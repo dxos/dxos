@@ -60,7 +60,7 @@
     "@effect/experimental": "catalog:",
     "@effect/platform": "catalog:",
     "@preact/signals-core": "catalog:",
-    "chalk": "^4.1.2",
+    "chalk": "catalog:",
     "effect": "catalog:",
     "jsonpath-plus": "catalog:"
   },

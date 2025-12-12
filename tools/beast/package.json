@@ -21,13 +21,13 @@
   "dependencies": {
     "@dxos/log": "workspace:*",
     "array-iterate": "catalog:",
-    "chalk": "^4.1.0",
+    "chalk": "catalog:",
     "color-hash": "catalog:",
     "cosmiconfig": "catalog:",
     "js-yaml": "catalog:",
     "lodash.defaultsdeep": "catalog:",
     "lodash.pick": "catalog:",
-    "minimatch": "^5.1.0",
+    "minimatch": "catalog:",
     "ts-morph": "catalog:",
     "yargs": "catalog:"
   },
@@ -36,7 +36,7 @@
     "@types/color-hash": "catalog:",
     "@types/lodash.defaultsdeep": "catalog:",
     "@types/lodash.pick": "catalog:",
-    "@types/minimatch": "^5.1.2",
+    "@types/minimatch": "catalog:",
     "@types/yargs": "catalog:"
   }
 }

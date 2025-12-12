@@ -48,7 +48,7 @@
     "@dxos/util": "workspace:*",
     "@fontsource-variable/inter": "catalog:",
     "@fontsource-variable/jetbrains-mono": "catalog:",
-    "@fontsource/poiret-one": "^5.2.8",
+    "@fontsource/poiret-one": "catalog:",
     "@tailwindcss/container-queries": "catalog:",
     "@tailwindcss/forms": "catalog:",
     "autoprefixer": "catalog:",

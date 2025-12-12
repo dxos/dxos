@@ -64,7 +64,7 @@
     "@radix-ui/react-accordion": "catalog:",
     "@radix-ui/react-context": "catalog:",
     "@radix-ui/react-radio-group": "catalog:",
-    "@radix-ui/react-use-controllable-state": "1.1.0",
+    "@radix-ui/react-use-controllable-state": "catalog:",
     "@xstate/react": "catalog:",
     "date-fns": "catalog:",
     "emoji-mart": "catalog:",
@@ -82,17 +82,17 @@
     "@dxos/react-ui-theme": "workspace:*",
     "@dxos/storybook-utils": "workspace:*",
     "@dxos/test-utils": "workspace:*",
-    "@types/react": "~19.2.2",
-    "@types/react-dom": "~19.2.2",
+    "@types/react": "catalog:",
+    "@types/react-dom": "catalog:",
     "@vitejs/plugin-react": "catalog:",
-    "react": "~19.2.0",
-    "react-dom": "~19.2.0",
+    "react": "catalog:",
+    "react-dom": "catalog:",
     "vite": "catalog:"
   },
   "peerDependencies": {
     "@dxos/react-client": "workspace:*",
-    "react": "^19.0.0",
-    "react-dom": "^19.0.0"
+    "react": "catalog:",
+    "react-dom": "catalog:"
   },
   "optionalDependencies": {
     "@dxos/react-ui": "workspace:*",

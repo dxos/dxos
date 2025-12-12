@@ -65,7 +65,7 @@
     "@dxos/util": "workspace:*",
     "@effect/ai": "catalog:",
     "@effect/experimental": "catalog:",
-    "@effect/platform": "^0.93.6",
+    "@effect/platform": "catalog:",
     "@preact/signals-core": "catalog:",
     "@xenova/transformers": "catalog:",
     "lodash.defaultsdeep": "catalog:"
@@ -75,7 +75,7 @@
     "effect": "catalog:"
   },
   "peerDependencies": {
-    "effect": "^3.13.3"
+    "effect": "catalog:"
   },
   "publishConfig": {
     "access": "public"

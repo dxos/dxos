@@ -88,7 +88,7 @@
     "@radix-ui/react-context": "catalog:",
     "@radix-ui/react-primitive": "catalog:",
     "@radix-ui/react-slot": "catalog:",
-    "@radix-ui/react-use-controllable-state": "1.1.0",
+    "@radix-ui/react-use-controllable-state": "catalog:",
     "date-fns": "catalog:",
     "lodash.orderby": "catalog:"
   },
@@ -105,22 +105,22 @@
     "@effect-atom/atom-react": "catalog:",
     "@effect/platform": "catalog:",
     "@types/lodash.orderby": "catalog:",
-    "@types/react": "~19.2.2",
-    "@types/react-dom": "~19.2.2",
+    "@types/react": "catalog:",
+    "@types/react-dom": "catalog:",
     "effect": "catalog:",
     "fast-check": "catalog:",
-    "react": "~19.2.0",
-    "react-dom": "~19.2.0",
+    "react": "catalog:",
+    "react-dom": "catalog:",
     "vite": "catalog:"
   },
   "peerDependencies": {
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-theme": "workspace:*",
-    "@effect-atom/atom-react": "^0.3.4",
-    "@effect/platform": "^0.80.12",
-    "effect": "^3.13.3",
-    "react": "^19.0.0",
-    "react-dom": "^19.0.0"
+    "@effect-atom/atom-react": "catalog:",
+    "@effect/platform": "catalog:",
+    "effect": "catalog:",
+    "react": "catalog:",
+    "react-dom": "catalog:"
   },
   "publishConfig": {
     "access": "public"

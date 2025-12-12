@@ -68,11 +68,11 @@
     "@dxos/util": "workspace:*",
     "@effect/ai": "catalog:",
     "@effect/ai-anthropic": "catalog:",
-    "@effect/ai-openai": "0.36.0",
+    "@effect/ai-openai": "catalog:",
     "@effect/experimental": "catalog:",
-    "@effect/platform": "^0.93.6",
-    "@effect/platform-node": "^0.103.0",
-    "@effect/workflow": "^0.15.2",
+    "@effect/platform": "catalog:",
+    "@effect/platform-node": "catalog:",
+    "@effect/workflow": "catalog:",
     "diff": "catalog:",
     "json-stable-stringify": "catalog:",
     "parjs": "catalog:",
@@ -83,7 +83,7 @@
     "effect": "catalog:"
   },
   "peerDependencies": {
-    "effect": "^3.13.3"
+    "effect": "catalog:"
   },
   "publishConfig": {
     "access": "public"

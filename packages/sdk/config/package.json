@@ -80,7 +80,7 @@
     "lodash.defaultsdeep": "catalog:",
     "lodash.ismatch": "catalog:",
     "pkg-up": "catalog:",
-    "yaml": "^2.6.1"
+    "yaml": "catalog:"
   },
   "devDependencies": {
     "@types/lodash.defaultsdeep": "catalog:",

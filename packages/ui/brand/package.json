@@ -36,14 +36,14 @@
     "@phosphor-icons/react": "catalog:",
     "@rive-app/react-canvas": "catalog:",
     "@types/d3": "catalog:",
-    "react": "~19.2.0",
-    "react-dom": "~19.2.0"
+    "react": "catalog:",
+    "react-dom": "catalog:"
   },
   "peerDependencies": {
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-theme": "workspace:*",
-    "@phosphor-icons/react": "^2.1.5",
-    "react": "^19.0.0",
-    "react-dom": "^19.0.0"
+    "@phosphor-icons/react": "catalog:",
+    "react": "catalog:",
+    "react-dom": "catalog:"
   }
 }

@@ -21,7 +21,7 @@
     "toolbox": "vite-node ./src/main.ts"
   },
   "dependencies": {
-    "chalk": "^4.1.0",
+    "chalk": "catalog:",
     "comment-json": "catalog:",
     "console-table-printer": "catalog:",
     "deep-equal": "catalog:",
