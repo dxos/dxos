@@ -1758,6 +1758,9 @@ catalogs:
     sodium-universal:
       specifier: ^3.0.2
       version: 3.1.0
+    solid-element:
+      specifier: ^1.9.1
+      version: 1.9.1
     solid-js:
       specifier: ^1.9.9
       version: 1.9.10
@@ -4102,6 +4105,10 @@ importers:
         version: 4.3.9
 
   packages/common/web-context-solid:
+    dependencies:
+      solid-element:
+        specifier: 'catalog:'
+        version: 1.9.1(solid-js@1.9.10)
     devDependencies:
       '@solidjs/testing-library':
         specifier: 'catalog:'
@@ -28237,6 +28244,9 @@ packages:
   complex.js@2.4.2:
     resolution: {integrity: sha512-qtx7HRhPGSCBtGiST4/WGHuW+zeaND/6Ld+db6PbrulIB1i2Ev/2UPiqcmpQNPSyfBKraC0EOvOKCB5dGZKt3g==}
 
+  component-register@0.8.8:
+    resolution: {integrity: sha512-djhwcxjY+X9dacaYUEOkOm7tda8uOEDiMDigWysu3xv54M8o6XDlsjR1qt5Y8QLGiKg51fqXFIR2HUTmt9ys0Q==}
+
   compress-commons@2.1.1:
     resolution: {integrity: sha512-eVw6n7CnEMFzc3duyFVrQEuY1BlHR3rYsSztyG32ibGMW722i3C6IizEGMFmfMU+A+fALvBIwxN3czffTcdA+Q==}
     engines: {node: '>= 6'}
@@ -35451,6 +35461,11 @@ packages:
 
   sodium-universal@3.1.0:
     resolution: {integrity: sha512-N2gxk68Kg2qZLSJ4h0NffEhp4BjgWHCHXVlDi1aG1hA3y+ZeWEmHqnpml8Hy47QzfL1xLy5nwr9LcsWAg2Ep0A==}
+
+  solid-element@1.9.1:
+    resolution: {integrity: sha512-baJy6Qz27oAUgkPlqOf3Y+7RsBiuVQrS51Nrh1ddDbrqrNPvJbIvehpUsTzLNFb2ZHIoHuNnDg330go/ZKcRdg==}
+    peerDependencies:
+      solid-js: ^1.9.3
 
   solid-js@1.9.10:
     resolution: {integrity: sha512-Coz956cos/EPDlhs6+jsdTxKuJDPT7B5SVIWgABwROyxjY7Xbr8wkzD68Et+NxnV7DLJ3nJdAC2r9InuV/4Jew==}
@@ -49729,6 +49744,8 @@ snapshots:
 
   complex.js@2.4.2: {}
 
+  component-register@0.8.8: {}
+
   compress-commons@2.1.1:
     dependencies:
       buffer-crc32: 0.2.13
@@ -58860,6 +58877,11 @@ snapshots:
       sodium-javascript: 0.8.0
       sodium-native: 3.4.1
       xsalsa20: 1.2.0
+
+  solid-element@1.9.1(solid-js@1.9.10):
+    dependencies:
+      component-register: 0.8.8
+      solid-js: 1.9.10
 
   solid-js@1.9.10:
     dependencies:

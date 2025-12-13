@@ -607,6 +607,7 @@ catalog:
   sodium-javascript: ~0.8.0
   sodium-native: ^3.2.0
   sodium-universal: ^3.0.2
+  solid-element: ^1.9.1
   solid-js: ^1.9.9
   sort-package-json: ^1.57.0
   stage-js: 1.0.0-alpha.17
