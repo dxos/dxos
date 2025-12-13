@@ -74,6 +74,9 @@
       "path": "../../plugins/plugin-assistant"
     },
     {
+      "path": "../../plugins/plugin-chess"
+    },
+    {
       "path": "../../sdk/client"
     },
     {

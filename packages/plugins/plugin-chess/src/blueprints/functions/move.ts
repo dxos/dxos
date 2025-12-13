@@ -10,7 +10,7 @@ import { ArtifactId } from '@dxos/assistant';
 import { Database } from '@dxos/echo';
 import { defineFunction } from '@dxos/functions';
 
-import { Chess } from '../types';
+import { Chess } from '../../types';
 
 export default defineFunction({
   key: 'dxos.org/function/chess/move',
