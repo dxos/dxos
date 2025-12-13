@@ -37,6 +37,9 @@
       "path": "packages/common/effect/tsconfig.json"
     },
     {
+      "path": "packages/common/effect-atom-solid/tsconfig.json"
+    },
+    {
       "path": "packages/common/errors/tsconfig.json"
     },
     {
@@ -116,6 +119,15 @@
     },
     {
       "path": "packages/common/util/tsconfig.json"
+    },
+    {
+      "path": "packages/common/web-context/tsconfig.json"
+    },
+    {
+      "path": "packages/common/web-context-react/tsconfig.json"
+    },
+    {
+      "path": "packages/common/web-context-solid/tsconfig.json"
     },
     {
       "path": "packages/core/ai/tsconfig.json"
