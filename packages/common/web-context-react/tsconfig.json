@@ -1,16 +1,10 @@
 {
   "extends": "../../../tsconfig.base.json",
   "compilerOptions": {
-    "jsx": "react-jsx",
     "lib": [
       "DOM",
       "ES2021"
     ],
-    "paths": {
-      "@dxos/web-context": [
-        "../web-context/src/index.ts"
-      ]
-    },
     "types": [
       "@types/node"
     ]

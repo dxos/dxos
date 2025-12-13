@@ -2,7 +2,15 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { type PropsWithChildren, createContext, useCallback, useContext, useEffect, useRef } from 'react';
+import React, {
+  type JSX,
+  type PropsWithChildren,
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useRef,
+} from 'react';
 
 import {
   CONTEXT_PROVIDER_EVENT,
