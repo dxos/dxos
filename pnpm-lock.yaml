@@ -6545,6 +6545,9 @@ importers:
       '@dxos/plugin-assistant':
         specifier: workspace:*
         version: link:../../plugins/plugin-assistant
+      '@dxos/plugin-chess':
+        specifier: workspace:*
+        version: link:../../plugins/plugin-chess
       '@dxos/protocols':
         specifier: workspace:*
         version: link:../../core/protocols

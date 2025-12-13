@@ -31,6 +31,7 @@
     "@dxos/keys": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/plugin-assistant": "workspace:*",
+    "@dxos/plugin-chess": "workspace:*",
     "@dxos/protocols": "workspace:*",
     "@dxos/schema": "workspace:*",
     "@dxos/types": "workspace:*",

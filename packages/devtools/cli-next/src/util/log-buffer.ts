@@ -73,7 +73,13 @@ const formatter = (_config: LogConfig, { message, context, error, meta }: LogEnt
   return [
     meta && line(meta),
     message,
-    Object.keys(context).length > 0 && JSON.stringify(context),
+    Object.keys(context).length > 0 &&
+      JSON.stringify(context, (key, value) => {
+        if (typeof value === 'bigint') {
+          return value.toString();
+        }
+        return value;
+      }),
     error && String(error),
   ]
     .filter(Boolean)
