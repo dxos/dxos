@@ -36,9 +36,6 @@
       "path": "../../common/util"
     },
     {
-      "path": "../../core/echo/echo"
-    },
-    {
       "path": "../../core/echo/live-object"
     },
     {
@@ -46,6 +43,9 @@
     },
     {
       "path": "../../sdk/app-graph"
+    },
+    {
+      "path": "../../sdk/echo"
     },
     {
       "path": "../../sdk/react-client"

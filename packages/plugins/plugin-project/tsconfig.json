@@ -36,9 +36,6 @@
       "path": "../../core/assistant-toolkit"
     },
     {
-      "path": "../../core/echo/echo"
-    },
-    {
       "path": "../../core/echo/echo-query"
     },
     {
@@ -49,6 +46,9 @@
     },
     {
       "path": "../../sdk/app-framework"
+    },
+    {
+      "path": "../../sdk/echo"
     },
     {
       "path": "../../sdk/react-client"

@@ -25,9 +25,6 @@
       "path": "../../common/node-std"
     },
     {
-      "path": "../../core/echo/echo"
-    },
-    {
       "path": "../../core/echo/echo-db"
     },
     {
@@ -38,6 +35,9 @@
     },
     {
       "path": "../../core/protocols"
+    },
+    {
+      "path": "../echo"
     }
   ]
 }

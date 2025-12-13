@@ -39,6 +39,9 @@
       "path": "../../sdk/app-framework"
     },
     {
+      "path": "../../sdk/echo"
+    },
+    {
       "path": "../../sdk/schema"
     },
     {
@@ -58,9 +61,6 @@
     },
     {
       "path": "../conductor"
-    },
-    {
-      "path": "../echo/echo"
     },
     {
       "path": "../echo/echo-db"

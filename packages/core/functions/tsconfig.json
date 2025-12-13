@@ -32,6 +32,9 @@
       "path": "../../common/node-std"
     },
     {
+      "path": "../../sdk/echo"
+    },
+    {
       "path": "../../sdk/schema"
     },
     {
@@ -39,9 +42,6 @@
     },
     {
       "path": "../ai"
-    },
-    {
-      "path": "../echo/echo"
     },
     {
       "path": "../echo/echo-db"

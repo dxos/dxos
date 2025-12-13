@@ -8,6 +8,7 @@ import { Match, Switch, createSignal, useContext } from 'solid-js';
 
 import { type ModelName } from '@dxos/ai';
 import { type AiConversation, GenerationObserver } from '@dxos/assistant';
+import { log } from '@dxos/log';
 
 import { DXOS_VERSION } from '../../../version';
 import { blueprintRegistry } from '../blueprints';
@@ -87,6 +88,7 @@ export const Chat = (props: ChatProps) => {
       const request = props.conversation.createRequest({ prompt, observer });
       await props.processor.execute(request, props.model);
     } catch (err: any) {
+      log.catch(err);
       chatMessages.updateMessage(assistantIndex, (message) => {
         message.role = 'error';
         message.content = String(err);

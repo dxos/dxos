@@ -55,6 +55,9 @@
       "path": "../../../common/util"
     },
     {
+      "path": "../../../sdk/echo"
+    },
+    {
       "path": "../../mesh/edge-client"
     },
     {
@@ -62,9 +65,6 @@
     },
     {
       "path": "../../protocols"
-    },
-    {
-      "path": "../echo"
     },
     {
       "path": "../echo-pipeline"

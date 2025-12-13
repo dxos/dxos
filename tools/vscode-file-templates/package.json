@@ -1,11 +1,12 @@
 {
   "name": "vscode-file-templates",
   "version": "0.0.6",
-  "license": "MIT",
+  "license": "FSL-1.1-Apache-2.0",
   "author": "info@dxos.org",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
   "repository": "https://github.com/dxos/dxos",
+  "publisher": "dxos",
   "main": "./extension.js",
   "scripts": {
     "build": "vsce package && mkdir -p dist && mv *.vsix dist/",
@@ -37,6 +38,5 @@
   "displayName": "DXOS File Templates",
   "engines": {
     "vscode": "^1.80.0"
-  },
-  "publisher": "dxos"
+  }
 }

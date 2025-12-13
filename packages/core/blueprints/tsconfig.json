@@ -24,13 +24,13 @@
       "path": "../../common/util"
     },
     {
+      "path": "../../sdk/echo"
+    },
+    {
       "path": "../../sdk/schema"
     },
     {
       "path": "../ai"
-    },
-    {
-      "path": "../echo/echo"
     },
     {
       "path": "../functions"

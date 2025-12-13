@@ -53,10 +53,10 @@
       "path": "../../../common/util"
     },
     {
-      "path": "../../protocols"
+      "path": "../../../sdk/echo"
     },
     {
-      "path": "../echo"
+      "path": "../../protocols"
     },
     {
       "path": "../echo-protocol"

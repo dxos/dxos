@@ -46,10 +46,10 @@
       "path": "../../common/util"
     },
     {
-      "path": "../../core/echo/echo"
+      "path": "../../sdk/app-framework"
     },
     {
-      "path": "../../sdk/app-framework"
+      "path": "../../sdk/echo"
     },
     {
       "path": "../../sdk/react-client"

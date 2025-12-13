@@ -43,13 +43,13 @@
       "path": "../../sdk/config"
     },
     {
+      "path": "../../sdk/echo"
+    },
+    {
       "path": "../../sdk/schema"
     },
     {
       "path": "../../sdk/types"
-    },
-    {
-      "path": "../echo/echo"
     },
     {
       "path": "../echo/echo-db"

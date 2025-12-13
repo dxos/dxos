@@ -1,8 +1,60 @@
-MIT License 
-Copyright (c) 2022 DXOS
+Functional Source License, Version 1.1, Apache 2.0 Future License
 
-Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+Abbreviation: FSL-1.1-Apache-2.0
 
-The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+Parameters
 
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+Licensor: DXOS
+Licensed Work: The Licensed Work is (c) 2022-2025 DXOS
+Change Date: 2028-01-01
+Change License: Apache License, Version 2.0
+
+Notice
+
+The Functional Source License (FSL) is not an Open Source license. However, the Licensed Work will eventually be made available under the Change License, as stated in this License.
+
+License Text
+
+Parameters
+
+Licensor: The Licensor is the entity that originally granted this license.
+
+Licensed Work: The Licensed Work is the software that the Licensor makes available under this License.
+
+Change Date: The Change Date is the date when this License converts to the Change License.
+
+Change License: The Change License is the license that this License converts to on the Change Date.
+
+Terms
+
+Subject to the terms and conditions of this License, the Licensor grants you a worldwide, royalty-free, non-exclusive, non-transferable license to:
+
+1. Use the Licensed Work for any purpose other than making the functionality of the Licensed Work or a modified version available to third parties as a service.
+
+2. Prepare derivative works based on the Licensed Work.
+
+3. Distribute the Licensed Work to third parties, including in source code or object code form.
+
+4. Grant sublicenses to others to do any of the foregoing.
+
+Limitations
+
+You may not make the functionality of the Licensed Work or a modified version available to third parties as a service without purchasing a commercial license from the Licensor.
+
+You may not alter, remove, or obscure any licensing, copyright, or other notices of the Licensor in the Licensed Work. Any use of the Licensor's trademarks is subject to applicable law.
+
+Termination
+
+If you violate any of the terms or conditions of this License, your rights under this License will automatically terminate.
+
+No Other Rights
+
+This License does not grant you any rights other than those expressly granted herein.
+
+Disclaimer
+
+THE LICENSED WORK IS PROVIDED "AS IS". THE LICENSOR HEREBY DISCLAIMS ALL WARRANTIES AND CONDITIONS, EXPRESS OR IMPLIED, INCLUDING (WITHOUT LIMITATION) WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, NON-INFRINGEMENT, AND TITLE.
+
+Conversion to Change License
+
+On the Change Date, or when the Licensor publicly announces an earlier date, this License will automatically convert to the Change License, and the terms of the Change License will apply to the Licensed Work going forward. No additional action by you or the Licensor is required for this conversion.

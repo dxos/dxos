@@ -21,10 +21,10 @@
       "path": "../../common/test-utils"
     },
     {
-      "path": "../../core/echo/echo"
+      "path": "../../sdk/client"
     },
     {
-      "path": "../../sdk/client"
+      "path": "../../sdk/echo"
     },
     {
       "path": "../../sdk/react-client"

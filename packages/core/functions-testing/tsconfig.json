@@ -22,7 +22,7 @@
       "path": "../../sdk/config"
     },
     {
-      "path": "../echo/echo"
+      "path": "../../sdk/echo"
     },
     {
       "path": "../functions"

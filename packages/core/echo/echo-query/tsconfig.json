@@ -34,7 +34,7 @@
       "path": "../../../common/util"
     },
     {
-      "path": "../echo"
+      "path": "../../../sdk/echo"
     },
     {
       "path": "../echo-generator"

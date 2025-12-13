@@ -27,9 +27,6 @@
       "path": "../../common/util"
     },
     {
-      "path": "../../core/echo/echo"
-    },
-    {
       "path": "../../core/echo/live-object"
     },
     {
@@ -37,6 +34,9 @@
     },
     {
       "path": "../../sdk/client"
+    },
+    {
+      "path": "../../sdk/echo"
     },
     {
       "path": "../react-ui"

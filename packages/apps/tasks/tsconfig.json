@@ -28,6 +28,9 @@
       "path": "../../sdk/config"
     },
     {
+      "path": "../../sdk/echo"
+    },
+    {
       "path": "../../sdk/react-client"
     },
     {

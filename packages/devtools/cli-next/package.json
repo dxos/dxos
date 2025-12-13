@@ -5,7 +5,7 @@
   "description": "Next-generation DXOS CLI",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
-  "license": "MIT",
+  "license": "Apache-2.0",
   "author": "info@dxos.org",
   "sideEffects": false,
   "type": "module",

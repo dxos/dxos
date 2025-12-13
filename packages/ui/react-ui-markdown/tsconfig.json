@@ -31,7 +31,7 @@
       "path": "../../common/util"
     },
     {
-      "path": "../../core/echo/echo"
+      "path": "../../sdk/echo"
     },
     {
       "path": "../../sdk/react-client"

@@ -42,6 +42,9 @@
       "path": "../../common/util"
     },
     {
+      "path": "../../sdk/echo"
+    },
+    {
       "path": "../../sdk/schema"
     },
     {
@@ -52,9 +55,6 @@
     },
     {
       "path": "../blueprints"
-    },
-    {
-      "path": "../echo/echo"
     },
     {
       "path": "../echo/echo-db"

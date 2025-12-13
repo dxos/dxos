@@ -43,13 +43,13 @@
       "path": "../../core/assistant"
     },
     {
-      "path": "../../core/echo/echo"
-    },
-    {
       "path": "../../core/echo/echo-query"
     },
     {
       "path": "../../sdk/client-protocol"
+    },
+    {
+      "path": "../../sdk/echo"
     },
     {
       "path": "../../sdk/react-client"

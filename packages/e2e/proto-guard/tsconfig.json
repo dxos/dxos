@@ -29,9 +29,6 @@
       "path": "../../common/node-std"
     },
     {
-      "path": "../../core/echo/echo"
-    },
-    {
       "path": "../../core/echo/echo-db"
     },
     {
@@ -42,6 +39,9 @@
     },
     {
       "path": "../../sdk/client"
+    },
+    {
+      "path": "../../sdk/echo"
     }
   ]
 }
