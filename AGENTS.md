@@ -1,5 +1,10 @@
 # Agent Guidelines for DXOS
 
+## Dependencies
+
+- All dependency versions are managed in the default pnpm catalog
+- To add a new dependency, run `pnpm add --filter "<project>" --save-catalog "<package>"`
+
 ## Build, Test, Lint Commands
 
 - Project uses `moon` to run tasks, tests, lint etc. (moon run package-name:task-name).
