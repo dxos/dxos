@@ -2,9 +2,18 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type KeyEvent } from '@opentui/core';
+import { hexToRgb, type KeyEvent } from '@opentui/core';
 import { useKeyboard, useRenderer } from '@opentui/solid';
-import { type Accessor, type ParentProps, createContext, createEffect, createSignal, onMount } from 'solid-js';
+import {
+  type Accessor,
+  createContext,
+  createEffect,
+  createSignal,
+  ErrorBoundary,
+  onCleanup,
+  onMount,
+  type ParentProps,
+} from 'solid-js';
 
 import { log } from '@dxos/log';
 import { isTruthy } from '@dxos/util';
@@ -126,14 +135,40 @@ export const App = (props: AppProps) => {
     // Replay logs once.
     props.logBuffer?.replay();
     log.info('focus console then ctrl-s to save logs to file');
+
+    // Repaint in case terminal is cleared (via cmd-k -- which is not propagated to the app from the terminal).
+    const i = setInterval(() => {
+      renderer.currentRenderBuffer.clear(hexToRgb('000000'));
+      renderer.requestRender();
+    }, 5_000);
+
+    onCleanup(() => {
+      clearInterval(i);
+    });
   });
 
   // Toggle focus between console and app content with tab.
   useKeyboard((key) => {
+    // log.info('App key', { key: key.name, ctrl: key.ctrl, meta: key.meta });
     handlers.forEach((handler) => {
       handler.handler(key);
     });
   });
 
-  return <AppContext.Provider value={{ focus, hint, processing, setProcessing }}>{props.children}</AppContext.Provider>;
+  return (
+    <AppContext.Provider value={{ focus, hint, processing, setProcessing }}>
+      <ErrorBoundary
+        fallback={(err: any) => {
+          log.catch(err);
+          return (
+            <box flexDirection='column' overflow='hidden'>
+              <text style={{ fg: theme.log.error }}>{err.stack}</text>
+            </box>
+          );
+        }}
+      >
+        {props.children}
+      </ErrorBoundary>
+    </AppContext.Provider>
+  );
 };

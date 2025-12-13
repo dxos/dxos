@@ -47,7 +47,7 @@ export type AiSessionRunParams<Tools extends Record<string, Tool.Any>> = {
   system?: string;
   history?: Message.Message[];
   objects?: Obj.Any[];
-  blueprints?: Blueprint.Blueprint[];
+  blueprints?: readonly Blueprint.Blueprint[];
   toolkit?: Toolkit.WithHandler<Tools>;
   observer?: GenerationObserver<Tools>;
 };

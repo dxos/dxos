@@ -65,7 +65,7 @@ const RenderNode = (props: { node: SyntaxNode; content: string }) => {
 
     case 'Paragraph':
       return (
-        <box marginBottom={props.node.parent?.name === 'ListItem' ? 0 : 1}>
+        <box marginLeft={1} marginRight={1} marginBottom={props.node.parent?.name === 'ListItem' ? 0 : 1}>
           <text style={{ fg: theme.text.default }}>
             <RenderInline node={props.node} content={props.content} />
           </text>
@@ -79,7 +79,7 @@ const RenderNode = (props: { node: SyntaxNode; content: string }) => {
     case 'ATXHeading5':
     case 'ATXHeading6':
       return (
-        <box marginTop={1} marginBottom={1}>
+        <box marginLeft={1} marginRight={1}>
           <text style={{ fg: theme.text.bold }}>
             <RenderInline node={props.node} content={props.content} />
           </text>
@@ -88,7 +88,13 @@ const RenderNode = (props: { node: SyntaxNode; content: string }) => {
 
     case 'FencedCode':
       return (
-        <box marginBottom={1} padding={1} flexDirection='column' style={{ backgroundColor: theme.input.bg }}>
+        <box
+          marginTop={1}
+          marginBottom={1}
+          padding={1}
+          flexDirection='column'
+          style={{ backgroundColor: theme.input.bg }}
+        >
           <For each={children}>{(child) => <RenderNode node={child} content={props.content} />}</For>
         </box>
       );
@@ -106,7 +112,7 @@ const RenderNode = (props: { node: SyntaxNode; content: string }) => {
     case 'BulletList':
     case 'OrderedList':
       return (
-        <box flexDirection='column' marginBottom={1}>
+        <box flexDirection='column' marginLeft={1} marginRight={1} marginBottom={1}>
           <For each={children}>{(child) => <RenderNode node={child} content={props.content} />}</For>
         </box>
       );
@@ -127,7 +133,7 @@ const RenderNode = (props: { node: SyntaxNode; content: string }) => {
     }
 
     case 'ListMark': // - or 1.
-      return <text style={{ fg: theme.text.primary }}>{props.content.slice(props.node.from, props.node.to)} </text>;
+      return <text style={{ fg: theme.text.primary }}>{props.content.slice(props.node.from, props.node.to)}</text>;
 
     case 'Blockquote':
       return (
@@ -149,12 +155,14 @@ const RenderNode = (props: { node: SyntaxNode; content: string }) => {
     case 'HeaderMark': // #
     case 'QuoteMark': // >
     case 'EmphasisMark': // *
+    case 'HorizontalRule': // ---
       return null;
 
     // Use RenderInline for unknown nodes to ensure text gaps are rendered.
     default:
+      log.warn('unknown node', { type: props.node.name });
       return (
-        <text>
+        <text marginLeft={1} marginRight={1}>
           <RenderInline node={props.node} content={props.content} />
         </text>
       );

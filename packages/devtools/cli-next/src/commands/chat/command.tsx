@@ -12,7 +12,7 @@ import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
 import * as Match from 'effect/Match';
 import * as Option from 'effect/Option';
-import { ErrorBoundary, createSignal } from 'solid-js';
+import { createSignal } from 'solid-js';
 
 import { AiService, DEFAULT_EDGE_MODEL, DEFAULT_LMSTUDIO_MODEL, DEFAULT_OLLAMA_MODEL, ModelName } from '@dxos/ai';
 import { type AiConversation, GenericToolkit } from '@dxos/assistant';
@@ -112,33 +112,22 @@ export const chat = Command.make(
       yield* Effect.promise(() =>
         render(
           () => (
-            <ErrorBoundary
-              fallback={(err: any) => {
-                log.catch(err);
-                return (
-                  <box flexDirection='column' overflow='hidden'>
-                    <text style={{ fg: theme.log.error }}>{err.stack}</text>
-                  </box>
-                );
-              }}
-            >
-              <App showConsole={options.debug} focusElements={['input', 'messages']} logBuffer={logBuffer}>
-                {conversation() && (
-                  <Chat
-                    processor={processor}
-                    conversation={conversation()!}
-                    model={model}
-                    verbose={verbose}
-                    onConversationCreate={({ blueprints }) => {
-                      // TODO(burdon): This is a hack to get the promise to run.
-                      setTimeout(async () => {
-                        await handleConversationCreate(blueprints);
-                      });
-                    }}
-                  />
-                )}
-              </App>
-            </ErrorBoundary>
+            <App showConsole={options.debug} focusElements={['input', 'messages']} logBuffer={logBuffer}>
+              {conversation() && (
+                <Chat
+                  processor={processor}
+                  conversation={conversation()!}
+                  model={model}
+                  verbose={verbose}
+                  onConversationCreate={({ blueprints }) => {
+                    // TODO(burdon): This is a hack to get the promise to run.
+                    setTimeout(async () => {
+                      await handleConversationCreate(blueprints);
+                    });
+                  }}
+                />
+              )}
+            </App>
           ),
           {
             exitOnCtrlC: true,
@@ -151,7 +140,7 @@ export const chat = Command.make(
             openConsoleOnError: true,
             consoleOptions: {
               position: ConsolePosition.TOP,
-              sizePercent: 25, // TODO(burdon): Option.
+              sizePercent: 50, // TODO(burdon): Option.
               colorDefault: theme.log.default,
               colorDebug: theme.log.debug,
               colorInfo: theme.log.info,

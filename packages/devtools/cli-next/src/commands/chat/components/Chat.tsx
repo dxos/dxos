@@ -8,6 +8,7 @@ import { Match, Switch, createSignal, useContext } from 'solid-js';
 
 import { type ModelName } from '@dxos/ai';
 import { type AiConversation, GenerationObserver } from '@dxos/assistant';
+import { log } from '@dxos/log';
 
 import { DXOS_VERSION } from '../../../version';
 import { blueprintRegistry } from '../blueprints';
@@ -87,6 +88,7 @@ export const Chat = (props: ChatProps) => {
       const request = props.conversation.createRequest({ prompt, observer });
       await props.processor.execute(request, props.model);
     } catch (err: any) {
+      log.catch(err);
       chatMessages.updateMessage(assistantIndex, (message) => {
         message.role = 'error';
         message.content = String(err);
@@ -123,8 +125,13 @@ export const Chat = (props: ChatProps) => {
         onSubmit={() => handleSubmit(inputValue())}
         focused={() => popup() === 'logo' || popup() === undefined}
       />
-      {/* TODO(burdon): Show blueprints in status bar. */}
-      <StatusBar model={props.model} metadata={props.processor.metadata} processing={context?.processing} />
+      <StatusBar
+        model={props.model}
+        metadata={props.processor.metadata}
+        // TODO(burdon): Empty.
+        blueprints={props.conversation.blueprints.map((blueprint) => blueprint.name)}
+        processing={context?.processing}
+      />
     </box>
   );
 };
@@ -136,7 +143,10 @@ const BlueprintPicker = (props: BlueprintPickerProps) => {
     <Picker
       multi
       title='Select Blueprints'
-      items={blueprintRegistry.blueprints.map((blueprint) => ({ id: blueprint.key, label: blueprint.name }))}
+      items={blueprintRegistry.blueprints.map((blueprint) => ({
+        id: blueprint.key,
+        label: blueprint.name,
+      }))}
       onConfirm={(ids) => props.onConfirm?.(ids)}
       onCancel={() => props.onCancel?.()}
     />

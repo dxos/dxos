@@ -7,6 +7,7 @@ import * as Array from 'effect/Array';
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
+import { Blueprint } from '@dxos/blueprints';
 import { Resource } from '@dxos/context';
 import { Database, Obj } from '@dxos/echo';
 import { type Queue } from '@dxos/echo-db';
@@ -49,6 +50,11 @@ export class AiConversation extends Resource {
    */
   private readonly _toolkit?: Toolkit.Any;
 
+  /**
+   * Blueprints bound to the conversation.
+   */
+  private _blueprints: readonly Blueprint.Blueprint[] = [];
+
   public constructor(queue: Queue<Message.Message | ContextBinding>, toolkit?: Toolkit.Any) {
     super();
     this._queue = queue;
@@ -59,6 +65,13 @@ export class AiConversation extends Resource {
   protected override async _open(): Promise<void> {
     // TODO(wittjosiah): Pass in parent context?
     await this._context.open();
+    const context = await this._context.query();
+    this._blueprints = await Effect.runPromise(
+      Effect.forEach(context.blueprints.values(), Database.Service.loadOption).pipe(
+        Effect.map(Array.filter(Option.isSome)),
+        Effect.map(Array.map((option) => option.value)),
+      ),
+    );
   }
 
   protected override async _close(): Promise<void> {
@@ -77,6 +90,10 @@ export class AiConversation extends Resource {
     return this._toolkit;
   }
 
+  public get blueprints() {
+    return this._blueprints;
+  }
+
   public async getHistory(): Promise<Message.Message[]> {
     const queueItems = await this._queue.queryObjects();
     return queueItems.filter(Obj.instanceOf(Message.Message));
@@ -85,7 +102,7 @@ export class AiConversation extends Resource {
   /**
    * Creates a new cancelable request effect.
    */
-  createRequest(
+  public createRequest(
     params: AiConversationRunParams,
   ): Effect.Effect<Message.Message[], AiSessionRunError, AiSessionRunRequirements> {
     const self = this;
@@ -95,15 +112,15 @@ export class AiConversation extends Resource {
 
       // Get context objects.
       const context = yield* Effect.promise(() => self.context.query());
-      const blueprints = yield* Effect.forEach(context.blueprints.values(), Database.Service.loadOption).pipe(
-        Effect.map(Array.filter(Option.isSome)),
-        Effect.map(Array.map((option) => option.value)),
-      );
+      // const blueprints = yield* Effect.forEach(context.blueprints.values(), Database.Service.loadOption).pipe(
+      //   Effect.map(Array.filter(Option.isSome)),
+      //   Effect.map(Array.map((option) => option.value)),
+      // );
 
       // Create toolkit.
       const toolkit = yield* createToolkit({
         toolkit: self._toolkit,
-        blueprints,
+        blueprints: self._blueprints,
       });
 
       // Context objects.
@@ -115,13 +132,13 @@ export class AiConversation extends Resource {
       const start = Date.now();
       log.info('run', {
         history: history.length,
-        blueprints: blueprints.length,
+        blueprints: self._blueprints.length,
         objects: objects.length,
         tools: Object.keys(toolkit.tools).length,
       });
 
       // Process request.
-      const messages = yield* session.run({ history, blueprints, toolkit, objects, ...params }).pipe(
+      const messages = yield* session.run({ history, blueprints: self._blueprints, toolkit, objects, ...params }).pipe(
         Effect.provideService(AiContextService, {
           binder: self.context,
         }),
