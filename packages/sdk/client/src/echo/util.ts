@@ -50,8 +50,6 @@ export const SPACE_ID_LENGTH = 33;
 export const OBJECT_ID_LENGTH = 26;
 export const FQ_ID_LENGTH = SPACE_ID_LENGTH + OBJECT_ID_LENGTH + 1;
 
-// TODO(wittjosiah): Factor out?
-/** Parse a string into a space id and/or an object id. */
 export const parseId = (id?: string): { spaceId?: SpaceId; objectId?: ObjectId } => {
   if (!id) {
     return {};

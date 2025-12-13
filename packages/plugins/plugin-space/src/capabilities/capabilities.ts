@@ -5,6 +5,7 @@
 import type * as Schema from 'effect/Schema';
 
 import { type AnyIntentChain, type Label, defineCapability } from '@dxos/app-framework';
+import { type Database } from '@dxos/echo';
 import { type Space } from '@dxos/react-client/echo';
 import { type Collection } from '@dxos/schema';
 import { type DeepReadonly, type Position } from '@dxos/util';
@@ -27,7 +28,7 @@ export namespace SpaceCapabilities {
   export const OnCreateSpace = defineCapability<OnCreateSpace>(`${meta.id}/capability/on-space-created`);
 
   export type OnSchemaAdded = (params: {
-    space: Space;
+    db: Database.Database;
     schema: Schema.Schema.AnyNoContext;
     // TODO(wittjosiah): This is leaky.
     show?: boolean;

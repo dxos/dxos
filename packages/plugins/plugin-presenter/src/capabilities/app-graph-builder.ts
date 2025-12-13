@@ -12,7 +12,6 @@ import { DeckCapabilities } from '@dxos/plugin-deck';
 import { ATTENDABLE_PATH_SEPARATOR, DeckAction } from '@dxos/plugin-deck/types';
 import { atomFromSignal, createExtension } from '@dxos/plugin-graph';
 import { Markdown } from '@dxos/plugin-markdown/types';
-import { getSpace } from '@dxos/react-client/echo';
 import { Collection } from '@dxos/schema';
 
 import { meta } from '../meta';
@@ -71,8 +70,9 @@ export default (context: PluginContext) =>
               return isPresentable ? Option.some(node.data) : Option.none();
             }),
             Option.map((object) => {
-              const id = Obj.getDXN(object).toString();
-              const spaceId = getSpace(object)?.id;
+              const dxn = Obj.getDXN(object);
+              const id = dxn.toString();
+              const { spaceId } = dxn.asEchoDXN()!;
               return [
                 {
                   id: `${PresenterAction.TogglePresentation._tag}/${id}`,

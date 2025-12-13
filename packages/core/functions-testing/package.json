@@ -43,9 +43,8 @@
     "@dxos/invariant": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/protocols": "workspace:*",
-    "@effect/platform": "0.92.1"
+    "@effect/platform": "catalog:"
   },
-  "devDependencies": {},
   "publishConfig": {
     "access": "public"
   },

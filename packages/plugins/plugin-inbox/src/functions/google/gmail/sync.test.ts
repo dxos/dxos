@@ -42,7 +42,7 @@ describe.runIf(process.env.GOOGLE_ACCESS_TOKEN)('Gmail API', { timeout: 30_000 }
   it.effect(
     'get labels',
     Effect.fnUntraced(function* ({ expect }) {
-      const userId = 'rich@braneframe.com';
+      const userId = 'me';
       const labels = yield* GoogleMail.listLabels(userId);
       console.log(JSON.stringify(labels, null, 2));
       expect(labels).to.exist;
@@ -51,7 +51,7 @@ describe.runIf(process.env.GOOGLE_ACCESS_TOKEN)('Gmail API', { timeout: 30_000 }
 
   it.effect('get messages', ({ expect }) => {
     return Effect.gen(function* () {
-      const userId = 'rich@braneframe.com';
+      const userId = 'me';
       const { messages } = yield* GoogleMail.listMessages(userId, 'label:investor', 50);
       invariant(messages);
 

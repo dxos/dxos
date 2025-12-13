@@ -207,8 +207,8 @@
     "@dxos/node-std": "workspace:*",
     "@dxos/protocols": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@preact/signals-core": "^1.12.1",
-    "effect": "3.18.3"
+    "@preact/signals-core": "catalog:",
+    "effect": "catalog:"
   },
   "publishConfig": {
     "access": "public"

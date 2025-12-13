@@ -1,8 +1,8 @@
 {
   "name": "tasks",
   "version": "0.1.0",
-  "description": "tasks - a DXOS application",
   "private": true,
+  "description": "tasks - a DXOS application",
   "type": "module",
   "scripts": {
     "build": "tsc --noEmit && vite build",
@@ -15,19 +15,19 @@
     "@dxos/react-client": "workspace:*",
     "@dxos/shell": "workspace:*",
     "@dxos/util": "workspace:*",
-    "react": "~19.2.0",
-    "react-dom": "~19.2.0",
-    "react-router-dom": "^6.4.0"
+    "react": "catalog:",
+    "react-dom": "catalog:",
+    "react-router-dom": "catalog:"
   },
   "devDependencies": {
-    "@types/react": "~19.2.2",
-    "@types/react-dom": "~19.2.2",
-    "autoprefixer": "^10.4.12",
-    "postcss": "^8.4.41",
-    "tailwindcss": "~3.4.1",
-    "vite": "7.1.9",
-    "vite-plugin-top-level-await": "^1.6.0",
-    "vite-plugin-wasm": "^3.5.0",
-    "workbox-window": "^7.3.0"
+    "@types/react": "catalog:",
+    "@types/react-dom": "catalog:",
+    "autoprefixer": "catalog:",
+    "postcss": "catalog:",
+    "tailwindcss": "catalog:",
+    "vite": "catalog:",
+    "vite-plugin-top-level-await": "catalog:",
+    "vite-plugin-wasm": "catalog:",
+    "workbox-window": "catalog:"
   }
 }

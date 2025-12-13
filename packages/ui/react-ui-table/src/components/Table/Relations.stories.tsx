@@ -48,14 +48,14 @@ const useTestModel = <S extends Type.Obj.Any>(schema: S, count: number) => {
       return;
     }
 
-    const { view, jsonSchema } = await View.makeFromSpace({ space, typename: Type.getTypename(schema) });
+    const { view, jsonSchema } = await View.makeFromDatabase({ db: space.db, typename: Type.getTypename(schema) });
     const object = Table.make({ view, jsonSchema });
     setObject(object);
     space.db.add(object);
   }, [space, schema]);
 
   const projection = useProjectionModel(schema, object);
-  const model = useTableModel<TableRow>({ object, projection, features });
+  const model = useTableModel<TableRow>({ object, projection, db: space?.db, features });
 
   useEffect(() => {
     if (!model || !space) {

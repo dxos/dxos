@@ -6,7 +6,10 @@ import { extname, join } from 'node:path';
 
 import * as Command from '@effect/cli/Command';
 import * as FileSystem from '@effect/platform/FileSystem';
-import * as Chalk from 'chalk';
+import * as Doc from '@effect/printer/Doc';
+import * as Ansi from '@effect/printer-ansi/Ansi';
+import * as AnsiDoc from '@effect/printer-ansi/AnsiDoc';
+import * as Console from 'effect/Console';
 import * as Effect from 'effect/Effect';
 import * as Yaml from 'yaml';
 
@@ -41,15 +44,15 @@ export const list = Command.make(
     );
 
     for (const profile of profiles) {
-      console.log();
-      console.log(
-        Chalk.underline(`Profile: ${Chalk.bold(profile.name)}`),
-        profile.isCurrent ? Chalk.green(' (current)') : '',
-      );
-      console.log('  Full path:', profile.fullPath);
-      console.log('  Storage path:', profile.storagePath);
-      console.log('  Edge:', profile.edge);
-      console.log();
+      const profileLabel = Doc.annotate(Doc.text(`Profile: ${profile.name}`), Ansi.combine(Ansi.underlined, Ansi.bold));
+      const currentLabel = profile.isCurrent ? Doc.annotate(Doc.text(' (current)'), Ansi.green) : Doc.empty;
+      const titleDoc = Doc.cat(profileLabel, currentLabel);
+
+      yield* Console.log(AnsiDoc.render(titleDoc, { style: 'pretty' }));
+      yield* Console.log('  Full path:', profile.fullPath);
+      yield* Console.log('  Storage path:', profile.storagePath);
+      yield* Console.log('  EDGE:', profile.edge);
+      yield* Console.log();
     }
   }),
 );

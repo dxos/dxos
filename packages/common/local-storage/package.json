@@ -33,15 +33,15 @@
     "@dxos/log": "workspace:*",
     "@dxos/node-std": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@preact/signals-core": "^1.12.1",
-    "effect": "3.18.3"
+    "@preact/signals-core": "catalog:",
+    "effect": "catalog:"
   },
   "devDependencies": {
     "@dxos/async": "workspace:*"
   },
   "peerDependencies": {
-    "effect": "^3.13.3",
-    "react": "^19.0.0"
+    "effect": "catalog:",
+    "react": "catalog:"
   },
   "publishConfig": {
     "access": "public"

@@ -8,13 +8,10 @@ import React, { useCallback, useMemo } from 'react';
 import { DXN, Obj, type Ref, Tag, Type } from '@dxos/echo';
 import { type JsonPath, splitJsonPath } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
-import { getSpace } from '@dxos/react-client/echo';
-import { Form, omitId, useRefQueryOptions } from '@dxos/react-ui-form';
+import { Form, omitId } from '@dxos/react-ui-form';
 import { isNonNullable } from '@dxos/util';
 
 import { meta as pluginMeta } from '../../meta';
-
-const TagSchema = Tag.Tag.pipe(Schema.omit('id'));
 
 export type ObjectFormProps = {
   schema: Schema.Schema.AnyNoContext;
@@ -22,7 +19,7 @@ export type ObjectFormProps = {
 };
 
 export const ObjectForm = ({ object, schema }: ObjectFormProps) => {
-  const space = getSpace(object);
+  const db = Obj.getDatabase(object);
 
   const formSchema = useMemo(
     () =>
@@ -33,16 +30,16 @@ export const ObjectForm = ({ object, schema }: ObjectFormProps) => {
   );
 
   const meta = Obj.getMeta(object);
-  const tags = (meta.tags ?? []).map((tag) => space?.db.makeRef(DXN.parse(tag))).filter(isNonNullable);
+  const tags = (meta.tags ?? []).map((tag) => db?.makeRef(DXN.parse(tag))).filter(isNonNullable);
   const values = useMemo(() => ({ tags, ...object }), [object, tags]);
 
-  const handleRefQueryLookup = useRefQueryOptions({ db: space?.db });
-
-  const handleCreateTag = useCallback((values: Schema.Schema.Type<typeof TagSchema>) => {
-    invariant(space);
-    const tag = space.db.add(Tag.make(values));
-    const meta = Obj.getMeta(object);
-    meta.tags = [...(meta.tags ?? []), Obj.getDXN(tag).toString()];
+  const handleCreate = useCallback((schema: Type.Entity.Any, values: any) => {
+    invariant(db);
+    const newObject = db.add(Obj.make(schema, values));
+    if (Obj.instanceOf(newObject, Tag.Tag)) {
+      const meta = Obj.getMeta(object);
+      meta.tags = [...(meta.tags ?? []), Obj.getDXN(newObject).toString()];
+    }
   }, []);
 
   // TODO(wittjosiah): Use FormRootProps type.
@@ -63,7 +60,6 @@ export const ObjectForm = ({ object, schema }: ObjectFormProps) => {
         }
 
         const value = Obj.getValue(values, parts);
-        console.log('set value', isValid, parts, value);
         Obj.setValue(object, parts, value);
       }
     },
@@ -74,13 +70,12 @@ export const ObjectForm = ({ object, schema }: ObjectFormProps) => {
     <Form.Root
       schema={omitId(formSchema)}
       values={values}
-      createSchema={TagSchema}
       createOptionIcon='ph--plus--regular'
       createOptionLabel={['add tag label', { ns: pluginMeta.id }]}
       createInitialValuePath='label'
+      db={db}
       onValuesChanged={handleChange}
-      onCreate={handleCreateTag}
-      onQueryRefOptions={handleRefQueryLookup}
+      onCreate={handleCreate}
     >
       <Form.Viewport>
         <Form.Content>

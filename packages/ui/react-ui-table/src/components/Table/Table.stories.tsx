@@ -147,7 +147,7 @@ const meta = {
       createSpace: true,
       onCreateSpace: async ({ space }) => {
         const [schema] = await space.db.schemaRegistry.register([Example]);
-        const { view, jsonSchema } = await View.makeFromSpace({ space, typename: schema.typename });
+        const { view, jsonSchema } = await View.makeFromDatabase({ db: space.db, typename: schema.typename });
         const table = Table.make({ view, jsonSchema });
         view.projection.fields = [
           view.projection.fields.find((field: any) => field.path === 'name')!,
@@ -191,7 +191,10 @@ export const StaticSchema: StoryObj = {
       createIdentity: true,
       createSpace: true,
       onCreateSpace: async ({ space }) => {
-        const { view, jsonSchema } = await View.makeFromSpace({ space, typename: TestSchema.Person.typename });
+        const { view, jsonSchema } = await View.makeFromDatabase({
+          db: space.db,
+          typename: TestSchema.Person.typename,
+        });
         const table = Table.make({ view, jsonSchema });
         space.db.add(table);
 
@@ -234,8 +237,8 @@ export const ArrayOfObjects: StoryObj = {
       createIdentity: true,
       createSpace: true,
       onCreateSpace: async ({ space }) => {
-        const { view, jsonSchema } = await View.makeFromSpace({
-          space,
+        const { view, jsonSchema } = await View.makeFromDatabase({
+          db: space.db,
           typename: ContactWithArrayOfEmails.typename,
         });
         const table = Table.make({ view, jsonSchema });
@@ -292,7 +295,7 @@ export const Tags: Meta<StoryProps> = {
         const [storedSchema] = await space.db.schemaRegistry.register([schema]);
 
         // Initialize table.
-        const { view, jsonSchema } = await View.makeFromSpace({ space, typename });
+        const { view, jsonSchema } = await View.makeFromDatabase({ db: space.db, typename });
         const table = Table.make({ view, jsonSchema });
         space.db.add(table);
 

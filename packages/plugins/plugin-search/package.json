@@ -46,32 +46,32 @@
     "@dxos/schema": "workspace:*",
     "@dxos/types": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@preact-signals/safe-react": "^0.9.0",
-    "exa-js": "^1.5.12",
-    "main-thread-scheduling": "^14.1.1"
+    "@preact-signals/safe-react": "catalog:",
+    "exa-js": "catalog:",
+    "main-thread-scheduling": "catalog:"
   },
   "devDependencies": {
     "@dxos/random": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-theme": "workspace:*",
     "@dxos/storybook-utils": "workspace:*",
-    "@effect-atom/atom-react": "^0.3.4",
-    "@effect/platform": "0.92.1",
-    "@types/react": "~19.2.2",
-    "@types/react-dom": "~19.2.2",
-    "effect": "3.18.3",
-    "react": "~19.2.0",
-    "react-dom": "~19.2.0",
-    "vite": "7.1.9"
+    "@effect-atom/atom-react": "catalog:",
+    "@effect/platform": "catalog:",
+    "@types/react": "catalog:",
+    "@types/react-dom": "catalog:",
+    "effect": "catalog:",
+    "react": "catalog:",
+    "react-dom": "catalog:",
+    "vite": "catalog:"
   },
   "peerDependencies": {
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-theme": "workspace:*",
-    "@effect-atom/atom-react": "^0.3.4",
-    "@effect/platform": "^0.80.12",
-    "effect": "^3.13.3",
-    "react": "^19.0.0",
-    "react-dom": "^19.0.0"
+    "@effect-atom/atom-react": "catalog:",
+    "@effect/platform": "catalog:",
+    "effect": "catalog:",
+    "react": "catalog:",
+    "react-dom": "catalog:"
   },
   "publishConfig": {
     "access": "public"

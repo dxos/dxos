@@ -8,8 +8,7 @@ import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
 import { Resource } from '@dxos/context';
-import { Obj } from '@dxos/echo';
-import { Database } from '@dxos/echo';
+import { Database, Obj } from '@dxos/echo';
 import { type Queue } from '@dxos/echo-db';
 import { log } from '@dxos/log';
 import { Message } from '@dxos/types';
@@ -48,12 +47,13 @@ export class AiConversation extends Resource {
   /**
    * Toolkit from the current session request.
    */
-  private _toolkit: Toolkit.WithHandler<any> | undefined;
+  private readonly _toolkit?: Toolkit.Any;
 
-  public constructor(queue: Queue<Message.Message | ContextBinding>) {
+  public constructor(queue: Queue<Message.Message | ContextBinding>, toolkit?: Toolkit.Any) {
     super();
     this._queue = queue;
     this._context = new AiContextBinder(this._queue);
+    this._toolkit = toolkit;
   }
 
   protected override async _open(): Promise<void> {
@@ -88,45 +88,50 @@ export class AiConversation extends Resource {
   createRequest(
     params: AiConversationRunParams,
   ): Effect.Effect<Message.Message[], AiSessionRunError, AiSessionRunRequirements> {
-    return Effect.gen(this, function* () {
+    const self = this;
+    return Effect.gen(function* () {
       const session = new AiSession();
-      const history = yield* Effect.promise(() => this.getHistory());
+      const history = yield* Effect.promise(() => self.getHistory());
 
       // Get context objects.
-      const context = yield* Effect.promise(() => this.context.query());
+      const context = yield* Effect.promise(() => self.context.query());
       const blueprints = yield* Effect.forEach(context.blueprints.values(), Database.Service.loadOption).pipe(
-        Effect.map(Array.filter(Option.isSome)),
-        Effect.map(Array.map((option) => option.value)),
-      );
-      const objects = yield* Effect.forEach(context.objects.values(), Database.Service.loadOption).pipe(
         Effect.map(Array.filter(Option.isSome)),
         Effect.map(Array.map((option) => option.value)),
       );
 
       // Create toolkit.
-      const toolkit = yield* createToolkit({ blueprints });
-      this._toolkit = toolkit;
+      const toolkit = yield* createToolkit({
+        toolkit: self._toolkit,
+        blueprints,
+      });
+
+      // Context objects.
+      const objects = yield* Effect.forEach(context.objects.values(), Database.Service.loadOption).pipe(
+        Effect.map(Array.filter(Option.isSome)),
+        Effect.map(Array.map((option) => option.value)),
+      );
 
       const start = Date.now();
-      log('run', {
+      log.info('run', {
         history: history.length,
         blueprints: blueprints.length,
         objects: objects.length,
-        tools: this._toolkit?.tools.length ?? 0,
+        tools: Object.keys(toolkit.tools).length,
       });
 
       // Process request.
-      const messages = yield* session.run({ history, blueprints, objects, toolkit, ...params }).pipe(
+      const messages = yield* session.run({ history, blueprints, toolkit, objects, ...params }).pipe(
         Effect.provideService(AiContextService, {
-          binder: this.context,
+          binder: self.context,
         }),
       );
 
-      log('result', { messages: messages.length, duration: Date.now() - start });
+      log.info('result', { messages: messages.length, duration: Date.now() - start });
 
       // Append to queue.
-      yield* Effect.promise(() => this._queue.append(messages));
+      yield* Effect.promise(() => self._queue.append(messages));
       return messages;
-    }).pipe(Effect.withSpan('AiConversation.request'));
+    });
   }
 }

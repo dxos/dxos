@@ -31,7 +31,7 @@
     "@dxos/keys": "workspace:*",
     "@dxos/protocols": "workspace:*",
     "@dxos/util": "workspace:*",
-    "effect": "3.18.3"
+    "effect": "catalog:"
   },
   "publishConfig": {
     "access": "public"

@@ -84,13 +84,13 @@
     "@dxos/teleport": "workspace:*",
     "@dxos/tracing": "workspace:*",
     "@dxos/util": "workspace:*",
-    "node-datachannel": "^0.30.0"
+    "node-datachannel": "catalog:"
   },
   "devDependencies": {
     "@dxos/edge-client": "workspace:*",
     "@dxos/keyring": "workspace:*",
     "@dxos/signal": "workspace:*",
-    "fetch-mock": "^11.0.0"
+    "fetch-mock": "catalog:"
   },
   "publishConfig": {
     "access": "public"

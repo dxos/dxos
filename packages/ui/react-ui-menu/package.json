@@ -30,10 +30,10 @@
     "@dxos/keyboard": "workspace:*",
     "@dxos/react-ui-attention": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@preact-signals/safe-react": "^0.9.0",
-    "@preact/signals-react": "^3.3.0",
-    "@radix-ui/react-context": "1.1.1",
-    "@radix-ui/react-use-controllable-state": "1.1.0"
+    "@preact-signals/safe-react": "catalog:",
+    "@preact/signals-react": "catalog:",
+    "@radix-ui/react-context": "catalog:",
+    "@radix-ui/react-use-controllable-state": "catalog:"
   },
   "devDependencies": {
     "@dxos/live-object": "workspace:*",
@@ -41,23 +41,23 @@
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-theme": "workspace:*",
     "@dxos/storybook-utils": "workspace:*",
-    "@effect-atom/atom-react": "^0.3.4",
-    "@effect/platform": "0.92.1",
-    "@types/react": "~19.2.2",
-    "@types/react-dom": "~19.2.2",
-    "effect": "3.18.3",
-    "react": "~19.2.0",
-    "react-dom": "~19.2.0",
-    "vite": "7.1.9"
+    "@effect-atom/atom-react": "catalog:",
+    "@effect/platform": "catalog:",
+    "@types/react": "catalog:",
+    "@types/react-dom": "catalog:",
+    "effect": "catalog:",
+    "react": "catalog:",
+    "react-dom": "catalog:",
+    "vite": "catalog:"
   },
   "peerDependencies": {
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-theme": "workspace:*",
-    "@effect-atom/atom-react": "^0.3.4",
-    "@effect/platform": "^0.80.12",
-    "effect": "^3.13.3",
-    "react": "^19.0.0",
-    "react-dom": "^19.0.0"
+    "@effect-atom/atom-react": "catalog:",
+    "@effect/platform": "catalog:",
+    "effect": "catalog:",
+    "react": "catalog:",
+    "react-dom": "catalog:"
   },
   "publishConfig": {
     "access": "public"

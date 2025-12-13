@@ -78,18 +78,17 @@ export type FormFieldProps = {
    * Function to lookup custom renderers for specific properties.
    */
   fieldProvider?: FormFieldProvider;
-} & Pick<
-  RefFieldProps,
-  | 'autoFocus'
-  | 'readonly'
-  | 'layout'
-  | 'createSchema'
-  | 'createOptionLabel'
-  | 'createOptionIcon'
-  | 'createInitialValuePath'
-  | 'onCreate'
-  | 'onQueryRefOptions'
->;
+} & Pick<FormFieldComponentProps, 'autoFocus' | 'readonly' | 'layout'> &
+  Pick<
+    RefFieldProps,
+    | 'createOptionLabel'
+    | 'createOptionIcon'
+    | 'createInitialValuePath'
+    | 'db'
+    | 'schemaHook'
+    | 'getOptions'
+    | 'onCreate'
+  >;
 
 export const FormField = (props: FormFieldProps) => {
   const {
@@ -101,12 +100,15 @@ export const FormField = (props: FormFieldProps) => {
     fieldProvider,
     readonly,
     layout,
-    createSchema,
+
+    // RefFieldProps
     createOptionLabel,
     createOptionIcon,
     createInitialValuePath,
+    db,
+    schemaHook,
+    getOptions: getRefOptions,
     onCreate,
-    onQueryRefOptions,
   } = props;
   const { t } = useTranslation(translationKey);
   const title = getAnnotation<string>(SchemaAST.TitleAnnotationId)(type);
@@ -190,12 +192,13 @@ export const FormField = (props: FormFieldProps) => {
       <RefField
         {...fieldProps}
         {...refProps}
-        createSchema={createSchema}
         createOptionLabel={createOptionLabel}
         createOptionIcon={createOptionIcon}
         createInitialValuePath={createInitialValuePath}
+        db={db}
+        schemaHook={schemaHook}
+        getOptions={getRefOptions}
         onCreate={onCreate}
-        onQueryRefOptions={onQueryRefOptions}
       />
     );
   }
@@ -224,8 +227,11 @@ export const FormField = (props: FormFieldProps) => {
           fieldProvider={fieldProvider}
           createOptionLabel={createOptionLabel}
           createOptionIcon={createOptionIcon}
+          createInitialValuePath={createInitialValuePath}
+          db={db}
+          schemaHook={schemaHook}
+          getOptions={getRefOptions}
           onCreate={onCreate}
-          onQueryRefOptions={onQueryRefOptions}
         />
       );
     }

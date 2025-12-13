@@ -4,10 +4,9 @@
 
 import React, { useCallback, useEffect, useState } from 'react';
 
-import { Obj } from '@dxos/echo';
+import { type Key, Obj } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { type OAuthFlowResult } from '@dxos/protocols';
-import { type Space } from '@dxos/react-client/echo';
 import { useEdgeClient } from '@dxos/react-edge-client';
 import { DropdownMenu, IconButton, useTranslation } from '@dxos/react-ui';
 import { AccessToken } from '@dxos/types';
@@ -16,12 +15,12 @@ import { OAUTH_PRESETS, type OAuthPreset } from '../defs';
 import { meta } from '../meta';
 
 type NewTokenSelectorProps = {
-  space: Space;
+  spaceId: Key.SpaceId;
   onAddAccessToken: (token: AccessToken.AccessToken) => void;
   onCustomToken?: () => void;
 };
 
-export const NewTokenSelector = ({ space, onAddAccessToken, onCustomToken }: NewTokenSelectorProps) => {
+export const NewTokenSelector = ({ spaceId, onAddAccessToken, onCustomToken }: NewTokenSelectorProps) => {
   const { t } = useTranslation(meta.id);
   const edgeClient = useEdgeClient();
   const [tokenMap] = useState(new Map<string, AccessToken.AccessToken>());
@@ -50,7 +49,7 @@ export const NewTokenSelector = ({ space, onAddAccessToken, onCustomToken }: New
     return () => {
       window.removeEventListener('message', listener);
     };
-  }, [tokenMap, space]);
+  }, [tokenMap]);
 
   const createOauthPreset = async (preset?: OAuthPreset) => {
     if (!preset) {
@@ -69,7 +68,7 @@ export const NewTokenSelector = ({ space, onAddAccessToken, onCustomToken }: New
     const { authUrl } = await edgeClient.initiateOAuthFlow({
       provider: preset.provider,
       scopes: preset.scopes,
-      spaceId: space.id,
+      spaceId,
       accessTokenId: token.id,
     });
 

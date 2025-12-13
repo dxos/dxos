@@ -42,6 +42,9 @@
       "path": "../../common/util"
     },
     {
+      "path": "../../core/echo/echo-react"
+    },
+    {
       "path": "../../core/echo/echo-signals"
     },
     {

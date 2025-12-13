@@ -22,13 +22,13 @@
     "src"
   ],
   "dependencies": {
-    "minimatch": "*",
-    "oxc-resolver": "*"
+    "minimatch": "catalog:",
+    "oxc-resolver": "catalog:"
   },
   "devDependencies": {
-    "@types/minimatch": "*"
+    "@types/minimatch": "catalog:"
   },
   "peerDependencies": {
-    "vite": "*"
+    "vite": "catalog:"
   }
 }

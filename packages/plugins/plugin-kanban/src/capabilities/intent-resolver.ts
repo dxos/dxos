@@ -3,8 +3,8 @@
 //
 
 import { Capabilities, type PluginContext, contributes, createResolver } from '@dxos/app-framework';
+import { JsonSchema, Obj } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
-import { getSpace } from '@dxos/react-client/echo';
 import { Kanban } from '@dxos/react-ui-kanban/types';
 import { ProjectionModel, View, getTypenameFromQuery } from '@dxos/schema';
 
@@ -15,8 +15,8 @@ export default (context: PluginContext) =>
   contributes(Capabilities.IntentResolver, [
     createResolver({
       intent: KanbanAction.Create,
-      resolve: async ({ space, name, typename, initialPivotColumn }) => {
-        const { view } = await View.makeFromSpace({ space, typename, pivotFieldName: initialPivotColumn });
+      resolve: async ({ db, name, typename, initialPivotColumn }) => {
+        const { view } = await View.makeFromDatabase({ db, typename, pivotFieldName: initialPivotColumn });
         const kanban = Kanban.make({ name, view });
         return { data: { object: kanban } };
       },
@@ -24,9 +24,15 @@ export default (context: PluginContext) =>
     createResolver({
       intent: KanbanAction.DeleteCardField,
       resolve: async ({ view, fieldId, deletionData }, undo) => {
-        const schema = getSpace(view)?.db.schemaRegistry.getSchema(getTypenameFromQuery(view.query.ast)!);
-        invariant(schema);
-        const projection = new ProjectionModel(schema.jsonSchema, view.projection);
+        const db = Obj.getDatabase(view);
+        invariant(db, 'Database not found');
+        const schema = await db.schemaRegistry
+          .query({
+            typename: getTypenameFromQuery(view.query.ast)!,
+            location: ['database', 'runtime'],
+          })
+          .first();
+        const projection = new ProjectionModel(JsonSchema.toJsonSchema(schema), view.projection);
 
         if (!undo) {
           const { deleted, index } = projection.deleteFieldProjection(fieldId);
@@ -45,11 +51,11 @@ export default (context: PluginContext) =>
     createResolver({
       intent: KanbanAction.DeleteCard,
       resolve: ({ card }, undo) => {
-        const space = getSpace(card);
-        invariant(space);
+        const db = Obj.getDatabase(card);
+        invariant(db);
 
         if (!undo) {
-          space.db.remove(card);
+          db.remove(card);
           return {
             undoable: {
               message: ['card deleted label', { ns: meta.id }],
@@ -57,7 +63,7 @@ export default (context: PluginContext) =>
             },
           };
         } else {
-          space.db.add(card);
+          db.add(card);
         }
       },
     }),

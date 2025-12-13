@@ -35,7 +35,7 @@ const DefaultStory = () => {
   useAsyncEffect(async () => {
     const space = client.spaces.default;
     void generate(space, generator);
-    const { view } = await View.makeFromSpace({ space, typename: Type.getTypename(Graph.Graph) });
+    const { view } = await View.makeFromDatabase({ db: space.db, typename: Type.getTypename(Graph.Graph) });
     const graph = Graph.make({ name: 'Test', view });
     space.db.add(graph);
     setSpace(space);

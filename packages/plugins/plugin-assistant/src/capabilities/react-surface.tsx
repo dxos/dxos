@@ -57,11 +57,12 @@ export default () =>
         data.subject === 'invocations',
       component: ({ data }) => {
         const space = getSpace(data.companionTo);
+        const queueDxn = space?.properties.invocationTraceQueue?.dxn;
         // TODO(wittjosiah): Support invocation filtering for prompts.
         const target = Obj.instanceOf(Prompt.Prompt, data.companionTo) ? undefined : data.companionTo;
         return (
           <StackItem.Content>
-            <InvocationTraceContainer space={space} target={target} detailAxis='block' />
+            <InvocationTraceContainer db={space?.db} queueDxn={queueDxn} target={target} detailAxis='block' />
           </StackItem.Content>
         );
       },

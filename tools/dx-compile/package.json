@@ -11,9 +11,9 @@
     "dx-compile": "cli.js"
   },
   "dependencies": {
-    "yargs": "~16.2.0"
+    "yargs": "catalog:"
   },
   "devDependencies": {
-    "@types/yargs": "~16.0.1"
+    "@types/yargs": "catalog:"
   }
 }

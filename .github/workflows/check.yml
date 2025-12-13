@@ -76,6 +76,9 @@ jobs:
         if: ${{ steps.extract_branch.outputs.branch == 'main' }}
         run: moon run :lint :build
 
+      - name: Check for peer dependency issues
+        run: pnpm install --resolution-only --no-frozen-lockfile
+
       - uses: 'moonrepo/run-report-action@v1'
         if: (success() || failure()) && github.event_name == 'pull_request'
         with:
@@ -207,11 +210,11 @@ jobs:
 
       - name: Test Affected
         if: ${{ steps.extract_branch.outputs.branch != 'main' }}
-        run: moon run :e2e --affected --remote --concurrency=2 -- --browser=all
+        run: PLAYWRIGHT_BROWSER=all moon run :e2e --affected --remote --concurrency=2
 
       - name: Test All
         if: ${{ steps.extract_branch.outputs.branch == 'main' }}
-        run: moon run :e2e --concurrency=2 -- --browser=all
+        run: PLAYWRIGHT_BROWSER=all moon run :e2e --concurrency=2
 
       - uses: 'moonrepo/run-report-action@v1'
         if: (success() || failure()) && github.event_name == 'pull_request'
@@ -220,6 +223,7 @@ jobs:
 
       - name: Upload Traces
         uses: actions/upload-artifact@v4
+        if: ${{ success() || failure() }}
         with:
           name: playwright-report
           path: test-results/playwright

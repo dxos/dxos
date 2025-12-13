@@ -14,10 +14,10 @@
     "dx-build": "cli.js"
   },
   "dependencies": {
-    "chalk": "^4.1.0",
-    "comment-json": "^4.2.3"
+    "chalk": "catalog:",
+    "comment-json": "catalog:"
   },
   "devDependencies": {
-    "@types/comment-json": "^2.4.5"
+    "@types/comment-json": "catalog:"
   }
 }

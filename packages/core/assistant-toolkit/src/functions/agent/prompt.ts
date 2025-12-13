@@ -77,6 +77,8 @@ export default defineFunction({
       Effect.map(Array.filter(Option.isSome)),
       Effect.map(Array.map((option) => option.value)),
     );
+    const toolkit = yield* createToolkit({ blueprints });
+
     const objects = yield* Function.pipe(
       prompt.context,
       Array.appendAll(systemPrompt?.context ?? []),
@@ -84,7 +86,6 @@ export default defineFunction({
       Effect.map(Array.filter(Option.isSome)),
       Effect.map(Array.map((option) => option.value)),
     );
-    const toolkit = yield* createToolkit({ blueprints });
 
     const promptInstructions = yield* Database.Service.load(prompt.instructions.source);
     const promptText = Template.process(promptInstructions.content, input);

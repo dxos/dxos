@@ -36,16 +36,16 @@
     "@dxos/typings": "workspace:*",
     "@dxos/util": "workspace:*",
     "@dxos/vendor-hypercore": "workspace:*",
-    "readable-stream": "^3.6.0",
-    "streamx": "^2.12.5"
+    "readable-stream": "catalog:",
+    "streamx": "catalog:"
   },
   "devDependencies": {
     "@dxos/log": "workspace:*",
     "@dxos/random": "workspace:*",
     "@dxos/tracing": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@types/readable-stream": "^2.3.9",
-    "hypercore-protocol": "^8.0.7"
+    "@types/readable-stream": "catalog:",
+    "hypercore-protocol": "catalog:"
   },
   "publishConfig": {
     "access": "public"

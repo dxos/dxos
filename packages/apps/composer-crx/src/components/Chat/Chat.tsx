@@ -9,6 +9,7 @@ import React, { useCallback, useMemo, useRef, useState } from 'react';
 import browser from 'webextension-polyfill';
 
 import { SpaceId } from '@dxos/keys';
+import { log } from '@dxos/log';
 import { IconButton, Input, ScrollContainer, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { MarkdownViewer } from '@dxos/react-ui-markdown';
 import { mx } from '@dxos/react-ui-theme';
@@ -89,7 +90,7 @@ export const Chat = ({ classNames, host, url }: ChatProps) => {
 
       // Send system message.
       if (context.length > 0) {
-        console.log('system:', JSON.stringify(context, null, 2));
+        log.info('system', { context });
         await sendMessage(
           {
             role: 'assistant',

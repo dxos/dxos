@@ -2,9 +2,6 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as Array from 'effect/Array';
-import * as EffectFunction from 'effect/Function';
-import * as Order from 'effect/Order';
 import * as Schema from 'effect/Schema';
 import { useState } from 'react';
 import React, { useCallback } from 'react';
@@ -48,18 +45,10 @@ export const FunctionsRegistry = ({ space }: FunctionsRegistryProps) => {
 
   useAsyncEffect(async () => {
     setLoading(true);
-    const functions = await getDeployedFunctions(client);
+    const functions = await getDeployedFunctions(client, true);
     setFunctions(functions);
     setLoading(false);
   }, []);
-
-  const dedupedFunctions = EffectFunction.pipe(
-    functions,
-    Array.filter((_) => _.key !== undefined),
-    Array.sort(Order.reverse(Order.mapInput(Order.string, (_: Function.Function) => _.updated ?? ''))),
-    Array.dedupeWith((self, that) => self.key === that.key),
-    Array.sort(Order.mapInput(Order.string, (_: Function.Function) => _.key ?? '')),
-  );
 
   const hanleImportOrUpdate = useCallback(
     async (func: Function.Function) => {
@@ -76,12 +65,8 @@ export const FunctionsRegistry = ({ space }: FunctionsRegistryProps) => {
 
   return (
     <div role='none' className={mx(controlItemClasses)}>
-      {dedupedFunctions.length > 0 && (
-        <List.Root<Function.Function>
-          items={dedupedFunctions}
-          isItem={Schema.is(Function.Function)}
-          getId={(func) => func.id}
-        >
+      {functions.length > 0 && (
+        <List.Root<Function.Function> items={functions} isItem={Schema.is(Function.Function)} getId={(func) => func.id}>
           {({ items }) => (
             <div role='list' className='flex flex-col is-full'>
               {items?.map((func) => (
@@ -117,7 +102,7 @@ export const FunctionsRegistry = ({ space }: FunctionsRegistryProps) => {
         </List.Root>
       )}
 
-      {dedupedFunctions.length === 0 && !loading && (
+      {functions.length === 0 && !loading && (
         <div className='text-center plb-4 text-gray-500'>{t('no functions found')}</div>
       )}
       {loading && <div className='text-center plb-4 text-gray-500'>{t('loading functions')}</div>}

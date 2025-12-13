@@ -95,6 +95,7 @@
     "@dxos/context": "workspace:*",
     "@dxos/debug": "workspace:*",
     "@dxos/echo": "workspace:*",
+    "@dxos/echo-react": "workspace:*",
     "@dxos/echo-signals": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/log": "workspace:*",
@@ -102,7 +103,7 @@
     "@dxos/protocols": "workspace:*",
     "@dxos/react-hooks": "workspace:*",
     "@dxos/util": "workspace:*",
-    "react-error-boundary": "^4.0.13"
+    "react-error-boundary": "catalog:"
   },
   "devDependencies": {
     "@dxos/random": "workspace:*",
@@ -111,15 +112,15 @@
     "@dxos/react-ui-theme": "workspace:*",
     "@dxos/storybook-utils": "workspace:*",
     "@dxos/test-utils": "workspace:*",
-    "@types/react": "~19.2.2",
-    "@types/react-dom": "~19.2.2",
-    "react": "~19.2.0",
-    "react-dom": "~19.2.0",
-    "typedoc": "0.28.1"
+    "@types/react": "catalog:",
+    "@types/react-dom": "catalog:",
+    "react": "catalog:",
+    "react-dom": "catalog:",
+    "typedoc": "catalog:"
   },
   "peerDependencies": {
-    "react": "^19.0.0",
-    "react-dom": "^19.0.0"
+    "react": "catalog:",
+    "react-dom": "catalog:"
   },
   "optionalDependencies": {
     "@dxos/random": "workspace:*",

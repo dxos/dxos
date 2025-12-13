@@ -6,9 +6,8 @@ import type * as Schema from 'effect/Schema';
 import React, { useMemo } from 'react';
 
 import { Capabilities, contributes, createSurface } from '@dxos/app-framework';
-import { Obj, Type } from '@dxos/echo';
+import { Database, Obj, Type } from '@dxos/echo';
 import { findAnnotation } from '@dxos/effect';
-import { type Space, getSpace, isSpace } from '@dxos/react-client/echo';
 import { type FormFieldComponentProps, SelectField, useFormValues } from '@dxos/react-ui-form';
 import { Kanban } from '@dxos/react-ui-kanban/types';
 import { type Collection } from '@dxos/schema';
@@ -40,22 +39,22 @@ export default () =>
       ): data is {
         prop: string;
         schema: Schema.Schema<any>;
-        target: Space | Collection.Collection | undefined;
+        target: Database.Database | Collection.Collection | undefined;
       } => {
         const annotation = findAnnotation<boolean>((data.schema as Schema.Schema.All).ast, PivotColumnAnnotationId);
         return !!annotation;
       },
       component: ({ data: { target }, ...inputProps }) => {
         const props = inputProps as any as FormFieldComponentProps;
-        const space = isSpace(target) ? target : getSpace(target);
-        if (!space) {
+        const db = Database.isDatabase(target) ? target : target && Obj.getDatabase(target);
+        if (!db) {
           return null;
         }
 
         const { typename } = useFormValues('KanbanForm');
         const [selectedSchema] = useMemo(
-          () => space?.db.schemaRegistry.query({ location: ['database', 'runtime'], typename }).runSync(),
-          [space, typename],
+          () => db.schemaRegistry.query({ location: ['database', 'runtime'], typename }).runSync(),
+          [db, typename],
         );
         const singleSelectColumns = useMemo(() => {
           const properties = Type.toJsonSchema(selectedSchema).properties;

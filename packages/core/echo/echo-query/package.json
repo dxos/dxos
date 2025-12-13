@@ -38,16 +38,16 @@
     "@dxos/node-std": "workspace:*",
     "@dxos/util": "workspace:*",
     "@dxos/vendor-quickjs": "workspace:*",
-    "@lezer/common": "^1.2.2",
-    "@lezer/lezer": "^1.1.2",
-    "@lezer/lr": "^1.4.2"
+    "@lezer/common": "catalog:",
+    "@lezer/lezer": "catalog:",
+    "@lezer/lr": "catalog:"
   },
   "devDependencies": {
     "@dxos/echo-generator": "workspace:*",
     "@dxos/random": "workspace:*",
-    "@lezer/generator": "^1.7.1",
-    "tsdown": "^0.16.6",
-    "typescript": "^5.9.3"
+    "@lezer/generator": "catalog:",
+    "tsdown": "catalog:",
+    "typescript": "catalog:"
   },
   "publishConfig": {
     "access": "public"

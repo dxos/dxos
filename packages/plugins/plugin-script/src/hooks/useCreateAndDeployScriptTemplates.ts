@@ -43,10 +43,10 @@ export const useCreateAndDeployScriptTemplates = (space: Space | undefined, scri
         const result = await dispatch(
           Function.pipe(
             createIntent(ScriptAction.CreateScript, {
-              space,
+              db: space.db,
               initialTemplateId: template.id as any,
             }),
-            chain(SpaceAction.AddObject, { target: space }),
+            chain(SpaceAction.AddObject, { target: space.db }),
           ),
         );
         invariant(Obj.instanceOf(Script.Script, result.data?.object));

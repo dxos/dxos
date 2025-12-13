@@ -11,7 +11,7 @@ import { Obj, Tag } from '@dxos/echo';
 import { QueryBuilder } from '@dxos/echo-query';
 import { AttentionAction } from '@dxos/plugin-attention/types';
 import { ATTENDABLE_PATH_SEPARATOR, DeckAction } from '@dxos/plugin-deck/types';
-import { Filter, getSpace, useQuery } from '@dxos/react-client/echo';
+import { Filter, useQuery } from '@dxos/react-client/echo';
 import { ElevationProvider, IconButton, useTranslation } from '@dxos/react-ui';
 import { useSelected } from '@dxos/react-ui-attention';
 import { QueryEditor } from '@dxos/react-ui-components';
@@ -63,8 +63,8 @@ export const MailboxArticle = ({ subject: mailbox, filter: filterParam, attendab
   );
 
   // Parse filter.
-  const space = getSpace(mailbox);
-  const tags = useQuery(space?.db, Filter.type(Tag.Tag));
+  const db = Obj.getDatabase(mailbox);
+  const tags = useQuery(db, Filter.type(Tag.Tag));
   const tagMap = useMemo(() => {
     return tags.reduce((acc, tag) => {
       acc[tag.id] = tag;
@@ -156,7 +156,7 @@ export const MailboxArticle = ({ subject: mailbox, filter: filterParam, attendab
                 ref={filterEditorRef}
                 classNames='min-is-0 pis-1'
                 autoFocus
-                db={getSpace(mailbox)?.db}
+                db={db}
                 tags={tagMap}
                 value={filterText}
                 onChange={setFilterText}

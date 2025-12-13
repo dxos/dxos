@@ -32,9 +32,9 @@
     "@dxos/config": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/node-std": "workspace:*",
-    "discord.js": "^14.14.1"
+    "discord.js": "catalog:"
   },
   "devDependencies": {
-    "@babel/core": "^7.18.13"
+    "@babel/core": "catalog:"
   }
 }

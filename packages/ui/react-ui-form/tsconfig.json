@@ -39,10 +39,10 @@
       "path": "../../common/util"
     },
     {
-      "path": "../../core/echo/echo-db"
+      "path": "../../core/echo/echo-query"
     },
     {
-      "path": "../../core/echo/echo-query"
+      "path": "../../core/echo/echo-react"
     },
     {
       "path": "../../core/echo/echo-signals"

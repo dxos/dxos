@@ -6,7 +6,6 @@ import React, { useCallback, useMemo } from 'react';
 
 import { createIntent } from '@dxos/app-framework';
 import { type SurfaceComponentProps, useIntentDispatcher } from '@dxos/app-framework/react';
-import { getSpace } from '@dxos/client/echo';
 import { Obj } from '@dxos/echo';
 import { StackItem } from '@dxos/react-ui-stack';
 import { type Message as MessageType } from '@dxos/types';
@@ -29,17 +28,17 @@ export const MessageArticle = ({
     return textBlocks.length > 1 && !!textBlocks[1]?.text ? 'enriched' : 'plain-only';
   }, [message]);
 
-  const space = getSpace(mailbox);
-  const sender = useActorContact(space?.db, message.sender);
+  const db = Obj.getDatabase(mailbox);
+  const sender = useActorContact(db, message.sender);
 
   const { dispatchPromise: dispatch } = useIntentDispatcher();
   const handleContactCreate = useCallback<NonNullable<MessageHeaderProps['onContactCreate']>>(
     (actor) => {
-      if (space && actor) {
-        void dispatch(createIntent(InboxAction.ExtractContact, { space, actor }));
+      if (db && actor) {
+        void dispatch(createIntent(InboxAction.ExtractContact, { db, actor }));
       }
     },
-    [space, dispatch],
+    [db, dispatch],
   );
 
   return (

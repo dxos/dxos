@@ -113,6 +113,7 @@ export type GenericTools<R = never> = Record<
       readonly parameters: AnyStructSchemaNoContext;
       readonly success: Schema.Schema.AnyNoContext;
       readonly failure: typeof Schema.Never;
+      readonly failureMode: Tool.FailureMode;
     },
     R
   >

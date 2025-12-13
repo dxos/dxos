@@ -24,13 +24,13 @@
     "dist"
   ],
   "dependencies": {
-    "@ch-ui/colors": "1.2.1",
-    "@ch-ui/tokens": "3.0.1",
+    "@ch-ui/colors": "catalog:",
+    "@ch-ui/tokens": "catalog:",
     "@dxos/lit-ui": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/react-hooks": "workspace:*",
     "@dxos/react-ui-theme": "workspace:*",
-    "lit": "^3.3.1"
+    "lit": "catalog:"
   },
   "devDependencies": {
     "@dxos/test-utils": "workspace:*"

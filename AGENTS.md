@@ -23,6 +23,14 @@
 - React: arrow function components, TailwindCSS for styles, proper event handler types
 - Remember to remove/update TODOs as you go.
 
+## PR Checklist
+
+**IMPORTANT**: Run this after every review & change cycle before submitting a PR:
+
+```bash
+pnpm -w pre-ci
+```
+
 ## Workflow
 
 - Never work on main, create a new git worktree for the branch you are working on.

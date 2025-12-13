@@ -10,7 +10,7 @@ import { Filter, Obj, Type } from '@dxos/echo';
 import { type TypedObject } from '@dxos/echo/internal';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { useGlobalFilteredObjects } from '@dxos/plugin-search';
-import { getSpace, useQuery } from '@dxos/react-client/echo';
+import { useQuery } from '@dxos/react-client/echo';
 import { Kanban as KanbanComponent, useKanbanModel, useProjectionModel } from '@dxos/react-ui-kanban';
 import { type Kanban } from '@dxos/react-ui-kanban/types';
 import { StackItem } from '@dxos/react-ui-stack';
@@ -21,7 +21,7 @@ import { KanbanAction } from '../types';
 export const KanbanContainer = ({ object }: { object: Kanban.Kanban; role: string }) => {
   const schemas = useCapabilities(ClientCapabilities.Schema);
   const [cardSchema, setCardSchema] = useState<TypedObject<any, any>>();
-  const space = getSpace(object);
+  const db = Obj.getDatabase(object);
   const { dispatchPromise: dispatch } = useIntentDispatcher();
   const typename = object.view.target?.query ? getTypenameFromQuery(object.view.target.query.ast) : undefined;
 
@@ -30,8 +30,8 @@ export const KanbanContainer = ({ object }: { object: Kanban.Kanban; role: strin
     if (staticSchema) {
       setCardSchema(() => staticSchema as TypedObject<any, any>);
     }
-    if (!staticSchema && typename && space) {
-      const query = space.db.schemaRegistry.query({ typename });
+    if (!staticSchema && typename && db) {
+      const query = db.schemaRegistry.query({ typename });
       const unsubscribe = query.subscribe(
         () => {
           const [schema] = query.results;
@@ -43,9 +43,9 @@ export const KanbanContainer = ({ object }: { object: Kanban.Kanban; role: strin
       );
       return unsubscribe;
     }
-  }, [schemas, space, typename]);
+  }, [schemas, db, typename]);
 
-  const objects = useQuery(space?.db, cardSchema ? Filter.type(cardSchema) : Filter.nothing());
+  const objects = useQuery(db, cardSchema ? Filter.type(cardSchema) : Filter.nothing());
   const filteredObjects = useGlobalFilteredObjects(objects);
 
   const projection = useProjectionModel(cardSchema, object);
@@ -58,13 +58,13 @@ export const KanbanContainer = ({ object }: { object: Kanban.Kanban; role: strin
   const handleAddCard = useCallback(
     (columnValue: string | undefined) => {
       const path = model?.columnFieldPath;
-      if (space && cardSchema && path) {
+      if (db && cardSchema && path) {
         const card = Obj.make(cardSchema, { [path]: columnValue });
-        space.db.add(card);
+        db.add(card);
         return card.id;
       }
     },
-    [space, cardSchema, model],
+    [db, cardSchema, model],
   );
 
   const handleRemoveCard = useCallback(

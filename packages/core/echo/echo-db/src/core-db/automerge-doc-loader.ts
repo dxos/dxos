@@ -246,7 +246,7 @@ export class AutomergeDocumentLoaderImpl implements AutomergeDocumentLoader {
   private async _loadHandleForObject(handle: DocHandleProxy<DatabaseDirectory>, objectId: string): Promise<void> {
     try {
       if (this._currentlyLoadingObjects.has({ url: handle.url, objectId })) {
-        log.warn('document is already loading', { objectId });
+        log.verbose('document is already loading', { objectId });
         return;
       }
       this._currentlyLoadingObjects.add({ url: handle.url, objectId });

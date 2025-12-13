@@ -32,8 +32,8 @@
     "@dxos/live-object": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@preact/signals-core": "^1.12.1",
-    "effect": "3.18.3"
+    "@preact/signals-core": "catalog:",
+    "effect": "catalog:"
   },
   "devDependencies": {
     "@dxos/echo": "workspace:*",
@@ -41,7 +41,7 @@
     "@dxos/random": "workspace:*"
   },
   "peerDependencies": {
-    "effect": "^3.13.3"
+    "effect": "catalog:"
   },
   "publishConfig": {
     "access": "public"

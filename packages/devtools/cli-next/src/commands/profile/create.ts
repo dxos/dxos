@@ -5,6 +5,7 @@
 import * as Command from '@effect/cli/Command';
 import * as Options from '@effect/cli/Options';
 import * as FileSystem from '@effect/platform/FileSystem';
+import * as Console from 'effect/Console';
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 import * as Record from 'effect/Record';
@@ -17,11 +18,6 @@ const TEMPLATES = {
     version: 1
     runtime:
       client:
-        edgeFeatures:
-          echoReplicator: true
-          feedReplicator: true
-          signaling: true
-          agents: true
         storage:
           persistent: true
       services:
@@ -32,11 +28,6 @@ const TEMPLATES = {
     version: 1
     runtime:
       client:
-        edgeFeatures:
-          echoReplicator: true
-          feedReplicator: true
-          signaling: true
-          agents: true
         storage:
           persistent: true
       services:
@@ -47,11 +38,6 @@ const TEMPLATES = {
     version: 1
     runtime:
       client:
-        edgeFeatures:
-          echoReplicator: true
-          feedReplicator: true
-          signaling: true
-          agents: true
         storage:
           persistent: true
       services:
@@ -62,11 +48,6 @@ const TEMPLATES = {
     version: 1
     runtime:
       client:
-        edgeFeatures:
-          echoReplicator: true
-          feedReplicator: true
-          signaling: true
-          agents: true
         storage:
           persistent: true
       services:
@@ -93,6 +74,6 @@ export const create = Command.make(
     }
 
     yield* fs.writeFileString(`${getProfilePath(DX_CONFIG, profileName)}.yml`, TEMPLATES[template]);
-    console.log(`Profile ${profileName} created`);
+    yield* Console.log(`Profile ${profileName} created`);
   }),
 );

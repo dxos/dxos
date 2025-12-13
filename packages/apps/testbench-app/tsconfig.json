@@ -24,6 +24,9 @@
       "path": "../../common/async"
     },
     {
+      "path": "../../common/context"
+    },
+    {
       "path": "../../common/effect"
     },
     {
@@ -82,6 +85,9 @@
     },
     {
       "path": "../../ui/react-ui-editor"
+    },
+    {
+      "path": "../../ui/react-ui-syntax-highlighter"
     },
     {
       "path": "../../ui/react-ui-table"

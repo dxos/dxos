@@ -31,14 +31,14 @@
     "@dxos/invariant": "workspace:*",
     "@dxos/keys": "workspace:*",
     "@dxos/node-std": "workspace:*",
-    "@hazae41/symbol-dispose-polyfill": "^1.0.2",
-    "lodash.get": "^4.4.2",
-    "lodash.set": "^4.3.2"
+    "@hazae41/symbol-dispose-polyfill": "catalog:",
+    "lodash.get": "catalog:",
+    "lodash.set": "catalog:"
   },
   "devDependencies": {
     "@dxos/crypto": "workspace:*",
-    "@types/lodash.get": "^4.4.9",
-    "@types/lodash.set": "^4.3.9"
+    "@types/lodash.get": "catalog:",
+    "@types/lodash.set": "catalog:"
   },
   "publishConfig": {
     "access": "public"

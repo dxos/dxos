@@ -8,7 +8,7 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
 
-import { AiService, type SericeMetadata, type Service } from './AiService';
+import { AiService, type Service, type ServiceMetadata } from './AiService';
 import { type ModelName as ModelName } from './defs';
 import { AiModelNotAvailableError } from './errors';
 
@@ -25,7 +25,7 @@ export class AiModelResolver extends Context.Tag('@dxos/ai/AiModelResolver')<AiM
   );
 
   static resolver = <R>(
-    metadata: SericeMetadata,
+    metadata: ServiceMetadata,
     impl: Effect.Effect<
       (model: ModelName) => Layer.Layer<LanguageModel.LanguageModel, AiModelNotAvailableError, never>,
       never,
@@ -54,7 +54,7 @@ export class AiModelResolver extends Context.Tag('@dxos/ai/AiModelResolver')<AiM
     );
 
   static fromModelMap = <R>(
-    metadata: SericeMetadata,
+    metadata: ServiceMetadata,
     models: Effect.Effect<
       Partial<Record<ModelName, Layer.Layer<LanguageModel.LanguageModel, AiModelNotAvailableError, never>>>,
       never,

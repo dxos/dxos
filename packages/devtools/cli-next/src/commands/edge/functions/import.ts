@@ -4,25 +4,30 @@
 
 import * as Args from '@effect/cli/Args';
 import * as Command from '@effect/cli/Command';
+import * as Options from '@effect/cli/Options';
+import * as Console from 'effect/Console';
 import * as Effect from 'effect/Effect';
 
 import { ClientService } from '@dxos/client';
-import { Obj } from '@dxos/echo';
-import { Database } from '@dxos/echo';
+import { Database, Obj } from '@dxos/echo';
 import { Function } from '@dxos/functions';
 import { getDeployedFunctions } from '@dxos/functions-runtime/edge';
 
-import { withDatabase } from '../../../util';
+import { CommandConfig } from '../../../services';
+import { spaceLayer } from '../../../util';
 import { Common } from '../../options';
+
+import { prettyPrintFunction } from './util';
 
 export const importCommand = Command.make(
   'import',
   {
-    spaceId: Common.spaceId,
+    spaceId: Common.spaceId.pipe(Options.optional),
     key: Args.text({ name: 'key' }).pipe(Args.withDescription('The key of the function to invoke.')),
   },
-  ({ spaceId, key }) =>
+  ({ key }) =>
     Effect.gen(function* () {
+      const { json } = yield* CommandConfig;
       const client = yield* ClientService;
 
       // TODO(dmaretskyi): Extract.
@@ -39,6 +44,13 @@ export const importCommand = Command.make(
       }
 
       yield* Database.Service.add(Obj.clone(fn));
-      console.log(JSON.stringify(fn, null, 2));
-    }).pipe(withDatabase(spaceId)),
-).pipe(Command.withDescription('Import a function deployed to EDGE.'));
+      if (json) {
+        yield* Console.log(JSON.stringify(fn, null, 2));
+      } else {
+        yield* Console.log(prettyPrintFunction(fn));
+      }
+    }),
+).pipe(
+  Command.withDescription('Import a function deployed to EDGE.'),
+  Command.provide(({ spaceId }) => spaceLayer(spaceId, true)),
+);
