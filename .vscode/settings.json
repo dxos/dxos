@@ -29,7 +29,6 @@
   "debug.javascript.terminalOptions": {
     "skipFiles": ["**/**/tracing/src/api.ts"]
   },
-  "editor.defaultFormatter": "esbenp.prettier-vscode",
   "editor.tabSize": 2,
   "eslint.rules.customizations": [{ "rule": "prettier/*", "severity": "off" }],
   "eslint.workingDirectories": [{ "mode": "auto" }],
