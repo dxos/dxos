@@ -9,11 +9,8 @@ packages:
   - '!**/dist/**'
   - '!**/out/**'
 
-strictPeerDependencies: true
-
-# TODO(wittjosiah): Introduce a separate catalog for peer dependencies.
-# https://pnpm.io/catalogs
 catalog:
+  3d-force-graph: ^1.76.1
   '@1password/op-js': ^0.1.13
   '@ai-sdk/react': ^2.0.86
   '@antv/graphlib': ^2.0.4
@@ -63,6 +60,7 @@ catalog:
   '@dxos/cli-next-linux-arm64': 0.8.3
   '@dxos/cli-next-linux-x64': 0.8.3
   '@dxos/cli-next-win32-x64': 0.8.3
+  '@effect-atom/atom': ^0.4.10
   '@effect-atom/atom-react': ^0.4.4
   '@effect/ai': 0.32.1
   '@effect/ai-anthropic': 0.22.0
@@ -197,6 +195,7 @@ catalog:
   '@sentry/react': ^7.100.1
   '@sentry/types': ^8.8.0
   '@sentry/vite-plugin': ^4.0.2
+  '@solidjs/testing-library': ^0.8.10
   '@storybook/addon-docs': ^10.1.0
   '@storybook/addon-links': ^10.1.0
   '@storybook/addon-themes': ^10.1.0
@@ -320,7 +319,7 @@ catalog:
   '@xenova/transformers': ^2.17.2
   '@xstate/react': ^3.2.1
   '@xyflow/react': ^12.8.1
-  3d-force-graph: ^1.76.1
+  JSONStream: ^1.3.5
   abstract-level: ^1.0.2
   adm-zip: ^0.5.16
   agents: ^0.2.23
@@ -342,15 +341,15 @@ catalog:
   blockstore-idb: ^2.0.0
   body-parser: 1.19.0
   boolean: ^3.0.1
+  buffer: ^6.0.3
   buffer-alloc: ^1.1.0
   buffer-from: ^0.1.1
-  buffer: ^6.0.3
   bytes: ^3.1.2
   cbor-x: ^1.5.4
-  chai-dom: ^1.11.0
   chai: ^4.4.1
-  chalk-table: ^1.0.2
+  chai-dom: ^1.11.0
   chalk: ^4.1.2
+  chalk-table: ^1.0.2
   change-case: ^4.1.2
   chart.js: ^4.5.0
   chartjs-adapter-luxon: ^1.3.1
@@ -362,8 +361,8 @@ catalog:
   cli-progress: ^3.11.2
   cli-table3: ^0.6.5
   cmdk: ^0.2.0
-  codemirror-lang-spreadsheet: ^1.3.0
   codemirror: ^6.0.1
+  codemirror-lang-spreadsheet: ^1.3.0
   color-hash: ^1.0.3
   columnify: ^1.6.0
   comment-json: ^4.2.3
@@ -374,10 +373,10 @@ catalog:
   cosmiconfig: ^8.0.0
   crc-32: ^1.2.2
   crx: ^5.0.1
+  d3: ^7.9.0
   d3-force: ~3.0.0
   d3-geo-projection: ^4.0.0
   d3-hexbin: ^0.2.2
-  d3: ^7.9.0
   date-fns: ^3.3.1
   debounce: ^2.2.0
   debug: ^4.3.4
@@ -392,6 +391,7 @@ catalog:
   effect: 3.19.11
   emoji-mart: ^5.5.2
   enquirer: ^2.3.6
+  esbuild: 0.25.10
   esbuild-plugin-glsl: ^1.4.0
   esbuild-plugin-inline-image: ^0.0.9
   esbuild-plugin-raw: 0.3.0
@@ -399,26 +399,25 @@ catalog:
   esbuild-plugin-yaml: ^0.0.1
   esbuild-style-plugin: ^1.6.1
   esbuild-wasm: ^0.16.14
-  esbuild: 0.25.10
+  eslint: ^9.37.0
   eslint-config-prettier: ^10.1.8
   eslint-formatter-unix: ^8.40.0
   eslint-plugin-i18next: ^6.1.3
-  eslint-plugin-import-x: ^4.16.1
+  eslint-plugin-import-x: 4.6.1
   eslint-plugin-prefer-arrow-functions: ^3.6.2
   eslint-plugin-prettier: ^5.5.4
   eslint-plugin-react: ^7.37.5
   eslint-plugin-sort-exports: ^0.9.1
   eslint-plugin-storybook: 10.1.0
   eslint-plugin-unused-imports: ^4.1.4
-  eslint: ^9.37.0
   eventemitter3: ^5.0.1
   events: ^3.3.0
   exa-js: ^1.5.12
   execa: ^5.1.1
   expect: ^27.0.2
   express: ^4.19.2
-  extendable-media-recorder-wav-encoder: ^7.0.123
   extendable-media-recorder: ^9.2.19
+  extendable-media-recorder-wav-encoder: ^7.0.123
   extensionless: ^1.9.9
   fast-check: ^3.19.0
   fast-xml-parser: ^4.3.2
@@ -428,8 +427,8 @@ catalog:
   force-graph: ^1.49.4
   fs-extra: ^8.1.0
   fuzzy: ^0.1.3
-  geojson2h3: ^1.2.0
   geojson: ^0.5.0
+  geojson2h3: ^1.2.0
   get-folder-size: ^2.0.1
   get-port-please: ^3.1.1
   git-rev-sync: ^3.0.2
@@ -444,19 +443,19 @@ catalog:
   hastscript: ^7.1.0
   highlight.js: ^11.9.0
   husky: ^8.0.0
+  hypercore: ^9.12.0
   hypercore-crypto: ^2.3.0
   hypercore-protocol: ^8.0.7
-  hypercore: ^9.12.0
   hyperformula: ^2.7.1
   i18next: ^21.10.0
   idb-keyval: ^6.2.1
   immer: ^10.1.1
   immutability-helper: ^3.0.2
   inherits: ^2.0.3
+  ink: ^6.3.1
   ink-spinner: ^5.0.0
   ink-table: ^3.1.0
   ink-text-input: ^6.0.0
-  ink: ^6.3.1
   inquirer: ^12.0.0
   interface-blockstore: ^5.2.10
   ioredis: ^5.3.2
@@ -466,15 +465,14 @@ catalog:
   it-all: ^3.0.6
   js-clipper: 1.0.1
   js-yaml: 4.1.1
-  jsdom-global: ^3.0.2
   jsdom: ^27.0.0
+  jsdom-global: ^3.0.2
   json-stable-stringify: ^1.3.0
   json-stringify-safe: ^5.0.1
   json5: ^2.2.3
-  jsonpath-plus: 10.2.0
   jsonpath: ^1.1.1
+  jsonpath-plus: 10.2.0
   jsonpointer: ^5.0.1
-  JSONStream: ^1.3.5
   jszip: ^3.10.1
   jwt-decode: ^4.0.0
   keyborg: ^2.5.0
@@ -483,8 +481,8 @@ catalog:
   kubo-rpc-client: ^4.1.1
   leaflet: ^1.9.4
   leva: ^0.10.1
-  level-transcoder: ^1.0.1
   level: ^8.0.1
+  level-transcoder: ^1.0.1
   lib0: ^0.2.65
   linkedom: ^0.18.5
   lit: ^3.3.1
@@ -512,8 +510,8 @@ catalog:
   mathjs: ^14.2.1
   md5-hex: 5.0.0
   mermaid: ^10.9.4
-  micromark-extension-directive: ^3.0.0
   micromark: ^4.0.1
+  micromark-extension-directive: ^3.0.0
   mini-virtual-list: ^0.3.2
   miniflare: ^4.20251128.0
   minimatch: ^5.1.6
@@ -545,11 +543,11 @@ catalog:
   platform: ^1.3.6
   playwright: 1.57.0
   plotly.js-dist-min: ^2.25.1
-  postcss-import: ^16.1.0
   postcss: ^8.4.41
+  postcss-import: ^16.1.0
   preact: ^10.26.9
-  prettier-plugin-packagejson: ^2.5.19
   prettier: ^3.6.2
+  prettier-plugin-packagejson: ^2.5.19
   protobufjs: ^7.2.5
   pwa-asset-generator: ^6.4.0
   quickjs-emscripten: 0.31.0
@@ -562,6 +560,7 @@ catalog:
   randombytes: ^2.1.0
   rci: ^0.1.0
   re-resizable: ^6.9.17
+  react: ~19.2.3
   react-charts: beta
   react-dom: ~19.2.3
   react-drag-drop-files: ^2.3.8
@@ -584,7 +583,6 @@ catalog:
   react-use: ^17.5.1
   react-virtualized: ^9.22.6
   react-window: ^2.2.3
-  react: ~19.2.3
   read-pkg: ^5.2.0
   readable-stream: ^3.6.0
   redis: ^4.6.6
@@ -596,9 +594,9 @@ catalog:
   resize-observer-polyfill: ^1.5.1
   reveal.js: ^5.1.0
   rmdir: ~1.2.0
+  rollup: ^3.20.4
   rollup-plugin-sourcemaps: ^0.6.3
   rollup-plugin-visualizer: ^5.12.0
-  rollup: ^3.20.4
   safe-compare: ~1.1.4
   seedrandom: ^3.0.5
   semver: ^7.5.4
@@ -618,9 +616,9 @@ catalog:
   style-mod: ^4.1.0
   tailwind-merge: ^2.2.1
   tailwind-scrollbar: ^3.1.0
+  tailwindcss: ~3.4.1
   tailwindcss-logical: ^3.0.0
   tailwindcss-radix: ^2.8.0
-  tailwindcss: ~3.4.1
   three: ^0.178.0
   todomvc-app-css: ^2.4.2
   todomvc-common: ^1.0.5
@@ -638,15 +636,16 @@ catalog:
   type-fest: 4.10.1
   typedoc: 0.28.1
   types-package-json: ^2.0.39
-  typescript-eslint: ^8.39.0
   typescript: ^5.9.3
+  typescript-eslint: ^8.39.0
   ua-parser-js: ^1.0.39
   uint8arrays: ^5.1.0
   ulidx: ^2.3.0
   undici: '*'
   unified: ^11.0.0
-  unplugin-fonts: ^1.4.0
   unplugin: ^1.7.1
+  unplugin-fonts: ^1.4.0
+  unplugin-swc: ^1.5.1
   unzip-stream: ^0.3.1
   url-join: ^5.0.0
   use-deep-compare-effect: ^1.8.1
@@ -655,16 +654,17 @@ catalog:
   uuid: ^9.0.0
   varint: 6.0.0
   versor: ^0.2.0
+  vite: 7.1.9
   vite-node: ^3.2.4
   vite-plugin-devtools-json: ^0.4.1
   vite-plugin-glslify: ^2.3.0
   vite-plugin-inspect: ^11.3.2
   vite-plugin-pwa: ^1.0.2
+  vite-plugin-solid: ^2.11.10
   vite-plugin-top-level-await: ^1.6.0
   vite-plugin-turbosnap: ^1.0.3
   vite-plugin-wasm: ^3.5.0
   vite-tsconfig-paths: ^5.1.4
-  vite: 7.1.9
   vitest: ^3.2.4
   wait-on: ^8.0.3
   wavefile: ^11.0.0
@@ -688,3 +688,5 @@ catalog:
   zen-push: ^0.3.1
   zone.js: '>=0.11.4 <0.12.0-0 || >=0.13.0 <0.14.0-0 || >=0.14.0 <0.15.0-0'
   zx: ^8.4.1
+
+strictPeerDependencies: true
