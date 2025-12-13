@@ -1,44 +1,42 @@
 # @dxos/web-context-solid
 
-Web Component Context Protocol Integration for SolidJS
+SolidJS implementation of the Web Component Context Protocol.
 
-This module provides a standards-compliant implementation of the
-Web Component Context Protocol with seamless SolidJS integration.
+## Overview
 
-https://github.com/webcomponents-cg/community-protocols/blob/main/proposals/context.md
+This package allows SolidJS components to seamlessly participate in the [Web Component Context Protocol](https://github.com/webcomponents-cg/community-protocols/blob/main/proposals/context.md).
+
+## Installation
+
+```bash
+npm install @dxos/web-context-solid @dxos/web-context
+```
+
+## Usage
+
+### Providing Context
 
 ```tsx
-import { customElement, noShadowDOM } from 'solid-element';
-import {
-  createContext,
-  ContextProtocolProvider,
-  useWebComponentContext,
-  withContextProvider
-} from './context';
+import { createContext } from '@dxos/web-context';
+import { ContextProtocolProvider } from '@dxos/web-context-solid';
 
-// Create a typed context
-const themeContext = createContext<{ primary: string }>('theme');
+const ThemeContext = createContext<{ color: string }>('theme');
 
-// Provide context (works with both SolidJS components and web components)
-function App() {
-  return (
-    <ContextProtocolProvider context={themeContext} value={{ primary: 'blue' }}>
-      <MyComponent />
-      <my-custom-element />
-    </ContextProtocolProvider>
-  );
-}
+const App = () => (
+  <ContextProtocolProvider context={ThemeContext} value={{ color: 'blue' }}>
+    <MyComponent />
+  </ContextProtocolProvider>
+);
+```
 
-// Consume context in SolidJS components
-function MyComponent() {
-  const theme = useWebComponentContext(themeContext, { subscribe: true });
-  return <div style={{ color: theme()?.primary }}>Themed Content</div>;
-}
+### Consuming Context
 
-// Define a custom element with solid-element + context support
-customElement('my-custom-element', {}, withContextProvider(() => {
-  noShadowDOM(); // Optional: use light DOM
-  const theme = useWebComponentContext(themeContext, { subscribe: true });
-  return <button style={{ background: theme()?.primary }}>Click me</button>;
-}));
+```tsx
+import { useWebComponentContext } from '@dxos/web-context-solid';
+
+const MyComponent = () => {
+  const theme = useWebComponentContext(ThemeContext, { subscribe: true });
+  
+  return <div style={{ color: theme()?.color }}>Hello World</div>;
+};
 ```
