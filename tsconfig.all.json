@@ -421,6 +421,9 @@
       "path": "packages/sdk/app-graph/tsconfig.json"
     },
     {
+      "path": "packages/sdk/app-solid/tsconfig.json"
+    },
+    {
       "path": "packages/sdk/client/tsconfig.json"
     },
     {

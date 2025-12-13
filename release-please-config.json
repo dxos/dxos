@@ -725,6 +725,11 @@
         },
         {
           "type": "json",
+          "path": "packages/sdk/app-solid/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/sdk/client/package.json",
           "jsonpath": "$.version"
         },

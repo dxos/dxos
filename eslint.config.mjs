@@ -279,6 +279,7 @@ export default tseslint.config(
       'packages/devtools/cli-next/**/*.{js,ts,jsx,tsx,mts,cts,mjs,cjs}',
       'packages/common/effect-atom-solid/**/*.{js,ts,jsx,tsx,mts,cts,mjs,cjs}',
       'packages/common/web-context-solid/**/*.{js,ts,jsx,tsx,mts,cts,mjs,cjs}',
+      'packages/sdk/app-solid/**/*.{js,ts,jsx,tsx,mts,cts,mjs,cjs}',
     ],
     rules: {
       ...Object.fromEntries(

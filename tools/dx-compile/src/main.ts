@@ -3,7 +3,7 @@
 //
 
 import { readFile, readdir, rm, writeFile } from 'node:fs/promises';
-import { basename, dirname } from 'node:path';
+import { basename, dirname, join } from 'node:path';
 
 import type * as Swc from '@swc/core';
 import * as Array from 'effect/Array';
@@ -57,6 +57,17 @@ export default async (options: EsbuildExecutorOptions): Promise<{ success: boole
   }
   const packageJson = JSON.parse(await readFile(packagePath, 'utf-8'));
 
+  let tsConfig: any;
+  try {
+    const tsConfigPath = join(dirname(packagePath), 'tsconfig.json');
+    const content = await readFile(tsConfigPath, 'utf-8');
+    const json = content.replace(/\/\*[\s\S]*?\*\/|([^\\:]|^)\/\/.*$/gm, '$1');
+    tsConfig = JSON.parse(json);
+  } catch (err) {
+    tsConfig = { compilerOptions: {} };
+  }
+  const { jsx, jsxImportSource, jsxFactory, jsxFragmentFactory } = tsConfig.compilerOptions || {};
+
   const swcTransformPlugin = new SwcTransformPlugin({
     isVerbose: options.verbose,
     getTranspilerOptions: ({ filePath }) => ({
@@ -67,6 +78,15 @@ export default async (options: EsbuildExecutorOptions): Promise<{ success: boole
         parser: {
           syntax: 'typescript',
           decorators: true,
+          tsx: true,
+        },
+        transform: {
+          react: {
+            runtime: jsxImportSource ? 'automatic' : 'classic',
+            importSource: jsxImportSource,
+            pragma: jsxFactory,
+            pragmaFrag: jsxFragmentFactory,
+          },
         },
         experimental: {
           plugins: [
@@ -143,6 +163,10 @@ export default async (options: EsbuildExecutorOptions): Promise<{ success: boole
         write: true,
         splitting: true,
         sourcemap: options.sourcemap,
+        jsx: jsx === 'preserve' ? 'preserve' : jsxImportSource ? 'automatic' : undefined,
+        jsxImportSource,
+        jsxFactory,
+        jsxFragment: jsxFragmentFactory,
         metafile: options.metafile,
         bundle: options.bundle,
         // watch: options.watch,

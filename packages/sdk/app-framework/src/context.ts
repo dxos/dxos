@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { createContext } from '@dxos/web-context-react';
+import { createContext } from '@dxos/web-context';
 
 import { type PluginManager } from './core';
 

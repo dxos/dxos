@@ -1,7 +1,7 @@
 {
-  "name": "@dxos/web-context-react",
+  "name": "@dxos/app-solid",
   "version": "0.1.0",
-  "description": "React integration with web context protocol",
+  "description": "SolidJS integration for @dxos/app-framework",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
@@ -25,18 +25,21 @@
     "src"
   ],
   "dependencies": {
-    "@dxos/web-context": "workspace:*"
+    "@dxos/app-framework": "workspace:*",
+    "@dxos/effect-atom-solid": "workspace:*",
+    "@dxos/invariant": "workspace:*",
+    "@dxos/web-context-solid": "workspace:*"
   },
   "devDependencies": {
-    "@testing-library/react": "catalog:",
-    "@types/react": "catalog:",
-    "@types/react-dom": "catalog:",
-    "react": "catalog:",
-    "react-dom": "catalog:",
-    "vitest": "catalog:"
+    "@effect-atom/atom": "catalog:",
+    "@solidjs/testing-library": "catalog:",
+    "effect": "catalog:",
+    "solid-js": "catalog:",
+    "vite-plugin-solid": "catalog:"
   },
   "peerDependencies": {
-    "react": "catalog:"
+    "effect": "catalog:",
+    "solid-js": "catalog:"
   },
   "publishConfig": {
     "access": "public"
