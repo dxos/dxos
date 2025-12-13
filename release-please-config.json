@@ -220,6 +220,16 @@
         },
         {
           "type": "json",
+          "path": "packages/common/web-context/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/common/web-context-react/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/common/web-context-solid/package.json",
           "jsonpath": "$.version"
         },

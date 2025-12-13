@@ -121,6 +121,12 @@
       "path": "packages/common/util/tsconfig.json"
     },
     {
+      "path": "packages/common/web-context/tsconfig.json"
+    },
+    {
+      "path": "packages/common/web-context-react/tsconfig.json"
+    },
+    {
       "path": "packages/common/web-context-solid/tsconfig.json"
     },
     {

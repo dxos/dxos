@@ -1,7 +1,7 @@
 {
-  "name": "@dxos/web-context-solid",
-  "version": "0.8.3",
-  "description": "Solid.js integration with web context protocol",
+  "name": "@dxos/web-context",
+  "version": "0.1.0",
+  "description": "Web Component Context Protocol definitions",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
@@ -24,18 +24,7 @@
     "dist",
     "src"
   ],
-  "dependencies": {
-    "@dxos/web-context": "workspace:*",
-    "solid-element": "catalog:"
-  },
-  "devDependencies": {
-    "@solidjs/testing-library": "catalog:",
-    "solid-js": "catalog:",
-    "vite-plugin-solid": "catalog:"
-  },
-  "peerDependencies": {
-    "solid-js": "catalog:"
-  },
+  "devDependencies": {},
   "publishConfig": {
     "access": "public"
   }

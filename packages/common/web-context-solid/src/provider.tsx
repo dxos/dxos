@@ -20,7 +20,7 @@ import {
   ContextRequestEvent,
   type ContextType,
   type UnknownContext,
-} from './protocol';
+} from '@dxos/web-context';
 
 /**
  * Handler function type for context requests passed via SolidJS context
