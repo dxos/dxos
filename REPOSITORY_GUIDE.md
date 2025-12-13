@@ -100,10 +100,15 @@ Playwright tests are written using these [guidelines](./tools/executors/test/PLA
 
 ## Adding new dependencies
 
-Currently, you must manually edit the individual `package.json` files to add packages.
-When adding a package name in `dependencies` or `devDependencies`, `vscode` should suggest package versions via autocomplete.
+All dependency versions are managed in the catalog. To add a new dependency, use the following command:
 
-Once the required changes have been made, re-run `pnpm i`.
+```bash
+pnpm add --filter "<project>" --save-catalog "<package>"
+```
+
+See the [pnpm catalog docs](https://pnpm.io/catalogs) for more information.
+
+> TODO: Introduce a separate catalog for peer dependencies.
 
 ## Updating dependencies
 

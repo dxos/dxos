@@ -37,6 +37,9 @@
       "path": "packages/common/effect/tsconfig.json"
     },
     {
+      "path": "packages/common/effect-atom-solid/tsconfig.json"
+    },
+    {
       "path": "packages/common/errors/tsconfig.json"
     },
     {
