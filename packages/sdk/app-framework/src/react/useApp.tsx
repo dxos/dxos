@@ -9,8 +9,10 @@ import React, { type FC, useCallback, useEffect, useMemo } from 'react';
 import { invariant } from '@dxos/invariant';
 import { live } from '@dxos/live-object';
 import { useAsyncEffect, useDefaultValue } from '@dxos/react-hooks';
+import { ContextProtocolProvider } from '@dxos/web-context-react';
 
 import { Capabilities, Events } from '../common';
+import { PluginManagerContext } from '../context';
 import { type Plugin, PluginManager, type PluginManagerOptions } from '../core';
 
 import { App } from './App';
@@ -149,9 +151,11 @@ export const useApp = ({
     () => (
       <ErrorBoundary fallback={fallback}>
         <PluginManagerProvider value={manager}>
-          <RegistryContext.Provider value={manager.registry}>
-            <App placeholder={placeholder} state={state} debounce={debounce} />
-          </RegistryContext.Provider>
+          <ContextProtocolProvider value={manager} context={PluginManagerContext}>
+            <RegistryContext.Provider value={manager.registry}>
+              <App placeholder={placeholder} state={state} debounce={debounce} />
+            </RegistryContext.Provider>
+          </ContextProtocolProvider>
         </PluginManagerProvider>
       </ErrorBoundary>
     ),
