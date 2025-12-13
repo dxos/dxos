@@ -6,4 +6,3 @@ export * from '@dxos/web-context';
 
 export * from './consumer';
 export * from './provider';
-export * from './solid-element';
