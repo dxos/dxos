@@ -12,8 +12,8 @@ export const theme = {
   },
   text: {
     bold: '#ffffff',
-    default: '#d3d3d3',
-    subdued: '#cdcdcd',
+    default: '#c0c0c0',
+    subdued: '#a0a0a0',
     primary: '#00ffaa',
     secondary: '#00aaff',
   },

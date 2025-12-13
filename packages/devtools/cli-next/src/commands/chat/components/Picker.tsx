@@ -96,7 +96,12 @@ export const Picker = (props: PickerProps) => {
       <For each={props.items}>
         {(item, i) => (
           <box height={1} backgroundColor={i() === selectedIndex() ? theme.input.bg : undefined}>
-            <text style={{ bg: i() === selectedIndex() ? theme.input.bg : undefined }}>
+            <text
+              style={{
+                bg: i() === selectedIndex() ? theme.input.bg : undefined,
+                fg: i() === selectedIndex() ? theme.text.bold : theme.text.default,
+              }}
+            >
               {props.multi ? (selectedIds().has(item.id) ? '[x] ' : '[ ] ') : ''}
               {item.label}
             </text>
