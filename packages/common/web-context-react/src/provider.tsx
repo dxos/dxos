@@ -2,15 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, {
-  type PropsWithChildren,
-  createContext,
-  useContext,
-  useEffect,
-  useRef,
-  useCallback,
-  useState,
-} from 'react';
+import React, { type PropsWithChildren, createContext, useCallback, useContext, useEffect, useRef } from 'react';
 
 import {
   CONTEXT_PROVIDER_EVENT,
@@ -71,11 +63,11 @@ export interface ContextProtocolProviderProps<T extends UnknownContext> {
  * 3. Supports subscriptions for reactive updates
  * 4. Uses WeakRef for subscriptions to prevent memory leaks
  */
-export function ContextProtocolProvider<T extends UnknownContext>({
+export const ContextProtocolProvider = <T extends UnknownContext>({
   context,
   value,
   children,
-}: PropsWithChildren<ContextProtocolProviderProps<T>>): JSX.Element {
+}: PropsWithChildren<ContextProtocolProviderProps<T>>): JSX.Element => {
   // Get parent handler if one exists (for nested providers)
   const parentHandler = useContext(ContextRequestHandlerContext);
 
@@ -131,7 +123,7 @@ export function ContextProtocolProvider<T extends UnknownContext>({
 
       return true;
     },
-    [context, parentHandler] // Dependencies
+    [context, parentHandler], // Dependencies
   );
 
   // Handle DOM context-request events
@@ -142,7 +134,7 @@ export function ContextProtocolProvider<T extends UnknownContext>({
         event.stopImmediatePropagation();
       }
     },
-    [handleRequest]
+    [handleRequest],
   );
 
   // Handle context-provider events
@@ -167,12 +159,12 @@ export function ContextProtocolProvider<T extends UnknownContext>({
         seen.add(callback);
 
         info.consumerHost.dispatchEvent(
-          new ContextRequestEvent(context, callback, { subscribe: true, target: info.consumerHost })
+          new ContextRequestEvent(context, callback, { subscribe: true, target: info.consumerHost }),
         );
       }
       event.stopPropagation();
     },
-    [context]
+    [context],
   );
 
   // Notify subscribers when value changes
@@ -220,4 +212,4 @@ export function ContextProtocolProvider<T extends UnknownContext>({
       </div>
     </ContextRequestHandlerContext.Provider>
   );
-}
+};

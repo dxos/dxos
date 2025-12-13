@@ -7,6 +7,7 @@ import { createSignal } from 'solid-js';
 import { afterEach, describe, expect, test, vi } from 'vitest';
 
 import { CONTEXT_REQUEST_EVENT, ContextRequestEvent, createContext } from '@dxos/web-context';
+
 import { ContextProtocolProvider } from './provider';
 
 describe('ContextProtocolProvider', () => {

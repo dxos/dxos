@@ -2,10 +2,11 @@
 // Copyright 2025 DXOS.org
 //
 
-import { useState, useEffect, useContext } from 'react';
+import { useContext, useEffect, useState } from 'react';
+
+import { ContextRequestEvent, type ContextType, type UnknownContext } from '@dxos/web-context';
 
 import { HostElementContext } from './internal';
-import { ContextRequestEvent, type ContextType, type UnknownContext } from '@dxos/web-context';
 import { useContextRequestHandler } from './provider';
 
 /**

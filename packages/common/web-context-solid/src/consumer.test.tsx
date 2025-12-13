@@ -6,8 +6,9 @@ import { cleanup, render, waitFor } from '@solidjs/testing-library';
 import { createSignal } from 'solid-js';
 import { afterEach, describe, expect, test } from 'vitest';
 
-import { useWebComponentContext } from './consumer';
 import { CONTEXT_REQUEST_EVENT, createContext } from '@dxos/web-context';
+
+import { useWebComponentContext } from './consumer';
 import { ContextProtocolProvider } from './provider';
 
 describe('useWebComponentContext', () => {
