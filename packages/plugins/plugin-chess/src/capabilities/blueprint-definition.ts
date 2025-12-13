@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Capabilities, contributes, type Capability } from '@dxos/app-framework';
+import { Capabilities, type Capability, contributes } from '@dxos/app-framework';
 
 import { ChessBlueprint } from '../blueprints';
 
