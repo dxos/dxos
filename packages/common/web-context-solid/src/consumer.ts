@@ -73,7 +73,10 @@ export function useWebComponentContext<T extends UnknownContext>(
   const targetElement = options?.element ?? hostElement ?? document.body;
 
   // Create the context request event with contextTarget for proper re-parenting support
-  const event = new ContextRequestEvent(context, targetElement, callback, options?.subscribe);
+  const event = new ContextRequestEvent(context, callback, {
+    subscribe: options?.subscribe,
+    target: targetElement,
+  });
 
   // First, try to handle via SolidJS context chain (synchronous)
   const handler = getContextRequestHandler();
@@ -88,6 +91,7 @@ export function useWebComponentContext<T extends UnknownContext>(
     targetElement.dispatchEvent(event);
   }
 
+  // Cleanup: unsubscribe when component unmounts
   // Cleanup: unsubscribe when component unmounts
   onCleanup(() => {
     unsubscribeFn?.();

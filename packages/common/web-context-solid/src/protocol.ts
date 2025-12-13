@@ -60,18 +60,23 @@ export type ContextCallback<ValueType> = (value: ValueType, unsubscribe?: () => 
 export class ContextRequestEvent<T extends UnknownContext> extends Event {
   /**
    * @param context - The context key being requested
-   * @param contextTarget - The element that originally requested the context.
-   *   This is preserved when events are re-dispatched for re-parenting.
    * @param callback - The callback to invoke with the context value
-   * @param subscribe - Whether to subscribe to future updates
+   * @param options - Options for the request:
+   *   - `subscribe`: Whether to subscribe to future updates.
+   *   - `target`: The element that originally requested the context.
+   *     This is preserved when events are re-dispatched for re-parenting.
    */
+  public readonly subscribe?: boolean;
+  public readonly contextTarget?: Element;
+
   public constructor(
     public readonly context: T,
-    public readonly contextTarget: Element,
     public readonly callback: ContextCallback<ContextType<T>>,
-    public readonly subscribe?: boolean,
+    options?: { subscribe?: boolean; target?: Element },
   ) {
-    super('context-request', { bubbles: true, composed: true });
+    super(CONTEXT_REQUEST_EVENT, { bubbles: true, composed: true });
+    this.subscribe = options?.subscribe;
+    this.contextTarget = options?.target;
   }
 }
 

@@ -78,17 +78,19 @@ export function ContextProtocolProvider<T extends UnknownContext>(props: Context
   const parentHandler = useContext(ContextRequestHandlerContext);
 
   // Track subscriptions with their stable unsubscribe functions and consumer host elements
-  // Note: We use strong references here. WeakRef was causing issues with callbacks
-  // being GC'd before they could be called. Proper cleanup is handled via unsubscribe.
+  // We use WeakMap to hold callbacks weakly. This ensures that if a consumer
+  // drops the callback, we don't leak memory.
   //
-  // IMPORTANT: We must pass the SAME unsubscribe function each time we call a callback.
-  // Lit's ContextConsumer compares unsubscribe functions and calls the old one if different,
-  // which would remove our subscription!
+  // NOTE: This means consumers MUST retain the callback reference as long as they
+  // want to receive updates (e.g. implicitly via closure in a retained component).
   interface SubscriptionInfo {
     unsubscribe: () => void;
     consumerHost: Element;
+    // Store ref to allow cleaning up the Set when unsubscribing
+    ref: WeakRef<ContextCallback<ContextType<T>>>;
   }
-  const subscriptions = new Map<ContextCallback<ContextType<T>>, SubscriptionInfo>();
+  const subscriptions = new WeakMap<ContextCallback<ContextType<T>>, SubscriptionInfo>();
+  const subscriptionRefs = new Set<WeakRef<ContextCallback<ContextType<T>>>>();
 
   // Helper to get current value (handles both static and accessor)
   const getValue = (): ContextType<T> => {
@@ -114,16 +116,23 @@ export function ContextProtocolProvider<T extends UnknownContext>(props: Context
       const callback = event.callback as ContextCallback<ContextType<T>>;
 
       // Get the consumer host element from the event
-      const consumerHost = event.contextTarget;
+      // Fallback to composedPath()[0] if contextTarget is missing (standard compliance)
+      const consumerHost = event.contextTarget || (event.composedPath()[0] as Element);
 
       // Create a stable unsubscribe function for this callback
       // IMPORTANT: We must pass the SAME unsubscribe function each time we call the callback
       // Lit's ContextConsumer compares unsubscribe functions and calls the old one if different
       const unsubscribe = () => {
-        subscriptions.delete(callback);
+        const info = subscriptions.get(callback);
+        if (info) {
+          subscriptionRefs.delete(info.ref);
+          subscriptions.delete(callback);
+        }
       };
 
-      subscriptions.set(callback, { unsubscribe, consumerHost });
+      const ref = new WeakRef(callback);
+      subscriptions.set(callback, { unsubscribe, consumerHost, ref });
+      subscriptionRefs.add(ref);
 
       // Invoke callback with current value and unsubscribe function
       event.callback(currentValue, unsubscribe);
@@ -162,8 +171,22 @@ export function ContextProtocolProvider<T extends UnknownContext>(props: Context
 
     // Re-dispatch context requests from our subscribers
     // They may now have a closer provider
+    // Iterate over weak refs to re-dispatch
+    // We use a separate Set of WeakRefs because WeakMap is not iterable.
+    // This allows us to re-parent subscriptions when a new provider appears.
     const seen = new Set<ContextCallback<ContextType<T>>>();
-    for (const [callback, { consumerHost }] of subscriptions) {
+    for (const ref of subscriptionRefs) {
+      const callback = ref.deref();
+      if (!callback) {
+        subscriptionRefs.delete(ref);
+        continue;
+      }
+
+      const info = subscriptions.get(callback);
+      if (!info) continue;
+
+      const { consumerHost } = info;
+
       // Prevent infinite loops with duplicate callbacks
       if (seen.has(callback)) {
         continue;
@@ -171,7 +194,10 @@ export function ContextProtocolProvider<T extends UnknownContext>(props: Context
       seen.add(callback);
 
       // Re-dispatch the context request from the consumer
-      consumerHost.dispatchEvent(new ContextRequestEvent(props.context, consumerHost, callback, true));
+      // We explicitly pass the original consumerHost as the target to preserve the causal chain
+      consumerHost.dispatchEvent(
+        new ContextRequestEvent(props.context, callback, { subscribe: true, target: consumerHost }),
+      );
     }
 
     // Stop propagation - we've handled the re-parenting
@@ -193,8 +219,17 @@ export function ContextProtocolProvider<T extends UnknownContext>(props: Context
     }
 
     // Notify all subscribers with their stable unsubscribe functions
-    for (const [callback, { unsubscribe }] of subscriptions) {
-      callback(newValue, unsubscribe);
+    for (const ref of subscriptionRefs) {
+      const callback = ref.deref();
+      if (!callback) {
+        subscriptionRefs.delete(ref);
+        continue;
+      }
+
+      const info = subscriptions.get(callback);
+      if (info) {
+        callback(newValue, info.unsubscribe);
+      }
     }
   });
 
@@ -223,7 +258,8 @@ export function ContextProtocolProvider<T extends UnknownContext>(props: Context
       containerRef.removeEventListener(CONTEXT_REQUEST_EVENT, handleContextRequestEvent);
       containerRef.removeEventListener(CONTEXT_PROVIDER_EVENT, handleContextProviderEvent);
     }
-    subscriptions.clear();
+    // WeakMap clears itself, but we should clear the Set of refs
+    subscriptionRefs.clear();
   });
 
   return (

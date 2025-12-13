@@ -4,7 +4,8 @@
     "jsx": "preserve",
     "jsxImportSource": "solid-js",
     "lib": [
-      "DOM"
+      "DOM",
+      "ES2021"
     ],
     "types": [
       "@testing-library/jest-dom"

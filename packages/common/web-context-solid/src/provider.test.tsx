@@ -38,7 +38,7 @@ describe('ContextProtocolProvider', () => {
     ));
 
     const child = container.querySelector('[data-testid="child"]')!;
-    const event = new ContextRequestEvent(ctx, child, callback);
+    const event = new ContextRequestEvent(ctx, callback, { target: child });
     child.dispatchEvent(event);
 
     expect(callback).toHaveBeenCalledWith('provided-value');
@@ -57,7 +57,7 @@ describe('ContextProtocolProvider', () => {
     ));
 
     const child = container.querySelector('[data-testid="child"]')!;
-    const event = new ContextRequestEvent(ctx2, child, callback);
+    const event = new ContextRequestEvent(ctx2, callback, { target: child });
     child.dispatchEvent(event);
 
     expect(callback).not.toHaveBeenCalled();
@@ -80,7 +80,7 @@ describe('ContextProtocolProvider', () => {
     container.addEventListener(CONTEXT_REQUEST_EVENT, outerHandler);
 
     const child = container.querySelector('[data-testid="child"]')!;
-    const event = new ContextRequestEvent(ctx, child, callback);
+    const event = new ContextRequestEvent(ctx, callback, { target: child });
     child.dispatchEvent(event);
 
     expect(callback).toHaveBeenCalledWith('inner-value');
@@ -100,7 +100,7 @@ describe('ContextProtocolProvider', () => {
     ));
 
     const child = container.querySelector('[data-testid="child"]')!;
-    const event = new ContextRequestEvent(ctx, child, callback, true);
+    const event = new ContextRequestEvent(ctx, callback, { subscribe: true, target: child });
     child.dispatchEvent(event);
 
     expect(callback).toHaveBeenCalledWith(42, expect.any(Function));
@@ -117,7 +117,7 @@ describe('ContextProtocolProvider', () => {
     ));
 
     const child = container.querySelector('[data-testid="child"]')!;
-    const event = new ContextRequestEvent(ctx, child, callback, false);
+    const event = new ContextRequestEvent(ctx, callback, { subscribe: false, target: child });
     child.dispatchEvent(event);
 
     // Should be called with just the value (no unsubscribe)
@@ -137,7 +137,7 @@ describe('ContextProtocolProvider', () => {
     ));
 
     const child = container.querySelector('[data-testid="child"]')!;
-    const event = new ContextRequestEvent(ctx, child, callback, true);
+    const event = new ContextRequestEvent(ctx, callback, { subscribe: true, target: child });
     child.dispatchEvent(event);
 
     expect(callback).toHaveBeenCalledWith(0, expect.any(Function));
@@ -179,7 +179,7 @@ describe('ContextProtocolProvider', () => {
       unsubscribeFn = unsubscribe;
     };
 
-    const event = new ContextRequestEvent(ctx, child, wrappedCallback, true);
+    const event = new ContextRequestEvent(ctx, wrappedCallback, { subscribe: true, target: child });
     child.dispatchEvent(event);
 
     expect(callback).toHaveBeenCalledTimes(1);
@@ -208,7 +208,7 @@ describe('ContextProtocolProvider', () => {
     ));
 
     const child = container.querySelector('[data-testid="child"]')!;
-    const event = new ContextRequestEvent(ctx, child, callback);
+    const event = new ContextRequestEvent(ctx, callback, { target: child });
     child.dispatchEvent(event);
 
     expect(callback).toHaveBeenCalledWith('inner');
@@ -231,8 +231,8 @@ describe('ContextProtocolProvider', () => {
 
     const child = container.querySelector('[data-testid="child"]')!;
 
-    child.dispatchEvent(new ContextRequestEvent(themeCtx, child, themeCallback));
-    child.dispatchEvent(new ContextRequestEvent(userCtx, child, userCallback));
+    child.dispatchEvent(new ContextRequestEvent(themeCtx, themeCallback, { target: child }));
+    child.dispatchEvent(new ContextRequestEvent(userCtx, userCallback, { target: child }));
 
     expect(themeCallback).toHaveBeenCalledWith('dark');
     expect(userCallback).toHaveBeenCalledWith({ name: 'Alice' });

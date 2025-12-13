@@ -56,7 +56,7 @@ describe('protocol', () => {
       const ctx = createContext<string>('test');
       const target = document.createElement('div');
       const callback = vi.fn();
-      const event = new ContextRequestEvent(ctx, target, callback);
+      const event = new ContextRequestEvent(ctx, callback, { target });
 
       expect(event.type).toBe('context-request');
     });
@@ -65,7 +65,7 @@ describe('protocol', () => {
       const ctx = createContext<string>('test');
       const target = document.createElement('div');
       const callback = vi.fn();
-      const event = new ContextRequestEvent(ctx, target, callback);
+      const event = new ContextRequestEvent(ctx, callback, { target });
 
       expect(event.bubbles).toBe(true);
     });
@@ -74,7 +74,7 @@ describe('protocol', () => {
       const ctx = createContext<string>('test');
       const target = document.createElement('div');
       const callback = vi.fn();
-      const event = new ContextRequestEvent(ctx, target, callback);
+      const event = new ContextRequestEvent(ctx, callback, { target });
 
       expect(event.composed).toBe(true);
     });
@@ -83,7 +83,7 @@ describe('protocol', () => {
       const ctx = createContext<string>('my-key');
       const target = document.createElement('div');
       const callback = vi.fn();
-      const event = new ContextRequestEvent(ctx, target, callback);
+      const event = new ContextRequestEvent(ctx, callback, { target });
 
       expect(event.context).toBe(ctx);
     });
@@ -92,7 +92,7 @@ describe('protocol', () => {
       const ctx = createContext<string>('test');
       const target = document.createElement('div');
       const callback = vi.fn();
-      const event = new ContextRequestEvent(ctx, target, callback);
+      const event = new ContextRequestEvent(ctx, callback, { target });
 
       expect(event.contextTarget).toBe(target);
     });
@@ -101,7 +101,7 @@ describe('protocol', () => {
       const ctx = createContext<string>('test');
       const target = document.createElement('div');
       const callback = vi.fn();
-      const event = new ContextRequestEvent(ctx, target, callback);
+      const event = new ContextRequestEvent(ctx, callback, { target });
 
       expect(event.callback).toBe(callback);
     });
@@ -110,7 +110,7 @@ describe('protocol', () => {
       const ctx = createContext<string>('test');
       const target = document.createElement('div');
       const callback = vi.fn();
-      const event = new ContextRequestEvent(ctx, target, callback);
+      const event = new ContextRequestEvent(ctx, callback, { target });
 
       expect(event.subscribe).toBeUndefined();
     });
@@ -119,7 +119,7 @@ describe('protocol', () => {
       const ctx = createContext<string>('test');
       const target = document.createElement('div');
       const callback = vi.fn();
-      const event = new ContextRequestEvent(ctx, target, callback, true);
+      const event = new ContextRequestEvent(ctx, callback, { subscribe: true, target });
 
       expect(event.subscribe).toBe(true);
     });
@@ -128,7 +128,7 @@ describe('protocol', () => {
       const ctx = createContext<string>('test');
       const target = document.createElement('div');
       const callback = vi.fn();
-      const event = new ContextRequestEvent(ctx, target, callback, false);
+      const event = new ContextRequestEvent(ctx, callback, { subscribe: false, target });
 
       expect(event.subscribe).toBe(false);
     });
@@ -154,7 +154,7 @@ describe('protocol', () => {
 
       parent.addEventListener(CONTEXT_REQUEST_EVENT, handler);
 
-      const event = new ContextRequestEvent(ctx, child, callback);
+      const event = new ContextRequestEvent(ctx, callback, { target: child });
       child.dispatchEvent(event);
 
       expect(handler).toHaveBeenCalled();
@@ -194,7 +194,7 @@ describe('protocol', () => {
       parent.addEventListener(CONTEXT_REQUEST_EVENT, parentHandler);
       grandparent.addEventListener(CONTEXT_REQUEST_EVENT, grandparentHandler);
 
-      const event = new ContextRequestEvent(ctx, child, callback);
+      const event = new ContextRequestEvent(ctx, callback, { target: child });
       child.dispatchEvent(event);
 
       expect(parentHandler).toHaveBeenCalled();
@@ -235,7 +235,7 @@ describe('protocol', () => {
 
       parent.addEventListener(CONTEXT_REQUEST_EVENT, handler);
 
-      const event = new ContextRequestEvent(ctx, child, callback, true);
+      const event = new ContextRequestEvent(ctx, callback, { subscribe: true, target: child });
       child.dispatchEvent(event);
 
       expect(callback).toHaveBeenCalledWith(0, unsubscribe);
@@ -275,13 +275,13 @@ describe('protocol', () => {
       parent.addEventListener(CONTEXT_REQUEST_EVENT, handler);
 
       // Request with ctx2 (equal to ctx1)
-      child.dispatchEvent(new ContextRequestEvent(ctx2, child, callback));
+      child.dispatchEvent(new ContextRequestEvent(ctx2, callback, { target: child }));
       expect(callback).toHaveBeenCalledWith('matched');
 
       callback.mockClear();
 
       // Request with ctx3 (different)
-      child.dispatchEvent(new ContextRequestEvent(ctx3, child, callback));
+      child.dispatchEvent(new ContextRequestEvent(ctx3, callback, { target: child }));
       expect(callback).not.toHaveBeenCalled();
 
       // Cleanup
