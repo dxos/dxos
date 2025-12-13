@@ -220,6 +220,11 @@
         },
         {
           "type": "json",
+          "path": "packages/common/web-context-solid/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/core/ai/package.json",
           "jsonpath": "$.version"
         },

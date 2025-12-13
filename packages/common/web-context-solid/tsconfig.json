@@ -1,0 +1,19 @@
+{
+  "extends": "../../../tsconfig.base.json",
+  "compilerOptions": {
+    "jsx": "preserve",
+    "jsxImportSource": "solid-js",
+    "lib": [
+      "DOM",
+      "ES2021"
+    ],
+    "types": [
+      "@testing-library/jest-dom"
+    ]
+  },
+  "include": [
+    "src",
+    "test"
+  ],
+  "references": []
+}
