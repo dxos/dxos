@@ -67,14 +67,17 @@ export const Blueprint = Schema.Struct({
  */
 export interface Blueprint extends Schema.Schema.Type<typeof Blueprint> {}
 
+type MakeProps = Pick<Blueprint, 'key' | 'name'> & Partial<Blueprint>;
+
 /**
  * Create a new Blueprint.
  */
-export const make = ({
-  tools = [],
-  instructions = Template.make(),
-  ...props
-}: Pick<Blueprint, 'key' | 'name'> & Partial<Blueprint>) => Obj.make(Blueprint, { tools, instructions, ...props });
+export const make = ({ tools = [], instructions = Template.make(), ...props }: MakeProps) =>
+  Obj.make(Blueprint, {
+    tools,
+    instructions,
+    ...props,
+  });
 
 /**
  * Util to create tool definitions for a blueprint.

@@ -44,7 +44,7 @@ export const tools = [...AssistantToolkit.tools, ...SystemToolkit.tools, ...deck
 
 export const ASSISTANT_BLUEPRINT_KEY = 'dxos.org/blueprint/assistant';
 
-export const createBlueprint = (): Blueprint.Blueprint =>
+export const createBlueprint = () =>
   Blueprint.make({
     key: ASSISTANT_BLUEPRINT_KEY,
     name: 'Assistant',

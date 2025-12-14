@@ -4,7 +4,7 @@
 
 import { ToolId } from '@dxos/ai';
 import { Blueprint } from '@dxos/blueprints';
-import { Obj, Ref } from '@dxos/echo';
+import { Ref } from '@dxos/echo';
 import { Text } from '@dxos/schema';
 import { trim } from '@dxos/util';
 
@@ -40,7 +40,7 @@ const instructions = trim`
   </unstructured_mode>
 `;
 
-export const blueprint: Blueprint.Blueprint = Obj.make(Blueprint.Blueprint, {
+export const blueprint = Blueprint.make({
   key: 'dxos.org/blueprint/research',
   name: 'Research',
   description: 'Researches the web and creates structured data.',
@@ -49,5 +49,3 @@ export const blueprint: Blueprint.Blueprint = Obj.make(Blueprint.Blueprint, {
   },
   tools: [Research.create, Research.research].map((fn) => ToolId.make(fn.key)),
 });
-
-export default blueprint;

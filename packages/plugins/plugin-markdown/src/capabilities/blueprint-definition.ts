@@ -13,7 +13,7 @@ const functions: FunctionDefinition[] = [MarkdownFunction.create, MarkdownFuncti
 
 export const MARKDOWN_BLUEPRINT_KEY = 'dxos.org/blueprint/markdown';
 
-export const MarkdownBlueprint: Blueprint.Blueprint = Blueprint.make({
+export const MarkdownBlueprint = Blueprint.make({
   key: MARKDOWN_BLUEPRINT_KEY,
   name: 'Markdown',
   tools: Blueprint.toolDefinitions({ functions }),
