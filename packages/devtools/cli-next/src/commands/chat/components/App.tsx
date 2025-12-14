@@ -2,17 +2,17 @@
 // Copyright 2025 DXOS.org
 //
 
-import { hexToRgb, type KeyEvent } from '@opentui/core';
+import { type KeyEvent, hexToRgb } from '@opentui/core';
 import { useKeyboard, useRenderer } from '@opentui/solid';
 import {
   type Accessor,
+  ErrorBoundary,
+  type ParentProps,
   createContext,
   createEffect,
   createSignal,
-  ErrorBoundary,
   onCleanup,
   onMount,
-  type ParentProps,
 } from 'solid-js';
 
 import { log } from '@dxos/log';

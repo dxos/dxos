@@ -3,7 +3,7 @@
 //
 import { useKeyboard } from '@opentui/solid';
 import * as Effect from 'effect/Effect';
-import { Match, Switch, createEffect, createSignal, useContext } from 'solid-js';
+import { Match, Switch, createSignal, useContext } from 'solid-js';
 
 import { type ModelName } from '@dxos/ai';
 import { type AiConversation, GenerationObserver } from '@dxos/assistant';
@@ -38,10 +38,6 @@ export const Chat = (props: ChatProps) => {
   const [inputValue, setInputValue] = createSignal('');
   const [popup, setPopup] = createSignal<'logo' | 'blueprints' | undefined>('logo');
 
-  createEffect(() => {
-    console.log('blueprints', props.conversation.blueprints.map((blueprint) => blueprint.name));
-  });
-
   // TODO(burdon): Factor out key handling, hints, and dialogs.
   useKeyboard(async (key) => {
     if (key.name === 'b' && key.ctrl) {
@@ -49,8 +45,8 @@ export const Chat = (props: ChatProps) => {
     }
 
     if (key.name === 'a' && key.ctrl) {
-      const blueprints = await props.conversation.open();
-      log.info('blueprints', { blueprints: blueprints.blueprints.map((blueprint) => blueprint.toString()) });
+      const conversation = await props.conversation.open();
+      log.info('blueprints', { blueprints: conversation.blueprints.map((blueprint) => blueprint.toString()) });
     }
   });
 
@@ -83,7 +79,12 @@ export const Chat = (props: ChatProps) => {
               case 'tool': {
                 if (props.verbose) {
                   for (const block of message.blocks) {
-                    chatMessages.appendToMessage(assistantIndex, ['```json', JSON.stringify(block), '```'].join('\n'));
+                    if (block._tag === 'toolResult') {
+                      chatMessages.appendToMessage(
+                        assistantIndex,
+                        createJsonBlock({ toolCallId: block.toolCallId, name: block.name }),
+                      );
+                    }
                   }
                 }
                 break;
@@ -159,4 +160,8 @@ const BlueprintPicker = (props: BlueprintPickerProps) => {
       onCancel={() => props.onCancel?.()}
     />
   );
+};
+
+const createJsonBlock = (content: any) => {
+  return ['', '```json', JSON.stringify(content, null, 2), '```', ''].join('\n');
 };

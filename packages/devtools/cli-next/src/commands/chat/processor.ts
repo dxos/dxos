@@ -79,12 +79,12 @@ export class ChatProcessor {
     // TODO(wittjosiah): This is copied from ChatCompanion.tsx.
     const existingBlueprints = await space.db.query(Filter.type(Blueprint.Blueprint)).run();
     for (const key of bluerpints) {
-      const existingBlueprint = existingBlueprints.find((blueprint) => blueprint.key === key);
-      if (existingBlueprint) {
-        // continue;
+      const existing = existingBlueprints.find((blueprint) => blueprint.key === key);
+      if (existing) {
         // TODO(wittjosiah): Stop doing this.
-        //   Currently doing this to ensure blueprints are always up t o date from the registry.
-        space.db.remove(existingBlueprint);
+        //   Currently doing this to ensure blueprints are always up-to-date from the registry.
+        space.db.remove(existing);
+        // continue;
       }
 
       const blueprint = blueprintRegistry.getByKey(key);

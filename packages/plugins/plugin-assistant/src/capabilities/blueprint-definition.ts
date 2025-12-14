@@ -20,7 +20,7 @@ import {
 import { Blueprint } from '@dxos/blueprints';
 import { type FunctionDefinition } from '@dxos/functions';
 
-import { analysis, list, load } from '../functions';
+import { list, load } from '../functions';
 
 // TODO(burdon): Document plugin structure (blueprint, functions, toolkit.)
 // TODO(burdon): Test framework for developing functions. Error handling.
@@ -29,7 +29,7 @@ import { analysis, list, load } from '../functions';
 // TODO(wittjosiah): Factor out to a generic app-framework blueprint.
 const deckTools = ['open-item'];
 
-export const functions$: FunctionDefinition[] = [analysis, list, load];
+export const functions$: FunctionDefinition[] = [list, load];
 export const functions = [
   ...functions$,
   // Factor out.

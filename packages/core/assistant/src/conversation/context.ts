@@ -13,6 +13,7 @@ import { Resource } from '@dxos/context';
 import { DXN, type Entity, Filter, Obj, Query, type Ref, Type } from '@dxos/echo';
 import { type Queue } from '@dxos/echo-db';
 import { invariant } from '@dxos/invariant';
+import { log } from '@dxos/log';
 import { ComplexSet } from '@dxos/util';
 
 /**
@@ -126,6 +127,7 @@ export class AiContextBinder extends Resource {
       return;
     }
 
+    log.info('bind', { blueprints: blueprints.length, objects: objects.length });
     await this._queue.append([
       Obj.make(ContextBinding, {
         blueprints: {
@@ -145,6 +147,7 @@ export class AiContextBinder extends Resource {
       return;
     }
 
+    log.info('unbind', { blueprints: props.blueprints?.length, objects: props.objects?.length });
     await this._queue.append([
       Obj.make(ContextBinding, {
         blueprints: {

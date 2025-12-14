@@ -20,7 +20,6 @@ import { ClientService } from '@dxos/client';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 
-import { CommandConfig } from '../../services';
 import { type AiChatServices, Provider, chatLayer, createLogBuffer, withTypes } from '../../util';
 import { Common } from '../options';
 
@@ -60,9 +59,17 @@ export const chat = Command.make(
       Options.withAlias('l'),
       Options.withDefault(process.env.DX_DEBUG ?? 'info'),
     ),
+    // TODO(burdon): This isn't inherited?
+    verbose: Options.boolean('verbose', { ifPresent: true }).pipe(
+      Options.withDescription('Verbose logging.'),
+      Options.withAlias('v'),
+    ),
   },
   (options) =>
     Effect.gen(function* () {
+      // const { verbose } = yield* CommandConfig;
+      const verbose = options.verbose;
+
       // Configure logging.
       const logBuffer = createLogBuffer();
       log.config({ filter: options.logLevel });
@@ -72,7 +79,6 @@ export const chat = Command.make(
       const client = yield* ClientService;
       const runtime = yield* Effect.runtime<AiChatServices>();
       const service = yield* AiService.AiService;
-      const { verbose } = yield* CommandConfig;
 
       const model = Option.getOrElse(options.model, () =>
         Match.value(options.provider).pipe(
