@@ -40,7 +40,7 @@ export const Chat = (props: ChatProps) => {
   const [popup, setPopup] = createSignal<'logo' | 'blueprints' | undefined>('logo');
   const [blueprints, setBlueprints] = createSignal<string[]>([]);
 
-  // TODO(burdon): Initially empty.
+  // TODO(burdon): Initially empty. Race condition?
   createEffect(() => {
     setBlueprints(props.conversation.context.blueprints.value.map((blueprint) => blueprint.name).sort());
   });
