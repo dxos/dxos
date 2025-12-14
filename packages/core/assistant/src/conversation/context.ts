@@ -138,9 +138,14 @@ export class AiContextBinder extends Resource {
       objects: objects.length,
     });
 
-    // TODO(burdon): Reduce.
-    this._blueprints.value = [...this._blueprints.value, ...blueprints.map((blueprint) => blueprint.target!)];
-    this._objects.value = [...this._objects.value, ...objects.map((object) => object.target!)];
+    this._blueprints.value = EArray.dedupeWith(
+      [...this._blueprints.value, ...blueprints.map((blueprint) => blueprint.target).filter(isTruthy)],
+      (a, b) => Obj.getDXN(a).toString() === Obj.getDXN(b).toString(),
+    );
+    this._objects.value = EArray.dedupeWith(
+      [...this._objects.value, ...objects.map((object) => object.target).filter(isTruthy)],
+      (a, b) => Obj.getDXN(a).toString() === Obj.getDXN(b).toString(),
+    );
   }
 
   async unbind(props: BindingProps): Promise<void> {
