@@ -114,8 +114,8 @@ export const chat = Command.make(
         return next;
       };
 
-      // TODO(burdon): Load previous conversation? Need Chat object for state.
-      yield* Effect.promise(() => handleConversationCreate(options.blueprints));
+      // TODO(burdon): Load/select previous saved conversation? Need Chat object for state.
+      yield* Effect.promise(async () => await handleConversationCreate(options.blueprints));
 
       const exitSignal = yield* Deferred.make<void, never>();
 

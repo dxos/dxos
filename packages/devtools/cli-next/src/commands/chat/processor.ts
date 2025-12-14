@@ -98,7 +98,7 @@ export class ChatProcessor {
     }
 
     const queue = space.queues.create<Message.Message>();
-    const conversation = new AiConversation(space.db, queue);
+    const conversation = new AiConversation(queue);
     await conversation.open();
 
     const blueprints = await space.db.query(Filter.type(Blueprint.Blueprint)).run();

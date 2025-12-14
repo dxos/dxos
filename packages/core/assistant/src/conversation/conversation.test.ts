@@ -55,7 +55,7 @@ describe('AiConversation', () => {
         ]),
       );
 
-      const conversation = new AiConversation(db, queue);
+      const conversation = new AiConversation(queue);
       yield* Effect.promise(() => conversation.open());
 
       expect(conversation.context.blueprints.value).toHaveLength(1);

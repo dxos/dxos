@@ -6,7 +6,7 @@ import type * as Toolkit from '@effect/ai/Toolkit';
 import * as Effect from 'effect/Effect';
 
 import { Resource } from '@dxos/context';
-import { type Database, Obj } from '@dxos/echo';
+import { Obj } from '@dxos/echo';
 import { type Queue } from '@dxos/echo-db';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
@@ -39,14 +39,12 @@ export class AiConversation extends Resource {
   private readonly _binder: AiContextBinder;
 
   public constructor(
-    private readonly _db: Database.Database,
     private readonly _queue: Queue<Message.Message | ContextBinding>,
     private readonly _toolkit?: Toolkit.Any,
   ) {
     super();
-    invariant(this._db);
     invariant(this._queue);
-    this._binder = new AiContextBinder(this._db, this._queue);
+    this._binder = new AiContextBinder(this._queue);
   }
 
   protected override async _open(): Promise<void> {

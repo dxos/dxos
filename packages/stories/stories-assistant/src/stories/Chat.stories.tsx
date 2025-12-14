@@ -37,9 +37,9 @@ import { TokenManagerPlugin } from '@dxos/plugin-token-manager';
 import { TranscriptionPlugin } from '@dxos/plugin-transcription';
 import { useQuery, useSpace } from '@dxos/react-client/echo';
 import { useAsyncEffect, useSignalsMemo } from '@dxos/react-ui';
-import { withTheme } from '@dxos/react-ui/testing';
 import { Stack, StackItem } from '@dxos/react-ui-stack';
 import { Table } from '@dxos/react-ui-table/types';
+import { withTheme } from '@dxos/react-ui/testing';
 import { Text, View } from '@dxos/schema';
 import { render } from '@dxos/storybook-utils';
 import {
@@ -132,10 +132,7 @@ const DefaultStory = ({ modules, showContext, blueprints = [] }: StoryProps) => 
 
   const chats = useQuery(space?.db, Filter.type(Assistant.Chat));
   const binder = useContextBinder(chats.at(-1)?.queue.target);
-  const objects = useSignalsMemo(
-    () => binder?.objects.value.map((ref) => ref.target).filter(isNonNullable) ?? [],
-    [binder],
-  );
+  const objects = useSignalsMemo(() => binder?.objects.value ?? [], [binder]);
 
   if (!space) {
     return null;

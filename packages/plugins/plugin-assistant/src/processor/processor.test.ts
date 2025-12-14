@@ -58,7 +58,7 @@ describe('Chat processor', () => {
       function* ({ expect }) {
         const services = yield* Effect.runtime<AiChatServices>();
         const queue = yield* QueueService.createQueue<Message.Message>();
-        const conversation = yield* acquireReleaseResource(() => new AiConversation(queue, {} as any));
+        const conversation = yield* acquireReleaseResource(() => new AiConversation(queue));
         const processor = new AiChatProcessor(conversation, async () => services);
         const result = yield* Effect.promise(() => processor.request({ message: 'Hello' }));
         void processor.cancel();

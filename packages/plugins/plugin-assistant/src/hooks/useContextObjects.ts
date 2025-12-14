@@ -6,7 +6,6 @@ import { useCallback } from 'react';
 
 import { type AiContextBinder } from '@dxos/assistant';
 import { type DXN, type Database, type Obj, Ref } from '@dxos/echo';
-import { isNonNullable } from '@dxos/util';
 
 export type UseContextObjects = {
   objects: Obj.Any[];
@@ -23,8 +22,6 @@ export const useContextObjects = ({
   db?: Database.Database;
   context?: AiContextBinder;
 }): UseContextObjects => {
-  const objects = context?.objects.value.map((ref) => ref.target).filter(isNonNullable) ?? [];
-
   const handleUpdateObject = useCallback<UseContextObjects['onUpdateObject']>(
     async (dxn: DXN, checked: boolean) => {
       if (!db || !context) {
@@ -45,7 +42,7 @@ export const useContextObjects = ({
   );
 
   return {
-    objects,
+    objects: context?.objects.value ?? [],
     onUpdateObject: handleUpdateObject,
   };
 };

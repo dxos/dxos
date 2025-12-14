@@ -17,8 +17,7 @@ import {
 } from '@dxos/assistant';
 import { Blueprint } from '@dxos/blueprints';
 import { SpaceProperties } from '@dxos/client-protocol';
-import { DXN, Obj, Query, Ref } from '@dxos/echo';
-import { Database } from '@dxos/echo';
+import { DXN, Database, Obj, Query, Ref } from '@dxos/echo';
 import { acquireReleaseResource } from '@dxos/effect';
 import { TestHelpers } from '@dxos/effect/testing';
 import { CredentialsService, FunctionInvocationService, QueueService, TracingService } from '@dxos/functions';
@@ -85,10 +84,8 @@ describe('create', () => {
     'create a markdown document',
     Effect.fnUntraced(
       function* (_) {
-        // TODO(burdon): Get database from queue?
-        // const db = yield* Database.Service.createDatabase();
         const queue = yield* QueueService.createQueue<Message.Message | ContextBinding>();
-        const conversation = yield* acquireReleaseResource(() => new AiConversation(db, queue));
+        const conversation = yield* acquireReleaseResource(() => new AiConversation(queue));
 
         yield* Database.Service.flush({ indexes: true });
         const markdownBlueprint = yield* Database.Service.add(Obj.clone(MarkdownBlueprint));
