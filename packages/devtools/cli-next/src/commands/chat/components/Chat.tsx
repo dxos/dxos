@@ -33,16 +33,21 @@ export type ChatProps = {
 };
 
 export const Chat = (props: ChatProps) => {
-  const context = useContext(AppContext);
+  const appContext = useContext(AppContext);
   const chatMessages = useChatMessages();
   const verboseMessages = useChatMessages();
   const [inputValue, setInputValue] = createSignal('');
   const [popup, setPopup] = createSignal<'logo' | 'blueprints' | undefined>('logo');
   const [blueprints, setBlueprints] = createSignal<string[]>([]);
 
-  // TODO(budron): Context objects also.
   createEffect(() => {
+    // Track conversation.
+    // TODO(burdon): chatMessages should monitor the queue.
+    const _ = props.conversation;
+    chatMessages.setMessages({ data: [] });
+    verboseMessages.setMessages({ data: [] });
     setBlueprints(props.conversation.context.blueprints.value.map((blueprint) => blueprint.name).sort());
+    log.info('xxx', { blueprints: blueprints() });
   });
 
   // TODO(burdon): Factor out key handling, hints, and dialogs.
@@ -55,7 +60,7 @@ export const Chat = (props: ChatProps) => {
   const handleSubmit = async (value: string) => {
     setPopup(undefined);
     const prompt = value.trim();
-    if (!prompt || context?.processing()) {
+    if (!prompt || appContext?.processing()) {
       return;
     }
 
@@ -70,7 +75,7 @@ export const Chat = (props: ChatProps) => {
     let verboseIndex = 0;
 
     try {
-      context?.setProcessing(true);
+      appContext?.setProcessing(true);
       const observer = GenerationObserver.make({
         onPart: (part) =>
           Effect.sync(() => {
@@ -114,7 +119,7 @@ export const Chat = (props: ChatProps) => {
         message.content = String(err);
       });
     } finally {
-      context?.setProcessing(false);
+      appContext?.setProcessing(false);
     }
   };
 
@@ -157,7 +162,7 @@ export const Chat = (props: ChatProps) => {
         onSubmit={() => handleSubmit(inputValue())}
       />
       <StatusBar
-        processing={context?.processing}
+        processing={appContext?.processing}
         model={props.model}
         metadata={props.processor.metadata}
         blueprints={blueprints()}

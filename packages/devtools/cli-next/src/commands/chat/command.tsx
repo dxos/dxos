@@ -109,7 +109,6 @@ export const chat = Command.make(
 
         log.info('creating conversation', { blueprints });
         const next = await processor.createConversation(space, blueprints);
-        await next.open();
         setConversation(next);
         return next;
       };
