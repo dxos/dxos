@@ -12,6 +12,8 @@ import { type FunctionDefinition } from '@dxos/functions';
 import { blueprints as AssistantBlueprints, functions as AssistantFunctions } from '@dxos/plugin-assistant/blueprints';
 import { ChessBlueprint } from '@dxos/plugin-chess/blueprints';
 import { Chess } from '@dxos/plugin-chess/types';
+import { MarkdownBlueprint } from '@dxos/plugin-markdown/blueprints';
+import { Markdown } from '@dxos/plugin-markdown/types';
 
 import { TestToolkit } from '../../util';
 
@@ -19,6 +21,7 @@ export const blueprintRegistry = new Blueprint.Registry([
   // Blueprints available to the chat.
   ...AssistantBlueprints,
   ChessBlueprint.make(),
+  MarkdownBlueprint.make(),
 ]);
 
 // TODO(dmaretskyi): In Composer, those are handled by the plugins and capabilities mechanism.
@@ -30,6 +33,7 @@ export const functions: FunctionDefinition.Any[] = [
   // NOTE: Functions referenced by blueprints above need to be added here.
   ...AssistantFunctions,
   ...ChessBlueprint.functions,
+  ...MarkdownBlueprint.functions,
 ];
 
 export const toolkits: GenericToolkit.GenericToolkit[] = [
@@ -43,4 +47,5 @@ export const toolkits: GenericToolkit.GenericToolkit[] = [
 export const types: Schema.Schema.AnyNoContext[] = [
   // NOTE: Types referenced by blueprints above need to be added here.
   [Chess.Game],
+  [Markdown.Document],
 ].flat();

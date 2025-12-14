@@ -6627,6 +6627,9 @@ importers:
       '@dxos/plugin-chess':
         specifier: workspace:*
         version: link:../../plugins/plugin-chess
+      '@dxos/plugin-markdown':
+        specifier: workspace:*
+        version: link:../../plugins/plugin-markdown
       '@dxos/protocols':
         specifier: workspace:*
         version: link:../../core/protocols

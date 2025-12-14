@@ -77,6 +77,9 @@
       "path": "../../plugins/plugin-chess"
     },
     {
+      "path": "../../plugins/plugin-markdown"
+    },
+    {
       "path": "../../sdk/client"
     },
     {

@@ -29,19 +29,21 @@ import { Markdown } from '@dxos/plugin-markdown/types';
 import { Collection } from '@dxos/schema';
 import { HasSubject, type Message } from '@dxos/types';
 
-import { WithProperties, testToolkit } from '../testing';
-import { MarkdownBlueprint, MarkdownFunction } from '../toolkit';
+import { WithProperties, testToolkit } from '../../testing';
+import * as MarkdownBlueprint from '../markdown-blueprint';
+
+import update from './update';
 
 ObjectId.dangerouslyDisableRandomness();
 
 const TestLayer = Layer.mergeAll(
   AiService.model('@anthropic/claude-opus-4-0'),
-  makeToolResolverFromFunctions([MarkdownFunction.create, MarkdownFunction.open, MarkdownFunction.update], testToolkit),
+  makeToolResolverFromFunctions(MarkdownBlueprint.functions, testToolkit),
   makeToolExecutionServiceFromFunctions(testToolkit, testToolkit.toLayer({}) as any),
 ).pipe(
   Layer.provideMerge(
     FunctionInvocationServiceLayerTest({
-      functions: [MarkdownFunction.create, MarkdownFunction.open, MarkdownFunction.update],
+      functions: MarkdownBlueprint.functions,
     }),
   ),
   Layer.provideMerge(
@@ -69,7 +71,7 @@ describe('update', () => {
         });
         yield* Database.Service.add(doc);
 
-        yield* FunctionInvocationService.invokeFunction(MarkdownFunction.update, {
+        yield* FunctionInvocationService.invokeFunction(update, {
           id: doc.id,
           diffs: ['- Founders', '+ # Founders'],
         });
@@ -93,7 +95,7 @@ describe('update', () => {
         const conversation = yield* acquireReleaseResource(() => new AiConversation(queue));
 
         yield* Database.Service.flush({ indexes: true });
-        const markdownBlueprint = yield* Database.Service.add(Obj.clone(MarkdownBlueprint));
+        const markdownBlueprint = yield* Database.Service.add(Obj.clone(MarkdownBlueprint.make()));
         yield* Effect.promise(() =>
           conversation.context.bind({
             blueprints: [Ref.make(markdownBlueprint)],
