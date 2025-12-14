@@ -1,0 +1,77 @@
+{
+  "name": "@dxos/solid-ui-geo",
+  "version": "0.8.3",
+  "description": "Geo components for SolidJS.",
+  "homepage": "https://github.com/dxos",
+  "bugs": "https://github.com/dxos/issues",
+  "license": "MIT",
+  "author": "DXOS.org",
+  "sideEffects": true,
+  "type": "module",
+  "exports": {
+    "./data": {
+      "source": "./src/data.ts",
+      "types": "./dist/types/src/data.d.ts",
+      "browser": "./dist/lib/browser/data.mjs",
+      "node": "./dist/lib/node-esm/data.mjs"
+    },
+    ".": {
+      "source": "./src/index.ts",
+      "types": "./dist/types/src/index.d.ts",
+      "browser": "./dist/lib/browser/index.mjs",
+      "node": "./dist/lib/node-esm/index.mjs"
+    }
+  },
+  "types": "dist/types/src/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "data": [
+        "dist/types/src/data.d.ts"
+      ]
+    }
+  },
+  "files": [
+    "data",
+    "dist",
+    "src"
+  ],
+  "dependencies": {
+    "@dxos/async": "workspace:*",
+    "@dxos/debug": "workspace:*",
+    "@dxos/log": "workspace:*",
+    "@dxos/node-std": "workspace:*",
+    "@dxos/react-ui-theme": "workspace:*",
+    "@dxos/util": "workspace:*",
+    "@solid-primitives/resize-observer": "^2.0.26",
+    "d3": "catalog:",
+    "d3-geo-projection": "catalog:",
+    "d3-hexbin": "catalog:",
+    "geojson": "catalog:",
+    "leaflet": "catalog:",
+    "lodash.defaultsdeep": "catalog:",
+    "solid-element": "catalog:",
+    "topojson-client": "catalog:",
+    "topojson-simplify": "catalog:",
+    "versor": "catalog:"
+  },
+  "devDependencies": {
+    "@dxos/storybook-utils": "workspace:*",
+    "@solidjs/testing-library": "catalog:",
+    "@types/d3": "catalog:",
+    "@types/geojson": "catalog:",
+    "@types/leaflet": "catalog:",
+    "@types/topojson-client": "catalog:",
+    "@types/topojson-simplify": "catalog:",
+    "@types/topojson-specification": "catalog:",
+    "JSONStream": "catalog:",
+    "geojson2h3": "catalog:",
+    "solid-js": "catalog:",
+    "vite-plugin-solid": "catalog:"
+  },
+  "peerDependencies": {
+    "solid-js": "catalog:"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}
