@@ -35,6 +35,7 @@ export type ChatProps = {
 export const Chat = (props: ChatProps) => {
   const context = useContext(AppContext);
   const chatMessages = useChatMessages();
+  const verboseMessages = useChatMessages();
   const [inputValue, setInputValue] = createSignal('');
   const [popup, setPopup] = createSignal<'logo' | 'blueprints' | undefined>('logo');
 
@@ -65,6 +66,9 @@ export const Chat = (props: ChatProps) => {
     const assistantMessage = createAssistantMessage();
     const assistantIndex = chatMessages.addMessage(assistantMessage);
 
+    let verboseMessage = undefined;
+    let verboseIndex = 0;
+
     try {
       context?.setProcessing(true);
       const observer = GenerationObserver.make({
@@ -79,10 +83,16 @@ export const Chat = (props: ChatProps) => {
             switch (message.sender.role) {
               case 'tool': {
                 if (props.verbose) {
+                  // TODO(burdon): Create Right-panel for tool results.
                   for (const block of message.blocks) {
                     if (block._tag === 'toolResult') {
-                      chatMessages.appendToMessage(
-                        assistantIndex,
+                      if (!verboseIndex) {
+                        verboseMessage = createAssistantMessage();
+                        verboseIndex = verboseMessages.addMessage(verboseMessage);
+                      }
+
+                      verboseMessages.appendToMessage(
+                        verboseIndex,
                         createJsonBlock({ toolCallId: block.toolCallId, name: block.name }),
                       );
                     }
@@ -125,7 +135,16 @@ export const Chat = (props: ChatProps) => {
             <Banner version={DXOS_VERSION} />
           </Match>
           <Match when={popup() === undefined}>
-            <ChatMessages messages={chatMessages.messages.data} />
+            <box flexDirection='row' width='100%'>
+              <box flexDirection='column' flexBasis={2} flexGrow={2}>
+                <ChatMessages messages={chatMessages.messages.data} />
+              </box>
+              {props.verbose && (
+                <box flexDirection='column' flexBasis={1} flexGrow={1} paddingLeft={2}>
+                  <ChatMessages messages={verboseMessages.messages.data} />
+                </box>
+              )}
+            </box>
           </Match>
         </Switch>
       </box>
@@ -164,5 +183,5 @@ const BlueprintPicker = (props: BlueprintPickerProps) => {
 };
 
 const createJsonBlock = (content: any) => {
-  return ['', '```json', JSON.stringify(content, null, 2), '```', ''].join('\n');
+  return ['```json', JSON.stringify(content, null, 2), '```', ''].join('\n');
 };

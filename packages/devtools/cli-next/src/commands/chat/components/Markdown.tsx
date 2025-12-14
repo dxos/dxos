@@ -93,19 +93,24 @@ const RenderNode = (props: { node: SyntaxNode; content: string }) => {
 
     case 'FencedCode':
       return (
-        <box
-          marginTop={1}
-          marginBottom={1}
-          padding={1}
-          flexDirection='column'
-          style={{ backgroundColor: theme.input.bg }}
-        >
+        <box marginBottom={1} padding={1} flexDirection='column' style={{ backgroundColor: theme.input.bg }}>
           <For each={children}>{(child) => <RenderNode node={child} content={props.content} />}</For>
         </box>
       );
 
-    case 'CodeText':
-      return <text style={{ fg: theme.log.info }}>{props.content.slice(props.node.from, props.node.to)}</text>;
+    case 'CodeText': {
+      let language: string | undefined;
+      const children = getChildren(props.node.parent!);
+      const mark = children.find((node) => node.name === 'CodeInfo');
+      if (mark) {
+        language = props.content.slice(mark.from, mark.to);
+      }
+      return (
+        <text style={{ fg: language === 'json' ? theme.log.error : theme.log.info }}>
+          {props.content.slice(props.node.from, props.node.to)}
+        </text>
+      );
+    }
 
     case 'InlineCode':
       return (
@@ -155,8 +160,8 @@ const RenderNode = (props: { node: SyntaxNode; content: string }) => {
         </span>
       );
 
-    case 'CodeMark': // ```
     case 'CodeInfo': // language
+    case 'CodeMark': // ```
     case 'HeaderMark': // #
     case 'QuoteMark': // >
     case 'EmphasisMark': // *
