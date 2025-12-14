@@ -47,10 +47,11 @@ export const Chat = (props: ChatProps) => {
       setPopup(popup() === 'blueprints' ? undefined : 'blueprints');
     }
 
-    // TODO(burdon): Remove once debugged: blueprints are always empty.
+    // TODO(burdon): Remove once debugged: blueprints are always empty?
     if (key.name === 'a' && key.ctrl) {
-      const conversation = await props.conversation.open();
-      log.info('blueprints', { blueprints: conversation.blueprints.map((blueprint) => blueprint.toString()) });
+      log.info('blueprints', {
+        blueprints: props.conversation.context.blueprints.value.length,
+      });
     }
   });
 
@@ -80,12 +81,12 @@ export const Chat = (props: ChatProps) => {
               chatMessages.appendToMessage(assistantIndex, part.delta);
             }
           }),
+
         onMessage: (message) =>
           Effect.sync(() => {
             switch (message.sender.role) {
               case 'tool': {
                 if (props.verbose) {
-                  // TODO(burdon): Create Right-panel for tool results.
                   for (const block of message.blocks) {
                     if (block._tag === 'toolResult') {
                       if (!verboseIndex) {
@@ -122,7 +123,7 @@ export const Chat = (props: ChatProps) => {
 
   return (
     <box flexDirection='column'>
-      <box padding={1} height='100%' justifyContent='center' alignItems='center'>
+      <box flexDirection='column' height='100%' justifyContent='center' alignItems='center' padding={1}>
         <Switch>
           <Match when={popup() === 'blueprints'}>
             <BlueprintPicker
@@ -151,16 +152,16 @@ export const Chat = (props: ChatProps) => {
         </Switch>
       </box>
       <ChatInput
+        focused={() => popup() === 'logo' || popup() === undefined}
         value={inputValue}
         onInput={setInputValue}
         onSubmit={() => handleSubmit(inputValue())}
-        focused={() => popup() === 'logo' || popup() === undefined}
       />
       <StatusBar
+        processing={context?.processing}
         model={props.model}
         metadata={props.processor.metadata}
-        blueprints={props.conversation.blueprints.map((blueprint) => blueprint.name)}
-        processing={context?.processing}
+        // blueprints={props.conversation.context.blueprints.value.map((blueprint) => blueprint.name)}
       />
     </box>
   );

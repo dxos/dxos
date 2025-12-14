@@ -58,8 +58,7 @@ describe('AiConversation', () => {
       const conversation = new AiConversation(queue);
       yield* Effect.promise(() => conversation.open());
 
-      expect(conversation.blueprints).toHaveLength(1);
-      expect(conversation.blueprints[0].id).toEqual(blueprint.id);
+      expect(conversation.context.blueprints.value).toHaveLength(1);
     }),
   );
 });

@@ -27,6 +27,7 @@ const CLOSE_RESOURCE_ON_UNHANDLED_ERROR = false;
  */
 export abstract class Resource implements Lifecycle {
   #lifecycleState = LifecycleState.CLOSED;
+
   #openPromise: Promise<void> | null = null;
   #closePromise: Promise<void> | null = null;
 

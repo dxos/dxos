@@ -46,6 +46,7 @@ export type BindingProps = Partial<{
 
 export class Bindings {
   readonly blueprints = new ComplexSet<Ref.Ref<Blueprint.Blueprint>>((ref) => ref.dxn.toString());
+
   // TODO(burdon): Some DXNs have the Space prefix so only compare the object ID.
   readonly objects = new ComplexSet<Ref.Ref<Obj.Any>>((ref) => ref.dxn.asEchoDXN()?.echoId);
 
@@ -65,8 +66,8 @@ export class AiContextBinder extends Resource {
   /**
    * Reactive query of all bindings.
    */
-  // TODO(burdon): Cache value?
   private _bindings?: ReadonlySignal<Bindings>;
+
   private _blueprints?: ReadonlySignal<Ref.Ref<Blueprint.Blueprint>[]>;
   private _objects?: ReadonlySignal<Ref.Ref<Obj.Any>[]>;
 
@@ -89,11 +90,23 @@ export class AiContextBinder extends Resource {
     return this._objects;
   }
 
-  // TODO(wittjosiah): Use parent context?
   protected override async _open(): Promise<void> {
-    const query = this._queue.query(Query.select(Filter.everything()));
-    this._ctx.onDispose(query.subscribe(() => {}));
-    this._bindings = computed(() => this._reduce(query.results));
+    const query = this._queue.query(Query.type(ContextBinding));
+    this._ctx.onDispose(
+      query.subscribe(
+        () => {
+          this._bindings = computed(() => this._reduce(query.results));
+          log.info('updated', {
+            blueprints: this._bindings.value.blueprints.size,
+          });
+        },
+        {
+          fire: true,
+        },
+      ),
+    );
+
+    // TODO(burdon): Load references.
     this._blueprints = computed(() => [...this.bindings.value.blueprints]);
     this._objects = computed(() => [...this.bindings.value.objects]);
   }

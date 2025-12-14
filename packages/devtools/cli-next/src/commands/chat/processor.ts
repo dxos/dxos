@@ -89,12 +89,12 @@ export class ChatProcessor {
 
       const blueprint = blueprintRegistry.getByKey(key);
       if (!blueprint) {
-        log.warn(`blueprint not found: ${key}`);
+        log.warn('blueprint not found', { key });
         continue;
       }
 
       space.db.add(Obj.clone(blueprint));
-      log.info(`added blueprint: ${key}`);
+      log.info('added blueprint', { key });
     }
 
     const queue = space.queues.create<Message.Message>();
