@@ -1,6 +1,7 @@
 //
 // Copyright 2025 DXOS.org
 //
+
 import { useKeyboard } from '@opentui/solid';
 import * as Effect from 'effect/Effect';
 import { Match, Switch, createSignal, useContext } from 'solid-js';
