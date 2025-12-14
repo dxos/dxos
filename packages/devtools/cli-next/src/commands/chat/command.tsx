@@ -130,12 +130,7 @@ export const chat = Command.make(
                   conversation={conversation()!}
                   model={model}
                   verbose={verbose}
-                  onConversationCreate={({ blueprints }) => {
-                    // TODO(burdon): This is a hack to get the promise to run.
-                    setTimeout(async () => {
-                      await handleConversationCreate(blueprints);
-                    });
-                  }}
+                  onConversationCreate={({ blueprints }) => handleConversationCreate(blueprints)}
                 />
               )}
             </App>

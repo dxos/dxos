@@ -44,6 +44,7 @@ export const Chat = (props: ChatProps) => {
       setPopup(popup() === 'blueprints' ? undefined : 'blueprints');
     }
 
+    // TODO(burdon): Remove once debugged: blueprints are always empty.
     if (key.name === 'a' && key.ctrl) {
       const conversation = await props.conversation.open();
       log.info('blueprints', { blueprints: conversation.blueprints.map((blueprint) => blueprint.toString()) });
