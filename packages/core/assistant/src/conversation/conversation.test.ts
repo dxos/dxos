@@ -55,10 +55,11 @@ describe('AiConversation', () => {
         ]),
       );
 
-      const conversation = new AiConversation(queue);
+      const conversation = new AiConversation(db, queue);
       yield* Effect.promise(() => conversation.open());
 
       expect(conversation.context.blueprints.value).toHaveLength(1);
+      expect(conversation.context.objects.value).toHaveLength(0);
     }),
   );
 });

@@ -4,7 +4,7 @@
 
 import { useKeyboard } from '@opentui/solid';
 import * as Effect from 'effect/Effect';
-import { Match, Switch, createSignal, useContext } from 'solid-js';
+import { Match, Switch, createEffect, createSignal, useContext } from 'solid-js';
 
 import { type ModelName } from '@dxos/ai';
 import { type AiConversation, GenerationObserver } from '@dxos/assistant';
@@ -24,8 +24,6 @@ import { createJsonBlock } from './Markdown';
 import { Picker, type PickerProps } from './Picker';
 import { StatusBar } from './StatusBar';
 
-// TODO(burdon): Show/select blueprints/objects.
-
 export type ChatProps = {
   processor: ChatProcessor;
   conversation: AiConversation;
@@ -40,18 +38,17 @@ export const Chat = (props: ChatProps) => {
   const verboseMessages = useChatMessages();
   const [inputValue, setInputValue] = createSignal('');
   const [popup, setPopup] = createSignal<'logo' | 'blueprints' | undefined>('logo');
+  const [blueprints, setBlueprints] = createSignal<string[]>([]);
+
+  // TODO(burdon): Initially empty.
+  createEffect(() => {
+    setBlueprints(props.conversation.context.blueprints.value.map((blueprint) => blueprint.name).sort());
+  });
 
   // TODO(burdon): Factor out key handling, hints, and dialogs.
   useKeyboard(async (key) => {
     if (key.name === 'b' && key.ctrl) {
       setPopup(popup() === 'blueprints' ? undefined : 'blueprints');
-    }
-
-    // TODO(burdon): Remove once debugged: blueprints are always empty?
-    if (key.name === 'a' && key.ctrl) {
-      log.info('blueprints', {
-        blueprints: props.conversation.context.blueprints.value.length,
-      });
     }
   });
 
@@ -161,7 +158,7 @@ export const Chat = (props: ChatProps) => {
         processing={context?.processing}
         model={props.model}
         metadata={props.processor.metadata}
-        // blueprints={props.conversation.context.blueprints.value.map((blueprint) => blueprint.name)}
+        blueprints={blueprints()}
       />
     </box>
   );

@@ -65,7 +65,7 @@ export default (context: PluginContext) => [
           defaultBlueprint = db.add(createBlueprint());
         }
 
-        const binder = new AiContextBinder(queue);
+        const binder = new AiContextBinder(queue, db);
         await binder.use((binder) => binder.bind({ blueprints: [Ref.make(defaultBlueprint)] }));
 
         return {
@@ -87,7 +87,7 @@ export default (context: PluginContext) => [
           .getRuntime(db.spaceId)
           .runPromise(Effect.runtime<AiChatServices>().pipe(Effect.provide(TracingService.layerNoop)));
 
-        await new AiConversation(queue).use(async (conversation) => updateName(runtime, conversation, chat));
+        await new AiConversation(queue, db).use(async (conversation) => updateName(runtime, conversation, chat));
       },
     }),
     createResolver({

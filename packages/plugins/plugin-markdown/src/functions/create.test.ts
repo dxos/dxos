@@ -85,8 +85,10 @@ describe('create', () => {
     'create a markdown document',
     Effect.fnUntraced(
       function* (_) {
+        // TODO(burdon): Get database from queue?
+        // const db = yield* Database.Service.createDatabase();
         const queue = yield* QueueService.createQueue<Message.Message | ContextBinding>();
-        const conversation = yield* acquireReleaseResource(() => new AiConversation(queue));
+        const conversation = yield* acquireReleaseResource(() => new AiConversation(db, queue));
 
         yield* Database.Service.flush({ indexes: true });
         const markdownBlueprint = yield* Database.Service.add(Obj.clone(MarkdownBlueprint));

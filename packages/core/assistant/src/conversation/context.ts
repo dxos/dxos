@@ -2,18 +2,19 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type ReadonlySignal, computed } from '@preact/signals-core';
-import * as Array from 'effect/Array';
+import { type ReadonlySignal, Signal, computed } from '@preact/signals-core';
+import * as EArray from 'effect/Array';
 import * as Context from 'effect/Context';
 import * as Function from 'effect/Function';
 import * as Schema from 'effect/Schema';
 
 import { Blueprint } from '@dxos/blueprints';
 import { Resource } from '@dxos/context';
-import { DXN, type Entity, Filter, Obj, Query, type Ref, Type } from '@dxos/echo';
+import { DXN, type Database, type Entity, Obj, Query, type Ref, Type } from '@dxos/echo';
 import { type Queue } from '@dxos/echo-db';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
+import { isTruthy } from '@dxos/util';
 import { ComplexSet } from '@dxos/util';
 
 /**
@@ -52,8 +53,8 @@ export class Bindings {
 
   toJSON() {
     return {
-      blueprints: Array.fromIterable(this.blueprints).map((ref) => ref.dxn.toString()),
-      objects: Array.fromIterable(this.objects).map((ref) => ref.dxn.toString()),
+      blueprints: EArray.fromIterable(this.blueprints).map((ref) => ref.dxn.toString()),
+      objects: EArray.fromIterable(this.objects).map((ref) => ref.dxn.toString()),
     };
   }
 }
@@ -68,10 +69,13 @@ export class AiContextBinder extends Resource {
    */
   private _bindings?: ReadonlySignal<Bindings>;
 
-  private _blueprints?: ReadonlySignal<Ref.Ref<Blueprint.Blueprint>[]>;
-  private _objects?: ReadonlySignal<Ref.Ref<Obj.Any>[]>;
+  private _blueprints = new Signal<Blueprint.Blueprint[]>([]);
+  private _objects = new Signal<Obj.Any[]>([]);
 
-  constructor(private readonly _queue: Queue) {
+  constructor(
+    private readonly _db: Database.Database,
+    private readonly _queue: Queue,
+  ) {
     super();
   }
 
@@ -81,12 +85,10 @@ export class AiContextBinder extends Resource {
   }
 
   get blueprints() {
-    invariant(this._blueprints, 'AiContextBinder not open');
     return this._blueprints;
   }
 
   get objects() {
-    invariant(this._objects, 'AiContextBinder not open');
     return this._objects;
   }
 
@@ -94,10 +96,36 @@ export class AiContextBinder extends Resource {
     const query = this._queue.query(Query.type(ContextBinding));
     this._ctx.onDispose(
       query.subscribe(
-        () => {
+        async () => {
           this._bindings = computed(() => this._reduce(query.results));
-          log.info('updated', {
-            blueprints: this._bindings.value.blueprints.size,
+
+          // Resolve references.
+          this._blueprints.value = await Promise.all(
+            [...this._bindings.value.blueprints]
+              .map((ref) => {
+                const dxn = ref.dxn.asEchoDXN();
+                if (dxn) {
+                  return this._db.getObjectById<Blueprint.Blueprint>(dxn.echoId);
+                }
+              })
+              .filter(isTruthy),
+          );
+
+          // Resolve references.
+          this._objects.value = await Promise.all(
+            [...this._bindings.value.objects]
+              .map((ref) => {
+                const dxn = ref.dxn.asEchoDXN();
+                if (dxn) {
+                  return this._db.getObjectById<Obj.Any>(dxn.echoId);
+                }
+              })
+              .filter(isTruthy),
+          );
+
+          log('updated', {
+            blueprints: this._blueprints.value.length,
+            objects: this._objects.value.length,
           });
         },
         {
@@ -105,42 +133,31 @@ export class AiContextBinder extends Resource {
         },
       ),
     );
-
-    // TODO(burdon): Load references.
-    this._blueprints = computed(() => [...this.bindings.value.blueprints]);
-    this._objects = computed(() => [...this.bindings.value.objects]);
   }
 
   protected override async _close(): Promise<void> {
     this._bindings = undefined;
-    this._blueprints = undefined;
-    this._objects = undefined;
-  }
-
-  /**
-   * Asynchronous query of all bindings.
-   */
-  async query(): Promise<Bindings> {
-    const objects = await this._queue.query(Query.select(Filter.everything())).run();
-    return this._reduce(objects);
+    this._blueprints.value = [];
+    this._objects.value = [];
   }
 
   // TODO(burdon): Pass in Blueprint obj (from registry?) and create reference.
   async bind(props: BindingProps): Promise<void> {
     const blueprints =
       props.blueprints?.filter(
-        (ref) => !this.blueprints.peek().find((blueprint) => blueprint.dxn.toString() === ref.dxn.toString()),
+        (ref) => !this.blueprints.peek().find((blueprint) => Obj.getDXN(blueprint).toString() === ref.dxn.toString()),
       ) ?? [];
+
     const objects =
       props.objects?.filter(
-        (ref) => !this.objects.peek().find((object) => object.dxn.toString() === ref.dxn.toString()),
+        (ref) => !this.objects.peek().find((object) => Obj.getDXN(object).toString() === ref.dxn.toString()),
       ) ?? [];
 
     if (!blueprints.length && !objects.length) {
       return;
     }
 
-    log.info('bind', { blueprints: blueprints.length, objects: objects.length });
+    log('bind', { blueprints: blueprints.length, objects: objects.length });
     await this._queue.append([
       Obj.make(ContextBinding, {
         blueprints: {
@@ -160,7 +177,7 @@ export class AiContextBinder extends Resource {
       return;
     }
 
-    log.info('unbind', { blueprints: props.blueprints?.length, objects: props.objects?.length });
+    log('unbind', { blueprints: props.blueprints?.length, objects: props.objects?.length });
     await this._queue.append([
       Obj.make(ContextBinding, {
         blueprints: {
@@ -175,11 +192,14 @@ export class AiContextBinder extends Resource {
     ]);
   }
 
+  /**
+   * Reduce results into sets of blueprints and objects.
+   */
   private _reduce(items: Entity.Unknown[]): Bindings {
     return Function.pipe(
       items,
-      Array.filter(Obj.instanceOf(ContextBinding)),
-      Array.reduce(new Bindings(), (context, item) => {
+      EArray.filter(Obj.instanceOf(ContextBinding)),
+      EArray.reduce(new Bindings(), (context, item) => {
         item.blueprints.removed.forEach((ref) => context.blueprints.delete(ref));
         item.blueprints.added.forEach((ref) => context.blueprints.add(ref));
         item.objects.removed.forEach((ref) => {

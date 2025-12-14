@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { createEffect, For, useContext, type Accessor } from 'solid-js';
+import { type Accessor, For, createEffect, useContext } from 'solid-js';
 
 import { type AiService, type ModelName } from '@dxos/ai';
 
@@ -59,7 +59,6 @@ export function toCircled(char: string): string {
   if (code >= 49 && code <= 57) {
     return String.fromCodePoint(0x2460 + (code - 49));
   }
-
   // 0 -> ⓪
   if (code === 48) {
     return String.fromCodePoint(0x24ea);

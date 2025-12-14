@@ -20,7 +20,8 @@ import type * as Entity from './Entity';
 import * as Err from './Err';
 import type * as Filter from './Filter';
 import type * as Hypergraph from './Hypergraph';
-import { isInstanceOf } from './internal';
+import { type AnyProperties, isInstanceOf } from './internal';
+import type * as Obj from './Obj';
 import type * as Query from './Query';
 import type * as QueryResult from './QueryResult';
 import type * as Ref from './Ref';
@@ -137,11 +138,14 @@ export interface Database extends Queryable {
   // TODO(burdon): Can we move this into graph?
   get schemaRegistry(): SchemaRegistry.SchemaRegistry;
 
-  /**
-   *
-   */
   // TODO(burdon): Comment required.
   get graph(): Hypergraph.Hypergraph;
+
+  /**
+   * @deprecated Use `ref` instead.
+   */
+  // TODO(burdon): Rename getObject.
+  getObjectById<T extends Obj.Any = Obj.Obj<AnyProperties>>(id: string, opts?: GetObjectByIdOptions): T | undefined;
 
   /**
    * Query objects.

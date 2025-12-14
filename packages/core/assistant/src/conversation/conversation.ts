@@ -3,13 +3,12 @@
 //
 
 import type * as Toolkit from '@effect/ai/Toolkit';
-import * as Array from 'effect/Array';
 import * as Effect from 'effect/Effect';
-import * as Option from 'effect/Option';
 
 import { Resource } from '@dxos/context';
-import { Database, Obj } from '@dxos/echo';
+import { type Database, Obj } from '@dxos/echo';
 import { type Queue } from '@dxos/echo-db';
+import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { Message } from '@dxos/types';
 
@@ -35,25 +34,19 @@ export interface AiConversationRunParams {
  */
 export class AiConversation extends Resource {
   /**
-   * Message and binding queue.
-   */
-  private readonly _queue: Queue<Message.Message | ContextBinding>;
-
-  /**
-   * Toolkit from the current session request.
-   */
-  private readonly _toolkit?: Toolkit.Any;
-
-  /**
-   * Blueprints bound to the conversation.
+   * Blueprints and objects bound to the conversation.
    */
   private readonly _binder: AiContextBinder;
 
-  public constructor(queue: Queue<Message.Message | ContextBinding>, toolkit?: Toolkit.Any) {
+  public constructor(
+    private readonly _db: Database.Database,
+    private readonly _queue: Queue<Message.Message | ContextBinding>,
+    private readonly _toolkit?: Toolkit.Any,
+  ) {
     super();
-    this._queue = queue;
-    this._toolkit = toolkit;
-    this._binder = new AiContextBinder(this._queue);
+    invariant(this._db);
+    invariant(this._queue);
+    this._binder = new AiContextBinder(this._db, this._queue);
   }
 
   protected override async _open(): Promise<void> {
@@ -86,24 +79,16 @@ export class AiConversation extends Resource {
     const self = this;
     return Effect.gen(function* () {
       const history = yield* Effect.promise(() => self.getHistory());
-      const bindings = yield* Effect.promise(() => self.context.query());
-
-      // Context objects.
-      const objects = yield* Effect.forEach(bindings.objects.values(), Database.Service.loadOption).pipe(
-        Effect.map(Array.filter(Option.isSome)),
-        Effect.map(Array.map((option) => option.value)),
-      );
 
       // Create toolkit.
-      const blueprints = yield* Effect.forEach(bindings.blueprints.values(), Database.Service.loadOption).pipe(
-        Effect.map(Array.filter(Option.isSome)),
-        Effect.map(Array.map((option) => option.value)),
-      );
-
+      const blueprints = self.context.blueprints.value;
       const toolkit = yield* createToolkit({
         toolkit: self._toolkit,
         blueprints,
       });
+
+      // Context objects.
+      const objects = self.context.objects.value;
 
       log.info('run', {
         history: history.length,

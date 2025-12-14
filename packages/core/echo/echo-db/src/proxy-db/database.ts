@@ -45,14 +45,6 @@ export interface EchoDatabase extends Database.Database {
   toJSON(): object;
 
   /**
-   * @deprecated Use `ref` instead.
-   */
-  getObjectById<T extends Obj.Any = Obj.Obj<AnyProperties>>(
-    id: string,
-    opts?: Database.GetObjectByIdOptions,
-  ): T | undefined;
-
-  /**
    * Run migrations.
    */
   runMigrations(migrations: ObjectMigration[]): Promise<void>;
