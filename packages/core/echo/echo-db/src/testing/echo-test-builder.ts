@@ -149,9 +149,10 @@ export class EchoTestPeer extends Resource {
   async createDatabase(
     spaceKey: PublicKey = PublicKey.random(),
     { client = this.client, reactiveSchemaQuery, preloadSchemaOnOpen }: OpenDatabaseOptions = {},
-  ): Promise<EchoDatabase> {
-    const root = await this.host.createSpaceRoot(spaceKey);
+    // TODO(burdon): Return Promise<EchoDatabase>
+  ) {
     // NOTE: Client closes the database when it is closed.
+    const root = await this.host.createSpaceRoot(spaceKey);
     const spaceId = await createIdFromSpaceKey(spaceKey);
     const db = client.constructDatabase({ spaceId, spaceKey, reactiveSchemaQuery, preloadSchemaOnOpen });
     await db.setSpaceRoot(root.url);
@@ -166,7 +167,8 @@ export class EchoTestPeer extends Resource {
     spaceKey: PublicKey,
     rootUrl: string,
     { client = this.client, reactiveSchemaQuery, preloadSchemaOnOpen }: OpenDatabaseOptions = {},
-  ): Promise<EchoDatabase> {
+    // TODO(burdon): Return Promise<EchoDatabase>
+  ) {
     // NOTE: Client closes the database when it is closed.
     const spaceId = await createIdFromSpaceKey(spaceKey);
     await this.host.openSpaceRoot(spaceId, rootUrl as AutomergeUrl);
