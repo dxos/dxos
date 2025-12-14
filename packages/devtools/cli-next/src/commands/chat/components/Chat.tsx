@@ -124,9 +124,11 @@ export const Chat = (props: ChatProps) => {
         <Switch>
           <Match when={popup() === 'blueprints'}>
             <BlueprintPicker
-              onConfirm={(ids) => {
+              selected={props.conversation.context.blueprints.value.map((blueprint) => blueprint.key)}
+              onSave={(blueprints) => {
                 setPopup(undefined);
-                props.onConversationCreate?.({ blueprints: ids });
+                log.info('blueprints', { blueprints });
+                props.onConversationCreate?.({ blueprints });
               }}
               onCancel={() => setPopup(undefined)}
             />
@@ -164,7 +166,7 @@ export const Chat = (props: ChatProps) => {
   );
 };
 
-type BlueprintPickerProps = Pick<PickerProps, 'onConfirm' | 'onCancel'>;
+type BlueprintPickerProps = Pick<PickerProps, 'selected' | 'onSave' | 'onCancel'>;
 
 const BlueprintPicker = (props: BlueprintPickerProps) => {
   return (
@@ -175,7 +177,8 @@ const BlueprintPicker = (props: BlueprintPickerProps) => {
         id: blueprint.key,
         label: blueprint.name,
       }))}
-      onConfirm={(ids) => props.onConfirm?.(ids)}
+      selected={props.selected}
+      onSave={(ids) => props.onSave?.(ids)}
       onCancel={() => props.onCancel?.()}
     />
   );

@@ -138,11 +138,6 @@ export const chat = Command.make(
           {
             exitOnCtrlC: true,
             exitSignals: ['SIGINT', 'SIGTERM'],
-            // NOTE: Called on on SIGINT (ctrl-c) and SIGTERM (via pkill not killall).
-            onDestroy: () => {
-              logBuffer.close();
-              Effect.runSync(Deferred.succeed(exitSignal, undefined));
-            },
             openConsoleOnError: true,
             consoleOptions: {
               position: ConsolePosition.TOP,
@@ -152,6 +147,11 @@ export const chat = Command.make(
               colorInfo: theme.log.info,
               colorWarn: theme.log.warn,
               colorError: theme.log.error,
+            },
+            // NOTE: Called on on SIGINT (ctrl-c) and SIGTERM (via pkill not killall).
+            onDestroy: () => {
+              logBuffer.close();
+              Effect.runSync(Deferred.succeed(exitSignal, undefined));
             },
           },
         ),

@@ -15,23 +15,22 @@ export type PickerItem = {
 
 export type PickerProps = {
   items: PickerItem[];
-  onSelect?: (id: string) => void;
-  onConfirm?: (ids: string[]) => void;
-  onCancel?: () => void;
-  defaultSelected?: string[];
-  title?: string;
+  selected?: string[];
   multi?: boolean;
+  title?: string;
+  onSave?: (ids: string[]) => void;
+  onCancel?: () => void;
 };
 
 export const Picker = (props: PickerProps) => {
   const [selectedIndex, setSelectedIndex] = createSignal(0);
-  const [selectedIds, setSelectedIds] = createSignal<Set<string>>(new Set(props.defaultSelected));
+  const [selectedIds, setSelectedIds] = createSignal<Set<string>>(new Set(props.selected));
 
   // Reset selection when items change.
   createEffect(() => {
     props.items;
     setSelectedIndex(0);
-    setSelectedIds(new Set(props.defaultSelected));
+    setSelectedIds(new Set(props.selected));
   });
 
   const toggleSelection = (id: string) => {
@@ -65,9 +64,7 @@ export const Picker = (props: PickerProps) => {
 
       case 'return': {
         if (props.multi) {
-          props.onConfirm?.(Array.from(selectedIds()));
-        } else {
-          props.onSelect?.(props.items[selectedIndex()].id);
+          props.onSave?.(Array.from(selectedIds()));
         }
         break;
       }
