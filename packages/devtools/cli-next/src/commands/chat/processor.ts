@@ -75,26 +75,26 @@ export class ChatProcessor {
     }
   }
 
-  async createConversation(space: Space, blueprintKeys: string[]) {
+  async createConversation(space: Space, bluerpints: string[]) {
     // TODO(wittjosiah): This is copied from ChatCompanion.tsx.
     const existingBlueprints = await space.db.query(Filter.type(Blueprint.Blueprint)).run();
-    for (const key of blueprintKeys) {
+    for (const key of bluerpints) {
       const existingBlueprint = existingBlueprints.find((blueprint) => blueprint.key === key);
       if (existingBlueprint) {
         // continue;
         // TODO(wittjosiah): Stop doing this.
-        //   Currently doing this to ensure blueprints are always up to date from the registry.
+        //   Currently doing this to ensure blueprints are always up t o date from the registry.
         space.db.remove(existingBlueprint);
       }
 
       const blueprint = blueprintRegistry.getByKey(key);
       if (!blueprint) {
-        log.warn(`Blueprint not found: ${key}`);
+        log.warn(`blueprint not found: ${key}`);
         continue;
       }
 
       space.db.add(Obj.clone(blueprint));
-      log.info(`Added blueprint: ${key}`);
+      log.info(`added blueprint: ${key}`);
     }
 
     const queue = space.queues.create<Message.Message>();

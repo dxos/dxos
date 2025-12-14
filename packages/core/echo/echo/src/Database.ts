@@ -263,11 +263,11 @@ export class Service extends Context.Tag('@dxos/echo/Database/Service')<
   /**
    * Loads an object reference option.
    */
-  // TODO(burdon): Option?
   static loadOption: <T>(ref: Ref.Ref<T>) => Effect.Effect<Option.Option<T>, never, never> = Effect.fn(function* (ref) {
     const object = yield* Service.load(ref).pipe(
       Effect.catchTag('ObjectNotFoundError', () => Effect.succeed(undefined)),
     );
+
     return Option.fromNullable(object);
   });
 

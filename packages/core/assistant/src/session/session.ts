@@ -41,6 +41,8 @@ export type AiSessionRunRequirements =
   | ToolResolverService
   | TracingService;
 
+export type AiSessionOptions = {};
+
 export type AiSessionRunParams<Tools extends Record<string, Tool.Any>> = {
   prompt: string;
   // TODO(wittjosiah): Rename to systemPrompt.
@@ -51,8 +53,6 @@ export type AiSessionRunParams<Tools extends Record<string, Tool.Any>> = {
   toolkit?: Toolkit.WithHandler<Tools>;
   observer?: GenerationObserver<Tools>;
 };
-
-export type AiSessionOptions = {};
 
 /**
  * Contains message history, tools, current context.
@@ -75,7 +75,19 @@ export class AiSession {
   /** Pending messages for this session (incl. the current prompt). */
   private _pending: Message.Message[] = [];
 
+  private _started = 0;
+  private _ended = 0;
+  private _toolCalls = 0;
+
   constructor(private readonly _options: AiSessionOptions = {}) {}
+
+  get duration(): number {
+    return this._ended - this._started;
+  }
+
+  get toolCalls(): number {
+    return this._toolCalls;
+  }
 
   run = <Tools extends Record<string, Tool.Any>>({
     prompt,
@@ -87,6 +99,7 @@ export class AiSession {
     observer = GenerationObserver.noop(),
   }: AiSessionRunParams<Tools>): Effect.Effect<Message.Message[], AiSessionRunError, AiSessionRunRequirements> =>
     Effect.gen(this, function* () {
+      this._started = Date.now();
       this._history = [...history];
       this._pending = [];
       const pending = this._pending;
@@ -176,9 +189,12 @@ export class AiSession {
             blocks: toolResults,
           }),
         );
+
+        this._toolCalls++;
       } while (true);
 
-      log('done', { pending: this._pending.length });
+      this._ended = Date.now();
+      log('done', { pending: this._pending.length, duration: this.duration, tools: this._toolCalls });
       return this._pending;
     }).pipe(this._semaphore.withPermits(1), Effect.withSpan('AiSession.run'));
 

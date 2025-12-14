@@ -98,9 +98,14 @@ export const chat = Command.make(
       });
 
       const handleConversationCreate = async (blueprints: string[]) => {
-        const conversation = await processor.createConversation(space, blueprints);
-        setConversation(conversation);
-        return conversation;
+        const current = conversation();
+        await current?.close();
+
+        log.info('creating conversation', { blueprints });
+        const next = await processor.createConversation(space, blueprints);
+        await next.open();
+        setConversation(next);
+        return next;
       };
 
       // TODO(burdon): Load previous conversation? Need Chat object for state.
@@ -140,7 +145,7 @@ export const chat = Command.make(
             openConsoleOnError: true,
             consoleOptions: {
               position: ConsolePosition.TOP,
-              sizePercent: 50, // TODO(burdon): Option.
+              sizePercent: 25, // TODO(burdon): Option.
               colorDefault: theme.log.default,
               colorDebug: theme.log.debug,
               colorInfo: theme.log.info,
@@ -168,21 +173,3 @@ export const chat = Command.make(
   Command.provide(({ provider, spaceId }) => chatLayer({ provider, spaceId, functions })),
   Command.provideEffectDiscard(() => withTypes(...typeRegistry)),
 );
-function restoreTerminalState() {
-  // Leave raw mode if enabled
-  try {
-    process.stdin.setRawMode?.(false);
-  } catch {}
-
-  // Show cursor
-  process.stdout.write('\x1b[?25h');
-
-  // Exit alternate screen buffer
-  process.stdout.write('\x1b[?1049l');
-
-  // Reset colors & styles
-  process.stdout.write('\x1b[0m');
-
-  // Move cursor to a normal sane location
-  process.stdout.write('\x1b[H');
-}

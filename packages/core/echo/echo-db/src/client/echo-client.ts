@@ -149,6 +149,7 @@ export class EchoClient extends Resource {
     if (this._queuesService) {
       queueFactory.setService(this._queuesService);
     }
+
     return queueFactory;
   }
 

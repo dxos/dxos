@@ -1,10 +1,9 @@
 //
 // Copyright 2025 DXOS.org
 //
-
 import { useKeyboard } from '@opentui/solid';
 import * as Effect from 'effect/Effect';
-import { Match, Switch, createSignal, useContext } from 'solid-js';
+import { Match, Switch, createEffect, createSignal, useContext } from 'solid-js';
 
 import { type ModelName } from '@dxos/ai';
 import { type AiConversation, GenerationObserver } from '@dxos/assistant';
@@ -39,10 +38,19 @@ export const Chat = (props: ChatProps) => {
   const [inputValue, setInputValue] = createSignal('');
   const [popup, setPopup] = createSignal<'logo' | 'blueprints' | undefined>('logo');
 
+  createEffect(() => {
+    console.log('blueprints', props.conversation.blueprints.map((blueprint) => blueprint.name));
+  });
+
   // TODO(burdon): Factor out key handling, hints, and dialogs.
-  useKeyboard((key) => {
+  useKeyboard(async (key) => {
     if (key.name === 'b' && key.ctrl) {
       setPopup(popup() === 'blueprints' ? undefined : 'blueprints');
+    }
+
+    if (key.name === 'a' && key.ctrl) {
+      const blueprints = await props.conversation.open();
+      log.info('blueprints', { blueprints: blueprints.blueprints.map((blueprint) => blueprint.toString()) });
     }
   });
 
@@ -128,7 +136,7 @@ export const Chat = (props: ChatProps) => {
       <StatusBar
         model={props.model}
         metadata={props.processor.metadata}
-        // TODO(burdon): Empty.
+        // TODO(burdon): This doesn't update.
         blueprints={props.conversation.blueprints.map((blueprint) => blueprint.name)}
         processing={context?.processing}
       />

@@ -59,6 +59,11 @@ const RenderNode = (props: { node: SyntaxNode; content: string }) => {
 
   const children = getChildren(props.node);
 
+  // Skip.
+  if (props.node.name.startsWith('SetextHeading')) {
+    return null;
+  }
+
   switch (props.node.name) {
     case 'Document':
       return <For each={children}>{(child) => <RenderNode node={child} content={props.content} />}</For>;
