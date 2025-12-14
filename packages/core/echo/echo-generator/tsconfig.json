@@ -28,7 +28,7 @@
       "path": "../../../sdk/client"
     },
     {
-      "path": "../echo"
+      "path": "../../../sdk/echo"
     },
     {
       "path": "../echo-db"

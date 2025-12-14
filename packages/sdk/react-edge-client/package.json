@@ -4,7 +4,7 @@
   "description": "React hooks for the Edge Client.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
-  "license": "MIT",
+  "license": "Apache-2.0",
   "author": "DXOS.org",
   "type": "module",
   "exports": {

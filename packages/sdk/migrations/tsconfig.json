@@ -19,9 +19,6 @@
       "path": "../../common/util"
     },
     {
-      "path": "../../core/echo/echo"
-    },
-    {
       "path": "../../core/echo/echo-db"
     },
     {
@@ -32,6 +29,9 @@
     },
     {
       "path": "../client"
+    },
+    {
+      "path": "../echo"
     }
   ]
 }

@@ -10,9 +10,6 @@
   ],
   "references": [
     {
-      "path": "../packages/core/echo/echo"
-    },
-    {
       "path": "../packages/core/echo/echo-signals"
     },
     {
@@ -29,6 +26,9 @@
     },
     {
       "path": "../packages/sdk/config"
+    },
+    {
+      "path": "../packages/sdk/echo"
     },
     {
       "path": "../packages/sdk/react-client"

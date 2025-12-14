@@ -60,9 +60,6 @@
       "path": "../../core/blueprints"
     },
     {
-      "path": "../../core/echo/echo"
-    },
-    {
       "path": "../../core/echo/echo-db"
     },
     {
@@ -79,6 +76,9 @@
     },
     {
       "path": "../../sdk/app-framework"
+    },
+    {
+      "path": "../../sdk/echo"
     },
     {
       "path": "../../sdk/react-client"

@@ -148,9 +148,6 @@
       "path": "packages/core/conductor/tsconfig.json"
     },
     {
-      "path": "packages/core/echo/echo/tsconfig.json"
-    },
-    {
       "path": "packages/core/echo/echo-db/tsconfig.json"
     },
     {
@@ -431,6 +428,9 @@
     },
     {
       "path": "packages/sdk/config/tsconfig.json"
+    },
+    {
+      "path": "packages/sdk/echo/tsconfig.json"
     },
     {
       "path": "packages/sdk/examples/tsconfig.json"

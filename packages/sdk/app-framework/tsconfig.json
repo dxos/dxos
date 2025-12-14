@@ -48,9 +48,6 @@
       "path": "../../core/blueprints"
     },
     {
-      "path": "../../core/echo/echo"
-    },
-    {
       "path": "../../core/echo/echo-signals"
     },
     {
@@ -76,6 +73,9 @@
     },
     {
       "path": "../client-protocol"
+    },
+    {
+      "path": "../echo"
     },
     {
       "path": "../schema"

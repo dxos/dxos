@@ -12,7 +12,7 @@
   ],
   "references": [
     {
-      "path": "../echo"
+      "path": "../../../sdk/echo"
     }
   ]
 }

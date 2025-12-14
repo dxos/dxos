@@ -36,10 +36,10 @@
       "path": "../../common/util"
     },
     {
-      "path": "../../sdk/types"
+      "path": "../../sdk/echo"
     },
     {
-      "path": "../echo/echo"
+      "path": "../../sdk/types"
     },
     {
       "path": "../echo/echo-db"

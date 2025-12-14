@@ -27,10 +27,10 @@
       "path": "../../common/util"
     },
     {
-      "path": "../../core/echo/echo"
+      "path": "../../core/echo/live-object"
     },
     {
-      "path": "../../core/echo/live-object"
+      "path": "../../sdk/echo"
     },
     {
       "path": "../react-ui"
