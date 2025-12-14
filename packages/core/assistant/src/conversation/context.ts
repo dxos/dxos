@@ -10,7 +10,7 @@ import * as Schema from 'effect/Schema';
 
 import { Blueprint } from '@dxos/blueprints';
 import { Resource } from '@dxos/context';
-import { DXN, type Entity, Obj, Query, type Ref, Type } from '@dxos/echo';
+import { DXN, Obj, Query, type Ref, Type } from '@dxos/echo';
 import { type Queue } from '@dxos/echo-db';
 import { log } from '@dxos/log';
 import { ComplexSet, isTruthy } from '@dxos/util';
@@ -120,7 +120,6 @@ export class AiContextBinder extends Resource {
       return;
     }
 
-    log('bind', { blueprints: blueprints.length, objects: objects.length });
     await this._queue.append([
       Obj.make(ContextBinding, {
         blueprints: {
@@ -134,9 +133,14 @@ export class AiContextBinder extends Resource {
       }),
     ]);
 
-    // Update.
-    this._blueprints.value.push(...blueprints.map((blueprint) => blueprint.target!));
-    this._objects.value.push(...objects.map((object) => object.target!));
+    log('bind', {
+      blueprints: blueprints.length,
+      objects: objects.length,
+    });
+
+    // TODO(burdon): Reduce.
+    this._blueprints.value = [...this._blueprints.value, ...blueprints.map((blueprint) => blueprint.target!)];
+    this._objects.value = [...this._objects.value, ...objects.map((object) => object.target!)];
   }
 
   async unbind(props: BindingProps): Promise<void> {
@@ -162,21 +166,22 @@ export class AiContextBinder extends Resource {
   /**
    * Reduce results into sets of blueprints and objects.
    */
-  private _reduce(items: Entity.Unknown[]): Bindings {
+  private _reduce(items: ContextBinding[]): Bindings {
     return Function.pipe(
       items,
-      EArray.filter(Obj.instanceOf(ContextBinding)),
-      EArray.reduce(new Bindings(), (context, item) => {
-        item.blueprints.removed.forEach((ref) => context.blueprints.delete(ref));
-        item.blueprints.added.forEach((ref) => context.blueprints.add(ref));
-        item.objects.removed.forEach((ref) => {
+      EArray.reduce(new Bindings(), (context, { blueprints, objects }) => {
+        blueprints.added.forEach((ref) => context.blueprints.add(ref));
+        blueprints.removed.forEach((ref) => context.blueprints.delete(ref));
+
+        objects.added.forEach((ref) => context.objects.add(ref));
+        objects.removed.forEach((ref) => {
           for (const obj of context.objects) {
             if (DXN.equalsEchoId(obj.dxn, ref.dxn)) {
               context.objects.delete(obj);
             }
           }
         });
-        item.objects.added.forEach((ref) => context.objects.add(ref));
+
         return context;
       }),
     );
