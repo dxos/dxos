@@ -19,6 +19,7 @@ import { AppContext } from './App';
 import { Banner } from './Banner';
 import { ChatInput } from './ChatInput';
 import { ChatMessages } from './ChatMessages';
+import { createJsonBlock } from './Markdown';
 import { Picker, type PickerProps } from './Picker';
 import { StatusBar } from './StatusBar';
 
@@ -157,7 +158,6 @@ export const Chat = (props: ChatProps) => {
       <StatusBar
         model={props.model}
         metadata={props.processor.metadata}
-        // TODO(burdon): This doesn't update.
         blueprints={props.conversation.blueprints.map((blueprint) => blueprint.name)}
         processing={context?.processing}
       />
@@ -180,8 +180,4 @@ const BlueprintPicker = (props: BlueprintPickerProps) => {
       onCancel={() => props.onCancel?.()}
     />
   );
-};
-
-const createJsonBlock = (content: any) => {
-  return ['```json', JSON.stringify(content, null, 2), '```', ''].join('\n');
 };

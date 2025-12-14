@@ -251,3 +251,7 @@ export const TEST_MARKDOWN = [
   '',
   'The End',
 ].join('\n');
+
+export const createJsonBlock = (content: any) => {
+  return ['```json', JSON.stringify(content, null, 2), '```', ''].join('\n');
+};
