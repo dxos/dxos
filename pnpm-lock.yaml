@@ -2017,6 +2017,9 @@ overrides:
 pnpmfileChecksum: sha256-XhsBLb/gGBNhO+rxM/Hlt3CN70bh1cdve6H5R8MA9O0=
 
 patchedDependencies:
+  '@automerge/automerge-repo@2.5.1':
+    hash: be766431e3a6459feb58222ae46cd90e3ad69b2350653ea95d8707259278baa8
+    path: patches/@automerge__automerge-repo@2.5.1.patch
   random-access-idb@1.2.2:
     hash: 207ec2404ef8b5e9e6d9de8ce83586d215ef77b94a7d0cadced03125874a1d9e
     path: patches/random-access-idb@1.2.2.patch
@@ -4692,7 +4695,7 @@ importers:
         version: 3.2.1
       '@automerge/automerge-repo':
         specifier: 'catalog:'
-        version: 2.5.1
+        version: 2.5.1(patch_hash=be766431e3a6459feb58222ae46cd90e3ad69b2350653ea95d8707259278baa8)
       '@dxos/async':
         specifier: workspace:*
         version: link:../../../common/async
@@ -4826,7 +4829,7 @@ importers:
         version: 3.2.1
       '@automerge/automerge-repo':
         specifier: 'catalog:'
-        version: 2.5.1
+        version: 2.5.1(patch_hash=be766431e3a6459feb58222ae46cd90e3ad69b2350653ea95d8707259278baa8)
       '@dxos/async':
         specifier: workspace:*
         version: link:../../../common/async
@@ -7142,7 +7145,7 @@ importers:
         version: 3.2.1
       '@automerge/automerge-repo':
         specifier: 'catalog:'
-        version: 2.5.1
+        version: 2.5.1(patch_hash=be766431e3a6459feb58222ae46cd90e3ad69b2350653ea95d8707259278baa8)
       '@automerge/automerge-repo-network-websocket':
         specifier: 'catalog:'
         version: 2.5.1
@@ -13423,7 +13426,7 @@ importers:
         version: 3.2.1
       '@automerge/automerge-repo':
         specifier: 'catalog:'
-        version: 2.5.1
+        version: 2.5.1(patch_hash=be766431e3a6459feb58222ae46cd90e3ad69b2350653ea95d8707259278baa8)
       '@dxos/async':
         specifier: workspace:*
         version: link:../../common/async
@@ -13604,7 +13607,7 @@ importers:
         version: 3.2.1
       '@automerge/automerge-repo':
         specifier: 'catalog:'
-        version: 2.5.1
+        version: 2.5.1(patch_hash=be766431e3a6459feb58222ae46cd90e3ad69b2350653ea95d8707259278baa8)
       '@dxos/async':
         specifier: workspace:*
         version: link:../../common/async
@@ -13867,7 +13870,7 @@ importers:
         version: 3.2.1
       '@automerge/automerge-repo':
         specifier: 'catalog:'
-        version: 2.5.1
+        version: 2.5.1(patch_hash=be766431e3a6459feb58222ae46cd90e3ad69b2350653ea95d8707259278baa8)
       '@dxos/client':
         specifier: workspace:*
         version: link:../client
@@ -16189,7 +16192,7 @@ importers:
     devDependencies:
       '@automerge/automerge-repo':
         specifier: 'catalog:'
-        version: 2.5.1
+        version: 2.5.1(patch_hash=be766431e3a6459feb58222ae46cd90e3ad69b2350653ea95d8707259278baa8)
       '@automerge/automerge-repo-network-broadcastchannel':
         specifier: 'catalog:'
         version: 2.5.1
@@ -38222,13 +38225,13 @@ snapshots:
 
   '@automerge/automerge-repo-network-broadcastchannel@2.5.1':
     dependencies:
-      '@automerge/automerge-repo': 2.5.1
+      '@automerge/automerge-repo': 2.5.1(patch_hash=be766431e3a6459feb58222ae46cd90e3ad69b2350653ea95d8707259278baa8)
     transitivePeerDependencies:
       - supports-color
 
   '@automerge/automerge-repo-network-websocket@2.5.1':
     dependencies:
-      '@automerge/automerge-repo': 2.5.1
+      '@automerge/automerge-repo': 2.5.1(patch_hash=be766431e3a6459feb58222ae46cd90e3ad69b2350653ea95d8707259278baa8)
       cbor-x: 1.5.4
       debug: 4.4.3
       eventemitter3: 5.0.1
@@ -38241,11 +38244,11 @@ snapshots:
 
   '@automerge/automerge-repo-storage-indexeddb@2.5.1':
     dependencies:
-      '@automerge/automerge-repo': 2.5.1
+      '@automerge/automerge-repo': 2.5.1(patch_hash=be766431e3a6459feb58222ae46cd90e3ad69b2350653ea95d8707259278baa8)
     transitivePeerDependencies:
       - supports-color
 
-  '@automerge/automerge-repo@2.5.1':
+  '@automerge/automerge-repo@2.5.1(patch_hash=be766431e3a6459feb58222ae46cd90e3ad69b2350653ea95d8707259278baa8)':
     dependencies:
       '@automerge/automerge': 3.2.1
       bs58check: 3.0.1
