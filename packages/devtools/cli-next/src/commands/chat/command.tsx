@@ -20,6 +20,7 @@ import { ClientService } from '@dxos/client';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 
+import { CommandConfig } from '../../services';
 import { type AiChatServices, Provider, chatLayer, createLogBuffer, withTypes } from '../../util';
 import { Common } from '../options';
 
@@ -33,6 +34,7 @@ export const chat = Command.make(
   'chat',
   {
     spaceId: Common.spaceId.pipe(Options.optional),
+    // TODO(burdon): Remove.
     debug: Options.boolean('debug', { ifPresent: true }).pipe(
       Options.withDescription('Show console to see logs.'),
       Options.withAlias('d'),
@@ -53,26 +55,14 @@ export const chat = Command.make(
       Options.withAlias('b'),
       Options.repeated,
     ),
-    // TODO(burdon): Push down (like verbose?)
-    logLevel: Options.choice('logLevel', ['debug', 'verbose', 'info', 'warn', 'error']).pipe(
-      Options.withDescription('Log level to use.'),
-      Options.withAlias('l'),
-      Options.withDefault(process.env.DX_DEBUG ?? 'info'),
-    ),
-    // TODO(burdon): This isn't inherited?
-    verbose: Options.boolean('verbose', { ifPresent: true }).pipe(
-      Options.withDescription('Verbose logging.'),
-      Options.withAlias('v'),
-    ),
   },
   (options) =>
     Effect.gen(function* () {
-      // const { verbose } = yield* CommandConfig;
-      const verbose = options.verbose;
+      const { verbose, logLevel } = yield* CommandConfig;
 
       // Configure logging.
       const logBuffer = createLogBuffer();
-      log.config({ filter: options.logLevel });
+      log.config({ filter: logLevel });
       log.runtimeConfig.processors = [logBuffer.processor];
       log.info('starting...');
 

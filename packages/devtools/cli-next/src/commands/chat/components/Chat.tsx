@@ -168,6 +168,12 @@ export const Chat = (props: ChatProps) => {
               </box>
               <box flexDirection='column' width={40} paddingLeft={2}>
                 <box flexDirection='column' flexShrink={0}>
+                  {blueprints().length > 0 && <text style={{ fg: theme.log.info }}>Blueprints:</text>}
+                  <box flexDirection='column' marginTop={1} marginBottom={1}>
+                    <For each={blueprints()}>{(blueprint) => <text>- {blueprint}</text>}</For>
+                  </box>
+                </box>
+                <box flexDirection='column' flexShrink={0}>
                   {objects().length > 0 && <text style={{ fg: theme.log.info }}>Artifacts:</text>}
                   <box flexDirection='column' marginTop={1} marginBottom={1}>
                     <For each={objects()}>{(object) => <text>- {Obj.getLabel(object) ?? object.id}</text>}</For>

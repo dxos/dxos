@@ -72,9 +72,9 @@ export const App = (props: AppProps) => {
     // Console
     //
     props.showConsole && {
-      hint: '[f1]: Toggle console',
+      hint: '[cmd-j]: Toggle console',
       handler: (key: KeyEvent) => {
-        if (key.name === 'f1' && props.showConsole) {
+        if (key.name === 'j' && key.meta) {
           setShowConsole(!showConsole());
         }
       },
