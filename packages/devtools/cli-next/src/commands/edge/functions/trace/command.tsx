@@ -22,7 +22,7 @@ import { log } from '@dxos/log';
 
 import { App } from '../../../../components';
 import { createLogBuffer, spaceLayer, withTypes } from '../../../../util';
-import { theme } from '../../../chat/theme';
+import { theme } from '../../../../theme';
 import { Common } from '../../../options';
 
 import { Trace } from './components/Trace';

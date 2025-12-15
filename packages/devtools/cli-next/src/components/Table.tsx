@@ -6,7 +6,7 @@ import { type KeyEvent, type ScrollBoxRenderable } from '@opentui/core';
 import { useKeyboard } from '@opentui/solid';
 import { For, createEffect, createSignal, useContext } from 'solid-js';
 
-import { theme } from '../commands/chat/theme';
+import { type Theme } from '../theme';
 
 import { AppContext } from './App';
 
@@ -24,6 +24,7 @@ export type TableProps<T> = {
   getId?: (row: T) => string;
   showHeader?: boolean;
   disableKeyboard?: boolean; // If true, don't handle keyboard events (parent will handle them).
+  theme?: Theme;
 };
 
 export const Table = <T,>(props: TableProps<T>) => {
@@ -100,42 +101,40 @@ export const Table = <T,>(props: TableProps<T>) => {
             <For each={props.columns}>
               {(col) => (
                 <box width={col.width}>
-                  <text style={{ fg: theme.text.bold }}>{col.header}</text>
+                  <text style={props.theme ? { fg: props.theme.text.bold } : undefined}>{col.header}</text>
                 </box>
               )}
             </For>
           </box>
           <box
             border={['bottom']}
-            borderColor={focused() ? theme.accent : theme.text.subdued}
+            borderColor={props.theme ? (focused() ? props.theme.accent : props.theme.text.subdued) : undefined}
             height={1}
             width='100%'
           />
         </box>
       )}
 
-      {/* Spacer to prevent scrollbar from intersecting header separator */}
-      {props.showHeader !== false && <box height={1} />}
-
       {/* Scrollable rows */}
-      <scrollbox
-        ref={setScrollboxRef}
-        flexGrow={1}
-        scrollX={false}
-        scrollY={true}
-        focused={focused()}
-        onSizeChange={() => {
-          const ref = scrollboxRef();
-          if (ref) {
-            const scrollboxH = ref.height;
-            const viewportH = ref.viewport?.height ?? 0;
-            const height = viewportH > 0 ? viewportH : scrollboxH;
-            if (height > 0) {
-              setScrollboxHeight(height);
+      <box flexGrow={1} paddingTop={props.showHeader !== false ? 1 : 0}>
+        <scrollbox
+          ref={setScrollboxRef}
+          flexGrow={1}
+          scrollX={false}
+          scrollY={true}
+          focused={focused()}
+          onSizeChange={() => {
+            const ref = scrollboxRef();
+            if (ref) {
+              const scrollboxH = ref.height;
+              const viewportH = ref.viewport?.height ?? 0;
+              const height = viewportH > 0 ? viewportH : scrollboxH;
+              if (height > 0) {
+                setScrollboxHeight(height);
+              }
             }
-          }
-        }}
-      >
+          }}
+        >
         <box flexDirection='column'>
           <For each={props.data}>
             {(row) => {
@@ -143,13 +142,13 @@ export const Table = <T,>(props: TableProps<T>) => {
               const isSelected = () => getId(row) === props.selectedId;
 
               return (
-                <box flexDirection='row' backgroundColor={isSelected() ? theme.input.bg : undefined}>
+                <box flexDirection='row' backgroundColor={isSelected() && props.theme ? props.theme.input.bg : undefined}>
                   <For each={props.columns}>
                     {(col) => (
                       <box width={col.width}>
                         <text
                           style={{
-                            fg: isSelected() ? theme.text.primary : theme.text.default,
+                            fg: props.theme ? (isSelected() ? props.theme.text.primary : props.theme.text.default) : undefined,
                           }}
                         >
                           {col.render(row)}
@@ -162,7 +161,8 @@ export const Table = <T,>(props: TableProps<T>) => {
             }}
           </For>
         </box>
-      </scrollbox>
+        </scrollbox>
+      </box>
     </box>
   );
 };

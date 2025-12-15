@@ -19,7 +19,7 @@ import { log } from '@dxos/log';
 import { isTruthy } from '@dxos/util';
 
 import { type LogBuffer } from '../../../util';
-import { theme } from '../theme';
+import { theme } from '../../../theme';
 
 export type KeyHandler = {
   hint: string;

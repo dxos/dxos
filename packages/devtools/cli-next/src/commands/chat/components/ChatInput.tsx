@@ -5,7 +5,7 @@
 import { type KeyEvent, type TextareaRenderable } from '@opentui/core';
 import { type Accessor, createEffect, useContext } from 'solid-js';
 
-import { theme } from '../theme';
+import { theme } from '../../../theme';
 
 import { AppContext } from './App';
 

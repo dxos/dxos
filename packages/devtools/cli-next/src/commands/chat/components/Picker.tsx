@@ -6,7 +6,7 @@ import { type KeyEvent } from '@opentui/core';
 import { useKeyboard } from '@opentui/solid';
 import { For, Show, createEffect, createSignal } from 'solid-js';
 
-import { theme } from '../theme';
+import { theme } from '../../../theme';
 
 export type PickerItem = {
   id: string;

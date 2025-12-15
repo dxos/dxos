@@ -16,7 +16,7 @@ import { DXOS_VERSION } from '../../../version';
 import { blueprintRegistry } from '../blueprints';
 import { useChatMessages } from '../hooks';
 import { type ChatProcessor } from '../processor';
-import { theme } from '../theme';
+import { theme } from '../../../theme';
 import { createAssistantMessage, createUserMessage } from '../types';
 
 import { Banner } from './Banner';

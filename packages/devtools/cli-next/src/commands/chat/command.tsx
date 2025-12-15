@@ -27,7 +27,7 @@ import { Common } from '../options';
 import { functions, toolkits, types } from './blueprints';
 import { Chat } from './components';
 import { ChatProcessor } from './processor';
-import { theme } from './theme';
+import { theme } from '../../theme';
 import { typeRegistry } from './types';
 
 export const chat = Command.make(

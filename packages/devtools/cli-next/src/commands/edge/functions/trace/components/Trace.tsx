@@ -19,6 +19,7 @@ import {
 import { type DXN } from '@dxos/keys';
 
 import { type Column, Table } from '../../../../../components/Table';
+import { theme } from '../../../../../theme';
 
 export type TraceProps = {
   db: Database.Database;
@@ -201,6 +202,7 @@ export const Trace = (props: TraceProps) => {
         }}
         selectedId={selectedInvocation()?.id}
         getId={(row) => row.id}
+        theme={theme}
       />
       <box height='50%' flexDirection='column' padding={1}>
         {selectedInvocation() ? (
