@@ -8,6 +8,7 @@ import { type CleanupFn, Event, type ReadOnlyEvent, synchronized } from '@dxos/a
 import { type Context, LifecycleState, Resource } from '@dxos/context';
 import { inspectObject } from '@dxos/debug';
 import { Database, type Entity, Obj, type QueryAST, Ref } from '@dxos/echo';
+import { type GetObjectByIdOptions } from '@dxos/echo/Database';
 import { type AnyProperties, assertObjectModel, setRefResolver } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
 import { DXN, type PublicKey, type SpaceId } from '@dxos/keys';
@@ -43,6 +44,12 @@ export interface EchoDatabase extends Database.Database {
   get schemaRegistry(): DatabaseSchemaRegistry;
 
   toJSON(): object;
+
+  /**
+   * @deprecated Use `ref` instead.
+   */
+  // TODO(burdon): Rename getObject.
+  getObjectById<T extends Obj.Any = Obj.Obj<AnyProperties>>(id: string, opts?: GetObjectByIdOptions): T | undefined;
 
   /**
    * Run migrations.

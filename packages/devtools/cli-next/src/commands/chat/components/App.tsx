@@ -149,7 +149,6 @@ export const App = (props: AppProps) => {
 
   // Toggle focus between console and app content with tab.
   useKeyboard((key) => {
-    // log.info('App key', { key: key.name, ctrl: key.ctrl, meta: key.meta });
     handlers.forEach((handler) => {
       handler.handler(key);
     });
