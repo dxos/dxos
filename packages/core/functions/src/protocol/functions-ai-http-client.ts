@@ -19,7 +19,7 @@ import { type EdgeFunctionEnv } from '@dxos/protocols';
 export const requestInitTagKey = '@effect/platform/FetchHttpClient/FetchOptions';
 
 export class FunctionsAiHttpClient {
-  static make = (service: EdgeFunctionEnv.FunctionService) =>
+  static make = (service: EdgeFunctionEnv.FunctionsAiService) =>
     HttpClient.make((request, url, signal, fiber) => {
       const context = fiber.getFiberRef(FiberRef.currentContext);
       const options: RequestInit = context.unsafeMap.get(requestInitTagKey) ?? {};
@@ -62,6 +62,6 @@ export class FunctionsAiHttpClient {
       return send(undefined);
     });
 
-  static layer = (service: EdgeFunctionEnv.FunctionService) =>
+  static layer = (service: EdgeFunctionEnv.FunctionsAiService) =>
     Layer.succeed(HttpClient.HttpClient, FunctionsAiHttpClient.make(service));
 }

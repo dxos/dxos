@@ -33,7 +33,7 @@ export const wrapHandlerForCloudflare = (func: FunctionProtocol.Func): ExportedH
         }
       }
 
-      const serviceContainer = new ServiceContainer({}, env.DATA_SERVICE, env.QUEUE_SERVICE, env.FUNCTIONS_SERVICE);
+      const serviceContainer = new ServiceContainer({}, env.DATA_SERVICE, env.QUEUE_SERVICE, env.FUNCTIONS_AI_SERVICE);
       const context = await createFunctionContext({
         serviceContainer,
         contextSpaceId: spaceId as SpaceId | undefined,
@@ -104,7 +104,7 @@ const createFunctionContext = async ({
   serviceContainer: ServiceContainer;
   contextSpaceId: SpaceId | undefined;
 }): Promise<FunctionProtocol.Context> => {
-  const { dataService, queryService, queueService, functionsService } = await serviceContainer.createServices();
+  const { dataService, queryService, queueService, functionsAiService } = await serviceContainer.createServices();
 
   let spaceKey: string | undefined;
   let rootUrl: string | undefined;
@@ -123,7 +123,7 @@ const createFunctionContext = async ({
       dataService,
       queryService,
       queueService,
-      functionsService,
+      functionsAiService,
     },
     spaceId: contextSpaceId,
     spaceKey,
