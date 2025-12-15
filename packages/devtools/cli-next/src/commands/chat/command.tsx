@@ -20,12 +20,13 @@ import { ClientService } from '@dxos/client';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 
+import { App } from '../../components';
 import { CommandConfig } from '../../services';
 import { type AiChatServices, Provider, chatLayer, createLogBuffer, withTypes } from '../../util';
 import { Common } from '../options';
 
 import { functions, toolkits, types } from './blueprints';
-import { App, Chat } from './components';
+import { Chat } from './components';
 import { ChatProcessor } from './processor';
 import { theme } from './theme';
 import { typeRegistry } from './types';
@@ -122,7 +123,12 @@ export const chat = Command.make(
                 );
               }}
             >
-              <App showConsole={options.debug} focusElements={['input', 'messages']} logBuffer={logBuffer}>
+              <App
+                showConsole={options.debug}
+                focusElements={['input', 'messages']}
+                logBuffer={logBuffer}
+                backgroundColor={theme.bg}
+              >
                 {conversation() && (
                   <Chat
                     processor={processor}
@@ -183,7 +189,7 @@ function restoreTerminalState() {
   // Leave raw mode if enabled
   try {
     process.stdin.setRawMode?.(false);
-  } catch {}
+  } catch { }
 
   // Show cursor
   process.stdout.write('\x1b[?25h');
