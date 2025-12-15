@@ -9,6 +9,7 @@ import * as Schema from 'effect/Schema';
 
 import { type DevtoolsFormatter, devtoolsFormatter, inspectCustom } from '@dxos/debug';
 import { Obj } from '@dxos/echo';
+import { DATA_NAMESPACE, type ObjectStructure, PROPERTY_ID, Reference, encodeReference } from '@dxos/echo-protocol';
 import {
   ATTR_DELETED,
   ATTR_META,
@@ -47,20 +48,15 @@ import {
   requireTypeReference,
   setRefResolver,
 } from '@dxos/echo/internal';
-import { DATA_NAMESPACE, type ObjectStructure, PROPERTY_ID, Reference, encodeReference } from '@dxos/echo-protocol';
 import { assertArgument, invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
-import { defineHiddenProperty } from '@dxos/live-object';
 import {
   type Live,
   type ReactiveHandler,
-  createProxy,
-  getProxyHandler,
-  getProxyTarget,
+  createProxy, defineHiddenProperty, getProxyHandler, getProxySlot, getProxyTarget,
   isLiveObject,
-  symbolIsProxy,
+  symbolIsProxy
 } from '@dxos/live-object';
-import { getProxySlot } from '@dxos/live-object';
 import { log } from '@dxos/log';
 import { deepMapValues, defaultMap, getDeep, setDeep } from '@dxos/util';
 
@@ -69,14 +65,13 @@ import { type EchoDatabase } from '../proxy-db';
 
 import { getBody, getHeader } from './devtools-formatter';
 import { EchoArray } from './echo-array';
-import { ObjectInternals } from './echo-proxy-target';
 import {
-  type ProxyTarget,
+  ObjectInternals, type ProxyTarget,
   TargetKey,
   symbolHandler,
   symbolInternals,
   symbolNamespace,
-  symbolPath,
+  symbolPath
 } from './echo-proxy-target';
 
 /**
@@ -700,6 +695,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
           middleware: (obj) => this._handleStoredSchema(target, obj),
         }),
       );
+
       return refImpl;
     } else {
       invariant(target[symbolInternals].linkCache);

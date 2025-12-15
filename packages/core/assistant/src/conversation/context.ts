@@ -85,9 +85,8 @@ export class AiContextBinder extends Resource {
           const bindings = this._reduce(query.results);
 
           // Resolve references.
-          this._blueprints.value = [...bindings.blueprints].map((ref) => ref.target).filter(isTruthy);
-          this._objects.value = [...bindings.objects].map((ref) => ref.target).filter(isTruthy);
-
+          this._blueprints.value = this._resolve(bindings.blueprints, this._blueprints.peek());
+          this._objects.value = this._resolve(bindings.objects, this._objects.peek());
           log('updated', {
             blueprints: this._blueprints.value.length,
             objects: this._objects.value.length,
@@ -105,67 +104,82 @@ export class AiContextBinder extends Resource {
     this._objects.value = [];
   }
 
-  async bind(props: BindingProps): Promise<void> {
-    const blueprints =
-      props.blueprints?.filter(
-        (ref) => !this.blueprints.peek().find((blueprint) => Obj.getDXN(blueprint).toString() === ref.dxn.toString()),
-      ) ?? [];
-
-    const objects =
-      props.objects?.filter(
-        (ref) => !this.objects.peek().find((object) => Obj.getDXN(object).toString() === ref.dxn.toString()),
-      ) ?? [];
-
-    if (!blueprints.length && !objects.length) {
+  async bind({ blueprints, objects }: BindingProps): Promise<void> {
+    const { added: addedBlueprints, next: nextBlueprints } = this._processBindings(blueprints, this._blueprints.peek());
+    const { added: addedObjects, next: nextObjects } = this._processBindings(objects, this._objects.peek());
+    if (!addedBlueprints.length && !addedObjects.length) {
       return;
     }
 
+    this._blueprints.value = nextBlueprints;
+    this._objects.value = nextObjects;
+
+    log('bind', { blueprints: addedBlueprints.length, objects: addedObjects.length });
     await this._queue.append([
       Obj.make(ContextBinding, {
         blueprints: {
-          added: blueprints,
+          added: addedBlueprints,
           removed: [],
         },
         objects: {
-          added: objects,
+          added: addedObjects,
           removed: [],
         },
       }),
     ]);
-
-    log('bind', {
-      blueprints: blueprints.length,
-      objects: objects.length,
-    });
-
-    this._blueprints.value = EArray.dedupeWith(
-      [...this._blueprints.value, ...blueprints.map((blueprint) => blueprint.target).filter(isTruthy)],
-      (a, b) => Obj.getDXN(a).toString() === Obj.getDXN(b).toString(),
-    );
-    this._objects.value = EArray.dedupeWith(
-      [...this._objects.value, ...objects.map((object) => object.target).filter(isTruthy)],
-      (a, b) => Obj.getDXN(a).toString() === Obj.getDXN(b).toString(),
-    );
   }
 
-  async unbind(props: BindingProps): Promise<void> {
-    if (!props.blueprints?.length && !props.objects?.length) {
+  async unbind({ blueprints, objects }: BindingProps): Promise<void> {
+    if (!blueprints?.length && !objects?.length) {
       return;
     }
 
-    log('unbind', { blueprints: props.blueprints?.length, objects: props.objects?.length });
+    log('unbind', { blueprints: blueprints?.length, objects: objects?.length });
     await this._queue.append([
       Obj.make(ContextBinding, {
         blueprints: {
           added: [],
-          removed: props.blueprints ?? [],
+          removed: blueprints ?? [],
         },
         objects: {
           added: [],
-          removed: props.objects ?? [],
+          removed: objects ?? [],
         },
       }),
     ]);
+  }
+
+  /**
+   * Process bindings to filter duplicates and determine next state.
+   */
+  private _processBindings<T extends Obj.Any>(
+    refs: Ref.Ref<T>[] | undefined,
+    current: T[],
+  ): { added: Ref.Ref<T>[]; next: T[] } {
+    const next = [...current];
+    const added: Ref.Ref<T>[] = [];
+    if (!refs?.length) {
+      return { added, next };
+    }
+
+    const seen = new Set(current.map((obj) => Obj.getDXN(obj).toString()));
+    for (const ref of refs) {
+      const dxn = ref.dxn.toString();
+      if (!seen.has(dxn)) {
+        seen.add(dxn);
+        added.push(ref);
+
+        // Only resolve target if available (has target or resolver).
+        if (ref.isAvailable) {
+          const target = ref.target;
+          if (target) {
+            next.push(target);
+          }
+        }
+      }
+    }
+
+    return { added, next };
   }
 
   /**
@@ -190,6 +204,24 @@ export class AiContextBinder extends Resource {
         return context;
       }),
     );
+  }
+
+  /**
+   * Resolve references to objects, falling back to existing objects if the reference target is missing.
+   */
+  private _resolve<T>(refs: Iterable<Ref.Ref<T>>, current: T[]): T[] {
+    return [...refs]
+      .map((ref) => {
+        let target: T | undefined;
+        // Only resolve target if available (has target or resolver).
+        if (ref.isAvailable) {
+          target = ref.target;
+        }
+
+        // Fallback to existing object.
+        return target ?? current.find((obj) => Obj.getDXN(obj as any).toString() === ref.dxn.toString());
+      })
+      .filter(isTruthy);
   }
 }
 

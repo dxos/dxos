@@ -331,7 +331,7 @@ export const WithChess: Story = {
     onInit: async ({ space }) => {
       // TODO(burdon): Add player DID (for user and assistant).
       space.db.add(
-        Chess.makeGame({
+        Chess.make({
           name: 'Challenge',
           pgn: [
             '1. e4 e5',
@@ -645,7 +645,7 @@ export const WithChessTrigger: Story = {
     onInit: async ({ space }) => {
       // TODO(burdon): Add player DID (for user and assistant).
       space.db.add(
-        Chess.makeGame({
+        Chess.make({
           name: 'Challenge',
           pgn: [
             '1. e4 e5',

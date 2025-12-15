@@ -4,16 +4,18 @@
 
 import { useKeyboard } from '@opentui/solid';
 import * as Effect from 'effect/Effect';
-import { Match, Switch, createEffect, createSignal, useContext } from 'solid-js';
+import { For, Match, Switch, createEffect, createSignal, onCleanup, useContext } from 'solid-js';
 
 import { type ModelName } from '@dxos/ai';
 import { type AiConversation, GenerationObserver } from '@dxos/assistant';
+import { Obj } from '@dxos/echo';
 import { log } from '@dxos/log';
 
 import { DXOS_VERSION } from '../../../version';
 import { blueprintRegistry } from '../blueprints';
 import { useChatMessages } from '../hooks';
 import { type ChatProcessor } from '../processor';
+import { theme } from '../theme';
 import { createAssistantMessage, createUserMessage } from '../types';
 
 import { AppContext } from './App';
@@ -34,20 +36,38 @@ export type ChatProps = {
 
 export const Chat = (props: ChatProps) => {
   const appContext = useContext(AppContext);
-  const chatMessages = useChatMessages();
-  const verboseMessages = useChatMessages();
   const [inputValue, setInputValue] = createSignal('');
   const [popup, setPopup] = createSignal<'logo' | 'blueprints' | undefined>('logo');
+
+  // Conversation state.
+  const chatMessages = useChatMessages();
+  const infoMessages = useChatMessages();
   const [blueprints, setBlueprints] = createSignal<string[]>([]);
+  const [objects, setObjects] = createSignal<Obj.Any[]>([]);
 
   createEffect(() => {
-    // Track conversation.
+    // Monitor conversation change.
+    props.conversation;
+
     // TODO(burdon): chatMessages should monitor the queue.
-    const _ = props.conversation;
+    // TODO(burdon): List conversations.
     chatMessages.setMessages({ data: [] });
-    verboseMessages.setMessages({ data: [] });
-    setBlueprints(props.conversation.context.blueprints.value.map((blueprint) => blueprint.name).sort());
-    log.info('xxx', { blueprints: blueprints() });
+    infoMessages.setMessages({ data: [] });
+  });
+
+  createEffect(() => {
+    // Bridge Preact signals to Solid signals.
+    const onUpdate = () => {
+      setBlueprints(props.conversation.context.blueprints.value.map((blueprint) => blueprint.name).sort());
+      setObjects(props.conversation.context.objects.value);
+    };
+
+    const unsubscribeBlueprints = props.conversation.context.blueprints.subscribe(onUpdate);
+    const unsubscribeObjects = props.conversation.context.objects.subscribe(onUpdate);
+    onCleanup(() => {
+      unsubscribeBlueprints();
+      unsubscribeObjects();
+    });
   });
 
   // TODO(burdon): Factor out key handling, hints, and dialogs.
@@ -93,10 +113,10 @@ export const Chat = (props: ChatProps) => {
                     if (block._tag === 'toolResult') {
                       if (!verboseIndex) {
                         verboseMessage = createAssistantMessage();
-                        verboseIndex = verboseMessages.addMessage(verboseMessage);
+                        verboseIndex = infoMessages.addMessage(verboseMessage);
                       }
 
-                      verboseMessages.appendToMessage(
+                      infoMessages.appendToMessage(
                         verboseIndex,
                         createJsonBlock({ toolCallId: block.toolCallId, name: block.name }),
                       );
@@ -143,12 +163,22 @@ export const Chat = (props: ChatProps) => {
           </Match>
           <Match when={popup() === undefined}>
             <box flexDirection='row' width='100%'>
-              <box flexDirection='column' flexBasis={2} flexGrow={2}>
+              <box flexDirection='column'>
                 <ChatMessages messages={chatMessages.messages.data} />
               </box>
               {props.verbose && (
-                <box flexDirection='column' flexBasis={1} flexGrow={1} paddingLeft={2}>
-                  <ChatMessages messages={verboseMessages.messages.data} />
+                <box flexDirection='column' width={40} paddingLeft={2}>
+                  <box flexDirection='column'>
+                    {objects().length > 0 && (
+                      <box marginBottom={1}>
+                        <text style={{ fg: theme.log.info }}>Artifacts:</text>
+                      </box>
+                    )}
+                    <box>
+                      <For each={objects()}>{(object) => <text>- {Obj.getLabel(object) ?? object.id}</text>}</For>
+                    </box>
+                  </box>
+                  <ChatMessages messages={infoMessages.messages.data} />
                 </box>
               )}
             </box>

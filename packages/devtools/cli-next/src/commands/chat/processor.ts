@@ -24,6 +24,7 @@ import { Filter, Obj, Ref } from '@dxos/echo';
 import type { FunctionDefinition } from '@dxos/functions';
 import { log } from '@dxos/log';
 import { type Message } from '@dxos/types';
+import { isTruthy } from '@dxos/util';
 
 import { type AiChatServices } from '../../util';
 
@@ -98,7 +99,7 @@ export class ChatProcessor {
         log.info('adding blueprint', { key });
         return space.db.add(Obj.clone(blueprint));
       })
-      .filter(Boolean);
+      .filter(isTruthy);
 
     const queue = space.queues.create<Message.Message>();
     const conversation = new AiConversation(queue);
