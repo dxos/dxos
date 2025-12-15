@@ -6,10 +6,10 @@ import { type Accessor, For, createEffect, useContext } from 'solid-js';
 
 import { type AiService, type ModelName } from '@dxos/ai';
 
+import { AppContext } from '../../../components';
+
 import { useSpinner } from '../hooks';
 import { theme } from '../../../theme';
-
-import { AppContext } from './App';
 
 export type StatusBarProps = {
   model: ModelName;

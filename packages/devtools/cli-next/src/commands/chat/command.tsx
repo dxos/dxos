@@ -21,13 +21,13 @@ import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 
 import { App } from '../../components';
+import { theme } from '../../theme';
 import { type AiChatServices, Provider, chatLayer, createLogBuffer, withTypes } from '../../util';
 import { Common } from '../options';
 
 import { functions, toolkits, types } from './blueprints';
 import { Chat } from './components';
 import { ChatProcessor } from './processor';
-import { theme } from '../../theme';
 import { typeRegistry } from './types';
 
 export const chat = Command.make(
@@ -123,12 +123,7 @@ export const chat = Command.make(
       yield* Effect.promise(() =>
         render(
           () => (
-            <App
-              showConsole={options.debug}
-              focusElements={['input', 'messages']}
-              logBuffer={logBuffer}
-              backgroundColor={theme.bg}
-            >
+            <App showConsole={options.debug} focusElements={['input', 'messages']} logBuffer={logBuffer} theme={theme}>
               {conversation() && (
                 <Chat
                   processor={processor}

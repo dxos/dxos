@@ -21,8 +21,8 @@ import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 
 import { App } from '../../../../components';
-import { createLogBuffer, spaceLayer, withTypes } from '../../../../util';
 import { theme } from '../../../../theme';
+import { createLogBuffer, spaceLayer, withTypes } from '../../../../util';
 import { Common } from '../../../options';
 
 import { Trace } from './components/Trace';
@@ -69,7 +69,7 @@ export const trace = Command.make(
       yield* Effect.promise(() =>
         render(
           () => (
-            <App showConsole={true} focusElements={['table']} logBuffer={logBuffer} backgroundColor={theme.bg}>
+            <App showConsole={true} focusElements={['table']} logBuffer={logBuffer} theme={theme}>
               <Trace
                 db={db}
                 queues={queues}
