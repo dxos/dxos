@@ -167,14 +167,14 @@ export const Chat = (props: ChatProps) => {
                 <ChatMessages messages={chatMessages.messages.data} />
               </box>
               <box flexDirection='column' width={40} paddingLeft={2}>
-                <box flexDirection='column'>
+                <box flexDirection='column' flexShrink={0}>
                   {objects().length > 0 && <text style={{ fg: theme.log.info }}>Artifacts:</text>}
-                  <box marginTop={1} marginBottom={1}>
+                  <box flexDirection='column' marginTop={1} marginBottom={1}>
                     <For each={objects()}>{(object) => <text>- {Obj.getLabel(object) ?? object.id}</text>}</For>
                   </box>
                 </box>
                 {props.verbose && (
-                  <box flexGrow={1}>
+                  <box flexDirection='column' flexGrow={1}>
                     <ChatMessages messages={infoMessages.messages.data} />
                   </box>
                 )}
