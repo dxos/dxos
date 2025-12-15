@@ -162,7 +162,7 @@ export const App = (props: AppProps) => {
           log.catch(err);
           return (
             <box flexDirection='column' overflow='hidden'>
-              <text style={{ fg: props.theme?.log?.error ?? props.theme?.log.error }}>{err.stack}</text>
+              <text style={{ fg: props.theme?.log?.error }}>{err.stack}</text>
             </box>
           );
         }}

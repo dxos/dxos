@@ -138,32 +138,39 @@ export const Table = <T,>(props: TableProps<T>) => {
             }
           }}
         >
-        <box flexDirection='column'>
-          <For each={props.data}>
-            {(row) => {
-              const getId = props.getId ?? ((row: any) => row.id);
-              const isSelected = () => getId(row) === props.selectedId;
+          <box flexDirection='column'>
+            <For each={props.data}>
+              {(row) => {
+                const getId = props.getId ?? ((row: any) => row.id);
+                const isSelected = () => getId(row) === props.selectedId;
 
-              return (
-                <box flexDirection='row' backgroundColor={isSelected() && props.theme ? props.theme.input.bg : undefined}>
-                  <For each={props.columns}>
-                    {(col) => (
-                      <box width={col.width}>
-                        <text
-                          style={{
-                            fg: props.theme ? (isSelected() ? props.theme.text.primary : props.theme.text.default) : undefined,
-                          }}
-                        >
-                          {col.render(row)}
-                        </text>
-                      </box>
-                    )}
-                  </For>
-                </box>
-              );
-            }}
-          </For>
-        </box>
+                return (
+                  <box
+                    flexDirection='row'
+                    backgroundColor={isSelected() && props.theme ? props.theme.input.bg : undefined}
+                  >
+                    <For each={props.columns}>
+                      {(col) => (
+                        <box width={col.width}>
+                          <text
+                            style={{
+                              fg: props.theme
+                                ? isSelected()
+                                  ? props.theme.text.primary
+                                  : props.theme.text.default
+                                : undefined,
+                            }}
+                          >
+                            {col.render(row)}
+                          </text>
+                        </box>
+                      )}
+                    </For>
+                  </box>
+                );
+              }}
+            </For>
+          </box>
         </scrollbox>
       </box>
     </box>
