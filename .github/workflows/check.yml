@@ -142,7 +142,7 @@ jobs:
 
       - name: Upload Test Results
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: vitest-report-${{ matrix.node-version }}
           path: test-results
@@ -222,7 +222,7 @@ jobs:
           access-token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Upload Traces
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         if: ${{ success() || failure() }}
         with:
           name: playwright-report
