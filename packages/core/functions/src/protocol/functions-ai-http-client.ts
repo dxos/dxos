@@ -12,7 +12,7 @@ import * as Layer from 'effect/Layer';
 import * as Stream from 'effect/Stream';
 
 import { log } from '@dxos/log';
-import { type EdgeFunctionEnv } from '@dxos/protocols';
+import { type EdgeFunctionEnv, ErrorCodec } from '@dxos/protocols';
 /**
  * Copy pasted from https://github.com/Effect-TS/effect/blob/main/packages/platform/src/internal/fetchHttpClient.ts
  */
@@ -40,7 +40,7 @@ export class FunctionsAiHttpClient {
               }),
             ),
           catch: (cause) => {
-            log.error('Failed to fetch', { error: cause });
+            log.error('Failed to fetch', { errorSerialized: ErrorCodec.encode(cause as Error) });
             return new HttpClientError.RequestError({
               request,
               reason: 'Transport',

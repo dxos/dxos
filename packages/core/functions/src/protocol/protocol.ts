@@ -158,7 +158,7 @@ class FunctionContext extends Resource {
               Layer.provide(
                 AnthropicClient.layer({
                   // TODO(dmaretskyi): Read endpoint from config/settings.
-                  apiUrl: 'http://ai-service.dxos.workers.dev/provider/anthropic',
+                  apiUrl: 'http://internal.dxos/provider/anthropic',
                 }).pipe(Layer.provide(FunctionsAiHttpClient.layer(this.context.services.functionsAiService))),
               ),
             ),
