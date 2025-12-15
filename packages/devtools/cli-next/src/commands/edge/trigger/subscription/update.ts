@@ -48,15 +48,11 @@ export const update = Command.make(
         };
       }
       if (Option.isSome(deep) || Option.isSome(delay)) {
-        if (!trigger.spec.options) {
-          trigger.spec.options = {};
-        }
-        if (Option.isSome(deep)) {
-          trigger.spec.options.deep = deep.value;
-        }
-        if (Option.isSome(delay)) {
-          trigger.spec.options.delay = delay.value;
-        }
+        trigger.spec.options = {
+          ...trigger.spec.options,
+          ...(Option.isSome(deep) ? { deep: deep.value } : {}),
+          ...(Option.isSome(delay) ? { delay: delay.value } : {}),
+        };
       }
       if (Option.isSome(input)) {
         trigger.input = input.value;
