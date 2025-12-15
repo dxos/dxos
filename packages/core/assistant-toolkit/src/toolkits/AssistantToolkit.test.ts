@@ -16,9 +16,7 @@ import {
   makeToolResolverFromFunctions,
 } from '@dxos/assistant';
 import { Blueprint, Template } from '@dxos/blueprints';
-import { Obj } from '@dxos/echo';
-import { Ref } from '@dxos/echo';
-import { Database } from '@dxos/echo';
+import { Database, Obj, Ref } from '@dxos/echo';
 import { acquireReleaseResource } from '@dxos/effect';
 import { TestHelpers } from '@dxos/effect/testing';
 import { CredentialsService, QueueService, TracingService } from '@dxos/functions';
@@ -66,7 +64,12 @@ describe('AssistantToolkit', () => {
         const queue = yield* QueueService.createQueue<Message.Message | ContextBinding>();
         const conversation = yield* acquireReleaseResource(() => new AiConversation(queue));
         const observer = GenerationObserver.fromPrinter(new ConsolePrinter());
-        yield* Effect.promise(() => conversation.context.bind({ blueprints: [Ref.make(db.add(blueprint))] }));
+
+        yield* Effect.promise(() =>
+          conversation.context.bind({
+            blueprints: [Ref.make(db.add(blueprint))],
+          }),
+        );
 
         const organization = yield* Database.Service.add(
           Obj.make(Organization.Organization, {
@@ -80,7 +83,8 @@ describe('AssistantToolkit', () => {
           observer,
         });
 
-        expect(conversation.context.objects.value).toEqual([Ref.make(organization)]);
+        expect(conversation.context.blueprints.value).toEqual([blueprint]);
+        expect(conversation.context.objects.value).toEqual([organization]);
       },
       Effect.provide(TestLayer),
       TestHelpers.provideTestContext,
