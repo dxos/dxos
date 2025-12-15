@@ -48,7 +48,6 @@ export interface EchoDatabase extends Database.Database {
   /**
    * @deprecated Use `ref` instead.
    */
-  // TODO(burdon): Rename getObject.
   getObjectById<T extends Obj.Any = Obj.Obj<AnyProperties>>(id: string, opts?: GetObjectByIdOptions): T | undefined;
 
   /**
