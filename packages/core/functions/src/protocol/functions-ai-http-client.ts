@@ -30,7 +30,7 @@ export class FunctionsAiHttpClient {
       const send = (body: BodyInit | undefined) =>
         Effect.tryPromise({
           try: () =>
-            service.aiFetch(
+            service.fetch(
               new Request(url, {
                 ...options,
                 method: request.method,
