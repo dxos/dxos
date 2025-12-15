@@ -186,15 +186,13 @@ const useTraceQueue = (
     try {
       const queue = queues.get<InvocationTraceEvent>(queueDxn.value);
       setTraceQueue(queue);
-      // Initial refresh to load current state.
-      void queue.refresh();
     } catch {
       setTraceQueue(undefined);
     }
   });
 };
 
-// Effect: Subscribe to invocations and poll the queue for updates.
+// Effect: Subscribe to invocations using the query API (which handles polling automatically).
 const useInvocationsSubscription = (
   traceQueue: () => Queue<InvocationTraceEvent> | undefined,
   functionId: Option.Option<string>,
@@ -209,21 +207,8 @@ const useInvocationsSubscription = (
       return;
     }
 
-    // Poll interval in milliseconds (1 second, matching useQueue default).
-    const POLL_INTERVAL = 1000;
-    let timeout: ReturnType<typeof setTimeout> | undefined;
-
-    // Poll the queue to pick up new events.
-    const poll = () => {
-      void queue.refresh().finally(() => {
-        timeout = setTimeout(poll, POLL_INTERVAL);
-      });
-    };
-
-    // Start polling.
-    poll();
-
     // Query both start and end events from the trace queue.
+    // The query subscription automatically handles polling via beginPolling().
     const query = queue.query(Filter.or(Filter.type(InvocationTraceStartEvent), Filter.type(InvocationTraceEndEvent)));
 
     const update = async () => {
@@ -248,17 +233,16 @@ const useInvocationsSubscription = (
       }
     };
 
-    // Initial load of all events.
-    void update();
-
-    const unsubscribe = query.subscribe(() => {
-      void update();
-    });
+    // Subscribe to query updates. The query API automatically handles polling.
+    // Use { fire: true } to trigger the callback immediately for initial load.
+    const unsubscribe = query.subscribe(
+      () => {
+        void update();
+      },
+      { fire: true },
+    );
 
     onCleanup(() => {
-      if (timeout) {
-        clearTimeout(timeout);
-      }
       unsubscribe();
     });
   });
