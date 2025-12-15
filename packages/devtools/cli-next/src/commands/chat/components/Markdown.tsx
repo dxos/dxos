@@ -59,13 +59,18 @@ const RenderNode = (props: { node: SyntaxNode; content: string }) => {
 
   const children = getChildren(props.node);
 
+  // Skip.
+  if (props.node.name.startsWith('SetextHeading')) {
+    return null;
+  }
+
   switch (props.node.name) {
     case 'Document':
       return <For each={children}>{(child) => <RenderNode node={child} content={props.content} />}</For>;
 
     case 'Paragraph':
       return (
-        <box marginBottom={props.node.parent?.name === 'ListItem' ? 0 : 1}>
+        <box marginLeft={1} marginRight={1} marginBottom={props.node.parent?.name === 'ListItem' ? 0 : 1}>
           <text style={{ fg: theme.text.default }}>
             <RenderInline node={props.node} content={props.content} />
           </text>
@@ -79,7 +84,7 @@ const RenderNode = (props: { node: SyntaxNode; content: string }) => {
     case 'ATXHeading5':
     case 'ATXHeading6':
       return (
-        <box marginTop={1} marginBottom={1}>
+        <box marginLeft={1} marginRight={1}>
           <text style={{ fg: theme.text.bold }}>
             <RenderInline node={props.node} content={props.content} />
           </text>
@@ -93,8 +98,19 @@ const RenderNode = (props: { node: SyntaxNode; content: string }) => {
         </box>
       );
 
-    case 'CodeText':
-      return <text style={{ fg: theme.log.info }}>{props.content.slice(props.node.from, props.node.to)}</text>;
+    case 'CodeText': {
+      let language: string | undefined;
+      const children = getChildren(props.node.parent!);
+      const mark = children.find((node) => node.name === 'CodeInfo');
+      if (mark) {
+        language = props.content.slice(mark.from, mark.to);
+      }
+      return (
+        <text style={{ fg: language === 'json' ? theme.log.error : theme.log.info }}>
+          {props.content.slice(props.node.from, props.node.to)}
+        </text>
+      );
+    }
 
     case 'InlineCode':
       return (
@@ -106,7 +122,7 @@ const RenderNode = (props: { node: SyntaxNode; content: string }) => {
     case 'BulletList':
     case 'OrderedList':
       return (
-        <box flexDirection='column' marginBottom={1}>
+        <box flexDirection='column' marginLeft={1} marginRight={1} marginBottom={1}>
           <For each={children}>{(child) => <RenderNode node={child} content={props.content} />}</For>
         </box>
       );
@@ -127,7 +143,7 @@ const RenderNode = (props: { node: SyntaxNode; content: string }) => {
     }
 
     case 'ListMark': // - or 1.
-      return <text style={{ fg: theme.text.primary }}>{props.content.slice(props.node.from, props.node.to)} </text>;
+      return <text style={{ fg: theme.text.primary }}>{props.content.slice(props.node.from, props.node.to)}</text>;
 
     case 'Blockquote':
       return (
@@ -144,17 +160,19 @@ const RenderNode = (props: { node: SyntaxNode; content: string }) => {
         </span>
       );
 
-    case 'CodeMark': // ```
     case 'CodeInfo': // language
+    case 'CodeMark': // ```
     case 'HeaderMark': // #
     case 'QuoteMark': // >
     case 'EmphasisMark': // *
+    case 'HorizontalRule': // ---
       return null;
 
     // Use RenderInline for unknown nodes to ensure text gaps are rendered.
     default:
+      log.warn('unknown node', { type: props.node.name });
       return (
-        <text>
+        <text marginLeft={1} marginRight={1}>
           <RenderInline node={props.node} content={props.content} />
         </text>
       );
@@ -233,3 +251,7 @@ export const TEST_MARKDOWN = [
   '',
   'The End',
 ].join('\n');
+
+export const createJsonBlock = (content: any) => {
+  return ['```json', JSON.stringify(content, null, 2), '```', ''].join('\n');
+};

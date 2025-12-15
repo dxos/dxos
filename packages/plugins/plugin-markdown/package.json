@@ -15,11 +15,11 @@
       "browser": "./dist/lib/browser/index.mjs",
       "node": "./dist/lib/node-esm/index.mjs"
     },
-    "./toolkit": {
-      "source": "./src/toolkit.ts",
-      "types": "./dist/types/src/toolkit.d.ts",
-      "browser": "./dist/lib/browser/toolkit.mjs",
-      "node": "./dist/lib/node-esm/toolkit.mjs"
+    "./blueprints": {
+      "browser": "./dist/lib/browser/blueprints/index.mjs",
+      "node": "./dist/lib/node-esm/blueprints/index.mjs",
+      "source": "./src/blueprints/index.ts",
+      "types": "./dist/types/src/blueprints/index.d.ts"
     },
     "./types": {
       "source": "./src/types/index.ts",

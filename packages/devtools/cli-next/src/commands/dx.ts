@@ -46,6 +46,7 @@ export const command = Command.make('dx', {
   ),
   verbose: Options.boolean('verbose', { ifPresent: true }).pipe(
     Options.withDescription('Verbose logging.'),
+    Options.withAlias('v'),
     Options.withFallbackConfig(Config.boolean('VERBOSE').pipe(Config.withDefault(false))),
   ),
 });

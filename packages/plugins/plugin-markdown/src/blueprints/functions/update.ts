@@ -11,7 +11,7 @@ import { createDocAccessor } from '@dxos/echo-db';
 import { defineFunction } from '@dxos/functions';
 import { trim } from '@dxos/util';
 
-import { Markdown } from '../types';
+import { Markdown } from '../../types';
 
 // TODO(wittjosiah): Reconcile with ThreadAction.AddProposal.
 export default defineFunction({
