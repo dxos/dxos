@@ -11,7 +11,7 @@ import * as Layer from 'effect/Layer';
 import { CredentialsService } from '@dxos/functions';
 
 import { GoogleCalendar } from '../../apis';
-import { InboxResolver } from '../../resolver';
+import * as InboxResolver from '../../inbox-resolver';
 
 import { mapEvent } from './mapper';
 

@@ -7,7 +7,8 @@ import * as Effect from 'effect/Effect';
 
 import { Organization, Person } from '@dxos/types';
 
-import { InboxResolver, Resolver } from './resolver';
+import * as InboxResolver from './inbox-resolver';
+import * as Resolver from './resolver';
 
 describe('resolver', () => {
   it.effect(

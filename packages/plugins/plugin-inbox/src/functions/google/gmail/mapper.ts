@@ -8,7 +8,7 @@ import { Obj, Ref } from '@dxos/echo';
 import { Message, Person } from '@dxos/types';
 
 import { type GoogleMail } from '../../apis';
-import { Resolver } from '../../resolver';
+import * as Resolver from '../../resolver';
 import { getPart, normalizeText, parseFromHeader } from '../../util';
 
 /**

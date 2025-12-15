@@ -23,7 +23,7 @@ import { type Event } from '@dxos/types';
 // TODO(burdon): Importing from types/index.ts pulls in @dxos/client dependencies due to SpaceSchema.
 import * as Calendar from '../../../types/Calendar';
 import { GoogleCalendar } from '../../apis';
-import { InboxResolver } from '../../resolver';
+import * as InboxResolver from '../../inbox-resolver';
 
 import { mapEvent } from './mapper';
 

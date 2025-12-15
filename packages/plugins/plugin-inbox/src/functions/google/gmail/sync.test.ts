@@ -14,7 +14,7 @@ import { CredentialsService } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 
 import { GoogleMail } from '../../apis';
-import { InboxResolver } from '../../resolver';
+import * as InboxResolver from '../../inbox-resolver';
 
 import { mapMessage } from './mapper';
 

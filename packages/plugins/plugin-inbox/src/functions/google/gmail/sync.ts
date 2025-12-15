@@ -26,7 +26,7 @@ import { type Message } from '@dxos/types';
 // TODO(burdon): Importing from types/index.ts pulls in @dxos/client dependencies due to SpaceSchema.
 import * as Mailbox from '../../../types/Mailbox';
 import { GoogleMail } from '../../apis';
-import { InboxResolver } from '../../resolver';
+import * as InboxResolver from '../../inbox-resolver';
 
 import { mapMessage } from './mapper';
 
