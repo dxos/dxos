@@ -358,12 +358,18 @@ const throwErrorWithClosestMatch = (store: MemoizedStore, conversation: Memozied
           'saved',
           'new',
         );
-        return yield* Effect.dieMessage(
-          `No memoized conversation found for the given prompt. Closest match:\n${patch}\n\nRe-run with ALLOW_LLM_GENERATION=1 to generate a new memoized conversation.`,
-        );
+        return yield* Effect.dieMessage(error(patch));
       }
     }
-    return yield* Effect.dieMessage(
-      'No memoized conversation found for the given prompt.\n\nRe-run with ALLOW_LLM_GENERATION=1 to generate a new memoized conversation.',
-    );
+
+    return yield* Effect.dieMessage(error());
   });
+
+const error = (patch?: string) =>
+  [
+    'No memoized conversation found for the given prompt.',
+    'Re-run test with ALLOW_LLM_GENERATION=1 to generate a new memoized conversation.',
+    patch && `Closest match: ${patch}`,
+  ]
+    .filter(Boolean)
+    .join('\n');

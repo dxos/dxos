@@ -117,9 +117,9 @@ export const ToolContainer = ({ items, onChangeOpen }: ToolContainerParams) => {
     }
   }, [open, onChangeOpen]);
 
-  const handleSelect = (index: number) => {
+  const handleSelect = useCallback((index: number) => {
     setSelected(index);
-  };
+  }, []);
 
   return (
     <ToggleContainer.Root classNames='mbs-2 is-full rounded-sm' open={open} onChangeOpen={setOpen}>

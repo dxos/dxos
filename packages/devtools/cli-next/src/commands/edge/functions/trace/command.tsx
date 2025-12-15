@@ -12,7 +12,6 @@ import * as Deferred from 'effect/Deferred';
 import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
 import * as Option from 'effect/Option';
-import { ErrorBoundary } from 'solid-js';
 
 import { SpaceProperties } from '@dxos/client-protocol';
 import { Database, Filter } from '@dxos/echo';
@@ -70,29 +69,14 @@ export const trace = Command.make(
       yield* Effect.promise(() =>
         render(
           () => (
-            <ErrorBoundary
-              fallback={(err: any) => {
-                return (
-                  <box flexDirection='column' overflow='hidden'>
-                    <text style={{ fg: theme.log.error }}>{err.stack}</text>
-                  </box>
-                );
-              }}
-            >
-              <App
-                showConsole={true}
-                focusElements={['table']} // TODO(burdon): Focus management.
-                logBuffer={logBuffer}
-                backgroundColor={theme.bg}
-              >
-                <Trace
-                  db={db}
-                  queues={queues}
-                  queueDxn={queueDxn ? Option.some(queueDxn) : Option.none()}
-                  functionId={functionId}
-                />
-              </App>
-            </ErrorBoundary>
+            <App showConsole={true} focusElements={['table']} logBuffer={logBuffer} backgroundColor={theme.bg}>
+              <Trace
+                db={db}
+                queues={queues}
+                queueDxn={queueDxn ? Option.some(queueDxn) : Option.none()}
+                functionId={functionId}
+              />
+            </App>
           ),
           {
             exitOnCtrlC: true,
