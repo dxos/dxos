@@ -9,7 +9,7 @@ import { ArtifactId } from '@dxos/assistant';
 import { Database } from '@dxos/echo';
 import { defineFunction } from '@dxos/functions';
 
-import { Markdown } from '../types';
+import { Markdown } from '../../types';
 
 export default defineFunction({
   key: 'dxos.org/function/markdown/open',

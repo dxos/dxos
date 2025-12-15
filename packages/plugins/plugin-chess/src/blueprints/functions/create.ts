@@ -15,6 +15,11 @@ export default defineFunction({
   name: 'Create Chess',
   description: 'Creates a new chess game.',
   inputSchema: Schema.Struct({
+    name: Schema.optional(
+      Schema.String.annotations({
+        description: 'Name of the game.',
+      }),
+    ),
     pgn: Schema.optional(
       Schema.String.annotations({
         description: 'Portable Game Notation.',
@@ -27,7 +32,7 @@ export default defineFunction({
     ),
   }),
   outputSchema: Chess.Game,
-  handler: Effect.fn(function* ({ data: { pgn, fen } }) {
-    return yield* Database.Service.add(Chess.makeGame({ pgn, fen }));
+  handler: Effect.fn(function* ({ data: { name, pgn, fen } }) {
+    return yield* Database.Service.add(Chess.make({ name, pgn, fen }));
   }),
 });

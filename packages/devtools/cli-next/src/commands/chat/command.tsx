@@ -12,7 +12,7 @@ import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
 import * as Match from 'effect/Match';
 import * as Option from 'effect/Option';
-import { ErrorBoundary, createSignal } from 'solid-js';
+import { createSignal } from 'solid-js';
 
 import { AiService, DEFAULT_EDGE_MODEL, DEFAULT_LMSTUDIO_MODEL, DEFAULT_OLLAMA_MODEL, ModelName } from '@dxos/ai';
 import { type AiConversation, GenericToolkit } from '@dxos/assistant';
@@ -20,7 +20,6 @@ import { ClientService } from '@dxos/client';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 
-import { CommandConfig } from '../../services';
 import { type AiChatServices, Provider, chatLayer, createLogBuffer, withTypes } from '../../util';
 import { Common } from '../options';
 
@@ -60,9 +59,17 @@ export const chat = Command.make(
       Options.withAlias('l'),
       Options.withDefault(process.env.DX_DEBUG ?? 'info'),
     ),
+    // TODO(burdon): This isn't inherited?
+    verbose: Options.boolean('verbose', { ifPresent: true }).pipe(
+      Options.withDescription('Verbose logging.'),
+      Options.withAlias('v'),
+    ),
   },
   (options) =>
     Effect.gen(function* () {
+      // const { verbose } = yield* CommandConfig;
+      const verbose = options.verbose;
+
       // Configure logging.
       const logBuffer = createLogBuffer();
       log.config({ filter: options.logLevel });
@@ -72,7 +79,6 @@ export const chat = Command.make(
       const client = yield* ClientService;
       const runtime = yield* Effect.runtime<AiChatServices>();
       const service = yield* AiService.AiService;
-      const { verbose } = yield* CommandConfig;
 
       const model = Option.getOrElse(options.model, () =>
         Match.value(options.provider).pipe(
@@ -98,13 +104,17 @@ export const chat = Command.make(
       });
 
       const handleConversationCreate = async (blueprints: string[]) => {
-        const conversation = await processor.createConversation(space, blueprints);
-        setConversation(conversation);
-        return conversation;
+        const current = conversation();
+        await current?.close();
+
+        log.info('creating conversation', { blueprints });
+        const next = await processor.createConversation(space, blueprints);
+        setConversation(next);
+        return next;
       };
 
-      // TODO(burdon): Load previous conversation? Need Chat object for state.
-      yield* Effect.promise(() => handleConversationCreate(options.blueprints));
+      // TODO(burdon): Load/select previous saved conversation? Need Chat object for state.
+      yield* Effect.promise(async () => await handleConversationCreate(options.blueprints));
 
       const exitSignal = yield* Deferred.make<void, never>();
 
@@ -112,42 +122,21 @@ export const chat = Command.make(
       yield* Effect.promise(() =>
         render(
           () => (
-            <ErrorBoundary
-              fallback={(err: any) => {
-                log.catch(err);
-                return (
-                  <box flexDirection='column' overflow='hidden'>
-                    <text style={{ fg: theme.log.error }}>{err.stack}</text>
-                  </box>
-                );
-              }}
-            >
-              <App showConsole={options.debug} focusElements={['input', 'messages']} logBuffer={logBuffer}>
-                {conversation() && (
-                  <Chat
-                    processor={processor}
-                    conversation={conversation()!}
-                    model={model}
-                    verbose={verbose}
-                    onConversationCreate={({ blueprints }) => {
-                      // TODO(burdon): This is a hack to get the promise to run.
-                      setTimeout(async () => {
-                        await handleConversationCreate(blueprints);
-                      });
-                    }}
-                  />
-                )}
-              </App>
-            </ErrorBoundary>
+            <App showConsole={options.debug} focusElements={['input', 'messages']} logBuffer={logBuffer}>
+              {conversation() && (
+                <Chat
+                  processor={processor}
+                  conversation={conversation()!}
+                  model={model}
+                  verbose={verbose}
+                  onConversationCreate={({ blueprints }) => handleConversationCreate(blueprints)}
+                />
+              )}
+            </App>
           ),
           {
             exitOnCtrlC: true,
             exitSignals: ['SIGINT', 'SIGTERM'],
-            // NOTE: Called on on SIGINT (ctrl-c) and SIGTERM (via pkill not killall).
-            onDestroy: () => {
-              logBuffer.close();
-              Effect.runSync(Deferred.succeed(exitSignal, undefined));
-            },
             openConsoleOnError: true,
             consoleOptions: {
               position: ConsolePosition.TOP,
@@ -157,6 +146,11 @@ export const chat = Command.make(
               colorInfo: theme.log.info,
               colorWarn: theme.log.warn,
               colorError: theme.log.error,
+            },
+            // NOTE: Called on on SIGINT (ctrl-c) and SIGTERM (via pkill not killall).
+            onDestroy: () => {
+              logBuffer.close();
+              Effect.runSync(Deferred.succeed(exitSignal, undefined));
             },
           },
         ),
@@ -179,21 +173,3 @@ export const chat = Command.make(
   Command.provide(({ provider, spaceId }) => chatLayer({ provider, spaceId, functions })),
   Command.provideEffectDiscard(() => withTypes(...typeRegistry)),
 );
-function restoreTerminalState() {
-  // Leave raw mode if enabled
-  try {
-    process.stdin.setRawMode?.(false);
-  } catch {}
-
-  // Show cursor
-  process.stdout.write('\x1b[?25h');
-
-  // Exit alternate screen buffer
-  process.stdout.write('\x1b[?1049l');
-
-  // Reset colors & styles
-  process.stdout.write('\x1b[0m');
-
-  // Move cursor to a normal sane location
-  process.stdout.write('\x1b[H');
-}

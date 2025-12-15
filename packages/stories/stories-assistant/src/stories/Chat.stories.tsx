@@ -132,10 +132,7 @@ const DefaultStory = ({ modules, showContext, blueprints = [] }: StoryProps) => 
 
   const chats = useQuery(space?.db, Filter.type(Assistant.Chat));
   const binder = useContextBinder(chats.at(-1)?.queue.target);
-  const objects = useSignalsMemo(
-    () => binder?.objects.value.map((ref) => ref.target).filter(isNonNullable) ?? [],
-    [binder],
-  );
+  const objects = useSignalsMemo(() => binder?.objects.value ?? [], [binder]);
 
   if (!space) {
     return null;
@@ -334,7 +331,7 @@ export const WithChess: Story = {
     onInit: async ({ space }) => {
       // TODO(burdon): Add player DID (for user and assistant).
       space.db.add(
-        Chess.makeGame({
+        Chess.make({
           name: 'Challenge',
           pgn: [
             '1. e4 e5',
@@ -648,7 +645,7 @@ export const WithChessTrigger: Story = {
     onInit: async ({ space }) => {
       // TODO(burdon): Add player DID (for user and assistant).
       space.db.add(
-        Chess.makeGame({
+        Chess.make({
           name: 'Challenge',
           pgn: [
             '1. e4 e5',

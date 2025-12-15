@@ -14,7 +14,7 @@ export default () =>
       resolve: ({ name, pgn }) => {
         return {
           data: {
-            object: Chess.makeGame({ name, pgn }),
+            object: Chess.make({ name, pgn }),
           },
         };
       },

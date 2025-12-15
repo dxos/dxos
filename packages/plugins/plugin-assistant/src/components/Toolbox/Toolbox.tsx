@@ -9,8 +9,7 @@ import { type Database, type Ref } from '@dxos/echo';
 import { Function } from '@dxos/functions';
 import { log } from '@dxos/log';
 import { Filter, useQuery } from '@dxos/react-client/echo';
-import { type ThemedClassName } from '@dxos/react-ui';
-import { useTranslation } from '@dxos/react-ui';
+import { type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
 import { meta } from '../../meta';
@@ -21,7 +20,7 @@ export type ToolboxProps = ThemedClassName<{
   services?: { service: ServiceType }[];
   functions?: Function.Function[];
   // TODO(burdon): Combine into single array.
-  blueprints?: readonly Ref.Ref<Blueprint.Blueprint>[];
+  blueprints?: readonly Blueprint.Blueprint[];
   activeBlueprints?: readonly Ref.Ref<Blueprint.Blueprint>[];
 }>;
 
@@ -33,10 +32,10 @@ export const Toolbox = ({ classNames, functions, services, blueprints, activeBlu
       {blueprints && blueprints.length > 0 && (
         <Section
           title='Blueprints'
-          items={blueprints.map(({ target }) => ({
-            name: target?.name ?? '',
-            description: target?.description ?? '',
-            subitems: target?.tools.map((toolId) => ({ name: `∙ ${safeToolId(toolId)}` })),
+          items={blueprints.map(({ name, description, tools }) => ({
+            name,
+            description,
+            subitems: tools.map((toolId) => ({ name: `∙ ${safeToolId(toolId)}` })),
           }))}
         />
       )}

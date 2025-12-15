@@ -34,7 +34,7 @@ const MessageItem = (props: { message: Message }) => {
   return (
     <Switch>
       <Match when={props.message.role === 'user'}>
-        <text>
+        <text marginLeft={1} marginRight={1}>
           <span style={{ fg: theme.role('user') }}>⟫</span> {props.message.content}
         </text>
       </Match>
@@ -44,14 +44,7 @@ const MessageItem = (props: { message: Message }) => {
         </box>
       </Match>
       <Match when={props.message.role === 'error'}>
-        <box
-          marginTop={1}
-          marginBottom={1}
-          paddingLeft={1}
-          paddingRight={1}
-          borderStyle='single'
-          borderColor={theme.log.error}
-        >
+        <box margin={1} paddingLeft={1} paddingRight={1} borderStyle='single' borderColor={theme.log.error}>
           <text style={{ fg: theme.log.error }}>{props.message.content}</text>
         </box>
       </Match>

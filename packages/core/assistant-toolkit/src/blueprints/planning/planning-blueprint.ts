@@ -4,7 +4,7 @@
 
 import { ToolId } from '@dxos/ai';
 import { Blueprint } from '@dxos/blueprints';
-import { Obj, Ref } from '@dxos/echo';
+import { Ref } from '@dxos/echo';
 import { Text } from '@dxos/schema';
 import { trim } from '@dxos/util';
 
@@ -85,7 +85,7 @@ const instructions = trim`
   - Be precise with task descriptions and hierarchy levels
 `;
 
-export const blueprint: Blueprint.Blueprint = Obj.make(Blueprint.Blueprint, {
+export const blueprint = Blueprint.make({
   key: 'dxos.org/blueprint/planning',
   name: 'Planning',
   description: 'Plans and tracks complex tasks with artifact management.',
@@ -94,5 +94,3 @@ export const blueprint: Blueprint.Blueprint = Obj.make(Blueprint.Blueprint, {
   },
   tools: [Tasks.read, Tasks.update].map((fn) => ToolId.make(fn.key)),
 });
-
-export default blueprint;

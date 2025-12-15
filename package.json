@@ -216,7 +216,8 @@
     "patchedDependencies": {
       "random-access-idb@1.2.2": "patches/random-access-idb@1.2.2.patch",
       "ts-node@10.9.1": "patches/ts-node@10.9.1.patch",
-      "uuid@8.3.2": "patches/uuid@8.3.2.patch"
+      "uuid@8.3.2": "patches/uuid@8.3.2.patch",
+      "@automerge/automerge-repo@2.5.1": "patches/@automerge__automerge-repo@2.5.1.patch"
     }
   }
 }
