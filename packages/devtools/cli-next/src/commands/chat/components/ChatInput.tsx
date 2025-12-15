@@ -18,8 +18,8 @@ type ChatInputProps = {
 };
 
 export const ChatInput = (props: ChatInputProps) => {
+  const appContext = useContext(AppContext);
   let textarea: TextareaRenderable | undefined;
-  const context = useContext(AppContext);
 
   // Sync signal to textarea (initialValue is not reactive).
   createEffect(() => {
@@ -40,7 +40,7 @@ export const ChatInput = (props: ChatInputProps) => {
 
   const isFocused = () => {
     const focused = props.focused?.();
-    return focused ?? context?.focus?.() === 'input';
+    return focused ?? appContext?.focus?.() === 'input';
   };
 
   return (

@@ -18,6 +18,7 @@ export interface QueueAPI {
 
 export class QueueFactory extends Resource implements QueueAPI {
   private readonly _queues = new Map<DXN.String, Queue<Entity.Unknown>>();
+
   private _service?: QueueService = undefined;
 
   constructor(

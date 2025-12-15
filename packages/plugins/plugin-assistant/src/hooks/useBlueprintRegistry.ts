@@ -11,7 +11,7 @@ import { type AiContextBinder } from '@dxos/assistant';
 import { Blueprint } from '@dxos/blueprints';
 import { type Database, Filter, Obj, Ref } from '@dxos/echo';
 import { useQuery } from '@dxos/react-client/echo';
-import { distinctBy, isNonNullable } from '@dxos/util';
+import { distinctBy } from '@dxos/util';
 
 /**
  * Provide a registry of blueprints from plugins.
@@ -45,8 +45,7 @@ export const useActiveBlueprints = ({ context }: { context?: AiContextBinder }) 
   const [active, setActive] = useState<Map<string, Blueprint.Blueprint>>(new Map());
 
   useSignalEffect(() => {
-    const refs = [...(context?.blueprints.value ?? [])];
-    const blueprints = refs.map((ref) => ref.target).filter(isNonNullable);
+    const blueprints = context?.blueprints.value ?? [];
     setActive(new Map(blueprints.map((blueprint) => [blueprint.key, blueprint])));
   });
 

@@ -24,6 +24,7 @@ import { Filter, Obj, Ref } from '@dxos/echo';
 import type { FunctionDefinition } from '@dxos/functions';
 import { log } from '@dxos/log';
 import { type Message } from '@dxos/types';
+import { isTruthy } from '@dxos/util';
 
 import { type AiChatServices } from '../../util';
 
@@ -75,33 +76,36 @@ export class ChatProcessor {
     }
   }
 
-  async createConversation(space: Space, blueprintKeys: string[]) {
-    // TODO(wittjosiah): This is copied from ChatCompanion.tsx.
-    const existingBlueprints = await space.db.query(Filter.type(Blueprint.Blueprint)).run();
-    for (const key of blueprintKeys) {
-      const existingBlueprint = existingBlueprints.find((blueprint) => blueprint.key === key);
-      if (existingBlueprint) {
-        // continue;
-        // TODO(wittjosiah): Stop doing this.
-        //   Currently doing this to ensure blueprints are always up to date from the registry.
-        space.db.remove(existingBlueprint);
-      }
+  async createConversation(space: Space, blueprintIds: string[]) {
+    const spaceBlueprints = await space.db.query(Filter.type(Blueprint.Blueprint)).run();
 
-      const blueprint = blueprintRegistry.getByKey(key);
-      if (!blueprint) {
-        log.warn(`Blueprint not found: ${key}`);
-        continue;
-      }
+    // Add blueprints to space.
+    const blueprints = blueprintIds
+      .map((key) => {
+        const existing = spaceBlueprints.find((blueprint) => blueprint.key === key);
+        if (existing) {
+          // TODO(wittjosiah): Stop doing this.
+          //   Currently doing this to ensure blueprints are always up-to-date from the registry.
+          space.db.remove(existing);
+          // continue;
+        }
 
-      space.db.add(Obj.clone(blueprint));
-      log.info(`Added blueprint: ${key}`);
-    }
+        const blueprint = blueprintRegistry.getByKey(key);
+        if (!blueprint) {
+          log.warn('blueprint not found', { key });
+          return;
+        }
+
+        log.info('adding blueprint', { key });
+        return space.db.add(Obj.clone(blueprint));
+      })
+      .filter(isTruthy);
 
     const queue = space.queues.create<Message.Message>();
     const conversation = new AiConversation(queue);
     await conversation.open();
 
-    const blueprints = await space.db.query(Filter.type(Blueprint.Blueprint)).run();
+    // Bind blueprints.
     await conversation.context.bind({
       blueprints: blueprints.map((blueprint) => Ref.make(blueprint)),
     });

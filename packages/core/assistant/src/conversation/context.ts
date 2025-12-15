@@ -2,18 +2,18 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type ReadonlySignal, computed } from '@preact/signals-core';
-import * as Array from 'effect/Array';
+import { Signal } from '@preact/signals-core';
+import * as EArray from 'effect/Array';
 import * as Context from 'effect/Context';
 import * as Function from 'effect/Function';
 import * as Schema from 'effect/Schema';
 
 import { Blueprint } from '@dxos/blueprints';
 import { Resource } from '@dxos/context';
-import { DXN, type Entity, Filter, Obj, Query, type Ref, Type } from '@dxos/echo';
+import { DXN, Obj, Query, type Ref, Type } from '@dxos/echo';
 import { type Queue } from '@dxos/echo-db';
-import { invariant } from '@dxos/invariant';
-import { ComplexSet } from '@dxos/util';
+import { log } from '@dxos/log';
+import { ComplexSet, isTruthy } from '@dxos/util';
 
 /**
  * Thread message that binds or unbinds contextual objects to a conversation.
@@ -45,13 +45,14 @@ export type BindingProps = Partial<{
 
 export class Bindings {
   readonly blueprints = new ComplexSet<Ref.Ref<Blueprint.Blueprint>>((ref) => ref.dxn.toString());
+
   // TODO(burdon): Some DXNs have the Space prefix so only compare the object ID.
   readonly objects = new ComplexSet<Ref.Ref<Obj.Any>>((ref) => ref.dxn.asEchoDXN()?.echoId);
 
   toJSON() {
     return {
-      blueprints: Array.fromIterable(this.blueprints).map((ref) => ref.dxn.toString()),
-      objects: Array.fromIterable(this.objects).map((ref) => ref.dxn.toString()),
+      blueprints: EArray.fromIterable(this.blueprints).map((ref) => ref.dxn.toString()),
+      objects: EArray.fromIterable(this.objects).map((ref) => ref.dxn.toString()),
     };
   }
 }
@@ -61,122 +62,166 @@ export class Bindings {
  */
 // TODO(burdon): Context should manage ephemeral state of bindings until prompt is issued?
 export class AiContextBinder extends Resource {
-  /**
-   * Reactive query of all bindings.
-   */
-  // TODO(burdon): Cache value?
-  private _bindings?: ReadonlySignal<Bindings>;
-  private _blueprints?: ReadonlySignal<Ref.Ref<Blueprint.Blueprint>[]>;
-  private _objects?: ReadonlySignal<Ref.Ref<Obj.Any>[]>;
+  private readonly _blueprints = new Signal<Blueprint.Blueprint[]>([]);
+  private readonly _objects = new Signal<Obj.Any[]>([]);
 
   constructor(private readonly _queue: Queue) {
     super();
   }
 
-  get bindings() {
-    invariant(this._bindings, 'AiContextBinder not open');
-    return this._bindings;
-  }
-
   get blueprints() {
-    invariant(this._blueprints, 'AiContextBinder not open');
     return this._blueprints;
   }
 
   get objects() {
-    invariant(this._objects, 'AiContextBinder not open');
     return this._objects;
   }
 
-  // TODO(wittjosiah): Use parent context?
   protected override async _open(): Promise<void> {
-    const query = this._queue.query(Query.select(Filter.everything()));
-    this._ctx.onDispose(query.subscribe(() => {}));
-    this._bindings = computed(() => this._reduce(query.results));
-    this._blueprints = computed(() => [...this.bindings.value.blueprints]);
-    this._objects = computed(() => [...this.bindings.value.objects]);
+    const query = this._queue.query(Query.type(ContextBinding));
+    this._ctx.onDispose(
+      query.subscribe(
+        async () => {
+          const bindings = this._reduce(query.results);
+
+          // Resolve references.
+          this._blueprints.value = this._resolve(bindings.blueprints, this._blueprints.peek());
+          this._objects.value = this._resolve(bindings.objects, this._objects.peek());
+          log('updated', {
+            blueprints: this._blueprints.value.length,
+            objects: this._objects.value.length,
+          });
+        },
+        {
+          fire: true,
+        },
+      ),
+    );
   }
 
   protected override async _close(): Promise<void> {
-    this._bindings = undefined;
-    this._blueprints = undefined;
-    this._objects = undefined;
+    this._blueprints.value = [];
+    this._objects.value = [];
+  }
+
+  async bind({ blueprints, objects }: BindingProps): Promise<void> {
+    const { added: addedBlueprints, next: nextBlueprints } = this._processBindings(blueprints, this._blueprints.peek());
+    const { added: addedObjects, next: nextObjects } = this._processBindings(objects, this._objects.peek());
+    if (!addedBlueprints.length && !addedObjects.length) {
+      return;
+    }
+
+    this._blueprints.value = nextBlueprints;
+    this._objects.value = nextObjects;
+
+    log('bind', { blueprints: addedBlueprints.length, objects: addedObjects.length });
+    await this._queue.append([
+      Obj.make(ContextBinding, {
+        blueprints: {
+          added: addedBlueprints,
+          removed: [],
+        },
+        objects: {
+          added: addedObjects,
+          removed: [],
+        },
+      }),
+    ]);
+  }
+
+  async unbind({ blueprints, objects }: BindingProps): Promise<void> {
+    if (!blueprints?.length && !objects?.length) {
+      return;
+    }
+
+    log('unbind', { blueprints: blueprints?.length, objects: objects?.length });
+    await this._queue.append([
+      Obj.make(ContextBinding, {
+        blueprints: {
+          added: [],
+          removed: blueprints ?? [],
+        },
+        objects: {
+          added: [],
+          removed: objects ?? [],
+        },
+      }),
+    ]);
   }
 
   /**
-   * Asynchronous query of all bindings.
+   * Process bindings to filter duplicates and determine next state.
    */
-  async query(): Promise<Bindings> {
-    const objects = await this._queue.query(Query.select(Filter.everything())).run();
-    return this._reduce(objects);
-  }
-
-  // TODO(burdon): Pass in Blueprint obj (from registry?) and create reference.
-  async bind(props: BindingProps): Promise<void> {
-    const blueprints =
-      props.blueprints?.filter(
-        (ref) => !this.blueprints.peek().find((blueprint) => blueprint.dxn.toString() === ref.dxn.toString()),
-      ) ?? [];
-    const objects =
-      props.objects?.filter(
-        (ref) => !this.objects.peek().find((object) => object.dxn.toString() === ref.dxn.toString()),
-      ) ?? [];
-
-    if (!blueprints.length && !objects.length) {
-      return;
+  private _processBindings<T extends Obj.Any>(
+    refs: Ref.Ref<T>[] | undefined,
+    current: T[],
+  ): { added: Ref.Ref<T>[]; next: T[] } {
+    const next = [...current];
+    const added: Ref.Ref<T>[] = [];
+    if (!refs?.length) {
+      return { added, next };
     }
 
-    await this._queue.append([
-      Obj.make(ContextBinding, {
-        blueprints: {
-          added: blueprints,
-          removed: [],
-        },
-        objects: {
-          added: objects,
-          removed: [],
-        },
-      }),
-    ]);
-  }
+    const seen = new Set(current.map((obj) => Obj.getDXN(obj).toString()));
+    for (const ref of refs) {
+      const dxn = ref.dxn.toString();
+      if (!seen.has(dxn)) {
+        seen.add(dxn);
+        added.push(ref);
 
-  async unbind(props: BindingProps): Promise<void> {
-    if (!props.blueprints?.length && !props.objects?.length) {
-      return;
+        // Only resolve target if available (has target or resolver).
+        if (ref.isAvailable) {
+          const target = ref.target;
+          if (target) {
+            next.push(target);
+          }
+        }
+      }
     }
 
-    await this._queue.append([
-      Obj.make(ContextBinding, {
-        blueprints: {
-          added: [],
-          removed: props.blueprints ?? [],
-        },
-        objects: {
-          added: [],
-          removed: props.objects ?? [],
-        },
-      }),
-    ]);
+    return { added, next };
   }
 
-  private _reduce(items: Entity.Unknown[]): Bindings {
+  /**
+   * Reduce results into sets of blueprints and objects.
+   */
+  private _reduce(items: ContextBinding[]): Bindings {
     return Function.pipe(
       items,
-      Array.filter(Obj.instanceOf(ContextBinding)),
-      Array.reduce(new Bindings(), (context, item) => {
-        item.blueprints.removed.forEach((ref) => context.blueprints.delete(ref));
-        item.blueprints.added.forEach((ref) => context.blueprints.add(ref));
-        item.objects.removed.forEach((ref) => {
+      EArray.reduce(new Bindings(), (context, { blueprints, objects }) => {
+        blueprints.added.forEach((ref) => context.blueprints.add(ref));
+        blueprints.removed.forEach((ref) => context.blueprints.delete(ref));
+
+        objects.added.forEach((ref) => context.objects.add(ref));
+        objects.removed.forEach((ref) => {
           for (const obj of context.objects) {
             if (DXN.equalsEchoId(obj.dxn, ref.dxn)) {
               context.objects.delete(obj);
             }
           }
         });
-        item.objects.added.forEach((ref) => context.objects.add(ref));
+
         return context;
       }),
     );
+  }
+
+  /**
+   * Resolve references to objects, falling back to existing objects if the reference target is missing.
+   */
+  private _resolve<T>(refs: Iterable<Ref.Ref<T>>, current: T[]): T[] {
+    return [...refs]
+      .map((ref) => {
+        let target: T | undefined;
+        // Only resolve target if available (has target or resolver).
+        if (ref.isAvailable) {
+          target = ref.target;
+        }
+
+        // Fallback to existing object.
+        return target ?? current.find((obj) => Obj.getDXN(obj as any).toString() === ref.dxn.toString());
+      })
+      .filter(isTruthy);
   }
 }
 

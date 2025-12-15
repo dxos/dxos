@@ -17,8 +17,7 @@ import {
 } from '@dxos/assistant';
 import { Blueprint } from '@dxos/blueprints';
 import { SpaceProperties } from '@dxos/client-protocol';
-import { DXN, Obj, Query, Ref } from '@dxos/echo';
-import { Database } from '@dxos/echo';
+import { DXN, Database, Obj, Query, Ref } from '@dxos/echo';
 import { acquireReleaseResource } from '@dxos/effect';
 import { TestHelpers } from '@dxos/effect/testing';
 import { CredentialsService, FunctionInvocationService, QueueService, TracingService } from '@dxos/functions';
@@ -29,19 +28,21 @@ import { Markdown } from '@dxos/plugin-markdown/types';
 import { Collection } from '@dxos/schema';
 import { HasSubject, type Message } from '@dxos/types';
 
-import { WithProperties, testToolkit } from '../testing';
-import { MarkdownBlueprint, MarkdownFunction } from '../toolkit';
+import { WithProperties, testToolkit } from '../../testing';
+import * as MarkdownBlueprint from '../markdown-blueprint';
+
+import create from './create';
 
 ObjectId.dangerouslyDisableRandomness();
 
 const TestLayer = Layer.mergeAll(
   AiService.model('@anthropic/claude-opus-4-0'),
-  makeToolResolverFromFunctions([MarkdownFunction.create, MarkdownFunction.open, MarkdownFunction.update], testToolkit),
+  makeToolResolverFromFunctions(MarkdownBlueprint.functions, testToolkit),
   makeToolExecutionServiceFromFunctions(testToolkit, testToolkit.toLayer({}) as any),
 ).pipe(
   Layer.provideMerge(
     FunctionInvocationServiceLayerTest({
-      functions: [MarkdownFunction.create, MarkdownFunction.open, MarkdownFunction.update],
+      functions: MarkdownBlueprint.functions,
     }),
   ),
   Layer.provideMerge(
@@ -65,7 +66,7 @@ describe('create', () => {
       function* (_) {
         const name = 'BlueYard';
         const content = 'Founders and portfolio of BlueYard.';
-        const result = yield* FunctionInvocationService.invokeFunction(MarkdownFunction.create, {
+        const result = yield* FunctionInvocationService.invokeFunction(create, {
           name,
           content,
         });
@@ -89,7 +90,7 @@ describe('create', () => {
         const conversation = yield* acquireReleaseResource(() => new AiConversation(queue));
 
         yield* Database.Service.flush({ indexes: true });
-        const markdownBlueprint = yield* Database.Service.add(Obj.clone(MarkdownBlueprint));
+        const markdownBlueprint = yield* Database.Service.add(Obj.clone(MarkdownBlueprint.make()));
         yield* Effect.promise(() =>
           conversation.context.bind({
             blueprints: [Ref.make(markdownBlueprint)],
