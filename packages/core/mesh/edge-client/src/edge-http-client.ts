@@ -119,7 +119,7 @@ export class EdgeHttpClient {
   //
 
   public async getStatus(args?: EdgeHttpGetArgs): Promise<EdgeStatus> {
-    return this._call(new URL('/status', this.baseUrl), { ...args, method: 'GET' });
+    return this._call(new URL('/status', this.baseUrl), { ...args, method: 'GET', auth: true });
   }
 
   //
