@@ -6630,9 +6630,30 @@ importers:
       '@dxos/plugin-chess':
         specifier: workspace:*
         version: link:../../plugins/plugin-chess
+      '@dxos/plugin-inbox':
+        specifier: workspace:*
+        version: link:../../plugins/plugin-inbox
+      '@dxos/plugin-kanban':
+        specifier: workspace:*
+        version: link:../../plugins/plugin-kanban
+      '@dxos/plugin-map':
+        specifier: workspace:*
+        version: link:../../plugins/plugin-map
       '@dxos/plugin-markdown':
         specifier: workspace:*
         version: link:../../plugins/plugin-markdown
+      '@dxos/plugin-script':
+        specifier: workspace:*
+        version: link:../../plugins/plugin-script
+      '@dxos/plugin-table':
+        specifier: workspace:*
+        version: link:../../plugins/plugin-table
+      '@dxos/plugin-thread':
+        specifier: workspace:*
+        version: link:../../plugins/plugin-thread
+      '@dxos/plugin-transcription':
+        specifier: workspace:*
+        version: link:../../plugins/plugin-transcription
       '@dxos/protocols':
         specifier: workspace:*
         version: link:../../core/protocols
@@ -7609,9 +7630,15 @@ importers:
       '@dxos/plugin-graph':
         specifier: workspace:*
         version: link:../plugin-graph
+      '@dxos/plugin-map':
+        specifier: workspace:*
+        version: link:../plugin-map
       '@dxos/plugin-space':
         specifier: workspace:*
         version: link:../plugin-space
+      '@dxos/plugin-table':
+        specifier: workspace:*
+        version: link:../plugin-table
       '@dxos/plugin-transcription':
         specifier: workspace:*
         version: link:../plugin-transcription
@@ -7733,12 +7760,6 @@ importers:
       '@dxos/plugin-chess':
         specifier: workspace:*
         version: link:../plugin-chess
-      '@dxos/plugin-map':
-        specifier: workspace:*
-        version: link:../plugin-map
-      '@dxos/plugin-table':
-        specifier: workspace:*
-        version: link:../plugin-table
       '@dxos/random':
         specifier: workspace:*
         version: link:../../common/random

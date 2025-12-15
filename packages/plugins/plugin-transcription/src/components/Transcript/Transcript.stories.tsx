@@ -31,8 +31,9 @@ import {
   useTestTranscriptionQueueWithEntityExtraction,
 } from '../../testing';
 import { translations } from '../../translations';
+import { renderByline } from '../../util';
 
-import { TranscriptView, type TranscriptViewProps, renderByline } from './Transcript';
+import { TranscriptView, type TranscriptViewProps } from './Transcript';
 
 faker.seed(1);
 

@@ -16,6 +16,7 @@
       "@dxos/functions/testing": ["packages/core/functions/src/testing/index.ts"],
       "@dxos/devtools": ["packages/devtools/devtools/src/index.ts"],
       "@dxos/plugin-assistant": ["packages/plugins/plugin-assistant/src/index.ts"],
+      "@dxos/plugin-assistant/blueprints": ["packages/plugins/plugin-assistant/src/blueprints/index.ts"],
       "@dxos/plugin-assistant/types": ["packages/plugins/plugin-assistant/src/types/index.ts"],
       "@dxos/plugin-attention": ["packages/plugins/plugin-attention/src/index.ts"],
       "@dxos/plugin-automation": ["packages/plugins/plugin-automation/src/index.ts"],
