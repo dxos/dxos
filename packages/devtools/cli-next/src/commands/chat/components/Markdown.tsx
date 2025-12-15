@@ -72,7 +72,7 @@ const RenderNode = (props: { node: SyntaxNode; content: string }) => {
       return (
         <box marginLeft={1} marginRight={1} marginBottom={props.node.parent?.name === 'ListItem' ? 0 : 1}>
           <text style={{ fg: theme.text.default }}>
-            <RenderInline node={props.node} content={props.content} />
+            <RenderInline node={props.node} content={props.content} />{' '}
           </text>
         </box>
       );

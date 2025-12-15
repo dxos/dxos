@@ -8,8 +8,10 @@ import { For, Match, Switch, createEffect, createSignal, onCleanup, useContext }
 
 import { type ModelName } from '@dxos/ai';
 import { type AiConversation, GenerationObserver } from '@dxos/assistant';
+import { type Blueprint } from '@dxos/blueprints';
 import { Obj } from '@dxos/echo';
 import { log } from '@dxos/log';
+import { isTruthy } from '@dxos/util';
 
 import { DXOS_VERSION } from '../../../version';
 import { blueprintRegistry } from '../blueprints';
@@ -42,7 +44,7 @@ export const Chat = (props: ChatProps) => {
   // Conversation state.
   const chatMessages = useChatMessages();
   const infoMessages = useChatMessages();
-  const [blueprints, setBlueprints] = createSignal<string[]>([]);
+  const [blueprints, setBlueprints] = createSignal<Blueprint.Blueprint[]>([]);
   const [objects, setObjects] = createSignal<Obj.Any[]>([]);
 
   createEffect(() => {
@@ -58,7 +60,11 @@ export const Chat = (props: ChatProps) => {
   createEffect(() => {
     // Bridge Preact signals to Solid signals.
     const onUpdate = () => {
-      setBlueprints(props.conversation.context.blueprints.value.map((blueprint) => blueprint.name).sort());
+      setBlueprints(
+        props.conversation.context.blueprints.value
+          .map((blueprint) => blueprintRegistry.getByKey(blueprint.key))
+          .filter(isTruthy),
+      );
       setObjects(props.conversation.context.objects.value);
     };
 
@@ -167,18 +173,8 @@ export const Chat = (props: ChatProps) => {
                 <ChatMessages messages={chatMessages.messages.data} />
               </box>
               <box flexDirection='column' width={40} paddingLeft={2}>
-                <box flexDirection='column' flexShrink={0}>
-                  {blueprints().length > 0 && <text style={{ fg: theme.log.info }}>Blueprints:</text>}
-                  <box flexDirection='column' marginTop={1} marginBottom={1}>
-                    <For each={blueprints()}>{(blueprint) => <text>- {blueprint}</text>}</For>
-                  </box>
-                </box>
-                <box flexDirection='column' flexShrink={0}>
-                  {objects().length > 0 && <text style={{ fg: theme.log.info }}>Artifacts:</text>}
-                  <box flexDirection='column' marginTop={1} marginBottom={1}>
-                    <For each={objects()}>{(object) => <text>- {Obj.getLabel(object) ?? object.id}</text>}</For>
-                  </box>
-                </box>
+                <Blueprints blueprints={blueprints()} />
+                <Artifacts objects={objects()} />
                 {props.verbose && (
                   <box flexDirection='column' flexGrow={1}>
                     <ChatMessages messages={infoMessages.messages.data} />
@@ -199,8 +195,30 @@ export const Chat = (props: ChatProps) => {
         processing={appContext?.processing}
         model={props.model}
         metadata={props.processor.metadata}
-        blueprints={blueprints()}
+        blueprints={blueprints().map((blueprint) => blueprint.name)}
       />
+    </box>
+  );
+};
+
+const Blueprints = (props: { blueprints: Blueprint.Blueprint[] }) => {
+  return (
+    <box flexDirection='column' flexShrink={0}>
+      {props.blueprints.length > 0 && <text style={{ fg: theme.log.info }}>Blueprints</text>}
+      <box flexDirection='column' marginTop={1} marginBottom={1}>
+        <For each={props.blueprints}>{(blueprint) => <text>- {blueprint.name}</text>}</For>
+      </box>
+    </box>
+  );
+};
+
+const Artifacts = (props: { objects: Obj.Any[] }) => {
+  return (
+    <box flexDirection='column' flexShrink={0}>
+      {props.objects.length > 0 && <text style={{ fg: theme.log.info }}>Artifacts</text>}
+      <box flexDirection='column' marginTop={1} marginBottom={1}>
+        <For each={props.objects}>{(object) => <text>- {Obj.getLabel(object) ?? object.id}</text>}</For>
+      </box>
     </box>
   );
 };
