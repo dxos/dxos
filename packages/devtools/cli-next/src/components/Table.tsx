@@ -115,6 +115,9 @@ export const Table = <T,>(props: TableProps<T>) => {
         </box>
       )}
 
+      {/* Spacer to prevent scrollbar from intersecting header separator */}
+      {props.showHeader !== false && <box height={1} />}
+
       {/* Scrollable rows */}
       <box flexGrow={1} paddingTop={props.showHeader !== false ? 1 : 0}>
         <scrollbox
