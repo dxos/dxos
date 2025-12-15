@@ -36,12 +36,6 @@ export const trace = Command.make(
   },
   ({ functionId, spaceId }) =>
     Effect.gen(function* () {
-      // Initialize the client.
-      // Note: We need to figure out how to pass 'client' or 'db' to the component.
-      // The `Trace` component currently uses mock data, but eventually will use `useInvocationSpans`.
-      // We might need to wrap the TUI render in a Context Provider if specialized client access is needed.
-      // For now, we will verify the TUI structure itself.
-
       const { db } = yield* Database.Service;
       const { queues } = yield* QueueService;
       yield* Console.log('Starting invocation trace...');
@@ -63,6 +57,7 @@ export const trace = Command.make(
         log.info('trace: found invocationTraceQueue', { spaceId: db.spaceId, queueDxn });
       }
 
+      // TODO(wittjosiah): Factor out exit signal handling.
       const exitSignal = yield* Deferred.make<void, never>();
 
       // Render.
@@ -70,6 +65,7 @@ export const trace = Command.make(
         render(
           () => (
             <App showConsole={true} focusElements={['table']} logBuffer={logBuffer} theme={theme}>
+              {/* TODO(wittjosiah): Rather than pass db and queues probably should have some sort of context provider then introduce hooks for interacting with the db and queues. */}
               <Trace
                 db={db}
                 queues={queues}
