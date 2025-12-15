@@ -166,21 +166,19 @@ export const Chat = (props: ChatProps) => {
               <box flexDirection='column'>
                 <ChatMessages messages={chatMessages.messages.data} />
               </box>
-              {props.verbose && (
-                <box flexDirection='column' width={40} paddingLeft={2}>
-                  <box flexDirection='column'>
-                    {objects().length > 0 && (
-                      <box marginBottom={1}>
-                        <text style={{ fg: theme.log.info }}>Artifacts:</text>
-                      </box>
-                    )}
-                    <box>
-                      <For each={objects()}>{(object) => <text>- {Obj.getLabel(object) ?? object.id}</text>}</For>
-                    </box>
+              <box flexDirection='column' width={40} paddingLeft={2}>
+                <box flexDirection='column'>
+                  {objects().length > 0 && <text style={{ fg: theme.log.info }}>Artifacts:</text>}
+                  <box marginTop={1} marginBottom={1}>
+                    <For each={objects()}>{(object) => <text>- {Obj.getLabel(object) ?? object.id}</text>}</For>
                   </box>
-                  <ChatMessages messages={infoMessages.messages.data} />
                 </box>
-              )}
+                {props.verbose && (
+                  <box flexGrow={1}>
+                    <ChatMessages messages={infoMessages.messages.data} />
+                  </box>
+                )}
+              </box>
             </box>
           </Match>
         </Switch>
