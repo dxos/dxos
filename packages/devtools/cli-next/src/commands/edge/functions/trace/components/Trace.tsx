@@ -28,35 +28,18 @@ export type TraceProps = {
   functionId: Option.Option<string>;
 };
 
-/**
- * Extracts the UUID part from a DXN.
- */
-const getUuidFromDxn = (dxn: DXN | string | undefined): string | undefined => {
-  if (!dxn) {
-    return undefined;
-  }
-  const dxnString = dxn.toString();
-  const dxnParts = dxnString.split(':');
-  return dxnParts.at(-1);
-};
-
 export const Trace = (props: TraceProps) => {
   const [invocations, setInvocations] = createSignal<InvocationSpan[]>([]);
   const [selectedInvocation, setSelectedInvocation] = createSignal<InvocationSpan | undefined>();
   const [traceQueue, setTraceQueue] = createSignal<Queue<InvocationTraceEvent> | undefined>();
   const [functions, setFunctions] = createSignal<Function.Function[]>([]);
 
-  // Query for Function objects to resolve target names.
-  createEffect(() => {
-    const functionsQuery = props.db.query(Filter.type(Function.Function));
-    const update = () => {
-      setFunctions(functionsQuery.results as Function.Function[]);
-    };
-    const unsubscribe = functionsQuery.subscribe(update, { fire: true });
-    onCleanup(() => unsubscribe());
-  });
+  // Set up effects.
+  useFunctionQuery(props.db, setFunctions);
+  useTraceQueue(props.queueDxn, props.queues, setTraceQueue);
+  useInvocationsSubscription(traceQueue, props.functionId, setInvocations, selectedInvocation, setSelectedInvocation);
 
-  // Function name resolver.
+  // Function name resolver (needs access to functions signal).
   const getFunctionName = (invocationTarget: DXN | undefined): string | undefined => {
     if (!invocationTarget) {
       return undefined;
@@ -68,101 +51,7 @@ export const Trace = (props: TraceProps) => {
     return functions().find((fn) => getUserFunctionIdInMetadata(Obj.getMeta(fn)) === uuidPart)?.name;
   };
 
-  // Resolve the queue from the DXN.
-  createEffect(() => {
-    if (Option.isNone(props.queueDxn)) {
-      setTraceQueue(undefined);
-      return;
-    }
-
-    try {
-      const queue = props.queues.get<InvocationTraceEvent>(props.queueDxn.value);
-      setTraceQueue(queue);
-      // Initial refresh to load current state.
-      void queue.refresh();
-    } catch {
-      setTraceQueue(undefined);
-    }
-  });
-
-  // Subscribe to invocations and poll the queue for updates.
-  createEffect(() => {
-    const queue = traceQueue();
-    if (!queue) {
-      setInvocations([]);
-      return;
-    }
-
-    // Poll interval in milliseconds (1 second, matching useQueue default).
-    const POLL_INTERVAL = 1000;
-    let timeout: ReturnType<typeof setTimeout> | undefined;
-
-    // Poll the queue to pick up new events.
-    const poll = () => {
-      void queue.refresh().finally(() => {
-        timeout = setTimeout(poll, POLL_INTERVAL);
-      });
-    };
-
-    // Start polling.
-    poll();
-
-    // Query both start and end events from the trace queue.
-    const query = queue.query(Filter.or(Filter.type(InvocationTraceStartEvent), Filter.type(InvocationTraceEndEvent)));
-
-    const update = async () => {
-      // Use run() to get all events, not just cached results.
-      const events = (await query.run()) as InvocationTraceEvent[];
-      let spans = createInvocationSpans(events);
-
-      // Filter by function ID if provided.
-      if (Option.isSome(props.functionId)) {
-        const targetId = props.functionId.value;
-        spans = spans.filter((span) => span.invocationTarget?.toString().includes(targetId));
-      }
-
-      // Sort by time descending (newest first).
-      spans.sort((a, b) => b.timestamp - a.timestamp);
-
-      setInvocations(spans);
-
-      // Auto-select first item if no selection exists.
-      if (spans.length > 0 && !selectedInvocation()) {
-        setSelectedInvocation(spans[0]);
-      }
-    };
-
-    // Initial load of all events.
-    void update();
-
-    const unsubscribe = query.subscribe(() => {
-      void update();
-    });
-
-    onCleanup(() => {
-      if (timeout) {
-        clearTimeout(timeout);
-      }
-      unsubscribe();
-    });
-  });
-
-  const formatTime = (timestamp: number): string => {
-    return new Date(timestamp).toLocaleTimeString('en-US', {
-      hour12: false,
-      hour: '2-digit',
-      minute: '2-digit',
-      second: '2-digit',
-      fractionalSecondDigits: 3,
-    });
-  };
-
-  const formatStatus = (outcome?: InvocationOutcome): string => {
-    if (outcome === InvocationOutcome.SUCCESS) return 'OK';
-    if (outcome === InvocationOutcome.FAILURE) return 'ERR';
-    return outcome ?? 'UNKNOWN';
-  };
-
+  // Target display name (uses getFunctionName).
   const getTargetDisplayName = (span: InvocationSpan): string => {
     const targetDxn = span.invocationTarget?.dxn;
     const name = getFunctionName(targetDxn);
@@ -240,4 +129,137 @@ export const Trace = (props: TraceProps) => {
       </box>
     </box>
   );
+};
+
+// Helper: Extracts the UUID part from a DXN.
+const getUuidFromDxn = (dxn: DXN | string | undefined): string | undefined => {
+  if (!dxn) {
+    return undefined;
+  }
+  const dxnString = dxn.toString();
+  const dxnParts = dxnString.split(':');
+  return dxnParts.at(-1);
+};
+
+// Helper: Format timestamp as time string.
+const formatTime = (timestamp: number): string => {
+  return new Date(timestamp).toLocaleTimeString('en-US', {
+    hour12: false,
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+    fractionalSecondDigits: 3,
+  });
+};
+
+// Helper: Format invocation outcome as status string.
+const formatStatus = (outcome?: InvocationOutcome): string => {
+  if (outcome === InvocationOutcome.SUCCESS) return 'OK';
+  if (outcome === InvocationOutcome.FAILURE) return 'ERR';
+  return outcome ?? 'UNKNOWN';
+};
+
+// Effect: Query for Function objects to resolve target names.
+const useFunctionQuery = (db: Database.Database, setFunctions: (functions: Function.Function[]) => void) => {
+  createEffect(() => {
+    const functionsQuery = db.query(Filter.type(Function.Function));
+    const update = () => {
+      setFunctions(functionsQuery.results as Function.Function[]);
+    };
+    const unsubscribe = functionsQuery.subscribe(update, { fire: true });
+    onCleanup(() => unsubscribe());
+  });
+};
+
+// Effect: Resolve the queue from the DXN.
+const useTraceQueue = (
+  queueDxn: Option.Option<DXN>,
+  queues: QueueAPI,
+  setTraceQueue: (queue: Queue<InvocationTraceEvent> | undefined) => void,
+) => {
+  createEffect(() => {
+    if (Option.isNone(queueDxn)) {
+      setTraceQueue(undefined);
+      return;
+    }
+
+    try {
+      const queue = queues.get<InvocationTraceEvent>(queueDxn.value);
+      setTraceQueue(queue);
+      // Initial refresh to load current state.
+      void queue.refresh();
+    } catch {
+      setTraceQueue(undefined);
+    }
+  });
+};
+
+// Effect: Subscribe to invocations and poll the queue for updates.
+const useInvocationsSubscription = (
+  traceQueue: () => Queue<InvocationTraceEvent> | undefined,
+  functionId: Option.Option<string>,
+  setInvocations: (invocations: InvocationSpan[]) => void,
+  selectedInvocation: () => InvocationSpan | undefined,
+  setSelectedInvocation: (invocation: InvocationSpan | undefined) => void,
+) => {
+  createEffect(() => {
+    const queue = traceQueue();
+    if (!queue) {
+      setInvocations([]);
+      return;
+    }
+
+    // Poll interval in milliseconds (1 second, matching useQueue default).
+    const POLL_INTERVAL = 1000;
+    let timeout: ReturnType<typeof setTimeout> | undefined;
+
+    // Poll the queue to pick up new events.
+    const poll = () => {
+      void queue.refresh().finally(() => {
+        timeout = setTimeout(poll, POLL_INTERVAL);
+      });
+    };
+
+    // Start polling.
+    poll();
+
+    // Query both start and end events from the trace queue.
+    const query = queue.query(Filter.or(Filter.type(InvocationTraceStartEvent), Filter.type(InvocationTraceEndEvent)));
+
+    const update = async () => {
+      // Use run() to get all events, not just cached results.
+      const events = (await query.run()) as InvocationTraceEvent[];
+      let spans = createInvocationSpans(events);
+
+      // Filter by function ID if provided.
+      if (Option.isSome(functionId)) {
+        const targetId = functionId.value;
+        spans = spans.filter((span) => span.invocationTarget?.toString().includes(targetId));
+      }
+
+      // Sort by time descending (newest first).
+      spans.sort((a, b) => b.timestamp - a.timestamp);
+
+      setInvocations(spans);
+
+      // Auto-select first item if no selection exists.
+      if (spans.length > 0 && !selectedInvocation()) {
+        setSelectedInvocation(spans[0]);
+      }
+    };
+
+    // Initial load of all events.
+    void update();
+
+    const unsubscribe = query.subscribe(() => {
+      void update();
+    });
+
+    onCleanup(() => {
+      if (timeout) {
+        clearTimeout(timeout);
+      }
+      unsubscribe();
+    });
+  });
 };
