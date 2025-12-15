@@ -34,7 +34,7 @@ export const chat = Command.make(
   'chat',
   {
     spaceId: Common.spaceId.pipe(Options.optional),
-    // TODO(burdon): Remove.
+    // TODO(burdon): Remove?
     debug: Options.boolean('debug', { ifPresent: true }).pipe(
       Options.withDescription('Show console to see logs.'),
       Options.withAlias('d'),
