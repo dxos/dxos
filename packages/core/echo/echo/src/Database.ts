@@ -137,7 +137,9 @@ export interface Database extends Queryable {
   // TODO(burdon): Can we move this into graph?
   get schemaRegistry(): SchemaRegistry.SchemaRegistry;
 
-  // TODO(burdon): Comment required.
+  /**
+   * Get hypergraph.
+   */
   get graph(): Hypergraph.Hypergraph;
 
   /**
@@ -158,7 +160,6 @@ export interface Database extends Queryable {
   /**
    * Adds object to the database.
    */
-  // TODO(burdon): Add batch.
   add<T extends Entity.Unknown = Entity.Unknown>(obj: T, opts?: AddOptions): T;
 
   /**

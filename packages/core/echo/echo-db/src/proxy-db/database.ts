@@ -36,12 +36,25 @@ import { type ObjectMigration } from './object-migration';
 
 // TODO(burdon): Remove and progressively push methods to Database.Database.
 export interface EchoDatabase extends Database.Database {
+  /**
+   * Get notification about the data being saved to disk.
+   */
+  readonly saveStateChanged: ReadOnlyEvent<SaveStateChangedEvent>;
+
+  /** @deprecated */
+  readonly pendingBatch: ReadOnlyEvent<unknown>;
+
+  /** @deprecated */
+  readonly coreDatabase: CoreDatabase;
+
   /** @deprecated */
   get spaceKey(): PublicKey;
-  get spaceId(): SpaceId;
 
-  get graph(): HypergraphImpl;
+  // Overrides interface.
   get schemaRegistry(): DatabaseSchemaRegistry;
+
+  // Overrides interface.
+  get graph(): HypergraphImpl;
 
   toJSON(): object;
 
@@ -66,34 +79,16 @@ export interface EchoDatabase extends Database.Database {
   subscribeToSyncState(ctx: Context, callback: (state: SpaceSyncState) => void): CleanupFn;
 
   /**
-   * Get notification about the data being saved to disk.
+   * Insert new objects.
+   * @deprecated Use `add` instead.
    */
-  readonly saveStateChanged: ReadOnlyEvent<SaveStateChangedEvent>;
-
-  /**
-   * @deprecated
-   */
-  readonly pendingBatch: ReadOnlyEvent<unknown>;
-
-  /**
-   * @deprecated
-   */
-  readonly coreDatabase: CoreDatabase;
+  insert(data: unknown): Promise<unknown>;
 
   /**
    * Update objects.
    * @deprecated Directly mutate the object.
    */
-  // TODO(burdon): Remove.
   update(filter: Filter.Any, operation: unknown): Promise<void>;
-
-  /**
-   * Insert new objects.
-   * @deprecated Use `add` instead.
-   */
-  // TODO(burdon): Remove.
-  // TODO(dmaretskyi): Support meta.
-  insert(data: unknown): Promise<unknown>;
 }
 
 export type EchoDatabaseParams = {
