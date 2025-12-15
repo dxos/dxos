@@ -5,31 +5,23 @@
 import * as Effect from 'effect/Effect';
 
 import { Obj, Ref } from '@dxos/echo';
-import { Message, type Person } from '@dxos/types';
+import { Message, Person } from '@dxos/types';
 
 import { type GoogleMail } from '../../apis';
+import { Resolver } from '../../resolver';
 import { getPart, normalizeText, parseFromHeader } from '../../util';
 
 /**
  * Maps Gmail message to ECHO message object.
  */
-export const mapMessage = Effect.fn(function* (message: GoogleMail.Message, contacts: Person.Person[]) {
+export const mapMessage = Effect.fn(function* (message: GoogleMail.Message) {
   const created = new Date(parseInt(message.internalDate)).toISOString();
 
   const data = message.payload.body?.data ?? getPart(message, 'text/html') ?? getPart(message, 'text/plain');
   const fromHeader = message.payload.headers.find(({ name }) => name === 'From');
   const from = fromHeader && parseFromHeader(fromHeader.value);
 
-  // TODO(burdon): Factor out resolvers.
-  const contact =
-    from &&
-    contacts.find(({ emails }) => {
-      if (!emails) {
-        return false;
-      }
-
-      return emails.findIndex(({ value }) => value === from.email) !== -1;
-    });
+  const contact = from && (yield* Resolver.resolve(Person.Person, { email: from.email }));
 
   // Skip the message if content or sender is missing.
   // TODO(wittjosiah): This comparison should be done via foreignId probably.

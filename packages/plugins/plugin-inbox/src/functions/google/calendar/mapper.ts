@@ -4,18 +4,18 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Filter, Query, Ref } from '@dxos/echo';
-import { Database } from '@dxos/echo';
+import { Ref } from '@dxos/echo';
 import { Event, Person } from '@dxos/types';
 
 import { type GoogleCalendar } from '../../apis';
+import { Resolver } from '../../resolver';
 import { normalizeText } from '../../util';
 
 /**
  * Maps Google Calendar event to ECHO event object.
  */
-export const mapEvent: (event: GoogleCalendar.Event) => Effect.Effect<Event.Event | null, never, Database.Service> =
-  Effect.fn(function* (event: GoogleCalendar.Event) {
+export const mapEvent: (event: GoogleCalendar.Event) => Effect.Effect<Event.Event | null, never, Resolver> = Effect.fn(
+  function* (event: GoogleCalendar.Event) {
     // Skip cancelled events.
     if (event.status === 'cancelled') {
       return null;
@@ -37,29 +37,21 @@ export const mapEvent: (event: GoogleCalendar.Event) => Effect.Effect<Event.Even
         }
       : undefined;
 
-    // TODO(burdon): Breaks unit tests; factor out "resolvers" (create data toolkit).
-    // TODO(burdon): Expensive to run on each map.
-    const contacts = yield* Database.Service.runQuery(Query.select(Filter.type(Person.Person)));
-
     // Parse attendees.
-    // TODO(burdon): Factor out in common with Gmail.
-    const attendees = (event.attendees || [])
-      .filter((a) => a.email)
-      .map((a) => {
-        const contact = contacts.find(({ emails }) => {
-          if (!emails) {
-            return false;
-          }
-
-          return emails.findIndex(({ value }) => value === a.email) !== -1;
-        });
-
-        return {
-          email: a.email,
-          name: a.displayName,
-          contact: contact && Ref.make(contact),
-        };
-      });
+    const attendees = yield* Effect.all(
+      (event.attendees || [])
+        .filter((a) => a.email)
+        .map((a) =>
+          Effect.gen(function* () {
+            const contact = yield* Resolver.resolve(Person.Person, { email: a.email! });
+            return {
+              email: a.email!,
+              name: a.displayName,
+              contact: contact && Ref.make(contact),
+            };
+          }),
+        ),
+    );
 
     return Event.make({
       title: event.summary,
@@ -69,4 +61,5 @@ export const mapEvent: (event: GoogleCalendar.Event) => Effect.Effect<Event.Even
       startDate,
       endDate,
     });
-  });
+  },
+);

@@ -23,6 +23,7 @@ import { type Event } from '@dxos/types';
 // TODO(burdon): Importing from types/index.ts pulls in @dxos/client dependencies due to SpaceSchema.
 import * as Calendar from '../../../types/Calendar';
 import { GoogleCalendar } from '../../apis';
+import { InboxResolver } from '../../resolver';
 
 import { mapEvent } from './mapper';
 
@@ -108,7 +109,7 @@ export default defineFunction({
       return {
         newEvents: queueEvents.length,
       };
-    }).pipe(Effect.provide(FetchHttpClient.layer)),
+    }).pipe(Effect.provide(FetchHttpClient.layer), Effect.provide(InboxResolver.Live)),
 });
 
 type BaseSyncProps<T = unknown> = {

@@ -9,9 +9,9 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
 import { CredentialsService } from '@dxos/functions';
-import { TestDatabaseLayer } from '@dxos/functions-runtime/testing';
 
 import { GoogleCalendar } from '../../apis';
+import { InboxResolver } from '../../resolver';
 
 import { mapEvent } from './mapper';
 
@@ -35,39 +35,31 @@ const TestLayer = Layer.mergeAll(
  * pnpm vitest sync.test.ts
  */
 describe.runIf(process.env.ACCESS_TOKEN)('Google Calendar API', { timeout: 30_000 }, () => {
-  it.effect(
-    'get events by start time',
-    Effect.fnUntraced(
-      function* ({ expect }) {
-        const calendarId = 'primary';
-        const timeMin = new Date().toISOString();
-        const timeMax = new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString();
-        const { items = [] } = yield* GoogleCalendar.listEventsByStartTime(calendarId, timeMin, timeMax, 10);
-        expect(items).to.exist;
-        if (items.length) {
-          const item = yield* mapEvent(items[0]);
-          console.log(JSON.stringify({ event: item }, null, 2));
-        }
-      },
-      Effect.provide(Layer.merge(TestLayer, TestDatabaseLayer())),
-    ),
+  it.effect('get events by start time', ({ expect }) =>
+    Effect.gen(function* () {
+      const calendarId = 'primary';
+      const timeMin = new Date().toISOString();
+      const timeMax = new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString();
+      const { items = [] } = yield* GoogleCalendar.listEventsByStartTime(calendarId, timeMin, timeMax, 10);
+      expect(items).to.exist;
+      if (items.length) {
+        const item = yield* mapEvent(items[0]);
+        console.log(JSON.stringify({ event: item }, null, 2));
+      }
+    }).pipe(Effect.provide(Layer.mergeAll(TestLayer, InboxResolver.Mock()))),
   );
 
-  it.effect(
-    'get events by updated time',
-    Effect.fnUntraced(
-      function* ({ expect }) {
-        const calendarId = 'primary';
-        const updatedMin = new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString();
-        const { items = [] } = yield* GoogleCalendar.listEventsByUpdated(calendarId, updatedMin, 10);
-        expect(items).to.exist;
-        if (items.length) {
-          const item = yield* mapEvent(items[0]);
-          console.log(JSON.stringify({ event: item }, null, 2));
-        }
-      },
-      Effect.provide(Layer.merge(TestLayer, TestDatabaseLayer())),
-    ),
+  it.effect('get events by updated time', ({ expect }) =>
+    Effect.gen(function* () {
+      const calendarId = 'primary';
+      const updatedMin = new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString();
+      const { items = [] } = yield* GoogleCalendar.listEventsByUpdated(calendarId, updatedMin, 10);
+      expect(items).to.exist;
+      if (items.length) {
+        const item = yield* mapEvent(items[0]);
+        console.log(JSON.stringify({ event: item }, null, 2));
+      }
+    }).pipe(Effect.provide(Layer.mergeAll(TestLayer, InboxResolver.Mock()))),
   );
 
   it.effect('transform event to object', ({ expect }) =>
@@ -80,6 +72,6 @@ describe.runIf(process.env.ACCESS_TOKEN)('Google Calendar API', { timeout: 30_00
         const item = yield* mapEvent(items[0]);
         console.log(JSON.stringify({ event: item }, null, 2));
       }
-    }).pipe(Effect.provide(Layer.merge(TestLayer, TestDatabaseLayer()))),
+    }).pipe(Effect.provide(Layer.mergeAll(TestLayer, InboxResolver.Mock()))),
   );
 });

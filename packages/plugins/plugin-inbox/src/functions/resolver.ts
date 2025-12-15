@@ -5,41 +5,109 @@
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
+import type * as Schema from 'effect/Schema';
 
-import { Database, Filter, Query } from '@dxos/echo';
+import { Database, Filter, Query, Type } from '@dxos/echo';
 import { Organization, Person } from '@dxos/types';
 
-/**
- * Attempts to match the given source to a target object using the provided resolution logic.
- */
-// TODO(burdon): Factor out to @dxos/schema.
-export type Resolver<Source, Target, E = never, R = never> = (
-  source: Source,
-) => Effect.Effect<Target | undefined, E, R>;
-
-export type ResolverDefinition = { source: unknown; target: unknown };
-
-export type ResolverDefinitionMap = Record<string, ResolverDefinition>;
-
-export type ResolverKind<D extends ResolverDefinitionMap> = keyof D & string;
-
-/**
- * Map of resolver effects indexed by resolver kind.
- */
-export type ResolverMap<D extends ResolverDefinitionMap, K extends ResolverKind<D> = ResolverKind<D>> = {
-  [P in K]: Resolver<D[P]['source'], D[P]['target']>;
-};
-
-//
-// TODO(burdon): Factor out implementation.
-//
-
 export type HasEmail = { email: string };
+
+export type ResolverType<T, I> = (input: I) => Effect.Effect<T | undefined>;
+
+export type ResolverMap = Record<string, ResolverType<any, any>>;
+
+export type InboxResolverFunction<T> = (input: HasEmail) => Effect.Effect<T | undefined>;
+
+export type InboxResolverMap = Record<string, InboxResolverFunction<any>>;
+
+/**
+ * Service for resolving objects from external data.
+ */
+export class Resolver extends Context.Tag('PluginInbox/Resolver')<
+  Resolver,
+  {
+    resolve<T, I>(schema: Schema.Schema<T, any>, input: I): Effect.Effect<T | undefined>;
+  }
+>() {
+  static resolve<T, I>(schema: Schema.Schema<T, any>, input: I) {
+    return Effect.flatMap(Resolver, (service) => service.resolve(schema, input));
+  }
+
+  static fromResolvers(resolvers: ResolverMap) {
+    return Layer.succeed(
+      Resolver,
+      Resolver.of({
+        resolve: (schema, input: any) => {
+          const typename = Type.getTypename(schema);
+          const resolver = resolvers[typename];
+          if (resolver) {
+            return resolver(input);
+          }
+
+          return Effect.succeed(undefined);
+        },
+      }),
+    );
+  }
+}
+
+/**
+ * Inbox specific resolver service.
+ */
+export class InboxResolver {
+  static Live = Layer.effect(
+    Resolver,
+    Effect.gen(function* () {
+      const personResolver = yield* createPersonResolver;
+      const organizationResolver = yield* createOrganizationResolver;
+      const resolvers: Record<string, InboxResolverFunction<any>> = {
+        [Type.getTypename(Person.Person)]: personResolver,
+        [Type.getTypename(Organization.Organization)]: organizationResolver,
+      };
+
+      return Resolver.of({
+        resolve: (schema, input: any) => {
+          const typename = Type.getTypename(schema);
+          const resolver = resolvers[typename];
+          if (resolver) {
+            return resolver(input);
+          }
+
+          return Effect.succeed(undefined);
+        },
+      });
+    }),
+  );
+
+  static Mock = (data: { people?: Person.Person[]; organizations?: Organization.Organization[] } = {}) =>
+    Layer.succeed(
+      Resolver,
+      Resolver.of({
+        resolve: (schema, input: any) => {
+          const typename = Type.getTypename(schema);
+          if (typename === Type.getTypename(Person.Person)) {
+            const person = data.people?.find((p) =>
+              p.emails?.some((e) => e.value === input.email || e.value === input),
+            );
+            return Effect.succeed(person as any);
+          } else if (typename === Type.getTypename(Organization.Organization)) {
+            const domain = extractDomain(input.email);
+            if (domain) {
+              const org = data.organizations?.find((o) => o.website && matchesDomain(o.website, domain));
+              return Effect.succeed(org as any);
+            }
+          }
+
+          return Effect.succeed(undefined);
+        },
+      }),
+    );
+}
 
 export const createOrganizationResolver = Effect.gen(function* () {
   // Cache.
   const organizations = yield* Database.Service.runQuery(Query.select(Filter.type(Organization.Organization)));
-  const resolver: Resolver<HasEmail, Organization.Organization> = ({ email }) => {
+  const resolver: InboxResolverFunction<Organization.Organization> = ({ email }: HasEmail) => {
     const domain = extractDomain(email);
     return Effect.succeed(
       domain
@@ -54,35 +122,12 @@ export const createOrganizationResolver = Effect.gen(function* () {
 export const createPersonResolver = Effect.gen(function* () {
   // Cache.
   const contacts = yield* Database.Service.runQuery(Query.select(Filter.type(Person.Person)));
-  const resolver: Resolver<HasEmail, Person.Person> = ({ email }) => {
+  const resolver: InboxResolverFunction<Person.Person> = ({ email }: HasEmail) => {
     return Effect.succeed(contacts.find((contact) => contact.emails?.some(({ value }) => value === email)));
   };
 
   return resolver;
 });
-
-//
-// TODO(burdon): Factor out implementation.
-//
-
-export type InboxResolverDefinitions = {
-  person: { source: HasEmail; target: Person.Person };
-  organization: { source: HasEmail; target: Organization.Organization };
-};
-
-export const createInboxResolverMap = Effect.gen(function* () {
-  return {
-    organization: yield* createOrganizationResolver,
-    person: yield* createPersonResolver,
-  } satisfies ResolverMap<InboxResolverDefinitions>;
-});
-
-export class InboxResolverMap extends Context.Tag('InboxResolverMap')<
-  InboxResolverMap,
-  ResolverMap<InboxResolverDefinitions>
->() {
-  static readonly Live = Layer.effect(InboxResolverMap, createInboxResolverMap);
-}
 
 //
 // TODO(burdon): Factor out implementation.

@@ -11,11 +11,10 @@ import * as Function from 'effect/Function';
 import * as Layer from 'effect/Layer';
 
 import { CredentialsService } from '@dxos/functions';
-import { TestDatabaseLayer } from '@dxos/functions-runtime/testing';
 import { invariant } from '@dxos/invariant';
-import { type Person } from '@dxos/types';
 
 import { GoogleMail } from '../../apis';
+import { InboxResolver } from '../../resolver';
 
 import { mapMessage } from './mapper';
 
@@ -49,8 +48,8 @@ describe.runIf(process.env.GOOGLE_ACCESS_TOKEN)('Gmail API', { timeout: 30_000 }
     }, Effect.provide(TestLayer)),
   );
 
-  it.effect('get messages', ({ expect }) => {
-    return Effect.gen(function* () {
+  it.effect('get messages', ({ expect }) =>
+    Effect.gen(function* () {
       const userId = 'me';
       const { messages } = yield* GoogleMail.listMessages(userId, 'label:investor', 50);
       invariant(messages);
@@ -60,7 +59,7 @@ describe.runIf(process.env.GOOGLE_ACCESS_TOKEN)('Gmail API', { timeout: 30_000 }
         Array.map((message) =>
           Function.pipe(
             GoogleMail.getMessage(userId, message.id),
-            Effect.flatMap((message) => mapMessage(message, [] as Person.Person[])),
+            Effect.flatMap((message) => mapMessage(message)),
           ),
         ),
         Effect.all,
@@ -69,6 +68,6 @@ describe.runIf(process.env.GOOGLE_ACCESS_TOKEN)('Gmail API', { timeout: 30_000 }
       expect(objects).to.exist;
       console.log(JSON.stringify(objects, null, 2));
       console.log((objects?.[0]?.blocks?.[0] as any)?.text);
-    }).pipe(Effect.provide(Layer.merge(TestLayer, TestDatabaseLayer())));
-  });
+    }).pipe(Effect.provide(Layer.mergeAll(TestLayer, InboxResolver.Mock()))),
+  );
 });

@@ -18,7 +18,7 @@ import { Database } from '@dxos/echo';
 import type { Queue } from '@dxos/echo-db';
 import { QueueService, defineFunction } from '@dxos/functions';
 import { log } from '@dxos/log';
-import { type Message, Person } from '@dxos/types';
+import { type Message } from '@dxos/types';
 
 // NOTE: While the integration is in test mode, only the emails listed in the following dashboard are supported:
 //   https://console.cloud.google.com/auth/audience?authuser=1&project=composer-app-454920
@@ -26,6 +26,7 @@ import { type Message, Person } from '@dxos/types';
 // TODO(burdon): Importing from types/index.ts pulls in @dxos/client dependencies due to SpaceSchema.
 import * as Mailbox from '../../../types/Mailbox';
 import { GoogleMail } from '../../apis';
+import { InboxResolver } from '../../resolver';
 
 import { mapMessage } from './mapper';
 
@@ -140,11 +141,10 @@ export default defineFunction({
         restrictedMode,
       );
       log('sync complete', { newMessages: newMessagesCount });
-
       return {
         newMessages: newMessagesCount,
       };
-    }).pipe(Effect.provide(FetchHttpClient.layer)),
+    }).pipe(Effect.provide(FetchHttpClient.layer), Effect.provide(InboxResolver.Live)),
 });
 
 //
@@ -254,9 +254,6 @@ const streamGmailMessagesToQueue = Effect.fn(function* (
     chunkDays: STREAMING_CONFIG.dateChunkDays,
   };
 
-  // TODO(burdon): Move to resolver.
-  const contacts = yield* Database.Service.runQuery(Query.select(Filter.type(Person.Person)));
-
   const count = yield* Function.pipe(
     generateDateRanges(config),
     // Sequential date range processing to maintain chronological order.
@@ -284,7 +281,7 @@ const streamGmailMessagesToQueue = Effect.fn(function* (
       },
     ),
     // Convert to Message.Message objects.
-    Stream.mapEffect((message) => mapMessage(message, contacts)),
+    Stream.mapEffect((message) => mapMessage(message)),
     Stream.filter(Predicate.isNotNullable),
     // Batch messages for queue append.
     Stream.grouped(STREAMING_CONFIG.queueBatchSize),
