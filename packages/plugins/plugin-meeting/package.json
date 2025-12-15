@@ -34,6 +34,8 @@
     "src"
   ],
   "dependencies": {
+    "@cloudflare/realtimekit-react": "1.2.1",
+    "@cloudflare/realtimekit-react-ui": "1.0.7",
     "@dxos/ai": "workspace:*",
     "@dxos/app-framework": "workspace:*",
     "@dxos/assistant": "workspace:*",
