@@ -6,6 +6,7 @@ import { type SpaceId } from '@dxos/keys';
 import type * as QueryProto from '@dxos/protocols/proto/dxos/echo/query';
 import type * as DataProto from '@dxos/protocols/proto/dxos/echo/service';
 
+import { type EdgeFunctionEnv } from './edge';
 import { type QueueService } from './queue';
 
 //
@@ -78,8 +79,11 @@ export interface Context {
      */
     queueService?: QueueService;
 
-    // TODO(dmaretskyi): Add aiService.
-    // TODO(dmaretskyi): Add functionsService.
+    /**
+     * Functions service.
+     * Available if the function is invoked in context of a space.
+     */
+    functionsAiService?: EdgeFunctionEnv.FunctionsAiService;
   };
 
   /**
