@@ -17,3 +17,6 @@ tasks:
   test:
     inputs:
       - .storybook/*
+  deploy-functions:
+    command: $workspaceRoot/scripts/dxnext --profile main edge function deploy --runtime worker-loader src/blueprints/functions/commentary.ts
+    local: true

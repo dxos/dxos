@@ -1,8 +1,13 @@
-#/bin/bash
+#!/bin/bash
 
 set -eo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
 
-pnpm --silent vite-node --root "$ROOT_DIR/packages/devtools/cli-next" "$ROOT_DIR/packages/devtools/cli-next/src/bin.ts" "$@"
+#
+# Use exec -a to set process name for easy signal targeting.
+# NOTE: killall uses the actual executable name, not argv[0], so use pkill instead:
+# pkill -TERM dxnext
+#
+exec -a dxnext bun run "$ROOT_DIR/packages/devtools/cli-next/src/bin.ts" "$@"
