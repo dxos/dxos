@@ -17,7 +17,7 @@ import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { Assistant } from '@dxos/plugin-assistant/types';
 
-import { renderApp } from '../../components';
+import { App, render } from '../../components';
 import { CommandConfig } from '../../services';
 import { theme } from '../../theme';
 import { type AiChatServices, Provider, chatLayer, createLogBuffer, withTypes } from '../../util';
@@ -131,7 +131,7 @@ export const chat = Command.make(
       });
 
       // Render.
-      yield* renderApp({
+      yield* render({
         children: () => (
           <App debug={options.debug} focusElements={['input', 'messages']} logBuffer={logBuffer}>
             {conversation() && (

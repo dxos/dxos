@@ -40,14 +40,17 @@ const getTriggerSpecInfo = (spec: Trigger.Spec | undefined): { kind: string; det
       kind: 'webhook',
       details: `${s.method ?? 'POST'}${s.port ? `:${s.port}` : ''}`,
     })),
-    Match.orElse(() => ({ kind: 'unknown', details: undefined })),
+    Match.orElse(() => ({
+      kind: 'unknown',
+      details: undefined,
+    })),
   );
 };
 
 /**
  * Pretty prints a trigger with ANSI colors.
  */
-export const prettyPrintTrigger = Effect.fn(function* (trigger: Trigger.Trigger) {
+export const printTrigger = Effect.fn(function* (trigger: Trigger.Trigger) {
   const enabled = trigger.enabled ?? false;
   const statusColor = enabled ? Ansi.green : Ansi.blackBright;
   const statusText = enabled ? 'enabled' : 'disabled';

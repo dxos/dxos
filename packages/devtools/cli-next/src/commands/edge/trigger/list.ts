@@ -14,7 +14,7 @@ import { CommandConfig } from '../../../services';
 import { spaceLayer } from '../../../util';
 import { Common } from '../../options';
 
-import { prettyPrintTrigger } from './util';
+import { printTrigger } from './util';
 
 export const list = Command.make(
   'list',
@@ -32,7 +32,7 @@ export const list = Command.make(
         yield* Console.log('No triggers found.');
       } else {
         for (const trigger of triggers) {
-          yield* Console.log(yield* prettyPrintTrigger(trigger));
+          yield* Console.log(yield* printTrigger(trigger));
           yield* Console.log('');
         }
       }

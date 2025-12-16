@@ -15,7 +15,7 @@ import { CommandConfig } from '../../../../services';
 import { spaceLayer, withTypes } from '../../../../util';
 import { Common } from '../../../options';
 import { Enabled, Input } from '../options';
-import { prettyPrintTrigger } from '../util';
+import { printTrigger } from '../util';
 
 import { Cron } from './options';
 
@@ -52,7 +52,7 @@ export const create = Command.make(
       if (json) {
         yield* Console.log(JSON.stringify(trigger, null, 2));
       } else {
-        yield* Console.log(yield* prettyPrintTrigger(trigger));
+        yield* Console.log(yield* printTrigger(trigger));
       }
     }),
 ).pipe(

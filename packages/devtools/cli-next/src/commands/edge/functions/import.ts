@@ -17,7 +17,7 @@ import { CommandConfig } from '../../../services';
 import { spaceLayer } from '../../../util';
 import { Common } from '../../options';
 
-import { prettyPrintFunction } from './util';
+import { printFunction as printFunction } from './util';
 
 export const importCommand = Command.make(
   'import',
@@ -47,7 +47,7 @@ export const importCommand = Command.make(
       if (json) {
         yield* Console.log(JSON.stringify(fn, null, 2));
       } else {
-        yield* Console.log(prettyPrintFunction(fn));
+        yield* Console.log(printFunction(fn));
       }
     }),
 ).pipe(
