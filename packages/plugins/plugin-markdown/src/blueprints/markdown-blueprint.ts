@@ -8,13 +8,13 @@ import { trim } from '@dxos/util';
 
 import { create, open, update } from './functions';
 
-export const BLUEPRINT_KEY = 'dxos.org/blueprint/markdown';
-
 export const functions: FunctionDefinition[] = [create, open, update];
+
+export const Key = 'dxos.org/blueprint/markdown';
 
 export const make = () =>
   Blueprint.make({
-    key: BLUEPRINT_KEY,
+    key: Key,
     name: 'Markdown',
     tools: Blueprint.toolDefinitions({ functions }),
     instructions: Template.make({
@@ -25,7 +25,7 @@ export const make = () =>
         You can create, read and update markdown documents.
         When asked to edit or update documents return updates as a set of compact diff string pairs.
         For each diff, respond with the smallest possible matching span.
-  
+
         Example:
         ${'```'}diff
         - "There is a tyop in this sentence."

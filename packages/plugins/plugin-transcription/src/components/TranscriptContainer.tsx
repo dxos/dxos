@@ -10,8 +10,9 @@ import { StackItem } from '@dxos/react-ui-stack';
 import { type Message, type Transcript } from '@dxos/types';
 
 import { useQueueModelAdapter } from '../hooks';
+import { renderByline } from '../util';
 
-import { TranscriptView, renderByline } from './Transcript';
+import { TranscriptView } from './Transcript';
 
 export type TranscriptionContainerProps = {
   role: string;

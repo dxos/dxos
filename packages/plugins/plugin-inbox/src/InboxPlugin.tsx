@@ -10,8 +10,8 @@ import { Event, Message } from '@dxos/types';
 import {
   AppGraphBuilder,
   BlueprintDefinition,
-  CALENDAR_BLUEPRINT_KEY,
-  INBOX_BLUEPRINT_KEY,
+  CalendarBlueprint,
+  InboxBlueprint,
   IntentResolver,
   ReactSurface,
 } from './capabilities';
@@ -34,7 +34,7 @@ export const InboxPlugin = definePlugin(meta, () => [
         metadata: {
           icon: 'ph--tray--regular',
           iconHue: 'rose',
-          blueprints: [INBOX_BLUEPRINT_KEY],
+          blueprints: [InboxBlueprint.Key],
           createObjectIntent: ((_, options) =>
             createIntent(InboxAction.CreateMailbox, { db: options.db })) satisfies CreateObjectIntent,
           addToCollectionOnCreate: true,
@@ -52,7 +52,7 @@ export const InboxPlugin = definePlugin(meta, () => [
         metadata: {
           icon: 'ph--calendar--regular',
           iconHue: 'rose',
-          blueprints: [CALENDAR_BLUEPRINT_KEY],
+          blueprints: [CalendarBlueprint.Key],
           createObjectIntent: ((_, options) =>
             createIntent(InboxAction.CreateCalendar, { db: options.db })) satisfies CreateObjectIntent,
           addToCollectionOnCreate: true,

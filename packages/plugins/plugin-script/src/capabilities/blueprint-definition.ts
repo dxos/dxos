@@ -2,29 +2,14 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Capabilities, contributes } from '@dxos/app-framework';
-import { Blueprint, Template } from '@dxos/blueprints';
-import { type FunctionDefinition } from '@dxos/functions';
-import { trim } from '@dxos/util';
+import { Capabilities, type Capability, contributes } from '@dxos/app-framework';
 
-const functions: FunctionDefinition[] = [];
-const tools: string[] = [];
+import { ScriptBlueprint } from '../blueprints';
 
-export default () => {
-  return [
-    contributes(Capabilities.Functions, functions),
-    contributes(
-      Capabilities.BlueprintDefinition,
-      Blueprint.make({
-        key: 'dxos.org/blueprint/script',
-        name: 'Script',
-        tools: Blueprint.toolDefinitions({ functions, tools }),
-        instructions: Template.make({
-          source: trim`
-            You can create and update scripts which contain Typescript code.
-          `,
-        }),
-      }),
-    ),
-  ];
-};
+export default (): (
+  | Capability<typeof Capabilities.Functions>
+  | Capability<typeof Capabilities.BlueprintDefinition>
+)[] => [
+  contributes(Capabilities.Functions, ScriptBlueprint.functions),
+  contributes(Capabilities.BlueprintDefinition, ScriptBlueprint.make()),
+];
