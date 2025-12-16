@@ -70,9 +70,14 @@ const RenderNode = (props: { node: SyntaxNode; content: string }) => {
 
     case 'Paragraph':
       return (
-        <box marginLeft={1} marginRight={1} marginBottom={props.node.parent?.name === 'ListItem' ? 0 : 1}>
+        <box
+          flexDirection='column'
+          marginBottom={props.node.parent?.name === 'ListItem' ? 0 : 1}
+          marginLeft={1}
+          marginRight={1}
+        >
           <text style={{ fg: theme.text.default }}>
-            <RenderInline node={props.node} content={props.content} />{' '}
+            <RenderInline node={props.node} content={props.content} />
           </text>
         </box>
       );
@@ -84,7 +89,7 @@ const RenderNode = (props: { node: SyntaxNode; content: string }) => {
     case 'ATXHeading5':
     case 'ATXHeading6':
       return (
-        <box marginLeft={1} marginRight={1}>
+        <box marginBottom={1} marginLeft={1} marginRight={1}>
           <text style={{ fg: theme.text.bold }}>
             <RenderInline node={props.node} content={props.content} />
           </text>
@@ -93,7 +98,7 @@ const RenderNode = (props: { node: SyntaxNode; content: string }) => {
 
     case 'FencedCode':
       return (
-        <box marginBottom={1} padding={1} flexDirection='column' style={{ backgroundColor: theme.input.bg }}>
+        <box flexDirection='column' marginBottom={1} padding={1} style={{ backgroundColor: theme.input.bg }}>
           <For each={children}>{(child) => <RenderNode node={child} content={props.content} />}</For>
         </box>
       );
@@ -105,6 +110,7 @@ const RenderNode = (props: { node: SyntaxNode; content: string }) => {
       if (mark) {
         language = props.content.slice(mark.from, mark.to);
       }
+
       return (
         <text style={{ fg: language === 'json' ? theme.log.error : theme.log.info }}>
           {props.content.slice(props.node.from, props.node.to)}
@@ -122,7 +128,7 @@ const RenderNode = (props: { node: SyntaxNode; content: string }) => {
     case 'BulletList':
     case 'OrderedList':
       return (
-        <box flexDirection='column' marginLeft={1} marginRight={1} marginBottom={1}>
+        <box flexDirection='column' marginBottom={1} marginLeft={1} marginRight={1}>
           <For each={children}>{(child) => <RenderNode node={child} content={props.content} />}</For>
         </box>
       );
@@ -219,7 +225,7 @@ const RenderInline = (props: { node: SyntaxNode; content: string }) => {
         }
 
         const text = props.content.slice(item.from, item.to);
-        return <>{text}</>;
+        return <>{text + ' '}</>;
       })}
     </>
   );

@@ -19,6 +19,7 @@ import { type AiConversation, GenericToolkit } from '@dxos/assistant';
 import { ClientService } from '@dxos/client';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
+import { type Assistant } from '@dxos/plugin-assistant/types';
 
 import { CommandConfig } from '../../services';
 import { type AiChatServices, Provider, chatLayer, createLogBuffer, withTypes } from '../../util';
@@ -34,9 +35,8 @@ export const chat = Command.make(
   'chat',
   {
     spaceId: Common.spaceId.pipe(Options.optional),
-    // TODO(burdon): Remove?
     debug: Options.boolean('debug', { ifPresent: true }).pipe(
-      Options.withDescription('Show console to see logs.'),
+      Options.withDescription('Show debug overlay.'),
       Options.withAlias('d'),
     ),
     provider: Options.choice('provider', Provider.literals).pipe(
@@ -64,7 +64,7 @@ export const chat = Command.make(
       const logBuffer = createLogBuffer();
       log.config({ filter: logLevel });
       log.runtimeConfig.processors = [logBuffer.processor];
-      log.info('starting...');
+      log.info('starting...', { options });
 
       const client = yield* ClientService;
       const runtime = yield* Effect.runtime<AiChatServices>();
@@ -93,7 +93,17 @@ export const chat = Command.make(
         return client.spaces.default;
       });
 
-      const handleConversationCreate = async (blueprints: string[]) => {
+      const handleChatSelect = async (chat: Assistant.Chat) => {
+        const current = conversation();
+        await current?.close();
+
+        log.info('selecting conversation', { id: chat.id });
+        const next = undefined;
+        setConversation(next);
+        return next;
+      };
+
+      const handleChatCreate = async (blueprints: string[]) => {
         const current = conversation();
         await current?.close();
 
@@ -104,7 +114,7 @@ export const chat = Command.make(
       };
 
       // TODO(burdon): Load/select previous saved conversation? Need Chat object for state.
-      yield* Effect.promise(async () => await handleConversationCreate(options.blueprints));
+      yield* Effect.promise(async () => await handleChatCreate(options.blueprints));
 
       const exitSignal = yield* Deferred.make<void, never>();
 
@@ -112,14 +122,16 @@ export const chat = Command.make(
       yield* Effect.promise(() =>
         render(
           () => (
-            <App showConsole={options.debug} focusElements={['input', 'messages']} logBuffer={logBuffer}>
+            <App debug={options.debug} focusElements={['input', 'messages']} logBuffer={logBuffer}>
               {conversation() && (
                 <Chat
+                  db={space.db}
                   processor={processor}
                   conversation={conversation()!}
                   model={model}
                   verbose={verbose}
-                  onConversationCreate={({ blueprints }) => handleConversationCreate(blueprints)}
+                  onChatSelect={(chat) => handleChatSelect(chat)}
+                  onChatCreate={({ blueprints }) => handleChatCreate(blueprints)}
                 />
               )}
             </App>
@@ -127,7 +139,7 @@ export const chat = Command.make(
           {
             exitOnCtrlC: true,
             exitSignals: ['SIGINT', 'SIGTERM'],
-            openConsoleOnError: true,
+            openConsoleOnError: options.debug,
             consoleOptions: {
               position: ConsolePosition.TOP,
               sizePercent: 25, // TODO(burdon): Option.

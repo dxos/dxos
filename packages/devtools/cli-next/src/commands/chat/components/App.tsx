@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type KeyEvent, hexToRgb } from '@opentui/core';
+import { DebugOverlayCorner, type KeyEvent, hexToRgb } from '@opentui/core';
 import { useKeyboard, useRenderer } from '@opentui/solid';
 import {
   type Accessor,
@@ -37,7 +37,7 @@ export const AppContext = createContext<{
 }>();
 
 export type AppProps = ParentProps<{
-  showConsole?: boolean;
+  debug?: boolean;
   focusElements?: string[];
   logBuffer?: LogBuffer;
 }>;
@@ -49,12 +49,20 @@ export type AppProps = ParentProps<{
 export const App = (props: AppProps) => {
   const renderer = useRenderer();
   renderer.setBackgroundColor(theme.bg);
-  renderer.useConsole = props.showConsole ?? false;
+  renderer.useConsole = true;
+  if (props.debug) {
+    renderer.configureDebugOverlay({
+      enabled: true,
+      corner: DebugOverlayCorner.bottomRight,
+    });
+  }
+
+  log.info('debug overlay', { debug: props.debug });
 
   // Focus.
   const focusElements = [...(props.focusElements ?? [])];
   const [focus, setFocus] = createSignal<string | undefined>(props.focusElements?.[0]);
-  const [showConsole, setShowConsole] = createSignal(false); // TODO(burdon): Option.
+  const [showConsole, setShowConsole] = createSignal(props.debug ?? false);
   const [processing, setProcessing] = createSignal(false);
 
   // Hints.
@@ -71,10 +79,10 @@ export const App = (props: AppProps) => {
     //
     // Console
     //
-    props.showConsole && {
-      hint: '[cmd-j]: Toggle console',
+    {
+      hint: '[ctrl-j]: Toggle console',
       handler: (key: KeyEvent) => {
-        if (key.name === 'j' && key.meta) {
+        if (key.name === 'j' && key.ctrl) {
           setShowConsole(!showConsole());
         }
       },
@@ -103,10 +111,7 @@ export const App = (props: AppProps) => {
   ].filter(isTruthy);
 
   createEffect(() => {
-    if (!props.showConsole) {
-      return;
-    }
-
+    // TODO(burdon): Better way to detech screen corrupted?
     // Use ctrl-p to cycle position; +/- to resize at runtime (when focused).
     if (showConsole()) {
       renderer.console.show();

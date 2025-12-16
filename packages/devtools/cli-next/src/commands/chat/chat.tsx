@@ -64,7 +64,7 @@ export const chat = Command.make(
       const logBuffer = createLogBuffer();
       log.config({ filter: logLevel });
       log.runtimeConfig.processors = [logBuffer.processor];
-      log.info('starting...');
+      log.info('starting...', { options });
 
       const client = yield* ClientService;
       const runtime = yield* Effect.runtime<AiChatServices>();
@@ -112,14 +112,15 @@ export const chat = Command.make(
       yield* Effect.promise(() =>
         render(
           () => (
-            <App showConsole={options.debug} focusElements={['input', 'messages']} logBuffer={logBuffer}>
+            <App debug={options.debug} focusElements={['input', 'messages']} logBuffer={logBuffer}>
               {conversation() && (
                 <Chat
+                  db={space.db}
                   processor={processor}
                   conversation={conversation()!}
                   model={model}
                   verbose={verbose}
-                  onConversationCreate={({ blueprints }) => handleConversationCreate(blueprints)}
+                  onChatCreate={({ blueprints }) => handleConversationCreate(blueprints)}
                 />
               )}
             </App>

@@ -9,8 +9,9 @@ import { For, Match, Switch, createEffect, createSignal, onCleanup, useContext }
 import { type ModelName } from '@dxos/ai';
 import { type AiConversation, GenerationObserver } from '@dxos/assistant';
 import { type Blueprint } from '@dxos/blueprints';
-import { Obj } from '@dxos/echo';
+import { type Database, Filter, Obj } from '@dxos/echo';
 import { log } from '@dxos/log';
+import { Assistant } from '@dxos/plugin-assistant/types';
 import { isTruthy } from '@dxos/util';
 
 import { DXOS_VERSION } from '../../../version';
@@ -29,17 +30,19 @@ import { Picker, type PickerProps } from './Picker';
 import { StatusBar } from './StatusBar';
 
 export type ChatProps = {
+  db: Database.Database;
   processor: ChatProcessor;
   conversation: AiConversation;
   model: ModelName;
   verbose?: boolean;
-  onConversationCreate?: ({ blueprints }: { blueprints: string[] }) => void;
+  onChatSelect?: (chat: Assistant.Chat) => void;
+  onChatCreate?: ({ blueprints }: { blueprints: string[] }) => void;
 };
 
 export const Chat = (props: ChatProps) => {
   const appContext = useContext(AppContext);
   const [inputValue, setInputValue] = createSignal('');
-  const [popup, setPopup] = createSignal<'logo' | 'blueprints' | undefined>('logo');
+  const [popup, setPopup] = createSignal<'logo' | 'blueprints' | 'chats' | undefined>('logo');
 
   // Conversation state.
   const chatMessages = useChatMessages();
@@ -80,6 +83,10 @@ export const Chat = (props: ChatProps) => {
   useKeyboard(async (key) => {
     if (key.name === 'b' && key.ctrl) {
       setPopup(popup() === 'blueprints' ? undefined : 'blueprints');
+    }
+
+    if (key.name === 'f' && key.ctrl) {
+      setPopup(popup() === 'chats' ? undefined : 'chats');
     }
   });
 
@@ -151,21 +158,30 @@ export const Chat = (props: ChatProps) => {
 
   return (
     <box flexDirection='column'>
-      <box flexDirection='column' height='100%' justifyContent='center' alignItems='center' padding={1}>
+      <box flexDirection='column' height='100%' padding={1} justifyContent='center' alignItems='center'>
         <Switch>
-          <Match when={popup() === 'blueprints'}>
-            <BlueprintPicker
-              selected={props.conversation.context.blueprints.value.map((blueprint) => blueprint.key)}
-              onSave={(blueprints) => {
+          <Match when={popup() === 'logo'}>
+            <Banner version={DXOS_VERSION} />
+          </Match>
+          <Match when={popup() === 'chats'}>
+            <ChatPicker
+              db={props.db}
+              onSave={(chat) => {
+                props.onChatSelect?.(chat);
                 setPopup(undefined);
-                log.info('blueprints', { blueprints });
-                props.onConversationCreate?.({ blueprints });
               }}
               onCancel={() => setPopup(undefined)}
             />
           </Match>
-          <Match when={popup() === 'logo'}>
-            <Banner version={DXOS_VERSION} />
+          <Match when={popup() === 'blueprints'}>
+            <BlueprintPicker
+              selected={props.conversation.context.blueprints.value.map((blueprint) => blueprint.key)}
+              onSave={(blueprints) => {
+                props.onChatCreate?.({ blueprints });
+                setPopup(undefined);
+              }}
+              onCancel={() => setPopup(undefined)}
+            />
           </Match>
           <Match when={popup() === undefined}>
             <box flexDirection='row' width='100%'>
@@ -204,7 +220,7 @@ export const Chat = (props: ChatProps) => {
 const Blueprints = (props: { blueprints: Blueprint.Blueprint[] }) => {
   return (
     <box flexDirection='column' flexShrink={0}>
-      {props.blueprints.length > 0 && <text style={{ fg: theme.log.info }}>Blueprints</text>}
+      {props.blueprints.length > 0 && <text style={{ fg: theme.text.primary }}>Blueprints</text>}
       <box flexDirection='column' marginTop={1} marginBottom={1}>
         <For each={props.blueprints}>{(blueprint) => <text>- {blueprint.name}</text>}</For>
       </box>
@@ -215,17 +231,27 @@ const Blueprints = (props: { blueprints: Blueprint.Blueprint[] }) => {
 const Artifacts = (props: { objects: Obj.Any[] }) => {
   return (
     <box flexDirection='column' flexShrink={0}>
-      {props.objects.length > 0 && <text style={{ fg: theme.log.info }}>Artifacts</text>}
+      {props.objects.length > 0 && <text style={{ fg: theme.text.primary }}>Artifacts</text>}
       <box flexDirection='column' marginTop={1} marginBottom={1}>
-        <For each={props.objects}>{(object) => <text>- {Obj.getLabel(object) ?? object.id}</text>}</For>
+        <For each={props.objects}>
+          {(object) => (
+            <box flexDirection='column'>
+              <text>
+                {'- '}
+                {Obj.getLabel(object) ?? object.id}
+              </text>
+              <text style={{ fg: theme.text.subdued }}>
+                {'  '}({Obj.getTypename(object)})
+              </text>
+            </box>
+          )}
+        </For>
       </box>
     </box>
   );
 };
 
-type BlueprintPickerProps = Pick<PickerProps, 'selected' | 'onSave' | 'onCancel'>;
-
-const BlueprintPicker = (props: BlueprintPickerProps) => {
+const BlueprintPicker = (props: Pick<PickerProps, 'selected' | 'onSave' | 'onCancel'>) => {
   return (
     <Picker
       multi
@@ -236,6 +262,36 @@ const BlueprintPicker = (props: BlueprintPickerProps) => {
       }))}
       selected={props.selected}
       onSave={(ids) => props.onSave?.(ids)}
+      onCancel={() => props.onCancel?.()}
+    />
+  );
+};
+
+const ChatPicker = (
+  props: { db: Database.Database; onSave?: (chat: Assistant.Chat) => void } & Pick<PickerProps, 'onCancel'>,
+) => {
+  const [chats, setChats] = createSignal<Assistant.Chat[]>([]);
+
+  createEffect(async () => {
+    const chats = await props.db.query(Filter.type(Assistant.Chat)).run();
+    setChats(chats);
+  });
+
+  return (
+    <Picker
+      title='Select Conversations'
+      items={chats().map((chat) => ({
+        id: chat.id,
+        label: chat.name ?? chat.id,
+      }))}
+      onSave={(ids) => {
+        const chat = chats().find((chat) => chat.id === ids[0]);
+        if (chat) {
+          props.onSave?.(chat);
+        } else {
+          props.onCancel?.();
+        }
+      }}
       onCancel={() => props.onCancel?.()}
     />
   );
