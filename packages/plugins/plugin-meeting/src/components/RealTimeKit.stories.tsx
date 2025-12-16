@@ -77,7 +77,6 @@ const Story = () => {
   useEffect(() => {
     const handler = (data: TranscriptionData) => {
       log.info('Transcript received:', data);
-      log.info('Transcripts', { transcripts: meeting?.ai.transcripts });
     };
     if (meeting && !hadRun.current) {
       hadRun.current = true;
