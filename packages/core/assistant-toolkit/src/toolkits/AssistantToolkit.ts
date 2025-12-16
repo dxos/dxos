@@ -9,8 +9,7 @@ import * as Record from 'effect/Record';
 import * as Schema from 'effect/Schema';
 
 import { AiContextService, ArtifactId } from '@dxos/assistant';
-import { Ref } from '@dxos/echo';
-import { Database } from '@dxos/echo';
+import { Database, Ref } from '@dxos/echo';
 import { trim } from '@dxos/util';
 
 export const AssistantToolkit = Toolkit.make(
@@ -33,7 +32,7 @@ export const tools = Record.keys(AssistantToolkit.tools);
 
 export const layer = () =>
   AssistantToolkit.toLayer({
-    'add-to-context': Effect.fnUntraced(function* ({ id }) {
+    ['add-to-context' as const]: Effect.fnUntraced(function* ({ id }) {
       const { binder } = yield* AiContextService;
       const { db } = yield* Database.Service;
       const ref = Ref.fromDXN(ArtifactId.toDXN(id, db.spaceId));

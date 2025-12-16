@@ -16,14 +16,14 @@ import {
 } from '@dxos/app-framework';
 import { Prompt } from '@dxos/blueprints';
 import { Sequence } from '@dxos/conductor';
-import { DXN, Obj } from '@dxos/echo';
+import { DXN, type Database, Obj } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { ATTENDABLE_PATH_SEPARATOR, PLANK_COMPANION_TYPE } from '@dxos/plugin-deck/types';
 import { ROOT_ID, atomFromSignal, createExtension } from '@dxos/plugin-graph';
 import { getActiveSpace } from '@dxos/plugin-space';
 import { SpaceAction } from '@dxos/plugin-space/types';
-import { Query, type Space, getSpace } from '@dxos/react-client/echo';
+import { Query } from '@dxos/react-client/echo';
 
 import { ASSISTANT_DIALOG, meta } from '../meta';
 import { Assistant, AssistantAction } from '../types';
@@ -77,7 +77,7 @@ export default (context: PluginContext) =>
                   const { dispatchPromise: dispatch } = context.getCapability(Capabilities.IntentDispatcher);
                   const client = context.getCapability(ClientCapabilities.Client);
                   const space = getActiveSpace(context) ?? client.spaces.default;
-                  const chat = await getOrCreateChat(dispatch, space);
+                  const chat = await getOrCreateChat(dispatch, space.db);
                   if (!chat) {
                     return;
                   }
@@ -131,9 +131,9 @@ export default (context: PluginContext) =>
                 return Option.some({ object, currentChat: undefined });
               }
 
-              const space = getSpace(object);
+              const db = Obj.getDatabase(object);
               const currentChatDxn = DXN.tryParse(currentChatState);
-              const currentChatRef = currentChatDxn ? space?.db.makeRef(currentChatDxn) : undefined;
+              const currentChatRef = currentChatDxn ? db?.makeRef(currentChatDxn) : undefined;
               const currentChat = get(atomFromSignal(() => currentChatRef?.target));
               return Obj.isObject(currentChat) ? Option.some({ object, currentChat }) : Option.none();
             }),
@@ -190,19 +190,19 @@ export default (context: PluginContext) =>
 // TODO(burdon): Factor out.
 const getOrCreateChat = async (
   dispatch: PromiseIntentDispatcher,
-  space: Space,
+  db: Database.Database,
 ): Promise<Assistant.Chat | undefined> => {
   // TODO(wittjosiah): This should be possible with a single query.
-  const allChats = await space.db.query(Query.type(Assistant.Chat)).run();
-  const relatedChats = await space.db.query(Query.type(Assistant.Chat).sourceOf(Assistant.CompanionTo).source()).run();
+  const allChats = await db.query(Query.type(Assistant.Chat)).run();
+  const relatedChats = await db.query(Query.type(Assistant.Chat).sourceOf(Assistant.CompanionTo).source()).run();
 
   const chats = allChats.filter((chat) => !relatedChats.includes(chat));
   if (chats.length > 0) {
     return chats.at(-1);
   }
 
-  const { data } = await dispatch(createIntent(AssistantAction.CreateChat, { space }));
+  const { data } = await dispatch(createIntent(AssistantAction.CreateChat, { db }));
   invariant(Obj.instanceOf(Assistant.Chat, data?.object));
-  await dispatch(createIntent(SpaceAction.AddObject, { target: space, object: data.object }));
+  await dispatch(createIntent(SpaceAction.AddObject, { target: db, object: data.object }));
   return data.object;
 };

@@ -21,6 +21,7 @@ import {
   type HasId,
   KindId,
   MetaId,
+  ObjectDatabaseId,
   ObjectDeletedId,
   type ObjectJSON,
   type ObjectMeta,
@@ -49,17 +50,17 @@ import {
 import { DATA_NAMESPACE, type ObjectStructure, PROPERTY_ID, Reference, encodeReference } from '@dxos/echo-protocol';
 import { assertArgument, invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
-import { defineHiddenProperty } from '@dxos/live-object';
 import {
   type Live,
   type ReactiveHandler,
   createProxy,
+  defineHiddenProperty,
   getProxyHandler,
+  getProxySlot,
   getProxyTarget,
   isLiveObject,
   symbolIsProxy,
 } from '@dxos/live-object';
-import { getProxySlot } from '@dxos/live-object';
 import { log } from '@dxos/log';
 import { deepMapValues, defaultMap, getDeep, setDeep } from '@dxos/util';
 
@@ -68,8 +69,8 @@ import { type EchoDatabase } from '../proxy-db';
 
 import { getBody, getHeader } from './devtools-formatter';
 import { EchoArray } from './echo-array';
-import { ObjectInternals } from './echo-proxy-target';
 import {
+  ObjectInternals,
   type ProxyTarget,
   TargetKey,
   symbolHandler,
@@ -192,6 +193,8 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
           return this.isDeleted(target);
         case ObjectVersionId:
           return this._getVersion(target);
+        case ObjectDatabaseId:
+          return target[symbolInternals].database;
       }
     } else {
       switch (prop) {
@@ -203,6 +206,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
         case TypeId:
         case MetaId:
         case ObjectDeletedId:
+        case ObjectDatabaseId:
           return undefined;
       }
     }
@@ -696,6 +700,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
           middleware: (obj) => this._handleStoredSchema(target, obj),
         }),
       );
+
       return refImpl;
     } else {
       invariant(target[symbolInternals].linkCache);

@@ -1,5 +1,10 @@
 # Agent Guidelines for DXOS
 
+## Dependencies
+
+- All dependency versions are managed in the default pnpm catalog
+- To add a new dependency, run `pnpm add --filter "<project>" --save-catalog "<package>"`
+
 ## Build, Test, Lint Commands
 
 - Project uses `moon` to run tasks, tests, lint etc. (moon run package-name:task-name).
@@ -22,6 +27,14 @@
 - JSDoc comments for public functions, all comments end with period
 - React: arrow function components, TailwindCSS for styles, proper event handler types
 - Remember to remove/update TODOs as you go.
+
+## PR Checklist
+
+**IMPORTANT**: Run this after every review & change cycle before submitting a PR:
+
+```bash
+pnpm -w pre-ci
+```
 
 ## Workflow
 

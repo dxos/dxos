@@ -25,7 +25,7 @@ import { CredentialsService, FunctionInvocationService, QueueService, TracingSer
 import { FunctionInvocationServiceLayerTest, TestDatabaseLayer } from '@dxos/functions-runtime/testing';
 import { invariant } from '@dxos/invariant';
 import { ObjectId } from '@dxos/keys';
-import { MarkdownBlueprint, MarkdownFunction } from '@dxos/plugin-markdown/toolkit';
+import { MarkdownBlueprint } from '@dxos/plugin-markdown/blueprints';
 import { Markdown } from '@dxos/plugin-markdown/types';
 import { HasSubject, type Message, Organization } from '@dxos/types';
 
@@ -41,15 +41,12 @@ ObjectId.dangerouslyDisableRandomness();
 
 const TestLayer = Layer.mergeAll(
   AiService.model('@anthropic/claude-opus-4-0'),
-  makeToolResolverFromFunctions(
-    [research, createDocument, MarkdownFunction.create, MarkdownFunction.open, MarkdownFunction.update],
-    testToolkit,
-  ),
+  makeToolResolverFromFunctions([research, createDocument, ...MarkdownBlueprint.functions], testToolkit),
   makeToolExecutionServiceFromFunctions(testToolkit, testToolkit.toLayer({}) as any),
 ).pipe(
   Layer.provideMerge(
     FunctionInvocationServiceLayerTest({
-      functions: [research, createDocument, MarkdownFunction.create, MarkdownFunction.open, MarkdownFunction.update],
+      functions: [research, createDocument, ...MarkdownBlueprint.functions],
     }),
   ),
   Layer.provideMerge(
@@ -116,7 +113,7 @@ describe('Research', () => {
 
         yield* Database.Service.flush({ indexes: true });
         const researchBlueprint = yield* Database.Service.add(Obj.clone(ResearchBlueprint));
-        const markdownBlueprint = yield* Database.Service.add(Obj.clone(MarkdownBlueprint));
+        const markdownBlueprint = yield* Database.Service.add(Obj.clone(MarkdownBlueprint.make()));
         yield* Effect.promise(() =>
           conversation.context.bind({
             blueprints: [Ref.make(researchBlueprint), Ref.make(markdownBlueprint)],

@@ -9,6 +9,7 @@ tasks:
   compile:
     args:
       - '--entryPoint=src/index.ts'
+      - '--entryPoint=src/blueprints/index.ts'
       - '--entryPoint=src/types/index.ts'
       - '--entryPoint=src/templates/index.ts'
       - '--preactSignalTracking'

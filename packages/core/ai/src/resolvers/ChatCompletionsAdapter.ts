@@ -7,6 +7,7 @@ import * as LanguageModel from '@effect/ai/LanguageModel';
 import type * as Prompt from '@effect/ai/Prompt';
 import type * as Response from '@effect/ai/Response';
 import * as HttpClient from '@effect/platform/HttpClient';
+import * as HttpClientError from '@effect/platform/HttpClientError';
 import * as HttpClientRequest from '@effect/platform/HttpClientRequest';
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
@@ -324,7 +325,7 @@ const parseStreamChunk = (
 /**
  * Create a chat completions language model service.
  */
-export const make = (model: string): Effect.Effect<LanguageModel.Service, never, ChatCompletionsClient> =>
+export const make = (model: string) =>
   Effect.flatMap(ChatCompletionsClient, ({ config, httpClient }) =>
     LanguageModel.make({
       generateText: (options) =>
@@ -333,22 +334,39 @@ export const make = (model: string): Effect.Effect<LanguageModel.Service, never,
           const jsonFormat = options.responseFormat.type === 'json';
           const requestBody = buildRequestBody(model, messages, false, jsonFormat, config.apiFormat);
           const endpoint = getChatEndpoint(config.baseUrl, config.apiFormat);
-
           const httpRequest = HttpClientRequest.post(endpoint).pipe(HttpClientRequest.bodyJson(requestBody));
-
           const response = yield* httpRequest.pipe(
             Effect.flatMap((req) => httpClient.execute(req).pipe(Effect.flatMap((res) => res.json))),
-            Effect.catchAll((e) =>
-              Effect.fail(
-                new AiError.UnknownError({ module: 'ChatCompletionsClient', method: 'generateText', cause: e }),
-              ),
-            ),
+            Effect.catchAll((err) => {
+              if (HttpClientError.isHttpClientError(err) && (err as any).cause?.code === 'ConnectionRefused') {
+                return Effect.fail(
+                  new AiError.HttpRequestError({
+                    module: 'ChatCompletionsClient',
+                    method: 'generateText',
+                    request: (err as any).request,
+                    reason: 'Transport',
+                    description: 'Connection refused',
+                    cause: err,
+                  }),
+                ) as Effect.Effect<never, any, never>;
+              }
+
+              return Effect.fail(
+                new AiError.UnknownError({
+                  module: 'ChatCompletionsClient',
+                  method: 'generateText',
+                  cause: err,
+                }),
+              ) as Effect.Effect<never, any, never>;
+            }),
           );
 
           const { text, inputTokens, outputTokens } = extractResponse(response, config.apiFormat);
-
           const parts: Response.PartEncoded[] = [
-            { type: 'text', text },
+            {
+              type: 'text',
+              text,
+            },
             {
               type: 'finish',
               reason: 'stop',
@@ -370,19 +388,30 @@ export const make = (model: string): Effect.Effect<LanguageModel.Service, never,
             const jsonFormat = options.responseFormat.type === 'json';
             const requestBody = buildRequestBody(model, messages, true, jsonFormat, config.apiFormat);
             const endpoint = getChatEndpoint(config.baseUrl, config.apiFormat);
-
             const httpRequest = HttpClientRequest.post(endpoint).pipe(HttpClientRequest.bodyJson(requestBody));
-
             const response = yield* httpRequest.pipe(
               Effect.flatMap((req) => httpClient.execute(req)),
-              Effect.catchAll((e) =>
-                Effect.fail(
-                  new AiError.UnknownError({ module: 'ChatCompletionsClient', method: 'streamText', cause: e }),
-                ),
-              ),
+              Effect.catchAll((err) => {
+                if (HttpClientError.isHttpClientError(err) && (err as any).cause?.code === 'ConnectionRefused') {
+                  return Effect.fail(
+                    new AiError.HttpRequestError({
+                      module: 'ChatCompletionsClient',
+                      method: 'streamText',
+                      request: (err as any).request,
+                      reason: 'Transport',
+                      description: 'Connection refused',
+                      cause: err,
+                    }),
+                  ) as Effect.Effect<never, any, never>;
+                }
+
+                return Effect.fail(
+                  new AiError.UnknownError({ module: 'ChatCompletionsClient', method: 'streamText', cause: err }),
+                ) as Effect.Effect<never, any, never>;
+              }),
             );
 
-            const id = `chat-${Date.now()}`;
+            const id = `chat-${Date.now()}`; // TODO(burdon): Better id.
             let started = false;
 
             return response.stream.pipe(
@@ -425,11 +454,11 @@ export const make = (model: string): Effect.Effect<LanguageModel.Service, never,
 
                 return parts;
               }),
-              Stream.catchAll((e) =>
-                Stream.fail(
-                  new AiError.UnknownError({ module: 'ChatCompletionsClient', method: 'streamText', cause: e }),
-                ),
-              ),
+              Stream.catchAll((err) => {
+                return Stream.fail(
+                  new AiError.UnknownError({ module: 'ChatCompletionsClient', method: 'streamText', cause: err }),
+                );
+              }),
             );
           }),
         ),
@@ -439,15 +468,12 @@ export const make = (model: string): Effect.Effect<LanguageModel.Service, never,
 /**
  * Create a chat completions language model layer.
  */
-export const layer = (model: string): Layer.Layer<LanguageModel.LanguageModel, never, ChatCompletionsClient> =>
-  Layer.effect(LanguageModel.LanguageModel, make(model));
+export const layer = (model: string) => Layer.effect(LanguageModel.LanguageModel, make(model));
 
 /**
  * Create a chat completions client layer.
  */
-export const clientLayer = (
-  config: ChatCompletionsClientConfig,
-): Layer.Layer<ChatCompletionsClient, never, HttpClient.HttpClient> =>
+export const clientLayer = (config: ChatCompletionsClientConfig) =>
   Layer.effect(
     ChatCompletionsClient,
     Effect.gen(function* () {

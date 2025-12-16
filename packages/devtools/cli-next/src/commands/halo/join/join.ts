@@ -5,6 +5,7 @@
 import * as Args from '@effect/cli/Args';
 import * as Command from '@effect/cli/Command';
 import * as Prompt from '@effect/cli/Prompt';
+import * as Console from 'effect/Console';
 import * as Effect from 'effect/Effect';
 import * as Match from 'effect/Match';
 
@@ -23,8 +24,8 @@ export const join = Command.make(
     invariant(!client.halo.identity.get(), 'Identity already exists');
 
     const identity = yield* sendInvitation({ client, invitationCode });
-    yield* Effect.log('Identity key:', identity?.identityKey?.toHex());
-    yield* Effect.log('Display name:', identity?.profile?.displayName);
+    yield* Console.log('Identity key:', identity?.identityKey?.toHex());
+    yield* Console.log('Display name:', identity?.profile?.displayName);
   }),
 ).pipe(Command.withDescription('Join an existing identity using an invitation code.'));
 
@@ -36,7 +37,7 @@ const sendInvitation = Effect.fn(function* ({
   invitationCode: string;
 }) {
   if (encoded.startsWith('http') || encoded.startsWith('socket')) {
-    const searchParams = new URLSearchParams(encoded.substring(encoded.lastIndexOf('?')));
+    const searchParams = new URL(encoded).searchParams;
     encoded = searchParams.get('deviceInvitationCode') ?? encoded;
   }
 

@@ -168,6 +168,7 @@ export default tseslint.config(
       camelcase: 'off',
       'jsx-quotes': ['error', 'prefer-single'],
       'no-unused-vars': 'off',
+      'no-console': 'error',
       'no-constant-binary-expression': 'off',
       'no-unsafe-optional-chaining': 'off',
       'no-dupe-else-if': 'off',
@@ -274,7 +275,11 @@ export default tseslint.config(
   // SolidJS - Exclude React rules
   //
   {
-    files: ['packages/devtools/cli-next/**/*.{js,ts,jsx,tsx,mts,cts,mjs,cjs}'],
+    files: [
+      'packages/devtools/cli-next/**/*.{js,ts,jsx,tsx,mts,cts,mjs,cjs}',
+      'packages/common/effect-atom-solid/**/*.{js,ts,jsx,tsx,mts,cts,mjs,cjs}',
+      'packages/common/web-context-solid/**/*.{js,ts,jsx,tsx,mts,cts,mjs,cjs}',
+    ],
     rules: {
       ...Object.fromEntries(
         Object.keys(reactPlugin.rules).map((rule) => [`react/${rule}`, 'off']),
@@ -283,10 +288,29 @@ export default tseslint.config(
   },
 
   //
+  // Tools
+  //
+  {
+    files: [
+      'packages/devtools/cli/**/*.{js,ts,jsx,tsx,mts,cts,mjs,cjs}',
+      'packages/devtools/cli-base/**/*.{js,ts,jsx,tsx,mts,cts,mjs,cjs}',
+      'packages/devtools/cli-composer/**/*.{js,ts,jsx,tsx,mts,cts,mjs,cjs}',
+      'packages/common/log/**/*.{js,ts,jsx,tsx,mts,cts,mjs,cjs}',
+      'tools/**/*.{js,ts,jsx,tsx,mts,cts,mjs,cjs}',
+    ],
+    rules: {
+      'no-console': 'off',
+    },
+  },
+
+  //
   // Tests
   //
   {
-    files: [[SOURCES_GLOB, '**/*.{test,stories,blueprint-test}.{js,ts,jsx,tsx,mts,cts,mjs,cjs}']],
+    files: [
+      [SOURCES_GLOB, '**/*.{test,stories,blueprint-test}.{js,ts,jsx,tsx,mts,cts,mjs,cjs}'],
+      [SOURCES_GLOB, '**/testing/**/*.{js,ts,jsx,tsx,mts,cts,mjs,cjs}'],
+    ],
     rules: {
       'no-console': 'off',
     },

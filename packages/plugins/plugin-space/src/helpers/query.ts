@@ -10,7 +10,7 @@ import * as Option from 'effect/Option';
 import type * as Schema from 'effect/Schema';
 import * as SchemaAST from 'effect/SchemaAST';
 
-import { DXN, Filter, Query, type QueryAST } from '@dxos/echo';
+import { DXN, Filter, Query, type QueryAST, type SchemaRegistry } from '@dxos/echo';
 import {
   ReferenceAnnotationId,
   type ReferenceAnnotationValue,
@@ -35,14 +35,14 @@ export const evalQuery = (queryString: string): Query.Any => {
   }
 };
 
-export const resolveSchemaWithClientAndSpace = (space: Space, query: QueryAST.Query) => {
+export const resolveSchemaWithRegistry = (registry: SchemaRegistry.SchemaRegistry, query: QueryAST.Query) => {
   const resolve = Effect.fn(function* (dxn: string) {
     const typename = DXN.parse(dxn).asTypeDXN()?.type;
     if (!typename) {
       return Option.none();
     }
 
-    const query = space.db.schemaRegistry.query({ typename, location: ['database', 'runtime'] });
+    const query = registry.query({ typename, location: ['database', 'runtime'] });
     const schemas = yield* Effect.promise(() => query.run());
     return Array.head(schemas);
   });

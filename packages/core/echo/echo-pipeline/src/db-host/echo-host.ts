@@ -2,15 +2,9 @@
 // Copyright 2024 DXOS.org
 //
 
-import {
-  type AnyDocumentId,
-  type AutomergeUrl,
-  type DocHandle,
-  type DocumentId,
-  type Repo,
-} from '@automerge/automerge-repo';
+import { type AnyDocumentId, type AutomergeUrl, type DocHandle, type DocumentId } from '@automerge/automerge-repo';
 
-import { type Context, LifecycleState, Resource } from '@dxos/context';
+import { Context, LifecycleState, Resource } from '@dxos/context';
 import { todo } from '@dxos/debug';
 import { type DatabaseDirectory, SpaceDocVersion, createIdFromSpaceKey } from '@dxos/echo-protocol';
 import { IndexMetadataStore, IndexStore, Indexer } from '@dxos/indexing';
@@ -26,7 +20,6 @@ import {
   EchoDataMonitor,
   type EchoDataStats,
   type EchoReplicator,
-  FIND_PARAMS,
   type LoadDocOptions,
   type PeerIdProvider,
   type RootDocumentSpaceKeyProvider,
@@ -177,13 +170,6 @@ export class EchoHost extends Resource {
     return this._dataService;
   }
 
-  /**
-   * @deprecated To be abstracted away.
-   */
-  get automergeRepo(): Repo {
-    return this._automergeHost.repo;
-  }
-
   get roots(): ReadonlyMap<DocumentId, DatabaseRoot> {
     return this._spaceStateManager.roots;
   }
@@ -271,7 +257,9 @@ export class EchoHost extends Resource {
   // TODO(dmaretskyi): Change to document id.
   async openSpaceRoot(spaceId: SpaceId, automergeUrl: AutomergeUrl): Promise<DatabaseRoot> {
     invariant(this._lifecycleState === LifecycleState.OPEN);
-    const handle = await this._automergeHost.repo.find<DatabaseDirectory>(automergeUrl, FIND_PARAMS);
+    const handle = await this._automergeHost.loadDoc<DatabaseDirectory>(Context.default(), automergeUrl, {
+      fetchFromNetwork: true,
+    });
     await handle.whenReady();
 
     return this._spaceStateManager.assignRootToSpace(spaceId, handle);
@@ -294,6 +282,18 @@ export class EchoHost extends Resource {
    */
   async removeReplicator(replicator: EchoReplicator): Promise<void> {
     await this._automergeHost.removeReplicator(replicator);
+  }
+
+  /**
+   * Run collection sync for the given space.
+   * Does not wait for the sync to complete.
+   */
+  async runCollectionSync(spaceId: SpaceId) {
+    const root = this._spaceStateManager.getRootBySpaceId(spaceId);
+    if (!root) {
+      throw new Error(`Space not found: ${spaceId}`);
+    }
+    this._automergeHost.refreshCollection(deriveCollectionIdFromSpaceId(spaceId, root.documentId));
   }
 }
 

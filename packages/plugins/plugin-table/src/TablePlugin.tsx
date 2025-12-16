@@ -35,7 +35,7 @@ export const TablePlugin = definePlugin(meta, () => [
           comments: 'unanchored',
           inputSchema: CreateTableSchema,
           createObjectIntent: ((props, options) =>
-            createIntent(TableAction.Create, { ...props, space: options.space })) satisfies CreateObjectIntent,
+            createIntent(TableAction.Create, { ...props, space: options.db })) satisfies CreateObjectIntent,
         },
       }),
   }),
@@ -54,8 +54,8 @@ export const TablePlugin = definePlugin(meta, () => [
     id: `${meta.id}/module/on-schema-added`,
     activatesOn: SpaceEvents.SchemaAdded,
     activate: () =>
-      contributes(SpaceCapabilities.OnSchemaAdded, ({ space, schema, show }) =>
-        createIntent(TableAction.OnSchemaAdded, { space, schema, show }),
+      contributes(SpaceCapabilities.OnSchemaAdded, ({ db, schema, show }) =>
+        createIntent(TableAction.OnSchemaAdded, { db, schema, show }),
       ),
   }),
   defineModule({

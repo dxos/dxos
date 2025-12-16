@@ -5,6 +5,8 @@
 // NOTE: `!=` is required.
 export const isNode = () => typeof process !== 'undefined' && process.versions != null && process.versions.node != null;
 
+export const isBun = () => (globalThis as any).Bun !== undefined;
+
 /* eslint-disable */
 
 // From https://stackoverflow.com/a/11381730/2804332.

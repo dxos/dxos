@@ -54,7 +54,7 @@ export const WnfsPlugin = definePlugin(meta, () => [
           inputSchema: WnfsAction.UploadFileSchema,
           createObjectIntent: ((props, options) =>
             Function.pipe(
-              createIntent(WnfsAction.Upload, { ...props, space: options.space }),
+              createIntent(WnfsAction.Upload, { ...props, db: options.db }),
               chain(WnfsAction.Create, {}),
             )) satisfies CreateObjectIntent,
           addToCollectionOnCreate: true,

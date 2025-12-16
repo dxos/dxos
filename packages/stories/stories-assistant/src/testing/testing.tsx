@@ -30,6 +30,7 @@ import { Blueprint, Prompt } from '@dxos/blueprints';
 import { type Space } from '@dxos/client/echo';
 import { Obj, Ref } from '@dxos/echo';
 import { Example, Function, Trigger } from '@dxos/functions';
+import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { Assistant, AssistantAction, AssistantPlugin } from '@dxos/plugin-assistant';
 import { AttentionPlugin } from '@dxos/plugin-attention';
@@ -239,7 +240,7 @@ const StoryPlugin = definePlugin<StoryPluginOptions>(
         await dispatch(createIntent(LayoutAction.SwitchWorkspace, { part: 'workspace', subject: space.id }));
 
         // Create initial chat.
-        await dispatch(createIntent(AssistantAction.CreateChat, { space }));
+        await dispatch(createIntent(AssistantAction.CreateChat, { db: space.db }));
 
         return [];
       },
@@ -247,7 +248,7 @@ const StoryPlugin = definePlugin<StoryPluginOptions>(
     defineModule({
       id: 'example.com/plugin/testing/module/intent-resolver',
       activatesOn: Events.SetupIntentResolver,
-      activate: () => [
+      activate: (context) => [
         contributes(Capabilities.IntentResolver, [
           createResolver({
             intent: DeckAction.ChangeCompanion,
@@ -256,7 +257,11 @@ const StoryPlugin = definePlugin<StoryPluginOptions>(
           createResolver({
             intent: AssistantAction.CreateChat,
             position: 'hoist',
-            resolve: async ({ space, name }) => {
+            resolve: async ({ db, name }) => {
+              const client = context.getCapability(ClientCapabilities.Client);
+              const space = client.spaces.get(db.spaceId);
+              invariant(space, 'Space not found');
+
               const queue = space.queues.create();
               const traceQueue = space.queues.create();
               const chat = Obj.make(Assistant.Chat, {

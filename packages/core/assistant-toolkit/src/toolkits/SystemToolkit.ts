@@ -10,8 +10,7 @@ import * as Record from 'effect/Record';
 import * as Schema from 'effect/Schema';
 
 import { ArtifactId } from '@dxos/assistant';
-import { DXN, Obj, Relation, Tag, Type } from '@dxos/echo';
-import { Database } from '@dxos/echo';
+import { DXN, Database, Filter, Obj, Relation, Tag, Type } from '@dxos/echo';
 import { trim } from '@dxos/util';
 
 export const SystemToolkit = Toolkit.make(
@@ -50,6 +49,23 @@ export const SystemToolkit = Toolkit.make(
   }),
 
   //
+  // Query
+  //
+
+  Tool.make('query', {
+    description: trim`
+      Queries objects in the space.
+      Get the typename from the schema-list tool.
+    `,
+    parameters: {
+      typename: Schema.String,
+    },
+    success: Schema.Any,
+    failure: Schema.Never,
+    dependencies: [Database.Service],
+  }),
+
+  //
   // Objects
   //
 
@@ -63,18 +79,33 @@ export const SystemToolkit = Toolkit.make(
       data: Schema.Any,
     },
     success: Schema.Any,
-    failure: Schema.Never,
+    failure: Schema.Never, // TODO(burdon): Error handing?
     dependencies: [Database.Service],
   }),
 
-  Tool.make('object-remove', {
+  Tool.make('object-delete', {
     description: trim`
-      Removes an object or relation from the database.
+      Deletes the object.
     `,
     parameters: {
       id: ArtifactId.annotations({
         description: 'The ID of the object.',
       }),
+    },
+    success: Schema.Any,
+    failure: Schema.Never,
+    dependencies: [Database.Service],
+  }),
+
+  Tool.make('object-update', {
+    description: trim`
+      Updates the object properties.
+    `,
+    parameters: {
+      id: ArtifactId.annotations({
+        description: 'The ID of the object.',
+      }),
+      properties: Schema.Record({ key: Schema.String, value: Schema.Any }),
     },
     success: Schema.Any,
     failure: Schema.Never,
@@ -100,6 +131,20 @@ export const SystemToolkit = Toolkit.make(
       }),
       data: Schema.Any.annotations({
         description: 'The data to be stored in the relation.',
+      }),
+    },
+    success: Schema.Any,
+    failure: Schema.Never,
+    dependencies: [Database.Service],
+  }),
+
+  Tool.make('relation-delete', {
+    description: trim`
+      Deletes the relation.
+    `,
+    parameters: {
+      id: ArtifactId.annotations({
+        description: 'The ID of the relation.',
       }),
     },
     success: Schema.Any,
@@ -152,10 +197,9 @@ export const tools = Record.keys(SystemToolkit.tools);
 
 export const layer = (): Layer.Layer<Tool.Handler<any>, never, never> =>
   SystemToolkit.toLayer({
-    'schema-list': Effect.fnUntraced(function* () {
+    ['schema-list' as const]: Effect.fnUntraced(function* () {
       const { db } = yield* Database.Service;
       const schema = yield* Effect.promise(() => db.schemaRegistry.query({ location: ['database', 'runtime'] }).run());
-
       return schema.map((schema) => {
         const meta = Type.getMeta(schema);
         return {
@@ -166,9 +210,8 @@ export const layer = (): Layer.Layer<Tool.Handler<any>, never, never> =>
       });
     }),
 
-    'schema-add': Effect.fnUntraced(function* ({ name, typename, jsonSchema }) {
+    ['schema-add' as const]: Effect.fnUntraced(function* ({ name, typename, jsonSchema }) {
       const { db } = yield* Database.Service;
-
       yield* Effect.promise(() =>
         db.schemaRegistry.register([
           {
@@ -181,7 +224,12 @@ export const layer = (): Layer.Layer<Tool.Handler<any>, never, never> =>
       );
     }),
 
-    'object-create': Effect.fnUntraced(function* ({ typename, data }) {
+    ['query' as const]: Effect.fnUntraced(function* ({ typename }) {
+      const objects = yield* Database.Service.runQuery(Filter.typename(typename));
+      return objects;
+    }),
+
+    ['object-create' as const]: Effect.fnUntraced(function* ({ typename, data }) {
       const { db } = yield* Database.Service;
       const schema = yield* Effect.promise(() =>
         db.schemaRegistry.query({ typename, location: ['database', 'runtime'] }).first(),
@@ -192,14 +240,22 @@ export const layer = (): Layer.Layer<Tool.Handler<any>, never, never> =>
       return object;
     }),
 
-    'object-remove': Effect.fnUntraced(function* ({ id }) {
+    ['object-delete' as const]: Effect.fnUntraced(function* ({ id }) {
       const { db } = yield* Database.Service;
       const object = yield* Database.Service.resolve(DXN.parse(id));
       db.remove(object);
       return object;
     }),
 
-    'relation-create': Effect.fnUntraced(function* ({ typename, source, target, data }) {
+    ['object-update' as const]: Effect.fnUntraced(function* ({ id, properties }) {
+      const object = yield* Database.Service.resolve(DXN.parse(id));
+      for (const [key, value] of Object.entries(properties)) {
+        (object as any)[key] = value;
+      }
+      return object;
+    }),
+
+    ['relation-create' as const]: Effect.fnUntraced(function* ({ typename, source, target, data }) {
       const { db } = yield* Database.Service;
       const schema = yield* Effect.promise(() =>
         db.schemaRegistry.query({ typename, location: ['database', 'runtime'] }).first(),
@@ -217,13 +273,20 @@ export const layer = (): Layer.Layer<Tool.Handler<any>, never, never> =>
       return relation;
     }),
 
-    'tag-add': Effect.fnUntraced(function* ({ tagId, objectId }) {
+    ['relation-delete' as const]: Effect.fnUntraced(function* ({ id }) {
+      const { db } = yield* Database.Service;
+      const relation = yield* Database.Service.resolve(DXN.parse(id));
+      db.remove(relation);
+      return relation;
+    }),
+
+    ['tag-add' as const]: Effect.fnUntraced(function* ({ tagId, objectId }) {
       const object = yield* Database.Service.resolve(DXN.parse(objectId));
       Obj.addTag(object, DXN.parse(tagId).toString());
       return object;
     }),
 
-    'tag-remove': Effect.fnUntraced(function* ({ tagId, objectId }) {
+    ['tag-remove' as const]: Effect.fnUntraced(function* ({ tagId, objectId }) {
       const object = yield* Database.Service.resolve(DXN.parse(objectId));
       Obj.removeTag(object, DXN.parse(tagId).toString());
       return object;

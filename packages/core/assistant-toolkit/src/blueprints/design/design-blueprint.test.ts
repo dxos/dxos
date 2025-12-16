@@ -31,7 +31,7 @@ import { trim } from '@dxos/util';
 import { Document } from '../../functions';
 import { testToolkit } from '../testing';
 
-import blueprint from './design-blueprint';
+import { blueprint } from './design-blueprint';
 
 describe('Design Blueprint', { timeout: 120_000 }, () => {
   it.scoped(

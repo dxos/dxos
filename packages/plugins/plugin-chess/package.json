@@ -10,22 +10,22 @@
   "type": "module",
   "exports": {
     ".": {
-      "source": "./src/index.ts",
-      "types": "./dist/types/src/index.d.ts",
       "browser": "./dist/lib/browser/index.mjs",
-      "node": "./dist/lib/node-esm/index.mjs"
+      "node": "./dist/lib/node-esm/index.mjs",
+      "source": "./src/index.ts",
+      "types": "./dist/types/src/index.d.ts"
+    },
+    "./blueprints": {
+      "browser": "./dist/lib/browser/blueprints/index.mjs",
+      "node": "./dist/lib/node-esm/blueprints/index.mjs",
+      "source": "./src/blueprints/index.ts",
+      "types": "./dist/types/src/blueprints/index.d.ts"
     },
     "./types": {
-      "source": "./src/types/index.ts",
-      "types": "./dist/types/src/types/index.d.ts",
       "browser": "./dist/lib/browser/types/index.mjs",
-      "node": "./dist/lib/node-esm/types/index.mjs"
-    },
-    "./functions": {
-      "source": "./src/functions/index.ts",
-      "types": "./dist/types/src/functions/index.d.ts",
-      "browser": "./dist/lib/browser/functions/index.mjs",
-      "node": "./dist/lib/node-esm/functions/index.mjs"
+      "node": "./dist/lib/node-esm/types/index.mjs",
+      "source": "./src/types/index.ts",
+      "types": "./dist/types/src/types/index.d.ts"
     }
   },
   "types": "dist/types/src/index.d.ts",
@@ -61,27 +61,27 @@
     "@dxos/react-ui-stack": "workspace:*",
     "@dxos/schema": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@preact-signals/safe-react": "^0.9.0",
-    "@preact/signals-core": "^1.12.1",
-    "chess.js": "^1.0.0",
-    "effect": "3.18.3"
+    "@preact-signals/safe-react": "catalog:",
+    "@preact/signals-core": "catalog:",
+    "chess.js": "catalog:",
+    "effect": "catalog:"
   },
   "devDependencies": {
     "@dxos/plugin-theme": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-theme": "workspace:*",
     "@dxos/storybook-utils": "workspace:*",
-    "@types/react": "~19.2.2",
-    "@types/react-dom": "~19.2.2",
-    "react": "~19.2.0",
-    "react-dom": "~19.2.0",
-    "vite": "7.1.9"
+    "@types/react": "catalog:",
+    "@types/react-dom": "catalog:",
+    "react": "catalog:",
+    "react-dom": "catalog:",
+    "vite": "catalog:"
   },
   "peerDependencies": {
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-theme": "workspace:*",
-    "react": "^19.0.0",
-    "react-dom": "^19.0.0"
+    "react": "catalog:",
+    "react-dom": "catalog:"
   },
   "publishConfig": {
     "access": "public"

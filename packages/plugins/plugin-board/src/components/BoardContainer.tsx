@@ -5,7 +5,6 @@
 import React, { useCallback, useMemo, useRef, useState } from 'react';
 
 import { Surface } from '@dxos/app-framework/react';
-import { getSpace } from '@dxos/client/echo';
 import { Filter, Obj, Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { useQuery } from '@dxos/react-client/echo';
@@ -37,9 +36,9 @@ export const BoardContainer = ({ board }: BoardContainerProps) => {
   const attendableId = Obj.getDXN(board).toString();
   const { hasAttention } = useAttention(attendableId);
 
-  const space = getSpace(board);
+  const db = Obj.getDatabase(board);
   // TODO(burdon): Use search.
-  const objects = useQuery(space?.db, Filter.everything());
+  const objects = useQuery(db, Filter.everything());
   const options = useMemo<ObjectPickerContentProps['options']>(
     () =>
       objects
@@ -61,8 +60,8 @@ export const BoardContainer = ({ board }: BoardContainerProps) => {
 
   const handleAdd = useCallback<NonNullable<BoardRootProps['onAdd']>>(
     async (anchor, position = DEFAULT_POSITION) => {
-      const space = getSpace(board);
-      invariant(space);
+      const db = Obj.getDatabase(board);
+      invariant(db);
       addTriggerRef.current = anchor;
       setPickerState({
         position,

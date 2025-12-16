@@ -12,15 +12,16 @@ import { type Queue } from '@dxos/client/echo';
 import { Sequence } from '@dxos/conductor';
 import { Filter, Key, Obj, Ref, Type } from '@dxos/echo';
 import { TracingService, serializeFunction } from '@dxos/functions';
+import { invariant } from '@dxos/invariant';
 import { AutomationCapabilities } from '@dxos/plugin-automation';
-import { getSpace } from '@dxos/react-client/echo';
+import { ClientCapabilities } from '@dxos/plugin-client';
 import { Collection } from '@dxos/schema';
 import { type Message } from '@dxos/types';
 
 import { type AiChatServices, updateName } from '../processor';
 import { Assistant, AssistantAction } from '../types';
 
-import { ASSISTANT_BLUEPRINT_KEY, createBlueprint } from './blueprint-definition';
+import { AssistantBlueprint, createBlueprint } from './blueprint-definition';
 import { AssistantCapabilities } from './capabilities';
 
 export default (context: PluginContext) => [
@@ -43,22 +44,25 @@ export default (context: PluginContext) => [
           space.db.add(serializeFunction(Agent.prompt));
 
           // Create default chat.
-          const { object: chat } = yield* dispatch(createIntent(AssistantAction.CreateChat, { space }));
+          const { object: chat } = yield* dispatch(createIntent(AssistantAction.CreateChat, { db: space.db }));
           space.db.add(chat);
         }),
     }),
     createResolver({
       intent: AssistantAction.CreateChat,
-      resolve: async ({ space, name }) => {
+      resolve: async ({ db, name }) => {
+        const client = context.getCapability(ClientCapabilities.Client);
+        const space = client.spaces.get(db.spaceId);
+        invariant(space, 'Space not found');
         const queue = space.queues.create();
         const chat = Assistant.makeChat({ name, queue });
 
         // TODO(wittjosiah): This should be a space-level setting.
         // TODO(burdon): Clone when activated. Copy-on-write for template.
-        const blueprints = await space.db.query(Filter.type(Blueprint.Blueprint)).run();
-        let defaultBlueprint = blueprints.find((blueprint) => blueprint.key === ASSISTANT_BLUEPRINT_KEY);
+        const blueprints = await db.query(Filter.type(Blueprint.Blueprint)).run();
+        let defaultBlueprint = blueprints.find((blueprint) => blueprint.key === AssistantBlueprint.Key);
         if (!defaultBlueprint) {
-          defaultBlueprint = space.db.add(createBlueprint());
+          defaultBlueprint = db.add(createBlueprint());
         }
 
         const binder = new AiContextBinder(queue);
@@ -72,15 +76,15 @@ export default (context: PluginContext) => [
     createResolver({
       intent: AssistantAction.UpdateChatName,
       resolve: async ({ chat }) => {
-        const space = getSpace(chat);
+        const db = Obj.getDatabase(chat);
         const queue = chat.queue.target as Queue<Message.Message>;
-        if (!space || !queue) {
+        if (!db || !queue) {
           return;
         }
 
         const runtimeResolver = context.getCapability(AutomationCapabilities.ComputeRuntime);
         const runtime = await runtimeResolver
-          .getRuntime(space.id)
+          .getRuntime(db.spaceId)
           .runPromise(Effect.runtime<AiChatServices>().pipe(Effect.provide(TracingService.layerNoop)));
 
         await new AiConversation(queue).use(async (conversation) => updateName(runtime, conversation, chat));

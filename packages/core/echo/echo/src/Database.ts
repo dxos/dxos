@@ -6,7 +6,7 @@ import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
-import type * as Schema from 'effect/Schema';
+import * as Schema from 'effect/Schema';
 import type * as Types from 'effect/Types';
 
 import { type QueryAST } from '@dxos/echo-protocol';
@@ -121,18 +121,25 @@ export type FlushOptions = {
 };
 
 /**
+ * Identifier denoting an ECHO Database.
+ */
+export const TypeId = Symbol.for('@dxos/echo/Database');
+export type TypeId = typeof TypeId;
+
+/**
  * ECHO Database interface.
  */
 export interface Database extends Queryable {
+  readonly [TypeId]: TypeId;
+
   get spaceId(): SpaceId;
 
   // TODO(burdon): Can we move this into graph?
   get schemaRegistry(): SchemaRegistry.SchemaRegistry;
 
   /**
-   *
+   * Get hypergraph.
    */
-  // TODO(burdon): Comment required.
   get graph(): Hypergraph.Hypergraph;
 
   /**
@@ -153,7 +160,6 @@ export interface Database extends Queryable {
   /**
    * Adds object to the database.
    */
-  // TODO(burdon): Add batch.
   add<T extends Entity.Unknown = Entity.Unknown>(obj: T, opts?: AddOptions): T;
 
   /**
@@ -168,6 +174,12 @@ export interface Database extends Queryable {
    */
   flush(opts?: FlushOptions): Promise<void>;
 }
+
+export const isDatabase = (obj: unknown): obj is Database => {
+  return obj ? typeof obj === 'object' && TypeId in obj && obj[TypeId] === TypeId : false;
+};
+
+export const Database: Schema.Schema<Database> = Schema.Any.pipe(Schema.filter((space) => isDatabase(space)));
 
 export class Service extends Context.Tag('@dxos/echo/Database/Service')<
   Service,
@@ -192,6 +204,14 @@ export class Service extends Context.Tag('@dxos/echo/Database/Service')<
   static layer = (db: Database): Layer.Layer<Service> => {
     return Layer.succeed(Service, Service.make(db));
   };
+
+  /**
+   * Returns the space ID of the database.
+   */
+  static spaceId = Effect.gen(function* () {
+    const { db } = yield* Service;
+    return db.spaceId;
+  });
 
   /**
    * Resolves an object by its DXN.
@@ -241,11 +261,11 @@ export class Service extends Context.Tag('@dxos/echo/Database/Service')<
   /**
    * Loads an object reference option.
    */
-  // TODO(burdon): Option?
   static loadOption: <T>(ref: Ref.Ref<T>) => Effect.Effect<Option.Option<T>, never, never> = Effect.fn(function* (ref) {
     const object = yield* Service.load(ref).pipe(
       Effect.catchTag('ObjectNotFoundError', () => Effect.succeed(undefined)),
     );
+
     return Option.fromNullable(object);
   });
 

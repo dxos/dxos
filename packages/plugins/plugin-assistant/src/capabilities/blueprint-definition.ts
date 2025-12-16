@@ -3,10 +3,8 @@
 //
 
 import { Capabilities, type Capability, contributes } from '@dxos/app-framework';
-import { templates } from '@dxos/assistant';
 import {
   Agent,
-  AssistantToolkit,
   Discord,
   DiscordBlueprint,
   EntityExtraction,
@@ -14,39 +12,21 @@ import {
   LinearBlueprint,
   Research,
   ResearchBlueprint,
-  SystemToolkit,
   WebSearchBlueprint,
 } from '@dxos/assistant-toolkit';
-import { Blueprint } from '@dxos/blueprints';
-import { type FunctionDefinition } from '@dxos/functions';
+import { type Blueprint } from '@dxos/blueprints';
 
-import { analysis, list, load } from '../functions';
+import { AssistantBlueprint } from '../blueprints';
 
-// TODO(burdon): Document plugin structure (blueprint, functions, toolkit.)
-// TODO(burdon): Test framework for developing functions. Error handling.
-// TODO(burdon): Function naming pattern (noun-verb); fully-qualified?
+export const createBlueprint: () => Blueprint.Blueprint = AssistantBlueprint.make;
+export { AssistantBlueprint };
 
-// TODO(wittjosiah): Factor out to a generic app-framework blueprint.
-const deckTools = ['open-item'];
-
-const functions: FunctionDefinition[] = [analysis, list, load];
-const tools = [...AssistantToolkit.tools, ...SystemToolkit.tools, ...deckTools];
-
-export const ASSISTANT_BLUEPRINT_KEY = 'dxos.org/blueprint/assistant';
-
-export const createBlueprint = (): Blueprint.Blueprint =>
-  Blueprint.make({
-    key: ASSISTANT_BLUEPRINT_KEY,
-    name: 'Assistant',
-    tools: Blueprint.toolDefinitions({ functions, tools }),
-    instructions: templates.system,
-  });
-
-const blueprint = createBlueprint();
-
-export default (): Capability<any>[] => [
-  contributes(Capabilities.Functions, functions),
-  contributes(Capabilities.BlueprintDefinition, blueprint),
+export default (): (
+  | Capability<typeof Capabilities.Functions>
+  | Capability<typeof Capabilities.BlueprintDefinition>
+)[] => [
+  contributes(Capabilities.Functions, AssistantBlueprint.functions$),
+  contributes(Capabilities.BlueprintDefinition, AssistantBlueprint.blueprint),
 
   // TODO(burdon): Factor out.
   contributes(Capabilities.Functions, [Research.create, Research.research]),

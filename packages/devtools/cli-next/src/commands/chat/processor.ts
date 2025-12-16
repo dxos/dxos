@@ -21,10 +21,12 @@ import {
 import { Blueprint } from '@dxos/blueprints';
 import { type Space } from '@dxos/client/echo';
 import { Filter, Obj, Ref } from '@dxos/echo';
-import { throwCause } from '@dxos/effect';
+import type { FunctionDefinition } from '@dxos/functions';
+import { log } from '@dxos/log';
 import { type Message } from '@dxos/types';
+import { isTruthy } from '@dxos/util';
 
-import { type AiChatServices, TestToolkit } from '../../util';
+import { type AiChatServices } from '../../util';
 
 import { blueprintRegistry } from './blueprints';
 
@@ -33,6 +35,7 @@ export class ChatProcessor {
   constructor(
     private readonly _runtime: Runtime.Runtime<AiChatServices>,
     private readonly _toolkit: GenericToolkit.GenericToolkit,
+    private readonly _functions: FunctionDefinition.Any[],
     private readonly _metadata?: AiService.ServiceMetadata,
   ) {}
 
@@ -56,7 +59,8 @@ export class ChatProcessor {
       Effect.provide(
         Layer.mergeAll(
           AiService.model(model),
-          makeToolResolverFromFunctions(TestToolkit.functions, this._toolkit.toolkit),
+          // TODO(dmaretskyi): Introduce new FunctionRegistry service (injected above) that will provide functions here.
+          makeToolResolverFromFunctions(this._functions, this._toolkit.toolkit),
           makeToolExecutionServiceFromFunctions(this._toolkit.toolkit, this._toolkit.layer),
         ),
       ),
@@ -66,40 +70,42 @@ export class ChatProcessor {
 
     const response = await fiber.pipe(Fiber.join, Effect.runPromiseExit);
     if (!Exit.isSuccess(response) && !Cause.isInterruptedOnly(response.cause)) {
-      throwCause(response.cause);
+      const cause = Cause.pretty(response.cause);
+      log.error('request failed', { cause });
+      throw new Error(cause);
     }
   }
 
-  async createConversation(space: Space, blueprintKeys: string[]) {
-    // TODO(wittjosiah): This is copied from ChatCompanion.tsx.
-    const existingBlueprints = await space.db.query(Filter.type(Blueprint.Blueprint)).run();
+  async createConversation(space: Space, blueprintIds: string[]) {
+    const spaceBlueprints = await space.db.query(Filter.type(Blueprint.Blueprint)).run();
 
-    // TODO(wittjosiah): Stop doing this.
-    //   Currently doing this to ensure blueprints are always up to date from the registry.
-    for (const blueprint of existingBlueprints) {
-      space.db.remove(blueprint);
-    }
+    // Add blueprints to space.
+    const blueprints = blueprintIds
+      .map((key) => {
+        const existing = spaceBlueprints.find((blueprint) => blueprint.key === key);
+        if (existing) {
+          // TODO(wittjosiah): Stop doing this.
+          //   Currently doing this to ensure blueprints are always up-to-date from the registry.
+          space.db.remove(existing);
+          // continue;
+        }
 
-    for (const key of blueprintKeys) {
-      const existingBlueprint = existingBlueprints.find((blueprint) => blueprint.key === key);
-      if (existingBlueprint) {
-        continue;
-      }
+        const blueprint = blueprintRegistry.getByKey(key);
+        if (!blueprint) {
+          log.warn('blueprint not found', { key });
+          return;
+        }
 
-      const blueprint = blueprintRegistry.getByKey(key);
-      if (!blueprint) {
-        continue;
-      }
-
-      space.db.add(Obj.clone(blueprint));
-    }
+        log.info('adding blueprint', { key });
+        return space.db.add(Obj.clone(blueprint));
+      })
+      .filter(isTruthy);
 
     const queue = space.queues.create<Message.Message>();
-    // TODO(wittjosiah): Remove this hardcoded toolkit now that blueprints are available?
-    const conversation = new AiConversation(queue, this._toolkit?.toolkit);
+    const conversation = new AiConversation(queue);
     await conversation.open();
 
-    const blueprints = await space.db.query(Filter.type(Blueprint.Blueprint)).run();
+    // Bind blueprints.
     await conversation.context.bind({
       blueprints: blueprints.map((blueprint) => Ref.make(blueprint)),
     });

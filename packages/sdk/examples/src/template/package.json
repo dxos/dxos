@@ -1,18 +1,18 @@
 {
   "name": "dxos-example-template",
-  "private": true,
   "version": "0.0.0",
+  "private": true,
   "scripts": {
-    "dev": "vite",
     "build": "tsc && vite build",
+    "dev": "vite",
     "preview": "vite preview"
   },
   "dependencies": {
+    "@dxos/echo": "latest",
+    "@dxos/react-client": "latest",
     "@dxos/react-ui": "latest",
     "@dxos/react-ui-theme": "latest",
     "@dxos/react-ui-types": "latest",
-    "@dxos/react-client": "latest",
-    "@dxos/echo": "latest",
     "react": "~19.2.0",
     "react-dom": "~19.2.0"
   },

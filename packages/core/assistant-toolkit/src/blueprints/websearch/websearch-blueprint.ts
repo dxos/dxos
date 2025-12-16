@@ -4,10 +4,10 @@
 
 import { ToolId } from '@dxos/ai';
 import { Blueprint } from '@dxos/blueprints';
-import { Obj, Ref } from '@dxos/echo';
+import { Ref } from '@dxos/echo';
 import { Text } from '@dxos/schema';
 
-const blueprint: Blueprint.Blueprint = Obj.make(Blueprint.Blueprint, {
+export const blueprint = Blueprint.make({
   key: 'dxos.org/blueprint/web-search',
   name: 'Web Search',
   description: 'Search the web.',
@@ -16,5 +16,3 @@ const blueprint: Blueprint.Blueprint = Obj.make(Blueprint.Blueprint, {
   },
   tools: [ToolId.make('AnthropicWebSearch')],
 });
-
-export default blueprint;

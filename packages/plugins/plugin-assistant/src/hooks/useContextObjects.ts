@@ -6,7 +6,11 @@ import { useCallback } from 'react';
 
 import { type AiContextBinder } from '@dxos/assistant';
 import { type DXN, type Database, type Obj, Ref } from '@dxos/echo';
-import { isNonNullable } from '@dxos/util';
+
+export type UseContextObjectsProps = {
+  db?: Database.Database;
+  context?: AiContextBinder;
+};
 
 export type UseContextObjects = {
   objects: Obj.Any[];
@@ -16,25 +20,16 @@ export type UseContextObjects = {
 /**
  * Create reactive map of active object references (by DXN string).
  */
-export const useContextObjects = ({
-  db,
-  context,
-}: {
-  db?: Database.Database;
-  context?: AiContextBinder;
-}): UseContextObjects => {
-  const objects = context?.objects.value.map((ref) => ref.target).filter(isNonNullable) ?? [];
-
+export const useContextObjects = ({ db, context }: UseContextObjectsProps): UseContextObjects => {
   const handleUpdateObject = useCallback<UseContextObjects['onUpdateObject']>(
     async (dxn: DXN, checked: boolean) => {
       if (!db || !context) {
         return;
       }
 
-      const ref = Ref.fromDXN(dxn);
       // Load the object by DXN from the current space.
+      const ref = Ref.fromDXN(dxn);
       await ref.load();
-
       if (checked) {
         await context.bind({ objects: [ref] });
       } else {
@@ -45,7 +40,7 @@ export const useContextObjects = ({
   );
 
   return {
-    objects,
+    objects: context?.objects.value ?? [],
     onUpdateObject: handleUpdateObject,
   };
 };

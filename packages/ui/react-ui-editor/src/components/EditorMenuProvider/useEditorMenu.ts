@@ -74,7 +74,6 @@ export const useEditorMenu = ({
 
   const handleOpenChange = useCallback<NonNullable<UseEditorMenu['onOpenChange']>>(
     async ({ view, open }) => {
-      console.log(view, open);
       invariant(view);
       setOpen(open);
       if (!open) {

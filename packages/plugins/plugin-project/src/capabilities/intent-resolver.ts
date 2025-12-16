@@ -13,9 +13,9 @@ export default () =>
     Capabilities.IntentResolver,
     createResolver({
       intent: ProjectAction.Create,
-      resolve: async ({ space, name, template = 'org-research' }) => {
+      resolve: async ({ db, name, template = 'org-research' }) => {
         if (templates[template]) {
-          const project = await templates[template](space);
+          const project = await templates[template](db);
           if (project) {
             return {
               data: { object: project },

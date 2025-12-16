@@ -4,7 +4,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { SpaceSchema } from '@dxos/client/echo';
+import { Database } from '@dxos/echo';
 import { Script } from '@dxos/functions';
 
 import { meta } from '../meta';
@@ -27,7 +27,7 @@ export namespace ScriptAction {
     input: Schema.extend(
       ScriptProps,
       Schema.Struct({
-        space: SpaceSchema,
+        db: Database.Database,
       }),
     ),
     output: Schema.Struct({
@@ -43,7 +43,7 @@ export namespace ScriptAction {
     input: Schema.extend(
       NotebookProps,
       Schema.Struct({
-        space: SpaceSchema,
+        db: Database.Database,
       }),
     ),
     output: Schema.Struct({

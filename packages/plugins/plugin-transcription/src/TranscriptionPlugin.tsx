@@ -9,9 +9,9 @@ import { getSpace } from '@dxos/react-client/echo';
 import { Message, Transcript } from '@dxos/types';
 
 import { BlueprintDefinition, IntentResolver, ReactSurface, Transcriber } from './capabilities';
-import { renderByline } from './components';
 import { meta } from './meta';
 import { translations } from './translations';
+import { renderByline } from './util';
 
 export const TranscriptionPlugin = definePlugin(meta, () => [
   defineModule({

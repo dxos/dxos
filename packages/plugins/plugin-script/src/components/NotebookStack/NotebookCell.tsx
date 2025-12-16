@@ -5,10 +5,10 @@
 import React, { useCallback, useMemo } from 'react';
 
 import { Surface } from '@dxos/app-framework/react';
+import { type Database } from '@dxos/echo';
 import { createDocAccessor } from '@dxos/echo-db';
 import { invariant } from '@dxos/invariant';
 import { TemplateEditor } from '@dxos/plugin-assistant';
-import { type Space } from '@dxos/react-client/echo';
 import { useThemeContext, useTranslation } from '@dxos/react-ui';
 import { QueryEditor, type QueryEditorProps } from '@dxos/react-ui-components';
 import {
@@ -35,7 +35,7 @@ const editorStyles = 'p-2 pis-3';
 const valueStyles = 'p-1 pis-3';
 
 export type NotebookCellProps = {
-  space?: Space;
+  db?: Database.Database;
   graph?: ComputeGraph;
   dragging?: boolean;
   cell: Notebook.Cell;
@@ -43,7 +43,7 @@ export type NotebookCellProps = {
 } & (Pick<NotebookMenuProps, 'onCellInsert' | 'onCellDelete'> & Pick<TypescriptEditorProps, 'env'>);
 
 // TODO(burdon): Show evaluation errors.
-export const NotebookCell = ({ space, graph, dragging, cell, promptResults, env }: NotebookCellProps) => {
+export const NotebookCell = ({ db, graph, dragging, cell, promptResults, env }: NotebookCellProps) => {
   const { t } = useTranslation(meta.id);
 
   const extensions = useMemo(() => {
@@ -119,7 +119,7 @@ export const NotebookCell = ({ space, graph, dragging, cell, promptResults, env 
           <QueryEditor
             id={cell.id}
             classNames={[editorStyles, 'border-be border-subduedSeparator']}
-            db={space?.db}
+            db={db}
             value={cell.source.target.content}
             onChange={handleQueryChange}
           />

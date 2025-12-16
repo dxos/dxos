@@ -59,7 +59,7 @@
     "src"
   ],
   "dependencies": {
-    "@bufbuild/protobuf": "2.9.0",
+    "@bufbuild/protobuf": "catalog:",
     "@dxos/codec-protobuf": "workspace:*",
     "@dxos/effect": "workspace:*",
     "@dxos/errors": "workspace:*",
@@ -69,13 +69,13 @@
     "@dxos/util": "workspace:*"
   },
   "devDependencies": {
-    "@bufbuild/buf": "1.43.0",
-    "@bufbuild/protoc-gen-es": "2.9.0",
+    "@bufbuild/buf": "catalog:",
+    "@bufbuild/protoc-gen-es": "catalog:",
     "@dxos/protobuf-compiler": "workspace:*",
-    "effect": "3.18.3"
+    "effect": "catalog:"
   },
   "peerDependencies": {
-    "effect": "^3.13.3"
+    "effect": "catalog:"
   },
   "publishConfig": {
     "access": "public"

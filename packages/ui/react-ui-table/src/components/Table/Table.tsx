@@ -18,6 +18,7 @@ import React, {
 } from 'react';
 
 import { type Type } from '@dxos/echo';
+import { log } from '@dxos/log';
 import { useAttention } from '@dxos/react-ui-attention';
 import {
   type DxGridElement,
@@ -302,7 +303,7 @@ const TableMainInner = <T extends Type.Entity.Any = Type.Entity.Any>(
               void navigator.clipboard.writeText(textContent);
               event.preventDefault();
             } catch (error) {
-              console.warn('Failed to copy cell content:', error);
+              log.catch(error);
             }
             break;
           }

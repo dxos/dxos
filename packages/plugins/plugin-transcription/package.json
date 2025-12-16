@@ -14,6 +14,12 @@
       "browser": "./dist/lib/browser/index.mjs",
       "node": "./dist/lib/node-esm/index.mjs"
     },
+    "./blueprints": {
+      "source": "./src/blueprints/index.ts",
+      "types": "./dist/types/src/blueprints/index.d.ts",
+      "browser": "./dist/lib/browser/blueprints/index.mjs",
+      "node": "./dist/lib/node-esm/blueprints/index.mjs"
+    },
     "./types": {
       "source": "./src/types/index.ts",
       "types": "./dist/types/src/types/index.d.ts",
@@ -24,6 +30,9 @@
   "types": "dist/types/src/index.d.ts",
   "typesVersions": {
     "*": {
+      "blueprints": [
+        "dist/types/src/blueprints/index.d.ts"
+      ],
       "types": [
         "dist/types/src/types/index.d.ts"
       ]
@@ -34,8 +43,8 @@
     "src"
   ],
   "dependencies": {
-    "@codemirror/state": "^6.5.2",
-    "@codemirror/view": "^6.38.4",
+    "@codemirror/state": "catalog:",
+    "@codemirror/view": "catalog:",
     "@dxos/ai": "workspace:*",
     "@dxos/app-framework": "workspace:*",
     "@dxos/assistant": "workspace:*",
@@ -75,16 +84,16 @@
     "@dxos/tracing": "workspace:*",
     "@dxos/types": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@preact-signals/safe-react": "^0.9.0",
-    "@preact/signals-core": "^1.12.1",
-    "date-fns": "^3.3.1",
-    "extendable-media-recorder": "^9.2.19",
-    "extendable-media-recorder-wav-encoder": "^7.0.123",
-    "main-thread-scheduling": "^14.1.1",
-    "react-resize-detector": "^11.0.1",
-    "react-router-dom": "^6.4.0",
-    "react-use": "^17.5.1",
-    "wavefile": "^11.0.0"
+    "@preact-signals/safe-react": "catalog:",
+    "@preact/signals-core": "catalog:",
+    "date-fns": "catalog:",
+    "extendable-media-recorder": "catalog:",
+    "extendable-media-recorder-wav-encoder": "catalog:",
+    "main-thread-scheduling": "catalog:",
+    "react-resize-detector": "catalog:",
+    "react-router-dom": "catalog:",
+    "react-use": "catalog:",
+    "wavefile": "catalog:"
   },
   "devDependencies": {
     "@dxos/plugin-preview": "workspace:*",
@@ -97,23 +106,23 @@
     "@dxos/react-ui-theme": "workspace:*",
     "@dxos/storybook-utils": "workspace:*",
     "@dxos/test-utils": "workspace:*",
-    "@effect-atom/atom-react": "^0.3.4",
-    "@effect/platform": "0.92.1",
-    "@types/dom-speech-recognition": "^0.0.6",
-    "@types/react": "~19.2.2",
-    "effect": "3.18.3",
-    "react": "~19.2.0",
-    "react-dom": "~19.2.0",
-    "tailwindcss": "~3.4.1"
+    "@effect-atom/atom-react": "catalog:",
+    "@effect/platform": "catalog:",
+    "@types/dom-speech-recognition": "catalog:",
+    "@types/react": "catalog:",
+    "effect": "catalog:",
+    "react": "catalog:",
+    "react-dom": "catalog:",
+    "tailwindcss": "catalog:"
   },
   "peerDependencies": {
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-theme": "workspace:*",
-    "@effect-atom/atom-react": "^0.3.4",
-    "@effect/platform": "^0.80.12",
-    "effect": "^3.13.3",
-    "react": "^19.0.0",
-    "react-dom": "^19.0.0"
+    "@effect-atom/atom-react": "catalog:",
+    "@effect/platform": "catalog:",
+    "effect": "catalog:",
+    "react": "catalog:",
+    "react-dom": "catalog:"
   },
   "publishConfig": {
     "access": "public"

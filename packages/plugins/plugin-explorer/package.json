@@ -44,7 +44,7 @@
     "src"
   ],
   "dependencies": {
-    "3d-force-graph": "^1.76.1",
+    "3d-force-graph": "catalog:",
     "@dxos/app-framework": "workspace:*",
     "@dxos/async": "workspace:*",
     "@dxos/client": "workspace:*",
@@ -66,16 +66,16 @@
     "@dxos/schema": "workspace:*",
     "@dxos/types": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@observablehq/plot": "^0.6.11",
-    "@preact-signals/safe-react": "^0.9.0",
-    "@preact/signals-core": "^1.12.1",
-    "d3": "^7.9.0",
-    "effect": "3.18.3",
-    "force-graph": "^1.49.4",
-    "lodash.defaultsdeep": "^4.6.1",
-    "react-resize-detector": "^11.0.1",
-    "three": "^0.178.0",
-    "topojson-client": "^3.1.0"
+    "@observablehq/plot": "catalog:",
+    "@preact-signals/safe-react": "catalog:",
+    "@preact/signals-core": "catalog:",
+    "d3": "catalog:",
+    "effect": "catalog:",
+    "force-graph": "catalog:",
+    "lodash.defaultsdeep": "catalog:",
+    "react-resize-detector": "catalog:",
+    "three": "catalog:",
+    "topojson-client": "catalog:"
   },
   "devDependencies": {
     "@dxos/echo-generator": "workspace:*",
@@ -83,23 +83,23 @@
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-theme": "workspace:*",
     "@dxos/storybook-utils": "workspace:*",
-    "@types/d3": "^7.4.3",
-    "@types/d3-hierarchy": "^3.1.6",
-    "@types/lodash.defaultsdeep": "^4.6.6",
-    "@types/react": "~19.2.2",
-    "@types/react-dom": "~19.2.2",
-    "@types/topojson-client": "^3.1.4",
-    "@types/topojson-specification": "^1.0.5",
-    "react": "~19.2.0",
-    "react-dom": "~19.2.0",
-    "vite": "7.1.9"
+    "@types/d3": "catalog:",
+    "@types/d3-hierarchy": "catalog:",
+    "@types/lodash.defaultsdeep": "catalog:",
+    "@types/react": "catalog:",
+    "@types/react-dom": "catalog:",
+    "@types/topojson-client": "catalog:",
+    "@types/topojson-specification": "catalog:",
+    "react": "catalog:",
+    "react-dom": "catalog:",
+    "vite": "catalog:"
   },
   "peerDependencies": {
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-theme": "workspace:*",
-    "effect": "^3.13.3",
-    "react": "^19.0.0",
-    "react-dom": "^19.0.0"
+    "effect": "catalog:",
+    "react": "catalog:",
+    "react-dom": "catalog:"
   },
   "publishConfig": {
     "access": "public"

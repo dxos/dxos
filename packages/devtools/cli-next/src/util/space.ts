@@ -22,6 +22,13 @@ export const getSpace = (spaceId: Key.SpaceId) =>
     return yield* Option.fromNullable(client.spaces.get(spaceId));
   }).pipe(Effect.catchTag('NoSuchElementException', () => Effect.fail(new SpaceNotFoundError(spaceId))));
 
+export const spaceIdWithDefault = (spaceId: Option.Option<Key.SpaceId>) =>
+  Effect.gen(function* () {
+    const client = yield* ClientService;
+    yield* Effect.promise(() => client.spaces.waitUntilReady());
+    return Option.getOrElse(spaceId, () => client.spaces.default.id);
+  });
+
 // TODO(wittjosiah): Factor out.
 export const spaceLayer = (
   spaceId$: Option.Option<Key.SpaceId>,

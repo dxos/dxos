@@ -110,6 +110,9 @@ export class ServiceContext extends Resource {
   ) {
     super();
 
+    log('runtimeParams', this._runtimeParams);
+    log('edgeFeatures', this._edgeFeatures);
+
     // TODO(burdon): Move strings to constants.
     this.metadataStore = new MetadataStore(storage.createDirectory('metadata'));
     this.blobStore = new BlobStore(storage.createDirectory('blobs'));
@@ -160,8 +163,6 @@ export class ServiceContext extends Resource {
         vector: this._runtimeParams?.enableVectorIndexing,
       },
     });
-
-    this._meshReplicator = new MeshEchoReplicator();
 
     this.invitations = new InvitationsHandler(
       this.networkManager, //

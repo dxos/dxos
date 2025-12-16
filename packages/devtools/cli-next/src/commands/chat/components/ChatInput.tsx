@@ -5,11 +5,11 @@
 import { type KeyEvent, type TextareaRenderable } from '@opentui/core';
 import { type Accessor, createEffect, useContext } from 'solid-js';
 
-import { theme } from '../theme';
-
-import { AppContext } from './App';
+import { AppContext } from '../../../components';
+import { theme } from '../../../theme';
 
 type ChatInputProps = {
+  focused?: Accessor<boolean | undefined>;
   height?: number;
   value: Accessor<string>;
   onInput: (value: string) => void;
@@ -17,8 +17,8 @@ type ChatInputProps = {
 };
 
 export const ChatInput = (props: ChatInputProps) => {
+  const appContext = useContext(AppContext);
   let textarea: TextareaRenderable | undefined;
-  const context = useContext(AppContext);
 
   // Sync signal to textarea (initialValue is not reactive).
   createEffect(() => {
@@ -37,6 +37,11 @@ export const ChatInput = (props: ChatInputProps) => {
     }
   };
 
+  const isFocused = () => {
+    const focused = props.focused?.();
+    return focused ?? appContext?.focus?.() === 'input';
+  };
+
   return (
     <box flexDirection='row' width='100%' height={props.height ?? 4}>
       <box width={1} height='100%' border={['right']} borderStyle='heavy' borderColor={theme.accent} />
@@ -45,7 +50,7 @@ export const ChatInput = (props: ChatInputProps) => {
           ref={textarea}
           width='100%'
           height='100%'
-          focused={context?.focus?.() === 'input'}
+          focused={isFocused()}
           placeholder='Search or ask anything...'
           initialValue={props.value()}
           onContentChange={() => props.onInput(textarea?.plainText ?? '')}

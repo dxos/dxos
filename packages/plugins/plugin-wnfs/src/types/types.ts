@@ -5,7 +5,7 @@
 import * as Schema from 'effect/Schema';
 
 import { FileInfoSchema } from '@dxos/app-framework';
-import { SpaceSchema } from '@dxos/react-client/echo';
+import { Database } from '@dxos/echo';
 
 import { meta } from '../meta';
 
@@ -35,7 +35,7 @@ export namespace WnfsAction {
   export type UploadFileForm = Schema.Schema.Type<typeof UploadFileSchema>;
 
   export class Upload extends Schema.TaggedClass<Upload>()(`${meta.id}/action/upload`, {
-    input: Schema.extend(UploadFileSchema, Schema.Struct({ space: SpaceSchema })),
+    input: Schema.extend(UploadFileSchema, Schema.Struct({ db: Database.Database })),
     output: Schema.required(FileInfoSchema),
   }) {}
 }

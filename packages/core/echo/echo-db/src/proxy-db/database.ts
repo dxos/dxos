@@ -7,7 +7,8 @@ import { inspect } from 'node:util';
 import { type CleanupFn, Event, type ReadOnlyEvent, synchronized } from '@dxos/async';
 import { type Context, LifecycleState, Resource } from '@dxos/context';
 import { inspectObject } from '@dxos/debug';
-import { type Database, type Entity, Obj, type QueryAST, Ref } from '@dxos/echo';
+import { Database, type Entity, Obj, type QueryAST, Ref } from '@dxos/echo';
+import { type GetObjectByIdOptions } from '@dxos/echo/Database';
 import { type AnyProperties, assertObjectModel, setRefResolver } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
 import { DXN, type PublicKey, type SpaceId } from '@dxos/keys';
@@ -35,22 +36,32 @@ import { type ObjectMigration } from './object-migration';
 
 // TODO(burdon): Remove and progressively push methods to Database.Database.
 export interface EchoDatabase extends Database.Database {
+  /**
+   * Get notification about the data being saved to disk.
+   */
+  readonly saveStateChanged: ReadOnlyEvent<SaveStateChangedEvent>;
+
+  /** @deprecated */
+  readonly pendingBatch: ReadOnlyEvent<unknown>;
+
+  /** @deprecated */
+  readonly coreDatabase: CoreDatabase;
+
   /** @deprecated */
   get spaceKey(): PublicKey;
-  get spaceId(): SpaceId;
 
-  get graph(): HypergraphImpl;
+  // Overrides interface.
   get schemaRegistry(): DatabaseSchemaRegistry;
+
+  // Overrides interface.
+  get graph(): HypergraphImpl;
 
   toJSON(): object;
 
   /**
    * @deprecated Use `ref` instead.
    */
-  getObjectById<T extends Obj.Any = Obj.Obj<AnyProperties>>(
-    id: string,
-    opts?: Database.GetObjectByIdOptions,
-  ): T | undefined;
+  getObjectById<T extends Obj.Any = Obj.Obj<AnyProperties>>(id: string, opts?: GetObjectByIdOptions): T | undefined;
 
   /**
    * Run migrations.
@@ -68,34 +79,16 @@ export interface EchoDatabase extends Database.Database {
   subscribeToSyncState(ctx: Context, callback: (state: SpaceSyncState) => void): CleanupFn;
 
   /**
-   * Get notification about the data being saved to disk.
+   * Insert new objects.
+   * @deprecated Use `add` instead.
    */
-  readonly saveStateChanged: ReadOnlyEvent<SaveStateChangedEvent>;
-
-  /**
-   * @deprecated
-   */
-  readonly pendingBatch: ReadOnlyEvent<unknown>;
-
-  /**
-   * @deprecated
-   */
-  readonly coreDatabase: CoreDatabase;
+  insert(data: unknown): Promise<unknown>;
 
   /**
    * Update objects.
    * @deprecated Directly mutate the object.
    */
-  // TODO(burdon): Remove.
   update(filter: Filter.Any, operation: unknown): Promise<void>;
-
-  /**
-   * Insert new objects.
-   * @deprecated Use `add` instead.
-   */
-  // TODO(burdon): Remove.
-  // TODO(dmaretskyi): Support meta.
-  insert(data: unknown): Promise<unknown>;
 }
 
 export type EchoDatabaseParams = {
@@ -121,6 +114,8 @@ export type EchoDatabaseParams = {
  * Implements EchoDatabase interface.
  */
 export class EchoDatabaseImpl extends Resource implements EchoDatabase {
+  readonly [Database.TypeId]: typeof Database.TypeId = Database.TypeId;
+
   /**
    * @internal
    */

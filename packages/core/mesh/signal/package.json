@@ -25,13 +25,13 @@
     "@dxos/log": "workspace:*",
     "@dxos/node-std": "workspace:*",
     "@dxos/util": "workspace:*",
-    "find-process": "^1.4.7",
-    "node-fetch": "^2.6.0",
-    "pkg-up": "^3.1.0"
+    "find-process": "catalog:",
+    "node-fetch": "catalog:",
+    "pkg-up": "catalog:"
   },
   "devDependencies": {
     "@dxos/util": "workspace:*",
-    "@types/node-fetch": "^2.5.10"
+    "@types/node-fetch": "catalog:"
   },
   "publishConfig": {
     "access": "public"

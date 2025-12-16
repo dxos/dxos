@@ -115,18 +115,12 @@ export interface RefFn {
  */
 export const Ref: RefFn = <S extends Schema.Schema.Any>(schema: S): RefSchema<Schema.Schema.Type<S>> => {
   assertArgument(Schema.isSchema(schema), 'schema', 'Must call with an instance of effect-schema');
-
   const annotation = getTypeAnnotation(schema);
   if (annotation == null) {
     throw new Error('Reference target must be an ECHO schema.');
   }
 
-  return createEchoReferenceSchema(
-    getTypeIdentifierAnnotation(schema),
-    annotation.typename,
-    annotation.version,
-    getSchemaExpectedName(schema.ast),
-  );
+  return createEchoReferenceSchema(getTypeIdentifierAnnotation(schema), annotation.typename, annotation.version);
 };
 
 /**
@@ -138,6 +132,11 @@ export interface Ref<T> {
    * Target object DXN.
    */
   get dxn(): DXN;
+
+  /**
+   * Returns true if the reference has a target available (inlined or resolver set).
+   */
+  get isAvailable(): boolean;
 
   /**
    * @returns The reference target.
@@ -244,7 +243,6 @@ export const createEchoReferenceSchema = (
   echoId: string | undefined,
   typename: string | undefined,
   version: string | undefined,
-  schemaName?: string, // TODO(burdon): Not used.
 ): Schema.SchemaClass<Ref<any>, EncodedReference> => {
   if (!echoId && !typename) {
     throw new TypeError('Either echoId or typename must be provided.');
@@ -361,6 +359,13 @@ export class RefImpl<T> implements Ref<T> {
   /**
    * @inheritdoc
    */
+  get isAvailable(): boolean {
+    return this.#target !== undefined || this.#resolver !== undefined;
+  }
+
+  /**
+   * @inheritdoc
+   */
   get target(): T | undefined {
     this.#signal.notifyRead();
     if (this.#target) {
@@ -442,9 +447,6 @@ export class RefImpl<T> implements Ref<T> {
   }
 
   /**
-   * Internal method to get the saved target.
-   * Not the same as `target` which is resolved from the resolver.
-   *
    * @internal
    */
   _getSavedTarget(): T | undefined {

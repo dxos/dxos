@@ -11,7 +11,7 @@ import { invariant } from '@dxos/invariant';
 import { ATTENDABLE_PATH_SEPARATOR, DeckAction } from '@dxos/plugin-deck/types';
 import { ObservabilityAction } from '@dxos/plugin-observability/types';
 import { SpaceAction } from '@dxos/plugin-space/types';
-import { Ref, getSpace } from '@dxos/react-client/echo';
+import { Ref } from '@dxos/react-client/echo';
 import { Collection } from '@dxos/schema';
 import { AnchoredTo, Message, Thread } from '@dxos/types';
 
@@ -107,9 +107,9 @@ export default (context: PluginContext) =>
           thread.status = 'active';
         }
 
-        const space = getSpace(thread);
-        invariant(space, 'Space not found');
-        const spaceId = space.id;
+        const db = Obj.getDatabase(thread);
+        invariant(db, 'Database not found');
+        const spaceId = db.spaceId;
 
         return {
           intents: [
@@ -140,16 +140,16 @@ export default (context: PluginContext) =>
           }
         }
 
-        const space = getSpace(anchor);
-        if (!space) {
+        const db = Obj.getDatabase(thread);
+        if (!db) {
           return;
         }
 
         if (!undo) {
           // TODO(wittjosiah): Without sleep, rendering crashes at `Relation.setSource(anchor)`.
-          space.db.remove(anchor);
+          db.remove(anchor);
           await sleep(100);
-          space.db.remove(thread);
+          db.remove(thread);
 
           return {
             undoable: {
@@ -160,7 +160,7 @@ export default (context: PluginContext) =>
               createIntent(ObservabilityAction.SendEvent, {
                 name: 'threads.delete',
                 properties: {
-                  spaceId: space.id,
+                  spaceId: db.spaceId,
                   threadId: thread.id,
                 },
               }),
@@ -168,16 +168,16 @@ export default (context: PluginContext) =>
           };
         } else {
           // TODO(wittjosiah): Without sleep, rendering crashes at `Relation.setSource(anchor)`.
-          space.db.add(thread);
+          db.add(thread);
           await sleep(100);
-          space.db.add(anchor);
+          db.add(anchor);
 
           return {
             intents: [
               createIntent(ObservabilityAction.SendEvent, {
                 name: 'threads.undo-delete',
                 properties: {
-                  spaceId: space.id,
+                  spaceId: db.spaceId,
                   threadId: thread.id,
                 },
               }),
@@ -192,8 +192,8 @@ export default (context: PluginContext) =>
         const thread = Relation.getSource(anchor) as Thread.Thread;
         const { state } = context.getCapability(ThreadCapabilities.MutableState);
         const subjectId = Obj.getDXN(subject).toString();
-        const space = getSpace(subject);
-        invariant(space, 'Space not found');
+        const db = Obj.getDatabase(subject);
+        invariant(db, 'Database not found');
 
         const message = Obj.make(Message.Message, {
           created: new Date().toISOString(),
@@ -211,10 +211,10 @@ export default (context: PluginContext) =>
           thread.status = 'active';
           // TODO(wittjosiah): This causes the thread to flash as it transitions from draft to db.
           state.drafts[subjectId] = state.drafts[subjectId]?.filter((a) => a.id !== anchor.id);
-          intents.push(createIntent(SpaceAction.AddObject, { object: thread, target: space, hidden: true }));
+          intents.push(createIntent(SpaceAction.AddObject, { object: thread, target: db, hidden: true }));
           intents.push(
             createIntent(SpaceAction.AddRelation, {
-              space,
+              db,
               schema: AnchoredTo.AnchoredTo,
               source: thread,
               target: subject,
@@ -225,7 +225,7 @@ export default (context: PluginContext) =>
             createIntent(ObservabilityAction.SendEvent, {
               name: 'threads.create',
               properties: {
-                spaceId: space.id,
+                spaceId: db.spaceId,
                 threadId: thread.id,
               },
             }),
@@ -236,7 +236,7 @@ export default (context: PluginContext) =>
           createIntent(ObservabilityAction.SendEvent, {
             name: 'threads.message.add',
             properties: {
-              spaceId: space.id,
+              spaceId: db.spaceId,
               threadId: thread.id,
               threadLength: thread.messages.length,
               messageId: message.id,
@@ -252,8 +252,8 @@ export default (context: PluginContext) =>
       intent: ThreadAction.DeleteMessage,
       resolve: ({ subject, anchor, messageId, message, messageIndex }, undo) => {
         const thread = Relation.getSource(anchor) as Thread.Thread;
-        const space = getSpace(subject);
-        invariant(space, 'Space not found');
+        const db = Obj.getDatabase(subject);
+        invariant(db, 'Database not found');
 
         if (!undo) {
           const messageIndex = thread.messages.findIndex(Ref.hasObjectId(messageId));
@@ -280,7 +280,7 @@ export default (context: PluginContext) =>
               createIntent(ObservabilityAction.SendEvent, {
                 name: 'threads.message.delete',
                 properties: {
-                  spaceId: space.id,
+                  spaceId: db.spaceId,
                   threadId: thread.id,
                   messageId: message.id,
                 },
@@ -298,7 +298,7 @@ export default (context: PluginContext) =>
               createIntent(ObservabilityAction.SendEvent, {
                 name: 'threads.message.undo-delete',
                 properties: {
-                  spaceId: space.id,
+                  spaceId: db.spaceId,
                   threadId: thread.id,
                   messageId: message.id,
                 },

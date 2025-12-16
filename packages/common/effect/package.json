@@ -38,22 +38,22 @@
     "@dxos/invariant": "workspace:*",
     "@dxos/node-std": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@effect/opentelemetry": "^0.58.0",
-    "@opentelemetry/api": "^1.9.0",
-    "jsonpath-plus": "10.2.0"
+    "@effect/opentelemetry": "catalog:",
+    "@opentelemetry/api": "catalog:",
+    "jsonpath-plus": "catalog:"
   },
   "devDependencies": {
     "@dxos/log": "workspace:*",
-    "@opentelemetry/api-logs": "^0.203.0",
-    "@opentelemetry/resources": "^2.1.0",
-    "@opentelemetry/sdk-logs": "^0.203.0",
-    "@opentelemetry/sdk-node": "^0.203.0",
-    "@opentelemetry/sdk-trace-node": "^2.1.0",
-    "@opentelemetry/semantic-conventions": "^1.37.0",
-    "effect": "3.18.3"
+    "@opentelemetry/api-logs": "catalog:",
+    "@opentelemetry/resources": "catalog:",
+    "@opentelemetry/sdk-logs": "catalog:",
+    "@opentelemetry/sdk-node": "catalog:",
+    "@opentelemetry/sdk-trace-node": "catalog:",
+    "@opentelemetry/semantic-conventions": "catalog:",
+    "effect": "catalog:"
   },
   "peerDependencies": {
-    "effect": "^3.13.3"
+    "effect": "catalog:"
   },
   "publishConfig": {
     "access": "public"

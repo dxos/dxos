@@ -230,6 +230,7 @@ export class QueryExecutor extends Resource {
     // ExecutionTrace.putOnPerformanceTimeline(trace);
 
     if (TRACE_QUERY_EXECUTION) {
+      // eslint-disable-next-line no-console
       console.log(ExecutionTrace.format(trace));
     }
 
@@ -735,7 +736,9 @@ export class QueryExecutor extends Resource {
   private async _loadFromIndexHit(hit: FindResult): Promise<QueryItem | null> {
     const { objectId, documentId, spaceKey: spaceKeyInIndex } = objectPointerCodec.decode(hit.id);
 
-    const handle = await this._automergeHost.loadDoc<DatabaseDirectory>(Context.default(), documentId as DocumentId);
+    const handle = await this._automergeHost.loadDoc<DatabaseDirectory>(Context.default(), documentId as DocumentId, {
+      fetchFromNetwork: true,
+    });
     const doc = handle.doc();
     if (!doc) {
       return null;
@@ -800,7 +803,9 @@ export class QueryExecutor extends Resource {
       return null;
     }
 
-    const handle = await this._automergeHost.loadDoc<DatabaseDirectory>(Context.default(), link as AutomergeUrl);
+    const handle = await this._automergeHost.loadDoc<DatabaseDirectory>(Context.default(), link as AutomergeUrl, {
+      fetchFromNetwork: true,
+    });
     const doc = handle.doc();
     if (!doc) {
       return null;

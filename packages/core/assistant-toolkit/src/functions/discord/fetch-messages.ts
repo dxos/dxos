@@ -133,7 +133,7 @@ export default defineFunction({
         throw new Error('no channels found');
       }
       for (const channel of channels) {
-        console.log(channel.id, 'name' in channel ? channel.name : undefined);
+        log.info('channel', { id: channel.id, name: 'name' in channel ? channel.name : undefined });
       }
 
       yield* TracingService.emitStatus({ message: `Will fetch from channels: ${channels.length}` });

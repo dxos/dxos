@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { theme } from '../theme';
+import { theme } from '../../../theme';
 
 export type BannerProps = {
   version?: string;

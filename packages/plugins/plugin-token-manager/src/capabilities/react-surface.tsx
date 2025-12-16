@@ -6,7 +6,7 @@ import React from 'react';
 
 import { Capabilities, contributes, createSurface } from '@dxos/app-framework';
 import { useLayout } from '@dxos/app-framework/react';
-import { parseId, useSpace } from '@dxos/react-client/echo';
+import { parseId, useDatabase } from '@dxos/react-client/echo';
 
 import { TokensContainer } from '../components';
 import { meta } from '../meta';
@@ -20,13 +20,13 @@ export default () =>
       component: () => {
         const layout = useLayout();
         const { spaceId } = parseId(layout.workspace);
-        const space = useSpace(spaceId);
+        const db = useDatabase(spaceId);
 
-        if (!space || !spaceId) {
+        if (!db) {
           return null;
         }
 
-        return <TokensContainer space={space} />;
+        return <TokensContainer db={db} />;
       },
     }),
   ]);

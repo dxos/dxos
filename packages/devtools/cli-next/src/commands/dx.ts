@@ -8,7 +8,7 @@ import * as Config from 'effect/Config';
 import * as Layer from 'effect/Layer';
 
 import { ClientService, ConfigService } from '@dxos/client';
-import { ENV_DX_PROFILE_DEFAULT } from '@dxos/client-protocol';
+import { ENV_DX_PROFILE, ENV_DX_PROFILE_DEFAULT } from '@dxos/client-protocol';
 
 import { CommandConfig } from '../services';
 import { DXOS_VERSION } from '../version';
@@ -23,7 +23,7 @@ import { object } from './object';
 import { profile } from './profile';
 import { queue } from './queue';
 import { repl } from './repl';
-import { spaces } from './spaces';
+import { space } from './space';
 
 export const command = Command.make('dx', {
   config: Options.file('config', { exists: 'yes' }).pipe(
@@ -33,7 +33,7 @@ export const command = Command.make('dx', {
   ),
   profile: Options.text('profile').pipe(
     Options.withDescription('Profile for the config file.'),
-    Options.withDefault(ENV_DX_PROFILE_DEFAULT),
+    Options.withFallbackConfig(Config.string(ENV_DX_PROFILE).pipe(Config.withDefault(ENV_DX_PROFILE_DEFAULT))),
     Options.withAlias('p'),
   ),
   json: Options.boolean('json', { ifPresent: true }).pipe(
@@ -46,6 +46,7 @@ export const command = Command.make('dx', {
   ),
   verbose: Options.boolean('verbose', { ifPresent: true }).pipe(
     Options.withDescription('Verbose logging.'),
+    Options.withAlias('v'),
     Options.withFallbackConfig(Config.boolean('VERBOSE').pipe(Config.withDefault(false))),
   ),
 });
@@ -62,7 +63,7 @@ export const dx = command.pipe(
     halo.pipe(Command.provide(ClientService.layer)),
     object.pipe(Command.provide(ClientService.layer)),
     queue.pipe(Command.provide(ClientService.layer)),
-    spaces.pipe(Command.provide(ClientService.layer)),
+    space.pipe(Command.provide(ClientService.layer)),
 
     // TODO(burdon): Admin-only (separate dynamic module?)
     debug.pipe(Command.provide(ClientService.layer)),
