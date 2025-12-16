@@ -57,8 +57,6 @@ export const App = (props: AppProps) => {
     });
   }
 
-  log.info('debug overlay', { debug: props.debug });
-
   // Focus.
   const focusElements = [...(props.focusElements ?? [])];
   const [focus, setFocus] = createSignal<string | undefined>(props.focusElements?.[0]);
@@ -80,9 +78,10 @@ export const App = (props: AppProps) => {
     // Console
     //
     {
-      hint: '[ctrl-j]: Toggle console',
+      hint: '[f1]: Toggle console',
       handler: (key: KeyEvent) => {
-        if (key.name === 'j' && key.ctrl) {
+        if (key.name === 'f1') {
+          key.preventDefault();
           setShowConsole(!showConsole());
         }
       },

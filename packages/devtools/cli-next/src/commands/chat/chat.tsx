@@ -17,8 +17,10 @@ import { createSignal } from 'solid-js';
 import { AiService, DEFAULT_EDGE_MODEL, DEFAULT_LMSTUDIO_MODEL, DEFAULT_OLLAMA_MODEL, ModelName } from '@dxos/ai';
 import { type AiConversation, GenericToolkit } from '@dxos/assistant';
 import { ClientService } from '@dxos/client';
+import { Filter } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
+import { Assistant } from '@dxos/plugin-assistant/types';
 
 import { CommandConfig } from '../../services';
 import { type AiChatServices, Provider, chatLayer, createLogBuffer, withTypes } from '../../util';
@@ -34,7 +36,6 @@ export const chat = Command.make(
   'chat',
   {
     spaceId: Common.spaceId.pipe(Options.optional),
-    // TODO(burdon): Remove?
     debug: Options.boolean('debug', { ifPresent: true }).pipe(
       Options.withDescription('Show console to see logs.'),
       Options.withAlias('d'),
@@ -93,7 +94,28 @@ export const chat = Command.make(
         return client.spaces.default;
       });
 
-      const handleConversationCreate = async (blueprints: string[]) => {
+      const handleChatLoad = async () => {
+        const chats = await space.db.query(Filter.type(Assistant.Chat)).run();
+        log.info('chats', { chats: chats.length });
+        // if (chats.length > 0) {
+        //   await handleChatSelect(chats[0]);
+        // } else {
+        await handleChatCreate([]);
+        // }
+      };
+
+      // TODO(burdon): Update message history, blueprints, etc.
+      const handleChatSelect = async (chat: Assistant.Chat) => {
+        const current = conversation();
+        await current?.close();
+
+        log.info('selecting conversation', { id: chat.id });
+        const next = undefined;
+        setConversation(next);
+        return next;
+      };
+
+      const handleChatCreate = async (blueprints: string[]) => {
         const current = conversation();
         await current?.close();
 
@@ -103,8 +125,14 @@ export const chat = Command.make(
         return next;
       };
 
-      // TODO(burdon): Load/select previous saved conversation? Need Chat object for state.
-      yield* Effect.promise(async () => await handleConversationCreate(options.blueprints));
+      yield* Effect.promise(async () => {
+        log.info('initializing', { blueprints: options.blueprints.length });
+        if (options.blueprints.length) {
+          await handleChatCreate(options.blueprints);
+        } else {
+          await handleChatLoad();
+        }
+      });
 
       const exitSignal = yield* Deferred.make<void, never>();
 
@@ -120,7 +148,8 @@ export const chat = Command.make(
                   conversation={conversation()!}
                   model={model}
                   verbose={verbose}
-                  onChatCreate={({ blueprints }) => handleConversationCreate(blueprints)}
+                  onChatSelect={(chat) => handleChatSelect(chat)}
+                  onChatCreate={({ blueprints }) => handleChatCreate(blueprints)}
                 />
               )}
             </App>
