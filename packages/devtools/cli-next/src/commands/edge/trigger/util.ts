@@ -61,13 +61,13 @@ export const printTrigger = Effect.fn(function* (trigger: Trigger.Trigger) {
         : (trigger.function?.dxn?.toString() ?? 'Unknown'),
   })
     .set({
-      key: 'id',
-      value: trigger.id,
-    })
-    .set({
       key: 'status',
       value: trigger.enabled ? 'enabled' : 'disabled',
       color: trigger.enabled ? Ansi.green : Ansi.blackBright,
+    })
+    .set({
+      key: 'id',
+      value: trigger.id,
     })
     .set({
       key: 'kind',
