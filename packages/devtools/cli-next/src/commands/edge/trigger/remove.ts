@@ -16,6 +16,7 @@ import { Common } from '../../options';
 
 import { TriggerId } from './options';
 
+// TODO(burdon): Rename "delete" (consistently).
 export const remove = Command.make(
   'remove',
   {
