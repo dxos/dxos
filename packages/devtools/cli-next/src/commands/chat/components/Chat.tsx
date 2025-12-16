@@ -11,14 +11,14 @@ import { type AiConversation, GenerationObserver } from '@dxos/assistant';
 import { Obj } from '@dxos/echo';
 import { log } from '@dxos/log';
 
+import { AppContext } from '../../../components';
+import { theme } from '../../../theme';
 import { DXOS_VERSION } from '../../../version';
 import { blueprintRegistry } from '../blueprints';
 import { useChatMessages } from '../hooks';
 import { type ChatProcessor } from '../processor';
-import { theme } from '../theme';
 import { createAssistantMessage, createUserMessage } from '../types';
 
-import { AppContext } from './App';
 import { Banner } from './Banner';
 import { ChatInput } from './ChatInput';
 import { ChatMessages } from './ChatMessages';
