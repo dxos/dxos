@@ -2,30 +2,14 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Capabilities, contributes } from '@dxos/app-framework';
-import { Blueprint, Template } from '@dxos/blueprints';
-import { type FunctionDefinition } from '@dxos/functions';
-import { trim } from '@dxos/util';
+import { Capabilities, type Capability, contributes } from '@dxos/app-framework';
 
-import { open, summarize } from '../functions';
+import { TranscriptionBlueprint } from '../blueprints';
 
-const functions: FunctionDefinition[] = [open, summarize];
-
-export default () => {
-  return [
-    contributes(Capabilities.Functions, functions),
-    contributes(
-      Capabilities.BlueprintDefinition,
-      Blueprint.make({
-        key: 'dxos.org/blueprint/transcription',
-        name: 'Transcription',
-        tools: Blueprint.toolDefinitions({ functions }),
-        instructions: Template.make({
-          source: trim`
-            You can open and summarize a meeting transcript.
-          `,
-        }),
-      }),
-    ),
-  ];
-};
+export default (): (
+  | Capability<typeof Capabilities.Functions>
+  | Capability<typeof Capabilities.BlueprintDefinition>
+)[] => [
+  contributes(Capabilities.Functions, TranscriptionBlueprint.functions),
+  contributes(Capabilities.BlueprintDefinition, TranscriptionBlueprint.make()),
+];

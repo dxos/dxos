@@ -31,6 +31,9 @@
   "types": "dist/types/src/index.d.ts",
   "typesVersions": {
     "*": {
+      "blueprints": [
+        "dist/types/src/blueprints/index.d.ts"
+      ],
       "toolkit": [
         "dist/types/src/toolkit.d.ts"
       ],
