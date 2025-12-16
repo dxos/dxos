@@ -229,7 +229,7 @@ catalog:
   '@tldraw/tlschema': ^3.0.0
   '@tldraw/utils': ^3.0.0
   '@trivago/prettier-plugin-sort-imports': ^5.2.2
-  '@trpc/server': ^10.45.2
+  '@trpc/server': ^10.45.3
   '@types/argparse': ^2.0.0
   '@types/bytes': ^3.1.1
   '@types/chai': ^4.2.15
