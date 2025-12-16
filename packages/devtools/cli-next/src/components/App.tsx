@@ -37,7 +37,6 @@ export const AppContext = createContext<{
 }>();
 
 export type AppProps = ParentProps<{
-  showConsole?: boolean;
   focusElements?: string[];
   logBuffer?: LogBuffer;
   theme?: Theme;
@@ -50,7 +49,7 @@ export type AppProps = ParentProps<{
 export const App = (props: AppProps) => {
   const renderer = useRenderer();
   props.theme?.bg && renderer.setBackgroundColor(props.theme.bg);
-  renderer.useConsole = props.showConsole ?? false;
+  renderer.useConsole = true;
 
   // Focus.
   const focusElements = [...(props.focusElements ?? [])];
@@ -72,10 +71,10 @@ export const App = (props: AppProps) => {
     //
     // Console
     //
-    props.showConsole && {
-      hint: '[f1]: Toggle console',
+    {
+      hint: '[ctrl+l]: Toggle log view',
       handler: (key: KeyEvent) => {
-        if (key.name === 'f1' && props.showConsole) {
+        if ((key.ctrl && key.name === 'l') || key.name === 'f1') {
           setShowConsole(!showConsole());
         }
       },
@@ -104,10 +103,6 @@ export const App = (props: AppProps) => {
   ].filter(isTruthy);
 
   createEffect(() => {
-    if (!props.showConsole) {
-      return;
-    }
-
     // Use ctrl-p to cycle position; +/- to resize at runtime (when focused).
     if (showConsole()) {
       renderer.console.show();

@@ -4,12 +4,7 @@
 
 import * as Command from '@effect/cli/Command';
 import * as Options from '@effect/cli/Options';
-import { ConsolePosition } from '@opentui/core';
-import { render } from '@opentui/solid';
-import * as Cause from 'effect/Cause';
-import * as Deferred from 'effect/Deferred';
 import * as Effect from 'effect/Effect';
-import * as Exit from 'effect/Exit';
 import * as Match from 'effect/Match';
 import * as Option from 'effect/Option';
 import { createSignal } from 'solid-js';
@@ -20,9 +15,7 @@ import { ClientService } from '@dxos/client';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 
-import { App } from '../../components';
-import { theme } from '../../theme';
-import { type AiChatServices, Provider, chatLayer, createLogBuffer, withTypes } from '../../util';
+import { type AiChatServices, Provider, chatLayer, createLogBuffer, renderApp, withTypes } from '../../util';
 import { Common } from '../options';
 
 import { functions, toolkits, types } from './blueprints';
@@ -117,57 +110,22 @@ export const chat = Command.make(
       // TODO(burdon): Load/select previous saved conversation? Need Chat object for state.
       yield* Effect.promise(async () => await handleConversationCreate(options.blueprints));
 
-      const exitSignal = yield* Deferred.make<void, never>();
-
       // Render.
-      yield* Effect.promise(() =>
-        render(
-          () => (
-            <App showConsole={options.debug} focusElements={['input', 'messages']} logBuffer={logBuffer} theme={theme}>
-              {conversation() && (
-                <Chat
-                  processor={processor}
-                  conversation={conversation()!}
-                  model={model}
-                  verbose={verbose}
-                  onConversationCreate={({ blueprints }) => handleConversationCreate(blueprints)}
-                />
-              )}
-            </App>
-          ),
-          {
-            exitOnCtrlC: true,
-            exitSignals: ['SIGINT', 'SIGTERM'],
-            openConsoleOnError: true,
-            consoleOptions: {
-              position: ConsolePosition.TOP,
-              sizePercent: 25, // TODO(burdon): Option.
-              colorDefault: theme.log.default,
-              colorDebug: theme.log.debug,
-              colorInfo: theme.log.info,
-              colorWarn: theme.log.warn,
-              colorError: theme.log.error,
-            },
-            // NOTE: Called on on SIGINT (ctrl-c) and SIGTERM (via pkill not killall).
-            onDestroy: () => {
-              logBuffer.close();
-              Effect.runSync(Deferred.succeed(exitSignal, undefined));
-            },
-          },
-        ),
-      );
-
-      // Wait for exit.
-      yield* Deferred.await(exitSignal).pipe(
-        Effect.onExit((exit) =>
-          Effect.sync(() => {
-            const cause = Exit.isFailure(exit) ? Cause.pretty(exit.cause) : undefined;
-            if (cause || options.debug) {
-              process.stderr.write(['exit:', cause ?? 'OK', '\n'].join(' '));
-            }
-          }),
-        ),
-      );
+      yield* renderApp({
+        children: () =>
+          conversation() ? (
+            <Chat
+              processor={processor}
+              conversation={conversation()!}
+              model={model}
+              verbose={verbose}
+              onConversationCreate={({ blueprints }) => handleConversationCreate(blueprints)}
+            />
+          ) : undefined,
+        focusElements: ['input', 'messages'],
+        logBuffer,
+        debug: options.debug,
+      });
     }),
 ).pipe(
   Command.withDescription('Open chat interface.'),
