@@ -137,6 +137,8 @@
     "@dxos/react-ui-theme": "workspace:*",
     "@dxos/storybook-utils": "workspace:*",
     "@effect-atom/atom-react": "catalog:",
+    "@effect/ai": "catalog:",
+    "@effect/ai-anthropic": "catalog:",
     "@effect/platform": "catalog:",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",

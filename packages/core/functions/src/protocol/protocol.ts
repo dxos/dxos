@@ -2,12 +2,14 @@
 // Copyright 2025 DXOS.org
 //
 
+import * as AnthropicClient from '@effect/ai-anthropic/AnthropicClient';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Schema from 'effect/Schema';
 import * as SchemaAST from 'effect/SchemaAST';
 
-import { AiService } from '@dxos/ai';
+import { AiModelResolver, AiService } from '@dxos/ai';
+import { AnthropicResolver } from '@dxos/ai/resolvers';
 import { LifecycleState, Resource } from '@dxos/context';
 import { Database, Type } from '@dxos/echo';
 import { EchoClient, type EchoDatabaseImpl, type QueueFactory } from '@dxos/echo-db';
@@ -18,8 +20,9 @@ import { type FunctionProtocol } from '@dxos/protocols';
 
 import { FunctionError } from '../errors';
 import { FunctionDefinition, type FunctionServices } from '../sdk';
-import { CredentialsService, FunctionInvocationService, TracingService } from '../services';
-import { QueueService } from '../services';
+import { CredentialsService, FunctionInvocationService, QueueService, TracingService } from '../services';
+
+import { FunctionsAiHttpClient } from './functions-ai-http-client';
 
 /**
  * Wraps a function handler made with `defineFunction` to a protocol that the functions-runtime expects.
@@ -146,10 +149,31 @@ class FunctionContext extends Resource {
       ? CredentialsService.layerFromDatabase().pipe(Layer.provide(dbLayer))
       : CredentialsService.configuredLayer([]);
     const functionInvocationService = MockedFunctionInvocationService;
-    const aiService = AiService.notAvailable;
     const tracing = TracingService.layerNoop;
 
-    return Layer.mergeAll(dbLayer, queuesLayer, credentials, functionInvocationService, aiService, tracing);
+    const aiLayer = this.context.services.functionsAiService
+      ? AiModelResolver.AiModelResolver.buildAiService.pipe(
+          Layer.provide(
+            AnthropicResolver.make().pipe(
+              Layer.provide(
+                AnthropicClient.layer({
+                  // Note: It doesn't matter what is base url here, it will be proxied to ai gateway in edge.
+                  apiUrl: 'http://internal/provider/anthropic',
+                }).pipe(Layer.provide(FunctionsAiHttpClient.layer(this.context.services.functionsAiService))),
+              ),
+            ),
+          ),
+        )
+      : AiService.notAvailable;
+
+    return Layer.mergeAll(
+      dbLayer, //
+      queuesLayer,
+      credentials,
+      functionInvocationService,
+      aiLayer,
+      tracing,
+    );
   }
 }
 
