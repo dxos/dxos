@@ -8099,6 +8099,9 @@ importers:
 
   packages/plugins/plugin-chess:
     dependencies:
+      '@automerge/automerge':
+        specifier: 3.2.1
+        version: 3.2.1
       '@dxos/ai':
         specifier: workspace:*
         version: link:../../core/ai
@@ -8120,6 +8123,9 @@ importers:
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../core/echo/echo
+      '@dxos/echo-db':
+        specifier: workspace:*
+        version: link:../../core/echo/echo-db
       '@dxos/functions':
         specifier: workspace:*
         version: link:../../core/functions
@@ -8138,6 +8144,9 @@ importers:
       '@dxos/plugin-graph':
         specifier: workspace:*
         version: link:../plugin-graph
+      '@dxos/plugin-markdown':
+        specifier: workspace:*
+        version: link:../plugin-markdown
       '@dxos/plugin-space':
         specifier: workspace:*
         version: link:../plugin-space
@@ -8156,6 +8165,9 @@ importers:
       '@dxos/schema':
         specifier: workspace:*
         version: link:../../sdk/schema
+      '@dxos/types':
+        specifier: workspace:*
+        version: link:../../sdk/types
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util

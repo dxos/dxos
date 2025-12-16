@@ -48,6 +48,9 @@
       "path": "../../core/echo/echo"
     },
     {
+      "path": "../../core/echo/echo-db"
+    },
+    {
       "path": "../../core/echo/live-object"
     },
     {
@@ -61,6 +64,9 @@
     },
     {
       "path": "../../sdk/schema"
+    },
+    {
+      "path": "../../sdk/types"
     },
     {
       "path": "../../ui/react-ui"
@@ -82,6 +88,9 @@
     },
     {
       "path": "../plugin-graph"
+    },
+    {
+      "path": "../plugin-markdown"
     },
     {
       "path": "../plugin-space"
