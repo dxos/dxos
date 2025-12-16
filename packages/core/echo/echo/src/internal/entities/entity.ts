@@ -29,13 +29,13 @@ export interface EchoTypeSchema<Self extends Schema.Schema.Any, ExtraFields = {}
   //   props: RequiredKeys<Schema.TypeLiteral.Constructor<Fields, []>> extends never
   //     ? void | Simplify<Schema.TypeLiteral.Constructor<Fields, []>>
   //     : Simplify<Schema.TypeLiteral.Constructor<Fields, []>>,
-  //   options?: MakeOptions,
+  //   options?: MakeProps,
   // ): Simplify<Schema.TypeLiteral.Type<Fields, []>>;
 
   instanceOf(value: unknown): boolean;
 }
 
-// type MakeOptions =
+// type MakeProps =
 //   | boolean
 //   | {
 //       readonly disableValidation?: boolean;
@@ -63,7 +63,7 @@ export interface EchoTypeSchema<Self extends Schema.Schema.Any, ExtraFields = {}
 //   return out;
 // };
 
-// const _getDisableValidationMakeOption = (options: MakeOptions | undefined): boolean =>
+// const _getDisableValidationMakeOption = (options: MakeProps | undefined): boolean =>
 //   Predicate.isBoolean(options) ? options : options?.disableValidation ?? false;
 
 /**
@@ -94,7 +94,7 @@ export const makeEchoTypeSchema = <Self extends Schema.Schema.Any>(
     //   props: RequiredKeys<Schema.TypeLiteral.Constructor<Fields, []>> extends never
     //     ? void | Simplify<Schema.TypeLiteral.Constructor<Fields, []>>
     //     : Simplify<Schema.TypeLiteral.Constructor<Fields, []>>,
-    //   options?: MakeOptions,
+    //   options?: MakeProps,
     // ): Simplify<Schema.TypeLiteral.Type<Fields, []>> {
     //   const propsWithDefaults: any = _lazilyMergeDefaults(fields, { ...(props as any) });
     //   return _getDisableValidationMakeOption(options)

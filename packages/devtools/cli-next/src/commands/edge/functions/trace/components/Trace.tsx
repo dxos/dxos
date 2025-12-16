@@ -18,7 +18,7 @@ import {
 } from '@dxos/functions-runtime';
 import { type DXN } from '@dxos/keys';
 
-import { type Column, Table } from '../../../../../components/Table';
+import { type Column, Table } from '../../../../../components';
 import { theme } from '../../../../../theme';
 
 export type TraceProps = {
@@ -44,10 +44,12 @@ export const Trace = (props: TraceProps) => {
     if (!invocationTarget) {
       return undefined;
     }
+
     const uuidPart = getUuidFromDxn(invocationTarget);
     if (!uuidPart) {
       return undefined;
     }
+
     return functions().find((fn) => getUserFunctionIdInMetadata(Obj.getMeta(fn)) === uuidPart)?.name;
   };
 
@@ -122,7 +124,7 @@ export const Trace = (props: TraceProps) => {
             )}
           </>
         ) : (
-          <box height={1}>
+          <box height={1} borderStyle='single' border={['top']}>
             <text>Select an invocation to view details.</text>
           </box>
         )}

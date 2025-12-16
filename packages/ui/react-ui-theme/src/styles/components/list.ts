@@ -18,10 +18,10 @@ export const listItem: ComponentFunction<ListStyleProps> = ({ collapsible }, ...
   mx(!collapsible && 'flex', ...etc);
 
 export const listItemEndcap: ComponentFunction<ListStyleProps> = ({ density }, ...etc) =>
-  mx(density === 'fine' ? getSize(8) : getSize(10), 'shrink-0 flex items-start justify-center', ...etc);
+  mx(density === 'fine' ? getSize(8) : getSize(10), 'shrink-0 flex items-center justify-center', ...etc);
 
 export const listItemHeading: ComponentFunction<ListStyleProps> = ({ density }, ...etc) =>
-  mx(densityBlockSize(density), ...etc);
+  mx(densityBlockSize(density), 'flex items-center', ...etc);
 
 export const listItemDragHandleIcon: ComponentFunction<ListStyleProps> = (_props, ...etc) =>
   mx(getSize(5), 'mbs-2.5', ...etc);

@@ -301,7 +301,6 @@ const useScrollToSelection = <T,>(
     // Clamp scroll position to valid range.
     const maxScrollTop = Math.max(0, totalRows * rowH - height);
     const clampedScrollTop = Math.max(0, Math.min(newScrollTop, maxScrollTop));
-
     if (clampedScrollTop !== currentScrollTop) {
       ref.scrollTop = clampedScrollTop;
     }
