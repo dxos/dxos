@@ -15,7 +15,9 @@ import { ClientService } from '@dxos/client';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 
-import { type AiChatServices, Provider, chatLayer, createLogBuffer, renderApp, withTypes } from '../../util';
+import { renderApp } from '../../components';
+import { theme } from '../../theme';
+import { type AiChatServices, Provider, chatLayer, createLogBuffer, withTypes } from '../../util';
 import { Common } from '../options';
 
 import { functions, toolkits, types } from './blueprints';
@@ -125,6 +127,7 @@ export const chat = Command.make(
         focusElements: ['input', 'messages'],
         logBuffer,
         debug: options.debug,
+        theme,
       });
     }),
 ).pipe(

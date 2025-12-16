@@ -15,7 +15,9 @@ import { InvocationTraceEndEvent, InvocationTraceStartEvent } from '@dxos/functi
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 
-import { createLogBuffer, renderApp, spaceLayer, withTypes } from '../../../../util';
+import { renderApp } from '../../../../components';
+import { theme } from '../../../../theme';
+import { createLogBuffer, spaceLayer, withTypes } from '../../../../util';
 import { Common } from '../../../options';
 
 import { Trace } from './components/Trace';
@@ -63,6 +65,7 @@ export const trace = Command.make(
         ),
         focusElements: ['table'],
         logBuffer,
+        theme,
       });
     }),
 ).pipe(
