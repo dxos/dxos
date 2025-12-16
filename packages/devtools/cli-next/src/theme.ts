@@ -4,7 +4,30 @@
 
 const colors = ['#00ffaa', '#00aaff', '#ffaa00', '#ff00aa', '#aa00ff'];
 
-export const theme = {
+export type Theme = {
+  accent: string;
+  bg: string;
+  input: {
+    bg: string;
+  };
+  text: {
+    bold: string;
+    default: string;
+    subdued: string;
+    primary: string;
+    secondary: string;
+  };
+  log: {
+    default: string;
+    debug: string;
+    info: string;
+    warn: string;
+    error: string;
+  };
+  role: (role: string) => string;
+};
+
+export const theme: Theme = {
   accent: colors[Math.floor(Math.random() * colors.length)],
   bg: '#000000',
   input: {

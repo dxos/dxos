@@ -9,8 +9,9 @@ import { importCommand } from './import';
 import { invoke } from './invoke';
 import { list } from './list';
 import { search } from './search';
+import { trace } from './trace';
 
 export const fn = Command.make('function').pipe(
   Command.withDescription('Manage EDGE functions.'),
-  Command.withSubcommands([deploy, list, search, invoke, importCommand]),
+  Command.withSubcommands([deploy, list, search, invoke, importCommand, trace]),
 );

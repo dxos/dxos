@@ -18,8 +18,8 @@ import {
 import { log } from '@dxos/log';
 import { isTruthy } from '@dxos/util';
 
-import { type LogBuffer } from '../../../util';
-import { theme } from '../theme';
+import { type Theme } from '../theme';
+import { type LogBuffer } from '../util';
 
 export type KeyHandler = {
   hint: string;
@@ -40,6 +40,7 @@ export type AppProps = ParentProps<{
   showConsole?: boolean;
   focusElements?: string[];
   logBuffer?: LogBuffer;
+  theme?: Theme;
 }>;
 
 /**
@@ -48,7 +49,7 @@ export type AppProps = ParentProps<{
 // TODO(burdon): Factor out (common to all commands).
 export const App = (props: AppProps) => {
   const renderer = useRenderer();
-  renderer.setBackgroundColor(theme.bg);
+  props.theme?.bg && renderer.setBackgroundColor(props.theme.bg);
   renderer.useConsole = props.showConsole ?? false;
 
   // Focus.
@@ -161,7 +162,7 @@ export const App = (props: AppProps) => {
           log.catch(err);
           return (
             <box flexDirection='column' overflow='hidden'>
-              <text style={{ fg: theme.log.error }}>{err.stack}</text>
+              <text style={{ fg: props.theme?.log?.error }}>{err.stack}</text>
             </box>
           );
         }}
