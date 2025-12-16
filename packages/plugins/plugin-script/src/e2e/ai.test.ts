@@ -51,7 +51,6 @@ describe.runIf(process.env.DX_TEST_TAGS?.includes('functions-e2e')).skip('Functi
       message: 'Hello, world!',
     });
     console.log(result);
-    //
   });
 
   const setup = async () => {

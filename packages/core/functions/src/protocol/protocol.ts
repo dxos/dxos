@@ -157,8 +157,8 @@ class FunctionContext extends Resource {
             AnthropicResolver.make().pipe(
               Layer.provide(
                 AnthropicClient.layer({
-                  // TODO(dmaretskyi): Read endpoint from config/settings.
-                  apiUrl: 'http://internal.dxos/provider/anthropic',
+                  // Note: It doesn't matter what is base url here, it will be proxied to ai gateway in edge.
+                  apiUrl: 'http://internal/provider/anthropic',
                 }).pipe(Layer.provide(FunctionsAiHttpClient.layer(this.context.services.functionsAiService))),
               ),
             ),
