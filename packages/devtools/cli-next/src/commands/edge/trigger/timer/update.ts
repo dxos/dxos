@@ -12,7 +12,7 @@ import { DXN, Database, Filter, Obj, Ref } from '@dxos/echo';
 import { Function, Trigger, getUserFunctionIdInMetadata } from '@dxos/functions';
 
 import { CommandConfig } from '../../../../services';
-import { spaceLayer, withTypes } from '../../../../util';
+import { print, spaceLayer, withTypes } from '../../../../util';
 import { Common } from '../../../options';
 import { Enabled, Input, TriggerId } from '../options';
 import { printTrigger } from '../util';
@@ -57,7 +57,7 @@ export const update = Command.make(
       if (json) {
         yield* Console.log(JSON.stringify(trigger, null, 2));
       } else {
-        yield* Console.log(yield* printTrigger(trigger));
+        yield* Console.log(print(yield* printTrigger(trigger)));
       }
     }),
 ).pipe(
