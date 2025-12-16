@@ -2,9 +2,9 @@
 // Copyright 2025 DXOS.org
 //
 
+import * as Doc from '@effect/printer/Doc';
 import * as Ansi from '@effect/printer-ansi/Ansi';
 import * as Effect from 'effect/Effect';
-import * as Match from 'effect/Match';
 
 import { Database, Obj } from '@dxos/echo';
 import { Function, type Trigger } from '@dxos/functions';
@@ -12,47 +12,10 @@ import { Function, type Trigger } from '@dxos/functions';
 import { FormBuilder } from '../../../util';
 
 /**
- * Gets the trigger kind and detailed spec information.
- */
-const getTriggerSpecInfo = (spec: Trigger.Spec | undefined): { kind: string; details: string | undefined } => {
-  if (!spec) {
-    return { kind: 'No spec defined', details: undefined };
-  }
-
-  return Match.value(spec).pipe(
-    Match.when({ kind: 'email' }, () => ({
-      kind: 'email',
-      details: undefined,
-    })),
-    Match.when({ kind: 'queue' }, (s) => ({
-      kind: 'queue',
-      details: s.queue ?? 'N/A',
-    })),
-    Match.when({ kind: 'subscription' }, (s) => ({
-      kind: 'subscription',
-      details: s.query?.raw ? s.query.raw : '[Query AST]',
-    })),
-    Match.when({ kind: 'timer' }, (s) => ({
-      kind: 'timer',
-      details: s.cron,
-    })),
-    Match.when({ kind: 'webhook' }, (s) => ({
-      kind: 'webhook',
-      details: `${s.method ?? 'POST'}${s.port ? `:${s.port}` : ''}`,
-    })),
-    Match.orElse(() => ({
-      kind: 'unknown',
-      details: undefined,
-    })),
-  );
-};
-
-/**
  * Pretty prints a trigger with ANSI colors.
  */
 export const printTrigger = Effect.fn(function* (trigger: Trigger.Trigger) {
   const fn = trigger.function && (yield* Database.Service.load(trigger.function));
-  const spec = getTriggerSpecInfo(trigger.spec);
 
   return (
     FormBuilder.of({
@@ -72,38 +35,70 @@ export const printTrigger = Effect.fn(function* (trigger: Trigger.Trigger) {
       })
       .set({
         key: 'kind',
-        value: spec.kind,
+        value: trigger.spec?.kind,
       })
       .set({
         key: 'spec',
-        value: spec.details,
+        value: trigger.spec && printSpec(trigger.spec),
       })
-      // TODO(burdon): Specialize sub keys based on kind.
+      // TODO(burdon): Remove?
       // .set({
-      //   key: 'kind',
+      //   key: 'input node',
+      //   value: trigger.inputNodeId,
+      // })
+      // .set({
+      //   key: 'input',
       //   value: (builder) =>
       //     builder
-      //       .child({ title: spec.kind })
-      //       .set({ key: 'cron', value: spec.details })
+      //       .each(Object.entries(trigger.input ?? {}), ([key, value]) =>
+      //         builder.set({
+      //           key,
+      //           value: typeof value === 'string' ? value : JSON.stringify(value),
+      //         }),
+      //       )
       //       .build(),
       // })
-      .set({
-        key: 'input node',
-        value: trigger.inputNodeId,
-      })
-      .set({
-        key: 'input',
-        value: (builder) =>
-          builder
-            .child()
-            .each(Object.entries(trigger.input ?? {}), ([key, value]) =>
-              builder.set({
-                key,
-                value: typeof value === 'string' ? value : JSON.stringify(value),
-              }),
-            )
-            .build(),
-      })
       .build()
   );
 });
+
+const printSpec = <T extends Trigger.Spec>(spec: T) => {
+  switch (spec.kind) {
+    case 'timer':
+      return printTimer(spec);
+    case 'subscription':
+      return printSubscription(spec);
+    case 'webhook':
+      return printWebhook(spec);
+    case 'queue':
+      return printQueue(spec);
+    default:
+      return Doc.text('Unknown');
+  }
+};
+
+const printTimer = (spec: Trigger.TimerSpec) =>
+  FormBuilder.of({})
+    // prettier-ignore
+    .set({ key: 'cron', value: spec.cron })
+    .set({ key: 'timezone', value: 100 })
+    .build();
+
+const printSubscription = (spec: Trigger.SubscriptionSpec) =>
+  FormBuilder.of({})
+    // prettier-ignore
+    .set({ key: 'query', value: spec.query?.raw ?? '[Query AST]' })
+    .build();
+
+const printWebhook = (spec: Trigger.WebhookSpec) =>
+  FormBuilder.of({})
+    // prettier-ignore
+    .set({ key: 'method', value: spec.method })
+    .set({ key: 'port', value: spec.port })
+    .build();
+
+const printQueue = (spec: Trigger.QueueSpec) =>
+  FormBuilder.of({})
+    // prettier-ignore
+    .set({ key: 'queue', value: spec.queue })
+    .build();

@@ -33,14 +33,12 @@ export class FormBuilder {
 
   private readonly _title?: string;
   private readonly _prefix: string;
-  private readonly _level: number;
 
-  private readonly _entries: Array<{ key: string; value: Doc.Doc<any> }> = [];
+  private readonly _entries: Array<{ key: string; value: Doc.Doc<any>; isSubtree?: boolean }> = [];
 
-  constructor({ title, prefix = '- ', level = 0 }: FormBuilderOptions = {}) {
+  constructor({ title, prefix = '- ' }: FormBuilderOptions = {}) {
     this._title = title;
     this._prefix = prefix;
-    this._level = level;
   }
 
   /**
@@ -55,25 +53,29 @@ export class FormBuilder {
     value: T | ((builder: FormBuilder) => Doc.Doc<any> | undefined) | undefined;
     color?: Ansi.Ansi | ((value: T) => Ansi.Ansi);
   }) {
-    let genValue: any = value;
-    if (typeof value === 'function') {
-      genValue = (value as any)(this);
-      if (Doc.isEmpty(genValue)) {
-        return this;
-      }
-    }
+    if (value !== undefined) {
+      let valueDoc: Doc.Doc<any>;
+      let isSubtree = false;
+      if (typeof value === 'function') {
+        const result = (value as any)(new FormBuilder());
+        if (!result) {
+          return this;
+        }
 
-    if (genValue !== undefined) {
-      // Check if value is a Doc (approximately).
-      const isDoc = typeof genValue === 'object' && genValue !== null && '_tag' in genValue;
-      let valueDoc = isDoc ? (genValue as Doc.Doc<any>) : Doc.text(String(genValue));
+        valueDoc = result;
+        isSubtree = true;
+      } else if (typeof value === 'object' && value !== null) {
+        valueDoc = value as unknown as Doc.Doc<any>;
+      } else {
+        valueDoc = Doc.text(String(value));
+      }
 
       if (color) {
         const ansi = typeof color === 'function' ? color(value as T) : color;
         valueDoc = Doc.annotate(valueDoc, ansi);
       }
 
-      this._entries.push({ key, value: valueDoc });
+      this._entries.push({ key, value: valueDoc, isSubtree });
     }
 
     return this;
@@ -87,13 +89,6 @@ export class FormBuilder {
     return this;
   }
 
-  /**
-   * Returns a child builder with increased level.
-   */
-  child(props: Omit<FormBuilderOptions, 'level'> = {}) {
-    return FormBuilder.of({ level: this._level + 1, ...props });
-  }
-
   build(): Doc.Doc<any> {
     const maxKeyLen = Math.max(0, ...this._entries.map((entry) => entry.key.length));
     const targetWidth = this._prefix.length + maxKeyLen + 2;
@@ -103,15 +98,23 @@ export class FormBuilder {
       lines.push(Doc.hcat([Doc.annotate(Doc.text(this._title), Ansi.combine(Ansi.bold, Ansi.cyan))]));
     }
 
-    const indent = Doc.text(' '.repeat(this._level * 2));
+    const i = 0;
+    const indent = Doc.text(' '.repeat(i * 2));
     lines.push(
-      ...this._entries.map(({ key, value }) =>
-        Doc.hcat([
+      ...this._entries.map(({ key, value, isSubtree }) => {
+        if (isSubtree) {
+          return Doc.vsep([
+            Doc.hcat([indent, Doc.annotate(Doc.text(this._prefix + key + ':'), Ansi.blackBright)]),
+            Doc.indent(value, 2),
+          ]);
+        }
+
+        return Doc.hcat([
           indent,
           Doc.annotate(Doc.fill(targetWidth)(Doc.text(this._prefix + key + ': ')), Ansi.blackBright),
           value,
-        ]),
-      ),
+        ]);
+      }),
     );
 
     return Doc.vsep(lines);
