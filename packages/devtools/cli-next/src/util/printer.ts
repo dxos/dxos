@@ -27,8 +27,8 @@ export type FormBuilderOptions = {
  * Builds vertical form documents.
  */
 export class FormBuilder {
-  static of({ title, prefix = '- ' }: FormBuilderOptions) {
-    return new FormBuilder({ title, prefix });
+  static of(props: FormBuilderOptions) {
+    return new FormBuilder(props);
   }
 
   private readonly _title?: string;
@@ -38,8 +38,8 @@ export class FormBuilder {
   private readonly _entries: Array<{ key: string; value: Doc.Doc<any> }> = [];
 
   constructor({ title, prefix = '- ', level = 0 }: FormBuilderOptions = {}) {
-    this._prefix = prefix;
     this._title = title;
+    this._prefix = prefix;
     this._level = level;
   }
 
@@ -57,7 +57,7 @@ export class FormBuilder {
   }) {
     let genValue: any = value;
     if (typeof value === 'function') {
-      genValue = (value as any)(FormBuilder.of({ level: this._level + 1 }));
+      genValue = (value as any)(this);
       if (Doc.isEmpty(genValue)) {
         return this;
       }
@@ -83,8 +83,15 @@ export class FormBuilder {
    * Set key for each value (if value !== undefined).
    */
   each<T>(values: T[], fn: (value: T, builder: FormBuilder) => void) {
-    values.forEach((value) => fn(value, FormBuilder.of({ level: this._level + 1 })));
+    values.forEach((value) => fn(value, this));
     return this;
+  }
+
+  /**
+   * Returns a child builder with increased level.
+   */
+  child() {
+    return FormBuilder.of({ level: this._level + 1 });
   }
 
   build(): Doc.Doc<any> {

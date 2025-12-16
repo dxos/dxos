@@ -6,4 +6,3 @@ export * from './render';
 
 export * from './App';
 export * from './Table';
-

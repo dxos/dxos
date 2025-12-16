@@ -81,6 +81,7 @@ export const printTrigger = Effect.fn(function* (trigger: Trigger.Trigger) {
       key: 'input',
       value: (builder) =>
         builder
+          .child()
           .each(Object.entries(trigger.input ?? {}), ([key, value]) =>
             builder.set({
               key,
