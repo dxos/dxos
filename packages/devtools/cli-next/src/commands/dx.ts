@@ -8,7 +8,7 @@ import * as Config from 'effect/Config';
 import * as Layer from 'effect/Layer';
 
 import { ClientService, ConfigService } from '@dxos/client';
-import { ENV_DX_PROFILE_DEFAULT } from '@dxos/client-protocol';
+import { ENV_DX_PROFILE, ENV_DX_PROFILE_DEFAULT } from '@dxos/client-protocol';
 
 import { CommandConfig } from '../services';
 import { DXOS_VERSION } from '../version';
@@ -33,7 +33,7 @@ export const command = Command.make('dx', {
   ),
   profile: Options.text('profile').pipe(
     Options.withDescription('Profile for the config file.'),
-    Options.withDefault(ENV_DX_PROFILE_DEFAULT),
+    Options.withFallbackConfig(Config.string(ENV_DX_PROFILE).pipe(Config.withDefault(ENV_DX_PROFILE_DEFAULT))),
     Options.withAlias('p'),
   ),
   json: Options.boolean('json', { ifPresent: true }).pipe(
