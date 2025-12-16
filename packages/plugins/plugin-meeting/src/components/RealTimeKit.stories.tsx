@@ -5,12 +5,15 @@
 import { useRealtimeKitClient } from '@cloudflare/realtimekit-react';
 import { RtkMeeting } from '@cloudflare/realtimekit-react-ui';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useRef, useState } from 'react';
 import { useEffect } from 'react';
 
 import { scheduleTask } from '@dxos/async';
 import { Context } from '@dxos/context';
+import { log } from '@dxos/log';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
+
+import { RealtimeHttpClient } from './realtimekit-http-client';
 
 export type RealTimeKitStoryProps = {
   authToken?: string;
@@ -20,76 +23,16 @@ const MEETING_ID = 'bbba67f8-fa44-4b1d-b48c-bb3cd806bc33';
 const BASE_URL = 'http://localhost:8787/api/v2';
 // const BASE_URL = 'https://calls-service.dxos.workers.dev/api/v2';
 
-export class RealtimeHttpClient {
-  constructor(private readonly _baseUrl: string) {}
-
-  async join({
-    meetingId,
-    customId,
-    presetName,
-    name,
-    picture,
-  }: {
-    meetingId: string;
-    customId: string;
-    presetName:
-      | 'group_call_guest'
-      | 'group_call_host'
-      | 'group_call_participant'
-      | 'livestream_host'
-      | 'livestream_viewer'
-      | 'webinar_presenter'
-      | 'webinar_viewer';
-    name?: string;
-    picture?: string;
-  }): Promise<
-    | {
-        success: true;
-        data: {
-          id: string;
-          token: string;
-          created_at: string;
-          custom_participant_id: string;
-          preset_name: string;
-          updated_at: string;
-          name?: string;
-          picture?: string;
-        };
-      }
-    | { success: false }
-  > {
-    const response = await this._call(`/meetings/${meetingId}/participants`, {
-      method: 'POST',
-      body: JSON.stringify({
-        custom_participant_id: customId,
-        presetName: presetName,
-        ...(name ? { name } : {}),
-        ...(picture ? { picture } : {}),
-      }),
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    });
-    return response.json();
-  }
-
-  async leave({
-    meetingId,
-    participantId,
-  }: {
-    meetingId: string;
-    participantId: string;
-  }): Promise<{ success: boolean }> {
-    const response = await this._call(`/meetings/${meetingId}/participants/${participantId}`, {
-      method: 'DELETE',
-    });
-    return response.json();
-  }
-
-  private _call(path: string, requestInit?: RequestInit) {
-    return fetch(`${this._baseUrl}${path}`, requestInit);
-  }
-}
+type TranscriptionData = {
+  id: string;
+  name: string;
+  peerId: string;
+  userId: string;
+  customParticipantId: string;
+  transcript: string;
+  isPartialTranscript: boolean;
+  date: Date;
+};
 
 const Story = () => {
   const [meeting, initMeeting] = useRealtimeKitClient();
@@ -129,6 +72,21 @@ const Story = () => {
       }
     };
   }, [initMeeting]);
+
+  const hadRun = useRef(false);
+  useEffect(() => {
+    const handler = (data: TranscriptionData) => {
+      log.info('Transcript received:', data);
+      log.info('Transcripts', { transcripts: meeting?.ai.transcripts });
+    };
+    if (meeting && !hadRun.current) {
+      hadRun.current = true;
+      meeting.ai.on('transcript', handler);
+    }
+    return () => {
+      meeting?.ai.off('transcript', handler);
+    };
+  }, [meeting]);
 
   return <RtkMeeting meeting={meeting} />;
 };
