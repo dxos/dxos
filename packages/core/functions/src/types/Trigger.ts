@@ -110,6 +110,8 @@ const Trigger_ = Schema.Struct({
    */
   inputNodeId: Schema.optional(Schema.String.annotations({ title: 'Input Node ID' })),
 
+  // TODO(burdon): NO BOOLEAN PROPERTIES (enabld/disabled/paused, etc.)
+  //  Need lint rule; or agent rule to require PR review for "boolean" key word.
   enabled: Schema.optional(Schema.Boolean.annotations({ title: 'Enabled' })),
 
   spec: Schema.optional(Spec),

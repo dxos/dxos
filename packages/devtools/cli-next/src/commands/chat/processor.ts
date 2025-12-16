@@ -21,8 +21,9 @@ import {
 import { Blueprint } from '@dxos/blueprints';
 import { type Space } from '@dxos/client/echo';
 import { Filter, Obj, Ref } from '@dxos/echo';
-import type { FunctionDefinition } from '@dxos/functions';
+import { type FunctionDefinition } from '@dxos/functions';
 import { log } from '@dxos/log';
+import { Assistant } from '@dxos/plugin-assistant/types';
 import { type Message } from '@dxos/types';
 import { isTruthy } from '@dxos/util';
 
@@ -102,6 +103,9 @@ export class ChatProcessor {
       .filter(isTruthy);
 
     const queue = space.queues.create<Message.Message>();
+    const chat = Assistant.make({ queue: Ref.fromDXN(queue.dxn) });
+    space.db.add(chat);
+
     const conversation = new AiConversation(queue);
     await conversation.open();
 

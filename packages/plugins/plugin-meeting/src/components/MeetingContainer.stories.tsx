@@ -58,7 +58,7 @@ const meta = {
               Obj.make(Meeting.Meeting, {
                 created: new Date().toISOString(),
                 participants: [],
-                transcript: Ref.make(Transcript.makeTranscript(space.queues.create().dxn)),
+                transcript: Ref.make(Transcript.make(space.queues.create().dxn)),
                 notes: Ref.make(Text.make('Notes')),
                 summary: Ref.make(Text.make()),
                 thread: Ref.make(Thread.make()),

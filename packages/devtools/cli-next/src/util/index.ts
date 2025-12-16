@@ -3,6 +3,7 @@
 //
 
 export * from './log-buffer';
+export * from './printer';
 export * from './runtime';
 export * from './space';
 export * from './timeout';

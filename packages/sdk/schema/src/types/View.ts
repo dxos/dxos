@@ -105,7 +105,7 @@ export interface ViewEncoded extends Schema.Schema.Encoded<typeof ViewSchema> {}
 // TODO(wittjosiah): Should be Type.obj<...> or equivalent.
 export const View: Schema.Schema<View, ViewEncoded> = ViewSchema;
 
-export type MakeProps = {
+type MakeProps = {
   name?: string;
   query: Query.Any;
   queryRaw?: string;

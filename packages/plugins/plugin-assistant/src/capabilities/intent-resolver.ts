@@ -55,7 +55,7 @@ export default (context: PluginContext) => [
         const space = client.spaces.get(db.spaceId);
         invariant(space, 'Space not found');
         const queue = space.queues.create();
-        const chat = Assistant.makeChat({ name, queue });
+        const chat = Assistant.make({ name, queue: Ref.fromDXN(queue.dxn) });
 
         // TODO(wittjosiah): This should be a space-level setting.
         // TODO(burdon): Clone when activated. Copy-on-write for template.

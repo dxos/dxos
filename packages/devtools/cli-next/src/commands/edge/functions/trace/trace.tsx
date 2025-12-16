@@ -15,7 +15,7 @@ import { InvocationTraceEndEvent, InvocationTraceStartEvent } from '@dxos/functi
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 
-import { renderApp } from '../../../../components';
+import { render } from '../../../../components';
 import { theme } from '../../../../theme';
 import { createLogBuffer, spaceLayer, withTypes } from '../../../../util';
 import { Common } from '../../../options';
@@ -53,7 +53,7 @@ export const trace = Command.make(
       }
 
       // Render.
-      yield* renderApp({
+      yield* render({
         children: () => (
           // TODO(wittjosiah): Rather than pass db and queues probably should have some sort of context provider then introduce hooks for interacting with the db and queues.
           <Trace

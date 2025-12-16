@@ -12,9 +12,10 @@ import { Trigger } from '@dxos/functions';
 
 import { CommandConfig } from '../../../services';
 import { spaceLayer } from '../../../util';
+import { printList } from '../../../util/printer';
 import { Common } from '../../options';
 
-import { prettyPrintTrigger } from './util';
+import { printTrigger } from './util';
 
 export const list = Command.make(
   'list',
@@ -31,10 +32,8 @@ export const list = Command.make(
       if (triggers.length === 0) {
         yield* Console.log('No triggers found.');
       } else {
-        for (const trigger of triggers) {
-          yield* Console.log(yield* prettyPrintTrigger(trigger));
-          yield* Console.log('');
-        }
+        const items = yield* Effect.all(triggers.map(printTrigger));
+        yield* Console.log(printList(items));
       }
     }
   }),

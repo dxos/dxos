@@ -68,7 +68,6 @@ export const create = Command.make(
   Effect.fnUntraced(function* ({ template, name }) {
     const fs = yield* FileSystem.FileSystem;
     const profileName = name.pipe(Option.getOrElse(() => template));
-
     if (yield* fs.exists(`${getProfilePath(DX_CONFIG, profileName)}.yml`)) {
       throw new Error(`Profile ${profileName} already exists`);
     }
