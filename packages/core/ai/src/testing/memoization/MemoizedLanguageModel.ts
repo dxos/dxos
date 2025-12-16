@@ -46,14 +46,14 @@ export const layer = (
     }),
   );
 
-export interface MakeModelOptions {
+type MakeProps = {
   upstreamModel: LanguageModel.Service;
   modelName: string;
   storePath: string;
   allowGeneration: boolean;
-}
+};
 
-export const make = (options: MakeModelOptions): Effect.Effect<LanguageModel.Service> => {
+export const make = (options: MakeProps): Effect.Effect<LanguageModel.Service> => {
   const store = new MemoizedStore(options.storePath);
 
   return LanguageModel.make({

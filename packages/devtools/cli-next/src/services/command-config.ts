@@ -12,6 +12,7 @@ export class CommandConfig extends Context.Tag('CommandConfig')<
     json: boolean;
     verbose: boolean;
     profile: string;
+    logLevel: string;
   }
 >() {
   static isJson: Effect.Effect<boolean, never, CommandConfig> = CommandConfig.pipe(Effect.map((config) => config.json));
@@ -23,5 +24,6 @@ export class CommandConfig extends Context.Tag('CommandConfig')<
     json: false,
     verbose: false,
     profile: 'default',
+    logLevel: 'info',
   });
 }

@@ -582,7 +582,7 @@ export const WithTranscription: Story = {
       const queue = space.queues.create();
       const messages = createTestTranscription();
       await queue.append(messages);
-      space.db.add(Transcript.makeTranscript(queue.dxn));
+      space.db.add(Transcript.make(queue.dxn));
     },
     onChatCreated: async ({ space, binder }) => {
       const objects = await space.db.query(Filter.type(Transcript.Transcript)).run();

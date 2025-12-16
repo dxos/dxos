@@ -13,10 +13,10 @@ import { Function } from '@dxos/functions';
 import { getDeployedFunctions } from '@dxos/functions-runtime/edge';
 
 import { CommandConfig } from '../../../services';
-import { spaceLayer } from '../../../util';
+import { printList, spaceLayer } from '../../../util';
 import { Common } from '../../options';
 
-import { getFunctionStatus, prettyPrintFunction } from './util';
+import { getFunctionStatus, printFunction } from './util';
 
 export const search = Command.make(
   'search',
@@ -28,16 +28,14 @@ export const search = Command.make(
     const client = yield* ClientService;
 
     const deployedFunctions = yield* Effect.promise(() => getDeployedFunctions(client, true));
-    const dbFunctions = yield* Database.Service.runQuery(Filter.type(Function.Function));
 
     if (json) {
       yield* Console.log(JSON.stringify(deployedFunctions, null, 2));
     } else {
-      for (const fn of deployedFunctions) {
-        const status = getFunctionStatus(fn, dbFunctions);
-        yield* Console.log(prettyPrintFunction(fn, status));
-        yield* Console.log('');
-      }
+      const dbFunctions = yield* Database.Service.runQuery(Filter.type(Function.Function));
+      yield* Console.log(
+        printList(deployedFunctions.map((fn) => printFunction(fn, getFunctionStatus(fn, dbFunctions)))),
+      );
     }
   }),
 ).pipe(

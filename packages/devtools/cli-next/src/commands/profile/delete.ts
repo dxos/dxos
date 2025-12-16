@@ -1,0 +1,25 @@
+//
+// Copyright 2025 DXOS.org
+//
+
+import * as Command from '@effect/cli/Command';
+import * as Options from '@effect/cli/Options';
+import * as FileSystem from '@effect/platform/FileSystem';
+import * as Console from 'effect/Console';
+import * as Effect from 'effect/Effect';
+import * as Option from 'effect/Option';
+
+import { DX_CONFIG, getProfilePath } from '@dxos/client-protocol';
+
+export const del = Command.make(
+  'delete',
+  {
+    name: Options.text('name').pipe(Options.withDescription('Profile name'), Options.optional),
+  },
+  Effect.fnUntraced(function* ({ name }) {
+    const fs = yield* FileSystem.FileSystem;
+    const profileName = name.pipe(Option.getOrElse(() => 'default'));
+    yield* fs.remove(`${getProfilePath(DX_CONFIG, profileName)}.yml`);
+    yield* Console.log(`Profile ${profileName} deleted`);
+  }),
+);

@@ -31,10 +31,12 @@ export const command = Command.make('dx', {
     Options.withAlias('c'),
     Options.optional,
   ),
+  // TODO(burdon): Throw if profile doesn't exist.
   profile: Options.text('profile').pipe(
     Options.withDescription('Profile for the config file.'),
-    Options.withFallbackConfig(Config.string(ENV_DX_PROFILE).pipe(Config.withDefault(ENV_DX_PROFILE_DEFAULT))),
     Options.withAlias('p'),
+    Options.withFallbackConfig(Config.string(ENV_DX_PROFILE).pipe(Config.withDefault(ENV_DX_PROFILE_DEFAULT))),
+    Options.withDefault(process.env[ENV_DX_PROFILE] ?? ENV_DX_PROFILE_DEFAULT),
   ),
   json: Options.boolean('json', { ifPresent: true }).pipe(
     Options.withDescription('JSON output.'),
@@ -49,8 +51,16 @@ export const command = Command.make('dx', {
     Options.withAlias('v'),
     Options.withFallbackConfig(Config.boolean('VERBOSE').pipe(Config.withDefault(false))),
   ),
+  logLevel: Options.choice('logLevel', ['debug', 'verbose', 'info', 'warn', 'error']).pipe(
+    Options.withDescription('Log level to use.'),
+    Options.withAlias('l'),
+    Options.withDefault(process.env.DX_DEBUG ?? 'info'),
+  ),
 });
 
+/**
+ * Root command.
+ */
 export const dx = command.pipe(
   Command.withSubcommands([
     config,
@@ -71,11 +81,12 @@ export const dx = command.pipe(
   ]),
   // TODO(wittjosiah): Create separate command path for clients that don't need the client.
   Command.provideEffect(ConfigService, (args) => ConfigService.load(args)),
-  Command.provide(({ json, verbose, profile }) =>
+  Command.provide(({ json, verbose, profile, logLevel }) =>
     Layer.succeed(CommandConfig, {
       json,
       verbose,
       profile,
+      logLevel,
     }),
   ),
 );

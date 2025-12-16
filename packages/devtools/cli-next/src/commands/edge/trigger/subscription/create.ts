@@ -13,10 +13,10 @@ import { Database, Filter, Obj, Query, Ref } from '@dxos/echo';
 import { Function, Trigger, getUserFunctionIdInMetadata } from '@dxos/functions';
 
 import { CommandConfig } from '../../../../services';
-import { spaceLayer, withTypes } from '../../../../util';
+import { print, spaceLayer, withTypes } from '../../../../util';
 import { Common } from '../../../options';
 import { Enabled, Input } from '../options';
-import { prettyPrintTrigger } from '../util';
+import { printTrigger } from '../util';
 
 import { Deep, Delay, Typename } from './options';
 
@@ -68,7 +68,7 @@ export const create = Command.make(
       if (json) {
         yield* Console.log(JSON.stringify(trigger, null, 2));
       } else {
-        yield* Console.log(yield* prettyPrintTrigger(trigger));
+        yield* Console.log(print(yield* printTrigger(trigger)));
       }
     }),
 ).pipe(

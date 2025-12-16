@@ -12,7 +12,7 @@ export default (context: PluginContext) =>
     createResolver({
       intent: TranscriptAction.Create,
       resolve: ({ name, space }) => {
-        const transcript = Transcript.makeTranscript(space.queues.create().dxn);
+        const transcript = Transcript.make(space.queues.create().dxn);
         return { data: { object: transcript } };
       },
     }),
