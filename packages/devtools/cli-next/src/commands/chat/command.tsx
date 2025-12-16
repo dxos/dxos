@@ -64,7 +64,7 @@ export const chat = Command.make(
       const logBuffer = createLogBuffer();
       log.config({ filter: logLevel });
       log.runtimeConfig.processors = [logBuffer.processor];
-      log.info('starting...', { options });
+      log.info('starting...');
 
       const client = yield* ClientService;
       const runtime = yield* Effect.runtime<AiChatServices>();
@@ -93,6 +93,7 @@ export const chat = Command.make(
         return client.spaces.default;
       });
 
+      // TODO(burdon): Update message history, blueprints, etc.
       const handleChatSelect = async (chat: Assistant.Chat) => {
         const current = conversation();
         await current?.close();
@@ -113,7 +114,6 @@ export const chat = Command.make(
         return next;
       };
 
-      // TODO(burdon): Load/select previous saved conversation? Need Chat object for state.
       yield* Effect.promise(async () => await handleChatCreate(options.blueprints));
 
       const exitSignal = yield* Deferred.make<void, never>();
