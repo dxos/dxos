@@ -55,7 +55,7 @@ export const MarkdownPlugin = definePlugin(meta, () => [
           label: (object: Markdown.Document) => object.name || object.fallbackName,
           icon: 'ph--text-aa--regular',
           iconHue: 'indigo',
-          blueprints: [MarkdownBlueprint.BLUEPRINT_KEY],
+          blueprints: [MarkdownBlueprint.Key],
           graphProps: {
             managesAutofocus: true,
           },

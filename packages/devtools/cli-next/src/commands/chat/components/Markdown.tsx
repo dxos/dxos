@@ -8,7 +8,7 @@ import { ErrorBoundary, For, Show, createMemo } from 'solid-js';
 
 import { log } from '@dxos/log';
 
-import { theme } from '../theme';
+import { theme } from '../../../theme';
 
 export type MarkdownProps = {
   content?: string;

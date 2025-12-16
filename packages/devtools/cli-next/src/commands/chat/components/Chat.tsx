@@ -14,14 +14,14 @@ import { log } from '@dxos/log';
 import { Assistant } from '@dxos/plugin-assistant/types';
 import { isTruthy } from '@dxos/util';
 
+import { AppContext } from '../../../components';
+import { theme } from '../../../theme';
 import { DXOS_VERSION } from '../../../version';
 import { blueprintRegistry } from '../blueprints';
 import { useChatMessages } from '../hooks';
 import { type ChatProcessor } from '../processor';
-import { theme } from '../theme';
 import { createAssistantMessage, createUserMessage } from '../types';
 
-import { AppContext } from './App';
 import { Banner } from './Banner';
 import { ChatInput } from './ChatInput';
 import { ChatMessages } from './ChatMessages';

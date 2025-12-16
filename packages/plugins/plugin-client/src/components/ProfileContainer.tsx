@@ -16,6 +16,7 @@ import {
   ControlSection,
   Form,
   type FormFieldMap,
+  type FormUpdateMeta,
 } from '@dxos/react-ui-form';
 import { EmojiPickerBlock, HuePicker } from '@dxos/react-ui-pickers';
 import { hexToEmoji, hexToHue } from '@dxos/util';
@@ -63,11 +64,26 @@ export const ProfileContainer = () => {
     [],
   );
 
-  const handleSave = useCallback(
-    (profile: UserProfile) => {
-      setDisplayNameDirectly(profile.displayName);
-      setEmojiDirectly(profile.emoji);
-      setHueDirectly(profile.hue);
+  const handleChange = useCallback(
+    (profile: Partial<UserProfile>, meta: FormUpdateMeta<UserProfile>) => {
+      for (const [path, changed] of Object.entries(meta.changed)) {
+        if (changed) {
+          switch (path) {
+            case 'displayName':
+              setDisplayNameDirectly(profile.displayName ?? '');
+              break;
+            case 'emoji':
+              setEmojiDirectly(profile.emoji ?? getDefaultEmojiValue(identity));
+              break;
+            case 'hue':
+              setHueDirectly(profile.hue ?? getDefaultHueValue(identity));
+              break;
+            default:
+              break;
+          }
+        }
+      }
+
       void updateProfile(profile);
     },
     [identity],
@@ -156,7 +172,7 @@ export const ProfileContainer = () => {
     <ControlPage>
       <Clipboard.Provider>
         <ControlSection title={t('profile label')} description={t('profile description')}>
-          <Form.Root schema={UserProfile} values={values} fieldMap={fieldMap} autoSave onSave={handleSave}>
+          <Form.Root schema={UserProfile} values={values} fieldMap={fieldMap} onValuesChanged={handleChange}>
             <Form.Content>
               <Form.FieldSet classNames='container-max-width grid grid-cols-1 md:grid-cols-[1fr_min-content]' />
             </Form.Content>

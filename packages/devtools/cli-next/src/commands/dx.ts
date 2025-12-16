@@ -35,6 +35,7 @@ export const command = Command.make('dx', {
   profile: Options.text('profile').pipe(
     Options.withDescription('Profile for the config file.'),
     Options.withAlias('p'),
+    Options.withFallbackConfig(Config.string(ENV_DX_PROFILE).pipe(Config.withDefault(ENV_DX_PROFILE_DEFAULT))),
     Options.withDefault(process.env[ENV_DX_PROFILE] ?? ENV_DX_PROFILE_DEFAULT),
   ),
   json: Options.boolean('json', { ifPresent: true }).pipe(

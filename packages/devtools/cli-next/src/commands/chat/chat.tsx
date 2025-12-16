@@ -4,12 +4,7 @@
 
 import * as Command from '@effect/cli/Command';
 import * as Options from '@effect/cli/Options';
-import { ConsolePosition } from '@opentui/core';
-import { render } from '@opentui/solid';
-import * as Cause from 'effect/Cause';
-import * as Deferred from 'effect/Deferred';
 import * as Effect from 'effect/Effect';
-import * as Exit from 'effect/Exit';
 import * as Match from 'effect/Match';
 import * as Option from 'effect/Option';
 import { createSignal } from 'solid-js';
@@ -22,14 +17,15 @@ import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { Assistant } from '@dxos/plugin-assistant/types';
 
+import { renderApp } from '../../components';
 import { CommandConfig } from '../../services';
+import { theme } from '../../theme';
 import { type AiChatServices, Provider, chatLayer, createLogBuffer, withTypes } from '../../util';
 import { Common } from '../options';
 
 import { functions, toolkits, types } from './blueprints';
-import { App, Chat } from './components';
+import { Chat } from './components';
 import { ChatProcessor } from './processor';
-import { theme } from './theme';
 import { typeRegistry } from './types';
 
 export const chat = Command.make(
@@ -134,59 +130,28 @@ export const chat = Command.make(
         }
       });
 
-      const exitSignal = yield* Deferred.make<void, never>();
-
       // Render.
-      yield* Effect.promise(() =>
-        render(
-          () => (
-            <App debug={options.debug} focusElements={['input', 'messages']} logBuffer={logBuffer}>
-              {conversation() && (
-                <Chat
-                  db={space.db}
-                  processor={processor}
-                  conversation={conversation()!}
-                  model={model}
-                  verbose={verbose}
-                  onChatSelect={(chat) => handleChatSelect(chat)}
-                  onChatCreate={({ blueprints }) => handleChatCreate(blueprints)}
-                />
-              )}
-            </App>
-          ),
-          {
-            exitOnCtrlC: true,
-            exitSignals: ['SIGINT', 'SIGTERM'],
-            openConsoleOnError: true,
-            consoleOptions: {
-              position: ConsolePosition.TOP,
-              sizePercent: 25, // TODO(burdon): Option.
-              colorDefault: theme.log.default,
-              colorDebug: theme.log.debug,
-              colorInfo: theme.log.info,
-              colorWarn: theme.log.warn,
-              colorError: theme.log.error,
-            },
-            // NOTE: Called on on SIGINT (ctrl-c) and SIGTERM (via pkill not killall).
-            onDestroy: () => {
-              logBuffer.close();
-              Effect.runSync(Deferred.succeed(exitSignal, undefined));
-            },
-          },
+      yield* renderApp({
+        children: () => (
+          <App debug={options.debug} focusElements={['input', 'messages']} logBuffer={logBuffer}>
+            {conversation() && (
+              <Chat
+                db={space.db}
+                processor={processor}
+                conversation={conversation()!}
+                model={model}
+                verbose={verbose}
+                onChatSelect={(chat) => handleChatSelect(chat)}
+                onChatCreate={({ blueprints }) => handleChatCreate(blueprints)}
+              />
+            )}
+          </App>
         ),
-      );
-
-      // Wait for exit.
-      yield* Deferred.await(exitSignal).pipe(
-        Effect.onExit((exit) =>
-          Effect.sync(() => {
-            const cause = Exit.isFailure(exit) ? Cause.pretty(exit.cause) : undefined;
-            if (cause || options.debug) {
-              process.stderr.write(['exit:', cause ?? 'OK', '\n'].join(' '));
-            }
-          }),
-        ),
-      );
+        focusElements: ['input', 'messages'],
+        logBuffer,
+        debug: options.debug,
+        theme,
+      });
     }),
 ).pipe(
   Command.withDescription('Open chat interface.'),

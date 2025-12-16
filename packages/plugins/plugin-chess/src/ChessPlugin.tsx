@@ -27,7 +27,7 @@ export const ChessPlugin = definePlugin(meta, () => [
         metadata: {
           icon: 'ph--shield-chevron--regular',
           iconHue: 'amber',
-          blueprints: [ChessBlueprint.BLUEPRINT_KEY],
+          blueprints: [ChessBlueprint.Key],
           createObjectIntent: (() => createIntent(ChessAction.Create)) satisfies CreateObjectIntent,
           addToCollectionOnCreate: true,
         },

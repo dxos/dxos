@@ -16,16 +16,31 @@ import { blueprints as AssistantBlueprints, functions as AssistantFunctions } fr
 import { Assistant } from '@dxos/plugin-assistant/types';
 import { ChessBlueprint } from '@dxos/plugin-chess/blueprints';
 import { Chess } from '@dxos/plugin-chess/types';
+import { CalendarBlueprint, InboxBlueprint } from '@dxos/plugin-inbox/blueprints';
+import { KanbanBlueprint } from '@dxos/plugin-kanban/blueprints';
+import { MapBlueprint } from '@dxos/plugin-map/blueprints';
 import { MarkdownBlueprint } from '@dxos/plugin-markdown/blueprints';
 import { Markdown } from '@dxos/plugin-markdown/types';
+import { ScriptBlueprint } from '@dxos/plugin-script/blueprints';
+import { TableBlueprint } from '@dxos/plugin-table/blueprints';
+import { ThreadBlueprint } from '@dxos/plugin-thread/blueprints';
+import { TranscriptionBlueprint } from '@dxos/plugin-transcription/blueprints';
 
 import { TestToolkit } from '../../util';
 
 export const blueprintRegistry = new Blueprint.Registry([
   // Blueprints available to the chat.
   ...AssistantBlueprints,
+  CalendarBlueprint.make(),
   ChessBlueprint.make(),
+  InboxBlueprint.make(),
+  KanbanBlueprint.make(),
+  MapBlueprint.make(),
   MarkdownBlueprint.make(),
+  ScriptBlueprint.make(),
+  TableBlueprint.make(),
+  ThreadBlueprint.make(),
+  TranscriptionBlueprint.make(),
 ]);
 
 // TODO(dmaretskyi): In Composer, those are handled by the plugins and capabilities mechanism.
@@ -36,8 +51,16 @@ export const blueprintRegistry = new Blueprint.Registry([
 export const functions: FunctionDefinition.Any[] = [
   // NOTE: Functions referenced by blueprints above need to be added here.
   ...AssistantFunctions,
+  ...CalendarBlueprint.functions,
   ...ChessBlueprint.functions,
+  ...InboxBlueprint.functions,
+  ...KanbanBlueprint.functions,
+  ...MapBlueprint.functions,
   ...MarkdownBlueprint.functions,
+  ...ScriptBlueprint.functions,
+  ...TableBlueprint.functions,
+  ...ThreadBlueprint.functions,
+  ...TranscriptionBlueprint.functions,
 ];
 
 const StubDeckToolkit = Toolkit.make(

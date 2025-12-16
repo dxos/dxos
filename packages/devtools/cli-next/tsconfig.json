@@ -77,7 +77,28 @@
       "path": "../../plugins/plugin-chess"
     },
     {
+      "path": "../../plugins/plugin-inbox"
+    },
+    {
+      "path": "../../plugins/plugin-kanban"
+    },
+    {
+      "path": "../../plugins/plugin-map"
+    },
+    {
       "path": "../../plugins/plugin-markdown"
+    },
+    {
+      "path": "../../plugins/plugin-script"
+    },
+    {
+      "path": "../../plugins/plugin-table"
+    },
+    {
+      "path": "../../plugins/plugin-thread"
+    },
+    {
+      "path": "../../plugins/plugin-transcription"
     },
     {
       "path": "../../sdk/client"
