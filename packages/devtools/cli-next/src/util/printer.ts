@@ -90,20 +90,20 @@ export class FormBuilder {
   /**
    * Returns a child builder with increased level.
    */
-  child() {
-    return FormBuilder.of({ level: this._level + 1 });
+  child(props: Omit<FormBuilderOptions, 'level'> = {}) {
+    return FormBuilder.of({ level: this._level + 1, ...props });
   }
 
   build(): Doc.Doc<any> {
-    const maxKeyLen = Math.max(0, ...this._entries.map((e) => e.key.length));
+    const maxKeyLen = Math.max(0, ...this._entries.map((entry) => entry.key.length));
     const targetWidth = this._prefix.length + maxKeyLen + 2;
-    const indent = Doc.text(' '.repeat(this._level * 2));
     const lines: Doc.Doc<any>[] = [];
 
     if (this._title) {
-      lines.push(Doc.hcat([indent, Doc.annotate(Doc.text(this._title), Ansi.combine(Ansi.bold, Ansi.cyan))]));
+      lines.push(Doc.hcat([Doc.annotate(Doc.text(this._title), Ansi.combine(Ansi.bold, Ansi.cyan))]));
     }
 
+    const indent = Doc.text(' '.repeat(this._level * 2));
     lines.push(
       ...this._entries.map(({ key, value }) =>
         Doc.hcat([

@@ -54,41 +54,56 @@ export const printTrigger = Effect.fn(function* (trigger: Trigger.Trigger) {
   const fn = trigger.function && (yield* Database.Service.load(trigger.function));
   const spec = getTriggerSpecInfo(trigger.spec);
 
-  return FormBuilder.of({
-    title:
-      fn && Obj.instanceOf(Function.Function, fn)
-        ? (fn.name ?? fn.key ?? fn.id)
-        : (trigger.function?.dxn?.toString() ?? 'Unknown'),
-  })
-    .set({
-      key: 'status',
-      value: trigger.enabled ? 'enabled' : 'disabled',
-      color: trigger.enabled ? Ansi.green : Ansi.blackBright,
+  return (
+    FormBuilder.of({
+      title:
+        fn && Obj.instanceOf(Function.Function, fn)
+          ? (fn.name ?? fn.key ?? fn.id)
+          : (trigger.function?.dxn?.toString() ?? 'Unknown'),
     })
-    .set({
-      key: 'id',
-      value: trigger.id,
-    })
-    .set({
-      key: 'kind',
-      value: spec.kind,
-    })
-    .set({
-      key: 'input node',
-      value: trigger.inputNodeId,
-    })
-    .set({
-      key: 'input',
-      value: (builder) =>
-        builder
-          .child()
-          .each(Object.entries(trigger.input ?? {}), ([key, value]) =>
-            builder.set({
-              key,
-              value: typeof value === 'string' ? value : JSON.stringify(value),
-            }),
-          )
-          .build(),
-    })
-    .build();
+      .set({
+        key: 'status',
+        value: trigger.enabled ? 'enabled' : 'disabled',
+        color: trigger.enabled ? Ansi.green : Ansi.blackBright,
+      })
+      .set({
+        key: 'id',
+        value: trigger.id,
+      })
+      .set({
+        key: 'kind',
+        value: spec.kind,
+      })
+      .set({
+        key: 'spec',
+        value: spec.details,
+      })
+      // TODO(burdon): Specialize sub keys based on kind.
+      // .set({
+      //   key: 'kind',
+      //   value: (builder) =>
+      //     builder
+      //       .child({ title: spec.kind })
+      //       .set({ key: 'cron', value: spec.details })
+      //       .build(),
+      // })
+      .set({
+        key: 'input node',
+        value: trigger.inputNodeId,
+      })
+      .set({
+        key: 'input',
+        value: (builder) =>
+          builder
+            .child()
+            .each(Object.entries(trigger.input ?? {}), ([key, value]) =>
+              builder.set({
+                key,
+                value: typeof value === 'string' ? value : JSON.stringify(value),
+              }),
+            )
+            .build(),
+      })
+      .build()
+  );
 });
