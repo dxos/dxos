@@ -8,6 +8,8 @@ import { type PublicKey } from '@dxos/client';
 import { type Space, SpaceState, type SpaceSyncState } from '@dxos/client/echo';
 import { truncateKey } from '@dxos/debug';
 
+import { FormBuilder } from '../../../util';
+
 // TODO(wittjosiah): Factor out.
 const maybeTruncateKey = (key: PublicKey, truncate = false) => (truncate ? truncateKey(key) : key.toHex());
 
@@ -76,3 +78,32 @@ const getSyncIndicator = (up: boolean, down: boolean) => {
     }
   }
 };
+
+export type FormattedSpace = {
+  id: string;
+  state: string;
+  name: string | undefined;
+  members: number;
+  objects: number;
+  key: string;
+  epoch: any;
+  startup: number | undefined;
+  automergeRoot: string | undefined;
+  syncState: string;
+};
+
+/**
+ * Pretty prints a space with ANSI colors.
+ */
+export const printSpace = (spaceData: FormattedSpace) =>
+  FormBuilder.of({ title: spaceData.name ?? spaceData.id })
+    .set({ key: 'id', value: spaceData.id })
+    .set({ key: 'state', value: spaceData.state })
+    .set({ key: 'key', value: spaceData.key })
+    .set({ key: 'members', value: spaceData.members })
+    .set({ key: 'objects', value: spaceData.objects })
+    .set({ key: 'epoch', value: spaceData.epoch ?? '<none>' })
+    .set({ key: 'startup', value: spaceData.startup ? `${spaceData.startup}ms` : '<none>' })
+    .set({ key: 'syncState', value: spaceData.syncState })
+    .set({ key: 'automergeRoot', value: spaceData.automergeRoot ?? '<none>' })
+    .build();

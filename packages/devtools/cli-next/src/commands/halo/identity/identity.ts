@@ -8,17 +8,36 @@ import * as Effect from 'effect/Effect';
 
 import { ClientService } from '@dxos/client';
 
+import { CommandConfig } from '../../../services';
+import { print } from '../../../util';
+import { printIdentity } from '../util';
+
 export const handler = Effect.fn(function* () {
+  const { json } = yield* CommandConfig;
   const client = yield* ClientService;
   const identity = client.halo.identity.get();
   if (!identity) {
-    // TODO(wittjosiah): Look into @effect/printer-ansi for colored output.
-    yield* Console.log('Identity not initialized.');
+    if (json) {
+      yield* Console.log(JSON.stringify({ error: 'Identity not initialized' }, null, 2));
+    } else {
+      yield* Console.log('Identity not initialized.');
+    }
   } else {
     yield* Effect.tryPromise(() => client.spaces.waitUntilReady());
-    const { identityKey, profile } = identity;
-    yield* Console.log(`Identity key: ${identityKey.toHex()}`);
-    yield* Console.log(`Display name: ${profile?.displayName}`);
+    if (json) {
+      yield* Console.log(
+        JSON.stringify(
+          {
+            identityKey: identity.identityKey.toHex(),
+            displayName: identity.profile?.displayName,
+          },
+          null,
+          2,
+        ),
+      );
+    } else {
+      yield* Console.log(print(printIdentity(identity)));
+    }
   }
 });
 

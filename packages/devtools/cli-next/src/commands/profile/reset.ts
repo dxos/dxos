@@ -13,6 +13,9 @@ import { DX_DATA, getProfilePath } from '@dxos/client-protocol';
 import { ConfigService } from '@dxos/config';
 
 import { CommandConfig } from '../../services';
+import { print } from '../../util';
+
+import { printProfileReset } from './util';
 
 export const reset = Command.make(
   'reset',
@@ -22,7 +25,7 @@ export const reset = Command.make(
   Effect.fnUntraced(function* ({ force }) {
     const fs = yield* FileSystem.FileSystem;
     const config = yield* ConfigService;
-    const { profile } = yield* CommandConfig;
+    const { json, profile } = yield* CommandConfig;
     const path = config.values.runtime?.client?.storage?.dataRoot ?? getProfilePath(DX_DATA, profile);
     if (!force) {
       const confirmed = yield* Prompt.confirm({
@@ -35,6 +38,10 @@ export const reset = Command.make(
     }
 
     yield* fs.remove(path, { recursive: true });
-    yield* Console.log(`Profile (${profile}) has been reset successfully.`);
+    if (json) {
+      yield* Console.log(JSON.stringify({ profile, reset: true }, null, 2));
+    } else {
+      yield* Console.log(print(printProfileReset(profile)));
+    }
   }),
 );

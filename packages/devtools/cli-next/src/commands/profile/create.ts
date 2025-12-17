@@ -13,6 +13,11 @@ import * as Record from 'effect/Record';
 import { DX_CONFIG, getProfilePath } from '@dxos/client-protocol';
 import { trim } from '@dxos/util';
 
+import { CommandConfig } from '../../services';
+import { print } from '../../util';
+
+import { printProfileCreated } from './util';
+
 const TEMPLATES = {
   default: trim`
     version: 1
@@ -66,13 +71,19 @@ export const create = Command.make(
     name: Options.text('name').pipe(Options.withDescription('Profile name'), Options.optional),
   },
   Effect.fnUntraced(function* ({ template, name }) {
+    const { json } = yield* CommandConfig;
     const fs = yield* FileSystem.FileSystem;
     const profileName = name.pipe(Option.getOrElse(() => template));
-    if (yield* fs.exists(`${getProfilePath(DX_CONFIG, profileName)}.yml`)) {
+    const profilePath = `${getProfilePath(DX_CONFIG, profileName)}.yml`;
+    if (yield* fs.exists(profilePath)) {
       throw new Error(`Profile ${profileName} already exists`);
     }
 
-    yield* fs.writeFileString(`${getProfilePath(DX_CONFIG, profileName)}.yml`, TEMPLATES[template]);
-    yield* Console.log(`Profile ${profileName} created`);
+    yield* fs.writeFileString(profilePath, TEMPLATES[template]);
+    if (json) {
+      yield* Console.log(JSON.stringify({ name: profileName, path: profilePath }, null, 2));
+    } else {
+      yield* Console.log(print(printProfileCreated(profileName, profilePath)));
+    }
   }),
 );
