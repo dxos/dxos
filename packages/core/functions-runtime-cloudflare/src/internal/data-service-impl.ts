@@ -112,9 +112,8 @@ export class DataServiceImpl implements DataServiceProto {
   }
 
   async updateIndexes(): Promise<void> {
-    throw new NotImplementedError({
-      message: 'updateIndexes is not implemented.',
-    });
+    log.error('updateIndexes is not available in EDGE env.');
+    // No-op.
   }
 
   async waitUntilHeadsReplicated({ heads }: { heads: any }): Promise<void> {

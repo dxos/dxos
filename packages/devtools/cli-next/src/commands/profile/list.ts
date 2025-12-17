@@ -37,7 +37,7 @@ export const list = Command.make(
           name,
           isCurrent: name === currentProfile,
           fullPath,
-          storagePath: getProfilePath(configValues.runtime.client.storage.dataRoot ?? DX_DATA, name),
+          storagePath: getProfilePath(configValues?.runtime?.client?.storage.dataRoot ?? DX_DATA, name),
           edge: config.values.runtime?.services?.edge?.url,
         };
       }),
