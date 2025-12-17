@@ -14,13 +14,11 @@ import { Function, Trigger } from '@dxos/functions';
 import { CommandConfig } from '../../../../services';
 import { print, spaceLayer, withTypes } from '../../../../util';
 import { Common } from '../../../options';
-import { Enabled, Input, TriggerId } from '../options';
+import { Deep, Delay, Enabled, Input, TriggerId, Typename } from '../options';
 import { printTrigger } from '../util';
 
-import { Deep, Delay, Typename } from './options';
-
-export const update = Command.make(
-  'update',
+export const subscription = Command.make(
+  'subscription',
   {
     spaceId: Common.spaceId.pipe(Options.optional),
     id: TriggerId,
@@ -37,7 +35,7 @@ export const update = Command.make(
       const dxn = DXN.fromLocalObjectId(id);
       const trigger = yield* Database.Service.resolve(dxn, Trigger.Trigger);
       if (trigger.spec?.kind !== 'subscription') {
-        throw new Error('Trigger is not a subscription');
+        throw new Error(`Invalid trigger type: ${trigger.spec?.kind}`);
       }
 
       trigger.enabled = enabled;

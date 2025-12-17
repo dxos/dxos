@@ -17,10 +17,7 @@ export type TriggerRemoteStatus = 'available' | 'not available' | 'n/a';
  * Determines the remote status of a trigger.
  * Only timer/cron triggers can be checked for remote availability.
  */
-export const getTriggerRemoteStatus = (
-  trigger: Trigger.Trigger,
-  remoteCronIds: string[],
-): TriggerRemoteStatus => {
+export const getTriggerRemoteStatus = (trigger: Trigger.Trigger, remoteCronIds: string[]): TriggerRemoteStatus => {
   if (trigger.spec?.kind !== 'timer') {
     return 'n/a';
   }
@@ -28,97 +25,99 @@ export const getTriggerRemoteStatus = (
 };
 
 /**
- * Gets the trigger kind and detailed spec information.
- */
-const getTriggerSpecInfo = (spec: Trigger.Spec | undefined): { kind: string; details: string | undefined } => {
-  if (!spec) {
-    return { kind: 'No spec defined', details: undefined };
-  }
-
-  return Match.value(spec).pipe(
-    Match.when({ kind: 'email' }, () => ({
-      kind: 'email',
-      details: undefined,
-    })),
-    Match.when({ kind: 'queue' }, (s) => ({
-      kind: 'queue',
-      details: s.queue ?? 'N/A',
-    })),
-    Match.when({ kind: 'subscription' }, (s) => ({
-      kind: 'subscription',
-      details: s.query?.raw ? s.query.raw : '[Query AST]',
-    })),
-    Match.when({ kind: 'timer' }, (s) => ({
-      kind: 'timer',
-      details: s.cron,
-    })),
-    Match.when({ kind: 'webhook' }, (s) => ({
-      kind: 'webhook',
-      details: `${s.method ?? 'POST'}${s.port ? `:${s.port}` : ''}`,
-    })),
-    Match.orElse(() => ({
-      kind: 'unknown',
-      details: undefined,
-    })),
-  );
-};
-
-/**
  * Pretty prints a trigger with ANSI colors.
  */
-export const printTrigger = Effect.fn(function* (
-  trigger: Trigger.Trigger,
-  remoteStatus?: TriggerRemoteStatus,
-) {
+export const printTrigger = Effect.fn(function* (trigger: Trigger.Trigger, remoteStatus?: TriggerRemoteStatus) {
   const fn = trigger.function && (yield* Database.Service.load(trigger.function));
-  const spec = getTriggerSpecInfo(trigger.spec);
 
-  return FormBuilder.of({
-    title:
-      fn && Obj.instanceOf(Function.Function, fn)
-        ? (fn.name ?? fn.key ?? fn.id)
-        : (trigger.function?.dxn?.toString() ?? 'Unknown'),
-  })
-    .set({
-      key: 'status',
-      value: trigger.enabled ? 'enabled' : 'disabled',
-      color: trigger.enabled ? Ansi.green : Ansi.blackBright,
+  return (
+    FormBuilder.of({
+      title:
+        fn && Obj.instanceOf(Function.Function, fn)
+          ? (fn.name ?? fn.key ?? fn.id)
+          : (trigger.function?.dxn?.toString() ?? 'Unknown'),
     })
-    .set({
-      key: 'id',
-      value: trigger.id,
-    })
-    .set({
-      key: 'kind',
-      value: spec.kind,
-    })
-    .set({
-      key: 'remote',
-      value: remoteStatus,
-      color: Match.type<TriggerRemoteStatus>().pipe(
-        Match.withReturnType<Ansi.Ansi>(),
-        Match.when('available', () => Ansi.green),
-        Match.when('not available', () => Ansi.yellow),
-        Match.when('n/a', () => Ansi.blackBright),
-        Match.exhaustive,
-      ),
-    })
-    .set({
-      key: 'input node',
-      value: trigger.inputNodeId,
-    })
-    .set({
-      key: 'input',
-      value: (builder) =>
-        builder
-          .child()
-          .each(Object.entries(trigger.input ?? {}), ([key, value]) =>
-            builder.set({
-              key,
-              value: typeof value === 'string' ? value : JSON.stringify(value),
-            }),
-          )
-          .build(),
-    })
-    .build();
+      .set({
+        key: 'status',
+        value: trigger.enabled ? 'enabled' : 'disabled',
+        color: trigger.enabled ? Ansi.green : Ansi.blackBright,
+      })
+      .set({
+        key: 'id',
+        value: trigger.id,
+      })
+      .set({
+        key: 'kind',
+        value: trigger.spec?.kind,
+      })
+      .set({
+        key: 'remote',
+        value: remoteStatus,
+        color: Match.type<TriggerRemoteStatus>().pipe(
+          Match.withReturnType<Ansi.Ansi>(),
+          Match.when('available', () => Ansi.green),
+          Match.when('not available', () => Ansi.yellow),
+          Match.when('n/a', () => Ansi.blackBright),
+          Match.exhaustive,
+        ),
+      })
+      .set({
+        key: 'spec',
+        value: trigger.spec && printSpec(trigger.spec),
+      })
+      // TODO(burdon): Remove?
+      // .set({
+      //   key: 'input node',
+      //   value: trigger.inputNodeId,
+      // })
+      // .set({
+      //   key: 'input',
+      //   value: (builder) =>
+      //     builder
+      //       .each(Object.entries(trigger.input ?? {}), ([key, value]) =>
+      //         builder.set({
+      //           key,
+      //           value: typeof value === 'string' ? value : JSON.stringify(value),
+      //         }),
+      //       )
+      //       .build(),
+      // })
+      .build()
+  );
 });
+
+const printSpec = <T extends Trigger.Spec>(spec: T): FormBuilder => {
+  switch (spec.kind) {
+    case 'timer':
+      return printTimer(spec);
+    case 'subscription':
+      return printSubscription(spec);
+    case 'webhook':
+      return printWebhook(spec);
+    case 'queue':
+      return printQueue(spec);
+    default:
+      return FormBuilder.of({}).set({ key: 'unknown', value: 'Unknown spec type' });
+  }
+};
+
+const printTimer = (spec: Trigger.TimerSpec) =>
+  FormBuilder.of({})
+    // prettier-ignore
+    .set({ key: 'cron', value: spec.cron });
+
+const printSubscription = (spec: Trigger.SubscriptionSpec) =>
+  FormBuilder.of({})
+    // prettier-ignore
+    .set({ key: 'query', value: spec.query?.raw ?? '[Query AST]' });
+
+const printWebhook = (spec: Trigger.WebhookSpec) =>
+  FormBuilder.of({})
+    // prettier-ignore
+    .set({ key: 'method', value: spec.method })
+    .set({ key: 'port', value: spec.port });
+
+const printQueue = (spec: Trigger.QueueSpec) =>
+  FormBuilder.of({})
+    // prettier-ignore
+    .set({ key: 'queue', value: spec.queue });

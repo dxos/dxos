@@ -46,7 +46,6 @@ export type AppProps = ParentProps<{
 /**
  * Common app bootstrap across all commands.
  */
-// TODO(burdon): Factor out (common to all commands).
 export const App = (props: AppProps) => {
   const renderer = useRenderer();
   props.theme?.bg && renderer.setBackgroundColor(props.theme.bg);
@@ -111,7 +110,6 @@ export const App = (props: AppProps) => {
   ].filter(isTruthy);
 
   createEffect(() => {
-    // TODO(burdon): Better way to detech screen corrupted?
     // Use ctrl-p to cycle position; +/- to resize at runtime (when focused).
     if (showConsole()) {
       renderer.console.show();
@@ -137,10 +135,11 @@ export const App = (props: AppProps) => {
     setFocus(props.focusElements?.[0]);
     randomHint();
 
-    // Replay logs once.
+    // Replay logs recorded on startup.
     props.logBuffer?.replay();
     log.info('focus console then ctrl-s to save logs to file');
 
+    // TODO(burdon): Better way to detech screen corrupted?
     // Repaint in case terminal is cleared (via cmd-k -- which is not propagated to the app from the terminal).
     const i = setInterval(() => {
       renderer.currentRenderBuffer.clear(hexToRgb('000000'));

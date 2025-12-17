@@ -13,3 +13,27 @@ export const Enabled = Options.boolean('enabled', { ifPresent: true }).pipe(
 export const Input = Options.keyValueMap('input').pipe(
   Options.withDescription("Input data to pass to the function. Must match the function's input schema."),
 );
+
+//
+// Subscription
+//
+
+export const Typename = Options.text('typename').pipe(
+  Options.withDescription('The type name to query for the subscription trigger.'),
+);
+
+export const Deep = Options.boolean('deep', { ifPresent: true }).pipe(
+  Options.withDescription('Watch changes to nested properties (not just creation).'),
+);
+
+export const Delay = Options.integer('delay').pipe(
+  Options.withDescription('Debounce changes with a delay in milliseconds.'),
+);
+
+//
+// Timer
+//
+
+export const Cron = Options.text('cron').pipe(
+  Options.withDescription('The cron expression to use for the timer trigger.'),
+);
