@@ -18,8 +18,8 @@ import {
 } from '@dxos/functions-runtime';
 import { type DXN } from '@dxos/keys';
 
-import { type Column, Table } from '../../../../../components';
-import { theme } from '../../../../../theme';
+import { type Column, Table } from '../../../../components';
+import { theme } from '../../../../theme';
 
 export type TraceProps = {
   db: Database.Database;

@@ -8,13 +8,13 @@ import * as Duration from 'effect/Duration';
 import * as Effect from 'effect/Effect';
 import * as Schedule from 'effect/Schedule';
 
-import { getSpace, waitForSync, withTimeout } from '../../../util';
+import { getSpace, spaceIdWithDefault, waitForSync, withTimeout } from '../../../util';
 import { Common } from '../../options';
 
 export const sync = Command.make(
   'sync',
   {
-    spaceId: Common.spaceId,
+    spaceId: Common.spaceId.pipe(Options.optional),
     spaceTimeout: Options.integer('spaceTimeout').pipe(
       Options.withDescription('The timeout to wait for the space to be available in milliseconds.'),
       Options.withDefault(5000),
@@ -23,7 +23,8 @@ export const sync = Command.make(
   ({ spaceId, spaceTimeout }) =>
     Effect.gen(function* () {
       // If space is not available locally, wait for it to sync.
-      const space = yield* getSpace(spaceId).pipe(
+      const resolvedSpaceId = yield* spaceIdWithDefault(spaceId);
+      const space = yield* getSpace(resolvedSpaceId).pipe(
         Effect.retry(Schedule.fixed('100 millis')),
         Effect.timeout(Duration.millis(spaceTimeout)),
       );

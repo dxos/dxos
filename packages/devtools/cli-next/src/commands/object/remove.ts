@@ -11,8 +11,11 @@ import * as Option from 'effect/Option';
 import { Filter, Query } from '@dxos/echo';
 import { Database } from '@dxos/echo';
 
-import { spaceLayer } from '../../util';
+import { CommandConfig } from '../../services';
+import { print, spaceLayer } from '../../util';
 import { Common } from '../options';
+
+import { printObjectRemoved } from './util';
 
 export const remove = Command.make(
   'remove',
@@ -23,6 +26,7 @@ export const remove = Command.make(
   },
   ({ typename, id }) =>
     Effect.gen(function* () {
+      const { json } = yield* CommandConfig;
       if (Option.isSome(id) && Option.isSome(typename)) {
         throw new Error('Cannot specify both typename and id');
       }
@@ -39,7 +43,11 @@ export const remove = Command.make(
         yield* Database.Service.remove(object);
       }
 
-      yield* Console.log(`Removed ${objects.length} objects.`);
+      if (json) {
+        yield* Console.log(JSON.stringify({ removed: objects.length }, null, 2));
+      } else {
+        yield* Console.log(print(printObjectRemoved(objects.length)));
+      }
     }),
 ).pipe(
   Command.withDescription('Remove an object from a space.'),

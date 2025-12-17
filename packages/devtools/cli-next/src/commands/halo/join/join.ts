@@ -13,19 +13,45 @@ import { type Client, ClientService } from '@dxos/client';
 import { type AuthenticatingInvitationObservable, Invitation, InvitationEncoder } from '@dxos/client/invitations';
 import { invariant } from '@dxos/invariant';
 
+import { CommandConfig } from '../../../services';
+import { print } from '../../../util';
+import { printIdentity } from '../util';
+
 export const join = Command.make(
   'join',
   {
     invitationCode: Args.text({ name: 'invitationCode' }).pipe(Args.withDescription('The invitation code.')),
   },
   Effect.fn(function* ({ invitationCode }) {
+    const { json } = yield* CommandConfig;
     const client = yield* ClientService;
     // TODO(wittjosiah): How to surface this error to the user cleanly?
     invariant(!client.halo.identity.get(), 'Identity already exists');
 
     const identity = yield* sendInvitation({ client, invitationCode });
-    yield* Console.log('Identity key:', identity?.identityKey?.toHex());
-    yield* Console.log('Display name:', identity?.profile?.displayName);
+    if (!identity) {
+      if (json) {
+        yield* Console.log(JSON.stringify({ error: 'Failed to join identity' }, null, 2));
+      } else {
+        yield* Console.log('Failed to join identity');
+      }
+      return;
+    }
+
+    if (json) {
+      yield* Console.log(
+        JSON.stringify(
+          {
+            identityKey: identity.identityKey.toHex(),
+            displayName: identity.profile?.displayName,
+          },
+          null,
+          2,
+        ),
+      );
+    } else {
+      yield* Console.log(print(printIdentity(identity)));
+    }
   }),
 ).pipe(Command.withDescription('Join an existing identity using an invitation code.'));
 

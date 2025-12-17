@@ -8,14 +8,24 @@ import * as Effect from 'effect/Effect';
 
 import { ClientService } from '@dxos/client';
 
-import { formatSpace } from './util';
+import { CommandConfig } from '../../../services';
+import { printList } from '../../../util';
+
+import { formatSpace, printSpace } from './util';
 
 // TODO(burdon): Move handler inline and test separate functions.
 export const handler = Effect.fn(function* () {
+  const { json } = yield* CommandConfig;
   const client = yield* ClientService;
   const spaces = client.spaces.get();
   const formattedSpaces = yield* Effect.all(spaces.map(formatSpace));
-  yield* Console.log(JSON.stringify(formattedSpaces, null, 2));
+
+  if (json) {
+    yield* Console.log(JSON.stringify(formattedSpaces, null, 2));
+  } else {
+    const formatted = formattedSpaces.map(printSpace);
+    yield* Console.log(printList(formatted));
+  }
 });
 
 export const list = Command.make('list', {}, handler).pipe(

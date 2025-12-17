@@ -17,6 +17,7 @@ import { chat } from './chat';
 import { config } from './config';
 import { debug } from './debug';
 import { edge } from './edge';
+import { fn } from './function';
 import { halo } from './halo';
 import { hub } from './hub';
 import { object } from './object';
@@ -24,6 +25,7 @@ import { profile } from './profile';
 import { queue } from './queue';
 import { repl } from './repl';
 import { space } from './space';
+import { trigger } from './trigger';
 
 export const command = Command.make('dx', {
   config: Options.file('config', { exists: 'yes' }).pipe(
@@ -70,10 +72,12 @@ export const dx = command.pipe(
     // Only providing client to commands that require it.
     chat.pipe(Command.provide(ClientService.layer)),
     edge.pipe(Command.provide(ClientService.layer)),
+    fn.pipe(Command.provide(ClientService.layer)),
     halo.pipe(Command.provide(ClientService.layer)),
     object.pipe(Command.provide(ClientService.layer)),
     queue.pipe(Command.provide(ClientService.layer)),
     space.pipe(Command.provide(ClientService.layer)),
+    trigger.pipe(Command.provide(ClientService.layer)),
 
     // TODO(burdon): Admin-only (separate dynamic module?)
     debug.pipe(Command.provide(ClientService.layer)),

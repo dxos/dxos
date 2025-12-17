@@ -21,7 +21,7 @@ export class CommandConfig extends Context.Tag('CommandConfig')<
   );
 
   static layerTest = Layer.succeed(CommandConfig, {
-    json: false,
+    json: true,
     verbose: false,
     profile: 'default',
     logLevel: 'info',

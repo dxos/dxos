@@ -11,15 +11,25 @@ import * as Option from 'effect/Option';
 
 import { DX_CONFIG, getProfilePath } from '@dxos/client-protocol';
 
+import { CommandConfig } from '../../services';
+import { print } from '../../util';
+
+import { printProfileDeleted } from './util';
+
 export const del = Command.make(
   'delete',
   {
     name: Options.text('name').pipe(Options.withDescription('Profile name'), Options.optional),
   },
   Effect.fnUntraced(function* ({ name }) {
+    const { json } = yield* CommandConfig;
     const fs = yield* FileSystem.FileSystem;
     const profileName = name.pipe(Option.getOrElse(() => 'default'));
     yield* fs.remove(`${getProfilePath(DX_CONFIG, profileName)}.yml`);
-    yield* Console.log(`Profile ${profileName} deleted`);
+    if (json) {
+      yield* Console.log(JSON.stringify({ name: profileName, deleted: true }, null, 2));
+    } else {
+      yield* Console.log(print(printProfileDeleted(profileName)));
+    }
   }),
 );

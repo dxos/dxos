@@ -10,17 +10,27 @@ import * as Option from 'effect/Option';
 
 import { Database, Filter } from '@dxos/echo';
 
-import { spaceLayer } from '../../../util';
+import { CommandConfig } from '../../../services';
+import { printList, spaceLayer } from '../../../util';
 import { Common } from '../../options';
+import { printObject } from '../util';
 
 export const handler = ({ typename }: { typename: Option.Option<string> }) =>
   Effect.gen(function* () {
+    const { json } = yield* CommandConfig;
     const filter = Option.match(typename, {
       onNone: () => Filter.everything(),
       onSome: (typename) => Filter.typename(typename),
     });
     const objects = yield* Database.Service.runQuery(filter);
-    yield* Console.log(JSON.stringify(objects, null, 2));
+
+    if (json) {
+      yield* Console.log(JSON.stringify(objects, null, 2));
+    } else {
+      // TODO(wittjosiah): Interactive table of results.
+      const formatted = objects.map(printObject);
+      yield* Console.log(printList(formatted));
+    }
   });
 
 export const query = Command.make(

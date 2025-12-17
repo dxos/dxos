@@ -11,13 +11,13 @@ import * as Option from 'effect/Option';
 import type * as Schema from 'effect/Schema';
 
 import { Filter, type Space } from '@dxos/client/echo';
-import { Obj, Ref } from '@dxos/echo';
+import { Database, Obj, Ref } from '@dxos/echo';
 import { Function, Script, getUserFunctionIdInMetadata, setUserFunctionIdInMetadata } from '@dxos/functions';
 import { incrementSemverPatch } from '@dxos/functions-runtime/edge';
 import { type UploadFunctionResponseBody } from '@dxos/protocols';
 import { Collection, Text } from '@dxos/schema';
 
-import { CommandConfig } from '../../../../services';
+import { CommandConfig } from '../../../services';
 
 export const DATA_TYPES: Schema.Schema.AnyNoContext[] = [
   Function.Function,
@@ -88,7 +88,7 @@ export const upsertFunctionObject: (opts: {
 const makeObjectNavigableInComposer = Effect.fn(function* (space: Space, obj: Obj.Any) {
   const collectionRef = space.properties['dxos.org/type/Collection'] as Ref.Ref<Collection.Collection> | undefined;
   if (collectionRef) {
-    const collection = yield* Effect.tryPromise(() => collectionRef.load());
+    const collection = yield* Database.Service.load(collectionRef);
     if (collection) {
       collection.objects.push(Ref.make(obj));
     }
@@ -119,7 +119,7 @@ export const upsertComposerScript = Effect.fn(function* ({
       yield* Console.log('Updated composer script', script.id);
     }
   } else {
-    const obj = space.db.add(Script.make({ name: scriptFileName, source: scriptFileContent }));
+    const obj = yield* Database.Service.add(Script.make({ name: scriptFileName, source: scriptFileContent }));
     functionObject.source = Ref.make(obj);
     yield* makeObjectNavigableInComposer(space, obj);
     if (verbose) {
