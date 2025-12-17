@@ -25,7 +25,9 @@ describe('spaces query', () => {
       yield* Effect.tryPromise(() => client.spaces.waitUntilReady());
       yield* Effect.tryPromise(() => client.spaces.default.waitUntilReady());
       const space = client.spaces.default;
-      yield* handler({ typename: Option.some(Task.Task.typename) }).pipe(Effect.provide(spaceLayer(Option.some(space.id))));
+      yield* handler({ typename: Option.some(Task.Task.typename) }).pipe(
+        Effect.provide(spaceLayer(Option.some(space.id))),
+      );
       const logger = yield* TestConsole.TestConsole;
       const logs = logger.logs;
       expect(logs).toHaveLength(1);
@@ -42,7 +44,9 @@ describe('spaces query', () => {
       yield* Effect.tryPromise(() => space.waitUntilReady());
       space.db.add(Obj.make(Task.Task, { title: 'Task 1' }));
       space.db.add(Obj.make(Task.Task, { title: 'Task 2' }));
-      yield* handler({ typename: Option.some(Task.Task.typename) }).pipe(Effect.provide(spaceLayer(Option.some(space.id))));
+      yield* handler({ typename: Option.some(Task.Task.typename) }).pipe(
+        Effect.provide(spaceLayer(Option.some(space.id))),
+      );
       const logger = yield* TestConsole.TestConsole;
       const logs = logger.logs;
       expect(logs).toHaveLength(1);
