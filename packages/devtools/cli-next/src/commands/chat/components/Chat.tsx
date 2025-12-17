@@ -16,8 +16,8 @@ import { isTruthy } from '@dxos/util';
 
 import { AppContext } from '../../../components';
 import { theme } from '../../../theme';
+import { blueprintRegistry } from '../../../util';
 import { DXOS_VERSION } from '../../../version';
-import { blueprintRegistry } from '../blueprints';
 import { useChatMessages } from '../hooks';
 import { type ChatProcessor } from '../processor';
 import { createAssistantMessage, createUserMessage } from '../types';
