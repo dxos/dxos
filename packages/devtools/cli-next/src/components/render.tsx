@@ -15,9 +15,9 @@ import { type LogBuffer } from '../util';
 
 export type RenderOptions = {
   /**
-   * The custom UI component to render inside the App wrapper.
+   * The custom app to render.
    */
-  children: () => JSX.Element;
+  app: () => JSX.Element;
   /**
    * Whether to show the console.
    */
@@ -54,7 +54,7 @@ export const render = (options: RenderOptions): Effect.Effect<void> =>
 
     // Render.
     yield* Effect.promise(() =>
-      render$(() => <>{options.children()}</>, {
+      render$(options.app, {
         exitOnCtrlC: true,
         exitSignals: ['SIGINT', 'SIGTERM'],
         openConsoleOnError: true,
