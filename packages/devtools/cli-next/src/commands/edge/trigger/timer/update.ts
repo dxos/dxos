@@ -8,8 +8,8 @@ import * as Console from 'effect/Console';
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
-import { DXN, Database, Filter, Obj, Ref } from '@dxos/echo';
-import { Function, Trigger, getUserFunctionIdInMetadata } from '@dxos/functions';
+import { DXN, Database, Filter, Ref } from '@dxos/echo';
+import { Function, Trigger } from '@dxos/functions';
 
 import { CommandConfig } from '../../../../services';
 import { print, spaceLayer, withTypes } from '../../../../util';
@@ -47,7 +47,7 @@ export const update = Command.make(
       }
       if (Option.isSome(functionId)) {
         const functions = yield* Database.Service.runQuery(Filter.type(Function.Function));
-        const fn = functions.find((fn) => getUserFunctionIdInMetadata(Obj.getMeta(fn)) === functionId.value);
+        const fn = functions.find((fn) => fn.id === functionId.value);
         if (!fn) {
           throw new Error(`Function not found: ${functionId.value}`);
         }

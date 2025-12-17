@@ -31,6 +31,7 @@ export const getFunctionStatus = (fn: Function.Function, functions: Function.Fun
  */
 export const printFunction = (fn: Function.Function, status?: FunctionStatus) =>
   FormBuilder.of({ title: fn.name ?? fn.key ?? 'Unknown' })
+    .set({ key: 'id', value: fn.id })
     .set({ key: 'key', value: fn.key ?? fn.id })
     .set({ key: 'version', value: fn.version })
     .set({ key: 'uploaded', value: fn.updated })

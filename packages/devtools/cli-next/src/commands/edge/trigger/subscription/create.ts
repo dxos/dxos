@@ -9,8 +9,8 @@ import * as Effect from 'effect/Effect';
 import * as HashMap from 'effect/HashMap';
 import * as Option from 'effect/Option';
 
-import { Database, Filter, Obj, Query, Ref } from '@dxos/echo';
-import { Function, Trigger, getUserFunctionIdInMetadata } from '@dxos/functions';
+import { Database, Filter, Query, Ref } from '@dxos/echo';
+import { Function, Trigger } from '@dxos/functions';
 
 import { CommandConfig } from '../../../../services';
 import { print, spaceLayer, withTypes } from '../../../../util';
@@ -25,7 +25,6 @@ export const create = Command.make(
   {
     spaceId: Common.spaceId.pipe(Options.optional),
     enabled: Enabled,
-    // TODO(dmaretskyi): Should be the ECHO id of the function
     functionId: Common.functionId,
     typename: Typename,
     deep: Deep.pipe(Options.optional),
@@ -36,7 +35,7 @@ export const create = Command.make(
     Effect.gen(function* () {
       const { json } = yield* CommandConfig;
       const functions = yield* Database.Service.runQuery(Filter.type(Function.Function));
-      const fn = functions.find((fn) => getUserFunctionIdInMetadata(Obj.getMeta(fn)) === functionId);
+      const fn = functions.find((fn) => fn.id === functionId);
       if (!fn) {
         throw new Error(`Function not found: ${functionId}`);
       }

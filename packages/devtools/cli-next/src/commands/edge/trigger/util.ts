@@ -11,6 +11,22 @@ import { Function, type Trigger } from '@dxos/functions';
 
 import { FormBuilder } from '../../../util';
 
+export type TriggerRemoteStatus = 'available' | 'not available' | 'n/a';
+
+/**
+ * Determines the remote status of a trigger.
+ * Only timer/cron triggers can be checked for remote availability.
+ */
+export const getTriggerRemoteStatus = (
+  trigger: Trigger.Trigger,
+  remoteCronIds: string[],
+): TriggerRemoteStatus => {
+  if (trigger.spec?.kind !== 'timer') {
+    return 'n/a';
+  }
+  return remoteCronIds.includes(trigger.id) ? 'available' : 'not available';
+};
+
 /**
  * Gets the trigger kind and detailed spec information.
  */
@@ -50,7 +66,10 @@ const getTriggerSpecInfo = (spec: Trigger.Spec | undefined): { kind: string; det
 /**
  * Pretty prints a trigger with ANSI colors.
  */
-export const printTrigger = Effect.fn(function* (trigger: Trigger.Trigger) {
+export const printTrigger = Effect.fn(function* (
+  trigger: Trigger.Trigger,
+  remoteStatus?: TriggerRemoteStatus,
+) {
   const fn = trigger.function && (yield* Database.Service.load(trigger.function));
   const spec = getTriggerSpecInfo(trigger.spec);
 
@@ -72,6 +91,17 @@ export const printTrigger = Effect.fn(function* (trigger: Trigger.Trigger) {
     .set({
       key: 'kind',
       value: spec.kind,
+    })
+    .set({
+      key: 'remote',
+      value: remoteStatus,
+      color: Match.type<TriggerRemoteStatus>().pipe(
+        Match.withReturnType<Ansi.Ansi>(),
+        Match.when('available', () => Ansi.green),
+        Match.when('not available', () => Ansi.yellow),
+        Match.when('n/a', () => Ansi.blackBright),
+        Match.exhaustive,
+      ),
     })
     .set({
       key: 'input node',
