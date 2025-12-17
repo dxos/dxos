@@ -10,5 +10,5 @@ import { stats } from './stats';
 
 export const object = Command.make('object').pipe(
   Command.withDescription('Manage objects.'),
-  Command.withSubcommands([query, stats, remove]),
+  Command.withSubcommands([query, remove, stats]),
 );

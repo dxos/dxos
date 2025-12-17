@@ -4,9 +4,10 @@
 
 import * as Command from '@effect/cli/Command';
 
+import { generate } from './generate';
 import { inspector } from './inspector';
 
 export const debug = Command.make('debug').pipe(
   Command.withDescription('Debug commands.'),
-  Command.withSubcommands([inspector]),
+  Command.withSubcommands([generate, inspector]),
 );

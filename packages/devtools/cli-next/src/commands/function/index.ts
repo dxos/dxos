@@ -12,5 +12,5 @@ import { trace } from './trace';
 
 export const fn = Command.make('function').pipe(
   Command.withDescription('Manage EDGE functions.'),
-  Command.withSubcommands([deploy, list, invoke, importCommand, trace]),
+  Command.withSubcommands([deploy, importCommand, invoke, list, trace]),
 );

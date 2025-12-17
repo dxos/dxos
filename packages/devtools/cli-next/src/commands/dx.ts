@@ -16,6 +16,7 @@ import { DXOS_VERSION } from '../version';
 import { chat } from './chat';
 import { config } from './config';
 import { debug } from './debug';
+import { device } from './device';
 import { edge } from './edge';
 import { fn } from './function';
 import { halo } from './halo';
@@ -71,6 +72,7 @@ export const dx = command.pipe(
 
     // Only providing client to commands that require it.
     chat.pipe(Command.provide(ClientService.layer)),
+    device.pipe(Command.provide(ClientService.layer)),
     edge.pipe(Command.provide(ClientService.layer)),
     fn.pipe(Command.provide(ClientService.layer)),
     halo.pipe(Command.provide(ClientService.layer)),
