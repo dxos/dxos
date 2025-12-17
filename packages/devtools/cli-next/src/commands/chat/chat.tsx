@@ -20,10 +20,18 @@ import { Assistant } from '@dxos/plugin-assistant/types';
 import { App, render } from '../../components';
 import { CommandConfig } from '../../services';
 import { theme } from '../../theme';
-import { type AiChatServices, Provider, chatLayer, createLogBuffer, withTypes } from '../../util';
+import {
+  type AiChatServices,
+  Provider,
+  chatLayer,
+  createLogBuffer,
+  functions,
+  toolkits,
+  types,
+  withTypes,
+} from '../../util';
 import { Common } from '../options';
 
-import { functions, toolkits, types } from './blueprints';
 import { Chat } from './components';
 import { ChatProcessor } from './processor';
 import { typeRegistry } from './types';

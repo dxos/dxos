@@ -26,7 +26,7 @@ import { TableBlueprint } from '@dxos/plugin-table/blueprints';
 import { ThreadBlueprint } from '@dxos/plugin-thread/blueprints';
 import { TranscriptionBlueprint } from '@dxos/plugin-transcription/blueprints';
 
-import { TestToolkit } from '../../util';
+import * as TestToolkit from './test-toolkit';
 
 export const blueprintRegistry = new Blueprint.Registry([
   // Blueprints available to the chat.
