@@ -38,6 +38,10 @@ export type RenderOptions = {
    * Theme for the app.
    */
   theme?: Theme;
+  /**
+   * Optional cleanup function called on destroy.
+   */
+  onDestroy?: () => void;
 };
 
 /**
@@ -69,6 +73,7 @@ export const render = (options: RenderOptions): Effect.Effect<void> =>
         },
         // NOTE: Called on on SIGINT (ctrl-c) and SIGTERM (via pkill not killall).
         onDestroy: () => {
+          options.onDestroy?.();
           options.logBuffer.close();
           Effect.runSync(Deferred.succeed(exitSignal, undefined));
         },
