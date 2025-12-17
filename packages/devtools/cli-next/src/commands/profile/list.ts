@@ -6,9 +6,6 @@ import { extname, join } from 'node:path';
 
 import * as Command from '@effect/cli/Command';
 import * as FileSystem from '@effect/platform/FileSystem';
-import * as Doc from '@effect/printer/Doc';
-import * as Ansi from '@effect/printer-ansi/Ansi';
-import * as AnsiDoc from '@effect/printer-ansi/AnsiDoc';
 import * as Console from 'effect/Console';
 import * as Effect from 'effect/Effect';
 import * as Yaml from 'yaml';
@@ -17,6 +14,9 @@ import { Config } from '@dxos/client';
 import { DX_CONFIG, DX_DATA, getProfilePath } from '@dxos/client-protocol';
 
 import { CommandConfig } from '../../services';
+import { printList } from '../../util';
+
+import { printProfile } from './util';
 
 export const list = Command.make(
   'list',
@@ -43,16 +43,12 @@ export const list = Command.make(
       }),
     );
 
-    for (const profile of profiles) {
-      const profileLabel = Doc.annotate(Doc.text(`Profile: ${profile.name}`), Ansi.combine(Ansi.underlined, Ansi.bold));
-      const currentLabel = profile.isCurrent ? Doc.annotate(Doc.text(' (current)'), Ansi.green) : Doc.empty;
-      const titleDoc = Doc.cat(profileLabel, currentLabel);
-
-      yield* Console.log(AnsiDoc.render(titleDoc, { style: 'pretty' }));
-      yield* Console.log('  Full path:', profile.fullPath);
-      yield* Console.log('  Storage path:', profile.storagePath);
-      yield* Console.log('  EDGE:', profile.edge);
-      yield* Console.log();
+    const { json } = yield* CommandConfig;
+    if (json) {
+      yield* Console.log(JSON.stringify(profiles, null, 2));
+    } else {
+      const formatted = profiles.map(printProfile);
+      yield* Console.log(printList(formatted));
     }
   }),
 );

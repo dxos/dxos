@@ -13,6 +13,11 @@ import * as Schema from 'effect/Schema';
 import { ClientService } from '@dxos/client';
 import { createEdgeClient, getDeployedFunctions, invokeFunction } from '@dxos/functions-runtime/edge';
 
+import { CommandConfig } from '../../services';
+import { print } from '../../util';
+
+import { printInvokeResult } from './util';
+
 export const invoke = Command.make(
   'invoke',
   {
@@ -31,6 +36,7 @@ export const invoke = Command.make(
     ),
   },
   Effect.fn(function* ({ key, data, cpuTimeLimit, subrequestsLimit }) {
+    const { json } = yield* CommandConfig;
     const client = yield* ClientService;
 
     // Produce normalized in-memory FunctionType objects for display.
@@ -50,6 +56,11 @@ export const invoke = Command.make(
         subrequestsLimit: subrequestsLimit.pipe(Option.getOrUndefined),
       }),
     );
-    yield* Console.log(JSON.stringify(result, null, 2));
+
+    if (json) {
+      yield* Console.log(JSON.stringify(result, null, 2));
+    } else {
+      yield* Console.log(print(printInvokeResult(result)));
+    }
   }),
 ).pipe(Command.withDescription('Invoke a function deployed to EDGE.'));

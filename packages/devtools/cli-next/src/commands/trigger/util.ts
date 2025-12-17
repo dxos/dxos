@@ -332,3 +332,9 @@ export const selectTrigger = Effect.fn(function* (kind?: Trigger.Kind) {
 
   return String(selected);
 });
+
+/**
+ * Pretty prints trigger removal result with ANSI colors.
+ */
+export const printTriggerRemoved = (id: string) =>
+  FormBuilder.of({ title: 'Trigger removed' }).set({ key: 'id', value: id }).build();

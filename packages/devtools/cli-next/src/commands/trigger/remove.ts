@@ -12,11 +12,12 @@ import { DXN } from '@dxos/echo';
 import { Database } from '@dxos/echo';
 import { Trigger } from '@dxos/functions';
 
-import { spaceLayer, withTypes } from '../../util';
+import { CommandConfig } from '../../services';
+import { print, spaceLayer, withTypes } from '../../util';
 import { Common } from '../options';
 
 import { TriggerId } from './options';
-import { selectTrigger } from './util';
+import { printTriggerRemoved, selectTrigger } from './util';
 
 export const remove = Command.make(
   'remove',
@@ -26,6 +27,7 @@ export const remove = Command.make(
   },
   (options) =>
     Effect.gen(function* () {
+      const { json } = yield* CommandConfig;
       const triggerId = yield* Option.match(options.id, {
         onNone: () => selectTrigger(),
         onSome: (id) => Effect.succeed(id),
@@ -33,7 +35,11 @@ export const remove = Command.make(
       const dxn = DXN.fromLocalObjectId(triggerId);
       const trigger = yield* Database.Service.resolve(dxn, Trigger.Trigger);
       yield* Database.Service.remove(trigger);
-      yield* Console.log('Removed trigger', trigger.id);
+      if (json) {
+        yield* Console.log(JSON.stringify({ id: trigger.id, removed: true }, null, 2));
+      } else {
+        yield* Console.log(print(printTriggerRemoved(trigger.id)));
+      }
     }),
 ).pipe(
   Command.withDescription('Remove a trigger.'),

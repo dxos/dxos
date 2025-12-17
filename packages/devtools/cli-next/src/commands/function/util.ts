@@ -47,3 +47,33 @@ export const printFunction = (fn: Function.Function, status?: FunctionStatus) =>
       ),
     })
     .build();
+
+/**
+ * Pretty prints function invocation result with ANSI colors.
+ */
+export const printInvokeResult = (result: unknown) => {
+  if (result === null || result === undefined) {
+    return FormBuilder.of({ title: 'Result' }).set({ key: 'value', value: 'null' }).build();
+  }
+
+  if (typeof result === 'string' || typeof result === 'number' || typeof result === 'boolean') {
+    return FormBuilder.of({ title: 'Result' })
+      .set({ key: 'value', value: String(result) })
+      .build();
+  }
+
+  if (typeof result === 'object') {
+    const builder = FormBuilder.of({ title: 'Result' });
+    for (const [key, value] of Object.entries(result)) {
+      builder.set({
+        key,
+        value: typeof value === 'object' && value !== null ? JSON.stringify(value) : String(value),
+      });
+    }
+    return builder.build();
+  }
+
+  return FormBuilder.of({ title: 'Result' })
+    .set({ key: 'value', value: String(result) })
+    .build();
+};
