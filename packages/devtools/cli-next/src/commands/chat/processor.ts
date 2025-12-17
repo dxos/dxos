@@ -27,9 +27,7 @@ import { Assistant } from '@dxos/plugin-assistant/types';
 import { type Message } from '@dxos/types';
 import { isTruthy } from '@dxos/util';
 
-import { type AiChatServices } from '../../util';
-
-import { blueprintRegistry } from './blueprints';
+import { type AiChatServices, blueprintRegistry } from '../../util';
 
 // TODO(burdon): Factor out common guts from AiChatProcessor.
 export class ChatProcessor {
