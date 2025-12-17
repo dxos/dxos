@@ -24,7 +24,7 @@ export const importCommand = Command.make(
   'import',
   {
     spaceId: Common.spaceId.pipe(Options.optional),
-    key: Args.text({ name: 'key' }).pipe(Args.withDescription('The key of the function to import.'), Args.optional),
+    key: Args.text({ name: 'key' }).pipe(Args.withDescription('Function key'), Args.optional),
   },
   ({ key }) =>
     Effect.gen(function* () {

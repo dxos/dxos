@@ -82,7 +82,6 @@ const updateFunction = Effect.fn(function* (trigger: Trigger.Trigger, functionId
       }).pipe(Prompt.run),
     onSome: () => Effect.succeed(true),
   });
-
   if (shouldChangeFunction) {
     const functionId = yield* Option.match(functionIdOption, {
       onNone: () => selectFunction(),
@@ -98,7 +97,8 @@ const updateFunction = Effect.fn(function* (trigger: Trigger.Trigger, functionId
   }
 
   if (!currentFn) {
-    return yield* Effect.fail(new Error('Trigger has no function reference'));
+    const functionId = trigger.function?.dxn.asEchoDXN()?.echoId ?? 'unknown';
+    return yield* Effect.fail(new Error(`Invalid reference for ${functionId}`));
   }
 
   return currentFn;
@@ -118,7 +118,6 @@ const updateCron = Effect.fn(function* (trigger: Trigger.Trigger, cronOption: Op
       }).pipe(Prompt.run),
     onSome: () => Effect.succeed(true),
   });
-
   if (shouldChangeCron) {
     const cron = yield* Option.match(cronOption, {
       onNone: () =>
@@ -146,13 +145,15 @@ const updateInput = Effect.fn(function* (
   const currentInputStr = currentInput ? JSON.stringify(currentInput) : 'none';
   const shouldChangeInput = yield* Option.match(inputOption, {
     onNone: () =>
-      Prompt.confirm({
-        message: `Change the input (current: ${currentInputStr})?`,
-        initial: false,
-      }).pipe(Prompt.run),
+      Effect.gen(function* () {
+        yield* Console.log(`Current input: ${currentInputStr}`);
+        return yield* Prompt.confirm({
+          message: 'Change input?',
+          initial: false,
+        }).pipe(Prompt.run);
+      }),
     onSome: () => Effect.succeed(true),
   });
-
   if (shouldChangeInput) {
     const inputObj = yield* Option.match(inputOption, {
       onNone: () =>
