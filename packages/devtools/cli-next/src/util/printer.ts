@@ -5,18 +5,17 @@
 import * as Doc from '@effect/printer/Doc';
 import * as Ansi from '@effect/printer-ansi/Ansi';
 import * as AnsiDoc from '@effect/printer-ansi/AnsiDoc';
-import * as Effect from 'effect/Effect';
 
 /**
  * Pretty print document.
  */
-export const print = (doc: Doc.Doc<any>) => Effect.sync(() => AnsiDoc.render(doc, { style: 'pretty' }));
+export const print = (doc: Doc.Doc<any>) => AnsiDoc.render(doc, { style: 'pretty' });
 
 /**
  * Pretty prints a list of documents with ANSI colors.
  */
 export const printList = (items: Array<Doc.Doc<any>>) =>
-  Effect.sync(() => AnsiDoc.render(Doc.vsep(items.map((item) => Doc.cat(item, Doc.hardLine))), { style: 'pretty' }));
+  AnsiDoc.render(Doc.vsep(items.map((item) => Doc.cat(item, Doc.hardLine))), { style: 'pretty' });
 
 export type FormBuilderOptions = {
   title?: string;

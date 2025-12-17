@@ -20,8 +20,7 @@ describe('FormBuilder', () => {
           .set({ key: 'bar', value: true });
 
         const doc = builder.build();
-        const result = yield* print(doc);
-        yield* Console.log(result);
+        yield* Console.log(print(doc));
       }),
     ));
 
@@ -40,7 +39,7 @@ describe('FormBuilder', () => {
           .set({ key: 'bottom', value: 'bottom-level' });
 
         const doc = builder.build();
-        const result = yield* print(doc);
+        const result = print(doc);
         yield* Console.log(result);
       }),
     ));

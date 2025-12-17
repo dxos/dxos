@@ -2,12 +2,19 @@
 // Copyright 2025 DXOS.org
 //
 
+import * as Prompt from '@effect/cli/Prompt';
+import type * as Terminal from '@effect/platform/Terminal';
 import * as Ansi from '@effect/printer-ansi/Ansi';
+import * as Console from 'effect/Console';
 import * as Effect from 'effect/Effect';
 import * as Match from 'effect/Match';
+import * as Option from 'effect/Option';
+import type * as Schema from 'effect/Schema';
+import * as SchemaAST from 'effect/SchemaAST';
 
-import { Database, Obj } from '@dxos/echo';
-import { Function, type Trigger } from '@dxos/functions';
+import { Database, Filter, Obj } from '@dxos/echo';
+import { getProperties } from '@dxos/effect';
+import { Function, Trigger } from '@dxos/functions';
 
 import { FormBuilder } from '../../../util';
 
@@ -121,3 +128,213 @@ const printQueue = (spec: Trigger.QueueSpec) =>
   FormBuilder.of({})
     // prettier-ignore
     .set({ key: 'queue', value: spec.queue });
+
+/**
+ * Prompts for input values based on an Effect schema.
+ * First shows a multi-select to choose which properties to specify,
+ * then prompts for values of the selected properties.
+ * Required properties are automatically included and cannot be unselected.
+ * @param schema - The Effect schema to prompt for
+ * @param defaults - Optional default values to use as initial values and pre-select optional properties
+ */
+export const promptForSchemaInput = (
+  schema: Schema.Schema.AnyNoContext | undefined,
+  defaults?: Record<string, any> | undefined,
+): Effect.Effect<Record<string, any>, any, any> =>
+  Effect.gen(function* () {
+    if (!schema) {
+      return {};
+    }
+
+    const ast = schema.ast;
+
+    // Check if it's a struct/object type
+    if (!SchemaAST.isTypeLiteral(ast)) {
+      return {};
+    }
+
+    const properties = getProperties(ast);
+    if (properties.length === 0) {
+      return {};
+    }
+
+    // Separate required and optional properties
+    const requiredProperties: typeof properties = [];
+    const optionalProperties: typeof properties = [];
+
+    for (const prop of properties) {
+      if (prop.isOptional) {
+        optionalProperties.push(prop);
+      } else {
+        requiredProperties.push(prop);
+      }
+    }
+
+    // Build property info
+    const propertyInfo = properties.map((prop) => {
+      const key = prop.name.toString();
+      return {
+        prop,
+        key,
+        isRequired: !prop.isOptional,
+      };
+    });
+
+    // Multi-select: show all properties and let user select which optional ones to include
+    const selectedKeys = new Set<string>();
+
+    // Required properties are automatically selected
+    for (const info of propertyInfo) {
+      if (info.isRequired) {
+        selectedKeys.add(info.key);
+      }
+    }
+
+    // Show required properties that will be automatically included
+    if (requiredProperties.length > 0) {
+      const requiredNames = requiredProperties.map((p) => {
+        const info = propertyInfo.find((i) => i.prop === p);
+        return info?.key ?? p.name.toString();
+      });
+      yield* Console.log(`Required properties (will be included): ${requiredNames.join(', ')}`);
+    }
+
+    // For optional properties, use multi-select to choose which ones to include
+    if (optionalProperties.length > 0) {
+      const optionalInfo = propertyInfo.filter((info) => !info.isRequired);
+      const choices = optionalInfo.map((info) => {
+        const hasDefault = defaults?.[info.key] !== undefined;
+        const defaultText = hasDefault ? ` (current: ${JSON.stringify(defaults[info.key])})` : '';
+        return {
+          title: `${info.key}${defaultText}`,
+          value: info.key,
+          description: hasDefault ? 'Has default value' : undefined,
+        };
+      });
+
+      const selected = yield* Prompt.multiSelect({
+        message: 'Select optional properties to include:',
+        choices,
+      });
+
+      // Add selected optional properties to selectedKeys
+      for (const key of selected) {
+        selectedKeys.add(String(key));
+      }
+    }
+
+    // If no properties selected (shouldn't happen if there are required ones), return empty
+    if (selectedKeys.size === 0) {
+      return {};
+    }
+
+    // Prompt for values of selected properties
+    const inputObj: Record<string, any> = {};
+
+    for (const info of propertyInfo) {
+      if (!selectedKeys.has(info.key)) {
+        continue;
+      }
+
+      const key = info.key;
+      const propType = info.prop.type;
+      const schemaDefault = Option.getOrUndefined(SchemaAST.getDefaultAnnotation(propType));
+      const defaultValue = defaults?.[key] ?? schemaDefault;
+
+      if (SchemaAST.isBooleanKeyword(propType)) {
+        const initialValue =
+          typeof defaultValue === 'boolean' ? defaultValue : typeof schemaDefault === 'boolean' ? schemaDefault : false;
+        const value = yield* Prompt.confirm({
+          message: `${info.key}${defaults?.[key] !== undefined ? ` (current: ${defaults[key]})` : ''}:`,
+          initial: initialValue,
+        });
+        inputObj[key] = value;
+      } else if (SchemaAST.isNumberKeyword(propType)) {
+        const currentValue = typeof defaultValue === 'number' ? String(defaultValue) : '';
+        const valueStr = yield* Prompt.text({
+          message: `${info.key}${currentValue ? ` (current: ${currentValue}, press Enter to keep)` : ''}:`,
+        }).pipe(Prompt.run);
+        inputObj[key] = valueStr === '' && defaultValue !== undefined ? defaultValue : parseFloat(valueStr) || 0;
+      } else if (SchemaAST.isStringKeyword(propType)) {
+        const currentValue = typeof defaultValue === 'string' ? defaultValue : '';
+        const valueStr = yield* Prompt.text({
+          message: `${info.key}${currentValue ? ` (current: ${currentValue}, press Enter to keep)` : ''}:`,
+        }).pipe(Prompt.run);
+        inputObj[key] = valueStr === '' && defaultValue !== undefined ? defaultValue : valueStr;
+      } else {
+        // For other types, prompt as string and let validation handle it
+        const currentValue = defaultValue !== undefined ? String(defaultValue) : '';
+        const valueStr = yield* Prompt.text({
+          message: `${info.key}${currentValue ? ` (current: ${currentValue}, press Enter to keep)` : ''}:`,
+        }).pipe(Prompt.run);
+        inputObj[key] = valueStr === '' && defaultValue !== undefined ? defaultValue : valueStr;
+      }
+    }
+
+    return inputObj;
+  });
+
+/**
+ * Selects a function interactively from available functions.
+ * Queries the database for functions and prompts the user to select one.
+ */
+export const selectFunction = (): Effect.Effect<string, Error, Terminal.Terminal | Database.Service> =>
+  Effect.gen(function* () {
+    const functions = yield* Database.Service.runQuery(Filter.type(Function.Function));
+
+    if (functions.length === 0) {
+      throw new Error('No functions available');
+    }
+
+    const selected = yield* Prompt.select({
+      message: 'Select a function:',
+      choices: functions.map((fn: Function.Function) => ({
+        title: fn.name ?? fn.id,
+        value: fn.id,
+        description: fn.description,
+      })),
+    });
+
+    return String(selected);
+  }).pipe(Effect.mapError((error) => (error instanceof Error ? error : new Error(String(error)))));
+
+/**
+ * Selects a trigger interactively from available triggers.
+ * If kind is provided, filters triggers by that kind.
+ * Queries the database for triggers and prompts the user to select one.
+ */
+export const selectTrigger = (
+  kind?: Trigger.Kind,
+): Effect.Effect<string, Error, Terminal.Terminal | Database.Service> =>
+  Effect.gen(function* () {
+    const triggers = yield* Database.Service.runQuery(Filter.type(Trigger.Trigger));
+    const filteredTriggers = kind ? triggers.filter((trigger) => trigger.spec?.kind === kind) : triggers;
+
+    if (filteredTriggers.length === 0) {
+      throw new Error(kind ? `No ${kind} triggers available` : 'No triggers available');
+    }
+
+    const choices = yield* Effect.all(
+      filteredTriggers.map((trigger) =>
+        Effect.gen(function* () {
+          const fn = trigger.function ? yield* Database.Service.load(trigger.function) : undefined;
+          const functionName = fn && Obj.instanceOf(Function.Function, fn) ? (fn.name ?? fn.key ?? fn.id) : undefined;
+          const title = functionName ?? trigger.id;
+          const description = `${trigger.enabled ? 'enabled' : 'disabled'} - ${trigger.spec?.kind ?? 'unknown'}`;
+
+          return {
+            title,
+            value: trigger.id,
+            description,
+          };
+        }),
+      ),
+    );
+
+    const selected = yield* Prompt.select({
+      message: kind ? `Select a ${kind} trigger:` : 'Select a trigger:',
+      choices,
+    });
+
+    return String(selected);
+  }).pipe(Effect.mapError((error) => (error instanceof Error ? error : new Error(String(error)))));
