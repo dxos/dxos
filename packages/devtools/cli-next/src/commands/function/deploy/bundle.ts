@@ -10,7 +10,7 @@ import { type Message } from 'esbuild';
 import { BaseError } from '@dxos/errors';
 import { bundleFunction } from '@dxos/functions-runtime/native';
 
-import { CommandConfig } from '../../../../services';
+import { CommandConfig } from '../../../services';
 
 type BundleOptions = {
   entryPoint: string;

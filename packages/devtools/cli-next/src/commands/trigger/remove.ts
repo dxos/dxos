@@ -12,8 +12,8 @@ import { DXN } from '@dxos/echo';
 import { Database } from '@dxos/echo';
 import { Trigger } from '@dxos/functions';
 
-import { spaceLayer, withTypes } from '../../../util';
-import { Common } from '../../options';
+import { spaceLayer, withTypes } from '../../util';
+import { Common } from '../options';
 
 import { TriggerId } from './options';
 import { selectTrigger } from './util';

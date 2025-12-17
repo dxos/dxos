@@ -9,6 +9,7 @@ import { list } from './list';
 import { remove } from './remove';
 import { update } from './update';
 
+// TODO(wittjosiah): Rename to automation to align with Composer?
 export const trigger = Command.make('trigger').pipe(
   Command.withDescription('Manage EDGE triggers.'),
   Command.withSubcommands([create, list, remove, update]),

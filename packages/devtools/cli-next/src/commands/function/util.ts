@@ -7,7 +7,7 @@ import * as Match from 'effect/Match';
 
 import { type Function } from '@dxos/functions';
 
-import { FormBuilder } from '../../../util';
+import { FormBuilder } from '../../util';
 
 export type FunctionStatus = 'not imported' | 'up-to-date' | 'update available';
 

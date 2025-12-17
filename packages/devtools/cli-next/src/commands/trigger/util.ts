@@ -15,7 +15,7 @@ import { Database, Filter, Obj } from '@dxos/echo';
 import { getProperties } from '@dxos/effect';
 import { Function, Trigger } from '@dxos/functions';
 
-import { FormBuilder } from '../../../util';
+import { FormBuilder } from '../../util';
 
 export type TriggerRemoteStatus = 'available' | 'not available' | 'n/a';
 

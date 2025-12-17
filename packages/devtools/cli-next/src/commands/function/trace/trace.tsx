@@ -15,10 +15,10 @@ import { InvocationTraceEndEvent, InvocationTraceStartEvent } from '@dxos/functi
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 
-import { App, render } from '../../../../components';
-import { theme } from '../../../../theme';
-import { createLogBuffer, spaceLayer, withTypes } from '../../../../util';
-import { Common } from '../../../options';
+import { App, render } from '../../../components';
+import { theme } from '../../../theme';
+import { createLogBuffer, spaceLayer, withTypes } from '../../../util';
+import { Common } from '../../options';
 
 import { Trace } from './components/Trace';
 

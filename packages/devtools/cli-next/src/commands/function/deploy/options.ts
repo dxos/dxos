@@ -11,7 +11,7 @@ import { type Key } from '@dxos/echo';
 import { type Function } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 
-import { getSpace } from '../../../../util';
+import { getSpace } from '../../../util';
 
 import { getNextVersion, loadFunctionObject } from './echo';
 

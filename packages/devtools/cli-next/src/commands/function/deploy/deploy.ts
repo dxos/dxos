@@ -21,9 +21,9 @@ import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { FunctionRuntimeKind } from '@dxos/protocols';
 
-import { CommandConfig } from '../../../../services';
-import { waitForSync } from '../../../../util';
-import { Common } from '../../../options';
+import { CommandConfig } from '../../../services';
+import { waitForSync } from '../../../util';
+import { Common } from '../../options';
 
 import { bundle } from './bundle';
 import { DATA_TYPES, upsertComposerScript } from './echo';

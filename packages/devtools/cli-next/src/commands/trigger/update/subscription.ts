@@ -13,9 +13,9 @@ import * as Option from 'effect/Option';
 import { DXN, Database, Filter, Obj, Query, Ref, Type } from '@dxos/echo';
 import { Function, Trigger } from '@dxos/functions';
 
-import { CommandConfig } from '../../../../services';
-import { print, spaceLayer, withTypes } from '../../../../util';
-import { Common } from '../../../options';
+import { CommandConfig } from '../../../services';
+import { print, spaceLayer, withTypes } from '../../../util';
+import { Common } from '../../options';
 import { Deep, Delay, Enabled, Input, TriggerId, Typename } from '../options';
 import { printTrigger, promptForSchemaInput, selectFunction, selectTrigger } from '../util';
 

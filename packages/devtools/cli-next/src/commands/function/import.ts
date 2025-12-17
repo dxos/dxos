@@ -13,9 +13,9 @@ import { Database, Obj } from '@dxos/echo';
 import { Function } from '@dxos/functions';
 import { getDeployedFunctions } from '@dxos/functions-runtime/edge';
 
-import { CommandConfig } from '../../../services';
-import { spaceLayer } from '../../../util';
-import { Common } from '../../options';
+import { CommandConfig } from '../../services';
+import { spaceLayer } from '../../util';
+import { Common } from '../options';
 
 import { printFunction as printFunction } from './util';
 

@@ -17,7 +17,7 @@ import { incrementSemverPatch } from '@dxos/functions-runtime/edge';
 import { type UploadFunctionResponseBody } from '@dxos/protocols';
 import { Collection, Text } from '@dxos/schema';
 
-import { CommandConfig } from '../../../../services';
+import { CommandConfig } from '../../../services';
 
 export const DATA_TYPES: Schema.Schema.AnyNoContext[] = [
   Function.Function,
