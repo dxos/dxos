@@ -2,7 +2,6 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as Doc from '@effect/printer/Doc';
 import * as Ansi from '@effect/printer-ansi/Ansi';
 import * as Effect from 'effect/Effect';
 
@@ -62,7 +61,7 @@ export const printTrigger = Effect.fn(function* (trigger: Trigger.Trigger) {
   );
 });
 
-const printSpec = <T extends Trigger.Spec>(spec: T) => {
+const printSpec = <T extends Trigger.Spec>(spec: T): FormBuilder => {
   switch (spec.kind) {
     case 'timer':
       return printTimer(spec);
@@ -73,32 +72,27 @@ const printSpec = <T extends Trigger.Spec>(spec: T) => {
     case 'queue':
       return printQueue(spec);
     default:
-      return Doc.text('Unknown');
+      return FormBuilder.of({}).set({ key: 'unknown', value: 'Unknown spec type' });
   }
 };
 
 const printTimer = (spec: Trigger.TimerSpec) =>
   FormBuilder.of({})
     // prettier-ignore
-    .set({ key: 'cron', value: spec.cron })
-    .set({ key: 'timezone', value: 100 })
-    .build();
+    .set({ key: 'cron', value: spec.cron });
 
 const printSubscription = (spec: Trigger.SubscriptionSpec) =>
   FormBuilder.of({})
     // prettier-ignore
-    .set({ key: 'query', value: spec.query?.raw ?? '[Query AST]' })
-    .build();
+    .set({ key: 'query', value: spec.query?.raw ?? '[Query AST]' });
 
 const printWebhook = (spec: Trigger.WebhookSpec) =>
   FormBuilder.of({})
     // prettier-ignore
     .set({ key: 'method', value: spec.method })
-    .set({ key: 'port', value: spec.port })
-    .build();
+    .set({ key: 'port', value: spec.port });
 
 const printQueue = (spec: Trigger.QueueSpec) =>
   FormBuilder.of({})
     // prettier-ignore
-    .set({ key: 'queue', value: spec.queue })
-    .build();
+    .set({ key: 'queue', value: spec.queue });
