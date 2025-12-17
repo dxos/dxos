@@ -259,6 +259,7 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
   }
 
   async waitUntilReady(): Promise<void> {
+    invariant(this._halo.identity.get(), 'Identity not available');
     return new Promise((resolve) => {
       const subscription = this._isReady.subscribe((isReady) => {
         if (isReady) {
