@@ -13,7 +13,7 @@ import { DXN, Database, Filter, Obj, Ref, Type } from '@dxos/echo';
 import { Function, Trigger } from '@dxos/functions';
 
 import { CommandConfig } from '../../../services';
-import { print, spaceLayer, withTypes } from '../../../util';
+import { flushAndSync, print, spaceLayer, withTypes } from '../../../util';
 import { Common } from '../../options';
 import { Cron, Enabled, Input, TriggerId } from '../options';
 import { printTrigger, promptForSchemaInput, selectFunction, selectTrigger } from '../util';
@@ -52,6 +52,8 @@ export const timer = Command.make(
       } else {
         yield* Console.log(print(yield* printTrigger(trigger)));
       }
+
+      yield* flushAndSync({ indexes: true });
     }),
 ).pipe(
   Command.withDescription('Update a timer trigger.'),

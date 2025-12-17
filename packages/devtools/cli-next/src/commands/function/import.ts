@@ -15,7 +15,7 @@ import { Function } from '@dxos/functions';
 import { getDeployedFunctions } from '@dxos/functions-runtime/edge';
 
 import { CommandConfig } from '../../services';
-import { printList, spaceLayer } from '../../util';
+import { flushAndSync, printList, spaceLayer } from '../../util';
 import { Common } from '../options';
 
 import { getFunctionStatus, printFunction, selectDeployedFunction } from './util';
@@ -77,6 +77,8 @@ export const importCommand = Command.make(
         const formatted = updatedFunctions.map((f) => printFunction(f, status));
         yield* Console.log(printList(formatted));
       }
+
+      yield* flushAndSync({ indexes: true });
     }),
 ).pipe(
   Command.withDescription('Import a function deployed to EDGE.'),

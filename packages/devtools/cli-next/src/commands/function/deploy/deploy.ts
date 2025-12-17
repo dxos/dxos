@@ -14,7 +14,7 @@ import * as Match from 'effect/Match';
 import * as Option from 'effect/Option';
 
 import { ClientService } from '@dxos/client';
-import { Obj } from '@dxos/echo';
+import { Database, Obj } from '@dxos/echo';
 import { FUNCTIONS_META_KEY, Function } from '@dxos/functions';
 import { FunctionsServiceClient } from '@dxos/functions-runtime/edge';
 import { invariant } from '@dxos/invariant';
@@ -22,7 +22,7 @@ import { PublicKey } from '@dxos/keys';
 import { FunctionRuntimeKind } from '@dxos/protocols';
 
 import { CommandConfig } from '../../../services';
-import { waitForSync } from '../../../util';
+import { flushAndSync, spaceLayer } from '../../../util';
 import { Common } from '../../options';
 
 import { bundle } from './bundle';
@@ -102,13 +102,9 @@ export const deploy = Command.make(
       functionObject = existingObject.value;
       Function.setFrom(functionObject, func);
     } else if (Option.isSome(space)) {
-      functionObject = space.value.db.add(func);
+      functionObject = yield* Database.Service.add(func);
     } else {
       functionObject = func;
-    }
-
-    if (Option.isSome(space)) {
-      yield* Effect.promise(() => space.value.db.flush({ indexes: true }));
     }
 
     if (options.script) {
@@ -127,9 +123,11 @@ export const deploy = Command.make(
       yield* Console.log(`Function ID: ${Obj.getKeys(functionObject, FUNCTIONS_META_KEY).at(0)?.id}`);
     }
 
-    yield* Option.match(space, {
-      onNone: () => Effect.succeed(undefined),
-      onSome: (space) => waitForSync(space),
-    });
+    if (Option.isSome(space)) {
+      yield* flushAndSync({ indexes: true });
+    }
   }),
-).pipe(Command.withDescription('Deploy a function to EDGE.'));
+).pipe(
+  Command.withDescription('Deploy a function to EDGE.'),
+  Command.provide(({ spaceId }) => spaceLayer(spaceId, true)),
+);

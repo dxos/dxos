@@ -14,7 +14,7 @@ import { Database, Filter, Query, Ref, Type } from '@dxos/echo';
 import { Function, Trigger } from '@dxos/functions';
 
 import { CommandConfig } from '../../../services';
-import { print, spaceLayer, withTypes } from '../../../util';
+import { flushAndSync, print, spaceLayer, withTypes } from '../../../util';
 import { Common } from '../../options';
 import { Deep, Delay, Enabled, Input, Typename } from '../options';
 import { printTrigger, promptForSchemaInput, selectFunction } from '../util';
@@ -118,6 +118,8 @@ export const subscription = Command.make(
       } else {
         yield* Console.log(print(yield* printTrigger(trigger)));
       }
+
+      yield* flushAndSync({ indexes: true });
     }),
 ).pipe(
   Command.withDescription('Create a subscription trigger.'),

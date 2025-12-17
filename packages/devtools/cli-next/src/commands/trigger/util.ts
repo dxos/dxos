@@ -3,10 +3,8 @@
 //
 
 import * as Prompt from '@effect/cli/Prompt';
-import * as Prompt from '@effect/cli/Prompt';
 import * as Ansi from '@effect/printer-ansi/Ansi';
 import * as Console from 'effect/Console';
-import * as Effect from 'effect/Effect';
 import * as Effect from 'effect/Effect';
 import * as Match from 'effect/Match';
 import * as Option from 'effect/Option';
@@ -14,10 +12,8 @@ import type * as Schema from 'effect/Schema';
 import * as SchemaAST from 'effect/SchemaAST';
 
 import { Database, Filter, Obj } from '@dxos/echo';
-import { Database, Filter } from '@dxos/echo';
 import { getProperties } from '@dxos/effect';
 import { Function, Trigger } from '@dxos/functions';
-import { Function } from '@dxos/functions';
 
 import { FormBuilder } from '../../util';
 
