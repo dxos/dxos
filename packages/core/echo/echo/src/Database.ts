@@ -269,9 +269,6 @@ export class Service extends Context.Tag('@dxos/echo/Database/Service')<
     return Option.fromNullable(object);
   });
 
-  // TODO(burdon): Can we create a proxy for the following methods on Database? Use @inheritDoc?
-  // TODO(burdon): Figure out how to chain query().run();
-
   /**
    * @link EchoDatabase.add
    */
