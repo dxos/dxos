@@ -192,8 +192,7 @@ export default defineFunction({
 
       log.info('result', { documentId: Obj.getDXN(document).toString(), commentary });
 
-      // TODO(wittjosiah): Hold function open so that mutations are persisted since flush is not supported in functions.
-      yield* Effect.sleep(5_000);
+      yield* Database.Service.flush();
 
       return {
         documentId: Obj.getDXN(document).toString(),
