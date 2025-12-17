@@ -11,6 +11,10 @@ import * as Option from 'effect/Option';
 import { ClientService } from '@dxos/client';
 import { invariant } from '@dxos/invariant';
 
+import { CommandConfig } from '../../../services';
+import { print } from '../../../util';
+import { printIdentity } from '../util';
+
 export const handler = Effect.fn(function* ({
   agent,
   displayName,
@@ -18,6 +22,7 @@ export const handler = Effect.fn(function* ({
   agent: boolean;
   displayName: Option.Option<string>;
 }) {
+  const { json } = yield* CommandConfig;
   const client = yield* ClientService;
   // TODO(wittjosiah): How to surface this error to the user cleanly?
   invariant(!client.halo.identity.get(), 'Identity already exists');
@@ -33,8 +38,20 @@ export const handler = Effect.fn(function* ({
     });
   }
 
-  yield* Console.log(`Identity key: ${identity.identityKey.toHex()}`);
-  yield* Console.log(`Display name: ${identity.profile?.displayName}`);
+  if (json) {
+    yield* Console.log(
+      JSON.stringify(
+        {
+          identityKey: identity.identityKey.toHex(),
+          displayName: identity.profile?.displayName,
+        },
+        null,
+        2,
+      ),
+    );
+  } else {
+    yield* Console.log(print(printIdentity(identity)));
+  }
 });
 
 export const create = Command.make(

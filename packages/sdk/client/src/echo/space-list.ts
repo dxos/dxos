@@ -4,7 +4,7 @@
 
 import { inspect } from 'node:util';
 
-import { Event, MulticastObservable, PushStream, Trigger, scheduleMicroTask } from '@dxos/async';
+import { Event, MulticastObservable, PushStream, Trigger, asyncTimeout, scheduleMicroTask } from '@dxos/async';
 import {
   CREATE_SPACE_TIMEOUT,
   type ClientServicesProvider,
@@ -42,6 +42,7 @@ import { AgentQuerySourceProvider } from './agent';
 import { SpaceProxy } from './space-proxy';
 
 const ENABLE_AGENT_QUERY_SOURCE = false;
+const IDENTITY_WAIT_TIMEOUT = 1_000;
 
 @trace.resource()
 export class SpaceList extends MulticastObservable<Space[]> implements Echo {
@@ -259,6 +260,7 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
   }
 
   async waitUntilReady(): Promise<void> {
+    await asyncTimeout(this._halo._waitForIdentity(), IDENTITY_WAIT_TIMEOUT);
     return new Promise((resolve) => {
       const subscription = this._isReady.subscribe((isReady) => {
         if (isReady) {

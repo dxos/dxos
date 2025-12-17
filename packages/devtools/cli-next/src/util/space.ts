@@ -121,6 +121,13 @@ export const waitForSync = Effect.fn(function* (space: Space) {
   yield* Console.log('Sync complete');
 });
 
+export const flushAndSync = Effect.fn(function* (opts?: Database.FlushOptions) {
+  yield* Database.Service.flush(opts);
+  const spaceId = yield* Database.Service.spaceId;
+  const space = yield* getSpace(spaceId);
+  yield* waitForSync(space);
+});
+
 // TODO(burdon): Reconcile with @dxos/protocols
 export class SpaceNotFoundError extends BaseError.extend('SpaceNotFoundError', 'Space not found') {
   constructor(spaceId: string, options?: Omit<BaseErrorOptions, 'context'>) {
