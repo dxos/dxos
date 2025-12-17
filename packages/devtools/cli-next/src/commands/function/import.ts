@@ -7,23 +7,24 @@ import * as Command from '@effect/cli/Command';
 import * as Options from '@effect/cli/Options';
 import * as Console from 'effect/Console';
 import * as Effect from 'effect/Effect';
+import * as Option from 'effect/Option';
 
 import { ClientService } from '@dxos/client';
-import { Database, Obj } from '@dxos/echo';
+import { Database, Filter, Obj } from '@dxos/echo';
 import { Function } from '@dxos/functions';
 import { getDeployedFunctions } from '@dxos/functions-runtime/edge';
 
 import { CommandConfig } from '../../services';
-import { spaceLayer } from '../../util';
+import { printList, spaceLayer } from '../../util';
 import { Common } from '../options';
 
-import { printFunction as printFunction } from './util';
+import { getFunctionStatus, printFunction, selectDeployedFunction } from './util';
 
 export const importCommand = Command.make(
   'import',
   {
     spaceId: Common.spaceId.pipe(Options.optional),
-    key: Args.text({ name: 'key' }).pipe(Args.withDescription('The key of the function to invoke.')),
+    key: Args.text({ name: 'key' }).pipe(Args.withDescription('The key of the function to import.'), Args.optional),
   },
   ({ key }) =>
     Effect.gen(function* () {
@@ -36,18 +37,45 @@ export const importCommand = Command.make(
       // Produce normalized in-memory FunctionType objects for display.
       const fns = yield* Effect.promise(() => getDeployedFunctions(client));
 
+      // If key is not provided, prompt interactively
+      const selectedKey = yield* Option.match(key, {
+        onNone: () => selectDeployedFunction(),
+        onSome: (k) => Effect.succeed(k),
+      });
+
       // We take the last deployment under a given key.
       // TODO(dmaretskyi): Should we make the keys unique?
-      const fn = fns.findLast((fn) => fn.key === key);
+      const fn = fns.findLast((fn) => fn.key === selectedKey);
       if (!fn) {
-        throw new Error(`Function ${key} not found`);
+        throw new Error(`Function ${selectedKey} not found`);
       }
 
-      yield* Database.Service.add(Obj.clone(fn));
-      if (json) {
-        yield* Console.log(JSON.stringify(fn, null, 2));
+      // Query database for existing functions with the same key
+      const existingFunctions = yield* Database.Service.runQuery(Filter.type(Function.Function, { key: selectedKey }));
+
+      let updatedFunctions: Function.Function[];
+      if (existingFunctions.length > 0) {
+        // Update all existing functions with the same key
+        for (const existingFunction of existingFunctions) {
+          Function.setFrom(existingFunction, fn);
+        }
+        updatedFunctions = existingFunctions;
       } else {
-        yield* Console.log(printFunction(fn));
+        // Add new function
+        const newFunction = yield* Database.Service.add(Obj.clone(fn));
+        updatedFunctions = [newFunction];
+      }
+
+      // Get status for display (after update/add, function should be up-to-date)
+      // Re-query to get the updated state
+      const updatedDbFunctions = yield* Database.Service.runQuery(Filter.type(Function.Function));
+      const status = getFunctionStatus(fn, updatedDbFunctions);
+
+      if (json) {
+        yield* Console.log(JSON.stringify(updatedFunctions, null, 2));
+      } else {
+        const formatted = updatedFunctions.map((f) => printFunction(f, status));
+        yield* Console.log(printList(formatted));
       }
     }),
 ).pipe(
