@@ -43,5 +43,5 @@ export const stats = Command.make(
     }),
 ).pipe(
   Command.withDescription('Query objects.'),
-  Command.provide(({ spaceId }) => spaceLayer(spaceId)),
+  Command.provide(({ spaceId }) => spaceLayer(spaceId, true)),
 );
