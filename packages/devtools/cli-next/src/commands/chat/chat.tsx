@@ -132,8 +132,8 @@ export const chat = Command.make(
 
       // Render.
       yield* render({
-        children: () => (
-          <App debug={options.debug} focusElements={['input', 'messages']} logBuffer={logBuffer}>
+        app: () => (
+          <App debug={options.debug} focusElements={['input', 'messages']} logBuffer={logBuffer} theme={theme}>
             {conversation() && (
               <Chat
                 db={space.db}
