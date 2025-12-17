@@ -127,12 +127,12 @@ export const selectDeployedFunction = Effect.fn(function* () {
     message: 'Select a function to import:',
     choices: importableFunctions.map((fn) => {
       const status = getFunctionStatus(fn, dbFunctions);
-      const title = `${fn.name ?? fn.key ?? fn.id}${status === 'update available' ? ' (update)' : ''}`;
-      const description = `v${fn.version}${fn.description ? `: ${fn.description}` : ''}`;
+      const title = `${fn.name ?? fn.key}${status === 'update available' ? ' (update)' : ''}`;
+      const description = `${fn.key} (v${fn.version})${fn.description ? `: ${fn.description}` : ''}`;
 
       return {
         title,
-        value: fn.key ?? fn.id,
+        value: fn.key,
         description,
       };
     }),
