@@ -119,7 +119,7 @@ export type FunctionProps<T, O> = {
    * List of types the function uses.
    * This is used to ensure that the types are available when the function is executed.
    */
-  types?: readonly Type.Obj.Any[];
+  types?: readonly Type.Entity.Any[];
   // TODO(dmaretskyi): This currently doesn't cause a compile-time error if the handler requests a service that is not specified
   services?: readonly Context.Tag<any, any>[];
 
