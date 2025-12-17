@@ -47,7 +47,7 @@ export const importCommand = Command.make(
       // TODO(dmaretskyi): Should we make the keys unique?
       const fn = fns.findLast((fn) => fn.key === selectedKey);
       if (!fn) {
-        throw new Error(`Function ${selectedKey} not found`);
+        return yield* Effect.fail(new Error(`Function not found: ${selectedKey}`));
       }
 
       // Query database for existing functions with the same key

@@ -17,7 +17,6 @@ import { ClientService } from '@dxos/client';
 import { Database, Obj } from '@dxos/echo';
 import { FUNCTIONS_META_KEY, Function } from '@dxos/functions';
 import { FunctionsServiceClient } from '@dxos/functions-runtime/edge';
-import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { FunctionRuntimeKind } from '@dxos/protocols';
 
@@ -63,11 +62,12 @@ export const deploy = Command.make(
     yield* Effect.promise(() => client.addTypes(DATA_TYPES));
 
     const identity = client.halo.identity.get();
-    invariant(identity, 'Identity not available');
+    if (!identity) {
+      return yield* Effect.fail(new Error('Identity not available'));
+    }
 
     if (!existsSync(options.entryPoint)) {
-      yield* Console.error(`File not found: ${options.entryPoint}`);
-      process.exit(1);
+      return yield* Effect.fail(new Error(`File not found: ${options.entryPoint}`));
     }
 
     const artifact = yield* bundle({ entryPoint: resolve(options.entryPoint) });

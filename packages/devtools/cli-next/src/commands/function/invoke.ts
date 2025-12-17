@@ -46,7 +46,7 @@ export const invoke = Command.make(
     // TODO(dmaretskyi): Should we make the keys unique?
     const fn = fns.findLast((fn) => fn.key === key);
     if (!fn) {
-      throw new Error(`Function ${key} not found`);
+      return yield* Effect.fail(new Error(`Function not found: ${key}`));
     }
 
     const edgeClient = createEdgeClient(client);

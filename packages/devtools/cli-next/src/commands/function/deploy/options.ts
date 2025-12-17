@@ -9,7 +9,6 @@ import { ClientService } from '@dxos/client';
 import { type Space } from '@dxos/client/echo';
 import { type Key } from '@dxos/echo';
 import { type Function } from '@dxos/functions';
-import { invariant } from '@dxos/invariant';
 
 import { getSpace } from '../../../util';
 
@@ -23,7 +22,9 @@ export const parseOptions = Effect.fn(function* (options: {
 }) {
   const client = yield* ClientService;
   const identity = client.halo.identity.get();
-  invariant(identity, 'Identity not available');
+  if (!identity) {
+    return yield* Effect.fail(new Error('Identity not available'));
+  }
 
   const space = yield* Option.match(options.spaceId, {
     onNone: () => Effect.succeed(Option.none<Space>()),
