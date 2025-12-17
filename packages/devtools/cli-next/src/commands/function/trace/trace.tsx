@@ -5,7 +5,6 @@
 import * as Command from '@effect/cli/Command';
 import * as Options from '@effect/cli/Options';
 import * as BunContext from '@effect/platform-bun/BunContext';
-import * as Console from 'effect/Console';
 import * as Duration from 'effect/Duration';
 import * as Effect from 'effect/Effect';
 import * as Fiber from 'effect/Fiber';
@@ -15,7 +14,7 @@ import * as Option from 'effect/Option';
 
 import { ClientService, ConfigService } from '@dxos/client';
 import { SpaceProperties } from '@dxos/client-protocol';
-import { Database, Filter } from '@dxos/echo';
+import { Database, Filter, type Key } from '@dxos/echo';
 import { QueueService } from '@dxos/functions';
 import { InvocationTraceEndEvent, InvocationTraceStartEvent, TriggerDispatcher } from '@dxos/functions-runtime';
 import { invariant } from '@dxos/invariant';
@@ -35,20 +34,20 @@ export const trace = Command.make(
   {
     functionId: Common.functionId.pipe(Options.optional),
     spaceId: Common.spaceId.pipe(Options.optional),
-    enableTriggers: Options.boolean('enable-triggers', { ifPresent: true }).pipe(
+    localTriggers: Options.boolean('local-triggers', { ifPresent: true }).pipe(
       Options.withDescription('Enable local trigger runtime to run functions in the background.'),
     ),
   },
-  ({ functionId, spaceId, enableTriggers }) =>
+  ({ functionId, spaceId, localTriggers }) =>
     Effect.gen(function* () {
       const { db } = yield* Database.Service;
       const { queues } = yield* QueueService;
-      yield* Console.log('Starting invocation trace...');
+      log.info('Starting invocation trace...');
 
       const logBuffer = createLogBuffer();
       log.config({ filter: process.env.DX_DEBUG ?? 'info' });
       log.runtimeConfig.processors = [logBuffer.processor];
-      log.info('trace: command starting', { spaceId, functionId, enableTriggers });
+      log.info('trace: command starting', { spaceId, functionId, localTriggers });
 
       // Query for SpaceProperties to get the invocation trace queue DXN.
       const objects = yield* Database.Service.runQuery(Filter.type(SpaceProperties));
@@ -63,38 +62,10 @@ export const trace = Command.make(
       }
 
       // Start trigger runtime in background if enabled
-      let triggerRuntime: ManagedRuntime.ManagedRuntime<any, any> | undefined;
-      let triggerRuntimeFiber: Fiber.Fiber<void, void> | undefined;
-      if (enableTriggers) {
-        yield* Console.log('Starting local trigger runtime...');
-
-        const { profile } = yield* CommandConfig;
-        const resolvedSpaceId = yield* spaceIdWithDefault(spaceId);
-        const client = yield* ClientService;
-        const config = yield* ConfigService;
-        const dbService = yield* Database.Service;
-
-        // Create the runtime layer
-        const layer = triggerRuntimeLayer({
-          spaceId: Option.some(resolvedSpaceId),
-          livePollInterval: Duration.seconds(1), // Default 1 second poll interval
-          profile,
-        }).pipe(
-          // Provide required services
-          Layer.provide(Layer.succeed(ClientService, client)),
-          Layer.provide(Layer.succeed(ConfigService, config)),
-          Layer.provide(Layer.succeed(Database.Service, dbService)),
-          Layer.provide(BunContext.layer),
-        );
-
-        // Create managed runtime and start trigger dispatcher in background
-        triggerRuntime = ManagedRuntime.make(layer);
-        triggerRuntimeFiber = yield* Effect.promise(() =>
-          triggerRuntime!.runPromise(TriggerDispatcher.pipe(Effect.flatMap((dispatcher) => dispatcher.start()))),
-        ).pipe(Effect.forkDaemon);
-
-        yield* Console.log('Trigger runtime started in background.');
-      }
+      const { profile } = yield* CommandConfig;
+      const triggerRuntimeResult = localTriggers ? yield* createTriggerRuntime(spaceId, profile) : undefined;
+      const triggerRuntime = triggerRuntimeResult?.runtime;
+      const triggerRuntimeFiber = triggerRuntimeResult?.fiber;
 
       // Render.
       yield* render({
@@ -113,22 +84,12 @@ export const trace = Command.make(
         logBuffer,
         theme,
         onDestroy:
-          enableTriggers && triggerRuntimeFiber && triggerRuntime
+          localTriggers && triggerRuntimeFiber && triggerRuntime
             ? () => {
                 // Stop trigger runtime on exit
                 log.info('Stopping trigger runtime...');
-                Effect.runSync(
-                  Fiber.interrupt(triggerRuntimeFiber!).pipe(
-                    Effect.flatMap(() =>
-                      Effect.promise(() =>
-                        triggerRuntime!.runPromise(
-                          TriggerDispatcher.pipe(Effect.flatMap((dispatcher) => dispatcher.stop())),
-                        ),
-                      ),
-                    ),
-                    Effect.tap(() => Effect.sync(() => log.info('Trigger runtime stopped.'))),
-                  ),
-                );
+                void triggerRuntime.runPromise(Fiber.interrupt(triggerRuntimeFiber!));
+                log.info('Trigger runtime stopped.');
               }
             : undefined,
       });
@@ -137,4 +98,53 @@ export const trace = Command.make(
   Command.withDescription('Trace function invocations.'),
   Command.provide(({ spaceId }) => spaceLayer(spaceId, true)),
   Command.provideEffectDiscard(() => withTypes(InvocationTraceStartEvent, InvocationTraceEndEvent)),
+);
+
+/**
+ * Creates and starts a trigger runtime with its fiber.
+ * Returns both the runtime and fiber for cleanup.
+ */
+const createTriggerRuntime = Effect.fn((spaceId: Option.Option<Key.SpaceId>, profile: string) =>
+  Effect.gen(function* () {
+    log.info('Starting local trigger runtime...');
+
+    const resolvedSpaceId = yield* spaceIdWithDefault(spaceId);
+    const client = yield* ClientService;
+    const config = yield* ConfigService;
+    const dbService = yield* Database.Service;
+
+    // Create the runtime layer
+    const layer = triggerRuntimeLayer({
+      spaceId: Option.some(resolvedSpaceId),
+      livePollInterval: Duration.seconds(1),
+      profile,
+    }).pipe(
+      // Provide required services
+      Layer.provide(Layer.succeed(ClientService, client)),
+      Layer.provide(Layer.succeed(ConfigService, config)),
+      Layer.provide(Layer.succeed(Database.Service, dbService)),
+      Layer.provide(BunContext.layer),
+    );
+
+    // Create managed runtime and start trigger dispatcher in background
+    const runtime = ManagedRuntime.make(layer);
+    const triggerEffect = TriggerDispatcher.pipe(
+      Effect.flatMap((dispatcher) =>
+        Effect.acquireRelease(
+          Effect.gen(function* () {
+            yield* dispatcher.start();
+            return dispatcher;
+          }),
+          (dispatcher) => dispatcher.stop(),
+        ),
+      ),
+      Effect.scoped,
+      Effect.asVoid,
+    );
+    const fiber = runtime.runFork(triggerEffect);
+
+    log.info('Trigger runtime started in background.');
+
+    return { runtime, fiber };
+  }),
 );
