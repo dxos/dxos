@@ -7,7 +7,7 @@ import * as Function from 'effect/Function';
 import * as Option from 'effect/Option';
 
 import { Capabilities, type PluginContext, contributes } from '@dxos/app-framework';
-import { Filter, Obj, type QueryResult } from '@dxos/echo';
+import { Filter, Obj, type QueryResult, Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { AttentionCapabilities } from '@dxos/plugin-attention';
 import { AutomationCapabilities, invokeFunctionWithTracing } from '@dxos/plugin-automation';
@@ -199,9 +199,7 @@ export default (context: PluginContext) =>
                       invariant(db);
                       const computeRuntime = context.getCapability(AutomationCapabilities.ComputeRuntime);
                       const runtime = computeRuntime.getRuntime(db.spaceId);
-                      await runtime.runPromise(
-                        invokeFunctionWithTracing(gmail.sync, { mailboxId: Obj.getDXN(mailbox).toString() }),
-                      );
+                      await runtime.runPromise(invokeFunctionWithTracing(gmail.sync, { mailbox: Ref.make(mailbox) }));
                     },
                     properties: {
                       label: ['sync mailbox label', { ns: meta.id }],

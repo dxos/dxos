@@ -35,11 +35,14 @@ export const importCommand = Command.make(
       yield* Effect.promise(() => client.addTypes([Function.Function]));
 
       // Produce normalized in-memory FunctionType objects for display.
-      const fns = yield* Effect.promise(() => getDeployedFunctions(client));
+      const fns = yield* Effect.promise(() => getDeployedFunctions(client, true));
+      if (fns.length === 0) {
+        return yield* Effect.fail(new Error('No deployed functions available'));
+      }
 
       // If key is not provided, prompt interactively
       const selectedKey = yield* Option.match(key, {
-        onNone: () => selectDeployedFunction(),
+        onNone: () => selectDeployedFunction(fns),
         onSome: (k) => Effect.succeed(k),
       });
 
