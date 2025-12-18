@@ -95,9 +95,6 @@
   },
   "devDependencies": {
     "@automerge/automerge": "catalog:",
-    "@dxos/assistant": "workspace:*",
-    "@dxos/plugin-chess": "workspace:*",
-    "@dxos/plugin-markdown": "workspace:*",
     "@dxos/types": "workspace:*",
     "chess.js": "catalog:"
   },
