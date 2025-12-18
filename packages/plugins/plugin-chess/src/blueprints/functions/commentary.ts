@@ -15,7 +15,6 @@ import { AiService, ConsolePrinter, ToolExecutionService, ToolResolverService } 
 import { AiSession, GenerationObserver } from '@dxos/assistant';
 import { ArtifactId } from '@dxos/assistant';
 import { Database, Filter, Obj, Ref, Relation, Type } from '@dxos/echo';
-import { refFromEncodedReference } from '@dxos/echo/internal';
 import { createDocAccessor } from '@dxos/echo-db';
 import { TracingService } from '@dxos/functions';
 import { defineFunction } from '@dxos/functions';
@@ -47,16 +46,9 @@ export default defineFunction({
   types: [Chess.Game, Markdown.Document, Text.Text, HasSubject.HasSubject, Collection.Collection],
   services: [AiService.AiService, Database.Service],
   handler: Effect.fnUntraced(
-    function* ({ data: { game: gameRefSerialized } }) {
-      log.info('load game', { gameRefSerialized });
-      // TODO(wittjosiah): The runtime should handle this conversion before passing to the function.
-      const { db } = yield* Database.Service;
-      const gameRef = refFromEncodedReference(
-        gameRefSerialized as any,
-        db.graph.createRefResolver({ context: { space: db.spaceId } }),
-      );
-      log.info('load game', { gameRef });
+    function* ({ data: { game: gameRef } }) {
       // Load the chess game
+      log.info('load game', { gameRef });
       const chessGame = yield* Database.Service.load(gameRef);
 
       // Load the chess position from PGN or FEN
