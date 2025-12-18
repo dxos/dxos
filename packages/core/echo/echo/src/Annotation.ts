@@ -7,6 +7,7 @@ export {
   FormInputAnnotation,
   GeneratorAnnotation,
   LabelAnnotation,
+  ReferenceAnnotation,
   SystemTypeAnnotation,
   TypeAnnotation,
   getDescription,

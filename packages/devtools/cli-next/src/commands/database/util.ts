@@ -12,7 +12,8 @@ import { FormBuilder } from '../../util';
 export const printObject = (obj: Entity.Unknown) => {
   const typename = Obj.getTypename(obj) ?? '<unknown>';
 
-  return FormBuilder.of({ title: typename })
+  // TODO(wittjosiah): Obj.getSchema and thus Obj.getLabel are coming back undefined for some reason.
+  return FormBuilder.of({ title: Obj.getLabel(obj) ?? typename })
     .set({ key: 'id', value: obj.id })
     .set({ key: 'typename', value: typename })
     .build();

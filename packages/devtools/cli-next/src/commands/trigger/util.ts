@@ -11,7 +11,7 @@ import * as Option from 'effect/Option';
 import type * as Schema from 'effect/Schema';
 import * as SchemaAST from 'effect/SchemaAST';
 
-import { Database, Filter, Obj, type Ref, Type } from '@dxos/echo';
+import { Annotation, Database, type Entity, Filter, Obj, Ref, Type } from '@dxos/echo';
 import { getProperties } from '@dxos/effect';
 import { Function, Trigger } from '@dxos/functions';
 import { QueueAnnotation } from '@dxos/schema';
@@ -265,6 +265,36 @@ export const promptForSchemaInput = Effect.fn(function* (
         message: `${info.key}${currentValue ? ` (current: ${currentValue}, press Enter to keep)` : ''}:`,
       }).pipe(Prompt.run);
       inputObj[key] = valueStr === '' && defaultValue !== undefined ? defaultValue : valueStr;
+    } else if (Ref.isRefType(propType)) {
+      const isDefaultTemplate =
+        typeof defaultValue === 'string' && defaultValue.startsWith('{{') && defaultValue.endsWith('}}');
+      const useTemplate = yield* Prompt.confirm({
+        message: `Use a template to specify ${info.key}?${isDefaultTemplate ? ' (current: template)' : ''}`,
+        initial: isDefaultTemplate,
+      });
+      if (useTemplate) {
+        const currentValue = typeof defaultValue === 'string' ? defaultValue : '';
+        const templateStr = yield* Prompt.text({
+          message: `${info.key} template${currentValue ? ` (current: ${currentValue}, press Enter to keep)` : ''}:`,
+        }).pipe(Prompt.run);
+        inputObj[key] = templateStr === '' && defaultValue !== undefined ? defaultValue : templateStr;
+      } else {
+        const annotation = Annotation.ReferenceAnnotation.getFromAst(propType).pipe(Option.getOrThrow);
+        const objects = yield* Database.Service.runQuery(Filter.typename(annotation.typename));
+        if (objects.length === 0) {
+          inputObj[key] = undefined;
+        } else {
+          const selected = yield* Prompt.select({
+            message: `Select ${info.key}:`,
+            choices: objects.map((obj: Entity.Any) => ({
+              title: Obj.getLabel(obj) ?? obj.id,
+              value: Ref.make(obj),
+              description: Obj.getDescription(obj),
+            })),
+          });
+          inputObj[key] = selected;
+        }
+      }
     } else {
       // For other types, prompt as string and let validation handle it
       const currentValue = defaultValue !== undefined ? String(defaultValue) : '';

@@ -7,13 +7,13 @@ import { addDays, format, subDays } from 'date-fns';
 import * as Chunk from 'effect/Chunk';
 import * as Effect from 'effect/Effect';
 import * as Function from 'effect/Function';
+import * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
 import * as Predicate from 'effect/Predicate';
 import * as Schema from 'effect/Schema';
 import * as Stream from 'effect/Stream';
 
-import { ArtifactId } from '@dxos/assistant';
-import { DXN, Filter, Obj, Query } from '@dxos/echo';
+import { Filter, Obj, Query, Type } from '@dxos/echo';
 import { Database } from '@dxos/echo';
 import type { Queue } from '@dxos/echo-db';
 import { QueueService, defineFunction } from '@dxos/functions';
@@ -61,7 +61,8 @@ export default defineFunction({
   name: 'Sync Gmail',
   description: 'Sync emails from Gmail to the mailbox.',
   inputSchema: Schema.Struct({
-    mailboxId: ArtifactId,
+    // TODO(wittjosiah): How to get the agent to be able to pass references rather than just ids?
+    mailbox: Type.Ref(Mailbox.Mailbox).annotations({ description: 'Reference to the mailbox to sync emails from.' }),
     userId: Schema.String.pipe(Schema.optional),
     label: Schema.String.pipe(
       Schema.annotations({
@@ -90,7 +91,7 @@ export default defineFunction({
   handler: ({
     // TODO(wittjosiah): Schema-based defaults are not yet supported.
     data: {
-      mailboxId,
+      mailbox: mailboxRef,
       userId = 'me',
       label = 'inbox',
       after = format(subDays(new Date(), 30), 'yyyy-MM-dd'),
@@ -98,8 +99,8 @@ export default defineFunction({
     },
   }) =>
     Effect.gen(function* () {
-      log('syncing gmail', { mailboxId, userId, after, restrictedMode });
-      const mailbox = yield* Database.Service.resolve(DXN.parse(mailboxId), Mailbox.Mailbox);
+      log('syncing gmail', { mailbox: mailboxRef.dxn.toString(), userId, after, restrictedMode });
+      const mailbox = yield* Database.Service.load(mailboxRef);
 
       // Get labels.
       const labelCount = yield* syncLabels(mailbox, userId).pipe(
@@ -144,7 +145,7 @@ export default defineFunction({
       return {
         newMessages: newMessagesCount,
       };
-    }).pipe(Effect.provide(FetchHttpClient.layer), Effect.provide(InboxResolver.Live)),
+    }).pipe(Effect.provide(Layer.mergeAll(FetchHttpClient.layer, InboxResolver.Live))),
 });
 
 //
