@@ -45,8 +45,8 @@ export type ThemeOptions = {
  * NOTE: `light` and `dark` selectors are preprocessed by CodeMirror and can only be in the base theme.
  * NOTE: Use 'unset' to remove default CM style.
  */
-export const createBaseTheme = ({ monospace }: ThemeOptions = {}) =>
-  EditorView.baseTheme({
+export const createBaseTheme = ({ monospace }: ThemeOptions = {}) => {
+  return EditorView.baseTheme({
     '&': {},
     '&.cm-focused': {
       outline: 'none',
@@ -274,6 +274,7 @@ export const createBaseTheme = ({ monospace }: ThemeOptions = {}) =>
       borderTop: '1px solid var(--dx-separator)',
     },
   });
+};
 
 export const editorGutter: Extension = EditorView.theme({
   '.cm-gutters': {

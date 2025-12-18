@@ -9,6 +9,9 @@
   "author": "info@dxos.org",
   "sideEffects": false,
   "type": "module",
+  "bin": {
+    "dx": "./bin/dx"
+  },
   "dependencies": {
     "@dxos/ai": "workspace:*",
     "@dxos/assistant": "workspace:*",

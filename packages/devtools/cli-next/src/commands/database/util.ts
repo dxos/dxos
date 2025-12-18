@@ -9,7 +9,7 @@ import { FormBuilder } from '../../util';
 /**
  * Pretty prints an object with ANSI colors.
  */
-export const printObject = (obj: Entity.Any) => {
+export const printObject = (obj: Entity.Unknown) => {
   const typename = Obj.getTypename(obj) ?? '<unknown>';
 
   // TODO(wittjosiah): Obj.getSchema and thus Obj.getLabel are coming back undefined for some reason.

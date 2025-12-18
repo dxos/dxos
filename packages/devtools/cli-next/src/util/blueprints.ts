@@ -11,6 +11,7 @@ import * as Schema from 'effect/Schema';
 import { ArtifactId, GenericToolkit } from '@dxos/assistant';
 import { AssistantToolkit, SystemToolkit, WebSearchToolkit } from '@dxos/assistant-toolkit';
 import { Blueprint } from '@dxos/blueprints';
+import { Tag } from '@dxos/echo';
 import { type FunctionDefinition } from '@dxos/functions';
 import { blueprints as AssistantBlueprints, functions as AssistantFunctions } from '@dxos/plugin-assistant/blueprints';
 import { Assistant } from '@dxos/plugin-assistant/types';
@@ -25,6 +26,19 @@ import { ScriptBlueprint } from '@dxos/plugin-script/blueprints';
 import { TableBlueprint } from '@dxos/plugin-table/blueprints';
 import { ThreadBlueprint } from '@dxos/plugin-thread/blueprints';
 import { TranscriptionBlueprint } from '@dxos/plugin-transcription/blueprints';
+import { DataTypes } from '@dxos/schema';
+import {
+  AnchoredTo,
+  Employer,
+  Event,
+  HasConnection,
+  HasRelationship,
+  HasSubject,
+  Organization,
+  Person,
+  Project,
+  Task,
+} from '@dxos/types';
 
 import * as TestToolkit from './test-toolkit';
 
@@ -92,7 +106,18 @@ export const toolkits: GenericToolkit.GenericToolkit[] = [
 
 export const types: Schema.Schema.AnyNoContext[] = [
   // NOTE: Types referenced by blueprints above need to be added here.
+  DataTypes,
   [Assistant.Chat],
   [Chess.Game],
   [Markdown.Document],
+  [Blueprint.Blueprint],
+  [Tag.Tag],
+  [Event.Event, Organization.Organization, Person.Person, Project.Project, Task.Task],
+  [
+    AnchoredTo.AnchoredTo,
+    Employer.Employer,
+    HasConnection.HasConnection,
+    HasRelationship.HasRelationship,
+    HasSubject.HasSubject,
+  ],
 ].flat();

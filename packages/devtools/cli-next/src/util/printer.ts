@@ -27,7 +27,7 @@ export type FormBuilderOptions = {
  * Builds vertical form documents.
  */
 export class FormBuilder {
-  static of(props: FormBuilderOptions) {
+  static of(props?: FormBuilderOptions) {
     return new FormBuilder(props);
   }
 
