@@ -15,7 +15,6 @@ import * as Stream from 'effect/Stream';
 
 import { Filter, Obj, Query, Type } from '@dxos/echo';
 import { Database } from '@dxos/echo';
-import { refFromEncodedReference } from '@dxos/echo/internal';
 import type { Queue } from '@dxos/echo-db';
 import { QueueService, defineFunction } from '@dxos/functions';
 import { log } from '@dxos/log';
@@ -58,8 +57,8 @@ const STREAMING_CONFIG = {
 } as const;
 
 export default defineFunction({
-  key: 'dxos.org/function/inbox/test-google-mail-sync',
-  name: 'Test Sync Gmail',
+  key: 'dxos.org/function/inbox/google-mail-sync',
+  name: 'Sync Gmail',
   description: 'Sync emails from Gmail to the mailbox.',
   inputSchema: Schema.Struct({
     // TODO(wittjosiah): How to get the agent to be able to pass references rather than just ids?
@@ -92,7 +91,7 @@ export default defineFunction({
   handler: ({
     // TODO(wittjosiah): Schema-based defaults are not yet supported.
     data: {
-      mailbox: mailboxRefSerialized,
+      mailbox: mailboxRef,
       userId = 'me',
       label = 'inbox',
       after = format(subDays(new Date(), 30), 'yyyy-MM-dd'),
@@ -100,12 +99,6 @@ export default defineFunction({
     },
   }) =>
     Effect.gen(function* () {
-      const { db } = yield* Database.Service;
-      const mailboxRef = refFromEncodedReference(
-        mailboxRefSerialized as any,
-        db.graph.createRefResolver({ context: { space: db.spaceId } }),
-      );
-      console.log('mailboxRef', mailboxRef, mailboxRefSerialized);
       log('syncing gmail', { mailbox: mailboxRef.dxn.toString(), userId, after, restrictedMode });
       const mailbox = yield* Database.Service.load(mailboxRef);
 

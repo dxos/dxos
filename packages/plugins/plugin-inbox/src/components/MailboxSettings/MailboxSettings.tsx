@@ -43,7 +43,7 @@ export const MailboxSettings = ({ subject }: SurfaceComponentProps<Mailbox.Mailb
       void dispatch(
         createIntent(AutomationAction.CreateTriggerFromTemplate, {
           db,
-          template: { type: 'timer', cron: '*/5 * * * * *' },
+          template: { type: 'timer', cron: '*/5 * * * *' },
           scriptName: 'Gmail',
           input: { mailbox: Ref.make(subject) },
         }),
