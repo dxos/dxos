@@ -32,7 +32,7 @@
     "@dxos/react-ui-dnd": "workspace:*",
     "@radix-ui/react-use-controllable-state": "catalog:",
     "lodash.defaultsdeep": "catalog:",
-    "storybook": "catalog:"
+    "storybook": "10.1.10"
   },
   "devDependencies": {
     "@dxos/react-ui": "workspace:*",
