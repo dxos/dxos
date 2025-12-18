@@ -345,14 +345,8 @@ export const getPropertyMetaAnnotation = <T>(prop: SchemaAST.PropertySignature, 
  * Schema reference.
  */
 export const ReferenceAnnotationId = Symbol.for('@dxos/schema/annotation/Reference');
-
 export type ReferenceAnnotationValue = TypeAnnotation;
-
-export const getReferenceAnnotation = (schema: Schema.Schema.AnyNoContext) =>
-  Function.pipe(
-    SchemaAST.getAnnotation<ReferenceAnnotationValue>(ReferenceAnnotationId)(schema.ast),
-    Option.getOrElse(() => undefined),
-  );
+export const ReferenceAnnotation = createAnnotationHelper<ReferenceAnnotationValue>(ReferenceAnnotationId);
 
 /**
  * SchemaMeta.
