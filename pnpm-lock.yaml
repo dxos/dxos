@@ -6561,6 +6561,9 @@ importers:
       '@dxos/client-protocol':
         specifier: workspace:*
         version: link:../../sdk/client-protocol
+      '@dxos/client-services':
+        specifier: workspace:*
+        version: link:../../sdk/client-services
       '@dxos/config':
         specifier: workspace:*
         version: link:../../sdk/config
@@ -6633,6 +6636,9 @@ importers:
       '@dxos/protocols':
         specifier: workspace:*
         version: link:../../core/protocols
+      '@dxos/random':
+        specifier: workspace:*
+        version: link:../../common/random
       '@dxos/schema':
         specifier: workspace:*
         version: link:../../sdk/schema

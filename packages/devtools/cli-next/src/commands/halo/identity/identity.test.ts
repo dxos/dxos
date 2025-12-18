@@ -19,7 +19,9 @@ describe('halo identity', () => {
       const logger = yield* TestConsole.TestConsole;
       const logs = logger.logs;
       expect(logs).toHaveLength(1);
-      expect(logs[0].args).toEqual([JSON.stringify({ error: 'Identity not initialized' }, null, 2)]);
+      expect(TestConsole.extractJsonString(logs[0])).toEqual(
+        JSON.stringify({ error: 'Identity not initialized' }, null, 2),
+      );
     }).pipe(Effect.provide(TestLayer), Effect.scoped, runAndForwardErrors));
 
   it('should print identity if initialized', () =>
@@ -30,7 +32,7 @@ describe('halo identity', () => {
       const logger = yield* TestConsole.TestConsole;
       const logs = logger.logs;
       expect(logs).toHaveLength(1);
-      const parsedIdentity = JSON.parse(logs[0].args as string);
+      const parsedIdentity = TestConsole.parseJson(logs[0]);
       expect(parsedIdentity).toEqual({
         identityKey: client.halo.identity.get()?.identityKey.toHex(),
         displayName: client.halo.identity.get()?.profile?.displayName,

@@ -52,6 +52,26 @@ class TestConsoleService {
 export namespace TestConsole {
   export class TestConsole extends Context.Tag('TestConsole')<TestConsole, TestConsoleService>() {}
 
+  /**
+   * Extract JSON string from log arguments.
+   * Handles both array and string argument formats.
+   */
+  export const extractJsonString = (log: { args: unknown }): string => {
+    if (Array.isArray(log.args) && log.args.length > 0) {
+      return String(log.args[0]);
+    }
+    return log.args as string;
+  };
+
+  /**
+   * Parse JSON from log arguments.
+   * Handles both array and string argument formats.
+   */
+  export const parseJson = <T = unknown>(log: { args: unknown }): T => {
+    const jsonString = extractJsonString(log);
+    return JSON.parse(jsonString) as T;
+  };
+
   const testConsole = Layer.effect(
     TestConsole,
     Effect.gen(function* () {
