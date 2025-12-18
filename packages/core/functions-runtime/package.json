@@ -93,11 +93,11 @@
   },
   "devDependencies": {
     "@automerge/automerge": "catalog:",
-    "chess.js": "catalog:",
     "@dxos/ai": "workspace:*",
     "@dxos/assistant": "workspace:*",
     "@dxos/plugin-chess": "workspace:*",
-    "@dxos/types": "workspace:*"
+    "@dxos/types": "workspace:*",
+    "chess.js": "catalog:"
   },
   "publishConfig": {
     "access": "public"
