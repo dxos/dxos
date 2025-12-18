@@ -31,7 +31,7 @@ describe('spaces query', () => {
       const logger = yield* TestConsole.TestConsole;
       const logs = logger.logs;
       expect(logs).toHaveLength(1);
-      expect(logs[0].args).toEqual(['[]']);
+      expect(TestConsole.extractJsonString(logs[0])).toEqual('[]');
     }).pipe(Effect.provide(TestLayer), Effect.scoped, runAndForwardErrors));
 
   it('should query space for objects', () =>
@@ -50,7 +50,7 @@ describe('spaces query', () => {
       const logger = yield* TestConsole.TestConsole;
       const logs = logger.logs;
       expect(logs).toHaveLength(1);
-      const formattedObjects = JSON.parse(logs[0].args as string);
+      const formattedObjects = TestConsole.parseJson(logs[0]);
       expect(formattedObjects).toHaveLength(2);
     }).pipe(Effect.provide(TestLayer), Effect.scoped, runAndForwardErrors));
 });

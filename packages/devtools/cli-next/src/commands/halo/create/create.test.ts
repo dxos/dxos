@@ -21,7 +21,7 @@ describe('halo create', () => {
       const logger = yield* TestConsole.TestConsole;
       const logs = logger.logs;
       expect(logs).toHaveLength(1);
-      const parsedIdentity = JSON.parse(logs[0].args as string);
+      const parsedIdentity = TestConsole.parseJson(logs[0]);
       expect(parsedIdentity).toEqual({
         identityKey: client.halo.identity.get()?.identityKey.toHex(),
         displayName: client.halo.identity.get()?.profile?.displayName,
@@ -35,7 +35,7 @@ describe('halo create', () => {
       const logger = yield* TestConsole.TestConsole;
       const logs = logger.logs;
       expect(logs).toHaveLength(1);
-      const parsedIdentity = JSON.parse(logs[0].args as string);
+      const parsedIdentity = TestConsole.parseJson(logs[0]);
       expect(parsedIdentity).toEqual({
         identityKey: client.halo.identity.get()?.identityKey.toHex(),
         displayName: client.halo.identity.get()?.profile?.displayName,
