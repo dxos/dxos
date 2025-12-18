@@ -19,7 +19,7 @@ describe('spaces list', () => {
       const logger = yield* TestConsole.TestConsole;
       const logs = logger.logs;
       expect(logs).toHaveLength(1);
-      expect(Array.isArray(logs[0].args) ? logs[0].args[0] : logs[0].args).toEqual('[]');
+      expect(TestConsole.extractJsonString(logs[0])).toEqual('[]');
     }).pipe(Effect.provide(TestLayer), Effect.scoped, runAndForwardErrors));
 
   it('should list spaces', () =>
@@ -31,9 +31,7 @@ describe('spaces list', () => {
       const logger = yield* TestConsole.TestConsole;
       const logs = logger.logs;
       expect(logs).toHaveLength(1);
-      const formattedSpaces = JSON.parse(
-        Array.isArray(logs[0].args) ? String(logs[0].args[0]) : (logs[0].args as string),
-      );
+      const formattedSpaces = TestConsole.parseJson(logs[0]);
       expect(formattedSpaces).toHaveLength(2);
     }).pipe(Effect.provide(TestLayer), Effect.scoped, runAndForwardErrors));
 });

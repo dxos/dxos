@@ -5,10 +5,7 @@
 import * as Effect from 'effect/Effect';
 import * as Queue from 'effect/Queue';
 
-import {
-  type AuthenticatingInvitationObservable,
-  Invitation,
-} from '@dxos/client/invitations';
+import { type AuthenticatingInvitationObservable, Invitation } from '@dxos/client/invitations';
 import { runAndForwardErrors } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { AlreadyJoinedError } from '@dxos/protocols';

@@ -16,6 +16,7 @@ import { ClientService } from '@dxos/client';
 import { CommandConfig } from '../../../services';
 import { print, waitForSync } from '../../../util';
 import { FormBuilder } from '../../../util';
+
 import { acceptInvitation } from './util';
 
 export const handler = Effect.fn(function* ({
@@ -53,10 +54,31 @@ export const handler = Effect.fn(function* ({
     },
   });
 
-  // Wait a bit for space to be available
-  yield* Effect.sleep(Duration.seconds(1));
+  // Wait for space to be available with retry logic
+  const spaceKey = invitation.spaceKey;
+  if (!spaceKey) {
+    if (json) {
+      yield* Console.log(JSON.stringify({ error: 'No space key in invitation' }, null, 2));
+    } else {
+      yield* Console.log('No space key in invitation.');
+    }
+    return;
+  }
 
-  const space = client.spaces.get(invitation.spaceKey!);
+  let space = client.spaces.get(spaceKey);
+  if (!space) {
+    // Retry up to 5 times with increasing delays
+    const maxRetries = 5;
+    const retryDelays = [0.5, 1, 1.5, 2, 2.5].map((s) => Duration.seconds(s));
+    for (let i = 0; i < maxRetries; i++) {
+      yield* Effect.sleep(retryDelays[i]);
+      space = client.spaces.get(spaceKey);
+      if (space) {
+        break;
+      }
+    }
+  }
+
   if (!space) {
     if (json) {
       yield* Console.log(JSON.stringify({ error: 'Space not found after joining' }, null, 2));
@@ -98,4 +120,3 @@ export const join = Command.make(
   },
   handler,
 ).pipe(Command.withDescription('Join a space via invitation.'));
-

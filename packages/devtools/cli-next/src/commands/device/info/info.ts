@@ -48,4 +48,3 @@ export const handler = Effect.fn(function* () {
 });
 
 export const info = Command.make('info', {}, handler).pipe(Command.withDescription('Show device info.'));
-

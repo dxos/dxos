@@ -2,8 +2,6 @@
 // Copyright 2025 DXOS.org
 //
 
-import { spawn } from 'node:child_process';
-
 import * as Command from '@effect/cli/Command';
 import * as Options from '@effect/cli/Options';
 import * as Console from 'effect/Console';
@@ -15,101 +13,18 @@ import { Invitation, InvitationEncoder } from '@dxos/client/invitations';
 import { type Key } from '@dxos/echo';
 
 import { CommandConfig } from '../../../services';
-import { getSpace, hostInvitation, print, spaceIdWithDefault } from '../../../util';
+import { copyToClipboard, getSpace, hostInvitation, openBrowser, print, spaceIdWithDefault } from '../../../util';
 import { FormBuilder } from '../../../util';
 import { Common } from '../../options';
-
-const copyToClipboard = (text: string): Effect.Effect<void, Error> =>
-  Effect.tryPromise({
-    try: () => {
-      return new Promise<void>((resolve, reject) => {
-        const platform = process.platform;
-        let command: string;
-        let args: string[];
-
-        if (platform === 'darwin') {
-          command = 'pbcopy';
-          args = [];
-        } else if (platform === 'win32') {
-          command = 'clip';
-          args = [];
-        } else {
-          command = 'xclip';
-          args = ['-selection', 'clipboard'];
-        }
-
-        const proc = spawn(command, args);
-        proc.stdin?.write(text);
-        proc.stdin?.end();
-
-        proc.on('close', (code) => {
-          if (code === 0) {
-            resolve();
-          } else if (platform === 'linux') {
-            const proc2 = spawn('xsel', ['--clipboard', '--input']);
-            proc2.stdin?.write(text);
-            proc2.stdin?.end();
-            proc2.on('close', (code2) => {
-              if (code2 === 0) {
-                resolve();
-              } else {
-                reject(new Error('Failed to copy to clipboard'));
-              }
-            });
-          } else {
-            reject(new Error('Failed to copy to clipboard'));
-          }
-        });
-
-        proc.on('error', reject);
-      });
-    },
-    catch: (error) => new Error(`Failed to copy to clipboard: ${error}`),
-  });
-
-const openBrowser = (url: string): Effect.Effect<void, Error> =>
-  Effect.tryPromise({
-    try: () => {
-      return new Promise<void>((resolve, reject) => {
-        const platform = process.platform;
-        let command: string;
-        let args: string[];
-
-        if (platform === 'darwin') {
-          command = 'open';
-          args = [url];
-        } else if (platform === 'win32') {
-          command = 'start';
-          args = [url];
-        } else {
-          command = 'xdg-open';
-          args = [url];
-        }
-
-        const proc = spawn(command, args);
-        proc.on('close', (code) => {
-          if (code === 0) {
-            resolve();
-          } else {
-            reject(new Error('Failed to open browser'));
-          }
-        });
-        proc.on('error', reject);
-      });
-    },
-    catch: (error) => new Error(`Failed to open browser: ${error}`),
-  });
 
 export const handler = Effect.fn(function* ({
   spaceId,
   multiple,
-  lifetime,
   open,
   host,
 }: {
   spaceId: Option.Option<string>;
   multiple: boolean;
-  lifetime: number;
   open: boolean;
   host: string;
 }) {
@@ -123,7 +38,6 @@ export const handler = Effect.fn(function* ({
   const observable = space.share({
     authMethod: Invitation.AuthMethod.SHARED_SECRET,
     persistent: true,
-    lifetime,
     multiUse: multiple,
   });
 
@@ -182,10 +96,6 @@ export const share = Command.make(
     multiple: Options.boolean('multiple', { ifPresent: true }).pipe(
       Options.withDescription('Create a multi-use invitation.'),
     ),
-    lifetime: Options.integer('lifetime').pipe(
-      Options.withDescription('Lifetime of the invitation in seconds.'),
-      Options.withDefault(86400),
-    ),
     open: Options.boolean('open', { ifPresent: true }).pipe(Options.withDescription('Open browser with invitation.')),
     host: Options.text('host').pipe(
       Options.withDescription('Application Host URL.'),
@@ -194,4 +104,3 @@ export const share = Command.make(
   },
   handler,
 ).pipe(Command.withDescription('Create space invitation.'));
-

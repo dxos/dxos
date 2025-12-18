@@ -8,17 +8,18 @@ import * as Console from 'effect/Console';
 import * as Effect from 'effect/Effect';
 
 import { ClientService } from '@dxos/client';
+import { type Key } from '@dxos/echo';
 
 import { CommandConfig } from '../../../services';
 import { getSpace, waitForSync } from '../../../util';
 import { Common } from '../../options';
 
-export const handler = ({ spaceId }: { spaceId: string }) =>
+export const handler = ({ spaceId }: { spaceId: Key.SpaceId }) =>
   Effect.gen(function* () {
     const { json } = yield* CommandConfig;
     const client = yield* ClientService;
 
-    const space = yield* getSpace(spaceId as any);
+    const space = yield* getSpace(spaceId);
     yield* Effect.tryPromise(() => space.open());
 
     // Flush and sync after opening
@@ -39,4 +40,3 @@ export const open = Command.make(
   },
   handler,
 ).pipe(Command.withDescription('Open a space.'));
-

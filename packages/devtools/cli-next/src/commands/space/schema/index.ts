@@ -10,4 +10,3 @@ export const schema = Command.make('schema').pipe(
   Command.withDescription('Manage space schemas.'),
   Command.withSubcommands([list]),
 );
-

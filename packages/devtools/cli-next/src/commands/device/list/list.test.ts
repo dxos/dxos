@@ -22,7 +22,7 @@ describe('device list', () => {
       const logger = yield* TestConsole.TestConsole;
       const logs = logger.logs;
       expect(logs).toHaveLength(1);
-      const parsed = JSON.parse(Array.isArray(logs[0].args) ? String(logs[0].args[0]) : (logs[0].args as string));
+      const parsed = TestConsole.parseJson<Array<{ key: string; type: string; kind: string }>>(logs[0]);
       expect(Array.isArray(parsed)).toBe(true);
       expect(parsed.length).toBeGreaterThan(0);
       expect(parsed[0]).toHaveProperty('key');
@@ -30,4 +30,3 @@ describe('device list', () => {
       expect(parsed[0]).toHaveProperty('kind');
     }).pipe(Effect.provide(TestLayer), Effect.scoped, runAndForwardErrors));
 });
-

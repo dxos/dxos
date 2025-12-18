@@ -14,6 +14,7 @@ import { type Key } from '@dxos/echo';
 import { CommandConfig } from '../../../services';
 import { getSpace, printList, spaceIdWithDefault } from '../../../util';
 import { Common } from '../../options';
+
 import { mapMembers, printMembers } from './util';
 
 export const handler = Effect.fn(function* ({ spaceId }: { spaceId: Option.Option<string> }) {
@@ -40,4 +41,3 @@ export const members = Command.make(
   },
   handler,
 ).pipe(Command.withDescription('List space members.'));
-

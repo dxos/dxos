@@ -12,4 +12,3 @@ export const device = Command.make('device').pipe(
   Command.withDescription('Manage HALO devices.'),
   Command.withSubcommands([info, list, update]),
 );
-

@@ -68,4 +68,3 @@ export const update = Command.make(
   },
   handler,
 ).pipe(Command.withDescription('Update device label.'));
-

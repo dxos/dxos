@@ -28,4 +28,3 @@ export const handler = Effect.fn(function* () {
 });
 
 export const list = Command.make('list', {}, handler).pipe(Command.withDescription('List devices.'));
-

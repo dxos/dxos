@@ -38,4 +38,3 @@ export const info = Command.make(
   },
   handler,
 ).pipe(Command.withDescription('Show space info.'));
-

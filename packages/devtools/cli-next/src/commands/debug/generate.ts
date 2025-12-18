@@ -37,6 +37,52 @@ export const handler = Effect.fn(function* ({
   const epochValue = Option.getOrUndefined(epoch);
   const { json } = yield* CommandConfig;
 
+  // Validate inputs
+  if (objects < 0) {
+    if (json) {
+      yield* Console.log(JSON.stringify({ error: 'objects must be non-negative' }, null, 2));
+    } else {
+      yield* Console.log('Error: objects must be non-negative.');
+    }
+    return;
+  }
+
+  if (mutations < 0) {
+    if (json) {
+      yield* Console.log(JSON.stringify({ error: 'mutations must be non-negative' }, null, 2));
+    } else {
+      yield* Console.log('Error: mutations must be non-negative.');
+    }
+    return;
+  }
+
+  if (interval < 0) {
+    if (json) {
+      yield* Console.log(JSON.stringify({ error: 'interval must be non-negative' }, null, 2));
+    } else {
+      yield* Console.log('Error: interval must be non-negative.');
+    }
+    return;
+  }
+
+  if (jitter < 0) {
+    if (json) {
+      yield* Console.log(JSON.stringify({ error: 'jitter must be non-negative' }, null, 2));
+    } else {
+      yield* Console.log('Error: jitter must be non-negative.');
+    }
+    return;
+  }
+
+  if (epochValue !== undefined && epochValue <= 0) {
+    if (json) {
+      yield* Console.log(JSON.stringify({ error: 'epoch must be positive' }, null, 2));
+    } else {
+      yield* Console.log('Error: epoch must be positive.');
+    }
+    return;
+  }
+
   const type = 'test';
 
   // Create objects

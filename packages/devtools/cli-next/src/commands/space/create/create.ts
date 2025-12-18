@@ -56,4 +56,3 @@ export const create = Command.make(
   },
   handler,
 ).pipe(Command.withDescription('Create a new space.'));
-

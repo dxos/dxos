@@ -90,12 +90,16 @@ export const handler = Effect.fn(function* ({
     yield* latch.await.pipe(
       Effect.timeout(Duration.millis(timeout)),
       Effect.catchAll(() => Effect.void),
+      Effect.ensuring(
+        Effect.sync(() => {
+          subscription.unsubscribe();
+        }),
+      ),
     );
 
     // Wait a bit more to ensure all credentials are loaded
     yield* Effect.sleep(Duration.millis(delay));
 
-    subscription.unsubscribe();
     credentials = client.halo.queryCredentials({ type: Option.getOrUndefined(type) });
   }
 

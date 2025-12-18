@@ -96,4 +96,3 @@ export const add = Command.make(
   },
   handler,
 ).pipe(Command.withDescription('Import credential into HALO.'));
-

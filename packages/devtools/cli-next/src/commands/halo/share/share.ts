@@ -2,8 +2,6 @@
 // Copyright 2025 DXOS.org
 //
 
-import { spawn } from 'node:child_process';
-
 import * as Command from '@effect/cli/Command';
 import * as Options from '@effect/cli/Options';
 import * as Console from 'effect/Console';
@@ -13,93 +11,8 @@ import { ClientService } from '@dxos/client';
 import { Invitation, InvitationEncoder } from '@dxos/client/invitations';
 
 import { CommandConfig } from '../../../services';
-import { hostInvitation, print } from '../../../util';
+import { copyToClipboard, hostInvitation, openBrowser, print } from '../../../util';
 import { FormBuilder } from '../../../util';
-
-const copyToClipboard = (text: string): Effect.Effect<void, Error> =>
-  Effect.tryPromise({
-    try: () => {
-      return new Promise<void>((resolve, reject) => {
-        const platform = process.platform;
-        let command: string;
-        let args: string[];
-
-        if (platform === 'darwin') {
-          command = 'pbcopy';
-          args = [];
-        } else if (platform === 'win32') {
-          command = 'clip';
-          args = [];
-        } else {
-          // Linux - try xclip or xsel
-          command = 'xclip';
-          args = ['-selection', 'clipboard'];
-        }
-
-        const proc = spawn(command, args);
-        proc.stdin?.write(text);
-        proc.stdin?.end();
-
-        proc.on('close', (code) => {
-          if (code === 0) {
-            resolve();
-          } else {
-            // Try xsel as fallback on Linux
-            if (platform === 'linux') {
-              const proc2 = spawn('xsel', ['--clipboard', '--input']);
-              proc2.stdin?.write(text);
-              proc2.stdin?.end();
-              proc2.on('close', (code2) => {
-                if (code2 === 0) {
-                  resolve();
-                } else {
-                  reject(new Error('Failed to copy to clipboard'));
-                }
-              });
-            } else {
-              reject(new Error('Failed to copy to clipboard'));
-            }
-          }
-        });
-
-        proc.on('error', reject);
-      });
-    },
-    catch: (error) => new Error(`Failed to copy to clipboard: ${error}`),
-  });
-
-const openBrowser = (url: string): Effect.Effect<void, Error> =>
-  Effect.tryPromise({
-    try: () => {
-      return new Promise<void>((resolve, reject) => {
-        const platform = process.platform;
-        let command: string;
-        let args: string[];
-
-        if (platform === 'darwin') {
-          command = 'open';
-          args = [url];
-        } else if (platform === 'win32') {
-          command = 'start';
-          args = [url];
-        } else {
-          command = 'xdg-open';
-          args = [url];
-        }
-
-        const proc = spawn(command, args);
-        proc.on('close', (code) => {
-          if (code === 0) {
-            resolve();
-          } else {
-            reject(new Error('Failed to open browser'));
-          }
-        });
-        proc.on('error', reject);
-      });
-    },
-    catch: (error) => new Error(`Failed to open browser: ${error}`),
-  });
 
 export const handler = Effect.fn(function* ({
   lifetime,
@@ -173,7 +86,7 @@ export const share = Command.make(
   {
     lifetime: Options.integer('lifetime').pipe(
       Options.withDescription('Lifetime of the invitation in seconds.'),
-      Options.withDefault(12 * 60 * 60),
+      Options.withDefault(12 * 60 * 60), // 12 hours - HALO invitations are typically shorter-lived
     ),
     open: Options.boolean('open', { ifPresent: true }).pipe(Options.withDescription('Open browser with invitation.')),
     host: Options.text('host').pipe(
@@ -183,4 +96,3 @@ export const share = Command.make(
   },
   handler,
 ).pipe(Command.withDescription('Create HALO (device) invitation.'));
-

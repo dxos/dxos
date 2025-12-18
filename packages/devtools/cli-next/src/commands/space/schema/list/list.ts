@@ -15,6 +15,7 @@ import { getTypeAnnotation } from '@dxos/echo/internal';
 import { CommandConfig } from '../../../../services';
 import { getSpace, printList, spaceIdWithDefault } from '../../../../util';
 import { Common } from '../../../options';
+
 import { createTypenameFilter, mapSchemas, printSchemas } from './util';
 
 export const handler = Effect.fn(function* ({
@@ -64,4 +65,3 @@ export const list = Command.make(
   },
   handler,
 ).pipe(Command.withDescription('List space schemas.'));
-

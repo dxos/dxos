@@ -43,4 +43,3 @@ export const handler = Effect.fn(function* () {
 });
 
 export const keys = Command.make('keys', {}, handler).pipe(Command.withDescription('Show HALO keys.'));
-

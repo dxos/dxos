@@ -12,10 +12,10 @@ import { identity } from './identity';
 import { keys } from './keys';
 import { recover } from './recover';
 import { seed } from './seed';
-import { share } from './share';
+// import { share } from './share';
 import { update } from './update';
 
 export const halo = Command.make('halo').pipe(
   Command.withDescription('Manage HALO identity.'),
-  Command.withSubcommands([create, credential, identity, keys, recover, seed, share, update]),
+  Command.withSubcommands([create, credential, identity, keys, recover, seed, update]),
 );
