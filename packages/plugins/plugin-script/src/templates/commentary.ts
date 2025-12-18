@@ -25,8 +25,6 @@ import { Collection, Text } from '@dxos/schema';
 import { HasSubject } from '@dxos/types';
 import { trim } from '@dxos/util';
 
-// TODO(mykola): Make not failing on missing Chess.pgn
-// TODO(mykola):
 export default defineFunction({
   key: 'dxos.org/function/chess/commentary',
   name: 'Commentary',
