@@ -8,7 +8,7 @@ import * as Config from 'effect/Config';
 import * as Layer from 'effect/Layer';
 
 import { ClientService, ConfigService } from '@dxos/client';
-import { ENV_DX_PROFILE, ENV_DX_PROFILE_DEFAULT } from '@dxos/client-protocol';
+import { DXEnv, DX_DEFAULT_PROFILE } from '@dxos/client-protocol';
 
 import { CommandConfig } from '../services';
 import { DXOS_VERSION } from '../version';
@@ -37,16 +37,12 @@ export const command = Command.make('dx', {
   profile: Options.text('profile').pipe(
     Options.withDescription('Profile for the config file.'),
     Options.withAlias('p'),
-    Options.withFallbackConfig(Config.string(ENV_DX_PROFILE).pipe(Config.withDefault(ENV_DX_PROFILE_DEFAULT))),
-    Options.withDefault(process.env[ENV_DX_PROFILE] ?? ENV_DX_PROFILE_DEFAULT),
+    Options.withFallbackConfig(Config.string(DXEnv.PROFILE).pipe(Config.withDefault(DX_DEFAULT_PROFILE))),
+    Options.withDefault(DXEnv.get(DXEnv.PROFILE, DX_DEFAULT_PROFILE)),
   ),
   json: Options.boolean('json', { ifPresent: true }).pipe(
     Options.withDescription('JSON output.'),
     Options.withFallbackConfig(Config.boolean('JSON').pipe(Config.withDefault(false))),
-  ),
-  timeout: Options.integer('timeout').pipe(
-    Options.withDescription('The timeout before the command fails.'),
-    Options.optional,
   ),
   verbose: Options.boolean('verbose', { ifPresent: true }).pipe(
     Options.withDescription('Verbose logging.'),
@@ -56,7 +52,11 @@ export const command = Command.make('dx', {
   logLevel: Options.choice('logLevel', ['debug', 'verbose', 'info', 'warn', 'error']).pipe(
     Options.withDescription('Log level to use.'),
     Options.withAlias('l'),
-    Options.withDefault(process.env.DX_DEBUG ?? 'info'),
+    Options.withDefault(DXEnv.get(DXEnv.DEBUG, 'info')),
+  ),
+  timeout: Options.integer('timeout').pipe(
+    Options.withDescription('The timeout before the command fails.'),
+    Options.optional,
   ),
 });
 
