@@ -94,7 +94,6 @@
   "devDependencies": {
     "@automerge/automerge": "catalog:",
     "@dxos/ai": "workspace:*",
-    "@dxos/assistant": "workspace:*",
     "@dxos/types": "workspace:*",
     "chess.js": "catalog:"
   },

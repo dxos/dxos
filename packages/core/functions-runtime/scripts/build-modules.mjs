@@ -13,11 +13,11 @@ const PACKAGES = [
   '@dxos/functions',
   '@dxos/functions-runtime-cloudflare',
   '@dxos/ai',
-  '@dxos/assistant',
   '@dxos/echo-db',
   '@dxos/echo',
   '@dxos/log',
   // Note: Causes circular dependency, if you will leave it in package.json.
+  // '@dxos/assistant',
   // '@dxos/plugin-chess',
   // '@dxos/plugin-markdown',
   '@dxos/schema',
