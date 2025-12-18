@@ -87,4 +87,3 @@ export const queue = Command.make(
   Command.provide(({ spaceId }) => spaceLayer(spaceId, true)),
   Command.provideEffectDiscard(() => withTypes(Function.Function, Trigger.Trigger, ...types)),
 );
-

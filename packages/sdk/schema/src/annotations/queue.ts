@@ -11,4 +11,3 @@ import { createAnnotationHelper } from '@dxos/echo/internal';
  */
 export const QueueAnnotationId = Symbol.for('@dxos/schema/annotation/Queue');
 export const QueueAnnotation = createAnnotationHelper<boolean>(QueueAnnotationId);
-

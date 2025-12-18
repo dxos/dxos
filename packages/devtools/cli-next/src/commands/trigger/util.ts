@@ -11,7 +11,7 @@ import * as Option from 'effect/Option';
 import type * as Schema from 'effect/Schema';
 import * as SchemaAST from 'effect/SchemaAST';
 
-import { Database, Filter, Obj, Ref, Type } from '@dxos/echo';
+import { Database, Filter, Obj, type Ref, Type } from '@dxos/echo';
 import { getProperties } from '@dxos/effect';
 import { Function, Trigger } from '@dxos/functions';
 import { QueueAnnotation } from '@dxos/schema';
@@ -345,7 +345,6 @@ export const selectQueue = Effect.fn(function* () {
 
   // Filter schemas that have QueueAnnotation
   const queueSchemas = schemas.filter((schema) => {
-    console.log('schema', Type.getTypename(schema));
     const annotation = QueueAnnotation.get(schema);
     return Option.isSome(annotation) && annotation.value === true;
   });
