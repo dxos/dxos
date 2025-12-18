@@ -22,6 +22,7 @@ import { edge } from './edge';
 import { fn } from './function';
 import { halo } from './halo';
 import { hub } from './hub';
+import { integration } from './integration';
 import { profile } from './profile';
 import { queue } from './queue';
 import { repl } from './repl';
@@ -77,6 +78,7 @@ export const dx = command.pipe(
     edge.pipe(Command.provide(ClientService.layer)),
     fn.pipe(Command.provide(ClientService.layer)),
     halo.pipe(Command.provide(ClientService.layer)),
+    integration.pipe(Command.provide(ClientService.layer)),
     queue.pipe(Command.provide(ClientService.layer)),
     space.pipe(Command.provide(ClientService.layer)),
     trigger.pipe(Command.provide(ClientService.layer)),

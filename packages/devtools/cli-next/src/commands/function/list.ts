@@ -30,21 +30,18 @@ export const list = Command.make(
   Effect.fn(function* ({ remote }) {
     const { json } = yield* CommandConfig;
 
-    // Fetch functions (local or remote)
+    const dbFunctions = yield* Database.Service.runQuery(Filter.type(Function.Function));
     const functions = remote
       ? yield* Effect.gen(function* () {
           const client = yield* ClientService;
           return yield* Effect.promise(() => getDeployedFunctions(client, true));
         })
-      : yield* Database.Service.runQuery(Filter.type(Function.Function));
+      : dbFunctions;
 
-    // Fetch local DB functions to calculate status
-    const dbFunctions = yield* Database.Service.runQuery(Filter.type(Function.Function));
-
-    // Normalize functions with status
+    // Only calculate status for remote functions (comparing against DB)
     const functionsWithStatus = functions.map((fn) => ({
       function: fn,
-      status: getFunctionStatus(fn, dbFunctions),
+      status: remote ? getFunctionStatus(fn, dbFunctions) : undefined,
     }));
 
     // Print functions
