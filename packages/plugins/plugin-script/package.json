@@ -87,6 +87,7 @@
     "@dxos/log": "workspace:*",
     "@dxos/plugin-assistant": "workspace:*",
     "@dxos/plugin-automation": "workspace:*",
+    "@dxos/plugin-chess": "workspace:*",
     "@dxos/plugin-client": "workspace:*",
     "@dxos/plugin-deck": "workspace:*",
     "@dxos/plugin-explorer": "workspace:*",

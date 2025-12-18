@@ -3,28 +3,31 @@
 //
 
 import * as A from '@automerge/automerge';
-import { Chess as ChessJS } from 'chess.js';
 import * as Array from 'effect/Array';
 import * as Effect from 'effect/Effect';
 import * as Function from 'effect/Function';
 import * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
+// @ts-ignore
+import { Chess as ChessJS } from 'https://esm.sh/chess.js@0.13.1?bundle=false';
 
 import { AiService, ConsolePrinter, ToolExecutionService, ToolResolverService } from '@dxos/ai';
 import { AiSession, GenerationObserver } from '@dxos/assistant';
 import { ArtifactId } from '@dxos/assistant';
 import { Database, Filter, Obj, Ref, Relation, Type } from '@dxos/echo';
+import { refFromEncodedReference } from '@dxos/echo/internal';
 import { createDocAccessor } from '@dxos/echo-db';
 import { TracingService, defineFunction } from '@dxos/functions';
 import { log } from '@dxos/log';
+import { Chess } from '@dxos/plugin-chess/types';
 import { Markdown } from '@dxos/plugin-markdown/types';
 import { Collection, Text } from '@dxos/schema';
 import { HasSubject } from '@dxos/types';
 import { trim } from '@dxos/util';
 
-import { Chess } from '../../types';
-
+// TODO(mykola): Make not failing on missing Chess.pgn
+// TODO(mykola):
 export default defineFunction({
   key: 'dxos.org/function/chess/commentary',
   name: 'Commentary',
@@ -50,9 +53,16 @@ export default defineFunction({
   types: [Chess.Game, Markdown.Document, Text.Text, HasSubject.HasSubject, Collection.Collection],
   services: [AiService.AiService, Database.Service],
   handler: Effect.fnUntraced(
-    function* ({ data: { game: gameRef } }) {
-      // Load the chess game
+    function* ({ data: { game: gameRefSerialized } }) {
+      log.info('load game', { gameRefSerialized });
+      // TODO(wittjosiah): The runtime should handle this conversion before passing to the function.
+      const { db } = yield* Database.Service;
+      const gameRef = refFromEncodedReference(
+        gameRefSerialized as any,
+        db.graph.createRefResolver({ context: { space: db.spaceId } }),
+      );
       log.info('load game', { gameRef });
+      // Load the chess game
       const chessGame = yield* Database.Service.load(gameRef);
 
       // Load the chess position from PGN or FEN
