@@ -4,6 +4,7 @@
 
 import * as Command from '@effect/cli/Command';
 
+import { add } from './add';
 import { query } from './query';
 import { remove } from './remove';
 import { stats } from './stats';
@@ -11,5 +12,5 @@ import { stats } from './stats';
 // TODO(wittjosiah): Alias to `db`.
 export const database = Command.make('database').pipe(
   Command.withDescription('Database access.'),
-  Command.withSubcommands([query, stats, remove]),
+  Command.withSubcommands([add, query, stats, remove]),
 );
