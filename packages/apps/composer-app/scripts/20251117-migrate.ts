@@ -12,7 +12,7 @@ import * as Effect from 'effect/Effect';
 import * as path from 'node:path';
 
 import { ClientService, ConfigService } from '@dxos/client';
-import { DX_DEFAULT_PROFILE } from '@dxos/client-protocol';
+import { DEFAULT_PROFILE } from '@dxos/client-protocol';
 import { Filter, Query, Ref, Type } from '@dxos/echo';
 import { EchoDatabase } from '@dxos/echo-db';
 import { log } from '@dxos/log';
@@ -79,7 +79,7 @@ const command = Command.make(
     ),
     profile: Options.text('profile').pipe(
       Options.withDescription('Profile for the config file.'),
-      Options.withDefault(DX_DEFAULT_PROFILE),
+      Options.withDefault(DEFAULT_PROFILE),
       Options.withAlias('p'),
     ),
     file: Args.fileContent(),

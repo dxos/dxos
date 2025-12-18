@@ -7,7 +7,7 @@ import {
   type ClientServices,
   type ClientServicesProvider,
   DXEnv,
-  DX_DEFAULT_PROFILE,
+  DEFAULT_PROFILE,
   DX_RUNTIME,
   clientServiceBundle,
   getProfilePath,
@@ -29,7 +29,7 @@ export type FromAgentOptions = {
  * Connects to locally running CLI daemon.
  */
 export const fromAgent = ({
-  profile = DXEnv.get(DXEnv.PROFILE, DX_DEFAULT_PROFILE),
+  profile = DXEnv.get(DXEnv.PROFILE, DEFAULT_PROFILE),
 }: FromAgentOptions = {}): ClientServicesProvider => {
   return new AgentClientServiceProvider(profile);
 };

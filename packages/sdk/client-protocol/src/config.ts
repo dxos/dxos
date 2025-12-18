@@ -14,6 +14,12 @@ export const DEFAULT_WORKER_BROADCAST_CHANNEL = 'dxos:shared-worker';
  */
 export const DEFAULT_VAULT_URL = 'https://halo.dxos.org/vault.html';
 
+/**
+ * @deprecated
+ */
+// TODO(burdon): Remove need (i.e., make undefined do the right thing).
+export const DEFAULT_PROFILE = 'default';
+
 export const EXPECTED_CONFIG_VERSION = 1;
 export const defaultConfig = { version: 1 };
 
@@ -53,12 +59,6 @@ export namespace DXEnv {
     return process.env[variable] ?? defaultValue;
   }
 }
-
-/**
- * @deprecated
- */
-// TODO(burdon): Remove need (i.e., make undefined do the right thing).
-export const DX_DEFAULT_PROFILE = 'default';
 
 // Base directories.
 // TODO(burdon): Consider Windows, Linux, OSX.

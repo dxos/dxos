@@ -16,7 +16,7 @@ import pkgUp from 'pkg-up';
 import { Client, Config, fromAgent } from '@dxos/client';
 import { type Space } from '@dxos/client/echo';
 import { createEdgeIdentity } from '@dxos/client/edge';
-import { DXEnv, DX_CONFIG, DX_DATA, DX_DEFAULT_PROFILE, getProfilePath } from '@dxos/client-protocol';
+import { DXEnv, DX_CONFIG, DX_DATA, DEFAULT_PROFILE, getProfilePath } from '@dxos/client-protocol';
 import { type ConfigProto, Remote } from '@dxos/config';
 import { raise } from '@dxos/debug';
 import { invariant } from '@dxos/invariant';
@@ -98,7 +98,7 @@ export abstract class AbstractBaseCommand<T extends typeof Command = any> extend
     ['profile']: Flags.string({
       description: 'User profile.',
       env: DXEnv.PROFILE,
-      default: DX_DEFAULT_PROFILE,
+      default: DEFAULT_PROFILE,
     }),
 
     ['config']: Flags.string({
@@ -106,7 +106,7 @@ export abstract class AbstractBaseCommand<T extends typeof Command = any> extend
       env: DXEnv.CONFIG,
       helpValue: 'path',
       async default({ flags }: { flags: any }) {
-        const profile = flags?.profile ?? DX_DEFAULT_PROFILE;
+        const profile = flags?.profile ?? DEFAULT_PROFILE;
         return getProfilePath(DX_CONFIG, profile) + '.yml';
       },
       dependsOn: ['profile'],
