@@ -40,6 +40,7 @@ export const FunctionsRegistry = ({ space }: FunctionsRegistryProps) => {
     if (dbFunction.version === func.version && dbFunction.updated === func.updated) {
       return 'none';
     }
+    console.log('dbFunction', dbFunction, func);
     return 'update';
   };
 

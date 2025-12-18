@@ -7,10 +7,8 @@ import * as Ansi from '@effect/printer-ansi/Ansi';
 import * as Effect from 'effect/Effect';
 import * as Match from 'effect/Match';
 
-import { ClientService } from '@dxos/client';
 import { Database, Filter } from '@dxos/echo';
 import { Function } from '@dxos/functions';
-import { getDeployedFunctions } from '@dxos/functions-runtime/edge';
 
 import { FormBuilder } from '../../util';
 
@@ -34,13 +32,15 @@ export const getFunctionStatus = (fn: Function.Function, functions: Function.Fun
 /**
  * Pretty prints a function with ANSI colors.
  */
-export const printFunction = (fn: Function.Function, status?: FunctionStatus) =>
-  FormBuilder.of({ title: fn.name ?? fn.key ?? 'Unknown' })
+export const printFunction = (fn: Function.Function, status?: FunctionStatus) => {
+  const builder = FormBuilder.of({ title: fn.name ?? fn.key ?? 'Unknown' })
     .set({ key: 'id', value: fn.id })
     .set({ key: 'key', value: fn.key ?? fn.id })
     .set({ key: 'version', value: fn.version })
-    .set({ key: 'uploaded', value: fn.updated })
-    .set({
+    .set({ key: 'uploaded', value: fn.updated });
+
+  if (status != null) {
+    builder.set({
       key: 'status',
       value: status,
       color: Match.type<FunctionStatus>().pipe(
@@ -50,8 +50,11 @@ export const printFunction = (fn: Function.Function, status?: FunctionStatus) =>
         Match.when('update available', () => Ansi.yellow),
         Match.exhaustive,
       ),
-    })
-    .build();
+    });
+  }
+
+  return builder.build();
+};
 
 /**
  * Pretty prints function invocation result with ANSI colors.
@@ -89,32 +92,12 @@ export const printInvokeResult = (result: unknown) => {
  * Omits functions that are already up-to-date in the database.
  * Indicates whether a function will be imported (new) or updated (existing).
  */
-export const selectDeployedFunction = Effect.fn(function* () {
-  const client = yield* ClientService;
-  const fns = yield* Effect.promise(() => getDeployedFunctions(client));
-
-  if (fns.length === 0) {
-    return yield* Effect.fail(new Error('No deployed functions available'));
-  }
-
+export const selectDeployedFunction = Effect.fn(function* (fns: Function.Function[]) {
   // Query database for existing functions to determine status
   const dbFunctions = yield* Database.Service.runQuery(Filter.type(Function.Function));
 
-  // Group functions by key and take the latest version of each
-  const functionsByKey = new Map<string, Function.Function>();
-  for (const fn of fns) {
-    if (fn.key) {
-      const existing = functionsByKey.get(fn.key);
-      if (!existing || (fn.version && existing.version && fn.version > existing.version)) {
-        functionsByKey.set(fn.key, fn);
-      }
-    }
-  }
-
-  const uniqueFunctions = Array.from(functionsByKey.values());
-
   // Filter out functions that are already up-to-date
-  const importableFunctions = uniqueFunctions.filter((fn) => {
+  const importableFunctions = fns.filter((fn) => {
     const status = getFunctionStatus(fn, dbFunctions);
     return status !== 'up-to-date';
   });
