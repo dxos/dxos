@@ -8,7 +8,8 @@ import { query } from './query';
 import { remove } from './remove';
 import { stats } from './stats';
 
-export const object = Command.make('object').pipe(
-  Command.withDescription('Manage objects.'),
+// TODO(wittjosiah): Alias to `db`.
+export const database = Command.make('database').pipe(
+  Command.withDescription('Database access.'),
   Command.withSubcommands([query, stats, remove]),
 );
