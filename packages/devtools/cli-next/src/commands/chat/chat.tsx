@@ -34,7 +34,6 @@ import { Common } from '../options';
 
 import { Chat } from './components';
 import { ChatProcessor } from './processor';
-import { typeRegistry } from './types';
 
 export const chat = Command.make(
   'chat',
@@ -90,9 +89,6 @@ export const chat = Command.make(
 
       invariant(client.halo.identity);
       const space = yield* Effect.promise(async () => {
-        // TODO(burdon): Add dynamically.
-        await client.addTypes(types);
-
         // TODO(burdon): Hangs if identity is not ready.
         await client.spaces.waitUntilReady();
         return client.spaces.default;
@@ -164,5 +160,5 @@ export const chat = Command.make(
 ).pipe(
   Command.withDescription('Open chat interface.'),
   Command.provide(({ provider, spaceId }) => chatLayer({ provider, spaceId, functions })),
-  Command.provideEffectDiscard(() => withTypes(...typeRegistry)),
+  Command.provideEffectDiscard(() => withTypes(...types)),
 );
