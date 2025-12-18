@@ -17,8 +17,8 @@ const PACKAGES = [
   '@dxos/echo-db',
   '@dxos/echo',
   '@dxos/log',
-  '@dxos/plugin-chess',
   // Note: Causes circular dependency, if you will leave it in package.json.
+  // '@dxos/plugin-chess',
   // '@dxos/plugin-markdown',
   '@dxos/schema',
   '@dxos/types',
