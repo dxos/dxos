@@ -19,18 +19,17 @@ import * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
 import * as Ref from 'effect/Ref';
 import * as Scope from 'effect/Scope';
+import { getPort } from 'get-port-please';
 
 import { ClientService } from '@dxos/client';
 import { Database } from '@dxos/echo';
 import { createEdgeClient } from '@dxos/functions-runtime/edge';
-import { type OAuthFlowResult } from '@dxos/protocols';
+import { type EdgeEnvelope, type InitiateOAuthFlowResponse, type OAuthFlowResult } from '@dxos/protocols';
 import { type AccessToken } from '@dxos/types';
 
 import { type OAuthPreset } from './util';
 
 const OAUTH_TIMEOUT_MS = 5 * 60 * 1000; // 5 minutes
-const PORT_RANGE_START = 8080;
-const PORT_RANGE_END = 8090;
 
 /**
  * Opens a URL in the default browser.
@@ -71,19 +70,6 @@ const getRelayPageHtml = (authUrl: string) => `
 <body></body>
 </html>
 `;
-
-/**
- * Finds an available port in the range.
- */
-const findAvailablePort = (start: number, _end: number): Effect.Effect<number, Error> =>
-  Effect.try({
-    try: () => {
-      // For now, just return the first port in range
-      // In a real implementation, we'd check if ports are available
-      return start;
-    },
-    catch: (error) => new Error(`Failed to find available port: ${error}`),
-  });
 
 /**
  * Creates an OAuth callback server.
@@ -181,7 +167,7 @@ export const performOAuthFlow = Effect.fn(function* (preset: OAuthPreset, access
   const spaceId = yield* Database.Service.spaceId;
 
   // Find available port
-  const port = yield* findAvailablePort(PORT_RANGE_START, PORT_RANGE_END);
+  const port = yield* Effect.promise(() => getPort({ random: true }));
   const origin = `http://localhost:${port}`;
 
   // Create callback handler
@@ -224,8 +210,7 @@ export const performOAuthFlow = Effect.fn(function* (preset: OAuthPreset, access
       Effect.flatMap((req) => httpClient.execute(req)),
     );
 
-    // Parse response JSON
-    const body = yield* response.json as any;
+    const body = (yield* response.json) as EdgeEnvelope<InitiateOAuthFlowResponse>;
 
     if (!body.success) {
       return yield* Effect.fail(new Error(`OAuth initiation failed: ${body.error?.message || 'Unknown error'}`));

@@ -6726,6 +6726,9 @@ importers:
       esbuild:
         specifier: 'catalog:'
         version: 0.25.10
+      get-port-please:
+        specifier: 'catalog:'
+        version: 3.1.1
       solid-js:
         specifier: 'catalog:'
         version: 1.9.10

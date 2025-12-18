@@ -63,6 +63,7 @@
     "@opentui/solid": "catalog:",
     "effect": "catalog:",
     "esbuild": "catalog:",
+    "get-port-please": "catalog:",
     "solid-js": "catalog:",
     "stage-js": "catalog:",
     "web-tree-sitter": "catalog:",
