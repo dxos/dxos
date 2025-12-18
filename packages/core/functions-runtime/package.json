@@ -57,7 +57,9 @@
     "schema",
     "src"
   ],
-  "scripts": {},
+  "scripts": {
+    "upload-modules": "node scripts/build-modules.mjs && node scripts/upload-modules.mjs"
+  },
   "dependencies": {
     "@dxos/ai": "workspace:*",
     "@dxos/async": "workspace:*",
@@ -92,8 +94,12 @@
     "iso-did": "catalog:"
   },
   "devDependencies": {
+    "@automerge/automerge": "catalog:",
+    "@dxos/assistant": "workspace:*",
+    "@dxos/plugin-chess": "workspace:*",
+    "@dxos/plugin-markdown": "workspace:*",
     "@dxos/types": "workspace:*",
-    "wrangler": "catalog:"
+    "chess.js": "catalog:"
   },
   "publishConfig": {
     "access": "public"

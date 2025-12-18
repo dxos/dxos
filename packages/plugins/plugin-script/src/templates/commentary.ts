@@ -2,16 +2,14 @@
 // Copyright 2025 DXOS.org
 //
 
-// @ts-ignore
 import * as A from '@automerge/automerge';
+import { Chess as ChessJS } from 'chess.js';
 import * as Array from 'effect/Array';
 import * as Effect from 'effect/Effect';
 import * as Function from 'effect/Function';
 import * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
-// @ts-ignore
-import { Chess as ChessJS } from 'https://esm.sh/chess.js@0.13.1?bundle=false';
 
 import { AiService, ConsolePrinter, ToolExecutionService, ToolResolverService } from '@dxos/ai';
 import { AiSession, GenerationObserver } from '@dxos/assistant';

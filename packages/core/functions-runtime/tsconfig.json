@@ -47,6 +47,12 @@
       "path": "../../common/util"
     },
     {
+      "path": "../../plugins/plugin-chess"
+    },
+    {
+      "path": "../../plugins/plugin-markdown"
+    },
+    {
       "path": "../../sdk/client"
     },
     {
@@ -60,6 +66,9 @@
     },
     {
       "path": "../ai"
+    },
+    {
+      "path": "../assistant"
     },
     {
       "path": "../echo/echo"
