@@ -11,7 +11,7 @@ import * as Option from 'effect/Option';
 import type * as Schema from 'effect/Schema';
 import * as SchemaAST from 'effect/SchemaAST';
 
-import { Annotation, Database, type Entity, Filter, Obj, Ref } from '@dxos/echo';
+import { Annotation, Database, type Entity, Filter, Obj, Ref, Type } from '@dxos/echo';
 import { getProperties } from '@dxos/effect';
 import { Function, Trigger } from '@dxos/functions';
 import { QueueAnnotation } from '@dxos/schema';
