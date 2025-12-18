@@ -1,15 +1,14 @@
 # DX CLI
 
-
 ## Development
 
-To temporarily install the cli run:
+To temporarily install the cli run `pnpm link` from the CLI directory:
 
 ```bash
 pnpm link --global
 ```
 
-To remove the cli run:
+To undo:
 
 ```bash
 pnpm unlink --global @dxos/cli-next
@@ -17,12 +16,12 @@ pnpm unlink --global @dxos/cli-next
 
 ## Setup
 
-- Ensure you have a cli profile for EDGE main: `dx profile list`.
+- Ensure you have a `main` profile for EDGE: `dx profile list`.
 - If not create one: `dx profile create --template main`.
 - Set the profile environment variable: `export DX_PROFILE="main"`.
-- Link the dx CLI's HALO to a Composer identity:
-    - Navigate to Profile > HALO > Recovery Code
-    - `dx halo recover "<recovery code>"`
+- Link the dx CLI's HALO to a Composer's identity:
+    - Navigate to Profile > Security > Create Recovery Code
+    - Enter the recovery code: `dx halo recover "<recovery code>"`
 
 ## Chess
 
