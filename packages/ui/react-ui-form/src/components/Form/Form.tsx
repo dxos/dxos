@@ -227,7 +227,7 @@ type FormActionsProps = ThemedClassName<{}>;
 const FormActions = ({ classNames }: FormActionsProps) => {
   const { t } = useTranslation(translationKey);
   const {
-    form: { isValid, onSave, onCancel },
+    form: { canSave, onSave, onCancel },
     readonly,
     layout,
   } = useFormContext(FormActions.displayName);
@@ -254,7 +254,7 @@ const FormActions = ({ classNames }: FormActionsProps) => {
         <IconButton
           type='submit'
           variant='primary'
-          disabled={!isValid}
+          disabled={!canSave}
           icon='ph--check--regular'
           iconEnd
           label={t('save button label')}
@@ -277,7 +277,7 @@ type FormSubmitProps = ThemedClassName<Partial<Pick<IconButtonProps, 'icon' | 'l
 const FormSubmit = ({ classNames, label, icon }: FormSubmitProps) => {
   const { t } = useTranslation(translationKey);
   const {
-    form: { isValid, onSave },
+    form: { canSave, onSave },
     readonly,
     layout,
   } = useFormContext(FormSubmit.displayName);
@@ -292,7 +292,7 @@ const FormSubmit = ({ classNames, label, icon }: FormSubmitProps) => {
         classNames='is-full'
         type='submit'
         variant='primary'
-        disabled={!isValid}
+        disabled={!canSave}
         icon={icon ?? 'ph--check--regular'}
         label={label ?? t('save button label')}
         onClick={onSave}
