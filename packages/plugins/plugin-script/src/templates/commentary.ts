@@ -2,6 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
+// @ts-ignore
 import * as A from '@automerge/automerge';
 import * as Array from 'effect/Array';
 import * as Effect from 'effect/Effect';
