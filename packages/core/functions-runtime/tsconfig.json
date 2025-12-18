@@ -47,9 +47,6 @@
       "path": "../../common/util"
     },
     {
-      "path": "../../plugins/plugin-chess"
-    },
-    {
       "path": "../../sdk/client"
     },
     {
