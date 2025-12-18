@@ -38,10 +38,7 @@ export const printTrigger = Effect.fn(function* (trigger: Trigger.Trigger, remot
 
   return (
     FormBuilder.of({
-      title:
-        fn && Obj.instanceOf(Function.Function, fn)
-          ? (fn.name ?? fn.key ?? fn.id)
-          : (trigger.function?.dxn?.toString() ?? 'Unknown'),
+      title: trigger.id,
     })
       .set({
         key: 'status',
@@ -49,12 +46,20 @@ export const printTrigger = Effect.fn(function* (trigger: Trigger.Trigger, remot
         color: trigger.enabled ? Ansi.green : Ansi.blackBright,
       })
       .set({
-        key: 'id',
-        value: trigger.id,
-      })
-      .set({
         key: 'kind',
         value: trigger.spec?.kind,
+      })
+      .set({
+        key: 'function',
+        value: FormBuilder.of()
+          .set({
+            key: 'key',
+            value: fn?.key,
+          })
+          .set({
+            key: 'dxn',
+            value: fn?.dxn?.toString(),
+          }),
       })
       .set({
         key: 'remote',
