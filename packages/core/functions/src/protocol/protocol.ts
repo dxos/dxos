@@ -199,7 +199,7 @@ const decodeRefsFromSchema = (ast: SchemaAST.AST, value: unknown, db: EchoDataba
     }
 
     if (typeof value === 'object' && value !== null && typeof (value as any)['/'] === 'string') {
-      const resolver = db?.graph.createRefResolver({ context: { space: db.spaceId } });
+      const resolver = db.graph.createRefResolver({ context: { space: db.spaceId } });
       return refFromEncodedReference(value as any, resolver);
     }
 
