@@ -6,8 +6,8 @@ import { Event } from '@dxos/async';
 import {
   type ClientServices,
   type ClientServicesProvider,
-  DXEnv,
   DEFAULT_PROFILE,
+  DXEnv,
   DX_RUNTIME,
   clientServiceBundle,
   getProfilePath,

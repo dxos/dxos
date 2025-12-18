@@ -1,9 +1,18 @@
 # DX CLI
 
-```bash
-alias dx="packages/devtools/cli-next/dxnext"
 
-export DX_PROFILE="main"
+## Development
+
+To temporarily install the cli run:
+
+```bash
+pnpm link --global
+```
+
+To remove the cli run:
+
+```bash
+pnpm unlink --global @dxos/cli-next
 ```
 
 ## Setup
@@ -13,6 +22,10 @@ export DX_PROFILE="main"
 - If not create one with `dx profile create --template main`
 - All commands should be run from this profile.
 - Join your cli and composer in the same identity by creating a recovery code in composer and then running `dx halo recover "<recovery code>"`
+
+```bash
+export DX_PROFILE="main"
+```
 
 ## Triggers
 
