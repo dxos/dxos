@@ -16,7 +16,7 @@ import pkgUp from 'pkg-up';
 import { Client, Config, fromAgent } from '@dxos/client';
 import { type Space } from '@dxos/client/echo';
 import { createEdgeIdentity } from '@dxos/client/edge';
-import { DXEnv, DX_CONFIG, DX_DATA, DEFAULT_PROFILE, getProfilePath } from '@dxos/client-protocol';
+import { DEFAULT_PROFILE, DXEnv, DX_CONFIG, DX_DATA, getProfilePath } from '@dxos/client-protocol';
 import { type ConfigProto, Remote } from '@dxos/config';
 import { raise } from '@dxos/debug';
 import { invariant } from '@dxos/invariant';
