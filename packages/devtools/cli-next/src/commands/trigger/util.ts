@@ -50,6 +50,17 @@ export const printTrigger = Effect.fn(function* (trigger: Trigger.Trigger, remot
         value: trigger.spec?.kind,
       })
       .set({
+        key: 'remote',
+        value: remoteStatus,
+        color: Match.type<TriggerRemoteStatus>().pipe(
+          Match.withReturnType<Ansi.Ansi>(),
+          Match.when('available', () => Ansi.green),
+          Match.when('not available', () => Ansi.yellow),
+          Match.when('n/a', () => Ansi.blackBright),
+          Match.exhaustive,
+        ),
+      })
+      .set({
         key: 'function',
         value: FormBuilder.of()
           .set({
@@ -60,17 +71,6 @@ export const printTrigger = Effect.fn(function* (trigger: Trigger.Trigger, remot
             key: 'dxn',
             value: fn?.dxn?.toString(),
           }),
-      })
-      .set({
-        key: 'remote',
-        value: remoteStatus,
-        color: Match.type<TriggerRemoteStatus>().pipe(
-          Match.withReturnType<Ansi.Ansi>(),
-          Match.when('available', () => Ansi.green),
-          Match.when('not available', () => Ansi.yellow),
-          Match.when('n/a', () => Ansi.blackBright),
-          Match.exhaustive,
-        ),
       })
       .set({
         key: 'spec',
