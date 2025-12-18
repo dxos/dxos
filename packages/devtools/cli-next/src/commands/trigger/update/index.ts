@@ -4,10 +4,11 @@
 
 import * as Command from '@effect/cli/Command';
 
+import { queue } from './queue';
 import { subscription } from './subscription';
 import { timer } from './timer';
 
 export const update = Command.make('update').pipe(
   Command.withDescription('Update a trigger.'),
-  Command.withSubcommands([subscription, timer]),
+  Command.withSubcommands([subscription, timer, queue]),
 );
