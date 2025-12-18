@@ -39,5 +39,3 @@ pnpm run proxy
 Once the socket is running both devtools and the app can connect to it in order to connect to each other.
 The app will know how to connect based on the provided config.
 For devtools a target will need to be provided: `https://devtools.dev.dxos.org/?target=wss://192.168.0.18:8080`.
-
-...........

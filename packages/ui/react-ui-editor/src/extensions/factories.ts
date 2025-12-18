@@ -215,13 +215,13 @@ export const createThemeExtensions = ({
   monospace,
   themeMode,
   slots: slotsParam,
-  syntaxHighlighting: syntaxHighlightingProp,
+  syntaxHighlighting: syntaxHighlightingParam,
 }: ThemeExtensionsOptions = {}): Extension => {
   const slots = defaultsDeep({}, slotsParam, defaultThemeSlots);
   return [
     EditorView.darkTheme.of(themeMode === 'dark'),
     createBaseTheme({ monospace }),
-    syntaxHighlightingProp &&
+    syntaxHighlightingParam &&
       syntaxHighlighting(HighlightStyle.define(themeMode === 'dark' ? defaultStyles.dark : defaultStyles.light)),
     slots.editor?.className && EditorView.editorAttributes.of({ class: slots.editor.className }),
     slots.content?.className && EditorView.contentAttributes.of({ class: slots.content.className }),

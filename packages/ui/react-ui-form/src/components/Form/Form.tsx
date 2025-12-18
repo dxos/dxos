@@ -194,7 +194,7 @@ const FormContent = ({ classNames, children }: FormContentProps) => {
     <div
       ref={ref}
       role='form'
-      className={mx('flex flex-col is-full pli-cardSpacingInline', classNames)}
+      className={mx('flex flex-col is-full pli-cardSpacingInline density-fine', classNames)}
       data-testid={testId}
     >
       {children}
