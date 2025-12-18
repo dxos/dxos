@@ -54,8 +54,9 @@ dx trigger create subscription --enabled
 6.  Once the remote functions load press the download button beside the `dxos.org/function/inbox/google-mail-sync` function to import it.
     - NOTE: be careful there are currently two gmail sync functions there but one is old and deprecated).
 7.  Now open the automations page, select the trigger that was created earlier to edit it.
-8.  Select the function just imported, set it to restricted mode, update the cron to `*/5 * * * *` (5 minutes), enable it and save it.
-    - NOTE: there's a bug with the trigger editor where sometimes save doesn't close the form, but it actually did save and it can be closed by pressing cancel.
+8.  Select the imported function and configure the timer.
+    - Update the cron to `*/5 * * * *` (5 minutes), enable it and save it.
+    - NOTE: there's a bug with the trigger editor where sometimes save doesn't close the form, but does save; close by pressing cancel.
 
 ## Current Limitations
 
