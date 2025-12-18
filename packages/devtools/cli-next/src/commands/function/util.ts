@@ -35,9 +35,9 @@ export const getFunctionStatus = (fn: Function.Function, functions: Function.Fun
  * Pretty prints a function with ANSI colors.
  */
 export const printFunction = (fn: Function.Function, status?: FunctionStatus) =>
-  FormBuilder.of({ title: fn.name ?? fn.key ?? 'Unknown' })
-    .set({ key: 'id', value: fn.id })
-    .set({ key: 'key', value: fn.key ?? fn.id })
+  FormBuilder.of({ title: fn.id })
+    .set({ key: 'key', value: fn.key })
+    .set({ key: 'name', value: fn.name })
     .set({ key: 'version', value: fn.version })
     .set({ key: 'uploaded', value: fn.updated })
     .set({
