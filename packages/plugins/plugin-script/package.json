@@ -149,10 +149,12 @@
     "vite": "catalog:"
   },
   "peerDependencies": {
+    "@automerge/automerge": "catalog:",
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-theme": "workspace:*",
     "@effect-atom/atom-react": "catalog:",
     "@effect/platform": "catalog:",
+    "chess.js": "catalog:",
     "effect": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:"

@@ -2,9 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-// @ts-ignore
 import * as A from '@automerge/automerge';
-// @ts-ignore
 import { Chess as ChessJS } from 'chess.js';
 import * as Array from 'effect/Array';
 import * as Effect from 'effect/Effect';
