@@ -16,14 +16,7 @@ import pkgUp from 'pkg-up';
 import { Client, Config, fromAgent } from '@dxos/client';
 import { type Space } from '@dxos/client/echo';
 import { createEdgeIdentity } from '@dxos/client/edge';
-import {
-  DX_CONFIG,
-  DX_DATA,
-  ENV_DX_CONFIG,
-  ENV_DX_PROFILE,
-  ENV_DX_PROFILE_DEFAULT,
-  getProfilePath,
-} from '@dxos/client-protocol';
+import { DEFAULT_PROFILE, DXEnv, DX_CONFIG, DX_DATA, getProfilePath } from '@dxos/client-protocol';
 import { type ConfigProto, Remote } from '@dxos/config';
 import { raise } from '@dxos/debug';
 import { invariant } from '@dxos/invariant';
@@ -86,58 +79,59 @@ export abstract class AbstractBaseCommand<T extends typeof Command = any> extend
   static override flags = {
     // TODO(burdon): Check fixed in v4.
     // Even though oclif should support this out of the box there seems to be a bug.
-    json: Flags.boolean({
+    ['json']: Flags.boolean({
       description: 'Output as JSON.',
       default: false,
     }),
 
-    verbose: Flags.boolean({
+    ['verbose']: Flags.boolean({
       char: 'v',
       description: 'Verbose output',
       default: false,
     }),
 
-    'dry-run': Flags.boolean({
+    ['dry-run']: Flags.boolean({
       description: 'Dry run.',
       default: false,
     }),
 
-    profile: Flags.string({
+    ['profile']: Flags.string({
       description: 'User profile.',
-      default: ENV_DX_PROFILE_DEFAULT,
-      env: ENV_DX_PROFILE,
+      env: DXEnv.PROFILE,
+      default: DEFAULT_PROFILE,
     }),
 
-    config: Flags.string({
-      env: ENV_DX_CONFIG,
+    ['config']: Flags.string({
       description: 'Config file.',
+      env: DXEnv.CONFIG,
       helpValue: 'path',
       async default({ flags }: { flags: any }) {
-        const profile = flags?.profile ?? ENV_DX_PROFILE_DEFAULT;
+        const profile = flags?.profile ?? DEFAULT_PROFILE;
         return getProfilePath(DX_CONFIG, profile) + '.yml';
       },
       dependsOn: ['profile'],
       aliases: ['c'],
     }),
 
-    timeout: Flags.integer({
+    ['timeout']: Flags.integer({
       description: 'Timeout (ms).',
       default: 60_000,
       aliases: ['t'],
     }),
 
-    target: Flags.string({
+    ['target']: Flags.string({
       description: 'Target websocket server.',
     }),
 
     // For consumption by Docker/Kubernetes/other log collection agents, write JSON logs to stderr.
     // Use stdout for user-facing interaction, and potentially JSON formatted output.
     // TODO(burdon): unify output/logging with oclif.
-    'json-log': Flags.boolean({
+    ['json-log']: Flags.boolean({
       description: 'When running in foreground, log JSON format',
     }),
 
-    'json-logfile': Flags.string({
+    // TODO(burdon): Rename json-file?
+    ['json-logfile']: Flags.string({
       description: "JSON log file destination, or 'stdout' or 'stderr'",
       default: 'stderr',
     }),
@@ -150,8 +144,8 @@ export abstract class AbstractBaseCommand<T extends typeof Command = any> extend
   protected _startTime: Date;
   protected _observability?: Observability;
 
-  protected flags!: Flags<T>;
   protected args!: Args<T>;
+  protected flags!: Flags<T>;
 
   constructor(argv: string[], config: OclifConfig) {
     super(argv, config);
@@ -179,14 +173,14 @@ export abstract class AbstractBaseCommand<T extends typeof Command = any> extend
 
     // TODO(burdon): Comment.
     const { args, flags } = await this.parse({
+      args: this.ctor.args,
       flags: this.ctor.flags,
       baseFlags: (super.ctor as typeof Command).baseFlags,
-      args: this.ctor.args,
       strict: this.ctor.strict,
     });
 
-    this.flags = flags as Flags<T>;
     this.args = args as Args<T>;
+    this.flags = flags as Flags<T>;
 
     if (this.flags['json-log']) {
       let pathOrFd: number | string;

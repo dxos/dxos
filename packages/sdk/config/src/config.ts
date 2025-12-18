@@ -19,7 +19,6 @@ const configRootType = schema.getCodecForType('dxos.config.Config');
 
 /**
  * Maps the given objects onto a flattened set of (key x values).
- *
  * Expects parsed yaml content of the form:
  *
  * ```
@@ -36,7 +35,6 @@ export const mapFromKeyValues = (spec: MappingSpec, values: Record<string, any>)
 
   for (const [key, { path, type }] of Object.entries(spec)) {
     let value = values[key];
-
     if (value !== undefined) {
       if (type) {
         switch (type) {
