@@ -12,7 +12,7 @@ pnpm link --global
 To remove the cli run:
 
 ```bash
-pnpm unlink --global @dxos/cli-next
+pnpm unlink --global @dxos/cli
 ```
 
 ## Setup

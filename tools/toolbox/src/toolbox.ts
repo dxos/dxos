@@ -209,7 +209,7 @@ export class Toolbox {
             // TODO(wittjosiah): Move extra files to toolbox config.
             'packages/sdk/client/src/version.ts',
             'packages/sdk/client-services/src/version.ts',
-            'packages/devtools/cli-next/src/version.ts',
+            'packages/devtools/cli/src/version.ts',
             {
               type: 'json',
               path: 'packages/apps/composer-app/src-tauri/tauri.conf.json',

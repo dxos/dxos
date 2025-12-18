@@ -15,7 +15,7 @@ const tag =
   tagIndex !== -1 && args[tagIndex + 1] ? args[tagIndex + 1] : 'latest';
 const dryRun = args.includes('--dry-run');
 
-console.log(`[Publish] Publishing cli-next packages with tag: ${tag}`);
+console.log(`[Publish] Publishing cli packages with tag: ${tag}`);
 if (dryRun) {
   console.log('[Publish] DRY RUN MODE - no actual publishing');
 }
@@ -30,7 +30,7 @@ if (!existsSync(distDir)) {
 // Get all package directories.
 const packageDirs = readdirSync(distDir, { withFileTypes: true })
   .filter(
-    (dirent) => dirent.isDirectory() && dirent.name.startsWith('cli-next'),
+    (dirent) => dirent.isDirectory() && dirent.name.startsWith('cli'),
   )
   .map((dirent) => dirent.name);
 
@@ -40,11 +40,11 @@ if (packageDirs.length === 0) {
 }
 
 // Separate main package from platform packages.
-const mainPackage = packageDirs.find((dir) => dir === 'cli-next');
-const platformPackages = packageDirs.filter((dir) => dir !== 'cli-next');
+const mainPackage = packageDirs.find((dir) => dir === 'cli');
+const platformPackages = packageDirs.filter((dir) => dir !== 'cli');
 
 if (!mainPackage) {
-  console.error('[Publish] Error: main package (cli-next) not found in dist/');
+  console.error('[Publish] Error: main package (cli) not found in dist/');
   process.exit(1);
 }
 
