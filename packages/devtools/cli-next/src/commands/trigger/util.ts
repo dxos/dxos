@@ -11,9 +11,10 @@ import * as Option from 'effect/Option';
 import type * as Schema from 'effect/Schema';
 import * as SchemaAST from 'effect/SchemaAST';
 
-import { Database, Filter, Obj } from '@dxos/echo';
+import { Database, Filter, Obj, type Ref, Type } from '@dxos/echo';
 import { getProperties } from '@dxos/effect';
 import { Function, Trigger } from '@dxos/functions';
+import { QueueAnnotation } from '@dxos/schema';
 
 import { FormBuilder } from '../../util';
 
@@ -38,19 +39,12 @@ export const printTrigger = Effect.fn(function* (trigger: Trigger.Trigger, remot
 
   return (
     FormBuilder.of({
-      title:
-        fn && Obj.instanceOf(Function.Function, fn)
-          ? (fn.name ?? fn.key ?? fn.id)
-          : (trigger.function?.dxn?.toString() ?? 'Unknown'),
+      title: trigger.id,
     })
       .set({
         key: 'status',
         value: trigger.enabled ? 'enabled' : 'disabled',
         color: trigger.enabled ? Ansi.green : Ansi.blackBright,
-      })
-      .set({
-        key: 'id',
-        value: trigger.id,
       })
       .set({
         key: 'kind',
@@ -66,6 +60,18 @@ export const printTrigger = Effect.fn(function* (trigger: Trigger.Trigger, remot
           Match.when('n/a', () => Ansi.blackBright),
           Match.exhaustive,
         ),
+      })
+      .set({
+        key: 'function',
+        value: FormBuilder.of()
+          .set({
+            key: 'key',
+            value: fn?.key,
+          })
+          .set({
+            key: 'dxn',
+            value: fn?.dxn?.toString(),
+          }),
       })
       .set({
         key: 'spec',
@@ -328,6 +334,71 @@ export const selectTrigger = Effect.fn(function* (kind?: Trigger.Kind) {
   const selected = yield* Prompt.select({
     message: kind ? `Select a ${kind} trigger:` : 'Select a trigger:',
     choices,
+  });
+
+  return String(selected);
+});
+
+/**
+ * Selects a queue interactively from available queues in the database.
+ * Queries schemas with QueueAnnotation, then queries objects of those types,
+ * and extracts queue DXNs from the objects' queue properties.
+ */
+export const selectQueue = Effect.fn(function* () {
+  // Query schema registry for schemas with QueueAnnotation
+  const schemas = yield* Database.Service.runSchemaQuery({ location: ['database', 'runtime'] });
+
+  // Filter schemas that have QueueAnnotation
+  const queueSchemas = schemas.filter((schema) => {
+    const annotation = QueueAnnotation.get(schema);
+    return Option.isSome(annotation) && annotation.value === true;
+  });
+
+  if (queueSchemas.length === 0) {
+    return yield* Effect.fail(new Error('No schemas with Queue annotation found'));
+  }
+
+  // Collect all objects with queues
+  const queueChoices: Array<{ title: string; value: string; description?: string }> = [];
+
+  // Process each schema, skipping ones that fail
+  for (const schema of queueSchemas) {
+    yield* Effect.gen(function* () {
+      const typename = Type.getTypename(schema);
+      const objects = yield* Database.Service.runQuery(Filter.type(typename));
+
+      for (const obj of objects) {
+        // Access the queue property (which is a Ref<Queue>)
+        const queueRef = (obj as any).queue as Ref.Ref<any> | undefined;
+        if (!queueRef) {
+          continue;
+        }
+
+        const queueDxn = queueRef.dxn.toString();
+        const objectTypename = Obj.getTypename(obj);
+        const objectName = (obj as any).name as string | undefined;
+        const objectId = obj.id;
+
+        // Create label: prefer name, then typename, then id
+        const label = objectName ?? objectTypename ?? objectId;
+        const description = objectName && objectTypename ? objectTypename : undefined;
+
+        queueChoices.push({
+          title: label,
+          value: queueDxn,
+          description,
+        });
+      }
+    }).pipe(Effect.catchAll(() => Effect.void));
+  }
+
+  if (queueChoices.length === 0) {
+    return yield* Effect.fail(new Error('No objects with queue properties found'));
+  }
+
+  const selected = yield* Prompt.select({
+    message: 'Select a queue:',
+    choices: queueChoices,
   });
 
   return String(selected);

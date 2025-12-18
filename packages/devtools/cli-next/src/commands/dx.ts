@@ -8,20 +8,20 @@ import * as Config from 'effect/Config';
 import * as Layer from 'effect/Layer';
 
 import { ClientService, ConfigService } from '@dxos/client';
-import { ENV_DX_PROFILE, ENV_DX_PROFILE_DEFAULT } from '@dxos/client-protocol';
+import { DEFAULT_PROFILE, DXEnv } from '@dxos/client-protocol';
 
 import { CommandConfig } from '../services';
 import { DXOS_VERSION } from '../version';
 
 import { chat } from './chat';
 import { config } from './config';
+import { database } from './database';
 import { debug } from './debug';
 import { device } from './device';
 import { edge } from './edge';
 import { fn } from './function';
 import { halo } from './halo';
 import { hub } from './hub';
-import { object } from './object';
 import { profile } from './profile';
 import { queue } from './queue';
 import { repl } from './repl';
@@ -38,16 +38,12 @@ export const command = Command.make('dx', {
   profile: Options.text('profile').pipe(
     Options.withDescription('Profile for the config file.'),
     Options.withAlias('p'),
-    Options.withFallbackConfig(Config.string(ENV_DX_PROFILE).pipe(Config.withDefault(ENV_DX_PROFILE_DEFAULT))),
-    Options.withDefault(process.env[ENV_DX_PROFILE] ?? ENV_DX_PROFILE_DEFAULT),
+    Options.withFallbackConfig(Config.string(DXEnv.PROFILE).pipe(Config.withDefault(DEFAULT_PROFILE))),
+    Options.withDefault(DXEnv.get(DXEnv.PROFILE, DEFAULT_PROFILE)),
   ),
   json: Options.boolean('json', { ifPresent: true }).pipe(
     Options.withDescription('JSON output.'),
     Options.withFallbackConfig(Config.boolean('JSON').pipe(Config.withDefault(false))),
-  ),
-  timeout: Options.integer('timeout').pipe(
-    Options.withDescription('The timeout before the command fails.'),
-    Options.optional,
   ),
   verbose: Options.boolean('verbose', { ifPresent: true }).pipe(
     Options.withDescription('Verbose logging.'),
@@ -57,7 +53,11 @@ export const command = Command.make('dx', {
   logLevel: Options.choice('logLevel', ['debug', 'verbose', 'info', 'warn', 'error']).pipe(
     Options.withDescription('Log level to use.'),
     Options.withAlias('l'),
-    Options.withDefault(process.env.DX_DEBUG ?? 'info'),
+    Options.withDefault(DXEnv.get(DXEnv.DEBUG, 'info')),
+  ),
+  timeout: Options.integer('timeout').pipe(
+    Options.withDescription('The timeout before the command fails.'),
+    Options.optional,
   ),
 });
 
@@ -71,12 +71,12 @@ export const dx = command.pipe(
     repl,
 
     // Only providing client to commands that require it.
+    database.pipe(Command.provide(ClientService.layer)),
     chat.pipe(Command.provide(ClientService.layer)),
     device.pipe(Command.provide(ClientService.layer)),
     edge.pipe(Command.provide(ClientService.layer)),
     fn.pipe(Command.provide(ClientService.layer)),
     halo.pipe(Command.provide(ClientService.layer)),
-    object.pipe(Command.provide(ClientService.layer)),
     queue.pipe(Command.provide(ClientService.layer)),
     space.pipe(Command.provide(ClientService.layer)),
     trigger.pipe(Command.provide(ClientService.layer)),

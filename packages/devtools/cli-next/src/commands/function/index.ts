@@ -10,6 +10,7 @@ import { invoke } from './invoke';
 import { list } from './list';
 import { trace } from './trace';
 
+// TODO(wittjosiah): Alias to `fn`.
 export const fn = Command.make('function').pipe(
   Command.withDescription('Manage EDGE functions.'),
   Command.withSubcommands([deploy, importCommand, invoke, list, trace]),
