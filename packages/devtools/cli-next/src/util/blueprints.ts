@@ -17,6 +17,7 @@ import { Assistant } from '@dxos/plugin-assistant/types';
 import { ChessBlueprint } from '@dxos/plugin-chess/blueprints';
 import { Chess } from '@dxos/plugin-chess/types';
 import { CalendarBlueprint, InboxBlueprint } from '@dxos/plugin-inbox/blueprints';
+import { Calendar, Mailbox } from '@dxos/plugin-inbox/types';
 import { KanbanBlueprint } from '@dxos/plugin-kanban/blueprints';
 import { MapBlueprint } from '@dxos/plugin-map/blueprints';
 import { MarkdownBlueprint } from '@dxos/plugin-markdown/blueprints';
@@ -95,4 +96,5 @@ export const types: Schema.Schema.AnyNoContext[] = [
   [Assistant.Chat],
   [Chess.Game],
   [Markdown.Document],
+  [Mailbox.Mailbox, Calendar.Calendar],
 ].flat();
