@@ -9,12 +9,12 @@ import * as Console from 'effect/Console';
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
-import { Filter, Query } from '@dxos/echo';
+import { DXN, Filter } from '@dxos/echo';
 import { Database } from '@dxos/echo';
 import { AccessToken } from '@dxos/types';
 
 import { CommandConfig } from '../../services';
-import { flushAndSync, print, spaceLayer } from '../../util';
+import { flushAndSync, print, spaceLayer, withTypes } from '../../util';
 import { Common } from '../options';
 
 import { printTokenRemoved } from './util';
@@ -25,47 +25,39 @@ export const remove = Command.make(
     spaceId: Common.spaceId.pipe(Options.optional),
     id: Options.text('id').pipe(Options.withDescription('The token ID.'), Options.optional),
   },
-  ({ spaceId, id }) =>
+  ({ id }) =>
     Effect.gen(function* () {
       const { json } = yield* CommandConfig;
 
-      let tokenId: string;
+      const token = yield* Option.match(id, {
+        onSome: (value) =>
+          Effect.gen(function* () {
+            const dxn = DXN.fromLocalObjectId(value);
+            return yield* Database.Service.resolve(dxn, AccessToken.AccessToken);
+          }),
+        onNone: () =>
+          Effect.gen(function* () {
+            const filter = Filter.type(AccessToken.AccessToken);
+            const tokens = yield* Database.Service.runQuery(filter);
 
-      if (Option.isSome(id)) {
-        tokenId = id.value;
-      } else {
-        // Interactive mode: show list of tokens and let user select
-        const filter = Filter.type(AccessToken.AccessToken);
-        const tokens = yield* Database.Service.runQuery(filter);
+            if (tokens.length === 0) {
+              return yield* Effect.fail(new Error('No tokens found to remove'));
+            }
 
-        if (tokens.length === 0) {
-          return yield* Effect.fail(new Error('No tokens found to remove'));
-        }
+            const choices = tokens.map((token) => ({
+              title: `${token.note || token.source} (${token.source})`,
+              value: token.id,
+            }));
 
-        const choices = tokens.map((token) => ({
-          title: `${token.note || token.source} (${token.source})`,
-          value: token.id,
-        }));
+            const selectedId = yield* Prompt.select({
+              message: 'Select token to remove:',
+              choices,
+            }).pipe(Prompt.run);
 
-        tokenId = yield* Prompt.select({
-          message: 'Select token to remove:',
-          choices,
-        }).pipe(Prompt.run);
-      }
-
-      // Find and remove the single token
-      const query = Query.select(Filter.id(tokenId));
-      const tokens = yield* Database.Service.runQuery(query);
-
-      if (tokens.length === 0) {
-        return yield* Effect.fail(new Error(`Token not found: ${tokenId}`));
-      }
-
-      if (tokens.length > 1) {
-        return yield* Effect.fail(new Error(`Multiple tokens found with id: ${tokenId}`));
-      }
-
-      const token = tokens[0];
+            const dxn = DXN.fromLocalObjectId(selectedId);
+            return yield* Database.Service.resolve(dxn, AccessToken.AccessToken);
+          }),
+      });
       yield* Database.Service.remove(token);
 
       if (json) {
@@ -89,4 +81,5 @@ export const remove = Command.make(
 ).pipe(
   Command.withDescription('Remove an integration (OAuth token). Interactive if no id specified.'),
   Command.provide(({ spaceId }) => spaceLayer(spaceId, true)),
+  Command.provideEffectDiscard(() => withTypes(AccessToken.AccessToken)),
 );
