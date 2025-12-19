@@ -19,19 +19,19 @@ import {
   type DxGridPlaneRange,
   type DxGridPosition,
 } from '@dxos/react-ui-grid';
-import {
-  type FieldSortType,
-  type ProjectionModel,
-  type PropertyType,
-  type SortDirectionType,
-  type ValidationError,
-  type View,
-  validateSchema,
-} from '@dxos/schema';
+import { type ProjectionModel, type PropertyType, type ValidationError, type View, validateSchema } from '@dxos/schema';
 
 import { type Table } from '../types';
 import { touch } from '../util';
 import { extractTagIds } from '../util/tag';
+
+/**
+ * Field sort configuration.
+ */
+export type FieldSortType = {
+  fieldId: string;
+  direction: QueryAST.OrderDirection;
+};
 
 import { type SelectionMode, SelectionModel } from './selection-model';
 
@@ -302,8 +302,7 @@ export class TableModel<T extends TableRow = TableRow> extends Resource {
       }
     }
 
-    // Fallback to deprecated view.sort for backward compatibility
-    return view.sort?.[0];
+    return undefined;
   }
 
   /**
@@ -759,7 +758,7 @@ export class TableModel<T extends TableRow = TableRow> extends Resource {
    * Sets the sort order for a field in-memory (local to this instance).
    * Use saveView() to persist the sort to the view query.
    */
-  public setSort(fieldId: string, direction: SortDirectionType): void {
+  public setSort(fieldId: string, direction: QueryAST.OrderDirection): void {
     const field = this._projection.fields.find((f) => f.id === fieldId);
     if (!field) {
       return;
@@ -818,9 +817,6 @@ export class TableModel<T extends TableRow = TableRow> extends Resource {
       // Clear sort from view.query.ast
       view.query.ast = baseQuery.ast;
     }
-
-    // Clear deprecated view.sort
-    view.sort = [];
 
     // Clear in-memory sort since it's now persisted
     this._inMemorySort.value = undefined;
@@ -885,7 +881,12 @@ const editorTextToCellValue = (props: PropertyType, value: any): any => {
  * Compares two values for sorting based on the field format.
  * Handles dates, numbers, and strings appropriately.
  */
-const compareValues = (aValue: any, bValue: any, format: Format.TypeFormat, direction: SortDirectionType): number => {
+const compareValues = (
+  aValue: any,
+  bValue: any,
+  format: Format.TypeFormat,
+  direction: QueryAST.OrderDirection,
+): number => {
   // Handle null/undefined values
   if (aValue === undefined || aValue === null) {
     return bValue === undefined || bValue === null ? 0 : 1;
