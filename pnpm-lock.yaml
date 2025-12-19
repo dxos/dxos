@@ -11288,6 +11288,9 @@ importers:
         specifier: 'catalog:'
         version: 5.9.3
     devDependencies:
+      '@automerge/automerge':
+        specifier: 3.2.1
+        version: 3.2.1
       '@dxos/random':
         specifier: workspace:*
         version: link:../../common/random
@@ -11318,6 +11321,9 @@ importers:
       '@types/react-dom':
         specifier: ~19.2.3
         version: 19.2.3(@types/react@19.2.7)
+      chess.js:
+        specifier: 'catalog:'
+        version: 1.4.0
       effect:
         specifier: 'catalog:'
         version: 3.19.11

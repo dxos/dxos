@@ -130,6 +130,7 @@
     "typescript": "catalog:"
   },
   "devDependencies": {
+    "@automerge/automerge": "catalog:",
     "@dxos/config": "workspace:*",
     "@dxos/echo-db": "workspace:*",
     "@dxos/plugin-automation": "workspace:*",
@@ -143,18 +144,17 @@
     "@effect/platform": "catalog:",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
+    "chess.js": "catalog:",
     "effect": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:",
     "vite": "catalog:"
   },
   "peerDependencies": {
-    "@automerge/automerge": "catalog:",
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-theme": "workspace:*",
     "@effect-atom/atom-react": "catalog:",
     "@effect/platform": "catalog:",
-    "chess.js": "catalog:",
     "effect": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:"
