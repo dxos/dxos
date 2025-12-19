@@ -5,6 +5,7 @@
 import anthropic from './anthropic.ts?raw';
 import chat from './chat.ts?raw';
 import chess from './chess.ts?raw';
+import commentary from './commentary.ts?raw';
 import dataGenerator from './data-generator.ts?raw';
 import discord from './discord.ts?raw';
 import email from './email.ts?raw';
@@ -80,5 +81,11 @@ export const templates = [
     id: 'dxos.org/script/anthropic',
     name: 'Anthropic',
     source: removeHeader(anthropic),
+  },
+  {
+    id: 'dxos.org/script/commentary',
+    name: 'Commentary',
+    source: removeHeader(commentary),
+    presetId: 'dxos.org/function/chess/commentary',
   },
 ] as const;

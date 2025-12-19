@@ -92,8 +92,10 @@
     "iso-did": "catalog:"
   },
   "devDependencies": {
+    "@automerge/automerge": "catalog:",
+    "@dxos/ai": "workspace:*",
     "@dxos/types": "workspace:*",
-    "wrangler": "catalog:"
+    "chess.js": "catalog:"
   },
   "publishConfig": {
     "access": "public"
