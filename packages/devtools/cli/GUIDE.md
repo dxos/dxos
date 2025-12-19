@@ -27,11 +27,10 @@ pnpm unlink --global @dxos/cli
 
 ### Chess
 
-TODO(burdon): First add chess player funciton then commentary.
-
 1.  Monitor function invocations: `dx function trace`.
-2.  Import the chess commentary function: `dx function import "dxos.org/function/chess/commentary"`.
-3.  Get the function id via: `dx function list` then create a subsription trigger:
+2.  Import the chess bot function: `dx function import "dxos.org/script/chess-bot"`.
+3.  Import the chess commentary function: `dx function import "dxos.org/function/chess/commentary"`.
+4.  Get the function id via: `dx function list` then create 2 subscription triggers for bot and commentary:
 
 ```bash
 dx trigger create subscription --enabled 
@@ -40,10 +39,10 @@ dx trigger create subscription --enabled
   --input "game={{event.subject}}"
 ```
 
-4.  Sync the trigger to EDGE: `dx space sync --space-id <default-space-id>`
-5.  In Composer, enable the chess plugin and create a chess game.
-6.  Make a move and it should create a document with commentary about the move.
-7.  Make another move and it should update the document.
+5.  Sync the trigger to EDGE: `dx space sync --space-id <default-space-id>`
+6.  In Composer, enable the chess plugin and create a chess game.
+7.  Make a move and it should create a document with commentary about the move.
+8.  Make another move and it should update the document.
 
 ### Inbox
 
