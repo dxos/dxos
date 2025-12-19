@@ -1,79 +1,154 @@
 //
-// Copyright 2023 DXOS.org
+// Copyright 2025 DXOS.org
 //
 
-import { Flags } from '@oclif/core';
+import * as Command from '@effect/cli/Command';
+import * as Options from '@effect/cli/Options';
+import * as Console from 'effect/Console';
+import * as Duration from 'effect/Duration';
+import * as Effect from 'effect/Effect';
+import * as Option from 'effect/Option';
 
-import { sleep } from '@dxos/async';
-import { ARG_SPACE_KEYS } from '@dxos/cli-base';
-import { Filter, Obj, Type } from '@dxos/echo';
+import { Database, Filter, Obj, Type } from '@dxos/echo';
 import { faker } from '@dxos/random';
 
-import { BaseCommand } from '../../base';
+import { CommandConfig } from '../../services';
+import { getSpace, spaceLayer } from '../../util';
+import { Common } from '../options';
 
-// TODO(burdon): Testing plugin (vs. debug)?
-// TODO(burdon): Disable unless NODE_ENV=development?
-export default class Generate extends BaseCommand<typeof Generate> {
-  static override enableJsonFlag = true;
-  static override description = 'Generate test data.';
-  static override args = ARG_SPACE_KEYS;
-  static override flags = {
-    ...BaseCommand.flags,
-    interval: Flags.integer({
-      description: 'Interval between mutations (ms).',
-      default: 0,
-    }),
-    jitter: Flags.integer({
-      description: 'Interval variance (ms).',
-      default: 0,
-    }),
-    objects: Flags.integer({
-      description: 'Number of objects.',
-      default: 0,
-    }),
-    mutations: Flags.integer({
-      description: 'Number of mutations.',
-      default: 0,
-    }),
-    // TODO(burdon): Remove: trigger via agent.
-    epoch: Flags.integer({
-      description: 'Number of mutations per epoch.',
-    }),
-  };
+const pause = (interval: number, jitter: number) =>
+  interval > 0
+    ? Effect.sleep(Duration.millis(interval + (jitter > 0 ? faker.number.int({ min: 0, max: jitter }) : 0)))
+    : Effect.void;
 
-  async run(): Promise<any> {
-    const pause = async () => {
-      if (this.flags.interval) {
-        const period =
-          this.flags.interval + this.flags.jitter ? faker.number.int({ min: 0, max: this.flags.jitter }) : 0;
-        await sleep(period);
-      }
-    };
+export const handler = Effect.fn(function* ({
+  interval,
+  jitter,
+  objects,
+  mutations,
+  epoch,
+}: {
+  interval: number;
+  jitter: number;
+  objects: number;
+  mutations: number;
+  epoch: Option.Option<number>;
+}) {
+  const epochValue = Option.getOrUndefined(epoch);
+  const { json } = yield* CommandConfig;
 
-    const type = 'test';
-    return await this.execWithClient(async ({ client }) => {
-      const space = await this.getSpace(client, this.args.key);
-      for (let i = 0; i < this.flags.objects; i++) {
-        space?.db.add(Obj.make(Type.Expando, { type, title: faker.lorem.word() }));
-        await space.db.flush();
-        await pause();
-      }
+  // Validate inputs
+  if (objects < 0) {
+    if (json) {
+      yield* Console.log(JSON.stringify({ error: 'objects must be non-negative' }, null, 2));
+    } else {
+      yield* Console.log('Error: objects must be non-negative.');
+    }
+    return;
+  }
 
-      const objects = (await space?.db.query(Filter.type(Type.Expando, { type }))?.run()) ?? [];
-      if (objects.length) {
-        for (let i = 0; i < this.flags.mutations; i++) {
-          const object = faker.helpers.arrayElement(objects);
-          object.title = faker.lorem.word();
-          await space.db.flush();
-          await pause();
+  if (mutations < 0) {
+    if (json) {
+      yield* Console.log(JSON.stringify({ error: 'mutations must be non-negative' }, null, 2));
+    } else {
+      yield* Console.log('Error: mutations must be non-negative.');
+    }
+    return;
+  }
 
-          // TODO(burdon): Remove: trigger via agent.
-          if (this.flags.epoch && i % this.flags.epoch === 0 && i > 0) {
-            await space.internal.createEpoch();
-            await space.db.flush();
-          }
+  if (interval < 0) {
+    if (json) {
+      yield* Console.log(JSON.stringify({ error: 'interval must be non-negative' }, null, 2));
+    } else {
+      yield* Console.log('Error: interval must be non-negative.');
+    }
+    return;
+  }
+
+  if (jitter < 0) {
+    if (json) {
+      yield* Console.log(JSON.stringify({ error: 'jitter must be non-negative' }, null, 2));
+    } else {
+      yield* Console.log('Error: jitter must be non-negative.');
+    }
+    return;
+  }
+
+  if (epochValue !== undefined && epochValue <= 0) {
+    if (json) {
+      yield* Console.log(JSON.stringify({ error: 'epoch must be positive' }, null, 2));
+    } else {
+      yield* Console.log('Error: epoch must be positive.');
+    }
+    return;
+  }
+
+  const type = 'test';
+
+  // Create objects
+  for (let i = 0; i < objects; i++) {
+    yield* Database.Service.add(Obj.make(Type.Expando, { type, title: faker.lorem.word() }));
+    yield* Database.Service.flush({ indexes: true });
+    yield* pause(interval, jitter);
+  }
+
+  // Query objects and mutate them
+  const queriedObjects = yield* Database.Service.runQuery(Filter.type(Type.Expando, { type }));
+
+  if (queriedObjects.length > 0) {
+    for (let i = 0; i < mutations; i++) {
+      const object = faker.helpers.arrayElement(queriedObjects);
+      object.title = faker.lorem.word();
+      yield* Database.Service.flush({ indexes: true });
+      yield* pause(interval, jitter);
+
+      // Create epoch if specified
+      if (epochValue && i % epochValue === 0 && i > 0) {
+        const spaceIdValue = yield* Database.Service.spaceId;
+        const space = yield* getSpace(spaceIdValue);
+        if (space) {
+          yield* Effect.tryPromise(() => space.internal.createEpoch());
+          yield* Database.Service.flush({ indexes: true });
         }
       }
-    });
+    }
   }
-}
+
+  if (json) {
+    yield* Console.log(
+      JSON.stringify(
+        {
+          success: true,
+          objectsCreated: objects,
+          mutationsPerformed: mutations,
+          totalObjects: queriedObjects.length,
+        },
+        null,
+        2,
+      ),
+    );
+  } else {
+    yield* Console.log(`Generated ${objects} objects and performed ${mutations} mutations.`);
+  }
+});
+
+export const generate = Command.make(
+  'generate',
+  {
+    spaceId: Common.spaceId.pipe(Options.optional),
+    interval: Options.integer('interval').pipe(
+      Options.withDescription('Interval between mutations (ms).'),
+      Options.withDefault(0),
+    ),
+    jitter: Options.integer('jitter').pipe(Options.withDescription('Interval variance (ms).'), Options.withDefault(0)),
+    objects: Options.integer('objects').pipe(Options.withDescription('Number of objects.'), Options.withDefault(0)),
+    mutations: Options.integer('mutations').pipe(
+      Options.withDescription('Number of mutations.'),
+      Options.withDefault(0),
+    ),
+    epoch: Options.integer('epoch').pipe(Options.withDescription('Number of mutations per epoch.'), Options.optional),
+  },
+  handler,
+)
+  .pipe(Command.withDescription('Generate test data.'))
+  .pipe(Command.provide(({ spaceId }) => spaceLayer(spaceId, true)));

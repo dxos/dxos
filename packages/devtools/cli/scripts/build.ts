@@ -22,7 +22,7 @@ const platforms = [
 const sourcePackage = await Bun.file('package.json').json();
 const version = sourcePackage.version;
 
-console.log(`[Build] Building cli-next v${version} for all platforms...`);
+console.log(`[Build] Building cli v${version} for all platforms...`);
 
 // Clean dist directory.
 if (existsSync('dist')) {
@@ -35,8 +35,8 @@ await mkdir('dist', { recursive: true });
 // Build all platform binaries in parallel.
 const buildPromises = platforms.map(async ({ target, platform, arch, ext }) => {
   const platformKey = `${platform}-${arch}`;
-  const packageName = `@dxos/cli-next-${platformKey}`;
-  const outDir = `dist/cli-next-${platformKey}`;
+  const packageName = `@dxos/cli-${platformKey}`;
+  const outDir = `dist/cli-${platformKey}`;
   const binaryName = `dx${ext}`;
   const outfile = join(outDir, binaryName);
 
@@ -96,7 +96,7 @@ await Promise.all(buildPromises);
 
 // Generate main package.
 console.log('[Build] Generating main package...');
-const mainDir = 'dist/cli-next';
+const mainDir = 'dist/cli';
 await mkdir(mainDir, { recursive: true });
 await mkdir(join(mainDir, 'bin'), { recursive: true });
 
@@ -107,11 +107,11 @@ const { execFileSync } = require('child_process');
 const { join } = require('path');
 
 const PLATFORMS = {
-  'darwin-arm64': '@dxos/cli-next-darwin-arm64',
-  'darwin-x64': '@dxos/cli-next-darwin-x64',
-  'linux-arm64': '@dxos/cli-next-linux-arm64',
-  'linux-x64': '@dxos/cli-next-linux-x64',
-  'win32-x64': '@dxos/cli-next-win32-x64',
+  'darwin-arm64': '@dxos/cli-darwin-arm64',
+  'darwin-x64': '@dxos/cli-darwin-x64',
+  'linux-arm64': '@dxos/cli-linux-arm64',
+  'linux-x64': '@dxos/cli-linux-x64',
+  'win32-x64': '@dxos/cli-win32-x64',
 };
 
 const key = \`\${process.platform}-\${process.arch}\`;
@@ -130,7 +130,7 @@ try {
 } catch (error) {
   if (error.code === 'MODULE_NOT_FOUND') {
     console.error(\`Platform-specific package not found: \${pkg}\`);
-    console.error('Please reinstall @dxos/cli-next to get the correct platform binary.');
+    console.error('Please reinstall @dxos/cli to get the correct platform binary.');
     process.exit(1);
   }
   throw error;
@@ -146,7 +146,7 @@ await copyFile('LICENSE', join(mainDir, 'LICENSE'));
 const optionalDependencies: Record<string, string> = {};
 platforms.forEach(({ platform, arch }) => {
   const platformKey = `${platform}-${arch}`;
-  const packageName = `@dxos/cli-next-${platformKey}`;
+  const packageName = `@dxos/cli-${platformKey}`;
   optionalDependencies[packageName] = version;
 });
 
@@ -177,7 +177,7 @@ await writeFile(
 console.log('[Build] ✓ Main package generated');
 console.log('[Build] Build completed successfully!');
 console.log(`[Build] Generated packages in dist/:`);
-console.log(`  - cli-next (main package)`);
+console.log(`  - cli (main package)`);
 platforms.forEach(({ platform, arch }) => {
-  console.log(`  - cli-next-${platform}-${arch}`);
+  console.log(`  - cli-${platform}-${arch}`);
 });

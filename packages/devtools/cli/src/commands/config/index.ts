@@ -1,19 +1,12 @@
 //
-// Copyright 2022 DXOS.org
+// Copyright 2025 DXOS.org
 //
 
-import { BaseCommand } from '../../base';
+import * as Command from '@effect/cli/Command';
 
-export default class Config extends BaseCommand<typeof Config> {
-  static override enableJsonFlag = true;
-  static override description = 'Show config file.';
+import { view } from './view';
 
-  async run(): Promise<any> {
-    const { config: configFile } = this.flags;
-    if (!this.flags.json) {
-      this.log(`Config file: ${configFile}\n${JSON.stringify(this.clientConfig?.values, undefined, 2)}`);
-    }
-
-    return this.clientConfig?.values;
-  }
-}
+export const config = Command.make('config').pipe(
+  Command.withDescription('Config commands.'),
+  Command.withSubcommands([view]),
+);
