@@ -57,7 +57,9 @@
     "schema",
     "src"
   ],
-  "scripts": {},
+  "scripts": {
+    "publish-runtime": "node ./scripts/build-modules.mjs && node ./scripts/upload-modules.mjs --env dev"
+  },
   "dependencies": {
     "@dxos/ai": "workspace:*",
     "@dxos/async": "workspace:*",
@@ -93,6 +95,7 @@
   },
   "devDependencies": {
     "@automerge/automerge": "catalog:",
+    "@aws-sdk/client-s3": "3.955.0",
     "@dxos/ai": "workspace:*",
     "@dxos/types": "workspace:*",
     "chess.js": "catalog:"
