@@ -81,7 +81,7 @@ export const MailboxArticle = ({ subject: mailbox, filter: filterParam, attendab
   const mergedLabels = useMemo(() => {
     const labels = { ...(mailbox.labels ?? {}) };
     // Add all tags to the labels object (tag.id -> tag.label)
-    for (const messageTags of Object.values(messageTagsMap)) {
+    for (const [_messageId, messageTags] of Object.entries(messageTagsMap)) {
       for (const tag of messageTags) {
         labels[tag.id] = tag.label;
       }
@@ -98,11 +98,12 @@ export const MailboxArticle = ({ subject: mailbox, filter: filterParam, attendab
       // Deduplicate existing labels and filter out tag IDs that are already present
       const uniqueExistingLabels = [...new Set(existingLabels)];
       const newTagIds = tagIds.filter((tagId) => !uniqueExistingLabels.includes(tagId));
+      const finalLabels = [...uniqueExistingLabels, ...newTagIds];
       return {
         ...message,
         properties: {
           ...message.properties,
-          labels: [...uniqueExistingLabels, ...newTagIds],
+          labels: finalLabels,
         },
       };
     });
@@ -237,10 +238,11 @@ export const MailboxArticle = ({ subject: mailbox, filter: filterParam, attendab
  */
 const useMessageTagsMap = (queue: Database.Queryable | undefined): Record<string, Tag.Tag[]> => {
   const hasSubjectRelations = useQuery(queue, Filter.type(HasSubject.HasSubject));
-  // Use refs to maintain the object and track processed relations for incremental updates
+  // Use state to ensure React detects changes and triggers dependent memo recomputation
+  const [messageTagsMap, setMessageTagsMap] = useState<Record<string, Tag.Tag[]>>({});
+  // Use refs to track processed relations for incremental updates
   const messageTagsMapRef = useRef<Record<string, Tag.Tag[]>>({});
   const processedRelationIdsRef = useRef(new Set<string>());
-  const [, forceUpdate] = useState(0);
 
   // Incrementally update the object when new relations appear
   useEffect(() => {
@@ -265,12 +267,17 @@ const useMessageTagsMap = (queue: Database.Queryable | undefined): Record<string
             if (Obj.instanceOf(Message.Message, target)) {
               const messageId = target.id;
               if (Obj.instanceOf(Tag.Tag, source)) {
-                if (!messageTagsMapRef.current[messageId]) {
-                  messageTagsMapRef.current[messageId] = [];
+                const existingTags = messageTagsMapRef.current[messageId] ?? [];
+                // Prevent duplicates upstream - check if tag already exists
+                const tagAlreadyExists = existingTags.some((tag) => tag.id === source.id);
+                if (!tagAlreadyExists) {
+                  if (!messageTagsMapRef.current[messageId]) {
+                    messageTagsMapRef.current[messageId] = [];
+                  }
+                  messageTagsMapRef.current[messageId].push(source);
+                  hasChanges = true;
                 }
-                messageTagsMapRef.current[messageId].push(source);
                 processedRelationIdsRef.current.add(relation.id);
-                hasChanges = true;
               }
             }
           } catch {
@@ -283,12 +290,17 @@ const useMessageTagsMap = (queue: Database.Queryable | undefined): Record<string
         // Check if source is a tag
         if (Obj.instanceOf(Tag.Tag, source)) {
           const messageId = queueDXNInfo.objectId;
-          if (!messageTagsMapRef.current[messageId]) {
-            messageTagsMapRef.current[messageId] = [];
+          const existingTags = messageTagsMapRef.current[messageId] ?? [];
+          // Prevent duplicates upstream - check if tag already exists
+          const tagAlreadyExists = existingTags.some((tag) => tag.id === source.id);
+          if (!tagAlreadyExists) {
+            if (!messageTagsMapRef.current[messageId]) {
+              messageTagsMapRef.current[messageId] = [];
+            }
+            messageTagsMapRef.current[messageId].push(source);
+            hasChanges = true;
           }
-          messageTagsMapRef.current[messageId].push(source);
           processedRelationIdsRef.current.add(relation.id);
-          hasChanges = true;
         } else {
           processedRelationIdsRef.current.add(relation.id);
         }
@@ -310,11 +322,13 @@ const useMessageTagsMap = (queue: Database.Queryable | undefined): Record<string
     }
 
     if (hasChanges) {
-      forceUpdate((n) => n + 1);
+      // Create a new object reference so React detects the change
+      const newMessageTagsMap = { ...messageTagsMapRef.current };
+      setMessageTagsMap(newMessageTagsMap);
     }
   }, [hasSubjectRelations]);
 
-  return messageTagsMapRef.current;
+  return messageTagsMap;
 };
 
 const useMailboxActions = ({

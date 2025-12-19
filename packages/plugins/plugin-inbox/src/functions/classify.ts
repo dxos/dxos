@@ -11,7 +11,7 @@ import * as Schema from 'effect/Schema';
 
 import { AiService, ConsolePrinter, ToolExecutionService, ToolResolverService } from '@dxos/ai';
 import { AiSession, ArtifactId, GenerationObserver } from '@dxos/assistant';
-import { Database, Filter, Obj, Relation, Tag } from '@dxos/echo';
+import { Database, Filter, Obj, Relation, Tag, Type } from '@dxos/echo';
 import { ContextQueueService, QueueService, TracingService, defineFunction } from '@dxos/functions';
 import { DXN } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -45,7 +45,8 @@ export default defineFunction({
   services: [AiService.AiService, Database.Service, QueueService],
   handler: Effect.fnUntraced(
     function* ({ data: { message } }) {
-      if (!Obj.instanceOf(Message.Message, message)) {
+      // TODO(wittjosiah): Obj.instanceOf does not work here.
+      if (message['@type'] !== Type.getDXN(Message.Message)!.toString()) {
         log.info('not a message object, skipping classification', { message });
         return;
       }
@@ -105,7 +106,7 @@ export default defineFunction({
 
       // TODO(wittjosiah): Why does Obj.getDXN(message) return `dxn:echo:@:<object-id>`?
       // Get the message DXN and extract the queue DXN
-      const messageDXN = DXN.parse((message as any)['@dxn']);
+      const messageDXN = DXN.parse(message['@dxn']);
       const queueDXNInfo = messageDXN.asQueueDXN();
       log.info('queueDXNInfo', queueDXNInfo);
 
