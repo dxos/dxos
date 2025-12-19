@@ -25,7 +25,7 @@
 - Error handling: use Effect-TS patterns
 - Testing: place tests near modules as `module.test.ts`, use vitest with `describe`/`test` (not `it`), prefer `test('foo', ({ expect }) => ...)`
 - JSDoc comments for public functions, all comments end with period
-- React: arrow function components, TailwindCSS for styles, proper event handler types
+- React: arrow function components, TailwindCSS for styles, proper event handler type
 - Remember to remove/update TODOs as you go.
 
 ## PR Checklist
@@ -39,10 +39,10 @@ pnpm -w pre-ci
 ## Workflow
 
 - Never work on main, create a new git worktree for the branch you are working on.
-- Check `moon.yml` for available package tasks
-- Run linter at natural stopping points
-- Use Conventional Commits for PR titles
-- Confirm work complete before final build/lint check
+- Check `moon.yml` for available package tasks (e.g. `moon run package-name:task-name`).
+- Run linter at natural stopping points.
+- Use Conventional Commits for PR titles.
+- Confirm work complete before final build/lint check.
 
 ## Submitting PRs
 

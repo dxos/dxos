@@ -1,0 +1,36 @@
+/* Dark mode overrides for React Flow */
+.dark {
+  --xy-edge-stroke: #555;
+  --xy-edge-stroke-selected: #777;
+  
+  --xy-controls-button-background-color: #222;
+  --xy-controls-button-background-color-hover: #333;
+  --xy-controls-button-color: #eee;
+  --xy-controls-button-border-color: #444;
+  --xy-controls-box-shadow: 0 0 2px 1px rgba(0, 0, 0, 0.4);
+
+  --xy-minimap-background-color: #111;
+  --xy-minimap-mask-background-color: rgba(255, 255, 255, 0.1);
+  --xy-minimap-node-background-color: #444;
+  --xy-minimap-node-stroke-color: transparent;
+}
+
+/* Ensure panels get the dark background */
+.dark .react-flow__panel {
+  background-color: #222;
+  color: #eee;
+  border-color: #444;
+}
+
+.dark .react-flow__controls-button {
+  background-color: #222;
+  border-bottom-color: #444;
+}
+
+.dark .react-flow__controls-button:hover {
+  background-color: #333;
+}
+
+.dark .react-flow__controls-button svg {
+  fill: #eee;
+}

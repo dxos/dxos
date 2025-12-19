@@ -11,4 +11,5 @@ export * from './UI';
 
 export * from './anchors';
 export type * from './defs';
+export * from './GraphCanvas';
 export * from './styles';

@@ -40,28 +40,28 @@ export const UI = ({ showTools, showToolbar }: UIProps) => {
   return (
     <div {...testId<TestId>('dx-ui')} className={mx('absolute bs-full inset-0', eventsNone)}>
       <div>
-        <div className='absolute top-2 left-2'>{debug && <FPS bar='bg-cyan-500' />}</div>
+        <div className='absolute block-start-2 inline-start-2'>{debug && <FPS bar='bg-cyan-500' />}</div>
       </div>
       {showTools && (
-        <div className='absolute top-2 left-2 right-2 flex justify-center'>
+        <div className='absolute block-start-2 inline-start-2 inline-end-2 flex justify-center'>
           <Tools classNames={mx(eventsAuto)} registry={registry} />
         </div>
       )}
 
       <div>
-        <div className='absolute bottom-2 left-2'>
+        <div className='absolute block-end-2 inline-start-2'>
           {debug && (
             <Json
               classNames={mx(
-                'is-[300px] bg-baseSurface rounded-md bg-baseSurface border border-separator text-xs opacity-70',
+                'is-[300px] bg-white dark:bg-baseSurface rounded-md border border-separator text-xs opacity-70',
               )}
               data={info}
             />
           )}
         </div>
         {showToolbar && (
-          <div className='absolute bottom-2 left-2 right-2 flex justify-center'>
-            <div className='p-1 bg-baseSurface rounded-md border border-separator'>
+          <div className='absolute block-end-2 inline-start-2 inline-end-2 flex justify-center'>
+            <div className='p-1 bg-white dark:bg-baseSurface rounded-md border border-separator'>
               <Toolbar onAction={actionHandler} classNames={mx(eventsAuto)} />
             </div>
           </div>

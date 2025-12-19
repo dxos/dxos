@@ -5,7 +5,7 @@
 // TODO(burdon): Themes?
 export const styles = {
   gridLine: 'stroke-neutral-500',
-  frameContainer: 'flex flex-column items-center box-border overflow-hidden bg-baseSurface',
+  frameContainer: 'flex flex-column items-center box-border overflow-hidden bg-white dark:bg-baseSurface',
   frameBorder: 'border-2 border-hoverSurface rounded-md shadow-md',
   framePreview: 'opacity-80',
   frameSelected: 'border-primary-500',

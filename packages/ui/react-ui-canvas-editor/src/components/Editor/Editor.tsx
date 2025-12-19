@@ -15,7 +15,7 @@ import React, {
 } from 'react';
 
 import { SelectionModel } from '@dxos/graph';
-import { type ThemedClassName } from '@dxos/react-ui';
+import { type ThemedClassName, useThemeContext } from '@dxos/react-ui';
 import { testId } from '@dxos/react-ui-canvas';
 import { mx } from '@dxos/react-ui-theme';
 
@@ -23,8 +23,9 @@ import { type ActionHandler } from '../../actions';
 import { DragMonitor, type EditingState, EditorContext, type EditorContextType, type EditorOptions } from '../../hooks';
 import { defaultShapes } from '../../shapes';
 import { CanvasGraphModel, type Shape } from '../../types';
-import { Canvas, ShapeLayout, ShapeRegistry } from '../Canvas';
+import { ShapeLayout, ShapeRegistry } from '../Canvas';
 import { type TestId } from '../defs';
+import { GraphCanvas } from '../GraphCanvas';
 import { UI } from '../UI';
 
 export const defaultEditorOptions: EditorOptions = {
@@ -80,6 +81,7 @@ const EditorRootWithType = <S extends Shape = Shape>(
   }: EditorRootProps<S>,
   forwardedRef: ForwardedRef<EditorController>,
 ) => {
+  const { themeMode } = useThemeContext();
   const options = useMemo(() => Object.assign({}, defaultEditorOptions, optionsParam), [optionsParam]);
 
   // External state.
@@ -174,6 +176,7 @@ const EditorRootWithType = <S extends Shape = Shape>(
         className={mx(
           'relative is-full bs-full overflow-hidden',
           ready ? 'transition-opacity delay-[1s] duration-[1s] opacity-100' : 'opacity-0',
+          themeMode === 'dark' && 'dark',
           classNames,
         )}
       >
@@ -189,7 +192,7 @@ export const EditorRoot = forwardRef(EditorRootWithType) as <S extends Shape>(
 
 export const Editor = {
   Root: EditorRoot,
-  Canvas,
+  Canvas: GraphCanvas,
   UI,
 };
 
