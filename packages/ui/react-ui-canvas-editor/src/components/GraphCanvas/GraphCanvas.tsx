@@ -4,6 +4,7 @@
 
 import {
   Background,
+  BackgroundVariant,
   Controls,
   type Edge,
   type Node,
@@ -22,8 +23,6 @@ import { type CanvasGraphModel, type Polygon } from '../../types';
 
 import { GraphNode } from './GraphNode';
 
-import './styles.css';
-
 const nodeTypes: NodeTypes = {
   custom: GraphNode,
 };
@@ -32,10 +31,10 @@ export type GraphCanvasProps = ThemedClassName<React.PropsWithChildren> & {
   graph?: CanvasGraphModel;
 };
 
-const GraphCanvasInner = ({ children, classNames, graph: propsGraph }: GraphCanvasProps) => {
+const GraphCanvasInner = ({ classNames, children, graph: graphParam }: GraphCanvasProps) => {
   const { themeMode } = useThemeContext();
   const context = useContext(EditorContext);
-  const graph = propsGraph ?? context?.graph;
+  const graph = graphParam ?? context?.graph;
 
   // Map graph nodes to React Flow nodes.
   const nodes: Node<Polygon>[] = useMemo(
@@ -74,13 +73,20 @@ const GraphCanvasInner = ({ children, classNames, graph: propsGraph }: GraphCanv
   }
 
   return (
-    <div className={mx('is-full bs-full', classNames)}>
-      <ReactFlow colorMode={themeMode} nodes={nodes} edges={edges} nodeTypes={nodeTypes} fitView>
-        <Background />
-        <Controls />
-        {children}
-      </ReactFlow>
-    </div>
+    <ReactFlow
+      colorMode={themeMode}
+      nodes={nodes}
+      edges={edges}
+      nodeTypes={nodeTypes}
+      fitView
+      proOptions={{ hideAttribution: true }}
+      className={mx('is-full bs-full', classNames)}
+    >
+      {/* TODO(burdon): Tailwind def. */}
+      <Background variant={BackgroundVariant.Lines} color={themeMode === 'dark' ? '#222' : undefined} />
+      <Controls />
+      {children}
+    </ReactFlow>
   );
 };
 
