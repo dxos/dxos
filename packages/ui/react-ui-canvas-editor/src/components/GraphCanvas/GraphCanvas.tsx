@@ -74,16 +74,34 @@ const GraphCanvasInner = ({ classNames, children, graph: graphParam }: GraphCanv
 
   return (
     <ReactFlow
+      className={mx('is-full bs-full', classNames)}
       colorMode={themeMode}
+      nodeTypes={nodeTypes}
       nodes={nodes}
       edges={edges}
-      nodeTypes={nodeTypes}
-      fitView
+      fitView={true}
+      fitViewOptions={{ maxZoom: 1 }}
       proOptions={{ hideAttribution: true }}
-      className={mx('is-full bs-full', classNames)}
+      zoomOnScroll={false}
+      onNodeDrag={(node) => {
+        console.log('onNodeDragStop', node);
+      }}
     >
-      {/* TODO(burdon): Tailwind def. */}
-      <Background variant={BackgroundVariant.Lines} color={themeMode === 'dark' ? '#222' : undefined} />
+      {/* TODO(burdon): Tailwind defs. */}
+      <Background
+        id='1'
+        gap={16}
+        bgColor='transparent'
+        color={themeMode === 'dark' ? '#202020' : '#e0e0e0'}
+        variant={BackgroundVariant.Lines}
+      />
+      <Background
+        id='2'
+        gap={64}
+        bgColor='transparent'
+        color={themeMode === 'dark' ? '#303030' : '#d0d0d0'}
+        variant={BackgroundVariant.Lines}
+      />
       <Controls />
       {children}
     </ReactFlow>
@@ -91,6 +109,7 @@ const GraphCanvasInner = ({ classNames, children, graph: graphParam }: GraphCanv
 };
 
 export const GraphCanvas = (props: GraphCanvasProps) => (
+  // TODO(burdon): Move Provider to Root.
   <ReactFlowProvider>
     <GraphCanvasInner {...props} />
   </ReactFlowProvider>
