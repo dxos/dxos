@@ -3,8 +3,7 @@
 //
 
 import { effect } from '@preact/signals-core';
-import orderBy from 'lodash.orderby';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 
 import { type Database, Obj } from '@dxos/echo';
 import { type Live } from '@dxos/live-object';
@@ -72,15 +71,22 @@ export const useTableModel = <T extends TableRow = TableRow>({
   }, [object, projection, features, rowActions, initialSelection]);
 
   // Update data.
+  // Use a ref to track previous rows to avoid unnecessary updates when only reference changes
+  const prevRowsRef = useRef<T[] | undefined>(undefined);
   useEffect(() => {
-    if (rows) {
-      /*
-       * Sort all objects by string id field as a temporary workaround for query ordering issues
-       * Reference: https://github.com/dxos/dxos/pull/9409
-       */
-      // TODO(ZaymonFC): Remove this workaround once unstable query ordering issue is resolved
-      const sortedRows = orderBy(rows, [(row) => String(row.id)], ['asc']);
-      model?.setRows(sortedRows);
+    if (rows && model) {
+      // Only update if rows actually changed (different length or different object IDs/order)
+      // Don't update if rows is empty (might be during query re-subscription)
+      const prevRows = prevRowsRef.current;
+      const rowsChanged =
+        rows.length > 0 &&
+        (!prevRows || prevRows.length !== rows.length || prevRows.some((row, i) => row.id !== rows[i]?.id));
+
+      if (rowsChanged) {
+        // Rows come pre-sorted from query, no need for additional sorting
+        model.setRows(rows);
+        prevRowsRef.current = rows;
+      }
     }
   }, [model, rows]);
 

@@ -5,7 +5,7 @@
 import { type ReadonlySignal, computed, effect, signal } from '@preact/signals-core';
 
 import { Resource } from '@dxos/context';
-import { type Database, Format, Obj, Ref } from '@dxos/echo';
+import { type Database, Format, Obj, Order, Query, type QueryAST, Ref } from '@dxos/echo';
 import { type JsonProp, type JsonSchemaType, toEffectSchema } from '@dxos/echo/internal';
 import { getValue, setValue } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
@@ -23,6 +23,7 @@ import {
   type FieldSortType,
   type ProjectionModel,
   type PropertyType,
+  type SortDirectionType,
   type ValidationError,
   type View,
   validateSchema,
@@ -33,7 +34,6 @@ import { touch } from '../util';
 import { extractTagIds } from '../util/tag';
 
 import { type SelectionMode, SelectionModel } from './selection-model';
-import { TableSorting } from './table-sorting';
 
 // Domain types for cell classification
 export type TableCellType = 'standard' | 'draft' | 'header';
@@ -74,7 +74,6 @@ export type TableModelProps<T extends TableRow = TableRow> = {
   projection: ProjectionModel;
   db?: Database.Database;
   features?: Partial<TableFeatures>;
-  sorting?: FieldSortType[];
   initialSelection?: string[];
   pinnedRows?: { top: number[]; bottom: number[] };
   rowActions?: TableRowAction[];
@@ -108,7 +107,12 @@ export class TableModel<T extends TableRow = TableRow> extends Resource {
 
   private readonly _rows = signal<T[]>([]);
   private readonly _draftRows = signal<DraftRow<T>[]>([]);
-  private readonly _sorting: TableSorting<T>;
+  // In-memory sort state - changes are local until saved
+  private readonly _inMemorySort = signal<FieldSortType | undefined>(undefined);
+  // Computed signal for sorted rows (used by rows getter and SelectionModel)
+  private readonly _sortedRows: ReadonlySignal<T[]>;
+  // Computed signal for viewDirty state
+  private readonly _viewDirty: ReadonlySignal<boolean>;
 
   private _pinnedRows: NonNullable<TableModelProps<T>['pinnedRows']>;
   private _selection!: SelectionModel<T>;
@@ -119,7 +123,6 @@ export class TableModel<T extends TableRow = TableRow> extends Resource {
     projection,
     db,
     features = {},
-    sorting = [],
     initialSelection = [],
     pinnedRows = { top: [], bottom: [] },
     rowActions = [],
@@ -144,23 +147,72 @@ export class TableModel<T extends TableRow = TableRow> extends Resource {
       'Single selection is not compatible with editable tables.',
     );
 
-    this._sorting = new TableSorting({
-      rows: this._rows,
-      getView: () => this.view,
-      projection: this._projection,
+    // Create computed signal for sorted rows (used by rows getter and SelectionModel)
+    this._sortedRows = computed(() => {
+      const rows = this._rows.value;
+      const sort = this.sorting;
+
+      if (!sort || rows.length === 0) {
+        return rows;
+      }
+
+      const field = this._projection.fields.find((f) => f.id === sort.fieldId);
+      if (!field) {
+        return rows;
+      }
+
+      // Get field projection to check format
+      const fieldProjection = this._projection.getFieldProjection(field.id);
+
+      const sorted = [...rows].sort((a, b) => {
+        const aValue = getValue(a, field.path);
+        const bValue = getValue(b, field.path);
+        return compareValues(aValue, bValue, fieldProjection.props.format, sort.direction);
+      });
+
+      return sorted;
     });
 
-    if (sorting.length > 0) {
-      const { fieldId, direction } = sorting[0];
-      this._sorting.setSort(fieldId, direction);
-    }
-
     this._selection = new SelectionModel(
-      this._sorting.sortedRows,
+      this._sortedRows,
       this._features.selection.mode ?? 'multiple',
       initialSelection,
       () => this._onRowOrderChange?.(),
     );
+
+    // Create computed signal for viewDirty
+    this._viewDirty = computed(() => {
+      const inMemorySort = this._inMemorySort.value;
+      if (!inMemorySort) {
+        return false;
+      }
+
+      const extractOrder = (queryAst: QueryAST.Query): readonly QueryAST.Order[] | undefined => {
+        if (queryAst.type === 'order') {
+          return queryAst.order;
+        }
+        if (queryAst.type === 'options') {
+          return extractOrder(queryAst.query);
+        }
+        return undefined;
+      };
+
+      // Compare with persisted sort from view.query.ast
+      const orders = extractOrder(this.view.query.ast);
+      if (orders && orders.length > 0) {
+        const firstOrder = orders[0];
+        if (firstOrder.kind === 'property') {
+          const field = this._projection.fields.find((f) => f.path === firstOrder.property);
+          if (field && field.id === inMemorySort.fieldId && firstOrder.direction === inMemorySort.direction) {
+            // In-memory sort matches persisted sort
+            return false;
+          }
+        }
+      }
+
+      // In-memory sort differs from persisted sort (or no persisted sort)
+      return true;
+    });
 
     this._pinnedRows = pinnedRows;
     this._rowActions = rowActions;
@@ -194,8 +246,12 @@ export class TableModel<T extends TableRow = TableRow> extends Resource {
     return this._db;
   }
 
+  /**
+   * Gets rows with in-memory sorting applied.
+   * In-memory sort is local to this instance until saved.
+   */
   public get rows(): ReadonlySignal<T[]> {
-    return this.sorting.sortedRows;
+    return this._sortedRows;
   }
 
   public get features(): TableFeatures {
@@ -203,21 +259,63 @@ export class TableModel<T extends TableRow = TableRow> extends Resource {
   }
 
   /**
+   * Gets the current sort state.
+   * Returns in-memory sort if set, otherwise falls back to persisted sort from query AST.
    * @reactive
    */
-  public get sorting(): TableSorting<T> {
-    return this._sorting;
+  public get sorting(): FieldSortType | undefined {
+    // Return in-memory sort if set (local changes)
+    const inMemorySort = this._inMemorySort.value;
+    if (inMemorySort) {
+      return inMemorySort;
+    }
+
+    // Otherwise, read from persisted view.query.ast
+    const view = this.view;
+    // Snapshot view before accessing query.ast
+    const viewSnapshot = Obj.getSnapshot(view);
+    const ast = viewSnapshot.query.ast;
+
+    // Extract order from query AST - handle nested structures (options, order, etc.)
+    const extractOrder = (queryAst: QueryAST.Query): readonly QueryAST.Order[] | undefined => {
+      if (queryAst.type === 'order') {
+        return queryAst.order;
+      }
+      if (queryAst.type === 'options') {
+        return extractOrder(queryAst.query);
+      }
+      return undefined;
+    };
+
+    const orders = extractOrder(ast);
+    if (orders && orders.length > 0) {
+      const firstOrder = orders[0];
+      if (firstOrder.kind === 'property') {
+        // Find field by property path
+        const field = this._projection.fields.find((f) => f.path === firstOrder.property);
+        if (field) {
+          return {
+            fieldId: field.id,
+            direction: firstOrder.direction,
+          };
+        }
+      }
+    }
+
+    // Fallback to deprecated view.sort for backward compatibility
+    return view.sort?.[0];
   }
 
   /**
    * Gets the row data at the specified display index.
    */
   public getRowAt(displayIndex: number): T | undefined {
-    if (displayIndex < 0 || displayIndex >= this.sorting.sortedRows.value.length) {
+    const sortedRows = this._sortedRows.value;
+    if (displayIndex < 0 || displayIndex >= sortedRows.length) {
       return undefined;
     }
 
-    return this.sorting.sortedRows.value[displayIndex];
+    return sortedRows[displayIndex];
   }
 
   public get pinnedRows(): NonNullable<TableModelProps<T>['pinnedRows']> {
@@ -231,11 +329,6 @@ export class TableModel<T extends TableRow = TableRow> extends Resource {
 
   public get selection() {
     return this._selection;
-  }
-
-  /** @reactive */
-  public get isViewDirty(): boolean {
-    return this.sorting.isDirty;
   }
 
   public get rowActions(): TableRowAction[] {
@@ -270,7 +363,7 @@ export class TableModel<T extends TableRow = TableRow> extends Resource {
 
   private initializeEffects(): void {
     const rowOrderWatcher = effect(() => {
-      touch(this.sorting.sortedRows.value);
+      touch(this._rows.value);
       this._onRowOrderChange?.();
     });
     this._ctx.onDispose(rowOrderWatcher);
@@ -286,7 +379,9 @@ export class TableModel<T extends TableRow = TableRow> extends Resource {
       for (let row = start.row; row <= end.row; row++) {
         rowEffects.push(
           effect(() => {
-            const obj = this.sorting.sortedRows.value[row];
+            // Use sorted rows for display index
+            const sortedRows = this._sortedRows.value;
+            const obj = sortedRows[row];
             this._projection?.fields.forEach((field) => touch(getValue(obj, field.path)));
             this._onCellUpdate?.({ row, col: start.col, plane: 'grid' });
           }),
@@ -313,7 +408,7 @@ export class TableModel<T extends TableRow = TableRow> extends Resource {
     this._rows.value = obj;
   };
 
-  public getRowCount = (): number => this._rows.value.length;
+  public getRowCount = (): number => this._sortedRows.value.length;
 
   /**
    * @reactive
@@ -414,8 +509,8 @@ export class TableModel<T extends TableRow = TableRow> extends Resource {
   };
 
   public deleteRow = (rowIndex: number): void => {
-    const row = this._sorting.getDataIndex(rowIndex);
-    const obj = this._rows.value[row];
+    const sortedRows = this._sortedRows.value;
+    const obj = sortedRows[rowIndex];
     const objectsToDelete = [];
 
     if (this.features.selection.enabled && this._selection.hasSelection.value) {
@@ -425,7 +520,7 @@ export class TableModel<T extends TableRow = TableRow> extends Resource {
       objectsToDelete.push(obj);
     }
 
-    this._onDeleteRows?.(row, objectsToDelete);
+    this._onDeleteRows?.(rowIndex, objectsToDelete);
   };
 
   public handleRowAction = (actionId: string, rowIndex: number): void => {
@@ -433,8 +528,8 @@ export class TableModel<T extends TableRow = TableRow> extends Resource {
       return;
     }
 
-    const row = this._sorting.getDataIndex(rowIndex);
-    const data = this._rows.value[row];
+    const sortedRows = this._sortedRows.value;
+    const data = sortedRows[rowIndex];
 
     if (data) {
       this._onRowAction(actionId, data);
@@ -459,9 +554,9 @@ export class TableModel<T extends TableRow = TableRow> extends Resource {
         return undefined;
       }
     } else {
-      // Get data from regular row
-      const dataIndex = this._sorting.getDataIndex(row);
-      value = getValue(this._rows.value[dataIndex], field.path);
+      // Get data from regular row (use sorted rows for display index)
+      const sortedRows = this._sortedRows.value;
+      value = getValue(sortedRows[row], field.path);
     }
 
     if (value == null) {
@@ -520,8 +615,7 @@ export class TableModel<T extends TableRow = TableRow> extends Resource {
       }
       return { valid: true };
     } else {
-      const rowIdx = this._sorting.getDataIndex(row);
-      const currentRow = this._rows.value[rowIdx];
+      const currentRow = this._rows.value[row];
       invariant(currentRow, 'Invalid row index');
 
       const snapshot = getSnapshot(currentRow);
@@ -565,9 +659,9 @@ export class TableModel<T extends TableRow = TableRow> extends Resource {
         this.validateDraftRow(row);
       }
     } else {
-      // Update regular row data
-      const rowIdx = this._sorting.getDataIndex(row);
-      setValue(this._rows.value[rowIdx], field.path, transformedValue);
+      // Update regular row data (use sorted rows for display index)
+      const sortedRows = this._sortedRows.value;
+      setValue(sortedRows[row], field.path, transformedValue);
     }
   };
 
@@ -577,13 +671,13 @@ export class TableModel<T extends TableRow = TableRow> extends Resource {
    * @param {(value: any) => any} update - A function that takes the current value and returns the updated value.
    */
   public updateCellData({ col, row }: DxGridPlanePosition, update: (value: any) => any): void {
-    const dataRow = this._sorting.getDataIndex(row);
     const fields = this._projection?.fields ?? [];
     const field = fields[col];
+    const sortedRows = this._sortedRows.value;
 
-    const value = getValue(this._rows.value[dataRow], field.path);
+    const value = getValue(sortedRows[row], field.path);
     const updatedValue = update(value);
-    setValue(this._rows.value[dataRow], field.path, updatedValue);
+    setValue(sortedRows[row], field.path, updatedValue);
   }
 
   /**
@@ -658,11 +752,98 @@ export class TableModel<T extends TableRow = TableRow> extends Resource {
   }
 
   //
-  // View operations
+  // Sort operations
   //
 
+  /**
+   * Sets the sort order for a field in-memory (local to this instance).
+   * Use saveView() to persist the sort to the view query.
+   */
+  public setSort(fieldId: string, direction: SortDirectionType): void {
+    const field = this._projection.fields.find((f) => f.id === fieldId);
+    if (!field) {
+      return;
+    }
+
+    // Update in-memory sort (local changes)
+    this._inMemorySort.value = {
+      fieldId,
+      direction,
+    };
+  }
+
+  /**
+   * Toggles the sort direction for a field in-memory.
+   */
+  public toggleSort(fieldId: string): void {
+    const currentSort = this.sorting;
+    if (!currentSort || currentSort.fieldId !== fieldId) {
+      this.setSort(fieldId, 'asc');
+      return;
+    }
+
+    const newDirection = currentSort.direction === 'asc' ? 'desc' : 'asc';
+    this.setSort(fieldId, newDirection);
+  }
+
+  /**
+   * Clears the in-memory sort order.
+   */
+  public clearSort(): void {
+    this._inMemorySort.value = undefined;
+  }
+
+  /**
+   * Saves the current in-memory sort to the view query AST.
+   * This persists the sort so it becomes the default for all viewers.
+   */
   public saveView(): void {
-    this._sorting.save();
+    const view = this.view;
+    const inMemorySort = this._inMemorySort.value;
+
+    // Snapshot view before accessing query.ast
+    const viewSnapshot = Obj.getSnapshot(view);
+    const currentQuery = Query.fromAst(viewSnapshot.query.ast);
+    const baseQuery = this._getBaseQuery(currentQuery);
+
+    if (inMemorySort) {
+      // Find the field to get its path
+      const field = this._projection.fields.find((f) => f.id === inMemorySort.fieldId);
+      if (field) {
+        // Persist sort to view.query.ast
+        const newQuery = baseQuery.orderBy(Order.property<any>(field.path as string, inMemorySort.direction));
+        view.query.ast = newQuery.ast;
+      }
+    } else {
+      // Clear sort from view.query.ast
+      view.query.ast = baseQuery.ast;
+    }
+
+    // Clear deprecated view.sort
+    view.sort = [];
+
+    // Clear in-memory sort since it's now persisted
+    this._inMemorySort.value = undefined;
+  }
+
+  /**
+   * Extracts the base query without order clauses.
+   */
+  private _getBaseQuery(query: Query.Any): Query.Any {
+    const ast = query.ast;
+    // If the query has an order clause, extract the inner query
+    if (ast.type === 'order') {
+      return Query.fromAst(ast.query);
+    }
+    return query;
+  }
+
+  /**
+   * Checks if the view has unsaved changes (in-memory sort differs from persisted sort).
+   * @reactive
+   */
+  public get viewDirty(): boolean {
+    return this._viewDirty.value;
   }
 }
 
@@ -698,4 +879,60 @@ const editorTextToCellValue = (props: PropertyType, value: any): any => {
       });
     }
   }
+};
+
+/**
+ * Compares two values for sorting based on the field format.
+ * Handles dates, numbers, and strings appropriately.
+ */
+const compareValues = (aValue: any, bValue: any, format: Format.TypeFormat, direction: SortDirectionType): number => {
+  // Handle null/undefined values
+  if (aValue === undefined || aValue === null) {
+    return bValue === undefined || bValue === null ? 0 : 1;
+  }
+  if (bValue === undefined || bValue === null) {
+    return -1;
+  }
+
+  let comparison = 0;
+
+  // Handle dates chronologically if schema indicates date format
+  const isDateFormat = format === Format.TypeFormat.DateTime || format === Format.TypeFormat.Date;
+  if (isDateFormat) {
+    const aDate = new Date(aValue);
+    const bDate = new Date(bValue);
+    if (!isNaN(aDate.getTime()) && !isNaN(bDate.getTime())) {
+      comparison = aDate.getTime() - bDate.getTime();
+    } else {
+      // Fallback to string comparison if date parsing fails
+      comparison = String(aValue).localeCompare(String(bValue));
+    }
+  }
+  // Handle numbers if schema indicates number format
+  else if (
+    format === Format.TypeFormat.Number ||
+    format === Format.TypeFormat.Integer ||
+    format === Format.TypeFormat.Currency ||
+    format === Format.TypeFormat.Percent ||
+    format === Format.TypeFormat.Duration
+  ) {
+    const aNum = typeof aValue === 'number' ? aValue : Number(aValue);
+    const bNum = typeof bValue === 'number' ? bValue : Number(bValue);
+    if (!isNaN(aNum) && !isNaN(bNum)) {
+      comparison = aNum - bNum;
+    } else {
+      // Fallback to string comparison if number parsing fails
+      comparison = String(aValue).localeCompare(String(bValue));
+    }
+  }
+  // Default to string comparison
+  else if (typeof aValue === 'string' && typeof bValue === 'string') {
+    comparison = aValue.localeCompare(bValue);
+  } else if (typeof aValue === 'number' && typeof bValue === 'number') {
+    comparison = aValue - bValue;
+  } else {
+    comparison = String(aValue).localeCompare(String(bValue));
+  }
+
+  return direction === 'desc' ? -comparison : comparison;
 };

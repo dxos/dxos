@@ -106,7 +106,7 @@ export const useTestTableModel = <T extends Type.Entity.Any = Type.Entity.Any>()
   }, [model]);
 
   const handleSaveView = useCallback(() => {
-    model?.saveView();
+    // Sort is now applied directly to query, no save needed
   }, [model]);
 
   const presentation = useMemo(() => {

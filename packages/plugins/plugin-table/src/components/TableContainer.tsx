@@ -9,7 +9,7 @@ import React, { forwardRef, useCallback, useMemo, useRef } from 'react';
 
 import { LayoutAction, createIntent } from '@dxos/app-framework';
 import { useAppGraph, useIntentDispatcher } from '@dxos/app-framework/react';
-import { Filter, Obj, Query, Type } from '@dxos/echo';
+import { type Database, Filter, Obj, Order, Query, type QueryAST, Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { useGlobalFilteredObjects } from '@dxos/plugin-search';
 import { SpaceAction } from '@dxos/plugin-space/types';
@@ -49,7 +49,8 @@ export const TableContainer = forwardRef<HTMLDivElement, TableContainerProps>(({
   const schema = useSchema(db, typename);
   // TODO(wittjosiah): This should use `query` above.
   //   That currently doesn't work for dynamic schema objects because their indexed typename is the schema object DXN.
-  const queriedObjects = useQuery(db, schema ? Filter.type(schema) : Filter.nothing());
+  // const queriedObjects = useQuery(db, query);
+  const queriedObjects = useQueryWorkaround(db, query.ast, schema);
   const filteredObjects = useGlobalFilteredObjects(queriedObjects);
 
   const { graph } = useAppGraph();
@@ -162,6 +163,7 @@ export const TableContainer = forwardRef<HTMLDivElement, TableContainerProps>(({
       <TableToolbar
         attendableId={Obj.getDXN(object).toString()}
         customActions={customActions}
+        viewDirty={model?.viewDirty}
         onAdd={handleInsertRow}
         onSave={handleSave}
       />
@@ -183,3 +185,47 @@ export const TableContainer = forwardRef<HTMLDivElement, TableContainerProps>(({
 TableContainer.displayName = 'TableContainer';
 
 export default TableContainer;
+
+const useQueryWorkaround = (
+  db: Database.Database | undefined,
+  ast: QueryAST.Query | undefined,
+  schema: Type.Entity.Any | undefined,
+) => {
+  // Extract order from query AST and apply it to the base filter query
+  const query = useMemo(() => {
+    const baseQuery = schema ? Filter.type(schema) : Filter.nothing();
+
+    if (!ast) {
+      return Query.select(baseQuery);
+    }
+
+    // Extract order from query AST - handle nested structures (options, order, etc.)
+    const extractOrder = (queryAst: QueryAST.Query): readonly QueryAST.Order[] | undefined => {
+      if (queryAst.type === 'order') {
+        return queryAst.order;
+      }
+      if (queryAst.type === 'options') {
+        return extractOrder(queryAst.query);
+      }
+      return undefined;
+    };
+
+    const orders = extractOrder(ast);
+    if (orders && orders.length > 0) {
+      // Convert AST orders to Order objects and apply to query
+      const queryWithFilter = Query.select(baseQuery);
+      const orderObjects = orders
+        .filter((order): order is QueryAST.Order & { kind: 'property' } => order.kind === 'property')
+        .map((order) => Order.property<any>(order.property, order.direction));
+
+      if (orderObjects.length > 0) {
+        // TypeScript needs explicit type assertion for spread operator
+        return queryWithFilter.orderBy(...(orderObjects as [Order.Any, ...Order.Any[]]));
+      }
+    }
+
+    return Query.select(baseQuery);
+  }, [ast, schema]);
+
+  return useQuery(db, query);
+};

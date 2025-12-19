@@ -118,14 +118,6 @@ const TableMainInner = <T extends Type.Entity.Any = Type.Entity.Any>(
     [presentation],
   );
 
-  // Set initial sort order.
-  // TODO(burdon): Save sort order to local storage.
-  useEffect(() => {
-    const fieldId = model?.projection?.fields?.[0]?.id;
-    if (fieldId) {
-      model.sorting.setSort(fieldId, 'asc');
-    }
-  }, [model]);
 
   useEffect(() => {
     if (!dxGrid || !presentation) {
@@ -221,7 +213,7 @@ const TableMainInner = <T extends Type.Entity.Any = Type.Entity.Any>(
             break;
           }
           case 'sort': {
-            model?.sorting?.toggleSort(data.fieldId);
+            model?.toggleSort(data.fieldId);
             break;
           }
           case 'saveDraftRow': {

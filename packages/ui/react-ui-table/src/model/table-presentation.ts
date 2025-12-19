@@ -320,10 +320,10 @@ export class TablePresentation<T extends TableRow = TableRow> {
   private getHeaderCells(range: DxGridPlaneRange): DxGridPlaneCells {
     const cells: DxGridPlaneCells = {};
     const fields = this.model.projection?.fields ?? [];
+    const currentSort = this.model.sorting;
     for (let col = range.start.col; col <= range.end.col && col < fields.length; col++) {
       const { field, props } = this.model.projection.getFieldProjection(fields[col].id);
-      const sorting = this.model.sorting?.sorting;
-      const direction = sorting?.fieldId === field.id ? sorting.direction : undefined;
+      const direction = currentSort?.fieldId === field.id ? currentSort.direction : undefined;
 
       cells[toPlaneCellIndex({ col, row: 0 })] = {
         // TODO(burdon): Use same logic as form for fallback title.
