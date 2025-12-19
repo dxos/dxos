@@ -19,7 +19,7 @@ import { type EditorController } from '@dxos/react-ui-editor';
 import { MenuBuilder, useMenuActions } from '@dxos/react-ui-menu';
 import { MenuProvider, ToolbarMenu } from '@dxos/react-ui-menu';
 import { StackItem } from '@dxos/react-ui-stack';
-import { type Message } from '@dxos/types';
+import { Message } from '@dxos/types';
 
 import { meta } from '../../meta';
 import { type Mailbox } from '../../types';
@@ -55,7 +55,7 @@ export const MailboxArticle = ({ subject: mailbox, filter: filterParam, attendab
   //  Query.select(filter ?? Filter.everything()).orderBy(Order.property('createdAt', 'desc')),
   const messages: Message.Message[] = useQuery(
     mailbox.queue.target,
-    filter ?? Filter.everything(),
+    filter ?? Filter.type(Message.Message),
   ) as Message.Message[];
   const sortedMessages = useMemo(
     () => [...messages].sort(sortByCreated('created', sortDescending.value)),

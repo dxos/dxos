@@ -405,13 +405,8 @@ export const selectQueue = Effect.fn(function* () {
         }
 
         const queueDxn = queueRef.dxn.toString();
-        const objectTypename = Obj.getTypename(obj);
-        const objectName = (obj as any).name as string | undefined;
-        const objectId = obj.id;
-
-        // Create label: prefer name, then typename, then id
-        const label = objectName ?? objectTypename ?? objectId;
-        const description = objectName && objectTypename ? objectTypename : undefined;
+        const label = Obj.getLabel(obj) ?? obj.id;
+        const description = Obj.getTypename(obj);
 
         queueChoices.push({
           title: label,

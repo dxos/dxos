@@ -119,14 +119,8 @@ export const waitForSync = Effect.fn(function* (space: Space) {
       onProgress: (state) => log.info('syncing', { state: state ?? 'no connection to edge' }),
     }),
   ).pipe(
-    Effect.timeout(Duration.seconds(2)),
-    Effect.catchAll(() =>
-      Effect.gen(function* () {
-        // In test environments, EDGE might not be available, so log and continue
-        log.warn('Sync failed or timed out (EDGE may not be available)');
-        yield* Console.log('Sync skipped (EDGE not available)');
-      }),
-    ),
+    Effect.timeout(Duration.seconds(10)),
+    Effect.catchAll(() => Console.warn('Sync skipped (EDGE not available)')),
   );
   yield* Console.log('Sync complete');
 });
