@@ -65,7 +65,7 @@ export const storybookGraphBuilders = (context: PluginContext): BuilderExtension
                   id: 'user-account',
                   type: 'user-account',
                   properties: {
-                    label: 'User Account',
+                    label: 'User profile',
                     icon: 'ph--user--regular',
                     disposition: 'user-account',
                     userId: '1234567890ABCDEF',

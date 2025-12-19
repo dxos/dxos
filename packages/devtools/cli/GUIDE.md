@@ -1,15 +1,14 @@
 # DX CLI
 
-
 ## Development
 
-To temporarily install the cli run:
+To temporarily install the cli run `pnpm link` from the CLI directory:
 
 ```bash
 pnpm link --global
 ```
 
-To remove the cli run:
+To undo:
 
 ```bash
 pnpm unlink --global @dxos/cli
@@ -17,14 +16,16 @@ pnpm unlink --global @dxos/cli
 
 ## Setup
 
-- Ensure you have a cli profile for EDGE main: `dx profile list`.
+- Ensure you have a `main` profile for EDGE: `dx profile list`.
 - If not create one: `dx profile create --template main`.
 - Set the profile environment variable: `export DX_PROFILE="main"`.
-- Link the dx CLI's HALO to a Composer identity:
-    - Navigate to Profile > HALO > Recovery Code
-    - `dx halo recover "<recovery code>"`
+- Link the dx CLI's HALO to a Composer's identity:
+    - Navigate to Profile > Security > Create Recovery Code
+    - Enter the recovery code: `dx halo recover "<recovery code>"`
 
-## Chess
+## Examples
+
+### Chess
 
 TODO(burdon): First add chess player funciton then commentary.
 
@@ -44,7 +45,7 @@ dx trigger create subscription --enabled
 6.  Make a move and it should create a document with commentary about the move.
 7.  Make another move and it should update the document.
 
-## Inbox
+### Inbox
 
 1.  In Composer, enable the Inbox plugin and create a new mailbox.
 2.  If you've not already authed with Google, there will be a `Manage Integrations` button in empty mailbox, click it and then do the Google auth process.
@@ -54,8 +55,9 @@ dx trigger create subscription --enabled
 6.  Once the remote functions load press the download button beside the `dxos.org/function/inbox/google-mail-sync` function to import it.
     - NOTE: be careful there are currently two gmail sync functions there but one is old and deprecated).
 7.  Now open the automations page, select the trigger that was created earlier to edit it.
-8.  Select the function just imported, set it to restricted mode, update the cron to `*/5 * * * *` (5 minutes), enable it and save it.
-    - NOTE: there's a bug with the trigger editor where sometimes save doesn't close the form, but it actually did save and it can be closed by pressing cancel.
+8.  Select the imported function and configure the timer.
+    - Update the cron to `*/5 * * * *` (5 minutes), enable it and save it.
+    - NOTE: there's a bug with the trigger editor where sometimes save doesn't close the form, but does save; close by pressing cancel.
 
 ## Current Limitations
 
