@@ -36,7 +36,7 @@ export const ObjectForm = ({ object, schema }: ObjectFormProps) => {
   const handleCreate = useCallback((schema: Type.Entity.Any, values: any) => {
     invariant(db);
     const newObject = db.add(Obj.make(schema, values));
-    if (Obj.instanceOf(newObject, Tag.Tag)) {
+    if (Obj.instanceOf(Tag.Tag, newObject)) {
       const meta = Obj.getMeta(object);
       meta.tags = [...(meta.tags ?? []), Obj.getDXN(newObject).toString()];
     }

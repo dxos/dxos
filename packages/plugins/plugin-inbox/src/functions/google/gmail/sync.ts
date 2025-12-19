@@ -18,7 +18,7 @@ import { Database } from '@dxos/echo';
 import type { Queue } from '@dxos/echo-db';
 import { QueueService, defineFunction } from '@dxos/functions';
 import { log } from '@dxos/log';
-import { type Message } from '@dxos/types';
+import { Message } from '@dxos/types';
 
 // NOTE: While the integration is in test mode, only the emails listed in the following dashboard are supported:
 //   https://console.cloud.google.com/auth/audience?authuser=1&project=composer-app-454920
@@ -113,7 +113,7 @@ export default defineFunction({
 
       // Get last message to resume from.
       const queue = yield* QueueService.getQueue<Message.Message>(mailbox.queue.dxn);
-      const objects = yield* Effect.tryPromise(() => queue.query(Query.select(Filter.everything())).run());
+      const objects = yield* Effect.tryPromise(() => queue.query(Query.select(Filter.type(Message.Message))).run());
       const lastMessage = objects.at(-1);
 
       // Build deduplication set from recent messages to prevent duplicates across sync runs.
