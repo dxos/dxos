@@ -1,9 +1,17 @@
 {
+  "name": "@dxos/cli-next",
+  "version": "0.8.3",
+  "private": true,
+  "description": "Next-generation DXOS CLI",
+  "homepage": "https://dxos.org",
+  "bugs": "https://github.com/dxos/dxos/issues",
+  "license": "MIT",
   "author": "info@dxos.org",
+  "sideEffects": false,
+  "type": "module",
   "bin": {
     "dx": "./bin/dx"
   },
-  "bugs": "https://github.com/dxos/dxos/issues",
   "dependencies": {
     "@dxos/ai": "workspace:*",
     "@dxos/assistant": "workspace:*",
@@ -64,7 +72,6 @@
     "wtfnode": "catalog:",
     "yaml": "catalog:"
   },
-  "description": "Next-generation DXOS CLI",
   "devDependencies": {
     "@opentui/core-darwin-arm64": "catalog:",
     "@opentui/core-darwin-x64": "catalog:",
@@ -75,12 +82,5 @@
     "@types/wtfnode": "catalog:",
     "typescript": "catalog:",
     "vitest": "catalog:"
-  },
-  "homepage": "https://dxos.org",
-  "license": "MIT",
-  "name": "@dxos/cli-next",
-  "private": true,
-  "sideEffects": false,
-  "type": "module",
-  "version": "0.8.3"
+  }
 }
