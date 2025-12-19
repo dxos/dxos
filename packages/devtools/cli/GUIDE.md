@@ -39,10 +39,10 @@ dx trigger create subscription --enabled
   --input "game={{event.subject}}"
 ```
 
-1.  Sync the trigger to EDGE: `dx space sync --space-id <default-space-id>`
-2.  In Composer, enable the chess plugin and create a chess game.
-3.  Make a move and it should create a document with commentary about the move.
-4.  Make another move and it should update the document.
+5.  Sync the trigger to EDGE: `dx space sync --space-id <default-space-id>`
+6.  In Composer, enable the chess plugin and create a chess game.
+7.  Make a move and it should create a document with commentary about the move.
+8.  Make another move and it should update the document.
 
 ### Inbox
 
