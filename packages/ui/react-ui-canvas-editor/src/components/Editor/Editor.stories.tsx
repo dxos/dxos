@@ -14,7 +14,7 @@ import { useAsyncEffect } from '@dxos/react-ui';
 import { withTheme } from '@dxos/react-ui/testing';
 import { withAttention } from '@dxos/react-ui-attention/testing';
 import { Form, TupleField } from '@dxos/react-ui-form';
-import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
+import { Json } from '@dxos/react-ui-syntax-highlighter';
 import { createGraph } from '@dxos/schema';
 import { TestSchema, type TypeSpec, type ValueGenerator, createObjectFactory } from '@dxos/schema/testing';
 
@@ -93,11 +93,7 @@ const DefaultStory = ({ id = 'test', init, sidebar, children, ...props }: Render
             </Form.Root>
           )}
 
-          {sidebar === 'json' && (
-            <SyntaxHighlighter language='json' classNames='text-xs'>
-              {JSON.stringify({ graph: graph?.graph }, null, 2)}
-            </SyntaxHighlighter>
-          )}
+          {sidebar === 'json' && <Json data={{ graph: graph?.graph }} classNames='text-xs' />}
         </Container>
       )}
     </div>
