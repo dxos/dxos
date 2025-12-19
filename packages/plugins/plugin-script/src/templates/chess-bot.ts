@@ -24,7 +24,6 @@ export default defineFunction({
     }),
   }),
 
-  // @ts-expect-error
   outputSchema: Schema.Struct({
     state: Schema.String.annotations({
       description: 'The state of the game as an ASCII art board.',
@@ -34,7 +33,7 @@ export default defineFunction({
   types: [Chess.Game],
   services: [Database.Service],
 
-  handler: Effect.fnUntraced(function* ({ data: { game, player = 'white' } }) {
+  handler: Effect.fnUntraced(function* ({ data: { game, player = 'black' } }) {
     const loadedGame = yield* Database.Service.load(game);
     const chess = new ChessJS();
     chess.loadPgn(loadedGame.pgn ?? '');
@@ -42,13 +41,13 @@ export default defineFunction({
       return { state: chess.ascii() };
     }
 
-    const moves = chess.history({ verbose: true });
+    const moves = chess.moves({ verbose: true });
     const move = moves[Math.floor(Math.random() * moves.length)];
     if (!move) {
-      return new Response('No legal moves', { status: 406 });
+      return { state: chess.ascii() };
     }
 
-    chess.move(move);
+    chess.move(move.san);
     const newPgn = chess.pgn();
     loadedGame.pgn = newPgn;
     yield* Database.Service.flush();
