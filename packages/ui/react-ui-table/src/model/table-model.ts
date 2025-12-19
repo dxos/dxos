@@ -22,7 +22,8 @@ import {
 import { type ProjectionModel, type PropertyType, type ValidationError, type View, validateSchema } from '@dxos/schema';
 
 import { type Table } from '../types';
-import { touch } from '../util';
+import { extractOrder, touch } from '../util';
+import { compareValues } from '../util/sort';
 import { extractTagIds } from '../util/tag';
 
 /**
@@ -109,6 +110,10 @@ export class TableModel<T extends TableRow = TableRow> extends Resource {
   private readonly _draftRows = signal<DraftRow<T>[]>([]);
   // In-memory sort state - changes are local until saved
   private readonly _inMemorySort = signal<FieldSortType | undefined>(undefined);
+  // Computed signal for persisted sort from view.query.ast
+  private readonly _persistedSort: ReadonlySignal<FieldSortType | undefined>;
+  // Computed signal for current sort (in-memory takes precedence over persisted)
+  private readonly _sorting: ReadonlySignal<FieldSortType | undefined>;
   // Computed signal for sorted rows (used by rows getter and SelectionModel)
   private readonly _sortedRows: ReadonlySignal<T[]>;
   // Computed signal for viewDirty state
@@ -147,10 +152,39 @@ export class TableModel<T extends TableRow = TableRow> extends Resource {
       'Single selection is not compatible with editable tables.',
     );
 
+    // Create computed signal for persisted sort from view.query.ast
+    this._persistedSort = computed(() => {
+      const viewSnapshot = Obj.getSnapshot(this.view);
+      const ast = viewSnapshot.query.ast;
+      const orders = extractOrder(ast);
+
+      if (orders && orders.length > 0) {
+        const firstOrder = orders[0];
+        if (firstOrder.kind === 'property') {
+          // Find field by property path
+          const field = this._projection.fields.find((f) => f.path === firstOrder.property);
+          if (field) {
+            return {
+              fieldId: field.id,
+              direction: firstOrder.direction,
+            };
+          }
+        }
+      }
+
+      return undefined;
+    });
+
+    // Create computed signal for current sort (in-memory takes precedence over persisted)
+    this._sorting = computed(() => {
+      const inMemorySort = this._inMemorySort.value;
+      return inMemorySort ?? this._persistedSort.value;
+    });
+
     // Create computed signal for sorted rows (used by rows getter and SelectionModel)
     this._sortedRows = computed(() => {
       const rows = this._rows.value;
-      const sort = this.sorting;
+      const sort = this._sorting.value;
 
       if (!sort || rows.length === 0) {
         return rows;
@@ -187,31 +221,12 @@ export class TableModel<T extends TableRow = TableRow> extends Resource {
         return false;
       }
 
-      const extractOrder = (queryAst: QueryAST.Query): readonly QueryAST.Order[] | undefined => {
-        if (queryAst.type === 'order') {
-          return queryAst.order;
-        }
-        if (queryAst.type === 'options') {
-          return extractOrder(queryAst.query);
-        }
-        return undefined;
-      };
-
-      // Compare with persisted sort from view.query.ast
-      const orders = extractOrder(this.view.query.ast);
-      if (orders && orders.length > 0) {
-        const firstOrder = orders[0];
-        if (firstOrder.kind === 'property') {
-          const field = this._projection.fields.find((f) => f.path === firstOrder.property);
-          if (field && field.id === inMemorySort.fieldId && firstOrder.direction === inMemorySort.direction) {
-            // In-memory sort matches persisted sort
-            return false;
-          }
-        }
+      const persisted = this._persistedSort.value;
+      if (!persisted) {
+        return true; // In-memory sort but no persisted sort
       }
 
-      // In-memory sort differs from persisted sort (or no persisted sort)
-      return true;
+      return inMemorySort.fieldId !== persisted.fieldId || inMemorySort.direction !== persisted.direction;
     });
 
     this._pinnedRows = pinnedRows;
@@ -260,49 +275,11 @@ export class TableModel<T extends TableRow = TableRow> extends Resource {
 
   /**
    * Gets the current sort state.
-   * Returns in-memory sort if set, otherwise falls back to persisted sort from query AST.
+   * Priority: in-memory sort (local changes) > persisted sort (from query AST).
    * @reactive
    */
   public get sorting(): FieldSortType | undefined {
-    // Return in-memory sort if set (local changes)
-    const inMemorySort = this._inMemorySort.value;
-    if (inMemorySort) {
-      return inMemorySort;
-    }
-
-    // Otherwise, read from persisted view.query.ast
-    const view = this.view;
-    // Snapshot view before accessing query.ast
-    const viewSnapshot = Obj.getSnapshot(view);
-    const ast = viewSnapshot.query.ast;
-
-    // Extract order from query AST - handle nested structures (options, order, etc.)
-    const extractOrder = (queryAst: QueryAST.Query): readonly QueryAST.Order[] | undefined => {
-      if (queryAst.type === 'order') {
-        return queryAst.order;
-      }
-      if (queryAst.type === 'options') {
-        return extractOrder(queryAst.query);
-      }
-      return undefined;
-    };
-
-    const orders = extractOrder(ast);
-    if (orders && orders.length > 0) {
-      const firstOrder = orders[0];
-      if (firstOrder.kind === 'property') {
-        // Find field by property path
-        const field = this._projection.fields.find((f) => f.path === firstOrder.property);
-        if (field) {
-          return {
-            fieldId: field.id,
-            direction: firstOrder.direction,
-          };
-        }
-      }
-    }
-
-    return undefined;
+    return this._sorting.value;
   }
 
   /**
@@ -875,65 +852,4 @@ const editorTextToCellValue = (props: PropertyType, value: any): any => {
       });
     }
   }
-};
-
-/**
- * Compares two values for sorting based on the field format.
- * Handles dates, numbers, and strings appropriately.
- */
-const compareValues = (
-  aValue: any,
-  bValue: any,
-  format: Format.TypeFormat,
-  direction: QueryAST.OrderDirection,
-): number => {
-  // Handle null/undefined values
-  if (aValue === undefined || aValue === null) {
-    return bValue === undefined || bValue === null ? 0 : 1;
-  }
-  if (bValue === undefined || bValue === null) {
-    return -1;
-  }
-
-  let comparison = 0;
-
-  // Handle dates chronologically if schema indicates date format
-  const isDateFormat = format === Format.TypeFormat.DateTime || format === Format.TypeFormat.Date;
-  if (isDateFormat) {
-    const aDate = new Date(aValue);
-    const bDate = new Date(bValue);
-    if (!isNaN(aDate.getTime()) && !isNaN(bDate.getTime())) {
-      comparison = aDate.getTime() - bDate.getTime();
-    } else {
-      // Fallback to string comparison if date parsing fails
-      comparison = String(aValue).localeCompare(String(bValue));
-    }
-  }
-  // Handle numbers if schema indicates number format
-  else if (
-    format === Format.TypeFormat.Number ||
-    format === Format.TypeFormat.Integer ||
-    format === Format.TypeFormat.Currency ||
-    format === Format.TypeFormat.Percent ||
-    format === Format.TypeFormat.Duration
-  ) {
-    const aNum = typeof aValue === 'number' ? aValue : Number(aValue);
-    const bNum = typeof bValue === 'number' ? bValue : Number(bValue);
-    if (!isNaN(aNum) && !isNaN(bNum)) {
-      comparison = aNum - bNum;
-    } else {
-      // Fallback to string comparison if number parsing fails
-      comparison = String(aValue).localeCompare(String(bValue));
-    }
-  }
-  // Default to string comparison
-  else if (typeof aValue === 'string' && typeof bValue === 'string') {
-    comparison = aValue.localeCompare(bValue);
-  } else if (typeof aValue === 'number' && typeof bValue === 'number') {
-    comparison = aValue - bValue;
-  } else {
-    comparison = String(aValue).localeCompare(String(bValue));
-  }
-
-  return direction === 'desc' ? -comparison : comparison;
 };

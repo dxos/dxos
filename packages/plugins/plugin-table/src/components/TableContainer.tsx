@@ -23,6 +23,7 @@ import {
   TablePresentation,
   type TableRowAction,
   TableToolbar,
+  extractOrder,
   useAddRow,
   useProjectionModel,
   useTableModel,
@@ -198,17 +199,6 @@ const useQueryWorkaround = (
     if (!ast) {
       return Query.select(baseQuery);
     }
-
-    // Extract order from query AST - handle nested structures (options, order, etc.)
-    const extractOrder = (queryAst: QueryAST.Query): readonly QueryAST.Order[] | undefined => {
-      if (queryAst.type === 'order') {
-        return queryAst.order;
-      }
-      if (queryAst.type === 'options') {
-        return extractOrder(queryAst.query);
-      }
-      return undefined;
-    };
 
     const orders = extractOrder(ast);
     if (orders && orders.length > 0) {
