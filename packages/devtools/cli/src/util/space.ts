@@ -3,7 +3,6 @@
 //
 
 import * as Console from 'effect/Console';
-import * as Duration from 'effect/Duration';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Match from 'effect/Match';
@@ -16,6 +15,7 @@ import { BaseError, type BaseErrorOptions } from '@dxos/errors';
 import { QueueService } from '@dxos/functions';
 import { log } from '@dxos/log';
 import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
+import { isBun } from '@dxos/util';
 
 export const getSpace = (spaceId: Key.SpaceId) =>
   Effect.gen(function* () {
@@ -108,6 +108,12 @@ export const spaceLayer = (
 
 // TODO(dmaretskyi): There a race condition with edge connection not showing up.
 export const waitForSync = Effect.fn(function* (space: Space) {
+  // TODO(wittjosiah): Find a better way to do this.
+  if (!isBun()) {
+    // Skipping sync to edge when not in bun env as this indicates running a test.
+    return;
+  }
+
   // TODO(wittjosiah): This should probably be prompted for.
   if (space.internal.data.edgeReplication !== EdgeReplicationSetting.ENABLED) {
     yield* Console.log('Edge replication is disabled, enabling...');
@@ -118,9 +124,6 @@ export const waitForSync = Effect.fn(function* (space: Space) {
     space.internal.syncToEdge({
       onProgress: (state) => log.info('syncing', { state: state ?? 'no connection to edge' }),
     }),
-  ).pipe(
-    Effect.timeout(Duration.seconds(10)),
-    Effect.catchAll(() => Console.warn('Sync skipped (EDGE not available)')),
   );
   yield* Console.log('Sync complete');
 });
