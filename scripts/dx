@@ -4,12 +4,12 @@ set -eo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
-CLI_DIR="$ROOT_DIR/packages/devtools/cli-next"
+CLI_DIR="$ROOT_DIR/packages/devtools/cli"
 
 #
 # Use exec -a to set process name for easy signal targeting.
 # NOTE: killall uses the actual executable name, not argv[0], so use pkill instead:
-# pkill -TERM dxnext
+# pkill -TERM dx
 #
 # Change to the CLI directory so bun can resolve OpenTUI native bindings correctly.
-cd "$CLI_DIR" && exec -a dxnext bun run src/bin.ts "$@"
+cd "$CLI_DIR" && exec -a dx bun run src/bin.ts "$@"
