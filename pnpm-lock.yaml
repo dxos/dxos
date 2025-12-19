@@ -11164,9 +11164,6 @@ importers:
       '@dxos/plugin-automation':
         specifier: workspace:*
         version: link:../plugin-automation
-      '@dxos/plugin-chess':
-        specifier: workspace:*
-        version: link:../plugin-chess
       '@dxos/plugin-client':
         specifier: workspace:*
         version: link:../plugin-client
@@ -11291,6 +11288,9 @@ importers:
       '@automerge/automerge':
         specifier: 3.2.1
         version: 3.2.1
+      '@dxos/plugin-chess':
+        specifier: workspace:*
+        version: link:../plugin-chess
       '@dxos/random':
         specifier: workspace:*
         version: link:../../common/random
