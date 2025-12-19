@@ -7,7 +7,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
 import { LayoutAction, createIntent } from '@dxos/app-framework';
 import { type SurfaceComponentProps, useIntentDispatcher } from '@dxos/app-framework/react';
-import { Obj, Tag } from '@dxos/echo';
+import { type Database, Obj, Relation, Tag } from '@dxos/echo';
 import { QueryBuilder } from '@dxos/echo-query';
 import { AttentionAction } from '@dxos/plugin-attention/types';
 import { ATTENDABLE_PATH_SEPARATOR, DeckAction } from '@dxos/plugin-deck/types';
@@ -19,7 +19,7 @@ import { type EditorController } from '@dxos/react-ui-editor';
 import { MenuBuilder, useMenuActions } from '@dxos/react-ui-menu';
 import { MenuProvider, ToolbarMenu } from '@dxos/react-ui-menu';
 import { StackItem } from '@dxos/react-ui-stack';
-import { type Message } from '@dxos/types';
+import { HasSubject, Message } from '@dxos/types';
 
 import { meta } from '../../meta';
 import { type Mailbox } from '../../types';
@@ -55,7 +55,7 @@ export const MailboxArticle = ({ subject: mailbox, filter: filterParam, attendab
   //  Query.select(filter ?? Filter.everything()).orderBy(Order.property('createdAt', 'desc')),
   const messages: Message.Message[] = useQuery(
     mailbox.queue.target,
-    filter ?? Filter.everything(),
+    filter ?? Filter.type(Message.Message),
   ) as Message.Message[];
   const sortedMessages = useMemo(
     () => [...messages].sort(sortByCreated('created', sortDescending.value)),
@@ -73,6 +73,41 @@ export const MailboxArticle = ({ subject: mailbox, filter: filterParam, attendab
   }, [tags]);
   const parser = useMemo(() => new QueryBuilder(tagMap), [tagMap]);
   useEffect(() => setFilter(parser.build(filterText).filter), [filterText, parser]);
+
+  // Build message-to-tags map from HasSubject relations incrementally
+  const messageTagsMap = useMessageTagsMap(mailbox.queue.target);
+
+  // Merge tags into mailbox labels
+  const mergedLabels = useMemo(() => {
+    const labels = { ...(mailbox.labels ?? {}) };
+    // Add all tags to the labels object (tag.id -> tag.label)
+    for (const [_messageId, messageTags] of Object.entries(messageTagsMap)) {
+      for (const tag of messageTags) {
+        labels[tag.id] = tag.label;
+      }
+    }
+    return labels;
+  }, [mailbox.labels, messageTagsMap]);
+
+  // Update message properties to include tag IDs in labels array
+  const messagesWithTags = useMemo(() => {
+    return sortedMessages.map((message) => {
+      const messageTags = messageTagsMap[message.id] ?? [];
+      const tagIds = [...new Set(messageTags.map((tag) => tag.id))]; // Deduplicate tag IDs
+      const existingLabels = Array.isArray(message.properties?.labels) ? message.properties.labels : [];
+      // Deduplicate existing labels and filter out tag IDs that are already present
+      const uniqueExistingLabels = [...new Set(existingLabels)];
+      const newTagIds = tagIds.filter((tagId) => !uniqueExistingLabels.includes(tagId));
+      const finalLabels = [...uniqueExistingLabels, ...newTagIds];
+      return {
+        ...message,
+        properties: {
+          ...message.properties,
+          labels: finalLabels,
+        },
+      };
+    });
+  }, [sortedMessages, messageTagsMap]);
 
   const handleAction = useCallback<MailboxActionHandler>(
     (action) => {
@@ -182,11 +217,11 @@ export const MailboxArticle = ({ subject: mailbox, filter: filterParam, attendab
         </MenuProvider>
       </ElevationProvider>
 
-      {sortedMessages && sortedMessages.length > 0 ? (
+      {messagesWithTags && messagesWithTags.length > 0 ? (
         <MailboxComponent
           id={id}
-          messages={sortedMessages}
-          labels={mailbox.labels}
+          messages={messagesWithTags}
+          labels={mergedLabels}
           currentMessageId={currentMessageId}
           onAction={handleAction}
         />
@@ -195,6 +230,62 @@ export const MailboxArticle = ({ subject: mailbox, filter: filterParam, attendab
       )}
     </StackItem.Content>
   );
+};
+
+/**
+ * Hook that builds an object mapping message IDs to tags from HasSubject relations.
+ */
+const useMessageTagsMap = (queue: Database.Queryable | undefined): Record<string, Tag.Tag[]> => {
+  const hasSubjectRelations = useQuery(queue, Filter.type(HasSubject.HasSubject));
+  const [messageTagsMap, setMessageTagsMap] = useState<Record<string, Tag.Tag[]>>({});
+
+  useEffect(() => {
+    const map: Record<string, Tag.Tag[]> = {};
+
+    for (const relation of hasSubjectRelations) {
+      try {
+        const source = Relation.getSource(relation);
+        if (!Obj.instanceOf(Tag.Tag, source)) {
+          continue;
+        }
+
+        // Try to get message ID from target DXN (queue DXN with objectId)
+        const targetDXN = Relation.getTargetDXN(relation);
+        const queueDXNInfo = targetDXN.asQueueDXN();
+        let messageId: string | undefined;
+
+        if (queueDXNInfo?.objectId) {
+          messageId = queueDXNInfo.objectId;
+        } else {
+          // Fallback: try to resolve target object
+          try {
+            const target = Relation.getTarget(relation);
+            if (Obj.instanceOf(Message.Message, target)) {
+              messageId = target.id;
+            }
+          } catch {
+            // Target not resolved, skip this relation
+          }
+        }
+
+        if (messageId) {
+          if (!map[messageId]) {
+            map[messageId] = [];
+          }
+          // Prevent duplicates
+          if (!map[messageId].some((tag) => tag.id === source.id)) {
+            map[messageId].push(source);
+          }
+        }
+      } catch {
+        // Skip relations with unresolved source or target
+      }
+    }
+
+    setMessageTagsMap(map);
+  }, [hasSubjectRelations]);
+
+  return messageTagsMap;
 };
 
 const useMailboxActions = ({

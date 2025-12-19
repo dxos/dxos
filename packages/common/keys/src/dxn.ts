@@ -300,7 +300,7 @@ export class DXN {
     }
 
     return {
-      subspaceTag,
+      subspaceTag: subspaceTag as QueueSubspaceTag,
       spaceId: spaceId as SpaceId,
       queueId,
       objectId: objectId as string | undefined,
@@ -338,7 +338,7 @@ export declare namespace DXN {
   };
 
   export type QueueDXN = {
-    subspaceTag: string;
+    subspaceTag: QueueSubspaceTag;
     spaceId: SpaceId;
     queueId: string; // TODO(dmaretskyi): ObjectId.
     objectId?: string; // TODO(dmaretskyi): ObjectId.

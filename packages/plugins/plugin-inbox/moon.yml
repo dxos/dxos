@@ -19,5 +19,7 @@ tasks:
       - .storybook/*
 
   deploy-functions:
-    command: $workspaceRoot/scripts/dxnext --profile main function deploy --runtime worker-loader $workspaceRoot/packages/plugins/plugin-inbox/src/functions/google/gmail/sync.ts
+    command: |
+      $workspaceRoot/scripts/dx --profile main function deploy --runtime worker-loader $workspaceRoot/packages/plugins/plugin-inbox/src/functions/google/gmail/sync.ts && \
+      $workspaceRoot/scripts/dx --profile main function deploy --runtime worker-loader $workspaceRoot/packages/plugins/plugin-inbox/src/functions/classify.ts
     local: true
