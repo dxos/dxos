@@ -21,7 +21,7 @@ export const ColumnActionsMenu = ({ model, modals }: ColumnActionsMenuProps) => 
     return null;
   }
 
-  const currentSort = model.sorting?.sorting;
+  const currentSort = model.sorting;
   const isCurrentColumnSorted = currentSort?.fieldId === state.fieldId;
 
   return (
@@ -33,7 +33,7 @@ export const ColumnActionsMenu = ({ model, modals }: ColumnActionsMenuProps) => 
             {(!isCurrentColumnSorted || currentSort?.direction === 'asc') && (
               <DropdownMenu.Item
                 data-testid='column-sort-descending'
-                onClick={() => model.sorting?.setSort(state.fieldId, 'desc')}
+                onClick={() => model.setSort(state.fieldId, 'desc')}
               >
                 {t('column action sort descending')}
               </DropdownMenu.Item>
@@ -41,13 +41,13 @@ export const ColumnActionsMenu = ({ model, modals }: ColumnActionsMenuProps) => 
             {(!isCurrentColumnSorted || currentSort?.direction === 'desc') && (
               <DropdownMenu.Item
                 data-testid='column-sort-ascending'
-                onClick={() => model.sorting?.setSort(state.fieldId, 'asc')}
+                onClick={() => model.setSort(state.fieldId, 'asc')}
               >
                 {t('column action sort ascending')}
               </DropdownMenu.Item>
             )}
             {isCurrentColumnSorted && (
-              <DropdownMenu.Item data-testid='column-clear-sort' onClick={() => model.sorting?.clearSort()}>
+              <DropdownMenu.Item data-testid='column-clear-sort' onClick={() => model.clearSort()}>
                 {t('column action clear sorting')}
               </DropdownMenu.Item>
             )}
