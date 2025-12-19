@@ -6,6 +6,6 @@ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 #
 # Use exec -a to set process name for easy signal targeting.
 # NOTE: killall uses the actual executable name, not argv[0], so use pkill instead:
-# pkill -TERM dxnext
+# pkill -TERM dx
 #
 exec -a dx bun run "$DIR/../src/bin.ts" "$@"

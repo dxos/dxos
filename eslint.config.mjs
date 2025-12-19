@@ -31,7 +31,7 @@ export default tseslint.config(
       'packages/core/protocols/proto/**/*',
       'packages/sdk/client/src/version.ts',
       'packages/sdk/client-services/src/version.ts',
-      'packages/devtools/cli-next/src/version.ts',
+      'packages/devtools/cli/src/version.ts',
       'packages/ui/react-ui-calendar/orig/**/*',
 
       // Config
@@ -276,7 +276,7 @@ export default tseslint.config(
   //
   {
     files: [
-      'packages/devtools/cli-next/**/*.{js,ts,jsx,tsx,mts,cts,mjs,cjs}',
+      'packages/devtools/cli/**/*.{js,ts,jsx,tsx,mts,cts,mjs,cjs}',
       'packages/common/effect-atom-solid/**/*.{js,ts,jsx,tsx,mts,cts,mjs,cjs}',
       'packages/common/web-context-solid/**/*.{js,ts,jsx,tsx,mts,cts,mjs,cjs}',
     ],

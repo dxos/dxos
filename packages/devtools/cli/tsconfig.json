@@ -1,21 +1,16 @@
 {
   "extends": "../../../tsconfig.base.json",
   "compilerOptions": {
-    "emitDeclarationOnly": false,
-    "outDir": "dist",
-    "rootDirs": [
-      "./src", // <-- KEEP "./src" FIRST
-      "./notebooks"
-    ],
+    "jsx": "preserve",
+    "jsxImportSource": "@opentui/solid",
+    "noEmit": true,
+    "rootDir": "src",
     "types": [
-      "@dxos/typings",
       "node"
     ]
   },
   "include": [
-    "notebooks",
-    "src",
-    "src/util/telemetryrc.json"
+    "src"
   ],
   "references": [
     {
@@ -28,16 +23,19 @@
       "path": "../../common/debug"
     },
     {
+      "path": "../../common/effect"
+    },
+    {
+      "path": "../../common/errors"
+    },
+    {
       "path": "../../common/invariant"
     },
     {
+      "path": "../../common/keys"
+    },
+    {
       "path": "../../common/log"
-    },
-    {
-      "path": "../../common/node-std"
-    },
-    {
-      "path": "../../common/process"
     },
     {
       "path": "../../common/random"
@@ -46,10 +44,22 @@
       "path": "../../common/util"
     },
     {
-      "path": "../../core/compute"
+      "path": "../../core/ai"
+    },
+    {
+      "path": "../../core/assistant"
+    },
+    {
+      "path": "../../core/assistant-toolkit"
+    },
+    {
+      "path": "../../core/blueprints"
     },
     {
       "path": "../../core/echo/echo"
+    },
+    {
+      "path": "../../core/echo/echo-db"
     },
     {
       "path": "../../core/functions"
@@ -58,13 +68,40 @@
       "path": "../../core/functions-runtime"
     },
     {
-      "path": "../../core/mesh/network-manager"
-    },
-    {
-      "path": "../../core/mesh/rpc"
+      "path": "../../core/mesh/edge-client"
     },
     {
       "path": "../../core/protocols"
+    },
+    {
+      "path": "../../plugins/plugin-assistant"
+    },
+    {
+      "path": "../../plugins/plugin-chess"
+    },
+    {
+      "path": "../../plugins/plugin-inbox"
+    },
+    {
+      "path": "../../plugins/plugin-kanban"
+    },
+    {
+      "path": "../../plugins/plugin-map"
+    },
+    {
+      "path": "../../plugins/plugin-markdown"
+    },
+    {
+      "path": "../../plugins/plugin-script"
+    },
+    {
+      "path": "../../plugins/plugin-table"
+    },
+    {
+      "path": "../../plugins/plugin-thread"
+    },
+    {
+      "path": "../../plugins/plugin-transcription"
     },
     {
       "path": "../../sdk/client"
@@ -79,19 +116,10 @@
       "path": "../../sdk/config"
     },
     {
-      "path": "../../sdk/observability"
-    },
-    {
       "path": "../../sdk/schema"
     },
     {
-      "path": "../cli-base"
-    },
-    {
-      "path": "../cli-composer"
+      "path": "../../sdk/types"
     }
-  ],
-  "ts-node": {
-    "transpileOnly": true
-  }
+  ]
 }

@@ -1,12 +1,46 @@
 type: application
 language: typescript
 tags:
+  - ts-build
   - ts-test
-  - ts-compile
 tasks:
   build:
-    command: 'true'
+    options:
+      mergeOutputs: replace
+    outputs: []
+  compile:
+    command: bun
+    args:
+      - ./scripts/build.ts
+    options:
+      mergeArgs: replace
+      mergeInputs: append
+      mergeOutputs: replace
+      timeout: 60
+    inputs:
+      - scripts/build.ts
+      - bunfig.toml
+      - package.json
+      - LICENSE
+    outputs:
+      - dist/cli/
+      - dist/cli-darwin-arm64/
+      - dist/cli-darwin-x64/
+      - dist/cli-linux-arm64/
+      - dist/cli-linux-x64/
+      - dist/cli-win32-x64/
+  dev:
+    command: ./dxnext
     deps:
-      - ^:build
       - ^:compile
+    local: true
+  publish:
+    command: bun
+    args:
+      - ./scripts/publish.ts
+    deps:
       - compile
+    inputs:
+      - scripts/publish.ts
+      - dist/**/*
+    local: true
