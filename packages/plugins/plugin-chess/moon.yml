@@ -18,5 +18,5 @@ tasks:
     inputs:
       - .storybook/*
   deploy-functions:
-    command: $workspaceRoot/scripts/dxnext --profile main edge function deploy --runtime worker-loader src/blueprints/functions/commentary.ts
+    command: $workspaceRoot/scripts/dxnext --profile main function deploy --runtime worker-loader $workspaceRoot/packages/plugins/plugin-chess/src/blueprints/functions/commentary.ts
     local: true

@@ -11,7 +11,8 @@ import * as SchemaAST from 'effect/SchemaAST';
 import { AiModelResolver, AiService } from '@dxos/ai';
 import { AnthropicResolver } from '@dxos/ai/resolvers';
 import { LifecycleState, Resource } from '@dxos/context';
-import { Database, Type } from '@dxos/echo';
+import { Database, Ref, Type } from '@dxos/echo';
+import { refFromEncodedReference } from '@dxos/echo/internal';
 import { EchoClient, type EchoDatabaseImpl, type QueueFactory } from '@dxos/echo-db';
 import { runAndForwardErrors } from '@dxos/effect';
 import { assertState, failedInvariant, invariant } from '@dxos/invariant';
@@ -68,10 +69,15 @@ export const wrapFunctionHandler = (func: FunctionDefinition): FunctionProtocol.
           await funcContext.db.graph.schemaRegistry.register(func.types as Type.Entity.Any[]);
         }
 
+        const dataWithDecodedRefs =
+          funcContext.db && !SchemaAST.isAnyKeyword(func.inputSchema.ast)
+            ? decodeRefsFromSchema(func.inputSchema.ast, data, funcContext.db)
+            : data;
+
         let result = await func.handler({
           // TODO(dmaretskyi): Fix the types.
           context: context as any,
-          data,
+          data: dataWithDecodedRefs,
         });
 
         if (Effect.isEffect(result)) {
@@ -180,3 +186,76 @@ class FunctionContext extends Resource {
 const MockedFunctionInvocationService = Layer.succeed(FunctionInvocationService, {
   invokeFunction: () => Effect.die('Calling functions from functions is not implemented yet.'),
 });
+
+const decodeRefsFromSchema = (ast: SchemaAST.AST, value: unknown, db: EchoDatabaseImpl): unknown => {
+  if (value == null) {
+    return value;
+  }
+
+  const encoded = SchemaAST.encodedBoundAST(ast);
+  if (Ref.isRefType(encoded)) {
+    if (Ref.isRef(value)) {
+      return value;
+    }
+
+    if (typeof value === 'object' && value !== null && typeof (value as any)['/'] === 'string') {
+      const resolver = db.graph.createRefResolver({ context: { space: db.spaceId } });
+      return refFromEncodedReference(value as any, resolver);
+    }
+
+    return value;
+  }
+
+  switch (encoded._tag) {
+    case 'TypeLiteral': {
+      if (typeof value !== 'object' || value === null || Array.isArray(value)) {
+        return value;
+      }
+      const result: Record<string, unknown> = { ...(value as any) };
+      for (const prop of SchemaAST.getPropertySignatures(encoded)) {
+        const key = prop.name.toString();
+        if (key in result) {
+          result[key] = decodeRefsFromSchema(prop.type, (result as any)[key], db);
+        }
+      }
+      return result;
+    }
+
+    case 'TupleType': {
+      if (!Array.isArray(value)) {
+        return value;
+      }
+
+      // For arrays, effect uses TupleType with empty elements and a single rest element.
+      if (encoded.elements.length === 0 && encoded.rest.length === 1) {
+        const elementType = encoded.rest[0].type;
+        return (value as unknown[]).map((item) => decodeRefsFromSchema(elementType, item, db));
+      }
+
+      return value;
+    }
+
+    case 'Union': {
+      // Optional values are represented as union with undefined.
+      const nonUndefined = encoded.types.filter((t) => !SchemaAST.isUndefinedKeyword(t));
+      if (nonUndefined.length === 1) {
+        return decodeRefsFromSchema(nonUndefined[0], value, db);
+      }
+
+      // For other unions we can't safely pick a branch without validating.
+      return value;
+    }
+
+    case 'Suspend': {
+      return decodeRefsFromSchema(encoded.f(), value, db);
+    }
+
+    case 'Refinement': {
+      return decodeRefsFromSchema(encoded.from, value, db);
+    }
+
+    default: {
+      return value;
+    }
+  }
+};

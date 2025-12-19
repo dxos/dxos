@@ -1,48 +1,65 @@
 //
-// Copyright 2022 DXOS.org
+// Copyright 2025 DXOS.org
 //
 
-import { readFile } from 'fs/promises';
-
-import { Flags } from '@oclif/core';
+import * as Command from '@effect/cli/Command';
+import * as Options from '@effect/cli/Options';
+import * as FileSystem from '@effect/platform/FileSystem';
+import * as Console from 'effect/Console';
+import * as Effect from 'effect/Effect';
 
 import { ProfileArchiveEntryType } from '@dxos/protocols';
 import { arrayToBuffer } from '@dxos/util';
 
-import { BaseCommand } from '../../base';
+import { CommandConfig } from '../../services';
+import { FormBuilder, print } from '../../util';
 
-export default class Inspect extends BaseCommand<typeof Inspect> {
-  static override description = 'Import profile.';
-  static override flags = {
-    ...BaseCommand.flags,
-    file: Flags.string({
-      description: 'Archive filename.',
-      required: true,
-    }),
-    storage: Flags.boolean({
-      description: 'List storage entries.',
-      default: false,
-    }),
-  };
+export const handler = Effect.fn(function* ({ file, storage }: { file: string; storage: boolean }) {
+  const { json } = yield* CommandConfig;
+  const fs = yield* FileSystem.FileSystem;
 
-  async run(): Promise<any> {
-    const { file, storage } = this.flags;
+  const { decodeProfileArchive } = yield* Effect.promise(() => import('@dxos/client-services'));
 
-    const { decodeProfileArchive } = await import('@dxos/client-services');
+  const data = yield* fs.readFile(file);
 
-    const data = await readFile(file);
-    const archive = decodeProfileArchive(data);
+  const archive = decodeProfileArchive(data);
 
-    console.log(archive.meta);
+  if (json) {
+    yield* Console.log(
+      JSON.stringify(
+        {
+          meta: archive.meta,
+          ...(storage ? { storage: archive.storage } : {}),
+        },
+        null,
+        2,
+      ),
+    );
+  } else {
+    const builder = FormBuilder.of({ title: 'Profile Archive' });
+    if (archive.meta) {
+      Object.entries(archive.meta).forEach(([key, value]) => {
+        builder.set({ key, value: String(value) });
+      });
+    }
+    yield* Console.log(print(builder.build()));
 
     if (storage) {
-      console.log('\nStorage entires:\n');
+      yield* Console.log('\nStorage entries:\n');
       for (const entry of archive.storage) {
         const key =
           typeof entry.key === 'string' ? entry.key : JSON.stringify(arrayToBuffer(entry.key).toString()).slice(1, -1);
-
-        console.log(`  ${ProfileArchiveEntryType[entry.type]} ${key}`);
+        yield* Console.log(`  ${ProfileArchiveEntryType[entry.type]} ${key}`);
       }
     }
   }
-}
+});
+
+export const inspect = Command.make(
+  'inspect',
+  {
+    file: Options.text('file').pipe(Options.withDescription('Archive filename.'), Options.withAlias('f')),
+    storage: Options.boolean('storage', { ifPresent: true }).pipe(Options.withDescription('List storage entries.')),
+  },
+  handler,
+).pipe(Command.withDescription('Inspect profile archive.'));
