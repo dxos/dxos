@@ -183,12 +183,13 @@ async function deleteWithConcurrency(keys, concurrency) {
     const r2Key = keys[index++];
     await deleteObject(r2Key);
     completed++;
-    await runNext();
 
     // Show progress every 50 files.
-    if (completed % 50 === 0 || completed === keys.length) {
-      console.log(chalk.cyan(`Deleted: ${completed}/${keys.length} (${((completed / keys.length) * 100).toFixed(1)}%)`));
+    if (completed % 50 === 0 || completed === total) {
+      console.log(chalk.cyan(`Progress: ${completed}/${total} (${((completed / total) * 100).toFixed(1)}%)`));
     }
+    
+    await runNext();
   }
 
   await Promise.all(

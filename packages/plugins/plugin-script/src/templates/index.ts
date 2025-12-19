@@ -4,7 +4,7 @@
 
 import anthropic from './anthropic.ts?raw';
 import chat from './chat.ts?raw';
-import chess from './chess.ts?raw';
+import chessBot from './chess-bot.ts?raw';
 import commentary from './commentary.ts?raw';
 import dataGenerator from './data-generator.ts?raw';
 import discord from './discord.ts?raw';
@@ -48,10 +48,10 @@ export const templates = [
     presetId: 'dxos.org/function/gpt',
   },
   {
-    id: 'dxos.org/script/chess',
-    name: 'Chess',
-    source: removeHeader(chess),
-    presetId: 'dxos.org/function/chess',
+    id: 'dxos.org/script/chess-bot',
+    name: 'Chess Bot',
+    source: removeHeader(chessBot),
+    presetId: 'dxos.org/function/chess-bot',
   },
   {
     id: 'dxos.org/script/email',
