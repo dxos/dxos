@@ -47,17 +47,27 @@ dx trigger create subscription --enabled
 
 ### Inbox
 
-1.  In Composer, enable the Inbox plugin and create a new mailbox.
-2.  If you've not already authed with Google, there will be a `Manage Integrations` button in empty mailbox, click it and then do the Google auth process.
-3.  Go back to the mailbox and open the Details companion.
-4.  Press the `Configure Sync` button to create a trigger that references the mailbox's queue.
-5.  In the navtree go to the space functions page.
-6.  Once the remote functions load press the download button beside the `dxos.org/function/inbox/google-mail-sync` function to import it.
-    - NOTE: be careful there are currently two gmail sync functions there but one is old and deprecated).
-7.  Now open the automations page, select the trigger that was created earlier to edit it.
-8.  Select the imported function and configure the timer.
-    - Update the cron to `*/5 * * * *` (5 minutes), enable it and save it.
-    - NOTE: there's a bug with the trigger editor where sometimes save doesn't close the form, but does save; close by pressing cancel.
+1. Get a Google auth token by running `dx integration add --preset google`.
+2. Create a new mailbox by running `dx database add` and choosing `Mailbox` from the options.
+3. Import the Gmail sync function by running `dx function import` and choosing the `Sync Gmail` function which has the key of `dxos.org/function/inbox/google-mail-sync`.
+   - NOTE: be careful there are currently two gmail sync functions there but one is old and deprecated.
+4. Create a trigger for the sync by running `dx trigger create timer`.
+   - Choose the `Sync Gmail` function just imported.
+   - Set the cron to `*/5 * * * *` (5 minutes)
+   - Select yes to customizing the input and choose to include the restricted option.
+   - Choose the mailbox created earlier as the mailbox and set restricted mode to true.
+   - Enable the trigger.
+5. Observe invocations of the function every 5 minutes with `dx function trace`.
+
+#### Classify
+
+1. Import the Classify function by running `dx function import` and choosing `Classify` function which has the key of `dxos.org/function/inbox/email-classify`.
+2. Create a trigger for the classifier by running `dx trigger create queue`.
+   - Choose the `Classify` function just imported.
+   - Choose the mailbox created earlier as the queue to trigger on.
+   - Specify the message input with the template `{{event.item}}`.
+   - Enable the trigger.
+3. Observe invocation of the function after emails are sync'd with `dx function trace`.
 
 ## Current Limitations
 
