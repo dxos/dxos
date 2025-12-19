@@ -233,99 +233,56 @@ export const MailboxArticle = ({ subject: mailbox, filter: filterParam, attendab
 };
 
 /**
- * Hook that incrementally builds an object mapping message IDs to tags from HasSubject relations.
- * Only processes new relations as they stream in, avoiding full recomputation.
+ * Hook that builds an object mapping message IDs to tags from HasSubject relations.
  */
 const useMessageTagsMap = (queue: Database.Queryable | undefined): Record<string, Tag.Tag[]> => {
   const hasSubjectRelations = useQuery(queue, Filter.type(HasSubject.HasSubject));
-  // Use state to ensure React detects changes and triggers dependent memo recomputation
   const [messageTagsMap, setMessageTagsMap] = useState<Record<string, Tag.Tag[]>>({});
-  // Use refs to track processed relations for incremental updates
-  const messageTagsMapRef = useRef<Record<string, Tag.Tag[]>>({});
-  const processedRelationIdsRef = useRef(new Set<string>());
 
-  // Incrementally update the object when new relations appear
   useEffect(() => {
-    let hasChanges = false;
-    for (const relation of hasSubjectRelations) {
-      // Skip if we've already processed this relation
-      if (processedRelationIdsRef.current.has(relation.id)) {
-        continue;
-      }
+    const map: Record<string, Tag.Tag[]> = {};
 
+    for (const relation of hasSubjectRelations) {
       try {
         const source = Relation.getSource(relation);
-        const targetDXN = Relation.getTargetDXN(relation);
-
-        // Extract message ID from target DXN (it's a queue DXN with objectId)
-        const queueDXNInfo = targetDXN.asQueueDXN();
-
-        if (!queueDXNInfo?.objectId) {
-          // Try to get target object and extract ID from it
-          try {
-            const target = Relation.getTarget(relation);
-            if (Obj.instanceOf(Message.Message, target)) {
-              const messageId = target.id;
-              if (Obj.instanceOf(Tag.Tag, source)) {
-                const existingTags = messageTagsMapRef.current[messageId] ?? [];
-                // Prevent duplicates upstream - check if tag already exists
-                const tagAlreadyExists = existingTags.some((tag) => tag.id === source.id);
-                if (!tagAlreadyExists) {
-                  if (!messageTagsMapRef.current[messageId]) {
-                    messageTagsMapRef.current[messageId] = [];
-                  }
-                  messageTagsMapRef.current[messageId].push(source);
-                  hasChanges = true;
-                }
-                processedRelationIdsRef.current.add(relation.id);
-              }
-            }
-          } catch {
-            // Target not resolved, skip
-          }
-          processedRelationIdsRef.current.add(relation.id);
+        if (!Obj.instanceOf(Tag.Tag, source)) {
           continue;
         }
 
-        // Check if source is a tag
-        if (Obj.instanceOf(Tag.Tag, source)) {
-          const messageId = queueDXNInfo.objectId;
-          const existingTags = messageTagsMapRef.current[messageId] ?? [];
-          // Prevent duplicates upstream - check if tag already exists
-          const tagAlreadyExists = existingTags.some((tag) => tag.id === source.id);
-          if (!tagAlreadyExists) {
-            if (!messageTagsMapRef.current[messageId]) {
-              messageTagsMapRef.current[messageId] = [];
-            }
-            messageTagsMapRef.current[messageId].push(source);
-            hasChanges = true;
-          }
-          processedRelationIdsRef.current.add(relation.id);
+        // Try to get message ID from target DXN (queue DXN with objectId)
+        const targetDXN = Relation.getTargetDXN(relation);
+        const queueDXNInfo = targetDXN.asQueueDXN();
+        let messageId: string | undefined;
+
+        if (queueDXNInfo?.objectId) {
+          messageId = queueDXNInfo.objectId;
         } else {
-          processedRelationIdsRef.current.add(relation.id);
+          // Fallback: try to resolve target object
+          try {
+            const target = Relation.getTarget(relation);
+            if (Obj.instanceOf(Message.Message, target)) {
+              messageId = target.id;
+            }
+          } catch {
+            // Target not resolved, skip this relation
+          }
+        }
+
+        if (messageId) {
+          if (!map[messageId]) {
+            map[messageId] = [];
+          }
+          // Prevent duplicates
+          if (!map[messageId].some((tag) => tag.id === source.id)) {
+            map[messageId].push(source);
+          }
         }
       } catch {
-        // Skip relations with unresolved source or target, but mark as processed to avoid retrying
-        processedRelationIdsRef.current.add(relation.id);
-        continue;
+        // Skip relations with unresolved source or target
       }
     }
 
-    // Clean up relations that no longer exist
-    const currentRelationIds = new Set(hasSubjectRelations.map((r) => r.id));
-    for (const relationId of processedRelationIdsRef.current) {
-      if (!currentRelationIds.has(relationId)) {
-        // Relation was removed - we'd need to rebuild to handle this properly
-        // For now, just remove from processed set and let it be re-added if it comes back
-        processedRelationIdsRef.current.delete(relationId);
-      }
-    }
-
-    if (hasChanges) {
-      // Create a new object reference so React detects the change
-      const newMessageTagsMap = { ...messageTagsMapRef.current };
-      setMessageTagsMap(newMessageTagsMap);
-    }
+    setMessageTagsMap(map);
   }, [hasSubjectRelations]);
 
   return messageTagsMap;
