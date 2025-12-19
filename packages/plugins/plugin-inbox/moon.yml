@@ -19,5 +19,5 @@ tasks:
       - .storybook/*
 
   deploy-functions:
-    command: $workspaceRoot/scripts/dxnext --profile main edge function deploy --runtime worker-loader src/functions/google/gmail/sync.ts
+    command: $workspaceRoot/scripts/dxnext --profile main function deploy --runtime worker-loader $workspaceRoot/packages/plugins/plugin-inbox/src/functions/google/gmail/sync.ts
     local: true

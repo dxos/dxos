@@ -12,7 +12,7 @@
       "extra-files": [
         "packages/sdk/client/src/version.ts",
         "packages/sdk/client-services/src/version.ts",
-        "packages/devtools/cli-next/src/version.ts",
+        "packages/devtools/cli/src/version.ts",
         {
           "type": "json",
           "path": "packages/apps/composer-app/src-tauri/tauri.conf.json",
@@ -416,21 +416,6 @@
         {
           "type": "json",
           "path": "packages/devtools/cli/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
-          "path": "packages/devtools/cli-base/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
-          "path": "packages/devtools/cli-composer/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
-          "path": "packages/devtools/cli-next/package.json",
           "jsonpath": "$.version"
         },
         {
