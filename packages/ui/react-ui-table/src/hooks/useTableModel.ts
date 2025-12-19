@@ -3,7 +3,7 @@
 //
 
 import { effect } from '@preact/signals-core';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 
 import { type Database, Obj } from '@dxos/echo';
 import { type Live } from '@dxos/live-object';
