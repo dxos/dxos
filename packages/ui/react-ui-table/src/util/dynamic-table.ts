@@ -2,14 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Filter, type JsonSchema, Obj, Query, Ref, Type } from '@dxos/echo';
-import {
-  ProjectionModel,
-  type SchemaPropertyDefinition,
-  type SortDirectionType,
-  View,
-  getSchemaFromPropertyDefinitions,
-} from '@dxos/schema';
+import { Filter, type JsonSchema, Obj, Order, Query, type QueryAST, Ref, Type } from '@dxos/echo';
+import { ProjectionModel, type SchemaPropertyDefinition, View, getSchemaFromPropertyDefinitions } from '@dxos/schema';
 
 import { Table } from '../types';
 
@@ -17,7 +11,7 @@ import { Table } from '../types';
 type PropertyDisplayProps = {
   size: number;
   title: string;
-  sort: SortDirectionType;
+  sort: QueryAST.OrderDirection;
 };
 
 export type TablePropertyDefinition = SchemaPropertyDefinition & Partial<PropertyDisplayProps>;
@@ -94,8 +88,11 @@ const setProperties = (
       }
 
       if (property.sort) {
-        const fieldId = field.id;
-        view.sort = [{ fieldId, direction: property.sort }];
+        // Apply sort to query instead of deprecated view.sort
+        const currentQuery = Query.fromAst(Obj.getSnapshot(view).query.ast);
+        // Use any type parameter since we're working with dynamic field paths
+        const newQuery = currentQuery.orderBy(Order.property<any>(field.path as string, property.sort));
+        view.query.ast = newQuery.ast;
       }
     }
   }
