@@ -62,6 +62,7 @@ dx trigger create subscription --enabled
 #### Classify
 
 1. Import the Classify function by running `dx function import` and choosing `Classify` function which has the key of `dxos.org/function/inbox/email-classify`.
+   - NOTE: The classification depends on `Tag.Tag` objects in the database so be sure to create some tags before triggering it.
 2. Create a trigger for the classifier by running `dx trigger create queue`.
    - Choose the `Classify` function just imported.
    - Choose the mailbox created earlier as the queue to trigger on.

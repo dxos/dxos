@@ -116,7 +116,10 @@ export default defineFunction({
         [Relation.Source]: selectedTag,
         // TODO(wittjosiah): Using `message` directly gets an error.
         //   Error: invariant violation: Schema is not defined for the target.
-        [Relation.Target]: Message.make({ ...message }),
+        [Relation.Target]: Obj.make(Message.Message, {
+          ...message,
+          id: message.id,
+        }),
         completedAt: new Date().toISOString(),
       });
 

@@ -190,7 +190,7 @@ export const Mailbox = ({ id, messages, labels, currentMessageId, ignoreAttentio
 
       return cells;
     },
-    [messages, currentMessageId],
+    [messages, currentMessageId, labels],
   );
 
   const rows = useMemo<DxGridAxisMeta>(() => {

@@ -7,7 +7,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
 import { LayoutAction, createIntent } from '@dxos/app-framework';
 import { type SurfaceComponentProps, useIntentDispatcher } from '@dxos/app-framework/react';
-import { Obj, Tag } from '@dxos/echo';
+import { type Database, Obj, Relation, Tag } from '@dxos/echo';
 import { QueryBuilder } from '@dxos/echo-query';
 import { AttentionAction } from '@dxos/plugin-attention/types';
 import { ATTENDABLE_PATH_SEPARATOR, DeckAction } from '@dxos/plugin-deck/types';
@@ -19,7 +19,7 @@ import { type EditorController } from '@dxos/react-ui-editor';
 import { MenuBuilder, useMenuActions } from '@dxos/react-ui-menu';
 import { MenuProvider, ToolbarMenu } from '@dxos/react-ui-menu';
 import { StackItem } from '@dxos/react-ui-stack';
-import { Message } from '@dxos/types';
+import { HasSubject, Message } from '@dxos/types';
 
 import { meta } from '../../meta';
 import { type Mailbox } from '../../types';
@@ -73,6 +73,40 @@ export const MailboxArticle = ({ subject: mailbox, filter: filterParam, attendab
   }, [tags]);
   const parser = useMemo(() => new QueryBuilder(tagMap), [tagMap]);
   useEffect(() => setFilter(parser.build(filterText).filter), [filterText, parser]);
+
+  // Build message-to-tags map from HasSubject relations incrementally
+  const messageTagsMap = useMessageTagsMap(mailbox.queue.target);
+
+  // Merge tags into mailbox labels
+  const mergedLabels = useMemo(() => {
+    const labels = { ...(mailbox.labels ?? {}) };
+    // Add all tags to the labels object (tag.id -> tag.label)
+    for (const messageTags of Object.values(messageTagsMap)) {
+      for (const tag of messageTags) {
+        labels[tag.id] = tag.label;
+      }
+    }
+    return labels;
+  }, [mailbox.labels, messageTagsMap]);
+
+  // Update message properties to include tag IDs in labels array
+  const messagesWithTags = useMemo(() => {
+    return sortedMessages.map((message) => {
+      const messageTags = messageTagsMap[message.id] ?? [];
+      const tagIds = [...new Set(messageTags.map((tag) => tag.id))]; // Deduplicate tag IDs
+      const existingLabels = Array.isArray(message.properties?.labels) ? message.properties.labels : [];
+      // Deduplicate existing labels and filter out tag IDs that are already present
+      const uniqueExistingLabels = [...new Set(existingLabels)];
+      const newTagIds = tagIds.filter((tagId) => !uniqueExistingLabels.includes(tagId));
+      return {
+        ...message,
+        properties: {
+          ...message.properties,
+          labels: [...uniqueExistingLabels, ...newTagIds],
+        },
+      };
+    });
+  }, [sortedMessages, messageTagsMap]);
 
   const handleAction = useCallback<MailboxActionHandler>(
     (action) => {
@@ -182,11 +216,11 @@ export const MailboxArticle = ({ subject: mailbox, filter: filterParam, attendab
         </MenuProvider>
       </ElevationProvider>
 
-      {sortedMessages && sortedMessages.length > 0 ? (
+      {messagesWithTags && messagesWithTags.length > 0 ? (
         <MailboxComponent
           id={id}
-          messages={sortedMessages}
-          labels={mailbox.labels}
+          messages={messagesWithTags}
+          labels={mergedLabels}
           currentMessageId={currentMessageId}
           onAction={handleAction}
         />
@@ -195,6 +229,92 @@ export const MailboxArticle = ({ subject: mailbox, filter: filterParam, attendab
       )}
     </StackItem.Content>
   );
+};
+
+/**
+ * Hook that incrementally builds an object mapping message IDs to tags from HasSubject relations.
+ * Only processes new relations as they stream in, avoiding full recomputation.
+ */
+const useMessageTagsMap = (queue: Database.Queryable | undefined): Record<string, Tag.Tag[]> => {
+  const hasSubjectRelations = useQuery(queue, Filter.type(HasSubject.HasSubject));
+  // Use refs to maintain the object and track processed relations for incremental updates
+  const messageTagsMapRef = useRef<Record<string, Tag.Tag[]>>({});
+  const processedRelationIdsRef = useRef(new Set<string>());
+  const [, forceUpdate] = useState(0);
+
+  // Incrementally update the object when new relations appear
+  useEffect(() => {
+    let hasChanges = false;
+    for (const relation of hasSubjectRelations) {
+      // Skip if we've already processed this relation
+      if (processedRelationIdsRef.current.has(relation.id)) {
+        continue;
+      }
+
+      try {
+        const source = Relation.getSource(relation);
+        const targetDXN = Relation.getTargetDXN(relation);
+
+        // Extract message ID from target DXN (it's a queue DXN with objectId)
+        const queueDXNInfo = targetDXN.asQueueDXN();
+
+        if (!queueDXNInfo?.objectId) {
+          // Try to get target object and extract ID from it
+          try {
+            const target = Relation.getTarget(relation);
+            if (Obj.instanceOf(Message.Message, target)) {
+              const messageId = target.id;
+              if (Obj.instanceOf(Tag.Tag, source)) {
+                if (!messageTagsMapRef.current[messageId]) {
+                  messageTagsMapRef.current[messageId] = [];
+                }
+                messageTagsMapRef.current[messageId].push(source);
+                processedRelationIdsRef.current.add(relation.id);
+                hasChanges = true;
+              }
+            }
+          } catch {
+            // Target not resolved, skip
+          }
+          processedRelationIdsRef.current.add(relation.id);
+          continue;
+        }
+
+        // Check if source is a tag
+        if (Obj.instanceOf(Tag.Tag, source)) {
+          const messageId = queueDXNInfo.objectId;
+          if (!messageTagsMapRef.current[messageId]) {
+            messageTagsMapRef.current[messageId] = [];
+          }
+          messageTagsMapRef.current[messageId].push(source);
+          processedRelationIdsRef.current.add(relation.id);
+          hasChanges = true;
+        } else {
+          processedRelationIdsRef.current.add(relation.id);
+        }
+      } catch {
+        // Skip relations with unresolved source or target, but mark as processed to avoid retrying
+        processedRelationIdsRef.current.add(relation.id);
+        continue;
+      }
+    }
+
+    // Clean up relations that no longer exist
+    const currentRelationIds = new Set(hasSubjectRelations.map((r) => r.id));
+    for (const relationId of processedRelationIdsRef.current) {
+      if (!currentRelationIds.has(relationId)) {
+        // Relation was removed - we'd need to rebuild to handle this properly
+        // For now, just remove from processed set and let it be re-added if it comes back
+        processedRelationIdsRef.current.delete(relationId);
+      }
+    }
+
+    if (hasChanges) {
+      forceUpdate((n) => n + 1);
+    }
+  }, [hasSubjectRelations]);
+
+  return messageTagsMapRef.current;
 };
 
 const useMailboxActions = ({
