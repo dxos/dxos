@@ -118,7 +118,6 @@ const TableMainInner = <T extends Type.Entity.Any = Type.Entity.Any>(
     [presentation],
   );
 
-
   useEffect(() => {
     if (!dxGrid || !presentation) {
       return;
