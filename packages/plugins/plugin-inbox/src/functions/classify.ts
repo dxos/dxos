@@ -30,18 +30,26 @@ export default defineFunction({
       description: 'The message object to classify.',
     }),
   }),
-  outputSchema: Schema.Struct({
-    tagId: ArtifactId.annotations({
-      description: 'The ID of the selected tag.',
+  outputSchema: Schema.Union(
+    Schema.Struct({
+      tagId: ArtifactId.annotations({
+        description: 'The ID of the selected tag.',
+      }),
+      tagLabel: Schema.String.annotations({
+        description: 'The label of the selected tag.',
+      }),
     }),
-    tagLabel: Schema.String.annotations({
-      description: 'The label of the selected tag.',
-    }),
-  }),
+    Schema.Void,
+  ),
   types: [Message.Message, Tag.Tag, HasSubject.HasSubject],
   services: [AiService.AiService, Database.Service, QueueService],
   handler: Effect.fnUntraced(
     function* ({ data: { message } }) {
+      if (!Obj.instanceOf(Message.Message, message)) {
+        log.info('not a message object, skipping classification', { message });
+        return;
+      }
+
       log.info('classify message', { message });
 
       // Query all Tag objects
@@ -97,7 +105,7 @@ export default defineFunction({
 
       // TODO(wittjosiah): Why does Obj.getDXN(message) return `dxn:echo:@:<object-id>`?
       // Get the message DXN and extract the queue DXN
-      const messageDXN = DXN.parse(message['@dxn']);
+      const messageDXN = DXN.parse((message as any)['@dxn']);
       const queueDXNInfo = messageDXN.asQueueDXN();
       log.info('queueDXNInfo', queueDXNInfo);
 
