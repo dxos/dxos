@@ -162,6 +162,9 @@
       "path": "../plugin-automation"
     },
     {
+      "path": "../plugin-chess"
+    },
+    {
       "path": "../plugin-client"
     },
     {
