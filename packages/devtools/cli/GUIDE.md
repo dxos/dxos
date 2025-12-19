@@ -23,7 +23,9 @@ pnpm unlink --global @dxos/cli
     - Navigate to Profile > Security > Create Recovery Code
     - Enter the recovery code: `dx halo recover "<recovery code>"`
 
-## Chess
+## Examples
+
+### Chess
 
 TODO(burdon): First add chess player funciton then commentary.
 
@@ -43,7 +45,7 @@ dx trigger create subscription --enabled
 6.  Make a move and it should create a document with commentary about the move.
 7.  Make another move and it should update the document.
 
-## Inbox
+### Inbox
 
 1.  In Composer, enable the Inbox plugin and create a new mailbox.
 2.  If you've not already authed with Google, there will be a `Manage Integrations` button in empty mailbox, click it and then do the Google auth process.
