@@ -6,7 +6,7 @@ import React from 'react';
 
 import { type ThemedClassName } from '@dxos/react-ui';
 import { FPS, testId } from '@dxos/react-ui-canvas';
-import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
+import { Json } from '@dxos/react-ui-syntax-highlighter';
 import { mx } from '@dxos/react-ui-theme';
 
 import { useEditorContext } from '../../hooks';
@@ -51,14 +51,12 @@ export const UI = ({ showTools, showToolbar }: UIProps) => {
       <div>
         <div className='absolute bottom-2 left-2'>
           {debug && (
-            <SyntaxHighlighter
-              language='javascript'
+            <Json
               classNames={mx(
                 'is-[300px] bg-baseSurface rounded-md bg-baseSurface border border-separator text-xs opacity-70',
               )}
-            >
-              {JSON.stringify(info, null, 2)}
-            </SyntaxHighlighter>
+              data={info}
+            />
           )}
         </div>
         {showToolbar && (
