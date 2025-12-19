@@ -70,28 +70,10 @@ export const useTableModel = <T extends TableRow = TableRow>({
     // TODO(burdon): Trigger if callbacks change?
   }, [object, projection, features, rowActions, initialSelection]);
 
-  // Update data.
-  // Use a ref to track previous rows to avoid unnecessary updates when only reference changes
-  const prevRowsRef = useRef<T[] | undefined>(undefined);
+  // Update data when rows change.
   useEffect(() => {
     if (rows && model) {
-      // Only update if rows actually changed (different length, different IDs, or different order)
-      // Don't update if rows is empty (might be during query re-subscription)
-      const prevRows = prevRowsRef.current;
-      const rowsChanged =
-        rows.length > 0 &&
-        (!prevRows ||
-          prevRows.length !== rows.length ||
-          // Check if any row at the same index has a different ID (handles reordering and replacements)
-          prevRows.some((row, i) => row.id !== rows[i]?.id) ||
-          // Check if any row in new array doesn't match (handles additions)
-          rows.some((row, i) => row.id !== prevRows[i]?.id));
-
-      if (rowsChanged) {
-        // Rows come pre-sorted from query, no need for additional sorting
-        model.setRows(rows);
-        prevRowsRef.current = rows;
-      }
+      model.setRows(rows);
     }
   }, [model, rows]);
 
