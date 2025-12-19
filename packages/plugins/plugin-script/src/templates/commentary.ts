@@ -16,15 +16,13 @@ import { AiSession, GenerationObserver } from '@dxos/assistant';
 import { ArtifactId } from '@dxos/assistant';
 import { Database, Filter, Obj, Ref, Relation, Type } from '@dxos/echo';
 import { createDocAccessor } from '@dxos/echo-db';
-import { TracingService } from '@dxos/functions';
-import { defineFunction } from '@dxos/functions';
+import { TracingService, defineFunction } from '@dxos/functions';
 import { log } from '@dxos/log';
+import { Chess } from '@dxos/plugin-chess/types';
 import { Markdown } from '@dxos/plugin-markdown/types';
 import { Collection, Text } from '@dxos/schema';
 import { HasSubject } from '@dxos/types';
 import { trim } from '@dxos/util';
-
-import { Chess } from '../../types';
 
 export default defineFunction({
   key: 'dxos.org/function/chess/commentary',
@@ -35,14 +33,19 @@ export default defineFunction({
       description: 'The chess game to comment on.',
     }),
   }),
-  outputSchema: Schema.Struct({
-    documentId: ArtifactId.annotations({
-      description: 'The ID of the markdown document that was updated or created.',
+  outputSchema: Schema.Union(
+    Schema.Struct({
+      documentId: ArtifactId.annotations({
+        description: 'The ID of the markdown document that was updated or created.',
+      }),
+      commentary: Schema.String.annotations({
+        description: 'The commentary that was added.',
+      }),
     }),
-    commentary: Schema.String.annotations({
-      description: 'The commentary that was added.',
+    Schema.Void.annotations({
+      description: 'Function did not find anything to comment on.',
     }),
-  }),
+  ),
   types: [Chess.Game, Markdown.Document, Text.Text, HasSubject.HasSubject, Collection.Collection],
   services: [AiService.AiService, Database.Service],
   handler: Effect.fnUntraced(
@@ -58,7 +61,8 @@ export default defineFunction({
       } else if (chessGame.fen) {
         chess.load(chessGame.fen);
       } else {
-        throw new Error('Chess game has no PGN or FEN');
+        log.info('Early return: no pgn or fen');
+        return;
       }
 
       // Get the most recent move
