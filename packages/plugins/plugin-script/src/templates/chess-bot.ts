@@ -12,7 +12,7 @@ import { Chess } from '@dxos/plugin-chess/types';
 
 export default defineFunction({
   key: 'dxos.org/script/chess-bot',
-  name: 'Chess',
+  name: 'Chess Bot',
   description: 'Plays a random move in a chess game.',
 
   inputSchema: Schema.Struct({
