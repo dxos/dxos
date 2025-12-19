@@ -6,23 +6,24 @@ import { hideBin } from 'yargs/helpers';
 import path from 'path';
 import { sleep } from '@dxos/async';
 import { writeFileSync } from 'fs';
-import { log } from '@dxos/log';
+import { DeleteObjectsCommand, ListObjectsV2Command, PutObjectCommand, S3Client } from '@aws-sdk/client-s3';
 
 //
 // Upload all assets from dist/vendor to cloudflare bucket.
 //
 // USAGE:
-// ./upload-modules.mjs --env <env>
+// R2_ACCESS_KEY_ID=<key> R2_SECRET_ACCESS_KEY=<secret> ./upload-modules.mjs --env <env>
 //
-// This script uploads vendored packages to Cloudflare R2 bucket using direct API calls.
+// This script uploads vendored packages to Cloudflare R2 bucket using S3 API calls.
 // Files are uploaded to <bucket>/<env>/ prefix with 10 concurrent threads.
 // Optimized for many small files (1KB average, max 3MB).
 //
 
 const CLOUDFLARE_ACCOUNT_ID = '950816f3f59b079880a1ae33fb0ec320';
-const CLOUDFLARE_API_TOKEN = process.env.CLOUDFLARE_API_TOKEN;
-if (!CLOUDFLARE_API_TOKEN) {
-  console.error(chalk.red('Error: CLOUDFLARE_API_TOKEN environment variable is not set'));
+const R2_ACCESS_KEY_ID = process.env.R2_ACCESS_KEY_ID;
+const R2_SECRET_ACCESS_KEY = process.env.R2_SECRET_ACCESS_KEY;
+if (!R2_ACCESS_KEY_ID || !R2_SECRET_ACCESS_KEY) {
+  console.error(chalk.red('Error: R2_ACCESS_KEY_ID and R2_SECRET_ACCESS_KEY environment variables must be set'));
   process.exit(1);
 }
 const BUCKET = 'script-vendored-packages';
@@ -40,43 +41,52 @@ const getRetryDelayMs = (attempt) => {
 };
 
 
-const getObjectUrl = (r2Key) =>
-  `https://api.cloudflare.com/client/v4/accounts/${CLOUDFLARE_ACCOUNT_ID}/r2/buckets/${BUCKET}/objects/${(r2Key)}`;
 
-async function fetchWithRetries(url, init) {
+const createS3Client = () =>
+  new S3Client({
+    region: 'auto',
+    endpoint: `https://${CLOUDFLARE_ACCOUNT_ID}.r2.cloudflarestorage.com`,
+    credentials: {
+      accessKeyId: R2_ACCESS_KEY_ID,
+      secretAccessKey: R2_SECRET_ACCESS_KEY,
+    },
+  });
+
+const isRetryableS3Error = (err) => {
+  const statusCode = err?.$metadata?.httpStatusCode;
+  const name = err?.name;
+  const code = err?.Code;
+  return (
+    statusCode === 429 ||
+    statusCode === 408 ||
+    statusCode === 409 ||
+    (typeof statusCode === 'number' && statusCode >= 500 && statusCode < 600) ||
+    name === 'SlowDown' ||
+    name === 'Throttling' ||
+    code === 'SlowDown' ||
+    code === 'Throttling'
+  );
+};
+
+async function sendWithRetries(s3, command) {
   let lastError;
   for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
     try {
-      const response = await fetch(url, init);
-      if (response.ok) {
-        return response;
-      }
+      return await s3.send(command);
+    } catch (err) {
+      lastError = err;
 
-      const errorText = await response.text();
-      const isRateLimited = response.status === 429 || errorText.includes('Rate limited') || errorText.includes('Please wait');
-      const isRetryableStatus =
-        isRateLimited || response.status === 408 || response.status === 409 || (response.status >= 500 && response.status < 600);
-
-      if (isRateLimited && !rateLimitedPrinted) {
+      const statusCode = err?.$metadata?.httpStatusCode;
+      if ((statusCode === 429 || err?.name === 'SlowDown' || err?.Code === 'SlowDown') && !rateLimitedPrinted) {
         console.log(chalk.yellow('Rate limited'));
         rateLimitedPrinted = true;
       }
 
-      if (attempt < MAX_RETRIES && isRetryableStatus) {
-        const retryAfterHeader = response.headers.get('Retry-After');
-        const retryAfterSeconds = retryAfterHeader ? Number(retryAfterHeader) : Number.NaN;
-        const delayMs = Number.isFinite(retryAfterSeconds) ? retryAfterSeconds * 1000 : getRetryDelayMs(attempt);
-        await sleep(delayMs);
-        continue;
-      }
-
-      throw new Error(`Request failed (${response.status}): ${errorText}`);
-    } catch (err) {
-      lastError = err;
-      if (attempt < MAX_RETRIES) {
+      if (attempt < MAX_RETRIES && isRetryableS3Error(err)) {
         await sleep(getRetryDelayMs(attempt));
         continue;
       }
+
       throw err;
     }
   }
@@ -104,95 +114,103 @@ const getR2Key = (filePath, vendorDir, env) => {
   return `${env}/${relativePath}`;
 };
 
-async function uploadObject(r2Key, body, contentType) {
-  const url = getObjectUrl(r2Key);
-  await fetchWithRetries(url, {
-    method: 'PUT',
-    headers: {
-      Authorization: `Bearer ${CLOUDFLARE_API_TOKEN}`,
-      'Content-Type': contentType,
-    },
-    body,
-  });
+async function uploadObject(s3, r2Key, body, contentType) {
+  await sendWithRetries(
+    s3,
+    new PutObjectCommand({
+      Bucket: BUCKET,
+      Key: r2Key,
+      Body: body,
+      ContentType: contentType,
+    }),
+  );
 }
 
-async function listObjects(prefix) {
+async function listObjects(s3, prefix) {
   const keys = [];
-  let cursor;
+  let continuationToken;
+
   while (true) {
-    const url = new URL(
-      `https://api.cloudflare.com/client/v4/accounts/${CLOUDFLARE_ACCOUNT_ID}/r2/buckets/${BUCKET}/objects`,
+    const result = await sendWithRetries(
+      s3,
+      new ListObjectsV2Command({
+        Bucket: BUCKET,
+        Prefix: prefix,
+        MaxKeys: 1000,
+        ContinuationToken: continuationToken,
+      }),
     );
-    url.searchParams.set('prefix', prefix);
-    url.searchParams.set('limit', '1000');
-    if (cursor) {
-      url.searchParams.set('cursor', cursor);
-    }
 
-    const response = await fetchWithRetries(url.toString(), {
-      method: 'GET',
-      headers: {
-        Authorization: `Bearer ${CLOUDFLARE_API_TOKEN}`,
-      },
-    });
-
-    const data = await response.json();
-    if (data && data.success === false) {
-      throw new Error(`List failed: ${JSON.stringify(data.errors ?? data)}`);
-    }
-
-    const result = data?.result ?? data;
-    const objects = result?.objects ?? result;
-    if (!Array.isArray(objects)) {
-      throw new Error(`Unexpected list response: ${JSON.stringify(data)}`);
-    }
-
-    for (const obj of objects) {
-      const key = obj?.key ?? obj?.name;
-      if (typeof key === 'string') {
-        keys.push(key);
+    for (const obj of result.Contents ?? []) {
+      if (typeof obj?.Key === 'string') {
+        keys.push(obj.Key);
       }
     }
 
-    const truncated = Boolean(data?.result_info?.is_truncated);
-    cursor = data?.result_info?.cursor;
-    if (!truncated || !cursor) {
+    if (!result.IsTruncated || !result.NextContinuationToken) {
       break;
     }
+
+    continuationToken = result.NextContinuationToken;
   }
 
   return keys;
 }
 
-async function deleteObject(r2Key) {
-  const url = getObjectUrl(r2Key);
-  await fetchWithRetries(url, {
-    method: 'DELETE',
-    headers: {
-      Authorization: `Bearer ${CLOUDFLARE_API_TOKEN}`,
-    },
-  });
-}
+const chunk = (items, size) => {
+  const chunks = [];
+  for (let i = 0; i < items.length; i += size) {
+    chunks.push(items.slice(i, i + size));
+  }
+  return chunks;
+};
 
-async function deleteWithConcurrency(keys, concurrency) {
-  let index = 0;
-  let completed = 0;
+async function deleteObjectsBulk(s3, keys) {
+  if (keys.length === 0) {
+    return;
+  }
 
-  async function runNext() {
-    if (index >= keys.length) return;
-    const r2Key = keys[index++];
-    await deleteObject(r2Key);
-    completed++;
-    await runNext();
+  const batches = chunk(keys, 1000);
+  const totalBatches = batches.length;
+  let completedBatches = 0;
 
-    // Show progress every 50 files.
-    if (completed % 50 === 0 || completed === keys.length) {
-      console.log(chalk.cyan(`Deleted: ${completed}/${keys.length} (${((completed / keys.length) * 100).toFixed(1)}%)`));
+  const runBatch = async (batchKeys) => {
+    const result = await sendWithRetries(
+      s3,
+      new DeleteObjectsCommand({
+        Bucket: BUCKET,
+        Delete: {
+          Objects: batchKeys.map((Key) => ({ Key })),
+          Quiet: true,
+        },
+      }),
+    );
+
+    if (Array.isArray(result.Errors) && result.Errors.length > 0) {
+      throw new Error(`DeleteObjects failed: ${JSON.stringify(result.Errors.slice(0, 10))}`);
     }
+  };
+
+  let index = 0;
+  async function runNext() {
+    if (index >= batches.length) return;
+    const batch = batches[index++];
+    await runBatch(batch);
+    completedBatches++;
+
+    if (completedBatches % 10 === 0 || completedBatches === totalBatches) {
+      console.log(
+        chalk.cyan(
+          `Progress: ${completedBatches}/${totalBatches} batches (${((completedBatches / totalBatches) * 100).toFixed(1)}%)`,
+        ),
+      );
+    }
+
+    await runNext();
   }
 
   await Promise.all(
-    Array(Math.min(concurrency, keys.length))
+    Array(Math.min(CONCURRENCY, batches.length))
       .fill(null)
       .map(() => runNext()),
   );
@@ -246,6 +264,7 @@ async function getFilesToUpload(vendorDir) {
 }
 
 let rateLimitedPrinted = false;
+const s3Client = createS3Client();
 
 /**
  * Upload a single file to R2 using Cloudflare API.
@@ -258,7 +277,7 @@ async function uploadFile(filePath, vendorDir, env) {
 
   // Determine content type based on file extension.
   const contentType = getContentType(filePath);
-  await uploadObject(r2Key, fileContent, contentType);
+  await uploadObject(s3Client, r2Key, fileContent, contentType);
 }
 
 /**
@@ -372,18 +391,18 @@ async function main() {
   await uploadWithConcurrency(files, vendorDir, env, CONCURRENCY);
 
   console.log(chalk.blue(`\nUploading manifest: ${manifestKey}`));
-  await uploadObject(manifestKey, Buffer.from(JSON.stringify(manifest, null, 2)), 'application/json');
+  await uploadObject(s3Client, manifestKey, Buffer.from(JSON.stringify(manifest, null, 2)), 'application/json');
   writeFileSync('dist/vendor/manifest.json', JSON.stringify(manifest, null, 2));
 
   console.log(chalk.blue(`\nListing objects in prefix: ${env}/`));
-  const remoteKeys = (await listObjects(`${env}/`)).sort((a, b) => a.localeCompare(b));
+  const remoteKeys = (await listObjects(s3Client, `${env}/`)).sort((a, b) => a.localeCompare(b));
   console.log(chalk.green(`Found ${remoteKeys.length} objects in prefix: ${env}/\n`));
 
   const manifestKeys = new Set([...manifestEntries.map((e) => e.key)]);
   const keysToDelete = remoteKeys.filter((key) => !manifestKeys.has(key));
   if (keysToDelete.length > 0) {
     console.log(chalk.yellow(`\nDeleting ${keysToDelete.length} objects not in manifest...`));
-    await deleteWithConcurrency(keysToDelete, CONCURRENCY);
+    await deleteObjectsBulk(s3Client, keysToDelete);
   } else {
     console.log(chalk.green('\nNo extra objects to delete.'));
   }
