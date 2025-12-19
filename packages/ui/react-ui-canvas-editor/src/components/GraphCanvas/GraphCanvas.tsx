@@ -37,10 +37,6 @@ const GraphCanvasInner = ({ children, classNames, graph: propsGraph }: GraphCanv
   const context = useContext(EditorContext);
   const graph = propsGraph ?? context?.graph;
 
-  if (!graph) {
-    return null;
-  }
-
   // Map graph nodes to React Flow nodes.
   const nodes: Node<Polygon>[] = useMemo(
     () =>
@@ -79,7 +75,7 @@ const GraphCanvasInner = ({ children, classNames, graph: propsGraph }: GraphCanv
 
   return (
     <div className={mx('is-full bs-full', classNames)}>
-      <ReactFlow nodes={nodes} edges={edges} nodeTypes={nodeTypes} colorMode={themeMode} fitView>
+      <ReactFlow colorMode={themeMode} nodes={nodes} edges={edges} nodeTypes={nodeTypes} fitView>
         <Background />
         <Controls />
         {children}

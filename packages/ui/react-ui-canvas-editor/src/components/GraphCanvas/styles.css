@@ -1,4 +1,10 @@
+
+.react-flow__attribution {
+  display: none;
+}
+
 /* Dark mode overrides for React Flow */
+/* TODO(burdon): Convert to tailwindcss */
 .dark {
   --xy-edge-stroke: #555;
   --xy-edge-stroke-selected: #777;
@@ -19,12 +25,14 @@
 .dark .react-flow__panel {
   background-color: #222;
   color: #eee;
-  border-color: #444;
+}
+
+.dark .react-flow__panel * {
+  border-color: transparent !important;
 }
 
 .dark .react-flow__controls-button {
   background-color: #222;
-  border-bottom-color: #444;
 }
 
 .dark .react-flow__controls-button:hover {
