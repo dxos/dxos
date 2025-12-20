@@ -27,7 +27,7 @@ export type GraphController = {
   findNode: (id: string) => SVGGElement | null;
 };
 
-export type GraphProps<Node extends Graph$.Node = any, Edge extends Graph$.Edge = any> = ThemedClassName<
+export type GraphProps<Node extends Graph$.Node.Any = any, Edge extends Graph$.Edge.Any = any> = ThemedClassName<
   Pick<GraphRendererOptions<Node>, 'labels' | 'subgraphs' | 'attributes'> & {
     model?: GraphModel.GraphModel<Node, Edge>; // TODO(burdon): ReactiveGraphModel
     projector?: GraphProjector<Node>;
@@ -39,7 +39,7 @@ export type GraphProps<Node extends Graph$.Node = any, Edge extends Graph$.Edge 
   }
 >;
 
-const GraphInner = <Node extends Graph$.Node = any, Edge extends Graph$.Edge = any>(
+const GraphInner = <Node extends Graph$.Node.Any = any, Edge extends Graph$.Edge.Any = any>(
   {
     classNames,
     model,
@@ -125,6 +125,6 @@ const GraphInner = <Node extends Graph$.Node = any, Edge extends Graph$.Edge = a
 /**
  * SVG Graph.
  */
-export const Graph = forwardRef(GraphInner) as <Node extends Graph$.Node = any, Edge extends Graph$.Edge = any>(
+export const Graph = forwardRef(GraphInner) as <Node extends Graph$.Node.Any = any, Edge extends Graph$.Edge.Any = any>(
   props: GraphProps<Node, Edge> & { ref?: Ref<GraphController> },
 ) => JSX.Element;

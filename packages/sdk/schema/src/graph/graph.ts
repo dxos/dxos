@@ -11,8 +11,8 @@ import { log } from '@dxos/log';
  * Creates a new reactive graph from a set of ECHO objects.
  * References are mapped onto graph edges.
  */
-export const createGraph = <T extends Entity.Unknown>(objects: T[]): GraphModel.GraphModel<Graph.Node.Required<T>> => {
-  const graph = new GraphModel.GraphModel<Graph.Node.Required<T>>({ nodes: [], edges: [] });
+export const createGraph = <T extends Entity.Unknown>(objects: T[]): GraphModel.GraphModel<Graph.Node.Node<T>> => {
+  const graph = new GraphModel.GraphModel<Graph.Node.Node<T>>({ nodes: [], edges: [] });
 
   // Map objects.
   objects.forEach((object) => {

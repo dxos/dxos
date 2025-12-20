@@ -20,13 +20,13 @@ import { visitValues } from '@dxos/util';
 // - https://observablehq.com/@d3/psr-b1919-21
 // - https://vasturiano.github.io/react-force-graph/example/basic (3D)
 
-export type SpaceGraphNode = Graph.Node.Required<{
+export type SpaceGraphNode = Graph.Node.Node<{
   label: string;
   object?: Obj.Any;
 }>;
 
 // TODO(burdon): Differentiate between refs and relations.
-export type SpaceGraphEdge = Graph.Edge.Optional;
+export type SpaceGraphEdge = Graph.Edge.Any;
 
 class SpaceGraphBuilder extends GraphModel.AbstractBuilder<SpaceGraphNode, SpaceGraphEdge, SpaceGraphModel> {}
 
