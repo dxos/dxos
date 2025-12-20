@@ -9,7 +9,6 @@ import * as Schema from 'effect/Schema';
 import * as SchemaAST from 'effect/SchemaAST';
 
 /**
- *
  * @param schema
  * @param property
  */

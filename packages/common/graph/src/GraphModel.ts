@@ -9,22 +9,19 @@ import { failedInvariant, invariant } from '@dxos/invariant';
 import { type Live, live } from '@dxos/live-object';
 import { type MakeOptional, isTruthy, removeBy } from '@dxos/util';
 
-import { type BaseGraphEdge, type BaseGraphNode, type Graph, type GraphEdge, type GraphNode } from './types';
+import type * as Graph from './Graph';
 import { createEdgeId } from './util';
 
 /**
  * Readonly Graph wrapper.
  */
-export class ReadonlyGraphModel<
-  Node extends BaseGraphNode = BaseGraphNode,
-  Edge extends BaseGraphEdge = BaseGraphEdge,
-> {
-  protected readonly _graph: Graph;
+export class ReadonlyGraphModel<Node extends Graph.Node = Graph.Node, Edge extends Graph.Edge = Graph.Edge> {
+  protected readonly _graph: Graph.Graph;
 
   /**
    * NOTE: Pass in simple Graph or Live.
    */
-  constructor(graph?: Graph) {
+  constructor(graph?: Graph.Graph) {
     this._graph = graph ?? {
       nodes: [],
       edges: [],
@@ -45,7 +42,7 @@ export class ReadonlyGraphModel<
     };
   }
 
-  get graph(): Graph {
+  get graph(): Graph.Graph {
     return this._graph;
   }
 
@@ -69,7 +66,7 @@ export class ReadonlyGraphModel<
     return this.findNode(id) ?? failedInvariant();
   }
 
-  filterNodes({ type }: Partial<GraphNode.Any> = {}): Node[] {
+  filterNodes({ type }: Partial<Graph.Node> = {}): Node[] {
     return this.nodes.filter((node) => !type || type === node.type);
   }
 
@@ -85,7 +82,7 @@ export class ReadonlyGraphModel<
     return this.findEdge(id) ?? failedInvariant();
   }
 
-  filterEdges({ type, source, target }: Partial<GraphEdge> = {}): Edge[] {
+  filterEdges({ type, source, target }: Partial<Graph.Edge> = {}): Edge[] {
     return this.edges.filter(
       (edge) =>
         (!type || type === edge.type) && (!source || source === edge.source) && (!target || target === edge.target),
@@ -118,10 +115,10 @@ export class ReadonlyGraphModel<
  * Mutable Graph wrapper.
  */
 export abstract class AbstractGraphModel<
-  Node extends BaseGraphNode = BaseGraphNode,
-  Edge extends BaseGraphEdge = BaseGraphEdge,
+  Node extends Graph.Node = Graph.Node,
+  Edge extends Graph.Edge = Graph.Edge,
   Model extends AbstractGraphModel<Node, Edge, Model, Builder> = any,
-  Builder extends AbstractGraphBuilder<Node, Edge, Model> = AbstractGraphBuilder<Node, Edge, Model>,
+  Builder extends AbstractBuilder<Node, Edge, Model> = AbstractBuilder<Node, Edge, Model>,
 > extends ReadonlyGraphModel<Node, Edge> {
   /**
    * Allows chaining.
@@ -131,7 +128,7 @@ export abstract class AbstractGraphModel<
   /**
    * Shallow copy of provided graph.
    */
-  abstract copy(graph?: Partial<Graph>): Model;
+  abstract copy(graph?: Partial<Graph.Graph>): Model;
 
   clear(): this {
     this._graph.nodes.length = 0;
@@ -205,9 +202,9 @@ export abstract class AbstractGraphModel<
 /**
  * Chainable builder wrapper
  */
-export abstract class AbstractGraphBuilder<
-  Node extends BaseGraphNode,
-  Edge extends BaseGraphEdge,
+export abstract class AbstractBuilder<
+  Node extends Graph.Node,
+  Edge extends Graph.Edge,
   Model extends GraphModel<Node, Edge>,
 > {
   constructor(protected readonly _model: Model) {}
@@ -250,25 +247,25 @@ export abstract class AbstractGraphBuilder<
  * Basic model.
  */
 export class GraphModel<
-  Node extends BaseGraphNode = BaseGraphNode,
-  Edge extends BaseGraphEdge = BaseGraphEdge,
-> extends AbstractGraphModel<Node, Edge, GraphModel<Node, Edge>, GraphBuilder<Node, Edge>> {
+  Node extends Graph.Node = Graph.Node,
+  Edge extends Graph.Edge = Graph.Edge,
+> extends AbstractGraphModel<Node, Edge, GraphModel<Node, Edge>, Builder<Node, Edge>> {
   override get builder() {
-    return new GraphBuilder<Node, Edge>(this);
+    return new Builder<Node, Edge>(this);
   }
 
-  override copy(graph?: Partial<Graph>): GraphModel<Node, Edge> {
+  override copy(graph?: Partial<Graph.Graph>): GraphModel<Node, Edge> {
     return new GraphModel<Node, Edge>({ nodes: graph?.nodes ?? [], edges: graph?.edges ?? [] });
   }
 }
 
-export type GraphModelSubscription = (model: GraphModel, graph: Live<Graph>) => void;
+export type Subscription = (model: GraphModel, graph: Live<Graph.Graph>) => void;
 
 /**
  * Subscription.
  * NOTE: Requires `registerSignalsRuntime` to be called.
  */
-export const subscribe = (model: GraphModel, cb: GraphModelSubscription, fire = false) => {
+export const subscribe = (model: GraphModel, cb: Subscription, fire = false) => {
   if (fire) {
     cb(model, model.graph);
   }
@@ -282,10 +279,10 @@ export const subscribe = (model: GraphModel, cb: GraphModelSubscription, fire = 
  * Basic reactive model.
  */
 export class ReactiveGraphModel<
-  Node extends BaseGraphNode = BaseGraphNode,
-  Edge extends BaseGraphEdge = BaseGraphEdge,
+  Node extends Graph.Node = Graph.Node,
+  Edge extends Graph.Edge = Graph.Edge,
 > extends GraphModel<Node, Edge> {
-  constructor(graph?: Partial<Graph>) {
+  constructor(graph?: Partial<Graph.Graph>) {
     super(
       live({
         nodes: graph?.nodes ?? [],
@@ -294,11 +291,11 @@ export class ReactiveGraphModel<
     );
   }
 
-  override copy(graph?: Partial<Graph>): ReactiveGraphModel<Node, Edge> {
+  override copy(graph?: Partial<Graph.Graph>): ReactiveGraphModel<Node, Edge> {
     return new ReactiveGraphModel<Node, Edge>(graph);
   }
 
-  subscribe(cb: GraphModelSubscription, fire = false): () => void {
+  subscribe(cb: Subscription, fire = false): () => void {
     return subscribe(this, cb, fire);
   }
 }
@@ -306,10 +303,10 @@ export class ReactiveGraphModel<
 /**
  * Basic builder.
  */
-export class GraphBuilder<
-  Node extends BaseGraphNode = BaseGraphNode,
-  Edge extends BaseGraphEdge = BaseGraphEdge,
-> extends AbstractGraphBuilder<Node, Edge, GraphModel<Node, Edge>> {
+export class Builder<
+  Node extends Graph.Node = Graph.Node,
+  Edge extends Graph.Edge = Graph.Edge,
+> extends AbstractBuilder<Node, Edge, GraphModel<Node, Edge>> {
   override call(cb: (builder: this) => void): this {
     cb(this);
     return this;

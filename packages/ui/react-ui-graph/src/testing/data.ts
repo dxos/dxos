@@ -2,7 +2,7 @@
 // Copyright 2020 DXOS.org
 //
 
-import { type BaseGraphEdge, type Graph } from '@dxos/graph';
+import { type BaseEdge, type Graph } from '@dxos/graph';
 import { faker } from '@dxos/random';
 
 import { type TestNode } from './model';
@@ -23,7 +23,7 @@ export const createNode = (type: string = undefined): TestNode => ({
 export const createNodes = (n = 0, types?: string[]): TestNode[] =>
   Array.from({ length: n }, () => createNode(types ? faker.helpers.arrayElement(types) : undefined));
 
-export const createEdge = (source: TestNode, target: TestNode): BaseGraphEdge => ({
+export const createEdge = (source: TestNode, target: TestNode): BaseEdge => ({
   id: `${source.id}-${target.id}`,
   source: source.id,
   target: target.id,

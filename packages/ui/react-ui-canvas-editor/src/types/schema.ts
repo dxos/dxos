@@ -7,7 +7,7 @@ import * as Schema from 'effect/Schema';
 import { ComputeGraph } from '@dxos/conductor';
 import { Type } from '@dxos/echo';
 import { Ref } from '@dxos/echo/internal';
-import { BaseGraphEdge, BaseGraphNode, Graph } from '@dxos/graph';
+import { BaseEdge, BaseNode, Graph } from '@dxos/graph';
 
 // TODO(burdon): Consider interop with TLDraw and GeoJSON standards?
 
@@ -15,7 +15,7 @@ import { BaseGraphEdge, BaseGraphNode, Graph } from '@dxos/graph';
  * Base type for all shapes.
  */
 export const Shape = Schema.extend(
-  BaseGraphNode.pipe(Schema.omit('type')),
+  BaseNode.pipe(Schema.omit('type')),
   Schema.Struct({
     type: Schema.String,
     text: Schema.optional(Schema.String),
@@ -30,7 +30,7 @@ export type Shape = Schema.Schema.Type<typeof Shape>;
  * Connections between shapes.
  */
 export const Connection = Schema.extend(
-  BaseGraphEdge,
+  BaseEdge,
   Schema.Struct({
     input: Schema.optional(Schema.String),
     output: Schema.optional(Schema.String),

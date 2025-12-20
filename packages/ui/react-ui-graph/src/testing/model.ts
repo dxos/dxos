@@ -2,12 +2,12 @@
 // Copyright 2022 DXOS.org
 //
 
-import { type BaseGraphNode, ReactiveGraphModel } from '@dxos/graph';
+import { type BaseNode, ReactiveGraphModel } from '@dxos/graph';
 import { faker } from '@dxos/random';
 
 import { createEdge, createNode } from './data';
 
-export type TestNode = BaseGraphNode & {
+export type TestNode = BaseNode & {
   label?: string;
   children?: TestNode[];
 };

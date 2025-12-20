@@ -6,16 +6,17 @@ import * as Schema from 'effect/Schema';
 
 import { JsonSchema, Obj, Type } from '@dxos/echo';
 import { Function } from '@dxos/functions';
-import { BaseGraphEdge, BaseGraphNode, Graph } from '@dxos/graph';
+import { Graph } from '@dxos/graph';
 
 export const ComputeValueType = Schema.Literal('string', 'number', 'boolean', 'object');
+
 export type ComputeValueType = Schema.Schema.Type<typeof ComputeValueType>;
 
 /**
  * GraphNode.
  */
 export const ComputeNode = Schema.extend(
-  BaseGraphNode,
+  Graph.BaseNode,
 
   /**
    * NOTE: We have a mixin of properties for different node types for simplicity, rather than a discriminated union.
@@ -23,8 +24,9 @@ export const ComputeNode = Schema.extend(
   // TODO(burdon): Split out into different types.
   Schema.Struct({
     /** For template nodes. */
-    // TODO(dmaretskyi): Compute at runtime -- don't persist.
+    // TODO(dmaretskyi): Compute at runtime: don't persist.
     inputSchema: Schema.optional(JsonSchema.JsonSchema),
+
     outputSchema: Schema.optional(JsonSchema.JsonSchema),
 
     /** For composition nodes. */
@@ -43,13 +45,16 @@ export const ComputeNode = Schema.extend(
     /** For constant and template nodes. */
     value: Schema.optional(Schema.Any),
 
-    /** For switch nodes. */
+    /**
+     * For switch nodes.
+     * @deprecated
+     */
     // TODO(dmaretskyi): Reuse `value`.
     enabled: Schema.optional(Schema.Boolean),
   }),
 ).pipe(Schema.mutable);
 
-export type ComputeNode = Schema.Schema.Type<typeof ComputeNode>;
+export interface ComputeNode extends Schema.Schema.Type<typeof ComputeNode> {}
 
 // TODO(dmaretskyi): To effect schema.
 export type ComputeNodeMeta = {
@@ -61,8 +66,7 @@ export type ComputeNodeMeta = {
  * GraphEdge.
  */
 export const ComputeEdge = Schema.extend(
-  BaseGraphEdge,
-
+  Graph.BaseEdge,
   Schema.Struct({
     /** Output property from source. */
     output: Schema.String,
@@ -72,7 +76,7 @@ export const ComputeEdge = Schema.extend(
   }),
 );
 
-export type ComputeEdge = Schema.Schema.Type<typeof ComputeEdge>;
+export interface ComputeEdge extends Schema.Schema.Type<typeof ComputeEdge> {}
 
 /**
  * Persistent graph.
@@ -82,14 +86,15 @@ export const ComputeGraph = Schema.Struct({
   graph: Graph as Schema.Schema<Graph>,
 
   // Reference nodes.
-  input: Schema.optional(BaseGraphNode),
-  output: Schema.optional(BaseGraphNode),
+  input: Schema.optional(Graph.BaseNode),
+  output: Schema.optional(Graph.BaseNode),
 }).pipe(
   Type.Obj({
     typename: 'dxos.org/type/ComputeGraph',
     version: '0.1.0',
   }),
 );
+
 export interface ComputeGraph extends Schema.Schema.Type<typeof ComputeGraph> {}
 
 export const isComputeGraph = Obj.instanceOf(ComputeGraph);

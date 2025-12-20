@@ -20,7 +20,7 @@ import { NODE_INPUT, NODE_OUTPUT } from '../nodes';
 import {
   AnyInput,
   AnyOutput,
-  type ComputeEffect,
+  type ComputeResult,
   ComputeGraph,
   ComputeGraphModel,
   type ComputeNode,
@@ -168,7 +168,7 @@ describe('workflow', () => {
     );
   });
 
-  const executeEffect = (effect: ComputeEffect<any>) => {
+  const executeEffect = (effect: ComputeResult<any>) => {
     return effect.pipe(
       Effect.withSpan('runTestWorkflow'),
       Effect.flatMap(ValueBag.unwrap),

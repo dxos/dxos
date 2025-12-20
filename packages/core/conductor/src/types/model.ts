@@ -7,10 +7,8 @@ import { AbstractGraphBuilder, AbstractGraphModel, type Graph, createEdgeId } fr
 import { DXN, ObjectId } from '@dxos/keys';
 import { type MakeOptional } from '@dxos/util';
 
-import { type ComputeEdge, ComputeGraph, type ComputeNode, isComputeGraph } from './compute-graph';
+import { type ComputeEdge, ComputeGraph, type ComputeNode, isComputeGraph } from './graph';
 import { DEFAULT_INPUT, DEFAULT_OUTPUT } from './schema';
-
-// TODO(burdon): DXN from echo-schema is a different type.
 
 export class ComputeGraphModel extends AbstractGraphModel<
   ComputeNode,
