@@ -1,5 +1,5 @@
 //
-// Copyright 2020 DXOS.org
+// Copyright 2025 DXOS.org
 //
 
 import { type GeoGeometryObjects, geoCircle as d3GeoCircle } from 'd3';

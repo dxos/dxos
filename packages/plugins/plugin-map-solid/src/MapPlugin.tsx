@@ -1,5 +1,5 @@
 //
-// Copyright 2023 DXOS.org
+// Copyright 2025 DXOS.org
 //
 
 import { Events, defineModule, definePlugin } from '@dxos/app-framework';

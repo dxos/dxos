@@ -1,6 +1,6 @@
 //
 // Copyright 2017 Philippe Rivière
-// Copyright 2024 DXOS.org
+// Copyright 2025 DXOS.org
 // https://github.com/Fil/d3-inertia
 //
 

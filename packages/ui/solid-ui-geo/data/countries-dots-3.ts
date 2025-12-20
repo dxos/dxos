@@ -1,5 +1,5 @@
 //
-// Copyright 2020 DXOS.org
+// Copyright 2025 DXOS.org
 // Generated from countries.json
 //
 

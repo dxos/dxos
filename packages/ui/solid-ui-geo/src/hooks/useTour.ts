@@ -1,5 +1,5 @@
 //
-// Copyright 2024 DXOS.org
+// Copyright 2025 DXOS.org
 //
 
 import { selection as d3Selection, geoDistance, geoInterpolate, geoPath } from 'd3';

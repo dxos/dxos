@@ -1,5 +1,5 @@
 //
-// Copyright 2024 DXOS.org
+// Copyright 2025 DXOS.org
 //
 
 import { type Accessor, type JSX, type Setter, createContext, createEffect, createSignal, useContext } from 'solid-js';

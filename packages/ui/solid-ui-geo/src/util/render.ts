@@ -1,5 +1,5 @@
 //
-// Copyright 2020 DXOS.org
+// Copyright 2025 DXOS.org
 //
 
 import { type GeoPath, type GeoPermissibleObjects, geoGraticule } from 'd3';

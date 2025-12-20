@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 //
-// Copyright 2019 DXOS.org
+// Copyright 2025 DXOS.org
 //
 
 const JSONStream = require('JSONStream');
@@ -47,7 +47,7 @@ fs.createReadStream(source, { encoding: 'utf8' }).pipe(
 
       const generated = [
         '//',
-        '// Copyright 2020 DXOS.org',
+        '// Copyright 2025 DXOS.org',
         `// Generated from ${path.basename(source)}`,
         '//',
         '',

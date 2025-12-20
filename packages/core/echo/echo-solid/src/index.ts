@@ -1,5 +1,5 @@
 //
-// Copyright 2022 DXOS.org
+// Copyright 2025 DXOS.org
 //
 
 export * from './useObject';

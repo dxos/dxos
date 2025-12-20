@@ -1,5 +1,5 @@
 //
-// Copyright 2022 DXOS.org
+// Copyright 2025 DXOS.org
 //
 
 import { type Accessor, createEffect, createMemo, createSignal, onCleanup } from 'solid-js';

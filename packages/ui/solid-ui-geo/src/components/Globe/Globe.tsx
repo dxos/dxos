@@ -1,5 +1,5 @@
 //
-// Copyright 2018 DXOS.org
+// Copyright 2025 DXOS.org
 //
 
 import { createResizeObserver } from '@solid-primitives/resize-observer';

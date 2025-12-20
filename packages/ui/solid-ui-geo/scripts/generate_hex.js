@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 //
-// Copyright 2020 DXOS.org
+// Copyright 2025 DXOS.org
 //
 
 const fs = require('fs');
@@ -62,7 +62,7 @@ for (const resolution of resolutions) {
 
   const generated = [
     '//',
-    '// Copyright 2020 DXOS.org',
+    '// Copyright 2025 DXOS.org',
     `// Generated from ${path.basename(source)}`,
     '//',
     '',
