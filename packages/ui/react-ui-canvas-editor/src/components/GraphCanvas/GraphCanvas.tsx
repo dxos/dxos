@@ -8,6 +8,7 @@ import {
   Controls,
   type Dimensions,
   type Edge,
+  MiniMap,
   type Node,
   type NodeTypes,
   ReactFlow,
@@ -17,9 +18,10 @@ import {
   useEdgesState,
   useNodesState,
 } from '@xyflow/react';
-import '@xyflow/react/dist/style.css';
+import '@xyflow/react/dist/style.css'; // TODO(burdon): Replace with tailwind.
 import React, { type PropsWithChildren, useCallback, useContext, useEffect } from 'react';
 
+import { log } from '@dxos/log';
 import { type ThemedClassName, useThemeContext } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
@@ -34,16 +36,18 @@ const nodeTypes: NodeTypes = {
 
 export type GraphCanvasProps = ThemedClassName<PropsWithChildren> & {
   graph?: CanvasGraphModel;
+  grid?: 'grid' | 'dots';
+  map?: boolean;
 };
 
-const GraphCanvasInner = ({ classNames, children, graph: graphParam }: GraphCanvasProps) => {
+const GraphCanvasInner = ({ classNames, children, graph: graphParam, grid, map }: GraphCanvasProps) => {
   const { themeMode } = useThemeContext();
   const context = useContext(EditorContext);
   const graph = graphParam ?? context?.graph;
 
   // Map graph nodes to React Flow nodes.
-  const [nodes, setNodes, onNodesChange] = useNodesState<Node<Polygon>>([]);
-  const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>([]);
+  const [nodes, setNodes, handleNodesChange] = useNodesState<Node<Polygon>>([]);
+  const [edges, setEdges, handleEdgesChange] = useEdgesState<Edge>([]);
 
   useEffect(() => {
     if (graph) {
@@ -60,7 +64,8 @@ const GraphCanvasInner = ({ classNames, children, graph: graphParam }: GraphCanv
             type: 'custom',
             position,
             origin: [0.5, 0.5],
-            className: '-my-[1px] -mx-[1px]',
+            // Fix alignment.
+            className: grid === 'grid' ? '-my-[1px] -mx-[1px]' : undefined,
             data: node as Polygon,
             style: size,
           };
@@ -72,18 +77,36 @@ const GraphCanvasInner = ({ classNames, children, graph: graphParam }: GraphCanv
           id: edge.id,
           source: edge.source,
           target: edge.target,
+          sourceHandle: edge.output,
+          targetHandle: edge.input,
         })),
       );
     }
   }, [graph?.nodes, graph?.edges]);
 
-  const handleNodeDragStart = useCallback<NonNullable<ReactFlowProps['onNodeDragStart']>>((_event, node) => {
-    // console.log('onNodeDragStart', JSON.stringify(node, null, 2));
-  }, []);
+  const handleConnect = useCallback<NonNullable<ReactFlowProps['onConnect']>>(
+    (connection) => {
+      // TODO(burdon): sourceHandle/targetHandle.
+      log.info('handleConnect', { connection });
+      if (graph && connection.source && connection.target) {
+        graph.createEdge({
+          source: connection.source,
+          target: connection.target,
+          output: connection.sourceHandle ?? undefined,
+          input: connection.targetHandle ?? undefined,
+        });
+      }
+    },
+    [graph],
+  );
 
-  const handleNodeDragMove = useCallback<NonNullable<ReactFlowProps['onNodeDrag']>>((_event, node) => {
-    // console.log('onNodeDrag', JSON.stringify(node, null, 2));
-  }, []);
+  // const handleNodeDragStart = useCallback<NonNullable<ReactFlowProps['onNodeDragStart']>>((_event, node) => {
+  //   console.log('onNodeDragStart', JSON.stringify(node, null, 2));
+  // }, []);
+
+  // const handleNodeDragMove = useCallback<NonNullable<ReactFlowProps['onNodeDrag']>>((_event, node) => {
+  //   console.log('onNodeDrag', JSON.stringify(node, null, 2));
+  // }, []);
 
   const handleNodeDragStop = useCallback<NonNullable<ReactFlowProps['onNodeDragStop']>>(
     (_event, node) => {
@@ -97,11 +120,11 @@ const GraphCanvasInner = ({ classNames, children, graph: graphParam }: GraphCanv
   );
 
   const handleNodesDelete = useCallback<NonNullable<ReactFlowProps['onNodesDelete']>>((nodes) => {
-    // console.log('onNodesDelete', nodes);
+    log.info('handleNodesDelete', { nodes });
   }, []);
 
   const handleEdgesDelete = useCallback<NonNullable<ReactFlowProps['onEdgesDelete']>>((edges) => {
-    // console.log('onEdgesDelete', edges);
+    log.info('handleEdgesDelete', { edges });
   }, []);
 
   if (!graph) {
@@ -123,27 +146,44 @@ const GraphCanvasInner = ({ classNames, children, graph: graphParam }: GraphCanv
       snapGrid={[snap, snap]}
       snapToGrid={true}
       zoomOnScroll={false}
-      onNodeDragStart={handleNodeDragStart}
-      onNodeDrag={handleNodeDragMove}
+      onConnect={handleConnect}
+      // onNodeDragStart={handleNodeDragStart}
+      // onNodeDrag={handleNodeDragMove}
       onNodeDragStop={handleNodeDragStop}
-      onNodesChange={onNodesChange}
+      onNodesChange={handleNodesChange}
       onNodesDelete={handleNodesDelete}
-      onEdgesChange={onEdgesChange}
+      onEdgesChange={handleEdgesChange}
       onEdgesDelete={handleEdgesDelete}
     >
-      <Background
-        id='grid-minor'
-        gap={snap}
-        className='!bg-transparent [&>*>*.lines]:dark:!stroke-neutral-750'
-        variant={BackgroundVariant.Lines}
-      />
-      <Background
-        id='grid-major'
-        gap={snap * 4}
-        className='!bg-transparent [&>*>*.lines]:dark:!stroke-neutral-700'
-        variant={BackgroundVariant.Lines}
-      />
-      <Controls />
+      {grid === 'grid' && (
+        <>
+          <Background
+            id='grid-minor'
+            gap={snap}
+            className='!bg-transparent [&>*>*.lines]:dark:!stroke-neutral-750 opacity-50'
+            variant={BackgroundVariant.Lines}
+          />
+          <Background
+            id='grid-major'
+            gap={snap * 4}
+            className='!bg-transparent [&>*>*.lines]:dark:!stroke-neutral-700 opacity-50'
+            variant={BackgroundVariant.Lines}
+          />
+        </>
+      )}
+      {grid === 'dots' && (
+        <>
+          <Background
+            id='grid-minor'
+            gap={snap}
+            offset={[0.5, 0.5]}
+            className='!bg-transparent [&>*>*.dots]:dark:!stroke-neutral-700'
+            variant={BackgroundVariant.Dots}
+          />
+        </>
+      )}
+      {map && <MiniMap />}
+      <Controls fitViewOptions={{ maxZoom: 1 }} showInteractive={false} />
       {children}
     </ReactFlow>
   );

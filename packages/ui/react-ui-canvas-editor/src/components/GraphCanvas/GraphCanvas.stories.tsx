@@ -13,11 +13,25 @@ import { Editor } from '../Editor';
 
 import { GraphCanvas, type GraphCanvasProps } from './GraphCanvas';
 
+// TODO(burdon): Story with conductor nodes and local processing.
+// TODO(burdon): Undo.
+// TODO(burdon): Customize database schema: https://reactflow.dev/ui/components/database-schema-node
+// TODO(burdon): Cards/info cards.
+
+// TODO(burdon): Editor inside node.
+// TODO(burdon): Tool palette.
+// TODO(burdon): DevTools (copy from shadcn).
+// TOOD(burdon): Animated edges.
+// TODO(burdon): Groups (hierarchical).
+// TODO(burdon): Resize.
+// TODO(burdon): Auto-layout.
+
 const DefaultStory = (props: GraphCanvasProps) => {
   const [graph, setGraph] = useState<CanvasGraphModel>();
 
   useEffect(() => {
     const init = async () => {
+      // TODO(burdon): Make reactive (createObject).
       const model = CanvasGraphModel.create<Polygon>({
         nodes: [
           {
@@ -33,7 +47,7 @@ const DefaultStory = (props: GraphCanvasProps) => {
             type: 'rectangle',
             text: 'Node 2',
             center: { x: 256, y: 64 },
-            size: { width: 128, height: 64 },
+            size: { width: 128, height: 96 },
             data: {},
           },
         ] as Polygon[],
@@ -76,4 +90,8 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-export const Default: Story = {};
+export const Default: Story = {
+  args: {
+    grid: 'grid',
+  },
+};
