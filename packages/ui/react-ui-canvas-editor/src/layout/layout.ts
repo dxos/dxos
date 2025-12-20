@@ -43,7 +43,7 @@ export const defaultLayoutOptions: LayoutOptions = {
 };
 
 export const doLayout = async (
-  data: GraphModel,
+  data: GraphModel.GraphModel,
   options: Partial<LayoutOptions> = defaultLayoutOptions,
 ): Promise<CanvasGraphModel> => {
   const graph = CanvasGraphModel.create();
@@ -131,7 +131,7 @@ const createLayout = (type: LayoutKind, options: CommonLayoutOptions) => {
 };
 
 // TODO(burdon): Preserve existing position with Shape adapter.
-const toLayoutGraph = ({ nodes, edges }: Graph): NaturalGraph<PlainObject, PlainObject> => {
+const toLayoutGraph = ({ nodes, edges }: Graph.Graph): NaturalGraph<PlainObject, PlainObject> => {
   return new NaturalGraph<PlainObject, PlainObject>({
     nodes: nodes.map((node) => ({
       id: node.id,

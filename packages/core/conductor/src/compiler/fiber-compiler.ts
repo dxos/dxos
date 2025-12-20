@@ -24,11 +24,11 @@ import { isNonNullable } from '@dxos/util';
 
 import { ComputeNodeError, InvalidValueError } from '../errors';
 import {
-  type ComputeEffect,
   type ComputeGraphModel,
   type ComputeNode,
   type ComputeNodeMeta,
   type ComputeRequirements,
+  type ComputeResult,
   type Executable,
   NotExecuted,
   ValueBag,
@@ -192,7 +192,7 @@ type GraphExecutorParams = {
  * - Execute individual nodes and propagate values through the graph
  */
 export class GraphExecutor {
-  private readonly _computeCache = new Map<string, ComputeEffect<ValueBag<any>>>();
+  private readonly _computeCache = new Map<string, ComputeResult<ValueBag<any>>>();
 
   private readonly _computeMetaResolver: (node: ComputeNode) => Promise<ComputeNodeMeta>;
   private readonly _computeNodeResolver: (node: ComputeNode) => Promise<Executable>;
@@ -268,11 +268,11 @@ export class GraphExecutor {
    * Set outputs for a node.
    * When values are polled, this node will not be computed.
    */
-  setOutputs(nodeId: string, outputs: ComputeEffect<ValueBag<any>>): void {
+  setOutputs(nodeId: string, outputs: ComputeResult<ValueBag<any>>): void {
     this._computeCache.set(nodeId, outputs);
   }
 
-  setInputs(nodeId: string, inputs: ComputeEffect<ValueBag<any>>): void {
+  setInputs(nodeId: string, inputs: ComputeResult<ValueBag<any>>): void {
     this._computeCache.set(nodeId, inputs);
   }
 
@@ -339,7 +339,7 @@ export class GraphExecutor {
   /**
    * Compute inputs for a node using a pull-based computation.
    */
-  computeInputs(nodeId: string): ComputeEffect<ValueBag<any>> {
+  computeInputs(nodeId: string): ComputeResult<ValueBag<any>> {
     return Effect.gen(this, function* () {
       invariant(this._topology, 'Graph not loaded');
       const node = this._topology.nodes.find((node) => node.id === nodeId) ?? failedInvariant();
@@ -399,7 +399,7 @@ export class GraphExecutor {
   /**
    * Compute outputs for a node using a pull-based computation.
    */
-  computeOutputs(nodeId: string): ComputeEffect<ValueBag> {
+  computeOutputs(nodeId: string): ComputeResult<ValueBag<any>> {
     return Effect.gen(this, function* () {
       invariant(this._topology, 'Graph not loaded');
       if (this._computeCache.has(nodeId)) {
@@ -407,6 +407,7 @@ export class GraphExecutor {
         if (!ValueBag.isValueBag(result)) {
           throw new Error(`Output is not a value bag: ${JSON.stringify(result)}`);
         }
+
         return result;
       }
 

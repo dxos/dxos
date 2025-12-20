@@ -6,32 +6,33 @@ import * as Schema from 'effect/Schema';
 
 import { JsonSchema, Obj, Type } from '@dxos/echo';
 import { Function } from '@dxos/functions';
-import { BaseGraphEdge, BaseGraphNode, Graph } from '@dxos/graph';
+import { Graph } from '@dxos/graph';
 
 export const ComputeValueType = Schema.Literal('string', 'number', 'boolean', 'object');
+
 export type ComputeValueType = Schema.Schema.Type<typeof ComputeValueType>;
 
 /**
  * GraphNode.
+ * NOTE: We have a mixin of properties for different node types for simplicity, rather than a discriminated union.
  */
 export const ComputeNode = Schema.extend(
-  BaseGraphNode,
-
-  /**
-   * NOTE: We have a mixin of properties for different node types for simplicity, rather than a discriminated union.
-   */
-  // TODO(burdon): Split out into different types.
+  Graph.Node,
   Schema.Struct({
     /** For template nodes. */
-    // TODO(dmaretskyi): Compute at runtime -- don't persist.
+    // TODO(dmaretskyi): Compute at runtime (don't persist).
     inputSchema: Schema.optional(JsonSchema.JsonSchema),
     outputSchema: Schema.optional(JsonSchema.JsonSchema),
 
-    /** For composition nodes. */
+    /**
+     * For composition nodes.
+     */
     subgraph: Schema.optional(Schema.suspend((): Type.Ref<ComputeGraph> => Type.Ref(ComputeGraph))),
 
-    /** For composition of function nodes. */
-    function: Schema.optional(Type.Ref(Function.Function) as Type.Ref<Function.Function>),
+    /**
+     * For composition of function nodes.
+     */
+    function: Schema.optional(Type.Ref(Function.Function)),
 
     /**
      * For template nodes determines the type of the value.
@@ -40,16 +41,21 @@ export const ComputeNode = Schema.extend(
      */
     valueType: Schema.optional(ComputeValueType),
 
-    /** For constant and template nodes. */
+    /**
+     * For constant and template nodes.
+     */
     value: Schema.optional(Schema.Any),
 
-    /** For switch nodes. */
+    /**
+     * For switch nodes.
+     * @deprecated
+     */
     // TODO(dmaretskyi): Reuse `value`.
     enabled: Schema.optional(Schema.Boolean),
   }),
 ).pipe(Schema.mutable);
 
-export type ComputeNode = Schema.Schema.Type<typeof ComputeNode>;
+export interface ComputeNode extends Schema.Schema.Type<typeof ComputeNode> {}
 
 // TODO(dmaretskyi): To effect schema.
 export type ComputeNodeMeta = {
@@ -61,9 +67,10 @@ export type ComputeNodeMeta = {
  * GraphEdge.
  */
 export const ComputeEdge = Schema.extend(
-  BaseGraphEdge,
-
+  Graph.Edge,
   Schema.Struct({
+    // TODO(burdon): Rename sourceProp, targetProp?
+
     /** Output property from source. */
     output: Schema.String,
 
@@ -72,24 +79,24 @@ export const ComputeEdge = Schema.extend(
   }),
 );
 
-export type ComputeEdge = Schema.Schema.Type<typeof ComputeEdge>;
+export interface ComputeEdge extends Schema.Schema.Type<typeof ComputeEdge> {}
 
 /**
  * Persistent graph.
  */
 export const ComputeGraph = Schema.Struct({
-  // NOTE: Cast required as workaround for TS compiler bug.
-  graph: Graph as Schema.Schema<Graph>,
+  graph: Graph.Graph,
 
   // Reference nodes.
-  input: Schema.optional(BaseGraphNode),
-  output: Schema.optional(BaseGraphNode),
+  input: Schema.optional(Graph.Node),
+  output: Schema.optional(Graph.Node),
 }).pipe(
   Type.Obj({
     typename: 'dxos.org/type/ComputeGraph',
     version: '0.1.0',
   }),
 );
+
 export interface ComputeGraph extends Schema.Schema.Type<typeof ComputeGraph> {}
 
 export const isComputeGraph = Obj.instanceOf(ComputeGraph);

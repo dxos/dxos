@@ -13,6 +13,12 @@
   "references": [
     {
       "path": "../echo"
+    },
+    {
+      "path": "../echo-atom"
+    },
+    {
+      "path": "../echo-db"
     }
   ]
 }

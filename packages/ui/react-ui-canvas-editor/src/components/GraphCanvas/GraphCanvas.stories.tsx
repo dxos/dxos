@@ -1,0 +1,129 @@
+//
+// Copyright 2024 DXOS.org
+//
+
+import { type Meta, type StoryObj } from '@storybook/react-vite';
+import React, { useEffect, useState } from 'react';
+
+import { withTheme } from '@dxos/react-ui/testing';
+import { render } from '@dxos/storybook-utils';
+
+import { CanvasGraphModel, type Connection, type Polygon } from '../../types';
+import { Editor } from '../Editor';
+
+import { GraphCanvas, type GraphCanvasProps } from './GraphCanvas';
+
+// TODO(burdon): Story with conductor nodes and local processing.
+// TODO(burdon): Undo.
+// TODO(burdon): Tools (drag-and-drop): https://reactflow.dev/examples/interaction/drag-and-drop
+
+// TODO(burdon): Snap connect: https://reactflow.dev/examples/nodes/proximity-connect
+// TODO(burdon): Customize database schema: https://reactflow.dev/ui/components/database-schema-node
+// TODO(burdon): Cards/info cards.
+// TODO(burdon): Resize: https://reactflow.dev/examples/nodes/node-resizer
+// TODO(burdon): Editor inside node.
+// TODO(burdon): Tool palette.
+// TODO(burdon): DevTools (copy from shadcn).
+// TOOD(burdon): Animated edges.
+// TODO(burdon): Groups (hierarchical).
+// TODO(burdon): Resize.
+// TODO(burdon): Auto-layout: https://reactflow.dev/learn/layouting/layouting
+
+const DefaultStory = (props: GraphCanvasProps) => {
+  const [graph, setGraph] = useState<CanvasGraphModel>();
+
+  useEffect(() => {
+    const init = async () => {
+      // TODO(burdon): Make reactive (createObject).
+      const model = CanvasGraphModel.create<Polygon>({
+        nodes: [
+          {
+            id: 'node-1',
+            type: 'rectangle',
+            text: 'Node 1',
+            center: { x: 0, y: 0 },
+            size: { width: 128, height: 64 },
+            data: {},
+          },
+          {
+            id: 'node-2',
+            type: 'rectangle',
+            text: 'Node 2',
+            center: { x: 256, y: -64 },
+            size: { width: 128, height: 96 },
+            data: {},
+          },
+          {
+            id: 'node-3',
+            type: 'rectangle',
+            text: 'Node 3',
+            center: { x: 416, y: 128 },
+            size: { width: 128, height: 64 },
+            data: {},
+          },
+          {
+            id: 'node-4',
+            type: 'rectangle',
+            text: 'Node 4',
+            center: { x: 192, y: 256 },
+            size: { width: 128, height: 96 },
+            data: {},
+          },
+        ] as Polygon[],
+        edges: [
+          {
+            id: 'edge-1',
+            source: 'node-1',
+            output: 'a',
+            target: 'node-2',
+          },
+          {
+            id: 'edge-2',
+            source: 'node-1',
+            output: 'b',
+            target: 'node-3',
+          },
+          {
+            id: 'edge-3',
+            source: 'node-1',
+            output: 'c',
+            target: 'node-4',
+          },
+        ] as Connection[],
+      });
+
+      setGraph(model);
+    };
+
+    void init();
+  }, []);
+
+  if (!graph) {
+    return null;
+  }
+
+  return (
+    <div className='flex is-full bs-full absolute inset-0'>
+      <Editor.Root id='story' graph={graph}>
+        <GraphCanvas {...props} />
+      </Editor.Root>
+    </div>
+  );
+};
+
+const meta = {
+  title: 'ui/react-ui-canvas-editor/GraphCanvas',
+  component: GraphCanvas,
+  render: render(DefaultStory),
+  decorators: [withTheme],
+} satisfies Meta<typeof GraphCanvas>;
+
+export default meta;
+
+type Story = StoryObj<typeof meta>;
+
+export const Default: Story = {
+  args: {
+    grid: 'grid',
+  },
+};

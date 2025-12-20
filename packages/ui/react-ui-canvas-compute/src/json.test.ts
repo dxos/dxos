@@ -5,12 +5,12 @@
 import * as Schema from 'effect/Schema';
 import { describe, test } from 'vitest';
 
-import { BaseGraphEdge, BaseGraphNode } from '@dxos/graph';
+import { Graph } from '@dxos/graph';
 
 import { createGptCircuit } from './testing';
 
 export const Shape = Schema.extend(
-  BaseGraphNode,
+  Graph.Node,
   Schema.Struct({
     text: Schema.optional(Schema.String),
     guide: Schema.optional(Schema.Boolean),
@@ -19,7 +19,7 @@ export const Shape = Schema.extend(
 );
 
 export const Connection = Schema.extend(
-  BaseGraphEdge,
+  Graph.Edge,
   Schema.Struct({
     input: Schema.optional(Schema.String),
     output: Schema.optional(Schema.String),
