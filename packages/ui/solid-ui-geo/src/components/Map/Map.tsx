@@ -18,8 +18,6 @@ import {
   useContext,
 } from 'solid-js';
 
-import { getDebugName } from '@dxos/util';
-
 import { type GeoMarker } from '../../types';
 import { ActionControls, type ControlProps, ZoomControls, controlPositions } from '../Toolbar';
 
@@ -80,9 +78,6 @@ type MapRootProps = {
  * https://leafletjs.com/reference.html#map
  */
 
-/**
- * @noUseSignals
- */
 const MapRoot = (props: MapRootProps) => {
   let mapContainer: HTMLDivElement | undefined;
   const [map, setMap] = createSignal<L.Map | null>(null);
@@ -148,12 +143,7 @@ const MapRoot = (props: MapRootProps) => {
 // Tiles
 //
 
-type MapTilesProps = object;
-
-/**
- * @noUseSignals
- */
-const MapTiles = (_props: MapTilesProps) => {
+const MapTiles = () => {
   const { map, onChange, attention } = useMapContext(MapTiles.name);
   let tileLayer: L.TileLayer | null = null;
 
@@ -187,10 +177,11 @@ const MapTiles = (_props: MapTilesProps) => {
 
   // Update tile layer class when attention changes
   createEffect(() => {
+    const att = attention();
     if (tileLayer) {
       const container = tileLayer.getContainer();
       if (container) {
-        container.className = attention() ? '' : 'opacity-80';
+        container.className = att ? '' : 'opacity-80';
       }
     }
   });
@@ -204,84 +195,46 @@ const MapTiles = (_props: MapTilesProps) => {
 
 type MapMarkersProps = {
   markers?: Accessor<GeoMarker[]>;
-  selected?: string[];
 };
 
-/**
- * @noUseSignals
- */
 const MapMarkers = (props: MapMarkersProps) => {
   const { map } = useMapContext(MapMarkers.name);
   const leafletMarkers: L.Marker[] = [];
-  let hasHadMarkers = false;
-  let lastMarkerIds: string[] = [];
-
-  console.log('[MapMarkers] Component created');
+  let lastMarkerIds = new Set<string>();
 
   // Clean up all markers when component unmounts
   onCleanup(() => {
-    console.log('[MapMarkers] Component cleanup - removing', leafletMarkers.length, 'markers');
     leafletMarkers.forEach((marker) => marker.remove());
     leafletMarkers.length = 0;
   });
 
   createEffect(() => {
     const leafletMap = map();
-    console.log(
-      '[MapMarkers] Effect running - map:',
-      getDebugName(leafletMap),
-      'hasHadMarkers:',
-      hasHadMarkers,
-      'leafletMarkers:',
-      leafletMarkers.length,
-    );
+    if (!leafletMap) return;
 
-    if (!leafletMap) {
-      console.log('[MapMarkers] No map, returning early');
-      return;
-    }
-
-    // Call the accessor to get current markers
     const markerList = props.markers?.() ?? [];
-    console.log('[MapMarkers] Got marker list:', markerList.length, JSON.stringify(markerList));
+    const currentIds = new Set(markerList.map((m) => m.id));
 
-    // Get current marker IDs
-    const currentIds = markerList
-      .map((m) => m.id)
-      .sort()
-      .join(',');
-    const previousIds = lastMarkerIds.sort().join(',');
-    console.log('[MapMarkers] IDs - current:', currentIds, 'previous:', previousIds);
-
-    // Skip if the markers haven't actually changed (prevents oscillation issues)
-    if (currentIds === previousIds && leafletMarkers.length > 0) {
-      console.log('[MapMarkers] Skipping - IDs unchanged and have leaflet markers');
-      return;
-    }
-
-    // If we previously had markers and now get an empty list, keep the existing markers
-    // This prevents flickering during reactive transitions
-    if (hasHadMarkers && markerList.length === 0 && leafletMarkers.length > 0) {
-      console.log('[MapMarkers] Skipping - had markers before, keeping existing');
+    // Skip if the markers haven't actually changed
+    if (
+      currentIds.size === lastMarkerIds.size &&
+      [...currentIds].every((id) => lastMarkerIds.has(id)) &&
+      leafletMarkers.length > 0
+    ) {
       return;
     }
 
     // Clear existing markers
-    console.log('[MapMarkers] Clearing', leafletMarkers.length, 'existing markers');
     leafletMarkers.forEach((marker) => marker.remove());
     leafletMarkers.length = 0;
+    lastMarkerIds = currentIds;
 
     if (markerList.length > 0) {
-      hasHadMarkers = true;
-      lastMarkerIds = markerList.map((m) => m.id);
-      console.log('[MapMarkers] Adding', markerList.length, 'markers');
       const bounds = latLngBounds(markerList.map((marker) => marker.location));
-      console.log('[MapMarkers] Fitting bounds:', bounds.toBBoxString());
       leafletMap.fitBounds(bounds);
 
       // Add new markers
-      markerList.forEach(({ id, title, location }) => {
-        console.log('[MapMarkers] Adding marker:', id, 'at', location);
+      markerList.forEach(({ title, location }) => {
         const marker = L.marker(location, {
           icon: new L.Icon({
             iconUrl: 'https://dxos.network/marker-icon.png',
@@ -300,10 +253,8 @@ const MapMarkers = (props: MapMarkersProps) => {
 
         marker.addTo(leafletMap);
         leafletMarkers.push(marker);
-        console.log('[MapMarkers] Marker added to map, total leaflet markers:', leafletMarkers.length);
       });
-    } else if (!hasHadMarkers) {
-      console.log('[MapMarkers] No markers and never had any, setting default view');
+    } else {
       leafletMap.setView(defaults.center, defaults.zoom);
     }
   });
@@ -315,9 +266,6 @@ const MapMarkers = (props: MapMarkersProps) => {
 // Controls
 //
 
-/**
- * @noUseSignals
- */
 const CustomControl = (props: { children: JSX.Element; position: ControlPosition }) => {
   const { map: mapAccessor } = useMapContext(CustomControl.name);
   let controlContainer: HTMLDivElement | undefined;
@@ -357,18 +305,12 @@ const CustomControl = (props: { children: JSX.Element; position: ControlPosition
 
 type MapControlProps = { position?: ControlPosition } & Pick<ControlProps, 'onAction'>;
 
-/**
- * @noUseSignals
- */
 const MapZoom = (props: MapControlProps) => (
   <CustomControl position={props.position ?? 'bottomleft'}>
     <ZoomControls onAction={props.onAction} />
   </CustomControl>
 );
 
-/**
- * @noUseSignals
- */
 const MapAction = (props: MapControlProps) => (
   <CustomControl position={props.position ?? 'bottomright'}>
     <ActionControls onAction={props.onAction} />
@@ -387,4 +329,4 @@ export const Map = {
   Action: MapAction,
 };
 
-export { type MapRootProps, type MapTilesProps, type MapMarkersProps, type MapControlProps };
+export { type MapRootProps, type MapMarkersProps, type MapControlProps };

@@ -8,14 +8,14 @@ import { Map } from '@dxos/plugin-map/types';
 
 import { meta } from '../meta';
 
-import './custom-elements';
+import '../components/MapSurface';
 
 export default () =>
   contributes(Capabilities.ReactSurface, [
     createWebSurface({
       id: `${meta.id}/surface/map`,
       role: ['article', 'section'],
-      tagName: 'dx-map',
+      tagName: 'dx-map-surface',
       position: 'hoist',
       filter: (data): data is { subject: Map.Map } => Obj.instanceOf(Map.Map, data.subject),
     }),

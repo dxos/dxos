@@ -205,7 +205,7 @@ describe('useObject', () => {
     const Wrapper = createWrapper(registry);
 
     const [objSignal, setObjSignal] = createSignal<Entity.Entity<TestSchema.Person>>(obj1);
-    let valueAccessor: (() => string) | undefined;
+    let valueAccessor: ReturnType<typeof useObject<Entity.Entity<TestSchema.Person>, 'name'>> | undefined;
 
     const { getByTestId } = render(
       () => {

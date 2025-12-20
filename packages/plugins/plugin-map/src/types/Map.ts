@@ -37,7 +37,7 @@ type MakeProps = Omit<Partial<Obj.MakeProps<typeof Map>>, 'view'> & {
 /**
  * Make a map as a view of a data set.
  */
-export const make = ({ name, center, zoom, coordinates, view }: MakeProps): Map => {
+export const make = ({ name, center, zoom, coordinates, view }: MakeProps = {}): Map => {
   return Obj.make(Map, {
     name,
     view: view && Ref.make(view),

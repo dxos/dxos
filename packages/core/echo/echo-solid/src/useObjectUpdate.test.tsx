@@ -292,8 +292,8 @@ describe('useObjectUpdate', () => {
     const Wrapper = createWrapper(registry);
 
     const [objSignal, setObjSignal] = createSignal<Entity.Entity<TestSchema.Person>>(obj1);
-    let updateFn: ((value: string | ((current: string) => string)) => void) | undefined;
-    let value: (() => string) | undefined;
+    let updateFn: ReturnType<typeof useObjectUpdate<Entity.Entity<TestSchema.Person>, 'name'>> | undefined;
+    let value: ReturnType<typeof useObject<Entity.Entity<TestSchema.Person>, 'name'>> | undefined;
 
     render(
       () => {

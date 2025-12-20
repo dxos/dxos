@@ -18,7 +18,7 @@ import { type Registry, useRegistry } from '@dxos/effect-atom-solid';
  * @returns Update function that accepts a value or updater function
  */
 export function useObjectUpdate<T extends Entity.Unknown, K extends keyof T>(
-  obj: MaybeAccessor<T>,
+  obj: MaybeAccessor<T | undefined>,
   property: K,
 ): (value: T[K] | ((current: T[K]) => T[K])) => void;
 
@@ -30,7 +30,7 @@ export function useObjectUpdate<T extends Entity.Unknown, K extends keyof T>(
  * @returns Update function that accepts an updater function
  */
 export function useObjectUpdate<T extends Entity.Unknown>(
-  obj: MaybeAccessor<T>,
+  obj: MaybeAccessor<T | undefined>,
   property?: undefined,
 ): (updater: (obj: T) => void) => void;
 
@@ -43,7 +43,7 @@ export function useObjectUpdate<T extends Entity.Unknown>(
  * @returns Update function
  */
 export function useObjectUpdate<T extends Entity.Unknown, K extends keyof T>(
-  obj: MaybeAccessor<T>,
+  obj: MaybeAccessor<T | undefined>,
   property?: K,
 ): ((value: T[K] | ((current: T[K]) => T[K])) => void) | ((updater: (obj: T) => void) => void) {
   const registry = useRegistry();
@@ -59,17 +59,20 @@ export function useObjectUpdate<T extends Entity.Unknown, K extends keyof T>(
  */
 function useObjectValueUpdate<T extends Entity.Unknown>(
   registry: Registry.Registry,
-  obj: MaybeAccessor<T>,
+  obj: MaybeAccessor<T | undefined>,
 ): (updater: (obj: T) => void) => void {
   // Memoize the resolved object to track changes
   const resolvedObj = createMemo(() => access(obj));
 
-  // Memoize the atom creation
-  const atom = createMemo(() => AtomObj.make(resolvedObj()));
-
   // Return a stable update function that uses the memoized atom
   return (updater: (obj: T) => void) => {
-    AtomObj.update(registry, atom(), updater);
+    const currentObj = resolvedObj();
+    if (!currentObj) {
+      // Can't update undefined object
+      return;
+    }
+    const a = AtomObj.make(currentObj);
+    AtomObj.update(registry, a, updater);
   };
 }
 
@@ -78,17 +81,20 @@ function useObjectValueUpdate<T extends Entity.Unknown>(
  */
 function useObjectPropertyUpdate<T extends Entity.Unknown, K extends keyof T>(
   registry: Registry.Registry,
-  obj: MaybeAccessor<T>,
+  obj: MaybeAccessor<T | undefined>,
   property: K,
 ): (value: T[K] | ((current: T[K]) => T[K])) => void {
   // Memoize the resolved object to track changes
   const resolvedObj = createMemo(() => access(obj));
 
-  // Memoize the atom creation
-  const atom = createMemo(() => AtomObj.makeProperty(resolvedObj(), property));
-
   // Return a stable update function that uses the memoized atom
   return (value: T[K] | ((current: T[K]) => T[K])) => {
-    AtomObj.updateProperty(registry, atom(), value);
+    const currentObj = resolvedObj();
+    if (!currentObj) {
+      // Can't update property on undefined object
+      return;
+    }
+    const a = AtomObj.makeProperty(currentObj, property);
+    AtomObj.updateProperty(registry, a, value);
   };
 }
