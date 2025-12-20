@@ -310,6 +310,11 @@
         },
         {
           "type": "json",
+          "path": "packages/core/echo/echo-solid/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/core/echo/indexing/package.json",
           "jsonpath": "$.version"
         },
@@ -551,6 +556,11 @@
         {
           "type": "json",
           "path": "packages/plugins/plugin-map/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/plugins/plugin-map-solid/package.json",
           "jsonpath": "$.version"
         },
         {

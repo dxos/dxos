@@ -14,6 +14,7 @@ import { defineConfig, searchForWorkspaceRoot, type ConfigEnv, type Plugin, type
 import devtoolsJson from 'vite-plugin-devtools-json';
 import inspect from 'vite-plugin-inspect';
 import { VitePWA } from 'vite-plugin-pwa';
+import solid from 'vite-plugin-solid';
 import wasm from 'vite-plugin-wasm';
 
 import { ConfigPlugin } from '@dxos/config/vite-plugin';
@@ -48,9 +49,9 @@ export default defineConfig((env) => ({
     https:
       process.env.HTTPS === 'true'
         ? {
-            key: '../../../key.pem',
-            cert: '../../../cert.pem',
-          }
+          key: '../../../key.pem',
+          cert: '../../../cert.pem',
+        }
         : undefined,
     fs: {
       strict: false,
@@ -65,6 +66,7 @@ export default defineConfig((env) => ({
   esbuild: {
     keepNames: true,
   },
+  // optimizeDeps config removed - let Vite handle solid-js normally
   build: {
     outDir: 'out/composer',
     sourcemap: true,
@@ -96,6 +98,14 @@ export default defineConfig((env) => ({
       ['util']: '@dxos/node-std/util',
       ['path']: '@dxos/node-std/path',
       ['tiktoken/lite']: path.resolve(dirname, 'stub.mjs'),
+      // TODO(wittjosiah): Remove this once we have a better solution.
+      // NOTE: This is a workaround to fix "dual package hazard" where dist output and local sources
+      //   might resolve differently, resulting in two distinct module instances.
+      '@dxos/solid-ui-geo': path.resolve(rootDir, 'packages/ui/solid-ui-geo/src'),
+      '@dxos/plugin-map-solid': path.resolve(rootDir, 'packages/plugins/plugin-map-solid/src'),
+      '@dxos/web-context-solid': path.resolve(rootDir, 'packages/common/web-context-solid/src'),
+      '@dxos/effect-atom-solid': path.resolve(rootDir, 'packages/common/effect-atom-solid/src'),
+      '@dxos/echo-solid': path.resolve(rootDir, 'packages/core/echo/echo-solid/src'),
     },
   },
   worker: {
@@ -126,20 +136,36 @@ export default defineConfig((env) => ({
 
     // Building from dist when creating a prod bundle.
     env.command === 'serve' &&
-      importSource({
-        exclude: [
-          '**/node_modules/**',
-          '**/common/random-access-storage/**',
-          '**/common/lock-file/**',
-          '**/mesh/network-manager/**',
-          '**/mesh/teleport/**',
-          '**/sdk/config/**',
-          '**/sdk/client-services/**',
-          '**/sdk/observability/**',
-          // TODO(dmaretskyi): Decorators break in lit.
-          '**/ui/lit-*/**',
-        ],
-      }),
+    importSource({
+      exclude: [
+        '**/node_modules/**',
+        '**/common/random-access-storage/**',
+        '**/common/lock-file/**',
+        '**/mesh/network-manager/**',
+        '**/mesh/teleport/**',
+        '**/sdk/config/**',
+        '**/sdk/client-services/**',
+        '**/sdk/observability/**',
+        // TODO(dmaretskyi): Decorators break in lit.
+        '**/ui/lit-*/**',
+        // Solid packages are aliased to source and processed by vite-plugin-solid.
+      ],
+    }),
+
+    // Solid JSX transform for Solid packages.
+    // Must be placed before React plugin to process Solid files first.
+    solid({
+      include: [
+        '**/solid-ui-geo/**',
+        '**/plugin-map-solid/**',
+        '**/effect-atom-solid/**',
+        '**/web-context-solid/**',
+        '**/echo-solid/**',
+        '**/node_modules/solid-js/**',
+        '**/node_modules/solid-element/**',
+        '**/node_modules/@solid-primitives/**',
+      ],
+    }),
 
     react({
       tsDecorators: true,

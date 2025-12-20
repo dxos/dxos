@@ -4,13 +4,12 @@
 
 import * as Effect from 'effect/Effect';
 import * as Function from 'effect/Function';
-import * as Option from 'effect/Option';
 import React, { useCallback, useMemo, useRef, useState } from 'react';
 
 import { Capabilities, LayoutAction, chain, createIntent } from '@dxos/app-framework';
 import { useIntentDispatcher, usePluginManager } from '@dxos/app-framework/react';
 import { Database, Obj, Type } from '@dxos/echo';
-import { EntityKind, SystemTypeAnnotation, getTypeAnnotation } from '@dxos/echo/internal';
+import { EntityKind, getTypeAnnotation } from '@dxos/echo/internal';
 import { runAndForwardErrors } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { useClient } from '@dxos/react-client';
@@ -63,13 +62,12 @@ export const CreateObjectDialog = ({
 
   const db = Database.isDatabase(target) ? target : target && Obj.getDatabase(target);
   // TODO(wittjosiah): Support database schemas.
-  const schemas = db?.schemaRegistry.query({ location: ['runtime'] }).runSync();
+  const schemas = db?.schemaRegistry.query({ location: ['runtime'], includeSystem: false }).runSync();
   const userSchemas = useMemo(
     () =>
       schemas
         ?.filter((schema) => getTypeAnnotation(schema)?.kind !== EntityKind.Relation)
-        .filter((schema) => !!resolve(Type.getTypename(schema)))
-        .filter((schema) => !SystemTypeAnnotation.get(schema).pipe(Option.getOrElse(() => false))) ?? [],
+        .filter((schema) => !!resolve(Type.getTypename(schema))) ?? [],
     [schemas],
   );
 

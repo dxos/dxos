@@ -24,14 +24,14 @@ export type SurfaceProps<T extends Record<string, any> = Record<string, unknown>
    */
   placeholder?: ReactNode;
 } & MakeOptional<CoreSurfaceProps<T>, 'id' | 'data'> &
-  /**
-   * Additional props to pass to the component.
-   * These props are not used by Surface itself but may be used by components which resolve the surface.
-   * Exclude known prop names to prevent overriding well-defined props.
-   */
-  {
-    [K in keyof Record<string, any>]: K extends keyof CoreSurfaceProps<T> | 'fallback' | 'placeholder' ? never : any;
-  };
+/**
+ * Additional props to pass to the component.
+ * These props are not used by Surface itself but may be used by components which resolve the surface.
+ * Exclude known prop names to prevent overriding well-defined props.
+ */
+{
+  [K in keyof Record<string, any>]: K extends keyof CoreSurfaceProps<T> | 'fallback' | 'placeholder' ? never : any;
+};
 
 /**
  * NOTE: If `[key: string]: unknown` is included in shared types, when re-used other fields become unknown as well.
@@ -71,9 +71,10 @@ export type SurfaceComponent<T extends Record<string, any> = Record<string, any>
 ) => ReactNode;
 
 /**
- * Definition of when a SurfaceComponent should be rendered.
+ * Definition of when a React SurfaceComponent should be rendered.
  */
-export type SurfaceDefinition<T extends Record<string, any> = any> = Readonly<{
+export type ReactSurfaceDefinition<T extends Record<string, any> = any> = Readonly<{
+  kind: 'react';
   id: string;
   role: string | string[];
   position?: Position;
@@ -82,8 +83,38 @@ export type SurfaceDefinition<T extends Record<string, any> = any> = Readonly<{
 }>;
 
 /**
- * Creates a surface definition.
+ * Definition of when a Web Component surface should be rendered.
+ */
+export type WebComponentSurfaceDefinition<T extends Record<string, any> = any> = Readonly<{
+  kind: 'web-component';
+  id: string;
+  role: string | string[];
+  position?: Position;
+  /**
+   * The tag name of the Web Component to render.
+   * The Web Component will receive the same props as React surfaces via properties/attributes.
+   */
+  tagName: string;
+  filter?: (data: Record<string, unknown>) => data is T;
+}>;
+
+/**
+ * Definition of when a surface (React or Web Component) should be rendered.
+ */
+export type SurfaceDefinition<T extends Record<string, any> = any> =
+  | ReactSurfaceDefinition<T>
+  | WebComponentSurfaceDefinition<T>;
+
+/**
+ * Creates a React surface definition.
  */
 export const createSurface = <T extends Record<string, any> = any>(
-  definition: SurfaceDefinition<T>,
-): SurfaceDefinition<T> => definition;
+  definition: Omit<ReactSurfaceDefinition<T>, 'kind'>,
+): ReactSurfaceDefinition<T> => ({ ...definition, kind: 'react' });
+
+/**
+ * Creates a Web Component surface definition.
+ */
+export const createWebSurface = <T extends Record<string, any> = any>(
+  definition: Omit<WebComponentSurfaceDefinition<T>, 'kind'>,
+): WebComponentSurfaceDefinition<T> => ({ ...definition, kind: 'web-component' });

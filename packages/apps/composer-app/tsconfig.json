@@ -134,6 +134,9 @@
       "path": "../../plugins/plugin-map"
     },
     {
+      "path": "../../plugins/plugin-map-solid"
+    },
+    {
       "path": "../../plugins/plugin-markdown"
     },
     {

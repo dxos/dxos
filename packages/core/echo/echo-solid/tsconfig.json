@@ -1,0 +1,29 @@
+{
+  "extends": "../../../../tsconfig.base.json",
+  "compilerOptions": {
+    "jsx": "preserve",
+    "jsxImportSource": "solid-js",
+    "types": [
+      "node"
+    ]
+  },
+  "include": [
+    "src/**/*.ts",
+    "src/**/*.tsx",
+    "src/*.ts"
+  ],
+  "references": [
+    {
+      "path": "../../../common/effect-atom-solid"
+    },
+    {
+      "path": "../echo"
+    },
+    {
+      "path": "../echo-atom"
+    },
+    {
+      "path": "../echo-db"
+    }
+  ]
+}

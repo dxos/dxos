@@ -122,6 +122,9 @@ type GlobeRootProps = {
 } & Partial<GlobeContextProviderProps> &
   JSX.HTMLAttributes<HTMLDivElement>;
 
+/**
+ * @noUseSignals
+ */
 const GlobeRoot = (props: GlobeRootProps) => {
   let containerRef: HTMLDivElement | undefined;
   const [size, setSize] = createSignal({ width: 0, height: 0 });
@@ -158,6 +161,10 @@ type GlobeCanvasProps = {
 /**
  * Basic globe renderer.
  * https://github.com/topojson/world-atlas
+ */
+
+/**
+ * @noUseSignals
  */
 const GlobeCanvas = (props: GlobeCanvasProps) => {
   const themeMode = 'dark'; // TODO: Get from theme context
@@ -273,6 +280,9 @@ const GlobeCanvas = (props: GlobeCanvasProps) => {
 // Debug
 //
 
+/**
+ * @noUseSignals
+ */
 const GlobeDebug = (props: { position?: ControlPosition }) => {
   const { size, zoom, translation, rotation } = useGlobeContext();
   return (
@@ -291,6 +301,9 @@ const GlobeDebug = (props: { position?: ControlPosition }) => {
 // Panel
 //
 
+/**
+ * @noUseSignals
+ */
 const GlobePanel = (props: { children: JSX.Element; position?: ControlPosition; class?: string }) => {
   return (
     <div class={`z-10 absolute overflow-hidden ${controlPositions[props.position ?? 'topleft']} ${props.class ?? ''}`}>
@@ -303,18 +316,27 @@ const GlobePanel = (props: { children: JSX.Element; position?: ControlPosition; 
 // Controls
 //
 
+/**
+ * @noUseSignals
+ */
 const CustomControl = (props: { children: JSX.Element; position: ControlPosition }) => {
   return <div class={`z-10 absolute overflow-hidden ${controlPositions[props.position]}`}>{props.children}</div>;
 };
 
 type GlobeControlProps = { position?: ControlPosition } & Pick<ControlProps, 'onAction'>;
 
+/**
+ * @noUseSignals
+ */
 const GlobeZoom = (props: GlobeControlProps) => (
   <CustomControl position={props.position ?? 'bottomleft'}>
     <ZoomControls onAction={props.onAction} />
   </CustomControl>
 );
 
+/**
+ * @noUseSignals
+ */
 const GlobeAction = (props: GlobeControlProps) => (
   <CustomControl position={props.position ?? 'bottomright'}>
     <ActionControls onAction={props.onAction} />

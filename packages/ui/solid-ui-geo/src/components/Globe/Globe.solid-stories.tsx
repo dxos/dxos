@@ -2,9 +2,9 @@
 // Copyright 2018 DXOS.org
 //
 
-import { type Meta, type StoryObj } from 'storybook-solidjs-vite';
 import { type FeatureCollection, type Geometry, type Position } from 'geojson';
 import { createEffect, createMemo, createResource, createSignal } from 'solid-js';
+import { type Meta, type StoryObj } from 'storybook-solidjs-vite';
 import { type Topology } from 'topojson-specification';
 
 import { type Vector, useDrag, useGlobeZoomHandler, useSpinner, useTour } from '../../hooks';
@@ -155,7 +155,9 @@ const DefaultStory = ({
   const [airports] = createResource(async () => (await import('../../../data/airports')).default);
 
   const features = createMemo(() => {
-    return airports() ? createTrip(airports()!, routes, (dots()?.objects.dots as any)?.geometries[0].coordinates) : undefined;
+    return airports()
+      ? createTrip(airports()!, routes, (dots()?.objects.dots as any)?.geometries[0].coordinates)
+      : undefined;
   });
 
   // Control hooks - must be called unconditionally

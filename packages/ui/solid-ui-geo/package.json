@@ -10,13 +10,11 @@
   "type": "module",
   "exports": {
     "./data": {
-      "source": "./src/data.ts",
       "types": "./dist/types/src/data.d.ts",
       "browser": "./dist/lib/browser/data.mjs",
       "node": "./dist/lib/node-esm/data.mjs"
     },
     ".": {
-      "source": "./src/index.ts",
       "types": "./dist/types/src/index.d.ts",
       "browser": "./dist/lib/browser/index.mjs",
       "node": "./dist/lib/node-esm/index.mjs"

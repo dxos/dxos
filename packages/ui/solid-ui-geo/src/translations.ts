@@ -2,8 +2,6 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type Resource } from '@dxos/react-ui';
-
 export const translationKey = 'react-ui-geo';
 
 export const translations = [
@@ -17,4 +15,4 @@ export const translations = [
       },
     },
   },
-] as const satisfies Resource[];
+] as const;

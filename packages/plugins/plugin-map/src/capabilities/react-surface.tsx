@@ -26,6 +26,7 @@ export default () =>
       id: `${meta.id}/surface/map`,
       role: ['article', 'section'],
       filter: (data): data is { subject: Map.Map } => Obj.instanceOf(Map.Map, data.subject),
+      position: 'fallback',
       component: ({ data, role }) => {
         const state = useCapability(MapCapabilities.MutableState);
         const [center, setCenter] = useState<LatLngLiteral | undefined>(undefined);

@@ -1,0 +1,126 @@
+//
+// Copyright 2025 DXOS.org
+//
+
+import { type Accessor, createEffect, createMemo, createSignal, onCleanup } from 'solid-js';
+
+import { Registry, useRegistry } from '@dxos/effect-atom-solid';
+
+import type { Entity, Ref } from '@dxos/echo';
+import { AtomObj } from '@dxos/echo-atom';
+
+/**
+ * Subscribe to a reference target object.
+ * Returns undefined if the reference hasn't loaded yet, and automatically updates when the target loads or changes.
+ *
+ * TODO: Currently there's no way to subscribe to ref target changes (when the ref points to a different object).
+ *       Ref.target is reactive to signals, but SolidJS doesn't track it automatically.
+ *       Once there's a way to subscribe to ref.target changes, we should use that instead of polling/loading.
+ *
+ * @param ref - The reference to subscribe to
+ * @returns An accessor that returns the current target object or undefined if not loaded
+ */
+export function useRef<T extends Entity.Unknown>(ref: Ref.Ref<T> | undefined): Accessor<T | undefined> {
+  const registry = useRegistry();
+
+  // Store the current target in a signal
+  const [target, setTarget] = createSignal<T | undefined>(undefined);
+
+  // Memoize the ref to track changes
+  const memoizedRef = createMemo(() => ref);
+
+  // Subscribe to ref target changes
+  createEffect(() => {
+    const r = memoizedRef();
+    if (!r) {
+      setTarget(() => undefined);
+      return;
+    }
+
+    let unsubscribe: (() => void) | undefined;
+    let isActive = true;
+
+    // Helper function to set up subscription for a target (similar to useObject)
+    const setupSubscription = (targetObj: T) => {
+      if (!isActive) {
+        return;
+      }
+
+      // Clean up previous subscription
+      unsubscribe?.();
+
+      const atom = AtomObj.make(targetObj);
+
+      // Get initial value - this also registers the atom
+      let currentValue = targetObj;
+      try {
+        currentValue = AtomObj.get(registry, atom) as T;
+      } catch {
+        // Atom not registered yet, use target object
+        currentValue = targetObj;
+      }
+
+      setTarget(() => currentValue);
+
+      // Subscribe to atom updates (same pattern as useObject)
+      unsubscribe = AtomObj.subscribe(
+        registry,
+        atom,
+        () => {
+          if (!isActive) {
+            return;
+          }
+          try {
+            const updatedValue = AtomObj.get(registry, atom) as T;
+            setTarget(() => updatedValue);
+          } catch {
+            // Fallback: re-read from the object directly
+            setTarget(() => targetObj);
+          }
+        },
+        { immediate: true },
+      );
+    };
+
+    // Access .target to trigger loading (this is reactive and triggers loading)
+    let currentTarget: T | undefined;
+    try {
+      currentTarget = r.target;
+    } catch {
+      // Ref not available yet
+      currentTarget = undefined;
+    }
+
+    // If target is immediately available, set up subscription
+    if (currentTarget) {
+      setupSubscription(currentTarget);
+    } else {
+      // Target not loaded yet - set to undefined and try to load asynchronously
+      setTarget(() => undefined);
+
+      // Use load() to explicitly load it
+      void r
+        .load()
+        .then((loadedTarget: T) => {
+          // Only update if this effect is still active (ref hasn't changed)
+          if (isActive && memoizedRef() === r) {
+            setupSubscription(loadedTarget);
+          }
+        })
+        .catch(() => {
+          // Loading failed, keep target as undefined
+          if (isActive) {
+            setTarget(() => undefined);
+          }
+        });
+    }
+
+    onCleanup(() => {
+      isActive = false;
+      unsubscribe?.();
+    });
+  });
+
+  return target;
+}
+

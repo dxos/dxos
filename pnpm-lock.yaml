@@ -2498,6 +2498,9 @@ importers:
       '@dxos/plugin-map':
         specifier: workspace:*
         version: link:../../plugins/plugin-map
+      '@dxos/plugin-map-solid':
+        specifier: workspace:*
+        version: link:../../plugins/plugin-map-solid
       '@dxos/plugin-markdown':
         specifier: workspace:*
         version: link:../../plugins/plugin-markdown
@@ -2639,6 +2642,9 @@ importers:
       react-joyride:
         specifier: 'catalog:'
         version: 2.7.2(@types/react@19.2.7)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
+      solid-js:
+        specifier: 'catalog:'
+        version: 1.9.10
     devDependencies:
       '@babel/core':
         specifier: 'catalog:'
@@ -2730,6 +2736,9 @@ importers:
       vite-plugin-pwa:
         specifier: 'catalog:'
         version: 1.0.2(@types/babel__core@7.20.5)(vite@7.1.9(@types/node@22.10.2)(jiti@2.6.1)(terser@5.19.2)(tsx@4.21.0)(yaml@2.8.2))(workbox-window@7.3.0)
+      vite-plugin-solid:
+        specifier: 'catalog:'
+        version: 2.11.10(@testing-library/jest-dom@6.9.1)(solid-js@1.9.10)(vite@7.1.9(@types/node@22.10.2)(jiti@2.6.1)(terser@5.19.2)(tsx@4.21.0)(yaml@2.8.2))
       vite-plugin-top-level-await:
         specifier: 'catalog:'
         version: 1.6.0(@swc/helpers@0.5.17)(rollup@4.46.2)(vite@7.1.9(@types/node@22.10.2)(jiti@2.6.1)(terser@5.19.2)(tsx@4.21.0)(yaml@2.8.2))
@@ -5048,6 +5057,34 @@ importers:
       react:
         specifier: ~19.2.3
         version: 19.2.3
+
+  packages/core/echo/echo-solid:
+    dependencies:
+      '@dxos/echo':
+        specifier: workspace:*
+        version: link:../echo
+      '@dxos/echo-atom':
+        specifier: workspace:*
+        version: link:../echo-atom
+      '@dxos/effect-atom-solid':
+        specifier: workspace:*
+        version: link:../../../common/effect-atom-solid
+    devDependencies:
+      '@dxos/echo-db':
+        specifier: workspace:*
+        version: link:../echo-db
+      '@solidjs/testing-library':
+        specifier: 'catalog:'
+        version: 0.8.10(solid-js@1.9.10)
+      solid-js:
+        specifier: 'catalog:'
+        version: 1.9.10
+      vite-plugin-solid:
+        specifier: 'catalog:'
+        version: 2.11.10(@testing-library/jest-dom@6.9.1)(solid-js@1.9.10)(vite@7.1.9(@types/node@22.10.2)(jiti@2.6.1)(terser@5.19.2)(tsx@4.21.0)(yaml@2.8.2))
+      vitest:
+        specifier: 'catalog:'
+        version: 3.2.4(@types/debug@4.1.12)(@types/node@22.10.2)(@vitest/browser@3.2.4)(@vitest/ui@3.2.4)(happy-dom@13.3.4)(jiti@2.6.1)(jsdom@27.0.0(canvas@3.2.0)(postcss@8.5.6))(terser@5.19.2)(tsx@4.21.0)(yaml@2.8.2)
 
   packages/core/echo/indexing:
     dependencies:
@@ -9115,6 +9152,40 @@ importers:
       react-dom:
         specifier: ~19.2.3
         version: 19.2.3(react@19.2.3)
+
+  packages/plugins/plugin-map-solid:
+    dependencies:
+      '@dxos/app-framework':
+        specifier: workspace:*
+        version: link:../../sdk/app-framework
+      '@dxos/echo':
+        specifier: workspace:*
+        version: link:../../core/echo/echo
+      '@dxos/echo-solid':
+        specifier: workspace:*
+        version: link:../../core/echo/echo-solid
+      '@dxos/plugin-map':
+        specifier: workspace:*
+        version: link:../plugin-map
+      '@dxos/schema':
+        specifier: workspace:*
+        version: link:../../sdk/schema
+      '@dxos/solid-ui-geo':
+        specifier: workspace:*
+        version: link:../../ui/solid-ui-geo
+      '@dxos/util':
+        specifier: workspace:*
+        version: link:../../common/util
+      solid-element:
+        specifier: 'catalog:'
+        version: 1.9.1(solid-js@1.9.10)
+      solid-js:
+        specifier: 'catalog:'
+        version: 1.9.10
+    devDependencies:
+      effect:
+        specifier: 'catalog:'
+        version: 3.19.11
 
   packages/plugins/plugin-markdown:
     dependencies:

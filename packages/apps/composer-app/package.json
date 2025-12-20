@@ -48,6 +48,7 @@
     "@dxos/plugin-inbox": "workspace:*",
     "@dxos/plugin-kanban": "workspace:*",
     "@dxos/plugin-map": "workspace:*",
+    "@dxos/plugin-map-solid": "workspace:*",
     "@dxos/plugin-markdown": "workspace:*",
     "@dxos/plugin-masonry": "workspace:*",
     "@dxos/plugin-meeting": "workspace:*",
@@ -94,7 +95,8 @@
     "micromark-extension-directive": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:",
-    "react-joyride": "catalog:"
+    "react-joyride": "catalog:",
+    "solid-js": "catalog:"
   },
   "devDependencies": {
     "@babel/core": "catalog:",
@@ -129,6 +131,7 @@
     "rollup-plugin-visualizer": "catalog:",
     "vite": "catalog:",
     "vite-plugin-pwa": "catalog:",
+    "vite-plugin-solid": "catalog:",
     "vite-plugin-top-level-await": "catalog:",
     "vite-plugin-wasm": "catalog:",
     "workbox-window": "catalog:"

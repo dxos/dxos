@@ -6,7 +6,7 @@ import React, { useCallback } from 'react';
 
 import { IconButton, List, ListItem } from '@dxos/react-ui';
 
-import { Capabilities } from '../../common';
+import { Capabilities, createSurface } from '../../common';
 import { contributes } from '../../core';
 import { usePluginManager } from '../../react';
 
@@ -63,8 +63,8 @@ export const Main = () => {
 };
 
 export default () =>
-  contributes(Capabilities.ReactSurface, {
+  contributes(Capabilities.ReactSurface, createSurface({
     id: 'dxos.org/test/generator/main',
     role: 'primary',
     component: Main,
-  });
+  }));

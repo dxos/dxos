@@ -175,6 +175,9 @@
       "path": "packages/core/echo/echo-signals/tsconfig.json"
     },
     {
+      "path": "packages/core/echo/echo-solid/tsconfig.json"
+    },
+    {
       "path": "packages/core/echo/indexing/tsconfig.json"
     },
     {
@@ -317,6 +320,9 @@
     },
     {
       "path": "packages/plugins/plugin-map/tsconfig.json"
+    },
+    {
+      "path": "packages/plugins/plugin-map-solid/tsconfig.json"
     },
     {
       "path": "packages/plugins/plugin-markdown/tsconfig.json"

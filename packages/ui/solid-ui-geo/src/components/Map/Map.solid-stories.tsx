@@ -2,8 +2,8 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type Meta, type StoryObj } from 'storybook-solidjs-vite';
 import { createSignal } from 'solid-js';
+import { type Meta, type StoryObj } from 'storybook-solidjs-vite';
 
 import { useMapZoomHandler } from '../../hooks';
 import { type GeoMarker } from '../../types';
@@ -17,7 +17,7 @@ const DefaultStory = ({ markers = [] }: { markers?: GeoMarker[] }) => {
   return (
     <Map.Root ref={setController}>
       <Map.Tiles />
-      <Map.Markers markers={markers} />
+      <Map.Markers markers={() => markers} />
       <Map.Zoom position='bottomleft' onAction={handleZoomAction} />
       <Map.Action position='bottomright' />
     </Map.Root>

@@ -3,7 +3,6 @@
 //
 
 import React, {
-  type ComponentType,
   type Context,
   Fragment,
   type NamedExoticComponent,
@@ -13,7 +12,9 @@ import React, {
   forwardRef,
   memo,
   useContext,
+  useEffect,
   useMemo,
+  useRef,
 } from 'react';
 
 import { raise } from '@dxos/debug';
@@ -21,7 +22,7 @@ import { log } from '@dxos/log';
 import { useDefaultValue } from '@dxos/react-hooks';
 import { byPosition } from '@dxos/util';
 
-import { Capabilities, type SurfaceDefinition, type SurfaceProps } from '../common';
+import { Capabilities, type SurfaceDefinition, type SurfaceProps, type WebComponentSurfaceDefinition } from '../common';
 import { type PluginContext } from '../core';
 
 import { ErrorBoundary } from './ErrorBoundary';
@@ -38,15 +39,103 @@ export type SurfaceContext = Pick<SurfaceProps, 'id' | 'role' | 'data'>;
 const SurfaceContext: Context<SurfaceContext | undefined> = createContext<SurfaceContext | undefined>(undefined);
 
 /**
+ * Wrapper component for rendering Web Component surfaces.
+ * Handles creation, prop setting, and cleanup of Web Components.
+ */
+const WebComponentWrapper = memo(
+  forwardRef<HTMLElement, SurfaceProps & { definition: WebComponentSurfaceDefinition }>(
+    ({ id, role, data, limit, definition, ...rest }, forwardedRef) => {
+      const containerRef = useRef<HTMLDivElement>(null);
+      const elementRef = useRef<HTMLElement | null>(null);
+      const propsRef = useRef({ id, role, data, limit, ...rest });
+
+      // Update props ref on every render
+      propsRef.current = { id, role, data, limit, ...rest };
+
+      // Create element only once
+      useEffect(() => {
+        if (!containerRef.current || elementRef.current) return;
+
+        // Create the Web Component
+        const element = document.createElement(definition.tagName);
+        elementRef.current = element;
+
+        // Set initial properties on the Web Component
+        Object.assign(element, propsRef.current);
+
+        // Append to container
+        containerRef.current.appendChild(element);
+
+        // Setup ref forwarding if provided
+        if (typeof forwardedRef === 'function') {
+          forwardedRef(element);
+        } else if (forwardedRef) {
+          forwardedRef.current = element;
+        }
+
+        // Cleanup on unmount to prevent memory leaks
+        return () => {
+          if (elementRef.current && containerRef.current?.contains(elementRef.current)) {
+            containerRef.current.removeChild(elementRef.current);
+          }
+          if (typeof forwardedRef === 'function') {
+            forwardedRef(null);
+          } else if (forwardedRef) {
+            forwardedRef.current = null;
+          }
+          elementRef.current = null;
+        };
+      }, [definition.tagName, forwardedRef]);
+
+      // Update props on existing element without recreating it
+      // This runs on every render to ensure all props (including those in `rest`) are kept up to date
+      useEffect(() => {
+        const element = elementRef.current;
+        if (!element) return;
+
+        // Update properties on the existing Web Component
+        Object.assign(element, propsRef.current);
+      });
+
+      return <div ref={containerRef} />;
+    },
+  ),
+);
+
+WebComponentWrapper.displayName = 'WebComponentWrapper';
+
+/**
  * Wrapper component that provides context for a surface.
  */
 const SurfaceContextProvider = memo(
-  forwardRef<HTMLElement, SurfaceProps & { component: ComponentType<any> }>(
-    ({ id, role, data, limit, fallback = DefaultFallback, component: Component, ...rest }, forwardedRef) => {
+  forwardRef<HTMLElement, SurfaceProps & { definition: SurfaceDefinition }>(
+    ({ id, role, data, limit, fallback = DefaultFallback, definition, ...rest }, forwardedRef) => {
       const contextValue = useMemo(() => ({ id, role, data }), [id, role, data]);
 
       // TODO(burdon): Remove from production build?
       const active = DEBUG || '__DX_DEBUG__' in window;
+
+      // Handle Web Component surfaces
+      if (definition.kind === 'web-component') {
+        return (
+          <ErrorBoundary data={data} fallback={fallback}>
+            <SurfaceContext.Provider value={contextValue}>
+              <WebComponentWrapper
+                id={id}
+                role={role}
+                data={data}
+                limit={limit}
+                definition={definition}
+                ref={forwardedRef}
+                {...rest}
+              />
+            </SurfaceContext.Provider>
+          </ErrorBoundary>
+        );
+      }
+
+      // Handle React component surfaces
+      const Component = definition.component;
       if (active) {
         return (
           <ErrorBoundary data={data} fallback={fallback}>
@@ -101,14 +190,14 @@ export const Surface: NamedExoticComponent<SurfaceProps & RefAttributes<HTMLElem
 
     return (
       <Suspense fallback={placeholder}>
-        {candidates.map(({ id, component }) => (
+        {candidates.map((definition) => (
           <SurfaceContextProvider
-            key={id}
-            id={id}
+            key={definition.id}
+            id={definition.id}
             role={role}
             data={data}
             limit={limit}
-            component={component}
+            definition={definition}
             ref={forwardedRef}
             {...rest}
           />

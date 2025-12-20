@@ -1,0 +1,45 @@
+{
+  "name": "@dxos/echo-solid",
+  "version": "0.8.3",
+  "description": "Solid.js integration for ECHO.",
+  "homepage": "https://dxos.org",
+  "bugs": "https://github.com/dxos/dxos/issues",
+  "license": "MIT",
+  "author": "DXOS.org",
+  "sideEffects": true,
+  "type": "module",
+  "exports": {
+    ".": {
+      "source": "./src/index.ts",
+      "types": "./dist/types/src/index.d.ts",
+      "browser": "./dist/lib/browser/index.mjs",
+      "node": "./dist/lib/node-esm/index.mjs"
+    }
+  },
+  "types": "dist/types/src/index.d.ts",
+  "typesVersions": {
+    "*": {}
+  },
+  "files": [
+    "dist",
+    "src"
+  ],
+  "dependencies": {
+    "@dxos/echo": "workspace:*",
+    "@dxos/echo-atom": "workspace:*",
+    "@dxos/effect-atom-solid": "workspace:*"
+  },
+  "devDependencies": {
+    "@dxos/echo-db": "workspace:*",
+    "@solidjs/testing-library": "catalog:",
+    "solid-js": "catalog:",
+    "vite-plugin-solid": "catalog:",
+    "vitest": "catalog:"
+  },
+  "peerDependencies": {
+    "solid-js": "catalog:"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}
