@@ -25,9 +25,14 @@
     "src"
   ],
   "dependencies": {
-    "@dxos/echo": "workspace:*"
+    "@dxos/echo": "workspace:*",
+    "@dxos/echo-atom": "workspace:*",
+    "@effect-atom/atom-react": "catalog:"
   },
   "devDependencies": {
+    "@dxos/echo-db": "workspace:*",
+    "@effect-atom/atom": "catalog:",
+    "@testing-library/react": "catalog:",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
     "react": "catalog:",

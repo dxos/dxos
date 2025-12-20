@@ -2,7 +2,9 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { useEffect } from 'react';
+import { RegistryContext } from '@effect-atom/atom-react';
+import * as Registry from '@effect-atom/atom/Registry';
+import React, { useEffect, useMemo } from 'react';
 import {
   Navigate,
   RouterProvider,
@@ -45,12 +47,6 @@ export const TaskListContainer = () => {
       }}
       onTaskRemove={(task) => {
         space?.db.remove(task);
-      }}
-      onTaskTitleChange={(task, newTitle) => {
-        task.title = newTitle;
-      }}
-      onTaskCheck={(task, checked) => {
-        task.completed = checked;
       }}
     />
   );
@@ -107,6 +103,9 @@ const createWorker = () =>
   });
 
 export const App = () => {
+  // Create a registry instance for atom reactivity
+  const registry = useMemo(() => Registry.make(), []);
+
   return (
     <ClientProvider
       config={getConfig}
@@ -120,7 +119,9 @@ export const App = () => {
         }
       }}
     >
-      <RouterProvider router={router} />
+      <RegistryContext.Provider value={registry}>
+        <RouterProvider router={router} />
+      </RegistryContext.Provider>
     </ClientProvider>
   );
 };
