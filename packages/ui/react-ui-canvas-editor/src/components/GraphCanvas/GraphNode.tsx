@@ -19,19 +19,23 @@ export const GraphNode = memo(({ data, selected }: GraphNodeProps) => {
     registry.getShapeDef(data.type) ?? raise(new Error(`ShapeDef not found for ${data.type}`));
 
   const handleConnect = useCallback<NonNullable<HandleProps['onConnect']>>(() => {
-    console.log('handleConnect', data);
+    // console.log('handleConnect', data);
   }, [data]);
 
   return (
-    <div
-      className={mx(
-        'relative group bg-groupSurface rounded-sm border border-separator bs-[64px] is-[128px]',
-        selected && 'ring-1 ring-primary-500',
-      )}
-    >
-      {Component && <Component shape={data} />}
+    <>
+      <div
+        role='none'
+        className={mx(
+          'bs-full is-full p-1 bg-groupSurface rounded-sm border border-separator',
+          selected && 'ring-1 ring-primary-500',
+        )}
+      >
+        {Component && <Component shape={data} />}
+      </div>
+
       <Handle type='source' position={Position.Right} onConnect={handleConnect} />
       <Handle type='target' position={Position.Left} onConnect={handleConnect} />
-    </div>
+    </>
   );
 });
