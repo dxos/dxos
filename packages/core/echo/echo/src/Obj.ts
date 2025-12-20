@@ -201,7 +201,7 @@ export const clone = <T extends Any>(obj: T, opts?: CloneOptions): T => {
  * Obj.getValue(person, ['addresses', 1, 'street']); // undefined
  * ```
  */
-export const getValue = (obj: any, path: readonly (string | number)[]): any => {
+export const getValue = (obj: Entity.Unknown, path: readonly (string | number)[]): any => {
   return getValue$(obj, createJsonPath(path));
 };
 
@@ -225,7 +225,7 @@ export const getValue = (obj: any, path: readonly (string | number)[]): any => {
  * ```
  */
 // TODO(wittjosiah): Compute possible path values + type value based on generic object type.
-export const setValue: (obj: Any, path: readonly (string | number)[], value: any) => void = setValue$ as any;
+export const setValue: (obj: Entity.Unknown, path: readonly (string | number)[], value: any) => void = setValue$ as any;
 
 //
 // Type
