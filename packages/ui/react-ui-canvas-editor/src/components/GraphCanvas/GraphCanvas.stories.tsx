@@ -8,7 +8,7 @@ import React, { useEffect, useState } from 'react';
 import { withTheme } from '@dxos/react-ui/testing';
 import { render } from '@dxos/storybook-utils';
 
-import { CanvasGraphModel, type Polygon } from '../../types';
+import { CanvasGraphModel, type Connection, type Polygon } from '../../types';
 import { Editor } from '../Editor';
 
 import { GraphCanvas, type GraphCanvasProps } from './GraphCanvas';
@@ -46,7 +46,23 @@ const DefaultStory = (props: GraphCanvasProps) => {
             id: 'node-2',
             type: 'rectangle',
             text: 'Node 2',
-            center: { x: 256, y: 64 },
+            center: { x: 256, y: -64 },
+            size: { width: 128, height: 96 },
+            data: {},
+          },
+          {
+            id: 'node-3',
+            type: 'rectangle',
+            text: 'Node 3',
+            center: { x: 416, y: 128 },
+            size: { width: 128, height: 64 },
+            data: {},
+          },
+          {
+            id: 'node-4',
+            type: 'rectangle',
+            text: 'Node 4',
+            center: { x: 192, y: 256 },
             size: { width: 128, height: 96 },
             data: {},
           },
@@ -55,9 +71,22 @@ const DefaultStory = (props: GraphCanvasProps) => {
           {
             id: 'edge-1',
             source: 'node-1',
+            output: 'a',
             target: 'node-2',
           },
-        ],
+          {
+            id: 'edge-2',
+            source: 'node-1',
+            output: 'b',
+            target: 'node-3',
+          },
+          {
+            id: 'edge-3',
+            source: 'node-1',
+            output: 'c',
+            target: 'node-4',
+          },
+        ] as Connection[],
       });
 
       setGraph(model);
