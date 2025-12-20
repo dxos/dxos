@@ -114,14 +114,14 @@ const GraphCanvasInner = ({ classNames, children, graph: graphParam }: GraphCanv
     <ReactFlow
       className={mx('is-full bs-full', classNames)}
       colorMode={themeMode}
-      nodeTypes={nodeTypes}
-      nodes={nodes}
       edges={edges}
       fitView={true}
       fitViewOptions={{ maxZoom: 1 }}
+      nodes={nodes}
+      nodeTypes={nodeTypes}
       proOptions={{ hideAttribution: true }}
-      snapToGrid={true}
       snapGrid={[snap, snap]}
+      snapToGrid={true}
       zoomOnScroll={false}
       onNodeDragStart={handleNodeDragStart}
       onNodeDrag={handleNodeDragMove}
