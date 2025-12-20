@@ -22,6 +22,7 @@ export class ServiceContainer {
     private readonly _executionContext: EdgeFunctionEnv.ExecutionContext,
     private readonly _dataService: EdgeFunctionEnv.DataService,
     private readonly _queueService: EdgeFunctionEnv.QueueService,
+    private readonly _functionsService: EdgeFunctionEnv.FunctionsAiService,
   ) {}
 
   async getSpaceMeta(spaceId: SpaceId): Promise<EdgeFunctionEnv.SpaceMeta | undefined> {
@@ -32,6 +33,7 @@ export class ServiceContainer {
     dataService: DataServiceProto;
     queryService: QueryServiceProto;
     queueService: QueueServiceProto;
+    functionsAiService: EdgeFunctionEnv.FunctionsAiService;
   }> {
     const dataService = new DataServiceImpl(this._executionContext, this._dataService);
     const queryService = new QueryServiceImpl(this._executionContext, this._dataService);
@@ -41,6 +43,7 @@ export class ServiceContainer {
       dataService,
       queryService,
       queueService,
+      functionsAiService: this._functionsService,
     };
   }
 

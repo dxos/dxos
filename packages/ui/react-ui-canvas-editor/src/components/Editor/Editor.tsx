@@ -67,33 +67,33 @@ const EditorRootWithType = <S extends Shape = Shape>(
     children,
     classNames,
     id,
-    options: _options = defaultEditorOptions,
-    debug: _debug = false,
-    showGrid: _showGrid = false,
-    snapToGrid: _snapToGrid = false,
-    graph: _graph,
+    options: optionsParam = defaultEditorOptions,
+    debug: debugParam = false,
+    showGrid: showGridParam = false,
+    snapToGrid: snapToGridParam = false,
+    graph: graphParam,
     graphMonitor,
-    selection: _selection,
-    registry: _registry,
-    layout: _layout,
+    selection: selectionParam,
+    registry: registryParam,
+    layout: layoutParam,
     autoZoom,
   }: EditorRootProps<S>,
   forwardedRef: ForwardedRef<EditorController>,
 ) => {
-  const options = useMemo(() => Object.assign({}, defaultEditorOptions, _options), [_options]);
+  const options = useMemo(() => Object.assign({}, defaultEditorOptions, optionsParam), [optionsParam]);
 
   // External state.
-  const graph = useMemo<CanvasGraphModel<S>>(() => _graph ?? CanvasGraphModel.create(), [_graph]);
+  const graph = useMemo<CanvasGraphModel<S>>(() => graphParam ?? CanvasGraphModel.create(), [graphParam]);
   const clipboard = useMemo(() => CanvasGraphModel.create(), []);
-  const selection = useMemo(() => _selection ?? new SelectionModel(), [_selection]);
-  const registry = useMemo(() => _registry ?? new ShapeRegistry(defaultShapes), [_registry]);
-  const layout = useMemo(() => _layout ?? new ShapeLayout(registry), [_layout, registry]);
+  const selection = useMemo(() => selectionParam ?? new SelectionModel(), [selectionParam]);
+  const registry = useMemo(() => registryParam ?? new ShapeRegistry(defaultShapes), [registryParam]);
+  const layout = useMemo(() => layoutParam ?? new ShapeLayout(registry), [layoutParam, registry]);
 
   // Canvas state.
-  const [debug, setDebug] = useState(_debug);
+  const [debug, setDebug] = useState(debugParam);
   const [gridSize, setGridSize] = useState({ width: options.gridSize, height: options.gridSize });
-  const [showGrid, setShowGrid] = useState(_showGrid);
-  const [snapToGrid, setSnapToGrid] = useState(_snapToGrid);
+  const [showGrid, setShowGrid] = useState(showGridParam);
+  const [snapToGrid, setSnapToGrid] = useState(snapToGridParam);
 
   // Repaint.
   const [, forceUpdate] = useState({});
@@ -170,12 +170,12 @@ const EditorRootWithType = <S extends Shape = Shape>(
       <div
         {...testId<TestId>('dx-editor')}
         tabIndex={0}
+        style={{ contain: 'layout' }}
         className={mx(
           'relative is-full bs-full overflow-hidden',
           ready ? 'transition-opacity delay-[1s] duration-[1s] opacity-100' : 'opacity-0',
           classNames,
         )}
-        style={{ contain: 'layout' }}
       >
         {children}
       </div>

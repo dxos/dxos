@@ -68,11 +68,11 @@ interface DropdownMenuRootProps {
 }
 
 const DropdownMenuRoot: FC<DropdownMenuRootProps> = (props: ScopedProps<DropdownMenuRootProps>) => {
-  const { __scopeDropdownMenu, children, dir, open: openProp, defaultOpen, onOpenChange, modal = true } = props;
+  const { __scopeDropdownMenu, children, dir, open: openParam, defaultOpen, onOpenChange, modal = true } = props;
   const menuScope = useMenuScope(__scopeDropdownMenu);
   const triggerRef = useRef<HTMLButtonElement | null>(null);
   const [open = false, setOpen] = useControllableState({
-    prop: openProp,
+    prop: openParam,
     defaultProp: defaultOpen,
     onChange: onOpenChange,
   });
@@ -542,10 +542,10 @@ interface DropdownMenuSubProps {
 }
 
 const DropdownMenuSub: FC<DropdownMenuSubProps> = (props: ScopedProps<DropdownMenuSubProps>) => {
-  const { __scopeDropdownMenu, children, open: openProp, onOpenChange, defaultOpen } = props;
+  const { __scopeDropdownMenu, children, open: openParam, onOpenChange, defaultOpen } = props;
   const menuScope = useMenuScope(__scopeDropdownMenu);
   const [open = false, setOpen] = useControllableState({
-    prop: openProp,
+    prop: openParam,
     defaultProp: defaultOpen,
     onChange: onOpenChange,
   });

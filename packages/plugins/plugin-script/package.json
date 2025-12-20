@@ -15,6 +15,12 @@
       "browser": "./dist/lib/browser/index.mjs",
       "node": "./dist/lib/node-esm/index.mjs"
     },
+    "./blueprints": {
+      "source": "./src/blueprints/index.ts",
+      "types": "./dist/types/src/blueprints/index.d.ts",
+      "browser": "./dist/lib/browser/blueprints/index.mjs",
+      "node": "./dist/lib/node-esm/blueprints/index.mjs"
+    },
     "./types": {
       "source": "./src/types/index.ts",
       "types": "./dist/types/src/types/index.d.ts",
@@ -31,6 +37,9 @@
   "types": "dist/types/src/index.d.ts",
   "typesVersions": {
     "*": {
+      "blueprints": [
+        "dist/types/src/blueprints/index.d.ts"
+      ],
       "types": [
         "dist/types/src/types/index.d.ts"
       ],
@@ -120,17 +129,22 @@
     "typescript": "catalog:"
   },
   "devDependencies": {
+    "@automerge/automerge": "catalog:",
     "@dxos/config": "workspace:*",
     "@dxos/echo-db": "workspace:*",
     "@dxos/plugin-automation": "workspace:*",
+    "@dxos/plugin-chess": "workspace:*",
     "@dxos/random": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-theme": "workspace:*",
     "@dxos/storybook-utils": "workspace:*",
     "@effect-atom/atom-react": "catalog:",
+    "@effect/ai": "catalog:",
+    "@effect/ai-anthropic": "catalog:",
     "@effect/platform": "catalog:",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
+    "chess.js": "catalog:",
     "effect": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:",

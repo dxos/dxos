@@ -17,7 +17,7 @@ import { Filter, Obj, Query, Ref, Tag, Type } from '@dxos/echo';
 import { Example, Script, Trigger, serializeFunction } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { ASSISTANT_BLUEPRINT_KEY, translations, useContextBinder } from '@dxos/plugin-assistant';
+import { AssistantBlueprint, translations, useContextBinder } from '@dxos/plugin-assistant';
 import { Assistant } from '@dxos/plugin-assistant/types';
 import { Board, BoardPlugin } from '@dxos/plugin-board';
 import { Chess, ChessPlugin } from '@dxos/plugin-chess';
@@ -132,10 +132,7 @@ const DefaultStory = ({ modules, showContext, blueprints = [] }: StoryProps) => 
 
   const chats = useQuery(space?.db, Filter.type(Assistant.Chat));
   const binder = useContextBinder(chats.at(-1)?.queue.target);
-  const objects = useSignalsMemo(
-    () => binder?.objects.value.map((ref) => ref.target).filter(isNonNullable) ?? [],
-    [binder],
-  );
+  const objects = useSignalsMemo(() => binder?.objects.value ?? [], [binder]);
 
   if (!space) {
     return null;
@@ -305,7 +302,7 @@ export const WithDocument: Story = {
   args: {
     showContext: true,
     modules: [[ChatModule], [CommentsModule]],
-    blueprints: [ASSISTANT_BLUEPRINT_KEY, 'dxos.org/blueprint/markdown', 'dxos.org/blueprint/thread'],
+    blueprints: [AssistantBlueprint.Key, 'dxos.org/blueprint/markdown', 'dxos.org/blueprint/thread'],
   },
 };
 
@@ -334,7 +331,7 @@ export const WithChess: Story = {
     onInit: async ({ space }) => {
       // TODO(burdon): Add player DID (for user and assistant).
       space.db.add(
-        Chess.makeGame({
+        Chess.make({
           name: 'Challenge',
           pgn: [
             '1. e4 e5',
@@ -363,7 +360,7 @@ export const WithChess: Story = {
   args: {
     showContext: true,
     modules: [[ChatModule]],
-    blueprints: [ASSISTANT_BLUEPRINT_KEY, 'dxos.org/blueprint/chess'],
+    blueprints: [AssistantBlueprint.Key, 'dxos.org/blueprint/chess'],
   },
 };
 
@@ -387,7 +384,7 @@ export const WithMail: Story = {
   args: {
     showContext: true,
     modules: [[ChatModule]],
-    blueprints: [ASSISTANT_BLUEPRINT_KEY, 'dxos.org/blueprint/inbox', 'dxos.org/blueprint/markdown'],
+    blueprints: [AssistantBlueprint.Key, 'dxos.org/blueprint/inbox', 'dxos.org/blueprint/markdown'],
   },
 };
 
@@ -408,7 +405,7 @@ export const WithGmail: Story = {
   args: {
     showContext: true,
     modules: [[ChatModule], [MessageModule, TokenManagerModule]],
-    blueprints: [ASSISTANT_BLUEPRINT_KEY, 'dxos.org/blueprint/inbox'],
+    blueprints: [AssistantBlueprint.Key, 'dxos.org/blueprint/inbox'],
   },
 };
 
@@ -429,7 +426,7 @@ export const WithCalendar: Story = {
   args: {
     showContext: true,
     modules: [[ChatModule], [TokenManagerModule]],
-    blueprints: [ASSISTANT_BLUEPRINT_KEY, 'dxos.org/blueprint/calendar'],
+    blueprints: [AssistantBlueprint.Key, 'dxos.org/blueprint/calendar'],
   },
 };
 
@@ -460,7 +457,7 @@ export const WithMap: Story = {
   args: {
     showContext: true,
     modules: [[ChatModule]],
-    blueprints: [ASSISTANT_BLUEPRINT_KEY, 'dxos.org/blueprint/map'],
+    blueprints: [AssistantBlueprint.Key, 'dxos.org/blueprint/map'],
   },
 };
 
@@ -557,7 +554,7 @@ export const WithResearch: Story = {
     showContext: true,
     modules: [[ChatModule], [GraphModule, ExecutionGraphModule]],
     blueprints: [
-      // ASSISTANT_BLUEPRINT_KEY, -- too many open-ended tools (querying for tools, querying for schema) confuses the model.
+      // AssistantBlueprint.Key, -- too many open-ended tools (querying for tools, querying for schema) confuses the model.
       ResearchBlueprint.key,
     ],
   },
@@ -585,7 +582,7 @@ export const WithTranscription: Story = {
       const queue = space.queues.create();
       const messages = createTestTranscription();
       await queue.append(messages);
-      space.db.add(Transcript.makeTranscript(queue.dxn));
+      space.db.add(Transcript.make(queue.dxn));
     },
     onChatCreated: async ({ space, binder }) => {
       const objects = await space.db.query(Filter.type(Transcript.Transcript)).run();
@@ -595,7 +592,7 @@ export const WithTranscription: Story = {
   args: {
     showContext: true,
     modules: [[ChatModule]],
-    blueprints: [ASSISTANT_BLUEPRINT_KEY, 'dxos.org/blueprint/transcription'],
+    blueprints: [AssistantBlueprint.Key, 'dxos.org/blueprint/transcription'],
   },
 };
 
@@ -648,7 +645,7 @@ export const WithChessTrigger: Story = {
     onInit: async ({ space }) => {
       // TODO(burdon): Add player DID (for user and assistant).
       space.db.add(
-        Chess.makeGame({
+        Chess.make({
           name: 'Challenge',
           pgn: [
             '1. e4 e5',

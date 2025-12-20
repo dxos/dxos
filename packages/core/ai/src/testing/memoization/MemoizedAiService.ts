@@ -13,17 +13,14 @@ import * as MemoizedLanguageModel from './MemoizedLanguageModel';
 
 export interface MemoizedAiService extends AiService.Service {}
 
-export interface MakeOptions {
+export type MakeProps = {
   upstream: AiService.Service;
-  /**
-   * Filename for memoized conversations to be stored at.
-   */
+  /** Filename for memoized conversations to be stored at. */
   storePath: string;
-
   allowGeneration: boolean;
-}
+};
 
-export const make = (options: MakeOptions): MemoizedAiService => ({
+export const make = (options: MakeProps): MemoizedAiService => ({
   model: (model) =>
     Layer.provide(
       MemoizedLanguageModel.layer({
@@ -45,7 +42,7 @@ export const make = (options: MakeOptions): MemoizedAiService => ({
  * @param options.storePath [default: `<test-file>.conversations.json`] - Filename for memoized conversations to be stored at.
  * @param options.allowGeneration [default: `ALLOW_LLM_GENERATION=1`] - Whether to allow generation if no memoized conversation is found.
  */
-export const layerTest = (options: Partial<Omit<MakeOptions, 'upstream'>> = {}) =>
+export const layerTest = (options: Partial<Omit<MakeProps, 'upstream'>> = {}) =>
   Layer.effect(
     AiService.AiService,
     Effect.gen(function* () {

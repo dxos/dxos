@@ -12,8 +12,8 @@ import { type ComponentProps } from './types';
 
 export const CommentsModule = ({ space }: ComponentProps) => {
   const chats = useQuery(space.db, Filter.type(Assistant.Chat));
-  const binder = useContextBinder(chats.at(-1)?.queue.target);
-  const object = binder?.objects.value[0]?.target;
+  const context = useContextBinder(chats.at(-1)?.queue.target);
+  const object = context?.objects.value[0];
   const data = useMemo(() => ({ subject: 'comments', companionTo: object }), [object]);
   if (!object) {
     return null;

@@ -10,12 +10,12 @@ import { type CreateObjectIntent } from '@dxos/plugin-space/types';
 import { translations as editorTranslations } from '@dxos/react-ui-editor';
 import { Text } from '@dxos/schema';
 
+import { MarkdownBlueprint } from './blueprints';
 import {
   AnchorSort,
   AppGraphSerializer,
   BlueprintDefinition,
   IntentResolver,
-  MARKDOWN_BLUEPRINT_KEY,
   MarkdownSettings,
   MarkdownState,
   ReactSurface,
@@ -55,7 +55,7 @@ export const MarkdownPlugin = definePlugin(meta, () => [
           label: (object: Markdown.Document) => object.name || object.fallbackName,
           icon: 'ph--text-aa--regular',
           iconHue: 'indigo',
-          blueprints: [MARKDOWN_BLUEPRINT_KEY],
+          blueprints: [MarkdownBlueprint.Key],
           graphProps: {
             managesAutofocus: true,
           },

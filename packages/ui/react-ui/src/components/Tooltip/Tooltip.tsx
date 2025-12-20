@@ -93,7 +93,7 @@ const TooltipProvider: FC<TooltipProviderProps> = (props: TooltipScopedProps<Too
   const {
     __scopeTooltip,
     children,
-    open: openProp,
+    open: openParam,
     defaultOpen = false,
     onOpenChange,
     disableHoverableContent = false,
@@ -140,7 +140,7 @@ const TooltipProvider: FC<TooltipProviderProps> = (props: TooltipScopedProps<Too
     [skipDelayDuration, onOpenChange],
   );
   const [open = false, setOpen] = useControllableState({
-    prop: openProp,
+    prop: openParam,
     defaultProp: defaultOpen,
     onChange: handleOpenChange,
   });

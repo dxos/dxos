@@ -45,7 +45,7 @@ import { invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
 import { type Live } from '@dxos/live-object';
 
-import { FieldSchema, FieldSortType, ProjectionModel } from '../projection';
+import { FieldSchema, ProjectionModel } from '../projection';
 import { createDefaultSchema, getSchema } from '../util';
 
 export const Projection = Schema.Struct({
@@ -84,11 +84,6 @@ export const ViewSchema = Schema.Struct({
   }).pipe(Schema.mutable),
 
   /**
-   * @deprecated Prefer ordering in query.
-   */
-  sort: Schema.Array(FieldSortType).pipe(Schema.optional),
-
-  /**
    * Projection of the data returned from the query.
    */
   projection: Projection,
@@ -105,7 +100,7 @@ export interface ViewEncoded extends Schema.Schema.Encoded<typeof ViewSchema> {}
 // TODO(wittjosiah): Should be Type.obj<...> or equivalent.
 export const View: Schema.Schema<View, ViewEncoded> = ViewSchema;
 
-export type MakeProps = {
+type MakeProps = {
   name?: string;
   query: Query.Any;
   queryRaw?: string;
@@ -316,7 +311,6 @@ export const ViewSchemaV4 = Schema.Struct({
     raw: Schema.optional(Schema.String),
     ast: QueryAST.Query,
   }).pipe(Schema.mutable, FormInputAnnotation.set(false)),
-  sort: Schema.optional(Schema.Array(FieldSortType).pipe(FormInputAnnotation.set(false))),
   projection: Projection.pipe(FormInputAnnotation.set(false)),
   presentation: Type.Ref(Obj.Any).pipe(FormInputAnnotation.set(false)),
 }).pipe(

@@ -3,7 +3,6 @@
 //
 
 import { effect } from '@preact/signals-core';
-import orderBy from 'lodash.orderby';
 import { useEffect, useMemo, useState } from 'react';
 
 import { type Database, Obj } from '@dxos/echo';
@@ -71,16 +70,10 @@ export const useTableModel = <T extends TableRow = TableRow>({
     // TODO(burdon): Trigger if callbacks change?
   }, [object, projection, features, rowActions, initialSelection]);
 
-  // Update data.
+  // Update data when rows change.
   useEffect(() => {
-    if (rows) {
-      /*
-       * Sort all objects by string id field as a temporary workaround for query ordering issues
-       * Reference: https://github.com/dxos/dxos/pull/9409
-       */
-      // TODO(ZaymonFC): Remove this workaround once unstable query ordering issue is resolved
-      const sortedRows = orderBy(rows, [(row) => String(row.id)], ['asc']);
-      model?.setRows(sortedRows);
+    if (rows && model) {
+      model.setRows(rows);
     }
   }, [model, rows]);
 

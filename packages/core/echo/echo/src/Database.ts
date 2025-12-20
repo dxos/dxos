@@ -138,9 +138,8 @@ export interface Database extends Queryable {
   get schemaRegistry(): SchemaRegistry.SchemaRegistry;
 
   /**
-   *
+   * Get hypergraph.
    */
-  // TODO(burdon): Comment required.
   get graph(): Hypergraph.Hypergraph;
 
   /**
@@ -161,7 +160,6 @@ export interface Database extends Queryable {
   /**
    * Adds object to the database.
    */
-  // TODO(burdon): Add batch.
   add<T extends Entity.Unknown = Entity.Unknown>(obj: T, opts?: AddOptions): T;
 
   /**
@@ -263,16 +261,13 @@ export class Service extends Context.Tag('@dxos/echo/Database/Service')<
   /**
    * Loads an object reference option.
    */
-  // TODO(burdon): Option?
   static loadOption: <T>(ref: Ref.Ref<T>) => Effect.Effect<Option.Option<T>, never, never> = Effect.fn(function* (ref) {
     const object = yield* Service.load(ref).pipe(
       Effect.catchTag('ObjectNotFoundError', () => Effect.succeed(undefined)),
     );
+
     return Option.fromNullable(object);
   });
-
-  // TODO(burdon): Can we create a proxy for the following methods on Database? Use @inheritDoc?
-  // TODO(burdon): Figure out how to chain query().run();
 
   /**
    * @link EchoDatabase.add

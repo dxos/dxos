@@ -12,7 +12,7 @@ import { isTruthy } from '@dxos/util';
 
 export type CreateToolkitParams = {
   toolkit?: Toolkit.Any;
-  blueprints?: Blueprint.Blueprint[];
+  blueprints?: readonly Blueprint.Blueprint[];
 };
 
 /**

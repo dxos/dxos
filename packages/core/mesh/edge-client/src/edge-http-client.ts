@@ -88,6 +88,10 @@ type EdgeHttpRequestArgs = {
 export type EdgeHttpGetArgs = Pick<EdgeHttpRequestArgs, 'context' | 'retry' | 'auth'>;
 export type EdgeHttpPostArgs = Pick<EdgeHttpRequestArgs, 'context' | 'retry' | 'body' | 'auth'>;
 
+export type GetCronTriggersResponse = {
+  cronIds: string[];
+};
+
 export class EdgeHttpClient {
   private readonly _baseUrl: string;
 
@@ -119,7 +123,7 @@ export class EdgeHttpClient {
   //
 
   public async getStatus(args?: EdgeHttpGetArgs): Promise<EdgeStatus> {
-    return this._call(new URL('/status', this.baseUrl), { ...args, method: 'GET' });
+    return this._call(new URL('/status', this.baseUrl), { ...args, method: 'GET', auth: true });
   }
 
   //
@@ -345,8 +349,10 @@ export class EdgeHttpClient {
   // Triggers
   //
 
-  public async getCronTriggers(spaceId: SpaceId) {
-    return this._call(new URL(`/test/functions/${spaceId}/triggers/crons`, this.baseUrl), { method: 'GET' });
+  public async getCronTriggers(spaceId: SpaceId): Promise<GetCronTriggersResponse> {
+    return this._call<GetCronTriggersResponse>(new URL(`/test/functions/${spaceId}/triggers/crons`, this.baseUrl), {
+      method: 'GET',
+    });
   }
 
   public async forceRunCronTrigger(spaceId: SpaceId, triggerId: ObjectId) {

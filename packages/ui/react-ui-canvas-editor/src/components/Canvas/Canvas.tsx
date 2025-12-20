@@ -96,7 +96,7 @@ export const CanvasContent = ({ children }: PropsWithChildren) => {
       {showGrid && <Grid size={options.gridSize} scale={scale} offset={offset} classNames={styles.gridLine} />}
 
       {/* Layout. */}
-      {<Shapes {...testId<TestId>('dx-layout', true)} ref={shapesRef} layout={layout} />}
+      {<Shapes {...testId<TestId>('dx-layout', true)} layout={layout} ref={shapesRef} />}
 
       {/* External content. */}
       {children}
@@ -118,8 +118,8 @@ export const CanvasContent = ({ children }: PropsWithChildren) => {
         {/* Misc overlay. */}
         <svg
           ref={overlayRef}
-          className='absolute overflow-visible pointer-events-none'
           style={projectionStyles}
+          className='absolute overflow-visible pointer-events-none'
           width={1}
           height={1}
         >

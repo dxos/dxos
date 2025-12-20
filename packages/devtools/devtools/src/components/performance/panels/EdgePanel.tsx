@@ -4,7 +4,7 @@
 
 import React, { useEffect, useMemo, useState } from 'react';
 
-import { scheduleTask } from '@dxos/async';
+import { asyncTimeout, scheduleTask } from '@dxos/async';
 import { createEdgeIdentity } from '@dxos/client/edge';
 import { Context } from '@dxos/context';
 import { type EdgeStatus } from '@dxos/protocols';
@@ -15,6 +15,8 @@ import { IconButton } from '@dxos/react-ui';
 import { type CustomPanelProps, Panel } from '../Panel';
 
 import { Table, type TableProps, Unit } from './Table';
+
+const IDENTITY_WAIT_TIMEOUT = 30_000;
 
 export const EdgePanel = ({ edge, ...props }: CustomPanelProps<{ edge?: QueryEdgeStatusResponse }>) => {
   const client = useClient();
@@ -32,6 +34,7 @@ export const EdgePanel = ({ edge, ...props }: CustomPanelProps<{ edge?: QueryEdg
   useEffect(() => {
     const ctx = new Context();
     scheduleTask(ctx, async () => {
+      await asyncTimeout(client.spaces.waitUntilReady(), IDENTITY_WAIT_TIMEOUT);
       client.edge.setIdentity(createEdgeIdentity(client));
       await handleRefresh();
     });

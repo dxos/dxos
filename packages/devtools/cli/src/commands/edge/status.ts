@@ -1,30 +1,46 @@
 //
-// Copyright 2024 DXOS.org
+// Copyright 2025 DXOS.org
 //
 
-import { BaseCommand } from '../../base';
+import * as Command from '@effect/cli/Command';
+import * as Console from 'effect/Console';
+import * as Effect from 'effect/Effect';
+import * as Option from 'effect/Option';
 
-export default class Status extends BaseCommand<typeof Status> {
-  static override enableJsonFlag = true;
-  static override description = 'Show agent status';
+import { ClientService } from '@dxos/client';
+import { createEdgeIdentity } from '@dxos/client/edge';
 
-  static override flags = {
-    ...BaseCommand.flags,
-  };
+import { CommandConfig } from '../../services';
 
-  async run(): Promise<any> {
-    return await this.execWithClient(
-      async ({ client }) => {
-        const edgeStatus = await client.edge.getStatus();
+export const getStatus = () =>
+  Effect.gen(function* () {
+    const client = yield* ClientService;
+    const identity = createEdgeIdentity(client);
+    client.edge.setIdentity(identity);
+    const status = yield* Effect.tryPromise(() => client.edge.getStatus());
 
-        // Output JSON directly so we can control the exit code.
-        if (this.jsonEnabled()) {
-          console.log(JSON.stringify({ edgeStatus }));
-        } else {
-          this.log('edge status', { edgeStatus });
-        }
-      },
-      { halo: true },
-    );
-  }
-}
+    if (yield* CommandConfig.isJson) {
+      yield* Console.log(JSON.stringify(status, null, 2));
+    } else if (status.problems.length > 0) {
+      for (const problem of status.problems) {
+        yield* Console.error(problem);
+      }
+    } else {
+      yield* Console.log('No problems found.');
+    }
+  }).pipe(
+    // TODO(wittjosiah): Tagged error.
+    Effect.catchSome((error) => {
+      if (error instanceof Error && error.message === 'Identity not available') {
+        // TODO(wittjosiah): Error coloring for logs.
+        return Option.some(Console.error(error.message));
+      } else {
+        return Option.none();
+      }
+    }),
+  );
+
+// TODO(wittjosiah): Admin functionality to provide to specify an identity.
+export const status = Command.make('status', {}, getStatus).pipe(
+  Command.withDescription('Get the EDGE status for the current identity.'),
+);

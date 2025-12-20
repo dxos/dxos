@@ -1,0 +1,133 @@
+//
+// Copyright 2025 DXOS.org
+//
+
+import { existsSync } from 'node:fs';
+import { resolve } from 'node:path';
+
+import * as Args from '@effect/cli/Args';
+import * as Command from '@effect/cli/Command';
+import * as Options from '@effect/cli/Options';
+import * as Console from 'effect/Console';
+import * as Effect from 'effect/Effect';
+import * as Match from 'effect/Match';
+import * as Option from 'effect/Option';
+
+import { ClientService } from '@dxos/client';
+import { Database, Obj } from '@dxos/echo';
+import { FUNCTIONS_META_KEY, Function } from '@dxos/functions';
+import { FunctionsServiceClient } from '@dxos/functions-runtime/edge';
+import { PublicKey } from '@dxos/keys';
+import { FunctionRuntimeKind } from '@dxos/protocols';
+
+import { CommandConfig } from '../../../services';
+import { flushAndSync, spaceLayer } from '../../../util';
+import { Common } from '../../options';
+
+import { bundle } from './bundle';
+import { DATA_TYPES, upsertComposerScript } from './echo';
+import { parseOptions } from './options';
+
+export const deploy = Command.make(
+  'deploy',
+  {
+    entryPoint: Args.file({ name: 'entryPoint' }).pipe(Args.withDescription('The file to deploy.')),
+    // TODO(burdon): Human readable name?
+    name: Options.text('name').pipe(Options.withDescription('The name of the function.'), Options.optional),
+    version: Options.text('version').pipe(
+      Options.withDescription('The version of the function to deploy.'),
+      Options.optional,
+    ),
+    script: Options.boolean('script').pipe(
+      Options.withDescription('Loads the script into composer.'),
+      Options.withDefault(false),
+    ),
+    functionId: Options.text('function-id').pipe(
+      Options.withDescription('Existing UserFunction ID to update.'),
+      Options.optional,
+    ),
+    spaceId: Common.spaceId.pipe(Options.optional),
+    dryRun: Options.boolean('dry-run').pipe(
+      Options.withDescription('Do not upload, just build the function.'),
+      Options.withDefault(false),
+    ),
+    runtime: Options.choice('runtime', ['worker-loader', 'workers-for-platforms']).pipe(
+      Options.withDescription('The runtime to use.'),
+      Options.optional,
+    ),
+  },
+  Effect.fn(function* (options) {
+    const { json } = yield* CommandConfig;
+    const client = yield* ClientService;
+    yield* Effect.promise(() => client.addTypes(DATA_TYPES));
+
+    const identity = client.halo.identity.get();
+    if (!identity) {
+      return yield* Effect.fail(new Error('Identity not available'));
+    }
+
+    if (!existsSync(options.entryPoint)) {
+      return yield* Effect.fail(new Error(`File not found: ${options.entryPoint}`));
+    }
+
+    const artifact = yield* bundle({ entryPoint: resolve(options.entryPoint) });
+
+    if (options.dryRun) {
+      yield* Console.log('Dry run, not uploading function.');
+      return;
+    }
+
+    const { space, ownerPublicKey, functionId, existingObject, name, version } = yield* parseOptions(options);
+
+    const functionsServiceClient = FunctionsServiceClient.fromClient(client);
+    const func = yield* Effect.tryPromise(() =>
+      functionsServiceClient.deploy({
+        functionId,
+        ownerPublicKey: PublicKey.fromHex(ownerPublicKey),
+        name,
+        version,
+        entryPoint: artifact.entryPoint,
+        assets: artifact.assets,
+        runtime: Match.value(options.runtime.pipe(Option.getOrUndefined)).pipe(
+          Match.when('worker-loader', () => FunctionRuntimeKind.enums.WORKER_LOADER),
+          Match.when('workers-for-platforms', () => FunctionRuntimeKind.enums.WORKERS_FOR_PLATFORMS),
+          Match.when(undefined, () => undefined),
+          Match.exhaustive,
+        ),
+      }),
+    );
+
+    let functionObject: Function.Function;
+    if (Option.isSome(existingObject)) {
+      functionObject = existingObject.value;
+      Function.setFrom(functionObject, func);
+    } else if (Option.isSome(space)) {
+      functionObject = yield* Database.Service.add(func);
+    } else {
+      functionObject = func;
+    }
+
+    if (options.script) {
+      yield* space.pipe(
+        Option.map((space) => upsertComposerScript({ space, functionObject, filePath: options.entryPoint, name })),
+        Option.getOrElse(() => Effect.succeed(undefined)),
+      );
+    }
+
+    if (json) {
+      yield* Console.log(JSON.stringify(func, null, 2));
+    } else {
+      yield* Console.log('Function uploaded successfully!');
+      yield* Console.log(`Key: ${func.key}`);
+      yield* Console.log(`Version: ${func.version}`);
+      yield* Console.log(`Function ID: ${Obj.getKeys(functionObject, FUNCTIONS_META_KEY).at(0)?.id}`);
+    }
+
+    if (Option.isSome(space)) {
+      yield* flushAndSync({ indexes: true });
+    }
+  }),
+).pipe(
+  Command.withDescription('Deploy a function to EDGE.'),
+  Command.provide(({ spaceId }) => spaceLayer(spaceId, true)),
+);

@@ -4,7 +4,8 @@
 
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
-import { type EchoDatabase, Query } from '@dxos/echo-db';
+import { Query } from '@dxos/echo';
+import { type EchoDatabase } from '@dxos/echo-db';
 import { EchoTestBuilder } from '@dxos/echo-db/testing';
 import { log } from '@dxos/log';
 import { faker } from '@dxos/random';

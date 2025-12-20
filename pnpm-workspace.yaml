@@ -55,11 +55,11 @@ catalog:
   '@dnd-kit/modifiers': ^6.0.0
   '@dnd-kit/sortable': ^7.0.1
   '@dnd-kit/utilities': ^3.2.0
-  '@dxos/cli-next-darwin-arm64': 0.8.3
-  '@dxos/cli-next-darwin-x64': 0.8.3
-  '@dxos/cli-next-linux-arm64': 0.8.3
-  '@dxos/cli-next-linux-x64': 0.8.3
-  '@dxos/cli-next-win32-x64': 0.8.3
+  '@dxos/cli-darwin-arm64': 0.8.3
+  '@dxos/cli-darwin-x64': 0.8.3
+  '@dxos/cli-linux-arm64': 0.8.3
+  '@dxos/cli-linux-x64': 0.8.3
+  '@dxos/cli-win32-x64': 0.8.3
   '@effect-atom/atom': ^0.4.10
   '@effect-atom/atom-react': ^0.4.4
   '@effect/ai': 0.32.1
@@ -131,13 +131,13 @@ catalog:
   '@opentelemetry/sdk-trace-node': ^2.1.0
   '@opentelemetry/sdk-trace-web': ^2.1.0
   '@opentelemetry/semantic-conventions': ^1.37.0
-  '@opentui/core': ^0.1.60
-  '@opentui/core-darwin-arm64': 0.1.59
-  '@opentui/core-darwin-x64': 0.1.59
-  '@opentui/core-linux-arm64': 0.1.59
-  '@opentui/core-linux-x64': 0.1.59
-  '@opentui/core-win32-x64': 0.1.59
-  '@opentui/solid': ^0.1.60
+  '@opentui/core': 0.1.61
+  '@opentui/core-darwin-arm64': 0.1.61
+  '@opentui/core-darwin-x64': 0.1.61
+  '@opentui/core-linux-arm64': 0.1.61
+  '@opentui/core-linux-x64': 0.1.61
+  '@opentui/core-win32-x64': 0.1.61
+  '@opentui/solid': 0.1.61
   '@orama/orama': ^3.1.7
   '@peermetrics/webrtc-stats': 5.7.1
   '@phosphor-icons/core': ^2.1.1
