@@ -39,10 +39,13 @@ export function useRef<T extends Entity.Unknown>(ref: MaybeAccessor<Ref.Ref<T> |
 
     let unsubscribe: (() => void) | undefined;
     let isActive = true;
+    // Track the specific ref we're loading to ignore stale promise resolutions
+    let loadingRef: Ref.Ref<T> | undefined = r;
 
     // Helper function to set up subscription for a target (similar to useObject)
     const setupSubscription = (targetObj: T) => {
-      if (!isActive) {
+      // Double-check we're still active before setting up subscription
+      if (!isActive || loadingRef !== r) {
         return;
       }
 
@@ -58,6 +61,11 @@ export function useRef<T extends Entity.Unknown>(ref: MaybeAccessor<Ref.Ref<T> |
       } catch {
         // Atom not registered yet, use target object
         currentValue = targetObj;
+      }
+
+      // Final check before updating state
+      if (!isActive || loadingRef !== r) {
+        return;
       }
 
       setTarget(() => currentValue);
@@ -102,14 +110,16 @@ export function useRef<T extends Entity.Unknown>(ref: MaybeAccessor<Ref.Ref<T> |
       void r
         .load()
         .then((loadedTarget: T) => {
-          // Only update if this effect is still active (ref hasn't changed)
-          if (isActive && memoizedRef() === r) {
+          // Only update if this effect is still active and we're still loading the same ref
+          // Check isActive first for early exit, then verify ref hasn't changed
+          if (isActive && loadingRef === r && memoizedRef() === r) {
             setupSubscription(loadedTarget);
           }
         })
         .catch(() => {
           // Loading failed, keep target as undefined
-          if (isActive) {
+          // Only update if still active and still loading the same ref
+          if (isActive && loadingRef === r) {
             setTarget(() => undefined);
           }
         });
@@ -117,6 +127,7 @@ export function useRef<T extends Entity.Unknown>(ref: MaybeAccessor<Ref.Ref<T> |
 
     onCleanup(() => {
       isActive = false;
+      loadingRef = undefined; // Clear ref reference to ignore any pending promises
       unsubscribe?.();
     });
   });
