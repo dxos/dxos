@@ -7,15 +7,23 @@
   },
   "include": [
     "src/**/*.ts",
-    "src/**/*.tsx",
     "src/*.ts"
   ],
   "references": [
     {
-      "path": "../echo"
+      "path": "../../../common/invariant"
     },
     {
-      "path": "../echo-atom"
+      "path": "../../../common/random"
+    },
+    {
+      "path": "../../../common/test-utils"
+    },
+    {
+      "path": "../../../common/util"
+    },
+    {
+      "path": "../echo"
     },
     {
       "path": "../echo-db"
