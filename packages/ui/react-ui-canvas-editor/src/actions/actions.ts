@@ -36,6 +36,6 @@ export type Action =
   | { type: 'delete'; ids?: string[]; all?: boolean }
 
   //
-  | { type: 'trigger'; edges?: Partial<Graph.Edge>[] };
+  | { type: 'trigger'; edges?: Partial<Graph.Edge.Any>[] };
 
 export type ActionHandler = (action: Action) => Promise<boolean>;

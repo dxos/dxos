@@ -104,20 +104,20 @@ describe('Graph', () => {
 
   test('optional', ({ expect }) => {
     {
-      const graph = new GraphModel.GraphModel<Graph.Node.Required<string>>();
+      const graph = new GraphModel.GraphModel<Graph.Node.Node<string>>();
       const node = graph.addNode({ id: 'test', data: 'test' });
       expect(node.data.length).to.eq(4);
     }
 
     {
-      const graph = new GraphModel.GraphModel<Graph.Node.Optional<string>>();
+      const graph = new GraphModel.GraphModel<Graph.Node.Any>();
       const node = graph.addNode({ id: 'test' });
       expect(node.data?.length).to.be.undefined;
     }
   });
 
   test('add and remove subgraphs', ({ expect }) => {
-    const graph = new GraphModel.GraphModel<Graph.Node.Required<TestData>>();
+    const graph = new GraphModel.GraphModel<Graph.Node.Node<TestData>>();
     graph.builder
       .addNode({ id: 'node1', data: { value: 'test' } })
       .addNode({ id: 'node2', data: { value: 'test' } })

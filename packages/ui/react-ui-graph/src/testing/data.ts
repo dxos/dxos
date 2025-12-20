@@ -23,7 +23,7 @@ export const createNode = (type: string = undefined): TestNode => ({
 export const createNodes = (n = 0, types?: string[]): TestNode[] =>
   Array.from({ length: n }, () => createNode(types ? faker.helpers.arrayElement(types) : undefined));
 
-export const createEdge = (source: TestNode, target: TestNode): Graph.Edge => ({
+export const createEdge = (source: TestNode, target: TestNode): Graph.Edge.Any => ({
   id: `${source.id}-${target.id}`,
   source: source.id,
   target: target.id,

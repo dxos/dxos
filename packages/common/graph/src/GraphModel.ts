@@ -14,7 +14,10 @@ import * as Graph from './Graph';
 /**
  * Readonly Graph wrapper.
  */
-export class ReadonlyGraphModel<Node extends Graph.Node = Graph.Node, Edge extends Graph.Edge = Graph.Edge> {
+export class ReadonlyGraphModel<
+  Node extends Graph.Node.Any = Graph.Node.Any,
+  Edge extends Graph.Edge.Any = Graph.Edge.Any,
+> {
   protected readonly _graph: Graph.Graph;
 
   /**
@@ -65,7 +68,7 @@ export class ReadonlyGraphModel<Node extends Graph.Node = Graph.Node, Edge exten
     return this.findNode(id) ?? failedInvariant();
   }
 
-  filterNodes({ type }: Partial<Graph.Node> = {}): Node[] {
+  filterNodes({ type }: Partial<Graph.Node.Any> = {}): Node[] {
     return this.nodes.filter((node) => !type || type === node.type);
   }
 
@@ -81,7 +84,7 @@ export class ReadonlyGraphModel<Node extends Graph.Node = Graph.Node, Edge exten
     return this.findEdge(id) ?? failedInvariant();
   }
 
-  filterEdges({ type, source, target }: Partial<Graph.Edge> = {}): Edge[] {
+  filterEdges({ type, source, target }: Partial<Graph.Edge.Any> = {}): Edge[] {
     return this.edges.filter(
       (edge) =>
         (!type || type === edge.type) && (!source || source === edge.source) && (!target || target === edge.target),
@@ -114,8 +117,8 @@ export class ReadonlyGraphModel<Node extends Graph.Node = Graph.Node, Edge exten
  * Mutable Graph wrapper.
  */
 export abstract class AbstractGraphModel<
-  Node extends Graph.Node = Graph.Node,
-  Edge extends Graph.Edge = Graph.Edge,
+  Node extends Graph.Node.Any = Graph.Node.Any,
+  Edge extends Graph.Edge.Any = Graph.Edge.Any,
   Model extends AbstractGraphModel<Node, Edge, Model, Builder> = any,
   Builder extends AbstractBuilder<Node, Edge, Model> = AbstractBuilder<Node, Edge, Model>,
 > extends ReadonlyGraphModel<Node, Edge> {
@@ -202,8 +205,8 @@ export abstract class AbstractGraphModel<
  * Chainable builder wrapper
  */
 export abstract class AbstractBuilder<
-  Node extends Graph.Node,
-  Edge extends Graph.Edge,
+  Node extends Graph.Node.Any,
+  Edge extends Graph.Edge.Any,
   Model extends GraphModel<Node, Edge>,
 > {
   constructor(protected readonly _model: Model) {}
@@ -246,8 +249,8 @@ export abstract class AbstractBuilder<
  * Basic model.
  */
 export class GraphModel<
-  Node extends Graph.Node = Graph.Node,
-  Edge extends Graph.Edge = Graph.Edge,
+  Node extends Graph.Node.Any = Graph.Node.Any,
+  Edge extends Graph.Edge.Any = Graph.Edge.Any,
 > extends AbstractGraphModel<Node, Edge, GraphModel<Node, Edge>, Builder<Node, Edge>> {
   override get builder() {
     return new Builder<Node, Edge>(this);
@@ -278,8 +281,8 @@ export const subscribe = (model: GraphModel, cb: Subscription, fire = false) => 
  * Basic reactive model.
  */
 export class ReactiveGraphModel<
-  Node extends Graph.Node = Graph.Node,
-  Edge extends Graph.Edge = Graph.Edge,
+  Node extends Graph.Node.Any = Graph.Node.Any,
+  Edge extends Graph.Edge.Any = Graph.Edge.Any,
 > extends GraphModel<Node, Edge> {
   constructor(graph?: Partial<Graph.Graph>) {
     super(
@@ -303,8 +306,8 @@ export class ReactiveGraphModel<
  * Basic builder.
  */
 export class Builder<
-  Node extends Graph.Node = Graph.Node,
-  Edge extends Graph.Edge = Graph.Edge,
+  Node extends Graph.Node.Any = Graph.Node.Any,
+  Edge extends Graph.Edge.Any = Graph.Edge.Any,
 > extends AbstractBuilder<Node, Edge, GraphModel<Node, Edge>> {
   override call(cb: (builder: this) => void): this {
     cb(this);
