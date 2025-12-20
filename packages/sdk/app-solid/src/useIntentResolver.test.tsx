@@ -18,7 +18,7 @@ class TestIntent extends Schema.TaggedClass<TestIntent>()('TestIntent', {
   output: Schema.Struct({
     result: Schema.String,
   }),
-}) { }
+}) {}
 
 describe('useIntentResolver', () => {
   test('registers and unregisters intent resolver', () => {

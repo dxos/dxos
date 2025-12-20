@@ -40,8 +40,11 @@ export const Toolbar = () => {
 };
 
 export default () =>
-  contributes(Capabilities.ReactSurface, createSurface({
-    id: 'dxos.org/test/generator/toolbar',
-    role: 'toolbar',
-    component: Toolbar,
-  }));
+  contributes(
+    Capabilities.ReactSurface,
+    createSurface({
+      id: 'dxos.org/test/generator/toolbar',
+      role: 'toolbar',
+      component: Toolbar,
+    }),
+  );

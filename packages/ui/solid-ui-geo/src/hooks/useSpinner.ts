@@ -20,7 +20,7 @@ export type SpinnerOptions = {
  */
 export const useSpinner = (controller?: GlobeController | null, options: SpinnerOptions = {}) => {
   const [running, setRunning] = createSignal(false);
-  
+
   createEffect(() => {
     let timer: Timer | undefined;
 

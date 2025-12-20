@@ -35,7 +35,7 @@ export const useTour = (
 ): { running: Accessor<boolean>; setRunning: Setter<boolean> } => {
   const selection = d3Selection();
   const [running, setRunning] = createSignal(options.running ?? false);
-  
+
   createEffect(() => {
     if (!running()) {
       selection.interrupt(TRANSITION_NAME);

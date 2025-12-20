@@ -24,14 +24,14 @@ export type SurfaceProps<T extends Record<string, any> = Record<string, unknown>
    */
   placeholder?: ReactNode;
 } & MakeOptional<CoreSurfaceProps<T>, 'id' | 'data'> &
-/**
- * Additional props to pass to the component.
- * These props are not used by Surface itself but may be used by components which resolve the surface.
- * Exclude known prop names to prevent overriding well-defined props.
- */
-{
-  [K in keyof Record<string, any>]: K extends keyof CoreSurfaceProps<T> | 'fallback' | 'placeholder' ? never : any;
-};
+  /**
+   * Additional props to pass to the component.
+   * These props are not used by Surface itself but may be used by components which resolve the surface.
+   * Exclude known prop names to prevent overriding well-defined props.
+   */
+  {
+    [K in keyof Record<string, any>]: K extends keyof CoreSurfaceProps<T> | 'fallback' | 'placeholder' ? never : any;
+  };
 
 /**
  * NOTE: If `[key: string]: unknown` is included in shared types, when re-used other fields become unknown as well.

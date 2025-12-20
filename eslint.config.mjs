@@ -75,6 +75,7 @@ export default tseslint.config(
       'packages/sdk/config/src/testing',
       'packages/sdk/shell/react-i18next.d.ts',
       'packages/ui/react-ui-geo/data',
+      'packages/ui/solid-ui-geo/data',
       'tools/dx-tools',
       'tools/esbuild/cli.js',
       'tools/storybook/.storybook/stub.mjs',
@@ -283,6 +284,7 @@ export default tseslint.config(
       'packages/plugins/plugin-map-solid/**/*.{js,ts,jsx,tsx,mts,cts,mjs,cjs}',
       'packages/sdk/app-solid/**/*.{js,ts,jsx,tsx,mts,cts,mjs,cjs}',
       'packages/ui/solid-ui-*/**/*.{js,ts,jsx,tsx,mts,cts,mjs,cjs}',
+      'tools/solid-storybook/**/*.{js,ts,jsx,tsx,mts,cts,mjs,cjs}',
     ],
     rules: {
       ...Object.fromEntries(

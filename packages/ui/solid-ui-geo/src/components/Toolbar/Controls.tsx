@@ -23,18 +23,18 @@ export const ZoomControls = (props: ControlProps): JSX.Element => {
   return (
     <div class={`flex flex-col gap-2 ${props.class ?? ''}`}>
       <button
-        class="w-10 h-10 bg-white dark:bg-gray-800 rounded shadow hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center justify-center"
+        class='w-10 h-10 bg-white dark:bg-gray-800 rounded shadow hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center justify-center'
         onClick={() => props.onAction?.('zoom-in')}
-        title="Zoom in"
+        title='Zoom in'
       >
-        <span class="text-xl">+</span>
+        <span class='text-xl'>+</span>
       </button>
       <button
-        class="w-10 h-10 bg-white dark:bg-gray-800 rounded shadow hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center justify-center"
+        class='w-10 h-10 bg-white dark:bg-gray-800 rounded shadow hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center justify-center'
         onClick={() => props.onAction?.('zoom-out')}
-        title="Zoom out"
+        title='Zoom out'
       >
-        <span class="text-xl">−</span>
+        <span class='text-xl'>−</span>
       </button>
     </div>
   );
@@ -44,18 +44,18 @@ export const ActionControls = (props: ControlProps): JSX.Element => {
   return (
     <div class={`flex flex-col gap-2 ${props.class ?? ''}`}>
       <button
-        class="w-10 h-10 bg-white dark:bg-gray-800 rounded shadow hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center justify-center"
+        class='w-10 h-10 bg-white dark:bg-gray-800 rounded shadow hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center justify-center'
         onClick={() => props.onAction?.('start')}
-        title="Start"
+        title='Start'
       >
-        <span class="text-xl">▶</span>
+        <span class='text-xl'>▶</span>
       </button>
       <button
-        class="w-10 h-10 bg-white dark:bg-gray-800 rounded shadow hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center justify-center"
+        class='w-10 h-10 bg-white dark:bg-gray-800 rounded shadow hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center justify-center'
         onClick={() => props.onAction?.('toggle')}
-        title="Toggle"
+        title='Toggle'
       >
-        <span class="text-xl">🌍</span>
+        <span class='text-xl'>🌍</span>
       </button>
     </div>
   );

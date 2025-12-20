@@ -49,9 +49,9 @@ export default defineConfig((env) => ({
     https:
       process.env.HTTPS === 'true'
         ? {
-          key: '../../../key.pem',
-          cert: '../../../cert.pem',
-        }
+            key: '../../../key.pem',
+            cert: '../../../cert.pem',
+          }
         : undefined,
     fs: {
       strict: false,
@@ -136,21 +136,20 @@ export default defineConfig((env) => ({
 
     // Building from dist when creating a prod bundle.
     env.command === 'serve' &&
-    importSource({
-      exclude: [
-        '**/node_modules/**',
-        '**/common/random-access-storage/**',
-        '**/common/lock-file/**',
-        '**/mesh/network-manager/**',
-        '**/mesh/teleport/**',
-        '**/sdk/config/**',
-        '**/sdk/client-services/**',
-        '**/sdk/observability/**',
-        // TODO(dmaretskyi): Decorators break in lit.
-        '**/ui/lit-*/**',
-        // Solid packages are aliased to source and processed by vite-plugin-solid.
-      ],
-    }),
+      importSource({
+        exclude: [
+          '**/node_modules/**',
+          '**/common/random-access-storage/**',
+          '**/common/lock-file/**',
+          '**/mesh/network-manager/**',
+          '**/mesh/teleport/**',
+          '**/sdk/config/**',
+          '**/sdk/client-services/**',
+          '**/sdk/observability/**',
+          // TODO(dmaretskyi): Decorators break in lit.
+          '**/ui/lit-*/**',
+        ],
+      }),
 
     // Solid JSX transform for Solid packages.
     // Must be placed before React plugin to process Solid files first.

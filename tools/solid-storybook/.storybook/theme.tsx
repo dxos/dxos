@@ -8,7 +8,7 @@ export const withLayout: Decorator = (Story, context) => {
   switch (context.parameters.layout) {
     case 'fullscreen':
       return (
-        <div role="none" class="fixed inset-0 flex flex-col overflow-hidden bg-baseSurface">
+        <div role='none' className='fixed inset-0 flex flex-col overflow-hidden bg-baseSurface'>
           <Story />
         </div>
       );

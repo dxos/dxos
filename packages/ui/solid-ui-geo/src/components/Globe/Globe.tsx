@@ -188,7 +188,7 @@ const GlobeCanvas = (props: GlobeCanvasProps) => {
   let zoomValue = zoom();
   let zooming = false;
 
-  createEffect(() => { });
+  createEffect(() => {});
 
   // Update rotation.
   createEffect(() => {
@@ -287,8 +287,9 @@ const GlobeDebug = (props: { position?: ControlPosition }) => {
   const { size, zoom, translation, rotation } = useGlobeContext();
   return (
     <div
-      class={`z-10 absolute w-96 p-2 overflow-hidden border border-green-700 rounded ${controlPositions[props.position ?? 'topleft']
-        }`}
+      class={`z-10 absolute w-96 p-2 overflow-hidden border border-green-700 rounded ${
+        controlPositions[props.position ?? 'topleft']
+      }`}
     >
       <pre class='font-mono text-xs text-green-700'>
         {JSON.stringify({ size, zoom: zoom(), translation: translation(), rotation: rotation() }, null, 2)}

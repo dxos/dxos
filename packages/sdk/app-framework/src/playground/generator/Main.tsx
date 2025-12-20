@@ -63,8 +63,11 @@ export const Main = () => {
 };
 
 export default () =>
-  contributes(Capabilities.ReactSurface, createSurface({
-    id: 'dxos.org/test/generator/main',
-    role: 'primary',
-    component: Main,
-  }));
+  contributes(
+    Capabilities.ReactSurface,
+    createSurface({
+      id: 'dxos.org/test/generator/main',
+      role: 'primary',
+      component: Main,
+    }),
+  );

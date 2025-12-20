@@ -69,8 +69,8 @@ export class RuntimeSchemaRegistry implements SchemaRegistry.SchemaRegistry {
       async getResults() {
         return filterOrderResults(self.schemas, query ?? {}) as SchemaRegistry.ExtractQueryResult<Q>[];
       },
-      async start() { },
-      async stop() { },
+      async start() {},
+      async stop() {},
     });
   }
 
