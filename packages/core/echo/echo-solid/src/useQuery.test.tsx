@@ -3,7 +3,7 @@
 //
 
 import { render, waitFor } from '@solidjs/testing-library';
-import { createSignal, type JSX } from 'solid-js';
+import { type JSX, createSignal } from 'solid-js';
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
 import { Filter, Obj, Query, Type } from '@dxos/echo';
@@ -32,7 +32,7 @@ describe('useQuery', () => {
     render(() => {
       const objects = useQuery(undefined, Filter.type(Type.Expando));
       result = objects();
-      return <div>test</div> as JSX.Element;
+      return (<div>test</div>) as JSX.Element;
     });
 
     expect(result).toEqual([]);
@@ -44,7 +44,7 @@ describe('useQuery', () => {
     render(() => {
       const objects = useQuery(db, Filter.type(Type.Expando));
       result = objects();
-      return <div>test</div> as JSX.Element;
+      return (<div>test</div>) as JSX.Element;
     });
 
     await waitFor(() => {
@@ -65,17 +65,14 @@ describe('useQuery', () => {
     function TestComponent() {
       const objects = useQuery(db, Filter.type(Type.Expando));
       objectsAccessor = objects;
-      return <div data-testid='count'>{objects().length}</div> as JSX.Element;
+      return (<div data-testid='count'>{objects().length}</div>) as JSX.Element;
     }
 
     const { getByTestId } = render(() => <TestComponent />);
 
-    await waitFor(
-      () => {
-        expect(getByTestId('count').textContent).toBe('2');
-      },
-      { timeout: 5000 },
-    );
+    await waitFor(() => {
+      expect(getByTestId('count').textContent).toBe('2');
+    });
 
     // Get the actual results from the accessor
     const result = objectsAccessor?.() ?? [];
@@ -89,29 +86,23 @@ describe('useQuery', () => {
     function TestComponent() {
       const objects = useQuery(db, Filter.type(Type.Expando));
       objectsAccessor = objects;
-      return <div data-testid='count'>{objects().length}</div> as JSX.Element;
+      return (<div data-testid='count'>{objects().length}</div>) as JSX.Element;
     }
 
     const { getByTestId } = render(() => <TestComponent />);
 
-    await waitFor(
-      () => {
-        expect(getByTestId('count').textContent).toBe('0');
-      },
-      { timeout: 5000 },
-    );
+    await waitFor(() => {
+      expect(getByTestId('count').textContent).toBe('0');
+    });
 
     // Add an object
     const obj = Obj.make(Type.Expando, { name: 'Charlie' });
     db.add(obj);
     await db.flush({ indexes: true });
 
-    await waitFor(
-      () => {
-        expect(getByTestId('count').textContent).toBe('1');
-      },
-      { timeout: 5000 },
-    );
+    await waitFor(() => {
+      expect(getByTestId('count').textContent).toBe('1');
+    });
 
     // Get the actual results from the accessor
     const result = objectsAccessor?.() ?? [];
@@ -132,28 +123,22 @@ describe('useQuery', () => {
     function TestComponent() {
       const objects = useQuery(db, Filter.type(Type.Expando));
       objectsAccessor = objects;
-      return <div data-testid='count'>{objects().length}</div> as JSX.Element;
+      return (<div data-testid='count'>{objects().length}</div>) as JSX.Element;
     }
 
     const { getByTestId } = render(() => <TestComponent />);
 
-    await waitFor(
-      () => {
-        expect(getByTestId('count').textContent).toBe('2');
-      },
-      { timeout: 5000 },
-    );
+    await waitFor(() => {
+      expect(getByTestId('count').textContent).toBe('2');
+    });
 
     // Remove an object
     db.remove(obj1);
     await db.flush({ indexes: true });
 
-    await waitFor(
-      () => {
-        expect(getByTestId('count').textContent).toBe('1');
-      },
-      { timeout: 5000 },
-    );
+    await waitFor(() => {
+      expect(getByTestId('count').textContent).toBe('1');
+    });
 
     // Get the actual results from the accessor
     const result = objectsAccessor?.() ?? [];
@@ -174,17 +159,14 @@ describe('useQuery', () => {
     function TestComponent() {
       const objects = useQuery(db, Filter.type(TestSchema.Person));
       objectsAccessor = objects;
-      return <div data-testid='count'>{objects().length}</div> as JSX.Element;
+      return (<div data-testid='count'>{objects().length}</div>) as JSX.Element;
     }
 
     const { getByTestId } = render(() => <TestComponent />);
 
-    await waitFor(
-      () => {
-        expect(getByTestId('count').textContent).toBe('1');
-      },
-      { timeout: 5000 },
-    );
+    await waitFor(() => {
+      expect(getByTestId('count').textContent).toBe('1');
+    });
 
     // Get the actual results from the accessor
     const result = objectsAccessor?.() ?? [];
@@ -202,17 +184,14 @@ describe('useQuery', () => {
     function TestComponent() {
       const objects = useQuery(db, Query.select(Filter.type(Type.Expando)));
       objectsAccessor = objects;
-      return <div data-testid='count'>{objects().length}</div> as JSX.Element;
+      return (<div data-testid='count'>{objects().length}</div>) as JSX.Element;
     }
 
     const { getByTestId } = render(() => <TestComponent />);
 
-    await waitFor(
-      () => {
-        expect(getByTestId('count').textContent).toBe('1');
-      },
-      { timeout: 5000 },
-    );
+    await waitFor(() => {
+      expect(getByTestId('count').textContent).toBe('1');
+    });
 
     // Get the actual results from the accessor
     const result = objectsAccessor?.() ?? [];
@@ -231,17 +210,14 @@ describe('useQuery', () => {
     function TestComponent() {
       const objects = useQuery(() => dbAccessor, Filter.type(Type.Expando));
       objectsAccessor = objects;
-      return <div data-testid='count'>{objects().length}</div> as JSX.Element;
+      return (<div data-testid='count'>{objects().length}</div>) as JSX.Element;
     }
 
     const { getByTestId } = render(() => <TestComponent />);
 
-    await waitFor(
-      () => {
-        expect(getByTestId('count').textContent).toBe('1');
-      },
-      { timeout: 5000 },
-    );
+    await waitFor(() => {
+      expect(getByTestId('count').textContent).toBe('1');
+    });
 
     // Get the actual results from the accessor
     let result = objectsAccessor?.() ?? [];
@@ -251,7 +227,6 @@ describe('useQuery', () => {
     dbAccessor = undefined;
 
     // Should keep previous value (no flickering)
-    await new Promise((resolve) => setTimeout(resolve, 50));
     result = objectsAccessor?.() ?? [];
     expect(result.length).toBe(1);
   });
@@ -270,19 +245,18 @@ describe('useQuery', () => {
     const [usePersonFilter, setUsePersonFilter] = createSignal(false);
 
     function TestComponent() {
-      const objects = useQuery(db, () => (usePersonFilter() ? Filter.type(TestSchema.Person) : Filter.type(Type.Expando)));
+      const objects = useQuery(db, () =>
+        usePersonFilter() ? Filter.type(TestSchema.Person) : Filter.type(Type.Expando),
+      );
       objectsAccessor = objects;
-      return <div data-testid='count'>{objects().length}</div> as JSX.Element;
+      return (<div data-testid='count'>{objects().length}</div>) as JSX.Element;
     }
 
     const { getByTestId } = render(() => <TestComponent />);
 
-    await waitFor(
-      () => {
-        expect(getByTestId('count').textContent).toBe('1');
-      },
-      { timeout: 5000 },
-    );
+    await waitFor(() => {
+      expect(getByTestId('count').textContent).toBe('1');
+    });
 
     // Get the actual results from the accessor
     let result = objectsAccessor?.() ?? [];
@@ -291,12 +265,9 @@ describe('useQuery', () => {
     // Switch to person filter
     setUsePersonFilter(true);
 
-    await waitFor(
-      () => {
-        expect(getByTestId('count').textContent).toBe('1');
-      },
-      { timeout: 5000 },
-    );
+    await waitFor(() => {
+      expect(getByTestId('count').textContent).toBe('1');
+    });
 
     // Get the actual results from the accessor
     result = objectsAccessor?.() ?? [];
@@ -304,4 +275,3 @@ describe('useQuery', () => {
     expect(result[0]?.name).toBe('Test2');
   });
 });
-

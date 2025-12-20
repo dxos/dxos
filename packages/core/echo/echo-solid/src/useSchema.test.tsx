@@ -3,14 +3,14 @@
 //
 
 import { render, waitFor } from '@solidjs/testing-library';
-import { createMemo, type JSX } from 'solid-js';
+import { type JSX, createMemo } from 'solid-js';
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
+import { Type } from '@dxos/echo';
 import { TestSchema } from '@dxos/echo/testing';
 import { EchoTestBuilder } from '@dxos/echo-db/testing';
 
 import { useSchema } from './useSchema';
-import { Type } from '@dxos/echo';
 
 describe('useSchema', () => {
   let testBuilder: EchoTestBuilder;
@@ -32,7 +32,7 @@ describe('useSchema', () => {
     render(() => {
       const schema = useSchema(undefined, 'dxos.test.Person');
       result = schema();
-      return <div>test</div> as JSX.Element;
+      return (<div>test</div>) as JSX.Element;
     });
 
     expect(result).toBeUndefined();
@@ -44,7 +44,7 @@ describe('useSchema', () => {
     render(() => {
       const schema = useSchema(db, undefined);
       result = schema();
-      return <div>test</div> as JSX.Element;
+      return (<div>test</div>) as JSX.Element;
     });
 
     expect(result).toBeUndefined();
@@ -56,7 +56,7 @@ describe('useSchema', () => {
     render(() => {
       const schema = useSchema(db, 'dxos.test.NonExistent');
       result = schema();
-      return <div>test</div> as JSX.Element;
+      return (<div>test</div>) as JSX.Element;
     });
 
     await waitFor(() => {
@@ -78,17 +78,14 @@ describe('useSchema', () => {
         const s = schema();
         return s ? Type.getTypename(s) : undefined;
       });
-      return <div data-testid='typename'>{t() || 'undefined'}</div> as JSX.Element;
+      return (<div data-testid='typename'>{t() || 'undefined'}</div>) as JSX.Element;
     }
 
     const { getByTestId } = render(() => <TestComponent />);
 
-    await waitFor(
-      () => {
-        expect(getByTestId('typename').textContent).toBe(registeredSchema.typename);
-      },
-      { timeout: 5000 },
-    );
+    await waitFor(() => {
+      expect(getByTestId('typename').textContent).toBe(registeredSchema.typename);
+    });
 
     // Get the actual result from the accessor
     const result = schemaAccessor?.();
@@ -112,17 +109,14 @@ describe('useSchema', () => {
         const s = schema();
         return s ? Type.getTypename(s) : undefined;
       });
-      return <div data-testid='typename'>{t() || 'undefined'}</div> as JSX.Element;
+      return (<div data-testid='typename'>{t() || 'undefined'}</div>) as JSX.Element;
     }
 
     const { getByTestId } = render(() => <TestComponent />);
 
-    await waitFor(
-      () => {
-        expect(getByTestId('typename').textContent).toBe('undefined');
-      },
-      { timeout: 5000 },
-    );
+    await waitFor(() => {
+      expect(getByTestId('typename').textContent).toBe('undefined');
+    });
 
     // Register the schema
     const [registeredSchema] = await db.schemaRegistry.register([TestSchema.Person]);
@@ -130,12 +124,9 @@ describe('useSchema', () => {
 
     // The schema registry query should pick up the new schema
     // It reads from db.graph.schemaRegistry.schemas which should include the newly registered schema
-    await waitFor(
-      () => {
-        expect(getByTestId('typename').textContent).toBe(registeredSchema.typename);
-      },
-      { timeout: 5000 },
-    );
+    await waitFor(() => {
+      expect(getByTestId('typename').textContent).toBe(registeredSchema.typename);
+    });
 
     // Get the actual result from the accessor
     const result = schemaAccessor?.();
@@ -156,17 +147,14 @@ describe('useSchema', () => {
         const s = schema();
         return s ? Type.getTypename(s) : undefined;
       });
-      return <div data-testid='typename'>{t() || 'undefined'}</div> as JSX.Element;
+      return (<div data-testid='typename'>{t() || 'undefined'}</div>) as JSX.Element;
     }
 
     const { getByTestId } = render(() => <TestComponent />);
 
-    await waitFor(
-      () => {
-        expect(getByTestId('typename').textContent).toBe(registeredSchema.typename);
-      },
-      { timeout: 5000 },
-    );
+    await waitFor(() => {
+      expect(getByTestId('typename').textContent).toBe(registeredSchema.typename);
+    });
 
     // Get the actual result from the accessor
     let result = schemaAccessor?.();
@@ -176,7 +164,6 @@ describe('useSchema', () => {
     dbAccessor = undefined;
 
     // Should keep previous value (no flickering)
-    await new Promise((resolve) => setTimeout(resolve, 50));
     result = schemaAccessor?.();
     expect(result).toBeDefined();
   });
@@ -194,17 +181,14 @@ describe('useSchema', () => {
         const s = schema();
         return s ? Type.getTypename(s) : undefined;
       });
-      return <div data-testid='typename'>{t() || 'undefined'}</div> as JSX.Element;
+      return (<div data-testid='typename'>{t() || 'undefined'}</div>) as JSX.Element;
     }
 
     const { getByTestId } = render(() => <TestComponent />);
 
-    await waitFor(
-      () => {
-        expect(getByTestId('typename').textContent).toBe(registeredSchema.typename);
-      },
-      { timeout: 5000 },
-    );
+    await waitFor(() => {
+      expect(getByTestId('typename').textContent).toBe(registeredSchema.typename);
+    });
 
     // Get the actual result from the accessor
     let result = schemaAccessor?.();
@@ -214,15 +198,11 @@ describe('useSchema', () => {
     // Change typename
     typename = undefined;
 
-    await waitFor(
-      () => {
-        // Should keep previous value when typename becomes undefined
-        expect(getByTestId('typename').textContent).toBe(registeredSchema.typename);
-      },
-      { timeout: 5000 },
-    );
+    await waitFor(() => {
+      // Should keep previous value when typename becomes undefined
+      expect(getByTestId('typename').textContent).toBe(registeredSchema.typename);
+    });
     result = schemaAccessor?.();
     expect(result).toBeDefined();
   });
 });
-

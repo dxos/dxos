@@ -522,6 +522,9 @@ catalogs:
     '@sentry/vite-plugin':
       specifier: ^4.0.2
       version: 4.0.2
+    '@solid-primitives/utils':
+      specifier: ^6.3.2
+      version: 6.3.2
     '@solidjs/testing-library':
       specifier: ^0.8.10
       version: 0.8.10
@@ -5069,6 +5072,9 @@ importers:
       '@dxos/effect-atom-solid':
         specifier: workspace:*
         version: link:../../../common/effect-atom-solid
+      '@solid-primitives/utils':
+        specifier: 'catalog:'
+        version: 6.3.2(solid-js@1.9.10)
     devDependencies:
       '@dxos/echo-db':
         specifier: workspace:*

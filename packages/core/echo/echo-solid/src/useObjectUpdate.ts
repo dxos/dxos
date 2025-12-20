@@ -2,23 +2,23 @@
 // Copyright 2025 DXOS.org
 //
 
+import { type MaybeAccessor, access } from '@solid-primitives/utils';
 import { createMemo } from 'solid-js';
-
-import { Registry, useRegistry } from '@dxos/effect-atom-solid';
 
 import type { Entity } from '@dxos/echo';
 import { AtomObj } from '@dxos/echo-atom';
+import { type Registry, useRegistry } from '@dxos/effect-atom-solid';
 
 /**
  * Returns an update function for a specific property of an Echo object.
  * The returned function is stable and memoized.
  *
- * @param obj - The Echo object to update
+ * @param obj - The Echo object to update (can be reactive)
  * @param property - Property key to update
  * @returns Update function that accepts a value or updater function
  */
 export function useObjectUpdate<T extends Entity.Unknown, K extends keyof T>(
-  obj: T,
+  obj: MaybeAccessor<T>,
   property: K,
 ): (value: T[K] | ((current: T[K]) => T[K])) => void;
 
@@ -26,11 +26,11 @@ export function useObjectUpdate<T extends Entity.Unknown, K extends keyof T>(
  * Returns an update function for an entire Echo object.
  * The returned function is stable and memoized.
  *
- * @param obj - The Echo object to update
+ * @param obj - The Echo object to update (can be reactive)
  * @returns Update function that accepts an updater function
  */
 export function useObjectUpdate<T extends Entity.Unknown>(
-  obj: T,
+  obj: MaybeAccessor<T>,
   property?: undefined,
 ): (updater: (obj: T) => void) => void;
 
@@ -38,12 +38,12 @@ export function useObjectUpdate<T extends Entity.Unknown>(
  * Returns an update function for an Echo object (entire object or specific property).
  * The returned function is stable and memoized.
  *
- * @param obj - The Echo object to update
+ * @param obj - The Echo object to update (can be reactive)
  * @param property - Optional property key to update a specific property
  * @returns Update function
  */
 export function useObjectUpdate<T extends Entity.Unknown, K extends keyof T>(
-  obj: T,
+  obj: MaybeAccessor<T>,
   property?: K,
 ): ((value: T[K] | ((current: T[K]) => T[K])) => void) | ((updater: (obj: T) => void) => void) {
   const registry = useRegistry();
@@ -59,10 +59,13 @@ export function useObjectUpdate<T extends Entity.Unknown, K extends keyof T>(
  */
 function useObjectValueUpdate<T extends Entity.Unknown>(
   registry: Registry.Registry,
-  obj: T,
+  obj: MaybeAccessor<T>,
 ): (updater: (obj: T) => void) => void {
+  // Memoize the resolved object to track changes
+  const resolvedObj = createMemo(() => access(obj));
+
   // Memoize the atom creation
-  const atom = createMemo(() => AtomObj.make(obj));
+  const atom = createMemo(() => AtomObj.make(resolvedObj()));
 
   // Return a stable update function that uses the memoized atom
   return (updater: (obj: T) => void) => {
@@ -75,15 +78,17 @@ function useObjectValueUpdate<T extends Entity.Unknown>(
  */
 function useObjectPropertyUpdate<T extends Entity.Unknown, K extends keyof T>(
   registry: Registry.Registry,
-  obj: T,
+  obj: MaybeAccessor<T>,
   property: K,
 ): (value: T[K] | ((current: T[K]) => T[K])) => void {
+  // Memoize the resolved object to track changes
+  const resolvedObj = createMemo(() => access(obj));
+
   // Memoize the atom creation
-  const atom = createMemo(() => AtomObj.makeProperty(obj, property));
+  const atom = createMemo(() => AtomObj.makeProperty(resolvedObj(), property));
 
   // Return a stable update function that uses the memoized atom
   return (value: T[K] | ((current: T[K]) => T[K])) => {
     AtomObj.updateProperty(registry, atom(), value);
   };
 }
-

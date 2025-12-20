@@ -2,15 +2,15 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Registry } from '@dxos/effect-atom-solid';
 import { render, waitFor } from '@solidjs/testing-library';
-import { type JSX } from 'solid-js';
+import { type JSX, createSignal } from 'solid-js';
 import { describe, expect, test } from 'vitest';
 
+import type { Entity } from '@dxos/echo';
 import { Obj } from '@dxos/echo';
 import { TestSchema } from '@dxos/echo/testing';
 import { createObject } from '@dxos/echo-db';
-
+import { Registry } from '@dxos/effect-atom-solid';
 import { RegistryProvider } from '@dxos/effect-atom-solid';
 
 import { useObject } from './useObject';
@@ -32,10 +32,13 @@ describe('useObjectUpdate', () => {
 
     let updateFn: ((updater: (obj: any) => void) => void) | undefined;
 
-    render(() => {
-      updateFn = useObjectUpdate(obj);
-      return <div>test</div> as JSX.Element;
-    }, { wrapper: Wrapper });
+    render(
+      () => {
+        updateFn = useObjectUpdate(obj);
+        return (<div>test</div>) as JSX.Element;
+      },
+      { wrapper: Wrapper },
+    );
 
     expect(typeof updateFn).toBe('function');
   });
@@ -49,10 +52,13 @@ describe('useObjectUpdate', () => {
 
     let updateFn: ((value: string | ((current: string) => string)) => void) | undefined;
 
-    render(() => {
-      updateFn = useObjectUpdate(obj, 'name');
-      return <div>test</div> as JSX.Element;
-    }, { wrapper: Wrapper });
+    render(
+      () => {
+        updateFn = useObjectUpdate(obj, 'name');
+        return (<div>test</div>) as JSX.Element;
+      },
+      { wrapper: Wrapper },
+    );
 
     expect(typeof updateFn).toBe('function');
   });
@@ -67,12 +73,15 @@ describe('useObjectUpdate', () => {
     let updateFn: ((updater: (obj: any) => void) => void) | undefined;
     let value: any;
 
-    render(() => {
-      updateFn = useObjectUpdate(obj);
-      const objValue = useObject(obj);
-      value = objValue;
-      return <div>test</div> as JSX.Element;
-    }, { wrapper: Wrapper });
+    render(
+      () => {
+        updateFn = useObjectUpdate(obj);
+        const objValue = useObject(obj);
+        value = objValue;
+        return (<div>test</div>) as JSX.Element;
+      },
+      { wrapper: Wrapper },
+    );
 
     expect(value()?.name).toBe('Test');
 
@@ -97,12 +106,15 @@ describe('useObjectUpdate', () => {
     let updateFn: ((value: string | ((current: string) => string)) => void) | undefined;
     let value: (() => string) | undefined;
 
-    render(() => {
-      updateFn = useObjectUpdate(obj, 'name');
-      const nameValue = useObject(obj, 'name');
-      value = nameValue;
-      return <div>test</div> as JSX.Element;
-    }, { wrapper: Wrapper });
+    render(
+      () => {
+        updateFn = useObjectUpdate(obj, 'name');
+        const nameValue = useObject(obj, 'name');
+        value = nameValue;
+        return (<div>test</div>) as JSX.Element;
+      },
+      { wrapper: Wrapper },
+    );
 
     expect(value?.()).toBe('Test');
 
@@ -125,12 +137,15 @@ describe('useObjectUpdate', () => {
     let updateFn: ((value: string | ((current: string) => string)) => void) | undefined;
     let value: (() => string) | undefined;
 
-    render(() => {
-      updateFn = useObjectUpdate(obj, 'name');
-      const nameValue = useObject(obj, 'name');
-      value = nameValue;
-      return <div>test</div> as JSX.Element;
-    }, { wrapper: Wrapper });
+    render(
+      () => {
+        updateFn = useObjectUpdate(obj, 'name');
+        const nameValue = useObject(obj, 'name');
+        value = nameValue;
+        return (<div>test</div>) as JSX.Element;
+      },
+      { wrapper: Wrapper },
+    );
 
     expect(value?.()).toBe('Test');
 
@@ -160,7 +175,7 @@ describe('useObjectUpdate', () => {
       }
       // Capture again to verify it's the same reference
       capturedFn = update;
-      return <div>test</div> as JSX.Element;
+      return (<div>test</div>) as JSX.Element;
     };
 
     render(() => <TestComponent />, { wrapper: Wrapper });
@@ -170,5 +185,150 @@ describe('useObjectUpdate', () => {
     expect(capturedFn).toBeDefined();
     expect(updateFn).toBe(capturedFn);
   });
-});
 
+  test('works with accessor function for entire object', () => {
+    const obj = createObject(
+      Obj.make(TestSchema.Person, { name: 'Test', username: 'test', email: 'test@example.com' }),
+    );
+    const registry = Registry.make();
+    const Wrapper = createWrapper(registry);
+
+    let updateFn: ((updater: (obj: any) => void) => void) | undefined;
+
+    render(
+      () => {
+        updateFn = useObjectUpdate(() => obj);
+        return (<div>test</div>) as JSX.Element;
+      },
+      { wrapper: Wrapper },
+    );
+
+    expect(typeof updateFn).toBe('function');
+  });
+
+  test('works with accessor function for property', () => {
+    const obj = createObject(
+      Obj.make(TestSchema.Person, { name: 'Test', username: 'test', email: 'test@example.com' }),
+    );
+    const registry = Registry.make();
+    const Wrapper = createWrapper(registry);
+
+    let updateFn: ((value: string | ((current: string) => string)) => void) | undefined;
+
+    render(
+      () => {
+        updateFn = useObjectUpdate(() => obj, 'name');
+        return (<div>test</div>) as JSX.Element;
+      },
+      { wrapper: Wrapper },
+    );
+
+    expect(typeof updateFn).toBe('function');
+  });
+
+  test('update function works when object changes via accessor', async () => {
+    const obj1 = createObject(
+      Obj.make(TestSchema.Person, { name: 'Test1', username: 'test1', email: 'test1@example.com' }),
+    );
+    const obj2 = createObject(
+      Obj.make(TestSchema.Person, { name: 'Test2', username: 'test2', email: 'test2@example.com' }),
+    );
+    const registry = Registry.make();
+    const Wrapper = createWrapper(registry);
+
+    const [objSignal, setObjSignal] = createSignal(obj1);
+    let updateFn: ((updater: (obj: any) => void) => void) | undefined;
+    let value: any;
+
+    render(
+      () => {
+        updateFn = useObjectUpdate(objSignal);
+        const objValue = useObject(objSignal);
+        value = objValue;
+        return (<div>test</div>) as JSX.Element;
+      },
+      { wrapper: Wrapper },
+    );
+
+    expect(value()?.name).toBe('Test1');
+
+    // Update the object
+    updateFn!((obj) => {
+      obj.name = 'Updated1';
+    });
+
+    // Wait for reactivity to update
+    await waitFor(() => {
+      expect(value()?.name).toBe('Updated1');
+    });
+
+    // Change the object via signal
+    setObjSignal(() => obj2);
+
+    // Wait for the new object to be tracked
+    await waitFor(() => {
+      expect(value()?.name).toBe('Test2');
+    });
+
+    // Update the new object
+    updateFn!((obj) => {
+      obj.name = 'Updated2';
+    });
+
+    // Wait for reactivity to update
+    await waitFor(() => {
+      expect(value()?.name).toBe('Updated2');
+    });
+  });
+
+  test('update function for property works when object changes via accessor', async () => {
+    const obj1 = createObject(
+      Obj.make(TestSchema.Person, { name: 'Test1', username: 'test1', email: 'test1@example.com' }),
+    ) as Entity.Entity<TestSchema.Person>;
+    const obj2 = createObject(
+      Obj.make(TestSchema.Person, { name: 'Test2', username: 'test2', email: 'test2@example.com' }),
+    ) as Entity.Entity<TestSchema.Person>;
+    const registry = Registry.make();
+    const Wrapper = createWrapper(registry);
+
+    const [objSignal, setObjSignal] = createSignal<Entity.Entity<TestSchema.Person>>(obj1);
+    let updateFn: ((value: string | ((current: string) => string)) => void) | undefined;
+    let value: (() => string) | undefined;
+
+    render(
+      () => {
+        updateFn = useObjectUpdate(objSignal, 'name');
+        const nameValue = useObject(objSignal, 'name');
+        value = nameValue;
+        return (<div>test</div>) as JSX.Element;
+      },
+      { wrapper: Wrapper },
+    );
+
+    expect(value?.()).toBe('Test1');
+
+    // Update the property
+    updateFn!('Updated1');
+
+    // Wait for reactivity to update
+    await waitFor(() => {
+      expect(value?.()).toBe('Updated1');
+    });
+
+    // Change the object via signal
+    setObjSignal(() => obj2);
+
+    // Wait for the new object to be tracked
+    await waitFor(() => {
+      expect(value?.()).toBe('Test2');
+    });
+
+    // Update the new object's property
+    updateFn!('Updated2');
+
+    // Wait for reactivity to update
+    await waitFor(() => {
+      expect(value?.()).toBe('Updated2');
+    });
+  });
+});

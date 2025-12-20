@@ -2,12 +2,12 @@
 // Copyright 2025 DXOS.org
 //
 
+import { type MaybeAccessor, access } from '@solid-primitives/utils';
 import { type Accessor, createEffect, createMemo, createSignal, onCleanup } from 'solid-js';
-
-import { Registry, useRegistry } from '@dxos/effect-atom-solid';
 
 import type { Entity, Ref } from '@dxos/echo';
 import { AtomObj } from '@dxos/echo-atom';
+import { useRegistry } from '@dxos/effect-atom-solid';
 
 /**
  * Subscribe to a reference target object.
@@ -15,19 +15,19 @@ import { AtomObj } from '@dxos/echo-atom';
  *
  * TODO: Currently there's no way to subscribe to ref target changes (when the ref points to a different object).
  *       Ref.target is reactive to signals, but SolidJS doesn't track it automatically.
- *       Once there's a way to subscribe to ref.target changes, we should use that instead of polling/loading.
+ *       Once there's a way to subscribe to ref.target changes, we should use that instead of only loading.
  *
- * @param ref - The reference to subscribe to
+ * @param ref - The reference to subscribe to (can be reactive)
  * @returns An accessor that returns the current target object or undefined if not loaded
  */
-export function useRef<T extends Entity.Unknown>(ref: Ref.Ref<T> | undefined): Accessor<T | undefined> {
+export function useRef<T extends Entity.Unknown>(ref: MaybeAccessor<Ref.Ref<T> | undefined>): Accessor<T | undefined> {
   const registry = useRegistry();
 
   // Store the current target in a signal
   const [target, setTarget] = createSignal<T | undefined>(undefined);
 
   // Memoize the ref to track changes
-  const memoizedRef = createMemo(() => ref);
+  const memoizedRef = createMemo(() => access(ref));
 
   // Subscribe to ref target changes
   createEffect(() => {
@@ -123,4 +123,3 @@ export function useRef<T extends Entity.Unknown>(ref: Ref.Ref<T> | undefined): A
 
   return target;
 }
-

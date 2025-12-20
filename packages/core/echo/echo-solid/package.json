@@ -27,7 +27,8 @@
   "dependencies": {
     "@dxos/echo": "workspace:*",
     "@dxos/echo-atom": "workspace:*",
-    "@dxos/effect-atom-solid": "workspace:*"
+    "@dxos/effect-atom-solid": "workspace:*",
+    "@solid-primitives/utils": "catalog:"
   },
   "devDependencies": {
     "@dxos/echo-db": "workspace:*",
