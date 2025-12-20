@@ -18,7 +18,7 @@ import {
   useNodesState,
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
-import React, { useCallback, useContext, useEffect } from 'react';
+import React, { type PropsWithChildren, useCallback, useContext, useEffect } from 'react';
 
 import { type ThemedClassName, useThemeContext } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
@@ -32,7 +32,7 @@ const nodeTypes: NodeTypes = {
   custom: GraphNode,
 };
 
-export type GraphCanvasProps = ThemedClassName<React.PropsWithChildren> & {
+export type GraphCanvasProps = ThemedClassName<PropsWithChildren> & {
   graph?: CanvasGraphModel;
 };
 
@@ -144,6 +144,7 @@ const GraphCanvasInner = ({ classNames, children, graph: graphParam }: GraphCanv
         variant={BackgroundVariant.Lines}
       />
       <Controls />
+      {children}
     </ReactFlow>
   );
 };

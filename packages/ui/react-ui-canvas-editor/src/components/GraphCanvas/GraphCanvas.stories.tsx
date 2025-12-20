@@ -18,11 +18,10 @@ const DefaultStory = (props: GraphCanvasProps) => {
 
   useEffect(() => {
     const init = async () => {
-      // Manually create graph with shapes.
       const model = CanvasGraphModel.create<Polygon>({
         nodes: [
           {
-            id: '1',
+            id: 'node-1',
             type: 'rectangle',
             text: 'Node 1',
             center: { x: 0, y: 0 },
@@ -30,19 +29,19 @@ const DefaultStory = (props: GraphCanvasProps) => {
             data: {},
           },
           {
-            id: '2',
+            id: 'node-2',
             type: 'rectangle',
             text: 'Node 2',
-            center: { x: 320, y: 64 },
+            center: { x: 256, y: 64 },
             size: { width: 128, height: 64 },
             data: {},
           },
         ] as Polygon[],
         edges: [
           {
-            id: 'e1-2',
-            source: '1',
-            target: '2',
+            id: 'edge-1',
+            source: 'node-1',
+            target: 'node-2',
           },
         ],
       });
