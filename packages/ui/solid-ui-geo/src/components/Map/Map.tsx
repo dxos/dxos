@@ -151,10 +151,11 @@ const MapTiles = () => {
     const leafletMap = map();
     if (!leafletMap) return;
 
+    const att = attention();
     tileLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       detectRetina: true,
       keepBuffer: 4,
-      className: attention() ? '' : 'opacity-80',
+      className: `dark:grayscale dark:invert ${att ? '' : 'opacity-80'}`,
     });
 
     tileLayer.addTo(leafletMap);
@@ -181,7 +182,7 @@ const MapTiles = () => {
     if (tileLayer) {
       const container = tileLayer.getContainer();
       if (container) {
-        container.className = att ? '' : 'opacity-80';
+        container.className = `dark:grayscale dark:invert ${att ? '' : 'opacity-80'}`;
       }
     }
   });

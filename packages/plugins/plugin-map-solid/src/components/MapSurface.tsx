@@ -4,15 +4,18 @@
 
 import * as Predicate from 'effect/Predicate';
 import { customElement, noShadowDOM } from 'solid-element';
-import { createMemo, createSignal } from 'solid-js';
+import { Show, createMemo, createSignal } from 'solid-js';
 
 import { Filter, Obj } from '@dxos/echo';
 import { useObject, useQuery, useSchema } from '@dxos/echo-solid';
 import { useRef } from '@dxos/echo-solid';
 import { type Map as MapType } from '@dxos/plugin-map/types';
 import { getTypenameFromQuery } from '@dxos/schema';
-import { type GeoMarker, Globe, Map, type MapController } from '@dxos/solid-ui-geo';
+import { type GeoMarker } from '@dxos/solid-ui-geo';
 import { getDeep } from '@dxos/util';
+
+import { GlobeControl } from './Globe';
+import { MapControl } from './Map';
 
 type MapSurfaceProps = {
   data?: { subject: MapType.Map };
@@ -30,20 +33,6 @@ const MapSurface = (props: MapSurfaceProps) => {
   });
 
   const [type, setType] = createSignal<'map' | 'globe'>('map');
-  const [controller, setController] = createSignal<MapController | null>(null);
-
-  const handleZoomAction = (action: string) => {
-    const ctrl = controller();
-    if (!ctrl) return;
-    switch (action) {
-      case 'zoom-in':
-        ctrl.setZoom((z) => z + 1);
-        break;
-      case 'zoom-out':
-        ctrl.setZoom((z) => z - 1);
-        break;
-    }
-  };
 
   const db = createMemo(() => (map ? Obj.getDatabase(map) : undefined));
   const schema = useSchema(db, typename);
@@ -84,23 +73,16 @@ const MapSurface = (props: MapSurfaceProps) => {
   });
 
   return (
-    <>
-      <div style={{ display: type() === 'map' ? 'contents' : 'none' }}>
-        <Map.Root ref={setController}>
-          <Map.Tiles />
-          <Map.Markers markers={markers} />
-          <Map.Zoom onAction={handleZoomAction} />
-          <Map.Action onAction={(action: string) => action === 'toggle' && setType('globe')} />
-        </Map.Root>
-      </div>
-      <div style={{ display: type() === 'globe' ? 'contents' : 'none' }}>
-        <Globe.Root>
-          <Globe.Canvas />
-          <Globe.Zoom />
-          <Globe.Action onAction={(action: string) => action === 'toggle' && setType('map')} />
-        </Globe.Root>
-      </div>
-    </>
+    <div class='flex h-full w-full min-h-0'>
+      <Show when={type() === 'map'}>
+        <div class='flex-1 min-h-0'>
+          <MapControl markers={markers} onToggle={() => setType('globe')} />
+        </div>
+      </Show>
+      <Show when={type() === 'globe'}>
+        <GlobeControl markers={markers} onToggle={() => setType('map')} />
+      </Show>
+    </div>
   );
 };
 

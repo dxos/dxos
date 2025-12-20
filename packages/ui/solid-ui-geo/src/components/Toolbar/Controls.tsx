@@ -21,16 +21,18 @@ export const controlPositions: Record<ControlPosition, string> = {
 
 export const ZoomControls = (props: ControlProps): JSX.Element => {
   return (
-    <div class={`flex flex-col gap-2 ${props.class ?? ''}`}>
+    <div class={`flex flex-row gap-2 ${props.class ?? ''}`}>
       <button
-        class='w-10 h-10 bg-white dark:bg-gray-800 rounded shadow hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center justify-center'
+        type='button'
+        class='dx-button dx-focus-ring w-10 h-10 min-bs-[2.5rem] pli-3 rounded-sm flex items-center justify-center'
         onClick={() => props.onAction?.('zoom-in')}
         title='Zoom in'
       >
         <span class='text-xl'>+</span>
       </button>
       <button
-        class='w-10 h-10 bg-white dark:bg-gray-800 rounded shadow hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center justify-center'
+        type='button'
+        class='dx-button dx-focus-ring w-10 h-10 min-bs-[2.5rem] pli-3 rounded-sm flex items-center justify-center'
         onClick={() => props.onAction?.('zoom-out')}
         title='Zoom out'
       >
@@ -42,16 +44,18 @@ export const ZoomControls = (props: ControlProps): JSX.Element => {
 
 export const ActionControls = (props: ControlProps): JSX.Element => {
   return (
-    <div class={`flex flex-col gap-2 ${props.class ?? ''}`}>
+    <div class={`flex flex-row gap-2 ${props.class ?? ''}`}>
       <button
-        class='w-10 h-10 bg-white dark:bg-gray-800 rounded shadow hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center justify-center'
+        type='button'
+        class='dx-button dx-focus-ring w-10 h-10 min-bs-[2.5rem] pli-3 rounded-sm flex items-center justify-center'
         onClick={() => props.onAction?.('start')}
         title='Start'
       >
         <span class='text-xl'>▶</span>
       </button>
       <button
-        class='w-10 h-10 bg-white dark:bg-gray-800 rounded shadow hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center justify-center'
+        type='button'
+        class='dx-button dx-focus-ring w-10 h-10 min-bs-[2.5rem] pli-3 rounded-sm flex items-center justify-center'
         onClick={() => props.onAction?.('toggle')}
         title='Toggle'
       >
