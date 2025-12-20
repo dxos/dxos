@@ -15,16 +15,19 @@ import { GraphCanvas, type GraphCanvasProps } from './GraphCanvas';
 
 // TODO(burdon): Story with conductor nodes and local processing.
 // TODO(burdon): Undo.
+// TODO(burdon): Tools (drag-and-drop): https://reactflow.dev/examples/interaction/drag-and-drop
+
+// TODO(burdon): Snap connect: https://reactflow.dev/examples/nodes/proximity-connect
 // TODO(burdon): Customize database schema: https://reactflow.dev/ui/components/database-schema-node
 // TODO(burdon): Cards/info cards.
-
+// TODO(burdon): Resize: https://reactflow.dev/examples/nodes/node-resizer
 // TODO(burdon): Editor inside node.
 // TODO(burdon): Tool palette.
 // TODO(burdon): DevTools (copy from shadcn).
 // TOOD(burdon): Animated edges.
 // TODO(burdon): Groups (hierarchical).
 // TODO(burdon): Resize.
-// TODO(burdon): Auto-layout.
+// TODO(burdon): Auto-layout: https://reactflow.dev/learn/layouting/layouting
 
 const DefaultStory = (props: GraphCanvasProps) => {
   const [graph, setGraph] = useState<CanvasGraphModel>();
