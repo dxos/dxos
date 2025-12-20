@@ -29,7 +29,10 @@ export function useObjectUpdate<T extends Entity.Unknown, K extends keyof T>(
  * @param obj - The Echo object to update
  * @returns Update function that accepts an updater function
  */
-export function useObjectUpdate<T extends Entity.Unknown>(obj: T, property?: undefined): (updater: (obj: T) => void) => void;
+export function useObjectUpdate<T extends Entity.Unknown>(
+  obj: T,
+  property?: undefined,
+): (updater: (obj: T) => void) => void;
 
 /**
  * Hook that returns an update function for an Echo object (entire object or specific property).

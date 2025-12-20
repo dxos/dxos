@@ -2,8 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
-import { RegistryContext } from '@effect-atom/atom-react';
 import * as Registry from '@effect-atom/atom/Registry';
+import { RegistryContext } from '@effect-atom/atom-react';
 import { renderHook, waitFor } from '@testing-library/react';
 import React, { type PropsWithChildren } from 'react';
 import { describe, expect, test } from 'vitest';
@@ -23,7 +23,9 @@ const createWrapper = (registry: Registry.Registry) => {
 
 describe('useObjectUpdate', () => {
   test('returns update function for entire object', () => {
-    const obj = createObject(Obj.make(TestSchema.Person, { name: 'Test', username: 'test', email: 'test@example.com' }));
+    const obj = createObject(
+      Obj.make(TestSchema.Person, { name: 'Test', username: 'test', email: 'test@example.com' }),
+    );
     const registry = Registry.make();
     const wrapper = createWrapper(registry);
 
@@ -33,7 +35,9 @@ describe('useObjectUpdate', () => {
   });
 
   test('returns update function for property', () => {
-    const obj = createObject(Obj.make(TestSchema.Person, { name: 'Test', username: 'test', email: 'test@example.com' }));
+    const obj = createObject(
+      Obj.make(TestSchema.Person, { name: 'Test', username: 'test', email: 'test@example.com' }),
+    );
     const registry = Registry.make();
     const wrapper = createWrapper(registry);
 
@@ -42,9 +46,10 @@ describe('useObjectUpdate', () => {
     expect(typeof result.current).toBe('function');
   });
 
-
   test('update function for object mutates the object', async () => {
-    const obj = createObject(Obj.make(TestSchema.Person, { name: 'Test', username: 'test', email: 'test@example.com' }));
+    const obj = createObject(
+      Obj.make(TestSchema.Person, { name: 'Test', username: 'test', email: 'test@example.com' }),
+    );
     const registry = Registry.make();
     const wrapper = createWrapper(registry);
 
@@ -65,7 +70,9 @@ describe('useObjectUpdate', () => {
   });
 
   test('update function for property updates the property', async () => {
-    const obj = createObject(Obj.make(TestSchema.Person, { name: 'Test', username: 'test', email: 'test@example.com' }));
+    const obj = createObject(
+      Obj.make(TestSchema.Person, { name: 'Test', username: 'test', email: 'test@example.com' }),
+    );
     const registry = Registry.make();
     const wrapper = createWrapper(registry);
 
@@ -84,7 +91,9 @@ describe('useObjectUpdate', () => {
   });
 
   test('update function for property accepts updater function', async () => {
-    const obj = createObject(Obj.make(TestSchema.Person, { name: 'Test', username: 'test', email: 'test@example.com' }));
+    const obj = createObject(
+      Obj.make(TestSchema.Person, { name: 'Test', username: 'test', email: 'test@example.com' }),
+    );
     const registry = Registry.make();
     const wrapper = createWrapper(registry);
 
@@ -94,7 +103,9 @@ describe('useObjectUpdate', () => {
     expect(valueResult.current).toBe('Test');
 
     // Update the property using updater function
-    (updateResult.current as (value: string | ((current: string) => string)) => void)((current) => `${current} Updated`);
+    (updateResult.current as (value: string | ((current: string) => string)) => void)(
+      (current) => `${current} Updated`,
+    );
 
     // Wait for reactivity to update
     await waitFor(() => {
@@ -103,7 +114,9 @@ describe('useObjectUpdate', () => {
   });
 
   test('update function is stable across re-renders', () => {
-    const obj = createObject(Obj.make(TestSchema.Person, { name: 'Test', username: 'test', email: 'test@example.com' }));
+    const obj = createObject(
+      Obj.make(TestSchema.Person, { name: 'Test', username: 'test', email: 'test@example.com' }),
+    );
     const registry = Registry.make();
     const wrapper = createWrapper(registry);
 
@@ -128,7 +141,7 @@ describe('useObjectUpdate', () => {
     // Note: RegistryContext from @effect-atom/atom-react may have a default value,
     // so we test that our hook properly checks for undefined registry
     const obj = createObject(Obj.make(TestSchema.Person, { name: 'Test' }));
-    
+
     // Since we can't easily mock useContext in this test environment,
     // and RegistryContext might have a default, we'll skip this test
     // The error handling is tested implicitly in other tests that require the context
@@ -137,4 +150,3 @@ describe('useObjectUpdate', () => {
     console.error = consoleError;
   });
 });
-

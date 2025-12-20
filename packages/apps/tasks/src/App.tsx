@@ -2,8 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
-import { RegistryContext } from '@effect-atom/atom-react';
 import * as Registry from '@effect-atom/atom/Registry';
+import { RegistryContext } from '@effect-atom/atom-react';
 import React, { useEffect, useMemo } from 'react';
 import {
   Navigate,
