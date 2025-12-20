@@ -20,10 +20,10 @@ import { NODE_INPUT, NODE_OUTPUT } from '../nodes';
 import {
   AnyInput,
   AnyOutput,
-  type ComputeResult,
   ComputeGraph,
   ComputeGraphModel,
   type ComputeNode,
+  type ComputeResult,
   type Executable,
   ValueBag,
   synchronizedComputeFunction,

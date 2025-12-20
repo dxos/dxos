@@ -14,26 +14,25 @@ export type ComputeValueType = Schema.Schema.Type<typeof ComputeValueType>;
 
 /**
  * GraphNode.
+ * NOTE: We have a mixin of properties for different node types for simplicity, rather than a discriminated union.
  */
 export const ComputeNode = Schema.extend(
   Graph.Node,
-
-  /**
-   * NOTE: We have a mixin of properties for different node types for simplicity, rather than a discriminated union.
-   */
-  // TODO(burdon): Split out into different types.
   Schema.Struct({
     /** For template nodes. */
-    // TODO(dmaretskyi): Compute at runtime: don't persist.
+    // TODO(dmaretskyi): Compute at runtime (don't persist).
     inputSchema: Schema.optional(JsonSchema.JsonSchema),
-
     outputSchema: Schema.optional(JsonSchema.JsonSchema),
 
-    /** For composition nodes. */
+    /**
+     * For composition nodes.
+     */
     subgraph: Schema.optional(Schema.suspend((): Type.Ref<ComputeGraph> => Type.Ref(ComputeGraph))),
 
-    /** For composition of function nodes. */
-    function: Schema.optional(Type.Ref(Function.Function) as Type.Ref<Function.Function>),
+    /**
+     * For composition of function nodes.
+     */
+    function: Schema.optional(Type.Ref(Function.Function)),
 
     /**
      * For template nodes determines the type of the value.
@@ -42,7 +41,9 @@ export const ComputeNode = Schema.extend(
      */
     valueType: Schema.optional(ComputeValueType),
 
-    /** For constant and template nodes. */
+    /**
+     * For constant and template nodes.
+     */
     value: Schema.optional(Schema.Any),
 
     /**
@@ -68,6 +69,8 @@ export type ComputeNodeMeta = {
 export const ComputeEdge = Schema.extend(
   Graph.Edge,
   Schema.Struct({
+    // TODO(burdon): Rename sourceProp, targetProp?
+
     /** Output property from source. */
     output: Schema.String,
 

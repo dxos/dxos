@@ -9,8 +9,7 @@ import { failedInvariant, invariant } from '@dxos/invariant';
 import { type Live, live } from '@dxos/live-object';
 import { type MakeOptional, isTruthy, removeBy } from '@dxos/util';
 
-import type * as Graph from './Graph';
-import { createEdgeId } from './util';
+import * as Graph from './Graph';
 
 /**
  * Readonly Graph wrapper.
@@ -166,7 +165,7 @@ export abstract class AbstractGraphModel<
     invariant(edge.target);
     if (!edge.id) {
       // TODO(burdon): Generate random id.
-      edge = { id: createEdgeId(edge), ...edge };
+      edge = { id: Graph.createEdgeId(edge), ...edge };
     }
     invariant(!this.findNode(edge.id!));
     this._graph.edges.push(edge as Edge);

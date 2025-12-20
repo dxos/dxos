@@ -3,7 +3,7 @@
 //
 
 import { Obj, Ref } from '@dxos/echo';
-import { type Graph, GraphModel, createEdgeId } from '@dxos/graph';
+import { Graph, GraphModel } from '@dxos/graph';
 import { DXN, ObjectId } from '@dxos/keys';
 import { type MakeOptional } from '@dxos/util';
 
@@ -74,7 +74,7 @@ export class ComputeGraphModel extends GraphModel.AbstractGraphModel<
         : target.node.id;
 
     const edge: ComputeEdge = {
-      id: createEdgeId({ source: sourceId, target: targetId }),
+      id: Graph.createEdgeId({ source: sourceId, target: targetId }),
       source: sourceId,
       target: targetId,
       output: source.property ?? DEFAULT_OUTPUT,

@@ -24,11 +24,11 @@ import { isNonNullable } from '@dxos/util';
 
 import { ComputeNodeError, InvalidValueError } from '../errors';
 import {
-  type ComputeResult,
   type ComputeGraphModel,
   type ComputeNode,
   type ComputeNodeMeta,
   type ComputeRequirements,
+  type ComputeResult,
   type Executable,
   NotExecuted,
   ValueBag,

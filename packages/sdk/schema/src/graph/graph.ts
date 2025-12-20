@@ -4,7 +4,7 @@
 
 import { type Entity, Obj, Ref } from '@dxos/echo';
 import { getProperties } from '@dxos/effect';
-import { type Graph, GraphModel, createEdgeId } from '@dxos/graph';
+import { Graph, GraphModel } from '@dxos/graph';
 import { log } from '@dxos/log';
 
 /**
@@ -34,7 +34,7 @@ export const createGraph = <T extends Entity.Unknown>(objects: T[]): GraphModel.
         const target = (object as any)[prop.name]?.target;
         if (target) {
           graph.addEdge({
-            id: createEdgeId({ source: source.id, target: target.id, relation: String(prop.name) }),
+            id: Graph.createEdgeId({ source: source.id, target: target.id, relation: String(prop.name) }),
             source: source.id,
             target: target.id,
           });
