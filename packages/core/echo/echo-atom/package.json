@@ -1,7 +1,7 @@
 {
-  "name": "@dxos/echo-react",
+  "name": "@dxos/echo-atom",
   "version": "0.8.3",
-  "description": "React integration for ECHO.",
+  "description": "Effect Atom wrappers for ECHO objects with explicit subscriptions.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
@@ -26,20 +26,16 @@
   ],
   "dependencies": {
     "@dxos/echo": "workspace:*",
-    "@dxos/echo-atom": "workspace:*",
-    "@effect-atom/atom-react": "catalog:"
+    "@dxos/echo-db": "workspace:*",
+    "@dxos/invariant": "workspace:*",
+    "@dxos/util": "workspace:*",
+    "@effect-atom/atom": "catalog:",
+    "lodash.isequal": "catalog:"
   },
   "devDependencies": {
-    "@dxos/echo-db": "workspace:*",
-    "@effect-atom/atom": "catalog:",
-    "@testing-library/react": "catalog:",
-    "@types/react": "catalog:",
-    "@types/react-dom": "catalog:",
-    "react": "catalog:",
-    "react-dom": "catalog:"
-  },
-  "peerDependencies": {
-    "react": "catalog:"
+    "@dxos/random": "workspace:*",
+    "@dxos/test-utils": "workspace:*",
+    "@types/lodash.isequal": "catalog:"
   },
   "publishConfig": {
     "access": "public"

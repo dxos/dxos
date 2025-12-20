@@ -6,6 +6,7 @@ import React, { useState } from 'react';
 
 import { isNonNullable } from '@dxos/util';
 
+import { TaskItem } from './TaskItem';
 import { type Task } from './types';
 
 export type TaskListProps = {
@@ -13,12 +14,10 @@ export type TaskListProps = {
   onInviteClick?: () => any;
   onTaskCreate?: (text: string) => any;
   onTaskRemove?: (task: Task) => any;
-  onTaskTitleChange?: (task: Task, newTitle: string) => any;
-  onTaskCheck?: (task: Task, checked: boolean) => any;
 };
 
 export const TaskList = (props: TaskListProps) => {
-  const { tasks, onInviteClick, onTaskCreate, onTaskRemove, onTaskTitleChange, onTaskCheck } = props;
+  const { tasks, onInviteClick, onTaskCreate, onTaskRemove } = props;
 
   const [newTaskTitle, setNewTaskTitle] = useState('');
   const [editingTask, setEditingTask] = useState<number | null>(null);
@@ -45,53 +44,16 @@ export const TaskList = (props: TaskListProps) => {
         {tasks && (
           <ul className='mb-2'>
             {tasks.filter(isNonNullable).map((task, index) => (
-              <li
+              <TaskItem
                 key={index}
-                className='flex items-center justify-between text-gray-700 max-is-md rounded p-1 bs-8'
-                onMouseOver={() => {
-                  setShowDeleteTask(index);
-                }}
-                onMouseLeave={() => {
-                  setShowDeleteTask(null);
-                }}
-              >
-                <input
-                  className='mr-2 rounded shadow hover:pointer-cursor'
-                  type='checkbox'
-                  checked={task.completed}
-                  onChange={(e) => onTaskCheck?.(task, e.target.checked)}
-                />
-                <div className='hover:pointer-cursor flex-grow' onClick={() => setEditingTask(index)}>
-                  {editingTask === index ? (
-                    <span className='flex justify-between'>
-                      <input
-                        className='border-none p-0 flex-grow bg-transparent is-full'
-                        type='text'
-                        value={task.title}
-                        onChange={(e) => {
-                          onTaskTitleChange?.(task, e.target.value);
-                        }}
-                        onKeyUp={(e) => {
-                          if (e.key === 'Enter') {
-                            setEditingTask(null);
-                          }
-                        }}
-                        autoFocus
-                      />
-                    </span>
-                  ) : (
-                    task.title
-                  )}
-                </div>
-                {showDeleteTask === index && (
-                  <button
-                    className='bg-white rounded ml-2 p-0 pli-2 hover:bg-gray-100 hover:cursor-pointer shadow border border-gray-400 active:bg-gray-200'
-                    onClick={() => onTaskRemove?.(task)}
-                  >
-                    Delete
-                  </button>
-                )}
-              </li>
+                task={task}
+                index={index}
+                editingTask={editingTask}
+                showDeleteTask={showDeleteTask}
+                onEdit={setEditingTask}
+                onShowDelete={setShowDeleteTask}
+                onRemove={onTaskRemove ?? (() => {})}
+              />
             ))}
           </ul>
         )}
