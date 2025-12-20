@@ -82,8 +82,7 @@ export interface ComputeEdge extends Schema.Schema.Type<typeof ComputeEdge> {}
  * Persistent graph.
  */
 export const ComputeGraph = Schema.Struct({
-  // NOTE: Cast required as workaround for TS compiler bug.
-  graph: Graph.Graph as Schema.Schema<Graph.Graph>,
+  graph: Graph.Graph,
 
   // Reference nodes.
   input: Schema.optional(Graph.Node),

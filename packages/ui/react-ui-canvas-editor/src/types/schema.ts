@@ -14,7 +14,7 @@ import { Graph } from '@dxos/graph';
  * Base type for all shapes.
  */
 export const Shape = Schema.extend(
-  Graph.Node.pipe(Schema.omit('type')),
+  Graph.Node.pipe(Schema.omit('type')), // TODO(burdon): Breaks graph contract?
   Schema.Struct({
     type: Schema.String,
     text: Schema.optional(Schema.String),
