@@ -28,7 +28,7 @@ export class GraphRadialProjector<
     return undefined;
   }
 
-  protected override onUpdate(graph?: Graph.Graph) {
+  protected override onUpdate(graph?: Graph.Any) {
     log('onUpdate', { graph: { nodes: graph?.nodes.length, edges: graph?.edges.length } });
     this.mergeData(graph);
     this.doRadialLayout();

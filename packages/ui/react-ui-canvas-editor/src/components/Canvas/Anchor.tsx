@@ -18,7 +18,7 @@ import { type Polygon, type Shape } from '../../types';
 import { type Anchor, resizeCursor } from '../anchors';
 import { styles } from '../styles';
 
-export const defaultAnchorSize: Dimension = { width: 12, height: 12 };
+export const defaultAnchorSize: Dimension = { width: 8, height: 8 };
 
 export const DATA_ANCHOR_ID = 'data-anchor-id';
 

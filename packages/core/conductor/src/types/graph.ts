@@ -71,11 +71,11 @@ export const ComputeEdge = Schema.extend(
   Schema.Struct({
     // TODO(burdon): Rename sourceProp, targetProp?
 
-    /** Output property from source. */
-    output: Schema.String,
-
     /** Input property to target. */
     input: Schema.String,
+
+    /** Output property from source. */
+    output: Schema.String,
   }),
 );
 
@@ -88,8 +88,8 @@ export const ComputeGraph = Schema.Struct({
   graph: Graph.Graph,
 
   // Reference nodes.
-  input: Schema.optional(Graph.Node),
-  output: Schema.optional(Graph.Node),
+  input: Schema.optional(ComputeNode),
+  output: Schema.optional(ComputeNode),
 }).pipe(
   Type.Obj({
     typename: 'dxos.org/type/ComputeGraph',

@@ -223,7 +223,7 @@ export class GraphForceProjector<NodeData = any> extends GraphProjector<NodeData
     this.restart();
   }
 
-  override onUpdate(graph?: Graph.Graph): void {
+  override onUpdate(graph?: Graph.Any): void {
     log('onUpdate', { graph: { nodes: graph?.nodes.length, edges: graph?.edges.length } });
     this._simulation.stop();
     this.mergeData(graph);

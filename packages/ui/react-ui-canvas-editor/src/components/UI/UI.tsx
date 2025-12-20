@@ -53,7 +53,7 @@ export const UI = ({ showTools, showToolbar }: UIProps) => {
           {debug && (
             <Json
               classNames={mx(
-                'is-[300px] bg-baseSurface rounded-md bg-baseSurface border border-separator text-xs opacity-70',
+                'is-[300px] bg-baseSurface rounded-sm bg-baseSurface border border-separator text-xs opacity-70',
               )}
               data={info}
             />
@@ -61,7 +61,7 @@ export const UI = ({ showTools, showToolbar }: UIProps) => {
         </div>
         {showToolbar && (
           <div className='absolute bottom-2 left-2 right-2 flex justify-center'>
-            <div className='p-1 bg-baseSurface rounded-md border border-separator'>
+            <div className='p-1 bg-baseSurface rounded-sm border border-separator'>
               <Toolbar onAction={actionHandler} classNames={mx(eventsAuto)} />
             </div>
           </div>
