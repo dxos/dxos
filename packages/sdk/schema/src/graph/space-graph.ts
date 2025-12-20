@@ -8,7 +8,7 @@ import { type CleanupFn } from '@dxos/async';
 import { type Space } from '@dxos/client-protocol';
 import { type Entity, Filter, Obj, Query, Ref, Relation, Type } from '@dxos/echo';
 import { type Queue } from '@dxos/echo-db';
-import { AbstractGraphBuilder, type Graph, type GraphEdge, type GraphNode, ReactiveGraphModel } from '@dxos/graph';
+import { type Graph, GraphModel } from '@dxos/graph';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { visitValues } from '@dxos/util';
@@ -20,15 +20,15 @@ import { visitValues } from '@dxos/util';
 // - https://observablehq.com/@d3/psr-b1919-21
 // - https://vasturiano.github.io/react-force-graph/example/basic (3D)
 
-export type SpaceGraphNode = GraphNode.Required<{
+export type SpaceGraphNode = Graph.Node.Required<{
   label: string;
   object?: Obj.Any;
 }>;
 
 // TODO(burdon): Differentiate between refs and relations.
-export type SpaceGraphEdge = GraphEdge.Optional;
+export type SpaceGraphEdge = Graph.Edge.Optional;
 
-class SpaceGraphBuilder extends AbstractGraphBuilder<SpaceGraphNode, SpaceGraphEdge, SpaceGraphModel> {}
+class SpaceGraphBuilder extends GraphModel.AbstractBuilder<SpaceGraphNode, SpaceGraphEdge, SpaceGraphModel> {}
 
 const defaultFilter: Filter.Any = Filter.everything();
 
@@ -43,7 +43,7 @@ export type SpaceGraphModelOptions = {
 /**
  * Converts ECHO objects to a graph.
  */
-export class SpaceGraphModel extends ReactiveGraphModel<SpaceGraphNode, SpaceGraphEdge> {
+export class SpaceGraphModel extends GraphModel.ReactiveGraphModel<SpaceGraphNode, SpaceGraphEdge> {
   private _options?: SpaceGraphModelOptions;
   private _filter?: Filter.Any;
 
@@ -61,7 +61,7 @@ export class SpaceGraphModel extends ReactiveGraphModel<SpaceGraphNode, SpaceGra
     return new SpaceGraphBuilder(this);
   }
 
-  override copy(graph?: Partial<Graph>): SpaceGraphModel {
+  override copy(graph?: Partial<Graph.Graph>): SpaceGraphModel {
     return new SpaceGraphModel(graph);
   }
 

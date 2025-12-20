@@ -16,7 +16,7 @@ export type ComputeValueType = Schema.Schema.Type<typeof ComputeValueType>;
  * GraphNode.
  */
 export const ComputeNode = Schema.extend(
-  Graph.BaseNode,
+  Graph.Node,
 
   /**
    * NOTE: We have a mixin of properties for different node types for simplicity, rather than a discriminated union.
@@ -66,7 +66,7 @@ export type ComputeNodeMeta = {
  * GraphEdge.
  */
 export const ComputeEdge = Schema.extend(
-  Graph.BaseEdge,
+  Graph.Edge,
   Schema.Struct({
     /** Output property from source. */
     output: Schema.String,
@@ -83,11 +83,11 @@ export interface ComputeEdge extends Schema.Schema.Type<typeof ComputeEdge> {}
  */
 export const ComputeGraph = Schema.Struct({
   // NOTE: Cast required as workaround for TS compiler bug.
-  graph: Graph as Schema.Schema<Graph>,
+  graph: Graph.Graph as Schema.Schema<Graph.Graph>,
 
   // Reference nodes.
-  input: Schema.optional(Graph.BaseNode),
-  output: Schema.optional(Graph.BaseNode),
+  input: Schema.optional(Graph.Node),
+  output: Schema.optional(Graph.Node),
 }).pipe(
   Type.Obj({
     typename: 'dxos.org/type/ComputeGraph',

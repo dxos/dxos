@@ -6,7 +6,7 @@ import { effect } from '@preact/signals-core';
 import React, { type JSX, type Ref, forwardRef, useEffect, useImperativeHandle, useMemo, useRef } from 'react';
 
 import { combine } from '@dxos/async';
-import { type BaseEdge, type BaseNode, type GraphModel } from '@dxos/graph';
+import { type Graph as GraphData, type GraphModel } from '@dxos/graph';
 import { log } from '@dxos/log';
 import { type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
@@ -27,9 +27,9 @@ export type GraphController = {
   findNode: (id: string) => SVGGElement | null;
 };
 
-export type GraphProps<Node extends BaseNode = any, Edge extends BaseEdge = any> = ThemedClassName<
+export type GraphProps<Node extends GraphData.Node = any, Edge extends GraphData.Edge = any> = ThemedClassName<
   Pick<GraphRendererOptions<Node>, 'labels' | 'subgraphs' | 'attributes'> & {
-    model?: GraphModel<Node, Edge>; // TODO(burdon): ReactiveGraphModel
+    model?: GraphModel.GraphModel<Node, Edge>; // TODO(burdon): ReactiveGraphModel
     projector?: GraphProjector<Node>;
     renderer?: GraphRenderer<Node>;
     drag?: boolean;
@@ -39,7 +39,7 @@ export type GraphProps<Node extends BaseNode = any, Edge extends BaseEdge = any>
   }
 >;
 
-export const GraphInner = <Node extends BaseNode = any, Edge extends BaseEdge = any>(
+const GraphInner = <Node extends GraphData.Node = any, Edge extends GraphData.Edge = any>(
   {
     classNames,
     model,
@@ -125,6 +125,6 @@ export const GraphInner = <Node extends BaseNode = any, Edge extends BaseEdge = 
 /**
  * SVG Graph.
  */
-export const Graph = forwardRef(GraphInner) as <Node extends BaseNode = any, Edge extends BaseEdge = any>(
+export const Graph = forwardRef(GraphInner) as <Node extends GraphData.Node = any, Edge extends GraphData.Edge = any>(
   props: GraphProps<Node, Edge> & { ref?: Ref<GraphController> },
 ) => JSX.Element;

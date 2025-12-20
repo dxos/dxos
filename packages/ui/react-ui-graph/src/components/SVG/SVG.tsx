@@ -23,6 +23,6 @@ export const SVG = {
   Mesh,
   Zoom,
   Graph,
-};
+} as const;
 
 export type { SVGRootProps, SVGGridProps, SVGMarkersProps, SVGZoomProps, SVGGraphProps, SVGMeshProps };
