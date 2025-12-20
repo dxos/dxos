@@ -7,7 +7,7 @@ import { faker } from '@dxos/random';
 
 import { createEdge, createNode } from './data';
 
-export type TestNode = Graph.Node & {
+export type TestNode = Graph.Node.Any & {
   label?: string;
   children?: TestNode[];
 };
