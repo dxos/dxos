@@ -330,7 +330,7 @@ catalog:
   aria-hidden: ^1.2.4
   array-iterate: ~2.0.1
   assert: ^2.0.0
-  astro: ^5.13.1
+  astro: ^5.15.9
   autoprefixer: ^10.4.12
   base-x: ~3.0.9
   base32-decode: ^1.0.0
