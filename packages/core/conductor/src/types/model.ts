@@ -3,22 +3,20 @@
 //
 
 import { Obj, Ref } from '@dxos/echo';
-import { AbstractGraphBuilder, AbstractGraphModel, type Graph, createEdgeId } from '@dxos/graph';
+import { Graph, GraphModel } from '@dxos/graph';
 import { DXN, ObjectId } from '@dxos/keys';
 import { type MakeOptional } from '@dxos/util';
 
-import { type ComputeEdge, ComputeGraph, type ComputeNode, isComputeGraph } from './compute-graph';
+import { type ComputeEdge, ComputeGraph, type ComputeNode, isComputeGraph } from './graph';
 import { DEFAULT_INPUT, DEFAULT_OUTPUT } from './schema';
 
-// TODO(burdon): DXN from echo-schema is a different type.
-
-export class ComputeGraphModel extends AbstractGraphModel<
+export class ComputeGraphModel extends GraphModel.AbstractGraphModel<
   ComputeNode,
   ComputeEdge,
   ComputeGraphModel,
   ComputeGraphBuilder
 > {
-  static create(graph?: Partial<Graph>): ComputeGraphModel {
+  static create(graph?: Partial<Graph.Graph>): ComputeGraphModel {
     return new ComputeGraphModel(
       Obj.make(ComputeGraph, {
         graph: {
@@ -45,7 +43,7 @@ export class ComputeGraphModel extends AbstractGraphModel<
     return new ComputeGraphBuilder(this);
   }
 
-  override copy(graph?: Partial<Graph>): ComputeGraphModel {
+  override copy(graph?: Partial<Graph.Graph>): ComputeGraphModel {
     return ComputeGraphModel.create(graph);
   }
 
@@ -76,7 +74,7 @@ export class ComputeGraphModel extends AbstractGraphModel<
         : target.node.id;
 
     const edge: ComputeEdge = {
-      id: createEdgeId({ source: sourceId, target: targetId }),
+      id: Graph.createEdgeId({ source: sourceId, target: targetId }),
       source: sourceId,
       target: targetId,
       output: source.property ?? DEFAULT_OUTPUT,
@@ -88,7 +86,7 @@ export class ComputeGraphModel extends AbstractGraphModel<
   }
 }
 
-class ComputeGraphBuilder extends AbstractGraphBuilder<ComputeNode, ComputeEdge, ComputeGraphModel> {
+class ComputeGraphBuilder extends GraphModel.AbstractBuilder<ComputeNode, ComputeEdge, ComputeGraphModel> {
   createNode(props: Partial<ComputeNode>): this {
     this.model.createNode(props);
     return this;

@@ -15102,6 +15102,9 @@ importers:
       '@radix-ui/react-context':
         specifier: 'catalog:'
         version: 1.1.1(@types/react@19.2.7)(react@19.2.3)
+      '@xyflow/react':
+        specifier: 'catalog:'
+        version: 12.8.1(@types/react@19.2.7)(immer@10.1.1)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
       bind-event-listener:
         specifier: 'catalog:'
         version: 3.0.0

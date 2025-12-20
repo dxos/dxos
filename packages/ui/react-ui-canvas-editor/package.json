@@ -57,6 +57,7 @@
     "@preact-signals/safe-react": "catalog:",
     "@preact/signals-core": "catalog:",
     "@radix-ui/react-context": "catalog:",
+    "@xyflow/react": "catalog:",
     "bind-event-listener": "catalog:",
     "d3": "catalog:",
     "lodash.defaultsdeep": "catalog:",

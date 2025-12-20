@@ -29,8 +29,6 @@ import {
   synchronizedComputeFunction,
 } from '../types';
 
-const ENABLE_LOGGING = false;
-
 const TestLayer = Layer.empty.pipe(
   Layer.provideMerge(FunctionInvocationServiceLayerTest()),
   Layer.provideMerge(
@@ -49,7 +47,7 @@ describe('Graph as a fiber runtime', () => {
     Effect.fnUntraced(
       function* ({ expect }) {
         const runtime = new TestRuntime()
-          // Break line formatting.
+          // prettier-ignore
           .registerNode('dxn:test:sum', sum)
           .registerGraph('dxn:test:g1', g1());
 

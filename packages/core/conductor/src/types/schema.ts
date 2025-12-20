@@ -13,6 +13,7 @@ import { Message } from '@dxos/types';
 
 export const createInputSchema = (schema: Schema.Schema.AnyNoContext): Schema.Schema.AnyNoContext =>
   Schema.Struct({ [DEFAULT_INPUT]: schema });
+
 export const createOutputSchema = (schema: Schema.Schema.AnyNoContext): Schema.Schema.AnyNoContext =>
   Schema.Struct({ [DEFAULT_OUTPUT]: schema });
 

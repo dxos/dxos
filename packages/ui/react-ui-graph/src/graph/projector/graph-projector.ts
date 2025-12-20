@@ -15,7 +15,7 @@ export type GraphProjectorOptions = ProjectorOptions & {};
  * Base class for graph projectors.
  */
 export abstract class GraphProjector<NodeData = any, Options extends GraphProjectorOptions = any> extends Projector<
-  Graph,
+  Graph.Graph,
   GraphLayout<NodeData>,
   Options
 > {
@@ -60,7 +60,7 @@ export abstract class GraphProjector<NodeData = any, Options extends GraphProjec
    * Merge external data with internal representation (e.g., so force properties like position are preserved).
    * @param data
    */
-  protected mergeData(data: Graph = emptyGraph) {
+  protected mergeData(data: Graph.Graph = emptyGraph) {
     // Merge nodes.
     const nodes: GraphLayoutNode[] = data.nodes.map((node) => {
       let current: GraphLayoutNode = this._layout.graph.nodes.find((n) => n.id === this.options.idAccessor(node));

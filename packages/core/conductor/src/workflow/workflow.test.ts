@@ -20,10 +20,10 @@ import { NODE_INPUT, NODE_OUTPUT } from '../nodes';
 import {
   AnyInput,
   AnyOutput,
-  type ComputeEffect,
   ComputeGraph,
   ComputeGraphModel,
   type ComputeNode,
+  type ComputeResult,
   type Executable,
   ValueBag,
   synchronizedComputeFunction,
@@ -168,7 +168,7 @@ describe('workflow', () => {
     );
   });
 
-  const executeEffect = (effect: ComputeEffect<any>) => {
+  const executeEffect = (effect: ComputeResult<any>) => {
     return effect.pipe(
       Effect.withSpan('runTestWorkflow'),
       Effect.flatMap(ValueBag.unwrap),

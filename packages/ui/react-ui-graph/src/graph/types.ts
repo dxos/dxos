@@ -19,7 +19,7 @@ export const defaultIdAccessor: IdAccessor = (node: any) => {
   return node.id;
 };
 
-export const emptyGraph: Graph = {
+export const emptyGraph: Graph.Graph = {
   nodes: [],
   edges: [],
 };
