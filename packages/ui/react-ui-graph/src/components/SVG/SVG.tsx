@@ -16,13 +16,22 @@ import { type ZoomProps as SVGZoomProps, Zoom } from './Zoom';
 
 export type SVGProps = PropsWithChildren<ThemedClassName>;
 
-export const SVG = {
+type SVG = {
+  Root: typeof Root;
+  Grid: typeof Grid;
+  Markers: typeof Markers;
+  Mesh: typeof Mesh;
+  Zoom: typeof Zoom;
+  Graph: typeof Graph;
+};
+
+export const SVG: SVG = {
   Root,
   Grid,
   Markers,
   Mesh,
   Zoom,
   Graph,
-} as const;
+};
 
 export type { SVGRootProps, SVGGridProps, SVGMarkersProps, SVGZoomProps, SVGGraphProps, SVGMeshProps };
