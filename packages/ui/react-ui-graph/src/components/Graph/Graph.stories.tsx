@@ -54,7 +54,7 @@ type StoryProps = GraphProps & {
   grid?: boolean | SVGGridProps;
   inspect?: boolean;
   singleSelect?: boolean;
-  graph: () => Graph;
+  graph: () => Graph.Graph;
   projectorType?: ProjectorType;
   projectorOptions?:
     | GraphForceProjectorOptions
@@ -77,7 +77,7 @@ const DefaultStory = ({
   const context = useRef<SVGContext>(null);
 
   // Models.
-  const [model, setModel] = useState<GraphModel | undefined>(() => new TestGraphModel(_graph?.()));
+  const [model, setModel] = useState<GraphModel.GraphModel | undefined>(() => new TestGraphModel(_graph?.()));
   const selection = useMemo(() => new SelectionModel(singleSelect), [singleSelect]);
 
   // Projector.
@@ -281,7 +281,7 @@ const Debug = ({
   onDelete,
   onPing,
 }: {
-  model?: GraphModel;
+  model?: GraphModel.GraphModel;
   selection: SelectionModel;
   projector: ProjectorType;
   onToggleProjector: () => void;

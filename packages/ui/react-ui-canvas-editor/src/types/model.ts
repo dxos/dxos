@@ -4,21 +4,21 @@
 
 import { DEFAULT_INPUT, DEFAULT_OUTPUT } from '@dxos/conductor';
 import { Obj } from '@dxos/echo';
-import { AbstractGraphBuilder, AbstractGraphModel, type Graph } from '@dxos/graph';
+import { type Graph, GraphModel } from '@dxos/graph';
 import { isLiveObject } from '@dxos/live-object';
 import { type MakeOptional } from '@dxos/util';
 
 import { type Connection, type Shape } from './schema';
 
-export class CanvasGraphModel<S extends Shape = Shape> extends AbstractGraphModel<
+export class CanvasGraphModel<S extends Shape = Shape> extends GraphModel.AbstractGraphModel<
   S,
   Connection,
   CanvasGraphModel<S>,
   CanvasGraphBuilder<S>
 > {
-  static create<S extends Shape>(graph?: Partial<Graph>): CanvasGraphModel<S> {
+  static create<S extends Shape>(graph?: Partial<Graph.Graph>): CanvasGraphModel<S> {
     if (isLiveObject(graph) as any) {
-      return new CanvasGraphModel<S>(graph as Graph);
+      return new CanvasGraphModel<S>(graph as Graph.Graph);
     }
 
     return new CanvasGraphModel<S>({
@@ -31,7 +31,7 @@ export class CanvasGraphModel<S extends Shape = Shape> extends AbstractGraphMode
     return new CanvasGraphBuilder(this);
   }
 
-  override copy(graph?: Partial<Graph>): CanvasGraphModel<S> {
+  override copy(graph?: Partial<Graph.Graph>): CanvasGraphModel<S> {
     return CanvasGraphModel.create<S>(graph);
   }
 
@@ -62,7 +62,7 @@ export class CanvasGraphModel<S extends Shape = Shape> extends AbstractGraphMode
   }
 }
 
-export class CanvasGraphBuilder<S extends Shape = Shape> extends AbstractGraphBuilder<
+export class CanvasGraphBuilder<S extends Shape = Shape> extends GraphModel.AbstractBuilder<
   S,
   Connection,
   CanvasGraphModel<S>

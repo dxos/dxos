@@ -13,7 +13,7 @@ import {
 } from 'd3';
 import { useEffect, useMemo, useState } from 'react';
 
-import { GraphModel, type GraphNode } from '@dxos/graph';
+import { type Graph, GraphModel } from '@dxos/graph';
 import { type Point } from '@dxos/react-ui-canvas';
 import { range } from '@dxos/util';
 
@@ -70,7 +70,7 @@ export const useRope = (
 
   // TODO(burdon): Add/delete elements.
   const graph = useMemo(() => {
-    const graph = new GraphModel<GraphNode.Required<SimulationNodeDatum>>();
+    const graph = new GraphModel.GraphModel<Graph.Node.Required<SimulationNodeDatum>>();
     for (const { id, start, end } of elements) {
       createGraph(graph, id, start, end, options);
     }
@@ -151,16 +151,16 @@ export const useRope = (
  * Create subgraph for spring.
  */
 const createGraph = (
-  graph: GraphModel<GraphNode.Required<SimulationNodeDatum>>,
+  graph: GraphModel.GraphModel<Graph.Node.Required<SimulationNodeDatum>>,
   id: string,
   p1: Point,
   p2: Point | undefined,
   options: RopeOptions,
-): GraphNode.Required<SimulationNodeDatum> => {
+): Graph.Node.Required<SimulationNodeDatum> => {
   const d = p2 && options.nodes > 1 ? pointDivide(pointSubtract(p2, p1), options.nodes - 1) : { x: 0, y: -1 };
 
   // Create start of chain.
-  let source: GraphNode.Required<SimulationNodeDatum> = {
+  let source: Graph.Node.Required<SimulationNodeDatum> = {
     id: `${id}-0`,
     type: 'start',
     data: { ...p1, fx: p1.x, fy: p1.y },
@@ -171,7 +171,7 @@ const createGraph = (
   range(options.nodes - 1).forEach((_, i) => {
     const last = i === options.nodes - 2;
     const p = pointAdd({ x: source.data.x ?? 0, y: source.data.y ?? 0 }, d);
-    const target: GraphNode.Required<SimulationNodeDatum> = {
+    const target: Graph.Node.Required<SimulationNodeDatum> = {
       id: `${id}-${i + 1}`,
       type: last ? 'end' : undefined,
       data: last && p2 ? { ...p2, fx: p2.x, fy: p2.y } : { ...p },
@@ -190,7 +190,10 @@ const createGraph = (
  * Each graph node data property contains the starting datum for the simulation.
  * The graph nodes are copied into the simulation since the simulation mutates them.
  */
-export const createSimulation = (graph: GraphModel<GraphNode.Required<SimulationNodeDatum>>, options: RopeOptions) => {
+export const createSimulation = (
+  graph: GraphModel.GraphModel<Graph.Node.Required<SimulationNodeDatum>>,
+  options: RopeOptions,
+) => {
   const simulation = forceSimulation<any>(graph.nodes.map((node) => ({ id: node.id, ...node.data, data: node })))
     .force(
       'link',

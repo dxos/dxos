@@ -2,7 +2,7 @@
 // Copyright 2020 DXOS.org
 //
 
-import { type BaseGraphEdge, type Graph } from '@dxos/graph';
+import { type Graph } from '@dxos/graph';
 import { faker } from '@dxos/random';
 
 import { type TestNode } from './model';
@@ -23,7 +23,7 @@ export const createNode = (type: string = undefined): TestNode => ({
 export const createNodes = (n = 0, types?: string[]): TestNode[] =>
   Array.from({ length: n }, () => createNode(types ? faker.helpers.arrayElement(types) : undefined));
 
-export const createEdge = (source: TestNode, target: TestNode): BaseGraphEdge => ({
+export const createEdge = (source: TestNode, target: TestNode): Graph.Edge => ({
   id: `${source.id}-${target.id}`,
   source: source.id,
   target: target.id,
@@ -54,8 +54,8 @@ export const createTree = ({ depth = 2, children = 3 } = {}): TestNode => {
  * Converts a tree into a graph.
  * @param root
  */
-export const convertTreeToGraph = (root: TestNode): Graph => {
-  const traverse = (node: TestNode, graph: Graph) => {
+export const convertTreeToGraph = (root: TestNode): Graph.Graph => {
+  const traverse = (node: TestNode, graph: Graph.Graph) => {
     graph.nodes.push(node);
     node.children?.forEach((child) => {
       graph.edges.push(createEdge(node, child));
@@ -76,7 +76,7 @@ export const convertTreeToGraph = (root: TestNode): Graph => {
  * @param numNodes
  * @param numEdges
  */
-export const createGraph = (numNodes = 0, numEdges = 0, types?: string[]): Graph => {
+export const createGraph = (numNodes = 0, numEdges = 0, types?: string[]): Graph.Graph => {
   const nodes = createNodes(numNodes, types);
 
   const edges = new Map();

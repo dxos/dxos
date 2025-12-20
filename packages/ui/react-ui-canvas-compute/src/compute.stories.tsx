@@ -60,7 +60,6 @@ const DefaultStory = ({
   children,
   graph,
   controller = null,
-  init,
   sidebar: _sidebar,
   registry,
   ...props

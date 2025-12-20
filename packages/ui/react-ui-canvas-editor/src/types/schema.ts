@@ -6,8 +6,7 @@ import * as Schema from 'effect/Schema';
 
 import { ComputeGraph } from '@dxos/conductor';
 import { Type } from '@dxos/echo';
-import { Ref } from '@dxos/echo/internal';
-import { BaseGraphEdge, BaseGraphNode, Graph } from '@dxos/graph';
+import { Graph } from '@dxos/graph';
 
 // TODO(burdon): Consider interop with TLDraw and GeoJSON standards?
 
@@ -15,7 +14,7 @@ import { BaseGraphEdge, BaseGraphNode, Graph } from '@dxos/graph';
  * Base type for all shapes.
  */
 export const Shape = Schema.extend(
-  BaseGraphNode.pipe(Schema.omit('type')),
+  Graph.Node.pipe(Schema.omit('type')), // TODO(burdon): Breaks graph contract?
   Schema.Struct({
     type: Schema.String,
     text: Schema.optional(Schema.String),
@@ -30,7 +29,7 @@ export type Shape = Schema.Schema.Type<typeof Shape>;
  * Connections between shapes.
  */
 export const Connection = Schema.extend(
-  BaseGraphEdge,
+  Graph.Edge,
   Schema.Struct({
     input: Schema.optional(Schema.String),
     output: Schema.optional(Schema.String),
@@ -50,12 +49,12 @@ export type Layout = Schema.Schema.Type<typeof Layout>;
 export const CanvasBoardType = Schema.Struct({
   name: Schema.optional(Schema.String),
 
-  computeGraph: Schema.optional(Ref(ComputeGraph)),
+  computeGraph: Schema.optional(Type.Ref(ComputeGraph)),
 
   /**
    * Graph of shapes positioned on the canvas.
    */
-  layout: Graph,
+  layout: Graph.Graph,
 }).pipe(
   Type.Obj({
     typename: 'dxos.org/type/CanvasBoard',
