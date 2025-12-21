@@ -29,9 +29,6 @@ jobs:
       - name: Build
         run: moon run :build
         env:
-          # NOTE: @dxos/cli is the only thing consuming these at build time, the apps all consume them at bundle.
-          DX_SENTRY_DESTINATION: ${{ env.CLI_SENTRY_DESTINATION }}
-          DX_TELEMETRY_API_KEY: ${{ env.CLI_SEGMENT_API_KEY }}
           NODE_ENV: production
 
       # NOTE: Shell must be bundled before npm publish.
@@ -41,5 +38,5 @@ jobs:
           NODE_ENV: production
 
       - name: Publish to pkg.pr.new
-        run: pnpm dlx pkg-pr-new publish
+        run: .github/workflows/scripts/pkg-pr-new-publish.sh
 
