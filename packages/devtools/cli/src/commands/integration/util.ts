@@ -30,21 +30,22 @@ export const OAUTH_PRESETS: OAuthPreset[] = [
  * Pretty prints a token for display using FormBuilder (shows id, source, note - NO token value).
  */
 export const printToken = (token: AccessToken.AccessToken) => {
-  return FormBuilder.of({ title: token.note || token.source })
-    .set({ key: 'id', value: token.id })
-    .set({ key: 'source', value: token.source })
-    .set({ key: 'note', value: token.note || '<no note>' })
-    .build();
+  return FormBuilder.make({ title: token.note || token.source }).pipe(
+    FormBuilder.set('id', token.id),
+    FormBuilder.set('source', token.source),
+    FormBuilder.set('note', token.note || '<no note>'),
+    FormBuilder.build,
+  );
 };
 
 /**
  * Pretty prints token addition result with ANSI colors.
  */
 export const printTokenAdded = (source: string) =>
-  FormBuilder.of({ title: 'Token added' }).set({ key: 'source', value: source }).build();
+  FormBuilder.make({ title: 'Token added' }).pipe(FormBuilder.set('source', source), FormBuilder.build);
 
 /**
  * Pretty prints token removal result with ANSI colors.
  */
 export const printTokenRemoved = (source: string) =>
-  FormBuilder.of({ title: 'Token removed' }).set({ key: 'source', value: source }).build();
+  FormBuilder.make({ title: 'Token removed' }).pipe(FormBuilder.set('source', source), FormBuilder.build);

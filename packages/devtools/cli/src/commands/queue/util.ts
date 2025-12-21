@@ -12,8 +12,9 @@ import { FormBuilder } from '../../util';
 export const printQueueObject = (obj: Entity.Any) => {
   const typename = Obj.getTypename(obj) ?? '<unknown>';
 
-  return FormBuilder.of({ title: typename })
-    .set({ key: 'id', value: obj.id })
-    .set({ key: 'typename', value: typename })
-    .build();
+  return FormBuilder.make({ title: typename }).pipe(
+    FormBuilder.set('id', obj.id),
+    FormBuilder.set('typename', typename),
+    FormBuilder.build,
+  );
 };

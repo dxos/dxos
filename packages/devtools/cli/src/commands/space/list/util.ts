@@ -96,14 +96,15 @@ export type FormattedSpace = {
  * Pretty prints a space with ANSI colors.
  */
 export const printSpace = (spaceData: FormattedSpace) =>
-  FormBuilder.of({ title: spaceData.name ?? spaceData.id })
-    .set({ key: 'id', value: spaceData.id })
-    .set({ key: 'state', value: spaceData.state })
-    .set({ key: 'key', value: spaceData.key })
-    .set({ key: 'members', value: spaceData.members })
-    .set({ key: 'objects', value: spaceData.objects })
-    .set({ key: 'epoch', value: spaceData.epoch ?? '<none>' })
-    .set({ key: 'startup', value: spaceData.startup ? `${spaceData.startup}ms` : '<none>' })
-    .set({ key: 'syncState', value: spaceData.syncState })
-    .set({ key: 'automergeRoot', value: spaceData.automergeRoot ?? '<none>' })
-    .build();
+  FormBuilder.make({ title: spaceData.name ?? spaceData.id }).pipe(
+    FormBuilder.set('id', spaceData.id),
+    FormBuilder.set('state', spaceData.state),
+    FormBuilder.set('key', spaceData.key),
+    FormBuilder.set('members', spaceData.members),
+    FormBuilder.set('objects', spaceData.objects),
+    FormBuilder.set('epoch', spaceData.epoch ?? '<none>'),
+    FormBuilder.set('startup', spaceData.startup ? `${spaceData.startup}ms` : '<none>'),
+    FormBuilder.set('syncState', spaceData.syncState),
+    FormBuilder.set('automergeRoot', spaceData.automergeRoot ?? '<none>'),
+    FormBuilder.build,
+  );

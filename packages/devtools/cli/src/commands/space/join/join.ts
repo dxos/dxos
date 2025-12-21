@@ -104,11 +104,12 @@ export const handler = Effect.fn(function* ({
       ),
     );
   } else {
-    const builder = FormBuilder.of({ title: 'Joined Space' })
-      .set({ key: 'spaceId', value: space.id })
-      .set({ key: 'key', value: space.key.truncate() })
-      .set({ key: 'name', value: space.properties.name ?? '<none>' });
-    yield* Console.log(print(builder.build()));
+    const builder = FormBuilder.make({ title: 'Joined Space' }).pipe(
+      FormBuilder.set('spaceId', space.id),
+      FormBuilder.set('key', space.key.truncate()),
+      FormBuilder.set('name', space.properties.name ?? '<none>'),
+    );
+    yield* Console.log(print(FormBuilder.build(builder)));
   }
 });
 

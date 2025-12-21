@@ -36,13 +36,14 @@ export const handler = Effect.fn(function* ({ file, storage }: { file: string; s
       ),
     );
   } else {
-    const builder = FormBuilder.of({ title: 'Profile Archive' });
-    if (archive.meta) {
-      Object.entries(archive.meta).forEach(([key, value]) => {
-        builder.set({ key, value: String(value) });
-      });
-    }
-    yield* Console.log(print(builder.build()));
+    const builder = FormBuilder.make({ title: 'Profile Archive' }).pipe(
+      FormBuilder.when(
+        archive.meta,
+        FormBuilder.each(Object.entries(archive.meta ?? {}), ([key, value]) => FormBuilder.set(key, String(value))),
+      ),
+      FormBuilder.build,
+    );
+    yield* Console.log(print(builder));
 
     if (storage) {
       yield* Console.log('\nStorage entries:\n');

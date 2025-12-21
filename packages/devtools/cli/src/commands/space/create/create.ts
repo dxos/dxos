@@ -38,10 +38,11 @@ export const handler = Effect.fn(function* ({ name }: { name: Option.Option<stri
       ),
     );
   } else {
-    const builder = FormBuilder.of({ title: 'Created Space' })
-      .set({ key: 'key', value: space.key.truncate() })
-      .set({ key: 'name', value: space.properties.name ?? '<none>' });
-    yield* Console.log(print(builder.build()));
+    const builder = FormBuilder.make({ title: 'Created Space' }).pipe(
+      FormBuilder.set('key', space.key.truncate()),
+      FormBuilder.set('name', space.properties.name ?? '<none>'),
+    );
+    yield* Console.log(print(FormBuilder.build(builder)));
   }
 
   // Flush and sync before completion

@@ -37,68 +37,39 @@ export const getTriggerRemoteStatus = (trigger: Trigger.Trigger, remoteCronIds: 
 export const printTrigger = Effect.fn(function* (trigger: Trigger.Trigger, remoteStatus?: TriggerRemoteStatus) {
   const fn = trigger.function && (yield* Database.Service.load(trigger.function));
 
-  return (
-    FormBuilder.of({
-      title: trigger.id,
-    })
-      .set({
-        key: 'status',
-        value: trigger.enabled ? 'enabled' : 'disabled',
-        color: trigger.enabled ? Ansi.green : Ansi.blackBright,
-      })
-      .set({
-        key: 'kind',
-        value: trigger.spec?.kind,
-      })
-      .set({
-        key: 'remote',
-        value: remoteStatus,
-        color: Match.type<TriggerRemoteStatus>().pipe(
-          Match.withReturnType<Ansi.Ansi>(),
-          Match.when('available', () => Ansi.green),
-          Match.when('not available', () => Ansi.yellow),
-          Match.when('n/a', () => Ansi.blackBright),
-          Match.exhaustive,
-        ),
-      })
-      .set({
-        key: 'function',
-        value: FormBuilder.of()
-          .set({
-            key: 'key',
-            value: fn?.key,
-          })
-          .set({
-            key: 'dxn',
-            value: fn?.dxn?.toString(),
-          }),
-      })
-      .set({
-        key: 'spec',
-        value: trigger.spec && printSpec(trigger.spec),
-      })
-      // TODO(burdon): Remove?
-      // .set({
-      //   key: 'input node',
-      //   value: trigger.inputNodeId,
-      // })
-      // .set({
-      //   key: 'input',
-      //   value: (builder) =>
-      //     builder
-      //       .each(Object.entries(trigger.input ?? {}), ([key, value]) =>
-      //         builder.set({
-      //           key,
-      //           value: typeof value === 'string' ? value : JSON.stringify(value),
-      //         }),
-      //       )
-      //       .build(),
-      // })
-      .build()
+  return FormBuilder.make({
+    title: trigger.id,
+  }).pipe(
+    FormBuilder.set(
+      'status',
+      trigger.enabled ? 'enabled' : 'disabled',
+      trigger.enabled ? Ansi.green : Ansi.blackBright,
+    ),
+    FormBuilder.option('kind', Option.fromNullable(trigger.spec?.kind)),
+    FormBuilder.option(
+      'remote',
+      Option.fromNullable(remoteStatus),
+      Match.type<TriggerRemoteStatus>().pipe(
+        Match.withReturnType<Ansi.Ansi>(),
+        Match.when('available', () => Ansi.green),
+        Match.when('not available', () => Ansi.yellow),
+        Match.when('n/a', () => Ansi.blackBright),
+        Match.exhaustive,
+      ),
+    ),
+    FormBuilder.when(
+      fn,
+      FormBuilder.nest(
+        'function',
+        FormBuilder.make().pipe(FormBuilder.set('key', fn!.key), FormBuilder.set('dxn', fn!.dxn?.toString())),
+      ),
+    ),
+    FormBuilder.nestedOption('spec', Option.fromNullable(trigger.spec).pipe(Option.map(printSpec))),
+    FormBuilder.build,
   );
 });
 
-const printSpec = <T extends Trigger.Spec>(spec: T): FormBuilder => {
+const printSpec = <T extends Trigger.Spec>(spec: T): FormBuilder.FormBuilder => {
   switch (spec.kind) {
     case 'timer':
       return printTimer(spec);
@@ -109,30 +80,19 @@ const printSpec = <T extends Trigger.Spec>(spec: T): FormBuilder => {
     case 'queue':
       return printQueue(spec);
     default:
-      return FormBuilder.of({}).set({ key: 'unknown', value: 'Unknown spec type' });
+      return FormBuilder.make({}).pipe(FormBuilder.set('unknown', 'Unknown spec type'));
   }
 };
 
-const printTimer = (spec: Trigger.TimerSpec) =>
-  FormBuilder.of({})
-    // prettier-ignore
-    .set({ key: 'cron', value: spec.cron });
+const printTimer = (spec: Trigger.TimerSpec) => FormBuilder.make({}).pipe(FormBuilder.set('cron', spec.cron));
 
 const printSubscription = (spec: Trigger.SubscriptionSpec) =>
-  FormBuilder.of({})
-    // prettier-ignore
-    .set({ key: 'query', value: spec.query?.raw ?? '[Query AST]' });
+  FormBuilder.make({}).pipe(FormBuilder.set('query', spec.query?.raw ?? '[Query AST]'));
 
 const printWebhook = (spec: Trigger.WebhookSpec) =>
-  FormBuilder.of({})
-    // prettier-ignore
-    .set({ key: 'method', value: spec.method })
-    .set({ key: 'port', value: spec.port });
+  FormBuilder.make({}).pipe(FormBuilder.set('method', spec.method), FormBuilder.set('port', spec.port));
 
-const printQueue = (spec: Trigger.QueueSpec) =>
-  FormBuilder.of({})
-    // prettier-ignore
-    .set({ key: 'queue', value: spec.queue });
+const printQueue = (spec: Trigger.QueueSpec) => FormBuilder.make({}).pipe(FormBuilder.set('queue', spec.queue));
 
 /**
  * Prompts for input values based on an Effect schema.
@@ -433,4 +393,4 @@ export const selectQueue = Effect.fn(function* () {
  * Pretty prints trigger removal result with ANSI colors.
  */
 export const printTriggerRemoved = (id: string) =>
-  FormBuilder.of({ title: 'Trigger removed' }).set({ key: 'id', value: id }).build();
+  FormBuilder.make({ title: 'Trigger removed' }).pipe(FormBuilder.set('id', id), FormBuilder.build);

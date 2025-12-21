@@ -81,11 +81,12 @@ export const handler = Effect.fn(function* ({
       ),
     );
   } else {
-    const builder = FormBuilder.of({ title: 'Space Invitation' })
-      .set({ key: 'invitationCode', value: InvitationEncoder.encode(invitation) })
-      .set({ key: 'authCode', value: invitation.authCode ?? '<none>' })
-      .set({ key: 'state', value: Invitation.State[invitation.state] });
-    yield* Console.log(print(builder.build()));
+    const builder = FormBuilder.make({ title: 'Space Invitation' }).pipe(
+      FormBuilder.set('invitationCode', InvitationEncoder.encode(invitation)),
+      FormBuilder.set('authCode', invitation.authCode ?? '<none>'),
+      FormBuilder.set('state', Invitation.State[invitation.state]),
+    );
+    yield* Console.log(print(FormBuilder.build(builder)));
   }
 });
 

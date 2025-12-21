@@ -30,19 +30,12 @@ const mapCredentials = (credentials: Credential[]) => {
 
 const printCredential = (credential: Credential) => {
   const type = credential.subject.assertion['@type'] ?? '<unknown>';
-  const builder = FormBuilder.of({ title: type });
-
-  if (credential.id) {
-    builder.set({ key: 'id', value: credential.id.truncate() });
-  }
-  if (credential.issuer) {
-    builder.set({ key: 'issuer', value: credential.issuer.truncate() });
-  }
-  if (credential.subject?.id) {
-    builder.set({ key: 'subject', value: credential.subject.id.truncate() });
-  }
-
-  return builder.build();
+  return FormBuilder.make({ title: type }).pipe(
+    FormBuilder.option('id', Option.fromNullable(credential.id?.truncate())),
+    FormBuilder.option('issuer', Option.fromNullable(credential.issuer?.truncate())),
+    FormBuilder.option('subject', Option.fromNullable(credential.subject?.id?.truncate())),
+    FormBuilder.build,
+  );
 };
 
 export const handler = Effect.fn(function* ({

@@ -3,6 +3,7 @@
 //
 
 export * from './blueprints';
+export * as FormBuilder from './form-builder';
 export * from './invitations';
 export * from './log-buffer';
 export * from './platform';
