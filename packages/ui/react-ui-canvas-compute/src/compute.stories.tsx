@@ -13,13 +13,7 @@ import { withClientProvider } from '@dxos/react-client/testing';
 import { Select, Toolbar } from '@dxos/react-ui';
 import { withTheme } from '@dxos/react-ui/testing';
 import { withAttention } from '@dxos/react-ui-attention/testing';
-import {
-  CanvasGraphModel,
-  Editor,
-  type EditorController,
-  type EditorRootProps,
-  ShapeRegistry,
-} from '@dxos/react-ui-canvas-editor';
+import { Editor, type EditorController, type EditorRootProps, ShapeRegistry } from '@dxos/react-ui-canvas-editor';
 import { Container, useSelection } from '@dxos/react-ui-canvas-editor/testing';
 import { Form } from '@dxos/react-ui-form';
 import { JsonFilter } from '@dxos/react-ui-syntax-highlighter';
@@ -36,6 +30,7 @@ import {
   createBasicCircuit,
   createComputeGraphController,
   createControlCircuit,
+  createEmptyCircuit,
   createGPTRealtimeCircuit,
   createGptCircuit,
   createLogicCircuit,
@@ -43,9 +38,11 @@ import {
   createTransformCircuit,
 } from './testing';
 
-// const FormSchema = Schema.omit<any, any, ['subgraph']>('subgraph')(ComputeNode);
+// TODO(burdon): Replace ServiceContainer.
 
 const sidebarTypes: NonNullable<RenderProps['sidebar']>[] = ['canvas', 'compute', 'controller', 'selected'] as const;
+
+const hiddenArg = { table: { disable: true } };
 
 type RenderProps = EditorRootProps<ComputeShape> &
   PropsWithChildren<{
@@ -60,8 +57,10 @@ const DefaultStory = ({
   children,
   graph,
   controller = null,
-  sidebar: _sidebar,
+  sidebar: sidebarParam,
   registry,
+  showGrid = true,
+  snapToGrid = true,
   ...props
 }: RenderProps) => {
   const editorRef = useRef<EditorController>(null);
@@ -79,7 +78,7 @@ const DefaultStory = ({
   };
 
   // Sidebar.
-  const [sidebar, setSidebar] = useState(_sidebar);
+  const [sidebar, setSidebar] = useState<RenderProps['sidebar']>(sidebarParam);
   const json = useMemo(() => {
     switch (sidebar) {
       case 'canvas':
@@ -131,6 +130,8 @@ const DefaultStory = ({
             registry={registry}
             selection={selection}
             autoZoom
+            showGrid={showGrid}
+            snapToGrid={snapToGrid}
             {...props}
           >
             <Editor.Canvas>{children}</Editor.Canvas>
@@ -193,6 +194,15 @@ const meta = {
   parameters: {
     layout: 'fullscreen',
   },
+  argTypes: {
+    controller: hiddenArg,
+    graph: hiddenArg,
+    registry: hiddenArg,
+    sidebar: {
+      control: 'select',
+      options: [...sidebarTypes, null],
+    },
+  },
 } satisfies Meta<typeof DefaultStory>;
 
 export default meta;
@@ -201,21 +211,13 @@ type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
   args: {
-    // debug: true,
-    showGrid: false,
-    snapToGrid: false,
-    sidebar: 'selected',
     registry: new ShapeRegistry(computeShapes),
-    ...createComputeGraphController(CanvasGraphModel.create<ComputeShape>(), new ServiceContainer()),
+    ...createComputeGraphController(createEmptyCircuit(), new ServiceContainer()),
   },
 };
 
 export const Beacon: Story = {
   args: {
-    // debug: true,
-    showGrid: false,
-    snapToGrid: false,
-    sidebar: 'selected',
     registry: new ShapeRegistry(computeShapes),
     ...createComputeGraphController(createBasicCircuit(), new ServiceContainer()),
   },
@@ -223,10 +225,6 @@ export const Beacon: Story = {
 
 export const Transform: Story = {
   args: {
-    // debug: true,
-    showGrid: false,
-    snapToGrid: false,
-    sidebar: 'selected',
     registry: new ShapeRegistry(computeShapes),
     ...createComputeGraphController(createTransformCircuit(), new ServiceContainer()),
   },
@@ -234,10 +232,6 @@ export const Transform: Story = {
 
 export const Logic: Story = {
   args: {
-    // debug: true,
-    showGrid: false,
-    snapToGrid: false,
-    sidebar: 'compute',
     registry: new ShapeRegistry(computeShapes),
     ...createComputeGraphController(createLogicCircuit(), new ServiceContainer()),
   },
@@ -245,10 +239,6 @@ export const Logic: Story = {
 
 export const Control: Story = {
   args: {
-    // debug: true,
-    showGrid: false,
-    snapToGrid: false,
-    sidebar: 'compute',
     registry: new ShapeRegistry(computeShapes),
     ...createComputeGraphController(createControlCircuit(), new ServiceContainer()),
   },
@@ -256,9 +246,6 @@ export const Control: Story = {
 
 export const Template: Story = {
   args: {
-    showGrid: false,
-    snapToGrid: false,
-    // sidebar: 'controller',
     registry: new ShapeRegistry(computeShapes),
     ...createComputeGraphController(
       createTemplateCircuit(),
@@ -271,11 +258,6 @@ export const Template: Story = {
 
 export const GPT: Story = {
   args: {
-    // debug: true,
-    showGrid: false,
-    snapToGrid: false,
-    // sidebar: 'json',
-    sidebar: 'controller',
     registry: new ShapeRegistry(computeShapes),
     ...createComputeGraphController(
       createGptCircuit({ history: true }),
@@ -288,10 +270,6 @@ export const GPT: Story = {
 
 export const Plugins: Story = {
   args: {
-    // debug: true,
-    showGrid: false,
-    snapToGrid: false,
-    // sidebar: 'json',
     registry: new ShapeRegistry(computeShapes),
     ...createComputeGraphController(
       createGptCircuit({ history: true, image: true, artifact: true }),
@@ -304,10 +282,6 @@ export const Plugins: Story = {
 
 export const Artifact: Story = {
   args: {
-    // debug: true,
-    showGrid: false,
-    snapToGrid: false,
-    // sidebar: 'json',
     registry: new ShapeRegistry(computeShapes),
     ...createComputeGraphController(
       createArtifactCircuit(),
@@ -320,11 +294,6 @@ export const Artifact: Story = {
 
 export const ImageGen: Story = {
   args: {
-    // debug: true,
-    showGrid: false,
-    snapToGrid: false,
-    // sidebar: 'json',
-    sidebar: 'controller',
     registry: new ShapeRegistry(computeShapes),
     ...createComputeGraphController(
       createGptCircuit({ image: true, artifact: true }),
@@ -337,10 +306,6 @@ export const ImageGen: Story = {
 
 export const Audio: Story = {
   args: {
-    // debug: true,
-    showGrid: false,
-    snapToGrid: false,
-    sidebar: 'controller',
     registry: new ShapeRegistry(computeShapes),
     ...createComputeGraphController(
       createAudioCircuit(),
@@ -353,9 +318,6 @@ export const Audio: Story = {
 
 export const Voice: Story = {
   args: {
-    showGrid: false,
-    snapToGrid: false,
-    sidebar: 'controller',
     registry: new ShapeRegistry(computeShapes),
     ...createComputeGraphController(
       createGPTRealtimeCircuit(),

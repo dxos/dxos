@@ -16,14 +16,14 @@ export class CanvasGraphModel<S extends Shape = Shape> extends GraphModel.Abstra
   CanvasGraphModel<S>,
   CanvasGraphBuilder<S>
 > {
-  static create<S extends Shape>(graph?: Partial<Graph.Graph>): CanvasGraphModel<S> {
+  static create<S extends Shape>(graph?: Partial<Graph.Any>): CanvasGraphModel<S> {
     if (isLiveObject(graph) as any) {
-      return new CanvasGraphModel<S>(graph as Graph.Graph);
+      return new CanvasGraphModel<S>(graph as Graph.Graph<S, Connection>);
     }
 
     return new CanvasGraphModel<S>({
-      nodes: graph?.nodes ?? [],
-      edges: graph?.edges ?? [],
+      nodes: (graph?.nodes ?? []) as S[],
+      edges: (graph?.edges ?? []) as Connection[],
     });
   }
 
@@ -31,7 +31,7 @@ export class CanvasGraphModel<S extends Shape = Shape> extends GraphModel.Abstra
     return new CanvasGraphBuilder(this);
   }
 
-  override copy(graph?: Partial<Graph.Graph>): CanvasGraphModel<S> {
+  override copy(graph?: Partial<Graph.Graph<S, Connection>>): CanvasGraphModel<S> {
     return CanvasGraphModel.create<S>(graph);
   }
 

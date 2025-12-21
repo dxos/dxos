@@ -18,6 +18,8 @@ const defaultOffset: Point = { x: 0, y: 0 };
 
 const createId = (parent: string, grid: number) => `dx-canvas-grid-${parent}-${grid}`;
 
+// TODO(burdon): Click to drag.
+
 export type GridProps = ThemedClassName<{
   size?: number;
   scale?: number;
@@ -25,22 +27,28 @@ export type GridProps = ThemedClassName<{
   showAxes?: boolean;
 }>;
 
+// TODO(burdon): Use id of parent canvas.
+export const Grid = (props: GridProps) => {
+  const { scale, offset } = useCanvasContext();
+  return <GridComponent {...props} scale={scale} offset={offset} />;
+};
+
 export const GridComponent = forwardRef<SVGSVGElement, GridProps>(
   (
     { size: gridSize = defaultGridSize, scale = 1, offset = defaultOffset, showAxes = true, classNames },
     forwardedRef,
   ) => {
     const svgRef = useForwardedRef(forwardedRef);
+    const { width = 0, height = 0 } = svgRef.current?.getBoundingClientRect() ?? {};
+
     const instanceId = useId();
     const grids = useMemo(
       () =>
         gridRatios
           .map((ratio) => ({ id: ratio, size: ratio * gridSize * scale }))
-          .filter(({ size }) => size >= gridSize && size <= 256),
+          .filter(({ size }) => size >= gridSize && size <= 128),
       [gridSize, scale],
     );
-
-    const { width = 0, height = 0 } = svgRef.current?.getBoundingClientRect() ?? {};
 
     return (
       <svg
@@ -79,9 +87,3 @@ export const GridComponent = forwardRef<SVGSVGElement, GridProps>(
     );
   },
 );
-
-// TODO(burdon): Use id of parent canvas.
-export const Grid = (props: GridProps) => {
-  const { scale, offset } = useCanvasContext();
-  return <GridComponent {...props} scale={scale} offset={offset} />;
-};

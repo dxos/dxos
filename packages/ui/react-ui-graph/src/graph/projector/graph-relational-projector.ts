@@ -20,7 +20,7 @@ export class GraphRelationalProjector<
   NodeData = any,
   Options extends GraphRelationalProjectorOptions = any,
 > extends GraphRadialProjector<NodeData, Options> {
-  protected override onUpdate(graph?: Graph.Graph) {
+  protected override onUpdate(graph?: Graph.Any) {
     log('onUpdate', {
       graph: { nodes: graph?.nodes.length, edges: graph?.edges.length },
       selection: this.selection?.selected.value,

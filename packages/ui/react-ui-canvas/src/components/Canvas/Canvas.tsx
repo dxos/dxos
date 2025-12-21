@@ -30,7 +30,7 @@ export type CanvasProps = ThemedClassName<PropsWithChildren<Partial<ProjectionSt
  * Manages CSS projection.
  */
 export const Canvas = forwardRef<CanvasController, CanvasProps>(
-  ({ children, classNames, scale: _scale = 1, offset: _offset = defaultOrigin, ...props }, forwardedRef) => {
+  ({ children, classNames, scale: _scale = 1, offset: offsetParam = defaultOrigin, ...props }, forwardedRef) => {
     // Size.
     const { ref, width = 0, height = 0 } = useResizeDetector();
 
@@ -38,7 +38,7 @@ export const Canvas = forwardRef<CanvasController, CanvasProps>(
     const [ready, setReady] = useState(false);
 
     // Projection.
-    const [{ scale, offset }, setProjection] = useState<ProjectionState>({ scale: _scale, offset: _offset });
+    const [{ scale, offset }, setProjection] = useState<ProjectionState>({ scale: _scale, offset: offsetParam });
     useEffect(() => {
       if (width && height && offset === defaultOrigin) {
         setProjection({ scale, offset: { x: width / 2, y: height / 2 } });

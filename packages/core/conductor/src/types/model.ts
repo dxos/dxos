@@ -16,7 +16,7 @@ export class ComputeGraphModel extends GraphModel.AbstractGraphModel<
   ComputeGraphModel,
   ComputeGraphBuilder
 > {
-  static create(graph?: Partial<Graph.Graph>): ComputeGraphModel {
+  static create(graph?: Partial<Graph.Any>): ComputeGraphModel {
     return new ComputeGraphModel(
       Obj.make(ComputeGraph, {
         graph: {
@@ -31,7 +31,7 @@ export class ComputeGraphModel extends GraphModel.AbstractGraphModel<
   private readonly _root: ComputeGraph;
 
   constructor(root: ComputeGraph) {
-    super(root.graph);
+    super(root.graph as Graph.Graph<ComputeNode, ComputeEdge>);
     this._root = root;
   }
 
@@ -43,7 +43,7 @@ export class ComputeGraphModel extends GraphModel.AbstractGraphModel<
     return new ComputeGraphBuilder(this);
   }
 
-  override copy(graph?: Partial<Graph.Graph>): ComputeGraphModel {
+  override copy(graph?: Partial<Graph.Any>): ComputeGraphModel {
     return ComputeGraphModel.create(graph);
   }
 

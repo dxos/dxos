@@ -50,6 +50,10 @@ export const createComputeGraphController = (
 // Circuits
 //
 
+export const createEmptyCircuit = () => {
+  return CanvasGraphModel.create<ComputeShape>();
+};
+
 export const createBasicCircuit = () => {
   const model = CanvasGraphModel.create<ComputeShape>();
   model.builder.call(({ model }) => {

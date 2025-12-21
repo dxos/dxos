@@ -61,7 +61,7 @@ export class SpaceGraphModel extends GraphModel.ReactiveGraphModel<SpaceGraphNod
     return new SpaceGraphBuilder(this);
   }
 
-  override copy(graph?: Partial<Graph.Graph>): SpaceGraphModel {
+  override copy(graph?: Partial<Graph.Graph<SpaceGraphNode, SpaceGraphEdge>>): SpaceGraphModel {
     return new SpaceGraphModel(graph);
   }
 
@@ -264,7 +264,7 @@ export class SpaceGraphModel extends GraphModel.ReactiveGraphModel<SpaceGraphNod
           // Link to schema.
           if (this._options?.showSchema) {
             const schemaNode = this._graph.nodes.find(
-              (node) => node.type === 'schema' && node.data.typename === typename,
+              (node) => node.type === 'schema' && node.data.object && Obj.getTypename(node.data.object) === typename,
             );
             if (!schemaNode) {
               log.warn('schema node not found', { typename });

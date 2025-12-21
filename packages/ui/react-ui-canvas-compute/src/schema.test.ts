@@ -29,7 +29,7 @@ describe('compute', () => {
     expect(Schema.is(Shape)(node)).toBe(true);
     expect(Schema.is(Graph.Node)(node)).toBe(true);
 
-    const graph: Graph.Graph = { nodes: [], edges: [] };
+    const graph: Graph.Any = { nodes: [], edges: [] };
     graph.nodes.push(node);
 
     model.createNode(node);

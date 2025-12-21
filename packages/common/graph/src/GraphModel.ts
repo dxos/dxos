@@ -18,12 +18,12 @@ export class ReadonlyGraphModel<
   Node extends Graph.Node.Any = Graph.Node.Any,
   Edge extends Graph.Edge.Any = Graph.Edge.Any,
 > {
-  protected readonly _graph: Graph.Graph;
+  protected readonly _graph: Graph.Graph<Node, Edge>;
 
   /**
    * NOTE: Pass in simple Graph or Live.
    */
-  constructor(graph?: Graph.Graph) {
+  constructor(graph?: Graph.Graph<Node, Edge>) {
     this._graph = graph ?? {
       nodes: [],
       edges: [],
@@ -44,16 +44,16 @@ export class ReadonlyGraphModel<
     };
   }
 
-  get graph(): Graph.Graph {
+  get graph(): Graph.Graph<Node, Edge> {
     return this._graph;
   }
 
   get nodes(): Node[] {
-    return this._graph.nodes as Node[];
+    return this._graph.nodes;
   }
 
   get edges(): Edge[] {
-    return this._graph.edges as Edge[];
+    return this._graph.edges;
   }
 
   //
@@ -130,7 +130,7 @@ export abstract class AbstractGraphModel<
   /**
    * Shallow copy of provided graph.
    */
-  abstract copy(graph?: Partial<Graph.Graph>): Model;
+  abstract copy(graph?: Partial<Graph.Graph<Node, Edge>>): Model;
 
   clear(): this {
     this._graph.nodes.length = 0;
@@ -256,12 +256,15 @@ export class GraphModel<
     return new Builder<Node, Edge>(this);
   }
 
-  override copy(graph?: Partial<Graph.Graph>): GraphModel<Node, Edge> {
-    return new GraphModel<Node, Edge>({ nodes: graph?.nodes ?? [], edges: graph?.edges ?? [] });
+  override copy(graph?: Partial<Graph.Graph<Node, Edge>>): GraphModel<Node, Edge> {
+    return new GraphModel<Node, Edge>(graph as Graph.Graph<Node, Edge>);
   }
 }
 
-export type Subscription = (model: GraphModel, graph: Live<Graph.Graph>) => void;
+export type Subscription = <Node extends Graph.Node.Any = Graph.Node.Any, Edge extends Graph.Edge.Any = Graph.Edge.Any>(
+  model: GraphModel<Node, Edge>,
+  graph: Live<Graph.Graph<Node, Edge>>,
+) => void;
 
 /**
  * Subscription.
@@ -284,7 +287,7 @@ export class ReactiveGraphModel<
   Node extends Graph.Node.Any = Graph.Node.Any,
   Edge extends Graph.Edge.Any = Graph.Edge.Any,
 > extends GraphModel<Node, Edge> {
-  constructor(graph?: Partial<Graph.Graph>) {
+  constructor(graph?: Partial<Graph.Graph<Node, Edge>>) {
     super(
       live({
         nodes: graph?.nodes ?? [],
@@ -293,7 +296,7 @@ export class ReactiveGraphModel<
     );
   }
 
-  override copy(graph?: Partial<Graph.Graph>): ReactiveGraphModel<Node, Edge> {
+  override copy(graph?: Partial<Graph.Graph<Node, Edge>>): ReactiveGraphModel<Node, Edge> {
     return new ReactiveGraphModel<Node, Edge>(graph);
   }
 

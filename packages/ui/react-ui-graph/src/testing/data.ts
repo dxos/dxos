@@ -54,8 +54,8 @@ export const createTree = ({ depth = 2, children = 3 } = {}): TestNode => {
  * Converts a tree into a graph.
  * @param root
  */
-export const convertTreeToGraph = (root: TestNode): Graph.Graph => {
-  const traverse = (node: TestNode, graph: Graph.Graph) => {
+export const convertTreeToGraph = (root: TestNode): Graph.Any => {
+  const traverse = (node: TestNode, graph: Graph.Any) => {
     graph.nodes.push(node);
     node.children?.forEach((child) => {
       graph.edges.push(createEdge(node, child));
@@ -76,7 +76,7 @@ export const convertTreeToGraph = (root: TestNode): Graph.Graph => {
  * @param numNodes
  * @param numEdges
  */
-export const createGraph = (numNodes = 0, numEdges = 0, types?: string[]): Graph.Graph => {
+export const createGraph = (numNodes = 0, numEdges = 0, types?: string[]): Graph.Any => {
   const nodes = createNodes(numNodes, types);
 
   const edges = new Map();
