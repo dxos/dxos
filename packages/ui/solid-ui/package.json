@@ -25,6 +25,7 @@
     "src"
   ],
   "dependencies": {
+    "@ark-ui/solid": "catalog:",
     "@dxos/async": "workspace:*",
     "@dxos/debug": "workspace:*",
     "@dxos/log": "workspace:*",

@@ -1,14 +1,13 @@
 {
   "extends": "../../../tsconfig.base.json",
   "compilerOptions": {
-    "types": [
-      "node"
-    ]
+    "jsx": "preserve",
+    "jsxImportSource": "solid-js",
+    "strict": false
   },
   "include": [
-    "src/**/*.ts",
-    "src/**/*.tsx",
-    "src/*.ts"
+    "src",
+    "tsconfig.spec.json"
   ],
   "references": [
     {

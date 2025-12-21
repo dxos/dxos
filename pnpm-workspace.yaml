@@ -15,6 +15,7 @@ catalog:
   '@ai-sdk/react': ^2.0.86
   '@antv/graphlib': ^2.0.4
   '@antv/layout': ^1.2.13
+  '@ark-ui/solid': ^5.30.0
   '@astrojs/starlight': ^0.32.5
   '@atlaskit/pragmatic-drag-and-drop': ^1.4.0
   '@atlaskit/pragmatic-drag-and-drop-auto-scroll': ^2.1.0
