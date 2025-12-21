@@ -310,6 +310,11 @@
         },
         {
           "type": "json",
+          "path": "packages/core/echo/echo-solid/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/core/echo/indexing/package.json",
           "jsonpath": "$.version"
         },
@@ -555,6 +560,11 @@
         },
         {
           "type": "json",
+          "path": "packages/plugins/plugin-map-solid/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/plugins/plugin-markdown/package.json",
           "jsonpath": "$.version"
         },
@@ -711,6 +721,11 @@
         {
           "type": "json",
           "path": "packages/sdk/app-graph/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/sdk/app-solid/package.json",
           "jsonpath": "$.version"
         },
         {
@@ -975,6 +990,11 @@
         },
         {
           "type": "json",
+          "path": "packages/ui/solid-ui-geo/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "tools/beast/package.json",
           "jsonpath": "$.version"
         },
@@ -1011,6 +1031,11 @@
         {
           "type": "json",
           "path": "tools/protobuf-test/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "tools/solid-storybook/package.json",
           "jsonpath": "$.version"
         },
         {

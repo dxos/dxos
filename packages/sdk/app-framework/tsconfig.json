@@ -39,6 +39,12 @@
       "path": "../../common/util"
     },
     {
+      "path": "../../common/web-context"
+    },
+    {
+      "path": "../../common/web-context-react"
+    },
+    {
       "path": "../../core/ai"
     },
     {

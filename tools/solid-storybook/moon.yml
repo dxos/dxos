@@ -1,0 +1,24 @@
+type: tool
+language: typescript
+tasks:
+  serve:
+    command: storybook dev
+    args:
+      - --port=9009
+      - --no-open
+    deps:
+      - ^:compile
+    inputs:
+      - .storybook/*
+    preset: server
+  serve-e2e:
+    command: storybook dev
+    args:
+      - --port=9009
+      - --ci
+      - --quiet
+    deps:
+      - ^:compile
+    inputs:
+      - .storybook/*
+    preset: server

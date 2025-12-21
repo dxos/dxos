@@ -1,0 +1,47 @@
+{
+  "name": "@dxos/app-solid",
+  "version": "0.1.0",
+  "description": "SolidJS integration for @dxos/app-framework",
+  "homepage": "https://dxos.org",
+  "bugs": "https://github.com/dxos/dxos/issues",
+  "license": "MIT",
+  "author": "DXOS.org",
+  "sideEffects": true,
+  "type": "module",
+  "exports": {
+    ".": {
+      "source": "./src/index.ts",
+      "types": "./dist/types/src/index.d.ts",
+      "browser": "./dist/lib/browser/index.mjs",
+      "node": "./dist/lib/node-esm/index.mjs"
+    }
+  },
+  "types": "dist/types/src/index.d.ts",
+  "typesVersions": {
+    "*": {}
+  },
+  "files": [
+    "dist",
+    "src"
+  ],
+  "dependencies": {
+    "@dxos/app-framework": "workspace:*",
+    "@dxos/effect-atom-solid": "workspace:*",
+    "@dxos/invariant": "workspace:*",
+    "@dxos/web-context-solid": "workspace:*"
+  },
+  "devDependencies": {
+    "@effect-atom/atom": "catalog:",
+    "@solidjs/testing-library": "catalog:",
+    "effect": "catalog:",
+    "solid-js": "catalog:",
+    "vite-plugin-solid": "catalog:"
+  },
+  "peerDependencies": {
+    "effect": "catalog:",
+    "solid-js": "catalog:"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

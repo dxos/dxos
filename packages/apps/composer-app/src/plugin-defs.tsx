@@ -25,6 +25,7 @@ import { HelpPlugin } from '@dxos/plugin-help';
 import { InboxPlugin } from '@dxos/plugin-inbox';
 import { KanbanPlugin } from '@dxos/plugin-kanban';
 import { MapPlugin } from '@dxos/plugin-map';
+import { MapPlugin as MapPluginSolid } from '@dxos/plugin-map-solid';
 import { MarkdownPlugin } from '@dxos/plugin-markdown';
 import { MasonryPlugin } from '@dxos/plugin-masonry';
 import { MeetingPlugin } from '@dxos/plugin-meeting';
@@ -149,6 +150,7 @@ export const getPlugins = ({ appKey, config, services, observability, isDev, isL
     IntentPlugin(),
     KanbanPlugin(),
     MapPlugin(),
+    isLabs && MapPluginSolid(),
     MarkdownPlugin(),
     MasonryPlugin(),
     MeetingPlugin(),

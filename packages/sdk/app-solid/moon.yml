@@ -1,0 +1,15 @@
+type: library
+language: typescript
+tags:
+  - pack
+  - ts-build
+  - ts-test
+tasks:
+  compile:
+    args:
+      - '--entryPoint=src/index.ts'
+  # TODO(wittjosiah): Get working with vitest.base.config.ts.
+  test:
+    options:
+      mergeOutputs: replace
+    outputs: []

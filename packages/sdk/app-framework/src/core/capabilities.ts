@@ -149,9 +149,6 @@ export class PluginContext {
     this.reset = reset;
   }
 
-  /**
-   * @internal
-   */
   contributeCapability<T>({
     module: moduleId,
     interface: interfaceDef,
@@ -175,9 +172,6 @@ export class PluginContext {
     });
   }
 
-  /**
-   * @internal
-   */
   removeCapability<T>(interfaceDef: InterfaceDef<T>, implementation: T): void {
     const current = this._registry.get(this._capabilityImpls(interfaceDef.identifier));
     if (current.length === 0) {

@@ -62,6 +62,8 @@
     "@dxos/schema": "workspace:*",
     "@dxos/types": "workspace:*",
     "@dxos/util": "workspace:*",
+    "@dxos/web-context": "workspace:*",
+    "@dxos/web-context-react": "workspace:*",
     "@effect/ai": "catalog:",
     "@effect/experimental": "catalog:",
     "@preact-signals/safe-react": "catalog:",
