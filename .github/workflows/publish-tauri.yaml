@@ -23,7 +23,7 @@ jobs:
       version: ${{ steps.bump-version.outputs.version }}
 
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
@@ -139,7 +139,7 @@ jobs:
     timeout-minutes: 45
 
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
 
       - name: Install Linux dependencies
         if: matrix.os == 'depot-ubuntu-24.04-4'
@@ -247,7 +247,7 @@ jobs:
     runs-on: depot-macos-latest
 
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
 
       - uses: tecolicom/actions-use-homebrew-tools@v1
         with:
@@ -343,7 +343,7 @@ jobs:
     runs-on: depot-ubuntu-24.04
 
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
 
       - name: Install Linux dependencies
         run: |
