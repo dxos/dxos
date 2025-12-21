@@ -22,7 +22,7 @@ export const printMember = (member: SpaceMember) =>
     FormBuilder.set('identityKey', member.identity.identityKey.truncate()),
     FormBuilder.set('displayName', member.identity.profile?.displayName ?? '<none>'),
     FormBuilder.set('presence', member.presence === SpaceMember.PresenceState.ONLINE ? 'Online' : 'Offline'),
-    FormBuilder.build
+    FormBuilder.build,
   );
 
 export const printMembers = (members: SpaceMember[]) => {

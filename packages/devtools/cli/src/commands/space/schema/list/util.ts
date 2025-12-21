@@ -23,7 +23,7 @@ export const printSchema = (schema: SchemaEntry) =>
     FormBuilder.set('id', schema.id ?? '<none>'),
     FormBuilder.set('typename', schema.typename),
     FormBuilder.set('version', schema.version),
-    FormBuilder.build
+    FormBuilder.build,
   );
 
 export const printSchemas = (schemas: SchemaEntry[]) => {

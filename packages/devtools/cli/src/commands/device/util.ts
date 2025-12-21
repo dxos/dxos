@@ -39,13 +39,16 @@ export const printDevice = (device: Device) =>
     FormBuilder.set('label', device.profile?.label ?? '<none>'),
     FormBuilder.set('type', device.profile?.type ? DeviceType[device.profile?.type] : 'UNKNOWN'),
     FormBuilder.set('kind', DeviceKind[device.kind]),
-    FormBuilder.set('presence', device?.kind === DeviceKind.CURRENT ? 'THIS DEVICE' : Device.PresenceState[device.presence]),
+    FormBuilder.set(
+      'presence',
+      device?.kind === DeviceKind.CURRENT ? 'THIS DEVICE' : Device.PresenceState[device.presence],
+    ),
     FormBuilder.set('platform', device.profile?.platform ?? '<none>'),
     FormBuilder.set('platformVersion', device.profile?.platformVersion ?? '<none>'),
     FormBuilder.set('architecture', device.profile?.architecture ?? '<none>'),
     FormBuilder.set('os', device.profile?.os ?? '<none>'),
     FormBuilder.set('osVersion', device.profile?.osVersion ?? '<none>'),
-    FormBuilder.build
+    FormBuilder.build,
   );
 
 export const printDevices = (devices: Device[]) => {

@@ -107,7 +107,7 @@ export const handler = Effect.fn(function* ({
     const builder = FormBuilder.make({ title: 'Joined Space' }).pipe(
       FormBuilder.set('spaceId', space.id),
       FormBuilder.set('key', space.key.truncate()),
-      FormBuilder.set('name', space.properties.name ?? '<none>')
+      FormBuilder.set('name', space.properties.name ?? '<none>'),
     );
     yield* Console.log(print(FormBuilder.build(builder)));
   }

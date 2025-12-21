@@ -76,7 +76,7 @@ export const handler = Effect.fn(function* ({
     const builder = FormBuilder.make({ title: 'HALO Invitation' }).pipe(
       FormBuilder.set('invitationCode', InvitationEncoder.encode(invitation)),
       FormBuilder.set('authCode', invitation.authCode ?? '<none>'),
-      FormBuilder.set('state', Invitation.State[invitation.state])
+      FormBuilder.set('state', Invitation.State[invitation.state]),
     );
     yield* Console.log(print(FormBuilder.build(builder)));
   }

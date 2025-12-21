@@ -40,7 +40,7 @@ export const handler = Effect.fn(function* ({ name }: { name: Option.Option<stri
   } else {
     const builder = FormBuilder.make({ title: 'Created Space' }).pipe(
       FormBuilder.set('key', space.key.truncate()),
-      FormBuilder.set('name', space.properties.name ?? '<none>')
+      FormBuilder.set('name', space.properties.name ?? '<none>'),
     );
     yield* Console.log(print(FormBuilder.build(builder)));
   }

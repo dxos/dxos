@@ -15,6 +15,6 @@ export const printQueueObject = (obj: Entity.Any) => {
   return FormBuilder.make({ title: typename }).pipe(
     FormBuilder.set('id', obj.id),
     FormBuilder.set('typename', typename),
-    FormBuilder.build
+    FormBuilder.build,
   );
 };

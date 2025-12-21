@@ -19,7 +19,7 @@ export const printProfileCreated = (name: string, path: string) =>
   FormBuilder.make({ title: 'Profile created' }).pipe(
     FormBuilder.set('name', name),
     FormBuilder.set('path', path),
-    FormBuilder.build
+    FormBuilder.build,
   );
 
 /**
@@ -43,6 +43,6 @@ export const printProfile = (profile: ProfileInfo) => {
     FormBuilder.set('fullPath', profile.fullPath),
     FormBuilder.set('storagePath', profile.storagePath),
     FormBuilder.set('edge', profile.edge ?? '<none>'),
-    FormBuilder.build
+    FormBuilder.build,
   );
 };

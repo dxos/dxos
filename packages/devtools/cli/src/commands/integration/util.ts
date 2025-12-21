@@ -34,7 +34,7 @@ export const printToken = (token: AccessToken.AccessToken) => {
     FormBuilder.set('id', token.id),
     FormBuilder.set('source', token.source),
     FormBuilder.set('note', token.note || '<no note>'),
-    FormBuilder.build
+    FormBuilder.build,
   );
 };
 

@@ -106,5 +106,5 @@ export const printSpace = (spaceData: FormattedSpace) =>
     FormBuilder.set('startup', spaceData.startup ? `${spaceData.startup}ms` : '<none>'),
     FormBuilder.set('syncState', spaceData.syncState),
     FormBuilder.set('automergeRoot', spaceData.automergeRoot ?? '<none>'),
-    FormBuilder.build
+    FormBuilder.build,
   );

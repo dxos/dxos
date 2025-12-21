@@ -14,5 +14,5 @@ export const printIdentity = (identity: {
   FormBuilder.make({ title: 'Identity' }).pipe(
     FormBuilder.set('identityKey', identity.identityKey.truncate()),
     FormBuilder.set('displayName', identity.profile?.displayName ?? '<none>'),
-    FormBuilder.build
+    FormBuilder.build,
   );

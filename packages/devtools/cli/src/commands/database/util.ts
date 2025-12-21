@@ -16,7 +16,7 @@ export const printObject = (obj: Entity.Unknown) => {
   return FormBuilder.make({ title: Obj.getLabel(obj) ?? typename }).pipe(
     FormBuilder.set('id', obj.id),
     FormBuilder.set('typename', typename),
-    FormBuilder.build
+    FormBuilder.build,
   );
 };
 
