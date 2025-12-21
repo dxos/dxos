@@ -613,7 +613,7 @@ catalog:
   sort-package-json: ^1.57.0
   stage-js: 1.0.0-alpha.17
   starlight-links-validator: ^0.14.3
-  storybook: ^10.1.0
+  storybook: ^10.1.10
   storybook-solidjs-vite: ^10.0.9
   streamx: ^2.12.5
   style-mod: ^4.1.0
