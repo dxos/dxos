@@ -18,7 +18,7 @@ import {
   useEdgesState,
   useNodesState,
 } from '@xyflow/react';
-import '@xyflow/react/dist/style.css'; // TODO(burdon): Replace with tailwind.
+import '@xyflow/react/dist/style.css'; // TODO(burdon): Replace with tailwind; or override vars (e.g., --xy-background-color-default)
 import React, { type PropsWithChildren, useCallback, useContext, useEffect } from 'react';
 
 import { log } from '@dxos/log';
@@ -160,13 +160,13 @@ const GraphCanvasInner = ({ classNames, children, graph: graphParam, grid, map }
           <Background
             id='grid-minor'
             gap={snap}
-            className='!bg-transparent [&>*>*.lines]:dark:!stroke-neutral-750 opacity-50'
+            className='[&>*>*.lines]:dark:!stroke-neutral-750 opacity-50'
             variant={BackgroundVariant.Lines}
           />
           <Background
             id='grid-major'
             gap={snap * 4}
-            className='!bg-transparent [&>*>*.lines]:dark:!stroke-neutral-700 opacity-50'
+            className='[&>*>*.lines]:dark:!stroke-neutral-700 opacity-50'
             variant={BackgroundVariant.Lines}
           />
         </>

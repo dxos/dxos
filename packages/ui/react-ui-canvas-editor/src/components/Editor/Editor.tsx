@@ -62,7 +62,7 @@ type EditorRootProps<S extends Shape = Shape> = ThemedClassName<
   >
 >;
 
-const EditorRootWithType = <S extends Shape = Shape>(
+const RootInner = <S extends Shape = Shape>(
   {
     children,
     classNames,
@@ -173,7 +173,7 @@ const EditorRootWithType = <S extends Shape = Shape>(
         style={{ contain: 'layout' }}
         className={mx(
           'relative is-full bs-full overflow-hidden',
-          ready ? 'transition-opacity delay-[1s] duration-[1s] opacity-100' : 'opacity-0',
+          ready ? 'transition-opacity delay-[0.5s] duration-[0.5s] opacity-100' : 'opacity-0',
           classNames,
         )}
       >
@@ -183,12 +183,12 @@ const EditorRootWithType = <S extends Shape = Shape>(
   );
 };
 
-export const EditorRoot = forwardRef(EditorRootWithType) as <S extends Shape>(
+export const Root = forwardRef(RootInner) as <S extends Shape>(
   props: EditorRootProps<S> & { ref?: ForwardedRef<EditorController> },
-) => ReturnType<typeof EditorRootWithType>;
+) => ReturnType<typeof RootInner>;
 
 export const Editor = {
-  Root: EditorRoot,
+  Root,
   Canvas,
   UI,
 };

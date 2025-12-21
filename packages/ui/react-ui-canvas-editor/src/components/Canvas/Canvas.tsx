@@ -6,7 +6,15 @@ import { dropTargetForElements } from '@atlaskit/pragmatic-drag-and-drop/element
 import React, { type PropsWithChildren, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 
-import { Grid, Canvas as NaturalCanvas, type Rect, testId, useCanvasContext, useWheel } from '@dxos/react-ui-canvas';
+import {
+  Grid,
+  Canvas as NaturalCanvas,
+  type Rect,
+  testId,
+  useCanvasContext,
+  useDrag,
+  useWheel,
+} from '@dxos/react-ui-canvas';
 import { mx } from '@dxos/react-ui-theme';
 
 import {
@@ -38,7 +46,7 @@ export const Canvas = ({ children }: PropsWithChildren) => {
 };
 
 export const CanvasContent = ({ children }: PropsWithChildren) => {
-  const { dragMonitor, overlayRef, options, showGrid, selection } = useEditorContext();
+  const { dragMonitor, overlayRef, options, selection, showGrid } = useEditorContext();
   const { root, styles: projectionStyles, scale, offset } = useCanvasContext();
   const shapesRef = useRef<HTMLDivElement>(null);
 
@@ -65,6 +73,7 @@ export const CanvasContent = ({ children }: PropsWithChildren) => {
 
   // Pan and zoom.
   useWheel();
+  useDrag();
 
   // Dragging and linking.
   useDragMonitor();
@@ -93,7 +102,9 @@ export const CanvasContent = ({ children }: PropsWithChildren) => {
   return (
     <>
       {/* Grid. */}
-      {showGrid && <Grid size={options.gridSize} scale={scale} offset={offset} classNames={styles.gridLine} />}
+      {showGrid && (
+        <Grid size={options.gridSize} showAxes={false} scale={scale} offset={offset} classNames={styles.gridLine} />
+      )}
 
       {/* Layout. */}
       {<Shapes {...testId<TestId>('dx-layout', true)} layout={layout} ref={shapesRef} />}

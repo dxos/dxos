@@ -25,14 +25,14 @@ export class GraphAdapter implements GraphData {
   private readonly _nodes: GraphNode[] = [];
   private readonly _links: GraphLink[] = [];
 
-  constructor(private readonly graph: Graph.Graph) {
-    this._nodes = graph.nodes.map((node) => ({
+  constructor(private readonly graph: Graph.Any) {
+    this._nodes = graph.nodes.map((node: Graph.Node.Any) => ({
       id: node.id,
       type: node.type,
       data: node.data,
     }));
 
-    this._links = graph.edges.map((edge) => ({
+    this._links = graph.edges.map((edge: Graph.Edge.Any) => ({
       type: edge.type,
       source: edge.source,
       target: edge.target,
