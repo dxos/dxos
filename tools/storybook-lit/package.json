@@ -1,5 +1,5 @@
 {
-  "name": "@dxos/lit-storybook",
+  "name": "@dxos/storybook-lit",
   "version": "0.8.3",
   "private": true,
   "description": "Storybook config package for Lit components of the DXOS monorepo.",

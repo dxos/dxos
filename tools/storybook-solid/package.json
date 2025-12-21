@@ -1,5 +1,5 @@
 {
-  "name": "@dxos/solid-storybook",
+  "name": "@dxos/storybook-solid",
   "version": "0.8.3",
   "private": true,
   "description": "Storybook config package for SolidJS components of the DXOS monorepo.",

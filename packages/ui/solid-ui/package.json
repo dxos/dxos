@@ -24,9 +24,27 @@
     "dist",
     "src"
   ],
-  "dependencies": {},
+  "dependencies": {
+    "@dxos/async": "workspace:*",
+    "@dxos/debug": "workspace:*",
+    "@dxos/log": "workspace:*",
+    "@dxos/node-std": "workspace:*",
+    "@dxos/util": "workspace:*",
+    "@solid-primitives/resize-observer": "^2.0.26",
+    "solid-element": "catalog:",
+    "solid-js": "catalog:"
+  },
   "devDependencies": {
-    "storybook-solidjs-vite": "^0.1.0"
+    "@effect-atom/atom": "catalog:",
+    "@solidjs/testing-library": "catalog:",
+    "effect": "catalog:",
+    "solid-js": "catalog:",
+    "vite-plugin-solid": "catalog:"
+  },
+  "peerDependencies": {
+    "@effect-atom/atom": "catalog:",
+    "effect": "catalog:",
+    "solid-js": "catalog:"
   },
   "publishConfig": {
     "access": "public"
