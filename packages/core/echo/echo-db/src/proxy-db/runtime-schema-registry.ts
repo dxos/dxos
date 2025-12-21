@@ -114,8 +114,7 @@ const getSortKey = (schema: Type.Entity.Any) =>
   Type.getTypename(schema) + ':' + Type.getVersion(schema) + ':' + Type.getDXN(schema);
 
 const filterOrderResults = (schemas: Type.Entity.Any[], query: SchemaRegistry.Query) => {
-  log('Filtering schemas', { schemas, query });
-  return schemas
+  const filtered = schemas
     .filter((schema) => {
       const typename = Type.getTypename(schema);
 
@@ -144,4 +143,10 @@ const filterOrderResults = (schemas: Type.Entity.Any[], query: SchemaRegistry.Qu
       return true;
     })
     .sort((a, b) => getSortKey(a).localeCompare(getSortKey(b)));
+  log('filtered schemas', {
+    query,
+    schemas: schemas.map((s) => Type.getTypename(s)),
+    filtered: filtered.map((s) => Type.getTypename(s)),
+  });
+  return filtered;
 };

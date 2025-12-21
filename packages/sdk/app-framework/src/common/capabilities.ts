@@ -59,6 +59,9 @@ export namespace Capabilities {
    */
   export const ReactRoot = defineCapability<ReactRoot>('dxos.org/app-framework/capability/react-root');
 
+  /**
+   * Surface definitions that can be either React components or Web Components.
+   */
   export type ReactSurface = SurfaceDefinition | readonly SurfaceDefinition[];
 
   /**

@@ -175,6 +175,9 @@
       "path": "packages/core/echo/echo-signals/tsconfig.json"
     },
     {
+      "path": "packages/core/echo/echo-solid/tsconfig.json"
+    },
+    {
       "path": "packages/core/echo/indexing/tsconfig.json"
     },
     {
@@ -319,6 +322,9 @@
       "path": "packages/plugins/plugin-map/tsconfig.json"
     },
     {
+      "path": "packages/plugins/plugin-map-solid/tsconfig.json"
+    },
+    {
       "path": "packages/plugins/plugin-markdown/tsconfig.json"
     },
     {
@@ -413,6 +419,9 @@
     },
     {
       "path": "packages/sdk/app-graph/tsconfig.json"
+    },
+    {
+      "path": "packages/sdk/app-solid/tsconfig.json"
     },
     {
       "path": "packages/sdk/client/tsconfig.json"
@@ -571,6 +580,9 @@
       "path": "packages/ui/react-ui-types/tsconfig.json"
     },
     {
+      "path": "packages/ui/solid-ui-geo/tsconfig.json"
+    },
+    {
       "path": "tools/beast/tsconfig.json"
     },
     {
@@ -593,6 +605,9 @@
     },
     {
       "path": "tools/protobuf-test/tsconfig.json"
+    },
+    {
+      "path": "tools/solid-storybook/tsconfig.json"
     },
     {
       "path": "tools/storybook/tsconfig.json"

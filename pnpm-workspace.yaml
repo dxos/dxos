@@ -195,6 +195,7 @@ catalog:
   '@sentry/react': ^7.100.1
   '@sentry/types': ^8.8.0
   '@sentry/vite-plugin': ^4.0.2
+  '@solid-primitives/utils': ^6.3.2
   '@solidjs/testing-library': ^0.8.10
   '@storybook/addon-docs': ^10.1.0
   '@storybook/addon-links': ^10.1.0
@@ -612,7 +613,8 @@ catalog:
   sort-package-json: ^1.57.0
   stage-js: 1.0.0-alpha.17
   starlight-links-validator: ^0.14.3
-  storybook: ^10.1.0
+  storybook: ^10.1.10
+  storybook-solidjs-vite: ^10.0.9
   streamx: ^2.12.5
   style-mod: ^4.1.0
   tailwind-merge: ^2.2.1

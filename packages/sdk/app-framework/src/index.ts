@@ -3,6 +3,7 @@
 //
 
 export * from './common';
+export * from './context';
 export * from './core';
 export * from './plugin-intent';
 export * from './plugin-settings';
