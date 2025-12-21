@@ -17,9 +17,12 @@ export type DragOptions = {
 export const useDrag = (_options: DragOptions = {}) => {
   const { root, setProjection } = useCanvasContext();
 
-  // Track drag state manually to avoid identifying stale closures in event listeners if we were to re-bind constantly,
-  // though we only bind once per root.
-  const state = useRef<{ panning: boolean; x: number; y: number }>({ panning: false, x: 0, y: 0 });
+  // Track drag state.
+  const state = useRef<{
+    panning: boolean;
+    x: number;
+    y: number;
+  }>({ panning: false, x: 0, y: 0 });
 
   useEffect(() => {
     if (!root) {
@@ -36,6 +39,10 @@ export const useDrag = (_options: DragOptions = {}) => {
         }
 
         if (ev.defaultPrevented) {
+          return;
+        }
+
+        if (ev.target !== root || ev.shiftKey) {
           return;
         }
 

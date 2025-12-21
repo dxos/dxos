@@ -82,11 +82,11 @@ export const CanvasContent = ({ children }: PropsWithChildren) => {
   const layout = useLayout();
 
   // Selection.
-  const selectionRect = useSelectionEvents(root, ({ bounds, shift }) => {
+  const selectionRect = useSelectionEvents(root, ({ bounds, subtract }) => {
     // NOTE: bounds will be undefined if clicking on an object.
-    if (bounds === null) {
+    if (!bounds) {
       selection.clear();
-    } else if (bounds) {
+    } else {
       selection.setSelected(
         layout.shapes
           .filter((shape) => {
@@ -94,7 +94,7 @@ export const CanvasContent = ({ children }: PropsWithChildren) => {
             return rect && rectContains(bounds, rect);
           })
           .map((shape) => shape.id),
-        shift,
+        subtract,
       );
     }
   });
