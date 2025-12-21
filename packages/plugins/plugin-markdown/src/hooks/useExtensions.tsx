@@ -37,7 +37,7 @@ import {
   selectionState,
   typewriter,
 } from '@dxos/react-ui-editor';
-import { defaultTx } from '@dxos/react-ui-theme';
+import { defaultTx } from '@dxos/ui-theme';
 import { Text } from '@dxos/schema';
 import { isTruthy } from '@dxos/util';
 

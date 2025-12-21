@@ -15,7 +15,7 @@ import { type Channel } from '@dxos/plugin-thread/types';
 import { Query, useQuery } from '@dxos/react-client/echo';
 import { Button, useTranslation } from '@dxos/react-ui';
 import { List } from '@dxos/react-ui-list';
-import { ghostHover, mx } from '@dxos/react-ui-theme';
+import { ghostHover, mx } from '@dxos/ui-theme';
 
 import { meta } from '../meta';
 import { Meeting, MeetingAction } from '../types';

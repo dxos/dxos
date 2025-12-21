@@ -15,7 +15,7 @@ import {
   useDrag,
   useWheel,
 } from '@dxos/react-ui-canvas';
-import { mx } from '@dxos/react-ui-theme';
+import { mx } from '@dxos/ui-theme';
 
 import {
   type DragDropPayload,

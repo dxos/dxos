@@ -7,7 +7,7 @@ import React from 'react';
 import { type AiContextBinder } from '@dxos/assistant';
 import { type Database, Obj } from '@dxos/echo';
 import { IconButton, type Label, type ThemedClassName, toLocalizedString, useTranslation } from '@dxos/react-ui';
-import { mx } from '@dxos/react-ui-theme';
+import { mx } from '@dxos/ui-theme';
 
 import { useContextObjects } from '../../hooks';
 import { meta } from '../../meta';

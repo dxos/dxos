@@ -6,7 +6,7 @@ import React from 'react';
 
 import { type SurfaceComponentProps } from '@dxos/app-framework/react';
 import { useTranslation } from '@dxos/react-ui';
-import { baseSurface, descriptionMessage, mx } from '@dxos/react-ui-theme';
+import { baseSurface, descriptionMessage, mx } from '@dxos/ui-theme';
 import { type Collection } from '@dxos/schema';
 
 import { meta } from '../meta';

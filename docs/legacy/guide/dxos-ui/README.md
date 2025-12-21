@@ -12,8 +12,8 @@ There are several open-source packages of UI components available:
 | Package                                                                      | Description                                                                                        | Audience                                           |
 | :--------------------------------------------------------------------------- | :------------------------------------------------------------------------------------------------- | :------------------------------------------------- |
 | [@dxos/react-ui](https://www.npmjs.com/package/@dxos/react-ui)               | A set of lookless components in a UI system based on `radix`, `phosphor`, `react`, and `tailwind`. | Any react application.                             |
-| [@dxos/react-ui-theme](https://www.npmjs.com/package/@dxos/react-ui-theme)   | A default theme for DXOS UI                                                                        | Any react application.                             |
-| [@dxos/react-ui-types](https://www.npmjs.com/package/@dxos/react-ui-types)   | TypeScript types for the UI system.                                                                | Any react application using DXOS UI.               |
+| [@dxos/ui-theme](https://www.npmjs.com/package/@dxos/ui-theme)   | A default theme for DXOS UI                                                                        | Any react application.                             |
+| [@dxos/ui-types](https://www.npmjs.com/package/@dxos/ui-types)   | TypeScript types for the UI system.                                                                | Any react application using DXOS UI.               |
 | [@dxos/react-ui-editor](https://www.npmjs.com/package/@dxos/react-ui-editor) | A collaborative rich text editor component.                                                        | Any react application using DXOS UI (and/or ECHO). |
 | [@dxos/react-ui-table](https://www.npmjs.com/package/@dxos/react-ui-table)   | A data table component.                                                                            | Any react application using DXOS UI (and/or ECHO). |
 
@@ -31,7 +31,7 @@ Configure the `ThemePlugin` in [`vite.config.js`](https://vitejs.dev/config/):
 import { resolve } from 'node:path';
 import { defineConfig } from 'vite';
 
-import { ThemePlugin } from '@dxos/react-ui-theme/plugin';
+import { ThemePlugin } from '@dxos/ui-theme/plugin';
 
 export default defineConfig({
   plugins: [

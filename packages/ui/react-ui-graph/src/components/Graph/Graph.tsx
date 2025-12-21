@@ -9,7 +9,7 @@ import { combine } from '@dxos/async';
 import { type Graph as Graph$, type GraphModel } from '@dxos/graph';
 import { log } from '@dxos/log';
 import { type ThemedClassName } from '@dxos/react-ui';
-import { mx } from '@dxos/react-ui-theme';
+import { mx } from '@dxos/ui-theme';
 
 import {
   GraphForceProjector,

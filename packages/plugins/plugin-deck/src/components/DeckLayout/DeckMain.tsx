@@ -10,7 +10,7 @@ import { useCapability, useIntentDispatcher, usePluginManager } from '@dxos/app-
 import { AttentionCapabilities } from '@dxos/plugin-attention';
 import { Main, type MainProps, useMediaQuery, useOnTransition } from '@dxos/react-ui';
 import { DEFAULT_HORIZONTAL_SIZE, Stack, StackContext } from '@dxos/react-ui-stack';
-import { mainPaddingTransitions, mx } from '@dxos/react-ui-theme';
+import { mainPaddingTransitions, mx } from '@dxos/ui-theme';
 
 import { DeckCapabilities } from '../../capabilities';
 import { useBreakpoints, useHoistStatusbar } from '../../hooks';

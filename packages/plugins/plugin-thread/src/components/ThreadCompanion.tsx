@@ -13,7 +13,7 @@ import { useTranslation } from '@dxos/react-ui';
 import { useAttended } from '@dxos/react-ui-attention';
 import { StackItem } from '@dxos/react-ui-stack';
 import { Tabs } from '@dxos/react-ui-tabs';
-import { mx } from '@dxos/react-ui-theme';
+import { mx } from '@dxos/ui-theme';
 import { AnchoredTo, Thread } from '@dxos/types';
 
 import { ThreadCapabilities } from '../capabilities';

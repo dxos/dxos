@@ -17,7 +17,7 @@ import React, {
 } from 'react';
 
 import { ListItem, type ThemedClassName, useId } from '@dxos/react-ui';
-import { mx } from '@dxos/react-ui-theme';
+import { mx } from '@dxos/ui-theme';
 
 import { useStackDropForElements } from '../../hooks';
 import { type StackContextValue } from '../defs';

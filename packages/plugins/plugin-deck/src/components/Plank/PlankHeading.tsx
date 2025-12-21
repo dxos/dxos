@@ -10,7 +10,7 @@ import { type Node } from '@dxos/plugin-graph';
 import { Icon, IconButton, Popover, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { StackItem, type StackItemSigilAction } from '@dxos/react-ui-stack';
 import { TextTooltip } from '@dxos/react-ui-text-tooltip';
-import { hoverableControls, hoverableFocusedWithinControls } from '@dxos/react-ui-theme';
+import { hoverableControls, hoverableFocusedWithinControls } from '@dxos/ui-theme';
 
 import { useBreakpoints } from '../../hooks';
 import { parseEntryId } from '../../layout';

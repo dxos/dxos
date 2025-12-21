@@ -14,7 +14,7 @@ import { invariant } from '@dxos/invariant';
 import { Callout, IconButton, Input, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { QueryForm, type QueryFormProps } from '@dxos/react-ui-components';
 import { List } from '@dxos/react-ui-list';
-import { mx, subtleHover } from '@dxos/react-ui-theme';
+import { mx, subtleHover } from '@dxos/ui-theme';
 import {
   FieldSchema,
   type FieldType,

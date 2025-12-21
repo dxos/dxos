@@ -9,7 +9,7 @@ import { fileURLToPath } from 'node:url';
 import { type StorybookConfig } from '@storybook/web-components-vite';
 import { type InlineConfig } from 'vite';
 
-import { ThemePlugin } from '@dxos/react-ui-theme/plugin';
+import { ThemePlugin } from '@dxos/ui-theme/plugin';
 import { IconsPlugin } from '@dxos/vite-plugin-icons';
 
 const __filename = fileURLToPath(import.meta.url);

@@ -5,8 +5,8 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
-import { baseSurface, modalSurface, mx, surfaceShadow } from '@dxos/react-ui-theme';
-import { type MessageValence } from '@dxos/react-ui-types';
+import { baseSurface, modalSurface, mx, surfaceShadow } from '@dxos/ui-theme';
+import { type MessageValence } from '@dxos/ui-types';
 
 import { withTheme } from '../../testing';
 

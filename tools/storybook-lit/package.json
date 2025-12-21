@@ -11,7 +11,7 @@
   "type": "module",
   "devDependencies": {
     "@dxos/log": "workspace:*",
-    "@dxos/react-ui-theme": "workspace:*",
+    "@dxos/ui-theme": "workspace:*",
     "@dxos/vite-plugin-icons": "workspace:*",
     "@storybook/addon-docs": "10.1.10",
     "@storybook/addon-links": "10.1.10",

@@ -8,7 +8,7 @@ import React, { type ComponentPropsWithRef, type ComponentPropsWithoutRef, forwa
 // TODO(burdon): Remove dep.
 import { Avatar, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { type UseTextEditorProps, keymap, listener, useTextEditor } from '@dxos/react-ui-editor';
-import { focusRing, mx } from '@dxos/react-ui-theme';
+import { focusRing, mx } from '@dxos/ui-theme';
 import { hexToEmoji, hexToHue, isTruthy } from '@dxos/util';
 
 import { translationKey } from '../translations';

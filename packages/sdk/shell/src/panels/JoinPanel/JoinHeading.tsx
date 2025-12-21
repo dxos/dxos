@@ -5,7 +5,7 @@
 import React, { type ForwardedRef, cloneElement, forwardRef } from 'react';
 
 import { Button, Icon, useTranslation } from '@dxos/react-ui';
-import { descriptionText, mx } from '@dxos/react-ui-theme';
+import { descriptionText, mx } from '@dxos/ui-theme';
 
 import { Heading } from '../../components';
 

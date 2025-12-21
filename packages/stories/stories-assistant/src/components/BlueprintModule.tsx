@@ -9,7 +9,7 @@ import { Filter, Obj } from '@dxos/echo';
 import { TemplateEditor, meta } from '@dxos/plugin-assistant';
 import { useQuery } from '@dxos/react-client/echo';
 import { Toolbar, useTranslation } from '@dxos/react-ui';
-import { descriptionMessage, mx } from '@dxos/react-ui-theme';
+import { descriptionMessage, mx } from '@dxos/ui-theme';
 
 import { type ComponentProps } from './types';
 

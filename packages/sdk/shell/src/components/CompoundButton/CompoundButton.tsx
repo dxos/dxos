@@ -5,7 +5,7 @@
 import React, { type ComponentPropsWithoutRef, type ReactNode } from 'react';
 
 import { type ButtonProps, useElevationContext, useId, useThemeContext } from '@dxos/react-ui';
-import { descriptionText, descriptionTextPrimary, mx } from '@dxos/react-ui-theme';
+import { descriptionText, descriptionTextPrimary, mx } from '@dxos/ui-theme';
 
 export interface CompoundButtonSlots {
   root: ComponentPropsWithoutRef<'button'>;

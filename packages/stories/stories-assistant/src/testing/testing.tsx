@@ -45,7 +45,7 @@ import { SpacePlugin } from '@dxos/plugin-space';
 import { StorybookLayoutPlugin } from '@dxos/plugin-storybook-layout';
 import { ThemePlugin } from '@dxos/plugin-theme';
 import { type Client, Config } from '@dxos/react-client';
-import { defaultTx } from '@dxos/react-ui-theme';
+import { defaultTx } from '@dxos/ui-theme';
 import { AccessToken } from '@dxos/types';
 import { trim } from '@dxos/util';
 

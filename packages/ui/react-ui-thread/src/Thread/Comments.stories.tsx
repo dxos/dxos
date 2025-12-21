@@ -23,7 +23,7 @@ import {
   useComments,
   useTextEditor,
 } from '@dxos/react-ui-editor';
-import { hoverableControls, hoverableFocusedWithinControls } from '@dxos/react-ui-theme';
+import { hoverableControls, hoverableFocusedWithinControls } from '@dxos/ui-theme';
 
 import { Obj } from '../../../../core/echo/echo/src';
 import { MessageBody, MessageHeading, MessageRoot, MessageTextbox } from '../Message';

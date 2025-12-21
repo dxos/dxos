@@ -7,7 +7,7 @@ import React from 'react';
 
 import { type PropertyMetaAnnotation, PropertyMetaAnnotationId } from '@dxos/echo/internal';
 import { Card, cardNoSpacing, cardSpacing } from '@dxos/react-ui-stack';
-import { mx } from '@dxos/react-ui-theme';
+import { mx } from '@dxos/ui-theme';
 import { Task } from '@dxos/types';
 
 import { CardSubjectMenu } from '../components';

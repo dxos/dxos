@@ -6,7 +6,7 @@ import { AnimatePresence, motion } from 'motion/react';
 import React, { useMemo } from 'react';
 
 import { type Size, type ThemedClassName } from '@dxos/react-ui';
-import { getSize, mx } from '@dxos/react-ui-theme';
+import { getSize, mx } from '@dxos/ui-theme';
 
 export type MatrixProps = ThemedClassName<{
   dim?: number;

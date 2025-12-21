@@ -4,7 +4,7 @@
 
 import React, { type FC } from 'react';
 
-import { mx } from '@dxos/react-ui-theme';
+import { mx } from '@dxos/ui-theme';
 import { Unit } from '@dxos/util';
 
 const SLOW_TIME = 250;

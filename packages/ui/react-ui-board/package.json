@@ -37,7 +37,7 @@
     "@dxos/react-ui-dnd": "workspace:*",
     "@dxos/react-ui-stack": "workspace:*",
     "@dxos/react-ui-text-tooltip": "workspace:*",
-    "@dxos/react-ui-types": "workspace:*",
+    "@dxos/ui-types": "workspace:*",
     "@dxos/util": "workspace:*",
     "@preact-signals/safe-react": "catalog:",
     "@preact/signals-core": "catalog:",
@@ -51,9 +51,9 @@
     "@dxos/plugin-preview": "workspace:*",
     "@dxos/random": "workspace:*",
     "@dxos/react-ui-syntax-highlighter": "workspace:*",
-    "@dxos/react-ui-theme": "workspace:*",
     "@dxos/schema": "workspace:*",
     "@dxos/storybook-utils": "workspace:*",
+    "@dxos/ui-theme": "workspace:*",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
     "react": "catalog:",
@@ -62,7 +62,7 @@
   },
   "peerDependencies": {
     "@dxos/react-ui": "workspace:*",
-    "@dxos/react-ui-theme": "workspace:*",
+    "@dxos/ui-theme": "workspace:*",
     "effect": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:"

@@ -11,7 +11,7 @@ import { type Client, useClient } from '@dxos/react-client';
 import { type Space, getSpace, useQuery } from '@dxos/react-client/echo';
 import { type TFunction } from '@dxos/react-ui';
 import { createMenuAction } from '@dxos/react-ui-menu';
-import { errorMessageColors } from '@dxos/react-ui-theme';
+import { errorMessageColors } from '@dxos/ui-theme';
 
 import { meta } from '../meta';
 import { deployScript, getFunctionUrl, isScriptDeployed } from '../util';

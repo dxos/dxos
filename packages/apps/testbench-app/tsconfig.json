@@ -93,7 +93,7 @@
       "path": "../../ui/react-ui-table"
     },
     {
-      "path": "../../ui/react-ui-theme"
+      "path": "../../ui/ui-theme"
     }
   ]
 }

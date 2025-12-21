@@ -8,7 +8,7 @@ import React, { useEffect, useRef } from 'react';
 import { createInputSchema, createOutputSchema } from '@dxos/conductor';
 import { type ThemedClassName } from '@dxos/react-ui';
 import { type ShapeComponentProps, type ShapeDef } from '@dxos/react-ui-canvas-editor';
-import { mx } from '@dxos/react-ui-theme';
+import { mx } from '@dxos/ui-theme';
 import { Message } from '@dxos/types';
 
 import { Box, createFunctionAnchors } from './common';

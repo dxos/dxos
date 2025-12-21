@@ -9,7 +9,7 @@ import { Obj } from '@dxos/echo';
 import { type SpaceMember, useMembers } from '@dxos/react-client/echo';
 import { Icon, IconButton, Select, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { type Player, useGameboardContext } from '@dxos/react-ui-gameboard';
-import { mx } from '@dxos/react-ui-theme';
+import { mx } from '@dxos/ui-theme';
 
 import { meta } from '../meta';
 

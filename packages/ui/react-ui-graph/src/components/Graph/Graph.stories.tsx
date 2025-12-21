@@ -12,7 +12,7 @@ import { IconButton, Popover, Toolbar } from '@dxos/react-ui';
 import { withTheme } from '@dxos/react-ui/testing';
 import { Card } from '@dxos/react-ui-stack';
 import { JsonFilter, SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
-import { getHashStyles, mx } from '@dxos/react-ui-theme';
+import { getHashStyles, mx } from '@dxos/ui-theme';
 
 import { Pulsar } from '../../fx';
 import {

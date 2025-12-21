@@ -19,7 +19,7 @@ import { Input, type ThemedClassName, useDynamicRef, useTranslation } from '@dxo
 import { ChatEditor, type ChatEditorController, type ChatEditorProps } from '@dxos/react-ui-chat';
 import { type MarkdownStreamController } from '@dxos/react-ui-components';
 import { MenuProvider, ToolbarMenu } from '@dxos/react-ui-menu';
-import { mx } from '@dxos/react-ui-theme';
+import { mx } from '@dxos/ui-theme';
 import { Message } from '@dxos/types';
 import { isTruthy } from '@dxos/util';
 

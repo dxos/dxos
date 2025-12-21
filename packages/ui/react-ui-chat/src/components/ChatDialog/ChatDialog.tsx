@@ -7,7 +7,7 @@ import React, { type Dispatch, type PropsWithChildren, type SetStateAction, useE
 
 import { Dialog, Icon, IconButton, type ThemedClassName, useControlledState } from '@dxos/react-ui';
 import { ResizeHandle, type Size, resizeAttributes, sizeStyle } from '@dxos/react-ui-dnd';
-import { mx } from '@dxos/react-ui-theme';
+import { mx } from '@dxos/ui-theme';
 
 const preventDefault = (event: Event) => event.preventDefault();
 

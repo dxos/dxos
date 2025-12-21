@@ -7,7 +7,7 @@ import { syntaxTree } from '@codemirror/language';
 import { hoverTooltip } from '@codemirror/view';
 import { type SyntaxNode } from '@lezer/common';
 
-import { tooltipContent } from '@dxos/react-ui-theme';
+import { tooltipContent } from '@dxos/ui-theme';
 
 import { type RenderCallback } from '../../types';
 

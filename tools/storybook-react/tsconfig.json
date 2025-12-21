@@ -23,7 +23,7 @@
       "path": "../../packages/common/storybook-utils"
     },
     {
-      "path": "../../packages/ui/react-ui-theme"
+      "path": "../../packages/ui/ui-theme"
     },
     {
       "path": "../vite-plugin-icons"

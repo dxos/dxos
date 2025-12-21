@@ -13,7 +13,7 @@ import { IconButton, type ThemedClassName, useAsyncEffect, useTranslation } from
 import { Form, ViewEditor } from '@dxos/react-ui-form';
 import { List } from '@dxos/react-ui-list';
 import { cardChrome, cardText } from '@dxos/react-ui-stack';
-import { inputTextLabel, mx, subtleHover } from '@dxos/react-ui-theme';
+import { inputTextLabel, mx, subtleHover } from '@dxos/ui-theme';
 import { type ProjectionModel, View } from '@dxos/schema';
 import { Project, Task } from '@dxos/types';
 import { arrayMove } from '@dxos/util';

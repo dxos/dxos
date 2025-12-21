@@ -9,7 +9,7 @@ import { type BundleResult } from '@dxos/functions-runtime/bundler';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { useClient } from '@dxos/react-client';
-import { baseSurface, mx } from '@dxos/react-ui-theme';
+import { baseSurface, mx } from '@dxos/ui-theme';
 import { createProtoRpcPeer } from '@dxos/rpc';
 import { createIFramePort } from '@dxos/rpc-tunnel';
 

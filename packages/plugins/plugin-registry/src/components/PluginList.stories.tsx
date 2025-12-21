@@ -8,7 +8,7 @@ import React, { useState } from 'react';
 import { type Plugin, definePlugin } from '@dxos/app-framework';
 import { faker } from '@dxos/random';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
-import { getHashHue } from '@dxos/react-ui-theme';
+import { getHashHue } from '@dxos/ui-theme';
 
 import { translations } from '../translations';
 import { RegistryTagType } from '../types';

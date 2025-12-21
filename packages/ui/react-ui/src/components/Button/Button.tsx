@@ -7,7 +7,7 @@ import { Primitive } from '@radix-ui/react-primitive';
 import { Slot } from '@radix-ui/react-slot';
 import React, { type ComponentPropsWithRef, forwardRef, memo } from 'react';
 
-import { type Density, type Elevation } from '@dxos/react-ui-types';
+import { type Density, type Elevation } from '@dxos/ui-types';
 
 import { useDensityContext, useElevationContext, useThemeContext } from '../../hooks';
 import { type ThemedClassName } from '../../util';

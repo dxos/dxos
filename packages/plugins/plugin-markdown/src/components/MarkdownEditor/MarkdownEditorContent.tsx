@@ -25,7 +25,7 @@ import {
   stackItemContentEditorClassNames,
   useTextEditor,
 } from '@dxos/react-ui-editor';
-import { mx } from '@dxos/react-ui-theme';
+import { mx } from '@dxos/ui-theme';
 import { isTruthy } from '@dxos/util';
 
 import { useSelectCurrentThread } from '../../hooks';

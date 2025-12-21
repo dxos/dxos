@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { mx } from '@dxos/react-ui-theme';
+import { mx } from '@dxos/ui-theme';
 
 export type HeadingLevel = 1 | 2 | 3 | 4 | 5 | 6;
 

@@ -8,7 +8,7 @@ import React, { type PropsWithChildren, forwardRef, useCallback, useEffect, useS
 
 import { log } from '@dxos/log';
 import { type ThemedClassName } from '@dxos/react-ui';
-import { mx } from '@dxos/react-ui-theme';
+import { mx } from '@dxos/ui-theme';
 
 import { Piece, type PieceProps } from './Piece';
 import { Square, type SquareProps } from './Square';

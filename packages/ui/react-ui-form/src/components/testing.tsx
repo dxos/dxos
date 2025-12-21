@@ -7,7 +7,7 @@ import React, { type PropsWithChildren } from 'react';
 import { type ThemedClassName } from '@dxos/react-ui';
 import { Card } from '@dxos/react-ui-stack';
 import { JsonFilter } from '@dxos/react-ui-syntax-highlighter';
-import { textBlockWidth } from '@dxos/react-ui-theme';
+import { textBlockWidth } from '@dxos/ui-theme';
 
 type TestLayoutProps = ThemedClassName<PropsWithChildren<{ json?: any }>>;
 

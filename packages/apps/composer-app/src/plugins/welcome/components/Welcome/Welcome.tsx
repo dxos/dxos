@@ -8,7 +8,7 @@ import React, { type ChangeEvent, type KeyboardEvent, useCallback, useMemo, useR
 
 import { DXOSHorizontalType } from '@dxos/brand';
 import { Button, Icon, Input, useTranslation } from '@dxos/react-ui';
-import { mx } from '@dxos/react-ui-theme';
+import { mx } from '@dxos/ui-theme';
 import { type ActionMenuItem, BifurcatedAction, CompoundButton } from '@dxos/shell/react';
 
 import { meta } from '../../meta';

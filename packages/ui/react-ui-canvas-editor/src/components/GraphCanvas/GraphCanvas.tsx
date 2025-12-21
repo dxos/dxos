@@ -23,7 +23,7 @@ import React, { type PropsWithChildren, useCallback, useContext, useEffect } fro
 
 import { log } from '@dxos/log';
 import { type ThemedClassName, useThemeContext } from '@dxos/react-ui';
-import { mx } from '@dxos/react-ui-theme';
+import { mx } from '@dxos/ui-theme';
 
 import { EditorContext } from '../../hooks';
 import { type CanvasGraphModel, type Polygon } from '../../types';

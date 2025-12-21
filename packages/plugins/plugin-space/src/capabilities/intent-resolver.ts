@@ -25,7 +25,7 @@ import { SpaceState, getSpace } from '@dxos/react-client/echo';
 import { Invitation, InvitationEncoder } from '@dxos/react-client/invitations';
 import { ATTENDABLE_PATH_SEPARATOR } from '@dxos/react-ui-attention';
 import { iconValues } from '@dxos/react-ui-pickers';
-import { hues } from '@dxos/react-ui-theme';
+import { hues } from '@dxos/ui-theme';
 import { Collection, ProjectionModel, getTypenameFromQuery } from '@dxos/schema';
 
 import {

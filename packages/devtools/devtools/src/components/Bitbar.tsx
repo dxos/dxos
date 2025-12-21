@@ -5,7 +5,7 @@
 import React, { type FC } from 'react';
 import { useResizeDetector } from 'react-resize-detector';
 
-import { mx } from '@dxos/react-ui-theme';
+import { mx } from '@dxos/ui-theme';
 import { BitField, range } from '@dxos/util';
 
 export type BitbarParams = {

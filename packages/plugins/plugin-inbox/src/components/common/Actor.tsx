@@ -6,7 +6,7 @@ import * as Array from 'effect/Array';
 import React from 'react';
 
 import { IconButton, type ThemedClassName, useTranslation } from '@dxos/react-ui';
-import { mx } from '@dxos/react-ui-theme';
+import { mx } from '@dxos/ui-theme';
 import { type Actor } from '@dxos/types';
 
 import { meta } from '../../meta';

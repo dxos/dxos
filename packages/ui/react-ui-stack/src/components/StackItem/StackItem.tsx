@@ -26,7 +26,7 @@ import { createPortal } from 'react-dom';
 
 import { ListItem, type ThemedClassName } from '@dxos/react-ui';
 import { resizeAttributes, sizeStyle } from '@dxos/react-ui-dnd';
-import { mx } from '@dxos/react-ui-theme';
+import { mx } from '@dxos/ui-theme';
 
 import { type StackItemData, type StackItemSize } from '../defs';
 import { type ItemDragState, StackItemContext, idle, useStack, useStackItem } from '../StackContext';

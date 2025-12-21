@@ -11,8 +11,8 @@
     "@dxos/echo": "latest",
     "@dxos/react-client": "latest",
     "@dxos/react-ui": "latest",
-    "@dxos/react-ui-theme": "latest",
-    "@dxos/react-ui-types": "latest",
+    "@dxos/ui-theme": "latest",
+    "@dxos/ui-types": "latest",
     "react": "~19.2.0",
     "react-dom": "~19.2.0"
   },

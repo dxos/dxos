@@ -16,7 +16,7 @@ import {
   type PopoverVirtualTriggerProps,
 } from '@dxos/react-ui';
 import { useId } from '@dxos/react-ui';
-import { mx, staticPlaceholderText } from '@dxos/react-ui-theme';
+import { mx, staticPlaceholderText } from '@dxos/ui-theme';
 
 import {
   SearchList,

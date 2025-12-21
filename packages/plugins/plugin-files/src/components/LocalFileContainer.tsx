@@ -8,7 +8,7 @@ import React, { type FC, useMemo } from 'react';
 import { Surface, useAppGraph } from '@dxos/app-framework/react';
 import { Button, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { StackItem } from '@dxos/react-ui-stack';
-import { descriptionMessage, mx } from '@dxos/react-ui-theme';
+import { descriptionMessage, mx } from '@dxos/ui-theme';
 
 import { meta } from '../meta';
 import { type LocalEntity, type LocalFile, LocalFilesAction } from '../types';

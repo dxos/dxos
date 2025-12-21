@@ -8,7 +8,7 @@ import { Capabilities, contributes } from '@dxos/app-framework';
 import { useCapabilities } from '@dxos/app-framework/react';
 import { live } from '@dxos/live-object';
 import { type ThemeMode, ThemeProvider, type ThemeProviderProps, Toast, Tooltip } from '@dxos/react-ui';
-import { defaultTx } from '@dxos/react-ui-theme';
+import { defaultTx } from '@dxos/ui-theme';
 
 import { meta } from './meta';
 import compositeEnUs from './translations/en-US';

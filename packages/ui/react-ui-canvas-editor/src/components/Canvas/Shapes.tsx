@@ -6,7 +6,7 @@ import React, { type HTMLAttributes, forwardRef, useCallback } from 'react';
 
 import { type ThemedClassName } from '@dxos/react-ui';
 import { Markers, useCanvasContext } from '@dxos/react-ui-canvas';
-import { mx } from '@dxos/react-ui-theme';
+import { mx } from '@dxos/ui-theme';
 
 import { useEditorContext } from '../../hooks';
 import { type Layout } from '../../types';

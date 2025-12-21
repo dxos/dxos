@@ -16,7 +16,7 @@ import {
   toLocalizedString,
   useTranslation,
 } from '@dxos/react-ui';
-import { groupHoverControlItemWithTransition, mx } from '@dxos/react-ui-theme';
+import { groupHoverControlItemWithTransition, mx } from '@dxos/ui-theme';
 
 import { ThreadCapabilities } from '../../capabilities';
 import { meta } from '../../meta';

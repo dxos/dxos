@@ -6,7 +6,7 @@ import React from 'react';
 
 import { Button, Icon, useTranslation } from '@dxos/react-ui';
 import { Card, cardText } from '@dxos/react-ui-stack';
-import { mx } from '@dxos/react-ui-theme';
+import { mx } from '@dxos/ui-theme';
 import { type Event } from '@dxos/types';
 
 import { meta } from '../../meta';

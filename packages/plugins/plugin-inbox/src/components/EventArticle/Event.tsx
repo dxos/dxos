@@ -8,7 +8,7 @@ import React, { type PropsWithChildren } from 'react';
 import { type Database } from '@dxos/react-client/echo';
 import { Icon, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { MenuProvider, ToolbarMenu } from '@dxos/react-ui-menu';
-import { mx } from '@dxos/react-ui-theme';
+import { mx } from '@dxos/ui-theme';
 import { type Actor, type Event as EventType } from '@dxos/types';
 
 import { meta } from '../../meta';

@@ -6,7 +6,7 @@ import React, { type ChangeEvent, useState } from 'react';
 
 import { Invitation } from '@dxos/react-client/invitations';
 import { Input, useTranslation } from '@dxos/react-ui';
-import { descriptionText } from '@dxos/react-ui-theme';
+import { descriptionText } from '@dxos/ui-theme';
 import { hexToEmoji } from '@dxos/util';
 
 import { Action, Actions, Emoji, Label, StepHeading } from '../../../components';

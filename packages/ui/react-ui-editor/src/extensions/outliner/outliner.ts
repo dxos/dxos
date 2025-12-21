@@ -5,7 +5,7 @@
 import { type EditorState, type Extension, Prec, type Range } from '@codemirror/state';
 import { Decoration, type DecorationSet, EditorView, ViewPlugin, type ViewUpdate } from '@codemirror/view';
 
-import { mx } from '@dxos/react-ui-theme';
+import { mx } from '@dxos/ui-theme';
 
 import { decorateMarkdown } from '../markdown';
 

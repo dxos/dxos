@@ -3,142 +3,414 @@
 {
   "compilerOptions": {
     "paths": {
-      "@dxos/storybook-utils": ["packages/common/storybook-utils/src/index.ts"],
-      "@dxos/assistant-toolkit": ["packages/core/assistant-testing/src/index.ts"],
-      "@dxos/assistant": ["packages/core/assistant/src/index.ts"],
-      "@dxos/compute": ["packages/core/compute/src/index.ts"],
-      "@dxos/compute/testing": ["packages/core/compute/src/testing/index.ts"],
-      "@dxos/conductor": ["packages/core/conductor/src/index.ts"],
-      "@dxos/conductor/testing": ["packages/core/conductor/src/testing/index.ts"],
-      "@dxos/functions/bundler": ["packages/core/functions/src/bundler/index.ts"],
-      "@dxos/functions/edge": ["packages/core/functions/src/edge/index.ts"],
-      "@dxos/functions": ["packages/core/functions/src/index.ts"],
-      "@dxos/functions/testing": ["packages/core/functions/src/testing/index.ts"],
-      "@dxos/devtools": ["packages/devtools/devtools/src/index.ts"],
-      "@dxos/plugin-assistant": ["packages/plugins/plugin-assistant/src/index.ts"],
-      "@dxos/plugin-assistant/blueprints": ["packages/plugins/plugin-assistant/src/blueprints/index.ts"],
-      "@dxos/plugin-assistant/types": ["packages/plugins/plugin-assistant/src/types/index.ts"],
-      "@dxos/plugin-attention": ["packages/plugins/plugin-attention/src/index.ts"],
-      "@dxos/plugin-automation": ["packages/plugins/plugin-automation/src/index.ts"],
-      "@dxos/plugin-automation/types": ["packages/plugins/plugin-automation/src/types/index.ts"],
-      "@dxos/plugin-board": ["packages/plugins/plugin-board/src/index.ts"],
-      "@dxos/plugin-board/types": ["packages/plugins/plugin-board/src/types/index.ts"],
-      "@dxos/plugin-chess": ["packages/plugins/plugin-chess/src/index.ts"],
-      "@dxos/plugin-chess/types": ["packages/plugins/plugin-chess/src/types/index.ts"],
-      "@dxos/plugin-client": ["packages/plugins/plugin-client/src/index.ts"],
-      "@dxos/plugin-client/types": ["packages/plugins/plugin-client/src/types/index.ts"],
-      "@dxos/plugin-conductor": ["packages/plugins/plugin-conductor/src/index.ts"],
-      "@dxos/plugin-conductor/types": ["packages/plugins/plugin-conductor/src/types/index.ts"],
-      "@dxos/plugin-debug": ["packages/plugins/plugin-debug/src/index.ts"],
-      "@dxos/plugin-deck": ["packages/plugins/plugin-deck/src/index.ts"],
-      "@dxos/plugin-deck/types": ["packages/plugins/plugin-deck/src/types/index.ts"],
-      "@dxos/plugin-excalidraw": ["packages/plugins/plugin-excalidraw/src/index.ts"],
-      "@dxos/plugin-explorer": ["packages/plugins/plugin-explorer/src/index.ts"],
-      "@dxos/plugin-explorer/meta": ["packages/plugins/plugin-explorer/src/meta.ts"],
-      "@dxos/plugin-explorer/types": ["packages/plugins/plugin-explorer/src/types/index.ts"],
-      "@dxos/plugin-files": ["packages/plugins/plugin-files/src/index.ts"],
-      "@dxos/plugin-graph": ["packages/plugins/plugin-graph/src/index.ts"],
-      "@dxos/plugin-help": ["packages/plugins/plugin-help/src/index.ts"],
-      "@dxos/plugin-help/meta": ["packages/plugins/plugin-help/src/meta.ts"],
-      "@dxos/plugin-help/types": ["packages/plugins/plugin-help/src/types/index.ts"],
-      "@dxos/plugin-inbox": ["packages/plugins/plugin-inbox/src/index.ts"],
-      "@dxos/plugin-inbox/types": ["packages/plugins/plugin-inbox/src/types/index.ts"],
-      "@dxos/plugin-kanban": ["packages/plugins/plugin-kanban/src/index.ts"],
-      "@dxos/plugin-kanban/types": ["packages/plugins/plugin-kanban/src/types/index.ts"],
-      "@dxos/plugin-map": ["packages/plugins/plugin-map/src/index.ts"],
-      "@dxos/plugin-map/types": ["packages/plugins/plugin-map/src/types/index.ts"],
-      "@dxos/plugin-markdown": ["packages/plugins/plugin-markdown/src/index.ts"],
-      "@dxos/plugin-markdown/types": ["packages/plugins/plugin-markdown/src/types/index.ts"],
-      "@dxos/plugin-meeting": ["packages/plugins/plugin-meeting/src/index.ts"],
-      "@dxos/plugin-meeting/types": ["packages/plugins/plugin-meeting/src/types/index.ts"],
-      "@dxos/plugin-mermaid": ["packages/plugins/plugin-mermaid/src/index.ts"],
-      "@dxos/plugin-native": ["packages/plugins/plugin-native/src/index.ts"],
-      "@dxos/plugin-navtree": ["packages/plugins/plugin-navtree/src/index.ts"],
-      "@dxos/plugin-observability": ["packages/plugins/plugin-observability/src/index.ts"],
-      "@dxos/plugin-observability/types": ["packages/plugins/plugin-observability/src/types/index.ts"],
-      "@dxos/plugin-outliner": ["packages/plugins/plugin-outliner/src/index.ts"],
-      "@dxos/plugin-outliner/types": ["packages/plugins/plugin-outliner/src/types/index.ts"],
-      "@dxos/plugin-presenter": ["packages/plugins/plugin-presenter/src/index.ts"],
-      "@dxos/plugin-preview": ["packages/plugins/plugin-preview/src/index.ts"],
-      "@dxos/plugin-pwa": ["packages/plugins/plugin-pwa/src/index.ts"],
-      "@dxos/plugin-registry": ["packages/plugins/plugin-registry/src/index.ts"],
-      "@dxos/plugin-script": ["packages/plugins/plugin-script/src/index.ts"],
-      "@dxos/plugin-script/templates": ["packages/plugins/plugin-script/src/templates/index.ts"],
-      "@dxos/plugin-script/types": ["packages/plugins/plugin-script/src/types/index.ts"],
-      "@dxos/plugin-search": ["packages/plugins/plugin-search/src/index.ts"],
-      "@dxos/plugin-sheet": ["packages/plugins/plugin-sheet/src/index.ts"],
-      "@dxos/plugin-sheet/types": ["packages/plugins/plugin-sheet/src/types/index.ts"],
-      "@dxos/plugin-sketch": ["packages/plugins/plugin-sketch/src/index.ts"],
-      "@dxos/plugin-sketch/sdk": ["packages/plugins/plugin-sketch/src/sdk.ts"],
-      "@dxos/plugin-sketch/types": ["packages/plugins/plugin-sketch/src/types/index.ts"],
-      "@dxos/plugin-space": ["packages/plugins/plugin-space/src/index.ts"],
-      "@dxos/plugin-space/types": ["packages/plugins/plugin-space/src/types/index.ts"],
-      "@dxos/plugin-stack": ["packages/plugins/plugin-stack/src/index.ts"],
-      "@dxos/plugin-stack/types": ["packages/plugins/plugin-stack/src/types/index.ts"],
-      "@dxos/plugin-status-bar": ["packages/plugins/plugin-status-bar/src/index.ts"],
-      "@dxos/plugin-storybook-layout": ["packages/plugins/plugin-storybook-layout/src/index.ts"],
-      "@dxos/plugin-table": ["packages/plugins/plugin-table/src/index.ts"],
-      "@dxos/plugin-table/types": ["packages/plugins/plugin-table/src/types/index.ts"],
-      "@dxos/plugin-template": ["packages/plugins/plugin-template/src/index.ts"],
-      "@dxos/plugin-template/types": ["packages/plugins/plugin-template/src/types/index.ts"],
-      "@dxos/plugin-theme": ["packages/plugins/plugin-theme/src/index.ts"],
-      "@dxos/plugin-theme/meta": ["packages/plugins/plugin-theme/src/meta.ts"],
-      "@dxos/plugin-theme-editor": ["packages/plugins/plugin-theme-editor/src/index.ts"],
-      "@dxos/plugin-thread": ["packages/plugins/plugin-thread/src/index.ts"],
-      "@dxos/plugin-thread/types": ["packages/plugins/plugin-thread/src/types/index.ts"],
-      "@dxos/plugin-token-manager": ["packages/plugins/plugin-token-manager/src/index.ts"],
-      "@dxos/plugin-token-manager/types": ["packages/plugins/plugin-token-manager/src/types/index.ts"],
-      "@dxos/plugin-transcription": ["packages/plugins/plugin-transcription/src/index.ts"],
-      "@dxos/plugin-transcription/types": ["packages/plugins/plugin-transcription/src/types/index.ts"],
-      "@dxos/plugin-transformer": ["packages/plugins/plugin-transformer/src/index.ts"],
-      "@dxos/plugin-transformer/types": ["packages/plugins/plugin-transformer/src/types/index.ts"],
-      "@dxos/plugin-wnfs": ["packages/plugins/plugin-wnfs/src/index.ts"],
-      "@dxos/plugin-wnfs/types": ["packages/plugins/plugin-wnfs/src/types/index.ts"],
-      "@dxos/app-framework": ["packages/sdk/app-framework/src/index.ts"],
-      "@dxos/app-framework/testing": ["packages/sdk/app-framework/src/testing/index.ts"],
-      "@dxos/app-framework/worker": ["packages/sdk/app-framework/src/worker.ts"],
-      "@dxos/app-graph": ["packages/sdk/app-graph/src/index.ts"],
-      "@dxos/migrations": ["packages/sdk/migrations/src/index.ts"],
-      "@dxos/shell/react": ["packages/sdk/shell/src/react.ts"],
-      "@dxos/shell/testing": ["packages/sdk/shell/src/testing/index.ts"],
-      "@dxos/react-ui": ["packages/ui/react-ui/src/index.ts"],
-      "@dxos/react-ui/testing": ["packages/ui/react-ui/src/testing/index.ts"],
-      "@dxos/react-ui-attention": ["packages/ui/react-ui-attention/src/index.ts"],
-      "@dxos/react-ui-attention/testing": ["packages/ui/react-ui-attention/src/testing/index.ts"],
-      "@dxos/react-ui-board": ["packages/ui/react-ui-board/src/index.ts"],
-      "@dxos/react-ui-canvas": ["packages/ui/react-ui-canvas/src/index.ts"],
-      "@dxos/react-ui-canvas-compute": ["packages/ui/react-ui-canvas-compute/src/index.ts"],
-      "@dxos/react-ui-canvas-editor": ["packages/ui/react-ui-canvas-editor/src/index.ts"],
-      "@dxos/react-ui-canvas-editor/testing": ["packages/ui/react-ui-canvas-editor/src/testing/index.ts"],
-      "@dxos/react-ui-chat": ["packages/ui/react-ui-chat/src/index.ts"],
-      "@dxos/react-ui-components": ["packages/ui/react-ui-components/src/index.ts"],
-      "@dxos/react-ui-dnd": ["packages/ui/react-ui-dnd/src/index.ts"],
-      "@dxos/react-ui-editor": ["packages/ui/react-ui-editor/src/index.ts"],
-      "@dxos/react-ui-editor/testing": ["packages/ui/react-ui-editor/src/testing/index.ts"],
-      "@dxos/react-ui-editor/types": ["packages/ui/react-ui-editor/src/types/index.ts"],
-      "@dxos/react-ui-form": ["packages/ui/react-ui-form/src/index.ts"],
-      "@dxos/react-ui-gameboard": ["packages/ui/react-ui-gameboard/src/index.ts"],
-      "@dxos/react-ui-geo/data": ["packages/ui/react-ui-geo/src/data.ts"],
-      "@dxos/react-ui-geo": ["packages/ui/react-ui-geo/src/index.ts"],
-      "@dxos/react-ui-graph": ["packages/ui/react-ui-graph/src/index.ts"],
-      "@dxos/react-ui-graph/testing": ["packages/ui/react-ui-graph/src/testing/index.ts"],
-      "@dxos/react-ui-grid": ["packages/ui/react-ui-grid/src/index.ts"],
-      "@dxos/react-ui-kanban": ["packages/ui/react-ui-kanban/src/index.ts"],
-      "@dxos/react-ui-kanban/types": ["packages/ui/react-ui-kanban/src/types/index.ts"],
-      "@dxos/react-ui-list": ["packages/ui/react-ui-list/src/index.ts"],
-      "@dxos/react-ui-menu": ["packages/ui/react-ui-menu/src/index.ts"],
-      "@dxos/react-ui-pickers": ["packages/ui/react-ui-pickers/src/index.ts"],
-      "@dxos/react-ui-searchlist": ["packages/ui/react-ui-searchlist/src/index.ts"],
-      "@dxos/react-ui-sfx": ["packages/ui/react-ui-sfx/src/index.ts"],
-      "@dxos/react-ui-stack": ["packages/ui/react-ui-stack/src/index.ts"],
-      "@dxos/react-ui-stack/testing": ["packages/ui/react-ui-stack/src/testing/index.ts"],
-      "@dxos/react-ui-syntax-highlighter": ["packages/ui/react-ui-syntax-highlighter/src/index.ts"],
-      "@dxos/react-ui-table": ["packages/ui/react-ui-table/src/index.ts"],
-      "@dxos/react-ui-tabs": ["packages/ui/react-ui-tabs/src/index.ts"],
-      "@dxos/react-ui-text-tooltip": ["packages/ui/react-ui-text-tooltip/src/index.ts"],
-      "@dxos/react-ui-thread": ["packages/ui/react-ui-thread/src/index.ts"],
-      "@dxos/react-ui-types": ["packages/ui/react-ui-types/src/index.ts"]
+      "@dxos/storybook-utils": [
+        "packages/common/storybook-utils/src/index.ts"
+      ],
+      "@dxos/assistant-toolkit": [
+        "packages/core/assistant-testing/src/index.ts"
+      ],
+      "@dxos/assistant": [
+        "packages/core/assistant/src/index.ts"
+      ],
+      "@dxos/compute": [
+        "packages/core/compute/src/index.ts"
+      ],
+      "@dxos/compute/testing": [
+        "packages/core/compute/src/testing/index.ts"
+      ],
+      "@dxos/conductor": [
+        "packages/core/conductor/src/index.ts"
+      ],
+      "@dxos/conductor/testing": [
+        "packages/core/conductor/src/testing/index.ts"
+      ],
+      "@dxos/functions/bundler": [
+        "packages/core/functions/src/bundler/index.ts"
+      ],
+      "@dxos/functions/edge": [
+        "packages/core/functions/src/edge/index.ts"
+      ],
+      "@dxos/functions": [
+        "packages/core/functions/src/index.ts"
+      ],
+      "@dxos/functions/testing": [
+        "packages/core/functions/src/testing/index.ts"
+      ],
+      "@dxos/devtools": [
+        "packages/devtools/devtools/src/index.ts"
+      ],
+      "@dxos/plugin-assistant": [
+        "packages/plugins/plugin-assistant/src/index.ts"
+      ],
+      "@dxos/plugin-assistant/blueprints": [
+        "packages/plugins/plugin-assistant/src/blueprints/index.ts"
+      ],
+      "@dxos/plugin-assistant/types": [
+        "packages/plugins/plugin-assistant/src/types/index.ts"
+      ],
+      "@dxos/plugin-attention": [
+        "packages/plugins/plugin-attention/src/index.ts"
+      ],
+      "@dxos/plugin-automation": [
+        "packages/plugins/plugin-automation/src/index.ts"
+      ],
+      "@dxos/plugin-automation/types": [
+        "packages/plugins/plugin-automation/src/types/index.ts"
+      ],
+      "@dxos/plugin-board": [
+        "packages/plugins/plugin-board/src/index.ts"
+      ],
+      "@dxos/plugin-board/types": [
+        "packages/plugins/plugin-board/src/types/index.ts"
+      ],
+      "@dxos/plugin-chess": [
+        "packages/plugins/plugin-chess/src/index.ts"
+      ],
+      "@dxos/plugin-chess/types": [
+        "packages/plugins/plugin-chess/src/types/index.ts"
+      ],
+      "@dxos/plugin-client": [
+        "packages/plugins/plugin-client/src/index.ts"
+      ],
+      "@dxos/plugin-client/types": [
+        "packages/plugins/plugin-client/src/types/index.ts"
+      ],
+      "@dxos/plugin-conductor": [
+        "packages/plugins/plugin-conductor/src/index.ts"
+      ],
+      "@dxos/plugin-conductor/types": [
+        "packages/plugins/plugin-conductor/src/types/index.ts"
+      ],
+      "@dxos/plugin-debug": [
+        "packages/plugins/plugin-debug/src/index.ts"
+      ],
+      "@dxos/plugin-deck": [
+        "packages/plugins/plugin-deck/src/index.ts"
+      ],
+      "@dxos/plugin-deck/types": [
+        "packages/plugins/plugin-deck/src/types/index.ts"
+      ],
+      "@dxos/plugin-excalidraw": [
+        "packages/plugins/plugin-excalidraw/src/index.ts"
+      ],
+      "@dxos/plugin-explorer": [
+        "packages/plugins/plugin-explorer/src/index.ts"
+      ],
+      "@dxos/plugin-explorer/meta": [
+        "packages/plugins/plugin-explorer/src/meta.ts"
+      ],
+      "@dxos/plugin-explorer/types": [
+        "packages/plugins/plugin-explorer/src/types/index.ts"
+      ],
+      "@dxos/plugin-files": [
+        "packages/plugins/plugin-files/src/index.ts"
+      ],
+      "@dxos/plugin-graph": [
+        "packages/plugins/plugin-graph/src/index.ts"
+      ],
+      "@dxos/plugin-help": [
+        "packages/plugins/plugin-help/src/index.ts"
+      ],
+      "@dxos/plugin-help/meta": [
+        "packages/plugins/plugin-help/src/meta.ts"
+      ],
+      "@dxos/plugin-help/types": [
+        "packages/plugins/plugin-help/src/types/index.ts"
+      ],
+      "@dxos/plugin-inbox": [
+        "packages/plugins/plugin-inbox/src/index.ts"
+      ],
+      "@dxos/plugin-inbox/types": [
+        "packages/plugins/plugin-inbox/src/types/index.ts"
+      ],
+      "@dxos/plugin-kanban": [
+        "packages/plugins/plugin-kanban/src/index.ts"
+      ],
+      "@dxos/plugin-kanban/types": [
+        "packages/plugins/plugin-kanban/src/types/index.ts"
+      ],
+      "@dxos/plugin-map": [
+        "packages/plugins/plugin-map/src/index.ts"
+      ],
+      "@dxos/plugin-map/types": [
+        "packages/plugins/plugin-map/src/types/index.ts"
+      ],
+      "@dxos/plugin-markdown": [
+        "packages/plugins/plugin-markdown/src/index.ts"
+      ],
+      "@dxos/plugin-markdown/types": [
+        "packages/plugins/plugin-markdown/src/types/index.ts"
+      ],
+      "@dxos/plugin-meeting": [
+        "packages/plugins/plugin-meeting/src/index.ts"
+      ],
+      "@dxos/plugin-meeting/types": [
+        "packages/plugins/plugin-meeting/src/types/index.ts"
+      ],
+      "@dxos/plugin-mermaid": [
+        "packages/plugins/plugin-mermaid/src/index.ts"
+      ],
+      "@dxos/plugin-native": [
+        "packages/plugins/plugin-native/src/index.ts"
+      ],
+      "@dxos/plugin-navtree": [
+        "packages/plugins/plugin-navtree/src/index.ts"
+      ],
+      "@dxos/plugin-observability": [
+        "packages/plugins/plugin-observability/src/index.ts"
+      ],
+      "@dxos/plugin-observability/types": [
+        "packages/plugins/plugin-observability/src/types/index.ts"
+      ],
+      "@dxos/plugin-outliner": [
+        "packages/plugins/plugin-outliner/src/index.ts"
+      ],
+      "@dxos/plugin-outliner/types": [
+        "packages/plugins/plugin-outliner/src/types/index.ts"
+      ],
+      "@dxos/plugin-presenter": [
+        "packages/plugins/plugin-presenter/src/index.ts"
+      ],
+      "@dxos/plugin-preview": [
+        "packages/plugins/plugin-preview/src/index.ts"
+      ],
+      "@dxos/plugin-pwa": [
+        "packages/plugins/plugin-pwa/src/index.ts"
+      ],
+      "@dxos/plugin-registry": [
+        "packages/plugins/plugin-registry/src/index.ts"
+      ],
+      "@dxos/plugin-script": [
+        "packages/plugins/plugin-script/src/index.ts"
+      ],
+      "@dxos/plugin-script/templates": [
+        "packages/plugins/plugin-script/src/templates/index.ts"
+      ],
+      "@dxos/plugin-script/types": [
+        "packages/plugins/plugin-script/src/types/index.ts"
+      ],
+      "@dxos/plugin-search": [
+        "packages/plugins/plugin-search/src/index.ts"
+      ],
+      "@dxos/plugin-sheet": [
+        "packages/plugins/plugin-sheet/src/index.ts"
+      ],
+      "@dxos/plugin-sheet/types": [
+        "packages/plugins/plugin-sheet/src/types/index.ts"
+      ],
+      "@dxos/plugin-sketch": [
+        "packages/plugins/plugin-sketch/src/index.ts"
+      ],
+      "@dxos/plugin-sketch/sdk": [
+        "packages/plugins/plugin-sketch/src/sdk.ts"
+      ],
+      "@dxos/plugin-sketch/types": [
+        "packages/plugins/plugin-sketch/src/types/index.ts"
+      ],
+      "@dxos/plugin-space": [
+        "packages/plugins/plugin-space/src/index.ts"
+      ],
+      "@dxos/plugin-space/types": [
+        "packages/plugins/plugin-space/src/types/index.ts"
+      ],
+      "@dxos/plugin-stack": [
+        "packages/plugins/plugin-stack/src/index.ts"
+      ],
+      "@dxos/plugin-stack/types": [
+        "packages/plugins/plugin-stack/src/types/index.ts"
+      ],
+      "@dxos/plugin-status-bar": [
+        "packages/plugins/plugin-status-bar/src/index.ts"
+      ],
+      "@dxos/plugin-storybook-layout": [
+        "packages/plugins/plugin-storybook-layout/src/index.ts"
+      ],
+      "@dxos/plugin-table": [
+        "packages/plugins/plugin-table/src/index.ts"
+      ],
+      "@dxos/plugin-table/types": [
+        "packages/plugins/plugin-table/src/types/index.ts"
+      ],
+      "@dxos/plugin-template": [
+        "packages/plugins/plugin-template/src/index.ts"
+      ],
+      "@dxos/plugin-template/types": [
+        "packages/plugins/plugin-template/src/types/index.ts"
+      ],
+      "@dxos/plugin-theme": [
+        "packages/plugins/plugin-theme/src/index.ts"
+      ],
+      "@dxos/plugin-theme/meta": [
+        "packages/plugins/plugin-theme/src/meta.ts"
+      ],
+      "@dxos/plugin-theme-editor": [
+        "packages/plugins/plugin-theme-editor/src/index.ts"
+      ],
+      "@dxos/plugin-thread": [
+        "packages/plugins/plugin-thread/src/index.ts"
+      ],
+      "@dxos/plugin-thread/types": [
+        "packages/plugins/plugin-thread/src/types/index.ts"
+      ],
+      "@dxos/plugin-token-manager": [
+        "packages/plugins/plugin-token-manager/src/index.ts"
+      ],
+      "@dxos/plugin-token-manager/types": [
+        "packages/plugins/plugin-token-manager/src/types/index.ts"
+      ],
+      "@dxos/plugin-transcription": [
+        "packages/plugins/plugin-transcription/src/index.ts"
+      ],
+      "@dxos/plugin-transcription/types": [
+        "packages/plugins/plugin-transcription/src/types/index.ts"
+      ],
+      "@dxos/plugin-transformer": [
+        "packages/plugins/plugin-transformer/src/index.ts"
+      ],
+      "@dxos/plugin-transformer/types": [
+        "packages/plugins/plugin-transformer/src/types/index.ts"
+      ],
+      "@dxos/plugin-wnfs": [
+        "packages/plugins/plugin-wnfs/src/index.ts"
+      ],
+      "@dxos/plugin-wnfs/types": [
+        "packages/plugins/plugin-wnfs/src/types/index.ts"
+      ],
+      "@dxos/app-framework": [
+        "packages/sdk/app-framework/src/index.ts"
+      ],
+      "@dxos/app-framework/testing": [
+        "packages/sdk/app-framework/src/testing/index.ts"
+      ],
+      "@dxos/app-framework/worker": [
+        "packages/sdk/app-framework/src/worker.ts"
+      ],
+      "@dxos/app-graph": [
+        "packages/sdk/app-graph/src/index.ts"
+      ],
+      "@dxos/migrations": [
+        "packages/sdk/migrations/src/index.ts"
+      ],
+      "@dxos/shell/react": [
+        "packages/sdk/shell/src/react.ts"
+      ],
+      "@dxos/shell/testing": [
+        "packages/sdk/shell/src/testing/index.ts"
+      ],
+      "@dxos/react-ui": [
+        "packages/ui/react-ui/src/index.ts"
+      ],
+      "@dxos/react-ui/testing": [
+        "packages/ui/react-ui/src/testing/index.ts"
+      ],
+      "@dxos/react-ui-attention": [
+        "packages/ui/react-ui-attention/src/index.ts"
+      ],
+      "@dxos/react-ui-attention/testing": [
+        "packages/ui/react-ui-attention/src/testing/index.ts"
+      ],
+      "@dxos/react-ui-board": [
+        "packages/ui/react-ui-board/src/index.ts"
+      ],
+      "@dxos/react-ui-canvas": [
+        "packages/ui/react-ui-canvas/src/index.ts"
+      ],
+      "@dxos/react-ui-canvas-compute": [
+        "packages/ui/react-ui-canvas-compute/src/index.ts"
+      ],
+      "@dxos/react-ui-canvas-editor": [
+        "packages/ui/react-ui-canvas-editor/src/index.ts"
+      ],
+      "@dxos/react-ui-canvas-editor/testing": [
+        "packages/ui/react-ui-canvas-editor/src/testing/index.ts"
+      ],
+      "@dxos/react-ui-chat": [
+        "packages/ui/react-ui-chat/src/index.ts"
+      ],
+      "@dxos/react-ui-components": [
+        "packages/ui/react-ui-components/src/index.ts"
+      ],
+      "@dxos/react-ui-dnd": [
+        "packages/ui/react-ui-dnd/src/index.ts"
+      ],
+      "@dxos/react-ui-editor": [
+        "packages/ui/react-ui-editor/src/index.ts"
+      ],
+      "@dxos/react-ui-editor/testing": [
+        "packages/ui/react-ui-editor/src/testing/index.ts"
+      ],
+      "@dxos/react-ui-editor/types": [
+        "packages/ui/react-ui-editor/src/types/index.ts"
+      ],
+      "@dxos/react-ui-form": [
+        "packages/ui/react-ui-form/src/index.ts"
+      ],
+      "@dxos/react-ui-gameboard": [
+        "packages/ui/react-ui-gameboard/src/index.ts"
+      ],
+      "@dxos/react-ui-geo/data": [
+        "packages/ui/react-ui-geo/src/data.ts"
+      ],
+      "@dxos/react-ui-geo": [
+        "packages/ui/react-ui-geo/src/index.ts"
+      ],
+      "@dxos/react-ui-graph": [
+        "packages/ui/react-ui-graph/src/index.ts"
+      ],
+      "@dxos/react-ui-graph/testing": [
+        "packages/ui/react-ui-graph/src/testing/index.ts"
+      ],
+      "@dxos/react-ui-grid": [
+        "packages/ui/react-ui-grid/src/index.ts"
+      ],
+      "@dxos/react-ui-kanban": [
+        "packages/ui/react-ui-kanban/src/index.ts"
+      ],
+      "@dxos/react-ui-kanban/types": [
+        "packages/ui/react-ui-kanban/src/types/index.ts"
+      ],
+      "@dxos/react-ui-list": [
+        "packages/ui/react-ui-list/src/index.ts"
+      ],
+      "@dxos/react-ui-menu": [
+        "packages/ui/react-ui-menu/src/index.ts"
+      ],
+      "@dxos/react-ui-pickers": [
+        "packages/ui/react-ui-pickers/src/index.ts"
+      ],
+      "@dxos/react-ui-searchlist": [
+        "packages/ui/react-ui-searchlist/src/index.ts"
+      ],
+      "@dxos/react-ui-sfx": [
+        "packages/ui/react-ui-sfx/src/index.ts"
+      ],
+      "@dxos/react-ui-stack": [
+        "packages/ui/react-ui-stack/src/index.ts"
+      ],
+      "@dxos/react-ui-stack/testing": [
+        "packages/ui/react-ui-stack/src/testing/index.ts"
+      ],
+      "@dxos/react-ui-syntax-highlighter": [
+        "packages/ui/react-ui-syntax-highlighter/src/index.ts"
+      ],
+      "@dxos/react-ui-table": [
+        "packages/ui/react-ui-table/src/index.ts"
+      ],
+      "@dxos/react-ui-tabs": [
+        "packages/ui/react-ui-tabs/src/index.ts"
+      ],
+      "@dxos/react-ui-text-tooltip": [
+        "packages/ui/react-ui-text-tooltip/src/index.ts"
+      ],
+      "@dxos/react-ui-thread": [
+        "packages/ui/react-ui-thread/src/index.ts"
+      ],
+      "@dxos/ui-types": [
+        "packages/ui/react-ui-types/src/index.ts"
+      ]
     }
   },
-  "include": ["**/*"]
+  "include": [
+    "**/*"
+  ]
 }

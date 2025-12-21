@@ -11,7 +11,7 @@ import { useQuery } from '@dxos/react-client/echo';
 import { useClientProvider, withClientProvider } from '@dxos/react-client/testing';
 import { withTheme } from '@dxos/react-ui/testing';
 import { Card, cardNoSpacing, cardSpacing } from '@dxos/react-ui-stack';
-import { mx } from '@dxos/react-ui-theme';
+import { mx } from '@dxos/ui-theme';
 import { createObjectFactory } from '@dxos/schema/testing';
 import { Organization } from '@dxos/types';
 

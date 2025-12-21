@@ -22,7 +22,7 @@ import { useConfig } from '@dxos/react-client';
 import { type Space } from '@dxos/react-client/echo';
 import { Avatar, Input, type ThemedClassName, Toolbar, useAsyncEffect } from '@dxos/react-ui';
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
-import { errorText, mx } from '@dxos/react-ui-theme';
+import { errorText, mx } from '@dxos/ui-theme';
 
 import { useDevtoolsState } from '../../../hooks';
 

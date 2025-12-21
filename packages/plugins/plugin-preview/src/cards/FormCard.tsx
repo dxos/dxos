@@ -10,7 +10,7 @@ import { type JsonPath, splitJsonPath } from '@dxos/effect';
 import { useTranslation } from '@dxos/react-ui';
 import { Form, omitId } from '@dxos/react-ui-form';
 import { Card } from '@dxos/react-ui-stack';
-import { descriptionMessage, mx } from '@dxos/react-ui-theme';
+import { descriptionMessage, mx } from '@dxos/ui-theme';
 import { type ProjectionModel } from '@dxos/schema';
 
 import { meta } from '../meta';

@@ -15,7 +15,7 @@ import {
   type DxGridPlaneRange,
   toPlaneCellIndex,
 } from '@dxos/react-ui-grid';
-import { mx } from '@dxos/react-ui-theme';
+import { mx } from '@dxos/ui-theme';
 import { type FieldType, VIEW_FIELD_LIMIT } from '@dxos/schema';
 
 import { tableButtons, tableControls } from '../util';

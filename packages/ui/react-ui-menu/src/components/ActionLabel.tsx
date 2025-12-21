@@ -7,7 +7,7 @@ import React from 'react';
 import { type ActionGroup, type Action as GraphAction } from '@dxos/app-graph';
 import { keySymbols } from '@dxos/keyboard';
 import { type TFunction, toLocalizedString, useTranslation } from '@dxos/react-ui';
-import { descriptionText, mx } from '@dxos/react-ui-theme';
+import { descriptionText, mx } from '@dxos/ui-theme';
 
 import { translationKey } from '../translations';
 import { type MenuActionProperties } from '../types';

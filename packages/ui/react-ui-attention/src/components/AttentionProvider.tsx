@@ -9,7 +9,7 @@ import React, { type ComponentPropsWithRef, type FocusEvent, type PropsWithChild
 
 import { log } from '@dxos/log';
 import { type ThemedClassName, useDefaultValue } from '@dxos/react-ui';
-import { mx } from '@dxos/react-ui-theme';
+import { mx } from '@dxos/ui-theme';
 
 import { ATTENDABLE_PATH_SEPARATOR, type Attention, AttentionManager, getAttendables } from '../attention';
 

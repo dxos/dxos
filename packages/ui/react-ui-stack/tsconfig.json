@@ -48,7 +48,7 @@
       "path": "../react-ui-dnd"
     },
     {
-      "path": "../react-ui-theme"
+      "path": "../ui-theme"
     }
   ]
 }

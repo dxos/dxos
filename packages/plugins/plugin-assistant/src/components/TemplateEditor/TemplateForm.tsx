@@ -7,7 +7,7 @@ import React, { Fragment, useEffect } from 'react';
 
 import { type Template } from '@dxos/blueprints';
 import { Input, Select, useTranslation } from '@dxos/react-ui';
-import { attentionSurface, groupBorder, mx } from '@dxos/react-ui-theme';
+import { attentionSurface, groupBorder, mx } from '@dxos/ui-theme';
 import { isNonNullable } from '@dxos/util';
 
 import { meta } from '../../meta';

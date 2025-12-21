@@ -7,7 +7,7 @@ import React from 'react';
 import { type ThemedClassName } from '@dxos/react-ui';
 import { FPS, testId } from '@dxos/react-ui-canvas';
 import { Json } from '@dxos/react-ui-syntax-highlighter';
-import { mx } from '@dxos/react-ui-theme';
+import { mx } from '@dxos/ui-theme';
 
 import { useEditorContext } from '../../hooks';
 import { type TestId } from '../defs';

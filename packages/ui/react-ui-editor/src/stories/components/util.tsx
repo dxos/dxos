@@ -8,7 +8,7 @@ import React, { type FC } from 'react';
 
 import { faker } from '@dxos/random';
 import { Icon } from '@dxos/react-ui';
-import { mx } from '@dxos/react-ui-theme';
+import { mx } from '@dxos/ui-theme';
 
 import {
   type EditorSelectionState,

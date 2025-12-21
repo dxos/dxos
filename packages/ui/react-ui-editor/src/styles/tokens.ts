@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { tokens } from '@dxos/react-ui-theme';
+import { tokens } from '@dxos/ui-theme';
 import { get } from '@dxos/util';
 
 /**

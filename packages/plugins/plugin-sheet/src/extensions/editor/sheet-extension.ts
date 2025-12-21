@@ -21,7 +21,7 @@ import { spreadsheet } from 'codemirror-lang-spreadsheet';
 import { type FunctionDefinition } from '@dxos/compute';
 import { RANGE_NOTATION } from '@dxos/compute';
 import { singleValueFacet } from '@dxos/react-ui-editor';
-import { mx } from '@dxos/react-ui-theme';
+import { mx } from '@dxos/ui-theme';
 
 /**
  * https://codemirror.net/examples/styling

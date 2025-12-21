@@ -48,9 +48,9 @@
   },
   "devDependencies": {
     "@dxos/async": "workspace:*",
-    "@dxos/react-ui-theme": "workspace:*",
     "@dxos/storybook-utils": "workspace:*",
     "@dxos/test-utils": "workspace:*",
+    "@dxos/ui-theme": "workspace:*",
     "@sentry/vite-plugin": "catalog:",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",

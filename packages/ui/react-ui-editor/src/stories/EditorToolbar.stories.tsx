@@ -8,7 +8,7 @@ import React, { useCallback, useState } from 'react';
 import { invariant } from '@dxos/invariant';
 import { useThemeContext } from '@dxos/react-ui';
 import { withTheme } from '@dxos/react-ui/testing';
-import { attentionSurface, mx } from '@dxos/react-ui-theme';
+import { attentionSurface, mx } from '@dxos/ui-theme';
 
 import { EditorToolbar, useEditorToolbar } from '../components';
 import { editorWidth } from '../defaults';

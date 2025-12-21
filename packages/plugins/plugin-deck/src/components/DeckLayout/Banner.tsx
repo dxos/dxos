@@ -6,7 +6,7 @@ import React from 'react';
 
 import { Surface } from '@dxos/app-framework/react';
 import { type ThemedClassName, useTranslation } from '@dxos/react-ui';
-import { mx } from '@dxos/react-ui-theme';
+import { mx } from '@dxos/ui-theme';
 
 import { meta } from '../../meta';
 import { CloseSidebarButton, ToggleSidebarButton } from '../Sidebar';
