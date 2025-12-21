@@ -19,11 +19,12 @@ export const mapSchemas = (schemas: SchemaEntry[]) => {
 };
 
 export const printSchema = (schema: SchemaEntry) =>
-  FormBuilder.of({ title: schema.typename })
-    .set({ key: 'id', value: schema.id ?? '<none>' })
-    .set({ key: 'typename', value: schema.typename })
-    .set({ key: 'version', value: schema.version })
-    .build();
+  FormBuilder.make({ title: schema.typename }).pipe(
+    FormBuilder.set('id', schema.id ?? '<none>'),
+    FormBuilder.set('typename', schema.typename),
+    FormBuilder.set('version', schema.version),
+    FormBuilder.build
+  );
 
 export const printSchemas = (schemas: SchemaEntry[]) => {
   return schemas.map(printSchema);

@@ -34,21 +34,19 @@ export const mapDevices = (devices: Device[], truncateKeys = false) => {
 };
 
 export const printDevice = (device: Device) =>
-  FormBuilder.of({ title: getDeviceTitle(device) })
-    .set({ key: 'deviceKey', value: device.deviceKey.truncate() })
-    .set({ key: 'label', value: device.profile?.label ?? '<none>' })
-    .set({ key: 'type', value: device.profile?.type ? DeviceType[device.profile?.type] : 'UNKNOWN' })
-    .set({ key: 'kind', value: DeviceKind[device.kind] })
-    .set({
-      key: 'presence',
-      value: device?.kind === DeviceKind.CURRENT ? 'THIS DEVICE' : Device.PresenceState[device.presence],
-    })
-    .set({ key: 'platform', value: device.profile?.platform ?? '<none>' })
-    .set({ key: 'platformVersion', value: device.profile?.platformVersion ?? '<none>' })
-    .set({ key: 'architecture', value: device.profile?.architecture ?? '<none>' })
-    .set({ key: 'os', value: device.profile?.os ?? '<none>' })
-    .set({ key: 'osVersion', value: device.profile?.osVersion ?? '<none>' })
-    .build();
+  FormBuilder.make({ title: getDeviceTitle(device) }).pipe(
+    FormBuilder.set('deviceKey', device.deviceKey.truncate()),
+    FormBuilder.set('label', device.profile?.label ?? '<none>'),
+    FormBuilder.set('type', device.profile?.type ? DeviceType[device.profile?.type] : 'UNKNOWN'),
+    FormBuilder.set('kind', DeviceKind[device.kind]),
+    FormBuilder.set('presence', device?.kind === DeviceKind.CURRENT ? 'THIS DEVICE' : Device.PresenceState[device.presence]),
+    FormBuilder.set('platform', device.profile?.platform ?? '<none>'),
+    FormBuilder.set('platformVersion', device.profile?.platformVersion ?? '<none>'),
+    FormBuilder.set('architecture', device.profile?.architecture ?? '<none>'),
+    FormBuilder.set('os', device.profile?.os ?? '<none>'),
+    FormBuilder.set('osVersion', device.profile?.osVersion ?? '<none>'),
+    FormBuilder.build
+  );
 
 export const printDevices = (devices: Device[]) => {
   return devices.map(printDevice);

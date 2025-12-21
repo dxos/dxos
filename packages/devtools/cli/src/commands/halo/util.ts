@@ -11,7 +11,8 @@ export const printIdentity = (identity: {
   identityKey: { toHex(): string; truncate(): string };
   profile?: { displayName?: string };
 }) =>
-  FormBuilder.of({ title: 'Identity' })
-    .set({ key: 'identityKey', value: identity.identityKey.truncate() })
-    .set({ key: 'displayName', value: identity.profile?.displayName ?? '<none>' })
-    .build();
+  FormBuilder.make({ title: 'Identity' }).pipe(
+    FormBuilder.set('identityKey', identity.identityKey.truncate()),
+    FormBuilder.set('displayName', identity.profile?.displayName ?? '<none>'),
+    FormBuilder.build
+  );

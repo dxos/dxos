@@ -5,6 +5,7 @@
 import * as Command from '@effect/cli/Command';
 import * as Console from 'effect/Console';
 import * as Effect from 'effect/Effect';
+import * as Option from 'effect/Option';
 
 import { ClientService } from '@dxos/client';
 
@@ -31,14 +32,11 @@ export const handler = Effect.fn(function* () {
       ),
     );
   } else {
-    const builder = FormBuilder.of({ title: 'HALO Keys' });
-    if (identity) {
-      builder.set({ key: 'identityKey', value: identity.identityKey.truncate() });
-    }
-    if (device) {
-      builder.set({ key: 'deviceKey', value: device.deviceKey.truncate() });
-    }
-    yield* Console.log(print(builder.build()));
+    const builder = FormBuilder.make({ title: 'HALO Keys' }).pipe(
+      FormBuilder.option('identityKey', Option.fromNullable(identity?.identityKey.truncate())),
+      FormBuilder.option('deviceKey', Option.fromNullable(device?.deviceKey.truncate())),
+    );
+    yield* Console.log(print(FormBuilder.build(builder)));
   }
 });
 

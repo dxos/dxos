@@ -33,27 +33,27 @@ export const getFunctionStatus = (fn: Function.Function, functions: Function.Fun
  * Pretty prints a function with ANSI colors.
  */
 export const printFunction = (fn: Function.Function, status?: FunctionStatus) => {
-  const builder = FormBuilder.of({ title: fn.id })
-    .set({ key: 'key', value: fn.key })
-    .set({ key: 'name', value: fn.name })
-    .set({ key: 'version', value: fn.version })
-    .set({ key: 'uploaded', value: fn.updated });
-
-  if (status != null) {
-    builder.set({
-      key: 'status',
-      value: status,
-      color: Match.type<FunctionStatus>().pipe(
-        Match.withReturnType<Ansi.Ansi>(),
-        Match.when('not imported', () => Ansi.white),
-        Match.when('up-to-date', () => Ansi.green),
-        Match.when('update available', () => Ansi.yellow),
-        Match.exhaustive,
+  return FormBuilder.make({ title: fn.id }).pipe(
+    FormBuilder.set('key', fn.key),
+    FormBuilder.set('name', fn.name),
+    FormBuilder.set('version', fn.version),
+    FormBuilder.set('uploaded', fn.updated),
+    FormBuilder.when(
+      status != null,
+      FormBuilder.set(
+        'status',
+        status!,
+        Match.type<FunctionStatus>().pipe(
+          Match.withReturnType<Ansi.Ansi>(),
+          Match.when('not imported', () => Ansi.white),
+          Match.when('up-to-date', () => Ansi.green),
+          Match.when('update available', () => Ansi.yellow),
+          Match.exhaustive,
+        ),
       ),
-    });
-  }
-
-  return builder.build();
+    ),
+    FormBuilder.build,
+  );
 };
 
 /**
@@ -61,29 +61,23 @@ export const printFunction = (fn: Function.Function, status?: FunctionStatus) =>
  */
 export const printInvokeResult = (result: unknown) => {
   if (result === null || result === undefined) {
-    return FormBuilder.of({ title: 'Result' }).set({ key: 'value', value: 'null' }).build();
+    return FormBuilder.make({ title: 'Result' }).pipe(FormBuilder.set('value', 'null'), FormBuilder.build);
   }
 
   if (typeof result === 'string' || typeof result === 'number' || typeof result === 'boolean') {
-    return FormBuilder.of({ title: 'Result' })
-      .set({ key: 'value', value: String(result) })
-      .build();
+    return FormBuilder.make({ title: 'Result' }).pipe(FormBuilder.set('value', String(result)), FormBuilder.build);
   }
 
   if (typeof result === 'object') {
-    const builder = FormBuilder.of({ title: 'Result' });
-    for (const [key, value] of Object.entries(result)) {
-      builder.set({
-        key,
-        value: typeof value === 'object' && value !== null ? JSON.stringify(value) : String(value),
-      });
-    }
-    return builder.build();
+    return FormBuilder.make({ title: 'Result' }).pipe(
+      FormBuilder.each(Object.entries(result), ([key, value]) =>
+        FormBuilder.set(key, typeof value === 'object' && value !== null ? JSON.stringify(value) : String(value)),
+      ),
+      FormBuilder.build,
+    );
   }
 
-  return FormBuilder.of({ title: 'Result' })
-    .set({ key: 'value', value: String(result) })
-    .build();
+  return FormBuilder.make({ title: 'Result' }).pipe(FormBuilder.set('value', String(result)), FormBuilder.build);
 };
 
 /**
