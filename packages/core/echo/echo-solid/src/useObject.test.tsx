@@ -29,8 +29,7 @@ describe('useObject', () => {
     const registry = Registry.make();
     const Wrapper = createWrapper(registry);
 
-    let result: Entity.Unknown | undefined;
-
+    let result: ReturnType<ReturnType<typeof useObject<typeof obj>>>;
     render(
       () => {
         const value = useObject(obj);
@@ -41,18 +40,17 @@ describe('useObject', () => {
     );
 
     expect(result).toBe(obj);
-    expect((result as any)?.name).toBe('Test');
+    expect(result?.name).toBe('Test');
   });
 
   test('returns property value when property is provided', () => {
     const obj = createObject(
       Obj.make(TestSchema.Person, { name: 'Test', username: 'test', email: 'test@example.com' }),
-    ) as Entity.Entity<TestSchema.Person>;
+    );
     const registry = Registry.make();
     const Wrapper = createWrapper(registry);
 
     let result: string | undefined;
-
     render(
       () => {
         const value = useObject(obj, 'name');
@@ -68,12 +66,11 @@ describe('useObject', () => {
   test('updates when object property changes', async () => {
     const obj = createObject(
       Obj.make(TestSchema.Person, { name: 'Test', username: 'test', email: 'test@example.com' }),
-    ) as Entity.Entity<TestSchema.Person>;
+    );
     const registry = Registry.make();
     const Wrapper = createWrapper(registry);
 
     let result: string | undefined;
-
     const { getByTestId } = render(
       () => {
         const value = useObject(obj, 'name');
@@ -102,8 +99,7 @@ describe('useObject', () => {
     const registry = Registry.make();
     const Wrapper = createWrapper(registry);
 
-    let result: Entity.Unknown | undefined;
-
+    let result: ReturnType<ReturnType<typeof useObject<typeof obj>>>;
     render(
       () => {
         const value = useObject(obj);
@@ -113,26 +109,25 @@ describe('useObject', () => {
       { wrapper: Wrapper },
     );
 
-    expect((result as any)?.name).toBe('Test');
+    expect(result?.name).toBe('Test');
 
     // Update a property on the object
-    (obj as any).name = 'Updated';
+    obj.name = 'Updated';
 
     // Wait for reactivity to update
     await waitFor(() => {
-      expect((result as any)?.name).toBe('Updated');
+      expect(result?.name).toBe('Updated');
     });
   });
 
   test('property atom does not update when other properties change', async () => {
     const obj = createObject(
       Obj.make(TestSchema.Person, { name: 'Test', username: 'test', email: 'test@example.com' }),
-    ) as Entity.Entity<TestSchema.Person>;
+    );
     const registry = Registry.make();
     const Wrapper = createWrapper(registry);
 
     let result: string | undefined;
-
     render(
       () => {
         const value = useObject(obj, 'name');
@@ -158,8 +153,7 @@ describe('useObject', () => {
     const registry = Registry.make();
     const Wrapper = createWrapper(registry);
 
-    let result: Entity.Unknown | undefined;
-
+    let result: ReturnType<ReturnType<typeof useObject<typeof obj>>>;
     render(
       () => {
         const value = useObject(() => obj);
@@ -170,13 +164,13 @@ describe('useObject', () => {
     );
 
     expect(result).toBe(obj);
-    expect((result as any)?.name).toBe('Test');
+    expect(result?.name).toBe('Test');
   });
 
   test('works with accessor function for property', () => {
     const obj = createObject(
       Obj.make(TestSchema.Person, { name: 'Test', username: 'test', email: 'test@example.com' }),
-    ) as Entity.Entity<TestSchema.Person>;
+    );
     const registry = Registry.make();
     const Wrapper = createWrapper(registry);
 
@@ -197,14 +191,14 @@ describe('useObject', () => {
   test('reactively tracks changes when accessor returns different object', async () => {
     const obj1 = createObject(
       Obj.make(TestSchema.Person, { name: 'Test1', username: 'test1', email: 'test1@example.com' }),
-    ) as Entity.Entity<TestSchema.Person>;
+    );
     const obj2 = createObject(
       Obj.make(TestSchema.Person, { name: 'Test2', username: 'test2', email: 'test2@example.com' }),
-    ) as Entity.Entity<TestSchema.Person>;
+    );
     const registry = Registry.make();
     const Wrapper = createWrapper(registry);
 
-    const [objSignal, setObjSignal] = createSignal<Entity.Entity<TestSchema.Person>>(obj1);
+    const [objSignal, setObjSignal] = createSignal(obj1);
     let valueAccessor: ReturnType<typeof useObject<Entity.Entity<TestSchema.Person>, 'name'>> | undefined;
 
     const { getByTestId } = render(
@@ -240,8 +234,7 @@ describe('useObject', () => {
     const Wrapper = createWrapper(registry);
 
     const [objSignal, setObjSignal] = createSignal(obj1);
-    let valueAccessor: (() => Entity.Unknown) | undefined;
-
+    let valueAccessor: ReturnType<typeof useObject<typeof obj1>> | undefined;
     render(
       () => {
         const value = useObject(objSignal);
@@ -251,15 +244,15 @@ describe('useObject', () => {
       { wrapper: Wrapper },
     );
 
-    expect((valueAccessor?.() as any)?.name).toBe('Test1');
+    expect(valueAccessor?.()?.name).toBe('Test1');
 
     // Change the object via signal
     setObjSignal(() => obj2);
 
     // Wait for reactivity to update
     await waitFor(() => {
-      expect((valueAccessor?.() as any)?.name).toBe('Test2');
+      expect(valueAccessor?.()?.name).toBe('Test2');
     });
-    expect((valueAccessor?.() as any)?.username).toBe('test2');
+    expect(valueAccessor?.()?.username).toBe('test2');
   });
 });

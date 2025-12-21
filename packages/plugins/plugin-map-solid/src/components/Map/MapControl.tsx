@@ -2,9 +2,9 @@
 // Copyright 2025 DXOS.org
 //
 
-import { createSignal } from 'solid-js';
+import { createMemo, createSignal } from 'solid-js';
 
-import { type ControlProps, Map, type MapController, type LatLngLiteral, useMapZoomHandler } from '@dxos/solid-ui-geo';
+import { type ControlProps, type LatLngLiteral, Map, type MapController, useMapZoomHandler } from '@dxos/solid-ui-geo';
 
 import { type GeoControlProps } from '../types';
 
@@ -14,7 +14,7 @@ export type MapControlProps = GeoControlProps & {
 
 export const MapControl = (props: MapControlProps) => {
   const [controller, setController] = createSignal<MapController | null>(null);
-  const handleZoomAction = useMapZoomHandler(controller());
+  const handleZoomAction = createMemo(() => useMapZoomHandler(controller()));
 
   const handleAction: ControlProps['onAction'] = (action) => {
     switch (action) {
@@ -26,12 +26,11 @@ export const MapControl = (props: MapControlProps) => {
   };
 
   return (
-    <Map.Root ref={setController} class={props.class} center={props.center} zoom={props.zoom} onChange={props.onChange}>
+    <Map.Root ref={setController} center={props.center} zoom={props.zoom} onChange={props.onChange}>
       <Map.Tiles />
       <Map.Markers markers={props.markers} />
       {props.onToggle && <Map.Action onAction={handleAction} />}
-      <Map.Zoom onAction={handleZoomAction} />
+      <Map.Zoom onAction={handleZoomAction()} />
     </Map.Root>
   );
 };
-

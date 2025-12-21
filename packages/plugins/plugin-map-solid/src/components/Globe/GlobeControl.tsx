@@ -12,7 +12,9 @@ import {
   loadTopology,
   useDrag,
   useGlobeZoomHandler,
+  useTour,
 } from '@dxos/solid-ui-geo';
+import { isNonNullable } from '@dxos/util';
 
 import { type GeoControlProps } from '../types';
 
@@ -67,6 +69,7 @@ const getGlobeStyles = (themeMode: 'dark' | 'light'): StyleSet =>
 
 export type GlobeControlProps = GeoControlProps & {
   class?: string;
+  selected?: () => string[];
 };
 
 export const GlobeControl = (props: GlobeControlProps) => {
@@ -82,15 +85,10 @@ export const GlobeControl = (props: GlobeControlProps) => {
   const [controller, setController] = createSignal<GlobeController | null>(null);
 
   // Control hooks - must be called unconditionally (aligned with globe stories).
-  let handleZoomAction: ControlProps['onAction'] | undefined;
+  const handleZoomAction = createMemo(() => useGlobeZoomHandler(controller()));
+  let setRunning: ((running: boolean | ((prev: boolean) => boolean)) => void) | undefined;
 
-  createEffect(() => {
-    const ctrl = controller();
-    if (ctrl) {
-      useDrag(ctrl);
-      handleZoomAction = useGlobeZoomHandler(ctrl);
-    }
-  });
+  const [moved, setMoved] = createSignal(false);
 
   const features = createMemo(() => {
     const markerList = props.markers?.() ?? [];
@@ -100,10 +98,55 @@ export const GlobeControl = (props: GlobeControlProps) => {
     };
   });
 
+  const selectedPoints = createMemo(() => {
+    const selected = props.selected?.() ?? [];
+    if (selected.length === 0) {
+      return features().points;
+    }
+
+    const markerList = props.markers?.() ?? [];
+    const points = selected
+      .map((id) => {
+        const marker = markerList.find((marker) => marker.id === id);
+        return marker ? marker.location : undefined;
+      })
+      .filter(isNonNullable);
+
+    return points;
+  });
+
+  // TODO(burdon): Redo.
+  const [active, setActive] = createSignal(false);
+
+  createEffect(() => {
+    const ctrl = controller();
+    if (ctrl) {
+      useDrag(ctrl, {
+        onUpdate: () => setMoved(true),
+      });
+
+      const tourResult = useTour(ctrl, selectedPoints().length ? selectedPoints() : features().points, {
+        running: active(),
+        loop: true,
+        styles: styles(),
+        autoRotate: !moved(),
+      });
+      setRunning = tourResult.setRunning;
+    }
+  });
+
+  createEffect(() => setActive(selectedPoints().length > 0));
+
   const handleAction: ControlProps['onAction'] = (action) => {
     switch (action) {
       case 'toggle': {
         props.onToggle?.();
+        break;
+      }
+
+      case 'start': {
+        setRunning?.((running) => !running);
+        setMoved(false);
         break;
       }
     }
@@ -119,7 +162,7 @@ export const GlobeControl = (props: GlobeControlProps) => {
         styles={styles()}
       />
       <Globe.Action onAction={handleAction} />
-      <Globe.Zoom onAction={handleZoomAction} />
+      <Globe.Zoom onAction={handleZoomAction()} />
     </Globe.Root>
   );
 };

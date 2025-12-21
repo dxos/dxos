@@ -104,14 +104,7 @@ function useObjectValue<T extends Entity.Unknown | undefined>(
     const a = AtomObj.make(currentObj);
     let currentValue: T | undefined = currentObj;
 
-    // Try to get initial value from registry
-    try {
-      currentValue = AtomObj.get(registry, a) as T;
-    } catch {
-      // Atom not registered yet, use initial value
-      currentValue = currentObj;
-    }
-
+    currentValue = AtomObj.get(registry, a);
     setValue(() => currentValue);
 
     // Subscribe to atom updates
@@ -165,14 +158,7 @@ function useObjectProperty<T extends Entity.Unknown | undefined, K extends keyof
     const a = AtomObj.makeProperty(obj, property);
     let currentValue: NonUndefinedT[K] | undefined = obj[property];
 
-    // Try to get initial value from registry
-    try {
-      currentValue = AtomObj.get(registry, a) as NonUndefinedT[K];
-    } catch {
-      // Atom not registered yet, use initial value
-      currentValue = obj[property];
-    }
-
+    currentValue = AtomObj.get(registry, a);
     setValue(() => currentValue);
 
     // Subscribe to atom updates

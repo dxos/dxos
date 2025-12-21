@@ -8,7 +8,7 @@ import * as A from '@automerge/automerge';
 import * as Schema from 'effect/Schema';
 
 import { type DevtoolsFormatter, devtoolsFormatter, inspectCustom } from '@dxos/debug';
-import { Obj } from '@dxos/echo';
+import { type Entity, Obj } from '@dxos/echo';
 import {
   ATTR_DELETED,
   ATTR_META,
@@ -977,11 +977,16 @@ export const isTypedObjectProxy = (value: any): value is Live<any> => {
 };
 
 /**
+ * Helper type to preserve Obj<Props> types, otherwise return Entity.Entity<T>.
+ */
+type CreateObjectReturn<T> = T extends Obj.Any ? T : Entity.Entity<T>;
+
+/**
  * Creates a reactive ECHO object backed by a CRDT.
  * @internal
  */
 // TODO(burdon): Document lifecycle.
-export const createObject = <T extends AnyProperties>(obj: T): AnyLiveObject<T> => {
+export const createObject = <T extends AnyProperties>(obj: T): CreateObjectReturn<T> => {
   assertArgument(!isEchoObject(obj), 'obj', 'Object is already an ECHO object');
   const schema = Obj.getSchema(obj);
   if (schema != null) {
@@ -1020,7 +1025,7 @@ export const createObject = <T extends AnyProperties>(obj: T): AnyLiveObject<T> 
       target[symbolInternals].core.setMeta(meta);
     }
 
-    return obj as any;
+    return obj as CreateObjectReturn<T>;
   } else {
     const target: ProxyTarget = {
       [symbolInternals]: new ObjectInternals(core),
@@ -1032,11 +1037,11 @@ export const createObject = <T extends AnyProperties>(obj: T): AnyLiveObject<T> 
     target[symbolInternals].subscriptions.push(core.updates.on(() => target[symbolInternals].signal.notifyWrite()));
 
     initCore(core, target);
-    const proxy = createProxy<ProxyTarget>(target, EchoReactiveHandler.instance) as any;
+    const proxy = createProxy<ProxyTarget>(target, EchoReactiveHandler.instance);
     setSchemaPropertiesOnObjectCore(target[symbolInternals], schema);
     setRelationSourceAndTarget(target, core, schema);
 
-    return proxy;
+    return proxy as unknown as CreateObjectReturn<T>;
   }
 };
 

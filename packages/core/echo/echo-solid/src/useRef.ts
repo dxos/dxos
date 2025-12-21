@@ -53,15 +53,7 @@ export function useRef<T extends Entity.Unknown>(ref: MaybeAccessor<Ref.Ref<T> |
       unsubscribe?.();
 
       const atom = AtomObj.make(targetObj);
-
-      // Get initial value - this also registers the atom
-      let currentValue = targetObj;
-      try {
-        currentValue = AtomObj.get(registry, atom) as T;
-      } catch {
-        // Atom not registered yet, use target object
-        currentValue = targetObj;
-      }
+      const currentValue = AtomObj.get(registry, atom);
 
       // Final check before updating state
       if (!isActive || loadingRef !== r) {
@@ -78,27 +70,14 @@ export function useRef<T extends Entity.Unknown>(ref: MaybeAccessor<Ref.Ref<T> |
           if (!isActive) {
             return;
           }
-          try {
-            const updatedValue = AtomObj.get(registry, atom) as T;
-            setTarget(() => updatedValue);
-          } catch {
-            // Fallback: re-read from the object directly
-            setTarget(() => targetObj);
-          }
+          const updatedValue = AtomObj.get(registry, atom) as T;
+          setTarget(() => updatedValue);
         },
         { immediate: true },
       );
     };
 
-    // Access .target to trigger loading (this is reactive and triggers loading)
-    let currentTarget: T | undefined;
-    try {
-      currentTarget = r.target;
-    } catch {
-      // Ref not available yet
-      currentTarget = undefined;
-    }
-
+    const currentTarget = r.target;
     // If target is immediately available, set up subscription
     if (currentTarget) {
       setupSubscription(currentTarget);

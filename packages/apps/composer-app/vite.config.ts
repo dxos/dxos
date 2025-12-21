@@ -66,7 +66,6 @@ export default defineConfig((env) => ({
   esbuild: {
     keepNames: true,
   },
-  // optimizeDeps config removed - let Vite handle solid-js normally
   build: {
     outDir: 'out/composer',
     sourcemap: true,
