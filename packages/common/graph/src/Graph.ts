@@ -70,4 +70,12 @@ export const Graph = Schema.Struct({
   edges: Schema.mutable(Schema.Array(Edge)),
 });
 
-export interface Graph extends Schema.Schema.Type<typeof Graph> {}
+export interface Any extends Schema.Schema.Type<typeof Graph> {}
+
+export type Graph<Node extends Node.Any, Edge extends Edge.Any> = Specialize<
+  Any,
+  {
+    nodes: Node[];
+    edges: Edge[];
+  }
+>;

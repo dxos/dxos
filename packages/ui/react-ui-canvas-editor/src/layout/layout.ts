@@ -131,16 +131,16 @@ const createLayout = (type: LayoutKind, options: CommonLayoutOptions) => {
 };
 
 // TODO(burdon): Preserve existing position with Shape adapter.
-const toLayoutGraph = ({ nodes, edges }: Graph.Graph): NaturalGraph<PlainObject, PlainObject> => {
+const toLayoutGraph = ({ nodes, edges }: Graph.Any): NaturalGraph<PlainObject, PlainObject> => {
   return new NaturalGraph<PlainObject, PlainObject>({
-    nodes: nodes.map((node) => ({
+    nodes: nodes.map((node: Graph.Node.Any) => ({
       id: node.id,
       data: {
         x: getDeep(node.data, ['center', 'x']) ?? 0,
         y: getDeep(node.data, ['center', 'y']) ?? 0,
       },
     })),
-    edges: edges.map((edge) => ({
+    edges: edges.map((edge: Graph.Edge.Any) => ({
       id: edge.id,
       source: edge.source,
       target: edge.target,

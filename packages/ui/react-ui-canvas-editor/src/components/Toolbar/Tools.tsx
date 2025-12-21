@@ -24,7 +24,7 @@ export const Tools = ({ classNames, registry }: ToolsProps) => {
   return (
     <div className={mx('flex flex-wrap gap-2 max-is-[80%] justify-center', classNames)}>
       {registry.defs.map(({ shapes }, i) => (
-        <div key={i} className='flex p-1 gap-2 items-center bg-baseSurface rounded-md border border-separator'>
+        <div key={i} className='flex p-1 gap-2 items-center bg-baseSurface rounded-sm border border-separator'>
           {shapes.map((shape) => (
             <Tool key={shape.type} type={shape.type} icon={shape.icon} />
           ))}

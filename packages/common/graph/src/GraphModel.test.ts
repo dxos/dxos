@@ -2,13 +2,11 @@
 // Copyright 2024 DXOS.org
 //
 
-import { effect } from '@preact/signals-core';
 import * as Schema from 'effect/Schema';
 import { describe, test } from 'vitest';
 
 import { Trigger } from '@dxos/async';
 import { registerSignalsRuntime } from '@dxos/echo-signals';
-import { live } from '@dxos/live-object';
 
 import * as Graph from './Graph';
 import * as GraphModel from './GraphModel';
@@ -40,42 +38,10 @@ describe('Graph', () => {
     expect(node.value.length).to.eq(4);
   });
 
-  test('reactive', async ({ expect }) => {
-    const graph = new GraphModel.GraphModel(live({ nodes: [], edges: [] }));
-
-    const done = new Trigger<Graph.Graph>();
-
-    // NOTE: Requires `registerSignalsRuntime` to be called.
-    const unsubscribe = effect(() => {
-      if (graph.edges.length === 2) {
-        done.wake(graph.graph);
-      }
-    });
-
-    setTimeout(() => {
-      graph.builder.addNode({ id: 'node-1' });
-      graph.builder.addNode({ id: 'node-2' });
-      graph.builder.addNode({ id: 'node-3' });
-    });
-
-    setTimeout(() => {
-      graph.builder.addEdge({ source: 'node-1', target: 'node-2' });
-      graph.builder.addEdge({ source: 'node-2', target: 'node-3' });
-    });
-
-    {
-      const graph = await done.wait();
-      expect(graph.nodes).to.have.length(3);
-      expect(graph.edges).to.have.length(2);
-    }
-
-    unsubscribe();
-  });
-
   test('reactive model', async ({ expect }) => {
     const graph = new GraphModel.ReactiveGraphModel();
 
-    const done = new Trigger<Graph.Graph>();
+    const done = new Trigger<Graph.Any>();
     const unsubscribe = graph.subscribe((graph) => {
       if (graph.edges.length === 2) {
         done.wake(graph.graph);

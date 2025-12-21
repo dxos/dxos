@@ -23,7 +23,7 @@ export type NetworkGraphNode = {
 
 // TODO(burdon): Update to use new GraphModel.
 class NetworkGraphModel extends GraphModel.GraphModel {
-  setData(graph: Graph.Graph): void {
+  setData(graph: Graph.Any): void {
     // this._graph = graph;
   }
 

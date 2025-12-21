@@ -47,7 +47,7 @@ export const useObjectMutator = <T>(initalValue: T): ObjectMutator<T> => {
 /**
  * Test data set generator and mutator.
  */
-export const useGraphGenerator = (options: { data?: Graph.Graph } = {}) => {
+export const useGraphGenerator = (options: { data?: Graph.Any } = {}) => {
   const [data, setData, updateData] = useObjectMutator(options.data || { nodes: [], edges: [] });
 
   let interval;

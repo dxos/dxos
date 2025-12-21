@@ -83,7 +83,7 @@ const DragElement = forwardRef<HTMLDivElement, DragElementProps>(({ classNames, 
       ref={forwardedRef}
       style={{ ...style, ...size, boxSizing: 'border-box' }}
       className={mx(
-        'absolute flex items-center justify-center border border-primary-500 rounded-md text-4xl',
+        'absolute flex items-center justify-center border border-primary-500 rounded-sm text-4xl',
         classNames,
       )}
     >

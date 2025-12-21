@@ -54,7 +54,7 @@ type StoryProps = GraphProps & {
   grid?: boolean | SVGGridProps;
   inspect?: boolean;
   singleSelect?: boolean;
-  graph: () => Graph.Graph;
+  graph: () => Graph.Any;
   projectorType?: ProjectorType;
   projectorOptions?:
     | GraphForceProjectorOptions
