@@ -31,16 +31,6 @@ export const useSelectionEvents = (root: HTMLElement | null, cb?: (event: Select
 
     return bindAll(root, [
       {
-        type: 'keydown',
-        listener: (ev) => {
-          if (ev.key === 'Escape') {
-            rangeRef.current = null;
-            setBounds(null);
-            console.log('@@@');
-          }
-        },
-      },
-      {
         type: 'pointerdown',
         listener: (ev) => {
           if (ev.target !== root) {
