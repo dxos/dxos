@@ -9,6 +9,7 @@ concurrency:
 
 env:
   DEPOT_TOKEN: ${{ secrets.DEPOT_TOKEN }}
+  PNPM_USE_NODE_VERSION: false
 
 jobs:
   publish:
