@@ -192,4 +192,4 @@ export interface RpcDisposable {
  *
  * This models Workers RPC behavior where any returned object (including arrays) gets a disposer added.
  */
-export type RpcResult<T> = T & RpcDisposable;
+export type RpcResult<T> = T extends object ? T & RpcDisposable : T;
