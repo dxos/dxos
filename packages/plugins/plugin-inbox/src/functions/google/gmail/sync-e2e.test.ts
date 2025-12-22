@@ -25,7 +25,7 @@ import { AccessToken, Message } from '@dxos/types';
 
 import { Mailbox } from '../../../types';
 
-const config = configPreset({ edge: 'dev' });
+const config = configPreset({ edge: 'local' });
 
 describe.runIf(process.env.DX_TEST_TAGS?.includes('functions-e2e'))('Functions deployment', () => {
   test('bundle function', async () => {
@@ -42,19 +42,19 @@ describe.runIf(process.env.DX_TEST_TAGS?.includes('functions-e2e'))('Functions d
   });
 
   test('deploy function', { timeout: 120_000 }, async () => {
-    const { space, mailbox, functionsServiceClient } = await setup();
+    const { space, mailbox: _mailbox, functionsServiceClient } = await setup();
     const func = await deployFunction(space, functionsServiceClient, new URL('./sync.ts', import.meta.url).pathname);
     console.log(func);
   });
 
-  test('inbox sync function (invoke)', { timeout: 120_000 }, async ({ expect }) => {
+  test('inbox sync function (invoke)', { timeout: 120_000 }, async () => {
     const { space, mailbox, functionsServiceClient } = await setup();
     await sync(space);
     const func = await deployFunction(space, functionsServiceClient, new URL('./sync.ts', import.meta.url).pathname);
     const result = await functionsServiceClient.invoke(
       func,
       {
-        mailboxId: Obj.getDXN(mailbox),
+        mailbox: Ref.make(mailbox),
         restrictedMode: true,
       },
       {
@@ -65,7 +65,7 @@ describe.runIf(process.env.DX_TEST_TAGS?.includes('functions-e2e'))('Functions d
     await checkEmails(mailbox);
   });
 
-  test('deployes inbox sync function (force-trigger)', { timeout: 120_000 }, async ({ expect }) => {
+  test('deployes inbox sync function (force-trigger)', { timeout: 120_000 }, async () => {
     const { space, mailbox, functionsServiceClient } = await setup();
     await sync(space);
 
@@ -75,7 +75,7 @@ describe.runIf(process.env.DX_TEST_TAGS?.includes('functions-e2e'))('Functions d
         enabled: true,
         function: Ref.make(func),
         spec: { kind: 'timer', cron: '*/30 * * * * *' },
-        input: { mailboxId: Obj.getDXN(mailbox).toString(), restrictedMode: true },
+        input: { mailbox: Ref.make(mailbox), restrictedMode: true },
       }),
     );
     await sync(space);
@@ -95,12 +95,12 @@ describe.runIf(process.env.DX_TEST_TAGS?.includes('functions-e2e'))('Functions d
     const { space, mailbox, functionsServiceClient } = await setup();
     await sync(space);
     const func = await deployFunction(space, functionsServiceClient, new URL('./sync.ts', import.meta.url).pathname);
-    const trigger = space.db.add(
+    space.db.add(
       Obj.make(Trigger.Trigger, {
         enabled: true,
         function: Ref.make(func),
         spec: { kind: 'timer', cron: '*/30 * * * * *' },
-        input: { mailboxId: Obj.getDXN(mailbox).toString(), restrictedMode: true },
+        input: { mailbox: Ref.make(mailbox), restrictedMode: true },
       }),
     );
     await sync(space);
@@ -116,14 +116,14 @@ describe.runIf(process.env.DX_TEST_TAGS?.includes('functions-e2e'))('Functions d
   });
 
   test('deployes inbox sync function (wait for trigger)', { timeout: 0 }, async ({ expect }) => {
-    const { client, space, mailbox, functionsServiceClient } = await setup();
+    const { client: _client, space, mailbox, functionsServiceClient } = await setup();
     const func = await deployFunction(space, functionsServiceClient, new URL('./sync.ts', import.meta.url).pathname);
     space.db.add(
       Obj.make(Trigger.Trigger, {
         enabled: true,
         function: Ref.make(func),
         spec: { kind: 'timer', cron: '*/3 * * * * *' },
-        input: { mailboxId: Obj.getDXN(mailbox).toString(), restrictedMode: true },
+        input: { mailbox: Ref.make(mailbox), restrictedMode: true },
       }),
     );
     await sync(space);
