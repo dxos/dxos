@@ -1,0 +1,54 @@
+//
+// Copyright 2025 DXOS.org
+//
+
+import { mx } from '@dxos/ui-theme';
+import { type ClassNameValue } from '@dxos/ui-types';
+
+/**
+ * Super lightweight chainable DOM builder.
+ * @deprecated Use cash-dom or umbrellajs
+ */
+export class Domino<T extends HTMLElement> {
+  static of<K extends keyof HTMLElementTagNameMap>(tag: K): Domino<HTMLElementTagNameMap[K]> {
+    return new Domino<HTMLElementTagNameMap[K]>(tag);
+  }
+
+  private readonly _el: T;
+  constructor(tag: keyof HTMLElementTagNameMap) {
+    this._el = document.createElement(tag) as T;
+  }
+  classNames(...classNames: ClassNameValue[]): this {
+    this._el.className = mx(classNames);
+    return this;
+  }
+  text(value: string): this {
+    this._el.textContent = value;
+    return this;
+  }
+  data(key: string, value: string): this {
+    this._el.dataset[key] = value;
+    return this;
+  }
+  attributes(attr: Record<string, string | undefined>): this {
+    Object.entries(attr)
+      .filter(([_, value]) => value !== undefined)
+      .map(([key, value]) => this._el.setAttribute(key, value!));
+    return this;
+  }
+  style(styles: Partial<CSSStyleDeclaration>): this {
+    Object.assign(this._el.style, styles);
+    return this;
+  }
+  children<C extends HTMLElement>(...children: Domino<C>[]): this {
+    children.forEach((child) => this._el.appendChild(child.build()));
+    return this;
+  }
+  on(event: string, handler: (e: Event) => void): this {
+    this._el.addEventListener(event, handler);
+    return this;
+  }
+  build(): T {
+    return this._el;
+  }
+}
