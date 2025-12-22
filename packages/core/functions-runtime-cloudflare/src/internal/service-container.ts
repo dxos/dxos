@@ -27,10 +27,12 @@ export class ServiceContainer {
 
   async getSpaceMeta(spaceId: SpaceId): Promise<EdgeFunctionEnv.SpaceMeta | undefined> {
     using result = await this._dataService.getSpaceMeta(this._executionContext, spaceId);
-    return result ? {
-      spaceKey: result.spaceKey,
-      rootDocumentId: result.rootDocumentId,
-    } : undefined;
+    return result
+      ? {
+          spaceKey: result.spaceKey,
+          rootDocumentId: result.rootDocumentId,
+        }
+      : undefined;
   }
 
   async createServices(): Promise<{
@@ -55,7 +57,7 @@ export class ServiceContainer {
     using result = (await this._queueService.query({}, queue.toString(), {})) as any;
     // Materialize to detach from potential RPC result proxies.
     return {
-      objects: result.objects ? JSON.parse(JSON.stringify(result.objects)) : [],
+      objects: structuredClone(result.objects),
       nextCursor: result.nextCursor ?? null,
       prevCursor: result.prevCursor ?? null,
     };

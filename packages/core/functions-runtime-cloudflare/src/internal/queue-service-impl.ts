@@ -17,7 +17,7 @@ export class QueueServiceImpl implements QueueServiceProto {
       using result = await this._queueService.query(this._ctx, `dxn:queue:${subspaceTag}:${spaceId}:${queueId}`, query);
       // Workers RPC may return disposable arrays/objects; strip proxies before leaving the scope.
       return {
-        objects: result.objects ? JSON.parse(JSON.stringify(result.objects)) : [],
+        objects: structuredClone(result.objects),
         nextCursor: result.nextCursor,
         prevCursor: result.prevCursor,
       };
