@@ -492,11 +492,13 @@ export class TableModel<T extends TableRow = TableRow> extends Resource {
     if (this.features.selection.enabled && this._selection.hasSelection.value) {
       const selectedRows = this._selection.getSelectedRows();
       objectsToDelete.push(...selectedRows);
-    } else {
+    } else if (obj) {
       objectsToDelete.push(obj);
     }
 
-    this._onDeleteRows?.(rowIndex, objectsToDelete);
+    if (objectsToDelete.length > 0) {
+      this._onDeleteRows?.(rowIndex, objectsToDelete);
+    }
   };
 
   public handleRowAction = (actionId: string, rowIndex: number): void => {
