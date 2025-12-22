@@ -27,6 +27,8 @@ export class ServiceContainer {
 
   async getSpaceMeta(spaceId: SpaceId): Promise<EdgeFunctionEnv.SpaceMeta | undefined> {
     using result = await this._dataService.getSpaceMeta(this._executionContext, spaceId);
+    // Copy returned object to avoid hanging RPC stub
+    // See https://developers.cloudflare.com/workers/runtime-apis/rpc/lifecycle/
     return result
       ? {
           spaceKey: result.spaceKey,
@@ -55,7 +57,8 @@ export class ServiceContainer {
 
   async queryQueue(queue: DXN): Promise<QueryResult> {
     using result = (await this._queueService.query({}, queue.toString(), {})) as any;
-    // Materialize to detach from potential RPC result proxies.
+    // Copy returned object to avoid hanging RPC stub
+    // See https://developers.cloudflare.com/workers/runtime-apis/rpc/lifecycle/
     return {
       objects: structuredClone(result.objects),
       nextCursor: result.nextCursor ?? null,

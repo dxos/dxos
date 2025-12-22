@@ -55,7 +55,8 @@ export class QueryServiceImpl implements QueryServiceProto {
                 spaceKey: PublicKey.ZERO,
                 documentId: object.document.documentId,
                 rank: 0,
-                // Ensure we don't leak a disposable Uint8Array from a Workers RPC response.
+                // Copy returned object to avoid hanging RPC stub.
+                // See https://developers.cloudflare.com/workers/runtime-apis/rpc/lifecycle/
                 documentAutomerge: copyUint8Array(object.document.data),
               }),
             ),

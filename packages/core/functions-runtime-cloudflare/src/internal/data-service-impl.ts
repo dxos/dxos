@@ -63,7 +63,16 @@ export class DataServiceImpl implements DataServiceProto {
           log.warn('not found', { documentId });
           continue;
         }
-        sub.next({ updates: [{ documentId, mutation: copyUint8Array(document.data) }] });
+        sub.next({
+          updates: [
+            {
+              documentId,
+              // Copy returned object to avoid hanging RPC stub
+              // See https://developers.cloudflare.com/workers/runtime-apis/rpc/lifecycle/
+              mutation: copyUint8Array(document.data),
+            },
+          ],
+        });
       }
     }
   }

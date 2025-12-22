@@ -15,8 +15,9 @@ export class QueueServiceImpl implements QueueServiceProto {
   async queryQueue(subspaceTag: string, spaceId: SpaceId, { queueId, ...query }: QueueQuery): Promise<QueryResult> {
     try {
       using result = await this._queueService.query(this._ctx, `dxn:queue:${subspaceTag}:${spaceId}:${queueId}`, query);
-      // Workers RPC may return disposable arrays/objects; strip proxies before leaving the scope.
       return {
+        // Copy returned object to avoid hanging RPC stub
+        // See https://developers.cloudflare.com/workers/runtime-apis/rpc/lifecycle/
         objects: structuredClone(result.objects),
         nextCursor: result.nextCursor,
         prevCursor: result.prevCursor,
