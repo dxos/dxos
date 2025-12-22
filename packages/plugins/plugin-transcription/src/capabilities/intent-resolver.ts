@@ -2,7 +2,13 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Capabilities, type PluginContext, contributes, createResolver, defineCapabilityModule } from '@dxos/app-framework';
+import {
+  Capabilities,
+  type PluginContext,
+  contributes,
+  createResolver,
+  defineCapabilityModule,
+} from '@dxos/app-framework';
 import { Transcript } from '@dxos/types';
 
 import { TranscriptAction } from '../types';
@@ -16,4 +22,5 @@ export default defineCapabilityModule((context: PluginContext) =>
         return { data: { object: transcript } };
       },
     }),
-  ]));
+  ]),
+);

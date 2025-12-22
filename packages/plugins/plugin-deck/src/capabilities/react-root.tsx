@@ -37,4 +37,5 @@ export default defineCapabilityModule(() =>
 
       return <DeckLayout onDismissToast={handleDismissToast} />;
     },
-  }));
+  }),
+);

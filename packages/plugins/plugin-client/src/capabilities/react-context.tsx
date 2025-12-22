@@ -19,4 +19,5 @@ export default defineCapabilityModule(() =>
       const client = useCapability(ClientCapabilities.Client);
       return <ClientProvider client={client}>{children}</ClientProvider>;
     },
-  }));
+  }),
+);

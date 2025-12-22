@@ -4,7 +4,14 @@
 
 import React, { useCallback } from 'react';
 
-import { Capabilities, LayoutAction, contributes, createIntent, createSurface, defineCapabilityModule } from '@dxos/app-framework';
+import {
+  Capabilities,
+  LayoutAction,
+  contributes,
+  createIntent,
+  createSurface,
+  defineCapabilityModule,
+} from '@dxos/app-framework';
 import { Surface, SurfaceCardRole, useIntentDispatcher } from '@dxos/app-framework/react';
 import { Obj } from '@dxos/echo';
 import { useActiveSpace } from '@dxos/plugin-space';
@@ -118,4 +125,5 @@ export default defineCapabilityModule(() =>
         );
       },
     }),
-  ]));
+  ]),
+);

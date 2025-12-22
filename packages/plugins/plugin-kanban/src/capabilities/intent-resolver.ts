@@ -2,7 +2,13 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Capabilities, type PluginContext, contributes, createResolver, defineCapabilityModule } from '@dxos/app-framework';
+import {
+  Capabilities,
+  type PluginContext,
+  contributes,
+  createResolver,
+  defineCapabilityModule,
+} from '@dxos/app-framework';
 import { JsonSchema, Obj } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { Kanban } from '@dxos/react-ui-kanban/types';
@@ -67,4 +73,5 @@ export default defineCapabilityModule((context: PluginContext) =>
         }
       },
     }),
-  ]));
+  ]),
+);

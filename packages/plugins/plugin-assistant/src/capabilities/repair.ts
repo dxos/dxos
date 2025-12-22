@@ -14,7 +14,8 @@ import { Assistant } from '../types';
 export default defineCapabilityModule(() =>
   contributes(SpaceCapabilities.Repair, async ({ space }) => {
     await ensureSystemCollections(space);
-  }));
+  }),
+);
 
 /**
  * Ensure the root collection has system collections for AI Chats, Blueprints, and Prompts.

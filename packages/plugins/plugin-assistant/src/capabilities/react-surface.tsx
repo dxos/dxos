@@ -85,4 +85,5 @@ export default defineCapabilityModule(() =>
       filter: (data): data is { props: { chat: Assistant.Chat } } => data.component === ASSISTANT_DIALOG,
       component: ({ data }) => <ChatDialog {...data.props} />,
     }),
-  ]));
+  ]),
+);

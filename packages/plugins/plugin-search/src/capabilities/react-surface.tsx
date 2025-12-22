@@ -53,4 +53,5 @@ export default defineCapabilityModule(() =>
         );
       },
     }),
-  ]));
+  ]),
+);

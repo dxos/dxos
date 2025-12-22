@@ -5,7 +5,14 @@
 import { Octokit } from '@octokit/core';
 import * as Predicate from 'effect/Predicate';
 
-import { Capabilities, LayoutAction, contributes, createIntent, createResolver, defineCapabilityModule } from '@dxos/app-framework';
+import {
+  Capabilities,
+  LayoutAction,
+  contributes,
+  createIntent,
+  createResolver,
+  defineCapabilityModule,
+} from '@dxos/app-framework';
 import { Obj } from '@dxos/echo';
 import { Script } from '@dxos/functions';
 import { TokenManagerAction } from '@dxos/plugin-token-manager/types';
@@ -83,4 +90,5 @@ export default defineCapabilityModule(() =>
         return { data: undefined };
       },
     }),
-  ]));
+  ]),
+);

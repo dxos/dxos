@@ -3,7 +3,13 @@
 //
 import React from 'react';
 
-import { Capabilities, type PluginContext, contributes, createSurface, defineCapabilityModule } from '@dxos/app-framework';
+import {
+  Capabilities,
+  type PluginContext,
+  contributes,
+  createSurface,
+  defineCapabilityModule,
+} from '@dxos/app-framework';
 import { useCapability } from '@dxos/app-framework/react';
 import { SettingsStore } from '@dxos/local-storage';
 
@@ -44,4 +50,5 @@ export default defineCapabilityModule((context: PluginContext) =>
         return <ExportStatus running={state.exportRunning} lastExport={state.lastExport} />;
       },
     }),
-  ]));
+  ]),
+);

@@ -28,4 +28,5 @@ export default defineCapabilityModule(() =>
       const posB = getStartPosition(anchorB.anchor);
       return posA - posB;
     },
-  }));
+  }),
+);

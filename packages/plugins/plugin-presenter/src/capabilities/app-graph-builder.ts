@@ -6,7 +6,14 @@ import { Atom } from '@effect-atom/atom-react';
 import * as Function from 'effect/Function';
 import * as Option from 'effect/Option';
 
-import { Capabilities, LayoutAction, type PluginContext, contributes, createIntent, defineCapabilityModule } from '@dxos/app-framework';
+import {
+  Capabilities,
+  LayoutAction,
+  type PluginContext,
+  contributes,
+  createIntent,
+  defineCapabilityModule,
+} from '@dxos/app-framework';
 import { Obj } from '@dxos/echo';
 import { DeckCapabilities } from '@dxos/plugin-deck';
 import { ATTENDABLE_PATH_SEPARATOR, DeckAction } from '@dxos/plugin-deck/types';
@@ -114,4 +121,5 @@ export default defineCapabilityModule((context: PluginContext) =>
           ),
         ),
     }),
-  ));
+  ),
+);

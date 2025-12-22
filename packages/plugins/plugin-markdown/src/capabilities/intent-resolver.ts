@@ -11,7 +11,9 @@ import {
   CollaborationActions,
   type PluginContext,
   contributes,
-  createResolver, defineCapabilityModule } from '@dxos/app-framework';
+  createResolver,
+  defineCapabilityModule,
+} from '@dxos/app-framework';
 import { Obj } from '@dxos/echo';
 import { createDocAccessor, getRangeFromCursor } from '@dxos/echo-db';
 
@@ -54,4 +56,5 @@ export default defineCapabilityModule((context: PluginContext) =>
         });
       },
     }),
-  ]));
+  ]),
+);

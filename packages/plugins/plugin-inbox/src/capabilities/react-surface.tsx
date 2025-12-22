@@ -112,4 +112,5 @@ export default defineCapabilityModule(() =>
         Obj.instanceOf(Organization.Organization, data.subject),
       component: ({ data: { subject } }) => <RelatedToOrganization subject={subject} />,
     }),
-  ]));
+  ]),
+);

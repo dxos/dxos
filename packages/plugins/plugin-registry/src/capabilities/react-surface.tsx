@@ -83,4 +83,5 @@ export default defineCapabilityModule(() =>
         return <PluginDetail plugin={subject} enabled={enabled} onEnable={handleEnable} />;
       },
     }),
-  ]));
+  ]),
+);

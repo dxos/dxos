@@ -12,7 +12,14 @@ import * as Function from 'effect/Function';
 import * as Match from 'effect/Match';
 import * as Schedule from 'effect/Schedule';
 
-import { Capabilities, LayoutAction, type PluginContext, contributes, createIntent, defineCapabilityModule } from '@dxos/app-framework';
+import {
+  Capabilities,
+  LayoutAction,
+  type PluginContext,
+  contributes,
+  createIntent,
+  defineCapabilityModule,
+} from '@dxos/app-framework';
 import { log } from '@dxos/log';
 
 import { meta } from '../meta';

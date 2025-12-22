@@ -20,4 +20,5 @@ export default defineCapabilityModule(() =>
       filter: (data): data is { subject: Chess.Game } => Obj.instanceOf(Chess.Game, data.subject),
       component: ({ data, role }) => <ChessboardContainer game={data.subject} role={role} />,
     }),
-  ]));
+  ]),
+);

@@ -19,4 +19,5 @@ export default defineCapabilityModule(() =>
       position: 'hoist',
       filter: (data): data is { subject: Map.Map } => Obj.instanceOf(Map.Map, data.subject),
     }),
-  ]));
+  ]),
+);

@@ -5,7 +5,13 @@
 import { effect } from '@preact/signals-core';
 import localforage from 'localforage';
 
-import { Capabilities, type PluginContext, contributes, createIntent, defineCapabilityModule } from '@dxos/app-framework';
+import {
+  Capabilities,
+  type PluginContext,
+  contributes,
+  createIntent,
+  defineCapabilityModule,
+} from '@dxos/app-framework';
 import { SubscriptionList } from '@dxos/async';
 import { scheduledEffect } from '@dxos/echo-signals/core';
 import { LocalStorageStore } from '@dxos/local-storage';

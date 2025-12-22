@@ -64,4 +64,5 @@ export default defineCapabilityModule(({ createInvitationUrl, onReset }: ReactSu
       filter: (data): data is { props: ResetDialogProps } => data.component === RESET_DIALOG,
       component: ({ data }) => <ResetDialog {...data.props} onReset={onReset} />,
     }),
-  ]));
+  ]),
+);

@@ -428,4 +428,5 @@ export default defineCapabilityModule((context: PluginContext) =>
           ),
         ),
     }),
-  ]));
+  ]),
+);

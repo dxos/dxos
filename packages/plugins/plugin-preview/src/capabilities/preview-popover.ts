@@ -2,7 +2,14 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Capabilities, LayoutAction, type PluginContext, contributes, createIntent, defineCapabilityModule } from '@dxos/app-framework';
+import {
+  Capabilities,
+  LayoutAction,
+  type PluginContext,
+  contributes,
+  createIntent,
+  defineCapabilityModule,
+} from '@dxos/app-framework';
 import { addEventListener } from '@dxos/async';
 import { type Client } from '@dxos/client';
 import { type Space, parseId } from '@dxos/client/echo';

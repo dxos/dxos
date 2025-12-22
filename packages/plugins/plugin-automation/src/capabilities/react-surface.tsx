@@ -53,4 +53,5 @@ export default defineCapabilityModule(() =>
         return <AutomationSettings space={getSpace(data.companionTo)!} object={data.companionTo} />;
       },
     }),
-  ]));
+  ]),
+);

@@ -8,7 +8,9 @@ import {
   type PluginContext,
   SettingsAction,
   contributes,
-  createIntent, defineCapabilityModule } from '@dxos/app-framework';
+  createIntent,
+  defineCapabilityModule,
+} from '@dxos/app-framework';
 import { type Observability, setupTelemetryListeners } from '@dxos/observability';
 
 import { meta } from '../meta';

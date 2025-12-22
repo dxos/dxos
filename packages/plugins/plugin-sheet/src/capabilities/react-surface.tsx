@@ -38,4 +38,5 @@ export default defineCapabilityModule(() =>
       filter: (data): data is { subject: Sheet.Sheet } => Obj.instanceOf(Sheet.Sheet, data.subject),
       component: ({ data }) => <RangeList sheet={data.subject} />,
     }),
-  ]));
+  ]),
+);

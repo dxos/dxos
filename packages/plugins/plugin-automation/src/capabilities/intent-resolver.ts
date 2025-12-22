@@ -8,7 +8,9 @@ import {
   type PluginContext,
   contributes,
   createIntent,
-  createResolver, defineCapabilityModule } from '@dxos/app-framework';
+  createResolver,
+  defineCapabilityModule,
+} from '@dxos/app-framework';
 import { Ref } from '@dxos/echo';
 import { Function, Script, Trigger } from '@dxos/functions';
 import { type DXN } from '@dxos/keys';
@@ -73,4 +75,5 @@ export default defineCapabilityModule((context: PluginContext) =>
         };
       },
     }),
-  ]));
+  ]),
+);

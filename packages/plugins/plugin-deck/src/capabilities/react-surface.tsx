@@ -27,4 +27,5 @@ export default defineCapabilityModule(() =>
         return <Banner variant={data.variant} />;
       },
     }),
-  ]));
+  ]),
+);

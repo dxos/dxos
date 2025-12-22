@@ -9,7 +9,9 @@ import {
   SettingsAction,
   contributes,
   createIntent,
-  createResolver, defineCapabilityModule } from '@dxos/app-framework';
+  createResolver,
+  defineCapabilityModule,
+} from '@dxos/app-framework';
 import { Trigger } from '@dxos/async';
 import { log } from '@dxos/log';
 import { type Node, isActionLike } from '@dxos/plugin-graph';

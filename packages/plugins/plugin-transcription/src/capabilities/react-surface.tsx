@@ -19,4 +19,5 @@ export default defineCapabilityModule(() =>
       filter: (data): data is { subject: Transcript.Transcript } => Obj.instanceOf(Transcript.Transcript, data.subject),
       component: ({ data, role }) => <TranscriptionContainer transcript={data.subject} role={role} />,
     }),
-  ]));
+  ]),
+);

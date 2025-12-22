@@ -4,7 +4,14 @@
 
 import * as Function from 'effect/Function';
 
-import { Capabilities, type PluginContext, chain, contributes, createIntent, defineCapabilityModule } from '@dxos/app-framework';
+import {
+  Capabilities,
+  type PluginContext,
+  chain,
+  contributes,
+  createIntent,
+  defineCapabilityModule,
+} from '@dxos/app-framework';
 import { Obj } from '@dxos/echo';
 import { SpaceAction } from '@dxos/plugin-space/types';
 import { isSpace } from '@dxos/react-client/echo';
@@ -50,4 +57,5 @@ export default defineCapabilityModule((context: PluginContext) =>
         return result.data?.object;
       },
     },
-  ]));
+  ]),
+);

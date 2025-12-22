@@ -4,7 +4,14 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Capabilities, LayoutAction, type PluginContext, contributes, createResolver, defineCapabilityModule } from '@dxos/app-framework';
+import {
+  Capabilities,
+  LayoutAction,
+  type PluginContext,
+  contributes,
+  createResolver,
+  defineCapabilityModule,
+} from '@dxos/app-framework';
 import { log } from '@dxos/log';
 
 import { NavTreeCapabilities } from './capabilities';
@@ -34,4 +41,5 @@ export default defineCapabilityModule((context: PluginContext) =>
         }
       },
     }),
-  ));
+  ),
+);

@@ -10,7 +10,9 @@ import {
   type PluginContext,
   contributes,
   createIntent,
-  createResolver, defineCapabilityModule } from '@dxos/app-framework';
+  createResolver,
+  defineCapabilityModule,
+} from '@dxos/app-framework';
 import { Obj, Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { SpaceAction } from '@dxos/plugin-space/types';
@@ -72,4 +74,5 @@ export default defineCapabilityModule((context: PluginContext) =>
         return { intents: [createIntent(SpaceAction.AddObject, { target: db, object, hidden: true })] };
       },
     }),
-  ]));
+  ]),
+);

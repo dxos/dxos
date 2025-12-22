@@ -60,4 +60,5 @@ export default defineCapabilityModule(() =>
         data.subject instanceof SettingsStore && data.subject.prefix === meta.id,
       component: ({ data: { subject } }) => <PresenterSettings settings={subject.value} />,
     }),
-  ]));
+  ]),
+);

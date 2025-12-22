@@ -12,7 +12,9 @@ import {
   type PluginContext,
   contributes,
   createIntent,
-  createResolver, defineCapabilityModule } from '@dxos/app-framework';
+  createResolver,
+  defineCapabilityModule,
+} from '@dxos/app-framework';
 // import { ArtifactId } from '@dxos/blueprints';
 // import { getSpace } from '@dxos/client/echo';
 // import { SequenceBuilder, compileSequence, DEFAULT_INPUT, ValueBag, ComputeGraphModel } from '@dxos/conductor';
@@ -217,7 +219,8 @@ export default defineCapabilityModule((context: PluginContext) =>
         // log.info('Workflow result', { text });
       },
     }),
-  ]));
+  ]),
+);
 
 // const Label = Schema.Literal('important', 'personal', 'work', 'social', 'promotions', 'updates', 'forums', 'spam');
 

@@ -2,7 +2,13 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Capabilities, type PluginContext, contributes, createResolver, defineCapabilityModule } from '@dxos/app-framework';
+import {
+  Capabilities,
+  type PluginContext,
+  contributes,
+  createResolver,
+  defineCapabilityModule,
+} from '@dxos/app-framework';
 import { invariant } from '@dxos/invariant';
 import { ClientCapabilities } from '@dxos/plugin-client';
 
@@ -34,4 +40,5 @@ export default defineCapabilityModule((context: PluginContext) =>
         return { data: info };
       },
     }),
-  ]));
+  ]),
+);

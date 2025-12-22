@@ -25,4 +25,5 @@ export default defineCapabilityModule(() =>
       filter: (data): data is { subject: Table.Table } => Obj.instanceOf(Table.Table, data.subject),
       component: ({ data, role }) => <TableCard object={data.subject} role={role} />,
     }),
-  ]));
+  ]),
+);

@@ -186,7 +186,8 @@ export default defineCapabilityModule((context: PluginContext) =>
           ),
         ),
     }),
-  ]));
+  ]),
+);
 
 // TODO(burdon): Factor out.
 const getOrCreateChat = async (

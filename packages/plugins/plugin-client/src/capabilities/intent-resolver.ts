@@ -11,7 +11,9 @@ import {
   chain,
   contributes,
   createIntent,
-  createResolver, defineCapabilityModule } from '@dxos/app-framework';
+  createResolver,
+  defineCapabilityModule,
+} from '@dxos/app-framework';
 import { invariant } from '@dxos/invariant';
 import { ObservabilityAction } from '@dxos/plugin-observability/types';
 import { PublicKey } from '@dxos/react-client';
@@ -247,4 +249,5 @@ export default defineCapabilityModule(({ context, appName = 'Composer' }: Intent
         );
       },
     }),
-  ]));
+  ]),
+);

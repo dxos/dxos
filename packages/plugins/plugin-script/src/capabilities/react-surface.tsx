@@ -100,4 +100,5 @@ export default defineCapabilityModule(() =>
         data.component === DEPLOYMENT_DIALOG,
       component: ({ data }) => <DeploymentDialog {...data.props} />,
     }),
-  ]));
+  ]),
+);

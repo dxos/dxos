@@ -23,4 +23,5 @@ export default defineCapabilityModule(() =>
         return <ExplorerContainer view={data.subject} role={role} />;
       },
     }),
-  ));
+  ),
+);

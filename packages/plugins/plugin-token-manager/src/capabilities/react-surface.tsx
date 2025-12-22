@@ -29,4 +29,5 @@ export default defineCapabilityModule(() =>
         return <TokensContainer db={db} />;
       },
     }),
-  ]));
+  ]),
+);

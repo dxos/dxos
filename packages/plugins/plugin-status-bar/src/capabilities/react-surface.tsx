@@ -32,4 +32,5 @@ export default defineCapabilityModule(() =>
       role: 'header-end',
       component: () => <VersionNumber />,
     }),
-  ]));
+  ]),
+);

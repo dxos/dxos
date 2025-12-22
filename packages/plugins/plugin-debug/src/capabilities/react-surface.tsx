@@ -12,7 +12,9 @@ import {
   chain,
   contributes,
   createIntent,
-  createSurface, defineCapabilityModule } from '@dxos/app-framework';
+  createSurface,
+  defineCapabilityModule,
+} from '@dxos/app-framework';
 import { useCapability, useIntentDispatcher } from '@dxos/app-framework/react';
 import {
   AutomergePanel,
@@ -415,4 +417,5 @@ export default defineCapabilityModule((context: PluginContext) =>
         return <TestingPanel onSpaceCreate={onSpaceCreate} onScriptPluginOpen={onScriptPluginOpen} />;
       },
     }),
-  ]));
+  ]),
+);

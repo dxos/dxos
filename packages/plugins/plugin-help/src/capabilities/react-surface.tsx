@@ -27,4 +27,5 @@ export default defineCapabilityModule(() =>
       filter: (data): data is any => data.component === SHORTCUTS_DIALOG,
       component: () => <ShortcutsDialogContent />,
     }),
-  ]));
+  ]),
+);

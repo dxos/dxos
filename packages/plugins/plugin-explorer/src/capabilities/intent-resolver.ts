@@ -2,7 +2,13 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Capabilities, type PluginContext, contributes, createResolver, defineCapabilityModule } from '@dxos/app-framework';
+import {
+  Capabilities,
+  type PluginContext,
+  contributes,
+  createResolver,
+  defineCapabilityModule,
+} from '@dxos/app-framework';
 import { View } from '@dxos/schema';
 
 import { ExplorerAction, Graph } from '../types';
@@ -18,4 +24,5 @@ export default defineCapabilityModule((context: PluginContext) =>
         return { data: { object: graph } };
       },
     }),
-  ));
+  ),
+);

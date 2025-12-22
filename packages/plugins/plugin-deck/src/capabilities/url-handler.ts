@@ -2,7 +2,14 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Capabilities, LayoutAction, type PluginContext, contributes, createIntent, defineCapabilityModule } from '@dxos/app-framework';
+import {
+  Capabilities,
+  LayoutAction,
+  type PluginContext,
+  contributes,
+  createIntent,
+  defineCapabilityModule,
+} from '@dxos/app-framework';
 import { scheduledEffect } from '@dxos/echo-signals/core';
 
 import { defaultDeck } from '../types';

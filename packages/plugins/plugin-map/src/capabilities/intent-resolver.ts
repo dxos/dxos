@@ -2,7 +2,13 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Capabilities, type PluginContext, contributes, createResolver, defineCapabilityModule } from '@dxos/app-framework';
+import {
+  Capabilities,
+  type PluginContext,
+  contributes,
+  createResolver,
+  defineCapabilityModule,
+} from '@dxos/app-framework';
 import { View } from '@dxos/schema';
 
 import { Map, MapAction } from '../types';
@@ -26,4 +32,5 @@ export default defineCapabilityModule((context: PluginContext) =>
         state.type = state.type === 'globe' ? 'map' : 'globe';
       },
     }),
-  ]));
+  ]),
+);

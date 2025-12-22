@@ -88,4 +88,5 @@ export default defineCapabilityModule(() =>
         return <CallDebugPanel state={call.state} />;
       },
     }),
-  ]));
+  ]),
+);

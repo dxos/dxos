@@ -13,4 +13,5 @@ export default defineCapabilityModule(() =>
   contributes(Capabilities.ReactContext, {
     id: meta.id,
     context: ({ children }) => <DevtoolsContextProvider>{children}</DevtoolsContextProvider>,
-  }));
+  }),
+);

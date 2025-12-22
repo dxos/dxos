@@ -42,4 +42,5 @@ export default defineCapabilityModule(() =>
       filter: (data): data is { subject: Project.Project } => Obj.instanceOf(Project.Project, data.subject),
       component: ({ data }) => <ProjectObjectSettings project={data.subject} />,
     }),
-  ]));
+  ]),
+);

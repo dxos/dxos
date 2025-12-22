@@ -20,4 +20,5 @@ export default defineCapabilityModule(() =>
       filter: (data): data is { subject: Obj.Any } => Obj.instanceOf(Template.Data, data.subject),
       component: ({ data, role }) => <TemplateContainer role={role} object={data.subject} />,
     }),
-  ));
+  ),
+);

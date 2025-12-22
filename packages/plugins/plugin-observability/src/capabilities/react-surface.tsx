@@ -24,4 +24,5 @@ export default defineCapabilityModule(() =>
       role: 'deck-companion--help',
       component: () => <HelpContainer />,
     }),
-  ]));
+  ]),
+);

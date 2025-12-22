@@ -31,4 +31,5 @@ export default defineCapabilityModule((steps: Step[]) =>
         />
       );
     },
-  }));
+  }),
+);

@@ -2,7 +2,12 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Capabilities as AppCapabilities, type PluginContext, contributes, defineCapabilityModule } from '@dxos/app-framework';
+import {
+  Capabilities as AppCapabilities,
+  type PluginContext,
+  contributes,
+  defineCapabilityModule,
+} from '@dxos/app-framework';
 import { debounce } from '@dxos/async';
 import { Keyboard } from '@dxos/keyboard';
 import { type Node, isAction } from '@dxos/plugin-graph';

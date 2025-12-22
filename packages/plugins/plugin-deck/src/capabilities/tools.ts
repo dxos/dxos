@@ -82,4 +82,5 @@ export default defineCapabilityModule(() =>
         }
       },
     }),
-  ]));
+  ]),
+);

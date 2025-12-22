@@ -26,4 +26,5 @@ export default defineCapabilityModule(() =>
         return <StackContainer id={id ?? Obj.getDXN(data.subject).toString()} collection={data.subject} />;
       },
     }),
-  ));
+  ),
+);

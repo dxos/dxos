@@ -20,4 +20,5 @@ export default defineCapabilityModule(() =>
       filter: (data): data is { subject: CanvasBoardType } => Obj.instanceOf(CanvasBoardType, data.subject),
       component: ({ data, role }) => <CanvasContainer canvas={data.subject} role={role} />,
     }),
-  ));
+  ),
+);

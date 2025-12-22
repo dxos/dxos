@@ -4,7 +4,14 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capabilities, type PluginContext, contributes, createIntent, createResolver, defineCapabilityModule } from '@dxos/app-framework';
+import {
+  Capabilities,
+  type PluginContext,
+  contributes,
+  createIntent,
+  createResolver,
+  defineCapabilityModule,
+} from '@dxos/app-framework';
 import { sleep } from '@dxos/async';
 import { Obj, Relation, Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
@@ -308,4 +315,5 @@ export default defineCapabilityModule((context: PluginContext) =>
         }
       },
     }),
-  ]));
+  ]),
+);

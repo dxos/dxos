@@ -79,4 +79,5 @@ export default defineCapabilityModule(() =>
         return <SelectField {...props} options={singleSelectColumns.map((column) => ({ value: column }))} />;
       },
     }),
-  ]));
+  ]),
+);

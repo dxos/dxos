@@ -4,7 +4,14 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Capabilities, LayoutAction, type PluginContext, contributes, createResolver, defineCapabilityModule } from '@dxos/app-framework';
+import {
+  Capabilities,
+  LayoutAction,
+  type PluginContext,
+  contributes,
+  createResolver,
+  defineCapabilityModule,
+} from '@dxos/app-framework';
 
 import { LayoutState } from './state';
 
@@ -89,4 +96,5 @@ export default defineCapabilityModule((context: PluginContext) =>
         layout.workspace = subject;
       },
     }),
-  ]));
+  ]),
+);

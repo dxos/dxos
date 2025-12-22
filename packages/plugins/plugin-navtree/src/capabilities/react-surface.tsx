@@ -45,4 +45,5 @@ export default defineCapabilityModule(() =>
       position: 'fallback',
       component: () => <CommandsTrigger />,
     }),
-  ]));
+  ]),
+);

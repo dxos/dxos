@@ -15,4 +15,5 @@ export default defineCapabilityModule(() =>
         data: { object: Template.make({ name }) },
       }),
     }),
-  ));
+  ),
+);

@@ -20,4 +20,5 @@ export default defineCapabilityModule((context: PluginContext) =>
         return computeGraphFacet.of(computeGraph);
       }
     },
-  ]));
+  ]),
+);

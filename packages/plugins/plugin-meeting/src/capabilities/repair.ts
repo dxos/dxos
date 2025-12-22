@@ -17,7 +17,8 @@ export default defineCapabilityModule(() =>
     }
 
     await ensureSystemCollection(space);
-  }));
+  }),
+);
 
 /**
  * Ensure the root collection has a system collection for Meetings.

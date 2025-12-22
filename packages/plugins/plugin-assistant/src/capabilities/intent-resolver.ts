@@ -4,7 +4,14 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capabilities, type PluginContext, contributes, createIntent, createResolver, defineCapabilityModule } from '@dxos/app-framework';
+import {
+  Capabilities,
+  type PluginContext,
+  contributes,
+  createIntent,
+  createResolver,
+  defineCapabilityModule,
+} from '@dxos/app-framework';
 import { AiContextBinder, AiConversation } from '@dxos/assistant';
 import { Agent } from '@dxos/assistant-toolkit';
 import { Blueprint, Prompt, Template } from '@dxos/blueprints';

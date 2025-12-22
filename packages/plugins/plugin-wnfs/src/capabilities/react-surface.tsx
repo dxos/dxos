@@ -42,4 +42,5 @@ export default defineCapabilityModule(() =>
         return <FileInput schema={schema} onChange={handleChange} />;
       },
     }),
-  ]));
+  ]),
+);

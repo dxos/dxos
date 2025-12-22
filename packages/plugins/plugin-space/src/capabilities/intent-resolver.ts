@@ -10,9 +10,9 @@ import {
   LayoutAction,
   type PluginContext,
   contributes,
-  defineCapabilityModule,
   createIntent,
   createResolver,
+  defineCapabilityModule,
 } from '@dxos/app-framework';
 import { Database, Obj, Query, Ref, Relation, Type } from '@dxos/echo';
 import { EchoDatabaseImpl, Serializer } from '@dxos/echo-db';

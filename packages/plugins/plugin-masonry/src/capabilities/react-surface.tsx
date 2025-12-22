@@ -19,4 +19,5 @@ export default defineCapabilityModule(() =>
       filter: (data): data is { subject: Masonry.Masonry } => Obj.instanceOf(Masonry.Masonry, data.subject),
       component: ({ data, role }) => <MasonryContainer object={data.subject} role={role} />,
     }),
-  ]));
+  ]),
+);

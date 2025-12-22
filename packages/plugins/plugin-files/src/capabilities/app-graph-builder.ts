@@ -6,7 +6,15 @@ import { Atom } from '@effect-atom/atom-react';
 import * as Function from 'effect/Function';
 import * as Option from 'effect/Option';
 
-import { Capabilities, LayoutAction, type PluginContext, chain, contributes, createIntent, defineCapabilityModule } from '@dxos/app-framework';
+import {
+  Capabilities,
+  LayoutAction,
+  type PluginContext,
+  chain,
+  contributes,
+  createIntent,
+  defineCapabilityModule,
+} from '@dxos/app-framework';
 import { ROOT_ID, atomFromSignal, createExtension } from '@dxos/plugin-graph';
 
 import { meta } from '../meta';
@@ -241,4 +249,5 @@ export default defineCapabilityModule((context: PluginContext) =>
           ),
         ),
     }),
-  ]));
+  ]),
+);

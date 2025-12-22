@@ -4,7 +4,14 @@
 
 import * as Option from 'effect/Option';
 
-import { Capabilities, LayoutAction, type PluginContext, contributes, defineCapabilityModule, createIntent } from '@dxos/app-framework';
+import {
+  Capabilities,
+  LayoutAction,
+  type PluginContext,
+  contributes,
+  createIntent,
+  defineCapabilityModule,
+} from '@dxos/app-framework';
 import { SubscriptionList } from '@dxos/async';
 import { Filter, Obj, Type } from '@dxos/echo';
 import { scheduledEffect } from '@dxos/echo-signals/core';

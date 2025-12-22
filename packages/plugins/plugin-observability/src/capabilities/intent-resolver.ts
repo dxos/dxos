@@ -2,7 +2,14 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Capabilities, IntentAction, type PluginContext, contributes, createResolver, defineCapabilityModule } from '@dxos/app-framework';
+import {
+  Capabilities,
+  IntentAction,
+  type PluginContext,
+  contributes,
+  createResolver,
+  defineCapabilityModule,
+} from '@dxos/app-framework';
 import { log } from '@dxos/log';
 import { getTelemetryIdentity, storeObservabilityDisabled } from '@dxos/observability';
 
@@ -66,4 +73,5 @@ export default defineCapabilityModule(({ context, namespace }: { context: Plugin
         observability.captureUserFeedback(data.message);
       },
     }),
-  ]));
+  ]),
+);
