@@ -83,7 +83,7 @@
       "path": "../../ui/react-ui-stack"
     },
     {
-      "path": "../../ui/react-ui-theme"
+      "path": "../../ui/ui-theme"
     },
     {
       "path": "../plugin-client"

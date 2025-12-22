@@ -24,7 +24,7 @@ import {
   useForwardedRef,
 } from '@dxos/react-ui';
 import { useAttention } from '@dxos/react-ui-attention';
-import { ghostSelectedContainerMd, mx } from '@dxos/react-ui-theme';
+import { ghostSelectedContainerMd, mx } from '@dxos/ui-theme';
 
 type TabsActivePart = 'list' | 'panel';
 

@@ -4,7 +4,7 @@
 
 import { useContext } from 'react';
 
-import { type Density } from '@dxos/react-ui-types';
+import { type Density } from '@dxos/ui-types';
 
 import { DensityContext } from '../components';
 

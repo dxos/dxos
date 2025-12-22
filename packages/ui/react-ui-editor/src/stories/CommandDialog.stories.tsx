@@ -7,7 +7,7 @@ import React, { type KeyboardEvent, useState } from 'react';
 
 import { type Button, IconButton, Input } from '@dxos/react-ui';
 import { withTheme } from '@dxos/react-ui/testing';
-import { mx } from '@dxos/react-ui-theme';
+import { mx } from '@dxos/ui-theme';
 
 import { editorWidth } from '../defaults';
 import { str } from '../util';

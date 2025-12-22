@@ -975,22 +975,27 @@
         },
         {
           "type": "json",
-          "path": "packages/ui/react-ui-theme/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
           "path": "packages/ui/react-ui-thread/package.json",
           "jsonpath": "$.version"
         },
         {
           "type": "json",
-          "path": "packages/ui/react-ui-types/package.json",
+          "path": "packages/ui/solid-ui/package.json",
           "jsonpath": "$.version"
         },
         {
           "type": "json",
           "path": "packages/ui/solid-ui-geo/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/ui/ui-theme/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/ui/ui-types/package.json",
           "jsonpath": "$.version"
         },
         {
@@ -1020,11 +1025,6 @@
         },
         {
           "type": "json",
-          "path": "tools/lit-storybook/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
           "path": "tools/lockfile-explorer/package.json",
           "jsonpath": "$.version"
         },
@@ -1035,12 +1035,17 @@
         },
         {
           "type": "json",
-          "path": "tools/solid-storybook/package.json",
+          "path": "tools/storybook-lit/package.json",
           "jsonpath": "$.version"
         },
         {
           "type": "json",
-          "path": "tools/storybook/package.json",
+          "path": "tools/storybook-react/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "tools/storybook-solid/package.json",
           "jsonpath": "$.version"
         },
         {

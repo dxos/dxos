@@ -9,7 +9,7 @@ import { PublicKey } from '@dxos/keys';
 import { type ChromaticPalette, IconButton, Input, Tag, useTranslation } from '@dxos/react-ui';
 import { List } from '@dxos/react-ui-list';
 import { HuePicker } from '@dxos/react-ui-pickers';
-import { hues, subtleHover } from '@dxos/react-ui-theme';
+import { hues, subtleHover } from '@dxos/ui-theme';
 
 import { translationKey } from '../../../translations';
 import { type FormFieldComponentProps, FormFieldLabel } from '../FormFieldComponent';

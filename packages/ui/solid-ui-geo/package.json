@@ -38,7 +38,7 @@
     "@dxos/debug": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/node-std": "workspace:*",
-    "@dxos/react-ui-theme": "workspace:*",
+    "@dxos/ui-theme": "workspace:*",
     "@dxos/util": "workspace:*",
     "@solid-primitives/resize-observer": "^2.0.26",
     "d3": "catalog:",

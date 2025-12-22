@@ -13,7 +13,7 @@ import { faker } from '@dxos/random';
 import { Toolbar } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { type XmlWidgetRegistry } from '@dxos/react-ui-editor';
-import { mx } from '@dxos/react-ui-theme';
+import { mx } from '@dxos/ui-theme';
 import { keyToFallback } from '@dxos/util';
 
 import { MarkdownStream, type MarkdownStreamController, type MarkdownStreamProps } from './MarkdownStream';

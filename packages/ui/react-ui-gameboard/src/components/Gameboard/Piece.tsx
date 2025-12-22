@@ -11,7 +11,7 @@ import { createPortal } from 'react-dom';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { type ThemedClassName, useDynamicRef } from '@dxos/react-ui';
-import { mx } from '@dxos/react-ui-theme';
+import { mx } from '@dxos/ui-theme';
 
 import { useGameboardContext } from './Gameboard';
 import { type Location, type PieceRecord, type Player, isEqualLocation, isLocation } from './types';

@@ -15,7 +15,7 @@ import { ConnectionState, useNetworkStatus } from '@dxos/react-client/mesh';
 import { useMultiClient, withMultiClientProvider } from '@dxos/react-client/testing';
 import { ButtonGroup, Clipboard, IconButton, List } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
-import { activeSurface } from '@dxos/react-ui-theme';
+import { activeSurface } from '@dxos/ui-theme';
 
 import { IdentityListItem, SpaceListItem } from '../components';
 import { IdentityPanel, JoinPanel, SpacePanel } from '../panels';

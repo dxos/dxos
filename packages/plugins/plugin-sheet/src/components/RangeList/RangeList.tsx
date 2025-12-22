@@ -8,7 +8,7 @@ import React, { useCallback } from 'react';
 import { rangeToA1Notation } from '@dxos/compute';
 import { Callout, useTranslation } from '@dxos/react-ui';
 import { List } from '@dxos/react-ui-list';
-import { ghostHover } from '@dxos/react-ui-theme';
+import { ghostHover } from '@dxos/ui-theme';
 
 import { meta } from '../../meta';
 import { rangeFromIndex } from '../../types';

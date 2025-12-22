@@ -2,8 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
-import { mx } from '@dxos/react-ui-theme';
-import { type ClassNameValue } from '@dxos/react-ui-types';
+import { mx } from '@dxos/ui-theme';
+import { type ClassNameValue } from '@dxos/ui-types';
 
 /**
  * Super lightweight chainable DOM builder.

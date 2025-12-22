@@ -1,0 +1,53 @@
+{
+  "name": "@dxos/solid-ui",
+  "version": "0.8.3",
+  "description": "Solui UI experiment.",
+  "homepage": "https://dxos.org",
+  "bugs": "https://github.com/dxos/dxos/issues",
+  "license": "MIT",
+  "author": "DXOS.org",
+  "sideEffects": true,
+  "type": "module",
+  "exports": {
+    ".": {
+      "source": "./src/index.ts",
+      "types": "./dist/types/src/index.d.ts",
+      "browser": "./dist/lib/browser/index.mjs",
+      "node": "./dist/lib/node-esm/index.mjs"
+    }
+  },
+  "types": "dist/types/src/index.d.ts",
+  "typesVersions": {
+    "*": {}
+  },
+  "files": [
+    "dist",
+    "src"
+  ],
+  "dependencies": {
+    "@ark-ui/solid": "catalog:",
+    "@dxos/async": "workspace:*",
+    "@dxos/debug": "workspace:*",
+    "@dxos/log": "workspace:*",
+    "@dxos/node-std": "workspace:*",
+    "@dxos/util": "workspace:*",
+    "@solid-primitives/resize-observer": "^2.0.26",
+    "solid-element": "catalog:",
+    "solid-js": "catalog:"
+  },
+  "devDependencies": {
+    "@effect-atom/atom": "catalog:",
+    "@solidjs/testing-library": "catalog:",
+    "effect": "catalog:",
+    "solid-js": "catalog:",
+    "vite-plugin-solid": "catalog:"
+  },
+  "peerDependencies": {
+    "@effect-atom/atom": "catalog:",
+    "effect": "catalog:",
+    "solid-js": "catalog:"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

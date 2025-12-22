@@ -6,7 +6,7 @@ import { type Decorator } from '@storybook/react';
 import React, { type FC, type PropsWithChildren } from 'react';
 
 import { type ClassNameValue, type ThemedClassName } from '@dxos/react-ui';
-import { mx } from '@dxos/react-ui-theme';
+import { mx } from '@dxos/ui-theme';
 
 export type ContainerProps = ThemedClassName<PropsWithChildren>;
 

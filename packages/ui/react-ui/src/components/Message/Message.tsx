@@ -8,7 +8,7 @@ import { Slot } from '@radix-ui/react-slot';
 import React, { type ComponentPropsWithRef, forwardRef } from 'react';
 
 import { useId } from '@dxos/react-hooks';
-import { type Elevation, type MessageValence } from '@dxos/react-ui-types';
+import { type Elevation, type MessageValence } from '@dxos/ui-types';
 
 import { useElevationContext, useThemeContext } from '../../hooks';
 import { type ThemedClassName } from '../../util';

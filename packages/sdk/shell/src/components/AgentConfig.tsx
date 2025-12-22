@@ -5,7 +5,7 @@
 import React from 'react';
 
 import { Avatar, Button, Icon, IconButton, Link, Tooltip, Trans, useTranslation } from '@dxos/react-ui';
-import { descriptionText, getSize, mx, valenceColorText } from '@dxos/react-ui-theme';
+import { descriptionText, getSize, mx, valenceColorText } from '@dxos/ui-theme';
 
 import { type AgentFormProps } from './DeviceList';
 

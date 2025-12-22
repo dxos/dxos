@@ -17,7 +17,7 @@ import { withClientProvider } from '@dxos/react-client/testing';
 import { Icon, IconButton, Input, Select } from '@dxos/react-ui';
 import { withTheme } from '@dxos/react-ui/testing';
 import { Path, Tree } from '@dxos/react-ui-list';
-import { getSize, mx } from '@dxos/react-ui-theme';
+import { getSize, mx } from '@dxos/ui-theme';
 import { byPosition, isNonNullable, safeParseInt } from '@dxos/util';
 
 import { type ExpandableGraph, ROOT_ID } from '../graph';

@@ -11,7 +11,7 @@ import { useClient } from '@dxos/react-client';
 import { useStream } from '@dxos/react-client/devtools';
 import { type SpaceSyncStateMap, getSyncSummary, useSyncState } from '@dxos/react-client/echo';
 import { Icon, Popover, useTranslation } from '@dxos/react-ui';
-import { mx } from '@dxos/react-ui-theme';
+import { mx } from '@dxos/ui-theme';
 import { Unit, type UnitFormat } from '@dxos/util';
 
 import { meta } from '../../meta';

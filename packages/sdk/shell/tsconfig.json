@@ -62,10 +62,10 @@
       "path": "../../ui/react-ui-pickers"
     },
     {
-      "path": "../../ui/react-ui-theme"
+      "path": "../../ui/ui-theme"
     },
     {
-      "path": "../../ui/react-ui-types"
+      "path": "../../ui/ui-types"
     },
     {
       "path": "../client-protocol"

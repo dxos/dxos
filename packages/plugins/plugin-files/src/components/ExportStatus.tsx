@@ -6,7 +6,7 @@ import React from 'react';
 
 import { StatusBar } from '@dxos/plugin-status-bar';
 import { Icon, useTranslation } from '@dxos/react-ui';
-import { getSize } from '@dxos/react-ui-theme';
+import { getSize } from '@dxos/ui-theme';
 
 import { meta } from '../meta';
 

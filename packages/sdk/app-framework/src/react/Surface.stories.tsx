@@ -8,7 +8,7 @@ import React, { forwardRef, useCallback, useEffect, useRef, useState } from 'rea
 import { faker } from '@dxos/random';
 import { List, ListItem, Toolbar } from '@dxos/react-ui';
 import { withTheme } from '@dxos/react-ui/testing';
-import { type ColorStyles, getHashStyles, mx } from '@dxos/react-ui-theme';
+import { type ColorStyles, getHashStyles, mx } from '@dxos/ui-theme';
 
 import { Capabilities, createSurface } from '../common';
 import { withPluginManager } from '../testing';

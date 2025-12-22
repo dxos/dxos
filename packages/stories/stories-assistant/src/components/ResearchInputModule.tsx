@@ -6,7 +6,7 @@ import React from 'react';
 
 import { type Entity, Filter, Obj } from '@dxos/echo';
 import { useQuery, useQueue } from '@dxos/react-client/echo';
-import { getHashHue } from '@dxos/react-ui-theme';
+import { getHashHue } from '@dxos/ui-theme';
 
 import { ResearchInputQueue } from '../testing';
 

@@ -6,8 +6,8 @@ import React, { type MouseEvent, useCallback } from 'react';
 
 import { type Plugin } from '@dxos/app-framework';
 import { type ChromaticPalette, Icon, IconButton, Input, Link, ListItem, Tag, useTranslation } from '@dxos/react-ui';
-import { descriptionText, mx } from '@dxos/react-ui-theme';
-import { getStyles } from '@dxos/react-ui-theme';
+import { descriptionText, mx } from '@dxos/ui-theme';
+import { getStyles } from '@dxos/ui-theme';
 
 import { meta } from '../meta';
 import { type RegistryTagType } from '../types';

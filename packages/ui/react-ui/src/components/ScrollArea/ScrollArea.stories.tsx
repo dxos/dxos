@@ -6,7 +6,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { type PropsWithChildren } from 'react';
 
 import { faker } from '@dxos/random';
-import { activeSurface, surfaceShadow } from '@dxos/react-ui-theme';
+import { activeSurface, surfaceShadow } from '@dxos/ui-theme';
 
 import { withTheme } from '../../testing';
 

@@ -17,7 +17,7 @@ import {
 } from '@dxos/lit-ui';
 import { DxAvatar } from '@dxos/lit-ui/react';
 import { useId } from '@dxos/react-hooks';
-import { mx } from '@dxos/react-ui-theme';
+import { mx } from '@dxos/ui-theme';
 
 import { useIconHref, useThemeContext } from '../../hooks';
 import { type ThemedClassName } from '../../util';

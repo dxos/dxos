@@ -11,7 +11,7 @@ import { useQuery } from '@dxos/react-client/echo';
 import { useTranslation } from '@dxos/react-ui';
 import { Masonry } from '@dxos/react-ui-masonry';
 import { StackItem } from '@dxos/react-ui-stack';
-import { mx } from '@dxos/react-ui-theme';
+import { mx } from '@dxos/ui-theme';
 import { isNonNullable } from '@dxos/util';
 
 import { meta } from '../meta';

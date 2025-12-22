@@ -13,7 +13,7 @@ import {
   type PopoverContentInteractOutsideEvent,
   useTranslation,
 } from '@dxos/react-ui';
-import { descriptionMessage, mx } from '@dxos/react-ui-theme';
+import { descriptionMessage, mx } from '@dxos/ui-theme';
 
 import { LayoutState } from '../capabilities';
 import { meta } from '../meta';

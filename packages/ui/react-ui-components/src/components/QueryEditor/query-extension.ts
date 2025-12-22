@@ -13,7 +13,7 @@ import { Tag } from '@dxos/echo';
 import { QueryDSL } from '@dxos/echo-query';
 import { Domino } from '@dxos/react-ui';
 import { type CompoetionContext, focus, focusField, staticCompletion, typeahead } from '@dxos/react-ui-editor';
-import { getHashHue, getStyles } from '@dxos/react-ui-theme';
+import { getHashHue, getStyles } from '@dxos/ui-theme';
 
 export type QueryOptions = {
   tags?: Tag.Map;

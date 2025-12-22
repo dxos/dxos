@@ -6,8 +6,8 @@ import React from 'react';
 
 import { Avatar, Button, Icon, useTranslation } from '@dxos/react-ui';
 import { Card, cardText } from '@dxos/react-ui-stack';
-import { mx } from '@dxos/react-ui-theme';
 import { type Person } from '@dxos/types';
+import { mx } from '@dxos/ui-theme';
 
 import { meta } from '../../meta';
 

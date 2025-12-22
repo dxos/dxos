@@ -15,10 +15,10 @@ import { ThemePlugin } from '@dxos/plugin-theme';
 import { faker } from '@dxos/random';
 import { Filter, useQuery, useSpaces } from '@dxos/react-client/echo';
 import { withTheme } from '@dxos/react-ui/testing';
-import { defaultTx } from '@dxos/react-ui-theme';
 import { View } from '@dxos/schema';
 import { createObjectFactory } from '@dxos/schema/testing';
 import { Organization } from '@dxos/types';
+import { defaultTx } from '@dxos/ui-theme';
 
 import { Masonry } from '../types';
 

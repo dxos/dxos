@@ -78,7 +78,7 @@ export default tseslint.config(
       'packages/ui/solid-ui-geo/data',
       'tools/dx-tools',
       'tools/esbuild/cli.js',
-      'tools/storybook/.storybook/stub.mjs',
+      'tools/storybook-react/.storybook/stub.mjs',
     ],
     // WARNING: Do not add extra keys to this config object
     // See: https://eslint.org/docs/latest/use/configure/configuration-files#globally-ignoring-files-with-ignores
@@ -283,8 +283,8 @@ export default tseslint.config(
       'packages/core/echo/echo-solid/**/*.{js,ts,jsx,tsx,mts,cts,mjs,cjs}',
       'packages/plugins/plugin-map-solid/**/*.{js,ts,jsx,tsx,mts,cts,mjs,cjs}',
       'packages/sdk/app-solid/**/*.{js,ts,jsx,tsx,mts,cts,mjs,cjs}',
-      'packages/ui/solid-ui-*/**/*.{js,ts,jsx,tsx,mts,cts,mjs,cjs}',
-      'tools/solid-storybook/**/*.{js,ts,jsx,tsx,mts,cts,mjs,cjs}',
+      'packages/ui/solid-ui*/**/*.{js,ts,jsx,tsx,mts,cts,mjs,cjs}',
+      'tools/storybook-solid/**/*.{js,ts,jsx,tsx,mts,cts,mjs,cjs}',
     ],
     rules: {
       ...Object.fromEntries(

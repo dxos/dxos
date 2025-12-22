@@ -13,7 +13,7 @@ import {
   WidgetType,
 } from '@codemirror/view';
 
-import { getHashStyles, mx } from '@dxos/react-ui-theme';
+import { getHashStyles, mx } from '@dxos/ui-theme';
 
 class TagWidget extends WidgetType {
   constructor(private _text: string) {

@@ -8,7 +8,7 @@ import { type ActionLike } from '@dxos/app-graph';
 import { keySymbols } from '@dxos/keyboard';
 import { Button, type ButtonProps, DropdownMenu, Icon, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { type AttendableId, type Related, useAttention } from '@dxos/react-ui-attention';
-import { descriptionText, mx } from '@dxos/react-ui-theme';
+import { descriptionText, mx } from '@dxos/ui-theme';
 import { getHostPlatform } from '@dxos/util';
 
 import { translationKey } from '../../translations';

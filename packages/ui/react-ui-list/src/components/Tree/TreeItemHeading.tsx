@@ -6,7 +6,7 @@ import React, { type KeyboardEvent, type MouseEvent, forwardRef, memo, useCallba
 
 import { Button, Icon, type Label, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { TextTooltip } from '@dxos/react-ui-text-tooltip';
-import { getStyles } from '@dxos/react-ui-theme';
+import { getStyles } from '@dxos/ui-theme';
 
 // TODO(wittjosiah): Consider whether there should be a separate disabled prop which was visually distinct
 //   rather than just making the item unselectable.

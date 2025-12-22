@@ -6,7 +6,7 @@ import React from 'react';
 
 import { Composer } from '@dxos/brand';
 import { Status, ThemeProvider } from '@dxos/react-ui';
-import { defaultTx, mx } from '@dxos/react-ui-theme';
+import { defaultTx, mx } from '@dxos/ui-theme';
 
 export const Placeholder = ({ stage }: { stage: number }) => {
   // This is used to test the error boundary & reset dialog.

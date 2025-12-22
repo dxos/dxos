@@ -6,7 +6,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 
 import { type LogConfig, type LogEntry, LogLevel, log, shortLevelName, shouldLog } from '@dxos/log';
 import { IconButton, Input, Toolbar } from '@dxos/react-ui';
-import { mx } from '@dxos/react-ui-theme';
+import { mx } from '@dxos/ui-theme';
 
 import { type CustomPanelProps, Panel } from '../Panel';
 

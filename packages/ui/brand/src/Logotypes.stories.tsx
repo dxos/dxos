@@ -6,7 +6,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { type FC, type ReactNode } from 'react';
 
 import { withTheme } from '@dxos/react-ui/testing';
-import { mx } from '@dxos/react-ui-theme';
+import { mx } from '@dxos/ui-theme';
 
 import { DXOSHorizontalType, DXOSType, DXOSVerticalType } from './logotypes';
 

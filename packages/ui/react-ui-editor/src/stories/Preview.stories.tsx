@@ -13,7 +13,7 @@ import { faker } from '@dxos/random';
 import { Popover } from '@dxos/react-ui';
 import { withTheme } from '@dxos/react-ui/testing';
 import { Card } from '@dxos/react-ui-stack';
-import { hoverableControlItem, hoverableControlItemTransition, hoverableControls } from '@dxos/react-ui-theme';
+import { hoverableControlItem, hoverableControlItemTransition, hoverableControls } from '@dxos/ui-theme';
 import { trim } from '@dxos/util';
 
 import { type EditorController, EditorPreviewProvider, useEditorPreview } from '../components';

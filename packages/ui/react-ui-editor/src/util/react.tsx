@@ -6,7 +6,7 @@ import React, { type FC, type ReactNode } from 'react';
 import { createRoot } from 'react-dom/client';
 
 import { ThemeProvider, Tooltip } from '@dxos/react-ui';
-import { defaultTx } from '@dxos/react-ui-theme';
+import { defaultTx } from '@dxos/ui-theme';
 
 import { type RenderCallback } from '../types';
 

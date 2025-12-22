@@ -28,7 +28,7 @@
       "path": "../primitives/react-hooks"
     },
     {
-      "path": "../react-ui-theme"
+      "path": "../ui-theme"
     }
   ]
 }

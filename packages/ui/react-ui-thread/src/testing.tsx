@@ -5,7 +5,7 @@
 import React from 'react';
 
 import { IconButton } from '@dxos/react-ui';
-import { hoverableControlItem, hoverableControls, hoverableFocusedWithinControls, mx } from '@dxos/react-ui-theme';
+import { hoverableControlItem, hoverableControls, hoverableFocusedWithinControls, mx } from '@dxos/ui-theme';
 
 import { MessageBody, MessageHeading } from './Message';
 import { type MessageMetadata } from './types';

@@ -27,7 +27,7 @@ import { useResizeDetector } from 'react-resize-detector';
 import { type Topology } from 'topojson-specification';
 
 import { type ThemeMode, type ThemedClassName, useDynamicRef, useThemeContext } from '@dxos/react-ui';
-import { mx } from '@dxos/react-ui-theme';
+import { mx } from '@dxos/ui-theme';
 
 import {
   GlobeContextProvider,

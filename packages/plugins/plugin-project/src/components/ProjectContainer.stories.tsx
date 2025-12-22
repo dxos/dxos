@@ -21,10 +21,10 @@ import { useDatabase, useQuery } from '@dxos/react-client/echo';
 import { withTheme } from '@dxos/react-ui/testing';
 import { translations as stackTranslations } from '@dxos/react-ui-stack';
 import { Stack } from '@dxos/react-ui-stack';
-import { defaultTx } from '@dxos/react-ui-theme';
 import { Collection, View } from '@dxos/schema';
 import { createObjectFactory } from '@dxos/schema/testing';
 import { Message, Organization, Person, Project, Task } from '@dxos/types';
+import { defaultTx } from '@dxos/ui-theme';
 
 import { translations } from '../translations';
 

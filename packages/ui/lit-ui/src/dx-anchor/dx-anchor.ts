@@ -8,7 +8,7 @@
 import { LitElement } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
 
-import { DxAnchorActivate } from '@dxos/react-ui-types';
+import { DxAnchorActivate } from '@dxos/ui-types';
 
 @customElement('dx-anchor')
 export class DxAnchor extends LitElement {

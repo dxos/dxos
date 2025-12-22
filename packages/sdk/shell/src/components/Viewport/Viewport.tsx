@@ -15,7 +15,7 @@ import React, {
 } from 'react';
 
 import { type ThemedClassName, useForwardedRef } from '@dxos/react-ui';
-import { mx } from '@dxos/react-ui-theme';
+import { mx } from '@dxos/ui-theme';
 
 const VIEWPORT_NAME = 'Viewport';
 const VIEWS_NAME = 'ViewportViews';

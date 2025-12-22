@@ -1,0 +1,78 @@
+{
+  "name": "@dxos/ui-theme",
+  "version": "0.8.3",
+  "description": "A set of design system tokens to use with DXOS UI.",
+  "homepage": "https://dxos.org",
+  "bugs": "https://github.com/dxos/dxos/issues",
+  "license": "MIT",
+  "author": "DXOS.org",
+  "sideEffects": true,
+  "type": "module",
+  "exports": {
+    ".": {
+      "source": "./src/index.ts",
+      "types": "./dist/types/src/index.d.ts",
+      "default": "./dist/lib/browser/index.mjs"
+    },
+    "./esbuild-plugin": {
+      "source": "./src/plugins/esbuild-plugin.ts",
+      "types": "./dist/types/src/plugins/esbuild-plugin.d.ts",
+      "import": "./dist/plugin/node-esm/plugins/esbuild-plugin.mjs",
+      "require": "./dist/plugin/node-cjs/plugins/esbuild-plugin.cjs"
+    },
+    "./plugin": {
+      "source": "./src/plugins/plugin.ts",
+      "types": "./dist/types/src/plugins/plugin.d.ts",
+      "import": "./dist/plugin/node-esm/plugins/plugin.mjs",
+      "require": "./dist/plugin/node-cjs/plugins/plugin.cjs"
+    }
+  },
+  "typesVersions": {
+    "*": {
+      "plugin": [
+        "dist/types/src/plugins/plugin.d.ts"
+      ]
+    }
+  },
+  "files": [
+    "dist",
+    "src"
+  ],
+  "scripts": {
+    "tailwind-check": "tailwindcss -i ./dist/plugin/node-esm/theme.css --config ./src/tailwind.ts --content \"./src/**/*.{js,ts,jsx,tsx,vue}\" --check"
+  },
+  "dependencies": {
+    "@ch-ui/tailwind-tokens": "catalog:",
+    "@ch-ui/tokens": "catalog:",
+    "@dxos/node-std": "workspace:*",
+    "@dxos/util": "workspace:*",
+    "@fontsource-variable/inter": "catalog:",
+    "@fontsource-variable/jetbrains-mono": "catalog:",
+    "@fontsource/poiret-one": "catalog:",
+    "@tailwindcss/container-queries": "catalog:",
+    "@tailwindcss/forms": "catalog:",
+    "autoprefixer": "catalog:",
+    "esbuild-style-plugin": "catalog:",
+    "glob": "catalog:",
+    "globby": "catalog:",
+    "lodash.merge": "catalog:",
+    "postcss": "catalog:",
+    "postcss-import": "catalog:",
+    "tailwind-merge": "catalog:",
+    "tailwind-scrollbar": "catalog:",
+    "tailwindcss": "catalog:",
+    "tailwindcss-logical": "catalog:",
+    "tailwindcss-radix": "catalog:"
+  },
+  "devDependencies": {
+    "@ch-ui/colors": "catalog:",
+    "@dxos/ui-types": "workspace:*",
+    "@types/lodash.merge": "catalog:",
+    "@types/postcss-import": "catalog:",
+    "esbuild": "catalog:",
+    "vite": "catalog:"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

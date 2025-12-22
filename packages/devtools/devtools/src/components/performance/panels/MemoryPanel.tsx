@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { mx } from '@dxos/react-ui-theme';
+import { mx } from '@dxos/ui-theme';
 import { Unit } from '@dxos/util';
 
 import { type MemoryInfo } from '../../../hooks';

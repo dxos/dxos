@@ -23,8 +23,8 @@ import { useResizeDetector } from 'react-resize-detector';
 
 import { useScroller } from '@dxos/react-hooks';
 import { type ThemedClassName, usePx } from '@dxos/react-ui';
-import { cardMaxInlineSize, cardMinInlineSize } from '@dxos/react-ui-theme';
-import { mx } from '@dxos/react-ui-theme';
+import { cardMaxInlineSize, cardMinInlineSize } from '@dxos/ui-theme';
+import { mx } from '@dxos/ui-theme';
 
 type MasonryRootProps<Item> = ThemedClassName<ComponentPropsWithRef<'div'>> &
   Omit<UsePositionerOptions, 'width'> &

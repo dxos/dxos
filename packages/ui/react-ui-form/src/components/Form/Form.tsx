@@ -10,7 +10,7 @@ import React, { type PropsWithChildren, useEffect, useMemo, useRef } from 'react
 import { type AnyProperties } from '@dxos/echo/internal';
 import { createJsonPath, getValue as getValue$, setValue as setValue$ } from '@dxos/effect';
 import { IconButton, type IconButtonProps, ScrollArea, type ThemedClassName, useTranslation } from '@dxos/react-ui';
-import { mx } from '@dxos/react-ui-theme';
+import { mx } from '@dxos/ui-theme';
 
 import {
   type FormHandler,

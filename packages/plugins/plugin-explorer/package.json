@@ -81,8 +81,8 @@
     "@dxos/echo-generator": "workspace:*",
     "@dxos/random": "workspace:*",
     "@dxos/react-ui": "workspace:*",
-    "@dxos/react-ui-theme": "workspace:*",
     "@dxos/storybook-utils": "workspace:*",
+    "@dxos/ui-theme": "workspace:*",
     "@types/d3": "catalog:",
     "@types/d3-hierarchy": "catalog:",
     "@types/lodash.defaultsdeep": "catalog:",
@@ -96,7 +96,7 @@
   },
   "peerDependencies": {
     "@dxos/react-ui": "workspace:*",
-    "@dxos/react-ui-theme": "workspace:*",
+    "@dxos/ui-theme": "workspace:*",
     "effect": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:"

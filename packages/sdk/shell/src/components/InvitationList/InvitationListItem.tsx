@@ -22,7 +22,7 @@ import {
   useThemeContext,
   useTranslation,
 } from '@dxos/react-ui';
-import { focusRing, getSize, mx } from '@dxos/react-ui-theme';
+import { focusRing, getSize, mx } from '@dxos/ui-theme';
 import { hexToEmoji } from '@dxos/util';
 
 import { AuthCode } from '../AuthCode';

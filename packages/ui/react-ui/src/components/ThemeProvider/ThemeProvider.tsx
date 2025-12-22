@@ -5,7 +5,7 @@
 import { createKeyborg } from 'keyborg';
 import React, { type PropsWithChildren, createContext, useEffect, useMemo } from 'react';
 
-import { type Density, type Elevation, type ThemeFunction } from '@dxos/react-ui-types';
+import { type Density, type Elevation, type ThemeFunction } from '@dxos/ui-types';
 
 import { type SafeAreaPadding, useSafeArea } from '../../hooks';
 import { hasIosKeyboard } from '../../util';

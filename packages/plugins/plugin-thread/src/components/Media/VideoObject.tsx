@@ -5,7 +5,7 @@
 import React, { type JSX, forwardRef, memo, useEffect, useRef } from 'react';
 
 import { type ThemedClassName } from '@dxos/react-ui';
-import { mx } from '@dxos/react-ui-theme';
+import { mx } from '@dxos/ui-theme';
 
 export type VideoObjectProps = Omit<JSX.IntrinsicElements['video'], 'className' | 'ref'> &
   ThemedClassName<{

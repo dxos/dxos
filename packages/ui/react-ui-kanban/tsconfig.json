@@ -72,7 +72,7 @@
       "path": "../react-ui-syntax-highlighter"
     },
     {
-      "path": "../react-ui-theme"
+      "path": "../ui-theme"
     }
   ]
 }

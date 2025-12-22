@@ -13,7 +13,7 @@ import { useClient } from '@dxos/react-client';
 import { Filter, useQuery } from '@dxos/react-client/echo';
 import { Button, Dialog, Icon, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { SearchList, type SearchListItemProps } from '@dxos/react-ui-searchlist';
-import { descriptionText, mx } from '@dxos/react-ui-theme';
+import { descriptionText, mx } from '@dxos/ui-theme';
 
 import { useSearchResults } from '../hooks';
 import { meta } from '../meta';

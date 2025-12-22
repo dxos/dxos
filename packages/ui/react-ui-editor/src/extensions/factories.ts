@@ -28,7 +28,7 @@ import { log } from '@dxos/log';
 import { type Messenger } from '@dxos/protocols';
 import { type Identity } from '@dxos/protocols/proto/dxos/client/services';
 import { type ThemeMode } from '@dxos/react-ui';
-import { type HuePalette } from '@dxos/react-ui-theme';
+import { type HuePalette } from '@dxos/ui-theme';
 import { hexToHue, isTruthy } from '@dxos/util';
 
 import { createBaseTheme, editorGutter } from '../styles';

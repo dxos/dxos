@@ -6,7 +6,7 @@ import React from 'react';
 
 import { type Invitation } from '@dxos/react-client/invitations';
 import { useTranslation } from '@dxos/react-ui';
-import { descriptionText } from '@dxos/react-ui-theme';
+import { descriptionText } from '@dxos/ui-theme';
 
 import { Action, Actions, StepHeading } from '../../../components';
 import { type FailReason } from '../../../types';

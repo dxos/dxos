@@ -7,7 +7,7 @@ import React from 'react';
 import { type Action, type Node } from '@dxos/app-graph';
 import { IconButton, toLocalizedString, useDensityContext, useTranslation } from '@dxos/react-ui';
 import { DropdownMenu, type MenuItem, MenuProvider } from '@dxos/react-ui-menu';
-import { hoverableControlItem, hoverableOpenControlItem } from '@dxos/react-ui-theme';
+import { hoverableControlItem, hoverableOpenControlItem } from '@dxos/ui-theme';
 
 import { meta } from '../../meta';
 import { type ActionProperties } from '../../types';

@@ -17,7 +17,7 @@ import {
   cardDialogPaddedOverflow,
   cardDialogSearchListRoot,
 } from '@dxos/react-ui-stack';
-import { descriptionText, mx } from '@dxos/react-ui-theme';
+import { descriptionText, mx } from '@dxos/ui-theme';
 import { getHostPlatform } from '@dxos/util';
 
 import { KEY_BINDING, meta } from '../../meta';

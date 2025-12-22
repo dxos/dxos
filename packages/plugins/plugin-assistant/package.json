@@ -139,8 +139,8 @@
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-menu": "workspace:*",
     "@dxos/react-ui-table": "workspace:*",
-    "@dxos/react-ui-theme": "workspace:*",
     "@dxos/storybook-utils": "workspace:*",
+    "@dxos/ui-theme": "workspace:*",
     "@effect-atom/atom-react": "catalog:",
     "@effect/platform": "catalog:",
     "@types/lodash.defaultsdeep": "catalog:",
@@ -154,7 +154,7 @@
   },
   "peerDependencies": {
     "@dxos/react-ui": "workspace:*",
-    "@dxos/react-ui-theme": "workspace:*",
+    "@dxos/ui-theme": "workspace:*",
     "@effect-atom/atom-react": "catalog:",
     "@effect/platform": "catalog:",
     "effect": "catalog:",

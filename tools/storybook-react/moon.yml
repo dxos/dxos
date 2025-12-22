@@ -1,0 +1,41 @@
+type: tool
+language: typescript
+tasks:
+  #
+  # Test locally via: npx http-server ./tools/storybook-reactout/storybook
+  #
+  bundle:
+    command: storybook build
+    args:
+      - --output-dir=out/storybook
+    deps:
+      # Ensure that all packages are built to run storybook.
+      - '#ts-build:build'
+      - '#ts-compile:compile'
+    inputs:
+      - .storybook/*
+      - static/*
+      - $NODE_OPTIONS
+    outputs:
+      - out/storybook/
+    preset: server
+  serve:
+    command: storybook dev
+    args:
+      - --port=9009
+      - --no-open
+    deps:
+      - ^:compile
+    inputs:
+      - .storybook/*
+      - static/*
+    preset: server
+  # TODO(wittjosiah): No inputs or deps to avoid moon re-building things when running e2e tests.
+  serve-e2e:
+    command: storybook dev
+    args:
+      - --port=9009
+      - --ci
+      - --quiet
+      - --config-dir=config/e2e
+    preset: server

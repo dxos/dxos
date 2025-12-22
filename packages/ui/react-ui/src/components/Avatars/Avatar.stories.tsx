@@ -5,8 +5,8 @@
 import { type Meta } from '@storybook/react-vite';
 import React, { type PropsWithChildren } from 'react';
 
-import { type HuePalette } from '@dxos/react-ui-theme';
-import { type Size } from '@dxos/react-ui-types';
+import { type HuePalette } from '@dxos/ui-theme';
+import { type Size } from '@dxos/ui-types';
 import { hexToFallback } from '@dxos/util';
 
 import { withTheme } from '../../testing';

@@ -97,8 +97,8 @@
     "@dxos/random": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-graph": "workspace:*",
-    "@dxos/react-ui-theme": "workspace:*",
     "@dxos/storybook-utils": "workspace:*",
+    "@dxos/ui-theme": "workspace:*",
     "@types/lodash.defaultsdeep": "catalog:",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
@@ -116,7 +116,7 @@
   "peerDependencies": {
     "@babel/core": "catalog:",
     "@dxos/react-ui": "workspace:*",
-    "@dxos/react-ui-theme": "workspace:*",
+    "@dxos/ui-theme": "workspace:*",
     "react": "catalog:",
     "react-dom": "catalog:"
   },

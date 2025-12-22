@@ -19,7 +19,7 @@ import { debounce } from '@dxos/async';
 import { type Node, useNode } from '@dxos/plugin-graph';
 import { ATTENDABLE_PATH_SEPARATOR, useAttentionAttributes } from '@dxos/react-ui-attention';
 import { StackItem, railGridHorizontal } from '@dxos/react-ui-stack';
-import { mainIntrinsicSize, mx } from '@dxos/react-ui-theme';
+import { mainIntrinsicSize, mx } from '@dxos/ui-theme';
 
 import { DeckCapabilities } from '../../capabilities';
 import { useCompanions, useMainSize } from '../../hooks';

@@ -63,7 +63,7 @@
       "path": "../../ui/react-ui-syntax-highlighter"
     },
     {
-      "path": "../../ui/react-ui-theme"
+      "path": "../../ui/ui-theme"
     },
     {
       "path": "../client"

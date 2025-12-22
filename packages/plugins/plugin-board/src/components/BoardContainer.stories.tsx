@@ -17,8 +17,8 @@ import { faker } from '@dxos/random';
 import { Filter, Ref, useQuery, useSpaces } from '@dxos/react-client/echo';
 import { withTheme } from '@dxos/react-ui/testing';
 import { translations as stackTranslations } from '@dxos/react-ui-stack';
-import { defaultTx } from '@dxos/react-ui-theme';
 import { Organization, Person } from '@dxos/types';
+import { defaultTx } from '@dxos/ui-theme';
 
 import { translations } from '../translations';
 import { Board } from '../types';

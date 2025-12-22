@@ -16,7 +16,7 @@ import {
   ghostSelectedTrackingInterFromNormal,
   mx,
   surfaceShadow,
-} from '@dxos/react-ui-theme';
+} from '@dxos/ui-theme';
 
 import { withTheme } from '../../testing';
 import { Icon } from '../Icon';

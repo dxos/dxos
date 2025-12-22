@@ -8,7 +8,7 @@ import { GraphPlugin } from '@dxos/plugin-graph';
 import { SpacePlugin } from '@dxos/plugin-space';
 import { ThemePlugin } from '@dxos/plugin-theme';
 import { Config } from '@dxos/react-client';
-import { defaultTx } from '@dxos/react-ui-theme';
+import { defaultTx } from '@dxos/ui-theme';
 
 import { ThreadPlugin } from '../ThreadPlugin';
 import { Channel } from '../types';

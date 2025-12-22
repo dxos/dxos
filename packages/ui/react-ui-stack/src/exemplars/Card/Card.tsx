@@ -13,7 +13,7 @@ import React, {
 } from 'react';
 
 import { Icon, IconButton, type ThemedClassName, Toolbar, type ToolbarRootProps, useTranslation } from '@dxos/react-ui';
-import { cardMinInlineSize, hoverableControls, mx } from '@dxos/react-ui-theme';
+import { cardMinInlineSize, hoverableControls, mx } from '@dxos/ui-theme';
 
 import { Image, StackItem } from '../../components';
 import { translationKey } from '../../translations';

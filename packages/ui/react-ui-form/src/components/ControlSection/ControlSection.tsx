@@ -14,7 +14,7 @@ import {
   useTranslation,
 } from '@dxos/react-ui';
 import { StackItem } from '@dxos/react-ui-stack';
-import { mx } from '@dxos/react-ui-theme';
+import { mx } from '@dxos/ui-theme';
 
 import { translationKey } from '../../translations';
 

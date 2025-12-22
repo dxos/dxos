@@ -10,7 +10,7 @@ import { sendMessage } from 'webext-bridge/popup';
 import browser from 'webextension-polyfill';
 
 import { log } from '@dxos/log';
-import { mx } from '@dxos/react-ui-theme';
+import { mx } from '@dxos/ui-theme';
 
 import { Chat, type ChatProps, Container, ErrorBoundary, Thumbnail } from './components';
 import { THUMBNAIL_PROP, getConfig } from './config';

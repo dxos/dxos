@@ -31,8 +31,8 @@
   },
   "devDependencies": {
     "@dxos/react-ui": "workspace:*",
-    "@dxos/react-ui-theme": "workspace:*",
     "@dxos/storybook-utils": "workspace:*",
+    "@dxos/ui-theme": "workspace:*",
     "react": "catalog:",
     "react-dom": "catalog:"
   },

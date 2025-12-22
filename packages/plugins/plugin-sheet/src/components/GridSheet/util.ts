@@ -19,7 +19,7 @@ import {
   commentedClassName,
   rowToA1Notation,
 } from '@dxos/react-ui-grid';
-import { mx } from '@dxos/react-ui-theme';
+import { mx } from '@dxos/ui-theme';
 
 import { type SheetModel } from '../../model';
 import { cellClassNameForRange, rangeFromIndex } from '../../types';

@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { mx } from '@dxos/react-ui-theme';
+import { mx } from '@dxos/ui-theme';
 
 import { type ThemeExtensionsOptions } from './extensions';
 

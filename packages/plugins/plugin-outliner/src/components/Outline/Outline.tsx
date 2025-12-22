@@ -21,8 +21,8 @@ import {
   outliner,
   useTextEditor,
 } from '@dxos/react-ui-editor';
-import { mx } from '@dxos/react-ui-theme';
 import { type Text } from '@dxos/schema';
+import { mx } from '@dxos/ui-theme';
 
 import { meta } from '../../meta';
 

@@ -19,7 +19,7 @@ import React, {
 import { addEventListener, combine } from '@dxos/async';
 import { invariant } from '@dxos/invariant';
 import { useForwardedRef } from '@dxos/react-hooks';
-import { mx } from '@dxos/react-ui-theme';
+import { mx } from '@dxos/ui-theme';
 
 import { type ThemedClassName } from '../../util';
 import { IconButton } from '../Button';

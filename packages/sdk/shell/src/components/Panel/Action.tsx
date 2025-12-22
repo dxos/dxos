@@ -6,7 +6,7 @@ import { useControllableState } from '@radix-ui/react-use-controllable-state';
 import React, { type Dispatch, type SetStateAction, forwardRef } from 'react';
 
 import { Button, type ButtonProps, DropdownMenu, Icon, IconButton, useTranslation } from '@dxos/react-ui';
-import { descriptionText, mx } from '@dxos/react-ui-theme';
+import { descriptionText, mx } from '@dxos/ui-theme';
 
 export type LargeButtonProps = ButtonProps & {
   isFull?: boolean;

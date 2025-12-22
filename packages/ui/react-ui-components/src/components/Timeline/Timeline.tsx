@@ -8,7 +8,7 @@ import { addEventListener } from '@dxos/async';
 import { LogLevel } from '@dxos/log';
 import { Icon, type ThemedClassName, useDynamicRef, useForwardedRef, useTranslation } from '@dxos/react-ui';
 import { ScrollContainer, type ScrollController } from '@dxos/react-ui';
-import { descriptionText, mx } from '@dxos/react-ui-theme';
+import { descriptionText, mx } from '@dxos/ui-theme';
 import { trim } from '@dxos/util';
 
 import { translationKey } from '../../translations';

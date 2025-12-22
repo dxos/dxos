@@ -6,7 +6,7 @@ import React, { type CSSProperties, type PropsWithChildren, useEffect, useState 
 
 import { Icon, IconButton, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { Waveform } from '@dxos/react-ui-sfx';
-import { groupHoverControlItemWithTransition, mx } from '@dxos/react-ui-theme';
+import { groupHoverControlItemWithTransition, mx } from '@dxos/ui-theme';
 
 import { meta } from '../../meta';
 

@@ -8,7 +8,7 @@ import browser from 'webextension-polyfill';
 import { Composer, DXOSHorizontalType } from '@dxos/brand';
 import { SpaceId } from '@dxos/keys';
 import { Input, type ThemedClassName, useTranslation } from '@dxos/react-ui';
-import { mx } from '@dxos/react-ui-theme';
+import { mx } from '@dxos/ui-theme';
 
 import { DEVELOPER_MODE_PROP, SPACE_ID_PROP, SPACE_MODE_PROP, getProp } from '../../config';
 import { translationKey } from '../../translations';

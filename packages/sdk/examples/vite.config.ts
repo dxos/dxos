@@ -10,7 +10,7 @@ import { defineConfig, searchForWorkspaceRoot } from 'vite';
 import TopLevelAwaitPlugin from 'vite-plugin-top-level-await';
 import WasmPlugin from 'vite-plugin-wasm';
 
-import { ThemePlugin } from '@dxos/react-ui-theme/plugin';
+import { ThemePlugin } from '@dxos/ui-theme/plugin';
 
 import { createConfig as createTestConfig } from '../../../vitest.base.config';
 
@@ -24,9 +24,9 @@ export default defineConfig({
     https:
       process.env.HTTPS === 'true'
         ? {
-            key: '../../../key.pem',
-            cert: '../../../cert.pem',
-          }
+          key: '../../../key.pem',
+          cert: '../../../cert.pem',
+        }
         : false,
     fs: {
       allow: [

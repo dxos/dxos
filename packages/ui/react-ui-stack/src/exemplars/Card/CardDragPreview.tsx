@@ -4,7 +4,7 @@
 
 import React, { type PropsWithChildren } from 'react';
 
-import { mx } from '@dxos/react-ui-theme';
+import { mx } from '@dxos/ui-theme';
 
 import { cardRoot } from './fragments';
 

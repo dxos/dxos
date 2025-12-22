@@ -6,7 +6,7 @@ import React from 'react';
 
 import { type Device } from '@dxos/react-client/halo';
 import { Button, Icon, List, useTranslation } from '@dxos/react-ui';
-import { descriptionText, getSize, mx } from '@dxos/react-ui-theme';
+import { descriptionText, getSize, mx } from '@dxos/ui-theme';
 
 import { DeviceListItem } from './DeviceListItem';
 import { type AgentFormProps, type DeviceListProps } from './DeviceListProps';

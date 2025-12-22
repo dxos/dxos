@@ -14,7 +14,7 @@ import { PLANK_COMPANION_TYPE } from '@dxos/plugin-deck/types';
 import { useConnections, useActions as useGraphActions } from '@dxos/plugin-graph';
 import { useMediaQuery, useSidebars } from '@dxos/react-ui';
 import { type TreeData, type TreeItemDataProps, isTreeData } from '@dxos/react-ui-list';
-import { mx } from '@dxos/react-ui-theme';
+import { mx } from '@dxos/ui-theme';
 import { arrayMove, byPosition } from '@dxos/util';
 
 import { NavTreeCapabilities } from '../capabilities';

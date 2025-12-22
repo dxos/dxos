@@ -4,7 +4,7 @@
 
 import React, { type FC, type HTMLAttributes, useState } from 'react';
 
-import { mx } from '@dxos/react-ui-theme';
+import { mx } from '@dxos/ui-theme';
 
 // TODO(burdon): Copied form devtools.
 

@@ -6,7 +6,7 @@ export { type Resource, type TFunction } from 'i18next';
 export { Trans } from 'react-i18next';
 
 export * from '@dxos/react-hooks';
-export * from '@dxos/react-ui-types';
+export * from '@dxos/ui-types';
 
 export * from './components';
 export * from './hooks';

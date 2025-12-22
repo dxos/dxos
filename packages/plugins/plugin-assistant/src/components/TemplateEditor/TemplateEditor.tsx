@@ -16,7 +16,7 @@ import {
   decorateMarkdown,
   useTextEditor,
 } from '@dxos/react-ui-editor';
-import { mx } from '@dxos/react-ui-theme';
+import { mx } from '@dxos/ui-theme';
 import { isNonNullable } from '@dxos/util';
 
 import { meta } from '../../meta';

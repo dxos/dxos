@@ -5,7 +5,7 @@
 import React, { forwardRef, useId, useMemo } from 'react';
 
 import { type ThemedClassName, useForwardedRef } from '@dxos/react-ui';
-import { mx } from '@dxos/react-ui-theme';
+import { mx } from '@dxos/ui-theme';
 
 import { useCanvasContext } from '../../hooks';
 import { type Point } from '../../types';

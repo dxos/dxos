@@ -16,7 +16,7 @@ import React, {
 import { type Format } from '@dxos/echo/internal';
 import { Icon, Input, Tooltip } from '@dxos/react-ui';
 import { labelSpacing } from '@dxos/react-ui-stack';
-import { errorText, mx } from '@dxos/react-ui-theme';
+import { errorText, mx } from '@dxos/ui-theme';
 
 import { type FormFieldStatus } from '../../hooks';
 

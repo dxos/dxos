@@ -38,7 +38,7 @@ import {
 import { DropdownMenu, type MenuItem, MenuProvider } from '@dxos/react-ui-menu';
 import type { StackItemRearrangeHandler } from '@dxos/react-ui-stack';
 import { Tabs } from '@dxos/react-ui-tabs';
-import { mx } from '@dxos/react-ui-theme';
+import { mx } from '@dxos/ui-theme';
 import { arrayMove } from '@dxos/util';
 
 import { useLoadDescendents } from '../../hooks';

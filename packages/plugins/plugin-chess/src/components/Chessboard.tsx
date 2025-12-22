@@ -24,7 +24,7 @@ import {
   useGameboardContext,
 } from '@dxos/react-ui-gameboard';
 import { useSoundEffect } from '@dxos/react-ui-sfx';
-import { mx } from '@dxos/react-ui-theme';
+import { mx } from '@dxos/ui-theme';
 
 import { type Chess } from '../types';
 

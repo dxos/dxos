@@ -42,8 +42,8 @@
     "@dxos/react-ui-sfx": "workspace:*",
     "@dxos/react-ui-syntax-highlighter": "workspace:*",
     "@dxos/react-ui-text-tooltip": "workspace:*",
-    "@dxos/react-ui-theme": "workspace:*",
-    "@dxos/react-ui-types": "workspace:*",
+    "@dxos/ui-theme": "workspace:*",
+    "@dxos/ui-types": "workspace:*",
     "@dxos/util": "workspace:*",
     "@fluentui/react-tabster": "catalog:",
     "@preact-signals/safe-react": "catalog:",
@@ -65,7 +65,7 @@
   },
   "peerDependencies": {
     "@dxos/react-ui": "workspace:*",
-    "@dxos/react-ui-theme": "workspace:*",
+    "@dxos/ui-theme": "workspace:*",
     "effect": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:"

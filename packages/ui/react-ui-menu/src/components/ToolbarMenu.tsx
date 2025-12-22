@@ -6,7 +6,7 @@ import React, { Fragment, useCallback } from 'react';
 
 import { Icon, Toolbar as NaturalToolbar, type ToolbarRootProps, useTranslation } from '@dxos/react-ui';
 import { useAttention } from '@dxos/react-ui-attention';
-import { mx, textBlockWidth, toolbarInactive, toolbarLayout } from '@dxos/react-ui-theme';
+import { mx, textBlockWidth, toolbarInactive, toolbarLayout } from '@dxos/ui-theme';
 
 import { translationKey } from '../translations';
 import {

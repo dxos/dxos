@@ -7,7 +7,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
 import { Ref } from '@dxos/echo';
 import { IconButton, type ThemedClassName, useTranslation } from '@dxos/react-ui';
-import { mx } from '@dxos/react-ui-theme';
+import { mx } from '@dxos/ui-theme';
 
 import { meta } from '../../meta';
 import { Journal as JournalType, getDateString, parseDateString } from '../../types';

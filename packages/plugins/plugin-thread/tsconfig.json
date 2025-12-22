@@ -120,10 +120,10 @@
       "path": "../../ui/react-ui-tabs"
     },
     {
-      "path": "../../ui/react-ui-theme"
+      "path": "../../ui/react-ui-thread"
     },
     {
-      "path": "../../ui/react-ui-thread"
+      "path": "../../ui/ui-theme"
     },
     {
       "path": "../plugin-attention"

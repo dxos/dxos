@@ -63,10 +63,10 @@
       "path": "../react-ui-text-tooltip"
     },
     {
-      "path": "../react-ui-theme"
+      "path": "../ui-theme"
     },
     {
-      "path": "../react-ui-types"
+      "path": "../ui-types"
     }
   ]
 }

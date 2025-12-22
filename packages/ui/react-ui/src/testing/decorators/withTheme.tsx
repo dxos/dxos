@@ -5,7 +5,7 @@
 import { type Decorator } from '@storybook/react';
 import React, { memo } from 'react';
 
-import { defaultTx } from '@dxos/react-ui-theme';
+import { defaultTx } from '@dxos/ui-theme';
 
 import { type ThemeMode, ThemeProvider, Tooltip } from '../../components';
 

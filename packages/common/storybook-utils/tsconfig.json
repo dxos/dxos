@@ -27,7 +27,7 @@
       "path": "../../ui/react-ui-dnd"
     },
     {
-      "path": "../../ui/react-ui-theme"
+      "path": "../../ui/ui-theme"
     },
     {
       "path": "../log"

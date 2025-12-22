@@ -571,16 +571,19 @@
       "path": "packages/ui/react-ui-text-tooltip/tsconfig.json"
     },
     {
-      "path": "packages/ui/react-ui-theme/tsconfig.json"
-    },
-    {
       "path": "packages/ui/react-ui-thread/tsconfig.json"
     },
     {
-      "path": "packages/ui/react-ui-types/tsconfig.json"
+      "path": "packages/ui/solid-ui/tsconfig.json"
     },
     {
       "path": "packages/ui/solid-ui-geo/tsconfig.json"
+    },
+    {
+      "path": "packages/ui/ui-theme/tsconfig.json"
+    },
+    {
+      "path": "packages/ui/ui-types/tsconfig.json"
     },
     {
       "path": "tools/beast/tsconfig.json"
@@ -598,19 +601,19 @@
       "path": "tools/dx-tools/tsconfig.json"
     },
     {
-      "path": "tools/lit-storybook/tsconfig.json"
-    },
-    {
       "path": "tools/lockfile-explorer/tsconfig.json"
     },
     {
       "path": "tools/protobuf-test/tsconfig.json"
     },
     {
-      "path": "tools/solid-storybook/tsconfig.json"
+      "path": "tools/storybook-lit/tsconfig.json"
     },
     {
-      "path": "tools/storybook/tsconfig.json"
+      "path": "tools/storybook-react/tsconfig.json"
+    },
+    {
+      "path": "tools/storybook-solid/tsconfig.json"
     },
     {
       "path": "tools/toolbox/tsconfig.json"

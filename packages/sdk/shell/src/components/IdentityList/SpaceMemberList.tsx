@@ -8,7 +8,7 @@ import { type PublicKey, useClient } from '@dxos/react-client';
 import type { SpaceMember } from '@dxos/react-client/echo';
 import { useMembers } from '@dxos/react-client/echo';
 import { List, useTranslation } from '@dxos/react-ui';
-import { descriptionText, mx } from '@dxos/react-ui-theme';
+import { descriptionText, mx } from '@dxos/ui-theme';
 
 import { IdentityListItem } from './IdentityListItem';
 

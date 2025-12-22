@@ -13,7 +13,7 @@ packages/ui/primitives/react-{…}
 packages/ui/react-ui
 
 > theme elements and tokens that can be applied to primitives
-@dxos/react-ui-theme
+@dxos/ui-theme
 packages/ui/react-ui-theme
 
 ## DXOS UI X

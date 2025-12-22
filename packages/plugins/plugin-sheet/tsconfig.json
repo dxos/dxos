@@ -116,10 +116,10 @@
       "path": "../../ui/react-ui-syntax-highlighter"
     },
     {
-      "path": "../../ui/react-ui-theme"
+      "path": "../../ui/ui-theme"
     },
     {
-      "path": "../../ui/react-ui-types"
+      "path": "../../ui/ui-types"
     },
     {
       "path": "../plugin-attention"

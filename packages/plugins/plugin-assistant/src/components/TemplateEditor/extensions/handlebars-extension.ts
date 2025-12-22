@@ -20,7 +20,7 @@ import {
 } from '@codemirror/view';
 
 import { Domino } from '@dxos/react-ui';
-import { mx } from '@dxos/react-ui-theme';
+import { mx } from '@dxos/ui-theme';
 
 export type HandlebarsOptions = {};
 

@@ -30,8 +30,8 @@
   "devDependencies": {
     "@dxos/log": "workspace:*",
     "@dxos/react-ui": "workspace:*",
-    "@dxos/react-ui-theme": "workspace:*",
     "@dxos/storybook-utils": "workspace:*",
+    "@dxos/ui-theme": "workspace:*",
     "@fontsource/k2d": "catalog:",
     "@phosphor-icons/react": "catalog:",
     "@rive-app/react-canvas": "catalog:",
@@ -41,7 +41,7 @@
   },
   "peerDependencies": {
     "@dxos/react-ui": "workspace:*",
-    "@dxos/react-ui-theme": "workspace:*",
+    "@dxos/ui-theme": "workspace:*",
     "@phosphor-icons/react": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:"

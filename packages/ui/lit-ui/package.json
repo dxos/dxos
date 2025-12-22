@@ -39,7 +39,7 @@
   ],
   "dependencies": {
     "@dxos/react-hooks": "workspace:*",
-    "@dxos/react-ui-types": "workspace:*",
+    "@dxos/ui-types": "workspace:*",
     "@dxos/util": "workspace:*",
     "@lit/react": "catalog:",
     "lit": "catalog:"

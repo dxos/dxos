@@ -7,7 +7,7 @@ import React, { useEffect, useState } from 'react';
 import { ConnectionState } from '@dxos/protocols/proto/dxos/client/services';
 import { useNetworkStatus } from '@dxos/react-client/mesh';
 import { Icon } from '@dxos/react-ui';
-import { mx } from '@dxos/react-ui-theme';
+import { mx } from '@dxos/ui-theme';
 
 import { styles } from './styles';
 

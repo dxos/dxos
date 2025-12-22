@@ -29,7 +29,7 @@
     "@dxos/lit-ui": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/react-hooks": "workspace:*",
-    "@dxos/react-ui-theme": "workspace:*",
+    "@dxos/ui-theme": "workspace:*",
     "lit": "catalog:"
   },
   "devDependencies": {

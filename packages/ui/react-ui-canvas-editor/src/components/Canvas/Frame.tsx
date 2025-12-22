@@ -20,7 +20,7 @@ import { createPortal } from 'react-dom';
 import { invariant } from '@dxos/invariant';
 import { type ThemedClassName, useForwardedRef } from '@dxos/react-ui';
 import { useCanvasContext } from '@dxos/react-ui-canvas';
-import { mx } from '@dxos/react-ui-theme';
+import { mx } from '@dxos/ui-theme';
 
 import { type DragDropPayload, useEditorContext } from '../../hooks';
 import { getBoundsProperties, getInputPoint, pointSubtract } from '../../layout';
