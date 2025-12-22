@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { Capabilities, contributes, createSurface } from '@dxos/app-framework';
+import { Capabilities, contributes, createSurface, defineCapabilityModule } from '@dxos/app-framework';
 import { useLayout } from '@dxos/app-framework/react';
 import { Obj } from '@dxos/echo';
 import { getSpace, parseId, useSpace } from '@dxos/react-client/echo';
@@ -12,7 +12,7 @@ import { getSpace, parseId, useSpace } from '@dxos/react-client/echo';
 import { AutomationSettings, FunctionsContainer } from '../components';
 import { meta } from '../meta';
 
-export default () =>
+export default defineCapabilityModule(() =>
   contributes(Capabilities.ReactSurface, [
     createSurface({
       id: `${meta.id}/space-settings-functions`,
@@ -53,4 +53,4 @@ export default () =>
         return <AutomationSettings space={getSpace(data.companionTo)!} object={data.companionTo} />;
       },
     }),
-  ]);
+  ]));

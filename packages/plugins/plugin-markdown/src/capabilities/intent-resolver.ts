@@ -11,8 +11,7 @@ import {
   CollaborationActions,
   type PluginContext,
   contributes,
-  createResolver,
-} from '@dxos/app-framework';
+  createResolver, defineCapabilityModule } from '@dxos/app-framework';
 import { Obj } from '@dxos/echo';
 import { createDocAccessor, getRangeFromCursor } from '@dxos/echo-db';
 
@@ -20,7 +19,7 @@ import { Markdown, MarkdownAction } from '../types';
 
 import { MarkdownCapabilities } from './capabilities';
 
-export default (context: PluginContext) =>
+export default defineCapabilityModule((context: PluginContext) =>
   contributes(Capabilities.IntentResolver, [
     createResolver({
       intent: MarkdownAction.Create,
@@ -55,4 +54,4 @@ export default (context: PluginContext) =>
         });
       },
     }),
-  ]);
+  ]));

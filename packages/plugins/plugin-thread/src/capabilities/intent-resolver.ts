@@ -4,7 +4,7 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capabilities, type PluginContext, contributes, createIntent, createResolver } from '@dxos/app-framework';
+import { Capabilities, type PluginContext, contributes, createIntent, createResolver, defineCapabilityModule } from '@dxos/app-framework';
 import { sleep } from '@dxos/async';
 import { Obj, Relation, Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
@@ -20,7 +20,7 @@ import { Channel, ThreadAction } from '../types';
 
 import { ThreadCapabilities } from './capabilities';
 
-export default (context: PluginContext) =>
+export default defineCapabilityModule((context: PluginContext) =>
   contributes(Capabilities.IntentResolver, [
     createResolver({
       intent: ThreadAction.OnCreateSpace,
@@ -308,4 +308,4 @@ export default (context: PluginContext) =>
         }
       },
     }),
-  ]);
+  ]));

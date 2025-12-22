@@ -2,14 +2,14 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Capabilities, contributes } from '@dxos/app-framework';
+import { Capabilities, contributes, defineCapabilityModule } from '@dxos/app-framework';
 import { Relation } from '@dxos/echo';
 import { createDocAccessor, getRangeFromCursor } from '@dxos/echo-db';
 import { type AnchoredTo } from '@dxos/types';
 
 import { Markdown } from '../types';
 
-export default () =>
+export default defineCapabilityModule(() =>
   contributes(Capabilities.AnchorSort, {
     key: Markdown.Document.typename,
     sort: (anchorA: AnchoredTo.AnchoredTo, anchorB: AnchoredTo.AnchoredTo) => {
@@ -28,4 +28,4 @@ export default () =>
       const posB = getStartPosition(anchorB.anchor);
       return posA - posB;
     },
-  });
+  }));

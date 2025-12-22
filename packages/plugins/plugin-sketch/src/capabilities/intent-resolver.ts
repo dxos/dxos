@@ -2,11 +2,11 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Capabilities, contributes, createResolver } from '@dxos/app-framework';
+import { Capabilities, contributes, createResolver, defineCapabilityModule } from '@dxos/app-framework';
 
 import { Diagram, SketchAction } from '../types';
 
-export default () =>
+export default defineCapabilityModule(() =>
   contributes(
     Capabilities.IntentResolver,
     createResolver({
@@ -17,4 +17,4 @@ export default () =>
         },
       }),
     }),
-  );
+  ));

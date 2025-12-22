@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { contributes } from '@dxos/app-framework';
+import { contributes, defineCapabilityModule } from '@dxos/app-framework';
 import { LocalStorageStore } from '@dxos/local-storage';
 import { getObservabilityGroup } from '@dxos/observability';
 
@@ -10,7 +10,7 @@ import { meta } from '../meta';
 
 import { ObservabilityCapabilities } from './capabilities';
 
-export default async ({ namespace }: { namespace: string }) => {
+export default defineCapabilityModule(async ({ namespace }: { namespace: string }) => {
   const state = new LocalStorageStore<ObservabilityCapabilities.State>(meta.id);
 
   state.prop({ key: 'notified', type: LocalStorageStore.bool({ allowUndefined: true }) });
@@ -19,4 +19,4 @@ export default async ({ namespace }: { namespace: string }) => {
   state.values.group = await getObservabilityGroup(namespace);
 
   return contributes(ObservabilityCapabilities.State, state.values, () => state.close());
-};
+});

@@ -4,14 +4,14 @@
 
 import React from 'react';
 
-import { Capabilities, contributes, createSurface } from '@dxos/app-framework';
+import { Capabilities, contributes, createSurface, defineCapabilityModule } from '@dxos/app-framework';
 import { Obj } from '@dxos/echo';
 import { Collection } from '@dxos/schema';
 
 import { StackContainer } from '../components';
 import { meta } from '../meta';
 
-export default () =>
+export default defineCapabilityModule(() =>
   contributes(
     Capabilities.ReactSurface,
     createSurface({
@@ -26,4 +26,4 @@ export default () =>
         return <StackContainer id={id ?? Obj.getDXN(data.subject).toString()} collection={data.subject} />;
       },
     }),
-  );
+  ));

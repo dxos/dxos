@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { Capabilities, contributes, createSurface } from '@dxos/app-framework';
+import { Capabilities, contributes, createSurface, defineCapabilityModule } from '@dxos/app-framework';
 import { type SurfaceComponentProps } from '@dxos/app-framework/react';
 import { Obj } from '@dxos/echo';
 
@@ -12,7 +12,7 @@ import { JournalContainer, OutlineCard, OutlineContainer } from '../components';
 import { meta } from '../meta';
 import { Journal, Outline } from '../types';
 
-export default () => [
+export default defineCapabilityModule(() => [
   contributes(Capabilities.ReactSurface, [
     createSurface({
       id: `${meta.id}/article/journal`,
@@ -37,4 +37,4 @@ export default () => [
       component: ({ data }) => <OutlineCard subject={data.subject} />,
     }),
   ]),
-];
+]);

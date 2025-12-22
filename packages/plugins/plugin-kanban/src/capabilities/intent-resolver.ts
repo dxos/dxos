@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Capabilities, type PluginContext, contributes, createResolver } from '@dxos/app-framework';
+import { Capabilities, type PluginContext, contributes, createResolver, defineCapabilityModule } from '@dxos/app-framework';
 import { JsonSchema, Obj } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { Kanban } from '@dxos/react-ui-kanban/types';
@@ -11,7 +11,7 @@ import { ProjectionModel, View, getTypenameFromQuery } from '@dxos/schema';
 import { meta } from '../meta';
 import { KanbanAction } from '../types';
 
-export default (context: PluginContext) =>
+export default defineCapabilityModule((context: PluginContext) =>
   contributes(Capabilities.IntentResolver, [
     createResolver({
       intent: KanbanAction.Create,
@@ -67,4 +67,4 @@ export default (context: PluginContext) =>
         }
       },
     }),
-  ]);
+  ]));

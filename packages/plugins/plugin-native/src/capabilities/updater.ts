@@ -12,14 +12,14 @@ import * as Function from 'effect/Function';
 import * as Match from 'effect/Match';
 import * as Schedule from 'effect/Schedule';
 
-import { Capabilities, LayoutAction, type PluginContext, contributes, createIntent } from '@dxos/app-framework';
+import { Capabilities, LayoutAction, type PluginContext, contributes, createIntent, defineCapabilityModule } from '@dxos/app-framework';
 import { log } from '@dxos/log';
 
 import { meta } from '../meta';
 
 const SUPPORTS_OTA = ['linux', 'macos', 'windows'];
 
-export default (context: PluginContext) => {
+export default defineCapabilityModule((context: PluginContext) => {
   // Skip updates if not supported or in dev mode.
   const platform = type();
   if (!SUPPORTS_OTA.includes(platform) || window.location.hostname === 'localhost') {
@@ -82,4 +82,4 @@ export default (context: PluginContext) => {
   return contributes(Capabilities.Null, null, () => {
     Effect.runSync(Fiber.interrupt(fiber));
   });
-};
+});

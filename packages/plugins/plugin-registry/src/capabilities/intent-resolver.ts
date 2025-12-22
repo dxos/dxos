@@ -8,12 +8,11 @@ import {
   SettingsAction,
   contributes,
   createIntent,
-  createResolver,
-} from '@dxos/app-framework';
+  createResolver, defineCapabilityModule } from '@dxos/app-framework';
 
 import { REGISTRY_ID } from '../meta';
 
-export default () =>
+export default defineCapabilityModule(() =>
   contributes(
     Capabilities.IntentResolver,
     createResolver({
@@ -24,4 +23,4 @@ export default () =>
         };
       },
     }),
-  );
+  ));

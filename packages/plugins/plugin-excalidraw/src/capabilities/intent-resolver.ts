@@ -2,12 +2,12 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Capabilities, contributes, createResolver } from '@dxos/app-framework';
+import { Capabilities, contributes, createResolver, defineCapabilityModule } from '@dxos/app-framework';
 import { Diagram } from '@dxos/plugin-sketch/types';
 
 import { EXCALIDRAW_SCHEMA, SketchAction } from '../types';
 
-export default () =>
+export default defineCapabilityModule(() =>
   contributes(
     Capabilities.IntentResolver,
     createResolver({
@@ -18,4 +18,4 @@ export default () =>
         },
       }),
     }),
-  );
+  ));

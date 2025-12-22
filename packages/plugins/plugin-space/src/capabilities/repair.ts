@@ -2,18 +2,19 @@
 // Copyright 2025 DXOS.org
 //
 
-import { contributes } from '@dxos/app-framework';
+import { contributes, defineCapabilityModule } from '@dxos/app-framework';
 import { Obj, Ref, Type } from '@dxos/echo';
 import { type Space } from '@dxos/react-client/echo';
 import { Collection } from '@dxos/schema';
 
 import { SpaceCapabilities } from './capabilities';
 
-export default () =>
+export default defineCapabilityModule(() =>
   contributes(SpaceCapabilities.Repair, async ({ space }) => {
     await removeQueryCollections(space);
     await ensureSystemCollection(space);
-  });
+  }),
+);
 
 /**
  * Remove all existing query collections from the root collection.

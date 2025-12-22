@@ -12,8 +12,7 @@ import {
   type PluginContext,
   contributes,
   createIntent,
-  createResolver,
-} from '@dxos/app-framework';
+  createResolver, defineCapabilityModule } from '@dxos/app-framework';
 // import { ArtifactId } from '@dxos/blueprints';
 // import { getSpace } from '@dxos/client/echo';
 // import { SequenceBuilder, compileSequence, DEFAULT_INPUT, ValueBag, ComputeGraphModel } from '@dxos/conductor';
@@ -33,7 +32,7 @@ import { Calendar, InboxAction, Mailbox } from '../types';
 // TODO(dmaretskyi): Circular dep due to the assistant stories
 // import { AssistantCapabilities } from '@dxos/plugin-assistant';
 
-export default (context: PluginContext) =>
+export default defineCapabilityModule((context: PluginContext) =>
   contributes(Capabilities.IntentResolver, [
     createResolver({
       intent: InboxAction.CreateMailbox,
@@ -218,7 +217,7 @@ export default (context: PluginContext) =>
         // log.info('Workflow result', { text });
       },
     }),
-  ]);
+  ]));
 
 // const Label = Schema.Literal('important', 'personal', 'work', 'social', 'promotions', 'updates', 'forums', 'spam');
 
@@ -226,4 +225,4 @@ export default (context: PluginContext) =>
 //   .step('Analyze the email and assign labels to it', {
 //     tools: ['inbox/label'],
 //   })
-//   .build();
+//   .build());

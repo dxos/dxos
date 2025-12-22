@@ -4,14 +4,14 @@
 
 import React from 'react';
 
-import { Capabilities, contributes, createSurface } from '@dxos/app-framework';
+import { Capabilities, contributes, createSurface, defineCapabilityModule } from '@dxos/app-framework';
 import { Obj } from '@dxos/echo';
 
 import { ChessboardContainer } from '../components';
 import { meta } from '../meta';
 import { Chess } from '../types';
 
-export default () =>
+export default defineCapabilityModule(() =>
   contributes(Capabilities.ReactSurface, [
     createSurface({
       id: meta.id,
@@ -20,4 +20,4 @@ export default () =>
       filter: (data): data is { subject: Chess.Game } => Obj.instanceOf(Chess.Game, data.subject),
       component: ({ data, role }) => <ChessboardContainer game={data.subject} role={role} />,
     }),
-  ]);
+  ]));

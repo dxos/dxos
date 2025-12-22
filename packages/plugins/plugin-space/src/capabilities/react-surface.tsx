@@ -6,7 +6,7 @@ import * as Option from 'effect/Option';
 import type * as Schema from 'effect/Schema';
 import React, { useCallback } from 'react';
 
-import { Capabilities, contributes, createSurface } from '@dxos/app-framework';
+import { Capabilities, contributes, defineCapabilityModule, createSurface } from '@dxos/app-framework';
 import { Surface, useCapability, useLayout } from '@dxos/app-framework/react';
 import { Database, Obj, type Ref } from '@dxos/echo';
 import { findAnnotation } from '@dxos/effect';
@@ -62,7 +62,7 @@ type ReactSurfaceOptions = {
   createInvitationUrl: (invitationCode: string) => string;
 };
 
-export default ({ createInvitationUrl }: ReactSurfaceOptions) =>
+export default defineCapabilityModule(({ createInvitationUrl }: ReactSurfaceOptions) =>
   contributes(Capabilities.ReactSurface, [
     createSurface({
       id: `${meta.id}/article`,
@@ -356,4 +356,5 @@ export default ({ createInvitationUrl }: ReactSurfaceOptions) =>
       role: 'status',
       component: () => <SyncStatus />,
     }),
-  ]);
+  ]),
+);

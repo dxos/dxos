@@ -2,12 +2,12 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Capabilities, type PluginContext, contributes } from '@dxos/app-framework';
+import { Capabilities, type PluginContext, contributes, defineCapabilityModule } from '@dxos/app-framework';
 import { type Type } from '@dxos/echo';
 
 import { ClientCapabilities } from './capabilities';
 
-export default (context: PluginContext) => {
+export default defineCapabilityModule((context: PluginContext) => {
   const registry = context.getCapability(Capabilities.AtomRegistry);
   const client = context.getCapability(ClientCapabilities.Client);
 
@@ -27,4 +27,4 @@ export default (context: PluginContext) => {
   );
 
   return contributes(Capabilities.Null, null, () => cancel());
-};
+});

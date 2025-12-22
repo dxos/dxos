@@ -7,7 +7,7 @@ import React from 'react';
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
 
 import { Capabilities, createSurface } from '../../common';
-import { contributes } from '../../core';
+import { contributes, defineCapabilityModule } from '../../core';
 import { usePluginManager } from '../../react';
 
 export const Debug = () => {
@@ -28,7 +28,7 @@ export const Debug = () => {
   );
 };
 
-export default () =>
+export default defineCapabilityModule(() =>
   contributes(
     Capabilities.ReactSurface,
     createSurface({
@@ -36,4 +36,5 @@ export default () =>
       role: 'secondary',
       component: Debug,
     }),
-  );
+  ),
+);

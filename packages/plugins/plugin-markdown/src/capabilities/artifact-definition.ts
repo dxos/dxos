@@ -9,7 +9,7 @@ import * as Function from 'effect/Function';
 import * as Schema from 'effect/Schema';
 
 import { ToolResult, createTool } from '@dxos/ai';
-import { Capabilities, chain, contributes, createIntent } from '@dxos/app-framework';
+import { Capabilities, chain, contributes, createIntent, defineCapabilityModule } from '@dxos/app-framework';
 import { ArtifactId, createArtifactElement } from '@dxos/assistant';
 import { defineArtifact } from '@dxos/blueprints';
 import { Obj } from '@dxos/echo';
@@ -20,7 +20,7 @@ import { Filter } from '@dxos/react-client/echo';
 import { meta } from '../meta';
 import { Markdown, MarkdownAction } from '../types';
 
-export default () => {
+export default defineCapabilityModule(() => {
   const definition = defineArtifact({
     id: `artifact:${meta.id}`, // TODO(burdon): meta.id/artifact?
     name: meta.name,
@@ -109,4 +109,4 @@ export default () => {
   });
 
   return contributes(Capabilities.ArtifactDefinition, definition);
-};
+});

@@ -17,6 +17,7 @@ import {
   contributes,
   createIntent,
   createResolver,
+  defineCapabilityModule,
 } from '@dxos/app-framework';
 import { Obj } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
@@ -42,7 +43,7 @@ import { setActive } from '../util';
 
 import { DeckCapabilities } from './capabilities';
 
-export default (context: PluginContext) =>
+export default defineCapabilityModule((context: PluginContext) =>
   contributes(Capabilities.IntentResolver, [
     createResolver({
       intent: IntentAction.ShowUndo,
@@ -468,4 +469,4 @@ export default (context: PluginContext) =>
         });
       },
     }),
-  ]);
+  ]));

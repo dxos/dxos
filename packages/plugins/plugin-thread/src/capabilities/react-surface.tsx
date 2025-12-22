@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { Capabilities, contributes, createSurface } from '@dxos/app-framework';
+import { Capabilities, contributes, createSurface, defineCapabilityModule } from '@dxos/app-framework';
 import { useCapability } from '@dxos/app-framework/react';
 import { Obj, type Ref } from '@dxos/echo';
 import { SettingsStore } from '@dxos/local-storage';
@@ -24,7 +24,7 @@ import { Channel, type ThreadSettingsProps } from '../types';
 
 import { ThreadCapabilities } from './capabilities';
 
-export default () =>
+export default defineCapabilityModule(() =>
   contributes(Capabilities.ReactSurface, [
     createSurface({
       id: `${meta.id}/channel`,
@@ -88,4 +88,4 @@ export default () =>
         return <CallDebugPanel state={call.state} />;
       },
     }),
-  ]);
+  ]));

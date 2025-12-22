@@ -7,7 +7,7 @@ import React, { useCallback } from 'react';
 import { Button } from '@dxos/react-ui';
 
 import { Capabilities, createSurface } from '../../common';
-import { contributes } from '../../core';
+import { contributes, defineCapabilityModule } from '../../core';
 import { createIntent } from '../../plugin-intent';
 import { useCapabilities, useIntentDispatcher, usePluginManager } from '../../react';
 
@@ -39,7 +39,7 @@ export const Toolbar = () => {
   );
 };
 
-export default () =>
+export default defineCapabilityModule(() =>
   contributes(
     Capabilities.ReactSurface,
     createSurface({
@@ -47,4 +47,5 @@ export default () =>
       role: 'toolbar',
       component: Toolbar,
     }),
-  );
+  ),
+);

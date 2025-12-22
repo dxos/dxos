@@ -5,12 +5,12 @@
 import * as Function from 'effect/Function';
 
 import { Capabilities, LayoutAction } from '../common';
-import { contributes } from '../core';
+import { contributes, defineCapabilityModule } from '../core';
 import { chain, createIntent, createResolver } from '../plugin-intent';
 
 import { SETTINGS_ID, SETTINGS_KEY, SettingsAction } from './actions';
 
-export default () =>
+export default defineCapabilityModule(() =>
   contributes(
     Capabilities.IntentResolver,
     createResolver({
@@ -32,4 +32,5 @@ export default () =>
         };
       },
     }),
-  );
+  ),
+);

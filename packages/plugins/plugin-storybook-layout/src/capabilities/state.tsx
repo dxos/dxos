@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Capabilities, contributes, defineCapability } from '@dxos/app-framework';
+import { Capabilities, contributes, defineCapability, defineCapabilityModule } from '@dxos/app-framework';
 import { live } from '@dxos/live-object';
 
 import { meta } from '../meta';
@@ -37,7 +37,7 @@ const defaultState: LayoutState = {
   workspace: 'default',
 };
 
-export default ({ initialState }: { initialState?: Partial<LayoutState> }) => {
+export default defineCapabilityModule(({ initialState }: { initialState?: Partial<LayoutState> }) => {
   const state = live<LayoutState>({ ...defaultState, ...initialState });
 
   const layout = live<Capabilities.Layout>({
@@ -68,4 +68,4 @@ export default ({ initialState }: { initialState?: Partial<LayoutState> }) => {
   });
 
   return [contributes(LayoutState, state), contributes(Capabilities.Layout, layout)];
-};
+});

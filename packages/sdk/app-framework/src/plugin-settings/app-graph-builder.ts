@@ -11,13 +11,13 @@ import { type SettingsStore, type SettingsValue } from '@dxos/local-storage';
 import { isNonNullable } from '@dxos/util';
 
 import { Capabilities } from '../common';
-import { type PluginContext, type PluginMeta, contributes } from '../core';
+import { type PluginContext, type PluginMeta, contributes, defineCapabilityModule } from '../core';
 import { createIntent } from '../plugin-intent';
 
 import { SETTINGS_ID, SETTINGS_KEY, SettingsAction } from './actions';
 import { meta } from './meta';
 
-export default (context: PluginContext) =>
+export default defineCapabilityModule((context: PluginContext) =>
   contributes(Capabilities.AppGraphBuilder, [
     createExtension({
       id: `${meta.id}/action`,
@@ -157,4 +157,5 @@ export default (context: PluginContext) =>
           ),
         ),
     }),
-  ]);
+  ]),
+);

@@ -11,8 +11,7 @@ import {
   chain,
   contributes,
   createIntent,
-  createResolver,
-} from '@dxos/app-framework';
+  createResolver, defineCapabilityModule } from '@dxos/app-framework';
 import { invariant } from '@dxos/invariant';
 import { ObservabilityAction } from '@dxos/plugin-observability/types';
 import { PublicKey } from '@dxos/react-client';
@@ -31,7 +30,7 @@ type IntentResolverOptions = {
 
 const RECOVER_IDENTITY_RPC_TIMEOUT = 20_000;
 
-export default ({ context, appName = 'Composer' }: IntentResolverOptions) =>
+export default defineCapabilityModule(({ context, appName = 'Composer' }: IntentResolverOptions) =>
   contributes(Capabilities.IntentResolver, [
     createResolver({
       intent: ClientAction.CreateIdentity,
@@ -248,4 +247,4 @@ export default ({ context, appName = 'Composer' }: IntentResolverOptions) =>
         );
       },
     }),
-  ]);
+  ]));

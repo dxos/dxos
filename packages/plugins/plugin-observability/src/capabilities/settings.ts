@@ -2,13 +2,13 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Capabilities, contributes } from '@dxos/app-framework';
+import { Capabilities, contributes, defineCapabilityModule } from '@dxos/app-framework';
 import { live } from '@dxos/live-object';
 
 import { type ObservabilitySettingsProps, ObservabilitySettingsSchema } from '../components';
 import { meta } from '../meta';
 
-export default () => {
+export default defineCapabilityModule(() => {
   const settings = live<ObservabilitySettingsProps>({
     enabled: true,
   });
@@ -18,4 +18,4 @@ export default () => {
     schema: ObservabilitySettingsSchema,
     value: settings,
   });
-};
+});

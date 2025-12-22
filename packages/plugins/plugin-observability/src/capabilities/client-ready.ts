@@ -8,8 +8,7 @@ import {
   type PluginContext,
   SettingsAction,
   contributes,
-  createIntent,
-} from '@dxos/app-framework';
+  createIntent, defineCapabilityModule } from '@dxos/app-framework';
 import { type Observability, setupTelemetryListeners } from '@dxos/observability';
 
 import { meta } from '../meta';
@@ -23,7 +22,7 @@ type ClientReadyOptions = {
   observability: Observability;
 };
 
-export default async ({ context, namespace, observability }: ClientReadyOptions) => {
+export default defineCapabilityModule(async ({ context, namespace, observability }: ClientReadyOptions) => {
   const manager = context.getCapability(Capabilities.PluginManager);
   const { dispatchPromise: dispatch } = context.getCapability(Capabilities.IntentDispatcher);
   const state = context.getCapability(ObservabilityCapabilities.State);
@@ -95,4 +94,4 @@ export default async ({ context, namespace, observability }: ClientReadyOptions)
     cleanup();
     await observability.close();
   });
-};
+});

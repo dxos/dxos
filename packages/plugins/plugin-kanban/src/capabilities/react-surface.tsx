@@ -5,7 +5,7 @@
 import type * as Schema from 'effect/Schema';
 import React, { useMemo } from 'react';
 
-import { Capabilities, contributes, createSurface } from '@dxos/app-framework';
+import { Capabilities, contributes, createSurface, defineCapabilityModule } from '@dxos/app-framework';
 import { Database, Obj, Type } from '@dxos/echo';
 import { findAnnotation } from '@dxos/effect';
 import { type FormFieldComponentProps, SelectField, useFormValues } from '@dxos/react-ui-form';
@@ -16,7 +16,7 @@ import { KanbanContainer, KanbanViewEditor } from '../components';
 import { meta } from '../meta';
 import { PivotColumnAnnotationId } from '../types';
 
-export default () =>
+export default defineCapabilityModule(() =>
   contributes(Capabilities.ReactSurface, [
     createSurface({
       id: meta.id,
@@ -79,4 +79,4 @@ export default () =>
         return <SelectField {...props} options={singleSelectColumns.map((column) => ({ value: column }))} />;
       },
     }),
-  ]);
+  ]));

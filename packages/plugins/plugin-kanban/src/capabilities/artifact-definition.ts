@@ -9,7 +9,7 @@ import * as Function from 'effect/Function';
 import * as Schema from 'effect/Schema';
 
 import { ToolResult, createTool } from '@dxos/ai';
-import { Capabilities, type PromiseIntentDispatcher, chain, contributes, createIntent } from '@dxos/app-framework';
+import { Capabilities, type PromiseIntentDispatcher, chain, contributes, createIntent, defineCapabilityModule } from '@dxos/app-framework';
 import { createArtifactElement } from '@dxos/assistant';
 import { defineArtifact } from '@dxos/blueprints';
 import { Obj, Query } from '@dxos/echo';
@@ -34,7 +34,7 @@ declare global {
   }
 }
 
-export default () => {
+export default defineCapabilityModule(() => {
   const definition = defineArtifact({
     id: `artifact:${meta.id}`,
     name: meta.name,
@@ -145,4 +145,4 @@ export default () => {
   });
 
   return contributes(Capabilities.ArtifactDefinition, definition);
-};
+});

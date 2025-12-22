@@ -2,13 +2,13 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Capabilities, contributes } from '@dxos/app-framework';
+import { Capabilities, contributes, defineCapabilityModule } from '@dxos/app-framework';
 import { live } from '@dxos/live-object';
 
 import { meta } from '../meta';
 import { type DeckSettingsProps, DeckSettingsSchema } from '../types';
 
-export default () => {
+export default defineCapabilityModule(() => {
   const settings = live<DeckSettingsProps>({
     showHints: false,
     enableDeck: false,
@@ -24,4 +24,4 @@ export default () => {
     schema: DeckSettingsSchema,
     value: settings,
   });
-};
+});

@@ -5,9 +5,9 @@
 import { RootSettingsStore } from '@dxos/local-storage';
 
 import { Capabilities } from '../common';
-import { type PluginContext, contributes } from '../core';
+import { type PluginContext, contributes, defineCapabilityModule } from '../core';
 
-export default (context: PluginContext) => {
+export default defineCapabilityModule((context: PluginContext) => {
   // TODO(wittjosiah): Replace with atom?
   const settingsStore = new RootSettingsStore();
 
@@ -30,4 +30,4 @@ export default (context: PluginContext) => {
   );
 
   return contributes(Capabilities.SettingsStore, settingsStore, () => cancel());
-};
+});

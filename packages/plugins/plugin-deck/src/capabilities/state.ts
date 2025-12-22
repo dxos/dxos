@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Capabilities, contributes } from '@dxos/app-framework';
+import { Capabilities, contributes, defineCapabilityModule } from '@dxos/app-framework';
 import { invariant } from '@dxos/invariant';
 import { live } from '@dxos/live-object';
 import { LocalStorageStore } from '@dxos/local-storage';
@@ -110,4 +110,4 @@ export const DeckStateFactory = () => {
   ];
 };
 
-export default DeckStateFactory;
+export default defineCapabilityModule(DeckStateFactory);

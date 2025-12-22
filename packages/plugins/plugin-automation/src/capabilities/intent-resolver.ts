@@ -8,8 +8,7 @@ import {
   type PluginContext,
   contributes,
   createIntent,
-  createResolver,
-} from '@dxos/app-framework';
+  createResolver, defineCapabilityModule } from '@dxos/app-framework';
 import { Ref } from '@dxos/echo';
 import { Function, Script, Trigger } from '@dxos/functions';
 import { type DXN } from '@dxos/keys';
@@ -19,7 +18,7 @@ import { Filter } from '@dxos/react-client/echo';
 
 import { AutomationAction } from '../types';
 
-export default (context: PluginContext) =>
+export default defineCapabilityModule((context: PluginContext) =>
   contributes(Capabilities.IntentResolver, [
     createResolver({
       intent: AutomationAction.CreateTriggerFromTemplate,
@@ -74,4 +73,4 @@ export default (context: PluginContext) =>
         };
       },
     }),
-  ]);
+  ]));

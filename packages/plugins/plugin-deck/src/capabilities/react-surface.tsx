@@ -4,14 +4,14 @@
 
 import React from 'react';
 
-import { Capabilities, contributes, createSurface } from '@dxos/app-framework';
+import { Capabilities, contributes, createSurface, defineCapabilityModule } from '@dxos/app-framework';
 import { SettingsStore } from '@dxos/local-storage';
 
 import { Banner, DeckSettings } from '../components';
 import { meta } from '../meta';
 import { type DeckSettingsProps } from '../types';
 
-export default () =>
+export default defineCapabilityModule(() =>
   contributes(Capabilities.ReactSurface, [
     createSurface({
       id: `${meta.id}/plugin-settings`,
@@ -27,4 +27,4 @@ export default () =>
         return <Banner variant={data.variant} />;
       },
     }),
-  ]);
+  ]));

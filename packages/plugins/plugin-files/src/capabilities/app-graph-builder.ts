@@ -6,7 +6,7 @@ import { Atom } from '@effect-atom/atom-react';
 import * as Function from 'effect/Function';
 import * as Option from 'effect/Option';
 
-import { Capabilities, LayoutAction, type PluginContext, chain, contributes, createIntent } from '@dxos/app-framework';
+import { Capabilities, LayoutAction, type PluginContext, chain, contributes, createIntent, defineCapabilityModule } from '@dxos/app-framework';
 import { ROOT_ID, atomFromSignal, createExtension } from '@dxos/plugin-graph';
 
 import { meta } from '../meta';
@@ -15,7 +15,7 @@ import { isLocalDirectory, isLocalEntity, isLocalFile } from '../util';
 
 import { FileCapabilities } from './capabilities';
 
-export default (context: PluginContext) =>
+export default defineCapabilityModule((context: PluginContext) =>
   contributes(Capabilities.AppGraphBuilder, [
     // Create export/import actions.
     createExtension({
@@ -241,4 +241,4 @@ export default (context: PluginContext) =>
           ),
         ),
     }),
-  ]);
+  ]));

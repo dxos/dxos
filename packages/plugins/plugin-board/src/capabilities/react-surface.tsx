@@ -4,14 +4,14 @@
 
 import React from 'react';
 
-import { Capabilities, type PluginContext, contributes, createSurface } from '@dxos/app-framework';
+import { Capabilities, type PluginContext, contributes, createSurface, defineCapabilityModule } from '@dxos/app-framework';
 import { Obj } from '@dxos/echo';
 
 import { BoardContainer } from '../components';
 import { meta } from '../meta';
 import { Board } from '../types';
 
-export default (context: PluginContext) =>
+export default defineCapabilityModule((context: PluginContext) =>
   contributes(Capabilities.ReactSurface, [
     createSurface({
       id: meta.id,
@@ -19,4 +19,4 @@ export default (context: PluginContext) =>
       filter: (data): data is { subject: Board.Board } => Obj.instanceOf(Board.Board, data.subject),
       component: ({ data, role }) => <BoardContainer board={data.subject} role={role} />,
     }),
-  ]);
+  ]));

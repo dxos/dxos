@@ -6,7 +6,7 @@ import { Atom } from '@effect-atom/atom-react';
 import * as Function from 'effect/Function';
 import * as Option from 'effect/Option';
 
-import { Capabilities, type PluginContext, contributes, createIntent } from '@dxos/app-framework';
+import { Capabilities, type PluginContext, contributes, createIntent, defineCapabilityModule } from '@dxos/app-framework';
 import { Obj, Relation } from '@dxos/echo';
 import { SystemTypeAnnotation } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
@@ -16,7 +16,7 @@ import { HasSubject } from '@dxos/types';
 import { meta } from '../meta';
 import { OutlineAction } from '../types';
 
-export default (context: PluginContext) =>
+export default defineCapabilityModule((context: PluginContext) =>
   contributes(
     Capabilities.AppGraphBuilder,
     createExtension({
@@ -77,4 +77,4 @@ export default (context: PluginContext) =>
           ),
         ),
     }),
-  );
+  ));

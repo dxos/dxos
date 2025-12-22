@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { Capabilities, contributes, createSurface } from '@dxos/app-framework';
+import { Capabilities, contributes, createSurface, defineCapabilityModule } from '@dxos/app-framework';
 import { Obj } from '@dxos/echo';
 import { Event, Message, Organization, Person } from '@dxos/types';
 
@@ -24,7 +24,7 @@ import {
 import { meta } from '../meta';
 import { Calendar, Mailbox } from '../types';
 
-export default () =>
+export default defineCapabilityModule(() =>
   contributes(Capabilities.ReactSurface, [
     createSurface({
       id: `${meta.id}/mailbox`,
@@ -112,4 +112,4 @@ export default () =>
         Obj.instanceOf(Organization.Organization, data.subject),
       component: ({ data: { subject } }) => <RelatedToOrganization subject={subject} />,
     }),
-  ]);
+  ]));

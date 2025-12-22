@@ -5,12 +5,12 @@
 import { effect } from '@preact/signals-core';
 import * as Option from 'effect/Option';
 
-import { Capabilities as AppCapabilities, type PluginContext, contributes } from '@dxos/app-framework';
+import { Capabilities as AppCapabilities, type PluginContext, contributes, defineCapabilityModule } from '@dxos/app-framework';
 import { Keyboard } from '@dxos/keyboard';
 
 import { AttentionCapabilities } from './capabilities';
 
-export default (context: PluginContext) => {
+export default defineCapabilityModule((context: PluginContext) => {
   const { graph } = context.getCapability(AppCapabilities.AppGraph);
   const attention = context.getCapability(AttentionCapabilities.Attention);
 
@@ -23,4 +23,4 @@ export default (context: PluginContext) => {
   });
 
   return contributes(AppCapabilities.Null, null, () => unsubscribe());
-};
+});

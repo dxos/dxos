@@ -5,7 +5,7 @@
 import { Octokit } from '@octokit/core';
 import * as Predicate from 'effect/Predicate';
 
-import { Capabilities, LayoutAction, contributes, createIntent, createResolver } from '@dxos/app-framework';
+import { Capabilities, LayoutAction, contributes, createIntent, createResolver, defineCapabilityModule } from '@dxos/app-framework';
 import { Obj } from '@dxos/echo';
 import { Script } from '@dxos/functions';
 import { TokenManagerAction } from '@dxos/plugin-token-manager/types';
@@ -15,7 +15,7 @@ import { defaultScriptsForIntegration } from '../meta';
 import { templates } from '../templates';
 import { Notebook, ScriptAction } from '../types';
 
-export default () =>
+export default defineCapabilityModule(() =>
   contributes(Capabilities.IntentResolver, [
     createResolver({
       intent: ScriptAction.CreateScript,
@@ -83,4 +83,4 @@ export default () =>
         return { data: undefined };
       },
     }),
-  ]);
+  ]));

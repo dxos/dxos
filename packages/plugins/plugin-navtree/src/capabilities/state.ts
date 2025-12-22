@@ -4,7 +4,7 @@
 
 import { effect, untracked } from '@preact/signals-core';
 
-import { Capabilities, type PluginContext, contributes } from '@dxos/app-framework';
+import { Capabilities, type PluginContext, contributes, defineCapabilityModule } from '@dxos/app-framework';
 import { type Live, live } from '@dxos/live-object';
 import { Path } from '@dxos/react-ui-list';
 
@@ -29,7 +29,7 @@ const getInitialState = () => {
   } catch {}
 };
 
-export default (context: PluginContext) => {
+export default defineCapabilityModule((context: PluginContext) => {
   const layout = context.getCapability(Capabilities.Layout);
 
   // TODO(wittjosiah): This currently needs to be not a Live at the root.
@@ -101,4 +101,4 @@ export default (context: PluginContext) => {
   return contributes(NavTreeCapabilities.State, { state, getItem, setItem, isOpen, isCurrent, isAlternateTree }, () =>
     unsubscribe(),
   );
-};
+});

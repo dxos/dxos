@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type PluginContext, contributes } from '@dxos/app-framework';
+import { type PluginContext, contributes, defineCapabilityModule } from '@dxos/app-framework';
 import { Client } from '@dxos/react-client';
 
 import { ClientEvents } from '../events';
@@ -14,7 +14,7 @@ type ClientCapabilityOptions = Omit<ClientPluginOptions, 'appKey' | 'invitationU
   context: PluginContext;
 };
 
-export default async ({ context, onClientInitialized, onSpacesReady, ...options }: ClientCapabilityOptions) => {
+export default defineCapabilityModule(async ({ context, onClientInitialized, onSpacesReady, ...options }: ClientCapabilityOptions) => {
   const client = new Client(options);
   await client.initialize();
   await onClientInitialized?.({ context, client });
@@ -40,4 +40,4 @@ export default async ({ context, onClientInitialized, onSpacesReady, ...options 
     subscription.unsubscribe();
     await client.destroy();
   });
-};
+});

@@ -4,13 +4,13 @@
 
 import React, { useCallback, useMemo } from 'react';
 
-import { Capabilities, Plugin, contributes, createSurface } from '@dxos/app-framework';
+import { Capabilities, Plugin, contributes, createSurface, defineCapabilityModule } from '@dxos/app-framework';
 import { usePluginManager } from '@dxos/app-framework/react';
 
 import { PluginDetail, RegistryContainer } from '../components';
 import { REGISTRY_KEY, meta } from '../meta';
 
-export default () =>
+export default defineCapabilityModule(() =>
   contributes(Capabilities.ReactSurface, [
     createSurface({
       id: `${meta.id}/all`,
@@ -83,4 +83,4 @@ export default () =>
         return <PluginDetail plugin={subject} enabled={enabled} onEnable={handleEnable} />;
       },
     }),
-  ]);
+  ]));

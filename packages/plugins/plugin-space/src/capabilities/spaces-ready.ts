@@ -4,7 +4,7 @@
 
 import * as Option from 'effect/Option';
 
-import { Capabilities, LayoutAction, type PluginContext, contributes, createIntent } from '@dxos/app-framework';
+import { Capabilities, LayoutAction, type PluginContext, contributes, defineCapabilityModule, createIntent } from '@dxos/app-framework';
 import { SubscriptionList } from '@dxos/async';
 import { Filter, Obj, Type } from '@dxos/echo';
 import { scheduledEffect } from '@dxos/echo-signals/core';
@@ -28,7 +28,7 @@ const WAIT_FOR_OBJECT_TIMEOUT = 5_000;
 // E.g., dxn:echo:BA25QRC2FEWCSAMRP4RZL65LWJ7352CKE:01J00J9B45YHYSGZQTQMSKMGJ6
 const ECHO_DXN_LENGTH = 3 + 1 + 4 + 1 + 33 + 1 + 26;
 
-export default async (context: PluginContext) => {
+export default defineCapabilityModule(async (context: PluginContext) => {
   const subscriptions = new SubscriptionList();
   const spaceSubscriptions = new SubscriptionList();
 
@@ -249,4 +249,4 @@ export default async (context: PluginContext) => {
     spaceSubscriptions.clear();
     subscriptions.clear();
   });
-};
+});

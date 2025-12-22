@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Capabilities, LayoutAction, type PluginContext, contributes, createIntent } from '@dxos/app-framework';
+import { Capabilities, LayoutAction, type PluginContext, contributes, createIntent, defineCapabilityModule } from '@dxos/app-framework';
 import { scheduledEffect } from '@dxos/echo-signals/core';
 
 import { defaultDeck } from '../types';
@@ -10,7 +10,7 @@ import { defaultDeck } from '../types';
 import { DeckCapabilities } from './capabilities';
 
 // TODO(wittjosiah): Cleanup the url handling. May justify introducing routing capabilities.
-export default async (context: PluginContext) => {
+export default defineCapabilityModule(async (context: PluginContext) => {
   const { dispatchPromise: dispatch } = context.getCapability(Capabilities.IntentDispatcher);
   const state = context.getCapability(DeckCapabilities.MutableDeckState);
 
@@ -57,4 +57,4 @@ export default async (context: PluginContext) => {
     window.removeEventListener('popstate', handleNavigation);
     unsubscribe();
   });
-};
+});

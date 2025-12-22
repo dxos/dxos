@@ -6,7 +6,7 @@ import { Atom } from '@effect-atom/atom-react';
 import * as Function from 'effect/Function';
 import * as Option from 'effect/Option';
 
-import { Capabilities, type PluginContext, contributes } from '@dxos/app-framework';
+import { Capabilities, contributes, defineCapabilityModule } from '@dxos/app-framework';
 import { ROOT_ID, createExtension } from '@dxos/plugin-graph';
 
 import { meta } from '../meta';
@@ -16,7 +16,7 @@ const ATTENDABLE_PATH_SEPARATOR = '~';
 
 const DECK_COMPANION_TYPE = 'dxos.org/plugin/deck/deck-companion';
 
-export default (_context: PluginContext) =>
+export default defineCapabilityModule(() =>
   contributes(Capabilities.AppGraphBuilder, [
     createExtension({
       id: `${meta.id}/help`,
@@ -44,4 +44,5 @@ export default (_context: PluginContext) =>
           ),
         ),
     }),
-  ]);
+  ]),
+);

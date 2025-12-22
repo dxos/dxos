@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { Capabilities, contributes, createSurface } from '@dxos/app-framework';
+import { Capabilities, contributes, createSurface, defineCapabilityModule } from '@dxos/app-framework';
 import { type JoinPanelProps } from '@dxos/shell/react';
 
 import {
@@ -26,7 +26,7 @@ type ReactSurfaceOptions = Pick<ClientPluginOptions, 'onReset'> & {
   createInvitationUrl: (invitationCode: string) => string;
 };
 
-export default ({ createInvitationUrl, onReset }: ReactSurfaceOptions) =>
+export default defineCapabilityModule(({ createInvitationUrl, onReset }: ReactSurfaceOptions) =>
   contributes(Capabilities.ReactSurface, [
     createSurface({
       id: Account.Profile,
@@ -64,4 +64,4 @@ export default ({ createInvitationUrl, onReset }: ReactSurfaceOptions) =>
       filter: (data): data is { props: ResetDialogProps } => data.component === RESET_DIALOG,
       component: ({ data }) => <ResetDialog {...data.props} onReset={onReset} />,
     }),
-  ]);
+  ]));

@@ -6,7 +6,7 @@ import { Atom } from '@effect-atom/atom-react';
 import * as Function from 'effect/Function';
 import * as Option from 'effect/Option';
 
-import { Capabilities, type PluginContext, contributes, createIntent } from '@dxos/app-framework';
+import { Capabilities, type PluginContext, contributes, createIntent, defineCapabilityModule } from '@dxos/app-framework';
 import { Obj } from '@dxos/echo';
 import { atomFromSignal, createExtension } from '@dxos/plugin-graph';
 import { View } from '@dxos/schema';
@@ -14,7 +14,7 @@ import { View } from '@dxos/schema';
 import { meta } from '../meta';
 import { Map, MapAction } from '../types';
 
-export default (context: PluginContext) =>
+export default defineCapabilityModule((context: PluginContext) =>
   contributes(
     Capabilities.AppGraphBuilder,
     createExtension({
@@ -46,4 +46,4 @@ export default (context: PluginContext) =>
           ),
         ),
     }),
-  );
+  ));

@@ -9,8 +9,7 @@ import {
   SettingsAction,
   contributes,
   createIntent,
-  createResolver,
-} from '@dxos/app-framework';
+  createResolver, defineCapabilityModule } from '@dxos/app-framework';
 import { Trigger } from '@dxos/async';
 import { log } from '@dxos/log';
 import { type Node, isActionLike } from '@dxos/plugin-graph';
@@ -29,7 +28,7 @@ import {
 
 import { FileCapabilities } from './capabilities';
 
-export default (context: PluginContext) => {
+export default defineCapabilityModule((context: PluginContext) => {
   const directoryHandles: Record<string, FileSystemDirectoryHandle> = {};
   const directoryNameCounter: Record<string, Record<string, number>> = {};
 
@@ -265,7 +264,7 @@ export default (context: PluginContext) => {
       },
     }),
   ]);
-};
+});
 
 const getFileType = (extension: string) => {
   switch (extension) {

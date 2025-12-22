@@ -8,7 +8,7 @@ import * as Function from 'effect/Function';
 import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 
-import { Capabilities, type PluginContext, contributes, createIntent } from '@dxos/app-framework';
+import { Capabilities, type PluginContext, contributes, defineCapabilityModule, createIntent } from '@dxos/app-framework';
 import { type Space, SpaceState, getSpace, isSpace } from '@dxos/client/echo';
 import { DXN, type Entity, Filter, Obj, type QueryResult, Type } from '@dxos/echo';
 import { log } from '@dxos/log';
@@ -35,7 +35,7 @@ import {
 
 import { SpaceCapabilities } from './capabilities';
 
-export default (context: PluginContext) => {
+export default defineCapabilityModule((context: PluginContext) => {
   // TODO(wittjosiah): Using `get` and being reactive seems to cause a bug with Atom where disposed atoms are accessed.
   const resolve = (get: Atom.Context) => (typename: string) =>
     context.getCapabilities(Capabilities.Metadata).find(({ id }) => id === typename)?.metadata ?? {};
@@ -721,4 +721,4 @@ export default (context: PluginContext) => {
         ),
     }),
   ]);
-};
+});

@@ -4,12 +4,12 @@
 
 import React from 'react';
 
-import { Capabilities, contributes, createSurface } from '@dxos/app-framework';
+import { Capabilities, contributes, createSurface, defineCapabilityModule } from '@dxos/app-framework';
 
 import { SHORTCUTS_DIALOG, ShortcutsDialogContent, ShortcutsHints, ShortcutsList } from '../components';
 import { meta } from '../meta';
 
-export default () =>
+export default defineCapabilityModule(() =>
   contributes(Capabilities.ReactSurface, [
     createSurface({
       id: `${meta.id}/hints`,
@@ -27,4 +27,4 @@ export default () =>
       filter: (data): data is any => data.component === SHORTCUTS_DIALOG,
       component: () => <ShortcutsDialogContent />,
     }),
-  ]);
+  ]));

@@ -4,7 +4,7 @@
 
 import { effect } from '@preact/signals-core';
 
-import { Capabilities, type PluginContext, contributes } from '@dxos/app-framework';
+import { Capabilities, type PluginContext, contributes, defineCapabilityModule } from '@dxos/app-framework';
 import { PublicKey } from '@dxos/keys';
 import { LocalStorageStore } from '@dxos/local-storage';
 import { ComplexMap } from '@dxos/util';
@@ -14,7 +14,7 @@ import { type PluginState } from '../types';
 
 import { SpaceCapabilities } from './capabilities';
 
-export default (context: PluginContext) => {
+export default defineCapabilityModule((context: PluginContext) => {
   const state = new LocalStorageStore<PluginState>(meta.id, {
     awaiting: undefined,
     spaceNames: {},
@@ -43,4 +43,4 @@ export default (context: PluginContext) => {
     unsubscribe();
     state.close();
   });
-};
+});
