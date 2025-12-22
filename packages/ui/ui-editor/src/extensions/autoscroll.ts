@@ -6,7 +6,7 @@ import { StateEffect } from '@codemirror/state';
 import { EditorView, ViewPlugin } from '@codemirror/view';
 
 import { debounce } from '@dxos/async';
-import { Domino } from '@dxos/react-ui';
+import { Domino } from '@dxos/ui';
 
 import { scrollToLineEffect } from './scrolling';
 

@@ -5,11 +5,8 @@
 import { codeFolding, foldGutter } from '@codemirror/language';
 import { type Extension } from '@codemirror/state';
 import { EditorView } from '@codemirror/view';
-import React from 'react';
 
-import { Domino, Icon } from '@dxos/react-ui';
-
-import { renderRoot } from '../util';
+import { Domino } from '@dxos/ui';
 
 export type FoldingOptions = {};
 
@@ -24,10 +21,13 @@ export const folding = (_props: FoldingOptions = {}): Extension => [
   }),
   foldGutter({
     markerDOM: (open) => {
-      return renderRoot(
-        Domino.of('div').classNames('flex bs-full items-center').build(),
-        <Icon icon='ph--caret-right--bold' size={3} classNames={['mx-3 cursor-pointer', open && 'rotate-90']} />,
-      );
+      return Domino.of('div')
+        .classNames('flex bs-full items-center')
+        .children(Domino.of('svg').children(Domino.of('use').attr('href', '/icons.svg#ph--arrow-right--regular')))
+        .build();
+      // TODO(burdon): Use sprint directly.
+      // <svg><use href="/icons.svg#ph--arrow-right--regular"/></svg>
+      // <Icon icon='ph--caret-right--bold' size={3} classNames={['mx-3 cursor-pointer', open && 'rotate-90']} />,
     },
   }),
   EditorView.theme({

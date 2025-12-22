@@ -112,6 +112,9 @@
       "path": "../../ui/react-ui-stack"
     },
     {
+      "path": "../../ui/ui"
+    },
+    {
       "path": "../../ui/ui-theme"
     },
     {

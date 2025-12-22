@@ -11,7 +11,9 @@
   ],
   "include": [
     "src",
-    "stories"
+    "stories",
+    "../react-ui-editor/src/translations.ts",
+    "../react-ui-editor/src/stories/automerge.stories.tsx"
   ],
   "references": [
     {
@@ -69,34 +71,10 @@
       "path": "../../sdk/config"
     },
     {
-      "path": "../../sdk/react-client"
-    },
-    {
       "path": "../../sdk/schema"
     },
     {
       "path": "../lit-ui"
-    },
-    {
-      "path": "../primitives/react-hooks"
-    },
-    {
-      "path": "../react-ui"
-    },
-    {
-      "path": "../react-ui-attention"
-    },
-    {
-      "path": "../react-ui-menu"
-    },
-    {
-      "path": "../react-ui-stack"
-    },
-    {
-      "path": "../react-ui-syntax-highlighter"
-    },
-    {
-      "path": "../ui-editor"
     },
     {
       "path": "../ui-theme"

@@ -7,9 +7,8 @@ import { type EditorState } from '@codemirror/state';
 import { type RefObject, useCallback, useMemo, useRef, useState } from 'react';
 
 import { invariant } from '@dxos/invariant';
+import { modalStateEffect } from '@dxos/ui-editor';
 import { type MaybePromise } from '@dxos/util';
-
-import { modalStateEffect } from '../../extensions';
 
 import { type EditorMenuProviderProps } from './EditorMenuProvider';
 import { type EditorMenuGroup, type EditorMenuItem } from './menu';
@@ -65,8 +64,8 @@ export const useEditorMenu = ({
       const groups = (await getMenu?.({ text, trigger, ...props })) ?? [];
       return filter
         ? filterMenuGroups(groups, (item) =>
-            text ? (item.label as string).toLowerCase().startsWith(text.toLowerCase()) : true,
-          )
+          text ? (item.label as string).toLowerCase().startsWith(text.toLowerCase()) : true,
+        )
         : groups;
     },
     [getMenu, filter],

@@ -27,8 +27,8 @@ import { type DocAccessor } from '@dxos/echo-db';
 import { log } from '@dxos/log';
 import { type Messenger } from '@dxos/protocols';
 import { type Identity } from '@dxos/protocols/proto/dxos/client/services';
-import { type ThemeMode } from '@dxos/react-ui';
 import { type HuePalette } from '@dxos/ui-theme';
+import { type ThemeMode } from '@dxos/ui-types';
 import { hexToHue, isTruthy } from '@dxos/util';
 
 import { createBaseTheme, editorGutter } from '../styles';
@@ -247,7 +247,6 @@ export type DataExtensionsProps<T> = {
   identity?: Identity | null;
 };
 
-// TODO(burdon): Move out of react-ui-editor?
 export const createDataExtensions = <T>({ id, text, messenger, identity }: DataExtensionsProps<T>): Extension[] => {
   const extensions: Extension[] = [];
   if (text) {

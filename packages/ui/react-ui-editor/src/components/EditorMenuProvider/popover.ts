@@ -15,8 +15,7 @@ import {
 
 import { isNonNullable, isTruthy } from '@dxos/util';
 
-import { type PlaceholderOptions, modalStateField, placeholder } from '../../extensions';
-import { type Range } from '../../types';
+import { type Range, type PlaceholderOptions, modalStateField, placeholder } from '@dxos/ui-editor';
 
 const DELIMITERS = [' ', ':'];
 
@@ -51,11 +50,11 @@ export const popover = (options: PopoverOptions = {}): Extension => {
     popoverAnchorDecoration(options),
     modalStateField,
     options.trigger &&
-      placeholder({
-        // TODO(burdon): Translations.
-        content: `Press '${Array.isArray(options.trigger) ? options.trigger[0] : options.trigger}' for commands`,
-        ...options.placeholder,
-      }),
+    placeholder({
+      // TODO(burdon): Translations.
+      content: `Press '${Array.isArray(options.trigger) ? options.trigger[0] : options.trigger}' for commands`,
+      ...options.placeholder,
+    }),
   ].filter(isTruthy);
 };
 
@@ -132,31 +131,31 @@ const popoverKeymap = (options: PopoverOptions) => {
       // Custom trigger.
       //
       options.triggerKey &&
-        ({
-          key: options.triggerKey,
-          run: (view: EditorView) => {
-            const selection = view.state.selection.main;
-            const line = view.state.doc.lineAt(selection.head);
+      ({
+        key: options.triggerKey,
+        run: (view: EditorView) => {
+          const selection = view.state.selection.main;
+          const line = view.state.doc.lineAt(selection.head);
 
-            // Get last word.
-            let str = line.text.slice(0, selection.head - line.from);
-            const idx = getLastIndexOf(str, options.delimiters ?? DELIMITERS);
-            if (idx !== -1) {
-              str = str.slice(idx + 1);
-            }
+          // Get last word.
+          let str = line.text.slice(0, selection.head - line.from);
+          const idx = getLastIndexOf(str, options.delimiters ?? DELIMITERS);
+          if (idx !== -1) {
+            str = str.slice(idx + 1);
+          }
 
-            // Create anchor even if zero length (append space).
-            const from = line.from + idx;
-            view.dispatch({
-              effects: popoverRangeEffect.of({ range: { from: from + 1, to: selection.head } }),
-              changes:
-                selection.head === view.state.doc.length
-                  ? { from: from + 1, to: selection.head, insert: ' ' }
-                  : undefined,
-            });
-            return true;
-          },
-        } satisfies KeyBinding),
+          // Create anchor even if zero length (append space).
+          const from = line.from + idx;
+          view.dispatch({
+            effects: popoverRangeEffect.of({ range: { from: from + 1, to: selection.head } }),
+            changes:
+              selection.head === view.state.doc.length
+                ? { from: from + 1, to: selection.head, insert: ' ' }
+                : undefined,
+          });
+          return true;
+        },
+      } satisfies KeyBinding),
 
       //
       // Nav keys.
@@ -210,7 +209,7 @@ const popoverAnchorDecoration = (options: PopoverOptions) => {
     class {
       _decorations: DecorationSet = Decoration.none;
 
-      constructor(readonly view: EditorView) {}
+      constructor(readonly view: EditorView) { }
 
       // TODO(wittjosiah): The decorations are repainted on every update, this occasionally causes menu to flicker.
       update({ view, transactions }: ViewUpdate) {

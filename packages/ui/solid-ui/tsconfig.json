@@ -24,6 +24,9 @@
     },
     {
       "path": "../../common/util"
+    },
+    {
+      "path": "../ui-theme"
     }
   ]
 }

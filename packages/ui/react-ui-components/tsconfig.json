@@ -79,6 +79,9 @@
       "path": "../react-ui-syntax-highlighter"
     },
     {
+      "path": "../ui"
+    },
+    {
       "path": "../ui-theme"
     }
   ]

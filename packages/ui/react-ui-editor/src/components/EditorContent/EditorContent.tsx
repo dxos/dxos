@@ -8,8 +8,8 @@ import React, { forwardRef, useEffect, useImperativeHandle } from 'react';
 
 import { type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
+import { initialSync } from '@dxos/ui-editor';
 
-import { initialSync } from '../../extensions';
 import { type UseTextEditorProps, useTextEditor } from '../../hooks';
 
 import { type EditorController, createEditorController } from './controller';

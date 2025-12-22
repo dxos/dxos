@@ -19,7 +19,7 @@ import {
   keymap,
 } from '@codemirror/view';
 
-import { Domino } from '@dxos/react-ui';
+import { Domino } from '@dxos/ui';
 import { mx } from '@dxos/ui-theme';
 
 export type HandlebarsOptions = {};

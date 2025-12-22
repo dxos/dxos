@@ -11,6 +11,7 @@ const initialLng = 'en-US';
 const initialNs = 'dxos-common';
 const initialDtLocale = dtLocaleEnUs;
 
+// TODO(burdon): Move to @dxos/ui
 // TODO(thure): `Parameters<TFunction>` causes typechecking issues because `TFunction` has so many signatures.
 export type Label = string | [string, { ns: string; count?: number; defaultValue?: string }];
 

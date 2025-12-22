@@ -4,7 +4,7 @@
 
 import { WidgetType } from '@codemirror/view';
 
-import { Domino } from '@dxos/react-ui';
+import { Domino } from '@dxos/ui';
 
 export class ReferenceWidget extends WidgetType {
   constructor(

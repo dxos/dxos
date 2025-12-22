@@ -15,7 +15,7 @@ import {
   createMarkdownExtensions,
   createThemeExtensions,
   decorateMarkdown,
-} from '../../extensions';
+} from '@dxos/ui-editor';
 import { createMenuGroup } from '../EditorMenuProvider';
 
 import { Editor, type EditorContentProps } from './Editor';

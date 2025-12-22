@@ -7,4 +7,3 @@ export * from './decorations';
 export * from './debug';
 export * from './dom';
 export * from './facet';
-export * from './react';

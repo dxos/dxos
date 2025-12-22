@@ -406,7 +406,7 @@
         "packages/ui/react-ui-thread/src/index.ts"
       ],
       "@dxos/ui-types": [
-        "packages/ui/react-ui-types/src/index.ts"
+        "packages/ui/ui-types/src/index.ts"
       ]
     }
   },

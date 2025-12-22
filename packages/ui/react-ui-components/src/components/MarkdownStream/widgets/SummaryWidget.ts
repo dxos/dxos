@@ -4,7 +4,7 @@
 
 import { WidgetType } from '@codemirror/view';
 
-import { Domino } from '@dxos/react-ui';
+import { Domino } from '@dxos/ui';
 
 /**
  * Simple summary widget.

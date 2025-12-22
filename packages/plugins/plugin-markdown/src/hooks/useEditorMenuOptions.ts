@@ -5,7 +5,8 @@
 import { type EditorView } from '@codemirror/view';
 import { useCallback, useMemo, useRef } from 'react';
 
-import { Domino, toLocalizedString, useTranslation } from '@dxos/react-ui';
+import { toLocalizedString, useTranslation } from '@dxos/react-ui';
+import { Domino } from '@dxos/ui';
 import {
   type EditorMenuGroup,
   type UseEditorMenuProps,

@@ -5,8 +5,8 @@
 import { useMemo } from 'react';
 
 import { type Live, live } from '@dxos/live-object';
+import { type Formatting } from '@dxos/ui-editor';
 
-import { type Formatting } from '../../extensions';
 import { type EditorViewMode } from '../../types';
 
 // TODO(burdon): Move to extensions.

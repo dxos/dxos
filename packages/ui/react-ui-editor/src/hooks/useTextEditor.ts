@@ -19,8 +19,7 @@ import {
 import { log } from '@dxos/log';
 import { type MaybeProvider, getProviderValue, isTruthy } from '@dxos/util';
 
-import { type EditorSelection, createEditorStateTransaction, documentId, modalStateField } from '../extensions';
-import { debugDispatcher } from '../util';
+import { debugDispatcher, type EditorSelection, createEditorStateTransaction, documentId, modalStateField } from '@dxos/ui-editor';
 
 let instanceCount = 0;
 

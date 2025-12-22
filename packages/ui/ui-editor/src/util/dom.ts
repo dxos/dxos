@@ -2,6 +2,8 @@
 // Copyright 2024 DXOS.org
 //
 
+// TODO(burdon): Factor out to @dxos/ui
+
 export type Rect = {
   readonly left: number;
   readonly right: number;

@@ -14,7 +14,7 @@ import { continueKeymap } from '@valtown/codemirror-continue';
 import { type HoverInfo, tsAutocomplete, tsFacet, tsHover, tsLinter, tsSync } from '@valtown/codemirror-ts';
 import React from 'react';
 
-import { Domino, type ThemeMode, type ThemedClassName, useThemeContext } from '@dxos/react-ui';
+import { type ThemeMode, type ThemedClassName, useThemeContext } from '@dxos/react-ui';
 import {
   type BasicExtensionsOptions,
   type EditorInputMode,
@@ -25,6 +25,7 @@ import {
   defaultStyles,
   useTextEditor,
 } from '@dxos/react-ui-editor';
+import { Domino } from '@dxos/ui';
 import { mx } from '@dxos/ui-theme';
 import { isNonNullable } from '@dxos/util';
 

@@ -5,7 +5,7 @@
 import { type Extension, StateEffect, StateField } from '@codemirror/state';
 import { Decoration, type DecorationSet, EditorView, ViewPlugin, type ViewUpdate, WidgetType } from '@codemirror/view';
 
-import { Domino } from '@dxos/react-ui';
+import { Domino } from '@dxos/ui';
 import { isTruthy } from '@dxos/util';
 
 const BLINK_RATE = 2_000;

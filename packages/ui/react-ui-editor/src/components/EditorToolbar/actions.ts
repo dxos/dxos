@@ -11,8 +11,8 @@ import {
   createMenuAction,
   createMenuItemGroup,
 } from '@dxos/react-ui-menu';
+import { List, addList, removeList } from '@dxos/ui-editor';
 
-import { List, addList, removeList } from '../../extensions';
 import { translationKey } from '../../translations';
 
 import { type EditorToolbarState } from './useEditorToolbar';

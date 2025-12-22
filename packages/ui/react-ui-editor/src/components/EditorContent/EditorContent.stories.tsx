@@ -11,7 +11,7 @@ import { useThemeContext } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Text } from '@dxos/schema';
 
-import { automerge, createBasicExtensions, createThemeExtensions } from '../../extensions';
+import { automerge, createBasicExtensions, createThemeExtensions } from '@dxos/ui-editor';
 
 import { EditorContent } from './EditorContent';
 

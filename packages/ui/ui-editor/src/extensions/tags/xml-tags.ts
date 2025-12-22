@@ -7,7 +7,10 @@ import { Prec } from '@codemirror/state';
 import { type EditorState, type Extension, RangeSetBuilder, StateEffect, StateField } from '@codemirror/state';
 import { keymap } from '@codemirror/view';
 import { Decoration, type DecorationSet, EditorView, ViewPlugin, type ViewUpdate, WidgetType } from '@codemirror/view';
-import { type ComponentType, type FC } from 'react';
+import { type FunctionComponent } from 'react';
+
+// TODO(burdon): Agnostic.
+// export type FunctionComponent<P = {} , R = unknown> = (props: P) => R;
 
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
@@ -68,8 +71,8 @@ export type XmlWidgetDef = {
   /** Native widget (rendered inline). */
   factory?: XmlWidgetFactory;
 
-  /** React widget (rendered in portals outside of the editor). */
-  Component?: FC<XmlWidgetProps>;
+  /** React/Solid widget (rendered in portals outside of the editor). */
+  Component?: FunctionComponent<XmlWidgetProps>;
 };
 
 export type XmlWidgetRegistry = Record<string, XmlWidgetDef>;
@@ -105,7 +108,7 @@ export type XmlWidgetState = {
   id: string;
   root: HTMLElement;
   props: any;
-  Component: ComponentType<XmlWidgetProps>;
+  Component: FunctionComponent<XmlWidgetProps>;
 };
 
 export interface XmlWidgetNotifier {
@@ -165,12 +168,12 @@ export type XmlTagsOptions = {
 };
 
 /**
- * Implements custom XML tags via CodeMirror-native Widgets and portaled React components.
+ * Implements custom XML tags via CodeMirror-native Widgets and portaled React/Solid components.
  *
  * Basic mechanism:
  * - Decorations are created from XML tags that matched the provided Widget registry.
  * - Native widgets are rendered inline.
- * - React widgets are rendered in portals outside of the editor via the PlaceholderWidget.
+ * - React/Solid widgets are rendered in portals outside of the editor via the PlaceholderWidget.
  * - Widget state can be update via effects.
  *   - NOTE: Widget state may be updated BEFORE the widget is mounted.
  */
@@ -460,14 +463,14 @@ const buildDecorations = (
 };
 
 /**
- * Placeholder for React widgets.
+ * Placeholder for widgets.
  */
 class PlaceholderWidget<TProps extends XmlWidgetProps> extends WidgetType {
   private _root: HTMLElement | null = null;
 
   constructor(
     public readonly id: string,
-    public readonly Component: FC<TProps>,
+    public readonly Component: FunctionComponent<TProps>,
     public readonly props: TProps,
     private readonly notifier: XmlWidgetNotifier,
   ) {

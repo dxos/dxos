@@ -5,6 +5,7 @@
 import { ACTION_GROUP_TYPE, type Action, type ActionGroup, type Node } from '@dxos/app-graph';
 import { type ClassNameValue, type IconButtonProps, type Label, type ToolbarSeparatorProps } from '@dxos/react-ui';
 
+// TODO(burdon): Move to @dxos/ui.
 export type MenuActionProperties = {
   label: Label;
   icon?: string;
