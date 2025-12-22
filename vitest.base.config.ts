@@ -104,6 +104,7 @@ const createBrowserProject = ({ browserName, nodeExternal = false, injectGlobals
       include: [
         '**/src/**/*.test.{ts,tsx}',
         '**/test/**/*.test.{ts,tsx}',
+        '!**/src/**/__snapshots__/**',
         '!**/src/**/*.node.test.{ts,tsx}',
         '!**/test/**/*.node.test.{ts,tsx}',
       ],
@@ -153,6 +154,7 @@ const createNodeProject = ({ environment = 'node', retry, timeout, setupFiles = 
       include: [
         '**/src/**/*.test.{ts,tsx}',
         '**/test/**/*.test.{ts,tsx}',
+        '!**/src/**/__snapshots__/**',
         '!**/src/**/*.browser.test.{ts,tsx}',
         '!**/test/**/*.browser.test.{ts,tsx}',
       ],

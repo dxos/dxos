@@ -1,0 +1,35 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`jsonata > evaluates expression with trigger event > input as expression 1`] = `
+{
+  "cursor": "01J00J9B45YHYSGZQTQMSKMGJ6",
+  "nested": {
+    "name": "John",
+    "value": "nested",
+  },
+  "queue": "dxn:queue:data:BA25QRC2FEWCSAMRP4RZL65LWJ7352CKE:01J00J9B45YHYSGZQTQMSKMGJ6",
+  "ref": {
+    "/": "dxn:echo:@:01KD35WMWTEEE1WQQPYEGD1X2B",
+  },
+  "value": "Hello, John!",
+}
+`;
+
+exports[`jsonata > evaluates expression with trigger event > input templating 1`] = `
+{
+  "cursor": "01J00J9B45YHYSGZQTQMSKMGJ6",
+  "nested": {
+    "name": "John",
+    "value": "nested",
+  },
+  "queue": "dxn:queue:data:BA25QRC2FEWCSAMRP4RZL65LWJ7352CKE:01J00J9B45YHYSGZQTQMSKMGJ6",
+  "ref": {
+    "/": "dxn:echo:@:01KD35WMWTEEE1WQQPYEGD1X2B",
+    "target": {
+      "id": "01KD35WMWTEEE1WQQPYEGD1X2B",
+      "name": "DXOS",
+    },
+  },
+  "value": "Hello, John!",
+}
+`;
