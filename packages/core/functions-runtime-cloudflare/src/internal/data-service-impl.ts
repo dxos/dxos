@@ -22,6 +22,8 @@ import type {
   UpdateSubscriptionRequest,
 } from '@dxos/protocols/proto/dxos/echo/service';
 
+import { copyUint8Array } from './utils';
+
 export class DataServiceImpl implements DataServiceProto {
   private dataSubscriptions = new Map<string, { spaceId: SpaceId; next: (msg: BatchedDocumentUpdates) => void }>();
 
@@ -55,13 +57,22 @@ export class DataServiceImpl implements DataServiceProto {
       log.info('request documents', { count: addIds.length });
       // TODO(dmaretskyi): Batch.
       for (const documentId of addIds) {
-        const document = await this._dataService.getDocument(this._executionContext, sub.spaceId, documentId);
+        using document = await this._dataService.getDocument(this._executionContext, sub.spaceId, documentId);
         log.info('document loaded', { documentId, spaceId: sub.spaceId, found: !!document });
         if (!document) {
           log.warn('not found', { documentId });
           continue;
         }
-        sub.next({ updates: [{ documentId, mutation: document.data }] });
+        sub.next({
+          updates: [
+            {
+              documentId,
+              // Copy returned object to avoid hanging RPC stub
+              // See https://developers.cloudflare.com/workers/runtime-apis/rpc/lifecycle/
+              mutation: copyUint8Array(document.data),
+            },
+          ],
+        });
       }
     }
   }
@@ -93,19 +104,19 @@ export class DataServiceImpl implements DataServiceProto {
     // No-op.
   }
 
-  subscribeSpaceSyncState(request: GetSpaceSyncStateRequest, options?: RequestOptions): Stream<SpaceSyncState> {
+  subscribeSpaceSyncState(_request: GetSpaceSyncStateRequest, _options?: RequestOptions): Stream<SpaceSyncState> {
     throw new NotImplementedError({
       message: 'subscribeSpaceSyncState is not implemented.',
     });
   }
 
-  async getDocumentHeads({ documentIds }: GetDocumentHeadsRequest): Promise<GetDocumentHeadsResponse> {
+  async getDocumentHeads({ documentIds: _documentIds }: GetDocumentHeadsRequest): Promise<GetDocumentHeadsResponse> {
     throw new NotImplementedError({
       message: 'getDocumentHeads is not implemented.',
     });
   }
 
-  async reIndexHeads({ documentIds }: ReIndexHeadsRequest): Promise<void> {
+  async reIndexHeads({ documentIds: _documentIds }: ReIndexHeadsRequest): Promise<void> {
     throw new NotImplementedError({
       message: 'reIndexHeads is not implemented.',
     });
@@ -116,7 +127,7 @@ export class DataServiceImpl implements DataServiceProto {
     // No-op.
   }
 
-  async waitUntilHeadsReplicated({ heads }: { heads: any }): Promise<void> {
+  async waitUntilHeadsReplicated({ heads: _heads }: { heads: any }): Promise<void> {
     throw new NotImplementedError({
       message: 'waitUntilHeadsReplicated is not implemented.',
     });

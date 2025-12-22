@@ -26,7 +26,15 @@ export class ServiceContainer {
   ) {}
 
   async getSpaceMeta(spaceId: SpaceId): Promise<EdgeFunctionEnv.SpaceMeta | undefined> {
-    return this._dataService.getSpaceMeta(this._executionContext, spaceId);
+    using result = await this._dataService.getSpaceMeta(this._executionContext, spaceId);
+    // Copy returned object to avoid hanging RPC stub
+    // See https://developers.cloudflare.com/workers/runtime-apis/rpc/lifecycle/
+    return result
+      ? {
+          spaceKey: result.spaceKey,
+          rootDocumentId: result.rootDocumentId,
+        }
+      : undefined;
   }
 
   async createServices(): Promise<{
@@ -47,11 +55,18 @@ export class ServiceContainer {
     };
   }
 
-  queryQueue(queue: DXN): Promise<QueryResult> {
-    return this._queueService.query({}, queue.toString(), {});
+  async queryQueue(queue: DXN): Promise<QueryResult> {
+    using result = (await this._queueService.query({}, queue.toString(), {})) as any;
+    // Copy returned object to avoid hanging RPC stub
+    // See https://developers.cloudflare.com/workers/runtime-apis/rpc/lifecycle/
+    return {
+      objects: structuredClone(result.objects),
+      nextCursor: result.nextCursor ?? null,
+      prevCursor: result.prevCursor ?? null,
+    };
   }
 
-  insertIntoQueue(queue: DXN, objects: HasId[]): Promise<void> {
-    return this._queueService.append({}, queue.toString(), objects);
+  async insertIntoQueue(queue: DXN, objects: HasId[]): Promise<void> {
+    await this._queueService.append({}, queue.toString(), objects);
   }
 }
