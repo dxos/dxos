@@ -4,8 +4,6 @@
 
 import { type EditorView } from '@codemirror/view';
 
-// TODO(burdon): Factor out.
-
 export const insertAtCursor = (view: EditorView, from: number, insert: string) => {
   view.dispatch({
     changes: { from, to: from, insert },

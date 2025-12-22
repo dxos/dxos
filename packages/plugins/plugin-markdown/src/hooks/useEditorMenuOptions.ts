@@ -6,7 +6,6 @@ import { type EditorView } from '@codemirror/view';
 import { useCallback, useMemo, useRef } from 'react';
 
 import { toLocalizedString, useTranslation } from '@dxos/react-ui';
-import { Domino } from '@dxos/ui';
 import {
   type EditorMenuGroup,
   type UseEditorMenuProps,
@@ -14,6 +13,7 @@ import {
   formattingCommands,
   linkSlashCommands,
 } from '@dxos/react-ui-editor';
+import { Domino } from '@dxos/ui';
 
 import { meta } from '../meta';
 

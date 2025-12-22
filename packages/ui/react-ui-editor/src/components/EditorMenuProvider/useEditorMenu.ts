@@ -64,8 +64,8 @@ export const useEditorMenu = ({
       const groups = (await getMenu?.({ text, trigger, ...props })) ?? [];
       return filter
         ? filterMenuGroups(groups, (item) =>
-          text ? (item.label as string).toLowerCase().startsWith(text.toLowerCase()) : true,
-        )
+            text ? (item.label as string).toLowerCase().startsWith(text.toLowerCase()) : true,
+          )
         : groups;
     },
     [getMenu, filter],

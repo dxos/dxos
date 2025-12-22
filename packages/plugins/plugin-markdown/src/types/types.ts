@@ -3,7 +3,7 @@
 //
 
 import { type Extension } from '@dxos/react-ui-editor';
-import { type EditorViewMode } from '@dxos/react-ui-editor/types';
+import { type EditorViewMode } from '@dxos/ui-editor/types';
 
 import { type Document } from './Markdown';
 

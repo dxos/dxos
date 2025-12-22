@@ -10,8 +10,10 @@
     "vite.config.ts"
   ],
   "include": [
-    "src",
-    "stories"
+    "src/**/*.ts",
+    "src/**/*.tsx",
+    "src/*.ts",
+    "../ui-editor/src/util/util.ts"
   ],
   "references": [
     {
@@ -94,6 +96,9 @@
     },
     {
       "path": "../react-ui-syntax-highlighter"
+    },
+    {
+      "path": "../ui"
     },
     {
       "path": "../ui-editor"

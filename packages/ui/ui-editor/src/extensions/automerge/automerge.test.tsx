@@ -6,8 +6,7 @@ import { type DocHandle, Repo } from '@automerge/automerge-repo';
 import { EditorState } from '@codemirror/state';
 import { EditorView } from '@codemirror/view';
 import { render, screen } from '@testing-library/react';
-// TODO(wittjosiah): Move to vitest expect (and remove from package.json).
-import chai, { expect } from 'chai';
+import chai from 'chai';
 import chaiDom from 'chai-dom';
 import React, { type FC, useEffect, useRef, useState } from 'react';
 import { describe, test } from 'vitest';
@@ -62,7 +61,7 @@ const Test: FC<{ handle: DocHandle<TestObject>; generator: Generator }> = ({ han
 chai.use(chaiDom);
 
 describe('Automerge', () => {
-  test('basic sync', () => {
+  test('basic sync', ({ expect }) => {
     const repo = new Repo({ network: [] });
     const handle = repo.create<TestObject>();
     const generator = new Generator(handle);

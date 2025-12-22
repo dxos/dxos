@@ -21,10 +21,13 @@ export const folding = (_props: FoldingOptions = {}): Extension => [
   }),
   foldGutter({
     markerDOM: (open) => {
-      return Domino.of('div')
-        .classNames('flex bs-full items-center')
-        .children(Domino.of('svg').children(Domino.of('use').attr('href', '/icons.svg#ph--arrow-right--regular')))
-        .build();
+      return (
+        Domino.of('div')
+          .classNames('flex bs-full items-center')
+          // TODO(burdon): !!!
+          // .children(Domino.of('svg').children(Domino.of('use').attr('href', '/icons.svg#ph--arrow-right--regular')))
+          .build()
+      );
       // TODO(burdon): Use sprint directly.
       // <svg><use href="/icons.svg#ph--arrow-right--regular"/></svg>
       // <Icon icon='ph--caret-right--bold' size={3} classNames={['mx-3 cursor-pointer', open && 'rotate-90']} />,

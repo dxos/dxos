@@ -30,6 +30,5 @@ export * from './selection';
 export * from './scrolling';
 export * from './state';
 export * from './submit';
-export * from './tab';
 export * from './tags';
 export * from './typewriter';

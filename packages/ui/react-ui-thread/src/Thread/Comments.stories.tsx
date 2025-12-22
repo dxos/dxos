@@ -5,7 +5,8 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { type FC, useEffect, useMemo, useRef, useState } from 'react';
 
-import { Expando } from '@dxos/echo/internal';
+import { Obj, Type } from '@dxos/echo';
+// TODO(burdon): Remove.
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { faker } from '@dxos/random';
@@ -14,18 +15,19 @@ import { withTheme } from '@dxos/react-ui/testing';
 import {
   type Comment,
   type CommentsOptions,
+  type EditorView,
   type Range,
   comments,
   createBasicExtensions,
   createThemeExtensions,
+  documentId,
   listener,
   scrollThreadIntoView,
-  useComments,
+  setComments,
   useTextEditor,
 } from '@dxos/react-ui-editor';
 import { hoverableControls, hoverableFocusedWithinControls } from '@dxos/ui-theme';
 
-import { Obj } from '../../../../core/echo/echo/src';
 import { MessageBody, MessageHeading, MessageRoot, MessageTextbox } from '../Message';
 import { type MessageEntity } from '../testing';
 import { translations } from '../translations';
@@ -36,13 +38,31 @@ faker.seed(101);
 
 const authorId = PublicKey.random().toHex();
 
+/**
+ * @deprecated This hook will be removed in future versions. Use the new comment sync extension instead.
+ * Update comments state field.
+ */
+const useComments = (view: EditorView | null | undefined, id: string, comments?: Comment[]) => {
+  useEffect(() => {
+    if (view) {
+      // Check same document.
+      // NOTE: Hook might be called before editor state is updated.
+      if (id === view.state.facet(documentId)) {
+        view.dispatch({
+          effects: setComments.of({ id, comments: comments ?? [] }),
+        });
+      }
+    }
+  });
+};
+
 //
 // Editor
 //
 
 const Editor: FC<{
   id?: string;
-  item: Expando;
+  initialValue: string;
   comments: Comment[];
   selected?: string;
   onCreateComment: CommentsOptions['onCreate'];
@@ -51,7 +71,7 @@ const Editor: FC<{
   onSelectComment: CommentsOptions['onSelect'];
 }> = ({
   id = 'test',
-  item,
+  initialValue,
   selected: selectedValue,
   comments: commentRanges,
   onCreateComment,
@@ -65,7 +85,7 @@ const Editor: FC<{
   const { parentRef, view } = useTextEditor(
     () => ({
       id,
-      initialValue: item.content,
+      initialValue: initialValue,
       extensions: [
         createBasicExtensions(),
         createThemeExtensions({ themeMode }),
@@ -78,7 +98,7 @@ const Editor: FC<{
         }),
       ],
     }),
-    [id, item, themeMode],
+    [id, initialValue, themeMode],
   );
   useComments(view, id, commentRanges);
   useEffect(() => {
@@ -141,7 +161,7 @@ const StoryThread: FC<{
 
   const handleCreateMessage = () => {
     if (messageRef.current?.length) {
-      const message = Obj.make(Expando, {
+      const message = Obj.make(Type.Expando, {
         timestamp: new Date().toISOString(),
         sender: { identityKey: authorId },
         text: messageRef.current,
@@ -236,7 +256,7 @@ type StoryProps = {
 };
 
 const DefaultStory = ({ text, autoCreate }: StoryProps) => {
-  const [item] = useState(() => Obj.make(Expando, { content: text ?? '' }));
+  const [item] = useState(() => Obj.make(Type.Expando, { content: text ?? '' }));
   const [threads, setThreads] = useState<StoryCommentThread[]>([]);
   const [selected, setSelected] = useState<string>();
 
@@ -330,7 +350,7 @@ const DefaultStory = ({ text, autoCreate }: StoryProps) => {
     <main className='fixed inset-0 grid grid-cols-[1fr_24rem]'>
       <div role='none' className='max-bs-full overflow-y-auto p-4'>
         <Editor
-          item={item}
+          initialValue={item.content}
           selected={selected}
           comments={comments}
           onCreateComment={handleCreateComment}

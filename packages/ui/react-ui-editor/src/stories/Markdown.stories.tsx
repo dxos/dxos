@@ -7,9 +7,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
 import { withTheme } from '@dxos/react-ui/testing';
-
-import { decorateMarkdown, image, linkTooltip, table } from '../extensions';
-import { str } from '../util';
+import { decorateMarkdown, image, linkTooltip, str, table } from '@dxos/ui-editor';
 
 import { EditorStory, content, defaultExtensions, headings, renderLinkTooltip, text } from './components';
 

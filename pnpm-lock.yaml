@@ -7191,6 +7191,9 @@ importers:
       '@dxos/types':
         specifier: workspace:*
         version: link:../../sdk/types
+      '@dxos/ui':
+        specifier: workspace:*
+        version: link:../../ui/ui
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
@@ -9312,6 +9315,9 @@ importers:
       '@dxos/ui':
         specifier: workspace:*
         version: link:../../ui/ui
+      '@dxos/ui-editor':
+        specifier: workspace:*
+        version: link:../../ui/ui-editor
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
@@ -15749,6 +15755,9 @@ importers:
       '@dxos/ui-editor':
         specifier: workspace:*
         version: link:../ui-editor
+      '@dxos/ui-theme':
+        specifier: workspace:*
+        version: link:../ui-theme
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
@@ -15846,9 +15855,6 @@ importers:
       '@dxos/storybook-utils':
         specifier: workspace:*
         version: link:../../common/storybook-utils
-      '@dxos/ui-theme':
-        specifier: workspace:*
-        version: link:../ui-theme
       '@dxos/ui-types':
         specifier: workspace:*
         version: link:../ui-types

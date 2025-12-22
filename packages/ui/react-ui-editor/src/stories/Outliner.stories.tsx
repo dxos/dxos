@@ -7,10 +7,9 @@ import React, { useMemo, useState } from 'react';
 
 import { withTheme } from '@dxos/react-ui/testing';
 import { withAttention } from '@dxos/react-ui-attention/testing';
+import { deleteItem, hashtag, listItemToString, outliner, str, treeFacet } from '@dxos/ui-editor';
 
 import { type EditorController, type EditorMenuGroup, EditorMenuProvider } from '../components';
-import { deleteItem, hashtag, listItemToString, outliner, treeFacet } from '../extensions';
-import { str } from '../util';
 
 import { EditorStory } from './components';
 

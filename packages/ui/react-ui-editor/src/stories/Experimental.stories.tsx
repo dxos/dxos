@@ -9,9 +9,7 @@ import React from 'react';
 import { log } from '@dxos/log';
 import { faker } from '@dxos/random';
 import { withTheme } from '@dxos/react-ui/testing';
-
-import { blast, defaultOptions, dropFile, typewriter } from '../extensions';
-import { str } from '../util';
+import { blast, defaultOptions, dropFile, str, typewriter } from '@dxos/ui-editor';
 
 import { EditorStory, content } from './components';
 

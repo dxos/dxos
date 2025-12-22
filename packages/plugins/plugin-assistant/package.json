@@ -110,6 +110,7 @@
     "@dxos/react-ui-tabs": "workspace:*",
     "@dxos/schema": "workspace:*",
     "@dxos/types": "workspace:*",
+    "@dxos/ui": "workspace:*",
     "@dxos/util": "workspace:*",
     "@effect/ai": "catalog:",
     "@effect/ai-anthropic": "catalog:",

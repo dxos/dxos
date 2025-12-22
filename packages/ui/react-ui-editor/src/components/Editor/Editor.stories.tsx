@@ -9,13 +9,13 @@ import { faker } from '@dxos/random';
 import { useThemeContext } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { withAttention } from '@dxos/react-ui-attention/testing';
-
 import {
   createBasicExtensions,
   createMarkdownExtensions,
   createThemeExtensions,
   decorateMarkdown,
 } from '@dxos/ui-editor';
+
 import { createMenuGroup } from '../EditorMenuProvider';
 
 import { Editor, type EditorContentProps } from './Editor';

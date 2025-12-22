@@ -20,7 +20,7 @@ import { withTheme } from '@dxos/react-ui/testing';
 import { render } from '@dxos/storybook-utils';
 import { createBasicExtensions, createDataExtensions, createThemeExtensions, editorSlots } from '@dxos/ui-editor';
 
-import { useTextEditor } from '../../hooks';
+import { useTextEditor } from '../hooks';
 import { translations } from '../translations';
 
 const initialContent = 'Hello world!';

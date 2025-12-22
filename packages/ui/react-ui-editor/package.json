@@ -62,6 +62,7 @@
     "@dxos/react-ui-stack": "workspace:*",
     "@dxos/ui": "workspace:*",
     "@dxos/ui-editor": "workspace:*",
+    "@dxos/ui-theme": "workspace:*",
     "@dxos/util": "workspace:*",
     "@fluentui/react-tabster": "catalog:",
     "@lezer/common": "catalog:",

@@ -15,7 +15,6 @@ import {
   keymap,
 } from '@codemirror/view';
 import sortBy from 'lodash.sortby';
-import { useEffect } from 'react';
 
 import { type CleanupFn, debounce } from '@dxos/async';
 import { log } from '@dxos/log';
@@ -578,21 +577,3 @@ export const createExternalCommentSync = (
       }
     },
   );
-
-/**
- * @deprecated This hook will be removed in future versions. Use the new comment sync extension instead.
- * Update comments state field.
- */
-export const useComments = (view: EditorView | null | undefined, id: string, comments?: Comment[]) => {
-  useEffect(() => {
-    if (view) {
-      // Check same document.
-      // NOTE: Hook might be called before editor state is updated.
-      if (id === view.state.facet(documentId)) {
-        view.dispatch({
-          effects: setComments.of({ id, comments: comments ?? [] }),
-        });
-      }
-    }
-  });
-};

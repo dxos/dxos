@@ -8,7 +8,6 @@ import React, { type FC } from 'react';
 
 import { faker } from '@dxos/random';
 import { Icon } from '@dxos/react-ui';
-import { mx } from '@dxos/ui-theme';
 import {
   type EditorSelectionState,
   decorateMarkdown,
@@ -18,6 +17,7 @@ import {
   linkTooltip,
   table,
 } from '@dxos/ui-editor';
+import { mx } from '@dxos/ui-theme';
 
 import { createRenderer, str } from '../../util';
 

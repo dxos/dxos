@@ -11,6 +11,7 @@ import { useClientProvider, withClientProvider } from '@dxos/react-client/testin
 import { withTheme } from '@dxos/react-ui/testing';
 import { TestSchema, type ValueGenerator, createObjectFactory } from '@dxos/schema/testing';
 import { Domino } from '@dxos/ui';
+import { insertAtCursor, insertAtLineStart, str } from '@dxos/ui-editor';
 
 import {
   type EditorController,
@@ -21,12 +22,9 @@ import {
   createMenuGroup,
   filterMenuGroups,
   formattingCommands,
-  insertAtCursor,
-  insertAtLineStart,
   linkSlashCommands,
   useEditorMenu,
 } from '../components';
-import { str } from '../util';
 
 import { EditorStory } from './components';
 

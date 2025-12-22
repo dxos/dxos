@@ -9,7 +9,6 @@ import React from 'react';
 
 import { log } from '@dxos/log';
 import { withTheme } from '@dxos/react-ui/testing';
-
 import {
   InputModeExtensions,
   decorateMarkdown,
@@ -19,9 +18,9 @@ import {
   mention,
   selectionState,
   staticCompletion,
+  str,
   typeahead,
-} from '../extensions';
-import { str } from '../util';
+} from '@dxos/ui-editor';
 
 import {
   EditorStory,
