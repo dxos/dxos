@@ -1,4 +1,4 @@
-# DXOS Lit-Storybook
+# @dxos/storybook-lit
 
 Storybook config package for Lit components in the DXOS monorepo.
 

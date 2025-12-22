@@ -17,8 +17,8 @@ import {
   gridSeparatorBlockEnd,
   toPlaneCellIndex,
 } from '@dxos/react-ui-grid';
-import { getHashStyles, mx } from '@dxos/ui-theme';
 import { type Message } from '@dxos/types';
+import { getHashStyles, mx } from '@dxos/ui-theme';
 import { trim } from '@dxos/util';
 
 import { GoogleMail } from '../../functions/apis';

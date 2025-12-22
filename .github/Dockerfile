@@ -16,7 +16,7 @@ RUN apt-get update \
     xz-utils
 
 # Install Node.js from official binary tarball
-ARG NODE_VERSION=24.4.1
+ARG NODE_VERSION=24.11.1
 RUN ARCH=$(uname -m) \
   && if [ "$ARCH" = "x86_64" ]; then ARCH="x64"; elif [ "$ARCH" = "aarch64" ]; then ARCH="arm64"; else echo "Unsupported architecture: $ARCH"; exit 1; fi \
   && curl -fsSL https://nodejs.org/dist/v${NODE_VERSION}/node-v${NODE_VERSION}-linux-$ARCH.tar.xz -o /tmp/node.tar.xz \

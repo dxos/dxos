@@ -71,8 +71,9 @@ test.describe('Table', () => {
     const table = new TableManager(page);
 
     await table.grid.ready();
+    await expect(page.getByRole('gridcell', { name: 'Sapiente.' })).toHaveCount(1);
     await table.deleteRow(0);
-    await expect(page.getByRole('gridcell', { name: 'Aut.' })).toHaveCount(0);
+    await expect(page.getByRole('gridcell', { name: 'Sapiente.' })).toHaveCount(0);
     await page.close();
   });
 

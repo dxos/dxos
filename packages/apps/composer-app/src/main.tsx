@@ -12,8 +12,8 @@ import { registerSignalsRuntime } from '@dxos/echo-signals';
 import { LogLevel, log } from '@dxos/log';
 import { getObservabilityGroup, initializeAppObservability, isObservabilityDisabled } from '@dxos/observability';
 import { ThemeProvider, Tooltip } from '@dxos/react-ui';
-import { defaultTx } from '@dxos/ui-theme';
 import { TRACE_PROCESSOR } from '@dxos/tracing';
+import { defaultTx } from '@dxos/ui-theme';
 
 import { Placeholder, ResetDialog } from './components';
 import { setupConfig } from './config';

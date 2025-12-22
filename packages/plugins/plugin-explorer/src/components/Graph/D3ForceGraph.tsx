@@ -15,8 +15,8 @@ import {
   SVG,
   type SVGContext,
 } from '@dxos/react-ui-graph';
-import { getHashStyles } from '@dxos/ui-theme';
 import { type SpaceGraphEdge, type SpaceGraphModel, type SpaceGraphNode } from '@dxos/schema';
+import { getHashStyles } from '@dxos/ui-theme';
 
 import '@dxos/react-ui-graph/styles/graph.css';
 

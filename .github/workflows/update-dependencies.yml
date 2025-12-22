@@ -43,7 +43,7 @@ jobs:
             spec: '"@ch-ui/*"'
     runs-on: depot-ubuntu-24.04-8
     container:
-      image: ghcr.io/dxos/gh-actions:24.4.1
+      image: ghcr.io/dxos/gh-actions:24.11.1
       credentials:
         username: dxos-bot
         password: ${{ secrets.CREATE_PR_TOKEN }}

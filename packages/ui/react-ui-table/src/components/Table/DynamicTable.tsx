@@ -7,8 +7,8 @@ import React, { useCallback, useMemo, useRef } from 'react';
 import { type Type } from '@dxos/echo';
 import { type JsonSchemaType } from '@dxos/echo/internal';
 import { type ThemedClassName, useDefaultValue } from '@dxos/react-ui';
-import { mx } from '@dxos/ui-theme';
 import { ProjectionModel } from '@dxos/schema';
+import { mx } from '@dxos/ui-theme';
 
 import { useTableModel } from '../../hooks';
 import { type TableFeatures, TablePresentation, type TableRowAction } from '../../model';

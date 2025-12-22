@@ -10,7 +10,6 @@ import { useIdentity } from '@dxos/react-client/halo';
 import { Icon, ScrollArea, type ThemedClassName, useThemeContext, useTranslation } from '@dxos/react-ui';
 import { createBasicExtensions, createThemeExtensions, listener } from '@dxos/react-ui-editor';
 import { StackItem } from '@dxos/react-ui-stack';
-import { mx } from '@dxos/ui-theme';
 import {
   MessageTextbox,
   type MessageTextboxProps,
@@ -19,6 +18,7 @@ import {
   threadLayout,
 } from '@dxos/react-ui-thread';
 import { Message, type Thread } from '@dxos/types';
+import { mx } from '@dxos/ui-theme';
 import { isNonNullable } from '@dxos/util';
 
 import { useStatus } from '../hooks';

@@ -1,4 +1,4 @@
-# DXOS Solid-Storybook
+# @dxos/storybook-solid
 
 Storybook config package for SolidJS components in the DXOS monorepo.
 
