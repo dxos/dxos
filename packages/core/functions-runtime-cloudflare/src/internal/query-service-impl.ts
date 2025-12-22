@@ -20,6 +20,7 @@ import {
 } from '@dxos/protocols/proto/dxos/echo/query';
 
 import { queryToDataServiceRequest } from './adapter';
+import { copyUint8Array } from './utils';
 
 export class QueryServiceImpl implements QueryServiceProto {
   private _queryCount = 0;
@@ -41,7 +42,7 @@ export class QueryServiceImpl implements QueryServiceProto {
         try {
           this._queryCount++;
           log.info('begin query', { spaceId });
-          const queryResponse = await this._dataService.queryDocuments(
+          using queryResponse = await this._dataService.queryDocuments(
             this._executionContext,
             queryToDataServiceRequest(query),
           );
@@ -54,7 +55,8 @@ export class QueryServiceImpl implements QueryServiceProto {
                 spaceKey: PublicKey.ZERO,
                 documentId: object.document.documentId,
                 rank: 0,
-                documentAutomerge: object.document.data,
+                // Ensure we don't leak a disposable Uint8Array from a Workers RPC response.
+                documentAutomerge: copyUint8Array(object.document.data),
               }),
             ),
           } satisfies QueryResponse;

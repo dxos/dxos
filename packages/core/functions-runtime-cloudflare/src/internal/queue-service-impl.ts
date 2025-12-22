@@ -14,8 +14,13 @@ export class QueueServiceImpl implements QueueServiceProto {
   ) {}
   async queryQueue(subspaceTag: string, spaceId: SpaceId, { queueId, ...query }: QueueQuery): Promise<QueryResult> {
     try {
-      const result = await this._queueService.query(this._ctx, `dxn:queue:${subspaceTag}:${spaceId}:${queueId}`, query);
-      return result;
+      using result = await this._queueService.query(this._ctx, `dxn:queue:${subspaceTag}:${spaceId}:${queueId}`, query);
+      // Workers RPC may return disposable arrays/objects; strip proxies before leaving the scope.
+      return {
+        objects: result.objects ? JSON.parse(JSON.stringify(result.objects)) : [],
+        nextCursor: result.nextCursor,
+        prevCursor: result.prevCursor,
+      };
     } catch (error) {
       throw RuntimeServiceError.wrap({
         message: 'Queue query failed.',
@@ -27,12 +32,7 @@ export class QueueServiceImpl implements QueueServiceProto {
 
   async insertIntoQueue(subspaceTag: string, spaceId: SpaceId, queueId: ObjectId, objects: unknown[]): Promise<void> {
     try {
-      const result = await this._queueService.append(
-        this._ctx,
-        `dxn:queue:${subspaceTag}:${spaceId}:${queueId}`,
-        objects,
-      );
-      return result;
+      await this._queueService.append(this._ctx, `dxn:queue:${subspaceTag}:${spaceId}:${queueId}`, objects);
     } catch (error) {
       throw RuntimeServiceError.wrap({
         message: 'Queue append failed.',
