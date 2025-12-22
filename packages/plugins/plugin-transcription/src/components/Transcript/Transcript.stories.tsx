@@ -18,9 +18,9 @@ import { useMembers, useSpace } from '@dxos/react-client/echo';
 import { IconButton, Toolbar } from '@dxos/react-ui';
 import { withTheme } from '@dxos/react-ui/testing';
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
-import { defaultTx } from '@dxos/ui-theme';
 import { TestSchema } from '@dxos/schema/testing';
 import { type Message, Organization, Person } from '@dxos/types';
+import { defaultTx } from '@dxos/ui-theme';
 
 import { useQueueModelAdapter } from '../../hooks';
 import { SerializationModel } from '../../model';

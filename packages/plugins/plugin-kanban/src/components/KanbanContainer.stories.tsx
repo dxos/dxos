@@ -22,9 +22,9 @@ import { ViewEditor } from '@dxos/react-ui-form';
 import { Kanban as KanbanComponent, useKanbanModel, useProjectionModel } from '@dxos/react-ui-kanban';
 import { Kanban } from '@dxos/react-ui-kanban/types';
 import { JsonFilter } from '@dxos/react-ui-syntax-highlighter';
-import { defaultTx } from '@dxos/ui-theme';
 import { View, getTypenameFromQuery } from '@dxos/schema';
 import { Organization, Person } from '@dxos/types';
+import { defaultTx } from '@dxos/ui-theme';
 
 import { translations } from '../translations';
 

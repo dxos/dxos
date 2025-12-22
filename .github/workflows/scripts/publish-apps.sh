@@ -7,7 +7,7 @@ set -euo pipefail
 
 APPS=(
   "./packages/apps/composer-app"
-  "./tools/storybook"
+  "./tools/storybook-react
 )
 
 BRANCH=$(git rev-parse --abbrev-ref HEAD)

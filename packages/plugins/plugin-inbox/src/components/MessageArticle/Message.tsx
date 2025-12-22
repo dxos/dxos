@@ -17,8 +17,8 @@ import {
   useTextEditor,
 } from '@dxos/react-ui-editor';
 import { MenuProvider, ToolbarMenu } from '@dxos/react-ui-menu';
-import { mx } from '@dxos/ui-theme';
 import { type Actor, type Message as MessageType } from '@dxos/types';
+import { mx } from '@dxos/ui-theme';
 
 import { formatDateTime } from '../../util';
 import { UserIconButton } from '../common';

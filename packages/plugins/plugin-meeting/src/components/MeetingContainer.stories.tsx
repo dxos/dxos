@@ -16,9 +16,9 @@ import { ThemePlugin } from '@dxos/plugin-theme';
 import { Channel } from '@dxos/plugin-thread/types';
 import { Query, useDatabase, useQuery } from '@dxos/react-client/echo';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
-import { defaultTx } from '@dxos/ui-theme';
 import { Text } from '@dxos/schema';
 import { Message, Thread, Transcript } from '@dxos/types';
+import { defaultTx } from '@dxos/ui-theme';
 
 import { translations } from '../translations';
 import { Meeting } from '../types';

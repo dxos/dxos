@@ -8,8 +8,8 @@ import { createRoot } from 'react-dom/client';
 import { DEFAULT_CLIENT_CHANNEL, DEFAULT_SHELL_CHANNEL } from '@dxos/client-protocol';
 import { AgentHostingProvider, ClientProvider, ClientServicesProxy, Config, ShellDisplay } from '@dxos/react-client';
 import { Button, Clipboard, Dialog, ThemeProvider, Tooltip, useTranslation } from '@dxos/react-ui';
-import { defaultTx } from '@dxos/ui-theme';
 import { createIFramePort } from '@dxos/rpc-tunnel';
+import { defaultTx } from '@dxos/ui-theme';
 
 import { translations } from '../../translations';
 

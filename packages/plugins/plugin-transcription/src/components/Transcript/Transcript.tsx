@@ -15,8 +15,8 @@ import {
   preview,
   useTextEditor,
 } from '@dxos/react-ui-editor';
-import { mx } from '@dxos/ui-theme';
 import { type Message, type Transcript } from '@dxos/types';
+import { mx } from '@dxos/ui-theme';
 import { isTruthy } from '@dxos/util';
 
 import { type SerializationModel } from '../../model';

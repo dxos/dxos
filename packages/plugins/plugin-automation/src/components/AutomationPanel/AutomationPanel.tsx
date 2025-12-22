@@ -17,8 +17,8 @@ import { type Space, useQuery } from '@dxos/react-client/echo';
 import { Clipboard, IconButton, Input, Separator, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { ControlItem, controlItemClasses } from '@dxos/react-ui-form';
 import { List } from '@dxos/react-ui-list';
-import { ghostHover, mx } from '@dxos/ui-theme';
 import { Project } from '@dxos/types';
+import { ghostHover, mx } from '@dxos/ui-theme';
 import { isNonNullable } from '@dxos/util';
 
 import { meta } from '../../meta';

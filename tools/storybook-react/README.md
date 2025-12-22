@@ -1,4 +1,4 @@
-# DXOS Storybook
+# @dxos/storybook-react
 
 Storybook config package for the DXOS monorepo.
 

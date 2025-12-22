@@ -6,8 +6,7 @@
     "strict": false
   },
   "include": [
-    "src",
-    "tsconfig.spec.json"
+    "src"
   ],
   "references": [
     {

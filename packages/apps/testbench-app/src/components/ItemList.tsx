@@ -14,8 +14,8 @@ import {
   createThemeExtensions,
   useTextEditor,
 } from '@dxos/react-ui-editor';
-import { mx, subtleHover } from '@dxos/ui-theme';
 import { mapSchemaToFields } from '@dxos/schema';
+import { mx, subtleHover } from '@dxos/ui-theme';
 
 const MAX_RENDERED_COUNT = 80;
 

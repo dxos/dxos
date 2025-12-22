@@ -2,7 +2,7 @@ type: tool
 language: typescript
 tasks:
   #
-  # Test locally via: npx http-server ./tools/storybook/out/storybook
+  # Test locally via: npx http-server ./tools/storybook-reactout/storybook
   #
   bundle:
     command: storybook build

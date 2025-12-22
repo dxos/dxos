@@ -27,11 +27,22 @@
     "wittjosiah"
   ],
   "debug.javascript.terminalOptions": {
-    "skipFiles": ["**/**/tracing/src/api.ts"]
+    "skipFiles": [
+      "**/**/tracing/src/api.ts"
+    ]
   },
   "editor.tabSize": 2,
-  "eslint.rules.customizations": [{ "rule": "prettier/*", "severity": "off" }],
-  "eslint.workingDirectories": [{ "mode": "auto" }],
+  "eslint.rules.customizations": [
+    {
+      "rule": "prettier/*",
+      "severity": "off"
+    }
+  ],
+  "eslint.workingDirectories": [
+    {
+      "mode": "auto"
+    }
+  ],
   "files.associations": {
     "workspace.json": "jsonc",
     "schema.json": "jsonc",
@@ -316,7 +327,10 @@
       }
     ]
   ],
-  "hediet.vscode-drawio.defaultFonts": ["Montserrat", "Space Grotesk"],
+  "hediet.vscode-drawio.defaultFonts": [
+    "Montserrat",
+    "Space Grotesk"
+  ],
   "hediet.vscode-drawio.presetColors": [
     // Netural
     "F7F7F7",
@@ -368,11 +382,15 @@
   "javascript.suggest.autoImports": true,
   "json.schemas": [
     {
-      "fileMatch": ["packages/wallet/extension/public/manifest.json"],
+      "fileMatch": [
+        "packages/wallet/extension/public/manifest.json"
+      ],
       "url": "https://raw.githubusercontent.com/PrsPrsBK/ffext-manifest-schema/master/ffext.json"
     }
   ],
-  "rust-analyzer.linkedProjects": ["packages/apps/composer-app/src-tauri/Cargo.toml"],
+  "rust-analyzer.linkedProjects": [
+    "packages/apps/composer-app/src-tauri/Cargo.toml"
+  ],
   "search.followSymlinks": false,
   "search.useGlobalIgnoreFiles": false,
   "search.useParentIgnoreFiles": true,
@@ -380,7 +398,7 @@
   "storyExplorer.server.external.url": "http://localhost:9009",
   "storyExplorer.server.internal.enabled": false,
   "storyExplorer.storiesGlobs": "**/src/**/*.stories.tsx",
-  "storyExplorer.storybookConfigDir": "tools/storybook/.storybook",
+  "storyExplorer.storybookConfigDir": "tools/storybook-react/.storybook",
   "typescript.preferences.autoImportSpecifierExcludeRegexes": [
     "^.*/src/.*$",
     "node:console",
