@@ -76,7 +76,7 @@ export const useTestTableModel = <T extends Type.Entity.Any = Type.Entity.Any>()
         db?.remove(object);
       }
     },
-    [space],
+    [db],
   );
 
   const handleDeleteColumn = useCallback(
