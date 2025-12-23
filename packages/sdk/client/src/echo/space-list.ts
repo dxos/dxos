@@ -38,10 +38,8 @@ import { RPC_TIMEOUT } from '../common';
 import { type HaloProxy } from '../halo/halo-proxy';
 import { InvitationsProxy } from '../invitations';
 
-import { AgentQuerySourceProvider } from './agent';
 import { SpaceProxy } from './space-proxy';
 
-const ENABLE_AGENT_QUERY_SOURCE = false;
 const IDENTITY_WAIT_TIMEOUT = 1_000;
 
 @trace.resource()
@@ -169,21 +167,6 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
       }
     });
     this._ctx.onDispose(() => spacesStream.close());
-
-    if (ENABLE_AGENT_QUERY_SOURCE) {
-      const subscription = this._isReady.subscribe(async (ready) => {
-        if (!ready) {
-          return;
-        }
-
-        const agentQuerySourceProvider = new AgentQuerySourceProvider(this.default);
-        await agentQuerySourceProvider.open();
-        this._echoClient.graph.registerQuerySourceProvider(agentQuerySourceProvider);
-        this._ctx.onDispose(() => agentQuerySourceProvider.close());
-        subscription.unsubscribe();
-      });
-      this._ctx.onDispose(() => subscription.unsubscribe());
-    }
 
     // TODO(nf): implement/verify works
     // TODO(nf): trigger automatically? feedback on how many were resumed?
