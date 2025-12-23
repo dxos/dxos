@@ -25,13 +25,13 @@ export const folding = (_props: FoldingOptions = {}): Extension => [
   foldGutter({
     markerDOM: (open) => {
       return $('<div>')
-        .addClass('flex bs-full items-center')
+        .addClass('flex bs-full justify-center items-center')
         .append(
           $(document.createElementNS(SVG_NS, 'svg'))
             .addClass(mx('is-4 bs-4', open && 'rotate-90'))
             .append($(document.createElementNS(SVG_NS, 'use')).attr('href', '/icons.svg#ph--caret-right--regular')),
         )
-        .get(0)!;
+        .get()[0];
     },
   }),
   EditorView.theme({
