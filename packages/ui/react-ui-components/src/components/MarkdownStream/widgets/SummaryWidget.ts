@@ -4,7 +4,7 @@
 
 import { WidgetType } from '@codemirror/view';
 
-import { $ } from '@dxos/ui';
+import { Domino } from '@dxos/ui';
 
 /**
  * Simple summary widget.
@@ -19,6 +19,6 @@ export class SummaryWidget extends WidgetType {
   }
 
   override toDOM() {
-    return $('<div>').addClass('mbs-2 mbe-4 pli-2 text-sm text-placeholder').text(this.text).get(0)!;
+    return Domino.of('div').classNames('mbs-2 mbe-4 pli-2 text-sm text-placeholder').text(this.text).root;
   }
 }

@@ -6,7 +6,7 @@ import { StateEffect } from '@codemirror/state';
 import { EditorView, ViewPlugin } from '@codemirror/view';
 
 import { debounce } from '@dxos/async';
-import { $ } from '@dxos/ui';
+import { Domino } from '@dxos/ui';
 
 import { scrollToLineEffect } from './scrolling';
 
@@ -127,19 +127,18 @@ export const autoScroll = ({
     ViewPlugin.fromClass(
       class {
         constructor(view: EditorView) {
-          const icon = $('<dx-icon>').attr('icon', 'ph--arrow-down--regular').get(0)!;
-          const button = $('<button>')
-            .addClass('dx-button bg-accentSurface')
-            .attr('data-density', 'fine')
-            .append(icon)
+          const icon = Domino.of('dx-icon' as any).attributes({ icon: 'ph--arrow-down--regular' });
+          const button = Domino.of('button')
+            .classNames('dx-button bg-accentSurface')
+            .attributes({ 'data-density': 'fine' })
+            .children(icon)
             .on('click', () => {
               scrollToBottom(view);
-            })
-            .get(0)!;
-          buttonContainer = $('<div>')
-            .addClass('cm-scroll-button transition-opacity duration-300 opacity-0')
-            .append(button)
-            .get(0)! as HTMLDivElement;
+            });
+          buttonContainer = Domino.of('div')
+            .classNames('cm-scroll-button transition-opacity duration-300 opacity-0')
+            .children(button)
+            .root as HTMLDivElement;
 
           view.scrollDOM.parentElement!.appendChild(buttonContainer);
         }

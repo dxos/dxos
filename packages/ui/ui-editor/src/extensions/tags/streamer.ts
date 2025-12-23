@@ -5,7 +5,7 @@
 import { type Extension, StateEffect, StateField } from '@codemirror/state';
 import { Decoration, type DecorationSet, EditorView, ViewPlugin, type ViewUpdate, WidgetType } from '@codemirror/view';
 
-import { $ } from '@dxos/ui';
+import { Domino } from '@dxos/ui';
 import { isTruthy } from '@dxos/util';
 
 const BLINK_RATE = 2_000;
@@ -103,8 +103,8 @@ const cursor = (): Extension => {
  */
 class CursorWidget extends WidgetType {
   toDOM() {
-    const inner = $('<span>').text('\u258F').css({ animation: 'blink 2s infinite' }).get(0)!;
-    return $('<span>').css({ opacity: '0.8' }).append(inner).get(0)!;
+    const inner = Domino.of('span').text('\u258F').style({ animation: 'blink 2s infinite' });
+    return Domino.of('span').style({ opacity: '0.8' }).children(inner).root;
   }
 }
 

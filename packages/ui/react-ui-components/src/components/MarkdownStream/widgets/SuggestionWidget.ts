@@ -4,7 +4,7 @@
 
 import { WidgetType } from '@codemirror/view';
 
-import { $, mx } from '@dxos/ui';
+import { Domino, mx } from '@dxos/ui';
 
 /**
  * Simple prompt widget.
@@ -19,16 +19,13 @@ export class SuggestionWidget extends WidgetType {
   }
 
   override toDOM() {
-    const icon = $('<dx-icon>').attr('icon', 'ph--lightning--regular').get(0)!;
-    const textEl = $('<span>').addClass('truncate').text(this.text).get(0)!;
-    const button = $('<button>')
-      .attr('data-action', 'submit')
-      .attr('data-density', 'fine')
-      .addClass(mx('dx-button max-is-[100cqi] gap-2'))
-      .attr('data-value', this.text)
-      .append([icon, textEl])
-      .get(0)!;
+    const icon = Domino.of('dx-icon' as any).attributes({ icon: 'ph--lightning--regular' });
+    const textEl = Domino.of('span').classNames('truncate').text(this.text);
+    const button = Domino.of('button')
+      .attributes({ 'data-action': 'submit', 'data-density': 'fine', 'data-value': this.text })
+      .classNames(mx('dx-button max-is-[100cqi] gap-2'))
+      .children(icon, textEl);
     // NOTE: Scroll container must have `size-container`.
-    return $('<span>').addClass(mx('inline-flex max-is-[100cqi] mlb-1 pie-2')).append(button).get(0)!;
+    return Domino.of('span').classNames(mx('inline-flex max-is-[100cqi] mlb-1 pie-2')).children(button).root;
   }
 }

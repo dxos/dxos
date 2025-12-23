@@ -6,7 +6,7 @@ import { codeFolding, foldGutter } from '@codemirror/language';
 import { type Extension } from '@codemirror/state';
 import { EditorView } from '@codemirror/view';
 
-import { $, icon, mx } from '@dxos/ui';
+import { Domino, mx } from '@dxos/ui';
 
 export type FoldingOptions = {};
 
@@ -16,19 +16,17 @@ export type FoldingOptions = {};
 export const folding = (_props: FoldingOptions = {}): Extension => [
   codeFolding({
     placeholderDOM: () => {
-      return $('span').get()[0]; // Collapse content.
+      return Domino.of('span').root; // Collapse content.
     },
   }),
   foldGutter({
     markerDOM: (open) => {
-      return $('<div>')
-        .addClass('flex bs-full justify-center items-center')
-        .append(
-          $.svg('svg')
-            .addClass(mx('is-4 bs-4 cursor-pointer', open && 'rotate-90'))
-            .append($.svg('use').attr('href', icon('ph--caret-right--regular'))),
-        )
-        .get()[0];
+      const use = Domino.of('use').attributes({ href: Domino.icon('ph--caret-right--regular') });
+      const svg = Domino.of('svg').classNames(mx('is-4 bs-4 cursor-pointer', open && 'rotate-90')).children(use);
+      return Domino.of('div')
+        .classNames('flex bs-full justify-center items-center')
+        .children(svg)
+        .root;
     },
   }),
   EditorView.theme({

@@ -1,177 +1,81 @@
 //
-// Copyright 2024 DXOS.org
+// Copyright 2025 DXOS.org
 //
 
-import { mx } from "@dxos/ui-theme";
-import type { ClassNameValue } from "@dxos/ui-types";
-
-export type Domino = {
-	text(content: string): Domino;
-	addClass(classNames: ClassNameValue): Domino;
-	append(
-		child:
-			| HTMLElement
-			| SVGElement
-			| Domino
-			| (HTMLElement | SVGElement | Domino)[],
-	): Domino;
-	attr(name: string, value?: string): Domino;
-	css(styles: Record<string, string>): Domino;
-	get(): (HTMLElement | SVGElement)[];
-	get(index: number): HTMLElement | SVGElement | undefined;
-	find(selector: string): Domino;
-	readonly length: number;
-	readonly [index: number]: HTMLElement | SVGElement | undefined;
-};
-
-/**
- * Minimal jQuery-like DOM manipulation utility.
- * Implements only the methods used in our codebase.
- */
-class DominoImpl implements Domino {
-	private elements: (HTMLElement | SVGElement)[];
-
-	constructor(elements: (HTMLElement | SVGElement)[]) {
-		this.elements = elements;
-		// Create indexed properties for array-like access.
-		elements.forEach((el, i) => {
-			(this as any)[i] = el;
-		});
-	}
-
-	get length(): number {
-		return this.elements.length;
-	}
-
-	[index: number]: HTMLElement | SVGElement | undefined;
-
-	text(content: string): Domino {
-		this.elements.forEach((el) => (el.textContent = content));
-		return this;
-	}
-
-	addClass(classNames: ClassNameValue): Domino {
-		const merged = mx(classNames);
-		if (merged) {
-			const classes = merged.split(/\s+/).filter(Boolean);
-			this.elements.forEach((el) => el.classList.add(...classes));
-		}
-		return this;
-	}
-
-	append(
-		child:
-			| HTMLElement
-			| SVGElement
-			| Domino
-			| (HTMLElement | SVGElement | Domino)[],
-	): Domino {
-		let children: (HTMLElement | SVGElement)[];
-
-		if (Array.isArray(child)) {
-			children = [];
-			for (const item of child) {
-				if (item instanceof DominoImpl) {
-					children.push(...item.get());
-				} else {
-					children.push(item as HTMLElement | SVGElement);
-				}
-			}
-		} else if (child instanceof DominoImpl) {
-			children = child.get();
-		} else {
-			children = [child as HTMLElement | SVGElement];
-		}
-
-		this.elements.forEach((el) => {
-			children.forEach((c) =>
-				el.appendChild(c.cloneNode(true) as HTMLElement | SVGElement),
-			);
-		});
-		return this;
-	}
-
-	attr(name: string, value?: string): Domino {
-		if (value === undefined) {
-			return this;
-		}
-		this.elements.forEach((el) => el.setAttribute(name, value));
-		return this;
-	}
-
-	css(styles: Record<string, string>): Domino {
-		this.elements.forEach((el) => {
-			if (el instanceof HTMLElement || el instanceof SVGElement) {
-				Object.entries(styles).forEach(([key, value]) => {
-					(el.style as any)[key] = value;
-				});
-			}
-		});
-		return this;
-	}
-
-	get(): (HTMLElement | SVGElement)[];
-	get(index: number): HTMLElement | SVGElement | undefined;
-	get(
-		index?: number,
-	): (HTMLElement | SVGElement)[] | HTMLElement | SVGElement | undefined {
-		if (index === undefined) {
-			return this.elements;
-		}
-		return this.elements[index];
-	}
-
-	find(selector: string): Domino {
-		const found: (HTMLElement | SVGElement)[] = [];
-		this.elements.forEach((el) => {
-			const matches = el.querySelectorAll(selector);
-			matches.forEach((match) => {
-				if (match instanceof HTMLElement || match instanceof SVGElement) {
-					found.push(match);
-				}
-			});
-		});
-		return new DominoImpl(found);
-	}
-}
-
-/**
- * Create a Domino instance from a selector or HTML string.
- * @param selector CSS selector or HTML string like '<div>' or '<span>'
- */
-export function $(selector: string): Domino {
-	// Check if it's an HTML string (starts with '<' and ends with '>')
-	if (selector.startsWith("<") && selector.endsWith(">")) {
-		const tagName = selector.slice(1, -1);
-		const element = document.createElement(tagName);
-		return new DominoImpl([element]);
-	}
-
-	// Otherwise treat as CSS selector
-	const elements = Array.from(document.querySelectorAll(selector));
-	const filtered = elements.filter(
-		(el) => el instanceof HTMLElement || el instanceof SVGElement,
-	) as (HTMLElement | SVGElement)[];
-	return new DominoImpl(filtered);
-}
+import { mx } from '@dxos/ui-theme';
+import { type ClassNameValue } from '@dxos/ui-types';
 
 // From icon-plugin.
-const ICONS_URL = "/icons.svg";
-
-export const icon = (icon: string) => ICONS_URL + "#" + icon;
+const ICONS_URL = '/icons.svg';
 
 /**
- * Creates an SVG element wrapped in Domino.
- * @param tag SVG element tag name (e.g., 'svg', 'use', 'path')
+ * Super lightweight chainable DOM builder.
  */
-const svg = (tag: string): Domino => {
-	return new DominoImpl([
-		document.createElementNS("http://www.w3.org/2000/svg", tag) as SVGElement,
-	]);
-};
+export class Domino<T extends HTMLElement | SVGElement> {
+  static icon = (icon: string) => ICONS_URL + '#' + icon;
 
-// Extend $ with svg helper.
-$.svg = svg;
+  static of<K extends keyof HTMLElementTagNameMap>(tag: K): Domino<HTMLElementTagNameMap[K]>;
+  static of<K extends keyof SVGElementTagNameMap>(tag: K): Domino<SVGElementTagNameMap[K]>;
+  static of(tag: string): Domino<HTMLElement | SVGElement> {
+    return new Domino(tag as any);
+  }
 
-// Legacy export for backwards compatibility
-export type Cash = Domino;
+  private readonly _el: T;
+
+  constructor(tag: keyof HTMLElementTagNameMap);
+  constructor(tag: keyof SVGElementTagNameMap);
+  constructor(tag: string) {
+    // Try HTML first, then SVG
+    if (tag in document.createElement('div')) {
+      this._el = document.createElement(tag as keyof HTMLElementTagNameMap) as T;
+    } else {
+      this._el = document.createElementNS('http://www.w3.org/2000/svg', tag) as T;
+    }
+  }
+
+  classNames(...classNames: ClassNameValue[]): this {
+    const merged = mx(classNames);
+    if (this._el instanceof HTMLElement || this._el instanceof SVGElement) {
+      this._el.setAttribute('class', merged);
+    }
+    return this;
+  }
+
+  text(value: string): this {
+    this._el.textContent = value;
+    return this;
+  }
+
+  data(key: string, value: string): this {
+    if (this._el instanceof HTMLElement) {
+      this._el.dataset[key] = value;
+    }
+    return this;
+  }
+
+  attributes(attr: Record<string, string | undefined>): this {
+    Object.entries(attr)
+      .filter(([_, value]) => value !== undefined)
+      .map(([key, value]) => this._el.setAttribute(key, value!));
+    return this;
+  }
+
+  style(styles: Partial<CSSStyleDeclaration>): this {
+    Object.assign(this._el.style, styles);
+    return this;
+  }
+
+  children<C extends HTMLElement | SVGElement>(...children: Domino<C>[]): this {
+    children.forEach((child) => this._el.appendChild(child.root));
+    return this;
+  }
+
+  on(event: string, handler: (e: Event) => void): this {
+    this._el.addEventListener(event, handler);
+    return this;
+  }
+
+  get root(): T {
+    return this._el;
+  }
+}

@@ -13,7 +13,7 @@ import {
   formattingCommands,
   linkSlashCommands,
 } from '@dxos/react-ui-editor';
-import { $ } from '@dxos/ui';
+import { Domino } from '@dxos/ui';
 
 import { meta } from '../meta';
 
@@ -54,18 +54,17 @@ export const useEditorMenuOptions = ({
     const placeholder = {
       delay: 3_000,
       content: () => {
-        const pressEl = $('<span>').text('Press').get(0)!;
+        const pressEl = Domino.of('span').text('Press');
         const triggerEls = trigger.map(
           (text) =>
-            $('<span>')
-              .addClass('mx-1 pli-1.5 pt-[1px] pb-[2px] border border-separator rounded-sm')
-              .text(text)
-              .get(0)!,
+            Domino.of('span')
+              .classNames('mx-1 pli-1.5 pt-[1px] pb-[2px] border border-separator rounded-sm')
+              .text(text),
         );
-        const forCommandsEl = $('<span>').text('for commands.').get(0)!;
-        return $('<div>')
-          .append([pressEl, ...triggerEls, forCommandsEl])
-          .get(0)!;
+        const forCommandsEl = Domino.of('span').text('for commands.');
+        return Domino.of('div')
+          .children(pressEl, ...triggerEls, forCommandsEl)
+          .root;
       },
     };
 

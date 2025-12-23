@@ -4,7 +4,7 @@
 
 import { WidgetType } from '@codemirror/view';
 
-import { $ } from '@dxos/ui';
+import { Domino } from '@dxos/ui';
 
 /**
  * Simple prompt widget.
@@ -24,14 +24,11 @@ export class SelectWidget extends WidgetType {
   override toDOM() {
     const buttons = this.options.map(
       (option) =>
-        $('<button>')
-          .addClass('dx-button inline-block max-is-[100cqi]')
-          .attr('data-action', 'submit')
-          .attr('data-value', option)
-          .attr('data-density', 'fine')
-          .text(option)
-          .get(0)!,
+        Domino.of('button')
+          .classNames('dx-button inline-block max-is-[100cqi]')
+          .attributes({ 'data-action': 'submit', 'data-value': option, 'data-density': 'fine' })
+          .text(option),
     );
-    return $('<div>').attr('role', 'group').addClass('flex flex-wrap mbs-2 mbe-2 gap-1').append(buttons).get(0)!;
+    return Domino.of('div').attributes({ role: 'group' }).classNames('flex flex-wrap mbs-2 mbe-2 gap-1').children(...buttons).root;
   }
 }

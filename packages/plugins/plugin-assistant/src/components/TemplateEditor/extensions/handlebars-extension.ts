@@ -19,7 +19,7 @@ import {
   keymap,
 } from '@codemirror/view';
 
-import { $, mx } from '@dxos/ui';
+import { Domino, mx } from '@dxos/ui';
 
 export type HandlebarsOptions = {};
 
@@ -227,7 +227,7 @@ class DXNWidget extends WidgetType {
         return part;
       })
       .join(':');
-    return $('<span>').addClass(mx('font-mono dx-tag--blue', tagPadding)).text(text).get(0)!;
+    return Domino.of('span').classNames(mx('font-mono dx-tag--blue', tagPadding)).text(text).root;
   }
 }
 

@@ -10,7 +10,7 @@ import { faker } from '@dxos/random';
 import { useClientProvider, withClientProvider } from '@dxos/react-client/testing';
 import { withTheme } from '@dxos/react-ui/testing';
 import { TestSchema, type ValueGenerator, createObjectFactory } from '@dxos/schema/testing';
-import { $, mx } from '@dxos/ui';
+import { Domino, mx } from '@dxos/ui';
 import { insertAtCursor, insertAtLineStart, join } from '@dxos/ui-editor';
 
 import {
@@ -36,18 +36,17 @@ const customCompletions: EditorMenuGroup = createMenuGroup({
 });
 
 const placeholder = (trigger: string[]) => {
-  const pressEl = $('<span>').text('Press').get(0)!;
+  const pressEl = Domino.of('span').text('Press');
   const triggerEls = trigger.map(
     (trigger) =>
-      $('<span>')
-        .addClass(mx('border border-separator rounded-sm mx-1 pli-1 pbs-[2px] pbe-[3px]'))
-        .text(trigger)
-        .get(0)!,
+      Domino.of('span')
+        .classNames(mx('border border-separator rounded-sm mx-1 pli-1 pbs-[2px] pbe-[3px]'))
+        .text(trigger),
   );
-  const forCommandsEl = $('<span>').text('for commands').get(0)!;
-  return $('<div>')
-    .append([pressEl, ...triggerEls, forCommandsEl])
-    .get(0)!;
+  const forCommandsEl = Domino.of('span').text('for commands');
+  return Domino.of('div')
+    .children(pressEl, ...triggerEls, forCommandsEl)
+    .root;
 };
 
 type StoryProps = Omit<UseEditorMenuProps, 'viewRef'> & { text: string };
