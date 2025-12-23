@@ -2,6 +2,12 @@
 // Copyright 2025 DXOS.org
 //
 
+import type * as Context from 'effect/Context';
+import type * as Layer from 'effect/Layer';
+
+import { Capabilities } from './common';
+import { type PluginContext } from './core';
+
 type DependencyNode = {
   id: string;
   dependsOn?: string[];
@@ -42,4 +48,26 @@ export const topologicalSort = <T extends DependencyNode>(nodes: T[]): T[] => {
   return allDependencies
     .map((id) => nodes.find((node) => node.id === id))
     .filter((node): node is T => node !== undefined);
+};
+
+/**
+ * Finds a layer in plugin capabilities that provides the given context tag.
+ *
+ * @param context The plugin context to search for layers.
+ * @param tag The context tag to find a layer for.
+ * @returns The layer that provides the tag, or undefined if not found.
+ *
+ * @example
+ * const dbLayer = findLayerByTag(pluginManager.context, Database.Service);
+ * if (dbLayer) {
+ *   // Use the layer
+ *   const runtime = ManagedRuntime.make(dbLayer);
+ * }
+ */
+export const findLayerByTag = <Service>(
+  context: PluginContext,
+  _tag: Context.Tag<Service, Service>,
+): Layer.Layer<Service, any, any> | undefined => {
+  const layers = context.getCapabilities(Capabilities.Layer);
+  return layers.find((layer): layer is Layer.Layer<Service, any, any> => layer !== undefined);
 };

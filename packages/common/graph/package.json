@@ -35,10 +35,10 @@
     "@preact/signals-core": "catalog:"
   },
   "devDependencies": {
-    "effect": "catalog:",
     "@dxos/echo": "workspace:*",
     "@dxos/echo-db": "workspace:*",
-    "@dxos/random": "workspace:*"
+    "@dxos/random": "workspace:*",
+    "effect": "catalog:"
   },
   "peerDependencies": {
     "effect": "catalog:"

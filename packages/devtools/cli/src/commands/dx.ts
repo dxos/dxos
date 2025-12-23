@@ -5,24 +5,12 @@
 import * as Command from '@effect/cli/Command';
 import * as Options from '@effect/cli/Options';
 import * as Config from 'effect/Config';
-import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
-import { createCliApp } from '@dxos/app-framework';
 import { CommandConfig } from '@dxos/cli-util';
-import { ClientService, ConfigService } from '@dxos/client';
 import { DEFAULT_PROFILE, DXEnv } from '@dxos/client-protocol';
 
-import { DXOS_VERSION } from '../version';
-
-import { chat } from './chat';
-import { debug } from './debug';
-import { fn } from './function';
-import { hub } from './hub';
-import { getCore, getDefaults, getPlugins } from './plugin-defs';
-import { repl } from './repl';
-
-export const command = Command.make('dx', {
+export const dx = Command.make('dx', {
   config: Options.file('config', { exists: 'yes' }).pipe(
     Options.withDescription('Config file path.'),
     Options.withAlias('c'),
@@ -54,7 +42,6 @@ export const command = Command.make('dx', {
     Options.optional,
   ),
 }).pipe(
-  Command.provideEffect(ConfigService, (args) => ConfigService.load(args)),
   Command.provide(({ json, verbose, profile, logLevel }) =>
     Layer.succeed(CommandConfig, {
       json,
@@ -64,30 +51,3 @@ export const command = Command.make('dx', {
     }),
   ),
 );
-
-export const run = Effect.fn(function* (args: readonly string[]) {
-  const dx = yield* createCliApp({
-    rootCommand: command,
-    subCommands: [
-      repl,
-
-      // TODO(wittjosiah): Factor out.
-      //   Currently would require standalone plugins due to clash between solid & react compilation.
-      //   Either create cli-specific plugins for these or wait until assistant/script plugins are built w/ Solid.
-      chat.pipe(Command.provide(ClientService.layer)),
-      fn.pipe(Command.provide(ClientService.layer)),
-
-      // TODO(burdon): Admin-only. Where should these commands live?
-      debug.pipe(Command.provide(ClientService.layer)),
-      hub.pipe(Command.provide(ClientService.layer)),
-    ],
-    plugins: getPlugins(),
-    core: getCore(),
-    defaults: getDefaults(),
-  });
-
-  return yield* Command.run(dx, {
-    name: 'DXOS CLI',
-    version: DXOS_VERSION,
-  })(args);
-});

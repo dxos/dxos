@@ -13,9 +13,9 @@ import {
   createIntent,
   createResolver,
 } from '@dxos/app-framework';
+import { PublicKey } from '@dxos/client';
 import { invariant } from '@dxos/invariant';
 import { ObservabilityAction } from '@dxos/plugin-observability/types';
-import { PublicKey } from '@dxos/react-client';
 import { type JoinPanelProps } from '@dxos/shell/react';
 
 import { JOIN_DIALOG, RECOVERY_CODE_DIALOG, RESET_DIALOG } from '../components';

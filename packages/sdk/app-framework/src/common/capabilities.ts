@@ -5,6 +5,7 @@
 import type * as Command from '@effect/cli/Command';
 import { type Registry } from '@effect-atom/atom-react';
 import type * as Layer from 'effect/Layer';
+import type * as ManagedRuntime from 'effect/ManagedRuntime';
 import type * as Schema from 'effect/Schema';
 import { type FC, type PropsWithChildren } from 'react';
 
@@ -221,4 +222,9 @@ export namespace Capabilities {
    * @category Capability
    */
   export const Command = defineCapability<AnyCommand>('dxos.org/app-framework/capability/command');
+
+  /**
+   * @category Capability
+   */
+  export const Layer = defineCapability<Layer.Layer<any, any, any>>('dxos.org/app-framework/capability/layer');
 }
