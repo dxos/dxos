@@ -50,13 +50,22 @@ class DominoImpl implements Domino {
   }
 
   append(child: HTMLElement | SVGElement | Domino | (HTMLElement | SVGElement | Domino)[]): Domino {
-    const getElements = (item: HTMLElement | SVGElement | Domino): (HTMLElement | SVGElement)[] => {
-      return item instanceof DominoImpl ? item.get() : [item];
-    };
+    let children: (HTMLElement | SVGElement)[];
 
-    const children: (HTMLElement | SVGElement)[] = Array.isArray(child)
-      ? child.flatMap(getElements)
-      : getElements(child);
+    if (Array.isArray(child)) {
+      children = [];
+      for (const item of child) {
+        if (item instanceof DominoImpl) {
+          children.push(...item.get());
+        } else {
+          children.push(item as HTMLElement | SVGElement);
+        }
+      }
+    } else if (child instanceof DominoImpl) {
+      children = child.get();
+    } else {
+      children = [child as HTMLElement | SVGElement];
+    }
 
     this.elements.forEach((el) => {
       children.forEach((c) => el.appendChild(c.cloneNode(true) as HTMLElement | SVGElement));
@@ -142,6 +151,3 @@ const svg = (tag: string): Domino => {
 
 // Extend $ with svg helper.
 $.svg = svg;
-
-// Legacy export for backwards compatibility
-export type Cash = Domino;
