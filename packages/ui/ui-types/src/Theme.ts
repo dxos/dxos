@@ -16,3 +16,5 @@ export type ThemeFunction<P extends Record<string, any>> = (
   styleProps?: P,
   ...etc: ClassNameArray
 ) => string;
+
+export type ThemedClassName<P = {}> = Omit<P, 'className'> & { classNames?: ClassNameValue };
