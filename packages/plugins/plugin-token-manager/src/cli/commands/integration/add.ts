@@ -9,13 +9,12 @@ import * as Console from 'effect/Console';
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
-import { Obj } from '@dxos/echo';
-import { Database } from '@dxos/echo';
-import { AccessToken } from '@dxos/types';
-
 import { CommandConfig } from '@dxos/cli-util';
 import { flushAndSync, print, spaceLayer, withTypes } from '@dxos/cli-util';
 import { Common } from '@dxos/cli-util';
+import { Obj } from '@dxos/echo';
+import { Database } from '@dxos/echo';
+import { AccessToken } from '@dxos/types';
 
 import { performOAuthFlow } from './oauth';
 import { OAUTH_PRESETS, type OAuthPreset, printTokenAdded } from './util';

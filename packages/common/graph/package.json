@@ -32,10 +32,10 @@
     "@dxos/live-object": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@preact/signals-core": "catalog:",
-    "effect": "catalog:"
+    "@preact/signals-core": "catalog:"
   },
   "devDependencies": {
+    "effect": "catalog:",
     "@dxos/echo": "workspace:*",
     "@dxos/echo-db": "workspace:*",
     "@dxos/random": "workspace:*"

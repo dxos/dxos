@@ -7,11 +7,10 @@ import * as Options from '@effect/cli/Options';
 import * as Console from 'effect/Console';
 import * as Effect from 'effect/Effect';
 
+import { CommandConfig, Common, printList, spaceIdWithDefault, spaceLayer } from '@dxos/cli-util';
 import { ClientService } from '@dxos/client';
 import { Database, Filter } from '@dxos/echo';
 import { Trigger } from '@dxos/functions';
-
-import { CommandConfig, Common, printList, spaceIdWithDefault, spaceLayer } from '@dxos/cli-util';
 
 import { getTriggerRemoteStatus, printTrigger } from './util';
 

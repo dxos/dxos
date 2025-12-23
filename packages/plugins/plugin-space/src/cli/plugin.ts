@@ -19,4 +19,3 @@ export const SpacePlugin = definePlugin(meta, () => [
     ],
   }),
 ]);
-

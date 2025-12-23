@@ -15,4 +15,3 @@ export const TokenManagerPlugin = definePlugin(meta, () => [
     activate: () => [contributes(Capabilities.Command, integration)],
   }),
 ]);
-

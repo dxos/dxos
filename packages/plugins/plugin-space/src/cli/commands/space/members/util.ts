@@ -2,9 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
-import { SpaceMember } from '@dxos/client/echo';
-
 import { FormBuilder } from '@dxos/cli-util';
+import { SpaceMember } from '@dxos/client/echo';
 
 const maybeTruncateKey = (key: { toHex(): string; truncate(): string }, truncate = false) =>
   truncate ? key.truncate() : key.toHex();

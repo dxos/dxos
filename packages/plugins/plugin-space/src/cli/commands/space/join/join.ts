@@ -11,11 +11,10 @@ import * as Duration from 'effect/Duration';
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
-import { ClientService } from '@dxos/client';
-
 import { CommandConfig } from '@dxos/cli-util';
 import { print, waitForSync } from '@dxos/cli-util';
 import { FormBuilder } from '@dxos/cli-util';
+import { ClientService } from '@dxos/client';
 
 import { acceptInvitation } from './util';
 

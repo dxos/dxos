@@ -6,9 +6,8 @@ import * as Command from '@effect/cli/Command';
 import * as Console from 'effect/Console';
 import * as Effect from 'effect/Effect';
 
-import { ClientService } from '@dxos/client';
-
 import { CommandConfig } from '@dxos/cli-util';
+import { ClientService } from '@dxos/client';
 
 export const handler = Effect.fn(function* () {
   const { json } = yield* CommandConfig;

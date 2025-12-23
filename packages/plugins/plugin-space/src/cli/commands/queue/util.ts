@@ -2,9 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type Entity, Obj } from '@dxos/echo';
-
 import { FormBuilder } from '@dxos/cli-util';
+import { type Entity, Obj } from '@dxos/echo';
 
 /**
  * Pretty prints a queue object with ANSI colors.

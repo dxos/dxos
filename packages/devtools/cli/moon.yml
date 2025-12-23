@@ -12,10 +12,6 @@ tasks:
     command: bun
     args:
       - ./scripts/build.ts
-    deps:
-      - app-framework:compile
-      - plugin-client:compile
-      - cli-util:compile
     options:
       mergeArgs: replace
       mergeInputs: append

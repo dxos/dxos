@@ -2,9 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Device, DeviceKind, DeviceType } from '@dxos/client/halo';
-
 import { FormBuilder } from '@dxos/cli-util';
+import { Device, DeviceKind, DeviceType } from '@dxos/client/halo';
 
 const maybeTruncateKey = (key: { toHex(): string; truncate(): string }, truncate = false) =>
   truncate ? key.truncate() : key.toHex();

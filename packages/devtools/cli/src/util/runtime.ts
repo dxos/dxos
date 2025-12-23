@@ -3,7 +3,6 @@
 //
 
 import type * as ConfigError from 'effect/ConfigError';
-import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Match from 'effect/Match';
 import type * as Option from 'effect/Option';
@@ -12,7 +11,8 @@ import * as Schema from 'effect/Schema';
 import { AiModelResolver, type AiService } from '@dxos/ai';
 import { LMStudioResolver, OllamaResolver } from '@dxos/ai/resolvers';
 import { AiServiceTestingPreset } from '@dxos/ai/testing';
-import { ClientService } from '@dxos/client';
+import { spaceLayer } from '@dxos/cli-util';
+import { type ClientService } from '@dxos/client';
 import { type Database, type Key } from '@dxos/echo';
 import {
   CredentialsService,
@@ -26,8 +26,6 @@ import {
   FunctionInvocationServiceLayerWithLocalLoopbackExecutor,
   RemoteFunctionExecutionService,
 } from '@dxos/functions-runtime';
-
-import { spaceLayer } from './space';
 
 // TODO(burdon): Factor out (see plugin-assistant/processor.ts)
 export type AiChatServices =
@@ -74,11 +72,3 @@ export const chatLayer = ({
     Layer.provideMerge(TracingService.layerNoop),
   );
 };
-
-export const withTypes: (...types: Schema.Schema.AnyNoContext[]) => Effect.Effect<void, never, ClientService> = (
-  ...types
-) =>
-  Effect.gen(function* () {
-    const client = yield* ClientService;
-    yield* Effect.promise(() => client.addTypes(types));
-  });

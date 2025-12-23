@@ -6,13 +6,12 @@ import { describe, expect, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
+import { spaceLayer } from '@dxos/cli-util';
+import { TestConsole, TestLayer } from '@dxos/cli-util/testing';
 import { ClientService } from '@dxos/client';
 import { Obj } from '@dxos/echo';
 import { runAndForwardErrors } from '@dxos/effect';
 import { Task } from '@dxos/types';
-
-import { TestConsole, TestLayer } from '@dxos/cli-util/testing';
-import { spaceLayer } from '@dxos/cli-util';
 
 import { handler } from './query';
 

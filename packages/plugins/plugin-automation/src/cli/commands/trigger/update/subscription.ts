@@ -10,12 +10,12 @@ import * as Effect from 'effect/Effect';
 import * as Match from 'effect/Match';
 import * as Option from 'effect/Option';
 
-import { DXN, Database, Filter, Obj, Query, Ref, Type } from '@dxos/echo';
-import { Function, Trigger } from '@dxos/functions';
-
 import { CommandConfig } from '@dxos/cli-util';
 import { flushAndSync, print, spaceLayer, withTypes } from '@dxos/cli-util';
 import { Common } from '@dxos/cli-util';
+import { DXN, Database, Filter, Obj, Query, Ref, Type } from '@dxos/echo';
+import { Function, Trigger } from '@dxos/functions';
+
 import { Deep, Delay, Enabled, Input, TriggerId, Typename } from '../options';
 import { printTrigger, promptForSchemaInput, selectFunction, selectTrigger } from '../util';
 

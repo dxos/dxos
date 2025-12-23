@@ -6,10 +6,9 @@ import { describe, expect, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
+import { TestConsole, TestLayer } from '@dxos/cli-util/testing';
 import { ClientService } from '@dxos/client';
 import { runAndForwardErrors } from '@dxos/effect';
-
-import { TestConsole, TestLayer } from '@dxos/cli-util/testing';
 
 import { handler } from './members';
 

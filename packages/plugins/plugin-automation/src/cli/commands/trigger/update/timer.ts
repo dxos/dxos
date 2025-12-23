@@ -9,12 +9,12 @@ import * as Console from 'effect/Console';
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
-import { DXN, Database, Filter, Obj, Ref, Type } from '@dxos/echo';
-import { Function, Trigger } from '@dxos/functions';
-
 import { CommandConfig } from '@dxos/cli-util';
 import { flushAndSync, print, spaceLayer, withTypes } from '@dxos/cli-util';
 import { Common } from '@dxos/cli-util';
+import { DXN, Database, Filter, Obj, Ref, Type } from '@dxos/echo';
+import { Function, Trigger } from '@dxos/functions';
+
 import { Cron, Enabled, Input, TriggerId } from '../options';
 import { printTrigger, promptForSchemaInput, selectFunction, selectTrigger } from '../util';
 

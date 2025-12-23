@@ -9,11 +9,10 @@ import * as Console from 'effect/Console';
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
+import { CommandConfig } from '@dxos/cli-util';
 import { ClientService } from '@dxos/client';
 import { invariant } from '@dxos/invariant';
 import { schema } from '@dxos/protocols/proto';
-
-import { CommandConfig } from '@dxos/cli-util';
 
 export const handler = Effect.fn(function* ({ credential }: { credential: Option.Option<string> }) {
   const { json } = yield* CommandConfig;

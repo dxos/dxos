@@ -108,4 +108,3 @@ export const printSpace = (spaceData: FormattedSpace) =>
     FormBuilder.set('automergeRoot', spaceData.automergeRoot ?? '<none>'),
     FormBuilder.build,
   );
-

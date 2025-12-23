@@ -8,11 +8,10 @@ import * as Console from 'effect/Console';
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
-import { ClientService } from '@dxos/client';
-
 import { CommandConfig } from '@dxos/cli-util';
 import { print, waitForSync } from '@dxos/cli-util';
 import { FormBuilder } from '@dxos/cli-util';
+import { ClientService } from '@dxos/client';
 
 export const handler = Effect.fn(function* ({ name }: { name: Option.Option<string> }) {
   const { json } = yield* CommandConfig;

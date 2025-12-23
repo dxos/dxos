@@ -11,12 +11,11 @@ import * as Option from 'effect/Option';
 import type * as Schema from 'effect/Schema';
 import * as SchemaAST from 'effect/SchemaAST';
 
+import { FormBuilder } from '@dxos/cli-util';
 import { Annotation, Database, type Entity, Filter, Obj, Ref, Type } from '@dxos/echo';
 import { getProperties } from '@dxos/effect';
 import { Function, Trigger } from '@dxos/functions';
 import { QueueAnnotation } from '@dxos/schema';
-
-import { FormBuilder } from '@dxos/cli-util';
 
 export type TriggerRemoteStatus = 'available' | 'not available' | 'n/a';
 

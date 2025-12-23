@@ -7,11 +7,10 @@ import * as Command from '@effect/cli/Command';
 import * as Console from 'effect/Console';
 import * as Effect from 'effect/Effect';
 
+import { CommandConfig, print } from '@dxos/cli-util';
 import { ClientService } from '@dxos/client';
 import { invariant } from '@dxos/invariant';
 
-import { CommandConfig } from '@dxos/cli-util';
-import { print } from '@dxos/cli-util';
 import { printIdentity } from '../util';
 
 export const recover = Command.make(

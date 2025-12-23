@@ -9,12 +9,11 @@ import * as Console from 'effect/Console';
 import * as Effect from 'effect/Effect';
 import * as Match from 'effect/Match';
 
+import { CommandConfig, print } from '@dxos/cli-util';
 import { type Client, ClientService } from '@dxos/client';
 import { type AuthenticatingInvitationObservable, Invitation, InvitationEncoder } from '@dxos/client/invitations';
 import { invariant } from '@dxos/invariant';
 
-import { CommandConfig } from '@dxos/cli-util';
-import { print } from '@dxos/cli-util';
 import { printIdentity } from '../util';
 
 export const join = Command.make(

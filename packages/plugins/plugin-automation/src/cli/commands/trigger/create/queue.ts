@@ -10,12 +10,12 @@ import * as Effect from 'effect/Effect';
 import * as HashMap from 'effect/HashMap';
 import * as Option from 'effect/Option';
 
-import { Database, Filter, Ref, Type } from '@dxos/echo';
-import { Function, Trigger } from '@dxos/functions';
-
 import { CommandConfig } from '@dxos/cli-util';
 import { flushAndSync, print, spaceLayer, types, withTypes } from '@dxos/cli-util';
 import { Common } from '@dxos/cli-util';
+import { Database, Filter, Ref, Type } from '@dxos/echo';
+import { Function, Trigger } from '@dxos/functions';
+
 import { Enabled, Input, Queue } from '../options';
 import { printTrigger, promptForSchemaInput, selectFunction, selectQueue } from '../util';
 

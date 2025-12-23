@@ -15,4 +15,3 @@ export const AutomationPlugin = definePlugin(meta, () => [
     activate: () => [contributes(Capabilities.Command, trigger)],
   }),
 ]);
-

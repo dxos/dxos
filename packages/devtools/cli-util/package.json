@@ -37,8 +37,7 @@
     "@dxos/util": "workspace:*",
     "@effect/cli": "catalog:",
     "@effect/printer": "catalog:",
-    "@effect/printer-ansi": "catalog:",
-    "effect": "catalog:"
+    "@effect/printer-ansi": "catalog:"
   },
   "devDependencies": {
     "effect": "catalog:",

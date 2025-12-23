@@ -19,4 +19,3 @@ export const withTimeout: <A, E, R>(
   );
   return yield* effect.pipe(Effect.timeout(duration));
 });
-

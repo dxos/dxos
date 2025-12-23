@@ -7,13 +7,10 @@ import * as Options from '@effect/cli/Options';
 import * as Console from 'effect/Console';
 import * as Effect from 'effect/Effect';
 
-import { ClientService } from '@dxos/client';
-import { Invitation, InvitationEncoder } from '@dxos/client/invitations';
-
-import { CommandConfig } from '@dxos/cli-util';
-import { hostInvitation } from '@dxos/client/invitations';
-import { copyToClipboard, openBrowser, print } from '@dxos/cli-util';
+import { CommandConfig, copyToClipboard, openBrowser, print } from '@dxos/cli-util';
 import { FormBuilder } from '@dxos/cli-util';
+import { ClientService } from '@dxos/client';
+import { Invitation, InvitationEncoder, hostInvitation } from '@dxos/client/invitations';
 
 export const handler = Effect.fn(function* ({
   lifetime,

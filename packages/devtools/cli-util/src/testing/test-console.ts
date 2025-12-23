@@ -86,4 +86,3 @@ export namespace TestConsole {
 
   export const layer = Layer.provideMerge(setConsole, testConsole);
 }
-
