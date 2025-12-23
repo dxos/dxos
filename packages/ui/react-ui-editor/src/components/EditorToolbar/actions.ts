@@ -5,13 +5,9 @@
 import { type EditorView } from '@codemirror/view';
 
 import { type Action, type NodeArg } from '@dxos/app-graph';
-import {
-  type MenuActionProperties,
-  type ToolbarMenuActionGroupProperties,
-  createMenuAction,
-  createMenuItemGroup,
-} from '@dxos/react-ui-menu';
+import { type ToolbarMenuActionGroupProperties, createMenuAction, createMenuItemGroup } from '@dxos/react-ui-menu';
 import { List, addList, removeList } from '@dxos/ui-editor';
+import { type MenuActionProperties } from '@dxos/ui-types';
 
 import { translationKey } from '../../translations';
 

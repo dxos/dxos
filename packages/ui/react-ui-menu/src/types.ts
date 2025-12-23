@@ -3,27 +3,8 @@
 //
 
 import { ACTION_GROUP_TYPE, type Action, type ActionGroup, type Node } from '@dxos/app-graph';
-import { type ClassNameValue, type IconButtonProps, type Label, type ToolbarSeparatorProps } from '@dxos/react-ui';
-
-// TODO(burdon): Move to @dxos/ui.
-export type MenuActionProperties = {
-  label: Label;
-  icon?: string;
-  value?: string;
-  disabled?: boolean;
-  hidden?: boolean;
-  iconOnly?: boolean;
-  testId?: string;
-  variant?: 'action' | 'toggle';
-  checked?: boolean;
-  classNames?: ClassNameValue;
-};
-
-export type MenuItemGroupProperties = {
-  label: Label;
-  icon?: string;
-  iconOnly?: boolean;
-};
+import { type IconButtonProps, type ToolbarSeparatorProps } from '@dxos/react-ui';
+import { type MenuActionProperties } from '@dxos/ui-types';
 
 export type MenuAction<P extends {} = {}> = Action<P & MenuActionProperties>;
 

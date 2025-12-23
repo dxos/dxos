@@ -5,7 +5,7 @@
 import { type EditorView } from '@codemirror/view';
 
 import { type Action } from '@dxos/app-graph';
-import { type MenuActionProperties } from '@dxos/react-ui-menu';
+import { type MenuActionProperties } from '@dxos/ui-types';
 
 import { createComment } from '../comments';
 

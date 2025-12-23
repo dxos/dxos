@@ -3,15 +3,10 @@
 //
 
 import { ACTION_GROUP_TYPE, ACTION_TYPE, type ActionLike, actionGroupSymbol } from '@dxos/app-graph';
+import { type MenuActionProperties, type MenuItemGroupProperties } from '@dxos/ui-types';
 import { getHostPlatform } from '@dxos/util';
 
-import {
-  type MenuAction,
-  type MenuActionProperties,
-  type MenuItemGroup,
-  type MenuItemGroupProperties,
-  type MenuSeparator,
-} from './types';
+import { type MenuAction, type MenuItemGroup, type MenuSeparator } from './types';
 
 export const getShortcut = (action: ActionLike) => {
   return typeof action.properties?.keyBinding === 'string'

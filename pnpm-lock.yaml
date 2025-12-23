@@ -16843,6 +16843,9 @@ importers:
       '@dxos/react-ui-attention':
         specifier: workspace:*
         version: link:../react-ui-attention
+      '@dxos/ui-types':
+        specifier: workspace:*
+        version: link:../ui-types
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
@@ -18010,7 +18013,11 @@ importers:
         specifier: 'catalog:'
         version: 7.1.9(@types/node@22.10.2)(jiti@2.6.1)(terser@5.19.2)(tsx@4.21.0)(yaml@2.8.2)
 
-  packages/ui/ui-types: {}
+  packages/ui/ui-types:
+    dependencies:
+      i18next:
+        specifier: 'catalog:'
+        version: 21.10.0
 
   tools/beast:
     dependencies:

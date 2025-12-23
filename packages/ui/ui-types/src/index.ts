@@ -2,11 +2,13 @@
 // Copyright 2022 DXOS.org
 //
 
-export * from './DxAnchorActivate';
+export * from './anchor';
+export * from './menu';
+export * from './translations';
 
-export type * from './Density';
-export type * from './Elevation';
-export type * from './MessageValence';
-export type * from './Palette';
-export type * from './Size';
-export type * from './Theme';
+export type * from './density';
+export type * from './elevation';
+export type * from './message';
+export type * from './palette';
+export type * from './size';
+export type * from './theme';

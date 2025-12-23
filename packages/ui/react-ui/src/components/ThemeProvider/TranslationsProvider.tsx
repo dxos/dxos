@@ -3,29 +3,13 @@
 //
 
 import { type Locale, enUS as dtLocaleEnUs } from 'date-fns/locale';
-import i18Next, { type Resource, type TFunction } from 'i18next';
+import i18Next, { type Resource } from 'i18next';
 import React, { type ReactNode, Suspense, createContext, useContext, useEffect, useState } from 'react';
 import { initReactI18next, useTranslation as useI18NextTranslation } from 'react-i18next';
 
 const initialLng = 'en-US';
 const initialNs = 'dxos-common';
 const initialDtLocale = dtLocaleEnUs;
-
-// TODO(burdon): Move to @dxos/ui
-// TODO(thure): `Parameters<TFunction>` causes typechecking issues because `TFunction` has so many signatures.
-export type Label = string | [string, { ns: string; count?: number; defaultValue?: string }];
-
-export const isLabel = (o: any): o is Label =>
-  typeof o === 'string' ||
-  (Array.isArray(o) &&
-    o.length === 2 &&
-    typeof o[0] === 'string' &&
-    !!o[1] &&
-    typeof o[1] === 'object' &&
-    'ns' in o[1] &&
-    typeof o[1].ns === 'string');
-
-export const toLocalizedString = (label: Label, t: TFunction) => (Array.isArray(label) ? t(...label) : label);
 
 export const resources = {
   [initialLng]: {
