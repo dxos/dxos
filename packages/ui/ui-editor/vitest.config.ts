@@ -2,13 +2,15 @@
 // Copyright 2024 DXOS.org
 //
 
-import path from 'node:path';
-import { fileURLToPath } from 'node:url';
+import path from "node:path";
+import { fileURLToPath } from "node:url";
 
-import { createConfig } from '../../../vitest.base.config';
+import { createConfig } from "../../../vitest.base.config";
 
 export default createConfig({
-  dirname: typeof __dirname !== 'undefined' ? __dirname : path.dirname(fileURLToPath(import.meta.url)),
-  node: { environment: 'happy-dom' },
-  storybook: true,
+	dirname:
+		typeof __dirname !== "undefined"
+			? __dirname
+			: path.dirname(fileURLToPath(import.meta.url)),
+	node: { environment: "happy-dom" },
 });
