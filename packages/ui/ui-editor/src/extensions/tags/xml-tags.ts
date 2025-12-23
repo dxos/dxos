@@ -9,7 +9,7 @@ import { keymap } from '@codemirror/view';
 import { Decoration, type DecorationSet, EditorView, ViewPlugin, type ViewUpdate, WidgetType } from '@codemirror/view';
 import { type FunctionComponent } from 'react';
 
-// TODO(burdon): Agnostic.
+// TODO(burdon): Make agnostic.
 // export type FunctionComponent<P = {} , R = unknown> = (props: P) => R;
 
 import { invariant } from '@dxos/invariant';
