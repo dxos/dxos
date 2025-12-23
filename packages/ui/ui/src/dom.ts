@@ -7,7 +7,7 @@ import type { ClassNameValue } from "@dxos/ui-types";
 
 export type Domino = {
 	text(content: string): Domino;
-	addClass(...classes: ClassNameValue[]): Domino;
+	addClass(classNames: ClassNameValue): Domino;
 	append(
 		child:
 			| HTMLElement
@@ -50,8 +50,8 @@ class DominoImpl implements Domino {
 		return this;
 	}
 
-	addClass(...classes: ClassNameValue[]): Domino {
-		const merged = mx(...classes);
+	addClass(classNames: ClassNameValue): Domino {
+		const merged = mx(classNames);
 		this.elements.forEach((el) => {
 			merged.split(/\s+/).forEach((cls) => cls && el.classList.add(cls));
 		});
