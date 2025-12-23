@@ -8,11 +8,9 @@ import * as FileSystem from '@effect/platform/FileSystem';
 import * as Console from 'effect/Console';
 import * as Effect from 'effect/Effect';
 
+import { CommandConfig, FormBuilder, print } from '@dxos/cli-util';
 import { ProfileArchiveEntryType } from '@dxos/protocols';
 import { arrayToBuffer } from '@dxos/util';
-
-import { CommandConfig } from '../../services';
-import { FormBuilder, print } from '../../util';
 
 export const handler = Effect.fn(function* ({ file, storage }: { file: string; storage: boolean }) {
   const { json } = yield* CommandConfig;

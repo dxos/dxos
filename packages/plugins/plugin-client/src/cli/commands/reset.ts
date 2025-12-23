@@ -9,11 +9,9 @@ import * as FileSystem from '@effect/platform/FileSystem';
 import * as Console from 'effect/Console';
 import * as Effect from 'effect/Effect';
 
+import { CommandConfig, print } from '@dxos/cli-util';
 import { DX_DATA, getProfilePath } from '@dxos/client-protocol';
 import { ConfigService } from '@dxos/config';
-
-import { CommandConfig } from '../../services';
-import { print } from '../../util';
 
 import { printProfileReset } from './util';
 

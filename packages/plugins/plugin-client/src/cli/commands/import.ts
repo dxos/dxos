@@ -2,21 +2,19 @@
 // Copyright 2025 DXOS.org
 //
 
-import { resolve } from 'node:path';
-
 import * as Command from '@effect/cli/Command';
 import * as Options from '@effect/cli/Options';
 import * as Prompt from '@effect/cli/Prompt';
 import * as FileSystem from '@effect/platform/FileSystem';
+import * as Path from '@effect/platform/Path';
 import * as Console from 'effect/Console';
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
+import { CommandConfig } from '@dxos/cli-util';
 import { ConfigService } from '@dxos/config';
 import { log } from '@dxos/log';
 import type { Runtime } from '@dxos/protocols/proto/dxos/config';
-
-import { CommandConfig } from '../../services';
 
 export const handler = Effect.fn(function* ({
   file,
@@ -30,6 +28,7 @@ export const handler = Effect.fn(function* ({
   const dataDirValue = Option.getOrUndefined(dataDir);
   const { json, profile } = yield* CommandConfig;
   const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
   const config = yield* ConfigService;
 
   const { createLevel, createStorageObjects, importProfileData, decodeProfileArchive } = yield* Effect.promise(
@@ -50,7 +49,7 @@ export const handler = Effect.fn(function* ({
     }
     storageConfig = config.values.runtime!.client!.storage!;
   } else {
-    const fullPath = resolve(dataDirValue);
+    const fullPath = path.resolve(dataDirValue);
     yield* Console.log(`Importing into: ${fullPath}`);
     storageConfig = {
       persistent: true,

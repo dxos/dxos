@@ -3,11 +3,12 @@
 //
 
 export * from './blueprints';
-export * as FormBuilder from './form-builder';
+// Re-export FormBuilder and printer from @dxos/cli-util
+export { FormBuilder } from '@dxos/cli-util/util';
+export { print, printList } from '@dxos/cli-util/util';
 export * from './invitations';
 export * from './log-buffer';
 export * from './platform';
-export * from './printer';
 export * from './runtime';
 export * from './space';
 export * from './timeout';

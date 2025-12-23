@@ -7,10 +7,9 @@ import * as Console from 'effect/Console';
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
+import { CommandConfig } from '@dxos/cli-util';
 import { ClientService } from '@dxos/client';
 import { createEdgeIdentity } from '@dxos/client/edge';
-
-import { CommandConfig } from '../../services';
 
 export const getStatus = () =>
   Effect.gen(function* () {

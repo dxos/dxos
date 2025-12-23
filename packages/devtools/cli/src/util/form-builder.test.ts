@@ -9,8 +9,8 @@ import * as Option from 'effect/Option';
 
 import { runAndForwardErrors } from '@dxos/effect';
 
-import * as FormBuilder from './form-builder';
-import { print } from './printer';
+import { FormBuilder } from '@dxos/cli-util/util';
+import { print } from '@dxos/cli-util/util';
 
 describe('FormBuilder', () => {
   it('option', () =>

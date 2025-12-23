@@ -2,4 +2,5 @@
 // Copyright 2025 DXOS.org
 //
 
-export * from './command-config';
+// Re-export from @dxos/cli-util/services for backwards compatibility
+export * from '@dxos/cli-util/services';

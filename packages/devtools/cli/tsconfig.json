@@ -80,6 +80,9 @@
       "path": "../../plugins/plugin-chess"
     },
     {
+      "path": "../../plugins/plugin-client"
+    },
+    {
       "path": "../../plugins/plugin-inbox"
     },
     {
@@ -104,6 +107,9 @@
       "path": "../../plugins/plugin-transcription"
     },
     {
+      "path": "../../sdk/app-framework"
+    },
+    {
       "path": "../../sdk/client"
     },
     {
@@ -120,6 +126,9 @@
     },
     {
       "path": "../../sdk/types"
+    },
+    {
+      "path": "../cli-util"
     }
   ]
 }

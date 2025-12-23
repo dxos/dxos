@@ -10,11 +10,9 @@ import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 import * as Record from 'effect/Record';
 
+import { CommandConfig, print } from '@dxos/cli-util';
 import { DX_CONFIG, getProfilePath } from '@dxos/client-protocol';
 import { trim } from '@dxos/util';
-
-import { CommandConfig } from '../../services';
-import { print } from '../../util';
 
 import { printProfileCreated } from './util';
 

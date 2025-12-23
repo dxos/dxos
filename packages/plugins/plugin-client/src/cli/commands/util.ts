@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { FormBuilder } from '../../util';
+import { FormBuilder } from '@dxos/cli-util';
 
 export type ProfileInfo = {
   name: string;

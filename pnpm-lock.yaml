@@ -6044,6 +6044,9 @@ importers:
       '@dxos/ai':
         specifier: workspace:*
         version: link:../../core/ai
+      '@dxos/app-framework':
+        specifier: workspace:*
+        version: link:../../sdk/app-framework
       '@dxos/assistant':
         specifier: workspace:*
         version: link:../../core/assistant
@@ -6056,6 +6059,9 @@ importers:
       '@dxos/blueprints':
         specifier: workspace:*
         version: link:../../core/blueprints
+      '@dxos/cli-util':
+        specifier: workspace:*
+        version: link:../cli-util
       '@dxos/client':
         specifier: workspace:*
         version: link:../../sdk/client
@@ -6110,6 +6116,9 @@ importers:
       '@dxos/plugin-chess':
         specifier: workspace:*
         version: link:../../plugins/plugin-chess
+      '@dxos/plugin-client':
+        specifier: workspace:*
+        version: link:../../plugins/plugin-client
       '@dxos/plugin-inbox':
         specifier: workspace:*
         version: link:../../plugins/plugin-inbox
@@ -6246,6 +6255,25 @@ importers:
       '@types/wtfnode':
         specifier: 'catalog:'
         version: 0.10.0
+      typescript:
+        specifier: 'catalog:'
+        version: 5.9.3
+      vitest:
+        specifier: 'catalog:'
+        version: 3.2.4(@types/debug@4.1.12)(@types/node@22.10.2)(@vitest/browser@3.2.4)(@vitest/ui@3.2.4)(happy-dom@13.3.4)(jiti@2.6.1)(jsdom@27.0.0(canvas@3.2.0)(postcss@8.5.6))(terser@5.19.2)(tsx@4.21.0)(yaml@2.8.2)
+
+  packages/devtools/cli-util:
+    dependencies:
+      '@effect/printer':
+        specifier: 'catalog:'
+        version: 0.47.0(@effect/typeclass@0.38.0(effect@3.19.11))(effect@3.19.11)
+      '@effect/printer-ansi':
+        specifier: 'catalog:'
+        version: 0.47.0(@effect/typeclass@0.38.0(effect@3.19.11))(effect@3.19.11)
+    devDependencies:
+      effect:
+        specifier: 'catalog:'
+        version: 3.19.11
       typescript:
         specifier: 'catalog:'
         version: 5.9.3
@@ -7703,6 +7731,18 @@ importers:
       '@dxos/async':
         specifier: workspace:*
         version: link:../../common/async
+      '@dxos/cli-util':
+        specifier: workspace:*
+        version: link:../../devtools/cli-util
+      '@dxos/client':
+        specifier: workspace:*
+        version: link:../../sdk/client
+      '@dxos/client-protocol':
+        specifier: workspace:*
+        version: link:../../sdk/client-protocol
+      '@dxos/client-services':
+        specifier: workspace:*
+        version: link:../../sdk/client-services
       '@dxos/config':
         specifier: workspace:*
         version: link:../../sdk/config
@@ -7727,6 +7767,9 @@ importers:
       '@dxos/plugin-observability':
         specifier: workspace:*
         version: link:../plugin-observability
+      '@dxos/protocols':
+        specifier: workspace:*
+        version: link:../../core/protocols
       '@dxos/react-client':
         specifier: workspace:*
         version: link:../../sdk/react-client
@@ -7745,15 +7788,27 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
+      '@effect/cli':
+        specifier: 'catalog:'
+        version: 0.72.1(@effect/platform@0.93.6(effect@3.19.11))(@effect/printer-ansi@0.47.0(@effect/typeclass@0.38.0(effect@3.19.11))(effect@3.19.11))(@effect/printer@0.47.0(@effect/typeclass@0.38.0(effect@3.19.11))(effect@3.19.11))(effect@3.19.11)
+      '@effect/platform':
+        specifier: 'catalog:'
+        version: 0.93.6(effect@3.19.11)
       '@preact-signals/safe-react':
         specifier: 'catalog:'
         version: 0.9.0(@babel/core@7.28.0)(@swc/helpers@0.5.17)(react@19.2.3)
       '@preact/signals-core':
         specifier: 'catalog:'
         version: 1.12.1
+      effect:
+        specifier: 'catalog:'
+        version: 3.19.11
       react-qr-rounded:
         specifier: 'catalog:'
         version: 1.0.0(react@19.2.3)
+      yaml:
+        specifier: 'catalog:'
+        version: 2.8.2
     devDependencies:
       '@dxos/live-object':
         specifier: workspace:*
@@ -7770,18 +7825,18 @@ importers:
       '@effect-atom/atom-react':
         specifier: 'catalog:'
         version: 0.4.4(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/platform@0.93.6(effect@3.19.11))(@effect/rpc@0.72.2(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11))(effect@3.19.11)(react@19.2.3)(scheduler@0.27.0)
-      '@effect/platform':
+      '@effect/printer':
         specifier: 'catalog:'
-        version: 0.93.6(effect@3.19.11)
+        version: 0.47.0(@effect/typeclass@0.38.0(effect@3.19.11))(effect@3.19.11)
+      '@effect/printer-ansi':
+        specifier: 'catalog:'
+        version: 0.47.0(@effect/typeclass@0.38.0(effect@3.19.11))(effect@3.19.11)
       '@types/react':
         specifier: ~19.2.7
         version: 19.2.7
       '@types/react-dom':
         specifier: ~19.2.3
         version: 19.2.3(@types/react@19.2.7)
-      effect:
-        specifier: 'catalog:'
-        version: 3.19.11
       react:
         specifier: ~19.2.3
         version: 19.2.3
@@ -12861,6 +12916,9 @@ importers:
       '@effect/ai':
         specifier: 'catalog:'
         version: 0.32.1(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/platform@0.93.6(effect@3.19.11))(@effect/rpc@0.72.2(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11))(effect@3.19.11)
+      '@effect/cli':
+        specifier: 'catalog:'
+        version: 0.72.1(@effect/platform@0.93.6(effect@3.19.11))(@effect/printer-ansi@0.47.0(@effect/typeclass@0.38.0(effect@3.19.11))(effect@3.19.11))(@effect/printer@0.47.0(@effect/typeclass@0.38.0(effect@3.19.11))(effect@3.19.11))(effect@3.19.11)
       '@effect/experimental':
         specifier: 'catalog:'
         version: 0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2)

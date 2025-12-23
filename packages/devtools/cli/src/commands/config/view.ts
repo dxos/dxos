@@ -7,9 +7,8 @@ import * as Console from 'effect/Console';
 import * as Effect from 'effect/Effect';
 import * as Yaml from 'yaml';
 
+import { CommandConfig } from '@dxos/cli-util';
 import { ConfigService } from '@dxos/client';
-
-import { CommandConfig } from '../../services';
 
 export const view = Command.make(
   'view',
