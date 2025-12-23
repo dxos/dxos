@@ -2,9 +2,12 @@
 // Copyright 2024 DXOS.org
 //
 
+import type { ClassNameValue } from '@dxos/ui-types';
+import { mx } from '@dxos/ui-theme';
+
 export type Domino = {
   text(content: string): Domino;
-  addClass(classes: string): Domino;
+  addClass(...classes: ClassNameValue[]): Domino;
   append(child: HTMLElement | SVGElement | Domino | (HTMLElement | SVGElement | Domino)[]): Domino;
   attr(name: string, value?: string): Domino;
   css(styles: Record<string, string>): Domino;
@@ -41,11 +44,15 @@ class DominoImpl implements Domino {
     return this;
   }
 
-  addClass(classes: string): Domino {
-    this.elements.forEach((el) => {
-      const classList = classes.split(/\s+/).filter(Boolean);
-      el.classList.add(...classList);
-    });
+  addClass(...classes: ClassNameValue[]): Domino {
+    // Use mx to merge and deduplicate classes
+    const merged = mx(...classes);
+    if (merged) {
+      const classList = merged.split(/\s+/).filter(Boolean);
+      this.elements.forEach((el) => {
+        el.classList.add(...classList);
+      });
+    }
     return this;
   }
 
@@ -151,3 +158,6 @@ const svg = (tag: string): Domino => {
 
 // Extend $ with svg helper.
 $.svg = svg;
+
+// Legacy export for backwards compatibility
+export type Cash = Domino;
