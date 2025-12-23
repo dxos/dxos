@@ -5,11 +5,8 @@
 import { codeFolding, foldGutter } from '@codemirror/language';
 import { type Extension } from '@codemirror/state';
 import { EditorView } from '@codemirror/view';
-import $ from 'cash-dom';
 
-import { mx } from '@dxos/ui-theme';
-
-const SVG_NS = 'http://www.w3.org/2000/svg';
+import { $, icon, mx } from '@dxos/ui';
 
 export type FoldingOptions = {};
 
@@ -19,7 +16,7 @@ export type FoldingOptions = {};
 export const folding = (_props: FoldingOptions = {}): Extension => [
   codeFolding({
     placeholderDOM: () => {
-      return document.createElement('span'); // Collapse content.
+      return $('span').get()[0]; // Collapse content.
     },
   }),
   foldGutter({
@@ -27,9 +24,9 @@ export const folding = (_props: FoldingOptions = {}): Extension => [
       return $('<div>')
         .addClass('flex bs-full justify-center items-center')
         .append(
-          $(document.createElementNS(SVG_NS, 'svg'))
-            .addClass(mx('is-4 bs-4', open && 'rotate-90'))
-            .append($(document.createElementNS(SVG_NS, 'use')).attr('href', '/icons.svg#ph--caret-right--regular')),
+          $.svg('svg')
+            .addClass(mx('is-4 bs-4 cursor-pointer', open && 'rotate-90'))
+            .append($.svg('use').attr('href', icon('ph--caret-right--regular'))),
         )
         .get()[0];
     },

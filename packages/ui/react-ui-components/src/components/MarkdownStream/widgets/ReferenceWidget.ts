@@ -4,7 +4,7 @@
 
 import { WidgetType } from '@codemirror/view';
 
-import { Domino } from '@dxos/ui';
+import { $ } from '@dxos/ui';
 
 export class ReferenceWidget extends WidgetType {
   constructor(
@@ -19,11 +19,7 @@ export class ReferenceWidget extends WidgetType {
   }
 
   override toDOM() {
-    return Domino.of('div')
-      .classNames('mbs-2 mbe-2')
-      .children(
-        Domino.of<any>('dx-anchor').classNames('dx-tag--anchor').attributes({ refid: this.refid }).text(this.text),
-      )
-      .build();
+    const anchor = $('<dx-anchor>').addClass('dx-tag--anchor').attr('refid', this.refid).text(this.text).get(0)!;
+    return $('<div>').addClass('mbs-2 mbe-2').append(anchor).get(0)!;
   }
 }

@@ -16,7 +16,7 @@ import React from 'react';
 
 import { type ThemeMode, type ThemedClassName, useThemeContext } from '@dxos/react-ui';
 import { type UseTextEditorProps, useTextEditor } from '@dxos/react-ui-editor';
-import { Domino } from '@dxos/ui';
+import { $ } from '@dxos/ui';
 import {
   type BasicExtensionsOptions,
   type EditorInputMode,
@@ -121,15 +121,15 @@ const createTooltipRenderer = (themeMode: ThemeMode) => {
   };
 
   return (info: HoverInfo) => {
+    const children =
+      info.quickInfo?.displayParts?.map(
+        ({ kind, text }) => $('<span>').addClass(classFromKind(kind)).text(text).get(0)!,
+      ) ?? [];
     return {
-      dom: Domino.of('div')
-        .classNames('xs:max-is-80 max-is-lg p-1 bg-baseSurface rounded border border-separator')
-        .children(
-          ...(info.quickInfo?.displayParts?.map(({ kind, text }) =>
-            Domino.of('span').classNames(classFromKind(kind)).text(text),
-          ) ?? []),
-        )
-        .build(),
+      dom: $('<div>')
+        .addClass('xs:max-is-80 max-is-lg p-1 bg-baseSurface rounded border border-separator')
+        .append(children)
+        .get(0)!,
     };
   };
 };

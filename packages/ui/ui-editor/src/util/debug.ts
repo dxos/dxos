@@ -7,11 +7,11 @@ import { type EditorView } from '@codemirror/view';
 
 import { log } from '@dxos/log';
 
-/**
- * @deprecated Use `trim` from `@dxos/util`.
- */
 export const join = (...lines: string[]) => lines.join('\n');
 
+/**
+ * CodeMirror callbacks swallow errors so wrap handlers.
+ */
 export const wrapWithCatch = (fn: (...args: any[]) => any, label?: string) => {
   return (...args: any[]) => {
     try {
@@ -21,19 +21,6 @@ export const wrapWithCatch = (fn: (...args: any[]) => any, label?: string) => {
     }
   };
 };
-
-/**
- * CodeMirror callbacks swallow errors so wrap handlers.
- */
-// TODO(burdon): Reconcile with wrapWithCatch.
-export const callbackWrapper = <T extends Function>(fn: T): T =>
-  ((...args: any[]) => {
-    try {
-      return fn(...args);
-    } catch (err) {
-      log.catch(err);
-    }
-  }) as unknown as T;
 
 /**
  * Log all changes before dispatching them to the view.

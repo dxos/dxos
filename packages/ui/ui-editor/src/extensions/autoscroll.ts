@@ -6,7 +6,7 @@ import { StateEffect } from '@codemirror/state';
 import { EditorView, ViewPlugin } from '@codemirror/view';
 
 import { debounce } from '@dxos/async';
-import { Domino } from '@dxos/ui';
+import { $ } from '@dxos/ui';
 
 import { scrollToLineEffect } from './scrolling';
 
@@ -60,7 +60,10 @@ export const autoScroll = ({
     const line = view.state.doc.lineAt(view.state.doc.length);
     view.dispatch({
       selection: { anchor: line.to, head: line.to },
-      effects: scrollToLineEffect.of({ line: line.number, options: { position: 'end', offset: threshold, behavior } }),
+      effects: scrollToLineEffect.of({
+        line: line.number,
+        options: { position: 'end', offset: threshold, behavior },
+      }),
     });
   };
 
@@ -124,18 +127,19 @@ export const autoScroll = ({
     ViewPlugin.fromClass(
       class {
         constructor(view: EditorView) {
-          buttonContainer = Domino.of('div')
-            .classNames(true && 'cm-scroll-button transition-opacity duration-300 opacity-0')
-            .children(
-              Domino.of('button')
-                .classNames('dx-button bg-accentSurface')
-                .data('density', 'fine')
-                .children(Domino.of<any>('dx-icon').attributes({ icon: 'ph--arrow-down--regular' }))
-                .on('click', () => {
-                  scrollToBottom(view);
-                }),
-            )
-            .build();
+          const icon = $('<dx-icon>').attr('icon', 'ph--arrow-down--regular').get(0)!;
+          const button = $('<button>')
+            .addClass('dx-button bg-accentSurface')
+            .attr('data-density', 'fine')
+            .append(icon)
+            .on('click', () => {
+              scrollToBottom(view);
+            })
+            .get(0)!;
+          buttonContainer = $('<div>')
+            .addClass('cm-scroll-button transition-opacity duration-300 opacity-0')
+            .append(button)
+            .get(0)! as HTMLDivElement;
 
           view.scrollDOM.parentElement!.appendChild(buttonContainer);
         }

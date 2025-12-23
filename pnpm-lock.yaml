@@ -17707,6 +17707,9 @@ importers:
       '@dxos/ui-types':
         specifier: workspace:*
         version: link:../ui-types
+      cash-dom:
+        specifier: 'catalog:'
+        version: 8.1.5
 
   packages/ui/ui-editor:
     dependencies:
@@ -17833,9 +17836,6 @@ importers:
       ajv:
         specifier: 'catalog:'
         version: 8.17.1
-      cash-dom:
-        specifier: 'catalog:'
-        version: 8.1.5
       codemirror:
         specifier: 'catalog:'
         version: 6.0.1

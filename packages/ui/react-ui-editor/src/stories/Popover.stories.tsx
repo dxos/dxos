@@ -10,7 +10,7 @@ import { faker } from '@dxos/random';
 import { useClientProvider, withClientProvider } from '@dxos/react-client/testing';
 import { withTheme } from '@dxos/react-ui/testing';
 import { TestSchema, type ValueGenerator, createObjectFactory } from '@dxos/schema/testing';
-import { Domino } from '@dxos/ui';
+import { $, mx } from '@dxos/ui';
 import { insertAtCursor, insertAtLineStart, join } from '@dxos/ui-editor';
 
 import {
@@ -35,16 +35,20 @@ const customCompletions: EditorMenuGroup = createMenuGroup({
   items: ['Hello world!', 'Hello DXOS', 'Hello Composer', 'https://dxos.org'],
 });
 
-const placeholder = (trigger: string[]) =>
-  Domino.of('div')
-    .children(
-      Domino.of('span').text('Press'),
-      ...trigger.map((trigger) =>
-        Domino.of('span').text(trigger).classNames('border border-separator rounded-sm mx-1 pli-1 pbs-[2px] pbe-[3px]'),
-      ),
-      Domino.of('span').text('for commands'),
-    )
-    .build();
+const placeholder = (trigger: string[]) => {
+  const pressEl = $('<span>').text('Press').get(0)!;
+  const triggerEls = trigger.map(
+    (trigger) =>
+      $('<span>')
+        .addClass(mx('border border-separator rounded-sm mx-1 pli-1 pbs-[2px] pbe-[3px]'))
+        .text(trigger)
+        .get(0)!,
+  );
+  const forCommandsEl = $('<span>').text('for commands').get(0)!;
+  return $('<div>')
+    .append([pressEl, ...triggerEls, forCommandsEl])
+    .get(0)!;
+};
 
 type StoryProps = Omit<UseEditorMenuProps, 'viewRef'> & { text: string };
 

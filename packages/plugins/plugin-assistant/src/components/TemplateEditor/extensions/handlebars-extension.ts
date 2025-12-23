@@ -19,8 +19,7 @@ import {
   keymap,
 } from '@codemirror/view';
 
-import { Domino } from '@dxos/ui';
-import { mx } from '@dxos/ui-theme';
+import { $, mx } from '@dxos/ui';
 
 export type HandlebarsOptions = {};
 
@@ -87,7 +86,11 @@ const handlebarsHighlightPlugin = ViewPlugin.fromClass(
     // NOTE: Decorations may clash with other extensions (e.g., markdown).
     buildDecorations(view: EditorView) {
       const selection = view.state.selection.main;
-      const decorations: Array<{ from: number; to: number; decoration: Decoration }> = [];
+      const decorations: Array<{
+        from: number;
+        to: number;
+        decoration: Decoration;
+      }> = [];
 
       for (const { from, to } of view.visibleRanges) {
         const text = view.state.doc.sliceString(from, to);
@@ -121,7 +124,9 @@ const handlebarsHighlightPlugin = ViewPlugin.fromClass(
             decorations.push({
               from: start,
               to: end,
-              decoration: Decoration.mark({ class: mx('dx-tag--blue', tagPadding) }),
+              decoration: Decoration.mark({
+                class: mx('dx-tag--blue', tagPadding),
+              }),
             });
           }
         }
@@ -222,7 +227,7 @@ class DXNWidget extends WidgetType {
         return part;
       })
       .join(':');
-    return Domino.of('span').classNames(['font-mono dx-tag--blue', tagPadding]).text(text).build();
+    return $('<span>').addClass(mx('font-mono dx-tag--blue', tagPadding)).text(text).get(0)!;
   }
 }
 

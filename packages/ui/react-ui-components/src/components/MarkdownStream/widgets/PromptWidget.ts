@@ -4,7 +4,7 @@
 
 import { WidgetType } from '@codemirror/view';
 
-import { Domino } from '@dxos/ui';
+import { $ } from '@dxos/ui';
 
 /**
  * Simple prompt widget.
@@ -22,9 +22,7 @@ export class PromptWidget extends WidgetType {
    * NOTE: Container must set var based on user's identity.
    */
   override toDOM() {
-    return Domino.of('div')
-      .classNames('flex justify-end mlb-2')
-      .children(Domino.of('div').classNames('pli-3 plb-1.5 bg-[--user-fill] rounded-sm').text(this.text))
-      .build();
+    const inner = $('<div>').addClass('pli-3 plb-1.5 bg-[--user-fill] rounded-sm').text(this.text).get(0)!;
+    return $('<div>').addClass('flex justify-end mlb-2').append(inner).get(0)!;
   }
 }

@@ -21,7 +21,7 @@ import { log } from '@dxos/log';
 import { isNonNullable } from '@dxos/util';
 
 import { type Comment, type Range, type RenderCallback } from '../types';
-import { Cursor, callbackWrapper, singleValueFacet } from '../util';
+import { Cursor, singleValueFacet, wrapWithCatch } from '../util';
 
 import { documentId } from './selection';
 
@@ -396,7 +396,7 @@ export const comments = (options: CommentsOptions = {}): Extension => {
       keymap.of([
         {
           key: shortcut,
-          run: callbackWrapper(createComment),
+          run: wrapWithCatch(createComment),
         },
       ]),
 

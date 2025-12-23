@@ -29,7 +29,8 @@
   },
   "dependencies": {
     "@dxos/ui-theme": "workspace:*",
-    "@dxos/ui-types": "workspace:*"
+    "@dxos/ui-types": "workspace:*",
+    "cash-dom": "catalog:"
   },
   "publishConfig": {
     "access": "public"

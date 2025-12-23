@@ -11,9 +11,9 @@ import JSON5 from 'json5';
 
 import { Tag } from '@dxos/echo';
 import { QueryDSL } from '@dxos/echo-query';
-import { Domino } from '@dxos/ui';
+import { $ } from '@dxos/ui';
 import { type CompoetionContext, focus, focusField, staticCompletion, typeahead } from '@dxos/ui-editor';
-import { getHashHue, getStyles } from '@dxos/ui-theme';
+import { getHashHue, getStyles, mx } from '@dxos/ui-theme';
 
 export type QueryOptions = {
   tags?: Tag.Map;
@@ -210,15 +210,12 @@ const lineHeight = '30px';
 /**
  * NOTE: The outer container vertically aligns the inner text with content in the outer div.
  */
-const container = (classNames: string, ...children: Domino<HTMLElement>[]) => {
-  return Domino.of('span')
-    .classNames('inline-flex bs-[28px] align-middle')
-    .children(
-      Domino.of('span')
-        .classNames(['inline-flex bs-[26px] border rounded-sm', classNames])
-        .children(...children),
-    )
-    .build();
+const container = (classNames: string, ...children: HTMLElement[]) => {
+  const inner = $('<span>')
+    .addClass(mx('inline-flex bs-[26px] border rounded-sm', classNames))
+    .append(children)
+    .get(0)!;
+  return $('<span>').addClass('inline-flex bs-[28px] align-middle').append(inner).get(0)!;
 };
 
 /**
@@ -241,8 +238,8 @@ class TypeWidget extends WidgetType {
     const label: string = this._identifier.split(/\W/).at(-1)!;
     return container(
       'border-sky-500',
-      Domino.of('span').classNames(['flex items-center pli-1 text-black text-xs bg-sky-500']).text('type'),
-      Domino.of('span').classNames(['flex items-center pli-1 text-subdued']).text(label),
+      $('<span>').addClass(mx('flex items-center pli-1 text-black text-xs bg-sky-500')).text('type').get(0)!,
+      $('<span>').addClass(mx('flex items-center pli-1 text-subdued')).text(label).get(0)!,
     );
   }
 }
@@ -266,10 +263,11 @@ class TagWidget extends WidgetType {
     const { bg, border, surface } = getStyles(this._hue);
     return container(
       border,
-      Domino.of('span').classNames(['flex items-center pli-1 text-black text-xs', bg]).text('#'),
-      Domino.of('span')
-        .classNames(['flex items-center pli-1 text-subdued text-sm rounded-r-[3px]', surface])
-        .text(this._str),
+      $('<span>').addClass(mx('flex items-center pli-1 text-black text-xs', bg)).text('#').get(0)!,
+      $('<span>')
+        .addClass(mx('flex items-center pli-1 text-subdued text-sm rounded-r-[3px]', surface))
+        .text(this._str)
+        .get(0)!,
     );
   }
 }
@@ -298,16 +296,14 @@ class ObjectWidget extends WidgetType {
   override toDOM() {
     return container(
       'border-separator divide-x divide-separator',
-      ...this._entries.map(([key, value]) =>
-        Domino.of('span')
-          .classNames('inline-flex items-stretch')
-          .children(
-            Domino.of('span')
-              .classNames('flex items-center pli-1 text-subdued text-xs bg-modalSurface first:rounded-l-[3px]')
-              .text(key),
-            Domino.of('span').classNames('flex items-center pli-1 text-subdued').text(value),
-          ),
-      ),
+      ...this._entries.map(([key, value]) => {
+        const keyEl = $('<span>')
+          .addClass('flex items-center pli-1 text-subdued text-xs bg-modalSurface first:rounded-l-[3px]')
+          .text(key)
+          .get(0)!;
+        const valueEl = $('<span>').addClass('flex items-center pli-1 text-subdued').text(value).get(0)!;
+        return $('<span>').addClass('inline-flex items-stretch').append([keyEl, valueEl]).get(0)!;
+      }),
     );
   }
 }
@@ -325,7 +321,7 @@ class SymbolWidget extends WidgetType {
   }
 
   override toDOM() {
-    return Domino.of('span').text(this._str).build();
+    return $('<span>').text(this._str).get(0)!;
   }
 }
 
