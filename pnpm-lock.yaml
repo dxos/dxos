@@ -954,9 +954,6 @@ catalogs:
     bytes:
       specifier: ^3.1.2
       version: 3.1.2
-    cash-dom:
-      specifier: 8.1.5
-      version: 8.1.5
     cbor-x:
       specifier: ^1.5.4
       version: 1.5.4
@@ -17710,9 +17707,6 @@ importers:
       '@dxos/ui-types':
         specifier: workspace:*
         version: link:../ui-types
-      cash-dom:
-        specifier: 'catalog:'
-        version: 8.1.5
 
   packages/ui/ui-editor:
     dependencies:
@@ -28062,9 +28056,6 @@ packages:
 
   capnp-ts@0.7.0:
     resolution: {integrity: sha512-XKxXAC3HVPv7r674zP0VC3RTXz+/JKhfyw94ljvF80yynK6VkTnqE3jMuN8b3dUVmmc43TjyxjW4KTsmB3c86g==}
-
-  cash-dom@8.1.5:
-    resolution: {integrity: sha512-/BS05CfzyHR5xT2ksKj1sDLPaOv5rSmIwoGxNgdKwUtnIuiJ5neMxVEmZxvfyJiSjGbOMD0Lwe+9v+fszDqHew==}
 
   catering@2.1.1:
     resolution: {integrity: sha512-K7Qy8O9p76sL3/3m7/zLKbRkyOlSZAgzEaLhyj2mXS8PsCud2Eo4hAb8aLtZqHh0QGqLcb9dlJSu6lHRVENm1w==}
@@ -49396,8 +49387,6 @@ snapshots:
       tslib: 2.8.1
     transitivePeerDependencies:
       - supports-color
-
-  cash-dom@8.1.5: {}
 
   catering@2.1.1: {}
 
