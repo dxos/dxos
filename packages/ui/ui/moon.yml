@@ -12,6 +12,3 @@ tasks:
       - '--platform=browser'
       - '--platform=node'
       - '--preactSignalTracking'
-  test:
-    inputs:
-      - .storybook/*
