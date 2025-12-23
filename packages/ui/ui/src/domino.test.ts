@@ -6,7 +6,7 @@ import { describe, expect, test } from 'vitest';
 
 import { mx } from '@dxos/ui-theme';
 
-import { Domino } from './dom';
+import { Domino } from './domino';
 
 describe('dom', () => {
   test('Domino creates an SVG element', () => {
