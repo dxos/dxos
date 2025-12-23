@@ -8,14 +8,14 @@ import React from 'react';
 import { type Template } from '@dxos/blueprints';
 import { createDocAccessor } from '@dxos/echo-db';
 import { type ThemedClassName, useThemeContext, useTranslation } from '@dxos/react-ui';
+import { useTextEditor } from '@dxos/react-ui-editor';
 import {
   createBasicExtensions,
   createDataExtensions,
   createMarkdownExtensions,
   createThemeExtensions,
   decorateMarkdown,
-  useTextEditor,
-} from '@dxos/react-ui-editor';
+} from '@dxos/ui-editor';
 import { mx } from '@dxos/ui-theme';
 import { isNonNullable } from '@dxos/util';
 
@@ -51,7 +51,10 @@ export const TemplateEditor = ({ id, classNames, template, lineNumbers = true }:
           lineWrapping: true,
           placeholder: t('template placeholder'),
         }),
-        createThemeExtensions({ themeMode, slots: { content: { className: '!pie-4' } } }),
+        createThemeExtensions({
+          themeMode,
+          slots: { content: { className: '!pie-4' } },
+        }),
         createMarkdownExtensions(),
         decorateMarkdown(),
         handlebars(),

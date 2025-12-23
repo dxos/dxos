@@ -123,6 +123,9 @@
       "path": "../../ui/react-ui-thread"
     },
     {
+      "path": "../../ui/ui-editor"
+    },
+    {
       "path": "../../ui/ui-theme"
     },
     {

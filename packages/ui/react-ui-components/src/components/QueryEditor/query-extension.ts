@@ -11,8 +11,8 @@ import JSON5 from 'json5';
 
 import { Tag } from '@dxos/echo';
 import { QueryDSL } from '@dxos/echo-query';
-import { type CompoetionContext, focus, focusField, staticCompletion, typeahead } from '@dxos/react-ui-editor';
 import { Domino } from '@dxos/ui';
+import { type CompoetionContext, focus, focusField, staticCompletion, typeahead } from '@dxos/ui-editor';
 import { getHashHue, getStyles } from '@dxos/ui-theme';
 
 export type QueryOptions = {

@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Prec } from '@codemirror/state';
+import { type Extension, Prec } from '@codemirror/state';
 import React, { forwardRef, useCallback, useEffect, useMemo, useState } from 'react';
 
 import { type ThemedClassName, setRef, useThemeContext, useTranslation } from '@dxos/react-ui';
@@ -12,14 +12,11 @@ import {
   type EditorController,
   EditorMenuProvider,
   type EditorMenuProviderProps,
-  type Extension,
   type UseEditorMenuProps,
-  createBasicExtensions,
   createMenuGroup,
-  createThemeExtensions,
-  keymap,
   useEditorMenu,
 } from '@dxos/react-ui-editor';
+import { createBasicExtensions, createThemeExtensions, keymap } from '@dxos/ui-editor';
 
 import { translationKey } from '../../translations';
 

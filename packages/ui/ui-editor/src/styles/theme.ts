@@ -77,6 +77,7 @@ export const createBaseTheme = ({ monospace }: ThemeOptions = {}) => {
      * NOTE: Gutters should have the same top margin as the content.
      */
     '.cm-gutters': {
+      background: 'transparent',
       borderRight: 'none',
     },
     '.cm-gutter': {},

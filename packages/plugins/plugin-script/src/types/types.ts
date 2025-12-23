@@ -4,7 +4,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { EditorInputMode } from '@dxos/react-ui-editor';
+import { EditorInputMode } from '@dxos/ui-editor';
 
 export const ScriptSettings = Schema.mutable(
   Schema.Struct({

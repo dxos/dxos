@@ -112,6 +112,7 @@
     "@dxos/schema": "workspace:*",
     "@dxos/types": "workspace:*",
     "@dxos/ui": "workspace:*",
+    "@dxos/ui-editor": "workspace:*",
     "@dxos/util": "workspace:*",
     "@dxos/vendor-quickjs": "workspace:*",
     "@lezer/common": "catalog:",

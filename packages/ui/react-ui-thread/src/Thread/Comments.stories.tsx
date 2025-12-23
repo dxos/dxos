@@ -6,12 +6,12 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { type FC, useEffect, useMemo, useRef, useState } from 'react';
 
 import { Obj, Type } from '@dxos/echo';
-// TODO(burdon): Remove.
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { faker } from '@dxos/random';
 import { Icon, IconButton, useThemeContext } from '@dxos/react-ui';
 import { withTheme } from '@dxos/react-ui/testing';
+import { useTextEditor } from '@dxos/react-ui-editor';
 import {
   type Comment,
   type CommentsOptions,
@@ -24,8 +24,7 @@ import {
   listener,
   scrollThreadIntoView,
   setComments,
-  useTextEditor,
-} from '@dxos/react-ui-editor';
+} from '@dxos/ui-editor';
 import { hoverableControls, hoverableFocusedWithinControls } from '@dxos/ui-theme';
 
 import { MessageBody, MessageHeading, MessageRoot, MessageTextbox } from '../Message';

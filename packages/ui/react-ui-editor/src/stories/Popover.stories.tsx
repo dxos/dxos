@@ -11,7 +11,7 @@ import { useClientProvider, withClientProvider } from '@dxos/react-client/testin
 import { withTheme } from '@dxos/react-ui/testing';
 import { TestSchema, type ValueGenerator, createObjectFactory } from '@dxos/schema/testing';
 import { Domino } from '@dxos/ui';
-import { insertAtCursor, insertAtLineStart, str } from '@dxos/ui-editor';
+import { insertAtCursor, insertAtLineStart, join } from '@dxos/ui-editor';
 
 import {
   type EditorController,
@@ -117,7 +117,7 @@ type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
   args: {
-    text: str('# Autocomplete', '', ''),
+    text: join('# Autocomplete', '', ''),
     triggerKey: 'Ctrl-Space',
     filter: true,
     getMenu: () => [customCompletions],
@@ -126,7 +126,7 @@ export const Default: Story = {
 
 export const Formatting: Story = {
   args: {
-    text: str('# Slash command', '', ''),
+    text: join('# Slash command', '', ''),
     trigger: '/',
     placeholder: {
       content: () => placeholder(['/']),
@@ -151,7 +151,7 @@ export const Link: Story = {
     }),
   ],
   args: {
-    text: str('# Links', '', ''),
+    text: join('# Links', '', ''),
     trigger: ['/', '@'],
     placeholder: {
       content: () => placeholder(['/', '@']),

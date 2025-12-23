@@ -4,7 +4,7 @@
 
 import { Capabilities, type PluginContext, contributes } from '@dxos/app-framework';
 import { LocalStorageStore } from '@dxos/local-storage';
-import { type EditorViewMode, createEditorStateStore } from '@dxos/react-ui-editor';
+import { type EditorViewMode, createEditorStateStore } from '@dxos/ui-editor';
 
 import { meta } from '../meta';
 import { type Markdown, type MarkdownPluginState } from '../types';

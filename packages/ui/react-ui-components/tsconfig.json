@@ -82,6 +82,9 @@
       "path": "../ui"
     },
     {
+      "path": "../ui-editor"
+    },
+    {
       "path": "../ui-theme"
     }
   ]

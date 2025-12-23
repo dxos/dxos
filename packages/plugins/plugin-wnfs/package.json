@@ -50,6 +50,7 @@
     "@dxos/react-ui-editor": "workspace:*",
     "@dxos/react-ui-form": "workspace:*",
     "@dxos/react-ui-stack": "workspace:*",
+    "@dxos/ui-editor": "workspace:*",
     "@dxos/util": "workspace:*",
     "@ipld/car": "catalog:",
     "@preact-signals/safe-react": "catalog:",

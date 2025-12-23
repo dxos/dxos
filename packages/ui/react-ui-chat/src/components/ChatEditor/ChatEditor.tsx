@@ -6,16 +6,14 @@ import { type Extension } from '@codemirror/state';
 import React, { forwardRef, useMemo } from 'react';
 
 import { type ThemedClassName, useThemeContext } from '@dxos/react-ui';
+import { Editor, type EditorController, type UseTextEditorProps } from '@dxos/react-ui-editor';
 import {
   type BasicExtensionsOptions,
-  Editor,
-  type EditorController,
   type SubmitOptions,
-  type UseTextEditorProps,
   createBasicExtensions,
   createThemeExtensions,
   submit,
-} from '@dxos/react-ui-editor';
+} from '@dxos/ui-editor';
 import { isTruthy } from '@dxos/util';
 
 import { type ReferencesOptions } from './references';

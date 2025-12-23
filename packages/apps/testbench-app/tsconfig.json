@@ -93,6 +93,9 @@
       "path": "../../ui/react-ui-table"
     },
     {
+      "path": "../../ui/ui-editor"
+    },
+    {
       "path": "../../ui/ui-theme"
     }
   ]

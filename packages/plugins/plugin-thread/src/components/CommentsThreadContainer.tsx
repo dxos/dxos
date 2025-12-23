@@ -8,7 +8,6 @@ import { Obj, Ref, Relation } from '@dxos/echo';
 import { getSpace, useMembers } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 import { IconButton, Tag, Tooltip, useThemeContext, useTranslation } from '@dxos/react-ui';
-import { createBasicExtensions, createThemeExtensions, listener } from '@dxos/react-ui-editor';
 import {
   MessageTextbox,
   type MessageTextboxProps,
@@ -16,6 +15,7 @@ import {
   type ThreadRootProps,
 } from '@dxos/react-ui-thread';
 import { type AnchoredTo, type Thread } from '@dxos/types';
+import { createBasicExtensions, createThemeExtensions, listener } from '@dxos/ui-editor';
 import { hoverableControlItem, hoverableControls, hoverableFocusedWithinControls, mx } from '@dxos/ui-theme';
 import { isNonNullable } from '@dxos/util';
 

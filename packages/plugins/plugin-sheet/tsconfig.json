@@ -116,6 +116,9 @@
       "path": "../../ui/react-ui-syntax-highlighter"
     },
     {
+      "path": "../../ui/ui-editor"
+    },
+    {
       "path": "../../ui/ui-theme"
     },
     {

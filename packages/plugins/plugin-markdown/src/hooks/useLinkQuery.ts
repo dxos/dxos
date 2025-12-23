@@ -10,7 +10,8 @@ import { usePluginManager } from '@dxos/app-framework/react';
 import { type Database, Filter, Obj, Query, Type } from '@dxos/echo';
 import { EntityKind, SystemTypeAnnotation, getTypeAnnotation } from '@dxos/echo/internal';
 import { toLocalizedString, useTranslation } from '@dxos/react-ui';
-import { type EditorMenuGroup, type EditorMenuItem, insertAtCursor, insertAtLineStart } from '@dxos/react-ui-editor';
+import { type EditorMenuGroup, type EditorMenuItem } from '@dxos/react-ui-editor';
+import { insertAtCursor, insertAtLineStart } from '@dxos/ui-editor';
 
 export const useLinkQuery = (db: Database.Database | undefined) => {
   const { t } = useTranslation();

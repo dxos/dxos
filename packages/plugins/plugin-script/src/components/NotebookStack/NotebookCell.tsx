@@ -11,16 +11,15 @@ import { invariant } from '@dxos/invariant';
 import { TemplateEditor } from '@dxos/plugin-assistant';
 import { useThemeContext, useTranslation } from '@dxos/react-ui';
 import { QueryEditor, type QueryEditorProps } from '@dxos/react-ui-components';
+import { EditorContent, type EditorContentProps } from '@dxos/react-ui-editor';
 import {
   type BasicExtensionsOptions,
-  EditorContent,
-  type EditorContentProps,
   createBasicExtensions,
   createDataExtensions,
   createMarkdownExtensions,
   createThemeExtensions,
   decorateMarkdown,
-} from '@dxos/react-ui-editor';
+} from '@dxos/ui-editor';
 import { mx } from '@dxos/ui-theme';
 import { isNonNullable } from '@dxos/util';
 

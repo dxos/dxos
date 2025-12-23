@@ -90,6 +90,7 @@
     "@dxos/react-ui-table": "workspace:*",
     "@dxos/schema": "workspace:*",
     "@dxos/types": "workspace:*",
+    "@dxos/ui-editor": "workspace:*",
     "@dxos/util": "workspace:*",
     "@effect/ai": "catalog:",
     "@effect/experimental": "catalog:",

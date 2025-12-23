@@ -9,7 +9,7 @@ import { useMemo } from 'react';
 import { LayoutAction, createResolver } from '@dxos/app-framework';
 import { useIntentResolver } from '@dxos/app-framework/react';
 import { invariant } from '@dxos/invariant';
-import { Cursor, setSelection } from '@dxos/react-ui-editor';
+import { Cursor, setSelection } from '@dxos/ui-editor';
 
 import { meta } from '../meta';
 

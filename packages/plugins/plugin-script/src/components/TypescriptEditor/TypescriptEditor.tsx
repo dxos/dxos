@@ -15,17 +15,16 @@ import { type HoverInfo, tsAutocomplete, tsFacet, tsHover, tsLinter, tsSync } fr
 import React from 'react';
 
 import { type ThemeMode, type ThemedClassName, useThemeContext } from '@dxos/react-ui';
+import { type UseTextEditorProps, useTextEditor } from '@dxos/react-ui-editor';
+import { Domino } from '@dxos/ui';
 import {
   type BasicExtensionsOptions,
   type EditorInputMode,
   InputModeExtensions,
-  type UseTextEditorProps,
   createBasicExtensions,
   createThemeExtensions,
   defaultStyles,
-  useTextEditor,
-} from '@dxos/react-ui-editor';
-import { Domino } from '@dxos/ui';
+} from '@dxos/ui-editor';
 import { mx } from '@dxos/ui-theme';
 import { isNonNullable } from '@dxos/util';
 

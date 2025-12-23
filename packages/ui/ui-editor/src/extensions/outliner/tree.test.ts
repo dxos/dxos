@@ -7,7 +7,7 @@ import { EditorState } from '@codemirror/state';
 import { beforeEach, describe, test } from 'vitest';
 
 import { type Range } from '../../types';
-import { str } from '../../util';
+import { join } from '../../util';
 
 import { type Item, listItemToString, outlinerTree, treeFacet } from './tree';
 
@@ -31,7 +31,7 @@ const extensions = [markdown({ base: markdownLanguage }), outlinerTree()];
 
 describe('tree (boundary conditions)', () => {
   test('empty', ({ expect }) => {
-    const state = EditorState.create({ doc: str(''), extensions });
+    const state = EditorState.create({ doc: join(''), extensions });
     const tree = state.facet(treeFacet);
     expect(tree).to.exist;
   });
@@ -63,7 +63,7 @@ describe('tree (boundary conditions)', () => {
   });
 
   test('empty continuation', ({ expect }) => {
-    const state = EditorState.create({ doc: str('- [ ] A', '  '), extensions });
+    const state = EditorState.create({ doc: join('- [ ] A', '  '), extensions });
     const tree = state.facet(treeFacet);
     tree.traverse((item, level) => {
       console.log(listItemToString(item, level));
@@ -75,7 +75,7 @@ describe('tree (advanced)', () => {
   let state: EditorState;
 
   beforeEach(() => {
-    state = EditorState.create({ doc: str(...lines), extensions });
+    state = EditorState.create({ doc: join(...lines), extensions });
   });
 
   test('traverse', ({ expect }) => {

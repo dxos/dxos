@@ -10,7 +10,7 @@ import { log } from '@dxos/log';
 /**
  * @deprecated Use `trim` from `@dxos/util`.
  */
-export const str = (...lines: string[]) => lines.join('\n');
+export const join = (...lines: string[]) => lines.join('\n');
 
 export const wrapWithCatch = (fn: (...args: any[]) => any, label?: string) => {
   return (...args: any[]) => {

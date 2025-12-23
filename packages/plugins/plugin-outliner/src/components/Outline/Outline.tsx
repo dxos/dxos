@@ -12,6 +12,10 @@ import {
   EditorMenuProvider,
   type EditorMenuProviderProps,
   type UseTextEditorProps,
+  useTextEditor,
+} from '@dxos/react-ui-editor';
+import { type Text } from '@dxos/schema';
+import {
   createBasicExtensions,
   createDataExtensions,
   createMarkdownExtensions,
@@ -19,9 +23,7 @@ import {
   deleteItem,
   hashtag,
   outliner,
-  useTextEditor,
-} from '@dxos/react-ui-editor';
-import { type Text } from '@dxos/schema';
+} from '@dxos/ui-editor';
 import { mx } from '@dxos/ui-theme';
 
 import { meta } from '../../meta';
@@ -50,10 +52,18 @@ export const Outline = forwardRef<OutlineController, OutlineProps>(
         selection: EditorSelection.cursor(text.content.length),
         initialValue: text.content,
         extensions: [
-          createDataExtensions({ id, text: createDocAccessor(text, ['content']) }),
+          createDataExtensions({
+            id,
+            text: createDocAccessor(text, ['content']),
+          }),
           createBasicExtensions({ readOnly: false, search: true }),
           createMarkdownExtensions(),
-          createThemeExtensions({ themeMode, slots: { scroll: { className: scrollable ? '' : '!overflow-hidden' } } }),
+          createThemeExtensions({
+            themeMode,
+            slots: {
+              scroll: { className: scrollable ? '' : '!overflow-hidden' },
+            },
+          }),
           outliner({ showSelected }),
           hashtag(),
         ],

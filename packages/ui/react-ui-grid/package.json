@@ -29,6 +29,7 @@
     "@codemirror/view": "catalog:",
     "@dxos/lit-grid": "workspace:*",
     "@dxos/react-ui-editor": "workspace:*",
+    "@dxos/ui-editor": "workspace:*",
     "@dxos/util": "workspace:*",
     "@lit/react": "catalog:",
     "@preact-signals/safe-react": "catalog:",

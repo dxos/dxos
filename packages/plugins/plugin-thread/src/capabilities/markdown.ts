@@ -8,7 +8,7 @@ import { Capabilities, type PluginContext, contributes, createIntent } from '@dx
 import { Obj } from '@dxos/echo';
 import { ATTENDABLE_PATH_SEPARATOR, DeckAction } from '@dxos/plugin-deck/types';
 import { MarkdownCapabilities } from '@dxos/plugin-markdown';
-import { type EditorState, commentClickedEffect, commentsState, overlap } from '@dxos/react-ui-editor';
+import { type EditorState, commentClickedEffect, commentsState, overlap } from '@dxos/ui-editor';
 
 import { threads } from '../extensions';
 

@@ -5,8 +5,11 @@
 import { codeFolding, foldGutter } from '@codemirror/language';
 import { type Extension } from '@codemirror/state';
 import { EditorView } from '@codemirror/view';
+import $ from 'cash-dom';
 
-import { Domino } from '@dxos/ui';
+import { mx } from '@dxos/ui-theme';
+
+const SVG_NS = 'http://www.w3.org/2000/svg';
 
 export type FoldingOptions = {};
 
@@ -21,16 +24,14 @@ export const folding = (_props: FoldingOptions = {}): Extension => [
   }),
   foldGutter({
     markerDOM: (open) => {
-      return (
-        Domino.of('div')
-          .classNames('flex bs-full items-center')
-          // TODO(burdon): !!!
-          // .children(Domino.of('svg').children(Domino.of('use').attr('href', '/icons.svg#ph--arrow-right--regular')))
-          .build()
-      );
-      // TODO(burdon): Use sprint directly.
-      // <svg><use href="/icons.svg#ph--arrow-right--regular"/></svg>
-      // <Icon icon='ph--caret-right--bold' size={3} classNames={['mx-3 cursor-pointer', open && 'rotate-90']} />,
+      return $('<div>')
+        .addClass('flex bs-full items-center')
+        .append(
+          $(document.createElementNS(SVG_NS, 'svg'))
+            .addClass(mx('is-4 bs-4', open && 'rotate-90'))
+            .append($(document.createElementNS(SVG_NS, 'use')).attr('href', '/icons.svg#ph--caret-right--regular')),
+        )
+        .get(0)!;
     },
   }),
   EditorView.theme({

@@ -42,6 +42,7 @@
     "@dxos/react-ui-sfx": "workspace:*",
     "@dxos/react-ui-syntax-highlighter": "workspace:*",
     "@dxos/react-ui-text-tooltip": "workspace:*",
+    "@dxos/ui-editor": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
     "@dxos/ui-types": "workspace:*",
     "@dxos/util": "workspace:*",

@@ -347,6 +347,7 @@ catalog:
   buffer-alloc: ^1.1.0
   buffer-from: ^0.1.1
   bytes: ^3.1.2
+  cash-dom: 8.1.5
   cbor-x: ^1.5.4
   chai: ^4.4.1
   chai-dom: ^1.11.0

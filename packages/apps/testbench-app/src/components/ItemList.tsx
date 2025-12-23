@@ -7,14 +7,9 @@ import React from 'react';
 import { Obj } from '@dxos/echo';
 import { createDocAccessor } from '@dxos/echo-db';
 import { IconButton, Input, useThemeContext } from '@dxos/react-ui';
-import {
-  automerge,
-  createBasicExtensions,
-  createMarkdownExtensions,
-  createThemeExtensions,
-  useTextEditor,
-} from '@dxos/react-ui-editor';
+import { useTextEditor } from '@dxos/react-ui-editor';
 import { mapSchemaToFields } from '@dxos/schema';
+import { automerge, createBasicExtensions, createMarkdownExtensions, createThemeExtensions } from '@dxos/ui-editor';
 import { mx, subtleHover } from '@dxos/ui-theme';
 
 const MAX_RENDERED_COUNT = 80;

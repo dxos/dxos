@@ -25,6 +25,7 @@
   ],
   "dependencies": {
     "@dxos/react-ui-editor": "workspace:*",
+    "@dxos/ui-editor": "workspace:*",
     "@dxos/util": "workspace:*",
     "@preact-signals/safe-react": "catalog:",
     "@radix-ui/react-primitive": "catalog:",

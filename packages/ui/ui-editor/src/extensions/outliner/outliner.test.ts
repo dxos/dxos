@@ -6,7 +6,7 @@ import { EditorSelection, EditorState } from '@codemirror/state';
 import { EditorView } from '@codemirror/view';
 import { describe, test } from 'vitest';
 
-import { str } from '../../util';
+import { join } from '../../util';
 import { createMarkdownExtensions } from '../markdown';
 
 import { indentItemLess, indentItemMore, moveItemDown, moveItemUp } from './commands';
@@ -32,7 +32,7 @@ const extensions = [createMarkdownExtensions(), outlinerTree()];
 
 // TODO(burdon): Flaky.
 describe.runIf(!process.env.CI)('outliner', () => {
-  const state = EditorState.create({ doc: str(...lines), extensions });
+  const state = EditorState.create({ doc: join(...lines), extensions });
 
   test('sanity', ({ expect }) => {
     const tree = state.facet(treeFacet);
@@ -88,13 +88,13 @@ describe.runIf(!process.env.CI)('outliner', () => {
     const view = new EditorView({ state });
     view.dispatch({ selection: EditorSelection.cursor(getPos(0)) });
     moveItemDown(view);
-    expect(view.state.doc.sliceString(0, view.state.doc.length)).toBe(str(...lines.slice(1, 8), lines[0], lines[8]));
+    expect(view.state.doc.sliceString(0, view.state.doc.length)).toBe(join(...lines.slice(1, 8), lines[0], lines[8]));
   });
 
   test('move up', ({ expect }) => {
     const view = new EditorView({ state });
     view.dispatch({ selection: EditorSelection.cursor(getPos(8)) });
     moveItemUp(view);
-    expect(view.state.doc.sliceString(0, view.state.doc.length)).toBe(str(lines[0], lines[8], ...lines.slice(1, 8)));
+    expect(view.state.doc.sliceString(0, view.state.doc.length)).toBe(join(lines[0], lines[8], ...lines.slice(1, 8)));
   });
 });
