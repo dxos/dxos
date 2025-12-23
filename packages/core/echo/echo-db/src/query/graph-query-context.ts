@@ -79,6 +79,7 @@ export class GraphQueryContext implements QueryContext {
     this._ctx = new Context();
     this._params.onStart();
     for (const source of this._sources) {
+      source.open();
       if (this._query) {
         source.update(this._query);
       }

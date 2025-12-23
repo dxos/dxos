@@ -19,7 +19,6 @@ import {
 } from '@dxos/protocols/proto/dxos/echo/query';
 import { isNonNullable } from '@dxos/util';
 
-import { getObjectCore } from '../echo-handler';
 import { OBJECT_DIAGNOSTICS, type QuerySourceProvider } from '../hypergraph';
 import { type QuerySource, getTargetSpacesForQuery } from '../query';
 
@@ -67,12 +66,16 @@ export class IndexQuerySource implements QuerySource {
   private _query?: QueryAST.Query = undefined;
   private _results?: QueryResult.EntityEntry[] = [];
   private _stream?: Stream<QueryResponse>;
+  private _open = false;
 
   constructor(private readonly _params: IndexQuerySourceParams) {}
 
-  open(): void {}
+  open(): void {
+    this._open = true;
+  }
 
   close(): void {
+    this._open = false;
     this._results = undefined;
     this._closeStream();
   }
@@ -94,6 +97,13 @@ export class IndexQuerySource implements QuerySource {
     this._closeStream();
     this._results = [];
     this.changed.emit();
+
+    // Don't start a reactive remote query until the query context is started (calls `open()`).
+    // This prevents `.query(...).run()` from accidentally triggering a REACTIVE query in addition to the ONE_SHOT query.
+    if (!this._open) {
+      return;
+    }
+
     this._queryIndex(query, QueryReactivity.REACTIVE, (results) => {
       this._results = results;
       this.changed.emit();
@@ -221,7 +231,6 @@ export class IndexQuerySource implements QuerySource {
       return null;
     }
 
-    const core = getObjectCore(object);
     const queryResult: QueryResult.EntityEntry = {
       id: object.id,
       result: object,
