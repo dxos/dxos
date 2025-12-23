@@ -52,9 +52,10 @@ class DominoImpl implements Domino {
 
 	addClass(classNames: ClassNameValue): Domino {
 		const merged = mx(classNames);
-		this.elements.forEach((el) => {
-			merged.split(/\s+/).forEach((cls) => cls && el.classList.add(cls));
-		});
+		if (merged) {
+			const classes = merged.split(/\s+/).filter(Boolean);
+			this.elements.forEach((el) => el.classList.add(...classes));
+		}
 		return this;
 	}
 
