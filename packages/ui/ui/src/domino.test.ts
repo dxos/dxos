@@ -8,19 +8,7 @@ import { mx } from '@dxos/ui-theme';
 
 import { Domino } from './domino';
 
-describe('dom', () => {
-  test('Domino creates an SVG element', () => {
-    const el = Domino.of('circle').root;
-    // Note: happy-dom returns uppercase tagName even for createElementNS in some versions/contexts.
-    expect(el.tagName.toLowerCase()).toBe('circle');
-    expect(el.namespaceURI).toBe('http://www.w3.org/2000/svg');
-  });
-
-  test('Domino creates nested SVG elements', () => {
-    const svg = Domino.of('svg').children(Domino.of('circle')).root;
-    expect(svg.querySelector('circle')).toBeTruthy();
-  });
-
+describe('domino', () => {
   test('classNames uses mx for class merging', () => {
     const el = Domino.of('div').classNames('foo bar').root;
 
@@ -71,5 +59,17 @@ describe('dom', () => {
 
     el.click();
     expect(clicked).toBe(true);
+  });
+
+  test('Domino creates an SVG element', () => {
+    const el = Domino.of('circle').root;
+    // Note: happy-dom returns uppercase tagName even for createElementNS in some versions/contexts.
+    expect(el.tagName.toLowerCase()).toBe('circle');
+    expect(el.namespaceURI).toBe('http://www.w3.org/2000/svg');
+  });
+
+  test('Domino creates nested SVG elements', () => {
+    const svg = Domino.of('svg').children(Domino.of('circle')).root;
+    expect(svg.querySelector('circle')).toBeTruthy();
   });
 });
