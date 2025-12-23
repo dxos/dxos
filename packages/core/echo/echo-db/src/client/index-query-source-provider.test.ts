@@ -5,26 +5,26 @@
 import { describe, expect, test } from 'vitest';
 
 import { Context } from '@dxos/context';
+import { type QueryAST } from '@dxos/echo-protocol';
 import { SpaceId } from '@dxos/keys';
 import { QueryReactivity, type QueryRequest, type QueryService } from '@dxos/protocols/proto/dxos/echo/query';
 
 import { IndexQuerySource } from './index-query-source-provider';
 
-const makeQuery = () =>
-  ({
-    type: 'options',
-    query: {
-      type: 'select',
-      filter: {
-        type: 'object',
-        typename: 'dxn:type:dxos.org/type/Person:0.1.0',
-        props: {},
-      },
+const makeQuery = (): QueryAST.Query => ({
+  type: 'options',
+  query: {
+    type: 'select',
+    filter: {
+      type: 'object',
+      typename: 'dxn:type:dxos.org/type/Person:0.1.0',
+      props: {},
     },
-    options: {
-      spaceIds: [SpaceId.random()],
-    },
-  }) as any;
+  },
+  options: {
+    spaceIds: [SpaceId.random()],
+  },
+});
 
 describe('IndexQuerySource', () => {
   test('does not start a REACTIVE remote query until open() is called', async () => {
