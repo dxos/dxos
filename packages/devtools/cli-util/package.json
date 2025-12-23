@@ -14,15 +14,10 @@
       "types": "./dist/types/src/index.d.ts",
       "node": "./dist/lib/node-esm/index.mjs"
     },
-    "./services": {
-      "source": "./src/services/index.ts",
-      "types": "./dist/types/src/services/index.d.ts",
-      "node": "./dist/lib/node-esm/services/index.mjs"
-    },
-    "./util": {
-      "source": "./src/util/index.ts",
-      "types": "./dist/types/src/util/index.d.ts",
-      "node": "./dist/lib/node-esm/util/index.mjs"
+    "./testing": {
+      "source": "./src/testing/index.ts",
+      "types": "./dist/types/src/testing/index.d.ts",
+      "node": "./dist/lib/node-esm/testing/index.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
@@ -31,8 +26,19 @@
     "src"
   ],
   "dependencies": {
+    "@dxos/client": "workspace:*",
+    "@dxos/debug": "workspace:*",
+    "@dxos/echo": "workspace:*",
+    "@dxos/effect": "workspace:*",
+    "@dxos/errors": "workspace:*",
+    "@dxos/functions": "workspace:*",
+    "@dxos/log": "workspace:*",
+    "@dxos/protocols": "workspace:*",
+    "@dxos/util": "workspace:*",
+    "@effect/cli": "catalog:",
     "@effect/printer": "catalog:",
-    "@effect/printer-ansi": "catalog:"
+    "@effect/printer-ansi": "catalog:",
+    "effect": "catalog:"
   },
   "devDependencies": {
     "effect": "catalog:",

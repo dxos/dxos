@@ -9,8 +9,7 @@ import * as Option from 'effect/Option';
 
 import { runAndForwardErrors } from '@dxos/effect';
 
-import { FormBuilder } from '@dxos/cli-util/util';
-import { print } from '@dxos/cli-util/util';
+import { FormBuilder, print } from '@dxos/cli-util';
 
 describe('FormBuilder', () => {
   it('option', () =>
@@ -44,7 +43,7 @@ describe('FormBuilder', () => {
       Effect.gen(function* () {
         const items = ['a', 'b', 'c'];
         const builder = FormBuilder.make({ title: 'Each Test' }).pipe(
-          FormBuilder.each(items, (item) => FormBuilder.set('item', item)),
+          FormBuilder.each(items, (item: string) => FormBuilder.set('item', item)),
         );
 
         const doc = FormBuilder.build(builder);

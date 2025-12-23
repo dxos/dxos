@@ -7,10 +7,9 @@ import * as Ansi from '@effect/printer-ansi/Ansi';
 import * as Effect from 'effect/Effect';
 import * as Match from 'effect/Match';
 
+import { FormBuilder } from '@dxos/cli-util';
 import { Database, Filter } from '@dxos/echo';
 import { Function } from '@dxos/functions';
-
-import { FormBuilder } from '../../util';
 
 export type FunctionStatus = 'not imported' | 'up-to-date' | 'update available';
 

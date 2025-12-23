@@ -11,6 +11,7 @@ import { createSignal } from 'solid-js';
 
 import { AiService, DEFAULT_EDGE_MODEL, DEFAULT_LMSTUDIO_MODEL, DEFAULT_OLLAMA_MODEL, ModelName } from '@dxos/ai';
 import { type AiConversation, GenericToolkit } from '@dxos/assistant';
+import { CommandConfig, Common } from '@dxos/cli-util';
 import { ClientService } from '@dxos/client';
 import { Filter } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
@@ -18,7 +19,6 @@ import { log } from '@dxos/log';
 import { Assistant } from '@dxos/plugin-assistant/types';
 
 import { App, render } from '../../components';
-import { CommandConfig } from '../../services';
 import { theme } from '../../theme';
 import {
   type AiChatServices,
@@ -30,7 +30,6 @@ import {
   types,
   withTypes,
 } from '../../util';
-import { Common } from '../options';
 
 import { Chat } from './components';
 import { ChatProcessor } from './processor';

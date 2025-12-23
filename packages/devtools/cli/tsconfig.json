@@ -77,6 +77,9 @@
       "path": "../../plugins/plugin-assistant"
     },
     {
+      "path": "../../plugins/plugin-automation"
+    },
+    {
       "path": "../../plugins/plugin-chess"
     },
     {
@@ -98,10 +101,16 @@
       "path": "../../plugins/plugin-script"
     },
     {
+      "path": "../../plugins/plugin-space"
+    },
+    {
       "path": "../../plugins/plugin-table"
     },
     {
       "path": "../../plugins/plugin-thread"
+    },
+    {
+      "path": "../../plugins/plugin-token-manager"
     },
     {
       "path": "../../plugins/plugin-transcription"

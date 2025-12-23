@@ -6,12 +6,18 @@ import { Capabilities, Events, contributes, defineModule, definePlugin } from '@
 
 import { meta } from '../meta';
 
-import { profile } from './commands';
+import { config, device, edge, halo, profile } from './commands';
 
 export const ClientPlugin = definePlugin(meta, () => [
   defineModule({
     id: `${meta.id}/module/cli-commands`,
     activatesOn: Events.Startup,
-    activate: () => [contributes(Capabilities.Command, profile)],
+    activate: () => [
+      contributes(Capabilities.Command, config),
+      contributes(Capabilities.Command, device),
+      contributes(Capabilities.Command, edge),
+      contributes(Capabilities.Command, halo),
+      contributes(Capabilities.Command, profile),
+    ],
   }),
 ]);

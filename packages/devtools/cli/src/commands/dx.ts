@@ -9,27 +9,18 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
 import { createCliApp } from '@dxos/app-framework';
-import { CommandConfig } from '@dxos/cli-util/services';
+import { CommandConfig } from '@dxos/cli-util';
 import { ClientService, ConfigService } from '@dxos/client';
 import { DEFAULT_PROFILE, DXEnv } from '@dxos/client-protocol';
 
 import { DXOS_VERSION } from '../version';
 
 import { chat } from './chat';
-import { config } from './config';
-import { database } from './database';
 import { debug } from './debug';
-import { device } from './device';
-import { edge } from './edge';
 import { fn } from './function';
-import { halo } from './halo';
 import { hub } from './hub';
-import { integration } from './integration';
 import { getCore, getDefaults, getPlugins } from './plugin-defs';
-import { queue } from './queue';
 import { repl } from './repl';
-import { space } from './space';
-import { trigger } from './trigger';
 
 export const command = Command.make('dx', {
   config: Options.file('config', { exists: 'yes' }).pipe(
@@ -37,7 +28,7 @@ export const command = Command.make('dx', {
     Options.withAlias('c'),
     Options.optional,
   ),
-  // TODO(burdon): Throw if profile doesn't exist.
+  // TODO(burdon): CommandConfig layer should throw if profile doesn't exist.
   profile: Options.text('profile').pipe(
     Options.withDescription('Profile for the config file.'),
     Options.withAlias('p'),
@@ -63,7 +54,6 @@ export const command = Command.make('dx', {
     Options.optional,
   ),
 }).pipe(
-  // TODO(wittjosiah): Create separate command path for clients that don't need the client.
   Command.provideEffect(ConfigService, (args) => ConfigService.load(args)),
   Command.provide(({ json, verbose, profile, logLevel }) =>
     Layer.succeed(CommandConfig, {
@@ -75,27 +65,19 @@ export const command = Command.make('dx', {
   ),
 );
 
-// TODO(wittjosiah): `repl` causes this to lose a bunch of type information due to the cycle.
 export const run = Effect.fn(function* (args: readonly string[]) {
   const dx = yield* createCliApp({
     rootCommand: command,
     subCommands: [
-      config,
       repl,
 
-      // Only providing client to commands that require it.
-      database.pipe(Command.provide(ClientService.layer)),
+      // TODO(wittjosiah): Factor out.
+      //   Currently would require standalone plugins due to clash between solid & react compilation.
+      //   Either create cli-specific plugins for these or wait until assistant/script plugins are built w/ Solid.
       chat.pipe(Command.provide(ClientService.layer)),
-      device.pipe(Command.provide(ClientService.layer)),
-      edge.pipe(Command.provide(ClientService.layer)),
       fn.pipe(Command.provide(ClientService.layer)),
-      halo.pipe(Command.provide(ClientService.layer)),
-      integration.pipe(Command.provide(ClientService.layer)),
-      queue.pipe(Command.provide(ClientService.layer)),
-      space.pipe(Command.provide(ClientService.layer)),
-      trigger.pipe(Command.provide(ClientService.layer)),
 
-      // TODO(burdon): Admin-only (separate dynamic module?)
+      // TODO(burdon): Admin-only. Where should these commands live?
       debug.pipe(Command.provide(ClientService.layer)),
       hub.pipe(Command.provide(ClientService.layer)),
     ],
