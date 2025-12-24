@@ -2,20 +2,21 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Capabilities, Events, contributes, defineModule, definePlugin, lazy, oneOf } from '@dxos/app-framework';
+import { Capabilities, Events, contributes, defineModule, definePlugin, oneOf } from '@dxos/app-framework';
 
+import {
+  AppGraphBuilder,
+  Client,
+  IntentResolver,
+  Migrations,
+  ReactContext,
+  ReactSurface,
+  SchemaDefs,
+} from './capabilities';
 import { ClientEvents } from './events';
 import { meta } from './meta';
 import { translations } from './translations';
 import { type ClientPluginOptions } from './types';
-
-export const AppGraphBuilder = lazy(async () => import('./capabilities/app-graph-builder'));
-export const Client = lazy(async () => import('./capabilities/client'));
-export const IntentResolver = lazy(async () => import('./capabilities/intent-resolver'));
-export const Migrations = lazy(async () => import('./capabilities/migrations'));
-export const ReactContext = lazy(async () => import('./capabilities/react-context'));
-export const ReactSurface = lazy(async () => import('./capabilities/react-surface'));
-export const SchemaDefs = lazy(async () => import('./capabilities/schema-defs'));
 
 export const ClientPlugin = definePlugin<ClientPluginOptions>(
   meta,

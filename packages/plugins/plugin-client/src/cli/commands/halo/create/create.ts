@@ -14,7 +14,7 @@ import { print } from '@dxos/cli-util';
 import { ClientService } from '@dxos/client';
 import { invariant } from '@dxos/invariant';
 
-import { ClientAction } from '../../../..';
+import { ClientAction } from '../../../../types';
 import { printIdentity } from '../util';
 
 export const handler = Effect.fn(function* ({

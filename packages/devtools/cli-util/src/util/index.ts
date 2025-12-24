@@ -10,4 +10,3 @@ export * from './runtime';
 export * from './space';
 export * from './space-format';
 export * from './timeout';
-export * from './types';

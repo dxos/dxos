@@ -10,7 +10,7 @@ import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
 import { CommandConfig } from '@dxos/cli-util';
-import { flushAndSync, print, spaceLayer, types, withTypes } from '@dxos/cli-util';
+import { flushAndSync, print, spaceLayer, withTypes } from '@dxos/cli-util';
 import { Common } from '@dxos/cli-util';
 import { DXN, Database, Filter, Obj, Ref, Type } from '@dxos/echo';
 import { Function, Trigger } from '@dxos/functions';
@@ -58,7 +58,7 @@ export const queue = Command.make(
 ).pipe(
   Command.withDescription('Update a queue trigger.'),
   Command.provide(({ spaceId }) => spaceLayer(spaceId, true)),
-  Command.provideEffectDiscard(() => withTypes(Function.Function, Trigger.Trigger, ...types)),
+  Command.provideEffectDiscard(() => withTypes(Function.Function, Trigger.Trigger)),
 );
 
 /**

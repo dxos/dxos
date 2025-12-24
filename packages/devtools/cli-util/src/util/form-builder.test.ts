@@ -42,7 +42,7 @@ describe('FormBuilder', () => {
       Effect.gen(function* () {
         const items = ['a', 'b', 'c'];
         const builder = FormBuilder.make({ title: 'Each Test' }).pipe(
-          FormBuilder.each(items, (item: string) => FormBuilder.set('item', item)),
+          FormBuilder.each(items, (item) => FormBuilder.set('item', item)),
         );
 
         const doc = FormBuilder.build(builder);

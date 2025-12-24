@@ -2,15 +2,14 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Capabilities, Events, contributes, createIntent, defineModule, definePlugin, lazy } from '@dxos/app-framework';
+import { Capabilities, Events, contributes, createIntent, defineModule, definePlugin } from '@dxos/app-framework';
 import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
 import { type CreateObjectIntent } from '@dxos/plugin-space/types';
 import { Text } from '@dxos/schema';
 
+import { IntentResolver } from '../capabilities';
 import { meta } from '../meta';
 import { Markdown, MarkdownAction } from '../types';
-
-const IntentResolver = lazy(() => import('../capabilities/intent-resolver'));
 
 export const MarkdownPlugin = definePlugin(meta, () => [
   defineModule({

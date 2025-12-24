@@ -2,17 +2,14 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Capabilities, Events, contributes, defineModule, definePlugin, lazy } from '@dxos/app-framework';
+import { Capabilities, Events, contributes, defineModule, definePlugin } from '@dxos/app-framework';
 
+import { Client, IntentResolver, SchemaDefs } from '../capabilities';
 import { ClientEvents } from '../events';
 import { meta } from '../meta';
 import { type ClientPluginOptions } from '../types';
 
 import { config, device, edge, halo, profile } from './commands';
-
-const Client = lazy(async () => import('../capabilities/client'));
-const IntentResolver = lazy(async () => import('../capabilities/intent-resolver'));
-const SchemaDefs = lazy(async () => import('../capabilities/schema-defs'));
 
 // TODO(wittjosiah): Refactor capabilities to be able to use them without pulling in react.
 export const ClientPlugin = definePlugin<ClientPluginOptions>(meta, (options) => [

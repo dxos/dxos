@@ -18,7 +18,7 @@ import { printProfile } from './util';
 export const list = Command.make(
   'list',
   {},
-  Effect.fnUntraced(function* (_args) {
+  Effect.fnUntraced(function* () {
     const { profile: currentProfile } = yield* CommandConfig;
     const fs = yield* FileSystem.FileSystem;
     const path = yield* Path.Path;

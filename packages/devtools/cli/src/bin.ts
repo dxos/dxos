@@ -27,7 +27,6 @@ import { loadEnabledPlugins } from '@dxos/plugin-registry/cli';
 import { chat, debug, dx, fn, hub, repl } from './commands';
 import { getCore, getDefaults, getPlugins } from './commands/plugin-defs';
 
-
 let filter = LogLevel.ERROR;
 const level = process.env.DX_DEBUG;
 if (level) {

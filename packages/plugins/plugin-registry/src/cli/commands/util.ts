@@ -22,4 +22,3 @@ export const printPlugin = (plugin: FormattedPlugin) => {
     FormBuilder.build,
   );
 };
-

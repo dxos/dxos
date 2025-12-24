@@ -5,6 +5,7 @@
 import * as Console from 'effect/Console';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
+import * as Match from 'effect/Match';
 import * as Option from 'effect/Option';
 
 import { ClientService } from '@dxos/client';
@@ -38,12 +39,16 @@ export const spaceLayer = (
     const client = yield* ClientService;
     yield* Effect.promise(() => client.spaces.waitUntilReady());
 
-    const spaceId = fallbackToDefaultSpace
-      ? spaceId$.pipe(
+    const spaceId = Match.value(fallbackToDefaultSpace).pipe(
+      Match.when(true, () =>
+        spaceId$.pipe(
           Option.getOrElse(() => client.spaces.default.id),
           Option.some,
-        )
-      : spaceId$;
+        ),
+      ),
+      Match.when(false, () => spaceId$),
+      Match.exhaustive,
+    );
 
     const space = spaceId.pipe(
       Option.flatMap((id) => Option.fromNullable(client.spaces.get(id))),

@@ -5,7 +5,6 @@
 import type * as Command from '@effect/cli/Command';
 import { type Registry } from '@effect-atom/atom-react';
 import type * as Layer from 'effect/Layer';
-import type * as ManagedRuntime from 'effect/ManagedRuntime';
 import type * as Schema from 'effect/Schema';
 import { type FC, type PropsWithChildren } from 'react';
 
