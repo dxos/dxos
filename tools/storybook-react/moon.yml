@@ -7,7 +7,7 @@ tasks:
   bundle:
     command: storybook build
     args:
-      - --output-dir=out/storybook
+      - --output-dir=out/storybook-react
     deps:
       # Ensure that all packages are built to run storybook.
       - '#ts-build:build'
