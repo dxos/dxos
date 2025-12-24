@@ -62,14 +62,14 @@ describe('domino', () => {
   });
 
   test('Domino creates an SVG element', () => {
-    const el = Domino.of('circle').root;
+    const el = Domino.of('circle', Domino.SVG).root;
     // Note: happy-dom returns uppercase tagName even for createElementNS in some versions/contexts.
     expect(el.tagName.toLowerCase()).toBe('circle');
     expect(el.namespaceURI).toBe('http://www.w3.org/2000/svg');
   });
 
   test('Domino creates nested SVG elements', () => {
-    const svg = Domino.of('svg').children(Domino.of('circle')).root;
+    const svg = Domino.of('svg', Domino.SVG).children(Domino.of('circle', Domino.SVG)).root;
     expect(svg.querySelector('circle')).toBeTruthy();
   });
 });

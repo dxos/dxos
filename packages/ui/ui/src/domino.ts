@@ -12,24 +12,23 @@ const ICONS_URL = '/icons.svg';
  * Super lightweight chainable DOM builder.
  */
 export class Domino<T extends HTMLElement | SVGElement> {
+  static SVG = 'http://www.w3.org/2000/svg';
+
   static icon = (icon: string) => ICONS_URL + '#' + icon;
 
   static of<K extends keyof HTMLElementTagNameMap>(tag: K): Domino<HTMLElementTagNameMap[K]>;
-  static of<K extends keyof SVGElementTagNameMap>(tag: K): Domino<SVGElementTagNameMap[K]>;
-  static of(tag: string): Domino<HTMLElement | SVGElement> {
-    return new Domino(tag as any);
+  static of<K extends keyof SVGElementTagNameMap>(tag: K, namespace: string): Domino<SVGElementTagNameMap[K]>;
+  static of(tag: string, namespace?: string): Domino<HTMLElement | SVGElement> {
+    return new Domino(tag, namespace);
   }
 
   private readonly _el: T;
 
-  constructor(tag: keyof HTMLElementTagNameMap);
-  constructor(tag: keyof SVGElementTagNameMap);
-  constructor(tag: string) {
-    // Try HTML first, then SVG
-    if (tag in document.createElement('div')) {
-      this._el = document.createElement(tag as keyof HTMLElementTagNameMap) as T;
+  private constructor(tag: string, namespace?: string) {
+    if (namespace) {
+      this._el = document.createElementNS(namespace, tag) as T;
     } else {
-      this._el = document.createElementNS('http://www.w3.org/2000/svg', tag) as T;
+      this._el = document.createElement(tag) as T;
     }
   }
 

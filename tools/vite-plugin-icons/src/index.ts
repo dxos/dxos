@@ -73,7 +73,6 @@ export const IconsPlugin = ({
                 if (extensions.some((e) => e === ext) && path.indexOf('node_modules') === -1) {
                   try {
                     const src = fs.readFileSync(filename, 'utf8');
-                    console.log(filename);
                     const match = scan(src);
                     status.updated ||= match;
                   } catch {

@@ -8,26 +8,22 @@ import { EditorView } from '@codemirror/view';
 
 import { Domino, mx } from '@dxos/ui';
 
-export type FoldingOptions = {};
-
 /**
  * https://codemirror.net/examples/gutter
  */
-export const folding = (_props: FoldingOptions = {}): Extension => [
+export const folding = (): Extension => [
   codeFolding({
-    placeholderDOM: () => {
-      return Domino.of('span').root; // Collapse content.
-    },
+    placeholderDOM: () => Domino.of('span').root,
   }),
   foldGutter({
-    markerDOM: (open) => {
-      const use = Domino.of('use').attributes({ href: Domino.icon('ph--caret-right--regular') });
-      const svg = Domino.of('svg').classNames(mx('is-4 bs-4 cursor-pointer', open && 'rotate-90')).children(use);
-      return Domino.of('div')
+    markerDOM: (open) =>
+      Domino.of('div')
         .classNames('flex bs-full justify-center items-center')
-        .children(svg)
-        .root;
-    },
+        .children(
+          Domino.of('svg', Domino.SVG)
+            .classNames(mx('is-4 bs-4 cursor-pointer', open && 'rotate-90'))
+            .children(Domino.of('use', Domino.SVG).attributes({ href: Domino.icon('ph--caret-right--regular') })),
+        ).root,
   }),
   EditorView.theme({
     '.cm-foldGutter': {
