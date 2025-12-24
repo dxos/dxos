@@ -5,7 +5,7 @@
 import { Capabilities, type PluginContext, contributes } from '@dxos/app-framework';
 import { type Type } from '@dxos/echo';
 
-import { ClientCapabilities } from './capabilities';
+import { ClientCapabilities } from '../types';
 
 export default (context: PluginContext) => {
   const registry = context.getCapability(Capabilities.AtomRegistry);

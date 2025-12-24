@@ -6134,6 +6134,9 @@ importers:
       '@dxos/plugin-markdown':
         specifier: workspace:*
         version: link:../../plugins/plugin-markdown
+      '@dxos/plugin-observability':
+        specifier: workspace:*
+        version: link:../../plugins/plugin-observability
       '@dxos/plugin-script':
         specifier: workspace:*
         version: link:../../plugins/plugin-script

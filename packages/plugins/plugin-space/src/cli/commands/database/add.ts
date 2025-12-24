@@ -7,19 +7,25 @@ import * as Options from '@effect/cli/Options';
 import * as Prompt from '@effect/cli/Prompt';
 import * as Console from 'effect/Console';
 import * as Effect from 'effect/Effect';
-import * as Match from 'effect/Match';
 import * as Option from 'effect/Option';
+import type * as Schema from 'effect/Schema';
 
-import { CommandConfig, Common, flushAndSync, getSpace, print, spaceLayer, withTypes } from '@dxos/cli-util';
+import { Capabilities, Events, PluginService } from '@dxos/app-framework';
+import { CommandConfig, Common, flushAndSync, print, spaceLayer } from '@dxos/cli-util';
 import { SpaceProperties } from '@dxos/client/echo';
-import { Database, type Entity, Filter, Ref, Type } from '@dxos/echo';
-// import { Chess } from '@dxos/plugin-chess/types';
-// import { Calendar, Mailbox } from '@dxos/plugin-inbox/types';
-// import { Markdown } from '@dxos/plugin-markdown/types';
+import { Database, Filter, Obj, Ref, Type } from '@dxos/echo';
+import { EntityKind, getTypeAnnotation } from '@dxos/echo/internal';
 import { Collection } from '@dxos/schema';
-import { Organization, Person } from '@dxos/types';
+
+import { type CreateObjectIntent } from '../../../types';
 
 import { printObject } from './util';
+
+export type Metadata = {
+  createObjectIntent: CreateObjectIntent;
+  inputSchema?: Schema.Schema.AnyNoContext;
+  addToCollectionOnCreate?: boolean;
+};
 
 export const add = Command.make(
   'add',
@@ -30,6 +36,17 @@ export const add = Command.make(
   ({ typename }) =>
     Effect.gen(function* () {
       const { json } = yield* CommandConfig;
+      const manager = yield* PluginService;
+      const { db } = yield* Database.Service;
+
+      yield* manager.context.activate(Events.SetupMetadata);
+
+      const resolve = (typename: string) => {
+        const metadata = manager.context
+          .getCapabilities(Capabilities.Metadata)
+          .find(({ id }) => id === typename)?.metadata;
+        return metadata?.createObjectIntent ? (metadata as Metadata) : undefined;
+      };
 
       const [properties] = yield* Database.Service.runQuery(Filter.type(SpaceProperties));
       const collection = yield* Database.Service.load<Collection.Collection>(
@@ -37,10 +54,20 @@ export const add = Command.make(
       );
 
       const selectedTypename = yield* Option.match(typename, {
-        onNone: () => selectTypename(),
+        onNone: () => selectTypename(resolve),
         onSome: (t) => Effect.succeed(t),
       });
-      const object = yield* createObject(selectedTypename);
+      const metadata = resolve(selectedTypename);
+      if (!metadata) {
+        return yield* Effect.fail(new Error(`Unknown typename: ${selectedTypename}`));
+      }
+
+      const { dispatch } = manager.context.getCapability(Capabilities.IntentDispatcher);
+      const { object } = yield* dispatch(metadata.createObjectIntent({}, { db }));
+      if (!Obj.isObject(object)) {
+        return yield* Effect.fail(new Error(`Invalid object: ${object}`));
+      }
+
       collection.objects.push(Ref.make(object));
 
       if (json) {
@@ -54,49 +81,25 @@ export const add = Command.make(
 ).pipe(
   Command.withDescription('Add an object to a space.'),
   Command.provide(({ spaceId }) => spaceLayer(spaceId, true)),
-  Command.provideEffectDiscard(() =>
-    withTypes(SpaceProperties, Collection.Collection, ...TYPE_REGISTRY.map(({ type }) => type)),
-  ),
 );
-
-/**
- * Type registry mapping typename to display name.
- */
-const TYPE_REGISTRY = [
-  // { type: Calendar.Calendar, name: 'Calendar' },
-  // { type: Chess.Game, name: 'Game' },
-  // { type: Mailbox.Mailbox, name: 'Mailbox' },
-  // { type: Markdown.Document, name: 'Document' },
-  { type: Organization.Organization, name: 'Organization' },
-  { type: Person.Person, name: 'Person' },
-] as const;
-
-/**
- * Creates an object based on the typename.
- */
-const createObject = Effect.fn(function* (typename: string) {
-  const spaceId = yield* Database.Service.spaceId;
-  const space = yield* getSpace(spaceId);
-  return yield* Match.value(typename).pipe(
-    Match.withReturnType<Effect.Effect<Entity.Unknown, Error>>(),
-    // Match.when(Markdown.Document.typename, () => Effect.succeed(Markdown.make())),
-    // Match.when(Chess.Game.typename, () => Effect.succeed(Chess.make())),
-    Match.when(Organization.Organization.typename, () => Effect.succeed(Organization.make())),
-    Match.when(Person.Person.typename, () => Effect.succeed(Person.make())),
-    // Match.when(Mailbox.Mailbox.typename, () => Effect.succeed(Mailbox.make({ space }))),
-    // Match.when(Calendar.Calendar.typename, () => Effect.succeed(Calendar.make({ space }))),
-    Match.orElse(() => Effect.fail(new Error(`Unknown typename: ${typename}`))),
-  );
-});
 
 /**
  * Prompts for typename selection if not provided.
  */
-const selectTypename = Effect.fn(function* () {
-  const choices = TYPE_REGISTRY.map((type) => ({
-    title: type.name,
-    value: Type.getTypename(type.type),
-    description: Type.getTypename(type.type),
+const selectTypename = Effect.fn(function* (resolve: (typename: string) => Metadata | undefined) {
+  const schemas = yield* Database.Service.runSchemaQuery({
+    location: ['database', 'runtime'],
+    includeSystem: false,
+  }).pipe(
+    Effect.map((schemas) => schemas.filter((schema) => getTypeAnnotation(schema)?.kind !== EntityKind.Relation)),
+    Effect.map((schemas) => schemas.filter((schema) => !!resolve(Type.getTypename(schema)))),
+  );
+
+  const choices = schemas.map((schema) => ({
+    // TODO(wittjosiah): Translations.
+    title: Type.getTypename(schema),
+    value: Type.getTypename(schema),
+    description: Type.getTypename(schema),
   }));
 
   const selected = yield* Prompt.select({

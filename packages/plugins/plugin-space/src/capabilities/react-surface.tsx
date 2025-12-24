@@ -19,24 +19,19 @@ import { Collection, type View, ViewAnnotation } from '@dxos/schema';
 import { type JoinPanelProps } from '@dxos/shell/react';
 
 import {
-  CREATE_OBJECT_DIALOG,
-  CREATE_SPACE_DIALOG,
   CollectionArticle,
   CollectionSection,
   CreateObjectDialog,
   type CreateObjectDialogProps,
   CreateSpaceDialog,
   InlineSyncStatus,
-  JOIN_DIALOG,
   JoinDialog,
   MembersContainer,
   MenuFooter,
-  OBJECT_RENAME_POPOVER,
   ObjectCardStack,
   ObjectDetails,
   ObjectRenamePopover,
   RecordArticle,
-  SPACE_RENAME_POPOVER,
   SchemaContainer,
   SmallPresenceLive,
   SpacePluginSettings,
@@ -46,17 +41,23 @@ import {
   SyncStatus,
   ViewEditor,
 } from '../components';
+import {
+  CREATE_OBJECT_DIALOG,
+  CREATE_SPACE_DIALOG,
+  JOIN_DIALOG,
+  OBJECT_RENAME_POPOVER,
+  SPACE_RENAME_POPOVER,
+} from '../constants';
 import { useTypeOptions } from '../hooks';
 import { meta } from '../meta';
 import {
   HueAnnotationId,
   IconAnnotationId,
+  SpaceCapabilities,
   type SpaceSettingsProps,
   type TypeInputOptions,
   TypeInputOptionsAnnotationId,
 } from '../types';
-
-import { SpaceCapabilities } from './capabilities';
 
 type ReactSurfaceOptions = {
   createInvitationUrl: (invitationCode: string) => string;

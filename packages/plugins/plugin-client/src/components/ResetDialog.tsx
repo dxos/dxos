@@ -13,8 +13,6 @@ import { ConfirmReset, type ConfirmResetProps } from '@dxos/shell/react';
 import { meta } from '../meta';
 import { type ClientPluginOptions } from '../types';
 
-export const RESET_DIALOG = `${meta.id}/ResetDialog`;
-
 export type ResetDialogProps = Pick<ConfirmResetProps, 'mode'> & Pick<ClientPluginOptions, 'onReset'>;
 
 export const ResetDialog = ({ mode, onReset }: ResetDialogProps) => {

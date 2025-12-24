@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Capabilities, Events, contributes, createIntent, defineModule, definePlugin } from '@dxos/app-framework';
+import { Capabilities, Events, contributes, createIntent, defineModule, definePlugin, lazy } from '@dxos/app-framework';
 import { type Obj, Ref } from '@dxos/echo';
 import { createDocAccessor, getTextInRange } from '@dxos/echo-db';
 import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
@@ -11,20 +11,19 @@ import { translations as editorTranslations } from '@dxos/react-ui-editor';
 import { Text } from '@dxos/schema';
 
 import { MarkdownBlueprint } from './blueprints';
-import {
-  AnchorSort,
-  AppGraphSerializer,
-  BlueprintDefinition,
-  IntentResolver,
-  MarkdownSettings,
-  MarkdownState,
-  ReactSurface,
-} from './capabilities';
 import { MarkdownEvents } from './events';
 import { meta } from './meta';
 import { translations } from './translations';
 import { Markdown, MarkdownAction } from './types';
 import { serializer } from './util';
+
+const AnchorSort = lazy(() => import('./capabilities/anchor-sort'));
+const AppGraphSerializer = lazy(() => import('./capabilities/app-graph-serializer'));
+const BlueprintDefinition = lazy(() => import('./capabilities/blueprint-definition'));
+const IntentResolver = lazy(() => import('./capabilities/intent-resolver'));
+const ReactSurface = lazy(() => import('./capabilities/react-surface'));
+const MarkdownSettings = lazy(() => import('./capabilities/settings'));
+const MarkdownState = lazy(() => import('./capabilities/state'));
 
 export const MarkdownPlugin = definePlugin(meta, () => [
   defineModule({

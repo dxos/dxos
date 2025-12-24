@@ -13,36 +13,33 @@ import {
   createIntent,
   createResolver,
 } from '@dxos/app-framework';
+import { SpaceState, getSpace } from '@dxos/client/echo';
+import { Invitation, InvitationEncoder } from '@dxos/client/invitations';
 import { Database, Obj, Query, Ref, Relation, Type } from '@dxos/echo';
 import { EchoDatabaseImpl, Serializer } from '@dxos/echo-db';
 import { runAndForwardErrors } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { Migrations } from '@dxos/migrations';
-import { ClientCapabilities } from '@dxos/plugin-client';
+import { ClientCapabilities } from '@dxos/plugin-client/types';
 import { ObservabilityAction } from '@dxos/plugin-observability/types';
 import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
-import { SpaceState, getSpace } from '@dxos/react-client/echo';
-import { Invitation, InvitationEncoder } from '@dxos/react-client/invitations';
-import { ATTENDABLE_PATH_SEPARATOR } from '@dxos/react-ui-attention';
-import { iconValues } from '@dxos/react-ui-pickers';
+import { ATTENDABLE_PATH_SEPARATOR } from '@dxos/react-ui-attention/types';
+import { iconValues } from '@dxos/react-ui-pickers/icons';
 import { Collection, ProjectionModel, getTypenameFromQuery } from '@dxos/schema';
 import { hues } from '@dxos/ui-theme';
 
+import type { CreateObjectDialogProps, JoinDialogProps } from '../components';
 import {
   CREATE_OBJECT_DIALOG,
   CREATE_SPACE_DIALOG,
-  type CreateObjectDialogProps,
   JOIN_DIALOG,
-  type JoinDialogProps,
   OBJECT_RENAME_POPOVER,
   SPACE_RENAME_POPOVER,
-} from '../components';
+} from '../constants';
 import { SpaceEvents } from '../events';
 import { meta } from '../meta';
-import { CollectionAction, SpaceAction } from '../types';
+import { CollectionAction, SpaceAction, SpaceCapabilities } from '../types';
 import { COMPOSER_SPACE_LOCK, cloneObject, getNestedObjects } from '../util';
-
-import { SpaceCapabilities } from './capabilities';
 
 // TODO(wittjosiah): Remove.
 const SPACE_MAX_OBJECTS = 750;

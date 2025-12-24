@@ -9,7 +9,7 @@ import * as Layer from 'effect/Layer';
 import { invariant } from '@dxos/invariant';
 
 import { Capabilities, Events } from './common';
-import { type Plugin, PluginManager, type PluginManagerOptions } from './core';
+import { type Plugin, PluginManager, type PluginManagerOptions, PluginService } from './core';
 
 const defaultPluginLoader =
   (plugins: Plugin[]): PluginManagerOptions['pluginLoader'] =>
@@ -90,7 +90,7 @@ export const createCliApp = Effect.fn(function* ({
 
   // Gather all layers and merge them into a single layer.
   const layers = manager.context.getCapabilities(Capabilities.Layer);
-  const layer = layers.length > 0 ? Layer.mergeAll(...(layers as Layers)) : Layer.empty;
+  const layer = Layer.mergeAll(PluginService.fromManager(manager), ...layers);
 
   // Gather all commands and provide them to the root command.
   const pluginCommands = manager.context.getCapabilities(Capabilities.Command);

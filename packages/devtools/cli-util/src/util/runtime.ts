@@ -7,6 +7,7 @@ import type * as Schema from 'effect/Schema';
 
 import { ClientService } from '@dxos/client';
 
+/** @deprecated Migrate to providing types via plugin capabilities. */
 export const withTypes: (...types: Schema.Schema.AnyNoContext[]) => Effect.Effect<void, never, ClientService> = (
   ...types
 ) =>

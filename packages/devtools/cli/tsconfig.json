@@ -98,6 +98,9 @@
       "path": "../../plugins/plugin-markdown"
     },
     {
+      "path": "../../plugins/plugin-observability"
+    },
+    {
       "path": "../../plugins/plugin-script"
     },
     {

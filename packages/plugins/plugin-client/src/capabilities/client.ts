@@ -6,9 +6,7 @@ import { Capabilities, type PluginContext, contributes } from '@dxos/app-framewo
 import { Client, ClientService } from '@dxos/client';
 
 import { ClientEvents } from '../events';
-import { type ClientPluginOptions } from '../types';
-
-import { ClientCapabilities } from './capabilities';
+import { ClientCapabilities, type ClientPluginOptions } from '../types';
 
 type ClientCapabilityOptions = Omit<ClientPluginOptions, 'appKey' | 'invitationUrl' | 'invitationParam' | 'onReset'> & {
   context: PluginContext;

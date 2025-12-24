@@ -5,13 +5,14 @@
 import type * as Schema from 'effect/Schema';
 
 import { type AnyIntentChain, type Label, defineCapability } from '@dxos/app-framework';
+import { type Space } from '@dxos/client/echo';
 import { type Database } from '@dxos/echo';
-import { type Space } from '@dxos/react-client/echo';
 import { type Collection } from '@dxos/schema';
 import { type DeepReadonly, type Position } from '@dxos/util';
 
 import { meta } from '../meta';
-import { type PluginState } from '../types';
+
+import { type PluginState } from './types';
 
 export namespace SpaceCapabilities {
   export const State = defineCapability<DeepReadonly<PluginState>>(`${meta.id}/capability/state`);

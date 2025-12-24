@@ -21,6 +21,12 @@
       "source": "./src/blueprints/index.ts",
       "types": "./dist/types/src/blueprints/index.d.ts"
     },
+    "./cli": {
+      "source": "./src/cli/index.ts",
+      "types": "./dist/types/src/cli/index.d.ts",
+      "browser": "./dist/lib/browser/cli/index.mjs",
+      "node": "./dist/lib/node-esm/cli/index.mjs"
+    },
     "./types": {
       "browser": "./dist/lib/browser/types/index.mjs",
       "node": "./dist/lib/node-esm/types/index.mjs",

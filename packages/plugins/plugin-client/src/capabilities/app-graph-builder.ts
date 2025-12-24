@@ -12,9 +12,7 @@ import { ROOT_ID, atomFromObservable, createExtension } from '@dxos/plugin-graph
 import { ConnectionState } from '@dxos/react-client/mesh';
 
 import { meta } from '../meta';
-import { Account, ClientAction } from '../types';
-
-import { ClientCapabilities } from './capabilities';
+import { Account, ClientAction, ClientCapabilities } from '../types';
 
 export default (context: PluginContext) =>
   contributes(

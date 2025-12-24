@@ -8,11 +8,13 @@ import * as Console from 'effect/Console';
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
-import { CommandConfig } from '@dxos/cli-util';
+import { Capabilities, PluginService, createIntent } from '@dxos/app-framework';
+import { CommandConfig, flushAndSync, spaceLayer } from '@dxos/cli-util';
 import { print } from '@dxos/cli-util';
 import { ClientService } from '@dxos/client';
 import { invariant } from '@dxos/invariant';
 
+import { ClientAction } from '../../../..';
 import { printIdentity } from '../util';
 
 export const handler = Effect.fn(function* ({
@@ -27,16 +29,18 @@ export const handler = Effect.fn(function* ({
   // TODO(wittjosiah): How to surface this error to the user cleanly?
   invariant(!client.halo.identity.get(), 'Identity already exists');
 
-  const identity = yield* Effect.tryPromise(() =>
-    client.halo.createIdentity({ displayName: Option.getOrUndefined(displayName) }),
+  const manager = yield* PluginService;
+  const { dispatch } = manager.context.getCapability(Capabilities.IntentDispatcher);
+  const identity = yield* dispatch(
+    createIntent(ClientAction.CreateIdentity, { displayName: Option.getOrUndefined(displayName) }),
   );
 
   if (agent) {
-    yield* Effect.tryPromise(() => {
-      invariant(client.services.services.EdgeAgentService, 'Missing EdgeAgentService');
-      return client.services.services.EdgeAgentService.createAgent(null as any, { timeout: 10_000 });
-    });
+    yield* dispatch(createIntent(ClientAction.CreateAgent));
   }
+
+  const space = client.spaces.default;
+  yield* flushAndSync({ indexes: true }).pipe(Effect.provide(spaceLayer(Option.some(space.id))));
 
   if (json) {
     yield* Console.log(
