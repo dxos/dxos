@@ -4,14 +4,9 @@
 
 import * as Effect from 'effect/Effect';
 
-import { type PublicKey } from '@dxos/client';
 import { type Space, SpaceState, type SpaceSyncState } from '@dxos/client/echo';
-import { truncateKey } from '@dxos/debug';
 
 import * as FormBuilder from './form-builder';
-
-// TODO(wittjosiah): Factor out.
-const maybeTruncateKey = (key: PublicKey, truncate = false) => (truncate ? truncateKey(key) : key.toHex());
 
 // TODO(wittjosiah): Use @effect/printer.
 export const formatSpace = Effect.fn(function* (space: Space, options = { verbose: false, truncateKeys: false }) {
@@ -37,7 +32,7 @@ export const formatSpace = Effect.fn(function* (space: Space, options = { verbos
     members: space.members.get().length,
     objects: space.db.coreDatabase.getAllObjectIds().length,
 
-    key: maybeTruncateKey(space.key, options.truncateKeys),
+    key: options.truncateKeys ? space.key.truncate() : space.key.toHex(),
     epoch,
     startup,
     automergeRoot: space.internal.data.pipeline?.spaceRootUrl,
