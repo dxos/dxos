@@ -6,8 +6,7 @@ import { type EditorView } from '@codemirror/view';
 
 import { type NodeArg } from '@dxos/app-graph';
 import { type ToolbarMenuActionGroupProperties } from '@dxos/react-ui-menu';
-
-import { addBlockquote, addCodeblock, insertTable, removeBlockquote, removeCodeblock } from '../../extensions';
+import { addBlockquote, addCodeblock, insertTable, removeBlockquote, removeCodeblock } from '@dxos/ui-editor';
 
 import { createEditorAction, createEditorActionGroup } from './actions';
 import { type EditorToolbarState } from './useEditorToolbar';

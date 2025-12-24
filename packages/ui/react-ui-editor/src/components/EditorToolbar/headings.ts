@@ -6,8 +6,8 @@ import { type EditorView } from '@codemirror/view';
 
 import { type NodeArg } from '@dxos/app-graph';
 import { type ToolbarMenuActionGroupProperties } from '@dxos/react-ui-menu';
+import { setHeading } from '@dxos/ui-editor';
 
-import { setHeading } from '../../extensions';
 import { translationKey } from '../../translations';
 
 import { createEditorAction, createEditorActionGroup } from './actions';

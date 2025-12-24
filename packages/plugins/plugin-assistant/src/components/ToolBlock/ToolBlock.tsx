@@ -7,9 +7,9 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
 import { useTranslation } from '@dxos/react-ui';
 import { NumericTabs, TextCrawl, ToggleContainer, type ToggleContainerRootProps } from '@dxos/react-ui-components';
-import { type XmlWidgetProps } from '@dxos/react-ui-editor';
 import { Json } from '@dxos/react-ui-syntax-highlighter';
 import { type ContentBlock, type Message } from '@dxos/types';
+import { type XmlWidgetProps } from '@dxos/ui-editor';
 import { isNonNullable, safeParseJson } from '@dxos/util';
 
 import { meta } from '../../meta';

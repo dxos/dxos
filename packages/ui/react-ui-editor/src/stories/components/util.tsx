@@ -8,8 +8,6 @@ import React, { type FC } from 'react';
 
 import { faker } from '@dxos/random';
 import { Icon } from '@dxos/react-ui';
-import { mx } from '@dxos/ui-theme';
-
 import {
   type EditorSelectionState,
   decorateMarkdown,
@@ -18,7 +16,9 @@ import {
   image,
   linkTooltip,
   table,
-} from '../../extensions';
+} from '@dxos/ui-editor';
+import { mx } from '@dxos/ui-theme';
+
 import { createRenderer, str } from '../../util';
 
 export const num = () => faker.number.int({ min: 0, max: 9999 }).toLocaleString();

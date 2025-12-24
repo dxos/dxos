@@ -12,7 +12,7 @@ import { PublicKey } from '@dxos/keys';
 import { faker } from '@dxos/random';
 import { Toolbar } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
-import { type XmlWidgetRegistry } from '@dxos/react-ui-editor';
+import { type XmlWidgetRegistry } from '@dxos/ui-editor';
 import { mx } from '@dxos/ui-theme';
 import { keyToFallback } from '@dxos/util';
 

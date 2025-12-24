@@ -14,17 +14,17 @@ import { continueKeymap } from '@valtown/codemirror-continue';
 import { type HoverInfo, tsAutocomplete, tsFacet, tsHover, tsLinter, tsSync } from '@valtown/codemirror-ts';
 import React from 'react';
 
-import { Domino, type ThemeMode, type ThemedClassName, useThemeContext } from '@dxos/react-ui';
+import { type ThemeMode, type ThemedClassName, useThemeContext } from '@dxos/react-ui';
+import { type UseTextEditorProps, useTextEditor } from '@dxos/react-ui-editor';
+import { Domino } from '@dxos/ui';
 import {
   type BasicExtensionsOptions,
   type EditorInputMode,
   InputModeExtensions,
-  type UseTextEditorProps,
   createBasicExtensions,
   createThemeExtensions,
   defaultStyles,
-  useTextEditor,
-} from '@dxos/react-ui-editor';
+} from '@dxos/ui-editor';
 import { mx } from '@dxos/ui-theme';
 import { isNonNullable } from '@dxos/util';
 
@@ -121,15 +121,14 @@ const createTooltipRenderer = (themeMode: ThemeMode) => {
   };
 
   return (info: HoverInfo) => {
+    const children =
+      info.quickInfo?.displayParts?.map(({ kind, text }) =>
+        Domino.of('span').classNames(classFromKind(kind)).text(text),
+      ) ?? [];
     return {
       dom: Domino.of('div')
         .classNames('xs:max-is-80 max-is-lg p-1 bg-baseSurface rounded border border-separator')
-        .children(
-          ...(info.quickInfo?.displayParts?.map(({ kind, text }) =>
-            Domino.of('span').classNames(classFromKind(kind)).text(text),
-          ) ?? []),
-        )
-        .build(),
+        .children(...children).root,
     };
   };
 };

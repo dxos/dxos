@@ -86,6 +86,7 @@ export const MarkdownContainer = forwardRef<HTMLDivElement, MarkdownContainerPro
           id={attendableId ?? id}
           object={object}
           extensions={extensions}
+          settings={settings}
           onFileUpload={handleFileUpload}
           onLinkQuery={handleLinkQuery}
           {...props}

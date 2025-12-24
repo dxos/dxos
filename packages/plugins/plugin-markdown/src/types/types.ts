@@ -2,8 +2,9 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type Extension } from '@dxos/react-ui-editor';
-import { type EditorViewMode } from '@dxos/react-ui-editor/types';
+import { type Extension } from '@codemirror/state';
+
+import { type EditorViewMode } from '@dxos/ui-editor/types';
 
 import { type Document } from './Markdown';
 

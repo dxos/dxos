@@ -16,6 +16,7 @@ import { getSpace } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 import { Icon, ThemeProvider } from '@dxos/react-ui';
 import { type SelectionManager } from '@dxos/react-ui-attention';
+import { Text } from '@dxos/schema';
 import {
   Cursor,
   type EditorStateStore,
@@ -36,8 +37,7 @@ import {
   replacer,
   selectionState,
   typewriter,
-} from '@dxos/react-ui-editor';
-import { Text } from '@dxos/schema';
+} from '@dxos/ui-editor';
 import { defaultTx } from '@dxos/ui-theme';
 import { isTruthy } from '@dxos/util';
 

@@ -8,16 +8,16 @@ import React, { type PropsWithChildren, useMemo } from 'react';
 
 import { type DXN } from '@dxos/echo';
 import { Icon, type ThemedClassName, useThemeContext } from '@dxos/react-ui';
+import { useTextEditor } from '@dxos/react-ui-editor';
+import { MenuProvider, ToolbarMenu } from '@dxos/react-ui-menu';
+import { type Actor, type Message as MessageType } from '@dxos/types';
 import {
   createBasicExtensions,
   createMarkdownExtensions,
   createThemeExtensions,
   decorateMarkdown,
   preview,
-  useTextEditor,
-} from '@dxos/react-ui-editor';
-import { MenuProvider, ToolbarMenu } from '@dxos/react-ui-menu';
-import { type Actor, type Message as MessageType } from '@dxos/types';
+} from '@dxos/ui-editor';
 import { mx } from '@dxos/ui-theme';
 
 import { formatDateTime } from '../../util';

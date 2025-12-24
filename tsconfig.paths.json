@@ -339,7 +339,7 @@
       "@dxos/react-ui-editor/testing": [
         "packages/ui/react-ui-editor/src/testing/index.ts"
       ],
-      "@dxos/react-ui-editor/types": [
+      "@dxos/ui-editor/types": [
         "packages/ui/react-ui-editor/src/types/index.ts"
       ],
       "@dxos/react-ui-form": [
@@ -406,7 +406,7 @@
         "packages/ui/react-ui-thread/src/index.ts"
       ],
       "@dxos/ui-types": [
-        "packages/ui/react-ui-types/src/index.ts"
+        "packages/ui/ui-types/src/index.ts"
       ]
     }
   },

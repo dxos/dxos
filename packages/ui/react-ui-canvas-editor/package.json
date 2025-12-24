@@ -53,6 +53,7 @@
     "@dxos/react-ui-canvas": "workspace:*",
     "@dxos/react-ui-editor": "workspace:*",
     "@dxos/react-ui-syntax-highlighter": "workspace:*",
+    "@dxos/ui-editor": "workspace:*",
     "@dxos/util": "workspace:*",
     "@preact-signals/safe-react": "catalog:",
     "@preact/signals-core": "catalog:",

@@ -3,7 +3,7 @@
 //
 
 import { defineCapability } from '@dxos/app-framework';
-import { type EditorStateStore, type EditorViewMode } from '@dxos/react-ui-editor';
+import { type EditorStateStore, type EditorViewMode } from '@dxos/ui-editor';
 
 import { meta } from '../meta';
 import { type MarkdownExtensionProvider, type MarkdownPluginState } from '../types';

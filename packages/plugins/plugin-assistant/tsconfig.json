@@ -178,6 +178,12 @@
       "path": "../../ui/react-ui-tabs"
     },
     {
+      "path": "../../ui/ui"
+    },
+    {
+      "path": "../../ui/ui-editor"
+    },
+    {
       "path": "../../ui/ui-theme"
     },
     {

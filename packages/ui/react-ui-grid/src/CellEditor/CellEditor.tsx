@@ -8,14 +8,13 @@ import { EditorView, keymap } from '@codemirror/view';
 import React, { type KeyboardEvent } from 'react';
 
 import { useThemeContext } from '@dxos/react-ui';
+import { type UseTextEditorProps, useTextEditor } from '@dxos/react-ui-editor';
 import {
   type ThemeExtensionsOptions,
-  type UseTextEditorProps,
   createBasicExtensions,
   createThemeExtensions,
   filterChars,
-  useTextEditor,
-} from '@dxos/react-ui-editor';
+} from '@dxos/ui-editor';
 import { mx } from '@dxos/ui-theme';
 
 import { type GridEditBox } from '../Grid';
@@ -123,7 +122,7 @@ export type CellEditorProps = {
 } & Pick<UseTextEditorProps, 'autoFocus'> &
   Pick<ThemeExtensionsOptions, 'slots'>;
 
-export const CellEditor = ({ value, extensions, box, gridId, onBlur, autoFocus, slots }: CellEditorProps) => {
+export const CellEditor = ({ value, extensions, box, gridId, autoFocus, slots, onBlur }: CellEditorProps) => {
   const { themeMode } = useThemeContext();
   const { parentRef } = useTextEditor(() => {
     return {

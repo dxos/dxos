@@ -24,6 +24,9 @@
     "dist",
     "src"
   ],
+  "dependencies": {
+    "i18next": "catalog:"
+  },
   "publishConfig": {
     "access": "public"
   }

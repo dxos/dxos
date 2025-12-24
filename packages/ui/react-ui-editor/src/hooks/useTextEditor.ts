@@ -17,10 +17,14 @@ import {
 } from 'react';
 
 import { log } from '@dxos/log';
+import {
+  type EditorSelection,
+  createEditorStateTransaction,
+  debugDispatcher,
+  documentId,
+  modalStateField,
+} from '@dxos/ui-editor';
 import { type MaybeProvider, getProviderValue, isTruthy } from '@dxos/util';
-
-import { type EditorSelection, createEditorStateTransaction, documentId, modalStateField } from '../extensions';
-import { debugDispatcher } from '../util';
 
 let instanceCount = 0;
 

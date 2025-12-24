@@ -23,7 +23,7 @@ import {
   createSheetName,
 } from '@dxos/compute';
 import { invariant } from '@dxos/invariant';
-import { documentId, singleValueFacet } from '@dxos/react-ui-editor';
+import { documentId, singleValueFacet } from '@dxos/ui-editor';
 
 const LANGUAGE_TAG = 'dx';
 

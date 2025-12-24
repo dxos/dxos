@@ -33,6 +33,9 @@
       "path": "../react-ui-searchlist"
     },
     {
+      "path": "../ui-editor"
+    },
+    {
       "path": "../ui-theme"
     }
   ]

@@ -8,8 +8,6 @@ import { createPortal } from 'react-dom';
 
 import { useThemeContext } from '@dxos/react-ui';
 import { withTheme } from '@dxos/react-ui/testing';
-import { trim } from '@dxos/util';
-
 import {
   type XmlWidgetRegistry,
   type XmlWidgetState,
@@ -18,7 +16,9 @@ import {
   decorateMarkdown,
   extendedMarkdown,
   xmlTags,
-} from '../extensions';
+} from '@dxos/ui-editor';
+import { trim } from '@dxos/util';
+
 import { useTextEditor } from '../hooks';
 
 const registry = {

@@ -1,0 +1,121 @@
+{
+  "name": "@dxos/ui-editor",
+  "version": "0.8.3",
+  "description": "Text editor components.",
+  "homepage": "https://dxos.org",
+  "bugs": "https://github.com/dxos/dxos/issues",
+  "license": "MIT",
+  "author": "DXOS.org",
+  "sideEffects": true,
+  "type": "module",
+  "exports": {
+    ".": {
+      "source": "./src/index.ts",
+      "types": "./dist/types/src/index.d.ts",
+      "browser": "./dist/lib/browser/index.mjs",
+      "node": "./dist/lib/node-esm/index.mjs"
+    },
+    "./types": {
+      "source": "./src/types/index.ts",
+      "types": "./dist/types/src/types/index.d.ts",
+      "browser": "./dist/lib/browser/types/index.mjs",
+      "node": "./dist/lib/node-esm/types/index.mjs"
+    }
+  },
+  "types": "dist/types/src/index.d.ts",
+  "typesVersions": {
+    "*": {}
+  },
+  "files": [
+    "dist",
+    "src"
+  ],
+  "scripts": {
+    "vitest-ui": "vitest --ui"
+  },
+  "dependencies": {
+    "@automerge/automerge": "catalog:",
+    "@codemirror/autocomplete": "catalog:",
+    "@codemirror/commands": "catalog:",
+    "@codemirror/lang-html": "catalog:",
+    "@codemirror/lang-javascript": "catalog:",
+    "@codemirror/lang-json": "catalog:",
+    "@codemirror/lang-markdown": "catalog:",
+    "@codemirror/lang-xml": "catalog:",
+    "@codemirror/lang-yaml": "catalog:",
+    "@codemirror/language": "catalog:",
+    "@codemirror/language-data": "catalog:",
+    "@codemirror/lint": "catalog:",
+    "@codemirror/search": "catalog:",
+    "@codemirror/state": "catalog:",
+    "@codemirror/theme-one-dark": "catalog:",
+    "@codemirror/view": "catalog:",
+    "@dxos/app-graph": "workspace:*",
+    "@dxos/async": "workspace:*",
+    "@dxos/client": "workspace:*",
+    "@dxos/context": "workspace:*",
+    "@dxos/debug": "workspace:*",
+    "@dxos/display-name": "workspace:*",
+    "@dxos/echo": "workspace:*",
+    "@dxos/echo-db": "workspace:*",
+    "@dxos/invariant": "workspace:*",
+    "@dxos/lit-ui": "workspace:*",
+    "@dxos/live-object": "workspace:*",
+    "@dxos/log": "workspace:*",
+    "@dxos/protocols": "workspace:*",
+    "@dxos/ui": "workspace:*",
+    "@dxos/ui-theme": "workspace:*",
+    "@dxos/ui-types": "workspace:*",
+    "@dxos/util": "workspace:*",
+    "@lezer/common": "catalog:",
+    "@lezer/generator": "catalog:",
+    "@lezer/highlight": "catalog:",
+    "@lezer/markdown": "catalog:",
+    "@replit/codemirror-vim": "catalog:",
+    "@replit/codemirror-vscode-keymap": "catalog:",
+    "@uiw/codemirror-theme-vscode": "catalog:",
+    "ajv": "catalog:",
+    "codemirror": "catalog:",
+    "lib0": "catalog:",
+    "lodash.defaultsdeep": "catalog:",
+    "lodash.merge": "catalog:",
+    "lodash.sortby": "catalog:",
+    "style-mod": "catalog:"
+  },
+  "devDependencies": {
+    "@automerge/automerge": "catalog:",
+    "@automerge/automerge-repo": "catalog:",
+    "@automerge/automerge-repo-network-broadcastchannel": "catalog:",
+    "@dxos/config": "workspace:*",
+    "@dxos/echo": "workspace:*",
+    "@dxos/echo-signals": "workspace:*",
+    "@dxos/keyboard": "workspace:*",
+    "@dxos/random": "workspace:*",
+    "@dxos/schema": "workspace:*",
+    "@dxos/storybook-utils": "workspace:*",
+    "@dxos/ui-theme": "workspace:*",
+    "@effect/platform": "catalog:",
+    "@types/chai": "catalog:",
+    "@types/chai-dom": "catalog:",
+    "@types/lodash.defaultsdeep": "catalog:",
+    "@types/lodash.merge": "catalog:",
+    "@types/lodash.sortby": "catalog:",
+    "chai": "catalog:",
+    "chai-dom": "catalog:",
+    "effect": "catalog:",
+    "happy-dom": "catalog:",
+    "jsdom": "catalog:",
+    "mocha": "catalog:",
+    "vite": "catalog:",
+    "vite-plugin-top-level-await": "catalog:",
+    "vite-plugin-wasm": "catalog:"
+  },
+  "peerDependencies": {
+    "@dxos/ui-theme": "workspace:*",
+    "@effect/platform": "catalog:",
+    "effect": "catalog:"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}
