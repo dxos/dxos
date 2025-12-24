@@ -7,9 +7,9 @@ import { EditorView } from '@codemirror/view';
 import React, { forwardRef, useEffect, useImperativeHandle } from 'react';
 
 import { type ThemedClassName } from '@dxos/react-ui';
+import { initialSync } from '@dxos/ui-editor';
 import { mx } from '@dxos/ui-theme';
 
-import { initialSync } from '../../extensions';
 import { type UseTextEditorProps, useTextEditor } from '../../hooks';
 
 import { type EditorController, createEditorController } from './controller';

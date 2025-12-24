@@ -475,6 +475,7 @@ catalog:
   jsonpath: ^1.1.1
   jsonpath-plus: 10.2.0
   jsonpointer: ^5.0.1
+  jsx-dom: ^8.1.6
   jszip: ^3.10.1
   jwt-decode: ^4.0.0
   keyborg: ^2.5.0

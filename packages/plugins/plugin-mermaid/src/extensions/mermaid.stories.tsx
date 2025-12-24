@@ -7,13 +7,13 @@ import React from 'react';
 
 import { useThemeContext } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
+import { useTextEditor } from '@dxos/react-ui-editor';
 import {
   createBasicExtensions,
   createMarkdownExtensions,
   createThemeExtensions,
   decorateMarkdown,
-  useTextEditor,
-} from '@dxos/react-ui-editor';
+} from '@dxos/ui-editor';
 
 import { mermaid } from './mermaid-extension';
 

@@ -8,7 +8,8 @@ import React, { useCallback, useState } from 'react';
 import { type FileInfo } from '@dxos/app-framework';
 import { invariant } from '@dxos/invariant';
 import { type ThemedClassName } from '@dxos/react-ui';
-import { EditorToolbar, type EditorToolbarProps, type EditorViewMode } from '@dxos/react-ui-editor';
+import { EditorToolbar, type EditorToolbarProps } from '@dxos/react-ui-editor';
+import { type EditorViewMode } from '@dxos/ui-editor';
 
 import { FileUpload, type FileUploadAction } from './FileUpload';
 

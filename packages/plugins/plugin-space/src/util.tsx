@@ -8,6 +8,7 @@ import * as Function from 'effect/Function';
 import type * as Schema from 'effect/Schema';
 
 import { LayoutAction, type PromiseIntentDispatcher, chain, createIntent } from '@dxos/app-framework';
+import { type Space, SpaceState, isSpace } from '@dxos/client/echo';
 import { type Database, type Entity, Filter, Obj, Query, type QueryResult, Ref, Type } from '@dxos/echo';
 import { EXPANDO_TYPENAME } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
@@ -22,8 +23,7 @@ import {
   type ReadableGraph,
   isGraphNode,
 } from '@dxos/plugin-graph';
-import { type Space, SpaceState, isSpace } from '@dxos/react-client/echo';
-import { ATTENDABLE_PATH_SEPARATOR } from '@dxos/react-ui-attention';
+import { ATTENDABLE_PATH_SEPARATOR } from '@dxos/react-ui-attention/types';
 import { type TreeData } from '@dxos/react-ui-list';
 import { Collection } from '@dxos/schema';
 import { createFilename } from '@dxos/util';

@@ -11,7 +11,8 @@
     ".": {
       "source": "./src/index.ts",
       "types": "./dist/types/src/index.d.ts",
-      "browser": "./dist/lib/browser/index.mjs"
+      "browser": "./dist/lib/browser/index.mjs",
+      "node": "./dist/lib/node-esm/index.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
@@ -42,6 +43,8 @@
     "@dxos/react-ui-stack": "workspace:*",
     "@dxos/react-ui-syntax-highlighter": "workspace:*",
     "@dxos/types": "workspace:*",
+    "@dxos/ui": "workspace:*",
+    "@dxos/ui-editor": "workspace:*",
     "@dxos/util": "workspace:*",
     "@effect/ai": "catalog:",
     "@effect/experimental": "catalog:",

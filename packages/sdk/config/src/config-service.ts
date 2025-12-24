@@ -63,9 +63,10 @@ export const defaultConfig = new Config({
   },
 });
 
-// TODO(wittjosiah): Factor out -- this should go to the CLI.
 export class ConfigService extends Context.Tag('ConfigService')<ConfigService, Config>() {
   static layerMemory = Layer.effect(ConfigService, Effect.succeed(memoryConfig));
+
+  static fromConfig = (config: Config) => Layer.succeed(ConfigService, config);
 
   static load = (args: { config: Option.Option<string>; profile: string }) => {
     const defaultConfigPath = `${getProfilePath(DX_CONFIG, args.profile)}.yml`;

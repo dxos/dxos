@@ -21,6 +21,9 @@
       "path": "../../common/async"
     },
     {
+      "path": "../../common/effect"
+    },
+    {
       "path": "../../common/invariant"
     },
     {
@@ -45,7 +48,22 @@
       "path": "../../core/echo/live-object"
     },
     {
+      "path": "../../core/protocols"
+    },
+    {
+      "path": "../../devtools/cli-util"
+    },
+    {
       "path": "../../sdk/app-framework"
+    },
+    {
+      "path": "../../sdk/client"
+    },
+    {
+      "path": "../../sdk/client-protocol"
+    },
+    {
+      "path": "../../sdk/client-services"
     },
     {
       "path": "../../sdk/config"

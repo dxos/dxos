@@ -14,8 +14,6 @@ import { JoinPanel, type JoinPanelProps } from '@dxos/shell/react';
 import { meta } from '../meta';
 import { ClientAction } from '../types';
 
-export const JOIN_DIALOG = `${meta.id}/JoinDialog`;
-
 export const JoinDialog = (props: JoinPanelProps) => {
   const { dispatchPromise: dispatch } = useIntentDispatcher();
   const { t } = useTranslation(meta.id);

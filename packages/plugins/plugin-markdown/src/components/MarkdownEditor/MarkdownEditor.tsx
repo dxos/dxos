@@ -15,12 +15,11 @@ import { useClient } from '@dxos/react-client';
 import {
   EditorMenuProvider,
   type EditorToolbarState,
-  type PreviewBlock,
-  type PreviewOptions,
   type UseEditorMenu,
   useEditorMenu,
   useEditorToolbar,
 } from '@dxos/react-ui-editor';
+import { type PreviewBlock, type PreviewOptions } from '@dxos/ui-editor';
 import { isNonNullable } from '@dxos/util';
 
 import {

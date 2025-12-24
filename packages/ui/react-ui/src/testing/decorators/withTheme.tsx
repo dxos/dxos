@@ -6,8 +6,9 @@ import { type Decorator } from '@storybook/react';
 import React, { memo } from 'react';
 
 import { defaultTx } from '@dxos/ui-theme';
+import { type ThemeMode } from '@dxos/ui-types';
 
-import { type ThemeMode, ThemeProvider, Tooltip } from '../../components';
+import { ThemeProvider, Tooltip } from '../../components';
 
 /**
  * Adds theme decorator (add to preview.ts)

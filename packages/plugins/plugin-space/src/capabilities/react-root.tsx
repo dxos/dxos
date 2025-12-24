@@ -9,8 +9,7 @@ import { useCapability } from '@dxos/app-framework/react';
 
 import { AwaitingObject } from '../components';
 import { meta } from '../meta';
-
-import { SpaceCapabilities } from './capabilities';
+import { SpaceCapabilities } from '../types';
 
 export default defineCapabilityModule(() =>
   contributes(Capabilities.ReactRoot, {

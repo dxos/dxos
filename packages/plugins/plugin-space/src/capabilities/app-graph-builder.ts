@@ -26,7 +26,7 @@ import { isNonNullable } from '@dxos/util';
 
 import { getActiveSpace } from '../hooks';
 import { meta } from '../meta';
-import { SPACE_TYPE, SpaceAction, type SpaceSettingsProps } from '../types';
+import { SPACE_TYPE, SpaceAction, SpaceCapabilities, type SpaceSettingsProps } from '../types';
 import {
   SHARED,
   SPACES,
@@ -38,8 +38,6 @@ import {
   createStaticSchemaActions,
   createStaticSchemaNode,
 } from '../util';
-
-import { SpaceCapabilities } from './capabilities';
 
 export default defineCapabilityModule((context: PluginContext) => {
   // TODO(wittjosiah): Using `get` and being reactive seems to cause a bug with Atom where disposed atoms are accessed.

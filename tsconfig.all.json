@@ -247,6 +247,9 @@
       "path": "packages/devtools/cli/tsconfig.json"
     },
     {
+      "path": "packages/devtools/cli-util/tsconfig.json"
+    },
+    {
       "path": "packages/devtools/devtools/tsconfig.json"
     },
     {
@@ -578,6 +581,9 @@
     },
     {
       "path": "packages/ui/solid-ui-geo/tsconfig.json"
+    },
+    {
+      "path": "packages/ui/ui-editor/tsconfig.json"
     },
     {
       "path": "packages/ui/ui-theme/tsconfig.json"

@@ -5,6 +5,8 @@
 import React from 'react';
 
 import { type ThemedClassName, useThemeContext } from '@dxos/react-ui';
+import { useTextEditor } from '@dxos/react-ui-editor';
+import { type Message, type Transcript } from '@dxos/types';
 import {
   autoScroll,
   createBasicExtensions,
@@ -13,9 +15,7 @@ import {
   decorateMarkdown,
   editorSlots,
   preview,
-  useTextEditor,
-} from '@dxos/react-ui-editor';
-import { type Message, type Transcript } from '@dxos/types';
+} from '@dxos/ui-editor';
 import { mx } from '@dxos/ui-theme';
 import { isTruthy } from '@dxos/util';
 

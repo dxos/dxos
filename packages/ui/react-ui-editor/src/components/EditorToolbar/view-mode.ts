@@ -4,9 +4,9 @@
 
 import { type NodeArg } from '@dxos/app-graph';
 import { type ToolbarMenuActionGroupProperties } from '@dxos/react-ui-menu';
+import { type EditorViewMode } from '@dxos/ui-editor';
 
 import { translationKey } from '../../translations';
-import { type EditorViewMode } from '../../types';
 
 import { createEditorAction, createEditorActionGroup } from './actions';
 import { type EditorToolbarState } from './useEditorToolbar';

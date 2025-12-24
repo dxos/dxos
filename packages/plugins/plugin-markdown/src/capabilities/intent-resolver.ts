@@ -17,9 +17,7 @@ import {
 import { Obj } from '@dxos/echo';
 import { createDocAccessor, getRangeFromCursor } from '@dxos/echo-db';
 
-import { Markdown, MarkdownAction } from '../types';
-
-import { MarkdownCapabilities } from './capabilities';
+import { Markdown, MarkdownAction, MarkdownCapabilities } from '../types';
 
 export default defineCapabilityModule((context: PluginContext) =>
   contributes(Capabilities.IntentResolver, [

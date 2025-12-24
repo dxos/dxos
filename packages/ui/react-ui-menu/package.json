@@ -29,6 +29,7 @@
     "@dxos/invariant": "workspace:*",
     "@dxos/keyboard": "workspace:*",
     "@dxos/react-ui-attention": "workspace:*",
+    "@dxos/ui-types": "workspace:*",
     "@dxos/util": "workspace:*",
     "@preact-signals/safe-react": "catalog:",
     "@preact/signals-react": "catalog:",

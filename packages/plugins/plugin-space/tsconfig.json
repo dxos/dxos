@@ -78,6 +78,9 @@
       "path": "../../core/protocols"
     },
     {
+      "path": "../../devtools/cli-util"
+    },
+    {
       "path": "../../sdk/app-framework"
     },
     {

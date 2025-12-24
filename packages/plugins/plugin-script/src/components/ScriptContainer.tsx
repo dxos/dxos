@@ -8,8 +8,8 @@ import { createDocAccessor } from '@dxos/echo-db';
 import { type Script } from '@dxos/functions';
 import { getSpace } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
-import { createDataExtensions, listener, stackItemContentEditorClassNames } from '@dxos/react-ui-editor';
 import { StackItem } from '@dxos/react-ui-stack';
+import { createDataExtensions, listener, stackItemContentEditorClassNames } from '@dxos/ui-editor';
 
 import { useDeployState, useToolbarState } from '../hooks';
 import { type ScriptSettings } from '../types';

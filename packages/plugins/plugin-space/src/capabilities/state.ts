@@ -10,9 +10,7 @@ import { LocalStorageStore } from '@dxos/local-storage';
 import { ComplexMap } from '@dxos/util';
 
 import { meta } from '../meta';
-import { type PluginState } from '../types';
-
-import { SpaceCapabilities } from './capabilities';
+import { type PluginState, SpaceCapabilities } from '../types';
 
 export default defineCapabilityModule((context: PluginContext) => {
   const state = new LocalStorageStore<PluginState>(meta.id, {

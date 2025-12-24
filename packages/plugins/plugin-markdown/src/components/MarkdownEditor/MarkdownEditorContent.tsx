@@ -9,12 +9,15 @@ import { type Live } from '@dxos/live-object';
 import { type ThemedClassName, useDynamicRef, useThemeContext, useTranslation } from '@dxos/react-ui';
 import {
   type EditorMenuGroup,
+  type EditorToolbarState,
+  type UseTextEditorProps,
+  useTextEditor,
+} from '@dxos/react-ui-editor';
+import {
   type EditorSelectionState,
   type EditorStateStore,
-  type EditorToolbarState,
   type EditorViewMode,
   type ThemeExtensionsOptions,
-  type UseTextEditorProps,
   createBasicExtensions,
   createMarkdownExtensions,
   createThemeExtensions,
@@ -23,8 +26,7 @@ import {
   formattingListener,
   processEditorPayload,
   stackItemContentEditorClassNames,
-  useTextEditor,
-} from '@dxos/react-ui-editor';
+} from '@dxos/ui-editor';
 import { mx } from '@dxos/ui-theme';
 import { isTruthy } from '@dxos/util';
 

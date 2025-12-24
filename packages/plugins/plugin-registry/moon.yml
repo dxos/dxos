@@ -9,7 +9,7 @@ tasks:
   compile:
     args:
       - '--entryPoint=src/index.ts'
-      - '--platform=browser'
+      - '--entryPoint=src/cli/index.ts'
       - '--preactSignalTracking'
   test:
     inputs:

@@ -5,11 +5,11 @@
 import * as Schema from 'effect/Schema';
 
 import { type AnyIntentChain } from '@dxos/app-framework';
-import { Database, type Obj, QueryAST, Type } from '@dxos/echo';
-import { type PublicKey } from '@dxos/react-client';
+import { type PublicKey } from '@dxos/client';
 // TODO(wittjosiah): This pulls in full client.
-import { EchoObjectSchema, ReactiveObjectSchema, SpaceSchema } from '@dxos/react-client/echo';
-import { CancellableInvitationObservable, Invitation } from '@dxos/react-client/invitations';
+import { EchoObjectSchema, ReactiveObjectSchema, SpaceSchema } from '@dxos/client/echo';
+import { CancellableInvitationObservable, Invitation } from '@dxos/client/invitations';
+import { Database, type Obj, QueryAST, Type } from '@dxos/echo';
 import { Collection, FieldSchema, View } from '@dxos/schema';
 import { type ComplexMap } from '@dxos/util';
 
@@ -20,6 +20,23 @@ import { TypeInputOptionsAnnotation } from './form';
 export const SPACE_DIRECTORY_HANDLE = `${meta.id}/directory`;
 
 export const SPACE_TYPE = 'dxos.org/type/Space';
+
+export type SpacePluginOptions = {
+  /**
+   * Base URL for the invitation link.
+   */
+  invitationUrl?: string;
+
+  /**
+   * Query parameter for the invitation code.
+   */
+  invitationParam?: string;
+
+  /**
+   * Whether to send observability events.
+   */
+  observability?: boolean;
+};
 
 export type ObjectViewerProps = {
   lastSeen: number;

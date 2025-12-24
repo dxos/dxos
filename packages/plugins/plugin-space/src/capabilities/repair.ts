@@ -7,7 +7,7 @@ import { Obj, Ref, Type } from '@dxos/echo';
 import { type Space } from '@dxos/react-client/echo';
 import { Collection } from '@dxos/schema';
 
-import { SpaceCapabilities } from './capabilities';
+import { SpaceCapabilities } from '../types';
 
 export default defineCapabilityModule(() =>
   contributes(SpaceCapabilities.Repair, async ({ space }) => {

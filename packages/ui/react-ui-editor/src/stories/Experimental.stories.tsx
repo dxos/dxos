@@ -9,9 +9,7 @@ import React from 'react';
 import { log } from '@dxos/log';
 import { faker } from '@dxos/random';
 import { withTheme } from '@dxos/react-ui/testing';
-
-import { blast, defaultOptions, dropFile, typewriter } from '../extensions';
-import { str } from '../util';
+import { blast, defaultOptions, dropFile, join, typewriter } from '@dxos/ui-editor';
 
 import { EditorStory, content } from './components';
 
@@ -37,7 +35,7 @@ const typewriterItems = localStorage.getItem('dxos.org/testing/typewriter')?.spl
 export const Typewriter: Story = {
   render: () => (
     <EditorStory
-      text={str('# Typewriter', '', content.paragraphs, content.footer)}
+      text={join('# Typewriter', '', content.paragraphs, content.footer)}
       extensions={[typewriter({ items: typewriterItems })]}
     />
   ),
@@ -50,7 +48,7 @@ export const Typewriter: Story = {
 export const Blast: Story = {
   render: () => (
     <EditorStory
-      text={str('# Blast', '', content.paragraphs, content.codeblocks, content.paragraphs)}
+      text={join('# Blast', '', content.paragraphs, content.codeblocks, content.paragraphs)}
       extensions={[
         typewriter({ items: typewriterItems }),
         blast(
@@ -77,7 +75,7 @@ export const Blast: Story = {
 export const DND: Story = {
   render: () => (
     <EditorStory
-      text={str('# DND', '')}
+      text={join('# DND', '')}
       extensions={[
         dropFile({
           onDrop: (view, event) => {

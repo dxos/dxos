@@ -67,6 +67,9 @@
       "path": "../../ui/react-ui-stack"
     },
     {
+      "path": "../../ui/ui-editor"
+    },
+    {
       "path": "../../ui/ui-theme"
     },
     {

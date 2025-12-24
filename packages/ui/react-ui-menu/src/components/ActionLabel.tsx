@@ -8,9 +8,9 @@ import { type ActionGroup, type Action as GraphAction } from '@dxos/app-graph';
 import { keySymbols } from '@dxos/keyboard';
 import { type TFunction, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { descriptionText, mx } from '@dxos/ui-theme';
+import { type MenuActionProperties } from '@dxos/ui-types';
 
 import { translationKey } from '../translations';
-import { type MenuActionProperties } from '../types';
 import { getShortcut } from '../util';
 
 type Action = GraphAction<MenuActionProperties> | ActionGroup<Omit<MenuActionProperties, 'variant'>>;

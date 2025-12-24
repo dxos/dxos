@@ -8,8 +8,6 @@ import { AlertDialog, Button, Clipboard, Input, useTranslation } from '@dxos/rea
 
 import { meta } from '../meta';
 
-export const RECOVERY_CODE_DIALOG = `${meta.id}/RecoveryCodeDialog`;
-
 export type RecoveryCodeDialogProps = {
   code: string;
 };

@@ -63,6 +63,9 @@
       "path": "../react-ui-text-tooltip"
     },
     {
+      "path": "../ui-editor"
+    },
+    {
       "path": "../ui-theme"
     },
     {

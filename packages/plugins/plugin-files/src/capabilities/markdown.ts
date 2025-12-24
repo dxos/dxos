@@ -4,7 +4,7 @@
 
 import { Capabilities, type PluginContext, contributes, defineCapabilityModule } from '@dxos/app-framework';
 import { MarkdownCapabilities } from '@dxos/plugin-markdown';
-import { listener } from '@dxos/react-ui-editor';
+import { listener } from '@dxos/ui-editor';
 
 import { meta } from '../meta';
 import { type FilesSettingsProps } from '../types';

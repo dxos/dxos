@@ -8,9 +8,10 @@ import React, { useCallback, useState } from 'react';
 import { Obj, Query } from '@dxos/echo';
 import { faker } from '@dxos/random';
 import { useClientProvider, withClientProvider } from '@dxos/react-client/testing';
-import { Domino } from '@dxos/react-ui';
 import { withTheme } from '@dxos/react-ui/testing';
 import { TestSchema, type ValueGenerator, createObjectFactory } from '@dxos/schema/testing';
+import { Domino, mx } from '@dxos/ui';
+import { insertAtCursor, insertAtLineStart, join } from '@dxos/ui-editor';
 
 import {
   type EditorController,
@@ -21,12 +22,9 @@ import {
   createMenuGroup,
   filterMenuGroups,
   formattingCommands,
-  insertAtCursor,
-  insertAtLineStart,
   linkSlashCommands,
   useEditorMenu,
 } from '../components';
-import { str } from '../util';
 
 import { EditorStory } from './components';
 
@@ -37,16 +35,14 @@ const customCompletions: EditorMenuGroup = createMenuGroup({
   items: ['Hello world!', 'Hello DXOS', 'Hello Composer', 'https://dxos.org'],
 });
 
-const placeholder = (trigger: string[]) =>
-  Domino.of('div')
-    .children(
-      Domino.of('span').text('Press'),
-      ...trigger.map((trigger) =>
-        Domino.of('span').text(trigger).classNames('border border-separator rounded-sm mx-1 pli-1 pbs-[2px] pbe-[3px]'),
-      ),
-      Domino.of('span').text('for commands'),
-    )
-    .build();
+const placeholder = (trigger: string[]) => {
+  const pressEl = Domino.of('span').text('Press');
+  const triggerEls = trigger.map((trigger) =>
+    Domino.of('span').classNames(mx('border border-separator rounded-sm mx-1 pli-1 pbs-[2px] pbe-[3px]')).text(trigger),
+  );
+  const forCommandsEl = Domino.of('span').text('for commands');
+  return Domino.of('div').children(pressEl, ...triggerEls, forCommandsEl).root;
+};
 
 type StoryProps = Omit<UseEditorMenuProps, 'viewRef'> & { text: string };
 
@@ -119,7 +115,7 @@ type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
   args: {
-    text: str('# Autocomplete', '', ''),
+    text: join('# Autocomplete', '', ''),
     triggerKey: 'Ctrl-Space',
     filter: true,
     getMenu: () => [customCompletions],
@@ -128,7 +124,7 @@ export const Default: Story = {
 
 export const Formatting: Story = {
   args: {
-    text: str('# Slash command', '', ''),
+    text: join('# Slash command', '', ''),
     trigger: '/',
     placeholder: {
       content: () => placeholder(['/']),
@@ -153,7 +149,7 @@ export const Link: Story = {
     }),
   ],
   args: {
-    text: str('# Links', '', ''),
+    text: join('# Links', '', ''),
     trigger: ['/', '@'],
     placeholder: {
       content: () => placeholder(['/', '@']),

@@ -9,12 +9,9 @@ import * as Duration from 'effect/Duration';
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
+import { CommandConfig, Common, getSpace, spaceLayer } from '@dxos/cli-util';
 import { Database, Filter, Obj, Type } from '@dxos/echo';
 import { faker } from '@dxos/random';
-
-import { CommandConfig } from '../../services';
-import { getSpace, spaceLayer } from '../../util';
-import { Common } from '../options';
 
 const pause = (interval: number, jitter: number) =>
   interval > 0

@@ -30,10 +30,10 @@
     "@dxos/debug": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/node-std": "workspace:*",
+    "@dxos/ui-theme": "workspace:*",
     "@dxos/util": "workspace:*",
     "@solid-primitives/resize-observer": "^2.0.26",
-    "solid-element": "catalog:",
-    "solid-js": "catalog:"
+    "solid-element": "catalog:"
   },
   "devDependencies": {
     "@effect-atom/atom": "catalog:",

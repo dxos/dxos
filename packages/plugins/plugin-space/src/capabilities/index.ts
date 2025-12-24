@@ -14,5 +14,3 @@ export const Repair = lazy(() => import('./repair'));
 export const SpaceSettings = lazy(() => import('./settings'));
 export const SpaceState = lazy(() => import('./state'));
 export const SpacesReady = lazy(() => import('./spaces-ready'));
-
-export * from './capabilities';

@@ -4,12 +4,10 @@
 
 import { Capabilities, type PluginContext, contributes, defineCapabilityModule } from '@dxos/app-framework';
 import { LocalStorageStore } from '@dxos/local-storage';
-import { type EditorViewMode, createEditorStateStore } from '@dxos/react-ui-editor';
+import { type EditorViewMode, createEditorStateStore } from '@dxos/ui-editor';
 
 import { meta } from '../meta';
-import { type Markdown, type MarkdownPluginState } from '../types';
-
-import { MarkdownCapabilities } from './capabilities';
+import { type Markdown, MarkdownCapabilities, type MarkdownPluginState } from '../types';
 
 export default defineCapabilityModule((context: PluginContext) => {
   const state = new LocalStorageStore<MarkdownPluginState>(meta.id, { extensionProviders: [], viewMode: {} });

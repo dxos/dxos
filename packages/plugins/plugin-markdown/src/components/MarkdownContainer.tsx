@@ -13,9 +13,8 @@ import { type SelectionManager } from '@dxos/react-ui-attention';
 import { StackItem } from '@dxos/react-ui-stack';
 import { Text } from '@dxos/schema';
 
-import { MarkdownCapabilities } from '../capabilities';
 import { type DocumentType, useLinkQuery } from '../hooks';
-import { Markdown, type MarkdownPluginState } from '../types';
+import { Markdown, MarkdownCapabilities, type MarkdownPluginState } from '../types';
 
 import { MarkdownEditor, type MarkdownEditorContentProps, type MarkdownEditorRootProps } from './MarkdownEditor';
 
@@ -86,6 +85,7 @@ export const MarkdownContainer = forwardRef<HTMLDivElement, MarkdownContainerPro
           id={attendableId ?? id}
           object={object}
           extensions={extensions}
+          settings={settings}
           onFileUpload={handleFileUpload}
           onLinkQuery={handleLinkQuery}
           {...props}

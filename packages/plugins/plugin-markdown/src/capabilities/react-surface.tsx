@@ -13,10 +13,8 @@ import { Text } from '@dxos/schema';
 
 import { MarkdownCard, MarkdownContainer, type MarkdownContainerProps, MarkdownSettings } from '../components';
 import { meta } from '../meta';
-import { Markdown } from '../types';
+import { Markdown, MarkdownCapabilities } from '../types';
 import { isEditorModel } from '../util';
-
-import { MarkdownCapabilities } from './capabilities';
 
 export default defineCapabilityModule(() =>
   contributes(Capabilities.ReactSurface, [

@@ -4,7 +4,7 @@
 
 import { WidgetType } from '@codemirror/view';
 
-import { Domino } from '@dxos/react-ui';
+import { Domino } from '@dxos/ui';
 
 /**
  * Simple prompt widget.
@@ -22,19 +22,15 @@ export class SelectWidget extends WidgetType {
    * NOTE: Container must set var based on user's identity.
    */
   override toDOM() {
+    const buttons = this.options.map((option) =>
+      Domino.of('button')
+        .classNames('dx-button inline-block max-is-[100cqi]')
+        .attributes({ 'data-action': 'submit', 'data-value': option, 'data-density': 'fine' })
+        .text(option),
+    );
     return Domino.of('div')
       .attributes({ role: 'group' })
       .classNames('flex flex-wrap mbs-2 mbe-2 gap-1')
-      .children(
-        ...this.options.map((option) =>
-          Domino.of('button')
-            .classNames('dx-button inline-block max-is-[100cqi]')
-            .data('action', 'submit')
-            .data('value', option)
-            .data('density', 'fine')
-            .text(option),
-        ),
-      )
-      .build();
+      .children(...buttons).root;
   }
 }

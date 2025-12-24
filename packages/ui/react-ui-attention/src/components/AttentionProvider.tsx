@@ -11,7 +11,8 @@ import { log } from '@dxos/log';
 import { type ThemedClassName, useDefaultValue } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
-import { ATTENDABLE_PATH_SEPARATOR, type Attention, AttentionManager, getAttendables } from '../attention';
+import { AttentionManager, getAttendables } from '../attention';
+import { ATTENDABLE_PATH_SEPARATOR, type Attention } from '../types';
 
 const ATTENTION_NAME = 'Attention';
 const ATTENDABLE_ATTRIBUTE = 'data-attendable-id';
