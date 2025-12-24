@@ -91,7 +91,8 @@
     "esbuild": "catalog:",
     "esbuild-wasm": "catalog:",
     "i18next": "catalog:",
-    "iso-did": "catalog:"
+    "iso-did": "catalog:",
+    "jsonata": "catalog:"
   },
   "devDependencies": {
     "@automerge/automerge": "catalog:",

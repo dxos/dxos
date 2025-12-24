@@ -1311,6 +1311,9 @@ catalogs:
     json5:
       specifier: ^2.2.3
       version: 2.2.3
+    jsonata:
+      specifier: ^2.1.0
+      version: 2.1.0
     jsonpath:
       specifier: ^1.1.1
       version: 1.1.1
@@ -5356,6 +5359,9 @@ importers:
       iso-did:
         specifier: 'catalog:'
         version: 1.6.0
+      jsonata:
+        specifier: 'catalog:'
+        version: 2.1.0
     devDependencies:
       '@automerge/automerge':
         specifier: 3.2.1
@@ -31987,6 +31993,10 @@ packages:
     engines: {node: '>=6'}
     hasBin: true
 
+  jsonata@2.1.0:
+    resolution: {integrity: sha512-OCzaRMK8HobtX8fp37uIVmL8CY1IGc/a6gLsDqz3quExFR09/U78HUzWYr7T31UEB6+Eu0/8dkVD5fFDOl9a8w==}
+    engines: {node: '>= 8'}
+
   jsonc-parser@3.3.1:
     resolution: {integrity: sha512-HUgH65KyejrUFPvHFPbqOY0rsFip3Bo5wb4ngvdi1EpCYWUQDC5V+Y7mZws+DLkr4M//zQJoanu1SP+87Dv1oQ==}
 
@@ -54134,6 +54144,8 @@ snapshots:
   json-stringify-safe@5.0.1: {}
 
   json5@2.2.3: {}
+
+  jsonata@2.1.0: {}
 
   jsonc-parser@3.3.1: {}
 

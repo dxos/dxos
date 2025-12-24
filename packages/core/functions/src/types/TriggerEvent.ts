@@ -6,6 +6,11 @@ import * as Schema from 'effect/Schema';
 
 import { DXN, Obj, Type } from '@dxos/echo';
 
+// TODO(wittjosiah): Review this type.
+//   - Should be discriminated union.
+//   - Should be more consistent (e.g. subject vs item).
+//   - Should re-use schemas if possible.
+
 export type TriggerEvent = EmailEvent | QueueEvent | SubscriptionEvent | TimerEvent | WebhookEvent;
 
 // TODO(burdon): Reuse trigger schema from @dxos/functions (TriggerType).

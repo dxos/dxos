@@ -472,6 +472,7 @@ catalog:
   json-stable-stringify: ^1.3.0
   json-stringify-safe: ^5.0.1
   json5: ^2.2.3
+  jsonata: ^2.1.0
   jsonpath: ^1.1.1
   jsonpath-plus: 10.2.0
   jsonpointer: ^5.0.1
