@@ -20,7 +20,7 @@ import { spreadsheet } from 'codemirror-lang-spreadsheet';
 
 import { type FunctionDefinition } from '@dxos/compute';
 import { RANGE_NOTATION } from '@dxos/compute';
-import { singleValueFacet } from '@dxos/react-ui-editor';
+import { singleValueFacet } from '@dxos/ui-editor';
 import { mx } from '@dxos/ui-theme';
 
 /**
@@ -75,7 +75,10 @@ export type SheetExtensionOptions = {
  * https://hyperformula.handsontable.com/guide/key-concepts.html#grammar
  */
 export const sheetExtension = ({ debug, functions = [] }: SheetExtensionOptions): Extension => {
-  const { extension, language } = spreadsheet({ idiom: 'en-US', decimalSeparator: '.' });
+  const { extension, language } = spreadsheet({
+    idiom: 'en-US',
+    decimalSeparator: '.',
+  });
 
   const createCompletion = (name: string) => {
     const { section = 'Custom', description, syntax } = functions.find((value) => value.name === name) ?? {};

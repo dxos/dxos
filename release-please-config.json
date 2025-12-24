@@ -995,6 +995,16 @@
         },
         {
           "type": "json",
+          "path": "packages/ui/ui/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/ui/ui-editor/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/ui/ui-theme/package.json",
           "jsonpath": "$.version"
         },

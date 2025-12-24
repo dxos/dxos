@@ -4,7 +4,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { EditorViewMode } from '@dxos/react-ui-editor/types';
+import { EditorViewMode } from '@dxos/ui-editor/types';
 
 import { meta } from '../meta';
 

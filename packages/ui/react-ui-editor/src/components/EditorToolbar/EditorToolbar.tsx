@@ -16,8 +16,7 @@ import {
   createGapSeparator,
   useMenuActions,
 } from '@dxos/react-ui-menu';
-
-import { type EditorViewMode } from '../../types';
+import { type EditorViewMode } from '@dxos/ui-editor';
 
 import { createLists } from './actions';
 import { createBlocks } from './blocks';

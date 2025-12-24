@@ -9,14 +9,14 @@ import { createDocAccessor } from '@dxos/echo-db';
 import { Markdown } from '@dxos/plugin-markdown/types';
 import { useQuery } from '@dxos/react-client/echo';
 import { Toolbar, useThemeContext } from '@dxos/react-ui';
+import { EditorContent } from '@dxos/react-ui-editor';
 import {
-  EditorContent,
   createBasicExtensions,
   createDataExtensions,
   createMarkdownExtensions,
   createThemeExtensions,
   outliner,
-} from '@dxos/react-ui-editor';
+} from '@dxos/ui-editor';
 
 import { type ComponentProps } from './types';
 

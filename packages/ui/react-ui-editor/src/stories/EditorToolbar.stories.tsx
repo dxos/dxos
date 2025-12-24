@@ -8,22 +8,23 @@ import React, { useCallback, useState } from 'react';
 import { invariant } from '@dxos/invariant';
 import { useThemeContext } from '@dxos/react-ui';
 import { withTheme } from '@dxos/react-ui/testing';
-import { attentionSurface, mx } from '@dxos/ui-theme';
-
-import { EditorToolbar, useEditorToolbar } from '../components';
-import { editorWidth } from '../defaults';
 import {
+  type EditorInputMode,
+  type EditorViewMode,
   InputModeExtensions,
   createBasicExtensions,
   createMarkdownExtensions,
   createThemeExtensions,
   decorateMarkdown,
+  editorWidth,
   formattingKeymap,
   formattingListener,
-} from '../extensions';
+} from '@dxos/ui-editor';
+import { attentionSurface, mx } from '@dxos/ui-theme';
+
+import { EditorToolbar, useEditorToolbar } from '../components';
 import { type UseTextEditorProps, useTextEditor } from '../hooks';
 import { translations } from '../translations';
-import { type EditorInputMode, type EditorViewMode } from '../types';
 
 type StoryProps = { placeholder?: string } & UseTextEditorProps;
 

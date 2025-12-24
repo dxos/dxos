@@ -583,6 +583,9 @@
       "path": "packages/ui/solid-ui-geo/tsconfig.json"
     },
     {
+      "path": "packages/ui/ui-editor/tsconfig.json"
+    },
+    {
       "path": "packages/ui/ui-theme/tsconfig.json"
     },
     {

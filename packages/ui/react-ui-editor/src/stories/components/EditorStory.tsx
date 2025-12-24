@@ -13,11 +13,6 @@ import { log } from '@dxos/log';
 import { useMergeRefs, useThemeContext } from '@dxos/react-ui';
 import { useAttentionAttributes } from '@dxos/react-ui-attention';
 import { JsonFilter } from '@dxos/react-ui-syntax-highlighter';
-import { mx } from '@dxos/ui-theme';
-import { isNonNullable } from '@dxos/util';
-
-import { type EditorController, createEditorController } from '../../components';
-import { editorSlots } from '../../defaults';
 import {
   type DebugNode,
   type ThemeExtensionsOptions,
@@ -26,7 +21,12 @@ import {
   createThemeExtensions,
   debugTree,
   decorateMarkdown,
-} from '../../extensions';
+  editorSlots,
+} from '@dxos/ui-editor';
+import { mx } from '@dxos/ui-theme';
+import { isNonNullable } from '@dxos/util';
+
+import { type EditorController, createEditorController } from '../../components';
 import { type UseTextEditorProps, useTextEditor } from '../../hooks';
 
 // Type definitions.

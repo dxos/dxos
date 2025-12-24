@@ -10,8 +10,8 @@ import { type PromiseIntentDispatcher, createIntent } from '@dxos/app-framework'
 import { Filter, Obj, Query, Relation } from '@dxos/echo';
 import { createDocAccessor, getTextInRange } from '@dxos/echo-db';
 import { type Markdown } from '@dxos/plugin-markdown/types';
-import { comments, createExternalCommentSync } from '@dxos/react-ui-editor';
 import { AnchoredTo, Thread } from '@dxos/types';
+import { comments, createExternalCommentSync } from '@dxos/ui-editor';
 
 import { ThreadAction, type ThreadState } from '../types';
 

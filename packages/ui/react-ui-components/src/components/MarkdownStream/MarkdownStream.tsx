@@ -24,6 +24,7 @@ import { runAndForwardErrors } from '@dxos/effect';
 import { log } from '@dxos/log';
 import { type ThemedClassName, useDynamicRef, useStateWithRef } from '@dxos/react-ui';
 import { useThemeContext } from '@dxos/react-ui';
+import { useTextEditor } from '@dxos/react-ui-editor';
 import {
   type AutoScrollOptions,
   type StreamerOptions,
@@ -41,12 +42,11 @@ import {
   scrollToBottomEffect,
   smoothScroll,
   streamer,
-  useTextEditor,
   xmlTagContextEffect,
   xmlTagResetEffect,
   xmlTagUpdateEffect,
   xmlTags,
-} from '@dxos/react-ui-editor';
+} from '@dxos/ui-editor';
 import { mx } from '@dxos/ui-theme';
 import { isNonNullable } from '@dxos/util';
 

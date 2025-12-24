@@ -10,7 +10,7 @@ import * as Schema from 'effect/Schema';
 import React, { type FC, useEffect, useMemo, useState } from 'react';
 
 import { Capabilities, IntentPlugin, SettingsPlugin } from '@dxos/app-framework';
-import { useCapability, useIntentDispatcher } from '@dxos/app-framework/react';
+import { useCapability } from '@dxos/app-framework/react';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Obj, Ref, Type } from '@dxos/echo';
 import { createDocAccessor, toCursorRange } from '@dxos/echo-db';
@@ -25,10 +25,11 @@ import { faker } from '@dxos/random';
 import { useQueue, useSpace } from '@dxos/react-client/echo';
 import { IconButton, Toolbar } from '@dxos/react-ui';
 import { withTheme } from '@dxos/react-ui/testing';
-import { type EditorSelection, type Range, useTextEditor } from '@dxos/react-ui-editor';
+import { useTextEditor } from '@dxos/react-ui-editor';
 import { StackItem } from '@dxos/react-ui-stack';
 import { render } from '@dxos/storybook-utils';
 import { Message } from '@dxos/types';
+import { type EditorSelection, type Range } from '@dxos/ui-editor';
 import { defaultTx } from '@dxos/ui-theme';
 
 import { MarkdownPlugin } from '../MarkdownPlugin';
@@ -57,7 +58,6 @@ const TestItem = Schema.Struct({
 );
 
 const TestChat: FC<{ doc: Markdown.Document; content: string }> = ({ doc, content }) => {
-  const { dispatchPromise: dispatch } = useIntentDispatcher();
   const { parentRef } = useTextEditor({ initialValue: content });
   const { editorState } = useCapability(MarkdownCapabilities.State);
 
@@ -147,7 +147,6 @@ const DefaultStory = ({ document, chat }: { document: string; chat: string }) =>
     return null;
   }
 
-  // TODO(burdon): Layout issue.
   return (
     <div className='grid grid-cols-2 bs-full overflow-hidden'>
       <MarkdownContainer id={doc.id} object={doc} settings={settings} editorStateStore={editorState} />

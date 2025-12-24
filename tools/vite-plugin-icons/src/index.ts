@@ -26,17 +26,9 @@ export const IconsPlugin = ({
   const shouldIgnore = (filepath: string) => !isContent(filepath);
 
   const detectedSymbols = new Set<string>();
-  const visitedFiles = new Set<string>();
-  const status = { updated: false };
-
-  let rootDir: string;
-  let spritePath: string;
-  let server: ViteDevServer | null = null;
-
-  const scan = (src: string) => {
+  const scan = (contentString: string) => {
     let updated = false;
-    const nextCandidates = scanString({ contentString: src, symbolPattern });
-    Array.from(nextCandidates).forEach((candidate) => {
+    Array.from(scanString({ contentString, symbolPattern })).forEach((candidate) => {
       if (!detectedSymbols.has(candidate)) {
         detectedSymbols.add(candidate);
         updated = true;
@@ -45,6 +37,13 @@ export const IconsPlugin = ({
 
     return updated;
   };
+
+  const visitedFiles = new Set<string>();
+  const status = { updated: false };
+
+  let rootDir: string;
+  let spritePath: string;
+  let server: ViteDevServer | null = null;
 
   return [
     {
@@ -76,8 +75,7 @@ export const IconsPlugin = ({
                     const src = fs.readFileSync(filename, 'utf8');
                     const match = scan(src);
                     status.updated ||= match;
-                  } catch (err) {
-                    // eslint-disable-next-line no-console
+                  } catch {
                     console.error('Missing file', req.url);
                   }
                 }
@@ -105,7 +103,6 @@ export const IconsPlugin = ({
       // Step 2: Write sprite.
       // NOTE: This must run before the public directory is copied.
       name: '@ch-ui/icons:write',
-
       transform: async () => {
         if (status.updated) {
           status.updated = false;
@@ -113,7 +110,6 @@ export const IconsPlugin = ({
           if (verbose) {
             const symbols = Array.from(detectedSymbols.values());
             symbols.sort();
-            // eslint-disable-next-line no-console
             console.log(
               'Sprite updated:',
               JSON.stringify({ path: spritePath, size: detectedSymbols.size, symbols }, null, 2),

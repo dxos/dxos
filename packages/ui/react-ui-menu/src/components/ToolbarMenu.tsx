@@ -7,11 +7,11 @@ import React, { Fragment, useCallback } from 'react';
 import { Icon, Toolbar as NaturalToolbar, type ToolbarRootProps, useTranslation } from '@dxos/react-ui';
 import { useAttention } from '@dxos/react-ui-attention';
 import { mx, textBlockWidth, toolbarInactive, toolbarLayout } from '@dxos/ui-theme';
+import { type MenuActionProperties } from '@dxos/ui-types';
 
 import { translationKey } from '../translations';
 import {
   type MenuAction,
-  type MenuActionProperties,
   type MenuItem,
   type MenuItemGroup,
   type MenuMultipleSelectActionGroup,

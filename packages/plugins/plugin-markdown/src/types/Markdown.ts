@@ -6,8 +6,8 @@ import * as Schema from 'effect/Schema';
 
 import { Obj, Ref, Type } from '@dxos/echo';
 import { DescriptionAnnotation, FormInputAnnotation, LabelAnnotation } from '@dxos/echo/internal';
-import { EditorInputMode, EditorViewMode } from '@dxos/react-ui-editor/types';
 import { Text } from '@dxos/schema';
+import { EditorInputMode, EditorViewMode } from '@dxos/ui-editor/types';
 
 /**
  * Document Item type.

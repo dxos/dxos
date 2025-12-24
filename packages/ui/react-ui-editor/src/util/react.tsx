@@ -6,9 +6,13 @@ import React, { type FC, type ReactNode } from 'react';
 import { createRoot } from 'react-dom/client';
 
 import { ThemeProvider, Tooltip } from '@dxos/react-ui';
+import { type RenderCallback } from '@dxos/ui-editor';
 import { defaultTx } from '@dxos/ui-theme';
 
-import { type RenderCallback } from '../types';
+/**
+ * @deprecated Use `trim` from `@dxos/util`.
+ */
+export const str = (...lines: string[]) => lines.join('\n');
 
 /** @deprecated */
 // TODO(wittjosiah): Replace with portals which are lighter weight and inherit context from the main react tree.

@@ -7,10 +7,8 @@ import React, { type KeyboardEvent, useState } from 'react';
 
 import { type Button, IconButton, Input } from '@dxos/react-ui';
 import { withTheme } from '@dxos/react-ui/testing';
+import { editorWidth, join } from '@dxos/ui-editor';
 import { mx } from '@dxos/ui-theme';
-
-import { editorWidth } from '../defaults';
-import { str } from '../util';
 
 import { EditorStory } from './components';
 
@@ -69,7 +67,7 @@ const CommandDialog = ({ onAction }: { onAction: (action?: any) => void }) => {
 
 const meta = {
   title: 'ui/react-ui-editor/CommandDialog',
-  render: () => <EditorStory text={str('# Command', '', '')} extensions={[]} />,
+  render: () => <EditorStory text={join('# Command', '', '')} extensions={[]} />,
   decorators: [withTheme],
   parameters: {
     layout: 'fullscreen',

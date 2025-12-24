@@ -5,9 +5,8 @@
 import { type EditorView } from '@codemirror/view';
 
 import { type Label } from '@dxos/react-ui';
+import { insertAtCursor } from '@dxos/ui-editor';
 import { type MaybePromise } from '@dxos/util';
-
-import { insertAtCursor } from './util';
 
 export type EditorMenuGroup = {
   id: string;

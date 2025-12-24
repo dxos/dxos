@@ -83,6 +83,7 @@
     "@dxos/react-ui-tabs": "workspace:*",
     "@dxos/schema": "workspace:*",
     "@dxos/types": "workspace:*",
+    "@dxos/ui-editor": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
     "@dxos/util": "workspace:*",
     "@effect/ai": "catalog:",
