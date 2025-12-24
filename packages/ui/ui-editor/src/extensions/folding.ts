@@ -16,8 +16,8 @@ export const folding = (): Extension => [
     placeholderDOM: () => Domino.of('span').root,
   }),
   foldGutter({
-    markerDOM: (open) =>
-      Domino.of('div')
+    markerDOM: (open) => {
+      return Domino.of('div')
         .classNames('flex bs-full justify-center items-center')
         .children(
           Domino.of('svg', Domino.SVG)
@@ -27,7 +27,26 @@ export const folding = (): Extension => [
                 href: Domino.icon('ph--caret-right--regular'),
               }),
             ),
-        ).root,
+        ).root;
+    },
+    // TODO(burdon): markerDOM is called either way, defeating the animation: transition-transform duration-200
+    // domEventHandlers: {
+    //   click: (view, line: BlockInfo, event) => {
+    //     event.preventDefault();
+    //     event.stopPropagation();
+    //     const range = foldable(view.state, line.from, line.to);
+    //     if (range) {
+    //       view.dispatch({ effects: foldEffect.of(range) });
+    //       (event.target as HTMLElement)?.classList.add('rotate-90');
+    //     } else {
+    //       foldedRanges(view.state).between(line.from, line.to, (from, to) => {
+    //         view.dispatch({ effects: unfoldEffect.of({ from, to }) });
+    //         (event.target as HTMLElement)?.classList.remove('rotate-90');
+    //       });
+    //     }
+    //     return true;
+    //   },
+    // },
   }),
   EditorView.theme({
     '.cm-foldGutter': {

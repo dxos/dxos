@@ -122,14 +122,13 @@ const createTooltipRenderer = (themeMode: ThemeMode) => {
 
   return (info: HoverInfo) => {
     const children =
-      info.quickInfo?.displayParts?.map(
-        ({ kind, text }) => Domino.of('span').classNames(classFromKind(kind)).text(text),
+      info.quickInfo?.displayParts?.map(({ kind, text }) =>
+        Domino.of('span').classNames(classFromKind(kind)).text(text),
       ) ?? [];
     return {
       dom: Domino.of('div')
         .classNames('xs:max-is-80 max-is-lg p-1 bg-baseSurface rounded border border-separator')
-        .children(...children)
-        .root,
+        .children(...children).root,
     };
   };
 };

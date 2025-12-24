@@ -137,8 +137,7 @@ export const autoScroll = ({
             });
           buttonContainer = Domino.of('div')
             .classNames('cm-scroll-button transition-opacity duration-300 opacity-0')
-            .children(button)
-            .root as HTMLDivElement;
+            .children(button).root as HTMLDivElement;
 
           view.scrollDOM.parentElement!.appendChild(buttonContainer);
         }

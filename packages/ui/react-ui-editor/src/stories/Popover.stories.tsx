@@ -37,16 +37,11 @@ const customCompletions: EditorMenuGroup = createMenuGroup({
 
 const placeholder = (trigger: string[]) => {
   const pressEl = Domino.of('span').text('Press');
-  const triggerEls = trigger.map(
-    (trigger) =>
-      Domino.of('span')
-        .classNames(mx('border border-separator rounded-sm mx-1 pli-1 pbs-[2px] pbe-[3px]'))
-        .text(trigger),
+  const triggerEls = trigger.map((trigger) =>
+    Domino.of('span').classNames(mx('border border-separator rounded-sm mx-1 pli-1 pbs-[2px] pbe-[3px]')).text(trigger),
   );
   const forCommandsEl = Domino.of('span').text('for commands');
-  return Domino.of('div')
-    .children(pressEl, ...triggerEls, forCommandsEl)
-    .root;
+  return Domino.of('div').children(pressEl, ...triggerEls, forCommandsEl).root;
 };
 
 type StoryProps = Omit<UseEditorMenuProps, 'viewRef'> & { text: string };
