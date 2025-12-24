@@ -101,6 +101,9 @@
       "path": "../../plugins/plugin-observability"
     },
     {
+      "path": "../../plugins/plugin-registry"
+    },
+    {
       "path": "../../plugins/plugin-script"
     },
     {

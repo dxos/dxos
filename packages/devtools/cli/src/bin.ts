@@ -20,10 +20,13 @@ import * as Option from 'effect/Option';
 import { createCliApp } from '@dxos/app-framework';
 import { unrefTimeout } from '@dxos/async';
 import { ClientService, ConfigService, DXOS_VERSION } from '@dxos/client';
+import { DEFAULT_PROFILE } from '@dxos/client-protocol';
 import { LogLevel, levels, log } from '@dxos/log';
+import { loadEnabledPlugins } from '@dxos/plugin-registry/cli';
 
 import { chat, debug, dx, fn, hub, repl } from './commands';
 import { getCore, getDefaults, getPlugins } from './commands/plugin-defs';
+
 
 let filter = LogLevel.ERROR;
 const level = process.env.DX_DEBUG;
@@ -56,6 +59,14 @@ const program = Effect.gen(function* () {
     Option.getOrElse(() => Effect.succeed(undefined)),
   );
 
+  // Get profile name from command value or use default
+  const profile: string = value.pipe(
+    Option.map((v) => (v as { profile?: string }).profile ?? DEFAULT_PROFILE),
+    Option.getOrElse(() => DEFAULT_PROFILE),
+  );
+  const savedEnabled = yield* loadEnabledPlugins({ profile });
+  const enabled = savedEnabled.length > 0 ? [...savedEnabled] : getDefaults();
+
   const { command, layer: pluginLayer } = yield* createCliApp({
     rootCommand: dx,
     subCommands: [
@@ -73,7 +84,7 @@ const program = Effect.gen(function* () {
     ],
     plugins: getPlugins({ config }),
     core: getCore(),
-    defaults: getDefaults(),
+    enabled,
   });
 
   const layer = Layer.merge(pluginLayer, config ? ConfigService.fromConfig(config) : Layer.empty);

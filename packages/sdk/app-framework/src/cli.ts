@@ -20,7 +20,6 @@ const defaultPluginLoader =
   };
 
 type SubCommands = [Command.Command<any, any, any, any>, ...Array<Command.Command<any, any, any, any>>];
-type Layers = [Layer.Layer<any, any, never>, ...Array<Layer.Layer<any, any, never>>];
 
 export type CreateCliAppOptions = {
   rootCommand: Command.Command<any, any, any, any>;
@@ -29,7 +28,7 @@ export type CreateCliAppOptions = {
   pluginLoader?: PluginManagerOptions['pluginLoader'];
   plugins?: Plugin[];
   core?: string[];
-  defaults?: string[];
+  enabled?: string[];
   safeMode?: boolean;
 };
 
@@ -46,7 +45,7 @@ export type CreateCliAppOptions = {
  * @param options.pluginLoader Function to load plugins by ID.
  * @param options.plugins All plugins available to the application.
  * @param options.core Core plugins which will always be enabled.
- * @param options.defaults Default plugins enabled by default.
+ * @param options.enabled Enabled plugins.
  * @param options.safeMode Whether to enable safe mode, which disables optional plugins.
  */
 export const createCliApp = Effect.fn(function* ({
@@ -56,14 +55,13 @@ export const createCliApp = Effect.fn(function* ({
   pluginLoader: pluginLoaderParam,
   plugins: pluginsParam = [],
   core: coreParam,
-  defaults: defaultsParam = [],
+  enabled: enabledParam = [],
   safeMode = false,
 }: CreateCliAppOptions) {
   const plugins = pluginsParam;
   const core = coreParam ?? plugins.map(({ meta }) => meta.id);
-  const defaults = defaultsParam;
   const pluginLoader = pluginLoaderParam ?? defaultPluginLoader(plugins);
-  const enabled = safeMode ? [] : defaults;
+  const enabled = safeMode ? [] : enabledParam;
   const manager =
     pluginManagerParam ??
     new PluginManager({

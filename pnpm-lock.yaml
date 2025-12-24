@@ -6137,6 +6137,9 @@ importers:
       '@dxos/plugin-observability':
         specifier: workspace:*
         version: link:../../plugins/plugin-observability
+      '@dxos/plugin-registry':
+        specifier: workspace:*
+        version: link:../../plugins/plugin-registry
       '@dxos/plugin-script':
         specifier: workspace:*
         version: link:../../plugins/plugin-script
@@ -10642,6 +10645,12 @@ importers:
       '@dxos/app-framework':
         specifier: workspace:*
         version: link:../../sdk/app-framework
+      '@dxos/cli-util':
+        specifier: workspace:*
+        version: link:../../devtools/cli-util
+      '@dxos/client-protocol':
+        specifier: workspace:*
+        version: link:../../sdk/client-protocol
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../core/echo/echo
@@ -10666,6 +10675,9 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
+      '@effect/cli':
+        specifier: 'catalog:'
+        version: 0.72.1(@effect/platform@0.93.6(effect@3.19.11))(@effect/printer-ansi@0.47.0(@effect/typeclass@0.38.0(effect@3.19.11))(effect@3.19.11))(@effect/printer@0.47.0(@effect/typeclass@0.38.0(effect@3.19.11))(effect@3.19.11))(effect@3.19.11)
       '@preact-signals/safe-react':
         specifier: 'catalog:'
         version: 0.9.0(@babel/core@7.28.0)(@swc/helpers@0.5.17)(react@19.2.3)

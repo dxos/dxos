@@ -10,6 +10,7 @@ import { ClientPlugin } from '@dxos/plugin-client/cli';
 import { InboxPlugin } from '@dxos/plugin-inbox/cli';
 import { MarkdownPlugin } from '@dxos/plugin-markdown/cli';
 import { ObservabilityPlugin } from '@dxos/plugin-observability/cli';
+import { RegistryPlugin } from '@dxos/plugin-registry/cli';
 import { SpacePlugin } from '@dxos/plugin-space/cli';
 import { TokenManagerPlugin } from '@dxos/plugin-token-manager/cli';
 
@@ -25,6 +26,7 @@ export const getCore = (): string[] => [
   ClientPlugin.meta.id,
   IntentPlugin.meta.id,
   ObservabilityPlugin.meta.id,
+  RegistryPlugin.meta.id,
   SpacePlugin.meta.id,
   TokenManagerPlugin.meta.id,
 ];
@@ -39,6 +41,7 @@ export const getPlugins = ({ config }: PluginConfig): Plugin[] => [
   IntentPlugin(),
   MarkdownPlugin(),
   ObservabilityPlugin(),
+  RegistryPlugin(),
   SpacePlugin({}),
   TokenManagerPlugin(),
 ];

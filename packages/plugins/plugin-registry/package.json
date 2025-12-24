@@ -12,7 +12,14 @@
     ".": {
       "source": "./src/index.ts",
       "types": "./dist/types/src/index.d.ts",
-      "browser": "./dist/lib/browser/index.mjs"
+      "browser": "./dist/lib/browser/index.mjs",
+      "node": "./dist/lib/node-esm/index.mjs"
+    },
+    "./cli": {
+      "source": "./src/cli/index.ts",
+      "types": "./dist/types/src/cli/index.d.ts",
+      "browser": "./dist/lib/browser/cli/index.mjs",
+      "node": "./dist/lib/node-esm/cli/index.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
@@ -25,6 +32,8 @@
   ],
   "dependencies": {
     "@dxos/app-framework": "workspace:*",
+    "@dxos/cli-util": "workspace:*",
+    "@dxos/client-protocol": "workspace:*",
     "@dxos/echo": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/live-object": "workspace:*",
@@ -33,6 +42,7 @@
     "@dxos/react-ui-form": "workspace:*",
     "@dxos/react-ui-stack": "workspace:*",
     "@dxos/util": "workspace:*",
+    "@effect/cli": "catalog:",
     "@preact-signals/safe-react": "catalog:"
   },
   "devDependencies": {
