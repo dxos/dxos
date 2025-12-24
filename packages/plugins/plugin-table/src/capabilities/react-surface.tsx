@@ -4,14 +4,14 @@
 
 import React from 'react';
 
-import { Capabilities, contributes, createSurface } from '@dxos/app-framework';
+import { Capabilities, contributes, createSurface, defineCapabilityModule } from '@dxos/app-framework';
 import { Obj } from '@dxos/echo';
 import { Table } from '@dxos/react-ui-table/types';
 
 import { TableCard, TableContainer } from '../components';
 import { meta } from '../meta';
 
-export default () =>
+export default defineCapabilityModule(() =>
   contributes(Capabilities.ReactSurface, [
     createSurface({
       id: `${meta.id}/table`,
@@ -25,4 +25,5 @@ export default () =>
       filter: (data): data is { subject: Table.Table } => Obj.instanceOf(Table.Table, data.subject),
       component: ({ data, role }) => <TableCard object={data.subject} role={role} />,
     }),
-  ]);
+  ]),
+);

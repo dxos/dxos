@@ -14,7 +14,7 @@ import { log } from '@dxos/log';
 import { type GuardedType, type MaybePromise, type Position, byPosition } from '@dxos/util';
 
 import { Capabilities, Events } from '../common';
-import { type PluginContext, contributes } from '../core';
+import { type PluginContext, contributes, defineCapabilityModule } from '../core';
 
 import { IntentAction } from './actions';
 import { CycleDetectedError, NoResolversError } from './errors';
@@ -312,7 +312,7 @@ export const createDispatcher = (
 const defaultEffect = () => Effect.fail(new Error('Intent runtime not ready'));
 const defaultPromise = () => runAndForwardErrors(defaultEffect());
 
-export default (context: PluginContext) => {
+export default defineCapabilityModule((context: PluginContext) => {
   const state = live<IntentContext>({
     dispatch: defaultEffect,
     dispatchPromise: defaultPromise,
@@ -340,4 +340,4 @@ export default (context: PluginContext) => {
   state.undoPromise = undoPromise;
 
   return contributes(Capabilities.IntentDispatcher, state);
-};
+});

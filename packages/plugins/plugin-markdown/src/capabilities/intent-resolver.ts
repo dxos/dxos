@@ -12,13 +12,14 @@ import {
   type PluginContext,
   contributes,
   createResolver,
+  defineCapabilityModule,
 } from '@dxos/app-framework';
 import { Obj } from '@dxos/echo';
 import { createDocAccessor, getRangeFromCursor } from '@dxos/echo-db';
 
 import { Markdown, MarkdownAction, MarkdownCapabilities } from '../types';
 
-export default (context: PluginContext) =>
+export default defineCapabilityModule((context: PluginContext) =>
   contributes(Capabilities.IntentResolver, [
     createResolver({
       intent: MarkdownAction.Create,
@@ -53,4 +54,5 @@ export default (context: PluginContext) =>
         });
       },
     }),
-  ]);
+  ]),
+);

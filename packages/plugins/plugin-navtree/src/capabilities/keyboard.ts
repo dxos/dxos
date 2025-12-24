@@ -2,7 +2,12 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Capabilities as AppCapabilities, type PluginContext, contributes } from '@dxos/app-framework';
+import {
+  Capabilities as AppCapabilities,
+  type PluginContext,
+  contributes,
+  defineCapabilityModule,
+} from '@dxos/app-framework';
 import { debounce } from '@dxos/async';
 import { Keyboard } from '@dxos/keyboard';
 import { type Node, isAction } from '@dxos/plugin-graph';
@@ -10,7 +15,7 @@ import { getHostPlatform } from '@dxos/util';
 
 import { KEY_BINDING } from '../meta';
 
-export default (context: PluginContext) => {
+export default defineCapabilityModule((context: PluginContext) => {
   const { graph } = context.getCapability(AppCapabilities.AppGraph);
 
   // TODO(wittjosiah): Factor out.
@@ -54,4 +59,4 @@ export default (context: PluginContext) => {
     unsubscribe();
     Keyboard.singleton.destroy();
   });
-};
+});

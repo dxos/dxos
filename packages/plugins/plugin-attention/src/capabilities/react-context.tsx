@@ -4,7 +4,7 @@
 
 import React, { type PropsWithChildren } from 'react';
 
-import { Capabilities, contributes } from '@dxos/app-framework';
+import { Capabilities, contributes, defineCapabilityModule } from '@dxos/app-framework';
 import { useCapability } from '@dxos/app-framework/react';
 import { RootAttentionProvider, SelectionProvider } from '@dxos/react-ui-attention';
 
@@ -12,7 +12,7 @@ import { meta } from '../meta';
 
 import { AttentionCapabilities } from './capabilities';
 
-export default () =>
+export default defineCapabilityModule(() =>
   contributes(Capabilities.ReactContext, {
     id: meta.id,
     context: (props: PropsWithChildren) => {
@@ -33,4 +33,5 @@ export default () =>
         </RootAttentionProvider>
       );
     },
-  });
+  }),
+);

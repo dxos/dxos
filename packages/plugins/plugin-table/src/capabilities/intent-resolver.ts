@@ -11,6 +11,7 @@ import {
   contributes,
   createIntent,
   createResolver,
+  defineCapabilityModule,
 } from '@dxos/app-framework';
 import { Obj, Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
@@ -21,7 +22,7 @@ import { Task } from '@dxos/types';
 
 import { TableAction } from '../types';
 
-export default (context: PluginContext) =>
+export default defineCapabilityModule((context: PluginContext) =>
   contributes(Capabilities.IntentResolver, [
     createResolver({
       intent: TableAction.OnCreateSpace,
@@ -73,4 +74,5 @@ export default (context: PluginContext) =>
         return { intents: [createIntent(SpaceAction.AddObject, { target: db, object, hidden: true })] };
       },
     }),
-  ]);
+  ]),
+);

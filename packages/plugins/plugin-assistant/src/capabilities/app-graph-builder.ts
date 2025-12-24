@@ -13,6 +13,7 @@ import {
   type PromiseIntentDispatcher,
   contributes,
   createIntent,
+  defineCapabilityModule,
 } from '@dxos/app-framework';
 import { Prompt } from '@dxos/blueprints';
 import { Sequence } from '@dxos/conductor';
@@ -30,7 +31,7 @@ import { Assistant, AssistantAction } from '../types';
 
 import { AssistantCapabilities } from './capabilities';
 
-export default (context: PluginContext) =>
+export default defineCapabilityModule((context: PluginContext) =>
   contributes(Capabilities.AppGraphBuilder, [
     createExtension({
       id: `${meta.id}/root`,
@@ -185,7 +186,8 @@ export default (context: PluginContext) =>
           ),
         ),
     }),
-  ]);
+  ]),
+);
 
 // TODO(burdon): Factor out.
 const getOrCreateChat = async (

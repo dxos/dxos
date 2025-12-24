@@ -9,11 +9,11 @@ import * as Schema from 'effect/Schema';
 
 import {
   Capabilities,
-  type Capability,
   LayoutAction,
   type PluginContext,
   contributes,
   createIntent,
+  defineCapabilityModule,
 } from '@dxos/app-framework';
 import { GenericToolkit } from '@dxos/assistant';
 import { ArtifactId } from '@dxos/assistant';
@@ -61,6 +61,6 @@ export namespace DeckToolkit {
     });
 }
 
-export default (context: PluginContext): Capability<any>[] => [
+export default defineCapabilityModule((context: PluginContext) => [
   contributes(Capabilities.Toolkit, GenericToolkit.make(DeckToolkit.Toolkit, DeckToolkit.createLayer(context))),
-];
+]);

@@ -4,7 +4,14 @@
 
 import React, { useCallback } from 'react';
 
-import { Capabilities, LayoutAction, contributes, createIntent, createSurface } from '@dxos/app-framework';
+import {
+  Capabilities,
+  LayoutAction,
+  contributes,
+  createIntent,
+  createSurface,
+  defineCapabilityModule,
+} from '@dxos/app-framework';
 import { Surface, SurfaceCardRole, useIntentDispatcher } from '@dxos/app-framework/react';
 import { Obj } from '@dxos/echo';
 import { useActiveSpace } from '@dxos/plugin-space';
@@ -15,7 +22,7 @@ import { FormCard, OrganizationCard, PersonCard, ProjectCard, TaskCard } from '.
 import { meta } from '../meta';
 import { type CardPreviewProps } from '../types';
 
-export default () =>
+export default defineCapabilityModule(() =>
   contributes(Capabilities.ReactSurface, [
     //
     // Specific schema types.
@@ -118,4 +125,5 @@ export default () =>
         );
       },
     }),
-  ]);
+  ]),
+);

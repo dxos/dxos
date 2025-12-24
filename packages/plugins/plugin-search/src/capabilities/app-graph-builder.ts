@@ -6,7 +6,13 @@ import { Atom } from '@effect-atom/atom-react';
 import * as Function from 'effect/Function';
 import * as Option from 'effect/Option';
 
-import { Capabilities, type PluginContext, contributes, createIntent } from '@dxos/app-framework';
+import {
+  Capabilities,
+  type PluginContext,
+  contributes,
+  createIntent,
+  defineCapabilityModule,
+} from '@dxos/app-framework';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { ATTENDABLE_PATH_SEPARATOR, DECK_COMPANION_TYPE } from '@dxos/plugin-deck/types';
 import { ROOT_ID, atomFromSignal, createExtension } from '@dxos/plugin-graph';
@@ -15,7 +21,7 @@ import { parseId } from '@dxos/react-client/echo';
 import { meta } from '../meta';
 import { SearchAction } from '../types';
 
-export default (context: PluginContext) =>
+export default defineCapabilityModule((context: PluginContext) =>
   contributes(Capabilities.AppGraphBuilder, [
     createExtension({
       id: `${meta.id}/space-search`,
@@ -78,4 +84,5 @@ export default (context: PluginContext) =>
           ),
         ),
     }),
-  ]);
+  ]),
+);

@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { contributes } from '@dxos/app-framework';
+import { contributes, defineCapabilityModule } from '@dxos/app-framework';
 import { Obj, Ref, Type } from '@dxos/echo';
 import { SpaceCapabilities } from '@dxos/plugin-space';
 import { type Space } from '@dxos/react-client/echo';
@@ -10,14 +10,15 @@ import { Collection } from '@dxos/schema';
 
 import { Meeting } from '../types';
 
-export default () =>
+export default defineCapabilityModule(() =>
   contributes(SpaceCapabilities.Repair, async ({ space, isDefault }) => {
     if (isDefault) {
       return;
     }
 
     await ensureSystemCollection(space);
-  });
+  }),
+);
 
 /**
  * Ensure the root collection has a system collection for Meetings.

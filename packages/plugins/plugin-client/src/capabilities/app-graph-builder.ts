@@ -7,14 +7,14 @@ import * as Function from 'effect/Function';
 import * as Option from 'effect/Option';
 
 import { createIntent } from '@dxos/app-framework';
-import { Capabilities, type PluginContext, contributes } from '@dxos/app-framework';
+import { Capabilities, type PluginContext, contributes, defineCapabilityModule } from '@dxos/app-framework';
 import { ROOT_ID, atomFromObservable, createExtension } from '@dxos/plugin-graph';
 import { ConnectionState } from '@dxos/react-client/mesh';
 
 import { meta } from '../meta';
 import { Account, ClientAction, ClientCapabilities } from '../types';
 
-export default (context: PluginContext) =>
+export default defineCapabilityModule((context: PluginContext) =>
   contributes(
     Capabilities.AppGraphBuilder,
     createExtension({
@@ -111,4 +111,5 @@ export default (context: PluginContext) =>
           ),
         ),
     }),
-  );
+  ),
+);

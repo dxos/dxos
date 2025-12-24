@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { Capabilities, contributes, createSurface } from '@dxos/app-framework';
+import { Capabilities, contributes, createSurface, defineCapabilityModule } from '@dxos/app-framework';
 import { useCapability } from '@dxos/app-framework/react';
 import { Obj } from '@dxos/echo';
 import { getSpace } from '@dxos/react-client/echo';
@@ -15,7 +15,7 @@ import { Sheet } from '../types';
 
 import { SheetCapabilities } from './capabilities';
 
-export default () =>
+export default defineCapabilityModule(() =>
   contributes(Capabilities.ReactSurface, [
     createSurface({
       id: `${meta.id}/sheet`,
@@ -38,4 +38,5 @@ export default () =>
       filter: (data): data is { subject: Sheet.Sheet } => Obj.instanceOf(Sheet.Sheet, data.subject),
       component: ({ data }) => <RangeList sheet={data.subject} />,
     }),
-  ]);
+  ]),
+);

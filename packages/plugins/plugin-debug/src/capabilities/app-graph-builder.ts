@@ -6,7 +6,7 @@ import { Atom } from '@effect-atom/atom-react';
 import * as Function from 'effect/Function';
 import * as Option from 'effect/Option';
 
-import { Capabilities, type PluginContext, contributes } from '@dxos/app-framework';
+import { Capabilities, type PluginContext, contributes, defineCapabilityModule } from '@dxos/app-framework';
 import { Obj } from '@dxos/echo';
 import { ATTENDABLE_PATH_SEPARATOR, DECK_COMPANION_TYPE, PLANK_COMPANION_TYPE } from '@dxos/plugin-deck/types';
 import { ROOT_ID, atomFromSignal, createExtension } from '@dxos/plugin-graph';
@@ -17,7 +17,7 @@ import { Devtools } from '../types';
 
 const DEVTOOLS_TYPE = `${meta.id}/devtools`;
 
-export default (context: PluginContext) =>
+export default defineCapabilityModule((context: PluginContext) =>
   contributes(Capabilities.AppGraphBuilder, [
     // Devtools node.
     createExtension({
@@ -428,4 +428,5 @@ export default (context: PluginContext) =>
           ),
         ),
     }),
-  ]);
+  ]),
+);

@@ -7,7 +7,7 @@ import React, { useCallback } from 'react';
 import { Button } from '@dxos/react-ui';
 
 import { Capabilities, createSurface } from '../../common';
-import { contributes } from '../../core';
+import { contributes, defineCapabilityModule } from '../../core';
 import { createIntent } from '../../plugin-intent';
 import { useIntentDispatcher } from '../../react';
 
@@ -19,7 +19,7 @@ export const Logger = () => {
   return <Button onClick={handleClick}>Log</Button>;
 };
 
-export default () =>
+export default defineCapabilityModule(() =>
   contributes(
     Capabilities.ReactSurface,
     createSurface({
@@ -27,4 +27,5 @@ export default () =>
       role: 'toolbar',
       component: Logger,
     }),
-  );
+  ),
+);

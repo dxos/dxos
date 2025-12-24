@@ -4,14 +4,14 @@
 
 import React from 'react';
 
-import { Capabilities, contributes, createSurface } from '@dxos/app-framework';
+import { Capabilities, contributes, createSurface, defineCapabilityModule } from '@dxos/app-framework';
 import { invariant } from '@dxos/invariant';
 import { useClient } from '@dxos/react-client';
 
 import { WELCOME_SCREEN, WelcomeScreen } from '../components';
 import { meta } from '../meta';
 
-export default () =>
+export default defineCapabilityModule(() =>
   contributes(Capabilities.ReactSurface, [
     createSurface({
       id: `${meta.id}/welcome`,
@@ -24,4 +24,5 @@ export default () =>
         return <WelcomeScreen hubUrl={hubUrl} />;
       },
     }),
-  ]);
+  ]),
+);

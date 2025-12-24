@@ -6,7 +6,13 @@ import { Atom } from '@effect-atom/atom-react';
 import * as Function from 'effect/Function';
 import * as Option from 'effect/Option';
 
-import { Capabilities, type PluginContext, contributes, createIntent } from '@dxos/app-framework';
+import {
+  Capabilities,
+  type PluginContext,
+  contributes,
+  createIntent,
+  defineCapabilityModule,
+} from '@dxos/app-framework';
 import { Obj } from '@dxos/echo';
 import { AttentionCapabilities } from '@dxos/plugin-attention';
 import { ATTENDABLE_PATH_SEPARATOR, DECK_COMPANION_TYPE, PLANK_COMPANION_TYPE } from '@dxos/plugin-deck/types';
@@ -20,7 +26,7 @@ import { ThreadCapabilities } from './capabilities';
 
 // TODO(wittjosiah): Highlight active calls in L1.
 //  Track active meetings by subscribing to meetings query and polling the swarms of recent meetings in the space.
-export default (context: PluginContext) => {
+export default defineCapabilityModule((context: PluginContext) => {
   const resolve = (typename: string) =>
     context.getCapabilities(Capabilities.Metadata).find(({ id }) => id === typename)?.metadata ?? {};
 
@@ -191,4 +197,4 @@ export default (context: PluginContext) => {
         ),
     }),
   ]);
-};
+});

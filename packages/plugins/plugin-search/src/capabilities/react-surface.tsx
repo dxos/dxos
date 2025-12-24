@@ -4,14 +4,14 @@
 
 import React from 'react';
 
-import { Capabilities, contributes, createSurface } from '@dxos/app-framework';
+import { Capabilities, contributes, createSurface, defineCapabilityModule } from '@dxos/app-framework';
 import { useActiveSpace } from '@dxos/plugin-space';
 import { type Space, isSpace } from '@dxos/react-client/echo';
 
 import { SEARCH_DIALOG, SearchDialog, type SearchDialogProps, SearchMain } from '../components';
 import { SearchContextProvider } from '../hooks';
 
-export default () =>
+export default defineCapabilityModule(() =>
   contributes(Capabilities.ReactSurface, [
     createSurface({
       id: SEARCH_DIALOG,
@@ -53,4 +53,5 @@ export default () =>
         );
       },
     }),
-  ]);
+  ]),
+);

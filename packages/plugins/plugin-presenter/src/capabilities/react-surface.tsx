@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { Capabilities, contributes, createSurface } from '@dxos/app-framework';
+import { Capabilities, contributes, createSurface, defineCapabilityModule } from '@dxos/app-framework';
 import { Obj } from '@dxos/echo';
 import { SettingsStore } from '@dxos/local-storage';
 import { Markdown } from '@dxos/plugin-markdown/types';
@@ -19,7 +19,7 @@ import {
 import { meta } from '../meta';
 import { type PresenterSettingsProps } from '../types';
 
-export default () =>
+export default defineCapabilityModule(() =>
   contributes(Capabilities.ReactSurface, [
     createSurface({
       id: `${meta.id}/document`,
@@ -60,4 +60,5 @@ export default () =>
         data.subject instanceof SettingsStore && data.subject.prefix === meta.id,
       component: ({ data: { subject } }) => <PresenterSettings settings={subject.value} />,
     }),
-  ]);
+  ]),
+);

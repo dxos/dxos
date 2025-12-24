@@ -2,13 +2,13 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Capabilities, contributes } from '@dxos/app-framework';
+import { Capabilities, contributes, defineCapabilityModule } from '@dxos/app-framework';
 import { live } from '@dxos/live-object';
 
 import { meta } from '../meta';
 import { type FilesSettingsProps, FilesSettingsSchema } from '../types';
 
-export default async () => {
+export default defineCapabilityModule(async () => {
   const settings = live<FilesSettingsProps>({
     autoExport: false,
     autoExportInterval: 30_000,
@@ -19,4 +19,4 @@ export default async () => {
     schema: FilesSettingsSchema,
     value: settings,
   });
-};
+});

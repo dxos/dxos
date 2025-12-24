@@ -3,7 +3,13 @@
 //
 import React from 'react';
 
-import { Capabilities, type PluginContext, contributes, createSurface } from '@dxos/app-framework';
+import {
+  Capabilities,
+  type PluginContext,
+  contributes,
+  createSurface,
+  defineCapabilityModule,
+} from '@dxos/app-framework';
 import { useCapability } from '@dxos/app-framework/react';
 import { SettingsStore } from '@dxos/local-storage';
 
@@ -14,7 +20,7 @@ import { isLocalFile } from '../util';
 
 import { FileCapabilities } from './capabilities';
 
-export default (context: PluginContext) =>
+export default defineCapabilityModule((context: PluginContext) =>
   contributes(Capabilities.ReactSurface, [
     createSurface({
       id: `${meta.id}/article`,
@@ -44,4 +50,5 @@ export default (context: PluginContext) =>
         return <ExportStatus running={state.exportRunning} lastExport={state.lastExport} />;
       },
     }),
-  ]);
+  ]),
+);

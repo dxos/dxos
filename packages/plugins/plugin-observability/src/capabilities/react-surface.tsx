@@ -4,13 +4,13 @@
 
 import React from 'react';
 
-import { Capabilities, contributes, createSurface } from '@dxos/app-framework';
+import { Capabilities, contributes, createSurface, defineCapabilityModule } from '@dxos/app-framework';
 import { SettingsStore } from '@dxos/local-storage';
 
 import { HelpContainer, ObservabilitySettings, type ObservabilitySettingsProps } from '../components';
 import { meta } from '../meta';
 
-export default () =>
+export default defineCapabilityModule(() =>
   contributes(Capabilities.ReactSurface, [
     createSurface({
       id: meta.id,
@@ -24,4 +24,5 @@ export default () =>
       role: 'deck-companion--help',
       component: () => <HelpContainer />,
     }),
-  ]);
+  ]),
+);

@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { Capabilities, contributes, createSurface } from '@dxos/app-framework';
+import { Capabilities, contributes, createSurface, defineCapabilityModule } from '@dxos/app-framework';
 import { useCapability } from '@dxos/app-framework/react';
 import { Obj } from '@dxos/echo';
 import { SettingsStore } from '@dxos/local-storage';
@@ -14,7 +14,7 @@ import { SketchContainer, SketchSettings } from '../components';
 import { meta } from '../meta';
 import { EXCALIDRAW_SCHEMA, type SketchSettingsProps } from '../types';
 
-export default () =>
+export default defineCapabilityModule(() =>
   contributes(Capabilities.ReactSurface, [
     createSurface({
       id: `${meta.id}/sketch`,
@@ -40,4 +40,5 @@ export default () =>
         data.subject instanceof SettingsStore && data.subject.prefix === meta.id,
       component: ({ data: { subject } }) => <SketchSettings settings={subject.value} />,
     }),
-  ]);
+  ]),
+);

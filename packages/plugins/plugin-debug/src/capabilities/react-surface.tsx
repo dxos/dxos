@@ -13,6 +13,7 @@ import {
   contributes,
   createIntent,
   createSurface,
+  defineCapabilityModule,
 } from '@dxos/app-framework';
 import { useCapability, useIntentDispatcher } from '@dxos/app-framework/react';
 import {
@@ -87,7 +88,7 @@ const useCurrentSpace = () => {
   return space;
 };
 
-export default (context: PluginContext) =>
+export default defineCapabilityModule((context: PluginContext) =>
   contributes(Capabilities.ReactSurface, [
     createSurface({
       id: `${meta.id}/plugin-settings`,
@@ -416,4 +417,5 @@ export default (context: PluginContext) =>
         return <TestingPanel onSpaceCreate={onSpaceCreate} onScriptPluginOpen={onScriptPluginOpen} />;
       },
     }),
-  ]);
+  ]),
+);

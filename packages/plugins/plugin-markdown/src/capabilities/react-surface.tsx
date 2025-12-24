@@ -4,7 +4,7 @@
 
 import React, { forwardRef, useCallback } from 'react';
 
-import { Capabilities, contributes, createSurface } from '@dxos/app-framework';
+import { Capabilities, contributes, createSurface, defineCapabilityModule } from '@dxos/app-framework';
 import { SurfaceCardRole, useCapability } from '@dxos/app-framework/react';
 import { Obj } from '@dxos/echo';
 import { SettingsStore } from '@dxos/local-storage';
@@ -16,7 +16,7 @@ import { meta } from '../meta';
 import { Markdown, MarkdownCapabilities } from '../types';
 import { isEditorModel } from '../util';
 
-export default () =>
+export default defineCapabilityModule(() =>
   contributes(Capabilities.ReactSurface, [
     createSurface({
       id: `${meta.id}/surface/document`,
@@ -59,7 +59,8 @@ export default () =>
         Obj.instanceOf(Markdown.Document, data.subject) || Obj.instanceOf(Text.Text, data.subject),
       component: ({ data, role, ref }) => <MarkdownCard {...data} role={role as SurfaceCardRole} ref={ref} />,
     }),
-  ]);
+  ]),
+);
 
 /**
  * Common wrapper.

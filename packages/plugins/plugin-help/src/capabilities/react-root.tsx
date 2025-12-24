@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { Capabilities, contributes } from '@dxos/app-framework';
+import { Capabilities, contributes, defineCapabilityModule } from '@dxos/app-framework';
 import { useCapability } from '@dxos/app-framework/react';
 
 import { WelcomeTour } from '../components';
@@ -13,7 +13,7 @@ import { type Step } from '../types';
 
 import { HelpCapabilities } from './capabilities';
 
-export default (steps: Step[]) =>
+export default defineCapabilityModule((steps: Step[]) =>
   contributes(Capabilities.ReactRoot, {
     id: meta.id,
     root: () => {
@@ -31,4 +31,5 @@ export default (steps: Step[]) =>
         />
       );
     },
-  });
+  }),
+);

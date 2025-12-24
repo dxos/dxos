@@ -2,13 +2,13 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Capabilities, contributes } from '@dxos/app-framework';
+import { Capabilities, contributes, defineCapabilityModule } from '@dxos/app-framework';
 import { live } from '@dxos/live-object';
 
 import { meta } from '../meta';
 import { type DebugSettingsProps, DebugSettingsSchema } from '../types';
 
-export default () => {
+export default defineCapabilityModule(() => {
   const settings = live<DebugSettingsProps>({});
 
   return contributes(Capabilities.Settings, {
@@ -16,4 +16,4 @@ export default () => {
     schema: DebugSettingsSchema,
     value: settings,
   });
-};
+});

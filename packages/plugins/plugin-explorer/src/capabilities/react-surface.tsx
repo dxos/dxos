@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { Capabilities, contributes, createSurface } from '@dxos/app-framework';
+import { Capabilities, contributes, createSurface, defineCapabilityModule } from '@dxos/app-framework';
 import { Obj } from '@dxos/echo';
 import { type View } from '@dxos/schema';
 
@@ -12,7 +12,7 @@ import { ExplorerContainer } from '../components';
 import { meta } from '../meta';
 import { Graph } from '../types';
 
-export default () =>
+export default defineCapabilityModule(() =>
   contributes(
     Capabilities.ReactSurface,
     createSurface({
@@ -23,4 +23,5 @@ export default () =>
         return <ExplorerContainer view={data.subject} role={role} />;
       },
     }),
-  );
+  ),
+);

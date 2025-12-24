@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { contributes } from '@dxos/app-framework';
+import { contributes, defineCapabilityModule } from '@dxos/app-framework';
 import { LocalStorageStore } from '@dxos/local-storage';
 import { type LatLngLiteral } from '@dxos/react-ui-geo';
 
@@ -11,7 +11,7 @@ import { meta } from '../meta';
 
 import { MapCapabilities } from './capabilities';
 
-export default () => {
+export default defineCapabilityModule(() => {
   const state = new LocalStorageStore<MapCapabilities.State>(meta.id, {
     type: 'map',
   });
@@ -22,4 +22,4 @@ export default () => {
     .prop({ key: 'center', type: LocalStorageStore.json<LatLngLiteral | undefined>() });
 
   return contributes(MapCapabilities.State, state.values);
-};
+});

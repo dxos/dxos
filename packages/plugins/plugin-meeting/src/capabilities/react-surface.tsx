@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { Capabilities, contributes, createSurface } from '@dxos/app-framework';
+import { Capabilities, contributes, createSurface, defineCapabilityModule } from '@dxos/app-framework';
 import { Obj } from '@dxos/echo';
 import { SettingsStore } from '@dxos/local-storage';
 import { Channel } from '@dxos/plugin-thread/types';
@@ -13,7 +13,7 @@ import { MeetingContainer, MeetingSettings, MeetingsList } from '../components';
 import { meta } from '../meta';
 import { Meeting } from '../types';
 
-export default () =>
+export default defineCapabilityModule(() =>
   contributes(Capabilities.ReactSurface, [
     createSurface({
       id: `${meta.id}/plugin-settings`,
@@ -42,4 +42,5 @@ export default () =>
         );
       },
     }),
-  ]);
+  ]),
+);

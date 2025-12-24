@@ -4,7 +4,7 @@
 
 import React, { useCallback } from 'react';
 
-import { Capabilities, contributes } from '@dxos/app-framework';
+import { Capabilities, contributes, defineCapabilityModule } from '@dxos/app-framework';
 import { useCapability } from '@dxos/app-framework/react';
 
 import { DeckLayout } from '../components';
@@ -12,7 +12,7 @@ import { meta } from '../meta';
 
 import { DeckCapabilities } from './capabilities';
 
-export default () =>
+export default defineCapabilityModule(() =>
   contributes(Capabilities.ReactRoot, {
     id: meta.id,
     root: () => {
@@ -37,4 +37,5 @@ export default () =>
 
       return <DeckLayout onDismissToast={handleDismissToast} />;
     },
-  });
+  }),
+);

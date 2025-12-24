@@ -57,6 +57,17 @@ export type Capability<T> = {
 
 export type AnyCapability = Capability<any>;
 
+/**
+ * Union type representing all valid return types for a capability module.
+ * Supports single capabilities, arrays, and tuples of different capability types.
+ */
+export type CapabilityModuleReturn =
+  | AnyCapability
+  | AnyCapability[]
+  | readonly AnyCapability[]
+  | [AnyCapability, ...AnyCapability[]]
+  | readonly [AnyCapability, ...AnyCapability[]];
+
 type PluginsContextOptions = {
   registry: Registry.Registry;
   activate: (event: ActivationEvent) => Effect.Effect<boolean, Error>;
@@ -87,20 +98,73 @@ export const contributes = <I extends InterfaceDef<any>>(
 };
 
 type LoadCapability<T, U> = () => Promise<{ default: (props: T) => MaybePromise<Capability<U>> }>;
-type LoadCapabilities<T> = () => Promise<{ default: (props: T) => MaybePromise<AnyCapability[]> }>;
+type LoadCapabilities<T> = () => Promise<{ default: (props: T) => MaybePromise<CapabilityModuleReturn> }>;
 
 // TODO(wittjosiah): Not having the array be `any` causes type errors when using the lazy capability.
 type LazyCapability<T, U> = (props?: T) => Promise<() => Promise<Capability<U> | AnyCapability[]>>;
 
 /**
  * Helper to define a lazily loaded implementation of a capability.
+ * Supports single capabilities, arrays, and tuples of different capability types.
  */
 export const lazy =
   <T, U>(c: LoadCapability<T, U> | LoadCapabilities<T>): LazyCapability<T, U> =>
   async (props?: T) => {
     const { default: getCapability } = await c();
-    return async () => getCapability(props as T);
+    return async () => {
+      const result = await getCapability(props as T);
+      // Normalize to array for runtime compatibility (handles tuples, readonly arrays, etc.)
+      return (Array.isArray(result) ? result : [result]) as AnyCapability[] | Capability<U>;
+    };
   };
+
+/**
+ * Helper to define a capability module with explicit typing.
+ * Wraps the default export function to provide better type inference and make the pattern explicit.
+ *
+ * This helper provides explicit typing for the module activation function,
+ * making it clear that the function should:
+ * - Accept a PluginContext (or no parameters, or an object containing PluginContext)
+ * - Return a capability, array of capabilities, or tuple of different capability types (sync or async)
+ *
+ * Supports returning multiple capabilities of different types as a tuple, which will be normalized
+ * to an array at runtime for compatibility with the plugin system.
+ *
+ * @example
+ * ```ts
+ * // Module with context - single capability
+ * export default defineCapabilityModule((context: PluginContext) => {
+ *   const store = new SettingsStore();
+ *   return contributes(Capabilities.SettingsStore, store);
+ * });
+ *
+ * // Module without context - single capability
+ * export default defineCapabilityModule(() => {
+ *   return contributes(Capabilities.Translations, translations);
+ * });
+ *
+ * // Module with multiple capabilities of different types
+ * export default defineCapabilityModule((context: PluginContext) => {
+ *   return [
+ *     contributes(Capabilities.SettingsStore, store),
+ *     contributes(Capabilities.Translations, translations),
+ *   ];
+ * });
+ *
+ * // Module with context and additional options
+ * export default defineCapabilityModule(({ context, observability }: { context: PluginContext; observability?: boolean }) => {
+ *   return contributes(Capabilities.IntentResolver, ...);
+ * });
+ * ```
+ */
+export const defineCapabilityModule = <
+  TArgs extends any[] = [PluginContext],
+  TReturn extends MaybePromise<CapabilityModuleReturn> = MaybePromise<CapabilityModuleReturn>,
+>(
+  fn: (...args: TArgs) => TReturn,
+): ((...args: TArgs) => TReturn) => {
+  return fn;
+};
 
 /**
  * Facilitates the dependency injection between [plugin modules](#pluginmodule) by allowing them contribute and request capabilities from each other.

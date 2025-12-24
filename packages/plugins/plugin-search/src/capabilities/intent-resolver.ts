@@ -2,11 +2,18 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Capabilities, LayoutAction, contributes, createIntent, createResolver } from '@dxos/app-framework';
+import {
+  Capabilities,
+  LayoutAction,
+  contributes,
+  createIntent,
+  createResolver,
+  defineCapabilityModule,
+} from '@dxos/app-framework';
 
 import { SearchAction } from '../types';
 
-export default () =>
+export default defineCapabilityModule(() =>
   contributes(
     Capabilities.IntentResolver,
     createResolver({
@@ -15,4 +22,5 @@ export default () =>
         intents: [createIntent(LayoutAction.UpdateComplementary, { part: 'complementary', subject: 'search' })],
       }),
     }),
-  );
+  ),
+);

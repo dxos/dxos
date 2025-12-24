@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { Capabilities, contributes, createSurface } from '@dxos/app-framework';
+import { Capabilities, contributes, createSurface, defineCapabilityModule } from '@dxos/app-framework';
 import { InvocationTraceContainer } from '@dxos/devtools';
 import { Obj } from '@dxos/echo';
 import { StackItem } from '@dxos/react-ui-stack';
@@ -13,7 +13,7 @@ import { Project } from '@dxos/types';
 import { ProjectContainer, ProjectObjectSettings } from '../components';
 import { meta } from '../meta';
 
-export default () =>
+export default defineCapabilityModule(() =>
   contributes(Capabilities.ReactSurface, [
     createSurface({
       id: meta.id,
@@ -42,4 +42,5 @@ export default () =>
       filter: (data): data is { subject: Project.Project } => Obj.instanceOf(Project.Project, data.subject),
       component: ({ data }) => <ProjectObjectSettings project={data.subject} />,
     }),
-  ]);
+  ]),
+);

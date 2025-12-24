@@ -4,7 +4,13 @@
 
 import { EditorView } from '@codemirror/view';
 
-import { Capabilities, type PluginContext, contributes, createIntent } from '@dxos/app-framework';
+import {
+  Capabilities,
+  type PluginContext,
+  contributes,
+  createIntent,
+  defineCapabilityModule,
+} from '@dxos/app-framework';
 import { Obj } from '@dxos/echo';
 import { ATTENDABLE_PATH_SEPARATOR, DeckAction } from '@dxos/plugin-deck/types';
 import { MarkdownCapabilities } from '@dxos/plugin-markdown';
@@ -14,7 +20,7 @@ import { threads } from '../extensions';
 
 import { ThreadCapabilities } from './capabilities';
 
-export default (context: PluginContext) =>
+export default defineCapabilityModule((context: PluginContext) =>
   contributes(MarkdownCapabilities.Extensions, [
     ({ document: doc }) => {
       const { dispatchPromise: dispatch } = context.getCapability(Capabilities.IntentDispatcher);
@@ -51,7 +57,8 @@ export default (context: PluginContext) =>
         });
       });
     },
-  ]);
+  ]),
+);
 
 const selectionOverlapsComment = (state: EditorState): boolean => {
   // May not be defined if thread plugin not installed.

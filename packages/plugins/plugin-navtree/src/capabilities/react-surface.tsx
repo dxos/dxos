@@ -4,13 +4,13 @@
 
 import React from 'react';
 
-import { Capabilities, contributes, createSurface } from '@dxos/app-framework';
+import { Capabilities, contributes, createSurface, defineCapabilityModule } from '@dxos/app-framework';
 import { isGraphNode } from '@dxos/plugin-graph';
 
 import { CommandsDialogContent, CommandsTrigger, NavTreeContainer, NavTreeDocumentTitle } from '../components';
 import { COMMANDS_DIALOG, meta } from '../meta';
 
-export default () =>
+export default defineCapabilityModule(() =>
   contributes(Capabilities.ReactSurface, [
     createSurface({
       id: COMMANDS_DIALOG,
@@ -45,4 +45,5 @@ export default () =>
       position: 'fallback',
       component: () => <CommandsTrigger />,
     }),
-  ]);
+  ]),
+);

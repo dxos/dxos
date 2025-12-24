@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type PluginContext, contributes } from '@dxos/app-framework';
+import { type PluginContext, contributes, defineCapabilityModule } from '@dxos/app-framework';
 import { getSpace } from '@dxos/client/echo';
 import { MarkdownCapabilities } from '@dxos/plugin-markdown';
 
@@ -10,7 +10,7 @@ import { computeGraphFacet } from '../extensions';
 
 import { SheetCapabilities } from './capabilities';
 
-export default (context: PluginContext) =>
+export default defineCapabilityModule((context: PluginContext) =>
   contributes(MarkdownCapabilities.Extensions, [
     ({ document: doc }) => {
       const computeGraphRegistry = context.getCapability(SheetCapabilities.ComputeGraphRegistry);
@@ -20,4 +20,5 @@ export default (context: PluginContext) =>
         return computeGraphFacet.of(computeGraph);
       }
     },
-  ]);
+  ]),
+);

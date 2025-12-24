@@ -6,7 +6,14 @@ import { Atom } from '@effect-atom/atom-react';
 import * as Function from 'effect/Function';
 import * as Option from 'effect/Option';
 
-import { Capabilities, LayoutAction, type PluginContext, contributes, createIntent } from '@dxos/app-framework';
+import {
+  Capabilities,
+  LayoutAction,
+  type PluginContext,
+  contributes,
+  createIntent,
+  defineCapabilityModule,
+} from '@dxos/app-framework';
 import { createExtension } from '@dxos/app-graph';
 
 import { SHORTCUTS_DIALOG } from '../components';
@@ -15,7 +22,7 @@ import { HelpAction } from '../types';
 
 import { HelpCapabilities } from './capabilities';
 
-export default (context: PluginContext) =>
+export default defineCapabilityModule((context: PluginContext) =>
   contributes(
     Capabilities.AppGraphBuilder,
     createExtension({
@@ -75,4 +82,5 @@ export default (context: PluginContext) =>
           ),
         ),
     }),
-  );
+  ),
+);

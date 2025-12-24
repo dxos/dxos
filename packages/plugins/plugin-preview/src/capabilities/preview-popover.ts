@@ -2,7 +2,14 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Capabilities, LayoutAction, type PluginContext, contributes, createIntent } from '@dxos/app-framework';
+import {
+  Capabilities,
+  LayoutAction,
+  type PluginContext,
+  contributes,
+  createIntent,
+  defineCapabilityModule,
+} from '@dxos/app-framework';
 import { addEventListener } from '@dxos/async';
 import { type Client } from '@dxos/client';
 import { type Space, parseId } from '@dxos/client/echo';
@@ -27,7 +34,7 @@ const handlePreviewLookup = async (
   }
 };
 
-export default (context: PluginContext) => {
+export default defineCapabilityModule((context: PluginContext) => {
   // TODO(wittjosiah): Factor out lookup handlers to other plugins to make not ECHO-specific.
   const handleAnchorActivate = async ({ refId, label, trigger }: DxAnchorActivate) => {
     const { dispatchPromise: dispatch } = context.getCapability(Capabilities.IntentDispatcher);
@@ -66,4 +73,4 @@ export default (context: PluginContext) => {
   }
 
   return contributes(Capabilities.Null, null, () => cleanup());
-};
+});

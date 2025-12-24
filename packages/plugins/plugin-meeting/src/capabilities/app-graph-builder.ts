@@ -6,7 +6,14 @@ import { Atom } from '@effect-atom/atom-react';
 import * as Function from 'effect/Function';
 import * as Option from 'effect/Option';
 
-import { Capabilities, type PluginContext, chain, contributes, createIntent } from '@dxos/app-framework';
+import {
+  Capabilities,
+  type PluginContext,
+  chain,
+  contributes,
+  createIntent,
+  defineCapabilityModule,
+} from '@dxos/app-framework';
 import { Obj, Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
@@ -23,7 +30,7 @@ import { Meeting, MeetingAction } from '../types';
 
 import { MeetingCapabilities } from './capabilities';
 
-export default (context: PluginContext) =>
+export default defineCapabilityModule((context: PluginContext) =>
   contributes(Capabilities.AppGraphBuilder, [
     // TODO(wittjosiah): This currently won't _start_ the call but will navigate to the correct channel.
     createExtension({
@@ -274,4 +281,5 @@ export default (context: PluginContext) =>
           ),
         ),
     }),
-  ]);
+  ]),
+);

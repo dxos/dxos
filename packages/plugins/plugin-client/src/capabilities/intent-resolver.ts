@@ -12,6 +12,7 @@ import {
   contributes,
   createIntent,
   createResolver,
+  defineCapabilityModule,
 } from '@dxos/app-framework';
 import { PublicKey } from '@dxos/client';
 import { invariant } from '@dxos/invariant';
@@ -29,7 +30,7 @@ type IntentResolverOptions = {
 
 const RECOVER_IDENTITY_RPC_TIMEOUT = 20_000;
 
-export default ({ context, appName = 'Composer' }: IntentResolverOptions) =>
+export default defineCapabilityModule(({ context, appName = 'Composer' }: IntentResolverOptions) =>
   contributes(Capabilities.IntentResolver, [
     createResolver({
       intent: ClientAction.CreateIdentity,
@@ -246,4 +247,5 @@ export default ({ context, appName = 'Composer' }: IntentResolverOptions) =>
         );
       },
     }),
-  ]);
+  ]),
+);

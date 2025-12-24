@@ -6,12 +6,19 @@ import { Atom } from '@effect-atom/atom-react';
 import * as Function from 'effect/Function';
 import * as Option from 'effect/Option';
 
-import { Capabilities, type PluginContext, SettingsAction, contributes, createIntent } from '@dxos/app-framework';
+import {
+  Capabilities,
+  type PluginContext,
+  SettingsAction,
+  contributes,
+  createIntent,
+  defineCapabilityModule,
+} from '@dxos/app-framework';
 import { createExtension } from '@dxos/plugin-graph';
 
 import { REGISTRY_ID, REGISTRY_KEY, meta } from '../meta';
 
-export default (context: PluginContext) =>
+export default defineCapabilityModule((context: PluginContext) =>
   contributes(Capabilities.AppGraphBuilder, [
     createExtension({
       id: meta.id,
@@ -153,4 +160,5 @@ export default (context: PluginContext) =>
           ),
         ),
     }),
-  ]);
+  ]),
+);

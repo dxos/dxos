@@ -7,7 +7,7 @@ import React, { useCallback } from 'react';
 import { IconButton, List, ListItem } from '@dxos/react-ui';
 
 import { Capabilities, createSurface } from '../../common';
-import { contributes } from '../../core';
+import { contributes, defineCapabilityModule } from '../../core';
 import { usePluginManager } from '../../react';
 
 const Item = ({
@@ -62,7 +62,7 @@ export const Main = () => {
   );
 };
 
-export default () =>
+export default defineCapabilityModule(() =>
   contributes(
     Capabilities.ReactSurface,
     createSurface({
@@ -70,4 +70,5 @@ export default () =>
       role: 'primary',
       component: Main,
     }),
-  );
+  ),
+);

@@ -2,7 +2,13 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Capabilities, type PluginContext, contributes, createIntent } from '@dxos/app-framework';
+import {
+  Capabilities,
+  type PluginContext,
+  contributes,
+  createIntent,
+  defineCapabilityModule,
+} from '@dxos/app-framework';
 import { isSpace } from '@dxos/client/echo';
 import { Obj } from '@dxos/echo';
 import { Collection } from '@dxos/schema';
@@ -17,7 +23,7 @@ const COLLECTION_TYPE = Collection.Collection.typename;
 // https://stackoverflow.com/a/19016910
 const DIRECTORY_TYPE = 'text/directory';
 
-export default (context: PluginContext) =>
+export default defineCapabilityModule((context: PluginContext) =>
   contributes(Capabilities.AppGraphSerializer, [
     {
       inputType: SPACES,
@@ -73,4 +79,5 @@ export default (context: PluginContext) =>
         return result.data?.object;
       },
     },
-  ]);
+  ]),
+);

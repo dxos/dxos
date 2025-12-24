@@ -12,6 +12,7 @@ import {
   contributes,
   createIntent,
   createResolver,
+  defineCapabilityModule,
 } from '@dxos/app-framework';
 import { SpaceState, getSpace } from '@dxos/client/echo';
 import { Invitation, InvitationEncoder } from '@dxos/client/invitations';
@@ -50,7 +51,7 @@ type IntentResolverOptions = {
   observability?: boolean;
 };
 
-export default ({ context, observability, createInvitationUrl }: IntentResolverOptions) => {
+export default defineCapabilityModule(({ context, observability, createInvitationUrl }: IntentResolverOptions) => {
   const resolve = (typename: string) =>
     context.getCapabilities(Capabilities.Metadata).find(({ id }) => id === typename)?.metadata ?? {};
 
@@ -700,4 +701,4 @@ export default ({ context, observability, createInvitationUrl }: IntentResolverO
       }),
     }),
   ]);
-};
+});

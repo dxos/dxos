@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as ManagedRuntime from 'effect/ManagedRuntime';
 
-import { Capabilities, type PluginContext, contributes } from '@dxos/app-framework';
+import { Capabilities, type PluginContext, contributes, defineCapabilityModule } from '@dxos/app-framework';
 import { GenericToolkit, makeToolExecutionServiceFromFunctions, makeToolResolverFromFunctions } from '@dxos/assistant';
 import { Resource } from '@dxos/context';
 import { Database, Query, Ref } from '@dxos/echo';
@@ -27,12 +27,12 @@ import { SpaceProperties } from '@dxos/react-client/echo';
 
 import { AutomationCapabilities } from './capabilities';
 
-export default async (context: PluginContext) => {
+export default defineCapabilityModule(async (context: PluginContext) => {
   const provider = await new ComputeRuntimeProviderImpl(context).open();
   return contributes(AutomationCapabilities.ComputeRuntime, provider, async () => {
     await provider.close();
   });
-};
+});
 
 /**
  * Adapts plugin capabilities to runtime layers.

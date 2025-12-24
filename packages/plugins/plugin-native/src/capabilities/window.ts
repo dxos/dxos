@@ -4,9 +4,9 @@
 
 import { LogicalPosition, LogicalSize, getCurrentWindow } from '@tauri-apps/api/window';
 
-import { Capabilities, type PluginContext, contributes } from '@dxos/app-framework';
+import { Capabilities, type PluginContext, contributes, defineCapabilityModule } from '@dxos/app-framework';
 
-export default (_context: PluginContext) => {
+export default defineCapabilityModule((_context: PluginContext) => {
   return contributes(Capabilities.Null, null, () => {
     const appWindow = getCurrentWindow();
 
@@ -46,4 +46,4 @@ export default (_context: PluginContext) => {
     // Save state before closing.
     window.addEventListener('beforeunload', saveWindowState);
   });
-};
+});

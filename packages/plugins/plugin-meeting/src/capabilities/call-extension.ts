@@ -4,7 +4,13 @@
 
 import type * as Schema from 'effect/Schema';
 
-import { Capabilities, type PluginContext, contributes, createIntent } from '@dxos/app-framework';
+import {
+  Capabilities,
+  type PluginContext,
+  contributes,
+  createIntent,
+  defineCapabilityModule,
+} from '@dxos/app-framework';
 import { extractionAnthropicFunction, processTranscriptMessage } from '@dxos/assistant/extraction';
 import { Filter, type Obj, Query, Type } from '@dxos/echo';
 import { FunctionExecutor } from '@dxos/functions-runtime';
@@ -29,7 +35,7 @@ import { MeetingCapabilities } from './capabilities';
 // TODO(wittjosiah): Can we stop using protobuf for this?
 type MeetingPayload = buf.MessageInitShape<typeof MeetingPayloadSchema>;
 
-export default (context: PluginContext) => {
+export default defineCapabilityModule((context: PluginContext) => {
   const { dispatchPromise: dispatch } = context.getCapability(Capabilities.IntentDispatcher);
   const client = context.getCapability(ClientCapabilities.Client);
   const state = context.getCapability(MeetingCapabilities.State);
@@ -77,7 +83,7 @@ export default (context: PluginContext) => {
       void state.transcriptionManager?.setRecording(isSpeaking);
     },
   });
-};
+});
 
 type EntityExtractionEnricherFactoryOptions = {
   contextTypes: Schema.Schema.AnyNoContext[];

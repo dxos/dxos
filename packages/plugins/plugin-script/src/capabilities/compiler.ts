@@ -10,7 +10,7 @@ import * as Schema from 'effect/Schema';
 import wasmUrl from 'esbuild-wasm/esbuild.wasm?url';
 import * as ts from 'typescript';
 
-import { contributes } from '@dxos/app-framework';
+import { contributes, defineCapabilityModule } from '@dxos/app-framework';
 import { runAndForwardErrors } from '@dxos/effect';
 import { initializeBundler } from '@dxos/functions-runtime/bundler';
 import { trim } from '@dxos/util';
@@ -23,7 +23,7 @@ const SCRIPT_PACKAGES_BUCKET = 'https://pub-5745ae82e450484aa28f75fc6a175935.r2.
 const DECLARATION_EXTS = ['.d.ts', '.d.mts'];
 const NO_TYPES = true; // Types temopararly disabled due to compiler erorrs.
 
-export default async () => {
+export default defineCapabilityModule(async () => {
   await initializeBundler({ wasmUrl });
 
   const runtimeModules = await runAndForwardErrors(fetchRuntimeModules().pipe(Effect.provide(FetchHttpClient.layer)));
@@ -49,7 +49,7 @@ export default async () => {
   }
 
   return contributes(ScriptCapabilities.Compiler, compiler);
-};
+});
 
 const fetchRuntimeModules = Effect.fnUntraced(function* () {
   const manifest = yield* HttpClient.get(new URL('manifest.json', SCRIPT_PACKAGES_BUCKET)).pipe(

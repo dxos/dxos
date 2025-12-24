@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { Capabilities, contributes, createSurface } from '@dxos/app-framework';
+import { Capabilities, contributes, createSurface, defineCapabilityModule } from '@dxos/app-framework';
 import { useCapability } from '@dxos/app-framework/react';
 import { InvocationTraceContainer } from '@dxos/devtools';
 import { Obj } from '@dxos/echo';
@@ -28,7 +28,7 @@ import { useCompiler } from '../hooks';
 import { meta } from '../meta';
 import { Notebook, type ScriptSettings } from '../types';
 
-export default () =>
+export default defineCapabilityModule(() =>
   contributes(Capabilities.ReactSurface, [
     createSurface({
       id: `${meta.id}/plugin-settings`,
@@ -100,4 +100,5 @@ export default () =>
         data.component === DEPLOYMENT_DIALOG,
       component: ({ data }) => <DeploymentDialog {...data.props} />,
     }),
-  ]);
+  ]),
+);

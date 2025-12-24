@@ -13,6 +13,7 @@ import {
   type PromiseIntentDispatcher,
   contributes,
   createIntent,
+  defineCapabilityModule,
 } from '@dxos/app-framework';
 import { invariant } from '@dxos/invariant';
 import { trim } from '@dxos/util';
@@ -29,7 +30,7 @@ declare global {
   }
 }
 
-export default () =>
+export default defineCapabilityModule(() =>
   contributes(Capabilities.Tools, [
     createTool(meta.id, {
       name: 'show',
@@ -81,4 +82,5 @@ export default () =>
         }
       },
     }),
-  ]);
+  ]),
+);
