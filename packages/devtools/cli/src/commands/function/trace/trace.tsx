@@ -12,6 +12,7 @@ import * as Layer from 'effect/Layer';
 import * as ManagedRuntime from 'effect/ManagedRuntime';
 import * as Option from 'effect/Option';
 
+import { CommandConfig, Common, spaceIdWithDefault, spaceLayer, withTypes } from '@dxos/cli-util';
 import { ClientService, ConfigService } from '@dxos/client';
 import { SpaceProperties } from '@dxos/client-protocol';
 import { Database, Filter, type Key } from '@dxos/echo';
@@ -21,10 +22,8 @@ import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 
 import { App, render } from '../../../components';
-import { CommandConfig } from '../../../services';
 import { theme } from '../../../theme';
-import { createLogBuffer, spaceIdWithDefault, spaceLayer, triggerRuntimeLayer, withTypes } from '../../../util';
-import { Common } from '../../options';
+import { createLogBuffer, triggerRuntimeLayer } from '../../../util';
 
 import { Trace } from './components/Trace';
 

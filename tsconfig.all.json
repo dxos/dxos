@@ -247,6 +247,9 @@
       "path": "packages/devtools/cli/tsconfig.json"
     },
     {
+      "path": "packages/devtools/cli-util/tsconfig.json"
+    },
+    {
       "path": "packages/devtools/devtools/tsconfig.json"
     },
     {

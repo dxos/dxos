@@ -24,7 +24,7 @@ import { Filter, Obj, Ref } from '@dxos/echo';
 // import { failedInvariant } from '@dxos/invariant';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { ClientCapabilities } from '@dxos/plugin-client';
+import { ClientCapabilities } from '@dxos/plugin-client/types';
 import { SpaceAction } from '@dxos/plugin-space/types';
 import { Organization, Person } from '@dxos/types';
 

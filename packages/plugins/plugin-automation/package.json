@@ -15,6 +15,11 @@
       "browser": "./dist/lib/browser/index.mjs",
       "node": "./dist/lib/node-esm/index.mjs"
     },
+    "./cli": {
+      "source": "./src/cli/index.ts",
+      "types": "./dist/types/src/cli/index.d.ts",
+      "node": "./dist/lib/node-esm/cli/index.mjs"
+    },
     "./hooks": {
       "source": "./src/hooks/index.ts",
       "types": "./dist/types/src/hooks/index.d.ts",
@@ -49,9 +54,12 @@
     "@dxos/app-framework": "workspace:*",
     "@dxos/assistant": "workspace:*",
     "@dxos/async": "workspace:*",
+    "@dxos/cli-util": "workspace:*",
+    "@dxos/client": "workspace:*",
     "@dxos/conductor": "workspace:*",
     "@dxos/context": "workspace:*",
     "@dxos/echo": "workspace:*",
+    "@dxos/effect": "workspace:*",
     "@dxos/functions": "workspace:*",
     "@dxos/functions-runtime": "workspace:*",
     "@dxos/invariant": "workspace:*",
@@ -73,7 +81,9 @@
     "@dxos/types": "workspace:*",
     "@dxos/util": "workspace:*",
     "@effect/ai": "catalog:",
+    "@effect/cli": "catalog:",
     "@effect/platform-browser": "catalog:",
+    "@effect/printer-ansi": "catalog:",
     "@preact-signals/safe-react": "catalog:",
     "@preact/signals-core": "catalog:"
   },

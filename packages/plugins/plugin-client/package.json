@@ -15,6 +15,11 @@
       "browser": "./dist/lib/browser/index.mjs",
       "node": "./dist/lib/node-esm/index.mjs"
     },
+    "./cli": {
+      "source": "./src/cli/index.ts",
+      "types": "./dist/types/src/cli/index.d.ts",
+      "node": "./dist/lib/node-esm/cli/index.mjs"
+    },
     "./types": {
       "source": "./src/types/index.ts",
       "types": "./dist/types/src/types/index.d.ts",
@@ -37,23 +42,33 @@
   "dependencies": {
     "@dxos/app-framework": "workspace:*",
     "@dxos/async": "workspace:*",
+    "@dxos/cli-util": "workspace:*",
+    "@dxos/client": "workspace:*",
+    "@dxos/client-protocol": "workspace:*",
+    "@dxos/client-services": "workspace:*",
     "@dxos/config": "workspace:*",
     "@dxos/echo": "workspace:*",
     "@dxos/echo-signals": "workspace:*",
+    "@dxos/effect": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/local-storage": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/plugin-graph": "workspace:*",
     "@dxos/plugin-observability": "workspace:*",
+    "@dxos/protocols": "workspace:*",
     "@dxos/react-client": "workspace:*",
     "@dxos/react-ui-form": "workspace:*",
     "@dxos/react-ui-pickers": "workspace:*",
     "@dxos/react-ui-stack": "workspace:*",
     "@dxos/shell": "workspace:*",
     "@dxos/util": "workspace:*",
+    "@effect/cli": "catalog:",
+    "@effect/platform": "catalog:",
     "@preact-signals/safe-react": "catalog:",
     "@preact/signals-core": "catalog:",
-    "react-qr-rounded": "catalog:"
+    "effect": "catalog:",
+    "react-qr-rounded": "catalog:",
+    "yaml": "catalog:"
   },
   "devDependencies": {
     "@dxos/live-object": "workspace:*",
@@ -61,10 +76,10 @@
     "@dxos/storybook-utils": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
     "@effect-atom/atom-react": "catalog:",
-    "@effect/platform": "catalog:",
+    "@effect/printer": "catalog:",
+    "@effect/printer-ansi": "catalog:",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
-    "effect": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:",
     "vite": "catalog:"

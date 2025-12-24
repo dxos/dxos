@@ -36,7 +36,13 @@
       "path": "../../core/echo/live-object"
     },
     {
+      "path": "../../devtools/cli-util"
+    },
+    {
       "path": "../../sdk/app-framework"
+    },
+    {
+      "path": "../../sdk/client-protocol"
     },
     {
       "path": "../../ui/react-ui"

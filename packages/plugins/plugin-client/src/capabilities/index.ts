@@ -11,5 +11,3 @@ export const Migrations = lazy(async () => import('./migrations'));
 export const ReactContext = lazy(async () => import('./react-context'));
 export const ReactSurface = lazy(async () => import('./react-surface'));
 export const SchemaDefs = lazy(async () => import('./schema-defs'));
-
-export * from './capabilities';

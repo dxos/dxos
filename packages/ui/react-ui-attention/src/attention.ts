@@ -7,18 +7,7 @@ import { untracked } from '@preact/signals-core';
 import { type Live, live } from '@dxos/live-object';
 import { ComplexMap } from '@dxos/util';
 
-// NOTE: Chosen from RFC 1738's `safe` characters: http://www.faqs.org/rfcs/rfc1738.html
-export const ATTENDABLE_PATH_SEPARATOR = '~';
-
-export type Attention = {
-  hasAttention: boolean;
-  isAncestor: boolean;
-  isRelated: boolean;
-};
-
-export type CurrentState = {
-  current: string[];
-};
+import { ATTENDABLE_PATH_SEPARATOR, type Attention, type CurrentState } from './types';
 
 // TODO(wittjosiah): Use mosaic path utility?
 const stringKey = (key: string[]) => key.join(',');

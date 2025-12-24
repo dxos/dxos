@@ -17,10 +17,8 @@ import { PublicKey } from '@dxos/react-client';
 import { SpaceState, parseId } from '@dxos/react-client/echo';
 import { ComplexMap, reduceGroupBy } from '@dxos/util';
 
-import { SpaceAction } from '../types';
+import { SpaceAction, SpaceCapabilities } from '../types';
 import { COMPOSER_SPACE_LOCK, SHARED } from '../util';
-
-import { SpaceCapabilities } from './capabilities';
 
 const ACTIVE_NODE_BROADCAST_INTERVAL = 30_000;
 const WAIT_FOR_OBJECT_TIMEOUT = 5_000;

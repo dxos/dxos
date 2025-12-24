@@ -2,13 +2,11 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type PluginContext, contributes } from '@dxos/app-framework';
-import { Client } from '@dxos/react-client';
+import { Capabilities, type PluginContext, contributes } from '@dxos/app-framework';
+import { Client, ClientService } from '@dxos/client';
 
 import { ClientEvents } from '../events';
-import { type ClientPluginOptions } from '../types';
-
-import { ClientCapabilities } from './capabilities';
+import { ClientCapabilities, type ClientPluginOptions } from '../types';
 
 type ClientCapabilityOptions = Omit<ClientPluginOptions, 'appKey' | 'invitationUrl' | 'invitationParam' | 'onReset'> & {
   context: PluginContext;
@@ -36,8 +34,13 @@ export default async ({ context, onClientInitialized, onSpacesReady, ...options 
     }
   });
 
-  return contributes(ClientCapabilities.Client, client, async () => {
-    subscription.unsubscribe();
-    await client.destroy();
-  });
+  return [
+    // TODO(wittjosiah): Try to remove and prefer layer?
+    //  Perhaps move to using layer has source of truth and add a getter capability for the client.
+    contributes(ClientCapabilities.Client, client, async () => {
+      subscription.unsubscribe();
+      await client.destroy();
+    }),
+    contributes(Capabilities.Layer, ClientService.fromClient(client)),
+  ];
 };

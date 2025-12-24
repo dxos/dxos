@@ -49,24 +49,7 @@ import {
 import { SpaceEvents } from './events';
 import { meta } from './meta';
 import { translations } from './translations';
-import { CollectionAction, type CreateObjectIntent, SpaceAction } from './types';
-
-export type SpacePluginOptions = {
-  /**
-   * Base URL for the invitation link.
-   */
-  invitationUrl?: string;
-
-  /**
-   * Query parameter for the invitation code.
-   */
-  invitationParam?: string;
-
-  /**
-   * Whether to send observability events.
-   */
-  observability?: boolean;
-};
+import { CollectionAction, type CreateObjectIntent, SpaceAction, type SpacePluginOptions } from './types';
 
 export const SpacePlugin = definePlugin<SpacePluginOptions>(
   meta,

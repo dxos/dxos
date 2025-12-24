@@ -24,9 +24,8 @@ import {
 import { HuePicker, IconPicker } from '@dxos/react-ui-pickers';
 import { StackItem } from '@dxos/react-ui-stack';
 
-import { SpaceCapabilities } from '../../capabilities';
 import { meta } from '../../meta';
-import { SpaceAction, SpaceForm } from '../../types';
+import { SpaceAction, SpaceCapabilities, SpaceForm } from '../../types';
 
 const SpaceFormSchema = SpaceForm.pipe(
   Schema.extend(

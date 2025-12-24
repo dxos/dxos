@@ -27,10 +27,9 @@ import {
 import { AttentionGlyph, type AttentionGlyphProps, useAttended, useAttention } from '@dxos/react-ui-attention';
 import { ComplexMap, keyToFallback } from '@dxos/util';
 
-import { SpaceCapabilities } from '../../capabilities';
 import { usePath } from '../../hooks';
 import { meta } from '../../meta';
-import { type ObjectViewerProps } from '../../types';
+import { type ObjectViewerProps, SpaceCapabilities } from '../../types';
 
 // TODO(thure): Get/derive these values from protocol
 const REFRESH_INTERVAL = 5000;

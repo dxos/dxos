@@ -7,14 +7,11 @@ import * as Options from '@effect/cli/Options';
 import * as Console from 'effect/Console';
 import * as Effect from 'effect/Effect';
 
+import { CommandConfig, Common, printList, spaceLayer } from '@dxos/cli-util';
 import { ClientService } from '@dxos/client';
 import { Database, Filter } from '@dxos/echo';
 import { Function } from '@dxos/functions';
 import { getDeployedFunctions } from '@dxos/functions-runtime/edge';
-
-import { CommandConfig } from '../../services';
-import { printList, spaceLayer } from '../../util';
-import { Common } from '../options';
 
 import { getFunctionStatus, printFunction } from './util';
 

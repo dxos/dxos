@@ -32,11 +32,10 @@ import { Message } from '@dxos/types';
 import { type EditorSelection, type Range } from '@dxos/ui-editor';
 import { defaultTx } from '@dxos/ui-theme';
 
-import { MarkdownCapabilities } from '../capabilities';
 import { MarkdownPlugin } from '../MarkdownPlugin';
 import { meta } from '../meta';
 import { translations } from '../translations';
-import { Markdown } from '../types';
+import { Markdown, MarkdownCapabilities } from '../types';
 
 import { MarkdownContainer } from './MarkdownContainer';
 

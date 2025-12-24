@@ -9,8 +9,7 @@ import { useCapability } from '@dxos/app-framework/react';
 import { ClientProvider } from '@dxos/react-client';
 
 import { meta } from '../meta';
-
-import { ClientCapabilities } from './capabilities';
+import { ClientCapabilities } from '../types';
 
 export default () =>
   contributes(Capabilities.ReactContext, {

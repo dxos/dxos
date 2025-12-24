@@ -9,17 +9,15 @@ import { type JoinPanelProps } from '@dxos/shell/react';
 
 import {
   DevicesContainer,
-  JOIN_DIALOG,
   JoinDialog,
   ProfileContainer,
-  RECOVERY_CODE_DIALOG,
-  RESET_DIALOG,
   RecoveryCodeDialog,
   type RecoveryCodeDialogProps,
   RecoveryCredentialsContainer,
   ResetDialog,
   type ResetDialogProps,
 } from '../components';
+import { JOIN_DIALOG, RECOVERY_CODE_DIALOG, RESET_DIALOG } from '../constants';
 import { Account, type ClientPluginOptions } from '../types';
 
 type ReactSurfaceOptions = Pick<ClientPluginOptions, 'onReset'> & {

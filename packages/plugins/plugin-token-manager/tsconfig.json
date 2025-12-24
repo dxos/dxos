@@ -21,6 +21,9 @@
       "path": "../../common/log"
     },
     {
+      "path": "../../common/node-std"
+    },
+    {
       "path": "../../common/random"
     },
     {
@@ -39,10 +42,19 @@
       "path": "../../core/echo/live-object"
     },
     {
+      "path": "../../core/functions-runtime"
+    },
+    {
       "path": "../../core/protocols"
     },
     {
+      "path": "../../devtools/cli-util"
+    },
+    {
       "path": "../../sdk/app-framework"
+    },
+    {
+      "path": "../../sdk/client"
     },
     {
       "path": "../../sdk/react-client"

@@ -1,0 +1,38 @@
+//
+// Copyright 2025 DXOS.org
+//
+
+import { Capabilities, Events, contributes, createIntent, defineModule, definePlugin, lazy } from '@dxos/app-framework';
+import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
+import { type CreateObjectIntent } from '@dxos/plugin-space/types';
+
+import { meta } from '../meta';
+import { Chess, ChessAction } from '../types';
+
+const IntentResolver = lazy(() => import('../capabilities/intent-resolver'));
+
+// TODO(wittjosiah): Factor out shared modules.
+export const ChessPlugin = definePlugin(meta, () => [
+  defineModule({
+    id: `${meta.id}/module/schema`,
+    activatesOn: ClientEvents.SetupSchema,
+    activate: () => contributes(ClientCapabilities.Schema, [Chess.Game]),
+  }),
+  defineModule({
+    id: `${meta.id}/module/metadata`,
+    activatesOn: Events.SetupMetadata,
+    activate: () =>
+      contributes(Capabilities.Metadata, {
+        id: Chess.Game.typename,
+        metadata: {
+          createObjectIntent: (() => createIntent(ChessAction.Create)) satisfies CreateObjectIntent,
+          addToCollectionOnCreate: true,
+        },
+      }),
+  }),
+  defineModule({
+    id: `${meta.id}/module/intent-resolver`,
+    activatesOn: Events.SetupIntentResolver,
+    activate: IntentResolver,
+  }),
+]);

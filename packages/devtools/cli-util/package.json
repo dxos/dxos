@@ -1,0 +1,53 @@
+{
+  "name": "@dxos/cli-util",
+  "version": "0.8.3",
+  "description": "Shared CLI utilities for DXOS CLI commands and plugins",
+  "homepage": "https://dxos.org",
+  "bugs": "https://github.com/dxos/dxos/issues",
+  "license": "MIT",
+  "author": "DXOS.org",
+  "sideEffects": false,
+  "type": "module",
+  "exports": {
+    ".": {
+      "source": "./src/index.ts",
+      "types": "./dist/types/src/index.d.ts",
+      "node": "./dist/lib/node-esm/index.mjs"
+    },
+    "./testing": {
+      "source": "./src/testing/index.ts",
+      "types": "./dist/types/src/testing/index.d.ts",
+      "node": "./dist/lib/node-esm/testing/index.mjs"
+    }
+  },
+  "types": "dist/types/src/index.d.ts",
+  "files": [
+    "dist",
+    "src"
+  ],
+  "dependencies": {
+    "@dxos/client": "workspace:*",
+    "@dxos/debug": "workspace:*",
+    "@dxos/echo": "workspace:*",
+    "@dxos/effect": "workspace:*",
+    "@dxos/errors": "workspace:*",
+    "@dxos/functions": "workspace:*",
+    "@dxos/log": "workspace:*",
+    "@dxos/protocols": "workspace:*",
+    "@dxos/util": "workspace:*",
+    "@effect/cli": "catalog:",
+    "@effect/printer": "catalog:",
+    "@effect/printer-ansi": "catalog:"
+  },
+  "devDependencies": {
+    "effect": "catalog:",
+    "typescript": "catalog:",
+    "vitest": "catalog:"
+  },
+  "peerDependencies": {
+    "effect": "catalog:"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

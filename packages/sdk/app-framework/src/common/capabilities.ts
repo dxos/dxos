@@ -2,6 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
+import type * as Command from '@effect/cli/Command';
 import { type Registry } from '@effect-atom/atom-react';
 import type * as Layer from 'effect/Layer';
 import type * as Schema from 'effect/Schema';
@@ -213,4 +214,16 @@ export namespace Capabilities {
    * @category Capability
    */
   export const AnchorSort = defineCapability<AnchorSort>('dxos.org/app-framework/capability/anchor-sort');
+
+  export type AnyCommand = Command.Command<any, any, any, any>;
+
+  /**
+   * @category Capability
+   */
+  export const Command = defineCapability<AnyCommand>('dxos.org/app-framework/capability/command');
+
+  /**
+   * @category Capability
+   */
+  export const Layer = defineCapability<Layer.Layer<any, any, any>>('dxos.org/app-framework/capability/layer');
 }

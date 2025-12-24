@@ -13,16 +13,14 @@ import {
   createIntent,
   createResolver,
 } from '@dxos/app-framework';
+import { PublicKey } from '@dxos/client';
 import { invariant } from '@dxos/invariant';
 import { ObservabilityAction } from '@dxos/plugin-observability/types';
-import { PublicKey } from '@dxos/react-client';
 import { type JoinPanelProps } from '@dxos/shell/react';
 
-import { JOIN_DIALOG, RECOVERY_CODE_DIALOG, RESET_DIALOG } from '../components';
+import { JOIN_DIALOG, RECOVERY_CODE_DIALOG, RESET_DIALOG } from '../constants';
 import { ClientEvents } from '../events';
-import { Account, ClientAction } from '../types';
-
-import { ClientCapabilities } from './capabilities';
+import { Account, ClientAction, ClientCapabilities } from '../types';
 
 type IntentResolverOptions = {
   context: PluginContext;

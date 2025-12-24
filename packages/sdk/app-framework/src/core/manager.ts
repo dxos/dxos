@@ -484,6 +484,7 @@ export class PluginManager {
             return Array.isArray(activationResult) ? activationResult : [activationResult];
           } catch (error) {
             failed = true;
+            log.catch(error);
             throw error;
           } finally {
             performance.measure('activate-module', {
