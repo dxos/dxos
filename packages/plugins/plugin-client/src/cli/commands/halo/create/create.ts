@@ -39,6 +39,8 @@ export const handler = Effect.fn(function* ({
     yield* dispatch(createIntent(ClientAction.CreateAgent));
   }
 
+  yield* Effect.promise(() => client.spaces.waitUntilReady());
+  yield* Effect.promise(() => client.spaces.default.waitUntilReady());
   const space = client.spaces.default;
   yield* flushAndSync({ indexes: true }).pipe(Effect.provide(spaceLayer(Option.some(space.id))));
 

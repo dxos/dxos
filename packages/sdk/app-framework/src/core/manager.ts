@@ -5,13 +5,11 @@
 import { Registry } from '@effect-atom/atom-react';
 import { untracked } from '@preact/signals-core';
 import * as Array from 'effect/Array';
-import * as Context from 'effect/Context';
 import * as Duration from 'effect/Duration';
 import * as Effect from 'effect/Effect';
 import * as Fiber from 'effect/Fiber';
 import * as Function from 'effect/Function';
 import * as HashSet from 'effect/HashSet';
-import * as Layer from 'effect/Layer';
 import * as Match from 'effect/Match';
 import * as Ref from 'effect/Ref';
 
@@ -52,10 +50,6 @@ type PluginManagerState = {
   eventsFired: string[];
   pendingReset: string[];
 };
-
-export class PluginService extends Context.Tag('PluginService')<PluginService, PluginManager>() {
-  static fromManager = (manager: PluginManager) => Layer.succeed(PluginService, manager);
-}
 
 export class PluginManager {
   readonly activation = new Event<{ event: string; state: 'activating' | 'activated' | 'error'; error?: any }>();
