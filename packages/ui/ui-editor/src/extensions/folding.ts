@@ -22,7 +22,11 @@ export const folding = (): Extension => [
         .children(
           Domino.of('svg', Domino.SVG)
             .classNames(mx('is-4 bs-4 cursor-pointer', open && 'rotate-90'))
-            .children(Domino.of('use', Domino.SVG).attributes({ href: Domino.icon('ph--caret-right--regular') })),
+            .children(
+              Domino.of('use', Domino.SVG).attributes({
+                href: Domino.icon('ph--caret-right--regular'),
+              }),
+            ),
         ).root,
   }),
   EditorView.theme({
