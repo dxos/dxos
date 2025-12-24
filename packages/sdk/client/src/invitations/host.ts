@@ -88,9 +88,7 @@ export const hostInvitation = ({
       Effect.gen(function* () {
         const error = yield* Queue.take(errorQueue);
         subscription.unsubscribe();
-        yield* Effect.fail(error);
-        // This line is unreachable but needed for type inference
-        return null as never;
+        return yield* Effect.fail(error);
       }),
     );
 
