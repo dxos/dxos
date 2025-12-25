@@ -50,12 +50,15 @@ const DefaultStory = () => {
     [],
   );
 
+  // TODO(burdon): Multi-column.
   // TODO(burdon): Data model for position?
-  const [items, setItems] = useState(range(5).map(() => createObject(Text.make(faker.lorem.paragraph()))));
+  // TODO(burdon): Key nav.
+  // TODO(burdon): Replace stack?
+
+  const [items, setItems] = useState(range(20).map(() => createObject(Text.make(faker.lorem.paragraph()))));
 
   const handleCellMove = useCallback<NonNullable<GridViewportProps['onCellMove']>>(
     (from, to) => {
-      console.log('handleCellMove', { from, to });
       const [item] = items.splice(from, 1);
       items.splice(to, 0, item);
       setItems([...items]);
