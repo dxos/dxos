@@ -3,14 +3,16 @@
 //
 
 import { syntaxTree } from '@codemirror/language';
-import { Prec } from '@codemirror/state';
-import { type EditorState, type Extension, RangeSetBuilder, StateEffect, StateField } from '@codemirror/state';
-import { keymap } from '@codemirror/view';
-import { Decoration, type DecorationSet, EditorView, ViewPlugin, type ViewUpdate, WidgetType } from '@codemirror/view';
-import { type FunctionComponent } from 'react';
-
-// TODO(burdon): Make agnostic.
-// export type FunctionComponent<P = {} , R = unknown> = (props: P) => R;
+import { type EditorState, type Extension, Prec, RangeSetBuilder, StateEffect, StateField } from '@codemirror/state';
+import {
+  Decoration,
+  type DecorationSet,
+  EditorView,
+  ViewPlugin,
+  type ViewUpdate,
+  WidgetType,
+  keymap,
+} from '@codemirror/view';
 
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
@@ -20,6 +22,9 @@ import { decorationSetToArray } from '../../util';
 import { scrollToLineEffect } from '../scrolling';
 
 import { nodeToJson } from './xml-util';
+
+// TODO(burdon): Factor out agnostic types (React/solid).
+type FunctionComponent<P = {}, R = unknown> = (props: P) => R;
 
 /**
  * StateEffect for navigating to previous bookmark.
@@ -177,7 +182,7 @@ export type XmlTagsOptions = {
  * - Widget state can be update via effects.
  *   - NOTE: Widget state may be updated BEFORE the widget is mounted.
  */
-export const xmlTags = ({ registry, setWidgets, bookmarks }: XmlTagsOptions): Extension => {
+export const xmlTags = ({ registry, setWidgets, bookmarks }: XmlTagsOptions = {}): Extension => {
   const notifier = createWidgetMap(setWidgets);
   const widgetDecorationsField = createWidgetDecorationsField(registry, notifier);
   return [
@@ -396,8 +401,8 @@ const buildDecorations = (
 ): WidgetDecorationSet => {
   const context = state.field(widgetContextStateField, false);
   const widgetStateMap = state.field(widgetStateMapStateField, false) ?? {};
-
   const builder = new RangeSetBuilder<Decoration>();
+
   const tree = syntaxTree(state);
   if (!tree || (tree.type.name === 'Program' && tree.length === 0)) {
     return { from: range.from, decorations: Decoration.none };
