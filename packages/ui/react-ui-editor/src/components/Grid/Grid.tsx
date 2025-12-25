@@ -76,8 +76,12 @@ const GridViewport = ({ classNames, children, onCellMove }: GridViewportProps) =
     return combine(
       monitorForElements({
         onDrop: ({ source, location }) => {
-          const column = location.current.dropTargets.find((t) => t.data.type === 'column');
           const cell = location.current.dropTargets.find((t) => t.data.type === 'cell');
+          const column = location.current.dropTargets.find((t) => t.data.type === 'column');
+          if (!column) {
+            return;
+          }
+
           const items = column?.data.items as Obj.Any[];
           const from = items.findIndex((item) => item.id === source.data.itemId);
           const to = items.findIndex((item) => item.id === cell?.data.itemId);
@@ -127,12 +131,7 @@ const GridColumn = memo(({ classNames, items, Component }: GridColumnProps) => {
   }, [rootRef]);
 
   return (
-    <div
-      role='none'
-      className={mx('relative flex flex-col is-full plb-2 overflow-y-auto', classNames)}
-      ref={rootRef}
-      {...{ '--dx-cell-width': '100px' }}
-    >
+    <div role='none' className={mx('relative flex flex-col is-full plb-2 overflow-y-auto', classNames)} ref={rootRef}>
       {items.map((item) => (
         <Grid.Cell key={item.id} item={item}>
           <Component item={item} />
