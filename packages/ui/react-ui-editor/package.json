@@ -81,6 +81,7 @@
     "@replit/codemirror-vscode-keymap": "catalog:",
     "@uiw/codemirror-theme-vscode": "catalog:",
     "ajv": "catalog:",
+    "bind-event-listener": "catalog:",
     "codemirror": "catalog:",
     "lib0": "catalog:",
     "lodash.defaultsdeep": "catalog:",

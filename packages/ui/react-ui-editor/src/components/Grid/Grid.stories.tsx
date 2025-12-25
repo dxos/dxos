@@ -25,18 +25,21 @@ import { Grid, type GridCellProps, type GridViewportProps } from '../Grid';
 
 faker.seed(1);
 
+// CONCEPT: Can the entire app be built from a small number of primitives like this?
+
 // TODO(burdon): Multi-column board / Hiararchy (left-to-right) / Infinite canvas / (Graph).
 //  Type note, then have AI create history (to the right).
 // TODO(burdon): Search / Filter / Sort (Tags).
 // TODO(burdon): Mobile / CRX.
 // TODO(burdon): Content types (Text, Mixed, Image, Form, etc).
-// TODO(burdon): Key nav / focus.
 // TODO(Burdon): AI / Auto-search.
 
+// TODO(burdon): Key nav / focus.
 // TODO(burdon): Menu.
 // TODO(burdon): Virtualization?
 // TODO(burdon): Use Card for Cell content.
-// TODO(burdon): Replace stack?
+// TODO(burdon): Replace stack? (Or simplify)
+// TODO(burdon): Factor out/generalize? (remove deps from dxos/ui-editor)
 
 const Cell: GridCellProps['Cell'] = ({ item, dragging }) => {
   const accessor = useMemo(() => createDocAccessor(item, ['content']), [item]);
@@ -47,10 +50,11 @@ const Cell: GridCellProps['Cell'] = ({ item, dragging }) => {
   }, [accessor]);
 
   if (dragging) {
-    return <div className='truncate'>{initialValue.slice(0, 100)}</div>;
+    return <div className='truncate'>{initialValue.slice(0, 80)}</div>;
   }
 
-  return <Editor.Content classNames='!outline-none' extensions={extensions} initialValue={initialValue} />;
+  // TODO(burdon): Set focusable=false if handling focus in Cell.
+  return <Editor.Content classNames='outline-none' extensions={extensions} initialValue={initialValue} />;
 };
 
 const DefaultStory = () => {
@@ -81,7 +85,7 @@ const DefaultStory = () => {
     <Editor.Root extensions={extensions}>
       <Grid.Root>
         <Grid.Viewport onCellMove={handleCellMove}>
-          <Grid.Column items={items} Cell={Cell} />
+          <Grid.Column items={items} Cell={Cell} classNames='is-[25rem]' />
         </Grid.Viewport>
       </Grid.Root>
     </Editor.Root>

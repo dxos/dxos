@@ -17,12 +17,15 @@ import {
   extractClosestEdge,
 } from '@atlaskit/pragmatic-drag-and-drop-hitbox/closest-edge';
 import { DropIndicator } from '@atlaskit/pragmatic-drag-and-drop-react-drop-indicator/box';
+import { useArrowNavigationGroup, useFocusableGroup } from '@fluentui/react-tabster';
 import { createContext } from '@radix-ui/react-context';
 import React, {
   type CSSProperties,
+  type Dispatch,
   type FC,
   type PropsWithChildren,
   type Ref,
+  type SetStateAction,
   forwardRef,
   memo,
   useEffect,
@@ -36,15 +39,16 @@ import { log } from '@dxos/log';
 import { Icon, type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
-// TODO(burdon): Factor out/generalize? (remove deps)
-
 //
 // Context
 //
 
-type GridContextValue = {};
+type GridContextValue = {
+  selection: Set<string>;
+  setSelection: Dispatch<SetStateAction<Set<string>>>;
+};
 
-const [GridContextProvider] = createContext<GridContextValue>('Grid');
+const [GridContextProvider, useGridContext] = createContext<GridContextValue>('Grid');
 
 //
 // Root
@@ -53,7 +57,13 @@ const [GridContextProvider] = createContext<GridContextValue>('Grid');
 type GridRootProps = PropsWithChildren<{}>;
 
 const GridRoot = ({ children }: GridRootProps) => {
-  return <GridContextProvider>{children}</GridContextProvider>;
+  const [selection, setSelection] = useState<Set<string>>(new Set());
+
+  return (
+    <GridContextProvider selection={selection} setSelection={setSelection}>
+      {children}
+    </GridContextProvider>
+  );
 };
 
 GridRoot.displayName = 'Grid.Root';
@@ -114,6 +124,7 @@ type GridColumnProps = ThemedClassName<
 
 const GridColumn = memo(({ classNames, items, Cell }: GridColumnProps) => {
   const rootRef = useRef<HTMLDivElement>(null);
+  const arrowNavigationAttrs = useArrowNavigationGroup({ axis: 'vertical' /*ignoreDefaultKeydown: { Enter: true }*/ });
 
   useEffect(() => {
     if (!rootRef.current) {
@@ -121,18 +132,23 @@ const GridColumn = memo(({ classNames, items, Cell }: GridColumnProps) => {
     }
 
     return combine(
-      autoScrollForElements({
-        element: rootRef.current,
-      }),
       dropTargetForElements({
         element: rootRef.current,
         getData: () => ({ type: 'column', items }),
+      }),
+      autoScrollForElements({
+        element: rootRef.current,
       }),
     );
   }, [rootRef]);
 
   return (
-    <div role='none' className={mx('relative flex flex-col is-full plb-2 overflow-y-auto', classNames)} ref={rootRef}>
+    <div
+      role='none'
+      className={mx('relative flex flex-col is-full plb-2 overflow-y-auto', classNames)}
+      ref={rootRef}
+      {...arrowNavigationAttrs}
+    >
       {items.map((item) => (
         <Grid.Cell key={item.id} item={item} Cell={Cell} />
       ))}
@@ -154,6 +170,7 @@ type GridCellProps = ThemedClassName<{
 }>;
 
 const GridCell = memo(({ classNames, item, Cell }: GridCellProps) => {
+  const focusableGroupAttrs = useFocusableGroup();
   const rootRef = useRef<HTMLDivElement>(null);
   const handleRef = useRef<HTMLDivElement>(null);
   const [state, setState] = useState<State>({ type: 'idle' });
@@ -231,7 +248,11 @@ const GridCell = memo(({ classNames, item, Cell }: GridCellProps) => {
   // And ensure padding doesn't change position of cursor when dragging.
   return (
     <>
-      <div role='none' className='relative mli-2'>
+      <div
+        role='none'
+        className='relative mli-2'
+        //  {...focusableGroupAttrs}
+      >
         <GridCellPrimitive
           classNames={['transition opacity-100', state.type === 'dragging' && 'opacity-25', classNames]}
           handleRef={handleRef}
@@ -254,6 +275,8 @@ const GridCell = memo(({ classNames, item, Cell }: GridCellProps) => {
     </>
   );
 });
+
+GridCell.displayName = 'Grid.Cell';
 
 const iconClasses = 'pbs-0.5 hover:bg-inputSurface rounded-sm transition opacity-10 group-hover:opacity-100';
 
@@ -281,7 +304,7 @@ const GridCellPrimitive = memo(
               <Icon classNames='cursor-pointer' icon='ph--dots-six-vertical--regular' size={5} />
             </div>
           </div>
-          {children}
+          <div role='none'>{children}</div>
           <div role='none'>
             <div role='none' className={iconClasses}>
               {/* TODO(burdon): Menu. */}
@@ -293,8 +316,6 @@ const GridCellPrimitive = memo(
     );
   }),
 );
-
-GridCell.displayName = 'Grid.Cell';
 
 //
 // Grid
