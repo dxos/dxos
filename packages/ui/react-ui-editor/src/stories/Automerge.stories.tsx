@@ -82,7 +82,7 @@ const DefaultStory = () => {
   }
 
   return (
-    <div className='grid grid-cols-2 bs-full is-full divide-x divide-separator'>
+    <div className='bs-full is-full grid grid-cols-2 gap-4'>
       <Editor source={object1} autoFocus />
       <Editor source={object2} />
     </div>
@@ -118,7 +118,7 @@ const EchoStory = () => {
   }, [objects, source]);
 
   return (
-    <div className='flex flex-col h-full grow overflow-hidden'>
+    <div className='bs-full is-full flex flex-col overflow-hidden'>
       <pre className='p-2 text-xs text-subdued'>
         {JSON.stringify({ index, identity: identity?.identityKey.truncate(), spaceId, objects }, null, 2)}
       </pre>
