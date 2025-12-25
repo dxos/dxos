@@ -8,7 +8,7 @@ import React, { useCallback, useMemo, useState } from 'react';
 import { createDocAccessor, createObject } from '@dxos/echo-db';
 import { faker } from '@dxos/random';
 import { useThemeContext } from '@dxos/react-ui';
-import { withLayout, withTheme } from '@dxos/react-ui/testing';
+import { withTheme } from '@dxos/react-ui/testing';
 import { Text } from '@dxos/schema';
 import {
   automerge,
@@ -25,13 +25,18 @@ import { Grid, type GridCellProps, type GridViewportProps } from '../Grid';
 
 faker.seed(1);
 
-// TODO(burdon): Multi-column board / Infinite canvas / (Graph).
-// TODO(burdon): Mobile.
-
-// TODO(burdon): Use Card for Cell content.
-// TODO(burdon): Key nav.
-// TODO(burdon): Replace stack?
+// TODO(burdon): Multi-column board / Hiararchy (left-to-right) / Infinite canvas / (Graph).
+//  Type note, then have AI create history (to the right).
+// TODO(burdon): Search / Filter / Sort (Tags).
+// TODO(burdon): Mobile / CRX.
+// TODO(burdon): Content types (Text, Mixed, Image, Form, etc).
+// TODO(burdon): Key nav / focus.
 // TODO(Burdon): AI / Auto-search.
+
+// TODO(burdon): Menu.
+// TODO(burdon): Virtualization?
+// TODO(burdon): Use Card for Cell content.
+// TODO(burdon): Replace stack?
 
 const Cell: GridCellProps['Cell'] = ({ item, dragging }) => {
   const accessor = useMemo(() => createDocAccessor(item, ['content']), [item]);
@@ -42,10 +47,9 @@ const Cell: GridCellProps['Cell'] = ({ item, dragging }) => {
   }, [accessor]);
 
   if (dragging) {
-    return <div className='truncate'>{item.id}</div>;
+    return <div className='truncate'>{initialValue.slice(0, 100)}</div>;
   }
 
-  // TODO(burdon): Jump to end of line.
   return <Editor.Content classNames='!outline-none' extensions={extensions} initialValue={initialValue} />;
 };
 
@@ -87,7 +91,7 @@ const DefaultStory = () => {
 const meta = {
   title: 'ui/react-ui-editor/Grid',
   render: DefaultStory,
-  decorators: [withTheme, withLayout({ container: 'column', classNames: 'is-[25rem]' })],
+  decorators: [withTheme],
   parameters: {
     layout: 'fullscreen',
   },

@@ -93,7 +93,7 @@ const GridViewport = ({ classNames, children, onCellMove }: GridViewportProps) =
   }, [rootRef]);
 
   return (
-    <div role='none' className={mx('flex bs-full is-full overflow-hidden', classNames)} ref={rootRef}>
+    <div role='none' className={mx('flex bs-full is-full overflow-x-auto', classNames)} ref={rootRef}>
       {children}
     </div>
   );

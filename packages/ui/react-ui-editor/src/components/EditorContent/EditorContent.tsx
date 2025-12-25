@@ -61,7 +61,9 @@ export const EditorContent = forwardRef<EditorController, EditorContentProps>(
           selection: selectionEnd ? { anchor: view?.state.doc.length ?? 0 } : undefined,
         });
 
-        view?.focus();
+        if (selectionEnd) {
+          view?.focus();
+        }
       });
     }, [view, value, selectionEnd]);
 
