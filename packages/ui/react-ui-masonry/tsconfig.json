@@ -36,7 +36,7 @@
       "path": "../../sdk/types"
     },
     {
-      "path": "../primitives/react-hooks"
+      "path": "../react-primitives/react-hooks"
     },
     {
       "path": "../react-ui"

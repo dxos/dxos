@@ -9,7 +9,7 @@ import { isMutable } from '@dxos/echo/internal';
 import { useGlobalFilteredObjects } from '@dxos/plugin-search';
 import { faker } from '@dxos/random';
 import { Filter, useQuery, useSchema } from '@dxos/react-client/echo';
-import { useClientProvider } from '@dxos/react-client/testing';
+import { useClientStory } from '@dxos/react-client/testing';
 import { type ProjectionModel, getTypenameFromQuery } from '@dxos/schema';
 
 import { type TableController } from '../components';
@@ -38,7 +38,7 @@ export type TestTableModel<T extends Type.Entity.Any = Type.Entity.Any> = {
  * Provides table data, schema, and handlers for table operations.
  */
 export const useTestTableModel = <T extends Type.Entity.Any = Type.Entity.Any>(): TestTableModel<T> => {
-  const { space } = useClientProvider();
+  const { space } = useClientStory();
   const db = space?.db;
 
   const tables = useQuery(space?.db, Filter.type(Table.Table));

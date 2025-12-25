@@ -88,10 +88,8 @@ export const EditorStory = forwardRef<EditorController, StoryProps>(
 
 /**
  * Default story component.
- * @deprecated
  */
-// TODO(burdon): Replace with <Editor.Root>
-export const EditorComponent = forwardRef<EditorController, StoryProps>(
+const EditorComponent = forwardRef<EditorController, StoryProps>(
   (
     {
       id = defaultId,

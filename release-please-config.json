@@ -820,17 +820,17 @@
         },
         {
           "type": "json",
-          "path": "packages/ui/primitives/react-hooks/package.json",
+          "path": "packages/ui/react-primitives/react-hooks/package.json",
           "jsonpath": "$.version"
         },
         {
           "type": "json",
-          "path": "packages/ui/primitives/react-input/package.json",
+          "path": "packages/ui/react-primitives/react-input/package.json",
           "jsonpath": "$.version"
         },
         {
           "type": "json",
-          "path": "packages/ui/primitives/react-list/package.json",
+          "path": "packages/ui/react-primitives/react-list/package.json",
           "jsonpath": "$.version"
         },
         {

@@ -9,7 +9,7 @@ import React, { type PropsWithChildren, useRef, useState } from 'react';
 import { Filter, Obj, Type } from '@dxos/echo';
 import { type Live } from '@dxos/live-object';
 import { faker } from '@dxos/random';
-import { useClientProvider, withClientProvider } from '@dxos/react-client/testing';
+import { useClientStory, withClientProvider } from '@dxos/react-client/testing';
 import { useAsyncEffect } from '@dxos/react-ui';
 import { withTheme } from '@dxos/react-ui/testing';
 import { withAttention } from '@dxos/react-ui-attention/testing';
@@ -40,7 +40,7 @@ type RenderProps = EditorRootProps &
 
 const DefaultStory = ({ id = 'test', init, sidebar, children, ...props }: RenderProps) => {
   const editorRef = useRef<EditorController>(null);
-  const { space } = useClientProvider();
+  const { space } = useClientStory();
   const [graph, setGraph] = useState<CanvasGraphModel | undefined>();
 
   // Layout.

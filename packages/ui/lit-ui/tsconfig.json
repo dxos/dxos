@@ -22,7 +22,7 @@
       "path": "../../common/util"
     },
     {
-      "path": "../primitives/react-hooks"
+      "path": "../react-primitives/react-hooks"
     },
     {
       "path": "../ui-types"

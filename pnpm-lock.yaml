@@ -2801,7 +2801,7 @@ importers:
         version: link:../../sdk/react-client
       '@dxos/react-hooks':
         specifier: workspace:*
-        version: link:../../ui/primitives/react-hooks
+        version: link:../../ui/react-primitives/react-hooks
       '@dxos/react-ui':
         specifier: workspace:*
         version: link:../../ui/react-ui
@@ -6426,7 +6426,7 @@ importers:
         version: link:../../sdk/react-edge-client
       '@dxos/react-hooks':
         specifier: workspace:*
-        version: link:../../ui/primitives/react-hooks
+        version: link:../../ui/react-primitives/react-hooks
       '@dxos/react-ui-components':
         specifier: workspace:*
         version: link:../../ui/react-ui-components
@@ -6625,7 +6625,7 @@ importers:
         version: link:../../sdk/react-client
       '@dxos/react-hooks':
         specifier: workspace:*
-        version: link:../../ui/primitives/react-hooks
+        version: link:../../ui/react-primitives/react-hooks
       '@dxos/react-ui':
         specifier: workspace:*
         version: link:../../ui/react-ui
@@ -6979,7 +6979,7 @@ importers:
         version: link:../../core/protocols
       '@dxos/react-hooks':
         specifier: workspace:*
-        version: link:../../ui/primitives/react-hooks
+        version: link:../../ui/react-primitives/react-hooks
       '@dxos/rpc':
         specifier: workspace:*
         version: link:../../core/mesh/rpc
@@ -8131,7 +8131,7 @@ importers:
         version: link:../../sdk/react-client
       '@dxos/react-hooks':
         specifier: workspace:*
-        version: link:../../ui/primitives/react-hooks
+        version: link:../../ui/react-primitives/react-hooks
       '@dxos/react-ui-attention':
         specifier: workspace:*
         version: link:../../ui/react-ui-attention
@@ -9426,7 +9426,7 @@ importers:
         version: link:../../sdk/react-client
       '@dxos/react-hooks':
         specifier: workspace:*
-        version: link:../../ui/primitives/react-hooks
+        version: link:../../ui/react-primitives/react-hooks
       '@dxos/react-ui-attention':
         specifier: workspace:*
         version: link:../../ui/react-ui-attention
@@ -11259,7 +11259,7 @@ importers:
         version: link:../../sdk/react-client
       '@dxos/react-hooks':
         specifier: workspace:*
-        version: link:../../ui/primitives/react-hooks
+        version: link:../../ui/react-primitives/react-hooks
       '@dxos/react-ui-attention':
         specifier: workspace:*
         version: link:../../ui/react-ui-attention
@@ -13053,7 +13053,7 @@ importers:
         version: link:../../common/log
       '@dxos/react-hooks':
         specifier: workspace:*
-        version: link:../../ui/primitives/react-hooks
+        version: link:../../ui/react-primitives/react-hooks
       '@dxos/schema':
         specifier: workspace:*
         version: link:../schema
@@ -13882,7 +13882,7 @@ importers:
         version: link:../../core/protocols
       '@dxos/react-hooks':
         specifier: workspace:*
-        version: link:../../ui/primitives/react-hooks
+        version: link:../../ui/react-primitives/react-hooks
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
@@ -14148,7 +14148,7 @@ importers:
         version: link:../react-client
       '@dxos/react-hooks':
         specifier: workspace:*
-        version: link:../../ui/primitives/react-hooks
+        version: link:../../ui/react-primitives/react-hooks
       '@dxos/storybook-utils':
         specifier: workspace:*
         version: link:../../common/storybook-utils
@@ -14603,7 +14603,7 @@ importers:
         version: link:../../common/log
       '@dxos/react-hooks':
         specifier: workspace:*
-        version: link:../primitives/react-hooks
+        version: link:../react-primitives/react-hooks
       '@dxos/ui-theme':
         specifier: workspace:*
         version: link:../ui-theme
@@ -14619,7 +14619,7 @@ importers:
     dependencies:
       '@dxos/react-hooks':
         specifier: workspace:*
-        version: link:../primitives/react-hooks
+        version: link:../react-primitives/react-hooks
       '@dxos/ui-types':
         specifier: workspace:*
         version: link:../ui-types
@@ -14637,7 +14637,7 @@ importers:
         specifier: workspace:*
         version: link:../../common/test-utils
 
-  packages/ui/primitives/react-hooks:
+  packages/ui/react-primitives/react-hooks:
     dependencies:
       '@dxos/async':
         specifier: workspace:*
@@ -14677,7 +14677,7 @@ importers:
         specifier: ~19.2.3
         version: 19.2.3(react@19.2.3)
 
-  packages/ui/primitives/react-input:
+  packages/ui/react-primitives/react-input:
     dependencies:
       '@dxos/react-hooks':
         specifier: workspace:*
@@ -14720,7 +14720,7 @@ importers:
         specifier: ~19.2.3
         version: 19.2.3(react@19.2.3)
 
-  packages/ui/primitives/react-list:
+  packages/ui/react-primitives/react-list:
     dependencies:
       '@dxos/react-hooks':
         specifier: workspace:*
@@ -14788,13 +14788,13 @@ importers:
         version: link:../../common/log
       '@dxos/react-hooks':
         specifier: workspace:*
-        version: link:../primitives/react-hooks
+        version: link:../react-primitives/react-hooks
       '@dxos/react-input':
         specifier: workspace:*
-        version: link:../primitives/react-input
+        version: link:../react-primitives/react-input
       '@dxos/react-list':
         specifier: workspace:*
-        version: link:../primitives/react-list
+        version: link:../react-primitives/react-list
       '@dxos/ui-types':
         specifier: workspace:*
         version: link:../ui-types
@@ -15956,7 +15956,7 @@ importers:
         version: link:../../core/protocols
       '@dxos/react-hooks':
         specifier: workspace:*
-        version: link:../primitives/react-hooks
+        version: link:../react-primitives/react-hooks
       '@dxos/react-ui-menu':
         specifier: workspace:*
         version: link:../react-ui-menu
@@ -16923,7 +16923,7 @@ importers:
     dependencies:
       '@dxos/react-hooks':
         specifier: workspace:*
-        version: link:../primitives/react-hooks
+        version: link:../react-primitives/react-hooks
       '@dxos/types':
         specifier: workspace:*
         version: link:../../sdk/types

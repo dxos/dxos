@@ -7,7 +7,7 @@ import React, { useCallback, useState } from 'react';
 
 import { Obj, Query } from '@dxos/echo';
 import { faker } from '@dxos/random';
-import { useClientProvider, withClientProvider } from '@dxos/react-client/testing';
+import { useClientStory, withClientProvider } from '@dxos/react-client/testing';
 import { withTheme } from '@dxos/react-ui/testing';
 import { TestSchema, type ValueGenerator, createObjectFactory } from '@dxos/schema/testing';
 import { Domino, mx } from '@dxos/ui';
@@ -58,7 +58,7 @@ const DefaultStory = ({ text, ...props }: StoryProps) => {
 };
 
 const LinkStory = (args: StoryProps) => {
-  const { space } = useClientProvider();
+  const { space } = useClientStory();
 
   const getMenu = useCallback<NonNullable<UseEditorMenuProps['getMenu']>>(
     async ({ text, trigger }): Promise<EditorMenuGroup[]> => {

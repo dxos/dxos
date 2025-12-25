@@ -36,7 +36,7 @@ export type QueryEditorProps = ThemedClassName<
 export const QueryEditor = forwardRef<EditorController, QueryEditorProps>(
   ({ db, tags, value, readonly, numItems = 8, ...props }, forwardedRef) => {
     const [controller, setController] = useState<EditorController | null>(null);
-    // TODO(burdon): This is suspicious.
+    // TODO(burdon): This is suspicious; use other hooks.
     useEffect(() => {
       setRef(forwardedRef, controller);
     }, [controller]);
