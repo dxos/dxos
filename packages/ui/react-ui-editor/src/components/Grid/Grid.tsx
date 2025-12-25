@@ -76,15 +76,15 @@ const GridViewport = ({ classNames, children, onCellMove }: GridViewportProps) =
     return combine(
       monitorForElements({
         onDrop: ({ source, location }) => {
-          const cell = location.current.dropTargets.find((t) => t.data.type === 'cell');
           const column = location.current.dropTargets.find((t) => t.data.type === 'column');
-          if (!column) {
+          const cell = location.current.dropTargets.find((t) => t.data.type === 'cell');
+          if (!column || !cell) {
             return;
           }
 
-          const items = column?.data.items as Obj.Any[];
+          const items = column.data.items as Obj.Any[];
           const from = items.findIndex((item) => item.id === source.data.itemId);
-          const to = items.findIndex((item) => item.id === cell?.data.itemId);
+          const to = items.findIndex((item) => item.id === cell.data.itemId);
           log.info('cellMove', { from, to });
           onCellMove?.(from, to);
         },
@@ -231,9 +231,9 @@ const GridCell = memo(({ classNames, item, Cell }: GridCellProps) => {
   // And ensure padding doesn't change position of cursor when dragging.
   return (
     <>
-      <div className='relative mli-2'>
+      <div role='none' className='relative mli-2'>
         <GridCellPrimitive
-          classNames={[state.type === 'dragging' && 'opacity-25', classNames]}
+          classNames={['transition opacity-100', state.type === 'dragging' && 'opacity-25', classNames]}
           handleRef={handleRef}
           ref={rootRef}
         >
@@ -244,7 +244,7 @@ const GridCell = memo(({ classNames, item, Cell }: GridCellProps) => {
 
       {state.type === 'preview' &&
         createPortal(
-          <div style={{ width: `${state.rect.width}px` } as CSSProperties}>
+          <div role='none' style={{ width: `${state.rect.width}px` } as CSSProperties}>
             <GridCellPrimitive classNames={['bg-inputSurface', classNames]}>
               <Cell item={item} dragging={true} />
             </GridCellPrimitive>

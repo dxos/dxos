@@ -87,7 +87,7 @@ const DefaultStory = () => {
 const meta = {
   title: 'ui/react-ui-editor/Grid',
   render: DefaultStory,
-  decorators: [withTheme, withLayout({ container: 'column', classNames: 'is-[300px]' })],
+  decorators: [withTheme, withLayout({ container: 'column', classNames: 'is-[25rem]' })],
   parameters: {
     layout: 'fullscreen',
   },
