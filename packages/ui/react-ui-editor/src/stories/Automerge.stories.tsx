@@ -45,14 +45,14 @@ const Editor = ({ source, messenger, identity, autoFocus }: EditorProps) => {
       initialValue: DocAccessor.getValue(source),
       extensions: [
         createBasicExtensions({ placeholder: 'Type here...', search: true }),
-        createThemeExtensions({ themeMode }),
+        createThemeExtensions({ themeMode, slots: { scroll: { className: 'p-2' } } }),
         createDataExtensions({ id: 'test', text: source, messenger, identity }),
       ],
     }),
     [source, themeMode],
   );
 
-  return <div ref={parentRef} className='flex is-full p-2' />;
+  return <div ref={parentRef} className='flex is-full' />;
 };
 
 const DefaultStory = () => {
@@ -122,7 +122,7 @@ const EchoStory = () => {
         {JSON.stringify({ index, identity: identity?.identityKey.truncate(), spaceId, objects }, null, 2)}
       </pre>
       {identity && source ? (
-        <div className='flex grow overflow-hidden'>
+        <div className='p-2 flex grow overflow-hidden'>
           <Editor identity={identity} messenger={space} source={source} />
         </div>
       ) : (
