@@ -50,8 +50,8 @@ const DefaultStory = () => {
     [],
   );
 
-  // TODO(burdon): Multi-column.
   // TODO(burdon): Data model for position?
+  // TODO(burdon): Multi-column.
   // TODO(burdon): Key nav.
   // TODO(burdon): Replace stack?
 

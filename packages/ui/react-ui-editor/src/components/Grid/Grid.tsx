@@ -19,6 +19,7 @@ import {
 import { DropIndicator } from '@atlaskit/pragmatic-drag-and-drop-react-drop-indicator/box';
 import { createContext } from '@radix-ui/react-context';
 import React, {
+  type CSSProperties,
   type ComponentType,
   type PropsWithChildren,
   type Ref,
@@ -126,7 +127,12 @@ const GridColumn = memo(({ classNames, items, Component }: GridColumnProps) => {
   }, [rootRef]);
 
   return (
-    <div role='none' className={mx('relative flex flex-col is-full plb-2 overflow-y-auto', classNames)} ref={rootRef}>
+    <div
+      role='none'
+      className={mx('relative flex flex-col is-full plb-2 overflow-y-auto', classNames)}
+      ref={rootRef}
+      {...{ '--dx-cell-width': '100px' }}
+    >
       {items.map((item) => (
         <Grid.Cell key={item.id} item={item}>
           <Component item={item} />
@@ -164,8 +170,8 @@ const GridCell = memo(({ classNames, children, item }: GridCellProps) => {
       draggable({
         element: handle,
         getInitialData: () => ({ type: 'cell', itemId: item.id }),
-        onGenerateDragPreview: ({ location, source, nativeSetDragImage }) => {
-          const rect = source.element.getBoundingClientRect();
+        onGenerateDragPreview: ({ location, nativeSetDragImage }) => {
+          const rect = root.getBoundingClientRect();
           setCustomNativeDragPreview({
             nativeSetDragImage,
             getOffset: preserveOffsetOnSource({
@@ -237,39 +243,50 @@ const GridCell = memo(({ classNames, children, item }: GridCellProps) => {
 
       {state.type === 'preview' &&
         createPortal(
-          <GridCellPrimitive classNames={['bg-inputSurface', classNames]} item={item}>
-            {/* TODO(burdon): Get placeholder */}
-            {item.id}
-          </GridCellPrimitive>,
+          <div style={{ width: `${state.rect.width}px` } as CSSProperties}>
+            <GridCellPrimitive classNames={['bg-inputSurface', classNames]} item={item}>
+              {/* TODO(burdon): Get placeholder */}
+              {item.id}
+            </GridCellPrimitive>
+          </div>,
           state.container,
         )}
     </>
   );
 });
 
+const iconClasses = 'pbs-0.5 hover:bg-inputSurface rounded-sm transition opacity-10 group-hover:opacity-100';
+
 type GridCellPrimitiveProps = GridCellProps & { handleRef?: Ref<HTMLDivElement> };
 
-const GridCellPrimitive = forwardRef<HTMLDivElement, GridCellPrimitiveProps>(
-  ({ classNames, children, handleRef }, ref) => {
+const GridCellPrimitive = memo(
+  forwardRef<HTMLDivElement, GridCellPrimitiveProps>(({ classNames, children, handleRef }, ref) => {
     return (
-      <div role='none' ref={ref} className='p-1'>
+      <div role='none' className='p-1' ref={ref}>
         <div
           role='none'
           className={mx(
-            'is-full grid grid-cols-[auto_1fr] gap-2 p-2 border border-subduedSeparator rounded-sm',
+            // TODO(burdon): Options for border/spacing.
+            'group is-full grid grid-cols-[min-content_1fr_min-content] gap-2 p-2 border border-subduedSeparator rounded-sm',
             classNames,
           )}
         >
           <div>
-            <div ref={handleRef} className='pbs-0.5 hover:bg-inputSurface rounded-sm'>
+            <div className={iconClasses} ref={handleRef}>
               <Icon classNames='cursor-pointer' icon='ph--dots-six-vertical--regular' size={5} />
             </div>
           </div>
           {children}
+          <div>
+            <div className={iconClasses}>
+              {/* TODO(burdon): Menu. */}
+              <Icon classNames='cursor-pointer' icon='ph--list--regular' size={5} />
+            </div>
+          </div>
         </div>
       </div>
     );
-  },
+  }),
 );
 
 GridCell.displayName = 'Grid.Cell';
