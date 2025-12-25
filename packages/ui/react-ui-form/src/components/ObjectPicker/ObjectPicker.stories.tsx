@@ -10,7 +10,7 @@ import { expect, fn, userEvent, within } from 'storybook/test';
 import { Obj } from '@dxos/echo';
 import { faker } from '@dxos/random';
 import { Filter, useQuery } from '@dxos/react-client/echo';
-import { useClientProvider, withClientProvider } from '@dxos/react-client/testing';
+import { useClientStory, withClientProvider } from '@dxos/react-client/testing';
 import { Button } from '@dxos/react-ui';
 import { withTheme } from '@dxos/react-ui/testing';
 import { Person } from '@dxos/types';
@@ -34,7 +34,7 @@ const mockHandleSelect = fn();
 const mockHandleCreate = fn();
 
 const DefaultStory = () => {
-  const { space } = useClientProvider();
+  const { space } = useClientStory();
   const [isOpen, setIsOpen] = useState(false);
 
   // Create sample Person objects

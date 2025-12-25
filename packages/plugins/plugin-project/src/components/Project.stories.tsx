@@ -9,7 +9,7 @@ import { Filter, Ref } from '@dxos/client/echo';
 import { Obj, Query, Type } from '@dxos/echo';
 import { faker } from '@dxos/random';
 import { useQuery } from '@dxos/react-client/echo';
-import { useClientProvider, withClientProvider } from '@dxos/react-client/testing';
+import { useClientStory, withClientProvider } from '@dxos/react-client/testing';
 import { withTheme } from '@dxos/react-ui/testing';
 import { Form, omitId } from '@dxos/react-ui-form';
 import { Collection, View } from '@dxos/schema';
@@ -39,7 +39,7 @@ const StorybookProjectItem = ({ item, projectionModel }: ItemProps) => {
 };
 
 const DefaultStory = () => {
-  const { space } = useClientProvider();
+  const { space } = useClientStory();
   const projects = useQuery(space?.db, Filter.type(Project.Project));
   const project = projects[0];
 
@@ -76,7 +76,7 @@ const DefaultStory = () => {
 };
 
 const MutationsStory = () => {
-  const { space } = useClientProvider();
+  const { space } = useClientStory();
   const projects = useQuery(space?.db, Filter.type(Project.Project));
   const contacts = useQuery(space?.db, Filter.type(Person.Person));
   const project = projects[0];

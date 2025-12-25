@@ -10,7 +10,7 @@ import { Function, Trigger } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { faker } from '@dxos/random';
 import { useQuery } from '@dxos/react-client/echo';
-import { TestSchema, useClientProvider, withClientProvider } from '@dxos/react-client/testing';
+import { TestSchema, useClientStory, withClientProvider } from '@dxos/react-client/testing';
 import { useAsyncEffect } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { translations as formTranslations } from '@dxos/react-ui-form';
@@ -30,7 +30,7 @@ const types = [
 ];
 
 const DefaultStory = (props: Partial<TriggerEditorProps>) => {
-  const { space } = useClientProvider();
+  const { space } = useClientStory();
   const [trigger, setTrigger] = useState<Trigger.Trigger>();
   const tags = useQuery(space?.db, Filter.type(Tag.Tag));
 

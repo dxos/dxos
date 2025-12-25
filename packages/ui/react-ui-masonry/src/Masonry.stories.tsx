@@ -8,7 +8,7 @@ import React from 'react';
 import { Filter } from '@dxos/client/echo';
 import { faker } from '@dxos/random';
 import { useQuery } from '@dxos/react-client/echo';
-import { useClientProvider, withClientProvider } from '@dxos/react-client/testing';
+import { useClientStory, withClientProvider } from '@dxos/react-client/testing';
 import { withTheme } from '@dxos/react-ui/testing';
 import { Card, cardNoSpacing, cardSpacing } from '@dxos/react-ui-stack';
 import { createObjectFactory } from '@dxos/schema/testing';
@@ -30,7 +30,7 @@ const StoryItem = ({ data: { image, name, description } }: { data: Organization.
 };
 
 const DefaultStory = () => {
-  const { space } = useClientProvider();
+  const { space } = useClientStory();
   const organizations = useQuery(space?.db, Filter.type(Organization.Organization));
 
   return (

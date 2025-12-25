@@ -12,7 +12,7 @@ import { type DxGrid } from '@dxos/lit-grid';
 import '@dxos/lit-ui/dx-tag-picker.pcss';
 import { faker } from '@dxos/random';
 import { useClient } from '@dxos/react-client';
-import { useClientProvider, withClientProvider } from '@dxos/react-client/testing';
+import { useClientStory, withClientProvider } from '@dxos/react-client/testing';
 import { useAsyncEffect } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { translations as formTranslations } from '@dxos/react-ui-form';
@@ -35,7 +35,7 @@ const generator: ValueGenerator = faker as any;
 // TODO(burdon): Reconcile schemas types and utils (see API PR).
 // TODO(burdon): Base type for T (with id); see ECHO API PR?
 const useTestModel = <S extends Type.Obj.Any>(schema: S, count: number) => {
-  const { space } = useClientProvider();
+  const { space } = useClientStory();
   const [object, setObject] = useState<Table.Table>();
 
   const features = useMemo<TableFeatures>(
@@ -83,7 +83,7 @@ const DefaultStory = () => {
   const client = useClient();
   const { model: orgModel, presentation: orgPresentation } = useTestModel(Organization.Organization, 50);
   const { model: contactModel, presentation: contactPresentation } = useTestModel(Person.Person, 50);
-  const { space } = useClientProvider();
+  const { space } = useClientStory();
 
   const handleCreate = useCallback(
     (schema: Schema.Schema.AnyNoContext, values: any) => {

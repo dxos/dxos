@@ -9,7 +9,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { DXN, Filter, Obj, Query, type QueryAST, Tag, Type } from '@dxos/echo';
 import { type EchoSchema, Format } from '@dxos/echo/internal';
 import { useQuery } from '@dxos/react-client/echo';
-import { useClientProvider, withClientProvider } from '@dxos/react-client/testing';
+import { useClientStory, withClientProvider } from '@dxos/react-client/testing';
 import { useAsyncEffect } from '@dxos/react-ui';
 import { withTheme } from '@dxos/react-ui/testing';
 import { type ProjectionModel, View, getTypenameFromQuery } from '@dxos/schema';
@@ -38,7 +38,7 @@ export type ViewEditorDebugObjects = {
 type StoryProps = Pick<ViewEditorProps, 'readonly' | 'mode'>;
 
 const DefaultStory = (props: StoryProps) => {
-  const { space } = useClientProvider();
+  const { space } = useClientStory();
   const [schema, setSchema] = useState<EchoSchema>();
   const [view, setView] = useState<View.View>();
   const projectionRef = useRef<ProjectionModel>(null);

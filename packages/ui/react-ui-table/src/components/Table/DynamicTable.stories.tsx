@@ -9,7 +9,7 @@ import { Obj } from '@dxos/echo';
 import { Format, type JsonSchemaType } from '@dxos/echo/internal';
 import { faker } from '@dxos/random';
 import { Filter, useQuery, useSchema } from '@dxos/react-client/echo';
-import { useClientProvider, withClientProvider } from '@dxos/react-client/testing';
+import { useClientStory, withClientProvider } from '@dxos/react-client/testing';
 import { withTheme } from '@dxos/react-ui/testing';
 import { type SchemaPropertyDefinition } from '@dxos/schema';
 import { TestSchema } from '@dxos/schema/testing';
@@ -129,7 +129,7 @@ export const WithJsonSchema: StoryObj = {
 
 export const WithEchoSchema: StoryObj = {
   render: () => {
-    const { space } = useClientProvider();
+    const { space } = useClientStory();
     const schema = useSchema(space?.db, TestSchema.Person.typename);
     const objects = useQuery(space?.db, schema ? Filter.type(schema) : Filter.nothing());
     if (!schema) {

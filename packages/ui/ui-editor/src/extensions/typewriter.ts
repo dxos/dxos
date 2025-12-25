@@ -26,7 +26,7 @@ export const typewriter = ({ delay = 75, items = defaultItems }: DemoOptions = {
       {
         // Reset.
         key: "alt-meta-'",
-        run: (view) => {
+        run: () => {
           clearTimeout(t);
           idx = 0;
           return true;

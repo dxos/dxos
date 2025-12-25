@@ -37,13 +37,13 @@
       "path": "../lit-ui"
     },
     {
-      "path": "../primitives/react-hooks"
+      "path": "../react-primitives/react-hooks"
     },
     {
-      "path": "../primitives/react-input"
+      "path": "../react-primitives/react-input"
     },
     {
-      "path": "../primitives/react-list"
+      "path": "../react-primitives/react-list"
     },
     {
       "path": "../ui-theme"

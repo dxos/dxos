@@ -3,12 +3,21 @@
 //
 
 import { type Decorator, type StoryContext } from '@storybook/react';
-import React, { type PropsWithChildren, createContext, useContext, useEffect, useRef, useState } from 'react';
+import React, {
+  type PropsWithChildren,
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 import { type FallbackProps, ErrorBoundary as NaturalErrorBoundary } from 'react-error-boundary';
 
 import { Trigger } from '@dxos/async';
 import { type Client } from '@dxos/client';
-import { type Space } from '@dxos/client/echo';
+import { type Space, type SpaceId } from '@dxos/client/echo';
 import { TestBuilder, performInvitation } from '@dxos/client/testing';
 import { log } from '@dxos/log';
 import { type MaybePromise } from '@dxos/util';
@@ -52,7 +61,7 @@ const initializeClient = async (
     await onCreateSpace?.({ client, space }, context);
   }
 
-  return { space };
+  return { space, spaceId: space?.id };
 };
 
 export type WithClientProviderProps = InitializeProps & Omit<ClientProviderProps, 'onInitialized'>;
@@ -122,56 +131,73 @@ export const withMultiClientProvider = ({
   ...props
 }: WithMultiClientProviderProps): Decorator => {
   return (Story, context) => {
-    const builder = useRef(new TestBuilder());
-    const hostRef = useRef<Client>(null);
     const spaceReady = useRef(new Trigger<Space | undefined>());
+    const [spaceId, setSpaceId] = useState<SpaceId>();
+
+    const clients = useMemo(() => {
+      const buidler = new TestBuilder();
+      return Array.from({ length: numClients }).map(() => {
+        return {
+          services: buidler.createLocalClientServices(),
+        };
+      });
+    }, [numClients]);
 
     // Handle invitations.
     // NOTE: The zeroth client isn't necessarily the first to be initialized.
-    const handleInitialized = async (client: Client, index: number) => {
-      log.info('initialized', { index });
-      if (createSpace) {
-        if (!hostRef.current) {
-          hostRef.current = client;
-          const { space } = await initializeClient(
-            client,
-            {
-              createIdentity,
-              createSpace,
-              onCreateSpace,
-              onCreateIdentity,
-              onInitialized,
-            },
-            context,
-          );
+    const handleInitialized = useCallback(async (client: Client, index: number) => {
+      if (index === 0) {
+        // Initialize host.
+        const { space } = await initializeClient(
+          client,
+          {
+            createIdentity,
+            createSpace,
+            onCreateSpace,
+            onCreateIdentity,
+            onInitialized,
+          },
+          context,
+        );
 
-          spaceReady.current.wake(space);
-          log.info('inviting', { index });
-        } else {
-          await initializeClient(client, { createIdentity, onInitialized }, context);
-          const space = await spaceReady.current.wait();
-          if (space) {
-            log.info('joining', { index });
-            await Promise.all(performInvitation({ host: space, guest: client.spaces }));
-          }
+        log.info('inviting', { index, spaceId: space?.id });
+        setSpaceId(space?.id);
+        spaceReady.current.wake(space);
+      } else {
+        // Initialize guest.
+        await initializeClient(client, { createIdentity, onInitialized }, context);
+
+        log.info('waiting', { index });
+        const space = await spaceReady.current.wait();
+        if (space) {
+          log.info('joining', { index, spaceId: space.id });
+          await Promise.all(
+            performInvitation({
+              host: space,
+              guest: client.spaces,
+            }),
+          );
         }
       }
-    };
+    }, []);
 
     return (
-      <ErrorBoundary>
-        {Array.from({ length: numClients }).map((_, index) => (
-          <MultiClientContext.Provider key={index} value={{ id: index }}>
-            <ClientProvider
-              services={builder.current.createLocalClientServices()}
-              onInitialized={(client) => handleInitialized(client, index)}
-              {...props}
-            >
-              <Story />
-            </ClientProvider>
-          </MultiClientContext.Provider>
+      <div className='absolute inset-0 grid grid-flow-col auto-cols-fr gap-4 overflow-hidden'>
+        {clients.map((client, index) => (
+          <ClientProvider
+            key={index}
+            services={client.services}
+            onInitialized={(client) => handleInitialized(client, index)}
+            {...props}
+          >
+            <ClientStory.Provider value={{ index, spaceId }}>
+              <ErrorBoundary>
+                <Story />
+              </ErrorBoundary>
+            </ClientStory.Provider>
+          </ClientProvider>
         ))}
-      </ErrorBoundary>
+      </div>
     );
   };
 };
@@ -197,6 +223,7 @@ const ErrorBoundary = ({ children }: PropsWithChildren) => {
 const ErrorFallback = ({ error }: FallbackProps) => {
   const { name, message, stack } =
     error instanceof Error ? error : { name: 'Error', message: String(error), stack: undefined };
+
   return (
     <div role='alert' className='flex flex-col p-4 gap-4 overflow-auto'>
       <h1 className='text-xl text-red-500'>{name}</h1>

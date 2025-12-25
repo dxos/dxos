@@ -10,7 +10,7 @@ import { withPluginManager } from '@dxos/app-framework/testing';
 import { Filter, Obj, Ref, Relation, type Type } from '@dxos/echo';
 import { faker } from '@dxos/random';
 import { useQuery } from '@dxos/react-client/echo';
-import { useClientProvider, withClientProvider } from '@dxos/react-client/testing';
+import { useClientStory, withClientProvider } from '@dxos/react-client/testing';
 import { withTheme } from '@dxos/react-ui/testing';
 import { Card } from '@dxos/react-ui-stack';
 import { Json } from '@dxos/react-ui-syntax-highlighter';
@@ -27,7 +27,7 @@ faker.seed(1);
 const generator: ValueGenerator = faker as any;
 
 const DefaultStory = () => {
-  const { space } = useClientProvider();
+  const { space } = useClientStory();
   const [object] = useQuery(space?.db, Filter.type(Organization.Organization));
   if (!object) {
     return null;
