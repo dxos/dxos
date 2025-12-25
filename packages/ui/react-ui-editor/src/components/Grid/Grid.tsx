@@ -20,7 +20,7 @@ import { DropIndicator } from '@atlaskit/pragmatic-drag-and-drop-react-drop-indi
 import { createContext } from '@radix-ui/react-context';
 import React, {
   type CSSProperties,
-  type ComponentType,
+  type FC,
   type PropsWithChildren,
   type Ref,
   forwardRef,
@@ -106,12 +106,13 @@ GridViewport.displayName = 'Grid.Viewport';
 // Ref: https://codesandbox.io/p/sandbox/vc6s5t?file=%2Fpragmatic-drag-and-drop%2Fdocumentation%2Fexamples%2Fpieces%2Fboard%2Fcolumn.tsx
 //
 
-type GridColumnProps = ThemedClassName<{
-  items: Obj.Any[];
-  Component: ComponentType<{ item: Obj.Any }>;
-}>;
+type GridColumnProps = ThemedClassName<
+  {
+    items: Obj.Any[];
+  } & Pick<GridCellProps, 'Cell'>
+>;
 
-const GridColumn = memo(({ classNames, items, Component }: GridColumnProps) => {
+const GridColumn = memo(({ classNames, items, Cell }: GridColumnProps) => {
   const rootRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -133,9 +134,7 @@ const GridColumn = memo(({ classNames, items, Component }: GridColumnProps) => {
   return (
     <div role='none' className={mx('relative flex flex-col is-full plb-2 overflow-y-auto', classNames)} ref={rootRef}>
       {items.map((item) => (
-        <Grid.Cell key={item.id} item={item}>
-          <Component item={item} />
-        </Grid.Cell>
+        <Grid.Cell key={item.id} item={item} Cell={Cell} />
       ))}
     </div>
   );
@@ -149,9 +148,12 @@ GridColumn.displayName = 'Grid.Column';
 
 type State = { type: 'idle' } | { type: 'preview'; container: HTMLElement; rect: DOMRect } | { type: 'dragging' };
 
-type GridCellProps = ThemedClassName<PropsWithChildren<{ item: Obj.Any }>>;
+type GridCellProps = ThemedClassName<{
+  item: Obj.Any;
+  Cell: FC<{ item: Obj.Any; dragging?: boolean }>;
+}>;
 
-const GridCell = memo(({ classNames, children, item }: GridCellProps) => {
+const GridCell = memo(({ classNames, item, Cell }: GridCellProps) => {
   const rootRef = useRef<HTMLDivElement>(null);
   const handleRef = useRef<HTMLDivElement>(null);
   const [state, setState] = useState<State>({ type: 'idle' });
@@ -226,16 +228,16 @@ const GridCell = memo(({ classNames, children, item }: GridCellProps) => {
   }, [rootRef, handleRef, item]);
 
   // NOTE: No gaps between cells (so that the drop indicators doesn't flicker).
+  // And ensure padding doesn't change position of cursor when dragging.
   return (
     <>
-      <div className='relative mli-1'>
+      <div className='relative mli-2'>
         <GridCellPrimitive
           classNames={[state.type === 'dragging' && 'opacity-25', classNames]}
-          item={item}
           handleRef={handleRef}
           ref={rootRef}
         >
-          {children}
+          <Cell item={item} />
         </GridCellPrimitive>
         {closestEdge && <DropIndicator edge={closestEdge} />}
       </div>
@@ -243,9 +245,8 @@ const GridCell = memo(({ classNames, children, item }: GridCellProps) => {
       {state.type === 'preview' &&
         createPortal(
           <div style={{ width: `${state.rect.width}px` } as CSSProperties}>
-            <GridCellPrimitive classNames={['bg-inputSurface', classNames]} item={item}>
-              {/* TODO(burdon): Get placeholder */}
-              {item.id}
+            <GridCellPrimitive classNames={['bg-inputSurface', classNames]}>
+              <Cell item={item} dragging={true} />
             </GridCellPrimitive>
           </div>,
           state.container,
@@ -256,7 +257,11 @@ const GridCell = memo(({ classNames, children, item }: GridCellProps) => {
 
 const iconClasses = 'pbs-0.5 hover:bg-inputSurface rounded-sm transition opacity-10 group-hover:opacity-100';
 
-type GridCellPrimitiveProps = GridCellProps & { handleRef?: Ref<HTMLDivElement> };
+type GridCellPrimitiveProps = ThemedClassName<
+  PropsWithChildren<{
+    handleRef?: Ref<HTMLDivElement>;
+  }>
+>;
 
 const GridCellPrimitive = memo(
   forwardRef<HTMLDivElement, GridCellPrimitiveProps>(({ classNames, children, handleRef }, ref) => {
@@ -266,18 +271,19 @@ const GridCellPrimitive = memo(
           role='none'
           className={mx(
             // TODO(burdon): Options for border/spacing.
-            'group is-full grid grid-cols-[min-content_1fr_min-content] gap-2 p-2 border border-subduedSeparator rounded-sm',
+            'group is-full grid grid-cols-[min-content_1fr_min-content] gap-2 p-2 overflow-hidden',
+            'border border-subduedSeparator focus-within:border-primary-500 rounded-sm',
             classNames,
           )}
         >
-          <div>
-            <div className={iconClasses} ref={handleRef}>
+          <div role='none'>
+            <div role='none' className={iconClasses} ref={handleRef}>
               <Icon classNames='cursor-pointer' icon='ph--dots-six-vertical--regular' size={5} />
             </div>
           </div>
           {children}
-          <div>
-            <div className={iconClasses}>
+          <div role='none'>
+            <div role='none' className={iconClasses}>
               {/* TODO(burdon): Menu. */}
               <Icon classNames='cursor-pointer' icon='ph--list--regular' size={5} />
             </div>

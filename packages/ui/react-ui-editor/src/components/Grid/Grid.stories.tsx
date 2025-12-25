@@ -5,7 +5,6 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useCallback, useMemo, useState } from 'react';
 
-import { type Obj } from '@dxos/echo';
 import { createDocAccessor, createObject } from '@dxos/echo-db';
 import { faker } from '@dxos/random';
 import { useThemeContext } from '@dxos/react-ui';
@@ -22,11 +21,19 @@ import { range } from '@dxos/util';
 import { get } from '@dxos/util';
 
 import { Editor } from '../Editor';
-import { Grid, type GridViewportProps } from '../Grid';
+import { Grid, type GridCellProps, type GridViewportProps } from '../Grid';
 
 faker.seed(1);
 
-const Cell = ({ item }: { item: Obj.Any }) => {
+// TODO(burdon): Multi-column board / Infinite canvas / (Graph).
+// TODO(burdon): Mobile.
+
+// TODO(burdon): Use Card for Cell content.
+// TODO(burdon): Key nav.
+// TODO(burdon): Replace stack?
+// TODO(Burdon): AI / Auto-search.
+
+const Cell: GridCellProps['Cell'] = ({ item, dragging }) => {
   const accessor = useMemo(() => createDocAccessor(item, ['content']), [item]);
   const extensions = useMemo(() => [automerge(accessor)], [accessor]);
   const initialValue = useMemo(() => {
@@ -34,8 +41,12 @@ const Cell = ({ item }: { item: Obj.Any }) => {
     return doc ? get(doc, accessor.path) : '';
   }, [accessor]);
 
+  if (dragging) {
+    return <div className='truncate'>{item.id}</div>;
+  }
+
   // TODO(burdon): Jump to end of line.
-  return <Editor.Content extensions={extensions} initialValue={initialValue} />;
+  return <Editor.Content classNames='!outline-none' extensions={extensions} initialValue={initialValue} />;
 };
 
 const DefaultStory = () => {
@@ -51,10 +62,6 @@ const DefaultStory = () => {
   );
 
   // TODO(burdon): Data model for position?
-  // TODO(burdon): Multi-column.
-  // TODO(burdon): Key nav.
-  // TODO(burdon): Replace stack?
-
   const [items, setItems] = useState(range(20).map(() => createObject(Text.make(faker.lorem.paragraph()))));
 
   const handleCellMove = useCallback<NonNullable<GridViewportProps['onCellMove']>>(
@@ -70,7 +77,7 @@ const DefaultStory = () => {
     <Editor.Root extensions={extensions}>
       <Grid.Root>
         <Grid.Viewport onCellMove={handleCellMove}>
-          <Grid.Column items={items} Component={Cell} />
+          <Grid.Column items={items} Cell={Cell} />
         </Grid.Viewport>
       </Grid.Root>
     </Editor.Root>
@@ -80,7 +87,7 @@ const DefaultStory = () => {
 const meta = {
   title: 'ui/react-ui-editor/Grid',
   render: DefaultStory,
-  decorators: [withTheme, withLayout({ container: 'column', classNames: 'is-[400px]' })],
+  decorators: [withTheme, withLayout({ container: 'column', classNames: 'is-[300px]' })],
   parameters: {
     layout: 'fullscreen',
   },
