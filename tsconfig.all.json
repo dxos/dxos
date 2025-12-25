@@ -478,13 +478,13 @@
       "path": "packages/ui/lit-ui/tsconfig.json"
     },
     {
-      "path": "packages/ui/primitives/react-hooks/tsconfig.json"
+      "path": "packages/ui/react-primitives/react-hooks/tsconfig.json"
     },
     {
-      "path": "packages/ui/primitives/react-input/tsconfig.json"
+      "path": "packages/ui/react-primitives/react-input/tsconfig.json"
     },
     {
-      "path": "packages/ui/primitives/react-list/tsconfig.json"
+      "path": "packages/ui/react-primitives/react-list/tsconfig.json"
     },
     {
       "path": "packages/ui/react-ui/tsconfig.json"
@@ -581,6 +581,9 @@
     },
     {
       "path": "packages/ui/solid-ui-geo/tsconfig.json"
+    },
+    {
+      "path": "packages/ui/ui/tsconfig.json"
     },
     {
       "path": "packages/ui/ui-editor/tsconfig.json"

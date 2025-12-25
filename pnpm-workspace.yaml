@@ -17,9 +17,10 @@ catalog:
   '@antv/layout': ^1.2.13
   '@ark-ui/solid': ^5.30.0
   '@astrojs/starlight': ^0.32.5
-  '@atlaskit/pragmatic-drag-and-drop': ^1.4.0
-  '@atlaskit/pragmatic-drag-and-drop-auto-scroll': ^2.1.0
-  '@atlaskit/pragmatic-drag-and-drop-hitbox': ^1.0.3
+  '@atlaskit/pragmatic-drag-and-drop': ^1.7.7
+  '@atlaskit/pragmatic-drag-and-drop-auto-scroll': ^2.1.2
+  '@atlaskit/pragmatic-drag-and-drop-hitbox': ^1.1.0
+  '@atlaskit/pragmatic-drag-and-drop-react-drop-indicator': ^3.2.10
   '@automerge/automerge': 3.2.1
   '@automerge/automerge-repo': 2.5.1
   '@automerge/automerge-repo-network-broadcastchannel': 2.5.1

@@ -3,8 +3,7 @@
 //
 
 export * from './Editor';
-
-// export { type GetMenuContext } from './EditorMenuProvider';
+export * from './Grid';
 
 // TODO(burdon): Remove once Editor is fully migrated.
 export { EditorContent, createEditorController } from './EditorContent';

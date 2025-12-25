@@ -14,7 +14,11 @@ export type ContainerType = 'default' | 'column';
 
 export type WithLayoutProps =
   | FC<ContainerProps>
-  | { classNames?: ClassNameValue; container?: ContainerType; scroll?: boolean };
+  | {
+      classNames?: ClassNameValue;
+      container?: ContainerType;
+      scroll?: boolean;
+    };
 
 /**
  * Adds layout container.
