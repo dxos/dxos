@@ -3,10 +3,11 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import React, { useMemo, useState } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 
 import { type Obj } from '@dxos/echo';
 import { createDocAccessor, createObject } from '@dxos/echo-db';
+import { faker } from '@dxos/random';
 import { useThemeContext } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Text } from '@dxos/schema';
@@ -17,12 +18,13 @@ import {
   createThemeExtensions,
   decorateMarkdown,
 } from '@dxos/ui-editor';
+import { range } from '@dxos/util';
 import { get } from '@dxos/util';
 
 import { Editor } from '../Editor';
-import { Grid } from '../Grid';
+import { Grid, type GridViewportProps } from '../Grid';
 
-// TODO(burdon): Drag-and-drop cells.
+faker.seed(1);
 
 const Cell = ({ item }: { item: Obj.Any }) => {
   const accessor = useMemo(() => createDocAccessor(item, ['content']), [item]);
@@ -48,12 +50,23 @@ const DefaultStory = () => {
     [],
   );
 
-  const [items, setItems] = useState(['A', 'B', 'C', 'D', 'E'].map((item) => createObject(Text.make(item))));
+  // TODO(burdon): Data model for position?
+  const [items, setItems] = useState(range(5).map(() => createObject(Text.make(faker.lorem.paragraph()))));
+
+  const handleCellMove = useCallback<NonNullable<GridViewportProps['onCellMove']>>(
+    (from, to) => {
+      console.log('handleCellMove', { from, to });
+      const [item] = items.splice(from, 1);
+      items.splice(to, 0, item);
+      setItems([...items]);
+    },
+    [items],
+  );
 
   return (
     <Editor.Root extensions={extensions}>
       <Grid.Root>
-        <Grid.Viewport>
+        <Grid.Viewport onCellMove={handleCellMove}>
           <Grid.Column items={items} Component={Cell} />
         </Grid.Viewport>
       </Grid.Root>

@@ -35,7 +35,7 @@ import { log } from '@dxos/log';
 import { Icon, type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
-// TODO(burdon): Factor out/generalize?
+// TODO(burdon): Factor out/generalize? (remove deps)
 
 //
 // Context
@@ -61,9 +61,13 @@ GridRoot.displayName = 'Grid.Root';
 // Viewport
 //
 
-type GridViewportProps = ThemedClassName<PropsWithChildren<{}>>;
+interface GridEventHandler {
+  onCellMove?: (from: number, to: number) => void;
+}
 
-const GridViewport = ({ classNames, children }: GridViewportProps) => {
+type GridViewportProps = ThemedClassName<PropsWithChildren<{}>> & GridEventHandler;
+
+const GridViewport = ({ classNames, children, onCellMove }: GridViewportProps) => {
   const rootRef = useRef<HTMLDivElement>(null);
 
   // Handle all mutation events.
@@ -71,7 +75,13 @@ const GridViewport = ({ classNames, children }: GridViewportProps) => {
     return combine(
       monitorForElements({
         onDrop: ({ source, location }) => {
-          log.info('drop', { source, location });
+          const column = location.current.dropTargets.find((t) => t.data.type === 'column');
+          const cell = location.current.dropTargets.find((t) => t.data.type === 'cell');
+          const items = column?.data.items as Obj.Any[];
+          const from = items.findIndex((item) => item.id === source.data.itemId);
+          const to = items.findIndex((item) => item.id === cell?.data.itemId);
+          log.info('cellMove', { from, to });
+          onCellMove?.(from, to);
         },
       }),
     );
@@ -110,13 +120,13 @@ const GridColumn = memo(({ classNames, items, Component }: GridColumnProps) => {
       }),
       dropTargetForElements({
         element: rootRef.current,
-        getData: () => ({ type: 'column' }),
+        getData: () => ({ type: 'column', items }),
       }),
     );
   }, [rootRef]);
 
   return (
-    <div role='none' className={mx('flex flex-col is-full gap-2 p-2 overflow-y-auto', classNames)} ref={rootRef}>
+    <div role='none' className={mx('relative flex flex-col is-full plb-2 overflow-y-auto', classNames)} ref={rootRef}>
       {items.map((item) => (
         <Grid.Cell key={item.id} item={item}>
           <Component item={item} />
@@ -210,17 +220,20 @@ const GridCell = memo(({ classNames, children, item }: GridCellProps) => {
     );
   }, [rootRef, handleRef, item]);
 
+  // NOTE: No gaps between cells (so that the drop indicators doesn't flicker).
   return (
     <>
-      <GridCellPrimitive
-        classNames={[state.type === 'dragging' && 'opacity-25', classNames]}
-        item={item}
-        handleRef={handleRef}
-        ref={rootRef}
-      >
-        {children}
+      <div className='relative mli-1'>
+        <GridCellPrimitive
+          classNames={[state.type === 'dragging' && 'opacity-25', classNames]}
+          item={item}
+          handleRef={handleRef}
+          ref={rootRef}
+        >
+          {children}
+        </GridCellPrimitive>
         {closestEdge && <DropIndicator edge={closestEdge} />}
-      </GridCellPrimitive>
+      </div>
 
       {state.type === 'preview' &&
         createPortal(
@@ -239,17 +252,21 @@ type GridCellPrimitiveProps = GridCellProps & { handleRef?: Ref<HTMLDivElement> 
 const GridCellPrimitive = forwardRef<HTMLDivElement, GridCellPrimitiveProps>(
   ({ classNames, children, handleRef }, ref) => {
     return (
-      <div
-        role='none'
-        className={mx('relative flex is-full p-2 gap-2 border border-subduedSeparator rounded-sm', classNames)}
-        ref={ref}
-      >
-        <div>
-          <div ref={handleRef} className='pbs-0.5 hover:bg-inputSurface rounded-sm'>
-            <Icon classNames='cursor-pointer' icon='ph--dots-six-vertical--regular' size={5} />
+      <div role='none' ref={ref} className='p-1'>
+        <div
+          role='none'
+          className={mx(
+            'is-full grid grid-cols-[auto_1fr] gap-2 p-2 border border-subduedSeparator rounded-sm',
+            classNames,
+          )}
+        >
+          <div>
+            <div ref={handleRef} className='pbs-0.5 hover:bg-inputSurface rounded-sm'>
+              <Icon classNames='cursor-pointer' icon='ph--dots-six-vertical--regular' size={5} />
+            </div>
           </div>
+          {children}
         </div>
-        {children}
       </div>
     );
   },
