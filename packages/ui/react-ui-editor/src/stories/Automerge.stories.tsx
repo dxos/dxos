@@ -108,6 +108,7 @@ const EchoStory = () => {
 
     setSource(createDocAccessor(content, ['content']));
   }, [objects]);
+
   useEffect(() => {
     if (source) {
       return;
