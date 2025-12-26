@@ -19,7 +19,7 @@ const graphSymbol = Symbol('graph');
 type DeepWriteable<T> = {
   -readonly [K in keyof T]: T[K] extends object ? DeepWriteable<T[K]> : T[K];
 };
-type NodeInternal = DeepWriteable<Node> & { [graphSymbol]: Graph };
+type NodeInternal = DeepWriteable<Node> & { [graphSymbol]: GraphImpl };
 
 /**
  * Get the Graph a Node is currently associated with.
@@ -27,7 +27,7 @@ type NodeInternal = DeepWriteable<Node> & { [graphSymbol]: Graph };
 export const getGraph = (node: Node): Graph => {
   const graph = (node as NodeInternal)[graphSymbol];
   invariant(graph, 'Node is not associated with a graph.');
-  return graph;
+  return graph as Graph;
 };
 
 export const ROOT_ID = 'root';
@@ -62,9 +62,9 @@ export type GraphParams = {
   registry?: Registry.Registry;
   nodes?: MakeOptional<Node, 'data' | 'cacheable'>[];
   edges?: Record<string, Edges>;
-  onExpand?: Graph['_onExpand'];
-  onInitialize?: Graph['_onInitialize'];
-  onRemoveNode?: Graph['_onRemoveNode'];
+  onExpand?: (id: string, relation: Relation) => void;
+  onInitialize?: (id: string) => Promise<void>;
+  onRemoveNode?: (id: string) => void;
 };
 
 export type Edge = { source: string; target: string };
@@ -227,17 +227,23 @@ export interface WritableGraph extends ExpandableGraph {
 }
 
 /**
- * The Graph represents the user interface information architecture of the application constructed via plugins.
+ * Graph interface.
  */
-export class Graph implements WritableGraph {
+export type Graph = WritableGraph;
+
+/**
+ * The Graph represents the user interface information architecture of the application constructed via plugins.
+ * @internal
+ */
+class GraphImpl implements WritableGraph {
   readonly onNodeChanged = new Event<{
     id: string;
     node: Option.Option<Node>;
   }>();
 
-  private readonly _onExpand?: (id: string, relation: Relation) => void;
-  private readonly _onInitialize?: (id: string) => Promise<void>;
-  private readonly _onRemoveNode?: (id: string) => void;
+  private readonly _onExpand?: GraphParams['onExpand'];
+  private readonly _onInitialize?: GraphParams['onInitialize'];
+  private readonly _onRemoveNode?: GraphParams['onRemoveNode'];
 
   private readonly _registry: Registry.Registry;
   private readonly _expanded = Record.empty<string, boolean>();
@@ -642,3 +648,10 @@ export class Graph implements WritableGraph {
     });
   }
 }
+
+/**
+ * Creates a new Graph instance.
+ */
+export const make = (params?: GraphParams): Graph => {
+  return new GraphImpl(params);
+};

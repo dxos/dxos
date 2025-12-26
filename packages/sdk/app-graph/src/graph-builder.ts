@@ -13,7 +13,7 @@ import { type CleanupFn, type MulticastObservable, type Trigger } from '@dxos/as
 import { log } from '@dxos/log';
 import { type MaybePromise, type Position, byPosition, getDebugName, isNode, isNonNullable } from '@dxos/util';
 
-import { ACTION_GROUP_TYPE, ACTION_TYPE, type ExpandableGraph, Graph, type GraphParams, ROOT_ID } from './graph';
+import { ACTION_GROUP_TYPE, ACTION_TYPE, type ExpandableGraph, type Graph, make as makeGraph, type GraphParams, ROOT_ID } from './graph';
 import { type ActionData, type Node, type NodeArg, type Relation, actionGroupSymbol } from './node';
 
 /**
@@ -185,12 +185,26 @@ export const flattenExtensions = (extension: BuilderExtensions, acc: BuilderExte
 };
 
 /**
+ * GraphBuilder interface.
+ */
+export interface GraphBuilder {
+  readonly graph: ExpandableGraph;
+  readonly extensions: Atom.Atom<Record.Record<string, BuilderExtension>>;
+
+  addExtension(extensions: BuilderExtensions): GraphBuilder;
+  removeExtension(id: string): GraphBuilder;
+  explore(options: GraphBuilderTraverseOptions, path?: string[]): Promise<void>;
+  destroy(): void;
+}
+
+/**
  * The builder provides an extensible way to compose the construction of the graph.
+ * @internal
  */
 // TODO(wittjosiah): Add api for setting subscription set and/or radius.
 //   Should unsubscribe from nodes that are not in the set/radius.
 //   Should track LRU nodes that are not in the set/radius and remove them beyond a certain threshold.
-export class GraphBuilder {
+class GraphBuilderImpl implements GraphBuilder {
   // TODO(wittjosiah): Use Context.
   private readonly _subscriptions = new Map<string, CleanupFn>();
   private readonly _extensions = Atom.make(Record.empty<string, BuilderExtension>()).pipe(
@@ -199,26 +213,19 @@ export class GraphBuilder {
   );
   private readonly _initialized: Record<string, Trigger> = {};
   private readonly _registry: Registry.Registry;
-  private readonly _graph: Graph;
+  private readonly _graph: Graph & { _node: (id: string) => Atom.Writable<Option.Option<Node>>; _constructNode: (node: NodeArg<any>) => Option.Option<Node> };
 
   constructor({ registry, ...params }: Pick<GraphParams, 'registry' | 'nodes' | 'edges'> = {}) {
     this._registry = registry ?? Registry.make();
-    this._graph = new Graph({
+    const graph = makeGraph({
       ...params,
       registry: this._registry,
       onExpand: (id, relation) => this._onExpand(id, relation),
       onInitialize: (id) => this._onInitialize(id),
       onRemoveNode: (id) => this._onRemoveNode(id),
     });
-  }
-
-  static from(pickle?: string, registry?: Registry.Registry): GraphBuilder {
-    if (!pickle) {
-      return new GraphBuilder({ registry });
-    }
-
-    const { nodes, edges } = JSON.parse(pickle);
-    return new GraphBuilder({ nodes, edges, registry });
+    // Access internal methods via type assertion since GraphBuilder needs them
+    this._graph = graph as Graph & { _node: (id: string) => Atom.Writable<Option.Option<Node>>; _constructNode: (node: NodeArg<any>) => Option.Option<Node> };
   }
 
   get graph(): ExpandableGraph {
@@ -403,6 +410,25 @@ export class GraphBuilder {
     this._subscriptions.delete(id);
   }
 }
+
+/**
+ * Creates a new GraphBuilder instance.
+ */
+export const make = (params?: Pick<GraphParams, 'registry' | 'nodes' | 'edges'>): GraphBuilder => {
+  return new GraphBuilderImpl(params);
+};
+
+/**
+ * Creates a GraphBuilder from a serialized pickle string.
+ */
+export const from = (pickle?: string, registry?: Registry.Registry): GraphBuilder => {
+  if (!pickle) {
+    return make({ registry });
+  }
+
+  const { nodes, edges } = JSON.parse(pickle);
+  return make({ nodes, edges, registry });
+};
 
 /**
  * Creates an Atom.Atom<T> from a callback which accesses signals.

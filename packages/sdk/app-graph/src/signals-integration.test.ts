@@ -14,7 +14,7 @@ import { EchoTestBuilder } from '@dxos/echo-db/testing';
 import { registerSignalsRuntime } from '@dxos/echo-signals';
 
 import { ROOT_ID } from './graph';
-import { GraphBuilder, atomFromSignal, createExtension } from './graph-builder';
+import { GraphBuilder, make, atomFromSignal, createExtension } from './graph-builder';
 import { atomFromQuery } from './testing';
 
 registerSignalsRuntime();
@@ -134,7 +134,7 @@ describe('signals integration', () => {
         const inner = registry.get(innerAtom);
         expect(inner).to.eq(undefined);
 
-        const builder = new GraphBuilder({ registry });
+        const builder = make({ registry });
         builder.addExtension(
           createExtension({
             id: 'outbound-connector',

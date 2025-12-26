@@ -6,7 +6,7 @@ import { Atom, Registry } from '@effect-atom/atom-react';
 import * as Option from 'effect/Option';
 import { assert, describe, expect, onTestFinished, test } from 'vitest';
 
-import { Graph, ROOT_ID, ROOT_TYPE, getGraph } from './graph';
+import { Graph, make, ROOT_ID, ROOT_TYPE, getGraph } from './graph';
 import { type Node } from './node';
 
 const exampleId = (id: number) => `dx:test:${id}`;
@@ -16,7 +16,7 @@ const EXAMPLE_TYPE = 'dxos.org/type/example';
 describe('Graph', () => {
   test('getGraph', () => {
     const registry = Registry.make();
-    const graph = new Graph({ registry });
+    const graph = make({ registry });
     const root = registry.get(graph.node(ROOT_ID));
     assert.ok(Option.isSome(root));
     expect(root.value.id).toEqual(ROOT_ID);
@@ -26,7 +26,7 @@ describe('Graph', () => {
 
   test('add node', () => {
     const registry = Registry.make();
-    const graph = new Graph({ registry });
+    const graph = make({ registry });
     graph.addNode({ id: EXAMPLE_ID, type: EXAMPLE_TYPE });
     const node = registry.get(graph.node(EXAMPLE_ID));
     assert.ok(Option.isSome(node));
@@ -38,7 +38,7 @@ describe('Graph', () => {
 
   test('add nodes updates existing nodes', () => {
     const registry = Registry.make();
-    const graph = new Graph({ registry });
+    const graph = make({ registry });
     const nodeKey = graph.node(EXAMPLE_ID);
 
     let count = 0;
@@ -68,7 +68,7 @@ describe('Graph', () => {
 
   test('remove node', () => {
     const registry = Registry.make();
-    const graph = new Graph({ registry });
+    const graph = make({ registry });
 
     {
       const node = registry.get(graph.node(EXAMPLE_ID));
@@ -89,7 +89,7 @@ describe('Graph', () => {
   });
 
   test('onNodeChanged', () => {
-    const graph = new Graph();
+    const graph = make();
 
     let node: Option.Option<Node> = Option.none();
     graph.onNodeChanged.on(({ node: newNode }) => {
@@ -107,7 +107,7 @@ describe('Graph', () => {
 
   test('add edge', () => {
     const registry = Registry.make();
-    const graph = new Graph({ registry });
+    const graph = make({ registry });
     graph.addEdge({ source: exampleId(1), target: exampleId(2) });
     const edges = registry.get(graph.edges(exampleId(1)));
     expect(edges.inbound).toEqual([]);
@@ -116,7 +116,7 @@ describe('Graph', () => {
 
   test('add edges is idempotent', () => {
     const registry = Registry.make();
-    const graph = new Graph({ registry });
+    const graph = make({ registry });
     graph.addEdge({ source: exampleId(1), target: exampleId(2) });
     graph.addEdge({ source: exampleId(1), target: exampleId(2) });
     const edges = registry.get(graph.edges(exampleId(1)));
@@ -126,7 +126,7 @@ describe('Graph', () => {
 
   test('sort edges', () => {
     const registry = Registry.make();
-    const graph = new Graph({ registry });
+    const graph = make({ registry });
 
     {
       graph.addEdge({ source: exampleId(1), target: exampleId(2) });
@@ -145,7 +145,7 @@ describe('Graph', () => {
 
   test('remove edge', () => {
     const registry = Registry.make();
-    const graph = new Graph({ registry });
+    const graph = make({ registry });
 
     {
       graph.addEdge({ source: exampleId(1), target: exampleId(2) });
@@ -164,7 +164,7 @@ describe('Graph', () => {
 
   test('get connections', () => {
     const registry = Registry.make();
-    const graph = new Graph({ registry });
+    const graph = make({ registry });
     graph.addNode({ id: exampleId(1), type: EXAMPLE_TYPE });
     graph.addNode({ id: exampleId(2), type: EXAMPLE_TYPE });
     graph.addEdge({ source: exampleId(1), target: exampleId(2) });
@@ -175,7 +175,7 @@ describe('Graph', () => {
 
   test('can subscribe to a node before it exists', async () => {
     const registry = Registry.make();
-    const graph = new Graph({ registry });
+    const graph = make({ registry });
     const nodeKey = graph.node(exampleId(1));
 
     let node: Option.Option<Node> = Option.none();
@@ -192,7 +192,7 @@ describe('Graph', () => {
 
   test('connections updates', () => {
     const registry = Registry.make();
-    const graph = new Graph({ registry });
+    const graph = make({ registry });
     assert.strictEqual(graph.connections(exampleId(1)), graph.connections(exampleId(1)));
     const childrenKey = graph.connections(exampleId(1));
 
@@ -246,7 +246,7 @@ describe('Graph', () => {
   });
 
   test('toJSON', () => {
-    const graph = new Graph();
+    const graph = make();
 
     graph.addNode({
       id: ROOT_ID,
@@ -271,7 +271,7 @@ describe('Graph', () => {
 
   test('subscribe to json', () => {
     const registry = Registry.make();
-    const graph = new Graph({ registry });
+    const graph = make({ registry });
 
     graph.addNode({
       id: ROOT_ID,
@@ -313,7 +313,7 @@ describe('Graph', () => {
   });
 
   test('get path', () => {
-    const graph = new Graph();
+    const graph = make();
     graph.addNode({
       id: ROOT_ID,
       type: ROOT_TYPE,
@@ -338,7 +338,7 @@ describe('Graph', () => {
 
   describe('traverse', () => {
     test('can be traversed', () => {
-      const graph = new Graph();
+      const graph = make();
       graph.addNode({
         id: ROOT_ID,
         type: ROOT_TYPE,
@@ -358,7 +358,7 @@ describe('Graph', () => {
     });
 
     test('traversal breaks cycles', () => {
-      const graph = new Graph();
+      const graph = make();
       graph.addNode({
         id: ROOT_ID,
         type: ROOT_TYPE,
@@ -379,7 +379,7 @@ describe('Graph', () => {
     });
 
     test('traversal can be started from any node', () => {
-      const graph = new Graph();
+      const graph = make();
       graph.addNode({
         id: ROOT_ID,
         type: ROOT_TYPE,
@@ -403,7 +403,7 @@ describe('Graph', () => {
     });
 
     test('traversal can follow inbound edges', () => {
-      const graph = new Graph();
+      const graph = make();
       graph.addNode({
         id: ROOT_ID,
         type: ROOT_TYPE,
@@ -428,7 +428,7 @@ describe('Graph', () => {
     });
 
     test('traversal can be terminated early', () => {
-      const graph = new Graph();
+      const graph = make();
       graph.addNode({
         id: ROOT_ID,
         type: ROOT_TYPE,

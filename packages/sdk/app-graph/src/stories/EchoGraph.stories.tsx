@@ -21,7 +21,7 @@ import { getSize, mx } from '@dxos/ui-theme';
 import { byPosition, isNonNullable, safeParseInt } from '@dxos/util';
 
 import { type ExpandableGraph, ROOT_ID } from '../graph';
-import { GraphBuilder, atomFromObservable, atomFromSignal, createExtension } from '../graph-builder';
+import { GraphBuilder, make, atomFromObservable, atomFromSignal, createExtension } from '../graph-builder';
 import { type Node } from '../node';
 import { atomFromQuery } from '../testing';
 
@@ -101,7 +101,7 @@ const createGraph = (client: Client, registry: Registry.Registry): ExpandableGra
     },
   });
 
-  const graph = new GraphBuilder({ registry })
+  const graph = make({ registry })
     .addExtension(spaceBuilderExtension)
     .addExtension(objectBuilderExtension).graph;
   graph.onNodeChanged.on(({ id }) => {

@@ -10,7 +10,7 @@ import { describe, expect, onTestFinished, test } from 'vitest';
 import { Trigger, sleep } from '@dxos/async';
 
 import { ROOT_ID } from './graph';
-import { GraphBuilder, createExtension } from './graph-builder';
+import { GraphBuilder, make, createExtension } from './graph-builder';
 import { type Node } from './node';
 
 const exampleId = (id: number) => `dx:test:${id}`;
@@ -21,7 +21,7 @@ describe('GraphBuilder', () => {
   describe('resolver', () => {
     test('works', async () => {
       const registry = Registry.make();
-      const builder = new GraphBuilder({ registry });
+      const builder = make({ registry });
       const graph = builder.graph;
 
       {
@@ -50,7 +50,7 @@ describe('GraphBuilder', () => {
 
     test('updates', async () => {
       const registry = Registry.make();
-      const builder = new GraphBuilder({ registry });
+      const builder = make({ registry });
       const name = Atom.make('default');
       builder.addExtension(
         createExtension({
@@ -78,7 +78,7 @@ describe('GraphBuilder', () => {
   describe('connector', () => {
     test('works', () => {
       const registry = Registry.make();
-      const builder = new GraphBuilder({ registry });
+      const builder = make({ registry });
       builder.addExtension(
         createExtension({
           id: 'outbound-connector',
@@ -110,7 +110,7 @@ describe('GraphBuilder', () => {
 
     test('updates', () => {
       const registry = Registry.make();
-      const builder = new GraphBuilder({ registry });
+      const builder = make({ registry });
       const state = Atom.make(0);
       builder.addExtension(
         createExtension({
@@ -135,7 +135,7 @@ describe('GraphBuilder', () => {
 
     test('subscribes to updates', () => {
       const registry = Registry.make();
-      const builder = new GraphBuilder({ registry });
+      const builder = make({ registry });
       const state = Atom.make(0);
       builder.addExtension(
         createExtension({
@@ -163,7 +163,7 @@ describe('GraphBuilder', () => {
 
     test('updates with new extensions', () => {
       const registry = Registry.make();
-      const builder = new GraphBuilder({ registry });
+      const builder = make({ registry });
       builder.addExtension(
         createExtension({
           id: 'connector',
@@ -199,7 +199,7 @@ describe('GraphBuilder', () => {
 
     test('removes', () => {
       const registry = Registry.make();
-      const builder = new GraphBuilder({ registry });
+      const builder = make({ registry });
       const nodes = Atom.make([
         { id: exampleId(1), type: EXAMPLE_TYPE },
         { id: exampleId(2), type: EXAMPLE_TYPE },
@@ -231,7 +231,7 @@ describe('GraphBuilder', () => {
 
     test('nodes are updated when removed', () => {
       const registry = Registry.make();
-      const builder = new GraphBuilder({ registry });
+      const builder = make({ registry });
       const name = Atom.make('removed');
 
       builder.addExtension([
@@ -279,7 +279,7 @@ describe('GraphBuilder', () => {
 
     test('sort edges', async () => {
       const registry = Registry.make();
-      const builder = new GraphBuilder({ registry });
+      const builder = make({ registry });
       const nodes = Atom.make([
         { id: exampleId(1), type: EXAMPLE_TYPE, data: 1 },
         { id: exampleId(2), type: EXAMPLE_TYPE, data: 2 },
@@ -322,7 +322,7 @@ describe('GraphBuilder', () => {
 
     test('updates are constrained', () => {
       const registry = Registry.make();
-      const builder = new GraphBuilder({ registry });
+      const builder = make({ registry });
       const name = Atom.make('default');
       const sub = Atom.make('default');
 
@@ -434,7 +434,7 @@ describe('GraphBuilder', () => {
 
     test('eager graph expansion', async () => {
       const registry = Registry.make();
-      const builder = new GraphBuilder({ registry });
+      const builder = make({ registry });
       builder.addExtension(
         createExtension({
           id: 'connector',
@@ -470,7 +470,7 @@ describe('GraphBuilder', () => {
 
   describe('explore', () => {
     test('works', async () => {
-      const builder = new GraphBuilder();
+      const builder = make();
       builder.addExtension(
         createExtension({
           id: 'connector',
