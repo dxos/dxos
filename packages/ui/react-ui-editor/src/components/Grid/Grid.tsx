@@ -17,7 +17,7 @@ import {
   extractClosestEdge,
 } from '@atlaskit/pragmatic-drag-and-drop-hitbox/closest-edge';
 import { DropIndicator } from '@atlaskit/pragmatic-drag-and-drop-react-drop-indicator/box';
-import { useArrowNavigationGroup, useFocusableGroup } from '@fluentui/react-tabster';
+import { useArrowNavigationGroup, useFocusFinders, useFocusableGroup } from '@fluentui/react-tabster';
 import { createContext } from '@radix-ui/react-context';
 import React, {
   type CSSProperties,
@@ -38,6 +38,12 @@ import { type Obj } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { Icon, type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
+
+import { findFirstFocusableAncestor } from './focusable';
+
+const borderClasses =
+  'outline-none transition border border-subduedSeparator focus:border-primary-500 focus-within:border-separator rounded-sm';
+const iconClasses = 'pbs-0.5 hover:bg-inputSurface rounded-sm transition opacity-10 group-hover:opacity-100';
 
 //
 // Context
@@ -73,12 +79,13 @@ GridRoot.displayName = 'Grid.Root';
 //
 
 interface GridEventHandler {
-  onCellMove?: (from: number, to: number) => void;
+  onCellMove?: (props: { from: number; to: number }) => void;
 }
 
 type GridViewportProps = ThemedClassName<PropsWithChildren<{}>> & GridEventHandler;
 
 const GridViewport = ({ classNames, children, onCellMove }: GridViewportProps) => {
+  const arrowNavigationAttrs = useArrowNavigationGroup({ axis: 'horizontal', memorizeCurrent: true });
   const rootRef = useRef<HTMLDivElement>(null);
 
   // Handle all mutation events.
@@ -96,14 +103,19 @@ const GridViewport = ({ classNames, children, onCellMove }: GridViewportProps) =
           const from = items.findIndex((item) => item.id === source.data.itemId);
           const to = items.findIndex((item) => item.id === cell.data.itemId);
           log.info('cellMove', { from, to });
-          onCellMove?.(from, to);
+          onCellMove?.({ from, to });
         },
       }),
     );
   }, [rootRef]);
 
   return (
-    <div role='none' className={mx('flex bs-full is-full overflow-x-auto', classNames)} ref={rootRef}>
+    <div
+      ref={rootRef}
+      role='none'
+      className={mx('flex bs-full is-full overflow-x-auto p-2', classNames)}
+      {...arrowNavigationAttrs}
+    >
       {children}
     </div>
   );
@@ -124,7 +136,9 @@ type GridColumnProps = ThemedClassName<
 
 const GridColumn = memo(({ classNames, items, Cell }: GridColumnProps) => {
   const rootRef = useRef<HTMLDivElement>(null);
-  const arrowNavigationAttrs = useArrowNavigationGroup({ axis: 'vertical' /*ignoreDefaultKeydown: { Enter: true }*/ });
+  const focusableGroupAttrs = useFocusableGroup();
+  const arrowNavigationAttrs = useArrowNavigationGroup({ axis: 'vertical', memorizeCurrent: true });
+  const { findFirstFocusable } = useFocusFinders();
 
   useEffect(() => {
     if (!rootRef.current) {
@@ -144,9 +158,20 @@ const GridColumn = memo(({ classNames, items, Cell }: GridColumnProps) => {
 
   return (
     <div
-      role='none'
-      className={mx('relative flex flex-col is-full plb-2 overflow-y-auto', classNames)}
       ref={rootRef}
+      role='none'
+      className={mx('relative flex flex-col is-full plb-2 overflow-y-auto', borderClasses, classNames)}
+      tabIndex={0}
+      onKeyDown={(event) => {
+        if (event.target === event.currentTarget) {
+          switch (event.key) {
+            case 'Enter':
+              rootRef.current && findFirstFocusable(rootRef.current)?.focus();
+              break;
+          }
+        }
+      }}
+      {...focusableGroupAttrs}
       {...arrowNavigationAttrs}
     >
       {items.map((item) => (
@@ -170,7 +195,6 @@ type GridCellProps = ThemedClassName<{
 }>;
 
 const GridCell = memo(({ classNames, item, Cell }: GridCellProps) => {
-  const focusableGroupAttrs = useFocusableGroup();
   const rootRef = useRef<HTMLDivElement>(null);
   const handleRef = useRef<HTMLDivElement>(null);
   const [state, setState] = useState<State>({ type: 'idle' });
@@ -248,15 +272,11 @@ const GridCell = memo(({ classNames, item, Cell }: GridCellProps) => {
   // And ensure padding doesn't change position of cursor when dragging.
   return (
     <>
-      <div
-        role='none'
-        className='relative mli-2'
-        //  {...focusableGroupAttrs}
-      >
+      <div role='none' className='relative mli-2'>
         <GridCellPrimitive
-          classNames={['transition opacity-100', state.type === 'dragging' && 'opacity-25', classNames]}
-          handleRef={handleRef}
           ref={rootRef}
+          handleRef={handleRef}
+          classNames={['transition opacity-100', state.type === 'dragging' && 'opacity-25', classNames]}
         >
           <Cell item={item} />
         </GridCellPrimitive>
@@ -278,8 +298,6 @@ const GridCell = memo(({ classNames, item, Cell }: GridCellProps) => {
 
 GridCell.displayName = 'Grid.Cell';
 
-const iconClasses = 'pbs-0.5 hover:bg-inputSurface rounded-sm transition opacity-10 group-hover:opacity-100';
-
 type GridCellPrimitiveProps = ThemedClassName<
   PropsWithChildren<{
     handleRef?: Ref<HTMLDivElement>;
@@ -288,19 +306,38 @@ type GridCellPrimitiveProps = ThemedClassName<
 
 const GridCellPrimitive = memo(
   forwardRef<HTMLDivElement, GridCellPrimitiveProps>(({ classNames, children, handleRef }, ref) => {
+    const focusableRef = useRef<HTMLDivElement>(null);
+    const focusableGroupAttrs = useFocusableGroup();
+
     return (
-      <div role='none' className='p-1' ref={ref}>
+      <div ref={ref} role='none' className='p-1'>
         <div
+          ref={focusableRef}
           role='none'
           className={mx(
             // TODO(burdon): Options for border/spacing.
             'group is-full grid grid-cols-[min-content_1fr_min-content] gap-2 p-2 overflow-hidden',
-            'border border-subduedSeparator focus-within:border-primary-500 rounded-sm',
+            borderClasses,
             classNames,
           )}
+          tabIndex={0}
+          onKeyDown={(event) => {
+            switch (event.key) {
+              // TODO(burdon): useFocusableGroup should do this.
+              case 'Escape': {
+                const element =
+                  event.target === focusableRef.current
+                    ? findFirstFocusableAncestor(focusableRef.current!)
+                    : focusableRef.current;
+                element?.focus();
+                break;
+              }
+            }
+          }}
+          {...focusableGroupAttrs}
         >
           <div role='none'>
-            <div role='none' className={iconClasses} ref={handleRef}>
+            <div ref={handleRef} role='none' className={iconClasses}>
               <Icon classNames='cursor-pointer' icon='ph--dots-six-vertical--regular' size={5} />
             </div>
           </div>

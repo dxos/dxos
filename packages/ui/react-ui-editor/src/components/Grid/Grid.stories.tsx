@@ -11,6 +11,7 @@ import { useThemeContext } from '@dxos/react-ui';
 import { withTheme } from '@dxos/react-ui/testing';
 import { Text } from '@dxos/schema';
 import {
+  EditorView,
   automerge,
   createBasicExtensions,
   createMarkdownExtensions,
@@ -53,9 +54,13 @@ const Cell: GridCellProps['Cell'] = ({ item, dragging }) => {
     return <div className='truncate'>{initialValue.slice(0, 80)}</div>;
   }
 
-  // TODO(burdon): Set focusable=false if handling focus in Cell.
-  return <Editor.Content classNames='outline-none' extensions={extensions} initialValue={initialValue} />;
+  return (
+    <Editor.Content classNames='outline-none' extensions={extensions} initialValue={initialValue} focusable={false} />
+  );
 };
+
+// Enable tabbing into editor (required for tabster to work).
+const tabbable = EditorView.contentAttributes.of({ tabindex: '0' });
 
 const DefaultStory = () => {
   const { themeMode } = useThemeContext();
@@ -65,15 +70,16 @@ const DefaultStory = () => {
       createThemeExtensions({ themeMode }),
       createMarkdownExtensions(),
       decorateMarkdown(),
+      tabbable,
     ],
     [],
   );
 
-  // TODO(burdon): Data model for position?
+  // TODO(burdon): Data model for position? Arrays of refs.
   const [items, setItems] = useState(range(20).map(() => createObject(Text.make(faker.lorem.paragraph()))));
 
   const handleCellMove = useCallback<NonNullable<GridViewportProps['onCellMove']>>(
-    (from, to) => {
+    ({ from, to }) => {
       const [item] = items.splice(from, 1);
       items.splice(to, 0, item);
       setItems([...items]);
