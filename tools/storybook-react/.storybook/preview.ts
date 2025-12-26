@@ -7,7 +7,7 @@ import '@dxos-theme';
 import { withThemeByClassName } from '@storybook/addon-themes';
 import { type Preview } from '@storybook/react';
 
-import { docsTheme, withLayout } from './theme';
+import { docsTheme } from './theme';
 
 /**
  * Configure Storybook rendering.
@@ -18,7 +18,6 @@ import { docsTheme, withLayout } from './theme';
 export const preview: Preview = {
   // NOTE: Does not affect docs.
   decorators: [
-    withLayout,
     withThemeByClassName({
       defaultTheme: 'dark',
       themes: {

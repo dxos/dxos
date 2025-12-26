@@ -13,7 +13,7 @@ import React, { forwardRef, useEffect, useMemo, useRef } from 'react';
 import { createTabster, disposeTabster } from 'tabster';
 
 import { Input } from '@dxos/react-ui';
-import { withTheme } from '@dxos/react-ui/testing';
+import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { mx } from '@dxos/ui-theme';
 
 const border =
@@ -23,10 +23,12 @@ const Board = forwardRef<HTMLDivElement, { columns: string[][] }>(({ columns }, 
   const arrowNavigationAttrs = useArrowNavigationGroup({ axis: 'horizontal', memorizeCurrent: true });
 
   return (
-    <div ref={ref} tabIndex={0} {...arrowNavigationAttrs} className={mx('flex p-4 gap-4')}>
-      {columns.map((column) => (
-        <Column key={column[0]} items={column} />
-      ))}
+    <div ref={ref} tabIndex={0} {...arrowNavigationAttrs} className='flex bs-full is-full overflow-hidden'>
+      <div className={mx('flex bs-full overflow-x-auto p-4 gap-4')}>
+        {columns.map((column) => (
+          <Column key={column[0]} items={column} />
+        ))}
+      </div>
     </div>
   );
 });
@@ -37,7 +39,12 @@ const Column = forwardRef<HTMLDivElement, { items: string[] }>(({ items }, ref) 
   const tabsterAttrs = useMergedTabsterAttributes_unstable(focusableGroupAttrs, arrowNavigationAttrs);
 
   return (
-    <div ref={ref} tabIndex={0} {...tabsterAttrs} className={mx('flex flex-col p-4 gap-4', border)}>
+    <div
+      ref={ref}
+      tabIndex={0}
+      {...tabsterAttrs}
+      className={mx('flex flex-col shrink-0 bs-full is-[25rem] overflow-y-auto p-4 gap-4', border)}
+    >
       {items.map((item) => (
         <Item key={item} value={item} />
       ))}
@@ -49,12 +56,7 @@ const Item = forwardRef<HTMLDivElement, { value: string }>(({ value }, ref) => {
   const focusableGroupAttrs = useFocusableGroup();
 
   return (
-    <div
-      ref={ref}
-      tabIndex={0}
-      {...focusableGroupAttrs}
-      className={mx('flex gap-4 p-4 items-center is-[20rem]', border)}
-    >
+    <div ref={ref} tabIndex={0} {...focusableGroupAttrs} className={mx('flex is-full gap-4 p-4 items-center', border)}>
       <Input.Root>
         <Input.Checkbox />
       </Input.Root>
@@ -108,7 +110,7 @@ const withTabster: Decorator = (Story) => {
 const meta: Meta<typeof DefaultStory> = {
   title: 'ui/react-ui-mosaic/focus',
   component: DefaultStory,
-  decorators: [withTheme, withTabster],
+  decorators: [withTheme, withLayout({ container: 'fullscreen' }), withTabster],
   parameters: {
     layout: 'fullscreen',
   },

@@ -3,14 +3,14 @@
 //
 
 import { type Decorator } from '@storybook/react';
-import React, { type FC, type PropsWithChildren } from 'react';
+import React, { type FC, type PropsWithChildren, memo } from 'react';
 
 import { type ClassNameValue, type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
 export type ContainerProps = ThemedClassName<PropsWithChildren>;
 
-export type ContainerType = 'default' | 'column';
+export type ContainerType = 'fullscreen' | 'column';
 
 export type WithLayoutProps =
   | FC<ContainerProps>
@@ -26,26 +26,29 @@ export type WithLayoutProps =
 export const withLayout =
   (props: WithLayoutProps): Decorator =>
   (Story) => {
+    // Prevent re-rendering of the story.
+    const MemoizedStory = memo(Story);
+
     if (typeof props === 'function') {
       const Container = props;
       return (
         <Container>
-          <Story />
+          <MemoizedStory />
         </Container>
       );
     }
 
-    const Container = layouts[(props as any).container as ContainerType] ?? layouts.default;
+    const Container = layouts[(props as any).container as ContainerType] ?? layouts.fullscreen;
     return (
       <Container classNames={mx(props.classNames, props.scroll ? 'overflow-y-auto' : 'overflow-hidden')}>
-        <Story />
+        <MemoizedStory />
       </Container>
     );
   };
 
 const layouts: Record<ContainerType, FC<ContainerProps>> = {
-  default: ({ children, classNames }: ContainerProps) => (
-    <div role='none' className={mx(classNames)}>
+  fullscreen: ({ children, classNames }: ContainerProps) => (
+    <div role='none' className={mx('fixed inset-0 flex overflow-hidden bg-deckSurface', classNames)}>
       {children}
     </div>
   ),
