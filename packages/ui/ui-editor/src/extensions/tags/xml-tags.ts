@@ -13,6 +13,8 @@ import {
   WidgetType,
   keymap,
 } from '@codemirror/view';
+// TODO(burdon): Factor out agnostic types (React/solid).
+import { type FunctionComponent } from 'react';
 
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
@@ -22,9 +24,6 @@ import { decorationSetToArray } from '../../util';
 import { scrollToLineEffect } from '../scrolling';
 
 import { nodeToJson } from './xml-util';
-
-// TODO(burdon): Factor out agnostic types (React/solid).
-type FunctionComponent<P = {}, R = unknown> = (props: P) => R;
 
 /**
  * StateEffect for navigating to previous bookmark.

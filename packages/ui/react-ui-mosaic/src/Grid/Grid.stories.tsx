@@ -9,27 +9,36 @@ import { createDocAccessor, createObject } from '@dxos/echo-db';
 import { faker } from '@dxos/random';
 import { useThemeContext } from '@dxos/react-ui';
 import { withTheme } from '@dxos/react-ui/testing';
+import { QueryEditor, translations } from '@dxos/react-ui-components';
+import { Editor } from '@dxos/react-ui-editor';
 import { Text } from '@dxos/schema';
 import {
-  EditorView,
   automerge,
   createBasicExtensions,
   createMarkdownExtensions,
   createThemeExtensions,
   decorateMarkdown,
 } from '@dxos/ui-editor';
-import { range } from '@dxos/util';
-import { get } from '@dxos/util';
+import { get, range } from '@dxos/util';
 
-import { Editor } from '../Editor';
 import { Grid, type GridCellProps, type GridViewportProps } from '../Grid';
 
 faker.seed(1);
 
+console.log(translations);
+
 // CONCEPT: Can the entire app be built from a small number of primitives like this?
 
-// TODO(burdon): Multi-column board / Hiararchy (left-to-right) / Infinite canvas / (Graph).
-//  Type note, then have AI create history (to the right).
+// MOSAIC: Column based UI (stakkr.ai)
+// Multi-column board / Hiararchy (left-to-right) / Infinite canvas / (Graph).
+// - Type note, then have AI create history (to the right).
+// - Generate test data
+// - Query editor
+// - Create columns
+// - Import/export
+// - CRX/MCP
+// - Column plugins
+
 // TODO(burdon): Search / Filter / Sort (Tags).
 // TODO(burdon): Mobile / CRX.
 // TODO(burdon): Content types (Text, Mixed, Image, Form, etc).
@@ -59,18 +68,14 @@ const Cell: GridCellProps['Cell'] = ({ item, dragging }) => {
   );
 };
 
-// Enable tabbing into editor (required for tabster to work).
-const tabbable = EditorView.contentAttributes.of({ tabindex: '0' });
-
 const DefaultStory = () => {
   const { themeMode } = useThemeContext();
   const extensions = useMemo(
     () => [
-      createBasicExtensions({ placeholder: 'Enter text' }),
+      createBasicExtensions({ placeholder: 'Enter text', tabbable: true }),
       createThemeExtensions({ themeMode }),
       createMarkdownExtensions(),
       decorateMarkdown(),
-      tabbable,
     ],
     [],
   );
@@ -91,7 +96,12 @@ const DefaultStory = () => {
     <Editor.Root extensions={extensions}>
       <Grid.Root>
         <Grid.Viewport onCellMove={handleCellMove}>
-          <Grid.Column items={items} Cell={Cell} classNames='is-[25rem]' />
+          <Grid.Column classNames='is-[25rem]'>
+            <QueryEditor classNames='p-2' />
+          </Grid.Column>
+          <Grid.Column classNames='is-[25rem]'>
+            <Grid.Stack items={items} Cell={Cell} />
+          </Grid.Column>
         </Grid.Viewport>
       </Grid.Root>
     </Editor.Root>
@@ -99,11 +109,12 @@ const DefaultStory = () => {
 };
 
 const meta = {
-  title: 'ui/react-ui-editor/Grid',
+  title: 'ui/react-ui-mosaic/Grid',
   render: DefaultStory,
   decorators: [withTheme],
   parameters: {
     layout: 'fullscreen',
+    tranlations: [...translations],
   },
 } satisfies Meta<typeof DefaultStory>;
 

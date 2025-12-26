@@ -550,6 +550,9 @@
       "path": "packages/ui/react-ui-menu/tsconfig.json"
     },
     {
+      "path": "packages/ui/react-ui-mosaic/tsconfig.json"
+    },
+    {
       "path": "packages/ui/react-ui-pickers/tsconfig.json"
     },
     {

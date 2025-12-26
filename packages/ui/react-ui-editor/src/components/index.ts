@@ -3,7 +3,6 @@
 //
 
 export * from './Editor';
-export * from './Grid';
 
 // TODO(burdon): Remove once Editor is fully migrated.
 export { EditorContent, createEditorController } from './EditorContent';

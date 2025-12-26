@@ -41,6 +41,11 @@ import { focus } from './focus';
 // Basic
 //
 
+/**
+ * Enable tabbing into editor (required for tabster to work).
+ */
+export const tabbable = EditorView.contentAttributes.of({ tabindex: '0' });
+
 export const filterChars = (chars: RegExp) => {
   return EditorState.transactionFilter.of((transaction) => {
     if (!transaction.docChanged) {
@@ -96,6 +101,7 @@ export type BasicExtensionsOptions = {
   /** NOTE: Do not use with stack sections. */
   scrollPastEnd?: boolean;
   standardKeymap?: boolean;
+  tabbable?: boolean;
   tabSize?: number;
 };
 
@@ -118,8 +124,8 @@ const keymaps: { [key: string]: readonly KeyBinding[] } = {
   default: defaultKeymap,
 };
 
-export const createBasicExtensions = (_props?: BasicExtensionsOptions): Extension => {
-  const props = defaultsDeep({}, _props, defaultBasicOptions);
+export const createBasicExtensions = (propsParam?: BasicExtensionsOptions): Extension => {
+  const props = defaultsDeep({}, propsParam, defaultBasicOptions);
   return [
     // NOTE: Doesn't catch errors in keymap functions.
     EditorView.exceptionSink.of((err) => {
@@ -140,6 +146,7 @@ export const createBasicExtensions = (_props?: BasicExtensionsOptions): Extensio
     props.placeholder && placeholder(props.placeholder),
     props.readOnly !== undefined && EditorState.readOnly.of(props.readOnly),
     props.scrollPastEnd && scrollPastEnd(),
+    props.tabbable && tabbable,
     props.tabSize && EditorState.tabSize.of(props.tabSize),
 
     // https://codemirror.net/docs/ref/#view.KeyBinding

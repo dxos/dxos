@@ -54,7 +54,7 @@ type GridContextValue = {
   setSelection: Dispatch<SetStateAction<Set<string>>>;
 };
 
-const [GridContextProvider, useGridContext] = createContext<GridContextValue>('Grid');
+const [GridContextProvider, _useGridContext] = createContext<GridContextValue>('Grid');
 
 //
 // Root
@@ -113,7 +113,7 @@ const GridViewport = ({ classNames, children, onCellMove }: GridViewportProps) =
     <div
       ref={rootRef}
       role='none'
-      className={mx('flex bs-full is-full overflow-x-auto p-2', classNames)}
+      className={mx('flex bs-full is-full overflow-x-auto p-2 gap-2', classNames)}
       {...arrowNavigationAttrs}
     >
       {children}
@@ -125,16 +125,32 @@ GridViewport.displayName = 'Grid.Viewport';
 
 //
 // Column
+//
+
+type GridColumnProps = ThemedClassName<PropsWithChildren<{}>>;
+
+const GridColumn = memo(({ classNames, children }: GridColumnProps) => {
+  return (
+    <div role='none' className={mx('relative flex flex-col is-full', borderClasses, classNames)}>
+      {children}
+    </div>
+  );
+});
+
+GridColumn.displayName = 'Grid.Column';
+
+//
+// Stack
 // Ref: https://codesandbox.io/p/sandbox/vc6s5t?file=%2Fpragmatic-drag-and-drop%2Fdocumentation%2Fexamples%2Fpieces%2Fboard%2Fcolumn.tsx
 //
 
-type GridColumnProps = ThemedClassName<
+type GridStackProps = ThemedClassName<
   {
     items: Obj.Any[];
   } & Pick<GridCellProps, 'Cell'>
 >;
 
-const GridColumn = memo(({ classNames, items, Cell }: GridColumnProps) => {
+const GridStack = memo(({ classNames, items, Cell }: GridStackProps) => {
   const rootRef = useRef<HTMLDivElement>(null);
   const focusableGroupAttrs = useFocusableGroup();
   const arrowNavigationAttrs = useArrowNavigationGroup({ axis: 'vertical', memorizeCurrent: true });
@@ -160,7 +176,7 @@ const GridColumn = memo(({ classNames, items, Cell }: GridColumnProps) => {
     <div
       ref={rootRef}
       role='none'
-      className={mx('relative flex flex-col is-full plb-2 overflow-y-auto', borderClasses, classNames)}
+      className={mx('relative flex flex-col is-full plb-2 overflow-y-auto', classNames)}
       tabIndex={0}
       onKeyDown={(event) => {
         if (event.target === event.currentTarget) {
@@ -181,7 +197,7 @@ const GridColumn = memo(({ classNames, items, Cell }: GridColumnProps) => {
   );
 });
 
-GridColumn.displayName = 'Grid.Column';
+GridStack.displayName = 'Grid.Column';
 
 //
 // Cell
@@ -362,7 +378,8 @@ export const Grid = {
   Root: GridRoot,
   Viewport: GridViewport,
   Column: GridColumn,
+  Stack: GridStack,
   Cell: GridCell,
 };
 
-export type { GridRootProps, GridViewportProps, GridColumnProps, GridCellProps };
+export type { GridRootProps, GridViewportProps, GridColumnProps, GridStackProps, GridCellProps };
