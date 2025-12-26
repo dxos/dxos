@@ -5,12 +5,14 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useCallback, useMemo, useState } from 'react';
 
+import { Obj } from '@dxos/echo';
 import { createDocAccessor, createObject } from '@dxos/echo-db';
 import { faker } from '@dxos/random';
+import { useQuery } from '@dxos/react-client/echo';
 import { useClientStory, withClientProvider } from '@dxos/react-client/testing';
 import { useThemeContext } from '@dxos/react-ui';
 import { withTheme } from '@dxos/react-ui/testing';
-import { QueryEditor, translations } from '@dxos/react-ui-components';
+import { QueryEditor, translations, useQueryBuilder } from '@dxos/react-ui-components';
 import { Editor } from '@dxos/react-ui-editor';
 import { Text } from '@dxos/schema';
 import { type ValueGenerator, createObjectFactory } from '@dxos/schema/testing';
@@ -29,8 +31,6 @@ const generator = faker as any as ValueGenerator;
 import { Grid, type GridCellProps, type GridViewportProps } from '../Grid';
 
 faker.seed(1);
-
-console.log(translations);
 
 // CONCEPT: Can the entire app be built from a small number of primitives like this?
 
@@ -56,7 +56,8 @@ console.log(translations);
 // TODO(burdon): Replace stack? (Or simplify)
 // TODO(burdon): Factor out/generalize? (remove deps from dxos/ui-editor)
 
-const Cell: GridCellProps['Cell'] = ({ item, dragging }) => {
+// TODO(burdon): Use Surface.
+const TextCell: GridCellProps['Cell'] = ({ item, dragging }) => {
   const accessor = useMemo(() => createDocAccessor(item, ['content']), [item]);
   const extensions = useMemo(() => [automerge(accessor)], [accessor]);
   const initialValue = useMemo(() => {
@@ -73,13 +74,23 @@ const Cell: GridCellProps['Cell'] = ({ item, dragging }) => {
   );
 };
 
-const DefaultStory = () => {
-  const { themeMode } = useThemeContext();
+const DebugCell: GridCellProps['Cell'] = ({ item }) => {
+  return (
+    <div className='flex flex-col'>
+      <div>{Obj.getLabel(item)}</div>
+      <div className='text-xs text-subdued'>{Obj.getTypename(item)}</div>
+      <div className='text-xs text-subdued'>{item.id}</div>
+    </div>
+  );
+};
 
+const DefaultStory = () => {
   const { space } = useClientStory();
   const [query, setQuery] = useState<string | undefined>();
-  console.log(space);
+  const filter = useQueryBuilder(query);
+  const searchObjects = useQuery(space?.db, filter).sort(Obj.sort(Obj.sortByTypename, Obj.sortByLabel));
 
+  const { themeMode } = useThemeContext();
   const extensions = useMemo(
     () => [
       createBasicExtensions({ placeholder: 'Enter text', tabbable: true }),
@@ -91,15 +102,15 @@ const DefaultStory = () => {
   );
 
   // TODO(burdon): Data model for position? Arrays of refs.
-  const [items, setItems] = useState(range(20).map(() => createObject(Text.make(faker.lorem.paragraph()))));
+  const [objects, setObjects] = useState(range(20).map(() => createObject(Text.make(faker.lorem.paragraph()))));
 
   const handleCellMove = useCallback<NonNullable<GridViewportProps['onCellMove']>>(
     ({ from, to }) => {
-      const [item] = items.splice(from, 1);
-      items.splice(to, 0, item);
-      setItems([...items]);
+      const [item] = objects.splice(from, 1);
+      objects.splice(to, 0, item);
+      setObjects([...objects]);
     },
-    [items],
+    [objects],
   );
 
   return (
@@ -108,9 +119,10 @@ const DefaultStory = () => {
         <Grid.Viewport onCellMove={handleCellMove}>
           <Grid.Column classNames='is-[25rem]'>
             <QueryEditor classNames='p-2' db={space?.db} onChange={setQuery} />
+            <Grid.Stack items={searchObjects} Cell={DebugCell} />
           </Grid.Column>
           <Grid.Column classNames='is-[25rem]'>
-            <Grid.Stack items={items} Cell={Cell} />
+            <Grid.Stack items={objects} Cell={TextCell} />
           </Grid.Column>
         </Grid.Viewport>
       </Grid.Root>

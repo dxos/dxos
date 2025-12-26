@@ -3,18 +3,16 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useState } from 'react';
 
 import { Obj, Tag } from '@dxos/echo';
-import { QueryBuilder } from '@dxos/echo-query';
 import { translations } from '@dxos/plugin-assistant';
 import { D3ForceGraph, useGraphModel } from '@dxos/plugin-explorer';
 import { faker } from '@dxos/random';
-import { Filter } from '@dxos/react-client/echo';
 import { useQuery } from '@dxos/react-client/echo';
 import { useClientStory, withClientProvider } from '@dxos/react-client/testing';
 import { withTheme } from '@dxos/react-ui/testing';
-import { QueryEditor, type QueryEditorProps } from '@dxos/react-ui-components';
+import { QueryEditor, type QueryEditorProps, useQueryBuilder } from '@dxos/react-ui-components';
 import { type ValueGenerator, createObjectFactory } from '@dxos/schema/testing';
 import { render } from '@dxos/storybook-utils';
 import { Employer, Organization, Person, Project } from '@dxos/types';
@@ -23,21 +21,6 @@ import { Employer, Organization, Person, Project } from '@dxos/types';
 
 faker.seed(1);
 const generator = faker as any as ValueGenerator;
-
-export const useQueryBuilder = (query?: string): Filter.Any => {
-  const builder = useMemo(() => new QueryBuilder(), []);
-  const [filter, setFilter] = useState<Filter.Any>(Filter.everything());
-  useEffect(() => {
-    if (query) {
-      const { filter } = builder.build(query);
-      setFilter(filter ?? Filter.everything());
-    } else {
-      setFilter(Filter.everything());
-    }
-  }, [builder, query]);
-
-  return filter;
-};
 
 const DefaultStory = ({ value: valueParam }: QueryEditorProps) => {
   const { space } = useClientStory();
