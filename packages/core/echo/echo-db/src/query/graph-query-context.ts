@@ -230,7 +230,7 @@ export class SpaceQuerySource implements QuerySource {
     const results: QueryResult.EntityEntry<AnyLiveObject<any>>[] = [];
     if (isObjectIdFilter(filter)) {
       results.push(
-        ...(await this._database._coreDatabase.batchLoadObjectCores((filter as QueryAST.FilterObject).id as ObjectId[]))
+        ...(await this._database.coreDatabase.batchLoadObjectCores((filter as QueryAST.FilterObject).id as ObjectId[]))
           .filter(Predicate.isNotUndefined)
           .filter((core) => this._filterCore(core, filter, options))
           .map((core) => this._mapCoreToResult(core)),

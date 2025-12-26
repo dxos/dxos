@@ -6,8 +6,7 @@ import { beforeAll, describe, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 
 import { Blueprint, Template } from '@dxos/blueprints';
-import { Obj } from '@dxos/echo';
-import { type EchoDatabase } from '@dxos/echo-db';
+import { Obj, Database } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-db/testing';
 import { Text } from '@dxos/schema';
 import { Organization } from '@dxos/types';
@@ -18,7 +17,7 @@ import { createSystemPrompt } from '../templates/system';
 import { formatSystemPrompt } from './format';
 
 describe('format', () => {
-  let db: EchoDatabase;
+  let db: Database.Database;
   beforeAll(async () => {
     const builder = await new EchoTestBuilder().open();
     ({ db } = await builder.createDatabase({

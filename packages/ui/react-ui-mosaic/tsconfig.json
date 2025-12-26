@@ -72,6 +72,9 @@
       "path": "../../sdk/schema"
     },
     {
+      "path": "../../sdk/types"
+    },
+    {
       "path": "../lit-ui"
     },
     {

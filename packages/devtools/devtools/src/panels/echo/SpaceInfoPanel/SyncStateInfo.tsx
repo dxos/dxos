@@ -19,7 +19,7 @@ export const SyncStateInfo = ({ space }: SyncStateInfoProps) => {
 
   useEffect(() => {
     if (space) {
-      return space.db.coreDatabase.subscribeToSyncState(Context.default(), (syncState) => {
+      return space.internal.db.coreDatabase.subscribeToSyncState(Context.default(), (syncState) => {
         setSyncState(syncState);
       });
     }

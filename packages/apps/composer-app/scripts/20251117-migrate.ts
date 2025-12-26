@@ -14,7 +14,7 @@ import * as path from 'node:path';
 import { ClientService, ConfigService } from '@dxos/client';
 import { DEFAULT_PROFILE } from '@dxos/client-protocol';
 import { Filter, Query, Ref, Type } from '@dxos/echo';
-import { EchoDatabase } from '@dxos/echo-db';
+import { type EchoDatabaseImpl } from '@dxos/echo-db';
 import { log } from '@dxos/log';
 import { Graph } from '@dxos/plugin-explorer/types';
 import { Kanban } from '@dxos/react-ui-kanban/types';
@@ -29,7 +29,7 @@ import { Database } from '@dxos/echo';
  * Migrates from schema without view reference to schema with view reference.
  */
 const migrateViewType = Effect.fn(function* (
-  db: EchoDatabase,
+  db: EchoDatabaseImpl,
   currentSchema: Type.Entity.Any,
   targetSchema: Type.Entity.Any,
 ) {
@@ -46,7 +46,7 @@ const migrateViewType = Effect.fn(function* (
     const { name, presentation: ref, ...view } = object;
     const presentation = yield* Database.Service.load(ref);
     yield* Effect.promise(() =>
-      (db as any)._coreDatabase.atomicReplaceObject(presentation.id, {
+      db.coreDatabase.atomicReplaceObject(presentation.id, {
         data: {
           ...presentation,
           name,
@@ -56,7 +56,7 @@ const migrateViewType = Effect.fn(function* (
       }),
     );
     yield* Effect.promise(() =>
-      (db as any)._coreDatabase.atomicReplaceObject(view.id, {
+      db.coreDatabase.atomicReplaceObject(view.id, {
         data: { ...view },
         type: Type.getDXN(View.View),
       }),

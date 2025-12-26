@@ -196,7 +196,7 @@ export class SpaceGraphModel extends GraphModel.ReactiveGraphModel<SpaceGraphNod
         // Database Schema.
         ...(this._schema ?? []),
         // Runtime schema.
-        ...(this._space?.db.graph.schemaRegistry.schemas ?? []),
+        ...(this._space?.internal.db.graph.schemaRegistry.schemas ?? []),
       ];
 
       schemas.forEach((schema) => {

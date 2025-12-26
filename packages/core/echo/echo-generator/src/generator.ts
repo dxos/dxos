@@ -115,18 +115,18 @@ export class SpaceObjectGenerator<T extends string> extends TestObjectGenerator<
     schema: EchoSchema | Schema.Schema.AnyNoContext,
   ): Promise<EchoSchema | Schema.Schema.AnyNoContext> {
     if (schema instanceof EchoSchema) {
-      const existingSchema = this._space.db.schemaRegistry.getSchema(typename);
+      const existingSchema = this._space.internal.db.schemaRegistry.getSchema(typename);
       if (existingSchema != null) {
         return existingSchema;
       }
-      const [registeredSchema] = await this._space.db.schemaRegistry.register([schema]);
+      const [registeredSchema] = await this._space.internal.db.schemaRegistry.register([schema]);
       return registeredSchema;
     } else {
-      const existingSchema = this._space.db.graph.schemaRegistry.getSchema(typename);
+      const existingSchema = this._space.internal.db.graph.schemaRegistry.getSchema(typename);
       if (existingSchema != null) {
         return existingSchema;
       }
-      await this._space.db.graph.schemaRegistry.register([schema]);
+      await this._space.internal.db.graph.schemaRegistry.register([schema]);
       return schema;
     }
   }

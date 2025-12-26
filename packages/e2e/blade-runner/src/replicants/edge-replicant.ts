@@ -175,7 +175,7 @@ export class EdgeReplicant {
 
     const replicationIsDone = new Trigger();
     let lastDifferentDocuments: number = Infinity;
-    const unsub = space.db.coreDatabase.subscribeToSyncState(Context.default(), (state) => {
+    const unsub = space.internal.db.coreDatabase.subscribeToSyncState(Context.default(), (state) => {
       if (
         state.peers?.length === 1 &&
         state.peers[0].differentDocuments === 0 &&

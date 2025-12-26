@@ -20,7 +20,8 @@ import type * as Entity from './Entity';
 import * as Err from './Err';
 import type * as Filter from './Filter';
 import type * as Hypergraph from './Hypergraph';
-import { isInstanceOf } from './internal';
+import { type AnyProperties, isInstanceOf } from './internal';
+import type * as Obj from './Obj';
 import type * as Query from './Query';
 import type * as QueryResult from './QueryResult';
 import type * as Ref from './Ref';
@@ -141,6 +142,13 @@ export interface Database extends Queryable {
    * Get hypergraph.
    */
   get graph(): Hypergraph.Hypergraph;
+
+  toJSON(): object;
+
+  /**
+   * Return object by local ID.
+   */
+  getObjectById<T extends Obj.Any = Obj.Obj<AnyProperties>>(id: string, opts?: GetObjectByIdOptions): T | undefined;
 
   /**
    * Query objects.

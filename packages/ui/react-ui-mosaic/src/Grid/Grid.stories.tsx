@@ -7,11 +7,14 @@ import React, { useCallback, useMemo, useState } from 'react';
 
 import { createDocAccessor, createObject } from '@dxos/echo-db';
 import { faker } from '@dxos/random';
+import { withClientProvider } from '@dxos/react-client/testing';
 import { useThemeContext } from '@dxos/react-ui';
 import { withTheme } from '@dxos/react-ui/testing';
 import { QueryEditor, translations } from '@dxos/react-ui-components';
 import { Editor } from '@dxos/react-ui-editor';
 import { Text } from '@dxos/schema';
+import { type ValueGenerator, createObjectFactory } from '@dxos/schema/testing';
+import { Organization, Person, Project } from '@dxos/types';
 import {
   automerge,
   createBasicExtensions,
@@ -20,6 +23,8 @@ import {
   decorateMarkdown,
 } from '@dxos/ui-editor';
 import { get, range } from '@dxos/util';
+
+const generator = faker as any as ValueGenerator;
 
 import { Grid, type GridCellProps, type GridViewportProps } from '../Grid';
 
@@ -111,7 +116,21 @@ const DefaultStory = () => {
 const meta = {
   title: 'ui/react-ui-mosaic/Grid',
   render: DefaultStory,
-  decorators: [withTheme],
+  decorators: [
+    withTheme,
+    withClientProvider({
+      createIdentity: true,
+      createSpace: true,
+      onCreateSpace: async ({ space }) => {
+        const factory = createObjectFactory(space.db, generator);
+        await factory([
+          { type: Organization.Organization, count: 20 },
+          { type: Person.Person, count: 30 },
+          { type: Project.Project, count: 10 },
+        ]);
+      },
+    }),
+  ],
   parameters: {
     layout: 'fullscreen',
     tranlations: [...translations],
