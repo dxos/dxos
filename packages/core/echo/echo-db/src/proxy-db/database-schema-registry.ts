@@ -98,6 +98,12 @@ export class DatabaseSchemaRegistry extends Resource implements SchemaRegistry.S
     // Nothing to do.
   }
 
+  public hasSchema(schema: Type.Entity.Any): boolean {
+    const schemaId = schema instanceof Type.RuntimeType ? schema.id : getObjectIdFromSchema(schema);
+    return schemaId != null && this.getSchemaById(schemaId) != null;
+  }
+
+  // TODO(burdon): Refactor: this is too complex and untestable.
   query<Q extends Types.NoExcessProperties<SchemaRegistry.Query, Q>>(
     _query?: Q & SchemaRegistry.Query,
   ): QueryResult.QueryResult<SchemaRegistry.ExtractQueryResult<Q>> {
@@ -281,11 +287,6 @@ export class DatabaseSchemaRegistry extends Resource implements SchemaRegistry.S
       }
     }
     return results;
-  }
-
-  public hasSchema(schema: Type.Entity.Any): boolean {
-    const schemaId = schema instanceof Type.RuntimeType ? schema.id : getObjectIdFromSchema(schema);
-    return schemaId != null && this.getSchemaById(schemaId) != null;
   }
 
   /**

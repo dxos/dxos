@@ -14,7 +14,7 @@ import * as path from 'node:path';
 import { ClientService, ConfigService } from '@dxos/client';
 import { DEFAULT_PROFILE } from '@dxos/client-protocol';
 import { Filter, Query, Ref, Type } from '@dxos/echo';
-import { type EchoDatabaseImpl } from '@dxos/echo-db';
+import { type EchoDatabase } from '@dxos/echo-db';
 import { log } from '@dxos/log';
 import { Graph } from '@dxos/plugin-explorer/types';
 import { Kanban } from '@dxos/react-ui-kanban/types';
@@ -29,7 +29,7 @@ import { Database } from '@dxos/echo';
  * Migrates from schema without view reference to schema with view reference.
  */
 const migrateViewType = Effect.fn(function* (
-  db: EchoDatabaseImpl,
+  db: EchoDatabase,
   currentSchema: Type.Entity.Any,
   targetSchema: Type.Entity.Any,
 ) {
@@ -104,16 +104,16 @@ const command = Command.make(
       ]);
     });
 
-    log.info('importing', { filename, contents: contents.length });
+    log.info('importing...', { filename, contents: contents.length });
     const space = yield* Effect.promise(() => client.spaces.import({ filename, contents }));
     log.info('imported', { spaceId: space.id, filename });
 
     yield* Effect.all([
-      migrateViewType(space.db, Graph.GraphV1, Graph.Graph),
-      migrateViewType(space.db, Kanban.KanbanV1, Kanban.Kanban),
-      migrateViewType(space.db, Map.MapV2, Map.Map),
-      migrateViewType(space.db, Masonry.MasonryV1, Masonry.Masonry),
-      migrateViewType(space.db, Table.TableV1, Table.Table),
+      migrateViewType(space.internal.db, Graph.GraphV1, Graph.Graph),
+      migrateViewType(space.internal.db, Kanban.KanbanV1, Kanban.Kanban),
+      migrateViewType(space.internal.db, Map.MapV2, Map.Map),
+      migrateViewType(space.internal.db, Masonry.MasonryV1, Masonry.Masonry),
+      migrateViewType(space.internal.db, Table.TableV1, Table.Table),
     ]).pipe(
       Effect.andThen(() => Database.Service.flush()),
       Effect.provide(Database.Service.layer(space.db)),

@@ -7,7 +7,7 @@ import * as Schema from 'effect/Schema';
 import { type MulticastObservable } from '@dxos/async';
 import { type SpecificCredential } from '@dxos/credentials';
 import { type Database, type Obj } from '@dxos/echo';
-import { type EchoDatabaseImpl, type QueueFactory, type SpaceSyncState } from '@dxos/echo-db';
+import { type EchoDatabase, type QueueFactory, type SpaceSyncState } from '@dxos/echo-db';
 import { type PublicKey, type SpaceId } from '@dxos/keys';
 import { type Messenger } from '@dxos/protocols';
 import {
@@ -33,7 +33,7 @@ export type CreateEpochOptions = {
 };
 
 export interface SpaceInternal {
-  get db(): EchoDatabaseImpl;
+  get db(): EchoDatabase;
   get data(): SpaceData;
 
   getCredentials(): Promise<Credential[]>;
@@ -117,7 +117,7 @@ export interface Space extends Messenger {
   /**
    * @deprecated
    */
-  // TODO(wittjosiah): Audit and remove. This should not be exposed (or marked @internal).
+  // TODO(wittjosiah): Audit and remove. This should not be exposed (or marked as internal).
   get internal(): SpaceInternal;
 
   /**

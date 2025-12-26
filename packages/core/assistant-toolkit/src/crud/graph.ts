@@ -56,7 +56,7 @@ export const findRelatedSchema = async (
   anchor: Schema.Schema.AnyNoContext,
 ): Promise<RelatedSchema[]> => {
   // TODO(dmaretskyi): Query stored schemas.
-  const allSchemas = [...db.graph.schemaRegistry.schemas];
+  const allSchemas = await db.graph.schemaRegistry.query().run();
 
   // TODO(dmaretskyi): Also do references.
   return allSchemas

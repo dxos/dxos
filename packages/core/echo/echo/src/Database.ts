@@ -138,9 +138,6 @@ export interface Database extends Queryable {
   // TODO(burdon): Can we move this into graph?
   get schemaRegistry(): SchemaRegistry.SchemaRegistry;
 
-  /**
-   * Get hypergraph.
-   */
   get graph(): Hypergraph.Hypergraph;
 
   toJSON(): object;
