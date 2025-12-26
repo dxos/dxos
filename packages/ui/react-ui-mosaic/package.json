@@ -63,7 +63,8 @@
     "ajv": "catalog:",
     "lodash.defaultsdeep": "catalog:",
     "lodash.merge": "catalog:",
-    "lodash.sortby": "catalog:"
+    "lodash.sortby": "catalog:",
+    "tabster": "catalog:"
   },
   "devDependencies": {
     "@dxos/config": "workspace:*",

@@ -1,0 +1,123 @@
+//
+// Copyright 2025 DXOS.org
+//
+
+import {
+  useArrowNavigationGroup,
+  useFocusFinders,
+  useFocusableGroup,
+  useMergedTabsterAttributes_unstable,
+} from '@fluentui/react-tabster';
+import { type Decorator, type Meta, type StoryObj } from '@storybook/react-vite';
+import React, { forwardRef, useEffect, useMemo, useRef } from 'react';
+import { createTabster, disposeTabster } from 'tabster';
+
+import { Input } from '@dxos/react-ui';
+import { withTheme } from '@dxos/react-ui/testing';
+import { mx } from '@dxos/ui-theme';
+
+const border =
+  'rounded-sm outline-none border border-subduedSeparator focus:border-primary-500 focus-within:border-rose-500';
+
+const Board = forwardRef<HTMLDivElement, { columns: string[][] }>(({ columns }, ref) => {
+  const arrowNavigationAttrs = useArrowNavigationGroup({ axis: 'horizontal', memorizeCurrent: true });
+
+  return (
+    <div ref={ref} tabIndex={0} {...arrowNavigationAttrs} className={mx('flex p-4 gap-4')}>
+      {columns.map((column) => (
+        <Column key={column[0]} items={column} />
+      ))}
+    </div>
+  );
+});
+
+const Column = forwardRef<HTMLDivElement, { items: string[] }>(({ items }, ref) => {
+  const focusableGroupAttrs = useFocusableGroup({ tabBehavior: 'limited' });
+  const arrowNavigationAttrs = useArrowNavigationGroup({ axis: 'vertical', memorizeCurrent: true });
+  const tabsterAttrs = useMergedTabsterAttributes_unstable(focusableGroupAttrs, arrowNavigationAttrs);
+
+  return (
+    <div ref={ref} tabIndex={0} {...tabsterAttrs} className={mx('flex flex-col p-4 gap-4', border)}>
+      {items.map((item) => (
+        <Item key={item} value={item} />
+      ))}
+    </div>
+  );
+});
+
+const Item = forwardRef<HTMLDivElement, { value: string }>(({ value }, ref) => {
+  const focusableGroupAttrs = useFocusableGroup();
+
+  return (
+    <div
+      ref={ref}
+      tabIndex={0}
+      {...focusableGroupAttrs}
+      className={mx('flex gap-4 p-4 items-center is-[20rem]', border)}
+    >
+      <Input.Root>
+        <Input.Checkbox />
+      </Input.Root>
+      <Input.Root>
+        <Input.TextInput defaultValue={value} />
+      </Input.Root>
+    </div>
+  );
+});
+
+const DefaultStory = () => {
+  const columns = useMemo(() => {
+    return [
+      ['A1', 'A2', 'A3'],
+      ['B1', 'B2', 'B3', 'B4'],
+      ['C1', 'C2', 'C3', 'C4', 'C5', 'C6'],
+    ];
+  }, []);
+
+  const ref = useRef<HTMLDivElement>(null);
+  const { findFirstFocusable } = useFocusFinders();
+  useEffect(() => {
+    if (ref.current) {
+      findFirstFocusable(ref.current)?.focus();
+    }
+  }, []);
+
+  return <Board columns={columns} ref={ref} />;
+};
+
+// TODO(burdon): This doesn't seem to be necessary or recongized; memoization doesn't work.
+const withTabster: Decorator = (Story) => {
+  useEffect(() => {
+    const tabster = createTabster(window, {
+      autoRoot: {},
+      // TODO(burdon): Not called.
+      // checkUncontrolledCompletely: (el) => {
+      //   console.log(el);
+      //   return true;
+      // },
+    });
+
+    return () => {
+      disposeTabster(tabster);
+    };
+  }, []);
+
+  return <Story />;
+};
+
+const meta: Meta<typeof DefaultStory> = {
+  title: 'ui/react-ui-mosaic/focus',
+  component: DefaultStory,
+  decorators: [withTheme, withTabster],
+  parameters: {
+    layout: 'fullscreen',
+  },
+};
+
+export default meta;
+
+type Story = StoryObj<typeof meta>;
+
+export const Default: Story = {
+  args: {},
+};

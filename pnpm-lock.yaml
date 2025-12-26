@@ -223,8 +223,8 @@ catalogs:
       specifier: ^0.18.0
       version: 0.18.0
     '@fluentui/react-tabster':
-      specifier: ^9.24.2
-      version: 9.24.6
+      specifier: ^9.26.11
+      version: 9.26.11
     '@fontsource-variable/inter':
       specifier: 5.0.16
       version: 5.0.16
@@ -1734,6 +1734,9 @@ catalogs:
     style-mod:
       specifier: ^4.1.0
       version: 4.1.0
+    tabster:
+      specifier: ^8.5.5
+      version: 8.5.5
     tailwind-merge:
       specifier: ^2.2.1
       version: 2.2.1
@@ -8306,7 +8309,7 @@ importers:
         version: 0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2)
       '@fluentui/react-tabster':
         specifier: 'catalog:'
-        version: 9.24.6(@types/react-dom@19.2.3(@types/react@19.2.7))(@types/react@19.2.7)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
+        version: 9.26.11(@types/react-dom@19.2.3(@types/react@19.2.7))(@types/react@19.2.7)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
       '@preact-signals/safe-react':
         specifier: 'catalog:'
         version: 0.9.0(@babel/core@7.28.0)(@swc/helpers@0.5.17)(react@19.2.3)
@@ -8797,7 +8800,7 @@ importers:
         version: link:../../common/util
       '@fluentui/react-tabster':
         specifier: 'catalog:'
-        version: 9.24.6(@types/react-dom@19.2.3(@types/react@19.2.7))(@types/react@19.2.7)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
+        version: 9.26.11(@types/react-dom@19.2.3(@types/react@19.2.7))(@types/react@19.2.7)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
       '@preact-signals/safe-react':
         specifier: 'catalog:'
         version: 0.9.0(@babel/core@7.28.0)(@swc/helpers@0.5.17)(react@19.2.3)
@@ -11799,7 +11802,7 @@ importers:
         version: link:../../common/util
       '@fluentui/react-tabster':
         specifier: 'catalog:'
-        version: 9.24.6(@types/react-dom@19.2.3(@types/react@19.2.7))(@types/react@19.2.7)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
+        version: 9.26.11(@types/react-dom@19.2.3(@types/react@19.2.7))(@types/react@19.2.7)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
       '@preact-signals/safe-react':
         specifier: 'catalog:'
         version: 0.9.0(@babel/core@7.28.0)(@swc/helpers@0.5.17)(react@19.2.3)
@@ -11875,7 +11878,7 @@ importers:
         version: link:../../common/util
       '@fluentui/react-tabster':
         specifier: 'catalog:'
-        version: 9.24.6(@types/react-dom@19.2.3(@types/react@19.2.7))(@types/react@19.2.7)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
+        version: 9.26.11(@types/react-dom@19.2.3(@types/react@19.2.7))(@types/react@19.2.7)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
       '@preact-signals/safe-react':
         specifier: 'catalog:'
         version: 0.9.0(@babel/core@7.28.0)(@swc/helpers@0.5.17)(react@19.2.3)
@@ -14105,7 +14108,7 @@ importers:
         version: 1.1.1(emoji-mart@5.5.2)(react@19.2.3)
       '@fluentui/react-tabster':
         specifier: 'catalog:'
-        version: 9.24.6(@types/react-dom@19.2.3(@types/react@19.2.7))(@types/react@19.2.7)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
+        version: 9.26.11(@types/react-dom@19.2.3(@types/react@19.2.7))(@types/react@19.2.7)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
       '@preact-signals/safe-react':
         specifier: 'catalog:'
         version: 0.9.0(@babel/core@7.28.0)(@swc/helpers@0.5.17)(react@19.2.3)
@@ -14806,7 +14809,7 @@ importers:
         version: link:../../common/util
       '@fluentui/react-tabster':
         specifier: 'catalog:'
-        version: 9.24.6(@types/react-dom@19.2.3(@types/react@19.2.7))(@types/react@19.2.7)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
+        version: 9.26.11(@types/react-dom@19.2.3(@types/react@19.2.7))(@types/react@19.2.7)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
       '@preact-signals/safe-react':
         specifier: 'catalog:'
         version: 0.9.0(@babel/core@7.28.0)(@swc/helpers@0.5.17)(react@19.2.3)
@@ -15647,7 +15650,7 @@ importers:
         version: link:../../common/util
       '@fluentui/react-tabster':
         specifier: 'catalog:'
-        version: 9.24.6(@types/react-dom@19.2.3(@types/react@19.2.7))(@types/react@19.2.7)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
+        version: 9.26.11(@types/react-dom@19.2.3(@types/react@19.2.7))(@types/react@19.2.7)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
       '@preact-signals/safe-react':
         specifier: 'catalog:'
         version: 0.9.0(@babel/core@7.28.0)(@swc/helpers@0.5.17)(react@19.2.3)
@@ -15980,7 +15983,7 @@ importers:
         version: link:../../common/util
       '@fluentui/react-tabster':
         specifier: 'catalog:'
-        version: 9.24.6(@types/react-dom@19.2.3(@types/react@19.2.7))(@types/react@19.2.7)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
+        version: 9.26.11(@types/react-dom@19.2.3(@types/react@19.2.7))(@types/react@19.2.7)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
       '@lezer/common':
         specifier: 'catalog:'
         version: 1.2.2
@@ -16221,7 +16224,7 @@ importers:
         version: link:../../common/util
       '@fluentui/react-tabster':
         specifier: 'catalog:'
-        version: 9.24.6(@types/react-dom@19.2.3(@types/react@19.2.7))(@types/react@19.2.7)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
+        version: 9.26.11(@types/react-dom@19.2.3(@types/react@19.2.7))(@types/react@19.2.7)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
       '@preact-signals/safe-react':
         specifier: 'catalog:'
         version: 0.9.0(@babel/core@7.28.0)(@swc/helpers@0.5.17)(react@19.2.3)
@@ -17153,7 +17156,7 @@ importers:
         version: link:../../common/util
       '@fluentui/react-tabster':
         specifier: 'catalog:'
-        version: 9.24.6(@types/react-dom@19.2.3(@types/react@19.2.7))(@types/react@19.2.7)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
+        version: 9.26.11(@types/react-dom@19.2.3(@types/react@19.2.7))(@types/react@19.2.7)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
       '@preact-signals/safe-react':
         specifier: 'catalog:'
         version: 0.9.0(@babel/core@7.28.0)(@swc/helpers@0.5.17)(react@19.2.3)
@@ -17178,6 +17181,9 @@ importers:
       lodash.sortby:
         specifier: 'catalog:'
         version: 4.7.0
+      tabster:
+        specifier: 'catalog:'
+        version: 8.5.5
     devDependencies:
       '@dxos/config':
         specifier: workspace:*
@@ -17338,7 +17344,7 @@ importers:
     dependencies:
       '@fluentui/react-tabster':
         specifier: 'catalog:'
-        version: 9.24.6(@types/react-dom@19.2.3(@types/react@19.2.7))(@types/react@19.2.7)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
+        version: 9.26.11(@types/react-dom@19.2.3(@types/react@19.2.7))(@types/react@19.2.7)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
       '@preact-signals/safe-react':
         specifier: 'catalog:'
         version: 0.9.0(@babel/core@7.28.0)(@swc/helpers@0.5.17)(react@19.2.3)
@@ -17511,7 +17517,7 @@ importers:
         version: link:../../common/util
       '@fluentui/react-tabster':
         specifier: 'catalog:'
-        version: 9.24.6(@types/react-dom@19.2.3(@types/react@19.2.7))(@types/react@19.2.7)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
+        version: 9.26.11(@types/react-dom@19.2.3(@types/react@19.2.7))(@types/react@19.2.7)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
       '@preact-signals/safe-react':
         specifier: 'catalog:'
         version: 0.9.0(@babel/core@7.28.0)(@swc/helpers@0.5.17)(react@19.2.3)
@@ -17714,7 +17720,7 @@ importers:
         version: link:../../common/util
       '@fluentui/react-tabster':
         specifier: 'catalog:'
-        version: 9.24.6(@types/react-dom@19.2.3(@types/react@19.2.7))(@types/react@19.2.7)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
+        version: 9.26.11(@types/react-dom@19.2.3(@types/react@19.2.7))(@types/react@19.2.7)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
       '@preact-signals/safe-react':
         specifier: 'catalog:'
         version: 0.9.0(@babel/core@7.28.0)(@swc/helpers@0.5.17)(react@19.2.3)
@@ -17799,7 +17805,7 @@ importers:
         version: link:../../common/util
       '@fluentui/react-tabster':
         specifier: 'catalog:'
-        version: 9.24.6(@types/react-dom@19.2.3(@types/react@19.2.7))(@types/react@19.2.7)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
+        version: 9.26.11(@types/react-dom@19.2.3(@types/react@19.2.7))(@types/react@19.2.7)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
       '@preact-signals/safe-react':
         specifier: 'catalog:'
         version: 0.9.0(@babel/core@7.28.0)(@swc/helpers@0.5.17)(react@19.2.3)
@@ -21485,31 +21491,31 @@ packages:
   '@fluentui/keyboard-keys@9.0.8':
     resolution: {integrity: sha512-iUSJUUHAyTosnXK8O2Ilbfxma+ZyZPMua5vB028Ys96z80v+LFwntoehlFsdH3rMuPsA8GaC1RE7LMezwPBPdw==}
 
-  '@fluentui/react-shared-contexts@9.23.1':
-    resolution: {integrity: sha512-mP+7talxLz7n0G36o7Asdvst+JPzUbqbnoMKUWRVB5YwzlOXumEgaQDgL1BkRUJYaDGOjIiSTUjHOEkBt7iSdg==}
+  '@fluentui/react-shared-contexts@9.26.0':
+    resolution: {integrity: sha512-r52B+LUevs930pe45pFsppM9XNvY+ojgRgnDE+T/6aiwR/Mo4YoGrtjhLEzlQBeTGuySICTeaAiXfuH6Keo5Dg==}
     peerDependencies:
       '@types/react': ~19.2.7
       react: ~19.2.3
 
-  '@fluentui/react-tabster@9.24.6':
-    resolution: {integrity: sha512-d0i4Yey8UE+zf+dM/wYtblRwRhxuE9uWdwsxWD5tdvDY3KZxIa9NsNW7xBRA1Az5dhvWw83fJJBd88DosX2sYw==}
+  '@fluentui/react-tabster@9.26.11':
+    resolution: {integrity: sha512-x2UjXowknK4gHJT14ezIeaLAKozZrpqsvWj8Mqa6p+TiOdHyo8YO6mecpCV1QWyz86qYsOPYhK/i0MSapwaELA==}
     peerDependencies:
       '@types/react': ~19.2.7
       '@types/react-dom': ~19.2.3
       react: ~19.2.3
       react-dom: ~19.2.3
 
-  '@fluentui/react-theme@9.1.24':
-    resolution: {integrity: sha512-OhVKYD7CMYHxzJEn4PtIszledj8hbQJNWBMfIZsp4Sytdp9vCi0txIQUx4BhS1WqtQPhNGCF16eW9Q3NRrnIrQ==}
+  '@fluentui/react-theme@9.2.0':
+    resolution: {integrity: sha512-Q0zp/MY1m5RjlkcwMcjn/PQRT2T+q3bgxuxWbhgaD07V+tLzBhGROvuqbsdg4YWF/IK21zPfLhmGyifhEu0DnQ==}
 
-  '@fluentui/react-utilities@9.19.0':
-    resolution: {integrity: sha512-66Kdpr4xZsov6KSqbPDmKR5CB96RUPZuWihMC3RYHj9uH+oxd81k2Jyrb6rM058xjVKDFSFVLUZlsp1Mgts38w==}
+  '@fluentui/react-utilities@9.26.0':
+    resolution: {integrity: sha512-3i/Vdt9UzDs/vuQvdR6HJFMhkOqB22lOGJ+v6VpkjGO81ywnQwP4LKkaKK534q+qiVbcKumCkHOeRhtMAUJXPQ==}
     peerDependencies:
       '@types/react': ~19.2.7
       react: ~19.2.3
 
-  '@fluentui/tokens@1.0.0-alpha.21':
-    resolution: {integrity: sha512-xQ1T56sNgDFGl+kJdIwhz67mHng8vcwO7Dvx5Uja4t+NRULQBgMcJ4reUo4FGF3TjufHj08pP0/OnKQgnOaSVg==}
+  '@fluentui/tokens@1.0.0-alpha.22':
+    resolution: {integrity: sha512-i9fgYyyCWFRdUi+vQwnV6hp7wpLGK4p09B+O/f2u71GBXzPuniubPYvrIJYtl444DD6shLjYToJhQ1S6XTFwLg==}
 
   '@fontsource-variable/inter@5.0.16':
     resolution: {integrity: sha512-k+BUNqksTL+AN+o+OV7ILeiE9B5M5X+/jA7LWvCwjbV9ovXTqZyKRhA/x7uYv/ml8WQ0XNLBM7cRFIx4jW0/hg==}
@@ -21541,8 +21547,8 @@ packages:
   '@griffel/core@1.19.2':
     resolution: {integrity: sha512-WkB/QQkjy9dE4vrNYGhQvRRUHFkYVOuaznVOMNTDT4pS9aTJ9XPrMTXXlkpcwaf0D3vNKoerj4zAwnU2lBzbOg==}
 
-  '@griffel/react@1.5.30':
-    resolution: {integrity: sha512-1q4ojbEVFY5YA0j1NamP0WWF4BKh+GHsVugltDYeEgEaVbH3odJ7tJabuhQgY+7Nhka0pyEFWSiHJev0K3FSew==}
+  '@griffel/react@1.5.32':
+    resolution: {integrity: sha512-jN3SmSwAUcWFUQuQ9jlhqZ5ELtKY21foaUR0q1mJtiAeSErVgjkpKJyMLRYpvaFGWrDql0Uz23nXUogXbsS2wQ==}
     peerDependencies:
       react: ~19.2.3
 
@@ -41378,19 +41384,19 @@ snapshots:
     dependencies:
       '@swc/helpers': 0.5.17
 
-  '@fluentui/react-shared-contexts@9.23.1(@types/react@19.2.7)(react@19.2.3)':
+  '@fluentui/react-shared-contexts@9.26.0(@types/react@19.2.7)(react@19.2.3)':
     dependencies:
-      '@fluentui/react-theme': 9.1.24
+      '@fluentui/react-theme': 9.2.0
       '@swc/helpers': 0.5.17
       '@types/react': 19.2.7
       react: 19.2.3
 
-  '@fluentui/react-tabster@9.24.6(@types/react-dom@19.2.3(@types/react@19.2.7))(@types/react@19.2.7)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)':
+  '@fluentui/react-tabster@9.26.11(@types/react-dom@19.2.3(@types/react@19.2.7))(@types/react@19.2.7)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)':
     dependencies:
-      '@fluentui/react-shared-contexts': 9.23.1(@types/react@19.2.7)(react@19.2.3)
-      '@fluentui/react-theme': 9.1.24
-      '@fluentui/react-utilities': 9.19.0(@types/react@19.2.7)(react@19.2.3)
-      '@griffel/react': 1.5.30(react@19.2.3)
+      '@fluentui/react-shared-contexts': 9.26.0(@types/react@19.2.7)(react@19.2.3)
+      '@fluentui/react-theme': 9.2.0
+      '@fluentui/react-utilities': 9.26.0(@types/react@19.2.7)(react@19.2.3)
+      '@griffel/react': 1.5.32(react@19.2.3)
       '@swc/helpers': 0.5.17
       '@types/react': 19.2.7
       '@types/react-dom': 19.2.3(@types/react@19.2.7)
@@ -41399,20 +41405,20 @@ snapshots:
       react-dom: 19.2.3(react@19.2.3)
       tabster: 8.5.5
 
-  '@fluentui/react-theme@9.1.24':
+  '@fluentui/react-theme@9.2.0':
     dependencies:
-      '@fluentui/tokens': 1.0.0-alpha.21
+      '@fluentui/tokens': 1.0.0-alpha.22
       '@swc/helpers': 0.5.17
 
-  '@fluentui/react-utilities@9.19.0(@types/react@19.2.7)(react@19.2.3)':
+  '@fluentui/react-utilities@9.26.0(@types/react@19.2.7)(react@19.2.3)':
     dependencies:
       '@fluentui/keyboard-keys': 9.0.8
-      '@fluentui/react-shared-contexts': 9.23.1(@types/react@19.2.7)(react@19.2.3)
+      '@fluentui/react-shared-contexts': 9.26.0(@types/react@19.2.7)(react@19.2.3)
       '@swc/helpers': 0.5.17
       '@types/react': 19.2.7
       react: 19.2.3
 
-  '@fluentui/tokens@1.0.0-alpha.21':
+  '@fluentui/tokens@1.0.0-alpha.22':
     dependencies:
       '@swc/helpers': 0.5.17
 
@@ -41454,7 +41460,7 @@ snapshots:
       stylis: 4.3.0
       tslib: 2.8.1
 
-  '@griffel/react@1.5.30(react@19.2.3)':
+  '@griffel/react@1.5.32(react@19.2.3)':
     dependencies:
       '@griffel/core': 1.19.2
       react: 19.2.3

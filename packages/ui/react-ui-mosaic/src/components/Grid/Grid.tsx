@@ -17,7 +17,7 @@ import {
   extractClosestEdge,
 } from '@atlaskit/pragmatic-drag-and-drop-hitbox/closest-edge';
 import { DropIndicator } from '@atlaskit/pragmatic-drag-and-drop-react-drop-indicator/box';
-import { useArrowNavigationGroup, useFocusFinders, useFocusableGroup } from '@fluentui/react-tabster';
+import { useArrowNavigationGroup, useFocusableGroup } from '@fluentui/react-tabster';
 import { createContext } from '@radix-ui/react-context';
 import React, {
   type CSSProperties,
@@ -39,9 +39,9 @@ import { log } from '@dxos/log';
 import { Icon, type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
-import { findFirstFocusableAncestor } from './focusable';
+import { findFirstFocusableAncestor, useFocusableGroupAlt } from '../../hooks';
 
-const borderClasses =
+const focusBorderClasses =
   'outline-none transition border border-subduedSeparator focus:border-primary-500 focus-within:border-separator rounded-sm';
 const iconClasses = 'pbs-0.5 hover:bg-inputSurface rounded-sm transition opacity-10 group-hover:opacity-100';
 
@@ -99,9 +99,9 @@ const GridViewport = ({ classNames, children, onCellMove }: GridViewportProps) =
             return;
           }
 
-          const items = column.data.items as Obj.Any[];
-          const from = items.findIndex((item) => item.id === source.data.itemId);
-          const to = items.findIndex((item) => item.id === cell.data.itemId);
+          const objects = column.data.objects as Obj.Any[];
+          const from = objects.findIndex((object) => object.id === source.data.objectId);
+          const to = objects.findIndex((object) => object.id === cell.data.objectId);
           log('cellMove', { from, to });
           onCellMove?.({ from, to });
         },
@@ -131,7 +131,7 @@ type GridColumnProps = ThemedClassName<PropsWithChildren<{}>>;
 
 const GridColumn = memo(({ classNames, children }: GridColumnProps) => {
   return (
-    <div role='none' className={mx('relative flex flex-col is-full', borderClasses, classNames)}>
+    <div role='none' className={mx('relative flex flex-col is-full', focusBorderClasses, classNames)}>
       {children}
     </div>
   );
@@ -146,15 +146,14 @@ GridColumn.displayName = 'Grid.Column';
 
 type GridStackProps = ThemedClassName<
   {
-    items: Obj.Any[];
-  } & Pick<GridCellProps, 'Cell'>
+    objects: Obj.Any[];
+  } & Pick<GridCellProps, 'Cell' | 'enableDrag'>
 >;
 
-const GridStack = memo(({ classNames, items, Cell }: GridStackProps) => {
+const GridStack = memo(({ classNames, objects, Cell, enableDrag }: GridStackProps) => {
   const rootRef = useRef<HTMLDivElement>(null);
-  const focusableGroupAttrs = useFocusableGroup();
+  const focusableGroupAttrs = useFocusableGroupAlt(rootRef.current);
   const arrowNavigationAttrs = useArrowNavigationGroup({ axis: 'vertical', memorizeCurrent: true });
-  const { findFirstFocusable } = useFocusFinders();
 
   useEffect(() => {
     if (!rootRef.current) {
@@ -164,7 +163,7 @@ const GridStack = memo(({ classNames, items, Cell }: GridStackProps) => {
     return combine(
       dropTargetForElements({
         element: rootRef.current,
-        getData: () => ({ type: 'column', items }),
+        getData: () => ({ type: 'column', objects }),
       }),
       autoScrollForElements({
         element: rootRef.current,
@@ -177,21 +176,11 @@ const GridStack = memo(({ classNames, items, Cell }: GridStackProps) => {
       ref={rootRef}
       role='none'
       className={mx('relative flex flex-col is-full plb-2 overflow-y-auto', classNames)}
-      tabIndex={0}
-      onKeyDown={(event) => {
-        if (event.target === event.currentTarget) {
-          switch (event.key) {
-            case 'Enter':
-              rootRef.current && findFirstFocusable(rootRef.current)?.focus();
-              break;
-          }
-        }
-      }}
       {...focusableGroupAttrs}
       {...arrowNavigationAttrs}
     >
-      {items.map((item) => (
-        <Grid.Cell key={item.id} item={item} Cell={Cell} />
+      {objects.map((object) => (
+        <Grid.Cell key={object.id} object={object} Cell={Cell} enableDrag={enableDrag} />
       ))}
     </div>
   );
@@ -206,11 +195,12 @@ GridStack.displayName = 'Grid.Column';
 type State = { type: 'idle' } | { type: 'preview'; container: HTMLElement; rect: DOMRect } | { type: 'dragging' };
 
 type GridCellProps = ThemedClassName<{
-  item: Obj.Any;
-  Cell: FC<{ item: Obj.Any; dragging?: boolean }>;
+  object: Obj.Any;
+  Cell: FC<{ object: Obj.Any; dragging?: boolean }>;
+  enableDrag?: boolean;
 }>;
 
-const GridCell = memo(({ classNames, item, Cell }: GridCellProps) => {
+const GridCell = memo(({ classNames, object, Cell, enableDrag }: GridCellProps) => {
   const rootRef = useRef<HTMLDivElement>(null);
   const handleRef = useRef<HTMLDivElement>(null);
   const [state, setState] = useState<State>({ type: 'idle' });
@@ -227,7 +217,7 @@ const GridCell = memo(({ classNames, item, Cell }: GridCellProps) => {
     return combine(
       draggable({
         element: handle,
-        getInitialData: () => ({ type: 'cell', itemId: item.id }),
+        getInitialData: () => ({ type: 'cell', objectId: object.id }),
         onGenerateDragPreview: ({ location, nativeSetDragImage }) => {
           const rect = root.getBoundingClientRect();
           setCustomNativeDragPreview({
@@ -255,7 +245,7 @@ const GridCell = memo(({ classNames, item, Cell }: GridCellProps) => {
           return attachClosestEdge(
             {
               type: 'cell',
-              itemId: item.id,
+              objectId: object.id,
             },
             {
               input,
@@ -265,12 +255,12 @@ const GridCell = memo(({ classNames, item, Cell }: GridCellProps) => {
           );
         },
         onDragEnter: ({ source, self }) => {
-          if (source.data.itemId !== item.id) {
+          if (source.data.objectId !== object.id) {
             setClosestEdge(extractClosestEdge(self.data));
           }
         },
         onDrag: ({ source, self }) => {
-          if (source.data.itemId !== item.id) {
+          if (source.data.objectId !== object.id) {
             setClosestEdge(extractClosestEdge(self.data));
           }
         },
@@ -282,7 +272,7 @@ const GridCell = memo(({ classNames, item, Cell }: GridCellProps) => {
         },
       }),
     );
-  }, [rootRef, handleRef, item]);
+  }, [rootRef, handleRef, object]);
 
   // NOTE: No gaps between cells (so that the drop indicators doesn't flicker).
   // And ensure padding doesn't change position of cursor when dragging.
@@ -291,10 +281,10 @@ const GridCell = memo(({ classNames, item, Cell }: GridCellProps) => {
       <div role='none' className='relative mli-2'>
         <GridCellPrimitive
           ref={rootRef}
-          handleRef={handleRef}
+          handleRef={enableDrag ? handleRef : undefined}
           classNames={['transition opacity-100', state.type === 'dragging' && 'opacity-25', classNames]}
         >
-          <Cell item={item} />
+          <Cell object={object} />
         </GridCellPrimitive>
         {closestEdge && <DropIndicator edge={closestEdge} />}
       </div>
@@ -303,7 +293,7 @@ const GridCell = memo(({ classNames, item, Cell }: GridCellProps) => {
         createPortal(
           <div role='none' style={{ width: `${state.rect.width}px` } as CSSProperties}>
             <GridCellPrimitive classNames={['bg-inputSurface', classNames]}>
-              <Cell item={item} dragging={true} />
+              <Cell object={object} dragging={true} />
             </GridCellPrimitive>
           </div>,
           state.container,
@@ -332,8 +322,8 @@ const GridCellPrimitive = memo(
           role='none'
           className={mx(
             // TODO(burdon): Options for border/spacing.
-            'group is-full grid grid-cols-[min-content_1fr_min-content] gap-2 p-2 overflow-hidden',
-            borderClasses,
+            'group is-full grid grid-cols-[1.25rem_1fr_1.25rem] gap-2 p-2 overflow-hidden',
+            focusBorderClasses,
             classNames,
           )}
           tabIndex={0}
@@ -353,9 +343,11 @@ const GridCellPrimitive = memo(
           {...focusableGroupAttrs}
         >
           <div role='none'>
-            <div ref={handleRef} role='none' className={iconClasses}>
-              <Icon classNames='cursor-pointer' icon='ph--dots-six-vertical--regular' size={5} />
-            </div>
+            {handleRef && (
+              <div ref={handleRef} role='none' className={iconClasses}>
+                <Icon classNames='cursor-pointer' icon='ph--dots-six-vertical--regular' size={5} />
+              </div>
+            )}
           </div>
           <div role='none'>{children}</div>
           <div role='none'>

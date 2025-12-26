@@ -28,9 +28,12 @@ import { get, range } from '@dxos/util';
 
 const generator = faker as any as ValueGenerator;
 
-import { Grid, type GridCellProps, type GridViewportProps } from '../Grid';
+import { Grid, type GridCellProps, type GridViewportProps } from '.';
 
 faker.seed(1);
+
+// NEXT
+// - Surface with customized card layout (e.g., drag).
 
 // CONCEPT: Can the entire app be built from a small number of primitives like this?
 
@@ -43,6 +46,7 @@ faker.seed(1);
 // - Import/export
 // - CRX/MCP
 // - Column plugins
+// - Sidebar/Navigation?
 
 // TODO(burdon): Search / Filter / Sort (Tags).
 // TODO(burdon): Mobile / CRX.
@@ -57,8 +61,8 @@ faker.seed(1);
 // TODO(burdon): Factor out/generalize? (remove deps from dxos/ui-editor)
 
 // TODO(burdon): Use Surface.
-const TextCell: GridCellProps['Cell'] = ({ item, dragging }) => {
-  const accessor = useMemo(() => createDocAccessor(item, ['content']), [item]);
+const TextCell: GridCellProps['Cell'] = ({ object, dragging }) => {
+  const accessor = useMemo(() => createDocAccessor(object, ['content']), [object]);
   const extensions = useMemo(() => [automerge(accessor)], [accessor]);
   const initialValue = useMemo(() => {
     const doc = accessor.handle.doc();
@@ -74,12 +78,12 @@ const TextCell: GridCellProps['Cell'] = ({ item, dragging }) => {
   );
 };
 
-const DebugCell: GridCellProps['Cell'] = ({ item }) => {
+const DebugCell: GridCellProps['Cell'] = ({ object }) => {
   return (
     <div className='flex flex-col'>
-      <div>{Obj.getLabel(item)}</div>
-      <div className='text-xs text-subdued'>{Obj.getTypename(item)}</div>
-      <div className='text-xs text-subdued'>{item.id}</div>
+      <div>{Obj.getLabel(object)}</div>
+      <div className='text-xs text-subdued'>{Obj.getTypename(object)}</div>
+      <div className='text-xs text-subdued'>{object.id}</div>
     </div>
   );
 };
@@ -106,8 +110,8 @@ const DefaultStory = () => {
 
   const handleCellMove = useCallback<NonNullable<GridViewportProps['onCellMove']>>(
     ({ from, to }) => {
-      const [item] = objects.splice(from, 1);
-      objects.splice(to, 0, item);
+      const [object] = objects.splice(from, 1);
+      objects.splice(to, 0, object);
       setObjects([...objects]);
     },
     [objects],
@@ -118,11 +122,17 @@ const DefaultStory = () => {
       <Grid.Root>
         <Grid.Viewport onCellMove={handleCellMove}>
           <Grid.Column classNames='is-[25rem]'>
-            <QueryEditor classNames='p-2' db={space?.db} onChange={setQuery} />
-            <Grid.Stack items={searchObjects} Cell={DebugCell} />
+            <div className='p-3'>
+              <QueryEditor
+                classNames='border border-subduedSeparator rounded-sm p-2'
+                db={space?.db}
+                onChange={setQuery}
+              />
+            </div>
+            <Grid.Stack objects={searchObjects} Cell={DebugCell} />
           </Grid.Column>
           <Grid.Column classNames='is-[25rem]'>
-            <Grid.Stack items={objects} Cell={TextCell} />
+            <Grid.Stack objects={objects} Cell={TextCell} enableDrag />
           </Grid.Column>
         </Grid.Viewport>
       </Grid.Root>

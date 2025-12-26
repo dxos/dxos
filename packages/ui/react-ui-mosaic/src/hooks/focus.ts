@@ -2,7 +2,45 @@
 // Copyright 2025 DXOS.org
 //
 
+import { useFocusFinders, useFocusableGroup } from '@fluentui/react-tabster';
+import { type KeyboardEventHandler, useCallback } from 'react';
+
+import { invariant } from '@dxos/invariant';
+
 // TODO(burdon): Factor out.
+// TODO(burdon): Create storybook (with surfaces).
+
+// https://storybooks.fluentui.dev/react/?path=/docs/concepts-introduction--page
+
+/**
+ * Attempts to fix Tabster's useFocusableGroup
+ */
+export const useFocusableGroupAlt = (element?: HTMLDivElement | null) => {
+  const focusableGroupAttrs = useFocusableGroup();
+  const { findFirstFocusable } = useFocusFinders();
+
+  const handleKeyDown = useCallback<KeyboardEventHandler<HTMLDivElement>>((event) => {
+    if (event.target === event.currentTarget) {
+      invariant(element);
+      switch (event.key) {
+        case 'Enter': {
+          findFirstFocusable(element)?.focus();
+          break;
+        }
+
+        case 'Escape': {
+          break;
+        }
+      }
+    }
+  }, []);
+
+  return {
+    ...focusableGroupAttrs,
+    tabIndex: 0,
+    onKeyDown: handleKeyDown,
+  };
+};
 
 export type FocusableOpts = {
   /** If true, require tab order focusability (tabIndex >= 0). If false, allow tabindex="-1" (programmatic focus). */
