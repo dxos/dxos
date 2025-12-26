@@ -64,6 +64,7 @@ export const SpaceGenerator = ({ space, onCreateObjects }: SpaceGeneratorProps) 
           const count = map[type] ?? 0;
           map[type] = count + 1;
         }
+
         return map;
       }, {}),
     );

@@ -7,7 +7,7 @@ import React, { useCallback, useMemo, useState } from 'react';
 
 import { createDocAccessor, createObject } from '@dxos/echo-db';
 import { faker } from '@dxos/random';
-import { withClientProvider } from '@dxos/react-client/testing';
+import { useClientStory, withClientProvider } from '@dxos/react-client/testing';
 import { useThemeContext } from '@dxos/react-ui';
 import { withTheme } from '@dxos/react-ui/testing';
 import { QueryEditor, translations } from '@dxos/react-ui-components';
@@ -75,6 +75,11 @@ const Cell: GridCellProps['Cell'] = ({ item, dragging }) => {
 
 const DefaultStory = () => {
   const { themeMode } = useThemeContext();
+
+  const { space } = useClientStory();
+  const [query, setQuery] = useState<string | undefined>();
+  console.log(space);
+
   const extensions = useMemo(
     () => [
       createBasicExtensions({ placeholder: 'Enter text', tabbable: true }),
@@ -102,7 +107,7 @@ const DefaultStory = () => {
       <Grid.Root>
         <Grid.Viewport onCellMove={handleCellMove}>
           <Grid.Column classNames='is-[25rem]'>
-            <QueryEditor classNames='p-2' />
+            <QueryEditor classNames='p-2' db={space?.db} onChange={setQuery} />
           </Grid.Column>
           <Grid.Column classNames='is-[25rem]'>
             <Grid.Stack items={items} Cell={Cell} />
@@ -121,6 +126,7 @@ const meta = {
     withClientProvider({
       createIdentity: true,
       createSpace: true,
+      types: [Organization.Organization, Person.Person, Project.Project],
       onCreateSpace: async ({ space }) => {
         const factory = createObjectFactory(space.db, generator);
         await factory([
@@ -133,7 +139,7 @@ const meta = {
   ],
   parameters: {
     layout: 'fullscreen',
-    tranlations: [...translations],
+    translations: [...translations],
   },
 } satisfies Meta<typeof DefaultStory>;
 

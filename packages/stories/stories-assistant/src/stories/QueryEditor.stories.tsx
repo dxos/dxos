@@ -10,26 +10,23 @@ import { QueryBuilder } from '@dxos/echo-query';
 import { translations } from '@dxos/plugin-assistant';
 import { D3ForceGraph, useGraphModel } from '@dxos/plugin-explorer';
 import { faker } from '@dxos/random';
-import { Filter, useSpaces } from '@dxos/react-client/echo';
+import { Filter } from '@dxos/react-client/echo';
 import { useQuery } from '@dxos/react-client/echo';
-import { withClientProvider } from '@dxos/react-client/testing';
+import { useClientStory, withClientProvider } from '@dxos/react-client/testing';
 import { withTheme } from '@dxos/react-ui/testing';
 import { QueryEditor, type QueryEditorProps } from '@dxos/react-ui-components';
 import { type ValueGenerator, createObjectFactory } from '@dxos/schema/testing';
 import { render } from '@dxos/storybook-utils';
 import { Employer, Organization, Person, Project } from '@dxos/types';
 
+// TODO(burdon): Move.
+
 faker.seed(1);
 const generator = faker as any as ValueGenerator;
 
-const DefaultStory = ({ value: valueParam }: QueryEditorProps) => {
-  const [query, setQuery] = useState(valueParam);
-  const [space] = useSpaces();
+export const useQueryBuilder = (query?: string): Filter.Any => {
   const builder = useMemo(() => new QueryBuilder(), []);
   const [filter, setFilter] = useState<Filter.Any>(Filter.everything());
-  const objects = useQuery(space?.db, filter).sort(Obj.sort(Obj.sortByTypename, Obj.sortByLabel));
-  const model = useGraphModel(space, filter);
-
   useEffect(() => {
     if (query) {
       const { filter } = builder.build(query);
@@ -39,10 +36,20 @@ const DefaultStory = ({ value: valueParam }: QueryEditorProps) => {
     }
   }, [builder, query]);
 
+  return filter;
+};
+
+const DefaultStory = ({ value: valueParam }: QueryEditorProps) => {
+  const { space } = useClientStory();
+  const [query, setQuery] = useState<string | undefined>(valueParam);
+  const filter = useQueryBuilder(query);
+  const objects = useQuery(space?.db, filter).sort(Obj.sort(Obj.sortByTypename, Obj.sortByLabel));
+  const model = useGraphModel(space, filter);
+
   return (
     <div role='none' className='grid grid-cols-2 grow divide-x divide-subduedSeparator overflow-hidden'>
       <div className='flex flex-col overflow-hidden'>
-        <QueryEditor classNames='p-2 is-full border-be border-subduedSeparator' db={space.db} onChange={setQuery} />
+        <QueryEditor classNames='p-2 is-full border-be border-subduedSeparator' db={space?.db} onChange={setQuery} />
         <div className='bs-full overflow-y-auto'>
           {objects.map((object) => (
             <div

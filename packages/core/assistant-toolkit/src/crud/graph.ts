@@ -72,8 +72,8 @@ export const findRelatedSchema = async (
     })
     .map(
       (schema): RelatedSchema => ({
-        schema,
         kind: 'relation',
+        schema,
       }),
     );
 };

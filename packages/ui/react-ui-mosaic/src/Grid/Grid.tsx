@@ -102,7 +102,7 @@ const GridViewport = ({ classNames, children, onCellMove }: GridViewportProps) =
           const items = column.data.items as Obj.Any[];
           const from = items.findIndex((item) => item.id === source.data.itemId);
           const to = items.findIndex((item) => item.id === cell.data.itemId);
-          log.info('cellMove', { from, to });
+          log('cellMove', { from, to });
           onCellMove?.({ from, to });
         },
       }),
