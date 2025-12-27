@@ -39,13 +39,14 @@ import React, {
 import { createPortal } from 'react-dom';
 
 import { type Obj } from '@dxos/echo';
-import { log } from '@dxos/log';
 import { Icon, type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
-const focusBorderClasses =
-  'outline-none transition border border-subduedSeparator focus:border-primary-500 focus-within:border-separator rounded-sm';
-const iconClasses = 'pbs-0.5 hover:bg-inputSurface rounded-sm transition opacity-10 group-hover:opacity-100';
+const classes: Record<string, string> = {
+  icon: 'bs-6 is-6 grid place-items-center hover:bg-inputSurface rounded-sm transition opacity-10 group-hover:opacity-100',
+  borderFocus:
+    'outline-none border rounded-sm transition border-subduedSeparator focus:border-accentSurface focus-within:border-neutralFocusIndicator',
+};
 
 //
 // Context
@@ -87,7 +88,7 @@ interface GridEventHandler {
 type GridViewportProps = ThemedClassName<PropsWithChildren<{}>> & GridEventHandler;
 
 const GridViewport = ({ classNames, children, onCellMove }: GridViewportProps) => {
-  const arrowNavigationAttrs = useArrowNavigationGroup({ axis: 'horizontal', memorizeCurrent: true });
+  const arrowNavigationAttrs = useArrowNavigationGroup({ axis: 'horizontal', memorizeCurrent: true, tabbable: true });
   const rootRef = useRef<HTMLDivElement>(null);
 
   // Handle all mutation events.
@@ -104,7 +105,6 @@ const GridViewport = ({ classNames, children, onCellMove }: GridViewportProps) =
           const objects = column.data.objects as Obj.Any[];
           const from = objects.findIndex((object) => object.id === source.data.objectId);
           const to = objects.findIndex((object) => object.id === cell.data.objectId);
-          log('cellMove', { from, to });
           onCellMove?.({ from, to });
         },
       }),
@@ -141,7 +141,7 @@ const GridColumn = memo(({ classNames, children }: GridColumnProps) => {
       role='none'
       tabIndex={0}
       {...tabsterAttrs}
-      className={mx('relative flex flex-col is-full overflow-hidden', focusBorderClasses, classNames)}
+      className={mx('relative flex flex-col is-full overflow-hidden', classes.borderFocus, classNames)}
     >
       {children}
     </div>
@@ -325,8 +325,8 @@ const GridCellPrimitive = memo(
           role='none'
           className={mx(
             // TODO(burdon): Options for border/spacing.
-            'group is-full grid grid-cols-[1.25rem_1fr_1.25rem] gap-2 p-2 overflow-hidden',
-            focusBorderClasses,
+            'group is-full grid grid-cols-[min-content_1fr_min-content] gap-2 p-2 overflow-hidden',
+            classes.borderFocus,
             classNames,
           )}
           tabIndex={0}
@@ -334,14 +334,14 @@ const GridCellPrimitive = memo(
         >
           <div role='none'>
             {handleRef && (
-              <div ref={handleRef} role='none' className={iconClasses}>
+              <div ref={handleRef} role='none' className={classes.icon}>
                 <Icon classNames='cursor-pointer' icon='ph--dots-six-vertical--regular' size={5} />
               </div>
             )}
           </div>
           <div role='none'>{children}</div>
           <div role='none'>
-            <div role='none' className={iconClasses}>
+            <div role='none' className={classes.icon}>
               {/* TODO(burdon): Menu. */}
               <Icon classNames='cursor-pointer' icon='ph--list--regular' size={5} />
             </div>

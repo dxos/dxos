@@ -60,7 +60,7 @@ faker.seed(1);
 // TODO(burdon): Replace stack? (Or simplify)
 // TODO(burdon): Factor out/generalize? (remove deps from dxos/ui-editor)
 
-// TODO(burdon): Use Surface.
+// TODO(burdon): Replace with Surface.
 const TextCell: GridCellProps['Cell'] = ({ object, dragging }) => {
   const accessor = useMemo(() => createDocAccessor(object, ['content']), [object]);
   const extensions = useMemo(() => [automerge(accessor)], [accessor]);
@@ -73,9 +73,7 @@ const TextCell: GridCellProps['Cell'] = ({ object, dragging }) => {
     return <div className='truncate'>{initialValue.slice(0, 80)}</div>;
   }
 
-  return (
-    <Editor.Content classNames='outline-none' extensions={extensions} initialValue={initialValue} focusable={false} />
-  );
+  return <Editor.Content extensions={extensions} initialValue={initialValue} focusable={false} />;
 };
 
 const DebugCell: GridCellProps['Cell'] = ({ object }) => {

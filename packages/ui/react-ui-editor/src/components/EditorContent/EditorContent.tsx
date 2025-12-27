@@ -69,7 +69,15 @@ export const EditorContent = forwardRef<EditorController, EditorContentProps>(
     }, [view, value, selectionEnd]);
 
     return (
-      <div role='none' className={mx('is-full', classNames)} ref={parentRef} {...(focusable ? focusAttributes : {})} />
+      <div
+        role='none'
+        className={mx(
+          'is-full outline-none focus:border-accentSurface focus-within:border-neutralFocusIndicator',
+          classNames,
+        )}
+        ref={parentRef}
+        {...(focusable ? focusAttributes : {})}
+      />
     );
   },
 );

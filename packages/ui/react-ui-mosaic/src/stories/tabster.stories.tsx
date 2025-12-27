@@ -24,7 +24,7 @@ const border =
   'rounded-sm outline-none border border-subduedSeparator focus:border-primary-500 focus-within:border-rose-500';
 
 const Board = forwardRef<HTMLDivElement, { columns: string[][] }>(({ columns }, ref) => {
-  const arrowNavigationAttrs = useArrowNavigationGroup({ axis: 'horizontal', memorizeCurrent: true });
+  const arrowNavigationAttrs = useArrowNavigationGroup({ axis: 'horizontal', memorizeCurrent: true, tabbable: true });
 
   return (
     <div ref={ref} tabIndex={0} {...arrowNavigationAttrs} className='flex bs-full is-full overflow-hidden'>
@@ -60,7 +60,12 @@ const Item = forwardRef<HTMLDivElement, { value: string }>(({ value }, ref) => {
   const focusableGroupAttrs = useFocusableGroup();
 
   return (
-    <div ref={ref} tabIndex={0} {...focusableGroupAttrs} className={mx('flex is-full gap-4 p-4 items-center', border)}>
+    <div
+      ref={ref}
+      tabIndex={0}
+      {...focusableGroupAttrs}
+      className={mx('flex shrink-0 is-full gap-4 p-4 items-center', border)}
+    >
       <Input.Root>
         <Input.Checkbox />
       </Input.Root>

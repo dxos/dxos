@@ -72,7 +72,7 @@ const DefaultStory = () => {
         <div
           className={mx(
             'z-2 absolute inset-0 flex items-center is-[720px] m-auto p-2',
-            'text-white text-[60px] leading-tight text-center font-thin _border _border-red-500',
+            'text-white text-[60px] leading-tight text-center font-thin',
           )}
         >
           The new standard for building collaborative local-first software.
