@@ -88,8 +88,10 @@ interface GridEventHandler {
 type GridViewportProps = ThemedClassName<PropsWithChildren<{}>> & GridEventHandler;
 
 const GridViewport = ({ classNames, children, onCellMove }: GridViewportProps) => {
-  const arrowNavigationAttrs = useArrowNavigationGroup({ axis: 'horizontal', memorizeCurrent: true, tabbable: true });
   const rootRef = useRef<HTMLDivElement>(null);
+  const focusableGroupAttrs = useFocusableGroup({ tabBehavior: 'limited-trap-focus' });
+  const arrowNavigationAttrs = useArrowNavigationGroup({ axis: 'horizontal', memorizeCurrent: true, tabbable: true });
+  const tabsterAttrs = useMergedTabsterAttributes_unstable(focusableGroupAttrs, arrowNavigationAttrs);
 
   // Handle all mutation events.
   useEffect(() => {
@@ -115,8 +117,8 @@ const GridViewport = ({ classNames, children, onCellMove }: GridViewportProps) =
     <div
       ref={rootRef}
       role='none'
-      className={mx('flex bs-full is-full overflow-x-auto p-2 gap-2', classNames)}
-      {...arrowNavigationAttrs}
+      className={mx('flex bs-full is-full overflow-x-auto p-2 gap-4', classNames)}
+      {...tabsterAttrs}
     >
       {children}
     </div>
@@ -132,7 +134,7 @@ GridViewport.displayName = 'Grid.Viewport';
 type GridColumnProps = ThemedClassName<PropsWithChildren<{}>>;
 
 const GridColumn = memo(({ classNames, children }: GridColumnProps) => {
-  const focusableGroupAttrs = useFocusableGroup({ tabBehavior: 'limited' });
+  const focusableGroupAttrs = useFocusableGroup({ tabBehavior: 'limited-trap-focus' });
   const arrowNavigationAttrs = useArrowNavigationGroup({ axis: 'vertical', memorizeCurrent: true });
   const tabsterAttrs = useMergedTabsterAttributes_unstable(focusableGroupAttrs, arrowNavigationAttrs);
 

@@ -32,10 +32,14 @@ import { Grid, type GridCellProps, type GridViewportProps } from './Grid';
 
 faker.seed(1);
 
-// NEXT
-// - Surface with customized card layout (e.g., drag).
+// CONCEPT: Can the entire app be built from a small number of primitives like this? Zero custom css.
 
-// CONCEPT: Can the entire app be built from a small number of primitives like this?
+// NEXT
+// - Test existing kanban
+// - Surface with customized card layout (e.g., drag).
+// - Cards with customized drag/menu: form, editor, debug.
+// - Drag from search.
+// - Menu to delete.
 
 // MOSAIC: Column based UI (stakkr.ai)
 // Multi-column board / Hiararchy (left-to-right) / Infinite canvas / (Graph).
