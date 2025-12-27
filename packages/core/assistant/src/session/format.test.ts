@@ -6,7 +6,7 @@ import { beforeAll, describe, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 
 import { Blueprint, Template } from '@dxos/blueprints';
-import { Obj, Database } from '@dxos/echo';
+import { type Database, Obj } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-db/testing';
 import { Text } from '@dxos/schema';
 import { Organization } from '@dxos/types';

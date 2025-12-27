@@ -4,7 +4,7 @@
 
 import { beforeAll, describe, test } from 'vitest';
 
-import { Database } from '@dxos/echo';
+import { type Database } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-db/testing';
 import { FunctionExecutor, ServiceContainer } from '@dxos/functions-runtime';
 import { log } from '@dxos/log';
