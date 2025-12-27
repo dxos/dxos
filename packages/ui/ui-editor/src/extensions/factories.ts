@@ -228,7 +228,6 @@ export const createThemeExtensions = ({
   return [
     baseTheme,
     EditorView.darkTheme.of(themeMode === 'dark'),
-    createBaseTheme(),
     createFontTheme({ monospace }),
     syntaxHighlightingProp &&
       syntaxHighlighting(HighlightStyle.define(themeMode === 'dark' ? defaultStyles.dark : defaultStyles.light)),

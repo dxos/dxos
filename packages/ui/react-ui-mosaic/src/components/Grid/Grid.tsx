@@ -3,11 +3,7 @@
 //
 
 import { combine } from '@atlaskit/pragmatic-drag-and-drop/combine';
-import {
-  draggable,
-  dropTargetForElements,
-  monitorForElements,
-} from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
+import { draggable, dropTargetForElements } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
 import { preserveOffsetOnSource } from '@atlaskit/pragmatic-drag-and-drop/element/preserve-offset-on-source';
 import { setCustomNativeDragPreview } from '@atlaskit/pragmatic-drag-and-drop/element/set-custom-native-drag-preview';
 import { autoScrollForElements } from '@atlaskit/pragmatic-drag-and-drop-auto-scroll/element';
@@ -39,11 +35,10 @@ import React, {
 import { createPortal } from 'react-dom';
 
 import { type Obj } from '@dxos/echo';
-import { log } from '@dxos/log';
 import { Icon, type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
-import { type CellData, type ComponentData, type ContainerData, type DragEventHandler } from '../../hooks';
+import { type ComponentData, type ContainerData } from '../../hooks';
 
 //
 // Styles
@@ -96,57 +91,15 @@ GridRoot.displayName = 'Grid.Root';
 // Viewport
 //
 
-type GridViewportProps = ThemedClassName<PropsWithChildren<DragEventHandler>>;
+type GridViewportProps = ThemedClassName<PropsWithChildren>;
 
-const GridViewport = ({ classNames, children, onDrop }: GridViewportProps) => {
-  const rootRef = useRef<HTMLDivElement>(null);
+const GridViewport = ({ classNames, children }: GridViewportProps) => {
   const focusableGroupAttrs = useFocusableGroup({ tabBehavior: 'limited-trap-focus' });
   const arrowNavigationAttrs = useArrowNavigationGroup({ axis: 'horizontal', memorizeCurrent: true, tabbable: true });
   const tabsterAttrs = useMergedTabsterAttributes_unstable(focusableGroupAttrs, arrowNavigationAttrs);
 
-  // TODO(burdon): Handle generic container drag/drop (checking source and target).
-  useEffect(() => {
-    return combine(
-      monitorForElements({
-        onDrop: ({ source, location }) => {
-          log.info('onDrop', { source: source.data, location: location.current.dropTargets.map((t) => t.data) });
-          const container = location.current.dropTargets.find((t) => t.data.type === 'container');
-          const cell = location.current.dropTargets.find((t) => t.data.type === 'cell');
-          if (!container || !cell) {
-            log.warn('invalid drop', { container, cell });
-            return;
-          }
-
-          const objects = container.data.objects as Obj.Any[];
-          const from = objects.findIndex((object) => object.id === source.data.id);
-          const to = objects.findIndex((object) => object.id === cell.data.id);
-          if (from === -1 || to === -1) {
-            log.warn('invalid drop', { from, to });
-            return;
-          }
-
-          onDrop?.({
-            source: {
-              index: from,
-              data: source.data as CellData,
-            },
-            target: {
-              index: to,
-              data: cell.data as CellData,
-            },
-          });
-        },
-      }),
-    );
-  }, [rootRef]);
-
   return (
-    <div
-      ref={rootRef}
-      role='none'
-      className={mx('flex bs-full is-full overflow-x-auto p-2 gap-4', classNames)}
-      {...tabsterAttrs}
-    >
+    <div role='none' className={mx('flex bs-full is-full overflow-x-auto p-2 gap-4', classNames)} {...tabsterAttrs}>
       {children}
     </div>
   );
@@ -205,13 +158,7 @@ const GridStack = memo(({ classNames, id, objects, Cell, canDrag = false, canDro
     return combine(
       dropTargetForElements({
         element: rootRef.current,
-        getData: () =>
-          ({
-            type: 'container',
-            id,
-            objects,
-          }) satisfies ContainerData,
-
+        getData: () => ({ type: 'container', id }) satisfies ContainerData,
         canDrop: () => canDrop,
         onDragEnter: () => setState({ type: 'active' }),
         onDragLeave: () => setState({ type: 'idle' }),
@@ -271,13 +218,7 @@ const GridCell = memo(({ classNames, containerId, object, Cell, canDrag = false,
     return combine(
       draggable({
         element: handle,
-        getInitialData: () =>
-          ({
-            type: 'cell',
-            id: object.id,
-            containerId,
-          }) satisfies ComponentData,
-
+        getInitialData: () => ({ type: 'cell', id: object.id, containerId }) satisfies ComponentData,
         onGenerateDragPreview: ({ location, nativeSetDragImage }) => {
           const rect = root.getBoundingClientRect();
           setCustomNativeDragPreview({

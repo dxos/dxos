@@ -28,7 +28,9 @@ import { get, range } from '@dxos/util';
 
 const generator = faker as any as ValueGenerator;
 
-import { Grid, type GridCellProps, type GridViewportProps } from './Grid';
+import { Mosaic, type MosaicContainerProps } from '../Mosaic';
+
+import { Grid, type GridCellProps } from './Grid';
 
 faker.seed(1);
 
@@ -112,36 +114,45 @@ const DefaultStory = () => {
   // TODO(burdon): Data model for position? Arrays of refs.
   const [objects, setObjects] = useState(range(2).map(() => createObject(Text.make(faker.lorem.paragraph()))));
 
-  const handleCellMove = useCallback<NonNullable<GridViewportProps['onDrop']>>(
+  const containerId = 'notes';
+  const handleDrop = useCallback<NonNullable<MosaicContainerProps['onDrop']>>(
     ({ source, target }) => {
-      const [object] = objects.splice(source.index, 1);
-      objects.splice(target.index, 0, object);
-      setObjects([...objects]);
+      console.log('>>>', source, target);
+      const from = source.containerId === containerId && objects.findIndex((object) => object.id === source.id);
+      const to = target.containerId === containerId && objects.findIndex((object) => object.id === target.id);
+
+      // const [object] = objects.splice(source.index, 1);
+      // objects.splice(target.index, 0, object);
+      // setObjects([...objects]);
     },
     [objects],
   );
 
   return (
-    <Editor.Root extensions={extensions}>
-      <Grid.Root>
-        <Grid.Viewport onDrop={handleCellMove}>
-          <Grid.Column classNames='is-[25rem]'>
-            {/* TODO(burdon): Container component. */}
-            <div role='none' className='p-3'>
-              <QueryEditor
-                classNames='border border-subduedSeparator rounded-sm p-2'
-                db={space?.db}
-                onChange={setQuery}
-              />
-            </div>
-            <Grid.Stack id='search' objects={searchObjects} Cell={DebugCell} canDrag />
-          </Grid.Column>
-          <Grid.Column classNames='is-[25rem]'>
-            <Grid.Stack id='notes' objects={objects} Cell={TextCell} canDrag canDrop />
-          </Grid.Column>
-        </Grid.Viewport>
-      </Grid.Root>
-    </Editor.Root>
+    <Mosaic.Root>
+      <Editor.Root extensions={extensions}>
+        <Grid.Root>
+          <Grid.Viewport>
+            <Grid.Column classNames='is-[25rem]'>
+              {/* TODO(burdon): Container component. */}
+              <div role='none' className='p-3'>
+                <QueryEditor
+                  classNames='border border-subduedSeparator rounded-sm p-2'
+                  db={space?.db}
+                  onChange={setQuery}
+                />
+              </div>
+              <Grid.Stack id='search' objects={searchObjects} Cell={DebugCell} canDrag />
+            </Grid.Column>
+            <Mosaic.Container id={containerId} canDrop={() => true} onDrop={handleDrop}>
+              <Grid.Column classNames='is-[25rem]'>
+                <Grid.Stack id={containerId} objects={objects} Cell={TextCell} canDrag canDrop />
+              </Grid.Column>
+            </Mosaic.Container>
+          </Grid.Viewport>
+        </Grid.Root>
+      </Editor.Root>
+    </Mosaic.Root>
   );
 };
 
