@@ -55,7 +55,7 @@ faker.seed(1);
 // TODO(burdon): Search / Filter / Sort (Tags).
 // TODO(burdon): Mobile / CRX.
 // TODO(burdon): Content types (Text, Mixed, Image, Form, etc).
-// TODO(Burdon): AI / Auto-search.
+// TODO(burdon): AI / Auto-search.
 
 // TODO(burdon): Key nav / focus.
 // TODO(burdon): Menu.

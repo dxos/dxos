@@ -22,24 +22,24 @@ type NormalizeQueryOptions = {
 };
 
 export const normalizeQuery = (
-  queryParam: unknown | undefined,
+  queryProp: unknown | undefined,
   userOptions: (Database.QueryOptions & QueryAST.QueryOptions) | undefined,
   opts?: NormalizeQueryOptions,
 ) => {
   let query: Query.Any;
 
-  if (Query.is(queryParam)) {
-    query = queryParam;
-  } else if (Filter.is(queryParam)) {
-    query = Query.select(queryParam);
-  } else if (queryParam === undefined) {
+  if (Query.is(queryProp)) {
+    query = queryProp;
+  } else if (Filter.is(queryProp)) {
+    query = Query.select(queryProp);
+  } else if (queryProp === undefined) {
     query = Query.select(Filter.everything());
-  } else if (typeof queryParam === 'object' && queryParam !== null) {
-    query = Query.select(Filter.props(queryParam));
-  } else if (typeof queryParam === 'function') {
+  } else if (typeof queryProp === 'object' && queryProp !== null) {
+    query = Query.select(Filter.props(queryProp));
+  } else if (typeof queryProp === 'function') {
     throw new TypeError('Functions are not supported as queries');
   } else {
-    log.error('Invalid query', { query: queryParam });
+    log.error('Invalid query', { query: queryProp });
     throw new TypeError('Invalid query');
   }
 

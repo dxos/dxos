@@ -30,7 +30,7 @@ export type SpacePluginOptions = {
   /**
    * Query parameter for the invitation code.
    */
-  invitationParam?: string;
+  invitationProp?: string;
 
   /**
    * Whether to send observability events.

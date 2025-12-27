@@ -26,7 +26,7 @@ import { CredentialRetrieverExtension } from './admission-discovery-extension';
 import { Space } from './space';
 import { SpaceProtocol, type SwarmIdentity } from './space-protocol';
 
-export type SpaceManagerParams = {
+export type SpaceManagerProps = {
   feedStore: FeedStore<FeedMessage>;
   networkManager: SwarmNetworkManager;
   metadataStore: MetadataStore;
@@ -36,7 +36,7 @@ export type SpaceManagerParams = {
   disableP2pReplication?: boolean;
 };
 
-export type ConstructSpaceParams = {
+export type ConstructSpaceProps = {
   metadata: SpaceMetadata;
   swarmIdentity: SwarmIdentity;
   memberKey: PublicKey;
@@ -49,7 +49,7 @@ export type ConstructSpaceParams = {
   onMemberRolesChanged: (member: MemberInfo[]) => Promise<void>;
 };
 
-export type RequestSpaceAdmissionCredentialParams = {
+export type RequestSpaceAdmissionCredentialProps = {
   spaceKey: PublicKey;
   identityKey: PublicKey;
   swarmIdentity: SwarmIdentity;
@@ -69,7 +69,7 @@ export class SpaceManager {
   private readonly _instanceId = PublicKey.random().toHex();
   private readonly _disableP2pReplication: boolean;
 
-  constructor({ feedStore, networkManager, metadataStore, blobStore, disableP2pReplication }: SpaceManagerParams) {
+  constructor({ feedStore, networkManager, metadataStore, blobStore, disableP2pReplication }: SpaceManagerProps) {
     // TODO(burdon): Assert.
     this._feedStore = feedStore;
     this._networkManager = networkManager;
@@ -99,7 +99,7 @@ export class SpaceManager {
     onDelegatedInvitationStatusChange,
     onMemberRolesChanged,
     memberKey,
-  }: ConstructSpaceParams): Promise<Space> {
+  }: ConstructSpaceProps): Promise<Space> {
     log.trace('dxos.echo.space-manager.construct-space', trace.begin({ id: this._instanceId }));
     log('constructing space...', { spaceKey: metadata.genesisFeedKey });
 
@@ -135,7 +135,7 @@ export class SpaceManager {
     return space;
   }
 
-  public async requestSpaceAdmissionCredential(params: RequestSpaceAdmissionCredentialParams): Promise<Credential> {
+  public async requestSpaceAdmissionCredential(params: RequestSpaceAdmissionCredentialProps): Promise<Credential> {
     const traceKey = 'dxos.echo.space-manager.request-space-admission';
     log.trace(traceKey, trace.begin({ id: this._instanceId }));
     log('requesting space admission credential...', { spaceKey: params.spaceKey });

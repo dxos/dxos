@@ -74,12 +74,12 @@ interface PopoverRootProps {
 }
 
 const PopoverRoot: FC<PopoverRootProps> = (props: ScopedProps<PopoverRootProps>) => {
-  const { __scopePopover, children, open: openParam, defaultOpen, onOpenChange, modal = false } = props;
+  const { __scopePopover, children, open: openProp, defaultOpen, onOpenChange, modal = false } = props;
   const popperScope = usePopperScope(__scopePopover);
   const triggerRef = useRef<HTMLButtonElement>(null);
   const [hasCustomAnchor, setHasCustomAnchor] = useState(false);
   const [open = false, setOpen] = useControllableState({
-    prop: openParam,
+    prop: openProp,
     defaultProp: defaultOpen,
     onChange: onOpenChange,
   });

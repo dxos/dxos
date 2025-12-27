@@ -18,8 +18,8 @@ export interface InvitationInputProps extends JoinStepProps, Pick<JoinPanelProps
 
 const invitationCodeFromUrl = (text: string) => {
   try {
-    const searchParams = new URLSearchParams(text.substring(text.lastIndexOf('?')));
-    const invitation = searchParams.get('spaceInvitationCode') ?? searchParams.get('deviceInvitationCode');
+    const searchProps = new URLSearchParams(text.substring(text.lastIndexOf('?')));
+    const invitation = searchProps.get('spaceInvitationCode') ?? searchProps.get('deviceInvitationCode');
     return invitation ?? text;
   } catch (err) {
     log.catch(err);

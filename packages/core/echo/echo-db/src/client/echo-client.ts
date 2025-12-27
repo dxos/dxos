@@ -14,17 +14,17 @@ import { HypergraphImpl } from '../hypergraph';
 import { EchoDatabaseImpl } from '../proxy-db';
 import { QueueFactory } from '../queue';
 
-import { IndexQuerySourceProvider, type LoadObjectParams } from './index-query-source-provider';
+import { IndexQuerySourceProvider, type LoadObjectProps } from './index-query-source-provider';
 
-export type EchoClientParams = {};
+export type EchoClientProps = {};
 
-export type ConnectToServiceParams = {
+export type ConnectToServiceProps = {
   dataService: DataService;
   queryService: QueryService;
   queueService?: QueueService;
 };
 
-export type ConstructDatabaseParams = {
+export type ConstructDatabaseProps = {
   spaceId: SpaceId;
 
   /** @deprecated Use spaceId */
@@ -66,7 +66,7 @@ export class EchoClient extends Resource {
 
   private _indexQuerySourceProvider: IndexQuerySourceProvider | undefined = undefined;
 
-  constructor(_: EchoClientParams = {}) {
+  constructor(_: EchoClientProps = {}) {
     super();
   }
 
@@ -82,7 +82,7 @@ export class EchoClient extends Resource {
    * Connects to the ECHO service.
    * Must be called before open.
    */
-  connectToService({ dataService, queryService, queueService }: ConnectToServiceParams): this {
+  connectToService({ dataService, queryService, queueService }: ConnectToServiceProps): this {
     invariant(this._lifecycleState === LifecycleState.CLOSED);
     this._dataService = dataService;
     this._queryService = queryService;
@@ -126,7 +126,7 @@ export class EchoClient extends Resource {
     reactiveSchemaQuery,
     preloadSchemaOnOpen,
     spaceKey,
-  }: ConstructDatabaseParams): EchoDatabaseImpl {
+  }: ConstructDatabaseProps): EchoDatabaseImpl {
     invariant(this._lifecycleState === LifecycleState.OPEN);
     invariant(!this._databases.has(spaceId), 'Database already exists.');
     const db = new EchoDatabaseImpl({
@@ -153,7 +153,7 @@ export class EchoClient extends Resource {
     return queueFactory;
   }
 
-  private async _loadObjectFromDocument({ spaceId, objectId, documentId }: LoadObjectParams) {
+  private async _loadObjectFromDocument({ spaceId, objectId, documentId }: LoadObjectProps) {
     const db = this._databases.get(spaceId);
     if (!db) {
       return undefined;

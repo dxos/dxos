@@ -17,7 +17,7 @@ import type { AutomergeHost } from '../automerge';
 
 const MAX_UPDATE_FREQ = 10; // [updates/sec]
 
-export type DocumentsSynchronizerParams = {
+export type DocumentsSynchronizerProps = {
   automergeHost: AutomergeHost;
   sendUpdates: (updates: BatchedDocumentUpdates) => void;
 };
@@ -47,7 +47,7 @@ export class DocumentsSynchronizer extends Resource {
    */
   private _sendUpdatesJob?: UpdateScheduler = undefined;
 
-  constructor(private readonly _params: DocumentsSynchronizerParams) {
+  constructor(private readonly _params: DocumentsSynchronizerProps) {
     super();
   }
 

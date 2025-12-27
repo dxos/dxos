@@ -104,7 +104,7 @@ export type AdmitMemberOptions = {
   delegationCredentialId?: PublicKey;
 };
 
-export type DataSpaceManagerParams = {
+export type DataSpaceManagerProps = {
   spaceManager: SpaceManager;
   metadataStore: MetadataStore;
   keyring: Keyring;
@@ -116,11 +116,11 @@ export type DataSpaceManagerParams = {
   edgeHttpClient?: EdgeHttpClient;
   meshReplicator?: MeshEchoReplicator;
   echoEdgeReplicator?: EchoEdgeReplicator;
-  runtimeParams?: DataSpaceManagerRuntimeParams;
+  runtimeProps?: DataSpaceManagerRuntimeProps;
   edgeFeatures?: Runtime.Client.EdgeFeatures;
 };
 
-export type DataSpaceManagerRuntimeParams = {
+export type DataSpaceManagerRuntimeProps = {
   spaceMemberPresenceAnnounceInterval?: number;
   spaceMemberPresenceOfflineTimeout?: number;
   activeEdgeNotarizationPollingInterval?: number;
@@ -152,9 +152,9 @@ export class DataSpaceManager extends Resource {
   private readonly _edgeFeatures?: Runtime.Client.EdgeFeatures = undefined;
   private readonly _meshReplicator?: MeshEchoReplicator = undefined;
   private readonly _echoEdgeReplicator?: EchoEdgeReplicator = undefined;
-  private readonly _runtimeParams?: DataSpaceManagerRuntimeParams = undefined;
+  private readonly _runtimeProps?: DataSpaceManagerRuntimeProps = undefined;
 
-  constructor(params: DataSpaceManagerParams) {
+  constructor(params: DataSpaceManagerProps) {
     super();
 
     this._spaceManager = params.spaceManager;
@@ -169,7 +169,7 @@ export class DataSpaceManager extends Resource {
     this._edgeFeatures = params.edgeFeatures;
     this._echoEdgeReplicator = params.echoEdgeReplicator;
     this._edgeHttpClient = params.edgeHttpClient;
-    this._runtimeParams = params.runtimeParams;
+    this._runtimeProps = params.runtimeProps;
 
     trace.diagnostic({
       id: 'spaces',
@@ -501,8 +501,8 @@ export class DataSpaceManager extends Resource {
       localPeerId: this._signingContext.deviceKey,
     });
     const presence = new Presence({
-      announceInterval: this._runtimeParams?.spaceMemberPresenceAnnounceInterval ?? PRESENCE_ANNOUNCE_INTERVAL,
-      offlineTimeout: this._runtimeParams?.spaceMemberPresenceOfflineTimeout ?? PRESENCE_OFFLINE_TIMEOUT,
+      announceInterval: this._runtimeProps?.spaceMemberPresenceAnnounceInterval ?? PRESENCE_ANNOUNCE_INTERVAL,
+      offlineTimeout: this._runtimeProps?.spaceMemberPresenceOfflineTimeout ?? PRESENCE_OFFLINE_TIMEOUT,
       identityKey: this._signingContext.identityKey,
       gossip,
     });
@@ -588,7 +588,7 @@ export class DataSpaceManager extends Resource {
       edgeConnection: this._edgeConnection,
       edgeHttpClient: this._edgeHttpClient,
       edgeFeatures: this._edgeFeatures,
-      activeEdgeNotarizationPollingInterval: this._runtimeParams?.activeEdgeNotarizationPollingInterval,
+      activeEdgeNotarizationPollingInterval: this._runtimeProps?.activeEdgeNotarizationPollingInterval,
     });
     dataSpace.postOpen.append(async () => {
       const setting = dataSpace.getEdgeReplicationSetting();

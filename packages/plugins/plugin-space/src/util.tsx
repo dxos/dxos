@@ -17,7 +17,7 @@ import {
   ACTION_GROUP_TYPE,
   ACTION_TYPE,
   type ActionData,
-  type InvokeParams,
+  type InvokeProps,
   type Node,
   type NodeArg,
   type ReadableGraph,
@@ -317,7 +317,7 @@ export const constructSpaceActions = ({
       {
         id: getId(SpaceAction.Rename._tag),
         type: ACTION_TYPE,
-        data: async (params?: InvokeParams) => {
+        data: async (params?: InvokeProps) => {
           await dispatch(createIntent(SpaceAction.Rename, { space, caller: params?.caller }));
         },
         properties: {
@@ -394,7 +394,7 @@ export const createStaticSchemaActions = ({
     {
       id: getId(SpaceAction.RenameObject._tag),
       type: ACTION_TYPE,
-      data: async (params?: InvokeParams) => {
+      data: async (params?: InvokeProps) => {
         throw new Error('Not implemented');
       },
       properties: {
@@ -661,7 +661,7 @@ export const constructObjectActions = ({
           {
             id: getId(SpaceAction.RenameObject._tag),
             type: ACTION_TYPE,
-            data: async (params?: InvokeParams) => {
+            data: async (params?: InvokeProps) => {
               await dispatch(createIntent(SpaceAction.RenameObject, { object, caller: params?.caller }));
             },
             properties: {

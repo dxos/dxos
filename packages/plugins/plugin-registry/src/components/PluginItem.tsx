@@ -27,7 +27,7 @@ export const PluginItem = ({
   enabled = [],
   onClick,
   onChange,
-  hasSettings: hasSettingsParam,
+  hasSettings: hasSettingsProp,
   onSettings,
 }: PluginItemProps) => {
   const { t } = useTranslation(meta.id);
@@ -46,7 +46,7 @@ export const PluginItem = ({
     [id, isEnabled, onChange],
   );
 
-  const hasSettings = hasSettingsParam?.(id) ?? false;
+  const hasSettings = hasSettingsProp?.(id) ?? false;
   const handleSettings = useCallback(() => onSettings?.(id), [id, onSettings]);
   const styles = getStyles(iconHue);
   const gridCols = 'grid grid-cols-[5rem_1fr]';

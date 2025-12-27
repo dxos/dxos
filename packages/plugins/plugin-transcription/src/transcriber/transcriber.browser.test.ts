@@ -213,7 +213,7 @@ class MockAudioRecorder implements AudioRecorder {
 
   @trace.span()
   async start(): Promise<void> {
-    log.info('start mock audio recorder', { wavParams: this.wav.fmt });
+    log.info('start mock audio recorder', { wavProps: this.wav.fmt });
     const now = Date.now();
     const samples = this.wav.getSamples();
     const sampleRate = this.wavConfig.sampleRate;

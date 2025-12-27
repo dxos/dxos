@@ -14,7 +14,7 @@ import { isNonNullable } from '@dxos/util';
 import { TableModel, type TableModelProps, type TableRow, type TableRowAction } from '../model';
 import { type Table } from '../types';
 
-export type UseTableModelParams<T extends TableRow = TableRow> = {
+export type UseTableModelProps<T extends TableRow = TableRow> = {
   object?: Table.Table;
   projection?: ProjectionModel;
   db?: Database.Database;
@@ -37,7 +37,7 @@ export const useTableModel = <T extends TableRow = TableRow>({
   onSelectionChanged,
   onRowAction,
   ...props
-}: UseTableModelParams<T>): TableModel<T> | undefined => {
+}: UseTableModelProps<T>): TableModel<T> | undefined => {
   const selected = useSelected(object && Obj.getDXN(object).toString(), 'multi');
   const initialSelection = useMemo(() => selected, [object]);
 

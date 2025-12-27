@@ -32,7 +32,7 @@ export type SmoothScrollOptions = {
 /**
  * Parameters for the scroll to line effect.
  */
-export type ScrollToLineParams = {
+export type ScrollToLineProps = {
   /**
    * The line number to scroll to (1-based).
    */
@@ -46,7 +46,7 @@ export type ScrollToLineParams = {
 /**
  * StateEffect for triggering smooth scroll to a specific line.
  */
-export const scrollToLineEffect = StateEffect.define<ScrollToLineParams>();
+export const scrollToLineEffect = StateEffect.define<ScrollToLineProps>();
 
 /**
  * Extension that provides smooth scrolling to specific lines in the editor.

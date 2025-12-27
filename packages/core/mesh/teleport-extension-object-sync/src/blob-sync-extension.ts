@@ -16,7 +16,7 @@ import { BitField } from '@dxos/util';
 
 import { type BlobStore } from './blob-store';
 
-export type BlobSyncExtensionParams = {
+export type BlobSyncExtensionProps = {
   blobStore: BlobStore;
   onOpen: () => Promise<void>;
   onClose: () => Promise<void>;
@@ -88,7 +88,7 @@ export class BlobSyncExtension extends RpcExtension<ServiceBundle, ServiceBundle
   public remoteWantList: WantList = { blobs: [] };
 
   constructor(
-    private readonly _params: BlobSyncExtensionParams, // to not conflict with the base class
+    private readonly _params: BlobSyncExtensionProps, // to not conflict with the base class
   ) {
     super({
       exposed: {

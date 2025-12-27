@@ -18,7 +18,7 @@ import {
   type Index,
   type IndexQuery,
   type IndexStaticProps,
-  type LoadParams,
+  type LoadProps,
   staticImplements,
 } from '../types';
 
@@ -116,7 +116,7 @@ export class IndexSchema extends Resource implements Index {
   }
 
   @trace.span({ showInBrowserTimeline: true })
-  static async load({ serialized, identifier }: LoadParams): Promise<IndexSchema> {
+  static async load({ serialized, identifier }: LoadProps): Promise<IndexSchema> {
     const index = new IndexSchema();
     const serializedIndex: { type: string | null; ids: string[] }[] = JSON.parse(serialized).index;
     index._identifier = identifier;

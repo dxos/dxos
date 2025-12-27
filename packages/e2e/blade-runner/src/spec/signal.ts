@@ -8,8 +8,8 @@ import { range } from '@dxos/util';
 
 import { analyzeMessages, analyzeSwarmEvents } from '../analysys';
 import { type SchedulerEnvImpl } from '../env';
-import { type ReplicantsSummary, type TestParams, type TestPlan } from '../plan';
-import { type ReplicantRunParams, SignalReplicant } from '../replicants/signal-replicant';
+import { type ReplicantsSummary, type TestPlan, type TestProps } from '../plan';
+import { type ReplicantRunProps, SignalReplicant } from '../replicants/signal-replicant';
 import { TestBuilder } from '../test-builder';
 import { randomArraySlice } from '../util';
 
@@ -69,7 +69,7 @@ export class SignalTestPlan implements TestPlan<SignalTestSpec> {
     };
   }
 
-  async run(env: SchedulerEnvImpl<SignalTestSpec>, params: TestParams<SignalTestSpec>): Promise<void> {
+  async run(env: SchedulerEnvImpl<SignalTestSpec>, params: TestProps<SignalTestSpec>): Promise<void> {
     await Promise.all(
       range(params.spec.servers).map((num) =>
         this.builder.createSignalServer(num, params.outDir, params.spec.signalArguments, (err) => {
@@ -94,7 +94,7 @@ export class SignalTestPlan implements TestPlan<SignalTestSpec> {
               params.spec.serversPerAgent,
             );
 
-        const replicantParams: ReplicantRunParams = {
+        const replicantProps: ReplicantRunProps = {
           replicants: params.spec.replicants,
           peersPerReplicant: params.spec.peersPerReplicant,
           servers,
@@ -107,12 +107,12 @@ export class SignalTestPlan implements TestPlan<SignalTestSpec> {
           replicantWaitTime: params.spec.replicantWaitTime,
         };
 
-        return replicant.brain.run(replicantParams);
+        return replicant.brain.run(replicantProps);
       }),
     );
   }
 
-  async analyze(params: TestParams<SignalTestSpec>, results: ReplicantsSummary): Promise<any> {
+  async analyze(params: TestProps<SignalTestSpec>, results: ReplicantsSummary): Promise<any> {
     await this.builder.destroy();
 
     switch (params.spec.type) {

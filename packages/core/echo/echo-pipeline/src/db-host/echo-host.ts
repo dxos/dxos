@@ -50,7 +50,7 @@ const DEFAULT_INDEXING_CONFIG: EchoHostIndexingConfig = {
   vector: false,
 };
 
-export type EchoHostParams = {
+export type EchoHostProps = {
   kv: LevelDB;
   peerIdProvider?: PeerIdProvider;
   getSpaceKeyByRootDocumentId?: RootDocumentSpaceKeyProvider;
@@ -73,7 +73,7 @@ export class EchoHost extends Resource {
   private readonly _spaceStateManager = new SpaceStateManager();
   private readonly _echoDataMonitor: EchoDataMonitor;
 
-  constructor({ kv, indexing = {}, peerIdProvider, getSpaceKeyByRootDocumentId }: EchoHostParams) {
+  constructor({ kv, indexing = {}, peerIdProvider, getSpaceKeyByRootDocumentId }: EchoHostProps) {
     super();
 
     const indexingConfig = { ...DEFAULT_INDEXING_CONFIG, ...indexing };

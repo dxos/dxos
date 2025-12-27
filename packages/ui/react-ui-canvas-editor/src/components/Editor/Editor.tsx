@@ -67,33 +67,33 @@ const RootInner = <S extends Shape = Shape>(
     children,
     classNames,
     id,
-    options: optionsParam = defaultEditorOptions,
-    debug: debugParam = false,
-    showGrid: showGridParam = false,
-    snapToGrid: snapToGridParam = false,
-    graph: graphParam,
+    options: optionsProp = defaultEditorOptions,
+    debug: debugProp = false,
+    showGrid: showGridProp = false,
+    snapToGrid: snapToGridProp = false,
+    graph: graphProp,
     graphMonitor,
-    selection: selectionParam,
-    registry: registryParam,
-    layout: layoutParam,
+    selection: selectionProp,
+    registry: registryProp,
+    layout: layoutProp,
     autoZoom,
   }: EditorRootProps<S>,
   forwardedRef: ForwardedRef<EditorController>,
 ) => {
-  const options = useMemo(() => Object.assign({}, defaultEditorOptions, optionsParam), [optionsParam]);
+  const options = useMemo(() => Object.assign({}, defaultEditorOptions, optionsProp), [optionsProp]);
 
   // External state.
-  const graph = useMemo<CanvasGraphModel<S>>(() => graphParam ?? CanvasGraphModel.create(), [graphParam]);
+  const graph = useMemo<CanvasGraphModel<S>>(() => graphProp ?? CanvasGraphModel.create(), [graphProp]);
   const clipboard = useMemo(() => CanvasGraphModel.create(), []);
-  const selection = useMemo(() => selectionParam ?? new SelectionModel(), [selectionParam]);
-  const registry = useMemo(() => registryParam ?? new ShapeRegistry(defaultShapes), [registryParam]);
-  const layout = useMemo(() => layoutParam ?? new ShapeLayout(registry), [layoutParam, registry]);
+  const selection = useMemo(() => selectionProp ?? new SelectionModel(), [selectionProp]);
+  const registry = useMemo(() => registryProp ?? new ShapeRegistry(defaultShapes), [registryProp]);
+  const layout = useMemo(() => layoutProp ?? new ShapeLayout(registry), [layoutProp, registry]);
 
   // Canvas state.
-  const [debug, setDebug] = useState(debugParam);
+  const [debug, setDebug] = useState(debugProp);
   const [gridSize, setGridSize] = useState({ width: options.gridSize, height: options.gridSize });
-  const [showGrid, setShowGrid] = useState(showGridParam);
-  const [snapToGrid, setSnapToGrid] = useState(snapToGridParam);
+  const [showGrid, setShowGrid] = useState(showGridProp);
+  const [snapToGrid, setSnapToGrid] = useState(snapToGridProp);
 
   // Repaint.
   const [, forceUpdate] = useState({});

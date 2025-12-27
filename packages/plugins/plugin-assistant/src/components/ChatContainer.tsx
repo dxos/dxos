@@ -24,8 +24,8 @@ export type ChatContainerProps = {
 } & Pick<ChatRootProps, 'onEvent'>;
 
 export const ChatContainer = forwardRef<HTMLDivElement, ChatContainerProps>((props, forwardedRef) => {
-  const { space: spaceParam, chat, companionTo, onEvent } = props;
-  const space = spaceParam ?? getSpace(chat);
+  const { space: spaceProp, chat, companionTo, onEvent } = props;
+  const space = spaceProp ?? getSpace(chat);
   const settings = useCapability(Capabilities.SettingsStore).getStore<Assistant.Settings>(meta.id)?.value;
   const services = useChatServices({ id: space?.id, chat });
   const [online, setOnline] = useOnline();

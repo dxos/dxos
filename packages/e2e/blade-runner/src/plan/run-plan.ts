@@ -16,14 +16,14 @@ import { type ResourceUsageStats, analyzeResourceUsage } from '../analysys/resou
 import { SchedulerEnvImpl } from '../env';
 
 import { buildBrowserBundle } from './browser/browser-bundle';
-import { type GlobalOptions, type ReplicantsSummary, type TestParams, type TestPlan } from './spec';
+import { type GlobalOptions, type ReplicantsSummary, type TestPlan, type TestProps } from './spec';
 
 const SUMMARY_FILENAME = 'test.json';
 
 type TestSummary = {
   planName: string;
   options: GlobalOptions;
-  testParams: TestParams<any>;
+  testProps: TestProps<any>;
   spec: any;
   stats: any;
   results: any;
@@ -33,7 +33,7 @@ type TestSummary = {
   };
 };
 
-export type RunPlanParams<S> = {
+export type RunPlanProps<S> = {
   plan: TestPlan<S>;
   spec: S;
   options: GlobalOptions;
@@ -49,7 +49,7 @@ export const readYAMLSpecFile = async <S>(
   path: string,
   plan: TestPlan<S>,
   options: GlobalOptions,
-): Promise<() => RunPlanParams<any>> => {
+): Promise<() => RunPlanProps<any>> => {
   const yamlSpec = yaml.load(await readFile(path, 'utf8')) as S;
   return () => ({
     plan,
@@ -58,13 +58,13 @@ export const readYAMLSpecFile = async <S>(
   });
 };
 
-export const runPlan = async <S>({ plan, spec, options }: RunPlanParams<S>) => {
+export const runPlan = async <S>({ plan, spec, options }: RunPlanProps<S>) => {
   options.randomSeed && seedrandom(options.randomSeed, { global: true });
   if (options.repeatAnalysis) {
     // Analysis mode.
     const summary: TestSummary = JSON.parse(fs.readFileSync(options.repeatAnalysis, 'utf8'));
     await plan.analyze?.(
-      { spec: summary.spec, outDir: summary.testParams?.outDir, testId: summary.testParams?.testId },
+      { spec: summary.spec, outDir: summary.testProps?.outDir, testId: summary.testProps?.testId },
       summary.results,
     );
     return;
@@ -73,7 +73,7 @@ export const runPlan = async <S>({ plan, spec, options }: RunPlanParams<S>) => {
   await runPlanner({ plan, spec, options });
 };
 
-const runPlanner = async <S>({ plan, spec, options }: RunPlanParams<S>) => {
+const runPlanner = async <S>({ plan, spec, options }: RunPlanProps<S>) => {
   const testId = createTestPathname();
   const outDirBase = process.env.GRAVITY_OUT_BASE || process.cwd();
   const outDir = `${outDirBase}/out/results/${testId}`;
@@ -82,7 +82,7 @@ const runPlanner = async <S>({ plan, spec, options }: RunPlanParams<S>) => {
     outDir,
   });
 
-  const testParams: TestParams<S> = {
+  const testProps: TestProps<S> = {
     testId,
     outDir,
     spec,
@@ -103,11 +103,11 @@ const runPlanner = async <S>({ plan, spec, options }: RunPlanParams<S>) => {
   // Start simulation
   //
 
-  const schedulerEnv = new SchedulerEnvImpl(options, testParams);
+  const schedulerEnv = new SchedulerEnvImpl(options, testProps);
   await schedulerEnv.open();
   let result: any;
   try {
-    result = await plan.run(schedulerEnv, testParams);
+    result = await plan.run(schedulerEnv, testProps);
   } catch (err) {
     log.error('error running plan', err);
     await schedulerEnv.close();
@@ -142,7 +142,7 @@ const runPlanner = async <S>({ plan, spec, options }: RunPlanParams<S>) => {
     options,
     spec,
     stats,
-    testParams,
+    testProps,
     results: result,
     replicants,
     diagnostics: {

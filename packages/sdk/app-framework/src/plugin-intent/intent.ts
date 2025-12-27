@@ -4,28 +4,28 @@
 
 import * as Schema from 'effect/Schema';
 
-export type IntentParams = {
+export type IntentProps = {
   readonly input: Schema.Schema.All;
   readonly output: Schema.Schema.All;
 };
 
-export type IntentData<Fields extends IntentParams> =
+export type IntentData<Fields extends IntentProps> =
   Schema.Schema.Type<Schema.Struct<Fields>> extends { readonly input: any }
     ? Schema.Schema.Type<Schema.Struct<Fields>>['input']
     : any;
 
-export type IntentResultData<Fields extends IntentParams> =
+export type IntentResultData<Fields extends IntentProps> =
   Schema.Schema.Type<Schema.Struct<Fields>> extends { readonly output: any }
     ? Schema.Schema.Type<Schema.Struct<Fields>>['output']
     : any;
 
-export type IntentSchema<Tag extends string, Fields extends IntentParams> = Schema.TaggedClass<any, Tag, Fields>;
+export type IntentSchema<Tag extends string, Fields extends IntentProps> = Schema.TaggedClass<any, Tag, Fields>;
 
 /**
  * An intent is an abstract description of an operation to be performed.
  * Intents allow actions to be performed across plugins.
  */
-export type Intent<Tag extends string, Fields extends IntentParams> = {
+export type Intent<Tag extends string, Fields extends IntentProps> = {
   _schema: IntentSchema<Tag, Fields>;
 
   /**
@@ -53,8 +53,8 @@ export type AnyIntent = Intent<any, any>;
 export type IntentChain<
   FirstTag extends string,
   LastTag extends string,
-  FirstFields extends IntentParams,
-  LastFields extends IntentParams,
+  FirstFields extends IntentProps,
+  LastFields extends IntentProps,
 > = {
   first: Intent<FirstTag, FirstFields>;
   last: Intent<LastTag, LastFields>;
@@ -70,7 +70,7 @@ export type AnyIntentChain = IntentChain<any, any, any, any>;
  * @param params.plugin Optional plugin ID to send the intent to.
  * @param params.undo Optional flag to indicate that the intent is being undone. Generally not set manually.
  */
-export const createIntent = <Tag extends string, Fields extends IntentParams>(
+export const createIntent = <Tag extends string, Fields extends IntentProps>(
   schema: IntentSchema<Tag, Fields>,
   data: IntentData<Fields> = {},
   params: Pick<AnyIntent, 'undo'> = {},
@@ -103,9 +103,9 @@ export const chain =
   <
     FirstTag extends string,
     NextTag extends string,
-    FirstFields extends IntentParams,
-    LastFields extends IntentParams,
-    NextFields extends IntentParams,
+    FirstFields extends IntentProps,
+    LastFields extends IntentProps,
+    NextFields extends IntentProps,
   >(
     schema: IntentSchema<NextTag, NextFields>,
     data: Omit<IntentData<NextFields>, keyof IntentResultData<LastFields>> = {},

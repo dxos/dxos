@@ -64,17 +64,17 @@ export type WelcomeTourProps = {
   onRunningChanged?: (state: boolean) => any;
 };
 
-export const WelcomeTour = ({ steps: initialSteps, running: runningParam, onRunningChanged }: WelcomeTourProps) => {
+export const WelcomeTour = ({ steps: initialSteps, running: runningProp, onRunningChanged }: WelcomeTourProps) => {
   const manager = usePluginManager();
   const layout = useLayout();
-  const [running, setRunning] = useState(!!runningParam && !!getTarget(initialSteps[0]));
+  const [running, setRunning] = useState(!!runningProp && !!getTarget(initialSteps[0]));
   const [stepIndex, _setStepIndex] = useState(0);
   const [steps, setSteps] = useState(initialSteps);
 
   const paused = layout.dialogOpen;
 
   const setStepIndex = (index: number) => {
-    if (runningParam) {
+    if (runningProp) {
       const step = steps[index];
       step?.before?.(manager.context);
     }
@@ -82,7 +82,7 @@ export const WelcomeTour = ({ steps: initialSteps, running: runningParam, onRunn
   };
 
   const setRunningChanged = (state: boolean) => {
-    if (typeof runningParam !== 'undefined') {
+    if (typeof runningProp !== 'undefined') {
       onRunningChanged?.(state);
     } else {
       if (state) {
@@ -95,16 +95,16 @@ export const WelcomeTour = ({ steps: initialSteps, running: runningParam, onRunn
   };
 
   useAsyncEffect(async () => {
-    if (runningParam) {
+    if (runningProp) {
       // This handles the case when the target is not yet in the document.
       // If the target is not in the document, when the joyride is turned on, it will not show the tooltip.
       await waitForTarget(steps[stepIndex]);
       setStepIndex(0);
       setRunning(true);
-    } else if (typeof runningParam !== 'undefined') {
+    } else if (typeof runningProp !== 'undefined') {
       setRunning(false);
     }
-  }, [runningParam]);
+  }, [runningProp]);
 
   // https://docs.react-joyride.com/callback
   const callback: Joyride['callback'] = async (options) => {

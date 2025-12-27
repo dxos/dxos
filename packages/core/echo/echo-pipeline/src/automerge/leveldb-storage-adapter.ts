@@ -16,21 +16,21 @@ export interface StorageAdapterDataMonitor {
   recordStoreDuration(durationMs: number): void;
 }
 
-export type LevelDBStorageAdapterParams = {
+export type LevelDBStorageAdapterProps = {
   db: SublevelDB;
   callbacks?: StorageCallbacks;
   monitor?: StorageAdapterDataMonitor;
 };
 
-export type BeforeSaveParams = { path: StorageKey; batch: BatchLevel };
+export type BeforeSaveProps = { path: StorageKey; batch: BatchLevel };
 
 export interface StorageCallbacks {
-  beforeSave(params: BeforeSaveParams): MaybePromise<void>;
+  beforeSave(params: BeforeSaveProps): MaybePromise<void>;
   afterSave(path: StorageKey): MaybePromise<void>;
 }
 
 export class LevelDBStorageAdapter extends Resource implements StorageAdapterInterface {
-  constructor(private readonly _params: LevelDBStorageAdapterParams) {
+  constructor(private readonly _params: LevelDBStorageAdapterProps) {
     super();
   }
 

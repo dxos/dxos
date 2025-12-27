@@ -25,7 +25,7 @@ export type ToolBlockProps = XmlWidgetProps<{
 export const ToolBlock = ({ view, blocks = [] }: ToolBlockProps) => {
   const { t } = useTranslation(meta.id);
 
-  const items = useMemo<ToolContainerParams['items']>(() => {
+  const items = useMemo<ToolContainerProps['items']>(() => {
     let lastToolCall: { tool: Tool.Any | undefined; block: ContentBlock.ToolCall } | undefined;
     // TODO(burdon): Get from context?
     const tools: Tool.Any[] = []; //processor.conversation.toolkit?.tools ?? [];
@@ -101,11 +101,11 @@ export const ToolBlock = ({ view, blocks = [] }: ToolBlockProps) => {
 
 ToolBlock.displayName = 'ToolBlock';
 
-type ToolContainerParams = {
+type ToolContainerProps = {
   items: { title: string; content: any }[];
 } & Pick<ToggleContainerRootProps, 'onChangeOpen'>;
 
-export const ToolContainer = ({ items, onChangeOpen }: ToolContainerParams) => {
+export const ToolContainer = ({ items, onChangeOpen }: ToolContainerProps) => {
   const tabsRef = useRef<HTMLDivElement>(null);
   const [selected, setSelected] = useState(0);
   const [open, setOpen] = useState(false);

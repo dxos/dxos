@@ -94,6 +94,6 @@ describe('ToolResolverService', () => {
 const callTool = <Tools extends Record<string, Tool.Any>, Name extends keyof Tools>(
   toolkit: Toolkit.Toolkit<Tools>,
   toolName: Name,
-  toolParams: Tool.Parameters<Tools[Name]> extends never ? unknown : Tool.Parameters<Tools[Name]>,
+  toolProps: Tool.Parameters<Tools[Name]> extends never ? unknown : Tool.Parameters<Tools[Name]>,
 ): Effect.Effect<Tool.Success<Tools[Name]>, Tool.Failure<Tools[Name]>, Tool.Requirements<Tools[Name]>> =>
-  toolkit.pipe(Effect.flatMap((h: any) => h.handle(toolName, toolParams) as Effect.Effect<any, any, any>));
+  toolkit.pipe(Effect.flatMap((h: any) => h.handle(toolName, toolProps) as Effect.Effect<any, any, any>));

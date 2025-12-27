@@ -11,16 +11,16 @@ import { useDynamicRef } from './useDynamicRef';
  * NOTE: Consider using Radix's `useControllableState`.
  */
 export const useControlledState = <T>(
-  valueParam: T,
+  valueProp: T,
   onChange?: (value: T) => void,
 ): [T, Dispatch<SetStateAction<T>>] => {
-  const [value, setControlledValue] = useState(valueParam);
+  const [value, setControlledValue] = useState(valueProp);
   useEffect(() => {
-    setControlledValue(valueParam);
-  }, [valueParam]);
+    setControlledValue(valueProp);
+  }, [valueProp]);
 
   const onChangeRef = useRef(onChange);
-  const valueRef = useDynamicRef(valueParam);
+  const valueRef = useDynamicRef(valueProp);
   const setValue = useCallback<Dispatch<SetStateAction<T>>>(
     (nextValue) => {
       const value = isFunction(nextValue) ? nextValue(valueRef.current) : nextValue;
