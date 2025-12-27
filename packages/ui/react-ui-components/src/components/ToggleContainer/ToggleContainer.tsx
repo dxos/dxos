@@ -44,14 +44,14 @@ type RootProps = ThemedClassName<
 
 const Root = ({
   classNames,
-  open: openParam,
+  open: openProp,
   defaultOpen = false,
   shrink = false,
   duration = 250,
   children,
   onChangeOpen,
 }: RootProps) => {
-  const [open, setOpen] = useControlledState<boolean>(openParam ?? defaultOpen);
+  const [open, setOpen] = useControlledState<boolean>(openProp ?? defaultOpen);
   const [expandX, setExpandX] = useState<boolean>(shrink ? open : true);
   const [expandY, setExpandY] = useState<boolean>(open);
 

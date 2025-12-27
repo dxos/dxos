@@ -41,7 +41,7 @@ export abstract class AbstractSegmentTelemetry {
 
   abstract track(options: TrackOptions): void;
 
-  protected createPageProps(options: PageOptions): PageParams {
+  protected createPageParams(options: PageOptions): PageParams {
     const { properties, ...rest } = options;
     return {
       ...getIdentityOptions(options),
@@ -53,7 +53,7 @@ export abstract class AbstractSegmentTelemetry {
     };
   }
 
-  protected createTrackProps(options: TrackOptions): TrackParams {
+  protected createTrackParams(options: TrackOptions): TrackParams {
     const { event, action, properties, ...rest } = options;
     return {
       ...getIdentityOptions(options),

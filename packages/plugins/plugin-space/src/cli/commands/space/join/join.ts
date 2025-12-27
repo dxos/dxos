@@ -30,8 +30,8 @@ export const handler = Effect.fn(function* ({
 
   let encoded = invitationCode;
   if (encoded.startsWith('http') || encoded.startsWith('socket')) {
-    const searchParams = new URL(encoded).searchParams;
-    encoded = searchParams.get('spaceInvitationCode') ?? encoded;
+    const searchProps = new URL(encoded).searchParams;
+    encoded = searchProps.get('spaceInvitationCode') ?? encoded;
   }
 
   const invitation = yield* acceptInvitation({

@@ -9,7 +9,7 @@ import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 
 import { type SchedulerEnv } from '../env';
-import { type Platform, type ReplicantsSummary, type TestParams, type TestPlan } from '../plan';
+import { type Platform, type ReplicantsSummary, type TestPlan, type TestProps } from '../plan';
 import { EchoReplicant } from '../replicants/echo-replicant';
 
 type QueryTestSpec = {
@@ -64,7 +64,7 @@ export class QueryTestPlan implements TestPlan<QueryTestSpec, QueryTestResult> {
     };
   }
 
-  async run(env: SchedulerEnv, params: TestParams<QueryTestSpec>): Promise<QueryTestResult> {
+  async run(env: SchedulerEnv, params: TestProps<QueryTestSpec>): Promise<QueryTestResult> {
     const results = {} as QueryTestResult;
     // TODO(mykola): Maybe factor out?
     const userDataDir = `/tmp/echo-replicant-${PublicKey.random().toHex()}`;
@@ -127,5 +127,5 @@ export class QueryTestPlan implements TestPlan<QueryTestSpec, QueryTestResult> {
     return results;
   }
 
-  async analyze(params: TestParams<QueryTestSpec>, summary: ReplicantsSummary, result: QueryTestResult): Promise<any> {}
+  async analyze(params: TestProps<QueryTestSpec>, summary: ReplicantsSummary, result: QueryTestResult): Promise<any> {}
 }

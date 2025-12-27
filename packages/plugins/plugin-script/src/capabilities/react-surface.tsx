@@ -45,6 +45,10 @@ export default defineCapabilityModule(() =>
         const compiler = useCompiler();
         // TODO(dmaretskyi): Since settings store is not reactive, this would break on the script plugin being enabled without a page reload.
         const settings = useCapability(Capabilities.SettingsStore).getStore<ScriptSettings>(meta.id)?.value;
+        if (!compiler?.environment) {
+          return null;
+        }
+
         return <ScriptContainer role={role} script={data.subject} settings={settings} env={compiler?.environment} />;
       },
     }),

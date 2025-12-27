@@ -6,7 +6,7 @@ import { type ExpectStatic } from 'vitest';
 
 import { Trigger } from '@dxos/async';
 import { type ClientServices } from '@dxos/client-protocol';
-import { ClientServicesHost, type ServiceContextRuntimeParams } from '@dxos/client-services';
+import { ClientServicesHost, type ServiceContextRuntimeProps } from '@dxos/client-services';
 import { Config } from '@dxos/config';
 import { Context } from '@dxos/context';
 import { raise } from '@dxos/debug';
@@ -83,12 +83,12 @@ export class TestBuilder {
   /**
    * Create backend service handlers.
    */
-  createClientServicesHost(runtimeParams?: ServiceContextRuntimeParams): ClientServicesHost {
+  createClientServicesHost(runtimeProps?: ServiceContextRuntimeProps): ClientServicesHost {
     const services = new ClientServicesHost({
       config: this.config,
       storage: this?.storage?.(),
       level: this?.level?.(),
-      runtimeParams,
+      runtimeProps,
       ...this.networking,
     });
 
@@ -105,11 +105,11 @@ export class TestBuilder {
       config: this.config,
       storage: this?.storage?.(),
       level: this?.level?.(),
-      runtimeParams: {
+      runtimeProps: {
         ...(options?.fastPeerPresenceUpdate
           ? { spaceMemberPresenceAnnounceInterval: 200, spaceMemberPresenceOfflineTimeout: 400 }
           : {}),
-        invitationConnectionDefaultParams: { teleport: { controlHeartbeatInterval: 200 } },
+        invitationConnectionDefaultProps: { teleport: { controlHeartbeatInterval: 200 } },
       },
       ...this.networking,
     });

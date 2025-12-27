@@ -24,7 +24,7 @@ export type WithLayoutProps =
  * Adds layout container.
  */
 export const withLayout =
-  (props: WithLayoutProps): Decorator =>
+  (props: WithLayoutProps = {}): Decorator =>
   (Story) => {
     // Prevent re-rendering of the story.
     const MemoizedStory = memo(Story);

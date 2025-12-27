@@ -95,7 +95,13 @@ const DropdownMenuToolbarItem = ({
   const Root = icon ? NaturalToolbar.IconButton : NaturalToolbar.Button;
   const labelAction = (group.properties as any).applyActive && activeItem ? (activeItem as MenuAction) : group;
   const rootProps = icon
-    ? { icon, size: iconSize, iconOnly, label: actionLabel(labelAction, t), caretDown: true }
+    ? {
+        icon,
+        size: iconSize,
+        iconOnly,
+        label: actionLabel(labelAction, t),
+        caretDown: true,
+      }
     : {
         children: (
           <>
@@ -164,14 +170,14 @@ const ToggleGroupToolbarItem = ({
 export const ToolbarMenu = ({
   __menuScope,
   classNames,
-  textBlockWidth: textBlockWidthParam,
+  textBlockWidth: textBlockWidthProp,
   ...props
 }: MenuScopedProps<ToolbarMenuProps>) => {
   const items = useMenuItems(undefined, undefined, 'ToolbarMenu', __menuScope);
   const { attendableId } = useMenu('ToolbarMenu', __menuScope);
   const { hasAttention } = useAttention(attendableId);
-  const InnerRoot = textBlockWidthParam ? 'div' : Fragment;
-  const innerRootProps = textBlockWidthParam
+  const InnerRoot = textBlockWidthProp ? 'div' : Fragment;
+  const innerRootProps = textBlockWidthProp
     ? { role: 'none', className: mx(textBlockWidth, toolbarLayout, 'bs-full') }
     : {};
 
@@ -179,7 +185,7 @@ export const ToolbarMenu = ({
     <NaturalToolbar.Root
       {...props}
       classNames={[attendableId && !hasAttention && toolbarInactive, classNames]}
-      layoutManaged={textBlockWidthParam}
+      layoutManaged={textBlockWidthProp}
     >
       <InnerRoot {...innerRootProps}>
         {items?.map((item: MenuItem, i: number) => (

@@ -13,7 +13,7 @@ import { type CleanupFn, type MulticastObservable, type Trigger } from '@dxos/as
 import { log } from '@dxos/log';
 import { type MaybePromise, type Position, byPosition, getDebugName, isNode, isNonNullable } from '@dxos/util';
 
-import { ACTION_GROUP_TYPE, ACTION_TYPE, type ExpandableGraph, Graph, type GraphParams, ROOT_ID } from './graph';
+import { ACTION_GROUP_TYPE, ACTION_TYPE, type ExpandableGraph, Graph, type GraphProps, ROOT_ID } from './graph';
 import { type ActionData, type Node, type NodeArg, type Relation, actionGroupSymbol } from './node';
 
 /**
@@ -201,7 +201,7 @@ export class GraphBuilder {
   private readonly _registry: Registry.Registry;
   private readonly _graph: Graph;
 
-  constructor({ registry, ...params }: Pick<GraphParams, 'registry' | 'nodes' | 'edges'> = {}) {
+  constructor({ registry, ...params }: Pick<GraphProps, 'registry' | 'nodes' | 'edges'> = {}) {
     this._registry = registry ?? Registry.make();
     this._graph = new Graph({
       ...params,

@@ -28,10 +28,10 @@ type StoryProps<T extends AnyProperties> = {
 const DefaultStory = <T extends AnyProperties = any>({
   debug,
   schema,
-  values: valuesParam,
+  values: valuesProp,
   ...props
 }: StoryProps<T>) => {
-  const [values, setValues] = useState(valuesParam);
+  const [values, setValues] = useState(valuesProp);
   const handleSave = useCallback<NonNullable<FormRootProps<T>['onSave']>>((values) => {
     setValues(values);
   }, []);

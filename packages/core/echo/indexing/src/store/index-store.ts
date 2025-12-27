@@ -20,14 +20,14 @@ type IndexData = {
   version: number;
 };
 
-export type IndexStoreParams = {
+export type IndexStoreProps = {
   db: SublevelDB;
 };
 
 // TODO(mykola): Delete header from storage codec.
 export class IndexStore {
   private readonly _db: SublevelDB;
-  constructor({ db }: IndexStoreParams) {
+  constructor({ db }: IndexStoreProps) {
     this._db = db;
 
     trace.diagnostic({

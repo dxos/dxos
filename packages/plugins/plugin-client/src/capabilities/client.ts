@@ -8,7 +8,7 @@ import { Client, ClientService } from '@dxos/client';
 import { ClientEvents } from '../events';
 import { ClientCapabilities, type ClientPluginOptions } from '../types';
 
-type ClientCapabilityOptions = Omit<ClientPluginOptions, 'appKey' | 'invitationUrl' | 'invitationParam' | 'onReset'> & {
+type ClientCapabilityOptions = Omit<ClientPluginOptions, 'appKey' | 'invitationUrl' | 'invitationProp' | 'onReset'> & {
   context: PluginContext;
 };
 

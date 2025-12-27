@@ -40,7 +40,7 @@ export const TextCrawl = ({
   minDuration = 1_000,
   size = 'md',
   lines = emptyLines,
-  index: indexParam,
+  index: indexProp,
   cyclic,
   transition = 500,
   ...props
@@ -70,18 +70,18 @@ export const TextCrawl = ({
 
   // Controlled.
   useEffect(() => {
-    if (indexParam === undefined || indexParam === index) {
+    if (indexProp === undefined || indexProp === index) {
       return;
     }
 
-    const next = Math.max(0, Math.min(indexParam, lines.length - 1));
+    const next = Math.max(0, Math.min(indexProp, lines.length - 1));
     setIndex(next);
     setPosition(next, true);
-  }, [indexParam, index]);
+  }, [indexProp, index]);
 
   // Uncontrolled.
   useEffect(() => {
-    if (indexParam !== undefined) {
+    if (indexProp !== undefined) {
       return;
     }
 
@@ -97,7 +97,7 @@ export const TextCrawl = ({
     return () => {
       clearTimeout(i);
     };
-  }, [wasReset, lines, index, indexParam, cyclic]);
+  }, [wasReset, lines, index, indexProp, cyclic]);
 
   // Auto-advance.
   const lastUpdatedRef = useRef(Date.now());
@@ -135,7 +135,7 @@ export const TextCrawl = ({
 
     const i = setInterval(next, minDuration);
     return () => clearInterval(i);
-  }, [lines, wasReset, indexParam, autoAdvance, greedy, minDuration, cyclic, transition]);
+  }, [lines, wasReset, indexProp, autoAdvance, greedy, minDuration, cyclic, transition]);
 
   return (
     <TextRibbon

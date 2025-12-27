@@ -104,7 +104,7 @@ export const Todos = () => {
           completedCount={completedCount}
           nowShowing={state ?? FILTER.ALL}
           generatePath={(state = '') =>
-            space ? generatePath('/:spaceParam/:state', { spaceParam: space.id, state }) : '/'
+            space ? generatePath('/:spaceProp/:state', { spaceProp: space.id, state }) : '/'
           }
           onClearCompleted={handleClearCompleted}
         />

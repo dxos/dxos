@@ -9,7 +9,7 @@ import { Context } from '@dxos/context';
 import { log } from '@dxos/log';
 import { useSoundEffect } from '@dxos/react-ui-sfx';
 
-import { type TranscriberParams } from '../transcriber';
+import { type TranscriberProps } from '../transcriber';
 
 import { useAudioTrack } from './useAudioTrack';
 import { useTranscriber } from './useTranscriber';
@@ -26,7 +26,7 @@ export const useVoiceInput = ({ active, onUpdate }: UseVoiceInputProps) => {
   const soundStart = useSoundEffect('StartRecording');
   const soundStop = useSoundEffect('StopRecording');
 
-  const handleSegments = useCallback<TranscriberParams['onSegments']>(async (segments) => {
+  const handleSegments = useCallback<TranscriberProps['onSegments']>(async (segments) => {
     const text = segments.map((str) => str.text.trim().replace(/[^\w\s]/g, '')).join(' ');
     onUpdate(text);
   }, []);

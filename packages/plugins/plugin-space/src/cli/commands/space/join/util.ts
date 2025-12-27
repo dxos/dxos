@@ -10,7 +10,7 @@ import { runAndForwardErrors } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { AlreadyJoinedError } from '@dxos/protocols';
 
-type AcceptInvitationParams = {
+type AcceptInvitationProps = {
   observable: AuthenticatingInvitationObservable;
   callbacks?: {
     onConnecting?: (invitation: Invitation) => Effect.Effect<void>;
@@ -23,7 +23,7 @@ type AcceptInvitationParams = {
  * Accept an invitation and handle authentication flow.
  * Ported from cli-base to Effect-based approach.
  */
-export const acceptInvitation = ({ observable, callbacks }: AcceptInvitationParams): Effect.Effect<Invitation, Error> =>
+export const acceptInvitation = ({ observable, callbacks }: AcceptInvitationProps): Effect.Effect<Invitation, Error> =>
   Effect.gen(function* () {
     const doneQueue = yield* Queue.unbounded<Invitation>();
 

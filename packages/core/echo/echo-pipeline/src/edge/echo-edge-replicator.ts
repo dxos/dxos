@@ -33,8 +33,8 @@ import {
   type EchoReplicator,
   type EchoReplicatorContext,
   type ReplicatorConnection,
-  type ShouldAdvertiseParams,
-  type ShouldSyncCollectionParams,
+  type ShouldAdvertiseProps,
+  type ShouldSyncCollectionProps,
   getSpaceIdFromCollectionId,
 } from '../automerge';
 
@@ -47,7 +47,7 @@ const INITIAL_RESTART_DELAY = 500;
 const RESTART_DELAY_JITTER = 250;
 const MAX_RESTART_DELAY = 5000;
 
-export type EchoEdgeReplicatorParams = {
+export type EchoEdgeReplicatorProps = {
   edgeConnection: EdgeConnection;
   edgeHttpClient: EdgeHttpClient;
   disableSharePolicy?: boolean;
@@ -64,7 +64,7 @@ export class EchoEdgeReplicator implements EchoReplicator {
   private _connections = new Map<SpaceId, EdgeReplicatorConnection>();
   private _sharePolicyEnabled = true;
 
-  constructor({ edgeConnection, edgeHttpClient, disableSharePolicy }: EchoEdgeReplicatorParams) {
+  constructor({ edgeConnection, edgeHttpClient, disableSharePolicy }: EchoEdgeReplicatorProps) {
     this._edgeConnection = edgeConnection;
     this._edgeHttpClient = edgeHttpClient;
     this._sharePolicyEnabled = !disableSharePolicy;
@@ -192,7 +192,7 @@ export class EchoEdgeReplicator implements EchoReplicator {
   }
 }
 
-type EdgeReplicatorConnectionsParams = {
+type EdgeReplicatorConnectionsProps = {
   edgeConnection: EdgeConnection;
   edgeHttpClient: EdgeHttpClient;
   spaceId: SpaceId;
@@ -239,7 +239,7 @@ class EdgeReplicatorConnection extends Resource implements ReplicatorConnection 
     onRemoteConnected,
     onRemoteDisconnected,
     onRestartRequested,
-  }: EdgeReplicatorConnectionsParams) {
+  }: EdgeReplicatorConnectionsProps) {
     super();
     this._edgeConnection = edgeConnection;
     this._edgeHttpClient = edgeHttpClient;
@@ -313,7 +313,7 @@ class EdgeReplicatorConnection extends Resource implements ReplicatorConnection 
     return this._remotePeerId;
   }
 
-  async shouldAdvertise(params: ShouldAdvertiseParams): Promise<boolean> {
+  async shouldAdvertise(params: ShouldAdvertiseProps): Promise<boolean> {
     if (!this._sharedPolicyEnabled) {
       return true;
     }
@@ -338,7 +338,7 @@ class EdgeReplicatorConnection extends Resource implements ReplicatorConnection 
     return spaceId === this._spaceId;
   }
 
-  shouldSyncCollection(params: ShouldSyncCollectionParams): boolean {
+  shouldSyncCollection(params: ShouldSyncCollectionProps): boolean {
     if (!this._sharedPolicyEnabled) {
       return true;
     }

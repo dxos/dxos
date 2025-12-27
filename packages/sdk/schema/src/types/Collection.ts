@@ -44,13 +44,13 @@ export type Managed = Schema.Schema.Type<typeof Managed>;
 
 export const makeManaged = (props: Obj.MakeProps<typeof Managed>) => Obj.make(Managed, props);
 
-type AddParams = {
+type AddProps = {
   object: Obj.Any;
   target?: Collection;
   hidden?: boolean;
 };
 
-export const add = Effect.fn(function* ({ object, target, hidden }: AddParams) {
+export const add = Effect.fn(function* ({ object, target, hidden }: AddProps) {
   if (Obj.instanceOf(Collection, target)) {
     target.objects.push(Ref.make(object));
   } else if (hidden) {

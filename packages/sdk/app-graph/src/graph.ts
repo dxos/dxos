@@ -58,7 +58,7 @@ export type GraphTraversalOptions = {
   relation?: Relation;
 };
 
-export type GraphParams = {
+export type GraphProps = {
   registry?: Registry.Registry;
   nodes?: MakeOptional<Node, 'data' | 'cacheable'>[];
   edges?: Record<string, Edges>;
@@ -323,7 +323,7 @@ export class Graph implements WritableGraph {
     }).pipe(Atom.withLabel(`graph:json:${id}`));
   });
 
-  constructor({ registry, nodes, edges, onInitialize, onExpand, onRemoveNode }: GraphParams = {}) {
+  constructor({ registry, nodes, edges, onInitialize, onExpand, onRemoveNode }: GraphProps = {}) {
     this._registry = registry ?? Registry.make();
     this._onInitialize = onInitialize;
     this._onExpand = onExpand;

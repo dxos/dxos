@@ -19,7 +19,7 @@ import { trim } from '@dxos/util';
 import { AiAssistantError } from '../errors';
 
 import { ArtifactDiffResolver } from './artifact-diff';
-import { type AiSessionRunError, type AiSessionRunParams } from './session';
+import { type AiSessionRunError, type AiSessionRunProps } from './session';
 
 /**
  * Formats the system prompt.
@@ -29,7 +29,7 @@ export const formatSystemPrompt = ({
   system,
   blueprints = [],
   objects = [],
-}: Pick<AiSessionRunParams<any>, 'system' | 'blueprints' | 'objects'>) =>
+}: Pick<AiSessionRunProps<any>, 'system' | 'blueprints' | 'objects'>) =>
   Effect.gen(function* () {
     const blueprintDefs = yield* Function.pipe(
       blueprints,
@@ -77,7 +77,7 @@ export const formatSystemPrompt = ({
 export const formatUserPrompt = ({
   prompt,
   history = [],
-}: Pick<AiSessionRunParams<any>, 'prompt' | 'history'>): Effect.Effect<Message.Message, AiSessionRunError> =>
+}: Pick<AiSessionRunProps<any>, 'prompt' | 'history'>): Effect.Effect<Message.Message, AiSessionRunError> =>
   Effect.gen(function* () {
     const blocks: ContentBlock.Any[] = [];
 

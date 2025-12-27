@@ -42,10 +42,10 @@ import { SpacesServiceImpl } from '../spaces';
 import { createLevel, createStorageObjects } from '../storage';
 import { SystemServiceImpl } from '../system';
 
-import { ServiceContext, type ServiceContextRuntimeParams } from './service-context';
+import { ServiceContext, type ServiceContextRuntimeProps } from './service-context';
 import { ServiceRegistry } from './service-registry';
 
-export type ClientServicesHostParams = {
+export type ClientServicesHostProps = {
   /**
    * Can be omitted if `initialize` is later called.
    */
@@ -57,7 +57,7 @@ export type ClientServicesHostParams = {
   level?: LevelDB;
   lockKey?: string;
   callbacks?: ClientServicesHostCallbacks;
-  runtimeParams?: ServiceContextRuntimeParams;
+  runtimeProps?: ServiceContextRuntimeProps;
 };
 
 export type ClientServicesHostCallbacks = {
@@ -95,7 +95,7 @@ export class ClientServicesHost {
   private _edgeHttpClient?: EdgeHttpClient = undefined;
 
   private _serviceContext!: ServiceContext;
-  private readonly _runtimeParams: ServiceContextRuntimeParams;
+  private readonly _runtimeProps: ServiceContextRuntimeProps;
   private diagnosticsBroadcastHandler: CollectDiagnosticsBroadcastHandler;
 
   @Trace.info()
@@ -116,12 +116,12 @@ export class ClientServicesHost {
     // TODO(wittjosiah): Turn this on by default.
     lockKey,
     callbacks,
-    runtimeParams,
-  }: ClientServicesHostParams = {}) {
+    runtimeProps,
+  }: ClientServicesHostProps = {}) {
     this._storage = storage;
     this._level = level;
     this._callbacks = callbacks;
-    this._runtimeParams = runtimeParams ?? {};
+    this._runtimeProps = runtimeProps ?? {};
 
     if (config) {
       this.initialize({ config, transportFactory, signalManager });
@@ -202,12 +202,12 @@ export class ClientServicesHost {
     log('initializing...');
 
     if (config) {
-      if (this._runtimeParams.disableP2pReplication === undefined) {
-        this._runtimeParams.disableP2pReplication = config?.get('runtime.client.disableP2pReplication', false);
+      if (this._runtimeProps.disableP2pReplication === undefined) {
+        this._runtimeProps.disableP2pReplication = config?.get('runtime.client.disableP2pReplication', false);
       }
 
-      if (this._runtimeParams.enableVectorIndexing === undefined) {
-        this._runtimeParams.enableVectorIndexing = config?.get('runtime.client.enableVectorIndexing', false);
+      if (this._runtimeProps.enableVectorIndexing === undefined) {
+        this._runtimeProps.enableVectorIndexing = config?.get('runtime.client.enableVectorIndexing', false);
       }
 
       invariant(!this._config, 'config already set');
@@ -291,7 +291,7 @@ export class ClientServicesHost {
       this._signalManager,
       this._edgeConnection,
       this._edgeHttpClient,
-      this._runtimeParams,
+      this._runtimeProps,
       this._config.get('runtime.client.edgeFeatures'),
     );
 

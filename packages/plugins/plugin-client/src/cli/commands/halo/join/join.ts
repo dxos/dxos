@@ -62,8 +62,8 @@ const sendInvitation = Effect.fn(function* ({
   invitationCode: string;
 }) {
   if (encoded.startsWith('http') || encoded.startsWith('socket')) {
-    const searchParams = new URL(encoded).searchParams;
-    encoded = searchParams.get('deviceInvitationCode') ?? encoded;
+    const searchProps = new URL(encoded).searchParams;
+    encoded = searchProps.get('deviceInvitationCode') ?? encoded;
   }
 
   const invitationCode = InvitationEncoder.decode(encoded);

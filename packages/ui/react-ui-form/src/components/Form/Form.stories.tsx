@@ -80,10 +80,10 @@ type StoryProps<T extends AnyProperties> = {
 const DefaultStory = <T extends AnyProperties = AnyProperties>({
   debug,
   schema,
-  values: valuesParam,
+  values: valuesProp,
   ...props
 }: StoryProps<T>) => {
-  const [values, setValues] = useState<Partial<T>>(valuesParam ?? {});
+  const [values, setValues] = useState<Partial<T>>(valuesProp ?? {});
   const client = useClient();
   const space = client.spaces.default;
 
@@ -94,7 +94,7 @@ const DefaultStory = <T extends AnyProperties = AnyProperties>({
 
   const handleCancel = useCallback<NonNullable<FormRootProps<T>['onCancel']>>(() => {
     log.info('cancel');
-    setValues(valuesParam ?? {});
+    setValues(valuesProp ?? {});
   }, []);
 
   return (

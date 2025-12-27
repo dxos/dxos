@@ -14,7 +14,7 @@ import { ComplexSet, defaultMap } from '@dxos/util';
 
 import { createIdFromSpaceKey } from '../common/space-id';
 
-import { type EchoReplicator, type EchoReplicatorContext, type ShouldAdvertiseParams } from './echo-replicator';
+import { type EchoReplicator, type EchoReplicatorContext, type ShouldAdvertiseProps } from './echo-replicator';
 import { MeshReplicatorConnection } from './mesh-echo-replicator-connection';
 import { getSpaceIdFromCollectionId } from './space-collection';
 
@@ -111,7 +111,7 @@ export class MeshEchoReplicator implements EchoReplicator {
           }
         }
       },
-      shouldAdvertise: async (params: ShouldAdvertiseParams) => {
+      shouldAdvertise: async (params: ShouldAdvertiseProps) => {
         log('shouldAdvertise', { peerId: connection.peerId, documentId: params.documentId });
         invariant(this._context);
         try {

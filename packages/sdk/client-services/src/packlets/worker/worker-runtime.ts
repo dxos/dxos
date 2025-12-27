@@ -23,7 +23,7 @@ import { ClientServicesHost } from '../services';
 import { WorkerSession } from './worker-session';
 
 // NOTE: Keep as RpcPorts to avoid dependency on @dxos/rpc-tunnel so we don't depend on browser-specific apis.
-export type CreateSessionParams = {
+export type CreateSessionProps = {
   appPort: RpcPort;
   systemPort: RpcPort;
   shellPort?: RpcPort;
@@ -133,7 +133,7 @@ export class WorkerRuntime {
   /**
    * Create a new session.
    */
-  async createSession({ appPort, systemPort, shellPort }: CreateSessionParams): Promise<void> {
+  async createSession({ appPort, systemPort, shellPort }: CreateSessionProps): Promise<void> {
     const session = new WorkerSession({
       serviceHost: this._clientServices,
       appPort,

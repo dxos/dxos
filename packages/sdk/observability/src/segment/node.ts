@@ -51,7 +51,7 @@ export class SegmentTelemetry extends AbstractSegmentTelemetry {
     }
 
     try {
-      this._analytics.page(this.createPageProps(options));
+      this._analytics.page(this.createPageParams(options));
     } catch (err) {
       log.catch('Failed to track page', err);
     }
@@ -65,7 +65,7 @@ export class SegmentTelemetry extends AbstractSegmentTelemetry {
 
     log.info('sending event to telemetry', { options });
     try {
-      this._analytics.track(this.createTrackProps(options));
+      this._analytics.track(this.createTrackParams(options));
     } catch (err) {
       log.catch('Failed to track action', err);
     }

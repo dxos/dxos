@@ -9,7 +9,7 @@ import { asyncTimeout } from '@dxos/async';
 import { PublicKey } from '@dxos/keys';
 
 import { ReplicantEnvImpl } from '../env';
-import { type ReplicantParams } from '../plan';
+import { type ReplicantProps } from '../plan';
 
 import { WebSocketConnector } from './websocket-connector';
 import { WebSocketRedisProxy } from './websocket-redis-proxy';
@@ -65,7 +65,7 @@ describe.skip('AgentEnv with WebSocketConnector', () => {
           {
             agents,
             testId,
-          } as unknown as ReplicantParams,
+          } as unknown as ReplicantProps,
           { Connector: WebSocketConnector, address: 'ws://localhost:8080' } as RedisOptions,
         ),
     );

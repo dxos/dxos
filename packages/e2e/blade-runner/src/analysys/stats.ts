@@ -7,7 +7,7 @@ import { mean, std } from 'mathjs';
 import { log } from '@dxos/log';
 import { entry, range } from '@dxos/util';
 
-import { type ReplicantsSummary, type TestParams } from '../plan';
+import { type ReplicantsSummary, type TestProps } from '../plan';
 import { type SignalTestSpec } from '../spec';
 
 import { LogReader, type TraceEvent, zapPreprocessor } from './logging';
@@ -70,7 +70,7 @@ export const analyzeMessages = async (results: ReplicantsSummary) => {
   };
 };
 
-export const analyzeSwarmEvents = async (params: TestParams<SignalTestSpec>, results: ReplicantsSummary) => {
+export const analyzeSwarmEvents = async (params: TestProps<SignalTestSpec>, results: ReplicantsSummary) => {
   const start = Date.now();
 
   /**

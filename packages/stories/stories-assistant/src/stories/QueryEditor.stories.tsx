@@ -22,9 +22,9 @@ import { Employer, Organization, Person, Project } from '@dxos/types';
 faker.seed(1);
 const generator = faker as any as ValueGenerator;
 
-const DefaultStory = ({ value: valueParam }: QueryEditorProps) => {
+const DefaultStory = ({ value: valueProp }: QueryEditorProps) => {
   const { space } = useClientStory();
-  const [query, setQuery] = useState<string | undefined>(valueParam);
+  const [query, setQuery] = useState<string | undefined>(valueProp);
   const filter = useQueryBuilder(query);
   const objects = useQuery(space?.db, filter).sort(Obj.sort(Obj.sortByTypename, Obj.sortByLabel));
   const model = useGraphModel(space, filter);

@@ -83,7 +83,7 @@ export interface EchoDatabase extends Database.Database {
   update(filter: Filter.Any, operation: unknown): Promise<void>;
 }
 
-export type EchoDatabaseParams = {
+export type EchoDatabaseProps = {
   graph: HypergraphImpl;
   dataService: DataService;
   queryService: QueryService;
@@ -125,7 +125,7 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
 
   private _rootUrl: string | undefined = undefined;
 
-  constructor(params: EchoDatabaseParams) {
+  constructor(params: EchoDatabaseProps) {
     super();
 
     this._coreDatabase = new CoreDatabase({

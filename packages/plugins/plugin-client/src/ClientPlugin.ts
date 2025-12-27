@@ -20,10 +20,10 @@ import { type ClientPluginOptions } from './types';
 
 export const ClientPlugin = definePlugin<ClientPluginOptions>(
   meta,
-  ({ invitationUrl = window.location.origin, invitationParam = 'deviceInvitationCode', onReset, ...options }) => {
+  ({ invitationUrl = window.location.origin, invitationProp = 'deviceInvitationCode', onReset, ...options }) => {
     const createInvitationUrl = (invitationCode: string) => {
       const baseUrl = new URL(invitationUrl);
-      baseUrl.searchParams.set(invitationParam, invitationCode);
+      baseUrl.searchParams.set(invitationProp, invitationCode);
       return baseUrl.toString();
     };
 

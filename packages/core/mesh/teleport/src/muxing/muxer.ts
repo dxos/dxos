@@ -86,7 +86,7 @@ type Channel = {
   };
 };
 
-type CreateChannelInternalParams = {
+type CreateChannelInternalProps = {
   tag: string;
   contentType?: string;
 };
@@ -414,7 +414,7 @@ export class Muxer {
     }
   }
 
-  private _getOrCreateStream(params: CreateChannelInternalParams): Channel {
+  private _getOrCreateStream(params: CreateChannelInternalProps): Channel {
     if (this._channelsByTag.size === 0) {
       scheduleTaskInterval(this._ctx, async () => this._emitStats(), STATS_INTERVAL);
     }
