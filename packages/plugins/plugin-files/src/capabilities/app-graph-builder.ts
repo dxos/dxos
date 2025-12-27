@@ -15,7 +15,7 @@ import {
   createIntent,
   defineCapabilityModule,
 } from '@dxos/app-framework';
-import { Graph, GraphBuilder } from '@dxos/plugin-graph';
+import { CreateAtom, Graph, GraphBuilder } from '@dxos/plugin-graph';
 
 import { meta } from '../meta';
 import { type FilesSettingsProps, LocalFilesAction } from '../types';
@@ -73,7 +73,7 @@ export default defineCapabilityModule((context: PluginContext) => {
             Option.flatMap(() => {
               const settingsStore = get(context.capabilities(Capabilities.SettingsStore))[0];
               const settings = get(
-                GraphBuilder.atomFromSignal(() => settingsStore?.getStore<FilesSettingsProps>(meta.id)?.value),
+                CreateAtom.fromSignal(() => settingsStore?.getStore<FilesSettingsProps>(meta.id)?.value),
               );
               return settings ? Option.some(settings) : Option.none();
             }),

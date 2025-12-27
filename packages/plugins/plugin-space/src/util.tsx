@@ -670,8 +670,7 @@ export const constructObjectActions = ({
             id: getId(SpaceAction.RemoveObjects._tag),
             type: Graph.ACTION_TYPE,
             data: async () => {
-              const collection = graph
-                .getConnections(Obj.getDXN(object).toString(), 'inbound')
+              const collection = Graph.getConnections(graph, Obj.getDXN(object).toString(), 'inbound')
                 .find((node: Node.Node): node is Node.Node<Collection.Collection> =>
                   Obj.instanceOf(Collection.Collection, node.data),
                 )?.data;

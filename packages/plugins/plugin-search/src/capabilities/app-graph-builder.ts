@@ -15,7 +15,7 @@ import {
 } from '@dxos/app-framework';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { ATTENDABLE_PATH_SEPARATOR, DECK_COMPANION_TYPE } from '@dxos/plugin-deck/types';
-import { Graph, GraphBuilder } from '@dxos/plugin-graph';
+import { CreateAtom, Graph, GraphBuilder } from '@dxos/plugin-graph';
 import { parseId } from '@dxos/react-client/echo';
 
 import { meta } from '../meta';
@@ -32,7 +32,7 @@ export default defineCapabilityModule((context: PluginContext) =>
             Option.flatMap((node) => (node.id === Graph.ROOT_ID ? Option.some(node) : Option.none())),
             Option.map((node) => {
               const workspace = get(
-                GraphBuilder.atomFromSignal(() => context.getCapability(Capabilities.Layout).workspace),
+                CreateAtom.fromSignal(() => context.getCapability(Capabilities.Layout).workspace),
               );
               const client = context.getCapability(ClientCapabilities.Client);
               const { spaceId } = parseId(workspace);

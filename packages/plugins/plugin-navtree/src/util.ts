@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type Graph, Node } from '@dxos/app-graph';
+import { Graph, Node } from '@dxos/plugin-graph';
 import { isNonNullable } from '@dxos/util';
 
 import { type NavTreeItemGraphNode } from './types';
@@ -13,7 +13,7 @@ export const getParent = (
   path: string[],
 ): NavTreeItemGraphNode | undefined => {
   const parentId = path[path.length - 2];
-  return graph.getConnections(node.id, 'inbound').find((n: Node.Node) => n.id === parentId) as
+  return Graph.getConnections(graph, node.id, 'inbound').find((n: Node.Node) => n.id === parentId) as
     | NavTreeItemGraphNode
     | undefined;
 };
@@ -80,8 +80,7 @@ export const getChildren = (
   node: NavTreeItemGraphNode,
   path: readonly string[] = [],
 ): NavTreeItemGraphNode[] => {
-  return graph
-    .getConnections(node.id, 'outbound')
+  return Graph.getConnections(graph, node.id, 'outbound')
     .map((n: Node.Node) => {
       // Break cycles.
       const nextPath = [...path, node.id];

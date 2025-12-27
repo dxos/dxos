@@ -12,6 +12,7 @@ import {
   defineModule,
   definePlugin,
 } from '@dxos/app-framework';
+import { Graph } from '@dxos/plugin-graph';
 import { type TreeData } from '@dxos/react-ui-list';
 
 import { AppGraphBuilder, IntentResolver, Keyboard, ReactSurface, State } from './capabilities';
@@ -62,8 +63,7 @@ export const NavTreePlugin = definePlugin(meta, () => [
       if (dispatch && layout.active.length === 1) {
         // TODO(wittjosiah): This should really be fired once the navtree renders for the first time.
         //   That is the point at which the graph is expanded and the path should be available.
-        void graph
-          .waitForPath({ target: layout.active[0] }, { timeout: 30_000 })
+        void Graph.waitForPath(graph, { target: layout.active[0] }, { timeout: 30_000 })
           .then(() => dispatch(createIntent(LayoutAction.Expose, { part: 'navigation', subject: layout.active[0] })))
           .catch(() => {});
       }

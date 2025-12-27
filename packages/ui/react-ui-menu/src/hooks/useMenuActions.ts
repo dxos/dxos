@@ -60,8 +60,7 @@ export const useMenuActions = (props: Atom.Atom<ActionGraphProps>): MenuActions 
   );
 
   useEffect(() => {
-    graph.addNodes(menuGraphProps.nodes);
-    graph.addEdges(menuGraphProps.edges);
+    graph.pipe(Graph.addNodes(menuGraphProps.nodes), Graph.addEdges(menuGraphProps.edges));
   }, [menuGraphProps]);
 
   const useGroupItems = useCallback(

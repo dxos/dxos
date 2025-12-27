@@ -17,7 +17,7 @@ import {
 import { Obj } from '@dxos/echo';
 import { DeckCapabilities } from '@dxos/plugin-deck';
 import { ATTENDABLE_PATH_SEPARATOR, DeckAction } from '@dxos/plugin-deck/types';
-import { GraphBuilder } from '@dxos/plugin-graph';
+import { CreateAtom, GraphBuilder } from '@dxos/plugin-graph';
 import { Markdown } from '@dxos/plugin-markdown/types';
 import { Collection } from '@dxos/schema';
 
@@ -37,7 +37,7 @@ export default defineCapabilityModule((context: PluginContext) => {
             Option.flatMap((node) => {
               const [settingsStore] = get(context.capabilities(Capabilities.SettingsStore));
               const settings = get(
-                GraphBuilder.atomFromSignal(() => settingsStore?.getStore<PresenterSettingsProps>(meta.id)?.value),
+                CreateAtom.fromSignal(() => settingsStore?.getStore<PresenterSettingsProps>(meta.id)?.value),
               );
               const isPresentable = settings?.presentCollections
                 ? Obj.instanceOf(Collection.Collection, node.data) || Obj.instanceOf(Markdown.Document, node.data)
@@ -69,7 +69,7 @@ export default defineCapabilityModule((context: PluginContext) => {
             Option.flatMap((node) => {
               const [settingsStore] = get(context.capabilities(Capabilities.SettingsStore));
               const settings = get(
-                GraphBuilder.atomFromSignal(() => settingsStore?.getStore<PresenterSettingsProps>(meta.id)?.value),
+                CreateAtom.fromSignal(() => settingsStore?.getStore<PresenterSettingsProps>(meta.id)?.value),
               );
               const isPresentable = settings?.presentCollections
                 ? Obj.instanceOf(Collection.Collection, node.data) || Obj.instanceOf(Markdown.Document, node.data)

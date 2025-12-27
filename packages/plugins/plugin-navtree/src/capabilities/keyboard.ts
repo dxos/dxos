@@ -10,7 +10,7 @@ import {
 } from '@dxos/app-framework';
 import { debounce } from '@dxos/async';
 import { Keyboard } from '@dxos/keyboard';
-import { Node } from '@dxos/plugin-graph';
+import { Graph, Node } from '@dxos/plugin-graph';
 import { getHostPlatform } from '@dxos/util';
 
 import { KEY_BINDING } from '../meta';
@@ -46,14 +46,14 @@ export default defineCapabilityModule((context: PluginContext) => {
   };
 
   const eventHandler = debounce(() => {
-    graph.traverse({ visitor });
+    Graph.traverse(graph, { visitor });
   }, 500);
 
   const unsubscribe = graph.onNodeChanged.on(eventHandler);
 
   // TODO(burdon): Create context and plugin.
   Keyboard.singleton.initialize();
-  Keyboard.singleton.setCurrentContext(graph.root.id);
+  Keyboard.singleton.setCurrentContext(Graph.ROOT_ID);
 
   return contributes(AppCapabilities.Null, null, () => {
     unsubscribe();

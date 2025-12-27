@@ -39,7 +39,6 @@ const icons = {
 };
 
 export const createActions = (params?: CreateActionsParams) => {
-  // eslint-disable-next-line no-console
   const { callback = () => console.log('invoke'), count = 12, type = Graph.ACTION_TYPE } = params ?? {};
   return faker.helpers.multiple(
     () =>
@@ -77,15 +76,17 @@ export const createNestedActionsResolver = (groupParams?: CreateActionsParams, p
   const actionGroups = createActions({ type: Graph.ACTION_GROUP_TYPE, ...groupParams });
   actionGroups.forEach((group) => {
     const actions = createActions(params);
-    graph.addNodes([group as Node.NodeArg<any>, ...(actions as Node.NodeArg<any>[])]);
-    graph.addEdges([
-      { source: 'root', target: group.id },
-      ...actions.map((action) => ({ source: group.id, target: action.id })),
-    ]);
-    void graph.expand(group.id);
+    graph.pipe(
+      Graph.addNodes([group as Node.NodeArg<any>, ...(actions as Node.NodeArg<any>[])]),
+      Graph.addEdges([
+        { source: 'root', target: group.id },
+        ...actions.map((action) => ({ source: group.id, target: action.id })),
+      ]),
+      Graph.expand(group.id),
+    );
   });
   const resolveGroupItems = (groupNode?: MenuItemGroup) =>
-    (graph.getActions(groupNode?.id ?? Graph.ROOT_ID) || null) as MenuItem[] | null;
+    (Graph.getActions(graph, groupNode?.id ?? Graph.ROOT_ID) || null) as MenuItem[] | null;
   return { resolveGroupItems };
 };
 

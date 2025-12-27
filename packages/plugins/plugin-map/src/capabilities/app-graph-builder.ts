@@ -14,7 +14,7 @@ import {
   defineCapabilityModule,
 } from '@dxos/app-framework';
 import { Obj } from '@dxos/echo';
-import { GraphBuilder } from '@dxos/plugin-graph';
+import { CreateAtom, GraphBuilder } from '@dxos/plugin-graph';
 import { View } from '@dxos/schema';
 
 import { meta } from '../meta';
@@ -31,7 +31,7 @@ export default defineCapabilityModule((context: PluginContext) => {
             get(node),
             Option.flatMap((node) =>
               Obj.instanceOf(View.View, node.data) &&
-              Obj.instanceOf(Map.Map, get(GraphBuilder.atomFromSignal(() => node.data.presentation.target)))
+              Obj.instanceOf(Map.Map, get(CreateAtom.fromSignal(() => node.data.presentation.target)))
                 ? Option.some(node)
                 : Option.none(),
             ),

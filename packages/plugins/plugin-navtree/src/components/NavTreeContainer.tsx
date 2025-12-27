@@ -9,8 +9,8 @@ import React, { forwardRef, memo, useCallback, useEffect, useMemo } from 'react'
 
 import { LayoutAction, createIntent } from '@dxos/app-framework';
 import { Surface, useAppGraph, useCapability, useIntentDispatcher, useLayout } from '@dxos/app-framework/react';
-import { Graph, Node } from '@dxos/app-graph';
 import { PLANK_COMPANION_TYPE } from '@dxos/plugin-deck/types';
+import { Graph, Node } from '@dxos/plugin-graph';
 import { useConnections, useActions as useGraphActions } from '@dxos/plugin-graph';
 import { useMediaQuery, useSidebars } from '@dxos/react-ui';
 import { type TreeData, type TreeItemDataProps, isTreeData } from '@dxos/react-ui-list';
@@ -50,7 +50,9 @@ const filterItems = (node: Node.Node, disposition?: string) => {
 };
 
 const getItems = (graph: Graph.ReadableGraph, node?: Node.Node, disposition?: string) => {
-  return graph.getConnections(node?.id ?? Graph.ROOT_ID, 'outbound').filter((node) => filterItems(node, disposition));
+  return Graph.getConnections(graph, node?.id ?? Graph.ROOT_ID, 'outbound').filter((node) =>
+    filterItems(node, disposition),
+  );
 };
 
 const useItems = (node?: Node.Node, options?: { disposition?: string; sort?: boolean }) => {
@@ -74,7 +76,7 @@ const useActions = (node: Node.Node): FlattenedActions => {
 
           acc.actions.push(arg);
           if (!Node.isAction(arg)) {
-            const actionGroup = graph.getActions(arg.id);
+            const actionGroup = Graph.getActions(graph, arg.id);
             acc.groupedActions[arg.id] = actionGroup;
           }
           return acc;
@@ -121,10 +123,10 @@ export const NavTreeContainer$ = forwardRef<HTMLDivElement, NavTreeContainerProp
 
     const loadDescendents = useCallback(
       (node: Node.Node) => {
-        graph.expand(node.id, 'outbound');
+        Graph.expand(graph, node.id, 'outbound');
         // Load one level deeper, which resolves some juddering observed on open/close.
-        graph.getConnections(node.id, 'outbound').forEach((child) => {
-          graph.expand(child.id, 'outbound');
+        Graph.getConnections(graph, node.id, 'outbound').forEach((child) => {
+          Graph.expand(graph, child.id, 'outbound');
         });
       },
       [graph],
@@ -134,7 +136,7 @@ export const NavTreeContainer$ = forwardRef<HTMLDivElement, NavTreeContainerProp
       ({ item: { id }, path, open }: { item: Node.Node; path: string[]; open: boolean }) => {
         // TODO(thure): This might become a localstorage leak; openItemIds that no longer exist should be removed from this map.
         setItem(path, 'open', open);
-        graph.expand(id, 'outbound');
+        Graph.expand(graph, id, 'outbound');
       },
       [graph],
     );
@@ -202,7 +204,7 @@ export const NavTreeContainer$ = forwardRef<HTMLDivElement, NavTreeContainerProp
         }
 
         if (Node.isAction(node)) {
-          const [parent] = graph.getConnections(node.id, 'inbound');
+          const [parent] = Graph.getConnections(graph, node.id, 'inbound');
           void (parent && node.data({ parent, caller: NAV_TREE_ITEM }));
           return;
         }
@@ -233,7 +235,9 @@ export const NavTreeContainer$ = forwardRef<HTMLDivElement, NavTreeContainerProp
           );
         }
 
-        const defaultAction = graph.getActions(node.id).find((action) => action.properties?.disposition === 'default');
+        const defaultAction = Graph.getActions(graph, node.id).find(
+          (action) => action.properties?.disposition === 'default',
+        );
         if (Node.isAction(defaultAction)) {
           void (defaultAction.data as () => void)();
         }
@@ -373,7 +377,7 @@ export const NavTreeContainer$ = forwardRef<HTMLDivElement, NavTreeContainerProp
 
     return (
       <NavTreeContext.Provider value={navTreeContextValue}>
-        <NavTree id={Graph.ROOT_ID} root={graph.root} open={layout.sidebarOpen} ref={forwardedRef} />
+        <NavTree id={Graph.ROOT_ID} root={Graph.getRoot(graph)} open={layout.sidebarOpen} ref={forwardedRef} />
       </NavTreeContext.Provider>
     );
   },

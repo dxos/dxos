@@ -6,7 +6,7 @@ import { type EditorView } from '@codemirror/view';
 import { Atom } from '@effect-atom/atom-react';
 import React, { memo, useMemo } from 'react';
 
-import { GraphBuilder } from '@dxos/app-graph';
+import { CreateAtom, GraphBuilder } from '@dxos/app-graph';
 import { type Live } from '@dxos/live-object';
 import { ElevationProvider, type ThemedClassName } from '@dxos/react-ui';
 import {
@@ -111,19 +111,19 @@ const createToolbarActions = ({
     };
 
     if (features?.showHeadings ?? true) {
-      addSubGraph(graph, get(GraphBuilder.atomFromSignal(() => createHeadings(state, getView))));
+      addSubGraph(graph, get(CreateAtom.fromSignal(() => createHeadings(state, getView))));
     }
     if (features?.showFormatting ?? true) {
-      addSubGraph(graph, get(GraphBuilder.atomFromSignal(() => createFormatting(state, getView))));
+      addSubGraph(graph, get(CreateAtom.fromSignal(() => createFormatting(state, getView))));
     }
     if (features?.showLists ?? true) {
-      addSubGraph(graph, get(GraphBuilder.atomFromSignal(() => createLists(state, getView))));
+      addSubGraph(graph, get(CreateAtom.fromSignal(() => createLists(state, getView))));
     }
     if (features?.showBlocks ?? true) {
-      addSubGraph(graph, get(GraphBuilder.atomFromSignal(() => createBlocks(state, getView))));
+      addSubGraph(graph, get(CreateAtom.fromSignal(() => createBlocks(state, getView))));
     }
     if (features?.onImageUpload) {
-      addSubGraph(graph, get(GraphBuilder.atomFromSignal(() => createImageUpload(features.onImageUpload!))));
+      addSubGraph(graph, get(CreateAtom.fromSignal(() => createImageUpload(features.onImageUpload!))));
     }
 
     addSubGraph(graph, createGapSeparator());
@@ -132,10 +132,10 @@ const createToolbarActions = ({
       addSubGraph(graph, get(customActions));
     }
     if (features?.showSearch ?? true) {
-      addSubGraph(graph, get(GraphBuilder.atomFromSignal(() => createSearch(getView))));
+      addSubGraph(graph, get(CreateAtom.fromSignal(() => createSearch(getView))));
     }
     if (features?.onViewModeChange) {
-      addSubGraph(graph, get(GraphBuilder.atomFromSignal(() => createViewMode(state, features.onViewModeChange!))));
+      addSubGraph(graph, get(CreateAtom.fromSignal(() => createViewMode(state, features.onViewModeChange!))));
     }
 
     return graph;

@@ -20,7 +20,7 @@ import { DXN, type Entity, Filter, Obj, type QueryResult, Type } from '@dxos/ech
 import { log } from '@dxos/log';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { ATTENDABLE_PATH_SEPARATOR, PLANK_COMPANION_TYPE } from '@dxos/plugin-deck/types';
-import { Graph, GraphBuilder, type Node } from '@dxos/plugin-graph';
+import { CreateAtom, Graph, GraphBuilder, type Node } from '@dxos/plugin-graph';
 import { Collection, ViewAnnotation, getTypenameFromQuery } from '@dxos/schema';
 import { isNonNullable } from '@dxos/util';
 
@@ -63,7 +63,8 @@ export default defineCapabilityModule((context: PluginContext) => {
         // NOTE: This is needed to ensure order is updated by next animation frame.
         // TODO(wittjosiah): Is there a better way to do this?
         //   If not, graph should be passed as an argument to the extension.
-        graph.sortEdges(
+        Graph.sortEdges(
+          graph,
           SPACES,
           'outbound',
           nextOrder.map(({ id }) => id),
@@ -185,8 +186,8 @@ export default defineCapabilityModule((context: PluginContext) => {
             Option.map(() => {
               const state = context.getCapability(SpaceCapabilities.State);
               const client = context.getCapability(ClientCapabilities.Client);
-              const spacesAtom = GraphBuilder.atomFromObservable(client.spaces);
-              const isReadyAtom = GraphBuilder.atomFromObservable(client.spaces.isReady);
+              const spacesAtom = CreateAtom.fromObservable(client.spaces);
+              const isReadyAtom = CreateAtom.fromObservable(client.spaces.isReady);
 
               const spaces = get(spacesAtom);
               const isReady = get(isReadyAtom);
@@ -206,7 +207,7 @@ export default defineCapabilityModule((context: PluginContext) => {
                 }
                 const [spacesOrder] = get(atomFromQuery(query));
                 return get(
-                  GraphBuilder.atomFromSignal(() => {
+                  CreateAtom.fromSignal(() => {
                     const order: string[] = spacesOrder?.order ?? [];
                     const orderMap = new Map(order.map((id, index) => [id, index]));
                     return [
@@ -283,13 +284,13 @@ export default defineCapabilityModule((context: PluginContext) => {
             ),
             Option.map((space) => {
               const state = context.getCapability(SpaceCapabilities.State);
-              const spaceState = get(GraphBuilder.atomFromObservable(space.state));
+              const spaceState = get(CreateAtom.fromObservable(space.state));
               if (spaceState !== SpaceState.SPACE_READY) {
                 return [];
               }
 
               const collection = get(
-                GraphBuilder.atomFromSignal(
+                CreateAtom.fromSignal(
                   () => space.properties[Collection.Collection.typename]?.target as Collection.Collection | undefined,
                 ),
               );
@@ -298,7 +299,7 @@ export default defineCapabilityModule((context: PluginContext) => {
               }
 
               return get(
-                GraphBuilder.atomFromSignal(() =>
+                CreateAtom.fromSignal(() =>
                   Function.pipe(
                     collection.objects,
                     Array.map((object) => object.target),
@@ -336,7 +337,7 @@ export default defineCapabilityModule((context: PluginContext) => {
               const space = getSpace(collection);
 
               return get(
-                GraphBuilder.atomFromSignal(() =>
+                CreateAtom.fromSignal(() =>
                   Function.pipe(
                     collection.objects,
                     Array.map((object) => object.target),
@@ -453,7 +454,7 @@ export default defineCapabilityModule((context: PluginContext) => {
             }),
             Option.map((space) => {
               // TODO(wittjosiah): Support reactive schema registry queries.
-              return get(GraphBuilder.atomFromSignal(() => (space.properties.staticRecords ?? []) as string[]))
+              return get(CreateAtom.fromSignal(() => (space.properties.staticRecords ?? []) as string[]))
                 .map((typename) => client?.graph.schemaRegistry.query({ typename, location: ['runtime'] }).runSync()[0])
                 .filter(isNonNullable)
                 .map((schema) => createStaticSchemaNode({ schema, space }));
@@ -496,7 +497,7 @@ export default defineCapabilityModule((context: PluginContext) => {
 
               const objects = get(atomFromQuery(query));
               const filteredViews = get(
-                GraphBuilder.atomFromSignal(() =>
+                CreateAtom.fromSignal(() =>
                   objects.filter(
                     (viewObject) =>
                       getTypenameFromQuery((viewObject as any).view.target?.query.ast) ===
@@ -563,14 +564,14 @@ export default defineCapabilityModule((context: PluginContext) => {
               return get(atomFromQuery(query))
                 .filter((object) =>
                   get(
-                    GraphBuilder.atomFromSignal(
+                    CreateAtom.fromSignal(
                       () => getTypenameFromQuery((object as any).view.target?.query.ast) === typename,
                     ),
                   ),
                 )
                 .map((object) =>
                   get(
-                    GraphBuilder.atomFromSignal(() =>
+                    CreateAtom.fromSignal(() =>
                       createObjectNode({
                         object,
                         db: space.db,
@@ -629,7 +630,7 @@ export default defineCapabilityModule((context: PluginContext) => {
               if (isSchema && query) {
                 const objects = get(atomFromQuery(query));
                 const filteredViews = get(
-                  GraphBuilder.atomFromSignal(() =>
+                  CreateAtom.fromSignal(() =>
                     objects.filter(
                       (viewObject) =>
                         getTypenameFromQuery((viewObject as any).view.target?.query.ast) === object.typename,
@@ -652,7 +653,7 @@ export default defineCapabilityModule((context: PluginContext) => {
                   dispatch: dispatcher.dispatchPromise,
                   resolve: resolve(get),
                   deletable,
-                  navigable: get(GraphBuilder.atomFromSignal(() => state.navigableCollections)),
+                  navigable: get(CreateAtom.fromSignal(() => state.navigableCollections)),
                 });
               }
             }),

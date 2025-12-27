@@ -16,7 +16,7 @@ import {
 import { Obj } from '@dxos/echo';
 import { AttentionCapabilities } from '@dxos/plugin-attention';
 import { ATTENDABLE_PATH_SEPARATOR, DECK_COMPANION_TYPE, PLANK_COMPANION_TYPE } from '@dxos/plugin-deck/types';
-import { Graph, GraphBuilder } from '@dxos/plugin-graph';
+import { CreateAtom, Graph, GraphBuilder } from '@dxos/plugin-graph';
 
 import { meta } from '../meta';
 import { Channel, ThreadAction } from '../types';
@@ -41,7 +41,7 @@ export default defineCapabilityModule((context: PluginContext) => {
             Option.map((node) => {
               const [call] = get(context.capabilities(ThreadCapabilities.CallManager));
               return get(
-                GraphBuilder.atomFromSignal(() =>
+                CreateAtom.fromSignal(() =>
                   call?.joined
                     ? [
                         {
@@ -78,7 +78,7 @@ export default defineCapabilityModule((context: PluginContext) => {
             Option.map((channel) => {
               const callManager = context.getCapability(ThreadCapabilities.CallManager);
               const joined = get(
-                GraphBuilder.atomFromSignal(
+                CreateAtom.fromSignal(
                   () => callManager.joined && callManager.roomId === Obj.getDXN(channel).toString(),
                 ),
               );
@@ -152,7 +152,7 @@ export default defineCapabilityModule((context: PluginContext) => {
               const selectionManager = context.getCapability(AttentionCapabilities.Selection);
               const toolbar = get(context.capabilities(ThreadCapabilities.State))[0]?.state.toolbar ?? {};
               const disabled = get(
-                GraphBuilder.atomFromSignal(() => {
+                CreateAtom.fromSignal(() => {
                   const metadata = resolve(Obj.getTypename(object)!);
                   const selection = selectionManager.getSelection(
                     Obj.getDXN(object).toString(),

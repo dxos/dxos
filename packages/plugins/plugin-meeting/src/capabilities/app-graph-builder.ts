@@ -18,7 +18,7 @@ import { Obj, Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { ATTENDABLE_PATH_SEPARATOR, DeckAction, PLANK_COMPANION_TYPE } from '@dxos/plugin-deck/types';
-import { GraphBuilder } from '@dxos/plugin-graph';
+import { CreateAtom, GraphBuilder } from '@dxos/plugin-graph';
 import { COMPOSER_SPACE_LOCK } from '@dxos/plugin-space';
 import { SpaceAction } from '@dxos/plugin-space/types';
 import { ThreadCapabilities } from '@dxos/plugin-thread';
@@ -44,7 +44,7 @@ export default defineCapabilityModule((context: PluginContext) => {
             ),
             Option.flatMap((channel) => {
               const space = getSpace(channel);
-              const state = space && get(GraphBuilder.atomFromObservable(space.state));
+              const state = space && get(CreateAtom.fromObservable(space.state));
               return space && state === SpaceState.SPACE_READY && !space.properties[COMPOSER_SPACE_LOCK]
                 ? Option.some(channel)
                 : Option.none();
@@ -85,13 +85,13 @@ export default defineCapabilityModule((context: PluginContext) => {
             Option.filter(Obj.instanceOf(Channel.Channel)),
             Option.flatMap((channel) => {
               const state = context.getCapability(MeetingCapabilities.State);
-              const meeting = get(GraphBuilder.atomFromSignal(() => state.activeMeeting));
+              const meeting = get(CreateAtom.fromSignal(() => state.activeMeeting));
               return meeting ? Option.some({ channel, meeting }) : Option.none();
             }),
             Option.map(({ channel, meeting }) => {
               const callManager = context.getCapability(ThreadCapabilities.CallManager);
               const joined = get(
-                GraphBuilder.atomFromSignal(
+                CreateAtom.fromSignal(
                   () => callManager.joined && callManager.roomId === Obj.getDXN(channel).toString(),
                 ),
               );
@@ -103,7 +103,7 @@ export default defineCapabilityModule((context: PluginContext) => {
                 {
                   id: `${Obj.getDXN(channel).toString()}${ATTENDABLE_PATH_SEPARATOR}meeting-thread`,
                   type: PLANK_COMPANION_TYPE,
-                  data: get(GraphBuilder.atomFromSignal(() => meeting.thread.target)),
+                  data: get(CreateAtom.fromSignal(() => meeting.thread.target)),
                   properties: {
                     label: ['meeting thread label', { ns: meta.id }],
                     icon: 'ph--chat-text--regular',
@@ -131,7 +131,7 @@ export default defineCapabilityModule((context: PluginContext) => {
             Option.flatMap((channel) => {
               const callManager = context.getCapability(ThreadCapabilities.CallManager);
               const isCallActive = get(
-                GraphBuilder.atomFromSignal(
+                CreateAtom.fromSignal(
                   () => callManager.joined && callManager.roomId === Obj.getDXN(channel).toString(),
                 ),
               );
@@ -139,7 +139,7 @@ export default defineCapabilityModule((context: PluginContext) => {
             }),
             Option.map((channel) => {
               const state = context.getCapability(MeetingCapabilities.State);
-              const data = get(GraphBuilder.atomFromSignal(() => state.activeMeeting ?? 'meeting'));
+              const data = get(CreateAtom.fromSignal(() => state.activeMeeting ?? 'meeting'));
 
               return [
                 {
@@ -171,7 +171,7 @@ export default defineCapabilityModule((context: PluginContext) => {
             ),
             Option.map((channel) => {
               const state = context.getCapability(MeetingCapabilities.State);
-              const enabled = get(GraphBuilder.atomFromSignal(() => state.transcriptionManager?.enabled ?? false));
+              const enabled = get(CreateAtom.fromSignal(() => state.transcriptionManager?.enabled ?? false));
               return [
                 {
                   id: `${Obj.getDXN(channel).toString()}/action/start-stop-transcription`,
@@ -234,7 +234,7 @@ export default defineCapabilityModule((context: PluginContext) => {
             ),
             Option.flatMap((channel) => {
               const state = context.getCapability(MeetingCapabilities.State);
-              const meeting = get(GraphBuilder.atomFromSignal(() => state.activeMeeting));
+              const meeting = get(CreateAtom.fromSignal(() => state.activeMeeting));
               return meeting ? Option.some({ channel, meeting }) : Option.none();
             }),
             Option.map(({ channel, meeting }) => {
@@ -242,7 +242,7 @@ export default defineCapabilityModule((context: PluginContext) => {
                 {
                   id: `${Obj.getDXN(channel).toString()}${ATTENDABLE_PATH_SEPARATOR}transcript`,
                   type: PLANK_COMPANION_TYPE,
-                  data: get(GraphBuilder.atomFromSignal(() => meeting.transcript.target)),
+                  data: get(CreateAtom.fromSignal(() => meeting.transcript.target)),
                   properties: {
                     label: ['transcript companion label', { ns: meta.id }],
                     icon: 'ph--subtitles--regular',
@@ -271,7 +271,7 @@ export default defineCapabilityModule((context: PluginContext) => {
                 {
                   id: `${Obj.getDXN(meeting).toString()}${ATTENDABLE_PATH_SEPARATOR}transcript`,
                   type: PLANK_COMPANION_TYPE,
-                  data: get(GraphBuilder.atomFromSignal(() => meeting.transcript.target)),
+                  data: get(CreateAtom.fromSignal(() => meeting.transcript.target)),
                   properties: {
                     label: ['transcript companion label', { ns: meta.id }],
                     icon: 'ph--subtitles--regular',

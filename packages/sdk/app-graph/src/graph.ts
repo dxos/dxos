@@ -123,7 +123,7 @@ export interface BaseGraph extends Pipeable.Pipeable {
   edges(id: string): Atom.Atom<Edges>;
 }
 
-export type ReadableGraph = BaseGraph & { readonly [GraphKind]: 'readable' };
+export type ReadableGraph = BaseGraph & { readonly [GraphKind]: 'readable' | 'expandable' | 'writable' };
 export type ExpandableGraph = BaseGraph & { readonly [GraphKind]: 'expandable' | 'writable' };
 export type WritableGraph = BaseGraph & { readonly [GraphKind]: 'writable' };
 
@@ -409,6 +409,14 @@ export function getNodeOrThrow(graphOrId: BaseGraph | string, id?: string): Node
     const graph = graphOrId;
     return getNodeOrThrowImpl(graph, id!);
   }
+}
+
+/**
+ * Get the root node of the graph.
+ * This is an alias for `getNodeOrThrow(graph, ROOT_ID)`.
+ */
+export function getRoot(graph: BaseGraph): Node {
+  return getNodeOrThrowImpl(graph, ROOT_ID);
 }
 
 /**

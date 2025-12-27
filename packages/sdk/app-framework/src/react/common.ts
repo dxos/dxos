@@ -10,7 +10,6 @@ import { useCapability } from './useCapabilities';
 
 export const useIntentDispatcher = () => useCapability(Capabilities.IntentDispatcher);
 
-export const useAppGraph = (): Readonly<Pick<GraphBuilder.GraphBuilder, 'graph' | 'explore'>> =>
-  useCapability(Capabilities.AppGraph);
+export const useAppGraph = (): Capabilities.AppGraph => useCapability(Capabilities.AppGraph);
 
 export const useLayout = () => useCapability(Capabilities.Layout);

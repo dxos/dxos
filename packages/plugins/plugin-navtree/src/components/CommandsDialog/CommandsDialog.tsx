@@ -6,7 +6,7 @@ import React, { forwardRef, useMemo, useState } from 'react';
 
 import { LayoutAction, createIntent } from '@dxos/app-framework';
 import { useAppGraph, useIntentDispatcher } from '@dxos/app-framework/react';
-import { Node } from '@dxos/app-graph';
+import { Graph, Node } from '@dxos/plugin-graph';
 import { Keyboard, keySymbols } from '@dxos/keyboard';
 import { useActions } from '@dxos/plugin-graph';
 import { Button, Dialog, Icon, toLocalizedString, useTranslation } from '@dxos/react-ui';
@@ -41,7 +41,7 @@ export const CommandsDialogContent = forwardRef<HTMLDivElement, CommandsDialogCo
       const current = Keyboard.singleton.getCurrentContext();
       const actionMap = new Set<string>();
       const actions: Node.ActionLike[] = [];
-      graph.traverse({
+      Graph.traverse(graph, {
         visitor: (node, path) => {
           if (
             (Node.isAction(node) || Node.isActionGroup(node)) &&
@@ -101,7 +101,7 @@ export const CommandsDialogContent = forwardRef<HTMLDivElement, CommandsDialogCo
                       }),
                     );
                     setTimeout(() => {
-                      const node = graph.getConnections(group?.id ?? action.id, 'inbound')[0];
+                      const node = Graph.getConnections(graph, group?.id ?? action.id, 'inbound')[0];
                       void (node && Node.isAction(action) && action.data({ parent: node, caller: KEY_BINDING }));
                     });
                   }}

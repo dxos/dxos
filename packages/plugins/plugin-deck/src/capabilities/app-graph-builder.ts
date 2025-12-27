@@ -15,7 +15,7 @@ import {
   defineCapabilityModule,
 } from '@dxos/app-framework';
 import { AttentionCapabilities } from '@dxos/plugin-attention';
-import { Graph, GraphBuilder } from '@dxos/plugin-graph';
+import { CreateAtom, Graph, GraphBuilder } from '@dxos/plugin-graph';
 
 import { meta } from '../meta';
 
@@ -119,7 +119,7 @@ export default defineCapabilityModule((context: PluginContext) =>
                 properties: {
                   label: [
                     get(
-                      GraphBuilder.atomFromSignal(() =>
+                      CreateAtom.fromSignal(() =>
                         state.sidebarState === 'expanded'
                           ? 'collapse navigation sidebar label'
                           : 'open navigation sidebar label',
@@ -138,7 +138,7 @@ export default defineCapabilityModule((context: PluginContext) =>
               };
 
               return get(
-                GraphBuilder.atomFromSignal(() =>
+                CreateAtom.fromSignal(() =>
                   !state.deck.solo ? [closeCurrent, closeOthers, closeAll, toggleSidebar] : [toggleSidebar],
                 ),
               );

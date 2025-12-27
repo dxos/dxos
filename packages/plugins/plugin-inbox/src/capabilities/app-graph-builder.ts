@@ -12,7 +12,7 @@ import { invariant } from '@dxos/invariant';
 import { AttentionCapabilities } from '@dxos/plugin-attention';
 import { AutomationCapabilities, invokeFunctionWithTracing } from '@dxos/plugin-automation';
 import { ATTENDABLE_PATH_SEPARATOR, PLANK_COMPANION_TYPE } from '@dxos/plugin-deck/types';
-import { Graph, GraphBuilder } from '@dxos/plugin-graph';
+import { CreateAtom, Graph, GraphBuilder } from '@dxos/plugin-graph';
 import { atomFromQuery } from '@dxos/plugin-space';
 import { type Event, type Message } from '@dxos/types';
 import { kebabize } from '@dxos/util';
@@ -38,7 +38,7 @@ export default defineCapabilityModule((context: PluginContext) => {
             ),
             Option.map((mailbox) =>
               get(
-                GraphBuilder.atomFromSignal(() => [
+                CreateAtom.fromSignal(() => [
                   {
                     id: `${Obj.getDXN(mailbox).toString()}-unfiltered`,
                     type: `${Mailbox.Mailbox.typename}-filter`,
@@ -94,7 +94,7 @@ export default defineCapabilityModule((context: PluginContext) => {
                 return Option.none();
               }
 
-              const queue = get(GraphBuilder.atomFromSignal(() => node.data.queue.target));
+              const queue = get(CreateAtom.fromSignal(() => node.data.queue.target));
               if (!queue) {
                 return Option.none();
               }
@@ -103,7 +103,7 @@ export default defineCapabilityModule((context: PluginContext) => {
             }),
             Option.map(({ nodeId, queue }) => {
               const selection = get(context.capabilities(AttentionCapabilities.Selection))[0];
-              const messageId = get(GraphBuilder.atomFromSignal(() => selection?.getSelected(nodeId, 'single')));
+              const messageId = get(CreateAtom.fromSignal(() => selection?.getSelected(nodeId, 'single')));
               if (!query || prevMessageId !== messageId) {
                 prevMessageId = messageId;
                 query = queue.query(
@@ -143,7 +143,7 @@ export default defineCapabilityModule((context: PluginContext) => {
                 return Option.none();
               }
 
-              const queue = get(GraphBuilder.atomFromSignal(() => node.data.queue.target));
+              const queue = get(CreateAtom.fromSignal(() => node.data.queue.target));
               if (!queue) {
                 return Option.none();
               }
@@ -152,7 +152,7 @@ export default defineCapabilityModule((context: PluginContext) => {
             }),
             Option.map(({ nodeId, queue }) => {
               const selection = get(context.capabilities(AttentionCapabilities.Selection))[0];
-              const eventId = get(GraphBuilder.atomFromSignal(() => selection?.getSelected(nodeId, 'single')));
+              const eventId = get(CreateAtom.fromSignal(() => selection?.getSelected(nodeId, 'single')));
               if (!query || prevEventId !== eventId) {
                 prevEventId = eventId;
                 query = queue.query(
@@ -190,7 +190,7 @@ export default defineCapabilityModule((context: PluginContext) => {
             ),
             Option.map((mailbox) =>
               get(
-                GraphBuilder.atomFromSignal(() => [
+                CreateAtom.fromSignal(() => [
                   {
                     id: `${Obj.getDXN(mailbox).toString()}-sync`,
                     type: Graph.ACTION_TYPE,
@@ -225,7 +225,7 @@ export default defineCapabilityModule((context: PluginContext) => {
             ),
             Option.map((object) =>
               get(
-                GraphBuilder.atomFromSignal(() => [
+                CreateAtom.fromSignal(() => [
                   {
                     id: `${Obj.getDXN(object).toString()}-sync`,
                     type: Graph.ACTION_TYPE,

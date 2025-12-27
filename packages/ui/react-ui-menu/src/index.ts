@@ -2,10 +2,12 @@
 // Copyright 2024 DXOS.org
 //
 
-import { GraphBuilder } from '@dxos/app-graph';
+import { type Atom } from '@effect-atom/atom-react';
+
+import { CreateAtom } from '@dxos/app-graph';
 
 // TODO(wittjosiah): Try to move to not re-exporting just one function.
-export const atomFromSignal: typeof GraphBuilder.atomFromSignal = GraphBuilder.atomFromSignal;
+export const atomFromSignal = <T>(cb: () => T): Atom.Atom<T> => CreateAtom.fromSignal(cb);
 
 export * from './components';
 export * from './hooks';
