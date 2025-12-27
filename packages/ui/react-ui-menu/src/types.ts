@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Graph, type Node } from '@dxos/app-graph';
+import { Node } from '@dxos/app-graph';
 import { type IconButtonProps, type ToolbarSeparatorProps } from '@dxos/react-ui';
 import { type MenuActionProperties } from '@dxos/ui-types';
 
@@ -21,7 +21,7 @@ export type MenuMultipleSelectActionGroup = { selectCardinality: 'multiple'; val
 
 export type MenuItemGroup<P extends Record<string, any> = Record<string, any>> = Node.ActionGroup<P>;
 
-export const isMenuGroup = (node: Node.Node): node is MenuItemGroup => node.type === Graph.ACTION_GROUP_TYPE;
+export const isMenuGroup = (node: Node.Node): node is MenuItemGroup => node.type === Node.ActionGroupType;
 
 export type MenuItem = MenuSeparator | MenuAction | MenuItemGroup;
 

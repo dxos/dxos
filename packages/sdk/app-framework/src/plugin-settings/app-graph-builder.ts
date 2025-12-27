@@ -2,11 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Atom } from '@effect-atom/atom-react';
-import * as Function from 'effect/Function';
-import * as Option from 'effect/Option';
-
-import { Graph, GraphBuilder } from '@dxos/app-graph';
+import { GraphBuilder, NodeMatcher } from '@dxos/app-graph';
 import { type SettingsStore, type SettingsValue } from '@dxos/local-storage';
 import { isNonNullable } from '@dxos/util';
 
@@ -21,141 +17,111 @@ export default defineCapabilityModule((context: PluginContext) =>
   contributes(Capabilities.AppGraphBuilder, [
     GraphBuilder.createExtension({
       id: `${meta.id}/action`,
-      actions: (node) =>
-        Atom.make((get) =>
-          Function.pipe(
-            get(node),
-            Option.flatMap((node) => (node.id === Graph.ROOT_ID ? Option.some(node) : Option.none())),
-            Option.map(() => [
-              {
-                id: meta.id,
-                data: async () => {
-                  const { dispatchPromise: dispatch } = context.getCapability(Capabilities.IntentDispatcher);
-                  await dispatch(createIntent(SettingsAction.Open));
-                },
-                properties: {
-                  label: ['open settings label', { ns: meta.id }],
-                  icon: 'ph--gear--regular',
-                  disposition: 'menu',
-                  keyBinding: {
-                    macos: 'meta+,',
-                    windows: 'alt+,',
-                  },
-                },
-              },
-            ]),
-            Option.getOrElse(() => []),
-          ),
-        ),
+      match: NodeMatcher.whenRoot,
+      actions: () => [
+        {
+          id: meta.id,
+          data: async () => {
+            const { dispatchPromise: dispatch } = context.getCapability(Capabilities.IntentDispatcher);
+            await dispatch(createIntent(SettingsAction.Open));
+          },
+          properties: {
+            label: ['open settings label', { ns: meta.id }],
+            icon: 'ph--gear--regular',
+            disposition: 'menu',
+            keyBinding: {
+              macos: 'meta+,',
+              windows: 'alt+,',
+            },
+          },
+        },
+      ],
     }),
     GraphBuilder.createExtension({
       id: `${meta.id}/core`,
-      connector: (node) =>
-        Atom.make((get) =>
-          Function.pipe(
-            get(node),
-            Option.flatMap((node) => (node.id === Graph.ROOT_ID ? Option.some(node) : Option.none())),
-            Option.map(() => [
-              {
-                id: SETTINGS_ID,
-                type: meta.id,
-                properties: {
-                  label: ['app settings label', { ns: meta.id }],
-                  icon: 'ph--gear--regular',
-                  disposition: 'pin-end',
-                  position: 'hoist',
-                  testId: 'treeView.appSettings',
-                },
-              },
-            ]),
-            Option.getOrElse(() => []),
-          ),
-        ),
+      match: NodeMatcher.whenRoot,
+      connector: () => [
+        {
+          id: SETTINGS_ID,
+          type: meta.id,
+          properties: {
+            label: ['app settings label', { ns: meta.id }],
+            icon: 'ph--gear--regular',
+            disposition: 'pin-end',
+            position: 'hoist',
+            testId: 'treeView.appSettings',
+          },
+        },
+      ],
     }),
     GraphBuilder.createExtension({
       id: `${meta.id}/core-plugins`,
-      connector: (node) =>
-        Atom.make((get) =>
-          Function.pipe(
-            get(node),
-            Option.flatMap((node) => (node.id !== SETTINGS_ID ? Option.none() : Option.some(node))),
-            Option.map(() => {
-              const manager = get(context.capability(Capabilities.PluginManager));
-              const [settingsStore] = get(context.capabilities(Capabilities.SettingsStore));
-              return [
-                ...manager.plugins
-                  .filter((plugin) => manager.core.includes(plugin.meta.id))
-                  .map((plugin): [PluginMeta, SettingsStore<SettingsValue>] | null => {
-                    const settings = settingsStore?.getStore(plugin.meta.id);
-                    if (!settings) {
-                      return null;
-                    }
+      match: NodeMatcher.whenId(SETTINGS_ID),
+      connector: (node, get) => {
+        const manager = get(context.capability(Capabilities.PluginManager));
+        const [settingsStore] = get(context.capabilities(Capabilities.SettingsStore));
+        return [
+          ...manager.plugins
+            .filter((plugin) => manager.core.includes(plugin.meta.id))
+            .map((plugin): [PluginMeta, SettingsStore<SettingsValue>] | null => {
+              const settings = settingsStore?.getStore(plugin.meta.id);
+              if (!settings) {
+                return null;
+              }
 
-                    return [plugin.meta, settings];
-                  })
-                  .filter(isNonNullable)
-                  .map(([meta, settings]) => ({
-                    id: `${SETTINGS_KEY}:${meta.id.replaceAll('/', ':')}`,
-                    type: 'category',
-                    data: settings,
-                    properties: {
-                      label: meta.name ?? meta.id,
-                      icon: meta.icon ?? 'ph--circle--regular',
-                    },
-                  })),
+              return [plugin.meta, settings];
+            })
+            .filter(isNonNullable)
+            .map(([meta, settings]) => ({
+              id: `${SETTINGS_KEY}:${meta.id.replaceAll('/', ':')}`,
+              type: 'category',
+              data: settings,
+              properties: {
+                label: meta.name ?? meta.id,
+                icon: meta.icon ?? 'ph--circle--regular',
+              },
+            })),
 
-                {
-                  id: `${SETTINGS_KEY}:custom-plugins`,
-                  type: 'category',
-                  properties: {
-                    label: ['custom plugins label', { ns: meta.id }],
-                    icon: 'ph--squares-four--regular',
-                    role: 'branch',
-                    disposition: 'collection',
-                  },
-                },
-              ];
-            }),
-            Option.getOrElse(() => []),
-          ),
-        ),
+          {
+            id: `${SETTINGS_KEY}:custom-plugins`,
+            type: 'category',
+            properties: {
+              label: ['custom plugins label', { ns: meta.id }],
+              icon: 'ph--squares-four--regular',
+              role: 'branch',
+              disposition: 'collection',
+            },
+          },
+        ];
+      },
     }),
     GraphBuilder.createExtension({
       id: `${meta.id}/custom-plugins`,
-      connector: (node) =>
-        Atom.make((get) =>
-          Function.pipe(
-            get(node),
-            Option.flatMap((node) =>
-              node.id !== `${SETTINGS_KEY}:custom-plugins` ? Option.none() : Option.some(node),
-            ),
-            Option.map(() => {
-              const manager = get(context.capability(Capabilities.PluginManager));
-              const [settingsStore] = get(context.capabilities(Capabilities.SettingsStore));
-              return manager.plugins
-                .filter((plugin) => !manager.core.includes(plugin.meta.id))
-                .map((plugin): [PluginMeta, SettingsStore<SettingsValue>] | null => {
-                  const settings = settingsStore?.getStore(plugin.meta.id);
-                  if (!settings) {
-                    return null;
-                  }
+      match: NodeMatcher.whenId(`${SETTINGS_KEY}:custom-plugins`),
+      connector: (node, get) => {
+        const manager = get(context.capability(Capabilities.PluginManager));
+        const [settingsStore] = get(context.capabilities(Capabilities.SettingsStore));
+        return manager.plugins
+          .filter((plugin) => !manager.core.includes(plugin.meta.id))
+          .map((plugin): [PluginMeta, SettingsStore<SettingsValue>] | null => {
+            const settings = settingsStore?.getStore(plugin.meta.id);
+            if (!settings) {
+              return null;
+            }
 
-                  return [plugin.meta, settings];
-                })
-                .filter(isNonNullable)
-                .map(([meta, settings]) => ({
-                  id: `${SETTINGS_KEY}:${meta.id.replaceAll('/', ':')}`,
-                  type: 'category',
-                  data: settings,
-                  properties: {
-                    label: meta.name ?? meta.id,
-                    icon: meta.icon ?? 'ph--circle--regular',
-                  },
-                }));
-            }),
-            Option.getOrElse(() => []),
-          ),
-        ),
+            return [plugin.meta, settings];
+          })
+          .filter(isNonNullable)
+          .map(([meta, settings]) => ({
+            id: `${SETTINGS_KEY}:${meta.id.replaceAll('/', ':')}`,
+            type: 'category',
+            data: settings,
+            properties: {
+              label: meta.name ?? meta.id,
+              icon: meta.icon ?? 'ph--circle--regular',
+            },
+          }));
+      },
     }),
   ]),
 );

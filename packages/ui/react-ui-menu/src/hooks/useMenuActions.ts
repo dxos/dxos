@@ -5,7 +5,7 @@
 import { type Atom, RegistryContext, useAtomValue } from '@effect-atom/atom-react';
 import { useCallback, useContext, useEffect, useState } from 'react';
 
-import { Graph, type Node } from '@dxos/app-graph';
+import { Graph, Node } from '@dxos/app-graph';
 
 import { type MenuItem, type MenuItemGroup } from '../types';
 
@@ -65,7 +65,7 @@ export const useMenuActions = (props: Atom.Atom<ActionGraphProps>): MenuActions 
 
   const useGroupItems = useCallback(
     (sourceNode?: MenuItemGroup) => {
-      const items = useAtomValue(graph.connections(sourceNode?.id || Graph.ROOT_ID)) as MenuItem[];
+      const items = useAtomValue(graph.connections(sourceNode?.id || Node.RootId)) as MenuItem[];
       return items;
     },
     [graph],

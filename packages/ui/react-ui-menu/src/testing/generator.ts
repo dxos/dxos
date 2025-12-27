@@ -14,7 +14,7 @@ import { type ActionGraphProps } from '../hooks/useMenuActions';
 import { type MenuAction, type MenuItem, type MenuItemGroup } from '../types';
 
 export type CreateActionsParams = Partial<{
-  type?: typeof Graph.ACTION_TYPE | typeof Graph.ACTION_GROUP_TYPE;
+  type?: typeof Node.ActionType | typeof Node.ActionGroupType;
   callback: () => void;
   count: number;
 }>;
@@ -39,18 +39,18 @@ const icons = {
 };
 
 export const createActions = (params?: CreateActionsParams) => {
-  const { callback = () => console.log('invoke'), count = 12, type = Graph.ACTION_TYPE } = params ?? {};
+  const { callback = () => console.log('invoke'), count = 12, type = Node.ActionType } = params ?? {};
   return faker.helpers.multiple(
     () =>
       live({
         id: faker.string.uuid(),
         type,
-        data: type === Graph.ACTION_GROUP_TYPE ? Node.actionGroupSymbol : callback,
+        data: type === Node.ActionGroupType ? Node.actionGroupSymbol : callback,
         properties: {
           label: faker.lorem.words(2),
           icon: faker.helpers.arrayElement(icons[faker.helpers.arrayElement(Object.keys(icons)) as keyof typeof icons]),
           disabled: faker.helpers.arrayElement([true, false]),
-          ...(type === Graph.ACTION_GROUP_TYPE && { variant: 'dropdownMenu' }),
+          ...(type === Node.ActionGroupType && { variant: 'dropdownMenu' }),
         },
       }),
     { count },
@@ -59,7 +59,7 @@ export const createActions = (params?: CreateActionsParams) => {
 
 export const createNestedActions = Atom.make(() => {
   const result: ActionGraphProps = { edges: [], nodes: [] };
-  const actionGroups = createActions({ type: Graph.ACTION_GROUP_TYPE });
+  const actionGroups = createActions({ type: Node.ActionGroupType });
   actionGroups.forEach((group) => {
     const actions = createActions();
     result.nodes.push(group, ...actions);
@@ -73,7 +73,7 @@ export const createNestedActions = Atom.make(() => {
 
 export const createNestedActionsResolver = (groupParams?: CreateActionsParams, params?: CreateActionsParams) => {
   const graph = Graph.make();
-  const actionGroups = createActions({ type: Graph.ACTION_GROUP_TYPE, ...groupParams });
+  const actionGroups = createActions({ type: Node.ActionGroupType, ...groupParams });
   actionGroups.forEach((group) => {
     const actions = createActions(params);
     graph.pipe(
@@ -86,7 +86,7 @@ export const createNestedActionsResolver = (groupParams?: CreateActionsParams, p
     );
   });
   const resolveGroupItems = (groupNode?: MenuItemGroup) =>
-    (Graph.getActions(graph, groupNode?.id ?? Graph.ROOT_ID) || null) as MenuItem[] | null;
+    (Graph.getActions(graph, groupNode?.id ?? Node.RootId) || null) as MenuItem[] | null;
   return { resolveGroupItems };
 };
 

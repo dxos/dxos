@@ -37,7 +37,8 @@ const PermissionsGate = ({ entity }: { entity: LocalEntity }) => {
   const { graph } = useAppGraph();
   const node = Graph.getNode(graph, entity.id).pipe(Option.getOrNull);
   const action =
-    node && Graph.getActions(graph, node.id).find((action) => action.id === `${LocalFilesAction.Reconnect._tag}:${node.id}`);
+    node &&
+    Graph.getActions(graph, node.id).find((action) => action.id === `${LocalFilesAction.Reconnect._tag}:${node.id}`);
 
   return (
     <StackItem.Content>

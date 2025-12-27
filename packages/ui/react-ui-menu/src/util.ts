@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Graph, Node } from '@dxos/app-graph';
+import { Node } from '@dxos/app-graph';
 import { type MenuActionProperties, type MenuItemGroupProperties } from '@dxos/ui-types';
 import { getHostPlatform } from '@dxos/util';
 
@@ -23,7 +23,7 @@ export const createMenuAction = <P extends {} = {}>(
 ) =>
   ({
     id,
-    type: Graph.ACTION_TYPE,
+    type: Node.ActionType,
     properties,
     data: invoke,
   }) satisfies MenuAction;
@@ -36,7 +36,7 @@ export const createMenuItemGroup = <
 ) =>
   ({
     id,
-    type: Graph.ACTION_GROUP_TYPE,
+    type: Node.ActionGroupType,
     properties,
     data: Node.actionGroupSymbol,
   }) satisfies MenuItemGroup;

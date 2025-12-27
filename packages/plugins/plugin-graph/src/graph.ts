@@ -5,7 +5,7 @@
 import * as Record from 'effect/Record';
 
 import { Capabilities, type PluginContext, contributes } from '@dxos/app-framework';
-import { Graph, GraphBuilder } from '@dxos/app-graph';
+import { Graph, GraphBuilder, Node } from '@dxos/app-graph';
 
 // TODO(wittjosiah): Remove or restore graph caching.
 // import { meta } from './meta';
@@ -32,7 +32,7 @@ export default async (context: PluginContext) => {
   );
 
   // await builder.initialize();
-  void Graph.expand(builder.graph, Graph.ROOT_ID);
+  void Graph.expand(builder.graph, Node.RootId);
 
   setupDevtools(builder.graph);
 

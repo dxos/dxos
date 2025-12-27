@@ -277,7 +277,7 @@ export const constructSpaceActions = ({
   if (hasPendingMigration) {
     actions.push({
       id: getId(SpaceAction.Migrate._tag),
-      type: Graph.ACTION_GROUP_TYPE,
+      type: Node.ActionGroupType,
       data: async () => {
         await dispatch(createIntent(SpaceAction.Migrate, { space }));
       },
@@ -294,7 +294,7 @@ export const constructSpaceActions = ({
     actions.push(
       {
         id: getId(SpaceAction.OpenCreateObject._tag),
-        type: Graph.ACTION_TYPE,
+        type: Node.ActionType,
         data: async () => {
           await dispatch(createIntent(SpaceAction.OpenCreateObject, { target: space.db }));
         },
@@ -307,7 +307,7 @@ export const constructSpaceActions = ({
       },
       {
         id: getId(SpaceAction.Rename._tag),
-        type: Graph.ACTION_TYPE,
+        type: Node.ActionType,
         data: async (params?: Node.InvokeParams) => {
           await dispatch(createIntent(SpaceAction.Rename, { space, caller: params?.caller }));
         },
@@ -365,7 +365,7 @@ export const createStaticSchemaActions = ({
   const actions: Node.NodeArg<Node.ActionData>[] = [
     {
       id: getId(SpaceAction.AddObject._tag),
-      type: Graph.ACTION_TYPE,
+      type: Node.ActionType,
       data: async () => {
         await dispatch(
           createIntent(SpaceAction.OpenCreateObject, {
@@ -384,7 +384,7 @@ export const createStaticSchemaActions = ({
     },
     {
       id: getId(SpaceAction.RenameObject._tag),
-      type: Graph.ACTION_TYPE,
+      type: Node.ActionType,
       data: async (params?: Node.InvokeParams) => {
         throw new Error('Not implemented');
       },
@@ -398,7 +398,7 @@ export const createStaticSchemaActions = ({
     },
     {
       id: getId(SpaceAction.RemoveObjects._tag),
-      type: Graph.ACTION_TYPE,
+      type: Node.ActionType,
       data: async () => {
         const index = space.properties.staticRecords.findIndex(
           (typename: string) => typename === Type.getTypename(schema),
@@ -417,7 +417,7 @@ export const createStaticSchemaActions = ({
     },
     {
       id: getId(SpaceAction.Snapshot._tag),
-      type: Graph.ACTION_TYPE,
+      type: Node.ActionType,
       data: async () => {
         const result = await dispatch(
           createIntent(SpaceAction.Snapshot, {
@@ -555,7 +555,7 @@ export const constructObjectActions = ({
       ? [
           {
             id: getId(SpaceAction.OpenCreateObject._tag),
-            type: Graph.ACTION_TYPE,
+            type: Node.ActionType,
             data: async () => {
               await dispatch(createIntent(SpaceAction.OpenCreateObject, { target: object }));
             },
@@ -572,7 +572,7 @@ export const constructObjectActions = ({
       ? [
           {
             id: getId(SpaceAction.AddObject._tag),
-            type: Graph.ACTION_TYPE,
+            type: Node.ActionType,
             data: async () => {
               await dispatch(
                 createIntent(SpaceAction.OpenCreateObject, {
@@ -591,7 +591,7 @@ export const constructObjectActions = ({
           },
           {
             id: getId(SpaceAction.Snapshot._tag),
-            type: Graph.ACTION_TYPE,
+            type: Node.ActionType,
             data: async () => {
               const result = await dispatch(
                 createIntent(SpaceAction.Snapshot, {
@@ -618,7 +618,7 @@ export const constructObjectActions = ({
       ? [
           {
             id: getId(SpaceAction.OpenCreateObject._tag),
-            type: Graph.ACTION_TYPE,
+            type: Node.ActionType,
             data: async () => {
               if (inputSchema) {
                 await dispatch(
@@ -651,7 +651,7 @@ export const constructObjectActions = ({
       : [
           {
             id: getId(SpaceAction.RenameObject._tag),
-            type: Graph.ACTION_TYPE,
+            type: Node.ActionType,
             data: async (params?: Node.InvokeParams) => {
               await dispatch(createIntent(SpaceAction.RenameObject, { object, caller: params?.caller }));
             },
@@ -668,12 +668,12 @@ export const constructObjectActions = ({
           },
           {
             id: getId(SpaceAction.RemoveObjects._tag),
-            type: Graph.ACTION_TYPE,
+            type: Node.ActionType,
             data: async () => {
-              const collection = Graph.getConnections(graph, Obj.getDXN(object).toString(), 'inbound')
-                .find((node: Node.Node): node is Node.Node<Collection.Collection> =>
+              const collection = Graph.getConnections(graph, Obj.getDXN(object).toString(), 'inbound').find(
+                (node: Node.Node): node is Node.Node<Collection.Collection> =>
                   Obj.instanceOf(Collection.Collection, node.data),
-                )?.data;
+              )?.data;
               await dispatch(createIntent(SpaceAction.RemoveObjects, { objects: [object], target: collection }));
             },
             properties: {
@@ -694,7 +694,7 @@ export const constructObjectActions = ({
       ? [
           {
             id: getId('copy-link'),
-            type: Graph.ACTION_TYPE,
+            type: Node.ActionType,
             data: async () => {
               const url = `${window.location.origin}/${db.spaceId}/${Obj.getDXN(object).toString()}`;
               await navigator.clipboard.writeText(url);
@@ -711,7 +711,7 @@ export const constructObjectActions = ({
     // TODO(wittjosiah): Factor out and apply to all nodes.
     {
       id: getId(LayoutAction.Expose._tag),
-      type: Graph.ACTION_TYPE,
+      type: Node.ActionType,
       data: async () => {
         await dispatch(
           createIntent(LayoutAction.Expose, { part: 'navigation', subject: Obj.getDXN(object).toString() }),

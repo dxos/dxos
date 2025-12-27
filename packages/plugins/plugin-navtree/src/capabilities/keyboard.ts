@@ -53,7 +53,7 @@ export default defineCapabilityModule((context: PluginContext) => {
 
   // TODO(burdon): Create context and plugin.
   Keyboard.singleton.initialize();
-  Keyboard.singleton.setCurrentContext(Graph.ROOT_ID);
+  Keyboard.singleton.setCurrentContext(Node.RootId);
 
   return contributes(AppCapabilities.Null, null, () => {
     unsubscribe();

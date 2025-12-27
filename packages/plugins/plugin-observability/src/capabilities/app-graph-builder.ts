@@ -2,12 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Atom } from '@effect-atom/atom-react';
-import * as Function from 'effect/Function';
-import * as Option from 'effect/Option';
-
 import { Capabilities, contributes, defineCapabilityModule } from '@dxos/app-framework';
-import { Graph, GraphBuilder } from '@dxos/plugin-graph';
+import { GraphBuilder, NodeMatcher } from '@dxos/plugin-graph';
 
 import { meta } from '../meta';
 
@@ -20,29 +16,20 @@ export default defineCapabilityModule(() =>
   contributes(Capabilities.AppGraphBuilder, [
     GraphBuilder.createExtension({
       id: `${meta.id}/help`,
-      connector: (node) =>
-        Atom.make((get) =>
-          Function.pipe(
-            get(node),
-            Option.flatMap((node) => (node.id === Graph.ROOT_ID ? Option.some(node) : Option.none())),
-            Option.map((node) => {
-              return [
-                {
-                  id: [node.id, 'help'].join(ATTENDABLE_PATH_SEPARATOR),
-                  type: DECK_COMPANION_TYPE,
-                  data: null,
-                  properties: {
-                    label: ['help label', { ns: meta.id }],
-                    icon: 'ph--question--regular',
-                    disposition: 'hidden',
-                    position: 'hoist',
-                  },
-                },
-              ];
-            }),
-            Option.getOrElse(() => []),
-          ),
-        ),
+      match: NodeMatcher.whenRoot,
+      connector: (node) => [
+        {
+          id: [node.id, 'help'].join(ATTENDABLE_PATH_SEPARATOR),
+          type: DECK_COMPANION_TYPE,
+          data: null,
+          properties: {
+            label: ['help label', { ns: meta.id }],
+            icon: 'ph--question--regular',
+            disposition: 'hidden',
+            position: 'hoist',
+          },
+        },
+      ],
     }),
   ]),
 );

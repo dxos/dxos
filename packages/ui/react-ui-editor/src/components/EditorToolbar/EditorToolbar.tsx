@@ -6,7 +6,7 @@ import { type EditorView } from '@codemirror/view';
 import { Atom } from '@effect-atom/atom-react';
 import React, { memo, useMemo } from 'react';
 
-import { CreateAtom, GraphBuilder } from '@dxos/app-graph';
+import { CreateAtom } from '@dxos/app-graph';
 import { type Live } from '@dxos/live-object';
 import { ElevationProvider, type ThemedClassName } from '@dxos/react-ui';
 import {

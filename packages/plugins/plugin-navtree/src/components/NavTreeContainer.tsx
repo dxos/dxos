@@ -50,14 +50,14 @@ const filterItems = (node: Node.Node, disposition?: string) => {
 };
 
 const getItems = (graph: Graph.ReadableGraph, node?: Node.Node, disposition?: string) => {
-  return Graph.getConnections(graph, node?.id ?? Graph.ROOT_ID, 'outbound').filter((node) =>
+  return Graph.getConnections(graph, node?.id ?? Node.RootId, 'outbound').filter((node) =>
     filterItems(node, disposition),
   );
 };
 
 const useItems = (node?: Node.Node, options?: { disposition?: string; sort?: boolean }) => {
   const { graph } = useAppGraph();
-  const connections = useConnections(graph, node?.id ?? Graph.ROOT_ID);
+  const connections = useConnections(graph, node?.id ?? Node.RootId);
   const filtered = connections.filter((node) => filterItems(node, options?.disposition));
   return options?.sort ? filtered.toSorted((a, b) => byPosition(a.properties, b.properties)) : filtered;
 };
@@ -377,7 +377,7 @@ export const NavTreeContainer$ = forwardRef<HTMLDivElement, NavTreeContainerProp
 
     return (
       <NavTreeContext.Provider value={navTreeContextValue}>
-        <NavTree id={Graph.ROOT_ID} root={Graph.getRoot(graph)} open={layout.sidebarOpen} ref={forwardedRef} />
+        <NavTree id={Node.RootId} root={Graph.getRoot(graph)} open={layout.sidebarOpen} ref={forwardedRef} />
       </NavTreeContext.Provider>
     );
   },

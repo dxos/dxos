@@ -11,8 +11,8 @@ import {
   contributes,
   defineCapabilityModule,
 } from '@dxos/app-framework';
-import { Graph } from '@dxos/plugin-graph';
 import { Keyboard } from '@dxos/keyboard';
+import { Graph } from '@dxos/plugin-graph';
 
 import { AttentionCapabilities } from './capabilities';
 

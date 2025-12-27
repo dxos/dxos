@@ -4,7 +4,7 @@
 
 import { Capabilities, Events, allOf, contributes, defineModule, definePlugin } from '@dxos/app-framework';
 import { AttentionEvents } from '@dxos/plugin-attention';
-import { Graph } from '@dxos/plugin-graph';
+import { Node } from '@dxos/plugin-graph';
 
 import { AppGraphBuilder, FileSettings, FileState, IntentResolver, Markdown, ReactSurface } from './capabilities';
 import { meta } from './meta';
@@ -54,7 +54,7 @@ export const FilesPlugin = definePlugin(meta, () => [
     activate: () =>
       contributes(Capabilities.AppGraphSerializer, [
         {
-          inputType: Graph.ROOT_TYPE,
+          inputType: Node.RootType,
           outputType: 'text/directory',
           position: 'fallback',
           serialize: async () => ({

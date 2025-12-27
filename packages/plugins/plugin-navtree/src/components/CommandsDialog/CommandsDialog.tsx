@@ -6,8 +6,8 @@ import React, { forwardRef, useMemo, useState } from 'react';
 
 import { LayoutAction, createIntent } from '@dxos/app-framework';
 import { useAppGraph, useIntentDispatcher } from '@dxos/app-framework/react';
-import { Graph, Node } from '@dxos/plugin-graph';
 import { Keyboard, keySymbols } from '@dxos/keyboard';
+import { Graph, Node } from '@dxos/plugin-graph';
 import { useActions } from '@dxos/plugin-graph';
 import { Button, Dialog, Icon, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { SearchList } from '@dxos/react-ui-searchlist';

@@ -2,12 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Atom } from '@effect-atom/atom-react';
-import * as Function from 'effect/Function';
-import * as Option from 'effect/Option';
-
 import { Capabilities, type PluginContext, contributes, defineCapabilityModule } from '@dxos/app-framework';
-import { GraphBuilder } from '@dxos/plugin-graph';
+import { GraphBuilder, NodeMatcher } from '@dxos/plugin-graph';
 import { meta as spaceMeta } from '@dxos/plugin-space';
 
 import { meta } from '../meta';
@@ -16,25 +12,18 @@ export default defineCapabilityModule((context: PluginContext) =>
   contributes(Capabilities.AppGraphBuilder, [
     GraphBuilder.createExtension({
       id: `${meta.id}/space-settings`,
-      connector: (node) =>
-        Atom.make((get) =>
-          Function.pipe(
-            get(node),
-            Option.flatMap((node) => (node.type === `${spaceMeta.id}/settings` ? Option.some(node) : Option.none())),
-            Option.map((node) => [
-              {
-                id: `integrations-${node.id}`,
-                type: `${meta.id}/space-settings`,
-                data: `${meta.id}/space-settings`,
-                properties: {
-                  label: ['space panel name', { ns: meta.id }],
-                  icon: 'ph--plugs--regular',
-                },
-              },
-            ]),
-            Option.getOrElse(() => []),
-          ),
-        ),
+      match: NodeMatcher.whenNodeType(`${spaceMeta.id}/settings`),
+      connector: (node) => [
+        {
+          id: `integrations-${node.id}`,
+          type: `${meta.id}/space-settings`,
+          data: `${meta.id}/space-settings`,
+          properties: {
+            label: ['space panel name', { ns: meta.id }],
+            icon: 'ph--plugs--regular',
+          },
+        },
+      ],
     }),
   ]),
 );

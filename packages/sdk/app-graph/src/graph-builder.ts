@@ -641,7 +641,7 @@ export const createTypeExtension = <T extends Type.Entity.Any>(
   options: CreateTypeExtensionOptions<T>,
 ): BuilderExtension[] => {
   const { id, type, actions, connector, relation, position } = options;
-  return createExtension<Entity.Entity<Schema.Schema.Type<T>>>({
+  return createExtension({
     id,
     match: NodeMatcher.whenType(type),
     actions,
