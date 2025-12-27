@@ -28,7 +28,7 @@ import { get, range } from '@dxos/util';
 
 const generator = faker as any as ValueGenerator;
 
-import { Grid, type GridCellProps, type GridViewportProps } from '.';
+import { Grid, type GridCellProps, type GridViewportProps } from './Grid';
 
 faker.seed(1);
 

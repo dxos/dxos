@@ -16,10 +16,8 @@ import { Input } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { mx } from '@dxos/ui-theme';
 
-// TODO(burdon): Factor out styles.
+// TODO(burdon): Factor out styles (incl. tabster debugging).
 // TODO(burdon): Implement horizontal movement between columns when column is selected.
-// TODO(burdon): Test codemirror Item.
-// TODO(burdon): Scroll if needed when nav.
 // TODO(burdon): Prevent tab out of app.
 
 const border =
@@ -110,7 +108,7 @@ const withTabster: Decorator = (Story) => {
 };
 
 const meta: Meta<typeof DefaultStory> = {
-  title: 'ui/react-ui-mosaic/focus',
+  title: 'ui/react-ui-mosaic/tabster',
   component: DefaultStory,
   decorators: [withTheme, withLayout({ layout: 'fullscreen' }), withTabster],
   parameters: {
