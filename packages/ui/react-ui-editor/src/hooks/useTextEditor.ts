@@ -160,7 +160,9 @@ export const useTextEditor = (
           element?.focus();
           break;
         }
+
         case 'Enter': {
+          event.preventDefault();
           if (target === currentTarget) {
             view?.focus();
           }

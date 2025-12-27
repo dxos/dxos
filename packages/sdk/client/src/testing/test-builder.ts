@@ -12,6 +12,7 @@ import { Context } from '@dxos/context';
 import { raise } from '@dxos/debug';
 import { Filter } from '@dxos/echo';
 import { Obj, Type } from '@dxos/echo';
+import { type Database } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { type PublicKey } from '@dxos/keys';
 import { type LevelDB } from '@dxos/kv-store';
@@ -30,7 +31,6 @@ import { type Storage } from '@dxos/random-access-storage';
 import { type ProtoRpcPeer, createLinkedPorts, createProtoRpcPeer } from '@dxos/rpc';
 
 import { Client } from '../client';
-import { type EchoDatabase } from '../echo';
 import { ClientServicesProxy, LocalClientServices } from '../services';
 
 export const testConfigWithLocalSignal = new Config({
@@ -179,8 +179,8 @@ export class TestBuilder {
 
 export const testSpaceAutomerge = async (
   expect: ExpectStatic,
-  createDb: EchoDatabase,
-  checkDb: EchoDatabase = createDb,
+  createDb: Database.Database,
+  checkDb: Database.Database = createDb,
 ) => {
   const object = Obj.make(Type.Expando, {});
   createDb.add(object);
@@ -189,7 +189,7 @@ export const testSpaceAutomerge = async (
   return { objectId: object.id };
 };
 
-export const syncItemsAutomerge = async (expect: ExpectStatic, db1: EchoDatabase, db2: EchoDatabase) => {
+export const syncItemsAutomerge = async (expect: ExpectStatic, db1: Database.Database, db2: Database.Database) => {
   await testSpaceAutomerge(expect, db1, db2);
   await testSpaceAutomerge(expect, db2, db1);
 };

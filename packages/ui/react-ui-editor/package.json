@@ -77,6 +77,7 @@
     "@replit/codemirror-vscode-keymap": "catalog:",
     "@uiw/codemirror-theme-vscode": "catalog:",
     "ajv": "catalog:",
+    "bind-event-listener": "catalog:",
     "codemirror": "catalog:",
     "lib0": "catalog:",
     "lodash.defaultsdeep": "catalog:",
@@ -128,7 +129,7 @@
   "peerDependencies": {
     "@dxos/react-client": "workspace:*",
     "@dxos/react-ui": "workspace:*",
-    "@dxos/react-ui-theme": "workspace:*",
+    "@dxos/ui-theme": "workspace:*",
     "@effect-atom/atom-react": "catalog:",
     "@effect/platform": "catalog:",
     "effect": "catalog:",

@@ -15,6 +15,10 @@
 - Lint & fix: `moon run :lint -- --fix`
 - Check package tasks: see `moon.yml` in package directory
 
+## Important
+
+- Do NOT cast values to fix build issues; instead create a refactoring plan and get permission.
+
 ## Code Style
 
 - Use TypeScript with single quotes for strings

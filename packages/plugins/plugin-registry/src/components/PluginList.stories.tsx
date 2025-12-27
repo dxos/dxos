@@ -69,7 +69,7 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
-  decorators: [withTheme, withLayout({ container: 'column', scroll: true })],
+  decorators: [withTheme, withLayout({ layout: 'column', scroll: true })],
 };
 
 export const FullScreen: Story = {

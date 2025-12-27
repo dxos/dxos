@@ -83,7 +83,7 @@ const meta = {
   title: 'plugins/plugin-script/TypescriptEditor',
   component: TypescriptEditor,
   render: DefaultStory,
-  decorators: [withTheme, withLayout({ container: 'column', classNames: 'is-prose' })],
+  decorators: [withTheme, withLayout({ layout: 'column', classNames: 'is-prose' })],
 } satisfies Meta<typeof DefaultStory>;
 
 export default meta;

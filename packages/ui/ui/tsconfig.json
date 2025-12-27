@@ -14,9 +14,6 @@
   ],
   "references": [
     {
-      "path": "../lit-ui"
-    },
-    {
       "path": "../ui-theme"
     },
     {

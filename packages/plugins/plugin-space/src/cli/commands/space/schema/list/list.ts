@@ -29,7 +29,7 @@ export const handler = Effect.fn(function* ({
   const space = yield* getSpace(resolvedSpaceId);
 
   const echoSchema = yield* Effect.tryPromise(() => space.db.schemaRegistry.query().run());
-  const runtimeSchema = space.db.graph.schemaRegistry.schemas;
+  const runtimeSchema = space.internal.db.graph.schemaRegistry.schemas;
 
   const schemas = [
     ...echoSchema.map((schema) => ({

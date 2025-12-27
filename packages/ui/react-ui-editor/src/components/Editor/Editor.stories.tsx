@@ -53,7 +53,7 @@ const withExtensions: Decorator<EditorContentProps> = (Story, { args }) => {
 const meta = {
   title: 'ui/react-ui-editor/Editor',
   component: Editor.Content,
-  decorators: [withExtensions, withTheme, withLayout({ container: 'column' }), withAttention],
+  decorators: [withExtensions, withTheme, withLayout({ layout: 'column' }), withAttention],
   parameters: {
     layout: 'fullscreen',
   },

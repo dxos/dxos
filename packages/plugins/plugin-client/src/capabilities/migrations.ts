@@ -16,7 +16,7 @@ export default defineCapabilityModule((context: PluginContext) => {
     (_migrations) => {
       const migrations = Array.from(new Set(_migrations.flat()));
       const spaces = client.spaces.get();
-      void Promise.all(spaces.map((space) => space.db.runMigrations(migrations)));
+      void Promise.all(spaces.map((space) => space.internal.db.runMigrations(migrations)));
     },
     { immediate: true },
   );

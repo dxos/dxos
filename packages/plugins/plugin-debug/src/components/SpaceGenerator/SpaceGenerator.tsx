@@ -53,7 +53,7 @@ export const SpaceGenerator = ({ space, onCreateObjects }: SpaceGeneratorProps) 
   const updateInfo = async () => {
     // Create schema map.
     const echoSchema = await space.db.schemaRegistry.query().run();
-    const staticSchema = space.db.graph.schemaRegistry.schemas;
+    const staticSchema = await space.db.graph.schemaRegistry.query().run();
 
     // Create object map.
     const objects = await space.db.query(Filter.everything()).run();
@@ -64,6 +64,7 @@ export const SpaceGenerator = ({ space, onCreateObjects }: SpaceGeneratorProps) 
           const count = map[type] ?? 0;
           map[type] = count + 1;
         }
+
         return map;
       }, {}),
     );
