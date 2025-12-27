@@ -8,180 +8,66 @@ import * as Function from 'effect/Function';
 import * as Option from 'effect/Option';
 import * as Pipeable from 'effect/Pipeable';
 import * as Record from 'effect/Record';
+import type * as Schema from 'effect/Schema';
 
 import { type CleanupFn, type Trigger } from '@dxos/async';
+import { type Entity, type Type } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { type MaybePromise, type Position, byPosition, getDebugName, isNode, isNonNullable } from '@dxos/util';
 
 import * as Graph from './graph';
-import { type ActionData, type Node, type NodeArg, type Relation, actionGroupSymbol } from './node';
+import * as Node from './node';
+import * as NodeMatcher from './node-matcher';
+
+//
+// Extension Types
+//
 
 /**
  * Graph builder extension for adding nodes to the graph based on a node id.
  */
-export type ResolverExtension = (id: string) => Atom.Atom<NodeArg<any> | null>;
+export type ResolverExtension = (id: string) => Atom.Atom<Node.NodeArg<any> | null>;
 
 /**
  * Graph builder extension for adding nodes to the graph based on a connection to an existing node.
  *
  * @param params.node The existing node the returned nodes will be connected to.
  */
-export type ConnectorExtension = (node: Atom.Atom<Option.Option<Node>>) => Atom.Atom<NodeArg<any>[]>;
+export type ConnectorExtension = (node: Atom.Atom<Option.Option<Node.Node>>) => Atom.Atom<Node.NodeArg<any>[]>;
 
 /**
  * Constrained case of the connector extension for more easily adding actions to the graph.
  */
 export type ActionsExtension = (
-  node: Atom.Atom<Option.Option<Node>>,
-) => Atom.Atom<Omit<NodeArg<ActionData>, 'type' | 'nodes' | 'edges'>[]>;
+  node: Atom.Atom<Option.Option<Node.Node>>,
+) => Atom.Atom<Omit<Node.NodeArg<Node.ActionData>, 'type' | 'nodes' | 'edges'>[]>;
 
 /**
  * Constrained case of the connector extension for more easily adding action groups to the graph.
  */
 export type ActionGroupsExtension = (
-  node: Atom.Atom<Option.Option<Node>>,
-) => Atom.Atom<Omit<NodeArg<typeof actionGroupSymbol>, 'type' | 'data' | 'nodes' | 'edges'>[]>;
-
-/**
- * A graph builder extension is used to add nodes to the graph.
- *
- * @param params.id The unique id of the extension.
- * @param params.relation The relation the graph is being expanded from the existing node.
- * @param params.position Affects the order the extensions are processed in.
- * @param params.resolver A function to add nodes to the graph based on just the node id.
- * @param params.connector A function to add nodes to the graph based on a connection to an existing node.
- * @param params.actions A function to add actions to the graph based on a connection to an existing node.
- * @param params.actionGroups A function to add action groups to the graph based on a connection to an existing node.
- */
-export type CreateExtensionOptions = {
-  id: string;
-  relation?: Relation;
-  position?: Position;
-  resolver?: ResolverExtension;
-  connector?: ConnectorExtension;
-  actions?: ActionsExtension;
-  actionGroups?: ActionGroupsExtension;
-};
-
-/**
- * Create a graph builder extension.
- */
-export const createExtension = (extension: CreateExtensionOptions): BuilderExtension[] => {
-  const {
-    id,
-    position = 'static',
-    relation = 'outbound',
-    resolver: _resolver,
-    connector: _connector,
-    actions: _actions,
-    actionGroups: _actionGroups,
-  } = extension;
-  const getId = (key: string) => `${id}/${key}`;
-
-  const resolver =
-    _resolver && Atom.family((id: string) => _resolver(id).pipe(Atom.withLabel(`graph-builder:_resolver:${id}`)));
-
-  const connector =
-    _connector &&
-    Atom.family((node: Atom.Atom<Option.Option<Node>>) =>
-      _connector(node).pipe(Atom.withLabel(`graph-builder:_connector:${id}`)),
-    );
-
-  const actionGroups =
-    _actionGroups &&
-    Atom.family((node: Atom.Atom<Option.Option<Node>>) =>
-      _actionGroups(node).pipe(Atom.withLabel(`graph-builder:_actionGroups:${id}`)),
-    );
-
-  const actions =
-    _actions &&
-    Atom.family((node: Atom.Atom<Option.Option<Node>>) =>
-      _actions(node).pipe(Atom.withLabel(`graph-builder:_actions:${id}`)),
-    );
-
-  return [
-    resolver ? { id: getId('resolver'), position, resolver } : undefined,
-    connector
-      ? ({
-          id: getId('connector'),
-          position,
-          relation,
-          connector: Atom.family((node) =>
-            Atom.make((get) => {
-              try {
-                return get(connector(node));
-              } catch {
-                log.warn('Error in connector', { id: getId('connector'), node });
-                return [];
-              }
-            }).pipe(Atom.withLabel(`graph-builder:connector:${id}`)),
-          ),
-        } satisfies BuilderExtension)
-      : undefined,
-    actionGroups
-      ? ({
-          id: getId('actionGroups'),
-          position,
-          relation: 'outbound',
-          connector: Atom.family((node) =>
-            Atom.make((get) => {
-              try {
-                return get(actionGroups(node)).map((arg) => ({
-                  ...arg,
-                  data: actionGroupSymbol,
-                  type: Graph.ACTION_GROUP_TYPE,
-                }));
-              } catch {
-                log.warn('Error in actionGroups', { id: getId('actionGroups'), node });
-                return [];
-              }
-            }).pipe(Atom.withLabel(`graph-builder:connector:actionGroups:${id}`)),
-          ),
-        } satisfies BuilderExtension)
-      : undefined,
-    actions
-      ? ({
-          id: getId('actions'),
-          position,
-          relation: 'outbound',
-          connector: Atom.family((node) =>
-            Atom.make((get) => {
-              try {
-                return get(actions(node)).map((arg) => ({ ...arg, type: Graph.ACTION_TYPE }));
-              } catch {
-                log.warn('Error in actions', { id: getId('actions'), node });
-                return [];
-              }
-            }).pipe(Atom.withLabel(`graph-builder:connector:actions:${id}`)),
-          ),
-        } satisfies BuilderExtension)
-      : undefined,
-  ].filter(isNonNullable);
-};
-
-export type GraphBuilderTraverseOptions = {
-  visitor: (node: Node, path: string[]) => MaybePromise<boolean | void>;
-  registry?: Registry.Registry;
-  source?: string;
-  relation?: Relation;
-};
+  node: Atom.Atom<Option.Option<Node.Node>>,
+) => Atom.Atom<Omit<Node.NodeArg<typeof Node.actionGroupSymbol>, 'type' | 'data' | 'nodes' | 'edges'>[]>;
 
 export type BuilderExtension = Readonly<{
   id: string;
   position: Position;
-  relation?: Relation; // Only for connector.
+  relation?: Node.Relation; // Only for connector.
   resolver?: ResolverExtension;
-  connector?: (node: Atom.Atom<Option.Option<Node>>) => Atom.Atom<NodeArg<any>[]>;
+  connector?: (node: Atom.Atom<Option.Option<Node.Node>>) => Atom.Atom<Node.NodeArg<any>[]>;
 }>;
 
 export type BuilderExtensions = BuilderExtension | BuilderExtension[] | BuilderExtensions[];
 
-export const flattenExtensions = (extension: BuilderExtensions, acc: BuilderExtension[] = []): BuilderExtension[] => {
-  if (Array.isArray(extension)) {
-    return [...acc, ...extension.flatMap((ext) => flattenExtensions(ext, acc))];
-  } else {
-    return [...acc, extension];
-  }
+//
+// GraphBuilder Core
+//
+
+export type GraphBuilderTraverseOptions = {
+  visitor: (node: Node.Node, path: string[]) => MaybePromise<boolean | void>;
+  registry?: Registry.Registry;
+  source?: string;
+  relation?: Node.Relation;
 };
 
 /**
@@ -223,8 +109,8 @@ class GraphBuilderImpl implements GraphBuilder {
   readonly _initialized: Record<string, Trigger> = {};
   readonly _registry: Registry.Registry;
   readonly _graph: Graph.Graph & {
-    _node: (id: string) => Atom.Writable<Option.Option<Node>>;
-    _constructNode: (node: NodeArg<any>) => Option.Option<Node>;
+    _node: (id: string) => Atom.Writable<Option.Option<Node.Node>>;
+    _constructNode: (node: Node.NodeArg<any>) => Option.Option<Node.Node>;
   };
 
   constructor({ registry, ...params }: Pick<Graph.GraphParams, 'registry' | 'nodes' | 'edges'> = {}) {
@@ -238,8 +124,8 @@ class GraphBuilderImpl implements GraphBuilder {
     });
     // Access internal methods via type assertion since GraphBuilder needs them
     this._graph = graph as Graph.Graph & {
-      _node: (id: string) => Atom.Writable<Option.Option<Node>>;
-      _constructNode: (node: NodeArg<any>) => Option.Option<Node>;
+      _node: (id: string) => Atom.Writable<Option.Option<Node.Node>>;
+      _constructNode: (node: Node.NodeArg<any>) => Option.Option<Node.Node>;
     };
   }
 
@@ -251,7 +137,7 @@ class GraphBuilderImpl implements GraphBuilder {
     return this._extensions;
   }
 
-  private readonly _resolvers = Atom.family<string, Atom.Atom<Option.Option<NodeArg<any>>>>((id) => {
+  private readonly _resolvers = Atom.family<string, Atom.Atom<Option.Option<Node.NodeArg<any>>>>((id) => {
     return Atom.make((get) => {
       return Function.pipe(
         get(this._extensions),
@@ -266,7 +152,7 @@ class GraphBuilderImpl implements GraphBuilder {
     });
   });
 
-  private readonly _connectors = Atom.family<string, Atom.Atom<NodeArg<any>[]>>((key) => {
+  private readonly _connectors = Atom.family<string, Atom.Atom<Node.NodeArg<any>[]>>((key) => {
     return Atom.make((get) => {
       const [id, relation] = key.split('+');
       const node = this._graph.node(id);
@@ -284,7 +170,7 @@ class GraphBuilderImpl implements GraphBuilder {
     }).pipe(Atom.withLabel(`graph-builder:connectors:${key}`));
   });
 
-  private _onExpand(id: string, relation: Relation): void {
+  private _onExpand(id: string, relation: Node.Relation): void {
     log('onExpand', { id, relation, registry: getDebugName(this._registry) });
     const connectors = this._connectors(`${id}+${relation}`);
 
@@ -456,7 +342,7 @@ const exploreImpl = async (
   path: string[] = [],
 ): Promise<void> => {
   const internal = builder as GraphBuilderImpl;
-  const { registry = Registry.make(), source = Graph.ROOT_ID, relation = 'outbound', visitor } = options;
+  const { registry = Registry.make(), source = Node.RootId, relation = 'outbound', visitor } = options;
   // Break cycles.
   if (path.includes(source)) {
     return;
@@ -544,3 +430,235 @@ export function destroy(builder?: GraphBuilder): void | ((builder: GraphBuilder)
     return destroyImpl(builder);
   }
 }
+
+//
+// Extension Creation
+//
+
+/**
+ * A graph builder extension is used to add nodes to the graph.
+ *
+ * @param params.id The unique id of the extension.
+ * @param params.relation The relation the graph is being expanded from the existing node.
+ * @param params.position Affects the order the extensions are processed in.
+ * @param params.resolver A function to add nodes to the graph based on just the node id.
+ * @param params.connector A function to add nodes to the graph based on a connection to an existing node.
+ * @param params.actions A function to add actions to the graph based on a connection to an existing node.
+ * @param params.actionGroups A function to add action groups to the graph based on a connection to an existing node.
+ */
+export type CreateExtensionRawOptions = {
+  id: string;
+  relation?: Node.Relation;
+  position?: Position;
+  resolver?: ResolverExtension;
+  connector?: ConnectorExtension;
+  actions?: ActionsExtension;
+  actionGroups?: ActionGroupsExtension;
+};
+
+/**
+ * Create a graph builder extension (low-level API that works directly with Atoms).
+ */
+export const createExtensionRaw = (extension: CreateExtensionRawOptions): BuilderExtension[] => {
+  const {
+    id,
+    position = 'static',
+    relation = 'outbound',
+    resolver: _resolver,
+    connector: _connector,
+    actions: _actions,
+    actionGroups: _actionGroups,
+  } = extension;
+  const getId = (key: string) => `${id}/${key}`;
+
+  const resolver =
+    _resolver && Atom.family((id: string) => _resolver(id).pipe(Atom.withLabel(`graph-builder:_resolver:${id}`)));
+
+  const connector =
+    _connector &&
+    Atom.family((node: Atom.Atom<Option.Option<Node.Node>>) =>
+      _connector(node).pipe(Atom.withLabel(`graph-builder:_connector:${id}`)),
+    );
+
+  const actionGroups =
+    _actionGroups &&
+    Atom.family((node: Atom.Atom<Option.Option<Node.Node>>) =>
+      _actionGroups(node).pipe(Atom.withLabel(`graph-builder:_actionGroups:${id}`)),
+    );
+
+  const actions =
+    _actions &&
+    Atom.family((node: Atom.Atom<Option.Option<Node.Node>>) =>
+      _actions(node).pipe(Atom.withLabel(`graph-builder:_actions:${id}`)),
+    );
+
+  return [
+    resolver ? { id: getId('resolver'), position, resolver } : undefined,
+    connector
+      ? ({
+          id: getId('connector'),
+          position,
+          relation,
+          connector: Atom.family((node) =>
+            Atom.make((get) => {
+              try {
+                return get(connector(node));
+              } catch {
+                log.warn('Error in connector', { id: getId('connector'), node });
+                return [];
+              }
+            }).pipe(Atom.withLabel(`graph-builder:connector:${id}`)),
+          ),
+        } satisfies BuilderExtension)
+      : undefined,
+    actionGroups
+      ? ({
+          id: getId('actionGroups'),
+          position,
+          relation: 'outbound',
+          connector: Atom.family((node) =>
+            Atom.make((get) => {
+              try {
+                return get(actionGroups(node)).map((arg) => ({
+                  ...arg,
+                  data: Node.actionGroupSymbol,
+                  type: Node.ActionGroupType,
+                }));
+              } catch {
+                log.warn('Error in actionGroups', { id: getId('actionGroups'), node });
+                return [];
+              }
+            }).pipe(Atom.withLabel(`graph-builder:connector:actionGroups:${id}`)),
+          ),
+        } satisfies BuilderExtension)
+      : undefined,
+    actions
+      ? ({
+          id: getId('actions'),
+          position,
+          relation: 'outbound',
+          connector: Atom.family((node) =>
+            Atom.make((get) => {
+              try {
+                return get(actions(node)).map((arg) => ({ ...arg, type: Node.ActionType }));
+              } catch {
+                log.warn('Error in actions', { id: getId('actions'), node });
+                return [];
+              }
+            }).pipe(Atom.withLabel(`graph-builder:connector:actions:${id}`)),
+          ),
+        } satisfies BuilderExtension)
+      : undefined,
+  ].filter(isNonNullable);
+};
+
+/**
+ * Options for creating a graph builder extension with simplified API.
+ */
+export type CreateExtensionOptions<TMatched = Node.Node> = {
+  id: string;
+  match: (node: Node.Node) => Option.Option<TMatched>;
+  actions?: (matched: TMatched, get: Atom.Context) => Omit<Node.NodeArg<Node.ActionData, any>, 'type'>[];
+  connector?: (matched: TMatched, get: Atom.Context) => Node.NodeArg<any, any>[];
+  resolver?: (id: string, get: Atom.Context) => Node.NodeArg<any, any> | null;
+  relation?: Node.Relation;
+  position?: Position;
+};
+
+/**
+ * Create a graph builder extension with simplified API.
+ */
+export const createExtension = <TMatched = Node.Node>(
+  options: CreateExtensionOptions<TMatched>,
+): BuilderExtension[] => {
+  const { id, match, actions, connector, resolver, relation, position } = options;
+
+  const connectorExtension = connector ? createConnector(match, connector) : undefined;
+
+  const actionsExtension = actions
+    ? (node: Atom.Atom<Option.Option<Node.Node>>) =>
+        Atom.make((get) =>
+          Function.pipe(
+            get(node),
+            Option.flatMap(match),
+            Option.map((matched) => actions(matched, get)),
+            Option.getOrElse(() => []),
+          ),
+        )
+    : undefined;
+
+  const resolverExtension = resolver ? (id: string) => Atom.make((get) => resolver(id, get) ?? null) : undefined;
+
+  return createExtensionRaw({
+    id,
+    relation,
+    position,
+    connector: connectorExtension,
+    actions: actionsExtension,
+    resolver: resolverExtension,
+  });
+};
+
+/**
+ * Create a connector extension from a matcher and factory function.
+ * The factory's data type is inferred from the matcher's return type.
+ */
+export const createConnector = <TData>(
+  matcher: (node: Node.Node) => Option.Option<TData>,
+  factory: (data: TData, get: Atom.Context) => Node.NodeArg<any>[],
+): ConnectorExtension => {
+  return (node: Atom.Atom<Option.Option<Node.Node>>) =>
+    Atom.make((get) =>
+      Function.pipe(
+        get(node),
+        Option.flatMap(matcher),
+        Option.map((data) => factory(data, get)),
+        Option.getOrElse(() => []),
+      ),
+    );
+};
+
+/**
+ * Options for creating a type-based extension.
+ */
+export type CreateTypeExtensionOptions<T extends Type.Entity.Any = Type.Entity.Any> = {
+  id: string;
+  type: T;
+  actions?: (
+    object: Entity.Entity<Schema.Schema.Type<T>>,
+    get: Atom.Context,
+  ) => Omit<Node.NodeArg<Node.ActionData>, 'type'>[];
+  connector?: (object: Entity.Entity<Schema.Schema.Type<T>>, get: Atom.Context) => Node.NodeArg<any>[];
+  relation?: Node.Relation;
+  position?: Position;
+};
+
+/**
+ * Create an extension that matches nodes by schema type.
+ * The entity type is inferred from the schema type and works for both object and relation schemas.
+ */
+export const createTypeExtension = <T extends Type.Entity.Any>(
+  options: CreateTypeExtensionOptions<T>,
+): BuilderExtension[] => {
+  const { id, type, actions, connector, relation, position } = options;
+  return createExtension<Entity.Entity<Schema.Schema.Type<T>>>({
+    id,
+    match: NodeMatcher.whenType(type),
+    actions,
+    connector,
+    relation,
+    position,
+  });
+};
+
+//
+// Extension Utilities
+//
+
+export const flattenExtensions = (extension: BuilderExtensions, acc: BuilderExtension[] = []): BuilderExtension[] => {
+  if (Array.isArray(extension)) {
+    return [...acc, ...extension.flatMap((ext) => flattenExtensions(ext, acc))];
+  } else {
+    return [...acc, extension];
+  }
+};

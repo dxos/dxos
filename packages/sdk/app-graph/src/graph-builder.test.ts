@@ -8,10 +8,13 @@ import * as Option from 'effect/Option';
 import { describe, expect, onTestFinished, test } from 'vitest';
 
 import { Trigger, sleep } from '@dxos/async';
+import { Obj } from '@dxos/echo';
+import { TestSchema } from '@dxos/echo/testing';
 
 import * as Graph from './graph';
 import * as GraphBuilder from './graph-builder';
-import { type Node } from './node';
+import * as Node from './node';
+import * as NodeMatcher from './node-matcher';
 
 const exampleId = (id: number) => `dx:test:${id}`;
 const EXAMPLE_ID = exampleId(1);
@@ -32,7 +35,7 @@ describe('GraphBuilder', () => {
       // Test direct API
       GraphBuilder.addExtension(
         builder,
-        GraphBuilder.createExtension({
+        GraphBuilder.createExtensionRaw({
           id: 'resolver',
           resolver: () => {
             console.log('resolver');
@@ -56,7 +59,7 @@ describe('GraphBuilder', () => {
       const name = Atom.make('default');
       GraphBuilder.addExtension(
         builder,
-        GraphBuilder.createExtension({
+        GraphBuilder.createExtensionRaw({
           id: 'resolver',
           resolver: () => Atom.make((get) => ({ id: EXAMPLE_ID, type: EXAMPLE_TYPE, data: get(name) })),
         }),
@@ -84,14 +87,14 @@ describe('GraphBuilder', () => {
       const builder = GraphBuilder.make({ registry });
       GraphBuilder.addExtension(
         builder,
-        GraphBuilder.createExtension({
+        GraphBuilder.createExtensionRaw({
           id: 'outbound-connector',
           connector: () => Atom.make([{ id: 'child', type: EXAMPLE_TYPE, data: 2 }]),
         }),
       );
       GraphBuilder.addExtension(
         builder,
-        GraphBuilder.createExtension({
+        GraphBuilder.createExtensionRaw({
           id: 'inbound-connector',
           relation: 'inbound',
           connector: () => Atom.make([{ id: 'parent', type: EXAMPLE_TYPE, data: 0 }]),
@@ -99,11 +102,11 @@ describe('GraphBuilder', () => {
       );
 
       const graph = builder.graph;
-      Graph.expand(graph, Graph.ROOT_ID);
-      Graph.expand(graph, Graph.ROOT_ID, 'inbound');
+      Graph.expand(graph, Node.RootId);
+      Graph.expand(graph, Node.RootId, 'inbound');
 
-      const outbound = registry.get(graph.connections(Graph.ROOT_ID));
-      const inbound = registry.get(graph.connections(Graph.ROOT_ID, 'inbound'));
+      const outbound = registry.get(graph.connections(Node.RootId));
+      const inbound = registry.get(graph.connections(Node.RootId, 'inbound'));
 
       expect(outbound).has.length(1);
       expect(outbound[0].id).to.equal('child');
@@ -119,22 +122,22 @@ describe('GraphBuilder', () => {
       const state = Atom.make(0);
       GraphBuilder.addExtension(
         builder,
-        GraphBuilder.createExtension({
+        GraphBuilder.createExtensionRaw({
           id: 'connector',
           connector: () => Atom.make((get) => [{ id: EXAMPLE_ID, type: EXAMPLE_TYPE, data: get(state) }]),
         }),
       );
       const graph = builder.graph;
-      Graph.expand(graph, Graph.ROOT_ID);
+      Graph.expand(graph, Node.RootId);
 
       {
-        const [node] = registry.get(graph.connections(Graph.ROOT_ID));
+        const [node] = registry.get(graph.connections(Node.RootId));
         expect(node.data).to.equal(0);
       }
 
       {
         registry.set(state, 1);
-        const [node] = registry.get(graph.connections(Graph.ROOT_ID));
+        const [node] = registry.get(graph.connections(Node.RootId));
         expect(node.data).to.equal(1);
       }
     });
@@ -145,7 +148,7 @@ describe('GraphBuilder', () => {
       const state = Atom.make(0);
       GraphBuilder.addExtension(
         builder,
-        GraphBuilder.createExtension({
+        GraphBuilder.createExtensionRaw({
           id: 'connector',
           connector: () => Atom.make((get) => [{ id: EXAMPLE_ID, type: EXAMPLE_TYPE, data: get(state) }]),
         }),
@@ -153,16 +156,16 @@ describe('GraphBuilder', () => {
       const graph = builder.graph;
 
       let count = 0;
-      const cancel = registry.subscribe(graph.connections(Graph.ROOT_ID), (_) => {
+      const cancel = registry.subscribe(graph.connections(Node.RootId), (_) => {
         count++;
       });
       onTestFinished(() => cancel());
 
       expect(count).to.equal(0);
-      expect(registry.get(graph.connections(Graph.ROOT_ID))).to.have.length(0);
+      expect(registry.get(graph.connections(Node.RootId))).to.have.length(0);
       expect(count).to.equal(1);
 
-      Graph.expand(graph, Graph.ROOT_ID);
+      Graph.expand(graph, Node.RootId);
       expect(count).to.equal(2);
       registry.set(state, 1);
       expect(count).to.equal(3);
@@ -173,17 +176,17 @@ describe('GraphBuilder', () => {
       const builder = GraphBuilder.make({ registry });
       GraphBuilder.addExtension(
         builder,
-        GraphBuilder.createExtension({
+        GraphBuilder.createExtensionRaw({
           id: 'connector',
           connector: () => Atom.make([{ id: EXAMPLE_ID, type: EXAMPLE_TYPE }]),
         }),
       );
       const graph = builder.graph;
-      Graph.expand(graph, Graph.ROOT_ID);
+      Graph.expand(graph, Node.RootId);
 
-      let nodes: Node[] = [];
+      let nodes: Node.Node[] = [];
       let count = 0;
-      const cancel = registry.subscribe(graph.connections(Graph.ROOT_ID), (_nodes) => {
+      const cancel = registry.subscribe(graph.connections(Node.RootId), (_nodes) => {
         count++;
         nodes = _nodes;
       });
@@ -191,13 +194,13 @@ describe('GraphBuilder', () => {
 
       expect(nodes).has.length(0);
       expect(count).to.equal(0);
-      registry.get(graph.connections(Graph.ROOT_ID));
+      registry.get(graph.connections(Node.RootId));
       expect(nodes).has.length(1);
       expect(count).to.equal(1);
 
       GraphBuilder.addExtension(
         builder,
-        GraphBuilder.createExtension({
+        GraphBuilder.createExtensionRaw({
           id: 'connector-2',
           connector: () => Atom.make([{ id: exampleId(2), type: EXAMPLE_TYPE }]),
         }),
@@ -215,16 +218,16 @@ describe('GraphBuilder', () => {
       ]);
       GraphBuilder.addExtension(
         builder,
-        GraphBuilder.createExtension({
+        GraphBuilder.createExtensionRaw({
           id: 'connector',
           connector: () => Atom.make((get) => get(nodes)),
         }),
       );
       const graph = builder.graph;
-      Graph.expand(graph, Graph.ROOT_ID);
+      Graph.expand(graph, Node.RootId);
 
       {
-        const nodes = registry.get(graph.connections(Graph.ROOT_ID));
+        const nodes = registry.get(graph.connections(Node.RootId));
         expect(nodes).has.length(2);
         expect(nodes[0].id).to.equal(exampleId(1));
         expect(nodes[1].id).to.equal(exampleId(2));
@@ -233,7 +236,7 @@ describe('GraphBuilder', () => {
       registry.set(nodes, [{ id: exampleId(3), type: EXAMPLE_TYPE }]);
 
       {
-        const nodes = registry.get(graph.connections(Graph.ROOT_ID));
+        const nodes = registry.get(graph.connections(Node.RootId));
         expect(nodes).has.length(1);
         expect(nodes[0].id).to.equal(exampleId(3));
       }
@@ -245,7 +248,7 @@ describe('GraphBuilder', () => {
       const name = Atom.make('removed');
 
       GraphBuilder.addExtension(builder, [
-        GraphBuilder.createExtension({
+        GraphBuilder.createExtensionRaw({
           id: 'root',
           connector: (node) =>
             Atom.make((get) =>
@@ -270,7 +273,7 @@ describe('GraphBuilder', () => {
       });
       onTestFinished(() => cancel());
 
-      Graph.expand(graph, Graph.ROOT_ID);
+      Graph.expand(graph, Node.RootId);
       expect(count).to.equal(0);
       expect(exists).to.be.false;
 
@@ -297,16 +300,16 @@ describe('GraphBuilder', () => {
       ]);
       GraphBuilder.addExtension(
         builder,
-        GraphBuilder.createExtension({
+        GraphBuilder.createExtensionRaw({
           id: 'connector',
           connector: () => Atom.make((get) => get(nodes)),
         }),
       );
       const graph = builder.graph;
-      Graph.expand(graph, Graph.ROOT_ID);
+      Graph.expand(graph, Node.RootId);
 
       {
-        const nodes = registry.get(graph.connections(Graph.ROOT_ID));
+        const nodes = registry.get(graph.connections(Node.RootId));
         expect(nodes).has.length(3);
         expect(nodes[0].id).to.equal(exampleId(1));
         expect(nodes[1].id).to.equal(exampleId(2));
@@ -323,7 +326,7 @@ describe('GraphBuilder', () => {
       await sleep(0);
 
       {
-        const nodes = registry.get(graph.connections(Graph.ROOT_ID));
+        const nodes = registry.get(graph.connections(Node.RootId));
         expect(nodes).has.length(3);
         expect(nodes[0].id).to.equal(exampleId(3));
         expect(nodes[1].id).to.equal(exampleId(1));
@@ -338,7 +341,7 @@ describe('GraphBuilder', () => {
       const sub = Atom.make('default');
 
       GraphBuilder.addExtension(builder, [
-        GraphBuilder.createExtension({
+        GraphBuilder.createExtensionRaw({
           id: 'root',
           connector: (node) =>
             Atom.make((get) =>
@@ -351,7 +354,7 @@ describe('GraphBuilder', () => {
               ),
             ),
         }),
-        GraphBuilder.createExtension({
+        GraphBuilder.createExtensionRaw({
           id: 'connector1',
           connector: (node) =>
             Atom.make((get) =>
@@ -363,7 +366,7 @@ describe('GraphBuilder', () => {
               ),
             ),
         }),
-        GraphBuilder.createExtension({
+        GraphBuilder.createExtensionRaw({
           id: 'connector2',
           connector: (node) =>
             Atom.make((get) =>
@@ -398,7 +401,7 @@ describe('GraphBuilder', () => {
       onTestFinished(() => dependentCancel());
 
       // Counts should not increment until the node is expanded.
-      Graph.expand(graph, Graph.ROOT_ID);
+      Graph.expand(graph, Node.RootId);
       expect(parentCount).to.equal(1);
       expect(independentCount).to.equal(0);
       expect(dependentCount).to.equal(0);
@@ -448,7 +451,7 @@ describe('GraphBuilder', () => {
       const builder = GraphBuilder.make({ registry });
       GraphBuilder.addExtension(
         builder,
-        GraphBuilder.createExtension({
+        GraphBuilder.createExtensionRaw({
           id: 'connector',
           connector: (node) => {
             return Atom.make((get) =>
@@ -474,7 +477,7 @@ describe('GraphBuilder', () => {
         }
       });
 
-      Graph.expand(builder.graph, Graph.ROOT_ID);
+      Graph.expand(builder.graph, Node.RootId);
       await trigger.wait();
       expect(count).to.equal(5);
     });
@@ -485,7 +488,7 @@ describe('GraphBuilder', () => {
       const builder = GraphBuilder.make();
       GraphBuilder.addExtension(
         builder,
-        GraphBuilder.createExtension({
+        GraphBuilder.createExtensionRaw({
           id: 'connector',
           connector: (node) =>
             Atom.make((get) =>
@@ -508,6 +511,210 @@ describe('GraphBuilder', () => {
       });
 
       expect(count).to.equal(6);
+    });
+  });
+
+  describe('helpers', () => {
+    describe('createConnector', () => {
+      test('creates connector with type inference', () => {
+        const registry = Registry.make();
+        const builder = GraphBuilder.make({ registry });
+        const graph = builder.graph;
+
+        const matcher = (node: Node.Node) => NodeMatcher.whenId('root')(node);
+        const factory = (node: Node.Node) => [{ id: 'child', type: EXAMPLE_TYPE, data: node.id }];
+
+        const connector = GraphBuilder.createConnector(matcher, factory);
+
+        GraphBuilder.addExtension(
+          builder,
+          GraphBuilder.createExtensionRaw({
+            id: 'test-connector',
+            connector,
+          }),
+        );
+
+        Graph.expand(graph, Node.RootId);
+
+        const connections = registry.get(graph.connections(Node.RootId));
+        expect(connections).has.length(1);
+        expect(connections[0].id).to.equal('child');
+      });
+    });
+
+    describe('createExtension', () => {
+      test('works with plain function connector', () => {
+        const registry = Registry.make();
+        const builder = GraphBuilder.make({ registry });
+        const graph = builder.graph;
+
+        const extensions = GraphBuilder.createExtension({
+          id: 'test-extension',
+          match: NodeMatcher.whenNodeType(EXAMPLE_TYPE),
+          connector: (node, get) => [{ id: 'child', type: EXAMPLE_TYPE, data: node.data }],
+        });
+
+        GraphBuilder.addExtension(builder, extensions);
+
+        const writableGraph = graph as Graph.WritableGraph;
+        Graph.addNode(writableGraph, { id: 'parent', type: EXAMPLE_TYPE, properties: {}, data: 'test' });
+        Graph.expand(graph, 'parent');
+
+        const connections = registry.get(graph.connections('parent'));
+        expect(connections).has.length(1);
+        expect(connections[0].id).to.equal('child');
+        expect(connections[0].data).to.equal('test');
+      });
+
+      test('works with plain function actions', () => {
+        const registry = Registry.make();
+        const builder = GraphBuilder.make({ registry });
+        const graph = builder.graph;
+
+        const extensions = GraphBuilder.createExtension({
+          id: 'test-extension',
+          match: NodeMatcher.whenNodeType(EXAMPLE_TYPE),
+          actions: (node, get) => [
+            {
+              id: 'test-action',
+              data: async () => {
+                console.log('TestAction');
+              },
+              properties: { label: 'Test' },
+            },
+          ],
+        });
+
+        GraphBuilder.addExtension(builder, extensions);
+
+        const writableGraph = graph as Graph.WritableGraph;
+        Graph.addNode(writableGraph, { id: 'parent', type: EXAMPLE_TYPE, properties: {}, data: 'test' });
+        Graph.expand(graph, 'parent');
+
+        const actions = registry.get(graph.actions('parent'));
+        expect(actions).has.length(1);
+        expect(actions[0].id).to.equal('test-action');
+      });
+
+      test('works with resolver', async () => {
+        const registry = Registry.make();
+        const builder = GraphBuilder.make({ registry });
+        const graph = builder.graph;
+
+        const extensions = GraphBuilder.createExtension({
+          id: 'test-extension',
+          match: NodeMatcher.whenNodeType(EXAMPLE_TYPE),
+          resolver: (id, get) => ({ id, type: EXAMPLE_TYPE, properties: {}, data: 'resolved' }),
+        });
+
+        GraphBuilder.addExtension(builder, extensions);
+        await Graph.initialize(graph, EXAMPLE_ID);
+
+        const node = Graph.getNode(graph, EXAMPLE_ID).pipe(Option.getOrNull);
+        expect(node).to.not.be.null;
+        expect(node?.id).to.equal(EXAMPLE_ID);
+        expect(node?.data).to.equal('resolved');
+      });
+
+      test('works with connector and actions together', () => {
+        const registry = Registry.make();
+        const builder = GraphBuilder.make({ registry });
+        const graph = builder.graph;
+
+        const extensions = GraphBuilder.createExtension({
+          id: 'test-extension',
+          match: NodeMatcher.whenNodeType(EXAMPLE_TYPE),
+          connector: (node, get) => [{ id: 'child', type: EXAMPLE_TYPE, data: node.data }],
+          actions: (node, get) => [
+            {
+              id: 'test-action',
+              data: async () => {
+                console.log('TestAction');
+              },
+              properties: { label: 'Test' },
+            },
+          ],
+        });
+
+        GraphBuilder.addExtension(builder, extensions);
+
+        const writableGraph = graph as Graph.WritableGraph;
+        Graph.addNode(writableGraph, { id: 'parent', type: EXAMPLE_TYPE, properties: {}, data: 'test' });
+        Graph.expand(graph, 'parent');
+
+        const connections = registry.get(graph.connections('parent'));
+        // Should have both the child node and the action node
+        expect(connections.length).to.be.greaterThanOrEqual(1);
+        const childNode = connections.find((n) => n.id === 'child');
+        expect(childNode).to.not.be.undefined;
+        expect(childNode?.data).to.equal('test');
+
+        const actions = registry.get(graph.actions('parent'));
+        expect(actions).has.length(1);
+        expect(actions[0].id).to.equal('test-action');
+      });
+
+      test('works with reactive connector using get context', () => {
+        const registry = Registry.make();
+        const builder = GraphBuilder.make({ registry });
+        const graph = builder.graph;
+
+        const state = Atom.make('initial');
+
+        const extensions = GraphBuilder.createExtension({
+          id: 'test-extension',
+          match: NodeMatcher.whenNodeType(EXAMPLE_TYPE),
+          connector: (node, get) => [{ id: 'child', type: EXAMPLE_TYPE, data: get(state) }],
+        });
+
+        GraphBuilder.addExtension(builder, extensions);
+
+        const writableGraph = graph as Graph.WritableGraph;
+        Graph.addNode(writableGraph, { id: 'parent', type: EXAMPLE_TYPE, properties: {}, data: 'test' });
+        Graph.expand(graph, 'parent');
+
+        {
+          const connections = registry.get(graph.connections('parent'));
+          expect(connections).has.length(1);
+          expect(connections[0].data).to.equal('initial');
+        }
+
+        registry.set(state, 'updated');
+
+        {
+          const connections = registry.get(graph.connections('parent'));
+          expect(connections).has.length(1);
+          expect(connections[0].data).to.equal('updated');
+        }
+      });
+    });
+
+    describe('createTypeExtension', () => {
+      test('creates extension matching by schema type with inferred object type', () => {
+        const registry = Registry.make();
+        const builder = GraphBuilder.make({ registry });
+        const graph = builder.graph;
+
+        const extensions = GraphBuilder.createTypeExtension({
+          id: 'type-extension',
+          type: TestSchema.Person,
+          connector: (object) => {
+            return [{ id: 'child', type: EXAMPLE_TYPE, data: object }];
+          },
+        });
+
+        GraphBuilder.addExtension(builder, extensions);
+
+        const writableGraph = graph as Graph.WritableGraph;
+        const testObject = Obj.make(TestSchema.Person, { name: 'Test' });
+        Graph.addNode(writableGraph, { id: 'parent', type: EXAMPLE_TYPE, properties: {}, data: testObject });
+        Graph.expand(graph, 'parent');
+
+        const connections = registry.get(graph.connections('parent'));
+        expect(connections).has.length(1);
+        expect(connections[0].id).to.equal('child');
+        expect(connections[0].data).to.equal(testObject);
+      });
     });
   });
 });

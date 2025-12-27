@@ -15,10 +15,8 @@ import { registerSignalsRuntime } from '@dxos/echo-signals';
 
 import { fromSignal } from './atoms';
 import * as Graph from './graph';
-import { ROOT_ID } from './graph';
 import * as GraphBuilder from './graph-builder';
-import { createExtension, make as makeGraphBuilder } from './graph-builder';
-import type * as Node from './node';
+import * as Node from './node';
 import { atomFromQuery } from './testing';
 
 registerSignalsRuntime();
@@ -138,10 +136,10 @@ describe('signals integration', () => {
         const inner = registry.get(innerAtom);
         expect(inner).to.eq(undefined);
 
-        const builder = makeGraphBuilder({ registry });
+        const builder = GraphBuilder.make({ registry });
         GraphBuilder.addExtension(
           builder,
-          createExtension({
+          GraphBuilder.createExtensionRaw({
             id: 'outbound-connector',
             connector: () =>
               Atom.make((get) => {
@@ -159,21 +157,21 @@ describe('signals integration', () => {
 
         const loaded = new Trigger();
         let count = 0;
-        const cancel = registry.subscribe(graph.connections(ROOT_ID), (nodes: Node.Node[]) => {
+        const cancel = registry.subscribe(graph.connections(Node.RootId), (nodes: Node.Node[]) => {
           count++;
           if (nodes.length > 0) {
             loaded.wake();
           }
         });
         onTestFinished(() => cancel());
-        registry.get(graph.connections(ROOT_ID));
+        registry.get(graph.connections(Node.RootId));
         expect(count).to.eq(1);
 
-        Graph.expand(graph, ROOT_ID);
+        Graph.expand(graph, Node.RootId);
         await loaded.wait();
         expect(count).to.eq(2);
 
-        const nodes = registry.get(graph.connections(ROOT_ID));
+        const nodes = registry.get(graph.connections(Node.RootId));
         expect(nodes).has.length(1);
         expect(nodes[0].id).to.eq(innerId);
         expect(nodes[0].data).to.eq('inner');
@@ -187,10 +185,10 @@ describe('signals integration', () => {
       db.add(Obj.make(Type.Expando, { name: 'a' }));
       db.add(Obj.make(Type.Expando, { name: 'b' }));
 
-      const builder = makeGraphBuilder({ registry });
+      const builder = GraphBuilder.make({ registry });
       GraphBuilder.addExtension(
         builder,
-        createExtension({
+        GraphBuilder.createExtensionRaw({
           id: 'expando',
           connector: () => {
             const query = db.query(Filter.type(Type.Expando));
@@ -212,15 +210,15 @@ describe('signals integration', () => {
 
       const graph = builder.graph;
       let count = 0;
-      const cancel = registry.subscribe(graph.connections(ROOT_ID), (nodes) => {
+      const cancel = registry.subscribe(graph.connections(Node.RootId), (nodes) => {
         count = nodes.length;
       });
       onTestFinished(() => cancel());
 
-      registry.get(graph.connections(ROOT_ID));
+      registry.get(graph.connections(Node.RootId));
       expect(count).to.eq(0);
 
-      Graph.expand(graph, ROOT_ID);
+      Graph.expand(graph, Node.RootId);
       expect(count).to.eq(2);
 
       const object = db.add(Obj.make(Type.Expando, { name: 'c' }));

@@ -8,8 +8,7 @@ import { assert, describe, expect, onTestFinished, test } from 'vitest';
 
 import * as Graph from './graph';
 import * as GraphBuilder from './graph-builder';
-import { createExtension, make as makeGraphBuilder } from './graph-builder';
-import { type Node } from './node';
+import * as Node from './node';
 
 const exampleId = (id: number) => `dx:test:${id}`;
 const EXAMPLE_ID = exampleId(1);
@@ -19,10 +18,10 @@ describe('Graph', () => {
   test('getGraph', () => {
     const registry = Registry.make();
     const graph = Graph.make({ registry });
-    const root = registry.get(graph.node(Graph.ROOT_ID));
+    const root = registry.get(graph.node(Node.RootId));
     assert.ok(Option.isSome(root));
-    expect(root.value.id).toEqual(Graph.ROOT_ID);
-    expect(root.value.type).toEqual(Graph.ROOT_TYPE);
+    expect(root.value.id).toEqual(Node.RootId);
+    expect(root.value.type).toEqual(Node.RootType);
     expect(Graph.getGraph(root.value)).toEqual(graph);
   });
 
@@ -114,7 +113,7 @@ describe('Graph', () => {
   test('onNodeChanged', () => {
     const graph = Graph.make();
 
-    let node: Option.Option<Node> = Option.none();
+    let node: Option.Option<Node.Node> = Option.none();
     graph.onNodeChanged.on(({ node: newNode }) => {
       node = newNode;
     });
@@ -214,7 +213,7 @@ describe('Graph', () => {
     const graph = Graph.make({ registry });
     const nodeKey = graph.node(exampleId(1));
 
-    let node: Option.Option<Node> = Option.none();
+    let node: Option.Option<Node.Node> = Option.none();
     const cancel = registry.subscribe(nodeKey, (n) => {
       node = n;
     });
@@ -289,8 +288,8 @@ describe('Graph', () => {
     const graph = Graph.make();
 
     Graph.addNode(graph, {
-      id: Graph.ROOT_ID,
-      type: Graph.ROOT_TYPE,
+      id: Node.RootId,
+      type: Node.RootType,
       nodes: [
         { id: 'test1', type: 'test' },
         { id: 'test2', type: 'test' },
@@ -300,8 +299,8 @@ describe('Graph', () => {
 
     const json = Graph.toJSON(graph);
     expect(json).to.deep.equal({
-      id: Graph.ROOT_ID,
-      type: Graph.ROOT_TYPE,
+      id: Node.RootId,
+      type: Node.RootType,
       nodes: [
         { id: 'test1', type: 'test', nodes: [{ id: 'test2', type: 'test' }] },
         { id: 'test2', type: 'test' },
@@ -314,8 +313,8 @@ describe('Graph', () => {
     const graph = Graph.make({ registry });
 
     Graph.addNode(graph, {
-      id: Graph.ROOT_ID,
-      type: Graph.ROOT_TYPE,
+      id: Node.RootId,
+      type: Node.RootType,
       nodes: [
         { id: 'test1', type: 'test' },
         { id: 'test2', type: 'test' },
@@ -331,8 +330,8 @@ describe('Graph', () => {
 
     registry.get(graph.json());
     expect(json).to.deep.equal({
-      id: Graph.ROOT_ID,
-      type: Graph.ROOT_TYPE,
+      id: Node.RootId,
+      type: Node.RootType,
       nodes: [
         { id: 'test1', type: 'test', nodes: [{ id: 'test2', type: 'test' }] },
         { id: 'test2', type: 'test' },
@@ -342,8 +341,8 @@ describe('Graph', () => {
     Graph.addNode(graph, { id: 'test3', type: 'test' });
     Graph.addEdge(graph, { source: 'root', target: 'test3' });
     expect(json).to.deep.equal({
-      id: Graph.ROOT_ID,
-      type: Graph.ROOT_TYPE,
+      id: Node.RootId,
+      type: Node.RootType,
       nodes: [
         { id: 'test1', type: 'test', nodes: [{ id: 'test2', type: 'test' }] },
         { id: 'test2', type: 'test' },
@@ -355,8 +354,8 @@ describe('Graph', () => {
   test('get path', () => {
     const graph = Graph.make();
     Graph.addNode(graph, {
-      id: Graph.ROOT_ID,
-      type: Graph.ROOT_TYPE,
+      id: Node.RootId,
+      type: Node.RootType,
       nodes: [
         { id: exampleId(1), type: EXAMPLE_TYPE },
         { id: exampleId(2), type: EXAMPLE_TYPE },
@@ -379,8 +378,8 @@ describe('Graph', () => {
   test('get path curried', () => {
     const graph = Graph.make();
     Graph.addNode(graph, {
-      id: Graph.ROOT_ID,
-      type: Graph.ROOT_TYPE,
+      id: Node.RootId,
+      type: Node.RootType,
       nodes: [
         { id: exampleId(1), type: EXAMPLE_TYPE },
         { id: exampleId(2), type: EXAMPLE_TYPE },
@@ -395,8 +394,8 @@ describe('Graph', () => {
     test('can be traversed', () => {
       const graph = Graph.make();
       Graph.addNode(graph, {
-        id: Graph.ROOT_ID,
-        type: Graph.ROOT_TYPE,
+        id: Node.RootId,
+        type: Node.RootType,
         nodes: [
           { id: 'test1', type: 'test' },
           { id: 'test2', type: 'test' },
@@ -415,8 +414,8 @@ describe('Graph', () => {
     test('traversal breaks cycles', () => {
       const graph = Graph.make();
       Graph.addNode(graph, {
-        id: Graph.ROOT_ID,
-        type: Graph.ROOT_TYPE,
+        id: Node.RootId,
+        type: Node.RootType,
         nodes: [
           { id: 'test1', type: 'test' },
           { id: 'test2', type: 'test' },
@@ -436,8 +435,8 @@ describe('Graph', () => {
     test('traversal can be started from any node', () => {
       const graph = Graph.make();
       Graph.addNode(graph, {
-        id: Graph.ROOT_ID,
-        type: Graph.ROOT_TYPE,
+        id: Node.RootId,
+        type: Node.RootType,
         nodes: [
           {
             id: 'test1',
@@ -460,8 +459,8 @@ describe('Graph', () => {
     test('traversal can follow inbound edges', () => {
       const graph = Graph.make();
       Graph.addNode(graph, {
-        id: Graph.ROOT_ID,
-        type: Graph.ROOT_TYPE,
+        id: Node.RootId,
+        type: Node.RootType,
         nodes: [
           {
             id: 'test1',
@@ -485,8 +484,8 @@ describe('Graph', () => {
     test('traversal can be terminated early', () => {
       const graph = Graph.make();
       Graph.addNode(graph, {
-        id: Graph.ROOT_ID,
-        type: Graph.ROOT_TYPE,
+        id: Node.RootId,
+        type: Node.RootType,
         nodes: [
           { id: 'test1', type: 'test' },
           { id: 'test2', type: 'test' },
@@ -509,8 +508,8 @@ describe('Graph', () => {
     test('traverse curried', () => {
       const graph = Graph.make();
       Graph.addNode(graph, {
-        id: Graph.ROOT_ID,
-        type: Graph.ROOT_TYPE,
+        id: Node.RootId,
+        type: Node.RootType,
         nodes: [{ id: 'test1', type: 'test' }],
       });
       Graph.addNode(graph, { id: 'test2', type: 'test' });
@@ -518,7 +517,7 @@ describe('Graph', () => {
       const nodes: string[] = [];
       graph.pipe(
         Graph.traverse({
-          source: Graph.ROOT_ID,
+          source: Node.RootId,
           visitor: (node, _path) => {
             nodes.push(node.id);
           },
@@ -599,12 +598,12 @@ describe('Graph', () => {
 
   test('expand curried', async () => {
     const registry = Registry.make();
-    const builder = makeGraphBuilder({ registry });
+    const builder = GraphBuilder.make({ registry });
     const graph = builder.graph;
     let expandCalled = false;
     GraphBuilder.addExtension(
       builder,
-      createExtension({
+      GraphBuilder.createExtensionRaw({
         id: 'test',
         connector: () => {
           expandCalled = true;
@@ -612,18 +611,18 @@ describe('Graph', () => {
         },
       }),
     );
-    await graph.pipe(Graph.expand(Graph.ROOT_ID));
+    await graph.pipe(Graph.expand(Node.RootId));
     expect(expandCalled).to.be.true;
   });
 
   test('initialize curried', async () => {
     const registry = Registry.make();
-    const builder = makeGraphBuilder({ registry });
+    const builder = GraphBuilder.make({ registry });
     const graph = builder.graph;
     let initializeCalled = false;
     GraphBuilder.addExtension(
       builder,
-      createExtension({
+      GraphBuilder.createExtensionRaw({
         id: 'test',
         resolver: () => {
           initializeCalled = true;
@@ -638,8 +637,8 @@ describe('Graph', () => {
   test('waitForPath curried', async () => {
     const graph = Graph.make();
     Graph.addNode(graph, {
-      id: Graph.ROOT_ID,
-      type: Graph.ROOT_TYPE,
+      id: Node.RootId,
+      type: Node.RootType,
       nodes: [{ id: exampleId(1), type: EXAMPLE_TYPE }],
     });
     const path = await graph.pipe(Graph.waitForPath({ target: exampleId(1) }, { timeout: 1000 }));

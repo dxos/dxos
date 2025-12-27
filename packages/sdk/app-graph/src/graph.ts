@@ -14,32 +14,24 @@ import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { type MakeOptional, isNonNullable } from '@dxos/util';
 
-import { type Action, type ActionGroup, type Node, type NodeArg, type Relation } from './node';
+import * as Node from './node';
 
-/** @internal */
 const graphSymbol = Symbol('graph');
 
-/** @internal */
 type DeepWriteable<T> = {
   -readonly [K in keyof T]: T[K] extends object ? DeepWriteable<T[K]> : T[K];
 };
 
-/** @internal */
-type NodeInternal = DeepWriteable<Node> & { [graphSymbol]: GraphImpl };
+type NodeInternal = DeepWriteable<Node.Node> & { [graphSymbol]: GraphImpl };
 
 /**
  * Get the Graph a Node is currently associated with.
  */
-export const getGraph = (node: Node): Graph => {
+export const getGraph = (node: Node.Node): Graph => {
   const graph = (node as NodeInternal)[graphSymbol];
   invariant(graph, 'Node is not associated with a graph.');
   return graph as Graph;
 };
-
-export const ROOT_ID = 'root';
-export const ROOT_TYPE = 'dxos.org/type/GraphRoot';
-export const ACTION_TYPE = 'dxos.org/type/GraphAction';
-export const ACTION_GROUP_TYPE = 'dxos.org/type/GraphActionGroup';
 
 export type GraphTraversalOptions = {
   /**
@@ -47,7 +39,7 @@ export type GraphTraversalOptions = {
    *
    * If the callback returns `false`, traversal is stops recursing.
    */
-  visitor: (node: Node, path: string[]) => boolean | void;
+  visitor: (node: Node.Node, path: string[]) => boolean | void;
 
   /**
    * The node to start traversing from.
@@ -61,14 +53,14 @@ export type GraphTraversalOptions = {
    *
    * @default 'outbound'
    */
-  relation?: Relation;
+  relation?: Node.Relation;
 };
 
 export type GraphParams = {
   registry?: Registry.Registry;
-  nodes?: MakeOptional<Node, 'data' | 'cacheable'>[];
+  nodes?: MakeOptional<Node.Node, 'data' | 'cacheable'>[];
   edges?: Record<string, Edges>;
-  onExpand?: (id: string, relation: Relation) => void;
+  onExpand?: (id: string, relation: Node.Relation) => void;
   onInitialize?: (id: string) => Promise<void>;
   onRemoveNode?: (id: string) => void;
 };
@@ -96,7 +88,7 @@ export interface BaseGraph extends Pipeable.Pipeable {
   /**
    * Event emitted when a node is changed.
    */
-  readonly onNodeChanged: Event<{ id: string; node: Option.Option<Node> }>;
+  readonly onNodeChanged: Event<{ id: string; node: Option.Option<Node.Node> }>;
   /**
    * Get the atom key for the JSON representation of the graph.
    */
@@ -104,19 +96,19 @@ export interface BaseGraph extends Pipeable.Pipeable {
   /**
    * Get the atom key for the node with the given id.
    */
-  node(id: string): Atom.Atom<Option.Option<Node>>;
+  node(id: string): Atom.Atom<Option.Option<Node.Node>>;
   /**
    * Get the atom key for the node with the given id.
    */
-  nodeOrThrow(id: string): Atom.Atom<Node>;
+  nodeOrThrow(id: string): Atom.Atom<Node.Node>;
   /**
    * Get the atom key for the connections of the node with the given id.
    */
-  connections(id: string, relation?: Relation): Atom.Atom<Node[]>;
+  connections(id: string, relation?: Node.Relation): Atom.Atom<Node.Node[]>;
   /**
    * Get the atom key for the actions of the node with the given id.
    */
-  actions(id: string): Atom.Atom<(Action | ActionGroup)[]>;
+  actions(id: string): Atom.Atom<(Node.Action | Node.ActionGroup)[]>;
   /**
    * Get the atom key for the edges of the node with the given id.
    */
@@ -147,7 +139,7 @@ class GraphImpl implements WritableGraph {
 
   readonly onNodeChanged = new Event<{
     id: string;
-    node: Option.Option<Node>;
+    node: Option.Option<Node.Node>;
   }>();
 
   readonly _onExpand?: GraphParams['onExpand'];
@@ -160,10 +152,10 @@ class GraphImpl implements WritableGraph {
   readonly _initialEdges = Record.empty<string, Edges>();
   readonly _initialNodes = Record.fromEntries([
     [
-      ROOT_ID,
+      Node.RootId,
       this._constructNode({
-        id: ROOT_ID,
-        type: ROOT_TYPE,
+        id: Node.RootId,
+        type: Node.RootType,
         data: null,
         properties: {},
       }),
@@ -171,12 +163,12 @@ class GraphImpl implements WritableGraph {
   ]);
 
   /** @internal */
-  readonly _node = Atom.family<string, Atom.Writable<Option.Option<Node>>>((id) => {
+  readonly _node = Atom.family<string, Atom.Writable<Option.Option<Node.Node>>>((id) => {
     const initial = Option.flatten(Record.get(this._initialNodes, id));
-    return Atom.make<Option.Option<Node>>(initial).pipe(Atom.keepAlive, Atom.withLabel(`graph:node:${id}`));
+    return Atom.make<Option.Option<Node.Node>>(initial).pipe(Atom.keepAlive, Atom.withLabel(`graph:node:${id}`));
   });
 
-  readonly _nodeOrThrow = Atom.family<string, Atom.Atom<Node>>((id) => {
+  readonly _nodeOrThrow = Atom.family<string, Atom.Atom<Node.Node>>((id) => {
     return Atom.make((get) => {
       const node = get(this._node(id));
       invariant(Option.isSome(node), `Node not available: ${id}`);
@@ -191,28 +183,28 @@ class GraphImpl implements WritableGraph {
 
   // NOTE: Currently the argument to the family needs to be referentially stable for the atom to be referentially stable.
   // TODO(wittjosiah): Atom feature request, support for something akin to `ComplexMap` to allow for complex arguments.
-  readonly _connections = Atom.family<string, Atom.Atom<Node[]>>((key) => {
+  readonly _connections = Atom.family<string, Atom.Atom<Node.Node[]>>((key) => {
     return Atom.make((get) => {
       const [id, relation] = key.split('$');
       const edges = get(this._edges(id));
-      return edges[relation as Relation]
+      return edges[relation as Node.Relation]
         .map((id) => get(this._node(id)))
         .filter(Option.isSome)
         .map((o) => o.value);
     }).pipe(Atom.withLabel(`graph:connections:${key}`));
   });
 
-  readonly _actions = Atom.family<string, Atom.Atom<(Action | ActionGroup)[]>>((id) => {
+  readonly _actions = Atom.family<string, Atom.Atom<(Node.Action | Node.ActionGroup)[]>>((id) => {
     return Atom.make((get) => {
       return get(this._connections(`${id}$outbound`)).filter(
-        (node) => node.type === ACTION_TYPE || node.type === ACTION_GROUP_TYPE,
+        (node) => node.type === Node.ActionType || node.type === Node.ActionGroupType,
       );
     }).pipe(Atom.withLabel(`graph:actions:${id}`));
   });
 
   readonly _json = Atom.family<string, Atom.Atom<any>>((id) => {
     return Atom.make((get) => {
-      const toJSON = (node: Node, seen: string[] = []): any => {
+      const toJSON = (node: Node.Node, seen: string[] = []): any => {
         const nodes = get(this._connections(`${node.id}$outbound`));
         const obj: Record<string, any> = {
           id: node.id,
@@ -223,7 +215,7 @@ class GraphImpl implements WritableGraph {
         }
         if (nodes.length) {
           obj.nodes = nodes
-            .map((n: Node) => {
+            .map((n: Node.Node) => {
               // Break cycles.
               const nextSeen = [...seen, node.id];
               return nextSeen.includes(n.id) ? undefined : toJSON(n, nextSeen);
@@ -257,23 +249,23 @@ class GraphImpl implements WritableGraph {
     }
   }
 
-  json(id = ROOT_ID): Atom.Atom<any> {
+  json(id = Node.RootId): Atom.Atom<any> {
     return jsonImpl(this, id);
   }
 
-  node(id: string): Atom.Atom<Option.Option<Node>> {
+  node(id: string): Atom.Atom<Option.Option<Node.Node>> {
     return nodeImpl(this, id);
   }
 
-  nodeOrThrow(id: string): Atom.Atom<Node> {
+  nodeOrThrow(id: string): Atom.Atom<Node.Node> {
     return nodeOrThrowImpl(this, id);
   }
 
-  connections(id: string, relation: Relation = 'outbound'): Atom.Atom<Node[]> {
+  connections(id: string, relation: Node.Relation = 'outbound'): Atom.Atom<Node.Node[]> {
     return connectionsImpl(this, id, relation);
   }
 
-  actions(id: string): Atom.Atom<(Action | ActionGroup)[]> {
+  actions(id: string): Atom.Atom<(Node.Action | Node.ActionGroup)[]> {
     return actionsImpl(this, id);
   }
 
@@ -282,7 +274,7 @@ class GraphImpl implements WritableGraph {
   }
 
   /** @internal */
-  _constructNode(node: NodeArg<any>): Option.Option<Node> {
+  _constructNode(node: Node.NodeArg<any>): Option.Option<Node.Node> {
     return Option.some({
       [graphSymbol]: this,
       data: null,
@@ -303,7 +295,7 @@ const getInternal = (graph: BaseGraph): GraphImpl => {
 /**
  * Convert the graph to a JSON object.
  */
-export const toJSON = (graph: BaseGraph, id = ROOT_ID): object => {
+export const toJSON = (graph: BaseGraph, id = Node.RootId): object => {
   const internal = getInternal(graph);
   return internal._registry.get(internal._json(id));
 };
@@ -311,7 +303,7 @@ export const toJSON = (graph: BaseGraph, id = ROOT_ID): object => {
 /**
  * Implementation helper for json.
  */
-const jsonImpl = (graph: BaseGraph, id = ROOT_ID): Atom.Atom<any> => {
+const jsonImpl = (graph: BaseGraph, id = Node.RootId): Atom.Atom<any> => {
   const internal = getInternal(graph);
   return internal._json(id);
 };
@@ -319,7 +311,7 @@ const jsonImpl = (graph: BaseGraph, id = ROOT_ID): Atom.Atom<any> => {
 /**
  * Implementation helper for node.
  */
-const nodeImpl = (graph: BaseGraph, id: string): Atom.Atom<Option.Option<Node>> => {
+const nodeImpl = (graph: BaseGraph, id: string): Atom.Atom<Option.Option<Node.Node>> => {
   const internal = getInternal(graph);
   return internal._node(id);
 };
@@ -327,7 +319,7 @@ const nodeImpl = (graph: BaseGraph, id: string): Atom.Atom<Option.Option<Node>> 
 /**
  * Implementation helper for nodeOrThrow.
  */
-const nodeOrThrowImpl = (graph: BaseGraph, id: string): Atom.Atom<Node> => {
+const nodeOrThrowImpl = (graph: BaseGraph, id: string): Atom.Atom<Node.Node> => {
   const internal = getInternal(graph);
   return internal._nodeOrThrow(id);
 };
@@ -335,7 +327,11 @@ const nodeOrThrowImpl = (graph: BaseGraph, id: string): Atom.Atom<Node> => {
 /**
  * Implementation helper for connections.
  */
-const connectionsImpl = (graph: BaseGraph, id: string, relation: Relation = 'outbound'): Atom.Atom<Node[]> => {
+const connectionsImpl = (
+  graph: BaseGraph,
+  id: string,
+  relation: Node.Relation = 'outbound',
+): Atom.Atom<Node.Node[]> => {
   const internal = getInternal(graph);
   return internal._connections(`${id}$${relation}`);
 };
@@ -343,7 +339,7 @@ const connectionsImpl = (graph: BaseGraph, id: string, relation: Relation = 'out
 /**
  * Implementation helper for actions.
  */
-const actionsImpl = (graph: BaseGraph, id: string): Atom.Atom<(Action | ActionGroup)[]> => {
+const actionsImpl = (graph: BaseGraph, id: string): Atom.Atom<(Node.Action | Node.ActionGroup)[]> => {
   const internal = getInternal(graph);
   return internal._actions(id);
 };
@@ -359,7 +355,7 @@ const edgesImpl = (graph: BaseGraph, id: string): Atom.Atom<Edges> => {
 /**
  * Implementation helper for getNode.
  */
-const getNodeImpl = (graph: BaseGraph, id: string): Option.Option<Node> => {
+const getNodeImpl = (graph: BaseGraph, id: string): Option.Option<Node.Node> => {
   const internal = getInternal(graph);
   return internal._registry.get(nodeImpl(graph, id));
 };
@@ -367,12 +363,12 @@ const getNodeImpl = (graph: BaseGraph, id: string): Option.Option<Node> => {
 /**
  * Get the node with the given id from the graph's registry.
  */
-export function getNode(graph: BaseGraph, id: string): Option.Option<Node>;
-export function getNode(id: string): (graph: BaseGraph) => Option.Option<Node>;
+export function getNode(graph: BaseGraph, id: string): Option.Option<Node.Node>;
+export function getNode(id: string): (graph: BaseGraph) => Option.Option<Node.Node>;
 export function getNode(
   graphOrId: BaseGraph | string,
   id?: string,
-): Option.Option<Node> | ((graph: BaseGraph) => Option.Option<Node>) {
+): Option.Option<Node.Node> | ((graph: BaseGraph) => Option.Option<Node.Node>) {
   if (typeof graphOrId === 'string') {
     // Curried: getNode(id)
     const id = graphOrId;
@@ -387,7 +383,7 @@ export function getNode(
 /**
  * Implementation helper for getNodeOrThrow.
  */
-const getNodeOrThrowImpl = (graph: BaseGraph, id: string): Node => {
+const getNodeOrThrowImpl = (graph: BaseGraph, id: string): Node.Node => {
   const internal = getInternal(graph);
   return internal._registry.get(nodeOrThrowImpl(graph, id));
 };
@@ -397,9 +393,12 @@ const getNodeOrThrowImpl = (graph: BaseGraph, id: string): Node => {
  *
  * @throws If the node is Option.none().
  */
-export function getNodeOrThrow(graph: BaseGraph, id: string): Node;
-export function getNodeOrThrow(id: string): (graph: BaseGraph) => Node;
-export function getNodeOrThrow(graphOrId: BaseGraph | string, id?: string): Node | ((graph: BaseGraph) => Node) {
+export function getNodeOrThrow(graph: BaseGraph, id: string): Node.Node;
+export function getNodeOrThrow(id: string): (graph: BaseGraph) => Node.Node;
+export function getNodeOrThrow(
+  graphOrId: BaseGraph | string,
+  id?: string,
+): Node.Node | ((graph: BaseGraph) => Node.Node) {
   if (typeof graphOrId === 'string') {
     // Curried: getNodeOrThrow(id)
     const id = graphOrId;
@@ -415,14 +414,14 @@ export function getNodeOrThrow(graphOrId: BaseGraph | string, id?: string): Node
  * Get the root node of the graph.
  * This is an alias for `getNodeOrThrow(graph, ROOT_ID)`.
  */
-export function getRoot(graph: BaseGraph): Node {
-  return getNodeOrThrowImpl(graph, ROOT_ID);
+export function getRoot(graph: BaseGraph): Node.Node {
+  return getNodeOrThrowImpl(graph, Node.RootId);
 }
 
 /**
  * Implementation helper for getConnections.
  */
-const getConnectionsImpl = (graph: BaseGraph, id: string, relation: Relation = 'outbound'): Node[] => {
+const getConnectionsImpl = (graph: BaseGraph, id: string, relation: Node.Relation = 'outbound'): Node.Node[] => {
   const internal = getInternal(graph);
   return internal._registry.get(connectionsImpl(graph, id, relation));
 };
@@ -430,13 +429,13 @@ const getConnectionsImpl = (graph: BaseGraph, id: string, relation: Relation = '
 /**
  * Get all nodes connected to the node with the given id by the given relation from the graph's registry.
  */
-export function getConnections(graph: BaseGraph, id: string, relation?: Relation): Node[];
-export function getConnections(id: string, relation?: Relation): (graph: BaseGraph) => Node[];
+export function getConnections(graph: BaseGraph, id: string, relation?: Node.Relation): Node.Node[];
+export function getConnections(id: string, relation?: Node.Relation): (graph: BaseGraph) => Node.Node[];
 export function getConnections(
   graphOrId: BaseGraph | string,
-  idOrRelation?: string | Relation,
-  relation?: Relation,
-): Node[] | ((graph: BaseGraph) => Node[]) {
+  idOrRelation?: string | Node.Relation,
+  relation?: Node.Relation,
+): Node.Node[] | ((graph: BaseGraph) => Node.Node[]) {
   if (typeof graphOrId === 'string') {
     // Curried: getConnections(id, relation?)
     const id = graphOrId;
@@ -454,7 +453,7 @@ export function getConnections(
 /**
  * Implementation helper for getActions.
  */
-const getActionsImpl = (graph: BaseGraph, id: string): Node[] => {
+const getActionsImpl = (graph: BaseGraph, id: string): Node.Node[] => {
   const internal = getInternal(graph);
   return internal._registry.get(actionsImpl(graph, id));
 };
@@ -462,9 +461,12 @@ const getActionsImpl = (graph: BaseGraph, id: string): Node[] => {
 /**
  * Get all actions connected to the node with the given id from the graph's registry.
  */
-export function getActions(graph: BaseGraph, id: string): Node[];
-export function getActions(id: string): (graph: BaseGraph) => Node[];
-export function getActions(graphOrId: BaseGraph | string, id?: string): Node[] | ((graph: BaseGraph) => Node[]) {
+export function getActions(graph: BaseGraph, id: string): Node.Node[];
+export function getActions(id: string): (graph: BaseGraph) => Node.Node[];
+export function getActions(
+  graphOrId: BaseGraph | string,
+  id?: string,
+): Node.Node[] | ((graph: BaseGraph) => Node.Node[]) {
   if (typeof graphOrId === 'string') {
     // Curried: getActions(id)
     const id = graphOrId;
@@ -508,7 +510,7 @@ export function getEdges(graphOrId: BaseGraph | string, id?: string): Edges | ((
  * Implementation helper for traverse.
  */
 const traverseImpl = (graph: BaseGraph, options: GraphTraversalOptions, path: string[] = []): void => {
-  const { visitor, source = ROOT_ID, relation = 'outbound' } = options;
+  const { visitor, source = Node.RootId, relation = 'outbound' } = options;
   // Break cycles.
   if (path.includes(source)) {
     return;
@@ -692,7 +694,7 @@ export function initialize<T extends ExpandableGraph | WritableGraph>(
 const expandImpl = <T extends ExpandableGraph | WritableGraph>(
   graph: T,
   id: string,
-  relation: Relation = 'outbound',
+  relation: Node.Relation = 'outbound',
 ): T => {
   const internal = getInternal(graph);
   const key = `${id}$${relation}`;
@@ -710,12 +712,15 @@ const expandImpl = <T extends ExpandableGraph | WritableGraph>(
  *
  * Fires the `onExpand` callback to add connections to the node.
  */
-export function expand<T extends ExpandableGraph | WritableGraph>(graph: T, id: string, relation?: Relation): T;
-export function expand(id: string, relation?: Relation): <T extends ExpandableGraph | WritableGraph>(graph: T) => T;
+export function expand<T extends ExpandableGraph | WritableGraph>(graph: T, id: string, relation?: Node.Relation): T;
+export function expand(
+  id: string,
+  relation?: Node.Relation,
+): <T extends ExpandableGraph | WritableGraph>(graph: T) => T;
 export function expand<T extends ExpandableGraph | WritableGraph>(
   graphOrId: T | string,
-  idOrRelation?: string | Relation,
-  relation?: Relation,
+  idOrRelation?: string | Node.Relation,
+  relation?: Node.Relation,
 ): T | (<T extends ExpandableGraph | WritableGraph>(graph: T) => T) {
   if (typeof graphOrId === 'string') {
     // Curried: expand(id, relation?)
@@ -737,7 +742,7 @@ export function expand<T extends ExpandableGraph | WritableGraph>(
 const sortEdgesImpl = <T extends ExpandableGraph | WritableGraph>(
   graph: T,
   id: string,
-  relation: Relation,
+  relation: Node.Relation,
   order: string[],
 ): T => {
   const internal = getInternal(graph);
@@ -756,31 +761,31 @@ const sortEdgesImpl = <T extends ExpandableGraph | WritableGraph>(
 export function sortEdges<T extends ExpandableGraph | WritableGraph>(
   graph: T,
   id: string,
-  relation: Relation,
+  relation: Node.Relation,
   order: string[],
 ): T;
 export function sortEdges(
   id: string,
-  relation: Relation,
+  relation: Node.Relation,
   order: string[],
 ): <T extends ExpandableGraph | WritableGraph>(graph: T) => T;
 export function sortEdges<T extends ExpandableGraph | WritableGraph>(
   graphOrId: T | string,
-  idOrRelation?: string | Relation,
-  relationOrOrder?: Relation | string[],
+  idOrRelation?: string | Node.Relation,
+  relationOrOrder?: Node.Relation | string[],
   order?: string[],
 ): T | (<T extends ExpandableGraph | WritableGraph>(graph: T) => T) {
   if (typeof graphOrId === 'string') {
     // Curried: sortEdges(id, relation, order)
     const id = graphOrId;
-    const relation = idOrRelation as Relation;
+    const relation = idOrRelation as Node.Relation;
     const order = relationOrOrder as string[];
     return <T extends ExpandableGraph | WritableGraph>(graph: T) => sortEdgesImpl(graph, id, relation, order);
   } else {
     // Direct: sortEdges(graph, id, relation, order)
     const graph = graphOrId;
     const id = idOrRelation as string;
-    const relation = relationOrOrder as Relation;
+    const relation = relationOrOrder as Node.Relation;
     return sortEdgesImpl(graph, id, relation, order!);
   }
 }
@@ -788,7 +793,7 @@ export function sortEdges<T extends ExpandableGraph | WritableGraph>(
 /**
  * Implementation helper for addNodes.
  */
-const addNodesImpl = <T extends WritableGraph>(graph: T, nodes: NodeArg<any, Record<string, any>>[]): T => {
+const addNodesImpl = <T extends WritableGraph>(graph: T, nodes: Node.NodeArg<any, Record<string, any>>[]): T => {
   Atom.batch(() => {
     nodes.map((node) => addNodeImpl(graph, node));
   });
@@ -798,15 +803,15 @@ const addNodesImpl = <T extends WritableGraph>(graph: T, nodes: NodeArg<any, Rec
 /**
  * Add nodes to the graph.
  */
-export function addNodes<T extends WritableGraph>(graph: T, nodes: NodeArg<any, Record<string, any>>[]): T;
-export function addNodes(nodes: NodeArg<any, Record<string, any>>[]): <T extends WritableGraph>(graph: T) => T;
+export function addNodes<T extends WritableGraph>(graph: T, nodes: Node.NodeArg<any, Record<string, any>>[]): T;
+export function addNodes(nodes: Node.NodeArg<any, Record<string, any>>[]): <T extends WritableGraph>(graph: T) => T;
 export function addNodes<T extends WritableGraph>(
-  graphOrNodes: T | NodeArg<any, Record<string, any>>[],
-  nodes?: NodeArg<any, Record<string, any>>[],
+  graphOrNodes: T | Node.NodeArg<any, Record<string, any>>[],
+  nodes?: Node.NodeArg<any, Record<string, any>>[],
 ): T | (<T extends WritableGraph>(graph: T) => T) {
   if (nodes === undefined) {
     // Curried: addNodes(nodes)
-    const nodes = graphOrNodes as NodeArg<any, Record<string, any>>[];
+    const nodes = graphOrNodes as Node.NodeArg<any, Record<string, any>>[];
     return <T extends WritableGraph>(graph: T) => addNodesImpl(graph, nodes);
   } else {
     // Direct: addNodes(graph, nodes)
@@ -818,7 +823,7 @@ export function addNodes<T extends WritableGraph>(
 /**
  * Implementation helper for addNode.
  */
-const addNodeImpl = <T extends WritableGraph>(graph: T, nodeArg: NodeArg<any, Record<string, any>>): T => {
+const addNodeImpl = <T extends WritableGraph>(graph: T, nodeArg: Node.NodeArg<any, Record<string, any>>): T => {
   const internal = getInternal(graph);
   const { nodes, edges, ...node } = nodeArg;
   const { id, type, data = null, properties = {} } = node;
@@ -870,15 +875,15 @@ const addNodeImpl = <T extends WritableGraph>(graph: T, nodeArg: NodeArg<any, Re
 /**
  * Add a node to the graph.
  */
-export function addNode<T extends WritableGraph>(graph: T, nodeArg: NodeArg<any, Record<string, any>>): T;
-export function addNode(nodeArg: NodeArg<any, Record<string, any>>): <T extends WritableGraph>(graph: T) => T;
+export function addNode<T extends WritableGraph>(graph: T, nodeArg: Node.NodeArg<any, Record<string, any>>): T;
+export function addNode(nodeArg: Node.NodeArg<any, Record<string, any>>): <T extends WritableGraph>(graph: T) => T;
 export function addNode<T extends WritableGraph>(
-  graphOrNodeArg: T | NodeArg<any, Record<string, any>>,
-  nodeArg?: NodeArg<any, Record<string, any>>,
+  graphOrNodeArg: T | Node.NodeArg<any, Record<string, any>>,
+  nodeArg?: Node.NodeArg<any, Record<string, any>>,
 ): T | (<T extends WritableGraph>(graph: T) => T) {
   if (nodeArg === undefined) {
     // Curried: addNode(nodeArg)
-    const nodeArg = graphOrNodeArg as NodeArg<any, Record<string, any>>;
+    const nodeArg = graphOrNodeArg as Node.NodeArg<any, Record<string, any>>;
     return <T extends WritableGraph>(graph: T) => addNodeImpl(graph, nodeArg);
   } else {
     // Direct: addNode(graph, nodeArg)
@@ -1112,10 +1117,10 @@ const removeEdgeImpl = <T extends WritableGraph>(graph: T, edgeArg: Edge, remove
   if (removeOrphans) {
     const source = internal._registry.get(sourceAtom);
     const target = internal._registry.get(targetAtom);
-    if (source.outbound.length === 0 && source.inbound.length === 0 && edgeArg.source !== ROOT_ID) {
+    if (source.outbound.length === 0 && source.inbound.length === 0 && edgeArg.source !== Node.RootId) {
       removeNodesImpl(graph, [edgeArg.source]);
     }
-    if (target.outbound.length === 0 && target.inbound.length === 0 && edgeArg.target !== ROOT_ID) {
+    if (target.outbound.length === 0 && target.inbound.length === 0 && edgeArg.target !== Node.RootId) {
       removeNodesImpl(graph, [edgeArg.target]);
     }
   }

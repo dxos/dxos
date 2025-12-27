@@ -7,6 +7,7 @@ export * as CreateAtom from './atoms';
 export * as Graph from './graph';
 export * as GraphBuilder from './graph-builder';
 export * as Node from './node';
+export * as NodeMatcher from './node-matcher';
 
 // TODO(wittjosiah): Direct re-export needed for portable type references.
 export type { BuilderExtensions } from './graph-builder';
