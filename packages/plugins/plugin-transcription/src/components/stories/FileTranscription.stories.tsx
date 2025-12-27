@@ -189,7 +189,7 @@ const meta = {
   title: 'plugins/plugin-transcription/FileTranscription',
   decorators: [
     withTheme,
-    withLayout({ container: 'column' }),
+    withLayout({ layout: 'column' }),
     withPluginManager({
       plugins: [
         ClientPlugin({

@@ -16,7 +16,7 @@ export type WithLayoutProps =
   | FC<ContainerProps>
   | {
       classNames?: ClassNameValue;
-      container?: ContainerType;
+      layout?: ContainerType;
       scroll?: boolean;
     };
 
@@ -28,7 +28,6 @@ export const withLayout =
   (Story) => {
     // Prevent re-rendering of the story.
     const MemoizedStory = memo(Story);
-
     if (typeof props === 'function') {
       const Container = props;
       return (
@@ -36,14 +35,15 @@ export const withLayout =
           <MemoizedStory />
         </Container>
       );
+    } else {
+      const { layout = 'fullscreen', classNames, scroll } = props;
+      const Container = layouts[layout] ?? layouts.fullscreen;
+      return (
+        <Container classNames={mx(classNames, scroll ? 'overflow-y-auto' : 'overflow-hidden')}>
+          <MemoizedStory />
+        </Container>
+      );
     }
-
-    const Container = layouts[(props as any).container as ContainerType] ?? layouts.fullscreen;
-    return (
-      <Container classNames={mx(props.classNames, props.scroll ? 'overflow-y-auto' : 'overflow-hidden')}>
-        <MemoizedStory />
-      </Container>
-    );
   };
 
 const layouts: Record<ContainerType, FC<ContainerProps>> = {

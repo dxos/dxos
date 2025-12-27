@@ -16,6 +16,12 @@ import { Input } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { mx } from '@dxos/ui-theme';
 
+// TODO(burdon): Factor out styles.
+// TODO(burdon): Implement horizontal movement between columns when column is selected.
+// TODO(burdon): Test codemirror Item.
+// TODO(burdon): Scroll if needed when nav.
+// TODO(burdon): Prevent tab out of app.
+
 const border =
   'rounded-sm outline-none border border-subduedSeparator focus:border-primary-500 focus-within:border-rose-500';
 
@@ -69,11 +75,7 @@ const Item = forwardRef<HTMLDivElement, { value: string }>(({ value }, ref) => {
 
 const DefaultStory = () => {
   const columns = useMemo(() => {
-    return [
-      ['A1', 'A2', 'A3'],
-      ['B1', 'B2', 'B3', 'B4'],
-      ['C1', 'C2', 'C3', 'C4', 'C5', 'C6'],
-    ];
+    return [['A1', 'A2', 'A3'], ['B1'], ['C1', 'C2', 'C3', 'C4', 'C5', 'C6'], ['D1', 'D2']];
   }, []);
 
   const ref = useRef<HTMLDivElement>(null);
@@ -110,7 +112,7 @@ const withTabster: Decorator = (Story) => {
 const meta: Meta<typeof DefaultStory> = {
   title: 'ui/react-ui-mosaic/focus',
   component: DefaultStory,
-  decorators: [withTheme, withLayout({ container: 'fullscreen' }), withTabster],
+  decorators: [withTheme, withLayout({ layout: 'fullscreen' }), withTabster],
   parameters: {
     layout: 'fullscreen',
   },

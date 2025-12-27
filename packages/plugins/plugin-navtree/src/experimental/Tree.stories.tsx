@@ -203,7 +203,7 @@ const Sidebar = ({ mutate }: { mutate?: boolean }) => {
 const meta = {
   title: 'plugins/plugin-navtree/experimental/Tree',
   component: Tree,
-  decorators: [withTheme, withLayout({ container: 'column' })],
+  decorators: [withTheme, withLayout({ layout: 'column' })],
 } satisfies Meta<typeof Tree>;
 
 export default meta;

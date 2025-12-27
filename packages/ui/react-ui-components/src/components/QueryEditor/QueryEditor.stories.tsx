@@ -48,7 +48,7 @@ const meta = {
   },
   decorators: [
     withTheme,
-    withLayout({ container: 'column', classNames: 'p-2', scroll: true }),
+    withLayout({ layout: 'column', classNames: 'p-2', scroll: true }),
     withClientProvider({
       types: [Organization.Organization, Person.Person, Project.Project, Employer.Employer],
       createIdentity: true,

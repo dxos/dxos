@@ -53,7 +53,7 @@ const meta: Meta<typeof DefaultStory> = {
   render: DefaultStory as any,
   decorators: [
     withTheme,
-    withLayout({ container: 'column' }),
+    withLayout({ layout: 'column' }),
     // TODO(burdon): Create story without client.
     withPluginManager({
       plugins: [

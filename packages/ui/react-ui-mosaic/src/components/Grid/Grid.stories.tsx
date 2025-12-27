@@ -11,7 +11,7 @@ import { faker } from '@dxos/random';
 import { useQuery } from '@dxos/react-client/echo';
 import { useClientStory, withClientProvider } from '@dxos/react-client/testing';
 import { useThemeContext } from '@dxos/react-ui';
-import { withTheme } from '@dxos/react-ui/testing';
+import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { QueryEditor, translations, useQueryBuilder } from '@dxos/react-ui-components';
 import { Editor } from '@dxos/react-ui-editor';
 import { Text } from '@dxos/schema';
@@ -145,6 +145,7 @@ const meta = {
   render: DefaultStory,
   decorators: [
     withTheme,
+    withLayout({ layout: 'fullscreen' }),
     withClientProvider({
       createIdentity: true,
       createSpace: true,

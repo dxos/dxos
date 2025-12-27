@@ -17,7 +17,11 @@ import {
   extractClosestEdge,
 } from '@atlaskit/pragmatic-drag-and-drop-hitbox/closest-edge';
 import { DropIndicator } from '@atlaskit/pragmatic-drag-and-drop-react-drop-indicator/box';
-import { useArrowNavigationGroup, useFocusableGroup } from '@fluentui/react-tabster';
+import {
+  useArrowNavigationGroup,
+  useFocusableGroup,
+  useMergedTabsterAttributes_unstable,
+} from '@fluentui/react-tabster';
 import { createContext } from '@radix-ui/react-context';
 import React, {
   type CSSProperties,
@@ -38,8 +42,6 @@ import { type Obj } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { Icon, type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
-
-import { findFirstFocusableAncestor, useFocusableGroupAlt } from '../../hooks';
 
 const focusBorderClasses =
   'outline-none transition border border-subduedSeparator focus:border-primary-500 focus-within:border-separator rounded-sm';
@@ -130,8 +132,17 @@ GridViewport.displayName = 'Grid.Viewport';
 type GridColumnProps = ThemedClassName<PropsWithChildren<{}>>;
 
 const GridColumn = memo(({ classNames, children }: GridColumnProps) => {
+  const focusableGroupAttrs = useFocusableGroup({ tabBehavior: 'limited' });
+  const arrowNavigationAttrs = useArrowNavigationGroup({ axis: 'vertical', memorizeCurrent: true });
+  const tabsterAttrs = useMergedTabsterAttributes_unstable(focusableGroupAttrs, arrowNavigationAttrs);
+
   return (
-    <div role='none' className={mx('relative flex flex-col is-full', focusBorderClasses, classNames)}>
+    <div
+      role='none'
+      tabIndex={0}
+      {...tabsterAttrs}
+      className={mx('relative flex flex-col is-full overflow-hidden', focusBorderClasses, classNames)}
+    >
       {children}
     </div>
   );
@@ -152,8 +163,6 @@ type GridStackProps = ThemedClassName<
 
 const GridStack = memo(({ classNames, objects, Cell, enableDrag }: GridStackProps) => {
   const rootRef = useRef<HTMLDivElement>(null);
-  const focusableGroupAttrs = useFocusableGroupAlt(rootRef.current);
-  const arrowNavigationAttrs = useArrowNavigationGroup({ axis: 'vertical', memorizeCurrent: true });
 
   useEffect(() => {
     if (!rootRef.current) {
@@ -172,13 +181,7 @@ const GridStack = memo(({ classNames, objects, Cell, enableDrag }: GridStackProp
   }, [rootRef]);
 
   return (
-    <div
-      ref={rootRef}
-      role='none'
-      className={mx('relative flex flex-col is-full plb-2 overflow-y-auto', classNames)}
-      {...focusableGroupAttrs}
-      {...arrowNavigationAttrs}
-    >
+    <div ref={rootRef} role='none' className={mx('relative flex flex-col is-full plb-2 overflow-y-auto', classNames)}>
       {objects.map((object) => (
         <Grid.Cell key={object.id} object={object} Cell={Cell} enableDrag={enableDrag} />
       ))}
@@ -327,19 +330,6 @@ const GridCellPrimitive = memo(
             classNames,
           )}
           tabIndex={0}
-          onKeyDown={(event) => {
-            switch (event.key) {
-              // TODO(burdon): useFocusableGroup should do this.
-              case 'Escape': {
-                const element =
-                  event.target === focusableRef.current
-                    ? findFirstFocusableAncestor(focusableRef.current!)
-                    : focusableRef.current;
-                element?.focus();
-                break;
-              }
-            }
-          }}
           {...focusableGroupAttrs}
         >
           <div role='none'>

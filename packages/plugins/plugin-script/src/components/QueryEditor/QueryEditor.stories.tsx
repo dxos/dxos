@@ -80,7 +80,7 @@ const meta = {
   title: 'plugins/plugin-script/QueryEditor',
   component: QueryEditor,
   render: DefaultStory,
-  decorators: [withTheme, withLayout({ container: 'column', classNames: 'is-prose' })],
+  decorators: [withTheme, withLayout({ layout: 'column', classNames: 'is-prose' })],
 } satisfies Meta<typeof DefaultStory>;
 
 export default meta;
