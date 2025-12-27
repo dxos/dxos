@@ -20,8 +20,11 @@ import { Path, Tree } from '@dxos/react-ui-list';
 import { getSize, mx } from '@dxos/ui-theme';
 import { byPosition, isNonNullable, safeParseInt } from '@dxos/util';
 
+import { fromObservable, fromSignal } from '../atoms';
+import * as Graph from '../graph';
 import { type ExpandableGraph, ROOT_ID } from '../graph';
-import { atomFromObservable, atomFromSignal, createExtension, make } from '../graph-builder';
+import * as GraphBuilder from '../graph-builder';
+import { createExtension, make } from '../graph-builder';
 import { type Node } from '../node';
 import { atomFromQuery } from '../testing';
 
@@ -56,14 +59,14 @@ const createGraph = (client: Client, registry: Registry.Registry): ExpandableGra
           get(node),
           Option.flatMap((node) => (node.id === ROOT_ID ? Option.some(node) : Option.none())),
           Option.map(() => {
-            const spaces = get(atomFromObservable(client.spaces)) ?? [];
+            const spaces = get(fromObservable(client.spaces)) ?? [];
             return spaces
-              .filter((space) => get(atomFromObservable(space.state)) === SpaceState.SPACE_READY)
+              .filter((space: any) => get(fromObservable(space.state)) === SpaceState.SPACE_READY)
               .map((space) => ({
                 id: space.id,
                 type: 'dxos.org/type/Space',
                 properties: {
-                  label: get(atomFromSignal(() => space.properties.name)),
+                  label: get(fromSignal(() => space.properties.name)),
                 },
                 data: space,
               }));
@@ -101,11 +104,14 @@ const createGraph = (client: Client, registry: Registry.Registry): ExpandableGra
     },
   });
 
-  const graph = make({ registry }).addExtension(spaceBuilderExtension).addExtension(objectBuilderExtension).graph;
+  const builder = make({ registry });
+  GraphBuilder.addExtension(builder, spaceBuilderExtension);
+  GraphBuilder.addExtension(builder, objectBuilderExtension);
+  const graph = builder.graph;
   graph.onNodeChanged.on(({ id }) => {
-    graph.expand(id);
+    Graph.expand(graph, id);
   });
-  graph.expand(ROOT_ID);
+  Graph.expand(graph, ROOT_ID);
   (window as any).graph = graph;
   return graph;
 };
@@ -294,8 +300,7 @@ export const TreeView: Story = {
 
     const getProps = useCallback(
       (node: Node, path: string[]) => {
-        const children = graph
-          .getConnections(node.id, 'outbound')
+        const children = Graph.getConnections(graph, node.id, 'outbound')
           .map((n) => {
             // Break cycles.
             const nextPath = [...path, node.id];

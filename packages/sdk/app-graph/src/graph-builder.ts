@@ -3,25 +3,17 @@
 //
 
 import { Atom, Registry } from '@effect-atom/atom-react';
-import { effect } from '@preact/signals-core';
 import * as Array from 'effect/Array';
 import * as Function from 'effect/Function';
 import * as Option from 'effect/Option';
+import * as Pipeable from 'effect/Pipeable';
 import * as Record from 'effect/Record';
 
-import { type CleanupFn, type MulticastObservable, type Trigger } from '@dxos/async';
+import { type CleanupFn, type Trigger } from '@dxos/async';
 import { log } from '@dxos/log';
 import { type MaybePromise, type Position, byPosition, getDebugName, isNode, isNonNullable } from '@dxos/util';
 
-import {
-  ACTION_GROUP_TYPE,
-  ACTION_TYPE,
-  type ExpandableGraph,
-  type Graph,
-  type GraphParams,
-  ROOT_ID,
-  make as makeGraph,
-} from './graph';
+import * as Graph from './graph';
 import { type ActionData, type Node, type NodeArg, type Relation, actionGroupSymbol } from './node';
 
 /**
@@ -137,7 +129,7 @@ export const createExtension = (extension: CreateExtensionOptions): BuilderExten
                 return get(actionGroups(node)).map((arg) => ({
                   ...arg,
                   data: actionGroupSymbol,
-                  type: ACTION_GROUP_TYPE,
+                  type: Graph.ACTION_GROUP_TYPE,
                 }));
               } catch {
                 log.warn('Error in actionGroups', { id: getId('actionGroups'), node });
@@ -155,7 +147,7 @@ export const createExtension = (extension: CreateExtensionOptions): BuilderExten
           connector: Atom.family((node) =>
             Atom.make((get) => {
               try {
-                return get(actions(node)).map((arg) => ({ ...arg, type: ACTION_TYPE }));
+                return get(actions(node)).map((arg) => ({ ...arg, type: Graph.ACTION_TYPE }));
               } catch {
                 log.warn('Error in actions', { id: getId('actions'), node });
                 return [];
@@ -193,16 +185,18 @@ export const flattenExtensions = (extension: BuilderExtensions, acc: BuilderExte
 };
 
 /**
+ * Identifier denoting a GraphBuilder.
+ */
+export const GraphBuilderTypeId: unique symbol = Symbol.for('@dxos/app-graph/GraphBuilder');
+export type GraphBuilderTypeId = typeof GraphBuilderTypeId;
+
+/**
  * GraphBuilder interface.
  */
-export interface GraphBuilder {
-  readonly graph: ExpandableGraph;
+export interface GraphBuilder extends Pipeable.Pipeable {
+  readonly [GraphBuilderTypeId]: GraphBuilderTypeId;
+  readonly graph: Graph.ExpandableGraph;
   readonly extensions: Atom.Atom<Record<string, BuilderExtension>>;
-
-  addExtension(extensions: BuilderExtensions): GraphBuilder;
-  removeExtension(id: string): GraphBuilder;
-  explore(options: GraphBuilderTraverseOptions, path?: string[]): Promise<void>;
-  destroy(): void;
 }
 
 /**
@@ -213,22 +207,29 @@ export interface GraphBuilder {
 //   Should unsubscribe from nodes that are not in the set/radius.
 //   Should track LRU nodes that are not in the set/radius and remove them beyond a certain threshold.
 class GraphBuilderImpl implements GraphBuilder {
+  readonly [GraphBuilderTypeId]: GraphBuilderTypeId = GraphBuilderTypeId;
+
+  pipe() {
+    // eslint-disable-next-line prefer-rest-params
+    return Pipeable.pipeArguments(this, arguments);
+  }
+
   // TODO(wittjosiah): Use Context.
-  private readonly _subscriptions = new Map<string, CleanupFn>();
-  private readonly _extensions = Atom.make(Record.empty<string, BuilderExtension>()).pipe(
+  readonly _subscriptions = new Map<string, CleanupFn>();
+  readonly _extensions = Atom.make(Record.empty<string, BuilderExtension>()).pipe(
     Atom.keepAlive,
     Atom.withLabel('graph-builder:extensions'),
   );
-  private readonly _initialized: Record<string, Trigger> = {};
-  private readonly _registry: Registry.Registry;
-  private readonly _graph: Graph & {
+  readonly _initialized: Record<string, Trigger> = {};
+  readonly _registry: Registry.Registry;
+  readonly _graph: Graph.Graph & {
     _node: (id: string) => Atom.Writable<Option.Option<Node>>;
     _constructNode: (node: NodeArg<any>) => Option.Option<Node>;
   };
 
-  constructor({ registry, ...params }: Pick<GraphParams, 'registry' | 'nodes' | 'edges'> = {}) {
+  constructor({ registry, ...params }: Pick<Graph.GraphParams, 'registry' | 'nodes' | 'edges'> = {}) {
     this._registry = registry ?? Registry.make();
-    const graph = makeGraph({
+    const graph = Graph.make({
       ...params,
       registry: this._registry,
       onExpand: (id, relation) => this._onExpand(id, relation),
@@ -236,81 +237,18 @@ class GraphBuilderImpl implements GraphBuilder {
       onRemoveNode: (id) => this._onRemoveNode(id),
     });
     // Access internal methods via type assertion since GraphBuilder needs them
-    this._graph = graph as Graph & {
+    this._graph = graph as Graph.Graph & {
       _node: (id: string) => Atom.Writable<Option.Option<Node>>;
       _constructNode: (node: NodeArg<any>) => Option.Option<Node>;
     };
   }
 
-  get graph(): ExpandableGraph {
+  get graph(): Graph.ExpandableGraph {
     return this._graph;
   }
 
   get extensions() {
     return this._extensions;
-  }
-
-  addExtension(extensions: BuilderExtensions): GraphBuilder {
-    flattenExtensions(extensions).forEach((extension) => {
-      const extensions = this._registry.get(this._extensions);
-      this._registry.set(this._extensions, Record.set(extensions, extension.id, extension));
-    });
-    return this;
-  }
-
-  removeExtension(id: string): GraphBuilder {
-    const extensions = this._registry.get(this._extensions);
-    this._registry.set(this._extensions, Record.remove(extensions, id));
-    return this;
-  }
-
-  async explore(
-    // TODO(wittjosiah): Currently defaulting to new registry.
-    //   Currently unsure about how to handle nodes which are expanded in the background.
-    //   This seems like a good place to start.
-    { registry = Registry.make(), source = ROOT_ID, relation = 'outbound', visitor }: GraphBuilderTraverseOptions,
-    path: string[] = [],
-  ): Promise<void> {
-    // Break cycles.
-    if (path.includes(source)) {
-      return;
-    }
-
-    // TODO(wittjosiah): This is a workaround for esm not working in the test runner.
-    //   Switching to vitest is blocked by having node esm versions of echo-schema & echo-signals.
-    if (!isNode()) {
-      const { yieldOrContinue } = await import('main-thread-scheduling');
-      await yieldOrContinue('idle');
-    }
-
-    const node = registry.get(this._graph.nodeOrThrow(source));
-    const shouldContinue = await visitor(node, [...path, node.id]);
-    if (shouldContinue === false) {
-      return;
-    }
-
-    const nodes = Object.values(this._registry.get(this._extensions))
-      .filter((extension) => relation === (extension.relation ?? 'outbound'))
-      .map((extension) => extension.connector)
-      .filter(isNonNullable)
-      .flatMap((connector) => registry.get(connector(this._graph.node(source))));
-
-    await Promise.all(
-      nodes.map((nodeArg) => {
-        registry.set(this._graph._node(nodeArg.id), this._graph._constructNode(nodeArg));
-        return this.explore({ registry, source: nodeArg.id, relation, visitor }, [...path, node.id]);
-      }),
-    );
-
-    if (registry !== this._registry) {
-      registry.reset();
-      registry.dispose();
-    }
-  }
-
-  destroy(): void {
-    this._subscriptions.forEach((unsubscribe) => unsubscribe());
-    this._subscriptions.clear();
   }
 
   private readonly _resolvers = Atom.family<string, Atom.Atom<Option.Option<NodeArg<any>>>>((id) => {
@@ -361,17 +299,20 @@ class GraphBuilderImpl implements GraphBuilder {
         log('update', { id, relation, ids, removed });
         const update = () => {
           Atom.batch(() => {
-            this._graph.removeEdges(
+            Graph.removeEdges(
+              this._graph,
               removed.map((target) => ({ source: id, target })),
               true,
             );
-            this._graph.addNodes(nodes);
-            this._graph.addEdges(
+            Graph.addNodes(this._graph, nodes);
+            Graph.addEdges(
+              this._graph,
               nodes.map((node) =>
                 relation === 'outbound' ? { source: id, target: node.id } : { source: node.id, target: id },
               ),
             );
-            this._graph.sortEdges(
+            Graph.sortEdges(
+              this._graph,
               id,
               relation,
               nodes.map(({ id }) => id),
@@ -404,12 +345,12 @@ class GraphBuilderImpl implements GraphBuilder {
         const trigger = this._initialized[id];
         Option.match(node, {
           onSome: (node) => {
-            this._graph.addNodes([node]);
+            Graph.addNodes(this._graph, [node]);
             trigger?.wake();
           },
           onNone: () => {
             trigger?.wake();
-            this._graph.removeNodes([id]);
+            Graph.removeNodes(this._graph, [id]);
           },
         });
       },
@@ -428,7 +369,7 @@ class GraphBuilderImpl implements GraphBuilder {
 /**
  * Creates a new GraphBuilder instance.
  */
-export const make = (params?: Pick<GraphParams, 'registry' | 'nodes' | 'edges'>): GraphBuilder => {
+export const make = (params?: Pick<Graph.GraphParams, 'registry' | 'nodes' | 'edges'>): GraphBuilder => {
   return new GraphBuilderImpl(params);
 };
 
@@ -445,35 +386,161 @@ export const from = (pickle?: string, registry?: Registry.Registry): GraphBuilde
 };
 
 /**
- * Creates an Atom.Atom<T> from a callback which accesses signals.
- * Will return a new atom instance each time.
+ * Implementation helper for addExtension.
  */
-export const atomFromSignal = <T>(cb: () => T): Atom.Atom<T> => {
-  return Atom.make((get) => {
-    const dispose = effect(() => {
-      get.setSelf(cb());
-    });
-
-    get.addFinalizer(() => dispose());
-
-    return cb();
+const addExtensionImpl = (builder: GraphBuilder, extensions: BuilderExtensions): GraphBuilder => {
+  const internal = builder as GraphBuilderImpl;
+  flattenExtensions(extensions).forEach((extension) => {
+    const extensions = internal._registry.get(internal._extensions);
+    internal._registry.set(internal._extensions, Record.set(extensions, extension.id, extension));
   });
+  return builder;
 };
-
-const observableFamily = Atom.family((observable: MulticastObservable<any>) => {
-  return Atom.make((get) => {
-    const subscription = observable.subscribe((value) => get.setSelf(value));
-
-    get.addFinalizer(() => subscription.unsubscribe());
-
-    return observable.get();
-  });
-});
 
 /**
- * Creates an Atom.Atom<T> from a MulticastObservable<T>
- * Will return the same atom instance for the same observable.
+ * Add extensions to the graph builder.
  */
-export const atomFromObservable = <T>(observable: MulticastObservable<T>): Atom.Atom<T> => {
-  return observableFamily(observable) as Atom.Atom<T>;
+export function addExtension(builder: GraphBuilder, extensions: BuilderExtensions): GraphBuilder;
+export function addExtension(extensions: BuilderExtensions): (builder: GraphBuilder) => GraphBuilder;
+export function addExtension(
+  builderOrExtensions: GraphBuilder | BuilderExtensions,
+  extensions?: BuilderExtensions,
+): GraphBuilder | ((builder: GraphBuilder) => GraphBuilder) {
+  if (extensions === undefined) {
+    // Curried: addExtension(extensions)
+    const extensions = builderOrExtensions as BuilderExtensions;
+    return (builder: GraphBuilder) => addExtensionImpl(builder, extensions);
+  } else {
+    // Direct: addExtension(builder, extensions)
+    const builder = builderOrExtensions as GraphBuilder;
+    return addExtensionImpl(builder, extensions);
+  }
+}
+
+/**
+ * Implementation helper for removeExtension.
+ */
+const removeExtensionImpl = (builder: GraphBuilder, id: string): GraphBuilder => {
+  const internal = builder as GraphBuilderImpl;
+  const extensions = internal._registry.get(internal._extensions);
+  internal._registry.set(internal._extensions, Record.remove(extensions, id));
+  return builder;
 };
+
+/**
+ * Remove an extension from the graph builder.
+ */
+export function removeExtension(builder: GraphBuilder, id: string): GraphBuilder;
+export function removeExtension(id: string): (builder: GraphBuilder) => GraphBuilder;
+export function removeExtension(
+  builderOrId: GraphBuilder | string,
+  id?: string,
+): GraphBuilder | ((builder: GraphBuilder) => GraphBuilder) {
+  if (typeof builderOrId === 'string') {
+    // Curried: removeExtension(id)
+    const id = builderOrId;
+    return (builder: GraphBuilder) => removeExtensionImpl(builder, id);
+  } else {
+    // Direct: removeExtension(builder, id)
+    const builder = builderOrId;
+    return removeExtensionImpl(builder, id!);
+  }
+}
+
+/**
+ * Implementation helper for explore.
+ */
+const exploreImpl = async (
+  builder: GraphBuilder,
+  options: GraphBuilderTraverseOptions,
+  path: string[] = [],
+): Promise<void> => {
+  const internal = builder as GraphBuilderImpl;
+  const { registry = Registry.make(), source = Graph.ROOT_ID, relation = 'outbound', visitor } = options;
+  // Break cycles.
+  if (path.includes(source)) {
+    return;
+  }
+
+  // TODO(wittjosiah): This is a workaround for esm not working in the test runner.
+  //   Switching to vitest is blocked by having node esm versions of echo-schema & echo-signals.
+  if (!isNode()) {
+    const { yieldOrContinue } = await import('main-thread-scheduling');
+    await yieldOrContinue('idle');
+  }
+
+  const node = registry.get(internal._graph.nodeOrThrow(source));
+  const shouldContinue = await visitor(node, [...path, node.id]);
+  if (shouldContinue === false) {
+    return;
+  }
+
+  const nodes = Object.values(internal._registry.get(internal._extensions))
+    .filter((extension) => relation === (extension.relation ?? 'outbound'))
+    .map((extension) => extension.connector)
+    .filter(isNonNullable)
+    .flatMap((connector) => registry.get(connector(internal._graph.node(source))));
+
+  await Promise.all(
+    nodes.map((nodeArg) => {
+      registry.set(internal._graph._node(nodeArg.id), internal._graph._constructNode(nodeArg));
+      return exploreImpl(builder, { registry, source: nodeArg.id, relation, visitor }, [...path, node.id]);
+    }),
+  );
+
+  if (registry !== internal._registry) {
+    registry.reset();
+    registry.dispose();
+  }
+};
+
+/**
+ * Explore the graph by traversing it with the given options.
+ */
+export function explore(builder: GraphBuilder, options: GraphBuilderTraverseOptions, path?: string[]): Promise<void>;
+export function explore(
+  options: GraphBuilderTraverseOptions,
+  path?: string[],
+): (builder: GraphBuilder) => Promise<void>;
+export function explore(
+  builderOrOptions: GraphBuilder | GraphBuilderTraverseOptions,
+  optionsOrPath?: GraphBuilderTraverseOptions | string[],
+  path?: string[],
+): Promise<void> | ((builder: GraphBuilder) => Promise<void>) {
+  if (typeof builderOrOptions === 'object' && 'visitor' in builderOrOptions) {
+    // Curried: explore(options, path?)
+    const options = builderOrOptions as GraphBuilderTraverseOptions;
+    const path = Array.isArray(optionsOrPath) ? optionsOrPath : undefined;
+    return (builder: GraphBuilder) => exploreImpl(builder, options, path);
+  } else {
+    // Direct: explore(builder, options, path?)
+    const builder = builderOrOptions as GraphBuilder;
+    const options = optionsOrPath as GraphBuilderTraverseOptions;
+    const pathArg = path ?? (Array.isArray(optionsOrPath) ? optionsOrPath : undefined);
+    return exploreImpl(builder, options, pathArg);
+  }
+}
+
+/**
+ * Implementation helper for destroy.
+ */
+const destroyImpl = (builder: GraphBuilder): void => {
+  const internal = builder as GraphBuilderImpl;
+  internal._subscriptions.forEach((unsubscribe) => unsubscribe());
+  internal._subscriptions.clear();
+};
+
+/**
+ * Destroy the graph builder and clean up resources.
+ */
+export function destroy(builder: GraphBuilder): void;
+export function destroy(): (builder: GraphBuilder) => void;
+export function destroy(builder?: GraphBuilder): void | ((builder: GraphBuilder) => void) {
+  if (builder === undefined) {
+    // Curried: destroy()
+    return (builder: GraphBuilder) => destroyImpl(builder);
+  } else {
+    // Direct: destroy(builder)
+    return destroyImpl(builder);
+  }
+}
