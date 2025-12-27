@@ -1,5 +1,5 @@
 ---
-description: Check CI is passing
+description: check CI is passing
 agent: build
 model: anthropic/claude-sonnet-4-0
 ---
