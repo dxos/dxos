@@ -14,7 +14,7 @@ import { continueKeymap } from '@valtown/codemirror-continue';
 import { type HoverInfo, tsAutocomplete, tsFacet, tsHover, tsLinter, tsSync } from '@valtown/codemirror-ts';
 import React, { memo } from 'react';
 
-import { type ThemeMode, type ThemedClassName, useDebugDeps, useThemeContext } from '@dxos/react-ui';
+import { type ThemeMode, type ThemedClassName, useThemeContext } from '@dxos/react-ui';
 import { type UseTextEditorProps, useTextEditor } from '@dxos/react-ui-editor';
 import { Domino } from '@dxos/ui';
 import {
@@ -96,8 +96,6 @@ export const TypescriptEditor = memo(
       }),
       [themeMode, id, extensions, inputMode, selection, scrollTo, env],
     );
-
-    useDebugDeps([themeMode, id, extensions, inputMode, selection, scrollTo, env], 'TypescriptEditor');
 
     return <div ref={parentRef} className={mx(classNames)} {...focusAttributes} />;
   },
