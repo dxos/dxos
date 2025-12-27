@@ -14,13 +14,13 @@ import {
   createIntent,
   defineCapabilityModule,
 } from '@dxos/app-framework';
-import { createExtension } from '@dxos/plugin-graph';
+import { GraphBuilder } from '@dxos/plugin-graph';
 
 import { REGISTRY_ID, REGISTRY_KEY, meta } from '../meta';
 
 export default defineCapabilityModule((context: PluginContext) =>
   contributes(Capabilities.AppGraphBuilder, [
-    createExtension({
+    GraphBuilder.createExtension({
       id: meta.id,
       actions: (node) =>
         Atom.make((get) =>
@@ -45,7 +45,7 @@ export default defineCapabilityModule((context: PluginContext) =>
           ),
         ),
     }),
-    createExtension({
+    GraphBuilder.createExtension({
       id: meta.id,
       connector: (node) =>
         Atom.make((get) =>
@@ -114,7 +114,7 @@ export default defineCapabilityModule((context: PluginContext) =>
           ),
         ),
     }),
-    createExtension({
+    GraphBuilder.createExtension({
       id: `${meta.id}/actions`,
       actions: (node) =>
         Atom.make((get) =>
@@ -136,7 +136,7 @@ export default defineCapabilityModule((context: PluginContext) =>
           ),
         ),
     }),
-    createExtension({
+    GraphBuilder.createExtension({
       id: `${meta.id}/plugins`,
       connector: (node) =>
         Atom.make((get) =>

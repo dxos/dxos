@@ -7,14 +7,14 @@ import * as Function from 'effect/Function';
 import * as Option from 'effect/Option';
 
 import { Capabilities, type PluginContext, contributes, defineCapabilityModule } from '@dxos/app-framework';
-import { createExtension } from '@dxos/plugin-graph';
+import { GraphBuilder } from '@dxos/plugin-graph';
 import { meta as spaceMeta } from '@dxos/plugin-space';
 
 import { meta } from '../meta';
 
 export default defineCapabilityModule((context: PluginContext) =>
   contributes(Capabilities.AppGraphBuilder, [
-    createExtension({
+    GraphBuilder.createExtension({
       id: `${meta.id}/space-settings`,
       connector: (node) =>
         Atom.make((get) =>

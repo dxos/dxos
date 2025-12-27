@@ -20,7 +20,7 @@ import { DXN, type Entity, Filter, Obj, type QueryResult, Type } from '@dxos/ech
 import { log } from '@dxos/log';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { ATTENDABLE_PATH_SEPARATOR, PLANK_COMPANION_TYPE } from '@dxos/plugin-deck/types';
-import { ROOT_ID, atomFromObservable, atomFromSignal, createExtension } from '@dxos/plugin-graph';
+import { Graph, GraphBuilder, type Node } from '@dxos/plugin-graph';
 import { Collection, ViewAnnotation, getTypenameFromQuery } from '@dxos/schema';
 import { isNonNullable } from '@dxos/util';
 
@@ -81,14 +81,14 @@ export default defineCapabilityModule((context: PluginContext) => {
 
   return contributes(Capabilities.AppGraphBuilder, [
     // Primary actions.
-    createExtension({
+    GraphBuilder.createExtension({
       id: `${meta.id}/primary-actions`,
       position: 'hoist',
       actions: (node) =>
         Atom.make((get) =>
           Function.pipe(
             get(node),
-            Option.flatMap((node) => (node.id === ROOT_ID ? Option.some(node) : Option.none())),
+            Option.flatMap((node) => (node.id === Graph.ROOT_ID ? Option.some(node) : Option.none())),
             Option.map(() => [
               {
                 id: SpaceAction.OpenCreateSpace._tag,
@@ -158,14 +158,14 @@ export default defineCapabilityModule((context: PluginContext) => {
     }),
 
     // Create spaces group node.
-    createExtension({
+    GraphBuilder.createExtension({
       id: `${meta.id}/root`,
       position: 'hoist',
       connector: (node) =>
         Atom.make((get) =>
           Function.pipe(
             get(node),
-            Option.flatMap((node) => (node.id === ROOT_ID ? Option.some(node) : Option.none())),
+            Option.flatMap((node) => (node.id === Graph.ROOT_ID ? Option.some(node) : Option.none())),
             Option.map(() => [spacesNode]),
             Option.getOrElse(() => []),
           ),
@@ -173,7 +173,7 @@ export default defineCapabilityModule((context: PluginContext) => {
     }),
 
     // Create space nodes.
-    createExtension({
+    GraphBuilder.createExtension({
       id: SPACES,
       connector: (node) => {
         // TODO(wittjosiah): Find a simpler way to define this type.
@@ -185,8 +185,8 @@ export default defineCapabilityModule((context: PluginContext) => {
             Option.map(() => {
               const state = context.getCapability(SpaceCapabilities.State);
               const client = context.getCapability(ClientCapabilities.Client);
-              const spacesAtom = atomFromObservable(client.spaces);
-              const isReadyAtom = atomFromObservable(client.spaces.isReady);
+              const spacesAtom = GraphBuilder.atomFromObservable(client.spaces);
+              const isReadyAtom = GraphBuilder.atomFromObservable(client.spaces.isReady);
 
               const spaces = get(spacesAtom);
               const isReady = get(isReadyAtom);
@@ -206,7 +206,7 @@ export default defineCapabilityModule((context: PluginContext) => {
                 }
                 const [spacesOrder] = get(atomFromQuery(query));
                 return get(
-                  atomFromSignal(() => {
+                  GraphBuilder.atomFromSignal(() => {
                     const order: string[] = spacesOrder?.order ?? [];
                     const orderMap = new Map(order.map((id, index) => [id, index]));
                     return [
@@ -240,7 +240,7 @@ export default defineCapabilityModule((context: PluginContext) => {
     }),
 
     // Create space actions.
-    createExtension({
+    GraphBuilder.createExtension({
       id: `${meta.id}/actions`,
       actions: (node) =>
         Atom.make((get) =>
@@ -272,7 +272,7 @@ export default defineCapabilityModule((context: PluginContext) => {
     }),
 
     // Create nodes for objects in the root collection of a space.
-    createExtension({
+    GraphBuilder.createExtension({
       id: `${meta.id}/root-collection`,
       connector: (node) =>
         Atom.make((get) =>
@@ -283,13 +283,13 @@ export default defineCapabilityModule((context: PluginContext) => {
             ),
             Option.map((space) => {
               const state = context.getCapability(SpaceCapabilities.State);
-              const spaceState = get(atomFromObservable(space.state));
+              const spaceState = get(GraphBuilder.atomFromObservable(space.state));
               if (spaceState !== SpaceState.SPACE_READY) {
                 return [];
               }
 
               const collection = get(
-                atomFromSignal(
+                GraphBuilder.atomFromSignal(
                   () => space.properties[Collection.Collection.typename]?.target as Collection.Collection | undefined,
                 ),
               );
@@ -298,7 +298,7 @@ export default defineCapabilityModule((context: PluginContext) => {
               }
 
               return get(
-                atomFromSignal(() =>
+                GraphBuilder.atomFromSignal(() =>
                   Function.pipe(
                     collection.objects,
                     Array.map((object) => object.target),
@@ -322,7 +322,7 @@ export default defineCapabilityModule((context: PluginContext) => {
     }),
 
     // Create nodes for objects in a collection or by its DXN.
-    createExtension({
+    GraphBuilder.createExtension({
       id: `${meta.id}/objects`,
       connector: (node) =>
         Atom.make((get) =>
@@ -336,7 +336,7 @@ export default defineCapabilityModule((context: PluginContext) => {
               const space = getSpace(collection);
 
               return get(
-                atomFromSignal(() =>
+                GraphBuilder.atomFromSignal(() =>
                   Function.pipe(
                     collection.objects,
                     Array.map((object) => object.target),
@@ -393,7 +393,7 @@ export default defineCapabilityModule((context: PluginContext) => {
     }),
 
     // Create object nodes for schema-based system collections.
-    createExtension({
+    GraphBuilder.createExtension({
       id: `${meta.id}/system-collections`,
       connector: (node) => {
         // TODO(wittjosiah): Find a simpler way to define this type.
@@ -435,14 +435,14 @@ export default defineCapabilityModule((context: PluginContext) => {
     }),
 
     // Create branch nodes for static schema record types.
-    createExtension({
+    GraphBuilder.createExtension({
       id: `${meta.id}/static-schemas`,
       connector: (node) =>
         Atom.make((get) => {
           const client = get(context.capabilities(ClientCapabilities.Client)).at(0);
           return Function.pipe(
             get(node),
-            Option.flatMap((node) =>
+            Option.flatMap((node: Node.Node) =>
               Obj.instanceOf(Collection.Managed, node.data) && node.data.key === Type.getTypename(Type.PersistentType)
                 ? Option.some(node.data)
                 : Option.none(),
@@ -453,7 +453,7 @@ export default defineCapabilityModule((context: PluginContext) => {
             }),
             Option.map((space) => {
               // TODO(wittjosiah): Support reactive schema registry queries.
-              return get(atomFromSignal(() => (space.properties.staticRecords ?? []) as string[]))
+              return get(GraphBuilder.atomFromSignal(() => (space.properties.staticRecords ?? []) as string[]))
                 .map((typename) => client?.graph.schemaRegistry.query({ typename, location: ['runtime'] }).runSync()[0])
                 .filter(isNonNullable)
                 .map((schema) => createStaticSchemaNode({ schema, space }));
@@ -464,7 +464,7 @@ export default defineCapabilityModule((context: PluginContext) => {
     }),
 
     // Create actions for static schema record types.
-    createExtension({
+    GraphBuilder.createExtension({
       id: `${meta.id}/static-schema-actions`,
       actions: (node) => {
         let query: QueryResult.QueryResult<Obj.Any> | undefined;
@@ -496,7 +496,7 @@ export default defineCapabilityModule((context: PluginContext) => {
 
               const objects = get(atomFromQuery(query));
               const filteredViews = get(
-                atomFromSignal(() =>
+                GraphBuilder.atomFromSignal(() =>
                   objects.filter(
                     (viewObject) =>
                       getTypenameFromQuery((viewObject as any).view.target?.query.ast) ===
@@ -526,7 +526,7 @@ export default defineCapabilityModule((context: PluginContext) => {
     }),
 
     // Create nodes for views of record types.
-    createExtension({
+    GraphBuilder.createExtension({
       id: `${meta.id}/schema-views`,
       connector: (node) => {
         let query: QueryResult.QueryResult<Obj.Any> | undefined;
@@ -562,11 +562,15 @@ export default defineCapabilityModule((context: PluginContext) => {
               const typename = Schema.isSchema(schema) ? Type.getTypename(schema as Type.Obj.Any) : schema.typename;
               return get(atomFromQuery(query))
                 .filter((object) =>
-                  get(atomFromSignal(() => getTypenameFromQuery((object as any).view.target?.query.ast) === typename)),
+                  get(
+                    GraphBuilder.atomFromSignal(
+                      () => getTypenameFromQuery((object as any).view.target?.query.ast) === typename,
+                    ),
+                  ),
                 )
                 .map((object) =>
                   get(
-                    atomFromSignal(() =>
+                    GraphBuilder.atomFromSignal(() =>
                       createObjectNode({
                         object,
                         db: space.db,
@@ -585,7 +589,7 @@ export default defineCapabilityModule((context: PluginContext) => {
     }),
 
     // Create collection actions and action groups.
-    createExtension({
+    GraphBuilder.createExtension({
       id: `${meta.id}/object-actions`,
       actions: (node) => {
         let query: QueryResult.QueryResult<Obj.Any> | undefined;
@@ -625,7 +629,7 @@ export default defineCapabilityModule((context: PluginContext) => {
               if (isSchema && query) {
                 const objects = get(atomFromQuery(query));
                 const filteredViews = get(
-                  atomFromSignal(() =>
+                  GraphBuilder.atomFromSignal(() =>
                     objects.filter(
                       (viewObject) =>
                         getTypenameFromQuery((viewObject as any).view.target?.query.ast) === object.typename,
@@ -648,7 +652,7 @@ export default defineCapabilityModule((context: PluginContext) => {
                   dispatch: dispatcher.dispatchPromise,
                   resolve: resolve(get),
                   deletable,
-                  navigable: get(atomFromSignal(() => state.navigableCollections)),
+                  navigable: get(GraphBuilder.atomFromSignal(() => state.navigableCollections)),
                 });
               }
             }),
@@ -660,7 +664,7 @@ export default defineCapabilityModule((context: PluginContext) => {
     }),
 
     // View selected objects.
-    createExtension({
+    GraphBuilder.createExtension({
       id: `${meta.id}/selected-objects`,
       connector: (node) =>
         Atom.make((get) =>
@@ -700,7 +704,7 @@ export default defineCapabilityModule((context: PluginContext) => {
     }),
 
     // Object settings plank companion.
-    createExtension({
+    GraphBuilder.createExtension({
       id: `${meta.id}/settings`,
       connector: (node) =>
         Atom.make((get) =>

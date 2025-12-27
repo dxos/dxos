@@ -7,7 +7,7 @@ import * as Function from 'effect/Function';
 import * as Option from 'effect/Option';
 
 import { Capabilities, type PluginContext, contributes, defineCapabilityModule } from '@dxos/app-framework';
-import { ROOT_ID, createExtension } from '@dxos/plugin-graph';
+import { Graph, GraphBuilder } from '@dxos/plugin-graph';
 
 import { themeEditorId } from '../defs';
 import { meta } from '../meta';
@@ -15,13 +15,13 @@ import { meta } from '../meta';
 export default defineCapabilityModule((context: PluginContext) => {
   return contributes(Capabilities.AppGraphBuilder, [
     // Debug node.
-    createExtension({
+    GraphBuilder.createExtension({
       id: themeEditorId,
       connector: (node) =>
         Atom.make((get) =>
           Function.pipe(
             get(node),
-            Option.flatMap((node) => (node.id === ROOT_ID ? Option.some(node) : Option.none())),
+            Option.flatMap((node) => (node.id === Graph.ROOT_ID ? Option.some(node) : Option.none())),
             Option.map(() => {
               return [
                 {

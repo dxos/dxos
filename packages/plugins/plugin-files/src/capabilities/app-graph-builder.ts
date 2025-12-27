@@ -15,7 +15,7 @@ import {
   createIntent,
   defineCapabilityModule,
 } from '@dxos/app-framework';
-import { ROOT_ID, atomFromSignal, createExtension } from '@dxos/plugin-graph';
+import { Graph, GraphBuilder } from '@dxos/plugin-graph';
 
 import { meta } from '../meta';
 import { type FilesSettingsProps, LocalFilesAction } from '../types';
@@ -23,16 +23,16 @@ import { isLocalDirectory, isLocalEntity, isLocalFile } from '../util';
 
 import { FileCapabilities } from './capabilities';
 
-export default defineCapabilityModule((context: PluginContext) =>
-  contributes(Capabilities.AppGraphBuilder, [
+export default defineCapabilityModule((context: PluginContext) => {
+  return contributes(Capabilities.AppGraphBuilder, [
     // Create export/import actions.
-    createExtension({
+    GraphBuilder.createExtension({
       id: `${meta.id}/export`,
       actions: (node) =>
         Atom.make((get) =>
           Function.pipe(
             get(node),
-            Option.flatMap((node) => (node.id === ROOT_ID ? Option.some(node) : Option.none())),
+            Option.flatMap((node) => (node.id === Graph.ROOT_ID ? Option.some(node) : Option.none())),
             Option.map(() => [
               {
                 id: LocalFilesAction.Export._tag,
@@ -63,16 +63,18 @@ export default defineCapabilityModule((context: PluginContext) =>
     }),
 
     // Create files group node.
-    createExtension({
+    GraphBuilder.createExtension({
       id: `${meta.id}/root`,
       connector: (node) =>
         Atom.make((get) =>
           Function.pipe(
             get(node),
-            Option.flatMap((node) => (node.id === ROOT_ID ? Option.some(node) : Option.none())),
+            Option.flatMap((node) => (node.id === Graph.ROOT_ID ? Option.some(node) : Option.none())),
             Option.flatMap(() => {
               const settingsStore = get(context.capabilities(Capabilities.SettingsStore))[0];
-              const settings = get(atomFromSignal(() => settingsStore?.getStore<FilesSettingsProps>(meta.id)?.value));
+              const settings = get(
+                GraphBuilder.atomFromSignal(() => settingsStore?.getStore<FilesSettingsProps>(meta.id)?.value),
+              );
               return settings ? Option.some(settings) : Option.none();
             }),
             Option.map((settings) => {
@@ -98,7 +100,7 @@ export default defineCapabilityModule((context: PluginContext) =>
     }),
 
     // Create files nodes.
-    createExtension({
+    GraphBuilder.createExtension({
       id: `${meta.id}/files`,
       actions: (node) =>
         Atom.make((get) =>
@@ -167,7 +169,7 @@ export default defineCapabilityModule((context: PluginContext) =>
     }),
 
     // Create sub-files nodes.
-    createExtension({
+    GraphBuilder.createExtension({
       id: `${meta.id}/sub-files`,
       connector: (node) =>
         Atom.make((get) =>
@@ -191,7 +193,7 @@ export default defineCapabilityModule((context: PluginContext) =>
     }),
 
     // Create file actions.
-    createExtension({
+    GraphBuilder.createExtension({
       id: `${meta.id}/actions`,
       actions: (node) =>
         Atom.make((get) =>
@@ -249,5 +251,5 @@ export default defineCapabilityModule((context: PluginContext) =>
           ),
         ),
     }),
-  ]),
-);
+  ]);
+});

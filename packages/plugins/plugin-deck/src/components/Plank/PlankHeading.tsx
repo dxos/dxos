@@ -26,7 +26,7 @@ export type PlankHeadingProps = {
   id: string;
   part: ResolvedPart;
   layoutMode?: LayoutMode;
-  node?: Node;
+  node?: Node.Node;
   deckEnabled?: boolean;
   canIncrementStart?: boolean;
   canIncrementEnd?: boolean;
@@ -34,7 +34,7 @@ export type PlankHeadingProps = {
   primaryId?: string;
   pending?: boolean;
   companioned?: 'primary' | 'companion';
-  companions?: Node[];
+  companions?: Node.Node[];
   actions?: StackItemSigilAction[];
 };
 

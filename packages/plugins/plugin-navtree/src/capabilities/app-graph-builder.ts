@@ -14,20 +14,20 @@ import {
   createIntent,
   defineCapabilityModule,
 } from '@dxos/app-framework';
-import { ROOT_ID, createExtension } from '@dxos/plugin-graph';
+import { Graph, GraphBuilder } from '@dxos/plugin-graph';
 
 import { COMMANDS_DIALOG, meta } from '../meta';
 
 export default defineCapabilityModule((context: PluginContext) =>
   contributes(
     Capabilities.AppGraphBuilder,
-    createExtension({
+    GraphBuilder.createExtension({
       id: meta.id,
       actions: (node) =>
         Atom.make((get) =>
           Function.pipe(
             get(node),
-            Option.flatMap((node) => (node.id === ROOT_ID ? Option.some(node) : Option.none())),
+            Option.flatMap((node) => (node.id === Graph.ROOT_ID ? Option.some(node) : Option.none())),
             Option.map(() => [
               {
                 id: COMMANDS_DIALOG,

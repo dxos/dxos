@@ -15,7 +15,7 @@ import {
 } from '@dxos/app-framework';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { ATTENDABLE_PATH_SEPARATOR, DECK_COMPANION_TYPE } from '@dxos/plugin-deck/types';
-import { ROOT_ID, atomFromSignal, createExtension } from '@dxos/plugin-graph';
+import { Graph, GraphBuilder } from '@dxos/plugin-graph';
 import { parseId } from '@dxos/react-client/echo';
 
 import { meta } from '../meta';
@@ -23,15 +23,17 @@ import { SearchAction } from '../types';
 
 export default defineCapabilityModule((context: PluginContext) =>
   contributes(Capabilities.AppGraphBuilder, [
-    createExtension({
+    GraphBuilder.createExtension({
       id: `${meta.id}/space-search`,
       connector: (node) =>
         Atom.make((get) =>
           Function.pipe(
             get(node),
-            Option.flatMap((node) => (node.id === ROOT_ID ? Option.some(node) : Option.none())),
+            Option.flatMap((node) => (node.id === Graph.ROOT_ID ? Option.some(node) : Option.none())),
             Option.map((node) => {
-              const workspace = get(atomFromSignal(() => context.getCapability(Capabilities.Layout).workspace));
+              const workspace = get(
+                GraphBuilder.atomFromSignal(() => context.getCapability(Capabilities.Layout).workspace),
+              );
               const client = context.getCapability(ClientCapabilities.Client);
               const { spaceId } = parseId(workspace);
               const space = spaceId ? client.spaces.get(spaceId) : null;
@@ -53,13 +55,13 @@ export default defineCapabilityModule((context: PluginContext) =>
           ),
         ),
     }),
-    createExtension({
+    GraphBuilder.createExtension({
       id: meta.id,
       actions: (node) =>
         Atom.make((get) =>
           Function.pipe(
             get(node),
-            Option.flatMap((node) => (node.id === ROOT_ID ? Option.some(node) : Option.none())),
+            Option.flatMap((node) => (node.id === Graph.ROOT_ID ? Option.some(node) : Option.none())),
             Option.map(() => {
               return [
                 {

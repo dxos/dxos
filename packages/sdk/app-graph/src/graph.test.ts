@@ -6,7 +6,7 @@ import { Atom, Registry } from '@effect-atom/atom-react';
 import * as Option from 'effect/Option';
 import { assert, describe, expect, onTestFinished, test } from 'vitest';
 
-import { Graph, make, ROOT_ID, ROOT_TYPE, getGraph } from './graph';
+import { ROOT_ID, ROOT_TYPE, getGraph, make } from './graph';
 import { type Node } from './node';
 
 const exampleId = (id: number) => `dx:test:${id}`;

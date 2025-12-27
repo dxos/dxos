@@ -16,7 +16,7 @@ import {
 import { Obj } from '@dxos/echo';
 import { AttentionCapabilities } from '@dxos/plugin-attention';
 import { ATTENDABLE_PATH_SEPARATOR, DECK_COMPANION_TYPE, PLANK_COMPANION_TYPE } from '@dxos/plugin-deck/types';
-import { ROOT_ID, atomFromSignal, createExtension } from '@dxos/plugin-graph';
+import { Graph, GraphBuilder } from '@dxos/plugin-graph';
 
 import { meta } from '../meta';
 import { Channel, ThreadAction } from '../types';
@@ -31,17 +31,17 @@ export default defineCapabilityModule((context: PluginContext) => {
     context.getCapabilities(Capabilities.Metadata).find(({ id }) => id === typename)?.metadata ?? {};
 
   return contributes(Capabilities.AppGraphBuilder, [
-    createExtension({
+    GraphBuilder.createExtension({
       id: `${meta.id}/active-call`,
       connector: (node) =>
         Atom.make((get) =>
           Function.pipe(
             get(node),
-            Option.flatMap((node) => (node.id === ROOT_ID ? Option.some(node) : Option.none())),
+            Option.flatMap((node) => (node.id === Graph.ROOT_ID ? Option.some(node) : Option.none())),
             Option.map((node) => {
               const [call] = get(context.capabilities(ThreadCapabilities.CallManager));
               return get(
-                atomFromSignal(() =>
+                GraphBuilder.atomFromSignal(() =>
                   call?.joined
                     ? [
                         {
@@ -66,7 +66,7 @@ export default defineCapabilityModule((context: PluginContext) => {
     }),
     // TODO(wittjosiah): The channel shouldn't become the companion during a call.
     //   Alternative: the call/meeting/thread should be a child node of the channel and that should be opened.
-    createExtension({
+    GraphBuilder.createExtension({
       id: `${meta.id}/channel-chat-companion`,
       connector: (node) => {
         return Atom.make((get) => {
@@ -78,7 +78,9 @@ export default defineCapabilityModule((context: PluginContext) => {
             Option.map((channel) => {
               const callManager = context.getCapability(ThreadCapabilities.CallManager);
               const joined = get(
-                atomFromSignal(() => callManager.joined && callManager.roomId === Obj.getDXN(channel).toString()),
+                GraphBuilder.atomFromSignal(
+                  () => callManager.joined && callManager.roomId === Obj.getDXN(channel).toString(),
+                ),
               );
               if (!joined) {
                 return [];
@@ -103,7 +105,7 @@ export default defineCapabilityModule((context: PluginContext) => {
         });
       },
     }),
-    createExtension({
+    GraphBuilder.createExtension({
       id: `${meta.id}/comments-companion`,
       connector: (node) =>
         Atom.make((get) =>
@@ -133,7 +135,7 @@ export default defineCapabilityModule((context: PluginContext) => {
           ),
         ),
     }),
-    createExtension({
+    GraphBuilder.createExtension({
       id: `${meta.id}/comment-toolbar`,
       actions: (node) =>
         Atom.make((get) =>
@@ -150,7 +152,7 @@ export default defineCapabilityModule((context: PluginContext) => {
               const selectionManager = context.getCapability(AttentionCapabilities.Selection);
               const toolbar = get(context.capabilities(ThreadCapabilities.State))[0]?.state.toolbar ?? {};
               const disabled = get(
-                atomFromSignal(() => {
+                GraphBuilder.atomFromSignal(() => {
                   const metadata = resolve(Obj.getTypename(object)!);
                   const selection = selectionManager.getSelection(
                     Obj.getDXN(object).toString(),

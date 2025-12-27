@@ -8,7 +8,7 @@ import * as Option from 'effect/Option';
 
 import { createIntent } from '@dxos/app-framework';
 import { Capabilities, type PluginContext, contributes, defineCapabilityModule } from '@dxos/app-framework';
-import { ROOT_ID, atomFromObservable, createExtension } from '@dxos/plugin-graph';
+import { Graph, GraphBuilder } from '@dxos/plugin-graph';
 import { ConnectionState } from '@dxos/react-client/mesh';
 
 import { meta } from '../meta';
@@ -17,13 +17,13 @@ import { Account, ClientAction, ClientCapabilities } from '../types';
 export default defineCapabilityModule((context: PluginContext) =>
   contributes(
     Capabilities.AppGraphBuilder,
-    createExtension({
+    GraphBuilder.createExtension({
       id: meta.id,
       actions: (node) =>
         Atom.make((get) =>
           Function.pipe(
             get(node),
-            Option.flatMap((node) => (node.id === ROOT_ID ? Option.some(node) : Option.none())),
+            Option.flatMap((node) => (node.id === Graph.ROOT_ID ? Option.some(node) : Option.none())),
             Option.map(() => {
               return [
                 {
@@ -53,11 +53,11 @@ export default defineCapabilityModule((context: PluginContext) =>
         Atom.make((get) =>
           Function.pipe(
             get(node),
-            Option.flatMap((node) => (node.id === ROOT_ID ? Option.some(node) : Option.none())),
+            Option.flatMap((node) => (node.id === Graph.ROOT_ID ? Option.some(node) : Option.none())),
             Option.map(() => {
               const client = context.getCapability(ClientCapabilities.Client);
-              const identity = get(atomFromObservable(client.halo.identity));
-              const status = get(atomFromObservable(client.mesh.networkStatus));
+              const identity = get(GraphBuilder.atomFromObservable(client.halo.identity));
+              const status = get(GraphBuilder.atomFromObservable(client.mesh.networkStatus));
 
               return [
                 {

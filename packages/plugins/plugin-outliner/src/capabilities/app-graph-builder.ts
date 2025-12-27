@@ -16,16 +16,16 @@ import {
 import { Obj, Relation } from '@dxos/echo';
 import { SystemTypeAnnotation } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
-import { createExtension } from '@dxos/plugin-graph';
+import { GraphBuilder } from '@dxos/plugin-graph';
 import { HasSubject } from '@dxos/types';
 
 import { meta } from '../meta';
 import { OutlineAction } from '../types';
 
-export default defineCapabilityModule((context: PluginContext) =>
-  contributes(
+export default defineCapabilityModule((context: PluginContext) => {
+  return contributes(
     Capabilities.AppGraphBuilder,
-    createExtension({
+    GraphBuilder.createExtension({
       id: `${meta.id}/root`,
       actions: (node) =>
         Atom.make((get) =>
@@ -83,5 +83,5 @@ export default defineCapabilityModule((context: PluginContext) =>
           ),
         ),
     }),
-  ),
-);
+  );
+});

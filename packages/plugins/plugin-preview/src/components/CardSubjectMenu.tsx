@@ -7,7 +7,7 @@ import React from 'react';
 
 import { LayoutAction, createIntent } from '@dxos/app-framework';
 import { useIntentDispatcher } from '@dxos/app-framework/react';
-import { ACTION_TYPE } from '@dxos/app-graph';
+import { Graph } from '@dxos/app-graph';
 import { Obj } from '@dxos/echo';
 import { SpaceAction } from '@dxos/plugin-space/types';
 import { IconButton, type IconButtonProps, useTranslation } from '@dxos/react-ui';
@@ -60,7 +60,7 @@ const useSubjectMenuGroupItems = ({ subject, db }: CardPreviewProps): MenuAction
   const result: ActionGraphProps = { edges: [], nodes: [] };
 
   result.nodes.push({
-    type: ACTION_TYPE,
+    type: Graph.ACTION_TYPE,
     id: `${subject.id}/open`,
     data: () =>
       dispatch(
@@ -77,7 +77,7 @@ const useSubjectMenuGroupItems = ({ subject, db }: CardPreviewProps): MenuAction
 
   if (db && Obj.getDXN(subject).asQueueDXN()) {
     result.nodes.push({
-      type: ACTION_TYPE,
+      type: Graph.ACTION_TYPE,
       id: `${subject.id}/add-to-space`,
       // TODO(wittjosiah): Update reference to point to db object when adding?
       data: () =>

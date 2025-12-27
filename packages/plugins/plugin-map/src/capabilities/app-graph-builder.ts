@@ -14,16 +14,16 @@ import {
   defineCapabilityModule,
 } from '@dxos/app-framework';
 import { Obj } from '@dxos/echo';
-import { atomFromSignal, createExtension } from '@dxos/plugin-graph';
+import { GraphBuilder } from '@dxos/plugin-graph';
 import { View } from '@dxos/schema';
 
 import { meta } from '../meta';
 import { Map, MapAction } from '../types';
 
-export default defineCapabilityModule((context: PluginContext) =>
-  contributes(
+export default defineCapabilityModule((context: PluginContext) => {
+  return contributes(
     Capabilities.AppGraphBuilder,
-    createExtension({
+    GraphBuilder.createExtension({
       id: MapAction.Toggle._tag,
       actions: (node) =>
         Atom.make((get) =>
@@ -31,7 +31,7 @@ export default defineCapabilityModule((context: PluginContext) =>
             get(node),
             Option.flatMap((node) =>
               Obj.instanceOf(View.View, node.data) &&
-              Obj.instanceOf(Map.Map, get(atomFromSignal(() => node.data.presentation.target)))
+              Obj.instanceOf(Map.Map, get(GraphBuilder.atomFromSignal(() => node.data.presentation.target)))
                 ? Option.some(node)
                 : Option.none(),
             ),
@@ -52,5 +52,5 @@ export default defineCapabilityModule((context: PluginContext) =>
           ),
         ),
     }),
-  ),
-);
+  );
+});

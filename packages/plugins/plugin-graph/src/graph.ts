@@ -5,7 +5,7 @@
 import * as Record from 'effect/Record';
 
 import { Capabilities, type PluginContext, contributes } from '@dxos/app-framework';
-import { type ExpandableGraph, GraphBuilder, ROOT_ID, flattenExtensions } from '@dxos/app-graph';
+import { Graph, GraphBuilder } from '@dxos/app-graph';
 
 // TODO(wittjosiah): Remove or restore graph caching.
 // import { meta } from './meta';
@@ -22,7 +22,7 @@ export default async (context: PluginContext) => {
   const unsubscribe = registry.subscribe(
     context.capabilities(Capabilities.AppGraphBuilder),
     (extensions) => {
-      const next = flattenExtensions(extensions);
+      const next = GraphBuilder.flattenExtensions(extensions);
       const current = Record.values(registry.get(builder.extensions));
       const removed = current.filter(({ id }) => !next.some(({ id: nextId }) => nextId === id));
       removed.forEach((extension) => builder.removeExtension(extension.id));
@@ -32,7 +32,7 @@ export default async (context: PluginContext) => {
   );
 
   // await builder.initialize();
-  void builder.graph.expand(ROOT_ID);
+  void builder.graph.expand(Graph.ROOT_ID);
 
   setupDevtools(builder.graph);
 
@@ -43,7 +43,7 @@ export default async (context: PluginContext) => {
 };
 
 // Expose the graph to the window for debugging.
-const setupDevtools = (graph: ExpandableGraph) => {
+const setupDevtools = (graph: Graph.ExpandableGraph) => {
   (globalThis as any).composer ??= {};
   (globalThis as any).composer.graph = graph;
 };

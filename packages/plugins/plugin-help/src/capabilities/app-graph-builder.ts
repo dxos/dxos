@@ -14,7 +14,7 @@ import {
   createIntent,
   defineCapabilityModule,
 } from '@dxos/app-framework';
-import { createExtension } from '@dxos/app-graph';
+import { GraphBuilder } from '@dxos/app-graph';
 
 import { SHORTCUTS_DIALOG } from '../components';
 import { meta } from '../meta';
@@ -25,7 +25,7 @@ import { HelpCapabilities } from './capabilities';
 export default defineCapabilityModule((context: PluginContext) =>
   contributes(
     Capabilities.AppGraphBuilder,
-    createExtension({
+    GraphBuilder.createExtension({
       id: meta.id,
       actions: (node) =>
         Atom.make((get) =>

@@ -5,7 +5,7 @@
 import * as Option from 'effect/Option';
 import { useEffect, useState } from 'react';
 
-import { type ReadableGraph } from '@dxos/plugin-graph';
+import { type Graph } from '@dxos/plugin-graph';
 
 /**
  * React hook to get a path from the graph.
@@ -16,7 +16,7 @@ import { type ReadableGraph } from '@dxos/plugin-graph';
  * @returns Path if found, undefined otherwise.
  */
 // TODO(wittjosiah): Factor out.
-export const usePath = (graph: ReadableGraph, id?: string, timeout?: number): Option.Option<string[]> => {
+export const usePath = (graph: Graph.ReadableGraph, id?: string, timeout?: number): Option.Option<string[]> => {
   const [pathState, setPathState] = useState<Option.Option<string[]>>(
     id ? graph.getPath({ target: id }) : Option.none(),
   );

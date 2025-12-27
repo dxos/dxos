@@ -6,7 +6,7 @@ import { Atom } from '@effect-atom/atom-react';
 import * as Function from 'effect/Function';
 import * as Option from 'effect/Option';
 
-import { ROOT_ID, createExtension } from '@dxos/app-graph';
+import { Graph, GraphBuilder } from '@dxos/app-graph';
 import { type SettingsStore, type SettingsValue } from '@dxos/local-storage';
 import { isNonNullable } from '@dxos/util';
 
@@ -19,13 +19,13 @@ import { meta } from './meta';
 
 export default defineCapabilityModule((context: PluginContext) =>
   contributes(Capabilities.AppGraphBuilder, [
-    createExtension({
+    GraphBuilder.createExtension({
       id: `${meta.id}/action`,
       actions: (node) =>
         Atom.make((get) =>
           Function.pipe(
             get(node),
-            Option.flatMap((node) => (node.id === ROOT_ID ? Option.some(node) : Option.none())),
+            Option.flatMap((node) => (node.id === Graph.ROOT_ID ? Option.some(node) : Option.none())),
             Option.map(() => [
               {
                 id: meta.id,
@@ -48,13 +48,13 @@ export default defineCapabilityModule((context: PluginContext) =>
           ),
         ),
     }),
-    createExtension({
+    GraphBuilder.createExtension({
       id: `${meta.id}/core`,
       connector: (node) =>
         Atom.make((get) =>
           Function.pipe(
             get(node),
-            Option.flatMap((node) => (node.id === ROOT_ID ? Option.some(node) : Option.none())),
+            Option.flatMap((node) => (node.id === Graph.ROOT_ID ? Option.some(node) : Option.none())),
             Option.map(() => [
               {
                 id: SETTINGS_ID,
@@ -72,7 +72,7 @@ export default defineCapabilityModule((context: PluginContext) =>
           ),
         ),
     }),
-    createExtension({
+    GraphBuilder.createExtension({
       id: `${meta.id}/core-plugins`,
       connector: (node) =>
         Atom.make((get) =>
@@ -120,7 +120,7 @@ export default defineCapabilityModule((context: PluginContext) =>
           ),
         ),
     }),
-    createExtension({
+    GraphBuilder.createExtension({
       id: `${meta.id}/custom-plugins`,
       connector: (node) =>
         Atom.make((get) =>

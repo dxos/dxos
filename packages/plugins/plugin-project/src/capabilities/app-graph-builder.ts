@@ -9,14 +9,14 @@ import * as Option from 'effect/Option';
 import { Capabilities, contributes, defineCapabilityModule } from '@dxos/app-framework';
 import { Obj } from '@dxos/echo';
 import { ATTENDABLE_PATH_SEPARATOR, PLANK_COMPANION_TYPE } from '@dxos/plugin-deck/types';
-import { createExtension } from '@dxos/plugin-graph';
+import { GraphBuilder } from '@dxos/plugin-graph';
 import { Project } from '@dxos/types';
 
 import { meta } from '../meta';
 
-export default defineCapabilityModule(() =>
-  contributes(Capabilities.AppGraphBuilder, [
-    createExtension({
+export default defineCapabilityModule(() => {
+  return contributes(Capabilities.AppGraphBuilder, [
+    GraphBuilder.createExtension({
       id: `${meta.id}/triggers`,
       connector: (node) =>
         Atom.make((get) =>
@@ -49,5 +49,5 @@ export default defineCapabilityModule(() =>
           ),
         ),
     }),
-  ]),
-);
+  ]);
+});

@@ -17,17 +17,17 @@ import {
 import { Obj } from '@dxos/echo';
 import { DeckCapabilities } from '@dxos/plugin-deck';
 import { ATTENDABLE_PATH_SEPARATOR, DeckAction } from '@dxos/plugin-deck/types';
-import { atomFromSignal, createExtension } from '@dxos/plugin-graph';
+import { GraphBuilder } from '@dxos/plugin-graph';
 import { Markdown } from '@dxos/plugin-markdown/types';
 import { Collection } from '@dxos/schema';
 
 import { meta } from '../meta';
 import { PresenterAction, type PresenterSettingsProps } from '../types';
 
-export default defineCapabilityModule((context: PluginContext) =>
-  contributes(
+export default defineCapabilityModule((context: PluginContext) => {
+  return contributes(
     Capabilities.AppGraphBuilder,
-    createExtension({
+    GraphBuilder.createExtension({
       id: `${meta.id}/root`,
       // TODO(wittjosiah): This is a hack to work around presenter previously relying on "variant". Remove.
       connector: (node) =>
@@ -37,7 +37,7 @@ export default defineCapabilityModule((context: PluginContext) =>
             Option.flatMap((node) => {
               const [settingsStore] = get(context.capabilities(Capabilities.SettingsStore));
               const settings = get(
-                atomFromSignal(() => settingsStore?.getStore<PresenterSettingsProps>(meta.id)?.value),
+                GraphBuilder.atomFromSignal(() => settingsStore?.getStore<PresenterSettingsProps>(meta.id)?.value),
               );
               const isPresentable = settings?.presentCollections
                 ? Obj.instanceOf(Collection.Collection, node.data) || Obj.instanceOf(Markdown.Document, node.data)
@@ -69,7 +69,7 @@ export default defineCapabilityModule((context: PluginContext) =>
             Option.flatMap((node) => {
               const [settingsStore] = get(context.capabilities(Capabilities.SettingsStore));
               const settings = get(
-                atomFromSignal(() => settingsStore?.getStore<PresenterSettingsProps>(meta.id)?.value),
+                GraphBuilder.atomFromSignal(() => settingsStore?.getStore<PresenterSettingsProps>(meta.id)?.value),
               );
               const isPresentable = settings?.presentCollections
                 ? Obj.instanceOf(Collection.Collection, node.data) || Obj.instanceOf(Markdown.Document, node.data)
@@ -121,5 +121,5 @@ export default defineCapabilityModule((context: PluginContext) =>
           ),
         ),
     }),
-  ),
-);
+  );
+});

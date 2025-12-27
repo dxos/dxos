@@ -7,7 +7,7 @@ import * as Function from 'effect/Function';
 import * as Option from 'effect/Option';
 
 import { Capabilities, contributes, defineCapabilityModule } from '@dxos/app-framework';
-import { ROOT_ID, createExtension } from '@dxos/plugin-graph';
+import { Graph, GraphBuilder } from '@dxos/plugin-graph';
 
 import { meta } from '../meta';
 
@@ -18,13 +18,13 @@ const DECK_COMPANION_TYPE = 'dxos.org/plugin/deck/deck-companion';
 
 export default defineCapabilityModule(() =>
   contributes(Capabilities.AppGraphBuilder, [
-    createExtension({
+    GraphBuilder.createExtension({
       id: `${meta.id}/help`,
       connector: (node) =>
         Atom.make((get) =>
           Function.pipe(
             get(node),
-            Option.flatMap((node) => (node.id === ROOT_ID ? Option.some(node) : Option.none())),
+            Option.flatMap((node) => (node.id === Graph.ROOT_ID ? Option.some(node) : Option.none())),
             Option.map((node) => {
               return [
                 {

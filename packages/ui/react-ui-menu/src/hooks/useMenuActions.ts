@@ -5,11 +5,11 @@
 import { type Atom, RegistryContext, useAtomValue } from '@effect-atom/atom-react';
 import { useCallback, useContext, useEffect, useState } from 'react';
 
-import { type Edge, type Edges, Graph, type Node, type NodeArg, ROOT_ID } from '@dxos/app-graph';
+import { Graph, type Node } from '@dxos/app-graph';
 
 import { type MenuItem, type MenuItemGroup } from '../types';
 
-const edgesArrayToRecord = (edges: Edge[]): Record<string, Edges> => {
+const edgesArrayToRecord = (edges: Graph.Edge[]): Record<string, Graph.Edges> => {
   return Object.fromEntries(
     Object.entries(
       edges.reduce((acc: Record<string, { inbound: string[]; outbound: string[] }>, { source, target }) => {
@@ -36,8 +36,8 @@ const edgesArrayToRecord = (edges: Edge[]): Record<string, Edges> => {
   );
 };
 
-export type ActionGraphNodes = NodeArg<any>[];
-export type ActionGraphEdges = Edge[];
+export type ActionGraphNodes = Node.NodeArg<any>[];
+export type ActionGraphEdges = Graph.Edge[];
 export type ActionGraphProps = {
   nodes: ActionGraphNodes;
   edges: ActionGraphEdges;
@@ -52,9 +52,9 @@ export const useMenuActions = (props: Atom.Atom<ActionGraphProps>): MenuActions 
   const menuGraphProps = useAtomValue(props);
 
   const [graph] = useState(
-    new Graph({
+    Graph.make({
       registry,
-      nodes: menuGraphProps.nodes as Node[],
+      nodes: menuGraphProps.nodes as Node.Node[],
       edges: edgesArrayToRecord(menuGraphProps.edges),
     }),
   );
@@ -66,7 +66,7 @@ export const useMenuActions = (props: Atom.Atom<ActionGraphProps>): MenuActions 
 
   const useGroupItems = useCallback(
     (sourceNode?: MenuItemGroup) => {
-      const items = useAtomValue(graph.connections(sourceNode?.id || ROOT_ID)) as MenuItem[];
+      const items = useAtomValue(graph.connections(sourceNode?.id || Graph.ROOT_ID)) as MenuItem[];
       return items;
     },
     [graph],

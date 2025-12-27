@@ -7,8 +7,9 @@ import * as Function from 'effect/Function';
 import * as Option from 'effect/Option';
 
 import { type PluginContext } from '@dxos/app-framework';
+import { type BuilderExtensions } from '@dxos/app-graph';
 import { log } from '@dxos/log';
-import { type BuilderExtensions, ROOT_ID, createExtension } from '@dxos/plugin-graph';
+import { Graph, GraphBuilder } from '@dxos/plugin-graph';
 import { faker } from '@dxos/random';
 
 export const storybookGraphBuilders = (context: PluginContext): BuilderExtensions => {
@@ -25,13 +26,13 @@ export const storybookGraphBuilders = (context: PluginContext): BuilderExtension
 
   return [
     // Create app menu actions.
-    createExtension({
+    GraphBuilder.createExtension({
       id: 'app-menu',
       actions: (node) =>
         Atom.make((get) =>
           Function.pipe(
             get(node),
-            Option.flatMap((node) => (node.id === ROOT_ID ? Option.some(node) : Option.none())),
+            Option.flatMap((node) => (node.id === Graph.ROOT_ID ? Option.some(node) : Option.none())),
             Option.map((node) => {
               return [
                 ...Array.from({ length: 5 }, (_, i) => ({
@@ -52,13 +53,13 @@ export const storybookGraphBuilders = (context: PluginContext): BuilderExtension
         ),
     }),
     // Create user account node.
-    createExtension({
+    GraphBuilder.createExtension({
       id: 'user-account',
       connector: (node) =>
         Atom.make((get) =>
           Function.pipe(
             get(node),
-            Option.flatMap((node) => (node.id === ROOT_ID ? Option.some(node) : Option.none())),
+            Option.flatMap((node) => (node.id === Graph.ROOT_ID ? Option.some(node) : Option.none())),
             Option.map(() => {
               return [
                 {
@@ -108,14 +109,14 @@ export const storybookGraphBuilders = (context: PluginContext): BuilderExtension
     }),
     // TODO(wittjosiah): This group node probably is unnecessary now with the flat L0 structure.
     // Create spaces group node.
-    createExtension({
+    GraphBuilder.createExtension({
       id: 'spaces-root',
       position: 'hoist',
       connector: (node) =>
         Atom.make((get) =>
           Function.pipe(
             get(node),
-            Option.flatMap((node) => (node.id === ROOT_ID ? Option.some(node) : Option.none())),
+            Option.flatMap((node) => (node.id === Graph.ROOT_ID ? Option.some(node) : Option.none())),
             Option.map(() => {
               return [
                 {
@@ -135,7 +136,7 @@ export const storybookGraphBuilders = (context: PluginContext): BuilderExtension
         ),
     }),
     // Create space nodes.
-    createExtension({
+    GraphBuilder.createExtension({
       id: 'spaces',
       connector: (node) => {
         const count = Atom.make((get) => {
@@ -176,7 +177,7 @@ export const storybookGraphBuilders = (context: PluginContext): BuilderExtension
       },
     }),
     // Create space actions.
-    createExtension({
+    GraphBuilder.createExtension({
       id: 'space-actions',
       actions: (node) =>
         Atom.make((get) =>
@@ -202,7 +203,7 @@ export const storybookGraphBuilders = (context: PluginContext): BuilderExtension
         ),
     }),
     // Create object nodes.
-    createExtension({
+    GraphBuilder.createExtension({
       id: 'objects',
       connector: (node) => {
         const count = Atom.make((get) => {
@@ -242,7 +243,7 @@ export const storybookGraphBuilders = (context: PluginContext): BuilderExtension
       },
     }),
     // Create object actions.
-    createExtension({
+    GraphBuilder.createExtension({
       id: 'object-actions',
       actions: (node) =>
         Atom.make((get) =>

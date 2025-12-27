@@ -13,7 +13,15 @@ import { type CleanupFn, type MulticastObservable, type Trigger } from '@dxos/as
 import { log } from '@dxos/log';
 import { type MaybePromise, type Position, byPosition, getDebugName, isNode, isNonNullable } from '@dxos/util';
 
-import { ACTION_GROUP_TYPE, ACTION_TYPE, type ExpandableGraph, type Graph, make as makeGraph, type GraphParams, ROOT_ID } from './graph';
+import {
+  ACTION_GROUP_TYPE,
+  ACTION_TYPE,
+  type ExpandableGraph,
+  type Graph,
+  type GraphParams,
+  ROOT_ID,
+  make as makeGraph,
+} from './graph';
 import { type ActionData, type Node, type NodeArg, type Relation, actionGroupSymbol } from './node';
 
 /**
@@ -189,7 +197,7 @@ export const flattenExtensions = (extension: BuilderExtensions, acc: BuilderExte
  */
 export interface GraphBuilder {
   readonly graph: ExpandableGraph;
-  readonly extensions: Atom.Atom<Record.Record<string, BuilderExtension>>;
+  readonly extensions: Atom.Atom<Record<string, BuilderExtension>>;
 
   addExtension(extensions: BuilderExtensions): GraphBuilder;
   removeExtension(id: string): GraphBuilder;
@@ -213,7 +221,10 @@ class GraphBuilderImpl implements GraphBuilder {
   );
   private readonly _initialized: Record<string, Trigger> = {};
   private readonly _registry: Registry.Registry;
-  private readonly _graph: Graph & { _node: (id: string) => Atom.Writable<Option.Option<Node>>; _constructNode: (node: NodeArg<any>) => Option.Option<Node> };
+  private readonly _graph: Graph & {
+    _node: (id: string) => Atom.Writable<Option.Option<Node>>;
+    _constructNode: (node: NodeArg<any>) => Option.Option<Node>;
+  };
 
   constructor({ registry, ...params }: Pick<GraphParams, 'registry' | 'nodes' | 'edges'> = {}) {
     this._registry = registry ?? Registry.make();
@@ -225,7 +236,10 @@ class GraphBuilderImpl implements GraphBuilder {
       onRemoveNode: (id) => this._onRemoveNode(id),
     });
     // Access internal methods via type assertion since GraphBuilder needs them
-    this._graph = graph as Graph & { _node: (id: string) => Atom.Writable<Option.Option<Node>>; _constructNode: (node: NodeArg<any>) => Option.Option<Node> };
+    this._graph = graph as Graph & {
+      _node: (id: string) => Atom.Writable<Option.Option<Node>>;
+      _constructNode: (node: NodeArg<any>) => Option.Option<Node>;
+    };
   }
 
   get graph(): ExpandableGraph {

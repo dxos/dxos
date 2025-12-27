@@ -10,14 +10,14 @@ import { Capabilities, type PluginContext, contributes, defineCapabilityModule }
 import { Obj } from '@dxos/echo';
 import { Script } from '@dxos/functions';
 import { ATTENDABLE_PATH_SEPARATOR, PLANK_COMPANION_TYPE } from '@dxos/plugin-deck/types';
-import { createExtension } from '@dxos/plugin-graph';
+import { GraphBuilder } from '@dxos/plugin-graph';
 import { meta as spaceMeta } from '@dxos/plugin-space';
 
 import { meta } from '../meta';
 
-export default defineCapabilityModule((context: PluginContext) =>
-  contributes(Capabilities.AppGraphBuilder, [
-    createExtension({
+export default defineCapabilityModule((context: PluginContext) => {
+  return contributes(Capabilities.AppGraphBuilder, [
+    GraphBuilder.createExtension({
       id: `${meta.id}/space-settings-automation`,
       connector: (node) =>
         Atom.make((get) =>
@@ -39,7 +39,7 @@ export default defineCapabilityModule((context: PluginContext) =>
           ),
         ),
     }),
-    createExtension({
+    GraphBuilder.createExtension({
       id: `${meta.id}/space-settings-functions`,
       connector: (node) =>
         Atom.make((get) =>
@@ -61,7 +61,7 @@ export default defineCapabilityModule((context: PluginContext) =>
           ),
         ),
     }),
-    createExtension({
+    GraphBuilder.createExtension({
       id: `${meta.id}/script-companion`,
       connector: (node) =>
         Atom.make((get) =>
@@ -84,5 +84,5 @@ export default defineCapabilityModule((context: PluginContext) =>
           ),
         ),
     }),
-  ]),
-);
+  ]);
+});

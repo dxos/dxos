@@ -15,7 +15,7 @@ import {
   defineCapabilityModule,
 } from '@dxos/app-framework';
 import { AttentionCapabilities } from '@dxos/plugin-attention';
-import { ROOT_ID, atomFromSignal, createExtension } from '@dxos/plugin-graph';
+import { Graph, GraphBuilder } from '@dxos/plugin-graph';
 
 import { meta } from '../meta';
 
@@ -24,13 +24,13 @@ import { DeckCapabilities } from './capabilities';
 export default defineCapabilityModule((context: PluginContext) =>
   contributes(
     Capabilities.AppGraphBuilder,
-    createExtension({
+    GraphBuilder.createExtension({
       id: meta.id,
       actions: (node) =>
         Atom.make((get) =>
           Function.pipe(
             get(node),
-            Option.flatMap((node) => (node.id === ROOT_ID ? Option.some(node) : Option.none())),
+            Option.flatMap((node) => (node.id === Graph.ROOT_ID ? Option.some(node) : Option.none())),
             Option.map(() => {
               const state = context.getCapability(DeckCapabilities.MutableDeckState);
 
@@ -119,7 +119,7 @@ export default defineCapabilityModule((context: PluginContext) =>
                 properties: {
                   label: [
                     get(
-                      atomFromSignal(() =>
+                      GraphBuilder.atomFromSignal(() =>
                         state.sidebarState === 'expanded'
                           ? 'collapse navigation sidebar label'
                           : 'open navigation sidebar label',
@@ -138,7 +138,7 @@ export default defineCapabilityModule((context: PluginContext) =>
               };
 
               return get(
-                atomFromSignal(() =>
+                GraphBuilder.atomFromSignal(() =>
                   !state.deck.solo ? [closeCurrent, closeOthers, closeAll, toggleSidebar] : [toggleSidebar],
                 ),
               );

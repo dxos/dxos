@@ -10,7 +10,7 @@ import { describe, expect, onTestFinished, test } from 'vitest';
 import { Trigger, sleep } from '@dxos/async';
 
 import { ROOT_ID } from './graph';
-import { GraphBuilder, make, createExtension } from './graph-builder';
+import { createExtension, make } from './graph-builder';
 import { type Node } from './node';
 
 const exampleId = (id: number) => `dx:test:${id}`;

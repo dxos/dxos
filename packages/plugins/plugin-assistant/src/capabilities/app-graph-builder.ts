@@ -21,7 +21,7 @@ import { DXN, type Database, Obj } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { ATTENDABLE_PATH_SEPARATOR, PLANK_COMPANION_TYPE } from '@dxos/plugin-deck/types';
-import { ROOT_ID, atomFromSignal, createExtension } from '@dxos/plugin-graph';
+import { Graph, GraphBuilder } from '@dxos/plugin-graph';
 import { getActiveSpace } from '@dxos/plugin-space';
 import { SpaceAction } from '@dxos/plugin-space/types';
 import { Query } from '@dxos/react-client/echo';
@@ -31,9 +31,9 @@ import { Assistant, AssistantAction } from '../types';
 
 import { AssistantCapabilities } from './capabilities';
 
-export default defineCapabilityModule((context: PluginContext) =>
-  contributes(Capabilities.AppGraphBuilder, [
-    createExtension({
+export default defineCapabilityModule((context: PluginContext) => {
+  return contributes(Capabilities.AppGraphBuilder, [
+    GraphBuilder.createExtension({
       id: `${meta.id}/root`,
       actions: (node) =>
         Atom.make((get) =>
@@ -64,13 +64,13 @@ export default defineCapabilityModule((context: PluginContext) =>
         ),
     }),
 
-    createExtension({
+    GraphBuilder.createExtension({
       id: `${meta.id}/assistant`,
       actions: (node) =>
         Atom.make((get) =>
           Function.pipe(
             get(node),
-            Option.flatMap((node) => (node.id === ROOT_ID ? Option.some(node) : Option.none())),
+            Option.flatMap((node) => (node.id === Graph.ROOT_ID ? Option.some(node) : Option.none())),
             Option.map(() => [
               {
                 id: `${LayoutAction.UpdateDialog._tag}/assistant/open`,
@@ -114,7 +114,7 @@ export default defineCapabilityModule((context: PluginContext) =>
         ),
     }),
 
-    createExtension({
+    GraphBuilder.createExtension({
       id: `${meta.id}/companion-chat`,
       connector: (node) => {
         return Atom.make((get) =>
@@ -123,7 +123,7 @@ export default defineCapabilityModule((context: PluginContext) =>
             Option.flatMap((node) => (Obj.isObject(node.data) ? Option.some(node.data) : Option.none())),
             Option.flatMap((object): Option.Option<{ object: Obj.Any; currentChat: Obj.Any | undefined }> => {
               const currentChatState = get(
-                atomFromSignal(
+                GraphBuilder.atomFromSignal(
                   () => context.getCapability(AssistantCapabilities.State).currentChat[Obj.getDXN(object).toString()],
                 ),
               );
@@ -135,7 +135,7 @@ export default defineCapabilityModule((context: PluginContext) =>
               const db = Obj.getDatabase(object);
               const currentChatDxn = DXN.tryParse(currentChatState);
               const currentChatRef = currentChatDxn ? db?.makeRef(currentChatDxn) : undefined;
-              const currentChat = get(atomFromSignal(() => currentChatRef?.target));
+              const currentChat = get(GraphBuilder.atomFromSignal(() => currentChatRef?.target));
               return Obj.isObject(currentChat) ? Option.some({ object, currentChat }) : Option.none();
             }),
             Option.map(({ object, currentChat }) => {
@@ -159,7 +159,7 @@ export default defineCapabilityModule((context: PluginContext) =>
       },
     }),
 
-    createExtension({
+    GraphBuilder.createExtension({
       id: `${meta.id}/invocations`,
       connector: (node) =>
         Atom.make((get) =>
@@ -186,8 +186,8 @@ export default defineCapabilityModule((context: PluginContext) =>
           ),
         ),
     }),
-  ]),
-);
+  ]);
+});
 
 // TODO(burdon): Factor out.
 const getOrCreateChat = async (

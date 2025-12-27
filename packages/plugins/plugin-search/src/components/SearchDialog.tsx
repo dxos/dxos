@@ -21,7 +21,7 @@ import { meta } from '../meta';
 export const SEARCH_DIALOG = `${meta.id}/SearchDialog`;
 
 type SearchListResultProps = {
-  node: Node;
+  node: Node.Node;
 } & Pick<SearchListItemProps, 'onSelect'>;
 
 const SearchListResult = forwardRef<HTMLDivElement, SearchListResultProps>(({ node, onSelect }, forwardedRef) => {

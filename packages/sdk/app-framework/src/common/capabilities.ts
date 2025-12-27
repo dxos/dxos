@@ -117,12 +117,12 @@ export namespace Capabilities {
    */
   export const Translations = defineCapability<Readonly<Resource[]>>('dxos.org/app-framework/capability/translations');
 
+  export type AppGraph = Readonly<Pick<GraphBuilder.GraphBuilder, 'graph' | 'explore'>>;
+
   /**
    * @category Capability
    */
-  export const AppGraph = defineCapability<Readonly<Pick<GraphBuilder, 'graph' | 'explore'>>>(
-    'dxos.org/app-framework/capability/app-graph',
-  );
+  export const AppGraph = defineCapability<AppGraph>('dxos.org/app-framework/capability/app-graph');
 
   /**
    * @category Capability

@@ -12,7 +12,7 @@ import { invariant } from '@dxos/invariant';
 import { AttentionCapabilities } from '@dxos/plugin-attention';
 import { AutomationCapabilities, invokeFunctionWithTracing } from '@dxos/plugin-automation';
 import { ATTENDABLE_PATH_SEPARATOR, PLANK_COMPANION_TYPE } from '@dxos/plugin-deck/types';
-import { ACTION_TYPE, atomFromSignal, createExtension } from '@dxos/plugin-graph';
+import { Graph, GraphBuilder } from '@dxos/plugin-graph';
 import { atomFromQuery } from '@dxos/plugin-space';
 import { type Event, type Message } from '@dxos/types';
 import { kebabize } from '@dxos/util';
@@ -21,9 +21,9 @@ import { calendar, gmail } from '../functions';
 import { meta } from '../meta';
 import { Calendar, Mailbox } from '../types';
 
-export default defineCapabilityModule((context: PluginContext) =>
-  contributes(Capabilities.AppGraphBuilder, [
-    createExtension({
+export default defineCapabilityModule((context: PluginContext) => {
+  return contributes(Capabilities.AppGraphBuilder, [
+    GraphBuilder.createExtension({
       id: `${meta.id}/mailbox-filters`,
       connector: (node) =>
         Atom.make((get) =>
@@ -38,7 +38,7 @@ export default defineCapabilityModule((context: PluginContext) =>
             ),
             Option.map((mailbox) =>
               get(
-                atomFromSignal(() => [
+                GraphBuilder.atomFromSignal(() => [
                   {
                     id: `${Obj.getDXN(mailbox).toString()}-unfiltered`,
                     type: `${Mailbox.Mailbox.typename}-filter`,
@@ -61,7 +61,7 @@ export default defineCapabilityModule((context: PluginContext) =>
                     nodes: [
                       {
                         id: `${Obj.getDXN(mailbox).toString()}-filter-${kebabize(name)}-delete`,
-                        type: ACTION_TYPE,
+                        type: Graph.ACTION_TYPE,
                         data: async () => {
                           const index = mailbox.filters.findIndex((f) => f.name === name);
                           mailbox.filters.splice(index, 1);
@@ -81,7 +81,7 @@ export default defineCapabilityModule((context: PluginContext) =>
           ),
         ),
     }),
-    createExtension({
+    GraphBuilder.createExtension({
       id: `${meta.id}/mailbox-message`,
       connector: (node) => {
         let prevMessageId: string | undefined;
@@ -94,7 +94,7 @@ export default defineCapabilityModule((context: PluginContext) =>
                 return Option.none();
               }
 
-              const queue = get(atomFromSignal(() => node.data.queue.target));
+              const queue = get(GraphBuilder.atomFromSignal(() => node.data.queue.target));
               if (!queue) {
                 return Option.none();
               }
@@ -103,7 +103,7 @@ export default defineCapabilityModule((context: PluginContext) =>
             }),
             Option.map(({ nodeId, queue }) => {
               const selection = get(context.capabilities(AttentionCapabilities.Selection))[0];
-              const messageId = get(atomFromSignal(() => selection?.getSelected(nodeId, 'single')));
+              const messageId = get(GraphBuilder.atomFromSignal(() => selection?.getSelected(nodeId, 'single')));
               if (!query || prevMessageId !== messageId) {
                 prevMessageId = messageId;
                 query = queue.query(
@@ -130,7 +130,7 @@ export default defineCapabilityModule((context: PluginContext) =>
         );
       },
     }),
-    createExtension({
+    GraphBuilder.createExtension({
       id: `${meta.id}/calendar-event`,
       connector: (node) => {
         let prevEventId: string | undefined;
@@ -143,7 +143,7 @@ export default defineCapabilityModule((context: PluginContext) =>
                 return Option.none();
               }
 
-              const queue = get(atomFromSignal(() => node.data.queue.target));
+              const queue = get(GraphBuilder.atomFromSignal(() => node.data.queue.target));
               if (!queue) {
                 return Option.none();
               }
@@ -152,7 +152,7 @@ export default defineCapabilityModule((context: PluginContext) =>
             }),
             Option.map(({ nodeId, queue }) => {
               const selection = get(context.capabilities(AttentionCapabilities.Selection))[0];
-              const eventId = get(atomFromSignal(() => selection?.getSelected(nodeId, 'single')));
+              const eventId = get(GraphBuilder.atomFromSignal(() => selection?.getSelected(nodeId, 'single')));
               if (!query || prevEventId !== eventId) {
                 prevEventId = eventId;
                 query = queue.query(
@@ -179,7 +179,7 @@ export default defineCapabilityModule((context: PluginContext) =>
         );
       },
     }),
-    createExtension({
+    GraphBuilder.createExtension({
       id: `${meta.id}/sync-mailbox`,
       actions: (node) =>
         Atom.make((get) =>
@@ -190,10 +190,10 @@ export default defineCapabilityModule((context: PluginContext) =>
             ),
             Option.map((mailbox) =>
               get(
-                atomFromSignal(() => [
+                GraphBuilder.atomFromSignal(() => [
                   {
                     id: `${Obj.getDXN(mailbox).toString()}-sync`,
-                    type: ACTION_TYPE,
+                    type: Graph.ACTION_TYPE,
                     data: async () => {
                       const db = Obj.getDatabase(mailbox);
                       invariant(db);
@@ -214,7 +214,7 @@ export default defineCapabilityModule((context: PluginContext) =>
           ),
         ),
     }),
-    createExtension({
+    GraphBuilder.createExtension({
       id: `${meta.id}/sync-calendar`,
       actions: (node) =>
         Atom.make((get) =>
@@ -225,10 +225,10 @@ export default defineCapabilityModule((context: PluginContext) =>
             ),
             Option.map((object) =>
               get(
-                atomFromSignal(() => [
+                GraphBuilder.atomFromSignal(() => [
                   {
                     id: `${Obj.getDXN(object).toString()}-sync`,
-                    type: ACTION_TYPE,
+                    type: Graph.ACTION_TYPE,
                     data: async () => {
                       const db = Obj.getDatabase(object);
                       invariant(db);
@@ -251,5 +251,5 @@ export default defineCapabilityModule((context: PluginContext) =>
           ),
         ),
     }),
-  ]),
-);
+  ]);
+});

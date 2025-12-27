@@ -14,7 +14,8 @@ import { EchoTestBuilder } from '@dxos/echo-db/testing';
 import { registerSignalsRuntime } from '@dxos/echo-signals';
 
 import { ROOT_ID } from './graph';
-import { GraphBuilder, make, atomFromSignal, createExtension } from './graph-builder';
+import { atomFromSignal, createExtension, make as makeGraphBuilder } from './graph-builder';
+import type * as Node from './node';
 import { atomFromQuery } from './testing';
 
 registerSignalsRuntime();
@@ -88,7 +89,7 @@ describe('signals integration', () => {
       await peer.reload();
       {
         await using db = await peer.openLastDatabase();
-        const outer = (await db.query(Filter.id(outerId)).first()) as any;
+        const outer = await db.query(Filter.id(outerId)).first();
         const innerAtom = atomFromSignal(() => outer.inner.target);
         const loaded = new Trigger();
 
@@ -129,19 +130,23 @@ describe('signals integration', () => {
 
       {
         await using db = await peer.openLastDatabase();
-        const outer = (await db.query(Filter.id(outerId)).first()) as any;
+        const outer = await db.query(Filter.id(outerId)).first();
         const innerAtom = atomFromSignal(() => outer.inner.target);
         const inner = registry.get(innerAtom);
         expect(inner).to.eq(undefined);
 
-        const builder = make({ registry });
+        const builder = makeGraphBuilder({ registry });
         builder.addExtension(
           createExtension({
             id: 'outbound-connector',
             connector: () =>
               Atom.make((get) => {
-                const inner = get(innerAtom) as any;
-                return inner ? [{ id: inner.id, type: EXAMPLE_TYPE, data: inner.name }] : [];
+                const inner = get(innerAtom);
+                if (!inner) {
+                  return [];
+                }
+                const innerObj = inner as Obj.Any & { name: string };
+                return [{ id: innerObj.id, type: EXAMPLE_TYPE, data: innerObj.name }];
               }),
           }),
         );
@@ -150,7 +155,7 @@ describe('signals integration', () => {
 
         const loaded = new Trigger();
         let count = 0;
-        const cancel = registry.subscribe(graph.connections(ROOT_ID), (nodes) => {
+        const cancel = registry.subscribe(graph.connections(ROOT_ID), (nodes: Node.Node[]) => {
           count++;
           if (nodes.length > 0) {
             loaded.wake();
@@ -178,7 +183,7 @@ describe('signals integration', () => {
       db.add(Obj.make(Type.Expando, { name: 'a' }));
       db.add(Obj.make(Type.Expando, { name: 'b' }));
 
-      const builder = new GraphBuilder({ registry });
+      const builder = makeGraphBuilder({ registry });
       builder.addExtension(
         createExtension({
           id: 'expando',
@@ -187,11 +192,14 @@ describe('signals integration', () => {
 
             return Atom.make((get) => {
               const objects = get(atomFromQuery(query));
-              return objects.map((object) => ({
-                id: object.id,
-                type: EXAMPLE_TYPE,
-                data: object.name,
-              }));
+              return objects.map((object) => {
+                const obj = object as Obj.Any & { name: string };
+                return {
+                  id: obj.id,
+                  type: EXAMPLE_TYPE,
+                  data: obj.name,
+                };
+              });
             });
           },
         }),

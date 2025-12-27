@@ -2,13 +2,13 @@
 // Copyright 2025 DXOS.org
 //
 
-import { ACTION_GROUP_TYPE, ACTION_TYPE, type ActionLike, actionGroupSymbol } from '@dxos/app-graph';
+import { Graph, Node } from '@dxos/app-graph';
 import { type MenuActionProperties, type MenuItemGroupProperties } from '@dxos/ui-types';
 import { getHostPlatform } from '@dxos/util';
 
 import { type MenuAction, type MenuItemGroup, type MenuSeparator } from './types';
 
-export const getShortcut = (action: ActionLike) => {
+export const getShortcut = (action: Node.ActionLike) => {
   return typeof action.properties?.keyBinding === 'string'
     ? action.properties.keyBinding
     : action.properties?.keyBinding?.[getHostPlatform()];
@@ -23,7 +23,7 @@ export const createMenuAction = <P extends {} = {}>(
 ) =>
   ({
     id,
-    type: ACTION_TYPE,
+    type: Graph.ACTION_TYPE,
     properties,
     data: invoke,
   }) satisfies MenuAction;
@@ -36,9 +36,9 @@ export const createMenuItemGroup = <
 ) =>
   ({
     id,
-    type: ACTION_GROUP_TYPE,
+    type: Graph.ACTION_GROUP_TYPE,
     properties,
-    data: actionGroupSymbol,
+    data: Node.actionGroupSymbol,
   }) satisfies MenuItemGroup;
 
 export const createGapSeparator = (id: string = 'gap', source: string = 'root') => ({
