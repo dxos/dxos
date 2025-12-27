@@ -34,6 +34,8 @@ faker.seed(1);
 
 // CONCEPT: Can the entire app be built from a small number of primitives like this? Zero custom css.
 
+// TODO(burdon): Universal DND.
+
 // NEXT
 // - Test existing kanban
 // - Surface with customized card layout (e.g., drag).
@@ -108,12 +110,12 @@ const DefaultStory = () => {
   );
 
   // TODO(burdon): Data model for position? Arrays of refs.
-  const [objects, setObjects] = useState(range(20).map(() => createObject(Text.make(faker.lorem.paragraph()))));
+  const [objects, setObjects] = useState(range(2).map(() => createObject(Text.make(faker.lorem.paragraph()))));
 
-  const handleCellMove = useCallback<NonNullable<GridViewportProps['onCellMove']>>(
-    ({ from, to }) => {
-      const [object] = objects.splice(from, 1);
-      objects.splice(to, 0, object);
+  const handleCellMove = useCallback<NonNullable<GridViewportProps['onDrop']>>(
+    ({ source, target }) => {
+      const [object] = objects.splice(source.index, 1);
+      objects.splice(target.index, 0, object);
       setObjects([...objects]);
     },
     [objects],
@@ -122,19 +124,20 @@ const DefaultStory = () => {
   return (
     <Editor.Root extensions={extensions}>
       <Grid.Root>
-        <Grid.Viewport onCellMove={handleCellMove}>
+        <Grid.Viewport onDrop={handleCellMove}>
           <Grid.Column classNames='is-[25rem]'>
-            <div className='p-3'>
+            {/* TODO(burdon): Container component. */}
+            <div role='none' className='p-3'>
               <QueryEditor
                 classNames='border border-subduedSeparator rounded-sm p-2'
                 db={space?.db}
                 onChange={setQuery}
               />
             </div>
-            <Grid.Stack objects={searchObjects} Cell={DebugCell} />
+            <Grid.Stack id='search' objects={searchObjects} Cell={DebugCell} canDrag />
           </Grid.Column>
           <Grid.Column classNames='is-[25rem]'>
-            <Grid.Stack objects={objects} Cell={TextCell} enableDrag />
+            <Grid.Stack id='notes' objects={objects} Cell={TextCell} canDrag canDrop />
           </Grid.Column>
         </Grid.Viewport>
       </Grid.Root>

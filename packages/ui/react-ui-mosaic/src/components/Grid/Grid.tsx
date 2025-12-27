@@ -39,13 +39,28 @@ import React, {
 import { createPortal } from 'react-dom';
 
 import { type Obj } from '@dxos/echo';
+import { log } from '@dxos/log';
 import { Icon, type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
+import { type CellData, type ComponentData, type ContainerData, type DragEventHandler } from '../../hooks';
+
+//
+// Styles
+//
+
 const classes: Record<string, string> = {
   icon: 'bs-6 is-6 grid place-items-center hover:bg-inputSurface rounded-sm transition opacity-10 group-hover:opacity-100',
-  borderFocus:
-    'outline-none border rounded-sm transition border-subduedSeparator focus:border-accentSurface focus-within:border-neutralFocusIndicator',
+
+  borderFocus: [
+    'outline-none border rounded-sm transition border-subduedSeparator',
+    // Tabster nav/focus.
+    'focus:border-accentSurface',
+    // Child has focus.
+    'focus-within:border-neutralFocusIndicator',
+    // Active drop target.
+    'has-[[data-active=true]]:border-neutralFocusIndicator',
+  ].join(' '),
 };
 
 //
@@ -81,33 +96,45 @@ GridRoot.displayName = 'Grid.Root';
 // Viewport
 //
 
-interface GridEventHandler {
-  onCellMove?: (props: { from: number; to: number }) => void;
-}
+type GridViewportProps = ThemedClassName<PropsWithChildren<DragEventHandler>>;
 
-type GridViewportProps = ThemedClassName<PropsWithChildren<{}>> & GridEventHandler;
-
-const GridViewport = ({ classNames, children, onCellMove }: GridViewportProps) => {
+const GridViewport = ({ classNames, children, onDrop }: GridViewportProps) => {
   const rootRef = useRef<HTMLDivElement>(null);
   const focusableGroupAttrs = useFocusableGroup({ tabBehavior: 'limited-trap-focus' });
   const arrowNavigationAttrs = useArrowNavigationGroup({ axis: 'horizontal', memorizeCurrent: true, tabbable: true });
   const tabsterAttrs = useMergedTabsterAttributes_unstable(focusableGroupAttrs, arrowNavigationAttrs);
 
-  // Handle all mutation events.
+  // TODO(burdon): Handle generic container drag/drop (checking source and target).
   useEffect(() => {
     return combine(
       monitorForElements({
         onDrop: ({ source, location }) => {
-          const column = location.current.dropTargets.find((t) => t.data.type === 'column');
+          log.info('onDrop', { source: source.data, location: location.current.dropTargets.map((t) => t.data) });
+          const container = location.current.dropTargets.find((t) => t.data.type === 'container');
           const cell = location.current.dropTargets.find((t) => t.data.type === 'cell');
-          if (!column || !cell) {
+          if (!container || !cell) {
+            log.warn('invalid drop', { container, cell });
             return;
           }
 
-          const objects = column.data.objects as Obj.Any[];
-          const from = objects.findIndex((object) => object.id === source.data.objectId);
-          const to = objects.findIndex((object) => object.id === cell.data.objectId);
-          onCellMove?.({ from, to });
+          const objects = container.data.objects as Obj.Any[];
+          const from = objects.findIndex((object) => object.id === source.data.id);
+          const to = objects.findIndex((object) => object.id === cell.data.id);
+          if (from === -1 || to === -1) {
+            log.warn('invalid drop', { from, to });
+            return;
+          }
+
+          onDrop?.({
+            source: {
+              index: from,
+              data: source.data as CellData,
+            },
+            target: {
+              index: to,
+              data: cell.data as CellData,
+            },
+          });
         },
       }),
     );
@@ -157,14 +184,18 @@ GridColumn.displayName = 'Grid.Column';
 // Ref: https://codesandbox.io/p/sandbox/vc6s5t?file=%2Fpragmatic-drag-and-drop%2Fdocumentation%2Fexamples%2Fpieces%2Fboard%2Fcolumn.tsx
 //
 
+type ContainerState = { type: 'idle' } | { type: 'active' };
+
 type GridStackProps = ThemedClassName<
   {
+    id: string;
     objects: Obj.Any[];
-  } & Pick<GridCellProps, 'Cell' | 'enableDrag'>
+  } & Pick<GridCellProps, 'Cell' | 'canDrag' | 'canDrop'>
 >;
 
-const GridStack = memo(({ classNames, objects, Cell, enableDrag }: GridStackProps) => {
+const GridStack = memo(({ classNames, id, objects, Cell, canDrag = false, canDrop = false }: GridStackProps) => {
   const rootRef = useRef<HTMLDivElement>(null);
+  const [state, setState] = useState<ContainerState>({ type: 'idle' });
 
   useEffect(() => {
     if (!rootRef.current) {
@@ -174,18 +205,32 @@ const GridStack = memo(({ classNames, objects, Cell, enableDrag }: GridStackProp
     return combine(
       dropTargetForElements({
         element: rootRef.current,
-        getData: () => ({ type: 'column', objects }),
+        getData: () =>
+          ({
+            type: 'container',
+            id,
+            objects,
+          }) satisfies ContainerData,
+
+        canDrop: () => canDrop,
+        onDragEnter: () => setState({ type: 'active' }),
+        onDragLeave: () => setState({ type: 'idle' }),
       }),
       autoScrollForElements({
         element: rootRef.current,
       }),
     );
-  }, [rootRef]);
+  }, [rootRef, canDrop]);
 
   return (
-    <div ref={rootRef} role='none' className={mx('relative flex flex-col is-full plb-2 overflow-y-auto', classNames)}>
+    <div
+      ref={rootRef}
+      role='none'
+      className={mx('relative flex flex-col is-full plb-2 overflow-y-auto', classNames)}
+      {...{ 'data-active': state.type === 'active' }}
+    >
       {objects.map((object) => (
-        <Grid.Cell key={object.id} object={object} Cell={Cell} enableDrag={enableDrag} />
+        <Grid.Cell key={object.id} containerId={id} object={object} Cell={Cell} canDrag={canDrag} canDrop={canDrop} />
       ))}
     </div>
   );
@@ -200,12 +245,16 @@ GridStack.displayName = 'Grid.Column';
 type State = { type: 'idle' } | { type: 'preview'; container: HTMLElement; rect: DOMRect } | { type: 'dragging' };
 
 type GridCellProps = ThemedClassName<{
+  containerId: string;
   object: Obj.Any;
   Cell: FC<{ object: Obj.Any; dragging?: boolean }>;
-  enableDrag?: boolean;
+
+  // TODO(burdon): Make dynamic.
+  canDrag?: boolean;
+  canDrop?: boolean;
 }>;
 
-const GridCell = memo(({ classNames, object, Cell, enableDrag }: GridCellProps) => {
+const GridCell = memo(({ classNames, containerId, object, Cell, canDrag = false, canDrop = false }: GridCellProps) => {
   const rootRef = useRef<HTMLDivElement>(null);
   const handleRef = useRef<HTMLDivElement>(null);
   const [state, setState] = useState<State>({ type: 'idle' });
@@ -222,7 +271,13 @@ const GridCell = memo(({ classNames, object, Cell, enableDrag }: GridCellProps) 
     return combine(
       draggable({
         element: handle,
-        getInitialData: () => ({ type: 'cell', objectId: object.id }),
+        getInitialData: () =>
+          ({
+            type: 'cell',
+            id: object.id,
+            containerId,
+          }) satisfies ComponentData,
+
         onGenerateDragPreview: ({ location, nativeSetDragImage }) => {
           const rect = root.getBoundingClientRect();
           setCustomNativeDragPreview({
@@ -244,14 +299,16 @@ const GridCell = memo(({ classNames, object, Cell, enableDrag }: GridCellProps) 
           setState({ type: 'idle' });
         },
       }),
+
       dropTargetForElements({
         element: root,
         getData: ({ input, element }) => {
           return attachClosestEdge(
             {
               type: 'cell',
-              objectId: object.id,
-            },
+              id: object.id,
+              containerId,
+            } satisfies ComponentData,
             {
               input,
               element,
@@ -259,13 +316,15 @@ const GridCell = memo(({ classNames, object, Cell, enableDrag }: GridCellProps) 
             },
           );
         },
+
+        canDrop: () => canDrop,
         onDragEnter: ({ source, self }) => {
-          if (source.data.objectId !== object.id) {
+          if (source.data.id !== object.id) {
             setClosestEdge(extractClosestEdge(self.data));
           }
         },
         onDrag: ({ source, self }) => {
-          if (source.data.objectId !== object.id) {
+          if (source.data.id !== object.id) {
             setClosestEdge(extractClosestEdge(self.data));
           }
         },
@@ -286,7 +345,7 @@ const GridCell = memo(({ classNames, object, Cell, enableDrag }: GridCellProps) 
       <div role='none' className='relative mli-2'>
         <GridCellPrimitive
           ref={rootRef}
-          handleRef={enableDrag ? handleRef : undefined}
+          handleRef={canDrag ? handleRef : undefined}
           classNames={['transition opacity-100', state.type === 'dragging' && 'opacity-25', classNames]}
         >
           <Cell object={object} />
