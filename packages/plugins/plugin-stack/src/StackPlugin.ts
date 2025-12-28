@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Capabilities, Events, Plugin, Capability } from '@dxos/app-framework';
+import { Capabilities, Capability, Events, Plugin } from '@dxos/app-framework';
 import { type Obj } from '@dxos/echo';
 import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
 
@@ -44,7 +44,6 @@ export const StackPlugin = Plugin.define(meta).pipe(
     activate: () => Capability.contributes(ClientCapabilities.Schema, [StackViewType]),
   }),
   Plugin.addModule({
-    id: 'react-surface',
     activatesOn: Events.SetupReactSurface,
     activate: ReactSurface,
   }),

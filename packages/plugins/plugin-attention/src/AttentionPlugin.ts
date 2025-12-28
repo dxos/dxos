@@ -25,17 +25,14 @@ export const AttentionPlugin = Plugin.define(meta).pipe(
     },
   }),
   Plugin.addModule({
-    id: 'react-context',
     activatesOn: Events.Startup,
     activate: ReactContext,
   }),
   Plugin.addModule({
-    id: 'keyboard',
     activatesOn: ActivationEvent.allOf(Events.AppGraphReady, AttentionEvents.AttentionReady),
     activate: Keyboard,
   }),
   Plugin.addModule({
-    id: 'intent-resolver',
     activatesOn: Events.SetupIntentResolver,
     activate: IntentResolver,
   }),

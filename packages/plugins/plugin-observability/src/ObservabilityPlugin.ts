@@ -34,7 +34,7 @@ export const ObservabilityPlugin = Plugin.define<ObservabilityPluginOptions>(met
     activate: ObservabilitySettings,
   }),
   Plugin.addModule(({ namespace }) => ({
-    id: 'observability-state',
+    id: Capability.getModuleTag(ObservabilityState),
     activatesOn: Events.Startup,
     activatesAfter: [ObservabilityEvents.StateReady],
     activate: () => ObservabilityState({ namespace }),
@@ -45,7 +45,7 @@ export const ObservabilityPlugin = Plugin.define<ObservabilityPluginOptions>(met
     activate: () => Capability.contributes(Capabilities.Translations, translations),
   }),
   Plugin.addModule(({ namespace }) => ({
-    id: 'intent-resolver',
+    id: Capability.getModuleTag(IntentResolver),
     activatesOn: Events.SetupIntentResolver,
     activate: (context) => IntentResolver({ context, namespace }),
   })),
@@ -58,7 +58,7 @@ export const ObservabilityPlugin = Plugin.define<ObservabilityPluginOptions>(met
     activate: AppGraphBuilder,
   }),
   Plugin.addModule(({ namespace, observability }) => ({
-    id: 'client-ready',
+    id: Capability.getModuleTag(ClientReady),
     activatesOn: ActivationEvent.allOf(Events.DispatcherReady, ObservabilityEvents.StateReady, ClientReadyEvent),
     activate: async (context: Capability.PluginContext) => {
       return ClientReady({ context, observability: await observability(), namespace });

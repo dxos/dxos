@@ -155,7 +155,7 @@ export const SpacePlugin = Plugin.define<SpacePluginOptions>(meta).pipe(
     };
 
     return {
-      id: 'react-surface',
+      id: Capability.getModuleTag(ReactSurface),
       activatesOn: Events.SetupReactSurface,
       // TODO(wittjosiah): Should occur before the settings dialog is loaded when surfaces activation is more granular.
       activatesBefore: [SpaceEvents.SetupSettingsPanel],
@@ -171,7 +171,7 @@ export const SpacePlugin = Plugin.define<SpacePluginOptions>(meta).pipe(
       };
 
       return {
-        id: 'intent-resolver',
+        id: Capability.getModuleTag(IntentResolver),
         activatesOn: Events.SetupIntentResolver,
         activate: (context) => IntentResolver({ context, createInvitationUrl, observability }),
       };

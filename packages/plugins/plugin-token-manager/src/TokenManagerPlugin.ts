@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Capabilities, Events, Plugin, Capability } from '@dxos/app-framework';
+import { Capabilities, Capability, Events, Plugin } from '@dxos/app-framework';
 import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
 import { AccessToken } from '@dxos/types';
 
@@ -22,12 +22,10 @@ export const TokenManagerPlugin = Plugin.define(meta).pipe(
     activate: () => Capability.contributes(ClientCapabilities.Schema, [AccessToken.AccessToken]),
   }),
   Plugin.addModule({
-    id: 'react-surface',
     activatesOn: Events.SetupReactSurface,
     activate: ReactSurface,
   }),
   Plugin.addModule({
-    id: 'app-graph-builder',
     activatesOn: Events.SetupAppGraph,
     activate: AppGraphBuilder,
   }),

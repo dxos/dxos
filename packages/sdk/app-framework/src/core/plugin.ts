@@ -9,20 +9,13 @@ import { invariant } from '@dxos/invariant';
 import { type MaybePromise } from '@dxos/util';
 
 import type * as ActivationEvent from './activation-event';
-import type * as Capability from './capability';
+import * as Capability from './capability';
 
 /**
  * Computes a module ID from plugin ID and export name.
  */
 const computeModuleId = (pluginId: string, moduleName: string): string => {
   return `${pluginId}/module/${moduleName}`;
-};
-
-/**
- * Extracts the export name from an activate function if it has the _exportName property.
- */
-const getExportName = (activate: any): string | undefined => {
-  return activate?._exportName;
 };
 
 /**
@@ -269,7 +262,7 @@ const resolveModule = (
   const id = Option.fromNullable(moduleOptions.id).pipe(
     Option.match({
       onNone: () => {
-        const exportName = getExportName(moduleOptions.activate);
+        const exportName = Capability.getModuleTag(moduleOptions.activate);
         invariant(exportName, `Plugin module missing name. Plugin: ${meta.id}`);
         return computeModuleId(meta.id, exportName);
       },

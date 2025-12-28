@@ -21,7 +21,7 @@ import { type ClientPluginOptions } from './types';
 export const ClientPlugin = Plugin.define<ClientPluginOptions>(meta).pipe(
   Plugin.addModule((options) => {
     return {
-      id: 'client',
+      id: Capability.getModuleTag(Client),
       activatesOn: ActivationEvent.oneOf(Events.Startup, Events.SetupAppGraph),
       activatesAfter: [ClientEvents.ClientReady],
       activate: (context) => Client({ ...options, context }),
@@ -49,7 +49,7 @@ export const ClientPlugin = Plugin.define<ClientPluginOptions>(meta).pipe(
     };
 
     return {
-      id: 'react-surface',
+      id: Capability.getModuleTag(ReactSurface),
       activatesOn: Events.SetupReactSurface,
       activate: () => ReactSurface({ createInvitationUrl, onReset }),
     };
@@ -59,7 +59,7 @@ export const ClientPlugin = Plugin.define<ClientPluginOptions>(meta).pipe(
     activate: AppGraphBuilder,
   }),
   Plugin.addModule({
-    id: 'intent-resolver',
+    id: Capability.getModuleTag(IntentResolver),
     activatesOn: Events.SetupIntentResolver,
     activate: (context) => IntentResolver({ context }),
   }),

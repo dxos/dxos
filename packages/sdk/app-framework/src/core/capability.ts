@@ -16,6 +16,11 @@ import type * as ActivationEvent from './activation-event';
 const InterfaceDefTypeId: unique symbol = Symbol.for('InterfaceDefTypeId');
 
 /**
+ * Symbol used to tag lazy capability functions with their module ID.
+ */
+export const ModuleTag: unique symbol = Symbol.for('@dxos/app-framework/ModuleTag');
+
+/**
  * The interface definition of a capability.
  */
 export type InterfaceDef<T> = {
@@ -89,12 +94,9 @@ type LazyCapability<T, U> = (props?: T) => Promise<() => Promise<Capability<U> |
  * Supports single capabilities, arrays, and tuples of different capability types.
  * @param name The export name (e.g., 'AppGraphBuilder') - used to auto-compute module IDs
  * @param loader The lazy loader function
- * @returns A lazy capability function with _exportName property attached
+ * @returns A lazy capability function with ModuleTag symbol attached
  */
-export const lazy = <T, U>(
-  name: string,
-  c: LoadCapability<T, U> | LoadCapabilities<T>,
-): LazyCapability<T, U> & { _exportName: string } => {
+export const lazy = <T, U>(name: string, c: LoadCapability<T, U> | LoadCapabilities<T>): LazyCapability<T, U> => {
   const lazyFn = async (props?: T) => {
     const { default: getCapability } = await c();
     return async () => {
@@ -103,7 +105,19 @@ export const lazy = <T, U>(
       return (Array.isArray(result) ? result : [result]) as Any[] | Capability<U>;
     };
   };
-  return Object.assign(lazyFn, { _exportName: name });
+  return Object.assign(lazyFn, { [ModuleTag]: name });
+};
+
+/**
+ * Gets the module tag (export name) from a lazy capability function.
+ * @param capability The lazy capability function
+ * @returns The module tag if present, undefined otherwise
+ */
+// TODO(wittjosiah): Stricter type for capability.
+export const getModuleTag = (capability: unknown): string | undefined => {
+  return capability && typeof capability === 'function' && ModuleTag in capability
+    ? String(capability[ModuleTag])
+    : undefined;
 };
 
 /**

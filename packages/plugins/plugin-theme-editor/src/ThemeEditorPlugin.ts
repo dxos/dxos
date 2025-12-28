@@ -15,12 +15,10 @@ export const ThemeEditorPlugin = Plugin.define(meta).pipe(
     activate: () => Capability.contributes(Capabilities.Translations, translations),
   }),
   Plugin.addModule({
-    id: 'react-surface',
     activatesOn: Events.SetupReactSurface,
     activate: ReactSurface,
   }),
   Plugin.addModule({
-    id: 'app-graph-builder',
     activatesOn: Events.SetupAppGraph,
     activate: AppGraphBuilder,
   }),

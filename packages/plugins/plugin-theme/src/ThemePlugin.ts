@@ -11,7 +11,7 @@ const ReactContext = Capability.lazy('ReactContext', () => import('./react-conte
 
 export const ThemePlugin = Plugin.define<ThemePluginOptions>(meta).pipe(
   Plugin.addModule((options: ThemePluginOptions) => ({
-    id: 'react-context',
+    id: Capability.getModuleTag(ReactContext),
     activatesOn: Events.Startup,
     activatesBefore: [Events.SetupTranslations],
     activate: () => ReactContext(options),
