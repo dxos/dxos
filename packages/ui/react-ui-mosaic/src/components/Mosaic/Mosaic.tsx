@@ -8,7 +8,7 @@ import React, { type PropsWithChildren, useEffect, useState } from 'react';
 
 import { log } from '@dxos/log';
 
-import { type ContainerData, type DropEventHandler, type ItemData } from '../../hooks';
+import { type ContainerData, type DropEventHandler, type DropTargetData, type ItemData } from '../../hooks';
 
 // TODO(burdon): DragContext.
 // TODO(burdon): Register containers and drop handlers.
@@ -45,6 +45,7 @@ const Root = ({ children }: RootProps) => {
           location: location.current.dropTargets.map((target) => target.data),
         });
 
+        // Get the source container.
         const sourceData = source.data as ItemData;
         const sourceContainer = containers[sourceData.containerId];
         if (!sourceContainer) {
@@ -52,10 +53,7 @@ const Root = ({ children }: RootProps) => {
           return;
         }
 
-        // TODO(burdon): Target could be a placeholder -- use it to get the location.
-        // const target = location.current.dropTargets.find((target) => target.data.type === 'item');
-        // const targetData = target?.data as ItemData;
-
+        // Get the target container.
         const container = location.current.dropTargets.find((target) => target.data.type === 'container');
         if (!container) {
           log.warn('invalid target');
@@ -69,11 +67,18 @@ const Root = ({ children }: RootProps) => {
           return;
         }
 
+        // Get the target location.
+        const target = location.current.dropTargets.find(
+          (target) => target.data.type === 'item' || target.data.type === 'placeholder',
+        );
+
         if (sourceContainer === targetContainer) {
-          targetContainer.onUpdate?.({ insert: sourceData });
+          targetContainer.onDrop?.({ item: sourceData, at: target?.data as DropTargetData });
         } else {
-          targetContainer.onUpdate?.({ insert: sourceData });
-          sourceContainer.onUpdate?.({ remove: sourceData });
+          sourceContainer.onTake?.(sourceData, (sourceData) => {
+            targetContainer.onDrop?.({ item: sourceData, at: target?.data as DropTargetData });
+            return true;
+          });
         }
       },
     });

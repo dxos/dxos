@@ -2,11 +2,13 @@
 // Copyright 2025 DXOS.org
 //
 
+import { extractClosestEdge } from '@atlaskit/pragmatic-drag-and-drop-hitbox/closest-edge';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useMemo, useState } from 'react';
 
 import { Obj } from '@dxos/echo';
 import { createDocAccessor, createObject } from '@dxos/echo-db';
+import { log } from '@dxos/log';
 import { faker } from '@dxos/random';
 import { useQuery } from '@dxos/react-client/echo';
 import { useClientStory, withClientProvider } from '@dxos/react-client/testing';
@@ -79,7 +81,7 @@ const TextCell: GridCellProps['Cell'] = ({ object, dragging }) => {
   }, [accessor]);
 
   if (dragging) {
-    return <div className='truncate'>{initialValue.slice(0, 80)}</div>;
+    return <div className='truncate'>{initialValue?.slice(0, 80)}</div>;
   }
 
   return <Editor.Content extensions={extensions} initialValue={initialValue} focusable={false} />;
@@ -115,39 +117,43 @@ const DefaultStory = () => {
     () => ({
       id: 'search',
       canDrop: () => false,
+      onTake: (item, cb) => {
+        const result = cb(item);
+        log.info('taken', { item, result });
+      },
     }),
     [],
   );
 
   // TODO(burdon): Data model for position? Arrays of refs.
   const [objects, setObjects] = useState(range(2).map(() => createObject(Text.make(faker.lorem.paragraph()))));
-  const objectHandler = useMemo<DropEventHandler>(
-    () => ({
-      id: 'notes',
+  const objectHandler = useMemo<DropEventHandler>(() => {
+    const containerId = 'notes';
+    return {
+      id: containerId,
       canDrop: () => true,
-      onUpdate: ({ insert, remove }) => {
-        // if (insert) {
-        //   const idx = objects.findIndex((object) => object.id === insert.id);
-        //   if (idx !== -1) {
-        //     objects.splice(idx, 1);
-        //     setObjects([...objects]);
-        //   }
-        // }
-        // TODO(burdon): Generalize get/remove/add from collections (array/map/position).
-        // const from = source.containerId === containerId ? objects.findIndex((object) => object.id === source.id) : -1;
-        // const to = container.id === containerId ? objects.findIndex((object) => object.id === target?.id) : -1;
-        // console.log('>>>', { source, from, target, to, container });
-        // if (from !== -1) {
-        //   objects.splice(from, 1);
-        // }
-        // if (to !== -1) {
-        //   objects.splice(to, 0, objects[from]);
-        // }
-        // setObjects([...objects]);
+      // TODO(burdon): Generalize/factor out.
+      onDrop: ({ item, at }) => {
+        const current = item.containerId === containerId ? objects.findIndex((object) => object.id === item.id) : -1;
+        if (current !== -1) {
+          objects.splice(current, 1);
+        }
+
+        const targetIdx =
+          at?.containerId === containerId && at?.type === 'item'
+            ? objects.findIndex((object) => object.id === at?.id)
+            : -1;
+
+        if (targetIdx !== -1) {
+          objects.splice(targetIdx + (at && extractClosestEdge(at) === 'bottom' ? 1 : 0), 0, item.object);
+        } else {
+          objects.push(item.object);
+        }
+
+        setObjects([...objects]);
       },
-    }),
-    [objects],
-  );
+    };
+  }, [objects]);
 
   return (
     <Mosaic.Root>
