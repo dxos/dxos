@@ -2,14 +2,14 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Capabilities, contributes, createResolver, defineCapabilityModule } from '@dxos/app-framework';
+import { Capabilities, Capability, createResolver } from '@dxos/app-framework';
 import { Obj } from '@dxos/echo';
 import { Task } from '@dxos/types';
 
 import { Journal, Outline, OutlineAction } from '../types';
 
-export default defineCapabilityModule(() =>
-  contributes(Capabilities.IntentResolver, [
+export default Capability.makeModule(() =>
+  Capability.contributes(Capabilities.IntentResolver, [
     createResolver({
       intent: OutlineAction.CreateJournal,
       resolve: ({ name }) => ({

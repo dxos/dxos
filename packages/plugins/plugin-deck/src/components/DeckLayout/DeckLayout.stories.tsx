@@ -5,7 +5,7 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
-import { Events, IntentPlugin, SettingsPlugin, defineModule, definePlugin } from '@dxos/app-framework';
+import { Events, IntentPlugin, SettingsPlugin, Plugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { AttentionPlugin } from '@dxos/plugin-attention';
 import { GraphPlugin } from '@dxos/plugin-graph';
@@ -29,24 +29,23 @@ const meta = {
         SettingsPlugin(),
         IntentPlugin(),
         GraphPlugin(),
-        definePlugin(
-          {
-            id: 'example.com/plutin/testing',
-            name: 'Testing',
-          },
-          () => [
-            defineModule({
-              id: `${pluginMeta.id}/module/deck-state`,
+        Plugin.define({
+          id: 'example.com/plutin/testing',
+          name: 'Testing',
+        })
+          .pipe(
+            Plugin.addModule({
+              id: 'deck-state',
               activatesOn: Events.AppGraphReady,
               activate: () => DeckStateFactory(),
             }),
-            defineModule({
-              id: `${pluginMeta.id}/module/layout-intent-resolver`,
+            Plugin.addModule({
+              id: 'layout-intent-resolver',
               activatesOn: Events.SetupIntentResolver,
               activate: LayoutIntentResolver,
             }),
-          ],
-        )(),
+            Plugin.make,
+          )(),
       ],
     }),
   ],

@@ -4,15 +4,15 @@
 
 import React from 'react';
 
-import { Capabilities, contributes, createSurface, defineCapabilityModule } from '@dxos/app-framework';
+import { Capabilities, Capability, createSurface } from '@dxos/app-framework';
 import { Obj } from '@dxos/echo';
 import { Table } from '@dxos/react-ui-table/types';
 
 import { TableCard, TableContainer } from '../components';
 import { meta } from '../meta';
 
-export default defineCapabilityModule(() =>
-  contributes(Capabilities.ReactSurface, [
+export default Capability.makeModule(() =>
+  Capability.contributes(Capabilities.ReactSurface, [
     createSurface({
       id: `${meta.id}/table`,
       role: ['article', 'section', 'slide'],

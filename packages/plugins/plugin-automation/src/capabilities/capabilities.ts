@@ -5,7 +5,7 @@
 import type * as ManagedRuntime from 'effect/ManagedRuntime';
 
 import { type AiService, type ToolExecutionService, type ToolResolverService } from '@dxos/ai';
-import { defineCapability } from '@dxos/app-framework';
+import { Capability } from '@dxos/app-framework';
 import { type Database } from '@dxos/echo';
 import type { CredentialsService, FunctionInvocationService, QueueService } from '@dxos/functions';
 import type { InvocationTracer, TriggerDispatcher, TriggerStateStore } from '@dxos/functions-runtime';
@@ -38,5 +38,5 @@ export namespace AutomationCapabilities {
   /**
    * Runtime for executing agents, functions, and triggers.
    */
-  export const ComputeRuntime = defineCapability<ComputeRuntimeProvider>(`${meta.id}/capability/compute-runtime`);
+  export const ComputeRuntime = Capability.make<ComputeRuntimeProvider>(`${meta.id}/capability/compute-runtime`);
 }

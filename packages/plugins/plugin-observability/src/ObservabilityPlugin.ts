@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Capabilities, Events, allOf, contributes, defineModule, definePlugin } from '@dxos/app-framework';
+import { ActivationEvent, Capabilities, Capability, Events, Plugin } from '@dxos/app-framework';
 import { type Observability } from '@dxos/observability';
 
 import {
@@ -23,48 +23,46 @@ export type ObservabilityPluginOptions = {
   observability: () => Promise<Observability>;
 };
 
-export const ObservabilityPlugin = definePlugin<ObservabilityPluginOptions>(meta, ({ namespace, observability }) => [
-  defineModule({
-    id: `${meta.id}/module/observability`,
+export const ObservabilityPlugin = Plugin.define<ObservabilityPluginOptions>(meta).pipe(
+  Plugin.addModule(({ namespace, observability }) => ({
+    id: 'observability',
     activatesOn: Events.Startup,
-    activate: async () => contributes(ObservabilityCapabilities.Observability, await observability()),
-  }),
-  defineModule({
-    id: `${meta.id}/module/settings`,
+    activate: async () => Capability.contributes(ObservabilityCapabilities.Observability, await observability()),
+  })),
+  Plugin.addModule({
     activatesOn: Events.SetupSettings,
     activate: ObservabilitySettings,
   }),
-  defineModule({
-    id: `${meta.id}/module/state`,
+  Plugin.addModule(({ namespace }) => ({
+    id: 'observability-state',
     activatesOn: Events.Startup,
     activatesAfter: [ObservabilityEvents.StateReady],
     activate: () => ObservabilityState({ namespace }),
-  }),
-  defineModule({
-    id: `${meta.id}/module/translations`,
+  })),
+  Plugin.addModule({
+    id: 'translations',
     activatesOn: Events.SetupTranslations,
-    activate: () => contributes(Capabilities.Translations, translations),
+    activate: () => Capability.contributes(Capabilities.Translations, translations),
   }),
-  defineModule({
-    id: `${meta.id}/module/intent-resolver`,
+  Plugin.addModule(({ namespace }) => ({
+    id: 'intent-resolver',
     activatesOn: Events.SetupIntentResolver,
     activate: (context) => IntentResolver({ context, namespace }),
-  }),
-  defineModule({
-    id: `${meta.id}/module/react-surface`,
+  })),
+  Plugin.addModule({
     activatesOn: Events.SetupReactSurface,
     activate: ReactSurface,
   }),
-  defineModule({
-    id: `${meta.id}/module/app-graph-builder`,
+  Plugin.addModule({
     activatesOn: Events.SetupAppGraph,
     activate: AppGraphBuilder,
   }),
-  defineModule({
-    id: `${meta.id}/module/client-ready`,
-    activatesOn: allOf(Events.DispatcherReady, ObservabilityEvents.StateReady, ClientReadyEvent),
-    activate: async (context) => {
+  Plugin.addModule(({ namespace, observability }) => ({
+    id: 'client-ready',
+    activatesOn: ActivationEvent.allOf(Events.DispatcherReady, ObservabilityEvents.StateReady, ClientReadyEvent),
+    activate: async (context: Capability.PluginContext) => {
       return ClientReady({ context, observability: await observability(), namespace });
     },
-  }),
-]);
+  })),
+  Plugin.make,
+);

@@ -5,7 +5,7 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
-import { contributes } from '@dxos/app-framework';
+import { Capability } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { Query, useDatabase, useQuery } from '@dxos/react-client/echo';
@@ -39,7 +39,7 @@ const meta = {
     withLayout({ container: 'column' }),
     withPluginManager({
       plugins: [...(await createThreadPlugins())],
-      capabilities: [contributes(ClientCapabilities.Schema, [Channel.Channel, Thread.Thread, Message.Message])],
+      capabilities: [Capability.contributes(ClientCapabilities.Schema, [Channel.Channel, Thread.Thread, Message.Message])],
     }),
   ],
   parameters: {

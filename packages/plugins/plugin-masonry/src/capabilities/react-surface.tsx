@@ -4,15 +4,15 @@
 
 import React from 'react';
 
-import { Capabilities, contributes, createSurface, defineCapabilityModule } from '@dxos/app-framework';
+import { Capabilities, Capability, createSurface } from '@dxos/app-framework';
 import { Obj } from '@dxos/echo';
 
 import { MasonryContainer } from '../components/MasonryContainer';
 import { meta } from '../meta';
 import { Masonry } from '../types';
 
-export default defineCapabilityModule(() =>
-  contributes(Capabilities.ReactSurface, [
+export default Capability.makeModule(() =>
+  Capability.contributes(Capabilities.ReactSurface, [
     createSurface({
       id: meta.id,
       role: ['article', 'section'],

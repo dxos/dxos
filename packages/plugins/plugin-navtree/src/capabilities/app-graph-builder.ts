@@ -4,18 +4,16 @@
 
 import {
   Capabilities,
+  Capability,
   LayoutAction,
-  type PluginContext,
-  contributes,
   createIntent,
-  defineCapabilityModule,
 } from '@dxos/app-framework';
 import { GraphBuilder, NodeMatcher } from '@dxos/plugin-graph';
 
 import { COMMANDS_DIALOG, meta } from '../meta';
 
-export default defineCapabilityModule((context: PluginContext) =>
-  contributes(
+export default Capability.makeModule((context) =>
+  Capability.contributes(
     Capabilities.AppGraphBuilder,
     GraphBuilder.createExtension({
       id: meta.id,

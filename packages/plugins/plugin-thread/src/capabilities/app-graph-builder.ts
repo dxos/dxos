@@ -6,10 +6,8 @@ import * as Option from 'effect/Option';
 
 import {
   Capabilities,
-  type PluginContext,
-  contributes,
   createIntent,
-  defineCapabilityModule,
+  Capability,
 } from '@dxos/app-framework';
 import { Obj } from '@dxos/echo';
 import { AttentionCapabilities } from '@dxos/plugin-attention';
@@ -24,11 +22,11 @@ import { ThreadCapabilities } from './capabilities';
 
 // TODO(wittjosiah): Highlight active calls in L1.
 //  Track active meetings by subscribing to meetings query and polling the swarms of recent meetings in the space.
-export default defineCapabilityModule((context: PluginContext) => {
+export default Capability.makeModule((context) => {
   const resolve = (typename: string) =>
     context.getCapabilities(Capabilities.Metadata).find(({ id }) => id === typename)?.metadata ?? {};
 
-  return contributes(Capabilities.AppGraphBuilder, [
+  return Capability.contributes(Capabilities.AppGraphBuilder, [
     GraphBuilder.createExtension({
       id: `${meta.id}/active-call`,
       match: NodeMatcher.whenRoot,

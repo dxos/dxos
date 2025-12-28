@@ -4,14 +4,7 @@
 
 import * as Effect from 'effect/Effect';
 
-import {
-  Capabilities,
-  type PluginContext,
-  contributes,
-  createIntent,
-  createResolver,
-  defineCapabilityModule,
-} from '@dxos/app-framework';
+import { Capabilities, Capability, createIntent, createResolver } from '@dxos/app-framework';
 import { DXN, Obj, Ref, Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { ClientCapabilities } from '@dxos/plugin-client';
@@ -26,8 +19,8 @@ import { Meeting, MeetingAction } from '../types';
 
 import { MeetingCapabilities } from './capabilities';
 
-export default defineCapabilityModule((context: PluginContext) =>
-  contributes(Capabilities.IntentResolver, [
+export default Capability.makeModule((context) =>
+  Capability.contributes(Capabilities.IntentResolver, [
     createResolver({
       intent: MeetingAction.OnCreateSpace,
       resolve: ({ isDefault, rootCollection }) =>

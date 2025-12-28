@@ -4,11 +4,9 @@
 
 import {
   Capabilities,
+  Capability,
   LayoutAction,
-  type PluginContext,
-  contributes,
   createIntent,
-  defineCapabilityModule,
 } from '@dxos/app-framework';
 import { addEventListener } from '@dxos/async';
 import { type Client } from '@dxos/client';
@@ -34,7 +32,7 @@ const handlePreviewLookup = async (
   }
 };
 
-export default defineCapabilityModule((context: PluginContext) => {
+export default Capability.makeModule((context) => {
   // TODO(wittjosiah): Factor out lookup handlers to other plugins to make not ECHO-specific.
   const handleAnchorActivate = async ({ refId, label, trigger }: DxAnchorActivate) => {
     const { dispatchPromise: dispatch } = context.getCapability(Capabilities.IntentDispatcher);
@@ -72,5 +70,5 @@ export default defineCapabilityModule((context: PluginContext) => {
     log.warn('No default view found');
   }
 
-  return contributes(Capabilities.Null, null, () => cleanup());
+  return Capability.contributes(Capabilities.Null, null, () => cleanup());
 });

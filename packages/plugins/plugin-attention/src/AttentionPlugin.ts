@@ -2,16 +2,16 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Events, allOf, contributes, defineModule, definePlugin } from '@dxos/app-framework';
+import { ActivationEvent, Capability, Events, Plugin } from '@dxos/app-framework';
 import { AttentionManager, SelectionManager } from '@dxos/react-ui-attention';
 
 import { AttentionCapabilities, IntentResolver, Keyboard, ReactContext } from './capabilities';
 import { AttentionEvents } from './events';
 import { meta } from './meta';
 
-export const AttentionPlugin = definePlugin(meta, () => [
-  defineModule({
-    id: `${meta.id}/module/attention`,
+export const AttentionPlugin = Plugin.define(meta).pipe(
+  Plugin.addModule({
+    id: 'attention',
     activatesOn: Events.Startup,
     activatesAfter: [AttentionEvents.AttentionReady],
     activate: () => {
@@ -19,27 +19,28 @@ export const AttentionPlugin = definePlugin(meta, () => [
       const selection = new SelectionManager();
       setupDevtools(attention);
       return [
-        contributes(AttentionCapabilities.Attention, attention),
-        contributes(AttentionCapabilities.Selection, selection),
+        Capability.contributes(AttentionCapabilities.Attention, attention),
+        Capability.contributes(AttentionCapabilities.Selection, selection),
       ];
     },
   }),
-  defineModule({
-    id: `${meta.id}/module/react-context`,
+  Plugin.addModule({
+    id: 'react-context',
     activatesOn: Events.Startup,
     activate: ReactContext,
   }),
-  defineModule({
-    id: `${meta.id}/module/keyboard`,
-    activatesOn: allOf(Events.AppGraphReady, AttentionEvents.AttentionReady),
+  Plugin.addModule({
+    id: 'keyboard',
+    activatesOn: ActivationEvent.allOf(Events.AppGraphReady, AttentionEvents.AttentionReady),
     activate: Keyboard,
   }),
-  defineModule({
-    id: `${meta.id}/module/intent-resolver`,
+  Plugin.addModule({
+    id: 'intent-resolver',
     activatesOn: Events.SetupIntentResolver,
     activate: IntentResolver,
   }),
-]);
+  Plugin.make,
+);
 
 const setupDevtools = (attention: AttentionManager) => {
   (globalThis as any).composer ??= {};

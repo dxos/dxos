@@ -4,10 +4,8 @@
 
 import {
   Capabilities,
-  type PluginContext,
-  contributes,
+  Capability,
   createIntent,
-  defineCapabilityModule,
 } from '@dxos/app-framework';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { ATTENDABLE_PATH_SEPARATOR, DECK_COMPANION_TYPE } from '@dxos/plugin-deck/types';
@@ -17,8 +15,8 @@ import { parseId } from '@dxos/react-client/echo';
 import { meta } from '../meta';
 import { SearchAction } from '../types';
 
-export default defineCapabilityModule((context: PluginContext) =>
-  contributes(Capabilities.AppGraphBuilder, [
+export default Capability.makeModule((context) =>
+  Capability.contributes(Capabilities.AppGraphBuilder, [
     GraphBuilder.createExtension({
       id: `${meta.id}/space-search`,
       match: NodeMatcher.whenRoot,

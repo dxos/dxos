@@ -2,17 +2,17 @@
 // Copyright 2025 DXOS.org
 //
 
-import { lazy } from '@dxos/app-framework';
+import { Capability } from '@dxos/app-framework';
 
-export const AppGraphBuilder = lazy(() => import('./app-graph-builder'));
-export const BlueprintDefinition = lazy(() => import('./blueprint-definition'));
-export const CallManager = lazy(() => import('./call-manager'));
-export const IntentResolver = lazy(() => import('./intent-resolver'));
-export const Markdown = lazy(() => import('./markdown'));
-export const ReactRoot = lazy(() => import('./react-root'));
-export const ReactSurface = lazy(() => import('./react-surface'));
-export const Repair = lazy(() => import('./repair'));
-export const ThreadSettings = lazy(() => import('./settings'));
-export const ThreadState = lazy(() => import('./state'));
+export const AppGraphBuilder = Capability.lazy('AppGraphBuilder', () => import('./app-graph-builder'));
+export const BlueprintDefinition = Capability.lazy('BlueprintDefinition', () => import('./blueprint-definition'));
+export const CallManager = Capability.lazy('CallManager', () => import('./call-manager'));
+export const IntentResolver = Capability.lazy('IntentResolver', () => import('./intent-resolver'));
+export const Markdown = Capability.lazy('Markdown', () => import('./markdown'));
+export const ReactRoot = Capability.lazy('ReactRoot', () => import('./react-root'));
+export const ReactSurface = Capability.lazy('ReactSurface', () => import('./react-surface'));
+export const Repair = Capability.lazy('Repair', () => import('./repair'));
+export const ThreadSettings = Capability.lazy('ThreadSettings', () => import('./settings'));
+export const ThreadState = Capability.lazy('ThreadState', () => import('./state'));
 
 export * from './capabilities';

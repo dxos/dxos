@@ -12,15 +12,15 @@ import * as ManagedRuntime from 'effect/ManagedRuntime';
 
 import { type AiModelResolver } from '@dxos/ai';
 import { OllamaResolver } from '@dxos/ai/resolvers';
-import { Capabilities, type Capability, contributes, defineCapabilityModule } from '@dxos/app-framework';
+import { Capabilities, Capability } from '@dxos/app-framework';
 import { log } from '@dxos/log';
 
 // NOTE: Running ollama on non-standard port (config Tauri).
 const OLLAMA_HOST = 'http://localhost:21434';
 
-export type OllamaCapabilities = Capability<typeof Capabilities.AiModelResolver>;
+export type OllamaCapabilities = Capability.Capability<typeof Capabilities.AiModelResolver>;
 
-export default defineCapabilityModule<[], OllamaCapabilities>(() => {
+export default Capability.makeModule<[], OllamaCapabilities>(() => {
   const runtime = ManagedRuntime.make(OllamaSidecar.layerLive);
 
   // Layer for the sidecar but the lifecycle is managed by the runtime.
@@ -28,7 +28,7 @@ export default defineCapabilityModule<[], OllamaCapabilities>(() => {
     runtime.runtimeEffect.pipe(Effect.map((rt) => rt.context.pipe(Context.pick(OllamaSidecar)))),
   );
 
-  return contributes(
+  return Capability.contributes(
     Capabilities.AiModelResolver,
     OllamaSidecarModelResolver.pipe(Layer.provide(sidecarLayer)),
     async () => {

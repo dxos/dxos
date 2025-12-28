@@ -2,12 +2,12 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Capabilities, contributes, createResolver, defineCapabilityModule } from '@dxos/app-framework';
+import { Capabilities, Capability, createResolver } from '@dxos/app-framework';
 
 import { Diagram, SketchAction } from '../types';
 
-export default defineCapabilityModule(() =>
-  contributes(
+export default Capability.makeModule(() =>
+  Capability.contributes(
     Capabilities.IntentResolver,
     createResolver({
       intent: SketchAction.Create,

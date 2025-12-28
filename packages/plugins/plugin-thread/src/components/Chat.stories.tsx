@@ -5,7 +5,7 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useState } from 'react';
 
-import { Capabilities, IntentPlugin, contributes, createSurface } from '@dxos/app-framework';
+import { Capabilities, IntentPlugin, Capability, createSurface } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { faker } from '@dxos/random';
 import { useClient } from '@dxos/react-client';
@@ -60,7 +60,7 @@ const meta = {
     withPluginManager({
       plugins: [IntentPlugin()],
       capabilities: [
-        contributes(
+        Capability.contributes(
           Capabilities.ReactSurface,
           createSurface({
             id: 'test',

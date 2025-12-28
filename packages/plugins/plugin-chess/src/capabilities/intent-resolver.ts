@@ -2,16 +2,16 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Capabilities, contributes, createResolver, defineCapabilityModule } from '@dxos/app-framework';
+import { Capabilities, Capability, createResolver } from '@dxos/app-framework';
 
 import { Chess, ChessAction } from '../types';
 
-export default defineCapabilityModule(() =>
-  contributes(
+export default Capability.makeModule(() =>
+  Capability.contributes(
     Capabilities.IntentResolver,
     createResolver({
       intent: ChessAction.Create,
-      resolve: ({ name, pgn }) => {
+      resolve: ({ name, pgn }: { name: string; pgn?: string }) => {
         return {
           data: {
             object: Chess.make({ name, pgn }),

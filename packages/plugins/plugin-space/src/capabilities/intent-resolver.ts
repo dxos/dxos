@@ -6,13 +6,11 @@ import * as Effect from 'effect/Effect';
 
 import {
   Capabilities,
+  Capability,
   type Label,
   LayoutAction,
-  type PluginContext,
-  contributes,
   createIntent,
   createResolver,
-  defineCapabilityModule,
 } from '@dxos/app-framework';
 import { SpaceState, getSpace } from '@dxos/client/echo';
 import { Invitation, InvitationEncoder } from '@dxos/client/invitations';
@@ -46,16 +44,16 @@ import { COMPOSER_SPACE_LOCK, cloneObject, getNestedObjects } from '../util';
 const SPACE_MAX_OBJECTS = 750;
 
 type IntentResolverOptions = {
-  context: PluginContext;
+  context: Capability.PluginContext;
   createInvitationUrl: (invitationCode: string) => string;
   observability?: boolean;
 };
 
-export default defineCapabilityModule(({ context, observability, createInvitationUrl }: IntentResolverOptions) => {
+export default Capability.makeModule(({ context, observability, createInvitationUrl }: IntentResolverOptions) => {
   const resolve = (typename: string) =>
-    context.getCapabilities(Capabilities.Metadata).find(({ id }) => id === typename)?.metadata ?? {};
+    context.getCapabilities(Capabilities.Metadata).find(({ id }: { id: string }) => id === typename)?.metadata ?? {};
 
-  return contributes(Capabilities.IntentResolver, [
+  return Capability.contributes(Capabilities.IntentResolver, [
     createResolver({
       intent: SpaceAction.OpenCreateSpace,
       resolve: () => ({
@@ -97,7 +95,7 @@ export default defineCapabilityModule(({ context, observability, createInvitatio
         // Allow other plugins to add default content.
         await context.activatePromise(SpaceEvents.SpaceCreated);
         const onCreateSpaceCallbacks = context.getCapabilities(SpaceCapabilities.OnCreateSpace);
-        const spaceCreatedIntents = onCreateSpaceCallbacks.map((onCreateSpace) =>
+        const spaceCreatedIntents = onCreateSpaceCallbacks.map((onCreateSpace: (params: any) => any) =>
           onCreateSpace({ space, isDefault: false, rootCollection: collection }),
         );
 
@@ -194,7 +192,7 @@ export default defineCapabilityModule(({ context, observability, createInvitatio
           const invitationCode = yield* Effect.tryPromise(
             () =>
               new Promise<string>((resolve) => {
-                invitation.subscribe((invitation) => {
+                invitation.subscribe((invitation: any) => {
                   if (invitation.state === Invitation.State.CONNECTING) {
                     resolve(InvitationEncoder.encode(invitation));
                   }
@@ -353,7 +351,7 @@ export default defineCapabilityModule(({ context, observability, createInvitatio
 
         await context.activatePromise(SpaceEvents.SchemaAdded);
         const onSchemaAdded = context.getCapabilities(SpaceCapabilities.OnSchemaAdded);
-        const schemaAddedIntents = onSchemaAdded.map((onSchemaAdded) => onSchemaAdded({ db, schema, show }));
+        const schemaAddedIntents = onSchemaAdded.map((onSchemaAdded: (params: any) => any) => onSchemaAdded({ db, schema, show }));
 
         return {
           data: {},
@@ -390,7 +388,7 @@ export default defineCapabilityModule(({ context, observability, createInvitatio
 
         await context.activatePromise(SpaceEvents.SchemaAdded);
         const onSchemaAdded = context.getCapabilities(SpaceCapabilities.OnSchemaAdded);
-        const schemaAddedIntents = onSchemaAdded.map((onSchemaAdded) => onSchemaAdded({ db, schema, show }));
+        const schemaAddedIntents = onSchemaAdded.map((onSchemaAdded: (params: any) => any) => onSchemaAdded({ db, schema, show }));
 
         return {
           data: {

@@ -4,7 +4,7 @@
 
 import React, { useMemo } from 'react';
 
-import { Capabilities, contributes, defineCapabilityModule } from '@dxos/app-framework';
+import { Capabilities, Capability } from '@dxos/app-framework';
 import { useCapabilities } from '@dxos/app-framework/react';
 import { live } from '@dxos/live-object';
 import { type ThemeMode, ThemeProvider, type ThemeProviderProps, Toast, Tooltip } from '@dxos/react-ui';
@@ -17,7 +17,7 @@ export type ThemePluginOptions = Partial<Pick<ThemeProviderProps, 'tx' | 'noCach
   appName?: string;
 };
 
-export default defineCapabilityModule(
+export default Capability.makeModule(
   (
     { appName, tx: propsTx = defaultTx, resourceExtensions = [], ...rest }: ThemePluginOptions = { appName: 'test' },
   ) => {
@@ -32,11 +32,11 @@ export default defineCapabilityModule(
     setTheme({ matches: modeQuery.matches });
     modeQuery.addEventListener('change', setTheme);
 
-    return contributes(
+    return Capability.contributes(
       Capabilities.ReactContext,
       {
         id: meta.id,
-        context: ({ children }) => {
+        context: ({ children }: { children?: React.ReactNode }) => {
           const _resources = useCapabilities(Capabilities.Translations);
           const resources = useMemo(
             () => [compositeEnUs(appName), ...resourceExtensions, ..._resources.flat()],

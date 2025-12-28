@@ -13,7 +13,7 @@ import { createIntent } from '../plugin-intent';
 import { SETTINGS_ID, SETTINGS_KEY, SettingsAction } from './actions';
 import { meta } from './meta';
 
-export default Capability.makeModule((context: Capability.PluginContext) =>
+export default Capability.makeModule((context) =>
   Capability.contributes(Capabilities.AppGraphBuilder, [
     GraphBuilder.createExtension({
       id: `${meta.id}/action`,

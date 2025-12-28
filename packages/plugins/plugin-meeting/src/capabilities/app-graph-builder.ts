@@ -4,14 +4,7 @@
 
 import * as Function from 'effect/Function';
 
-import {
-  Capabilities,
-  type PluginContext,
-  chain,
-  contributes,
-  createIntent,
-  defineCapabilityModule,
-} from '@dxos/app-framework';
+import { Capabilities, Capability, chain, createIntent } from '@dxos/app-framework';
 import { Obj, Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
@@ -28,8 +21,8 @@ import { Meeting, MeetingAction } from '../types';
 
 import { MeetingCapabilities } from './capabilities';
 
-export default defineCapabilityModule((context: PluginContext) => {
-  return contributes(Capabilities.AppGraphBuilder, [
+export default Capability.makeModule((context) => {
+  return Capability.contributes(Capabilities.AppGraphBuilder, [
     // TODO(wittjosiah): This currently won't _start_ the call but will navigate to the correct channel.
     GraphBuilder.createTypeExtension({
       id: `${meta.id}/share-call-link`,

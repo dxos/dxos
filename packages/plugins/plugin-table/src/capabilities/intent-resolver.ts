@@ -4,15 +4,7 @@
 
 import * as Effect from 'effect/Effect';
 
-import {
-  Capabilities,
-  LayoutAction,
-  type PluginContext,
-  contributes,
-  createIntent,
-  createResolver,
-  defineCapabilityModule,
-} from '@dxos/app-framework';
+import { Capabilities, Capability, LayoutAction, createIntent, createResolver } from '@dxos/app-framework';
 import { Obj, Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { SpaceAction } from '@dxos/plugin-space/types';
@@ -22,8 +14,8 @@ import { Task } from '@dxos/types';
 
 import { TableAction } from '../types';
 
-export default defineCapabilityModule((context: PluginContext) =>
-  contributes(Capabilities.IntentResolver, [
+export default Capability.makeModule((context) =>
+  Capability.contributes(Capabilities.IntentResolver, [
     createResolver({
       intent: TableAction.OnCreateSpace,
       resolve: ({ space }) =>

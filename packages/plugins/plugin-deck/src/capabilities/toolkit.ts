@@ -7,14 +7,7 @@ import * as Toolkit from '@effect/ai/Toolkit';
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
-import {
-  Capabilities,
-  LayoutAction,
-  type PluginContext,
-  contributes,
-  createIntent,
-  defineCapabilityModule,
-} from '@dxos/app-framework';
+import { Capabilities, Capability, LayoutAction, createIntent } from '@dxos/app-framework';
 import { GenericToolkit } from '@dxos/assistant';
 import { ArtifactId } from '@dxos/assistant';
 import { type SpaceId } from '@dxos/keys';
@@ -38,7 +31,7 @@ const Toolkit$ = Toolkit.make(
 export namespace DeckToolkit {
   export const Toolkit = Toolkit$;
 
-  export const createLayer = (context: PluginContext) =>
+  export const createLayer = (context: Capability.PluginContext) =>
     Toolkit$.toLayer({
       'open-item': ({ id }) =>
         Effect.gen(function* () {
@@ -61,6 +54,9 @@ export namespace DeckToolkit {
     });
 }
 
-export default defineCapabilityModule((context: PluginContext) => [
-  contributes(Capabilities.Toolkit, GenericToolkit.make(DeckToolkit.Toolkit, DeckToolkit.createLayer(context))),
-]);
+export default Capability.makeModule((context) =>
+  Capability.contributes(
+    Capabilities.Toolkit,
+    GenericToolkit.make(DeckToolkit.Toolkit, DeckToolkit.createLayer(context)),
+  ),
+);

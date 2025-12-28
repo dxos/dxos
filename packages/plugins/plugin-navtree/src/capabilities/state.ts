@@ -4,7 +4,7 @@
 
 import { effect, untracked } from '@preact/signals-core';
 
-import { Capabilities, type PluginContext, contributes, defineCapabilityModule } from '@dxos/app-framework';
+import { Capabilities, Capability } from '@dxos/app-framework';
 import { type Live, live } from '@dxos/live-object';
 import { Path } from '@dxos/react-ui-list';
 
@@ -29,7 +29,7 @@ const getInitialState = () => {
   } catch {}
 };
 
-export default defineCapabilityModule((context: PluginContext) => {
+export default Capability.makeModule((context) => {
   const layout = context.getCapability(Capabilities.Layout);
 
   // TODO(wittjosiah): This currently needs to be not a Live at the root.
@@ -82,7 +82,7 @@ export default defineCapabilityModule((context: PluginContext) => {
         });
       });
 
-      layout.active.forEach((id) => {
+      layout.active.forEach((id: string) => {
         const keys = Array.from(new Set([...state.keys(), id])).filter((key) => Path.last(key) === id);
         keys.forEach((key) => {
           setItem(Path.parts(key), 'current', true);
@@ -98,7 +98,7 @@ export default defineCapabilityModule((context: PluginContext) => {
     return () => clearTimeout(timeout);
   });
 
-  return contributes(NavTreeCapabilities.State, { state, getItem, setItem, isOpen, isCurrent, isAlternateTree }, () =>
+  return Capability.contributes(NavTreeCapabilities.State, { state, getItem, setItem, isOpen, isCurrent, isAlternateTree }, () =>
     unsubscribe(),
   );
 });

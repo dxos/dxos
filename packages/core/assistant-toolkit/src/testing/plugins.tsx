@@ -5,7 +5,7 @@
 import * as Schema from 'effect/Schema';
 import React from 'react';
 
-import { type AnyCapability, Capabilities, contributes, createSurface } from '@dxos/app-framework';
+import { Capabilities, Capability, createSurface } from '@dxos/app-framework';
 import { Format, type Obj, Type } from '@dxos/echo';
 import { JsonFilter } from '@dxos/react-ui-syntax-highlighter';
 
@@ -36,8 +36,8 @@ declare global {
 // TODO(dmaretskyi): Removed images from conductor GPT implementation.
 const isImage = (data: any): data is any => false;
 
-export const capabilities: AnyCapability[] = [
-  contributes(
+export const capabilities: Capability.Any[] = [
+  Capability.contributes(
     Capabilities.ReactSurface,
     createSurface({
       id: 'plugin-image',
@@ -56,7 +56,7 @@ export const capabilities: AnyCapability[] = [
   //
   // Default
   //
-  contributes(
+  Capability.contributes(
     Capabilities.ReactSurface,
     createSurface({
       id: 'plugin-default',

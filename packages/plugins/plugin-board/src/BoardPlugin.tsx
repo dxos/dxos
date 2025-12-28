@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Capabilities, Events, contributes, createIntent, defineModule, definePlugin } from '@dxos/app-framework';
+import { Capabilities, Capability, Events, Plugin, createIntent } from '@dxos/app-framework';
 import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
 import { type CreateObjectIntent } from '@dxos/plugin-space/types';
 import { translations as boardTranslations } from '@dxos/react-ui-board';
@@ -12,18 +12,18 @@ import { meta } from './meta';
 import { translations } from './translations';
 import { Board } from './types';
 
-export const BoardPlugin = definePlugin(meta, () => [
-  defineModule({
-    id: `${meta.id}/module/translations`,
+export const BoardPlugin = Plugin.define(meta).pipe(
+  Plugin.addModule({
+    id: 'translations',
     activatesOn: Events.SetupTranslations,
-    activate: () => contributes(Capabilities.Translations, [...translations, ...boardTranslations]),
+    activate: () => Capability.contributes(Capabilities.Translations, [...translations, ...boardTranslations]),
   }),
-  defineModule({
-    id: `${meta.id}/module/metadata`,
+  Plugin.addModule({
+    id: 'metadata',
     activatesOn: Events.SetupMetadata,
     activate: () =>
       // TODO(burdon): "Metadata" here seems non-descriptive; is this specifically for the type? ObjectMetadata?
-      contributes(Capabilities.Metadata, {
+      Capability.contributes(Capabilities.Metadata, {
         id: Board.Board.typename,
         metadata: {
           icon: 'ph--squares-four--regular',
@@ -33,19 +33,20 @@ export const BoardPlugin = definePlugin(meta, () => [
         },
       }),
   }),
-  defineModule({
-    id: `${meta.id}/module/schema`,
+  Plugin.addModule({
+    id: 'schema',
     activatesOn: ClientEvents.SetupSchema,
-    activate: () => contributes(ClientCapabilities.Schema, [Board.Board]),
+    activate: () => Capability.contributes(ClientCapabilities.Schema, [Board.Board]),
   }),
-  defineModule({
-    id: `${meta.id}/module/react-surface`,
+  Plugin.addModule({
+    id: 'react-surface',
     activatesOn: Events.SetupReactSurface,
     activate: ReactSurface,
   }),
-  defineModule({
-    id: `${meta.id}/module/intent-resolver`,
+  Plugin.addModule({
+    id: 'intent-resolver',
     activatesOn: Events.SetupIntentResolver,
     activate: IntentResolver,
   }),
-]);
+  Plugin.make,
+);

@@ -170,10 +170,12 @@ export namespace Capabilities {
    */
   export const Metadata = Capability.make<Metadata>('dxos.org/app-framework/capability/metadata');
 
+  export type Toolkit = GenericToolkit.GenericToolkit;
+
   /**
    * @category Capability
    */
-  export const Toolkit = Capability.make<GenericToolkit.GenericToolkit>('dxos.org/app-framework/capability/ai-toolkit');
+  export const Toolkit = Capability.make<Toolkit>('dxos.org/app-framework/capability/ai-toolkit');
 
   /**
    * @category Capability

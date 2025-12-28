@@ -12,25 +12,18 @@ import * as Function from 'effect/Function';
 import * as Match from 'effect/Match';
 import * as Schedule from 'effect/Schedule';
 
-import {
-  Capabilities,
-  LayoutAction,
-  type PluginContext,
-  contributes,
-  createIntent,
-  defineCapabilityModule,
-} from '@dxos/app-framework';
+import { Capabilities, Capability, LayoutAction, createIntent } from '@dxos/app-framework';
 import { log } from '@dxos/log';
 
 import { meta } from '../meta';
 
 const SUPPORTS_OTA = ['linux', 'macos', 'windows'];
 
-export default defineCapabilityModule((context: PluginContext) => {
+export default Capability.makeModule((context) => {
   // Skip updates if not supported or in dev mode.
   const platform = type();
   if (!SUPPORTS_OTA.includes(platform) || window.location.hostname === 'localhost') {
-    return contributes(Capabilities.Null, null);
+    return Capability.contributes(Capabilities.Null, null);
   }
 
   const { dispatch } = context.getCapability(Capabilities.IntentDispatcher);
@@ -86,7 +79,7 @@ export default defineCapabilityModule((context: PluginContext) => {
     Effect.runFork,
   );
 
-  return contributes(Capabilities.Null, null, () => {
+  return Capability.contributes(Capabilities.Null, null, () => {
     Effect.runSync(Fiber.interrupt(fiber));
   });
 });

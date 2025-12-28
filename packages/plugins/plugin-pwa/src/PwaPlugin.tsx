@@ -4,31 +4,23 @@
 
 import { registerSW } from 'virtual:pwa-register';
 
-import {
-  Capabilities,
-  Events,
-  LayoutAction,
-  contributes,
-  createIntent,
-  defineModule,
-  definePlugin,
-} from '@dxos/app-framework';
+import { Capabilities, Capability, Events, LayoutAction, Plugin, createIntent } from '@dxos/app-framework';
 import { log } from '@dxos/log';
 import { captureException } from '@dxos/observability/sentry';
 
 import { meta } from './meta';
 import { translations } from './translations';
 
-export const PwaPlugin = definePlugin(meta, () => [
-  defineModule({
-    id: `${meta.id}/module/translations`,
+export const PwaPlugin = Plugin.define(meta).pipe(
+  Plugin.addModule({
+    id: 'translations',
     activatesOn: Events.SetupTranslations,
-    activate: () => contributes(Capabilities.Translations, translations),
+    activate: () => Capability.contributes(Capabilities.Translations, translations),
   }),
-  defineModule({
-    id: `${meta.id}/module/register-pwa`,
+  Plugin.addModule({
+    id: 'register-pwa',
     activatesOn: Events.DispatcherReady,
-    activate: (context) => {
+    activate: (context: Capability.PluginContext) => {
       const { dispatchPromise: dispatch } = context.getCapability(Capabilities.IntentDispatcher);
 
       const updateSW = registerSW({
@@ -64,7 +56,8 @@ export const PwaPlugin = definePlugin(meta, () => [
         },
       });
 
-      return contributes(Capabilities.Null, null);
+      return Capability.contributes(Capabilities.Null, null);
     },
   }),
-]);
+  Plugin.make,
+);

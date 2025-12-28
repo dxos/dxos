@@ -2,19 +2,19 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Capabilities, type PluginContext, contributes, defineCapabilityModule } from '@dxos/app-framework';
+import { Capabilities, Capability } from '@dxos/app-framework';
 import { Script } from '@dxos/functions';
 import { ATTENDABLE_PATH_SEPARATOR, PLANK_COMPANION_TYPE } from '@dxos/plugin-deck/types';
 import { GraphBuilder } from '@dxos/plugin-graph';
 
 import { meta } from '../meta';
 
-export default defineCapabilityModule((context: PluginContext) => {
-  return contributes(Capabilities.AppGraphBuilder, [
+export default Capability.makeModule(() => {
+  return Capability.contributes(Capabilities.AppGraphBuilder, [
     GraphBuilder.createTypeExtension({
       id: `${meta.id}/execute`,
       type: Script.Script,
-      connector: (script, get) => [
+      connector: (script) => [
         {
           id: [script.id, 'execute'].join(ATTENDABLE_PATH_SEPARATOR),
           type: PLANK_COMPANION_TYPE,
@@ -30,7 +30,7 @@ export default defineCapabilityModule((context: PluginContext) => {
     GraphBuilder.createTypeExtension({
       id: `${meta.id}/logs`,
       type: Script.Script,
-      connector: (script, get) => [
+      connector: (script) => [
         {
           id: [script.id, 'logs'].join(ATTENDABLE_PATH_SEPARATOR),
           type: PLANK_COMPANION_TYPE,

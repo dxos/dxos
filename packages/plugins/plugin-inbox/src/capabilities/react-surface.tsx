@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { Capabilities, contributes, createSurface, defineCapabilityModule } from '@dxos/app-framework';
+import { Capabilities, Capability, createSurface } from '@dxos/app-framework';
 import { Obj } from '@dxos/echo';
 import { Event, Message, Organization, Person } from '@dxos/types';
 
@@ -24,8 +24,8 @@ import {
 import { meta } from '../meta';
 import { Calendar, Mailbox } from '../types';
 
-export default defineCapabilityModule(() =>
-  contributes(Capabilities.ReactSurface, [
+export default Capability.makeModule(() =>
+  Capability.contributes(Capabilities.ReactSurface, [
     createSurface({
       id: `${meta.id}/mailbox`,
       role: ['article'],

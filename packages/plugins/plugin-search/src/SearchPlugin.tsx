@@ -2,24 +2,24 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Capabilities, Events, contributes, defineModule, definePlugin } from '@dxos/app-framework';
+import { Capabilities, Events, Plugin, Capability } from '@dxos/app-framework';
 
 import { AppGraphBuilder, IntentResolver, ReactSurface } from './capabilities';
 import { SEARCH_RESULT, meta } from './meta';
 import { translations } from './translations';
 import { type SearchResult } from './types';
 
-export const SearchPlugin = definePlugin(meta, () => [
-  defineModule({
-    id: `${meta.id}/module/translations`,
+export const SearchPlugin = Plugin.define(meta).pipe(
+  Plugin.addModule({
+    id: 'translations',
     activatesOn: Events.SetupTranslations,
-    activate: () => contributes(Capabilities.Translations, translations),
+    activate: () => Capability.contributes(Capabilities.Translations, translations),
   }),
-  defineModule({
-    id: `${meta.id}/module/metadata`,
+  Plugin.addModule({
+    id: 'metadata',
     activatesOn: Events.SetupMetadata,
     activate: () =>
-      contributes(Capabilities.Metadata, {
+      Capability.contributes(Capabilities.Metadata, {
         id: SEARCH_RESULT,
         metadata: {
           parse: (item: SearchResult, type: string) => {
@@ -35,19 +35,20 @@ export const SearchPlugin = definePlugin(meta, () => [
         },
       }),
   }),
-  defineModule({
-    id: `${meta.id}/module/app-graph-builder`,
+  Plugin.addModule({
+    id: 'app-graph-builder',
     activatesOn: Events.SetupAppGraph,
     activate: AppGraphBuilder,
   }),
-  defineModule({
-    id: `${meta.id}/module/intent-resolver`,
+  Plugin.addModule({
+    id: 'intent-resolver',
     activatesOn: Events.SetupIntentResolver,
     activate: IntentResolver,
   }),
-  defineModule({
-    id: `${meta.id}/module/react-surface`,
+  Plugin.addModule({
+    id: 'react-surface',
     activatesOn: Events.SetupReactSurface,
     activate: ReactSurface,
   }),
-]);
+  Plugin.make,
+);

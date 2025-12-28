@@ -6,15 +6,7 @@
 
 // import { createTool, ToolRegistry, ToolResult } from '@dxos/ai';
 
-import {
-  type AnyIntentChain,
-  Capabilities,
-  type PluginContext,
-  contributes,
-  createIntent,
-  createResolver,
-  defineCapabilityModule,
-} from '@dxos/app-framework';
+import { type AnyIntentChain, Capabilities, Capability, createIntent, createResolver } from '@dxos/app-framework';
 // import { ArtifactId } from '@dxos/blueprints';
 // import { getSpace } from '@dxos/client/echo';
 // import { SequenceBuilder, compileSequence, DEFAULT_INPUT, ValueBag, ComputeGraphModel } from '@dxos/conductor';
@@ -34,8 +26,8 @@ import { Calendar, InboxAction, Mailbox } from '../types';
 // TODO(dmaretskyi): Circular dep due to the assistant stories
 // import { AssistantCapabilities } from '@dxos/plugin-assistant';
 
-export default defineCapabilityModule((context: PluginContext) =>
-  contributes(Capabilities.IntentResolver, [
+export default Capability.makeModule((context) =>
+  Capability.contributes(Capabilities.IntentResolver, [
     createResolver({
       intent: InboxAction.CreateMailbox,
       resolve: ({ db, name }) => {

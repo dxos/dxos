@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Capabilities, Events, contributes, createIntent, defineModule, definePlugin } from '@dxos/app-framework';
+import { Capabilities, Events, Plugin, Capability, createIntent } from '@dxos/app-framework';
 import { ResearchGraph } from '@dxos/assistant-toolkit';
 import { Blueprint, Prompt } from '@dxos/blueprints';
 import { Sequence } from '@dxos/conductor';
@@ -30,30 +30,30 @@ import { meta } from './meta';
 import { translations } from './translations';
 import { Assistant, AssistantAction } from './types';
 
-export const AssistantPlugin = definePlugin(meta, () => [
-  defineModule({
-    id: `${meta.id}/module/translations`,
+export const AssistantPlugin = Plugin.define(meta).pipe(
+  Plugin.addModule({
+    id: 'translations',
     activatesOn: Events.SetupTranslations,
-    activate: () => contributes(Capabilities.Translations, translations),
+    activate: () => Capability.contributes(Capabilities.Translations, translations),
   }),
-  defineModule({
-    id: `${meta.id}/module/settings`,
+  Plugin.addModule({
+    id: 'settings',
     activatesOn: Events.SetupSettings,
     activate: Settings,
   }),
-  defineModule({
-    id: `${meta.id}/module/state`,
+  Plugin.addModule({
+    id: 'state',
     // TODO(wittjosiah): Does not integrate with settings store.
     //   Should this be a different event?
     //   Should settings store be renamed to be more generic?
     activatesOn: Events.SetupSettings,
     activate: AssistantState,
   }),
-  defineModule({
-    id: `${meta.id}/module/metadata`,
+  Plugin.addModule({
+    id: 'metadata',
     activatesOn: Events.SetupMetadata,
     activate: () => [
-      contributes(Capabilities.Metadata, {
+      Capability.contributes(Capabilities.Metadata, {
         id: Type.getTypename(Assistant.Chat),
         metadata: {
           icon: 'ph--atom--regular',
@@ -62,7 +62,7 @@ export const AssistantPlugin = definePlugin(meta, () => [
             createIntent(AssistantAction.CreateChat, { db: options.db })) satisfies CreateObjectIntent,
         },
       }),
-      contributes(Capabilities.Metadata, {
+      Capability.contributes(Capabilities.Metadata, {
         id: Type.getTypename(Blueprint.Blueprint),
         metadata: {
           icon: 'ph--blueprint--regular',
@@ -72,7 +72,7 @@ export const AssistantPlugin = definePlugin(meta, () => [
             createIntent(AssistantAction.CreateBlueprint, props)) satisfies CreateObjectIntent,
         },
       }),
-      contributes(Capabilities.Metadata, {
+      Capability.contributes(Capabilities.Metadata, {
         id: Type.getTypename(Prompt.Prompt),
         metadata: {
           icon: 'ph--scroll--regular',
@@ -80,7 +80,7 @@ export const AssistantPlugin = definePlugin(meta, () => [
           createObjectIntent: (() => createIntent(AssistantAction.CreatePrompt)) satisfies CreateObjectIntent,
         },
       }),
-      contributes(Capabilities.Metadata, {
+      Capability.contributes(Capabilities.Metadata, {
         id: Type.getTypename(Sequence),
         metadata: {
           icon: 'ph--circuitry--regular',
@@ -91,11 +91,11 @@ export const AssistantPlugin = definePlugin(meta, () => [
       }),
     ],
   }),
-  defineModule({
-    id: `${meta.id}/module/schema`,
+  Plugin.addModule({
+    id: 'schema',
     activatesOn: ClientEvents.SetupSchema,
     activate: () =>
-      contributes(ClientCapabilities.Schema, [
+      Capability.contributes(ClientCapabilities.Schema, [
         Assistant.Chat,
         Assistant.CompanionTo,
         Blueprint.Blueprint,
@@ -105,60 +105,61 @@ export const AssistantPlugin = definePlugin(meta, () => [
         Sequence,
       ]),
   }),
-  defineModule({
-    id: `${meta.id}/module/on-space-created`,
+  Plugin.addModule({
+    id: 'on-space-created',
     activatesOn: SpaceEvents.SpaceCreated,
     activate: () =>
-      contributes(SpaceCapabilities.OnCreateSpace, (params) => createIntent(AssistantAction.OnCreateSpace, params)),
+      Capability.contributes(SpaceCapabilities.OnCreateSpace, (params) => createIntent(AssistantAction.OnCreateSpace, params)),
   }),
-  defineModule({
-    id: `${meta.id}/module/repair`,
+  Plugin.addModule({
+    id: 'repair',
     activatesOn: ClientEvents.SpacesReady,
     activate: Repair,
   }),
-  defineModule({
-    id: `${meta.id}/module/app-graph-builder`,
+  Plugin.addModule({
+    id: 'app-graph-builder',
     activatesOn: Events.SetupAppGraph,
     activate: AppGraphBuilder,
   }),
-  defineModule({
-    id: `${meta.id}/module/intent-resolver`,
+  Plugin.addModule({
+    id: 'intent-resolver',
     activatesOn: Events.SetupIntentResolver,
     activate: IntentResolver,
   }),
-  defineModule({
-    id: `${meta.id}/module/react-surface`,
+  Plugin.addModule({
+    id: 'react-surface',
     activatesOn: Events.SetupReactSurface,
     // TODO(wittjosiah): Should occur before the chat is loaded when surfaces activation is more granular.
     activatesBefore: [Events.SetupArtifactDefinition],
     activate: ReactSurface,
   }),
-  defineModule({
-    id: `${meta.id}/module/edge-model-resolver`,
+  Plugin.addModule({
+    id: 'edge-model-resolver',
     activatesOn: AssistantEvents.SetupAiServiceProviders,
     activate: EdgeModelResolver,
   }),
-  defineModule({
-    id: `${meta.id}/module/local-model-resolver`,
+  Plugin.addModule({
+    id: 'local-model-resolver',
     activatesOn: AssistantEvents.SetupAiServiceProviders,
     activate: LocalModelResolver,
   }),
-  defineModule({
-    id: `${meta.id}/module/ai-service`,
+  Plugin.addModule({
+    id: 'ai-service',
     activatesBefore: [AssistantEvents.SetupAiServiceProviders],
     // TODO(dmaretskyi): This should activate lazily when the AI chat is used.
     activatesOn: Events.Startup,
     activate: AiService,
   }),
-  defineModule({
-    id: `${meta.id}/module/blueprint`,
+  Plugin.addModule({
+    id: 'blueprint',
     activatesOn: Events.SetupArtifactDefinition,
     activate: BlueprintDefinition,
   }),
-  defineModule({
-    id: `${meta.id}/module/toolkit`,
+  Plugin.addModule({
+    id: 'toolkit',
     // TODO(wittjosiah): Use a different event.
     activatesOn: Events.Startup,
     activate: Toolkit,
   }),
-]);
+  Plugin.make,
+);

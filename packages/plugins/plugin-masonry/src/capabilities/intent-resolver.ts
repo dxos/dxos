@@ -2,19 +2,13 @@
 // Copyright 2025 DXOS.org
 //
 
-import {
-  Capabilities,
-  type PluginContext,
-  contributes,
-  createResolver,
-  defineCapabilityModule,
-} from '@dxos/app-framework';
+import { Capabilities, Capability, createResolver } from '@dxos/app-framework';
 import { View } from '@dxos/schema';
 
 import { Masonry, MasonryAction } from '../types';
 
-export default defineCapabilityModule((context: PluginContext) =>
-  contributes(Capabilities.IntentResolver, [
+export default Capability.makeModule((context) =>
+  Capability.contributes(Capabilities.IntentResolver, [
     createResolver({
       intent: MasonryAction.CreateMasonry,
       resolve: async ({ db, name, typename }) => {

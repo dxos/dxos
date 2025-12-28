@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as ManagedRuntime from 'effect/ManagedRuntime';
 
-import { Capabilities, type PluginContext, contributes, defineCapabilityModule } from '@dxos/app-framework';
+import { Capabilities, Capability } from '@dxos/app-framework';
 import { GenericToolkit, makeToolExecutionServiceFromFunctions, makeToolResolverFromFunctions } from '@dxos/assistant';
 import { Resource } from '@dxos/context';
 import { Database, Query, Ref } from '@dxos/echo';
@@ -27,9 +27,9 @@ import { SpaceProperties } from '@dxos/react-client/echo';
 
 import { AutomationCapabilities } from './capabilities';
 
-export default defineCapabilityModule(async (context: PluginContext) => {
+export default Capability.makeModule(async (context: Capability.PluginContext) => {
   const provider = await new ComputeRuntimeProviderImpl(context).open();
-  return contributes(AutomationCapabilities.ComputeRuntime, provider, async () => {
+  return Capability.contributes(AutomationCapabilities.ComputeRuntime, provider, async () => {
     await provider.close();
   });
 });
@@ -39,9 +39,9 @@ export default defineCapabilityModule(async (context: PluginContext) => {
  */
 class ComputeRuntimeProviderImpl extends Resource implements AutomationCapabilities.ComputeRuntimeProvider {
   readonly #runtimes = new Map<SpaceId, AutomationCapabilities.ComputeRuntime>();
-  readonly #context: PluginContext;
+  readonly #context: Capability.PluginContext;
 
-  constructor(context: PluginContext) {
+  constructor(context: Capability.PluginContext) {
     super();
     this.#context = context;
   }

@@ -4,7 +4,7 @@
 
 import React, { forwardRef, useCallback } from 'react';
 
-import { Capabilities, contributes, createSurface, defineCapabilityModule } from '@dxos/app-framework';
+import { Capabilities, Capability, createSurface } from '@dxos/app-framework';
 import { SurfaceCardRole, useCapability } from '@dxos/app-framework/react';
 import { Obj } from '@dxos/echo';
 import { SettingsStore } from '@dxos/local-storage';
@@ -16,8 +16,8 @@ import { meta } from '../meta';
 import { Markdown, MarkdownCapabilities } from '../types';
 import { isEditorModel } from '../util';
 
-export default defineCapabilityModule(() =>
-  contributes(Capabilities.ReactSurface, [
+export default Capability.makeModule(() =>
+  Capability.contributes(Capabilities.ReactSurface, [
     createSurface({
       id: `${meta.id}/surface/document`,
       role: ['article', 'section', 'tabpanel'],

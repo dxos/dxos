@@ -6,10 +6,9 @@ import { EditorView } from '@codemirror/view';
 
 import {
   Capabilities,
-  type PluginContext,
-  contributes,
+  Capability,
+  
   createIntent,
-  defineCapabilityModule,
 } from '@dxos/app-framework';
 import { Obj } from '@dxos/echo';
 import { ATTENDABLE_PATH_SEPARATOR, DeckAction } from '@dxos/plugin-deck/types';
@@ -20,8 +19,8 @@ import { threads } from '../extensions';
 
 import { ThreadCapabilities } from './capabilities';
 
-export default defineCapabilityModule((context: PluginContext) =>
-  contributes(MarkdownCapabilities.Extensions, [
+export default Capability.makeModule((context) =>
+  Capability.contributes(MarkdownCapabilities.Extensions, [
     ({ document: doc }) => {
       const { dispatchPromise: dispatch } = context.getCapability(Capabilities.IntentDispatcher);
       const { state } = context.getCapability(ThreadCapabilities.MutableState);

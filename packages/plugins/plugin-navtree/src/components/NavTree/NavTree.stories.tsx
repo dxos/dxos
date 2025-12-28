@@ -9,12 +9,11 @@ import { expect, userEvent, within } from 'storybook/test';
 
 import {
   Capabilities,
+  Capability,
   IntentPlugin,
   LayoutAction,
   SettingsPlugin,
-  contributes,
   createResolver,
-  defineCapability,
 } from '@dxos/app-framework';
 import { useCapability } from '@dxos/app-framework/react';
 import { withPluginManager } from '@dxos/app-framework/testing';
@@ -37,7 +36,7 @@ import { NavTreeContainer } from '../NavTreeContainer';
 
 faker.seed(1234);
 
-const StoryState = defineCapability<{ tab: string }>('story-state');
+const StoryState = Capability.make<{ tab: string }>('story-state');
 
 // TODO(burdon): Fix outline (e.g., button in sidebar nav is clipped when focused).
 // TODO(burdon): Consider similar containment of: Table, Sheet, Kanban Column, Form, etc.
@@ -141,9 +140,9 @@ const meta = {
         StorybookLayoutPlugin({ initialState: { sidebarState: 'expanded' } }),
       ],
       capabilities: (context) => [
-        contributes(StoryState, live({ tab: 'space-0' })),
-        contributes(Capabilities.AppGraphBuilder, storybookGraphBuilders(context)),
-        contributes(Capabilities.IntentResolver, [
+        Capability.contributes(StoryState, live({ tab: 'space-0' })),
+        Capability.contributes(Capabilities.AppGraphBuilder, storybookGraphBuilders(context)),
+        Capability.contributes(Capabilities.IntentResolver, [
           createResolver({
             intent: LayoutAction.UpdateLayout,
             filter: (data): data is Schema.Schema.Type<typeof LayoutAction.SwitchWorkspace.fields.input> =>

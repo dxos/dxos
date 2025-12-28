@@ -2,16 +2,15 @@
 // Copyright 2025 DXOS.org
 //
 
-import { createIntent } from '@dxos/app-framework';
-import { Capabilities, type PluginContext, contributes, defineCapabilityModule } from '@dxos/app-framework';
+import { Capabilities, Capability, createIntent } from '@dxos/app-framework';
 import { CreateAtom, GraphBuilder, NodeMatcher } from '@dxos/plugin-graph';
 import { ConnectionState } from '@dxos/react-client/mesh';
 
 import { meta } from '../meta';
 import { Account, ClientAction, ClientCapabilities } from '../types';
 
-export default defineCapabilityModule((context: PluginContext) =>
-  contributes(
+export default Capability.makeModule((context) =>
+  Capability.contributes(
     Capabilities.AppGraphBuilder,
     GraphBuilder.createExtension({
       id: meta.id,

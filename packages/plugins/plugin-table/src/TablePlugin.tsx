@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Capabilities, Events, contributes, createIntent, defineModule, definePlugin } from '@dxos/app-framework';
+import { Capabilities, Events, Plugin, Capability, createIntent } from '@dxos/app-framework';
 import { Type } from '@dxos/echo';
 import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
 import { SpaceCapabilities, SpaceEvents } from '@dxos/plugin-space';
@@ -16,18 +16,18 @@ import { meta } from './meta';
 import { translations } from './translations';
 import { CreateTableSchema, TableAction } from './types';
 
-export const TablePlugin = definePlugin(meta, () => [
-  defineModule({
-    id: `${meta.id}/module/translations`,
+export const TablePlugin = Plugin.define(meta).pipe(
+  Plugin.addModule({
+    id: 'translations',
     activatesOn: Events.SetupTranslations,
     activate: () =>
-      contributes(Capabilities.Translations, [...translations, ...formTranslations, ...tableTranslations]),
+      Capability.contributes(Capabilities.Translations, [...translations, ...formTranslations, ...tableTranslations]),
   }),
-  defineModule({
-    id: `${meta.id}/module/metadata`,
+  Plugin.addModule({
+    id: 'metadata',
     activatesOn: Events.SetupMetadata,
     activate: () =>
-      contributes(Capabilities.Metadata, {
+      Capability.contributes(Capabilities.Metadata, {
         id: Type.getTypename(Table.Table),
         metadata: {
           icon: 'ph--table--regular',
@@ -39,38 +39,39 @@ export const TablePlugin = definePlugin(meta, () => [
         },
       }),
   }),
-  defineModule({
-    id: `${meta.id}/module/schema`,
+  Plugin.addModule({
+    id: 'schema',
     activatesOn: ClientEvents.SetupSchema,
-    activate: () => contributes(ClientCapabilities.Schema, [Table.Table]),
+    activate: () => Capability.contributes(ClientCapabilities.Schema, [Table.Table]),
   }),
-  defineModule({
-    id: `${meta.id}/module/on-space-created`,
+  Plugin.addModule({
+    id: 'on-space-created',
     activatesOn: SpaceEvents.SpaceCreated,
     activate: () =>
-      contributes(SpaceCapabilities.OnCreateSpace, (params) => createIntent(TableAction.OnCreateSpace, params)),
+      Capability.contributes(SpaceCapabilities.OnCreateSpace, (params) => createIntent(TableAction.OnCreateSpace, params)),
   }),
-  defineModule({
-    id: `${meta.id}/module/on-schema-added`,
+  Plugin.addModule({
+    id: 'on-schema-added',
     activatesOn: SpaceEvents.SchemaAdded,
     activate: () =>
-      contributes(SpaceCapabilities.OnSchemaAdded, ({ db, schema, show }) =>
+      Capability.contributes(SpaceCapabilities.OnSchemaAdded, ({ db, schema, show }) =>
         createIntent(TableAction.OnSchemaAdded, { db, schema, show }),
       ),
   }),
-  defineModule({
-    id: `${meta.id}/module/react-surface`,
+  Plugin.addModule({
+    id: 'react-surface',
     activatesOn: Events.SetupReactSurface,
     activate: ReactSurface,
   }),
-  defineModule({
-    id: `${meta.id}/module/intent-resolver`,
+  Plugin.addModule({
+    id: 'intent-resolver',
     activatesOn: Events.SetupIntentResolver,
     activate: IntentResolver,
   }),
-  defineModule({
-    id: `${meta.id}/module/blueprint`,
+  Plugin.addModule({
+    id: 'blueprint',
     activatesOn: Events.SetupArtifactDefinition,
     activate: BlueprintDefinition,
   }),
-]);
+  Plugin.make,
+);

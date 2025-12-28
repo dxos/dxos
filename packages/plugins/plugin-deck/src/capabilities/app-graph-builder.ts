@@ -2,14 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import {
-  Capabilities,
-  LayoutAction,
-  type PluginContext,
-  contributes,
-  createIntent,
-  defineCapabilityModule,
-} from '@dxos/app-framework';
+import { Capabilities, Capability, LayoutAction, createIntent } from '@dxos/app-framework';
 import { AttentionCapabilities } from '@dxos/plugin-attention';
 import { CreateAtom, GraphBuilder, NodeMatcher } from '@dxos/plugin-graph';
 
@@ -17,8 +10,8 @@ import { meta } from '../meta';
 
 import { DeckCapabilities } from './capabilities';
 
-export default defineCapabilityModule((context: PluginContext) =>
-  contributes(
+export default Capability.makeModule((context) =>
+  Capability.contributes(
     Capabilities.AppGraphBuilder,
     GraphBuilder.createExtension({
       id: meta.id,

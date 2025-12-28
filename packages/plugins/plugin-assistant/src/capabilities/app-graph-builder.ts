@@ -7,12 +7,10 @@ import * as Option from 'effect/Option';
 
 import {
   Capabilities,
+  Capability,
   LayoutAction,
-  type PluginContext,
   type PromiseIntentDispatcher,
-  contributes,
   createIntent,
-  defineCapabilityModule,
 } from '@dxos/app-framework';
 import { Prompt } from '@dxos/blueprints';
 import { Sequence } from '@dxos/conductor';
@@ -30,8 +28,8 @@ import { Assistant, AssistantAction } from '../types';
 
 import { AssistantCapabilities } from './capabilities';
 
-export default defineCapabilityModule((context: PluginContext) => {
-  return contributes(Capabilities.AppGraphBuilder, [
+export default Capability.makeModule((context) => {
+  return Capability.contributes(Capabilities.AppGraphBuilder, [
     GraphBuilder.createTypeExtension({
       id: `${meta.id}/root`,
       type: Assistant.Chat,

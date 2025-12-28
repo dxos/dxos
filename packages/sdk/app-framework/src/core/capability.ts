@@ -281,7 +281,9 @@ export class PluginContextImpl implements PluginContext {
   }): void {
     const current = this._registry.get(this._capabilityImpls(interfaceDef.identifier));
     const capability = new CapabilityImpl(moduleId, implementation);
-    if (current.includes(capability)) {
+    const isDuplicate = current.some((c) => c.moduleId === moduleId && c.implementation === implementation);
+    if (isDuplicate) {
+      log('capability already contributed, skipping', { id: interfaceDef.identifier, moduleId });
       return;
     }
 

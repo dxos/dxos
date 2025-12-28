@@ -4,7 +4,7 @@
 
 import { setAutoFreeze } from 'immer';
 
-import { Capabilities, Events, allOf, contributes, defineModule, definePlugin, oneOf } from '@dxos/app-framework';
+import { Capabilities, Events, ActivationEvent, Capability, Plugin } from '@dxos/app-framework';
 import { translations as stackTranslations } from '@dxos/react-ui-stack';
 
 import {
@@ -27,65 +27,56 @@ import { translations } from './translations';
 // TODO(Zan): Move this to a more global location if we use immer more broadly.
 setAutoFreeze(false);
 
-export const DeckPlugin = definePlugin(meta, () => [
-  defineModule({
-    id: `${meta.id}/module/check-app-scheme`,
+export const DeckPlugin = Plugin.define(meta).pipe(
+  Plugin.addModule({
     activatesOn: Events.SettingsReady,
     activate: CheckAppScheme,
   }),
-  defineModule({
-    id: `${meta.id}/module/settings`,
+  Plugin.addModule({
     activatesOn: Events.SetupSettings,
     activate: DeckSettings,
   }),
-  defineModule({
-    id: `${meta.id}/module/layout`,
+  Plugin.addModule({
     // TODO(wittjosiah): Does not integrate with settings store.
     //   Should this be a different event?
     //   Should settings store be renamed to be more generic?
-    activatesOn: oneOf(Events.SetupSettings, Events.SetupAppGraph),
+    activatesOn: ActivationEvent.oneOf(Events.SetupSettings, Events.SetupAppGraph),
     activatesAfter: [Events.LayoutReady, DeckEvents.StateReady],
     activate: DeckState,
   }),
-  defineModule({
-    id: `${meta.id}/module/translations`,
+  Plugin.addModule({
+    id: 'translations',
     activatesOn: Events.SetupTranslations,
-    activate: () => contributes(Capabilities.Translations, [...translations, ...stackTranslations]),
+    activate: () => Capability.contributes(Capabilities.Translations, [...translations, ...stackTranslations]),
   }),
-  defineModule({
-    id: `${meta.id}/module/react-root`,
+  Plugin.addModule({
     activatesOn: Events.Startup,
     activate: ReactRoot,
   }),
-  defineModule({
-    id: `${meta.id}/module/react-surface`,
+  Plugin.addModule({
     activatesOn: Events.SetupReactSurface,
     activate: ReactSurface,
   }),
-  defineModule({
-    id: `${meta.id}/module/layout-intent-resolver`,
+  Plugin.addModule({
     activatesOn: Events.SetupIntentResolver,
     activate: LayoutIntentResolver,
   }),
-  defineModule({
-    id: `${meta.id}/module/app-graph-builder`,
+  Plugin.addModule({
     activatesOn: Events.SetupAppGraph,
     activate: AppGraphBuilder,
   }),
-  // defineModule({
-  //   id: `${meta.id}/module/tools`,
+  // Plugin.addModule({
   //   activatesOn: Events.SetupArtifactDefinition,
   //   activate: Tools,
   // }),
-  defineModule({
-    id: `${meta.id}/module/toolkit`,
+  Plugin.addModule({
     // TODO(wittjosiah): Shouldn't use the startup event.
     activatesOn: Events.Startup,
     activate: Toolkit,
   }),
-  defineModule({
-    id: `${meta.id}/module/url`,
-    activatesOn: allOf(Events.DispatcherReady, DeckEvents.StateReady),
+  Plugin.addModule({
+    activatesOn: ActivationEvent.allOf(Events.DispatcherReady, DeckEvents.StateReady),
     activate: UrlHandler,
   }),
-]);
+  Plugin.make,
+);

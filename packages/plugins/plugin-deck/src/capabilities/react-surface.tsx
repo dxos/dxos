@@ -4,15 +4,15 @@
 
 import React from 'react';
 
-import { Capabilities, contributes, createSurface, defineCapabilityModule } from '@dxos/app-framework';
+import { Capabilities, Capability, createSurface } from '@dxos/app-framework';
 import { SettingsStore } from '@dxos/local-storage';
 
 import { Banner, DeckSettings } from '../components';
 import { meta } from '../meta';
 import { type DeckSettingsProps } from '../types';
 
-export default defineCapabilityModule(() =>
-  contributes(Capabilities.ReactSurface, [
+export default Capability.makeModule(() =>
+  Capability.contributes(Capabilities.ReactSurface, [
     createSurface({
       id: `${meta.id}/plugin-settings`,
       role: 'article',

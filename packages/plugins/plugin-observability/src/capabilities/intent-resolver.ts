@@ -4,11 +4,9 @@
 
 import {
   Capabilities,
+  Capability,
   IntentAction,
-  type PluginContext,
-  contributes,
   createResolver,
-  defineCapabilityModule,
 } from '@dxos/app-framework';
 import { log } from '@dxos/log';
 import { getTelemetryIdentity, storeObservabilityDisabled } from '@dxos/observability';
@@ -19,8 +17,8 @@ import { ObservabilityAction } from '../types';
 
 import { ClientCapability, ObservabilityCapabilities } from './capabilities';
 
-export default defineCapabilityModule(({ context, namespace }: { context: PluginContext; namespace: string }) =>
-  contributes(Capabilities.IntentResolver, [
+export default Capability.makeModule(({ context, namespace }: { context: Capability.PluginContext; namespace: string }) =>
+  Capability.contributes(Capabilities.IntentResolver, [
     createResolver({
       intent: IntentAction.Track,
       resolve: (intent) => {

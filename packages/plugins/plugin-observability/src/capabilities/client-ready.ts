@@ -4,12 +4,10 @@
 
 import {
   Capabilities,
+  Capability,
   LayoutAction,
-  type PluginContext,
   SettingsAction,
-  contributes,
   createIntent,
-  defineCapabilityModule,
 } from '@dxos/app-framework';
 import { type Observability, setupTelemetryListeners } from '@dxos/observability';
 
@@ -19,12 +17,12 @@ import { ObservabilityAction } from '../types';
 import { ClientCapability, ObservabilityCapabilities } from './capabilities';
 
 type ClientReadyOptions = {
-  context: PluginContext;
+  context: Capability.PluginContext;
   namespace: string;
   observability: Observability;
 };
 
-export default defineCapabilityModule(async ({ context, namespace, observability }: ClientReadyOptions) => {
+export default Capability.makeModule(async ({ context, namespace, observability }: ClientReadyOptions) => {
   const manager = context.getCapability(Capabilities.PluginManager);
   const { dispatchPromise: dispatch } = context.getCapability(Capabilities.IntentDispatcher);
   const state = context.getCapability(ObservabilityCapabilities.State);
@@ -92,7 +90,7 @@ export default defineCapabilityModule(async ({ context, namespace, observability
     });
   }
 
-  return contributes(ObservabilityCapabilities.Observability, observability, async () => {
+  return Capability.contributes(ObservabilityCapabilities.Observability, observability, async () => {
     cleanup();
     await observability.close();
   });

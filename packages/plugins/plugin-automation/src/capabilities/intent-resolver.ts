@@ -4,12 +4,10 @@
 
 import {
   Capabilities,
+  Capability,
   LayoutAction,
-  type PluginContext,
-  contributes,
   createIntent,
   createResolver,
-  defineCapabilityModule,
 } from '@dxos/app-framework';
 import { Ref } from '@dxos/echo';
 import { Function, Script, Trigger } from '@dxos/functions';
@@ -20,8 +18,8 @@ import { Filter } from '@dxos/react-client/echo';
 
 import { AutomationAction } from '../types';
 
-export default defineCapabilityModule((context: PluginContext) =>
-  contributes(Capabilities.IntentResolver, [
+export default Capability.makeModule((context) =>
+  Capability.contributes(Capabilities.IntentResolver, [
     createResolver({
       intent: AutomationAction.CreateTriggerFromTemplate,
       resolve: async ({ db, template, enabled = false, scriptName, input }) => {

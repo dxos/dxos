@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { Capabilities, contributes, createSurface, defineCapabilityModule } from '@dxos/app-framework';
+import { Capabilities, Capability, createSurface } from '@dxos/app-framework';
 import { useCapability } from '@dxos/app-framework/react';
 import { SettingsStore } from '@dxos/local-storage';
 
@@ -12,8 +12,8 @@ import { SketchContainer, SketchSettings } from '../components';
 import { meta } from '../meta';
 import { Diagram, type SketchSettingsProps } from '../types';
 
-export default defineCapabilityModule(() =>
-  contributes(Capabilities.ReactSurface, [
+export default Capability.makeModule(() =>
+  Capability.contributes(Capabilities.ReactSurface, [
     createSurface({
       id: `${meta.id}/sketch`,
       role: ['article', 'section', 'slide'],

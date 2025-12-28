@@ -5,6 +5,8 @@
 import React from 'react';
 
 import { type Plugin } from '@dxos/app-framework';
+
+type PluginType = Plugin.Plugin;
 import { Icon, Input, Link, useTranslation } from '@dxos/react-ui';
 import { StackItem } from '@dxos/react-ui-stack';
 import { getStyles, mx } from '@dxos/ui-theme';
@@ -12,7 +14,7 @@ import { getStyles, mx } from '@dxos/ui-theme';
 import { meta } from '../meta';
 
 export type PluginDetailProps = {
-  plugin: Plugin;
+  plugin: PluginType;
   enabled?: boolean;
   onEnable?: () => void;
 };

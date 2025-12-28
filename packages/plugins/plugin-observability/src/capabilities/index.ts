@@ -2,13 +2,13 @@
 // Copyright 2025 DXOS.org
 //
 
-import { lazy } from '@dxos/app-framework';
+import { Capability } from '@dxos/app-framework';
 
-export const AppGraphBuilder = lazy(() => import('./app-graph-builder'));
-export const ClientReady = lazy(() => import('./client-ready'));
-export const IntentResolver = lazy(() => import('./intent-resolver'));
-export const ReactSurface = lazy(() => import('./react-surface'));
-export const ObservabilitySettings = lazy(() => import('./settings'));
-export const ObservabilityState = lazy(() => import('./state'));
+export const AppGraphBuilder = Capability.lazy('AppGraphBuilder', () => import('./app-graph-builder'));
+export const ClientReady = Capability.lazy('ClientReady', () => import('./client-ready'));
+export const IntentResolver = Capability.lazy('IntentResolver', () => import('./intent-resolver'));
+export const ReactSurface = Capability.lazy('ReactSurface', () => import('./react-surface'));
+export const ObservabilitySettings = Capability.lazy('ObservabilitySettings', () => import('./settings'));
+export const ObservabilityState = Capability.lazy('ObservabilityState', () => import('./state'));
 
 export * from './capabilities';

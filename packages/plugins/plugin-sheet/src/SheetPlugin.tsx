@@ -2,15 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import {
-  Capabilities,
-  Events,
-  allOf,
-  contributes,
-  createIntent,
-  defineModule,
-  definePlugin,
-} from '@dxos/app-framework';
+import { ActivationEvent, Capabilities, Capability, Events, Plugin, createIntent } from '@dxos/app-framework';
 import { AutomationEvents } from '@dxos/plugin-automation';
 import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
 import { MarkdownEvents } from '@dxos/plugin-markdown';
@@ -22,22 +14,22 @@ import { serializer } from './serializer';
 import { translations } from './translations';
 import { Sheet, SheetAction } from './types';
 
-export const SheetPlugin = definePlugin(meta, () => [
-  defineModule({
-    id: `${meta.id}/module/compute-graph-registry`,
-    activatesOn: allOf(ClientEvents.ClientReady, AutomationEvents.ComputeRuntimeReady),
+export const SheetPlugin = Plugin.define(meta).pipe(
+  Plugin.addModule({
+    id: 'compute-graph-registry',
+    activatesOn: ActivationEvent.allOf(ClientEvents.ClientReady, AutomationEvents.ComputeRuntimeReady),
     activate: ComputeGraphRegistry,
   }),
-  defineModule({
-    id: `${meta.id}/module/translations`,
+  Plugin.addModule({
+    id: 'translations',
     activatesOn: Events.SetupTranslations,
-    activate: () => contributes(Capabilities.Translations, translations),
+    activate: () => Capability.contributes(Capabilities.Translations, translations),
   }),
-  defineModule({
-    id: `${meta.id}/module/metadata`,
+  Plugin.addModule({
+    id: 'metadata',
     activatesOn: Events.SetupMetadata,
     activate: () =>
-      contributes(Capabilities.Metadata, {
+      Capability.contributes(Capabilities.Metadata, {
         id: Sheet.Sheet.typename,
         metadata: {
           label: (object: Sheet.Sheet) => object.name,
@@ -50,30 +42,31 @@ export const SheetPlugin = definePlugin(meta, () => [
         },
       }),
   }),
-  defineModule({
-    id: `${meta.id}/module/schema`,
+  Plugin.addModule({
+    id: 'schema',
     activatesOn: ClientEvents.SetupSchema,
-    activate: () => contributes(ClientCapabilities.Schema, [Sheet.Sheet]),
+    activate: () => Capability.contributes(ClientCapabilities.Schema, [Sheet.Sheet]),
   }),
-  defineModule({
-    id: `${meta.id}/module/markdown`,
+  Plugin.addModule({
+    id: 'markdown',
     activatesOn: MarkdownEvents.SetupExtensions,
     activate: Markdown,
   }),
-  defineModule({
-    id: `${meta.id}/module/anchor-sort`,
+  Plugin.addModule({
+    id: 'anchor-sort',
     // TODO(wittjosiah): More relevant event?
     activatesOn: Events.AppGraphReady,
     activate: AnchorSort,
   }),
-  defineModule({
-    id: `${meta.id}/module/react-surface`,
+  Plugin.addModule({
+    id: 'react-surface',
     activatesOn: Events.SetupReactSurface,
     activate: ReactSurface,
   }),
-  defineModule({
-    id: `${meta.id}/module/intent-resolver`,
+  Plugin.addModule({
+    id: 'intent-resolver',
     activatesOn: Events.SetupIntentResolver,
     activate: IntentResolver,
   }),
-]);
+  Plugin.make,
+);

@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { Capabilities, contributes, createSurface, defineCapabilityModule } from '@dxos/app-framework';
+import { Capabilities, Capability, createSurface } from '@dxos/app-framework';
 import { useLayout } from '@dxos/app-framework/react';
 import { Obj } from '@dxos/echo';
 import { getSpace, parseId, useSpace } from '@dxos/react-client/echo';
@@ -12,8 +12,8 @@ import { getSpace, parseId, useSpace } from '@dxos/react-client/echo';
 import { AutomationSettings, FunctionsContainer } from '../components';
 import { meta } from '../meta';
 
-export default defineCapabilityModule(() =>
-  contributes(Capabilities.ReactSurface, [
+export default Capability.makeModule(() =>
+  Capability.contributes(Capabilities.ReactSurface, [
     createSurface({
       id: `${meta.id}/space-settings-functions`,
       role: 'article',

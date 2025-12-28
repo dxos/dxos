@@ -4,14 +4,14 @@
 
 import React from 'react';
 
-import { Capabilities, contributes, createSurface, defineCapabilityModule } from '@dxos/app-framework';
+import { Capabilities, Capability, createSurface } from '@dxos/app-framework';
 import { Surface } from '@dxos/app-framework/react';
 
 import { StatusBarActions, StatusBarPanel, VersionNumber } from '../components';
 import { meta } from '../meta';
 
-export default defineCapabilityModule(() =>
-  contributes(Capabilities.ReactSurface, [
+export default Capability.makeModule(() =>
+  Capability.contributes(Capabilities.ReactSurface, [
     createSurface({
       id: `${meta.id}/status-bar`,
       role: 'status-bar',

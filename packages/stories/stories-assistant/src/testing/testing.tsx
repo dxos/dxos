@@ -9,19 +9,16 @@ import * as Schema from 'effect/Schema';
 
 import { SERVICES_CONFIG } from '@dxos/ai/testing';
 import {
+  ActivationEvent,
   Capabilities,
+  Capability,
   Events,
   IntentPlugin,
   LayoutAction,
-  type Plugin,
-  type PluginContext,
+  Plugin,
   SettingsPlugin,
-  allOf,
-  contributes,
   createIntent,
   createResolver,
-  defineModule,
-  definePlugin,
 } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { AiContextBinder, ArtifactId, GenericToolkit } from '@dxos/assistant';
@@ -89,14 +86,14 @@ const Toolkit$ = Toolkit.make(
 namespace TestingToolkit {
   export const Toolkit = Toolkit$;
 
-  export const createLayer = (_context: PluginContext) =>
+  export const createLayer = (_context: Capability.PluginContext) =>
     Toolkit$.toLayer({
       'open-item': ({ id }) => Console.log('Called open-item', { id }),
     });
 }
 
 type DecoratorsProps = {
-  plugins?: Plugin[];
+  plugins?: Plugin.Plugin[];
   accessTokens?: AccessToken.AccessToken[];
   onInit?: (props: { client: Client; space: Space }) => Promise<void>;
 } & (Omit<ClientPluginOptions, 'onClientInitialized' | 'onSpacesReady'> & Pick<StoryPluginOptions, 'onChatCreated'>);
@@ -199,93 +196,91 @@ type StoryPluginOptions = {
   onChatCreated?: (props: { space: Space; chat: Assistant.Chat; binder: AiContextBinder }) => Promise<void>;
 };
 
-const StoryPlugin = definePlugin<StoryPluginOptions>(
-  {
-    id: 'example.com/plugin/testing',
-    name: 'Testing',
-  },
-  ({ onChatCreated }) => [
-    defineModule({
-      id: 'example.com/plugin/testing/module/testing',
-      activatesOn: Events.SetupArtifactDefinition,
-      activate: () => [
-        contributes(Capabilities.BlueprintDefinition, DesignBlueprint),
-        contributes(Capabilities.BlueprintDefinition, PlanningBlueprint),
-        contributes(Capabilities.Functions, [Agent.prompt]),
-        contributes(Capabilities.Functions, [Document.read, Document.update]),
-        contributes(Capabilities.Functions, [Tasks.read, Tasks.update]),
-        contributes(Capabilities.Functions, [Research.create, Research.research]),
-        contributes(Capabilities.Functions, [Example.reply]),
-      ],
-    }),
-    defineModule({
-      id: 'example.com/plugin/testing/module/toolkit',
-      activatesOn: Events.Startup,
-      activate: (context) => [
-        contributes(
-          Capabilities.Toolkit,
-          GenericToolkit.make(TestingToolkit.Toolkit, TestingToolkit.createLayer(context)),
-        ),
-      ],
-    }),
-    defineModule({
-      id: 'example.com/plugin/testing/module/setup',
-      activatesOn: allOf(Events.DispatcherReady, ClientEvents.SpacesReady),
-      activate: async (context) => {
-        const client = context.getCapability(ClientCapabilities.Client);
-        const space = client.spaces.default;
-        const { dispatchPromise: dispatch } = context.getCapability(Capabilities.IntentDispatcher);
+const StoryPlugin = Plugin.define<StoryPluginOptions>({
+  id: 'example.com/plugin/testing',
+  name: 'Testing',
+}).pipe(
+  Plugin.addModule({
+    id: 'example.com/plugin/testing/module/testing',
+    activatesOn: Events.SetupArtifactDefinition,
+    activate: () => [
+      Capability.contributes(Capabilities.BlueprintDefinition, DesignBlueprint),
+      Capability.contributes(Capabilities.BlueprintDefinition, PlanningBlueprint),
+      Capability.contributes(Capabilities.Functions, [Agent.prompt]),
+      Capability.contributes(Capabilities.Functions, [Document.read, Document.update]),
+      Capability.contributes(Capabilities.Functions, [Tasks.read, Tasks.update]),
+      Capability.contributes(Capabilities.Functions, [Research.create, Research.research]),
+      Capability.contributes(Capabilities.Functions, [Example.reply]),
+    ],
+  }),
+  Plugin.addModule({
+    id: 'example.com/plugin/testing/module/toolkit',
+    activatesOn: Events.Startup,
+    activate: (context) => [
+      Capability.contributes(
+        Capabilities.Toolkit,
+        GenericToolkit.make(TestingToolkit.Toolkit, TestingToolkit.createLayer(context)),
+      ),
+    ],
+  }),
+  Plugin.addModule({
+    id: 'example.com/plugin/testing/module/setup',
+    activatesOn: ActivationEvent.allOf(Events.DispatcherReady, ClientEvents.SpacesReady),
+    activate: async (context) => {
+      const client = context.getCapability(ClientCapabilities.Client);
+      const space = client.spaces.default;
+      const { dispatchPromise: dispatch } = context.getCapability(Capabilities.IntentDispatcher);
 
-        // Ensure workspace is set.
-        await dispatch(createIntent(LayoutAction.SwitchWorkspace, { part: 'workspace', subject: space.id }));
+      // Ensure workspace is set.
+      await dispatch(createIntent(LayoutAction.SwitchWorkspace, { part: 'workspace', subject: space.id }));
 
-        // Create initial chat.
-        await dispatch(createIntent(AssistantAction.CreateChat, { db: space.db }));
+      // Create initial chat.
+      await dispatch(createIntent(AssistantAction.CreateChat, { db: space.db }));
 
-        return [];
-      },
-    }),
-    defineModule({
-      id: 'example.com/plugin/testing/module/intent-resolver',
-      activatesOn: Events.SetupIntentResolver,
-      activate: (context) => [
-        contributes(Capabilities.IntentResolver, [
-          createResolver({
-            intent: DeckAction.ChangeCompanion,
-            resolve: () => ({}),
-          }),
-          createResolver({
-            intent: AssistantAction.CreateChat,
-            position: 'hoist',
-            resolve: async ({ db, name }) => {
-              const client = context.getCapability(ClientCapabilities.Client);
-              const space = client.spaces.get(db.spaceId);
-              invariant(space, 'Space not found');
+      return [];
+    },
+  }),
+  Plugin.addModule(({ onChatCreated }) => ({
+    id: 'example.com/plugin/testing/module/intent-resolver',
+    activatesOn: Events.SetupIntentResolver,
+    activate: (context) => [
+      Capability.contributes(Capabilities.IntentResolver, [
+        createResolver({
+          intent: DeckAction.ChangeCompanion,
+          resolve: () => ({}),
+        }),
+        createResolver({
+          intent: AssistantAction.CreateChat,
+          position: 'hoist',
+          resolve: async ({ db, name }) => {
+            const client = context.getCapability(ClientCapabilities.Client);
+            const space = client.spaces.get(db.spaceId);
+            invariant(space, 'Space not found');
 
-              const queue = space.queues.create();
-              const traceQueue = space.queues.create();
-              const chat = Obj.make(Assistant.Chat, {
-                name,
-                queue: Ref.fromDXN(queue.dxn),
-                traceQueue: Ref.fromDXN(traceQueue.dxn),
-              });
-              const binder = new AiContextBinder(queue);
+            const queue = space.queues.create();
+            const traceQueue = space.queues.create();
+            const chat = Obj.make(Assistant.Chat, {
+              name,
+              queue: Ref.fromDXN(queue.dxn),
+              traceQueue: Ref.fromDXN(traceQueue.dxn),
+            });
+            const binder = new AiContextBinder(queue);
 
-              // Story-specific behaviour to allow chat creation to be extended.
-              space.db.add(chat);
-              await space.db.flush({ indexes: true });
+            // Story-specific behaviour to allow chat creation to be extended.
+            space.db.add(chat);
+            await space.db.flush({ indexes: true });
 
-              await binder.open();
-              await onChatCreated?.({ space, chat, binder });
-              await binder.close();
+            await binder.open();
+            await onChatCreated?.({ space, chat, binder });
+            await binder.close();
 
-              return {
-                data: { object: chat },
-              };
-            },
-          }),
-        ]),
-      ],
-    }),
-  ],
+            return {
+              data: { object: chat },
+            };
+          },
+        }),
+      ]),
+    ],
+  })),
+  Plugin.make,
 );

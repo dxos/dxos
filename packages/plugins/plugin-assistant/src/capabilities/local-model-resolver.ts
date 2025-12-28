@@ -7,9 +7,9 @@ import * as FetchHttpClient from '@effect/platform/FetchHttpClient';
 import * as Layer from 'effect/Layer';
 
 import { LMStudioResolver } from '@dxos/ai/resolvers';
-import { Capabilities, type Capability, contributes, defineCapabilityModule } from '@dxos/app-framework';
+import { Capabilities, Capability } from '@dxos/app-framework';
 
-type LocalModelResolverCapabilities = Capability<typeof Capabilities.AiModelResolver>[];
+type LocalModelResolverCapabilities = Capability.Capability<typeof Capabilities.AiModelResolver>[];
 
 /**
  * To start LM Studio server:
@@ -17,8 +17,8 @@ type LocalModelResolverCapabilities = Capability<typeof Capabilities.AiModelReso
  * ~/.lmstudio/bin/lms server start --cors
  * ```
  */
-const localModelResolver = defineCapabilityModule<[], LocalModelResolverCapabilities>(() => [
-  contributes(
+const localModelResolver = Capability.makeModule<[], LocalModelResolverCapabilities>(() => [
+  Capability.contributes(
     Capabilities.AiModelResolver,
     LMStudioResolver.make().pipe(
       Layer.provide(

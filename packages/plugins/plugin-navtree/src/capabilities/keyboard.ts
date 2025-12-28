@@ -4,9 +4,7 @@
 
 import {
   Capabilities as AppCapabilities,
-  type PluginContext,
-  contributes,
-  defineCapabilityModule,
+  Capability,
 } from '@dxos/app-framework';
 import { debounce } from '@dxos/async';
 import { Keyboard } from '@dxos/keyboard';
@@ -15,7 +13,7 @@ import { getHostPlatform } from '@dxos/util';
 
 import { KEY_BINDING } from '../meta';
 
-export default defineCapabilityModule((context: PluginContext) => {
+export default Capability.makeModule((context) => {
   const { graph } = context.getCapability(AppCapabilities.AppGraph);
 
   // TODO(wittjosiah): Factor out.
@@ -55,7 +53,7 @@ export default defineCapabilityModule((context: PluginContext) => {
   Keyboard.singleton.initialize();
   Keyboard.singleton.setCurrentContext(Node.RootId);
 
-  return contributes(AppCapabilities.Null, null, () => {
+  return Capability.contributes(AppCapabilities.Null, null, () => {
     unsubscribe();
     Keyboard.singleton.destroy();
   });

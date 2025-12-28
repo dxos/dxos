@@ -4,17 +4,16 @@
 
 import {
   Capabilities,
+  Capability,
   LayoutAction,
-  contributes,
   createIntent,
   createResolver,
-  defineCapabilityModule,
 } from '@dxos/app-framework';
 
 import { SearchAction } from '../types';
 
-export default defineCapabilityModule(() =>
-  contributes(
+export default Capability.makeModule(() =>
+  Capability.contributes(
     Capabilities.IntentResolver,
     createResolver({
       intent: SearchAction.OpenSearch,

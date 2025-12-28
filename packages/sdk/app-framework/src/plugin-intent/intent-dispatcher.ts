@@ -312,7 +312,7 @@ export const createDispatcher = (
 const defaultEffect = () => Effect.fail(new Error('Intent runtime not ready'));
 const defaultPromise = () => runAndForwardErrors(defaultEffect());
 
-export default Capability.makeModule((context: Capability.PluginContext) => {
+export default Capability.makeModule((context) => {
   const state = live<IntentContext>({
     dispatch: defaultEffect,
     dispatchPromise: defaultPromise,

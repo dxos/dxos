@@ -4,14 +4,14 @@
 
 import React, { useCallback, useMemo } from 'react';
 
-import { Capabilities, Plugin, contributes, createSurface, defineCapabilityModule } from '@dxos/app-framework';
+import { Capabilities, Capability, Plugin, createSurface } from '@dxos/app-framework';
 import { usePluginManager } from '@dxos/app-framework/react';
 
 import { PluginDetail, RegistryContainer } from '../components';
 import { REGISTRY_KEY, meta } from '../meta';
 
-export default defineCapabilityModule(() =>
-  contributes(Capabilities.ReactSurface, [
+export default Capability.makeModule(() =>
+  Capability.contributes(Capabilities.ReactSurface, [
     createSurface({
       id: `${meta.id}/all`,
       role: 'article',
@@ -71,7 +71,7 @@ export default defineCapabilityModule(() =>
     createSurface({
       id: `${meta.id}/plugin-details`,
       role: 'article',
-      filter: (data): data is { subject: Plugin } => data.subject instanceof Plugin,
+      filter: (data): data is { subject: Plugin.Plugin } => Plugin.isPlugin(data.subject),
       component: ({ data: { subject } }) => {
         const manager = usePluginManager();
         const enabled = manager.enabled.includes(subject.meta.id);

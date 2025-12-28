@@ -2,12 +2,12 @@
 // Copyright 2025 DXOS.org
 //
 
-import { contributes, defineCapabilityModule } from '@dxos/app-framework';
+import { Capability } from '@dxos/app-framework';
 import { live } from '@dxos/live-object';
 
 import { MeetingCapabilities } from './capabilities';
 
-export default defineCapabilityModule(() => {
+export default Capability.makeModule(() => {
   const state = live<MeetingCapabilities.State>({});
-  return contributes(MeetingCapabilities.State, state);
+  return Capability.contributes(MeetingCapabilities.State, state);
 });

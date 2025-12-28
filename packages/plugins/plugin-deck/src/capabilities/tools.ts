@@ -9,11 +9,10 @@ import * as Schema from 'effect/Schema';
 
 import {
   Capabilities,
+  Capability,
   LayoutAction,
   type PromiseIntentDispatcher,
-  contributes,
   createIntent,
-  defineCapabilityModule,
 } from '@dxos/app-framework';
 import { invariant } from '@dxos/invariant';
 import { trim } from '@dxos/util';
@@ -30,8 +29,8 @@ declare global {
   }
 }
 
-export default defineCapabilityModule(() =>
-  contributes(Capabilities.Tools, [
+export default Capability.makeModule(() =>
+  Capability.contributes(Capabilities.Tools, [
     createTool(meta.id, {
       name: 'show',
       description: trim`

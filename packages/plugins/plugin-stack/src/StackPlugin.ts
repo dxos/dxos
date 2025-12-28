@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Capabilities, Events, contributes, defineModule, definePlugin } from '@dxos/app-framework';
+import { Capabilities, Events, Plugin, Capability } from '@dxos/app-framework';
 import { type Obj } from '@dxos/echo';
 import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
 
@@ -11,17 +11,17 @@ import { SECTION_IDENTIFIER, meta } from './meta';
 import { translations } from './translations';
 import { StackViewType } from './types';
 
-export const StackPlugin = definePlugin(meta, () => [
-  defineModule({
-    id: `${meta.id}/module/translations`,
+export const StackPlugin = Plugin.define(meta).pipe(
+  Plugin.addModule({
+    id: 'translations',
     activatesOn: Events.SetupTranslations,
-    activate: () => contributes(Capabilities.Translations, translations),
+    activate: () => Capability.contributes(Capabilities.Translations, translations),
   }),
-  defineModule({
-    id: `${meta.id}/module/metadata`,
+  Plugin.addModule({
+    id: 'metadata',
     activatesOn: Events.SetupMetadata,
     activate: () => [
-      contributes(Capabilities.Metadata, {
+      Capability.contributes(Capabilities.Metadata, {
         id: SECTION_IDENTIFIER,
         metadata: {
           parse: (section: { object: Obj.Any }, type: string) => {
@@ -38,14 +38,15 @@ export const StackPlugin = definePlugin(meta, () => [
       }),
     ],
   }),
-  defineModule({
-    id: `${meta.id}/module/schema`,
+  Plugin.addModule({
+    id: 'schema',
     activatesOn: ClientEvents.SetupSchema,
-    activate: () => contributes(ClientCapabilities.Schema, [StackViewType]),
+    activate: () => Capability.contributes(ClientCapabilities.Schema, [StackViewType]),
   }),
-  defineModule({
-    id: `${meta.id}/module/react-surface`,
+  Plugin.addModule({
+    id: 'react-surface',
     activatesOn: Events.SetupReactSurface,
     activate: ReactSurface,
   }),
-]);
+  Plugin.make,
+);

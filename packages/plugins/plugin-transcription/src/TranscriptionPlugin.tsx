@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Capabilities, Events, contributes, defineModule, definePlugin } from '@dxos/app-framework';
+import { Capabilities, Events, Plugin, Capability } from '@dxos/app-framework';
 import { Obj } from '@dxos/echo';
 import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
 import { getSpace } from '@dxos/react-client/echo';
@@ -13,17 +13,17 @@ import { meta } from './meta';
 import { translations } from './translations';
 import { renderByline } from './util';
 
-export const TranscriptionPlugin = definePlugin(meta, () => [
-  defineModule({
-    id: `${meta.id}/module/translations`,
+export const TranscriptionPlugin = Plugin.define(meta).pipe(
+  Plugin.addModule({
+    id: 'translations',
     activatesOn: Events.SetupTranslations,
-    activate: () => contributes(Capabilities.Translations, translations),
+    activate: () => Capability.contributes(Capabilities.Translations, translations),
   }),
-  defineModule({
-    id: `${meta.id}/module/metadata`,
+  Plugin.addModule({
+    id: 'metadata',
     activatesOn: Events.SetupMetadata,
     activate: () =>
-      contributes(Capabilities.Metadata, {
+      Capability.contributes(Capabilities.Metadata, {
         id: Transcript.Transcript.typename,
         metadata: {
           icon: 'ph--subtitles--regular',
@@ -43,29 +43,30 @@ export const TranscriptionPlugin = definePlugin(meta, () => [
         },
       }),
   }),
-  defineModule({
-    id: `${meta.id}/module/schema`,
+  Plugin.addModule({
+    id: 'schema',
     activatesOn: ClientEvents.SetupSchema,
-    activate: () => [contributes(ClientCapabilities.Schema, [Transcript.Transcript])],
+    activate: () => [Capability.contributes(ClientCapabilities.Schema, [Transcript.Transcript])],
   }),
-  defineModule({
-    id: `${meta.id}/module/react-surface`,
+  Plugin.addModule({
+    id: 'react-surface',
     activatesOn: Events.SetupReactSurface,
     activate: ReactSurface,
   }),
-  defineModule({
-    id: `${meta.id}/module/intent-resolver`,
+  Plugin.addModule({
+    id: 'intent-resolver',
     activatesOn: Events.SetupIntentResolver,
     activate: IntentResolver,
   }),
-  defineModule({
-    id: `${meta.id}/module/transcription`,
+  Plugin.addModule({
+    id: 'transcription',
     activatesOn: Events.SetupAppGraph,
     activate: Transcriber,
   }),
-  defineModule({
-    id: `${meta.id}/module/blueprint`,
+  Plugin.addModule({
+    id: 'blueprint',
     activatesOn: Events.SetupArtifactDefinition,
     activate: BlueprintDefinition,
   }),
-]);
+  Plugin.make,
+);

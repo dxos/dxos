@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Capabilities, contributes, defineCapabilityModule } from '@dxos/app-framework';
+import { Capabilities, Capability } from '@dxos/app-framework';
 import { invariant } from '@dxos/invariant';
 import { live } from '@dxos/live-object';
 import { LocalStorageStore } from '@dxos/local-storage';
@@ -105,9 +105,10 @@ export const DeckStateFactory = () => {
   });
 
   return [
-    contributes(DeckCapabilities.DeckState, state.values, () => state.close()),
-    contributes(Capabilities.Layout, layout),
+    Capability.contributes(DeckCapabilities.DeckState, state.values, () => state.close()),
+    Capability.contributes(Capabilities.Layout, layout),
   ];
 };
 
-export default defineCapabilityModule(DeckStateFactory);
+export default Capability.makeModule(() => DeckStateFactory());
+

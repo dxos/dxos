@@ -2,14 +2,14 @@
 // Copyright 2025 DXOS.org
 //
 
-import { contributes, defineCapabilityModule } from '@dxos/app-framework';
+import { Capability } from '@dxos/app-framework';
 import { LocalStorageStore } from '@dxos/local-storage';
 
 import { meta } from '../meta';
 
 import { HelpCapabilities } from './capabilities';
 
-export default defineCapabilityModule(() => {
+export default Capability.makeModule(() => {
   const state = new LocalStorageStore<HelpCapabilities.State>(meta.id, {
     running: false,
     showHints: true,
@@ -20,5 +20,5 @@ export default defineCapabilityModule(() => {
     .prop({ key: 'showHints', type: LocalStorageStore.bool() })
     .prop({ key: 'showWelcome', type: LocalStorageStore.bool() });
 
-  return contributes(HelpCapabilities.State, state.values);
+  return Capability.contributes(HelpCapabilities.State, state.values);
 });

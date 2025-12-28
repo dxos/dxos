@@ -6,19 +6,17 @@ import * as Schema from 'effect/Schema';
 
 import {
   Capabilities,
+  Capability,
   LayoutAction,
-  type PluginContext,
-  contributes,
   createResolver,
-  defineCapabilityModule,
 } from '@dxos/app-framework';
 import { log } from '@dxos/log';
 import { Graph } from '@dxos/plugin-graph';
 
 import { NavTreeCapabilities } from './capabilities';
 
-export default defineCapabilityModule((context: PluginContext) =>
-  contributes(
+export default Capability.makeModule((context) =>
+  Capability.contributes(
     Capabilities.IntentResolver,
     createResolver({
       intent: LayoutAction.UpdateLayout,

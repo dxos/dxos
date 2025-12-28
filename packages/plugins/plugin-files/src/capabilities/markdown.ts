@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Capabilities, type PluginContext, contributes, defineCapabilityModule } from '@dxos/app-framework';
+import { Capabilities, Capability } from '@dxos/app-framework';
 import { MarkdownCapabilities } from '@dxos/plugin-markdown';
 import { listener } from '@dxos/ui-editor';
 
@@ -11,7 +11,7 @@ import { type FilesSettingsProps } from '../types';
 
 import { FileCapabilities } from './capabilities';
 
-export default defineCapabilityModule((context: PluginContext) => {
+export default Capability.makeModule((context) => {
   const extensionProvider = () =>
     listener({
       onChange: ({ id, text }) => {
@@ -24,5 +24,5 @@ export default defineCapabilityModule((context: PluginContext) => {
       },
     });
 
-  return contributes(MarkdownCapabilities.Extensions, [extensionProvider]);
+  return Capability.contributes(MarkdownCapabilities.Extensions, [extensionProvider]);
 });

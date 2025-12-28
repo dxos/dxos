@@ -2,16 +2,17 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Capabilities, Events, contributes, defineModule, definePlugin } from '@dxos/app-framework';
+import { Capabilities, Events, Plugin, Capability } from '@dxos/app-framework';
 
 import { meta } from '../meta';
 
 import { trigger } from './commands';
 
-export const AutomationPlugin = definePlugin(meta, () => [
-  defineModule({
-    id: `${meta.id}/module/cli-commands`,
+export const AutomationPlugin = Plugin.define(meta).pipe(
+  Plugin.addModule({
+    id: 'cli-commands',
     activatesOn: Events.Startup,
-    activate: () => [contributes(Capabilities.Command, trigger)],
+    activate: () => [Capability.contributes(Capabilities.Command, trigger)],
   }),
-]);
+  Plugin.make,
+);

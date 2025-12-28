@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { Capabilities, contributes, createSurface, defineCapabilityModule } from '@dxos/app-framework';
+import { Capabilities, Capability, createSurface } from '@dxos/app-framework';
 import { Obj } from '@dxos/echo';
 import { type View } from '@dxos/schema';
 
@@ -12,8 +12,8 @@ import { ExplorerContainer } from '../components';
 import { meta } from '../meta';
 import { Graph } from '../types';
 
-export default defineCapabilityModule(() =>
-  contributes(
+export default Capability.makeModule(() =>
+  Capability.contributes(
     Capabilities.ReactSurface,
     createSurface({
       id: `${meta.id}/article`,

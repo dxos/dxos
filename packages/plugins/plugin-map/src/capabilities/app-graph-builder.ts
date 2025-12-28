@@ -4,13 +4,7 @@
 
 import * as Option from 'effect/Option';
 
-import {
-  Capabilities,
-  type PluginContext,
-  contributes,
-  createIntent,
-  defineCapabilityModule,
-} from '@dxos/app-framework';
+import { Capabilities, Capability, createIntent } from '@dxos/app-framework';
 import { Obj } from '@dxos/echo';
 import { CreateAtom, GraphBuilder } from '@dxos/plugin-graph';
 import { View } from '@dxos/schema';
@@ -18,8 +12,8 @@ import { View } from '@dxos/schema';
 import { meta } from '../meta';
 import { Map, MapAction } from '../types';
 
-export default defineCapabilityModule((context: PluginContext) => {
-  return contributes(
+export default Capability.makeModule((context) => {
+  return Capability.contributes(
     Capabilities.AppGraphBuilder,
     GraphBuilder.createExtension({
       id: MapAction.Toggle._tag,

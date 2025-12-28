@@ -4,20 +4,25 @@
 
 import React, { type PropsWithChildren } from 'react';
 
-import { Capabilities, contributes, defineCapabilityModule } from '@dxos/app-framework';
+import { Capabilities, Capability } from '@dxos/app-framework';
 import { useCapability } from '@dxos/app-framework/react';
-import { RootAttentionProvider, SelectionProvider } from '@dxos/react-ui-attention';
+import {
+  type AttentionManager,
+  RootAttentionProvider,
+  type SelectionManager,
+  SelectionProvider,
+} from '@dxos/react-ui-attention';
 
 import { meta } from '../meta';
 
 import { AttentionCapabilities } from './capabilities';
 
-export default defineCapabilityModule(() =>
-  contributes(Capabilities.ReactContext, {
+export default Capability.makeModule(() =>
+  Capability.contributes(Capabilities.ReactContext, {
     id: meta.id,
     context: (props: PropsWithChildren) => {
-      const attention = useCapability(AttentionCapabilities.Attention);
-      const selection = useCapability(AttentionCapabilities.Selection);
+      const attention = useCapability(AttentionCapabilities.Attention) as AttentionManager | undefined;
+      const selection = useCapability(AttentionCapabilities.Selection) as SelectionManager | undefined;
 
       return (
         <RootAttentionProvider

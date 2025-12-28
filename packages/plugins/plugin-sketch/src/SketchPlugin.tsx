@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Capabilities, Events, contributes, createIntent, defineModule, definePlugin } from '@dxos/app-framework';
+import { Capabilities, Events, Plugin, Capability, createIntent } from '@dxos/app-framework';
 import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
 import { type CreateObjectIntent } from '@dxos/plugin-space/types';
 import { RefArray } from '@dxos/react-client/echo';
@@ -13,22 +13,22 @@ import { translations } from './translations';
 import { Diagram, SketchAction } from './types';
 import { serializer } from './util';
 
-export const SketchPlugin = definePlugin(meta, () => [
-  defineModule({
-    id: `${meta.id}/module/settings`,
+export const SketchPlugin = Plugin.define(meta).pipe(
+  Plugin.addModule({
+    id: 'settings',
     activatesOn: Events.SetupSettings,
     activate: SketchSettings,
   }),
-  defineModule({
-    id: `${meta.id}/module/translations`,
+  Plugin.addModule({
+    id: 'translations',
     activatesOn: Events.SetupTranslations,
-    activate: () => contributes(Capabilities.Translations, translations),
+    activate: () => Capability.contributes(Capabilities.Translations, translations),
   }),
-  defineModule({
-    id: `${meta.id}/module/metadata`,
+  Plugin.addModule({
+    id: 'metadata',
     activatesOn: Events.SetupMetadata,
     activate: () =>
-      contributes(Capabilities.Metadata, {
+      Capability.contributes(Capabilities.Metadata, {
         id: Diagram.Diagram.typename,
         metadata: {
           icon: 'ph--compass-tool--regular',
@@ -42,24 +42,25 @@ export const SketchPlugin = definePlugin(meta, () => [
         },
       }),
   }),
-  defineModule({
-    id: `${meta.id}/module/schema`,
+  Plugin.addModule({
+    id: 'schema',
     activatesOn: ClientEvents.SetupSchema,
-    activate: () => contributes(ClientCapabilities.Schema, [Diagram.Canvas, Diagram.Diagram]),
+    activate: () => Capability.contributes(ClientCapabilities.Schema, [Diagram.Canvas, Diagram.Diagram]),
   }),
-  defineModule({
-    id: `${meta.id}/module/react-surface`,
+  Plugin.addModule({
+    id: 'react-surface',
     activatesOn: Events.SetupReactSurface,
     activate: ReactSurface,
   }),
-  defineModule({
-    id: `${meta.id}/module/intent-resolver`,
+  Plugin.addModule({
+    id: 'intent-resolver',
     activatesOn: Events.SetupIntentResolver,
     activate: IntentResolver,
   }),
-  defineModule({
-    id: `${meta.id}/module/app-graph-serializer`,
+  Plugin.addModule({
+    id: 'app-graph-serializer',
     activatesOn: Events.AppGraphReady,
     activate: AppGraphSerializer,
   }),
-]);
+  Plugin.make,
+);

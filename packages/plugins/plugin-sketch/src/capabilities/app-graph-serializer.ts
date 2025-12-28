@@ -4,14 +4,7 @@
 
 import * as Function from 'effect/Function';
 
-import {
-  Capabilities,
-  type PluginContext,
-  chain,
-  contributes,
-  createIntent,
-  defineCapabilityModule,
-} from '@dxos/app-framework';
+import { Capabilities, Capability, chain, createIntent } from '@dxos/app-framework';
 import { Obj } from '@dxos/echo';
 import { SpaceAction } from '@dxos/plugin-space/types';
 import { isSpace } from '@dxos/react-client/echo';
@@ -20,8 +13,8 @@ import { Collection } from '@dxos/schema';
 import { translations } from '../translations';
 import { Diagram, SketchAction } from '../types';
 
-export default defineCapabilityModule((context: PluginContext) =>
-  contributes(Capabilities.AppGraphSerializer, [
+export default Capability.makeModule((context) =>
+  Capability.contributes(Capabilities.AppGraphSerializer, [
     {
       inputType: Diagram.Diagram.typename,
       outputType: 'application/tldraw',

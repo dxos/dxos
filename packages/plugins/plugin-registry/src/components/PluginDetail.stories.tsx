@@ -4,6 +4,7 @@
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 
+import { Plugin } from '@dxos/app-framework';
 import { faker } from '@dxos/random';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
@@ -26,20 +27,18 @@ type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
   args: {
-    plugin: {
-      meta: {
-        id: 'example.com/plugin/test-plugin',
-        name: 'Test Plugin',
-        description: faker.lorem.paragraphs(2),
-        icon: 'ph--bug--regular',
-        iconHue: 'sky',
-        homePage: 'https://example.com',
-        source: 'https://github.com/example/test-plugin',
-        screenshots: [
-          'https://media.gcflearnfree.org/content/55e073de7dd48174331f51b3_01_17_2014/getting_started_interactive2.png',
-        ],
-      },
-      modules: [],
-    },
+    plugin: Plugin.define({
+      id: 'example.com/plugin/test-plugin',
+      name: 'Test Plugin',
+      description: faker.lorem.paragraphs(2),
+      icon: 'ph--bug--regular',
+      iconHue: 'sky',
+      homePage: 'https://example.com',
+      source: 'https://github.com/example/test-plugin',
+      screenshots: [
+        'https://media.gcflearnfree.org/content/55e073de7dd48174331f51b3_01_17_2014/getting_started_interactive2.png',
+      ],
+    })
+      .pipe(Plugin.make)(),
   },
 };

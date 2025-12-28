@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { defineCapability } from '@dxos/app-framework';
+import { Capability } from '@dxos/app-framework';
 import { type Live } from '@dxos/live-object';
 import { type TranscriptionManager } from '@dxos/plugin-transcription';
 
@@ -15,5 +15,5 @@ export namespace MeetingCapabilities {
     transcriptionManager?: TranscriptionManager;
   }>;
 
-  export const State = defineCapability<State>(`${meta.id}/capability/state`);
+  export const State = Capability.make<State>(`${meta.id}/capability/state`);
 }

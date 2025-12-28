@@ -4,14 +4,7 @@
 
 import * as Effect from 'effect/Effect';
 
-import {
-  Capabilities,
-  type PluginContext,
-  contributes,
-  createIntent,
-  createResolver,
-  defineCapabilityModule,
-} from '@dxos/app-framework';
+import { Capabilities, Capability, createIntent, createResolver } from '@dxos/app-framework';
 import { AiContextBinder, AiConversation } from '@dxos/assistant';
 import { Agent } from '@dxos/assistant-toolkit';
 import { Blueprint, Prompt, Template } from '@dxos/blueprints';
@@ -31,8 +24,8 @@ import { Assistant, AssistantAction } from '../types';
 import { AssistantBlueprint, createBlueprint } from './blueprint-definition';
 import { AssistantCapabilities } from './capabilities';
 
-export default defineCapabilityModule((context: PluginContext) => [
-  contributes(Capabilities.IntentResolver, [
+export default Capability.makeModule((context) => [
+  Capability.contributes(Capabilities.IntentResolver, [
     createResolver({
       intent: AssistantAction.OnCreateSpace,
       resolve: ({ space, rootCollection }) =>

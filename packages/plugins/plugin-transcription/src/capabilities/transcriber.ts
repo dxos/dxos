@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type PluginContext, contributes, defineCapabilityModule } from '@dxos/app-framework';
+import { Capability } from '@dxos/app-framework';
 import { ClientCapabilities } from '@dxos/plugin-client';
 
 import { MediaStreamRecorder, Transcriber, TranscriptionManager } from '../transcriber';
@@ -30,7 +30,7 @@ const TRANSCRIBE_AFTER_CHUNKS_AMOUNT = 50;
 /**
  * Records audio while user is speaking and transcribes it after user is done speaking.
  */
-export default defineCapabilityModule((context: PluginContext) => {
+export default Capability.makeModule((context) => {
   const getTranscriber: TranscriptionCapabilities.GetTranscriber = ({
     audioStreamTrack,
     onSegments,
@@ -71,7 +71,7 @@ export default defineCapabilityModule((context: PluginContext) => {
   };
 
   return [
-    contributes(TranscriptionCapabilities.Transcriber, getTranscriber),
-    contributes(TranscriptionCapabilities.TranscriptionManager, getTranscriptionManager),
+    Capability.contributes(TranscriptionCapabilities.Transcriber, getTranscriber),
+    Capability.contributes(TranscriptionCapabilities.TranscriptionManager, getTranscriptionManager),
   ];
 });

@@ -7,12 +7,10 @@ import * as Option from 'effect/Option';
 
 import {
   Capabilities,
+  Capability,
   LayoutAction,
-  type PluginContext,
   chain,
-  contributes,
   createIntent,
-  defineCapabilityModule,
 } from '@dxos/app-framework';
 import { CreateAtom, GraphBuilder, NodeMatcher } from '@dxos/plugin-graph';
 
@@ -22,8 +20,8 @@ import { isLocalDirectory, isLocalEntity, isLocalFile } from '../util';
 
 import { FileCapabilities } from './capabilities';
 
-export default defineCapabilityModule((context: PluginContext) => {
-  return contributes(Capabilities.AppGraphBuilder, [
+export default Capability.makeModule((context) => {
+  return Capability.contributes(Capabilities.AppGraphBuilder, [
     // Create export/import actions.
     GraphBuilder.createExtension({
       id: `${meta.id}/export`,

@@ -10,7 +10,7 @@ import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 import type * as Schema from 'effect/Schema';
 
-import { Capabilities, Events, PluginService } from '@dxos/app-framework';
+import { Capabilities, Events, PluginManager } from '@dxos/app-framework';
 import { CommandConfig, Common, flushAndSync, print, spaceLayer } from '@dxos/cli-util';
 import { SpaceProperties } from '@dxos/client/echo';
 import { Database, Filter, Obj, Ref, Type } from '@dxos/echo';
@@ -36,7 +36,7 @@ export const add = Command.make(
   ({ typename }) =>
     Effect.gen(function* () {
       const { json } = yield* CommandConfig;
-      const manager = yield* PluginService;
+      const manager = yield* PluginManager.Service;
       const { db } = yield* Database.Service;
 
       yield* manager.context.activate(Events.SetupMetadata);

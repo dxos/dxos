@@ -7,7 +7,7 @@ import * as Command from '@effect/cli/Command';
 import * as Console from 'effect/Console';
 import * as Effect from 'effect/Effect';
 
-import { PluginService } from '@dxos/app-framework';
+import { type Plugin, PluginManager } from '@dxos/app-framework';
 import { CommandConfig } from '@dxos/cli-util';
 import { invariant } from '@dxos/invariant';
 
@@ -15,10 +15,10 @@ import { saveEnabledPlugins } from '../storage';
 
 export const handler = Effect.fn(function* ({ id }: { id: string }) {
   const { json, profile } = yield* CommandConfig;
-  const manager = yield* PluginService;
+  const manager = yield* PluginManager.Service;
 
   const plugins = manager.plugins;
-  const plugin = plugins.find((p) => p.meta.id === id);
+  const plugin = plugins.find((p: Plugin.Plugin) => p.meta.id === id);
   invariant(plugin, `Plugin not found: ${id}`);
 
   const enabled = yield* Effect.promise(() => manager.enable(id));

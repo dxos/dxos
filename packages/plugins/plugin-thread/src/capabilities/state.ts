@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { contributes, defineCapabilityModule } from '@dxos/app-framework';
+import { Capability } from '@dxos/app-framework';
 import { live } from '@dxos/live-object';
 
 import { type ThreadState, type ViewStore } from '../types';
@@ -11,7 +11,7 @@ import { ThreadCapabilities } from './capabilities';
 
 const initialViewState = { showResolvedThreads: false };
 
-export default defineCapabilityModule(() => {
+export default Capability.makeModule(() => {
   const state = live<ThreadState>({ toolbar: {}, drafts: {} });
   const viewStore = live<ViewStore>({});
 
@@ -22,5 +22,5 @@ export default defineCapabilityModule(() => {
     return viewStore[subjectId];
   };
 
-  return contributes(ThreadCapabilities.State, { state, getViewState });
+  return Capability.contributes(ThreadCapabilities.State, { state, getViewState });
 });

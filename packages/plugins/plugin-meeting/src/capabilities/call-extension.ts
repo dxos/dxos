@@ -4,13 +4,7 @@
 
 import type * as Schema from 'effect/Schema';
 
-import {
-  Capabilities,
-  type PluginContext,
-  contributes,
-  createIntent,
-  defineCapabilityModule,
-} from '@dxos/app-framework';
+import { Capabilities, Capability, createIntent } from '@dxos/app-framework';
 import { extractionAnthropicFunction, processTranscriptMessage } from '@dxos/assistant/extraction';
 import { Filter, type Obj, Query, Type } from '@dxos/echo';
 import { FunctionExecutor } from '@dxos/functions-runtime';
@@ -35,13 +29,13 @@ import { MeetingCapabilities } from './capabilities';
 // TODO(wittjosiah): Can we stop using protobuf for this?
 type MeetingPayload = buf.MessageInitShape<typeof MeetingPayloadSchema>;
 
-export default defineCapabilityModule((context: PluginContext) => {
+export default Capability.makeModule((context) => {
   const { dispatchPromise: dispatch } = context.getCapability(Capabilities.IntentDispatcher);
   const client = context.getCapability(ClientCapabilities.Client);
   const state = context.getCapability(MeetingCapabilities.State);
   const _settings = context.getCapability(Capabilities.SettingsStore).getStore<Meeting.Settings>(meta.id)!.value;
 
-  return contributes(ThreadCapabilities.CallExtension, {
+  return Capability.contributes(ThreadCapabilities.CallExtension, {
     onJoin: async ({ channel }: { channel?: Channel.Channel }) => {
       const identity = client.halo.identity.get();
       invariant(identity);

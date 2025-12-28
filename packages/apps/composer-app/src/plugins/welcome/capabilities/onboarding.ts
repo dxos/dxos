@@ -2,14 +2,14 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Capabilities, type PluginContext, contributes } from '@dxos/app-framework';
+import { Capabilities, Capability } from '@dxos/app-framework';
 import { ClientCapabilities } from '@dxos/plugin-client';
 
 import { OnboardingManager } from '../onboarding-manager';
 
 import { WelcomeCapabilities } from './capabilities';
 
-export default async (context: PluginContext) => {
+export default Capability.makeModule(async (context) => {
   const { dispatchPromise: dispatch } = context.getCapability(Capabilities.IntentDispatcher);
   const client = context.getCapability(ClientCapabilities.Client);
   const searchParams = new URLSearchParams(window.location.search);
@@ -31,5 +31,5 @@ export default async (context: PluginContext) => {
 
   await manager.initialize();
 
-  return contributes(WelcomeCapabilities.Onboarding, manager, () => manager.destroy());
-};
+  return Capability.contributes(WelcomeCapabilities.Onboarding, manager, () => manager.destroy());
+});

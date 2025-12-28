@@ -4,11 +4,9 @@
 
 import {
   Capabilities,
+  Capability,
   LayoutAction,
-  type PluginContext,
-  contributes,
   createIntent,
-  defineCapabilityModule,
 } from '@dxos/app-framework';
 import { scheduledEffect } from '@dxos/echo-signals/core';
 
@@ -17,7 +15,7 @@ import { defaultDeck } from '../types';
 import { DeckCapabilities } from './capabilities';
 
 // TODO(wittjosiah): Cleanup the url handling. May justify introducing routing capabilities.
-export default defineCapabilityModule(async (context: PluginContext) => {
+export default Capability.makeModule(async (context: Capability.PluginContext) => {
   const { dispatchPromise: dispatch } = context.getCapability(Capabilities.IntentDispatcher);
   const state = context.getCapability(DeckCapabilities.MutableDeckState);
 
@@ -60,7 +58,7 @@ export default defineCapabilityModule(async (context: PluginContext) => {
     },
   );
 
-  return contributes(Capabilities.Null, null, () => {
+  return Capability.contributes(Capabilities.Null, null, () => {
     window.removeEventListener('popstate', handleNavigation);
     unsubscribe();
   });

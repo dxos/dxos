@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Capabilities, Events, contributes, createIntent, defineModule, definePlugin } from '@dxos/app-framework';
+import { Capabilities, Events, Plugin, Capability, createIntent } from '@dxos/app-framework';
 import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
 import { type CreateObjectIntent } from '@dxos/plugin-space/types';
 import { Text } from '@dxos/schema';
@@ -11,17 +11,17 @@ import { IntentResolver } from '../capabilities';
 import { meta } from '../meta';
 import { Markdown, MarkdownAction } from '../types';
 
-export const MarkdownPlugin = definePlugin(meta, () => [
-  defineModule({
-    id: `${meta.id}/module/schema`,
+export const MarkdownPlugin = Plugin.define(meta).pipe(
+  Plugin.addModule({
+    id: 'schema',
     activatesOn: ClientEvents.SetupSchema,
-    activate: () => contributes(ClientCapabilities.Schema, [Markdown.Document, Text.Text]),
+    activate: () => Capability.contributes(ClientCapabilities.Schema, [Markdown.Document, Text.Text]),
   }),
-  defineModule({
-    id: `${meta.id}/module/metadata`,
+  Plugin.addModule({
+    id: 'metadata',
     activatesOn: Events.SetupMetadata,
     activate: () =>
-      contributes(Capabilities.Metadata, {
+      Capability.contributes(Capabilities.Metadata, {
         id: Markdown.Document.typename,
         metadata: {
           createObjectIntent: (() => createIntent(MarkdownAction.Create)) satisfies CreateObjectIntent,
@@ -29,9 +29,10 @@ export const MarkdownPlugin = definePlugin(meta, () => [
         },
       }),
   }),
-  defineModule({
-    id: `${meta.id}/module/intent-resolver`,
+  Plugin.addModule({
+    id: 'intent-resolver',
     activatesOn: Events.SetupIntentResolver,
     activate: IntentResolver,
   }),
-]);
+  Plugin.make,
+);

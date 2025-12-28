@@ -10,14 +10,12 @@ import * as Schema from 'effect/Schema';
 
 import {
   Capabilities,
+  Capability,
   IntentAction,
   LayoutAction,
-  type PluginContext,
   chain,
-  contributes,
   createIntent,
   createResolver,
-  defineCapabilityModule,
 } from '@dxos/app-framework';
 import { Obj } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
@@ -43,8 +41,8 @@ import { setActive } from '../util';
 
 import { DeckCapabilities } from './capabilities';
 
-export default defineCapabilityModule((context: PluginContext) =>
-  contributes(Capabilities.IntentResolver, [
+export default Capability.makeModule((context) =>
+  Capability.contributes(Capabilities.IntentResolver, [
     createResolver({
       intent: IntentAction.ShowUndo,
       resolve: (data) => {
@@ -53,7 +51,7 @@ export default defineCapabilityModule((context: PluginContext) =>
 
         // TODO(wittjosiah): Support undoing further back than the last action.
         if (layout.currentUndoId) {
-          layout.toasts = layout.toasts.filter((toast) => toast.id !== layout.currentUndoId);
+          layout.toasts = layout.toasts.filter((toast: LayoutAction.Toast) => toast.id !== layout.currentUndoId);
         }
         layout.currentUndoId = `${IntentAction.ShowUndo._tag}-${Date.now()}`;
         layout.toasts = [
@@ -174,8 +172,8 @@ export default defineCapabilityModule((context: PluginContext) =>
             mode !== 'deck' ? [subject ?? deck.solo ?? deck.active[0]] : [...deck.active, deck.solo]
           ).filter(isNonNullable);
 
-          const removed = current.filter((id) => !next.includes(id));
-          const closed = Array.from(new Set([...deck.inactive.filter((id) => !next.includes(id)), ...removed]));
+          const removed = current.filter((id: string) => !next.includes(id));
+          const closed = Array.from(new Set([...deck.inactive.filter((id: string) => !next.includes(id)), ...removed]));
           deck.inactive = closed;
 
           if (mode !== 'deck' && next[0]) {
@@ -292,7 +290,7 @@ export default defineCapabilityModule((context: PluginContext) =>
           });
 
           const ids = state.deck.solo ? [state.deck.solo] : state.deck.active;
-          const newlyOpen = ids.filter((i) => !previouslyOpenIds.has(i));
+          const newlyOpen = ids.filter((i: string) => !previouslyOpenIds.has(i));
 
           return {
             intents: [
@@ -300,7 +298,7 @@ export default defineCapabilityModule((context: PluginContext) =>
                 ? [createIntent(LayoutAction.ScrollIntoView, { part: 'current', subject: newlyOpen[0] ?? subject[0] })]
                 : []),
               createIntent(LayoutAction.Expose, { part: 'navigation', subject: newlyOpen[0] ?? subject[0] }),
-              ...newlyOpen.map((subjectId) => {
+              ...newlyOpen.map((subjectId: string) => {
                 const typename = Option.match(Graph.getNode(graph, subjectId), {
                   onNone: () => undefined,
                   onSome: (node) => {
@@ -318,7 +316,7 @@ export default defineCapabilityModule((context: PluginContext) =>
               }),
             ],
           };
-        }),
+        }) as Effect.Effect<{ intents: any[] }, Error>,
     }),
     createResolver({
       intent: LayoutAction.UpdateLayout,

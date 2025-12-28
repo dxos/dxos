@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Capabilities, type PluginContext, contributes, defineCapabilityModule } from '@dxos/app-framework';
+import { Capabilities, Capability } from '@dxos/app-framework';
 import { ATTENDABLE_PATH_SEPARATOR, DECK_COMPANION_TYPE, PLANK_COMPANION_TYPE } from '@dxos/plugin-deck/types';
 import { CreateAtom, GraphBuilder, Node, NodeMatcher } from '@dxos/plugin-graph';
 import { getActiveSpace, meta as spaceMeta } from '@dxos/plugin-space';
@@ -12,8 +12,8 @@ import { Devtools } from '../types';
 
 const DEVTOOLS_TYPE = `${meta.id}/devtools`;
 
-export default defineCapabilityModule((context: PluginContext) => {
-  return contributes(Capabilities.AppGraphBuilder, [
+export default Capability.makeModule((context) => {
+  return Capability.contributes(Capabilities.AppGraphBuilder, [
     // Devtools node.
     GraphBuilder.createExtension({
       id: `${meta.id}/devtools`,

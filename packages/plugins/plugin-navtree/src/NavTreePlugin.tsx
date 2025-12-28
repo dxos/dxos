@@ -6,11 +6,10 @@ import {
   Capabilities,
   Events,
   LayoutAction,
-  allOf,
-  contributes,
+  ActivationEvent,
+  Plugin,
+  Capability,
   createIntent,
-  defineModule,
-  definePlugin,
 } from '@dxos/app-framework';
 import { Graph } from '@dxos/plugin-graph';
 import { type TreeData } from '@dxos/react-ui-list';
@@ -21,23 +20,23 @@ import { NavTreeEvents } from './events';
 import { meta } from './meta';
 import { translations } from './translations';
 
-export const NavTreePlugin = definePlugin(meta, () => [
-  defineModule({
-    id: `${meta.id}/module/state`,
+export const NavTreePlugin = Plugin.define(meta).pipe(
+  Plugin.addModule({
+    id: 'state',
     activatesOn: Events.LayoutReady,
     activatesAfter: [NavTreeEvents.StateReady],
     activate: State,
   }),
-  defineModule({
-    id: `${meta.id}/module/translations`,
+  Plugin.addModule({
+    id: 'translations',
     activatesOn: Events.SetupTranslations,
-    activate: () => contributes(Capabilities.Translations, translations),
+    activate: () => Capability.contributes(Capabilities.Translations, translations),
   }),
-  defineModule({
-    id: `${meta.id}/module/metadata`,
+  Plugin.addModule({
+    id: 'metadata',
     activatesOn: Events.SetupMetadata,
     activate: () =>
-      contributes(Capabilities.Metadata, {
+      Capability.contributes(Capabilities.Metadata, {
         id: NODE_TYPE,
         metadata: {
           parse: ({ item }: TreeData, type: string) => {
@@ -53,9 +52,14 @@ export const NavTreePlugin = definePlugin(meta, () => [
         },
       }),
   }),
-  defineModule({
-    id: `${meta.id}/module/expose`,
-    activatesOn: allOf(Events.DispatcherReady, Events.AppGraphReady, Events.LayoutReady, NavTreeEvents.StateReady),
+  Plugin.addModule({
+    id: 'expose',
+    activatesOn: ActivationEvent.allOf(
+      Events.DispatcherReady,
+      Events.AppGraphReady,
+      Events.LayoutReady,
+      NavTreeEvents.StateReady,
+    ),
     activate: async (context) => {
       const layout = context.getCapability(Capabilities.Layout);
       const { dispatchPromise: dispatch } = context.getCapability(Capabilities.IntentDispatcher);
@@ -71,24 +75,25 @@ export const NavTreePlugin = definePlugin(meta, () => [
       return [];
     },
   }),
-  defineModule({
-    id: `${meta.id}/module/keyboard`,
+  Plugin.addModule({
+    id: 'keyboard',
     activatesOn: Events.AppGraphReady,
     activate: Keyboard,
   }),
-  defineModule({
-    id: `${meta.id}/module/react-surface`,
+  Plugin.addModule({
+    id: 'react-surface',
     activatesOn: Events.SetupReactSurface,
     activate: ReactSurface,
   }),
-  defineModule({
-    id: `${meta.id}/module/intent-resolver`,
+  Plugin.addModule({
+    id: 'intent-resolver',
     activatesOn: Events.SetupIntentResolver,
     activate: IntentResolver,
   }),
-  defineModule({
-    id: `${meta.id}/module/app-graph-builder`,
+  Plugin.addModule({
+    id: 'app-graph-builder',
     activatesOn: Events.SetupAppGraph,
     activate: AppGraphBuilder,
   }),
-]);
+  Plugin.make,
+);

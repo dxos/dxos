@@ -6,9 +6,9 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
 import { AiModelResolver } from '@dxos/ai';
-import { Capabilities, type PluginContext, contributes, defineCapabilityModule } from '@dxos/app-framework';
+import { Capabilities, Capability } from '@dxos/app-framework';
 
-export default defineCapabilityModule((context: PluginContext) => {
+export default Capability.makeModule((context) => {
   const resolvers = context.getCapabilities(Capabilities.AiModelResolver);
 
   // TODO(dmaretskyi): Extract function to reduce them.
@@ -19,7 +19,7 @@ export default defineCapabilityModule((context: PluginContext) => {
 
   return [
     // TODO(dmaretskyi): Read config from settings.
-    contributes(
+    Capability.contributes(
       Capabilities.AiServiceLayer,
       AiModelResolver.AiModelResolver.buildAiService.pipe(Layer.provide(combinedLayer)),
     ),

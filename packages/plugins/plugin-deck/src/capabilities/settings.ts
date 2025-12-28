@@ -2,13 +2,13 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Capabilities, contributes, defineCapabilityModule } from '@dxos/app-framework';
+import { Capabilities, Capability } from '@dxos/app-framework';
 import { live } from '@dxos/live-object';
 
 import { meta } from '../meta';
 import { type DeckSettingsProps, DeckSettingsSchema } from '../types';
 
-export default defineCapabilityModule(() => {
+export default Capability.makeModule(() => {
   const settings = live<DeckSettingsProps>({
     showHints: false,
     enableDeck: false,
@@ -19,7 +19,7 @@ export default defineCapabilityModule(() => {
     encapsulatedPlanks: false,
   });
 
-  return contributes(Capabilities.Settings, {
+  return Capability.contributes(Capabilities.Settings, {
     prefix: meta.id,
     schema: DeckSettingsSchema,
     value: settings,

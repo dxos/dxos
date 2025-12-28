@@ -2,26 +2,27 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Capabilities, Events, contributes, defineModule, definePlugin } from '@dxos/app-framework';
+import { Capabilities, Capability, Events, Plugin } from '@dxos/app-framework';
 
 import { AppGraphBuilder, ReactSurface } from './capabilities';
 import { meta } from './meta';
 import { translations } from './translations';
 
-export const ThemeEditorPlugin = definePlugin(meta, () => [
-  defineModule({
-    id: `${meta.id}/module/translations`,
+export const ThemeEditorPlugin = Plugin.define(meta).pipe(
+  Plugin.addModule({
+    id: 'translations',
     activatesOn: Events.SetupTranslations,
-    activate: () => contributes(Capabilities.Translations, translations),
+    activate: () => Capability.contributes(Capabilities.Translations, translations),
   }),
-  defineModule({
-    id: `${meta.id}/module/react-surface`,
+  Plugin.addModule({
+    id: 'react-surface',
     activatesOn: Events.SetupReactSurface,
     activate: ReactSurface,
   }),
-  defineModule({
-    id: `${meta.id}/module/app-graph-builder`,
+  Plugin.addModule({
+    id: 'app-graph-builder',
     activatesOn: Events.SetupAppGraph,
     activate: AppGraphBuilder,
   }),
-]);
+  Plugin.make,
+);

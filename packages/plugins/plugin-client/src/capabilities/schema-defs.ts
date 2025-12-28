@@ -2,12 +2,12 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Capabilities, type PluginContext, contributes, defineCapabilityModule } from '@dxos/app-framework';
+import { Capabilities, Capability } from '@dxos/app-framework';
 import { type Type } from '@dxos/echo';
 
 import { ClientCapabilities } from '../types';
 
-export default defineCapabilityModule((context: PluginContext) => {
+export default Capability.makeModule((context) => {
   const registry = context.getCapability(Capabilities.AtomRegistry);
   const client = context.getCapability(ClientCapabilities.Client);
 
@@ -15,9 +15,9 @@ export default defineCapabilityModule((context: PluginContext) => {
   let previous: Type.Entity.Any[] = [];
   const cancel = registry.subscribe(
     context.capabilities(ClientCapabilities.Schema),
-    async (_schemas) => {
+    async (_schemas: any[]) => {
       // TODO(wittjosiah): This doesn't seem to de-dupe schemas as expected.
-      const schemas = Array.from(new Set(_schemas.flat()));
+      const schemas = Array.from(new Set(_schemas.flat())) as Type.Entity.Any[];
       // TODO(wittjosiah): Filter out schemas which the client has already registered.
       const newSchemas = schemas.filter((schema) => !previous.includes(schema));
       previous = schemas;
@@ -26,5 +26,5 @@ export default defineCapabilityModule((context: PluginContext) => {
     { immediate: true },
   );
 
-  return contributes(Capabilities.Null, null, () => cancel());
+  return Capability.contributes(Capabilities.Null, null, () => cancel());
 });

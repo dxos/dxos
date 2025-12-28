@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Capabilities, Events, contributes, createResolver, defineModule, definePlugin } from '@dxos/app-framework';
+import { Capabilities, Capability, Events, Plugin, createResolver } from '@dxos/app-framework';
 
 import { AppGraphBuilder, HelpCapabilities, HelpState, ReactRoot, ReactSurface } from './capabilities';
 import { meta } from './meta';
@@ -11,32 +11,30 @@ import { HelpAction, type Step } from './types';
 
 export type HelpPluginOptions = { steps?: Step[] };
 
-export const HelpPlugin = definePlugin<HelpPluginOptions>(meta, ({ steps = [] }) => [
-  defineModule({
-    id: `${meta.id}/module/state`,
+export const HelpPlugin = Plugin.define<HelpPluginOptions>(meta).pipe(
+  Plugin.addModule({
     activatesOn: Events.Startup,
     activate: HelpState,
   }),
-  defineModule({
-    id: `${meta.id}/module/translations`,
+  Plugin.addModule({
+    id: 'translations',
     activatesOn: Events.SetupTranslations,
-    activate: () => contributes(Capabilities.Translations, translations),
+    activate: () => Capability.contributes(Capabilities.Translations, translations),
   }),
-  defineModule({
-    id: `${meta.id}/module/react-root`,
+  Plugin.addModule(({ steps = [] }) => ({
+    id: 'react-root',
     activatesOn: Events.Startup,
     activate: () => ReactRoot(steps),
-  }),
-  defineModule({
-    id: `${meta.id}/module/react-surface`,
+  })),
+  Plugin.addModule({
     activatesOn: Events.SetupReactSurface,
     activate: ReactSurface,
   }),
-  defineModule({
-    id: `${meta.id}/module/intent-resolver`,
+  Plugin.addModule({
+    id: 'intent-resolver',
     activatesOn: Events.SetupIntentResolver,
     activate: (context) =>
-      contributes(
+      Capability.contributes(
         Capabilities.IntentResolver,
         createResolver({
           intent: HelpAction.Start,
@@ -47,9 +45,9 @@ export const HelpPlugin = definePlugin<HelpPluginOptions>(meta, ({ steps = [] })
         }),
       ),
   }),
-  defineModule({
-    id: `${meta.id}/module/app-graph-builder`,
+  Plugin.addModule({
     activatesOn: Events.SetupAppGraph,
     activate: AppGraphBuilder,
   }),
-]);
+  Plugin.make,
+);

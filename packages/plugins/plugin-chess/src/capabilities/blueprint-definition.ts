@@ -2,19 +2,19 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Capabilities, type Capability, contributes, defineCapabilityModule } from '@dxos/app-framework';
+import { Capabilities, Capability } from '@dxos/app-framework';
 
 import { ChessBlueprint } from '../blueprints';
 
 type BlueprintCapabilities = (
-  | Capability<typeof Capabilities.Functions>
-  | Capability<typeof Capabilities.BlueprintDefinition>
+  | Capability.Capability<typeof Capabilities.Functions>
+  | Capability.Capability<typeof Capabilities.BlueprintDefinition>
 )[];
 
-const blueprintDefinition = defineCapabilityModule<[], BlueprintCapabilities>(
+const blueprintDefinition = Capability.makeModule<[], BlueprintCapabilities>(
   (): BlueprintCapabilities => [
-    contributes(Capabilities.Functions, ChessBlueprint.functions),
-    contributes(Capabilities.BlueprintDefinition, ChessBlueprint.make()),
+    Capability.contributes(Capabilities.Functions, ChessBlueprint.functions),
+    Capability.contributes(Capabilities.BlueprintDefinition, ChessBlueprint.make()),
   ],
 );
 

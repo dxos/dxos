@@ -4,17 +4,15 @@
 
 import {
   Capabilities,
-  type PluginContext,
-  contributes,
+  Capability,
   createResolver,
-  defineCapabilityModule,
 } from '@dxos/app-framework';
 import { View } from '@dxos/schema';
 
 import { ExplorerAction, Graph } from '../types';
 
-export default defineCapabilityModule((context: PluginContext) =>
-  contributes(
+export default Capability.makeModule((context) =>
+  Capability.contributes(
     Capabilities.IntentResolver,
     createResolver({
       intent: ExplorerAction.CreateGraph,

@@ -6,17 +6,15 @@ import * as Schema from 'effect/Schema';
 
 import {
   Capabilities,
+  Capability,
   LayoutAction,
-  type PluginContext,
-  contributes,
   createResolver,
-  defineCapabilityModule,
 } from '@dxos/app-framework';
 
 import { LayoutState } from './state';
 
-export default defineCapabilityModule((context: PluginContext) =>
-  contributes(Capabilities.IntentResolver, [
+export default Capability.makeModule((context) =>
+  Capability.contributes(Capabilities.IntentResolver, [
     createResolver({
       intent: LayoutAction.UpdateLayout,
       // TODO(wittjosiah): This should be able to just be `Schema.is(LayoutAction.UpdateSidebar.fields.input)`

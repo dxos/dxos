@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { Capabilities, contributes, createSurface, defineCapabilityModule } from '@dxos/app-framework';
+import { Capabilities, Capability, createSurface } from '@dxos/app-framework';
 import { Obj } from '@dxos/echo';
 import { SettingsStore } from '@dxos/local-storage';
 import { Markdown } from '@dxos/plugin-markdown/types';
@@ -19,8 +19,8 @@ import {
 import { meta } from '../meta';
 import { type PresenterSettingsProps } from '../types';
 
-export default defineCapabilityModule(() =>
-  contributes(Capabilities.ReactSurface, [
+export default Capability.makeModule(() =>
+  Capability.contributes(Capabilities.ReactSurface, [
     createSurface({
       id: `${meta.id}/document`,
       role: 'article',

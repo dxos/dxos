@@ -6,11 +6,9 @@ import * as Function from 'effect/Function';
 
 import {
   Capabilities,
-  type PluginContext,
+  Capability,
   chain,
-  contributes,
   createIntent,
-  defineCapabilityModule,
 } from '@dxos/app-framework';
 import { Obj } from '@dxos/echo';
 import { SpaceAction } from '@dxos/plugin-space/types';
@@ -20,8 +18,8 @@ import { Collection } from '@dxos/schema';
 import { translations } from '../translations';
 import { Markdown, MarkdownAction } from '../types';
 
-export default defineCapabilityModule((context: PluginContext) =>
-  contributes(Capabilities.AppGraphSerializer, [
+export default Capability.makeModule((context) =>
+  Capability.contributes(Capabilities.AppGraphSerializer, [
     {
       inputType: Markdown.Document.typename,
       outputType: 'text/markdown',

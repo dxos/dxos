@@ -4,10 +4,8 @@
 
 import {
   Capabilities,
-  type PluginContext,
-  contributes,
+  Capability,
   createResolver,
-  defineCapabilityModule,
 } from '@dxos/app-framework';
 import { JsonSchema, Obj } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
@@ -17,8 +15,8 @@ import { ProjectionModel, View, getTypenameFromQuery } from '@dxos/schema';
 import { meta } from '../meta';
 import { KanbanAction } from '../types';
 
-export default defineCapabilityModule((context: PluginContext) =>
-  contributes(Capabilities.IntentResolver, [
+export default Capability.makeModule((context) =>
+  Capability.contributes(Capabilities.IntentResolver, [
     createResolver({
       intent: KanbanAction.Create,
       resolve: async ({ db, name, typename, initialPivotColumn }) => {

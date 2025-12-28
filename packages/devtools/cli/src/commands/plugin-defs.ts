@@ -33,7 +33,7 @@ export const getCore = (): string[] => [
 
 export const getDefaults = (): string[] => [ChessPlugin.meta.id, InboxPlugin.meta.id, MarkdownPlugin.meta.id];
 
-export const getPlugins = ({ config }: PluginConfig): Plugin[] => [
+export const getPlugins = ({ config }: PluginConfig): Plugin.Plugin[] => [
   AutomationPlugin(),
   ChessPlugin(),
   ClientPlugin({ config }),

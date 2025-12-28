@@ -2,14 +2,14 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Capabilities, type PluginContext, contributes, defineCapabilityModule } from '@dxos/app-framework';
+import { Capabilities, Capability } from '@dxos/app-framework';
 import { LocalStorageStore } from '@dxos/local-storage';
 import { type EditorViewMode, createEditorStateStore } from '@dxos/ui-editor';
 
 import { meta } from '../meta';
 import { type Markdown, MarkdownCapabilities, type MarkdownPluginState } from '../types';
 
-export default defineCapabilityModule((context: PluginContext) => {
+export default Capability.makeModule((context) => {
   const state = new LocalStorageStore<MarkdownPluginState>(meta.id, { extensionProviders: [], viewMode: {} });
   state.prop({ key: 'viewMode', type: LocalStorageStore.json<{ [key: string]: EditorViewMode }>() });
 
@@ -25,5 +25,5 @@ export default defineCapabilityModule((context: PluginContext) => {
   const setViewMode = (id: string, viewMode: EditorViewMode) => (state.values.viewMode[id] = viewMode);
 
   // Return object with methods.
-  return contributes(MarkdownCapabilities.State, { state: state.values, editorState, getViewMode, setViewMode });
+  return Capability.contributes(MarkdownCapabilities.State, { state: state.values, editorState, getViewMode, setViewMode });
 });

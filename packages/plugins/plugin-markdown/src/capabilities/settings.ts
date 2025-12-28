@@ -2,13 +2,13 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Capabilities, contributes, defineCapabilityModule } from '@dxos/app-framework';
+import { Capabilities, Capability } from '@dxos/app-framework';
 import { live } from '@dxos/live-object';
 
 import { meta } from '../meta';
 import { Markdown } from '../types';
 
-export default defineCapabilityModule(() => {
+export default Capability.makeModule(() => {
   const settings = live<Markdown.Settings>({
     defaultViewMode: 'preview',
     toolbar: true,
@@ -17,7 +17,7 @@ export default defineCapabilityModule(() => {
     experimental: false,
   });
 
-  return contributes(Capabilities.Settings, {
+  return Capability.contributes(Capabilities.Settings, {
     prefix: meta.id,
     schema: Markdown.Settings,
     value: settings,

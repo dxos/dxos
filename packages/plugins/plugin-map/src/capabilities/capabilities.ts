@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { defineCapability } from '@dxos/app-framework';
+import { Capability } from '@dxos/app-framework';
 import { type LatLngLiteral } from '@dxos/react-ui-geo';
 import { type DeepReadonly } from '@dxos/util';
 
@@ -15,6 +15,6 @@ export namespace MapCapabilities {
     center?: LatLngLiteral;
     zoom?: number;
   };
-  export const State = defineCapability<DeepReadonly<State>>(`${meta.id}/capability/state`);
-  export const MutableState = defineCapability<State>(`${meta.id}/capability/state`);
+  export const State = Capability.make<DeepReadonly<State>>(`${meta.id}/capability/state`);
+  export const MutableState = Capability.make<State>(`${meta.id}/capability/state`);
 }

@@ -6,12 +6,12 @@ import * as Schema from 'effect/Schema';
 import { type Context, createContext } from 'react';
 import { type Step as BaseStep } from 'react-joyride';
 
-import { type PluginContext } from '@dxos/app-framework';
+import { type Capability } from '@dxos/app-framework';
 
 import { meta } from '../meta';
 
 export type Step = BaseStep & {
-  before?: (context: PluginContext) => void;
+  before?: (context: Capability.PluginContext) => void;
 };
 
 export type HelpContextType = {

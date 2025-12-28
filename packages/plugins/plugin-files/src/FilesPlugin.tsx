@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Capabilities, Events, allOf, contributes, defineModule, definePlugin } from '@dxos/app-framework';
+import { Capabilities, Events, ActivationEvent, Capability, Plugin } from '@dxos/app-framework';
 import { AttentionEvents } from '@dxos/plugin-attention';
 import { Node } from '@dxos/plugin-graph';
 
@@ -12,47 +12,48 @@ import { translations } from './translations';
 
 // TODO(burdon): Rename package plugin-file (singular).
 
-export const FilesPlugin = definePlugin(meta, () => [
-  defineModule({
-    id: `${meta.id}/module/settings`,
+export const FilesPlugin = Plugin.define(meta)
+  .pipe(
+    Plugin.addModule({
+    id: 'settings',
     activatesOn: Events.SetupSettings,
     activate: FileSettings,
-  }),
-  defineModule({
-    id: `${meta.id}/module/state`,
-    activatesOn: allOf(Events.DispatcherReady, Events.SettingsReady, AttentionEvents.AttentionReady),
+    }),
+    Plugin.addModule({
+    id: 'state',
+    activatesOn: ActivationEvent.allOf(Events.DispatcherReady, Events.SettingsReady, AttentionEvents.AttentionReady),
     activate: FileState,
-  }),
-  defineModule({
-    id: `${meta.id}/module/translations`,
+    }),
+    Plugin.addModule({
+    id: 'translations',
     activatesOn: Events.SetupTranslations,
-    activate: () => contributes(Capabilities.Translations, translations),
-  }),
-  defineModule({
-    id: `${meta.id}/module/markdown`,
+    activate: () => Capability.contributes(Capabilities.Translations, translations),
+    }),
+    Plugin.addModule({
+    id: 'markdown',
     activatesOn: Events.SettingsReady,
     activate: Markdown,
-  }),
-  defineModule({
-    id: `${meta.id}/module/react-surface`,
+    }),
+    Plugin.addModule({
+    id: 'react-surface',
     activatesOn: Events.SetupReactSurface,
     activate: ReactSurface,
-  }),
-  defineModule({
-    id: `${meta.id}/module/intent-resolver`,
+    }),
+    Plugin.addModule({
+    id: 'intent-resolver',
     activatesOn: Events.SetupIntentResolver,
     activate: IntentResolver,
-  }),
-  defineModule({
-    id: `${meta.id}/module/app-graph-builder`,
+    }),
+    Plugin.addModule({
+    id: 'app-graph-builder',
     activatesOn: Events.SetupAppGraph,
     activate: AppGraphBuilder,
-  }),
-  defineModule({
-    id: `${meta.id}/module/app-graph-serializer`,
+    }),
+    Plugin.addModule({
+    id: 'app-graph-serializer',
     activatesOn: Events.AppGraphReady,
     activate: () =>
-      contributes(Capabilities.AppGraphSerializer, [
+      Capability.contributes(Capabilities.AppGraphSerializer, [
         {
           inputType: Node.RootType,
           outputType: 'text/directory',
@@ -67,5 +68,6 @@ export const FilesPlugin = definePlugin(meta, () => [
           },
         },
       ]),
-  }),
-]);
+    }),
+    Plugin.make,
+  );

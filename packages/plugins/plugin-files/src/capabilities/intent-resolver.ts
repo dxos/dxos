@@ -4,13 +4,11 @@
 
 import {
   Capabilities,
-  type PluginContext,
   type SerializedNode,
   SettingsAction,
-  contributes,
   createIntent,
   createResolver,
-  defineCapabilityModule,
+  Capability,
 } from '@dxos/app-framework';
 import { Trigger } from '@dxos/async';
 import { log } from '@dxos/log';
@@ -30,7 +28,7 @@ import {
 
 import { FileCapabilities } from './capabilities';
 
-export default defineCapabilityModule((context: PluginContext) => {
+export default Capability.makeModule((context) => {
   const directoryHandles: Record<string, FileSystemDirectoryHandle> = {};
   const directoryNameCounter: Record<string, Record<string, number>> = {};
 
@@ -93,7 +91,7 @@ export default defineCapabilityModule((context: PluginContext) => {
     }
   };
 
-  return contributes(Capabilities.IntentResolver, [
+  return Capability.contributes(Capabilities.IntentResolver, [
     createResolver({
       intent: LocalFilesAction.SelectRoot,
       resolve: async () => {

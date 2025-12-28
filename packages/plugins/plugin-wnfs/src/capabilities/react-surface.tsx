@@ -5,7 +5,7 @@
 import type * as Schema from 'effect/Schema';
 import React, { useCallback } from 'react';
 
-import { Capabilities, contributes, createSurface, defineCapabilityModule } from '@dxos/app-framework';
+import { Capabilities, Capability, createSurface } from '@dxos/app-framework';
 import { Obj } from '@dxos/echo';
 import { findAnnotation } from '@dxos/effect';
 import { type FormFieldComponentProps } from '@dxos/react-ui-form';
@@ -14,8 +14,8 @@ import { FileContainer, FileInput } from '../components';
 import { meta } from '../meta';
 import { WnfsAction, WnfsFile } from '../types';
 
-export default defineCapabilityModule(() =>
-  contributes(Capabilities.ReactSurface, [
+export default Capability.makeModule(() =>
+  Capability.contributes(Capabilities.ReactSurface, [
     createSurface({
       id: `${meta.id}/article`,
       role: ['article', 'section', 'slide'],

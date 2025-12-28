@@ -11,9 +11,10 @@ import { StackItem } from '@dxos/react-ui-stack';
 
 import { PluginList } from './PluginList';
 
-const sortByPluginMeta = ({ meta: { name: a = '' } }: Plugin, { meta: { name: b = '' } }: Plugin) => a.localeCompare(b);
+const sortByPluginMeta = ({ meta: { name: a = '' } }: Plugin.Plugin, { meta: { name: b = '' } }: Plugin.Plugin) =>
+  a.localeCompare(b);
 
-export const RegistryContainer = ({ id, plugins: _plugins }: { id: string; plugins: Plugin[] }) => {
+export const RegistryContainer = ({ id, plugins: _plugins }: { id: string; plugins: Plugin.Plugin[] }) => {
   const manager = usePluginManager();
   const { dispatchPromise: dispatch } = useIntentDispatcher();
   const plugins = useMemo(() => _plugins.sort(sortByPluginMeta), [_plugins]);

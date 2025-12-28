@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { Capabilities, contributes, createSurface, defineCapabilityModule } from '@dxos/app-framework';
+import { Capabilities, Capability, createSurface } from '@dxos/app-framework';
 import { type JoinPanelProps } from '@dxos/shell/react';
 
 import {
@@ -24,8 +24,8 @@ type ReactSurfaceOptions = Pick<ClientPluginOptions, 'onReset'> & {
   createInvitationUrl: (invitationCode: string) => string;
 };
 
-export default defineCapabilityModule(({ createInvitationUrl, onReset }: ReactSurfaceOptions) =>
-  contributes(Capabilities.ReactSurface, [
+export default Capability.makeModule(({ createInvitationUrl, onReset }: ReactSurfaceOptions) =>
+  Capability.contributes(Capabilities.ReactSurface, [
     createSurface({
       id: Account.Profile,
       role: 'article',

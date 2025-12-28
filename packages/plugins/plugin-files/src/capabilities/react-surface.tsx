@@ -5,10 +5,8 @@ import React from 'react';
 
 import {
   Capabilities,
-  type PluginContext,
-  contributes,
   createSurface,
-  defineCapabilityModule,
+  Capability,
 } from '@dxos/app-framework';
 import { useCapability } from '@dxos/app-framework/react';
 import { SettingsStore } from '@dxos/local-storage';
@@ -20,8 +18,8 @@ import { isLocalFile } from '../util';
 
 import { FileCapabilities } from './capabilities';
 
-export default defineCapabilityModule((context: PluginContext) =>
-  contributes(Capabilities.ReactSurface, [
+export default Capability.makeModule((context) =>
+  Capability.contributes(Capabilities.ReactSurface, [
     createSurface({
       id: `${meta.id}/article`,
       role: 'article',

@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Capabilities, Events, contributes, createIntent, defineModule, definePlugin } from '@dxos/app-framework';
+import { Capabilities, Events, Capability, createIntent, Plugin } from '@dxos/app-framework';
 import { Ref } from '@dxos/echo';
 import { Script } from '@dxos/functions';
 import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
@@ -21,27 +21,25 @@ import { meta } from './meta';
 import { translations } from './translations';
 import { Notebook, ScriptAction } from './types';
 
-export const ScriptPlugin = definePlugin(meta, () => [
-  defineModule({
-    id: `${meta.id}/module/settings`,
+export const ScriptPlugin = Plugin.define(meta).pipe(
+  Plugin.addModule({
     activatesOn: Events.SetupSettings,
     activate: ScriptSettings,
   }),
-  defineModule({
-    id: `${meta.id}/module/compiler`,
+  Plugin.addModule({
     activatesOn: ScriptEvents.SetupCompiler,
     activate: Compiler,
   }),
-  defineModule({
-    id: `${meta.id}/module/translations`,
+  Plugin.addModule({
+    id: 'translations',
     activatesOn: Events.SetupTranslations,
-    activate: () => contributes(Capabilities.Translations, translations),
+    activate: () => Capability.contributes(Capabilities.Translations, translations),
   }),
-  defineModule({
-    id: `${meta.id}/module/metadata`,
+  Plugin.addModule({
+    id: 'metadata',
     activatesOn: Events.SetupMetadata,
     activate: () => [
-      contributes(Capabilities.Metadata, {
+      Capability.contributes(Capabilities.Metadata, {
         id: Script.Script.typename,
         metadata: {
           icon: 'ph--code--regular',
@@ -54,7 +52,7 @@ export const ScriptPlugin = definePlugin(meta, () => [
           addToCollectionOnCreate: true,
         },
       }),
-      contributes(Capabilities.Metadata, {
+      Capability.contributes(Capabilities.Metadata, {
         id: Notebook.Notebook.typename,
         metadata: {
           icon: 'ph--notebook--regular',
@@ -67,30 +65,26 @@ export const ScriptPlugin = definePlugin(meta, () => [
       }),
     ],
   }),
-  defineModule({
-    id: `${meta.id}/module/app-graph-builder`,
+  Plugin.addModule({
     activatesOn: Events.SetupAppGraph,
     activate: AppGraphBuilder,
   }),
-  defineModule({
-    id: `${meta.id}/module/schema`,
+  Plugin.addModule({
+    id: 'schema',
     activatesOn: ClientEvents.SetupSchema,
-    activate: () => contributes(ClientCapabilities.Schema, [Script.Script]),
+    activate: () => Capability.contributes(ClientCapabilities.Schema, [Script.Script]),
   }),
-
-  defineModule({
-    id: `${meta.id}/module/react-surface`,
+  Plugin.addModule({
     activatesOn: Events.SetupReactSurface,
     activate: ReactSurface,
   }),
-  defineModule({
-    id: `${meta.id}/module/intent-resolver`,
+  Plugin.addModule({
     activatesOn: Events.SetupIntentResolver,
     activate: IntentResolver,
   }),
-  defineModule({
-    id: `${meta.id}/module/blueprint`,
+  Plugin.addModule({
     activatesOn: Events.SetupArtifactDefinition,
     activate: BlueprintDefinition,
   }),
-]);
+  Plugin.make,
+);

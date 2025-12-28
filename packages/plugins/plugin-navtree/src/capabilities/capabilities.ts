@@ -2,14 +2,14 @@
 // Copyright 2025 DXOS.org
 //
 
-import { defineCapability } from '@dxos/app-framework';
+import { Capability } from '@dxos/app-framework';
 import { type Live } from '@dxos/live-object';
 
 import { meta } from '../meta';
 import { type NavTreeItemGraphNode } from '../types';
 
 export namespace NavTreeCapabilities {
-  export const State = defineCapability<{
+  export const State = Capability.make<{
     state: Map<string, Live<{ open: boolean; current: boolean; alternateTree?: boolean }>>;
     getItem: (path: string[]) => Live<{ open: boolean; current: boolean; alternateTree?: boolean }>;
     setItem: (path: string[], key: 'open' | 'current' | 'alternateTree', next: boolean) => void;

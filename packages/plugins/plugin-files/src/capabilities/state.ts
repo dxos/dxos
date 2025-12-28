@@ -7,10 +7,8 @@ import localforage from 'localforage';
 
 import {
   Capabilities,
-  type PluginContext,
-  contributes,
   createIntent,
-  defineCapabilityModule,
+  Capability,
 } from '@dxos/app-framework';
 import { SubscriptionList } from '@dxos/async';
 import { scheduledEffect } from '@dxos/echo-signals/core';
@@ -23,7 +21,7 @@ import { PREFIX, findFile, handleToLocalDirectory, handleToLocalFile } from '../
 
 import { FileCapabilities } from './capabilities';
 
-export default defineCapabilityModule(async (context: PluginContext) => {
+export default Capability.makeModule(async (context: Capability.PluginContext) => {
   const state = new LocalStorageStore<FilesState>(meta.id, {
     exportRunning: false,
     files: [],
@@ -114,5 +112,5 @@ export default defineCapabilityModule(async (context: PluginContext) => {
     }),
   );
 
-  return contributes(FileCapabilities.State, state.values, () => subscriptions.clear());
+  return Capability.contributes(FileCapabilities.State, state.values, () => subscriptions.clear());
 });

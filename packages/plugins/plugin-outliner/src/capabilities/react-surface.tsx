@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { Capabilities, contributes, createSurface, defineCapabilityModule } from '@dxos/app-framework';
+import { Capabilities, Capability, createSurface } from '@dxos/app-framework';
 import { type SurfaceComponentProps } from '@dxos/app-framework/react';
 import { Obj } from '@dxos/echo';
 
@@ -12,8 +12,8 @@ import { JournalContainer, OutlineCard, OutlineContainer } from '../components';
 import { meta } from '../meta';
 import { Journal, Outline } from '../types';
 
-export default defineCapabilityModule(() => [
-  contributes(Capabilities.ReactSurface, [
+export default Capability.makeModule(() => [
+  Capability.contributes(Capabilities.ReactSurface, [
     createSurface({
       id: `${meta.id}/article/journal`,
       role: ['article', 'section'],

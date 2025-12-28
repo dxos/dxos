@@ -2,13 +2,13 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Capabilities, contributes, createResolver, defineCapabilityModule } from '@dxos/app-framework';
+import { Capabilities, Capability, createResolver } from '@dxos/app-framework';
 
 import { meta } from '../meta';
 import { Sheet, SheetAction } from '../types';
 
-export default defineCapabilityModule(() =>
-  contributes(Capabilities.IntentResolver, [
+export default Capability.makeModule(() =>
+  Capability.contributes(Capabilities.IntentResolver, [
     createResolver({
       intent: SheetAction.Create,
       resolve: ({ name }) => ({ data: { object: Sheet.make({ name }) } }),

@@ -5,12 +5,10 @@
 import {
   Capabilities,
   Events,
-  allOf,
-  contributes,
+  ActivationEvent,
+  Capability,
+  Plugin,
   createIntent,
-  defineModule,
-  definePlugin,
-  oneOf,
 } from '@dxos/app-framework';
 import { Type } from '@dxos/echo';
 import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
@@ -29,30 +27,28 @@ import { meta } from './meta';
 import { translations } from './translations';
 import { Meeting, MeetingAction } from './types';
 
-export const MeetingPlugin = definePlugin(meta, () => [
-  defineModule({
-    id: `${meta.id}/module/settings`,
+export const MeetingPlugin = Plugin.define(meta).pipe(
+  Plugin.addModule({
     activatesOn: Events.SetupSettings,
     activate: MeetingSettings,
   }),
-  defineModule({
-    id: `${meta.id}/module/state`,
+  Plugin.addModule({
     // TODO(wittjosiah): Does not integrate with settings store.
     //   Should this be a different event?
     //   Should settings store be renamed to be more generic?
-    activatesOn: oneOf(Events.SetupSettings, Events.SetupAppGraph),
+    activatesOn: ActivationEvent.oneOf(Events.SetupSettings, Events.SetupAppGraph),
     activate: MeetingState,
   }),
-  defineModule({
-    id: `${meta.id}/module/translations`,
+  Plugin.addModule({
+    id: 'translations',
     activatesOn: Events.SetupTranslations,
-    activate: () => contributes(Capabilities.Translations, translations),
+    activate: () => Capability.contributes(Capabilities.Translations, translations),
   }),
-  defineModule({
-    id: `${meta.id}/module/metadata`,
+  Plugin.addModule({
+    id: 'metadata',
     activatesOn: Events.SetupMetadata,
     activate: () => [
-      contributes(Capabilities.Metadata, {
+      Capability.contributes(Capabilities.Metadata, {
         id: Type.getTypename(Meeting.Meeting),
         metadata: {
           label: (object: Meeting.Meeting) => object.name || new Date(object.created).toLocaleString(),
@@ -62,40 +58,36 @@ export const MeetingPlugin = definePlugin(meta, () => [
       }),
     ],
   }),
-  defineModule({
-    id: `${meta.id}/module/schemas`,
+  Plugin.addModule({
+    id: 'schemas',
     activatesOn: ClientEvents.SetupSchema,
-    activate: () => contributes(ClientCapabilities.Schema, [Meeting.Meeting]),
+    activate: () => Capability.contributes(ClientCapabilities.Schema, [Meeting.Meeting]),
   }),
-  defineModule({
-    id: `${meta.id}/module/on-space-created`,
+  Plugin.addModule({
+    id: 'on-space-created',
     activatesOn: SpaceEvents.SpaceCreated,
     activate: () =>
-      contributes(SpaceCapabilities.OnCreateSpace, (params) => createIntent(MeetingAction.OnCreateSpace, params)),
+      Capability.contributes(SpaceCapabilities.OnCreateSpace, (params) => createIntent(MeetingAction.OnCreateSpace, params)),
   }),
-  defineModule({
-    id: `${meta.id}/module/repair`,
+  Plugin.addModule({
     activatesOn: ClientEvents.SpacesReady,
     activate: Repair,
   }),
-  defineModule({
-    id: `${meta.id}/module/react-surface`,
+  Plugin.addModule({
     activatesOn: Events.SetupReactSurface,
     activate: ReactSurface,
   }),
-  defineModule({
-    id: `${meta.id}/module/intent-resolver`,
+  Plugin.addModule({
     activatesOn: Events.SetupIntentResolver,
     activate: IntentResolver,
   }),
-  defineModule({
-    id: `${meta.id}/module/app-graph-builder`,
+  Plugin.addModule({
     activatesOn: Events.SetupAppGraph,
     activate: AppGraphBuilder,
   }),
-  defineModule({
-    id: `${meta.id}/module/call-extension`,
-    activatesOn: allOf(Events.SettingsReady, ClientEvents.ClientReady),
+  Plugin.addModule({
+    activatesOn: ActivationEvent.allOf(Events.SettingsReady, ClientEvents.ClientReady),
     activate: CallExtension,
   }),
-]);
+  Plugin.make,
+);

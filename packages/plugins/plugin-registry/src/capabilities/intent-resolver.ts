@@ -4,18 +4,17 @@
 
 import {
   Capabilities,
+  Capability,
   LayoutAction,
   SettingsAction,
-  contributes,
   createIntent,
   createResolver,
-  defineCapabilityModule,
 } from '@dxos/app-framework';
 
 import { REGISTRY_ID } from '../meta';
 
-export default defineCapabilityModule(() =>
-  contributes(
+export default Capability.makeModule(() =>
+  Capability.contributes(
     Capabilities.IntentResolver,
     createResolver({
       intent: SettingsAction.OpenPluginRegistry,

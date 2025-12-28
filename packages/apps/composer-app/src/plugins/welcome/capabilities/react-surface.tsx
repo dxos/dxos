@@ -4,15 +4,15 @@
 
 import React from 'react';
 
-import { Capabilities, contributes, createSurface, defineCapabilityModule } from '@dxos/app-framework';
+import { Capabilities, Capability, createSurface } from '@dxos/app-framework';
 import { invariant } from '@dxos/invariant';
 import { useClient } from '@dxos/react-client';
 
 import { WELCOME_SCREEN, WelcomeScreen } from '../components';
 import { meta } from '../meta';
 
-export default defineCapabilityModule(() =>
-  contributes(Capabilities.ReactSurface, [
+export default Capability.makeModule(() =>
+  Capability.contributes(Capabilities.ReactSurface, [
     createSurface({
       id: `${meta.id}/welcome`,
       role: 'dialog',

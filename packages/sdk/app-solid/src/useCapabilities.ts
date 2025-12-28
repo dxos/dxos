@@ -4,7 +4,9 @@
 
 import { type Accessor } from 'solid-js';
 
-import { type InterfaceDef } from '@dxos/app-framework';
+import { type Capability } from '@dxos/app-framework';
+
+type InterfaceDef<T> = Capability.InterfaceDef<T>;
 import { useAtomValue } from '@dxos/effect-atom-solid';
 import { invariant } from '@dxos/invariant';
 
@@ -26,9 +28,9 @@ export const useCapabilities = <T>(interfaceDef: InterfaceDef<T>): Accessor<T[]>
  */
 export const useCapability = <T>(interfaceDef: InterfaceDef<T>): Accessor<T> => {
   const capabilities = useCapabilities(interfaceDef);
-  return () => {
+  return (() => {
     const caps = capabilities();
     invariant(caps.length > 0, `No capability found for ${interfaceDef.identifier}`);
     return caps[0];
-  };
+  }) as Accessor<T>;
 };

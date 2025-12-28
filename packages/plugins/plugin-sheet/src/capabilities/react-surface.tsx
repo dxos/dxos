@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { Capabilities, contributes, createSurface, defineCapabilityModule } from '@dxos/app-framework';
+import { Capabilities, Capability, createSurface } from '@dxos/app-framework';
 import { useCapability } from '@dxos/app-framework/react';
 import { Obj } from '@dxos/echo';
 import { getSpace } from '@dxos/react-client/echo';
@@ -15,8 +15,8 @@ import { Sheet } from '../types';
 
 import { SheetCapabilities } from './capabilities';
 
-export default defineCapabilityModule(() =>
-  contributes(Capabilities.ReactSurface, [
+export default Capability.makeModule(() =>
+  Capability.contributes(Capabilities.ReactSurface, [
     createSurface({
       id: `${meta.id}/sheet`,
       role: ['article', 'section'],

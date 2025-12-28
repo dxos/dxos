@@ -2,13 +2,13 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Events, defineEvent } from '@dxos/app-framework';
+import { ActivationEvent, Events } from '@dxos/app-framework';
 
 import { meta } from './meta';
 
 export namespace ObservabilityEvents {
-  export const StateReady = Events.createStateEvent(meta.id);
+  export const StateReady: ActivationEvent.ActivationEvent = Events.createStateEvent(meta.id);
 }
 
 // NOTE: This is cloned from the client plugin to avoid circular dependencies.
-export const ClientReadyEvent = defineEvent('dxos.org/plugin/client/event/client-ready');
+export const ClientReadyEvent = ActivationEvent.make('dxos.org/plugin/client/event/client-ready');

@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { contributes, defineCapabilityModule } from '@dxos/app-framework';
+import { Capability } from '@dxos/app-framework';
 import { Blueprint, Prompt } from '@dxos/blueprints';
 import { Obj, Ref, Type } from '@dxos/echo';
 import { SpaceCapabilities } from '@dxos/plugin-space';
@@ -11,8 +11,8 @@ import { Collection } from '@dxos/schema';
 
 import { Assistant } from '../types';
 
-export default defineCapabilityModule(() =>
-  contributes(SpaceCapabilities.Repair, async ({ space }) => {
+export default Capability.makeModule(() =>
+  Capability.contributes(SpaceCapabilities.Repair, async ({ space }) => {
     await ensureSystemCollections(space);
   }),
 );

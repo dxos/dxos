@@ -2,13 +2,13 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Capabilities, type PluginContext, contributes, defineCapabilityModule } from '@dxos/app-framework';
+import { Capabilities, Capability } from '@dxos/app-framework';
 import { Ref } from '@dxos/echo';
 import { Migrations } from '@dxos/migrations';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { Collection } from '@dxos/schema';
 
-export default defineCapabilityModule(async (context: PluginContext) => {
+export default Capability.makeModule(async (context: Capability.PluginContext) => {
   const client = context.getCapability(ClientCapabilities.Client);
   await client.spaces.waitUntilReady();
 
@@ -21,5 +21,5 @@ export default defineCapabilityModule(async (context: PluginContext) => {
     defaultSpace.properties[Migrations.versionProperty] = Migrations.targetVersion;
   }
 
-  return contributes(Capabilities.Null, null);
+  return Capability.contributes(Capabilities.Null, null);
 });

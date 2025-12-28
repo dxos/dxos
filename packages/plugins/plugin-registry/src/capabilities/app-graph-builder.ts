@@ -4,18 +4,16 @@
 
 import {
   Capabilities,
-  type PluginContext,
+  Capability,
   SettingsAction,
-  contributes,
   createIntent,
-  defineCapabilityModule,
 } from '@dxos/app-framework';
 import { GraphBuilder, NodeMatcher } from '@dxos/plugin-graph';
 
 import { REGISTRY_ID, REGISTRY_KEY, meta } from '../meta';
 
-export default defineCapabilityModule((context: PluginContext) =>
-  contributes(Capabilities.AppGraphBuilder, [
+export default Capability.makeModule((context) =>
+  Capability.contributes(Capabilities.AppGraphBuilder, [
     GraphBuilder.createExtension({
       id: meta.id,
       match: NodeMatcher.whenRoot,

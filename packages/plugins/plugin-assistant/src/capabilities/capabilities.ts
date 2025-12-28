@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { defineCapability } from '@dxos/app-framework';
+import { Capability } from '@dxos/app-framework';
 import { type DeepReadonly } from '@dxos/util';
 
 import { meta } from '../meta';
@@ -12,6 +12,6 @@ export namespace AssistantCapabilities {
     /** Map of primary object dxn to current chat dxn. */
     currentChat: Record<string, string | undefined>;
   };
-  export const State = defineCapability<DeepReadonly<AssistantState>>(`${meta.id}/capability/state`);
-  export const MutableState = defineCapability<AssistantState>(`${meta.id}/capability/state`);
+  export const State = Capability.make<DeepReadonly<AssistantState>>(`${meta.id}/capability/state`);
+  export const MutableState = Capability.make<AssistantState>(`${meta.id}/capability/state`);
 }

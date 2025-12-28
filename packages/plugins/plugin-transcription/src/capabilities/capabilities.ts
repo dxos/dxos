@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { defineCapability } from '@dxos/app-framework';
+import { Capability } from '@dxos/app-framework';
 
 import { meta } from '../meta';
 import {
@@ -21,13 +21,13 @@ export namespace TranscriptionCapabilities {
     onSegments: TranscriberParams['onSegments'];
   };
   export type GetTranscriber = (props: GetTranscriberProps) => Transcriber;
-  export const Transcriber = defineCapability<GetTranscriber>(`${meta.id}/capability/transcriber`);
+  export const Transcriber = Capability.make<GetTranscriber>(`${meta.id}/capability/transcriber`);
 
   export type GetTranscriptionManagerProps = {
     messageEnricher?: TranscriptMessageEnricher;
   };
   export type GetTranscriptionManager = (props: GetTranscriptionManagerProps) => TranscriptionManager;
-  export const TranscriptionManager = defineCapability<GetTranscriptionManager>(
+  export const TranscriptionManager = Capability.make<GetTranscriptionManager>(
     `${meta.id}/capability/transcription-manager`,
   );
 }

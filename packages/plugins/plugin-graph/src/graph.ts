@@ -4,7 +4,7 @@
 
 import * as Record from 'effect/Record';
 
-import { Capabilities, type PluginContext, contributes } from '@dxos/app-framework';
+import { Capabilities, Capability } from '@dxos/app-framework';
 import { Graph, GraphBuilder, Node } from '@dxos/app-graph';
 
 // TODO(wittjosiah): Remove or restore graph caching.
@@ -12,7 +12,7 @@ import { Graph, GraphBuilder, Node } from '@dxos/app-graph';
 
 // const KEY = `${meta.id}/app-graph`;
 
-export default async (context: PluginContext) => {
+export default Capability.makeModule(async (context) => {
   const registry = context.getCapability(Capabilities.AtomRegistry);
   const builder = GraphBuilder.from(/* localStorage.getItem(KEY) ?? */ undefined, registry);
   // const interval = setInterval(() => {
@@ -36,11 +36,11 @@ export default async (context: PluginContext) => {
 
   setupDevtools(builder.graph);
 
-  return contributes(Capabilities.AppGraph, { graph: builder.graph, explore: GraphBuilder.explore }, () => {
+  return Capability.contributes(Capabilities.AppGraph, { graph: builder.graph, explore: GraphBuilder.explore }, () => {
     // clearInterval(interval);
     unsubscribe();
   });
-};
+});
 
 // Expose the graph to the window for debugging.
 const setupDevtools = (graph: Graph.ExpandableGraph) => {

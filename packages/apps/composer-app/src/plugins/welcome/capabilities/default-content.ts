@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Capabilities, LayoutAction, type PluginContext, contributes, createIntent } from '@dxos/app-framework';
+import { Capabilities, Capability, LayoutAction, createIntent } from '@dxos/app-framework';
 import { Graph } from '@dxos/plugin-graph';
 import { SPACES, SpaceCapabilities, SpaceEvents } from '@dxos/plugin-space';
 
@@ -10,7 +10,7 @@ import README_CONTENT from '../content/README.md?raw';
 
 const SPACE_ICON = 'house-line';
 
-export default async (context: PluginContext) => {
+export default Capability.makeModule(async (context) => {
   const { Obj, Ref, Type } = await import('@dxos/echo');
   const { ClientCapabilities } = await import('@dxos/plugin-client');
   const { Markdown } = await import('@dxos/plugin-markdown/types');
@@ -60,5 +60,5 @@ export default async (context: PluginContext) => {
     }),
   );
 
-  return contributes(Capabilities.Null, null);
-};
+  return Capability.contributes(Capabilities.Null, null);
+});

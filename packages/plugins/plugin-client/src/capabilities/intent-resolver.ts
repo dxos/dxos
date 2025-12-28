@@ -6,13 +6,11 @@ import * as Function from 'effect/Function';
 
 import {
   Capabilities,
+  Capability,
   LayoutAction,
-  type PluginContext,
   chain,
-  contributes,
   createIntent,
   createResolver,
-  defineCapabilityModule,
 } from '@dxos/app-framework';
 import { PublicKey } from '@dxos/client';
 import { invariant } from '@dxos/invariant';
@@ -24,14 +22,14 @@ import { ClientEvents } from '../events';
 import { Account, ClientAction, ClientCapabilities } from '../types';
 
 type IntentResolverOptions = {
-  context: PluginContext;
+  context: Capability.PluginContext;
   appName?: string;
 };
 
 const RECOVER_IDENTITY_RPC_TIMEOUT = 20_000;
 
-export default defineCapabilityModule(({ context, appName = 'Composer' }: IntentResolverOptions) =>
-  contributes(Capabilities.IntentResolver, [
+export default Capability.makeModule(({ context, appName = 'Composer' }: IntentResolverOptions) =>
+  Capability.contributes(Capabilities.IntentResolver, [
     createResolver({
       intent: ClientAction.CreateIdentity,
       resolve: async (profile) => {

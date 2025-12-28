@@ -6,10 +6,8 @@ import React from 'react';
 
 import {
   Capabilities,
-  type PluginContext,
-  contributes,
+  Capability,
   createSurface,
-  defineCapabilityModule,
 } from '@dxos/app-framework';
 import { Obj } from '@dxos/echo';
 
@@ -17,8 +15,8 @@ import { BoardContainer } from '../components';
 import { meta } from '../meta';
 import { Board } from '../types';
 
-export default defineCapabilityModule((context: PluginContext) =>
-  contributes(Capabilities.ReactSurface, [
+export default Capability.makeModule((context) =>
+  Capability.contributes(Capabilities.ReactSurface, [
     createSurface({
       id: meta.id,
       role: ['article', 'section'],

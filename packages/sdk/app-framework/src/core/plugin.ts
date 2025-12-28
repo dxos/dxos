@@ -2,6 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
+import * as Option from 'effect/Option';
 import * as Pipeable from 'effect/Pipeable';
 
 import { invariant } from '@dxos/invariant';
@@ -164,8 +165,8 @@ export const isPlugin = (value: unknown): value is Plugin => {
  */
 export interface Plugin {
   readonly [PluginTypeId]: PluginTypeId;
-  readonly modules: PluginModule[];
-  readonly meta: Meta;
+  readonly meta: Readonly<Meta>;
+  readonly modules: ReadonlyArray<PluginModule>;
 }
 
 /**
@@ -174,27 +175,18 @@ export interface Plugin {
  */
 class PluginImpl implements Plugin {
   readonly [PluginTypeId]: PluginTypeId = PluginTypeId;
-  readonly modules: PluginModule[];
-  readonly meta: Meta;
 
-  constructor(meta: Meta, modulesParam: PluginModuleOptions[]) {
-    this.meta = meta;
-    this.modules = modulesParam.map((module) => {
-      // Use explicit id if provided, otherwise compute from export name
-      if (module.id) {
-        return new PluginModuleImpl({
-          ...module,
-          id: computeModuleId(meta.id, module.id),
-        });
-      }
+  constructor(
+    private readonly _meta: Meta,
+    private readonly _modules: PluginModule[],
+  ) {}
 
-      const exportName = getExportName(module.activate);
-      invariant(exportName, 'Plugin module missing name');
-      return new PluginModuleImpl({
-        id: computeModuleId(meta.id, exportName),
-        ...module,
-      });
-    });
+  get meta(): Readonly<Meta> {
+    return this._meta;
+  }
+
+  get modules(): ReadonlyArray<PluginModule> {
+    return this._modules;
   }
 }
 
@@ -274,13 +266,16 @@ const resolveModule = (
   options?: any,
 ): PluginModuleImpl => {
   const moduleOptions = typeof module === 'function' ? module(options) : module;
-  const id = moduleOptions.id
-    ? computeModuleId(meta.id, moduleOptions.id)
-    : (() => {
+  const id = Option.fromNullable(moduleOptions.id).pipe(
+    Option.match({
+      onNone: () => {
         const exportName = getExportName(moduleOptions.activate);
-        invariant(exportName, 'Plugin module missing name');
+        invariant(exportName, `Plugin module missing name. Plugin: ${meta.id}`);
         return computeModuleId(meta.id, exportName);
-      })();
+      },
+      onSome: (id) => computeModuleId(meta.id, id),
+    }),
+  );
   return new PluginModuleImpl({ ...moduleOptions, id });
 };
 

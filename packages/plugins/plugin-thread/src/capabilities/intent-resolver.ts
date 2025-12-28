@@ -6,11 +6,10 @@ import * as Effect from 'effect/Effect';
 
 import {
   Capabilities,
-  type PluginContext,
-  contributes,
+  Capability,
+  
   createIntent,
   createResolver,
-  defineCapabilityModule,
 } from '@dxos/app-framework';
 import { sleep } from '@dxos/async';
 import { Obj, Relation, Type } from '@dxos/echo';
@@ -27,8 +26,8 @@ import { Channel, ThreadAction } from '../types';
 
 import { ThreadCapabilities } from './capabilities';
 
-export default defineCapabilityModule((context: PluginContext) =>
-  contributes(Capabilities.IntentResolver, [
+export default Capability.makeModule((context) =>
+  Capability.contributes(Capabilities.IntentResolver, [
     createResolver({
       intent: ThreadAction.OnCreateSpace,
       resolve: ({ space, isDefault, rootCollection }) =>

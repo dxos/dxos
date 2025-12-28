@@ -7,10 +7,8 @@ import * as Option from 'effect/Option';
 import {
   Capabilities,
   LayoutAction,
-  type PluginContext,
-  contributes,
   createIntent,
-  defineCapabilityModule,
+  Capability,
 } from '@dxos/app-framework';
 import { Obj } from '@dxos/echo';
 import { DeckCapabilities } from '@dxos/plugin-deck';
@@ -22,8 +20,8 @@ import { Collection } from '@dxos/schema';
 import { meta } from '../meta';
 import { PresenterAction, type PresenterSettingsProps } from '../types';
 
-export default defineCapabilityModule((context: PluginContext) => {
-  return contributes(
+export default Capability.makeModule((context) => {
+  return Capability.contributes(
     Capabilities.AppGraphBuilder,
     GraphBuilder.createExtension({
       id: `${meta.id}/root`,

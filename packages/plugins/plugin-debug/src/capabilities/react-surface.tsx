@@ -5,16 +5,7 @@
 import * as Function from 'effect/Function';
 import React, { useCallback } from 'react';
 
-import {
-  Capabilities,
-  LayoutAction,
-  type PluginContext,
-  chain,
-  contributes,
-  createIntent,
-  createSurface,
-  defineCapabilityModule,
-} from '@dxos/app-framework';
+import { Capabilities, Capability, LayoutAction, chain, createIntent, createSurface } from '@dxos/app-framework';
 import { useCapability, useIntentDispatcher } from '@dxos/app-framework/react';
 import {
   AutomergePanel,
@@ -91,8 +82,8 @@ const useCurrentSpace = () => {
   return space;
 };
 
-export default defineCapabilityModule((context: PluginContext) =>
-  contributes(Capabilities.ReactSurface, [
+export default Capability.makeModule((context) =>
+  Capability.contributes(Capabilities.ReactSurface, [
     createSurface({
       id: `${meta.id}/plugin-settings`,
       role: 'article',

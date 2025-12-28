@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Capabilities, Events, contributes, defineModule, definePlugin, oneOf } from '@dxos/app-framework';
+import { ActivationEvent, Capabilities, Capability, Events, Plugin } from '@dxos/app-framework';
 
 import {
   AppGraphBuilder,
@@ -18,59 +18,55 @@ import { meta } from './meta';
 import { translations } from './translations';
 import { type ClientPluginOptions } from './types';
 
-export const ClientPlugin = definePlugin<ClientPluginOptions>(
-  meta,
-  ({ invitationUrl = window.location.origin, invitationParam = 'deviceInvitationCode', onReset, ...options }) => {
+export const ClientPlugin = Plugin.define<ClientPluginOptions>(meta).pipe(
+  Plugin.addModule((options) => {
+    return {
+      id: 'client',
+      activatesOn: ActivationEvent.oneOf(Events.Startup, Events.SetupAppGraph),
+      activatesAfter: [ClientEvents.ClientReady],
+      activate: (context) => Client({ ...options, context }),
+    };
+  }),
+  Plugin.addModule({
+    activatesOn: ClientEvents.ClientReady,
+    activatesBefore: [ClientEvents.SetupSchema],
+    activate: SchemaDefs,
+  }),
+  Plugin.addModule({
+    activatesOn: ClientEvents.ClientReady,
+    activatesBefore: [ClientEvents.SetupMigration],
+    activate: Migrations,
+  }),
+  Plugin.addModule({
+    activatesOn: Events.Startup,
+    activate: ReactContext,
+  }),
+  Plugin.addModule(({ invitationUrl = window.location.origin, invitationParam = 'deviceInvitationCode', onReset }) => {
     const createInvitationUrl = (invitationCode: string) => {
       const baseUrl = new URL(invitationUrl);
       baseUrl.searchParams.set(invitationParam, invitationCode);
       return baseUrl.toString();
     };
 
-    return [
-      defineModule({
-        id: `${meta.id}/module/client`,
-        activatesOn: oneOf(Events.Startup, Events.SetupAppGraph),
-        activatesAfter: [ClientEvents.ClientReady],
-        activate: (context) => Client({ ...options, context }),
-      }),
-      defineModule({
-        id: `${meta.id}/module/schema`,
-        activatesOn: ClientEvents.ClientReady,
-        activatesBefore: [ClientEvents.SetupSchema],
-        activate: SchemaDefs,
-      }),
-      defineModule({
-        id: `${meta.id}/module/migration`,
-        activatesOn: ClientEvents.ClientReady,
-        activatesBefore: [ClientEvents.SetupMigration],
-        activate: Migrations,
-      }),
-      defineModule({
-        id: `${meta.id}/module/react-context`,
-        activatesOn: Events.Startup,
-        activate: ReactContext,
-      }),
-      defineModule({
-        id: `${meta.id}/module/react-surface`,
-        activatesOn: Events.SetupReactSurface,
-        activate: () => ReactSurface({ createInvitationUrl, onReset }),
-      }),
-      defineModule({
-        id: `${meta.id}/module/app-graph-builder`,
-        activatesOn: Events.SetupAppGraph,
-        activate: AppGraphBuilder,
-      }),
-      defineModule({
-        id: `${meta.id}/module/intent-resolver`,
-        activatesOn: Events.SetupIntentResolver,
-        activate: (context) => IntentResolver({ context }),
-      }),
-      defineModule({
-        id: `${meta.id}/module/translations`,
-        activatesOn: Events.SetupTranslations,
-        activate: () => contributes(Capabilities.Translations, translations),
-      }),
-    ];
-  },
+    return {
+      id: 'react-surface',
+      activatesOn: Events.SetupReactSurface,
+      activate: () => ReactSurface({ createInvitationUrl, onReset }),
+    };
+  }),
+  Plugin.addModule({
+    activatesOn: Events.SetupAppGraph,
+    activate: AppGraphBuilder,
+  }),
+  Plugin.addModule({
+    id: 'intent-resolver',
+    activatesOn: Events.SetupIntentResolver,
+    activate: (context) => IntentResolver({ context }),
+  }),
+  Plugin.addModule({
+    id: 'translations',
+    activatesOn: Events.SetupTranslations,
+    activate: () => Capability.contributes(Capabilities.Translations, translations),
+  }),
+  Plugin.make,
 );

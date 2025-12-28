@@ -4,10 +4,8 @@
 
 import {
   Capabilities,
-  type PluginContext,
-  contributes,
+  Capability,
   createIntent,
-  defineCapabilityModule,
 } from '@dxos/app-framework';
 import { isSpace } from '@dxos/client/echo';
 import { Obj } from '@dxos/echo';
@@ -23,8 +21,8 @@ const COLLECTION_TYPE = Collection.Collection.typename;
 // https://stackoverflow.com/a/19016910
 const DIRECTORY_TYPE = 'text/directory';
 
-export default defineCapabilityModule((context: PluginContext) =>
-  contributes(Capabilities.AppGraphSerializer, [
+export default Capability.makeModule((context) =>
+  Capability.contributes(Capabilities.AppGraphSerializer, [
     {
       inputType: SPACES,
       outputType: DIRECTORY_TYPE,

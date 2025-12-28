@@ -2,17 +2,17 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Capabilities, type PluginContext, contributes, defineCapabilityModule } from '@dxos/app-framework';
+import { Capabilities, Capability } from '@dxos/app-framework';
 import { Client, ClientService } from '@dxos/client';
 
 import { ClientEvents } from '../events';
 import { ClientCapabilities, type ClientPluginOptions } from '../types';
 
 type ClientCapabilityOptions = Omit<ClientPluginOptions, 'appKey' | 'invitationUrl' | 'invitationParam' | 'onReset'> & {
-  context: PluginContext;
+  context: Capability.PluginContext;
 };
 
-export default defineCapabilityModule(
+export default Capability.makeModule(
   async ({ context, onClientInitialized, onSpacesReady, ...options }: ClientCapabilityOptions) => {
     const client = new Client(options);
     await client.initialize();
@@ -38,11 +38,11 @@ export default defineCapabilityModule(
     return [
       // TODO(wittjosiah): Try to remove and prefer layer?
       //  Perhaps move to using layer has source of truth and add a getter capability for the client.
-      contributes(ClientCapabilities.Client, client, async () => {
+      Capability.contributes(ClientCapabilities.Client, client, async () => {
         subscription.unsubscribe();
         await client.destroy();
       }),
-      contributes(Capabilities.Layer, ClientService.fromClient(client)),
+      Capability.contributes(Capabilities.Layer, ClientService.fromClient(client)),
     ];
   },
 );

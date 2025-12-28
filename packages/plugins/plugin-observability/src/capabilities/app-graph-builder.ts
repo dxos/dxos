@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Capabilities, contributes, defineCapabilityModule } from '@dxos/app-framework';
+import { Capabilities, Capability } from '@dxos/app-framework';
 import { GraphBuilder, NodeMatcher } from '@dxos/plugin-graph';
 
 import { meta } from '../meta';
@@ -12,8 +12,8 @@ const ATTENDABLE_PATH_SEPARATOR = '~';
 
 const DECK_COMPANION_TYPE = 'dxos.org/plugin/deck/deck-companion';
 
-export default defineCapabilityModule(() =>
-  contributes(Capabilities.AppGraphBuilder, [
+export default Capability.makeModule(() =>
+  Capability.contributes(Capabilities.AppGraphBuilder, [
     GraphBuilder.createExtension({
       id: `${meta.id}/help`,
       match: NodeMatcher.whenRoot,

@@ -2,12 +2,12 @@
 // Copyright 2025 DXOS.org
 //
 
-import { lazy } from '@dxos/app-framework';
+import { Capability } from '@dxos/app-framework';
 
-export const AppGraphBuilder = lazy(() => import('./app-graph-builder'));
-export const IntentResolver = lazy(() => import('./intent-resolver'));
-export const Keyboard = lazy(() => import('./keyboard'));
-export const ReactSurface = lazy(() => import('./react-surface'));
-export const State = lazy(() => import('./state'));
+export const AppGraphBuilder = Capability.lazy('AppGraphBuilder', () => import('./app-graph-builder'));
+export const IntentResolver = Capability.lazy('IntentResolver', () => import('./intent-resolver'));
+export const Keyboard = Capability.lazy('Keyboard', () => import('./keyboard'));
+export const ReactSurface = Capability.lazy('ReactSurface', () => import('./react-surface'));
+export const State = Capability.lazy('State', () => import('./state'));
 
 export * from './capabilities';

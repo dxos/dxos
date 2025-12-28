@@ -4,13 +4,13 @@
 
 import React from 'react';
 
-import { Capabilities, contributes, defineCapabilityModule } from '@dxos/app-framework';
+import { Capabilities, Capability } from '@dxos/app-framework';
 import { DevtoolsContextProvider } from '@dxos/devtools';
 
 import { meta } from '../meta';
 
-export default defineCapabilityModule(() =>
-  contributes(Capabilities.ReactContext, {
+export default Capability.makeModule(() =>
+  Capability.contributes(Capabilities.ReactContext, {
     id: meta.id,
     context: ({ children }) => <DevtoolsContextProvider>{children}</DevtoolsContextProvider>,
   }),

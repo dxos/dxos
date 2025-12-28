@@ -2,14 +2,14 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Capabilities, type PluginContext, contributes, defineCapabilityModule } from '@dxos/app-framework';
+import { Capabilities, Capability } from '@dxos/app-framework';
 import { GraphBuilder, NodeMatcher } from '@dxos/plugin-graph';
 import { meta as spaceMeta } from '@dxos/plugin-space';
 
 import { meta } from '../meta';
 
-export default defineCapabilityModule((context: PluginContext) =>
-  contributes(Capabilities.AppGraphBuilder, [
+export default Capability.makeModule((context) =>
+  Capability.contributes(Capabilities.AppGraphBuilder, [
     GraphBuilder.createExtension({
       id: `${meta.id}/space-settings`,
       match: NodeMatcher.whenNodeType(`${spaceMeta.id}/settings`),

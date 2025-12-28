@@ -5,7 +5,7 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
-import { IntentPlugin, SettingsPlugin, contributes } from '@dxos/app-framework';
+import { Capability, IntentPlugin, SettingsPlugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Obj, Ref } from '@dxos/echo';
 import { AttentionPlugin } from '@dxos/plugin-attention';
@@ -71,7 +71,9 @@ const meta = {
         SettingsPlugin(),
         MarkdownPlugin(),
       ],
-      capabilities: [contributes(ClientCapabilities.Schema, [Channel.Channel, Thread.Thread, Message.Message])],
+      capabilities: [
+        Capability.contributes(ClientCapabilities.Schema, [Channel.Channel, Thread.Thread, Message.Message]),
+      ],
     }),
   ],
 } satisfies Meta<typeof MeetingContainer>;

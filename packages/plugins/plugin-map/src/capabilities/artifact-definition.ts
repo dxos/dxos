@@ -12,9 +12,9 @@ import {
   Capabilities,
   type PromiseIntentDispatcher,
   chain,
-  contributes,
+  
   createIntent,
-  defineCapabilityModule,
+  Capability,
 } from '@dxos/app-framework';
 import { createArtifactElement } from '@dxos/assistant';
 import { defineArtifact } from '@dxos/blueprints';
@@ -36,7 +36,7 @@ declare global {
   }
 }
 
-export default defineCapabilityModule(() => {
+export default Capability.makeModule(() => {
   const definition = defineArtifact({
     id: `artifact:${meta.id}`,
     name: meta.name,
@@ -126,5 +126,5 @@ export default defineCapabilityModule(() => {
     ],
   });
 
-  return contributes(Capabilities.ArtifactDefinition, definition);
+  return Capability.contributes(Capabilities.ArtifactDefinition, definition);
 });

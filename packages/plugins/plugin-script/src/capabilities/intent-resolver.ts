@@ -8,10 +8,10 @@ import * as Predicate from 'effect/Predicate';
 import {
   Capabilities,
   LayoutAction,
-  contributes,
+  
   createIntent,
   createResolver,
-  defineCapabilityModule,
+  Capability,
 } from '@dxos/app-framework';
 import { Obj } from '@dxos/echo';
 import { Script } from '@dxos/functions';
@@ -22,8 +22,8 @@ import { defaultScriptsForIntegration } from '../meta';
 import { templates } from '../templates';
 import { Notebook, ScriptAction } from '../types';
 
-export default defineCapabilityModule(() =>
-  contributes(Capabilities.IntentResolver, [
+export default Capability.makeModule(() =>
+  Capability.contributes(Capabilities.IntentResolver, [
     createResolver({
       intent: ScriptAction.CreateScript,
       resolve: async ({ name, gistUrl, initialTemplateId }) => {

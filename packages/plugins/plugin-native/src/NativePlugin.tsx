@@ -2,32 +2,33 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Capabilities, Events, contributes, defineModule, definePlugin } from '@dxos/app-framework';
+import { Capabilities, Events, Plugin, Capability } from '@dxos/app-framework';
 import { AssistantEvents } from '@dxos/plugin-assistant';
 
 import { Ollama, Updater, Window } from './capabilities';
 import { meta } from './meta';
 import { translations } from './translations';
 
-export const NativePlugin = definePlugin(meta, () => [
-  defineModule({
-    id: `${meta.id}/module/translations`,
+export const NativePlugin = Plugin.define(meta).pipe(
+  Plugin.addModule({
+    id: 'translations',
     activatesOn: Events.SetupTranslations,
-    activate: () => contributes(Capabilities.Translations, translations),
+    activate: () => Capability.contributes(Capabilities.Translations, translations),
   }),
-  defineModule({
-    id: `${meta.id}/module/updater`,
+  Plugin.addModule({
+    id: 'updater',
     activatesOn: Events.DispatcherReady,
     activate: Updater,
   }),
-  defineModule({
-    id: `${meta.id}/module/window`,
+  Plugin.addModule({
+    id: 'window',
     activatesOn: Events.DispatcherReady,
     activate: Window,
   }),
-  defineModule({
-    id: `${meta.id}/module/ollama`,
+  Plugin.addModule({
+    id: 'ollama',
     activatesOn: AssistantEvents.SetupAiServiceProviders,
     activate: Ollama,
   }),
-]);
+  Plugin.make,
+);

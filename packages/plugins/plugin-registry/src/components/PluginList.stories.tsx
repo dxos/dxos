@@ -5,7 +5,7 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useState } from 'react';
 
-import { type Plugin, definePlugin } from '@dxos/app-framework';
+import { type Plugin, Plugin as PluginNS } from '@dxos/app-framework';
 import { faker } from '@dxos/random';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { getHashHue } from '@dxos/ui-theme';
@@ -27,22 +27,20 @@ const icons = [
 ];
 
 const DefaultStory = () => {
-  const [plugins] = useState<Plugin[]>(
+  const [plugins] = useState<Plugin.Plugin[]>(
     faker.helpers.multiple(
       () =>
-        definePlugin(
-          {
-            id: `dxos.org/plugin/plugin-${faker.string.uuid()}`,
-            name: `${faker.commerce.productName()}`,
-            description: faker.lorem.sentences(Math.ceil(Math.random() * 3)),
-            tags: faker.helpers.uniqueArray(RegistryTagType.literals as any, Math.floor(Math.random() * 3)),
-            icon: faker.helpers.arrayElement(icons),
-            iconHue: getHashHue(faker.string.uuid()),
-            homePage: faker.datatype.boolean({ probability: 0.5 }) ? faker.internet.url() : undefined,
-            source: faker.internet.url(),
-          },
-          () => [],
-        )(),
+        PluginNS.define({
+          id: `dxos.org/plugin/plugin-${faker.string.uuid()}`,
+          name: `${faker.commerce.productName()}`,
+          description: faker.lorem.sentences(Math.ceil(Math.random() * 3)),
+          tags: faker.helpers.uniqueArray(RegistryTagType.literals as any, Math.floor(Math.random() * 3)),
+          icon: faker.helpers.arrayElement(icons),
+          iconHue: getHashHue(faker.string.uuid()),
+          homePage: faker.datatype.boolean({ probability: 0.5 }) ? faker.internet.url() : undefined,
+          source: faker.internet.url(),
+        })
+          .pipe(PluginNS.make)(),
       { count: 32 },
     ),
   );

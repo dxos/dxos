@@ -7,19 +7,17 @@ import * as Function from 'effect/Function';
 
 import {
   Capabilities,
-  type PluginContext,
+  Capability,
   chain,
-  contributes,
   createIntent,
-  defineCapabilityModule,
 } from '@dxos/app-framework';
 import { runAndForwardErrors } from '@dxos/effect';
 import { SpaceAction } from '@dxos/plugin-space/types';
 
 import { WnfsAction } from '../types';
 
-export default defineCapabilityModule((context: PluginContext) => {
-  return contributes(Capabilities.FileUploader, (db, file) => {
+export default Capability.makeModule((context) => {
+  return Capability.contributes(Capabilities.FileUploader, (db, file) => {
     const { dispatch } = context.getCapability(Capabilities.IntentDispatcher);
     const program = Effect.gen(function* () {
       const fileInfo = yield* dispatch(createIntent(WnfsAction.Upload, { db, file }));
