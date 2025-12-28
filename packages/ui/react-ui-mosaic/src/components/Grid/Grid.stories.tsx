@@ -159,28 +159,37 @@ const DefaultStory = () => {
     <Mosaic.Root>
       <Editor.Root extensions={extensions}>
         <Grid.Root>
-          <Grid.Viewport>
-            {/* Search */}
-            <Mosaic.Container handler={searchHandler}>
-              <Grid.Column classNames='is-[25rem]'>
-                {/* TODO(burdon): Stack layout. */}
-                <div role='none' className='p-3'>
-                  <QueryEditor
-                    classNames='border border-subduedSeparator rounded-sm p-2'
-                    db={space?.db}
-                    onChange={setQuery}
-                  />
-                </div>
-                <Grid.Stack id={searchHandler.id} objects={searchObjects} Cell={DebugCell} canDrag />
-              </Grid.Column>
-            </Mosaic.Container>
+          <Grid.Viewport classNames='flex is-full overflow-x-auto'>
+            <div role='none' className='grid grid-flow-col auto-cols-[25rem] gap-4'>
+              {/* Search */}
+              <Mosaic.Container handler={searchHandler}>
+                <Grid.Column>
+                  {/* TODO(burdon): Stack layout. */}
+                  <div role='none' className='p-3'>
+                    <QueryEditor
+                      classNames='border border-subduedSeparator rounded-sm p-2'
+                      db={space?.db}
+                      onChange={setQuery}
+                    />
+                  </div>
+                  <Grid.Stack id={searchHandler.id} objects={searchObjects} Cell={DebugCell} canDrag />
+                </Grid.Column>
+              </Mosaic.Container>
 
-            {/* Canvas */}
-            <Mosaic.Container handler={objectHandler}>
-              <Grid.Column classNames='is-[25rem]'>
-                <Grid.Stack id={objectHandler.id} objects={objects} Cell={TextCell} canDrag canDrop />
+              {/* Canvas */}
+              <Mosaic.Container handler={objectHandler}>
+                <Grid.Column>
+                  <Grid.Stack id={objectHandler.id} objects={objects} Cell={TextCell} canDrag canDrop />
+                </Grid.Column>
+              </Mosaic.Container>
+
+              {/* TODO(burdon): Document. */}
+              <Grid.Column classNames='p-3'>
+                <Editor.Root extensions={extensions}>
+                  <Editor.Content />
+                </Editor.Root>
               </Grid.Column>
-            </Mosaic.Container>
+            </div>
           </Grid.Viewport>
         </Grid.Root>
       </Editor.Root>
