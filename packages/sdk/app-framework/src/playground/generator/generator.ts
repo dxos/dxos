@@ -5,12 +5,12 @@
 import * as Schema from 'effect/Schema';
 
 import { Capabilities, Events } from '../../common';
-import { contributes, defineCapability, defineEvent, defineModule, definePlugin } from '../../core';
+import { ActivationEvent, Capability, Plugin } from '../../core';
 import { type IntentSchema, createResolver } from '../../plugin-intent';
 
-export const Number = defineCapability<number>('dxos.org/test/generator/number');
+export const Number = Capability.make<number>('dxos.org/test/generator/number');
 
-export const CountEvent = defineEvent('dxos.org/test/generator/count');
+export const CountEvent = ActivationEvent.make('dxos.org/test/generator/count');
 
 export const createPluginId = (id: string) => `dxos.org/test/generator/${id}`;
 
@@ -26,17 +26,17 @@ export const createGeneratorIntent = (id: string) => {
 export const createNumberPlugin = (id: string) => {
   const number = Math.floor(Math.random() * 100);
 
-  return definePlugin({ id, name: `Plugin ${id}` }, () => [
-    defineModule({
-      id: `${id}/main`,
+  return Plugin.define({ id, name: `Plugin ${id}` }).pipe(
+    Plugin.addModule({
+      id: 'Main',
       activatesOn: CountEvent,
-      activate: () => contributes(Number, number),
+      activate: () => Capability.contributes(Number, number),
     }),
-    defineModule({
-      id: `${id}/intent-resolver`,
+    Plugin.addModule({
+      id: 'IntentResolver',
       activatesOn: Events.SetupIntentResolver,
       activate: () =>
-        contributes(
+        Capability.contributes(
           Capabilities.IntentResolver,
           createResolver({
             intent: createGeneratorIntent(id),
@@ -44,5 +44,6 @@ export const createNumberPlugin = (id: string) => {
           }),
         ),
     }),
-  ]);
+    Plugin.make,
+  )();
 };

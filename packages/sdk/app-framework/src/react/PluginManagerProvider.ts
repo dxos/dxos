@@ -8,12 +8,12 @@ import { raise } from '@dxos/debug';
 
 import { type PluginManager } from '../core';
 
-const PluginManagerContext = createContext<PluginManager | undefined>(undefined);
+const PluginManagerContext = createContext<PluginManager.PluginManager | undefined>(undefined);
 
 /**
  * Get the plugin manager.
  */
-export const usePluginManager = (): PluginManager =>
+export const usePluginManager = (): PluginManager.PluginManager =>
   useContext(PluginManagerContext) ?? raise(new Error('Missing PluginManagerContext'));
 
 /**

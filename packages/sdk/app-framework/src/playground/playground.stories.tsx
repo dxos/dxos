@@ -15,16 +15,14 @@ import { GeneratorPlugin, createNumberPlugin } from './generator';
 import { LayoutPlugin } from './layout';
 import { LoggerPlugin } from './logger';
 
-const pluginFactories = [
+const plugins = [
   // prettier-ignore
-  IntentPlugin,
-  LayoutPlugin,
+  IntentPlugin(),
+  LayoutPlugin(),
   DebugPlugin(),
   LoggerPlugin(),
   GeneratorPlugin(),
 ];
-
-const plugins = pluginFactories.map((factory) => (typeof factory === 'function' ? factory() : factory));
 const core = plugins.map((plugin) => plugin.meta.id);
 
 const Placeholder = () => {
@@ -33,7 +31,7 @@ const Placeholder = () => {
 
 const DefaultStory = () => {
   const App = useApp({
-    pluginLoader: (id) => createNumberPlugin(id)(),
+    pluginLoader: (id: string) => createNumberPlugin(id),
     plugins,
     core,
     placeholder: Placeholder,

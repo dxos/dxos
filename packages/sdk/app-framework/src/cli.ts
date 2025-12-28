@@ -9,10 +9,10 @@ import * as Layer from 'effect/Layer';
 import { invariant } from '@dxos/invariant';
 
 import { Capabilities, Events } from './common';
-import { type Plugin, PluginManager, type PluginManagerOptions, PluginService } from './core';
+import { type Plugin, PluginManager } from './core';
 
 const defaultPluginLoader =
-  (plugins: Plugin[]): PluginManagerOptions['pluginLoader'] =>
+  (plugins: Plugin.Plugin[]): PluginManager.ManagerOptions['pluginLoader'] =>
   (id: string) => {
     const plugin = plugins.find((plugin) => plugin.meta.id === id);
     invariant(plugin, `Plugin not found: ${id}`);
@@ -24,9 +24,9 @@ type SubCommands = [Command.Command<any, any, any, any>, ...Array<Command.Comman
 export type CreateCliAppOptions = {
   rootCommand: Command.Command<any, any, any, any>;
   subCommands?: SubCommands;
-  pluginManager?: PluginManager;
-  pluginLoader?: PluginManagerOptions['pluginLoader'];
-  plugins?: Plugin[];
+  pluginManager?: PluginManager.PluginManager;
+  pluginLoader?: PluginManager.ManagerOptions['pluginLoader'];
+  plugins?: Plugin.Plugin[];
   core?: string[];
   enabled?: string[];
   safeMode?: boolean;
@@ -64,7 +64,7 @@ export const createCliApp = Effect.fn(function* ({
   const enabled = safeMode ? [] : enabledParam;
   const manager =
     pluginManagerParam ??
-    new PluginManager({
+    PluginManager.make({
       pluginLoader,
       plugins,
       core,
@@ -88,7 +88,7 @@ export const createCliApp = Effect.fn(function* ({
 
   // Gather all layers and merge them into a single layer.
   const layers = manager.context.getCapabilities(Capabilities.Layer);
-  const layer = Layer.mergeAll(PluginService.fromManager(manager), ...layers);
+  const layer = Layer.mergeAll(PluginManager.Service.fromManager(manager), ...layers);
 
   // Gather all commands and provide them to the root command.
   const pluginCommands = manager.context.getCapabilities(Capabilities.Command);

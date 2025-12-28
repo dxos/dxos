@@ -5,13 +5,13 @@
 import * as Function from 'effect/Function';
 
 import { Capabilities, LayoutAction } from '../common';
-import { contributes, defineCapabilityModule } from '../core';
+import { Capability } from '../core';
 import { chain, createIntent, createResolver } from '../plugin-intent';
 
 import { SETTINGS_ID, SETTINGS_KEY, SettingsAction } from './actions';
 
-export default defineCapabilityModule(() =>
-  contributes(
+export default Capability.makeModule(() =>
+  Capability.contributes(
     Capabilities.IntentResolver,
     createResolver({
       intent: SettingsAction.Open,

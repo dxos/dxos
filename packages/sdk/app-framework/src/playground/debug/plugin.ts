@@ -3,14 +3,14 @@
 //
 
 import { Events } from '../../common';
-import { defineModule, definePlugin, lazy } from '../../core';
+import { Capability, Plugin } from '../../core';
 
-const Debug = lazy(() => import('./Debug'));
+const Debug = Capability.lazy('Debug', () => import('./Debug'));
 
-export const DebugPlugin = definePlugin({ id: 'dxos.org/test/plugin-debug', name: 'Debug' }, () => [
-  defineModule({
-    id: 'dxos.org/test/debug/main',
+export const DebugPlugin = Plugin.define({ id: 'dxos.org/test/plugin-debug', name: 'Debug' }).pipe(
+  Plugin.addModule({
     activatesOn: Events.Startup,
     activate: Debug,
   }),
-]);
+  Plugin.make,
+);

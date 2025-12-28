@@ -3,32 +3,34 @@
 //
 
 import { Capabilities, Events } from '../common';
-import { contributes, defineModule, definePlugin, lazy } from '../core';
+import { Capability, Plugin } from '../core';
 
 import { meta } from './meta';
 import { translations } from './translations';
 
-export const SettingsPlugin = definePlugin(meta, () => [
-  defineModule({
-    id: `${meta.id}/module/store`,
+const SettingsStore = Capability.lazy('SettingsStore', () => import('./store'));
+const SettingsIntentResolver = Capability.lazy('SettingsIntentResolver', () => import('./intent-resolver'));
+const SettingsAppGraphBuilder = Capability.lazy('SettingsAppGraphBuilder', () => import('./app-graph-builder'));
+
+export const SettingsPlugin = Plugin.define(meta).pipe(
+  Plugin.addModule({
     activatesOn: Events.Startup,
     activatesBefore: [Events.SetupSettings],
     activatesAfter: [Events.SettingsReady],
-    activate: lazy(() => import('./store')),
+    activate: SettingsStore,
   }),
-  defineModule({
-    id: `${meta.id}/module/translations`,
+  Plugin.addModule({
+    id: 'translations',
     activatesOn: Events.SetupTranslations,
-    activate: () => contributes(Capabilities.Translations, translations),
+    activate: () => Capability.contributes(Capabilities.Translations, translations),
   }),
-  defineModule({
-    id: `${meta.id}/module/intent-resolver`,
+  Plugin.addModule({
     activatesOn: Events.SetupIntentResolver,
-    activate: lazy(() => import('./intent-resolver')),
+    activate: SettingsIntentResolver,
   }),
-  defineModule({
-    id: `${meta.id}/module/app-graph-builder`,
+  Plugin.addModule({
     activatesOn: Events.SetupAppGraph,
-    activate: lazy(() => import('./app-graph-builder')),
+    activate: SettingsAppGraphBuilder,
   }),
-]);
+  Plugin.make,
+);

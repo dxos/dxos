@@ -7,7 +7,7 @@ import React, { useCallback } from 'react';
 import { Button } from '@dxos/react-ui';
 
 import { Capabilities, createSurface } from '../../common';
-import { contributes, defineCapabilityModule } from '../../core';
+import { Capability } from '../../core';
 import { createIntent } from '../../plugin-intent';
 import { useIntentDispatcher } from '../../react';
 
@@ -19,8 +19,8 @@ export const Logger = () => {
   return <Button onClick={handleClick}>Log</Button>;
 };
 
-export default defineCapabilityModule(() =>
-  contributes(
+export default Capability.makeModule(() =>
+  Capability.contributes(
     Capabilities.ReactSurface,
     createSurface({
       id: 'dxos.org/test/logger/action',

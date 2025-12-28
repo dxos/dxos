@@ -7,7 +7,7 @@ import React, { useCallback } from 'react';
 import { IconButton, List, ListItem } from '@dxos/react-ui';
 
 import { Capabilities, createSurface } from '../../common';
-import { contributes, defineCapabilityModule } from '../../core';
+import { Capability } from '../../core';
 import { usePluginManager } from '../../react';
 
 const Item = ({
@@ -62,8 +62,8 @@ export const Main = () => {
   );
 };
 
-export default defineCapabilityModule(() =>
-  contributes(
+export default Capability.makeModule(() =>
+  Capability.contributes(
     Capabilities.ReactSurface,
     createSurface({
       id: 'dxos.org/test/generator/main',

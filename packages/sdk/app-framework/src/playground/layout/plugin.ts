@@ -3,16 +3,16 @@
 //
 
 import { Events } from '../../common';
-import { defineModule, definePlugin, lazy } from '../../core';
+import { Capability, Plugin } from '../../core';
 
-const Layout = lazy(() => import('./Layout'));
+const Layout = Capability.lazy('Layout', () => import('./Layout'));
 
 const meta = { id: 'dxos.org/test/layout', name: 'Layout' };
 
-export const LayoutPlugin = definePlugin(meta, () => [
-  defineModule({
-    id: 'dxos.org/test/layout/root',
+export const LayoutPlugin = Plugin.define(meta).pipe(
+  Plugin.addModule({
     activatesOn: Events.Startup,
     activate: Layout,
   }),
-]);
+  Plugin.make,
+);

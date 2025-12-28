@@ -5,11 +5,13 @@
 import { Registry } from '@effect-atom/atom-react';
 import { untracked } from '@preact/signals-core';
 import * as Array from 'effect/Array';
+import * as Context from 'effect/Context';
 import * as Duration from 'effect/Duration';
 import * as Effect from 'effect/Effect';
 import * as Fiber from 'effect/Fiber';
 import * as Function from 'effect/Function';
 import * as HashSet from 'effect/HashSet';
+import * as Layer from 'effect/Layer';
 import * as Match from 'effect/Match';
 import * as Ref from 'effect/Ref';
 
@@ -19,31 +21,37 @@ import { type Live, live } from '@dxos/live-object';
 import { log } from '@dxos/log';
 import { type MaybePromise } from '@dxos/util';
 
-import { type AnyCapability, PluginContext } from './capabilities';
-import { type ActivationEvent, eventKey, getEvents, isAllOf } from './events';
-import { type Plugin, type PluginModule } from './plugin';
+import * as ActivationEvent from './activation-event';
+import * as Capability from './capability';
+import type * as Plugin from './plugin';
+
+/**
+ * Identifier denoting a Manager.
+ */
+export const ManagerTypeId: unique symbol = Symbol.for('@dxos/app-framework/Manager');
+export type ManagerTypeId = typeof ManagerTypeId;
 
 // TODO(wittjosiah): Factor out?
 const isPromise = (value: unknown): value is Promise<unknown> => {
   return value !== null && typeof value === 'object' && 'then' in value;
 };
 
-export type PluginManagerOptions = {
-  pluginLoader: (id: string) => MaybePromise<Plugin>;
-  plugins?: Plugin[];
+export type ManagerOptions = {
+  pluginLoader: (id: string) => MaybePromise<Plugin.Plugin>;
+  plugins?: Plugin.Plugin[];
   core?: string[];
   enabled?: string[];
   registry?: Registry.Registry;
 };
 
-type PluginManagerState = {
+type ManagerState = {
   // Plugins
-  plugins: Plugin[];
+  plugins: Plugin.Plugin[];
   core: string[];
   enabled: string[];
 
   // Modules
-  modules: PluginModule[];
+  modules: Plugin.PluginModule[];
   active: string[];
 
   // Events
@@ -51,16 +59,62 @@ type PluginManagerState = {
   pendingReset: string[];
 };
 
-export class PluginManager {
+/**
+ * Interface for the Plugin Manager.
+ */
+export interface PluginManager {
+  readonly [ManagerTypeId]: ManagerTypeId;
+  readonly activation: Event<{ event: string; state: 'activating' | 'activated' | 'error'; error?: any }>;
+  readonly context: Capability.PluginContext;
+  readonly registry: Registry.Registry;
+
+  readonly plugins: Live<readonly Plugin.Plugin[]>;
+  readonly core: Live<readonly string[]>;
+  readonly enabled: Live<readonly string[]>;
+  readonly modules: Live<readonly Plugin.PluginModule[]>;
+  readonly active: Live<readonly string[]>;
+  readonly eventsFired: Live<readonly string[]>;
+  readonly pendingReset: Live<readonly string[]>;
+
+  add(id: string): Promise<boolean>;
+  enable(id: string): Promise<boolean>;
+  remove(id: string): boolean;
+  disable(id: string): Promise<boolean>;
+  activate(event: ActivationEvent.ActivationEvent | string): Promise<boolean>;
+  deactivate(id: string): Promise<boolean>;
+  reset(event: ActivationEvent.ActivationEvent | string): Promise<boolean>;
+
+  /**
+   * @internal
+   */
+  _activate(
+    event: ActivationEvent.ActivationEvent | string,
+    params?: { before?: string; after?: string },
+  ): Effect.Effect<boolean, Error>;
+}
+
+/**
+ * Type guard to check if a value is a PluginManager.
+ */
+export const isManager = (value: unknown): value is PluginManager => {
+  return typeof value === 'object' && value !== null && ManagerTypeId in value;
+};
+
+/**
+ * Internal implementation of PluginManager.
+ * @internal
+ */
+class ManagerImpl implements PluginManager {
+  readonly [ManagerTypeId]: ManagerTypeId = ManagerTypeId;
   readonly activation = new Event<{ event: string; state: 'activating' | 'activated' | 'error'; error?: any }>();
-  readonly context: PluginContext;
+  readonly context: Capability.PluginContext;
   readonly registry: Registry.Registry;
 
   // TODO(wittjosiah): Replace with Atom.
-  private readonly _state: Live<PluginManagerState>;
-  private readonly _pluginLoader: PluginManagerOptions['pluginLoader'];
-  private readonly _capabilities = new Map<string, AnyCapability[]>();
-  private readonly _moduleMemoMap = new Map<PluginModule['id'], Promise<AnyCapability[]>>();
+  private readonly _state: Live<ManagerState>;
+  private readonly _pluginLoader: ManagerOptions['pluginLoader'];
+  private readonly _capabilities = new Map<string, Capability.Any[]>();
+  private readonly _moduleMemoMap = new Map<Plugin.PluginModule['id'], Promise<Capability.Any[]>>();
   private readonly _activatingEvents = Effect.runSync(Ref.make<string[]>([]));
   private readonly _activatingModules = Effect.runSync(Ref.make<string[]>([]));
 
@@ -70,9 +124,9 @@ export class PluginManager {
     core = plugins.map(({ meta }) => meta.id),
     enabled = [],
     registry,
-  }: PluginManagerOptions) {
+  }: ManagerOptions) {
     this.registry = registry ?? Registry.make();
-    this.context = new PluginContext({
+    this.context = new Capability.PluginContextImpl({
       registry: this.registry,
       activate: (event) => this._activate(event),
       reset: (id) => this._reset(id),
@@ -98,7 +152,7 @@ export class PluginManager {
    *
    * @reactive
    */
-  get plugins(): Live<readonly Plugin[]> {
+  get plugins(): Live<readonly Plugin.Plugin[]> {
     return this._state.plugins;
   }
 
@@ -125,7 +179,7 @@ export class PluginManager {
    *
    * @reactive
    */
-  get modules(): Live<readonly PluginModule[]> {
+  get modules(): Live<readonly Plugin.PluginModule[]> {
     return this._state.modules;
   }
 
@@ -254,7 +308,7 @@ export class PluginManager {
    * @param event The activation event.
    * @returns Whether the activation was successful.
    */
-  activate(event: ActivationEvent | string): Promise<boolean> {
+  activate(event: ActivationEvent.ActivationEvent | string): Promise<boolean> {
     return untracked(() => runAndForwardErrors(this._activate(event)));
   }
 
@@ -272,11 +326,11 @@ export class PluginManager {
    * @param event The activation event.
    * @returns Whether the reset was successful.
    */
-  reset(event: ActivationEvent | string): Promise<boolean> {
+  reset(event: ActivationEvent.ActivationEvent | string): Promise<boolean> {
     return untracked(() => runAndForwardErrors(this._reset(event)));
   }
 
-  private _addPlugin(plugin: Plugin): void {
+  private _addPlugin(plugin: Plugin.Plugin): void {
     untracked(() => {
       log('add plugin', { id: plugin.meta.id });
       // TODO(wittjosiah): Find a way to add a warning for duplicate plugins that doesn't cause log spam.
@@ -296,7 +350,7 @@ export class PluginManager {
     });
   }
 
-  private _addModule(module: PluginModule): void {
+  private _addModule(module: Plugin.PluginModule): void {
     untracked(() => {
       log('add module', { id: module.id });
       // TODO(wittjosiah): Find a way to add a warning for duplicate modules that doesn't cause log spam.
@@ -316,30 +370,34 @@ export class PluginManager {
     });
   }
 
-  private _getPlugin(id: string): Plugin | undefined {
+  private _getPlugin(id: string): Plugin.Plugin | undefined {
     return this._state.plugins.find((plugin) => plugin.meta.id === id);
   }
 
-  private _getActiveModules(): PluginModule[] {
+  private _getActiveModules(): Plugin.PluginModule[] {
     return this._state.modules.filter((module) => this._state.active.includes(module.id));
   }
 
-  private _getInactiveModules(): PluginModule[] {
+  private _getInactiveModules(): Plugin.PluginModule[] {
     return this._state.modules.filter((module) => !this._state.active.includes(module.id));
   }
 
-  private _getActiveModulesByEvent(key: string): PluginModule[] {
-    return this._getActiveModules().filter((module) => getEvents(module.activatesOn).map(eventKey).includes(key));
+  private _getActiveModulesByEvent(key: string): Plugin.PluginModule[] {
+    return this._getActiveModules().filter((module) =>
+      ActivationEvent.getEvents(module.activatesOn).map(ActivationEvent.eventKey).includes(key),
+    );
   }
 
-  private _getInactiveModulesByEvent(key: string): PluginModule[] {
-    return this._getInactiveModules().filter((module) => getEvents(module.activatesOn).map(eventKey).includes(key));
+  private _getInactiveModulesByEvent(key: string): Plugin.PluginModule[] {
+    return this._getInactiveModules().filter((module) =>
+      ActivationEvent.getEvents(module.activatesOn).map(ActivationEvent.eventKey).includes(key),
+    );
   }
 
-  private _setPendingResetByModule(module: PluginModule): void {
+  private _setPendingResetByModule(module: Plugin.PluginModule): void {
     return untracked(() => {
-      const activationEvents = getEvents(module.activatesOn)
-        .map(eventKey)
+      const activationEvents = ActivationEvent.getEvents(module.activatesOn)
+        .map(ActivationEvent.eventKey)
         .filter((key) => this._state.eventsFired.includes(key));
 
       const pendingReset = Array.fromIterable(new Set(activationEvents)).filter(
@@ -357,11 +415,11 @@ export class PluginManager {
    */
   // TODO(wittjosiah): Improve error typing.
   _activate(
-    event: ActivationEvent | string,
+    event: ActivationEvent.ActivationEvent | string,
     params?: { before?: string; after?: string },
   ): Effect.Effect<boolean, Error> {
     return Effect.gen(this, function* () {
-      const key = typeof event === 'string' ? event : eventKey(event);
+      const key = typeof event === 'string' ? event : ActivationEvent.eventKey(event);
       log('activating', { key, ...params });
       yield* Ref.update(this._activatingEvents, (activating) => Array.append(activating, key));
       const pendingIndex = this._state.pendingReset.findIndex((event) => event === key);
@@ -372,17 +430,21 @@ export class PluginManager {
       const activatingEvents = yield* this._activatingEvents;
       const activatingModules = yield* this._activatingModules;
       const modules = this._getInactiveModulesByEvent(key).filter((module) => {
-        const allOf = isAllOf(module.activatesOn);
+        const allOf = ActivationEvent.isAllOf(module.activatesOn);
         if (!allOf) {
           return true;
         }
 
         // Check to see if all of the events in the `allOf` have been fired.
         // An event can be considered "fired" if it is in the `eventsFired` list or if it is currently being activated.
-        const events = module.activatesOn.events.filter((event) => eventKey(event) !== key);
+        const events = ActivationEvent.getEvents(module.activatesOn).filter(
+          (event) => ActivationEvent.eventKey(event) !== key,
+        );
         return (
           events.every(
-            (event) => this._state.eventsFired.includes(eventKey(event)) || activatingEvents.includes(eventKey(event)),
+            (event) =>
+              this._state.eventsFired.includes(ActivationEvent.eventKey(event)) ||
+              activatingEvents.includes(ActivationEvent.eventKey(event)),
           ) && !activatingModules.includes(module.id)
         );
       });
@@ -409,7 +471,7 @@ export class PluginManager {
         Array.flatMap((module) => module.activatesBefore ?? []),
         HashSet.fromIterable,
         HashSet.toValues,
-        Array.filter((event) => !activatingEvents.includes(eventKey(event))),
+        Array.filter((event) => !activatingEvents.includes(ActivationEvent.eventKey(event))),
         Array.map((event) => this._activate(event, { before: key })),
         Effect.allWith({ concurrency: 'unbounded' }),
       );
@@ -441,7 +503,7 @@ export class PluginManager {
         Array.flatMap((module) => module.activatesAfter ?? []),
         HashSet.fromIterable,
         HashSet.toValues,
-        Array.filter((event) => !activatingEvents.includes(eventKey(event))),
+        Array.filter((event) => !activatingEvents.includes(ActivationEvent.eventKey(event))),
         Array.map((event) => this._activate(event, { after: key })),
         Effect.allWith({ concurrency: 'unbounded' }),
       );
@@ -463,7 +525,7 @@ export class PluginManager {
   }
 
   // Memoized with _moduleMemoMap
-  private _loadModule = (mod: PluginModule): Effect.Effect<AnyCapability[], Error> =>
+  private _loadModule = (mod: Plugin.PluginModule): Effect.Effect<Capability.Any[], Error> =>
     Effect.tryPromise({
       try: async () => {
         const entry = this._moduleMemoMap.get(mod.id);
@@ -510,7 +572,10 @@ export class PluginManager {
       ),
     );
 
-  private _contributeCapabilities(module: PluginModule, capabilities: AnyCapability[]): Effect.Effect<void, Error> {
+  private _contributeCapabilities(
+    module: Plugin.PluginModule,
+    capabilities: Capability.Any[],
+  ): Effect.Effect<void, Error> {
     return Effect.gen(this, function* () {
       capabilities.forEach((capability) => {
         this.context.contributeCapability({ module: module.id, ...capability });
@@ -536,7 +601,7 @@ export class PluginManager {
     });
   }
 
-  private _deactivateModule(module: PluginModule): Effect.Effect<boolean, Error> {
+  private _deactivateModule(module: Plugin.PluginModule): Effect.Effect<boolean, Error> {
     return Effect.gen(this, function* () {
       const id = module.id;
       log('deactivating', { id });
@@ -571,9 +636,9 @@ export class PluginManager {
     });
   }
 
-  private _reset(event: ActivationEvent | string): Effect.Effect<boolean, Error> {
+  private _reset(event: ActivationEvent.ActivationEvent | string): Effect.Effect<boolean, Error> {
     return Effect.gen(this, function* () {
-      const key = typeof event === 'string' ? event : eventKey(event);
+      const key = typeof event === 'string' ? event : ActivationEvent.eventKey(event);
       log('reset', { key });
       const modules = this._getActiveModulesByEvent(key);
       const results = yield* Effect.all(
@@ -588,6 +653,15 @@ export class PluginManager {
       }
     });
   }
+}
+
+/**
+ * Creates a new Plugin Manager instance.
+ */
+export const make = (options: ManagerOptions): PluginManager => new ManagerImpl(options);
+
+export class Service extends Context.Tag('PluginService')<Service, PluginManager>() {
+  static fromManager = (manager: PluginManager) => Layer.succeed(Service, manager);
 }
 
 /**

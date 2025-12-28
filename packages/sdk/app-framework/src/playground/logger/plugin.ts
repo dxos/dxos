@@ -5,24 +5,24 @@
 import { log } from '@dxos/log';
 
 import { Capabilities, Events } from '../../common';
-import { contributes, defineModule, definePlugin, lazy } from '../../core';
+import { Capability, Plugin } from '../../core';
 import { createResolver } from '../../plugin-intent';
 
 import { Log } from './schema';
 
-const Toolbar = lazy(() => import('./Toolbar'));
+const Toolbar = Capability.lazy('Toolbar', () => import('./Toolbar'));
 
 const meta = {
   id: 'dxos.org/test/logger',
   name: 'Logger',
 };
 
-export const LoggerPlugin = definePlugin(meta, () => [
-  defineModule({
-    id: 'dxos.org/test/logger/intents',
+export const LoggerPlugin = Plugin.define(meta).pipe(
+  Plugin.addModule({
+    id: 'intents',
     activatesOn: Events.SetupIntentResolver,
     activate: () => [
-      contributes(
+      Capability.contributes(
         Capabilities.IntentResolver,
         createResolver({
           intent: Log,
@@ -33,9 +33,9 @@ export const LoggerPlugin = definePlugin(meta, () => [
       ),
     ],
   }),
-  defineModule({
-    id: 'dxos.org/test/logger/surfaces',
+  Plugin.addModule({
     activatesOn: Events.Startup,
     activate: Toolbar,
   }),
-]);
+  Plugin.make,
+);

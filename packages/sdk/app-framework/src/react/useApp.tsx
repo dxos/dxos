@@ -13,7 +13,7 @@ import { ContextProtocolProvider } from '@dxos/web-context-react';
 
 import { Capabilities, Events } from '../common';
 import { PluginManagerContext } from '../context';
-import { type Plugin, PluginManager, type PluginManagerOptions } from '../core';
+import { type Plugin, PluginManager } from '../core';
 
 import { App } from './App';
 import { DefaultFallback } from './DefaultFallback';
@@ -23,9 +23,9 @@ import { PluginManagerProvider } from './PluginManagerProvider';
 const ENABLED_KEY = 'dxos.org/app-framework/enabled';
 
 export type UseAppOptions = {
-  pluginManager?: PluginManager;
-  pluginLoader?: PluginManagerOptions['pluginLoader'];
-  plugins?: Plugin[];
+  pluginManager?: PluginManager.PluginManager;
+  pluginLoader?: PluginManager.ManagerOptions['pluginLoader'];
+  plugins?: Plugin.Plugin[];
   core?: string[];
   defaults?: string[];
   placeholder?: FC<{ stage: number }>;
@@ -95,7 +95,7 @@ export const useApp = ({
     [safeMode, cacheEnabled, cached, defaults],
   );
   const manager = useMemo(
-    () => pluginManager ?? new PluginManager({ pluginLoader, plugins, core, enabled }),
+    () => pluginManager ?? PluginManager.make({ pluginLoader, plugins, core, enabled }),
     [pluginManager, pluginLoader, plugins, core, enabled],
   );
 
@@ -163,7 +163,7 @@ export const useApp = ({
   );
 };
 
-const setupDevtools = (manager: PluginManager) => {
+const setupDevtools = (manager: PluginManager.PluginManager) => {
   (globalThis as any).composer ??= {};
   (globalThis as any).composer.manager = manager;
 };

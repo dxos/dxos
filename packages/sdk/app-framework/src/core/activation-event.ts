@@ -16,7 +16,7 @@ export type ActivationEvent = {
 /**
  * An activation event that can be a single event, or a combination of events.
  */
-export type ActivationEvents =
+export type Events =
   | ActivationEvent
   | { type: 'one-of'; events: ActivationEvent[] }
   | { type: 'all-of'; events: ActivationEvent[] };
@@ -24,7 +24,7 @@ export type ActivationEvents =
 /**
  * Helper to define an activation event.
  */
-export const defineEvent = (id: string, specifier?: string) => {
+export const make = (id: string, specifier?: string) => {
   return { id, specifier } as ActivationEvent;
 };
 
@@ -46,16 +46,16 @@ export const allOf = (...events: ActivationEvent[]) => ({ type: 'all-of' as cons
 /**
  * Helper to check if an activation event is a one-of event.
  */
-export const isOneOf = (events: ActivationEvents): events is { type: 'one-of'; events: ActivationEvent[] } =>
+export const isOneOf = (events: Events): events is { type: 'one-of'; events: ActivationEvent[] } =>
   'type' in events && events.type === 'one-of';
 
 /**
  * Helper to check if an activation event is an all-of event.
  */
-export const isAllOf = (events: ActivationEvents): events is { type: 'all-of'; events: ActivationEvent[] } =>
+export const isAllOf = (events: Events): events is { type: 'all-of'; events: ActivationEvent[] } =>
   'type' in events && events.type === 'all-of';
 
 /**
  * Helper to get the events from an activation event.
  */
-export const getEvents = (events: ActivationEvents) => ('type' in events ? events.events : [events]);
+export const getEvents = (events: Events) => ('type' in events ? events.events : [events]);

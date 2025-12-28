@@ -17,7 +17,7 @@ import { type FunctionDefinition } from '@dxos/functions';
 import { type RootSettingsStore } from '@dxos/local-storage';
 import { type AnchoredTo } from '@dxos/types';
 
-import { type PluginManager, defineCapability } from '../core';
+import { Capability, type PluginManager } from '../core';
 import { type AnyIntentResolver, type IntentContext } from '../plugin-intent';
 
 import { type FileInfo } from './file';
@@ -30,17 +30,19 @@ export namespace Capabilities {
   /**
    * @category Capability
    */
-  export const Null = defineCapability<null>('dxos.org/app-framework/capability/null');
+  export const Null = Capability.make<null>('dxos.org/app-framework/capability/null');
 
   /**
    * @category Capability
    */
-  export const PluginManager = defineCapability<PluginManager>('dxos.org/app-framework/capability/plugin-manager');
+  export const PluginManager = Capability.make<PluginManager.PluginManager>(
+    'dxos.org/app-framework/capability/plugin-manager',
+  );
 
   /**
    * @category Capability
    */
-  export const AtomRegistry = defineCapability<Registry.Registry>('dxos.org/app-framework/capability/atom-registry');
+  export const AtomRegistry = Capability.make<Registry.Registry>('dxos.org/app-framework/capability/atom-registry');
 
   export type ReactContext = Readonly<{
     id: string;
@@ -51,14 +53,14 @@ export namespace Capabilities {
   /**
    * @category Capability
    */
-  export const ReactContext = defineCapability<ReactContext>('dxos.org/app-framework/capability/react-context');
+  export const ReactContext = Capability.make<ReactContext>('dxos.org/app-framework/capability/react-context');
 
   export type ReactRoot = Readonly<{ id: string; root: FC<PropsWithChildren> }>;
 
   /**
    * @category Capability
    */
-  export const ReactRoot = defineCapability<ReactRoot>('dxos.org/app-framework/capability/react-root');
+  export const ReactRoot = Capability.make<ReactRoot>('dxos.org/app-framework/capability/react-root');
 
   /**
    * Surface definitions that can be either React components or Web Components.
@@ -68,21 +70,19 @@ export namespace Capabilities {
   /**
    * @category Capability
    */
-  export const ReactSurface = defineCapability<ReactSurface>('dxos.org/app-framework/common/react-surface');
+  export const ReactSurface = Capability.make<ReactSurface>('dxos.org/app-framework/common/react-surface');
 
   export type IntentResolver = AnyIntentResolver | readonly AnyIntentResolver[];
 
   /**
    * @category Capability
    */
-  export const IntentResolver = defineCapability<IntentResolver>('dxos.org/app-framework/capability/intent-resolver');
+  export const IntentResolver = Capability.make<IntentResolver>('dxos.org/app-framework/capability/intent-resolver');
 
   /**
    * @category Capability
    */
-  export const IntentDispatcher = defineCapability<IntentContext>(
-    'dxos.org/app-framework/capability/intent-dispatcher',
-  );
+  export const IntentDispatcher = Capability.make<IntentContext>('dxos.org/app-framework/capability/intent-dispatcher');
 
   export type Layout = Readonly<{
     mode: string;
@@ -110,12 +110,12 @@ export namespace Capabilities {
   /**
    * @category Capability
    */
-  export const Layout = defineCapability<Layout>('dxos.org/app-framework/capability/layout');
+  export const Layout = Capability.make<Layout>('dxos.org/app-framework/capability/layout');
 
   /**
    * @category Capability
    */
-  export const Translations = defineCapability<Readonly<Resource[]>>('dxos.org/app-framework/capability/translations');
+  export const Translations = Capability.make<Readonly<Resource[]>>('dxos.org/app-framework/capability/translations');
 
   export type AppGraph = Readonly<{
     graph: GraphBuilder.GraphBuilder['graph'];
@@ -125,26 +125,26 @@ export namespace Capabilities {
   /**
    * @category Capability
    */
-  export const AppGraph = defineCapability<AppGraph>('dxos.org/app-framework/capability/app-graph');
+  export const AppGraph = Capability.make<AppGraph>('dxos.org/app-framework/capability/app-graph');
 
   /**
    * @category Capability
    */
-  export const AppGraphBuilder = defineCapability<BuilderExtensions>(
+  export const AppGraphBuilder = Capability.make<BuilderExtensions>(
     'dxos.org/app-framework/capability/app-graph-builder',
   );
 
   /**
    * @category Capability
    */
-  export const AppGraphSerializer = defineCapability<NodeSerializer[]>(
+  export const AppGraphSerializer = Capability.make<NodeSerializer[]>(
     'dxos.org/app-framework/capability/app-graph-serializer',
   );
 
   /**
    * @category Capability
    */
-  export const SettingsStore = defineCapability<RootSettingsStore>('dxos.org/app-framework/capability/settings-store');
+  export const SettingsStore = Capability.make<RootSettingsStore>('dxos.org/app-framework/capability/settings-store');
 
   // TODO(wittjosiah): The generics caused type inference issues for schemas when contributing settings.
   // export type Settings = Parameters<RootSettingsStore['createStore']>[0];
@@ -158,7 +158,7 @@ export namespace Capabilities {
   /**
    * @category Capability
    */
-  export const Settings = defineCapability<Settings>('dxos.org/app-framework/capability/settings');
+  export const Settings = Capability.make<Settings>('dxos.org/app-framework/capability/settings');
 
   export type Metadata = Readonly<{
     id: string;
@@ -168,45 +168,41 @@ export namespace Capabilities {
   /**
    * @category Capability
    */
-  export const Metadata = defineCapability<Metadata>('dxos.org/app-framework/capability/metadata');
+  export const Metadata = Capability.make<Metadata>('dxos.org/app-framework/capability/metadata');
 
   /**
    * @category Capability
    */
-  export const Toolkit = defineCapability<GenericToolkit.GenericToolkit>(
-    'dxos.org/app-framework/capability/ai-toolkit',
-  );
+  export const Toolkit = Capability.make<GenericToolkit.GenericToolkit>('dxos.org/app-framework/capability/ai-toolkit');
 
   /**
    * @category Capability
    */
-  export const BlueprintDefinition = defineCapability<Blueprint.Blueprint>(
+  export const BlueprintDefinition = Capability.make<Blueprint.Blueprint>(
     'dxos.org/app-framework/capability/blueprint-definition',
   );
 
   export type AiServiceLayer = Layer.Layer<AiService.AiService>;
-  export const AiServiceLayer = defineCapability<AiServiceLayer>(
-    'dxos.org/app-framework/capability/ai-service-factory',
-  );
+  export const AiServiceLayer = Capability.make<AiServiceLayer>('dxos.org/app-framework/capability/ai-service-factory');
 
   /**
    * Plugins can contribute them to provide model resolvers.
    */
-  export const AiModelResolver = defineCapability<Layer.Layer<AiModelResolver.AiModelResolver>>(
+  export const AiModelResolver = Capability.make<Layer.Layer<AiModelResolver.AiModelResolver>>(
     'dxos.org/app-framework/capability/ai-model-resolver',
   );
 
   /**
    * @category Capability
    */
-  export const Functions = defineCapability<FunctionDefinition.Any[]>('dxos.org/app-framework/capability/functions');
+  export const Functions = Capability.make<FunctionDefinition.Any[]>('dxos.org/app-framework/capability/functions');
 
   export type FileUploader = (db: Database.Database, file: File) => Promise<FileInfo | undefined>;
 
   /**
    * @category Capability
    */
-  export const FileUploader = defineCapability<FileUploader>('dxos.org/app-framework/capability/file-uploader');
+  export const FileUploader = Capability.make<FileUploader>('dxos.org/app-framework/capability/file-uploader');
 
   export type AnchorSort = {
     key: string;
@@ -216,17 +212,17 @@ export namespace Capabilities {
   /**
    * @category Capability
    */
-  export const AnchorSort = defineCapability<AnchorSort>('dxos.org/app-framework/capability/anchor-sort');
+  export const AnchorSort = Capability.make<AnchorSort>('dxos.org/app-framework/capability/anchor-sort');
 
   export type AnyCommand = Command.Command<any, any, any, any>;
 
   /**
    * @category Capability
    */
-  export const Command = defineCapability<AnyCommand>('dxos.org/app-framework/capability/command');
+  export const Command = Capability.make<AnyCommand>('dxos.org/app-framework/capability/command');
 
   /**
    * @category Capability
    */
-  export const Layer = defineCapability<Layer.Layer<any, any, any>>('dxos.org/app-framework/capability/layer');
+  export const Layer = Capability.make<Layer.Layer<any, any, any>>('dxos.org/app-framework/capability/layer');
 }

@@ -11,7 +11,7 @@ import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { type MaybePromise } from '@dxos/util';
 
-import { type ActivationEvent } from './events';
+import type * as ActivationEvent from './activation-event';
 
 const InterfaceDefTypeId: unique symbol = Symbol.for('InterfaceDefTypeId');
 
@@ -30,7 +30,7 @@ export namespace InterfaceDef {
 /**
  * Helper to define the interface of a capability.
  */
-export const defineCapability = <T>(identifier: string) => {
+export const make = <T>(identifier: string) => {
   return { identifier } as InterfaceDef<T>;
 };
 
@@ -55,32 +55,13 @@ export type Capability<T> = {
   readonly deactivate?: () => MaybePromise<void> | Effect.Effect<void, Error>;
 };
 
-export type AnyCapability = Capability<any>;
+export type Any = Capability<any>;
 
 /**
  * Union type representing all valid return types for a capability module.
  * Supports single capabilities, arrays, and tuples of different capability types.
  */
-export type CapabilityModuleReturn =
-  | AnyCapability
-  | AnyCapability[]
-  | readonly AnyCapability[]
-  | [AnyCapability, ...AnyCapability[]]
-  | readonly [AnyCapability, ...AnyCapability[]];
-
-type PluginsContextOptions = {
-  registry: Registry.Registry;
-  activate: (event: ActivationEvent) => Effect.Effect<boolean, Error>;
-  reset: (event: ActivationEvent) => Effect.Effect<boolean, Error>;
-};
-
-// NOTE: This is implemented as a class to prevent it from being proxied by PluginManager state.
-class CapabilityImpl<T> {
-  constructor(
-    readonly moduleId: string,
-    readonly implementation: T,
-  ) {}
-}
+export type ModuleReturn = Any | Any[] | readonly Any[] | [Any, ...Any[]] | readonly [Any, ...Any[]];
 
 /**
  * Helper to define the implementation of a capability.
@@ -98,25 +79,32 @@ export const contributes = <I extends InterfaceDef<any>>(
 };
 
 type LoadCapability<T, U> = () => Promise<{ default: (props: T) => MaybePromise<Capability<U>> }>;
-type LoadCapabilities<T> = () => Promise<{ default: (props: T) => MaybePromise<CapabilityModuleReturn> }>;
+type LoadCapabilities<T> = () => Promise<{ default: (props: T) => MaybePromise<ModuleReturn> }>;
 
 // TODO(wittjosiah): Not having the array be `any` causes type errors when using the lazy capability.
-type LazyCapability<T, U> = (props?: T) => Promise<() => Promise<Capability<U> | AnyCapability[]>>;
+type LazyCapability<T, U> = (props?: T) => Promise<() => Promise<Capability<U> | Any[]>>;
 
 /**
  * Helper to define a lazily loaded implementation of a capability.
  * Supports single capabilities, arrays, and tuples of different capability types.
+ * @param name The export name (e.g., 'AppGraphBuilder') - used to auto-compute module IDs
+ * @param loader The lazy loader function
+ * @returns A lazy capability function with _exportName property attached
  */
-export const lazy =
-  <T, U>(c: LoadCapability<T, U> | LoadCapabilities<T>): LazyCapability<T, U> =>
-  async (props?: T) => {
+export const lazy = <T, U>(
+  name: string,
+  c: LoadCapability<T, U> | LoadCapabilities<T>,
+): LazyCapability<T, U> & { _exportName: string } => {
+  const lazyFn = async (props?: T) => {
     const { default: getCapability } = await c();
     return async () => {
       const result = await getCapability(props as T);
       // Normalize to array for runtime compatibility (handles tuples, readonly arrays, etc.)
-      return (Array.isArray(result) ? result : [result]) as AnyCapability[] | Capability<U>;
+      return (Array.isArray(result) ? result : [result]) as Any[] | Capability<U>;
     };
   };
+  return Object.assign(lazyFn, { _exportName: name });
+};
 
 /**
  * Helper to define a capability module with explicit typing.
@@ -133,18 +121,18 @@ export const lazy =
  * @example
  * ```ts
  * // Module with context - single capability
- * export default defineCapabilityModule((context: PluginContext) => {
+ * export default Capability.makeModule((context: PluginContext) => {
  *   const store = new SettingsStore();
  *   return contributes(Capabilities.SettingsStore, store);
  * });
  *
  * // Module without context - single capability
- * export default defineCapabilityModule(() => {
+ * export default Capability.makeModule(() => {
  *   return contributes(Capabilities.Translations, translations);
  * });
  *
  * // Module with multiple capabilities of different types
- * export default defineCapabilityModule((context: PluginContext) => {
+ * export default Capability.makeModule((context: PluginContext) => {
  *   return [
  *     contributes(Capabilities.SettingsStore, store),
  *     contributes(Capabilities.Translations, translations),
@@ -152,26 +140,106 @@ export const lazy =
  * });
  *
  * // Module with context and additional options
- * export default defineCapabilityModule(({ context, observability }: { context: PluginContext; observability?: boolean }) => {
+ * export default Capability.makeModule(({ context, observability }: { context: PluginContext; observability?: boolean }) => {
  *   return contributes(Capabilities.IntentResolver, ...);
  * });
  * ```
  */
-export const defineCapabilityModule = <
+export const makeModule = <
   TArgs extends any[] = [PluginContext],
-  TReturn extends MaybePromise<CapabilityModuleReturn> = MaybePromise<CapabilityModuleReturn>,
+  TReturn extends MaybePromise<ModuleReturn> = MaybePromise<ModuleReturn>,
 >(
   fn: (...args: TArgs) => TReturn,
 ): ((...args: TArgs) => TReturn) => {
   return fn;
 };
 
+// NOTE: This is implemented as a class to prevent it from being proxied by PluginManager state.
+class CapabilityImpl<T> {
+  constructor(
+    readonly moduleId: string,
+    readonly implementation: T,
+  ) {}
+}
+
 /**
- * Facilitates the dependency injection between [plugin modules](#pluginmodule) by allowing them contribute and request capabilities from each other.
- * It tracks the capabilities that are contributed in an in-memory live object.
- * This allows the application to subscribe to this state and incorporate plugins which are added dynamically.
+ * Options for creating a plugin context.
+ * @internal
  */
-export class PluginContext {
+export type PluginContextOptions = {
+  registry: Registry.Registry;
+  activate: (event: ActivationEvent.ActivationEvent) => Effect.Effect<boolean, Error>;
+  reset: (event: ActivationEvent.ActivationEvent) => Effect.Effect<boolean, Error>;
+};
+
+/**
+ * Interface for the Plugin Context.
+ */
+export interface PluginContext {
+  /**
+   * Activates plugins based on the activation event.
+   * @param event The activation event.
+   * @returns Whether the activation was successful.
+   */
+  readonly activate: (event: ActivationEvent.ActivationEvent) => Effect.Effect<boolean, Error>;
+
+  /**
+   * Re-activates the modules that were activated by the event.
+   * @param event The activation event.
+   * @returns Whether the reset was successful.
+   */
+  readonly reset: (event: ActivationEvent.ActivationEvent) => Effect.Effect<boolean, Error>;
+
+  contributeCapability<T>(args: { module: string; interface: InterfaceDef<T>; implementation: T }): void;
+
+  removeCapability<T>(interfaceDef: InterfaceDef<T>, implementation: T): void;
+
+  /**
+   * Get the Atom reference to the available capabilities for a given interface.
+   * Primarily useful for deriving other Atom values based on the capabilities or
+   * for subscribing to changes in the capabilities.
+   * @returns An atom reference to the available capabilities.
+   */
+  capabilities<T>(interfaceDef: InterfaceDef<T>): Atom.Atom<T[]>;
+
+  /**
+   * Get the Atom reference to the available capabilities for a given interface.
+   * Primarily useful for deriving other Atom values based on the capability or
+   * for subscribing to changes in the capability.
+   * @returns An atom reference to the available capability.
+   * @throws If no capability is found.
+   */
+  capability<T>(interfaceDef: InterfaceDef<T>): Atom.Atom<T>;
+
+  /**
+   * Get capabilities from the plugin context.
+   * @returns An array of capabilities.
+   */
+  getCapabilities<T>(interfaceDef: InterfaceDef<T>): T[];
+
+  /**
+   * Requests a single capability from the plugin context.
+   * @returns The capability.
+   * @throws If no capability is found.
+   */
+  getCapability<T>(interfaceDef: InterfaceDef<T>): T;
+
+  /**
+   * Waits for a capability to be available.
+   * @returns The capability.
+   */
+  waitForCapability<T>(interfaceDef: InterfaceDef<T>): Promise<T>;
+
+  activatePromise(event: ActivationEvent.ActivationEvent): Promise<boolean>;
+
+  resetPromise(event: ActivationEvent.ActivationEvent): Promise<boolean>;
+}
+
+/**
+ * Internal implementation of PluginContext.
+ * @internal
+ */
+export class PluginContextImpl implements PluginContext {
   private readonly _registry: Registry.Registry;
 
   private readonly _capabilityImpls = Atom.family<string, Atom.Writable<CapabilityImpl<unknown>[]>>(() => {
@@ -193,21 +261,10 @@ export class PluginContext {
     });
   });
 
-  /**
-   * Activates plugins based on the activation event.
-   * @param event The activation event.
-   * @returns Whether the activation was successful.
-   */
-  readonly activate: PluginsContextOptions['activate'];
+  readonly activate: PluginContextOptions['activate'];
+  readonly reset: PluginContextOptions['reset'];
 
-  /**
-   * Re-activates the modules that were activated by the event.
-   * @param event The activation event.
-   * @returns Whether the reset was successful.
-   */
-  readonly reset: PluginsContextOptions['reset'];
-
-  constructor({ registry, activate, reset }: PluginsContextOptions) {
+  constructor({ registry, activate, reset }: PluginContextOptions) {
     this._registry = registry;
     this.activate = activate;
     this.reset = reset;
@@ -251,50 +308,24 @@ export class PluginContext {
     }
   }
 
-  /**
-   * Get the Atom reference to the available capabilities for a given interface.
-   * Primarily useful for deriving other Atom values based on the capabilities or
-   * for subscribing to changes in the capabilities.
-   * @returns An atom reference to the available capabilities.
-   */
   capabilities<T>(interfaceDef: InterfaceDef<T>): Atom.Atom<T[]> {
     // NOTE: This the type-checking for capabilities is done at the time of contribution.
     return this._capabilities(interfaceDef.identifier) as Atom.Atom<T[]>;
   }
 
-  /**
-   * Get the Atom reference to the available capabilities for a given interface.
-   * Primarily useful for deriving other Atom values based on the capability or
-   * for subscribing to changes in the capability.
-   * @returns An atom reference to the available capability.
-   * @throws If no capability is found.
-   */
   capability<T>(interfaceDef: InterfaceDef<T>): Atom.Atom<T> {
     // NOTE: This the type-checking for capabilities is done at the time of contribution.
     return this._capability(interfaceDef.identifier) as Atom.Atom<T>;
   }
 
-  /**
-   * Get capabilities from the plugin context.
-   * @returns An array of capabilities.
-   */
   getCapabilities<T>(interfaceDef: InterfaceDef<T>): T[] {
     return this._registry.get(this.capabilities(interfaceDef));
   }
 
-  /**
-   * Requests a single capability from the plugin context.
-   * @returns The capability.
-   * @throws If no capability is found.
-   */
   getCapability<T>(interfaceDef: InterfaceDef<T>): T {
     return this._registry.get(this.capability(interfaceDef));
   }
 
-  /**
-   * Waits for a capability to be available.
-   * @returns The capability.
-   */
   async waitForCapability<T>(interfaceDef: InterfaceDef<T>): Promise<T> {
     const [capability] = this.getCapabilities(interfaceDef);
     if (capability) {
@@ -312,11 +343,11 @@ export class PluginContext {
     return result;
   }
 
-  async activatePromise(event: ActivationEvent): Promise<boolean> {
+  async activatePromise(event: ActivationEvent.ActivationEvent): Promise<boolean> {
     return this.activate(event).pipe(runAndForwardErrors);
   }
 
-  async resetPromise(event: ActivationEvent): Promise<boolean> {
+  async resetPromise(event: ActivationEvent.ActivationEvent): Promise<boolean> {
     return this.reset(event).pipe(runAndForwardErrors);
   }
 }

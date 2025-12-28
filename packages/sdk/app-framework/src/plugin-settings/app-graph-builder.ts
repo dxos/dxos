@@ -7,14 +7,14 @@ import { type SettingsStore, type SettingsValue } from '@dxos/local-storage';
 import { isNonNullable } from '@dxos/util';
 
 import { Capabilities } from '../common';
-import { type PluginContext, type PluginMeta, contributes, defineCapabilityModule } from '../core';
+import { Capability, type Plugin } from '../core';
 import { createIntent } from '../plugin-intent';
 
 import { SETTINGS_ID, SETTINGS_KEY, SettingsAction } from './actions';
 import { meta } from './meta';
 
-export default defineCapabilityModule((context: PluginContext) =>
-  contributes(Capabilities.AppGraphBuilder, [
+export default Capability.makeModule((context: Capability.PluginContext) =>
+  Capability.contributes(Capabilities.AppGraphBuilder, [
     GraphBuilder.createExtension({
       id: `${meta.id}/action`,
       match: NodeMatcher.whenRoot,
@@ -62,8 +62,8 @@ export default defineCapabilityModule((context: PluginContext) =>
         const [settingsStore] = get(context.capabilities(Capabilities.SettingsStore));
         return [
           ...manager.plugins
-            .filter((plugin) => manager.core.includes(plugin.meta.id))
-            .map((plugin): [PluginMeta, SettingsStore<SettingsValue>] | null => {
+            .filter((plugin: Plugin.Plugin) => manager.core.includes(plugin.meta.id))
+            .map((plugin: Plugin.Plugin): [Plugin.Meta, SettingsStore<SettingsValue>] | null => {
               const settings = settingsStore?.getStore(plugin.meta.id);
               if (!settings) {
                 return null;
@@ -72,7 +72,7 @@ export default defineCapabilityModule((context: PluginContext) =>
               return [plugin.meta, settings];
             })
             .filter(isNonNullable)
-            .map(([meta, settings]) => ({
+            .map(([meta, settings]: [Plugin.Meta, SettingsStore<SettingsValue>]) => ({
               id: `${SETTINGS_KEY}:${meta.id.replaceAll('/', ':')}`,
               type: 'category',
               data: settings,
@@ -102,8 +102,8 @@ export default defineCapabilityModule((context: PluginContext) =>
         const manager = get(context.capability(Capabilities.PluginManager));
         const [settingsStore] = get(context.capabilities(Capabilities.SettingsStore));
         return manager.plugins
-          .filter((plugin) => !manager.core.includes(plugin.meta.id))
-          .map((plugin): [PluginMeta, SettingsStore<SettingsValue>] | null => {
+          .filter((plugin: Plugin.Plugin) => !manager.core.includes(plugin.meta.id))
+          .map((plugin: Plugin.Plugin): [Plugin.Meta, SettingsStore<SettingsValue>] | null => {
             const settings = settingsStore?.getStore(plugin.meta.id);
             if (!settings) {
               return null;
@@ -112,7 +112,7 @@ export default defineCapabilityModule((context: PluginContext) =>
             return [plugin.meta, settings];
           })
           .filter(isNonNullable)
-          .map(([meta, settings]) => ({
+          .map(([meta, settings]: [Plugin.Meta, SettingsStore<SettingsValue>]) => ({
             id: `${SETTINGS_KEY}:${meta.id.replaceAll('/', ':')}`,
             type: 'category',
             data: settings,

@@ -3,20 +3,19 @@
 //
 
 import { Events } from '../../common';
-import { defineModule, definePlugin, lazy } from '../../core';
+import { Capability, Plugin } from '../../core';
 
-const Main = lazy(() => import('./Main'));
-const Toolbar = lazy(() => import('./Toolbar'));
+const Main = Capability.lazy('Main', () => import('./Main'));
+const Toolbar = Capability.lazy('Toolbar', () => import('./Toolbar'));
 
-export const GeneratorPlugin = definePlugin({ id: 'dxos.org/test/generator', name: 'Generator' }, () => [
-  defineModule({
-    id: 'dxos.org/test/generator/main',
+export const GeneratorPlugin = Plugin.define({ id: 'dxos.org/test/generator', name: 'Generator' }).pipe(
+  Plugin.addModule({
     activatesOn: Events.Startup,
     activate: Main,
   }),
-  defineModule({
-    id: 'dxos.org/test/generator/toolbar',
+  Plugin.addModule({
     activatesOn: Events.Startup,
     activate: Toolbar,
   }),
-]);
+  Plugin.make,
+);

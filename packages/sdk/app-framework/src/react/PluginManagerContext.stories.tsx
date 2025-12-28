@@ -12,12 +12,12 @@ import { useWebComponentContext } from '@dxos/web-context-react';
 import { Capabilities } from '../common';
 import { Events } from '../common';
 import { PluginManagerContext } from '../context';
-import { contributes, defineCapability, defineModule, definePlugin } from '../core';
+import { Capability, Plugin } from '../core';
 
 import { useApp } from './useApp';
 
 // Define the Counter capability
-const Counter = defineCapability<{ count: number; increment: () => void }>('example/counter');
+const Counter = Capability.make<{ count: number; increment: () => void }>('example/counter');
 
 const CountStatus = () => {
   const manager = useWebComponentContext(PluginManagerContext);
@@ -116,41 +116,39 @@ const CounterComponent = () => {
 };
 
 // Plugin that provides the Counter capability and renders the UI
-const CounterPlugin = definePlugin(
-  {
-    id: 'dxos.org/plugin/counter',
-    name: 'Counter Plugin',
-  },
-  () => [
-    defineModule({
-      id: 'dxos.org/plugin/counter/main',
-      activatesOn: Events.Startup,
-      activate: () => {
-        const count = signal(0);
+const CounterPlugin = Plugin.define({
+  id: 'dxos.org/plugin/counter',
+  name: 'Counter Plugin',
+}).pipe(
+  Plugin.addModule({
+    id: 'CounterMain',
+    activatesOn: Events.Startup,
+    activate: () => {
+      const count = signal(0);
 
-        return [
-          // Contribute the state/logic
-          contributes(Counter, {
-            get count() {
-              return count.value;
-            },
-            increment: () => {
-              count.value++;
-            },
-          }),
+      return [
+        // Contribute the state/logic
+        Capability.contributes(Counter, {
+          get count() {
+            return count.value;
+          },
+          increment: () => {
+            count.value++;
+          },
+        }),
 
-          // Contribute the UI
-          contributes(Capabilities.ReactRoot, {
-            id: 'dxos.org/plugin/counter/root',
-            root: CounterComponent,
-          }),
-        ];
-      },
-    }),
-  ],
-);
+        // Contribute the UI
+        Capability.contributes(Capabilities.ReactRoot, {
+          id: 'dxos.org/plugin/counter/root',
+          root: CounterComponent,
+        }),
+      ];
+    },
+  }),
+  Plugin.make,
+)();
 
-const plugins = [CounterPlugin()];
+const plugins = [CounterPlugin];
 const core = ['dxos.org/plugin/counter'];
 const placeholder = () => (
   <div className='flex h-screen items-center justify-center p-4 text-lg text-neutral-500'>
