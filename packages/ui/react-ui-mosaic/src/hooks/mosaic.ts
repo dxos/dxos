@@ -50,6 +50,7 @@ export interface DropEventHandler {
 
   /**
    * Request the object to be dropped.
+   * This allows the source container to clone/mutate/swap the object before it is dropped.
    * If the callback returns true, then the callback may decide to remove the item from the source container,
    * completing the transfer.
    */
