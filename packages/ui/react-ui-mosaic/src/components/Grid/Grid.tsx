@@ -38,7 +38,7 @@ import { type Obj } from '@dxos/echo';
 import { Icon, type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
-import { type ComponentData, type ContainerData } from '../../hooks';
+import { type ContainerData, type ItemData } from '../../hooks';
 
 //
 // Styles
@@ -158,8 +158,12 @@ const GridStack = memo(({ classNames, id, objects, Cell, canDrag = false, canDro
     return combine(
       dropTargetForElements({
         element: rootRef.current,
-        getData: () => ({ type: 'container', id }) satisfies ContainerData,
-        canDrop: () => canDrop,
+        getData: () =>
+          ({
+            type: 'container',
+            id,
+          }) satisfies ContainerData,
+        canDrop: () => canDrop, // TODO(burdon): Generalize.
         onDragEnter: () => setState({ type: 'active' }),
         onDragLeave: () => setState({ type: 'idle' }),
       }),
@@ -218,7 +222,13 @@ const GridCell = memo(({ classNames, containerId, object, Cell, canDrag = false,
     return combine(
       draggable({
         element: handle,
-        getInitialData: () => ({ type: 'cell', id: object.id, containerId }) satisfies ComponentData,
+        getInitialData: () =>
+          ({
+            type: 'item',
+            id: object.id,
+            object,
+            containerId,
+          }) satisfies ItemData,
         onGenerateDragPreview: ({ location, nativeSetDragImage }) => {
           const rect = root.getBoundingClientRect();
           setCustomNativeDragPreview({
@@ -246,10 +256,11 @@ const GridCell = memo(({ classNames, containerId, object, Cell, canDrag = false,
         getData: ({ input, element }) => {
           return attachClosestEdge(
             {
-              type: 'cell',
+              type: 'item',
               id: object.id,
+              object,
               containerId,
-            } satisfies ComponentData,
+            } satisfies ItemData,
             {
               input,
               element,

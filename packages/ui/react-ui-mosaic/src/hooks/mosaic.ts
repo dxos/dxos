@@ -2,34 +2,30 @@
 // Copyright 2025 DXOS.org
 //
 
-/**
- * Pragmatic drag and drop data.
- */
-export type CellData<T extends Record<string | symbol, unknown> = Record<string | symbol, unknown>> = T & {
-  type: 'cell' | 'container';
+import { type Obj } from '@dxos/echo';
+
+// TODO(burdon): Reconcile with react-ui-dnd.
+
+export type ItemData = {
+  type: 'item';
+  id: string;
+  object: Obj.Any;
+  containerId: string;
+};
+
+export type ContainerData = {
+  type: 'container';
   id: string;
 };
 
-export type ComponentData = CellData<{ containerId: string }>;
-
-export type ContainerData = CellData;
-
-//
-// Events
-//
-
-export type DragLocation = {
-  index: number;
-  data: CellData;
-};
-
 export type DropEvent = {
-  source: ComponentData;
-  target: ContainerData;
+  source: ItemData;
+  target?: ItemData;
+  container: ContainerData;
 };
 
 export interface DropEventHandler {
   id: string;
-  canDrop: (data: ComponentData) => boolean;
-  onDrop: (event: DropEvent) => void;
+  canDrop: (props: { item: ItemData }) => boolean;
+  onUpdate?: (props: { insert?: ItemData; at?: ItemData; remove?: ItemData }) => void;
 }

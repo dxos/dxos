@@ -8,7 +8,7 @@ import React, { type PropsWithChildren, useEffect, useState } from 'react';
 
 import { log } from '@dxos/log';
 
-import { type ComponentData, type ContainerData, type DropEventHandler } from '../../hooks';
+import { type ContainerData, type DropEventHandler, type ItemData } from '../../hooks';
 
 // TODO(burdon): DragContext.
 // TODO(burdon): Register containers and drop handlers.
@@ -45,22 +45,36 @@ const Root = ({ children }: RootProps) => {
           location: location.current.dropTargets.map((target) => target.data),
         });
 
-        // TODO(burdon): Also get target cell (to compute position).
-        const target = location.current.dropTargets.find((t) => t.data.type === 'container');
-        if (!target) {
-          log.warn('invalid drop', { source, location });
+        const sourceData = source.data as ItemData;
+        const sourceContainer = containers[sourceData.containerId];
+        if (!sourceContainer) {
+          log.warn('invalid source', { source: sourceData });
           return;
         }
 
-        const sourceData = source.data as ComponentData;
-        const targetData = target.data as ContainerData;
-        const container = containers[targetData.id];
+        // TODO(burdon): Target could be a placeholder -- use it to get the location.
+        // const target = location.current.dropTargets.find((target) => target.data.type === 'item');
+        // const targetData = target?.data as ItemData;
+
+        const container = location.current.dropTargets.find((target) => target.data.type === 'container');
         if (!container) {
-          log.warn('invalid container', { id: targetData.id });
+          log.warn('invalid target');
           return;
         }
 
-        container.onDrop({ source: sourceData, target: targetData });
+        const containerData = container.data as ContainerData;
+        const targetContainer = containers[containerData.id];
+        if (!targetContainer) {
+          log.warn('invalid container', { id: containerData.id });
+          return;
+        }
+
+        if (sourceContainer === targetContainer) {
+          targetContainer.onUpdate?.({ insert: sourceData });
+        } else {
+          targetContainer.onUpdate?.({ insert: sourceData });
+          sourceContainer.onUpdate?.({ remove: sourceData });
+        }
       },
     });
   }, [containers]);
@@ -85,14 +99,14 @@ const Root = ({ children }: RootProps) => {
 // Container
 //
 
-type ContainerProps = PropsWithChildren<{ id: string } & DropEventHandler>;
+type ContainerProps = PropsWithChildren<{ handler: DropEventHandler }>;
 
-const Container = ({ children, id, canDrop, onDrop }: ContainerProps) => {
-  const { addContainer, removeContainer } = useMosaicContext(id);
+const Container = ({ children, handler }: ContainerProps) => {
+  const { addContainer, removeContainer } = useMosaicContext(handler.id);
   useEffect(() => {
-    addContainer({ id, canDrop, onDrop });
-    return () => removeContainer(id);
-  }, [id, canDrop, onDrop]);
+    addContainer(handler);
+    return () => removeContainer(handler.id);
+  }, [handler]);
 
   return <>{children}</>;
 };

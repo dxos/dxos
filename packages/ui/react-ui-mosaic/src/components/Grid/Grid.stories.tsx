@@ -3,7 +3,7 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useMemo, useState } from 'react';
 
 import { Obj } from '@dxos/echo';
 import { createDocAccessor, createObject } from '@dxos/echo-db';
@@ -28,7 +28,8 @@ import { get, range } from '@dxos/util';
 
 const generator = faker as any as ValueGenerator;
 
-import { Mosaic, type MosaicContainerProps } from '../Mosaic';
+import { type DropEventHandler } from '../../hooks';
+import { Mosaic } from '../Mosaic';
 
 import { Grid, type GridCellProps } from './Grid';
 
@@ -86,7 +87,7 @@ const TextCell: GridCellProps['Cell'] = ({ object, dragging }) => {
 
 const DebugCell: GridCellProps['Cell'] = ({ object }) => {
   return (
-    <div className='flex flex-col'>
+    <div role='none' className='flex flex-col'>
       <div>{Obj.getLabel(object)}</div>
       <div className='text-xs text-subdued'>{Obj.getTypename(object)}</div>
       <div className='text-xs text-subdued'>{object.id}</div>
@@ -96,10 +97,6 @@ const DebugCell: GridCellProps['Cell'] = ({ object }) => {
 
 const DefaultStory = () => {
   const { space } = useClientStory();
-  const [query, setQuery] = useState<string | undefined>();
-  const filter = useQueryBuilder(query);
-  const searchObjects = useQuery(space?.db, filter).sort(Obj.sort(Obj.sortByTypename, Obj.sortByLabel));
-
   const { themeMode } = useThemeContext();
   const extensions = useMemo(
     () => [
@@ -111,20 +108,44 @@ const DefaultStory = () => {
     [],
   );
 
+  const [query, setQuery] = useState<string | undefined>();
+  const filter = useQueryBuilder(query);
+  const searchObjects = useQuery(space?.db, filter).sort(Obj.sort(Obj.sortByTypename, Obj.sortByLabel));
+  const searchHandler = useMemo<DropEventHandler>(
+    () => ({
+      id: 'search',
+      canDrop: () => false,
+    }),
+    [],
+  );
+
   // TODO(burdon): Data model for position? Arrays of refs.
   const [objects, setObjects] = useState(range(2).map(() => createObject(Text.make(faker.lorem.paragraph()))));
-
-  const containerId = 'notes';
-  const handleDrop = useCallback<NonNullable<MosaicContainerProps['onDrop']>>(
-    ({ source, target }) => {
-      console.log('>>>', source, target);
-      const from = source.containerId === containerId && objects.findIndex((object) => object.id === source.id);
-      const to = target.containerId === containerId && objects.findIndex((object) => object.id === target.id);
-
-      // const [object] = objects.splice(source.index, 1);
-      // objects.splice(target.index, 0, object);
-      // setObjects([...objects]);
-    },
+  const objectHandler = useMemo<DropEventHandler>(
+    () => ({
+      id: 'notes',
+      canDrop: () => true,
+      onUpdate: ({ insert, remove }) => {
+        // if (insert) {
+        //   const idx = objects.findIndex((object) => object.id === insert.id);
+        //   if (idx !== -1) {
+        //     objects.splice(idx, 1);
+        //     setObjects([...objects]);
+        //   }
+        // }
+        // TODO(burdon): Generalize get/remove/add from collections (array/map/position).
+        // const from = source.containerId === containerId ? objects.findIndex((object) => object.id === source.id) : -1;
+        // const to = container.id === containerId ? objects.findIndex((object) => object.id === target?.id) : -1;
+        // console.log('>>>', { source, from, target, to, container });
+        // if (from !== -1) {
+        //   objects.splice(from, 1);
+        // }
+        // if (to !== -1) {
+        //   objects.splice(to, 0, objects[from]);
+        // }
+        // setObjects([...objects]);
+      },
+    }),
     [objects],
   );
 
@@ -133,20 +154,25 @@ const DefaultStory = () => {
       <Editor.Root extensions={extensions}>
         <Grid.Root>
           <Grid.Viewport>
-            <Grid.Column classNames='is-[25rem]'>
-              {/* TODO(burdon): Container component. */}
-              <div role='none' className='p-3'>
-                <QueryEditor
-                  classNames='border border-subduedSeparator rounded-sm p-2'
-                  db={space?.db}
-                  onChange={setQuery}
-                />
-              </div>
-              <Grid.Stack id='search' objects={searchObjects} Cell={DebugCell} canDrag />
-            </Grid.Column>
-            <Mosaic.Container id={containerId} canDrop={() => true} onDrop={handleDrop}>
+            {/* Search */}
+            <Mosaic.Container handler={searchHandler}>
               <Grid.Column classNames='is-[25rem]'>
-                <Grid.Stack id={containerId} objects={objects} Cell={TextCell} canDrag canDrop />
+                {/* TODO(burdon): Stack layout. */}
+                <div role='none' className='p-3'>
+                  <QueryEditor
+                    classNames='border border-subduedSeparator rounded-sm p-2'
+                    db={space?.db}
+                    onChange={setQuery}
+                  />
+                </div>
+                <Grid.Stack id={searchHandler.id} objects={searchObjects} Cell={DebugCell} canDrag />
+              </Grid.Column>
+            </Mosaic.Container>
+
+            {/* Canvas */}
+            <Mosaic.Container handler={objectHandler}>
+              <Grid.Column classNames='is-[25rem]'>
+                <Grid.Stack id={objectHandler.id} objects={objects} Cell={TextCell} canDrag canDrop />
               </Grid.Column>
             </Mosaic.Container>
           </Grid.Viewport>
