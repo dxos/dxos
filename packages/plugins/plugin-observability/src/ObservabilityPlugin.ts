@@ -39,24 +39,14 @@ export const ObservabilityPlugin = Plugin.define<ObservabilityPluginOptions>(met
     activatesAfter: [ObservabilityEvents.StateReady],
     activate: () => ObservabilityState({ namespace }),
   })),
-  Plugin.addModule({
-    id: 'translations',
-    activatesOn: Common.ActivationEvent.SetupTranslations,
-    activate: () => Capability.contributes(Common.Capability.Translations, translations),
-  }),
+  Common.Plugin.addTranslationsModule({ translations }),
   Plugin.addModule(({ namespace }) => ({
     id: Capability.getModuleTag(IntentResolver),
     activatesOn: Common.ActivationEvent.SetupIntentResolver,
     activate: (context) => IntentResolver({ context, namespace }),
   })),
-  Plugin.addModule({
-    activatesOn: Common.ActivationEvent.SetupReactSurface,
-    activate: ReactSurface,
-  }),
-  Plugin.addModule({
-    activatesOn: Common.ActivationEvent.SetupAppGraph,
-    activate: AppGraphBuilder,
-  }),
+  Common.Plugin.addSurfaceModule({ activate: ReactSurface }),
+  Common.Plugin.addAppGraphModule({ activate: AppGraphBuilder }),
   Plugin.addModule(({ namespace, observability }) => ({
     id: Capability.getModuleTag(ClientReady),
     activatesOn: ActivationEvent.allOf(

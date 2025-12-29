@@ -19,30 +19,23 @@ export const NavTreePlugin = Plugin.define(meta).pipe(
     activatesAfter: [NavTreeEvents.StateReady],
     activate: State,
   }),
-  Plugin.addModule({
-    id: 'translations',
-    activatesOn: Common.ActivationEvent.SetupTranslations,
-    activate: () => Capability.contributes(Common.Capability.Translations, translations),
-  }),
-  Plugin.addModule({
-    id: 'metadata',
-    activatesOn: Common.ActivationEvent.SetupMetadata,
-    activate: () =>
-      Capability.contributes(Common.Capability.Metadata, {
-        id: NODE_TYPE,
-        metadata: {
-          parse: ({ item }: TreeData, type: string) => {
-            switch (type) {
-              case 'node':
-                return item;
-              case 'object':
-                return item.data;
-              case 'view-object':
-                return { id: `${item.id}-view`, object: item.data };
-            }
-          },
+  Common.Plugin.addTranslationsModule({ translations }),
+  Common.Plugin.addMetadataModule({
+    metadata: {
+      id: NODE_TYPE,
+      metadata: {
+        parse: ({ item }: TreeData, type: string) => {
+          switch (type) {
+            case 'node':
+              return item;
+            case 'object':
+              return item.data;
+            case 'view-object':
+              return { id: `${item.id}-view`, object: item.data };
+          }
         },
-      }),
+      },
+    },
   }),
   Plugin.addModule({
     id: 'expose',
@@ -74,20 +67,8 @@ export const NavTreePlugin = Plugin.define(meta).pipe(
     activatesOn: Common.ActivationEvent.AppGraphReady,
     activate: Keyboard,
   }),
-  Plugin.addModule({
-    id: 'react-surface',
-    activatesOn: Common.ActivationEvent.SetupReactSurface,
-    activate: ReactSurface,
-  }),
-  Plugin.addModule({
-    id: 'intent-resolver',
-    activatesOn: Common.ActivationEvent.SetupIntentResolver,
-    activate: IntentResolver,
-  }),
-  Plugin.addModule({
-    id: 'app-graph-builder',
-    activatesOn: Common.ActivationEvent.SetupAppGraph,
-    activate: AppGraphBuilder,
-  }),
+  Common.Plugin.addSurfaceModule({ activate: ReactSurface }),
+  Common.Plugin.addIntentResolverModule({ activate: IntentResolver }),
+  Common.Plugin.addAppGraphModule({ activate: AppGraphBuilder }),
   Plugin.make,
 );

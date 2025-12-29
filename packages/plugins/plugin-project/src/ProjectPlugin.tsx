@@ -13,45 +13,26 @@ import { translations } from './translations';
 import { ProjectAction } from './types';
 
 export const ProjectPlugin = Plugin.define(meta).pipe(
-  Plugin.addModule({
-    id: 'translations',
-    activatesOn: Common.ActivationEvent.SetupTranslations,
-    activate: () => Capability.contributes(Common.Capability.Translations, translations),
-  }),
-  Plugin.addModule({
-    id: 'metadata',
-    activatesOn: Common.ActivationEvent.SetupMetadata,
-    activate: () =>
-      Capability.contributes(Common.Capability.Metadata, {
-        id: Project.Project.typename,
-        metadata: {
-          icon: 'ph--check-square-offset--regular',
-          iconHue: 'purple',
-          createObjectIntent: ((_, options) =>
-            createIntent(ProjectAction.Create, { db: options.db })) satisfies CreateObjectIntent,
-          addToCollectionOnCreate: true,
-        },
-      }),
+  Common.Plugin.addTranslationsModule({ translations }),
+  Common.Plugin.addMetadataModule({
+    metadata: {
+      id: Project.Project.typename,
+      metadata: {
+        icon: 'ph--check-square-offset--regular',
+        iconHue: 'purple',
+        createObjectIntent: ((_, options) =>
+          createIntent(ProjectAction.Create, { db: options.db })) satisfies CreateObjectIntent,
+        addToCollectionOnCreate: true,
+      },
+    },
   }),
   Plugin.addModule({
     id: 'schema',
     activatesOn: ClientEvents.SetupSchema,
     activate: () => Capability.contributes(ClientCapabilities.Schema, [Project.Project]),
   }),
-  Plugin.addModule({
-    id: 'react-surface',
-    activatesOn: Common.ActivationEvent.SetupReactSurface,
-    activate: ReactSurface,
-  }),
-  Plugin.addModule({
-    id: 'intent-resolver',
-    activatesOn: Common.ActivationEvent.SetupIntentResolver,
-    activate: IntentResolver,
-  }),
-  Plugin.addModule({
-    id: 'app-graph-builder',
-    activatesOn: Common.ActivationEvent.SetupAppGraph,
-    activate: AppGraphBuilder,
-  }),
+  Common.Plugin.addSurfaceModule({ activate: ReactSurface }),
+  Common.Plugin.addIntentResolverModule({ activate: IntentResolver }),
+  Common.Plugin.addAppGraphModule({ activate: AppGraphBuilder }),
   Plugin.make,
 );

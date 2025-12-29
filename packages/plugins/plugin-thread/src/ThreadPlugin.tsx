@@ -51,16 +51,10 @@ export const ThreadPlugin = Plugin.define(meta).pipe(
     activatesOn: Common.ActivationEvent.SetupSettings,
     activate: ThreadState,
   }),
-  Plugin.addModule({
-    id: 'translations',
-    activatesOn: Common.ActivationEvent.SetupTranslations,
-    activate: () => Capability.contributes(Common.Capability.Translations, [...translations, ...threadTranslations]),
-  }),
-  Plugin.addModule({
-    id: 'metadata',
-    activatesOn: Common.ActivationEvent.SetupMetadata,
-    activate: () => [
-      Capability.contributes(Common.Capability.Metadata, {
+  Common.Plugin.addTranslationsModule({ translations: [...translations, ...threadTranslations] }),
+  Common.Plugin.addMetadataModule({
+    metadata: [
+      {
         id: Type.getTypename(Channel.Channel),
         metadata: {
           icon: 'ph--hash--regular',
@@ -70,22 +64,22 @@ export const ThreadPlugin = Plugin.define(meta).pipe(
               spaceId: options.db.spaceId,
             })) satisfies CreateObjectIntent,
         },
-      }),
-      Capability.contributes(Common.Capability.Metadata, {
+      },
+      {
         id: Type.getTypename(Thread.Thread),
         metadata: {
           // TODO(wittjosiah): Move out of metadata.
           loadReferences: async (thread: Thread.Thread) => await Ref.Array.loadAll(thread.messages ?? []),
         },
-      }),
-      Capability.contributes(Common.Capability.Metadata, {
+      },
+      {
         id: Message.Message.typename,
         metadata: {
           // TODO(wittjosiah): Move out of metadata.
           loadReferences: () => [], // loadObjectReferences(message, (message) => [...message.parts, message.context]),
         },
-      }),
-      Capability.contributes(Common.Capability.Metadata, {
+      },
+      {
         id: THREAD_ITEM,
         metadata: {
           parse: (item: Thread.Thread, type: string) => {
@@ -99,7 +93,7 @@ export const ThreadPlugin = Plugin.define(meta).pipe(
             }
           },
         },
-      }),
+      },
     ],
   }),
   Plugin.addModule({
@@ -142,21 +136,9 @@ export const ThreadPlugin = Plugin.define(meta).pipe(
     activatesOn: Common.ActivationEvent.Startup,
     activate: ReactRoot,
   }),
-  Plugin.addModule({
-    id: 'react-surface',
-    activatesOn: Common.ActivationEvent.SetupReactSurface,
-    activate: ReactSurface,
-  }),
-  Plugin.addModule({
-    id: 'intent-resolver',
-    activatesOn: Common.ActivationEvent.SetupIntentResolver,
-    activate: IntentResolver,
-  }),
-  Plugin.addModule({
-    id: 'app-graph-builder',
-    activatesOn: Common.ActivationEvent.SetupAppGraph,
-    activate: AppGraphBuilder,
-  }),
+  Common.Plugin.addSurfaceModule({ activate: ReactSurface }),
+  Common.Plugin.addIntentResolverModule({ activate: IntentResolver }),
+  Common.Plugin.addAppGraphModule({ activate: AppGraphBuilder }),
   Plugin.addModule({
     id: 'blueprint',
     activatesOn: Common.ActivationEvent.SetupArtifactDefinition,

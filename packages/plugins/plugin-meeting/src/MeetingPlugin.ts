@@ -32,24 +32,16 @@ export const MeetingPlugin = Plugin.define(meta).pipe(
     activatesOn: ActivationEvent.oneOf(Common.ActivationEvent.SetupSettings, Common.ActivationEvent.SetupAppGraph),
     activate: MeetingState,
   }),
-  Plugin.addModule({
-    id: 'translations',
-    activatesOn: Common.ActivationEvent.SetupTranslations,
-    activate: () => Capability.contributes(Common.Capability.Translations, translations),
-  }),
-  Plugin.addModule({
-    id: 'metadata',
-    activatesOn: Common.ActivationEvent.SetupMetadata,
-    activate: () => [
-      Capability.contributes(Common.Capability.Metadata, {
-        id: Type.getTypename(Meeting.Meeting),
-        metadata: {
-          label: (object: Meeting.Meeting) => object.name || new Date(object.created).toLocaleString(),
-          icon: 'ph--note--regular',
-          iconHue: 'rose',
-        },
-      }),
-    ],
+  Common.Plugin.addTranslationsModule({ translations }),
+  Common.Plugin.addMetadataModule({
+    metadata: {
+      id: Type.getTypename(Meeting.Meeting),
+      metadata: {
+        label: (object: Meeting.Meeting) => object.name || new Date(object.created).toLocaleString(),
+        icon: 'ph--note--regular',
+        iconHue: 'rose',
+      },
+    },
   }),
   Plugin.addModule({
     id: 'schemas',
@@ -68,18 +60,9 @@ export const MeetingPlugin = Plugin.define(meta).pipe(
     activatesOn: ClientEvents.SpacesReady,
     activate: Repair,
   }),
-  Plugin.addModule({
-    activatesOn: Common.ActivationEvent.SetupReactSurface,
-    activate: ReactSurface,
-  }),
-  Plugin.addModule({
-    activatesOn: Common.ActivationEvent.SetupIntentResolver,
-    activate: IntentResolver,
-  }),
-  Plugin.addModule({
-    activatesOn: Common.ActivationEvent.SetupAppGraph,
-    activate: AppGraphBuilder,
-  }),
+  Common.Plugin.addSurfaceModule({ activate: ReactSurface }),
+  Common.Plugin.addIntentResolverModule({ activate: IntentResolver }),
+  Common.Plugin.addAppGraphModule({ activate: AppGraphBuilder }),
   Plugin.addModule({
     activatesOn: ActivationEvent.allOf(Common.ActivationEvent.SettingsReady, ClientEvents.ClientReady),
     activate: CallExtension,

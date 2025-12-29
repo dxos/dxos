@@ -21,46 +21,27 @@ export const MapPlugin = Plugin.define(meta).pipe(
     activatesOn: Common.ActivationEvent.SetupSettings,
     activate: MapState,
   }),
-  Plugin.addModule({
-    id: 'translations',
-    activatesOn: Common.ActivationEvent.SetupTranslations,
-    activate: () => Capability.contributes(Common.Capability.Translations, translations),
-  }),
-  Plugin.addModule({
-    id: 'metadata',
-    activatesOn: Common.ActivationEvent.SetupMetadata,
-    activate: () =>
-      Capability.contributes(Common.Capability.Metadata, {
-        id: Type.getTypename(Map.Map),
-        metadata: {
-          icon: 'ph--compass--regular',
-          iconHue: 'green',
-          inputSchema: MapAction.CreateMap,
-          createIntent: ((props, options) =>
-            createIntent(MapAction.Create, { ...props, space: options.db })) satisfies CreateObjectIntent,
-        },
-      }),
+  Common.Plugin.addTranslationsModule({ translations }),
+  Common.Plugin.addMetadataModule({
+    metadata: {
+      id: Type.getTypename(Map.Map),
+      metadata: {
+        icon: 'ph--compass--regular',
+        iconHue: 'green',
+        inputSchema: MapAction.CreateMap,
+        createIntent: ((props, options) =>
+          createIntent(MapAction.Create, { ...props, space: options.db })) satisfies CreateObjectIntent,
+      },
+    },
   }),
   Plugin.addModule({
     id: 'schema',
     activatesOn: ClientEvents.SetupSchema,
     activate: () => Capability.contributes(ClientCapabilities.Schema, [Map.Map]),
   }),
-  Plugin.addModule({
-    id: 'react-surface',
-    activatesOn: Common.ActivationEvent.SetupReactSurface,
-    activate: ReactSurface,
-  }),
-  Plugin.addModule({
-    id: 'intent-resolver',
-    activatesOn: Common.ActivationEvent.SetupIntentResolver,
-    activate: IntentResolver,
-  }),
-  Plugin.addModule({
-    id: 'app-graph-builder',
-    activatesOn: Common.ActivationEvent.SetupAppGraph,
-    activate: AppGraphBuilder,
-  }),
+  Common.Plugin.addSurfaceModule({ activate: ReactSurface }),
+  Common.Plugin.addIntentResolverModule({ activate: IntentResolver }),
+  Common.Plugin.addAppGraphModule({ activate: AppGraphBuilder }),
   Plugin.addModule({
     id: 'blueprint',
     activatesOn: Common.ActivationEvent.SetupArtifactDefinition,

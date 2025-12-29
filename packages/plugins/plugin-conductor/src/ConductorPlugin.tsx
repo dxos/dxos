@@ -14,39 +14,24 @@ import { translations } from './translations';
 import { ConductorAction } from './types';
 
 export const ConductorPlugin = Plugin.define(meta).pipe(
-  Plugin.addModule({
-    id: 'translations',
-    activatesOn: Common.ActivationEvent.SetupTranslations,
-    activate: () => Capability.contributes(Common.Capability.Translations, translations),
-  }),
-  Plugin.addModule({
-    id: 'metadata',
-    activatesOn: Common.ActivationEvent.SetupMetadata,
-    activate: () =>
-      Capability.contributes(Common.Capability.Metadata, {
-        id: CanvasBoardType.typename,
-        metadata: {
-          icon: 'ph--infinity--regular',
-          iconHue: 'sky',
-          createObjectIntent: (() => createIntent(ConductorAction.Create)) satisfies CreateObjectIntent,
-          addToCollectionOnCreate: true,
-        },
-      }),
+  Common.Plugin.addTranslationsModule({ translations }),
+  Common.Plugin.addMetadataModule({
+    metadata: {
+      id: CanvasBoardType.typename,
+      metadata: {
+        icon: 'ph--infinity--regular',
+        iconHue: 'sky',
+        createObjectIntent: (() => createIntent(ConductorAction.Create)) satisfies CreateObjectIntent,
+        addToCollectionOnCreate: true,
+      },
+    },
   }),
   Plugin.addModule({
     id: 'schema',
     activatesOn: ClientEvents.SetupSchema,
     activate: () => Capability.contributes(ClientCapabilities.Schema, [CanvasBoardType, ComputeGraph]),
   }),
-  Plugin.addModule({
-    id: 'react-surface',
-    activatesOn: Common.ActivationEvent.SetupReactSurface,
-    activate: ReactSurface,
-  }),
-  Plugin.addModule({
-    id: 'intent-resolver',
-    activatesOn: Common.ActivationEvent.SetupIntentResolver,
-    activate: IntentResolver,
-  }),
+  Common.Plugin.addSurfaceModule({ activate: ReactSurface }),
+  Common.Plugin.addIntentResolverModule({ activate: IntentResolver }),
   Plugin.make,
 );

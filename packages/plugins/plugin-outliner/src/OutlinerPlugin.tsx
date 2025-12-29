@@ -12,16 +12,10 @@ import { translations } from './translations';
 import { Journal, Outline, OutlineAction } from './types';
 
 export const OutlinerPlugin = Plugin.define(meta).pipe(
-  Plugin.addModule({
-    id: 'translations',
-    activatesOn: Common.ActivationEvent.SetupTranslations,
-    activate: () => Capability.contributes(Common.Capability.Translations, translations),
-  }),
-  Plugin.addModule({
-    id: 'metadata',
-    activatesOn: Common.ActivationEvent.SetupMetadata,
-    activate: () => [
-      Capability.contributes(Common.Capability.Metadata, {
+  Common.Plugin.addTranslationsModule({ translations }),
+  Common.Plugin.addMetadataModule({
+    metadata: [
+      {
         id: Journal.Journal.typename,
         metadata: {
           icon: 'ph--calendar-check--regular',
@@ -29,8 +23,8 @@ export const OutlinerPlugin = Plugin.define(meta).pipe(
           createObjectIntent: (() => createIntent(OutlineAction.CreateJournal)) satisfies CreateObjectIntent,
           addToCollectionOnCreate: true,
         },
-      }),
-      Capability.contributes(Common.Capability.Metadata, {
+      },
+      {
         id: Outline.Outline.typename,
         metadata: {
           icon: 'ph--tree-structure--regular',
@@ -38,7 +32,7 @@ export const OutlinerPlugin = Plugin.define(meta).pipe(
           createObjectIntent: (() => createIntent(OutlineAction.CreateOutline)) satisfies CreateObjectIntent,
           addToCollectionOnCreate: true,
         },
-      }),
+      },
     ],
   }),
   Plugin.addModule({
@@ -47,20 +41,8 @@ export const OutlinerPlugin = Plugin.define(meta).pipe(
     activate: () =>
       Capability.contributes(ClientCapabilities.Schema, [Journal.JournalEntry, Journal.Journal, Outline.Outline]),
   }),
-  Plugin.addModule({
-    id: 'app-graph-builder',
-    activatesOn: Common.ActivationEvent.SetupAppGraph,
-    activate: AppGraphBuilder,
-  }),
-  Plugin.addModule({
-    id: 'react-surface',
-    activatesOn: Common.ActivationEvent.SetupReactSurface,
-    activate: ReactSurface,
-  }),
-  Plugin.addModule({
-    id: 'intent-resolver',
-    activatesOn: Common.ActivationEvent.SetupIntentResolver,
-    activate: IntentResolver,
-  }),
+  Common.Plugin.addAppGraphModule({ activate: AppGraphBuilder }),
+  Common.Plugin.addSurfaceModule({ activate: ReactSurface }),
+  Common.Plugin.addIntentResolverModule({ activate: IntentResolver }),
   Plugin.make,
 );

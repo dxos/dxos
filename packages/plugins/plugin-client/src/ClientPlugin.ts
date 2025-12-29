@@ -54,19 +54,12 @@ export const ClientPlugin = Plugin.define<ClientPluginOptions>(meta).pipe(
       activate: () => ReactSurface({ createInvitationUrl, onReset }),
     };
   }),
-  Plugin.addModule({
-    activatesOn: Common.ActivationEvent.SetupAppGraph,
-    activate: AppGraphBuilder,
-  }),
+  Common.Plugin.addAppGraphModule({ activate: AppGraphBuilder }),
   Plugin.addModule({
     id: Capability.getModuleTag(IntentResolver),
     activatesOn: Common.ActivationEvent.SetupIntentResolver,
     activate: (context) => IntentResolver({ context }),
   }),
-  Plugin.addModule({
-    id: 'translations',
-    activatesOn: Common.ActivationEvent.SetupTranslations,
-    activate: () => Capability.contributes(Common.Capability.Translations, translations),
-  }),
+  Common.Plugin.addTranslationsModule({ translations }),
   Plugin.make,
 );

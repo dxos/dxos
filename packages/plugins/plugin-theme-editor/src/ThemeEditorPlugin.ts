@@ -2,25 +2,15 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Capability, Common, Plugin } from '@dxos/app-framework';
+import { Common, Plugin } from '@dxos/app-framework';
 
 import { AppGraphBuilder, ReactSurface } from './capabilities';
 import { meta } from './meta';
 import { translations } from './translations';
 
 export const ThemeEditorPlugin = Plugin.define(meta).pipe(
-  Plugin.addModule({
-    id: 'translations',
-    activatesOn: Common.ActivationEvent.SetupTranslations,
-    activate: () => Capability.contributes(Common.Capability.Translations, translations),
-  }),
-  Plugin.addModule({
-    activatesOn: Common.ActivationEvent.SetupReactSurface,
-    activate: ReactSurface,
-  }),
-  Plugin.addModule({
-    activatesOn: Common.ActivationEvent.SetupAppGraph,
-    activate: AppGraphBuilder,
-  }),
+  Common.Plugin.addTranslationsModule({ translations }),
+  Common.Plugin.addSurfaceModule({ activate: ReactSurface }),
+  Common.Plugin.addAppGraphModule({ activate: AppGraphBuilder }),
   Plugin.make,
 );

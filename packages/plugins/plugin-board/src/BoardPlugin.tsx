@@ -13,40 +13,24 @@ import { translations } from './translations';
 import { Board } from './types';
 
 export const BoardPlugin = Plugin.define(meta).pipe(
-  Plugin.addModule({
-    id: 'translations',
-    activatesOn: Common.ActivationEvent.SetupTranslations,
-    activate: () => Capability.contributes(Common.Capability.Translations, [...translations, ...boardTranslations]),
-  }),
-  Plugin.addModule({
-    id: 'metadata',
-    activatesOn: Common.ActivationEvent.SetupMetadata,
-    activate: () =>
-      // TODO(burdon): "Metadata" here seems non-descriptive; is this specifically for the type? ObjectMetadata?
-      Capability.contributes(Common.Capability.Metadata, {
-        id: Board.Board.typename,
-        metadata: {
-          icon: 'ph--squares-four--regular',
-          iconHue: 'green',
-          creatObjectIntent: (() => createIntent(Board.Create)) satisfies CreateObjectIntent,
-          addToCollectionOnCreate: true,
-        },
-      }),
+  Common.Plugin.addTranslationsModule({ translations: [...translations, ...boardTranslations] }),
+  Common.Plugin.addMetadataModule({
+    metadata: {
+      id: Board.Board.typename,
+      metadata: {
+        icon: 'ph--squares-four--regular',
+        iconHue: 'green',
+        creatObjectIntent: (() => createIntent(Board.Create)) satisfies CreateObjectIntent,
+        addToCollectionOnCreate: true,
+      },
+    },
   }),
   Plugin.addModule({
     id: 'schema',
     activatesOn: ClientEvents.SetupSchema,
     activate: () => Capability.contributes(ClientCapabilities.Schema, [Board.Board]),
   }),
-  Plugin.addModule({
-    id: 'react-surface',
-    activatesOn: Common.ActivationEvent.SetupReactSurface,
-    activate: ReactSurface,
-  }),
-  Plugin.addModule({
-    id: 'intent-resolver',
-    activatesOn: Common.ActivationEvent.SetupIntentResolver,
-    activate: IntentResolver,
-  }),
+  Common.Plugin.addSurfaceModule({ activate: ReactSurface }),
+  Common.Plugin.addIntentResolverModule({ activate: IntentResolver }),
   Plugin.make,
 );

@@ -31,11 +31,7 @@ import { translations } from './translations';
 import { Assistant, AssistantAction } from './types';
 
 export const AssistantPlugin = Plugin.define(meta).pipe(
-  Plugin.addModule({
-    id: 'translations',
-    activatesOn: Common.ActivationEvent.SetupTranslations,
-    activate: () => Capability.contributes(Common.Capability.Translations, translations),
-  }),
+  Common.Plugin.addTranslationsModule({ translations }),
   Plugin.addModule({
     id: 'settings',
     activatesOn: Common.ActivationEvent.SetupSettings,
@@ -49,11 +45,9 @@ export const AssistantPlugin = Plugin.define(meta).pipe(
     activatesOn: Common.ActivationEvent.SetupSettings,
     activate: AssistantState,
   }),
-  Plugin.addModule({
-    id: 'metadata',
-    activatesOn: Common.ActivationEvent.SetupMetadata,
-    activate: () => [
-      Capability.contributes(Common.Capability.Metadata, {
+  Common.Plugin.addMetadataModule({
+    metadata: [
+      {
         id: Type.getTypename(Assistant.Chat),
         metadata: {
           icon: 'ph--atom--regular',
@@ -61,8 +55,8 @@ export const AssistantPlugin = Plugin.define(meta).pipe(
           createObjectIntent: ((_, options) =>
             createIntent(AssistantAction.CreateChat, { db: options.db })) satisfies CreateObjectIntent,
         },
-      }),
-      Capability.contributes(Common.Capability.Metadata, {
+      },
+      {
         id: Type.getTypename(Blueprint.Blueprint),
         metadata: {
           icon: 'ph--blueprint--regular',
@@ -71,16 +65,16 @@ export const AssistantPlugin = Plugin.define(meta).pipe(
           createObjectIntent: ((props) =>
             createIntent(AssistantAction.CreateBlueprint, props)) satisfies CreateObjectIntent,
         },
-      }),
-      Capability.contributes(Common.Capability.Metadata, {
+      },
+      {
         id: Type.getTypename(Prompt.Prompt),
         metadata: {
           icon: 'ph--scroll--regular',
           iconHue: 'sky',
           createObjectIntent: (() => createIntent(AssistantAction.CreatePrompt)) satisfies CreateObjectIntent,
         },
-      }),
-      Capability.contributes(Common.Capability.Metadata, {
+      },
+      {
         id: Type.getTypename(Sequence),
         metadata: {
           icon: 'ph--circuitry--regular',
@@ -88,7 +82,7 @@ export const AssistantPlugin = Plugin.define(meta).pipe(
           createObjectIntent: (() => createIntent(AssistantAction.CreateSequence)) satisfies CreateObjectIntent,
           addToCollectionOnCreate: true,
         },
-      }),
+      },
     ],
   }),
   Plugin.addModule({
@@ -118,22 +112,11 @@ export const AssistantPlugin = Plugin.define(meta).pipe(
     activatesOn: ClientEvents.SpacesReady,
     activate: Repair,
   }),
-  Plugin.addModule({
-    id: 'app-graph-builder',
-    activatesOn: Common.ActivationEvent.SetupAppGraph,
-    activate: AppGraphBuilder,
-  }),
-  Plugin.addModule({
-    id: 'intent-resolver',
-    activatesOn: Common.ActivationEvent.SetupIntentResolver,
-    activate: IntentResolver,
-  }),
-  Plugin.addModule({
-    id: 'react-surface',
-    activatesOn: Common.ActivationEvent.SetupReactSurface,
-    // TODO(wittjosiah): Should occur before the chat is loaded when surfaces activation is more granular.
-    activatesBefore: [Common.ActivationEvent.SetupArtifactDefinition],
+  Common.Plugin.addAppGraphModule({ activate: AppGraphBuilder }),
+  Common.Plugin.addIntentResolverModule({ activate: IntentResolver }),
+  Common.Plugin.addSurfaceModule({
     activate: ReactSurface,
+    activatesBefore: [Common.ActivationEvent.SetupArtifactDefinition],
   }),
   Plugin.addModule({
     id: 'edge-model-resolver',

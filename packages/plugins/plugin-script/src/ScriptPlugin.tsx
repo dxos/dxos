@@ -30,16 +30,10 @@ export const ScriptPlugin = Plugin.define(meta).pipe(
     activatesOn: ScriptEvents.SetupCompiler,
     activate: Compiler,
   }),
-  Plugin.addModule({
-    id: 'translations',
-    activatesOn: Common.ActivationEvent.SetupTranslations,
-    activate: () => Capability.contributes(Common.Capability.Translations, translations),
-  }),
-  Plugin.addModule({
-    id: 'metadata',
-    activatesOn: Common.ActivationEvent.SetupMetadata,
-    activate: () => [
-      Capability.contributes(Common.Capability.Metadata, {
+  Common.Plugin.addTranslationsModule({ translations }),
+  Common.Plugin.addMetadataModule({
+    metadata: [
+      {
         id: Script.Script.typename,
         metadata: {
           icon: 'ph--code--regular',
@@ -51,8 +45,8 @@ export const ScriptPlugin = Plugin.define(meta).pipe(
             createIntent(ScriptAction.CreateScript, { ...props, db: options.db })) satisfies CreateObjectIntent,
           addToCollectionOnCreate: true,
         },
-      }),
-      Capability.contributes(Common.Capability.Metadata, {
+      },
+      {
         id: Notebook.Notebook.typename,
         metadata: {
           icon: 'ph--notebook--regular',
@@ -62,26 +56,17 @@ export const ScriptPlugin = Plugin.define(meta).pipe(
             createIntent(ScriptAction.CreateNotebook, { ...props, db: options.db })) satisfies CreateObjectIntent,
           addToCollectionOnCreate: true,
         },
-      }),
+      },
     ],
   }),
-  Plugin.addModule({
-    activatesOn: Common.ActivationEvent.SetupAppGraph,
-    activate: AppGraphBuilder,
-  }),
+  Common.Plugin.addAppGraphModule({ activate: AppGraphBuilder }),
   Plugin.addModule({
     id: 'schema',
     activatesOn: ClientEvents.SetupSchema,
     activate: () => Capability.contributes(ClientCapabilities.Schema, [Script.Script]),
   }),
-  Plugin.addModule({
-    activatesOn: Common.ActivationEvent.SetupReactSurface,
-    activate: ReactSurface,
-  }),
-  Plugin.addModule({
-    activatesOn: Common.ActivationEvent.SetupIntentResolver,
-    activate: IntentResolver,
-  }),
+  Common.Plugin.addSurfaceModule({ activate: ReactSurface }),
+  Common.Plugin.addIntentResolverModule({ activate: IntentResolver }),
   Plugin.addModule({
     activatesOn: Common.ActivationEvent.SetupArtifactDefinition,
     activate: BlueprintDefinition,

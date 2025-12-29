@@ -44,27 +44,14 @@ export const DeckPlugin = Plugin.define(meta).pipe(
     activatesAfter: [Common.ActivationEvent.LayoutReady, DeckEvents.StateReady],
     activate: DeckState,
   }),
-  Plugin.addModule({
-    id: 'translations',
-    activatesOn: Common.ActivationEvent.SetupTranslations,
-    activate: () => Capability.contributes(Common.Capability.Translations, [...translations, ...stackTranslations]),
-  }),
+  Common.Plugin.addTranslationsModule({ translations: [...translations, ...stackTranslations] }),
   Plugin.addModule({
     activatesOn: Common.ActivationEvent.Startup,
     activate: ReactRoot,
   }),
-  Plugin.addModule({
-    activatesOn: Common.ActivationEvent.SetupReactSurface,
-    activate: ReactSurface,
-  }),
-  Plugin.addModule({
-    activatesOn: Common.ActivationEvent.SetupIntentResolver,
-    activate: LayoutIntentResolver,
-  }),
-  Plugin.addModule({
-    activatesOn: Common.ActivationEvent.SetupAppGraph,
-    activate: AppGraphBuilder,
-  }),
+  Common.Plugin.addSurfaceModule({ activate: ReactSurface }),
+  Common.Plugin.addIntentResolverModule({ activate: LayoutIntentResolver }),
+  Common.Plugin.addAppGraphModule({ activate: AppGraphBuilder }),
   // Plugin.addModule({
   //   activatesOn: Events.SetupArtifactDefinition,
   //   activate: Tools,

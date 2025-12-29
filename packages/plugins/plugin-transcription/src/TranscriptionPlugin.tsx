@@ -14,50 +14,35 @@ import { translations } from './translations';
 import { renderByline } from './util';
 
 export const TranscriptionPlugin = Plugin.define(meta).pipe(
-  Plugin.addModule({
-    id: 'translations',
-    activatesOn: Common.ActivationEvent.SetupTranslations,
-    activate: () => Capability.contributes(Common.Capability.Translations, translations),
-  }),
-  Plugin.addModule({
-    id: 'metadata',
-    activatesOn: Common.ActivationEvent.SetupMetadata,
-    activate: () =>
-      Capability.contributes(Common.Capability.Metadata, {
-        id: Transcript.Transcript.typename,
-        metadata: {
-          icon: 'ph--subtitles--regular',
-          iconHue: 'sky',
-          // TODO(wittjosiah): Factor out. Artifact? Separate capability?
-          getTextContent: async (transcript: Transcript.Transcript) => {
-            const space = getSpace(transcript);
-            const members = space?.members.get().map((member) => member.identity) ?? [];
-            const queue = space?.queues.get<Message.Message>(transcript.queue.dxn);
-            await queue?.refresh();
-            const content = queue?.objects
-              .filter((message) => Obj.instanceOf(Message.Message, message))
-              .flatMap((message, index) => renderByline(members)(message, index))
-              .join('\n\n');
-            return content;
-          },
+  Common.Plugin.addTranslationsModule({ translations }),
+  Common.Plugin.addMetadataModule({
+    metadata: {
+      id: Transcript.Transcript.typename,
+      metadata: {
+        icon: 'ph--subtitles--regular',
+        iconHue: 'sky',
+        // TODO(wittjosiah): Factor out. Artifact? Separate capability?
+        getTextContent: async (transcript: Transcript.Transcript) => {
+          const space = getSpace(transcript);
+          const members = space?.members.get().map((member) => member.identity) ?? [];
+          const queue = space?.queues.get<Message.Message>(transcript.queue.dxn);
+          await queue?.refresh();
+          const content = queue?.objects
+            .filter((message) => Obj.instanceOf(Message.Message, message))
+            .flatMap((message, index) => renderByline(members)(message, index))
+            .join('\n\n');
+          return content;
         },
-      }),
+      },
+    },
   }),
   Plugin.addModule({
     id: 'schema',
     activatesOn: ClientEvents.SetupSchema,
     activate: () => [Capability.contributes(ClientCapabilities.Schema, [Transcript.Transcript])],
   }),
-  Plugin.addModule({
-    id: 'react-surface',
-    activatesOn: Common.ActivationEvent.SetupReactSurface,
-    activate: ReactSurface,
-  }),
-  Plugin.addModule({
-    id: 'intent-resolver',
-    activatesOn: Common.ActivationEvent.SetupIntentResolver,
-    activate: IntentResolver,
-  }),
+  Common.Plugin.addSurfaceModule({ activate: ReactSurface }),
+  Common.Plugin.addIntentResolverModule({ activate: IntentResolver }),
   Plugin.addModule({
     id: 'transcription',
     activatesOn: Common.ActivationEvent.SetupAppGraph,

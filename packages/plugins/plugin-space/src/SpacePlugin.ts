@@ -55,22 +55,12 @@ export const SpacePlugin = Plugin.define<SpacePluginOptions>(meta).pipe(
     activatesOn: Common.ActivationEvent.SetupSettings,
     activate: SpaceSettings,
   }),
-  Plugin.addModule({
-    id: 'translations',
-    activatesOn: Common.ActivationEvent.SetupTranslations,
-    activate: () =>
-      Capability.contributes(Common.Capability.Translations, [
-        ...translations,
-        ...componentsTranslations,
-        ...formTranslations,
-        ...shellTranslations,
-      ]),
+  Common.Plugin.addTranslationsModule({
+    translations: [...translations, ...componentsTranslations, ...formTranslations, ...shellTranslations],
   }),
-  Plugin.addModule({
-    id: 'metadata',
-    activatesOn: Common.ActivationEvent.SetupMetadata,
-    activate: () => [
-      Capability.contributes(Common.Capability.Metadata, {
+  Common.Plugin.addMetadataModule({
+    metadata: [
+      {
         id: Collection.Collection.typename,
         metadata: {
           icon: 'ph--cards-three--regular',
@@ -81,8 +71,8 @@ export const SpacePlugin = Plugin.define<SpacePluginOptions>(meta).pipe(
           createObjectIntent: ((props) => createIntent(CollectionAction.Create, props)) satisfies CreateObjectIntent,
           addToCollectionOnCreate: true,
         },
-      }),
-      Capability.contributes(Common.Capability.Metadata, {
+      },
+      {
         id: Type.getTypename(Type.PersistentType),
         metadata: {
           icon: 'ph--database--regular',
@@ -97,31 +87,31 @@ export const SpacePlugin = Plugin.define<SpacePluginOptions>(meta).pipe(
                   schema: createDefaultSchema(),
                 })) satisfies CreateObjectIntent,
         },
-      }),
-      Capability.contributes(Common.Capability.Metadata, {
+      },
+      {
         id: Event.Event.typename,
         metadata: {
           icon: 'ph--calendar-dot--regular',
         },
-      }),
-      Capability.contributes(Common.Capability.Metadata, {
+      },
+      {
         id: Organization.Organization.typename,
         metadata: {
           icon: 'ph--building-office--regular',
         },
-      }),
-      Capability.contributes(Common.Capability.Metadata, {
+      },
+      {
         id: Person.Person.typename,
         metadata: {
           icon: 'ph--user--regular',
         },
-      }),
-      Capability.contributes(Common.Capability.Metadata, {
+      },
+      {
         id: Task.Task.typename,
         metadata: {
           icon: 'ph--check-circle--regular',
         },
-      }),
+      },
     ],
   }),
   Plugin.addModule({
@@ -177,10 +167,7 @@ export const SpacePlugin = Plugin.define<SpacePluginOptions>(meta).pipe(
       };
     },
   ),
-  Plugin.addModule({
-    activatesOn: Common.ActivationEvent.SetupAppGraph,
-    activate: AppGraphBuilder,
-  }),
+  Common.Plugin.addAppGraphModule({ activate: AppGraphBuilder }),
   // TODO(wittjosiah): This could probably be deferred.
   Plugin.addModule({
     activatesOn: Common.ActivationEvent.AppGraphReady,

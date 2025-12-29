@@ -16,20 +16,13 @@ export const HelpPlugin = Plugin.define<HelpPluginOptions>(meta).pipe(
     activatesOn: Common.ActivationEvent.Startup,
     activate: HelpState,
   }),
-  Plugin.addModule({
-    id: 'translations',
-    activatesOn: Common.ActivationEvent.SetupTranslations,
-    activate: () => Capability.contributes(Common.Capability.Translations, translations),
-  }),
+  Common.Plugin.addTranslationsModule({ translations }),
   Plugin.addModule(({ steps = [] }) => ({
     id: 'react-root',
     activatesOn: Common.ActivationEvent.Startup,
     activate: () => ReactRoot(steps),
   })),
-  Plugin.addModule({
-    activatesOn: Common.ActivationEvent.SetupReactSurface,
-    activate: ReactSurface,
-  }),
+  Common.Plugin.addSurfaceModule({ activate: ReactSurface }),
   Plugin.addModule({
     id: 'intent-resolver',
     activatesOn: Common.ActivationEvent.SetupIntentResolver,
@@ -45,9 +38,6 @@ export const HelpPlugin = Plugin.define<HelpPluginOptions>(meta).pipe(
         }),
       ),
   }),
-  Plugin.addModule({
-    activatesOn: Common.ActivationEvent.SetupAppGraph,
-    activate: AppGraphBuilder,
-  }),
+  Common.Plugin.addAppGraphModule({ activate: AppGraphBuilder }),
   Plugin.make,
 );

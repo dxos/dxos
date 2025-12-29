@@ -20,27 +20,20 @@ export const SheetPlugin = Plugin.define(meta).pipe(
     activatesOn: ActivationEvent.allOf(ClientEvents.ClientReady, AutomationEvents.ComputeRuntimeReady),
     activate: ComputeGraphRegistry,
   }),
-  Plugin.addModule({
-    id: 'translations',
-    activatesOn: Common.ActivationEvent.SetupTranslations,
-    activate: () => Capability.contributes(Common.Capability.Translations, translations),
-  }),
-  Plugin.addModule({
-    id: 'metadata',
-    activatesOn: Common.ActivationEvent.SetupMetadata,
-    activate: () =>
-      Capability.contributes(Common.Capability.Metadata, {
-        id: Sheet.Sheet.typename,
-        metadata: {
-          label: (object: Sheet.Sheet) => object.name,
-          icon: 'ph--grid-nine--regular',
-          iconHue: 'indigo',
-          serializer,
-          comments: 'anchored',
-          createObjectIntent: ((props) => createIntent(SheetAction.Create, { ...props })) satisfies CreateObjectIntent,
-          addToCollectionOnCreate: true,
-        },
-      }),
+  Common.Plugin.addTranslationsModule({ translations }),
+  Common.Plugin.addMetadataModule({
+    metadata: {
+      id: Sheet.Sheet.typename,
+      metadata: {
+        label: (object: Sheet.Sheet) => object.name,
+        icon: 'ph--grid-nine--regular',
+        iconHue: 'indigo',
+        serializer,
+        comments: 'anchored',
+        createObjectIntent: ((props) => createIntent(SheetAction.Create, { ...props })) satisfies CreateObjectIntent,
+        addToCollectionOnCreate: true,
+      },
+    },
   }),
   Plugin.addModule({
     id: 'schema',
@@ -58,15 +51,7 @@ export const SheetPlugin = Plugin.define(meta).pipe(
     activatesOn: Common.ActivationEvent.AppGraphReady,
     activate: AnchorSort,
   }),
-  Plugin.addModule({
-    id: 'react-surface',
-    activatesOn: Common.ActivationEvent.SetupReactSurface,
-    activate: ReactSurface,
-  }),
-  Plugin.addModule({
-    id: 'intent-resolver',
-    activatesOn: Common.ActivationEvent.SetupIntentResolver,
-    activate: IntentResolver,
-  }),
+  Common.Plugin.addSurfaceModule({ activate: ReactSurface }),
+  Common.Plugin.addIntentResolverModule({ activate: IntentResolver }),
   Plugin.make,
 );

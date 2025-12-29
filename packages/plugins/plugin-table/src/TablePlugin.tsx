@@ -17,27 +17,19 @@ import { translations } from './translations';
 import { CreateTableSchema, TableAction } from './types';
 
 export const TablePlugin = Plugin.define(meta).pipe(
-  Plugin.addModule({
-    id: 'translations',
-    activatesOn: Common.ActivationEvent.SetupTranslations,
-    activate: () =>
-      Capability.contributes(Common.Capability.Translations, [...translations, ...formTranslations, ...tableTranslations]),
-  }),
-  Plugin.addModule({
-    id: 'metadata',
-    activatesOn: Common.ActivationEvent.SetupMetadata,
-    activate: () =>
-      Capability.contributes(Common.Capability.Metadata, {
-        id: Type.getTypename(Table.Table),
-        metadata: {
-          icon: 'ph--table--regular',
-          iconHue: 'green',
-          comments: 'unanchored',
-          inputSchema: CreateTableSchema,
-          createObjectIntent: ((props, options) =>
-            createIntent(TableAction.Create, { ...props, space: options.db })) satisfies CreateObjectIntent,
-        },
-      }),
+  Common.Plugin.addTranslationsModule({ translations: [...translations, ...formTranslations, ...tableTranslations] }),
+  Common.Plugin.addMetadataModule({
+    metadata: {
+      id: Type.getTypename(Table.Table),
+      metadata: {
+        icon: 'ph--table--regular',
+        iconHue: 'green',
+        comments: 'unanchored',
+        inputSchema: CreateTableSchema,
+        createObjectIntent: ((props, options) =>
+          createIntent(TableAction.Create, { ...props, space: options.db })) satisfies CreateObjectIntent,
+      },
+    },
   }),
   Plugin.addModule({
     id: 'schema',
@@ -58,16 +50,8 @@ export const TablePlugin = Plugin.define(meta).pipe(
         createIntent(TableAction.OnSchemaAdded, { db, schema, show }),
       ),
   }),
-  Plugin.addModule({
-    id: 'react-surface',
-    activatesOn: Common.ActivationEvent.SetupReactSurface,
-    activate: ReactSurface,
-  }),
-  Plugin.addModule({
-    id: 'intent-resolver',
-    activatesOn: Common.ActivationEvent.SetupIntentResolver,
-    activate: IntentResolver,
-  }),
+  Common.Plugin.addSurfaceModule({ activate: ReactSurface }),
+  Common.Plugin.addIntentResolverModule({ activate: IntentResolver }),
   Plugin.addModule({
     id: 'blueprint',
     activatesOn: Common.ActivationEvent.SetupArtifactDefinition,

@@ -13,38 +13,25 @@ import { translations } from './translations';
 import { ExplorerAction, Graph } from './types';
 
 export const ExplorerPlugin = Plugin.define(meta).pipe(
-  Plugin.addModule({
-    id: 'translations',
-    activatesOn: Common.ActivationEvent.SetupTranslations,
-    activate: () => Capability.contributes(Common.Capability.Translations, translations),
-  }),
-  Plugin.addModule({
-    id: 'metadata',
-    activatesOn: Common.ActivationEvent.SetupMetadata,
-    activate: () =>
-      Capability.contributes(Common.Capability.Metadata, {
-        id: Type.getTypename(Graph.Graph),
-        metadata: {
-          icon: 'ph--graph--regular',
-          iconHue: 'green',
-          inputSchema: ExplorerAction.GraphProps,
-          createObjectIntent: ((props, options) =>
-            createIntent(ExplorerAction.CreateGraph, { ...props, space: options.db })) satisfies CreateObjectIntent,
-        },
-      }),
+  Common.Plugin.addTranslationsModule({ translations }),
+  Common.Plugin.addMetadataModule({
+    metadata: {
+      id: Type.getTypename(Graph.Graph),
+      metadata: {
+        icon: 'ph--graph--regular',
+        iconHue: 'green',
+        inputSchema: ExplorerAction.GraphProps,
+        createObjectIntent: ((props, options) =>
+          createIntent(ExplorerAction.CreateGraph, { ...props, space: options.db })) satisfies CreateObjectIntent,
+      },
+    },
   }),
   Plugin.addModule({
     id: 'schema',
     activatesOn: ClientEvents.SetupSchema,
     activate: () => Capability.contributes(ClientCapabilities.Schema, [Graph.Graph]),
   }),
-  Plugin.addModule({
-    activatesOn: Common.ActivationEvent.SetupReactSurface,
-    activate: ReactSurface,
-  }),
-  Plugin.addModule({
-    activatesOn: Common.ActivationEvent.SetupIntentResolver,
-    activate: IntentResolver,
-  }),
+  Common.Plugin.addSurfaceModule({ activate: ReactSurface }),
+  Common.Plugin.addIntentResolverModule({ activate: IntentResolver }),
   Plugin.make,
 );

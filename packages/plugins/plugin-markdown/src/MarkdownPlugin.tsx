@@ -27,11 +27,7 @@ import { Markdown, MarkdownAction } from './types';
 import { serializer } from './util';
 
 export const MarkdownPlugin = Plugin.define(meta).pipe(
-  Plugin.addModule({
-    id: 'translations',
-    activatesOn: Common.ActivationEvent.SetupTranslations,
-    activate: () => Capability.contributes(Common.Capability.Translations, [...translations, ...editorTranslations]),
-  }),
+  Common.Plugin.addTranslationsModule({ translations: [...translations, ...editorTranslations] }),
   Plugin.addModule({
     activatesOn: Common.ActivationEvent.SetupSettings,
     activate: MarkdownSettings,
@@ -44,52 +40,44 @@ export const MarkdownPlugin = Plugin.define(meta).pipe(
     activatesOn: Common.ActivationEvent.SetupSettings,
     activate: MarkdownState,
   }),
-  Plugin.addModule({
-    id: 'metadata',
-    activatesOn: Common.ActivationEvent.SetupMetadata,
-    activate: () =>
-      Capability.contributes(Common.Capability.Metadata, {
-        id: Markdown.Document.typename,
-        metadata: {
-          label: (object: Markdown.Document) => object.name || object.fallbackName,
-          icon: 'ph--text-aa--regular',
-          iconHue: 'indigo',
-          blueprints: [MarkdownBlueprint.Key],
-          graphProps: {
-            managesAutofocus: true,
-          },
-          // TODO(wittjosiah): Move out of metadata.
-          loadReferences: async (doc: Markdown.Document) => await Ref.Array.loadAll<Obj.Any>([doc.content]),
-          serializer,
-          // TODO(wittjosiah): Consider how to do generic comments without these.
-          comments: 'anchored',
-          selectionMode: 'multi-range',
-          getAnchorLabel: (doc: Markdown.Document, anchor: string): string | undefined => {
-            if (doc.content) {
-              const [start, end] = anchor.split(':');
-              return getTextInRange(createDocAccessor(doc.content.target!, ['content']), start, end);
-            }
-          },
-          createObjectIntent: (() => createIntent(MarkdownAction.Create)) satisfies CreateObjectIntent,
-          addToCollectionOnCreate: true,
+  Common.Plugin.addMetadataModule({
+    metadata: {
+      id: Markdown.Document.typename,
+      metadata: {
+        label: (object: Markdown.Document) => object.name || object.fallbackName,
+        icon: 'ph--text-aa--regular',
+        iconHue: 'indigo',
+        blueprints: [MarkdownBlueprint.Key],
+        graphProps: {
+          managesAutofocus: true,
         },
-      }),
+        // TODO(wittjosiah): Move out of metadata.
+        loadReferences: async (doc: Markdown.Document) => await Ref.Array.loadAll<Obj.Any>([doc.content]),
+        serializer,
+        // TODO(wittjosiah): Consider how to do generic comments without these.
+        comments: 'anchored',
+        selectionMode: 'multi-range',
+        getAnchorLabel: (doc: Markdown.Document, anchor: string): string | undefined => {
+          if (doc.content) {
+            const [start, end] = anchor.split(':');
+            return getTextInRange(createDocAccessor(doc.content.target!, ['content']), start, end);
+          }
+        },
+        createObjectIntent: (() => createIntent(MarkdownAction.Create)) satisfies CreateObjectIntent,
+        addToCollectionOnCreate: true,
+      },
+    },
   }),
   Plugin.addModule({
     id: 'schema',
     activatesOn: ClientEvents.SetupSchema,
     activate: () => Capability.contributes(ClientCapabilities.Schema, [Markdown.Document, Text.Text]),
   }),
-  Plugin.addModule({
-    activatesOn: Common.ActivationEvent.SetupReactSurface,
-    // TODO(wittjosiah): Should occur before the editor is loaded when surfaces activation is more granular.
-    activatesBefore: [MarkdownEvents.SetupExtensions],
+  Common.Plugin.addSurfaceModule({
     activate: ReactSurface,
+    activatesBefore: [MarkdownEvents.SetupExtensions],
   }),
-  Plugin.addModule({
-    activatesOn: Common.ActivationEvent.SetupIntentResolver,
-    activate: IntentResolver,
-  }),
+  Common.Plugin.addIntentResolverModule({ activate: IntentResolver }),
   Plugin.addModule({
     activatesOn: Common.ActivationEvent.AppGraphReady,
     activate: AppGraphSerializer,

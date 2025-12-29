@@ -32,10 +32,7 @@ export const AttentionPlugin = Plugin.define(meta).pipe(
     activatesOn: ActivationEvent.allOf(Common.ActivationEvent.AppGraphReady, AttentionEvents.AttentionReady),
     activate: Keyboard,
   }),
-  Plugin.addModule({
-    activatesOn: Common.ActivationEvent.SetupIntentResolver,
-    activate: IntentResolver,
-  }),
+  Common.Plugin.addIntentResolverModule({ activate: IntentResolver }),
   Plugin.make,
 );
 

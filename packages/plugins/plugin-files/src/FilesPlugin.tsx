@@ -24,31 +24,15 @@ export const FilesPlugin = Plugin.define(meta)
     activatesOn: ActivationEvent.allOf(Common.ActivationEvent.DispatcherReady, Common.ActivationEvent.SettingsReady, AttentionEvents.AttentionReady),
     activate: FileState,
     }),
-    Plugin.addModule({
-    id: 'translations',
-    activatesOn: Common.ActivationEvent.SetupTranslations,
-    activate: () => Capability.contributes(Common.Capability.Translations, translations),
-    }),
+    Common.Plugin.addTranslationsModule({ translations }),
     Plugin.addModule({
     id: 'markdown',
     activatesOn: Common.ActivationEvent.SettingsReady,
     activate: Markdown,
     }),
-    Plugin.addModule({
-    id: 'react-surface',
-    activatesOn: Common.ActivationEvent.SetupReactSurface,
-    activate: ReactSurface,
-    }),
-    Plugin.addModule({
-    id: 'intent-resolver',
-    activatesOn: Common.ActivationEvent.SetupIntentResolver,
-    activate: IntentResolver,
-    }),
-    Plugin.addModule({
-    id: 'app-graph-builder',
-    activatesOn: Common.ActivationEvent.SetupAppGraph,
-    activate: AppGraphBuilder,
-    }),
+    Common.Plugin.addSurfaceModule({ activate: ReactSurface }),
+    Common.Plugin.addIntentResolverModule({ activate: IntentResolver }),
+    Common.Plugin.addAppGraphModule({ activate: AppGraphBuilder }),
     Plugin.addModule({
     id: 'app-graph-serializer',
     activatesOn: Common.ActivationEvent.AppGraphReady,

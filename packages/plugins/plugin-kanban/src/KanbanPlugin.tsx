@@ -15,41 +15,26 @@ import { translations } from './translations';
 import { CreateKanbanSchema, KanbanAction } from './types';
 
 export const KanbanPlugin = Plugin.define(meta).pipe(
-  Plugin.addModule({
-    id: 'translations',
-    activatesOn: Common.ActivationEvent.SetupTranslations,
-    activate: () => Capability.contributes(Common.Capability.Translations, [...translations, ...kanbanTranslations]),
-  }),
-  Plugin.addModule({
-    id: 'metadata',
-    activatesOn: Common.ActivationEvent.SetupMetadata,
-    activate: () =>
-      Capability.contributes(Common.Capability.Metadata, {
-        id: Type.getTypename(Kanban.Kanban),
-        metadata: {
-          icon: 'ph--kanban--regular',
-          iconHue: 'green',
-          inputSchema: CreateKanbanSchema,
-          createObjectIntent: ((props, options) =>
-            createIntent(KanbanAction.Create, { ...props, space: options.db })) satisfies CreateObjectIntent,
-        },
-      }),
+  Common.Plugin.addTranslationsModule({ translations: [...translations, ...kanbanTranslations] }),
+  Common.Plugin.addMetadataModule({
+    metadata: {
+      id: Type.getTypename(Kanban.Kanban),
+      metadata: {
+        icon: 'ph--kanban--regular',
+        iconHue: 'green',
+        inputSchema: CreateKanbanSchema,
+        createObjectIntent: ((props, options) =>
+          createIntent(KanbanAction.Create, { ...props, space: options.db })) satisfies CreateObjectIntent,
+      },
+    },
   }),
   Plugin.addModule({
     id: 'schema',
     activatesOn: ClientEvents.SetupSchema,
     activate: () => Capability.contributes(ClientCapabilities.Schema, [Kanban.Kanban]),
   }),
-  Plugin.addModule({
-    id: 'react-surface',
-    activatesOn: Common.ActivationEvent.SetupReactSurface,
-    activate: ReactSurface,
-  }),
-  Plugin.addModule({
-    id: 'intent-resolver',
-    activatesOn: Common.ActivationEvent.SetupIntentResolver,
-    activate: IntentResolver,
-  }),
+  Common.Plugin.addSurfaceModule({ activate: ReactSurface }),
+  Common.Plugin.addIntentResolverModule({ activate: IntentResolver }),
   Plugin.addModule({
     id: 'blueprint',
     activatesOn: Common.ActivationEvent.SetupArtifactDefinition,
