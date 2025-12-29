@@ -5,48 +5,27 @@
 import { type Extension, StateEffect, StateField } from '@codemirror/state';
 import { Decoration, type DecorationSet, EditorView, ViewPlugin, WidgetType } from '@codemirror/view';
 
-export type DropHandlerOptions = {};
+export type DropEvent = { text: string; url: string };
+
+export type DropHandlerOptions = {
+  onDrop?: (view: EditorView, pos: number, event: DropEvent) => void;
+};
 
 export type DropHandler = {
   extension: Extension;
   update: (position: { x: number; y: number } | null) => void;
   cancel: () => void;
-  drop: (props: { text: string; url: string }) => void;
+  drop: (event: DropEvent) => void;
 };
 
-const setDrop = StateEffect.define<number | null>();
-
-const dropField = StateField.define<DecorationSet>({
-  create: () => Decoration.none,
-  update: (decorations, tr) => {
-    for (const effect of tr.effects) {
-      if (effect.is(setDrop)) {
-        if (effect.value === null) {
-          return Decoration.none;
-        }
-        return Decoration.set([
-          Decoration.widget({
-            widget: new (class extends WidgetType {
-              toDOM() {
-                const dom = document.createElement('div');
-                dom.className = 'cm-drop-cursor';
-                dom.style.borderTop = '2px solid var(--dx-accentSurface)';
-                return dom;
-              }
-            })(),
-            side: 0,
-          }).range(effect.value),
-        ]);
-      }
-    }
-    return decorations.map(tr.changes);
-  },
-  provide: (f) => EditorView.decorations.from(f),
-});
-
-export const dropHandler = (_options: DropHandlerOptions = {}): DropHandler => {
+export const dropHandler = ({ onDrop = handleDrop }: DropHandlerOptions = {}): DropHandler => {
   const views = new Set<EditorView>();
   let state: { view: EditorView; pos: number } | null = null;
+
+  const reset = () => {
+    views.forEach((view) => view.dispatch({ effects: setDrop.of(null) }));
+    state = null;
+  };
 
   const extension: Extension = [
     dropField,
@@ -67,8 +46,7 @@ export const dropHandler = (_options: DropHandlerOptions = {}): DropHandler => {
     extension,
     update: (position: { x: number; y: number } | null) => {
       if (!position) {
-        state = null;
-        views.forEach((view) => view.dispatch({ effects: setDrop.of(null) }));
+        reset();
         return;
       }
 
@@ -80,10 +58,17 @@ export const dropHandler = (_options: DropHandlerOptions = {}): DropHandler => {
           position.y >= rect.top &&
           position.y <= rect.bottom
         ) {
-          const pos = view.posAtCoords(position);
+          let pos = view.posAtCoords(position);
           if (pos !== null) {
-            state = { view, pos };
+            const word = view.state.wordAt(pos);
+            if (word) {
+              const startDist = Math.abs(pos - word.from);
+              const endDist = Math.abs(pos - word.to);
+              pos = startDist < endDist ? word.from : word.to;
+            }
+
             view.dispatch({ effects: setDrop.of(pos) });
+            state = { view, pos };
             return;
           }
         }
@@ -92,20 +77,54 @@ export const dropHandler = (_options: DropHandlerOptions = {}): DropHandler => {
       });
     },
     cancel: () => {
-      views.forEach((view) => view.dispatch({ effects: setDrop.of(null) }));
-      state = null;
+      reset();
     },
     drop: ({ text, url }) => {
       if (state) {
-        // TODO(burdon): Configure callback.
-        state.view.dispatch({
-          changes: { from: state.pos, insert: `[${text}](${url}) ` },
-          effects: setDrop.of(null),
-        });
+        onDrop(state.view, state.pos, { text, url });
       }
 
-      state = null;
-      views.forEach((view) => view.dispatch({ effects: setDrop.of(null) }));
+      reset();
     },
   } satisfies DropHandler;
 };
+
+const handleDrop = (view: EditorView, pos: number, event: DropEvent) => {
+  view.dispatch({
+    changes: { from: pos, insert: `[${event.text}](${event.url}) ` },
+    effects: setDrop.of(null),
+  });
+};
+
+const setDrop = StateEffect.define<number | null>();
+
+const dropField = StateField.define<DecorationSet>({
+  create: () => Decoration.none,
+  update: (decorations, tr) => {
+    for (const effect of tr.effects) {
+      if (effect.is(setDrop)) {
+        if (effect.value === null) {
+          return Decoration.none;
+        }
+        return Decoration.set([
+          Decoration.widget({
+            widget: new (class extends WidgetType {
+              toDOM() {
+                const dom = document.createElement('span');
+                dom.className = 'cm-drop-cursor';
+                dom.style.borderLeft = '2px solid var(--dx-accentSurface)';
+                dom.style.display = 'inline-block';
+                dom.style.height = '1em';
+                dom.style.verticalAlign = 'middle';
+                return dom;
+              }
+            })(),
+            side: 0,
+          }).range(effect.value),
+        ]);
+      }
+    }
+    return decorations.map(tr.changes);
+  },
+  provide: (f) => EditorView.decorations.from(f),
+});
