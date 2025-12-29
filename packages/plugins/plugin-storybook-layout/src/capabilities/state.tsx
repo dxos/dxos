@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Capabilities, Capability } from '@dxos/app-framework';
+import { Common, Capability } from '@dxos/app-framework';
 import { live } from '@dxos/live-object';
 
 import { meta } from '../meta';
@@ -40,7 +40,7 @@ const defaultState: LayoutState = {
 export default Capability.makeModule(({ initialState }: { initialState?: Partial<LayoutState> }) => {
   const state = live<LayoutState>({ ...defaultState, ...initialState });
 
-  const layout = live<Capabilities.Layout>({
+  const layout = live<Common.Capability.Layout>({
     get mode() {
       return 'storybook';
     },
@@ -67,5 +67,5 @@ export default Capability.makeModule(({ initialState }: { initialState?: Partial
     },
   });
 
-  return [Capability.contributes(LayoutState, state), Capability.contributes(Capabilities.Layout, layout)];
+  return [Capability.contributes(LayoutState, state), Capability.contributes(Common.Capability.Layout, layout)];
 });

@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Capabilities, Events, Capability, createIntent, Plugin } from '@dxos/app-framework';
+import { Capability, Common, Plugin, createIntent } from '@dxos/app-framework';
 import { Ref } from '@dxos/echo';
 import { Script } from '@dxos/functions';
 import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
@@ -23,7 +23,7 @@ import { Notebook, ScriptAction } from './types';
 
 export const ScriptPlugin = Plugin.define(meta).pipe(
   Plugin.addModule({
-    activatesOn: Events.SetupSettings,
+    activatesOn: Common.ActivationEvent.SetupSettings,
     activate: ScriptSettings,
   }),
   Plugin.addModule({
@@ -32,14 +32,14 @@ export const ScriptPlugin = Plugin.define(meta).pipe(
   }),
   Plugin.addModule({
     id: 'translations',
-    activatesOn: Events.SetupTranslations,
-    activate: () => Capability.contributes(Capabilities.Translations, translations),
+    activatesOn: Common.ActivationEvent.SetupTranslations,
+    activate: () => Capability.contributes(Common.Capability.Translations, translations),
   }),
   Plugin.addModule({
     id: 'metadata',
-    activatesOn: Events.SetupMetadata,
+    activatesOn: Common.ActivationEvent.SetupMetadata,
     activate: () => [
-      Capability.contributes(Capabilities.Metadata, {
+      Capability.contributes(Common.Capability.Metadata, {
         id: Script.Script.typename,
         metadata: {
           icon: 'ph--code--regular',
@@ -52,7 +52,7 @@ export const ScriptPlugin = Plugin.define(meta).pipe(
           addToCollectionOnCreate: true,
         },
       }),
-      Capability.contributes(Capabilities.Metadata, {
+      Capability.contributes(Common.Capability.Metadata, {
         id: Notebook.Notebook.typename,
         metadata: {
           icon: 'ph--notebook--regular',
@@ -66,7 +66,7 @@ export const ScriptPlugin = Plugin.define(meta).pipe(
     ],
   }),
   Plugin.addModule({
-    activatesOn: Events.SetupAppGraph,
+    activatesOn: Common.ActivationEvent.SetupAppGraph,
     activate: AppGraphBuilder,
   }),
   Plugin.addModule({
@@ -75,15 +75,15 @@ export const ScriptPlugin = Plugin.define(meta).pipe(
     activate: () => Capability.contributes(ClientCapabilities.Schema, [Script.Script]),
   }),
   Plugin.addModule({
-    activatesOn: Events.SetupReactSurface,
+    activatesOn: Common.ActivationEvent.SetupReactSurface,
     activate: ReactSurface,
   }),
   Plugin.addModule({
-    activatesOn: Events.SetupIntentResolver,
+    activatesOn: Common.ActivationEvent.SetupIntentResolver,
     activate: IntentResolver,
   }),
   Plugin.addModule({
-    activatesOn: Events.SetupArtifactDefinition,
+    activatesOn: Common.ActivationEvent.SetupArtifactDefinition,
     activate: BlueprintDefinition,
   }),
   Plugin.make,

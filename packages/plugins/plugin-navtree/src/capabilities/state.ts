@@ -4,7 +4,7 @@
 
 import { effect, untracked } from '@preact/signals-core';
 
-import { Capabilities, Capability } from '@dxos/app-framework';
+import { Capability, Common } from '@dxos/app-framework';
 import { type Live, live } from '@dxos/live-object';
 import { Path } from '@dxos/react-ui-list';
 
@@ -30,7 +30,7 @@ const getInitialState = () => {
 };
 
 export default Capability.makeModule((context) => {
-  const layout = context.getCapability(Capabilities.Layout);
+  const layout = context.getCapability(Common.Capability.Layout);
 
   // TODO(wittjosiah): This currently needs to be not a Live at the root.
   //   If it is a Live then React errors when initializing new paths because of state change during render.

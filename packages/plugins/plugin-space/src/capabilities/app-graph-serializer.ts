@@ -3,8 +3,8 @@
 //
 
 import {
-  Capabilities,
   Capability,
+  Common,
   createIntent,
 } from '@dxos/app-framework';
 import { isSpace } from '@dxos/client/echo';
@@ -22,7 +22,7 @@ const COLLECTION_TYPE = Collection.Collection.typename;
 const DIRECTORY_TYPE = 'text/directory';
 
 export default Capability.makeModule((context) =>
-  Capability.contributes(Capabilities.AppGraphSerializer, [
+  Capability.contributes(Common.Capability.AppGraphSerializer, [
     {
       inputType: SPACES,
       outputType: DIRECTORY_TYPE,
@@ -44,7 +44,7 @@ export default Capability.makeModule((context) =>
         type: DIRECTORY_TYPE,
       }),
       deserialize: async (data) => {
-        const { dispatchPromise: dispatch } = context.getCapability(Capabilities.IntentDispatcher);
+        const { dispatchPromise: dispatch } = context.getCapability(Common.Capability.IntentDispatcher);
         const result = await dispatch(createIntent(SpaceAction.Create, { name: data.name, edgeReplication: true }));
         return result.data?.space;
       },
@@ -66,7 +66,7 @@ export default Capability.makeModule((context) =>
           return;
         }
 
-        const { dispatchPromise: dispatch } = context.getCapability(Capabilities.IntentDispatcher);
+        const { dispatchPromise: dispatch } = context.getCapability(Common.Capability.IntentDispatcher);
         const result = await dispatch(
           createIntent(SpaceAction.AddObject, {
             target: collection,

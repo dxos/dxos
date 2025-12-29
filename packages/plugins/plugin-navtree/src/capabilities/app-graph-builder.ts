@@ -2,19 +2,14 @@
 // Copyright 2025 DXOS.org
 //
 
-import {
-  Capabilities,
-  Capability,
-  LayoutAction,
-  createIntent,
-} from '@dxos/app-framework';
+import { Capability, Common, createIntent } from '@dxos/app-framework';
 import { GraphBuilder, NodeMatcher } from '@dxos/plugin-graph';
 
 import { COMMANDS_DIALOG, meta } from '../meta';
 
 export default Capability.makeModule((context) =>
   Capability.contributes(
-    Capabilities.AppGraphBuilder,
+    Common.Capability.AppGraphBuilder,
     GraphBuilder.createExtension({
       id: meta.id,
       match: NodeMatcher.whenRoot,
@@ -22,9 +17,9 @@ export default Capability.makeModule((context) =>
         {
           id: COMMANDS_DIALOG,
           data: async () => {
-            const { dispatchPromise: dispatch } = context.getCapability(Capabilities.IntentDispatcher);
+            const { dispatchPromise: dispatch } = context.getCapability(Common.Capability.IntentDispatcher);
             await dispatch(
-              createIntent(LayoutAction.UpdateDialog, {
+              createIntent(Common.LayoutAction.UpdateDialog, {
                 part: 'dialog',
                 subject: COMMANDS_DIALOG,
                 options: {

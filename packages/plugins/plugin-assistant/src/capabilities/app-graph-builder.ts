@@ -5,13 +5,7 @@
 import * as Function from 'effect/Function';
 import * as Option from 'effect/Option';
 
-import {
-  Capabilities,
-  Capability,
-  LayoutAction,
-  type PromiseIntentDispatcher,
-  createIntent,
-} from '@dxos/app-framework';
+import { Capability, Common, type PromiseIntentDispatcher, createIntent } from '@dxos/app-framework';
 import { Prompt } from '@dxos/blueprints';
 import { Sequence } from '@dxos/conductor';
 import { DXN, type Database, Obj } from '@dxos/echo';
@@ -29,7 +23,7 @@ import { Assistant, AssistantAction } from '../types';
 import { AssistantCapabilities } from './capabilities';
 
 export default Capability.makeModule((context) => {
-  return Capability.contributes(Capabilities.AppGraphBuilder, [
+  return Capability.contributes(Common.Capability.AppGraphBuilder, [
     GraphBuilder.createTypeExtension({
       id: `${meta.id}/root`,
       type: Assistant.Chat,
@@ -39,7 +33,7 @@ export default Capability.makeModule((context) => {
           {
             id: `${AssistantAction.UpdateChatName._tag}/${id}`,
             data: async () => {
-              const { dispatchPromise: dispatch } = context.getCapability(Capabilities.IntentDispatcher);
+              const { dispatchPromise: dispatch } = context.getCapability(Common.Capability.IntentDispatcher);
               await dispatch(createIntent(AssistantAction.UpdateChatName, { chat }));
             },
             properties: {
@@ -57,9 +51,9 @@ export default Capability.makeModule((context) => {
       match: NodeMatcher.whenRoot,
       actions: () => [
         {
-          id: `${LayoutAction.UpdateDialog._tag}/assistant/open`,
+          id: `${Common.LayoutAction.UpdateDialog._tag}/assistant/open`,
           data: async () => {
-            const { dispatchPromise: dispatch } = context.getCapability(Capabilities.IntentDispatcher);
+            const { dispatchPromise: dispatch } = context.getCapability(Common.Capability.IntentDispatcher);
             const client = context.getCapability(ClientCapabilities.Client);
             const space = getActiveSpace(context) ?? client.spaces.default;
             const chat = await getOrCreateChat(dispatch, space.db);
@@ -68,7 +62,7 @@ export default Capability.makeModule((context) => {
             }
 
             await dispatch(
-              createIntent(LayoutAction.UpdateDialog, {
+              createIntent(Common.LayoutAction.UpdateDialog, {
                 part: 'dialog',
                 subject: ASSISTANT_DIALOG,
                 options: {

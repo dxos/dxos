@@ -2,20 +2,18 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Capabilities, Capability } from '@dxos/app-framework';
+import { Capability, Common } from '@dxos/app-framework';
 
 import { ThreadBlueprint } from '../blueprints';
 
 type BlueprintCapabilities = (
-  | Capability.Capability<typeof Capabilities.Functions>
-  | Capability.Capability<typeof Capabilities.BlueprintDefinition>
+  | Capability.Capability<typeof Common.Capability.Functions>
+  | Capability.Capability<typeof Common.Capability.BlueprintDefinition>
 )[];
 
-const blueprintDefinition = Capability.makeModule<[], BlueprintCapabilities>(
-  (): BlueprintCapabilities => [
-    Capability.contributes(Capabilities.Functions, ThreadBlueprint.functions),
-    Capability.contributes(Capabilities.BlueprintDefinition, ThreadBlueprint.make()),
-  ],
-);
+const blueprintDefinition = Capability.makeModule<[], BlueprintCapabilities>(() => [
+  Capability.contributes(Common.Capability.Functions, ThreadBlueprint.functions),
+  Capability.contributes(Common.Capability.BlueprintDefinition, ThreadBlueprint.make()),
+]);
 
 export default blueprintDefinition;

@@ -6,9 +6,8 @@ import * as Function from 'effect/Function';
 import * as Option from 'effect/Option';
 
 import {
-  Capabilities,
   Capability,
-  LayoutAction,
+  Common,
   chain,
   createIntent,
 } from '@dxos/app-framework';
@@ -21,7 +20,7 @@ import { isLocalDirectory, isLocalEntity, isLocalFile } from '../util';
 import { FileCapabilities } from './capabilities';
 
 export default Capability.makeModule((context) => {
-  return Capability.contributes(Capabilities.AppGraphBuilder, [
+  return Capability.contributes(Common.Capability.AppGraphBuilder, [
     // Create export/import actions.
     GraphBuilder.createExtension({
       id: `${meta.id}/export`,
@@ -30,7 +29,7 @@ export default Capability.makeModule((context) => {
         {
           id: LocalFilesAction.Export._tag,
           data: async () => {
-            const { dispatchPromise: dispatch } = context.getCapability(Capabilities.IntentDispatcher);
+            const { dispatchPromise: dispatch } = context.getCapability(Common.Capability.IntentDispatcher);
             await dispatch(createIntent(LocalFilesAction.Export));
           },
           properties: {
@@ -41,7 +40,7 @@ export default Capability.makeModule((context) => {
         {
           id: LocalFilesAction.Import._tag,
           data: async () => {
-            const { dispatchPromise: dispatch } = context.getCapability(Capabilities.IntentDispatcher);
+            const { dispatchPromise: dispatch } = context.getCapability(Common.Capability.IntentDispatcher);
             await dispatch(createIntent(LocalFilesAction.Import));
           },
           properties: {
@@ -57,7 +56,7 @@ export default Capability.makeModule((context) => {
       id: `${meta.id}/root`,
       match: NodeMatcher.whenRoot,
       connector: (node, get) => {
-        const settingsStore = get(context.capabilities(Capabilities.SettingsStore))[0];
+        const settingsStore = get(context.capabilities(Common.Capability.SettingsStore))[0];
         const settings = get(CreateAtom.fromSignal(() => settingsStore?.getStore<FilesSettingsProps>(meta.id)?.value));
         return settings && settings.openLocalFiles
           ? [
@@ -85,9 +84,9 @@ export default Capability.makeModule((context) => {
         {
           id: LocalFilesAction.OpenFile._tag,
           data: async () => {
-            const { dispatchPromise: dispatch } = context.getCapability(Capabilities.IntentDispatcher);
+            const { dispatchPromise: dispatch } = context.getCapability(Common.Capability.IntentDispatcher);
             await dispatch(
-              Function.pipe(createIntent(LocalFilesAction.OpenFile), chain(LayoutAction.Open, { part: 'main' })),
+              Function.pipe(createIntent(LocalFilesAction.OpenFile), chain(Common.LayoutAction.Open, { part: 'main' })),
             );
           },
           properties: {
@@ -100,11 +99,11 @@ export default Capability.makeModule((context) => {
               {
                 id: 'open-directory',
                 data: async () => {
-                  const { dispatchPromise: dispatch } = context.getCapability(Capabilities.IntentDispatcher);
+                  const { dispatchPromise: dispatch } = context.getCapability(Common.Capability.IntentDispatcher);
                   await dispatch(
                     Function.pipe(
                       createIntent(LocalFilesAction.OpenDirectory),
-                      chain(LayoutAction.Open, { part: 'main' }),
+                      chain(Common.LayoutAction.Open, { part: 'main' }),
                     ),
                   );
                 },
@@ -155,7 +154,7 @@ export default Capability.makeModule((context) => {
         {
           id: `${LocalFilesAction.Close._tag}:${entity.id}`,
           data: async () => {
-            const { dispatchPromise: dispatch } = context.getCapability(Capabilities.IntentDispatcher);
+            const { dispatchPromise: dispatch } = context.getCapability(Common.Capability.IntentDispatcher);
             await dispatch(createIntent(LocalFilesAction.Close, { id: entity.id }));
           },
           properties: {
@@ -168,7 +167,7 @@ export default Capability.makeModule((context) => {
               {
                 id: `${LocalFilesAction.Reconnect._tag}:${entity.id}`,
                 data: async () => {
-                  const { dispatchPromise: dispatch } = context.getCapability(Capabilities.IntentDispatcher);
+                  const { dispatchPromise: dispatch } = context.getCapability(Common.Capability.IntentDispatcher);
                   await dispatch(createIntent(LocalFilesAction.Reconnect, { id: entity.id }));
                 },
                 properties: {
@@ -183,7 +182,7 @@ export default Capability.makeModule((context) => {
               {
                 id: `${LocalFilesAction.Save._tag}:${entity.id}`,
                 data: async () => {
-                  const { dispatchPromise: dispatch } = context.getCapability(Capabilities.IntentDispatcher);
+                  const { dispatchPromise: dispatch } = context.getCapability(Common.Capability.IntentDispatcher);
                   await dispatch(createIntent(LocalFilesAction.Save, { id: entity.id }));
                 },
                 properties: {

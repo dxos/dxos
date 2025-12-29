@@ -4,7 +4,7 @@
 
 import React, { useCallback, useMemo } from 'react';
 
-import { LayoutAction, createIntent } from '@dxos/app-framework';
+import { Common, createIntent } from '@dxos/app-framework';
 import { type SurfaceComponentProps, useIntentDispatcher } from '@dxos/app-framework/react';
 import { Obj, Ref } from '@dxos/echo';
 import { Trigger } from '@dxos/functions';
@@ -31,7 +31,7 @@ export const MailboxSettings = ({ subject }: SurfaceComponentProps<Mailbox.Mailb
     );
     if (syncTrigger) {
       void dispatch(
-        createIntent(LayoutAction.Open, {
+        createIntent(Common.LayoutAction.Open, {
           part: 'main',
           subject: [`automation-settings${ATTENDABLE_PATH_SEPARATOR}${db.spaceId}`],
           options: {
@@ -64,7 +64,7 @@ export const MailboxSettings = ({ subject }: SurfaceComponentProps<Mailbox.Mailb
     });
     if (subscriptionTrigger) {
       void dispatch(
-        createIntent(LayoutAction.Open, {
+        createIntent(Common.LayoutAction.Open, {
           part: 'main',
           subject: [`automation-settings${ATTENDABLE_PATH_SEPARATOR}${db.spaceId}`],
           options: {

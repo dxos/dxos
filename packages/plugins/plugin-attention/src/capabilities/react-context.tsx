@@ -4,7 +4,7 @@
 
 import React, { type PropsWithChildren } from 'react';
 
-import { Capabilities, Capability } from '@dxos/app-framework';
+import { Common, Capability } from '@dxos/app-framework';
 import { useCapability } from '@dxos/app-framework/react';
 import {
   type AttentionManager,
@@ -18,7 +18,7 @@ import { meta } from '../meta';
 import { AttentionCapabilities } from './capabilities';
 
 export default Capability.makeModule(() =>
-  Capability.contributes(Capabilities.ReactContext, {
+  Capability.contributes(Common.Capability.ReactContext, {
     id: meta.id,
     context: (props: PropsWithChildren) => {
       const attention = useCapability(AttentionCapabilities.Attention) as AttentionManager | undefined;

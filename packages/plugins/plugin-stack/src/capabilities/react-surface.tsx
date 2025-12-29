@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { Capabilities, Capability, createSurface } from '@dxos/app-framework';
+import { Capability, Common } from '@dxos/app-framework';
 import { Obj } from '@dxos/echo';
 import { Collection } from '@dxos/schema';
 
@@ -13,8 +13,8 @@ import { meta } from '../meta';
 
 export default Capability.makeModule(() =>
   Capability.contributes(
-    Capabilities.ReactSurface,
-    createSurface({
+    Common.Capability.ReactSurface,
+    Common.createSurface({
       id: `${meta.id}/article`,
       role: 'article',
       filter: (data): data is { id?: string; subject: Collection.Collection } =>

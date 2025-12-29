@@ -4,7 +4,7 @@
 
 import * as Function from 'effect/Function';
 
-import { Capabilities, Capability, chain, createIntent } from '@dxos/app-framework';
+import { Capability, Common, chain, createIntent } from '@dxos/app-framework';
 import { Obj, Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
@@ -22,7 +22,7 @@ import { Meeting, MeetingAction } from '../types';
 import { MeetingCapabilities } from './capabilities';
 
 export default Capability.makeModule((context) => {
-  return Capability.contributes(Capabilities.AppGraphBuilder, [
+  return Capability.contributes(Common.Capability.AppGraphBuilder, [
     // TODO(wittjosiah): This currently won't _start_ the call but will navigate to the correct channel.
     GraphBuilder.createTypeExtension({
       id: `${meta.id}/share-call-link`,
@@ -37,7 +37,7 @@ export default Capability.makeModule((context) => {
           {
             id: `${Obj.getDXN(channel).toString()}/action/share-meeting-link`,
             data: async () => {
-              const { dispatchPromise: dispatch } = context.getCapability(Capabilities.IntentDispatcher);
+              const { dispatchPromise: dispatch } = context.getCapability(Common.Capability.IntentDispatcher);
               invariant(space);
               await dispatch(
                 createIntent(SpaceAction.GetShareLink, {
@@ -134,7 +134,7 @@ export default Capability.makeModule((context) => {
               // NOTE: We are not saving the state of the transcription manager here.
               // We expect the state to be updated through `onCallStateUpdated` once it is propagated through Swarm.
               // This is done to avoid race conditions and to not handle optimistic updates.
-              const { dispatchPromise: dispatch } = context.getCapability(Capabilities.IntentDispatcher);
+              const { dispatchPromise: dispatch } = context.getCapability(Common.Capability.IntentDispatcher);
 
               let meeting = state.activeMeeting;
               if (!meeting) {

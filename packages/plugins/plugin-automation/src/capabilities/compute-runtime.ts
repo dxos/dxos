@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as ManagedRuntime from 'effect/ManagedRuntime';
 
-import { Capabilities, Capability } from '@dxos/app-framework';
+import { Common, Capability } from '@dxos/app-framework';
 import { GenericToolkit, makeToolExecutionServiceFromFunctions, makeToolResolverFromFunctions } from '@dxos/assistant';
 import { Resource } from '@dxos/context';
 import { Database, Query, Ref } from '@dxos/echo';
@@ -62,11 +62,11 @@ class ComputeRuntimeProviderImpl extends Resource implements AutomationCapabilit
       Effect.gen(this, function* () {
         const client = this.#context.getCapability(ClientCapabilities.Client);
         const aiServiceLayer =
-          this.#context.getCapability(Capabilities.AiServiceLayer) ?? Layer.die('AiService not found');
+          this.#context.getCapability(Common.Capability.AiServiceLayer) ?? Layer.die('AiService not found');
 
         // TODO(dmaretskyi): Make these reactive.
-        const functions = this.#context.getCapabilities(Capabilities.Functions).flat();
-        const toolkits = this.#context.getCapabilities(Capabilities.Toolkit);
+        const functions = this.#context.getCapabilities(Common.Capability.Functions).flat();
+        const toolkits = this.#context.getCapabilities(Common.Capability.Toolkit);
         const mergedToolkit = GenericToolkit.merge(...toolkits);
         const toolkit = mergedToolkit.toolkit;
         const toolkitLayer = mergedToolkit.layer;

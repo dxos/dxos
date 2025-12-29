@@ -4,7 +4,7 @@
 
 import * as Option from 'effect/Option';
 
-import { Capabilities, Capability } from '@dxos/app-framework';
+import { Capability, Common } from '@dxos/app-framework';
 import { Filter, Obj, type QueryResult, Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { AttentionCapabilities } from '@dxos/plugin-attention';
@@ -20,7 +20,7 @@ import { meta } from '../meta';
 import { Calendar, Mailbox } from '../types';
 
 export default Capability.makeModule((context) => {
-  return Capability.contributes(Capabilities.AppGraphBuilder, [
+  return Capability.contributes(Common.Capability.AppGraphBuilder, [
     GraphBuilder.createExtension({
       id: `${meta.id}/mailbox-filters`,
       match: (node) =>

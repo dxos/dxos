@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Capabilities, Capability } from '@dxos/app-framework';
+import { Capability, Common } from '@dxos/app-framework';
 import { Client, ClientService } from '@dxos/client';
 
 import { ClientEvents } from '../events';
@@ -42,7 +42,7 @@ export default Capability.makeModule(
         subscription.unsubscribe();
         await client.destroy();
       }),
-      Capability.contributes(Capabilities.Layer, ClientService.fromClient(client)),
+      Capability.contributes(Common.Capability.Layer, ClientService.fromClient(client)),
     ];
   },
 );

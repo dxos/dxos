@@ -4,7 +4,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { ActivationEvent, Capabilities, Capability, Events, Plugin, createIntent } from '@dxos/app-framework';
+import { ActivationEvent, Capability, Common, Plugin, createIntent } from '@dxos/app-framework';
 import { Ref, Tag, Type } from '@dxos/echo';
 import { AttentionEvents } from '@dxos/plugin-attention';
 import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
@@ -47,19 +47,19 @@ export const SpacePlugin = Plugin.define<SpacePluginOptions>(meta).pipe(
     // TODO(wittjosiah): Does not integrate with settings store.
     //   Should this be a different event?
     //   Should settings store be renamed to be more generic?
-    activatesOn: ActivationEvent.oneOf(Events.SetupSettings, Events.SetupAppGraph),
+    activatesOn: ActivationEvent.oneOf(Common.ActivationEvent.SetupSettings, Common.ActivationEvent.SetupAppGraph),
     activatesAfter: [SpaceEvents.StateReady],
     activate: SpaceState,
   }),
   Plugin.addModule({
-    activatesOn: Events.SetupSettings,
+    activatesOn: Common.ActivationEvent.SetupSettings,
     activate: SpaceSettings,
   }),
   Plugin.addModule({
     id: 'translations',
-    activatesOn: Events.SetupTranslations,
+    activatesOn: Common.ActivationEvent.SetupTranslations,
     activate: () =>
-      Capability.contributes(Capabilities.Translations, [
+      Capability.contributes(Common.Capability.Translations, [
         ...translations,
         ...componentsTranslations,
         ...formTranslations,
@@ -68,9 +68,9 @@ export const SpacePlugin = Plugin.define<SpacePluginOptions>(meta).pipe(
   }),
   Plugin.addModule({
     id: 'metadata',
-    activatesOn: Events.SetupMetadata,
+    activatesOn: Common.ActivationEvent.SetupMetadata,
     activate: () => [
-      Capability.contributes(Capabilities.Metadata, {
+      Capability.contributes(Common.Capability.Metadata, {
         id: Collection.Collection.typename,
         metadata: {
           icon: 'ph--cards-three--regular',
@@ -82,7 +82,7 @@ export const SpacePlugin = Plugin.define<SpacePluginOptions>(meta).pipe(
           addToCollectionOnCreate: true,
         },
       }),
-      Capability.contributes(Capabilities.Metadata, {
+      Capability.contributes(Common.Capability.Metadata, {
         id: Type.getTypename(Type.PersistentType),
         metadata: {
           icon: 'ph--database--regular',
@@ -98,25 +98,25 @@ export const SpacePlugin = Plugin.define<SpacePluginOptions>(meta).pipe(
                 })) satisfies CreateObjectIntent,
         },
       }),
-      Capability.contributes(Capabilities.Metadata, {
+      Capability.contributes(Common.Capability.Metadata, {
         id: Event.Event.typename,
         metadata: {
           icon: 'ph--calendar-dot--regular',
         },
       }),
-      Capability.contributes(Capabilities.Metadata, {
+      Capability.contributes(Common.Capability.Metadata, {
         id: Organization.Organization.typename,
         metadata: {
           icon: 'ph--building-office--regular',
         },
       }),
-      Capability.contributes(Capabilities.Metadata, {
+      Capability.contributes(Common.Capability.Metadata, {
         id: Person.Person.typename,
         metadata: {
           icon: 'ph--user--regular',
         },
       }),
-      Capability.contributes(Capabilities.Metadata, {
+      Capability.contributes(Common.Capability.Metadata, {
         id: Task.Task.typename,
         metadata: {
           icon: 'ph--check-circle--regular',
@@ -144,7 +144,7 @@ export const SpacePlugin = Plugin.define<SpacePluginOptions>(meta).pipe(
       ]),
   }),
   Plugin.addModule({
-    activatesOn: Events.Startup,
+    activatesOn: Common.ActivationEvent.Startup,
     activate: ReactRoot,
   }),
   Plugin.addModule(({ invitationUrl = window.location.origin, invitationParam = 'spaceInvitationCode' }) => {
@@ -156,7 +156,7 @@ export const SpacePlugin = Plugin.define<SpacePluginOptions>(meta).pipe(
 
     return {
       id: Capability.getModuleTag(ReactSurface),
-      activatesOn: Events.SetupReactSurface,
+      activatesOn: Common.ActivationEvent.SetupReactSurface,
       // TODO(wittjosiah): Should occur before the settings dialog is loaded when surfaces activation is more granular.
       activatesBefore: [SpaceEvents.SetupSettingsPanel],
       activate: () => ReactSurface({ createInvitationUrl }),
@@ -172,18 +172,18 @@ export const SpacePlugin = Plugin.define<SpacePluginOptions>(meta).pipe(
 
       return {
         id: Capability.getModuleTag(IntentResolver),
-        activatesOn: Events.SetupIntentResolver,
+        activatesOn: Common.ActivationEvent.SetupIntentResolver,
         activate: (context) => IntentResolver({ context, createInvitationUrl, observability }),
       };
     },
   ),
   Plugin.addModule({
-    activatesOn: Events.SetupAppGraph,
+    activatesOn: Common.ActivationEvent.SetupAppGraph,
     activate: AppGraphBuilder,
   }),
   // TODO(wittjosiah): This could probably be deferred.
   Plugin.addModule({
-    activatesOn: Events.AppGraphReady,
+    activatesOn: Common.ActivationEvent.AppGraphReady,
     activate: AppGraphSerializer,
   }),
   Plugin.addModule({
@@ -193,9 +193,9 @@ export const SpacePlugin = Plugin.define<SpacePluginOptions>(meta).pipe(
   }),
   Plugin.addModule({
     activatesOn: ActivationEvent.allOf(
-      Events.DispatcherReady,
-      Events.LayoutReady,
-      Events.AppGraphReady,
+      Common.ActivationEvent.DispatcherReady,
+      Common.ActivationEvent.LayoutReady,
+      Common.ActivationEvent.AppGraphReady,
       AttentionEvents.AttentionReady,
       SpaceEvents.StateReady,
       ClientEvents.SpacesReady,

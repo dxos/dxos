@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Capabilities, Capability, Events, Plugin } from '@dxos/app-framework';
+import { Capability, Common, Plugin } from '@dxos/app-framework';
 import { type Client } from '@dxos/react-client';
 
 import { AppGraphBuilder, DebugSettings, ReactContext, ReactSurface } from './capabilities';
@@ -13,35 +13,35 @@ import { translations } from './translations';
 export const DebugPlugin = Plugin.define(meta).pipe(
   Plugin.addModule({
     id: 'setup-devtools',
-    activatesOn: Events.Startup,
+    activatesOn: Common.ActivationEvent.Startup,
     activate: () => {
       setupDevtools();
-      return Capability.contributes(Capabilities.Null, null);
+      return Capability.contributes(Common.Capability.Null, null);
     },
   }),
   Plugin.addModule({
     id: 'settings',
-    activatesOn: Events.SetupSettings,
+    activatesOn: Common.ActivationEvent.SetupSettings,
     activate: DebugSettings,
   }),
   Plugin.addModule({
     id: 'translations',
-    activatesOn: Events.SetupTranslations,
-    activate: () => Capability.contributes(Capabilities.Translations, translations),
+    activatesOn: Common.ActivationEvent.SetupTranslations,
+    activate: () => Capability.contributes(Common.Capability.Translations, translations),
   }),
   Plugin.addModule({
     id: 'react-context',
-    activatesOn: Events.Startup,
+    activatesOn: Common.ActivationEvent.Startup,
     activate: ReactContext,
   }),
   Plugin.addModule({
     id: 'react-surface',
-    activatesOn: Events.SetupReactSurface,
+    activatesOn: Common.ActivationEvent.SetupReactSurface,
     activate: ReactSurface,
   }),
   Plugin.addModule({
     id: 'app-graph-builder',
-    activatesOn: Events.SetupAppGraph,
+    activatesOn: Common.ActivationEvent.SetupAppGraph,
     activate: AppGraphBuilder,
   }),
   Plugin.make,

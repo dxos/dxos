@@ -5,7 +5,7 @@
 import type * as Schema from 'effect/Schema';
 import React, { useCallback } from 'react';
 
-import { Capabilities, Capability, createSurface } from '@dxos/app-framework';
+import { Capability, Common } from '@dxos/app-framework';
 import { Obj } from '@dxos/echo';
 import { findAnnotation } from '@dxos/effect';
 import { type FormFieldComponentProps } from '@dxos/react-ui-form';
@@ -15,14 +15,14 @@ import { meta } from '../meta';
 import { WnfsAction, WnfsFile } from '../types';
 
 export default Capability.makeModule(() =>
-  Capability.contributes(Capabilities.ReactSurface, [
-    createSurface({
+  Capability.contributes(Common.Capability.ReactSurface, [
+    Common.createSurface({
       id: `${meta.id}/article`,
       role: ['article', 'section', 'slide'],
       filter: (data): data is { subject: WnfsFile.File } => Obj.instanceOf(WnfsFile.File, data.subject),
       component: ({ data, role }) => <FileContainer role={role} file={data.subject} />,
     }),
-    createSurface({
+    Common.createSurface({
       id: `${meta.id}/create-form`,
       role: 'form-input',
       filter: (data): data is { prop: string; schema: Schema.Schema.Any } => {

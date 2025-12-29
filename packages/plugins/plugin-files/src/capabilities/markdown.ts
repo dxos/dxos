@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Capabilities, Capability } from '@dxos/app-framework';
+import { Capability, Common } from '@dxos/app-framework';
 import { MarkdownCapabilities } from '@dxos/plugin-markdown';
 import { listener } from '@dxos/ui-editor';
 
@@ -15,7 +15,7 @@ export default Capability.makeModule((context) => {
   const extensionProvider = () =>
     listener({
       onChange: ({ id, text }) => {
-        const settings = context.getCapability(Capabilities.SettingsStore).getStore<FilesSettingsProps>(meta.id)!.value;
+        const settings = context.getCapability(Common.Capability.SettingsStore).getStore<FilesSettingsProps>(meta.id)!.value;
         const state = context.getCapability(FileCapabilities.State);
         if (settings.openLocalFiles && state.current && state.current.id === id && state.current.text !== text) {
           state.current.text = text.toString();

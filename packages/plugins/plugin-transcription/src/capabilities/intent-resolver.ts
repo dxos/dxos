@@ -2,13 +2,13 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Capabilities, Capability, createResolver } from '@dxos/app-framework';
+import { Capability, Common, createResolver } from '@dxos/app-framework';
 import { Transcript } from '@dxos/types';
 
 import { TranscriptAction } from '../types';
 
 export default Capability.makeModule(() =>
-  Capability.contributes(Capabilities.IntentResolver, [
+  Capability.contributes(Common.Capability.IntentResolver, [
     createResolver({
       intent: TranscriptAction.Create,
       resolve: ({ name, space }) => {

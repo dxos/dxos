@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Capabilities, Events, Plugin, Capability } from '@dxos/app-framework';
+import { Common, Plugin, Capability } from '@dxos/app-framework';
 
 import { meta } from '../meta';
 
@@ -11,8 +11,8 @@ import { trigger } from './commands';
 export const AutomationPlugin = Plugin.define(meta).pipe(
   Plugin.addModule({
     id: 'cli-commands',
-    activatesOn: Events.Startup,
-    activate: () => [Capability.contributes(Capabilities.Command, trigger)],
+    activatesOn: Common.ActivationEvent.Startup,
+    activate: () => [Capability.contributes(Common.Capability.Command, trigger)],
   }),
   Plugin.make,
 );

@@ -13,7 +13,7 @@ import React, {
   useRef,
 } from 'react';
 
-import { LayoutAction, createIntent } from '@dxos/app-framework';
+import { Common, createIntent } from '@dxos/app-framework';
 import { Surface, useAppGraph, useCapability, useIntentDispatcher } from '@dxos/app-framework/react';
 import { debounce } from '@dxos/async';
 import { type Node, useNode } from '@dxos/plugin-graph';
@@ -200,7 +200,7 @@ const PlankComponent = memo(
       if (scrollIntoView === id) {
         layoutMode === 'deck' && rootElement.current?.scrollIntoView({ behavior: 'smooth', inline: 'center' });
         // Clear the scroll into view state once it has been actioned.
-        void dispatch(createIntent(LayoutAction.ScrollIntoView, { part: 'current', subject: undefined }));
+        void dispatch(createIntent(Common.LayoutAction.ScrollIntoView, { part: 'current', subject: undefined }));
       }
     }, [id, scrollIntoView, layoutMode]);
 

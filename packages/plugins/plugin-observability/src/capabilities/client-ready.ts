@@ -2,13 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import {
-  Capabilities,
-  Capability,
-  LayoutAction,
-  SettingsAction,
-  createIntent,
-} from '@dxos/app-framework';
+import { Capability, Common, SettingsAction, createIntent } from '@dxos/app-framework';
 import { type Observability, setupTelemetryListeners } from '@dxos/observability';
 
 import { meta } from '../meta';
@@ -23,8 +17,8 @@ type ClientReadyOptions = {
 };
 
 export default Capability.makeModule(async ({ context, namespace, observability }: ClientReadyOptions) => {
-  const manager = context.getCapability(Capabilities.PluginManager);
-  const { dispatchPromise: dispatch } = context.getCapability(Capabilities.IntentDispatcher);
+  const manager = context.getCapability(Common.Capability.PluginManager);
+  const { dispatchPromise: dispatch } = context.getCapability(Common.Capability.IntentDispatcher);
   const state = context.getCapability(ObservabilityCapabilities.State);
   const client = context.getCapability(ClientCapability);
 
@@ -34,7 +28,7 @@ export default Capability.makeModule(async ({ context, namespace, observability 
       environment && environment !== 'ci' && !environment.endsWith('.local') && !environment.endsWith('.lan');
     if (!state.notified && notify) {
       await dispatch(
-        createIntent(LayoutAction.AddToast, {
+        createIntent(Common.LayoutAction.AddToast, {
           part: 'toast',
           subject: {
             id: `${meta.id}/notice`,

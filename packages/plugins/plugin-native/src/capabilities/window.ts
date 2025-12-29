@@ -4,10 +4,10 @@
 
 import { LogicalPosition, LogicalSize, getCurrentWindow } from '@tauri-apps/api/window';
 
-import { Capabilities, Capability } from '@dxos/app-framework';
+import { Capability, Common } from '@dxos/app-framework';
 
 export default Capability.makeModule(() => {
-  return Capability.contributes(Capabilities.Null, null, () => {
+  return Capability.contributes(Common.Capability.Null, null, () => {
     const appWindow = getCurrentWindow();
 
     // Save window state to localStorage.

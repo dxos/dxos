@@ -5,7 +5,7 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useState } from 'react';
 
-import { Capabilities, IntentPlugin, Capability, createSurface } from '@dxos/app-framework';
+import { Capability, Common, IntentPlugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { faker } from '@dxos/random';
 import { useClient } from '@dxos/react-client';
@@ -61,8 +61,8 @@ const meta = {
       plugins: [IntentPlugin()],
       capabilities: [
         Capability.contributes(
-          Capabilities.ReactSurface,
-          createSurface({
+          Common.Capability.ReactSurface,
+          Common.createSurface({
             id: 'test',
             role: 'card',
             component: ({ role }) => <span>{JSON.stringify({ role })}</span>,

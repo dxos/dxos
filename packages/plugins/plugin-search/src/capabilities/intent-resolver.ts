@@ -2,23 +2,17 @@
 // Copyright 2025 DXOS.org
 //
 
-import {
-  Capabilities,
-  Capability,
-  LayoutAction,
-  createIntent,
-  createResolver,
-} from '@dxos/app-framework';
+import { Capability, Common, createIntent, createResolver } from '@dxos/app-framework';
 
 import { SearchAction } from '../types';
 
 export default Capability.makeModule(() =>
   Capability.contributes(
-    Capabilities.IntentResolver,
+    Common.Capability.IntentResolver,
     createResolver({
       intent: SearchAction.OpenSearch,
       resolve: () => ({
-        intents: [createIntent(LayoutAction.UpdateComplementary, { part: 'complementary', subject: 'search' })],
+        intents: [createIntent(Common.LayoutAction.UpdateComplementary, { part: 'complementary', subject: 'search' })],
       }),
     }),
   ),

@@ -4,7 +4,7 @@
 
 import * as Match from 'effect/Match';
 
-import { Capabilities, Capability, createResolver } from '@dxos/app-framework';
+import { Common, Capability, createResolver } from '@dxos/app-framework';
 import { type Selection } from '@dxos/react-ui-attention';
 
 import { AttentionAction } from '../types';
@@ -12,7 +12,7 @@ import { AttentionAction } from '../types';
 import { AttentionCapabilities } from './capabilities';
 
 export default Capability.makeModule((context) =>
-  Capability.contributes(Capabilities.IntentResolver, [
+  Capability.contributes(Common.Capability.IntentResolver, [
     createResolver({
       intent: AttentionAction.Select,
       resolve: (data) => {

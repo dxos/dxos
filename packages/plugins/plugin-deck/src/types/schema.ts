@@ -4,7 +4,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { LayoutAction } from '@dxos/app-framework';
+import { Common } from '@dxos/app-framework';
 import { type DeepReadonly } from '@dxos/util';
 
 import { meta } from '../meta';
@@ -98,7 +98,7 @@ export const DeckPluginState = Schema.Struct({
   /** Data to be passed to the popover Surface. */
   popoverContent: Schema.optional(Schema.Any),
 
-  toasts: Schema.mutable(Schema.Array(LayoutAction.Toast)),
+  toasts: Schema.mutable(Schema.Array(Common.LayoutAction.Toast)),
   currentUndoId: Schema.optional(Schema.String),
 
   activeDeck: Schema.String,

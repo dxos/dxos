@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Capabilities, Events, Plugin, Capability } from '@dxos/app-framework';
+import { Capability, Common, Plugin } from '@dxos/app-framework';
 import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
 
 // import { IntentResolver } from './capabilities';
@@ -12,12 +12,12 @@ import { translations } from './translations';
 export const TransformerPlugin = Plugin.define(meta).pipe(
   Plugin.addModule({
     id: 'translations',
-    activatesOn: Events.SetupTranslations,
-    activate: () => Capability.contributes(Capabilities.Translations, translations),
+    activatesOn: Common.ActivationEvent.SetupTranslations,
+    activate: () => Capability.contributes(Common.Capability.Translations, translations),
   }),
   Plugin.addModule({
     id: 'metadata',
-    activatesOn: Events.SetupMetadata,
+    activatesOn: Common.ActivationEvent.SetupMetadata,
     activate: () => [],
   }),
   Plugin.addModule({

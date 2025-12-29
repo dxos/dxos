@@ -4,30 +4,30 @@
 
 import React from 'react';
 
-import { Capabilities, Capability, createSurface } from '@dxos/app-framework';
+import { Capability, Common } from '@dxos/app-framework';
 import { Surface } from '@dxos/app-framework/react';
 
 import { StatusBarActions, StatusBarPanel, VersionNumber } from '../components';
 import { meta } from '../meta';
 
 export default Capability.makeModule(() =>
-  Capability.contributes(Capabilities.ReactSurface, [
-    createSurface({
+  Capability.contributes(Common.Capability.ReactSurface, [
+    Common.createSurface({
       id: `${meta.id}/status-bar`,
       role: 'status-bar',
       component: () => <StatusBarPanel />,
     }),
-    createSurface({
+    Common.createSurface({
       id: `${meta.id}/status-bar--r0-footer`,
       role: 'status-bar--r0-footer',
       component: () => <Surface role='status' />,
     }),
-    createSurface({
+    Common.createSurface({
       id: `${meta.id}/status-bar--r1-footer`,
       role: 'status-bar--r1-footer',
       component: () => <StatusBarActions />,
     }),
-    createSurface({
+    Common.createSurface({
       id: `${meta.id}/header-end`,
       role: 'header-end',
       component: () => <VersionNumber />,

@@ -4,7 +4,7 @@
 
 import type * as Schema from 'effect/Schema';
 
-import { Capabilities, Capability, createIntent } from '@dxos/app-framework';
+import { Capability, Common, createIntent } from '@dxos/app-framework';
 import { extractionAnthropicFunction, processTranscriptMessage } from '@dxos/assistant/extraction';
 import { Filter, type Obj, Query, Type } from '@dxos/echo';
 import { FunctionExecutor } from '@dxos/functions-runtime';
@@ -30,10 +30,10 @@ import { MeetingCapabilities } from './capabilities';
 type MeetingPayload = buf.MessageInitShape<typeof MeetingPayloadSchema>;
 
 export default Capability.makeModule((context) => {
-  const { dispatchPromise: dispatch } = context.getCapability(Capabilities.IntentDispatcher);
+  const { dispatchPromise: dispatch } = context.getCapability(Common.Capability.IntentDispatcher);
   const client = context.getCapability(ClientCapabilities.Client);
   const state = context.getCapability(MeetingCapabilities.State);
-  const _settings = context.getCapability(Capabilities.SettingsStore).getStore<Meeting.Settings>(meta.id)!.value;
+  const _settings = context.getCapability(Common.Capability.SettingsStore).getStore<Meeting.Settings>(meta.id)!.value;
 
   return Capability.contributes(ThreadCapabilities.CallExtension, {
     onJoin: async ({ channel }: { channel?: Channel.Channel }) => {

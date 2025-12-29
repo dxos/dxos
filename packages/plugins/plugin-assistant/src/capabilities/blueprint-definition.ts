@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Capabilities, Capability } from '@dxos/app-framework';
+import { Capability, Common } from '@dxos/app-framework';
 import {
   Agent,
   Discord,
@@ -22,27 +22,27 @@ export const createBlueprint: () => Blueprint.Blueprint = AssistantBlueprint.mak
 export { AssistantBlueprint };
 
 type BlueprintCapabilities = (
-  | Capability.Capability<typeof Capabilities.Functions>
-  | Capability.Capability<typeof Capabilities.BlueprintDefinition>
+  | Capability.Capability<typeof Common.Capability.Functions>
+  | Capability.Capability<typeof Common.Capability.BlueprintDefinition>
 )[];
 
 export default Capability.makeModule<[], BlueprintCapabilities>(() => [
-  Capability.contributes(Capabilities.Functions, AssistantBlueprint.functions$),
-  Capability.contributes(Capabilities.BlueprintDefinition, AssistantBlueprint.blueprint),
+  Capability.contributes(Common.Capability.Functions, AssistantBlueprint.functions$),
+  Capability.contributes(Common.Capability.BlueprintDefinition, AssistantBlueprint.blueprint),
 
   // TODO(burdon): Factor out.
-  Capability.contributes(Capabilities.Functions, [Research.create, Research.research]),
-  Capability.contributes(Capabilities.BlueprintDefinition, ResearchBlueprint),
+  Capability.contributes(Common.Capability.Functions, [Research.create, Research.research]),
+  Capability.contributes(Common.Capability.BlueprintDefinition, ResearchBlueprint),
 
   // TODO(burdon): Factor out.
-  Capability.contributes(Capabilities.Functions, [Agent.prompt, EntityExtraction.extract]),
-  Capability.contributes(Capabilities.BlueprintDefinition, WebSearchBlueprint),
+  Capability.contributes(Common.Capability.Functions, [Agent.prompt, EntityExtraction.extract]),
+  Capability.contributes(Common.Capability.BlueprintDefinition, WebSearchBlueprint),
 
   // TODO(burdon): Factor out.
-  Capability.contributes(Capabilities.Functions, [Discord.fetch]),
-  Capability.contributes(Capabilities.BlueprintDefinition, DiscordBlueprint),
+  Capability.contributes(Common.Capability.Functions, [Discord.fetch]),
+  Capability.contributes(Common.Capability.BlueprintDefinition, DiscordBlueprint),
 
   // TODO(burdon): Factor out.
-  Capability.contributes(Capabilities.Functions, [Linear.sync]),
-  Capability.contributes(Capabilities.BlueprintDefinition, LinearBlueprint),
+  Capability.contributes(Common.Capability.Functions, [Linear.sync]),
+  Capability.contributes(Common.Capability.BlueprintDefinition, LinearBlueprint),
 ]);

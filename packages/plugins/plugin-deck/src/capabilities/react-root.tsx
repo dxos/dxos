@@ -4,7 +4,7 @@
 
 import React, { useCallback } from 'react';
 
-import { Capabilities, Capability } from '@dxos/app-framework';
+import { Capability, Common } from '@dxos/app-framework';
 import { useCapability } from '@dxos/app-framework/react';
 
 import { DeckLayout } from '../components';
@@ -13,7 +13,7 @@ import { meta } from '../meta';
 import { DeckCapabilities } from './capabilities';
 
 export default Capability.makeModule(() =>
-  Capability.contributes(Capabilities.ReactRoot, {
+  Capability.contributes(Common.Capability.ReactRoot, {
     id: meta.id,
     root: () => {
       const layout = useCapability(DeckCapabilities.MutableDeckState);

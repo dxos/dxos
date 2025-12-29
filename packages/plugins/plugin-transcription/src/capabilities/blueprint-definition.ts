@@ -2,18 +2,18 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Capabilities, Capability } from '@dxos/app-framework';
+import { Capability, Common } from '@dxos/app-framework';
 
 import { TranscriptionBlueprint } from '../blueprints';
 
 type BlueprintCapabilities = (
-  | Capability.Capability<typeof Capabilities.Functions>
-  | Capability.Capability<typeof Capabilities.BlueprintDefinition>
+  | Capability.Capability<typeof Common.Capability.Functions>
+  | Capability.Capability<typeof Common.Capability.BlueprintDefinition>
 )[];
 
 const blueprintDefinition = Capability.makeModule<[], BlueprintCapabilities>(() => [
-  Capability.contributes(Capabilities.Functions, TranscriptionBlueprint.functions),
-  Capability.contributes(Capabilities.BlueprintDefinition, TranscriptionBlueprint.make()),
+  Capability.contributes(Common.Capability.Functions, TranscriptionBlueprint.functions),
+  Capability.contributes(Common.Capability.BlueprintDefinition, TranscriptionBlueprint.make()),
 ]);
 
 export default blueprintDefinition;

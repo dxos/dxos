@@ -12,7 +12,7 @@ import * as Function from 'effect/Function';
 import * as Match from 'effect/Match';
 import * as Schedule from 'effect/Schedule';
 
-import { Capabilities, Capability, LayoutAction, createIntent } from '@dxos/app-framework';
+import { Capability, Common, createIntent } from '@dxos/app-framework';
 import { log } from '@dxos/log';
 
 import { meta } from '../meta';
@@ -23,10 +23,10 @@ export default Capability.makeModule((context) => {
   // Skip updates if not supported or in dev mode.
   const platform = type();
   if (!SUPPORTS_OTA.includes(platform) || window.location.hostname === 'localhost') {
-    return Capability.contributes(Capabilities.Null, null);
+    return Capability.contributes(Common.Capability.Null, null);
   }
 
-  const { dispatch } = context.getCapability(Capabilities.IntentDispatcher);
+  const { dispatch } = context.getCapability(Common.Capability.IntentDispatcher);
 
   // https://tauri.app/plugin/updater/#checking-for-updates
   const action = Effect.gen(function* () {
@@ -56,7 +56,7 @@ export default Capability.makeModule((context) => {
       yield* Effect.tryPromise(() => update.downloadAndInstall(handleDownload));
 
       yield* dispatch(
-        createIntent(LayoutAction.AddToast, {
+        createIntent(Common.LayoutAction.AddToast, {
           part: 'toast',
           subject: {
             id: `${meta.id}/update-ready`,
@@ -79,7 +79,7 @@ export default Capability.makeModule((context) => {
     Effect.runFork,
   );
 
-  return Capability.contributes(Capabilities.Null, null, () => {
+  return Capability.contributes(Common.Capability.Null, null, () => {
     Effect.runSync(Fiber.interrupt(fiber));
   });
 });

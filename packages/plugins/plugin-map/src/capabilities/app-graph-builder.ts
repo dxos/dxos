@@ -4,7 +4,7 @@
 
 import * as Option from 'effect/Option';
 
-import { Capabilities, Capability, createIntent } from '@dxos/app-framework';
+import { Capability, Common, createIntent } from '@dxos/app-framework';
 import { Obj } from '@dxos/echo';
 import { CreateAtom, GraphBuilder } from '@dxos/plugin-graph';
 import { View } from '@dxos/schema';
@@ -14,7 +14,7 @@ import { Map, MapAction } from '../types';
 
 export default Capability.makeModule((context) => {
   return Capability.contributes(
-    Capabilities.AppGraphBuilder,
+    Common.Capability.AppGraphBuilder,
     GraphBuilder.createExtension({
       id: MapAction.Toggle._tag,
       match: (node) => {
@@ -32,7 +32,7 @@ export default Capability.makeModule((context) => {
           {
             id: `${view.id}/toggle-map`,
             data: async () => {
-              const { dispatchPromise: dispatch } = context.getCapability(Capabilities.IntentDispatcher);
+              const { dispatchPromise: dispatch } = context.getCapability(Common.Capability.IntentDispatcher);
               await dispatch(createIntent(MapAction.Toggle));
             },
             properties: {

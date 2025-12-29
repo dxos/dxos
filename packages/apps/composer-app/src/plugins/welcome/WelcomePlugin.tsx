@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { ActivationEvent, Capabilities, Capability, Events, Plugin } from '@dxos/app-framework';
+import { ActivationEvent, Capability, Common, Plugin } from '@dxos/app-framework';
 import { ClientEvents } from '@dxos/plugin-client';
 import { SpaceEvents } from '@dxos/plugin-space';
 
@@ -14,22 +14,22 @@ export const WelcomePlugin = Plugin.define(meta).pipe(
   Plugin.addModule({
     id: `${meta.id}/module/onboarding`,
     activatesOn: ActivationEvent.allOf(
-      Events.DispatcherReady,
-      Events.AppGraphReady,
-      Events.SettingsReady,
-      Events.LayoutReady,
+      Common.ActivationEvent.DispatcherReady,
+      Common.ActivationEvent.AppGraphReady,
+      Common.ActivationEvent.SettingsReady,
+      Common.ActivationEvent.LayoutReady,
       ClientEvents.ClientReady,
     ),
     activate: Onboarding,
   }),
   Plugin.addModule({
     id: `${meta.id}/module/translations`,
-    activatesOn: Events.SetupTranslations,
-    activate: () => Capability.contributes(Capabilities.Translations, translations),
+    activatesOn: Common.ActivationEvent.SetupTranslations,
+    activate: () => Capability.contributes(Common.Capability.Translations, translations),
   }),
   Plugin.addModule({
     id: `${meta.id}/module/react-surface`,
-    activatesOn: Events.SetupReactSurface,
+    activatesOn: Common.ActivationEvent.SetupReactSurface,
     activate: ReactSurface,
   }),
   Plugin.addModule({

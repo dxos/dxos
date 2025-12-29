@@ -9,7 +9,7 @@ import * as Function from 'effect/Function';
 import * as Schema from 'effect/Schema';
 
 import { ToolResult, createTool } from '@dxos/ai';
-import { Capabilities, chain, Capability, createIntentModule } from '@dxos/app-framework';
+import { Capability, Common, chain, createIntentModule } from '@dxos/app-framework';
 import { ArtifactId, createArtifactElement } from '@dxos/assistant';
 import { defineArtifact } from '@dxos/blueprints';
 import { Obj } from '@dxos/echo';
@@ -108,5 +108,5 @@ export default Capability.makeModule(() => {
     ],
   });
 
-  return Capability.contributes(Capabilities.ArtifactDefinition, definition);
+  return Capability.contributes(Common.Capability.ArtifactDefinition, definition);
 });

@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Capabilities, Capability } from '@dxos/app-framework';
+import { Capability, Common } from '@dxos/app-framework';
 import { invariant } from '@dxos/invariant';
 import { live } from '@dxos/live-object';
 import { LocalStorageStore } from '@dxos/local-storage';
@@ -77,7 +77,7 @@ export const DeckStateFactory = () => {
     state.values.deck.fullscreen = false;
   }
 
-  const layout = live<Capabilities.Layout>({
+  const layout = live<Common.Capability.Layout>({
     get mode() {
       return getMode(state.values.deck);
     },
@@ -106,7 +106,7 @@ export const DeckStateFactory = () => {
 
   return [
     Capability.contributes(DeckCapabilities.DeckState, state.values, () => state.close()),
-    Capability.contributes(Capabilities.Layout, layout),
+    Capability.contributes(Common.Capability.Layout, layout),
   ];
 };
 

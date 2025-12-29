@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { Capabilities, Capability, createSurface } from '@dxos/app-framework';
+import { Capability, Common } from '@dxos/app-framework';
 import { useCapability } from '@dxos/app-framework/react';
 import { Obj, type Ref } from '@dxos/echo';
 import { SettingsStore } from '@dxos/local-storage';
@@ -25,14 +25,14 @@ import { Channel, type ThreadSettingsProps } from '../types';
 import { ThreadCapabilities } from './capabilities';
 
 export default Capability.makeModule(() =>
-  Capability.contributes(Capabilities.ReactSurface, [
-    createSurface({
+  Capability.contributes(Common.Capability.ReactSurface, [
+    Common.createSurface({
       id: `${meta.id}/channel`,
       role: 'article',
       filter: (data): data is { subject: Channel.Channel } => Obj.instanceOf(Channel.Channel, data.subject),
       component: ({ data: { subject }, role }) => <ChannelContainer channel={subject} role={role} />,
     }),
-    createSurface({
+    Common.createSurface({
       id: `${meta.id}/chat-companion`,
       role: 'article',
       filter: (data): data is { companionTo: Channel.Channel; subject: 'chat' } =>
@@ -47,7 +47,7 @@ export default Capability.makeModule(() =>
         return <ChatContainer thread={thread} space={space} />;
       },
     }),
-    createSurface({
+    Common.createSurface({
       id: `${meta.id}/thread`,
       role: 'article',
       filter: (data): data is { subject: Thread.Thread } => Obj.instanceOf(Thread.Thread, data.subject),
@@ -60,7 +60,7 @@ export default Capability.makeModule(() =>
         return <ChatContainer thread={subject} space={space} />;
       },
     }),
-    createSurface({
+    Common.createSurface({
       id: `${meta.id}/comments`,
       role: 'article',
       filter: (data): data is { companionTo: { threads: Ref.Ref<Thread.Thread>[] } } =>
@@ -68,19 +68,19 @@ export default Capability.makeModule(() =>
       // TODO(wittjosiah): This isn't scrolling properly in a plank.
       component: ({ data }) => <ThreadCompanion subject={data.companionTo} />,
     }),
-    createSurface({
+    Common.createSurface({
       id: `${meta.id}/plugin-settings`,
       role: 'article',
       filter: (data): data is { subject: SettingsStore<ThreadSettingsProps> } =>
         data.subject instanceof SettingsStore && data.subject.prefix === meta.id,
       component: ({ data: { subject } }) => <ThreadSettings settings={subject.value} />,
     }),
-    createSurface({
+    Common.createSurface({
       id: `${meta.id}/assistant`,
       role: 'deck-companion--active-call',
       component: () => <CallSidebar />,
     }),
-    createSurface({
+    Common.createSurface({
       id: `${meta.id}/devtools-overview`,
       role: 'devtools-overview',
       component: () => {

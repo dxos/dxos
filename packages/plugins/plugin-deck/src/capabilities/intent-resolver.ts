@@ -9,10 +9,9 @@ import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 
 import {
-  Capabilities,
   Capability,
+  Common,
   IntentAction,
-  LayoutAction,
   chain,
   createIntent,
   createResolver,
@@ -42,16 +41,16 @@ import { setActive } from '../util';
 import { DeckCapabilities } from './capabilities';
 
 export default Capability.makeModule((context) =>
-  Capability.contributes(Capabilities.IntentResolver, [
+  Capability.contributes(Common.Capability.IntentResolver, [
     createResolver({
       intent: IntentAction.ShowUndo,
       resolve: (data) => {
         const layout = context.getCapability(DeckCapabilities.MutableDeckState);
-        const { undoPromise: undo } = context.getCapability(Capabilities.IntentDispatcher);
+        const { undoPromise: undo } = context.getCapability(Common.Capability.IntentDispatcher);
 
         // TODO(wittjosiah): Support undoing further back than the last action.
         if (layout.currentUndoId) {
-          layout.toasts = layout.toasts.filter((toast: LayoutAction.Toast) => toast.id !== layout.currentUndoId);
+          layout.toasts = layout.toasts.filter((toast: Common.LayoutAction.Toast) => toast.id !== layout.currentUndoId);
         }
         layout.currentUndoId = `${IntentAction.ShowUndo._tag}-${Date.now()}`;
         layout.toasts = [
@@ -69,11 +68,11 @@ export default Capability.makeModule((context) =>
       },
     }),
     createResolver({
-      intent: LayoutAction.UpdateLayout,
+      intent: Common.LayoutAction.UpdateLayout,
       // TODO(wittjosiah): This should be able to just be `Schema.is(LayoutAction.UpdateSidebar.fields.input)`
       //  but the filter is not being applied correctly.
-      filter: (data): data is Schema.Schema.Type<typeof LayoutAction.UpdateSidebar.fields.input> =>
-        Schema.is(LayoutAction.UpdateSidebar.fields.input)(data),
+      filter: (data): data is Schema.Schema.Type<typeof Common.LayoutAction.UpdateSidebar.fields.input> =>
+        Schema.is(Common.LayoutAction.UpdateSidebar.fields.input)(data),
       resolve: ({ options }) => {
         const layout = context.getCapability(DeckCapabilities.MutableDeckState);
         const next = options?.state ?? layout.sidebarState;
@@ -83,11 +82,11 @@ export default Capability.makeModule((context) =>
       },
     }),
     createResolver({
-      intent: LayoutAction.UpdateLayout,
+      intent: Common.LayoutAction.UpdateLayout,
       // TODO(wittjosiah): This should be able to just be `Schema.is(LayoutAction.UpdateComplementary.fields.input)`
       //  but the filter is not being applied correctly.
-      filter: (data): data is Schema.Schema.Type<typeof LayoutAction.UpdateComplementary.fields.input> =>
-        Schema.is(LayoutAction.UpdateComplementary.fields.input)(data),
+      filter: (data): data is Schema.Schema.Type<typeof Common.LayoutAction.UpdateComplementary.fields.input> =>
+        Schema.is(Common.LayoutAction.UpdateComplementary.fields.input)(data),
       resolve: ({ subject, options }) => {
         const layout = context.getCapability(DeckCapabilities.MutableDeckState);
         if (layout.complementarySidebarPanel !== subject) {
@@ -101,11 +100,11 @@ export default Capability.makeModule((context) =>
       },
     }),
     createResolver({
-      intent: LayoutAction.UpdateLayout,
+      intent: Common.LayoutAction.UpdateLayout,
       // TODO(wittjosiah): This should be able to just be `Schema.is(LayoutAction.UpdateDialog.fields.input)`
       //  but the filter is not being applied correctly.
-      filter: (data): data is Schema.Schema.Type<typeof LayoutAction.UpdateDialog.fields.input> =>
-        Schema.is(LayoutAction.UpdateDialog.fields.input)(data),
+      filter: (data): data is Schema.Schema.Type<typeof Common.LayoutAction.UpdateDialog.fields.input> =>
+        Schema.is(Common.LayoutAction.UpdateDialog.fields.input)(data),
       resolve: ({ subject, options }) => {
         const layout = context.getCapability(DeckCapabilities.MutableDeckState);
         layout.dialogOpen = options.state ?? Boolean(subject);
@@ -117,11 +116,11 @@ export default Capability.makeModule((context) =>
       },
     }),
     createResolver({
-      intent: LayoutAction.UpdateLayout,
+      intent: Common.LayoutAction.UpdateLayout,
       // TODO(wittjosiah): This should be able to just be `Schema.is(LayoutAction.UpdatePopover.fields.input)`
       //  but the filter is not being applied correctly.
-      filter: (data): data is Schema.Schema.Type<typeof LayoutAction.UpdatePopover.fields.input> =>
-        Schema.is(LayoutAction.UpdatePopover.fields.input)(data),
+      filter: (data): data is Schema.Schema.Type<typeof Common.LayoutAction.UpdatePopover.fields.input> =>
+        Schema.is(Common.LayoutAction.UpdatePopover.fields.input)(data),
       resolve: ({ subject, options }) => {
         const layout = context.getCapability(DeckCapabilities.MutableDeckState);
         layout.popoverOpen = options.state ?? Boolean(subject);
@@ -136,22 +135,22 @@ export default Capability.makeModule((context) =>
       },
     }),
     createResolver({
-      intent: LayoutAction.UpdateLayout,
+      intent: Common.LayoutAction.UpdateLayout,
       // TODO(wittjosiah): This should be able to just be `Schema.is(LayoutAction.AddToast.fields.input)`
       //  but the filter is not being applied correctly.
-      filter: (data): data is Schema.Schema.Type<typeof LayoutAction.AddToast.fields.input> =>
-        Schema.is(LayoutAction.AddToast.fields.input)(data),
+      filter: (data): data is Schema.Schema.Type<typeof Common.LayoutAction.AddToast.fields.input> =>
+        Schema.is(Common.LayoutAction.AddToast.fields.input)(data),
       resolve: ({ subject }) => {
         const layout = context.getCapability(DeckCapabilities.MutableDeckState);
         layout.toasts.push(subject);
       },
     }),
     createResolver({
-      intent: LayoutAction.UpdateLayout,
+      intent: Common.LayoutAction.UpdateLayout,
       // TODO(wittjosiah): This should be able to just be `Schema.is(LayoutAction.SetLayoutMode.fields.input)`
       //  but the filter is not being applied correctly.
-      filter: (data): data is Schema.Schema.Type<typeof LayoutAction.SetLayoutMode.fields.input> => {
-        if (!Schema.is(LayoutAction.SetLayoutMode.fields.input)(data)) {
+      filter: (data): data is Schema.Schema.Type<typeof Common.LayoutAction.SetLayoutMode.fields.input> => {
+        if (!Schema.is(Common.LayoutAction.SetLayoutMode.fields.input)(data)) {
           return false;
         }
 
@@ -205,11 +204,11 @@ export default Capability.makeModule((context) =>
       },
     }),
     createResolver({
-      intent: LayoutAction.UpdateLayout,
-      filter: (data): data is Schema.Schema.Type<typeof LayoutAction.SwitchWorkspace.fields.input> =>
-        Schema.is(LayoutAction.SwitchWorkspace.fields.input)(data),
+      intent: Common.LayoutAction.UpdateLayout,
+      filter: (data): data is Schema.Schema.Type<typeof Common.LayoutAction.SwitchWorkspace.fields.input> =>
+        Schema.is(Common.LayoutAction.SwitchWorkspace.fields.input)(data),
       resolve: ({ subject }) => {
-        const { graph } = context.getCapability(Capabilities.AppGraph);
+        const { graph } = context.getCapability(Common.Capability.AppGraph);
         const state = context.getCapability(DeckCapabilities.MutableDeckState);
         batch(() => {
           // TODO(wittjosiah): This is a hack to prevent the previous deck from being set for pinned items.
@@ -226,7 +225,7 @@ export default Capability.makeModule((context) =>
         const first = state.deck.solo ? state.deck.solo : state.deck.active[0];
         if (first) {
           return {
-            intents: [createIntent(LayoutAction.ScrollIntoView, { part: 'current', subject: first })],
+            intents: [createIntent(Common.LayoutAction.ScrollIntoView, { part: 'current', subject: first })],
           };
         } else {
           const [item] = Graph.getConnections(graph, subject).filter(
@@ -234,40 +233,40 @@ export default Capability.makeModule((context) =>
           );
           if (item) {
             return {
-              intents: [createIntent(LayoutAction.Open, { part: 'main', subject: [item.id] })],
+              intents: [createIntent(Common.LayoutAction.Open, { part: 'main', subject: [item.id] })],
             };
           }
         }
       },
     }),
     createResolver({
-      intent: LayoutAction.UpdateLayout,
-      filter: (data): data is Schema.Schema.Type<typeof LayoutAction.RevertWorkspace.fields.input> =>
-        Schema.is(LayoutAction.RevertWorkspace.fields.input)(data),
+      intent: Common.LayoutAction.UpdateLayout,
+      filter: (data): data is Schema.Schema.Type<typeof Common.LayoutAction.RevertWorkspace.fields.input> =>
+        Schema.is(Common.LayoutAction.RevertWorkspace.fields.input)(data),
       resolve: () => {
         const state = context.getCapability(DeckCapabilities.MutableDeckState);
         return {
-          intents: [createIntent(LayoutAction.SwitchWorkspace, { part: 'workspace', subject: state.previousDeck })],
+          intents: [createIntent(Common.LayoutAction.SwitchWorkspace, { part: 'workspace', subject: state.previousDeck })],
         };
       },
     }),
     createResolver({
-      intent: LayoutAction.UpdateLayout,
-      filter: (data): data is Schema.Schema.Type<typeof LayoutAction.Open.fields.input> =>
-        Schema.is(LayoutAction.Open.fields.input)(data),
+      intent: Common.LayoutAction.UpdateLayout,
+      filter: (data): data is Schema.Schema.Type<typeof Common.LayoutAction.Open.fields.input> =>
+        Schema.is(Common.LayoutAction.Open.fields.input)(data),
       resolve: ({ subject, options }) =>
         Effect.gen(function* () {
-          const { graph } = context.getCapability(Capabilities.AppGraph);
+          const { graph } = context.getCapability(Common.Capability.AppGraph);
           const state = context.getCapability(DeckCapabilities.MutableDeckState);
           const attention = context.getCapability(AttentionCapabilities.Attention);
           const settings = context
-            .getCapabilities(Capabilities.SettingsStore)[0]
+            .getCapabilities(Common.Capability.SettingsStore)[0]
             ?.getStore<DeckSettingsProps>(meta.id)?.value;
 
           if (options?.workspace && state.activeDeck !== options?.workspace) {
-            const { dispatch } = context.getCapability(Capabilities.IntentDispatcher);
+            const { dispatch } = context.getCapability(Common.Capability.IntentDispatcher);
             yield* dispatch(
-              createIntent(LayoutAction.SwitchWorkspace, { part: 'workspace', subject: options.workspace }),
+              createIntent(Common.LayoutAction.SwitchWorkspace, { part: 'workspace', subject: options.workspace }),
             );
           }
 
@@ -295,9 +294,9 @@ export default Capability.makeModule((context) =>
           return {
             intents: [
               ...(options?.scrollIntoView !== false
-                ? [createIntent(LayoutAction.ScrollIntoView, { part: 'current', subject: newlyOpen[0] ?? subject[0] })]
+                ? [createIntent(Common.LayoutAction.ScrollIntoView, { part: 'current', subject: newlyOpen[0] ?? subject[0] })]
                 : []),
-              createIntent(LayoutAction.Expose, { part: 'navigation', subject: newlyOpen[0] ?? subject[0] }),
+              createIntent(Common.LayoutAction.Expose, { part: 'navigation', subject: newlyOpen[0] ?? subject[0] }),
               ...newlyOpen.map((subjectId: string) => {
                 const typename = Option.match(Graph.getNode(graph, subjectId), {
                   onNone: () => undefined,
@@ -319,9 +318,9 @@ export default Capability.makeModule((context) =>
         }) as Effect.Effect<{ intents: any[] }, Error>,
     }),
     createResolver({
-      intent: LayoutAction.UpdateLayout,
-      filter: (data): data is Schema.Schema.Type<typeof LayoutAction.Close.fields.input> =>
-        Schema.is(LayoutAction.Close.fields.input)(data),
+      intent: Common.LayoutAction.UpdateLayout,
+      filter: (data): data is Schema.Schema.Type<typeof Common.LayoutAction.Close.fields.input> =>
+        Schema.is(Common.LayoutAction.Close.fields.input)(data),
       resolve: ({ subject }) => {
         const state = context.getCapability(DeckCapabilities.MutableDeckState);
         const attention = context.getCapability(AttentionCapabilities.Attention);
@@ -336,28 +335,28 @@ export default Capability.makeModule((context) =>
         return {
           intents: [
             ...clearCompanionIntents,
-            ...(toAttend ? [createIntent(LayoutAction.ScrollIntoView, { part: 'current', subject: toAttend })] : []),
+            ...(toAttend ? [createIntent(Common.LayoutAction.ScrollIntoView, { part: 'current', subject: toAttend })] : []),
           ],
         };
       },
     }),
     createResolver({
-      intent: LayoutAction.UpdateLayout,
-      filter: (data): data is Schema.Schema.Type<typeof LayoutAction.Set.fields.input> =>
-        Schema.is(LayoutAction.Set.fields.input)(data),
+      intent: Common.LayoutAction.UpdateLayout,
+      filter: (data): data is Schema.Schema.Type<typeof Common.LayoutAction.Set.fields.input> =>
+        Schema.is(Common.LayoutAction.Set.fields.input)(data),
       resolve: ({ subject }) => {
         const state = context.getCapability(DeckCapabilities.MutableDeckState);
         const attention = context.getCapability(AttentionCapabilities.Attention);
         const toAttend = setActive({ next: subject as string[], state, attention });
         return {
-          intents: toAttend ? [createIntent(LayoutAction.ScrollIntoView, { part: 'current', subject: toAttend })] : [],
+          intents: toAttend ? [createIntent(Common.LayoutAction.ScrollIntoView, { part: 'current', subject: toAttend })] : [],
         };
       },
     }),
     createResolver({
-      intent: LayoutAction.UpdateLayout,
-      filter: (data): data is Schema.Schema.Type<typeof LayoutAction.ScrollIntoView.fields.input> =>
-        Schema.is(LayoutAction.ScrollIntoView.fields.input)(data),
+      intent: Common.LayoutAction.UpdateLayout,
+      filter: (data): data is Schema.Schema.Type<typeof Common.LayoutAction.ScrollIntoView.fields.input> =>
+        Schema.is(Common.LayoutAction.ScrollIntoView.fields.input)(data),
       resolve: ({ subject }) => {
         const layout = context.getCapability(DeckCapabilities.MutableDeckState);
         layout.scrollIntoView = subject;
@@ -392,7 +391,7 @@ export default Capability.makeModule((context) =>
       resolve: (adjustment) => {
         const state = context.getCapability(DeckCapabilities.MutableDeckState);
         const attention = context.getCapability(AttentionCapabilities.Attention);
-        const { graph } = context.getCapability(Capabilities.AppGraph);
+        const { graph } = context.getCapability(Common.Capability.AppGraph);
 
         return batch(() => {
           if (adjustment.type === 'increment-end' || adjustment.type === 'increment-start') {
@@ -430,7 +429,7 @@ export default Capability.makeModule((context) =>
               // Solo the entry.
               return {
                 intents: [
-                  createIntent(LayoutAction.SetLayoutMode, {
+                  createIntent(Common.LayoutAction.SetLayoutMode, {
                     part: 'mode',
                     subject: entryId,
                     options: { mode: adjustment.type },
@@ -442,7 +441,7 @@ export default Capability.makeModule((context) =>
                 // Toggle fullscreen on the current entry.
                 return {
                   intents: [
-                    createIntent(LayoutAction.SetLayoutMode, {
+                    createIntent(Common.LayoutAction.SetLayoutMode, {
                       part: 'mode',
                       subject: entryId,
                       options: { mode: 'solo--fullscreen' },
@@ -455,8 +454,8 @@ export default Capability.makeModule((context) =>
                   intents: [
                     // NOTE: The order of these is important.
                     Function.pipe(
-                      createIntent(LayoutAction.SetLayoutMode, { part: 'mode', options: { mode: 'deck' } }),
-                      chain(LayoutAction.Open, { part: 'main', subject: [entryId] }),
+                      createIntent(Common.LayoutAction.SetLayoutMode, { part: 'mode', options: { mode: 'deck' } }),
+                      chain(Common.LayoutAction.Open, { part: 'main', subject: [entryId] }),
                     ),
                   ],
                 };

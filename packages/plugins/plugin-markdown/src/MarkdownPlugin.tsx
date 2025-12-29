@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Capabilities, Capability, Events, Plugin, createIntent } from '@dxos/app-framework';
+import { Capability, Common, Plugin, createIntent } from '@dxos/app-framework';
 import { type Obj, Ref } from '@dxos/echo';
 import { createDocAccessor, getTextInRange } from '@dxos/echo-db';
 import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
@@ -29,11 +29,11 @@ import { serializer } from './util';
 export const MarkdownPlugin = Plugin.define(meta).pipe(
   Plugin.addModule({
     id: 'translations',
-    activatesOn: Events.SetupTranslations,
-    activate: () => Capability.contributes(Capabilities.Translations, [...translations, ...editorTranslations]),
+    activatesOn: Common.ActivationEvent.SetupTranslations,
+    activate: () => Capability.contributes(Common.Capability.Translations, [...translations, ...editorTranslations]),
   }),
   Plugin.addModule({
-    activatesOn: Events.SetupSettings,
+    activatesOn: Common.ActivationEvent.SetupSettings,
     activate: MarkdownSettings,
   }),
   Plugin.addModule({
@@ -41,14 +41,14 @@ export const MarkdownPlugin = Plugin.define(meta).pipe(
     // TODO(wittjosiah): Does not integrate with settings store.
     //   Should this be a different event?
     //   Should settings store be renamed to be more generic?
-    activatesOn: Events.SetupSettings,
+    activatesOn: Common.ActivationEvent.SetupSettings,
     activate: MarkdownState,
   }),
   Plugin.addModule({
     id: 'metadata',
-    activatesOn: Events.SetupMetadata,
+    activatesOn: Common.ActivationEvent.SetupMetadata,
     activate: () =>
-      Capability.contributes(Capabilities.Metadata, {
+      Capability.contributes(Common.Capability.Metadata, {
         id: Markdown.Document.typename,
         metadata: {
           label: (object: Markdown.Document) => object.name || object.fallbackName,
@@ -81,26 +81,26 @@ export const MarkdownPlugin = Plugin.define(meta).pipe(
     activate: () => Capability.contributes(ClientCapabilities.Schema, [Markdown.Document, Text.Text]),
   }),
   Plugin.addModule({
-    activatesOn: Events.SetupReactSurface,
+    activatesOn: Common.ActivationEvent.SetupReactSurface,
     // TODO(wittjosiah): Should occur before the editor is loaded when surfaces activation is more granular.
     activatesBefore: [MarkdownEvents.SetupExtensions],
     activate: ReactSurface,
   }),
   Plugin.addModule({
-    activatesOn: Events.SetupIntentResolver,
+    activatesOn: Common.ActivationEvent.SetupIntentResolver,
     activate: IntentResolver,
   }),
   Plugin.addModule({
-    activatesOn: Events.AppGraphReady,
+    activatesOn: Common.ActivationEvent.AppGraphReady,
     activate: AppGraphSerializer,
   }),
   Plugin.addModule({
     // TODO(wittjosiah): More relevant event?
-    activatesOn: Events.AppGraphReady,
+    activatesOn: Common.ActivationEvent.AppGraphReady,
     activate: AnchorSort,
   }),
   Plugin.addModule({
-    activatesOn: Events.SetupArtifactDefinition,
+    activatesOn: Common.ActivationEvent.SetupArtifactDefinition,
     activate: BlueprintDefinition,
   }),
   Plugin.make,

@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Events, Plugin } from '@dxos/app-framework';
+import { Common, Plugin } from '@dxos/app-framework';
 
 import { Surface } from './capabilities';
 import { meta } from './meta';
@@ -10,7 +10,7 @@ import { meta } from './meta';
 export const MapPlugin = Plugin.define(meta).pipe(
   Plugin.addModule({
     id: 'surface',
-    activatesOn: Events.SetupReactSurface,
+    activatesOn: Common.ActivationEvent.SetupReactSurface,
     activate: Surface,
   }),
   Plugin.make,

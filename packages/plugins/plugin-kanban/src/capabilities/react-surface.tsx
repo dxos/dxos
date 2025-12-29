@@ -5,7 +5,7 @@
 import type * as Schema from 'effect/Schema';
 import React, { useMemo } from 'react';
 
-import { Capabilities, Capability, createSurface } from '@dxos/app-framework';
+import { Capability, Common } from '@dxos/app-framework';
 import { Database, Obj, Type } from '@dxos/echo';
 import { findAnnotation } from '@dxos/effect';
 import { type FormFieldComponentProps, SelectField, useFormValues } from '@dxos/react-ui-form';
@@ -17,21 +17,21 @@ import { meta } from '../meta';
 import { PivotColumnAnnotationId } from '../types';
 
 export default Capability.makeModule(() =>
-  Capability.contributes(Capabilities.ReactSurface, [
-    createSurface({
+  Capability.contributes(Common.Capability.ReactSurface, [
+    Common.createSurface({
       id: meta.id,
       role: ['article', 'section'],
       filter: (data): data is { subject: Kanban.Kanban } => Obj.instanceOf(Kanban.Kanban, data.subject),
       component: ({ data, role }) => <KanbanContainer object={data.subject} role={role} />,
     }),
-    createSurface({
+    Common.createSurface({
       id: `${meta.id}/object-settings`,
       role: 'object-settings',
       position: 'hoist',
       filter: (data): data is { subject: Kanban.Kanban } => Obj.instanceOf(Kanban.Kanban, data.subject),
       component: ({ data }) => <KanbanViewEditor object={data.subject} />,
     }),
-    createSurface({
+    Common.createSurface({
       id: `${meta.id}/create-initial-schema-form-[pivot-column]`,
       role: 'form-input',
       filter: (

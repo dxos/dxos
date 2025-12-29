@@ -4,23 +4,18 @@
 
 import * as Schema from 'effect/Schema';
 
-import {
-  Capabilities,
-  Capability,
-  LayoutAction,
-  createResolver,
-} from '@dxos/app-framework';
+import { Capability, Common, createResolver } from '@dxos/app-framework';
 
 import { LayoutState } from './state';
 
 export default Capability.makeModule((context) =>
-  Capability.contributes(Capabilities.IntentResolver, [
+  Capability.contributes(Common.Capability.IntentResolver, [
     createResolver({
-      intent: LayoutAction.UpdateLayout,
+      intent: Common.LayoutAction.UpdateLayout,
       // TODO(wittjosiah): This should be able to just be `Schema.is(LayoutAction.UpdateSidebar.fields.input)`
       //  but the filter is not being applied correctly.
-      filter: (data): data is Schema.Schema.Type<typeof LayoutAction.UpdateSidebar.fields.input> =>
-        Schema.is(LayoutAction.UpdateSidebar.fields.input)(data),
+      filter: (data): data is Schema.Schema.Type<typeof Common.LayoutAction.UpdateSidebar.fields.input> =>
+        Schema.is(Common.LayoutAction.UpdateSidebar.fields.input)(data),
       resolve: ({ options }) => {
         const layout = context.getCapability(LayoutState);
         const next = options?.state ?? layout.sidebarState;
@@ -30,11 +25,11 @@ export default Capability.makeModule((context) =>
       },
     }),
     createResolver({
-      intent: LayoutAction.UpdateLayout,
+      intent: Common.LayoutAction.UpdateLayout,
       // TODO(wittjosiah): This should be able to just be `Schema.is(LayoutAction.UpdateComplementary.fields.input)`
       //  but the filter is not being applied correctly.
-      filter: (data): data is Schema.Schema.Type<typeof LayoutAction.UpdateComplementary.fields.input> =>
-        Schema.is(LayoutAction.UpdateComplementary.fields.input)(data),
+      filter: (data): data is Schema.Schema.Type<typeof Common.LayoutAction.UpdateComplementary.fields.input> =>
+        Schema.is(Common.LayoutAction.UpdateComplementary.fields.input)(data),
       resolve: ({ options }) => {
         const layout = context.getCapability(LayoutState);
         const next = options?.state ?? layout.complementarySidebarState;
@@ -44,11 +39,11 @@ export default Capability.makeModule((context) =>
       },
     }),
     createResolver({
-      intent: LayoutAction.UpdateLayout,
+      intent: Common.LayoutAction.UpdateLayout,
       // TODO(wittjosiah): This should be able to just be `Schema.is(LayoutAction.UpdateDialog.fields.input)`
       //  but the filter is not being applied correctly.
-      filter: (data): data is Schema.Schema.Type<typeof LayoutAction.UpdateDialog.fields.input> =>
-        Schema.is(LayoutAction.UpdateDialog.fields.input)(data),
+      filter: (data): data is Schema.Schema.Type<typeof Common.LayoutAction.UpdateDialog.fields.input> =>
+        Schema.is(Common.LayoutAction.UpdateDialog.fields.input)(data),
       resolve: ({ subject, options }) => {
         const layout = context.getCapability(LayoutState);
         layout.dialogOpen = options.state ?? Boolean(subject);
@@ -60,11 +55,11 @@ export default Capability.makeModule((context) =>
       },
     }),
     createResolver({
-      intent: LayoutAction.UpdateLayout,
+      intent: Common.LayoutAction.UpdateLayout,
       // TODO(wittjosiah): This should be able to just be `Schema.is(LayoutAction.UpdatePopover.fields.input)`
       //  but the filter is not being applied correctly.
-      filter: (data): data is Schema.Schema.Type<typeof LayoutAction.UpdatePopover.fields.input> =>
-        Schema.is(LayoutAction.UpdatePopover.fields.input)(data),
+      filter: (data): data is Schema.Schema.Type<typeof Common.LayoutAction.UpdatePopover.fields.input> =>
+        Schema.is(Common.LayoutAction.UpdatePopover.fields.input)(data),
       resolve: ({ subject, options }) => {
         const layout = context.getCapability(LayoutState);
         layout.popoverContent =
@@ -84,11 +79,11 @@ export default Capability.makeModule((context) =>
       },
     }),
     createResolver({
-      intent: LayoutAction.UpdateLayout,
+      intent: Common.LayoutAction.UpdateLayout,
       // TODO(wittjosiah): This should be able to just be `Schema.is(LayoutAction.UpdatePopover.fields.input)`
       //  but the filter is not being applied correctly.
-      filter: (data): data is Schema.Schema.Type<typeof LayoutAction.SwitchWorkspace.fields.input> =>
-        Schema.is(LayoutAction.SwitchWorkspace.fields.input)(data),
+      filter: (data): data is Schema.Schema.Type<typeof Common.LayoutAction.SwitchWorkspace.fields.input> =>
+        Schema.is(Common.LayoutAction.SwitchWorkspace.fields.input)(data),
       resolve: ({ subject }) => {
         const layout = context.getCapability(LayoutState);
         layout.workspace = subject;

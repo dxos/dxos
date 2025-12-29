@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { Capabilities, Capability, createSurface } from '@dxos/app-framework';
+import { Capability, Common } from '@dxos/app-framework';
 import { useCapability } from '@dxos/app-framework/react';
 import { Obj } from '@dxos/echo';
 import { SettingsStore } from '@dxos/local-storage';
@@ -15,13 +15,13 @@ import { meta } from '../meta';
 import { EXCALIDRAW_SCHEMA, type SketchSettingsProps } from '../types';
 
 export default Capability.makeModule(() =>
-  Capability.contributes(Capabilities.ReactSurface, [
-    createSurface({
+  Capability.contributes(Common.Capability.ReactSurface, [
+    Common.createSurface({
       id: `${meta.id}/sketch`,
       role: ['article', 'section', 'slide'],
       filter: (data): data is { subject: Diagram.Diagram } => Diagram.isDiagram(data.subject, EXCALIDRAW_SCHEMA),
       component: ({ data, role }) => {
-        const settings = useCapability(Capabilities.SettingsStore).getStore<SketchSettingsProps>(meta.id)!.value;
+        const settings = useCapability(Common.Capability.SettingsStore).getStore<SketchSettingsProps>(meta.id)!.value;
 
         return (
           <SketchContainer
@@ -33,7 +33,7 @@ export default Capability.makeModule(() =>
         );
       },
     }),
-    createSurface({
+    Common.createSurface({
       id: `${meta.id}/plugin-settings`,
       role: 'article',
       filter: (data): data is { subject: SettingsStore<SketchSettingsProps> } =>

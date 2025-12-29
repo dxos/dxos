@@ -3,7 +3,7 @@
 //
 
 import {
-  Capabilities,
+  Common,
   Capability,
   IntentAction,
   createResolver,
@@ -18,7 +18,7 @@ import { ObservabilityAction } from '../types';
 import { ClientCapability, ObservabilityCapabilities } from './capabilities';
 
 export default Capability.makeModule(({ context, namespace }: { context: Capability.PluginContext; namespace: string }) =>
-  Capability.contributes(Capabilities.IntentResolver, [
+  Capability.contributes(Common.Capability.IntentResolver, [
     createResolver({
       intent: IntentAction.Track,
       resolve: (intent) => {
@@ -31,7 +31,7 @@ export default Capability.makeModule(({ context, namespace }: { context: Capabil
         const client = context.getCapability(ClientCapability);
         const observability = context.getCapability(ObservabilityCapabilities.Observability);
         const settings = context
-          .getCapability(Capabilities.SettingsStore)
+          .getCapability(Common.Capability.SettingsStore)
           .getStore<ObservabilitySettingsProps>(meta.id)!.value;
         settings.enabled = state ?? !settings.enabled;
         observability.track({

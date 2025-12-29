@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Capabilities, Capability, createResolver } from '@dxos/app-framework';
+import { Capability, Common, createResolver } from '@dxos/app-framework';
 import { Project } from '@dxos/types';
 
 import { templates } from '../templates';
@@ -10,7 +10,7 @@ import { ProjectAction } from '../types';
 
 export default Capability.makeModule(() =>
   Capability.contributes(
-    Capabilities.IntentResolver,
+    Common.Capability.IntentResolver,
     createResolver({
       intent: ProjectAction.Create,
       resolve: async ({ db, name, template = 'org-research' }) => {

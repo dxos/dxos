@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Capabilities, Capability, Events, Plugin } from '@dxos/app-framework';
+import { Capability, Common, Plugin } from '@dxos/app-framework';
 
 import { Client, IntentResolver, SchemaDefs } from '../capabilities';
 import { ClientEvents } from '../events';
@@ -15,7 +15,7 @@ import { config, device, edge, halo, profile } from './commands';
 export const ClientPlugin = Plugin.define<ClientPluginOptions>(meta).pipe(
   Plugin.addModule((options) => ({
     id: `${meta.id}/module/client`,
-    activatesOn: Events.Startup,
+    activatesOn: Common.ActivationEvent.Startup,
     activatesAfter: [ClientEvents.ClientReady],
     activate: (context) => Client({ ...options, context }),
   })),
@@ -28,18 +28,18 @@ export const ClientPlugin = Plugin.define<ClientPluginOptions>(meta).pipe(
   // TODO(wittjosiah): Could some of these commands make use of intents?
   Plugin.addModule({
     id: `${meta.id}/module/cli-commands`,
-    activatesOn: Events.Startup,
+    activatesOn: Common.ActivationEvent.Startup,
     activate: () => [
-      Capability.contributes(Capabilities.Command, config),
-      Capability.contributes(Capabilities.Command, device),
-      Capability.contributes(Capabilities.Command, edge),
-      Capability.contributes(Capabilities.Command, halo),
-      Capability.contributes(Capabilities.Command, profile),
+      Capability.contributes(Common.Capability.Command, config),
+      Capability.contributes(Common.Capability.Command, device),
+      Capability.contributes(Common.Capability.Command, edge),
+      Capability.contributes(Common.Capability.Command, halo),
+      Capability.contributes(Common.Capability.Command, profile),
     ],
   }),
   Plugin.addModule({
     id: `${meta.id}/module/intent-resolver`,
-    activatesOn: Events.SetupIntentResolver,
+    activatesOn: Common.ActivationEvent.SetupIntentResolver,
     activate: (context) => IntentResolver({ context }),
   }),
   Plugin.make,

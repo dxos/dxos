@@ -4,7 +4,7 @@
 
 import React, { forwardRef, useCallback } from 'react';
 
-import { Capabilities, Capability, createSurface } from '@dxos/app-framework';
+import { Capability, Common } from '@dxos/app-framework';
 import { SurfaceCardRole, useCapability } from '@dxos/app-framework/react';
 import { Obj } from '@dxos/echo';
 import { SettingsStore } from '@dxos/local-storage';
@@ -17,8 +17,8 @@ import { Markdown, MarkdownCapabilities } from '../types';
 import { isEditorModel } from '../util';
 
 export default Capability.makeModule(() =>
-  Capability.contributes(Capabilities.ReactSurface, [
-    createSurface({
+  Capability.contributes(Common.Capability.ReactSurface, [
+    Common.createSurface({
       id: `${meta.id}/surface/document`,
       role: ['article', 'section', 'tabpanel'],
       filter: (data): data is { subject: Markdown.Document; variant: undefined } =>
@@ -27,7 +27,7 @@ export default Capability.makeModule(() =>
         return <Container id={Obj.getDXN(data.subject).toString()} subject={data.subject} role={role} ref={ref} />;
       },
     }),
-    createSurface({
+    Common.createSurface({
       id: `${meta.id}/surface/text`,
       role: ['article', 'section', 'tabpanel'],
       filter: (data): data is { id: string; subject: Text.Text } =>
@@ -37,7 +37,7 @@ export default Capability.makeModule(() =>
       },
     }),
     // TODO(burdon): Remove this variant and conform to Text.
-    createSurface({
+    Common.createSurface({
       id: `${meta.id}/surface/editor`,
       role: ['article', 'section'],
       filter: (data): data is { subject: { id: string; text: string } } => isEditorModel(data.subject),
@@ -45,14 +45,14 @@ export default Capability.makeModule(() =>
         return <Container id={data.subject.id} subject={data.subject} role={role} />;
       },
     }),
-    createSurface({
+    Common.createSurface({
       id: `${meta.id}/surface/plugin-settings`,
       role: 'article',
       filter: (data): data is { subject: SettingsStore<Markdown.Settings> } =>
         data.subject instanceof SettingsStore && data.subject.prefix === meta.id,
       component: ({ data: { subject } }) => <MarkdownSettings settings={subject.value} />,
     }),
-    createSurface({
+    Common.createSurface({
       id: `${meta.id}/surface/preview`,
       role: SurfaceCardRole.literals as any,
       filter: (data): data is { subject: Markdown.Document | Text.Text } =>
@@ -69,7 +69,7 @@ export default Capability.makeModule(() =>
 const Container = forwardRef<HTMLDivElement, { id: string; subject: MarkdownContainerProps['object']; role: string }>(
   ({ id, subject, role }, forwardedRef) => {
     const selectionManager = useCapability(AttentionCapabilities.Selection);
-    const settingsStore = useCapability(Capabilities.SettingsStore);
+    const settingsStore = useCapability(Common.Capability.SettingsStore);
     const settings = settingsStore.getStore<Markdown.Settings>(meta.id)!.value;
     const { state, editorState, getViewMode, setViewMode } = useCapability(MarkdownCapabilities.State);
     const viewMode = getViewMode(id);

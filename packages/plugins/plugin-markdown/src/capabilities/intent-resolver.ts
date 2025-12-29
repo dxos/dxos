@@ -7,9 +7,8 @@ import * as Option from 'effect/Option';
 import type * as Schema from 'effect/Schema';
 
 import {
-  Capabilities,
   Capability,
-  CollaborationActions,
+  Common,
   createResolver,
 } from '@dxos/app-framework';
 import { Obj } from '@dxos/echo';
@@ -18,7 +17,7 @@ import { createDocAccessor, getRangeFromCursor } from '@dxos/echo-db';
 import { Markdown, MarkdownAction, MarkdownCapabilities } from '../types';
 
 export default Capability.makeModule((context) =>
-  Capability.contributes(Capabilities.IntentResolver, [
+  Capability.contributes(Common.Capability.IntentResolver, [
     createResolver({
       intent: MarkdownAction.Create,
       resolve: ({ name, content }) => {
@@ -33,10 +32,10 @@ export default Capability.makeModule((context) =>
       },
     }),
     createResolver({
-      intent: CollaborationActions.AcceptProposal,
+      intent: Common.CollaborationActions.AcceptProposal,
       filter: (
         data,
-      ): data is Omit<Schema.Schema.Type<typeof CollaborationActions.AcceptProposal.fields.input>, 'subject'> & {
+      ): data is Omit<Schema.Schema.Type<typeof Common.CollaborationActions.AcceptProposal.fields.input>, 'subject'> & {
         subject: Markdown.Document;
       } => Obj.instanceOf(Markdown.Document, data.subject),
       resolve: async ({ subject, anchor, proposal }) => {

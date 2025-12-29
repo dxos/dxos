@@ -7,7 +7,7 @@ import { Atom } from '@effect-atom/atom-react';
 import * as Function from 'effect/Function';
 import type * as Schema from 'effect/Schema';
 
-import { LayoutAction, type PromiseIntentDispatcher, chain, createIntent } from '@dxos/app-framework';
+import { Common, type PromiseIntentDispatcher, chain, createIntent } from '@dxos/app-framework';
 import { type Space, SpaceState, isSpace } from '@dxos/client/echo';
 import { type Database, type Entity, Filter, Obj, Query, type QueryResult, Ref, Type } from '@dxos/echo';
 import { EXPANDO_TYPENAME } from '@dxos/echo/internal';
@@ -632,7 +632,7 @@ export const constructObjectActions = ({
                   Function.pipe(
                     createObjectIntent({}, { db }),
                     chain(SpaceAction.AddObject, { target: db, hidden: true }),
-                    chain(LayoutAction.Open, { part: 'main' }),
+                    chain(Common.LayoutAction.Open, { part: 'main' }),
                   ),
                 );
               }
@@ -710,11 +710,11 @@ export const constructObjectActions = ({
       : []),
     // TODO(wittjosiah): Factor out and apply to all nodes.
     {
-      id: getId(LayoutAction.Expose._tag),
+      id: getId(Common.LayoutAction.Expose._tag),
       type: Node.ActionType,
       data: async () => {
         await dispatch(
-          createIntent(LayoutAction.Expose, { part: 'navigation', subject: Obj.getDXN(object).toString() }),
+          createIntent(Common.LayoutAction.Expose, { part: 'navigation', subject: Obj.getDXN(object).toString() }),
         );
       },
       properties: {

@@ -4,7 +4,7 @@
 
 import React, { useCallback, useEffect, useState } from 'react';
 
-import { LayoutAction, createIntent } from '@dxos/app-framework';
+import { Common, createIntent } from '@dxos/app-framework';
 import { useIntentDispatcher, useLayout } from '@dxos/app-framework/react';
 import { Obj } from '@dxos/echo';
 import { useClient } from '@dxos/react-client';
@@ -52,7 +52,7 @@ export const AwaitingObject = ({ id }: { id: string }) => {
   );
 
   const handleNavigate = useCallback(() => {
-    void dispatch(createIntent(LayoutAction.Open, { part: 'main', subject: [id] }));
+    void dispatch(createIntent(Common.LayoutAction.Open, { part: 'main', subject: [id] }));
     void handleClose();
   }, [id, handleClose, dispatch]);
 

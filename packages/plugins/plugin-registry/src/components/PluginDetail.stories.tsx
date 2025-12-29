@@ -38,7 +38,6 @@ export const Default: Story = {
       screenshots: [
         'https://media.gcflearnfree.org/content/55e073de7dd48174331f51b3_01_17_2014/getting_started_interactive2.png',
       ],
-    })
-      .pipe(Plugin.make)(),
+    }).pipe(Plugin.make)(),
   },
 };

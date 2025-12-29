@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Capabilities, Events, Plugin, Capability } from '@dxos/app-framework';
+import { Capability, Common, Plugin } from '@dxos/app-framework';
 
 import { AppGraphBuilder, IntentResolver, ReactSurface } from './capabilities';
 import { SEARCH_RESULT, meta } from './meta';
@@ -12,14 +12,14 @@ import { type SearchResult } from './types';
 export const SearchPlugin = Plugin.define(meta).pipe(
   Plugin.addModule({
     id: 'translations',
-    activatesOn: Events.SetupTranslations,
-    activate: () => Capability.contributes(Capabilities.Translations, translations),
+    activatesOn: Common.ActivationEvent.SetupTranslations,
+    activate: () => Capability.contributes(Common.Capability.Translations, translations),
   }),
   Plugin.addModule({
     id: 'metadata',
-    activatesOn: Events.SetupMetadata,
+    activatesOn: Common.ActivationEvent.SetupMetadata,
     activate: () =>
-      Capability.contributes(Capabilities.Metadata, {
+      Capability.contributes(Common.Capability.Metadata, {
         id: SEARCH_RESULT,
         metadata: {
           parse: (item: SearchResult, type: string) => {
@@ -37,17 +37,17 @@ export const SearchPlugin = Plugin.define(meta).pipe(
   }),
   Plugin.addModule({
     id: 'app-graph-builder',
-    activatesOn: Events.SetupAppGraph,
+    activatesOn: Common.ActivationEvent.SetupAppGraph,
     activate: AppGraphBuilder,
   }),
   Plugin.addModule({
     id: 'intent-resolver',
-    activatesOn: Events.SetupIntentResolver,
+    activatesOn: Common.ActivationEvent.SetupIntentResolver,
     activate: IntentResolver,
   }),
   Plugin.addModule({
     id: 'react-surface',
-    activatesOn: Events.SetupReactSurface,
+    activatesOn: Common.ActivationEvent.SetupReactSurface,
     activate: ReactSurface,
   }),
   Plugin.make,

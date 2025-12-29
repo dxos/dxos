@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Capabilities, Events, Plugin, Capability, createIntent } from '@dxos/app-framework';
+import { Capability, Common, Plugin, createIntent } from '@dxos/app-framework';
 import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
 import { type CreateObjectIntent } from '@dxos/plugin-space/types';
 
@@ -14,14 +14,14 @@ import { Journal, Outline, OutlineAction } from './types';
 export const OutlinerPlugin = Plugin.define(meta).pipe(
   Plugin.addModule({
     id: 'translations',
-    activatesOn: Events.SetupTranslations,
-    activate: () => Capability.contributes(Capabilities.Translations, translations),
+    activatesOn: Common.ActivationEvent.SetupTranslations,
+    activate: () => Capability.contributes(Common.Capability.Translations, translations),
   }),
   Plugin.addModule({
     id: 'metadata',
-    activatesOn: Events.SetupMetadata,
+    activatesOn: Common.ActivationEvent.SetupMetadata,
     activate: () => [
-      Capability.contributes(Capabilities.Metadata, {
+      Capability.contributes(Common.Capability.Metadata, {
         id: Journal.Journal.typename,
         metadata: {
           icon: 'ph--calendar-check--regular',
@@ -30,7 +30,7 @@ export const OutlinerPlugin = Plugin.define(meta).pipe(
           addToCollectionOnCreate: true,
         },
       }),
-      Capability.contributes(Capabilities.Metadata, {
+      Capability.contributes(Common.Capability.Metadata, {
         id: Outline.Outline.typename,
         metadata: {
           icon: 'ph--tree-structure--regular',
@@ -44,21 +44,22 @@ export const OutlinerPlugin = Plugin.define(meta).pipe(
   Plugin.addModule({
     id: 'schema',
     activatesOn: ClientEvents.SetupSchema,
-    activate: () => Capability.contributes(ClientCapabilities.Schema, [Journal.JournalEntry, Journal.Journal, Outline.Outline]),
+    activate: () =>
+      Capability.contributes(ClientCapabilities.Schema, [Journal.JournalEntry, Journal.Journal, Outline.Outline]),
   }),
   Plugin.addModule({
     id: 'app-graph-builder',
-    activatesOn: Events.SetupAppGraph,
+    activatesOn: Common.ActivationEvent.SetupAppGraph,
     activate: AppGraphBuilder,
   }),
   Plugin.addModule({
     id: 'react-surface',
-    activatesOn: Events.SetupReactSurface,
+    activatesOn: Common.ActivationEvent.SetupReactSurface,
     activate: ReactSurface,
   }),
   Plugin.addModule({
     id: 'intent-resolver',
-    activatesOn: Events.SetupIntentResolver,
+    activatesOn: Common.ActivationEvent.SetupIntentResolver,
     activate: IntentResolver,
   }),
   Plugin.make,

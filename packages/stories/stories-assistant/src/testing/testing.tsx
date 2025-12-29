@@ -10,11 +10,9 @@ import * as Schema from 'effect/Schema';
 import { SERVICES_CONFIG } from '@dxos/ai/testing';
 import {
   ActivationEvent,
-  Capabilities,
   Capability,
-  Events,
+  Common,
   IntentPlugin,
-  LayoutAction,
   Plugin,
   SettingsPlugin,
   createIntent,
@@ -202,37 +200,37 @@ const StoryPlugin = Plugin.define<StoryPluginOptions>({
 }).pipe(
   Plugin.addModule({
     id: 'example.com/plugin/testing/module/testing',
-    activatesOn: Events.SetupArtifactDefinition,
+    activatesOn: Common.ActivationEvent.SetupArtifactDefinition,
     activate: () => [
-      Capability.contributes(Capabilities.BlueprintDefinition, DesignBlueprint),
-      Capability.contributes(Capabilities.BlueprintDefinition, PlanningBlueprint),
-      Capability.contributes(Capabilities.Functions, [Agent.prompt]),
-      Capability.contributes(Capabilities.Functions, [Document.read, Document.update]),
-      Capability.contributes(Capabilities.Functions, [Tasks.read, Tasks.update]),
-      Capability.contributes(Capabilities.Functions, [Research.create, Research.research]),
-      Capability.contributes(Capabilities.Functions, [Example.reply]),
+      Capability.contributes(Common.Capability.BlueprintDefinition, DesignBlueprint),
+      Capability.contributes(Common.Capability.BlueprintDefinition, PlanningBlueprint),
+      Capability.contributes(Common.Capability.Functions, [Agent.prompt]),
+      Capability.contributes(Common.Capability.Functions, [Document.read, Document.update]),
+      Capability.contributes(Common.Capability.Functions, [Tasks.read, Tasks.update]),
+      Capability.contributes(Common.Capability.Functions, [Research.create, Research.research]),
+      Capability.contributes(Common.Capability.Functions, [Example.reply]),
     ],
   }),
   Plugin.addModule({
     id: 'example.com/plugin/testing/module/toolkit',
-    activatesOn: Events.Startup,
+    activatesOn: Common.ActivationEvent.Startup,
     activate: (context) => [
       Capability.contributes(
-        Capabilities.Toolkit,
+        Common.Capability.Toolkit,
         GenericToolkit.make(TestingToolkit.Toolkit, TestingToolkit.createLayer(context)),
       ),
     ],
   }),
   Plugin.addModule({
     id: 'example.com/plugin/testing/module/setup',
-    activatesOn: ActivationEvent.allOf(Events.DispatcherReady, ClientEvents.SpacesReady),
+    activatesOn: ActivationEvent.allOf(Common.ActivationEvent.DispatcherReady, ClientEvents.SpacesReady),
     activate: async (context) => {
       const client = context.getCapability(ClientCapabilities.Client);
       const space = client.spaces.default;
-      const { dispatchPromise: dispatch } = context.getCapability(Capabilities.IntentDispatcher);
+      const { dispatchPromise: dispatch } = context.getCapability(Common.Capability.IntentDispatcher);
 
       // Ensure workspace is set.
-      await dispatch(createIntent(LayoutAction.SwitchWorkspace, { part: 'workspace', subject: space.id }));
+      await dispatch(createIntent(Common.LayoutAction.SwitchWorkspace, { part: 'workspace', subject: space.id }));
 
       // Create initial chat.
       await dispatch(createIntent(AssistantAction.CreateChat, { db: space.db }));
@@ -242,9 +240,9 @@ const StoryPlugin = Plugin.define<StoryPluginOptions>({
   }),
   Plugin.addModule(({ onChatCreated }) => ({
     id: 'example.com/plugin/testing/module/intent-resolver',
-    activatesOn: Events.SetupIntentResolver,
+    activatesOn: Common.ActivationEvent.SetupIntentResolver,
     activate: (context) => [
-      Capability.contributes(Capabilities.IntentResolver, [
+      Capability.contributes(Common.Capability.IntentResolver, [
         createResolver({
           intent: DeckAction.ChangeCompanion,
           resolve: () => ({}),

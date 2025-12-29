@@ -4,11 +4,7 @@
 
 import * as Option from 'effect/Option';
 
-import {
-  Capabilities,
-  createIntent,
-  Capability,
-} from '@dxos/app-framework';
+import { Capability, Common, createIntent } from '@dxos/app-framework';
 import { Obj } from '@dxos/echo';
 import { AttentionCapabilities } from '@dxos/plugin-attention';
 import { ATTENDABLE_PATH_SEPARATOR, DECK_COMPANION_TYPE, PLANK_COMPANION_TYPE } from '@dxos/plugin-deck/types';
@@ -24,9 +20,9 @@ import { ThreadCapabilities } from './capabilities';
 //  Track active meetings by subscribing to meetings query and polling the swarms of recent meetings in the space.
 export default Capability.makeModule((context) => {
   const resolve = (typename: string) =>
-    context.getCapabilities(Capabilities.Metadata).find(({ id }) => id === typename)?.metadata ?? {};
+    context.getCapabilities(Common.Capability.Metadata).find(({ id }) => id === typename)?.metadata ?? {};
 
-  return Capability.contributes(Capabilities.AppGraphBuilder, [
+  return Capability.contributes(Common.Capability.AppGraphBuilder, [
     GraphBuilder.createExtension({
       id: `${meta.id}/active-call`,
       match: NodeMatcher.whenRoot,
@@ -132,7 +128,7 @@ export default Capability.makeModule((context) => {
           {
             id: `${Obj.getDXN(object).toString()}/comment`,
             data: () => {
-              const { dispatchPromise: dispatch } = context.getCapability(Capabilities.IntentDispatcher);
+              const { dispatchPromise: dispatch } = context.getCapability(Common.Capability.IntentDispatcher);
               const metadata = resolve(Obj.getTypename(object)!);
               const selection = selectionManager.getSelection(Obj.getDXN(object).toString());
               // TODO(wittjosiah): Use presence of selection to determine if the comment should be anchored.

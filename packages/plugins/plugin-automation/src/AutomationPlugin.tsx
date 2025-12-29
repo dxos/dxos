@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Capabilities, Events, Capability, Plugin } from '@dxos/app-framework';
+import { Common, Capability, Plugin } from '@dxos/app-framework';
 import { Function, Trigger } from '@dxos/functions';
 import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
 
@@ -15,8 +15,8 @@ export const AutomationPlugin = Plugin.define(meta)
   .pipe(
     Plugin.addModule({
       id: 'translations',
-      activatesOn: Events.SetupTranslations,
-      activate: () => Capability.contributes(Capabilities.Translations, translations),
+      activatesOn: Common.ActivationEvent.SetupTranslations,
+      activate: () => Capability.contributes(Common.Capability.Translations, translations),
     }),
     Plugin.addModule({
       id: 'schema',
@@ -25,17 +25,17 @@ export const AutomationPlugin = Plugin.define(meta)
     }),
     Plugin.addModule({
       id: 'app-graph-builder',
-      activatesOn: Events.SetupAppGraph,
+      activatesOn: Common.ActivationEvent.SetupAppGraph,
       activate: AppGraphBuilder,
     }),
     Plugin.addModule({
       id: 'intent-resolver',
-      activatesOn: Events.SetupIntentResolver,
+      activatesOn: Common.ActivationEvent.SetupIntentResolver,
       activate: IntentResolver,
     }),
     Plugin.addModule({
       id: 'react-surface',
-      activatesOn: Events.SetupReactSurface,
+      activatesOn: Common.ActivationEvent.SetupReactSurface,
       activate: ReactSurface,
     }),
     Plugin.addModule({

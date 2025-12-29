@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { Capabilities, Capability, createSurface } from '@dxos/app-framework';
+import { Capability, Common } from '@dxos/app-framework';
 import { Obj } from '@dxos/echo';
 
 import { MasonryContainer } from '../components/MasonryContainer';
@@ -12,8 +12,8 @@ import { meta } from '../meta';
 import { Masonry } from '../types';
 
 export default Capability.makeModule(() =>
-  Capability.contributes(Capabilities.ReactSurface, [
-    createSurface({
+  Capability.contributes(Common.Capability.ReactSurface, [
+    Common.createSurface({
       id: meta.id,
       role: ['article', 'section'],
       filter: (data): data is { subject: Masonry.Masonry } => Obj.instanceOf(Masonry.Masonry, data.subject),

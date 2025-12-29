@@ -6,9 +6,9 @@ import { effect } from '@preact/signals-core';
 import localforage from 'localforage';
 
 import {
-  Capabilities,
-  createIntent,
   Capability,
+  Common,
+  createIntent,
 } from '@dxos/app-framework';
 import { SubscriptionList } from '@dxos/async';
 import { scheduledEffect } from '@dxos/echo-signals/core';
@@ -28,9 +28,9 @@ export default Capability.makeModule(async (context: Capability.PluginContext) =
     current: undefined,
   });
 
-  const { dispatchPromise: dispatch } = context.getCapability(Capabilities.IntentDispatcher);
+  const { dispatchPromise: dispatch } = context.getCapability(Common.Capability.IntentDispatcher);
   const attention = context.getCapability(AttentionCapabilities.Attention);
-  const settings = context.getCapability(Capabilities.SettingsStore).getStore<FilesSettingsProps>(meta.id)!.value;
+  const settings = context.getCapability(Common.Capability.SettingsStore).getStore<FilesSettingsProps>(meta.id)!.value;
 
   const subscriptions = new SubscriptionList();
 

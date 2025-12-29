@@ -39,8 +39,7 @@ const DefaultStory = () => {
           iconHue: getHashHue(faker.string.uuid()),
           homePage: faker.datatype.boolean({ probability: 0.5 }) ? faker.internet.url() : undefined,
           source: faker.internet.url(),
-        })
-          .pipe(PluginNS.make)(),
+        }).pipe(PluginNS.make)(),
       { count: 32 },
     ),
   );

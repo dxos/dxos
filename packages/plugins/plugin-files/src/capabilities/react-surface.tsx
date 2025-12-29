@@ -3,11 +3,7 @@
 //
 import React from 'react';
 
-import {
-  Capabilities,
-  createSurface,
-  Capability,
-} from '@dxos/app-framework';
+import { Capability, Common } from '@dxos/app-framework';
 import { useCapability } from '@dxos/app-framework/react';
 import { SettingsStore } from '@dxos/local-storage';
 
@@ -19,14 +15,14 @@ import { isLocalFile } from '../util';
 import { FileCapabilities } from './capabilities';
 
 export default Capability.makeModule((context) =>
-  Capability.contributes(Capabilities.ReactSurface, [
-    createSurface({
+  Capability.contributes(Common.Capability.ReactSurface, [
+    Common.createSurface({
       id: `${meta.id}/article`,
       role: 'article',
       filter: (data): data is { subject: LocalFile } => isLocalFile(data.subject),
       component: ({ data }) => <LocalFileContainer file={data.subject} />,
     }),
-    createSurface({
+    Common.createSurface({
       id: `${meta.id}/plugin-settings`,
       role: 'article',
       filter: (data): data is { subject: SettingsStore<FilesSettingsProps> } =>
@@ -36,11 +32,13 @@ export default Capability.makeModule((context) =>
         return <FilesSettings settings={subject.value} state={state} />;
       },
     }),
-    createSurface({
+    Common.createSurface({
       id: `${meta.id}/status`,
       role: 'status',
       filter: (data): data is any => {
-        const settings = context.getCapability(Capabilities.SettingsStore).getStore<FilesSettingsProps>(meta.id)!.value;
+        const settings = context
+          .getCapability(Common.Capability.SettingsStore)
+          .getStore<FilesSettingsProps>(meta.id)!.value;
         return settings.autoExport;
       },
       component: () => {

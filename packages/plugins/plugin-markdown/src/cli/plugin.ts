@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Capabilities, Events, Plugin, Capability, createIntent } from '@dxos/app-framework';
+import { Common, Plugin, Capability, createIntent } from '@dxos/app-framework';
 import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
 import { type CreateObjectIntent } from '@dxos/plugin-space/types';
 import { Text } from '@dxos/schema';
@@ -19,9 +19,9 @@ export const MarkdownPlugin = Plugin.define(meta).pipe(
   }),
   Plugin.addModule({
     id: 'metadata',
-    activatesOn: Events.SetupMetadata,
+    activatesOn: Common.ActivationEvent.SetupMetadata,
     activate: () =>
-      Capability.contributes(Capabilities.Metadata, {
+      Capability.contributes(Common.Capability.Metadata, {
         id: Markdown.Document.typename,
         metadata: {
           createObjectIntent: (() => createIntent(MarkdownAction.Create)) satisfies CreateObjectIntent,
@@ -31,7 +31,7 @@ export const MarkdownPlugin = Plugin.define(meta).pipe(
   }),
   Plugin.addModule({
     id: 'intent-resolver',
-    activatesOn: Events.SetupIntentResolver,
+    activatesOn: Common.ActivationEvent.SetupIntentResolver,
     activate: IntentResolver,
   }),
   Plugin.make,

@@ -6,7 +6,7 @@ import * as Option from 'effect/Option';
 import type * as Schema from 'effect/Schema';
 import React, { useCallback } from 'react';
 
-import { Capabilities, Capability, createSurface } from '@dxos/app-framework';
+import { Capability, Common } from '@dxos/app-framework';
 import { Surface, useCapability, useLayout } from '@dxos/app-framework/react';
 import { Database, Obj, type Ref } from '@dxos/echo';
 import { findAnnotation } from '@dxos/effect';
@@ -64,8 +64,8 @@ type ReactSurfaceOptions = {
 };
 
 export default Capability.makeModule(({ createInvitationUrl }: ReactSurfaceOptions) =>
-  Capability.contributes(Capabilities.ReactSurface, [
-    createSurface({
+  Capability.contributes(Common.Capability.ReactSurface, [
+    Common.createSurface({
       id: `${meta.id}/article`,
       role: 'article',
       filter: (data): data is { subject: Space } =>
@@ -82,34 +82,34 @@ export default Capability.makeModule(({ createInvitationUrl }: ReactSurfaceOptio
         />
       ),
     }),
-    createSurface({
+    Common.createSurface({
       id: `${meta.id}/record-article`,
       role: 'article',
       position: 'fallback',
       filter: (data): data is { subject: Obj.Any } => Obj.isObject(data.subject),
       component: ({ data }) => <RecordArticle subject={data.subject} />,
     }),
-    createSurface({
+    Common.createSurface({
       id: `${meta.id}/collection-fallback`,
       role: 'article',
       position: 'fallback',
       filter: (data): data is { subject: Collection.Collection } => Obj.instanceOf(Collection.Collection, data.subject),
       component: ({ data }) => <CollectionArticle subject={data.subject} />,
     }),
-    createSurface({
+    Common.createSurface({
       id: `${meta.id}/plugin-settings`,
       role: 'article',
       filter: (data): data is { subject: SettingsStore<SpaceSettingsProps> } =>
         data.subject instanceof SettingsStore && data.subject.prefix === meta.id,
       component: ({ data: { subject } }) => <SpacePluginSettings settings={subject.value} />,
     }),
-    createSurface({
+    Common.createSurface({
       id: `${meta.id}/companion/object-settings`,
       role: 'article',
       filter: (data): data is { companionTo: Obj.Any } => Obj.isObject(data.companionTo) && data.subject === 'settings',
       component: ({ ref, data, role }) => <ObjectDetails object={data.companionTo} role={role} ref={ref} />,
     }),
-    createSurface({
+    Common.createSurface({
       id: `${meta.id}/space-settings-properties`,
       role: 'article',
       filter: (data): data is { subject: string } => data.subject === `${meta.id}/properties`,
@@ -124,7 +124,7 @@ export default Capability.makeModule(({ createInvitationUrl }: ReactSurfaceOptio
         return <SpaceSettingsContainer space={space} ref={ref} />;
       },
     }),
-    createSurface({
+    Common.createSurface({
       id: `${meta.id}/space-settings-members`,
       role: 'article',
       position: 'hoist',
@@ -140,7 +140,7 @@ export default Capability.makeModule(({ createInvitationUrl }: ReactSurfaceOptio
         return <MembersContainer space={space} createInvitationUrl={createInvitationUrl} />;
       },
     }),
-    createSurface({
+    Common.createSurface({
       id: `${meta.id}/space-settings-schema`,
       role: 'article',
       filter: (data): data is { subject: string } => data.subject === `${meta.id}/schema`,
@@ -155,7 +155,7 @@ export default Capability.makeModule(({ createInvitationUrl }: ReactSurfaceOptio
         return <SchemaContainer space={space} />;
       },
     }),
-    createSurface({
+    Common.createSurface({
       id: `${meta.id}/selected-objects`,
       role: 'article',
       filter: (data): data is { companionTo: Obj.Obj<{ view: Ref.Ref<View.View> }>; subject: 'selected-objects' } => {
@@ -179,25 +179,25 @@ export default Capability.makeModule(({ createInvitationUrl }: ReactSurfaceOptio
         />
       ),
     }),
-    createSurface({
+    Common.createSurface({
       id: JOIN_DIALOG,
       role: 'dialog',
       filter: (data): data is { props: JoinPanelProps } => data.component === JOIN_DIALOG,
       component: ({ data }) => <JoinDialog {...data.props} />,
     }),
-    createSurface({
+    Common.createSurface({
       id: CREATE_SPACE_DIALOG,
       role: 'dialog',
       filter: (data): data is any => data.component === CREATE_SPACE_DIALOG,
       component: () => <CreateSpaceDialog />,
     }),
-    createSurface({
+    Common.createSurface({
       id: CREATE_OBJECT_DIALOG,
       role: 'dialog',
       filter: (data): data is { props: CreateObjectDialogProps } => data.component === CREATE_OBJECT_DIALOG,
       component: ({ data }) => <CreateObjectDialog {...data.props} />,
     }),
-    createSurface({
+    Common.createSurface({
       id: `${meta.id}/create-initial-space-form-[hue]`,
       role: 'form-input',
       filter: (data): data is { prop: string; schema: Schema.Schema<any> } => {
@@ -216,7 +216,7 @@ export default Capability.makeModule(({ createInvitationUrl }: ReactSurfaceOptio
         );
       },
     }),
-    createSurface({
+    Common.createSurface({
       id: `${meta.id}/create-initial-space-form-[icon]`,
       role: 'form-input',
       filter: (data): data is { prop: string; schema: Schema.Schema<any> } => {
@@ -235,7 +235,7 @@ export default Capability.makeModule(({ createInvitationUrl }: ReactSurfaceOptio
         );
       },
     }),
-    createSurface({
+    Common.createSurface({
       id: `${meta.id}/typename-form-input`,
       role: 'form-input',
       filter: (
@@ -262,7 +262,7 @@ export default Capability.makeModule(({ createInvitationUrl }: ReactSurfaceOptio
         return <SelectField {...props} options={options} />;
       },
     }),
-    createSurface({
+    Common.createSurface({
       id: `${meta.id}/object-settings`,
       role: 'object-settings',
       filter: (data): data is { subject: { view: Ref.Ref<View.View> } } => {
@@ -285,26 +285,26 @@ export default Capability.makeModule(({ createInvitationUrl }: ReactSurfaceOptio
         return <ViewEditor view={view} />;
       },
     }),
-    createSurface({
+    Common.createSurface({
       id: SPACE_RENAME_POPOVER,
       role: 'card--popover',
       filter: (data): data is { props: Space } => data.component === SPACE_RENAME_POPOVER && isSpace(data.props),
       component: ({ data }) => <SpaceRenamePopover space={data.props} />,
     }),
-    createSurface({
+    Common.createSurface({
       id: OBJECT_RENAME_POPOVER,
       role: 'card--popover',
       filter: (data): data is { props: Obj.Any } =>
         data.component === OBJECT_RENAME_POPOVER && isLiveObject(data.props),
       component: ({ data }) => <ObjectRenamePopover object={data.props} />,
     }),
-    createSurface({
+    Common.createSurface({
       id: `${meta.id}/menu-footer`,
       role: 'menu-footer',
       filter: (data): data is { subject: Obj.Any } => Obj.isObject(data.subject),
       component: ({ data }) => <MenuFooter object={data.subject} />,
     }),
-    createSurface({
+    Common.createSurface({
       id: `${meta.id}/navtree-presence`,
       role: 'navtree-item-end',
       filter: (data): data is { id: string; subject: Obj.Any; open?: boolean } =>
@@ -316,7 +316,7 @@ export default Capability.makeModule(({ createInvitationUrl }: ReactSurfaceOptio
       },
     }),
     // TODO(wittjosiah): Attention glyph for non-echo items should be handled elsewhere.
-    createSurface({
+    Common.createSurface({
       id: `${meta.id}/navtree-presence-fallback`,
       role: 'navtree-item-end',
       position: 'fallback',
@@ -324,13 +324,13 @@ export default Capability.makeModule(({ createInvitationUrl }: ReactSurfaceOptio
       component: ({ data }) => <SmallPresenceLive id={data.id} open={data.open} />,
     }),
     // TODO(wittjosiah): Broken?
-    createSurface({
+    Common.createSurface({
       id: `${meta.id}/navtree-sync-status`,
       role: 'navtree-item-end',
       filter: (data): data is { subject: Space; open?: boolean } => isSpace(data.subject),
       component: ({ data }) => <InlineSyncStatus space={data.subject} open={data.open} />,
     }),
-    createSurface({
+    Common.createSurface({
       id: `${meta.id}/navbar-presence`,
       role: 'navbar-end',
       position: 'hoist',
@@ -346,13 +346,13 @@ export default Capability.makeModule(({ createInvitationUrl }: ReactSurfaceOptio
         return object ? <SpacePresence object={object} /> : null;
       },
     }),
-    createSurface({
+    Common.createSurface({
       id: `${meta.id}/collection-section`,
       role: 'section',
       filter: (data): data is { subject: Collection.Collection } => Obj.instanceOf(Collection.Collection, data.subject),
       component: ({ data }) => <CollectionSection subject={data.subject} />,
     }),
-    createSurface({
+    Common.createSurface({
       id: `${meta.id}/status`,
       role: 'status',
       component: () => <SyncStatus />,

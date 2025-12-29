@@ -7,7 +7,7 @@ import { type Instruction, extractInstruction } from '@atlaskit/pragmatic-drag-a
 import { untracked } from '@preact/signals-core';
 import React, { forwardRef, memo, useCallback, useEffect, useMemo } from 'react';
 
-import { LayoutAction, createIntent } from '@dxos/app-framework';
+import { Common, createIntent } from '@dxos/app-framework';
 import { Surface, useAppGraph, useCapability, useIntentDispatcher, useLayout } from '@dxos/app-framework/react';
 import { PLANK_COMPANION_TYPE } from '@dxos/plugin-deck/types';
 import { Graph, Node } from '@dxos/plugin-graph';
@@ -144,7 +144,7 @@ export const NavTreeContainer$ = forwardRef<HTMLDivElement, NavTreeContainerProp
     const handleTabChange = useCallback(
       async (node: NavTreeItemGraphNode) => {
         await dispatch(
-          createIntent(LayoutAction.UpdateSidebar, {
+          createIntent(Common.LayoutAction.UpdateSidebar, {
             part: 'sidebar',
             options: {
               state:
@@ -160,7 +160,7 @@ export const NavTreeContainer$ = forwardRef<HTMLDivElement, NavTreeContainerProp
         );
 
         await dispatch(
-          createIntent(LayoutAction.SwitchWorkspace, {
+          createIntent(Common.LayoutAction.SwitchWorkspace, {
             part: 'workspace',
             subject: node.id,
           }),
@@ -171,7 +171,7 @@ export const NavTreeContainer$ = forwardRef<HTMLDivElement, NavTreeContainerProp
           const [item] = getItems(graph, node).filter((node) => !Node.isActionLike(node));
           if (item && item.data) {
             await dispatch(
-              createIntent(LayoutAction.Open, {
+              createIntent(Common.LayoutAction.Open, {
                 part: 'main',
                 subject: [item.id],
               }),
@@ -212,7 +212,7 @@ export const NavTreeContainer$ = forwardRef<HTMLDivElement, NavTreeContainerProp
         const current = isCurrent(path, node);
         if (!current) {
           void dispatch(
-            createIntent(LayoutAction.Open, {
+            createIntent(Common.LayoutAction.Open, {
               part: 'main',
               subject: [node.id],
               options: { key: node.properties.key },
@@ -220,7 +220,7 @@ export const NavTreeContainer$ = forwardRef<HTMLDivElement, NavTreeContainerProp
           );
         } else if (option) {
           void dispatch(
-            createIntent(LayoutAction.Close, {
+            createIntent(Common.LayoutAction.Close, {
               part: 'main',
               subject: [node.id],
               options: { state: false },
@@ -228,7 +228,7 @@ export const NavTreeContainer$ = forwardRef<HTMLDivElement, NavTreeContainerProp
           );
         } else {
           void dispatch(
-            createIntent(LayoutAction.ScrollIntoView, {
+            createIntent(Common.LayoutAction.ScrollIntoView, {
               part: 'current',
               subject: node.id,
             }),
@@ -244,7 +244,7 @@ export const NavTreeContainer$ = forwardRef<HTMLDivElement, NavTreeContainerProp
 
         if (!isLg) {
           void dispatch(
-            createIntent(LayoutAction.UpdateSidebar, {
+            createIntent(Common.LayoutAction.UpdateSidebar, {
               part: 'sidebar',
               options: { state: 'closed' },
             }),
@@ -257,7 +257,7 @@ export const NavTreeContainer$ = forwardRef<HTMLDivElement, NavTreeContainerProp
     const handleBack = useCallback(
       () =>
         dispatch(
-          createIntent(LayoutAction.RevertWorkspace, {
+          createIntent(Common.LayoutAction.RevertWorkspace, {
             part: 'workspace',
             options: { revert: true },
           }),

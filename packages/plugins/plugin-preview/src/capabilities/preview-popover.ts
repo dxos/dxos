@@ -2,12 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import {
-  Capabilities,
-  Capability,
-  LayoutAction,
-  createIntent,
-} from '@dxos/app-framework';
+import { Capability, Common, createIntent } from '@dxos/app-framework';
 import { addEventListener } from '@dxos/async';
 import { type Client } from '@dxos/client';
 import { type Space, parseId } from '@dxos/client/echo';
@@ -35,9 +30,9 @@ const handlePreviewLookup = async (
 export default Capability.makeModule((context) => {
   // TODO(wittjosiah): Factor out lookup handlers to other plugins to make not ECHO-specific.
   const handleAnchorActivate = async ({ refId, label, trigger }: DxAnchorActivate) => {
-    const { dispatchPromise: dispatch } = context.getCapability(Capabilities.IntentDispatcher);
+    const { dispatchPromise: dispatch } = context.getCapability(Common.Capability.IntentDispatcher);
     const client = context.getCapability(ClientCapabilities.Client);
-    const [layout] = context.getCapabilities(Capabilities.Layout);
+    const [layout] = context.getCapabilities(Common.Capability.Layout);
     const { spaceId } = parseId(layout.workspace);
     const space = (spaceId && client.spaces.get(spaceId)) ?? client.spaces.default;
     const result = await handlePreviewLookup(client, space, { ref: refId, label });
@@ -46,7 +41,7 @@ export default Capability.makeModule((context) => {
     }
 
     await dispatch(
-      createIntent(LayoutAction.UpdatePopover, {
+      createIntent(Common.LayoutAction.UpdatePopover, {
         part: 'popover',
         subject: result.object,
         options: {
@@ -70,5 +65,5 @@ export default Capability.makeModule((context) => {
     log.warn('No default view found');
   }
 
-  return Capability.contributes(Capabilities.Null, null, () => cleanup());
+  return Capability.contributes(Common.Capability.Null, null, () => cleanup());
 });

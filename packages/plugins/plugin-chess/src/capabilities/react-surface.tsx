@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { Capabilities, Capability, createSurface } from '@dxos/app-framework';
+import { Capability, Common } from '@dxos/app-framework';
 import { Obj } from '@dxos/echo';
 
 import { ChessboardContainer } from '../components';
@@ -12,8 +12,8 @@ import { meta } from '../meta';
 import { Chess } from '../types';
 
 export default Capability.makeModule(() =>
-  Capability.contributes(Capabilities.ReactSurface, [
-    createSurface({
+  Capability.contributes(Common.Capability.ReactSurface, [
+    Common.createSurface({
       id: meta.id,
       role: ['article', 'section', 'card--intrinsic', 'card--extrinsic', 'card--popover', 'card--transclusion'],
       // TODO(burdon): Could this be standardized so that we don't require a subject property.

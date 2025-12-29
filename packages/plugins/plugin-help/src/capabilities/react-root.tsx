@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { Capabilities, Capability } from '@dxos/app-framework';
+import { Capability, Common } from '@dxos/app-framework';
 import { useCapability } from '@dxos/app-framework/react';
 
 import { WelcomeTour } from '../components';
@@ -14,7 +14,7 @@ import { type Step } from '../types';
 import { HelpCapabilities } from './capabilities';
 
 export default Capability.makeModule((steps: Step[]) =>
-  Capability.contributes(Capabilities.ReactRoot, {
+  Capability.contributes(Common.Capability.ReactRoot, {
     id: meta.id,
     root: () => {
       const state = useCapability(HelpCapabilities.MutableState);

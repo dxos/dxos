@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Capabilities, Capability } from '@dxos/app-framework';
+import { Capability, Common } from '@dxos/app-framework';
 import { ATTENDABLE_PATH_SEPARATOR, PLANK_COMPANION_TYPE } from '@dxos/plugin-deck/types';
 import { GraphBuilder } from '@dxos/plugin-graph';
 import { Project } from '@dxos/types';
@@ -10,7 +10,7 @@ import { Project } from '@dxos/types';
 import { meta } from '../meta';
 
 export default Capability.makeModule(() => {
-  return Capability.contributes(Capabilities.AppGraphBuilder, [
+  return Capability.contributes(Common.Capability.AppGraphBuilder, [
     GraphBuilder.createTypeExtension({
       id: `${meta.id}/triggers`,
       type: Project.Project,

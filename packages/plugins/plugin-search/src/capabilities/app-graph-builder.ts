@@ -2,11 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import {
-  Capabilities,
-  Capability,
-  createIntent,
-} from '@dxos/app-framework';
+import { Capability, Common, createIntent } from '@dxos/app-framework';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { ATTENDABLE_PATH_SEPARATOR, DECK_COMPANION_TYPE } from '@dxos/plugin-deck/types';
 import { CreateAtom, GraphBuilder, NodeMatcher } from '@dxos/plugin-graph';
@@ -16,12 +12,12 @@ import { meta } from '../meta';
 import { SearchAction } from '../types';
 
 export default Capability.makeModule((context) =>
-  Capability.contributes(Capabilities.AppGraphBuilder, [
+  Capability.contributes(Common.Capability.AppGraphBuilder, [
     GraphBuilder.createExtension({
       id: `${meta.id}/space-search`,
       match: NodeMatcher.whenRoot,
       connector: (node, get) => {
-        const workspace = get(CreateAtom.fromSignal(() => context.getCapability(Capabilities.Layout).workspace));
+        const workspace = get(CreateAtom.fromSignal(() => context.getCapability(Common.Capability.Layout).workspace));
         const client = context.getCapability(ClientCapabilities.Client);
         const { spaceId } = parseId(workspace);
         const space = spaceId ? client.spaces.get(spaceId) : null;
@@ -47,7 +43,7 @@ export default Capability.makeModule((context) =>
         {
           id: SearchAction.OpenSearch._tag,
           data: async () => {
-            const { dispatchPromise: dispatch } = context.getCapability(Capabilities.IntentDispatcher);
+            const { dispatchPromise: dispatch } = context.getCapability(Common.Capability.IntentDispatcher);
             await dispatch(createIntent(SearchAction.OpenSearch));
             return false;
           },

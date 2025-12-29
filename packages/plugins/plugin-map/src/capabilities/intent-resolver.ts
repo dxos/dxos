@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Capabilities, Capability, createResolver } from '@dxos/app-framework';
+import { Capability, Common, createResolver } from '@dxos/app-framework';
 import { View } from '@dxos/schema';
 
 import { Map, MapAction } from '../types';
@@ -10,7 +10,7 @@ import { Map, MapAction } from '../types';
 import { MapCapabilities } from './capabilities';
 
 export default Capability.makeModule((context) =>
-  Capability.contributes(Capabilities.IntentResolver, [
+  Capability.contributes(Common.Capability.IntentResolver, [
     createResolver({
       intent: MapAction.Create,
       resolve: async ({ db, name, typename, locationFieldName, center, zoom, coordinates }) => {

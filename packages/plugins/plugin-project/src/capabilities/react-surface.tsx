@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { Capabilities, Capability, createSurface } from '@dxos/app-framework';
+import { Capability, Common } from '@dxos/app-framework';
 import { InvocationTraceContainer } from '@dxos/devtools';
 import { Obj } from '@dxos/echo';
 import { StackItem } from '@dxos/react-ui-stack';
@@ -14,14 +14,14 @@ import { ProjectContainer, ProjectObjectSettings } from '../components';
 import { meta } from '../meta';
 
 export default Capability.makeModule(() =>
-  Capability.contributes(Capabilities.ReactSurface, [
-    createSurface({
+  Capability.contributes(Common.Capability.ReactSurface, [
+    Common.createSurface({
       id: meta.id,
       role: 'article',
       filter: (data): data is { subject: Project.Project } => Obj.instanceOf(Project.Project, data.subject),
       component: ({ data, role }) => <ProjectContainer role={role} project={data.subject} />,
     }),
-    createSurface({
+    Common.createSurface({
       id: `${meta.id}/companion/invocations`,
       role: 'article',
       filter: (data): data is { companionTo: Project.Project } =>
@@ -36,7 +36,7 @@ export default Capability.makeModule(() =>
         );
       },
     }),
-    createSurface({
+    Common.createSurface({
       id: `${meta.id}/object-settings`,
       role: 'object-settings',
       filter: (data): data is { subject: Project.Project } => Obj.instanceOf(Project.Project, data.subject),

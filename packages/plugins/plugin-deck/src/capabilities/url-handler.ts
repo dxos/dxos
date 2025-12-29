@@ -3,9 +3,8 @@
 //
 
 import {
-  Capabilities,
   Capability,
-  LayoutAction,
+  Common,
   createIntent,
 } from '@dxos/app-framework';
 import { scheduledEffect } from '@dxos/echo-signals/core';
@@ -16,7 +15,7 @@ import { DeckCapabilities } from './capabilities';
 
 // TODO(wittjosiah): Cleanup the url handling. May justify introducing routing capabilities.
 export default Capability.makeModule(async (context: Capability.PluginContext) => {
-  const { dispatchPromise: dispatch } = context.getCapability(Capabilities.IntentDispatcher);
+  const { dispatchPromise: dispatch } = context.getCapability(Common.Capability.IntentDispatcher);
   const state = context.getCapability(DeckCapabilities.MutableDeckState);
 
   const handleNavigation = async () => {
@@ -32,15 +31,15 @@ export default Capability.makeModule(async (context: Capability.PluginContext) =
 
     const [_, nextDeck, nextSolo] = pathname.split('/');
     if (nextDeck && nextDeck !== state.activeDeck) {
-      await dispatch(createIntent(LayoutAction.SwitchWorkspace, { part: 'workspace', subject: nextDeck }));
+      await dispatch(createIntent(Common.LayoutAction.SwitchWorkspace, { part: 'workspace', subject: nextDeck }));
     }
 
     if (nextSolo && nextSolo !== state.deck.solo) {
       await dispatch(
-        createIntent(LayoutAction.SetLayoutMode, { part: 'mode', subject: nextSolo, options: { mode: 'solo' } }),
+        createIntent(Common.LayoutAction.SetLayoutMode, { part: 'mode', subject: nextSolo, options: { mode: 'solo' } }),
       );
     } else if (!nextSolo && state.deck.solo) {
-      await dispatch(createIntent(LayoutAction.SetLayoutMode, { part: 'mode', options: { mode: 'deck' } }));
+      await dispatch(createIntent(Common.LayoutAction.SetLayoutMode, { part: 'mode', options: { mode: 'deck' } }));
     }
   };
 
@@ -58,7 +57,7 @@ export default Capability.makeModule(async (context: Capability.PluginContext) =
     },
   );
 
-  return Capability.contributes(Capabilities.Null, null, () => {
+  return Capability.contributes(Common.Capability.Null, null, () => {
     window.removeEventListener('popstate', handleNavigation);
     unsubscribe();
   });

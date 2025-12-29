@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { Capabilities, Capability, createSurface } from '@dxos/app-framework';
+import { Capability, Common } from '@dxos/app-framework';
 import { useLayout } from '@dxos/app-framework/react';
 import { parseId, useDatabase } from '@dxos/react-client/echo';
 
@@ -12,8 +12,8 @@ import { TokensContainer } from '../components';
 import { meta } from '../meta';
 
 export default Capability.makeModule(() =>
-  Capability.contributes(Capabilities.ReactSurface, [
-    createSurface({
+  Capability.contributes(Common.Capability.ReactSurface, [
+    Common.createSurface({
       id: meta.id,
       role: 'article',
       filter: (data): data is { subject: string } => data.subject === `${meta.id}/space-settings`,

@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Capabilities, Capability, Events, Plugin, createIntent } from '@dxos/app-framework';
+import { Capability, Common, Plugin, createIntent } from '@dxos/app-framework';
 import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
 import { type CreateObjectIntent } from '@dxos/plugin-space/types';
 import { translations as boardTranslations } from '@dxos/react-ui-board';
@@ -15,15 +15,15 @@ import { Board } from './types';
 export const BoardPlugin = Plugin.define(meta).pipe(
   Plugin.addModule({
     id: 'translations',
-    activatesOn: Events.SetupTranslations,
-    activate: () => Capability.contributes(Capabilities.Translations, [...translations, ...boardTranslations]),
+    activatesOn: Common.ActivationEvent.SetupTranslations,
+    activate: () => Capability.contributes(Common.Capability.Translations, [...translations, ...boardTranslations]),
   }),
   Plugin.addModule({
     id: 'metadata',
-    activatesOn: Events.SetupMetadata,
+    activatesOn: Common.ActivationEvent.SetupMetadata,
     activate: () =>
       // TODO(burdon): "Metadata" here seems non-descriptive; is this specifically for the type? ObjectMetadata?
-      Capability.contributes(Capabilities.Metadata, {
+      Capability.contributes(Common.Capability.Metadata, {
         id: Board.Board.typename,
         metadata: {
           icon: 'ph--squares-four--regular',
@@ -40,12 +40,12 @@ export const BoardPlugin = Plugin.define(meta).pipe(
   }),
   Plugin.addModule({
     id: 'react-surface',
-    activatesOn: Events.SetupReactSurface,
+    activatesOn: Common.ActivationEvent.SetupReactSurface,
     activate: ReactSurface,
   }),
   Plugin.addModule({
     id: 'intent-resolver',
-    activatesOn: Events.SetupIntentResolver,
+    activatesOn: Common.ActivationEvent.SetupIntentResolver,
     activate: IntentResolver,
   }),
   Plugin.make,

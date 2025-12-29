@@ -4,12 +4,7 @@
 
 import * as Option from 'effect/Option';
 
-import {
-  Capabilities,
-  LayoutAction,
-  createIntent,
-  Capability,
-} from '@dxos/app-framework';
+import { Capability, Common, createIntent } from '@dxos/app-framework';
 import { Obj } from '@dxos/echo';
 import { DeckCapabilities } from '@dxos/plugin-deck';
 import { ATTENDABLE_PATH_SEPARATOR, DeckAction } from '@dxos/plugin-deck/types';
@@ -22,7 +17,7 @@ import { PresenterAction, type PresenterSettingsProps } from '../types';
 
 export default Capability.makeModule((context) => {
   return Capability.contributes(
-    Capabilities.AppGraphBuilder,
+    Common.Capability.AppGraphBuilder,
     GraphBuilder.createExtension({
       id: `${meta.id}/root`,
       // TODO(wittjosiah): This is a hack to work around presenter previously relying on "variant". Remove.
@@ -32,7 +27,7 @@ export default Capability.makeModule((context) => {
         return isPresentable ? Option.some(node.data) : Option.none();
       },
       connector: (object, get) => {
-        const [settingsStore] = get(context.capabilities(Capabilities.SettingsStore));
+        const [settingsStore] = get(context.capabilities(Common.Capability.SettingsStore));
         const settings = get(
           CreateAtom.fromSignal(() => settingsStore?.getStore<PresenterSettingsProps>(meta.id)?.value),
         );
@@ -57,7 +52,7 @@ export default Capability.makeModule((context) => {
         ];
       },
       actions: (object, get) => {
-        const [settingsStore] = get(context.capabilities(Capabilities.SettingsStore));
+        const [settingsStore] = get(context.capabilities(Common.Capability.SettingsStore));
         const settings = get(
           CreateAtom.fromSignal(() => settingsStore?.getStore<PresenterSettingsProps>(meta.id)?.value),
         );
@@ -76,7 +71,7 @@ export default Capability.makeModule((context) => {
             // TODO(burdon): Allow function so can generate state when activated.
             //  So can set explicit fullscreen state coordinated with current presenter state.
             data: async () => {
-              const { dispatchPromise: dispatch } = context.getCapability(Capabilities.IntentDispatcher);
+              const { dispatchPromise: dispatch } = context.getCapability(Common.Capability.IntentDispatcher);
               const layout = context.getCapability(DeckCapabilities.MutableDeckState);
               const presenterId = [id, 'presenter'].join(ATTENDABLE_PATH_SEPARATOR);
               if (!layout.deck.fullscreen) {
@@ -88,7 +83,7 @@ export default Capability.makeModule((context) => {
                 );
               }
               await dispatch(
-                createIntent(LayoutAction.Open, {
+                createIntent(Common.LayoutAction.Open, {
                   part: 'main',
                   subject: [presenterId],
                   options: { workspace: spaceId },

@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Capabilities, Events, ActivationEvent, Capability, Plugin } from '@dxos/app-framework';
+import { ActivationEvent, Capability, Common, Plugin } from '@dxos/app-framework';
 import { AttentionEvents } from '@dxos/plugin-attention';
 import { Node } from '@dxos/plugin-graph';
 
@@ -16,44 +16,44 @@ export const FilesPlugin = Plugin.define(meta)
   .pipe(
     Plugin.addModule({
     id: 'settings',
-    activatesOn: Events.SetupSettings,
+    activatesOn: Common.ActivationEvent.SetupSettings,
     activate: FileSettings,
     }),
     Plugin.addModule({
     id: 'state',
-    activatesOn: ActivationEvent.allOf(Events.DispatcherReady, Events.SettingsReady, AttentionEvents.AttentionReady),
+    activatesOn: ActivationEvent.allOf(Common.ActivationEvent.DispatcherReady, Common.ActivationEvent.SettingsReady, AttentionEvents.AttentionReady),
     activate: FileState,
     }),
     Plugin.addModule({
     id: 'translations',
-    activatesOn: Events.SetupTranslations,
-    activate: () => Capability.contributes(Capabilities.Translations, translations),
+    activatesOn: Common.ActivationEvent.SetupTranslations,
+    activate: () => Capability.contributes(Common.Capability.Translations, translations),
     }),
     Plugin.addModule({
     id: 'markdown',
-    activatesOn: Events.SettingsReady,
+    activatesOn: Common.ActivationEvent.SettingsReady,
     activate: Markdown,
     }),
     Plugin.addModule({
     id: 'react-surface',
-    activatesOn: Events.SetupReactSurface,
+    activatesOn: Common.ActivationEvent.SetupReactSurface,
     activate: ReactSurface,
     }),
     Plugin.addModule({
     id: 'intent-resolver',
-    activatesOn: Events.SetupIntentResolver,
+    activatesOn: Common.ActivationEvent.SetupIntentResolver,
     activate: IntentResolver,
     }),
     Plugin.addModule({
     id: 'app-graph-builder',
-    activatesOn: Events.SetupAppGraph,
+    activatesOn: Common.ActivationEvent.SetupAppGraph,
     activate: AppGraphBuilder,
     }),
     Plugin.addModule({
     id: 'app-graph-serializer',
-    activatesOn: Events.AppGraphReady,
+    activatesOn: Common.ActivationEvent.AppGraphReady,
     activate: () =>
-      Capability.contributes(Capabilities.AppGraphSerializer, [
+      Capability.contributes(Common.Capability.AppGraphSerializer, [
         {
           inputType: Node.RootType,
           outputType: 'text/directory',

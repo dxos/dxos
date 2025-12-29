@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { ActivationEvent, Capabilities, Capability, Events, Plugin, createIntent } from '@dxos/app-framework';
+import { ActivationEvent, Capability, Common, Plugin, createIntent } from '@dxos/app-framework';
 import { Type } from '@dxos/echo';
 import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
 import { SpaceCapabilities, SpaceEvents } from '@dxos/plugin-space';
@@ -22,26 +22,26 @@ import { Meeting, MeetingAction } from './types';
 
 export const MeetingPlugin = Plugin.define(meta).pipe(
   Plugin.addModule({
-    activatesOn: Events.SetupSettings,
+    activatesOn: Common.ActivationEvent.SetupSettings,
     activate: MeetingSettings,
   }),
   Plugin.addModule({
     // TODO(wittjosiah): Does not integrate with settings store.
     //   Should this be a different event?
     //   Should settings store be renamed to be more generic?
-    activatesOn: ActivationEvent.oneOf(Events.SetupSettings, Events.SetupAppGraph),
+    activatesOn: ActivationEvent.oneOf(Common.ActivationEvent.SetupSettings, Common.ActivationEvent.SetupAppGraph),
     activate: MeetingState,
   }),
   Plugin.addModule({
     id: 'translations',
-    activatesOn: Events.SetupTranslations,
-    activate: () => Capability.contributes(Capabilities.Translations, translations),
+    activatesOn: Common.ActivationEvent.SetupTranslations,
+    activate: () => Capability.contributes(Common.Capability.Translations, translations),
   }),
   Plugin.addModule({
     id: 'metadata',
-    activatesOn: Events.SetupMetadata,
+    activatesOn: Common.ActivationEvent.SetupMetadata,
     activate: () => [
-      Capability.contributes(Capabilities.Metadata, {
+      Capability.contributes(Common.Capability.Metadata, {
         id: Type.getTypename(Meeting.Meeting),
         metadata: {
           label: (object: Meeting.Meeting) => object.name || new Date(object.created).toLocaleString(),
@@ -69,19 +69,19 @@ export const MeetingPlugin = Plugin.define(meta).pipe(
     activate: Repair,
   }),
   Plugin.addModule({
-    activatesOn: Events.SetupReactSurface,
+    activatesOn: Common.ActivationEvent.SetupReactSurface,
     activate: ReactSurface,
   }),
   Plugin.addModule({
-    activatesOn: Events.SetupIntentResolver,
+    activatesOn: Common.ActivationEvent.SetupIntentResolver,
     activate: IntentResolver,
   }),
   Plugin.addModule({
-    activatesOn: Events.SetupAppGraph,
+    activatesOn: Common.ActivationEvent.SetupAppGraph,
     activate: AppGraphBuilder,
   }),
   Plugin.addModule({
-    activatesOn: ActivationEvent.allOf(Events.SettingsReady, ClientEvents.ClientReady),
+    activatesOn: ActivationEvent.allOf(Common.ActivationEvent.SettingsReady, ClientEvents.ClientReady),
     activate: CallExtension,
   }),
   Plugin.make,

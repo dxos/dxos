@@ -2,12 +2,12 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Capabilities, Capability } from '@dxos/app-framework';
+import { Capability, Common } from '@dxos/app-framework';
 
 import { ClientCapabilities } from '../types';
 
 export default Capability.makeModule((context) => {
-  const registry = context.getCapability(Capabilities.AtomRegistry);
+  const registry = context.getCapability(Common.Capability.AtomRegistry);
   const client = context.getCapability(ClientCapabilities.Client);
 
   // NOTE: Migrations are currently unidirectional and idempotent.
@@ -21,5 +21,5 @@ export default Capability.makeModule((context) => {
     { immediate: true },
   );
 
-  return Capability.contributes(Capabilities.Null, null, () => cancel());
+  return Capability.contributes(Common.Capability.Null, null, () => cancel());
 });

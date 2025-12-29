@@ -5,10 +5,9 @@
 import * as Effect from 'effect/Effect';
 
 import {
-  Capabilities,
   Capability,
+  Common,
   type Label,
-  LayoutAction,
   createIntent,
   createResolver,
 } from '@dxos/app-framework';
@@ -51,14 +50,14 @@ type IntentResolverOptions = {
 
 export default Capability.makeModule(({ context, observability, createInvitationUrl }: IntentResolverOptions) => {
   const resolve = (typename: string) =>
-    context.getCapabilities(Capabilities.Metadata).find(({ id }: { id: string }) => id === typename)?.metadata ?? {};
+    context.getCapabilities(Common.Capability.Metadata).find(({ id }: { id: string }) => id === typename)?.metadata ?? {};
 
-  return Capability.contributes(Capabilities.IntentResolver, [
+  return Capability.contributes(Common.Capability.IntentResolver, [
     createResolver({
       intent: SpaceAction.OpenCreateSpace,
       resolve: () => ({
         intents: [
-          createIntent(LayoutAction.UpdateDialog, {
+          createIntent(Common.LayoutAction.UpdateDialog, {
             part: 'dialog',
             subject: CREATE_SPACE_DIALOG,
             options: {
@@ -125,7 +124,7 @@ export default Capability.makeModule(({ context, observability, createInvitation
       intent: SpaceAction.Join,
       resolve: ({ invitationCode, onDone }) => ({
         intents: [
-          createIntent(LayoutAction.UpdateDialog, {
+          createIntent(Common.LayoutAction.UpdateDialog, {
             part: 'dialog',
             subject: JOIN_DIALOG,
             options: {
@@ -143,7 +142,7 @@ export default Capability.makeModule(({ context, observability, createInvitation
       intent: SpaceAction.OpenMembers,
       resolve: ({ space }) => ({
         intents: [
-          createIntent(LayoutAction.Open, {
+          createIntent(Common.LayoutAction.Open, {
             part: 'main',
             subject: [`members-settings${ATTENDABLE_PATH_SEPARATOR}${space.id}`],
             options: {
@@ -176,7 +175,7 @@ export default Capability.makeModule(({ context, observability, createInvitation
       intent: SpaceAction.GetShareLink,
       resolve: ({ space, target, copyToClipboard }) =>
         Effect.gen(function* () {
-          const { dispatch } = context.getCapability(Capabilities.IntentDispatcher);
+          const { dispatch } = context.getCapability(Common.Capability.IntentDispatcher);
           const invitation = yield* dispatch(
             createIntent(SpaceAction.Share, {
               space,
@@ -252,7 +251,7 @@ export default Capability.makeModule(({ context, observability, createInvitation
       resolve: ({ caller, space }) => {
         return {
           intents: [
-            createIntent(LayoutAction.UpdatePopover, {
+            createIntent(Common.LayoutAction.UpdatePopover, {
               part: 'popover',
               subject: SPACE_RENAME_POPOVER,
               options: {
@@ -268,7 +267,7 @@ export default Capability.makeModule(({ context, observability, createInvitation
       intent: SpaceAction.OpenSettings,
       resolve: ({ space }) => ({
         intents: [
-          createIntent(LayoutAction.Open, {
+          createIntent(Common.LayoutAction.Open, {
             part: 'main',
             subject: [`properties-settings${ATTENDABLE_PATH_SEPARATOR}${space.id}`],
             options: {
@@ -445,7 +444,7 @@ export default Capability.makeModule(({ context, observability, createInvitation
 
         return {
           intents: [
-            createIntent(LayoutAction.UpdateDialog, {
+            createIntent(Common.LayoutAction.UpdateDialog, {
               part: 'dialog',
               subject: CREATE_OBJECT_DIALOG,
               options: {
@@ -480,7 +479,7 @@ export default Capability.makeModule(({ context, observability, createInvitation
           return {
             error: new Error('Space limit reached.'),
             intents: [
-              createIntent(LayoutAction.AddToast, {
+              createIntent(Common.LayoutAction.AddToast, {
                 part: 'toast',
                 subject: {
                   id: `${meta.id}/space-limit`,
@@ -558,7 +557,7 @@ export default Capability.makeModule(({ context, observability, createInvitation
     createResolver({
       intent: SpaceAction.RemoveObjects,
       resolve: async ({ objects, target, deletionData }, undo) => {
-        const layout = context.getCapability(Capabilities.Layout);
+        const layout = context.getCapability(Common.Capability.Layout);
 
         // All objects must be a member of the same space.
         const space = getSpace(objects[0]);
@@ -616,7 +615,7 @@ export default Capability.makeModule(({ context, observability, createInvitation
             intents:
               deletionData.wasActive.length > 0
                 ? [
-                    createIntent(LayoutAction.Close, {
+                    createIntent(Common.LayoutAction.Close, {
                       part: 'main',
                       subject: deletionData.wasActive,
                       options: { state: false },
@@ -648,7 +647,7 @@ export default Capability.makeModule(({ context, observability, createInvitation
               intents:
                 deletionData.wasActive.length > 0
                   ? [
-                      createIntent(LayoutAction.Open, {
+                      createIntent(Common.LayoutAction.Open, {
                         part: 'main',
                         subject: deletionData.wasActive,
                       }),
@@ -663,7 +662,7 @@ export default Capability.makeModule(({ context, observability, createInvitation
       intent: SpaceAction.RenameObject,
       resolve: async ({ object, caller }) => ({
         intents: [
-          createIntent(LayoutAction.UpdatePopover, {
+          createIntent(Common.LayoutAction.UpdatePopover, {
             part: 'popover',
             subject: OBJECT_RENAME_POPOVER,
             options: {

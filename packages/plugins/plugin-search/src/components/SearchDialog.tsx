@@ -5,7 +5,7 @@
 import * as Option from 'effect/Option';
 import React, { forwardRef, useCallback, useState } from 'react';
 
-import { LayoutAction, createIntent } from '@dxos/app-framework';
+import { Common, createIntent } from '@dxos/app-framework';
 import { useAppGraph, useIntentDispatcher, useLayout } from '@dxos/app-framework/react';
 import { Obj } from '@dxos/echo';
 import { Graph, type Node } from '@dxos/plugin-graph';
@@ -62,7 +62,7 @@ export const SearchDialog = ({ pivotId }: SearchDialogProps) => {
   const handleSelect = useCallback(
     async (nodeId: string) => {
       await dispatch(
-        createIntent(LayoutAction.UpdateDialog, {
+        createIntent(Common.LayoutAction.UpdateDialog, {
           part: 'dialog',
           options: { state: false },
         }),
@@ -72,14 +72,14 @@ export const SearchDialog = ({ pivotId }: SearchDialogProps) => {
       const index = layout.active.findIndex((id) => id === nodeId);
       if (index !== -1) {
         await dispatch(
-          createIntent(LayoutAction.ScrollIntoView, {
+          createIntent(Common.LayoutAction.ScrollIntoView, {
             part: 'current',
             subject: nodeId,
           }),
         );
       } else {
         await dispatch(
-          createIntent(LayoutAction.Open, {
+          createIntent(Common.LayoutAction.Open, {
             part: 'main',
             subject: [nodeId],
             options: {

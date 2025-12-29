@@ -5,7 +5,7 @@
 import { Atom, useAtomSet, useAtomValue } from '@effect-atom/atom-react';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { LayoutAction, createIntent } from '@dxos/app-framework';
+import { Common, createIntent } from '@dxos/app-framework';
 import { type SurfaceComponentProps, useIntentDispatcher } from '@dxos/app-framework/react';
 import { type Database, Obj, Relation, Tag } from '@dxos/echo';
 import { QueryBuilder } from '@dxos/echo-query';
@@ -146,7 +146,7 @@ export const MailboxArticle = ({ subject: mailbox, filter: filterParam, attendab
 
         case 'save': {
           void dispatch(
-            createIntent(LayoutAction.UpdatePopover, {
+            createIntent(Common.LayoutAction.UpdatePopover, {
               part: 'popover',
               subject: POPOVER_SAVE_FILTER,
               options: {

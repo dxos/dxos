@@ -8,7 +8,7 @@ import * as Function from 'effect/Function';
 import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 
-import { Capabilities, Capability, createIntent } from '@dxos/app-framework';
+import { Capability, Common, createIntent } from '@dxos/app-framework';
 import { type Space, SpaceState, getSpace, isSpace } from '@dxos/client/echo';
 import { DXN, type Entity, Filter, Obj, type QueryResult, Type } from '@dxos/echo';
 import { log } from '@dxos/log';
@@ -36,7 +36,7 @@ import {
 export default Capability.makeModule((context) => {
   // TODO(wittjosiah): Using `get` and being reactive seems to cause a bug with Atom where disposed atoms are accessed.
   const resolve = (get: Atom.Context) => (typename: string) =>
-    context.getCapabilities(Capabilities.Metadata).find(({ id }) => id === typename)?.metadata ?? {};
+    context.getCapabilities(Common.Capability.Metadata).find(({ id }) => id === typename)?.metadata ?? {};
 
   const spacesNode = {
     id: SPACES,
@@ -51,7 +51,7 @@ export default Capability.makeModule((context) => {
       disabled: true,
       childrenPersistenceClass: 'echo',
       onRearrangeChildren: async (nextOrder: Space[]) => {
-        const { graph } = context.getCapability(Capabilities.AppGraph);
+        const { graph } = context.getCapability(Common.Capability.AppGraph);
         const client = context.getCapability(ClientCapabilities.Client);
 
         // NOTE: This is needed to ensure order is updated by next animation frame.
@@ -74,7 +74,7 @@ export default Capability.makeModule((context) => {
     },
   };
 
-  return Capability.contributes(Capabilities.AppGraphBuilder, [
+  return Capability.contributes(Common.Capability.AppGraphBuilder, [
     // Primary actions.
     GraphBuilder.createExtension({
       id: `${meta.id}/primary-actions`,
@@ -84,7 +84,7 @@ export default Capability.makeModule((context) => {
         {
           id: SpaceAction.OpenCreateSpace._tag,
           data: async () => {
-            const { dispatchPromise: dispatch } = context.getCapability(Capabilities.IntentDispatcher);
+            const { dispatchPromise: dispatch } = context.getCapability(Common.Capability.IntentDispatcher);
             await dispatch(createIntent(SpaceAction.OpenCreateSpace));
           },
           properties: {
@@ -97,7 +97,7 @@ export default Capability.makeModule((context) => {
         {
           id: SpaceAction.Join._tag,
           data: async () => {
-            const { dispatchPromise: dispatch } = context.getCapability(Capabilities.IntentDispatcher);
+            const { dispatchPromise: dispatch } = context.getCapability(Common.Capability.IntentDispatcher);
             await dispatch(createIntent(SpaceAction.Join));
           },
           properties: {
@@ -110,7 +110,7 @@ export default Capability.makeModule((context) => {
         {
           id: SpaceAction.OpenMembers._tag,
           data: async () => {
-            const { dispatchPromise: dispatch } = context.getCapability(Capabilities.IntentDispatcher);
+            const { dispatchPromise: dispatch } = context.getCapability(Common.Capability.IntentDispatcher);
             const client = context.getCapability(ClientCapabilities.Client);
             const space = getActiveSpace(context) ?? client.spaces.default;
             await dispatch(createIntent(SpaceAction.OpenMembers, { space }));
@@ -128,7 +128,7 @@ export default Capability.makeModule((context) => {
         {
           id: SpaceAction.OpenSettings._tag,
           data: async () => {
-            const { dispatchPromise: dispatch } = context.getCapability(Capabilities.IntentDispatcher);
+            const { dispatchPromise: dispatch } = context.getCapability(Common.Capability.IntentDispatcher);
             const client = context.getCapability(ClientCapabilities.Client);
             const space = getActiveSpace(context) ?? client.spaces.default;
             await dispatch(createIntent(SpaceAction.OpenSettings, { space }));
@@ -172,7 +172,7 @@ export default Capability.makeModule((context) => {
           return [];
         }
 
-        const settings = get(context.capabilities(Capabilities.SettingsStore))[0]?.getStore<SpaceSettingsProps>(
+        const settings = get(context.capabilities(Common.Capability.SettingsStore))[0]?.getStore<SpaceSettingsProps>(
           meta.id,
         )?.value;
 
@@ -215,7 +215,7 @@ export default Capability.makeModule((context) => {
       id: `${meta.id}/actions`,
       match: (node) => (node.type === SPACE_TYPE && isSpace(node.data) ? Option.some(node.data) : Option.none()),
       actions: (space, get) => {
-        const [dispatcher] = get(context.capabilities(Capabilities.IntentDispatcher));
+        const [dispatcher] = get(context.capabilities(Common.Capability.IntentDispatcher));
         const [client] = get(context.capabilities(ClientCapabilities.Client));
         const [state] = get(context.capabilities(SpaceCapabilities.State));
 
@@ -427,7 +427,7 @@ export default Capability.makeModule((context) => {
         );
         const deletable = filteredViews.length === 0;
 
-        const [dispatcher] = get(context.capabilities(Capabilities.IntentDispatcher));
+        const [dispatcher] = get(context.capabilities(Common.Capability.IntentDispatcher));
         if (!dispatcher) {
           return [];
         }
@@ -539,8 +539,8 @@ export default Capability.makeModule((context) => {
           deletable = filteredViews.length === 0;
         }
 
-        const [dispatcher] = get(context.capabilities(Capabilities.IntentDispatcher));
-        const [appGraph] = get(context.capabilities(Capabilities.AppGraph));
+        const [dispatcher] = get(context.capabilities(Common.Capability.IntentDispatcher));
+        const [appGraph] = get(context.capabilities(Common.Capability.AppGraph));
         const [state] = get(context.capabilities(SpaceCapabilities.State));
 
         if (!dispatcher || !appGraph || !state) {

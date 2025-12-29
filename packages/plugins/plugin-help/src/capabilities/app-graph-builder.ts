@@ -3,9 +3,8 @@
 //
 
 import {
-  Capabilities,
   Capability,
-  LayoutAction,
+  Common,
   createIntent,
 } from '@dxos/app-framework';
 import { GraphBuilder, NodeMatcher } from '@dxos/app-graph';
@@ -18,7 +17,7 @@ import { HelpCapabilities } from './capabilities';
 
 export default Capability.makeModule((context) =>
   Capability.contributes(
-    Capabilities.AppGraphBuilder,
+    Common.Capability.AppGraphBuilder,
     GraphBuilder.createExtension({
       id: meta.id,
       match: NodeMatcher.whenRoot,
@@ -26,7 +25,7 @@ export default Capability.makeModule((context) =>
         {
           id: HelpAction.Start._tag,
           data: async () => {
-            const { dispatchPromise: dispatch } = context.getCapability(Capabilities.IntentDispatcher);
+            const { dispatchPromise: dispatch } = context.getCapability(Common.Capability.IntentDispatcher) as { dispatchPromise: (intent: any) => Promise<any> };
             const state = context.getCapability(HelpCapabilities.MutableState);
             state.showHints = true;
             await dispatch(createIntent(HelpAction.Start));
@@ -46,11 +45,11 @@ export default Capability.makeModule((context) =>
         {
           id: `${meta.id}/open-shortcuts`,
           data: async () => {
-            const { dispatchPromise: dispatch } = context.getCapability(Capabilities.IntentDispatcher);
+            const { dispatchPromise: dispatch } = context.getCapability(Common.Capability.IntentDispatcher) as { dispatchPromise: (intent: any) => Promise<any> };
             const state = context.getCapability(HelpCapabilities.MutableState);
             state.showHints = true;
             await dispatch(
-              createIntent(LayoutAction.UpdateDialog, {
+              createIntent(Common.LayoutAction.UpdateDialog, {
                 part: 'dialog',
                 subject: SHORTCUTS_DIALOG,
                 options: {

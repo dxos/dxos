@@ -5,7 +5,7 @@
 import { Atom } from '@effect-atom/atom-react';
 import React from 'react';
 
-import { LayoutAction, createIntent } from '@dxos/app-framework';
+import { Common, createIntent } from '@dxos/app-framework';
 import { useIntentDispatcher } from '@dxos/app-framework/react';
 import { Node } from '@dxos/app-graph';
 import { Obj } from '@dxos/echo';
@@ -64,7 +64,7 @@ const useSubjectMenuGroupItems = ({ subject, db }: CardPreviewProps): MenuAction
     id: `${subject.id}/open`,
     data: () =>
       dispatch(
-        createIntent(LayoutAction.Open, {
+        createIntent(Common.LayoutAction.Open, {
           part: 'main',
           subject: [Obj.getDXN(subject).toString()],
         }),

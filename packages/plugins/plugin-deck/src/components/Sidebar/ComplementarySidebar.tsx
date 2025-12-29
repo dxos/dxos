@@ -12,7 +12,7 @@ import React, {
   useState,
 } from 'react';
 
-import { LayoutAction, createIntent } from '@dxos/app-framework';
+import { Common, createIntent } from '@dxos/app-framework';
 import { Surface, useCapability, useIntentDispatcher } from '@dxos/app-framework/react';
 import { IconButton, type Label, Main, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { Tabs } from '@dxos/react-ui-tabs';
@@ -59,7 +59,7 @@ export const ComplementarySidebar = ({ current }: ComplementarySidebarProps) => 
       } else {
         setInternalValue(nextValue);
         layout.complementarySidebarState = 'expanded';
-        void dispatch(createIntent(LayoutAction.UpdateComplementary, { part: 'complementary', subject: nextValue }));
+        void dispatch(createIntent(Common.LayoutAction.UpdateComplementary, { part: 'complementary', subject: nextValue }));
       }
     },
     [layout, activeId, dispatch],
@@ -77,7 +77,7 @@ export const ComplementarySidebar = ({ current }: ComplementarySidebarProps) => 
   useEffect(() => {
     if (!activeId) {
       void dispatch(
-        createIntent(LayoutAction.UpdateComplementary, { part: 'complementary', options: { state: 'collapsed' } }),
+        createIntent(Common.LayoutAction.UpdateComplementary, { part: 'complementary', options: { state: 'collapsed' } }),
       );
     }
   }, [activeId, dispatch]);

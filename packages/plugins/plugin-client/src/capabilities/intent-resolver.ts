@@ -5,9 +5,8 @@
 import * as Function from 'effect/Function';
 
 import {
-  Capabilities,
   Capability,
-  LayoutAction,
+  Common,
   chain,
   createIntent,
   createResolver,
@@ -29,11 +28,11 @@ type IntentResolverOptions = {
 const RECOVER_IDENTITY_RPC_TIMEOUT = 20_000;
 
 export default Capability.makeModule(({ context, appName = 'Composer' }: IntentResolverOptions) =>
-  Capability.contributes(Capabilities.IntentResolver, [
+  Capability.contributes(Common.Capability.IntentResolver, [
     createResolver({
       intent: ClientAction.CreateIdentity,
       resolve: async (profile) => {
-        const manager = context.getCapability(Capabilities.PluginManager);
+        const manager = context.getCapability(Common.Capability.PluginManager);
         const client = context.getCapability(ClientCapabilities.Client);
         const data = await client.halo.createIdentity(profile);
         await manager.activate(ClientEvents.IdentityCreated);
@@ -52,7 +51,7 @@ export default Capability.makeModule(({ context, appName = 'Composer' }: IntentR
       resolve: async (data) => {
         return {
           intents: [
-            createIntent(LayoutAction.UpdateDialog, {
+            createIntent(Common.LayoutAction.UpdateDialog, {
               part: 'dialog',
               subject: JOIN_DIALOG,
               options: {
@@ -73,11 +72,11 @@ export default Capability.makeModule(({ context, appName = 'Composer' }: IntentR
         return {
           intents: [
             Function.pipe(
-              createIntent(LayoutAction.SwitchWorkspace, {
+              createIntent(Common.LayoutAction.SwitchWorkspace, {
                 part: 'workspace',
                 subject: Account.id,
               }),
-              chain(LayoutAction.Open, {
+              chain(Common.LayoutAction.Open, {
                 part: 'main',
                 subject: [Account.Profile],
               }),
@@ -94,7 +93,7 @@ export default Capability.makeModule(({ context, appName = 'Composer' }: IntentR
       resolve: async () => {
         return {
           intents: [
-            createIntent(LayoutAction.UpdateDialog, {
+            createIntent(Common.LayoutAction.UpdateDialog, {
               part: 'dialog',
               subject: JOIN_DIALOG,
               options: {
@@ -113,7 +112,7 @@ export default Capability.makeModule(({ context, appName = 'Composer' }: IntentR
       resolve: async (data) => {
         return {
           intents: [
-            createIntent(LayoutAction.UpdateDialog, {
+            createIntent(Common.LayoutAction.UpdateDialog, {
               part: 'dialog',
               subject: RESET_DIALOG,
               options: {
@@ -144,7 +143,7 @@ export default Capability.makeModule(({ context, appName = 'Composer' }: IntentR
         const { recoveryCode } = await client.services.services.IdentityService.createRecoveryCredential({});
         return {
           intents: [
-            createIntent(LayoutAction.UpdateDialog, {
+            createIntent(Common.LayoutAction.UpdateDialog, {
               part: 'dialog',
               subject: RECOVERY_CODE_DIALOG,
               options: {

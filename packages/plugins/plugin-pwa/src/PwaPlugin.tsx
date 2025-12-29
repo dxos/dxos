@@ -4,7 +4,7 @@
 
 import { registerSW } from 'virtual:pwa-register';
 
-import { Capabilities, Capability, Events, LayoutAction, Plugin, createIntent } from '@dxos/app-framework';
+import { Capability, Common, Plugin, createIntent } from '@dxos/app-framework';
 import { log } from '@dxos/log';
 import { captureException } from '@dxos/observability/sentry';
 
@@ -14,19 +14,19 @@ import { translations } from './translations';
 export const PwaPlugin = Plugin.define(meta).pipe(
   Plugin.addModule({
     id: 'translations',
-    activatesOn: Events.SetupTranslations,
-    activate: () => Capability.contributes(Capabilities.Translations, translations),
+    activatesOn: Common.ActivationEvent.SetupTranslations,
+    activate: () => Capability.contributes(Common.Capability.Translations, translations),
   }),
   Plugin.addModule({
     id: 'register-pwa',
-    activatesOn: Events.DispatcherReady,
+    activatesOn: Common.ActivationEvent.DispatcherReady,
     activate: (context: Capability.PluginContext) => {
-      const { dispatchPromise: dispatch } = context.getCapability(Capabilities.IntentDispatcher);
+      const { dispatchPromise: dispatch } = context.getCapability(Common.Capability.IntentDispatcher);
 
       const updateSW = registerSW({
         onNeedRefresh: () =>
           dispatch?.(
-            createIntent(LayoutAction.AddToast, {
+            createIntent(Common.LayoutAction.AddToast, {
               part: 'toast',
               subject: {
                 id: `${meta.id}/need-refresh`,
@@ -41,7 +41,7 @@ export const PwaPlugin = Plugin.define(meta).pipe(
           ),
         onOfflineReady: () =>
           dispatch?.(
-            createIntent(LayoutAction.AddToast, {
+            createIntent(Common.LayoutAction.AddToast, {
               part: 'toast',
               subject: {
                 id: `${meta.id}/offline-ready`,
@@ -56,7 +56,7 @@ export const PwaPlugin = Plugin.define(meta).pipe(
         },
       });
 
-      return Capability.contributes(Capabilities.Null, null);
+      return Capability.contributes(Common.Capability.Null, null);
     },
   }),
   Plugin.make,

@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { Capabilities, Capability, createSurface } from '@dxos/app-framework';
+import { Capability, Common } from '@dxos/app-framework';
 import { Obj } from '@dxos/echo';
 import { SettingsStore } from '@dxos/local-storage';
 import { Markdown } from '@dxos/plugin-markdown/types';
@@ -20,8 +20,8 @@ import { meta } from '../meta';
 import { type PresenterSettingsProps } from '../types';
 
 export default Capability.makeModule(() =>
-  Capability.contributes(Capabilities.ReactSurface, [
-    createSurface({
+  Capability.contributes(Common.Capability.ReactSurface, [
+    Common.createSurface({
       id: `${meta.id}/document`,
       role: 'article',
       position: 'hoist',
@@ -34,7 +34,7 @@ export default Capability.makeModule(() =>
         Obj.instanceOf(Markdown.Document, data.subject.object),
       component: ({ data }) => <DocumentPresenterContainer document={data.subject.object} />,
     }),
-    createSurface({
+    Common.createSurface({
       id: `${meta.id}/collection`,
       role: 'article',
       position: 'hoist',
@@ -47,13 +47,13 @@ export default Capability.makeModule(() =>
         Obj.instanceOf(Collection.Collection, data.subject.object),
       component: ({ data }) => <CollectionPresenterContainer collection={data.subject.object} />,
     }),
-    createSurface({
+    Common.createSurface({
       id: `${meta.id}/slide`,
       role: 'slide',
       filter: (data): data is { subject: Markdown.Document } => Obj.instanceOf(Markdown.Document, data.subject),
       component: ({ data }) => <MarkdownSlide document={data.subject} />,
     }),
-    createSurface({
+    Common.createSurface({
       id: `${meta.id}/plugin-settings`,
       role: 'article',
       filter: (data): data is { subject: SettingsStore<PresenterSettingsProps> } =>

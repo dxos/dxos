@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { ActivationEvent, Capabilities, Capability, Events, Plugin } from '@dxos/app-framework';
+import { ActivationEvent, Capability, Common, Plugin } from '@dxos/app-framework';
 
 import {
   AppGraphBuilder,
@@ -22,7 +22,7 @@ export const ClientPlugin = Plugin.define<ClientPluginOptions>(meta).pipe(
   Plugin.addModule((options) => {
     return {
       id: Capability.getModuleTag(Client),
-      activatesOn: ActivationEvent.oneOf(Events.Startup, Events.SetupAppGraph),
+      activatesOn: ActivationEvent.oneOf(Common.ActivationEvent.Startup, Common.ActivationEvent.SetupAppGraph),
       activatesAfter: [ClientEvents.ClientReady],
       activate: (context) => Client({ ...options, context }),
     };
@@ -38,7 +38,7 @@ export const ClientPlugin = Plugin.define<ClientPluginOptions>(meta).pipe(
     activate: Migrations,
   }),
   Plugin.addModule({
-    activatesOn: Events.Startup,
+    activatesOn: Common.ActivationEvent.Startup,
     activate: ReactContext,
   }),
   Plugin.addModule(({ invitationUrl = window.location.origin, invitationParam = 'deviceInvitationCode', onReset }) => {
@@ -50,23 +50,23 @@ export const ClientPlugin = Plugin.define<ClientPluginOptions>(meta).pipe(
 
     return {
       id: Capability.getModuleTag(ReactSurface),
-      activatesOn: Events.SetupReactSurface,
+      activatesOn: Common.ActivationEvent.SetupReactSurface,
       activate: () => ReactSurface({ createInvitationUrl, onReset }),
     };
   }),
   Plugin.addModule({
-    activatesOn: Events.SetupAppGraph,
+    activatesOn: Common.ActivationEvent.SetupAppGraph,
     activate: AppGraphBuilder,
   }),
   Plugin.addModule({
     id: Capability.getModuleTag(IntentResolver),
-    activatesOn: Events.SetupIntentResolver,
+    activatesOn: Common.ActivationEvent.SetupIntentResolver,
     activate: (context) => IntentResolver({ context }),
   }),
   Plugin.addModule({
     id: 'translations',
-    activatesOn: Events.SetupTranslations,
-    activate: () => Capability.contributes(Capabilities.Translations, translations),
+    activatesOn: Common.ActivationEvent.SetupTranslations,
+    activate: () => Capability.contributes(Common.Capability.Translations, translations),
   }),
   Plugin.make,
 );

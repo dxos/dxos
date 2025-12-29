@@ -2,22 +2,22 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Capabilities, Capability } from '@dxos/app-framework';
+import { Capability, Common } from '@dxos/app-framework';
 
 import { CalendarBlueprint, InboxBlueprint } from '../blueprints';
 
 export { CalendarBlueprint, InboxBlueprint };
 
 type BlueprintCapabilities = (
-  | Capability.Capability<typeof Capabilities.Functions>
-  | Capability.Capability<typeof Capabilities.BlueprintDefinition>
+  | Capability.Capability<typeof Common.Capability.Functions>
+  | Capability.Capability<typeof Common.Capability.BlueprintDefinition>
 )[];
 
 const blueprintDefinition = Capability.makeModule<[], BlueprintCapabilities>(() => [
-  Capability.contributes(Capabilities.Functions, InboxBlueprint.functions),
-  Capability.contributes(Capabilities.BlueprintDefinition, InboxBlueprint.make()),
-  Capability.contributes(Capabilities.Functions, CalendarBlueprint.functions),
-  Capability.contributes(Capabilities.BlueprintDefinition, CalendarBlueprint.make()),
+  Capability.contributes(Common.Capability.Functions, InboxBlueprint.functions),
+  Capability.contributes(Common.Capability.BlueprintDefinition, InboxBlueprint.make()),
+  Capability.contributes(Common.Capability.Functions, CalendarBlueprint.functions),
+  Capability.contributes(Common.Capability.BlueprintDefinition, CalendarBlueprint.make()),
 ]);
 
 export default blueprintDefinition;

@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Capabilities, Events, Plugin, Capability, createIntent } from '@dxos/app-framework';
+import { Capability, Common, Plugin, createIntent } from '@dxos/app-framework';
 import { ResearchGraph } from '@dxos/assistant-toolkit';
 import { Blueprint, Prompt } from '@dxos/blueprints';
 import { Sequence } from '@dxos/conductor';
@@ -33,12 +33,12 @@ import { Assistant, AssistantAction } from './types';
 export const AssistantPlugin = Plugin.define(meta).pipe(
   Plugin.addModule({
     id: 'translations',
-    activatesOn: Events.SetupTranslations,
-    activate: () => Capability.contributes(Capabilities.Translations, translations),
+    activatesOn: Common.ActivationEvent.SetupTranslations,
+    activate: () => Capability.contributes(Common.Capability.Translations, translations),
   }),
   Plugin.addModule({
     id: 'settings',
-    activatesOn: Events.SetupSettings,
+    activatesOn: Common.ActivationEvent.SetupSettings,
     activate: Settings,
   }),
   Plugin.addModule({
@@ -46,14 +46,14 @@ export const AssistantPlugin = Plugin.define(meta).pipe(
     // TODO(wittjosiah): Does not integrate with settings store.
     //   Should this be a different event?
     //   Should settings store be renamed to be more generic?
-    activatesOn: Events.SetupSettings,
+    activatesOn: Common.ActivationEvent.SetupSettings,
     activate: AssistantState,
   }),
   Plugin.addModule({
     id: 'metadata',
-    activatesOn: Events.SetupMetadata,
+    activatesOn: Common.ActivationEvent.SetupMetadata,
     activate: () => [
-      Capability.contributes(Capabilities.Metadata, {
+      Capability.contributes(Common.Capability.Metadata, {
         id: Type.getTypename(Assistant.Chat),
         metadata: {
           icon: 'ph--atom--regular',
@@ -62,7 +62,7 @@ export const AssistantPlugin = Plugin.define(meta).pipe(
             createIntent(AssistantAction.CreateChat, { db: options.db })) satisfies CreateObjectIntent,
         },
       }),
-      Capability.contributes(Capabilities.Metadata, {
+      Capability.contributes(Common.Capability.Metadata, {
         id: Type.getTypename(Blueprint.Blueprint),
         metadata: {
           icon: 'ph--blueprint--regular',
@@ -72,7 +72,7 @@ export const AssistantPlugin = Plugin.define(meta).pipe(
             createIntent(AssistantAction.CreateBlueprint, props)) satisfies CreateObjectIntent,
         },
       }),
-      Capability.contributes(Capabilities.Metadata, {
+      Capability.contributes(Common.Capability.Metadata, {
         id: Type.getTypename(Prompt.Prompt),
         metadata: {
           icon: 'ph--scroll--regular',
@@ -80,7 +80,7 @@ export const AssistantPlugin = Plugin.define(meta).pipe(
           createObjectIntent: (() => createIntent(AssistantAction.CreatePrompt)) satisfies CreateObjectIntent,
         },
       }),
-      Capability.contributes(Capabilities.Metadata, {
+      Capability.contributes(Common.Capability.Metadata, {
         id: Type.getTypename(Sequence),
         metadata: {
           icon: 'ph--circuitry--regular',
@@ -109,7 +109,9 @@ export const AssistantPlugin = Plugin.define(meta).pipe(
     id: 'on-space-created',
     activatesOn: SpaceEvents.SpaceCreated,
     activate: () =>
-      Capability.contributes(SpaceCapabilities.OnCreateSpace, (params) => createIntent(AssistantAction.OnCreateSpace, params)),
+      Capability.contributes(SpaceCapabilities.OnCreateSpace, (params) =>
+        createIntent(AssistantAction.OnCreateSpace, params),
+      ),
   }),
   Plugin.addModule({
     id: 'repair',
@@ -118,19 +120,19 @@ export const AssistantPlugin = Plugin.define(meta).pipe(
   }),
   Plugin.addModule({
     id: 'app-graph-builder',
-    activatesOn: Events.SetupAppGraph,
+    activatesOn: Common.ActivationEvent.SetupAppGraph,
     activate: AppGraphBuilder,
   }),
   Plugin.addModule({
     id: 'intent-resolver',
-    activatesOn: Events.SetupIntentResolver,
+    activatesOn: Common.ActivationEvent.SetupIntentResolver,
     activate: IntentResolver,
   }),
   Plugin.addModule({
     id: 'react-surface',
-    activatesOn: Events.SetupReactSurface,
+    activatesOn: Common.ActivationEvent.SetupReactSurface,
     // TODO(wittjosiah): Should occur before the chat is loaded when surfaces activation is more granular.
-    activatesBefore: [Events.SetupArtifactDefinition],
+    activatesBefore: [Common.ActivationEvent.SetupArtifactDefinition],
     activate: ReactSurface,
   }),
   Plugin.addModule({
@@ -147,18 +149,18 @@ export const AssistantPlugin = Plugin.define(meta).pipe(
     id: 'ai-service',
     activatesBefore: [AssistantEvents.SetupAiServiceProviders],
     // TODO(dmaretskyi): This should activate lazily when the AI chat is used.
-    activatesOn: Events.Startup,
+    activatesOn: Common.ActivationEvent.Startup,
     activate: AiService,
   }),
   Plugin.addModule({
     id: 'blueprint',
-    activatesOn: Events.SetupArtifactDefinition,
+    activatesOn: Common.ActivationEvent.SetupArtifactDefinition,
     activate: BlueprintDefinition,
   }),
   Plugin.addModule({
     id: 'toolkit',
     // TODO(wittjosiah): Use a different event.
-    activatesOn: Events.Startup,
+    activatesOn: Common.ActivationEvent.Startup,
     activate: Toolkit,
   }),
   Plugin.make,

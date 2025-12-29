@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Capabilities, Capability, Events, Plugin, createIntent } from '@dxos/app-framework';
+import { Capability, Common, Plugin, createIntent } from '@dxos/app-framework';
 import { Tag } from '@dxos/echo';
 import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
 import { Collection, DataTypes } from '@dxos/schema';
@@ -32,11 +32,11 @@ export const SpacePlugin = Plugin.define<SpacePluginOptions>(meta).pipe(
   // TODO(wittjosiah): Could some of these commands make use of intents?
   Plugin.addModule({
     id: 'cli-commands',
-    activatesOn: Events.Startup,
+    activatesOn: Common.ActivationEvent.Startup,
     activate: () => [
-      Capability.contributes(Capabilities.Command, database),
-      Capability.contributes(Capabilities.Command, queue),
-      Capability.contributes(Capabilities.Command, space),
+      Capability.contributes(Common.Capability.Command, database),
+      Capability.contributes(Common.Capability.Command, queue),
+      Capability.contributes(Common.Capability.Command, space),
     ],
   }),
   Plugin.addModule({
@@ -60,9 +60,9 @@ export const SpacePlugin = Plugin.define<SpacePluginOptions>(meta).pipe(
   }),
   Plugin.addModule({
     id: 'metadata',
-    activatesOn: Events.SetupMetadata,
+    activatesOn: Common.ActivationEvent.SetupMetadata,
     activate: () => [
-      Capability.contributes(Capabilities.Metadata, {
+      Capability.contributes(Common.Capability.Metadata, {
         id: Collection.Collection.typename,
         metadata: {
           createObjectIntent: ((props) => createIntent(CollectionAction.Create, props)) satisfies CreateObjectIntent,
@@ -80,7 +80,7 @@ export const SpacePlugin = Plugin.define<SpacePluginOptions>(meta).pipe(
 
     return {
       id: 'intent-resolver',
-      activatesOn: Events.SetupIntentResolver,
+      activatesOn: Common.ActivationEvent.SetupIntentResolver,
       activate: (context) => IntentResolver({ context, createInvitationUrl, observability: false }),
     };
   }),

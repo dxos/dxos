@@ -4,21 +4,21 @@
 
 import React from 'react';
 
-import { Capabilities, Capability, createSurface } from '@dxos/app-framework';
+import { Capability, Common } from '@dxos/app-framework';
 import { Node } from '@dxos/plugin-graph';
 
 import { CommandsDialogContent, CommandsTrigger, NavTreeContainer, NavTreeDocumentTitle } from '../components';
 import { COMMANDS_DIALOG, meta } from '../meta';
 
 export default Capability.makeModule(() =>
-  Capability.contributes(Capabilities.ReactSurface, [
-    createSurface({
+  Capability.contributes(Common.Capability.ReactSurface, [
+    Common.createSurface({
       id: COMMANDS_DIALOG,
       role: 'dialog',
       filter: (data): data is { props: { selected?: string } } => data.component === COMMANDS_DIALOG,
       component: ({ data, ref }) => <CommandsDialogContent {...data.props} ref={ref} />,
     }),
-    createSurface({
+    Common.createSurface({
       id: `${meta.id}/navigation`,
       role: 'navigation',
       filter: (data): data is { popoverAnchorId?: string; topbar: boolean; current: string } =>
@@ -34,14 +34,14 @@ export default Capability.makeModule(() =>
         );
       },
     }),
-    createSurface({
+    Common.createSurface({
       id: `${meta.id}/document-title`,
       role: 'document-title',
       component: ({ data }) => (
         <NavTreeDocumentTitle node={Node.isGraphNode(data.subject) ? data.subject : undefined} />
       ),
     }),
-    createSurface({
+    Common.createSurface({
       id: `${meta.id}/search-input`,
       role: 'search-input',
       position: 'fallback',

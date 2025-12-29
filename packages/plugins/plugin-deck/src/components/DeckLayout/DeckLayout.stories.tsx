@@ -5,7 +5,7 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
-import { Events, IntentPlugin, SettingsPlugin, Plugin } from '@dxos/app-framework';
+import { Common, IntentPlugin, SettingsPlugin, Plugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { AttentionPlugin } from '@dxos/plugin-attention';
 import { GraphPlugin } from '@dxos/plugin-graph';
@@ -36,12 +36,12 @@ const meta = {
           .pipe(
             Plugin.addModule({
               id: 'deck-state',
-              activatesOn: Events.AppGraphReady,
+              activatesOn: Common.ActivationEvent.AppGraphReady,
               activate: () => DeckStateFactory(),
             }),
             Plugin.addModule({
               id: 'layout-intent-resolver',
-              activatesOn: Events.SetupIntentResolver,
+              activatesOn: Common.ActivationEvent.SetupIntentResolver,
               activate: LayoutIntentResolver,
             }),
             Plugin.make,

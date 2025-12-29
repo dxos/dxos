@@ -4,7 +4,7 @@
 
 import * as Function from 'effect/Function';
 
-import { LayoutAction, type PromiseIntentDispatcher, chain, createIntent } from '@dxos/app-framework';
+import { Common, type PromiseIntentDispatcher, chain, createIntent } from '@dxos/app-framework';
 import { SubscriptionList, type Trigger } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
@@ -152,7 +152,7 @@ export class OnboardingManager {
     }
 
     await this._dispatch(
-      createIntent(LayoutAction.AddToast, {
+      createIntent(Common.LayoutAction.AddToast, {
         part: 'toast',
         subject: {
           id: 'passkey-setup-toast',
@@ -165,8 +165,8 @@ export class OnboardingManager {
           actionAlt: ['passkey setup toast action alt', { ns: meta.id }],
           onAction: () => {
             const intent = Function.pipe(
-              createIntent(LayoutAction.SwitchWorkspace, { part: 'workspace', subject: Account.id }),
-              chain(LayoutAction.Open, { part: 'main', subject: [Account.Security] }),
+              createIntent(Common.LayoutAction.SwitchWorkspace, { part: 'workspace', subject: Account.id }),
+              chain(Common.LayoutAction.Open, { part: 'main', subject: [Account.Security] }),
             );
             void this._dispatch(intent);
           },
@@ -236,7 +236,7 @@ export class OnboardingManager {
   private async _showWelcome(): Promise<void> {
     // NOTE: Active parts cannot contain '/' characters currently.
     await this._dispatch(
-      createIntent(LayoutAction.UpdateDialog, {
+      createIntent(Common.LayoutAction.UpdateDialog, {
         part: 'dialog',
         subject: WELCOME_SCREEN,
         options: { type: 'alert', overlayClasses: OVERLAY_CLASSES, overlayStyle: OVERLAY_STYLE },
@@ -246,7 +246,7 @@ export class OnboardingManager {
 
   private async _closeWelcome(): Promise<void> {
     await this._dispatch(
-      createIntent(LayoutAction.UpdateDialog, {
+      createIntent(Common.LayoutAction.UpdateDialog, {
         part: 'dialog',
         options: { state: false },
       }),

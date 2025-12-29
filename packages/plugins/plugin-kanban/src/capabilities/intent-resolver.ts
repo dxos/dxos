@@ -2,11 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import {
-  Capabilities,
-  Capability,
-  createResolver,
-} from '@dxos/app-framework';
+import { Capability, Common, createResolver } from '@dxos/app-framework';
 import { JsonSchema, Obj } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { Kanban } from '@dxos/react-ui-kanban/types';
@@ -15,8 +11,8 @@ import { ProjectionModel, View, getTypenameFromQuery } from '@dxos/schema';
 import { meta } from '../meta';
 import { KanbanAction } from '../types';
 
-export default Capability.makeModule((context) =>
-  Capability.contributes(Capabilities.IntentResolver, [
+export default Capability.makeModule(() =>
+  Capability.contributes(Common.Capability.IntentResolver, [
     createResolver({
       intent: KanbanAction.Create,
       resolve: async ({ db, name, typename, initialPivotColumn }) => {

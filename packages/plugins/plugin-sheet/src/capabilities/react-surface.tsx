@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { Capabilities, Capability, createSurface } from '@dxos/app-framework';
+import { Capability, Common } from '@dxos/app-framework';
 import { useCapability } from '@dxos/app-framework/react';
 import { Obj } from '@dxos/echo';
 import { getSpace } from '@dxos/react-client/echo';
@@ -16,8 +16,8 @@ import { Sheet } from '../types';
 import { SheetCapabilities } from './capabilities';
 
 export default Capability.makeModule(() =>
-  Capability.contributes(Capabilities.ReactSurface, [
-    createSurface({
+  Capability.contributes(Common.Capability.ReactSurface, [
+    Common.createSurface({
       id: `${meta.id}/sheet`,
       role: ['article', 'section'],
       filter: (data): data is { subject: Sheet.Sheet } =>
@@ -32,7 +32,7 @@ export default Capability.makeModule(() =>
         );
       },
     }),
-    createSurface({
+    Common.createSurface({
       id: `${meta.id}/object-settings`,
       role: 'object-settings',
       filter: (data): data is { subject: Sheet.Sheet } => Obj.instanceOf(Sheet.Sheet, data.subject),

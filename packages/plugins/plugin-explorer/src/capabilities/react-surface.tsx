@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { Capabilities, Capability, createSurface } from '@dxos/app-framework';
+import { Capability, Common } from '@dxos/app-framework';
 import { Obj } from '@dxos/echo';
 import { type View } from '@dxos/schema';
 
@@ -14,8 +14,8 @@ import { Graph } from '../types';
 
 export default Capability.makeModule(() =>
   Capability.contributes(
-    Capabilities.ReactSurface,
-    createSurface({
+    Common.Capability.ReactSurface,
+    Common.createSurface({
       id: `${meta.id}/article`,
       role: ['article', 'section'],
       filter: (data): data is { subject: View.View } => Obj.instanceOf(Graph.Graph, data.subject),

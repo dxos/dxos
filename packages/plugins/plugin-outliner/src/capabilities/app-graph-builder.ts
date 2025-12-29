@@ -4,7 +4,7 @@
 
 import * as Option from 'effect/Option';
 
-import { Capabilities, Capability, createIntent } from '@dxos/app-framework';
+import { Capability, Common, createIntent } from '@dxos/app-framework';
 import { Obj, Relation } from '@dxos/echo';
 import { SystemTypeAnnotation } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
@@ -16,7 +16,7 @@ import { OutlineAction } from '../types';
 
 export default Capability.makeModule((context) => {
   return Capability.contributes(
-    Capabilities.AppGraphBuilder,
+    Common.Capability.AppGraphBuilder,
     GraphBuilder.createExtension({
       id: `${meta.id}/root`,
       match: (node) => {
@@ -51,7 +51,7 @@ export default Capability.makeModule((context) => {
             },
             data: async () => {
               invariant(db);
-              const { dispatchPromise: dispatch } = context.getCapability(Capabilities.IntentDispatcher);
+              const { dispatchPromise: dispatch } = context.getCapability(Common.Capability.IntentDispatcher);
               const { data } = await dispatch(createIntent(OutlineAction.CreateOutline));
               if (data?.object) {
                 db.add(data.object);

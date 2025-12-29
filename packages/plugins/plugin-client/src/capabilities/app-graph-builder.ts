@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Capabilities, Capability, createIntent } from '@dxos/app-framework';
+import { Capability, Common, createIntent } from '@dxos/app-framework';
 import { CreateAtom, GraphBuilder, NodeMatcher } from '@dxos/plugin-graph';
 import { ConnectionState } from '@dxos/react-client/mesh';
 
@@ -11,7 +11,7 @@ import { Account, ClientAction, ClientCapabilities } from '../types';
 
 export default Capability.makeModule((context) =>
   Capability.contributes(
-    Capabilities.AppGraphBuilder,
+    Common.Capability.AppGraphBuilder,
     GraphBuilder.createExtension({
       id: meta.id,
       match: NodeMatcher.whenRoot,
@@ -19,7 +19,7 @@ export default Capability.makeModule((context) =>
         {
           id: `${meta.id}/open-user-account`,
           data: async () => {
-            const { dispatchPromise: dispatch } = context.getCapability(Capabilities.IntentDispatcher);
+            const { dispatchPromise: dispatch } = context.getCapability(Common.Capability.IntentDispatcher);
             await dispatch(createIntent(ClientAction.ShareIdentity));
           },
           properties: {

@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Capabilities, Capability } from '@dxos/app-framework';
+import { Common, Capability } from '@dxos/app-framework';
 import { live } from '@dxos/live-object';
 
 import { type ObservabilitySettingsProps, ObservabilitySettingsSchema } from '../components';
@@ -13,7 +13,7 @@ export default Capability.makeModule(() => {
     enabled: true,
   });
 
-  return Capability.contributes(Capabilities.Settings, {
+  return Capability.contributes(Common.Capability.Settings, {
     prefix: meta.id,
     schema: ObservabilitySettingsSchema,
     value: settings,

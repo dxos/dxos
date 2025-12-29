@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Capabilities, Capability } from '@dxos/app-framework';
+import { Capability, Common } from '@dxos/app-framework';
 import { LocalStorageStore } from '@dxos/local-storage';
 import { type EditorViewMode, createEditorStateStore } from '@dxos/ui-editor';
 
@@ -17,7 +17,7 @@ export default Capability.makeModule((context) => {
   const editorState = createEditorStateStore(`${meta.id}/editor`);
 
   const getViewMode = (id: string) => {
-    const defaultViewMode = context.getCapability(Capabilities.SettingsStore).getStore<Markdown.Settings>(meta.id)!
+    const defaultViewMode = context.getCapability(Common.Capability.SettingsStore).getStore<Markdown.Settings>(meta.id)!
       .value.defaultViewMode;
     return (id && state.values.viewMode[id]) || defaultViewMode;
   };
@@ -25,5 +25,10 @@ export default Capability.makeModule((context) => {
   const setViewMode = (id: string, viewMode: EditorViewMode) => (state.values.viewMode[id] = viewMode);
 
   // Return object with methods.
-  return Capability.contributes(MarkdownCapabilities.State, { state: state.values, editorState, getViewMode, setViewMode });
+  return Capability.contributes(MarkdownCapabilities.State, {
+    state: state.values,
+    editorState,
+    getViewMode,
+    setViewMode,
+  });
 });

@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { ActivationEvent, Capability, Events, Plugin } from '@dxos/app-framework';
+import { ActivationEvent, Capability, Common, Plugin } from '@dxos/app-framework';
 import { AttentionManager, SelectionManager } from '@dxos/react-ui-attention';
 
 import { AttentionCapabilities, IntentResolver, Keyboard, ReactContext } from './capabilities';
@@ -12,7 +12,7 @@ import { meta } from './meta';
 export const AttentionPlugin = Plugin.define(meta).pipe(
   Plugin.addModule({
     id: 'attention',
-    activatesOn: Events.Startup,
+    activatesOn: Common.ActivationEvent.Startup,
     activatesAfter: [AttentionEvents.AttentionReady],
     activate: () => {
       const attention = new AttentionManager();
@@ -25,15 +25,15 @@ export const AttentionPlugin = Plugin.define(meta).pipe(
     },
   }),
   Plugin.addModule({
-    activatesOn: Events.Startup,
+    activatesOn: Common.ActivationEvent.Startup,
     activate: ReactContext,
   }),
   Plugin.addModule({
-    activatesOn: ActivationEvent.allOf(Events.AppGraphReady, AttentionEvents.AttentionReady),
+    activatesOn: ActivationEvent.allOf(Common.ActivationEvent.AppGraphReady, AttentionEvents.AttentionReady),
     activate: Keyboard,
   }),
   Plugin.addModule({
-    activatesOn: Events.SetupIntentResolver,
+    activatesOn: Common.ActivationEvent.SetupIntentResolver,
     activate: IntentResolver,
   }),
   Plugin.make,

@@ -4,7 +4,7 @@
 
 import * as Function from 'effect/Function';
 
-import { Capabilities, Capability, chain, createIntent } from '@dxos/app-framework';
+import { Capability, Common, chain, createIntent } from '@dxos/app-framework';
 import { Obj } from '@dxos/echo';
 import { SpaceAction } from '@dxos/plugin-space/types';
 import { isSpace } from '@dxos/react-client/echo';
@@ -14,7 +14,7 @@ import { translations } from '../translations';
 import { Diagram, SketchAction } from '../types';
 
 export default Capability.makeModule((context) =>
-  Capability.contributes(Capabilities.AppGraphSerializer, [
+  Capability.contributes(Common.Capability.AppGraphSerializer, [
     {
       inputType: Diagram.Diagram.typename,
       outputType: 'application/tldraw',
@@ -39,7 +39,7 @@ export default Capability.makeModule((context) =>
 
         const { schema, content } = JSON.parse(data.data);
 
-        const { dispatchPromise: dispatch } = context.getCapability(Capabilities.IntentDispatcher);
+        const { dispatchPromise: dispatch } = context.getCapability(Common.Capability.IntentDispatcher);
         const result = await dispatch(
           Function.pipe(
             createIntent(SketchAction.Create, { name: data.name, schema, content }),

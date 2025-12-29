@@ -7,13 +7,13 @@ import * as FetchHttpClient from '@effect/platform/FetchHttpClient';
 import * as Layer from 'effect/Layer';
 
 import { AnthropicResolver } from '@dxos/ai/resolvers';
-import { Capabilities, Capability } from '@dxos/app-framework';
+import { Capability, Common } from '@dxos/app-framework';
 
-type EdgeModelResolverCapabilities = Capability.Capability<typeof Capabilities.AiModelResolver>[];
+type EdgeModelResolverCapabilities = Capability.Capability<typeof Common.Capability.AiModelResolver>[];
 
 const edgeModelResolver = Capability.makeModule<[], EdgeModelResolverCapabilities>(() => [
   Capability.contributes(
-    Capabilities.AiModelResolver,
+    Common.Capability.AiModelResolver,
     AnthropicResolver.make().pipe(
       Layer.provide(
         AnthropicClient.layer({

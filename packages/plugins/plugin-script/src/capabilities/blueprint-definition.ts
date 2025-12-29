@@ -2,18 +2,18 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Capabilities, Capability } from '@dxos/app-framework';
+import { Capability, Common } from '@dxos/app-framework';
 
 import { ScriptBlueprint } from '../blueprints';
 
 type BlueprintCapabilities = (
-  | Capability.Capability<typeof Capabilities.Functions>
-  | Capability.Capability<typeof Capabilities.BlueprintDefinition>
+  | Capability.Capability<typeof Common.Capability.Functions>
+  | Capability.Capability<typeof Common.Capability.BlueprintDefinition>
 )[];
 
 const blueprintDefinition = Capability.makeModule<[], BlueprintCapabilities>(() => [
-  Capability.contributes(Capabilities.Functions, ScriptBlueprint.functions),
-  Capability.contributes(Capabilities.BlueprintDefinition, ScriptBlueprint.make()),
+  Capability.contributes(Common.Capability.Functions, ScriptBlueprint.functions),
+  Capability.contributes(Common.Capability.BlueprintDefinition, ScriptBlueprint.make()),
 ]);
 
 export default blueprintDefinition;

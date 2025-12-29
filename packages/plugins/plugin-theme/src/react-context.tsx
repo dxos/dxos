@@ -4,7 +4,7 @@
 
 import React, { useMemo } from 'react';
 
-import { Capabilities, Capability } from '@dxos/app-framework';
+import { Common, Capability } from '@dxos/app-framework';
 import { useCapabilities } from '@dxos/app-framework/react';
 import { live } from '@dxos/live-object';
 import { type ThemeMode, ThemeProvider, type ThemeProviderProps, Toast, Tooltip } from '@dxos/react-ui';
@@ -33,11 +33,11 @@ export default Capability.makeModule(
     modeQuery.addEventListener('change', setTheme);
 
     return Capability.contributes(
-      Capabilities.ReactContext,
+      Common.Capability.ReactContext,
       {
         id: meta.id,
         context: ({ children }: { children?: React.ReactNode }) => {
-          const _resources = useCapabilities(Capabilities.Translations);
+          const _resources = useCapabilities(Common.Capability.Translations);
           const resources = useMemo(
             () => [compositeEnUs(appName), ...resourceExtensions, ..._resources.flat()],
             [appName, resourceExtensions, _resources],

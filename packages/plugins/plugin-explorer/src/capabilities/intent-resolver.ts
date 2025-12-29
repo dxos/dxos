@@ -2,18 +2,14 @@
 // Copyright 2025 DXOS.org
 //
 
-import {
-  Capabilities,
-  Capability,
-  createResolver,
-} from '@dxos/app-framework';
+import { Capability, Common, createResolver } from '@dxos/app-framework';
 import { View } from '@dxos/schema';
 
 import { ExplorerAction, Graph } from '../types';
 
-export default Capability.makeModule((context) =>
+export default Capability.makeModule(() =>
   Capability.contributes(
-    Capabilities.IntentResolver,
+    Common.Capability.IntentResolver,
     createResolver({
       intent: ExplorerAction.CreateGraph,
       resolve: async ({ db, name, typename }) => {

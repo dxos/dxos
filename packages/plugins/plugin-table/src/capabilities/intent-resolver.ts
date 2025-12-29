@@ -4,7 +4,7 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capabilities, Capability, LayoutAction, createIntent, createResolver } from '@dxos/app-framework';
+import { Capability, Common, createIntent, createResolver } from '@dxos/app-framework';
 import { Obj, Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { SpaceAction } from '@dxos/plugin-space/types';
@@ -15,12 +15,12 @@ import { Task } from '@dxos/types';
 import { TableAction } from '../types';
 
 export default Capability.makeModule((context) =>
-  Capability.contributes(Capabilities.IntentResolver, [
+  Capability.contributes(Common.Capability.IntentResolver, [
     createResolver({
       intent: TableAction.OnCreateSpace,
       resolve: ({ space }) =>
         Effect.gen(function* () {
-          const { dispatch } = context.getCapability(Capabilities.IntentDispatcher);
+          const { dispatch } = context.getCapability(Common.Capability.IntentDispatcher);
           const { object } = yield* dispatch(
             createIntent(TableAction.Create, { db: space.db, typename: Task.Task.typename }),
           );
@@ -32,7 +32,7 @@ export default Capability.makeModule((context) =>
       intent: TableAction.OnSchemaAdded,
       resolve: ({ db, schema, show = true }) =>
         Effect.gen(function* () {
-          const { dispatch } = context.getCapability(Capabilities.IntentDispatcher);
+          const { dispatch } = context.getCapability(Common.Capability.IntentDispatcher);
           const { object } = yield* dispatch(
             createIntent(TableAction.Create, { db, typename: Type.getTypename(schema) }),
           );
@@ -40,7 +40,7 @@ export default Capability.makeModule((context) =>
 
           if (show) {
             return {
-              intents: [createIntent(LayoutAction.Open, { part: 'main', subject: [Obj.getDXN(object).toString()] })],
+              intents: [createIntent(Common.LayoutAction.Open, { part: 'main', subject: [Obj.getDXN(object).toString()] })],
             };
           }
         }),

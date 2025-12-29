@@ -4,7 +4,7 @@
 
 import React, { useCallback, useMemo } from 'react';
 
-import { Capabilities, LayoutAction, type Plugin, SettingsAction, createIntent } from '@dxos/app-framework';
+import { Common, type Plugin, SettingsAction, createIntent } from '@dxos/app-framework';
 import { useCapability, useIntentDispatcher, usePluginManager } from '@dxos/app-framework/react';
 import { ObservabilityAction } from '@dxos/plugin-observability/types';
 import { StackItem } from '@dxos/react-ui-stack';
@@ -18,7 +18,7 @@ export const RegistryContainer = ({ id, plugins: _plugins }: { id: string; plugi
   const manager = usePluginManager();
   const { dispatchPromise: dispatch } = useIntentDispatcher();
   const plugins = useMemo(() => _plugins.sort(sortByPluginMeta), [_plugins]);
-  const settingsStore = useCapability(Capabilities.SettingsStore);
+  const settingsStore = useCapability(Common.Capability.SettingsStore);
 
   // TODO(wittjosiah): Factor out to an intent?
   const handleChange = useCallback(
@@ -45,7 +45,7 @@ export const RegistryContainer = ({ id, plugins: _plugins }: { id: string; plugi
   const handleClick = useCallback(
     (pluginId: string) =>
       dispatch(
-        createIntent(LayoutAction.Open, {
+        createIntent(Common.LayoutAction.Open, {
           part: 'main',
           // TODO(wittjosiah): `/` currently is not supported in ids.
           subject: [pluginId.replaceAll('/', ':')],

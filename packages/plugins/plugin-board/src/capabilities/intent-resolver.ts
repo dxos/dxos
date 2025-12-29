@@ -2,14 +2,14 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Capabilities, Capability, createResolver } from '@dxos/app-framework';
+import { Capability, Common, createResolver } from '@dxos/app-framework';
 import { Obj } from '@dxos/echo';
 
 import { Board } from '../types';
 
 export default Capability.makeModule(() => [
   Capability.contributes(
-    Capabilities.IntentResolver,
+    Common.Capability.IntentResolver,
     createResolver({
       intent: Board.Create,
       resolve: ({ name }: { name: string }) => {

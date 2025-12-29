@@ -4,13 +4,7 @@
 
 import React, { useCallback } from 'react';
 
-import {
-  Capabilities,
-  Capability,
-  LayoutAction,
-  createIntent,
-  createSurface,
-} from '@dxos/app-framework';
+import { Capability, Common, createIntent } from '@dxos/app-framework';
 import { Surface, SurfaceCardRole, useIntentDispatcher } from '@dxos/app-framework/react';
 import { Obj } from '@dxos/echo';
 import { useActiveSpace } from '@dxos/plugin-space';
@@ -22,14 +16,14 @@ import { meta } from '../meta';
 import { type CardPreviewProps } from '../types';
 
 export default Capability.makeModule(() =>
-  Capability.contributes(Capabilities.ReactSurface, [
+  Capability.contributes(Common.Capability.ReactSurface, [
     //
     // Specific schema types.
     // TODO(burdon): Create helpers and factor out.
     //
 
     // TODO(burdon): Infer Role type.
-    createSurface<{ subject: Person.Person }>({
+    Common.createSurface<{ subject: Person.Person }>({
       id: `${meta.id}/schema-popover--contact`,
       role: SurfaceCardRole.literals as any,
       filter: (data): data is { subject: Person.Person } => Obj.instanceOf(Person.Person, data.subject),
@@ -40,7 +34,7 @@ export default Capability.makeModule(() =>
         const handleSelect = useCallback<NonNullable<CardPreviewProps['onSelect']>>(
           (object) =>
             dispatch(
-              createIntent(LayoutAction.Open, {
+              createIntent(Common.LayoutAction.Open, {
                 part: 'main',
                 subject: [Obj.getDXN(object).toString()],
                 options: {
@@ -63,7 +57,7 @@ export default Capability.makeModule(() =>
         );
       },
     }),
-    createSurface({
+    Common.createSurface({
       id: `${meta.id}/schema-popover--organization`,
       role: SurfaceCardRole.literals as any,
       filter: (data): data is { subject: Organization.Organization } =>
@@ -77,7 +71,7 @@ export default Capability.makeModule(() =>
         );
       },
     }),
-    createSurface({
+    Common.createSurface({
       id: `${meta.id}/schema-popover--project`,
       role: SurfaceCardRole.literals as any,
       filter: (data): data is { subject: Project.Project } => Obj.instanceOf(Project.Project, data.subject),
@@ -86,7 +80,7 @@ export default Capability.makeModule(() =>
         return <ProjectCard subject={data.subject} role={role as SurfaceCardRole} db={activeSpace?.db} />;
       },
     }),
-    createSurface({
+    Common.createSurface({
       id: `${meta.id}/schema-popover--task`,
       role: SurfaceCardRole.literals as any,
       filter: (data): data is { subject: Task.Task } => Obj.instanceOf(Task.Task, data.subject),
@@ -99,7 +93,7 @@ export default Capability.makeModule(() =>
     // Fallback for any object.
     //
 
-    createSurface({
+    Common.createSurface({
       id: `${meta.id}/fallback-popover`,
       role: SurfaceCardRole.literals as any,
       position: 'fallback',
@@ -109,7 +103,7 @@ export default Capability.makeModule(() =>
       },
     }),
 
-    createSurface({
+    Common.createSurface({
       id: `${meta.id}/section`,
       role: ['section'],
       position: 'fallback',

@@ -2,13 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import {
-  Capabilities,
-  Capability,
-  LayoutAction,
-  createIntent,
-  createResolver,
-} from '@dxos/app-framework';
+import { Capability, Common, createIntent, createResolver } from '@dxos/app-framework';
 import { Ref } from '@dxos/echo';
 import { Function, Script, Trigger } from '@dxos/functions';
 import { type DXN } from '@dxos/keys';
@@ -18,8 +12,8 @@ import { Filter } from '@dxos/react-client/echo';
 
 import { AutomationAction } from '../types';
 
-export default Capability.makeModule((context) =>
-  Capability.contributes(Capabilities.IntentResolver, [
+export default Capability.makeModule(() =>
+  Capability.contributes(Common.Capability.IntentResolver, [
     createResolver({
       intent: AutomationAction.CreateTriggerFromTemplate,
       resolve: async ({ db, template, enabled = false, scriptName, input }) => {
@@ -62,7 +56,7 @@ export default Capability.makeModule((context) =>
               target: db,
               hidden: true,
             }),
-            createIntent(LayoutAction.Open, {
+            createIntent(Common.LayoutAction.Open, {
               part: 'main',
               subject: [`automation-settings${ATTENDABLE_PATH_SEPARATOR}${db.spaceId}`],
               options: {

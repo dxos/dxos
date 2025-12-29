@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Capabilities, Events, Plugin, Capability } from '@dxos/app-framework';
+import { Capability, Common, Plugin } from '@dxos/app-framework';
 import { Obj } from '@dxos/echo';
 import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
 import { getSpace } from '@dxos/react-client/echo';
@@ -16,14 +16,14 @@ import { renderByline } from './util';
 export const TranscriptionPlugin = Plugin.define(meta).pipe(
   Plugin.addModule({
     id: 'translations',
-    activatesOn: Events.SetupTranslations,
-    activate: () => Capability.contributes(Capabilities.Translations, translations),
+    activatesOn: Common.ActivationEvent.SetupTranslations,
+    activate: () => Capability.contributes(Common.Capability.Translations, translations),
   }),
   Plugin.addModule({
     id: 'metadata',
-    activatesOn: Events.SetupMetadata,
+    activatesOn: Common.ActivationEvent.SetupMetadata,
     activate: () =>
-      Capability.contributes(Capabilities.Metadata, {
+      Capability.contributes(Common.Capability.Metadata, {
         id: Transcript.Transcript.typename,
         metadata: {
           icon: 'ph--subtitles--regular',
@@ -50,22 +50,22 @@ export const TranscriptionPlugin = Plugin.define(meta).pipe(
   }),
   Plugin.addModule({
     id: 'react-surface',
-    activatesOn: Events.SetupReactSurface,
+    activatesOn: Common.ActivationEvent.SetupReactSurface,
     activate: ReactSurface,
   }),
   Plugin.addModule({
     id: 'intent-resolver',
-    activatesOn: Events.SetupIntentResolver,
+    activatesOn: Common.ActivationEvent.SetupIntentResolver,
     activate: IntentResolver,
   }),
   Plugin.addModule({
     id: 'transcription',
-    activatesOn: Events.SetupAppGraph,
+    activatesOn: Common.ActivationEvent.SetupAppGraph,
     activate: Transcriber,
   }),
   Plugin.addModule({
     id: 'blueprint',
-    activatesOn: Events.SetupArtifactDefinition,
+    activatesOn: Common.ActivationEvent.SetupArtifactDefinition,
     activate: BlueprintDefinition,
   }),
   Plugin.make,

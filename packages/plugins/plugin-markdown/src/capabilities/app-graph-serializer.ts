@@ -5,8 +5,8 @@
 import * as Function from 'effect/Function';
 
 import {
-  Capabilities,
   Capability,
+  Common,
   chain,
   createIntent,
 } from '@dxos/app-framework';
@@ -19,7 +19,7 @@ import { translations } from '../translations';
 import { Markdown, MarkdownAction } from '../types';
 
 export default Capability.makeModule((context) =>
-  Capability.contributes(Capabilities.AppGraphSerializer, [
+  Capability.contributes(Common.Capability.AppGraphSerializer, [
     {
       inputType: Markdown.Document.typename,
       outputType: 'text/markdown',
@@ -45,7 +45,7 @@ export default Capability.makeModule((context) =>
           return;
         }
 
-        const { dispatchPromise: dispatch } = context.getCapability(Capabilities.IntentDispatcher);
+        const { dispatchPromise: dispatch } = context.getCapability(Common.Capability.IntentDispatcher);
         const result = await dispatch(
           Function.pipe(
             createIntent(MarkdownAction.Create, { name: data.name, content: data.data }),

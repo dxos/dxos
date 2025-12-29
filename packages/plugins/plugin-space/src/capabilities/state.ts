@@ -4,7 +4,7 @@
 
 import { effect } from '@preact/signals-core';
 
-import { Capabilities, Capability } from '@dxos/app-framework';
+import { Capability, Common } from '@dxos/app-framework';
 import { PublicKey } from '@dxos/keys';
 import { LocalStorageStore } from '@dxos/local-storage';
 import { ComplexMap } from '@dxos/util';
@@ -28,7 +28,7 @@ export default Capability.makeModule((context) => {
     .prop({ key: 'spaceNames', type: LocalStorageStore.json<Record<string, string>>() })
     .prop({ key: 'enabledEdgeReplication', type: LocalStorageStore.bool() });
 
-  const manager = context.getCapability(Capabilities.PluginManager);
+  const manager = context.getCapability(Common.Capability.PluginManager);
   const unsubscribe = effect(() => {
     // TODO(wittjosiah): Find a way to make this capability-based.
     const enabled = manager.enabled.includes('dxos.org/plugin/stack');

@@ -6,7 +6,7 @@
 
 // import { createTool, ToolRegistry, ToolResult } from '@dxos/ai';
 
-import { type AnyIntentChain, Capabilities, Capability, createIntent, createResolver } from '@dxos/app-framework';
+import { type AnyIntentChain, Capability, Common, createIntent, createResolver } from '@dxos/app-framework';
 // import { ArtifactId } from '@dxos/blueprints';
 // import { getSpace } from '@dxos/client/echo';
 // import { SequenceBuilder, compileSequence, DEFAULT_INPUT, ValueBag, ComputeGraphModel } from '@dxos/conductor';
@@ -27,7 +27,7 @@ import { Calendar, InboxAction, Mailbox } from '../types';
 // import { AssistantCapabilities } from '@dxos/plugin-assistant';
 
 export default Capability.makeModule((context) =>
-  Capability.contributes(Capabilities.IntentResolver, [
+  Capability.contributes(Common.Capability.IntentResolver, [
     createResolver({
       intent: InboxAction.CreateMailbox,
       resolve: ({ db, name }) => {

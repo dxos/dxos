@@ -2,18 +2,13 @@
 // Copyright 2025 DXOS.org
 //
 
-import {
-  Capabilities,
-  Capability,
-  SettingsAction,
-  createIntent,
-} from '@dxos/app-framework';
+import { Capability, Common, SettingsAction, createIntent } from '@dxos/app-framework';
 import { GraphBuilder, NodeMatcher } from '@dxos/plugin-graph';
 
 import { REGISTRY_ID, REGISTRY_KEY, meta } from '../meta';
 
 export default Capability.makeModule((context) =>
-  Capability.contributes(Capabilities.AppGraphBuilder, [
+  Capability.contributes(Common.Capability.AppGraphBuilder, [
     GraphBuilder.createExtension({
       id: meta.id,
       match: NodeMatcher.whenRoot,
@@ -21,7 +16,7 @@ export default Capability.makeModule((context) =>
         {
           id: meta.id,
           data: async () => {
-            const { dispatchPromise: dispatch } = context.getCapability(Capabilities.IntentDispatcher);
+            const { dispatchPromise: dispatch } = context.getCapability(Common.Capability.IntentDispatcher);
             await dispatch(createIntent(SettingsAction.OpenPluginRegistry));
           },
           properties: {
@@ -113,7 +108,7 @@ export default Capability.makeModule((context) =>
       id: `${meta.id}/plugins`,
       match: NodeMatcher.whenId(REGISTRY_ID),
       connector: () => {
-        const manager = context.getCapability(Capabilities.PluginManager);
+        const manager = context.getCapability(Common.Capability.PluginManager);
         return manager.plugins.map((plugin) => ({
           id: plugin.meta.id.replaceAll('/', ':'),
           type: 'dxos.org/plugin',

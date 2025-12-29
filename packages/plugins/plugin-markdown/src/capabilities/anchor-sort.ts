@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Capabilities, Capability } from '@dxos/app-framework';
+import { Capability, Common } from '@dxos/app-framework';
 import { Relation } from '@dxos/echo';
 import { createDocAccessor, getRangeFromCursor } from '@dxos/echo-db';
 import { type AnchoredTo } from '@dxos/types';
@@ -10,7 +10,7 @@ import { type AnchoredTo } from '@dxos/types';
 import { Markdown } from '../types';
 
 export default Capability.makeModule(() =>
-  Capability.contributes(Capabilities.AnchorSort, {
+  Capability.contributes(Common.Capability.AnchorSort, {
     key: Markdown.Document.typename,
     sort: (anchorA: AnchoredTo.AnchoredTo, anchorB: AnchoredTo.AnchoredTo) => {
       const doc = Relation.getTarget(anchorA) as Markdown.Document;

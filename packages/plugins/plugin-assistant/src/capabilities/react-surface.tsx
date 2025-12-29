@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { Capabilities, Capability, createSurface } from '@dxos/app-framework';
+import { Capability, Common } from '@dxos/app-framework';
 import { Blueprint, Prompt } from '@dxos/blueprints';
 import { getSpace } from '@dxos/client/echo';
 import { Sequence } from '@dxos/conductor';
@@ -25,15 +25,15 @@ import { ASSISTANT_DIALOG, meta } from '../meta';
 import { Assistant } from '../types';
 
 export default Capability.makeModule(() =>
-  Capability.contributes(Capabilities.ReactSurface, [
-    createSurface({
+  Capability.contributes(Common.Capability.ReactSurface, [
+    Common.createSurface({
       id: `${meta.id}/plugin-settings`,
       role: 'article',
       filter: (data): data is { subject: SettingsStore<Assistant.Settings> } =>
         data.subject instanceof SettingsStore && data.subject.prefix === meta.id,
       component: ({ data: { subject } }) => <AssistantSettings settings={subject.value} />,
     }),
-    createSurface({
+    Common.createSurface({
       id: `${meta.id}/chat`,
       role: 'article',
       filter: (data): data is { subject: Assistant.Chat; variant: undefined } =>
@@ -41,7 +41,7 @@ export default Capability.makeModule(() =>
       component: ({ data, role, ref }) => <ChatContainer role={role} chat={data.subject} ref={ref} />,
     }),
     // TODO(wittjosiah): This is flashing when chat changes.
-    createSurface({
+    Common.createSurface({
       id: `${meta.id}/companion-chat`,
       role: 'article',
       filter: (data): data is { companionTo: Obj.Any; subject: Assistant.Chat | 'assistant-chat' } =>
@@ -49,7 +49,7 @@ export default Capability.makeModule(() =>
         (Obj.instanceOf(Assistant.Chat, data.subject) || data.subject === 'assistant-chat'),
       component: ({ data, role, ref }) => <ChatCompanion role={role} data={data} ref={ref} />,
     }),
-    createSurface({
+    Common.createSurface({
       id: `${meta.id}/companion-invocations`,
       role: 'article',
       filter: (data): data is { companionTo: Sequence } =>
@@ -67,19 +67,19 @@ export default Capability.makeModule(() =>
         );
       },
     }),
-    createSurface({
+    Common.createSurface({
       id: `${meta.id}/blueprint`,
       role: 'article',
       filter: (data): data is { subject: Blueprint.Blueprint } => Obj.instanceOf(Blueprint.Blueprint, data.subject),
       component: ({ data }) => <BlueprintArticle subject={data.subject} />,
     }),
-    createSurface({
+    Common.createSurface({
       id: `${meta.id}/prompt`,
       role: 'article',
       filter: (data): data is { subject: Prompt.Prompt } => Obj.instanceOf(Prompt.Prompt, data.subject),
       component: ({ data }) => <PromptArticle subject={data.subject} />,
     }),
-    createSurface({
+    Common.createSurface({
       id: ASSISTANT_DIALOG,
       role: 'dialog',
       filter: (data): data is { props: { chat: Assistant.Chat } } => data.component === ASSISTANT_DIALOG,

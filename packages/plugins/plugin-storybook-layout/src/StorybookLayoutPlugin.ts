@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Capabilities, Capability, Events, Plugin } from '@dxos/app-framework';
+import { Capability, Common, Plugin } from '@dxos/app-framework';
 
 import { IntentResolver, type LayoutState, State } from './capabilities';
 import { Layout } from './components';
@@ -14,21 +14,21 @@ export type StorybookLayoutPluginOptions = {
 
 export const StorybookLayoutPlugin = Plugin.define<StorybookLayoutPluginOptions>(meta).pipe(
   Plugin.addModule(({ initialState }) => ({
-    activatesOn: Events.Startup,
-    activatesAfter: [Events.LayoutReady],
+    activatesOn: Common.ActivationEvent.Startup,
+    activatesAfter: [Common.ActivationEvent.LayoutReady],
     activate: () => State({ initialState }),
   })),
   Plugin.addModule({
     id: 'react-context',
-    activatesOn: Events.Startup,
+    activatesOn: Common.ActivationEvent.Startup,
     activate: () =>
-      Capability.contributes(Capabilities.ReactContext, {
+      Capability.contributes(Common.Capability.ReactContext, {
         id: 'storybook-layout',
         context: Layout,
       }),
   }),
   Plugin.addModule({
-    activatesOn: Events.SetupIntentResolver,
+    activatesOn: Common.ActivationEvent.SetupIntentResolver,
     activate: IntentResolver,
   }),
   Plugin.make,

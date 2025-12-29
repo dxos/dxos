@@ -5,7 +5,7 @@
 import * as Function from 'effect/Function';
 import React, { useCallback } from 'react';
 
-import { Capabilities, Capability, LayoutAction, chain, createIntent, createSurface } from '@dxos/app-framework';
+import { Capability, Common, chain, createIntent } from '@dxos/app-framework';
 import { useCapability, useIntentDispatcher } from '@dxos/app-framework/react';
 import {
   AutomergePanel,
@@ -75,7 +75,7 @@ const isGraphDebug = (data: any): data is GraphDebug => {
 
 // TODO(wittjosiah): Factor out?
 const useCurrentSpace = () => {
-  const layout = useCapability(Capabilities.Layout);
+  const layout = useCapability(Common.Capability.Layout);
   const client = useCapability(ClientCapabilities.Client);
   const { spaceId } = parseId(layout.workspace);
   const space = spaceId ? client.spaces.get(spaceId) : undefined;
@@ -83,15 +83,15 @@ const useCurrentSpace = () => {
 };
 
 export default Capability.makeModule((context) =>
-  Capability.contributes(Capabilities.ReactSurface, [
-    createSurface({
+  Capability.contributes(Common.Capability.ReactSurface, [
+    Common.createSurface({
       id: `${meta.id}/plugin-settings`,
       role: 'article',
       filter: (data): data is { subject: SettingsStore<DebugSettingsProps> } =>
         data.subject instanceof SettingsStore && data.subject.prefix === meta.id,
       component: ({ data: { subject } }) => <DebugSettings settings={subject.value} />,
     }),
-    createSurface({
+    Common.createSurface({
       id: `${meta.id}/space`,
       role: 'article',
       filter: (data): data is { subject: SpaceDebug } => isSpaceDebug(data.subject),
@@ -130,36 +130,36 @@ export default Capability.makeModule((context) =>
         );
       },
     }),
-    createSurface({
+    Common.createSurface({
       id: `${meta.id}/app-graph`,
       role: 'article',
       filter: (data): data is { subject: GraphDebug } => isGraphDebug(data.subject),
       component: ({ data }) => <DebugGraph graph={data.subject.graph} root={data.subject.root} />,
     }),
-    createSurface({
+    Common.createSurface({
       id: `${meta.id}/wireframe`,
       role: ['article', 'section'],
       position: 'hoist',
       filter: (data): data is { subject: Obj.Any } => {
-        const settings = context.getCapability(Capabilities.SettingsStore).getStore<DebugSettingsProps>(meta.id)!.value;
+        const settings = context.getCapability(Common.Capability.SettingsStore).getStore<DebugSettingsProps>(meta.id)!.value;
         return Obj.isObject(data.subject) && !!settings.wireframe;
       },
       component: ({ data, role }) => (
         <Wireframe label={`${role}:${name}`} object={data.subject} classNames='row-span-2 overflow-hidden' />
       ),
     }),
-    createSurface({
+    Common.createSurface({
       id: `${meta.id}/object-debug`,
       role: 'article',
       filter: (data): data is { companionTo: Obj.Any } => data.subject === 'debug' && Obj.isObject(data.companionTo),
       component: ({ data }) => <DebugObjectPanel object={data.companionTo} />,
     }),
-    createSurface({
+    Common.createSurface({
       id: `${meta.id}/devtools-overview`,
       role: 'deck-companion--devtools',
       component: () => <DevtoolsOverviewContainer />,
     }),
-    createSurface({
+    Common.createSurface({
       id: `${meta.id}/status`,
       role: 'status',
       component: () => <DebugStatus />,
@@ -169,55 +169,55 @@ export default Capability.makeModule((context) =>
     // Devtools
     //
 
-    createSurface({
+    Common.createSurface({
       id: `${meta.id}/client/config`,
       role: 'article',
       filter: (data): data is any => data.subject === Devtools.Client.Config,
       component: () => <ConfigPanel vaultSelector={false} />,
     }),
-    createSurface({
+    Common.createSurface({
       id: `${meta.id}/client/storage`,
       role: 'article',
       filter: (data): data is any => data.subject === Devtools.Client.Storage,
       component: () => <StoragePanel />,
     }),
-    createSurface({
+    Common.createSurface({
       id: `${meta.id}/client/logs`,
       role: 'article',
       filter: (data): data is any => data.subject === Devtools.Client.Logs,
       component: () => <LoggingPanel />,
     }),
-    createSurface({
+    Common.createSurface({
       id: `${meta.id}/client/diagnostics`,
       role: 'article',
       filter: (data): data is any => data.subject === Devtools.Client.Diagnostics,
       component: () => <DiagnosticsPanel />,
     }),
-    createSurface({
+    Common.createSurface({
       id: `${meta.id}/client/tracing`,
       role: 'article',
       filter: (data): data is any => data.subject === Devtools.Client.Tracing,
       component: () => <TracingPanel />,
     }),
-    createSurface({
+    Common.createSurface({
       id: `${meta.id}/halo/identity`,
       role: 'article',
       filter: (data): data is any => data.subject === Devtools.Halo.Identity,
       component: () => <IdentityPanel />,
     }),
-    createSurface({
+    Common.createSurface({
       id: `${meta.id}/halo/devices`,
       role: 'article',
       filter: (data): data is any => data.subject === Devtools.Halo.Devices,
       component: () => <DeviceListPanel />,
     }),
-    createSurface({
+    Common.createSurface({
       id: `${meta.id}/halo/keyring`,
       role: 'article',
       filter: (data): data is any => data.subject === Devtools.Halo.Keyring,
       component: () => <KeyringPanel />,
     }),
-    createSurface({
+    Common.createSurface({
       id: `${meta.id}/halo/credentials`,
       role: 'article',
       filter: (data): data is any => data.subject === Devtools.Halo.Credentials,
@@ -226,7 +226,7 @@ export default Capability.makeModule((context) =>
         return <CredentialsPanel space={space} />;
       },
     }),
-    createSurface({
+    Common.createSurface({
       id: `${meta.id}/echo/spaces`,
       role: 'article',
       filter: (data): data is any => data.subject === Devtools.Echo.Spaces,
@@ -235,7 +235,7 @@ export default Capability.makeModule((context) =>
         const handleSelect = useCallback(
           () =>
             dispatch(
-              createIntent(LayoutAction.Open, {
+              createIntent(Common.LayoutAction.Open, {
                 part: 'main',
                 subject: [Devtools.Echo.Space],
               }),
@@ -245,7 +245,7 @@ export default Capability.makeModule((context) =>
         return <SpaceListPanel onSelect={handleSelect} />;
       },
     }),
-    createSurface({
+    Common.createSurface({
       id: `${meta.id}/echo/space`,
       role: 'article',
       filter: (data): data is any => data.subject === Devtools.Echo.Space,
@@ -255,7 +255,7 @@ export default Capability.makeModule((context) =>
         const handleSelect = useCallback(
           () =>
             dispatch(
-              createIntent(LayoutAction.Open, {
+              createIntent(Common.LayoutAction.Open, {
                 part: 'main',
                 subject: [Devtools.Echo.Feeds],
               }),
@@ -265,7 +265,7 @@ export default Capability.makeModule((context) =>
         return <SpaceInfoPanel space={space} onSelectFeed={handleSelect} onSelectPipeline={handleSelect} />;
       },
     }),
-    createSurface({
+    Common.createSurface({
       id: `${meta.id}/echo/feeds`,
       role: 'article',
       filter: (data): data is any => data.subject === Devtools.Echo.Feeds,
@@ -274,7 +274,7 @@ export default Capability.makeModule((context) =>
         return <FeedsPanel space={space} />;
       },
     }),
-    createSurface({
+    Common.createSurface({
       id: `${meta.id}/echo/objects`,
       role: 'article',
       filter: (data): data is any => data.subject === Devtools.Echo.Objects,
@@ -283,7 +283,7 @@ export default Capability.makeModule((context) =>
         return <ObjectsPanel space={space} />;
       },
     }),
-    createSurface({
+    Common.createSurface({
       id: `${meta.id}/echo/schema`,
       role: 'article',
       filter: (data): data is any => data.subject === Devtools.Echo.Schema,
@@ -292,7 +292,7 @@ export default Capability.makeModule((context) =>
         return <SchemaPanel space={space} />;
       },
     }),
-    createSurface({
+    Common.createSurface({
       id: `${meta.id}/echo/automerge`,
       role: 'article',
       filter: (data): data is any => data.subject === Devtools.Echo.Automerge,
@@ -301,13 +301,13 @@ export default Capability.makeModule((context) =>
         return <AutomergePanel space={space} />;
       },
     }),
-    createSurface({
+    Common.createSurface({
       id: `${meta.id}/echo/queues`,
       role: 'article',
       filter: (data): data is any => data.subject === Devtools.Echo.Queues,
       component: () => <QueuesPanel />,
     }),
-    createSurface({
+    Common.createSurface({
       id: `${meta.id}/echo/members`,
       role: 'article',
       filter: (data): data is any => data.subject === Devtools.Echo.Members,
@@ -316,25 +316,25 @@ export default Capability.makeModule((context) =>
         return <MembersPanel space={space} />;
       },
     }),
-    createSurface({
+    Common.createSurface({
       id: `${meta.id}/echo/metadata`,
       role: 'article',
       filter: (data): data is any => data.subject === Devtools.Echo.Metadata,
       component: () => <MetadataPanel />,
     }),
-    createSurface({
+    Common.createSurface({
       id: `${meta.id}/mesh/signal`,
       role: 'article',
       filter: (data): data is any => data.subject === Devtools.Mesh.Signal,
       component: () => <SignalPanel />,
     }),
-    createSurface({
+    Common.createSurface({
       id: `${meta.id}/mesh/swarm`,
       role: 'article',
       filter: (data): data is any => data.subject === Devtools.Mesh.Swarm,
       component: () => <SwarmPanel />,
     }),
-    createSurface({
+    Common.createSurface({
       id: `${meta.id}/mesh/network`,
       role: 'article',
       filter: (data): data is any => data.subject === Devtools.Mesh.Network,
@@ -350,13 +350,13 @@ export default Capability.makeModule((context) =>
     //   filter: (data): data is any => data.subject === Devtools.Agent.Dashboard,
     //   component: () => <DashboardPanel />,
     // }),
-    createSurface({
+    Common.createSurface({
       id: `${meta.id}/edge/dashboard`,
       role: 'article',
       filter: (data): data is any => data.subject === Devtools.Edge.Dashboard,
       component: () => <EdgeDashboardPanel />,
     }),
-    createSurface({
+    Common.createSurface({
       id: `${meta.id}/edge/workflows`,
       role: 'article',
       filter: (data): data is any => data.subject === Devtools.Edge.Workflows,
@@ -365,7 +365,7 @@ export default Capability.makeModule((context) =>
         return <WorkflowPanel space={space} />;
       },
     }),
-    createSurface({
+    Common.createSurface({
       id: `${meta.id}/edge/traces`,
       role: 'article',
       filter: (data): data is any => data.subject === Devtools.Edge.Traces,
@@ -375,7 +375,7 @@ export default Capability.makeModule((context) =>
         return <InvocationTraceContainer db={space?.db} queueDxn={queueDxn} detailAxis='block' />;
       },
     }),
-    createSurface({
+    Common.createSurface({
       id: `${meta.id}/edge/testing`,
       role: 'article',
       filter: (data): data is any => data.subject === Devtools.Edge.Testing,
@@ -400,7 +400,7 @@ export default Capability.makeModule((context) =>
             );
             log.info('script created', { result });
             await dispatch(
-              createIntent(LayoutAction.Open, {
+              createIntent(Common.LayoutAction.Open, {
                 part: 'main',
                 subject: [`${space.id}:${result.data?.object.id}`],
               }),

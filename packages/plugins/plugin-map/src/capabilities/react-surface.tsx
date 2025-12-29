@@ -5,7 +5,7 @@
 import type * as Schema from 'effect/Schema';
 import React, { useCallback, useMemo, useState } from 'react';
 
-import { Capabilities, Capability, createSurface } from '@dxos/app-framework';
+import { Capability, Common } from '@dxos/app-framework';
 import { useCapability } from '@dxos/app-framework/react';
 import { Database, JsonSchema, Obj } from '@dxos/echo';
 import { Format } from '@dxos/echo/internal';
@@ -21,8 +21,8 @@ import { LocationAnnotationId, Map } from '../types';
 import { MapCapabilities } from './capabilities';
 
 export default Capability.makeModule(() =>
-  Capability.contributes(Capabilities.ReactSurface, [
-    createSurface({
+  Capability.contributes(Common.Capability.ReactSurface, [
+    Common.createSurface({
       id: `${meta.id}/surface/map`,
       role: ['article', 'section'],
       filter: (data): data is { subject: Map.Map } => Obj.instanceOf(Map.Map, data.subject),
@@ -57,14 +57,14 @@ export default Capability.makeModule(() =>
     //     return <MapControl center={{ lat, lng }} zoom={8} />;
     //   },
     // }),
-    createSurface({
+    Common.createSurface({
       id: `${meta.id}/surface/object-settings`,
       role: 'object-settings',
       position: 'hoist',
       filter: (data): data is { subject: Map.Map } => Obj.instanceOf(Map.Map, data.subject),
       component: ({ data }) => <MapViewEditor object={data.subject} />,
     }),
-    createSurface({
+    Common.createSurface({
       // TODO(burdon): Why this title?
       id: `${meta.id}/surface/create-initial-schema-form-[property-of-interest]`,
       role: 'form-input',

@@ -4,7 +4,7 @@
 
 import React, { useCallback, useRef, useState } from 'react';
 
-import { LayoutAction, createIntent } from '@dxos/app-framework';
+import { Common, createIntent } from '@dxos/app-framework';
 import { useIntentDispatcher } from '@dxos/app-framework/react';
 import { type Space } from '@dxos/client/echo';
 import { Button, Input, Popover, useTranslation } from '@dxos/react-ui';
@@ -22,7 +22,7 @@ export const SpaceRenamePopover = ({ space }: { space: Space }) => {
   const handleDone = useCallback(() => {
     space.properties.name = name;
     void dispatch(
-      createIntent(LayoutAction.UpdatePopover, {
+      createIntent(Common.LayoutAction.UpdatePopover, {
         part: 'popover',
         options: { variant: 'react', anchorId: '', state: false },
       }),

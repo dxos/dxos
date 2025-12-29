@@ -4,7 +4,7 @@
 
 import * as Option from 'effect/Option';
 
-import { Capabilities, Capability, LayoutAction, createIntent } from '@dxos/app-framework';
+import { Capability, Common, createIntent } from '@dxos/app-framework';
 import { SubscriptionList } from '@dxos/async';
 import { Filter, Obj, Type } from '@dxos/echo';
 import { scheduledEffect } from '@dxos/echo-signals/core';
@@ -31,9 +31,9 @@ export default Capability.makeModule(async (context: Capability.PluginContext) =
   const subscriptions = new SubscriptionList();
   const spaceSubscriptions = new SubscriptionList();
 
-  const { dispatchPromise: dispatch } = context.getCapability(Capabilities.IntentDispatcher);
-  const { graph } = context.getCapability(Capabilities.AppGraph);
-  const layout = context.getCapability(Capabilities.Layout);
+  const { dispatchPromise: dispatch } = context.getCapability(Common.Capability.IntentDispatcher);
+  const { graph } = context.getCapability(Common.Capability.AppGraph);
+  const layout = context.getCapability(Common.Capability.Layout);
   const deck = context.getCapabilities(DeckCapabilities.DeckState)[0];
   const attention = context.getCapability(AttentionCapabilities.Attention);
   const state = context.getCapability(SpaceCapabilities.MutableState);
@@ -44,7 +44,7 @@ export default Capability.makeModule(async (context: Capability.PluginContext) =
 
   if (deck?.activeDeck === 'default') {
     await dispatch(
-      createIntent(LayoutAction.SwitchWorkspace, {
+      createIntent(Common.LayoutAction.SwitchWorkspace, {
         part: 'workspace',
         subject: defaultSpace.id,
       }),
@@ -244,7 +244,7 @@ export default Capability.makeModule(async (context: Capability.PluginContext) =
     log.catch(err);
   }
 
-  return Capability.contributes(Capabilities.Null, null, () => {
+  return Capability.contributes(Common.Capability.Null, null, () => {
     spaceSubscriptions.clear();
     subscriptions.clear();
   });

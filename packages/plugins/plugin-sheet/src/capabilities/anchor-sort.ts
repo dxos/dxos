@@ -2,14 +2,14 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Capabilities, Capability } from '@dxos/app-framework';
+import { Capability, Common } from '@dxos/app-framework';
 import { Relation } from '@dxos/echo';
 
 import { Sheet, compareIndexPositions } from '../types';
 
 export default Capability.makeModule(
-  (): Capability.Capability<typeof Capabilities.AnchorSort> =>
-    Capability.contributes(Capabilities.AnchorSort, {
+  (): Capability.Capability<typeof Common.Capability.AnchorSort> =>
+    Capability.contributes(Common.Capability.AnchorSort, {
       key: Sheet.Sheet.typename,
       sort: (anchorA, anchorB) => {
         const sheet = Relation.getTarget(anchorA) as Sheet.Sheet;

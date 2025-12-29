@@ -2,14 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import {
-  Capabilities,
-  type SerializedNode,
-  SettingsAction,
-  createIntent,
-  createResolver,
-  Capability,
-} from '@dxos/app-framework';
+import { Capability, Common, SettingsAction, createIntent, createResolver } from '@dxos/app-framework';
 import { Trigger } from '@dxos/async';
 import { log } from '@dxos/log';
 import { Node } from '@dxos/plugin-graph';
@@ -39,7 +32,7 @@ export default Capability.makeModule((context) => {
   }: {
     node: Node.Node;
     path: string[];
-    serialized: SerializedNode;
+    serialized: Common.SerializedNode;
   }) => {
     const state = context.getCapability(FileCapabilities.MutableState);
     if (!state.rootHandle) {
@@ -91,7 +84,7 @@ export default Capability.makeModule((context) => {
     }
   };
 
-  return Capability.contributes(Capabilities.IntentResolver, [
+  return Capability.contributes(Common.Capability.IntentResolver, [
     createResolver({
       intent: LocalFilesAction.SelectRoot,
       resolve: async () => {
@@ -105,13 +98,13 @@ export default Capability.makeModule((context) => {
     createResolver({
       intent: LocalFilesAction.Export,
       resolve: async () => {
-        const { explore } = context.getCapability(Capabilities.AppGraph);
+        const { explore } = context.getCapability(Common.Capability.AppGraph);
         const state = context.getCapability(FileCapabilities.MutableState);
         if (!state.rootHandle) {
           return { intents: [createIntent(SettingsAction.Open, { plugin: meta.id })] };
         }
 
-        const serializers = context.getCapabilities(Capabilities.AppGraphSerializer).flat();
+        const serializers = context.getCapabilities(Common.Capability.AppGraphSerializer).flat();
 
         // TODO(wittjosiah): Export needs to include order of nodes as well.
         //   Without this order is not guaranteed to be preserved on import.
@@ -147,7 +140,7 @@ export default Capability.makeModule((context) => {
           return;
         }
 
-        const serializers = context.getCapabilities(Capabilities.AppGraphSerializer).flat();
+        const serializers = context.getCapabilities(Common.Capability.AppGraphSerializer).flat();
 
         const importFile = async ({ handle, ancestors }: { handle: FileSystemHandle; ancestors: unknown[] }) => {
           const [name, ...extension] = handle.name.split('.');
@@ -291,7 +284,7 @@ const writeFile = async (handle: FileSystemFileHandle, content: string) => {
   await writable.close();
 };
 
-const getFileName = (node: SerializedNode, counter = 0) => {
+const getFileName = (node: Common.SerializedNode, counter = 0) => {
   let extension = '';
   switch (node.type) {
     case 'application/tldraw':

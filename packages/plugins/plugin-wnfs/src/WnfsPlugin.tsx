@@ -4,14 +4,7 @@
 
 import * as Function from 'effect/Function';
 
-import {
-  Capabilities,
-  Events,
-  Plugin,
-  Capability,
-  chain,
-  createIntent,
-} from '@dxos/app-framework';
+import { Capability, Common, Plugin, chain, createIntent } from '@dxos/app-framework';
 import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
 import { MarkdownEvents } from '@dxos/plugin-markdown';
 import { type CreateObjectIntent } from '@dxos/plugin-space/types';
@@ -37,14 +30,14 @@ export const WnfsPlugin = Plugin.define(meta).pipe(
   }),
   Plugin.addModule({
     id: 'translations',
-    activatesOn: Events.SetupTranslations,
-    activate: () => Capability.contributes(Capabilities.Translations, translations),
+    activatesOn: Common.ActivationEvent.SetupTranslations,
+    activate: () => Capability.contributes(Common.Capability.Translations, translations),
   }),
   Plugin.addModule({
     id: 'metadata',
-    activatesOn: Events.SetupMetadata,
+    activatesOn: Common.ActivationEvent.SetupMetadata,
     activate: () =>
-      Capability.contributes(Capabilities.Metadata, {
+      Capability.contributes(Common.Capability.Metadata, {
         id: WnfsFile.File.typename,
         metadata: {
           // TODO(wittjosiah): Would be nice if icon could change based on the type of the file.
@@ -77,12 +70,12 @@ export const WnfsPlugin = Plugin.define(meta).pipe(
   }),
   Plugin.addModule({
     id: 'react-surface',
-    activatesOn: Events.SetupReactSurface,
+    activatesOn: Common.ActivationEvent.SetupReactSurface,
     activate: ReactSurface,
   }),
   Plugin.addModule({
     id: 'intent-resolver',
-    activatesOn: Events.SetupIntentResolver,
+    activatesOn: Common.ActivationEvent.SetupIntentResolver,
     activate: IntentResolver,
   }),
   Plugin.make,

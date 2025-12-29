@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { Capabilities, Capability, createSurface } from '@dxos/app-framework';
+import { Capability, Common } from '@dxos/app-framework';
 import { useActiveSpace } from '@dxos/plugin-space';
 import { type Space, isSpace } from '@dxos/react-client/echo';
 
@@ -12,8 +12,8 @@ import { SEARCH_DIALOG, SearchDialog, type SearchDialogProps, SearchMain } from 
 import { SearchContextProvider } from '../hooks';
 
 export default Capability.makeModule(() =>
-  Capability.contributes(Capabilities.ReactSurface, [
-    createSurface({
+  Capability.contributes(Common.Capability.ReactSurface, [
+    Common.createSurface({
       id: SEARCH_DIALOG,
       role: 'dialog',
       filter: (data): data is { props: SearchDialogProps } => data.component === SEARCH_DIALOG,
@@ -23,7 +23,7 @@ export default Capability.makeModule(() =>
         </SearchContextProvider>
       ),
     }),
-    createSurface({
+    Common.createSurface({
       id: `${SEARCH_DIALOG}/search-input`,
       role: 'search-input',
       component: () => {
@@ -36,7 +36,7 @@ export default Capability.makeModule(() =>
         );
       },
     }),
-    createSurface({
+    Common.createSurface({
       id: `${SEARCH_DIALOG}/search`,
       role: 'deck-companion--search',
       filter: (data): data is { subject: Space } => isSpace(data.subject),

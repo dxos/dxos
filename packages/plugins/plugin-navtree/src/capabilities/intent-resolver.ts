@@ -4,12 +4,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import {
-  Capabilities,
-  Capability,
-  LayoutAction,
-  createResolver,
-} from '@dxos/app-framework';
+import { Capability, Common, createResolver } from '@dxos/app-framework';
 import { log } from '@dxos/log';
 import { Graph } from '@dxos/plugin-graph';
 
@@ -17,13 +12,13 @@ import { NavTreeCapabilities } from './capabilities';
 
 export default Capability.makeModule((context) =>
   Capability.contributes(
-    Capabilities.IntentResolver,
+    Common.Capability.IntentResolver,
     createResolver({
-      intent: LayoutAction.UpdateLayout,
-      filter: (data): data is Schema.Schema.Type<typeof LayoutAction.Expose.fields.input> =>
-        Schema.is(LayoutAction.Expose.fields.input)(data),
+      intent: Common.LayoutAction.UpdateLayout,
+      filter: (data): data is Schema.Schema.Type<typeof Common.LayoutAction.Expose.fields.input> =>
+        Schema.is(Common.LayoutAction.Expose.fields.input)(data),
       resolve: async ({ subject }) => {
-        const { graph } = context.getCapability(Capabilities.AppGraph);
+        const { graph } = context.getCapability(Common.Capability.AppGraph);
         const { getItem, setItem } = context.getCapability(NavTreeCapabilities.State);
 
         try {

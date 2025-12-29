@@ -2,15 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import {
-  Capabilities,
-  Events,
-  LayoutAction,
-  ActivationEvent,
-  Plugin,
-  Capability,
-  createIntent,
-} from '@dxos/app-framework';
+import { ActivationEvent, Capability, Common, Plugin, createIntent } from '@dxos/app-framework';
 import { Graph } from '@dxos/plugin-graph';
 import { type TreeData } from '@dxos/react-ui-list';
 
@@ -23,20 +15,20 @@ import { translations } from './translations';
 export const NavTreePlugin = Plugin.define(meta).pipe(
   Plugin.addModule({
     id: 'state',
-    activatesOn: Events.LayoutReady,
+    activatesOn: Common.ActivationEvent.LayoutReady,
     activatesAfter: [NavTreeEvents.StateReady],
     activate: State,
   }),
   Plugin.addModule({
     id: 'translations',
-    activatesOn: Events.SetupTranslations,
-    activate: () => Capability.contributes(Capabilities.Translations, translations),
+    activatesOn: Common.ActivationEvent.SetupTranslations,
+    activate: () => Capability.contributes(Common.Capability.Translations, translations),
   }),
   Plugin.addModule({
     id: 'metadata',
-    activatesOn: Events.SetupMetadata,
+    activatesOn: Common.ActivationEvent.SetupMetadata,
     activate: () =>
-      Capability.contributes(Capabilities.Metadata, {
+      Capability.contributes(Common.Capability.Metadata, {
         id: NODE_TYPE,
         metadata: {
           parse: ({ item }: TreeData, type: string) => {
@@ -55,20 +47,22 @@ export const NavTreePlugin = Plugin.define(meta).pipe(
   Plugin.addModule({
     id: 'expose',
     activatesOn: ActivationEvent.allOf(
-      Events.DispatcherReady,
-      Events.AppGraphReady,
-      Events.LayoutReady,
+      Common.ActivationEvent.DispatcherReady,
+      Common.ActivationEvent.AppGraphReady,
+      Common.ActivationEvent.LayoutReady,
       NavTreeEvents.StateReady,
     ),
     activate: async (context) => {
-      const layout = context.getCapability(Capabilities.Layout);
-      const { dispatchPromise: dispatch } = context.getCapability(Capabilities.IntentDispatcher);
-      const { graph } = context.getCapability(Capabilities.AppGraph);
+      const layout = context.getCapability(Common.Capability.Layout);
+      const { dispatchPromise: dispatch } = context.getCapability(Common.Capability.IntentDispatcher);
+      const { graph } = context.getCapability(Common.Capability.AppGraph);
       if (dispatch && layout.active.length === 1) {
         // TODO(wittjosiah): This should really be fired once the navtree renders for the first time.
         //   That is the point at which the graph is expanded and the path should be available.
         void Graph.waitForPath(graph, { target: layout.active[0] }, { timeout: 30_000 })
-          .then(() => dispatch(createIntent(LayoutAction.Expose, { part: 'navigation', subject: layout.active[0] })))
+          .then(() =>
+            dispatch(createIntent(Common.LayoutAction.Expose, { part: 'navigation', subject: layout.active[0] })),
+          )
           .catch(() => {});
       }
 
@@ -77,22 +71,22 @@ export const NavTreePlugin = Plugin.define(meta).pipe(
   }),
   Plugin.addModule({
     id: 'keyboard',
-    activatesOn: Events.AppGraphReady,
+    activatesOn: Common.ActivationEvent.AppGraphReady,
     activate: Keyboard,
   }),
   Plugin.addModule({
     id: 'react-surface',
-    activatesOn: Events.SetupReactSurface,
+    activatesOn: Common.ActivationEvent.SetupReactSurface,
     activate: ReactSurface,
   }),
   Plugin.addModule({
     id: 'intent-resolver',
-    activatesOn: Events.SetupIntentResolver,
+    activatesOn: Common.ActivationEvent.SetupIntentResolver,
     activate: IntentResolver,
   }),
   Plugin.addModule({
     id: 'app-graph-builder',
-    activatesOn: Events.SetupAppGraph,
+    activatesOn: Common.ActivationEvent.SetupAppGraph,
     activate: AppGraphBuilder,
   }),
   Plugin.make,

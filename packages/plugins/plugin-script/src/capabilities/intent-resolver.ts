@@ -5,14 +5,7 @@
 import { Octokit } from '@octokit/core';
 import * as Predicate from 'effect/Predicate';
 
-import {
-  Capabilities,
-  LayoutAction,
-  
-  createIntent,
-  createResolver,
-  Capability,
-} from '@dxos/app-framework';
+import { Capability, Common, createIntent, createResolver } from '@dxos/app-framework';
 import { Obj } from '@dxos/echo';
 import { Script } from '@dxos/functions';
 import { TokenManagerAction } from '@dxos/plugin-token-manager/types';
@@ -23,7 +16,7 @@ import { templates } from '../templates';
 import { Notebook, ScriptAction } from '../types';
 
 export default Capability.makeModule(() =>
-  Capability.contributes(Capabilities.IntentResolver, [
+  Capability.contributes(Common.Capability.IntentResolver, [
     createResolver({
       intent: ScriptAction.CreateScript,
       resolve: async ({ name, gistUrl, initialTemplateId }) => {
@@ -78,7 +71,7 @@ export default Capability.makeModule(() =>
         if (scriptTemplates.length > 0) {
           return {
             intents: [
-              createIntent(LayoutAction.UpdateDialog, {
+              createIntent(Common.LayoutAction.UpdateDialog, {
                 part: 'dialog',
                 subject: DEPLOYMENT_DIALOG,
                 options: { blockAlign: 'start', state: true, props: { accessToken, scriptTemplates } },

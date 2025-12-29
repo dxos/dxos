@@ -4,13 +4,7 @@
 
 import * as Effect from 'effect/Effect';
 
-import {
-  Capabilities,
-  Capability,
-  
-  createIntent,
-  createResolver,
-} from '@dxos/app-framework';
+import { Capability, Common, createIntent, createResolver } from '@dxos/app-framework';
 import { sleep } from '@dxos/async';
 import { Obj, Relation, Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
@@ -27,7 +21,7 @@ import { Channel, ThreadAction } from '../types';
 import { ThreadCapabilities } from './capabilities';
 
 export default Capability.makeModule((context) =>
-  Capability.contributes(Capabilities.IntentResolver, [
+  Capability.contributes(Common.Capability.IntentResolver, [
     createResolver({
       intent: ThreadAction.OnCreateSpace,
       resolve: ({ space, isDefault, rootCollection }) =>
@@ -36,7 +30,7 @@ export default Capability.makeModule((context) =>
             return;
           }
 
-          const { dispatch } = context.getCapability(Capabilities.IntentDispatcher);
+          const { dispatch } = context.getCapability(Common.Capability.IntentDispatcher);
           const collection = Collection.makeManaged({ key: Type.getTypename(Channel.Channel) });
           rootCollection.objects.push(Ref.make(collection));
 

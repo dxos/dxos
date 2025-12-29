@@ -2,13 +2,13 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Capabilities, Capability } from '@dxos/app-framework';
+import { Capability, Common } from '@dxos/app-framework';
 import { type Type } from '@dxos/echo';
 
 import { ClientCapabilities } from '../types';
 
 export default Capability.makeModule((context) => {
-  const registry = context.getCapability(Capabilities.AtomRegistry);
+  const registry = context.getCapability(Common.Capability.AtomRegistry);
   const client = context.getCapability(ClientCapabilities.Client);
 
   // TODO(wittjosiah): Unregister schemas when they are disabled.
@@ -26,5 +26,5 @@ export default Capability.makeModule((context) => {
     { immediate: true },
   );
 
-  return Capability.contributes(Capabilities.Null, null, () => cancel());
+  return Capability.contributes(Common.Capability.Null, null, () => cancel());
 });

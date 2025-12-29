@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { ActivationEvent, Capabilities, Capability, Events, Plugin } from '@dxos/app-framework';
+import { ActivationEvent, Capability, Common, Plugin } from '@dxos/app-framework';
 import { type Observability } from '@dxos/observability';
 
 import {
@@ -26,42 +26,46 @@ export type ObservabilityPluginOptions = {
 export const ObservabilityPlugin = Plugin.define<ObservabilityPluginOptions>(meta).pipe(
   Plugin.addModule(({ namespace, observability }) => ({
     id: 'observability',
-    activatesOn: Events.Startup,
+    activatesOn: Common.ActivationEvent.Startup,
     activate: async () => Capability.contributes(ObservabilityCapabilities.Observability, await observability()),
   })),
   Plugin.addModule({
-    activatesOn: Events.SetupSettings,
+    activatesOn: Common.ActivationEvent.SetupSettings,
     activate: ObservabilitySettings,
   }),
   Plugin.addModule(({ namespace }) => ({
     id: Capability.getModuleTag(ObservabilityState),
-    activatesOn: Events.Startup,
+    activatesOn: Common.ActivationEvent.Startup,
     activatesAfter: [ObservabilityEvents.StateReady],
     activate: () => ObservabilityState({ namespace }),
   })),
   Plugin.addModule({
     id: 'translations',
-    activatesOn: Events.SetupTranslations,
-    activate: () => Capability.contributes(Capabilities.Translations, translations),
+    activatesOn: Common.ActivationEvent.SetupTranslations,
+    activate: () => Capability.contributes(Common.Capability.Translations, translations),
   }),
   Plugin.addModule(({ namespace }) => ({
     id: Capability.getModuleTag(IntentResolver),
-    activatesOn: Events.SetupIntentResolver,
+    activatesOn: Common.ActivationEvent.SetupIntentResolver,
     activate: (context) => IntentResolver({ context, namespace }),
   })),
   Plugin.addModule({
-    activatesOn: Events.SetupReactSurface,
+    activatesOn: Common.ActivationEvent.SetupReactSurface,
     activate: ReactSurface,
   }),
   Plugin.addModule({
-    activatesOn: Events.SetupAppGraph,
+    activatesOn: Common.ActivationEvent.SetupAppGraph,
     activate: AppGraphBuilder,
   }),
   Plugin.addModule(({ namespace, observability }) => ({
     id: Capability.getModuleTag(ClientReady),
-    activatesOn: ActivationEvent.allOf(Events.DispatcherReady, ObservabilityEvents.StateReady, ClientReadyEvent),
-    activate: async (context: Capability.PluginContext) => {
-      return ClientReady({ context, observability: await observability(), namespace });
+    activatesOn: ActivationEvent.allOf(
+      Common.ActivationEvent.DispatcherReady,
+      ObservabilityEvents.StateReady,
+      ClientReadyEvent,
+    ),
+    activate: async (context) => {
+      return ClientReady({ context, namespace, observability: await observability() });
     },
   })),
   Plugin.make,

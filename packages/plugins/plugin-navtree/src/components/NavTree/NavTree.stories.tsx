@@ -8,10 +8,9 @@ import React, { type KeyboardEvent, useCallback, useRef } from 'react';
 import { expect, userEvent, within } from 'storybook/test';
 
 import {
-  Capabilities,
   Capability,
+  Common,
   IntentPlugin,
-  LayoutAction,
   SettingsPlugin,
   createResolver,
 } from '@dxos/app-framework';
@@ -141,12 +140,12 @@ const meta = {
       ],
       capabilities: (context) => [
         Capability.contributes(StoryState, live({ tab: 'space-0' })),
-        Capability.contributes(Capabilities.AppGraphBuilder, storybookGraphBuilders(context)),
-        Capability.contributes(Capabilities.IntentResolver, [
+        Capability.contributes(Common.Capability.AppGraphBuilder, storybookGraphBuilders(context)),
+        Capability.contributes(Common.Capability.IntentResolver, [
           createResolver({
-            intent: LayoutAction.UpdateLayout,
-            filter: (data): data is Schema.Schema.Type<typeof LayoutAction.SwitchWorkspace.fields.input> =>
-              Schema.is(LayoutAction.SwitchWorkspace.fields.input)(data),
+            intent: Common.LayoutAction.UpdateLayout,
+            filter: (data): data is Schema.Schema.Type<typeof Common.LayoutAction.SwitchWorkspace.fields.input> =>
+              Schema.is(Common.LayoutAction.SwitchWorkspace.fields.input)(data),
             resolve: ({ subject }) => {
               const state = context.getCapability(StoryState);
               state.tab = subject;

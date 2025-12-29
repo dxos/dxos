@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Capabilities, Capability } from '@dxos/app-framework';
+import { Capability, Common } from '@dxos/app-framework';
 import { live } from '@dxos/live-object';
 
 import { meta } from '../meta';
@@ -14,7 +14,7 @@ export default Capability.makeModule(async () => {
     autoExportInterval: 30_000,
   });
 
-  return Capability.contributes(Capabilities.Settings, {
+  return Capability.contributes(Common.Capability.Settings, {
     prefix: meta.id,
     schema: FilesSettingsSchema,
     value: settings,

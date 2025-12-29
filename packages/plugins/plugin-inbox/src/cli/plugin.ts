@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Capabilities, Capability, Events, Plugin, createIntent } from '@dxos/app-framework';
+import { Capability, Common, Plugin, createIntent } from '@dxos/app-framework';
 import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
 import { type CreateObjectIntent } from '@dxos/plugin-space/types';
 import { Event, Message } from '@dxos/types';
@@ -25,9 +25,9 @@ export const InboxPlugin = Plugin.define(meta).pipe(
   }),
   Plugin.addModule({
     id: 'metadata',
-    activatesOn: Events.SetupMetadata,
+    activatesOn: Common.ActivationEvent.SetupMetadata,
     activate: () => [
-      Capability.contributes(Capabilities.Metadata, {
+      Capability.contributes(Common.Capability.Metadata, {
         id: Mailbox.Mailbox.typename,
         metadata: {
           createObjectIntent: ((_, options) =>
@@ -35,7 +35,7 @@ export const InboxPlugin = Plugin.define(meta).pipe(
           addToCollectionOnCreate: true,
         },
       }),
-      Capability.contributes(Capabilities.Metadata, {
+      Capability.contributes(Common.Capability.Metadata, {
         id: Calendar.Calendar.typename,
         metadata: {
           createObjectIntent: ((_, options) =>
@@ -46,7 +46,7 @@ export const InboxPlugin = Plugin.define(meta).pipe(
     ],
   }),
   Plugin.addModule({
-    activatesOn: Events.SetupIntentResolver,
+    activatesOn: Common.ActivationEvent.SetupIntentResolver,
     activate: Capability.lazy('IntentResolver', () => import('../capabilities/intent-resolver')),
   }),
   Plugin.make,

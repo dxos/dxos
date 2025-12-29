@@ -5,7 +5,7 @@
 import { type Meta } from '@storybook/react-vite';
 import React from 'react';
 
-import { Capabilities, Capability, IntentPlugin, createResolver } from '@dxos/app-framework';
+import { Capability, Common, IntentPlugin, createResolver } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Obj } from '@dxos/echo';
 import { GraphPlugin } from '@dxos/plugin-graph';
@@ -36,7 +36,7 @@ const meta = {
       plugins: [IntentPlugin(), GraphPlugin()],
       capabilities: [
         Capability.contributes(
-          Capabilities.IntentResolver,
+          Common.Capability.IntentResolver,
           createResolver({
             intent: SheetAction.DropAxis,
             resolve: ({ model, axis, axisIndex }) => {

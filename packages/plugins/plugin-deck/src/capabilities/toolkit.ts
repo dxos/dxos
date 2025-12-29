@@ -7,7 +7,7 @@ import * as Toolkit from '@effect/ai/Toolkit';
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
-import { Capabilities, Capability, LayoutAction, createIntent } from '@dxos/app-framework';
+import { Capability, Common, createIntent } from '@dxos/app-framework';
 import { GenericToolkit } from '@dxos/assistant';
 import { ArtifactId } from '@dxos/assistant';
 import { type SpaceId } from '@dxos/keys';
@@ -43,9 +43,9 @@ export namespace DeckToolkit {
           }
 
           // TODO(wittjosiah): Get capabilities via layers.
-          const { dispatch } = context.getCapability(Capabilities.IntentDispatcher);
+          const { dispatch } = context.getCapability(Common.Capability.IntentDispatcher);
           yield* dispatch(
-            createIntent(LayoutAction.Open, {
+            createIntent(Common.LayoutAction.Open, {
               subject: [`${dxn.spaceId!}:${dxn.echoId}`],
               part: 'main',
             }),
@@ -56,7 +56,7 @@ export namespace DeckToolkit {
 
 export default Capability.makeModule((context) =>
   Capability.contributes(
-    Capabilities.Toolkit,
+    Common.Capability.Toolkit,
     GenericToolkit.make(DeckToolkit.Toolkit, DeckToolkit.createLayer(context)),
   ),
 );

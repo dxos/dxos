@@ -4,13 +4,13 @@
 
 import React from 'react';
 
-import { Capabilities, Capability } from '@dxos/app-framework';
+import { Capability, Common } from '@dxos/app-framework';
 
 import { Call } from '../components';
 import { meta } from '../meta';
 
 export default Capability.makeModule(() => {
-  return Capability.contributes(Capabilities.ReactRoot, {
+  return Capability.contributes(Common.Capability.ReactRoot, {
     id: meta.id,
     root: () => <Call.Audio />,
   });

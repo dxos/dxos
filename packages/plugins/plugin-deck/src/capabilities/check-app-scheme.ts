@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Capabilities, Capability } from '@dxos/app-framework';
+import { Capability, Common } from '@dxos/app-framework';
 
 import { meta } from '../meta';
 import { type DeckSettingsProps } from '../types';
@@ -31,10 +31,10 @@ const checkAppScheme = (url: string) => {
 };
 
 export default Capability.makeModule((context) => {
-  const settings = context.getCapability(Capabilities.SettingsStore).getStore<DeckSettingsProps>(meta.id)?.value;
+  const settings = context.getCapability(Common.Capability.SettingsStore).getStore<DeckSettingsProps>(meta.id)?.value;
   if (!isSocket && settings?.enableNativeRedirect) {
     checkAppScheme(appScheme);
   }
 
-  return Capability.contributes(Capabilities.Null, null);
+  return Capability.contributes(Common.Capability.Null, null);
 });

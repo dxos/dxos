@@ -2,11 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import {
-  Capabilities,
-  createResolver,
-  Capability,
-} from '@dxos/app-framework';
+import { Capability, Common, createResolver } from '@dxos/app-framework';
 import { invariant } from '@dxos/invariant';
 import { ClientCapabilities } from '@dxos/plugin-client';
 
@@ -16,7 +12,7 @@ import { WnfsAction, WnfsFile } from '../types';
 import { WnfsCapabilities } from './capabilities';
 
 export default Capability.makeModule((context) =>
-  Capability.contributes(Capabilities.IntentResolver, [
+  Capability.contributes(Common.Capability.IntentResolver, [
     // TODO(wittjosiah): Deleting the object doesn't delete the wnfs blob.
     //  Consider ways to trigger blob deletion based on object deletion and/or adding file system manager.
     createResolver({

@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Capabilities, Capability } from '@dxos/app-framework';
+import { Capability, Common } from '@dxos/app-framework';
 import { ATTENDABLE_PATH_SEPARATOR, DECK_COMPANION_TYPE, PLANK_COMPANION_TYPE } from '@dxos/plugin-deck/types';
 import { CreateAtom, GraphBuilder, Node, NodeMatcher } from '@dxos/plugin-graph';
 import { getActiveSpace, meta as spaceMeta } from '@dxos/plugin-space';
@@ -13,14 +13,14 @@ import { Devtools } from '../types';
 const DEVTOOLS_TYPE = `${meta.id}/devtools`;
 
 export default Capability.makeModule((context) => {
-  return Capability.contributes(Capabilities.AppGraphBuilder, [
+  return Capability.contributes(Common.Capability.AppGraphBuilder, [
     // Devtools node.
     GraphBuilder.createExtension({
       id: `${meta.id}/devtools`,
       match: NodeMatcher.whenAny(NodeMatcher.whenRoot, NodeMatcher.whenNodeType(`${spaceMeta.id}/settings`)),
       connector: (node, get) => {
         const space = get(CreateAtom.fromSignal(() => getActiveSpace(context)));
-        const [graph] = get(context.capabilities(Capabilities.AppGraph));
+        const [graph] = get(context.capabilities(Common.Capability.AppGraph));
 
         return [
           {

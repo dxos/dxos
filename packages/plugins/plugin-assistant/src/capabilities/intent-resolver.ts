@@ -4,7 +4,7 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capabilities, Capability, createIntent, createResolver } from '@dxos/app-framework';
+import { Capability, Common, createIntent, createResolver } from '@dxos/app-framework';
 import { AiContextBinder, AiConversation } from '@dxos/assistant';
 import { Agent } from '@dxos/assistant-toolkit';
 import { Blueprint, Prompt, Template } from '@dxos/blueprints';
@@ -25,12 +25,12 @@ import { AssistantBlueprint, createBlueprint } from './blueprint-definition';
 import { AssistantCapabilities } from './capabilities';
 
 export default Capability.makeModule((context) => [
-  Capability.contributes(Capabilities.IntentResolver, [
+  Capability.contributes(Common.Capability.IntentResolver, [
     createResolver({
       intent: AssistantAction.OnCreateSpace,
       resolve: ({ space, rootCollection }) =>
         Effect.gen(function* () {
-          const { dispatch } = context.getCapability(Capabilities.IntentDispatcher);
+          const { dispatch } = context.getCapability(Common.Capability.IntentDispatcher);
           const chatCollection = Collection.makeManaged({ key: Assistant.Chat.typename });
           const blueprintCollection = Collection.makeManaged({ key: Blueprint.Blueprint.typename });
           const promptCollection = Collection.makeManaged({ key: Type.getTypename(Prompt.Prompt) });

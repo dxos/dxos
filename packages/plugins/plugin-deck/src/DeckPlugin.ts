@@ -4,7 +4,7 @@
 
 import { setAutoFreeze } from 'immer';
 
-import { Capabilities, Events, ActivationEvent, Capability, Plugin } from '@dxos/app-framework';
+import { ActivationEvent, Capability, Common, Plugin } from '@dxos/app-framework';
 import { translations as stackTranslations } from '@dxos/react-ui-stack';
 
 import {
@@ -29,40 +29,40 @@ setAutoFreeze(false);
 
 export const DeckPlugin = Plugin.define(meta).pipe(
   Plugin.addModule({
-    activatesOn: Events.SettingsReady,
+    activatesOn: Common.ActivationEvent.SettingsReady,
     activate: CheckAppScheme,
   }),
   Plugin.addModule({
-    activatesOn: Events.SetupSettings,
+    activatesOn: Common.ActivationEvent.SetupSettings,
     activate: DeckSettings,
   }),
   Plugin.addModule({
     // TODO(wittjosiah): Does not integrate with settings store.
     //   Should this be a different event?
     //   Should settings store be renamed to be more generic?
-    activatesOn: ActivationEvent.oneOf(Events.SetupSettings, Events.SetupAppGraph),
-    activatesAfter: [Events.LayoutReady, DeckEvents.StateReady],
+    activatesOn: ActivationEvent.oneOf(Common.ActivationEvent.SetupSettings, Common.ActivationEvent.SetupAppGraph),
+    activatesAfter: [Common.ActivationEvent.LayoutReady, DeckEvents.StateReady],
     activate: DeckState,
   }),
   Plugin.addModule({
     id: 'translations',
-    activatesOn: Events.SetupTranslations,
-    activate: () => Capability.contributes(Capabilities.Translations, [...translations, ...stackTranslations]),
+    activatesOn: Common.ActivationEvent.SetupTranslations,
+    activate: () => Capability.contributes(Common.Capability.Translations, [...translations, ...stackTranslations]),
   }),
   Plugin.addModule({
-    activatesOn: Events.Startup,
+    activatesOn: Common.ActivationEvent.Startup,
     activate: ReactRoot,
   }),
   Plugin.addModule({
-    activatesOn: Events.SetupReactSurface,
+    activatesOn: Common.ActivationEvent.SetupReactSurface,
     activate: ReactSurface,
   }),
   Plugin.addModule({
-    activatesOn: Events.SetupIntentResolver,
+    activatesOn: Common.ActivationEvent.SetupIntentResolver,
     activate: LayoutIntentResolver,
   }),
   Plugin.addModule({
-    activatesOn: Events.SetupAppGraph,
+    activatesOn: Common.ActivationEvent.SetupAppGraph,
     activate: AppGraphBuilder,
   }),
   // Plugin.addModule({
@@ -71,11 +71,11 @@ export const DeckPlugin = Plugin.define(meta).pipe(
   // }),
   Plugin.addModule({
     // TODO(wittjosiah): Shouldn't use the startup event.
-    activatesOn: Events.Startup,
+    activatesOn: Common.ActivationEvent.Startup,
     activate: Toolkit,
   }),
   Plugin.addModule({
-    activatesOn: ActivationEvent.allOf(Events.DispatcherReady, DeckEvents.StateReady),
+    activatesOn: ActivationEvent.allOf(Common.ActivationEvent.DispatcherReady, DeckEvents.StateReady),
     activate: UrlHandler,
   }),
   Plugin.make,

@@ -4,7 +4,7 @@
 
 import * as Record from 'effect/Record';
 
-import { Capabilities, Capability } from '@dxos/app-framework';
+import { Capability, Common } from '@dxos/app-framework';
 import { Graph, GraphBuilder, Node } from '@dxos/app-graph';
 
 // TODO(wittjosiah): Remove or restore graph caching.
@@ -13,14 +13,14 @@ import { Graph, GraphBuilder, Node } from '@dxos/app-graph';
 // const KEY = `${meta.id}/app-graph`;
 
 export default Capability.makeModule(async (context) => {
-  const registry = context.getCapability(Capabilities.AtomRegistry);
+  const registry = context.getCapability(Common.Capability.AtomRegistry);
   const builder = GraphBuilder.from(/* localStorage.getItem(KEY) ?? */ undefined, registry);
   // const interval = setInterval(() => {
   //   localStorage.setItem(KEY, builder.graph.pickle());
   // }, 5_000);
 
   const unsubscribe = registry.subscribe(
-    context.capabilities(Capabilities.AppGraphBuilder),
+    context.capabilities(Common.Capability.AppGraphBuilder),
     (extensions) => {
       const next = GraphBuilder.flattenExtensions(extensions);
       const current = Record.values(registry.get(builder.extensions));
@@ -36,10 +36,14 @@ export default Capability.makeModule(async (context) => {
 
   setupDevtools(builder.graph);
 
-  return Capability.contributes(Capabilities.AppGraph, { graph: builder.graph, explore: GraphBuilder.explore }, () => {
-    // clearInterval(interval);
-    unsubscribe();
-  });
+  return Capability.contributes(
+    Common.Capability.AppGraph,
+    { graph: builder.graph, explore: GraphBuilder.explore },
+    () => {
+      // clearInterval(interval);
+      unsubscribe();
+    },
+  );
 });
 
 // Expose the graph to the window for debugging.

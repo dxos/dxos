@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Capabilities, Capability, Events, Plugin, createResolver } from '@dxos/app-framework';
+import { Capability, Common, Plugin, createResolver } from '@dxos/app-framework';
 
 import { AppGraphBuilder, HelpCapabilities, HelpState, ReactRoot, ReactSurface } from './capabilities';
 import { meta } from './meta';
@@ -13,29 +13,29 @@ export type HelpPluginOptions = { steps?: Step[] };
 
 export const HelpPlugin = Plugin.define<HelpPluginOptions>(meta).pipe(
   Plugin.addModule({
-    activatesOn: Events.Startup,
+    activatesOn: Common.ActivationEvent.Startup,
     activate: HelpState,
   }),
   Plugin.addModule({
     id: 'translations',
-    activatesOn: Events.SetupTranslations,
-    activate: () => Capability.contributes(Capabilities.Translations, translations),
+    activatesOn: Common.ActivationEvent.SetupTranslations,
+    activate: () => Capability.contributes(Common.Capability.Translations, translations),
   }),
   Plugin.addModule(({ steps = [] }) => ({
     id: 'react-root',
-    activatesOn: Events.Startup,
+    activatesOn: Common.ActivationEvent.Startup,
     activate: () => ReactRoot(steps),
   })),
   Plugin.addModule({
-    activatesOn: Events.SetupReactSurface,
+    activatesOn: Common.ActivationEvent.SetupReactSurface,
     activate: ReactSurface,
   }),
   Plugin.addModule({
     id: 'intent-resolver',
-    activatesOn: Events.SetupIntentResolver,
+    activatesOn: Common.ActivationEvent.SetupIntentResolver,
     activate: (context) =>
       Capability.contributes(
-        Capabilities.IntentResolver,
+        Common.Capability.IntentResolver,
         createResolver({
           intent: HelpAction.Start,
           resolve: () => {
@@ -46,7 +46,7 @@ export const HelpPlugin = Plugin.define<HelpPluginOptions>(meta).pipe(
       ),
   }),
   Plugin.addModule({
-    activatesOn: Events.SetupAppGraph,
+    activatesOn: Common.ActivationEvent.SetupAppGraph,
     activate: AppGraphBuilder,
   }),
   Plugin.make,

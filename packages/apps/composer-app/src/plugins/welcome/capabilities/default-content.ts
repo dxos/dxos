@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Capabilities, Capability, LayoutAction, createIntent } from '@dxos/app-framework';
+import { Capability, Common, createIntent } from '@dxos/app-framework';
 import { Graph } from '@dxos/plugin-graph';
 import { SPACES, SpaceCapabilities, SpaceEvents } from '@dxos/plugin-space';
 
@@ -16,8 +16,8 @@ export default Capability.makeModule(async (context) => {
   const { Markdown } = await import('@dxos/plugin-markdown/types');
   const { Collection } = await import('@dxos/schema');
 
-  const { dispatchPromise: dispatch } = context.getCapability(Capabilities.IntentDispatcher);
-  const { graph } = context.getCapability(Capabilities.AppGraph);
+  const { dispatchPromise: dispatch } = context.getCapability(Common.Capability.IntentDispatcher);
+  const { graph } = context.getCapability(Common.Capability.AppGraph);
   const client = context.getCapability(ClientCapabilities.Client);
 
   const space = client.spaces.default;
@@ -47,18 +47,18 @@ export default Capability.makeModule(async (context) => {
   graph.pipe(Graph.expand(SPACES), Graph.expand(space.id));
 
   await dispatch(
-    createIntent(LayoutAction.SwitchWorkspace, {
+    createIntent(Common.LayoutAction.SwitchWorkspace, {
       part: 'workspace',
       subject: space.id,
     }),
   );
   await dispatch(
-    createIntent(LayoutAction.SetLayoutMode, {
+    createIntent(Common.LayoutAction.SetLayoutMode, {
       part: 'mode',
       subject: Obj.getDXN(readme).toString(),
       options: { mode: 'solo' },
     }),
   );
 
-  return Capability.contributes(Capabilities.Null, null);
+  return Capability.contributes(Common.Capability.Null, null);
 });

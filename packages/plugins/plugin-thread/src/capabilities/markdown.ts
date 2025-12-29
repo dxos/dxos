@@ -4,12 +4,7 @@
 
 import { EditorView } from '@codemirror/view';
 
-import {
-  Capabilities,
-  Capability,
-  
-  createIntent,
-} from '@dxos/app-framework';
+import { Capability, Common, createIntent } from '@dxos/app-framework';
 import { Obj } from '@dxos/echo';
 import { ATTENDABLE_PATH_SEPARATOR, DeckAction } from '@dxos/plugin-deck/types';
 import { MarkdownCapabilities } from '@dxos/plugin-markdown';
@@ -22,7 +17,7 @@ import { ThreadCapabilities } from './capabilities';
 export default Capability.makeModule((context) =>
   Capability.contributes(MarkdownCapabilities.Extensions, [
     ({ document: doc }) => {
-      const { dispatchPromise: dispatch } = context.getCapability(Capabilities.IntentDispatcher);
+      const { dispatchPromise: dispatch } = context.getCapability(Common.Capability.IntentDispatcher);
       const { state } = context.getCapability(ThreadCapabilities.MutableState);
       return threads(state, doc, dispatch);
     },
@@ -38,7 +33,7 @@ export default Capability.makeModule((context) =>
     },
     ({ document: doc }) => {
       if (!doc) return [];
-      const { dispatchPromise: dispatch } = context.getCapability(Capabilities.IntentDispatcher);
+      const { dispatchPromise: dispatch } = context.getCapability(Common.Capability.IntentDispatcher);
       const id = Obj.getDXN(doc).toString();
 
       return EditorView.updateListener.of((update) => {

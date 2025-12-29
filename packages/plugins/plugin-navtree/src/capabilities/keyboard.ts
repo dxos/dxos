@@ -2,10 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import {
-  Capabilities as AppCapabilities,
-  Capability,
-} from '@dxos/app-framework';
+import { Capability, Common } from '@dxos/app-framework';
 import { debounce } from '@dxos/async';
 import { Keyboard } from '@dxos/keyboard';
 import { Graph, Node } from '@dxos/plugin-graph';
@@ -14,7 +11,7 @@ import { getHostPlatform } from '@dxos/util';
 import { KEY_BINDING } from '../meta';
 
 export default Capability.makeModule((context) => {
-  const { graph } = context.getCapability(AppCapabilities.AppGraph);
+  const { graph } = context.getCapability(Common.Capability.AppGraph);
 
   // TODO(wittjosiah): Factor out.
   // TODO(wittjosiah): Handle removal of actions.
@@ -53,7 +50,7 @@ export default Capability.makeModule((context) => {
   Keyboard.singleton.initialize();
   Keyboard.singleton.setCurrentContext(Node.RootId);
 
-  return Capability.contributes(AppCapabilities.Null, null, () => {
+  return Capability.contributes(Common.Capability.Null, null, () => {
     unsubscribe();
     Keyboard.singleton.destroy();
   });

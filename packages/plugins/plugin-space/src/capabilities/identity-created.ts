@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Capabilities, Capability } from '@dxos/app-framework';
+import { Capability, Common } from '@dxos/app-framework';
 import { Ref } from '@dxos/echo';
 import { Migrations } from '@dxos/migrations';
 import { ClientCapabilities } from '@dxos/plugin-client';
@@ -21,5 +21,5 @@ export default Capability.makeModule(async (context: Capability.PluginContext) =
     defaultSpace.properties[Migrations.versionProperty] = Migrations.targetVersion;
   }
 
-  return Capability.contributes(Capabilities.Null, null);
+  return Capability.contributes(Common.Capability.Null, null);
 });

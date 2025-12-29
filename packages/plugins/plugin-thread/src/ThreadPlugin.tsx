@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Capabilities, Capability, Events, Plugin, createIntent } from '@dxos/app-framework';
+import { Capability, Common, Plugin, createIntent } from '@dxos/app-framework';
 import { Ref, Type } from '@dxos/echo';
 import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
 import { MarkdownEvents } from '@dxos/plugin-markdown';
@@ -48,19 +48,19 @@ export const ThreadPlugin = Plugin.define(meta).pipe(
     // TODO(wittjosiah): Does not integrate with settings store.
     //   Should this be a different event?
     //   Should settings store be renamed to be more generic?
-    activatesOn: Events.SetupSettings,
+    activatesOn: Common.ActivationEvent.SetupSettings,
     activate: ThreadState,
   }),
   Plugin.addModule({
     id: 'translations',
-    activatesOn: Events.SetupTranslations,
-    activate: () => Capability.contributes(Capabilities.Translations, [...translations, ...threadTranslations]),
+    activatesOn: Common.ActivationEvent.SetupTranslations,
+    activate: () => Capability.contributes(Common.Capability.Translations, [...translations, ...threadTranslations]),
   }),
   Plugin.addModule({
     id: 'metadata',
-    activatesOn: Events.SetupMetadata,
+    activatesOn: Common.ActivationEvent.SetupMetadata,
     activate: () => [
-      Capability.contributes(Capabilities.Metadata, {
+      Capability.contributes(Common.Capability.Metadata, {
         id: Type.getTypename(Channel.Channel),
         metadata: {
           icon: 'ph--hash--regular',
@@ -71,21 +71,21 @@ export const ThreadPlugin = Plugin.define(meta).pipe(
             })) satisfies CreateObjectIntent,
         },
       }),
-      Capability.contributes(Capabilities.Metadata, {
+      Capability.contributes(Common.Capability.Metadata, {
         id: Type.getTypename(Thread.Thread),
         metadata: {
           // TODO(wittjosiah): Move out of metadata.
           loadReferences: async (thread: Thread.Thread) => await Ref.Array.loadAll(thread.messages ?? []),
         },
       }),
-      Capability.contributes(Capabilities.Metadata, {
+      Capability.contributes(Common.Capability.Metadata, {
         id: Message.Message.typename,
         metadata: {
           // TODO(wittjosiah): Move out of metadata.
           loadReferences: () => [], // loadObjectReferences(message, (message) => [...message.parts, message.context]),
         },
       }),
-      Capability.contributes(Capabilities.Metadata, {
+      Capability.contributes(Common.Capability.Metadata, {
         id: THREAD_ITEM,
         metadata: {
           parse: (item: Thread.Thread, type: string) => {
@@ -139,27 +139,27 @@ export const ThreadPlugin = Plugin.define(meta).pipe(
   }),
   Plugin.addModule({
     id: 'react-root',
-    activatesOn: Events.Startup,
+    activatesOn: Common.ActivationEvent.Startup,
     activate: ReactRoot,
   }),
   Plugin.addModule({
     id: 'react-surface',
-    activatesOn: Events.SetupReactSurface,
+    activatesOn: Common.ActivationEvent.SetupReactSurface,
     activate: ReactSurface,
   }),
   Plugin.addModule({
     id: 'intent-resolver',
-    activatesOn: Events.SetupIntentResolver,
+    activatesOn: Common.ActivationEvent.SetupIntentResolver,
     activate: IntentResolver,
   }),
   Plugin.addModule({
     id: 'app-graph-builder',
-    activatesOn: Events.SetupAppGraph,
+    activatesOn: Common.ActivationEvent.SetupAppGraph,
     activate: AppGraphBuilder,
   }),
   Plugin.addModule({
     id: 'blueprint',
-    activatesOn: Events.SetupArtifactDefinition,
+    activatesOn: Common.ActivationEvent.SetupArtifactDefinition,
     activate: BlueprintDefinition,
   }),
   Plugin.make,

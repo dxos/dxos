@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { Capabilities, Capability, createSurface } from '@dxos/app-framework';
+import { Capability, Common } from '@dxos/app-framework';
 import { type JoinPanelProps } from '@dxos/shell/react';
 
 import {
@@ -25,42 +25,42 @@ type ReactSurfaceOptions = Pick<ClientPluginOptions, 'onReset'> & {
 };
 
 export default Capability.makeModule(({ createInvitationUrl, onReset }: ReactSurfaceOptions) =>
-  Capability.contributes(Capabilities.ReactSurface, [
-    createSurface({
+  Capability.contributes(Common.Capability.ReactSurface, [
+    Common.createSurface({
       id: Account.Profile,
       role: 'article',
       filter: (data): data is any => data.subject === Account.Profile,
       component: () => <ProfileContainer />,
     }),
-    createSurface({
+    Common.createSurface({
       id: Account.Devices,
       role: 'article',
       filter: (data): data is any => data.subject === Account.Devices,
       component: () => <DevicesContainer createInvitationUrl={createInvitationUrl} />,
     }),
-    createSurface({
+    Common.createSurface({
       id: Account.Security,
       role: 'article',
       filter: (data): data is any => data.subject === Account.Security,
       component: () => <RecoveryCredentialsContainer />,
     }),
-    createSurface({
+    Common.createSurface({
       id: JOIN_DIALOG,
       role: 'dialog',
       filter: (data): data is { props: JoinPanelProps } => data.component === JOIN_DIALOG,
-      component: ({ data }) => <JoinDialog {...data.props} />,
+      component: ({ data }: { data: any }) => <JoinDialog {...data.props} />,
     }),
-    createSurface({
+    Common.createSurface({
       id: RECOVERY_CODE_DIALOG,
       role: 'dialog',
       filter: (data): data is { props: RecoveryCodeDialogProps } => data.component === RECOVERY_CODE_DIALOG,
-      component: ({ data }) => <RecoveryCodeDialog {...data.props} />,
+      component: ({ data }: { data: any }) => <RecoveryCodeDialog {...data.props} />,
     }),
-    createSurface({
+    Common.createSurface({
       id: RESET_DIALOG,
       role: 'dialog',
       filter: (data): data is { props: ResetDialogProps } => data.component === RESET_DIALOG,
-      component: ({ data }) => <ResetDialog {...data.props} onReset={onReset} />,
+      component: ({ data }: { data: any }) => <ResetDialog {...data.props} onReset={onReset} />,
     }),
   ]),
 );

@@ -4,7 +4,7 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capabilities, Capability, createIntent, createResolver } from '@dxos/app-framework';
+import { Capability, Common, createIntent, createResolver } from '@dxos/app-framework';
 import { DXN, Obj, Ref, Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { ClientCapabilities } from '@dxos/plugin-client';
@@ -20,7 +20,7 @@ import { Meeting, MeetingAction } from '../types';
 import { MeetingCapabilities } from './capabilities';
 
 export default Capability.makeModule((context) =>
-  Capability.contributes(Capabilities.IntentResolver, [
+  Capability.contributes(Common.Capability.IntentResolver, [
     createResolver({
       intent: MeetingAction.OnCreateSpace,
       resolve: ({ isDefault, rootCollection }) =>
@@ -37,7 +37,7 @@ export default Capability.makeModule((context) =>
       intent: MeetingAction.Create,
       resolve: ({ name, channel }) =>
         Effect.gen(function* () {
-          const { dispatch } = context.getCapability(Capabilities.IntentDispatcher);
+          const { dispatch } = context.getCapability(Common.Capability.IntentDispatcher);
           const space = getSpace(channel);
           invariant(space);
           const { object: transcript } = yield* dispatch(createIntent(TranscriptAction.Create, { space }));
