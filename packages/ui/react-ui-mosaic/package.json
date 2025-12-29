@@ -59,6 +59,8 @@
     "@preact-signals/safe-react": "catalog:",
     "@preact/signals-react": "catalog:",
     "@radix-ui/react-context": "catalog:",
+    "@radix-ui/react-primitive": "catalog:",
+    "@radix-ui/react-slot": "catalog:",
     "@radix-ui/react-use-controllable-state": "catalog:",
     "ajv": "catalog:",
     "lodash.defaultsdeep": "catalog:",

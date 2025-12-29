@@ -5,20 +5,11 @@
 import type { Extension } from '@codemirror/state';
 import { EditorView, dropCursor } from '@codemirror/view';
 
-export type DNDOptions = { onDrop?: (view: EditorView, event: { files: FileList }) => void };
+export type DropOptions = {
+  onDrop?: (view: EditorView, event: { files: FileList }) => void;
+};
 
-const styles = EditorView.theme({
-  '.cm-dropCursor': {
-    borderLeft: '2px solid var(--dx-accentText)',
-    color: 'var(--dx-accentText)',
-    padding: '0 4px',
-  },
-  '.cm-dropCursor:after': {
-    content: '"←"',
-  },
-});
-
-export const dropFile = (options: DNDOptions = {}): Extension => {
+export const dropFile = (options: DropOptions = {}): Extension => {
   return [
     styles,
     dropCursor(),
@@ -35,3 +26,14 @@ export const dropFile = (options: DNDOptions = {}): Extension => {
     }),
   ];
 };
+
+const styles = EditorView.theme({
+  '.cm-dropCursor': {
+    borderLeft: '2px solid var(--dx-accentText)',
+    color: 'var(--dx-accentText)',
+    padding: '0 4px',
+  },
+  '.cm-dropCursor:after': {
+    content: '"←"',
+  },
+});

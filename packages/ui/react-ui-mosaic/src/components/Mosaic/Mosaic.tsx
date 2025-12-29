@@ -2,9 +2,13 @@
 // Copyright 2025 DXOS.org
 //
 
-import { monitorForElements } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
+import { combine } from '@atlaskit/pragmatic-drag-and-drop/combine';
+import { dropTargetForElements, monitorForElements } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
+import { autoScrollForElements } from '@atlaskit/pragmatic-drag-and-drop-auto-scroll/element';
 import { createContext } from '@radix-ui/react-context';
-import React, { type PropsWithChildren, useEffect, useState } from 'react';
+import { Primitive } from '@radix-ui/react-primitive';
+import { Slot } from '@radix-ui/react-slot';
+import React, { type PropsWithChildren, useEffect, useRef, useState } from 'react';
 
 import { log } from '@dxos/log';
 
@@ -72,6 +76,7 @@ const Root = ({ children }: RootProps) => {
           (target) => target.data.type === 'item' || target.data.type === 'placeholder',
         );
 
+        // TODO(burdon): Check doesn't already exist in collection.
         if (sourceContainer === targetContainer) {
           targetContainer.onDrop?.({ item: sourceData, at: target?.data as DropTargetData });
         } else {
@@ -104,16 +109,54 @@ const Root = ({ children }: RootProps) => {
 // Container
 //
 
-type ContainerProps = PropsWithChildren<{ handler: DropEventHandler }>;
+export const CONTAINER_DATA_ACTIVE_ATTR = 'data-active';
 
-const Container = ({ children, handler }: ContainerProps) => {
+type ContainerState = { type: 'idle' } | { type: 'active' };
+
+type ContainerProps = PropsWithChildren<{ asChild?: boolean; handler: DropEventHandler }>;
+
+// TODO(burdon): Create context?
+// TODO(burdon): forwardRef.
+const Container = ({ children, asChild, handler }: ContainerProps) => {
+  const rootRef = useRef<HTMLDivElement>(null);
+  const Root = asChild ? Slot : Primitive.div;
+
   const { addContainer, removeContainer } = useMosaicContext(handler.id);
   useEffect(() => {
     addContainer(handler);
     return () => removeContainer(handler.id);
   }, [handler]);
 
-  return <>{children}</>;
+  const [state, setState] = useState<ContainerState>({ type: 'idle' });
+  useEffect(() => {
+    if (!rootRef.current) {
+      return;
+    }
+
+    return combine(
+      dropTargetForElements({
+        element: rootRef.current,
+        getData: () =>
+          ({
+            type: 'container',
+            id: handler.id,
+          }) satisfies ContainerData,
+        canDrop: ({ source }) => source.data.type === 'item' && handler.canDrop(source.data as ItemData),
+        onDragEnter: () => setState({ type: 'active' }),
+        onDragLeave: () => setState({ type: 'idle' }),
+      }),
+      autoScrollForElements({
+        element: rootRef.current,
+      }),
+    );
+  }, [rootRef, handler]);
+
+  // TOOD(burdon): Doesn't pass props to Slot?
+  return (
+    <Root {...{ [CONTAINER_DATA_ACTIVE_ATTR]: state.type === 'active' }} ref={rootRef} tabIndex={7}>
+      {children}
+    </Root>
+  );
 };
 
 //

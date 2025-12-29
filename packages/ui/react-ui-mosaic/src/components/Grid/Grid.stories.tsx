@@ -4,9 +4,10 @@
 
 import { extractClosestEdge } from '@atlaskit/pragmatic-drag-and-drop-hitbox/closest-edge';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
+import * as Schema from 'effect/Schema';
 import React, { useMemo, useState } from 'react';
 
-import { Obj } from '@dxos/echo';
+import { Obj, Ref, Type } from '@dxos/echo';
 import { createDocAccessor, createObject } from '@dxos/echo-db';
 import { log } from '@dxos/log';
 import { faker } from '@dxos/random';
@@ -25,8 +26,9 @@ import {
   createMarkdownExtensions,
   createThemeExtensions,
   decorateMarkdown,
+  dropFile,
 } from '@dxos/ui-editor';
-import { get, range } from '@dxos/util';
+import { get, isTruthy, range } from '@dxos/util';
 
 const generator = faker as any as ValueGenerator;
 
@@ -39,10 +41,8 @@ faker.seed(1);
 
 // CONCEPT: Can the entire app be built from a small number of primitives like this? Zero custom css.
 
-// TODO(burdon): Universal DND.
-
 // NEXT
-// - Test existing kanban
+// - Grid data structure.
 // - Surface with customized card layout (e.g., drag).
 // - Cards with customized drag/menu: form, editor, debug.
 // - Drag from search.
@@ -59,6 +59,7 @@ faker.seed(1);
 // - Column plugins
 // - Sidebar/Navigation?
 
+// - Test existing kanban
 // TODO(burdon): Search / Filter / Sort (Tags).
 // TODO(burdon): Mobile / CRX.
 // TODO(burdon): Content types (Text, Mixed, Image, Form, etc).
@@ -70,6 +71,17 @@ faker.seed(1);
 // TODO(burdon): Use Card for Cell content.
 // TODO(burdon): Replace stack? (Or simplify)
 // TODO(burdon): Factor out/generalize? (remove deps from dxos/ui-editor)
+
+const GridData = Schema.Struct({
+  objects: Schema.mutable(Schema.Array(Type.Ref(Obj.Any))),
+}).pipe(
+  Type.Obj({
+    typename: 'example.com/type/Grid',
+    version: '0.1.0',
+  }),
+);
+
+interface GridData extends Schema.Schema.Type<typeof GridData> {}
 
 // TODO(burdon): Replace with Surface.
 const TextCell: GridCellProps['Cell'] = ({ object, dragging }) => {
@@ -125,8 +137,19 @@ const DefaultStory = () => {
     [],
   );
 
-  // TODO(burdon): Data model for position? Arrays of refs.
-  const [objects, setObjects] = useState(range(2).map(() => createObject(Text.make(faker.lorem.paragraph()))));
+  const grid = useMemo(() => {
+    if (!space) {
+      return;
+    }
+
+    return space.db.add(
+      Obj.make(GridData, { objects: range(3).map(() => Ref.make(Text.make(faker.lorem.paragraph()))) }),
+    );
+  }, [space]);
+  const _objects = grid?.objects.map((ref) => ref.target).filter(isTruthy);
+
+  // TODO(burdon): Replace with grid.
+  const [objects, setObjects] = useState(range(3).map(() => createObject(Text.make(faker.lorem.paragraph()))));
   const objectHandler = useMemo<DropEventHandler>(() => {
     const containerId = 'notes';
     return {
@@ -153,41 +176,65 @@ const DefaultStory = () => {
         setObjects([...objects]);
       },
     };
-  }, [objects]);
+  }, [grid]);
+
+  const documentHandler = useMemo<DropEventHandler>(() => {
+    return {
+      id: 'document',
+      canDrop: () => true,
+      onDrop: () => {
+        console.log('drop');
+      },
+    };
+  }, []);
+
+  const mainEditorExtensions = useMemo(
+    () => [
+      ...extensions,
+      dropFile({
+        onDrop: (view, event) => console.log('drop', event),
+      }),
+    ],
+    [extensions],
+  );
 
   return (
     <Mosaic.Root>
-      <Editor.Root extensions={extensions}>
+      <Editor.Root extensions={mainEditorExtensions}>
         <Grid.Root>
           <Grid.Viewport classNames='flex is-full overflow-x-auto'>
             <div role='none' className='grid grid-flow-col auto-cols-[25rem] gap-4'>
               {/* Search */}
-              <Mosaic.Container handler={searchHandler}>
-                <Grid.Column>
-                  {/* TODO(burdon): Stack layout. */}
-                  <div role='none' className='p-3'>
-                    <QueryEditor
-                      classNames='border border-subduedSeparator rounded-sm p-2'
-                      db={space?.db}
-                      onChange={setQuery}
-                    />
-                  </div>
+              <Grid.Column>
+                <div role='none' className='p-3'>
+                  <QueryEditor
+                    classNames='border border-subduedSeparator rounded-sm p-2'
+                    db={space?.db}
+                    onChange={setQuery}
+                  />
+                </div>
+                <Mosaic.Container asChild handler={searchHandler}>
                   <Grid.Stack id={searchHandler.id} objects={searchObjects} Cell={DebugCell} canDrag />
-                </Grid.Column>
-              </Mosaic.Container>
+                </Mosaic.Container>
+              </Grid.Column>
 
               {/* Canvas */}
-              <Mosaic.Container handler={objectHandler}>
-                <Grid.Column>
+              <Grid.Column>
+                {/* TODO(burdon): asChild doesn't work. */}
+                <Mosaic.Container handler={objectHandler}>
                   <Grid.Stack id={objectHandler.id} objects={objects} Cell={TextCell} canDrag canDrop />
-                </Grid.Column>
-              </Mosaic.Container>
+                </Mosaic.Container>
+              </Grid.Column>
 
               {/* TODO(burdon): Document. */}
-              <Grid.Column classNames='p-3'>
-                <Editor.Root extensions={extensions}>
-                  <Editor.Content />
+              <Grid.Column>
+                {/* <Mosaic.Container handler={documentHandler}> */}
+                <Editor.Root extensions={mainEditorExtensions}>
+                  <Editor.Viewport classNames='p-3'>
+                    <Editor.Content initialValue={['# Hello World', 'This is a markdown editor.', '', ''].join('\n')} />
+                  </Editor.Viewport>
                 </Editor.Root>
+                {/* </Mosaic.Container> */}
               </Grid.Column>
             </div>
           </Grid.Viewport>
@@ -206,7 +253,7 @@ const meta = {
     withClientProvider({
       createIdentity: true,
       createSpace: true,
-      types: [Organization.Organization, Person.Person, Project.Project],
+      types: [GridData, Organization.Organization, Person.Person, Project.Project],
       onCreateSpace: async ({ space }) => {
         const factory = createObjectFactory(space.db, generator);
         await factory([

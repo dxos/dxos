@@ -6,6 +6,9 @@ import { type Obj } from '@dxos/echo';
 
 // TODO(burdon): Reconcile with react-ui-dnd.
 
+/**
+ * Draggable item.
+ */
 export type ItemData = {
   type: 'item';
   id: string;
@@ -13,12 +16,18 @@ export type ItemData = {
   containerId: string;
 };
 
-export type PlaceholderData<LOC = any> = {
+/**
+ * Drop target placeholder.
+ */
+export type PlaceholderData<Location = any> = {
   type: 'placeholder';
-  location: LOC;
+  location: Location;
   containerId: string;
 };
 
+/**
+ * Drop target container.
+ */
 export type ContainerData = {
   type: 'container';
   id: string;
@@ -41,7 +50,7 @@ export interface DropEventHandler {
   /**
    * Determine if the item can be dropped into this container.
    */
-  canDrop: (props: { item: ItemData }) => boolean;
+  canDrop: (item: ItemData) => boolean;
 
   /**
    * Insert/rearrange the item at the given location.
