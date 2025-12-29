@@ -9,7 +9,6 @@ import React, { useMemo, useState } from 'react';
 
 import { Obj, Ref, Type } from '@dxos/echo';
 import { createDocAccessor, createObject } from '@dxos/echo-db';
-import { log } from '@dxos/log';
 import { faker } from '@dxos/random';
 import { useQuery } from '@dxos/react-client/echo';
 import { useClientStory, withClientProvider } from '@dxos/react-client/testing';
@@ -26,15 +25,15 @@ import {
   createMarkdownExtensions,
   createThemeExtensions,
   decorateMarkdown,
-  dropFile,
 } from '@dxos/ui-editor';
 import { get, isTruthy, range } from '@dxos/util';
 
 const generator = faker as any as ValueGenerator;
 
-import { type DropEventHandler } from '../../hooks';
+import { type DragEventHandler } from '../../hooks';
 import { Mosaic } from '../Mosaic';
 
+import { dropHandler } from './extension';
 import { Grid, type GridCellProps } from './Grid';
 
 faker.seed(1);
@@ -125,13 +124,12 @@ const DefaultStory = () => {
   const [query, setQuery] = useState<string | undefined>();
   const filter = useQueryBuilder(query);
   const searchObjects = useQuery(space?.db, filter).sort(Obj.sort(Obj.sortByTypename, Obj.sortByLabel));
-  const searchHandler = useMemo<DropEventHandler>(
+  const searchHandler = useMemo<DragEventHandler>(
     () => ({
       id: 'search',
       canDrop: () => false,
       onTake: (item, cb) => {
-        const result = cb(item);
-        log.info('taken', { item, result });
+        cb(item.object);
       },
     }),
     [],
@@ -148,16 +146,16 @@ const DefaultStory = () => {
   }, [space]);
   const _objects = grid?.objects.map((ref) => ref.target).filter(isTruthy);
 
-  // TODO(burdon): Replace with grid.
+  // TODO(burdon): Generalize for kanban, board, etc.
   const [objects, setObjects] = useState(range(3).map(() => createObject(Text.make(faker.lorem.paragraph()))));
-  const objectHandler = useMemo<DropEventHandler>(() => {
+  const objectHandler = useMemo<DragEventHandler>(() => {
     const containerId = 'notes';
     return {
       id: containerId,
       canDrop: () => true,
       // TODO(burdon): Generalize/factor out.
-      onDrop: ({ item, at }) => {
-        const current = item.containerId === containerId ? objects.findIndex((object) => object.id === item.id) : -1;
+      onDrop: ({ object, at }) => {
+        const current = objects.findIndex(({ id }) => id === object.id);
         if (current !== -1) {
           objects.splice(current, 1);
         }
@@ -166,37 +164,45 @@ const DefaultStory = () => {
           at?.containerId === containerId && at?.type === 'item'
             ? objects.findIndex((object) => object.id === at?.id)
             : -1;
-
         if (targetIdx !== -1) {
-          objects.splice(targetIdx + (at && extractClosestEdge(at) === 'bottom' ? 1 : 0), 0, item.object);
+          objects.splice(targetIdx + (at && extractClosestEdge(at) === 'bottom' ? 1 : 0), 0, object);
         } else {
-          objects.push(item.object);
+          objects.push(object);
         }
 
         setObjects([...objects]);
       },
-    };
-  }, [grid]);
+      onTake: (item, cb) => {
+        const object = objects.find((object) => object.id === item.id);
+        if (!object) {
+          return;
+        }
 
-  const documentHandler = useMemo<DropEventHandler>(() => {
+        cb(object);
+      },
+    };
+  }, [grid, objects]);
+
+  const { extension, update, cancel, drop } = useMemo(() => dropHandler({}), []);
+  const documentHandler = useMemo<DragEventHandler>(() => {
     return {
       id: 'document',
       canDrop: () => true,
-      onDrop: () => {
-        console.log('drop');
+      onDrag: ({ position }) => {
+        update(position);
+      },
+      onCancel: () => {
+        cancel();
+      },
+      onDrop: ({ object }) => {
+        const text = Obj.getLabel(object) ?? 'Link';
+        drop({ text, url: object.id });
       },
     };
   }, []);
 
-  const mainEditorExtensions = useMemo(
-    () => [
-      ...extensions,
-      dropFile({
-        onDrop: (view, event) => console.log('drop', event),
-      }),
-    ],
-    [extensions],
-  );
+  // TODO(burdon): Custom drag handler.
+  const mainEditorExtensions = useMemo(() => [...extensions, extension], [extensions, extension]);
 
   return (
     <Mosaic.Root>
@@ -213,28 +219,29 @@ const DefaultStory = () => {
                     onChange={setQuery}
                   />
                 </div>
-                <Mosaic.Container asChild handler={searchHandler}>
+                <Mosaic.Container asChild autoscroll handler={searchHandler}>
                   <Grid.Stack id={searchHandler.id} objects={searchObjects} Cell={DebugCell} canDrag />
                 </Mosaic.Container>
               </Grid.Column>
 
               {/* Canvas */}
               <Grid.Column>
-                {/* TODO(burdon): asChild doesn't work. */}
-                <Mosaic.Container handler={objectHandler}>
+                <Mosaic.Container asChild autoscroll handler={objectHandler}>
                   <Grid.Stack id={objectHandler.id} objects={objects} Cell={TextCell} canDrag canDrop />
                 </Mosaic.Container>
               </Grid.Column>
 
               {/* TODO(burdon): Document. */}
               <Grid.Column>
-                {/* <Mosaic.Container handler={documentHandler}> */}
-                <Editor.Root extensions={mainEditorExtensions}>
-                  <Editor.Viewport classNames='p-3'>
-                    <Editor.Content initialValue={['# Hello World', 'This is a markdown editor.', '', ''].join('\n')} />
-                  </Editor.Viewport>
-                </Editor.Root>
-                {/* </Mosaic.Container> */}
+                <Mosaic.Container handler={documentHandler}>
+                  <Editor.Root extensions={mainEditorExtensions}>
+                    <Editor.Viewport classNames='p-3'>
+                      <Editor.Content
+                        initialValue={['# Hello World', '', 'This is a markdown editor.', '', '', ''].join('\n')}
+                      />
+                    </Editor.Viewport>
+                  </Editor.Root>
+                </Mosaic.Container>
               </Grid.Column>
             </div>
           </Grid.Viewport>

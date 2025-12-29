@@ -3,7 +3,12 @@
 //
 
 import { combine } from '@atlaskit/pragmatic-drag-and-drop/combine';
-import { dropTargetForElements, monitorForElements } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
+import { type DragLocationHistory } from '@atlaskit/pragmatic-drag-and-drop/dist/types/internal-types';
+import {
+  type ElementDragPayload,
+  dropTargetForElements,
+  monitorForElements,
+} from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
 import { autoScrollForElements } from '@atlaskit/pragmatic-drag-and-drop-auto-scroll/element';
 import { createContext } from '@radix-ui/react-context';
 import { Primitive } from '@radix-ui/react-primitive';
@@ -11,8 +16,9 @@ import { Slot } from '@radix-ui/react-slot';
 import React, { type PropsWithChildren, useEffect, useRef, useState } from 'react';
 
 import { log } from '@dxos/log';
+import { isTruthy } from '@dxos/util';
 
-import { type ContainerData, type DropEventHandler, type DropTargetData, type ItemData } from '../../hooks';
+import { type ContainerData, type DragEventHandler, type DropTargetData, type ItemData } from '../../hooks';
 
 // TODO(burdon): DragContext.
 // TODO(burdon): Register containers and drop handlers.
@@ -25,8 +31,8 @@ import { type ContainerData, type DropEventHandler, type DropTargetData, type It
 //
 
 type MosaicContextValue = {
-  containers: Record<string, DropEventHandler>;
-  addContainer: (container: DropEventHandler) => void;
+  containers: Record<string, DragEventHandler>;
+  addContainer: (container: DragEventHandler) => void;
   removeContainer: (id: string) => void;
 };
 
@@ -39,62 +45,90 @@ const [MosaicContextProvider, useMosaicContext] = createContext<MosaicContextVal
 type RootProps = PropsWithChildren;
 
 const Root = ({ children }: RootProps) => {
-  const [containers, setContainers] = useState<Record<string, DropEventHandler>>({});
+  const [handlers, setHandlers] = useState<Record<string, DragEventHandler>>({});
+  const currentHandler = useRef<DragEventHandler>(undefined);
+
+  const getSourceHandler = (source: ElementDragPayload): { data: ItemData; handler: DragEventHandler | undefined } => {
+    const data = source.data as ItemData;
+    return { data, handler: handlers[data.containerId] };
+  };
+
+  const getTargetHandler = (
+    location: DragLocationHistory,
+  ): { data: ContainerData; handler: DragEventHandler | undefined } => {
+    const targetData = location.current.dropTargets.find((target) => target.data.type === 'container')
+      ?.data as ContainerData;
+    return { data: targetData, handler: targetData?.id ? handlers[targetData.id] : undefined };
+  };
 
   useEffect(() => {
     return monitorForElements({
+      onDrag: ({ source, location }) => {
+        const { data } = getSourceHandler(source);
+        const { handler } = getTargetHandler(location);
+        if (handler) {
+          const { clientX: x, clientY: y } = location.current.input;
+          handler.onDrag?.({ item: data, position: { x, y } });
+        }
+      },
+      onDropTargetChange: ({ location }) => {
+        const { handler } = getTargetHandler(location);
+        currentHandler.current?.onCancel?.();
+        currentHandler.current = handler;
+      },
       onDrop: ({ source, location }) => {
-        log.info('onDrop', {
+        log('onDrop', {
           source: source.data,
           location: location.current.dropTargets.map((target) => target.data),
         });
 
-        // Get the source container.
-        const sourceData = source.data as ItemData;
-        const sourceContainer = containers[sourceData.containerId];
-        if (!sourceContainer) {
-          log.warn('invalid source', { source: sourceData });
-          return;
-        }
+        try {
+          // Get the source container.
+          const { data: sourceData, handler: sourceHandler } = getSourceHandler(source);
+          if (!sourceHandler) {
+            log.warn('invalid source', { source: sourceData });
+            return;
+          }
 
-        // Get the target container.
-        const container = location.current.dropTargets.find((target) => target.data.type === 'container');
-        if (!container) {
-          log.warn('invalid target');
-          return;
-        }
+          // Get the target container.
+          const { handler: targetHandler } = getTargetHandler(location);
+          if (!targetHandler) {
+            log.warn('invalid target', { source: sourceData });
+            return;
+          }
 
-        const containerData = container.data as ContainerData;
-        const targetContainer = containers[containerData.id];
-        if (!targetContainer) {
-          log.warn('invalid container', { id: containerData.id });
-          return;
-        }
+          // Get the target location.
+          const target = location.current.dropTargets.find(
+            (target) => target.data.type === 'item' || target.data.type === 'placeholder',
+          );
 
-        // Get the target location.
-        const target = location.current.dropTargets.find(
-          (target) => target.data.type === 'item' || target.data.type === 'placeholder',
-        );
-
-        // TODO(burdon): Check doesn't already exist in collection.
-        if (sourceContainer === targetContainer) {
-          targetContainer.onDrop?.({ item: sourceData, at: target?.data as DropTargetData });
-        } else {
-          sourceContainer.onTake?.(sourceData, (sourceData) => {
-            targetContainer.onDrop?.({ item: sourceData, at: target?.data as DropTargetData });
-            return true;
-          });
+          // TODO(burdon): Check doesn't already exist in collection.
+          if (sourceHandler === targetHandler) {
+            targetHandler.onDrop?.({ object: sourceData.object, at: target?.data as DropTargetData });
+          } else {
+            if (!sourceHandler.onTake) {
+              log.warn('invalid source', { source: sourceData });
+              return;
+            }
+            sourceHandler.onTake?.(sourceData, (object) => {
+              targetHandler.onDrop?.({ object, at: target?.data as DropTargetData });
+              return true;
+            });
+          }
+        } finally {
+          currentHandler.current?.onCancel?.();
+          currentHandler.current = undefined;
         }
       },
     });
-  }, [containers]);
+  }, [handlers]);
 
   return (
     <MosaicContextProvider
-      containers={containers}
-      addContainer={(container) => setContainers((containers) => ({ ...containers, [container.id]: container }))}
+      containers={handlers}
+      addContainer={(container) => setHandlers((containers) => ({ ...containers, [container.id]: container }))}
       removeContainer={(id) =>
-        setContainers((containers) => {
+        setHandlers((containers) => {
           delete containers[id];
           return { ...containers };
         })
@@ -113,11 +147,13 @@ export const CONTAINER_DATA_ACTIVE_ATTR = 'data-active';
 
 type ContainerState = { type: 'idle' } | { type: 'active' };
 
-type ContainerProps = PropsWithChildren<{ asChild?: boolean; handler: DropEventHandler }>;
+type ContainerProps = PropsWithChildren<{ asChild?: boolean; autoscroll?: boolean; handler: DragEventHandler }>;
 
-// TODO(burdon): Create context?
-// TODO(burdon): forwardRef.
-const Container = ({ children, asChild, handler }: ContainerProps) => {
+/**
+ * Ref https://www.radix-ui.com/primitives/docs/guides/composition
+ * NOTE: Children must forwardRef and spread props to root element.
+ */
+const Container = ({ children, asChild, autoscroll, handler }: ContainerProps) => {
   const rootRef = useRef<HTMLDivElement>(null);
   const Root = asChild ? Slot : Primitive.div;
 
@@ -134,26 +170,32 @@ const Container = ({ children, asChild, handler }: ContainerProps) => {
     }
 
     return combine(
-      dropTargetForElements({
-        element: rootRef.current,
-        getData: () =>
-          ({
-            type: 'container',
-            id: handler.id,
-          }) satisfies ContainerData,
-        canDrop: ({ source }) => source.data.type === 'item' && handler.canDrop(source.data as ItemData),
-        onDragEnter: () => setState({ type: 'active' }),
-        onDragLeave: () => setState({ type: 'idle' }),
-      }),
-      autoScrollForElements({
-        element: rootRef.current,
-      }),
+      ...[
+        dropTargetForElements({
+          element: rootRef.current,
+          getData: () =>
+            ({
+              type: 'container',
+              id: handler.id,
+            }) satisfies ContainerData,
+          canDrop: ({ source }) => source.data.type === 'item' && handler.canDrop(source.data as ItemData),
+          onDragEnter: () => {
+            setState({ type: 'active' });
+          },
+          onDragLeave: () => {
+            setState({ type: 'idle' });
+          },
+        }),
+        autoscroll &&
+          autoScrollForElements({
+            element: rootRef.current,
+          }),
+      ].filter(isTruthy),
     );
   }, [rootRef, handler]);
 
-  // TOOD(burdon): Doesn't pass props to Slot?
   return (
-    <Root {...{ [CONTAINER_DATA_ACTIVE_ATTR]: state.type === 'active' }} ref={rootRef} tabIndex={7}>
+    <Root {...{ [CONTAINER_DATA_ACTIVE_ATTR]: state.type === 'active' }} ref={rootRef}>
       {children}
     </Root>
   );

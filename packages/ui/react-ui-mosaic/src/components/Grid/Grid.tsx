@@ -45,7 +45,7 @@ import { CONTAINER_DATA_ACTIVE_ATTR } from '../Mosaic';
 //
 
 const classes: Record<string, string> = {
-  icon: 'bs-6 is-6 grid place-items-center hover:bg-inputSurface rounded-sm transition opacity-10 group-hover:opacity-100',
+  icon: 'bs-6 is-6 grid place-items-center hover:bg-inputSurface rounded-sm transition opacity-10 group-hover/cell:opacity-100',
 
   borderFocus: [
     'outline-none border rounded-sm transition border-subduedSeparator',
@@ -54,7 +54,7 @@ const classes: Record<string, string> = {
     // Child has focus.
     'focus-within:border-neutralFocusIndicator',
     // Active drop target.
-    `has-[[${CONTAINER_DATA_ACTIVE_ATTR}]]:border-neutralFocusIndicator`,
+    `has-[[${CONTAINER_DATA_ACTIVE_ATTR}=true]]:border-neutralFocusIndicator`,
   ].join(' '),
 };
 
@@ -143,42 +143,45 @@ type GridStackProps = ThemedClassName<
   } & Pick<GridCellProps, 'Cell' | 'canDrag' | 'canDrop'>
 >;
 
-const GridStack = forwardRef<HTMLDivElement, GridStackProps>(({ classNames, id, objects, ...props }, forwardedRef) => {
-  const placeholderRef = useRef<HTMLDivElement>(null);
-  useEffect(() => {
-    if (!placeholderRef.current) {
-      return;
-    }
+const GridStack = forwardRef<HTMLDivElement, GridStackProps>(
+  ({ classNames, id, objects, Cell, canDrag, canDrop, ...props }, forwardedRef) => {
+    const placeholderRef = useRef<HTMLDivElement>(null);
+    useEffect(() => {
+      if (!placeholderRef.current) {
+        return;
+      }
 
-    return dropTargetForElements({
-      element: placeholderRef.current,
-      getData: () =>
-        ({
-          type: 'placeholder',
-          location: 'bottom',
-          containerId: id,
-        }) satisfies PlaceholderData,
-    });
-  }, [placeholderRef, id]);
+      return dropTargetForElements({
+        element: placeholderRef.current,
+        getData: () =>
+          ({
+            type: 'placeholder',
+            location: 'bottom',
+            containerId: id,
+          }) satisfies PlaceholderData,
+      });
+    }, [placeholderRef, id]);
 
-  return (
-    <div ref={forwardedRef} role='none' className={mx('flex flex-col is-full plb-2 overflow-y-auto', classNames)}>
-      {objects?.map((object) => (
-        <Grid.Cell key={object.id} containerId={id} object={object} {...props} />
-      ))}
-      <div className='p-3' ref={placeholderRef}>
-        <div
-          // TODO(burdon): Display while dragging.
-          className={mx(
-            'bs-[8rem]',
-            'outline-none border rounded-sm transition border-transparent border-dashed',
-            `has-[[data-active=true]]:border-neutralFocusIndicator`,
-          )}
-        />
+    return (
+      <div
+        ref={forwardedRef}
+        role='none'
+        className={mx('flex flex-col is-full plb-2 overflow-y-auto', classNames)}
+        {...props}
+      >
+        {objects?.map((object) => (
+          <Grid.Cell key={object.id} containerId={id} object={object} Cell={Cell} canDrag={canDrag} canDrop={canDrop} />
+        ))}
+        <div className='p-3' ref={placeholderRef}>
+          <div
+            // TODO(burdon): Display while dragging.
+            className={mx('bs-[8rem]', 'outline-none border rounded-sm transition border-transparent border-dashed')}
+          />
+        </div>
       </div>
-    </div>
-  );
-});
+    );
+  },
+);
 
 GridStack.displayName = 'Grid.Stack';
 
@@ -330,7 +333,7 @@ const GridCellPrimitive = memo(
           ref={focusableRef}
           role='none'
           className={mx(
-            'group is-full grid grid-cols-[min-content_1fr_min-content] gap-2 p-2 overflow-hidden',
+            'group/cell is-full grid grid-cols-[min-content_1fr_min-content] gap-2 p-2 overflow-hidden',
             classes.borderFocus,
             classNames,
           )}
@@ -370,3 +373,5 @@ export const Grid = {
 };
 
 export type { GridRootProps, GridViewportProps, GridColumnProps, GridStackProps, GridCellProps };
+
+export { classes };

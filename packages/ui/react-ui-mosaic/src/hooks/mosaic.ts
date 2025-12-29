@@ -44,7 +44,7 @@ export type DropEvent = {
 /**
  * Handler implemented by drop containers.
  */
-export interface DropEventHandler {
+export interface DragEventHandler {
   id: string;
 
   /**
@@ -53,9 +53,14 @@ export interface DropEventHandler {
   canDrop: (item: ItemData) => boolean;
 
   /**
+   * Called during drag for custom visualization.
+   */
+  onDrag?: (props: { item: ItemData; position: { x: number; y: number } }) => void;
+
+  /**
    * Insert/rearrange the item at the given location.
    */
-  onDrop?: (props: { item: ItemData; at?: DropTargetData }) => void;
+  onDrop?: (props: { object: Obj.Any; at?: DropTargetData }) => void;
 
   /**
    * Request the object to be dropped.
@@ -63,5 +68,10 @@ export interface DropEventHandler {
    * If the callback returns true, then the callback may decide to remove the item from the source container,
    * completing the transfer.
    */
-  onTake?: (item: ItemData, cb: (item: ItemData) => boolean) => void;
+  onTake?: (item: ItemData, cb: (objects: Obj.Any) => boolean) => void;
+
+  /**
+   * Dragging ended.
+   */
+  onCancel?: () => void;
 }
