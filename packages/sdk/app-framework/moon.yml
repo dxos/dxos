@@ -10,6 +10,7 @@ tasks:
   compile:
     args:
       - '--entryPoint=src/index.ts'
+      - '--entryPoint=src/common/index.ts'
       - '--entryPoint=src/core/activation-event.ts'
       - '--entryPoint=src/core/capability.ts'
       - '--entryPoint=src/core/plugin.ts'

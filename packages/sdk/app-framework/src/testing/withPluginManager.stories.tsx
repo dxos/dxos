@@ -7,7 +7,7 @@ import React from 'react';
 
 import { withTheme } from '@dxos/react-ui/testing';
 
-import { Capabilities, createSurface } from '../common';
+import * as Common from '../common';
 import { Capability } from '../core';
 import { Surface } from '../react';
 
@@ -31,8 +31,8 @@ const meta = {
     withPluginManager({
       capabilities: [
         Capability.contributes(
-          Capabilities.ReactSurface,
-          createSurface({
+          Common.Capability.ReactSurface,
+          Common.createSurface({
             id: 'test',
             role: 'main',
             component: ({ role }) => <span>{JSON.stringify({ role })}</span>,

@@ -4,17 +4,17 @@
 
 import { RootSettingsStore } from '@dxos/local-storage';
 
-import { Capabilities } from '../common';
+import * as Common from '../common';
 import { Capability } from '../core';
 
 export default Capability.makeModule((context) => {
   // TODO(wittjosiah): Replace with atom?
   const settingsStore = new RootSettingsStore();
 
-  let previous: Capabilities.Settings[] = [];
-  const registry = context.getCapability(Capabilities.AtomRegistry);
+  let previous: Common.Capability.Settings[] = [];
+  const registry = context.getCapability(Common.Capability.AtomRegistry);
   const cancel = registry.subscribe(
-    context.capabilities(Capabilities.Settings),
+    context.capabilities(Common.Capability.Settings),
     (allSettings) => {
       const added = allSettings.filter((setting) => !previous.includes(setting));
       const removed = previous.filter((setting) => !allSettings.includes(setting));
@@ -29,5 +29,5 @@ export default Capability.makeModule((context) => {
     { immediate: true },
   );
 
-  return Capability.contributes(Capabilities.SettingsStore, settingsStore, () => cancel());
+  return Capability.contributes(Common.Capability.SettingsStore, settingsStore, () => cancel());
 });

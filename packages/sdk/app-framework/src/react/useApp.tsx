@@ -11,7 +11,7 @@ import { live } from '@dxos/live-object';
 import { useAsyncEffect, useDefaultValue } from '@dxos/react-hooks';
 import { ContextProtocolProvider } from '@dxos/web-context-react';
 
-import { Capabilities, Events } from '../common';
+import * as Common from '../common';
 import { PluginManagerContext } from '../context';
 import { type Plugin, PluginManager } from '../core';
 
@@ -102,7 +102,7 @@ export const useApp = ({
   useEffect(() => {
     return manager.activation.on(({ event, state: _state, error }) => {
       // Once the app is ready the first time, don't show the fallback again.
-      if (!state.ready && event === Events.Startup.id) {
+      if (!state.ready && event === Common.ActivationEvent.Startup.id) {
         state.ready = _state === 'activated';
       }
 
@@ -124,26 +124,26 @@ export const useApp = ({
 
   useAsyncEffect(async () => {
     manager.context.contributeCapability({
-      interface: Capabilities.PluginManager,
+      interface: Common.Capability.PluginManager,
       implementation: manager,
       module: 'dxos.org/app-framework/plugin-manager',
     });
 
     manager.context.contributeCapability({
-      interface: Capabilities.AtomRegistry,
+      interface: Common.Capability.AtomRegistry,
       implementation: manager.registry,
       module: 'dxos.org/app-framework/atom-registry',
     });
 
     await Promise.all([
       // TODO(wittjosiah): Factor out such that this could be called per surface role when attempting to render.
-      manager.activate(Events.SetupReactSurface),
-      manager.activate(Events.Startup),
+      manager.activate(Common.ActivationEvent.SetupReactSurface),
+      manager.activate(Common.ActivationEvent.Startup),
     ]);
 
     return () => {
-      manager.context.removeCapability(Capabilities.PluginManager, manager);
-      manager.context.removeCapability(Capabilities.AtomRegistry, manager.registry);
+      manager.context.removeCapability(Common.Capability.PluginManager, manager);
+      manager.context.removeCapability(Common.Capability.AtomRegistry, manager.registry);
     };
   }, [manager]);
 

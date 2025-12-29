@@ -8,7 +8,7 @@ import * as Layer from 'effect/Layer';
 
 import { invariant } from '@dxos/invariant';
 
-import { Capabilities, Events } from './common';
+import * as Common from './common';
 import { type Plugin, PluginManager } from './core';
 
 const defaultPluginLoader =
@@ -39,7 +39,7 @@ export type CreateCliAppOptions = {
  * @example
  * const plugins = [ClientPluginCLI()];
  * const manager = await createCliApp({ plugins });
- * const commands = manager.context.getCapabilities(Capabilities.Command);
+ * const commands = manager.context.getCapabilities(Common.Capability.Command);
  *
  * @param options.pluginManager Optional existing PluginManager instance.
  * @param options.pluginLoader Function to load plugins by ID.
@@ -72,26 +72,26 @@ export const createCliApp = Effect.fn(function* ({
     });
 
   manager.context.contributeCapability({
-    interface: Capabilities.PluginManager,
+    interface: Common.Capability.PluginManager,
     implementation: manager,
     module: 'dxos.org/app-framework/plugin-manager',
   });
 
   manager.context.contributeCapability({
-    interface: Capabilities.AtomRegistry,
+    interface: Common.Capability.AtomRegistry,
     implementation: manager.registry,
     module: 'dxos.org/app-framework/atom-registry',
   });
 
   // Activate startup event to load CLI commands and Effect layers.
-  yield* manager._activate(Events.Startup);
+  yield* manager._activate(Common.ActivationEvent.Startup);
 
   // Gather all layers and merge them into a single layer.
-  const layers = manager.context.getCapabilities(Capabilities.Layer);
+  const layers = manager.context.getCapabilities(Common.Capability.Layer);
   const layer = Layer.mergeAll(PluginManager.Service.fromManager(manager), ...layers);
 
   // Gather all commands and provide them to the root command.
-  const pluginCommands = manager.context.getCapabilities(Capabilities.Command);
+  const pluginCommands = manager.context.getCapabilities(Common.Capability.Command);
   const subCommands = subCommandsParam ? [...subCommandsParam, ...pluginCommands] : pluginCommands;
   invariant(subCommands.length > 0, 'No subcommands provided');
   const command = rootCommand.pipe(Command.withSubcommands(subCommands as SubCommands));

@@ -4,7 +4,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Capabilities, Events } from '../../common';
+import * as Common from '../../common';
 import { ActivationEvent, Capability, Plugin } from '../../core';
 import { type IntentSchema, createResolver } from '../../plugin-intent';
 
@@ -34,10 +34,10 @@ export const createNumberPlugin = (id: string) => {
     }),
     Plugin.addModule({
       id: 'IntentResolver',
-      activatesOn: Events.SetupIntentResolver,
+      activatesOn: Common.ActivationEvent.SetupIntentResolver,
       activate: () =>
         Capability.contributes(
-          Capabilities.IntentResolver,
+          Common.Capability.IntentResolver,
           createResolver({
             intent: createGeneratorIntent(id),
             resolve: () => window.alert(JSON.stringify({ number })),

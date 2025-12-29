@@ -12,7 +12,7 @@ import { registerSignalsRuntime } from '@dxos/echo-signals';
 import { invariant } from '@dxos/invariant';
 import { live } from '@dxos/live-object';
 
-import { Events } from '../common';
+import * as Common from '../common';
 
 import * as ActivationEvent from './activation-event';
 import * as Capability from './capability';
@@ -59,12 +59,12 @@ describe('PluginManager', () => {
     const TestPluginFactory = Plugin.define<TestPluginOptions>(testMeta).pipe(
       Plugin.addModule((options: TestPluginOptions) => ({
         id: 'Hello',
-        activatesOn: Events.Startup,
+        activatesOn: Common.ActivationEvent.Startup,
         activate: () => Capability.contributes(String, { string: `hello-${options.count}` }),
       })),
       Plugin.addModule({
         id: 'World',
-        activatesOn: Events.Startup,
+        activatesOn: Common.ActivationEvent.Startup,
         activate: () => Capability.contributes(String, { string: 'world' }),
       }),
       Plugin.make,
@@ -75,7 +75,7 @@ describe('PluginManager', () => {
 
     const manager = PluginManager.make({ plugins: [plugin], core: [], pluginLoader });
     await manager.enable(testMeta.id);
-    await manager.activate(Events.Startup);
+    await manager.activate(Common.ActivationEvent.Startup);
     const strings = manager.context.getCapabilities(String);
     expect(strings).toHaveLength(2);
     expect(strings[0].string).toBe('hello-5');
@@ -86,7 +86,7 @@ describe('PluginManager', () => {
     const Test = Plugin.define(testMeta).pipe(
       Plugin.addModule({
         id: 'Hello',
-        activatesOn: Events.Startup,
+        activatesOn: Common.ActivationEvent.Startup,
         activate: () => Capability.contributes(String, { string: 'hello' }),
       }),
       Plugin.make,
@@ -106,7 +106,7 @@ describe('PluginManager', () => {
     const Test = Plugin.define(testMeta).pipe(
       Plugin.addModule({
         id: 'Hello',
-        activatesOn: Events.Startup,
+        activatesOn: Common.ActivationEvent.Startup,
         activate: () => Capability.contributes(String, { string: 'hello' }),
       }),
       Plugin.make,
@@ -119,9 +119,9 @@ describe('PluginManager', () => {
     expect(manager.modules).toEqual([testPlugin.modules[0]]);
     expect(manager.active).toEqual([]);
     expect(manager.eventsFired).toEqual([]);
-    await manager.activate(Events.Startup);
+    await manager.activate(Common.ActivationEvent.Startup);
     expect(manager.active).toEqual([testPlugin.modules[0].id]);
-    expect(manager.eventsFired).toEqual([Events.Startup.id]);
+    expect(manager.eventsFired).toEqual([Common.ActivationEvent.Startup.id]);
   });
 
   it('should propagate errors thrown by module activate callbacks', async () => {
@@ -146,7 +146,7 @@ describe('PluginManager', () => {
       Plugin.define(testMeta).pipe(
         Plugin.addModule({
           id: 'Hello',
-          activatesOn: Events.Startup,
+          activatesOn: Common.ActivationEvent.Startup,
           activate: () => Capability.contributes(String, { string: 'hello' }),
         }),
         Plugin.addModule({
@@ -170,7 +170,7 @@ describe('PluginManager', () => {
     });
 
     await manager.add(testMeta.id);
-    await manager.activate(Events.Startup);
+    await manager.activate(Common.ActivationEvent.Startup);
     expect(await activating.wait()).toEqual(true);
     expect(await activated.wait()).toEqual(true);
 
@@ -186,7 +186,7 @@ describe('PluginManager', () => {
     const Test = Plugin.define(testMeta).pipe(
       Plugin.addModule({
         id: 'Hello',
-        activatesOn: Events.Startup,
+        activatesOn: Common.ActivationEvent.Startup,
         activate: () => {
           count++;
           return Capability.contributes(String, { string: 'hello' });
@@ -201,19 +201,19 @@ describe('PluginManager', () => {
 
     {
       await manager.add(testMeta.id);
-      const result = await manager.activate(Events.Startup);
+      const result = await manager.activate(Common.ActivationEvent.Startup);
       expect(result).toEqual(true);
       expect(manager.active).toEqual([testPlugin.modules[0].id]);
       expect(count).toEqual(1);
     }
 
     {
-      const result = await manager.activate(Events.Startup);
+      const result = await manager.activate(Common.ActivationEvent.Startup);
       expect(result).toEqual(false);
     }
 
     {
-      const result = await manager.reset(Events.Startup);
+      const result = await manager.reset(Common.ActivationEvent.Startup);
       expect(result).toEqual(true);
       expect(count).toEqual(2);
     }
@@ -278,7 +278,7 @@ describe('PluginManager', () => {
   it('should only activate modules after all activatation events have been fired', async () => {
     const Test = Plugin.define(testMeta).pipe(
       Plugin.addModule({
-        activatesOn: ActivationEvent.allOf(Events.Startup, CountEvent),
+        activatesOn: ActivationEvent.allOf(Common.ActivationEvent.Startup, CountEvent),
         id: 'Hello',
         activate: () => {
           return Capability.contributes(String, { string: 'hello' });
@@ -294,7 +294,7 @@ describe('PluginManager', () => {
     expect(manager.context.getCapabilities(String)).toHaveLength(0);
 
     await manager.add(testMeta.id);
-    await manager.activate(Events.Startup);
+    await manager.activate(Common.ActivationEvent.Startup);
     expect(manager.active).toEqual([]);
     expect(manager.context.getCapabilities(String)).toHaveLength(0);
 
@@ -308,7 +308,7 @@ describe('PluginManager', () => {
     const Test = Plugin.define(testMeta).pipe(
       Plugin.addModule({
         id: 'Hello',
-        activatesOn: ActivationEvent.oneOf(Events.Startup, CountEvent),
+        activatesOn: ActivationEvent.oneOf(Common.ActivationEvent.Startup, CountEvent),
         activate: () => {
           count++;
           return Capability.contributes(String, { string: 'hello' });
@@ -330,7 +330,7 @@ describe('PluginManager', () => {
     expect(manager.context.getCapabilities(String)).toHaveLength(1);
     expect(count).toEqual(1);
 
-    await manager.activate(Events.Startup);
+    await manager.activate(Common.ActivationEvent.Startup);
     expect(manager.active).toEqual([testPlugin.modules[0].id]);
     expect(manager.context.getCapabilities(String)).toHaveLength(1);
     expect(count).toEqual(1);
@@ -346,7 +346,7 @@ describe('PluginManager', () => {
     const Count = Plugin.define({ id: 'dxos.org/test/count', name: 'Count' }).pipe(
       Plugin.addModule({
         id: 'Count',
-        activatesOn: Events.Startup,
+        activatesOn: Common.ActivationEvent.Startup,
         activatesBefore: [CountEvent],
         activate: async (context) => async () => {
           computeTotal(context);
@@ -382,7 +382,7 @@ describe('PluginManager', () => {
     {
       await manager.add(Test.meta.id);
       await manager.add(Count.meta.id);
-      await manager.activate(Events.Startup);
+      await manager.activate(Common.ActivationEvent.Startup);
       expect(manager.active).toEqual([...testPlugin.modules.map((m) => m.id), countPlugin.modules[0].id]);
       expect(manager.pendingReset).toEqual([]);
 
@@ -415,12 +415,12 @@ describe('PluginManager', () => {
 
   it('should be able to handle live object contributions', async () => {
     const id = 'dxos.org/test/counter';
-    const stateEvent = Events.createStateEvent(id);
+    const stateEvent = Common.ActivationEvent.createStateEvent(id);
 
     const Test = Plugin.define(testMeta).pipe(
       Plugin.addModule({
         id: 'Counter',
-        activatesOn: Events.Startup,
+        activatesOn: Common.ActivationEvent.Startup,
         activatesAfter: [stateEvent],
         activate: () => Capability.contributes(Number, live({ number: 1 })),
       }),
@@ -443,7 +443,7 @@ describe('PluginManager', () => {
 
     const manager = PluginManager.make({ pluginLoader });
     await manager.add(Test.meta.id);
-    await manager.activate(Events.Startup);
+    await manager.activate(Common.ActivationEvent.Startup);
     expect(manager.active).toEqual(testPlugin.modules.map((m) => m.id));
 
     const counter = manager.context.getCapability(Number);

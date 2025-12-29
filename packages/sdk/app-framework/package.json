@@ -27,6 +27,12 @@
       "browser": "./dist/lib/browser/capability/index.mjs",
       "node": "./dist/lib/node-esm/capability/index.mjs"
     },
+    "./Common": {
+      "source": "./src/common/index.ts",
+      "types": "./dist/types/src/common/index.d.ts",
+      "browser": "./dist/lib/browser/common/index.mjs",
+      "node": "./dist/lib/node-esm/common/index.mjs"
+    },
     "./Plugin": {
       "source": "./src/core/plugin.ts",
       "types": "./dist/types/src/plugin/index.d.ts",
@@ -60,6 +66,9 @@
       ],
       "Capability": [
         "dist/types/src/capability/index.d.ts"
+      ],
+      "Common": [
+        "dist/types/src/common/index.d.ts"
       ],
       "Plugin": [
         "dist/types/src/plugin/index.d.ts"

@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { Capabilities } from '../../common';
+import * as Common from '../../common';
 import { Capability } from '../../core';
 import { Surface } from '../../react';
 
@@ -27,7 +27,7 @@ export const Layout = () => {
 };
 
 export default Capability.makeModule(() =>
-  Capability.contributes(Capabilities.ReactRoot, {
+  Capability.contributes(Common.Capability.ReactRoot, {
     id: 'dxos.org/test/layout/root',
     root: Layout,
   }),

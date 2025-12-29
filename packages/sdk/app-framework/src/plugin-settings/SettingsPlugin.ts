@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Capabilities, Events } from '../common';
+import * as Common from '../common';
 import { Capability, Plugin } from '../core';
 
 import { meta } from './meta';
@@ -14,22 +14,22 @@ const SettingsAppGraphBuilder = Capability.lazy('SettingsAppGraphBuilder', () =>
 
 export const SettingsPlugin = Plugin.define(meta).pipe(
   Plugin.addModule({
-    activatesOn: Events.Startup,
-    activatesBefore: [Events.SetupSettings],
-    activatesAfter: [Events.SettingsReady],
+    activatesOn: Common.ActivationEvent.Startup,
+    activatesBefore: [Common.ActivationEvent.SetupSettings],
+    activatesAfter: [Common.ActivationEvent.SettingsReady],
     activate: SettingsStore,
   }),
   Plugin.addModule({
     id: 'translations',
-    activatesOn: Events.SetupTranslations,
-    activate: () => Capability.contributes(Capabilities.Translations, translations),
+    activatesOn: Common.ActivationEvent.SetupTranslations,
+    activate: () => Capability.contributes(Common.Capability.Translations, translations),
   }),
   Plugin.addModule({
-    activatesOn: Events.SetupIntentResolver,
+    activatesOn: Common.ActivationEvent.SetupIntentResolver,
     activate: SettingsIntentResolver,
   }),
   Plugin.addModule({
-    activatesOn: Events.SetupAppGraph,
+    activatesOn: Common.ActivationEvent.SetupAppGraph,
     activate: SettingsAppGraphBuilder,
   }),
   Plugin.make,

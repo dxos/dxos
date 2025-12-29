@@ -6,7 +6,7 @@ import React from 'react';
 
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
 
-import { Capabilities, createSurface } from '../../common';
+import * as Common from '../../common';
 import { Capability } from '../../core';
 import { usePluginManager } from '../../react';
 
@@ -30,8 +30,8 @@ export const Debug = () => {
 
 export default Capability.makeModule(() =>
   Capability.contributes(
-    Capabilities.ReactSurface,
-    createSurface({
+    Common.Capability.ReactSurface,
+    Common.createSurface({
       id: 'dxos.org/test/debug/main',
       role: 'secondary',
       component: Debug,

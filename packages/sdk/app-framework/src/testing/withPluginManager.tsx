@@ -9,7 +9,7 @@ import { raise } from '@dxos/debug';
 import { useAsyncEffect } from '@dxos/react-hooks';
 import { type MaybeProvider, getProviderValue } from '@dxos/util';
 
-import { Capabilities, Events } from '../common';
+import * as Common from '../common';
 import { type ActivationEvent, Capability, Plugin, PluginManager } from '../core';
 import { type UseAppOptions, useApp } from '../react';
 
@@ -64,7 +64,7 @@ export const withPluginManager = <Args,>(init: WithPluginManagerInitializer<Args
 
     // Set-up root capability.
     useEffect(() => {
-      const capability = Capability.contributes(Capabilities.ReactRoot, {
+      const capability = Capability.contributes(Common.Capability.ReactRoot, {
         id: context.id,
         root: () => <Story />,
       });
@@ -99,6 +99,6 @@ const storyMeta = {
 // No-op plugin to ensure there exists at least one plugin for the startup event.
 // This is necessary because `createApp` expects the startup event to complete before the app is ready.
 const StoryPlugin = Plugin.define(storyMeta).pipe(
-  Plugin.addModule({ id: 'Story', activatesOn: Events.Startup, activate: () => [] }),
+  Plugin.addModule({ id: 'Story', activatesOn: Common.ActivationEvent.Startup, activate: () => [] }),
   Plugin.make,
 )();

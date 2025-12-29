@@ -4,7 +4,7 @@
 
 import { log } from '@dxos/log';
 
-import { Capabilities, Events } from '../../common';
+import * as Common from '../../common';
 import { Capability, Plugin } from '../../core';
 import { createResolver } from '../../plugin-intent';
 
@@ -20,10 +20,10 @@ const meta = {
 export const LoggerPlugin = Plugin.define(meta).pipe(
   Plugin.addModule({
     id: 'intents',
-    activatesOn: Events.SetupIntentResolver,
+    activatesOn: Common.ActivationEvent.SetupIntentResolver,
     activate: () => [
       Capability.contributes(
-        Capabilities.IntentResolver,
+        Common.Capability.IntentResolver,
         createResolver({
           intent: Log,
           resolve: ({ message }) => {
@@ -34,7 +34,7 @@ export const LoggerPlugin = Plugin.define(meta).pipe(
     ],
   }),
   Plugin.addModule({
-    activatesOn: Events.Startup,
+    activatesOn: Common.ActivationEvent.Startup,
     activate: Toolbar,
   }),
   Plugin.make,

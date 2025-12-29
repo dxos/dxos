@@ -13,7 +13,7 @@ import { live } from '@dxos/live-object';
 import { log } from '@dxos/log';
 import { type GuardedType, type MaybePromise, type Position, byPosition } from '@dxos/util';
 
-import { Capabilities, Events } from '../common';
+import * as Common from '../common';
 import { Capability } from '../core';
 
 import { IntentAction } from './actions';
@@ -322,22 +322,22 @@ export default Capability.makeModule((context) => {
 
   // TODO(wittjosiah): Make getResolver callback async and allow resolvers to be requested on demand.
   const { dispatch, dispatchPromise, undo, undoPromise } = createDispatcher(() =>
-    context.getCapabilities(Capabilities.IntentResolver).flat(),
+    context.getCapabilities(Common.Capability.IntentResolver).flat(),
   );
 
-  const manager = context.getCapability(Capabilities.PluginManager);
+  const manager = context.getCapability(Common.Capability.PluginManager);
   state.dispatch = (intentChain, depth) => {
     return Effect.gen(function* () {
-      yield* manager._activate(Events.SetupIntentResolver);
+      yield* manager._activate(Common.ActivationEvent.SetupIntentResolver);
       return yield* dispatch(intentChain, depth);
     });
   };
   state.dispatchPromise = async (intentChain) => {
-    await manager.activate(Events.SetupIntentResolver);
+    await manager.activate(Common.ActivationEvent.SetupIntentResolver);
     return await dispatchPromise(intentChain);
   };
   state.undo = undo;
   state.undoPromise = undoPromise;
 
-  return Capability.contributes(Capabilities.IntentDispatcher, state);
+  return Capability.contributes(Common.Capability.IntentDispatcher, state);
 });

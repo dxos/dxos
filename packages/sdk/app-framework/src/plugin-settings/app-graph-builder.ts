@@ -6,7 +6,7 @@ import { GraphBuilder, NodeMatcher } from '@dxos/app-graph';
 import { type SettingsStore, type SettingsValue } from '@dxos/local-storage';
 import { isNonNullable } from '@dxos/util';
 
-import { Capabilities } from '../common';
+import * as Common from '../common';
 import { Capability, type Plugin } from '../core';
 import { createIntent } from '../plugin-intent';
 
@@ -14,7 +14,7 @@ import { SETTINGS_ID, SETTINGS_KEY, SettingsAction } from './actions';
 import { meta } from './meta';
 
 export default Capability.makeModule((context) =>
-  Capability.contributes(Capabilities.AppGraphBuilder, [
+  Capability.contributes(Common.Capability.AppGraphBuilder, [
     GraphBuilder.createExtension({
       id: `${meta.id}/action`,
       match: NodeMatcher.whenRoot,
@@ -22,7 +22,7 @@ export default Capability.makeModule((context) =>
         {
           id: meta.id,
           data: async () => {
-            const { dispatchPromise: dispatch } = context.getCapability(Capabilities.IntentDispatcher);
+            const { dispatchPromise: dispatch } = context.getCapability(Common.Capability.IntentDispatcher);
             await dispatch(createIntent(SettingsAction.Open));
           },
           properties: {
@@ -58,8 +58,8 @@ export default Capability.makeModule((context) =>
       id: `${meta.id}/core-plugins`,
       match: NodeMatcher.whenId(SETTINGS_ID),
       connector: (node, get) => {
-        const manager = get(context.capability(Capabilities.PluginManager));
-        const [settingsStore] = get(context.capabilities(Capabilities.SettingsStore));
+        const manager = get(context.capability(Common.Capability.PluginManager));
+        const [settingsStore] = get(context.capabilities(Common.Capability.SettingsStore));
         return [
           ...manager.plugins
             .filter((plugin: Plugin.Plugin) => manager.core.includes(plugin.meta.id))
@@ -99,8 +99,8 @@ export default Capability.makeModule((context) =>
       id: `${meta.id}/custom-plugins`,
       match: NodeMatcher.whenId(`${SETTINGS_KEY}:custom-plugins`),
       connector: (node, get) => {
-        const manager = get(context.capability(Capabilities.PluginManager));
-        const [settingsStore] = get(context.capabilities(Capabilities.SettingsStore));
+        const manager = get(context.capability(Common.Capability.PluginManager));
+        const [settingsStore] = get(context.capabilities(Common.Capability.SettingsStore));
         return manager.plugins
           .filter((plugin: Plugin.Plugin) => !manager.core.includes(plugin.meta.id))
           .map((plugin: Plugin.Plugin): [Plugin.Meta, SettingsStore<SettingsValue>] | null => {

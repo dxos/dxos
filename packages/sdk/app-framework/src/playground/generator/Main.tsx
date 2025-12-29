@@ -6,7 +6,7 @@ import React, { useCallback } from 'react';
 
 import { IconButton, List, ListItem } from '@dxos/react-ui';
 
-import { Capabilities, createSurface } from '../../common';
+import * as Common from '../../common';
 import { Capability } from '../../core';
 import { usePluginManager } from '../../react';
 
@@ -64,8 +64,8 @@ export const Main = () => {
 
 export default Capability.makeModule(() =>
   Capability.contributes(
-    Capabilities.ReactSurface,
-    createSurface({
+    Common.Capability.ReactSurface,
+    Common.createSurface({
       id: 'dxos.org/test/generator/main',
       role: 'primary',
       component: Main,

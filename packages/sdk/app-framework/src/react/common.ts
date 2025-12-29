@@ -2,12 +2,12 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Capabilities } from '../common';
+import * as Common from '../common';
 
 import { useCapability } from './useCapabilities';
 
-export const useIntentDispatcher = () => useCapability(Capabilities.IntentDispatcher);
+export const useIntentDispatcher = () => useCapability(Common.Capability.IntentDispatcher);
 
-export const useAppGraph = (): Capabilities.AppGraph => useCapability(Capabilities.AppGraph);
+export const useAppGraph = (): Common.Capability.AppGraph => useCapability(Common.Capability.AppGraph);
 
-export const useLayout = () => useCapability(Capabilities.Layout);
+export const useLayout = () => useCapability(Common.Capability.Layout);

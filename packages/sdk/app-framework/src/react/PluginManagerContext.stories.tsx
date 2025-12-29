@@ -9,8 +9,7 @@ import React, { useEffect, useState } from 'react';
 import { withTheme } from '@dxos/react-ui/testing';
 import { useWebComponentContext } from '@dxos/web-context-react';
 
-import { Capabilities } from '../common';
-import { Events } from '../common';
+import * as Common from '../common';
 import { PluginManagerContext } from '../context';
 import { Capability, Plugin } from '../core';
 
@@ -122,7 +121,7 @@ const CounterPlugin = Plugin.define({
 }).pipe(
   Plugin.addModule({
     id: 'CounterMain',
-    activatesOn: Events.Startup,
+    activatesOn: Common.ActivationEvent.Startup,
     activate: () => {
       const count = signal(0);
 
@@ -138,7 +137,7 @@ const CounterPlugin = Plugin.define({
         }),
 
         // Contribute the UI
-        Capability.contributes(Capabilities.ReactRoot, {
+        Capability.contributes(Common.Capability.ReactRoot, {
           id: 'dxos.org/plugin/counter/root',
           root: CounterComponent,
         }),

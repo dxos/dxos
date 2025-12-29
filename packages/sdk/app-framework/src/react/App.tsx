@@ -4,7 +4,7 @@
 
 import React, { type PropsWithChildren } from 'react';
 
-import { Capabilities } from '../common';
+import * as Common from '../common';
 import { topologicalSort } from '../helpers';
 
 import { type UseAppOptions } from './useApp';
@@ -16,8 +16,8 @@ export type AppProps = Pick<UseAppOptions, 'placeholder' | 'debounce'> & {
 };
 
 export const App = ({ placeholder: Placeholder, state, debounce }: AppProps) => {
-  const reactContexts = useCapabilities(Capabilities.ReactContext);
-  const reactRoots = useCapabilities(Capabilities.ReactRoot);
+  const reactContexts = useCapabilities(Common.Capability.ReactContext);
+  const reactRoots = useCapabilities(Common.Capability.ReactRoot);
   const stage = useLoading(state, debounce);
 
   if (state.error) {
@@ -44,7 +44,7 @@ export const App = ({ placeholder: Placeholder, state, debounce }: AppProps) => 
   );
 };
 
-const composeContexts = (contexts: Capabilities.ReactContext[]) => {
+const composeContexts = (contexts: Common.Capability.ReactContext[]) => {
   if (contexts.length === 0) {
     return ({ children }: PropsWithChildren) => <>{children}</>;
   }
