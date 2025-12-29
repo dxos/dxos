@@ -26,11 +26,7 @@ export const ConductorPlugin = Plugin.define(meta).pipe(
       },
     },
   }),
-  Plugin.addModule({
-    id: 'schema',
-    activatesOn: ClientEvents.SetupSchema,
-    activate: () => Capability.contributes(ClientCapabilities.Schema, [CanvasBoardType, ComputeGraph]),
-  }),
+  Common.Plugin.addSchemaModule({ schema: [CanvasBoardType, ComputeGraph] }),
   Common.Plugin.addSurfaceModule({ activate: ReactSurface }),
   Common.Plugin.addIntentResolverModule({ activate: IntentResolver }),
   Plugin.make,

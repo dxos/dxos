@@ -7,7 +7,7 @@ import { ResearchGraph } from '@dxos/assistant-toolkit';
 import { Blueprint, Prompt } from '@dxos/blueprints';
 import { Sequence } from '@dxos/conductor';
 import { Type } from '@dxos/echo';
-import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
+import { ClientEvents } from '@dxos/plugin-client';
 import { SpaceCapabilities, SpaceEvents } from '@dxos/plugin-space';
 import { type CreateObjectIntent } from '@dxos/plugin-space/types';
 import { HasSubject } from '@dxos/types';
@@ -32,11 +32,7 @@ import { Assistant, AssistantAction } from './types';
 
 export const AssistantPlugin = Plugin.define(meta).pipe(
   Common.Plugin.addTranslationsModule({ translations }),
-  Plugin.addModule({
-    id: 'settings',
-    activatesOn: Common.ActivationEvent.SetupSettings,
-    activate: Settings,
-  }),
+  Common.Plugin.addSettingsModule({ activate: Settings }),
   Plugin.addModule({
     id: 'state',
     // TODO(wittjosiah): Does not integrate with settings store.
@@ -85,19 +81,16 @@ export const AssistantPlugin = Plugin.define(meta).pipe(
       },
     ],
   }),
-  Plugin.addModule({
-    id: 'schema',
-    activatesOn: ClientEvents.SetupSchema,
-    activate: () =>
-      Capability.contributes(ClientCapabilities.Schema, [
-        Assistant.Chat,
-        Assistant.CompanionTo,
-        Blueprint.Blueprint,
-        HasSubject.HasSubject,
-        Prompt.Prompt,
-        ResearchGraph,
-        Sequence,
-      ]),
+  Common.Plugin.addSchemaModule({
+    schema: [
+      Assistant.Chat,
+      Assistant.CompanionTo,
+      Blueprint.Blueprint,
+      HasSubject.HasSubject,
+      Prompt.Prompt,
+      ResearchGraph,
+      Sequence,
+    ],
   }),
   Plugin.addModule({
     id: 'on-space-created',
@@ -135,11 +128,7 @@ export const AssistantPlugin = Plugin.define(meta).pipe(
     activatesOn: Common.ActivationEvent.Startup,
     activate: AiService,
   }),
-  Plugin.addModule({
-    id: 'blueprint',
-    activatesOn: Common.ActivationEvent.SetupArtifactDefinition,
-    activate: BlueprintDefinition,
-  }),
+  Common.Plugin.addBlueprintDefinitionModule({ activate: BlueprintDefinition }),
   Plugin.addModule({
     id: 'toolkit',
     // TODO(wittjosiah): Use a different event.

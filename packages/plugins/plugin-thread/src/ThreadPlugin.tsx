@@ -96,17 +96,8 @@ export const ThreadPlugin = Plugin.define(meta).pipe(
       },
     ],
   }),
-  Plugin.addModule({
-    id: 'schema',
-    activatesOn: ClientEvents.SetupSchema,
-    activate: () =>
-      Capability.contributes(ClientCapabilities.Schema, [
-        AnchoredTo.AnchoredTo,
-        Channel.Channel,
-        Message.Message,
-        Message.MessageV1,
-        Thread.Thread,
-      ]),
+  Common.Plugin.addSchemaModule({
+    schema: [AnchoredTo.AnchoredTo, Channel.Channel, Message.Message, Message.MessageV1, Thread.Thread],
   }),
   Plugin.addModule({
     id: 'migration',
@@ -131,18 +122,10 @@ export const ThreadPlugin = Plugin.define(meta).pipe(
     activatesOn: MarkdownEvents.SetupExtensions,
     activate: Markdown,
   }),
-  Plugin.addModule({
-    id: 'react-root',
-    activatesOn: Common.ActivationEvent.Startup,
-    activate: ReactRoot,
-  }),
+  Common.Plugin.addReactRootModule({ activate: ReactRoot }),
   Common.Plugin.addSurfaceModule({ activate: ReactSurface }),
   Common.Plugin.addIntentResolverModule({ activate: IntentResolver }),
   Common.Plugin.addAppGraphModule({ activate: AppGraphBuilder }),
-  Plugin.addModule({
-    id: 'blueprint',
-    activatesOn: Common.ActivationEvent.SetupArtifactDefinition,
-    activate: BlueprintDefinition,
-  }),
+  Common.Plugin.addBlueprintDefinitionModule({ activate: BlueprintDefinition }),
   Plugin.make,
 );

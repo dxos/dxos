@@ -18,7 +18,7 @@ import { IconButton, type Label, Main, toLocalizedString, useTranslation } from 
 import { Tabs } from '@dxos/react-ui-tabs';
 import { mx } from '@dxos/ui-theme';
 
-import { DeckCapabilities } from '../../capabilities';
+import { DeckCapabilities } from '../../types';
 import { type DeckCompanion, getCompanionId, useBreakpoints, useDeckCompanions, useHoistStatusbar } from '../../hooks';
 import { meta } from '../../meta';
 import { getMode } from '../../types';

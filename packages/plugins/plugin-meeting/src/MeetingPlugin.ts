@@ -43,11 +43,7 @@ export const MeetingPlugin = Plugin.define(meta).pipe(
       },
     },
   }),
-  Plugin.addModule({
-    id: 'schemas',
-    activatesOn: ClientEvents.SetupSchema,
-    activate: () => Capability.contributes(ClientCapabilities.Schema, [Meeting.Meeting]),
-  }),
+  Common.Plugin.addSchemaModule({ schema: [Meeting.Meeting], id: 'schemas' }),
   Plugin.addModule({
     id: 'on-space-created',
     activatesOn: SpaceEvents.SpaceCreated,

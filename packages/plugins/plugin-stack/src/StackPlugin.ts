@@ -30,11 +30,7 @@ export const StackPlugin = Plugin.define(meta).pipe(
       },
     },
   }),
-  Plugin.addModule({
-    id: 'schema',
-    activatesOn: ClientEvents.SetupSchema,
-    activate: () => Capability.contributes(ClientCapabilities.Schema, [StackViewType]),
-  }),
+  Common.Plugin.addSchemaModule({ schema: [StackViewType] }),
   Common.Plugin.addSurfaceModule({ activate: ReactSurface }),
   Plugin.make,
 );

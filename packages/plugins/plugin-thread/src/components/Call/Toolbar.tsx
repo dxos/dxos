@@ -18,7 +18,7 @@ import {
 } from '@dxos/react-ui';
 import { groupHoverControlItemWithTransition, mx } from '@dxos/ui-theme';
 
-import { ThreadCapabilities } from '../../capabilities';
+import { ThreadCapabilities } from '../../types';
 import { meta } from '../../meta';
 import { type Channel } from '../../types';
 

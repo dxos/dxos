@@ -18,9 +18,7 @@ const meta = {
 };
 
 export const LoggerPlugin = Plugin.define(meta).pipe(
-  Plugin.addModule({
-    id: 'intents',
-    activatesOn: Common.ActivationEvent.SetupIntentResolver,
+  Common.Plugin.addIntentResolverModule({
     activate: () => [
       Capability.contributes(
         Common.Capability.IntentResolver,

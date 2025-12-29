@@ -36,11 +36,7 @@ export const TranscriptionPlugin = Plugin.define(meta).pipe(
       },
     },
   }),
-  Plugin.addModule({
-    id: 'schema',
-    activatesOn: ClientEvents.SetupSchema,
-    activate: () => [Capability.contributes(ClientCapabilities.Schema, [Transcript.Transcript])],
-  }),
+  Common.Plugin.addSchemaModule({ schema: [Transcript.Transcript] }),
   Common.Plugin.addSurfaceModule({ activate: ReactSurface }),
   Common.Plugin.addIntentResolverModule({ activate: IntentResolver }),
   Plugin.addModule({
@@ -48,10 +44,6 @@ export const TranscriptionPlugin = Plugin.define(meta).pipe(
     activatesOn: Common.ActivationEvent.SetupAppGraph,
     activate: Transcriber,
   }),
-  Plugin.addModule({
-    id: 'blueprint',
-    activatesOn: Common.ActivationEvent.SetupArtifactDefinition,
-    activate: BlueprintDefinition,
-  }),
+  Common.Plugin.addBlueprintDefinitionModule({ activate: BlueprintDefinition }),
   Plugin.make,
 );

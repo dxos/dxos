@@ -4,9 +4,10 @@
 
 import { Capability, Common, Plugin } from '@dxos/app-framework';
 
-import { IntentResolver, type LayoutState, State } from './capabilities';
+import { IntentResolver, State } from './capabilities';
 import { Layout } from './components';
 import { meta } from './meta';
+import { type LayoutState } from './types';
 
 export type StorybookLayoutPluginOptions = {
   initialState?: Partial<LayoutState>;
@@ -18,9 +19,7 @@ export const StorybookLayoutPlugin = Plugin.define<StorybookLayoutPluginOptions>
     activatesAfter: [Common.ActivationEvent.LayoutReady],
     activate: () => State({ initialState }),
   })),
-  Plugin.addModule({
-    id: 'react-context',
-    activatesOn: Common.ActivationEvent.Startup,
+  Common.Plugin.addReactContextModule({
     activate: () =>
       Capability.contributes(Common.Capability.ReactContext, {
         id: 'storybook-layout',

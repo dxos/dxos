@@ -68,11 +68,7 @@ export const MarkdownPlugin = Plugin.define(meta).pipe(
       },
     },
   }),
-  Plugin.addModule({
-    id: 'schema',
-    activatesOn: ClientEvents.SetupSchema,
-    activate: () => Capability.contributes(ClientCapabilities.Schema, [Markdown.Document, Text.Text]),
-  }),
+  Common.Plugin.addSchemaModule({ schema: [Markdown.Document, Text.Text] }),
   Common.Plugin.addSurfaceModule({
     activate: ReactSurface,
     activatesBefore: [MarkdownEvents.SetupExtensions],
@@ -87,9 +83,6 @@ export const MarkdownPlugin = Plugin.define(meta).pipe(
     activatesOn: Common.ActivationEvent.AppGraphReady,
     activate: AnchorSort,
   }),
-  Plugin.addModule({
-    activatesOn: Common.ActivationEvent.SetupArtifactDefinition,
-    activate: BlueprintDefinition,
-  }),
+  Common.Plugin.addBlueprintDefinitionModule({ activate: BlueprintDefinition }),
   Plugin.make,
 );

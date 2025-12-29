@@ -5,9 +5,10 @@
 import { ActivationEvent, Capability, Common, Plugin } from '@dxos/app-framework';
 import { AttentionManager, SelectionManager } from '@dxos/react-ui-attention';
 
-import { AttentionCapabilities, IntentResolver, Keyboard, ReactContext } from './capabilities';
+import { IntentResolver, Keyboard, ReactContext } from './capabilities';
 import { AttentionEvents } from './events';
 import { meta } from './meta';
+import { AttentionCapabilities } from './types';
 
 export const AttentionPlugin = Plugin.define(meta).pipe(
   Plugin.addModule({

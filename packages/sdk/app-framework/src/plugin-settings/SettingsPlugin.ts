@@ -19,18 +19,8 @@ export const SettingsPlugin = Plugin.define(meta).pipe(
     activatesAfter: [Common.ActivationEvent.SettingsReady],
     activate: SettingsStore,
   }),
-  Plugin.addModule({
-    id: 'translations',
-    activatesOn: Common.ActivationEvent.SetupTranslations,
-    activate: () => Capability.contributes(Common.Capability.Translations, translations),
-  }),
-  Plugin.addModule({
-    activatesOn: Common.ActivationEvent.SetupIntentResolver,
-    activate: SettingsIntentResolver,
-  }),
-  Plugin.addModule({
-    activatesOn: Common.ActivationEvent.SetupAppGraph,
-    activate: SettingsAppGraphBuilder,
-  }),
+  Common.Plugin.addTranslationsModule({ translations }),
+  Common.Plugin.addIntentResolverModule({ activate: SettingsIntentResolver }),
+  Common.Plugin.addAppGraphModule({ activate: SettingsAppGraphBuilder }),
   Plugin.make,
 );

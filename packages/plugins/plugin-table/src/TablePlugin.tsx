@@ -31,11 +31,7 @@ export const TablePlugin = Plugin.define(meta).pipe(
       },
     },
   }),
-  Plugin.addModule({
-    id: 'schema',
-    activatesOn: ClientEvents.SetupSchema,
-    activate: () => Capability.contributes(ClientCapabilities.Schema, [Table.Table]),
-  }),
+  Common.Plugin.addSchemaModule({ schema: [Table.Table] }),
   Plugin.addModule({
     id: 'on-space-created',
     activatesOn: SpaceEvents.SpaceCreated,
@@ -52,10 +48,6 @@ export const TablePlugin = Plugin.define(meta).pipe(
   }),
   Common.Plugin.addSurfaceModule({ activate: ReactSurface }),
   Common.Plugin.addIntentResolverModule({ activate: IntentResolver }),
-  Plugin.addModule({
-    id: 'blueprint',
-    activatesOn: Common.ActivationEvent.SetupArtifactDefinition,
-    activate: BlueprintDefinition,
-  }),
+  Common.Plugin.addBlueprintDefinitionModule({ activate: BlueprintDefinition }),
   Plugin.make,
 );

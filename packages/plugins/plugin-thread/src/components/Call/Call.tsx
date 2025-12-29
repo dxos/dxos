@@ -7,7 +7,7 @@ import React, { type FC, type PropsWithChildren } from 'react';
 import { useCapability } from '@dxos/app-framework/react';
 import { type ThemedClassName } from '@dxos/react-ui';
 
-import { ThreadCapabilities } from '../../capabilities';
+import { ThreadCapabilities } from '../../types';
 import { useDebugMode } from '../../hooks';
 import { AudioStream } from '../Media';
 import { ParticipantGrid } from '../Participant';

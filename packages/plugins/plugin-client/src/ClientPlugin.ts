@@ -29,7 +29,7 @@ export const ClientPlugin = Plugin.define<ClientPluginOptions>(meta).pipe(
   }),
   Plugin.addModule({
     activatesOn: ClientEvents.ClientReady,
-    activatesBefore: [ClientEvents.SetupSchema],
+    activatesBefore: [Common.ActivationEvent.SetupSchema],
     activate: SchemaDefs,
   }),
   Plugin.addModule({
@@ -37,10 +37,7 @@ export const ClientPlugin = Plugin.define<ClientPluginOptions>(meta).pipe(
     activatesBefore: [ClientEvents.SetupMigration],
     activate: Migrations,
   }),
-  Plugin.addModule({
-    activatesOn: Common.ActivationEvent.Startup,
-    activate: ReactContext,
-  }),
+  Common.Plugin.addReactContextModule({ activate: ReactContext }),
   Plugin.addModule(({ invitationUrl = window.location.origin, invitationParam = 'deviceInvitationCode', onReset }) => {
     const createInvitationUrl = (invitationCode: string) => {
       const baseUrl = new URL(invitationUrl);
@@ -55,11 +52,7 @@ export const ClientPlugin = Plugin.define<ClientPluginOptions>(meta).pipe(
     };
   }),
   Common.Plugin.addAppGraphModule({ activate: AppGraphBuilder }),
-  Plugin.addModule({
-    id: Capability.getModuleTag(IntentResolver),
-    activatesOn: Common.ActivationEvent.SetupIntentResolver,
-    activate: (context) => IntentResolver({ context }),
-  }),
+  Common.Plugin.addIntentResolverModule({ activate: (context) => IntentResolver({ context }) }),
   Common.Plugin.addTranslationsModule({ translations }),
   Plugin.make,
 );

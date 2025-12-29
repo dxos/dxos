@@ -3,27 +3,27 @@
 //
 
 import type * as Command$ from '@effect/cli/Command';
-import { type Registry } from '@effect-atom/atom-react';
+import type { Registry } from '@effect-atom/atom-react';
 import type * as Layer$ from 'effect/Layer';
-import type * as Schema from 'effect/Schema';
-import { type FC, type PropsWithChildren } from 'react';
+import type * as Schema$ from 'effect/Schema';
+import type { FC, PropsWithChildren } from 'react';
 
-import { type AiModelResolver as AiModelResolver$, type AiService as AiService$ } from '@dxos/ai';
-import { type BuilderExtensions, type GraphBuilder } from '@dxos/app-graph';
-import { type GenericToolkit } from '@dxos/assistant';
-import { type Blueprint } from '@dxos/blueprints';
-import { type Database } from '@dxos/echo';
-import { type FunctionDefinition } from '@dxos/functions';
-import { type RootSettingsStore } from '@dxos/local-storage';
-import { type AnchoredTo } from '@dxos/types';
+import type { AiModelResolver as AiModelResolver$, AiService as AiService$ } from '@dxos/ai';
+import type { BuilderExtensions, GraphBuilder } from '@dxos/app-graph';
+import type { GenericToolkit } from '@dxos/assistant';
+import type { Blueprint } from '@dxos/blueprints';
+import type { Database, Type } from '@dxos/echo';
+import type { FunctionDefinition } from '@dxos/functions';
+import type { RootSettingsStore } from '@dxos/local-storage';
+import type { AnchoredTo } from '@dxos/types';
 
 import { Capability as Capability$, type PluginManager as PluginManager$ } from '../core';
-import { type AnyIntentResolver, type IntentContext } from '../plugin-intent';
+import type { AnyIntentResolver, IntentContext } from '../plugin-intent';
 
-import { type FileInfo } from './file';
-import { type NodeSerializer } from './graph';
-import { type SurfaceDefinition } from './surface';
-import { type Resource } from './translations';
+import type { FileInfo } from './file';
+import type { NodeSerializer } from './graph';
+import type { SurfaceDefinition } from './surface';
+import type { Resource } from './translations';
 
 export namespace Capability {
   // TODO(burdon): Sort.
@@ -154,7 +154,7 @@ export namespace Capability {
   // export type Settings<T extends SettingsValue = SettingsValue> = SettingsProps<T>;
   export type Settings = {
     prefix: string;
-    schema: Schema.Schema.All;
+    schema: Schema$.Schema.All;
     value?: Record<string, any>;
   };
 
@@ -172,6 +172,13 @@ export namespace Capability {
    * @category Capability
    */
   export const Metadata = Capability$.make<Metadata>('dxos.org/app-framework/capability/metadata');
+
+  export type Schema = ReadonlyArray<Type.Entity.Any>;
+
+  /**
+   * @category Capability
+   */
+  export const Schema = Capability$.make<Schema>('dxos.org/app-framework/capability/schema');
 
   export type Toolkit = GenericToolkit.GenericToolkit;
 

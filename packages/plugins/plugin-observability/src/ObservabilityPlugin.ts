@@ -9,7 +9,6 @@ import {
   AppGraphBuilder,
   ClientReady,
   IntentResolver,
-  ObservabilityCapabilities,
   ObservabilitySettings,
   ObservabilityState,
   ReactSurface,
@@ -17,6 +16,7 @@ import {
 import { ClientReadyEvent, ObservabilityEvents } from './events';
 import { meta } from './meta';
 import { translations } from './translations';
+import { ObservabilityCapabilities } from './types';
 
 export type ObservabilityPluginOptions = {
   namespace: string;

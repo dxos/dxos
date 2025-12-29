@@ -12,28 +12,27 @@ import { translations } from './translations';
 
 // TODO(burdon): Rename package plugin-file (singular).
 
-export const FilesPlugin = Plugin.define(meta)
-  .pipe(
-    Plugin.addModule({
-    id: 'settings',
-    activatesOn: Common.ActivationEvent.SetupSettings,
-    activate: FileSettings,
-    }),
-    Plugin.addModule({
+export const FilesPlugin = Plugin.define(meta).pipe(
+  Common.Plugin.addSettingsModule({ activate: FileSettings }),
+  Plugin.addModule({
     id: 'state',
-    activatesOn: ActivationEvent.allOf(Common.ActivationEvent.DispatcherReady, Common.ActivationEvent.SettingsReady, AttentionEvents.AttentionReady),
+    activatesOn: ActivationEvent.allOf(
+      Common.ActivationEvent.DispatcherReady,
+      Common.ActivationEvent.SettingsReady,
+      AttentionEvents.AttentionReady,
+    ),
     activate: FileState,
-    }),
-    Common.Plugin.addTranslationsModule({ translations }),
-    Plugin.addModule({
+  }),
+  Common.Plugin.addTranslationsModule({ translations }),
+  Plugin.addModule({
     id: 'markdown',
     activatesOn: Common.ActivationEvent.SettingsReady,
     activate: Markdown,
-    }),
-    Common.Plugin.addSurfaceModule({ activate: ReactSurface }),
-    Common.Plugin.addIntentResolverModule({ activate: IntentResolver }),
-    Common.Plugin.addAppGraphModule({ activate: AppGraphBuilder }),
-    Plugin.addModule({
+  }),
+  Common.Plugin.addSurfaceModule({ activate: ReactSurface }),
+  Common.Plugin.addIntentResolverModule({ activate: IntentResolver }),
+  Common.Plugin.addAppGraphModule({ activate: AppGraphBuilder }),
+  Plugin.addModule({
     id: 'app-graph-serializer',
     activatesOn: Common.ActivationEvent.AppGraphReady,
     activate: () =>
@@ -52,6 +51,6 @@ export const FilesPlugin = Plugin.define(meta)
           },
         },
       ]),
-    }),
-    Plugin.make,
-  );
+  }),
+  Plugin.make,
+);

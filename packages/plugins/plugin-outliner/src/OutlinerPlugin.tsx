@@ -2,8 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Capability, Common, Plugin, createIntent } from '@dxos/app-framework';
-import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
+import { Common, Plugin, createIntent } from '@dxos/app-framework';
 import { type CreateObjectIntent } from '@dxos/plugin-space/types';
 
 import { AppGraphBuilder, IntentResolver, ReactSurface } from './capabilities';
@@ -35,11 +34,8 @@ export const OutlinerPlugin = Plugin.define(meta).pipe(
       },
     ],
   }),
-  Plugin.addModule({
-    id: 'schema',
-    activatesOn: ClientEvents.SetupSchema,
-    activate: () =>
-      Capability.contributes(ClientCapabilities.Schema, [Journal.JournalEntry, Journal.Journal, Outline.Outline]),
+  Common.Plugin.addSchemaModule({
+    schema: [Journal.JournalEntry, Journal.Journal, Outline.Outline],
   }),
   Common.Plugin.addAppGraphModule({ activate: AppGraphBuilder }),
   Common.Plugin.addSurfaceModule({ activate: ReactSurface }),

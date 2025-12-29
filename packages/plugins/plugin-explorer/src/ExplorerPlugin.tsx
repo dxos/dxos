@@ -26,11 +26,7 @@ export const ExplorerPlugin = Plugin.define(meta).pipe(
       },
     },
   }),
-  Plugin.addModule({
-    id: 'schema',
-    activatesOn: ClientEvents.SetupSchema,
-    activate: () => Capability.contributes(ClientCapabilities.Schema, [Graph.Graph]),
-  }),
+  Common.Plugin.addSchemaModule({ schema: [Graph.Graph] }),
   Common.Plugin.addSurfaceModule({ activate: ReactSurface }),
   Common.Plugin.addIntentResolverModule({ activate: IntentResolver }),
   Plugin.make,

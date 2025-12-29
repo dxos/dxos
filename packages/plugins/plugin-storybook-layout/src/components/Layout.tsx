@@ -15,7 +15,7 @@ import {
 } from '@dxos/react-ui';
 import { descriptionMessage, mx } from '@dxos/ui-theme';
 
-import { LayoutState } from '../capabilities';
+import { LayoutState } from '../types';
 import { meta } from '../meta';
 
 const debounce_delay = 100;

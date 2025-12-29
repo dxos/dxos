@@ -2,9 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Capability } from '@dxos/app-framework';
-
-export const AppGraphSerializer = Capability.lazy('AppGraphSerializer', () => import('./app-graph-serializer'));
-export const IntentResolver = Capability.lazy('IntentResolver', () => import('./intent-resolver'));
-export const ReactSurface = Capability.lazy('ReactSurface', () => import('./react-surface'));
-export const SketchSettings = Capability.lazy('SketchSettings', () => import('./settings'));
+export * from './app-graph-serializer';
+export * from './intent-resolver';
+export * from './react-surface';
+export * from './settings';

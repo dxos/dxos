@@ -4,7 +4,10 @@
 
 import { Capability, Common, Plugin } from '@dxos/app-framework';
 
-import { Client, IntentResolver, SchemaDefs } from '../capabilities';
+// NOTE: Must not import from index to avoid pulling in react dependencies.
+import { Client } from '../capabilities/client';
+import { IntentResolver } from '../capabilities/intent-resolver';
+import { SchemaDefs } from '../capabilities/schema-defs';
 import { ClientEvents } from '../events';
 import { meta } from '../meta';
 import { type ClientPluginOptions } from '../types';
@@ -21,21 +24,14 @@ export const ClientPlugin = Plugin.define<ClientPluginOptions>(meta).pipe(
   })),
   Plugin.addModule({
     id: `${meta.id}/module/schema`,
-    activatesOn: ClientEvents.ClientReady,
-    activatesBefore: [ClientEvents.SetupSchema],
+    activatesOn: Common.ActivationEvent.SetupSchema,
+    activatesAfter: [ClientEvents.ClientReady],
     activate: SchemaDefs,
   }),
   // TODO(wittjosiah): Could some of these commands make use of intents?
-  Plugin.addModule({
+  Common.Plugin.addCommandModule({
     id: `${meta.id}/module/cli-commands`,
-    activatesOn: Common.ActivationEvent.Startup,
-    activate: () => [
-      Capability.contributes(Common.Capability.Command, config),
-      Capability.contributes(Common.Capability.Command, device),
-      Capability.contributes(Common.Capability.Command, edge),
-      Capability.contributes(Common.Capability.Command, halo),
-      Capability.contributes(Common.Capability.Command, profile),
-    ],
+    commands: [config, device, edge, halo, profile],
   }),
   Plugin.addModule({
     id: `${meta.id}/module/intent-resolver`,

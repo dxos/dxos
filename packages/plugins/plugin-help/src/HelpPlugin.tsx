@@ -4,10 +4,10 @@
 
 import { Capability, Common, Plugin, createResolver } from '@dxos/app-framework';
 
-import { AppGraphBuilder, HelpCapabilities, HelpState, ReactRoot, ReactSurface } from './capabilities';
+import { AppGraphBuilder, HelpState, ReactRoot, ReactSurface } from './capabilities';
 import { meta } from './meta';
 import { translations } from './translations';
-import { HelpAction, type Step } from './types';
+import { HelpAction, HelpCapabilities, type Step } from './types';
 
 export type HelpPluginOptions = { steps?: Step[] };
 
@@ -23,9 +23,7 @@ export const HelpPlugin = Plugin.define<HelpPluginOptions>(meta).pipe(
     activate: () => ReactRoot(steps),
   })),
   Common.Plugin.addSurfaceModule({ activate: ReactSurface }),
-  Plugin.addModule({
-    id: 'intent-resolver',
-    activatesOn: Common.ActivationEvent.SetupIntentResolver,
+  Common.Plugin.addIntentResolverModule({
     activate: (context) =>
       Capability.contributes(
         Common.Capability.IntentResolver,

@@ -2,6 +2,10 @@
 // Copyright 2025 DXOS.org
 //
 
+import type * as Command$ from '@effect/cli/Command';
+
+import { type Type } from '@dxos/echo';
+
 import { Capability as Capability$, Plugin as Plugin$ } from '../core';
 
 import { ActivationEvent } from './activation-event';
@@ -77,6 +81,42 @@ export namespace Plugin {
     return Plugin$.addModule({
       id: Capability$.getModuleTag(options.activate) ?? options.id ?? 'surfaces',
       activatesOn: options.activatesOn ?? ActivationEvent.SetupReactSurface,
+      activatesBefore: options.activatesBefore,
+      activatesAfter: options.activatesAfter,
+      activate: options.activate,
+    });
+  }
+
+  // TODO(wittjosiah): Restrict type to only allow react roots.
+  export type ReactRootModuleOptions = PluginModuleOptions;
+
+  /**
+   * Creates a module that contributes a React root.
+   */
+  export function addReactRootModule<T = void>(
+    options: ReactRootModuleOptions,
+  ): (builder: Plugin$.PluginBuilder<T>) => Plugin$.PluginBuilder<T> {
+    return Plugin$.addModule({
+      id: Capability$.getModuleTag(options.activate) ?? options.id ?? 'react-root',
+      activatesOn: options.activatesOn ?? ActivationEvent.Startup,
+      activatesBefore: options.activatesBefore,
+      activatesAfter: options.activatesAfter,
+      activate: options.activate,
+    });
+  }
+
+  // TODO(wittjosiah): Restrict type to only allow react contexts.
+  export type ReactContextModuleOptions = PluginModuleOptions;
+
+  /**
+   * Creates a module that contributes a React context.
+   */
+  export function addReactContextModule<T = void>(
+    options: ReactContextModuleOptions,
+  ): (builder: Plugin$.PluginBuilder<T>) => Plugin$.PluginBuilder<T> {
+    return Plugin$.addModule({
+      id: Capability$.getModuleTag(options.activate) ?? options.id ?? 'react-context',
+      activatesOn: options.activatesOn ?? ActivationEvent.Startup,
       activatesBefore: options.activatesBefore,
       activatesAfter: options.activatesAfter,
       activate: options.activate,
@@ -185,6 +225,119 @@ export namespace Plugin {
         const metadataArray = Array.isArray(options.metadata) ? options.metadata : [options.metadata];
         return metadataArray.map((m) => Capability$.contributes(Capability.Metadata, m));
       },
+    });
+  }
+
+  // TODO(wittjosiah): Restrict type to only allow settings.
+  export type SettingsModuleOptions = PluginModuleOptions;
+
+  /**
+   * Creates a module that contributes settings.
+   */
+  export function addSettingsModule<T = void>(
+    options: SettingsModuleOptions,
+  ): (builder: Plugin$.PluginBuilder<T>) => Plugin$.PluginBuilder<T> {
+    return Plugin$.addModule({
+      id: Capability$.getModuleTag(options.activate) ?? options.id ?? 'settings',
+      activatesOn: options.activatesOn ?? ActivationEvent.SetupSettings,
+      activatesBefore: options.activatesBefore,
+      activatesAfter: options.activatesAfter,
+      activate: options.activate,
+    });
+  }
+
+  // TODO(wittjosiah): Restrict type to only allow blueprint definitions.
+  export type BlueprintDefinitionModuleOptions = PluginModuleOptions;
+
+  /**
+   * Creates a module that contributes blueprint definitions.
+   *
+   * @param options Module options including the activate function and optional configuration
+   * @returns A function that can be used with Plugin.addModule() in a pipe chain
+   *
+   * @example
+   * ```ts
+   * Plugin.define(meta).pipe(
+   *   Common.Plugin.addBlueprintDefinitionModule({
+   *     activate: (context) =>
+   *       Capability.contributes(Common.Capability.BlueprintDefinition, [
+   *         BlueprintDefinition.make({ key: 'my-blueprint', ... })
+   *       ])
+   *   })
+   * )
+   * ```
+   */
+  export function addBlueprintDefinitionModule<T = void>(
+    options: BlueprintDefinitionModuleOptions,
+  ): (builder: Plugin$.PluginBuilder<T>) => Plugin$.PluginBuilder<T> {
+    return Plugin$.addModule({
+      id: Capability$.getModuleTag(options.activate) ?? options.id ?? 'blueprint-definition',
+      activatesOn: options.activatesOn ?? ActivationEvent.SetupArtifactDefinition,
+      activatesBefore: options.activatesBefore,
+      activatesAfter: options.activatesAfter,
+      activate: options.activate,
+    });
+  }
+
+  export type SchemaModuleOptions = Omit<PluginModuleOptions, 'activate'> & {
+    schema: ReadonlyArray<Type.Entity.Any>;
+  };
+
+  /**
+   * Creates a module that contributes schemas.
+   *
+   * @param options Module options including schema array and optional configuration
+   * @returns A function that can be used with Plugin.addModule() in a pipe chain
+   *
+   * @example
+   * ```ts
+   * Plugin.define(meta).pipe(
+   *   Common.Plugin.addSchemaModule({
+   *     schema: [MyType.Type, AnotherType.Type]
+   *   })
+   * )
+   * ```
+   */
+  export function addSchemaModule<T = void>(
+    options: SchemaModuleOptions,
+  ): (builder: Plugin$.PluginBuilder<T>) => Plugin$.PluginBuilder<T> {
+    return Plugin$.addModule({
+      id: options.id ?? 'schema',
+      activatesOn: options.activatesOn ?? ActivationEvent.SetupSchema,
+      activatesBefore: options.activatesBefore,
+      activatesAfter: options.activatesAfter,
+      activate: () => Capability$.contributes(Capability.Schema, options.schema),
+    });
+  }
+
+  export type CommandModuleOptions = Omit<PluginModuleOptions, 'activate'> & {
+    commands: ReadonlyArray<Command$.Command<any, any, any, any>>;
+  };
+
+  /**
+   * Creates a module that contributes CLI commands.
+   *
+   * @param options Module options including commands and optional configuration
+   * @returns A function that can be used with Plugin.addModule() in a pipe chain
+   *
+   * @example
+   * ```ts
+   * Plugin.define(meta).pipe(
+   *   Common.Plugin.addCommandModule({
+   *     commands: [myCommand, anotherCommand]
+   *   })
+   * )
+   * ```
+   */
+  export function addCommandModule<T = void>(
+    options: CommandModuleOptions,
+  ): (builder: Plugin$.PluginBuilder<T>) => Plugin$.PluginBuilder<T> {
+    return Plugin$.addModule({
+      id: options.id ?? 'cli-commands',
+      activatesOn: options.activatesOn ?? ActivationEvent.Startup,
+      activatesBefore: options.activatesBefore,
+      activatesAfter: options.activatesAfter,
+      activate: () => options.commands.map((cmd) => Capability$.contributes(Capability.Command, cmd)),
     });
   }
 }

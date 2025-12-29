@@ -5,7 +5,7 @@
 import { useCapabilities, usePluginManager } from '@dxos/app-framework/react';
 import { useAsyncEffect } from '@dxos/react-ui';
 
-import { ScriptCapabilities } from '../capabilities';
+import { ScriptCapabilities } from '../types';
 import type { Compiler } from '../compiler';
 import { ScriptEvents } from '../events';
 

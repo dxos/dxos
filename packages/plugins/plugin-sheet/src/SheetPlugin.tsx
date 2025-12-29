@@ -2,9 +2,9 @@
 // Copyright 2023 DXOS.org
 //
 
-import { ActivationEvent, Capability, Common, Plugin, createIntent } from '@dxos/app-framework';
+import { ActivationEvent, Common, Plugin, createIntent } from '@dxos/app-framework';
 import { AutomationEvents } from '@dxos/plugin-automation';
-import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
+import { ClientEvents } from '@dxos/plugin-client';
 import { MarkdownEvents } from '@dxos/plugin-markdown';
 import { type CreateObjectIntent } from '@dxos/plugin-space/types';
 
@@ -16,7 +16,6 @@ import { Sheet, SheetAction } from './types';
 
 export const SheetPlugin = Plugin.define(meta).pipe(
   Plugin.addModule({
-    id: 'compute-graph-registry',
     activatesOn: ActivationEvent.allOf(ClientEvents.ClientReady, AutomationEvents.ComputeRuntimeReady),
     activate: ComputeGraphRegistry,
   }),
@@ -35,18 +34,12 @@ export const SheetPlugin = Plugin.define(meta).pipe(
       },
     },
   }),
+  Common.Plugin.addSchemaModule({ schema: [Sheet.Sheet] }),
   Plugin.addModule({
-    id: 'schema',
-    activatesOn: ClientEvents.SetupSchema,
-    activate: () => Capability.contributes(ClientCapabilities.Schema, [Sheet.Sheet]),
-  }),
-  Plugin.addModule({
-    id: 'markdown',
     activatesOn: MarkdownEvents.SetupExtensions,
     activate: Markdown,
   }),
   Plugin.addModule({
-    id: 'anchor-sort',
     // TODO(wittjosiah): More relevant event?
     activatesOn: Common.ActivationEvent.AppGraphReady,
     activate: AnchorSort,

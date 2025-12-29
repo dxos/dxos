@@ -32,9 +32,7 @@ export const createNumberPlugin = (id: string) => {
       activatesOn: CountEvent,
       activate: () => Capability.contributes(Number, number),
     }),
-    Plugin.addModule({
-      id: 'IntentResolver',
-      activatesOn: Common.ActivationEvent.SetupIntentResolver,
+    Common.Plugin.addIntentResolverModule({
       activate: () =>
         Capability.contributes(
           Common.Capability.IntentResolver,

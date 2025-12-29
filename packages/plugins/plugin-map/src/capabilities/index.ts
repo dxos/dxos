@@ -2,12 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Capability } from '@dxos/app-framework';
-
-export const AppGraphBuilder = Capability.lazy('AppGraphBuilder', () => import('./app-graph-builder'));
-export const BlueprintDefinition = Capability.lazy('BlueprintDefinition', () => import('./blueprint-definition'));
-export const IntentResolver = Capability.lazy('IntentResolver', () => import('./intent-resolver'));
-export const ReactSurface = Capability.lazy('ReactSurface', () => import('./react-surface'));
-export const MapState = Capability.lazy('MapState', () => import('./state'));
-
-export * from './capabilities';
+export * from './app-graph-builder';
+export * from './blueprint-definition';
+export * from './intent-resolver';
+export * from './react-surface';
+export * from './state';

@@ -7,7 +7,7 @@ import * as Schema from 'effect/Schema';
 import { ActivationEvent, Capability, Common, Plugin, createIntent } from '@dxos/app-framework';
 import { Ref, Tag, Type } from '@dxos/echo';
 import { AttentionEvents } from '@dxos/plugin-attention';
-import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
+import { ClientEvents } from '@dxos/plugin-client';
 import { translations as componentsTranslations } from '@dxos/react-ui-components';
 import { translations as formTranslations } from '@dxos/react-ui-form';
 import { Collection, DataTypes, createDefaultSchema } from '@dxos/schema';
@@ -51,10 +51,7 @@ export const SpacePlugin = Plugin.define<SpacePluginOptions>(meta).pipe(
     activatesAfter: [SpaceEvents.StateReady],
     activate: SpaceState,
   }),
-  Plugin.addModule({
-    activatesOn: Common.ActivationEvent.SetupSettings,
-    activate: SpaceSettings,
-  }),
+  Common.Plugin.addSettingsModule({ activate: SpaceSettings }),
   Common.Plugin.addTranslationsModule({
     translations: [...translations, ...componentsTranslations, ...formTranslations, ...shellTranslations],
   }),
@@ -114,29 +111,23 @@ export const SpacePlugin = Plugin.define<SpacePluginOptions>(meta).pipe(
       },
     ],
   }),
-  Plugin.addModule({
-    id: 'schema',
-    activatesOn: ClientEvents.SetupSchema,
-    activate: () =>
-      Capability.contributes(ClientCapabilities.Schema, [
-        ...DataTypes,
-        AnchoredTo.AnchoredTo,
-        Employer.Employer,
-        Event.Event,
-        HasConnection.HasConnection,
-        HasRelationship.HasRelationship,
-        HasSubject.HasSubject,
-        Organization.Organization,
-        Person.Person,
-        Project.Project,
-        Tag.Tag,
-        Task.Task,
-      ]),
+  Common.Plugin.addSchemaModule({
+    schema: [
+      ...DataTypes,
+      AnchoredTo.AnchoredTo,
+      Employer.Employer,
+      Event.Event,
+      HasConnection.HasConnection,
+      HasRelationship.HasRelationship,
+      HasSubject.HasSubject,
+      Organization.Organization,
+      Person.Person,
+      Project.Project,
+      Tag.Tag,
+      Task.Task,
+    ],
   }),
-  Plugin.addModule({
-    activatesOn: Common.ActivationEvent.Startup,
-    activate: ReactRoot,
-  }),
+  Common.Plugin.addReactRootModule({ activate: ReactRoot }),
   Plugin.addModule(({ invitationUrl = window.location.origin, invitationParam = 'spaceInvitationCode' }) => {
     const createInvitationUrl = (invitationCode: string) => {
       const baseUrl = new URL(invitationUrl);

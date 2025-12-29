@@ -47,6 +47,11 @@ export namespace ActivationEvent {
   export const SetupTranslations = ActivationEvent$.make('dxos.org/app-framework/event/setup-translations');
 
   /**
+   * Fired before the schema is created.
+   */
+  export const SetupSchema = ActivationEvent$.make('dxos.org/app-framework/event/setup-schema');
+
+  /**
    * Fired to load any newly available artifacts definitions.
    */
   // TODO(burdon): Rename.

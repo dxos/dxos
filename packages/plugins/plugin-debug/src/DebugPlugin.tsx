@@ -19,31 +19,11 @@ export const DebugPlugin = Plugin.define(meta).pipe(
       return Capability.contributes(Common.Capability.Null, null);
     },
   }),
-  Plugin.addModule({
-    id: 'settings',
-    activatesOn: Common.ActivationEvent.SetupSettings,
-    activate: DebugSettings,
-  }),
-  Plugin.addModule({
-    id: 'translations',
-    activatesOn: Common.ActivationEvent.SetupTranslations,
-    activate: () => Capability.contributes(Common.Capability.Translations, translations),
-  }),
-  Plugin.addModule({
-    id: 'react-context',
-    activatesOn: Common.ActivationEvent.Startup,
-    activate: ReactContext,
-  }),
-  Plugin.addModule({
-    id: 'react-surface',
-    activatesOn: Common.ActivationEvent.SetupReactSurface,
-    activate: ReactSurface,
-  }),
-  Plugin.addModule({
-    id: 'app-graph-builder',
-    activatesOn: Common.ActivationEvent.SetupAppGraph,
-    activate: AppGraphBuilder,
-  }),
+  Common.Plugin.addSettingsModule({ activate: DebugSettings }),
+  Common.Plugin.addTranslationsModule({ translations }),
+  Common.Plugin.addReactContextModule({ activate: ReactContext }),
+  Common.Plugin.addSurfaceModule({ activate: ReactSurface }),
+  Common.Plugin.addAppGraphModule({ activate: AppGraphBuilder }),
   Plugin.make,
 );
 

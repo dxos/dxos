@@ -12,11 +12,7 @@ import { meta } from './meta';
 import { translations } from './translations';
 
 export const PwaPlugin = Plugin.define(meta).pipe(
-  Plugin.addModule({
-    id: 'translations',
-    activatesOn: Common.ActivationEvent.SetupTranslations,
-    activate: () => Capability.contributes(Common.Capability.Translations, translations),
-  }),
+  Common.Plugin.addTranslationsModule({ translations }),
   Plugin.addModule({
     id: 'register-pwa',
     activatesOn: Common.ActivationEvent.DispatcherReady,

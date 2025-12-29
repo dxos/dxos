@@ -6,7 +6,7 @@ import React from 'react';
 
 import { Surface, useCapability } from '@dxos/app-framework/react';
 
-import { DeckCapabilities } from '../../capabilities';
+import { DeckCapabilities } from '../../types';
 import { useBreakpoints } from '../../hooks';
 import { getMode } from '../../types';
 import { layoutAppliesTopbar } from '../../util';

@@ -2,7 +2,5 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Capability } from '@dxos/app-framework';
-
-export const ReactSurface = Capability.lazy('ReactSurface', () => import('./react-surface'));
-export const IntentResolver = Capability.lazy('IntentResolver', () => import('./intent-resolver'));
+export * from './intent-resolver';
+export * from './react-surface';

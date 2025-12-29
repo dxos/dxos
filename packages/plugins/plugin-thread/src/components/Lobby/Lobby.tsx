@@ -8,7 +8,7 @@ import { useCapability } from '@dxos/app-framework/react';
 import { type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
-import { ThreadCapabilities } from '../../capabilities';
+import { ThreadCapabilities } from '../../types';
 import { meta } from '../../meta';
 import { Toolbar, type ToolbarProps } from '../Call';
 import { VideoObject } from '../Media';

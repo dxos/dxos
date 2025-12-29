@@ -60,16 +60,9 @@ export const ScriptPlugin = Plugin.define(meta).pipe(
     ],
   }),
   Common.Plugin.addAppGraphModule({ activate: AppGraphBuilder }),
-  Plugin.addModule({
-    id: 'schema',
-    activatesOn: ClientEvents.SetupSchema,
-    activate: () => Capability.contributes(ClientCapabilities.Schema, [Script.Script]),
-  }),
+  Common.Plugin.addSchemaModule({ schema: [Script.Script] }),
   Common.Plugin.addSurfaceModule({ activate: ReactSurface }),
   Common.Plugin.addIntentResolverModule({ activate: IntentResolver }),
-  Plugin.addModule({
-    activatesOn: Common.ActivationEvent.SetupArtifactDefinition,
-    activate: BlueprintDefinition,
-  }),
+  Common.Plugin.addBlueprintDefinitionModule({ activate: BlueprintDefinition }),
   Plugin.make,
 );

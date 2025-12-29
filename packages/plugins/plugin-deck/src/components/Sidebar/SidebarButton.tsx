@@ -8,7 +8,7 @@ import { Common, createIntent } from '@dxos/app-framework';
 import { useCapability, useIntentDispatcher } from '@dxos/app-framework/react';
 import { IconButton, type IconButtonProps, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 
-import { DeckCapabilities } from '../../capabilities';
+import { DeckCapabilities } from '../../types';
 import { getCompanionId, useDeckCompanions } from '../../hooks';
 import { meta } from '../../meta';
 

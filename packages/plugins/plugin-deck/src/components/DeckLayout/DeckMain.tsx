@@ -12,7 +12,7 @@ import { Main, type MainProps, useMediaQuery, useOnTransition } from '@dxos/reac
 import { DEFAULT_HORIZONTAL_SIZE, Stack, StackContext } from '@dxos/react-ui-stack';
 import { mainPaddingTransitions, mx } from '@dxos/ui-theme';
 
-import { DeckCapabilities } from '../../capabilities';
+import { DeckCapabilities } from '../../types';
 import { useBreakpoints, useHoistStatusbar } from '../../hooks';
 import { meta } from '../../meta';
 import { type DeckSettingsProps, getMode } from '../../types';

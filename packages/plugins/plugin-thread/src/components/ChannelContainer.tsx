@@ -19,7 +19,7 @@ import { MenuProvider, ToolbarMenu, createMenuAction, createMenuItemGroup, useMe
 import { useSoundEffect } from '@dxos/react-ui-sfx';
 import { StackItem } from '@dxos/react-ui-stack';
 
-import { ThreadCapabilities } from '../capabilities';
+import { ThreadCapabilities } from '../types';
 import { meta } from '../meta';
 import { type Channel } from '../types';
 

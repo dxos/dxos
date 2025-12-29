@@ -26,11 +26,7 @@ export const ProjectPlugin = Plugin.define(meta).pipe(
       },
     },
   }),
-  Plugin.addModule({
-    id: 'schema',
-    activatesOn: ClientEvents.SetupSchema,
-    activate: () => Capability.contributes(ClientCapabilities.Schema, [Project.Project]),
-  }),
+  Common.Plugin.addSchemaModule({ schema: [Project.Project] }),
   Common.Plugin.addSurfaceModule({ activate: ReactSurface }),
   Common.Plugin.addIntentResolverModule({ activate: IntentResolver }),
   Common.Plugin.addAppGraphModule({ activate: AppGraphBuilder }),

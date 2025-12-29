@@ -5,14 +5,14 @@
 import * as Function from 'effect/Function';
 
 import { Capability, Common, Plugin, chain, createIntent } from '@dxos/app-framework';
-import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
+import { ClientEvents } from '@dxos/plugin-client';
 import { MarkdownEvents } from '@dxos/plugin-markdown';
 import { type CreateObjectIntent } from '@dxos/plugin-space/types';
 
-import { Blockstore, FileUploader, IntentResolver, Markdown, ReactSurface, WnfsCapabilities } from './capabilities';
+import { Blockstore, FileUploader, IntentResolver, Markdown, ReactSurface } from './capabilities';
 import { meta } from './meta';
 import { translations } from './translations';
-import { WnfsAction, WnfsFile } from './types';
+import { WnfsAction, WnfsCapabilities, WnfsFile } from './types';
 
 export const WnfsPlugin = Plugin.define(meta).pipe(
   Plugin.addModule({
@@ -28,36 +28,25 @@ export const WnfsPlugin = Plugin.define(meta).pipe(
       return Capability.contributes(WnfsCapabilities.Instances, instances);
     },
   }),
-  Plugin.addModule({
-    id: 'translations',
-    activatesOn: Common.ActivationEvent.SetupTranslations,
-    activate: () => Capability.contributes(Common.Capability.Translations, translations),
+  Common.Plugin.addTranslationsModule({ translations }),
+  Common.Plugin.addMetadataModule({
+    metadata: {
+      id: WnfsFile.File.typename,
+      metadata: {
+        // TODO(wittjosiah): Would be nice if icon could change based on the type of the file.
+        icon: 'ph--file--regular',
+        iconHue: 'teal',
+        inputSchema: WnfsAction.UploadFileSchema,
+        createObjectIntent: ((props, options) =>
+          Function.pipe(
+            createIntent(WnfsAction.Upload, { ...props, db: options.db }),
+            chain(WnfsAction.Create, {}),
+          )) satisfies CreateObjectIntent,
+        addToCollectionOnCreate: true,
+      },
+    },
   }),
-  Plugin.addModule({
-    id: 'metadata',
-    activatesOn: Common.ActivationEvent.SetupMetadata,
-    activate: () =>
-      Capability.contributes(Common.Capability.Metadata, {
-        id: WnfsFile.File.typename,
-        metadata: {
-          // TODO(wittjosiah): Would be nice if icon could change based on the type of the file.
-          icon: 'ph--file--regular',
-          iconHue: 'teal',
-          inputSchema: WnfsAction.UploadFileSchema,
-          createObjectIntent: ((props, options) =>
-            Function.pipe(
-              createIntent(WnfsAction.Upload, { ...props, db: options.db }),
-              chain(WnfsAction.Create, {}),
-            )) satisfies CreateObjectIntent,
-          addToCollectionOnCreate: true,
-        },
-      }),
-  }),
-  Plugin.addModule({
-    id: 'schema',
-    activatesOn: ClientEvents.SetupSchema,
-    activate: () => Capability.contributes(ClientCapabilities.Schema, [WnfsFile.File]),
-  }),
+  Common.Plugin.addSchemaModule({ schema: [WnfsFile.File] }),
   Plugin.addModule({
     id: 'file-uploader',
     activatesOn: ClientEvents.ClientReady,
@@ -68,15 +57,7 @@ export const WnfsPlugin = Plugin.define(meta).pipe(
     activatesOn: MarkdownEvents.SetupExtensions,
     activate: Markdown,
   }),
-  Plugin.addModule({
-    id: 'react-surface',
-    activatesOn: Common.ActivationEvent.SetupReactSurface,
-    activate: ReactSurface,
-  }),
-  Plugin.addModule({
-    id: 'intent-resolver',
-    activatesOn: Common.ActivationEvent.SetupIntentResolver,
-    activate: IntentResolver,
-  }),
+  Common.Plugin.addSurfaceModule({ activate: ReactSurface }),
+  Common.Plugin.addIntentResolverModule({ activate: IntentResolver }),
   Plugin.make,
 );

@@ -10,11 +10,10 @@ import { Event, Message } from '@dxos/types';
 import {
   AppGraphBuilder,
   BlueprintDefinition,
-  CalendarBlueprint,
-  InboxBlueprint,
   IntentResolver,
   ReactSurface,
 } from './capabilities';
+import { CalendarBlueprint, InboxBlueprint } from './blueprints';
 import { meta } from './meta';
 import { translations } from './translations';
 import { Calendar, InboxAction, Mailbox } from './types';
@@ -61,24 +60,12 @@ export const InboxPlugin = Plugin.define(meta).pipe(
       },
     ],
   }),
-  Plugin.addModule({
-    id: 'schema',
-    activatesOn: ClientEvents.SetupSchema,
-    activate: () =>
-      Capability.contributes(ClientCapabilities.Schema, [
-        Calendar.Calendar,
-        Event.Event,
-        Mailbox.Mailbox,
-        Message.Message,
-      ]),
+  Common.Plugin.addSchemaModule({
+    schema: [Calendar.Calendar, Event.Event, Mailbox.Mailbox, Message.Message],
   }),
   Common.Plugin.addAppGraphModule({ activate: AppGraphBuilder }),
   Common.Plugin.addSurfaceModule({ activate: ReactSurface }),
   Common.Plugin.addIntentResolverModule({ activate: IntentResolver }),
-  Plugin.addModule({
-    id: 'blueprint',
-    activatesOn: Common.ActivationEvent.SetupArtifactDefinition,
-    activate: BlueprintDefinition,
-  }),
+  Common.Plugin.addBlueprintDefinitionModule({ activate: BlueprintDefinition }),
   Plugin.make,
 );
