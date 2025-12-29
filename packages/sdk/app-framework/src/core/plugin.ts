@@ -69,7 +69,7 @@ export interface PluginModule {
   ) => MaybePromise<Capability.Any | Capability.Any[]> | Promise<() => Promise<Capability.Any | Capability.Any[]>>;
 }
 
-type PluginModuleOptions = Omit<PluginModule, 'id' | typeof PluginModuleTypeId> & { id?: string };
+export type PluginModuleOptions = Omit<PluginModule, 'id' | typeof PluginModuleTypeId> & { id?: string };
 
 class PluginModuleImpl implements PluginModule {
   readonly [PluginModuleTypeId]: PluginModuleTypeId = PluginModuleTypeId;
