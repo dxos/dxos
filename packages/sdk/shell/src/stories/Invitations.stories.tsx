@@ -12,7 +12,7 @@ import { type Space, type SpaceMember, useSpaces } from '@dxos/react-client/echo
 import { useIdentity } from '@dxos/react-client/halo';
 import { Invitation, InvitationEncoder } from '@dxos/react-client/invitations';
 import { ConnectionState, useNetworkStatus } from '@dxos/react-client/mesh';
-import { useMultiClient, withMultiClientProvider } from '@dxos/react-client/testing';
+import { useClientStory, withMultiClientProvider } from '@dxos/react-client/testing';
 import { ButtonGroup, Clipboard, IconButton, List } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { activeSurface } from '@dxos/ui-theme';
@@ -115,7 +115,7 @@ const Panel = ({ id, panel, setPanel }: { id: number; panel?: PanelType; setPane
 };
 
 const Invitations = () => {
-  const { id } = useMultiClient();
+  const { index: id } = useClientStory();
   const client = useClient();
   const networkStatus = useNetworkStatus().swarm;
   const identity = useIdentity();
