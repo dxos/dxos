@@ -8,6 +8,8 @@ import { type Device } from '@dxos/react-client/halo';
 import { Button, Icon, List, useTranslation } from '@dxos/react-ui';
 import { descriptionText, getSize, mx } from '@dxos/ui-theme';
 
+import { translationKey } from '../../translations';
+
 import { DeviceListItem } from './DeviceListItem';
 import { type AgentFormProps, type DeviceListProps } from './DeviceListProps';
 
@@ -21,7 +23,7 @@ export const DeviceList = ({
   onClickJoinExisting,
   onAgentDestroy,
 }: DeviceListProps & Partial<Pick<AgentFormProps, 'onAgentDestroy'>>) => {
-  const { t } = useTranslation('os');
+  const { t } = useTranslation(translationKey);
   return (
     <div role='none' className='p-1'>
       <h2 className={mx(descriptionText, 'text-center mbs-2')}>{t('devices heading')}</h2>

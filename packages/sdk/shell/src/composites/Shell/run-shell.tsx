@@ -11,7 +11,7 @@ import { Button, Clipboard, Dialog, ThemeProvider, Tooltip, useTranslation } fro
 import { createIFramePort } from '@dxos/rpc-tunnel';
 import { defaultTx } from '@dxos/ui-theme';
 
-import { translations } from '../../translations';
+import { translationKey, translations } from '../../translations';
 
 import { Shell } from './Shell';
 import { ShellRuntimeImpl } from './shell-runtime';
@@ -52,7 +52,7 @@ export const runShell = async (config: Config = new Config()) => {
 };
 
 const Fallback = ({ onClose }: { onClose?: () => void }) => {
-  const { t } = useTranslation('os');
+  const { t } = useTranslation(translationKey);
 
   return (
     <Dialog.Root modal open onOpenChange={() => onClose?.()}>

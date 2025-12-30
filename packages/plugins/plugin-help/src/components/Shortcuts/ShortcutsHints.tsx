@@ -10,7 +10,7 @@ import { IconButton, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { Key } from './Key';
 
 const Shortcut = ({ binding }: { binding: KeyBinding }) => {
-  const { t } = useTranslation('os');
+  const { t } = useTranslation('@dxos/os');
   return (
     <div role='none' className='flex items-center gap-2 whitespace-nowrap'>
       <Key binding={binding.shortcut} />
