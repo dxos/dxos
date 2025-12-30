@@ -41,7 +41,7 @@ const meta = {
   render: () => <Story />,
   decorators: [
     withTheme,
-    withLayout({ container: 'column' }),
+    withLayout({ layout: 'column' }),
     withPluginManager({
       plugins: [
         AttentionPlugin(),

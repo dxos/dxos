@@ -38,10 +38,10 @@ export const ClientPlugin = Plugin.define<ClientPluginOptions>(meta).pipe(
     activate: Migrations,
   }),
   Common.Plugin.addReactContextModule({ activate: ReactContext }),
-  Plugin.addModule(({ invitationUrl = window.location.origin, invitationParam = 'deviceInvitationCode', onReset }) => {
+  Plugin.addModule(({ invitationUrl = window.location.origin, invitationProp = 'deviceInvitationCode', onReset }) => {
     const createInvitationUrl = (invitationCode: string) => {
       const baseUrl = new URL(invitationUrl);
-      baseUrl.searchParams.set(invitationParam, invitationCode);
+      baseUrl.searchParams.set(invitationProp, invitationCode);
       return baseUrl.toString();
     };
 

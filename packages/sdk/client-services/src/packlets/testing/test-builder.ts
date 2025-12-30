@@ -18,8 +18,8 @@ import { type Storage, StorageType, createStorage } from '@dxos/random-access-st
 import { BlobStore } from '@dxos/teleport-extension-object-sync';
 
 import { InvitationsHandler, InvitationsManager, SpaceInvitationProtocol } from '../invitations';
-import { ClientServicesHost, ServiceContext, type ServiceContextRuntimeParams } from '../services';
-import { DataSpaceManager, type DataSpaceManagerRuntimeParams, type SigningContext } from '../spaces';
+import { ClientServicesHost, ServiceContext, type ServiceContextRuntimeProps } from '../services';
+import { DataSpaceManager, type DataSpaceManagerRuntimeProps, type SigningContext } from '../spaces';
 
 //
 // TODO(burdon): Replace with test builder.
@@ -39,11 +39,11 @@ export const createServiceContext = async ({
     return new MemorySignalManager(signalContext);
   },
   storage = createStorage({ type: StorageType.RAM }),
-  runtimeParams,
+  runtimeProps,
 }: {
   signalManagerFactory?: () => Promise<SignalManager>;
   storage?: Storage;
-  runtimeParams?: ServiceContextRuntimeParams;
+  runtimeProps?: ServiceContextRuntimeProps;
 } = {}) => {
   const signalManager = await signalManagerFactory();
   const networkManager = new SwarmNetworkManager({
@@ -54,8 +54,8 @@ export const createServiceContext = async ({
   await level.open();
 
   return new ServiceContext(storage, level, networkManager, signalManager, undefined, undefined, {
-    invitationConnectionDefaultParams: { teleport: { controlHeartbeatInterval: 200 } },
-    ...runtimeParams,
+    invitationConnectionDefaultProps: { teleport: { controlHeartbeatInterval: 200 } },
+    ...runtimeProps,
   });
 };
 
@@ -95,7 +95,7 @@ export class TestBuilder {
 
 export type TestPeerOpts = {
   dataStore?: StorageType;
-  dataSpaceParams?: DataSpaceManagerRuntimeParams;
+  dataSpaceProps?: DataSpaceManagerRuntimeProps;
 };
 
 export type TestPeerProps = {
@@ -198,7 +198,7 @@ export class TestPeer {
       edgeConnection: undefined,
       meshReplicator: this.meshEchoReplicator,
       echoEdgeReplicator: undefined,
-      runtimeParams: this._opts.dataSpaceParams,
+      runtimeProps: this._opts.dataSpaceProps,
     }));
   }
 

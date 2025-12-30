@@ -8,7 +8,7 @@ import { Trigger } from '@dxos/async';
 import { Resource } from '@dxos/context';
 import { log } from '@dxos/log';
 
-import { type ReplicantParams } from '../plan';
+import { type ReplicantProps } from '../plan';
 import { createRedisRpcPort, createRedisWritableStream } from '../redis';
 import { PERFETTO_EVENTS, registerPerfettoTracer } from '../tracing';
 
@@ -53,7 +53,7 @@ export class ReplicantEnvImpl extends Resource implements ReplicantEnv {
   private _replicantRpcServer!: ReplicantRpcServer;
 
   constructor(
-    public params: ReplicantParams,
+    public params: ReplicantProps,
     public redisOptions: RedisOptions,
   ) {
     super();

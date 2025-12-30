@@ -23,7 +23,7 @@ const DEFAULT_INDEX_COOLDOWN_TIME = 100;
 
 const DEFAULT_INDEX_TIME_BUDGET = 300;
 
-export type IndexerParams = {
+export type IndexerProps = {
   db: LevelDB;
 
   metadataStore: IndexMetadataStore;
@@ -76,7 +76,7 @@ export class Indexer extends Resource {
     indexUpdateBatchSize = DEFAULT_INDEX_UPDATE_BATCH_SIZE,
     indexCooldownTime = DEFAULT_INDEX_COOLDOWN_TIME,
     indexTimeBudget = DEFAULT_INDEX_TIME_BUDGET,
-  }: IndexerParams) {
+  }: IndexerProps) {
     super();
     this._db = db;
     this._metadataStore = metadataStore;

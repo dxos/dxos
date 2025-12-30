@@ -41,14 +41,16 @@ const [EditorContextProvider, useEditorContext] = createContext<EditorContextVal
 // Root
 //
 
-type EditorRootProps = PropsWithChildren<Omit<UseEditorMenuProps, 'viewRef'> & Pick<EditorToolbarState, 'viewMode'>>;
+type EditorRootProps = PropsWithChildren<
+  Pick<EditorContextValue, 'extensions'> & Omit<UseEditorMenuProps, 'viewRef'> & Pick<EditorToolbarState, 'viewMode'>
+>;
 
 /**
  * Root component for the Editor compound component.
  * Provides context for all child components and manages the editor controller state.
  */
 const EditorRoot = forwardRef<EditorController | null, EditorRootProps>(
-  ({ children, viewMode, ...props }, forwardedRef) => {
+  ({ children, extensions: extensionsProp, viewMode, ...props }, forwardedRef) => {
     const state = useEditorToolbar({ viewMode });
 
     const [controller, setController] = useState<EditorController>();
@@ -56,7 +58,10 @@ const EditorRoot = forwardRef<EditorController | null, EditorRootProps>(
 
     // TODO(burdon): Consider lighter-weight approach if EditorMenuProvider is not needed.
     const { groupsRef, extension, ...menuProps } = useEditorMenu(props);
-    const extensions = useMemo(() => [extension], [extension]);
+    const extensions = useMemo(
+      () => [extension, extensionsProp].filter(isNonNullable).flat(),
+      [extension, extensionsProp],
+    );
 
     return (
       <EditorContextProvider

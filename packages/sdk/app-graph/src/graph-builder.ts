@@ -113,7 +113,7 @@ class GraphBuilderImpl implements GraphBuilder {
     _constructNode: (node: Node.NodeArg<any>) => Option.Option<Node.Node>;
   };
 
-  constructor({ registry, ...params }: Pick<Graph.GraphParams, 'registry' | 'nodes' | 'edges'> = {}) {
+  constructor({ registry, ...params }: Pick<Graph.GraphProps, 'registry' | 'nodes' | 'edges'> = {}) {
     this._registry = registry ?? Registry.make();
     const graph = Graph.make({
       ...params,
@@ -255,7 +255,7 @@ class GraphBuilderImpl implements GraphBuilder {
 /**
  * Creates a new GraphBuilder instance.
  */
-export const make = (params?: Pick<Graph.GraphParams, 'registry' | 'nodes' | 'edges'>): GraphBuilder => {
+export const make = (params?: Pick<Graph.GraphProps, 'registry' | 'nodes' | 'edges'>): GraphBuilder => {
   return new GraphBuilderImpl(params);
 };
 

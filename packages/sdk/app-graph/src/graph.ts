@@ -56,7 +56,7 @@ export type GraphTraversalOptions = {
   relation?: Node.Relation;
 };
 
-export type GraphParams = {
+export type GraphProps = {
   registry?: Registry.Registry;
   nodes?: MakeOptional<Node.Node, 'data' | 'cacheable'>[];
   edges?: Record<string, Edges>;
@@ -142,9 +142,9 @@ class GraphImpl implements WritableGraph {
     node: Option.Option<Node.Node>;
   }>();
 
-  readonly _onExpand?: GraphParams['onExpand'];
-  readonly _onInitialize?: GraphParams['onInitialize'];
-  readonly _onRemoveNode?: GraphParams['onRemoveNode'];
+  readonly _onExpand?: GraphProps['onExpand'];
+  readonly _onInitialize?: GraphProps['onInitialize'];
+  readonly _onRemoveNode?: GraphProps['onRemoveNode'];
 
   readonly _registry: Registry.Registry;
   readonly _expanded = Record.empty<string, boolean>();
@@ -230,7 +230,7 @@ class GraphImpl implements WritableGraph {
     }).pipe(Atom.withLabel(`graph:json:${id}`));
   });
 
-  constructor({ registry, nodes, edges, onInitialize, onExpand, onRemoveNode }: GraphParams = {}) {
+  constructor({ registry, nodes, edges, onInitialize, onExpand, onRemoveNode }: GraphProps = {}) {
     this._registry = registry ?? Registry.make();
     this._onInitialize = onInitialize;
     this._onExpand = onExpand;
@@ -1158,6 +1158,6 @@ export function removeEdge<T extends WritableGraph>(
 /**
  * Creates a new Graph instance.
  */
-export const make = (params?: GraphParams): Graph => {
+export const make = (params?: GraphProps): Graph => {
   return new GraphImpl(params);
 };

@@ -13,7 +13,7 @@ import { type DeepWriteable } from '@dxos/util';
 import { type ActionGraphProps } from '../hooks/useMenuActions';
 import { type MenuAction, type MenuItem, type MenuItemGroup } from '../types';
 
-export type CreateActionsParams = Partial<{
+export type CreateActionsProps = Partial<{
   type?: typeof Node.ActionType | typeof Node.ActionGroupType;
   callback: () => void;
   count: number;
@@ -38,7 +38,7 @@ const icons = {
   ],
 };
 
-export const createActions = (params?: CreateActionsParams) => {
+export const createActions = (params?: CreateActionsProps) => {
   const { callback = () => console.log('invoke'), count = 12, type = Node.ActionType } = params ?? {};
   return faker.helpers.multiple(
     () =>
@@ -71,7 +71,7 @@ export const createNestedActions = Atom.make(() => {
   return result;
 });
 
-export const createNestedActionsResolver = (groupParams?: CreateActionsParams, params?: CreateActionsParams) => {
+export const createNestedActionsResolver = (groupParams?: CreateActionsProps, params?: CreateActionsProps) => {
   const graph = Graph.make();
   const actionGroups = createActions({ type: Node.ActionGroupType, ...groupParams });
   actionGroups.forEach((group) => {

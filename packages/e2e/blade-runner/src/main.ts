@@ -11,8 +11,8 @@ import { log } from '@dxos/log';
 
 import {
   type GlobalOptions,
-  type RunParams,
-  type RunPlanParams,
+  type RunPlanProps,
+  type RunProps,
   type TestPlan,
   readYAMLSpecFile,
   runPlan,
@@ -54,7 +54,7 @@ const plans: { [key: string]: () => TestPlan<any, any> } = {
 const start = async () => {
   // Entry point for Replicant node process.
   if (process.env.DX_RUN_PARAMS) {
-    const params: RunParams = JSON.parse(process.env.DX_RUN_PARAMS!);
+    const params: RunProps = JSON.parse(process.env.DX_RUN_PARAMS!);
     await runReplicant(params);
     return;
   }
@@ -85,7 +85,7 @@ const start = async () => {
 
   const name = argv._[0] as string;
 
-  let plan: () => RunPlanParams<any>;
+  let plan: () => RunPlanProps<any>;
   const planGenerator = plans[name];
 
   if (!planGenerator) {

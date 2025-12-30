@@ -31,7 +31,7 @@ import { POPOVER_SAVE_FILTER } from './PopoverSaveFilter';
 
 export type MailboxArticleProps = SurfaceComponentProps<Mailbox.Mailbox> & { filter?: string; attendableId?: string };
 
-export const MailboxArticle = ({ subject: mailbox, filter: filterParam, attendableId }: MailboxArticleProps) => {
+export const MailboxArticle = ({ subject: mailbox, filter: filterProp, attendableId }: MailboxArticleProps) => {
   const { t } = useTranslation(meta.id);
   const id = attendableId ?? Obj.getDXN(mailbox).toString();
   const { dispatchPromise: dispatch } = useIntentDispatcher();
@@ -50,7 +50,7 @@ export const MailboxArticle = ({ subject: mailbox, filter: filterParam, attendab
 
   // Filter and messages.
   const [filter, setFilter] = useState<Filter.Any>();
-  const [filterText, setFilterText] = useState<string>(filterParam ?? '');
+  const [filterText, setFilterText] = useState<string>(filterProp ?? '');
   // TODO(burdon): Query not supported on queues.
   //  Query.select(filter ?? Filter.everything()).orderBy(Order.property('createdAt', 'desc')),
   const messages: Message.Message[] = useQuery(
@@ -166,9 +166,9 @@ export const MailboxArticle = ({ subject: mailbox, filter: filterParam, attendab
 
   const handleCancel = useCallback(() => {
     filterVisible.set(false);
-    setFilterText(filterParam ?? '');
-    setFilter(parser.build(filterParam ?? '').filter);
-  }, [filterVisible, filterParam, parser]);
+    setFilterText(filterProp ?? '');
+    setFilter(parser.build(filterProp ?? '').filter);
+  }, [filterVisible, filterProp, parser]);
 
   return (
     <StackItem.Content

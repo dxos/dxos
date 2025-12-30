@@ -16,13 +16,13 @@ import { toUint8Array } from '../protocol';
 
 export const DEFAULT_PORT = 8080;
 
-type TestEdgeWsServerParams = {
+type TestEdgeWsServerProps = {
   admitConnection?: Trigger;
   payloadDecoder?: (payload: Uint8Array) => any;
   messageHandler?: (payload: any) => Promise<Uint8Array | undefined>;
 };
 
-export const createTestEdgeWsServer = async (port = DEFAULT_PORT, params?: TestEdgeWsServerParams) => {
+export const createTestEdgeWsServer = async (port = DEFAULT_PORT, params?: TestEdgeWsServerProps) => {
   const wsServer = new WebSocket.Server({
     port,
     verifyClient: createConnectionDelayHandler(params),
@@ -86,7 +86,7 @@ export const createTestEdgeWsServer = async (port = DEFAULT_PORT, params?: TestE
   };
 };
 
-const createConnectionDelayHandler = (params: TestEdgeWsServerParams | undefined) => {
+const createConnectionDelayHandler = (params: TestEdgeWsServerProps | undefined) => {
   return (_: any, callback: (admit: boolean) => void) => {
     if (params?.admitConnection) {
       log('delaying edge connection admission');
@@ -116,7 +116,7 @@ const createResponseSender = (connection: () => WebSocketMuxer) => {
   };
 };
 
-const decodePayload = async (request: Message, params: TestEdgeWsServerParams | undefined) => {
+const decodePayload = async (request: Message, params: TestEdgeWsServerProps | undefined) => {
   const requestPayload = params?.payloadDecoder
     ? params.payloadDecoder(request.payload!.value!)
     : protocol.getPayload(request, TextMessageSchema);

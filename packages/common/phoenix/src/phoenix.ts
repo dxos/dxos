@@ -12,7 +12,7 @@ import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 
 import { waitForPidDeletion, waitForPidFileBeingFilledWithInfo } from './utils';
-import { type ProcessInfo, type WatchDogParams } from './watchdog';
+import { type ProcessInfo, type WatchDogProps } from './watchdog';
 
 const scriptDir = typeof __dirname === 'string' ? __dirname : dirname(new URL(import.meta.url).pathname);
 
@@ -23,7 +23,7 @@ export class Phoenix {
   /**
    * Starts detached watchdog process which starts and monitors selected command.
    */
-  static async start(params: WatchDogParams): Promise<ProcessInfo> {
+  static async start(params: WatchDogProps): Promise<ProcessInfo> {
     {
       // Clear stale pid file.
       if (existsSync(params.pidFile)) {

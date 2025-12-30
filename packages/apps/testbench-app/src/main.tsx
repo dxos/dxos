@@ -85,8 +85,8 @@ const main = async () => {
   log.config({ filter: config.get('runtime.client.log.filter'), prefix: config.get('runtime.client.log.prefix') });
 
   const handleInitialized = async (client: Client) => {
-    const searchParams = new URLSearchParams(location.search);
-    const deviceInvitationCode = searchParams.get('deviceInvitationCode');
+    const searchProps = new URLSearchParams(location.search);
+    const deviceInvitationCode = searchProps.get('deviceInvitationCode');
     const identity = client.halo.identity.get();
     if (!identity && !deviceInvitationCode) {
       await client.halo.createIdentity({ displayName: 'Testbench User' });

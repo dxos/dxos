@@ -7,7 +7,7 @@ import * as Option from 'effect/Option';
 import type * as Schema from 'effect/Schema';
 import * as SchemaAST from 'effect/SchemaAST';
 
-import { Obj, Ref, Type } from '@dxos/echo';
+import { type Database, Obj, Ref, Type } from '@dxos/echo';
 import {
   type AnyProperties,
   GeneratorAnnotationId,
@@ -16,7 +16,7 @@ import {
   type TypedObject,
   getSchemaReference,
 } from '@dxos/echo/internal';
-import { type AnyLiveObject, type EchoDatabase, Filter, Query } from '@dxos/echo-db';
+import { type AnyLiveObject, Filter, Query } from '@dxos/echo-db';
 import {
   type SchemaProperty,
   findAnnotation,
@@ -47,7 +47,7 @@ export type TypeSpec = {
  * Create sets of objects.
  */
 export const createObjectFactory =
-  (db: EchoDatabase, generator: ValueGenerator) =>
+  (db: Database.Database, generator: ValueGenerator) =>
   async (specs: TypeSpec[]): Promise<Live<any>[]> => {
     const result: Live<any>[] = [];
     for (const { type, count } of specs) {
@@ -135,7 +135,7 @@ const createValue = <T extends AnyProperties>(
 /**
  * Set references.
  */
-export const createReferences = <T extends AnyProperties>(schema: Schema.Schema<T>, db: EchoDatabase) => {
+export const createReferences = <T extends AnyProperties>(schema: Schema.Schema<T>, db: Database.Database) => {
   return async (obj: T): Promise<T> => {
     for (const property of getProperties(schema.ast)) {
       if (!property.isOptional || randomBoolean()) {
@@ -164,7 +164,7 @@ export const createReactiveObject = <S extends Schema.Schema.AnyNoContext>(type:
   return (data: Type.Properties<Schema.Schema.Type<S>>) => Obj.make<S>(type, data);
 };
 
-export const addToDatabase = (db: EchoDatabase) => {
+export const addToDatabase = (db: Database.Database) => {
   // TODO(dmaretskyi): Fix DB types.
   return <T extends AnyProperties>(obj: Live<T>): AnyLiveObject<T> => db.add(obj as any) as any;
 };
@@ -183,7 +183,7 @@ export const createArrayPipeline = <T extends AnyProperties>(
 
 export type CreateOptions = {
   /** Database for references. */
-  db?: EchoDatabase;
+  db?: Database.Database;
 
   /** If true, set all optional properties, otherwise randomly set them. */
   force?: boolean;

@@ -18,9 +18,9 @@ import { mx } from '@dxos/ui-theme';
 
 import { translationKey } from '../../translations';
 
-export type ControlPageProps = ThemedClassName<ComponentPropsWithoutRef<'div'>>;
+export type ControlPageParams = ThemedClassName<ComponentPropsWithoutRef<'div'>>;
 
-export const ControlPage = ({ children, classNames, ...props }: ControlPageProps) => {
+export const ControlPage = ({ children, classNames, ...props }: ControlPageParams) => {
   return (
     <StackItem.Content scrollable classNames='[--control-spacing:var(--dx-trimMd)]'>
       <div role='none' className={mx('pli-cardSpacingInline pbe-trimLg', classNames)} {...props}>

@@ -15,11 +15,11 @@ export default Capability.makeModule((context) =>
   Effect.gen(function* () {
     const { dispatchPromise: dispatch } = context.getCapability(Common.Capability.IntentDispatcher);
     const client = context.getCapability(ClientCapabilities.Client);
-    const searchParams = new URLSearchParams(window.location.search);
+    const searchProps = new URLSearchParams(window.location.search);
     const hubUrl = client.config.values?.runtime?.app?.env?.DX_HUB_URL;
 
-    const token = searchParams.get('token') ?? undefined;
-    const type = searchParams.get('type');
+    const token = searchProps.get('token') ?? undefined;
+    const type = searchProps.get('type');
     const tokenType = !token ? undefined : type === 'login' ? 'login' : 'verify';
     const manager = new OnboardingManager({
       dispatch,
@@ -27,9 +27,9 @@ export default Capability.makeModule((context) =>
       hubUrl,
       token,
       tokenType,
-      recoverIdentity: searchParams.get('recoverIdentity') === 'true',
-      deviceInvitationCode: searchParams.get('deviceInvitationCode') ?? undefined,
-      spaceInvitationCode: searchParams.get('spaceInvitationCode') ?? undefined,
+      recoverIdentity: searchProps.get('recoverIdentity') === 'true',
+      deviceInvitationCode: searchProps.get('deviceInvitationCode') ?? undefined,
+      spaceInvitationCode: searchProps.get('spaceInvitationCode') ?? undefined,
     });
 
     yield* Effect.tryPromise(() => manager.initialize());

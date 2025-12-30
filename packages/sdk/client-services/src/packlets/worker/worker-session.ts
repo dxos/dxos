@@ -15,9 +15,9 @@ import { type BridgeService } from '@dxos/protocols/proto/dxos/mesh/bridge';
 import { type ProtoRpcPeer, type RpcPort, createProtoRpcPeer } from '@dxos/rpc';
 import { Callback, type MaybePromise } from '@dxos/util';
 
-import { ClientRpcServer, type ClientRpcServerParams, type ClientServicesHost } from '../services';
+import { ClientRpcServer, type ClientRpcServerProps, type ClientServicesHost } from '../services';
 
-export type WorkerSessionParams = {
+export type WorkerSessionProps = {
   serviceHost: ClientServicesHost;
   systemPort: RpcPort;
   appPort: RpcPort;
@@ -50,11 +50,11 @@ export class WorkerSession {
 
   public bridgeService?: BridgeService;
 
-  constructor({ serviceHost, systemPort, appPort, shellPort, readySignal }: WorkerSessionParams) {
+  constructor({ serviceHost, systemPort, appPort, shellPort, readySignal }: WorkerSessionProps) {
     invariant(serviceHost);
     this._serviceHost = serviceHost;
 
-    const middleware: Pick<ClientRpcServerParams, 'handleCall' | 'handleStream'> = {
+    const middleware: Pick<ClientRpcServerProps, 'handleCall' | 'handleStream'> = {
       handleCall: async (method, params, handler) => {
         const error = await readySignal.wait({ timeout: PROXY_CONNECTION_TIMEOUT });
         if (error) {

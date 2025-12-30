@@ -9,7 +9,7 @@ import {
   ClientServicesProviderResource,
   clientServiceBundle,
 } from '@dxos/client-protocol';
-import { type ClientServicesHost, type ClientServicesHostParams } from '@dxos/client-services';
+import { type ClientServicesHost, type ClientServicesHostProps } from '@dxos/client-services';
 import { Config } from '@dxos/config';
 import { Context } from '@dxos/context';
 import { log } from '@dxos/log';
@@ -25,7 +25,7 @@ import { isBun } from '@dxos/util';
 // TODO(burdon): Rename createLocalServices?
 export const fromHost = async (
   config = new Config(),
-  params?: ClientServicesHostParams,
+  params?: ClientServicesHostProps,
   observabilityGroup?: string,
   signalTelemetryEnabled?: boolean,
 ): Promise<ClientServicesProvider> => {
@@ -98,7 +98,7 @@ const setupNetworking = async (
 export class LocalClientServices implements ClientServicesProvider {
   readonly closed = new Event<Error | undefined>();
   private readonly _ctx = new Context();
-  private readonly _params: ClientServicesHostParams;
+  private readonly _params: ClientServicesHostProps;
   private _host?: ClientServicesHost;
   signalMetadataTags: any = {
     runtime: 'local-client-services',
@@ -107,7 +107,7 @@ export class LocalClientServices implements ClientServicesProvider {
   @trace.info()
   private _isOpen = false;
 
-  constructor(params: ClientServicesHostParams) {
+  constructor(params: ClientServicesHostProps) {
     this._params = params;
     // TODO(nf): extract
     if (typeof window === 'undefined' || typeof window.location === 'undefined') {

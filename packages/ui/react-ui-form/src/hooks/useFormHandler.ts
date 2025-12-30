@@ -119,8 +119,8 @@ export type FormHandler<T extends AnyProperties> = Pick<FormHandlerProps<T>, 'sc
 export const useFormHandler = <T extends AnyProperties>({
   schema,
   autoSave,
-  values: valuesParam,
-  defaultValues: defaultValuesParam,
+  values: valuesProp,
+  defaultValues: defaultValuesProp,
   onValuesChanged,
   onValidate,
   onSave,
@@ -131,12 +131,12 @@ export const useFormHandler = <T extends AnyProperties>({
   const [touched, setTouched] = useState<Record<JsonPath, boolean>>({});
   const [errors, setErrors] = useState<Record<JsonPath, string>>({});
   const [saving, setSaving] = useState(false);
-  const defaultValues = useDefaultValue<Partial<T>>(defaultValuesParam, () => ({}));
+  const defaultValues = useDefaultValue<Partial<T>>(defaultValuesProp, () => ({}));
   const [values$, setValues] = useControllableState<Partial<T>>({
-    prop: valuesParam,
+    prop: valuesProp,
     defaultProp: defaultValues,
     onChange: () => {
-      setValues(valuesParam ?? defaultValues);
+      setValues(valuesProp ?? defaultValues);
       setChanged({});
       setTouched({});
       setErrors({});

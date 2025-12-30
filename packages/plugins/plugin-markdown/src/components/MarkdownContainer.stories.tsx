@@ -65,7 +65,7 @@ const meta = {
   render: DefaultStory,
   decorators: [
     withTheme,
-    withLayout({ container: 'column' }),
+    withLayout({ layout: 'column' }),
     withPluginManager<{ title?: string; content?: string }>((context) => ({
       plugins: [
         ClientPlugin({

@@ -128,10 +128,10 @@ export const SpacePlugin = Plugin.define<SpacePluginOptions>(meta).pipe(
     ],
   }),
   Common.Plugin.addReactRootModule({ activate: ReactRoot }),
-  Plugin.addModule(({ invitationUrl = window.location.origin, invitationParam = 'spaceInvitationCode' }) => {
+  Plugin.addModule(({ invitationUrl = window.location.origin, invitationProp = 'spaceInvitationCode' }) => {
     const createInvitationUrl = (invitationCode: string) => {
       const baseUrl = new URL(invitationUrl);
-      baseUrl.searchParams.set(invitationParam, invitationCode);
+      baseUrl.searchParams.set(invitationProp, invitationCode);
       return baseUrl.toString();
     };
 
@@ -144,10 +144,10 @@ export const SpacePlugin = Plugin.define<SpacePluginOptions>(meta).pipe(
     };
   }),
   Plugin.addModule(
-    ({ invitationUrl = window.location.origin, invitationParam = 'spaceInvitationCode', observability = false }) => {
+    ({ invitationUrl = window.location.origin, invitationProp = 'spaceInvitationCode', observability = false }) => {
       const createInvitationUrl = (invitationCode: string) => {
         const baseUrl = new URL(invitationUrl);
-        baseUrl.searchParams.set(invitationParam, invitationCode);
+        baseUrl.searchParams.set(invitationProp, invitationCode);
         return baseUrl.toString();
       };
 

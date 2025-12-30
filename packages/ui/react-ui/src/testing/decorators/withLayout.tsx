@@ -3,45 +3,52 @@
 //
 
 import { type Decorator } from '@storybook/react';
-import React, { type FC, type PropsWithChildren } from 'react';
+import React, { type FC, type PropsWithChildren, memo } from 'react';
 
 import { type ClassNameValue, type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
 export type ContainerProps = ThemedClassName<PropsWithChildren>;
 
-export type ContainerType = 'default' | 'column';
+export type ContainerType = 'fullscreen' | 'column';
 
 export type WithLayoutProps =
   | FC<ContainerProps>
-  | { classNames?: ClassNameValue; container?: ContainerType; scroll?: boolean };
+  | {
+      classNames?: ClassNameValue;
+      layout?: ContainerType;
+      scroll?: boolean;
+    };
 
 /**
  * Adds layout container.
  */
 export const withLayout =
-  (props: WithLayoutProps): Decorator =>
+  (props: WithLayoutProps = {}): Decorator =>
   (Story) => {
+    // Prevent re-rendering of the story.
+    const MemoizedStory = memo(Story);
     if (typeof props === 'function') {
       const Container = props;
       return (
         <Container>
-          <Story />
+          <MemoizedStory />
+        </Container>
+      );
+    } else {
+      const { layout = 'fullscreen', classNames, scroll } = props;
+      const Container = layouts[layout] ?? layouts.fullscreen;
+      return (
+        <Container classNames={mx(classNames, scroll ? 'overflow-y-auto' : 'overflow-hidden')}>
+          <MemoizedStory />
         </Container>
       );
     }
-
-    const Container = layouts[(props as any).container as ContainerType] ?? layouts.default;
-    return (
-      <Container classNames={mx(props.classNames, props.scroll ? 'overflow-y-auto' : 'overflow-hidden')}>
-        <Story />
-      </Container>
-    );
   };
 
 const layouts: Record<ContainerType, FC<ContainerProps>> = {
-  default: ({ children, classNames }: ContainerProps) => (
-    <div role='none' className={mx(classNames)}>
+  fullscreen: ({ children, classNames }: ContainerProps) => (
+    <div role='none' className={mx('fixed inset-0 flex overflow-hidden bg-deckSurface', classNames)}>
       {children}
     </div>
   ),

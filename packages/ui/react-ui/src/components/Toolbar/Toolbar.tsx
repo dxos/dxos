@@ -31,11 +31,14 @@ type ToolbarRootProps = ThemedClassName<
 >;
 
 const ToolbarRoot = forwardRef<HTMLDivElement, ToolbarRootProps>(
-  ({ classNames, children, layoutManaged, textBlockWidth: textBlockWidthParam, disabled, ...props }, forwardedRef) => {
+  ({ classNames, children, layoutManaged, textBlockWidth: textBlockWidthProp, disabled, ...props }, forwardedRef) => {
     const { tx } = useThemeContext();
-    const InnerRoot = textBlockWidthParam ? 'div' : Fragment;
-    const innerRootProps = textBlockWidthParam
-      ? { role: 'none', className: tx('toolbar.inner', 'toolbar', { layoutManaged }, classNames) }
+    const InnerRoot = textBlockWidthProp ? 'div' : Fragment;
+    const innerRootProps = textBlockWidthProp
+      ? {
+          role: 'none',
+          className: tx('toolbar.inner', 'toolbar', { layoutManaged }, classNames),
+        }
       : {};
 
     return (
@@ -125,7 +128,18 @@ const ToolbarToggleGroupIconItem = forwardRef<HTMLButtonElement, ToolbarToggleGr
   ({ variant, density, elevation, classNames, icon, label, iconOnly, ...props }, forwardedRef) => {
     return (
       <ToolbarPrimitive.ToolbarToggleItem {...props} asChild>
-        <IconButton {...{ variant, density, elevation, classNames, icon, label, iconOnly }} ref={forwardedRef} />
+        <IconButton
+          {...{
+            variant,
+            density,
+            elevation,
+            classNames,
+            icon,
+            label,
+            iconOnly,
+          }}
+          ref={forwardedRef}
+        />
       </ToolbarPrimitive.ToolbarToggleItem>
     );
   },

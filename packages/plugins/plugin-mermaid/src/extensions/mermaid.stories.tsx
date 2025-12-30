@@ -45,7 +45,7 @@ const DefaultStory = ({ text }: StoryProps) => {
 const meta = {
   title: 'plugins/plugin-mermaid/extensions',
   render: DefaultStory,
-  decorators: [withTheme, withLayout({ container: 'column' })],
+  decorators: [withTheme, withLayout({ layout: 'column' })],
 } satisfies Meta<typeof DefaultStory>;
 
 export default meta;

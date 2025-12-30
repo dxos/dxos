@@ -123,7 +123,7 @@ export default Capability.makeModule(() =>
       <handler_function>
         Async function that takes the argument in the form of:
 
-        type HandlerFunctionParam = {
+        type HandlerFunctionProp = {
           event: {
             data: T // The input schema
           },

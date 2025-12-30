@@ -57,7 +57,7 @@ const DefaultStory = ({
   children,
   graph,
   controller = null,
-  sidebar: sidebarParam,
+  sidebar: sidebarProp,
   registry,
   showGrid = true,
   snapToGrid = true,
@@ -78,7 +78,7 @@ const DefaultStory = ({
   };
 
   // Sidebar.
-  const [sidebar, setSidebar] = useState<RenderProps['sidebar']>(sidebarParam);
+  const [sidebar, setSidebar] = useState<RenderProps['sidebar']>(sidebarProp);
   const json = useMemo(() => {
     switch (sidebar) {
       case 'canvas':

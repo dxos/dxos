@@ -47,6 +47,11 @@ export default Capability.makeModule(() =>
           const compiler = useCompiler();
           // TODO(dmaretskyi): Since settings store is not reactive, this would break on the script plugin being enabled without a page reload.
           const settings = useCapability(Common.Capability.SettingsStore).getStore<ScriptSettings>(meta.id)?.value;
+          // TODO(wittjosiah): Why? The editor should be allow to render even if the environment is not ready.
+          if (!compiler?.environment) {
+            return null;
+          }
+
           return <ScriptContainer role={role} script={data.subject} settings={settings} env={compiler?.environment} />;
         },
       }),
@@ -90,7 +95,12 @@ export default Capability.makeModule(() =>
           const queueDxn = space?.properties.invocationTraceQueue?.dxn;
           return (
             <StackItem.Content>
-              <InvocationTraceContainer db={space?.db} queueDxn={queueDxn} target={data.companionTo} detailAxis='block' />
+              <InvocationTraceContainer
+                db={space?.db}
+                queueDxn={queueDxn}
+                target={data.companionTo}
+                detailAxis='block'
+              />
             </StackItem.Content>
           );
         },

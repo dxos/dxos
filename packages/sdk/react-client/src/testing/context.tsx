@@ -10,8 +10,6 @@ import { raise } from '@dxos/debug';
 export type ClientStory = {
   index?: number;
   spaceId?: SpaceId;
-
-  /** @deprecated Use spaceId */
   space?: Space;
 };
 

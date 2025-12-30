@@ -7,9 +7,25 @@ import { EditorView } from '@codemirror/view';
 
 import { fontBody, fontMono } from './tokens';
 
-export type ThemeOptions = {
+export type FontOptions = {
   monospace?: boolean;
 };
+
+export const createFontTheme = ({ monospace }: FontOptions = {}) =>
+  EditorView.theme({
+    // Set metrics on the scroller (this is often what CM uses for layout)
+    '.cm-scroller': {
+      fontFamily: monospace ? fontMono : fontBody,
+      // NOTE: Base font size (otherwise defined by HTML tag, which might be different for storybook).
+      fontSize: '16px',
+    },
+
+    // Ensure content + gutters don't keep their own defaults
+    '.cm-content, .cm-gutters': {
+      fontFamily: 'inherit',
+      fontSize: 'inherit',
+    },
+  });
 
 /**
  * Minimal styles.
@@ -42,10 +58,11 @@ export type ThemeOptions = {
  *   </div>
  * </div>
  *
+ * NOTE: The base theme is GLOBAL and is applied to ALL editors.
  * NOTE: `light` and `dark` selectors are preprocessed by CodeMirror and can only be in the base theme.
  * NOTE: Use 'unset' to remove default CM style.
  */
-export const createBaseTheme = ({ monospace }: ThemeOptions = {}) => {
+export const createBaseTheme = () => {
   return EditorView.baseTheme({
     '&': {},
     '&.cm-focused': {
@@ -66,9 +83,6 @@ export const createBaseTheme = ({ monospace }: ThemeOptions = {}) => {
     '.cm-content': {
       padding: 'unset',
       lineHeight: '24px',
-      fontFamily: monospace ? fontMono : fontBody,
-      // NOTE: Base font size (otherwise defined by HTML tag, which might be different for storybook).
-      fontSize: '16px',
       color: 'unset',
     },
 

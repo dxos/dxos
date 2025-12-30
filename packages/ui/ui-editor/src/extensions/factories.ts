@@ -31,7 +31,7 @@ import { type HuePalette } from '@dxos/ui-theme';
 import { type ThemeMode } from '@dxos/ui-types';
 import { hexToHue, isTruthy } from '@dxos/util';
 
-import { createBaseTheme, editorGutter } from '../styles';
+import { createBaseTheme, createFontTheme, editorGutter } from '../styles';
 
 import { automerge } from './automerge';
 import { SpaceAwarenessProvider, awareness } from './awareness';
@@ -40,6 +40,11 @@ import { focus } from './focus';
 //
 // Basic
 //
+
+/**
+ * Enable tabbing into editor (required for tabster to work).
+ */
+export const tabbable = EditorView.contentAttributes.of({ tabindex: '0' });
 
 export const filterChars = (chars: RegExp) => {
   return EditorState.transactionFilter.of((transaction) => {
@@ -96,6 +101,7 @@ export type BasicExtensionsOptions = {
   /** NOTE: Do not use with stack sections. */
   scrollPastEnd?: boolean;
   standardKeymap?: boolean;
+  tabbable?: boolean;
   tabSize?: number;
 };
 
@@ -118,8 +124,8 @@ const keymaps: { [key: string]: readonly KeyBinding[] } = {
   default: defaultKeymap,
 };
 
-export const createBasicExtensions = (_props?: BasicExtensionsOptions): Extension => {
-  const props = defaultsDeep({}, _props, defaultBasicOptions);
+export const createBasicExtensions = (propsProp?: BasicExtensionsOptions): Extension => {
+  const props = defaultsDeep({}, propsProp, defaultBasicOptions);
   return [
     // NOTE: Doesn't catch errors in keymap functions.
     EditorView.exceptionSink.of((err) => {
@@ -140,6 +146,7 @@ export const createBasicExtensions = (_props?: BasicExtensionsOptions): Extensio
     props.placeholder && placeholder(props.placeholder),
     props.readOnly !== undefined && EditorState.readOnly.of(props.readOnly),
     props.scrollPastEnd && scrollPastEnd(),
+    props.tabbable && tabbable,
     props.tabSize && EditorState.tabSize.of(props.tabSize),
 
     // https://codemirror.net/docs/ref/#view.KeyBinding
@@ -214,14 +221,15 @@ export const defaultStyles = {
 export const createThemeExtensions = ({
   monospace,
   themeMode,
-  slots: slotsParam,
-  syntaxHighlighting: syntaxHighlightingParam,
+  slots: slotsProp,
+  syntaxHighlighting: syntaxHighlightingProp,
 }: ThemeExtensionsOptions = {}): Extension => {
-  const slots = defaultsDeep({}, slotsParam, defaultThemeSlots);
+  const slots = defaultsDeep({}, slotsProp, defaultThemeSlots);
   return [
     EditorView.darkTheme.of(themeMode === 'dark'),
-    createBaseTheme({ monospace }),
-    syntaxHighlightingParam &&
+    createBaseTheme(),
+    createFontTheme({ monospace }),
+    syntaxHighlightingProp &&
       syntaxHighlighting(HighlightStyle.define(themeMode === 'dark' ? defaultStyles.dark : defaultStyles.light)),
     slots.editor?.className && EditorView.editorAttributes.of({ class: slots.editor.className }),
     slots.content?.className && EditorView.contentAttributes.of({ class: slots.content.className }),

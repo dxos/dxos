@@ -7,9 +7,9 @@ import { type Dispatch, type RefObject, type SetStateAction, useCallback, useEff
 /**
  * Like `useState` but with an additional dynamic value.
  */
-export const useStateWithRef = <T>(valueParam: T): [T, Dispatch<SetStateAction<T>>, RefObject<T>] => {
-  const [value, setValue] = useState<T>(valueParam);
-  const valueRef = useRef<T>(valueParam);
+export const useStateWithRef = <T>(valueProp: T): [T, Dispatch<SetStateAction<T>>, RefObject<T>] => {
+  const [value, setValue] = useState<T>(valueProp);
+  const valueRef = useRef<T>(valueProp);
   const setter = useCallback<Dispatch<SetStateAction<T>>>((value) => {
     if (typeof value === 'function') {
       setValue((current) => {

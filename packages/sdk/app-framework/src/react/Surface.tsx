@@ -170,8 +170,8 @@ export const useSurface = (): SurfaceContext => {
  * A surface is a named region of the screen that can be populated by plugins.
  */
 export const Surface: NamedExoticComponent<Common.SurfaceProps & RefAttributes<HTMLElement>> = memo(
-  forwardRef(({ id: _id, role, data: dataParam, limit, placeholder = DEFAULT_PLACEHOLDER, ...rest }, forwardedRef) => {
-    const data = useDefaultValue(dataParam, () => ({}));
+  forwardRef(({ id: _id, role, data: dataProp, limit, placeholder = DEFAULT_PLACEHOLDER, ...rest }, forwardedRef) => {
+    const data = useDefaultValue(dataProp, () => ({}));
 
     // TODO(wittjosiah): This will make all surfaces depend on a single signal.
     //   This isn't ideal because it means that any change to the data will cause all surfaces to re-render.

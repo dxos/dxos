@@ -22,7 +22,7 @@ import {
 
 import { AiContextBinder, AiContextService, type ContextBinding } from './context';
 
-export interface AiConversationRunParams {
+export interface AiConversationRunProps {
   prompt: string;
   system?: string;
   observer?: GenerationObserver;
@@ -72,7 +72,7 @@ export class AiConversation extends Resource {
    * Creates a new cancelable request effect.
    */
   public createRequest(
-    params: AiConversationRunParams,
+    params: AiConversationRunProps,
   ): Effect.Effect<Message.Message[], AiSessionRunError, AiSessionRunRequirements> {
     const self = this;
     return Effect.gen(function* () {

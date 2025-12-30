@@ -72,7 +72,7 @@ export const useTextEditor = (
   useEffect(() => {
     let view: EditorView | null = null;
     if (parentRef.current) {
-      log('create', { id, instanceId, doc: initialValue?.length ?? 0 });
+      log.info('create', { id, instanceId, doc: initialValue?.length ?? 0 });
 
       let initialSelection;
       if (selection?.anchor && initialValue?.length) {
@@ -160,7 +160,9 @@ export const useTextEditor = (
           element?.focus();
           break;
         }
+
         case 'Enter': {
+          event.preventDefault();
           if (target === currentTarget) {
             view?.focus();
           }

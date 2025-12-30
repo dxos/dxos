@@ -23,7 +23,7 @@ import {
   getTypeAnnotation,
   getTypeIdentifierAnnotation,
 } from '@dxos/echo/internal';
-import { type EchoDatabase, type Queue } from '@dxos/echo-db';
+import { type Queue } from '@dxos/echo-db';
 import { isEncodedReference } from '@dxos/echo-protocol';
 import { mapAst } from '@dxos/effect';
 import { ContextQueueService } from '@dxos/functions';
@@ -52,11 +52,11 @@ export type RelatedSchema = {
  * @returns
  */
 export const findRelatedSchema = async (
-  db: EchoDatabase,
+  db: Database.Database,
   anchor: Schema.Schema.AnyNoContext,
 ): Promise<RelatedSchema[]> => {
   // TODO(dmaretskyi): Query stored schemas.
-  const allSchemas = [...db.graph.schemaRegistry.schemas];
+  const allSchemas = await db.graph.schemaRegistry.query().run();
 
   // TODO(dmaretskyi): Also do references.
   return allSchemas
@@ -72,8 +72,8 @@ export const findRelatedSchema = async (
     })
     .map(
       (schema): RelatedSchema => ({
-        schema,
         kind: 'relation',
+        schema,
       }),
     );
 };

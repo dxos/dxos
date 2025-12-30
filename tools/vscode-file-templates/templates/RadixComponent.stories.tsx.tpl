@@ -17,7 +17,7 @@ const meta = {
   title: 'ui/react-ui-xxx/${name}',
   component: ${name}.Root,
   render: DefaultStory,
-  decorators: [withTheme, withLayout({ container: 'column' })],
+  decorators: [withTheme, withLayout({ layout: 'column' })],
   parameters: {
     layout: 'fullscreen',
   },

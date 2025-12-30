@@ -50,9 +50,9 @@ export class MigrationBuilder {
   private _newRoot?: DocHandleProxy<DatabaseDirectory> = undefined;
 
   constructor(private readonly _space: Space) {
-    this._repo = this._space.db.coreDatabase._repo;
+    this._repo = this._space.internal.db.coreDatabase._repo;
     // TODO(wittjosiah): Accessing private API.
-    this._rootDoc = (this._space.db.coreDatabase as any)._automergeDocLoader
+    this._rootDoc = (this._space.internal.db.coreDatabase as any)._automergeDocLoader
       .getSpaceRootDocHandle()
       .doc() as Doc<DatabaseDirectory>;
   }

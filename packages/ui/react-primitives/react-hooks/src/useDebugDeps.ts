@@ -2,27 +2,34 @@
 // Copyright 2024 DXOS.org
 //
 
-/* eslint-disable no-console */
-
 import { type DependencyList, useEffect, useRef } from 'react';
+
+import { log } from '@dxos/log';
 
 /**
  * Util to log deps that have changed.
  */
-export const useDebugDeps = (deps: DependencyList = [], active = true) => {
+export const useDebugDeps = (deps: DependencyList = [], label = 'useDebugDeps', active = true) => {
   const lastDeps = useRef<DependencyList>([]);
   useEffect(() => {
-    console.group('deps changed', { previous: lastDeps.current.length, current: deps.length });
+    if (!active) {
+      return;
+    }
+
+    const diff: Record<number, { previous: any; current: any }> = {};
     for (let i = 0; i < Math.max(lastDeps.current.length ?? 0, deps.length ?? 0); i++) {
-      if (lastDeps.current[i] !== deps[i] && active) {
-        console.log('changed', {
-          index: i,
+      if (lastDeps.current[i] !== deps[i] || i > lastDeps.current.length) {
+        diff[i] = {
           previous: lastDeps.current[i],
           current: deps[i],
-        });
+        };
       }
     }
-    console.groupEnd();
+
+    if (Object.keys(diff).length > 0) {
+      log.warn(`Updated: ${label} [${lastDeps.current.length}/${deps.length}]`, diff);
+    }
+
     lastDeps.current = deps;
-  }, deps);
+  }, [...deps, active]);
 };

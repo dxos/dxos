@@ -40,7 +40,7 @@ const meta = {
   title: 'ui/react-ui-searchlist/Listbox',
   component: Listbox.Root,
   render: DefaultStory,
-  decorators: [withTheme, withLayout({ container: 'column', classNames: 'p-2' })],
+  decorators: [withTheme, withLayout({ layout: 'column', classNames: 'p-2' })],
   parameters: {
     translations,
   },

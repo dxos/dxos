@@ -11,13 +11,14 @@ import wasmUrl from 'esbuild-wasm/esbuild.wasm?url';
 import * as ts from 'typescript';
 
 import { Capability } from '@dxos/app-framework';
-import { runAndForwardErrors } from '@dxos/effect';
 import { initializeBundler } from '@dxos/functions-runtime/bundler';
+import { log } from '@dxos/log';
 import { trim } from '@dxos/util';
 
 import { Compiler } from '../../compiler';
 import { ScriptCapabilities } from '../../types';
 
+// TODO(burdon): Document.
 const SCRIPT_PACKAGES_BUCKET = 'https://pub-5745ae82e450484aa28f75fc6a175935.r2.dev/dev/';
 const DECLARATION_EXTS = ['.d.ts', '.d.mts'];
 const NO_TYPES = true; // Types temopararly disabled due to compiler erorrs.
@@ -26,9 +27,7 @@ export default Capability.makeModule(() =>
   Effect.gen(function* () {
     yield* Effect.tryPromise(() => initializeBundler({ wasmUrl }));
 
-    const runtimeModules = yield* Effect.tryPromise(() =>
-      runAndForwardErrors(fetchRuntimeModules().pipe(Effect.provide(FetchHttpClient.layer))),
-    );
+    const runtimeModules = yield* fetchRuntimeModules().pipe(Effect.provide(FetchHttpClient.layer));
 
     const compiler = new Compiler({
       skipLibCheck: true,
@@ -57,9 +56,21 @@ export default Capability.makeModule(() =>
 );
 
 const fetchRuntimeModules = Effect.fnUntraced(function* () {
+  // { key, size, contentType }
   const manifest = yield* HttpClient.get(new URL('manifest.json', SCRIPT_PACKAGES_BUCKET)).pipe(
     Effect.flatMap((_) => _.json),
-    Effect.flatMap(Schema.decodeUnknown(Schema.Struct({ files: Schema.Array(Schema.String) }))),
+    Effect.flatMap(
+      Schema.decodeUnknown(
+        Schema.Struct({
+          files: Schema.Array(
+            Schema.Struct({
+              key: Schema.String,
+            }),
+          ),
+        }),
+      ),
+    ),
+    Effect.map((manifest) => ({ ...manifest, files: manifest.files.map((f) => f.key) })),
   );
 
   const declarationFiles = manifest.files.filter((file) => DECLARATION_EXTS.some((ext) => file.endsWith(ext)));
@@ -68,17 +79,17 @@ const fetchRuntimeModules = Effect.fnUntraced(function* () {
   const modules = yield* Effect.forEach(
     declarationFiles,
     Effect.fnUntraced(
-      function* (file) {
-        const response = yield* HttpClient.get(new URL(file, SCRIPT_PACKAGES_BUCKET)).pipe(
+      function* (filename) {
+        const response = yield* HttpClient.get(new URL(filename, SCRIPT_PACKAGES_BUCKET)).pipe(
           Effect.retry(Schedule.exponential(1_000).pipe(Schedule.compose(Schedule.recurs(3)))),
         );
         const content = yield* response.text;
+        const moduleName = filename.replace(/\.d\.(ts|mts)$/, '');
         fetched++;
 
-        const moduleName = file.replace(/\.d\.(ts|mts)$/, '');
         return {
           moduleName,
-          filename: file,
+          filename,
           content,
         };
       },
@@ -86,5 +97,7 @@ const fetchRuntimeModules = Effect.fnUntraced(function* () {
     ),
     { concurrency: 20 },
   );
+
+  log.info('runtime modules', { manifest: manifest.files.length, files: declarationFiles.length, fetched });
   return modules;
 });

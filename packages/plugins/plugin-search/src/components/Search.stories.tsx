@@ -56,7 +56,7 @@ const meta = {
   title: 'plugins/plugin-search/Search',
   component: Searchbar,
   render: DefaultStory,
-  decorators: [withTheme, withLayout({ container: 'column' }), withSearchContext()],
+  decorators: [withTheme, withLayout({ layout: 'column' }), withSearchContext()],
 } satisfies Meta<typeof Searchbar>;
 
 export default meta;

@@ -62,7 +62,10 @@ export type TreeComponentProps<N = unknown> = {
 
 // TODO(burdon): Label accessor.
 export const Tree = <N,>({ space, selected, variant = 'tidy', onNodeClick }: TreeComponentProps<N>) => {
-  const [model] = useAsyncState(async () => (space ? new SpaceGraphModel().open(space) : undefined), [space, selected]);
+  const [model] = useAsyncState(
+    async () => (space ? new SpaceGraphModel().open(space.db) : undefined),
+    [space, selected],
+  );
 
   const [tree, setTree] = useState<TreeNode>();
   useEffect(() => {

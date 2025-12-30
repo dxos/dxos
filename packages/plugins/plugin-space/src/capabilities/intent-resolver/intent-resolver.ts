@@ -491,7 +491,7 @@ export default Capability.makeModule(({ context, observability, createInvitation
                   actionLabel: ['remove deleted objects label', { ns: meta.id }],
                   actionAlt: ['remove deleted objects alt', { ns: meta.id }],
                   closeLabel: ['close label', { ns: 'os' }],
-                  onAction: () => db.coreDatabase.unlinkDeletedObjects(),
+                  onAction: () => db instanceof EchoDatabaseImpl && db.coreDatabase.unlinkDeletedObjects(),
                 },
               }),
               ...(observability

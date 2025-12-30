@@ -13,7 +13,7 @@ import { FeedbackForm } from './FeedbackForm';
 const meta = {
   title: 'plugins/plugin-observability/FeedbackForm',
   component: FeedbackForm,
-  decorators: [withTheme, withLayout({ container: 'column' })],
+  decorators: [withTheme, withLayout({ layout: 'column' })],
   parameters: {
     layout: 'fullscreen',
     translations,

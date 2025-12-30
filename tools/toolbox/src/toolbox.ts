@@ -352,7 +352,7 @@ export class Toolbox {
           tsConfigJson.references = [];
         } else {
           tsConfigJson.references = deps.map(([dependencyName]) => {
-            const dependency = this._getProjectByPackageName(dependencyName)!;
+            const dependency = this._getProjectByPackageName(dependencyName);
             const path = relative(project.path, dependency.path);
             return { path };
           });

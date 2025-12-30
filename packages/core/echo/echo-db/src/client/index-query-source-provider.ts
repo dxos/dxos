@@ -22,17 +22,17 @@ import { isNonNullable } from '@dxos/util';
 import { OBJECT_DIAGNOSTICS, type QuerySourceProvider } from '../hypergraph';
 import { type QuerySource, getTargetSpacesForQuery } from '../query';
 
-export type LoadObjectParams = {
+export type LoadObjectProps = {
   spaceId: SpaceId;
   objectId: string;
   documentId: string;
 };
 
 export interface ObjectLoader {
-  loadObject(params: LoadObjectParams): Promise<Obj.Obj<any> | undefined>;
+  loadObject(params: LoadObjectProps): Promise<Obj.Obj<any> | undefined>;
 }
 
-export type IndexQueryProviderParams = {
+export type IndexQueryProviderProps = {
   service: QueryService;
   objectLoader: ObjectLoader;
 };
@@ -41,7 +41,7 @@ const QUERY_SERVICE_TIMEOUT = 20_000;
 
 export class IndexQuerySourceProvider implements QuerySourceProvider {
   // TODO(burdon): OK for options, but not params. Pass separately and type readonly here.
-  constructor(private readonly _params: IndexQueryProviderParams) {}
+  constructor(private readonly _params: IndexQueryProviderProps) {}
 
   // TODO(burdon): Rename createQuerySource
   create(): QuerySource {
@@ -52,7 +52,7 @@ export class IndexQuerySourceProvider implements QuerySourceProvider {
   }
 }
 
-export type IndexQuerySourceParams = {
+export type IndexQuerySourceProps = {
   service: QueryService;
   objectLoader: ObjectLoader;
 };
@@ -68,7 +68,7 @@ export class IndexQuerySource implements QuerySource {
   private _stream?: Stream<QueryResponse>;
   private _open = false;
 
-  constructor(private readonly _params: IndexQuerySourceParams) {}
+  constructor(private readonly _params: IndexQuerySourceProps) {}
 
   open(): void {
     this._open = true;

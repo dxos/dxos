@@ -74,6 +74,12 @@ export type ExtractQueryResult<Query> = Query extends { location: ('database' | 
 
 export interface SchemaRegistry {
   /**
+   * Checks if the provided schema is registered.
+   */
+  // TODO(burdon): Type?
+  hasSchema(schema: Type.Entity.Any): boolean;
+
+  /**
    * Registers the provided schema.
    *
    * @returns Mutable runtime instances of schemas that were registered.
@@ -86,6 +92,9 @@ export interface SchemaRegistry {
    */
   register(input: RegisterSchemaInput[]): Promise<Type.RuntimeType[]>;
 
+  /**
+   *
+   */
   query<Q extends Types.NoExcessProperties<Query, Q>>(
     query?: Q & Query,
   ): QueryResult.QueryResult<ExtractQueryResult<Q>>;

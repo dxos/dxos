@@ -49,7 +49,7 @@ export type StoryProps = Pick<UseTextEditorProps, 'id' | 'scrollTo' | 'selection
   };
 
 export const EditorStory = forwardRef<EditorController, StoryProps>(
-  ({ debug, debugCustom, text, extensions: extensionsParam, ...props }, forwardedRef) => {
+  ({ debug, debugCustom, text, extensions: extensionsProp, ...props }, forwardedRef) => {
     const controllerRef = useRef<EditorController>(null);
     const mergedRef = useMergeRefs([controllerRef, forwardedRef]);
 
@@ -58,8 +58,8 @@ export const EditorStory = forwardRef<EditorController, StoryProps>(
     const [object] = useState(Obj.make(Type.Expando, { content: text ?? '' }));
 
     const extensions = useMemo(
-      () => (debug ? [extensionsParam, debugTree(setTree)].filter(isNonNullable) : extensionsParam),
-      [debug, extensionsParam],
+      () => (debug ? [extensionsProp, debugTree(setTree)].filter(isNonNullable) : extensionsProp),
+      [debug, extensionsProp],
     );
 
     const view = controllerRef.current?.view;

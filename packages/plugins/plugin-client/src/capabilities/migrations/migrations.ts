@@ -19,7 +19,7 @@ export default Capability.makeModule((context) =>
       (_migrations: any[]) => {
         const migrations = Array.from(new Set(_migrations.flat()));
         const spaces = client.spaces.get();
-        void Promise.all(spaces.map((space: any) => space.db.runMigrations(migrations)));
+        void Promise.all(spaces.map((space: any) => space.internal.db.runMigrations(migrations)));
       },
       { immediate: true },
     );

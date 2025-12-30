@@ -19,7 +19,7 @@ export interface ReplicantBrain<T> {
    * Field that holds the RPC handle to the replicant.
    */
   brain: RpcHandle<T>;
-  params: ReplicantParams;
+  params: ReplicantProps;
   kill(signal?: NodeJS.Signals | number): void;
 }
 
@@ -32,7 +32,7 @@ export type GlobalOptions = {
   shouldBuildBrowser?: boolean;
 };
 
-export type TestParams<S> = {
+export type TestProps<S> = {
   testId: string;
   outDir: string;
   spec: S;
@@ -43,7 +43,7 @@ export type TestParams<S> = {
  */
 export type Platform = 'nodejs' | 'chromium' | 'firefox' | 'webkit';
 
-export type ReplicantParams = {
+export type ReplicantProps = {
   /**
    * Replicant class name. Used in registry.
    * Sent to replicant from orchestrator process.
@@ -62,11 +62,11 @@ export type ReplicantParams = {
    */
   redisTracingQueue: string;
 
-  runtime: ReplicantRuntimeParams;
+  runtime: ReplicantRuntimeProps;
   testId: string;
 };
 
-export type ReplicantRuntimeParams = {
+export type ReplicantRuntimeProps = {
   // defaults to node.
   platform?: Platform;
 
@@ -76,7 +76,7 @@ export type ReplicantRuntimeParams = {
   userDataDir?: string;
 };
 
-export type ReplicantsSummary = { [replicantId: string]: ReplicantParams };
+export type ReplicantsSummary = { [replicantId: string]: ReplicantProps };
 
 // plan vs environment
 export interface TestPlan<S, R = void> {
@@ -86,7 +86,7 @@ export interface TestPlan<S, R = void> {
    * Run the test.
    * @returns results of the run will be passed to the `analyze` method.
    */
-  run(env: SchedulerEnv, params: TestParams<S>): Promise<R>;
+  run(env: SchedulerEnv, params: TestProps<S>): Promise<R>;
   // TODO(mykola): Add analysesEnv which will contain collected preprocessed logs.
-  analyze?: (params: TestParams<S>, summary: ReplicantsSummary, result: R) => Promise<any>;
+  analyze?: (params: TestProps<S>, summary: ReplicantsSummary, result: R) => Promise<any>;
 }

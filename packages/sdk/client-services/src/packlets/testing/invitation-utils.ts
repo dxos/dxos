@@ -36,7 +36,7 @@ export type PerformInvitationCallbacks<T> = {
   onError?: (value: T) => boolean | void;
 };
 
-export type PerformInvitationParams = {
+export type PerformInvitationProps = {
   host: ServiceContext | InvitationHost;
   guest: ServiceContext | InvitationGuest;
   guestDeviceProfile?: DeviceProfileDocument;
@@ -62,7 +62,7 @@ export const performInvitation = ({
   options,
   hooks,
   codeInputDelay,
-}: PerformInvitationParams): [Promise<Result>, Promise<Result>] => {
+}: PerformInvitationProps): [Promise<Result>, Promise<Result>] => {
   let guestError = false;
   let guestConnected = false;
   let wereConnected = false;

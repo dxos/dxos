@@ -66,10 +66,10 @@ export type UseAppOptions = {
  */
 export const useApp = ({
   pluginManager,
-  pluginLoader: pluginLoaderParam,
-  plugins: pluginsParam,
-  core: coreParam,
-  defaults: defaultsParam,
+  pluginLoader: pluginLoaderProp,
+  plugins: pluginsProp,
+  core: coreProp,
+  defaults: defaultsProp,
   placeholder,
   fallback = DefaultFallback,
   cacheEnabled = false,
@@ -77,21 +77,21 @@ export const useApp = ({
   debounce = 0,
   timeout = 30_000,
 }: UseAppOptions) => {
-  const plugins = useDefaultValue(pluginsParam, () => []);
-  const core = useDefaultValue(coreParam, () => plugins.map(({ meta }) => meta.id));
-  const defaults = useDefaultValue(defaultsParam, () => []);
+  const plugins = useDefaultValue(pluginsProp, () => []);
+  const core = useDefaultValue(coreProp, () => plugins.map(({ meta }) => meta.id));
+  const defaults = useDefaultValue(defaultsProp, () => []);
 
   // TODO(wittjosiah): Provide a custom plugin loader which supports loading via url.
   const pluginLoader = useMemo(
     () =>
-      pluginLoaderParam ??
+      pluginLoaderProp ??
       ((id: string) =>
         Effect.sync(() => {
           const plugin = plugins.find((plugin) => plugin.meta.id === id);
           invariant(plugin, `Plugin not found: ${id}`);
           return plugin;
         })),
-    [pluginLoaderParam, plugins],
+    [pluginLoaderProp, plugins],
   );
 
   const readyRef = useRef(false);

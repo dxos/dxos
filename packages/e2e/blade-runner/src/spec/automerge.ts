@@ -8,7 +8,7 @@ import { mean, std } from 'mathjs';
 import { PublicKey } from '@dxos/keys';
 
 import { type SchedulerEnvImpl } from '../env';
-import { type Platform, type ReplicantsSummary, type TestParams, type TestPlan } from '../plan';
+import { type Platform, type ReplicantsSummary, type TestPlan, type TestProps } from '../plan';
 import { AutomergeReplicant, type StorageAdaptorKind } from '../replicants/automerge-replicant';
 
 export type AutomergeTestSpec = {
@@ -43,7 +43,7 @@ export class AutomergeTestPlan implements TestPlan<AutomergeTestSpec, AutomergeT
 
   async run(
     env: SchedulerEnvImpl<AutomergeTestSpec>,
-    params: TestParams<AutomergeTestSpec>,
+    params: TestProps<AutomergeTestSpec>,
   ): Promise<AutomergeTestResult> {
     const userDataDir = `/tmp/echo-replicant-${PublicKey.random().toHex()}`;
     const replicant = await env.spawn(AutomergeReplicant, { platform: params.spec.platform, userDataDir });
@@ -80,7 +80,7 @@ export class AutomergeTestPlan implements TestPlan<AutomergeTestSpec, AutomergeT
   }
 
   async analyze(
-    params: TestParams<AutomergeTestSpec>,
+    params: TestProps<AutomergeTestSpec>,
     summary: ReplicantsSummary,
     result: AutomergeTestResult,
   ): Promise<{

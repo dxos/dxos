@@ -53,7 +53,7 @@ export class DevtoolsHostEvents {
   readonly ready = new AsyncEvent();
 }
 
-export type DevtoolsServiceParams = {
+export type DevtoolsServiceProps = {
   events: DevtoolsHostEvents;
   config: Config;
   context: ServiceContext;
@@ -63,7 +63,7 @@ export type DevtoolsServiceParams = {
  * @deprecated
  */
 export class DevtoolsServiceImpl implements DevtoolsHost {
-  constructor(private readonly params: DevtoolsServiceParams) {}
+  constructor(private readonly params: DevtoolsServiceProps) {}
 
   events(_request: void): Stream<Event> {
     return new Stream<Event>(({ next }) => {

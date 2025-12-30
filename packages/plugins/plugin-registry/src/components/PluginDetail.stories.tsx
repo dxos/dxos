@@ -15,7 +15,7 @@ import { PluginDetail } from './PluginDetail';
 const meta = {
   title: 'plugins/plugin-registry/PluginDetail',
   component: PluginDetail,
-  decorators: [withTheme, withLayout({ container: 'column' })],
+  decorators: [withTheme, withLayout({ layout: 'column' })],
   parameters: {
     translations,
   },

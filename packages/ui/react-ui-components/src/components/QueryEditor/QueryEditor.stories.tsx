@@ -7,8 +7,7 @@ import React, { useCallback, useMemo, useState } from 'react';
 
 import { type Filter, Tag } from '@dxos/echo';
 import { QueryBuilder } from '@dxos/echo-query';
-import { useSpaces } from '@dxos/react-client/echo';
-import { withClientProvider } from '@dxos/react-client/testing';
+import { useClientStory, withClientProvider } from '@dxos/react-client/testing';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Json } from '@dxos/react-ui-syntax-highlighter';
 import { Employer, Organization, Person, Project } from '@dxos/types';
@@ -27,7 +26,7 @@ const meta = {
   title: 'ui/react-ui-components/QueryEditor',
   component: QueryEditor,
   render: (args: QueryEditorProps) => {
-    const [space] = useSpaces();
+    const { space } = useClientStory();
     const [filter, setFilter] = useState<Filter.Any>();
     const builder = useMemo(() => new QueryBuilder(tags), []);
     const handleChange = useCallback<NonNullable<QueryEditorProps['onChange']>>((value) => {
@@ -49,7 +48,7 @@ const meta = {
   },
   decorators: [
     withTheme,
-    withLayout({ container: 'column', classNames: 'p-2', scroll: true }),
+    withLayout({ layout: 'column', classNames: 'p-2', scroll: true }),
     withClientProvider({
       types: [Organization.Organization, Person.Person, Project.Project, Employer.Employer],
       createIdentity: true,

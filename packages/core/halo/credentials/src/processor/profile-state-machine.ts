@@ -10,7 +10,7 @@ import { getCredentialAssertion } from '../credentials';
 
 import { type CredentialProcessor } from './credential-processor';
 
-export type ProfileStateMachineParams = {
+export type ProfileStateMachineProps = {
   identityKey: PublicKey;
   onUpdate?: () => void;
 };
@@ -22,7 +22,7 @@ export class ProfileStateMachine implements CredentialProcessor {
   // TODO(burdon): Return values via getter.
   public profile?: ProfileDocument;
 
-  constructor(private readonly _params: ProfileStateMachineParams) {}
+  constructor(private readonly _params: ProfileStateMachineProps) {}
 
   async processCredential(credential: Credential): Promise<void> {
     const assertion = getCredentialAssertion(credential);

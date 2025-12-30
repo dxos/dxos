@@ -63,7 +63,7 @@ const meta = {
   render: render(DefaultStory),
   decorators: [
     withTheme,
-    withLayout({ container: 'column', scroll: true }),
+    withLayout({ layout: 'column', scroll: true }),
     // TODO(wittjosiah): This shouldn't depend on app framework (use withClientProvider instead).
     //  Currently this is required due to useOnEditAnalytics.
     withPluginManager({

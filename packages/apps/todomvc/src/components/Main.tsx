@@ -11,10 +11,10 @@ import { parseId, useSpace, useSpaces } from '@dxos/react-client/echo';
 import { SpaceList } from './SpaceList';
 
 export const Main = () => {
-  const { spaceParam } = useParams();
+  const { spaceProp } = useParams();
   const client = useClient();
   const spaces = useSpaces();
-  const { spaceId } = parseId(spaceParam);
+  const { spaceId } = parseId(spaceProp);
   const space = useSpace(spaceId);
 
   useEffect(() => {

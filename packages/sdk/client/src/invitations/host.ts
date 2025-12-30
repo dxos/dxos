@@ -9,7 +9,7 @@ import { type CancellableInvitation } from '@dxos/client-protocol';
 import { runAndForwardErrors } from '@dxos/effect';
 import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 
-type HostInvitationParams = {
+type HostInvitationProps = {
   observable: CancellableInvitation;
   callbacks?: {
     onConnecting?: (invitation: Invitation) => Effect.Effect<void>;
@@ -28,7 +28,7 @@ export const hostInvitation = ({
   callbacks,
   peersNumber = 1,
   waitForSuccess = true,
-}: HostInvitationParams): Effect.Effect<Invitation, Error> =>
+}: HostInvitationProps): Effect.Effect<Invitation, Error> =>
   Effect.gen(function* () {
     const invitationQueue = yield* Queue.unbounded<Invitation>();
     const connectingQueue = yield* Queue.unbounded<Invitation>();

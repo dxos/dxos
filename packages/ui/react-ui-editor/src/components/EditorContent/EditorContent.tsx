@@ -16,6 +16,7 @@ import { type EditorController, createEditorController } from './controller';
 
 export type EditorContentProps = ThemedClassName<
   {
+    focusable?: boolean;
     value?: string;
     onChange?: (value: string) => void;
   } & UseTextEditorProps
@@ -27,7 +28,7 @@ export type EditorContentProps = ThemedClassName<
  * @deprecated Use Editor.Content
  */
 export const EditorContent = forwardRef<EditorController, EditorContentProps>(
-  ({ classNames, id, extensions, selectionEnd, value, onChange, ...props }, forwardedRef) => {
+  ({ classNames, id, extensions, selectionEnd, focusable = true, value, onChange, ...props }, forwardedRef) => {
     const { parentRef, focusAttributes, view } = useTextEditor(
       () => ({
         id,
@@ -44,7 +45,7 @@ export const EditorContent = forwardRef<EditorController, EditorContentProps>(
         ],
         ...props,
       }),
-      [id, extensions, onChange, selectionEnd],
+      [id, extensions, selectionEnd, onChange],
     );
 
     // External controller.
@@ -61,10 +62,22 @@ export const EditorContent = forwardRef<EditorController, EditorContentProps>(
           selection: selectionEnd ? { anchor: view?.state.doc.length ?? 0 } : undefined,
         });
 
-        view?.focus();
+        if (selectionEnd) {
+          view?.focus();
+        }
       });
     }, [view, value, selectionEnd]);
 
-    return <div role='none' className={mx('is-full', classNames)} {...focusAttributes} ref={parentRef} />;
+    return (
+      <div
+        role='none'
+        className={mx(
+          'is-full outline-none focus:border-accentSurface focus-within:border-neutralFocusIndicator',
+          classNames,
+        )}
+        ref={parentRef}
+        {...(focusable ? focusAttributes : {})}
+      />
+    );
   },
 );

@@ -36,7 +36,7 @@ const meta = {
   render: render(DefaultStory),
   decorators: [
     withTheme,
-    withLayout({ container: 'column' }),
+    withLayout({ layout: 'column' }),
     withPluginManager({
       plugins: [...(await createThreadPlugins())],
       capabilities: [Capability.contributes(Common.Capability.Schema, [Channel.Channel, Thread.Thread, Message.Message])],

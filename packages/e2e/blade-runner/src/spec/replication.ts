@@ -7,7 +7,7 @@ import { type AutomergeUrl } from '@automerge/automerge-repo';
 import { log } from '@dxos/log';
 
 import { type SchedulerEnvImpl } from '../env';
-import { type Platform, type ReplicantBrain, type ReplicantsSummary, type TestParams, type TestPlan } from '../plan';
+import { type Platform, type ReplicantBrain, type ReplicantsSummary, type TestPlan, type TestProps } from '../plan';
 import { EchoReplicant } from '../replicants/echo-replicant';
 
 /**
@@ -82,7 +82,7 @@ export class ReplicationTestPlan implements TestPlan<ReplicationTestSpec, Replic
 
   async run(
     env: SchedulerEnvImpl<ReplicationTestSpec>,
-    params: TestParams<ReplicationTestSpec>,
+    params: TestProps<ReplicationTestSpec>,
   ): Promise<ReplicationTestResult> {
     const results = {} as ReplicationTestResult;
 
@@ -174,7 +174,7 @@ export class ReplicationTestPlan implements TestPlan<ReplicationTestSpec, Replic
   }
 
   async analyze(
-    params: TestParams<ReplicationTestSpec>,
+    params: TestProps<ReplicationTestSpec>,
     summary: ReplicantsSummary,
     result: ReplicationTestResult,
   ): Promise<any> {}
