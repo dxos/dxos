@@ -42,7 +42,7 @@ export const EmojiPickerToolbarButton = ({
   defaultEmoji,
   onChangeEmoji,
 }: Omit<EmojiPickerProps, 'onClickClear'>) => {
-  const { t } = useTranslation('os');
+  const { t } = useTranslation('@dxos/os');
   const { themeMode } = useThemeContext();
 
   const [_emojiValue, setEmojiValue] = useControllableState<string>({
@@ -112,7 +112,7 @@ export const EmojiPickerBlock = ({
   triggerVariant = 'ghost',
   classNames,
 }: EmojiPickerProps) => {
-  const { t } = useTranslation('os');
+  const { t } = useTranslation('@dxos/os');
   const [isMd] = useMediaQuery('md');
 
   const [emojiValue, setEmojiValue] = useControllableState<string>({

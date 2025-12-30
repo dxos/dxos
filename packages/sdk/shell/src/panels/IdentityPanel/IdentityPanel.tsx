@@ -19,6 +19,7 @@ import { hexToEmoji, hexToHue, keyToFallback } from '@dxos/util';
 
 import { CloseButton, Heading, Viewport } from '../../components';
 import { ConfirmReset, InvitationManager } from '../../steps';
+import { translationKey } from '../../translations';
 
 import { useIdentityMachine } from './identityMachine';
 import {
@@ -48,7 +49,7 @@ const IdentityHeading = ({
   onManageCredentials,
 }: IdentityPanelHeadingProps) => {
   const fallbackValue = keyToFallback(identity.identityKey);
-  const { t } = useTranslation('os');
+  const { t } = useTranslation(translationKey);
   const [displayName, setDisplayNameDirectly] = useState(identity.profile?.displayName ?? '');
   const [emoji, setEmojiDirectly] = useState<string>(getEmojiValue(identity));
   const [hue, setHueDirectly] = useState<string | undefined>(getHueValue(identity));
@@ -175,7 +176,7 @@ export const IdentityPanelImpl = (props: IdentityPanelImplProps) => {
     onManageCredentials,
     ...rest
   } = props;
-  const { t } = useTranslation('os');
+  const { t } = useTranslation(translationKey);
   const title = useMemo(() => {
     switch (activeView) {
       case 'device invitation manager':

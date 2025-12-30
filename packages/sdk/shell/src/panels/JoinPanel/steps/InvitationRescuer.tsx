@@ -9,6 +9,7 @@ import { useTranslation } from '@dxos/react-ui';
 import { descriptionText } from '@dxos/ui-theme';
 
 import { Action, Actions, StepHeading } from '../../../components';
+import { translationKey } from '../../../translations';
 import { type FailReason } from '../../../types';
 import { type JoinStepProps } from '../JoinPanelProps';
 
@@ -29,7 +30,7 @@ const InvitationActions = ({
   Kind,
   failReason,
 }: InvitationRescuerProps) => {
-  const { t } = useTranslation('os');
+  const { t } = useTranslation(translationKey);
 
   if (failReason) {
     return (
@@ -75,7 +76,7 @@ const InvitationActions = ({
 
 export const InvitationRescuer = (props: InvitationRescuerProps) => {
   const { Kind, invitationState, active, send } = props;
-  const { t } = useTranslation('os');
+  const { t } = useTranslation(translationKey);
 
   return (
     <>

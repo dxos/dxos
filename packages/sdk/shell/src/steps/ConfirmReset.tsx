@@ -8,6 +8,7 @@ import { log } from '@dxos/log';
 import { Message, useTranslation } from '@dxos/react-ui';
 
 import { Action, Actions, Input, StepHeading } from '../components';
+import { translationKey } from '../translations';
 
 import { type StepProps } from './StepProps';
 
@@ -26,7 +27,7 @@ export type ConfirmResetImplProps = ConfirmResetOptions & {
 };
 
 export const ConfirmReset = ({ active, onCancel, onConfirm, mode }: ConfirmResetProps) => {
-  const { t } = useTranslation('os');
+  const { t } = useTranslation(translationKey);
   const [validationMessage, setValidationMessage] = useState('');
   const [pending, setPending] = useState(false);
   const processReset = async () => {
@@ -60,7 +61,7 @@ export const ConfirmResetImpl = ({
   onCancel,
   mode,
 }: ConfirmResetImplProps) => {
-  const { t } = useTranslation('os');
+  const { t } = useTranslation(translationKey);
   const confirmationValue = t('confirmation value');
   const [inputValue, setInputValue] = useState('');
   const testIdAffix =
