@@ -364,8 +364,7 @@ describe('CoreDatabase', () => {
       const { db, graph } = await testBuilder.createDatabase();
       await graph.schemaRegistry.register([TestSchema.Person]);
       const contact = db.add(Obj.make(TestSchema.Person, { name: 'Foo' }));
-
-      await db._coreDatabase.atomicReplaceObject(contact.id, {
+      await db.coreDatabase.atomicReplaceObject(contact.id, {
         type: DXN.parse('dxn:type:example.com/type/Task:0.1.0'),
         data: { name: 'Bar' },
       });

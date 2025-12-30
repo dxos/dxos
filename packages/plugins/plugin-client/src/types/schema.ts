@@ -99,7 +99,7 @@ export type ClientPluginOptions = ClientOptions & {
   /**
    * Query parameter for the invitation code.
    */
-  invitationParam?: string;
+  invitationProp?: string;
 
   /**
    * Run after the client has been initialized.

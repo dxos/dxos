@@ -20,7 +20,7 @@ import { type EchoDatabaseImpl } from '../proxy-db';
 import { type QueryContext } from './query-context';
 import { getTargetSpacesForQuery, isSimpleSelectionQuery } from './util';
 
-export type GraphQueryContextParams = {
+export type GraphQueryContextProps = {
   // TODO(dmaretskyi): Make async.
   onStart: () => void;
   onStop: () => void;
@@ -69,7 +69,7 @@ export class GraphQueryContext implements QueryContext {
 
   public changed = new Event<void>();
 
-  constructor(private readonly _params: GraphQueryContextParams) {}
+  constructor(private readonly _params: GraphQueryContextProps) {}
 
   get sources(): ReadonlySet<QuerySource> {
     return this._sources;
@@ -230,7 +230,7 @@ export class SpaceQuerySource implements QuerySource {
     const results: QueryResult.EntityEntry<AnyLiveObject<any>>[] = [];
     if (isObjectIdFilter(filter)) {
       results.push(
-        ...(await this._database._coreDatabase.batchLoadObjectCores((filter as QueryAST.FilterObject).id as ObjectId[]))
+        ...(await this._database.coreDatabase.batchLoadObjectCores((filter as QueryAST.FilterObject).id as ObjectId[]))
           .filter(Predicate.isNotUndefined)
           .filter((core) => this._filterCore(core, filter, options))
           .map((core) => this._mapCoreToResult(core)),

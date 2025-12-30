@@ -8,14 +8,14 @@ import type { DocumentId } from '@automerge/automerge-repo';
 import { headsEncoding } from '@dxos/indexing';
 import type { BatchLevel, SublevelDB } from '@dxos/kv-store';
 
-export type HeadsStoreParams = {
+export type HeadsStoreProps = {
   db: SublevelDB;
 };
 
 export class HeadsStore {
   private readonly _db: SublevelDB;
 
-  constructor({ db }: HeadsStoreParams) {
+  constructor({ db }: HeadsStoreProps) {
     this._db = db;
   }
 

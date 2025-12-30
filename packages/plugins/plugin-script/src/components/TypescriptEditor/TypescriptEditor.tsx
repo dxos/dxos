@@ -12,7 +12,7 @@ import { tags } from '@lezer/highlight';
 import { type VirtualTypeScriptEnvironment } from '@typescript/vfs';
 import { continueKeymap } from '@valtown/codemirror-continue';
 import { type HoverInfo, tsAutocomplete, tsFacet, tsHover, tsLinter, tsSync } from '@valtown/codemirror-ts';
-import React from 'react';
+import React, { memo } from 'react';
 
 import { type ThemeMode, type ThemedClassName, useThemeContext } from '@dxos/react-ui';
 import { type UseTextEditorProps, useTextEditor } from '@dxos/react-ui-editor';
@@ -39,66 +39,67 @@ export type TypescriptEditorProps = ThemedClassName<
   } & Pick<UseTextEditorProps, 'initialValue' | 'extensions' | 'scrollTo' | 'selection'>
 >;
 
-export const TypescriptEditor = ({
-  classNames,
-  id,
-  role = 'article',
-  inputMode = 'vscode',
-  env,
-  options,
-  initialValue,
-  extensions,
-  scrollTo,
-  selection,
-}: TypescriptEditorProps) => {
-  const { themeMode } = useThemeContext();
-  const { parentRef, focusAttributes } = useTextEditor(
-    () => ({
-      id,
-      initialValue,
-      selection,
-      scrollTo,
-      extensions: [
-        extensions,
-        createBasicExtensions({
-          highlightActiveLine: true,
-          indentWithTab: true,
-          lineNumbers: true,
-          lineWrapping: false,
-          scrollPastEnd: role !== 'section',
-          search: true,
-          ...options,
-        }),
-        createThemeExtensions({
-          monospace: true,
-          themeMode,
-          syntaxHighlighting: true,
-        }),
-        InputModeExtensions[inputMode],
+export const TypescriptEditor = memo(
+  ({
+    classNames,
+    id,
+    role = 'article',
+    inputMode = 'vscode',
+    env,
+    options,
+    initialValue,
+    extensions,
+    scrollTo,
+    selection,
+  }: TypescriptEditorProps) => {
+    const { themeMode } = useThemeContext();
+    const { parentRef, focusAttributes } = useTextEditor(
+      () => ({
+        id,
+        initialValue,
+        selection,
+        scrollTo,
+        extensions: [
+          extensions,
+          createBasicExtensions({
+            highlightActiveLine: true,
+            indentWithTab: true,
+            lineNumbers: true,
+            lineWrapping: false,
+            scrollPastEnd: role !== 'section',
+            search: true,
+            ...options,
+          }),
+          createThemeExtensions({
+            monospace: true,
+            themeMode,
+            syntaxHighlighting: true,
+          }),
 
-        javascript({ typescript: true }),
-        autocompletion({ override: env ? [tsAutocomplete()] : undefined }),
+          InputModeExtensions[inputMode],
+          javascript({ typescript: true }),
+          autocompletion({ override: env ? [tsAutocomplete()] : undefined }),
 
-        // Continues block comments when pressing Enter.
-        Prec.high(keymap.of(continueKeymap)),
-        keymap.of(completionKeymap),
-        keymap.of(lintKeymap),
+          // Continues block comments when pressing Enter.
+          Prec.high(keymap.of(continueKeymap)),
+          keymap.of(completionKeymap),
+          keymap.of(lintKeymap),
 
-        // https://github.com/val-town/codemirror-ts
-        env && [
-          tsFacet.of({ env, path: `./src/${id}.ts` }),
-          tsSync(),
-          tsLinter(),
-          tsHover({ renderTooltip: createTooltipRenderer(themeMode) }),
-        ],
-      ].filter(isNonNullable),
-    }),
-    [id, extensions, themeMode, inputMode, selection, scrollTo, env],
-  );
+          // https://github.com/val-town/codemirror-ts
+          env && [
+            tsFacet.of({ env, path: `./src/${id}.ts` }),
+            tsSync(),
+            tsLinter(),
+            tsHover({ renderTooltip: createTooltipRenderer(themeMode) }),
+          ],
+        ].filter(isNonNullable),
+      }),
+      [themeMode, id, extensions, inputMode, selection, scrollTo, env],
+    );
 
-  // TODO(brudon): Use react-ui-editor's Editor component.
-  return <div ref={parentRef} className={mx(classNames)} {...focusAttributes} />;
-};
+    return <div ref={parentRef} className={mx(classNames)} {...focusAttributes} />;
+  },
+);
 
 // TODO(burdon): Factor out (react-ui-editor).
 const createTooltipRenderer = (themeMode: ThemeMode) => {

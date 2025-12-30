@@ -35,7 +35,7 @@ import { defaultTx } from '@dxos/ui-theme';
 
 import { useAudioTrack, useQueueModelAdapter, useTranscriber } from '../../hooks';
 import { TestItem } from '../../testing';
-import { type MediaStreamRecorderParams, type TranscriberParams } from '../../transcriber';
+import { type MediaStreamRecorderProps, type TranscriberProps } from '../../transcriber';
 import { TranscriptionPlugin } from '../../TranscriptionPlugin';
 import { renderByline } from '../../util';
 
@@ -53,8 +53,8 @@ const RECORDER_CONFIG = {
 
 type StoryProps = {
   detectSpeaking?: boolean;
-  transcriberConfig: TranscriberParams['config'];
-  recorderConfig: MediaStreamRecorderParams['config'];
+  transcriberConfig: TranscriberProps['config'];
+  recorderConfig: MediaStreamRecorderProps['config'];
   audioConstraints?: MediaTrackConstraints;
   entityExtraction: 'none' | 'ner' | 'llm';
 };
@@ -132,7 +132,7 @@ const DefaultStory = ({
   }, [entityExtraction, space]);
 
   // Transcriber.
-  const handleSegments = useCallback<TranscriberParams['onSegments']>(
+  const handleSegments = useCallback<TranscriberProps['onSegments']>(
     async (blocks) => {
       const message = Message.make({
         sender: { name: 'You' },
@@ -198,7 +198,7 @@ const meta = {
   render: DefaultStory,
   decorators: [
     withTheme,
-    withLayout({ container: 'column' }),
+    withLayout({ layout: 'column' }),
     withPluginManager({
       plugins: [
         ClientPlugin({

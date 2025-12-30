@@ -44,8 +44,8 @@ export const useChatExtensions = ({ extensions, lineWrapping = false, placeholde
 };
 
 export const ChatEditor = forwardRef<ChatEditorController, ChatEditorProps>(
-  ({ classNames, autoFocus, extensions: extensionsParam, lineWrapping = false, placeholder, onSubmit }, forwardRef) => {
-    const extensions = useChatExtensions({ extensions: extensionsParam, lineWrapping, placeholder, onSubmit });
+  ({ classNames, autoFocus, extensions: extensionsProp, lineWrapping = false, placeholder, onSubmit }, forwardRef) => {
+    const extensions = useChatExtensions({ extensions: extensionsProp, lineWrapping, placeholder, onSubmit });
 
     // TODO(burdon): Popover.
     return (

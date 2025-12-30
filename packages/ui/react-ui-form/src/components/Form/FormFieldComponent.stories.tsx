@@ -44,7 +44,7 @@ const Component = ({
 const meta: Meta<typeof Component> = {
   title: 'ui/react-ui-form/FormFieldComponent',
   component: Component,
-  decorators: [withTheme, withLayout({ container: 'column' })],
+  decorators: [withTheme, withLayout({ layout: 'column' })],
   parameters: {
     layout: 'fullscreen',
   },

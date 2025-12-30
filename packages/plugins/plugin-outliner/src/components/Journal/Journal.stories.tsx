@@ -20,12 +20,12 @@ import { Journal as JournalComponent } from './Journal';
 const meta = {
   title: 'plugins/plugin-outliner/Journal',
   component: JournalComponent,
-  render: render(({ journal: journalParam }) => {
+  render: render(({ journal: journalProp }) => {
     const space = useSpace();
     // TODO(burdon): Throws:
     //  Uncaught InvariantViolation: invariant violation: assignFromLocalState [doc] at packages/core/echo/echo-db/src/core-db/object-core.ts:126
     //  Uncaught Error: Object references must be wrapped with `Ref.make`
-    const journal = useMemo(() => space?.db.add(journalParam), [space, journalParam]);
+    const journal = useMemo(() => space?.db.add(journalProp), [space, journalProp]);
     if (journal) {
       return <JournalComponent journal={journal} />;
     }

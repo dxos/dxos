@@ -63,7 +63,7 @@ export const useDatabase = (spaceId?: SpaceId): Space['db'] | undefined => {
   return space?.db;
 };
 
-export type UseSpacesParams = {
+export type UseSpacesProps = {
   /**
    * Return uninitialized spaces as well.
    */
@@ -76,7 +76,7 @@ export type UseSpacesParams = {
  * By default, only ready spaces are returned.
  * @returns an array of Spaces
  */
-export const useSpaces = ({ all = false }: UseSpacesParams = {}): Space[] => {
+export const useSpaces = ({ all = false }: UseSpacesProps = {}): Space[] => {
   const client = useClient();
   const spaces = useMulticastObservable<Space[]>(client.spaces);
 

@@ -6,9 +6,9 @@ import { defineCapability } from '@dxos/app-framework';
 
 import { meta } from '../meta';
 import {
-  type MediaStreamRecorderParams,
+  type MediaStreamRecorderProps,
   type Transcriber,
-  type TranscriberParams,
+  type TranscriberProps,
   type TranscriptMessageEnricher,
   type TranscriptionManager,
 } from '../transcriber';
@@ -16,9 +16,9 @@ import {
 export namespace TranscriptionCapabilities {
   export type GetTranscriberProps = {
     audioStreamTrack: MediaStreamTrack;
-    recorderConfig?: Partial<MediaStreamRecorderParams['config']>;
-    transcriberConfig?: Partial<TranscriberParams['config']>;
-    onSegments: TranscriberParams['onSegments'];
+    recorderConfig?: Partial<MediaStreamRecorderProps['config']>;
+    transcriberConfig?: Partial<TranscriberProps['config']>;
+    onSegments: TranscriberProps['onSegments'];
   };
   export type GetTranscriber = (props: GetTranscriberProps) => Transcriber;
   export const Transcriber = defineCapability<GetTranscriber>(`${meta.id}/capability/transcriber`);

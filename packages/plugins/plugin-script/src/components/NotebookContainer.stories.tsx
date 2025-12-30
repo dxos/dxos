@@ -39,7 +39,7 @@ const meta = {
   },
   decorators: [
     withTheme,
-    withLayout({ container: 'column', classNames: 'is-prose' }),
+    withLayout({ layout: 'column', classNames: 'is-prose' }),
     withPluginManager({
       plugins: [
         ClientPlugin({

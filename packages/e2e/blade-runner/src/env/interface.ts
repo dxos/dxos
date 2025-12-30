@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type ReplicantBrain, type ReplicantClass, type ReplicantParams, type ReplicantRuntimeParams } from '../plan';
+import { type ReplicantBrain, type ReplicantClass, type ReplicantProps, type ReplicantRuntimeProps } from '../plan';
 
 // TODO(mykola): R with `spec.ts`
 export interface CommonTestEnv {
@@ -11,11 +11,11 @@ export interface CommonTestEnv {
 }
 
 export interface ReplicantEnv extends CommonTestEnv {
-  params: ReplicantParams;
+  params: ReplicantProps;
 }
 
 export interface SchedulerEnv extends CommonTestEnv {
-  spawn<T>(replicantClass: ReplicantClass<T>, runtime: ReplicantRuntimeParams): Promise<ReplicantBrain<T>>;
+  spawn<T>(replicantClass: ReplicantClass<T>, runtime: ReplicantRuntimeProps): Promise<ReplicantBrain<T>>;
 }
 
 /**

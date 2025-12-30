@@ -155,6 +155,9 @@ export class SpaceProxy implements Space, CustomInspectable {
 
     const self = this;
     this._internal = {
+      get db() {
+        return self._db;
+      },
       get data() {
         return self._data;
       },

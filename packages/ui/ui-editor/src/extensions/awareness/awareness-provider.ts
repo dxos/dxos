@@ -22,7 +22,7 @@ type ProtocolMessage =
 
 const DEBOUNCE_INTERVAL = 100; // ms
 
-export type AwarenessProviderParams = {
+export type AwarenessProviderProps = {
   messenger: Messenger;
   channel: string;
   peerId: string;
@@ -46,7 +46,7 @@ export class SpaceAwarenessProvider implements AwarenessProvider {
 
   public readonly remoteStateChange = new Event<void>();
 
-  constructor({ messenger, channel, peerId, info }: AwarenessProviderParams) {
+  constructor({ messenger, channel, peerId, info }: AwarenessProviderProps) {
     this._messenger = messenger;
     this._channel = channel;
     this._peerId = peerId;

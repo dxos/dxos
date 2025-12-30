@@ -28,7 +28,7 @@ import { QueryExecutor } from '../query';
 
 import type { SpaceStateManager } from './space-state-manager';
 
-export type QueryServiceParams = {
+export type QueryServiceProps = {
   indexer: Indexer;
   automergeHost: AutomergeHost;
   spaceStateManager: SpaceStateManager;
@@ -62,7 +62,7 @@ export class QueryServiceImpl extends Resource implements QueryService {
   private _updateQueries!: DeferredTask;
 
   // TODO(burdon): OK for options, but not params. Pass separately and type readonly here.
-  constructor(private readonly _params: QueryServiceParams) {
+  constructor(private readonly _params: QueryServiceProps) {
     super();
 
     trace.diagnostic({

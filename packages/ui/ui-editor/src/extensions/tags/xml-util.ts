@@ -34,20 +34,19 @@ export const nodeToJson = (state: EditorState, node: SyntaxNode): Tag | undefine
     let attributeNode = openTag.getChild('Attribute');
     while (attributeNode) {
       const attrName = attributeNode.getChild('AttributeName');
-      const attrValue = attributeNode.getChild('AttributeValue');
       if (attrName) {
         const attr = state.doc.sliceString(attrName.from, attrName.to);
 
         // Default for attributes without values.
-        let value: string | boolean = true;
-
+        let value: any = undefined;
+        const attrValue = attributeNode.getChild('AttributeValue');
         if (attrValue) {
           const rawValue = state.doc.sliceString(attrValue.from, attrValue.to);
-          // Remove quotes if present.
           if (
             (rawValue.startsWith('"') && rawValue.endsWith('"')) ||
             (rawValue.startsWith("'") && rawValue.endsWith("'"))
           ) {
+            // Remove quotes if present.
             value = rawValue.slice(1, -1);
           } else {
             value = rawValue;

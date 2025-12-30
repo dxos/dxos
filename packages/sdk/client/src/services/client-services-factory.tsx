@@ -9,7 +9,7 @@ import { type Config } from '@dxos/config';
 
 import { fromHost } from './local-client-services';
 import { fromSocket } from './socket';
-import { type WorkerClientServicesParams, fromWorker } from './worker-client-services';
+import { type WorkerClientServicesProps, fromWorker } from './worker-client-services';
 
 /**
  * Create services from config.
@@ -20,7 +20,7 @@ import { type WorkerClientServicesParams, fromWorker } from './worker-client-ser
  */
 export const createClientServices = (
   config: Config,
-  createWorker?: WorkerClientServicesParams['createWorker'],
+  createWorker?: WorkerClientServicesProps['createWorker'],
   observabilityGroup?: string,
   signalTelemetryEnabled?: boolean,
 ): Promise<ClientServicesProvider> => {

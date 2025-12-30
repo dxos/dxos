@@ -23,7 +23,7 @@ import {
   type Index,
   type IndexQuery,
   type IndexStaticProps,
-  type LoadParams,
+  type LoadProps,
   staticImplements,
 } from '../types';
 
@@ -245,7 +245,7 @@ export class IndexGraph extends Resource implements Index {
   }
 
   @trace.span({ showInBrowserTimeline: true })
-  static async load({ serialized, identifier }: LoadParams): Promise<IndexGraph> {
+  static async load({ serialized, identifier }: LoadProps): Promise<IndexGraph> {
     const index = new IndexGraph();
     await index.open();
 

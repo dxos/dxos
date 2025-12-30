@@ -20,7 +20,7 @@ const meta = {
   title: 'plugins/plugin-inbox/Event',
   component: Event.Root,
   render: DefaultStory,
-  decorators: [withTheme, withLayout({ container: 'column' })],
+  decorators: [withTheme, withLayout({ layout: 'column' })],
   parameters: {
     layout: 'fullscreen',
     translations,

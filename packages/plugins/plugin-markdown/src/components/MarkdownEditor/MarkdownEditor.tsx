@@ -77,7 +77,7 @@ const MarkdownEditorRoot = ({
   selectionManager,
   settings,
   viewMode,
-  extensions: extensionsParam,
+  extensions: extensionsProp,
   slashCommandGroups,
   onLinkQuery,
   ...props
@@ -121,8 +121,8 @@ const MarkdownEditorRoot = ({
   });
 
   const extensions = useMemo(
-    () => [coreExtensions, menuExtension, extensionsParam].filter(isNonNullable),
-    [coreExtensions, menuExtension, extensionsParam],
+    () => [coreExtensions, menuExtension, extensionsProp].filter(isNonNullable),
+    [coreExtensions, menuExtension, extensionsProp],
   );
 
   return (

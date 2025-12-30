@@ -46,7 +46,7 @@ export const EditorMenuProvider = ({
   view,
   groups,
   currentItem,
-  open: openParam,
+  open: openProp,
   defaultOpen,
   numItems = 8,
   onOpenChange,
@@ -59,7 +59,7 @@ export const EditorMenuProvider = ({
 
   const viewRef = useDynamicRef(view);
   const [open, setOpen] = useControllableState({
-    prop: openParam,
+    prop: openProp,
     defaultProp: defaultOpen,
     onChange: (open) => {
       invariant(viewRef.current);

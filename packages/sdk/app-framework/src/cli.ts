@@ -50,20 +50,20 @@ export type CreateCliAppOptions = {
  */
 export const createCliApp = Effect.fn(function* ({
   rootCommand,
-  subCommands: subCommandsParam,
-  pluginManager: pluginManagerParam,
-  pluginLoader: pluginLoaderParam,
-  plugins: pluginsParam = [],
-  core: coreParam,
-  enabled: enabledParam = [],
+  subCommands: subCommandsProp,
+  pluginManager: pluginManagerProp,
+  pluginLoader: pluginLoaderProp,
+  plugins: pluginsProp = [],
+  core: coreProp,
+  enabled: enabledProp = [],
   safeMode = false,
 }: CreateCliAppOptions) {
-  const plugins = pluginsParam;
-  const core = coreParam ?? plugins.map(({ meta }) => meta.id);
-  const pluginLoader = pluginLoaderParam ?? defaultPluginLoader(plugins);
-  const enabled = safeMode ? [] : enabledParam;
+  const plugins = pluginsProp;
+  const core = coreProp ?? plugins.map(({ meta }) => meta.id);
+  const pluginLoader = pluginLoaderProp ?? defaultPluginLoader(plugins);
+  const enabled = safeMode ? [] : enabledProp;
   const manager =
-    pluginManagerParam ??
+    pluginManagerProp ??
     new PluginManager({
       pluginLoader,
       plugins,
@@ -92,7 +92,7 @@ export const createCliApp = Effect.fn(function* ({
 
   // Gather all commands and provide them to the root command.
   const pluginCommands = manager.context.getCapabilities(Capabilities.Command);
-  const subCommands = subCommandsParam ? [...subCommandsParam, ...pluginCommands] : pluginCommands;
+  const subCommands = subCommandsProp ? [...subCommandsProp, ...pluginCommands] : pluginCommands;
   invariant(subCommands.length > 0, 'No subcommands provided');
   const command = rootCommand.pipe(Command.withSubcommands(subCommands as SubCommands));
 

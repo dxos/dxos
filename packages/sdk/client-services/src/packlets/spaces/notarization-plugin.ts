@@ -33,14 +33,14 @@ const WRITER_NOT_SET_ERROR_CODE = 'WRITER_NOT_SET';
 
 const credentialCodec = schema.getCodecForType('dxos.halo.credentials.Credential');
 
-export type NotarizationPluginParams = {
+export type NotarizationPluginProps = {
   spaceId: SpaceId;
   edgeClient?: EdgeHttpClient;
   edgeFeatures?: Runtime.Client.EdgeFeatures;
   activeEdgePollingInterval?: number;
 };
 
-export type NotarizeParams = {
+export type NotarizeProps = {
   /**
    * For cancellation.
    */
@@ -97,7 +97,7 @@ export class NotarizationPlugin extends Resource implements CredentialProcessor 
 
   private readonly _edgeClient: EdgeHttpClient | undefined;
 
-  constructor(params: NotarizationPluginParams) {
+  constructor(params: NotarizationPluginProps) {
     super();
     this._spaceId = params.spaceId;
     this._activeEdgePollingInterval = params.activeEdgePollingInterval ?? DEFAULT_ACTIVE_EDGE_POLLING_INTERVAL;
@@ -149,7 +149,7 @@ export class NotarizationPlugin extends Resource implements CredentialProcessor 
     retryTimeout = DEFAULT_RETRY_TIMEOUT,
     successDelay = DEFAULT_SUCCESS_DELAY,
     edgeRetryJitter,
-  }: NotarizeParams): Promise<void> {
+  }: NotarizeProps): Promise<void> {
     log('notarize', { credentials });
     invariant(
       credentials.every((credential) => credential.id),
@@ -399,14 +399,14 @@ const handleEdgeError = (error: any) => {
   }
 };
 
-export type NotarizationTeleportExtensionParams = {
+export type NotarizationTeleportExtensionProps = {
   onOpen: () => Promise<void>;
   onClose: () => Promise<void>;
   onNotarize: (request: NotarizeRequest) => Promise<void>;
 };
 
 export class NotarizationTeleportExtension extends RpcExtension<Services, Services> {
-  constructor(private readonly _params: NotarizationTeleportExtensionParams) {
+  constructor(private readonly _params: NotarizationTeleportExtensionProps) {
     super({
       requested: {
         NotarizationService: schema.getService('dxos.mesh.teleport.notarization.NotarizationService'),

@@ -45,8 +45,8 @@ const [MessageContextProvider, useMessageContext] = createContext<MessageContext
 
 type MessageRootProps = PropsWithChildren<Omit<MessageContextValue, 'viewMode'> & { viewMode?: ViewMode }>;
 
-const MessageRoot = ({ children, viewMode: viewModeParam = 'plain', ...props }: MessageRootProps) => {
-  const viewMode = useSignal(viewModeParam);
+const MessageRoot = ({ children, viewMode: viewModeProp = 'plain', ...props }: MessageRootProps) => {
+  const viewMode = useSignal(viewModeProp);
 
   return (
     <MessageContextProvider viewMode={viewMode} {...props}>

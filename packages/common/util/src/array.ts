@@ -49,7 +49,7 @@ export const intersection = <A, B = A>(a: A[], b: B[], comparator: Comparator<A,
  * Returns a new array with only the first instance of each unique item
  * based on a specified property.
  *
- * @typeParam T - The type of items in the input array.
+ * @typeProp T - The type of items in the input array.
  * @param array - The array to filter for distinct items.
  * @param key - The property key to determine uniqueness for each item.
  * @returns A new array with only distinct items based on the specified property.

@@ -3,7 +3,7 @@
 //
 
 import { type SchedulerEnvImpl } from '../env';
-import { type Platform, type ReplicantsSummary, type TestParams, type TestPlan } from '../plan';
+import { type Platform, type ReplicantsSummary, type TestPlan, type TestProps } from '../plan';
 import { type RunResults, StorageReplicant } from '../replicants/storage-replicant';
 
 /**
@@ -43,5 +43,5 @@ export class StorageTestPlan implements TestPlan<StorageTestSpec, RunResults> {
     return replicant.brain.run({ ...spec, batchSize });
   }
 
-  async analyze(params: TestParams<StorageTestSpec>, summary: ReplicantsSummary, result: RunResults): Promise<any> {}
+  async analyze(params: TestProps<StorageTestSpec>, summary: ReplicantsSummary, result: RunResults): Promise<any> {}
 }

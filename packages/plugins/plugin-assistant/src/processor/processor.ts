@@ -20,7 +20,7 @@ import {
 } from '@dxos/ai';
 import {
   type AiConversation,
-  type AiConversationRunParams,
+  type AiConversationRunProps,
   ArtifactDiffResolver,
   GenerationObserver,
   createSystemPrompt,
@@ -58,7 +58,7 @@ export type AiChatProcessorOptions = {
   blueprintRegistry?: Blueprint.Registry;
   observableRegistry?: Registry.Registry;
   extensions?: ToolContextExtensions;
-} & Pick<AiConversationRunParams, 'system'>;
+} & Pick<AiConversationRunProps, 'system'>;
 
 const defaultOptions: Partial<AiChatProcessorOptions> = {
   model: DEFAULT_EDGE_MODEL,
@@ -144,13 +144,13 @@ export class AiChatProcessor {
   /**
    * Initiates a new request.
    */
-  async request(requestParam: AiRequest): Promise<void> {
+  async request(requestProp: AiRequest): Promise<void> {
     if (this._fiber) {
       await this.cancel();
     }
 
     try {
-      this._lastRequest = requestParam;
+      this._lastRequest = requestProp;
       this._registry.set(this.error, Option.none());
       this._registry.set(this.active, true);
 
@@ -159,7 +159,7 @@ export class AiChatProcessor {
       // Create request.
       const request = this._conversation.createRequest({
         system: this._options.system,
-        prompt: requestParam.message,
+        prompt: requestProp.message,
         observer: this._observer,
       });
 

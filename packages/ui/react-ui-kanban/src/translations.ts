@@ -4,7 +4,7 @@
 
 import { type Resource } from '@dxos/react-ui';
 
-export const translationKey = 'react-ui-kanban';
+export const translationKey = '@dxos/react-ui-kanban';
 
 export const translations = [
   {

@@ -20,7 +20,7 @@ export const ExportStatus = ({ running, lastExport }: { running: boolean; lastEx
           : lastExport
             ? t('last export at label', {
                 value: new Date(lastExport),
-                formatParams: {
+                formatProps: {
                   value: { year: 'numeric', month: 'numeric', day: 'numeric', hour: 'numeric', minute: 'numeric' },
                 },
               })

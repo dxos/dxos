@@ -192,7 +192,7 @@ const NotebookPromptResult = ({ cell, promptResults }: NotebookCellProps) => {
 };
 
 const NotebookTextEditor = ({
-  extensions: extensionsParam,
+  extensions: extensionsProp,
   readOnly,
   ...props
 }: EditorContentProps & Pick<BasicExtensionsOptions, 'readOnly'>) => {
@@ -207,9 +207,9 @@ const NotebookTextEditor = ({
       createThemeExtensions({ themeMode, syntaxHighlighting: true }),
       createMarkdownExtensions(),
       decorateMarkdown(),
-      extensionsParam,
+      extensionsProp,
     ].filter(isNonNullable);
-  }, [extensionsParam]);
+  }, [extensionsProp]);
 
   return <EditorContent {...props} extensions={extensions} selectionEnd />;
 };

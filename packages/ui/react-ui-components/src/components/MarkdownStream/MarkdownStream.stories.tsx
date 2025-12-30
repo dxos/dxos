@@ -104,7 +104,7 @@ const DefaultStory = ({ content = '', streamOptions = defaultStreamOptions, ...p
 const meta = {
   title: 'ui/react-ui-markdown/MarkdownStream',
   render: DefaultStory,
-  decorators: [withTheme, withLayout({ container: 'column' })],
+  decorators: [withTheme, withLayout({ layout: 'column' })],
 } satisfies Meta<typeof DefaultStory>;
 
 export default meta;

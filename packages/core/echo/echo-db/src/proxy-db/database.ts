@@ -8,7 +8,6 @@ import { type CleanupFn, Event, type ReadOnlyEvent, synchronized } from '@dxos/a
 import { type Context, LifecycleState, Resource } from '@dxos/context';
 import { inspectObject } from '@dxos/debug';
 import { Database, type Entity, Obj, type QueryAST, Ref } from '@dxos/echo';
-import { type GetObjectByIdOptions } from '@dxos/echo/Database';
 import { type AnyProperties, assertObjectModel, setRefResolver } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
 import { DXN, type PublicKey, type SpaceId } from '@dxos/keys';
@@ -56,13 +55,6 @@ export interface EchoDatabase extends Database.Database {
   // Overrides interface.
   get graph(): HypergraphImpl;
 
-  toJSON(): object;
-
-  /**
-   * @deprecated Use `ref` instead.
-   */
-  getObjectById<T extends Obj.Any = Obj.Obj<AnyProperties>>(id: string, opts?: GetObjectByIdOptions): T | undefined;
-
   /**
    * Run migrations.
    */
@@ -91,7 +83,7 @@ export interface EchoDatabase extends Database.Database {
   update(filter: Filter.Any, operation: unknown): Promise<void>;
 }
 
-export type EchoDatabaseParams = {
+export type EchoDatabaseProps = {
   graph: HypergraphImpl;
   dataService: DataService;
   queryService: QueryService;
@@ -123,8 +115,6 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
 
   private readonly _schemaRegistry: DatabaseSchemaRegistry;
 
-  private _rootUrl: string | undefined = undefined;
-
   /**
    * Mapping `object core` -> `root proxy` (User facing proxies).
    * @internal
@@ -133,7 +123,9 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
 
   readonly saveStateChanged: ReadOnlyEvent<SaveStateChangedEvent>;
 
-  constructor(params: EchoDatabaseParams) {
+  private _rootUrl: string | undefined = undefined;
+
+  constructor(params: EchoDatabaseProps) {
     super();
 
     this._coreDatabase = new CoreDatabase({

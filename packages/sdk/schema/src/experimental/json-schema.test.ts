@@ -250,7 +250,7 @@ export function isSchemaOptional(context: SchemaContext): boolean {
   return false;
 }
 
-export type AddNewPropertyParams = {
+export type AddNewPropertyProps = {
   root: JsonSchema.JsonSchema;
   path: JsonPath;
   name: string;
@@ -268,7 +268,7 @@ export function addProperty({
   name,
   schema: schema,
   optional,
-}: AddNewPropertyParams): JsonSchema.JsonSchema {
+}: AddNewPropertyProps): JsonSchema.JsonSchema {
   const callback: ContextualVisitorCallback = (parent, context) => {
     // Check if the current schema is the target schema.
     if (context.path === path) {

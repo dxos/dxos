@@ -23,8 +23,8 @@ const main = async () => {
 
   const { Remote, Config, Defaults } = await import('@dxos/react-client');
 
-  const searchParams = new URLSearchParams(window.location.search);
-  const target = searchParams.get('target');
+  const searchProps = new URLSearchParams(window.location.search);
+  const target = searchProps.get('target');
   const config = new Config(target ? Remote(target) : {}, Defaults());
   void initializeAppObservability({ namespace, config });
 

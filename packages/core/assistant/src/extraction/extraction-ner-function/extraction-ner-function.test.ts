@@ -4,7 +4,7 @@
 
 import { beforeAll, describe, test } from 'vitest';
 
-import { type EchoDatabase } from '@dxos/echo-db';
+import { type Database } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-db/testing';
 import { FunctionExecutor, ServiceContainer } from '@dxos/functions-runtime';
 import { log } from '@dxos/log';
@@ -19,7 +19,7 @@ import { extractionNerFunction } from './extraction-ner-function';
 
 describe.skip('NER EntityExtraction', () => {
   let builder: EchoTestBuilder;
-  let db: EchoDatabase;
+  let db: Database.Database;
   let executor: FunctionExecutor;
   let testData: {
     transcriptJosiah: Message.Message[];

@@ -30,10 +30,10 @@ const IntentResolver = lazy(() => import('../capabilities/intent-resolver'));
 
 export const SpacePlugin = definePlugin<SpacePluginOptions>(
   meta,
-  ({ invitationUrl = 'http://localhost:5173', invitationParam = 'spaceInvitationCode' }) => {
+  ({ invitationUrl = 'http://localhost:5173', invitationProp = 'spaceInvitationCode' }) => {
     const createInvitationUrl = (invitationCode: string) => {
       const baseUrl = new URL(invitationUrl);
-      baseUrl.searchParams.set(invitationParam, invitationCode);
+      baseUrl.searchParams.set(invitationProp, invitationCode);
       return baseUrl.toString();
     };
 

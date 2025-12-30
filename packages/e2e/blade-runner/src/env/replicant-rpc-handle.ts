@@ -10,7 +10,7 @@ import { rpcCodec } from '../redis';
 export const open = Symbol('open');
 export const close = Symbol('close');
 
-export type ReplicantRpcHandleParams<T> = { replicantClass: ReplicantClass<T>; rpcPort: RpcPort };
+export type ReplicantRpcHandleProps<T> = { replicantClass: ReplicantClass<T>; rpcPort: RpcPort };
 
 /**
  * Client for a replicant RPC.
@@ -19,7 +19,7 @@ export type ReplicantRpcHandleParams<T> = { replicantClass: ReplicantClass<T>; r
 export class ReplicantRpcHandle<T> {
   private readonly _rpc: RpcPeer;
 
-  constructor({ replicantClass, rpcPort }: ReplicantRpcHandleParams<T>) {
+  constructor({ replicantClass, rpcPort }: ReplicantRpcHandleProps<T>) {
     this._rpc = new RpcPeer({
       callHandler: async () => {
         throw new Error('Method not implemented');

@@ -14,7 +14,7 @@ import { EmojiPickerBlock, type EmojiPickerProps, EmojiPickerToolbarButton } fro
 const meta = {
   title: 'ui/react-ui-pickers/EmojiPicker',
   component: EmojiPicker,
-  decorators: [withTheme, withLayout({ container: 'column' })],
+  decorators: [withTheme, withLayout({ layout: 'column' })],
 } satisfies Meta<typeof EmojiPicker>;
 
 export default meta;

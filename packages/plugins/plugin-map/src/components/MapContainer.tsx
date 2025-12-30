@@ -28,8 +28,8 @@ export type MapContainerProps = {
   object?: Map.Map;
 } & (GeoControlProps & Pick<MapRootProps, 'onChange'>);
 
-export const MapContainer = ({ role, type: typeParam = 'map', object, ...props }: MapContainerProps) => {
-  const [type, setType] = useControlledState(typeParam);
+export const MapContainer = ({ role, type: typeProp = 'map', object, ...props }: MapContainerProps) => {
+  const [type, setType] = useControlledState(typeProp);
   const db = object && Obj.getDatabase(object);
 
   const view = object?.view?.target;

@@ -24,7 +24,7 @@ import {
   type Intent,
   type IntentChain,
   type IntentData,
-  type IntentParams,
+  type IntentProps,
   type IntentResultData,
   type IntentSchema,
   type Label,
@@ -95,7 +95,7 @@ export type IntentEffectDefinition<Input, Output> = (
 /**
  * Intent resolver to match intents to their effects.
  */
-export type IntentResolver<Tag extends string, Fields extends IntentParams, Data = IntentData<Fields>> = Readonly<{
+export type IntentResolver<Tag extends string, Fields extends IntentProps, Data = IntentData<Fields>> = Readonly<{
   /**
    * The schema of the intent to be resolved.
    */
@@ -127,21 +127,21 @@ export type AnyIntentResolver = IntentResolver<any, any, any>;
  * @param params.disposition Determines the priority of the resolver when multiple are resolved.
  * @param params.filter Optional filter to determine if the resolver should be used.
  */
-export const createResolver = <Tag extends string, Fields extends IntentParams, Data = IntentData<Fields>>(
+export const createResolver = <Tag extends string, Fields extends IntentProps, Data = IntentData<Fields>>(
   resolver: IntentResolver<Tag, Fields, Data>,
 ) => resolver;
 
 /**
  * Invokes intents and returns the result.
  */
-export type PromiseIntentDispatcher = <Fields extends IntentParams>(
+export type PromiseIntentDispatcher = <Fields extends IntentProps>(
   intent: IntentChain<any, any, any, Fields>,
 ) => Promise<Types.Simplify<IntentDispatcherResult<IntentData<Fields>, IntentResultData<Fields>>>>;
 
 /**
  * Creates an effect for intents.
  */
-export type IntentDispatcher = <Fields extends IntentParams>(
+export type IntentDispatcher = <Fields extends IntentProps>(
   intent: IntentChain<any, any, any, Fields>,
   depth?: number,
 ) => Effect.Effect<
@@ -149,7 +149,7 @@ export type IntentDispatcher = <Fields extends IntentParams>(
   Error
 >;
 
-type IntentResult<Tag extends string, Fields extends IntentParams> = IntentEffectResult<
+type IntentResult<Tag extends string, Fields extends IntentProps> = IntentEffectResult<
   IntentData<Fields>,
   IntentResultData<Fields>
 > & {

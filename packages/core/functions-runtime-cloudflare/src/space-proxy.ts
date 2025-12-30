@@ -3,7 +3,8 @@
 //
 
 import { Resource } from '@dxos/context';
-import { type CoreDatabase, type EchoClient, type EchoDatabase } from '@dxos/echo-db';
+import { type Database } from '@dxos/echo';
+import { type CoreDatabase, type EchoClient, type EchoDatabaseImpl } from '@dxos/echo-db';
 import { invariant } from '@dxos/invariant';
 import { PublicKey, type SpaceId } from '@dxos/keys';
 
@@ -14,7 +15,7 @@ import { type QueuesAPI, QueuesAPIImpl } from './queues-api';
  * @deprecated
  */
 export class SpaceProxy extends Resource {
-  private _db?: EchoDatabase = undefined;
+  private _db?: EchoDatabaseImpl = undefined;
   private _queuesApi: QueuesAPIImpl;
 
   constructor(
@@ -30,7 +31,7 @@ export class SpaceProxy extends Resource {
     return this._id;
   }
 
-  get db(): EchoDatabase {
+  get db(): Database.Database {
     invariant(this._db);
     return this._db;
   }

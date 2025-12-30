@@ -4,7 +4,7 @@
 
 import { type Resource } from '@dxos/react-ui';
 
-export const translationKey = 'os';
+export const translationKey = '@dxos/os';
 
 export const translations = [
   {

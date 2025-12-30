@@ -51,7 +51,7 @@ const meta = {
   title: 'ui/react-ui-searchlist/SearchList',
   component: SearchList.Root as any,
   render: DefaultStory,
-  decorators: [withTheme, withLayout({ container: 'column', classNames: 'p-2' })],
+  decorators: [withTheme, withLayout({ layout: 'column', classNames: 'p-2' })],
   parameters: {
     translations,
   },

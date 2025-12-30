@@ -91,11 +91,11 @@ export interface Index {
   serialize(): Promise<string>;
 }
 
-export type LoadParams = { serialized: string; indexKind: IndexKind; identifier: string };
+export type LoadProps = { serialized: string; indexKind: IndexKind; identifier: string };
 
 export interface IndexStaticProps {
   new (kind: IndexKind): Index;
-  load(params: LoadParams): Promise<Index>;
+  load(params: LoadProps): Promise<Index>;
 }
 
 /**

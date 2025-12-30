@@ -22,7 +22,7 @@ import { OVERLAY_CLASSES, OVERLAY_STYLE } from './components/Welcome/Welcome';
 import { activateAccount, getProfile, matchServiceCredential, upgradeCredential } from './credentials';
 import { meta } from './meta';
 
-export type OnboardingManagerParams = {
+export type OnboardingManagerProps = {
   dispatch: PromiseIntentDispatcher;
   client: Client;
   firstRun?: Trigger;
@@ -59,7 +59,7 @@ export class OnboardingManager {
     recoverIdentity,
     deviceInvitationCode,
     spaceInvitationCode,
-  }: OnboardingManagerParams) {
+  }: OnboardingManagerProps) {
     this._ctx.onDispose(() => this._subscriptions.clear());
 
     this._dispatch = dispatch;

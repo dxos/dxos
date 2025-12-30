@@ -29,7 +29,7 @@ const meta = {
   title: 'plugins/plugin-inbox/Message',
   component: Message.Root,
   render: DefaultStory,
-  decorators: [withTheme, withLayout({ container: 'column' })],
+  decorators: [withTheme, withLayout({ layout: 'column' })],
   parameters: {
     layout: 'fullscreen',
     translations,

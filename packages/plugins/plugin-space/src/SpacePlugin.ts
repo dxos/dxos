@@ -53,10 +53,10 @@ import { CollectionAction, type CreateObjectIntent, SpaceAction, type SpacePlugi
 
 export const SpacePlugin = definePlugin<SpacePluginOptions>(
   meta,
-  ({ invitationUrl = window.location.origin, invitationParam = 'spaceInvitationCode', observability = false }) => {
+  ({ invitationUrl = window.location.origin, invitationProp = 'spaceInvitationCode', observability = false }) => {
     const createInvitationUrl = (invitationCode: string) => {
       const baseUrl = new URL(invitationUrl);
-      baseUrl.searchParams.set(invitationParam, invitationCode);
+      baseUrl.searchParams.set(invitationProp, invitationCode);
       return baseUrl.toString();
     };
 

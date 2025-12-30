@@ -17,7 +17,7 @@ const MIN_QUERY_INTERVAL = 5_000;
 
 const POLL_INTERVAL = 10_000;
 
-export type CollectionSynchronizerParams = {
+export type CollectionSynchronizerProps = {
   sendCollectionState: (collectionId: string, peerId: PeerId, state: CollectionState) => void;
   queryCollectionState: (collectionId: string, peerId: PeerId) => void;
   shouldSyncCollection: (collectionId: string, peerId: PeerId) => boolean;
@@ -28,9 +28,9 @@ export type CollectionSynchronizerParams = {
  */
 @trace.resource()
 export class CollectionSynchronizer extends Resource {
-  private readonly _sendCollectionState: CollectionSynchronizerParams['sendCollectionState'];
-  private readonly _queryCollectionState: CollectionSynchronizerParams['queryCollectionState'];
-  private readonly _shouldSyncCollection: CollectionSynchronizerParams['shouldSyncCollection'];
+  private readonly _sendCollectionState: CollectionSynchronizerProps['sendCollectionState'];
+  private readonly _queryCollectionState: CollectionSynchronizerProps['queryCollectionState'];
+  private readonly _shouldSyncCollection: CollectionSynchronizerProps['shouldSyncCollection'];
 
   /**
    * CollectionId -> State.
@@ -42,7 +42,7 @@ export class CollectionSynchronizer extends Resource {
 
   public readonly remoteStateUpdated = new Event<{ collectionId: string; peerId: PeerId; newDocsAppeared: boolean }>();
 
-  constructor(params: CollectionSynchronizerParams) {
+  constructor(params: CollectionSynchronizerProps) {
     super();
     this._sendCollectionState = params.sendCollectionState;
     this._queryCollectionState = params.queryCollectionState;

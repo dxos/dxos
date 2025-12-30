@@ -30,7 +30,7 @@ import { type AutomergeHost, deriveCollectionIdFromSpaceId } from '../automerge'
 import { DocumentsSynchronizer } from './documents-synchronizer';
 import { type SpaceStateManager } from './space-state-manager';
 
-export type DataServiceParams = {
+export type DataServiceProps = {
   automergeHost: AutomergeHost;
   spaceStateManager: SpaceStateManager;
   updateIndexes: () => Promise<void>;
@@ -51,7 +51,7 @@ export class DataServiceImpl implements DataService {
   private readonly _spaceStateManager: SpaceStateManager;
   private readonly _updateIndexes: () => Promise<void>;
 
-  constructor(params: DataServiceParams) {
+  constructor(params: DataServiceProps) {
     this._automergeHost = params.automergeHost;
     this._spaceStateManager = params.spaceStateManager;
     this._updateIndexes = params.updateIndexes;

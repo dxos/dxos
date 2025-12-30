@@ -44,15 +44,15 @@ import { ComplexSet, bufferToArray, defaultMap, isNonNullable, range } from '@dx
 import { type CollectionState, CollectionSynchronizer, diffCollectionState } from './collection-synchronizer';
 import { type EchoDataMonitor } from './echo-data-monitor';
 import { EchoNetworkAdapter, isEchoPeerMetadata } from './echo-network-adapter';
-import { type EchoReplicator, type RemoteDocumentExistenceCheckParams } from './echo-replicator';
+import { type EchoReplicator, type RemoteDocumentExistenceCheckProps } from './echo-replicator';
 import { HeadsStore } from './heads-store';
-import { type BeforeSaveParams, LevelDBStorageAdapter } from './leveldb-storage-adapter';
+import { type BeforeSaveProps, LevelDBStorageAdapter } from './leveldb-storage-adapter';
 
 export type PeerIdProvider = () => string | undefined;
 
 export type RootDocumentSpaceKeyProvider = (documentId: string) => PublicKey | undefined;
 
-export type AutomergeHostParams = {
+export type AutomergeHostProps = {
   db: LevelDB;
   indexMetadataStore: IndexMetadataStore;
   dataMonitor?: EchoDataMonitor;
@@ -176,7 +176,7 @@ export class AutomergeHost extends Resource {
     dataMonitor,
     peerIdProvider,
     getSpaceKeyByRootDocumentId,
-  }: AutomergeHostParams) {
+  }: AutomergeHostProps) {
     super();
     this._db = db;
     this._storage = new LevelDBStorageAdapter({
@@ -498,7 +498,7 @@ export class AutomergeHost extends Resource {
     },
   };
 
-  private async _beforeSave({ path, batch }: BeforeSaveParams): Promise<void> {
+  private async _beforeSave({ path, batch }: BeforeSaveProps): Promise<void> {
     const handle = this._repo.handles[path[0] as DocumentId];
     if (!handle || !handle.isReady()) {
       return;
@@ -560,7 +560,7 @@ export class AutomergeHost extends Resource {
     return this._repo.peers;
   }
 
-  private async _isDocumentInRemoteCollection(params: RemoteDocumentExistenceCheckParams): Promise<boolean> {
+  private async _isDocumentInRemoteCollection(params: RemoteDocumentExistenceCheckProps): Promise<boolean> {
     for (const collectionId of this._collectionSynchronizer.getRegisteredCollectionIds()) {
       const remoteCollections = this._collectionSynchronizer.getRemoteCollectionStates(collectionId);
       const remotePeerDocs = remoteCollections.get(params.peerId as PeerId)?.documents;

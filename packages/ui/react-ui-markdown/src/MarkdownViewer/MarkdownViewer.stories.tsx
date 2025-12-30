@@ -15,7 +15,7 @@ faker.seed(0);
 const meta = {
   title: 'ui/react-ui-markdown/MarkdownViewer',
   component: MarkdownViewer,
-  decorators: [withTheme, withLayout({ container: 'column' })],
+  decorators: [withTheme, withLayout({ layout: 'column' })],
 } satisfies Meta<typeof MarkdownViewer>;
 
 export default meta;

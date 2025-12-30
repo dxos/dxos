@@ -104,7 +104,7 @@ const GridStory = ({ initialCells, ...props }: GridStoryProps) => {
 const meta = {
   title: 'ui/react-ui-grid/Grid',
   component: GridStory,
-  decorators: [withTheme, withLayout({ container: 'column' })],
+  decorators: [withTheme, withLayout({ layout: 'column' })],
   parameters: {
     layout: 'fullscreen',
   },

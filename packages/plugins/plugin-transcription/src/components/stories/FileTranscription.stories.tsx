@@ -28,7 +28,7 @@ import { defaultTx } from '@dxos/ui-theme';
 import { useAudioFile, useQueueModelAdapter, useTranscriber } from '../../hooks';
 import { MessageNormalizer, getActorId } from '../../segments-normalization';
 import { TestItem } from '../../testing';
-import { type MediaStreamRecorderParams, type TranscriberParams } from '../../transcriber';
+import { type MediaStreamRecorderProps, type TranscriberProps } from '../../transcriber';
 import { TranscriptionPlugin } from '../../TranscriptionPlugin';
 import { renderByline } from '../../util';
 
@@ -46,8 +46,8 @@ const AudioFile = ({
   detectSpeaking?: boolean;
   normalizeSentences?: boolean;
   audioUrl: string;
-  transcriberConfig?: TranscriberParams['config'];
-  recorderConfig?: MediaStreamRecorderParams['config'];
+  transcriberConfig?: TranscriberProps['config'];
+  recorderConfig?: MediaStreamRecorderProps['config'];
   audioConstraints?: MediaTrackConstraints;
 }) => {
   const [running, setRunning] = useState(false);
@@ -83,7 +83,7 @@ const AudioFile = ({
   const queue = useMemo(() => new MemoryQueue<Message.Message>(queueDxn), [queueDxn]);
 
   const model = useQueueModelAdapter(renderByline([]), queue);
-  const handleSegments = useCallback<TranscriberParams['onSegments']>(
+  const handleSegments = useCallback<TranscriberProps['onSegments']>(
     async (blocks) => {
       void queue?.append([
         Obj.make(Message.Message, {
@@ -189,7 +189,7 @@ const meta = {
   title: 'plugins/plugin-transcription/FileTranscription',
   decorators: [
     withTheme,
-    withLayout({ container: 'column' }),
+    withLayout({ layout: 'column' }),
     withPluginManager({
       plugins: [
         ClientPlugin({

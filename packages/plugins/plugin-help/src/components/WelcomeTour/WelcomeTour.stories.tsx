@@ -32,7 +32,7 @@ const App = () => {
         <div>{String(running)}</div>
       </div>
       <div>
-        <ul className='p-2 border border-blue-500 rounded-md' data-joyride='basic/2'>
+        <ul className='p-2 border border-primary-500 rounded-md' data-joyride='basic/2'>
           {items.map((item, i) => (
             <li key={i} className='flex items-center gap-2'>
               <Icon icon='ph--circle--regular' />

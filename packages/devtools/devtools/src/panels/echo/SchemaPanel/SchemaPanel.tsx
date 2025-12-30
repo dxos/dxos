@@ -42,7 +42,7 @@ const useSchemaQuery = (space?: Space): Schema.Schema.AnyNoContext[] => {
 
     return space.db.schemaRegistry.query().subscribe(
       (query) => {
-        setSchema([...space.db.graph.schemaRegistry.schemas, ...query.results]);
+        setSchema([...space.internal.db.graph.schemaRegistry.schemas, ...query.results]);
       },
       { fire: true },
     );

@@ -51,7 +51,7 @@ import { getInlineAndLinkChanges } from './util';
 
 export type InitRootProxyFn = (core: ObjectCore) => void;
 
-export type CoreDatabaseParams = {
+export type CoreDatabaseProps = {
   graph: HypergraphImpl;
   dataService: DataService;
   queryService: QueryService;
@@ -117,7 +117,7 @@ export class CoreDatabase {
 
   readonly saveStateChanged: ReadOnlyEvent<SaveStateChangedEvent>;
 
-  constructor({ graph, dataService, queryService, spaceId, spaceKey }: CoreDatabaseParams) {
+  constructor({ graph, dataService, queryService, spaceId, spaceKey }: CoreDatabaseProps) {
     this._hypergraph = graph;
     this._dataService = dataService;
     this._queryService = queryService;
@@ -500,7 +500,7 @@ export class CoreDatabase {
    * Intended way to change the type of the object (for schema migrations).
    * Any concurrent changes made by other peers will be overwritten.
    */
-  async atomicReplaceObject(id: ObjectId, params: AtomicReplaceObjectParams): Promise<void> {
+  async atomicReplaceObject(id: ObjectId, params: AtomicReplaceObjectProps): Promise<void> {
     const { data, type } = params;
 
     const core = await this.loadObjectCoreById(id);
@@ -950,7 +950,7 @@ export type GetObjectCoreByIdOptions = {
   load?: boolean;
 };
 
-export type AtomicReplaceObjectParams = {
+export type AtomicReplaceObjectProps = {
   /**
    * Update data.
    * NOTE: This is not merged with the existing data.

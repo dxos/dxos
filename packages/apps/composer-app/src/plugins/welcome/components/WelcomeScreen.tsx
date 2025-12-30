@@ -23,8 +23,8 @@ export const WELCOME_SCREEN = `${meta.id}/component/WelcomeScreen`;
 const TEST_EMAIL = 'test@dxos.org';
 
 export const WelcomeScreen = ({ hubUrl }: { hubUrl: string }) => {
-  const searchParams = new URLSearchParams(window.location.search);
-  const spaceInvitationCode = searchParams.get('spaceInvitationCode') ?? undefined;
+  const searchProps = new URLSearchParams(window.location.search);
+  const spaceInvitationCode = searchProps.get('spaceInvitationCode') ?? undefined;
 
   const client = useClient();
   const identity = useIdentity();
