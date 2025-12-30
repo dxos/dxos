@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { LayoutAction, createIntent } from '@dxos/app-framework';
+import { Common, createIntent } from '@dxos/app-framework';
 import { useIntentDispatcher } from '@dxos/app-framework/react';
 import { Button, Icon, useTranslation } from '@dxos/react-ui';
 
@@ -19,7 +19,7 @@ export const CommandsTrigger = () => {
       classNames='m-1 pli-1 lg:pli-2'
       onClick={() =>
         dispatch(
-          createIntent(LayoutAction.UpdateDialog, {
+          createIntent(Common.LayoutAction.UpdateDialog, {
             part: 'dialog',
             subject: COMMANDS_DIALOG,
             options: {

@@ -2,15 +2,16 @@
 // Copyright 2025 DXOS.org
 //
 
+import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
-import { Capabilities, Events } from '../../common';
-import { contributes, defineCapability, defineEvent, defineModule, definePlugin } from '../../core';
+import * as Common from '../../common';
+import { ActivationEvent, Capability, Plugin } from '../../core';
 import { type IntentSchema, createResolver } from '../../plugin-intent';
 
-export const Number = defineCapability<number>('dxos.org/test/generator/number');
+export const Number = Capability.make<number>('dxos.org/test/generator/number');
 
-export const CountEvent = defineEvent('dxos.org/test/generator/count');
+export const CountEvent = ActivationEvent.make('dxos.org/test/generator/count');
 
 export const createPluginId = (id: string) => `dxos.org/test/generator/${id}`;
 
@@ -26,23 +27,24 @@ export const createGeneratorIntent = (id: string) => {
 export const createNumberPlugin = (id: string) => {
   const number = Math.floor(Math.random() * 100);
 
-  return definePlugin({ id, name: `Plugin ${id}` }, () => [
-    defineModule({
-      id: `${id}/main`,
+  return Plugin.define({ id, name: `Plugin ${id}` }).pipe(
+    Plugin.addModule({
+      id: 'Main',
       activatesOn: CountEvent,
-      activate: () => contributes(Number, number),
+      activate: () => Effect.succeed(Capability.contributes(Number, number)),
     }),
-    defineModule({
-      id: `${id}/intent-resolver`,
-      activatesOn: Events.SetupIntentResolver,
+    Common.Plugin.addIntentResolverModule({
       activate: () =>
-        contributes(
-          Capabilities.IntentResolver,
-          createResolver({
-            intent: createGeneratorIntent(id),
-            resolve: () => window.alert(JSON.stringify({ number })),
-          }),
+        Effect.succeed(
+          Capability.contributes(
+            Common.Capability.IntentResolver,
+            createResolver({
+              intent: createGeneratorIntent(id),
+              resolve: () => window.alert(JSON.stringify({ number })),
+            }),
+          ),
         ),
     }),
-  ]);
+    Plugin.make,
+  )();
 };

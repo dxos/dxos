@@ -2,44 +2,43 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Events, allOf, contributes, defineModule, definePlugin } from '@dxos/app-framework';
+import * as Effect from 'effect/Effect';
+
+import { ActivationEvent, Capability, Common, Plugin } from '@dxos/app-framework';
 import { AttentionManager, SelectionManager } from '@dxos/react-ui-attention';
 
-import { AttentionCapabilities, IntentResolver, Keyboard, ReactContext } from './capabilities';
+import { IntentResolver, Keyboard, ReactContext } from './capabilities';
 import { AttentionEvents } from './events';
 import { meta } from './meta';
+import { AttentionCapabilities } from './types';
 
-export const AttentionPlugin = definePlugin(meta, () => [
-  defineModule({
-    id: `${meta.id}/module/attention`,
-    activatesOn: Events.Startup,
+export const AttentionPlugin = Plugin.define(meta).pipe(
+  Plugin.addModule({
+    id: 'attention',
+    activatesOn: Common.ActivationEvent.Startup,
     activatesAfter: [AttentionEvents.AttentionReady],
-    activate: () => {
-      const attention = new AttentionManager();
-      const selection = new SelectionManager();
-      setupDevtools(attention);
-      return [
-        contributes(AttentionCapabilities.Attention, attention),
-        contributes(AttentionCapabilities.Selection, selection),
-      ];
-    },
+    activate: () =>
+      Effect.sync(() => {
+        const attention = new AttentionManager();
+        const selection = new SelectionManager();
+        setupDevtools(attention);
+        return [
+          Capability.contributes(AttentionCapabilities.Attention, attention),
+          Capability.contributes(AttentionCapabilities.Selection, selection),
+        ];
+      }),
   }),
-  defineModule({
-    id: `${meta.id}/module/react-context`,
-    activatesOn: Events.Startup,
+  Plugin.addModule({
+    activatesOn: Common.ActivationEvent.Startup,
     activate: ReactContext,
   }),
-  defineModule({
-    id: `${meta.id}/module/keyboard`,
-    activatesOn: allOf(Events.AppGraphReady, AttentionEvents.AttentionReady),
+  Plugin.addModule({
+    activatesOn: ActivationEvent.allOf(Common.ActivationEvent.AppGraphReady, AttentionEvents.AttentionReady),
     activate: Keyboard,
   }),
-  defineModule({
-    id: `${meta.id}/module/intent-resolver`,
-    activatesOn: Events.SetupIntentResolver,
-    activate: IntentResolver,
-  }),
-]);
+  Common.Plugin.addIntentResolverModule({ activate: IntentResolver }),
+  Plugin.make,
+);
 
 const setupDevtools = (attention: AttentionManager) => {
   (globalThis as any).composer ??= {};

@@ -2,12 +2,14 @@
 // Copyright 2025 DXOS.org
 //
 
+import { useAtomValue } from '@effect-atom/atom-react';
+import * as Effect from 'effect/Effect';
 import React, { useCallback } from 'react';
 
 import { IconButton, List, ListItem } from '@dxos/react-ui';
 
-import { Capabilities, createSurface } from '../../common';
-import { contributes, defineCapabilityModule } from '../../core';
+import * as Common from '../../common';
+import { Capability } from '../../core';
 import { usePluginManager } from '../../react';
 
 const Item = ({
@@ -40,6 +42,8 @@ const Item = ({
 
 export const Main = () => {
   const manager = usePluginManager();
+  const plugins = useAtomValue(manager.plugins);
+  const core = useAtomValue(manager.core);
 
   const handleRemove = useCallback(
     async (id: string) => {
@@ -50,11 +54,11 @@ export const Main = () => {
 
   return (
     <List itemSizes='one'>
-      {manager.plugins.map((plugin) => (
+      {plugins.map((plugin) => (
         <Item
           key={plugin.meta.id}
           id={plugin.meta.id}
-          disabled={manager.core.includes(plugin.meta.id)}
+          disabled={core.includes(plugin.meta.id)}
           onRemove={handleRemove}
         />
       ))}
@@ -62,13 +66,15 @@ export const Main = () => {
   );
 };
 
-export default defineCapabilityModule(() =>
-  contributes(
-    Capabilities.ReactSurface,
-    createSurface({
-      id: 'dxos.org/test/generator/main',
-      role: 'primary',
-      component: Main,
-    }),
+export default Capability.makeModule(() =>
+  Effect.succeed(
+    Capability.contributes(
+      Common.Capability.ReactSurface,
+      Common.createSurface({
+        id: 'dxos.org/test/generator/main',
+        role: 'primary',
+        component: Main,
+      }),
+    ),
   ),
 );

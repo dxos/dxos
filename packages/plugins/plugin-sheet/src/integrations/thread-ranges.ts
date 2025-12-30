@@ -6,7 +6,7 @@ import * as Function from 'effect/Function';
 import * as Schema from 'effect/Schema';
 import { useCallback, useEffect, useMemo } from 'react';
 
-import { LayoutAction, chain, createIntent, createResolver } from '@dxos/app-framework';
+import { Common, chain, createIntent, createResolver } from '@dxos/app-framework';
 import { useIntentDispatcher, useIntentResolver } from '@dxos/app-framework/react';
 import { debounce } from '@dxos/async';
 import { type CellAddress, type CompleteCellRange, inRange } from '@dxos/compute';
@@ -42,7 +42,7 @@ export const useUpdateFocusedCellOnThreadSelection = (grid: DxGridElement | null
   const scrollIntoViewResolver = useMemo(
     () =>
       createResolver({
-        intent: LayoutAction.ScrollIntoView,
+        intent: Common.LayoutAction.ScrollIntoView,
         position: 'hoist',
         filter: (
           data,
@@ -51,7 +51,7 @@ export const useUpdateFocusedCellOnThreadSelection = (grid: DxGridElement | null
           subject: string;
           options: { cursor: string; ref: GridContentProps['activeRefs'] };
         } => {
-          if (!Schema.is(LayoutAction.ScrollIntoView.fields.input)(data)) {
+          if (!Schema.is(Common.LayoutAction.ScrollIntoView.fields.input)(data)) {
             return false;
           }
 

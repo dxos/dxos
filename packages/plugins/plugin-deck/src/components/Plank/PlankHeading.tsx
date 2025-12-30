@@ -4,7 +4,7 @@
 
 import React, { Fragment, type MouseEvent, memo, useCallback, useEffect, useMemo } from 'react';
 
-import { LayoutAction, createIntent } from '@dxos/app-framework';
+import { Common, createIntent } from '@dxos/app-framework';
 import { Surface, useAppGraph, useIntentDispatcher } from '@dxos/app-framework/react';
 import { Graph, type Node } from '@dxos/plugin-graph';
 import { Icon, IconButton, Popover, toLocalizedString, useTranslation } from '@dxos/react-ui';
@@ -119,14 +119,14 @@ export const PlankHeading = memo(
         } else if (eventType === 'close') {
           if (part === 'complementary') {
             return dispatch(
-              createIntent(LayoutAction.UpdateComplementary, {
+              createIntent(Common.LayoutAction.UpdateComplementary, {
                 part: 'complementary',
                 options: { state: 'collapsed' },
               }),
             );
           } else {
             return dispatch(
-              createIntent(LayoutAction.Close, { part: 'main', subject: [id], options: { state: false } }),
+              createIntent(Common.LayoutAction.Close, { part: 'main', subject: [id], options: { state: false } }),
             );
           }
         } else {

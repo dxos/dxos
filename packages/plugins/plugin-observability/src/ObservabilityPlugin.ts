@@ -2,14 +2,15 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Capabilities, Events, allOf, contributes, defineModule, definePlugin } from '@dxos/app-framework';
+import * as Effect from 'effect/Effect';
+
+import { ActivationEvent, Capability, Common, Plugin } from '@dxos/app-framework';
 import { type Observability } from '@dxos/observability';
 
 import {
   AppGraphBuilder,
   ClientReady,
   IntentResolver,
-  ObservabilityCapabilities,
   ObservabilitySettings,
   ObservabilityState,
   ReactSurface,
@@ -17,54 +18,53 @@ import {
 import { ClientReadyEvent, ObservabilityEvents } from './events';
 import { meta } from './meta';
 import { translations } from './translations';
+import { ObservabilityCapabilities } from './types';
 
 export type ObservabilityPluginOptions = {
   namespace: string;
   observability: () => Promise<Observability>;
 };
 
-export const ObservabilityPlugin = definePlugin<ObservabilityPluginOptions>(meta, ({ namespace, observability }) => [
-  defineModule({
-    id: `${meta.id}/module/observability`,
-    activatesOn: Events.Startup,
-    activate: async () => contributes(ObservabilityCapabilities.Observability, await observability()),
-  }),
-  defineModule({
-    id: `${meta.id}/module/settings`,
-    activatesOn: Events.SetupSettings,
+export const ObservabilityPlugin = Plugin.define<ObservabilityPluginOptions>(meta).pipe(
+  Plugin.addModule(({ namespace, observability }) => ({
+    id: 'observability',
+    activatesOn: Common.ActivationEvent.Startup,
+    activate: () =>
+      Effect.gen(function* () {
+        const obs = yield* Effect.tryPromise(() => observability());
+        return Capability.contributes(ObservabilityCapabilities.Observability, obs);
+      }),
+  })),
+  Plugin.addModule({
+    activatesOn: Common.ActivationEvent.SetupSettings,
     activate: ObservabilitySettings,
   }),
-  defineModule({
-    id: `${meta.id}/module/state`,
-    activatesOn: Events.Startup,
+  Plugin.addModule(({ namespace }) => ({
+    id: Capability.getModuleTag(ObservabilityState),
+    activatesOn: Common.ActivationEvent.Startup,
     activatesAfter: [ObservabilityEvents.StateReady],
     activate: () => ObservabilityState({ namespace }),
-  }),
-  defineModule({
-    id: `${meta.id}/module/translations`,
-    activatesOn: Events.SetupTranslations,
-    activate: () => contributes(Capabilities.Translations, translations),
-  }),
-  defineModule({
-    id: `${meta.id}/module/intent-resolver`,
-    activatesOn: Events.SetupIntentResolver,
+  })),
+  Common.Plugin.addTranslationsModule({ translations }),
+  Plugin.addModule(({ namespace }) => ({
+    id: Capability.getModuleTag(IntentResolver),
+    activatesOn: Common.ActivationEvent.SetupIntentResolver,
     activate: (context) => IntentResolver({ context, namespace }),
-  }),
-  defineModule({
-    id: `${meta.id}/module/react-surface`,
-    activatesOn: Events.SetupReactSurface,
-    activate: ReactSurface,
-  }),
-  defineModule({
-    id: `${meta.id}/module/app-graph-builder`,
-    activatesOn: Events.SetupAppGraph,
-    activate: AppGraphBuilder,
-  }),
-  defineModule({
-    id: `${meta.id}/module/client-ready`,
-    activatesOn: allOf(Events.DispatcherReady, ObservabilityEvents.StateReady, ClientReadyEvent),
-    activate: async (context) => {
-      return ClientReady({ context, observability: await observability(), namespace });
-    },
-  }),
-]);
+  })),
+  Common.Plugin.addSurfaceModule({ activate: ReactSurface }),
+  Common.Plugin.addAppGraphModule({ activate: AppGraphBuilder }),
+  Plugin.addModule(({ namespace, observability }) => ({
+    id: Capability.getModuleTag(ClientReady),
+    activatesOn: ActivationEvent.allOf(
+      Common.ActivationEvent.DispatcherReady,
+      ObservabilityEvents.StateReady,
+      ClientReadyEvent,
+    ),
+    activate: (context) =>
+      Effect.gen(function* () {
+        const obs = yield* Effect.tryPromise(() => observability());
+        return yield* ClientReady({ context, namespace, observability: obs });
+      }),
+  })),
+  Plugin.make,
+);

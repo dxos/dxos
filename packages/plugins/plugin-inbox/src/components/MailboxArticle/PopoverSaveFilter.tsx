@@ -4,7 +4,7 @@
 
 import React, { useCallback, useRef, useState } from 'react';
 
-import { LayoutAction, createIntent } from '@dxos/app-framework';
+import { Common, createIntent } from '@dxos/app-framework';
 import { useIntentDispatcher } from '@dxos/app-framework/react';
 import { Button, Input, Popover, useTranslation } from '@dxos/react-ui';
 
@@ -22,7 +22,7 @@ export const PopoverSaveFilter = ({ mailbox, filter }: { mailbox: Mailbox.Mailbo
   const handleDone = useCallback(() => {
     (mailbox.filters ??= []).push({ name, filter });
     void dispatch(
-      createIntent(LayoutAction.UpdatePopover, {
+      createIntent(Common.LayoutAction.UpdatePopover, {
         part: 'popover',
         options: { variant: 'virtual', anchor: null, state: false },
       }),

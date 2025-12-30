@@ -2,12 +2,10 @@
 // Copyright 2025 DXOS.org
 //
 
-import { lazy } from '@dxos/app-framework';
-
-export const AppGraphBuilder = lazy(() => import('./app-graph-builder'));
-export const CallExtension = lazy(() => import('./call-extension'));
-export const IntentResolver = lazy(() => import('./intent-resolver'));
-export const ReactSurface = lazy(() => import('./react-surface'));
-export const Repair = lazy(() => import('./repair'));
-export const MeetingSettings = lazy(() => import('./settings'));
-export const MeetingState = lazy(() => import('./state'));
+export * from './app-graph-builder';
+export * from './call-extension';
+export * from './intent-resolver';
+export * from './react-surface';
+export * from './repair';
+export * from './settings';
+export * from './state';

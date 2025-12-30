@@ -4,13 +4,13 @@
 
 import { Atom } from '@effect-atom/atom-react';
 
-import { type PluginContext } from '@dxos/app-framework';
+import { type Capability } from '@dxos/app-framework';
 import { type BuilderExtensions } from '@dxos/app-graph';
 import { log } from '@dxos/log';
 import { GraphBuilder, NodeMatcher } from '@dxos/plugin-graph';
 import { faker } from '@dxos/random';
 
-export const storybookGraphBuilders = (context: PluginContext): BuilderExtensions => {
+export const storybookGraphBuilders = (context: Capability.PluginContext): BuilderExtensions => {
   const propertiesCache = new Map<string, Record<string, unknown>>();
   const getProperties = (id: string, defaults: Record<string, unknown>) => {
     const cached = propertiesCache.get(id);

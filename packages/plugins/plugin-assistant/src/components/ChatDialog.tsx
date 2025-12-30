@@ -4,7 +4,7 @@
 
 import React, { useCallback, useState } from 'react';
 
-import { Capabilities } from '@dxos/app-framework';
+import { Common } from '@dxos/app-framework';
 import { useCapability } from '@dxos/app-framework/react';
 import { Obj } from '@dxos/echo';
 import { useTranslation } from '@dxos/react-ui';
@@ -24,7 +24,7 @@ export const ChatDialog = ({ chat }: ChatDialogProps) => {
   const { t } = useTranslation(meta.id);
 
   const db = chat && Obj.getDatabase(chat);
-  const settings = useCapability(Capabilities.SettingsStore).getStore<Assistant.Settings>(meta.id)?.value;
+  const settings = useCapability(Common.Capability.SettingsStore).getStore<Assistant.Settings>(meta.id)?.value;
   const services = useChatServices({ id: db?.spaceId, chat });
   const [online, setOnline] = useOnline();
   const { preset, ...chatProps } = usePresets(online);

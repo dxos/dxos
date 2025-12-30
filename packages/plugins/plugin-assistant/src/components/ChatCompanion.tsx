@@ -7,7 +7,7 @@ import * as Function from 'effect/Function';
 import * as Option from 'effect/Option';
 import React, { forwardRef, useCallback, useEffect, useMemo, useState } from 'react';
 
-import { Capabilities, createIntent } from '@dxos/app-framework';
+import { Common, createIntent } from '@dxos/app-framework';
 import { useCapabilities, useIntentDispatcher } from '@dxos/app-framework/react';
 import { Blueprint } from '@dxos/blueprints';
 import { getSpace } from '@dxos/client/echo';
@@ -88,7 +88,7 @@ export const ChatCompanion = forwardRef<HTMLDivElement, ChatCompanionProps>(
       [chat, space, companionTo, dispatch],
     );
 
-    const metadata = useCapabilities(Capabilities.Metadata);
+    const metadata = useCapabilities(Common.Capability.Metadata);
     const blueprintKeys = useMemo(
       () =>
         Function.pipe(

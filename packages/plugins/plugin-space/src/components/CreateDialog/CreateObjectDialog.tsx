@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 import * as Function from 'effect/Function';
 import React, { useCallback, useMemo, useRef, useState } from 'react';
 
-import { Capabilities, LayoutAction, chain, createIntent } from '@dxos/app-framework';
+import { Common, chain, createIntent } from '@dxos/app-framework';
 import { useIntentDispatcher, usePluginManager } from '@dxos/app-framework/react';
 import { Database, Obj, Type } from '@dxos/echo';
 import { EntityKind, getTypeAnnotation } from '@dxos/echo/internal';
@@ -53,7 +53,7 @@ export const CreateObjectDialog = ({
   const resolve = useCallback<NonNullable<CreateObjectPanelProps['resolve']>>(
     (typename) => {
       const metadata = manager.context
-        .getCapabilities(Capabilities.Metadata)
+        .getCapabilities(Common.Capability.Metadata)
         .find(({ id }) => id === typename)?.metadata;
       return metadata?.createObjectIntent ? (metadata as Metadata) : undefined;
     },
@@ -95,7 +95,7 @@ export const CreateObjectDialog = ({
           });
           const shouldNavigate = _shouldNavigate ?? (() => true);
           if (shouldNavigate(object)) {
-            yield* dispatch(Function.pipe(addObjectIntent, chain(LayoutAction.Open, { part: 'main' })));
+            yield* dispatch(Function.pipe(addObjectIntent, chain(Common.LayoutAction.Open, { part: 'main' })));
           } else {
             yield* dispatch(addObjectIntent);
           }

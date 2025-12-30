@@ -4,10 +4,10 @@
 
 import React, { useEffect, useState } from 'react';
 
+import { Common } from '@dxos/app-framework';
 import { Surface, useCapabilities } from '@dxos/app-framework/react';
 import { Filter, Obj, Type } from '@dxos/echo';
 import { type TypedObject } from '@dxos/echo/internal';
-import { ClientCapabilities } from '@dxos/plugin-client';
 import { useGlobalFilteredObjects } from '@dxos/plugin-search';
 import { useQuery } from '@dxos/react-client/echo';
 import { Masonry as MasonryComponent } from '@dxos/react-ui-masonry';
@@ -20,7 +20,7 @@ const Item = ({ data }: { data: any }) => {
 };
 
 export const MasonryContainer = ({ object, role }: { object: Masonry.Masonry; role?: string }) => {
-  const schemas = useCapabilities(ClientCapabilities.Schema);
+  const schemas = useCapabilities(Common.Capability.Schema);
   const db = Obj.getDatabase(object);
   const typename = object.view.target?.query ? getTypenameFromQuery(object.view.target.query.ast) : undefined;
 

@@ -8,7 +8,7 @@ import React, { type PropsWithChildren, useCallback, useEffect, useRef, useState
 import { Surface, useCapability } from '@dxos/app-framework/react';
 import { Popover, type PopoverContentInteractOutsideEvent } from '@dxos/react-ui';
 
-import { DeckCapabilities } from '../../capabilities';
+import { DeckCapabilities } from '../../types';
 
 export type DeckPopoverRootProps = PropsWithChildren<{}>;
 

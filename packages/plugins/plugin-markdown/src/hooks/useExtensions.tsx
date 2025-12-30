@@ -6,7 +6,7 @@ import { type ViewUpdate } from '@codemirror/view';
 import React, { type AnchorHTMLAttributes, type ReactNode, useMemo } from 'react';
 import { createRoot } from 'react-dom/client';
 
-import { LayoutAction, type PromiseIntentDispatcher, createIntent } from '@dxos/app-framework';
+import { Common, type PromiseIntentDispatcher, createIntent } from '@dxos/app-framework';
 import { useIntentDispatcher } from '@dxos/app-framework/react';
 import { debounceAndThrottle } from '@dxos/async';
 import { Obj } from '@dxos/echo';
@@ -172,7 +172,7 @@ const createBaseExtensions = ({
             dispatch && (object || id)
               ? createLinkRenderer((id: string) => {
                   void dispatch(
-                    createIntent(LayoutAction.Open, {
+                    createIntent(Common.LayoutAction.Open, {
                       part: 'main',
                       subject: [id],
                       options: {

@@ -2,16 +2,19 @@
 // Copyright 2023 DXOS.org
 //
 
-import { contributes, defineModule, definePlugin } from '@dxos/app-framework';
+import * as Effect from 'effect/Effect';
+
+import { Capability, Plugin } from '@dxos/app-framework';
 import { MarkdownCapabilities, MarkdownEvents } from '@dxos/plugin-markdown';
 
 import { mermaid } from './extensions';
 import { meta } from './meta';
 
-export const MermaidPlugin = definePlugin(meta, () => [
-  defineModule({
-    id: `${meta.id}/module/markdown`,
+export const MermaidPlugin = Plugin.define(meta).pipe(
+  Plugin.addModule({
+    id: 'markdown',
     activatesOn: MarkdownEvents.SetupExtensions,
-    activate: () => contributes(MarkdownCapabilities.Extensions, [mermaid]),
+    activate: () => Effect.succeed(Capability.contributes(MarkdownCapabilities.Extensions, [mermaid])),
   }),
-]);
+  Plugin.make,
+);

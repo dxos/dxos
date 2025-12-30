@@ -4,7 +4,7 @@
 
 import React, { useEffect, useMemo } from 'react';
 
-import { LayoutAction, createIntent } from '@dxos/app-framework';
+import { Common, createIntent } from '@dxos/app-framework';
 import { useIntentDispatcher } from '@dxos/app-framework/react';
 import { getSpace } from '@dxos/react-client/echo';
 import { Button, Dialog, IconButton, useTranslation } from '@dxos/react-ui';
@@ -39,7 +39,7 @@ export const DeploymentDialog = ({ accessToken, scriptTemplates }: DeploymentDia
     if (status === 'success') {
       // TODO(ZaymonFC): We can probably re-use this toast for normal script deployment.
       void dispatch(
-        createIntent(LayoutAction.AddToast, {
+        createIntent(Common.LayoutAction.AddToast, {
           part: 'toast',
           subject: {
             id: `${meta.id}/deployment-success`,
@@ -52,7 +52,7 @@ export const DeploymentDialog = ({ accessToken, scriptTemplates }: DeploymentDia
         }),
       );
       void dispatch(
-        createIntent(LayoutAction.UpdateDialog, {
+        createIntent(Common.LayoutAction.UpdateDialog, {
           part: 'dialog',
           options: { state: false },
         }),
@@ -60,13 +60,13 @@ export const DeploymentDialog = ({ accessToken, scriptTemplates }: DeploymentDia
     }
     if (status === 'error') {
       void dispatch(
-        createIntent(LayoutAction.UpdateDialog, {
+        createIntent(Common.LayoutAction.UpdateDialog, {
           part: 'dialog',
           options: { state: false },
         }),
       );
       void dispatch(
-        createIntent(LayoutAction.AddToast, {
+        createIntent(Common.LayoutAction.AddToast, {
           part: 'toast',
           subject: {
             id: `${meta.id}/deployment-error`,

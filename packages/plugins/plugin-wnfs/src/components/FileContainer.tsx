@@ -10,8 +10,8 @@ import { getSpace } from '@dxos/react-client/echo';
 import { useAsyncEffect } from '@dxos/react-ui';
 import { StackItem } from '@dxos/react-ui-stack';
 
-import { WnfsCapabilities } from '../capabilities';
 import { filePath, getBlobUrl, loadWnfs, wnfsUrl } from '../helpers';
+import { WnfsCapabilities } from '../types';
 import { type WnfsFile } from '../types';
 
 import { FilePreview } from './FilePreview';

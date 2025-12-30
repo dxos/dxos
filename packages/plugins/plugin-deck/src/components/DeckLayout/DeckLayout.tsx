@@ -6,7 +6,7 @@ import React from 'react';
 
 import { useCapability } from '@dxos/app-framework/react';
 
-import { DeckCapabilities } from '../../capabilities';
+import { DeckCapabilities } from '../../types';
 
 import { ActiveNode } from './ActiveNode';
 import { DeckMain } from './DeckMain';

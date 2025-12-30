@@ -10,7 +10,7 @@ import { List, ListItem, Toolbar } from '@dxos/react-ui';
 import { withTheme } from '@dxos/react-ui/testing';
 import { type ColorStyles, getHashStyles, mx } from '@dxos/ui-theme';
 
-import { Capabilities, createSurface } from '../common';
+import * as Common from '../common';
 import { withPluginManager } from '../testing';
 
 import { usePluginManager } from './PluginManagerProvider';
@@ -42,8 +42,8 @@ const DefaultStory = () => {
     const styles = getHashStyles(id);
     manager.context.contributeCapability({
       module: 'test',
-      interface: Capabilities.ReactSurface,
-      implementation: createSurface({
+      interface: Common.Capability.ReactSurface,
+      implementation: Common.createSurface({
         id,
         role: 'item',
         filter: (data): data is any => (data as any)?.id === id,
@@ -61,8 +61,8 @@ const DefaultStory = () => {
   const handleError = useCallback(() => {
     manager.context.contributeCapability({
       module: 'error',
-      interface: Capabilities.ReactSurface,
-      implementation: createSurface({
+      interface: Common.Capability.ReactSurface,
+      implementation: Common.createSurface({
         id: 'error',
         role: 'item',
         filter: (data): data is any => (data as any)?.id === 'error',

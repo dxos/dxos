@@ -15,6 +15,36 @@
       "browser": "./dist/lib/browser/index.mjs",
       "node": "./dist/lib/node-esm/index.mjs"
     },
+    "./ActivationEvent": {
+      "source": "./src/core/activation-event.ts",
+      "types": "./dist/types/src/activation-event/index.d.ts",
+      "browser": "./dist/lib/browser/activation-event/index.mjs",
+      "node": "./dist/lib/node-esm/activation-event/index.mjs"
+    },
+    "./Capability": {
+      "source": "./src/core/capability.ts",
+      "types": "./dist/types/src/capability/index.d.ts",
+      "browser": "./dist/lib/browser/capability/index.mjs",
+      "node": "./dist/lib/node-esm/capability/index.mjs"
+    },
+    "./Common": {
+      "source": "./src/common/index.ts",
+      "types": "./dist/types/src/common/index.d.ts",
+      "browser": "./dist/lib/browser/common/index.mjs",
+      "node": "./dist/lib/node-esm/common/index.mjs"
+    },
+    "./Plugin": {
+      "source": "./src/core/plugin.ts",
+      "types": "./dist/types/src/plugin/index.d.ts",
+      "browser": "./dist/lib/browser/plugin/index.mjs",
+      "node": "./dist/lib/node-esm/plugin/index.mjs"
+    },
+    "./PluginManager": {
+      "source": "./src/core/plugin-manager.ts",
+      "types": "./dist/types/src/plugin-manager/index.d.ts",
+      "browser": "./dist/lib/browser/plugin-manager/index.mjs",
+      "node": "./dist/lib/node-esm/plugin-manager/index.mjs"
+    },
     "./react": {
       "source": "./src/react/index.ts",
       "types": "./dist/types/src/react/index.d.ts",
@@ -31,6 +61,21 @@
   "types": "dist/types/src/index.d.ts",
   "typesVersions": {
     "*": {
+      "ActivationEvent": [
+        "dist/types/src/activation-event/index.d.ts"
+      ],
+      "Capability": [
+        "dist/types/src/capability/index.d.ts"
+      ],
+      "Common": [
+        "dist/types/src/common/index.d.ts"
+      ],
+      "Plugin": [
+        "dist/types/src/plugin/index.d.ts"
+      ],
+      "PluginManager": [
+        "dist/types/src/plugin-manager/index.d.ts"
+      ],
       "react": [
         "dist/types/src/react/index.d.ts"
       ],
@@ -65,10 +110,7 @@
     "@dxos/web-context": "workspace:*",
     "@dxos/web-context-react": "workspace:*",
     "@effect/ai": "catalog:",
-    "@effect/cli": "catalog:",
-    "@effect/experimental": "catalog:",
-    "@preact-signals/safe-react": "catalog:",
-    "@preact/signals-core": "catalog:"
+    "@effect/cli": "catalog:"
   },
   "devDependencies": {
     "@dxos/echo-signals": "workspace:*",

@@ -5,3 +5,5 @@
 export * as MeetingAction from './MeetingAction';
 /** @deprecated Use Event instead. */
 export * as Meeting from './Meeting';
+
+export * from './capabilities';

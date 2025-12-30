@@ -7,7 +7,7 @@ import * as Match from 'effect/Match';
 import type * as Schema from 'effect/Schema';
 import React, { forwardRef, useCallback, useMemo, useRef } from 'react';
 
-import { LayoutAction, createIntent } from '@dxos/app-framework';
+import { Common, createIntent } from '@dxos/app-framework';
 import { useAppGraph, useIntentDispatcher } from '@dxos/app-framework/react';
 import { type Database, Filter, Obj, Order, Query, type QueryAST, Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
@@ -105,7 +105,7 @@ export const TableContainer = forwardRef<HTMLDivElement, TableContainerProps>(({
     (actionId: string, data: any) =>
       Match.value(actionId).pipe(
         Match.when('open', () =>
-          dispatch(createIntent(LayoutAction.Open, { part: 'main', subject: [Obj.getDXN(data).toString()] })),
+          dispatch(createIntent(Common.LayoutAction.Open, { part: 'main', subject: [Obj.getDXN(data).toString()] })),
         ),
         Match.orElseAbsurd,
       ),

@@ -4,7 +4,7 @@
 
 import React, { useCallback } from 'react';
 
-import { LayoutAction, createIntent } from '@dxos/app-framework';
+import { Common, createIntent } from '@dxos/app-framework';
 import { useIntentDispatcher } from '@dxos/app-framework/react';
 import { useClient } from '@dxos/react-client';
 import { Dialog, useTranslation } from '@dxos/react-ui';
@@ -29,7 +29,7 @@ export const ResetDialog = ({ mode, onReset }: ResetDialogProps) => {
 
   const handleCancel = useCallback(() => {
     void dispatch(
-      createIntent(LayoutAction.UpdateDialog, {
+      createIntent(Common.LayoutAction.UpdateDialog, {
         part: 'dialog',
         options: { state: false },
       }),

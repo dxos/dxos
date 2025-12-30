@@ -4,7 +4,7 @@
 
 import React, { useCallback, useRef, useState } from 'react';
 
-import { LayoutAction, createIntent } from '@dxos/app-framework';
+import { Common, createIntent } from '@dxos/app-framework';
 import { useIntentDispatcher } from '@dxos/app-framework/react';
 import { Obj } from '@dxos/echo';
 import { log } from '@dxos/log';
@@ -27,7 +27,7 @@ export const ObjectRenamePopover = ({ object }: { object: Obj.Any }) => {
       log.error('Failed to rename object', { err });
     }
     void dispatch(
-      createIntent(LayoutAction.UpdatePopover, {
+      createIntent(Common.LayoutAction.UpdatePopover, {
         part: 'popover',
         options: { variant: 'react', anchorId: '', state: false },
       }),

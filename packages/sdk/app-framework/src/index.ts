@@ -3,7 +3,7 @@
 //
 
 export * from './cli';
-export * from './common';
+export * as Common from './common';
 export * from './context';
 export * from './core';
 export * from './plugin-intent';

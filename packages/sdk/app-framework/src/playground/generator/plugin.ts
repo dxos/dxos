@@ -2,21 +2,20 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Events } from '../../common';
-import { defineModule, definePlugin, lazy } from '../../core';
+import * as Common from '../../common';
+import { Capability, Plugin } from '../../core';
 
-const Main = lazy(() => import('./Main'));
-const Toolbar = lazy(() => import('./Toolbar'));
+const Main = Capability.lazy('Main', () => import('./Main'));
+const Toolbar = Capability.lazy('Toolbar', () => import('./Toolbar'));
 
-export const GeneratorPlugin = definePlugin({ id: 'dxos.org/test/generator', name: 'Generator' }, () => [
-  defineModule({
-    id: 'dxos.org/test/generator/main',
-    activatesOn: Events.Startup,
+export const GeneratorPlugin = Plugin.define({ id: 'dxos.org/test/generator', name: 'Generator' }).pipe(
+  Plugin.addModule({
+    activatesOn: Common.ActivationEvent.Startup,
     activate: Main,
   }),
-  defineModule({
-    id: 'dxos.org/test/generator/toolbar',
-    activatesOn: Events.Startup,
+  Plugin.addModule({
+    activatesOn: Common.ActivationEvent.Startup,
     activate: Toolbar,
   }),
-]);
+  Plugin.make,
+);

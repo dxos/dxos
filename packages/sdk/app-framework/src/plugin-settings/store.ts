@@ -2,19 +2,21 @@
 // Copyright 2025 DXOS.org
 //
 
+import * as Effect from 'effect/Effect';
+
 import { RootSettingsStore } from '@dxos/local-storage';
 
-import { Capabilities } from '../common';
-import { type PluginContext, contributes, defineCapabilityModule } from '../core';
+import * as Common from '../common';
+import { Capability } from '../core';
 
-export default defineCapabilityModule((context: PluginContext) => {
+export default Capability.makeModule((context) => {
   // TODO(wittjosiah): Replace with atom?
   const settingsStore = new RootSettingsStore();
 
-  let previous: Capabilities.Settings[] = [];
-  const registry = context.getCapability(Capabilities.AtomRegistry);
+  let previous: Common.Capability.Settings[] = [];
+  const registry = context.getCapability(Common.Capability.AtomRegistry);
   const cancel = registry.subscribe(
-    context.capabilities(Capabilities.Settings),
+    context.capabilities(Common.Capability.Settings),
     (allSettings) => {
       const added = allSettings.filter((setting) => !previous.includes(setting));
       const removed = previous.filter((setting) => !allSettings.includes(setting));
@@ -29,5 +31,7 @@ export default defineCapabilityModule((context: PluginContext) => {
     { immediate: true },
   );
 
-  return contributes(Capabilities.SettingsStore, settingsStore, () => cancel());
+  return Effect.succeed(
+    Capability.contributes(Common.Capability.SettingsStore, settingsStore, () => Effect.sync(() => cancel())),
+  );
 });

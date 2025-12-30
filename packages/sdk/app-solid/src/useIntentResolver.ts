@@ -4,7 +4,7 @@
 
 import { createEffect, onCleanup } from 'solid-js';
 
-import { type AnyIntentResolver, Capabilities } from '@dxos/app-framework';
+import { type AnyIntentResolver, Common } from '@dxos/app-framework';
 
 import { usePluginManager } from './usePluginManager';
 
@@ -14,12 +14,12 @@ export const useIntentResolver = (module: string, resolver: AnyIntentResolver) =
   createEffect(() => {
     manager.context.contributeCapability({
       module,
-      interface: Capabilities.IntentResolver,
+      interface: Common.Capability.IntentResolver,
       implementation: resolver,
     });
 
     onCleanup(() => {
-      manager.context.removeCapability(Capabilities.IntentResolver, resolver);
+      manager.context.removeCapability(Common.Capability.IntentResolver, resolver);
     });
   });
 };

@@ -15,8 +15,8 @@ import { focusField } from '@dxos/ui-editor';
 import { defaultTx } from '@dxos/ui-theme';
 import { type MaybePromise } from '@dxos/util';
 
-import { type WnfsCapabilities } from '../capabilities';
 import { getBlobUrl, getPathFromUrl, loadWnfs } from '../helpers';
+import { type WnfsCapabilities } from '../types';
 
 const WAIT_UNTIL_LOADER = 1500;
 

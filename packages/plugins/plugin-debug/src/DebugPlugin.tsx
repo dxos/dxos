@@ -2,7 +2,9 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Capabilities, Events, contributes, defineModule, definePlugin } from '@dxos/app-framework';
+import * as Effect from 'effect/Effect';
+
+import { Common, Plugin } from '@dxos/app-framework';
 import { type Client } from '@dxos/react-client';
 
 import { AppGraphBuilder, DebugSettings, ReactContext, ReactSurface } from './capabilities';
@@ -10,36 +12,19 @@ import { meta } from './meta';
 import { translations } from './translations';
 
 // TODO(wittjosiah): Factor out DevtoolsPlugin?
-export const DebugPlugin = definePlugin(meta, () => {
-  setupDevtools();
-  return [
-    defineModule({
-      id: `${meta.id}/module/settings`,
-      activatesOn: Events.SetupSettings,
-      activate: DebugSettings,
-    }),
-    defineModule({
-      id: `${meta.id}/module/translations`,
-      activatesOn: Events.SetupTranslations,
-      activate: () => contributes(Capabilities.Translations, translations),
-    }),
-    defineModule({
-      id: `${meta.id}/module/react-context`,
-      activatesOn: Events.Startup,
-      activate: ReactContext,
-    }),
-    defineModule({
-      id: `${meta.id}/module/react-surface`,
-      activatesOn: Events.SetupReactSurface,
-      activate: ReactSurface,
-    }),
-    defineModule({
-      id: `${meta.id}/module/app-graph-builder`,
-      activatesOn: Events.SetupAppGraph,
-      activate: AppGraphBuilder,
-    }),
-  ];
-});
+export const DebugPlugin = Plugin.define(meta).pipe(
+  Plugin.addModule({
+    id: 'setup-devtools',
+    activatesOn: Common.ActivationEvent.Startup,
+    activate: () => Effect.sync(() => setupDevtools()),
+  }),
+  Common.Plugin.addSettingsModule({ activate: DebugSettings }),
+  Common.Plugin.addTranslationsModule({ translations }),
+  Common.Plugin.addReactContextModule({ activate: ReactContext }),
+  Common.Plugin.addSurfaceModule({ activate: ReactSurface }),
+  Common.Plugin.addAppGraphModule({ activate: AppGraphBuilder }),
+  Plugin.make,
+);
 
 const setupDevtools = () => {
   (globalThis as any).composer ??= {};

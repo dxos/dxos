@@ -2,39 +2,42 @@
 // Copyright 2025 DXOS.org
 //
 
-import { effect, signal } from '@preact/signals-core';
+import { Atom, useAtomValue } from '@effect-atom/atom-react';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import React, { useEffect, useState } from 'react';
+import * as Effect from 'effect/Effect';
+import React, { useEffect, useMemo, useState } from 'react';
 
 import { withTheme } from '@dxos/react-ui/testing';
 import { useWebComponentContext } from '@dxos/web-context-react';
 
-import { Capabilities } from '../common';
-import { Events } from '../common';
+import * as Common from '../common';
 import { PluginManagerContext } from '../context';
-import { contributes, defineCapability, defineModule, definePlugin } from '../core';
+import { Capability, Plugin } from '../core';
 
 import { useApp } from './useApp';
 
 // Define the Counter capability
-const Counter = defineCapability<{ count: number; increment: () => void }>('example/counter');
+const Counter = Capability.make<{ count: number; increment: () => void }>('example/counter');
 
 const CountStatus = () => {
   const manager = useWebComponentContext(PluginManagerContext);
-  const [count, setCount] = useState(0);
+  const capabilitiesAtom = useMemo(
+    () => manager?.context.capabilities(Counter) ?? Atom.make<{ count: number; increment: () => void }[]>([]),
+    [manager],
+  );
+  const capabilities = useAtomValue(capabilitiesAtom);
+  const counter = (capabilities as any)[0];
+  const [count, setCount] = useState(counter?.count ?? 0);
 
   useEffect(() => {
-    if (!manager) {
+    if (!counter) {
       return;
     }
-
-    return effect(() => {
-      try {
-        const counter = manager.context.getCapability(Counter);
-        setCount(counter.count);
-      } catch (_err) {}
-    });
-  }, [manager]);
+    setCount(counter.count);
+    if ('subscribe' in counter && typeof counter.subscribe === 'function') {
+      return counter.subscribe(() => setCount(counter.count));
+    }
+  }, [counter]);
 
   if (!manager) return null;
 
@@ -57,26 +60,23 @@ const CountStatus = () => {
 const CounterComponent = () => {
   // Use the web-context hook to get the PluginManager
   const manager = useWebComponentContext(PluginManagerContext);
-  const [count, setCount] = useState(0);
+  const capabilitiesAtom = useMemo(
+    () => manager?.context.capabilities(Counter) ?? Atom.make<{ count: number; increment: () => void }[]>([]),
+    [manager],
+  );
+  const capabilities = useAtomValue(capabilitiesAtom);
+  const counter = (capabilities as any)[0];
+  const [count, setCount] = useState(counter?.count ?? 0);
 
   useEffect(() => {
-    if (!manager) {
+    if (!counter) {
       return;
     }
-
-    // Subscribe to the count signal
-    // note: manager.context.getCapability might throw if not ready, but effect handles dependencies dynamicially
-    const unsubscribe = effect(() => {
-      try {
-        const counter = manager.context.getCapability(Counter);
-        setCount(counter.count);
-      } catch (_err) {
-        // Capability might not be available yet
-      }
-    });
-
-    return unsubscribe;
-  }, [manager]);
+    setCount(counter.count);
+    if ('subscribe' in counter && typeof counter.subscribe === 'function') {
+      return counter.subscribe(() => setCount(counter.count));
+    }
+  }, [counter]);
 
   if (!manager) {
     return <div className='p-4 text-red-500'>Error: Context not found</div>;
@@ -116,41 +116,43 @@ const CounterComponent = () => {
 };
 
 // Plugin that provides the Counter capability and renders the UI
-const CounterPlugin = definePlugin(
-  {
-    id: 'dxos.org/plugin/counter',
-    name: 'Counter Plugin',
-  },
-  () => [
-    defineModule({
-      id: 'dxos.org/plugin/counter/main',
-      activatesOn: Events.Startup,
-      activate: () => {
-        const count = signal(0);
+const CounterPlugin = Plugin.define({
+  id: 'dxos.org/plugin/counter',
+  name: 'Counter Plugin',
+}).pipe(
+  Plugin.addModule({
+    id: 'CounterMain',
+    activatesOn: Common.ActivationEvent.Startup,
+    activate: () => {
+      const listeners = new Set<() => void>();
+      const counter = {
+        count: 0,
+        increment: () => {
+          counter.count++;
+          listeners.forEach((listener) => listener());
+        },
+        subscribe: (listener: () => void) => {
+          listeners.add(listener);
+          return () => listeners.delete(listener);
+        },
+      };
 
-        return [
-          // Contribute the state/logic
-          contributes(Counter, {
-            get count() {
-              return count.value;
-            },
-            increment: () => {
-              count.value++;
-            },
-          }),
+      return Effect.succeed([
+        // Contribute the state/logic
+        Capability.contributes(Counter, counter),
 
-          // Contribute the UI
-          contributes(Capabilities.ReactRoot, {
-            id: 'dxos.org/plugin/counter/root',
-            root: CounterComponent,
-          }),
-        ];
-      },
-    }),
-  ],
-);
+        // Contribute the UI
+        Capability.contributes(Common.Capability.ReactRoot, {
+          id: 'dxos.org/plugin/counter/root',
+          root: CounterComponent,
+        }),
+      ]);
+    },
+  }),
+  Plugin.make,
+)();
 
-const plugins = [CounterPlugin()];
+const plugins = [CounterPlugin];
 const core = ['dxos.org/plugin/counter'];
 const placeholder = () => (
   <div className='flex h-screen items-center justify-center p-4 text-lg text-neutral-500'>

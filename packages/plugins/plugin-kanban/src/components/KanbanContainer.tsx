@@ -4,11 +4,10 @@
 
 import React, { useCallback, useEffect, useState } from 'react';
 
-import { createIntent } from '@dxos/app-framework';
+import { Common, createIntent } from '@dxos/app-framework';
 import { useCapabilities, useIntentDispatcher } from '@dxos/app-framework/react';
 import { Filter, Obj, Type } from '@dxos/echo';
 import { type TypedObject } from '@dxos/echo/internal';
-import { ClientCapabilities } from '@dxos/plugin-client';
 import { useGlobalFilteredObjects } from '@dxos/plugin-search';
 import { useQuery } from '@dxos/react-client/echo';
 import { Kanban as KanbanComponent, useKanbanModel, useProjectionModel } from '@dxos/react-ui-kanban';
@@ -19,7 +18,7 @@ import { getTypenameFromQuery } from '@dxos/schema';
 import { KanbanAction } from '../types';
 
 export const KanbanContainer = ({ object }: { object: Kanban.Kanban; role: string }) => {
-  const schemas = useCapabilities(ClientCapabilities.Schema);
+  const schemas = useCapabilities(Common.Capability.Schema);
   const [cardSchema, setCardSchema] = useState<TypedObject<any, any>>();
   const db = Obj.getDatabase(object);
   const { dispatchPromise: dispatch } = useIntentDispatcher();

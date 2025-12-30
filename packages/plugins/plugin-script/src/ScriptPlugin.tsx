@@ -2,10 +2,9 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Capabilities, Events, contributes, createIntent, defineModule, definePlugin } from '@dxos/app-framework';
+import { Common, Plugin, createIntent } from '@dxos/app-framework';
 import { Ref } from '@dxos/echo';
 import { Script } from '@dxos/functions';
-import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
 import { type CreateObjectIntent } from '@dxos/plugin-space/types';
 
 import {
@@ -21,27 +20,19 @@ import { meta } from './meta';
 import { translations } from './translations';
 import { Notebook, ScriptAction } from './types';
 
-export const ScriptPlugin = definePlugin(meta, () => [
-  defineModule({
-    id: `${meta.id}/module/settings`,
-    activatesOn: Events.SetupSettings,
+export const ScriptPlugin = Plugin.define(meta).pipe(
+  Plugin.addModule({
+    activatesOn: Common.ActivationEvent.SetupSettings,
     activate: ScriptSettings,
   }),
-  defineModule({
-    id: `${meta.id}/module/compiler`,
+  Plugin.addModule({
     activatesOn: ScriptEvents.SetupCompiler,
     activate: Compiler,
   }),
-  defineModule({
-    id: `${meta.id}/module/translations`,
-    activatesOn: Events.SetupTranslations,
-    activate: () => contributes(Capabilities.Translations, translations),
-  }),
-  defineModule({
-    id: `${meta.id}/module/metadata`,
-    activatesOn: Events.SetupMetadata,
-    activate: () => [
-      contributes(Capabilities.Metadata, {
+  Common.Plugin.addTranslationsModule({ translations }),
+  Common.Plugin.addMetadataModule({
+    metadata: [
+      {
         id: Script.Script.typename,
         metadata: {
           icon: 'ph--code--regular',
@@ -53,8 +44,8 @@ export const ScriptPlugin = definePlugin(meta, () => [
             createIntent(ScriptAction.CreateScript, { ...props, db: options.db })) satisfies CreateObjectIntent,
           addToCollectionOnCreate: true,
         },
-      }),
-      contributes(Capabilities.Metadata, {
+      },
+      {
         id: Notebook.Notebook.typename,
         metadata: {
           icon: 'ph--notebook--regular',
@@ -64,33 +55,13 @@ export const ScriptPlugin = definePlugin(meta, () => [
             createIntent(ScriptAction.CreateNotebook, { ...props, db: options.db })) satisfies CreateObjectIntent,
           addToCollectionOnCreate: true,
         },
-      }),
+      },
     ],
   }),
-  defineModule({
-    id: `${meta.id}/module/app-graph-builder`,
-    activatesOn: Events.SetupAppGraph,
-    activate: AppGraphBuilder,
-  }),
-  defineModule({
-    id: `${meta.id}/module/schema`,
-    activatesOn: ClientEvents.SetupSchema,
-    activate: () => contributes(ClientCapabilities.Schema, [Script.Script]),
-  }),
-
-  defineModule({
-    id: `${meta.id}/module/react-surface`,
-    activatesOn: Events.SetupReactSurface,
-    activate: ReactSurface,
-  }),
-  defineModule({
-    id: `${meta.id}/module/intent-resolver`,
-    activatesOn: Events.SetupIntentResolver,
-    activate: IntentResolver,
-  }),
-  defineModule({
-    id: `${meta.id}/module/blueprint`,
-    activatesOn: Events.SetupArtifactDefinition,
-    activate: BlueprintDefinition,
-  }),
-]);
+  Common.Plugin.addAppGraphModule({ activate: AppGraphBuilder }),
+  Common.Plugin.addSchemaModule({ schema: [Script.Script] }),
+  Common.Plugin.addSurfaceModule({ activate: ReactSurface }),
+  Common.Plugin.addIntentResolverModule({ activate: IntentResolver }),
+  Common.Plugin.addBlueprintDefinitionModule({ activate: BlueprintDefinition }),
+  Plugin.make,
+);

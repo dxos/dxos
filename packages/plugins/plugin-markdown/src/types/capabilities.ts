@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { defineCapability } from '@dxos/app-framework';
+import { Capability } from '@dxos/app-framework';
 import { type EditorStateStore, type EditorViewMode } from '@dxos/ui-editor';
 
 import { meta } from '../meta';
@@ -10,7 +10,7 @@ import { meta } from '../meta';
 import { type MarkdownExtensionProvider, type MarkdownPluginState } from './types';
 
 export namespace MarkdownCapabilities {
-  export const State = defineCapability<{
+  export const State = Capability.make<{
     state: MarkdownPluginState;
     editorState: EditorStateStore;
     getViewMode: (id: string) => EditorViewMode;
@@ -19,5 +19,5 @@ export namespace MarkdownCapabilities {
   }>(`${meta.id}/capability/state`);
 
   // TODO(burdon): Move to ./types (external API)?
-  export const Extensions = defineCapability<MarkdownExtensionProvider[]>(`${meta.id}/capability/extensions`);
+  export const Extensions = Capability.make<MarkdownExtensionProvider[]>(`${meta.id}/capability/extensions`);
 }

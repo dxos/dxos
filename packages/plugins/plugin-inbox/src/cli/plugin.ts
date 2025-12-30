@@ -2,8 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Capabilities, Events, contributes, createIntent, defineModule, definePlugin, lazy } from '@dxos/app-framework';
-import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
+import { Capability, Common, Plugin, createIntent } from '@dxos/app-framework';
 import { type CreateObjectIntent } from '@dxos/plugin-space/types';
 import { Event, Message } from '@dxos/types';
 
@@ -11,38 +10,32 @@ import { meta } from '../meta';
 import { Calendar, InboxAction, Mailbox } from '../types';
 
 // TODO(wittjosiah): Factor out shared modules.
-export const InboxPlugin = definePlugin(meta, () => [
-  defineModule({
-    id: `${meta.id}/module/schema`,
-    activatesOn: ClientEvents.SetupSchema,
-    activate: () =>
-      contributes(ClientCapabilities.Schema, [Calendar.Calendar, Event.Event, Mailbox.Mailbox, Message.Message]),
+export const InboxPlugin = Plugin.define(meta).pipe(
+  Common.Plugin.addSchemaModule({
+    schema: [Calendar.Calendar, Event.Event, Mailbox.Mailbox, Message.Message],
   }),
-  defineModule({
-    id: `${meta.id}/module/metadata`,
-    activatesOn: Events.SetupMetadata,
-    activate: () => [
-      contributes(Capabilities.Metadata, {
+  Common.Plugin.addMetadataModule({
+    metadata: [
+      {
         id: Mailbox.Mailbox.typename,
         metadata: {
           createObjectIntent: ((_, options) =>
             createIntent(InboxAction.CreateMailbox, { db: options.db })) satisfies CreateObjectIntent,
           addToCollectionOnCreate: true,
         },
-      }),
-      contributes(Capabilities.Metadata, {
+      },
+      {
         id: Calendar.Calendar.typename,
         metadata: {
           createObjectIntent: ((_, options) =>
             createIntent(InboxAction.CreateCalendar, { db: options.db })) satisfies CreateObjectIntent,
           addToCollectionOnCreate: true,
         },
-      }),
+      },
     ],
   }),
-  defineModule({
-    id: `${meta.id}/module/intent-resolver`,
-    activatesOn: Events.SetupIntentResolver,
-    activate: lazy(() => import('../capabilities/intent-resolver')),
+  Common.Plugin.addIntentResolverModule({
+    activate: Capability.lazy('IntentResolver', () => import('../capabilities/intent-resolver/intent-resolver')),
   }),
-]);
+  Plugin.make,
+);

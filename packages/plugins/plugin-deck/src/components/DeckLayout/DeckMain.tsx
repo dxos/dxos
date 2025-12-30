@@ -5,16 +5,16 @@
 import { untracked } from '@preact/signals-core';
 import React, { Fragment, type UIEvent, useCallback, useEffect, useMemo, useRef } from 'react';
 
-import { Capabilities, LayoutAction, createIntent } from '@dxos/app-framework';
+import { Common, createIntent } from '@dxos/app-framework';
 import { useCapability, useIntentDispatcher, usePluginManager } from '@dxos/app-framework/react';
 import { AttentionCapabilities } from '@dxos/plugin-attention';
 import { Main, type MainProps, useMediaQuery, useOnTransition } from '@dxos/react-ui';
 import { DEFAULT_HORIZONTAL_SIZE, Stack, StackContext } from '@dxos/react-ui-stack';
 import { mainPaddingTransitions, mx } from '@dxos/ui-theme';
 
-import { DeckCapabilities } from '../../capabilities';
 import { useBreakpoints, useHoistStatusbar } from '../../hooks';
 import { meta } from '../../meta';
+import { DeckCapabilities } from '../../types';
 import { type DeckSettingsProps, getMode } from '../../types';
 import { calculateOverscroll, layoutAppliesTopbar } from '../../util';
 import { fixedComplementarySidebarToggleStyles, fixedSidebarToggleStyles } from '../fragments';
@@ -27,7 +27,7 @@ import { Topbar } from './Topbar';
 
 export const DeckMain = () => {
   const { dispatchPromise: dispatch } = useIntentDispatcher();
-  const settings = useCapability(Capabilities.SettingsStore).getStore<DeckSettingsProps>(meta.id)?.value;
+  const settings = useCapability(Common.Capability.SettingsStore).getStore<DeckSettingsProps>(meta.id)?.value;
   const context = useCapability(DeckCapabilities.MutableDeckState);
   const { sidebarState, complementarySidebarState, complementarySidebarPanel, deck } = context;
   const { active, activeCompanions, fullscreen, solo, plankSizing } = deck;
@@ -69,10 +69,14 @@ export const DeckMain = () => {
 
       shouldRevert.current = true;
       void dispatch(
-        createIntent(LayoutAction.SetLayoutMode, { part: 'mode', subject: attended[0], options: { mode: 'solo' } }),
+        createIntent(Common.LayoutAction.SetLayoutMode, {
+          part: 'mode',
+          subject: attended[0],
+          options: { mode: 'solo' },
+        }),
       );
     } else if (isNotMobile && getMode(deck) === 'solo' && shouldRevert.current) {
-      void dispatch(createIntent(LayoutAction.SetLayoutMode, { part: 'mode', options: { revert: true } }));
+      void dispatch(createIntent(Common.LayoutAction.SetLayoutMode, { part: 'mode', options: { revert: true } }));
     }
   }, [isNotMobile, deck, dispatch]);
 
@@ -81,7 +85,11 @@ export const DeckMain = () => {
   useEffect(() => {
     if (!settings?.enableDeck && layoutMode === 'deck') {
       void dispatch(
-        createIntent(LayoutAction.SetLayoutMode, { part: 'mode', subject: active[0], options: { mode: 'solo' } }),
+        createIntent(Common.LayoutAction.SetLayoutMode, {
+          part: 'mode',
+          subject: active[0],
+          options: { mode: 'solo' },
+        }),
       );
     }
   }, [settings?.enableDeck, dispatch, active, layoutMode]);

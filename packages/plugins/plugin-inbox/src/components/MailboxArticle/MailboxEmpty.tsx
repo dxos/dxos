@@ -4,7 +4,7 @@
 
 import React, { useCallback } from 'react';
 
-import { LayoutAction, createIntent } from '@dxos/app-framework';
+import { Common, createIntent } from '@dxos/app-framework';
 import { useIntentDispatcher } from '@dxos/app-framework/react';
 import { Obj } from '@dxos/echo';
 import { ATTENDABLE_PATH_SEPARATOR } from '@dxos/plugin-deck/types';
@@ -24,7 +24,7 @@ export const MailboxEmpty = ({ mailbox }: { mailbox: Mailbox.Mailbox }) => {
   const openSpaceSettings = useCallback(() => {
     if (db) {
       void dispatch(
-        createIntent(LayoutAction.Open, {
+        createIntent(Common.LayoutAction.Open, {
           part: 'main',
           subject: [`integrations-settings${ATTENDABLE_PATH_SEPARATOR}${db.spaceId}`],
           options: {

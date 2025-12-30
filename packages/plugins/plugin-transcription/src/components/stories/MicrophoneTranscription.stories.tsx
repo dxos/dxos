@@ -6,7 +6,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import type * as Schema from 'effect/Schema';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
-import { Events, IntentPlugin, SettingsPlugin } from '@dxos/app-framework';
+import { Common, IntentPlugin, SettingsPlugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import {
   type ExtractionFunction,
@@ -233,7 +233,7 @@ const meta = {
         TranscriptionPlugin(),
         StorybookLayoutPlugin({}),
       ],
-      fireEvents: [Events.SetupAppGraph],
+      fireEvents: [Common.ActivationEvent.SetupAppGraph],
     }),
   ],
 } satisfies Meta<typeof DefaultStory>;

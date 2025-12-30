@@ -4,7 +4,7 @@
 
 import React, { useCallback, useMemo } from 'react';
 
-import { Capabilities, CollaborationActions, LayoutAction, createIntent } from '@dxos/app-framework';
+import { Common, createIntent } from '@dxos/app-framework';
 import { useCapabilities, useCapability, useIntentDispatcher } from '@dxos/app-framework/react';
 import { Filter, Obj, Query, Relation } from '@dxos/echo';
 import { Ref, useQuery } from '@dxos/react-client/echo';
@@ -16,9 +16,9 @@ import { Tabs } from '@dxos/react-ui-tabs';
 import { AnchoredTo, Thread } from '@dxos/types';
 import { mx } from '@dxos/ui-theme';
 
-import { ThreadCapabilities } from '../capabilities';
 import { CommentsContainer, type CommentsContainerProps } from '../components';
 import { meta } from '../meta';
+import { ThreadCapabilities } from '../types';
 import { ThreadAction } from '../types';
 
 export const ThreadCompanion = ({ subject }: { subject: any }) => {
@@ -38,7 +38,7 @@ export const ThreadCompanion = ({ subject }: { subject: any }) => {
     [viewState],
   );
 
-  const anchorSorts = useCapabilities(Capabilities.AnchorSort);
+  const anchorSorts = useCapabilities(Common.Capability.AnchorSort);
   const sort = useMemo(
     () => anchorSorts.find(({ key }) => key === Obj.getTypename(subject))?.sort,
     [anchorSorts, subject],
@@ -65,7 +65,7 @@ export const ThreadCompanion = ({ subject }: { subject: any }) => {
         //  The layout doesn't know about threads and this working depends on other plugins conditionally handling it.
         //  This may be overloading this intent or highjacking its intended purpose.
         void dispatch(
-          createIntent(LayoutAction.ScrollIntoView, {
+          createIntent(Common.LayoutAction.ScrollIntoView, {
             part: 'current',
             subject: Obj.getDXN(subject).toString(),
             options: {
@@ -134,7 +134,7 @@ export const ThreadCompanion = ({ subject }: { subject: any }) => {
       }
 
       await dispatch(
-        createIntent(CollaborationActions.AcceptProposal, {
+        createIntent(Common.CollaborationActions.AcceptProposal, {
           subject,
           anchor: anchor.anchor,
           proposal,

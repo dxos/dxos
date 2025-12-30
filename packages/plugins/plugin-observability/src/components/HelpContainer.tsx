@@ -5,7 +5,7 @@
 import * as Function from 'effect/Function';
 import React, { useCallback } from 'react';
 
-import { LayoutAction, chain, createIntent } from '@dxos/app-framework';
+import { Common, chain, createIntent } from '@dxos/app-framework';
 import { useIntentDispatcher } from '@dxos/app-framework/react';
 
 import { meta } from '../meta';
@@ -21,8 +21,8 @@ export const HelpContainer = () => {
       dispatch(
         Function.pipe(
           createIntent(ObservabilityAction.CaptureUserFeedback, values),
-          chain(LayoutAction.UpdateComplementary, { part: 'complementary', options: { state: 'collapsed' } }),
-          chain(LayoutAction.AddToast, {
+          chain(Common.LayoutAction.UpdateComplementary, { part: 'complementary', options: { state: 'collapsed' } }),
+          chain(Common.LayoutAction.AddToast, {
             part: 'toast',
             subject: {
               id: `${meta.id}/feedback-success`,

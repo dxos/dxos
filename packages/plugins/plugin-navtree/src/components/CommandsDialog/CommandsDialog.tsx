@@ -4,7 +4,7 @@
 
 import React, { forwardRef, useMemo, useState } from 'react';
 
-import { LayoutAction, createIntent } from '@dxos/app-framework';
+import { Common, createIntent } from '@dxos/app-framework';
 import { useAppGraph, useIntentDispatcher } from '@dxos/app-framework/react';
 import { Keyboard, keySymbols } from '@dxos/keyboard';
 import { Graph, Node } from '@dxos/plugin-graph';
@@ -95,7 +95,7 @@ export const CommandsDialogContent = forwardRef<HTMLDivElement, CommandsDialogCo
                     }
 
                     void dispatch(
-                      createIntent(LayoutAction.UpdateDialog, {
+                      createIntent(Common.LayoutAction.UpdateDialog, {
                         part: 'dialog',
                         options: { state: false },
                       }),

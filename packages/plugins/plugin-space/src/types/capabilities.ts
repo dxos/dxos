@@ -4,7 +4,7 @@
 
 import type * as Schema from 'effect/Schema';
 
-import { type AnyIntentChain, type Label, defineCapability } from '@dxos/app-framework';
+import { type AnyIntentChain, Capability, type Label } from '@dxos/app-framework';
 import { type Space } from '@dxos/client/echo';
 import { type Database } from '@dxos/echo';
 import { type Collection } from '@dxos/schema';
@@ -15,18 +15,18 @@ import { meta } from '../meta';
 import { type PluginState } from './types';
 
 export namespace SpaceCapabilities {
-  export const State = defineCapability<DeepReadonly<PluginState>>(`${meta.id}/capability/state`);
-  export const MutableState = defineCapability<PluginState>(`${meta.id}/capability/state`);
+  export const State = Capability.make<DeepReadonly<PluginState>>(`${meta.id}/capability/state`);
+  export const MutableState = Capability.make<PluginState>(`${meta.id}/capability/state`);
 
   export type SettingsSection = { id: string; label: Label; position?: Position };
-  export const SettingsSection = defineCapability<SettingsSection>(`${meta.id}/capability/settings-section`);
+  export const SettingsSection = Capability.make<SettingsSection>(`${meta.id}/capability/settings-section`);
 
   export type OnCreateSpace = (params: {
     space: Space;
     isDefault: boolean;
     rootCollection: Collection.Collection;
   }) => AnyIntentChain;
-  export const OnCreateSpace = defineCapability<OnCreateSpace>(`${meta.id}/capability/on-space-created`);
+  export const OnCreateSpace = Capability.make<OnCreateSpace>(`${meta.id}/capability/on-space-created`);
 
   export type OnSchemaAdded = (params: {
     db: Database.Database;
@@ -34,9 +34,9 @@ export namespace SpaceCapabilities {
     // TODO(wittjosiah): This is leaky.
     show?: boolean;
   }) => AnyIntentChain;
-  export const OnSchemaAdded = defineCapability<OnSchemaAdded>(`${meta.id}/capability/on-schema-added`);
+  export const OnSchemaAdded = Capability.make<OnSchemaAdded>(`${meta.id}/capability/on-schema-added`);
 
   // TODO(wittjosiah): Replace with migrations, this is not a sustainable solution.
   export type HandleRepair = (params: { space: Space; isDefault: boolean }) => Promise<void>;
-  export const Repair = defineCapability<HandleRepair>(`${meta.id}/capability/repair`);
+  export const Repair = Capability.make<HandleRepair>(`${meta.id}/capability/repair`);
 }

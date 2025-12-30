@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type PluginMeta } from '@dxos/app-framework';
+import { type Plugin } from '@dxos/app-framework';
 import { trim } from '@dxos/util';
 
 // TODO(wittjosiah): Deck does not currently support `/` in ids.
@@ -11,7 +11,7 @@ import { trim } from '@dxos/util';
 export const REGISTRY_ID = '!dxos:plugin-registry';
 export const REGISTRY_KEY = 'plugin-registry';
 
-export const meta: PluginMeta = {
+export const meta: Plugin.Meta = {
   id: 'dxos.org/plugin/registry',
   name: 'Plugins',
   description: trim`

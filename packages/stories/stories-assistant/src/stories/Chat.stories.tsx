@@ -8,7 +8,7 @@ import React, { type FC, useCallback } from 'react';
 
 import { ToolId } from '@dxos/ai';
 import { EXA_API_KEY } from '@dxos/ai/testing';
-import { Capabilities } from '@dxos/app-framework';
+import { Common } from '@dxos/app-framework';
 import { Surface, useCapabilities } from '@dxos/app-framework/react';
 import { AiContextBinder } from '@dxos/assistant';
 import { Agent, LinearBlueprint, ResearchBlueprint, ResearchDataTypes, ResearchGraph } from '@dxos/assistant-toolkit';
@@ -97,7 +97,7 @@ type StoryProps = {
 };
 
 const DefaultStory = ({ modules, showContext, blueprints = [] }: StoryProps) => {
-  const blueprintsDefinitions = useCapabilities(Capabilities.BlueprintDefinition);
+  const blueprintsDefinitions = useCapabilities(Common.Capability.BlueprintDefinition);
 
   const space = useSpace();
   useAsyncEffect(async () => {

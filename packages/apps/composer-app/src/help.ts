@@ -2,14 +2,18 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Capabilities, LayoutAction, type PluginContext, createIntent } from '@dxos/app-framework';
+import { type Capability, Common, createIntent } from '@dxos/app-framework';
 import { sleep } from '@dxos/async';
 import { type Step } from '@dxos/plugin-help';
 
-const ensureSidebar: Step['before'] = async (context: PluginContext) => {
-  const { dispatchPromise: dispatch } = context.getCapability(Capabilities.IntentDispatcher);
+const ensureSidebar: Step['before'] = async (context: Capability.PluginContext) => {
+  const { dispatchPromise: dispatch } = context.getCapability(Common.Capability.IntentDispatcher);
   await dispatch(
-    createIntent(LayoutAction.UpdateSidebar, { part: 'sidebar', subject: 'sidebar', options: { state: 'expanded' } }),
+    createIntent(Common.LayoutAction.UpdateSidebar, {
+      part: 'sidebar',
+      subject: 'sidebar',
+      options: { state: 'expanded' },
+    }),
   );
   return await sleep(200);
 };

@@ -5,7 +5,7 @@
 import * as Function from 'effect/Function';
 import React, { forwardRef, useCallback, useMemo } from 'react';
 
-import { LayoutAction, chain, createIntent } from '@dxos/app-framework';
+import { Common, chain, createIntent } from '@dxos/app-framework';
 import { useIntentDispatcher } from '@dxos/app-framework/react';
 import { Obj } from '@dxos/echo';
 import { type CardPreviewProps } from '@dxos/plugin-preview';
@@ -31,12 +31,12 @@ export const MarkdownCard = forwardRef<HTMLDivElement, MarkdownCardProps>(
     const handleNavigate = useCallback(() => {
       void dispatch(
         Function.pipe(
-          createIntent(LayoutAction.UpdatePopover, {
+          createIntent(Common.LayoutAction.UpdatePopover, {
             part: 'popover',
             subject: null,
             options: { state: false, anchorId: '' },
           }),
-          chain(LayoutAction.Open, {
+          chain(Common.LayoutAction.Open, {
             part: 'main',
             subject: [Obj.getDXN(subject).toString()],
           }),

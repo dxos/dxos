@@ -2,12 +2,13 @@
 // Copyright 2025 DXOS.org
 //
 
+import * as Effect from 'effect/Effect';
 import React, { useCallback } from 'react';
 
 import { Button } from '@dxos/react-ui';
 
-import { Capabilities, createSurface } from '../../common';
-import { contributes, defineCapabilityModule } from '../../core';
+import * as Common from '../../common';
+import { Capability } from '../../core';
 import { createIntent } from '../../plugin-intent';
 import { useIntentDispatcher } from '../../react';
 
@@ -19,13 +20,15 @@ export const Logger = () => {
   return <Button onClick={handleClick}>Log</Button>;
 };
 
-export default defineCapabilityModule(() =>
-  contributes(
-    Capabilities.ReactSurface,
-    createSurface({
-      id: 'dxos.org/test/logger/action',
-      role: 'toolbar',
-      component: Logger,
-    }),
+export default Capability.makeModule(() =>
+  Effect.succeed(
+    Capability.contributes(
+      Common.Capability.ReactSurface,
+      Common.createSurface({
+        id: 'dxos.org/test/logger/action',
+        role: 'toolbar',
+        component: Logger,
+      }),
+    ),
   ),
 );

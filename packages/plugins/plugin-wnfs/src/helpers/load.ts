@@ -9,7 +9,7 @@ import { AccessKey, PrivateDirectory, PrivateForest, PrivateNode } from 'wnfs';
 
 import { type Space } from '@dxos/react-client/echo';
 
-import { type WnfsCapabilities } from '../capabilities';
+import { type WnfsCapabilities } from '../types';
 
 import { Rng, store } from './common';
 

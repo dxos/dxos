@@ -4,8 +4,6 @@
 
 import { useEffect, useState } from 'react';
 
-import { type AppProps } from './App';
-
 export enum LoadingState {
   Loading = 0,
   FadeIn = 1,
@@ -23,7 +21,7 @@ export enum LoadingState {
  * 2: Fade-out  - Fade out the loading animation.
  * 3: Done      - Remove the placeholder.
  */
-export const useLoading = (state: AppProps['state'], debounce = 0) => {
+export const useLoading = (ready: boolean, debounce = 0) => {
   const [stage, setStage] = useState<LoadingState>(LoadingState.Loading);
   useEffect(() => {
     if (!debounce) {
@@ -34,7 +32,7 @@ export const useLoading = (state: AppProps['state'], debounce = 0) => {
       setStage((stage) => {
         switch (stage) {
           case LoadingState.Loading: {
-            if (!state.ready) {
+            if (!ready) {
               return LoadingState.FadeIn;
             } else {
               clearInterval(i);
@@ -43,7 +41,7 @@ export const useLoading = (state: AppProps['state'], debounce = 0) => {
           }
 
           case LoadingState.FadeIn: {
-            if (state.ready) {
+            if (ready) {
               return LoadingState.FadeOut;
             }
             break;
@@ -63,7 +61,7 @@ export const useLoading = (state: AppProps['state'], debounce = 0) => {
   }, [debounce]);
 
   if (!debounce) {
-    return state.ready ? LoadingState.Done : LoadingState.Loading;
+    return ready ? LoadingState.Done : LoadingState.Loading;
   }
 
   return stage;
