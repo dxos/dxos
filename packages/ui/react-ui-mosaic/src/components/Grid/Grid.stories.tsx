@@ -7,11 +7,13 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Schema from 'effect/Schema';
 import React, { useMemo, useState } from 'react';
 
+import { withPluginManager } from '@dxos/app-framework/testing';
 import { Obj, Ref, Type } from '@dxos/echo';
 import { createDocAccessor, createObject } from '@dxos/echo-db';
+import { PreviewPlugin } from '@dxos/plugin-preview';
+import { ClientPlugin, StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
 import { faker } from '@dxos/random';
-import { useQuery } from '@dxos/react-client/echo';
-import { useClientStory, withClientProvider } from '@dxos/react-client/testing';
+import { useQuery, useSpaces } from '@dxos/react-client/echo';
 import { useThemeContext } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { QueryEditor, translations, useQueryBuilder } from '@dxos/react-ui-components';
@@ -31,9 +33,8 @@ import { get, isTruthy, range } from '@dxos/util';
 const generator = faker as any as ValueGenerator;
 
 import { type DragEventHandler } from '../../hooks';
-import { Mosaic } from '../Mosaic';
+import { Mosaic, dropHandler } from '../Mosaic';
 
-import { dropHandler } from './extension';
 import { Grid, type GridCellProps } from './Grid';
 
 faker.seed(1);
@@ -109,7 +110,7 @@ const DebugCell: GridCellProps['Cell'] = ({ object }) => {
 };
 
 const DefaultStory = () => {
-  const { space } = useClientStory();
+  const [space] = useSpaces();
   const { themeMode } = useThemeContext();
   const extensions = useMemo(
     () => [
@@ -257,19 +258,42 @@ const meta = {
   decorators: [
     withTheme,
     withLayout({ layout: 'fullscreen' }),
-    withClientProvider({
-      createIdentity: true,
-      createSpace: true,
-      types: [GridData, Organization.Organization, Person.Person, Project.Project],
-      onCreateSpace: async ({ space }) => {
-        const factory = createObjectFactory(space.db, generator);
-        await factory([
-          { type: Organization.Organization, count: 20 },
-          { type: Person.Person, count: 30 },
-          { type: Project.Project, count: 10 },
-        ]);
-      },
-    }),
+    // withClientProvider({
+    //   createIdentity: true,
+    //   createSpace: true,
+    //   types: [GridData, Organization.Organization, Person.Person, Project.Project],
+    //   onCreateSpace: async ({ space }) => {
+    //     const factory = createObjectFactory(space.db, generator);
+    //     await factory([
+    //       { type: Organization.Organization, count: 20 },
+    //       { type: Person.Person, count: 30 },
+    //       { type: Project.Project, count: 10 },
+    //     ]);
+    //   },
+    // }),
+    withPluginManager<{ title?: string; content?: string }>((context) => ({
+      plugins: [
+        ...corePlugins(),
+        ClientPlugin({
+          types: [GridData, Organization.Organization, Person.Person, Project.Project],
+          onClientInitialized: async ({ client }) => {
+            await client.halo.createIdentity();
+            await client.spaces.waitUntilReady();
+            await client.spaces.default.waitUntilReady();
+            const space = client.spaces.default;
+
+            const factory = createObjectFactory(space.db, generator);
+            await factory([
+              { type: Organization.Organization, count: 20 },
+              { type: Person.Person, count: 30 },
+              { type: Project.Project, count: 10 },
+            ]);
+          },
+        }),
+        StorybookPlugin(),
+        PreviewPlugin(),
+      ],
+    })),
   ],
   parameters: {
     layout: 'fullscreen',

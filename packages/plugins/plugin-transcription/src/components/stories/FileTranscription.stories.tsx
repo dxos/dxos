@@ -17,7 +17,7 @@ import { log } from '@dxos/log';
 import { ClientPlugin } from '@dxos/plugin-client';
 import { PreviewPlugin } from '@dxos/plugin-preview';
 import { SpacePlugin } from '@dxos/plugin-space';
-import { StorybookLayoutPlugin } from '@dxos/plugin-storybook-layout';
+import { StorybookPlugin } from '@dxos/plugin-testing';
 import { ThemePlugin } from '@dxos/plugin-theme';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { TestSchema } from '@dxos/schema/testing';
@@ -209,7 +209,7 @@ const meta = {
         SettingsPlugin(),
         PreviewPlugin(),
         TranscriptionPlugin(),
-        StorybookLayoutPlugin({}),
+        StorybookPlugin({}),
       ],
       fireEvents: [Events.SetupAppGraph],
     }),

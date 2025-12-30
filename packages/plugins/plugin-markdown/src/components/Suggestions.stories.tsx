@@ -19,7 +19,7 @@ import { ClientPlugin } from '@dxos/plugin-client';
 import { GraphPlugin } from '@dxos/plugin-graph';
 import { PreviewPlugin } from '@dxos/plugin-preview';
 import { SpacePlugin } from '@dxos/plugin-space';
-import { StorybookLayoutPlugin } from '@dxos/plugin-storybook-layout';
+import { StorybookPlugin } from '@dxos/plugin-testing';
 import { ThemePlugin } from '@dxos/plugin-theme';
 import { faker } from '@dxos/random';
 import { useQueue, useSpace } from '@dxos/react-client/echo';
@@ -177,7 +177,7 @@ const storybook: Meta<typeof DefaultStory> = {
         ThemePlugin({ tx: defaultTx }),
         MarkdownPlugin(),
         PreviewPlugin(),
-        StorybookLayoutPlugin({}),
+        StorybookPlugin({}),
       ],
     }),
   ],

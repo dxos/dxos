@@ -12,7 +12,7 @@ import { Filter } from '@dxos/echo';
 import { ClientPlugin } from '@dxos/plugin-client';
 import { PreviewPlugin } from '@dxos/plugin-preview';
 import { SpacePlugin } from '@dxos/plugin-space';
-import { StorybookLayoutPlugin } from '@dxos/plugin-storybook-layout';
+import { StorybookPlugin } from '@dxos/plugin-testing';
 import { ThemePlugin } from '@dxos/plugin-theme';
 import { useDatabase, useQuery } from '@dxos/react-client/echo';
 import { List, ListItem } from '@dxos/react-ui';
@@ -117,7 +117,7 @@ const meta = {
 
         // UI
         ThemePlugin({ tx: defaultTx }),
-        StorybookLayoutPlugin({}),
+        StorybookPlugin({}),
         PreviewPlugin(),
         InboxPlugin(),
       ],

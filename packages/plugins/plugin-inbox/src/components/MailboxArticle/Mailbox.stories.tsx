@@ -14,7 +14,7 @@ import { Obj } from '@dxos/echo';
 import { ClientPlugin } from '@dxos/plugin-client';
 import { PreviewPlugin } from '@dxos/plugin-preview';
 import { SpacePlugin } from '@dxos/plugin-space';
-import { StorybookLayoutPlugin } from '@dxos/plugin-storybook-layout';
+import { StorybookPlugin } from '@dxos/plugin-testing';
 import { ThemePlugin } from '@dxos/plugin-theme';
 import { Filter, useDatabase, useQuery } from '@dxos/react-client/echo';
 import { withTheme } from '@dxos/react-ui/testing';
@@ -100,7 +100,7 @@ export const WithCompanion: Story = {
         ThemePlugin({ tx: defaultTx }),
         PreviewPlugin(),
         InboxPlugin(),
-        StorybookLayoutPlugin({}),
+        StorybookPlugin({}),
       ],
     }),
   ],

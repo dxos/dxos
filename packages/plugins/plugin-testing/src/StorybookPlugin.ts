@@ -8,11 +8,11 @@ import { IntentResolver, type LayoutState, State } from './capabilities';
 import { Layout } from './components';
 import { meta } from './meta';
 
-export type StorybookLayoutPluginOptions = {
+export type StorybookPluginOptions = {
   initialState?: Partial<LayoutState>;
 };
 
-export const StorybookLayoutPlugin = definePlugin<StorybookLayoutPluginOptions>(meta, ({ initialState }) => [
+export const StorybookPlugin = definePlugin<StorybookPluginOptions | void>(meta, ({ initialState } = {}) => [
   defineModule({
     id: `${meta.id}/module/state`,
     activatesOn: Events.Startup,

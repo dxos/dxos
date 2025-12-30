@@ -21,7 +21,7 @@ import { withPluginManager } from '@dxos/app-framework/testing';
 import { live } from '@dxos/live-object';
 import { AttentionPlugin } from '@dxos/plugin-attention';
 import { GraphPlugin } from '@dxos/plugin-graph';
-import { StorybookLayoutPlugin } from '@dxos/plugin-storybook-layout';
+import { StorybookPlugin } from '@dxos/plugin-testing';
 import { ThemePlugin } from '@dxos/plugin-theme';
 import { faker } from '@dxos/random';
 import { IconButton, Input, Main, Toolbar } from '@dxos/react-ui';
@@ -138,7 +138,7 @@ const meta = {
         SettingsPlugin(),
         AttentionPlugin(),
         NavTreePlugin(),
-        StorybookLayoutPlugin({ initialState: { sidebarState: 'expanded' } }),
+        StorybookPlugin({ initialState: { sidebarState: 'expanded' } }),
       ],
       capabilities: (context) => [
         contributes(StoryState, live({ tab: 'space-0' })),
