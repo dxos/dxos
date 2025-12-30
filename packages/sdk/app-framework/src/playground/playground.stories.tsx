@@ -3,6 +3,7 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
+import * as Effect from 'effect/Effect';
 import React from 'react';
 
 import { withTheme } from '@dxos/react-ui/testing';
@@ -31,7 +32,7 @@ const Placeholder = () => {
 
 const DefaultStory = () => {
   const App = useApp({
-    pluginLoader: (id: string) => createNumberPlugin(id),
+    pluginLoader: (id: string) => Effect.sync(() => createNumberPlugin(id)),
     plugins,
     core,
     placeholder: Placeholder,

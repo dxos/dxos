@@ -3,6 +3,7 @@
 //
 
 import type * as Command$ from '@effect/cli/Command';
+import * as Effect from 'effect/Effect';
 
 import { type Type } from '@dxos/echo';
 
@@ -183,11 +184,12 @@ export namespace Plugin {
       activatesOn: options?.activatesOn ?? ActivationEvent.SetupTranslations,
       activatesBefore: options?.activatesBefore,
       activatesAfter: options?.activatesAfter,
-      activate: () =>
-        Capability$.contributes(
+      activate: Effect.fnUntraced(function* () {
+        return Capability$.contributes(
           Capability.Translations,
           Array.isArray(options.translations) ? options.translations : ([options.translations] as Resource[]),
-        ),
+        );
+      }),
     });
   }
 
@@ -221,10 +223,11 @@ export namespace Plugin {
       activatesOn: options.activatesOn ?? ActivationEvent.SetupMetadata,
       activatesBefore: options.activatesBefore,
       activatesAfter: options.activatesAfter,
-      activate: () => {
-        const metadataArray = Array.isArray(options.metadata) ? options.metadata : [options.metadata];
-        return metadataArray.map((m) => Capability$.contributes(Capability.Metadata, m));
-      },
+      activate: Effect.fnUntraced(function* () {
+        return (Array.isArray(options.metadata) ? options.metadata : [options.metadata]).map((m) =>
+          Capability$.contributes(Capability.Metadata, m),
+        );
+      }),
     });
   }
 
@@ -306,7 +309,9 @@ export namespace Plugin {
       activatesOn: options.activatesOn ?? ActivationEvent.SetupSchema,
       activatesBefore: options.activatesBefore,
       activatesAfter: options.activatesAfter,
-      activate: () => Capability$.contributes(Capability.Schema, options.schema),
+      activate: Effect.fnUntraced(function* () {
+        return Capability$.contributes(Capability.Schema, options.schema);
+      }),
     });
   }
 
@@ -337,7 +342,9 @@ export namespace Plugin {
       activatesOn: options.activatesOn ?? ActivationEvent.Startup,
       activatesBefore: options.activatesBefore,
       activatesAfter: options.activatesAfter,
-      activate: () => options.commands.map((cmd) => Capability$.contributes(Capability.Command, cmd)),
+      activate: Effect.fnUntraced(function* () {
+        return options.commands.map((cmd) => Capability$.contributes(Capability.Command, cmd));
+      }),
     });
   }
 }

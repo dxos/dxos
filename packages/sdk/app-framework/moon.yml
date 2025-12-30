@@ -17,7 +17,6 @@ tasks:
       - '--entryPoint=src/core/plugin-manager.ts'
       - '--entryPoint=src/react/index.ts'
       - '--entryPoint=src/testing/index.ts'
-      - '--preactSignalTracking'
   test:
     inputs:
       - .storybook/*

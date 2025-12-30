@@ -2,6 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
+import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
 import * as Common from '../../common';
@@ -30,16 +31,18 @@ export const createNumberPlugin = (id: string) => {
     Plugin.addModule({
       id: 'Main',
       activatesOn: CountEvent,
-      activate: () => Capability.contributes(Number, number),
+      activate: () => Effect.succeed(Capability.contributes(Number, number)),
     }),
     Common.Plugin.addIntentResolverModule({
       activate: () =>
-        Capability.contributes(
-          Common.Capability.IntentResolver,
-          createResolver({
-            intent: createGeneratorIntent(id),
-            resolve: () => window.alert(JSON.stringify({ number })),
-          }),
+        Effect.succeed(
+          Capability.contributes(
+            Common.Capability.IntentResolver,
+            createResolver({
+              intent: createGeneratorIntent(id),
+              resolve: () => window.alert(JSON.stringify({ number })),
+            }),
+          ),
         ),
     }),
     Plugin.make,

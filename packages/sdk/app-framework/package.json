@@ -110,10 +110,7 @@
     "@dxos/web-context": "workspace:*",
     "@dxos/web-context-react": "workspace:*",
     "@effect/ai": "catalog:",
-    "@effect/cli": "catalog:",
-    "@effect/experimental": "catalog:",
-    "@preact-signals/safe-react": "catalog:",
-    "@preact/signals-core": "catalog:"
+    "@effect/cli": "catalog:"
   },
   "devDependencies": {
     "@dxos/echo-signals": "workspace:*",

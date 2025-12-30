@@ -2,15 +2,15 @@
 // Copyright 2025 DXOS.org
 //
 
-import { effect } from '@preact/signals-core';
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, assert, describe, it } from '@effect/vitest';
+import { type Atom, Registry } from '@effect-atom/atom-react';
+import * as Effect from 'effect/Effect';
+import * as Fiber from 'effect/Fiber';
+import * as Match from 'effect/Match';
+import * as PubSub from 'effect/PubSub';
+import * as Queue from 'effect/Queue';
 
-import { Trigger } from '@dxos/async';
-import { raise } from '@dxos/debug';
-import { updateCounter } from '@dxos/echo/testing';
-import { registerSignalsRuntime } from '@dxos/echo-signals';
 import { invariant } from '@dxos/invariant';
-import { live } from '@dxos/live-object';
 
 import * as Common from '../common';
 
@@ -18,8 +18,6 @@ import * as ActivationEvent from './activation-event';
 import * as Capability from './capability';
 import * as Plugin from './plugin';
 import * as PluginManager from './plugin-manager';
-
-registerSignalsRuntime();
 
 const String = Capability.make<{ string: string }>('dxos.org/test/string');
 const Number = Capability.make<{ number: number }>('dxos.org/test/number');
@@ -30,556 +28,619 @@ const FailEvent = ActivationEvent.make('dxos.org/test/fail');
 
 const testMeta = { id: 'dxos.org/plugin/test', name: 'Test' };
 
+// TODO(wittjosiah): Factor out?
+const atomCounter = (registry: Registry.Registry, atom: Atom.Atom<any>) => {
+  let count = 0;
+  let initial = true;
+  const dispose = registry.subscribe(
+    atom,
+    () => {
+      if (initial) {
+        initial = false;
+        return;
+      }
+      count++;
+    },
+    { immediate: true },
+  );
+  return {
+    get count() {
+      return count;
+    },
+    [Symbol.dispose]: dispose,
+  };
+};
+
 describe('PluginManager', () => {
   let plugins: Plugin.Plugin[] = [];
-  const pluginLoader = (id: string) => {
+  const pluginLoader = Effect.fn(function* (id: string) {
     const plugin = plugins.find((plugin) => plugin.meta.id === id);
     invariant(plugin, `Plugin not found: ${id}`);
     return plugin;
-  };
+  });
 
   afterEach(() => {
     plugins = [];
   });
 
-  it('should be able to add and remove plugins', async () => {
-    const Test = Plugin.make(Plugin.define(testMeta));
-    const testPlugin = Test();
-    plugins = [testPlugin];
+  it.effect('should be able to add and remove plugins', () =>
+    Effect.gen(function* () {
+      const Test = Plugin.make(Plugin.define(testMeta));
+      const testPlugin = Test();
+      plugins = [testPlugin];
 
-    const manager = PluginManager.make({ pluginLoader });
-    await manager.add(testMeta.id);
-    expect(manager.plugins).toEqual([testPlugin]);
-    manager.remove(testMeta.id);
-    expect(manager.plugins).toEqual([]);
-  });
+      const manager = PluginManager.make({ pluginLoader });
+      const added = yield* manager.add(testMeta.id);
+      assert.isTrue(added);
+      assert.deepStrictEqual(manager.getPlugins(), [testPlugin]);
+      const removed = manager.remove(testMeta.id);
+      assert.isTrue(removed);
+      assert.deepStrictEqual(manager.getPlugins(), []);
+    }),
+  );
 
-  it('should support factory pattern with options', async () => {
-    type TestPluginOptions = { count: number };
-    const TestPluginFactory = Plugin.define<TestPluginOptions>(testMeta).pipe(
-      Plugin.addModule((options: TestPluginOptions) => ({
-        id: 'Hello',
-        activatesOn: Common.ActivationEvent.Startup,
-        activate: () => Capability.contributes(String, { string: `hello-${options.count}` }),
-      })),
-      Plugin.addModule({
-        id: 'World',
-        activatesOn: Common.ActivationEvent.Startup,
-        activate: () => Capability.contributes(String, { string: 'world' }),
-      }),
-      Plugin.make,
-    );
-
-    const plugin = TestPluginFactory({ count: 5 });
-    plugins = [plugin];
-
-    const manager = PluginManager.make({ plugins: [plugin], core: [], pluginLoader });
-    await manager.enable(testMeta.id);
-    await manager.activate(Common.ActivationEvent.Startup);
-    const strings = manager.context.getCapabilities(String);
-    expect(strings).toHaveLength(2);
-    expect(strings[0].string).toBe('hello-5');
-    expect(strings[1].string).toBe('world');
-  });
-
-  it('should be able to enable and disable plugins', async () => {
-    const Test = Plugin.define(testMeta).pipe(
-      Plugin.addModule({
-        id: 'Hello',
-        activatesOn: Common.ActivationEvent.Startup,
-        activate: () => Capability.contributes(String, { string: 'hello' }),
-      }),
-      Plugin.make,
-    );
-
-    const testPlugin = Test();
-    const manager = PluginManager.make({ plugins: [testPlugin], core: [], pluginLoader });
-    await manager.enable(testMeta.id);
-    expect(manager.enabled).toEqual([Test.meta.id]);
-    expect(manager.modules).toEqual([testPlugin.modules[0]]);
-    await manager.disable(testMeta.id);
-    expect(manager.enabled).toEqual([]);
-    expect(manager.modules).toEqual([]);
-  });
-
-  it('should be able to activate plugins', async () => {
-    const Test = Plugin.define(testMeta).pipe(
-      Plugin.addModule({
-        id: 'Hello',
-        activatesOn: Common.ActivationEvent.Startup,
-        activate: () => Capability.contributes(String, { string: 'hello' }),
-      }),
-      Plugin.make,
-    );
-
-    const testPlugin = Test();
-    const manager = PluginManager.make({ plugins: [testPlugin], enabled: [Test.meta.id], pluginLoader });
-    expect(manager.plugins).toEqual([testPlugin]);
-    expect(manager.enabled).toEqual([Test.meta.id]);
-    expect(manager.modules).toEqual([testPlugin.modules[0]]);
-    expect(manager.active).toEqual([]);
-    expect(manager.eventsFired).toEqual([]);
-    await manager.activate(Common.ActivationEvent.Startup);
-    expect(manager.active).toEqual([testPlugin.modules[0].id]);
-    expect(manager.eventsFired).toEqual([Common.ActivationEvent.Startup.id]);
-  });
-
-  it('should propagate errors thrown by module activate callbacks', async () => {
-    plugins = [
-      Plugin.define(testMeta).pipe(
+  it.effect('should support factory pattern with options', () =>
+    Effect.gen(function* () {
+      type TestPluginOptions = { count: number };
+      const TestPluginFactory = Plugin.define<TestPluginOptions>(testMeta).pipe(
+        Plugin.addModule((options: TestPluginOptions) => ({
+          id: 'Hello',
+          activatesOn: Common.ActivationEvent.Startup,
+          activate: () => Effect.succeed(Capability.contributes(String, { string: `hello-${options.count}` })),
+        })),
         Plugin.addModule({
-          activatesOn: FailEvent,
-          id: 'Fail',
-          activate: async () => raise(new Error('test')),
+          id: 'World',
+          activatesOn: Common.ActivationEvent.Startup,
+          activate: () => Effect.succeed(Capability.contributes(String, { string: 'world' })),
         }),
         Plugin.make,
-      )(),
-    ];
+      );
 
-    const manager = PluginManager.make({ pluginLoader });
-    await manager.add(testMeta.id);
-    await expect(() => manager.activate(FailEvent)).rejects.toThrow('test');
-  });
+      const plugin = TestPluginFactory({ count: 5 });
+      plugins = [plugin];
 
-  it('should fire activation events', async () => {
-    plugins = [
-      Plugin.define(testMeta).pipe(
+      const manager = PluginManager.make({ plugins: [plugin], core: [], pluginLoader });
+      yield* manager.enable(testMeta.id);
+      yield* manager.activate(Common.ActivationEvent.Startup);
+      const strings = manager.context.getCapabilities(String);
+      assert.strictEqual(strings.length, 2);
+      assert.strictEqual(strings[0].string, 'hello-5');
+      assert.strictEqual(strings[1].string, 'world');
+    }),
+  );
+
+  it.effect('should be able to enable and disable plugins', () =>
+    Effect.gen(function* () {
+      const Test = Plugin.define(testMeta).pipe(
         Plugin.addModule({
           id: 'Hello',
           activatesOn: Common.ActivationEvent.Startup,
-          activate: () => Capability.contributes(String, { string: 'hello' }),
-        }),
-        Plugin.addModule({
-          activatesOn: FailEvent,
-          id: 'Fail',
-          activate: async () => async () => raise(new Error('test')),
+          activate: () => Effect.succeed(Capability.contributes(String, { string: 'hello' })),
         }),
         Plugin.make,
-      )(),
-    ];
+      );
 
-    const manager = PluginManager.make({ pluginLoader });
-    const activating = new Trigger<boolean>();
-    const activated = new Trigger<boolean>();
-    const error = new Trigger<boolean>();
+      const testPlugin = Test();
+      const manager = PluginManager.make({ plugins: [testPlugin], core: [], pluginLoader });
+      yield* manager.enable(testMeta.id);
+      assert.deepStrictEqual(manager.getEnabled(), [Test.meta.id]);
+      assert.deepStrictEqual(manager.getModules(), [testPlugin.modules[0]]);
+      yield* manager.disable(testMeta.id);
+      assert.deepStrictEqual(manager.getEnabled(), []);
+      assert.deepStrictEqual(manager.getModules(), []);
+    }),
+  );
 
-    manager.activation.on(({ state }) => {
-      state === 'activating' && activating.wake(true);
-      state === 'activated' && activated.wake(true);
-      state === 'error' && error.wake(true);
-    });
+  it.effect('should be able to activate plugins', () =>
+    Effect.gen(function* () {
+      const Test = Plugin.define(testMeta).pipe(
+        Plugin.addModule({
+          id: 'Hello',
+          activatesOn: Common.ActivationEvent.Startup,
+          activate: () => Effect.succeed(Capability.contributes(String, { string: 'hello' })),
+        }),
+        Plugin.make,
+      );
 
-    await manager.add(testMeta.id);
-    await manager.activate(Common.ActivationEvent.Startup);
-    expect(await activating.wait()).toEqual(true);
-    expect(await activated.wait()).toEqual(true);
+      const testPlugin = Test();
+      const manager = PluginManager.make({ plugins: [testPlugin], pluginLoader });
+      yield* manager.enable(Test.meta.id);
+      assert.deepStrictEqual(manager.getPlugins(), [testPlugin]);
+      assert.deepStrictEqual(manager.getEnabled(), [Test.meta.id]);
+      assert.deepStrictEqual(manager.getModules(), [testPlugin.modules[0]]);
+      assert.deepStrictEqual(manager.getActive(), []);
+      assert.deepStrictEqual(manager.getEventsFired(), []);
+      yield* manager.activate(Common.ActivationEvent.Startup);
+      assert.deepStrictEqual(manager.getActive(), [testPlugin.modules[0].id]);
+      assert.deepStrictEqual(manager.getEventsFired(), [Common.ActivationEvent.Startup.id]);
+    }),
+  );
 
-    activating.reset();
+  it.effect('should handle activate returning void', () =>
+    Effect.gen(function* () {
+      const Test = Plugin.define(testMeta).pipe(
+        Plugin.addModule({
+          id: 'NoCapabilities',
+          activatesOn: Common.ActivationEvent.Startup,
+          activate: Effect.fnUntraced(function* () {}),
+        }),
+        Plugin.make,
+      );
 
-    await manager.activate(FailEvent).catch(() => {});
-    expect(await activating.wait()).toEqual(true);
-    expect(await error.wait()).toEqual(true);
-  });
+      const testPlugin = Test();
+      const manager = PluginManager.make({ plugins: [testPlugin], pluginLoader });
+      yield* manager.enable(Test.meta.id);
 
-  it('should be able to reset an activation event', async () => {
-    let count = 0;
-    const Test = Plugin.define(testMeta).pipe(
-      Plugin.addModule({
-        id: 'Hello',
-        activatesOn: Common.ActivationEvent.Startup,
-        activate: () => {
-          count++;
-          return Capability.contributes(String, { string: 'hello' });
-        },
-      }),
-      Plugin.make,
-    );
-    const testPlugin = Test();
-    plugins = [testPlugin];
+      const result = yield* manager.activate(Common.ActivationEvent.Startup);
+      assert.isTrue(result);
+      assert.deepStrictEqual(manager.getActive(), [testPlugin.modules[0].id]);
+      assert.strictEqual(manager.context.getCapabilities(String).length, 0);
+    }),
+  );
 
-    const manager = PluginManager.make({ pluginLoader });
+  it.effect('should propagate errors thrown by module activate callbacks', () =>
+    Effect.gen(function* () {
+      plugins = [
+        Plugin.define(testMeta).pipe(
+          Plugin.addModule({
+            activatesOn: FailEvent,
+            id: 'Fail',
+            activate: () => Effect.fail(new Error('test')),
+          }),
+          Plugin.make,
+        )(),
+      ];
 
-    {
-      await manager.add(testMeta.id);
-      const result = await manager.activate(Common.ActivationEvent.Startup);
-      expect(result).toEqual(true);
-      expect(manager.active).toEqual([testPlugin.modules[0].id]);
-      expect(count).toEqual(1);
-    }
+      const manager = PluginManager.make({ pluginLoader });
+      yield* manager.add(testMeta.id);
+      const error = yield* Effect.flip(manager.activate(FailEvent));
+      assert.strictEqual(error.message, 'test');
+    }),
+  );
 
-    {
-      const result = await manager.activate(Common.ActivationEvent.Startup);
-      expect(result).toEqual(false);
-    }
+  it.effect('should fire activation events', () =>
+    Effect.gen(function* () {
+      plugins = [
+        Plugin.define(testMeta).pipe(
+          Plugin.addModule({
+            id: 'Hello',
+            activatesOn: Common.ActivationEvent.Startup,
+            activate: () => Effect.succeed(Capability.contributes(String, { string: 'hello' })),
+          }),
+          Plugin.addModule({
+            activatesOn: FailEvent,
+            id: 'Fail',
+            activate: () => Effect.fail(new Error('test')),
+          }),
+          Plugin.make,
+        )(),
+      ];
 
-    {
-      const result = await manager.reset(Common.ActivationEvent.Startup);
-      expect(result).toEqual(true);
-      expect(count).toEqual(2);
-    }
-  });
+      const manager = PluginManager.make({ pluginLoader });
+      const activating = yield* Effect.makeLatch(false);
+      const activated = yield* Effect.makeLatch(false);
+      const error = yield* Effect.makeLatch(false);
 
-  it('should not fire an unknown event', async () => {
-    const manager = PluginManager.make({ pluginLoader });
-    const UnknownEvent = ActivationEvent.make('unknown');
-    expect(await manager.activate(UnknownEvent)).toEqual(false);
-  });
+      const activationFiber = PubSub.subscribe(manager.activation).pipe(
+        Effect.flatMap((queue) =>
+          Queue.take(queue).pipe(
+            Effect.flatMap(({ state }) =>
+              Match.value(state).pipe(
+                Match.when('activating', () => activating.open),
+                Match.when('activated', () => activated.open),
+                Match.when('error', () => error.open),
+                Match.orElse(() => Effect.succeed(undefined)),
+              ),
+            ),
+            Effect.forever,
+          ),
+        ),
+        Effect.scoped,
+        Effect.runFork,
+      );
 
-  it('should be able to fire custom activation events', async () => {
-    const Plugin1 = Plugin.define({ id: 'dxos.org/test/plugin-1', name: 'Plugin 1' }).pipe(
-      Plugin.addModule({
-        activatesOn: CountEvent,
-        id: 'Plugin1',
-        activate: () => [Capability.contributes(Number, { number: 1 })],
-      }),
-      Plugin.make,
-    );
-    const Plugin2 = Plugin.define({ id: 'dxos.org/test/plugin-2', name: 'Plugin 2' }).pipe(
-      Plugin.addModule({
-        activatesOn: CountEvent,
-        id: 'Plugin2',
-        activate: () => [Capability.contributes(Number, { number: 2 })],
-      }),
-      Plugin.make,
-    );
-    const Plugin3 = Plugin.define({ id: 'dxos.org/test/plugin-3', name: 'Plugin 3' }).pipe(
-      Plugin.addModule({
-        activatesOn: CountEvent,
-        id: 'Plugin3',
-        activate: () => [Capability.contributes(Number, { number: 3 })],
-      }),
-      Plugin.make,
-    );
-    const plugin1 = Plugin1();
-    const plugin2 = Plugin2();
-    const plugin3 = Plugin3();
-    plugins = [plugin1, plugin2, plugin3];
+      yield* manager.add(testMeta.id);
+      yield* manager.activate(Common.ActivationEvent.Startup);
+      yield* activating.await;
+      yield* activated.await;
 
-    const manager = PluginManager.make({ pluginLoader });
-    expect(manager.active).toEqual([]);
-    expect(manager.context.getCapabilities(Number)).toHaveLength(0);
+      const activating2 = yield* Effect.makeLatch(false);
+      const activationFiber2 = PubSub.subscribe(manager.activation).pipe(
+        Effect.flatMap((queue) =>
+          Queue.take(queue).pipe(
+            Effect.flatMap(({ state }) =>
+              Match.value(state).pipe(
+                Match.when('activating', () => activating2.open),
+                Match.orElse(() => Effect.succeed(undefined)),
+              ),
+            ),
+            Effect.forever,
+          ),
+        ),
+        Effect.scoped,
+        Effect.runFork,
+      );
 
-    await manager.add(Plugin1.meta.id);
-    await manager.activate(CountEvent);
-    expect(manager.active).toEqual([plugin1.modules[0].id]);
-    expect(manager.context.getCapabilities(Number)).toHaveLength(1);
+      yield* manager.activate(FailEvent).pipe(Effect.catchAll(() => Effect.succeed(false)));
+      yield* activating2.await;
+      yield* error.await;
+      yield* Fiber.interrupt(activationFiber);
+      yield* Fiber.interrupt(activationFiber2);
+    }),
+  );
 
-    await manager.add(Plugin2.meta.id);
-    await manager.activate(CountEvent);
-    expect(manager.active).toEqual([plugin1.modules[0].id, plugin2.modules[0].id]);
-    expect(manager.context.getCapabilities(Number)).toHaveLength(2);
+  it.effect('should be able to reset an activation event', () =>
+    Effect.gen(function* () {
+      let count = 0;
+      const Test = Plugin.define(testMeta).pipe(
+        Plugin.addModule({
+          id: 'Hello',
+          activatesOn: Common.ActivationEvent.Startup,
+          activate: () => {
+            count++;
+            return Effect.succeed(Capability.contributes(String, { string: 'hello' }));
+          },
+        }),
+        Plugin.make,
+      );
+      const testPlugin = Test();
+      plugins = [testPlugin];
 
-    await manager.add(Plugin3.meta.id);
-    await manager.activate(CountEvent);
-    expect(manager.active).toEqual([plugin1.modules[0].id, plugin2.modules[0].id, plugin3.modules[0].id]);
-    expect(manager.context.getCapabilities(Number)).toHaveLength(3);
-  });
+      const manager = PluginManager.make({ pluginLoader });
 
-  it('should only activate modules after all activatation events have been fired', async () => {
-    const Test = Plugin.define(testMeta).pipe(
-      Plugin.addModule({
-        activatesOn: ActivationEvent.allOf(Common.ActivationEvent.Startup, CountEvent),
-        id: 'Hello',
-        activate: () => {
-          return Capability.contributes(String, { string: 'hello' });
-        },
-      }),
-      Plugin.make,
-    );
-    const testPlugin = Test();
-    plugins = [testPlugin];
+      {
+        yield* manager.add(testMeta.id);
+        const result = yield* manager.activate(Common.ActivationEvent.Startup);
+        assert.isTrue(result);
+        assert.deepStrictEqual(manager.getActive(), [testPlugin.modules[0].id]);
+        assert.strictEqual(count, 1);
+      }
 
-    const manager = PluginManager.make({ pluginLoader });
-    expect(manager.active).toEqual([]);
-    expect(manager.context.getCapabilities(String)).toHaveLength(0);
+      {
+        const result = yield* manager.activate(Common.ActivationEvent.Startup);
+        assert.isFalse(result);
+      }
 
-    await manager.add(testMeta.id);
-    await manager.activate(Common.ActivationEvent.Startup);
-    expect(manager.active).toEqual([]);
-    expect(manager.context.getCapabilities(String)).toHaveLength(0);
+      {
+        const result = yield* manager.reset(Common.ActivationEvent.Startup);
+        assert.isTrue(result);
+        assert.strictEqual(count, 2);
+      }
+    }),
+  );
 
-    await manager.activate(CountEvent);
-    expect(manager.active).toEqual([testPlugin.modules[0].id]);
-    expect(manager.context.getCapabilities(String)).toHaveLength(1);
-  });
+  it.effect('should not fire an unknown event', () =>
+    Effect.gen(function* () {
+      const manager = PluginManager.make({ pluginLoader });
+      const UnknownEvent = ActivationEvent.make('unknown');
+      const result = yield* manager.activate(UnknownEvent);
+      assert.isFalse(result);
+    }),
+  );
 
-  it('should only activate modules once when multiple activatation events have been fired', async () => {
-    let count = 0;
-    const Test = Plugin.define(testMeta).pipe(
-      Plugin.addModule({
-        id: 'Hello',
-        activatesOn: ActivationEvent.oneOf(Common.ActivationEvent.Startup, CountEvent),
-        activate: () => {
-          count++;
-          return Capability.contributes(String, { string: 'hello' });
-        },
-      }),
-      Plugin.make,
-    );
-    const testPlugin = Test();
-    plugins = [testPlugin];
+  it.effect('should be able to fire custom activation events', () =>
+    Effect.gen(function* () {
+      const Plugin1 = Plugin.define({ id: 'dxos.org/test/plugin-1', name: 'Plugin 1' }).pipe(
+        Plugin.addModule({
+          activatesOn: CountEvent,
+          id: 'Plugin1',
+          activate: () => Effect.succeed([Capability.contributes(Number, { number: 1 })]),
+        }),
+        Plugin.make,
+      );
+      const Plugin2 = Plugin.define({ id: 'dxos.org/test/plugin-2', name: 'Plugin 2' }).pipe(
+        Plugin.addModule({
+          activatesOn: CountEvent,
+          id: 'Plugin2',
+          activate: () => Effect.succeed([Capability.contributes(Number, { number: 2 })]),
+        }),
+        Plugin.make,
+      );
+      const Plugin3 = Plugin.define({ id: 'dxos.org/test/plugin-3', name: 'Plugin 3' }).pipe(
+        Plugin.addModule({
+          activatesOn: CountEvent,
+          id: 'Plugin3',
+          activate: () => Effect.succeed([Capability.contributes(Number, { number: 3 })]),
+        }),
+        Plugin.make,
+      );
+      const plugin1 = Plugin1();
+      const plugin2 = Plugin2();
+      const plugin3 = Plugin3();
+      plugins = [plugin1, plugin2, plugin3];
 
-    const manager = PluginManager.make({ pluginLoader });
-    expect(manager.active).toEqual([]);
-    expect(manager.context.getCapabilities(String)).toHaveLength(0);
-    expect(count).toEqual(0);
+      const manager = PluginManager.make({ pluginLoader });
+      assert.deepStrictEqual(manager.getActive(), []);
+      assert.strictEqual(manager.context.getCapabilities(Number).length, 0);
 
-    await manager.add(testMeta.id);
-    await manager.activate(CountEvent);
-    expect(manager.active).toEqual([testPlugin.modules[0].id]);
-    expect(manager.context.getCapabilities(String)).toHaveLength(1);
-    expect(count).toEqual(1);
+      yield* manager.add(Plugin1.meta.id);
+      yield* manager.activate(CountEvent);
+      assert.deepStrictEqual(manager.getActive(), [plugin1.modules[0].id]);
+      assert.strictEqual(manager.context.getCapabilities(Number).length, 1);
 
-    await manager.activate(Common.ActivationEvent.Startup);
-    expect(manager.active).toEqual([testPlugin.modules[0].id]);
-    expect(manager.context.getCapabilities(String)).toHaveLength(1);
-    expect(count).toEqual(1);
-  });
+      yield* manager.add(Plugin2.meta.id);
+      yield* manager.activate(CountEvent);
+      assert.deepStrictEqual(manager.getActive(), [plugin1.modules[0].id, plugin2.modules[0].id]);
+      assert.strictEqual(manager.context.getCapabilities(Number).length, 2);
 
-  it('should be able to disable and re-enable an active plugin', async () => {
-    const state = { total: 0 };
-    const computeTotal = (context: Capability.PluginContext) => {
-      const numbers = context.getCapabilities(Number);
-      state.total = numbers.reduce((acc, n) => acc + n.number, 0);
-    };
+      yield* manager.add(Plugin3.meta.id);
+      yield* manager.activate(CountEvent);
+      assert.deepStrictEqual(manager.getActive(), [
+        plugin1.modules[0].id,
+        plugin2.modules[0].id,
+        plugin3.modules[0].id,
+      ]);
+      assert.strictEqual(manager.context.getCapabilities(Number).length, 3);
+    }),
+  );
 
-    const Count = Plugin.define({ id: 'dxos.org/test/count', name: 'Count' }).pipe(
-      Plugin.addModule({
-        id: 'Count',
-        activatesOn: Common.ActivationEvent.Startup,
-        activatesBefore: [CountEvent],
-        activate: async (context) => async () => {
-          computeTotal(context);
-          return Capability.contributes(Total, state);
-        },
-      }),
-      Plugin.make,
-    );
+  it.effect('should only activate modules after all activatation events have been fired', () =>
+    Effect.gen(function* () {
+      const Test = Plugin.define(testMeta).pipe(
+        Plugin.addModule({
+          activatesOn: ActivationEvent.allOf(Common.ActivationEvent.Startup, CountEvent),
+          id: 'Hello',
+          activate: () => {
+            return Effect.succeed(Capability.contributes(String, { string: 'hello' }));
+          },
+        }),
+        Plugin.make,
+      );
+      const testPlugin = Test();
+      plugins = [testPlugin];
 
-    const Test = Plugin.define(testMeta).pipe(
-      Plugin.addModule({
-        activatesOn: CountEvent,
-        id: 'Test1',
-        activate: () => Capability.contributes(Number, { number: 1 }),
-      }),
-      Plugin.addModule({
-        id: 'Test2',
-        activatesOn: CountEvent,
-        activate: () => Capability.contributes(Number, { number: 2 }),
-      }),
-      Plugin.addModule({
-        id: 'Test3',
-        activatesOn: CountEvent,
-        activate: () => Capability.contributes(Number, { number: 3 }),
-      }),
-      Plugin.make,
-    );
-    const countPlugin = Count();
-    const testPlugin = Test();
-    plugins = [countPlugin, testPlugin];
+      const manager = PluginManager.make({ pluginLoader });
+      assert.deepStrictEqual(manager.getActive(), []);
+      assert.strictEqual(manager.context.getCapabilities(String).length, 0);
 
-    const manager = PluginManager.make({ pluginLoader });
-    {
-      await manager.add(Test.meta.id);
-      await manager.add(Count.meta.id);
-      await manager.activate(Common.ActivationEvent.Startup);
-      expect(manager.active).toEqual([...testPlugin.modules.map((m) => m.id), countPlugin.modules[0].id]);
-      expect(manager.pendingReset).toEqual([]);
+      yield* manager.add(testMeta.id);
+      yield* manager.activate(Common.ActivationEvent.Startup);
+      assert.deepStrictEqual(manager.getActive(), []);
+      assert.strictEqual(manager.context.getCapabilities(String).length, 0);
 
-      const totals = manager.context.getCapabilities(Total);
-      expect(totals).toHaveLength(1);
-      expect(totals[0].total).toEqual(6);
-    }
+      yield* manager.activate(CountEvent);
+      assert.deepStrictEqual(manager.getActive(), [testPlugin.modules[0].id]);
+      assert.strictEqual(manager.context.getCapabilities(String).length, 1);
+    }),
+  );
 
-    {
-      await manager.disable(Test.meta.id);
-      expect(manager.active).toEqual([countPlugin.modules[0].id]);
-      expect(manager.pendingReset).toEqual([]);
+  it.effect('should only activate modules once when multiple activatation events have been fired', () =>
+    Effect.gen(function* () {
+      let count = 0;
+      const Test = Plugin.define(testMeta).pipe(
+        Plugin.addModule({
+          id: 'Hello',
+          activatesOn: ActivationEvent.oneOf(Common.ActivationEvent.Startup, CountEvent),
+          activate: () => {
+            count++;
+            return Effect.succeed(Capability.contributes(String, { string: 'hello' }));
+          },
+        }),
+        Plugin.make,
+      );
+      const testPlugin = Test();
+      plugins = [testPlugin];
 
-      const totals = manager.context.getCapabilities(Total);
-      expect(totals).toHaveLength(1);
-      // Total doesn't change because it is not reactive.
-      expect(totals[0].total).toEqual(6);
-    }
+      const manager = PluginManager.make({ pluginLoader });
+      assert.deepStrictEqual(manager.getActive(), []);
+      assert.strictEqual(manager.context.getCapabilities(String).length, 0);
+      assert.strictEqual(count, 0);
 
-    {
-      await manager.enable(Test.meta.id);
-      expect(manager.active).toEqual([countPlugin.modules[0].id, ...testPlugin.modules.map((m) => m.id)]);
-      expect(manager.pendingReset).toEqual([]);
+      yield* manager.add(testMeta.id);
+      yield* manager.activate(CountEvent);
+      assert.deepStrictEqual(manager.getActive(), [testPlugin.modules[0].id]);
+      assert.strictEqual(manager.context.getCapabilities(String).length, 1);
+      assert.strictEqual(count, 1);
 
-      const totals = manager.context.getCapabilities(Total);
-      expect(totals).toHaveLength(1);
-      expect(totals[0].total).toEqual(6);
-    }
-  });
+      yield* manager.activate(Common.ActivationEvent.Startup);
+      assert.deepStrictEqual(manager.getActive(), [testPlugin.modules[0].id]);
+      assert.strictEqual(manager.context.getCapabilities(String).length, 1);
+      assert.strictEqual(count, 1);
+    }),
+  );
 
-  it('should be able to handle live object contributions', async () => {
-    const id = 'dxos.org/test/counter';
-    const stateEvent = Common.ActivationEvent.createStateEvent(id);
+  it.effect('should be able to disable and re-enable an active plugin', () =>
+    Effect.gen(function* () {
+      const state = { total: 0 };
+      const computeTotal = (context: Capability.PluginContext) => {
+        const numbers = context.getCapabilities(Number);
+        state.total = numbers.reduce((acc, n) => acc + n.number, 0);
+      };
 
-    const Test = Plugin.define(testMeta).pipe(
-      Plugin.addModule({
-        id: 'Counter',
-        activatesOn: Common.ActivationEvent.Startup,
-        activatesAfter: [stateEvent],
-        activate: () => Capability.contributes(Number, live({ number: 1 })),
-      }),
-      Plugin.addModule({
-        id: 'Doubler',
-        activatesOn: stateEvent,
-        activate: (context) => {
-          const counter = context.getCapability(Number);
-          const state = live({ total: counter.number * 2 });
-          const unsubscribe = effect(() => {
-            state.total = counter.number * 2;
-          });
-          return Capability.contributes(Total, state, () => unsubscribe());
-        },
-      }),
-      Plugin.make,
-    );
-    const testPlugin = Test();
-    plugins = [testPlugin];
+      const Count = Plugin.define({ id: 'dxos.org/test/count', name: 'Count' }).pipe(
+        Plugin.addModule({
+          id: 'Count',
+          activatesOn: Common.ActivationEvent.Startup,
+          activatesBefore: [CountEvent],
+          activate: (context) =>
+            Effect.sync(() => {
+              computeTotal(context);
+              return Capability.contributes(Total, state);
+            }),
+        }),
+        Plugin.make,
+      );
 
-    const manager = PluginManager.make({ pluginLoader });
-    await manager.add(Test.meta.id);
-    await manager.activate(Common.ActivationEvent.Startup);
-    expect(manager.active).toEqual(testPlugin.modules.map((m) => m.id));
+      const Test = Plugin.define(testMeta).pipe(
+        Plugin.addModule({
+          activatesOn: CountEvent,
+          id: 'Test1',
+          activate: () => Effect.succeed(Capability.contributes(Number, { number: 1 })),
+        }),
+        Plugin.addModule({
+          id: 'Test2',
+          activatesOn: CountEvent,
+          activate: () => Effect.succeed(Capability.contributes(Number, { number: 2 })),
+        }),
+        Plugin.addModule({
+          id: 'Test3',
+          activatesOn: CountEvent,
+          activate: () => Effect.succeed(Capability.contributes(Number, { number: 3 })),
+        }),
+        Plugin.make,
+      );
+      const countPlugin = Count();
+      const testPlugin = Test();
+      plugins = [countPlugin, testPlugin];
 
-    const counter = manager.context.getCapability(Number);
-    const doubler = manager.context.getCapability(Total);
-    expect(counter.number).toEqual(1);
-    expect(doubler.total).toEqual(2);
+      const manager = PluginManager.make({ pluginLoader });
+      {
+        yield* manager.add(Test.meta.id);
+        yield* manager.add(Count.meta.id);
+        yield* manager.activate(Common.ActivationEvent.Startup);
+        assert.deepStrictEqual(manager.getActive(), [
+          ...testPlugin.modules.map((m) => m.id),
+          countPlugin.modules[0].id,
+        ]);
+        assert.deepStrictEqual(manager.getPendingReset(), []);
 
-    counter.number = 2;
-    expect(doubler.total).toEqual(4);
-  });
+        const totals = manager.context.getCapabilities(Total);
+        assert.strictEqual(totals.length, 1);
+        assert.strictEqual(totals[0].total, 6);
+      }
 
-  it('should be reactive', async () => {
-    const Plugin1 = Plugin.define({ id: 'dxos.org/test/plugin-1', name: 'Plugin 1' }).pipe(
-      Plugin.addModule({
-        activatesOn: CountEvent,
-        id: 'Plugin1',
-        activate: () => [Capability.contributes(Number, { number: 1 })],
-      }),
-      Plugin.make,
-    );
-    const Plugin2 = Plugin.define({ id: 'dxos.org/test/plugin-2', name: 'Plugin 2' }).pipe(
-      Plugin.addModule({
-        activatesOn: CountEvent,
-        id: 'Plugin2',
-        activate: () => [Capability.contributes(Number, { number: 2 })],
-      }),
-      Plugin.make,
-    );
-    const Plugin3 = Plugin.define({ id: 'dxos.org/test/plugin-3', name: 'Plugin 3' }).pipe(
-      Plugin.addModule({
-        activatesOn: CountEvent,
-        id: 'Plugin3',
-        activate: () => [Capability.contributes(Number, { number: 3 })],
-      }),
-      Plugin.make,
-    );
-    plugins = [Plugin1(), Plugin2(), Plugin3()];
+      {
+        yield* manager.disable(Test.meta.id);
+        assert.deepStrictEqual(manager.getActive(), [countPlugin.modules[0].id]);
+        assert.deepStrictEqual(manager.getPendingReset(), []);
 
-    const manager = PluginManager.make({ pluginLoader });
-    using pluginUpdates = updateCounter(() => {
-      const _ = manager.plugins.length;
-    });
-    using enabledUpdates = updateCounter(() => {
-      const _ = manager.enabled.length;
-    });
-    using modulesUpdates = updateCounter(() => {
-      const _ = manager.modules.length;
-    });
-    using activeUpdates = updateCounter(() => {
-      const _ = manager.active.length;
-    });
-    using eventsFiredUpdates = updateCounter(() => {
-      const _ = manager.eventsFired.length;
-    });
-    using pendingResetUpdates = updateCounter(() => {
-      const _ = manager.pendingReset.length;
-    });
-    expect(pluginUpdates.count).toEqual(0);
-    expect(enabledUpdates.count).toEqual(0);
-    expect(modulesUpdates.count).toEqual(0);
-    expect(activeUpdates.count).toEqual(0);
-    expect(eventsFiredUpdates.count).toEqual(0);
-    expect(pendingResetUpdates.count).toEqual(0);
+        const totals = manager.context.getCapabilities(Total);
+        assert.strictEqual(totals.length, 1);
+        // Total doesn't change because it is not reactive.
+        assert.strictEqual(totals[0].total, 6);
+      }
 
-    await manager.add(Plugin1.meta.id);
-    expect(pluginUpdates.count).toEqual(1);
-    expect(enabledUpdates.count).toEqual(1);
-    expect(modulesUpdates.count).toEqual(1);
-    expect(activeUpdates.count).toEqual(0);
-    expect(eventsFiredUpdates.count).toEqual(0);
-    expect(pendingResetUpdates.count).toEqual(0);
+      {
+        yield* manager.enable(Test.meta.id);
+        assert.deepStrictEqual(manager.getActive(), [
+          countPlugin.modules[0].id,
+          ...testPlugin.modules.map((m) => m.id),
+        ]);
+        assert.deepStrictEqual(manager.getPendingReset(), []);
 
-    await manager.activate(CountEvent);
-    expect(pluginUpdates.count).toEqual(1);
-    expect(enabledUpdates.count).toEqual(1);
-    expect(modulesUpdates.count).toEqual(1);
-    expect(activeUpdates.count).toEqual(1);
-    expect(eventsFiredUpdates.count).toEqual(1);
-    expect(pendingResetUpdates.count).toEqual(0);
+        const totals = manager.context.getCapabilities(Total);
+        assert.strictEqual(totals.length, 1);
+        assert.strictEqual(totals[0].total, 6);
+      }
+    }),
+  );
 
-    await manager.add(Plugin2.meta.id);
-    expect(pluginUpdates.count).toEqual(2);
-    expect(enabledUpdates.count).toEqual(2);
-    expect(modulesUpdates.count).toEqual(2);
-    expect(activeUpdates.count).toEqual(2);
-    expect(eventsFiredUpdates.count).toEqual(1);
-    expect(pendingResetUpdates.count).toEqual(2);
+  it.effect('should be reactive', () =>
+    Effect.gen(function* () {
+      const Plugin1 = Plugin.define({ id: 'dxos.org/test/plugin-1', name: 'Plugin 1' }).pipe(
+        Plugin.addModule({
+          activatesOn: CountEvent,
+          id: 'Plugin1',
+          activate: () => Effect.succeed([Capability.contributes(Number, { number: 1 })]),
+        }),
+        Plugin.make,
+      );
+      const Plugin2 = Plugin.define({ id: 'dxos.org/test/plugin-2', name: 'Plugin 2' }).pipe(
+        Plugin.addModule({
+          activatesOn: CountEvent,
+          id: 'Plugin2',
+          activate: () => Effect.succeed([Capability.contributes(Number, { number: 2 })]),
+        }),
+        Plugin.make,
+      );
+      const Plugin3 = Plugin.define({ id: 'dxos.org/test/plugin-3', name: 'Plugin 3' }).pipe(
+        Plugin.addModule({
+          activatesOn: CountEvent,
+          id: 'Plugin3',
+          activate: () => Effect.succeed([Capability.contributes(Number, { number: 3 })]),
+        }),
+        Plugin.make,
+      );
+      plugins = [Plugin1(), Plugin2(), Plugin3()];
 
-    await manager.activate(CountEvent);
-    expect(pluginUpdates.count).toEqual(2);
-    expect(enabledUpdates.count).toEqual(2);
-    expect(modulesUpdates.count).toEqual(2);
-    expect(activeUpdates.count).toEqual(2);
-    expect(eventsFiredUpdates.count).toEqual(1);
-    expect(pendingResetUpdates.count).toEqual(2);
+      const registry = Registry.make();
+      const manager = PluginManager.make({ pluginLoader, registry });
+      using pluginUpdates = atomCounter(registry, manager.plugins);
+      using enabledUpdates = atomCounter(registry, manager.enabled);
+      using modulesUpdates = atomCounter(registry, manager.modules);
+      using activeUpdates = atomCounter(registry, manager.active);
+      using eventsFiredUpdates = atomCounter(registry, manager.eventsFired);
+      using pendingResetUpdates = atomCounter(registry, manager.pendingReset);
+      assert.strictEqual(pluginUpdates.count, 0);
+      assert.strictEqual(enabledUpdates.count, 0);
+      assert.strictEqual(modulesUpdates.count, 0);
+      assert.strictEqual(activeUpdates.count, 0);
+      assert.strictEqual(eventsFiredUpdates.count, 0);
+      assert.strictEqual(pendingResetUpdates.count, 0);
 
-    await manager.add(Plugin3.meta.id);
-    expect(pluginUpdates.count).toEqual(3);
-    expect(enabledUpdates.count).toEqual(3);
-    expect(modulesUpdates.count).toEqual(3);
-    expect(activeUpdates.count).toEqual(3);
-    expect(eventsFiredUpdates.count).toEqual(1);
-    expect(pendingResetUpdates.count).toEqual(4);
+      yield* manager.add(Plugin1.meta.id);
+      assert.strictEqual(pluginUpdates.count, 1);
+      assert.strictEqual(enabledUpdates.count, 1);
+      assert.strictEqual(modulesUpdates.count, 1);
+      assert.strictEqual(activeUpdates.count, 0);
+      assert.strictEqual(eventsFiredUpdates.count, 0);
+      assert.strictEqual(pendingResetUpdates.count, 0);
 
-    await manager.reset(CountEvent);
-    expect(pluginUpdates.count).toEqual(3);
-    expect(enabledUpdates.count).toEqual(3);
-    expect(modulesUpdates.count).toEqual(3);
-    // Starts at 3, plus deactivates 3, plus activates 3.
-    expect(activeUpdates.count).toEqual(9);
-    expect(eventsFiredUpdates.count).toEqual(1);
-    expect(pendingResetUpdates.count).toEqual(4);
+      yield* manager.activate(CountEvent);
+      assert.strictEqual(pluginUpdates.count, 1);
+      assert.strictEqual(enabledUpdates.count, 1);
+      assert.strictEqual(modulesUpdates.count, 1);
+      assert.strictEqual(activeUpdates.count, 1);
+      assert.strictEqual(eventsFiredUpdates.count, 1);
+      assert.strictEqual(pendingResetUpdates.count, 0);
 
-    await manager.disable(Plugin1.meta.id);
-    expect(pluginUpdates.count).toEqual(3);
-    expect(enabledUpdates.count).toEqual(4);
-    expect(modulesUpdates.count).toEqual(4);
-    expect(activeUpdates.count).toEqual(10);
-    expect(eventsFiredUpdates.count).toEqual(1);
-    expect(pendingResetUpdates.count).toEqual(4);
+      yield* manager.add(Plugin2.meta.id);
+      assert.strictEqual(pluginUpdates.count, 2);
+      assert.strictEqual(enabledUpdates.count, 2);
+      assert.strictEqual(modulesUpdates.count, 2);
+      assert.strictEqual(activeUpdates.count, 2);
+      assert.strictEqual(eventsFiredUpdates.count, 1);
+      assert.strictEqual(pendingResetUpdates.count, 2);
 
-    await manager.remove(Plugin1.meta.id);
-    expect(pluginUpdates.count).toEqual(4);
-    expect(enabledUpdates.count).toEqual(4);
-    expect(modulesUpdates.count).toEqual(4);
-    expect(activeUpdates.count).toEqual(10);
-    expect(eventsFiredUpdates.count).toEqual(1);
-    expect(pendingResetUpdates.count).toEqual(4);
+      yield* manager.activate(CountEvent);
+      assert.strictEqual(pluginUpdates.count, 2);
+      assert.strictEqual(enabledUpdates.count, 2);
+      assert.strictEqual(modulesUpdates.count, 2);
+      assert.strictEqual(activeUpdates.count, 2);
+      assert.strictEqual(eventsFiredUpdates.count, 1);
+      assert.strictEqual(pendingResetUpdates.count, 2);
 
-    await manager.reset(CountEvent);
-    expect(pluginUpdates.count).toEqual(4);
-    expect(enabledUpdates.count).toEqual(4);
-    expect(modulesUpdates.count).toEqual(4);
-    // Starts at 10, plus deactivates 2, plus activates 2.
-    expect(activeUpdates.count).toEqual(14);
-    expect(eventsFiredUpdates.count).toEqual(1);
-    expect(pendingResetUpdates.count).toEqual(4);
-  });
+      yield* manager.add(Plugin3.meta.id);
+      assert.strictEqual(pluginUpdates.count, 3);
+      assert.strictEqual(enabledUpdates.count, 3);
+      assert.strictEqual(modulesUpdates.count, 3);
+      assert.strictEqual(activeUpdates.count, 3);
+      assert.strictEqual(eventsFiredUpdates.count, 1);
+      assert.strictEqual(pendingResetUpdates.count, 4);
+
+      yield* manager.reset(CountEvent);
+      assert.strictEqual(pluginUpdates.count, 3);
+      assert.strictEqual(enabledUpdates.count, 3);
+      assert.strictEqual(modulesUpdates.count, 3);
+      // Starts at 3, plus deactivates 3, plus activates 3.
+      assert.strictEqual(activeUpdates.count, 9);
+      assert.strictEqual(eventsFiredUpdates.count, 1);
+      assert.strictEqual(pendingResetUpdates.count, 4);
+
+      yield* manager.disable(Plugin1.meta.id);
+      assert.strictEqual(pluginUpdates.count, 3);
+      assert.strictEqual(enabledUpdates.count, 4);
+      assert.strictEqual(modulesUpdates.count, 4);
+      assert.strictEqual(activeUpdates.count, 10);
+      assert.strictEqual(eventsFiredUpdates.count, 1);
+      assert.strictEqual(pendingResetUpdates.count, 4);
+
+      manager.remove(Plugin1.meta.id);
+      assert.strictEqual(pluginUpdates.count, 4);
+      assert.strictEqual(enabledUpdates.count, 4);
+      assert.strictEqual(modulesUpdates.count, 4);
+      assert.strictEqual(activeUpdates.count, 10);
+      assert.strictEqual(eventsFiredUpdates.count, 1);
+      assert.strictEqual(pendingResetUpdates.count, 4);
+
+      yield* manager.reset(CountEvent);
+      assert.strictEqual(pluginUpdates.count, 4);
+      assert.strictEqual(enabledUpdates.count, 4);
+      assert.strictEqual(modulesUpdates.count, 4);
+      // Starts at 10, plus deactivates 2, plus activates 2.
+      assert.strictEqual(activeUpdates.count, 14);
+      assert.strictEqual(eventsFiredUpdates.count, 1);
+      assert.strictEqual(pendingResetUpdates.count, 4);
+    }),
+  );
 });

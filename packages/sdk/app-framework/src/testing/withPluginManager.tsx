@@ -3,6 +3,7 @@
 //
 
 import { type Decorator, type StoryContext } from '@storybook/react';
+import * as Effect from 'effect/Effect';
 import React, { useEffect, useMemo } from 'react';
 
 import { raise } from '@dxos/debug';
@@ -99,6 +100,10 @@ const storyMeta = {
 // No-op plugin to ensure there exists at least one plugin for the startup event.
 // This is necessary because `createApp` expects the startup event to complete before the app is ready.
 const StoryPlugin = Plugin.define(storyMeta).pipe(
-  Plugin.addModule({ id: 'Story', activatesOn: Common.ActivationEvent.Startup, activate: () => [] }),
+  Plugin.addModule({
+    id: 'Story',
+    activatesOn: Common.ActivationEvent.Startup,
+    activate: () => Effect.succeed([]),
+  }),
   Plugin.make,
 )();

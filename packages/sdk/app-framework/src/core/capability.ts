@@ -3,13 +3,11 @@
 //
 
 import { Atom, type Registry } from '@effect-atom/atom-react';
-import type * as Effect from 'effect/Effect';
+import * as Deferred from 'effect/Deferred';
+import * as Effect from 'effect/Effect';
 
-import { Trigger } from '@dxos/async';
-import { runAndForwardErrors } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { type MaybePromise } from '@dxos/util';
 
 import type * as ActivationEvent from './activation-event';
 
@@ -57,7 +55,7 @@ export type Capability<T> = {
   /**
    * Called when the capability is deactivated.
    */
-  readonly deactivate?: () => MaybePromise<void> | Effect.Effect<void, Error>;
+  readonly deactivate?: () => Effect.Effect<void, Error>;
 };
 
 export type Any = Capability<any>;
@@ -66,7 +64,7 @@ export type Any = Capability<any>;
  * Union type representing all valid return types for a capability module.
  * Supports single capabilities, arrays, and tuples of different capability types.
  */
-export type ModuleReturn = Any | Any[] | readonly Any[] | [Any, ...Any[]] | readonly [Any, ...Any[]];
+export type ModuleReturn = void | Any | Any[] | readonly Any[] | [Any, ...Any[]] | readonly [Any, ...Any[]];
 
 /**
  * Helper to define the implementation of a capability.
@@ -83,11 +81,24 @@ export const contributes = <I extends InterfaceDef<any>>(
   } satisfies Capability<I>;
 };
 
-type LoadCapability<T, U> = () => Promise<{ default: (props: T) => MaybePromise<Capability<U>> }>;
-type LoadCapabilities<T> = () => Promise<{ default: (props: T) => MaybePromise<ModuleReturn> }>;
+type LoadCapability<Props, Capabilities extends ModuleReturn = ModuleReturn> = () => Promise<{
+  default: (props: Props) => Effect.Effect<Capabilities, Error>;
+}>;
+type LoadCapabilities<Props, Capabilities extends ModuleReturn = ModuleReturn> = () => Promise<{
+  default: (props: Props) => Effect.Effect<Capabilities, Error>;
+}>;
 
-// TODO(wittjosiah): Not having the array be `any` causes type errors when using the lazy capability.
-type LazyCapability<T, U> = (props?: T) => Promise<() => Promise<Capability<U> | Any[]>>;
+type NormalizeReturn<R> = R extends readonly (infer A)[]
+  ? A[]
+  : R extends (infer A)[]
+    ? A[]
+    : R extends Any
+      ? [R]
+      : Any[];
+
+export type LazyCapability<Props = PluginContext, Capabilities extends ModuleReturn = ModuleReturn> = (
+  props: Props,
+) => Effect.Effect<NormalizeReturn<Capabilities>, Error>;
 
 /**
  * Helper to define a lazily loaded implementation of a capability.
@@ -96,15 +107,18 @@ type LazyCapability<T, U> = (props?: T) => Promise<() => Promise<Capability<U> |
  * @param loader The lazy loader function
  * @returns A lazy capability function with ModuleTag symbol attached
  */
-export const lazy = <T, U>(name: string, c: LoadCapability<T, U> | LoadCapabilities<T>): LazyCapability<T, U> => {
-  const lazyFn = async (props?: T) => {
-    const { default: getCapability } = await c();
-    return async () => {
-      const result = await getCapability(props as T);
-      // Normalize to array for runtime compatibility (handles tuples, readonly arrays, etc.)
-      return (Array.isArray(result) ? result : [result]) as Any[] | Capability<U>;
-    };
-  };
+export const lazy = <T = PluginContext, R extends ModuleReturn = ModuleReturn>(
+  name: string,
+  c: LoadCapability<T, R> | LoadCapabilities<T, R>,
+): LazyCapability<T, R> => {
+  const lazyFn: LazyCapability<T, R> = (props: T) =>
+    Effect.gen(function* () {
+      const { default: getCapability } = yield* Effect.tryPromise(() => c());
+      const result = yield* getCapability(props);
+      const normalized = Array.isArray(result) ? Array.from(result) : [result];
+      return normalized as NormalizeReturn<R>;
+    });
+
   return Object.assign(lazyFn, { [ModuleTag]: name });
 };
 
@@ -159,14 +173,9 @@ export const getModuleTag = (capability: unknown): string | undefined => {
  * });
  * ```
  */
-export const makeModule = <
-  TArgs extends any[] = [PluginContext],
-  TReturn extends MaybePromise<ModuleReturn> = MaybePromise<ModuleReturn>,
->(
-  fn: (...args: TArgs) => TReturn,
-): ((...args: TArgs) => TReturn) => {
-  return fn;
-};
+export const makeModule = <TArgs extends any[] = [PluginContext], TReturn extends ModuleReturn = ModuleReturn>(
+  fn: (...args: TArgs) => Effect.Effect<TReturn, Error>,
+): ((...args: TArgs) => Effect.Effect<TReturn, Error>) => fn;
 
 // NOTE: This is implemented as a class to prevent it from being proxied by PluginManager state.
 class CapabilityImpl<T> {
@@ -242,11 +251,7 @@ export interface PluginContext {
    * Waits for a capability to be available.
    * @returns The capability.
    */
-  waitForCapability<T>(interfaceDef: InterfaceDef<T>): Promise<T>;
-
-  activatePromise(event: ActivationEvent.ActivationEvent): Promise<boolean>;
-
-  resetPromise(event: ActivationEvent.ActivationEvent): Promise<boolean>;
+  waitForCapability<T>(interfaceDef: InterfaceDef<T>): Effect.Effect<T, Error>;
 }
 
 /**
@@ -342,28 +347,22 @@ export class PluginContextImpl implements PluginContext {
     return this._registry.get(this.capability(interfaceDef));
   }
 
-  async waitForCapability<T>(interfaceDef: InterfaceDef<T>): Promise<T> {
-    const [capability] = this.getCapabilities(interfaceDef);
-    if (capability) {
-      return capability;
-    }
-
-    const trigger = new Trigger<T>();
-    const cancel = this._registry.subscribe(this.capabilities(interfaceDef), (capabilities) => {
-      if (capabilities.length > 0) {
-        trigger.wake(capabilities[0]);
+  waitForCapability<T>(interfaceDef: InterfaceDef<T>): Effect.Effect<T, Error> {
+    return Effect.gen(this, function* () {
+      const [capability] = this.getCapabilities(interfaceDef);
+      if (capability) {
+        return capability;
       }
+
+      const deferred = yield* Deferred.make<T, Error>();
+      const cancel = this._registry.subscribe(this.capabilities(interfaceDef), (capabilities) => {
+        if (capabilities.length > 0) {
+          Effect.runSync(Deferred.succeed(deferred, capabilities[0]));
+        }
+      });
+      const result = yield* Deferred.await(deferred);
+      cancel();
+      return result;
     });
-    const result = await trigger.wait();
-    cancel();
-    return result;
-  }
-
-  async activatePromise(event: ActivationEvent.ActivationEvent): Promise<boolean> {
-    return this.activate(event).pipe(runAndForwardErrors);
-  }
-
-  async resetPromise(event: ActivationEvent.ActivationEvent): Promise<boolean> {
-    return this.reset(event).pipe(runAndForwardErrors);
   }
 }

@@ -2,9 +2,10 @@
 // Copyright 2025 DXOS.org
 //
 
-import { effect, signal } from '@preact/signals-core';
+import { Atom, useAtomValue } from '@effect-atom/atom-react';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import React, { useEffect, useState } from 'react';
+import * as Effect from 'effect/Effect';
+import React, { useEffect, useMemo, useState } from 'react';
 
 import { withTheme } from '@dxos/react-ui/testing';
 import { useWebComponentContext } from '@dxos/web-context-react';
@@ -20,20 +21,23 @@ const Counter = Capability.make<{ count: number; increment: () => void }>('examp
 
 const CountStatus = () => {
   const manager = useWebComponentContext(PluginManagerContext);
-  const [count, setCount] = useState(0);
+  const capabilitiesAtom = useMemo(
+    () => manager?.context.capabilities(Counter) ?? Atom.make<{ count: number; increment: () => void }[]>([]),
+    [manager],
+  );
+  const capabilities = useAtomValue(capabilitiesAtom);
+  const counter = (capabilities as any)[0];
+  const [count, setCount] = useState(counter?.count ?? 0);
 
   useEffect(() => {
-    if (!manager) {
+    if (!counter) {
       return;
     }
-
-    return effect(() => {
-      try {
-        const counter = manager.context.getCapability(Counter);
-        setCount(counter.count);
-      } catch (_err) {}
-    });
-  }, [manager]);
+    setCount(counter.count);
+    if ('subscribe' in counter && typeof counter.subscribe === 'function') {
+      return counter.subscribe(() => setCount(counter.count));
+    }
+  }, [counter]);
 
   if (!manager) return null;
 
@@ -56,26 +60,23 @@ const CountStatus = () => {
 const CounterComponent = () => {
   // Use the web-context hook to get the PluginManager
   const manager = useWebComponentContext(PluginManagerContext);
-  const [count, setCount] = useState(0);
+  const capabilitiesAtom = useMemo(
+    () => manager?.context.capabilities(Counter) ?? Atom.make<{ count: number; increment: () => void }[]>([]),
+    [manager],
+  );
+  const capabilities = useAtomValue(capabilitiesAtom);
+  const counter = (capabilities as any)[0];
+  const [count, setCount] = useState(counter?.count ?? 0);
 
   useEffect(() => {
-    if (!manager) {
+    if (!counter) {
       return;
     }
-
-    // Subscribe to the count signal
-    // note: manager.context.getCapability might throw if not ready, but effect handles dependencies dynamicially
-    const unsubscribe = effect(() => {
-      try {
-        const counter = manager.context.getCapability(Counter);
-        setCount(counter.count);
-      } catch (_err) {
-        // Capability might not be available yet
-      }
-    });
-
-    return unsubscribe;
-  }, [manager]);
+    setCount(counter.count);
+    if ('subscribe' in counter && typeof counter.subscribe === 'function') {
+      return counter.subscribe(() => setCount(counter.count));
+    }
+  }, [counter]);
 
   if (!manager) {
     return <div className='p-4 text-red-500'>Error: Context not found</div>;
@@ -123,25 +124,29 @@ const CounterPlugin = Plugin.define({
     id: 'CounterMain',
     activatesOn: Common.ActivationEvent.Startup,
     activate: () => {
-      const count = signal(0);
+      const listeners = new Set<() => void>();
+      const counter = {
+        count: 0,
+        increment: () => {
+          counter.count++;
+          listeners.forEach((listener) => listener());
+        },
+        subscribe: (listener: () => void) => {
+          listeners.add(listener);
+          return () => listeners.delete(listener);
+        },
+      };
 
-      return [
+      return Effect.succeed([
         // Contribute the state/logic
-        Capability.contributes(Counter, {
-          get count() {
-            return count.value;
-          },
-          increment: () => {
-            count.value++;
-          },
-        }),
+        Capability.contributes(Counter, counter),
 
         // Contribute the UI
         Capability.contributes(Common.Capability.ReactRoot, {
           id: 'dxos.org/plugin/counter/root',
           root: CounterComponent,
         }),
-      ];
+      ]);
     },
   }),
   Plugin.make,

@@ -2,8 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Registry } from '@effect-atom/atom-react';
-import { untracked } from '@preact/signals-core';
+import { Atom, Registry } from '@effect-atom/atom-react';
 import * as Array from 'effect/Array';
 import * as Context from 'effect/Context';
 import * as Duration from 'effect/Duration';
@@ -12,14 +11,11 @@ import * as Fiber from 'effect/Fiber';
 import * as Function from 'effect/Function';
 import * as HashSet from 'effect/HashSet';
 import * as Layer from 'effect/Layer';
-import * as Match from 'effect/Match';
+import * as PubSub from 'effect/PubSub';
 import * as Ref from 'effect/Ref';
 
-import { Event } from '@dxos/async';
 import { runAndForwardErrors } from '@dxos/effect';
-import { type Live, live } from '@dxos/live-object';
 import { log } from '@dxos/log';
-import { type MaybePromise } from '@dxos/util';
 
 import * as ActivationEvent from './activation-event';
 import * as Capability from './capability';
@@ -31,66 +27,52 @@ import type * as Plugin from './plugin';
 export const ManagerTypeId: unique symbol = Symbol.for('@dxos/app-framework/Manager');
 export type ManagerTypeId = typeof ManagerTypeId;
 
-// TODO(wittjosiah): Factor out?
-const isPromise = (value: unknown): value is Promise<unknown> => {
-  return value !== null && typeof value === 'object' && 'then' in value;
-};
-
 export type ManagerOptions = {
-  pluginLoader: (id: string) => MaybePromise<Plugin.Plugin>;
+  pluginLoader: (id: string) => Effect.Effect<Plugin.Plugin, Error>;
   plugins?: Plugin.Plugin[];
   core?: string[];
   enabled?: string[];
   registry?: Registry.Registry;
 };
 
-type ManagerState = {
-  // Plugins
-  plugins: Plugin.Plugin[];
-  core: string[];
-  enabled: string[];
-
-  // Modules
-  modules: Plugin.PluginModule[];
-  active: string[];
-
-  // Events
-  eventsFired: string[];
-  pendingReset: string[];
-};
+type ActivationMessage = { event: string; state: 'activating' | 'activated' | 'error'; error?: Error };
 
 /**
  * Interface for the Plugin Manager.
  */
 export interface PluginManager {
   readonly [ManagerTypeId]: ManagerTypeId;
-  readonly activation: Event<{ event: string; state: 'activating' | 'activated' | 'error'; error?: any }>;
+  readonly activation: PubSub.PubSub<ActivationMessage>;
   readonly context: Capability.PluginContext;
   readonly registry: Registry.Registry;
 
-  readonly plugins: Live<readonly Plugin.Plugin[]>;
-  readonly core: Live<readonly string[]>;
-  readonly enabled: Live<readonly string[]>;
-  readonly modules: Live<readonly Plugin.PluginModule[]>;
-  readonly active: Live<readonly string[]>;
-  readonly eventsFired: Live<readonly string[]>;
-  readonly pendingReset: Live<readonly string[]>;
+  readonly plugins: Atom.Atom<readonly Plugin.Plugin[]>;
+  readonly core: Atom.Atom<readonly string[]>;
+  readonly enabled: Atom.Atom<readonly string[]>;
+  readonly modules: Atom.Atom<readonly Plugin.PluginModule[]>;
+  readonly active: Atom.Atom<readonly string[]>;
+  readonly eventsFired: Atom.Atom<readonly string[]>;
+  readonly pendingReset: Atom.Atom<readonly string[]>;
 
-  add(id: string): Promise<boolean>;
-  enable(id: string): Promise<boolean>;
+  getPlugins(): readonly Plugin.Plugin[];
+  getCore(): readonly string[];
+  getEnabled(): readonly string[];
+  getModules(): readonly Plugin.PluginModule[];
+  getActive(): readonly string[];
+  getEventsFired(): readonly string[];
+  getPendingReset(): readonly string[];
+
+  add(id: string): Effect.Effect<boolean, Error>;
+  enable(id: string): Effect.Effect<boolean, Error>;
   remove(id: string): boolean;
-  disable(id: string): Promise<boolean>;
-  activate(event: ActivationEvent.ActivationEvent | string): Promise<boolean>;
-  deactivate(id: string): Promise<boolean>;
-  reset(event: ActivationEvent.ActivationEvent | string): Promise<boolean>;
-
-  /**
-   * @internal
-   */
-  _activate(
+  disable(id: string): Effect.Effect<boolean, Error>;
+  // TODO(wittjosiah): Improve error typing.
+  activate(
     event: ActivationEvent.ActivationEvent | string,
     params?: { before?: string; after?: string },
   ): Effect.Effect<boolean, Error>;
+  deactivate(id: string): Effect.Effect<boolean, Error>;
+  reset(event: ActivationEvent.ActivationEvent | string): Effect.Effect<boolean, Error>;
 }
 
 /**
@@ -102,19 +84,23 @@ export const isManager = (value: unknown): value is PluginManager => {
 
 /**
  * Internal implementation of PluginManager.
- * @internal
  */
 class ManagerImpl implements PluginManager {
   readonly [ManagerTypeId]: ManagerTypeId = ManagerTypeId;
-  readonly activation = new Event<{ event: string; state: 'activating' | 'activated' | 'error'; error?: any }>();
+  readonly activation = Effect.runSync(PubSub.unbounded<ActivationMessage>());
   readonly context: Capability.PluginContext;
   readonly registry: Registry.Registry;
 
-  // TODO(wittjosiah): Replace with Atom.
-  private readonly _state: Live<ManagerState>;
+  private readonly _pluginsAtom: Atom.Writable<Plugin.Plugin[]>;
+  private readonly _coreAtom: Atom.Writable<string[]>;
+  private readonly _enabledAtom: Atom.Writable<string[]>;
+  private readonly _modulesAtom: Atom.Writable<Plugin.PluginModule[]>;
+  private readonly _activeAtom: Atom.Writable<string[]>;
+  private readonly _eventsFiredAtom: Atom.Writable<string[]>;
+  private readonly _pendingResetAtom: Atom.Writable<string[]>;
   private readonly _pluginLoader: ManagerOptions['pluginLoader'];
   private readonly _capabilities = new Map<string, Capability.Any[]>();
-  private readonly _moduleMemoMap = new Map<Plugin.PluginModule['id'], Promise<Capability.Any[]>>();
+  private readonly _moduleMemoMap = new Map<Plugin.PluginModule['id'], Effect.Effect<Capability.Any[], Error>>();
   private readonly _activatingEvents = Effect.runSync(Ref.make<string[]>([]));
   private readonly _activatingModules = Effect.runSync(Ref.make<string[]>([]));
 
@@ -128,41 +114,28 @@ class ManagerImpl implements PluginManager {
     this.registry = registry ?? Registry.make();
     this.context = new Capability.PluginContextImpl({
       registry: this.registry,
-      activate: (event) => this._activate(event),
-      reset: (id) => this._reset(id),
+      activate: (event) => this.activate(event),
+      reset: (id) => this.reset(id),
     });
 
     this._pluginLoader = pluginLoader;
-    this._state = live({
-      plugins,
-      core,
-      enabled,
-      modules: [],
-      active: [],
-      eventsFired: [],
-      pendingReset: [],
-    });
+    this._pluginsAtom = Atom.make(plugins).pipe(Atom.keepAlive);
+    this._coreAtom = Atom.make(core).pipe(Atom.keepAlive);
+    this._enabledAtom = Atom.make(enabled).pipe(Atom.keepAlive);
+    this._modulesAtom = Atom.make<Plugin.PluginModule[]>([]).pipe(Atom.keepAlive);
+    this._activeAtom = Atom.make<string[]>([]).pipe(Atom.keepAlive);
+    this._eventsFiredAtom = Atom.make<string[]>([]).pipe(Atom.keepAlive);
+    this._pendingResetAtom = Atom.make<string[]>([]).pipe(Atom.keepAlive);
     plugins.forEach((plugin) => this._addPlugin(plugin));
-    core.forEach((id) => this.enable(id));
-    enabled.forEach((id) => this.enable(id));
+    void Effect.all([...core, ...enabled].map((id) => this.enable(id))).pipe(runAndForwardErrors);
   }
 
-  /**
-   * Plugins that are currently registered.
-   *
-   * @reactive
-   */
-  get plugins(): Live<readonly Plugin.Plugin[]> {
-    return this._state.plugins;
+  get plugins(): Atom.Atom<readonly Plugin.Plugin[]> {
+    return this._pluginsAtom;
   }
 
-  /**
-   * Ids of plugins that are core and cannot be removed.
-   *
-   * @reactive
-   */
-  get core(): Live<readonly string[]> {
-    return this._state.core;
+  get core(): Atom.Atom<readonly string[]> {
+    return this._coreAtom;
   }
 
   /**
@@ -170,8 +143,8 @@ class ManagerImpl implements PluginManager {
    *
    * @reactive
    */
-  get enabled(): Live<readonly string[]> {
-    return this._state.enabled;
+  get enabled(): Atom.Atom<readonly string[]> {
+    return this._enabledAtom;
   }
 
   /**
@@ -179,8 +152,8 @@ class ManagerImpl implements PluginManager {
    *
    * @reactive
    */
-  get modules(): Live<readonly Plugin.PluginModule[]> {
-    return this._state.modules;
+  get modules(): Atom.Atom<readonly Plugin.PluginModule[]> {
+    return this._modulesAtom;
   }
 
   /**
@@ -188,8 +161,8 @@ class ManagerImpl implements PluginManager {
    *
    * @reactive
    */
-  get active(): Live<readonly string[]> {
-    return this._state.active;
+  get active(): Atom.Atom<readonly string[]> {
+    return this._activeAtom;
   }
 
   /**
@@ -197,8 +170,8 @@ class ManagerImpl implements PluginManager {
    *
    * @reactive
    */
-  get eventsFired(): Live<readonly string[]> {
-    return this._state.eventsFired;
+  get eventsFired(): Atom.Atom<readonly string[]> {
+    return this._eventsFiredAtom;
   }
 
   /**
@@ -206,20 +179,48 @@ class ManagerImpl implements PluginManager {
    *
    * @reactive
    */
-  get pendingReset(): Live<readonly string[]> {
-    return this._state.pendingReset;
+  get pendingReset(): Atom.Atom<readonly string[]> {
+    return this._pendingResetAtom;
+  }
+
+  getPlugins(): readonly Plugin.Plugin[] {
+    return this._get(this._pluginsAtom);
+  }
+
+  getCore(): readonly string[] {
+    return this._get(this._coreAtom);
+  }
+
+  getEnabled(): readonly string[] {
+    return this._get(this._enabledAtom);
+  }
+
+  getModules(): readonly Plugin.PluginModule[] {
+    return this._get(this._modulesAtom);
+  }
+
+  getActive(): readonly string[] {
+    return this._get(this._activeAtom);
+  }
+
+  getEventsFired(): readonly string[] {
+    return this._get(this._eventsFiredAtom);
+  }
+
+  getPendingReset(): readonly string[] {
+    return this._get(this._pendingResetAtom);
   }
 
   /**
    * Adds a plugin to the manager via the plugin loader.
    * @param id The id of the plugin.
    */
-  async add(id: string): Promise<boolean> {
-    return untracked(async () => {
+  add(id: string): Effect.Effect<boolean, Error> {
+    return Effect.gen(this, function* () {
       log('add plugin', { id });
-      const plugin = await this._pluginLoader(id);
+      const plugin = yield* this._pluginLoader(id);
       this._addPlugin(plugin);
-      return this.enable(id);
+      return yield* this.enable(id);
     });
   }
 
@@ -227,29 +228,25 @@ class ManagerImpl implements PluginManager {
    * Enables a plugin.
    * @param id The id of the plugin.
    */
-  enable(id: string): Promise<boolean> {
-    return untracked(async () => {
+  enable(id: string): Effect.Effect<boolean, Error> {
+    return Effect.gen(this, function* () {
       log('enable plugin', { id });
       const plugin = this._getPlugin(id);
       if (!plugin) {
         return false;
       }
 
-      if (!this._state.enabled.includes(id)) {
-        this._state.enabled.push(id);
-      }
+      this._update(this._enabledAtom, (enabled) => (enabled.includes(id) ? enabled : [...enabled, id]));
 
       plugin.modules.forEach((module) => {
         this._addModule(module);
         this._setPendingResetByModule(module);
       });
 
-      log('pending reset', { events: [...this.pendingReset] });
-      await runAndForwardErrors(
-        Effect.all(
-          this.pendingReset.map((event) => this._activate(event)),
-          { concurrency: 'unbounded' },
-        ),
+      log('pending reset', { events: [...this.getPendingReset()] });
+      yield* Effect.all(
+        this.getPendingReset().map((event) => this.activate(event)),
+        { concurrency: 'unbounded' },
       );
 
       return true;
@@ -261,26 +258,24 @@ class ManagerImpl implements PluginManager {
    * @param id The id of the plugin.
    */
   remove(id: string): boolean {
-    return untracked(() => {
-      log('remove plugin', { id });
-      const result = this.disable(id);
-      if (!result) {
-        return false;
-      }
+    log('remove plugin', { id });
+    const result = this.disable(id);
+    if (!result) {
+      return false;
+    }
 
-      this._removePlugin(id);
-      return true;
-    });
+    this._removePlugin(id);
+    return true;
   }
 
   /**
    * Disables a plugin.
    * @param id The id of the plugin.
    */
-  disable(id: string): Promise<boolean> {
-    return untracked(async () => {
+  disable(id: string): Effect.Effect<boolean, Error> {
+    return Effect.gen(this, function* () {
       log('disable plugin', { id });
-      if (this._state.core.includes(id)) {
+      if (this._get(this._coreAtom).includes(id)) {
         return false;
       }
 
@@ -289,10 +284,10 @@ class ManagerImpl implements PluginManager {
         return false;
       }
 
-      const enabledIndex = this._state.enabled.findIndex((enabled) => enabled === id);
+      const enabledIndex = this._get(this._enabledAtom).findIndex((enabled) => enabled === id);
       if (enabledIndex !== -1) {
-        this._state.enabled.splice(enabledIndex, 1);
-        await runAndForwardErrors(this._deactivate(id));
+        this._update(this._enabledAtom, (enabled) => enabled.filter((item) => item !== id));
+        yield* this.deactivate(id);
 
         plugin.modules.forEach((module) => {
           this._removeModule(module.id);
@@ -308,113 +303,7 @@ class ManagerImpl implements PluginManager {
    * @param event The activation event.
    * @returns Whether the activation was successful.
    */
-  activate(event: ActivationEvent.ActivationEvent | string): Promise<boolean> {
-    return untracked(() => runAndForwardErrors(this._activate(event)));
-  }
-
-  /**
-   * Deactivates all of the modules for a plugin.
-   * @param id The id of the plugin.
-   * @returns Whether the deactivation was successful.
-   */
-  deactivate(id: string): Promise<boolean> {
-    return untracked(() => runAndForwardErrors(this._deactivate(id)));
-  }
-
-  /**
-   * Re-activates the modules that were activated by the event.
-   * @param event The activation event.
-   * @returns Whether the reset was successful.
-   */
-  reset(event: ActivationEvent.ActivationEvent | string): Promise<boolean> {
-    return untracked(() => runAndForwardErrors(this._reset(event)));
-  }
-
-  private _addPlugin(plugin: Plugin.Plugin): void {
-    untracked(() => {
-      log('add plugin', { id: plugin.meta.id });
-      // TODO(wittjosiah): Find a way to add a warning for duplicate plugins that doesn't cause log spam.
-      if (!this._state.plugins.includes(plugin)) {
-        this._state.plugins.push(plugin);
-      }
-    });
-  }
-
-  private _removePlugin(id: string): void {
-    untracked(() => {
-      log('remove plugin', { id });
-      const pluginIndex = this._state.plugins.findIndex((plugin) => plugin.meta.id === id);
-      if (pluginIndex !== -1) {
-        this._state.plugins.splice(pluginIndex, 1);
-      }
-    });
-  }
-
-  private _addModule(module: Plugin.PluginModule): void {
-    untracked(() => {
-      log('add module', { id: module.id });
-      // TODO(wittjosiah): Find a way to add a warning for duplicate modules that doesn't cause log spam.
-      if (!this._state.modules.includes(module)) {
-        this._state.modules.push(module);
-      }
-    });
-  }
-
-  private _removeModule(id: string): void {
-    untracked(() => {
-      log('remove module', { id });
-      const moduleIndex = this._state.modules.findIndex((module) => module.id === id);
-      if (moduleIndex !== -1) {
-        this._state.modules.splice(moduleIndex, 1);
-      }
-    });
-  }
-
-  private _getPlugin(id: string): Plugin.Plugin | undefined {
-    return this._state.plugins.find((plugin) => plugin.meta.id === id);
-  }
-
-  private _getActiveModules(): Plugin.PluginModule[] {
-    return this._state.modules.filter((module) => this._state.active.includes(module.id));
-  }
-
-  private _getInactiveModules(): Plugin.PluginModule[] {
-    return this._state.modules.filter((module) => !this._state.active.includes(module.id));
-  }
-
-  private _getActiveModulesByEvent(key: string): Plugin.PluginModule[] {
-    return this._getActiveModules().filter((module) =>
-      ActivationEvent.getEvents(module.activatesOn).map(ActivationEvent.eventKey).includes(key),
-    );
-  }
-
-  private _getInactiveModulesByEvent(key: string): Plugin.PluginModule[] {
-    return this._getInactiveModules().filter((module) =>
-      ActivationEvent.getEvents(module.activatesOn).map(ActivationEvent.eventKey).includes(key),
-    );
-  }
-
-  private _setPendingResetByModule(module: Plugin.PluginModule): void {
-    return untracked(() => {
-      const activationEvents = ActivationEvent.getEvents(module.activatesOn)
-        .map(ActivationEvent.eventKey)
-        .filter((key) => this._state.eventsFired.includes(key));
-
-      const pendingReset = Array.fromIterable(new Set(activationEvents)).filter(
-        (event) => !this._state.pendingReset.includes(event),
-      );
-      if (pendingReset.length > 0) {
-        log('pending reset', { events: pendingReset });
-        this._state.pendingReset.push(...pendingReset);
-      }
-    });
-  }
-
-  /**
-   * @internal
-   */
-  // TODO(wittjosiah): Improve error typing.
-  _activate(
+  activate(
     event: ActivationEvent.ActivationEvent | string,
     params?: { before?: string; after?: string },
   ): Effect.Effect<boolean, Error> {
@@ -422,9 +311,9 @@ class ManagerImpl implements PluginManager {
       const key = typeof event === 'string' ? event : ActivationEvent.eventKey(event);
       log('activating', { key, ...params });
       yield* Ref.update(this._activatingEvents, (activating) => Array.append(activating, key));
-      const pendingIndex = this._state.pendingReset.findIndex((event) => event === key);
+      const pendingIndex = this._get(this._pendingResetAtom).findIndex((event) => event === key);
       if (pendingIndex !== -1) {
-        this._state.pendingReset.splice(pendingIndex, 1);
+        this._update(this._pendingResetAtom, (pending) => pending.filter((event) => event !== key));
       }
 
       const activatingEvents = yield* this._activatingEvents;
@@ -443,7 +332,7 @@ class ManagerImpl implements PluginManager {
         return (
           events.every(
             (event) =>
-              this._state.eventsFired.includes(ActivationEvent.eventKey(event)) ||
+              this._get(this._eventsFiredAtom).includes(ActivationEvent.eventKey(event)) ||
               activatingEvents.includes(ActivationEvent.eventKey(event)),
           ) && !activatingModules.includes(module.id)
         );
@@ -456,14 +345,14 @@ class ManagerImpl implements PluginManager {
       );
       if (modules.length === 0) {
         log('no modules to activate', { key });
-        if (!this._state.eventsFired.includes(key)) {
-          this._state.eventsFired.push(key);
+        if (!this._get(this._eventsFiredAtom).includes(key)) {
+          this._update(this._eventsFiredAtom, (events) => [...events, key]);
         }
         return false;
       }
 
       log('activating modules', { key, modules: modules.map((module) => module.id) });
-      this.activation.emit({ event: key, state: 'activating' });
+      yield* PubSub.publish(this.activation, { event: key, state: 'activating' });
 
       // Fire activatesBefore events.
       yield* Function.pipe(
@@ -472,7 +361,7 @@ class ManagerImpl implements PluginManager {
         HashSet.fromIterable,
         HashSet.toValues,
         Array.filter((event) => !activatingEvents.includes(ActivationEvent.eventKey(event))),
-        Array.map((event) => this._activate(event, { before: key })),
+        Array.map((event) => this.activate(event, { before: key })),
         Effect.allWith({ concurrency: 'unbounded' }),
       );
 
@@ -482,8 +371,10 @@ class ManagerImpl implements PluginManager {
         Array.map((mod) => this._loadModule(mod)),
         Effect.allWith({ concurrency: 'unbounded' }),
         Effect.catchAll((error) => {
-          this.activation.emit({ event: key, state: 'error', error });
-          return Effect.fail(error);
+          return Effect.gen(this, function* () {
+            yield* PubSub.publish(this.activation, { event: key, state: 'error', error });
+            return yield* Effect.fail(error);
+          });
         }),
       );
 
@@ -504,7 +395,7 @@ class ManagerImpl implements PluginManager {
         HashSet.fromIterable,
         HashSet.toValues,
         Array.filter((event) => !activatingEvents.includes(ActivationEvent.eventKey(event))),
-        Array.map((event) => this._activate(event, { after: key })),
+        Array.map((event) => this.activate(event, { after: key })),
         Effect.allWith({ concurrency: 'unbounded' }),
       );
 
@@ -513,79 +404,23 @@ class ManagerImpl implements PluginManager {
         Array.filter(activating, (module) => !modules.map((module) => module.id).includes(module)),
       );
 
-      if (!this._state.eventsFired.includes(key)) {
-        this._state.eventsFired.push(key);
+      if (!this._get(this._eventsFiredAtom).includes(key)) {
+        this._update(this._eventsFiredAtom, (events) => [...events, key]);
       }
 
-      this.activation.emit({ event: key, state: 'activated' });
+      yield* PubSub.publish(this.activation, { event: key, state: 'activated' });
       log('activated', { key });
 
       return true;
     });
   }
 
-  // Memoized with _moduleMemoMap
-  private _loadModule = (mod: Plugin.PluginModule): Effect.Effect<Capability.Any[], Error> =>
-    Effect.tryPromise({
-      try: async () => {
-        const entry = this._moduleMemoMap.get(mod.id);
-        if (entry) {
-          return entry;
-        }
-
-        const promise = (async () => {
-          const start = performance.now();
-          let failed = false;
-          try {
-            log('loading module', { module: mod.id });
-            // TODO(wittjosiah): Support activation with an effect.
-            let activationResult = await mod.activate(this.context);
-            if (typeof activationResult === 'function') {
-              activationResult = await activationResult();
-            }
-            return Array.isArray(activationResult) ? activationResult : [activationResult];
-          } catch (error) {
-            failed = true;
-            log.catch(error);
-            throw error;
-          } finally {
-            performance.measure('activate-module', {
-              start,
-              end: performance.now(),
-              detail: {
-                module: mod.id,
-              },
-            });
-            log('loaded module', { module: mod.id, elapsed: performance.now() - start, failed });
-          }
-        })();
-        this._moduleMemoMap.set(mod.id, promise);
-        return promise;
-      },
-      catch: (error) => error as Error,
-    }).pipe(
-      Effect.withSpan('PluginManager._loadModule'),
-      together(
-        Effect.sleep(Duration.seconds(10)).pipe(
-          Effect.andThen(Effect.sync(() => log.warn(`module is taking a long time to activate`, { module: mod.id }))),
-        ),
-      ),
-    );
-
-  private _contributeCapabilities(
-    module: Plugin.PluginModule,
-    capabilities: Capability.Any[],
-  ): Effect.Effect<void, Error> {
-    return Effect.gen(this, function* () {
-      capabilities.forEach((capability) => {
-        this.context.contributeCapability({ module: module.id, ...capability });
-      });
-      this._state.active.push(module.id);
-      this._capabilities.set(module.id, capabilities);
-    });
-  }
-
-  private _deactivate(id: string): Effect.Effect<boolean, Error> {
+  /**
+   * Deactivates all of the modules for a plugin.
+   * @param id The id of the plugin.
+   * @returns Whether the deactivation was successful.
+   */
+  deactivate(id: string): Effect.Effect<boolean, Error> {
     return Effect.gen(this, function* () {
       const plugin = this._getPlugin(id);
       if (!plugin) {
@@ -601,42 +436,12 @@ class ManagerImpl implements PluginManager {
     });
   }
 
-  private _deactivateModule(module: Plugin.PluginModule): Effect.Effect<boolean, Error> {
-    return Effect.gen(this, function* () {
-      const id = module.id;
-      log('deactivating', { id });
-      this._moduleMemoMap.delete(id);
-
-      const capabilities = this._capabilities.get(id);
-      if (capabilities) {
-        for (const capability of capabilities) {
-          this.context.removeCapability(capability.interface, capability.implementation);
-          const program = capability.deactivate?.();
-          yield* Match.value(program).pipe(
-            Match.when(Effect.isEffect, (effect) => effect),
-            Match.when(isPromise, (promise) =>
-              Effect.tryPromise({
-                try: () => promise,
-                catch: (error) => error as Error,
-              }),
-            ),
-            Match.orElse((program) => Effect.succeed(program)),
-          );
-        }
-        this._capabilities.delete(id);
-      }
-
-      const activeIndex = this._state.active.findIndex((event) => event === id);
-      if (activeIndex !== -1) {
-        this._state.active.splice(activeIndex, 1);
-      }
-
-      log('deactivated', { id });
-      return true;
-    });
-  }
-
-  private _reset(event: ActivationEvent.ActivationEvent | string): Effect.Effect<boolean, Error> {
+  /**
+   * Re-activates the modules that were activated by the event.
+   * @param event The activation event.
+   * @returns Whether the reset was successful.
+   */
+  reset(event: ActivationEvent.ActivationEvent | string): Effect.Effect<boolean, Error> {
     return Effect.gen(this, function* () {
       const key = typeof event === 'string' ? event : ActivationEvent.eventKey(event);
       log('reset', { key });
@@ -647,10 +452,164 @@ class ManagerImpl implements PluginManager {
       );
 
       if (results.every((result) => result)) {
-        return yield* this._activate(key);
+        return yield* this.activate(key);
       } else {
         return false;
       }
+    });
+  }
+
+  private _get<T>(atom: Atom.Atom<T>): T {
+    return this.registry.get(atom);
+  }
+
+  private _set<T>(atom: Atom.Writable<T>, value: T): void {
+    this.registry.set(atom, value);
+  }
+
+  private _update<T>(atom: Atom.Writable<T>, updater: (current: T) => T): void {
+    this._set(atom, updater(this._get(atom)));
+  }
+
+  private _addPlugin(plugin: Plugin.Plugin): void {
+    log('add plugin', { id: plugin.meta.id });
+    // TODO(wittjosiah): Find a way to add a warning for duplicate plugins that doesn't cause log spam.
+    this._update(this._pluginsAtom, (plugins) => (plugins.includes(plugin) ? plugins : [...plugins, plugin]));
+  }
+
+  private _removePlugin(id: string): void {
+    log('remove plugin', { id });
+    this._update(this._pluginsAtom, (plugins) => plugins.filter((plugin) => plugin.meta.id !== id));
+  }
+
+  private _addModule(module: Plugin.PluginModule): void {
+    log('add module', { id: module.id });
+    // TODO(wittjosiah): Find a way to add a warning for duplicate modules that doesn't cause log spam.
+    this._update(this._modulesAtom, (modules) => (modules.includes(module) ? modules : [...modules, module]));
+  }
+
+  private _removeModule(id: string): void {
+    log('remove module', { id });
+    this._update(this._modulesAtom, (modules) => modules.filter((module) => module.id !== id));
+  }
+
+  private _getPlugin(id: string): Plugin.Plugin | undefined {
+    return this._get(this._pluginsAtom).find((plugin) => plugin.meta.id === id);
+  }
+
+  private _getActiveModules(): Plugin.PluginModule[] {
+    const active = this._get(this._activeAtom);
+    return this._get(this._modulesAtom).filter((module) => active.includes(module.id));
+  }
+
+  private _getInactiveModules(): Plugin.PluginModule[] {
+    const active = this._get(this._activeAtom);
+    return this._get(this._modulesAtom).filter((module) => !active.includes(module.id));
+  }
+
+  private _getActiveModulesByEvent(key: string): Plugin.PluginModule[] {
+    return this._getActiveModules().filter((module) =>
+      ActivationEvent.getEvents(module.activatesOn).map(ActivationEvent.eventKey).includes(key),
+    );
+  }
+
+  private _getInactiveModulesByEvent(key: string): Plugin.PluginModule[] {
+    return this._getInactiveModules().filter((module) =>
+      ActivationEvent.getEvents(module.activatesOn).map(ActivationEvent.eventKey).includes(key),
+    );
+  }
+
+  private _setPendingResetByModule(module: Plugin.PluginModule): void {
+    const activationEvents = ActivationEvent.getEvents(module.activatesOn)
+      .map(ActivationEvent.eventKey)
+      .filter((key) => this._get(this._eventsFiredAtom).includes(key));
+
+    const pendingReset = Array.fromIterable(new Set(activationEvents)).filter((event) => {
+      const pending = this._get(this._pendingResetAtom);
+      return !pending.includes(event);
+    });
+    if (pendingReset.length > 0) {
+      log('pending reset', { events: pendingReset });
+      this._update(this._pendingResetAtom, (current) => [...current, ...pendingReset]);
+    }
+  }
+
+  // Memoized with _moduleMemoMap
+  private _loadModule = (module: Plugin.PluginModule): Effect.Effect<Capability.Any[], Error> =>
+    Effect.gen(this, function* () {
+      const memoized = this._moduleMemoMap.get(module.id);
+      if (memoized) {
+        return yield* memoized;
+      }
+
+      const loadEffect = Effect.gen(this, function* () {
+        log('loading module', { module: module.id });
+        const [duration, capabilities] = yield* Effect.timed(module.activate(this.context));
+        const normalized = capabilities == null ? [] : Array.isArray(capabilities) ? capabilities : [capabilities];
+        return { capabilities: normalized, duration };
+      }).pipe(
+        Effect.tap(({ duration }) =>
+          Effect.sync(() =>
+            log('loaded module', {
+              module: module.id,
+              elapsed: Duration.toMillis(duration),
+              failed: false,
+            }),
+          ),
+        ),
+        Effect.map(({ capabilities }) => capabilities as Capability.Any[]),
+        Effect.withSpan('PluginManager._loadModule'),
+        together(
+          Effect.sleep(Duration.seconds(10)).pipe(
+            Effect.andThen(
+              Effect.sync(() => log.warn(`module is taking a long time to activate`, { module: module.id })),
+            ),
+          ),
+        ),
+      );
+
+      const fiber = yield* Effect.fork(loadEffect);
+      const joined = Fiber.join(fiber);
+      this._moduleMemoMap.set(module.id, joined);
+      return yield* joined;
+    });
+
+  private _contributeCapabilities(
+    module: Plugin.PluginModule,
+    capabilities: Capability.Any[],
+  ): Effect.Effect<void, Error> {
+    return Effect.gen(this, function* () {
+      capabilities.forEach((capability) => {
+        this.context.contributeCapability({ module: module.id, ...capability });
+      });
+      this._update(this._activeAtom, (active) => [...active, module.id]);
+      this._capabilities.set(module.id, capabilities);
+    });
+  }
+
+  private _deactivateModule(module: Plugin.PluginModule): Effect.Effect<boolean, Error> {
+    return Effect.gen(this, function* () {
+      const id = module.id;
+      log('deactivating', { id });
+      this._moduleMemoMap.delete(id);
+
+      const capabilities = this._capabilities.get(id);
+      if (capabilities) {
+        for (const capability of capabilities) {
+          this.context.removeCapability(capability.interface, capability.implementation);
+          const program = capability.deactivate?.() ?? Effect.succeed(undefined);
+          yield* program;
+        }
+        this._capabilities.delete(id);
+      }
+
+      const activeIndex = this._get(this._activeAtom).findIndex((event) => event === id);
+      if (activeIndex !== -1) {
+        this._update(this._activeAtom, (active) => active.filter((event) => event !== id));
+      }
+
+      log('deactivated', { id });
+      return true;
     });
   }
 }

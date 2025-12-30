@@ -2,6 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
+import * as Effect from 'effect/Effect';
 import React from 'react';
 
 import * as Common from '../../common';
@@ -27,8 +28,10 @@ export const Layout = () => {
 };
 
 export default Capability.makeModule(() =>
-  Capability.contributes(Common.Capability.ReactRoot, {
-    id: 'dxos.org/test/layout/root',
-    root: Layout,
-  }),
+  Effect.succeed(
+    Capability.contributes(Common.Capability.ReactRoot, {
+      id: 'dxos.org/test/layout/root',
+      root: Layout,
+    }),
+  ),
 );

@@ -2,6 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
+import * as Effect from 'effect/Effect';
+
 import { log } from '@dxos/log';
 
 import * as Common from '../../common';
@@ -19,17 +21,18 @@ const meta = {
 
 export const LoggerPlugin = Plugin.define(meta).pipe(
   Common.Plugin.addIntentResolverModule({
-    activate: () => [
-      Capability.contributes(
-        Common.Capability.IntentResolver,
-        createResolver({
-          intent: Log,
-          resolve: ({ message }) => {
-            log.info(message);
-          },
-        }),
-      ),
-    ],
+    activate: () =>
+      Effect.succeed([
+        Capability.contributes(
+          Common.Capability.IntentResolver,
+          createResolver({
+            intent: Log,
+            resolve: ({ message }) => {
+              log.info(message);
+            },
+          }),
+        ),
+      ]),
   }),
   Plugin.addModule({
     activatesOn: Common.ActivationEvent.Startup,

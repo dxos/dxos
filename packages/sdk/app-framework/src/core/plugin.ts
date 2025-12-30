@@ -2,11 +2,11 @@
 // Copyright 2025 DXOS.org
 //
 
+import type * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 import * as Pipeable from 'effect/Pipeable';
 
 import { invariant } from '@dxos/invariant';
-import { type MaybePromise } from '@dxos/util';
 
 import type * as ActivationEvent from './activation-event';
 import * as Capability from './capability';
@@ -64,9 +64,7 @@ export interface PluginModule {
    * @param context The plugin context.
    * @returns The capabilities of the module.
    */
-  activate: (
-    context: Capability.PluginContext,
-  ) => MaybePromise<Capability.Any | Capability.Any[]> | Promise<() => Promise<Capability.Any | Capability.Any[]>>;
+  activate: (context: Capability.PluginContext) => Effect.Effect<Capability.ModuleReturn, Error>;
 }
 
 export type PluginModuleOptions = Omit<PluginModule, 'id' | typeof PluginModuleTypeId> & { id?: string };

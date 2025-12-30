@@ -13,11 +13,12 @@ import { type Plugin, PluginManager } from './core';
 
 const defaultPluginLoader =
   (plugins: Plugin.Plugin[]): PluginManager.ManagerOptions['pluginLoader'] =>
-  (id: string) => {
-    const plugin = plugins.find((plugin) => plugin.meta.id === id);
-    invariant(plugin, `Plugin not found: ${id}`);
-    return plugin;
-  };
+  (id: string) =>
+    Effect.sync(() => {
+      const plugin = plugins.find((plugin) => plugin.meta.id === id);
+      invariant(plugin, `Plugin not found: ${id}`);
+      return plugin;
+    });
 
 type SubCommands = [Command.Command<any, any, any, any>, ...Array<Command.Command<any, any, any, any>>];
 
@@ -84,7 +85,7 @@ export const createCliApp = Effect.fn(function* ({
   });
 
   // Activate startup event to load CLI commands and Effect layers.
-  yield* manager._activate(Common.ActivationEvent.Startup);
+  yield* manager.activate(Common.ActivationEvent.Startup);
 
   // Gather all layers and merge them into a single layer.
   const layers = manager.context.getCapabilities(Common.Capability.Layer);

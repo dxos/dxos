@@ -2,6 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
+import * as Effect from 'effect/Effect';
+
 import { RootSettingsStore } from '@dxos/local-storage';
 
 import * as Common from '../common';
@@ -29,5 +31,7 @@ export default Capability.makeModule((context) => {
     { immediate: true },
   );
 
-  return Capability.contributes(Common.Capability.SettingsStore, settingsStore, () => cancel());
+  return Effect.succeed(
+    Capability.contributes(Common.Capability.SettingsStore, settingsStore, () => Effect.sync(() => cancel())),
+  );
 });

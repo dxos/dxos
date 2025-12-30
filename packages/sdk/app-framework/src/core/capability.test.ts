@@ -2,9 +2,9 @@
 // Copyright 2025 DXOS.org
 //
 
+import { describe, expect, it, onTestFinished } from '@effect/vitest';
 import { Registry } from '@effect-atom/atom-react';
 import * as Effect from 'effect/Effect';
-import { describe, expect, it, onTestFinished } from 'vitest';
 
 import * as Capability from './capability';
 
@@ -116,21 +116,18 @@ describe('PluginsContext', () => {
     expect(count).toEqual(2);
   });
 
-  it('should be able to wait for a capability', async () => {
-    const registry = Registry.make();
-    const context = new Capability.PluginContextImpl({ registry, ...defaultOptions });
-    const interfaceDef = Capability.make<{ example: string }>('@dxos/app-framework/test/example');
+  it.effect('should be able to wait for a capability', () =>
+    Effect.gen(function* () {
+      const registry = Registry.make();
+      const context = new Capability.PluginContextImpl({ registry, ...defaultOptions });
+      const interfaceDef = Capability.make<{ example: string }>('@dxos/app-framework/test/example');
 
-    let capability: { example: string } | undefined;
-    const cancel = registry.subscribe(context.capabilities(interfaceDef), (capabilities) => {
-      capability = capabilities[0];
-    });
-    onTestFinished(() => cancel());
-    registry.get(context.capabilities(interfaceDef));
-    expect(capability).toBeUndefined();
+      expect(context.getCapabilities(interfaceDef)).toHaveLength(0);
+      const capability = context.waitForCapability(interfaceDef);
 
-    const implementation = { example: 'identifier' };
-    context.contributeCapability({ interface: interfaceDef, implementation, module: 'test' });
-    expect(capability).toEqual(implementation);
-  });
+      const implementation = { example: 'identifier' };
+      context.contributeCapability({ interface: interfaceDef, implementation, module: 'test' });
+      expect(yield* capability).toEqual(implementation);
+    }),
+  );
 });

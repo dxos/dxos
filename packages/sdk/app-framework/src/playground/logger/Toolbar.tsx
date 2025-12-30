@@ -2,6 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
+import * as Effect from 'effect/Effect';
 import React, { useCallback } from 'react';
 
 import { Button } from '@dxos/react-ui';
@@ -20,12 +21,14 @@ export const Logger = () => {
 };
 
 export default Capability.makeModule(() =>
-  Capability.contributes(
-    Common.Capability.ReactSurface,
-    Common.createSurface({
-      id: 'dxos.org/test/logger/action',
-      role: 'toolbar',
-      component: Logger,
-    }),
+  Effect.succeed(
+    Capability.contributes(
+      Common.Capability.ReactSurface,
+      Common.createSurface({
+        id: 'dxos.org/test/logger/action',
+        role: 'toolbar',
+        component: Logger,
+      }),
+    ),
   ),
 );

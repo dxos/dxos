@@ -20,11 +20,12 @@ export const fromPlugins = (plugins: Plugin.Plugin[]) =>
     Effect.gen(function* () {
       // TODO(wittjosiah): Try to dedupe logic between here, createCliApp and useApp.
 
-      const pluginLoader = (id: string) => {
-        const plugin = plugins.find((plugin) => plugin.meta.id === id);
-        invariant(plugin, `Plugin not found: ${id}`);
-        return plugin;
-      };
+      const pluginLoader = (id: string) =>
+        Effect.sync(() => {
+          const plugin = plugins.find((plugin) => plugin.meta.id === id);
+          invariant(plugin, `Plugin not found: ${id}`);
+          return plugin;
+        });
 
       const manager = PluginManager.make({
         pluginLoader,
@@ -44,7 +45,7 @@ export const fromPlugins = (plugins: Plugin.Plugin[]) =>
         module: 'dxos.org/app-framework/atom-registry',
       });
 
-      yield* manager._activate(Common.ActivationEvent.Startup);
+      yield* manager.activate(Common.ActivationEvent.Startup);
 
       return manager;
     }),

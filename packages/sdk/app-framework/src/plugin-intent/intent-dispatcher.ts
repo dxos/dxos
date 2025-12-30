@@ -321,23 +321,29 @@ export default Capability.makeModule((context) => {
   });
 
   // TODO(wittjosiah): Make getResolver callback async and allow resolvers to be requested on demand.
-  const { dispatch, dispatchPromise, undo, undoPromise } = createDispatcher(() =>
-    context.getCapabilities(Common.Capability.IntentResolver).flat(),
-  );
+  const { dispatch, undo } = createDispatcher(() => context.getCapabilities(Common.Capability.IntentResolver).flat());
 
   const manager = context.getCapability(Common.Capability.PluginManager);
   state.dispatch = (intentChain, depth) => {
     return Effect.gen(function* () {
-      yield* manager._activate(Common.ActivationEvent.SetupIntentResolver);
+      yield* manager.activate(Common.ActivationEvent.SetupIntentResolver);
       return yield* dispatch(intentChain, depth);
     });
   };
-  state.dispatchPromise = async (intentChain) => {
-    await manager.activate(Common.ActivationEvent.SetupIntentResolver);
-    return await dispatchPromise(intentChain);
+  state.dispatchPromise = (intentChain) => {
+    return runAndForwardErrors(state.dispatch(intentChain))
+      .then((data: any) => ({ data }))
+      .catch((error: any) => {
+        log.catch(error);
+        return { error };
+      });
   };
   state.undo = undo;
-  state.undoPromise = undoPromise;
+  state.undoPromise = () => {
+    return runAndForwardErrors(state.undo())
+      .then((data: any) => ({ data }))
+      .catch((error: any) => ({ error }));
+  };
 
-  return Capability.contributes(Common.Capability.IntentDispatcher, state);
+  return Effect.succeed(Capability.contributes(Common.Capability.IntentDispatcher, state));
 });

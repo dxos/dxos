@@ -2,6 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
+import { useAtomValue } from '@effect-atom/atom-react';
+import * as Effect from 'effect/Effect';
 import React, { useCallback } from 'react';
 
 import { Button } from '@dxos/react-ui';
@@ -15,6 +17,7 @@ import { Number, createGeneratorIntent, createPluginId } from './generator';
 
 export const Toolbar = () => {
   const manager = usePluginManager();
+  const plugins = useAtomValue(manager.plugins);
   const { dispatchPromise: dispatch } = useIntentDispatcher();
 
   const handleAdd = useCallback(async () => {
@@ -24,7 +27,7 @@ export const Toolbar = () => {
 
   const count = useCapabilities(Number).reduce((acc: number, curr: number) => acc + curr, 0);
 
-  const generatorPlugins = manager.plugins.filter((plugin: Plugin.Plugin) =>
+  const generatorPlugins = plugins.filter((plugin: Plugin.Plugin) =>
     plugin.meta.id.startsWith('dxos.org/test/generator/'),
   );
 
@@ -42,12 +45,14 @@ export const Toolbar = () => {
 };
 
 export default Capability.makeModule(() =>
-  Capability.contributes(
-    Common.Capability.ReactSurface,
-    Common.createSurface({
-      id: 'dxos.org/test/generator/toolbar',
-      role: 'toolbar',
-      component: Toolbar,
-    }),
+  Effect.succeed(
+    Capability.contributes(
+      Common.Capability.ReactSurface,
+      Common.createSurface({
+        id: 'dxos.org/test/generator/toolbar',
+        role: 'toolbar',
+        component: Toolbar,
+      }),
+    ),
   ),
 );

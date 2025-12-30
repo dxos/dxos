@@ -12,17 +12,18 @@ import { useCapabilities } from './useCapabilities';
 import { LoadingState, useLoading } from './useLoading';
 
 export type AppProps = Pick<UseAppOptions, 'placeholder' | 'debounce'> & {
-  state: { ready: boolean; error: unknown };
+  ready: boolean;
+  error: unknown;
 };
 
-export const App = ({ placeholder: Placeholder, state, debounce }: AppProps) => {
+export const App = ({ placeholder: Placeholder, ready, error, debounce }: AppProps) => {
   const reactContexts = useCapabilities(Common.Capability.ReactContext);
   const reactRoots = useCapabilities(Common.Capability.ReactRoot);
-  const stage = useLoading(state, debounce);
+  const stage = useLoading(ready, debounce);
 
-  if (state.error) {
+  if (error) {
     // This triggers the error boundary to provide UI feedback for the startup error.
-    throw state.error;
+    throw error;
   }
 
   // TODO(wittjosiah): Consider using Suspense instead.
