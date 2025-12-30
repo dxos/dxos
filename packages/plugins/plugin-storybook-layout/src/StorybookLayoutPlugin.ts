@@ -17,6 +17,7 @@ export type StorybookLayoutPluginOptions = {
 
 export const StorybookLayoutPlugin = Plugin.define<StorybookLayoutPluginOptions>(meta).pipe(
   Plugin.addModule(({ initialState }) => ({
+    id: Capability.getModuleTag(State),
     activatesOn: Common.ActivationEvent.Startup,
     activatesAfter: [Common.ActivationEvent.LayoutReady],
     activate: () => State({ initialState }),
