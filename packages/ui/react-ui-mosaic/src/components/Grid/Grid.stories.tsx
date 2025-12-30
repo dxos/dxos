@@ -6,13 +6,16 @@ import { extractClosestEdge } from '@atlaskit/pragmatic-drag-and-drop-hitbox/clo
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Schema from 'effect/Schema';
 import React, { useMemo, useState } from 'react';
+import { createPortal } from 'react-dom';
 
+import { Surface } from '@dxos/app-framework/react';
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { Obj, Ref, Type } from '@dxos/echo';
+import { DXN, Obj, Ref, Type } from '@dxos/echo';
 import { createDocAccessor, createObject } from '@dxos/echo-db';
 import { PreviewPlugin } from '@dxos/plugin-preview';
 import { ClientPlugin, StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
 import { faker } from '@dxos/random';
+import { useClient } from '@dxos/react-client';
 import { useQuery, useSpaces } from '@dxos/react-client/echo';
 import { useThemeContext } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
@@ -22,11 +25,13 @@ import { Text } from '@dxos/schema';
 import { type ValueGenerator, createObjectFactory } from '@dxos/schema/testing';
 import { Organization, Person, Project } from '@dxos/types';
 import {
+  type PreviewBlock,
   automerge,
   createBasicExtensions,
   createMarkdownExtensions,
   createThemeExtensions,
   decorateMarkdown,
+  preview,
 } from '@dxos/ui-editor';
 import { get, isTruthy, range } from '@dxos/util';
 
@@ -99,7 +104,10 @@ const TextCell: GridCellProps['Cell'] = ({ object, dragging }) => {
   return <Editor.Content extensions={extensions} initialValue={initialValue} focusable={false} />;
 };
 
+// TODO(burdon): Compact card surface (incl. document).
 const DebugCell: GridCellProps['Cell'] = ({ object }) => {
+  return <Surface role='card' data={{ subject: object }} limit={1} />;
+
   return (
     <div role='none' className='flex flex-col'>
       <div>{Obj.getLabel(object)}</div>
@@ -117,7 +125,9 @@ const DefaultStory = () => {
       createBasicExtensions({ placeholder: 'Enter text', tabbable: true }),
       createThemeExtensions({ themeMode }),
       createMarkdownExtensions(),
-      decorateMarkdown(),
+      decorateMarkdown({
+        skip: (node) => (node.name === 'Link' || node.name === 'Image') && node.url.startsWith('dxn:'),
+      }),
     ],
     [],
   );
@@ -197,13 +207,29 @@ const DefaultStory = () => {
       },
       onDrop: ({ object }) => {
         const text = Obj.getLabel(object) ?? 'Link';
-        drop({ text, url: object.id });
+        drop({ text, url: Obj.getDXN(object).toString() });
       },
     };
   }, []);
 
   // TODO(burdon): Custom drag handler.
-  const mainEditorExtensions = useMemo(() => [...extensions, extension], [extensions, extension]);
+  const [previewBlocks, setPreviewBlocks] = useState<PreviewBlock[]>([]);
+  const mainEditorExtensions = useMemo(
+    () => [
+      ...extensions,
+      extension,
+      // TODO(burdon): Factor out (see plugin-markdown).
+      preview({
+        addBlockContainer: (block) => {
+          setPreviewBlocks((prev) => [...prev, block]);
+        },
+        removeBlockContainer: ({ link }) => {
+          setPreviewBlocks((prev) => prev.filter(({ link: prevLink }) => prevLink.ref !== link.ref));
+        },
+      }),
+    ],
+    [extensions, extension],
+  );
 
   return (
     <Mosaic.Root>
@@ -232,7 +258,7 @@ const DefaultStory = () => {
                 </Mosaic.Container>
               </Grid.Column>
 
-              {/* TODO(burdon): Document. */}
+              {/* Document. */}
               <Grid.Column>
                 <Mosaic.Container handler={documentHandler}>
                   <Editor.Root extensions={mainEditorExtensions}>
@@ -240,6 +266,9 @@ const DefaultStory = () => {
                       <Editor.Content
                         initialValue={['# Hello World', '', 'This is a markdown editor.', '', '', ''].join('\n')}
                       />
+                      {previewBlocks.map(({ link, el }) => (
+                        <PreviewBlock key={link.ref} link={link} el={el} />
+                      ))}
                     </Editor.Viewport>
                   </Editor.Root>
                 </Mosaic.Container>
@@ -252,26 +281,22 @@ const DefaultStory = () => {
   );
 };
 
+const PreviewBlock = ({ el, link }: PreviewBlock) => {
+  const client = useClient();
+  const dxn = DXN.parse(link.ref);
+  const subject = client.graph.makeRef(dxn).target;
+  const data = useMemo(() => ({ subject }), [subject]);
+
+  return createPortal(<Surface role='card--transclusion' data={data} limit={1} />, el);
+};
+
 const meta = {
   title: 'ui/react-ui-mosaic/Grid',
   render: DefaultStory,
   decorators: [
     withTheme,
     withLayout({ layout: 'fullscreen' }),
-    // withClientProvider({
-    //   createIdentity: true,
-    //   createSpace: true,
-    //   types: [GridData, Organization.Organization, Person.Person, Project.Project],
-    //   onCreateSpace: async ({ space }) => {
-    //     const factory = createObjectFactory(space.db, generator);
-    //     await factory([
-    //       { type: Organization.Organization, count: 20 },
-    //       { type: Person.Person, count: 30 },
-    //       { type: Project.Project, count: 10 },
-    //     ]);
-    //   },
-    // }),
-    withPluginManager<{ title?: string; content?: string }>((context) => ({
+    withPluginManager<{ title?: string; content?: string }>(() => ({
       plugins: [
         ...corePlugins(),
         ClientPlugin({

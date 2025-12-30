@@ -90,10 +90,18 @@ export const dropHandler = ({ onDrop = handleDrop }: DropHandlerOptions = {}): D
 };
 
 const handleDrop = (view: EditorView, pos: number, event: DropEvent) => {
-  view.dispatch({
-    changes: { from: pos, insert: `[${event.text}](${event.url}) ` },
-    effects: setDrop.of(null),
-  });
+  const line = view.state.doc.lineAt(pos);
+  if (line.text.trim() === '') {
+    view.dispatch({
+      changes: { from: pos, insert: `\n![${event.text}](${event.url})\n` },
+      effects: setDrop.of(null),
+    });
+  } else {
+    view.dispatch({
+      changes: { from: pos, insert: ` [${event.text}](${event.url})` },
+      effects: setDrop.of(null),
+    });
+  }
 };
 
 const setDrop = StateEffect.define<number | null>();
