@@ -4,7 +4,7 @@
 
 import * as Effect from 'effect/Effect';
 
-import { ActivationEvent, Capability, Common, Plugin, createIntent } from '@dxos/app-framework';
+import { ActivationEvent, Common, Plugin, createIntent } from '@dxos/app-framework';
 import { Graph } from '@dxos/plugin-graph';
 import { type TreeData } from '@dxos/react-ui-list';
 

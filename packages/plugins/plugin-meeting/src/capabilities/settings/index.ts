@@ -5,4 +5,3 @@
 import { Capability } from '@dxos/app-framework';
 
 export const MeetingSettings = Capability.lazy('MeetingSettings', () => import('./settings'));
-

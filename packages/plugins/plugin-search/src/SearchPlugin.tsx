@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Capability, Common, Plugin } from '@dxos/app-framework';
+import { Common, Plugin } from '@dxos/app-framework';
 
 import { AppGraphBuilder, IntentResolver, ReactSurface } from './capabilities';
 import { SEARCH_RESULT, meta } from './meta';

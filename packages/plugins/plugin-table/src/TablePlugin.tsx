@@ -6,7 +6,6 @@ import * as Effect from 'effect/Effect';
 
 import { Capability, Common, Plugin, createIntent } from '@dxos/app-framework';
 import { Type } from '@dxos/echo';
-import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
 import { SpaceCapabilities, SpaceEvents } from '@dxos/plugin-space';
 import { type CreateObjectIntent } from '@dxos/plugin-space/types';
 import { translations as formTranslations } from '@dxos/react-ui-form';

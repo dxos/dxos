@@ -24,8 +24,8 @@ const mockManager = {
 describe('useCapabilities', () => {
   test('returns capabilities from the plugin manager', () => {
     const TestComponent = () => {
-      const caps = useCapabilities(TestCapability);
-      return <div data-testid='caps-length'>{caps().length}</div>;
+      const capabilities = useCapabilities(TestCapability);
+      return <div data-testid='caps-length'>{capabilities().length}</div>;
     };
 
     render(() => (
@@ -41,9 +41,8 @@ describe('useCapabilities', () => {
 describe('useCapability', () => {
   test('returns a single capability', () => {
     const TestComponent = () => {
-      const cap = useCapability(TestCapability);
-      const capValue = cap();
-      return <div data-testid='cap-value'>{capValue.value}</div>;
+      const capability = useCapability(TestCapability);
+      return <div data-testid='cap-value'>{capability().value}</div>;
     };
 
     render(() => (
@@ -64,9 +63,8 @@ describe('useCapability', () => {
     } as unknown as PluginManager.PluginManager;
 
     const TestComponent = () => {
-      const cap = useCapability(TestCapability);
-      const capValue = cap();
-      return <div>{capValue.value}</div>; // This read triggers the invariant
+      const capability = useCapability(TestCapability);
+      return <div>{capability().value}</div>; // This read triggers the invariant
     };
 
     expect(() =>

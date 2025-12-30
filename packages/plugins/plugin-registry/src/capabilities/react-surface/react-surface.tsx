@@ -7,6 +7,7 @@ import React, { useCallback, useMemo } from 'react';
 
 import { Capability, Common, Plugin } from '@dxos/app-framework';
 import { usePluginManager } from '@dxos/app-framework/react';
+import { runAndForwardErrors } from '@dxos/effect';
 
 import { PluginDetail, RegistryContainer } from '../../components';
 import { REGISTRY_KEY, meta } from '../../meta';
@@ -85,8 +86,8 @@ export default Capability.makeModule(() =>
           const handleEnable = useCallback(
             () =>
               enabled
-                ? Effect.runPromise(manager.disable(subject.meta.id))
-                : Effect.runPromise(manager.enable(subject.meta.id)),
+                ? runAndForwardErrors(manager.disable(subject.meta.id))
+                : runAndForwardErrors(manager.enable(subject.meta.id)),
             [manager, subject.meta.id, enabled],
           );
 

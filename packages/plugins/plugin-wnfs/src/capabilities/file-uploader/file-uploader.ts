@@ -12,17 +12,19 @@ import { SpaceAction } from '@dxos/plugin-space/types';
 import { WnfsAction } from '../../types';
 
 export default Capability.makeModule((context) =>
-  Effect.succeed(Capability.contributes(Common.Capability.FileUploader, (db, file) => {
-    const { dispatch } = context.getCapability(Common.Capability.IntentDispatcher);
-    const program = Effect.gen(function* () {
-      const fileInfo = yield* dispatch(createIntent(WnfsAction.Upload, { db, file }));
-      yield* dispatch(
-        Function.pipe(createIntent(WnfsAction.Create, fileInfo), chain(SpaceAction.AddObject, { target: db })),
-      );
+  Effect.succeed(
+    Capability.contributes(Common.Capability.FileUploader, (db, file) => {
+      const { dispatch } = context.getCapability(Common.Capability.IntentDispatcher);
+      const program = Effect.gen(function* () {
+        const fileInfo = yield* dispatch(createIntent(WnfsAction.Upload, { db, file }));
+        yield* dispatch(
+          Function.pipe(createIntent(WnfsAction.Create, fileInfo), chain(SpaceAction.AddObject, { target: db })),
+        );
 
-      return fileInfo;
-    });
+        return fileInfo;
+      });
 
-    return runAndForwardErrors(program);
-  })),
+      return runAndForwardErrors(program);
+    }),
+  ),
 );

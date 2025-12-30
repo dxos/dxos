@@ -4,7 +4,7 @@
 
 import { setAutoFreeze } from 'immer';
 
-import { ActivationEvent, Capability, Common, Plugin } from '@dxos/app-framework';
+import { ActivationEvent, Common, Plugin } from '@dxos/app-framework';
 import { translations as stackTranslations } from '@dxos/react-ui-stack';
 
 import {

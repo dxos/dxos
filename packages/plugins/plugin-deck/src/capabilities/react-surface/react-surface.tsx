@@ -15,20 +15,20 @@ import { type DeckSettingsProps } from '../../types';
 export default Capability.makeModule(() =>
   Effect.succeed(
     Capability.contributes(Common.Capability.ReactSurface, [
-    Common.createSurface({
-      id: `${meta.id}/plugin-settings`,
-      role: 'article',
-      filter: (data): data is { subject: SettingsStore<DeckSettingsProps> } =>
-        data.subject instanceof SettingsStore && data.subject.prefix === meta.id,
-      component: ({ data: { subject } }) => <DeckSettings settings={subject.value} />,
-    }),
-    Common.createSurface({
-      id: `${meta.id}/banner`,
-      role: 'banner',
-      component: ({ data }: { data: { variant?: 'topbar' | 'sidebar' } }) => {
-        return <Banner variant={data.variant} />;
-      },
-    }),
-  ]),
+      Common.createSurface({
+        id: `${meta.id}/plugin-settings`,
+        role: 'article',
+        filter: (data): data is { subject: SettingsStore<DeckSettingsProps> } =>
+          data.subject instanceof SettingsStore && data.subject.prefix === meta.id,
+        component: ({ data: { subject } }) => <DeckSettings settings={subject.value} />,
+      }),
+      Common.createSurface({
+        id: `${meta.id}/banner`,
+        role: 'banner',
+        component: ({ data }: { data: { variant?: 'topbar' | 'sidebar' } }) => {
+          return <Banner variant={data.variant} />;
+        },
+      }),
+    ]),
   ),
 );

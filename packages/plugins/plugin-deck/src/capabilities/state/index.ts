@@ -6,4 +6,3 @@ import { Capability } from '@dxos/app-framework';
 
 export const DeckState = Capability.lazy('DeckState', () => import('./state'));
 export { DeckStateFactory } from './state';
-

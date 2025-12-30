@@ -18,9 +18,9 @@ import { IconButton, type Label, Main, toLocalizedString, useTranslation } from 
 import { Tabs } from '@dxos/react-ui-tabs';
 import { mx } from '@dxos/ui-theme';
 
-import { DeckCapabilities } from '../../types';
 import { type DeckCompanion, getCompanionId, useBreakpoints, useDeckCompanions, useHoistStatusbar } from '../../hooks';
 import { meta } from '../../meta';
+import { DeckCapabilities } from '../../types';
 import { getMode } from '../../types';
 import { layoutAppliesTopbar } from '../../util';
 import { PlankContentError, PlankLoading } from '../Plank';
@@ -59,7 +59,9 @@ export const ComplementarySidebar = ({ current }: ComplementarySidebarProps) => 
       } else {
         setInternalValue(nextValue);
         layout.complementarySidebarState = 'expanded';
-        void dispatch(createIntent(Common.LayoutAction.UpdateComplementary, { part: 'complementary', subject: nextValue }));
+        void dispatch(
+          createIntent(Common.LayoutAction.UpdateComplementary, { part: 'complementary', subject: nextValue }),
+        );
       }
     },
     [layout, activeId, dispatch],
@@ -77,7 +79,10 @@ export const ComplementarySidebar = ({ current }: ComplementarySidebarProps) => 
   useEffect(() => {
     if (!activeId) {
       void dispatch(
-        createIntent(Common.LayoutAction.UpdateComplementary, { part: 'complementary', options: { state: 'collapsed' } }),
+        createIntent(Common.LayoutAction.UpdateComplementary, {
+          part: 'complementary',
+          options: { state: 'collapsed' },
+        }),
       );
     }
   }, [activeId, dispatch]);

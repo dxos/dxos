@@ -2,9 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Capability, Common, Plugin, createIntent } from '@dxos/app-framework';
+import { Common, Plugin, createIntent } from '@dxos/app-framework';
 import { ComputeGraph } from '@dxos/conductor';
-import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
 import { type CreateObjectIntent } from '@dxos/plugin-space/types';
 import { CanvasBoardType } from '@dxos/react-ui-canvas-editor';
 

@@ -3,43 +3,25 @@
 //
 
 import * as Effect from 'effect/Effect';
-
 import type * as Schema from 'effect/Schema';
 
-
 import { Capability, Common, createIntent } from '@dxos/app-framework';
-
 import { extractionAnthropicFunction, processTranscriptMessage } from '@dxos/assistant/extraction';
-
 import { Filter, type Obj, Query, Type } from '@dxos/echo';
-
 import { FunctionExecutor } from '@dxos/functions-runtime';
-
 import { ServiceContainer } from '@dxos/functions-runtime';
-
 import { invariant } from '@dxos/invariant';
-
 import { log } from '@dxos/log';
-
 import { ClientCapabilities } from '@dxos/plugin-client';
-
 import { type CallState, type MediaState, ThreadCapabilities } from '@dxos/plugin-thread';
-
 import { type Channel } from '@dxos/plugin-thread/types';
-
 import { TranscriptionCapabilities } from '@dxos/plugin-transcription';
-
 import { type buf } from '@dxos/protocols/buf';
-
 import { type MeetingPayloadSchema } from '@dxos/protocols/buf/dxos/edge/calls_pb';
-
 import { type Space } from '@dxos/react-client/echo';
-
 import { type Message } from '@dxos/types';
 
-
 import { meta } from '../../meta';
-
 import { Meeting, MeetingAction, MeetingCapabilities } from '../../types';
 
 // TODO(wittjosiah): Factor out.
@@ -48,52 +30,52 @@ type MeetingPayload = buf.MessageInitShape<typeof MeetingPayloadSchema>;
 
 export default Capability.makeModule((context) =>
   Effect.sync(() => {
-  const { dispatchPromise: dispatch } = context.getCapability(Common.Capability.IntentDispatcher);
-  const client = context.getCapability(ClientCapabilities.Client);
-  const state = context.getCapability(MeetingCapabilities.State);
-  const _settings = context.getCapability(Common.Capability.SettingsStore).getStore<Meeting.Settings>(meta.id)!.value;
+    const { dispatchPromise: dispatch } = context.getCapability(Common.Capability.IntentDispatcher);
+    const client = context.getCapability(ClientCapabilities.Client);
+    const state = context.getCapability(MeetingCapabilities.State);
+    const _settings = context.getCapability(Common.Capability.SettingsStore).getStore<Meeting.Settings>(meta.id)!.value;
 
-  return Capability.contributes(ThreadCapabilities.CallExtension, {
-    onJoin: async ({ channel }: { channel?: Channel.Channel }) => {
-      const identity = client.halo.identity.get();
-      invariant(identity);
+    return Capability.contributes(ThreadCapabilities.CallExtension, {
+      onJoin: async ({ channel }: { channel?: Channel.Channel }) => {
+        const identity = client.halo.identity.get();
+        invariant(identity);
 
-      // let messageEnricher;
-      // if (aiClient && settings.entityExtraction) {
-      //   messageEnricher = createEntityExtractionEnricher({
-      //     aiClient: aiClient.value,
-      //     // TODO(dmaretskyi): Have those be discovered from the schema graph or contributed by capabilities?
-      //     //  This forced me to add a dependency on markdown plugin.
-      //     //  This will be replaced with a vector search index anyway, so its not a big deal.
-      //     contextTypes: [DocumentType, Person.Person, Organization.Organization],
-      //     space,
-      //   });
-      // }
+        // let messageEnricher;
+        // if (aiClient && settings.entityExtraction) {
+        //   messageEnricher = createEntityExtractionEnricher({
+        //     aiClient: aiClient.value,
+        //     // TODO(dmaretskyi): Have those be discovered from the schema graph or contributed by capabilities?
+        //     //  This forced me to add a dependency on markdown plugin.
+        //     //  This will be replaced with a vector search index anyway, so its not a big deal.
+        //     contextTypes: [DocumentType, Person.Person, Organization.Organization],
+        //     space,
+        //   });
+        // }
 
-      // TODO(burdon): The TranscriptionManager singleton is part of the state and should just be updated here.
-      state.transcriptionManager = await context
-        .getCapability(TranscriptionCapabilities.TranscriptionManager)({})
-        .open();
-    },
-    onLeave: async () => {
-      await state.transcriptionManager?.close();
-      state.transcriptionManager = undefined;
-      state.activeMeeting = undefined;
-    },
-    onCallStateUpdated: async (callState: CallState) => {
-      const typename = Type.getTypename(Meeting.Meeting);
-      const activity = typename ? callState.activities?.[typename] : undefined;
-      if (!activity?.payload) {
-        return;
-      }
+        // TODO(burdon): The TranscriptionManager singleton is part of the state and should just be updated here.
+        state.transcriptionManager = await context
+          .getCapability(TranscriptionCapabilities.TranscriptionManager)({})
+          .open();
+      },
+      onLeave: async () => {
+        await state.transcriptionManager?.close();
+        state.transcriptionManager = undefined;
+        state.activeMeeting = undefined;
+      },
+      onCallStateUpdated: async (callState: CallState) => {
+        const typename = Type.getTypename(Meeting.Meeting);
+        const activity = typename ? callState.activities?.[typename] : undefined;
+        if (!activity?.payload) {
+          return;
+        }
 
-      const payload: MeetingPayload = activity.payload;
-      await dispatch(createIntent(MeetingAction.HandlePayload, payload));
-    },
-    onMediaStateUpdated: async ([mediaState, isSpeaking]: [MediaState, boolean]) => {
-      void state.transcriptionManager?.setAudioTrack(mediaState.audioTrack);
-      void state.transcriptionManager?.setRecording(isSpeaking);
-    },
+        const payload: MeetingPayload = activity.payload;
+        await dispatch(createIntent(MeetingAction.HandlePayload, payload));
+      },
+      onMediaStateUpdated: async ([mediaState, isSpeaking]: [MediaState, boolean]) => {
+        void state.transcriptionManager?.setAudioTrack(mediaState.audioTrack);
+        void state.transcriptionManager?.setRecording(isSpeaking);
+      },
     });
   }),
 );

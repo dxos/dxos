@@ -4,7 +4,7 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Common, Capability } from '@dxos/app-framework';
+import { Capability, Common } from '@dxos/app-framework';
 import { live } from '@dxos/live-object';
 
 import { type ObservabilitySettingsProps, ObservabilitySettingsSchema } from '../../components';

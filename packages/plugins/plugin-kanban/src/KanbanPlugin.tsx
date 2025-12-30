@@ -2,9 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Capability, Common, Plugin, createIntent } from '@dxos/app-framework';
+import { Common, Plugin, createIntent } from '@dxos/app-framework';
 import { Type } from '@dxos/echo';
-import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
 import { type CreateObjectIntent } from '@dxos/plugin-space/types';
 import { translations as kanbanTranslations } from '@dxos/react-ui-kanban';
 import { Kanban } from '@dxos/react-ui-kanban/types';

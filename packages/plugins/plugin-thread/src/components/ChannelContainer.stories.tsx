@@ -7,7 +7,6 @@ import React from 'react';
 
 import { Capability, Common } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { ClientCapabilities } from '@dxos/plugin-client';
 import { Query, useDatabase, useQuery } from '@dxos/react-client/echo';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { render } from '@dxos/storybook-utils';
@@ -39,7 +38,9 @@ const meta = {
     withLayout({ layout: 'column' }),
     withPluginManager({
       plugins: [...(await createThreadPlugins())],
-      capabilities: [Capability.contributes(Common.Capability.Schema, [Channel.Channel, Thread.Thread, Message.Message])],
+      capabilities: [
+        Capability.contributes(Common.Capability.Schema, [Channel.Channel, Thread.Thread, Message.Message]),
+      ],
     }),
   ],
   parameters: {

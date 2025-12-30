@@ -5,4 +5,3 @@
 import { Capability } from '@dxos/app-framework';
 
 export const ArtifactDefinition = Capability.lazy('ArtifactDefinition', () => import('./artifact-definition'));
-

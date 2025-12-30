@@ -3,18 +3,16 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
+import * as Effect from 'effect/Effect';
 import React from 'react';
 
-import * as Effect from 'effect/Effect';
-
-import { Common, IntentPlugin, SettingsPlugin, Plugin } from '@dxos/app-framework';
+import { Common, IntentPlugin, Plugin, SettingsPlugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { AttentionPlugin } from '@dxos/plugin-attention';
 import { GraphPlugin } from '@dxos/plugin-graph';
 import { withTheme } from '@dxos/react-ui/testing';
 
 import { DeckStateFactory, LayoutIntentResolver } from '../../capabilities';
-import { meta as pluginMeta } from '../../meta';
 import { translations } from '../../translations';
 
 import { DeckLayout } from './DeckLayout';
@@ -34,20 +32,19 @@ const meta = {
         Plugin.define({
           id: 'example.com/plutin/testing',
           name: 'Testing',
-        })
-          .pipe(
-            Plugin.addModule({
-              id: 'deck-state',
-              activatesOn: Common.ActivationEvent.AppGraphReady,
-              activate: () => Effect.succeed(DeckStateFactory()),
-            }),
-            Plugin.addModule({
-              id: 'layout-intent-resolver',
-              activatesOn: Common.ActivationEvent.SetupIntentResolver,
-              activate: LayoutIntentResolver,
-            }),
-            Plugin.make,
-          )(),
+        }).pipe(
+          Plugin.addModule({
+            id: 'deck-state',
+            activatesOn: Common.ActivationEvent.AppGraphReady,
+            activate: () => Effect.succeed(DeckStateFactory()),
+          }),
+          Plugin.addModule({
+            id: 'layout-intent-resolver',
+            activatesOn: Common.ActivationEvent.SetupIntentResolver,
+            activate: LayoutIntentResolver,
+          }),
+          Plugin.make,
+        )(),
       ],
     }),
   ],

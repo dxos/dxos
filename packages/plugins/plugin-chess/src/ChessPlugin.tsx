@@ -2,8 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Common, Capability, createIntent, Plugin } from '@dxos/app-framework';
-import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
+import { Common, Plugin, createIntent } from '@dxos/app-framework';
 import { type CreateObjectIntent } from '@dxos/plugin-space/types';
 
 import { ChessBlueprint } from './blueprints';

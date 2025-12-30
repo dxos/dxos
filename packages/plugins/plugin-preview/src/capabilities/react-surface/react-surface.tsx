@@ -54,7 +54,7 @@ export default Capability.makeModule(() =>
               db={activeSpace?.db}
               onSelect={handleSelect}
             >
-              {role === 'card--popover' && <Surface role="related" data={data} />}
+              {role === 'card--popover' && <Surface role='related' data={data} />}
             </PersonCard>
           );
         },
@@ -68,7 +68,7 @@ export default Capability.makeModule(() =>
           const activeSpace = useActiveSpace();
           return (
             <OrganizationCard role={role as SurfaceCardRole} subject={data.subject} db={activeSpace?.db}>
-              {role === 'card--popover' && <Surface role="related" data={data} />}
+              {role === 'card--popover' && <Surface role='related' data={data} />}
             </OrganizationCard>
           );
         },
@@ -112,9 +112,9 @@ export default Capability.makeModule(() =>
         filter: (data): data is { subject: Obj.Any } => Obj.isObject(data.subject),
         component: ({ data }) => {
           return (
-            <div role="none" className="flex is-full justify-center">
-              <div role="none" className="pbs-2 pbe-2 card-min-width card-max-width">
-                <Surface role="card" data={data} limit={1} />
+            <div role='none' className='flex is-full justify-center'>
+              <div role='none' className='pbs-2 pbe-2 card-min-width card-max-width'>
+                <Surface role='card' data={data} limit={1} />
               </div>
             </div>
           );

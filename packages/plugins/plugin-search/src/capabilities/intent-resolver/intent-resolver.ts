@@ -15,7 +15,9 @@ export default Capability.makeModule(() =>
       createResolver({
         intent: SearchAction.OpenSearch,
         resolve: () => ({
-          intents: [createIntent(Common.LayoutAction.UpdateComplementary, { part: 'complementary', subject: 'search' })],
+          intents: [
+            createIntent(Common.LayoutAction.UpdateComplementary, { part: 'complementary', subject: 'search' }),
+          ],
         }),
       }),
     ),

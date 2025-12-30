@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Common, Plugin, Capability } from '@dxos/app-framework';
+import { Common, Plugin } from '@dxos/app-framework';
 
 import { meta } from '../meta';
 

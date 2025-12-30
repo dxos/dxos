@@ -18,8 +18,8 @@ import {
 } from '@dxos/react-ui';
 import { groupHoverControlItemWithTransition, mx } from '@dxos/ui-theme';
 
-import { ThreadCapabilities } from '../../types';
 import { meta } from '../../meta';
+import { ThreadCapabilities } from '../../types';
 import { type Channel } from '../../types';
 
 export type ToolbarProps = ThemedClassName<{

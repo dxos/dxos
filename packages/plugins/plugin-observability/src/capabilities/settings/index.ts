@@ -5,4 +5,3 @@
 import { Capability } from '@dxos/app-framework';
 
 export const ObservabilitySettings = Capability.lazy('ObservabilitySettings', () => import('./settings'));
-

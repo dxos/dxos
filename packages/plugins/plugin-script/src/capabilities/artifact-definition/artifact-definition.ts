@@ -6,34 +6,17 @@
 // @ts-nocheck
 
 import * as Effect from 'effect/Effect';
-
 import * as Schema from 'effect/Schema';
 
-
 import { ToolResult, createTool } from '@dxos/ai';
-
-import {
-  Capabilities,
-  type PromiseIntentDispatcher,
-  
-  createIntent,
-  Capability,
-} from '@dxos/app-framework';
-
+import { Capabilities, Capability, type PromiseIntentDispatcher, createIntent } from '@dxos/app-framework';
 import { ArtifactId, createArtifactElement } from '@dxos/assistant';
-
 import { defineArtifact } from '@dxos/blueprints';
-
 import { Filter, Obj, Ref } from '@dxos/echo';
-
 import { ScriptType } from '@dxos/functions';
-
 import { invariant } from '@dxos/invariant';
-
 import { SpaceAction } from '@dxos/plugin-space/types';
-
 import { type Space } from '@dxos/react-client/echo';
-
 
 import { meta } from '../../meta';
 
@@ -47,13 +30,13 @@ declare global {
 
 export default Capability.makeModule(() =>
   Effect.sync(() => {
-  const definition = defineArtifact({
-    id: `artifact:${meta.id}`,
-    name: meta.name,
-    // TODO(dmaretskyi): Since writing scripts requires a lot of domain knowledge,
-    //  we should offload the work of synthesizing the code to a separate model.
-    //  The main reasoning model will give it a concrete task and the script model will synthesize the code, knowing all the docs.
-    instructions: `
+    const definition = defineArtifact({
+      id: `artifact:${meta.id}`,
+      name: meta.name,
+      // TODO(dmaretskyi): Since writing scripts requires a lot of domain knowledge,
+      //  we should offload the work of synthesizing the code to a separate model.
+      //  The main reasoning model will give it a concrete task and the script model will synthesize the code, knowing all the docs.
+      instructions: `
       If the user explicitly requests you to write a script, you can create one.
       If the user requests you to change one of the existing script, you can update it.
       You must not create a script unless the user explicitly requests it.
@@ -162,83 +145,83 @@ export default Capability.makeModule(() =>
         });
       </example>
   `,
-    schema: ScriptType,
-    tools: [
-      createTool(meta.id, {
-        name: 'create',
-        description: 'Create a new script. Returns the artifact definition for the script',
-        caption: 'Creating script...',
-        schema: Schema.Struct({
-          name: Schema.String.annotations({ description: 'The name of the script' }),
-          code: Schema.String.annotations({
-            description: 'The full code of the script in JavaScript or TypeScript. Must be valid executable code.',
+      schema: ScriptType,
+      tools: [
+        createTool(meta.id, {
+          name: 'create',
+          description: 'Create a new script. Returns the artifact definition for the script',
+          caption: 'Creating script...',
+          schema: Schema.Struct({
+            name: Schema.String.annotations({ description: 'The name of the script' }),
+            code: Schema.String.annotations({
+              description: 'The full code of the script in JavaScript or TypeScript. Must be valid executable code.',
+            }),
           }),
+          execute: async ({ name, code }, { extensions }) => {
+            invariant(extensions?.space, 'No space');
+            invariant(extensions?.dispatch, 'No intent dispatcher');
+            const script = Obj.make(ScriptType, { name, source: Ref.make(Text.make(code)) });
+            extensions.space.db.add(script);
+            await extensions.space.db.flush();
+
+            const intent = createIntent(SpaceAction.AddObject, { target: extensions.space, object: script });
+            const { data, error } = await extensions.dispatch(intent);
+            if (!data || error) {
+              return ToolResult.Error(error?.message ?? 'Failed to create chess game');
+            }
+
+            return ToolResult.Success(createArtifactElement(script.id));
+          },
         }),
-        execute: async ({ name, code }, { extensions }) => {
-          invariant(extensions?.space, 'No space');
-          invariant(extensions?.dispatch, 'No intent dispatcher');
-          const script = Obj.make(ScriptType, { name, source: Ref.make(Text.make(code)) });
-          extensions.space.db.add(script);
-          await extensions.space.db.flush();
-
-          const intent = createIntent(SpaceAction.AddObject, { target: extensions.space, object: script });
-          const { data, error } = await extensions.dispatch(intent);
-          if (!data || error) {
-            return ToolResult.Error(error?.message ?? 'Failed to create chess game');
-          }
-
-          return ToolResult.Success(createArtifactElement(script.id));
-        },
-      }),
-      createTool(meta.id, {
-        name: 'inspect',
-        description: 'Inspect a script. Returns the artifact definition for the script',
-        caption: 'Inspecting script...',
-        schema: Schema.Struct({
-          id: ArtifactId,
-        }),
-        execute: async ({ id }, { extensions }) => {
-          invariant(extensions?.space, 'No space');
-
-          const script = (await extensions.space.db.query(Filter.id(id)).first()) as ScriptType;
-          const { content } = await script.source.load();
-
-          return ToolResult.Success({
-            name: script.name,
-            code: content,
-          });
-        },
-      }),
-      createTool(meta.id, {
-        name: 'update',
-        description: 'Update a script. Returns the artifact definition for the script',
-        caption: 'Updating script...',
-        schema: Schema.Struct({
-          id: ArtifactId,
-          code: Schema.String.annotations({
-            description: 'The full code of the script in JavaScript or TypeScript. Must be valid executable code.',
+        createTool(meta.id, {
+          name: 'inspect',
+          description: 'Inspect a script. Returns the artifact definition for the script',
+          caption: 'Inspecting script...',
+          schema: Schema.Struct({
+            id: ArtifactId,
           }),
+          execute: async ({ id }, { extensions }) => {
+            invariant(extensions?.space, 'No space');
+
+            const script = (await extensions.space.db.query(Filter.id(id)).first()) as ScriptType;
+            const { content } = await script.source.load();
+
+            return ToolResult.Success({
+              name: script.name,
+              code: content,
+            });
+          },
         }),
-        execute: async ({ id, code }, { extensions }) => {
-          invariant(extensions?.space, 'No space');
+        createTool(meta.id, {
+          name: 'update',
+          description: 'Update a script. Returns the artifact definition for the script',
+          caption: 'Updating script...',
+          schema: Schema.Struct({
+            id: ArtifactId,
+            code: Schema.String.annotations({
+              description: 'The full code of the script in JavaScript or TypeScript. Must be valid executable code.',
+            }),
+          }),
+          execute: async ({ id, code }, { extensions }) => {
+            invariant(extensions?.space, 'No space');
 
-          const script = (await extensions.space.db.query(Filter.id(id)).first()) as ScriptType;
-          const source = await script.source.load();
-          if (!source) {
-            return ToolResult.Error('Script not found');
-          }
+            const script = (await extensions.space.db.query(Filter.id(id)).first()) as ScriptType;
+            const source = await script.source.load();
+            if (!source) {
+              return ToolResult.Error('Script not found');
+            }
 
-          source.content = code;
-          await extensions.space?.db.flush();
+            source.content = code;
+            await extensions.space?.db.flush();
 
-          return ToolResult.Success({
-            name: script.name,
-          });
-        },
-      }),
-    ],
-  });
+            return ToolResult.Success({
+              name: script.name,
+            });
+          },
+        }),
+      ],
+    });
 
-  return Capability.contributes(Capabilities.ArtifactDefinition, definition);
+    return Capability.contributes(Capabilities.ArtifactDefinition, definition);
   }),
 );

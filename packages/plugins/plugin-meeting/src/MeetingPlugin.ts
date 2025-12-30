@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 
 import { ActivationEvent, Capability, Common, Plugin, createIntent } from '@dxos/app-framework';
 import { Type } from '@dxos/echo';
-import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
+import { ClientEvents } from '@dxos/plugin-client';
 import { SpaceCapabilities, SpaceEvents } from '@dxos/plugin-space';
 
 import {

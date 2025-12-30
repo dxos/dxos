@@ -5,4 +5,3 @@
 import { Capability } from '@dxos/app-framework';
 
 export const ComputeGraphRegistry = Capability.lazy('ComputeGraphRegistry', () => import('./compute-graph-registry'));
-

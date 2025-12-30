@@ -4,7 +4,7 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Common, Plugin, Capability, createResolver } from '@dxos/app-framework';
+import { Capability, Common, Plugin, createResolver } from '@dxos/app-framework';
 
 import { meta } from '../meta';
 import { ObservabilityAction } from '../types';

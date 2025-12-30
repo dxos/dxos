@@ -2,9 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Capability, Common, Plugin } from '@dxos/app-framework';
+import { Common, Plugin } from '@dxos/app-framework';
 import { Obj } from '@dxos/echo';
-import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
 import { getSpace } from '@dxos/react-client/echo';
 import { Message, Transcript } from '@dxos/types';
 

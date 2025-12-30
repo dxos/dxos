@@ -12,9 +12,9 @@ import { Main, type MainProps, useMediaQuery, useOnTransition } from '@dxos/reac
 import { DEFAULT_HORIZONTAL_SIZE, Stack, StackContext } from '@dxos/react-ui-stack';
 import { mainPaddingTransitions, mx } from '@dxos/ui-theme';
 
-import { DeckCapabilities } from '../../types';
 import { useBreakpoints, useHoistStatusbar } from '../../hooks';
 import { meta } from '../../meta';
+import { DeckCapabilities } from '../../types';
 import { type DeckSettingsProps, getMode } from '../../types';
 import { calculateOverscroll, layoutAppliesTopbar } from '../../util';
 import { fixedComplementarySidebarToggleStyles, fixedSidebarToggleStyles } from '../fragments';
@@ -69,7 +69,11 @@ export const DeckMain = () => {
 
       shouldRevert.current = true;
       void dispatch(
-        createIntent(Common.LayoutAction.SetLayoutMode, { part: 'mode', subject: attended[0], options: { mode: 'solo' } }),
+        createIntent(Common.LayoutAction.SetLayoutMode, {
+          part: 'mode',
+          subject: attended[0],
+          options: { mode: 'solo' },
+        }),
       );
     } else if (isNotMobile && getMode(deck) === 'solo' && shouldRevert.current) {
       void dispatch(createIntent(Common.LayoutAction.SetLayoutMode, { part: 'mode', options: { revert: true } }));
@@ -81,7 +85,11 @@ export const DeckMain = () => {
   useEffect(() => {
     if (!settings?.enableDeck && layoutMode === 'deck') {
       void dispatch(
-        createIntent(Common.LayoutAction.SetLayoutMode, { part: 'mode', subject: active[0], options: { mode: 'solo' } }),
+        createIntent(Common.LayoutAction.SetLayoutMode, {
+          part: 'mode',
+          subject: active[0],
+          options: { mode: 'solo' },
+        }),
       );
     }
   }, [settings?.enableDeck, dispatch, active, layoutMode]);

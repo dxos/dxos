@@ -19,8 +19,8 @@ import { MenuProvider, ToolbarMenu, createMenuAction, createMenuItemGroup, useMe
 import { useSoundEffect } from '@dxos/react-ui-sfx';
 import { StackItem } from '@dxos/react-ui-stack';
 
-import { ThreadCapabilities } from '../types';
 import { meta } from '../meta';
+import { ThreadCapabilities } from '../types';
 import { type Channel } from '../types';
 
 import { Call } from './Call';

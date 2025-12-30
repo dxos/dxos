@@ -5,24 +5,21 @@
 import * as Effect from 'effect/Effect';
 
 import { Capability, Common } from '@dxos/app-framework';
-
 import { live } from '@dxos/live-object';
 
-
 import { meta } from '../../meta';
-
 import { ScriptSettings } from '../../types';
 
 export default Capability.makeModule(() =>
   Effect.sync(() => {
-  const settings = live<ScriptSettings>({
-    editorInputMode: 'vscode',
-  });
+    const settings = live<ScriptSettings>({
+      editorInputMode: 'vscode',
+    });
 
-  return Capability.contributes(Common.Capability.Settings, {
-    prefix: meta.id,
-    schema: ScriptSettings,
-    value: settings,
-  });
+    return Capability.contributes(Common.Capability.Settings, {
+      prefix: meta.id,
+      schema: ScriptSettings,
+      value: settings,
+    });
   }),
 );

@@ -21,9 +21,9 @@ import { ATTENDABLE_PATH_SEPARATOR, useAttentionAttributes } from '@dxos/react-u
 import { StackItem, railGridHorizontal } from '@dxos/react-ui-stack';
 import { mainIntrinsicSize, mx } from '@dxos/ui-theme';
 
-import { DeckCapabilities } from '../../types';
 import { useCompanions, useMainSize } from '../../hooks';
 import { parseEntryId } from '../../layout';
+import { DeckCapabilities } from '../../types';
 import { DeckAction, type DeckSettingsProps, type LayoutMode, type ResolvedPart } from '../../types';
 
 import { PlankContentError, PlankError } from './PlankError';

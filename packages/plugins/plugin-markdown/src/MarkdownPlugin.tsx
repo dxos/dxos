@@ -2,10 +2,9 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Capability, Common, Plugin, createIntent } from '@dxos/app-framework';
+import { Common, Plugin, createIntent } from '@dxos/app-framework';
 import { type Obj, Ref } from '@dxos/echo';
 import { createDocAccessor, getTextInRange } from '@dxos/echo-db';
-import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
 import { type CreateObjectIntent } from '@dxos/plugin-space/types';
 import { translations as editorTranslations } from '@dxos/react-ui-editor';
 import { Text } from '@dxos/schema';

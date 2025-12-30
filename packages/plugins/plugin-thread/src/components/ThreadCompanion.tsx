@@ -16,9 +16,9 @@ import { Tabs } from '@dxos/react-ui-tabs';
 import { AnchoredTo, Thread } from '@dxos/types';
 import { mx } from '@dxos/ui-theme';
 
-import { ThreadCapabilities } from '../types';
 import { CommentsContainer, type CommentsContainerProps } from '../components';
 import { meta } from '../meta';
+import { ThreadCapabilities } from '../types';
 import { ThreadAction } from '../types';
 
 export const ThreadCompanion = ({ subject }: { subject: any }) => {

@@ -5,4 +5,3 @@
 import { Capability } from '@dxos/app-framework';
 
 export const IntentResolver = Capability.lazy('IntentResolver', () => import('./intent-resolver'));
-

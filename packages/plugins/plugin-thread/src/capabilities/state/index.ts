@@ -5,4 +5,3 @@
 import { Capability } from '@dxos/app-framework';
 
 export const ThreadState = Capability.lazy('ThreadState', () => import('./state'));
-

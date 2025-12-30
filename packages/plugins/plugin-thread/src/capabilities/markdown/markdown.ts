@@ -2,8 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as Effect from 'effect/Effect';
 import { EditorView } from '@codemirror/view';
+import * as Effect from 'effect/Effect';
 
 import { Capability, Common, createIntent } from '@dxos/app-framework';
 import { Obj } from '@dxos/echo';

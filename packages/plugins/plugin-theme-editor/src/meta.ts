@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Plugin } from '@dxos/app-framework';
+import { type Plugin } from '@dxos/app-framework';
 import { trim } from '@dxos/util';
 
 export const meta: Plugin.Meta = {
