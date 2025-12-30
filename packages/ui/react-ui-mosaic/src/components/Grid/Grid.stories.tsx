@@ -98,10 +98,10 @@ const TextCell: GridCellProps['Cell'] = ({ object, dragging }) => {
   }, [accessor]);
 
   if (dragging) {
-    return <div className='truncate'>{initialValue?.slice(0, 80)}</div>;
+    return <div className='plb-2 truncate'>{initialValue?.slice(0, 80)}</div>;
   }
 
-  return <Editor.Content extensions={extensions} initialValue={initialValue} focusable={false} />;
+  return <Editor.Content classNames='plb-2' extensions={extensions} initialValue={initialValue} focusable={false} />;
 };
 
 // TODO(burdon): Compact card surface (incl. document).

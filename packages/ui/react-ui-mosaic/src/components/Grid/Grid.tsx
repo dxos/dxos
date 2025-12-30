@@ -170,7 +170,9 @@ const GridStack = forwardRef<HTMLDivElement, GridStackProps>(
         {...props}
       >
         {objects?.map((object) => (
-          <Grid.Cell key={object.id} containerId={id} object={object} Cell={Cell} canDrag={canDrag} canDrop={canDrop} />
+          <div key={object.id} className='p-1'>
+            <Grid.Cell containerId={id} object={object} Cell={Cell} canDrag={canDrag} canDrop={canDrop} />
+          </div>
         ))}
         <div className='p-3' ref={placeholderRef}>
           <div
@@ -303,9 +305,12 @@ const GridCell = memo(({ classNames, containerId, object, Cell, canDrag = false,
 
       {state.type === 'preview' &&
         createPortal(
-          <div role='none' style={{ width: `${state.rect.width}px` } as CSSProperties}>
+          <div
+            role='none'
+            style={{ width: `${state.rect.width}px`, height: `${state.rect.height}px` } as CSSProperties}
+          >
             <GridCellPrimitive classNames={['bg-inputSurface', classNames]}>
-              <Cell object={object} dragging={true} />
+              <Cell object={object} dragging />
             </GridCellPrimitive>
           </div>,
           state.container,
@@ -323,36 +328,33 @@ type GridCellPrimitiveProps = ThemedClassName<
 >;
 
 const GridCellPrimitive = memo(
-  forwardRef<HTMLDivElement, GridCellPrimitiveProps>(({ classNames, children, handleRef }, ref) => {
-    const focusableRef = useRef<HTMLDivElement>(null);
+  forwardRef<HTMLDivElement, GridCellPrimitiveProps>(({ classNames, children, handleRef }, forwardedRef) => {
     const focusableGroupAttrs = useFocusableGroup();
 
     return (
-      <div ref={ref} role='none' className='p-1'>
-        <div
-          ref={focusableRef}
-          role='none'
-          className={mx(
-            'group/cell is-full grid grid-cols-[min-content_1fr_min-content] gap-2 p-2 overflow-hidden',
-            classes.borderFocus,
-            classNames,
-          )}
-          tabIndex={0}
-          {...focusableGroupAttrs}
-        >
-          <div role='none'>
-            {handleRef && (
-              <div ref={handleRef} role='none' className={classes.icon}>
-                <Icon classNames='cursor-pointer' icon='ph--dots-six-vertical--regular' size={5} />
-              </div>
-            )}
+      <div
+        ref={forwardedRef}
+        role='none'
+        className={mx(
+          'group/cell is-full grid grid-cols-[min-content_1fr_min-content] overflow-hidden',
+          classes.borderFocus,
+          classNames,
+        )}
+        tabIndex={0}
+        {...focusableGroupAttrs}
+      >
+        <div role='none' className='shrink-0 p-2'>
+          <div ref={handleRef} role='none' className={classes.icon}>
+            <Icon classNames='cursor-pointer' icon='ph--dots-six-vertical--regular' size={5} />
           </div>
-          <div role='none'>{children}</div>
-          <div role='none'>
-            <div role='none' className={classes.icon}>
-              {/* TODO(burdon): Menu. */}
-              <Icon classNames='cursor-pointer' icon='ph--list--regular' size={5} />
-            </div>
+        </div>
+        <div role='none' className='grow overflow-hidden'>
+          {children}
+        </div>
+        <div role='none' className='shrink-0 p-2'>
+          <div role='none' className={classes.icon}>
+            {/* TODO(burdon): Menu. */}
+            <Icon classNames='cursor-pointer' icon='ph--list--regular' size={5} />
           </div>
         </div>
       </div>

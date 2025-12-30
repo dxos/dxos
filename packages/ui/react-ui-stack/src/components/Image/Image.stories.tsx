@@ -18,8 +18,10 @@ const meta = {
   title: 'ui/react-ui-stack/Image',
   component: Image,
   render: (args) => (
-    <div className='absolute inset-0 flex place-items-center'>
-      <Image {...args} />
+    <div className='absolute inset-0 flex justify-center items-center'>
+      <div className='border border-neutral-500'>
+        <Image {...args} />
+      </div>
     </div>
   ),
   decorators: [withTheme],
@@ -38,6 +40,8 @@ export const Default: Story = {
   },
 };
 
+const classNames = 'bs-[12rem] is-[18rem]';
+
 /**
  * Access to image at 'https://dxos.network/dxos-logotype-blue.png'
  * from origin 'http://localhost:9009' has been blocked by CORS policy:
@@ -46,21 +50,21 @@ export const Default: Story = {
 export const Cors: Story = {
   args: {
     src: 'https://dxos.network/dxos-logotype-blue.png',
-    classNames: 'is-[20rem]',
+    classNames,
   },
 };
 
 export const Corners: Story = {
   args: {
-    src: 'https://media.licdn.com/dms/image/v2/D4D0BAQEY4OiENeMR4A/company-logo_200_200/company-logo_200_200/0/1728648673877/moonfire_logo?e=1763596800&v=beta&t=_Jmhg-vu5uqUR88YiTbDFOC4ShlUbjk63_7-JQpgK9A',
-    classNames: 'is-[20rem]',
+    src: 'https://picsum.photos/seed/picsum/200/200',
+    classNames,
   },
 };
 
 export const SVG: Story = {
   args: {
     src: 'https://dxos.network/bg-kube.svg',
-    classNames: 'is-[20rem]',
+    classNames,
   },
 };
 
@@ -76,7 +80,7 @@ export const Many: Story = {
     return (
       <div className='is-[60rem] grid grid-cols-3 grid-rows-3 gap-8'>
         {images.map((src, i) => (
-          <Image key={i} src={src} classNames='is-[18rem] bs-[12rem]' />
+          <Image key={i} src={src} classNames={classNames} />
         ))}
       </div>
     );
