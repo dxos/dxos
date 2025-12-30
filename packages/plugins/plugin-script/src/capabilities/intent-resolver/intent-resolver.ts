@@ -2,20 +2,32 @@
 // Copyright 2025 DXOS.org
 //
 
+import * as Effect from 'effect/Effect';
+
 import { Octokit } from '@octokit/core';
+
 import * as Predicate from 'effect/Predicate';
 
+
 import { Capability, Common, createIntent, createResolver } from '@dxos/app-framework';
+
 import { Obj } from '@dxos/echo';
+
 import { Script } from '@dxos/functions';
+
 import { TokenManagerAction } from '@dxos/plugin-token-manager/types';
 
+
 import { DEPLOYMENT_DIALOG } from '../../components';
+
 import { defaultScriptsForIntegration } from '../../meta';
+
 import { templates } from '../../templates';
+
 import { Notebook, ScriptAction } from '../../types';
 
 export default Capability.makeModule(() =>
+  Effect.succeed(
   Capability.contributes(Common.Capability.IntentResolver, [
     createResolver({
       intent: ScriptAction.CreateScript,
@@ -83,5 +95,6 @@ export default Capability.makeModule(() =>
         return { data: undefined };
       },
     }),
-  ]),
+    ]),
+  ),
 );

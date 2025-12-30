@@ -4,6 +4,7 @@
 
 import { type Atom } from '@effect-atom/atom-react';
 import * as Array from 'effect/Array';
+import * as Effect from 'effect/Effect';
 import * as Function from 'effect/Function';
 import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
@@ -33,12 +34,13 @@ import {
   createStaticSchemaNode,
 } from '../../util';
 
-export default Capability.makeModule((context) => {
-  // TODO(wittjosiah): Using `get` and being reactive seems to cause a bug with Atom where disposed atoms are accessed.
-  const resolve = (get: Atom.Context) => (typename: string) =>
-    context.getCapabilities(Common.Capability.Metadata).find(({ id }) => id === typename)?.metadata ?? {};
+export default Capability.makeModule((context) =>
+  Effect.sync(() => {
+    // TODO(wittjosiah): Using `get` and being reactive seems to cause a bug with Atom where disposed atoms are accessed.
+    const resolve = (get: Atom.Context) => (typename: string) =>
+      context.getCapabilities(Common.Capability.Metadata).find(({ id }) => id === typename)?.metadata ?? {};
 
-  const spacesNode = {
+    const spacesNode = {
     id: SPACES,
     type: SPACES,
     cacheable: ['label', 'role'],
@@ -610,4 +612,5 @@ export default Capability.makeModule((context) => {
       ],
     }),
   ]);
-});
+  }),
+);

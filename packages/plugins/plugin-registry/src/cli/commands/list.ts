@@ -15,9 +15,9 @@ export const handler = Effect.fn(function* () {
   const { json } = yield* CommandConfig;
   const manager = yield* PluginManager.Service;
 
-  const plugins = manager.plugins;
-  const enabled = manager.enabled;
-  const core = manager.core;
+  const plugins = manager.getPlugins();
+  const enabled = manager.getEnabled();
+  const core = manager.getCore();
 
   const formattedPlugins: FormattedPlugin[] = plugins.map((plugin: Plugin.Plugin) => {
     const isEnabled = enabled.includes(plugin.meta.id);

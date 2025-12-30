@@ -27,12 +27,14 @@ import { SpaceProperties } from '@dxos/react-client/echo';
 
 import { AutomationCapabilities } from '../../types';
 
-export default Capability.makeModule(async (context: Capability.PluginContext) => {
-  const provider = await new ComputeRuntimeProviderImpl(context).open();
-  return Capability.contributes(AutomationCapabilities.ComputeRuntime, provider, async () => {
-    await provider.close();
-  });
-});
+export default Capability.makeModule((context: Capability.PluginContext) =>
+  Effect.gen(function* () {
+    const provider = yield* Effect.tryPromise(() => new ComputeRuntimeProviderImpl(context).open());
+    return Capability.contributes(AutomationCapabilities.ComputeRuntime, provider, () =>
+      Effect.tryPromise(() => provider.close()),
+    );
+  }),
+);
 
 /**
  * Adapts plugin capabilities to runtime layers.

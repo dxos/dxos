@@ -5,6 +5,7 @@
 import * as Tool from '@effect/ai/Tool';
 import * as Toolkit from '@effect/ai/Toolkit';
 import * as Console from 'effect/Console';
+import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
 import { SERVICES_CONFIG } from '@dxos/ai/testing';
@@ -201,84 +202,88 @@ const StoryPlugin = Plugin.define<StoryPluginOptions>({
   Plugin.addModule({
     id: 'example.com/plugin/testing/module/testing',
     activatesOn: Common.ActivationEvent.SetupArtifactDefinition,
-    activate: () => [
-      Capability.contributes(Common.Capability.BlueprintDefinition, DesignBlueprint),
-      Capability.contributes(Common.Capability.BlueprintDefinition, PlanningBlueprint),
-      Capability.contributes(Common.Capability.Functions, [Agent.prompt]),
-      Capability.contributes(Common.Capability.Functions, [Document.read, Document.update]),
-      Capability.contributes(Common.Capability.Functions, [Tasks.read, Tasks.update]),
-      Capability.contributes(Common.Capability.Functions, [Research.create, Research.research]),
-      Capability.contributes(Common.Capability.Functions, [Example.reply]),
-    ],
+    activate: () =>
+      Effect.succeed([
+        Capability.contributes(Common.Capability.BlueprintDefinition, DesignBlueprint),
+        Capability.contributes(Common.Capability.BlueprintDefinition, PlanningBlueprint),
+        Capability.contributes(Common.Capability.Functions, [Agent.prompt]),
+        Capability.contributes(Common.Capability.Functions, [Document.read, Document.update]),
+        Capability.contributes(Common.Capability.Functions, [Tasks.read, Tasks.update]),
+        Capability.contributes(Common.Capability.Functions, [Research.create, Research.research]),
+        Capability.contributes(Common.Capability.Functions, [Example.reply]),
+      ]),
   }),
   Plugin.addModule({
     id: 'example.com/plugin/testing/module/toolkit',
     activatesOn: Common.ActivationEvent.Startup,
-    activate: (context) => [
-      Capability.contributes(
-        Common.Capability.Toolkit,
-        GenericToolkit.make(TestingToolkit.Toolkit, TestingToolkit.createLayer(context)),
-      ),
-    ],
+    activate: (context) =>
+      Effect.succeed([
+        Capability.contributes(
+          Common.Capability.Toolkit,
+          GenericToolkit.make(TestingToolkit.Toolkit, TestingToolkit.createLayer(context)),
+        ),
+      ]),
   }),
   Plugin.addModule({
     id: 'example.com/plugin/testing/module/setup',
     activatesOn: ActivationEvent.allOf(Common.ActivationEvent.DispatcherReady, ClientEvents.SpacesReady),
-    activate: async (context) => {
-      const client = context.getCapability(ClientCapabilities.Client);
-      const space = client.spaces.default;
-      const { dispatchPromise: dispatch } = context.getCapability(Common.Capability.IntentDispatcher);
+    activate: (context) =>
+      Effect.gen(function* () {
+        const client = context.getCapability(ClientCapabilities.Client);
+        const space = client.spaces.default;
+        const { dispatchPromise: dispatch } = context.getCapability(Common.Capability.IntentDispatcher);
 
-      // Ensure workspace is set.
-      await dispatch(createIntent(Common.LayoutAction.SwitchWorkspace, { part: 'workspace', subject: space.id }));
+        // Ensure workspace is set.
+        yield* Effect.tryPromise(() =>
+          dispatch(createIntent(Common.LayoutAction.SwitchWorkspace, { part: 'workspace', subject: space.id })),
+        );
 
-      // Create initial chat.
-      await dispatch(createIntent(AssistantAction.CreateChat, { db: space.db }));
-
-      return [];
-    },
+        // Create initial chat.
+        yield* Effect.tryPromise(() => dispatch(createIntent(AssistantAction.CreateChat, { db: space.db })));
+      }),
   }),
   Plugin.addModule(({ onChatCreated }) => ({
     id: 'example.com/plugin/testing/module/intent-resolver',
     activatesOn: Common.ActivationEvent.SetupIntentResolver,
-    activate: (context) => [
-      Capability.contributes(Common.Capability.IntentResolver, [
-        createResolver({
-          intent: DeckAction.ChangeCompanion,
-          resolve: () => ({}),
-        }),
-        createResolver({
-          intent: AssistantAction.CreateChat,
-          position: 'hoist',
-          resolve: async ({ db, name }) => {
-            const client = context.getCapability(ClientCapabilities.Client);
-            const space = client.spaces.get(db.spaceId);
-            invariant(space, 'Space not found');
+    activate: (context) =>
+      Effect.succeed(
+        Capability.contributes(Common.Capability.IntentResolver, [
+          createResolver({
+            intent: DeckAction.ChangeCompanion,
+            resolve: () => ({}),
+          }),
+          createResolver({
+            intent: AssistantAction.CreateChat,
+            position: 'hoist',
+            resolve: async ({ db, name }) => {
+              const client = context.getCapability(ClientCapabilities.Client);
+              const space = client.spaces.get(db.spaceId);
+              invariant(space, 'Space not found');
 
-            const queue = space.queues.create();
-            const traceQueue = space.queues.create();
-            const chat = Obj.make(Assistant.Chat, {
-              name,
-              queue: Ref.fromDXN(queue.dxn),
-              traceQueue: Ref.fromDXN(traceQueue.dxn),
-            });
-            const binder = new AiContextBinder(queue);
+              const queue = space.queues.create();
+              const traceQueue = space.queues.create();
+              const chat = Obj.make(Assistant.Chat, {
+                name,
+                queue: Ref.fromDXN(queue.dxn),
+                traceQueue: Ref.fromDXN(traceQueue.dxn),
+              });
+              const binder = new AiContextBinder(queue);
 
-            // Story-specific behaviour to allow chat creation to be extended.
-            space.db.add(chat);
-            await space.db.flush({ indexes: true });
+              // Story-specific behaviour to allow chat creation to be extended.
+              space.db.add(chat);
+              await space.db.flush({ indexes: true });
 
-            await binder.open();
-            await onChatCreated?.({ space, chat, binder });
-            await binder.close();
+              await binder.open();
+              await onChatCreated?.({ space, chat, binder });
+              await binder.close();
 
-            return {
-              data: { object: chat },
-            };
-          },
-        }),
-      ]),
-    ],
+              return {
+                data: { object: chat },
+              };
+            },
+          }),
+        ]),
+      ),
   })),
   Plugin.make,
 );

@@ -29,7 +29,7 @@ export const ResetDialog = ({ mode, onReset }: ResetDialogProps) => {
 
   const handleCancel = useCallback(() => {
     void dispatch(
-        createIntent(Common.LayoutAction.UpdateDialog, {
+      createIntent(Common.LayoutAction.UpdateDialog, {
         part: 'dialog',
         options: { state: false },
       }),

@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Capability, Common, Plugin } from '@dxos/app-framework';
+import { Common, Plugin } from '@dxos/app-framework';
 
 // NOTE: Must not import from index to avoid pulling in react dependencies.
 import { Client } from '../capabilities/client';
@@ -24,8 +24,8 @@ export const ClientPlugin = Plugin.define<ClientPluginOptions>(meta).pipe(
   })),
   Plugin.addModule({
     id: `${meta.id}/module/schema`,
-    activatesOn: Common.ActivationEvent.SetupSchema,
-    activatesAfter: [ClientEvents.ClientReady],
+    activatesOn: ClientEvents.ClientReady,
+    activatesBefore: [Common.ActivationEvent.SetupSchema],
     activate: SchemaDefs,
   }),
   // TODO(wittjosiah): Could some of these commands make use of intents?

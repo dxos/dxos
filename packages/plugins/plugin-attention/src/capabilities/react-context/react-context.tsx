@@ -2,9 +2,10 @@
 // Copyright 2025 DXOS.org
 //
 
+import * as Effect from 'effect/Effect';
 import React, { type PropsWithChildren } from 'react';
 
-import { Common, Capability } from '@dxos/app-framework';
+import { Capability, Common } from '@dxos/app-framework';
 import { useCapability } from '@dxos/app-framework/react';
 import {
   type AttentionManager,
@@ -17,25 +18,27 @@ import { meta } from '../../meta';
 import { AttentionCapabilities } from '../../types';
 
 export default Capability.makeModule(() =>
-  Capability.contributes(Common.Capability.ReactContext, {
-    id: meta.id,
-    context: (props: PropsWithChildren) => {
-      const attention = useCapability(AttentionCapabilities.Attention) as AttentionManager | undefined;
-      const selection = useCapability(AttentionCapabilities.Selection) as SelectionManager | undefined;
+  Effect.succeed(
+    Capability.contributes(Common.Capability.ReactContext, {
+      id: meta.id,
+      context: (props: PropsWithChildren) => {
+        const attention = useCapability(AttentionCapabilities.Attention) as AttentionManager | undefined;
+        const selection = useCapability(AttentionCapabilities.Selection) as SelectionManager | undefined;
 
-      return (
-        <RootAttentionProvider
-          attention={attention}
-          onChange={(nextAttended) => {
-            // TODO(Zan): Workout why this was in deck plugin. It didn't seem to work?
-            // if (layout.values.scrollIntoView && nextAttended.has(layout.values.scrollIntoView)) {
-            //   layout.values.scrollIntoView = undefined;
-            // }
-          }}
-        >
-          <SelectionProvider selection={selection}>{props.children}</SelectionProvider>
-        </RootAttentionProvider>
-      );
-    },
-  }),
+        return (
+          <RootAttentionProvider
+            attention={attention}
+            onChange={(nextAttended) => {
+              // TODO(Zan): Workout why this was in deck plugin. It didn't seem to work?
+              // if (layout.values.scrollIntoView && nextAttended.has(layout.values.scrollIntoView)) {
+              //   layout.values.scrollIntoView = undefined;
+              // }
+            }}
+          >
+            <SelectionProvider selection={selection}>{props.children}</SelectionProvider>
+          </RootAttentionProvider>
+        );
+      },
+    }),
+  ),
 );

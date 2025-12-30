@@ -2,20 +2,32 @@
 // Copyright 2025 DXOS.org
 //
 
+import * as Effect from 'effect/Effect';
+
 import * as Option from 'effect/Option';
 
+
 import { Capability, Common, createIntent } from '@dxos/app-framework';
+
 import { Obj } from '@dxos/echo';
+
 import { DeckCapabilities } from '@dxos/plugin-deck';
+
 import { ATTENDABLE_PATH_SEPARATOR, DeckAction } from '@dxos/plugin-deck/types';
+
 import { CreateAtom, GraphBuilder } from '@dxos/plugin-graph';
+
 import { Markdown } from '@dxos/plugin-markdown/types';
+
 import { Collection } from '@dxos/schema';
 
+
 import { meta } from '../../meta';
+
 import { PresenterAction, type PresenterSettingsProps } from '../../types';
 
-export default Capability.makeModule((context) => {
+export default Capability.makeModule((context) =>
+  Effect.sync(() => {
   return Capability.contributes(
     Common.Capability.AppGraphBuilder,
     GraphBuilder.createExtension({
@@ -104,4 +116,5 @@ export default Capability.makeModule((context) => {
       },
     }),
   );
-});
+  }),
+);

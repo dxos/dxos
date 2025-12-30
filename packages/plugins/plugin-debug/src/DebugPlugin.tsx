@@ -2,7 +2,9 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Capability, Common, Plugin } from '@dxos/app-framework';
+import * as Effect from 'effect/Effect';
+
+import { Common, Plugin } from '@dxos/app-framework';
 import { type Client } from '@dxos/react-client';
 
 import { AppGraphBuilder, DebugSettings, ReactContext, ReactSurface } from './capabilities';
@@ -14,10 +16,7 @@ export const DebugPlugin = Plugin.define(meta).pipe(
   Plugin.addModule({
     id: 'setup-devtools',
     activatesOn: Common.ActivationEvent.Startup,
-    activate: () => {
-      setupDevtools();
-      return Capability.contributes(Common.Capability.Null, null);
-    },
+    activate: () => Effect.sync(() => setupDevtools()),
   }),
   Common.Plugin.addSettingsModule({ activate: DebugSettings }),
   Common.Plugin.addTranslationsModule({ translations }),

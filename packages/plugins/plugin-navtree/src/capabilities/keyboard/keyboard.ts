@@ -2,15 +2,23 @@
 // Copyright 2025 DXOS.org
 //
 
+import * as Effect from 'effect/Effect';
+
 import { Capability, Common } from '@dxos/app-framework';
+
 import { debounce } from '@dxos/async';
+
 import { Keyboard } from '@dxos/keyboard';
+
 import { Graph, Node } from '@dxos/plugin-graph';
+
 import { getHostPlatform } from '@dxos/util';
+
 
 import { KEY_BINDING } from '../../meta';
 
-export default Capability.makeModule((context) => {
+export default Capability.makeModule((context) =>
+  Effect.sync(() => {
   const { graph } = context.getCapability(Common.Capability.AppGraph);
 
   // TODO(wittjosiah): Factor out.
@@ -50,8 +58,11 @@ export default Capability.makeModule((context) => {
   Keyboard.singleton.initialize();
   Keyboard.singleton.setCurrentContext(Node.RootId);
 
-  return Capability.contributes(Common.Capability.Null, null, () => {
-    unsubscribe();
-    Keyboard.singleton.destroy();
-  });
-});
+  return Capability.contributes(Common.Capability.Null, null, () =>
+    Effect.sync(() => {
+      unsubscribe();
+      Keyboard.singleton.destroy();
+    }),
+  );
+  }),
+);

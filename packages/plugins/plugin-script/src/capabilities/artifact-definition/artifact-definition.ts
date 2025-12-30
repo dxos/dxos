@@ -5,9 +5,13 @@
 // ISSUE(burdon): defineArtifact
 // @ts-nocheck
 
+import * as Effect from 'effect/Effect';
+
 import * as Schema from 'effect/Schema';
 
+
 import { ToolResult, createTool } from '@dxos/ai';
+
 import {
   Capabilities,
   type PromiseIntentDispatcher,
@@ -15,13 +19,21 @@ import {
   createIntent,
   Capability,
 } from '@dxos/app-framework';
+
 import { ArtifactId, createArtifactElement } from '@dxos/assistant';
+
 import { defineArtifact } from '@dxos/blueprints';
+
 import { Filter, Obj, Ref } from '@dxos/echo';
+
 import { ScriptType } from '@dxos/functions';
+
 import { invariant } from '@dxos/invariant';
+
 import { SpaceAction } from '@dxos/plugin-space/types';
+
 import { type Space } from '@dxos/react-client/echo';
+
 
 import { meta } from '../../meta';
 
@@ -33,7 +45,8 @@ declare global {
   }
 }
 
-export default Capability.makeModule(() => {
+export default Capability.makeModule(() =>
+  Effect.sync(() => {
   const definition = defineArtifact({
     id: `artifact:${meta.id}`,
     name: meta.name,
@@ -227,4 +240,5 @@ export default Capability.makeModule(() => {
   });
 
   return Capability.contributes(Capabilities.ArtifactDefinition, definition);
-});
+  }),
+);

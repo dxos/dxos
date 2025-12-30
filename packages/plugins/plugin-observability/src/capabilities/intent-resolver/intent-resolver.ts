@@ -2,12 +2,9 @@
 // Copyright 2025 DXOS.org
 //
 
-import {
-  Common,
-  Capability,
-  IntentAction,
-  createResolver,
-} from '@dxos/app-framework';
+import * as Effect from 'effect/Effect';
+
+import { Common, Capability, IntentAction, createResolver } from '@dxos/app-framework';
 import { log } from '@dxos/log';
 import { getTelemetryIdentity, storeObservabilityDisabled } from '@dxos/observability';
 
@@ -16,7 +13,8 @@ import { meta } from '../../meta';
 import { ClientCapability, ObservabilityAction, ObservabilityCapabilities } from '../../types';
 
 export default Capability.makeModule(({ context, namespace }: { context: Capability.PluginContext; namespace: string }) =>
-  Capability.contributes(Common.Capability.IntentResolver, [
+  Effect.succeed(
+    Capability.contributes(Common.Capability.IntentResolver, [
     createResolver({
       intent: IntentAction.Track,
       resolve: (intent) => {
@@ -53,13 +51,16 @@ export default Capability.makeModule(({ context, namespace }: { context: Capabil
         // NOTE: This is to ensure that events fired before observability is ready are still sent.
         // TODO(wittjosiah): If the intent dispatcher supports concurrent actions in the future,
         //   then this could be awaited still rather than voiding.
-        void context.waitForCapability(ObservabilityCapabilities.Observability).then((observability) => {
-          observability.track({
-            ...getTelemetryIdentity(client),
-            action: data.name,
-            properties,
-          });
-        });
+        void Effect.runPromise(
+          Effect.gen(function* () {
+            const observability = yield* context.waitForCapability(ObservabilityCapabilities.Observability);
+            observability.track({
+              ...getTelemetryIdentity(client),
+              action: data.name,
+              properties,
+            });
+          }),
+        );
       },
     }),
     createResolver({
@@ -70,4 +71,5 @@ export default Capability.makeModule(({ context, namespace }: { context: Capabil
       },
     }),
   ]),
+  ),
 );

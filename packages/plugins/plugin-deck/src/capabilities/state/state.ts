@@ -2,6 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
+import * as Effect from 'effect/Effect';
+
 import { Capability, Common } from '@dxos/app-framework';
 import { invariant } from '@dxos/invariant';
 import { live } from '@dxos/live-object';
@@ -103,10 +105,9 @@ export const DeckStateFactory = () => {
   });
 
   return [
-    Capability.contributes(DeckCapabilities.DeckState, state.values, () => state.close()),
+    Capability.contributes(DeckCapabilities.DeckState, state.values, () => Effect.sync(() => state.close())),
     Capability.contributes(Common.Capability.Layout, layout),
   ];
 };
 
-export default Capability.makeModule(() => DeckStateFactory());
-
+export default Capability.makeModule(() => Effect.succeed(DeckStateFactory()));

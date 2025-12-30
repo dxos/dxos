@@ -2,6 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
+import * as Effect from 'effect/Effect';
+
 import { Capability, Common, Plugin, createIntent } from '@dxos/app-framework';
 import { Ref, Type } from '@dxos/echo';
 import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
@@ -102,14 +104,16 @@ export const ThreadPlugin = Plugin.define(meta).pipe(
   Plugin.addModule({
     id: 'migration',
     activatesOn: ClientEvents.SetupMigration,
-    activate: () => Capability.contributes(ClientCapabilities.Migration, [Message.MessageV1ToV2]),
+    activate: () => Effect.succeed(Capability.contributes(ClientCapabilities.Migration, [Message.MessageV1ToV2])),
   }),
   Plugin.addModule({
     id: 'on-space-created',
     activatesOn: SpaceEvents.SpaceCreated,
     activate: () =>
-      Capability.contributes(SpaceCapabilities.OnCreateSpace, (params) =>
-        createIntent(ThreadAction.OnCreateSpace, params),
+      Effect.succeed(
+        Capability.contributes(SpaceCapabilities.OnCreateSpace, (params) =>
+          createIntent(ThreadAction.OnCreateSpace, params),
+        ),
       ),
   }),
   Plugin.addModule({

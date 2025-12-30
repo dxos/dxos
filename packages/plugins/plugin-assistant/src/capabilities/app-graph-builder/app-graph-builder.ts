@@ -2,26 +2,43 @@
 // Copyright 2025 DXOS.org
 //
 
+import * as Effect from 'effect/Effect';
+
 import * as Function from 'effect/Function';
+
 import * as Option from 'effect/Option';
 
+
 import { Capability, Common, type PromiseIntentDispatcher, createIntent } from '@dxos/app-framework';
+
 import { Prompt } from '@dxos/blueprints';
+
 import { Sequence } from '@dxos/conductor';
+
 import { DXN, type Database, Obj } from '@dxos/echo';
+
 import { invariant } from '@dxos/invariant';
+
 import { ClientCapabilities } from '@dxos/plugin-client';
+
 import { ATTENDABLE_PATH_SEPARATOR, PLANK_COMPANION_TYPE } from '@dxos/plugin-deck/types';
+
 import { CreateAtom, GraphBuilder, NodeMatcher } from '@dxos/plugin-graph';
+
 import { getActiveSpace } from '@dxos/plugin-space';
+
 import { SpaceAction } from '@dxos/plugin-space/types';
+
 import { Query } from '@dxos/react-client/echo';
 
+
 import { ASSISTANT_DIALOG, meta } from '../../meta';
+
 import { Assistant, AssistantAction, AssistantCapabilities } from '../../types';
 
-export default Capability.makeModule((context) => {
-  return Capability.contributes(Common.Capability.AppGraphBuilder, [
+export default Capability.makeModule((context) =>
+  Effect.sync(() => {
+    return Capability.contributes(Common.Capability.AppGraphBuilder, [
     GraphBuilder.createTypeExtension({
       id: `${meta.id}/root`,
       type: Assistant.Chat,
@@ -163,8 +180,9 @@ export default Capability.makeModule((context) => {
         },
       ],
     }),
-  ]);
-});
+    ]);
+  }),
+);
 
 // TODO(burdon): Factor out.
 const getOrCreateChat = async (

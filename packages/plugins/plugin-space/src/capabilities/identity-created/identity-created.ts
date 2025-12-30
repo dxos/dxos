@@ -2,24 +2,26 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Capability, Common } from '@dxos/app-framework';
+import * as Effect from 'effect/Effect';
+
+import { Capability } from '@dxos/app-framework';
 import { Ref } from '@dxos/echo';
 import { Migrations } from '@dxos/migrations';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { Collection } from '@dxos/schema';
 
-export default Capability.makeModule(async (context: Capability.PluginContext) => {
-  const client = context.getCapability(ClientCapabilities.Client);
-  await client.spaces.waitUntilReady();
+export default Capability.makeModule((context: Capability.PluginContext) =>
+  Effect.gen(function* () {
+    const client = context.getCapability(ClientCapabilities.Client);
+    yield* Effect.tryPromise(() => client.spaces.waitUntilReady());
 
-  const defaultSpace = client.spaces.default;
-  await defaultSpace.waitUntilReady();
+    const defaultSpace = client.spaces.default;
+    yield* Effect.tryPromise(() => defaultSpace.waitUntilReady());
 
-  // Create root collection structure.
-  defaultSpace.properties[Collection.Collection.typename] = Ref.make(Collection.make());
-  if (Migrations.versionProperty) {
-    defaultSpace.properties[Migrations.versionProperty] = Migrations.targetVersion;
-  }
-
-  return Capability.contributes(Common.Capability.Null, null);
-});
+    // Create root collection structure.
+    defaultSpace.properties[Collection.Collection.typename] = Ref.make(Collection.make());
+    if (Migrations.versionProperty) {
+      defaultSpace.properties[Migrations.versionProperty] = Migrations.targetVersion;
+    }
+  }),
+);

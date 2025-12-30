@@ -6,20 +6,29 @@
 
 // import { createTool, ToolRegistry, ToolResult } from '@dxos/ai';
 
+import * as Effect from 'effect/Effect';
+
 import { type AnyIntentChain, Capability, Common, createIntent, createResolver } from '@dxos/app-framework';
 // import { ArtifactId } from '@dxos/blueprints';
 // import { getSpace } from '@dxos/client/echo';
 // import { SequenceBuilder, compileSequence, DEFAULT_INPUT, ValueBag, ComputeGraphModel } from '@dxos/conductor';
 // import { TestRuntime } from '@dxos/conductor/testing';
+
 import { Filter, Obj, Ref } from '@dxos/echo';
 // import { runAndForwardErrors } from '@dxos/effect';
 // import { AiService, Database.Service, QueueService, ServiceContainer, ToolResolverService } from '@dxos/functions';
 // import { failedInvariant } from '@dxos/invariant';
+
 import { invariant } from '@dxos/invariant';
+
 import { log } from '@dxos/log';
+
 import { ClientCapabilities } from '@dxos/plugin-client/types';
+
 import { SpaceAction } from '@dxos/plugin-space/types';
+
 import { Organization, Person } from '@dxos/types';
+
 
 import { Calendar, InboxAction, Mailbox } from '../../types';
 
@@ -27,6 +36,7 @@ import { Calendar, InboxAction, Mailbox } from '../../types';
 // import { AssistantCapabilities } from '@dxos/plugin-assistant';
 
 export default Capability.makeModule((context) =>
+  Effect.succeed(
   Capability.contributes(Common.Capability.IntentResolver, [
     createResolver({
       intent: InboxAction.CreateMailbox,
@@ -211,7 +221,8 @@ export default Capability.makeModule((context) =>
         // log.info('Workflow result', { text });
       },
     }),
-  ]),
+    ]),
+  ),
 );
 
 // const Label = Schema.Literal('important', 'personal', 'work', 'social', 'promotions', 'updates', 'forums', 'spam');

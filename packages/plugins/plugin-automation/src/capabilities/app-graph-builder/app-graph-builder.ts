@@ -2,15 +2,23 @@
 // Copyright 2025 DXOS.org
 //
 
+import * as Effect from 'effect/Effect';
+
 import { Capability, Common } from '@dxos/app-framework';
+
 import { Script } from '@dxos/functions';
+
 import { ATTENDABLE_PATH_SEPARATOR, PLANK_COMPANION_TYPE } from '@dxos/plugin-deck/types';
+
 import { GraphBuilder, NodeMatcher } from '@dxos/plugin-graph';
+
 import { meta as spaceMeta } from '@dxos/plugin-space';
+
 
 import { meta } from '../../meta';
 
-export default Capability.makeModule(() => {
+export default Capability.makeModule(() =>
+  Effect.sync(() => {
   return Capability.contributes(Common.Capability.AppGraphBuilder, [
     GraphBuilder.createExtension({
       id: `${meta.id}/space-settings-automation`,
@@ -59,4 +67,5 @@ export default Capability.makeModule(() => {
       ],
     }),
   ]);
-});
+  }),
+);

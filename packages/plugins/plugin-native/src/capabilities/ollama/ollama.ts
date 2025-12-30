@@ -20,22 +20,22 @@ const OLLAMA_HOST = 'http://localhost:21434';
 
 export type OllamaCapabilities = Capability.Capability<typeof Common.Capability.AiModelResolver>;
 
-export default Capability.makeModule<[], OllamaCapabilities>(() => {
-  const runtime = ManagedRuntime.make(OllamaSidecar.layerLive);
+export default Capability.makeModule<[], OllamaCapabilities>(() =>
+  Effect.sync(() => {
+    const runtime = ManagedRuntime.make(OllamaSidecar.layerLive);
 
-  // Layer for the sidecar but the lifecycle is managed by the runtime.
-  const sidecarLayer = Layer.effectContext(
-    runtime.runtimeEffect.pipe(Effect.map((rt) => rt.context.pipe(Context.pick(OllamaSidecar)))),
-  );
+    // Layer for the sidecar but the lifecycle is managed by the runtime.
+    const sidecarLayer = Layer.effectContext(
+      runtime.runtimeEffect.pipe(Effect.map((rt) => rt.context.pipe(Context.pick(OllamaSidecar)))),
+    );
 
-  return Capability.contributes(
-    Common.Capability.AiModelResolver,
-    OllamaSidecarModelResolver.pipe(Layer.provide(sidecarLayer)),
-    async () => {
-      await runtime.dispose();
-    },
-  );
-});
+    return Capability.contributes(
+      Common.Capability.AiModelResolver,
+      OllamaSidecarModelResolver.pipe(Layer.provide(sidecarLayer)),
+      () => Effect.tryPromise(() => runtime.dispose()),
+    );
+  }),
+);
 
 class OllamaSidecar extends Context.Tag('@dxos/plugin-native/OllamaSidecar')<
   OllamaSidecar,

@@ -3,6 +3,7 @@
 //
 
 import { next as A } from '@automerge/automerge';
+import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 import type * as Schema from 'effect/Schema';
 
@@ -17,7 +18,8 @@ import { createDocAccessor, getRangeFromCursor } from '@dxos/echo-db';
 import { Markdown, MarkdownAction, MarkdownCapabilities } from '../../types';
 
 export default Capability.makeModule((context) =>
-  Capability.contributes(Common.Capability.IntentResolver, [
+  Effect.succeed(
+    Capability.contributes(Common.Capability.IntentResolver, [
     createResolver({
       intent: MarkdownAction.Create,
       resolve: ({ name, content }) => {
@@ -52,4 +54,5 @@ export default Capability.makeModule((context) =>
       },
     }),
   ]),
+  ),
 );

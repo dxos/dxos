@@ -5,6 +5,7 @@
 import { Capability } from '@dxos/app-framework';
 
 import { meta } from '../meta';
+
 import { type FilesState } from './schema';
 
 export namespace FileCapabilities {

@@ -17,18 +17,18 @@ export const handler = Effect.fn(function* ({ id }: { id: string }) {
   const { json, profile } = yield* CommandConfig;
   const manager = yield* PluginManager.Service;
 
-  const plugins = manager.plugins;
+  const plugins = manager.getPlugins();
   const plugin = plugins.find((p: Plugin.Plugin) => p.meta.id === id);
   invariant(plugin, `Plugin not found: ${id}`);
 
-  const core = manager.core;
+  const core = manager.getCore();
   invariant(!core.includes(id), `Cannot disable core plugin: ${id}`);
 
-  const disabled = yield* Effect.promise(() => manager.disable(id));
+  const disabled = yield* manager.disable(id);
   invariant(disabled, `Failed to disable plugin: ${id}`);
 
   // Save enabled plugins to storage
-  const enabledPlugins = manager.enabled;
+  const enabledPlugins = manager.getEnabled();
   yield* saveEnabledPlugins({ profile, enabled: [...enabledPlugins] });
 
   if (json) {

@@ -2,19 +2,30 @@
 // Copyright 2025 DXOS.org
 //
 
+import * as Effect from 'effect/Effect';
+
 import * as Option from 'effect/Option';
 
+
 import { Capability, Common, createIntent } from '@dxos/app-framework';
+
 import { Obj, Relation } from '@dxos/echo';
+
 import { SystemTypeAnnotation } from '@dxos/echo/internal';
+
 import { invariant } from '@dxos/invariant';
+
 import { GraphBuilder } from '@dxos/plugin-graph';
+
 import { HasSubject } from '@dxos/types';
 
+
 import { meta } from '../../meta';
+
 import { OutlineAction } from '../../types';
 
-export default Capability.makeModule((context) => {
+export default Capability.makeModule((context) =>
+  Effect.sync(() => {
   return Capability.contributes(
     Common.Capability.AppGraphBuilder,
     GraphBuilder.createExtension({
@@ -69,4 +80,5 @@ export default Capability.makeModule((context) => {
       },
     }),
   );
-});
+  }),
+);

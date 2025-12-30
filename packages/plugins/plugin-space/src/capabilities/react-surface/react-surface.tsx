@@ -2,6 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
+import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 import type * as Schema from 'effect/Schema';
 import React, { useCallback } from 'react';
@@ -64,7 +65,8 @@ type ReactSurfaceOptions = {
 };
 
 export default Capability.makeModule(({ createInvitationUrl }: ReactSurfaceOptions) =>
-  Capability.contributes(Common.Capability.ReactSurface, [
+  Effect.succeed(
+    Capability.contributes(Common.Capability.ReactSurface, [
     Common.createSurface({
       id: `${meta.id}/article`,
       role: 'article',
@@ -358,4 +360,5 @@ export default Capability.makeModule(({ createInvitationUrl }: ReactSurfaceOptio
       component: () => <SyncStatus />,
     }),
   ]),
+  ),
 );

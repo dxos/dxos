@@ -2,6 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
+import * as Effect from 'effect/Effect';
+
 import { ActivationEvent, Capability, Common, Plugin } from '@dxos/app-framework';
 import { AttentionEvents } from '@dxos/plugin-attention';
 import { Node } from '@dxos/plugin-graph';
@@ -36,21 +38,23 @@ export const FilesPlugin = Plugin.define(meta).pipe(
     id: 'app-graph-serializer',
     activatesOn: Common.ActivationEvent.AppGraphReady,
     activate: () =>
-      Capability.contributes(Common.Capability.AppGraphSerializer, [
-        {
-          inputType: Node.RootType,
-          outputType: 'text/directory',
-          position: 'fallback',
-          serialize: async () => ({
-            name: 'root',
-            data: 'root',
-            type: 'text/directory',
-          }),
-          deserialize: async () => {
-            // No-op.
+      Effect.succeed(
+        Capability.contributes(Common.Capability.AppGraphSerializer, [
+          {
+            inputType: Node.RootType,
+            outputType: 'text/directory',
+            position: 'fallback',
+            serialize: async () => ({
+              name: 'root',
+              data: 'root',
+              type: 'text/directory',
+            }),
+            deserialize: async () => {
+              // No-op.
+            },
           },
-        },
-      ]),
+        ]),
+      ),
   }),
   Plugin.make,
 );

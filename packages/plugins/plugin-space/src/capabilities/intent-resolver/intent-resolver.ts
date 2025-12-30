@@ -48,11 +48,12 @@ type IntentResolverOptions = {
   observability?: boolean;
 };
 
-export default Capability.makeModule(({ context, observability, createInvitationUrl }: IntentResolverOptions) => {
-  const resolve = (typename: string) =>
-    context.getCapabilities(Common.Capability.Metadata).find(({ id }: { id: string }) => id === typename)?.metadata ?? {};
+export default Capability.makeModule(({ context, observability, createInvitationUrl }: IntentResolverOptions) =>
+  Effect.sync(() => {
+    const resolve = (typename: string) =>
+      context.getCapabilities(Common.Capability.Metadata).find(({ id }: { id: string }) => id === typename)?.metadata ?? {};
 
-  return Capability.contributes(Common.Capability.IntentResolver, [
+    return Capability.contributes(Common.Capability.IntentResolver, [
     createResolver({
       intent: SpaceAction.OpenCreateSpace,
       resolve: () => ({
@@ -92,7 +93,7 @@ export default Capability.makeModule(({ context, observability, createInvitation
         collection.objects.push(Ref.make(Collection.makeManaged({ key: Type.getTypename(Type.PersistentType) })));
 
         // Allow other plugins to add default content.
-        await context.activatePromise(SpaceEvents.SpaceCreated);
+        await Effect.runPromise(context.activate(SpaceEvents.SpaceCreated));
         const onCreateSpaceCallbacks = context.getCapabilities(SpaceCapabilities.OnCreateSpace);
         const spaceCreatedIntents = onCreateSpaceCallbacks.map((onCreateSpace: (params: any) => any) =>
           onCreateSpace({ space, isDefault: false, rootCollection: collection }),
@@ -348,7 +349,7 @@ export default Capability.makeModule(({ context, observability, createInvitation
           space.properties.staticRecords.push(typename);
         }
 
-        await context.activatePromise(SpaceEvents.SchemaAdded);
+        await Effect.runPromise(context.activate(SpaceEvents.SchemaAdded));
         const onSchemaAdded = context.getCapabilities(SpaceCapabilities.OnSchemaAdded);
         const schemaAddedIntents = onSchemaAdded.map((onSchemaAdded: (params: any) => any) => onSchemaAdded({ db, schema, show }));
 
@@ -385,7 +386,7 @@ export default Capability.makeModule(({ context, observability, createInvitation
           schema.storedSchema.version = version;
         }
 
-        await context.activatePromise(SpaceEvents.SchemaAdded);
+        await Effect.runPromise(context.activate(SpaceEvents.SchemaAdded));
         const onSchemaAdded = context.getCapabilities(SpaceCapabilities.OnSchemaAdded);
         const schemaAddedIntents = onSchemaAdded.map((onSchemaAdded: (params: any) => any) => onSchemaAdded({ db, schema, show }));
 
@@ -698,4 +699,5 @@ export default Capability.makeModule(({ context, observability, createInvitation
       }),
     }),
   ]);
-});
+  }),
+);

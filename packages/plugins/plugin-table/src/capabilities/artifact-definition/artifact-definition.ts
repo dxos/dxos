@@ -5,10 +5,15 @@
 // ISSUE(burdon): defineArtifact
 // @ts-nocheck
 
+import * as Effect from 'effect/Effect';
+
 import * as Function from 'effect/Function';
+
 import * as Schema from 'effect/Schema';
 
+
 import { ToolResult, createTool } from '@dxos/ai';
+
 import {
   Capabilities,
   type PromiseIntentDispatcher,
@@ -17,16 +22,26 @@ import {
   createIntent,
   Capability,
 } from '@dxos/app-framework';
+
 import { createArtifactElement } from '@dxos/assistant';
+
 import { defineArtifact } from '@dxos/blueprints';
+
 import { Obj, Query } from '@dxos/echo';
+
 import { invariant } from '@dxos/invariant';
+
 import { SpaceAction } from '@dxos/plugin-space/types';
+
 import { Filter, type Space } from '@dxos/react-client/echo';
+
 import { TableView } from '@dxos/react-ui-table/types';
+
 import { isNonNullable } from '@dxos/util';
 
+
 import { meta } from '../../meta';
+
 import { TableAction } from '../../types';
 
 // TODO(burdon): Factor out.
@@ -43,7 +58,8 @@ const QualifiedId = Schema.String.annotations({
   description: 'The fully qualified ID of the table `spaceID:objectID`',
 });
 
-export default Capability.makeModule(() => {
+export default Capability.makeModule(() =>
+  Effect.sync(() => {
   const definition = defineArtifact({
     id: `artifact:${meta.id}`,
     name: meta.name,
@@ -232,4 +248,5 @@ export default Capability.makeModule(() => {
   });
 
   return Capability.contributes(Capabilities.ArtifactDefinition, definition);
-});
+  }),
+);

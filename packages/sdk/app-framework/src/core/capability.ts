@@ -115,7 +115,7 @@ export const lazy = <T = PluginContext, R extends ModuleReturn = ModuleReturn>(
     Effect.gen(function* () {
       const { default: getCapability } = yield* Effect.tryPromise(() => c());
       const result = yield* getCapability(props);
-      const normalized = Array.isArray(result) ? Array.from(result) : [result];
+      const normalized = result == null ? [] : Array.isArray(result) ? Array.from(result) : [result];
       return normalized as NormalizeReturn<R>;
     });
 

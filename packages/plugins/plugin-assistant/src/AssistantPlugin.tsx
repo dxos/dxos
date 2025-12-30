@@ -2,6 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
+import * as Effect from 'effect/Effect';
+
 import { Capability, Common, Plugin, createIntent } from '@dxos/app-framework';
 import { ResearchGraph } from '@dxos/assistant-toolkit';
 import { Blueprint, Prompt } from '@dxos/blueprints';
@@ -96,8 +98,10 @@ export const AssistantPlugin = Plugin.define(meta).pipe(
     id: 'on-space-created',
     activatesOn: SpaceEvents.SpaceCreated,
     activate: () =>
-      Capability.contributes(SpaceCapabilities.OnCreateSpace, (params) =>
-        createIntent(AssistantAction.OnCreateSpace, params),
+      Effect.succeed(
+        Capability.contributes(SpaceCapabilities.OnCreateSpace, (params) =>
+          createIntent(AssistantAction.OnCreateSpace, params),
+        ),
       ),
   }),
   Plugin.addModule({

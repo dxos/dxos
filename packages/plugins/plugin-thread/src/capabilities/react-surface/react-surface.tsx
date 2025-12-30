@@ -2,6 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
+import * as Effect from 'effect/Effect';
 import React from 'react';
 
 import { Capability, Common } from '@dxos/app-framework';
@@ -23,7 +24,8 @@ import { meta } from '../../meta';
 import { Channel, ThreadCapabilities, type ThreadSettingsProps } from '../../types';
 
 export default Capability.makeModule(() =>
-  Capability.contributes(Common.Capability.ReactSurface, [
+  Effect.succeed(
+    Capability.contributes(Common.Capability.ReactSurface, [
     Common.createSurface({
       id: `${meta.id}/channel`,
       role: 'article',
@@ -87,4 +89,5 @@ export default Capability.makeModule(() =>
       },
     }),
   ]),
+  ),
 );

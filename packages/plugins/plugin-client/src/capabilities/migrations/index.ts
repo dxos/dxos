@@ -5,4 +5,3 @@
 import { Capability } from '@dxos/app-framework';
 
 export const Migrations = Capability.lazy('Migrations', () => import('./migrations'));
-

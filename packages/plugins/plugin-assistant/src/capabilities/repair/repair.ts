@@ -2,6 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
+import * as Effect from 'effect/Effect';
+
 import { Capability } from '@dxos/app-framework';
 import { Blueprint, Prompt } from '@dxos/blueprints';
 import { Obj, Ref, Type } from '@dxos/echo';
@@ -12,9 +14,11 @@ import { Collection } from '@dxos/schema';
 import { Assistant } from '../../types';
 
 export default Capability.makeModule(() =>
-  Capability.contributes(SpaceCapabilities.Repair, async ({ space }) => {
-    await ensureSystemCollections(space);
-  }),
+  Effect.succeed(
+    Capability.contributes(SpaceCapabilities.Repair, async ({ space }) => {
+      await ensureSystemCollections(space);
+    }),
+  ),
 );
 
 /**

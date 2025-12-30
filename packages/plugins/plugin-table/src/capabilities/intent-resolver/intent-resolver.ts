@@ -15,7 +15,7 @@ import { Task } from '@dxos/types';
 import { TableAction } from '../../types';
 
 export default Capability.makeModule((context) =>
-  Capability.contributes(Common.Capability.IntentResolver, [
+  Effect.succeed(Capability.contributes(Common.Capability.IntentResolver, [
     createResolver({
       intent: TableAction.OnCreateSpace,
       resolve: ({ space }) =>
@@ -66,5 +66,5 @@ export default Capability.makeModule((context) =>
         return { intents: [createIntent(SpaceAction.AddObject, { target: db, object, hidden: true })] };
       },
     }),
-  ]),
+  ])),
 );

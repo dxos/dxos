@@ -3,6 +3,7 @@
 //
 
 import { Capability } from '@dxos/app-framework';
+
 import { meta } from '../meta';
 
 export type LayoutState = {

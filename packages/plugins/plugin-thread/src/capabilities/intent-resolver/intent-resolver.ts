@@ -19,7 +19,8 @@ import { meta } from '../../meta';
 import { Channel, ThreadAction, ThreadCapabilities } from '../../types';
 
 export default Capability.makeModule((context) =>
-  Capability.contributes(Common.Capability.IntentResolver, [
+  Effect.succeed(
+    Capability.contributes(Common.Capability.IntentResolver, [
     createResolver({
       intent: ThreadAction.OnCreateSpace,
       resolve: ({ space, isDefault, rootCollection }) =>
@@ -307,4 +308,5 @@ export default Capability.makeModule((context) =>
       },
     }),
   ]),
+  ),
 );

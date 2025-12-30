@@ -2,6 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
+import * as Effect from 'effect/Effect';
+
 import { ActivationEvent, Capability, Common, Plugin, createIntent } from '@dxos/app-framework';
 import { Graph } from '@dxos/plugin-graph';
 import { type TreeData } from '@dxos/react-ui-list';
@@ -45,22 +47,23 @@ export const NavTreePlugin = Plugin.define(meta).pipe(
       Common.ActivationEvent.LayoutReady,
       NavTreeEvents.StateReady,
     ),
-    activate: async (context) => {
-      const layout = context.getCapability(Common.Capability.Layout);
-      const { dispatchPromise: dispatch } = context.getCapability(Common.Capability.IntentDispatcher);
-      const { graph } = context.getCapability(Common.Capability.AppGraph);
-      if (dispatch && layout.active.length === 1) {
-        // TODO(wittjosiah): This should really be fired once the navtree renders for the first time.
-        //   That is the point at which the graph is expanded and the path should be available.
-        void Graph.waitForPath(graph, { target: layout.active[0] }, { timeout: 30_000 })
-          .then(() =>
-            dispatch(createIntent(Common.LayoutAction.Expose, { part: 'navigation', subject: layout.active[0] })),
-          )
-          .catch(() => {});
-      }
+    activate: (context) =>
+      Effect.sync(() => {
+        const layout = context.getCapability(Common.Capability.Layout);
+        const { dispatchPromise: dispatch } = context.getCapability(Common.Capability.IntentDispatcher);
+        const { graph } = context.getCapability(Common.Capability.AppGraph);
+        if (dispatch && layout.active.length === 1) {
+          // TODO(wittjosiah): This should really be fired once the navtree renders for the first time.
+          //   That is the point at which the graph is expanded and the path should be available.
+          void Graph.waitForPath(graph, { target: layout.active[0] }, { timeout: 30_000 })
+            .then(() =>
+              dispatch(createIntent(Common.LayoutAction.Expose, { part: 'navigation', subject: layout.active[0] })),
+            )
+            .catch(() => {});
+        }
 
-      return [];
-    },
+        return [];
+      }),
   }),
   Plugin.addModule({
     id: 'keyboard',

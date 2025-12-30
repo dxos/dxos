@@ -2,6 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
+import * as Effect from 'effect/Effect';
+
 import { Capability, Common, Plugin } from '@dxos/app-framework';
 
 import { IntentResolver, State } from './capabilities';
@@ -21,10 +23,12 @@ export const StorybookLayoutPlugin = Plugin.define<StorybookLayoutPluginOptions>
   })),
   Common.Plugin.addReactContextModule({
     activate: () =>
-      Capability.contributes(Common.Capability.ReactContext, {
-        id: 'storybook-layout',
-        context: Layout,
-      }),
+      Effect.succeed(
+        Capability.contributes(Common.Capability.ReactContext, {
+          id: 'storybook-layout',
+          context: Layout,
+        }),
+      ),
   }),
   Plugin.addModule({
     activatesOn: Common.ActivationEvent.SetupIntentResolver,

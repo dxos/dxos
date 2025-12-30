@@ -2,13 +2,20 @@
 // Copyright 2025 DXOS.org
 //
 
+import * as Effect from 'effect/Effect';
+
 import { effect, untracked } from '@preact/signals-core';
 
+
 import { Capability, Common } from '@dxos/app-framework';
+
 import { type Live, live } from '@dxos/live-object';
+
 import { Path } from '@dxos/react-ui-list';
 
+
 import { meta } from '../../meta';
+
 import { NavTreeCapabilities } from '../../types';
 
 const KEY = `${meta.id}/state/v1`;
@@ -28,7 +35,8 @@ const getInitialState = () => {
   } catch {}
 };
 
-export default Capability.makeModule((context) => {
+export default Capability.makeModule((context) =>
+  Effect.sync(() => {
   const layout = context.getCapability(Common.Capability.Layout);
 
   // TODO(wittjosiah): This currently needs to be not a Live at the root.
@@ -98,6 +106,7 @@ export default Capability.makeModule((context) => {
   });
 
   return Capability.contributes(NavTreeCapabilities.State, { state, getItem, setItem, isOpen, isCurrent, isAlternateTree }, () =>
-    unsubscribe(),
+    Effect.sync(() => unsubscribe()),
   );
-});
+  }),
+);

@@ -5,22 +5,36 @@
 // ISSUE(burdon): defineArtifact
 // @ts-nocheck
 
+import * as Effect from 'effect/Effect';
+
 import * as Function from 'effect/Function';
+
 import * as Schema from 'effect/Schema';
 
+
 import { ToolResult, createTool } from '@dxos/ai';
+
 import { Capability, Common, chain, createIntentModule } from '@dxos/app-framework';
+
 import { ArtifactId, createArtifactElement } from '@dxos/assistant';
+
 import { defineArtifact } from '@dxos/blueprints';
+
 import { Obj } from '@dxos/echo';
+
 import { assertArgument, invariant } from '@dxos/invariant';
+
 import { SpaceAction } from '@dxos/plugin-space/types';
+
 import { Filter } from '@dxos/react-client/echo';
 
+
 import { meta } from '../../meta';
+
 import { Markdown, MarkdownAction } from '../../types';
 
-export default Capability.makeModule(() => {
+export default Capability.makeModule(() =>
+  Effect.sync(() => {
   const definition = defineArtifact({
     id: `artifact:${meta.id}`, // TODO(burdon): meta.id/artifact?
     name: meta.name,
@@ -109,4 +123,5 @@ export default Capability.makeModule(() => {
   });
 
   return Capability.contributes(Common.Capability.ArtifactDefinition, definition);
-});
+  }),
+);

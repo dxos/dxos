@@ -2,6 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
+import * as Effect from 'effect/Effect';
+
 import { ActivationEvent, Capability, Common, Plugin } from '@dxos/app-framework';
 import { AttentionManager, SelectionManager } from '@dxos/react-ui-attention';
 
@@ -15,15 +17,16 @@ export const AttentionPlugin = Plugin.define(meta).pipe(
     id: 'attention',
     activatesOn: Common.ActivationEvent.Startup,
     activatesAfter: [AttentionEvents.AttentionReady],
-    activate: () => {
-      const attention = new AttentionManager();
-      const selection = new SelectionManager();
-      setupDevtools(attention);
-      return [
-        Capability.contributes(AttentionCapabilities.Attention, attention),
-        Capability.contributes(AttentionCapabilities.Selection, selection),
-      ];
-    },
+    activate: () =>
+      Effect.sync(() => {
+        const attention = new AttentionManager();
+        const selection = new SelectionManager();
+        setupDevtools(attention);
+        return [
+          Capability.contributes(AttentionCapabilities.Attention, attention),
+          Capability.contributes(AttentionCapabilities.Selection, selection),
+        ];
+      }),
   }),
   Plugin.addModule({
     activatesOn: Common.ActivationEvent.Startup,

@@ -2,6 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
+import * as Effect from 'effect/Effect';
+
 import { ActivationEvent, Capability, Common, Plugin, createIntent } from '@dxos/app-framework';
 import { Type } from '@dxos/echo';
 import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
@@ -48,8 +50,10 @@ export const MeetingPlugin = Plugin.define(meta).pipe(
     id: 'on-space-created',
     activatesOn: SpaceEvents.SpaceCreated,
     activate: () =>
-      Capability.contributes(SpaceCapabilities.OnCreateSpace, (params) =>
-        createIntent(MeetingAction.OnCreateSpace, params),
+      Effect.succeed(
+        Capability.contributes(SpaceCapabilities.OnCreateSpace, (params) =>
+          createIntent(MeetingAction.OnCreateSpace, params),
+        ),
       ),
   }),
   Plugin.addModule({

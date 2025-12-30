@@ -2,10 +2,15 @@
 // Copyright 2025 DXOS.org
 //
 
+import * as Effect from 'effect/Effect';
+
 import { Capability } from '@dxos/app-framework';
+
 import { ClientCapabilities } from '@dxos/plugin-client';
 
+
 import { MediaStreamRecorder, Transcriber, TranscriptionManager } from '../../transcriber';
+
 import { TranscriptionCapabilities } from '../../types';
 
 // TODO(burdon): Move to config?
@@ -29,7 +34,8 @@ const TRANSCRIBE_AFTER_CHUNKS_AMOUNT = 50;
 /**
  * Records audio while user is speaking and transcribes it after user is done speaking.
  */
-export default Capability.makeModule((context) => {
+export default Capability.makeModule((context) =>
+  Effect.sync(() => {
   const getTranscriber: TranscriptionCapabilities.GetTranscriber = ({
     audioStreamTrack,
     onSegments,
@@ -73,4 +79,5 @@ export default Capability.makeModule((context) => {
     Capability.contributes(TranscriptionCapabilities.Transcriber, getTranscriber),
     Capability.contributes(TranscriptionCapabilities.TranscriptionManager, getTranscriptionManager),
   ];
-});
+  }),
+);

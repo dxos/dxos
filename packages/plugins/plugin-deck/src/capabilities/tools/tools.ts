@@ -5,7 +5,10 @@
 // ISSUE(burdon): tools
 // @ts-nocheck
 
+import * as Effect from 'effect/Effect';
+
 import * as Schema from 'effect/Schema';
+
 
 import {
   Capabilities,
@@ -14,10 +17,14 @@ import {
   type PromiseIntentDispatcher,
   createIntent,
 } from '@dxos/app-framework';
+
 import { invariant } from '@dxos/invariant';
+
 import { trim } from '@dxos/util';
 
+
 import { meta } from '../../meta';
+
 import { DeckAction } from '../../types';
 
 // TODO(burdon): Factor out.
@@ -30,7 +37,8 @@ declare global {
 }
 
 export default Capability.makeModule(() =>
-  Capability.contributes(Capabilities.Tools, [
+  Effect.succeed(
+    Capability.contributes(Capabilities.Tools, [
     createTool(meta.id, {
       name: 'show',
       description: trim`
@@ -81,5 +89,6 @@ export default Capability.makeModule(() =>
         }
       },
     }),
-  ]),
+    ]),
+  ),
 );

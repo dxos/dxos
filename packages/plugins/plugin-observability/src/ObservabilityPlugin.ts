@@ -2,6 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
+import * as Effect from 'effect/Effect';
+
 import { ActivationEvent, Capability, Common, Plugin } from '@dxos/app-framework';
 import { type Observability } from '@dxos/observability';
 
@@ -27,7 +29,11 @@ export const ObservabilityPlugin = Plugin.define<ObservabilityPluginOptions>(met
   Plugin.addModule(({ namespace, observability }) => ({
     id: 'observability',
     activatesOn: Common.ActivationEvent.Startup,
-    activate: async () => Capability.contributes(ObservabilityCapabilities.Observability, await observability()),
+    activate: () =>
+      Effect.gen(function* () {
+        const obs = yield* Effect.tryPromise(() => observability());
+        return Capability.contributes(ObservabilityCapabilities.Observability, obs);
+      }),
   })),
   Plugin.addModule({
     activatesOn: Common.ActivationEvent.SetupSettings,
@@ -54,9 +60,11 @@ export const ObservabilityPlugin = Plugin.define<ObservabilityPluginOptions>(met
       ObservabilityEvents.StateReady,
       ClientReadyEvent,
     ),
-    activate: async (context) => {
-      return ClientReady({ context, namespace, observability: await observability() });
-    },
+    activate: (context) =>
+      Effect.gen(function* () {
+        const obs = yield* Effect.tryPromise(() => observability());
+        return yield* ClientReady({ context, namespace, observability: obs });
+      }),
   })),
   Plugin.make,
 );

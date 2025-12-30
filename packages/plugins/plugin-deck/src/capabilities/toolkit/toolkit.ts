@@ -55,8 +55,10 @@ export namespace DeckToolkit {
 }
 
 export default Capability.makeModule((context) =>
-  Capability.contributes(
-    Common.Capability.Toolkit,
-    GenericToolkit.make(DeckToolkit.Toolkit, DeckToolkit.createLayer(context)),
+  Effect.succeed(
+    Capability.contributes(
+      Common.Capability.Toolkit,
+      GenericToolkit.make(DeckToolkit.Toolkit, DeckToolkit.createLayer(context)),
+    ),
   ),
 );

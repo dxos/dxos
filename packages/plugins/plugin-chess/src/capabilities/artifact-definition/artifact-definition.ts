@@ -5,21 +5,36 @@
 // ISSUE(burdon): defineArtifact
 // @ts-nocheck
 
+import * as Effect from 'effect/Effect';
+
 import { Chess as ChessJS } from 'chess.js';
+
 import * as Function from 'effect/Function';
+
 import * as Schema from 'effect/Schema';
 
+
 import { ToolResult, createTool } from '@dxos/ai';
+
 import { Capabilities, Capability, type PromiseIntentDispatcher, chain, createIntent } from '@dxos/app-framework';
+
 import { ArtifactId, VersionPin, createArtifactElement } from '@dxos/assistant';
+
 import { defineArtifact } from '@dxos/blueprints';
+
 import { Obj } from '@dxos/echo';
+
 import { invariant } from '@dxos/invariant';
+
 import { SpaceAction } from '@dxos/plugin-space/types';
+
 import { Filter, type Space } from '@dxos/react-client/echo';
+
 import { trim } from '@dxos/util';
 
+
 import { meta } from '../../meta';
+
 import { Chess, ChessAction } from '../../types';
 
 // TODO(burdon): Factor out.
@@ -30,7 +45,8 @@ declare global {
   }
 }
 
-export default Capability.makeModule(() => {
+export default Capability.makeModule(() =>
+  Effect.sync(() => {
   const definition = defineArtifact({
     id: `artifact:${meta.id}`,
     name: meta.name,
@@ -126,4 +142,5 @@ export default Capability.makeModule(() => {
   });
 
   return Capability.contributes(Capabilities.ArtifactDefinition, definition);
-});
+  }),
+);

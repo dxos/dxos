@@ -18,6 +18,7 @@ import { type Message } from '@dxos/types';
 import { Meeting, MeetingAction, MeetingCapabilities } from '../../types';
 
 export default Capability.makeModule((context) =>
+  Effect.succeed(
   Capability.contributes(Common.Capability.IntentResolver, [
     createResolver({
       intent: MeetingAction.OnCreateSpace,
@@ -105,5 +106,6 @@ export default Capability.makeModule((context) =>
         // text.content = summary;
       },
     }),
-  ]),
+    ]),
+  ),
 );

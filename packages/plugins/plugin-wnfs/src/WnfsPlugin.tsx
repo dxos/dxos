@@ -2,6 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
+import * as Effect from 'effect/Effect';
 import * as Function from 'effect/Function';
 
 import { Capability, Common, Plugin, chain, createIntent } from '@dxos/app-framework';
@@ -23,10 +24,11 @@ export const WnfsPlugin = Plugin.define(meta).pipe(
   Plugin.addModule({
     id: 'instances',
     activatesOn: ClientEvents.ClientReady,
-    activate: () => {
-      const instances: WnfsCapabilities.Instances = {};
-      return Capability.contributes(WnfsCapabilities.Instances, instances);
-    },
+    activate: () =>
+      Effect.sync(() => {
+        const instances: WnfsCapabilities.Instances = {};
+        return Capability.contributes(WnfsCapabilities.Instances, instances);
+      }),
   }),
   Common.Plugin.addTranslationsModule({ translations }),
   Common.Plugin.addMetadataModule({

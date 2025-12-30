@@ -22,33 +22,39 @@ const SCRIPT_PACKAGES_BUCKET = 'https://pub-5745ae82e450484aa28f75fc6a175935.r2.
 const DECLARATION_EXTS = ['.d.ts', '.d.mts'];
 const NO_TYPES = true; // Types temopararly disabled due to compiler erorrs.
 
-export default Capability.makeModule(async () => {
-  await initializeBundler({ wasmUrl });
+export default Capability.makeModule(() =>
+  Effect.gen(function* () {
+    yield* Effect.tryPromise(() => initializeBundler({ wasmUrl }));
 
-  const runtimeModules = await runAndForwardErrors(fetchRuntimeModules().pipe(Effect.provide(FetchHttpClient.layer)));
+    const runtimeModules = yield* Effect.tryPromise(() =>
+      runAndForwardErrors(fetchRuntimeModules().pipe(Effect.provide(FetchHttpClient.layer))),
+    );
 
-  const compiler = new Compiler({
-    skipLibCheck: true,
-    moduleResolution: ts.ModuleResolutionKind.Bundler,
-    allowImportingTsExtensions: true,
-    noEmit: true,
-    strict: true,
-    esModuleInterop: true,
-    paths: Object.fromEntries(runtimeModules.map((mod: any) => [mod.moduleName, [`./src/${mod.filename}`]])),
-  });
+    const compiler = new Compiler({
+      skipLibCheck: true,
+      moduleResolution: ts.ModuleResolutionKind.Bundler,
+      allowImportingTsExtensions: true,
+      noEmit: true,
+      strict: true,
+      esModuleInterop: true,
+      paths: Object.fromEntries(runtimeModules.map((mod: any) => [mod.moduleName, [`./src/${mod.filename}`]])),
+    });
 
-  await compiler.initialize(trim`
-    declare module 'https://*';
-    ${NO_TYPES ? '' : 'declare module "*";'}
-  `);
-  if (!NO_TYPES) {
-    for (const mod of runtimeModules) {
-      compiler.setFile(`/src/${mod.filename}`, mod.content);
+    yield* Effect.tryPromise(() =>
+      compiler.initialize(trim`
+      declare module 'https://*';
+      ${NO_TYPES ? '' : 'declare module "*";'}
+    `),
+    );
+    if (!NO_TYPES) {
+      for (const mod of runtimeModules) {
+        compiler.setFile(`/src/${mod.filename}`, mod.content);
+      }
     }
-  }
 
-  return Capability.contributes(ScriptCapabilities.Compiler, compiler);
-});
+    return Capability.contributes(ScriptCapabilities.Compiler, compiler);
+  }),
+);
 
 const fetchRuntimeModules = Effect.fnUntraced(function* () {
   const manifest = yield* HttpClient.get(new URL('manifest.json', SCRIPT_PACKAGES_BUCKET)).pipe(

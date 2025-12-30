@@ -2,6 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
+import * as Effect from 'effect/Effect';
+
 import { Capability } from '@dxos/app-framework';
 import { Obj, Ref, Type } from '@dxos/echo';
 import { SpaceCapabilities } from '@dxos/plugin-space';
@@ -11,13 +13,18 @@ import { Collection } from '@dxos/schema';
 import { Channel } from '../../types';
 
 export default Capability.makeModule(() =>
-  Capability.contributes(SpaceCapabilities.Repair, async ({ space, isDefault }: { space: Space; isDefault: boolean }) => {
-    if (isDefault) {
-      return;
-    }
+  Effect.succeed(
+    Capability.contributes(
+      SpaceCapabilities.Repair,
+      async ({ space, isDefault }: { space: Space; isDefault: boolean }) => {
+        if (isDefault) {
+          return;
+        }
 
-    await ensureSystemCollection(space);
-  }),
+        await ensureSystemCollection(space);
+      },
+    ),
+  ),
 );
 
 /**

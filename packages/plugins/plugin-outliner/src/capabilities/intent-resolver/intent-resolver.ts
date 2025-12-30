@@ -2,6 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
+import * as Effect from 'effect/Effect';
+
 import { Capability, Common, createResolver } from '@dxos/app-framework';
 import { Obj } from '@dxos/echo';
 import { Task } from '@dxos/types';
@@ -9,32 +11,34 @@ import { Task } from '@dxos/types';
 import { Journal, Outline, OutlineAction } from '../../types';
 
 export default Capability.makeModule(() =>
-  Capability.contributes(Common.Capability.IntentResolver, [
-    createResolver({
-      intent: OutlineAction.CreateJournal,
-      resolve: ({ name }) => ({
-        data: {
-          object: Journal.make({ name }),
-        },
-      }),
-    }),
-    createResolver({
-      intent: OutlineAction.CreateOutline,
-      resolve: ({ name }) => ({
-        data: {
-          object: Outline.make({ name }),
-        },
-      }),
-    }),
-    createResolver({
-      intent: OutlineAction.CreateTask,
-      resolve: ({ text }) => {
-        return {
+  Effect.succeed(
+    Capability.contributes(Common.Capability.IntentResolver, [
+      createResolver({
+        intent: OutlineAction.CreateJournal,
+        resolve: ({ name }) => ({
           data: {
-            object: Obj.make(Task.Task, { title: text }),
+            object: Journal.make({ name }),
           },
-        };
-      },
-    }),
-  ]),
+        }),
+      }),
+      createResolver({
+        intent: OutlineAction.CreateOutline,
+        resolve: ({ name }) => ({
+          data: {
+            object: Outline.make({ name }),
+          },
+        }),
+      }),
+      createResolver({
+        intent: OutlineAction.CreateTask,
+        resolve: ({ text }) => {
+          return {
+            data: {
+              object: Obj.make(Task.Task, { title: text }),
+            },
+          };
+        },
+      }),
+    ]),
+  ),
 );

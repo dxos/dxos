@@ -23,8 +23,9 @@ import { Assistant, AssistantAction, AssistantCapabilities } from '../../types';
 
 import { AssistantBlueprint, createBlueprint } from '../blueprint-definition/blueprint-definition';
 
-export default Capability.makeModule((context) => [
-  Capability.contributes(Common.Capability.IntentResolver, [
+export default Capability.makeModule((context) =>
+  Effect.succeed([
+    Capability.contributes(Common.Capability.IntentResolver, [
     createResolver({
       intent: AssistantAction.OnCreateSpace,
       resolve: ({ space, rootCollection }) =>
@@ -134,5 +135,6 @@ export default Capability.makeModule((context) => [
           state.currentChat[Obj.getDXN(companionTo).toString()] = chat && Obj.getDXN(chat).toString();
         }),
     }),
+    ]),
   ]),
-]);
+);

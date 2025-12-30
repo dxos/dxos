@@ -2,6 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
+import * as Effect from 'effect/Effect';
 import { EditorView } from '@codemirror/view';
 
 import { Capability, Common, createIntent } from '@dxos/app-framework';
@@ -14,43 +15,45 @@ import { threads } from '../../extensions';
 import { ThreadCapabilities } from '../../types';
 
 export default Capability.makeModule((context) =>
-  Capability.contributes(MarkdownCapabilities.Extensions, [
-    ({ document: doc }) => {
-      const { dispatchPromise: dispatch } = context.getCapability(Common.Capability.IntentDispatcher);
-      const { state } = context.getCapability(ThreadCapabilities.MutableState);
-      return threads(state, doc, dispatch);
-    },
-    ({ document: doc }) => {
-      if (!doc) return [];
-      const { state } = context.getCapability(ThreadCapabilities.MutableState);
+  Effect.succeed(
+    Capability.contributes(MarkdownCapabilities.Extensions, [
+      ({ document: doc }) => {
+        const { dispatchPromise: dispatch } = context.getCapability(Common.Capability.IntentDispatcher);
+        const { state } = context.getCapability(ThreadCapabilities.MutableState);
+        return threads(state, doc, dispatch);
+      },
+      ({ document: doc }) => {
+        if (!doc) return [];
+        const { state } = context.getCapability(ThreadCapabilities.MutableState);
 
-      return EditorView.updateListener.of((update) => {
-        if (update.docChanged || update.selectionSet) {
-          state.toolbar[Obj.getDXN(doc).toString()] = selectionOverlapsComment(update.state);
-        }
-      });
-    },
-    ({ document: doc }) => {
-      if (!doc) return [];
-      const { dispatchPromise: dispatch } = context.getCapability(Common.Capability.IntentDispatcher);
-      const id = Obj.getDXN(doc).toString();
+        return EditorView.updateListener.of((update) => {
+          if (update.docChanged || update.selectionSet) {
+            state.toolbar[Obj.getDXN(doc).toString()] = selectionOverlapsComment(update.state);
+          }
+        });
+      },
+      ({ document: doc }) => {
+        if (!doc) return [];
+        const { dispatchPromise: dispatch } = context.getCapability(Common.Capability.IntentDispatcher);
+        const id = Obj.getDXN(doc).toString();
 
-      return EditorView.updateListener.of((update) => {
-        update.transactions.forEach((transaction) => {
-          transaction.effects.forEach(async (effect) => {
-            if (effect.is(commentClickedEffect)) {
-              void dispatch(
-                createIntent(DeckAction.ChangeCompanion, {
-                  primary: id,
-                  companion: `${id}${ATTENDABLE_PATH_SEPARATOR}comments`,
-                }),
-              );
-            }
+        return EditorView.updateListener.of((update) => {
+          update.transactions.forEach((transaction) => {
+            transaction.effects.forEach(async (effect) => {
+              if (effect.is(commentClickedEffect)) {
+                void dispatch(
+                  createIntent(DeckAction.ChangeCompanion, {
+                    primary: id,
+                    companion: `${id}${ATTENDABLE_PATH_SEPARATOR}comments`,
+                  }),
+                );
+              }
+            });
           });
         });
-      });
-    },
-  ]),
+      },
+    ]),
+  ),
 );
 
 const selectionOverlapsComment = (state: EditorState): boolean => {

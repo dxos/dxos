@@ -2,6 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
+import * as Effect from 'effect/Effect';
 import React, { forwardRef, useCallback } from 'react';
 
 import { Capability, Common } from '@dxos/app-framework';
@@ -17,49 +18,51 @@ import { Markdown, MarkdownCapabilities } from '../../types';
 import { isEditorModel } from '../../util';
 
 export default Capability.makeModule(() =>
-  Capability.contributes(Common.Capability.ReactSurface, [
-    Common.createSurface({
-      id: `${meta.id}/surface/document`,
-      role: ['article', 'section', 'tabpanel'],
-      filter: (data): data is { subject: Markdown.Document; variant: undefined } =>
-        Obj.instanceOf(Markdown.Document, data.subject) && !data.variant,
-      component: ({ data, role, ref }) => {
-        return <Container id={Obj.getDXN(data.subject).toString()} subject={data.subject} role={role} ref={ref} />;
-      },
-    }),
-    Common.createSurface({
-      id: `${meta.id}/surface/text`,
-      role: ['article', 'section', 'tabpanel'],
-      filter: (data): data is { id: string; subject: Text.Text } =>
-        typeof data.id === 'string' && Obj.instanceOf(Text.Text, data.subject),
-      component: ({ data, role }) => {
-        return <Container id={data.id} subject={data.subject} role={role} />;
-      },
-    }),
-    // TODO(burdon): Remove this variant and conform to Text.
-    Common.createSurface({
-      id: `${meta.id}/surface/editor`,
-      role: ['article', 'section'],
-      filter: (data): data is { subject: { id: string; text: string } } => isEditorModel(data.subject),
-      component: ({ data, role }) => {
-        return <Container id={data.subject.id} subject={data.subject} role={role} />;
-      },
-    }),
-    Common.createSurface({
-      id: `${meta.id}/surface/plugin-settings`,
-      role: 'article',
-      filter: (data): data is { subject: SettingsStore<Markdown.Settings> } =>
-        data.subject instanceof SettingsStore && data.subject.prefix === meta.id,
-      component: ({ data: { subject } }) => <MarkdownSettings settings={subject.value} />,
-    }),
-    Common.createSurface({
-      id: `${meta.id}/surface/preview`,
-      role: SurfaceCardRole.literals as any,
-      filter: (data): data is { subject: Markdown.Document | Text.Text } =>
-        Obj.instanceOf(Markdown.Document, data.subject) || Obj.instanceOf(Text.Text, data.subject),
-      component: ({ data, role, ref }) => <MarkdownCard {...data} role={role as SurfaceCardRole} ref={ref} />,
-    }),
-  ]),
+  Effect.succeed(
+    Capability.contributes(Common.Capability.ReactSurface, [
+      Common.createSurface({
+        id: `${meta.id}/surface/document`,
+        role: ['article', 'section', 'tabpanel'],
+        filter: (data): data is { subject: Markdown.Document; variant: undefined } =>
+          Obj.instanceOf(Markdown.Document, data.subject) && !data.variant,
+        component: ({ data, role, ref }) => {
+          return <Container id={Obj.getDXN(data.subject).toString()} subject={data.subject} role={role} ref={ref} />;
+        },
+      }),
+      Common.createSurface({
+        id: `${meta.id}/surface/text`,
+        role: ['article', 'section', 'tabpanel'],
+        filter: (data): data is { id: string; subject: Text.Text } =>
+          typeof data.id === 'string' && Obj.instanceOf(Text.Text, data.subject),
+        component: ({ data, role }) => {
+          return <Container id={data.id} subject={data.subject} role={role} />;
+        },
+      }),
+      // TODO(burdon): Remove this variant and conform to Text.
+      Common.createSurface({
+        id: `${meta.id}/surface/editor`,
+        role: ['article', 'section'],
+        filter: (data): data is { subject: { id: string; text: string } } => isEditorModel(data.subject),
+        component: ({ data, role }) => {
+          return <Container id={data.subject.id} subject={data.subject} role={role} />;
+        },
+      }),
+      Common.createSurface({
+        id: `${meta.id}/surface/plugin-settings`,
+        role: 'article',
+        filter: (data): data is { subject: SettingsStore<Markdown.Settings> } =>
+          data.subject instanceof SettingsStore && data.subject.prefix === meta.id,
+        component: ({ data: { subject } }) => <MarkdownSettings settings={subject.value} />,
+      }),
+      Common.createSurface({
+        id: `${meta.id}/surface/preview`,
+        role: SurfaceCardRole.literals as any,
+        filter: (data): data is { subject: Markdown.Document | Text.Text } =>
+          Obj.instanceOf(Markdown.Document, data.subject) || Obj.instanceOf(Text.Text, data.subject),
+        component: ({ data, role, ref }) => <MarkdownCard {...data} role={role as SurfaceCardRole} ref={ref} />,
+      }),
+    ]),
+  ),
 );
 
 /**

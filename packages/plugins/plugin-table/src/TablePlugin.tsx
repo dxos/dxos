@@ -2,6 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
+import * as Effect from 'effect/Effect';
+
 import { Capability, Common, Plugin, createIntent } from '@dxos/app-framework';
 import { Type } from '@dxos/echo';
 import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
@@ -36,14 +38,20 @@ export const TablePlugin = Plugin.define(meta).pipe(
     id: 'on-space-created',
     activatesOn: SpaceEvents.SpaceCreated,
     activate: () =>
-      Capability.contributes(SpaceCapabilities.OnCreateSpace, (params) => createIntent(TableAction.OnCreateSpace, params)),
+      Effect.succeed(
+        Capability.contributes(SpaceCapabilities.OnCreateSpace, (params) =>
+          createIntent(TableAction.OnCreateSpace, params),
+        ),
+      ),
   }),
   Plugin.addModule({
     id: 'on-schema-added',
     activatesOn: SpaceEvents.SchemaAdded,
     activate: () =>
-      Capability.contributes(SpaceCapabilities.OnSchemaAdded, ({ db, schema, show }) =>
-        createIntent(TableAction.OnSchemaAdded, { db, schema, show }),
+      Effect.succeed(
+        Capability.contributes(SpaceCapabilities.OnSchemaAdded, ({ db, schema, show }) =>
+          createIntent(TableAction.OnSchemaAdded, { db, schema, show }),
+        ),
       ),
   }),
   Common.Plugin.addSurfaceModule({ activate: ReactSurface }),

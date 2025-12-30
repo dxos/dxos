@@ -2,6 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
+import * as Effect from 'effect/Effect';
+
 import { Capability, Common } from '@dxos/app-framework';
 
 import { meta } from '../../meta';
@@ -30,11 +32,11 @@ const checkAppScheme = (url: string) => {
   });
 };
 
-export default Capability.makeModule((context) => {
-  const settings = context.getCapability(Common.Capability.SettingsStore).getStore<DeckSettingsProps>(meta.id)?.value;
-  if (!isSocket && settings?.enableNativeRedirect) {
-    checkAppScheme(appScheme);
-  }
-
-  return Capability.contributes(Common.Capability.Null, null);
-});
+export default Capability.makeModule((context) =>
+  Effect.sync(() => {
+    const settings = context.getCapability(Common.Capability.SettingsStore).getStore<DeckSettingsProps>(meta.id)?.value;
+    if (!isSocket && settings?.enableNativeRedirect) {
+      checkAppScheme(appScheme);
+    }
+  }),
+);

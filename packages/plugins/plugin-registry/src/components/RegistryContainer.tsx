@@ -2,10 +2,13 @@
 // Copyright 2023 DXOS.org
 //
 
+import { useAtomValue } from '@effect-atom/atom-react';
+import * as Effect from 'effect/Effect';
 import React, { useCallback, useMemo } from 'react';
 
 import { Common, type Plugin, SettingsAction, createIntent } from '@dxos/app-framework';
 import { useCapability, useIntentDispatcher, usePluginManager } from '@dxos/app-framework/react';
+import { runAndForwardErrors } from '@dxos/effect';
 import { ObservabilityAction } from '@dxos/plugin-observability/types';
 import { StackItem } from '@dxos/react-ui-stack';
 
@@ -16,35 +19,37 @@ const sortByPluginMeta = ({ meta: { name: a = '' } }: Plugin.Plugin, { meta: { n
 
 export const RegistryContainer = ({ id, plugins: _plugins }: { id: string; plugins: Plugin.Plugin[] }) => {
   const manager = usePluginManager();
-  const { dispatchPromise: dispatch } = useIntentDispatcher();
+  const { dispatch, dispatchPromise } = useIntentDispatcher();
   const plugins = useMemo(() => _plugins.sort(sortByPluginMeta), [_plugins]);
+  const enabled = useAtomValue(manager.enabled);
   const settingsStore = useCapability(Common.Capability.SettingsStore);
 
   // TODO(wittjosiah): Factor out to an intent?
   const handleChange = useCallback(
-    async (id: string, enabled: boolean) => {
-      if (enabled) {
-        await manager.enable(id);
-      } else {
-        await manager.disable(id);
-      }
+    (id: string, enabled: boolean) =>
+      Effect.gen(function* () {
+        if (enabled) {
+          yield* manager.enable(id);
+        } else {
+          yield* manager.disable(id);
+        }
 
-      await dispatch(
-        createIntent(ObservabilityAction.SendEvent, {
-          name: 'plugins.toggle',
-          properties: {
-            plugin: id,
-            enabled,
-          },
-        }),
-      );
-    },
+        yield* dispatch(
+          createIntent(ObservabilityAction.SendEvent, {
+            name: 'plugins.toggle',
+            properties: {
+              plugin: id,
+              enabled,
+            },
+          }),
+        );
+      }).pipe(runAndForwardErrors),
     [dispatch, manager],
   );
 
   const handleClick = useCallback(
     (pluginId: string) =>
-      dispatch(
+      dispatchPromise(
         createIntent(Common.LayoutAction.Open, {
           part: 'main',
           // TODO(wittjosiah): `/` currently is not supported in ids.
@@ -58,7 +63,7 @@ export const RegistryContainer = ({ id, plugins: _plugins }: { id: string; plugi
   const hasSettings = useCallback((pluginId: string) => !!settingsStore.getStore(pluginId), [settingsStore]);
 
   const handleSettings = useCallback(
-    (pluginId: string) => dispatch(createIntent(SettingsAction.Open, { plugin: pluginId })),
+    (pluginId: string) => dispatchPromise(createIntent(SettingsAction.Open, { plugin: pluginId })),
     [dispatch],
   );
 
@@ -66,7 +71,7 @@ export const RegistryContainer = ({ id, plugins: _plugins }: { id: string; plugi
     <StackItem.Content scrollable>
       <PluginList
         plugins={plugins}
-        enabled={manager.enabled}
+        enabled={enabled}
         onClick={handleClick}
         onChange={handleChange}
         hasSettings={hasSettings}

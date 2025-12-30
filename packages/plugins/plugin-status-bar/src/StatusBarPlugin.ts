@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Capability, Common, Plugin } from '@dxos/app-framework';
+import { Common, Plugin } from '@dxos/app-framework';
 
 import { ReactSurface } from './capabilities';
 import { meta } from './meta';

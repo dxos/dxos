@@ -2,6 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
+import * as Effect from 'effect/Effect';
+
 import { ActivationEvent, Capability, Common, Plugin } from '@dxos/app-framework';
 import { ClientEvents } from '@dxos/plugin-client';
 import { SpaceEvents } from '@dxos/plugin-space';
@@ -25,7 +27,7 @@ export const WelcomePlugin = Plugin.define(meta).pipe(
   Plugin.addModule({
     id: `${meta.id}/module/translations`,
     activatesOn: Common.ActivationEvent.SetupTranslations,
-    activate: () => Capability.contributes(Common.Capability.Translations, translations),
+    activate: () => Effect.succeed(Capability.contributes(Common.Capability.Translations, translations)),
   }),
   Plugin.addModule({
     id: `${meta.id}/module/react-surface`,

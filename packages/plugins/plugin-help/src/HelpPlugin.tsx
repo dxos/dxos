@@ -2,6 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
+import * as Effect from 'effect/Effect';
+
 import { Capability, Common, Plugin, createResolver } from '@dxos/app-framework';
 
 import { AppGraphBuilder, HelpState, ReactRoot, ReactSurface } from './capabilities';
@@ -25,15 +27,17 @@ export const HelpPlugin = Plugin.define<HelpPluginOptions>(meta).pipe(
   Common.Plugin.addSurfaceModule({ activate: ReactSurface }),
   Common.Plugin.addIntentResolverModule({
     activate: (context) =>
-      Capability.contributes(
-        Common.Capability.IntentResolver,
-        createResolver({
-          intent: HelpAction.Start,
-          resolve: () => {
-            const state = context.getCapability(HelpCapabilities.MutableState);
-            state.running = true;
-          },
-        }),
+      Effect.succeed(
+        Capability.contributes(
+          Common.Capability.IntentResolver,
+          createResolver({
+            intent: HelpAction.Start,
+            resolve: () => {
+              const state = context.getCapability(HelpCapabilities.MutableState);
+              state.running = true;
+            },
+          }),
+        ),
       ),
   }),
   Common.Plugin.addAppGraphModule({ activate: AppGraphBuilder }),

@@ -2,24 +2,40 @@
 // Copyright 2025 DXOS.org
 //
 
+import * as Effect from 'effect/Effect';
+
 import * as Option from 'effect/Option';
 
+
 import { Capability, Common } from '@dxos/app-framework';
+
 import { Filter, Obj, type QueryResult, Ref } from '@dxos/echo';
+
 import { invariant } from '@dxos/invariant';
+
 import { AttentionCapabilities } from '@dxos/plugin-attention';
+
 import { AutomationCapabilities, invokeFunctionWithTracing } from '@dxos/plugin-automation';
+
 import { ATTENDABLE_PATH_SEPARATOR, PLANK_COMPANION_TYPE } from '@dxos/plugin-deck/types';
+
 import { CreateAtom, GraphBuilder, Node } from '@dxos/plugin-graph';
+
 import { atomFromQuery } from '@dxos/plugin-space';
+
 import { type Event, type Message } from '@dxos/types';
+
 import { kebabize } from '@dxos/util';
 
+
 import { calendar, gmail } from '../../functions';
+
 import { meta } from '../../meta';
+
 import { Calendar, Mailbox } from '../../types';
 
-export default Capability.makeModule((context) => {
+export default Capability.makeModule((context) =>
+  Effect.sync(() => {
   return Capability.contributes(Common.Capability.AppGraphBuilder, [
     GraphBuilder.createExtension({
       id: `${meta.id}/mailbox-filters`,
@@ -175,4 +191,5 @@ export default Capability.makeModule((context) => {
       ],
     }),
   ]);
-});
+  }),
+);

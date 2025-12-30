@@ -3,11 +3,12 @@
 //
 
 import { LogicalPosition, LogicalSize, getCurrentWindow } from '@tauri-apps/api/window';
+import * as Effect from 'effect/Effect';
 
 import { Capability, Common } from '@dxos/app-framework';
 
-export default Capability.makeModule(() => {
-  return Capability.contributes(Common.Capability.Null, null, () => {
+export default Capability.makeModule(() =>
+  Effect.gen(function* () {
     const appWindow = getCurrentWindow();
 
     // Save window state to localStorage.
@@ -37,13 +38,22 @@ export default Capability.makeModule(() => {
     }
 
     // Listen for window events and save state.
-    void appWindow.listen('tauri://resize', saveWindowState);
-    void appWindow.listen('tauri://move', saveWindowState);
+    const unsubscribeResize = yield* Effect.tryPromise(() => appWindow.listen('tauri://resize', saveWindowState));
+    const unsubscribeMove = yield* Effect.tryPromise(() => appWindow.listen('tauri://move', saveWindowState));
 
     // Restore state when app loads.
     document.addEventListener('DOMContentLoaded', restoreWindowState);
 
     // Save state before closing.
     window.addEventListener('beforeunload', saveWindowState);
-  });
-});
+
+    return Capability.contributes(Common.Capability.Null, null, () =>
+      Effect.gen(function* () {
+        document.removeEventListener('DOMContentLoaded', restoreWindowState);
+        window.removeEventListener('beforeunload', saveWindowState);
+        unsubscribeResize();
+        unsubscribeMove();
+      }),
+    );
+  }),
+);

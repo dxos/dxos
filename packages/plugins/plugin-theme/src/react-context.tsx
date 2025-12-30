@@ -2,9 +2,10 @@
 // Copyright 2025 DXOS.org
 //
 
+import * as Effect from 'effect/Effect';
 import React, { useMemo } from 'react';
 
-import { Common, Capability } from '@dxos/app-framework';
+import { Capability, Common } from '@dxos/app-framework';
 import { useCapabilities } from '@dxos/app-framework/react';
 import { live } from '@dxos/live-object';
 import { type ThemeMode, ThemeProvider, type ThemeProviderProps, Toast, Tooltip } from '@dxos/react-ui';
@@ -18,46 +19,46 @@ export type ThemePluginOptions = Partial<Pick<ThemeProviderProps, 'tx' | 'noCach
 };
 
 export default Capability.makeModule(
-  (
-    { appName, tx: propsTx = defaultTx, resourceExtensions = [], ...rest }: ThemePluginOptions = { appName: 'test' },
-  ) => {
-    const state = live<{ themeMode: ThemeMode }>({ themeMode: 'dark' });
+  ({ appName, tx: propsTx = defaultTx, resourceExtensions = [], ...rest }: ThemePluginOptions = { appName: 'test' }) =>
+    Effect.sync(() => {
+      const state = live<{ themeMode: ThemeMode }>({ themeMode: 'dark' });
 
-    const setTheme = ({ matches: prefersDark }: { matches?: boolean }) => {
-      document.documentElement.classList[prefersDark ? 'add' : 'remove']('dark');
-      state.themeMode = prefersDark ? 'dark' : 'light';
-    };
+      const setTheme = ({ matches: prefersDark }: { matches?: boolean }) => {
+        document.documentElement.classList[prefersDark ? 'add' : 'remove']('dark');
+        state.themeMode = prefersDark ? 'dark' : 'light';
+      };
 
-    const modeQuery = window.matchMedia('(prefers-color-scheme: dark)');
-    setTheme({ matches: modeQuery.matches });
-    modeQuery.addEventListener('change', setTheme);
+      const modeQuery = window.matchMedia('(prefers-color-scheme: dark)');
+      setTheme({ matches: modeQuery.matches });
+      modeQuery.addEventListener('change', setTheme);
 
-    return Capability.contributes(
-      Common.Capability.ReactContext,
-      {
-        id: meta.id,
-        context: ({ children }: { children?: React.ReactNode }) => {
-          const _resources = useCapabilities(Common.Capability.Translations);
-          const resources = useMemo(
-            () => [compositeEnUs(appName), ...resourceExtensions, ..._resources.flat()],
-            [appName, resourceExtensions, _resources],
-          );
+      return Capability.contributes(
+        Common.Capability.ReactContext,
+        {
+          id: meta.id,
+          context: ({ children }: { children?: React.ReactNode }) => {
+            const _resources = useCapabilities(Common.Capability.Translations);
+            const resources = useMemo(
+              () => [compositeEnUs(appName), ...resourceExtensions, ..._resources.flat()],
+              [appName, resourceExtensions, _resources],
+            );
 
-          return (
-            <ThemeProvider {...{ tx: propsTx, themeMode: state.themeMode, resourceExtensions: resources, ...rest }}>
-              <Toast.Provider>
-                <Tooltip.Provider delayDuration={2_000} skipDelayDuration={100} disableHoverableContent>
-                  {children}
-                </Tooltip.Provider>
-                <Toast.Viewport />
-              </Toast.Provider>
-            </ThemeProvider>
-          );
+            return (
+              <ThemeProvider {...{ tx: propsTx, themeMode: state.themeMode, resourceExtensions: resources, ...rest }}>
+                <Toast.Provider>
+                  <Tooltip.Provider delayDuration={2_000} skipDelayDuration={100} disableHoverableContent>
+                    {children}
+                  </Tooltip.Provider>
+                  <Toast.Viewport />
+                </Toast.Provider>
+              </ThemeProvider>
+            );
+          },
         },
-      },
-      () => {
-        modeQuery.removeEventListener('change', setTheme);
-      },
-    );
-  },
+        () =>
+          Effect.sync(() => {
+            modeQuery.removeEventListener('change', setTheme);
+          }),
+      );
+    }),
 );

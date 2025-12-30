@@ -2,24 +2,40 @@
 // Copyright 2025 DXOS.org
 //
 
+import * as Effect from 'effect/Effect';
+
 import * as Function from 'effect/Function';
 
+
 import { Capability, Common, chain, createIntent } from '@dxos/app-framework';
+
 import { Obj, Type } from '@dxos/echo';
+
 import { invariant } from '@dxos/invariant';
+
 import { log } from '@dxos/log';
+
 import { ATTENDABLE_PATH_SEPARATOR, DeckAction, PLANK_COMPANION_TYPE } from '@dxos/plugin-deck/types';
+
 import { CreateAtom, GraphBuilder } from '@dxos/plugin-graph';
+
 import { COMPOSER_SPACE_LOCK } from '@dxos/plugin-space';
+
 import { SpaceAction } from '@dxos/plugin-space/types';
+
 import { ThreadCapabilities } from '@dxos/plugin-thread';
+
 import { Channel } from '@dxos/plugin-thread/types';
+
 import { SpaceState, getSpace } from '@dxos/react-client/echo';
 
+
 import { meta } from '../../meta';
+
 import { Meeting, MeetingAction, MeetingCapabilities } from '../../types';
 
-export default Capability.makeModule((context) => {
+export default Capability.makeModule((context) =>
+  Effect.sync(() => {
   return Capability.contributes(Common.Capability.AppGraphBuilder, [
     // TODO(wittjosiah): This currently won't _start_ the call but will navigate to the correct channel.
     GraphBuilder.createTypeExtension({
@@ -216,4 +232,5 @@ export default Capability.makeModule((context) => {
       ],
     }),
   ]);
-});
+  }),
+);

@@ -40,7 +40,8 @@ import {
 import { setActive } from '../../util';
 
 export default Capability.makeModule((context) =>
-  Capability.contributes(Common.Capability.IntentResolver, [
+  Effect.succeed(
+    Capability.contributes(Common.Capability.IntentResolver, [
     createResolver({
       intent: IntentAction.ShowUndo,
       resolve: (data) => {
@@ -465,4 +466,5 @@ export default Capability.makeModule((context) =>
       },
     }),
   ]),
+  ),
 );

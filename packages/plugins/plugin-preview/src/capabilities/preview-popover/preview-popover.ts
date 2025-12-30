@@ -2,14 +2,24 @@
 // Copyright 2025 DXOS.org
 //
 
+import * as Effect from 'effect/Effect';
+
 import { Capability, Common, createIntent } from '@dxos/app-framework';
+
 import { addEventListener } from '@dxos/async';
+
 import { type Client } from '@dxos/client';
+
 import { type Space, parseId } from '@dxos/client/echo';
+
 import { DXN } from '@dxos/keys';
+
 import { log } from '@dxos/log';
+
 import { ClientCapabilities } from '@dxos/plugin-client';
+
 import { DX_ANCHOR_ACTIVATE, type DxAnchorActivate } from '@dxos/react-ui';
+
 import { type PreviewLinkRef, type PreviewLinkTarget } from '@dxos/ui-editor';
 
 const customEventOptions = { capture: true, passive: false };
@@ -27,7 +37,8 @@ const handlePreviewLookup = async (
   }
 };
 
-export default Capability.makeModule((context) => {
+export default Capability.makeModule((context) =>
+  Effect.sync(() => {
   // TODO(wittjosiah): Factor out lookup handlers to other plugins to make not ECHO-specific.
   const handleAnchorActivate = async ({ refId, label, trigger }: DxAnchorActivate) => {
     const { dispatchPromise: dispatch } = context.getCapability(Common.Capability.IntentDispatcher);
@@ -65,5 +76,6 @@ export default Capability.makeModule((context) => {
     log.warn('No default view found');
   }
 
-  return Capability.contributes(Common.Capability.Null, null, () => cleanup());
-});
+  return Capability.contributes(Common.Capability.Null, null, () => Effect.sync(() => cleanup?.()));
+  }),
+);

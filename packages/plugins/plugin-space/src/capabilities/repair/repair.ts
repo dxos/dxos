@@ -2,6 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
+import * as Effect from 'effect/Effect';
+
 import { Capability } from '@dxos/app-framework';
 import { Obj, Ref, Type } from '@dxos/echo';
 import { type Space } from '@dxos/react-client/echo';
@@ -10,10 +12,12 @@ import { Collection } from '@dxos/schema';
 import { SpaceCapabilities } from '../../types';
 
 export default Capability.makeModule(() =>
-  Capability.contributes(SpaceCapabilities.Repair, async ({ space }: { space: Space }) => {
-    await removeQueryCollections(space);
-    await ensureSystemCollection(space);
-  }),
+  Effect.succeed(
+    Capability.contributes(SpaceCapabilities.Repair, async ({ space }: { space: Space }) => {
+      await removeQueryCollections(space);
+      await ensureSystemCollection(space);
+    }),
+  ),
 );
 
 /**

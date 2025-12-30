@@ -2,32 +2,52 @@
 // Copyright 2025 DXOS.org
 //
 
+import * as Effect from 'effect/Effect';
+
 import type * as Schema from 'effect/Schema';
 
+
 import { Capability, Common, createIntent } from '@dxos/app-framework';
+
 import { extractionAnthropicFunction, processTranscriptMessage } from '@dxos/assistant/extraction';
+
 import { Filter, type Obj, Query, Type } from '@dxos/echo';
+
 import { FunctionExecutor } from '@dxos/functions-runtime';
+
 import { ServiceContainer } from '@dxos/functions-runtime';
+
 import { invariant } from '@dxos/invariant';
+
 import { log } from '@dxos/log';
+
 import { ClientCapabilities } from '@dxos/plugin-client';
+
 import { type CallState, type MediaState, ThreadCapabilities } from '@dxos/plugin-thread';
+
 import { type Channel } from '@dxos/plugin-thread/types';
+
 import { TranscriptionCapabilities } from '@dxos/plugin-transcription';
+
 import { type buf } from '@dxos/protocols/buf';
+
 import { type MeetingPayloadSchema } from '@dxos/protocols/buf/dxos/edge/calls_pb';
+
 import { type Space } from '@dxos/react-client/echo';
+
 import { type Message } from '@dxos/types';
 
+
 import { meta } from '../../meta';
+
 import { Meeting, MeetingAction, MeetingCapabilities } from '../../types';
 
 // TODO(wittjosiah): Factor out.
 // TODO(wittjosiah): Can we stop using protobuf for this?
 type MeetingPayload = buf.MessageInitShape<typeof MeetingPayloadSchema>;
 
-export default Capability.makeModule((context) => {
+export default Capability.makeModule((context) =>
+  Effect.sync(() => {
   const { dispatchPromise: dispatch } = context.getCapability(Common.Capability.IntentDispatcher);
   const client = context.getCapability(ClientCapabilities.Client);
   const state = context.getCapability(MeetingCapabilities.State);
@@ -74,8 +94,9 @@ export default Capability.makeModule((context) => {
       void state.transcriptionManager?.setAudioTrack(mediaState.audioTrack);
       void state.transcriptionManager?.setRecording(isSpeaking);
     },
-  });
-});
+    });
+  }),
+);
 
 type EntityExtractionEnricherFactoryOptions = {
   contextTypes: Schema.Schema.AnyNoContext[];

@@ -2,13 +2,19 @@
 // Copyright 2025 DXOS.org
 //
 
+import * as Effect from 'effect/Effect';
+
 import { Common, Capability } from '@dxos/app-framework';
+
 import { GraphBuilder, NodeMatcher } from '@dxos/plugin-graph';
 
+
 import { themeEditorId } from '../../defs';
+
 import { meta } from '../../meta';
 
-export default Capability.makeModule((context) => {
+export default Capability.makeModule((context) =>
+  Effect.sync(() => {
   return Capability.contributes(Common.Capability.AppGraphBuilder, [
     GraphBuilder.createExtension({
       id: themeEditorId,
@@ -27,4 +33,5 @@ export default Capability.makeModule((context) => {
       ],
     }),
   ]);
-});
+  }),
+);

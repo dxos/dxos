@@ -2,6 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
+import * as Effect from 'effect/Effect';
 import React from 'react';
 
 import { Capability, Common } from '@dxos/app-framework';
@@ -12,46 +13,48 @@ import { SEARCH_DIALOG, SearchDialog, type SearchDialogProps, SearchMain } from 
 import { SearchContextProvider } from '../../hooks';
 
 export default Capability.makeModule(() =>
-  Capability.contributes(Common.Capability.ReactSurface, [
-    Common.createSurface({
-      id: SEARCH_DIALOG,
-      role: 'dialog',
-      filter: (data): data is { props: SearchDialogProps } => data.component === SEARCH_DIALOG,
-      component: ({ data }) => (
-        <SearchContextProvider>
-          <SearchDialog {...data.props} />
-        </SearchContextProvider>
-      ),
-    }),
-    Common.createSurface({
-      id: `${SEARCH_DIALOG}/search-input`,
-      role: 'search-input',
-      component: () => {
-        const space = useActiveSpace();
-
-        return (
+  Effect.succeed(
+    Capability.contributes(Common.Capability.ReactSurface, [
+      Common.createSurface({
+        id: SEARCH_DIALOG,
+        role: 'dialog',
+        filter: (data): data is { props: SearchDialogProps } => data.component === SEARCH_DIALOG,
+        component: ({ data }) => (
           <SearchContextProvider>
-            <SearchMain space={space} />
+            <SearchDialog {...data.props} />
           </SearchContextProvider>
-        );
-      },
-    }),
-    Common.createSurface({
-      id: `${SEARCH_DIALOG}/search`,
-      role: 'deck-companion--search',
-      filter: (data): data is { subject: Space } => isSpace(data.subject),
-      component: ({ data }) => {
-        const space = data.subject;
-        if (!space) {
-          return null;
-        }
+        ),
+      }),
+      Common.createSurface({
+        id: `${SEARCH_DIALOG}/search-input`,
+        role: 'search-input',
+        component: () => {
+          const space = useActiveSpace();
 
-        return (
-          <SearchContextProvider>
-            <SearchMain space={space} />
-          </SearchContextProvider>
-        );
-      },
-    }),
-  ]),
+          return (
+            <SearchContextProvider>
+              <SearchMain space={space} />
+            </SearchContextProvider>
+          );
+        },
+      }),
+      Common.createSurface({
+        id: `${SEARCH_DIALOG}/search`,
+        role: 'deck-companion--search',
+        filter: (data): data is { subject: Space } => isSpace(data.subject),
+        component: ({ data }) => {
+          const space = data.subject;
+          if (!space) {
+            return null;
+          }
+
+          return (
+            <SearchContextProvider>
+              <SearchMain space={space} />
+            </SearchContextProvider>
+          );
+        },
+      }),
+    ]),
+  ),
 );

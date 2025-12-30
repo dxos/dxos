@@ -2,6 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
+import * as Effect from 'effect/Effect';
+
 import {
   Capability,
   Common,
@@ -22,7 +24,8 @@ const COLLECTION_TYPE = Collection.Collection.typename;
 const DIRECTORY_TYPE = 'text/directory';
 
 export default Capability.makeModule((context) =>
-  Capability.contributes(Common.Capability.AppGraphSerializer, [
+  Effect.succeed(
+    Capability.contributes(Common.Capability.AppGraphSerializer, [
     {
       inputType: SPACES,
       outputType: DIRECTORY_TYPE,
@@ -78,4 +81,5 @@ export default Capability.makeModule((context) =>
       },
     },
   ]),
+  ),
 );

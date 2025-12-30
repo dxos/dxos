@@ -2,13 +2,15 @@
 // Copyright 2025 DXOS.org
 //
 
+import * as Effect from 'effect/Effect';
+
 import { Capability, Common } from '@dxos/app-framework';
 import { Relation } from '@dxos/echo';
 
 import { Sheet, compareIndexPositions } from '../../types';
 
-export default Capability.makeModule(
-  (): Capability.Capability<typeof Common.Capability.AnchorSort> =>
+export default Capability.makeModule(() =>
+  Effect.succeed(
     Capability.contributes(Common.Capability.AnchorSort, {
       key: Sheet.Sheet.typename,
       sort: (anchorA, anchorB) => {
@@ -20,4 +22,5 @@ export default Capability.makeModule(
         return !anchorA.anchor || !anchorB.anchor ? 0 : compareIndexPositions(sheet, anchorA.anchor, anchorB.anchor);
       },
     }),
+  ),
 );

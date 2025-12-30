@@ -5,6 +5,8 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
+import * as Effect from 'effect/Effect';
+
 import { Common, IntentPlugin, SettingsPlugin, Plugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { AttentionPlugin } from '@dxos/plugin-attention';
@@ -37,7 +39,7 @@ const meta = {
             Plugin.addModule({
               id: 'deck-state',
               activatesOn: Common.ActivationEvent.AppGraphReady,
-              activate: () => DeckStateFactory(),
+              activate: () => Effect.succeed(DeckStateFactory()),
             }),
             Plugin.addModule({
               id: 'layout-intent-resolver',

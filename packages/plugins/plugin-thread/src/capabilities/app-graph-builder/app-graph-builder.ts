@@ -2,21 +2,32 @@
 // Copyright 2025 DXOS.org
 //
 
+import * as Effect from 'effect/Effect';
+
 import * as Option from 'effect/Option';
 
+
 import { Capability, Common, createIntent } from '@dxos/app-framework';
+
 import { Obj } from '@dxos/echo';
+
 import { AttentionCapabilities } from '@dxos/plugin-attention';
+
 import { ATTENDABLE_PATH_SEPARATOR, DECK_COMPANION_TYPE, PLANK_COMPANION_TYPE } from '@dxos/plugin-deck/types';
+
 import { CreateAtom, GraphBuilder, NodeMatcher } from '@dxos/plugin-graph';
 
+
 import { meta } from '../../meta';
+
 import { Channel, ThreadAction, ThreadCapabilities } from '../../types';
+
 import { getAnchor } from '../../util';
 
 // TODO(wittjosiah): Highlight active calls in L1.
 //  Track active meetings by subscribing to meetings query and polling the swarms of recent meetings in the space.
-export default Capability.makeModule((context) => {
+export default Capability.makeModule((context) =>
+  Effect.sync(() => {
   const resolve = (typename: string) =>
     context.getCapabilities(Common.Capability.Metadata).find(({ id }) => id === typename)?.metadata ?? {};
 
@@ -153,4 +164,5 @@ export default Capability.makeModule((context) => {
       },
     }),
   ]);
-});
+  }),
+);
