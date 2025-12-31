@@ -8,7 +8,7 @@ import React, { type PropsWithChildren, useEffect, useMemo, useRef, useState } f
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { capabilities } from '@dxos/assistant-toolkit/testing';
 import { type ComputeGraphModel, type ComputeNode, type GraphDiagnostic } from '@dxos/conductor';
-import { ServiceContainer } from '@dxos/functions-runtime';
+import { FunctionInvocationServiceLayerTest, ServiceContainer } from '@dxos/functions-runtime';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { Select, Toolbar } from '@dxos/react-ui';
 import { withTheme } from '@dxos/react-ui/testing';
@@ -20,7 +20,7 @@ import { JsonFilter } from '@dxos/react-ui-syntax-highlighter';
 
 import { DiagnosticOverlay } from './components';
 import { ComputeShapeLayout } from './compute-layout';
-import { type ComputeGraphController } from './graph';
+import { createComputeGraphController, type ComputeGraphController } from './graph';
 import { ComputeContext, useComputeGraphController, useGraphMonitor } from './hooks';
 import { computeShapes } from './registry';
 import { type ComputeShape } from './shapes';
@@ -28,7 +28,6 @@ import {
   createArtifactCircuit,
   createAudioCircuit,
   createBasicCircuit,
-  createComputeGraphController,
   createControlCircuit,
   createEmptyCircuit,
   createGPTRealtimeCircuit,
@@ -37,6 +36,10 @@ import {
   createTemplateCircuit,
   createTransformCircuit,
 } from './testing';
+import { Layer, ManagedRuntime } from 'effect';
+import { AiServiceTestingPreset, TestAiService } from '@dxos/ai/testing';
+import { TestDatabaseLayer } from '@dxos/functions-runtime/testing';
+import { CredentialsService, TracingService } from '@dxos/functions';
 
 // TODO(burdon): Replace ServiceContainer.
 
@@ -209,62 +212,65 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
+const ServiceLayer = Layer.empty.pipe(
+  Layer.provideMerge(FunctionInvocationServiceLayerTest()),
+  Layer.provideMerge(
+    Layer.mergeAll(
+      AiServiceTestingPreset('direct'),
+      TestDatabaseLayer(),
+      CredentialsService.configuredLayer([]),
+      TracingService.layerNoop,
+    ),
+  ),
+  Layer.orDie,
+);
+
 export const Default: Story = {
   args: {
     registry: new ShapeRegistry(computeShapes),
-    ...createComputeGraphController(createEmptyCircuit(), new ServiceContainer()),
+    ...createComputeGraphController(createEmptyCircuit(), ManagedRuntime.make(ServiceLayer)),
   },
 };
 
 export const Beacon: Story = {
   args: {
     registry: new ShapeRegistry(computeShapes),
-    ...createComputeGraphController(createBasicCircuit(), new ServiceContainer()),
+    ...createComputeGraphController(createBasicCircuit(), ManagedRuntime.make(ServiceLayer)),
   },
 };
 
 export const Transform: Story = {
   args: {
     registry: new ShapeRegistry(computeShapes),
-    ...createComputeGraphController(createTransformCircuit(), new ServiceContainer()),
+    ...createComputeGraphController(createTransformCircuit(), ManagedRuntime.make(ServiceLayer)),
   },
 };
 
 export const Logic: Story = {
   args: {
     registry: new ShapeRegistry(computeShapes),
-    ...createComputeGraphController(createLogicCircuit(), new ServiceContainer()),
+    ...createComputeGraphController(createLogicCircuit(), ManagedRuntime.make(ServiceLayer)),
   },
 };
 
 export const Control: Story = {
   args: {
     registry: new ShapeRegistry(computeShapes),
-    ...createComputeGraphController(createControlCircuit(), new ServiceContainer()),
+    ...createComputeGraphController(createControlCircuit(), ManagedRuntime.make(ServiceLayer)),
   },
 };
 
 export const Template: Story = {
   args: {
     registry: new ShapeRegistry(computeShapes),
-    ...createComputeGraphController(
-      createTemplateCircuit(),
-      new ServiceContainer().setServices({
-        // ai: AiService.make(new Edge AiServiceClient({ endpoint: localServiceEndpoints.ai })),
-      }),
-    ),
+    ...createComputeGraphController(createTemplateCircuit(), ManagedRuntime.make(ServiceLayer)),
   },
 };
 
 export const GPT: Story = {
   args: {
     registry: new ShapeRegistry(computeShapes),
-    ...createComputeGraphController(
-      createGptCircuit({ history: true }),
-      new ServiceContainer().setServices({
-        // ai: AiService.make(new Edge AiServiceClient({ endpoint: localServiceEndpoints.ai })),
-      }),
-    ),
+    ...createComputeGraphController(createGptCircuit({ history: true }), ManagedRuntime.make(ServiceLayer)),
   },
 };
 
@@ -273,9 +279,7 @@ export const Plugins: Story = {
     registry: new ShapeRegistry(computeShapes),
     ...createComputeGraphController(
       createGptCircuit({ history: true, image: true, artifact: true }),
-      new ServiceContainer().setServices({
-        // ai: AiService.make(new Edge AiServiceClient({ endpoint: SERVICES_CONFIG.local.ai.server })),
-      }),
+      ManagedRuntime.make(ServiceLayer),
     ),
   },
 };
@@ -283,12 +287,7 @@ export const Plugins: Story = {
 export const Artifact: Story = {
   args: {
     registry: new ShapeRegistry(computeShapes),
-    ...createComputeGraphController(
-      createArtifactCircuit(),
-      new ServiceContainer().setServices({
-        // ai: AiService.make(new Edge AiServiceClient({ endpoint: SERVICES_CONFIG.local.ai.server })),
-      }),
-    ),
+    ...createComputeGraphController(createArtifactCircuit(), ManagedRuntime.make(ServiceLayer)),
   },
 };
 
@@ -297,9 +296,7 @@ export const ImageGen: Story = {
     registry: new ShapeRegistry(computeShapes),
     ...createComputeGraphController(
       createGptCircuit({ image: true, artifact: true }),
-      new ServiceContainer().setServices({
-        // ai: AiService.make(createTestAiServiceClient()),
-      }),
+      ManagedRuntime.make(ServiceLayer),
     ),
   },
 };
@@ -307,23 +304,13 @@ export const ImageGen: Story = {
 export const Audio: Story = {
   args: {
     registry: new ShapeRegistry(computeShapes),
-    ...createComputeGraphController(
-      createAudioCircuit(),
-      new ServiceContainer().setServices({
-        // ai: AiService.make(createTestAiServiceClient()),
-      }),
-    ),
+    ...createComputeGraphController(createAudioCircuit(), ManagedRuntime.make(ServiceLayer)),
   },
 };
 
 export const Voice: Story = {
   args: {
     registry: new ShapeRegistry(computeShapes),
-    ...createComputeGraphController(
-      createGPTRealtimeCircuit(),
-      new ServiceContainer().setServices({
-        // ai: AiService.make(createTestAiServiceClient()),
-      }),
-    ),
+    ...createComputeGraphController(createGPTRealtimeCircuit(), ManagedRuntime.make(ServiceLayer)),
   },
 };

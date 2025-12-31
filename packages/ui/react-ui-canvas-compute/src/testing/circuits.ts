@@ -37,15 +37,6 @@ import {
   createTextToImage,
 } from '../shapes';
 
-export const createComputeGraphController = (
-  graph: CanvasGraphModel<ComputeShape>,
-  serviceContainer: ServiceContainer,
-) => {
-  const computeGraph = createComputeGraph(graph);
-  const controller = new ComputeGraphController(serviceContainer, computeGraph);
-  return { controller, graph };
-};
-
 //
 // Circuits
 //
