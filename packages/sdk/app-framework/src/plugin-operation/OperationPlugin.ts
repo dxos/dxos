@@ -29,4 +29,3 @@ export const OperationPlugin = Plugin.define(meta).pipe(
   }),
   Plugin.make,
 );
-

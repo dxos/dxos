@@ -41,9 +41,7 @@ export default Capability.makeModule((context) =>
           const { schema, content } = JSON.parse(data.data);
 
           const { dispatchPromise: dispatch } = context.getCapability(Common.Capability.IntentDispatcher);
-          const createResult = await dispatch(
-            createIntent(SketchAction.Create, { name: data.name, schema, content }),
-          );
+          const createResult = await dispatch(createIntent(SketchAction.Create, { name: data.name, schema, content }));
           if (!createResult.data?.object) {
             return undefined;
           }

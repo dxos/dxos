@@ -78,10 +78,7 @@ export const createOperationInvoker = (
     });
   };
 
-  const invokePromise = async <I, O>(
-    op: OperationDefinition<I, O>,
-    input: I,
-  ): Promise<{ data?: O; error?: Error }> => {
+  const invokePromise = async <I, O>(op: OperationDefinition<I, O>, input: I): Promise<{ data?: O; error?: Error }> => {
     return runAndForwardErrors(invoke(op, input))
       .then((data) => ({ data }))
       .catch((error) => {
@@ -112,11 +109,8 @@ export const createOperationInvoker = (
 
 export default Capability.makeModule((context) =>
   Effect.gen(function* () {
-    const invoker = createOperationInvoker(() =>
-      context.getCapabilities(Common.Capability.OperationHandler).flat(),
-    );
+    const invoker = createOperationInvoker(() => context.getCapabilities(Common.Capability.OperationHandler).flat());
 
     return Effect.succeed(Capability.contributes(Common.Capability.OperationInvoker, invoker));
   }).pipe(Effect.flatten),
 );
-

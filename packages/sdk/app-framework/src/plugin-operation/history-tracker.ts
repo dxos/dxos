@@ -106,4 +106,3 @@ export default Capability.makeModule((context: PluginContext) =>
     return Effect.succeed(Capability.contributes(Common.Capability.HistoryTracker, tracker));
   }).pipe(Effect.flatten),
 );
-

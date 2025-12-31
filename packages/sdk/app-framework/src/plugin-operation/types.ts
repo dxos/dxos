@@ -62,9 +62,7 @@ export type OperationInvokerInterface = {
  * UndoRegistry capability interface.
  */
 export type UndoRegistryInterface = {
-  lookup: (
-    operation: OperationDefinition<any, any>,
-  ) =>
+  lookup: (operation: OperationDefinition<any, any>) =>
     | {
         inverse: OperationDefinition<any, any>;
         deriveContext: (input: any, output: any) => any;
@@ -80,4 +78,3 @@ export type HistoryTrackerInterface = {
   undoPromise: () => Promise<{ error?: Error }>;
   canUndo: () => boolean;
 };
-

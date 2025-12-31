@@ -46,9 +46,7 @@ export const useCreateAndDeployScriptTemplates = (space: Space | undefined, scri
           }),
         );
         invariant(Obj.instanceOf(Script.Script, createResult.data?.object));
-        await dispatch(
-          createIntent(SpaceAction.AddObject, { target: space.db, object: createResult.data.object }),
-        );
+        await dispatch(createIntent(SpaceAction.AddObject, { target: space.db, object: createResult.data.object }));
 
         return deployScript({ space, client, script: createResult.data.object });
       }),

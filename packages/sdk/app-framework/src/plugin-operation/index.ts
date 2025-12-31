@@ -9,4 +9,3 @@ export { OperationPlugin } from './OperationPlugin';
 export { createOperationInvoker } from './operation-invoker';
 export { createUndoRegistry } from './undo-registry';
 export { createHistoryTracker } from './history-tracker';
-

@@ -45,4 +45,3 @@ export default Capability.makeModule((context) =>
     return Effect.succeed(Capability.contributes(Common.Capability.UndoRegistry, registry));
   }).pipe(Effect.flatten),
 );
-

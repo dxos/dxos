@@ -165,9 +165,7 @@ export class OnboardingManager {
             await this._dispatch(
               createIntent(Common.LayoutAction.SwitchWorkspace, { part: 'workspace', subject: Account.id }),
             );
-            await this._dispatch(
-              createIntent(Common.LayoutAction.Open, { part: 'main', subject: [Account.Security] }),
-            );
+            await this._dispatch(createIntent(Common.LayoutAction.Open, { part: 'main', subject: [Account.Security] }));
           },
         },
       }),

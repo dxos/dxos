@@ -21,4 +21,3 @@ export class EmptyHistoryError extends Error {
     this.name = 'EmptyHistoryError';
   }
 }
-

@@ -442,4 +442,3 @@ describe('HistoryTracker', () => {
     expect(error?.message).toContain('empty');
   });
 });
-
