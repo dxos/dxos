@@ -102,6 +102,9 @@
       "path": "../plugin-space"
     },
     {
+      "path": "../plugin-testing"
+    },
+    {
       "path": "../plugin-theme"
     }
   ]

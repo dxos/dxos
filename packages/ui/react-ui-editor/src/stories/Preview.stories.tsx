@@ -218,7 +218,6 @@ export const Default: Story = {
     }, []);
 
     // TODO(burdon): Migrate to Editor.Root.
-    // TODO(burdon): Ranges must be sorted error (decorate.enter).
     return (
       <EditorPreviewProvider onLookup={handlePreviewLookup}>
         <EditorStory ref={setController} text={text} extensions={extensions} />

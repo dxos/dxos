@@ -670,17 +670,17 @@
         },
         {
           "type": "json",
-          "path": "packages/plugins/plugin-storybook-layout/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
           "path": "packages/plugins/plugin-table/package.json",
           "jsonpath": "$.version"
         },
         {
           "type": "json",
           "path": "packages/plugins/plugin-template/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/plugins/plugin-testing/package.json",
           "jsonpath": "$.version"
         },
         {

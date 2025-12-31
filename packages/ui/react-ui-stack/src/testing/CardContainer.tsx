@@ -6,7 +6,7 @@ import React, { type PropsWithChildren } from 'react';
 
 import { ExtrinsicCardContainer, IntrinsicCardContainer, PopoverCardContainer } from '@dxos/storybook-utils';
 
-import { Card } from '../exemplars';
+import { Card } from '../components';
 
 export const CardContainer = ({
   children,

@@ -1,7 +1,7 @@
 {
-  "name": "@dxos/plugin-storybook-layout",
+  "name": "@dxos/plugin-testing",
   "version": "0.8.3",
-  "description": "Storybook layout plugin",
+  "description": "Plugin testing utils",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
@@ -23,6 +23,10 @@
   "dependencies": {
     "@dxos/app-framework": "workspace:*",
     "@dxos/live-object": "workspace:*",
+    "@dxos/plugin-attention": "workspace:*",
+    "@dxos/plugin-client": "workspace:*",
+    "@dxos/plugin-graph": "workspace:*",
+    "@dxos/plugin-theme": "workspace:*",
     "@dxos/util": "workspace:*",
     "@preact-signals/safe-react": "catalog:"
   },

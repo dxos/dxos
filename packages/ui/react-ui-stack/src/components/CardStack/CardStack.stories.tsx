@@ -10,8 +10,8 @@ import { faker } from '@dxos/random';
 import { IconButton } from '@dxos/react-ui';
 import { withTheme } from '@dxos/react-ui/testing';
 
-import { StackItem } from '../../components';
 import { Card, CardDragPreview } from '../Card';
+import { StackItem } from '../StackItem';
 
 import { CardStack } from './CardStack';
 

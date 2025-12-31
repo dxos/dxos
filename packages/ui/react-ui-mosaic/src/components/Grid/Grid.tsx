@@ -3,14 +3,9 @@
 //
 
 import { combine } from '@atlaskit/pragmatic-drag-and-drop/combine';
-import {
-  draggable,
-  dropTargetForElements,
-  monitorForElements,
-} from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
+import { draggable, dropTargetForElements } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
 import { preserveOffsetOnSource } from '@atlaskit/pragmatic-drag-and-drop/element/preserve-offset-on-source';
 import { setCustomNativeDragPreview } from '@atlaskit/pragmatic-drag-and-drop/element/set-custom-native-drag-preview';
-import { autoScrollForElements } from '@atlaskit/pragmatic-drag-and-drop-auto-scroll/element';
 import {
   type Edge,
   attachClosestEdge,
@@ -42,10 +37,25 @@ import { type Obj } from '@dxos/echo';
 import { Icon, type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
+import { type ItemData, type PlaceholderData } from '../../hooks';
+import { CONTAINER_DATA_ACTIVE_ATTR } from '../Mosaic';
+
+//
+// Styles
+//
+
 const classes: Record<string, string> = {
-  icon: 'bs-6 is-6 grid place-items-center hover:bg-inputSurface rounded-sm transition opacity-10 group-hover:opacity-100',
-  borderFocus:
-    'outline-none border rounded-sm transition border-subduedSeparator focus:border-accentSurface focus-within:border-neutralFocusIndicator',
+  icon: 'bs-6 is-6 grid place-items-center hover:bg-inputSurface rounded-sm transition opacity-10 group-hover/cell:opacity-100',
+
+  borderFocus: [
+    'outline-none border rounded-sm transition border-subduedSeparator',
+    // Tabster nav/focus.
+    'focus:border-accentSurface',
+    // Child has focus.
+    'focus-within:border-neutralFocusIndicator',
+    // Active drop target.
+    `has-[[${CONTAINER_DATA_ACTIVE_ATTR}=true]]:border-neutralFocusIndicator`,
+  ].join(' '),
 };
 
 //
@@ -81,45 +91,15 @@ GridRoot.displayName = 'Grid.Root';
 // Viewport
 //
 
-interface GridEventHandler {
-  onCellMove?: (props: { from: number; to: number }) => void;
-}
+type GridViewportProps = ThemedClassName<PropsWithChildren>;
 
-type GridViewportProps = ThemedClassName<PropsWithChildren<{}>> & GridEventHandler;
-
-const GridViewport = ({ classNames, children, onCellMove }: GridViewportProps) => {
-  const rootRef = useRef<HTMLDivElement>(null);
+const GridViewport = ({ classNames, children }: GridViewportProps) => {
   const focusableGroupAttrs = useFocusableGroup({ tabBehavior: 'limited-trap-focus' });
   const arrowNavigationAttrs = useArrowNavigationGroup({ axis: 'horizontal', memorizeCurrent: true, tabbable: true });
   const tabsterAttrs = useMergedTabsterAttributes_unstable(focusableGroupAttrs, arrowNavigationAttrs);
 
-  // Handle all mutation events.
-  useEffect(() => {
-    return combine(
-      monitorForElements({
-        onDrop: ({ source, location }) => {
-          const column = location.current.dropTargets.find((t) => t.data.type === 'column');
-          const cell = location.current.dropTargets.find((t) => t.data.type === 'cell');
-          if (!column || !cell) {
-            return;
-          }
-
-          const objects = column.data.objects as Obj.Any[];
-          const from = objects.findIndex((object) => object.id === source.data.objectId);
-          const to = objects.findIndex((object) => object.id === cell.data.objectId);
-          onCellMove?.({ from, to });
-        },
-      }),
-    );
-  }, [rootRef]);
-
   return (
-    <div
-      ref={rootRef}
-      role='none'
-      className={mx('flex bs-full is-full overflow-x-auto p-2 gap-4', classNames)}
-      {...tabsterAttrs}
-    >
+    <div role='none' className={mx('flex bs-full is-full overflow-x-auto p-2 gap-4', classNames)} {...tabsterAttrs}>
       {children}
     </div>
   );
@@ -131,7 +111,7 @@ GridViewport.displayName = 'Grid.Viewport';
 // Column
 //
 
-type GridColumnProps = ThemedClassName<PropsWithChildren<{}>>;
+type GridColumnProps = ThemedClassName<PropsWithChildren>;
 
 const GridColumn = memo(({ classNames, children }: GridColumnProps) => {
   const focusableGroupAttrs = useFocusableGroup({ tabBehavior: 'limited-trap-focus' });
@@ -143,7 +123,7 @@ const GridColumn = memo(({ classNames, children }: GridColumnProps) => {
       role='none'
       tabIndex={0}
       {...tabsterAttrs}
-      className={mx('relative flex flex-col is-full overflow-hidden', classes.borderFocus, classNames)}
+      className={mx('flex flex-col is-full overflow-hidden', classes.borderFocus, classNames)}
     >
       {children}
     </div>
@@ -154,44 +134,58 @@ GridColumn.displayName = 'Grid.Column';
 
 //
 // Stack
-// Ref: https://codesandbox.io/p/sandbox/vc6s5t?file=%2Fpragmatic-drag-and-drop%2Fdocumentation%2Fexamples%2Fpieces%2Fboard%2Fcolumn.tsx
 //
 
 type GridStackProps = ThemedClassName<
   {
-    objects: Obj.Any[];
-  } & Pick<GridCellProps, 'Cell' | 'enableDrag'>
+    id: string;
+    objects?: Obj.Any[];
+  } & Pick<GridCellProps, 'Cell' | 'canDrag' | 'canDrop'>
 >;
 
-const GridStack = memo(({ classNames, objects, Cell, enableDrag }: GridStackProps) => {
-  const rootRef = useRef<HTMLDivElement>(null);
+const GridStack = forwardRef<HTMLDivElement, GridStackProps>(
+  ({ classNames, id, objects, Cell, canDrag, canDrop, ...props }, forwardedRef) => {
+    const placeholderRef = useRef<HTMLDivElement>(null);
+    useEffect(() => {
+      if (!placeholderRef.current) {
+        return;
+      }
 
-  useEffect(() => {
-    if (!rootRef.current) {
-      return;
-    }
+      return dropTargetForElements({
+        element: placeholderRef.current,
+        getData: () =>
+          ({
+            type: 'placeholder',
+            location: 'bottom',
+            containerId: id,
+          }) satisfies PlaceholderData,
+      });
+    }, [placeholderRef, id]);
 
-    return combine(
-      dropTargetForElements({
-        element: rootRef.current,
-        getData: () => ({ type: 'column', objects }),
-      }),
-      autoScrollForElements({
-        element: rootRef.current,
-      }),
+    return (
+      <div
+        ref={forwardedRef}
+        role='none'
+        className={mx('flex flex-col is-full plb-2 overflow-y-auto', classNames)}
+        {...props}
+      >
+        {objects?.map((object) => (
+          <div key={object.id} className='p-1'>
+            <Grid.Cell containerId={id} object={object} Cell={Cell} canDrag={canDrag} canDrop={canDrop} />
+          </div>
+        ))}
+        <div className='p-3' ref={placeholderRef}>
+          <div
+            // TODO(burdon): Display while dragging.
+            className={mx('bs-[8rem]', 'outline-none border rounded-sm transition border-transparent border-dashed')}
+          />
+        </div>
+      </div>
     );
-  }, [rootRef]);
+  },
+);
 
-  return (
-    <div ref={rootRef} role='none' className={mx('relative flex flex-col is-full plb-2 overflow-y-auto', classNames)}>
-      {objects.map((object) => (
-        <Grid.Cell key={object.id} object={object} Cell={Cell} enableDrag={enableDrag} />
-      ))}
-    </div>
-  );
-});
-
-GridStack.displayName = 'Grid.Column';
+GridStack.displayName = 'Grid.Stack';
 
 //
 // Cell
@@ -200,12 +194,16 @@ GridStack.displayName = 'Grid.Column';
 type State = { type: 'idle' } | { type: 'preview'; container: HTMLElement; rect: DOMRect } | { type: 'dragging' };
 
 type GridCellProps = ThemedClassName<{
+  containerId: string;
   object: Obj.Any;
   Cell: FC<{ object: Obj.Any; dragging?: boolean }>;
-  enableDrag?: boolean;
+
+  // TODO(burdon): Make dynamic.
+  canDrag?: boolean;
+  canDrop?: boolean;
 }>;
 
-const GridCell = memo(({ classNames, object, Cell, enableDrag }: GridCellProps) => {
+const GridCell = memo(({ classNames, containerId, object, Cell, canDrag = false, canDrop = false }: GridCellProps) => {
   const rootRef = useRef<HTMLDivElement>(null);
   const handleRef = useRef<HTMLDivElement>(null);
   const [state, setState] = useState<State>({ type: 'idle' });
@@ -222,7 +220,13 @@ const GridCell = memo(({ classNames, object, Cell, enableDrag }: GridCellProps) 
     return combine(
       draggable({
         element: handle,
-        getInitialData: () => ({ type: 'cell', objectId: object.id }),
+        getInitialData: () =>
+          ({
+            type: 'item',
+            id: object.id,
+            object,
+            containerId,
+          }) satisfies ItemData,
         onGenerateDragPreview: ({ location, nativeSetDragImage }) => {
           const rect = root.getBoundingClientRect();
           setCustomNativeDragPreview({
@@ -244,14 +248,17 @@ const GridCell = memo(({ classNames, object, Cell, enableDrag }: GridCellProps) 
           setState({ type: 'idle' });
         },
       }),
+
       dropTargetForElements({
         element: root,
         getData: ({ input, element }) => {
           return attachClosestEdge(
             {
-              type: 'cell',
-              objectId: object.id,
-            },
+              type: 'item',
+              id: object.id,
+              object,
+              containerId,
+            } satisfies ItemData,
             {
               input,
               element,
@@ -259,13 +266,15 @@ const GridCell = memo(({ classNames, object, Cell, enableDrag }: GridCellProps) 
             },
           );
         },
+
+        canDrop: () => canDrop,
         onDragEnter: ({ source, self }) => {
-          if (source.data.objectId !== object.id) {
+          if (source.data.id !== object.id) {
             setClosestEdge(extractClosestEdge(self.data));
           }
         },
         onDrag: ({ source, self }) => {
-          if (source.data.objectId !== object.id) {
+          if (source.data.id !== object.id) {
             setClosestEdge(extractClosestEdge(self.data));
           }
         },
@@ -286,7 +295,7 @@ const GridCell = memo(({ classNames, object, Cell, enableDrag }: GridCellProps) 
       <div role='none' className='relative mli-2'>
         <GridCellPrimitive
           ref={rootRef}
-          handleRef={enableDrag ? handleRef : undefined}
+          handleRef={canDrag ? handleRef : undefined}
           classNames={['transition opacity-100', state.type === 'dragging' && 'opacity-25', classNames]}
         >
           <Cell object={object} />
@@ -296,9 +305,12 @@ const GridCell = memo(({ classNames, object, Cell, enableDrag }: GridCellProps) 
 
       {state.type === 'preview' &&
         createPortal(
-          <div role='none' style={{ width: `${state.rect.width}px` } as CSSProperties}>
+          <div
+            role='none'
+            style={{ width: `${state.rect.width}px`, height: `${state.rect.height}px` } as CSSProperties}
+          >
             <GridCellPrimitive classNames={['bg-inputSurface', classNames]}>
-              <Cell object={object} dragging={true} />
+              <Cell object={object} dragging />
             </GridCellPrimitive>
           </div>,
           state.container,
@@ -316,37 +328,33 @@ type GridCellPrimitiveProps = ThemedClassName<
 >;
 
 const GridCellPrimitive = memo(
-  forwardRef<HTMLDivElement, GridCellPrimitiveProps>(({ classNames, children, handleRef }, ref) => {
-    const focusableRef = useRef<HTMLDivElement>(null);
+  forwardRef<HTMLDivElement, GridCellPrimitiveProps>(({ classNames, children, handleRef }, forwardedRef) => {
     const focusableGroupAttrs = useFocusableGroup();
 
     return (
-      <div ref={ref} role='none' className='p-1'>
-        <div
-          ref={focusableRef}
-          role='none'
-          className={mx(
-            // TODO(burdon): Options for border/spacing.
-            'group is-full grid grid-cols-[min-content_1fr_min-content] gap-2 p-2 overflow-hidden',
-            classes.borderFocus,
-            classNames,
-          )}
-          tabIndex={0}
-          {...focusableGroupAttrs}
-        >
-          <div role='none'>
-            {handleRef && (
-              <div ref={handleRef} role='none' className={classes.icon}>
-                <Icon classNames='cursor-pointer' icon='ph--dots-six-vertical--regular' size={5} />
-              </div>
-            )}
+      <div
+        ref={forwardedRef}
+        role='none'
+        className={mx(
+          'group/cell is-full grid grid-cols-[min-content_1fr_min-content] overflow-hidden',
+          classes.borderFocus,
+          classNames,
+        )}
+        tabIndex={0}
+        {...focusableGroupAttrs}
+      >
+        <div role='none' className='shrink-0 p-2'>
+          <div ref={handleRef} role='none' className={classes.icon}>
+            <Icon classNames='cursor-pointer' icon='ph--dots-six-vertical--regular' size={5} />
           </div>
-          <div role='none'>{children}</div>
-          <div role='none'>
-            <div role='none' className={classes.icon}>
-              {/* TODO(burdon): Menu. */}
-              <Icon classNames='cursor-pointer' icon='ph--list--regular' size={5} />
-            </div>
+        </div>
+        <div role='none' className='grow overflow-hidden'>
+          {children}
+        </div>
+        <div role='none' className='shrink-0 p-2'>
+          <div role='none' className={classes.icon}>
+            {/* TODO(burdon): Menu. */}
+            <Icon classNames='cursor-pointer' icon='ph--list--regular' size={5} />
           </div>
         </div>
       </div>
@@ -367,3 +375,5 @@ export const Grid = {
 };
 
 export type { GridRootProps, GridViewportProps, GridColumnProps, GridStackProps, GridCellProps };
+
+export { classes };

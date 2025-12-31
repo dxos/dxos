@@ -58,7 +58,7 @@
     "react-joyride": "catalog:"
   },
   "devDependencies": {
-    "@dxos/plugin-storybook-layout": "workspace:*",
+    "@dxos/plugin-testing": "workspace:*",
     "@dxos/random": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/storybook-utils": "workspace:*",
