@@ -5251,6 +5251,9 @@ importers:
       '@dxos/node-std':
         specifier: workspace:*
         version: link:../../common/node-std
+      '@dxos/operation':
+        specifier: workspace:*
+        version: link:../operation
       '@dxos/protocols':
         specifier: workspace:*
         version: link:../protocols
@@ -6013,6 +6016,19 @@ importers:
       ws:
         specifier: 'catalog:'
         version: 8.18.2
+
+  packages/core/operation:
+    dependencies:
+      '@dxos/effect':
+        specifier: workspace:*
+        version: link:../../common/effect
+      '@dxos/schema':
+        specifier: workspace:*
+        version: link:../../sdk/schema
+    devDependencies:
+      effect:
+        specifier: 'catalog:'
+        version: 3.19.11
 
   packages/core/protocols:
     dependencies:
