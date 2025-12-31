@@ -32,6 +32,11 @@ export namespace ActivationEvent {
   export const SetupIntentResolver = ActivationEvent$.make('dxos.org/app-framework/event/setup-intent-resolver');
 
   /**
+   * Fired before the operation invoker is activated.
+   */
+  export const SetupOperationHandler = ActivationEvent$.make('dxos.org/app-framework/event/setup-operation-handler');
+
+  /**
    * Fired before the settings store is activated.
    */
   export const SetupSettings = ActivationEvent$.make('dxos.org/app-framework/event/setup-settings');

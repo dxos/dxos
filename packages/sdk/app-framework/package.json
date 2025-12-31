@@ -122,6 +122,7 @@
     "@dxos/ui-theme": "workspace:*",
     "@effect-atom/atom-react": "catalog:",
     "@effect/platform": "catalog:",
+    "@effect/vitest": "catalog:",
     "@types/react": "catalog:",
     "effect": "catalog:",
     "react": "catalog:",

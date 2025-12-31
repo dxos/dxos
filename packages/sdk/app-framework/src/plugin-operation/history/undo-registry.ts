@@ -2,19 +2,34 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as Effect from 'effect/Effect';
-
 import type { OperationDefinition } from '@dxos/operation';
 
-import * as Common from '../common';
-import { Capability } from '../core';
+import type { UndoMappingRegistration } from './types';
 
-import type { UndoMappingRegistration, UndoRegistryInterface } from './types';
+//
+// Public Interface
+//
+
+/**
+ * UndoRegistry interface - looks up inverse operations.
+ */
+export interface UndoRegistry {
+  lookup: (operation: OperationDefinition<any, any>) =>
+    | {
+        inverse: OperationDefinition<any, any>;
+        deriveContext: (input: any, output: any) => any;
+      }
+    | undefined;
+}
+
+//
+// Factory
+//
 
 /**
  * Creates an UndoRegistry that looks up inverse operations.
  */
-export const createUndoRegistry = (getMappings: () => UndoMappingRegistration[]): UndoRegistryInterface => {
+export const make = (getMappings: () => UndoMappingRegistration[]): UndoRegistry => {
   const lookup = (
     operation: OperationDefinition<any, any>,
   ):
@@ -37,11 +52,3 @@ export const createUndoRegistry = (getMappings: () => UndoMappingRegistration[])
 
   return { lookup };
 };
-
-export default Capability.makeModule((context) =>
-  Effect.gen(function* () {
-    const registry = createUndoRegistry(() => context.getCapabilities(Common.Capability.UndoMapping).flat());
-
-    return Effect.succeed(Capability.contributes(Common.Capability.UndoRegistry, registry));
-  }).pipe(Effect.flatten),
-);

@@ -3,35 +3,44 @@
 //
 
 import * as Effect from 'effect/Effect';
+import * as Stream from 'effect/Stream';
 
 import { runAndForwardErrors } from '@dxos/effect';
 import { log } from '@dxos/log';
 
-import * as Common from '../common';
-import { Capability, type PluginContext } from '../core';
+import { type OperationInvoker } from '../invoker';
 
 import { EmptyHistoryError } from './errors';
-import type {
-  HistoryEntry,
-  HistoryTrackerInterface,
-  InvocationEvent,
-  OperationInvokerInterface,
-  UndoRegistryInterface,
-} from './types';
+import type { HistoryEntry } from './types';
+import type { UndoRegistry } from './undo-registry';
 
 const HISTORY_LIMIT = 100;
+
+//
+// Public Interface
+//
+
+/**
+ * HistoryTracker interface - tracks operation history and provides undo.
+ */
+export interface HistoryTracker {
+  undo: () => Effect.Effect<void, Error>;
+  undoPromise: () => Promise<{ error?: Error }>;
+  canUndo: () => boolean;
+}
+
+//
+// Factory
+//
 
 /**
  * Creates a HistoryTracker that subscribes to invocation events and provides undo.
  */
-export const createHistoryTracker = (
-  invoker: OperationInvokerInterface,
-  undoRegistry: UndoRegistryInterface,
-): HistoryTrackerInterface => {
+export const make = (invoker: OperationInvoker.OperationInvoker, undoRegistry: UndoRegistry): HistoryTracker => {
   const history: HistoryEntry[] = [];
 
-  // Subscribe to invocation events.
-  const handleInvocation = (event: InvocationEvent) => {
+  // Subscribe to invocation stream.
+  const handleInvocation = (event: OperationInvoker.InvocationEvent) => {
     const mapping = undoRegistry.lookup(event.operation);
     if (!mapping) {
       // Operation is not undoable, skip.
@@ -57,8 +66,12 @@ export const createHistoryTracker = (
     }
   };
 
-  // Subscribe to invoker events.
-  invoker.subscribe(handleInvocation);
+  // Fork a fiber to consume the invocation stream.
+  Effect.runFork(
+    Stream.fromPubSub(invoker.invocations).pipe(
+      Stream.runForEach((event) => Effect.sync(() => handleInvocation(event))),
+    ),
+  );
 
   const undo = (): Effect.Effect<void, Error> => {
     return Effect.gen(function* () {
@@ -69,8 +82,8 @@ export const createHistoryTracker = (
 
       log('undoing operation', { key: entry.operation.meta.key, inverseKey: entry.inverse.meta.key });
 
-      // Use invokeInternal to skip stream emission (avoid undo-of-undo loops).
-      yield* invoker.invokeInternal(entry.inverse, entry.inverseInput);
+      // Use _invokeCore to skip event emission (avoid undo-of-undo loops).
+      yield* invoker._invokeCore(entry.inverse, entry.inverseInput);
 
       log('undo completed', { key: entry.operation.meta.key });
     });
@@ -95,14 +108,3 @@ export const createHistoryTracker = (
     canUndo,
   };
 };
-
-export default Capability.makeModule((context: PluginContext) =>
-  Effect.gen(function* () {
-    const invoker = context.getCapability(Common.Capability.OperationInvoker);
-    const undoRegistry = context.getCapability(Common.Capability.UndoRegistry);
-
-    const tracker = createHistoryTracker(invoker, undoRegistry);
-
-    return Effect.succeed(Capability.contributes(Common.Capability.HistoryTracker, tracker));
-  }).pipe(Effect.flatten),
-);

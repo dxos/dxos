@@ -55,6 +55,40 @@ export namespace Plugin {
     });
   }
 
+  // TODO(wittjosiah): Restrict type to only allow operation handlers.
+  export type OperationHandlerModuleOptions = PluginModuleOptions;
+
+  /**
+   * Creates a module that contributes operation handlers.
+   *
+   * @param options Module options including the activate function and optional configuration
+   * @returns A function that can be used with Plugin.addModule() in a pipe chain
+   *
+   * @example
+   * ```ts
+   * Plugin.define(meta).pipe(
+   *   Common.Plugin.addOperationHandlerModule({
+   *     activate: (context) =>
+   *       Capability.contributes(Common.Capability.OperationHandler, [{
+   *         operation: MyOperation,
+   *         handler: (input) => Effect.succeed(...)
+   *       }])
+   *   })
+   * )
+   * ```
+   */
+  export function addOperationHandlerModule<T = void>(
+    options: OperationHandlerModuleOptions,
+  ): (builder: Plugin$.PluginBuilder<T>) => Plugin$.PluginBuilder<T> {
+    return Plugin$.addModule({
+      id: Capability$.getModuleTag(options.activate) ?? options.id ?? 'operation-handler',
+      activatesOn: options.activatesOn ?? ActivationEvent.SetupOperationHandler,
+      activatesBefore: options.activatesBefore,
+      activatesAfter: options.activatesAfter,
+      activate: options.activate,
+    });
+  }
+
   // TODO(wittjosiah): Restrict type to only allow surfaces.
   export type SurfaceModuleOptions = PluginModuleOptions;
 

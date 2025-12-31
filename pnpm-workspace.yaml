@@ -82,7 +82,7 @@ catalog:
   '@effect/schema': ^0.75.5
   '@effect/sql': 0.48.6
   '@effect/typeclass': 0.38.0
-  '@effect/vitest': ~0.27.0
+  '@effect/vitest': 0.27.0
   '@effect/workflow': ^0.15.2
   '@emoji-mart/data': ^1.1.2
   '@emoji-mart/react': ^1.1.1

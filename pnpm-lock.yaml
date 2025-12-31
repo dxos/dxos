@@ -205,7 +205,7 @@ catalogs:
       specifier: 0.38.0
       version: 0.38.0
     '@effect/vitest':
-      specifier: ~0.27.0
+      specifier: 0.27.0
       version: 0.27.0
     '@effect/workflow':
       specifier: ^0.15.2
@@ -13134,6 +13134,9 @@ importers:
       '@effect/platform':
         specifier: 'catalog:'
         version: 0.93.6(effect@3.19.11)
+      '@effect/vitest':
+        specifier: 'catalog:'
+        version: 0.27.0(effect@3.19.11)(vitest@3.2.4)
       '@types/react':
         specifier: ~19.2.7
         version: 19.2.7
