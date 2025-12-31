@@ -8,6 +8,7 @@ import { log } from '@dxos/log';
 import { useTranslation } from '@dxos/react-ui';
 
 import { Action, Actions, Input, StepHeading } from '../../../components';
+import { translationKey } from '../../../translations';
 import { type JoinPanelProps, type JoinStepProps } from '../JoinPanelProps';
 
 export interface InvitationInputProps extends JoinStepProps, Pick<JoinPanelProps, 'onExit' | 'exitActionParent'> {
@@ -31,7 +32,7 @@ export const InvitationInput = (props: InvitationInputProps) => {
   const { Kind, active, send, unredeemedCode, onExit, exitActionParent, onDone, doneActionParent, succeededKeys } =
     props;
   const disabled = !active;
-  const { t } = useTranslation('os');
+  const { t } = useTranslation(translationKey);
 
   const [inputValue, setInputValue] = useState(unredeemedCode ?? '');
 
