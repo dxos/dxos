@@ -2,11 +2,10 @@
 // Copyright 2024 DXOS.org
 //
 
-import * as Function from 'effect/Function';
 import * as Schema from 'effect/Schema';
 import { useCallback, useEffect, useMemo } from 'react';
 
-import { Common, chain, createIntent, createResolver } from '@dxos/app-framework';
+import { Common, createIntent, createResolver } from '@dxos/app-framework';
 import { useIntentDispatcher, useIntentResolver } from '@dxos/app-framework/react';
 import { debounce } from '@dxos/async';
 import { type CellAddress, type CompleteCellRange, inRange } from '@dxos/compute';
@@ -95,11 +94,15 @@ export const useSelectThreadOnCellFocus = () => {
 
       if (closestThread) {
         const primary = Obj.getDXN(model.sheet).toString();
-        const intent = Function.pipe(
-          createIntent(ThreadAction.Select, { current: Obj.getDXN(closestThread).toString() }),
-          chain(DeckAction.ChangeCompanion, { primary, companion: `${primary}${ATTENDABLE_PATH_SEPARATOR}comments` }),
-        );
-        void dispatch(intent);
+        void (async () => {
+          await dispatch(createIntent(ThreadAction.Select, { current: Obj.getDXN(closestThread).toString() }));
+          await dispatch(
+            createIntent(DeckAction.ChangeCompanion, {
+              primary,
+              companion: `${primary}${ATTENDABLE_PATH_SEPARATOR}comments`,
+            }),
+          );
+        })();
       }
     },
     [dispatch, anchors],

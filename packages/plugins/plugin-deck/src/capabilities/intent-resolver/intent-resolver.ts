@@ -8,7 +8,7 @@ import * as Function from 'effect/Function';
 import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 
-import { Capability, Common, IntentAction, chain, createIntent, createResolver } from '@dxos/app-framework';
+import { Capability, Common, IntentAction, createIntent, createResolver } from '@dxos/app-framework';
 import { Obj } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { isLiveObject } from '@dxos/live-object';
@@ -461,10 +461,8 @@ export default Capability.makeModule((context) =>
                   return {
                     intents: [
                       // NOTE: The order of these is important.
-                      Function.pipe(
-                        createIntent(Common.LayoutAction.SetLayoutMode, { part: 'mode', options: { mode: 'deck' } }),
-                        chain(Common.LayoutAction.Open, { part: 'main', subject: [entryId] }),
-                      ),
+                      createIntent(Common.LayoutAction.SetLayoutMode, { part: 'mode', options: { mode: 'deck' } }),
+                      createIntent(Common.LayoutAction.Open, { part: 'main', subject: [entryId] }),
                     ],
                   };
                 }

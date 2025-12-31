@@ -8,7 +8,7 @@
 
 import * as Effect from 'effect/Effect';
 
-import { type AnyIntentChain, Capability, Common, createIntent, createResolver } from '@dxos/app-framework';
+import { type AnyIntent, Capability, Common, createIntent, createResolver } from '@dxos/app-framework';
 // import { ArtifactId } from '@dxos/blueprints';
 // import { getSpace } from '@dxos/client/echo';
 // import { SequenceBuilder, compileSequence, DEFAULT_INPUT, ValueBag, ComputeGraphModel } from '@dxos/conductor';
@@ -136,7 +136,7 @@ export default Capability.makeModule((context) =>
             newContact.organization = Ref.make(matchingOrg);
           }
 
-          const intents: AnyIntentChain[] = [];
+          const intents: AnyIntent[] = [];
           if (!space.properties.staticRecords.includes(Person.Person.typename)) {
             log.info('adding record type for contacts');
             intents.push(

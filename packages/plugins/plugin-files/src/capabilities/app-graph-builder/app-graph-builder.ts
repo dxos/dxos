@@ -3,10 +3,9 @@
 //
 
 import * as Effect from 'effect/Effect';
-import * as Function from 'effect/Function';
 import * as Option from 'effect/Option';
 
-import { Capability, Common, chain, createIntent } from '@dxos/app-framework';
+import { Capability, Common, createIntent } from '@dxos/app-framework';
 import { CreateAtom, GraphBuilder, NodeMatcher } from '@dxos/plugin-graph';
 
 import { meta } from '../../meta';
@@ -82,12 +81,10 @@ export default Capability.makeModule((context) =>
             id: LocalFilesAction.OpenFile._tag,
             data: async () => {
               const { dispatchPromise: dispatch } = context.getCapability(Common.Capability.IntentDispatcher);
-              await dispatch(
-                Function.pipe(
-                  createIntent(LocalFilesAction.OpenFile),
-                  chain(Common.LayoutAction.Open, { part: 'main' }),
-                ),
-              );
+              const result = await dispatch(createIntent(LocalFilesAction.OpenFile));
+              if (result.data) {
+                await dispatch(createIntent(Common.LayoutAction.Open, { part: 'main', ...result.data }));
+              }
             },
             properties: {
               label: ['open file label', { ns: meta.id }],
@@ -100,12 +97,10 @@ export default Capability.makeModule((context) =>
                   id: 'open-directory',
                   data: async () => {
                     const { dispatchPromise: dispatch } = context.getCapability(Common.Capability.IntentDispatcher);
-                    await dispatch(
-                      Function.pipe(
-                        createIntent(LocalFilesAction.OpenDirectory),
-                        chain(Common.LayoutAction.Open, { part: 'main' }),
-                      ),
-                    );
+                    const result = await dispatch(createIntent(LocalFilesAction.OpenDirectory));
+                    if (result.data) {
+                      await dispatch(createIntent(Common.LayoutAction.Open, { part: 'main', ...result.data }));
+                    }
                   },
                   properties: {
                     label: ['open directory label', { ns: meta.id }],

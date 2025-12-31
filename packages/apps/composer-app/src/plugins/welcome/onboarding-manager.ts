@@ -2,9 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import * as Function from 'effect/Function';
-
-import { Common, type PromiseIntentDispatcher, chain, createIntent } from '@dxos/app-framework';
+import { Common, type PromiseIntentDispatcher, createIntent } from '@dxos/app-framework';
 import { SubscriptionList, type Trigger } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
@@ -163,12 +161,13 @@ export class OnboardingManager {
           closeLabel: ['close label', { ns: 'os' }],
           actionLabel: ['passkey setup toast action label', { ns: meta.id }],
           actionAlt: ['passkey setup toast action alt', { ns: meta.id }],
-          onAction: () => {
-            const intent = Function.pipe(
+          onAction: async () => {
+            await this._dispatch(
               createIntent(Common.LayoutAction.SwitchWorkspace, { part: 'workspace', subject: Account.id }),
-              chain(Common.LayoutAction.Open, { part: 'main', subject: [Account.Security] }),
             );
-            void this._dispatch(intent);
+            await this._dispatch(
+              createIntent(Common.LayoutAction.Open, { part: 'main', subject: [Account.Security] }),
+            );
           },
         },
       }),

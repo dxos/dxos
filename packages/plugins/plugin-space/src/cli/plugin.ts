@@ -2,7 +2,9 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Capability, Common, Plugin, createIntent } from '@dxos/app-framework';
+import * as Effect from 'effect/Effect';
+
+import { Capability, Common, Plugin } from '@dxos/app-framework';
 import { Tag } from '@dxos/echo';
 import { ClientEvents } from '@dxos/plugin-client';
 import { Collection, DataTypes } from '@dxos/schema';
@@ -21,7 +23,7 @@ import {
 
 import { SpaceEvents } from '../events';
 import { meta } from '../meta';
-import { CollectionAction, type CreateObjectIntent, type SpacePluginOptions } from '../types';
+import { type CreateObject, type SpacePluginOptions } from '../types';
 
 import { database, queue, space } from './commands';
 
@@ -59,7 +61,7 @@ export const SpacePlugin = Plugin.define<SpacePluginOptions>(meta).pipe(
     metadata: {
       id: Collection.Collection.typename,
       metadata: {
-        createObjectIntent: ((props) => createIntent(CollectionAction.Create, props)) satisfies CreateObjectIntent,
+        createObject: ((props) => Effect.sync(() => Collection.make(props))) satisfies CreateObject,
         addToCollectionOnCreate: true,
       },
     },

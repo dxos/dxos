@@ -6,7 +6,7 @@ import * as Array from 'effect/Array';
 import * as Function from 'effect/Function';
 import React, { useCallback } from 'react';
 
-import { Common, chain, createIntent } from '@dxos/app-framework';
+import { Common, createIntent } from '@dxos/app-framework';
 import { type SurfaceComponentProps, useIntentDispatcher } from '@dxos/app-framework/react';
 import { Filter, Obj } from '@dxos/echo';
 import { AttentionAction } from '@dxos/plugin-attention/types';
@@ -55,52 +55,56 @@ export const RelatedToContact = ({ subject: contact }: SurfaceComponentProps<Per
     .slice(0, 3);
 
   const handleMessageClick = useCallback(
-    (message: Message.Message) => {
-      void dispatch(
-        Function.pipe(
-          createIntent(Common.LayoutAction.UpdatePopover, {
-            part: 'popover',
-            options: {
-              state: false,
-              anchorId: '',
-            },
-          }),
-          chain(Common.LayoutAction.Open, {
-            part: 'main',
-            subject: [Obj.getDXN(mailbox).toString()],
-            options: { workspace: space?.id },
-          }),
-          chain(AttentionAction.Select, {
-            contextId: Obj.getDXN(mailbox).toString(),
-            selection: { mode: 'single', id: message.id },
-          }),
-        ),
+    async (message: Message.Message) => {
+      await dispatch(
+        createIntent(Common.LayoutAction.UpdatePopover, {
+          part: 'popover',
+          options: {
+            state: false,
+            anchorId: '',
+          },
+        }),
+      );
+      await dispatch(
+        createIntent(Common.LayoutAction.Open, {
+          part: 'main',
+          subject: [Obj.getDXN(mailbox).toString()],
+          options: { workspace: space?.id },
+        }),
+      );
+      await dispatch(
+        createIntent(AttentionAction.Select, {
+          contextId: Obj.getDXN(mailbox).toString(),
+          selection: { mode: 'single', id: message.id },
+        }),
       );
     },
     [dispatch, space, mailbox],
   );
 
   const handleEventClick = useCallback(
-    (event: Event.Event) => {
-      void dispatch(
-        Function.pipe(
-          createIntent(Common.LayoutAction.UpdatePopover, {
-            part: 'popover',
-            options: {
-              state: false,
-              anchorId: '',
-            },
-          }),
-          chain(Common.LayoutAction.Open, {
-            part: 'main',
-            subject: [Obj.getDXN(calendar).toString()],
-            options: { workspace: space?.id },
-          }),
-          chain(AttentionAction.Select, {
-            contextId: Obj.getDXN(calendar).toString(),
-            selection: { mode: 'single', id: event.id },
-          }),
-        ),
+    async (event: Event.Event) => {
+      await dispatch(
+        createIntent(Common.LayoutAction.UpdatePopover, {
+          part: 'popover',
+          options: {
+            state: false,
+            anchorId: '',
+          },
+        }),
+      );
+      await dispatch(
+        createIntent(Common.LayoutAction.Open, {
+          part: 'main',
+          subject: [Obj.getDXN(calendar).toString()],
+          options: { workspace: space?.id },
+        }),
+      );
+      await dispatch(
+        createIntent(AttentionAction.Select, {
+          contextId: Obj.getDXN(calendar).toString(),
+          selection: { mode: 'single', id: event.id },
+        }),
       );
     },
     [dispatch, space, calendar],

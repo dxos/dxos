@@ -6,11 +6,10 @@
 // @ts-nocheck
 
 import * as Effect from 'effect/Effect';
-import * as Function from 'effect/Function';
 import * as Schema from 'effect/Schema';
 
 import { ToolResult, createTool } from '@dxos/ai';
-import { Capabilities, Capability, type PromiseIntentDispatcher, chain, createIntent } from '@dxos/app-framework';
+import { Capabilities, Capability, type PromiseIntentDispatcher, createIntent } from '@dxos/app-framework';
 import { createArtifactElement } from '@dxos/assistant';
 import { defineArtifact } from '@dxos/blueprints';
 import { Obj, Query } from '@dxos/echo';
@@ -71,18 +70,22 @@ export default Capability.makeModule(() =>
               return ToolResult.Error(`Schema not found: ${typename}`);
             }
 
-            const intent = Function.pipe(
+            const createResult = await extensions.dispatch(
               createIntent(KanbanAction.Create, {
                 space: extensions.space,
                 typename,
                 initialPivotColumn: pivotColumn,
               }),
-              chain(SpaceAction.AddObject, { target: extensions.space }),
             );
+            if (!createResult.data?.object) {
+              return ToolResult.Error('Failed to create kanban board');
+            }
 
-            const { data, error } = await extensions.dispatch(intent);
+            const { data, error } = await extensions.dispatch(
+              createIntent(SpaceAction.AddObject, { target: extensions.space, object: createResult.data.object }),
+            );
             if (!data || error) {
-              return ToolResult.Error(error?.message ?? 'Failed to create kanban board');
+              return ToolResult.Error(error?.message ?? 'Failed to add kanban board to space');
             }
 
             return ToolResult.Success(createArtifactElement(data.id));

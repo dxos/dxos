@@ -47,95 +47,31 @@ export type Intent<Tag extends string, Fields extends IntentProps> = {
 export type AnyIntent = Intent<any, any>;
 
 /**
- * Chain of intents to be executed together.
- * The result of each intent is merged into the next intent's input data.
- */
-export type IntentChain<
-  FirstTag extends string,
-  LastTag extends string,
-  FirstFields extends IntentProps,
-  LastFields extends IntentProps,
-> = {
-  first: Intent<FirstTag, FirstFields>;
-  last: Intent<LastTag, LastFields>;
-  all: AnyIntent[];
-};
-
-export type AnyIntentChain = IntentChain<any, any, any, any>;
-
-/**
  * Creates a typed intent.
  * @param schema Schema of the intent. Must be a tagged class with input and output schemas.
  * @param data Data fulfilling the input schema of the intent.
- * @param params.plugin Optional plugin ID to send the intent to.
  * @param params.undo Optional flag to indicate that the intent is being undone. Generally not set manually.
  */
 export const createIntent = <Tag extends string, Fields extends IntentProps>(
   schema: IntentSchema<Tag, Fields>,
   data: IntentData<Fields> = {},
   params: Pick<AnyIntent, 'undo'> = {},
-): IntentChain<Tag, Tag, Fields, Fields> => {
+): Intent<Tag, Fields> => {
   // The output of validateSync breaks proxy objects so this is just used for validation.
-  // TODO(wittjosiah): Is there a better way to make theses types align?
   const _ = Schema.validateSync(schema.fields.input as Schema.Schema<any, any, unknown>)(data);
-  const intent = {
+  return {
     ...params,
     _schema: schema,
     id: schema._tag,
     data,
   } satisfies Intent<Tag, Fields>;
-
-  return {
-    first: intent,
-    last: intent,
-    all: [intent],
-  };
 };
-
-// TODO(wittjosiah): Add a function for mapping the output of one intent to the input of another.
-
-/**
- * Chain two intents together.
- *
- * NOTE: Chaining of intents depends on the data inputs and outputs being structs.
- */
-export const chain =
-  <
-    FirstTag extends string,
-    NextTag extends string,
-    FirstFields extends IntentProps,
-    LastFields extends IntentProps,
-    NextFields extends IntentProps,
-  >(
-    schema: IntentSchema<NextTag, NextFields>,
-    data: Omit<IntentData<NextFields>, keyof IntentResultData<LastFields>> = {},
-    params: Pick<AnyIntent, 'undo'> = {},
-  ) =>
-  (
-    intent: IntentChain<FirstTag, any, FirstFields, LastFields>,
-  ): IntentChain<FirstTag, NextTag, FirstFields, NextFields> => {
-    const intents = 'all' in intent ? intent.all : [intent];
-    const first = intents[0];
-    const last = {
-      ...params,
-      _schema: schema,
-      id: schema._tag,
-      data,
-    } satisfies Intent<NextTag, NextFields>;
-
-    return {
-      first,
-      last,
-      all: [...intents, last],
-    };
-  };
 
 //
 // Intents
 //
 
 // NOTE: Should maintain compatibility with `i18next` (and @dxos/react-ui).
-// TODO(wittjosiah): Making this immutable breaks type compatibility.
 export const Label = Schema.Union(
   Schema.String,
   Schema.mutable(

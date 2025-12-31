@@ -10,7 +10,7 @@ import * as Function from 'effect/Function';
 import * as Schema from 'effect/Schema';
 
 import { ToolResult, createTool } from '@dxos/ai';
-import { Capability, Common, chain } from '@dxos/app-framework';
+import { Capability, Common, createIntent } from '@dxos/app-framework';
 import { ArtifactId, createArtifactElement } from '@dxos/assistant';
 import { defineArtifact } from '@dxos/blueprints';
 import { Obj } from '@dxos/echo';
@@ -49,21 +49,25 @@ export default Capability.makeModule(() =>
             invariant(extensions?.space, 'No space');
             invariant(extensions?.dispatch, 'No intent dispatcher');
 
-            const intent = Function.pipe(
+            const createResult = await extensions.dispatch(
               createIntent(MarkdownAction.Create, {
                 spaceId: extensions.space.id,
                 name,
                 content,
               }),
-              chain(SpaceAction.AddObject, { target: extensions.space }),
             );
-
-            const { data, error } = await extensions.dispatch(intent);
-            if (!data || error) {
-              return ToolResult.Error(error?.message ?? 'Failed to create document');
+            if (!createResult.data?.object) {
+              return ToolResult.Error('Failed to create document');
             }
 
-            return ToolResult.Success(createArtifactElement(data.id));
+            const { data, error } = await extensions.dispatch(
+              createIntent(SpaceAction.AddObject, { target: extensions.space, object: createResult.data.object }),
+            );
+            if (!data || error) {
+              return ToolResult.Error(error?.message ?? 'Failed to add document to space');
+            }
+
+            return ToolResult.Success(createArtifactElement(createResult.data.object.id));
           },
         }),
         createTool(meta.id, {

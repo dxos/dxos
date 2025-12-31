@@ -2,11 +2,13 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Capability, Common, Plugin, createIntent } from '@dxos/app-framework';
-import { type CreateObjectIntent } from '@dxos/plugin-space/types';
+import * as Effect from 'effect/Effect';
+
+import { Capability, Common, Plugin } from '@dxos/app-framework';
+import { type CreateObject } from '@dxos/plugin-space/types';
 
 import { meta } from '../meta';
-import { Chess, ChessAction } from '../types';
+import { Chess } from '../types';
 
 const IntentResolver = Capability.lazy(
   'IntentResolver',
@@ -20,7 +22,7 @@ export const ChessPlugin = Plugin.define(meta).pipe(
     metadata: {
       id: Chess.Game.typename,
       metadata: {
-        createObjectIntent: (() => createIntent(ChessAction.Create)) satisfies CreateObjectIntent,
+        createObject: ((props) => Effect.sync(() => Chess.make(props))) satisfies CreateObject,
         addToCollectionOnCreate: true,
       },
     },

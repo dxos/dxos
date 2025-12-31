@@ -38,4 +38,15 @@ export namespace WnfsAction {
     input: Schema.extend(UploadFileSchema, Schema.Struct({ db: Database.Database })),
     output: Schema.required(Common.FileInfoSchema),
   }) {}
+
+  /**
+   * Consolidated action that uploads a file and creates a WNFS file object.
+   * Combines Upload and Create into a single action for use in CreateObject.
+   */
+  export class CreateFile extends Schema.TaggedClass<CreateFile>()(`${meta.id}/action/create-file`, {
+    input: Schema.extend(UploadFileSchema, Schema.Struct({ db: Database.Database })),
+    output: Schema.Struct({
+      object: File.File,
+    }),
+  }) {}
 }

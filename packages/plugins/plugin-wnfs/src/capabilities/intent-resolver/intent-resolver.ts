@@ -35,6 +35,22 @@ export default Capability.makeModule((context) =>
           return { data: info };
         },
       }),
+      // Consolidated action that uploads a file and creates a WNFS file object.
+      createResolver({
+        intent: WnfsAction.CreateFile,
+        resolve: async ({ file, db }) => {
+          const client = context.getCapability(ClientCapabilities.Client);
+          const space = client.spaces.get(db.spaceId);
+          invariant(space, 'Space not found');
+          const blockstore = context.getCapability(WnfsCapabilities.Blockstore);
+          const info = await upload({ file, blockstore, space });
+          return {
+            data: {
+              object: WnfsFile.make({ name: info.name, type: info.type, cid: info.cid }),
+            },
+          };
+        },
+      }),
     ]),
   ),
 );

@@ -2,10 +2,9 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as Function from 'effect/Function';
 import React, { useCallback } from 'react';
 
-import { Common, chain, createIntent } from '@dxos/app-framework';
+import { Common, createIntent } from '@dxos/app-framework';
 import { useIntentDispatcher } from '@dxos/app-framework/react';
 
 import { meta } from '../meta';
@@ -17,24 +16,28 @@ export const HelpContainer = () => {
   const { dispatchPromise: dispatch } = useIntentDispatcher();
 
   const handleSave = useCallback(
-    (values: UserFeedback) =>
-      dispatch(
-        Function.pipe(
-          createIntent(ObservabilityAction.CaptureUserFeedback, values),
-          chain(Common.LayoutAction.UpdateComplementary, { part: 'complementary', options: { state: 'collapsed' } }),
-          chain(Common.LayoutAction.AddToast, {
-            part: 'toast',
-            subject: {
-              id: `${meta.id}/feedback-success`,
-              icon: 'ph--paper-plane-tilt--regular',
-              duration: 3000,
-              title: ['feedback toast label', { ns: meta.id }],
-              description: ['feedback toast description', { ns: meta.id }],
-              closeLabel: ['close label', { ns: 'os' }],
-            },
-          }),
-        ),
-      ),
+    async (values: UserFeedback) => {
+      await dispatch(createIntent(ObservabilityAction.CaptureUserFeedback, values));
+      await dispatch(
+        createIntent(Common.LayoutAction.UpdateComplementary, {
+          part: 'complementary',
+          options: { state: 'collapsed' },
+        }),
+      );
+      await dispatch(
+        createIntent(Common.LayoutAction.AddToast, {
+          part: 'toast',
+          subject: {
+            id: `${meta.id}/feedback-success`,
+            icon: 'ph--paper-plane-tilt--regular',
+            duration: 3000,
+            title: ['feedback toast label', { ns: meta.id }],
+            description: ['feedback toast description', { ns: meta.id }],
+            closeLabel: ['close label', { ns: 'os' }],
+          },
+        }),
+      );
+    },
     [dispatch],
   );
 

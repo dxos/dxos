@@ -3,10 +3,9 @@
 //
 
 import * as Effect from 'effect/Effect';
-import * as Function from 'effect/Function';
 import React, { useCallback } from 'react';
 
-import { Capability, Common, chain, createIntent } from '@dxos/app-framework';
+import { Capability, Common, createIntent } from '@dxos/app-framework';
 import { useCapability, useIntentDispatcher } from '@dxos/app-framework/react';
 import {
   AutomergePanel,
@@ -396,19 +395,21 @@ export default Capability.makeModule((context) =>
           const onScriptPluginOpen = useCallback(
             async (space: Space) => {
               await space.waitUntilReady();
-              const result = await dispatch(
-                Function.pipe(
-                  createIntent(ScriptAction.CreateScript, { db: space.db }),
-                  chain(SpaceAction.AddObject, { target: space.db }),
-                ),
-              );
-              log.info('script created', { result });
-              await dispatch(
-                createIntent(Common.LayoutAction.Open, {
-                  part: 'main',
-                  subject: [`${space.id}:${result.data?.object.id}`],
-                }),
-              );
+              const createResult = await dispatch(createIntent(ScriptAction.CreateScript, { db: space.db }));
+              if (createResult.data?.object) {
+                await dispatch(
+                  createIntent(SpaceAction.AddObject, { target: space.db, object: createResult.data.object }),
+                );
+              }
+              log.info('script created', { result: createResult });
+              if (createResult.data?.object?.id) {
+                await dispatch(
+                  createIntent(Common.LayoutAction.Open, {
+                    part: 'main',
+                    subject: [`${space.id}:${createResult.data.object.id}`],
+                  }),
+                );
+              }
             },
             [dispatch],
           );

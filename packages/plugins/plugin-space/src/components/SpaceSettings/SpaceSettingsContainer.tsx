@@ -2,11 +2,10 @@
 // Copyright 2024 DXOS.org
 //
 
-import * as Function from 'effect/Function';
 import * as Schema from 'effect/Schema';
 import React, { type ChangeEvent, forwardRef, useCallback, useMemo, useState } from 'react';
 
-import { Common, chain, createIntent } from '@dxos/app-framework';
+import { Common, createIntent } from '@dxos/app-framework';
 import { useCapabilities, useIntentDispatcher } from '@dxos/app-framework/react';
 import { log } from '@dxos/log';
 import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
@@ -75,15 +74,15 @@ export const SpaceSettingsContainer = forwardRef<HTMLDivElement, SpaceSettingsCo
           space.properties.hue = properties.hue;
         }
         if (properties.archived && !archived) {
-          void dispatch(
-            Function.pipe(
-              createIntent(SpaceAction.Close, { space }),
-              chain(Common.LayoutAction.SwitchWorkspace, {
+          void (async () => {
+            await dispatch(createIntent(SpaceAction.Close, { space }));
+            await dispatch(
+              createIntent(Common.LayoutAction.SwitchWorkspace, {
                 part: 'workspace',
                 subject: client.spaces.default.id,
               }),
-            ),
-          );
+            );
+          })();
         } else if (!properties.archived && archived) {
           void dispatch(createIntent(SpaceAction.Open, { space }));
         }

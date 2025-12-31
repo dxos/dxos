@@ -3,10 +3,9 @@
 //
 
 import * as Effect from 'effect/Effect';
-import * as Function from 'effect/Function';
 import React, { useCallback, useMemo, useRef, useState } from 'react';
 
-import { Common, chain, createIntent } from '@dxos/app-framework';
+import { Common, createIntent } from '@dxos/app-framework';
 import { useIntentDispatcher, usePluginManager } from '@dxos/app-framework/react';
 import { Database, Obj, Type } from '@dxos/echo';
 import { EntityKind, getTypeAnnotation } from '@dxos/echo/internal';
@@ -55,7 +54,7 @@ export const CreateObjectDialog = ({
       const metadata = manager.context
         .getCapabilities(Common.Capability.Metadata)
         .find(({ id }) => id === typename)?.metadata;
-      return metadata?.createObjectIntent ? (metadata as Metadata) : undefined;
+      return metadata?.createObject ? (metadata as Metadata) : undefined;
     },
     [manager],
   );
@@ -84,7 +83,7 @@ export const CreateObjectDialog = ({
 
         const db = Database.isDatabase(target) ? target : target && Obj.getDatabase(target);
         invariant(db, 'Missing database');
-        const { object } = yield* dispatch(metadata.createObjectIntent(data, { db }));
+        const object = yield* metadata.createObject(data, { db, context: manager.context });
         if (isLiveObject(object) && !Obj.instanceOf(Type.PersistentType, object)) {
           // TODO(wittjosiah): Selection in navtree isn't working as expected when hidden typenames evals to true.
           const hidden = !metadata.addToCollectionOnCreate;
@@ -94,16 +93,17 @@ export const CreateObjectDialog = ({
             hidden,
           });
           const shouldNavigate = _shouldNavigate ?? (() => true);
+          yield* dispatch(addObjectIntent);
           if (shouldNavigate(object)) {
-            yield* dispatch(Function.pipe(addObjectIntent, chain(Common.LayoutAction.Open, { part: 'main' })));
-          } else {
-            yield* dispatch(addObjectIntent);
+            yield* dispatch(
+              createIntent(Common.LayoutAction.Open, { part: 'main', subject: [Obj.getDXN(object).toString()] }),
+            );
           }
 
           onCreateObject?.(object);
         }
       }).pipe(runAndForwardErrors),
-    [dispatch, target, resolve, _shouldNavigate],
+    [dispatch, target, _shouldNavigate],
   );
 
   return (

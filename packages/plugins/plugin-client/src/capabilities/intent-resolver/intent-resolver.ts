@@ -3,9 +3,8 @@
 //
 
 import * as Effect from 'effect/Effect';
-import * as Function from 'effect/Function';
 
-import { Capability, Common, chain, createIntent, createResolver } from '@dxos/app-framework';
+import { Capability, Common, createIntent, createResolver } from '@dxos/app-framework';
 import { PublicKey } from '@dxos/client';
 import { runAndForwardErrors } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
@@ -68,16 +67,14 @@ export default Capability.makeModule(({ context, appName = 'Composer' }: IntentR
         resolve: async () => {
           return {
             intents: [
-              Function.pipe(
-                createIntent(Common.LayoutAction.SwitchWorkspace, {
-                  part: 'workspace',
-                  subject: Account.id,
-                }),
-                chain(Common.LayoutAction.Open, {
-                  part: 'main',
-                  subject: [Account.Profile],
-                }),
-              ),
+              createIntent(Common.LayoutAction.SwitchWorkspace, {
+                part: 'workspace',
+                subject: Account.id,
+              }),
+              createIntent(Common.LayoutAction.Open, {
+                part: 'main',
+                subject: [Account.Profile],
+              }),
               createIntent(ObservabilityAction.SendEvent, {
                 name: 'identity.share',
               }),

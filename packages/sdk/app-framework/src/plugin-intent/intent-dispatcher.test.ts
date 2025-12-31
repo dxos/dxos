@@ -4,17 +4,16 @@
 
 import * as Effect from 'effect/Effect';
 import * as Fiber from 'effect/Fiber';
-import * as Function from 'effect/Function';
 import * as Schema from 'effect/Schema';
-import { describe, expect, test } from 'vitest';
+import { describe, test } from 'vitest';
 
 import { runAndForwardErrors } from '@dxos/effect';
 
-import { chain, createIntent } from './intent';
+import { createIntent } from './intent';
 import { type AnyIntentResolver, createDispatcher, createResolver } from './intent-dispatcher';
 
 describe('Intent dispatcher', () => {
-  test('throws error if no resolver found', async () => {
+  test('throws error if no resolver found', async ({ expect }) => {
     const { dispatchPromise } = createDispatcher(() => []);
     const { data, error } = await dispatchPromise(createIntent(ToString, { value: 1 }));
 
@@ -22,7 +21,7 @@ describe('Intent dispatcher', () => {
     expect(error).toBeInstanceOf(Error);
   });
 
-  test('matches intent to resolver and executes', async () => {
+  test('matches intent to resolver and executes', async ({ expect }) => {
     const { dispatchPromise } = createDispatcher(() => [toStringResolver]);
     const { data, error } = await dispatchPromise(createIntent(ToString, { value: 1 }));
 
@@ -30,7 +29,7 @@ describe('Intent dispatcher', () => {
     expect(data?.string).toBe('1');
   });
 
-  test('update resolvers', async () => {
+  test('update resolvers', async ({ expect }) => {
     const resolvers: AnyIntentResolver[] = [];
     const { dispatchPromise } = createDispatcher(() => resolvers);
     const { error } = await dispatchPromise(createIntent(ToString, { value: 1 }));
@@ -53,7 +52,7 @@ describe('Intent dispatcher', () => {
     }
   });
 
-  test('compose intent effects', async () => {
+  test('compose intent effects', async ({ expect }) => {
     const { dispatch } = createDispatcher(() => [computeResolver]);
     const program = Effect.gen(function* () {
       const a = yield* dispatch(createIntent(Compute, { value: 1 }));
@@ -64,7 +63,7 @@ describe('Intent dispatcher', () => {
     expect(await runAndForwardErrors(program)).toBe(2);
   });
 
-  test('concurrent intent effects', async () => {
+  test('concurrent intent effects', async ({ expect }) => {
     const { dispatch } = createDispatcher(() => [computeResolver]);
     const program = Effect.gen(function* () {
       const fiberA = yield* Effect.fork(dispatch(createIntent(Compute, { value: 5 })));
@@ -76,7 +75,7 @@ describe('Intent dispatcher', () => {
     expect(await runAndForwardErrors(program)).toBe(-6);
   });
 
-  test('mix & match intent effects with promises', async () => {
+  test('mix & match intent effects with promises', async ({ expect }) => {
     const { dispatch, dispatchPromise } = createDispatcher(() => [toStringResolver, computeResolver]);
     const program = Effect.gen(function* () {
       const a = yield* dispatch(createIntent(Compute, { value: 2 }));
@@ -92,7 +91,7 @@ describe('Intent dispatcher', () => {
     expect(b.data?.string).toBe('4');
   });
 
-  test('undo intent', async () => {
+  test('undo intent', async ({ expect }) => {
     const { dispatch, undo } = createDispatcher(() => [computeResolver]);
     const program = Effect.gen(function* () {
       const a = yield* dispatch(createIntent(Compute, { value: 2 }));
@@ -107,43 +106,7 @@ describe('Intent dispatcher', () => {
     await runAndForwardErrors(program);
   });
 
-  test('chain intents', async () => {
-    const { dispatch } = createDispatcher(() => [computeResolver, toStringResolver, concatResolver]);
-    const intent = Function.pipe(
-      createIntent(Compute, { value: 1 }),
-      chain(ToString, {}),
-      chain(Concat, { plus: '!' }),
-    );
-
-    expect(intent.first.id).toBe(Compute._tag);
-    expect(intent.last.id).toBe(Concat._tag);
-    expect(intent.all.length).toBe(3);
-
-    const program = Effect.gen(function* () {
-      const data = yield* dispatch(intent);
-      return data.string;
-    });
-
-    expect(await runAndForwardErrors(program)).toBe('2!');
-  });
-
-  test('undo chained intent', async () => {
-    const { dispatch, undo } = createDispatcher(() => [computeResolver, toStringResolver, concatResolver]);
-    const intent = Function.pipe(createIntent(Compute, { value: 1 }), chain(Compute, {}), chain(Compute, {}));
-    const program = Effect.gen(function* () {
-      const a = yield* dispatch(intent);
-
-      expect(a.value).toBe(8);
-
-      const b = yield* undo();
-
-      expect(b.value).toBe(1);
-    });
-
-    await runAndForwardErrors(program);
-  });
-
-  test('filter resolvers by predicate', async () => {
+  test('filter resolvers by predicate', async ({ expect }) => {
     const conditionalComputeResolver = createResolver({
       intent: Compute,
       filter: (data): data is { value: number } => data?.value > 1,
@@ -163,7 +126,7 @@ describe('Intent dispatcher', () => {
     await runAndForwardErrors(program);
   });
 
-  test('hoist resolvers', async () => {
+  test('hoist resolvers', async ({ expect }) => {
     const hoistedComputeResolver = createResolver({
       intent: Compute,
       position: 'hoist',
@@ -174,7 +137,7 @@ describe('Intent dispatcher', () => {
     expect(data?.value).toBe(3);
   });
 
-  test('fallback resolvers', async () => {
+  test('fallback resolvers', async ({ expect }) => {
     const conditionalComputeResolver = createResolver({
       intent: Compute,
       filter: (data): data is { value: number } => data?.value === 1,
@@ -199,19 +162,41 @@ describe('Intent dispatcher', () => {
     await runAndForwardErrors(program);
   });
 
-  test('non-struct inputs & outputs', async () => {
+  test('non-struct inputs & outputs', async ({ expect }) => {
     const { dispatchPromise } = createDispatcher(() => [addResolver]);
     const { data } = await dispatchPromise(createIntent(Add, [1, 1]));
     expect(data).toBe(2);
   });
 
-  test('empty inputs & outputs', async () => {
+  test('empty inputs & outputs', async ({ expect }) => {
     const { dispatchPromise } = createDispatcher(() => [sideEffectResolver]);
     const { data } = await dispatchPromise(createIntent(SideEffect));
     expect(data).toBe(undefined);
   });
 
-  test.todo('follow up intents');
+  test('follow up intents', async ({ expect }) => {
+    const followUpResolver = createResolver({
+      intent: Compute,
+      resolve: async (data) => ({
+        data: { value: data.value * 2 },
+        intents: [createIntent(ToString, { value: data.value * 2 })],
+      }),
+    });
+    let toStringCalled = false;
+    const trackingToStringResolver = createResolver({
+      intent: ToString,
+      resolve: async (data) => {
+        toStringCalled = true;
+        return { data: { string: data.value.toString() } };
+      },
+    });
+
+    const { dispatchPromise } = createDispatcher(() => [followUpResolver, trackingToStringResolver]);
+    const { data } = await dispatchPromise(createIntent(Compute, { value: 5 }));
+
+    expect(data?.value).toBe(10);
+    expect(toStringCalled).toBe(true);
+  });
 });
 
 class ToString extends Schema.TaggedClass<ToString>()('ToString', {
@@ -250,21 +235,6 @@ const computeResolver = createResolver({
       return { data: { value }, undoable: { message: 'test', data: { value } } };
     });
   },
-});
-
-class Concat extends Schema.TaggedClass<Concat>()('Concat', {
-  input: Schema.Struct({
-    string: Schema.String,
-    plus: Schema.String,
-  }),
-  output: Schema.Struct({
-    string: Schema.String,
-  }),
-}) {}
-
-const concatResolver = createResolver({
-  intent: Concat,
-  resolve: async (data) => ({ data: { string: data.string + data.plus } }),
 });
 
 class Add extends Schema.TaggedClass<Add>()('Add', {

@@ -2,10 +2,9 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as Function from 'effect/Function';
 import { useCallback, useState } from 'react';
 
-import { chain, createIntent } from '@dxos/app-framework';
+import { createIntent } from '@dxos/app-framework';
 import { useIntentDispatcher } from '@dxos/app-framework/react';
 import { Obj } from '@dxos/echo';
 import { Script } from '@dxos/functions';
@@ -40,18 +39,18 @@ export const useCreateAndDeployScriptTemplates = (space: Space | undefined, scri
 
     const deploymentResults = await Promise.all(
       scriptTemplates.map(async (template) => {
-        const result = await dispatch(
-          Function.pipe(
-            createIntent(ScriptAction.CreateScript, {
-              db: space.db,
-              initialTemplateId: template.id as any,
-            }),
-            chain(SpaceAction.AddObject, { target: space.db }),
-          ),
+        const createResult = await dispatch(
+          createIntent(ScriptAction.CreateScript, {
+            db: space.db,
+            initialTemplateId: template.id as any,
+          }),
         );
-        invariant(Obj.instanceOf(Script.Script, result.data?.object));
+        invariant(Obj.instanceOf(Script.Script, createResult.data?.object));
+        await dispatch(
+          createIntent(SpaceAction.AddObject, { target: space.db, object: createResult.data.object }),
+        );
 
-        return deployScript({ space, client, script: result.data.object });
+        return deployScript({ space, client, script: createResult.data.object });
       }),
     );
 

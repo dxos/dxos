@@ -2,9 +2,10 @@
 // Copyright 2023 DXOS.org
 //
 
+import type * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
-import { type AnyIntentChain } from '@dxos/app-framework';
+import { type Capability } from '@dxos/app-framework';
 import { type PublicKey } from '@dxos/client';
 // TODO(wittjosiah): This pulls in full client.
 import { EchoObjectSchema, ReactiveObjectSchema, SpaceSchema } from '@dxos/client/echo';
@@ -111,7 +112,18 @@ export interface TypedObjectSerializer<T extends Obj.Any = Obj.Any> {
   deserialize(params: { content: string; db: Database.Database; newId?: boolean }): Promise<T>;
 }
 
-export type CreateObjectIntent = (props: any, options: { db: Database.Database }) => AnyIntentChain;
+/**
+ * Factory function that creates an object directly using Type.make().
+ * Returns an Effect that resolves to the created object.
+ *
+ * Options include:
+ * - `db`: The database to use for object creation.
+ * - `context`: The plugin context for accessing capabilities and dispatch.
+ */
+export type CreateObject = (
+  props: any,
+  options: { db: Database.Database; context: Capability.PluginContext },
+) => Effect.Effect<Obj.Any, Error>;
 
 // TODO(burdon): Move to FormatEnum or SDK.
 export const IconAnnotationId = Symbol.for('@dxos/plugin-space/annotation/Icon');

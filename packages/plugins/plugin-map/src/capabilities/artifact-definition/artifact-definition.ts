@@ -6,10 +6,9 @@
 // @ts-nocheck
 
 import * as Effect from 'effect/Effect';
-import * as Function from 'effect/Function';
 import * as Schema from 'effect/Schema';
 
-import { Capabilities, Capability, type PromiseIntentDispatcher, chain, createIntent } from '@dxos/app-framework';
+import { Capabilities, Capability, type PromiseIntentDispatcher, createIntent } from '@dxos/app-framework';
 import { createArtifactElement } from '@dxos/assistant';
 import { defineArtifact } from '@dxos/blueprints';
 import { Obj } from '@dxos/echo';
@@ -101,18 +100,22 @@ export default Capability.makeModule(() =>
               }
             }
 
-            const intent = Function.pipe(
+            const createResult = await extensions.dispatch(
               createIntent(MapAction.Create, {
                 space: extensions.space,
                 typename,
                 locationFieldId,
               }),
-              chain(SpaceAction.AddObject, { target: extensions.space }),
             );
+            if (!createResult.data?.object) {
+              return ToolResult.Error('Failed to create map');
+            }
 
-            const { data, error } = await extensions.dispatch(intent);
+            const { data, error } = await extensions.dispatch(
+              createIntent(SpaceAction.AddObject, { target: extensions.space, object: createResult.data.object }),
+            );
             if (!data || error) {
-              return ToolResult.Error(error?.message ?? 'Failed to create map');
+              return ToolResult.Error(error?.message ?? 'Failed to add map to space');
             }
 
             return ToolResult.Success(createArtifactElement(data.id));

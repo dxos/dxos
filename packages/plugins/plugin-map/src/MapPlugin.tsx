@@ -2,9 +2,11 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Common, Plugin, createIntent } from '@dxos/app-framework';
+import * as Effect from 'effect/Effect';
+
+import { Common, Plugin } from '@dxos/app-framework';
 import { Type } from '@dxos/echo';
-import { type CreateObjectIntent } from '@dxos/plugin-space/types';
+import { type CreateObject } from '@dxos/plugin-space/types';
 
 import { AppGraphBuilder, BlueprintDefinition, IntentResolver, MapState, ReactSurface } from './capabilities';
 import { meta } from './meta';
@@ -28,8 +30,7 @@ export const MapPlugin = Plugin.define(meta).pipe(
         icon: 'ph--compass--regular',
         iconHue: 'green',
         inputSchema: MapAction.CreateMap,
-        createIntent: ((props, options) =>
-          createIntent(MapAction.Create, { ...props, space: options.db })) satisfies CreateObjectIntent,
+        createObject: ((props) => Effect.sync(() => Map.make(props))) satisfies CreateObject,
       },
     },
   }),

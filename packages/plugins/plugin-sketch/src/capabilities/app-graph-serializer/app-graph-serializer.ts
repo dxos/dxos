@@ -3,9 +3,8 @@
 //
 
 import * as Effect from 'effect/Effect';
-import * as Function from 'effect/Function';
 
-import { Capability, Common, chain, createIntent } from '@dxos/app-framework';
+import { Capability, Common, createIntent } from '@dxos/app-framework';
 import { Obj } from '@dxos/echo';
 import { SpaceAction } from '@dxos/plugin-space/types';
 import { isSpace } from '@dxos/react-client/echo';
@@ -42,14 +41,15 @@ export default Capability.makeModule((context) =>
           const { schema, content } = JSON.parse(data.data);
 
           const { dispatchPromise: dispatch } = context.getCapability(Common.Capability.IntentDispatcher);
-          const result = await dispatch(
-            Function.pipe(
-              createIntent(SketchAction.Create, { name: data.name, schema, content }),
-              chain(SpaceAction.AddObject, { target }),
-            ),
+          const createResult = await dispatch(
+            createIntent(SketchAction.Create, { name: data.name, schema, content }),
           );
+          if (!createResult.data?.object) {
+            return undefined;
+          }
+          await dispatch(createIntent(SpaceAction.AddObject, { target, object: createResult.data.object }));
 
-          return result.data?.object;
+          return createResult.data.object;
         },
       },
     ]),

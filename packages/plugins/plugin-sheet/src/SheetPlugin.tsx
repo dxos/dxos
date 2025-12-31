@@ -2,17 +2,19 @@
 // Copyright 2023 DXOS.org
 //
 
-import { ActivationEvent, Common, Plugin, createIntent } from '@dxos/app-framework';
+import * as Effect from 'effect/Effect';
+
+import { ActivationEvent, Common, Plugin } from '@dxos/app-framework';
 import { AutomationEvents } from '@dxos/plugin-automation';
 import { ClientEvents } from '@dxos/plugin-client';
 import { MarkdownEvents } from '@dxos/plugin-markdown';
-import { type CreateObjectIntent } from '@dxos/plugin-space/types';
+import { type CreateObject } from '@dxos/plugin-space/types';
 
 import { AnchorSort, ComputeGraphRegistry, IntentResolver, Markdown, ReactSurface } from './capabilities';
 import { meta } from './meta';
 import { serializer } from './serializer';
 import { translations } from './translations';
-import { Sheet, SheetAction } from './types';
+import { Sheet } from './types';
 
 export const SheetPlugin = Plugin.define(meta).pipe(
   Plugin.addModule({
@@ -29,7 +31,7 @@ export const SheetPlugin = Plugin.define(meta).pipe(
         iconHue: 'indigo',
         serializer,
         comments: 'anchored',
-        createObjectIntent: ((props) => createIntent(SheetAction.Create, { ...props })) satisfies CreateObjectIntent,
+        createObject: ((props) => Effect.sync(() => Sheet.make(props))) satisfies CreateObject,
         addToCollectionOnCreate: true,
       },
     },

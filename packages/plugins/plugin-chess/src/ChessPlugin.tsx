@@ -2,14 +2,16 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Common, Plugin, createIntent } from '@dxos/app-framework';
-import { type CreateObjectIntent } from '@dxos/plugin-space/types';
+import * as Effect from 'effect/Effect';
+
+import { Common, Plugin } from '@dxos/app-framework';
+import { type CreateObject } from '@dxos/plugin-space/types';
 
 import { ChessBlueprint } from './blueprints';
 import { BlueprintDefinition, IntentResolver, ReactSurface } from './capabilities';
 import { meta } from './meta';
 import { translations } from './translations';
-import { Chess, ChessAction } from './types';
+import { Chess } from './types';
 
 export const ChessPlugin = Plugin.define(meta).pipe(
   Common.Plugin.addTranslationsModule({ translations }),
@@ -20,7 +22,7 @@ export const ChessPlugin = Plugin.define(meta).pipe(
         icon: 'ph--shield-chevron--regular',
         iconHue: 'amber',
         blueprints: [ChessBlueprint.Key],
-        createObjectIntent: (() => createIntent(ChessAction.Create)) satisfies CreateObjectIntent,
+        createObject: ((props) => Effect.sync(() => Chess.make(props))) satisfies CreateObject,
         addToCollectionOnCreate: true,
       },
     },

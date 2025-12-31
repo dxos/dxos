@@ -2,9 +2,11 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Common, Plugin, createIntent } from '@dxos/app-framework';
+import * as Effect from 'effect/Effect';
+
+import { Common, Plugin } from '@dxos/app-framework';
 import { Type } from '@dxos/echo';
-import { type CreateObjectIntent } from '@dxos/plugin-space/types';
+import { type CreateObject } from '@dxos/plugin-space/types';
 
 import { IntentResolver, ReactSurface } from './capabilities';
 import { meta } from './meta';
@@ -20,8 +22,7 @@ export const ExplorerPlugin = Plugin.define(meta).pipe(
         icon: 'ph--graph--regular',
         iconHue: 'green',
         inputSchema: ExplorerAction.GraphProps,
-        createObjectIntent: ((props, options) =>
-          createIntent(ExplorerAction.CreateGraph, { ...props, space: options.db })) satisfies CreateObjectIntent,
+        createObject: ((props) => Effect.sync(() => Graph.make(props))) satisfies CreateObject,
       },
     },
   }),

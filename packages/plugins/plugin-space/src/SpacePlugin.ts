@@ -2,6 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
+import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
 import { ActivationEvent, Capability, Common, Plugin, createIntent } from '@dxos/app-framework';
@@ -40,7 +41,7 @@ import {
 import { SpaceEvents } from './events';
 import { meta } from './meta';
 import { translations } from './translations';
-import { CollectionAction, type CreateObjectIntent, SpaceAction, type SpacePluginOptions } from './types';
+import { type CreateObject, SpaceAction, type SpacePluginOptions } from './types';
 
 export const SpacePlugin = Plugin.define<SpacePluginOptions>(meta).pipe(
   Plugin.addModule({
@@ -65,7 +66,7 @@ export const SpacePlugin = Plugin.define<SpacePluginOptions>(meta).pipe(
           // TODO(wittjosiah): Move out of metadata.
           loadReferences: async (collection: Collection.Collection) => await Ref.Array.loadAll(collection.objects),
           inputSchema: Schema.Struct({ name: Schema.optional(Schema.String) }),
-          createObjectIntent: ((props) => createIntent(CollectionAction.Create, props)) satisfies CreateObjectIntent,
+          createObject: ((props) => Effect.sync(() => Collection.make(props))) satisfies CreateObject,
           addToCollectionOnCreate: true,
         },
       },
@@ -75,14 +76,21 @@ export const SpacePlugin = Plugin.define<SpacePluginOptions>(meta).pipe(
           icon: 'ph--database--regular',
           iconHue: 'green',
           inputSchema: SpaceAction.StoredSchemaForm,
-          createObjectIntent: ((props, options) =>
-            props.typename
-              ? createIntent(SpaceAction.UseStaticSchema, { db: options.db, typename: props.typename })
-              : createIntent(SpaceAction.AddSchema, {
-                  db: options.db,
-                  name: props.name,
-                  schema: createDefaultSchema(),
-                })) satisfies CreateObjectIntent,
+          createObject: ((props, { db, context }) =>
+            Effect.gen(function* () {
+              const { dispatch } = context.getCapability(Common.Capability.IntentDispatcher);
+              if (props.typename) {
+                const result = yield* dispatch(
+                  createIntent(SpaceAction.UseStaticSchema, { db, typename: props.typename }),
+                );
+                return result as any;
+              } else {
+                const result = yield* dispatch(
+                  createIntent(SpaceAction.AddSchema, { db, name: props.name, schema: createDefaultSchema() }),
+                );
+                return result.object;
+              }
+            })) satisfies CreateObject,
         },
       },
       {

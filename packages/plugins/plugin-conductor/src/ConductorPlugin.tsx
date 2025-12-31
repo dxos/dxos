@@ -2,15 +2,17 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Common, Plugin, createIntent } from '@dxos/app-framework';
+import * as Effect from 'effect/Effect';
+
+import { Common, Plugin } from '@dxos/app-framework';
 import { ComputeGraph } from '@dxos/conductor';
-import { type CreateObjectIntent } from '@dxos/plugin-space/types';
+import { Obj } from '@dxos/echo';
+import { type CreateObject } from '@dxos/plugin-space/types';
 import { CanvasBoardType } from '@dxos/react-ui-canvas-editor';
 
 import { IntentResolver, ReactSurface } from './capabilities';
 import { meta } from './meta';
 import { translations } from './translations';
-import { ConductorAction } from './types';
 
 export const ConductorPlugin = Plugin.define(meta).pipe(
   Common.Plugin.addTranslationsModule({ translations }),
@@ -20,7 +22,7 @@ export const ConductorPlugin = Plugin.define(meta).pipe(
       metadata: {
         icon: 'ph--infinity--regular',
         iconHue: 'sky',
-        createObjectIntent: (() => createIntent(ConductorAction.Create)) satisfies CreateObjectIntent,
+        createObject: ((props) => Effect.sync(() => Obj.make(CanvasBoardType, props))) satisfies CreateObject,
         addToCollectionOnCreate: true,
       },
     },

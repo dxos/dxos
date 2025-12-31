@@ -4,13 +4,13 @@
 
 import { type Instruction } from '@atlaskit/pragmatic-drag-and-drop-hitbox/tree-item';
 import { Atom } from '@effect-atom/atom-react';
-import * as Function from 'effect/Function';
 import type * as Schema from 'effect/Schema';
 
-import { Common, type PromiseIntentDispatcher, chain, createIntent } from '@dxos/app-framework';
+import { type Capability, Common, type PromiseIntentDispatcher, createIntent } from '@dxos/app-framework';
 import { type Space, SpaceState, isSpace } from '@dxos/client/echo';
 import { type Database, type Entity, Filter, Obj, Query, type QueryResult, Ref, Type } from '@dxos/echo';
 import { EXPANDO_TYPENAME } from '@dxos/echo/internal';
+import { runAndForwardErrors } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { Migrations } from '@dxos/migrations';
 import { Graph, Node } from '@dxos/plugin-graph';
@@ -528,6 +528,7 @@ export const constructObjectActions = ({
   graph,
   dispatch,
   resolve,
+  context,
   deletable = true,
   navigable = false,
 }: {
@@ -535,6 +536,7 @@ export const constructObjectActions = ({
   graph: Graph.ReadableGraph;
   dispatch: PromiseIntentDispatcher;
   resolve: (typename: string) => Record<string, any>;
+  context: Capability.PluginContext;
   deletable?: boolean;
   navigable?: boolean;
 }) => {
@@ -547,7 +549,7 @@ export const constructObjectActions = ({
 
   const managedCollection = Obj.instanceOf(Collection.Managed, object) ? object : undefined;
   const metadata = managedCollection ? resolve(managedCollection.key) : {};
-  const createObjectIntent = metadata.createObjectIntent;
+  const createObject = metadata.createObject;
   const inputSchema = metadata.inputSchema;
 
   const actions: Node.NodeArg<Node.ActionData>[] = [
@@ -614,7 +616,7 @@ export const constructObjectActions = ({
           },
         ]
       : []),
-    ...(createObjectIntent
+    ...(createObject
       ? [
           {
             id: getId(SpaceAction.OpenCreateObject._tag),
@@ -628,13 +630,19 @@ export const constructObjectActions = ({
                   }),
                 );
               } else {
-                await dispatch(
-                  Function.pipe(
-                    createObjectIntent({}, { db }),
-                    chain(SpaceAction.AddObject, { target: db, hidden: true }),
-                    chain(Common.LayoutAction.Open, { part: 'main' }),
-                  ),
+                const createdObject = await runAndForwardErrors(createObject({}, { db, context }));
+                const addResult = await dispatch(
+                  createIntent(SpaceAction.AddObject, {
+                    target: db,
+                    hidden: true,
+                    object: createdObject,
+                  }),
                 );
+                if (addResult.data?.id) {
+                  await dispatch(
+                    createIntent(Common.LayoutAction.Open, { part: 'main', subject: [addResult.data.id] }),
+                  );
+                }
               }
             },
             properties: {

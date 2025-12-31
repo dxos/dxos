@@ -9,7 +9,7 @@ import { Ref, Type } from '@dxos/echo';
 import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
 import { MarkdownEvents } from '@dxos/plugin-markdown';
 import { SpaceCapabilities, SpaceEvents } from '@dxos/plugin-space';
-import { type CreateObjectIntent } from '@dxos/plugin-space/types';
+import { type CreateObject } from '@dxos/plugin-space/types';
 import { translations as threadTranslations } from '@dxos/react-ui-thread';
 import { AnchoredTo, Message, Thread } from '@dxos/types';
 
@@ -61,10 +61,7 @@ export const ThreadPlugin = Plugin.define(meta).pipe(
         metadata: {
           icon: 'ph--hash--regular',
           iconHue: 'rose',
-          createObjectIntent: ((_, options) =>
-            createIntent(ThreadAction.CreateChannel, {
-              spaceId: options.db.spaceId,
-            })) satisfies CreateObjectIntent,
+          createObject: ((props) => Effect.sync(() => Channel.make(props))) satisfies CreateObject,
         },
       },
       {

@@ -3,9 +3,8 @@
 //
 
 import * as Effect from 'effect/Effect';
-import * as Function from 'effect/Function';
 
-import { Capability, Common, chain, createIntent } from '@dxos/app-framework';
+import { Capability, Common, createIntent } from '@dxos/app-framework';
 import { Obj, Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
@@ -140,13 +139,16 @@ export default Capability.makeModule((context) =>
                 if (!meeting) {
                   const db = Obj.getDatabase(channel);
                   invariant(db);
-                  const intent = Function.pipe(
-                    createIntent(MeetingAction.Create, { channel }),
-                    chain(SpaceAction.AddObject, { target: db, hidden: true }),
-                    chain(MeetingAction.SetActive),
+                  const createResult = await dispatch(createIntent(MeetingAction.Create, { channel }));
+                  const addResult = await dispatch(
+                    createIntent(SpaceAction.AddObject, {
+                      target: db,
+                      hidden: true,
+                      object: createResult.data?.object,
+                    }),
                   );
-                  const { data } = await dispatch(intent);
-                  meeting = data!.object as Meeting.Meeting;
+                  await dispatch(createIntent(MeetingAction.SetActive, { object: addResult.data?.object }));
+                  meeting = addResult.data?.object as Meeting.Meeting;
                 }
 
                 const callManager = context.getCapability(ThreadCapabilities.CallManager);

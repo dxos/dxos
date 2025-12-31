@@ -8,10 +8,10 @@ import { Capability, Common, Plugin, createIntent } from '@dxos/app-framework';
 import { ResearchGraph } from '@dxos/assistant-toolkit';
 import { Blueprint, Prompt } from '@dxos/blueprints';
 import { Sequence } from '@dxos/conductor';
-import { Type } from '@dxos/echo';
+import { Obj, Type } from '@dxos/echo';
 import { ClientEvents } from '@dxos/plugin-client';
 import { SpaceCapabilities, SpaceEvents } from '@dxos/plugin-space';
-import { type CreateObjectIntent } from '@dxos/plugin-space/types';
+import { type CreateObject } from '@dxos/plugin-space/types';
 import { HasSubject } from '@dxos/types';
 
 import {
@@ -50,8 +50,7 @@ export const AssistantPlugin = Plugin.define(meta).pipe(
         metadata: {
           icon: 'ph--atom--regular',
           iconHue: 'sky',
-          createObjectIntent: ((_, options) =>
-            createIntent(AssistantAction.CreateChat, { db: options.db })) satisfies CreateObjectIntent,
+          createObject: ((props) => Effect.sync(() => Assistant.make(props))) satisfies CreateObject,
         },
       },
       {
@@ -60,8 +59,7 @@ export const AssistantPlugin = Plugin.define(meta).pipe(
           icon: 'ph--blueprint--regular',
           iconHue: 'sky',
           inputSchema: AssistantAction.BlueprintForm,
-          createObjectIntent: ((props) =>
-            createIntent(AssistantAction.CreateBlueprint, props)) satisfies CreateObjectIntent,
+          createObject: ((props) => Effect.sync(() => Blueprint.make(props))) satisfies CreateObject,
         },
       },
       {
@@ -69,7 +67,7 @@ export const AssistantPlugin = Plugin.define(meta).pipe(
         metadata: {
           icon: 'ph--scroll--regular',
           iconHue: 'sky',
-          createObjectIntent: (() => createIntent(AssistantAction.CreatePrompt)) satisfies CreateObjectIntent,
+          createObject: ((props) => Effect.sync(() => Prompt.make(props))) satisfies CreateObject,
         },
       },
       {
@@ -77,7 +75,7 @@ export const AssistantPlugin = Plugin.define(meta).pipe(
         metadata: {
           icon: 'ph--circuitry--regular',
           iconHue: 'sky',
-          createObjectIntent: (() => createIntent(AssistantAction.CreateSequence)) satisfies CreateObjectIntent,
+          createObject: ((props) => Effect.sync(() => Obj.make(Sequence, props))) satisfies CreateObject,
           addToCollectionOnCreate: true,
         },
       },

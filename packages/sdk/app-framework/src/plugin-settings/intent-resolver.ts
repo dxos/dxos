@@ -3,11 +3,10 @@
 //
 
 import * as Effect from 'effect/Effect';
-import * as Function from 'effect/Function';
 
 import * as Common from '../common';
 import { Capability } from '../core';
-import { chain, createIntent, createResolver } from '../plugin-intent';
+import { createIntent, createResolver } from '../plugin-intent';
 
 import { SETTINGS_ID, SETTINGS_KEY, SettingsAction } from './actions';
 
@@ -23,17 +22,15 @@ export default Capability.makeModule(() =>
             subject: SETTINGS_ID,
           });
           return {
-            intents: [
-              plugin
-                ? Function.pipe(
-                    openSettings,
-                    chain(Common.LayoutAction.Open, {
-                      part: 'main',
-                      subject: [`${SETTINGS_KEY}:${plugin.replaceAll('/', ':')}`],
-                    }),
-                  )
-                : openSettings,
-            ],
+            intents: plugin
+              ? [
+                  openSettings,
+                  createIntent(Common.LayoutAction.Open, {
+                    part: 'main',
+                    subject: [`${SETTINGS_KEY}:${plugin.replaceAll('/', ':')}`],
+                  }),
+                ]
+              : [openSettings],
           };
         },
       }),

@@ -556,6 +556,7 @@ export default Capability.makeModule((context) =>
             graph: appGraph.graph,
             dispatch: dispatcher.dispatchPromise,
             resolve: resolve(get),
+            context,
             deletable,
             navigable: get(CreateAtom.fromSignal(() => state.navigableCollections)),
           });

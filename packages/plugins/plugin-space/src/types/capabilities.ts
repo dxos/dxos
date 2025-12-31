@@ -4,7 +4,7 @@
 
 import type * as Schema from 'effect/Schema';
 
-import { type AnyIntentChain, Capability, type Label } from '@dxos/app-framework';
+import { type AnyIntent, Capability, type Label } from '@dxos/app-framework';
 import { type Space } from '@dxos/client/echo';
 import { type Database } from '@dxos/echo';
 import { type Collection } from '@dxos/schema';
@@ -25,7 +25,7 @@ export namespace SpaceCapabilities {
     space: Space;
     isDefault: boolean;
     rootCollection: Collection.Collection;
-  }) => AnyIntentChain;
+  }) => AnyIntent;
   export const OnCreateSpace = Capability.make<OnCreateSpace>(`${meta.id}/capability/on-space-created`);
 
   export type OnSchemaAdded = (params: {
@@ -33,7 +33,7 @@ export namespace SpaceCapabilities {
     schema: Schema.Schema.AnyNoContext;
     // TODO(wittjosiah): This is leaky.
     show?: boolean;
-  }) => AnyIntentChain;
+  }) => AnyIntent;
   export const OnSchemaAdded = Capability.make<OnSchemaAdded>(`${meta.id}/capability/on-schema-added`);
 
   // TODO(wittjosiah): Replace with migrations, this is not a sustainable solution.

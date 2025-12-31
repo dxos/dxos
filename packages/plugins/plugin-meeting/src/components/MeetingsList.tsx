@@ -2,11 +2,10 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as Function from 'effect/Function';
 import * as Schema from 'effect/Schema';
 import React, { useCallback, useMemo } from 'react';
 
-import { Common, chain, createIntent } from '@dxos/app-framework';
+import { Common, createIntent } from '@dxos/app-framework';
 import { useCapabilities, useIntentDispatcher } from '@dxos/app-framework/react';
 import { Obj, Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
@@ -86,13 +85,12 @@ export const MeetingsList = ({ channel }: MeetingsListProps) => {
   const getId = useCallback((meeting: Meeting.Meeting) => meeting.id, []);
   const handleCreateMeeting = useCallback(async () => {
     invariant(db);
-    const intent = Function.pipe(
-      createIntent(MeetingAction.Create, { channel }),
-      chain(SpaceAction.AddObject, { target: db, hidden: true }),
-      chain(MeetingAction.SetActive),
+    const createResult = await dispatch(createIntent(MeetingAction.Create, { channel }));
+    const addResult = await dispatch(
+      createIntent(SpaceAction.AddObject, { target: db, hidden: true, object: createResult.data?.object }),
     );
-    await dispatch(intent);
-  }, [dispatch, db]);
+    await dispatch(createIntent(MeetingAction.SetActive, { object: addResult.data?.object }));
+  }, [dispatch, db, channel]);
 
   return (
     <div>

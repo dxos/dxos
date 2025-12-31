@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 import { Capability, Common, Plugin, createIntent } from '@dxos/app-framework';
 import { Type } from '@dxos/echo';
 import { SpaceCapabilities, SpaceEvents } from '@dxos/plugin-space';
-import { type CreateObjectIntent } from '@dxos/plugin-space/types';
+import { type CreateObject } from '@dxos/plugin-space/types';
 import { translations as formTranslations } from '@dxos/react-ui-form';
 import { translations as tableTranslations } from '@dxos/react-ui-table';
 import { Table } from '@dxos/react-ui-table/types';
@@ -27,8 +27,7 @@ export const TablePlugin = Plugin.define(meta).pipe(
         iconHue: 'green',
         comments: 'unanchored',
         inputSchema: CreateTableSchema,
-        createObjectIntent: ((props, options) =>
-          createIntent(TableAction.Create, { ...props, space: options.db })) satisfies CreateObjectIntent,
+        createObject: ((props) => Effect.sync(() => Table.make(props))) satisfies CreateObject,
       },
     },
   }),
