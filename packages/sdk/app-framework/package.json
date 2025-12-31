@@ -103,6 +103,7 @@
     "@dxos/live-object": "workspace:*",
     "@dxos/local-storage": "workspace:*",
     "@dxos/log": "workspace:*",
+    "@dxos/operation": "workspace:*",
     "@dxos/react-hooks": "workspace:*",
     "@dxos/schema": "workspace:*",
     "@dxos/types": "workspace:*",

@@ -239,4 +239,57 @@ export namespace Capability {
    * @category Capability
    */
   export const Layer = Capability$.make<Layer$.Layer<any, any, any>>('dxos.org/app-framework/capability/layer');
+
+  //
+  // Operation System Capabilities
+  //
+
+  export type {
+    OperationHandlerRegistration,
+    UndoMappingRegistration,
+    OperationInvokerInterface,
+    UndoRegistryInterface,
+    HistoryTrackerInterface,
+    InvocationEvent,
+  } from '../plugin-operation/types';
+
+  /**
+   * Handler registration for operations - contributed by plugins.
+   * @category Capability
+   */
+  export const OperationHandler = Capability$.make<
+    import('../plugin-operation/types').OperationHandlerRegistration[]
+  >('dxos.org/app-framework/capability/operation-handler');
+
+  /**
+   * Undo mapping registration - contributed by plugins.
+   * @category Capability
+   */
+  export const UndoMapping = Capability$.make<import('../plugin-operation/types').UndoMappingRegistration[]>(
+    'dxos.org/app-framework/capability/undo-mapping',
+  );
+
+  /**
+   * Operation invoker - provided by OperationPlugin.
+   * @category Capability
+   */
+  export const OperationInvoker = Capability$.make<import('../plugin-operation/types').OperationInvokerInterface>(
+    'dxos.org/app-framework/capability/operation-invoker',
+  );
+
+  /**
+   * Undo registry - provided by OperationPlugin.
+   * @category Capability
+   */
+  export const UndoRegistry = Capability$.make<import('../plugin-operation/types').UndoRegistryInterface>(
+    'dxos.org/app-framework/capability/undo-registry',
+  );
+
+  /**
+   * History tracker - provided by OperationPlugin.
+   * @category Capability
+   */
+  export const HistoryTracker = Capability$.make<import('../plugin-operation/types').HistoryTrackerInterface>(
+    'dxos.org/app-framework/capability/history-tracker',
+  );
 }
