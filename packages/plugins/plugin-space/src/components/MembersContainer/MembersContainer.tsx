@@ -227,7 +227,7 @@ const InvitationSection = ({
 };
 
 const InvitationQR = ({ id, url, onCancel }: { id: string; url: string; onCancel?: () => void }) => {
-  const { t } = useTranslation('os');
+  const { t } = useTranslation('@dxos/os');
   const qrLabel = useId('members-container__qr-code');
   const emoji = hexToEmoji(id);
   return (
@@ -262,7 +262,7 @@ const InvitationQR = ({ id, url, onCancel }: { id: string; url: string; onCancel
 };
 
 const InvitationAuthCode = ({ id, code, onCancel }: { id: string; code: string; onCancel?: () => void }) => {
-  const { t } = useTranslation('os');
+  const { t } = useTranslation('@dxos/os');
   const emoji = hexToEmoji(id);
 
   return (
