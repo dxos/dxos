@@ -7,6 +7,7 @@ import React, { cloneElement } from 'react';
 import { useTranslation } from '@dxos/react-ui';
 
 import { Action, Actions } from '../../../components';
+import { translationKey } from '../../../translations';
 import { type JoinStepProps } from '../JoinPanelProps';
 
 export interface InvitationAcceptedProps extends JoinStepProps {
@@ -18,7 +19,7 @@ export interface InvitationAcceptedProps extends JoinStepProps {
 export const InvitationAccepted = (props: InvitationAcceptedProps) => {
   const { active, Kind, doneActionParent, onDone } = props;
   const disabled = !active;
-  const { t } = useTranslation('os');
+  const { t } = useTranslation(translationKey);
 
   const doneAction = (
     <Action

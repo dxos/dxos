@@ -22,7 +22,7 @@ export type IconPickerProps = {
 >;
 
 export const IconPicker = ({ ...props }: ThemedClassName<IconPickerProps>) => {
-  const { t } = useTranslation('os');
+  const { t } = useTranslation('@dxos/os');
 
   return (
     <PickerButton

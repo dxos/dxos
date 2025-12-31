@@ -3,16 +3,7 @@
 //
 
 import { type Decorator, type StoryContext } from '@storybook/react';
-import React, {
-  type PropsWithChildren,
-  createContext,
-  useCallback,
-  useContext,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from 'react';
+import React, { type PropsWithChildren, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { type FallbackProps, ErrorBoundary as NaturalErrorBoundary } from 'react-error-boundary';
 
 import { Trigger } from '@dxos/async';
@@ -112,10 +103,6 @@ export const withClientProvider = ({
 // TODO(burdon): Delay/jitter for creation of other clients.
 export type WithMultiClientProviderProps = InitializeProps &
   Omit<ClientProviderProps, 'onInitialized'> & { numClients?: number };
-
-const MultiClientContext = createContext<{ id: number }>({ id: 0 });
-
-export const useMultiClient = () => useContext(MultiClientContext);
 
 /**
  * Decorator that creates a scaffold for multiple clients.
