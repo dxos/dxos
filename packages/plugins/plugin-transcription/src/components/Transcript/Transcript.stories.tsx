@@ -5,14 +5,11 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { type FC, useEffect, useMemo, useState } from 'react';
 
-import { IntentPlugin, SettingsPlugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Key } from '@dxos/echo';
 import { ClientPlugin } from '@dxos/plugin-client';
 import { PreviewPlugin } from '@dxos/plugin-preview';
-import { SpacePlugin } from '@dxos/plugin-space';
-import { StorybookPlugin } from '@dxos/plugin-testing';
-import { ThemePlugin } from '@dxos/plugin-theme';
+import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
 import { faker } from '@dxos/random';
 import { useMembers, useSpace } from '@dxos/react-client/echo';
 import { IconButton, Toolbar } from '@dxos/react-ui';
@@ -20,7 +17,6 @@ import { withTheme } from '@dxos/react-ui/testing';
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { TestSchema } from '@dxos/schema/testing';
 import { type Message, Organization, Person } from '@dxos/types';
-import { defaultTx } from '@dxos/ui-theme';
 
 import { useQueueModelAdapter } from '../../hooks';
 import { SerializationModel } from '../../model';
@@ -177,19 +173,14 @@ const meta = {
     withTheme,
     withPluginManager({
       plugins: [
+        ...corePlugins(),
         ClientPlugin({
           types: [TestItem, TestSchema.DocumentType, Person.Person, Organization.Organization],
           onClientInitialized: async ({ client }) => {
             await client.halo.createIdentity();
           },
         }),
-        SpacePlugin({}),
-        IntentPlugin(),
-        SettingsPlugin(),
-
-        // UI
         PreviewPlugin(),
-        ThemePlugin({ tx: defaultTx }),
         StorybookPlugin({}),
       ],
     }),

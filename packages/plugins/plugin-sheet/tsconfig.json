@@ -8,6 +8,7 @@
     ]
   },
   "exclude": [
+    "*.stories.tsx",
     "vite.config.ts"
   ],
   "include": [
@@ -150,6 +151,9 @@
     },
     {
       "path": "../plugin-stack"
+    },
+    {
+      "path": "../plugin-testing"
     },
     {
       "path": "../plugin-thread"

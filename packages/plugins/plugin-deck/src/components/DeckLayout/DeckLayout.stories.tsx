@@ -5,10 +5,9 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
-import { Events, IntentPlugin, SettingsPlugin, defineModule, definePlugin } from '@dxos/app-framework';
+import { Events, defineModule, definePlugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { AttentionPlugin } from '@dxos/plugin-attention';
-import { GraphPlugin } from '@dxos/plugin-graph';
+import { corePlugins } from '@dxos/plugin-testing';
 import { withTheme } from '@dxos/react-ui/testing';
 
 import { DeckStateFactory, LayoutIntentResolver } from '../../capabilities';
@@ -25,10 +24,7 @@ const meta = {
     withTheme,
     withPluginManager({
       plugins: [
-        AttentionPlugin(),
-        SettingsPlugin(),
-        IntentPlugin(),
-        GraphPlugin(),
+        ...corePlugins(),
         definePlugin(
           {
             id: 'example.com/plutin/testing',

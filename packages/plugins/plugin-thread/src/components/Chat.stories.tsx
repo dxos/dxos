@@ -5,8 +5,9 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useState } from 'react';
 
-import { Capabilities, IntentPlugin, contributes, createSurface } from '@dxos/app-framework';
+import { Capabilities, contributes, createSurface } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
+import { corePlugins } from '@dxos/plugin-testing';
 import { faker } from '@dxos/random';
 import { useClient } from '@dxos/react-client';
 import { type Space } from '@dxos/react-client/echo';
@@ -58,7 +59,7 @@ const meta = {
   decorators: [
     withTheme,
     withPluginManager({
-      plugins: [IntentPlugin()],
+      plugins: [...corePlugins()],
       capabilities: [
         contributes(
           Capabilities.ReactSurface,

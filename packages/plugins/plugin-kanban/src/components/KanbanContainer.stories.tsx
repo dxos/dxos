@@ -5,16 +5,13 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useCallback } from 'react';
 
-import { IntentPlugin, SettingsPlugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Obj, type QueryAST, Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { ClientPlugin } from '@dxos/plugin-client';
 import { PreviewPlugin } from '@dxos/plugin-preview';
 import { useGlobalFilteredObjects } from '@dxos/plugin-search';
-import { SpacePlugin } from '@dxos/plugin-space';
-import { StorybookPlugin } from '@dxos/plugin-testing';
-import { ThemePlugin } from '@dxos/plugin-theme';
+import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
 import { faker } from '@dxos/random';
 import { Filter, useQuery, useSchema, useSpaces } from '@dxos/react-client/echo';
 import { withTheme } from '@dxos/react-ui/testing';
@@ -24,7 +21,6 @@ import { Kanban } from '@dxos/react-ui-kanban/types';
 import { JsonFilter } from '@dxos/react-ui-syntax-highlighter';
 import { View, getTypenameFromQuery } from '@dxos/schema';
 import { Organization, Person } from '@dxos/types';
-import { defaultTx } from '@dxos/ui-theme';
 
 import { translations } from '../translations';
 
@@ -124,6 +120,7 @@ const meta = {
     withTheme,
     withPluginManager({
       plugins: [
+        ...corePlugins(),
         ClientPlugin({
           types: [Organization.Organization, Person.Person, View.View, Kanban.Kanban],
           onClientInitialized: async ({ client }) => {
@@ -144,14 +141,8 @@ const meta = {
             });
           },
         }),
-        SpacePlugin({}),
-        IntentPlugin(),
-        SettingsPlugin(),
-
-        // UI
-        ThemePlugin({ tx: defaultTx }),
-        PreviewPlugin(),
         StorybookPlugin({}),
+        PreviewPlugin(),
       ],
     }),
   ],

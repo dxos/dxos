@@ -8,6 +8,7 @@
     ]
   },
   "exclude": [
+    "*.stories.tsx",
     "*.t.ts",
     "vite.config.ts"
   ],
@@ -163,6 +164,9 @@
     },
     {
       "path": "../plugin-status-bar"
+    },
+    {
+      "path": "../plugin-testing"
     }
   ]
 }

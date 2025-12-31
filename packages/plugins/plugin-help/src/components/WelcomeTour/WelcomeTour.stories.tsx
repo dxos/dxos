@@ -108,7 +108,6 @@ const meta = {
   title: 'plugins/plugin-help/WelcomeTour',
   component: WelcomeTour,
   render: DefaultStory,
-  // TODO(wittjosiah): Try to write story which does not depend on plugin manager.
   decorators: [withTheme, withPluginManager({ plugins: [StorybookPlugin({})] })],
 } satisfies Meta<typeof WelcomeTour>;
 
