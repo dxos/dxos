@@ -8,8 +8,8 @@ import React, { type ComponentPropsWithoutRef, forwardRef } from 'react';
 import type { ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
-import { Stack, type StackProps, railGridHorizontalContainFitContent } from '../../components';
 import { Card } from '../Card';
+import { Stack, type StackProps, railGridHorizontalContainFitContent } from '../Stack';
 
 //
 // Root

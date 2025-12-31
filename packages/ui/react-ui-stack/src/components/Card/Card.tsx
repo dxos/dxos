@@ -15,8 +15,9 @@ import React, {
 import { Icon, IconButton, type ThemedClassName, Toolbar, type ToolbarRootProps, useTranslation } from '@dxos/react-ui';
 import { cardMinInlineSize, hoverableControls, mx } from '@dxos/ui-theme';
 
-import { Image, StackItem } from '../../components';
 import { translationKey } from '../../translations';
+import { Image } from '../Image';
+import { StackItem } from '../StackItem';
 
 import { cardChrome, cardHeading, cardRoot, cardSpacing, cardText } from './fragments';
 
