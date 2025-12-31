@@ -89,12 +89,18 @@ const CardSurfaceRoot = forwardRef<HTMLDivElement, ThemedClassName<PropsWithChil
   },
 );
 
-const CardHeading = forwardRef<HTMLDivElement, SharedCardProps>(
-  ({ children, classNames, asChild, role = 'heading', ...props }, forwardedRef) => {
+//
+// Heading
+//
+
+type CardHeadingProps = SharedCardProps & { truncate?: boolean };
+
+const CardHeading = forwardRef<HTMLDivElement, CardHeadingProps>(
+  ({ children, classNames, asChild, truncate, role = 'heading', ...props }, forwardedRef) => {
     const Root = asChild ? Slot : 'div';
     const rootProps = asChild
-      ? { classNames: [cardHeading, cardText, classNames] }
-      : { className: mx(cardHeading, cardText, classNames), role };
+      ? { classNames: [cardHeading, cardText, truncate && 'truncate', classNames] }
+      : { className: mx(cardHeading, cardText, truncate && 'truncate', classNames), role };
     return (
       <Root {...props} {...rootProps} ref={forwardedRef}>
         {children}
@@ -103,9 +109,13 @@ const CardHeading = forwardRef<HTMLDivElement, SharedCardProps>(
   },
 );
 
+//
+// Toolbar
+//
+
 const CardToolbar = forwardRef<HTMLDivElement, ToolbarRootProps>(({ children, classNames, ...props }, forwardedRef) => {
   return (
-    <Toolbar.Root {...props} classNames={['bg-transparent density-coarse', classNames]} ref={forwardedRef}>
+    <Toolbar.Root {...props} classNames={['bg-transparent density-fine', classNames]} ref={forwardedRef}>
       {children}
     </Toolbar.Root>
   );
@@ -113,6 +123,10 @@ const CardToolbar = forwardRef<HTMLDivElement, ToolbarRootProps>(({ children, cl
 
 const CardToolbarIconButton = Toolbar.IconButton;
 const CardToolbarSeparator = Toolbar.Separator;
+
+//
+// DragHandle
+//
 
 const CardDragHandle = forwardRef<HTMLButtonElement, { toolbarItem?: boolean }>(({ toolbarItem }, forwardedRef) => {
   const { t } = useTranslation(translationKey);
@@ -123,7 +137,6 @@ const CardDragHandle = forwardRef<HTMLButtonElement, { toolbarItem?: boolean }>(
       icon='ph--dots-six-vertical--regular'
       variant='ghost'
       label={t('drag handle label')}
-      classNames='pli-2'
       ref={forwardedRef}
     />
   );
@@ -131,7 +144,15 @@ const CardDragHandle = forwardRef<HTMLButtonElement, { toolbarItem?: boolean }>(
 
 const CardDragPreview = StackItem.DragPreview;
 
+//
+// Menu
+//
+
 const CardMenu = Primitive.div as FC<ComponentPropsWithRef<'div'>>;
+
+//
+// Poster
+//
 
 type CardPosterProps = ThemedClassName<
   {
@@ -161,6 +182,10 @@ const CardPoster = (props: CardPosterProps) => {
   }
 };
 
+//
+// Chrome
+//
+
 const CardChrome = forwardRef<HTMLDivElement, SharedCardProps>(
   ({ children, classNames, asChild, role = 'none', ...props }, forwardedRef) => {
     const Root = asChild ? Slot : 'div';
@@ -175,6 +200,10 @@ const CardChrome = forwardRef<HTMLDivElement, SharedCardProps>(
   },
 );
 
+//
+// Text
+//
+
 const CardText = forwardRef<HTMLDivElement, SharedCardProps>(
   ({ children, classNames, asChild, role = 'none', ...props }, forwardedRef) => {
     const Root = asChild ? Slot : 'div';
@@ -186,6 +215,10 @@ const CardText = forwardRef<HTMLDivElement, SharedCardProps>(
     );
   },
 );
+
+//
+// Card
+//
 
 export const Card = {
   StaticRoot: CardStaticRoot,

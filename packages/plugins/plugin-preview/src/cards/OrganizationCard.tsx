@@ -15,12 +15,12 @@ export const OrganizationCard = ({ children, subject, role, db }: CardPreviewPro
 
   return (
     <Card.SurfaceRoot id={subject.id} role={role}>
+      <CardHeader label={name} subject={subject} db={db} />
       <Card.Poster
         alt={name ?? ''}
         {...(image ? { image } : { icon: 'ph--building-office--regular' })}
         classNames={!image && 'opacity-50'}
       />
-      <CardHeader label={name} subject={subject} db={db} />
       {description && <Card.Text classNames='line-clamp-2'>{description}</Card.Text>}
       {website && <CardLink label={website} href={website} />}
       {children}

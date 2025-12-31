@@ -288,6 +288,8 @@ const GridCell = memo(({ classNames, containerId, object, Cell, canDrag = false,
     );
   }, [rootRef, handleRef, object]);
 
+  // TODO(burdon): Move into card (How does Kanban do this?)
+
   // NOTE: No gaps between cells (so that the drop indicators doesn't flicker).
   // And ensure padding doesn't change position of cursor when dragging.
   return (
