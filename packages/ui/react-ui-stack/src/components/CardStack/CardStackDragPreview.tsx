@@ -7,8 +7,8 @@ import React, { type PropsWithChildren } from 'react';
 import { IconButton, useTranslation } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
-import { type StackProps } from '../Stack';
 import { translationKey } from '../../translations';
+import { type StackProps } from '../Stack';
 
 const CardStackDragPreviewRoot = ({ children }: PropsWithChildren<{}>) => {
   return (
