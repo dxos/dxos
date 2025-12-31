@@ -115,7 +115,7 @@ const Panel = ({ id, panel, setPanel }: { id: number; panel?: PanelType; setPane
 };
 
 const Invitations = () => {
-  const { index: id } = useClientStory();
+  const { index: id = 0 } = useClientStory();
   const client = useClient();
   const networkStatus = useNetworkStatus().swarm;
   const identity = useIdentity();
