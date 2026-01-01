@@ -6022,6 +6022,9 @@ importers:
 
   packages/core/operation:
     dependencies:
+      '@dxos/echo':
+        specifier: workspace:*
+        version: link:../echo/echo
       '@dxos/effect':
         specifier: workspace:*
         version: link:../../common/effect
@@ -13227,6 +13230,9 @@ importers:
         specifier: 'catalog:'
         version: 0.72.1(@effect/platform@0.93.6(effect@3.19.11))(@effect/printer-ansi@0.47.0(@effect/typeclass@0.38.0(effect@3.19.11))(effect@3.19.11))(@effect/printer@0.47.0(@effect/typeclass@0.38.0(effect@3.19.11))(effect@3.19.11))(effect@3.19.11)
     devDependencies:
+      '@dxos/echo-db':
+        specifier: workspace:*
+        version: link:../../core/echo/echo-db
       '@dxos/echo-signals':
         specifier: workspace:*
         version: link:../../core/echo/echo-signals
@@ -13242,6 +13248,9 @@ importers:
       '@dxos/storybook-utils':
         specifier: workspace:*
         version: link:../../common/storybook-utils
+      '@dxos/test-utils':
+        specifier: workspace:*
+        version: link:../../common/test-utils
       '@dxos/ui-theme':
         specifier: workspace:*
         version: link:../../ui/ui-theme

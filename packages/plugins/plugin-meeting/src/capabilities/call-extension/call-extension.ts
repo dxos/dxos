@@ -30,13 +30,12 @@ type MeetingPayload = buf.MessageInitShape<typeof MeetingPayloadSchema>;
 
 export default Capability.makeModule((context) =>
   Effect.sync(() => {
-    const { invokePromise } = context.getCapability(Common.Capability.OperationInvoker);
-    const client = context.getCapability(ClientCapabilities.Client);
     const state = context.getCapability(MeetingCapabilities.State);
     const _settings = context.getCapability(Common.Capability.SettingsStore).getStore<Meeting.Settings>(meta.id)!.value;
 
     return Capability.contributes(ThreadCapabilities.CallExtension, {
       onJoin: async ({ channel }: { channel?: Channel.Channel }) => {
+        const client = context.getCapability(ClientCapabilities.Client);
         const identity = client.halo.identity.get();
         invariant(identity);
 
@@ -63,6 +62,7 @@ export default Capability.makeModule((context) =>
         state.activeMeeting = undefined;
       },
       onCallStateUpdated: async (callState: CallState) => {
+        const { invokePromise } = context.getCapability(Common.Capability.OperationInvoker);
         const typename = Type.getTypename(Meeting.Meeting);
         const activity = typename ? callState.activities?.[typename] : undefined;
         if (!activity?.payload) {

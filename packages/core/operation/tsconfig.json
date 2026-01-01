@@ -9,6 +9,9 @@
     },
     {
       "path": "../../sdk/schema"
+    },
+    {
+      "path": "../echo/echo"
     }
   ]
 }

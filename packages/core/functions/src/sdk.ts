@@ -192,6 +192,9 @@ const getServiceKeys = (services: readonly Context.Tag<any, any>[]) => {
 /**
  * Converts a FunctionDefinition to an OperationDefinition with handler.
  * The function handler is adapted to the OperationHandler format.
+ *
+ * Note: FunctionDefinition stores service keys as strings, not Tag types,
+ * so we can't use Operation.withHandler's type inference here.
  */
 export const toOperation = <T, O, S extends FunctionServices = FunctionServices>(
   functionDef: FunctionDefinition<T, O, S>,
@@ -208,15 +211,15 @@ export const toOperation = <T, O, S extends FunctionServices = FunctionServices>
     },
   });
 
-  // Adapt FunctionHandler signature to OperationHandler format
-  // FunctionHandler expects { context, data }, OperationHandler expects just input
+  // Adapt FunctionHandler signature to OperationHandler format.
+  // FunctionHandler expects { context, data }, OperationHandler expects just input.
   const operationHandler: Operation.OperationHandler<T, O, any, S> = (input: T) => {
     const result = functionDef.handler({
       context: {} as FunctionContext,
       data: input,
     });
 
-    // Convert Promise or plain value to Effect
+    // Convert Promise or plain value to Effect.
     if (Effect.isEffect(result)) {
       return result;
     }
@@ -226,7 +229,12 @@ export const toOperation = <T, O, S extends FunctionServices = FunctionServices>
     return Effect.succeed(result as O);
   };
 
-  return Operation.withHandler(op, operationHandler);
+  // Manually attach handler since FunctionDefinition stores service keys as strings,
+  // not Tag types, so withHandler's type inference doesn't apply.
+  return {
+    ...op,
+    handler: operationHandler,
+  };
 };
 
 export const FunctionDefinition = {

@@ -5,6 +5,7 @@
 import type * as Command$ from '@effect/cli/Command';
 import type { Registry } from '@effect-atom/atom-react';
 import type * as Layer$ from 'effect/Layer';
+import type * as ManagedRuntime$ from 'effect/ManagedRuntime';
 import type * as Schema$ from 'effect/Schema';
 import type { FC, PropsWithChildren } from 'react';
 
@@ -231,6 +232,13 @@ export namespace Capability {
    * @category Capability
    */
   export const Layer = Capability$.make<Layer$.Layer<any, any, any>>('dxos.org/app-framework/capability/layer');
+
+  export type ManagedRuntime = ManagedRuntime$.ManagedRuntime<any, any>;
+
+  /**
+   * @category Capability
+   */
+  export const ManagedRuntime = Capability$.make<ManagedRuntime>('dxos.org/app-framework/capability/managed-runtime');
 
   //
   // Operation System Capabilities

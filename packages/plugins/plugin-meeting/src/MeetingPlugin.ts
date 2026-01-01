@@ -22,6 +22,8 @@ import { meta } from './meta';
 import { translations } from './translations';
 import { Meeting, MeetingOperation } from './types';
 
+const StateReady = Common.ActivationEvent.createStateEvent(meta.id);
+
 export const MeetingPlugin = Plugin.define(meta).pipe(
   Plugin.addModule({
     activatesOn: Common.ActivationEvent.SetupSettings,
@@ -32,6 +34,7 @@ export const MeetingPlugin = Plugin.define(meta).pipe(
     //   Should this be a different event?
     //   Should settings store be renamed to be more generic?
     activatesOn: ActivationEvent.oneOf(Common.ActivationEvent.SetupSettings, Common.ActivationEvent.SetupAppGraph),
+    activatesAfter: [StateReady],
     activate: MeetingState,
   }),
   Common.Plugin.addTranslationsModule({ translations }),
@@ -65,7 +68,7 @@ export const MeetingPlugin = Plugin.define(meta).pipe(
   Common.Plugin.addOperationResolverModule({ activate: OperationResolver }),
   Common.Plugin.addAppGraphModule({ activate: AppGraphBuilder }),
   Plugin.addModule({
-    activatesOn: ActivationEvent.allOf(Common.ActivationEvent.SettingsReady, ClientEvents.ClientReady),
+    activatesOn: ActivationEvent.allOf(Common.ActivationEvent.SettingsReady, StateReady),
     activate: CallExtension,
   }),
   Plugin.make,

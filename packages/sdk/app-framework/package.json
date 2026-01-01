@@ -114,11 +114,13 @@
     "@effect/cli": "catalog:"
   },
   "devDependencies": {
+    "@dxos/echo-db": "workspace:*",
     "@dxos/echo-signals": "workspace:*",
     "@dxos/random": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-syntax-highlighter": "workspace:*",
     "@dxos/storybook-utils": "workspace:*",
+    "@dxos/test-utils": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
     "@effect-atom/atom-react": "catalog:",
     "@effect/platform": "catalog:",

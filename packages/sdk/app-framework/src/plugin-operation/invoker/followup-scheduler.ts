@@ -11,10 +11,16 @@ import * as Ref from 'effect/Ref';
 import { log } from '@dxos/log';
 import type { OperationDefinition } from '@dxos/operation';
 
+import type { InvokeOptions } from './operation-invoker';
+
 /**
  * Invocation function type for scheduling operations.
  */
-export type InvokeFn = <I, O>(op: OperationDefinition<I, O>, input: I) => Effect.Effect<O, Error>;
+export type InvokeFn = <I, O>(
+  op: OperationDefinition<I, O>,
+  input: I,
+  options?: InvokeOptions,
+) => Effect.Effect<O, Error>;
 
 //
 // Public Interface

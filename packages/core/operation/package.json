@@ -23,6 +23,7 @@
   ],
   "scripts": {},
   "dependencies": {
+    "@dxos/echo": "workspace:*",
     "@dxos/effect": "workspace:*",
     "@dxos/schema": "workspace:*"
   },
