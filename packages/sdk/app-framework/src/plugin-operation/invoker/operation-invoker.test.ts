@@ -195,6 +195,8 @@ describe('OperationInvoker', () => {
 
   it.effect('handler can invoke another operation sequentially', () =>
     Effect.gen(function* () {
+      const invoker = OperationInvoker.make(() => Effect.succeed([computeAndStringifyHandler, toStringHandler]));
+
       // Handler that computes and then converts result to string.
       const computeAndStringifyHandler: OperationResolver = {
         operation: Compute,
@@ -207,7 +209,6 @@ describe('OperationInvoker', () => {
           }),
       };
 
-      const invoker = OperationInvoker.make(() => Effect.succeed([computeAndStringifyHandler, toStringHandler]));
       const collector = yield* createEventCollector(invoker);
 
       const result = yield* invoker.invoke(Compute, { value: 5 });
@@ -240,6 +241,10 @@ describe('OperationInvoker', () => {
           }),
       };
 
+      const invoker = OperationInvoker.make(() =>
+        Effect.succeed([computeWithForkedSideEffect, trackingSideEffectHandler]),
+      );
+
       // Handler that forks a side effect and returns immediately.
       const computeWithForkedSideEffect: OperationResolver = {
         operation: Compute,
@@ -251,9 +256,6 @@ describe('OperationInvoker', () => {
           }),
       };
 
-      const invoker = OperationInvoker.make(() =>
-        Effect.succeed([computeWithForkedSideEffect, trackingSideEffectHandler]),
-      );
       const collector = yield* createEventCollector(invoker);
 
       // Side effect not executed yet.
@@ -319,4 +321,38 @@ describe('OperationInvoker', () => {
       yield* collector.dispose;
     }),
   );
+
+  it('synchronous handler can be run with Effect.runSync', ({ expect }) => {
+    let executed = false;
+    const syncHandler: OperationResolver = {
+      operation: SideEffect,
+      handler: () =>
+        Effect.sync(() => {
+          executed = true;
+          return undefined;
+        }),
+    };
+    const invoker = OperationInvoker.make(() => Effect.succeed([syncHandler]));
+
+    // Effect.runSync throws if the effect requires async execution.
+    // This verifies the invoker doesn't introduce unnecessary async boundaries.
+    Effect.runSync(invoker.invoke(SideEffect, undefined));
+
+    expect(executed).toBe(true);
+  });
+
+  it('asynchronous handler throws when run with Effect.runSync', ({ expect }) => {
+    const asyncHandler: OperationResolver = {
+      operation: Compute,
+      handler: (data: { value: number }) =>
+        Effect.gen(function* () {
+          yield* Effect.sleep(10);
+          return { value: data.value * 2 };
+        }),
+    };
+    const invoker = OperationInvoker.make(() => Effect.succeed([asyncHandler]));
+
+    // Effect.runSync should throw when the handler requires async execution.
+    expect(() => Effect.runSync(invoker.invoke(Compute, { value: 1 }))).toThrow();
+  });
 });

@@ -11,6 +11,7 @@ import type { OperationDefinition, OperationHandler } from '@dxos/operation';
 import { byPosition } from '@dxos/util';
 
 import { NoHandlerError } from './errors';
+import * as FollowupScheduler from './followup-scheduler';
 import type { OperationResolver } from './operation-resolver';
 
 /**
@@ -43,6 +44,10 @@ export interface OperationInvoker {
   _invokeCore: <I, O>(op: OperationDefinition<I, O>, input: I) => Effect.Effect<O, Error>;
   /** Effect stream of invocation events. */
   invocations: PubSub.PubSub<InvocationEvent>;
+  /** Number of pending followup operations. */
+  pendingFollowups: Effect.Effect<number>;
+  /** Wait for all pending followups to complete. */
+  awaitFollowups: Effect.Effect<void>;
 }
 
 //
@@ -52,14 +57,27 @@ export interface OperationInvoker {
 class OperationInvokerImpl implements OperationInvoker {
   private readonly _pubsub: PubSub.PubSub<InvocationEvent>;
   private readonly _getHandlers: () => Effect.Effect<OperationResolver[], Error>;
+  private readonly _followupScheduler: FollowupScheduler.FollowupScheduler;
 
-  constructor(getHandlers: () => Effect.Effect<OperationResolver[], Error>) {
+  constructor(
+    getHandlers: () => Effect.Effect<OperationResolver[], Error>,
+    followupScheduler: FollowupScheduler.FollowupScheduler,
+  ) {
     this._getHandlers = getHandlers;
     this._pubsub = Effect.runSync(PubSub.unbounded<InvocationEvent>());
+    this._followupScheduler = followupScheduler;
   }
 
   get invocations(): PubSub.PubSub<InvocationEvent> {
     return this._pubsub;
+  }
+
+  get pendingFollowups(): Effect.Effect<number> {
+    return this._followupScheduler.pending;
+  }
+
+  get awaitFollowups(): Effect.Effect<void> {
+    return this._followupScheduler.awaitAll;
   }
 
   // Arrow function to preserve `this` context when destructured.
@@ -99,7 +117,7 @@ class OperationInvokerImpl implements OperationInvoker {
   private _resolveHandler(
     operation: OperationDefinition<any, any>,
     input: any,
-  ): Effect.Effect<OperationHandler<any, any> | undefined, Error> {
+  ): Effect.Effect<OperationHandler<any, any, Error, FollowupScheduler.Service> | undefined, Error> {
     return Effect.gen(this, function* () {
       const candidates = yield* this._getHandlers().pipe(
         Effect.map((handlers) => handlers.filter((reg) => reg.operation.meta.key === operation.meta.key)),
@@ -125,8 +143,11 @@ class OperationInvokerImpl implements OperationInvoker {
       }
 
       log('invoking operation', { key: op.meta.key, input });
-      // Handler may have different error/requirements types, so we cast the result.
-      const output = yield* handler(input) as Effect.Effect<O, Error>;
+      // Provide the FollowupScheduler service to the handler.
+      // Handlers may or may not use this service - we provide it unconditionally.
+      const output = yield* handler(input).pipe(
+        Effect.provideService(FollowupScheduler.Service, this._followupScheduler),
+      );
       log('operation completed', { key: op.meta.key, output });
 
       return output;
@@ -141,7 +162,25 @@ class OperationInvokerImpl implements OperationInvoker {
 /**
  * Creates an OperationInvoker that resolves handlers and invokes operations.
  * Emits invocation events to subscribers after successful invocations.
+ *
+ * @example
+ * ```ts
+ * const invoker = OperationInvoker.make(() => Effect.succeed(handlers));
+ * const result = yield* invoker.invoke(MyOperation, { value: 42 });
+ * ```
  */
 export const make = (getHandlers: () => Effect.Effect<OperationResolver[], Error>): OperationInvoker => {
-  return new OperationInvokerImpl(getHandlers);
+  // Use a ref object so the closure can access the invoker after initialization.
+  const ref: { invoker?: OperationInvokerImpl } = {};
+
+  const invokeFn: FollowupScheduler.InvokeFn = (op, input) => {
+    if (!ref.invoker) {
+      return Effect.die(new Error('Invoker not initialized'));
+    }
+    return ref.invoker._invokeCore(op, input);
+  };
+
+  const scheduler = FollowupScheduler.make(invokeFn);
+  ref.invoker = new OperationInvokerImpl(getHandlers, scheduler);
+  return ref.invoker;
 };

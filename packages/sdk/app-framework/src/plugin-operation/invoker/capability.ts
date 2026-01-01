@@ -14,14 +14,15 @@ import * as OperationInvoker from './operation-invoker';
 //
 
 export default Capability.makeModule((context) =>
-  Effect.gen(function* () {
-    const invoker = OperationInvoker.make(() =>
-      Effect.gen(function* () {
-        yield* context.activate(Common.ActivationEvent.SetupOperationResolver);
-        return context.getCapabilities(Common.Capability.OperationResolver).flat();
-      }),
-    );
-
-    return Effect.succeed(Capability.contributes(Common.Capability.OperationInvoker, invoker));
-  }).pipe(Effect.flatten),
+  Effect.succeed(
+    Capability.contributes(
+      Common.Capability.OperationInvoker,
+      OperationInvoker.make(() =>
+        Effect.gen(function* () {
+          yield* context.activate(Common.ActivationEvent.SetupOperationResolver);
+          return context.getCapabilities(Common.Capability.OperationResolver).flat();
+        }),
+      ),
+    ),
+  ),
 );

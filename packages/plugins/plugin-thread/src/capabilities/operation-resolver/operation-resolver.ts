@@ -4,7 +4,7 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capability, Common, OperationResolver, UndoMapping } from '@dxos/app-framework';
+import { Capability, Common, FollowupScheduler, OperationResolver, UndoMapping } from '@dxos/app-framework';
 import { sleep } from '@dxos/async';
 import { Obj, Relation, Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
@@ -97,7 +97,7 @@ export default Capability.makeModule((context) =>
         operation: ThreadOperation.ToggleResolved,
         handler: (input) =>
           Effect.gen(function* () {
-            const { invoke } = context.getCapability(Common.Capability.OperationInvoker);
+            const scheduler = yield* FollowupScheduler.Service;
             const thread = input.thread;
 
             if (thread.status === 'active' || thread.status === undefined) {
@@ -109,7 +109,7 @@ export default Capability.makeModule((context) =>
             const db = Obj.getDatabase(thread);
             invariant(db, 'Database not found');
 
-            yield* invoke(ObservabilityOperation.SendEvent, {
+            yield* scheduler.schedule(ObservabilityOperation.SendEvent, {
               name: 'threads.toggle-resolved',
               properties: {
                 spaceId: db.spaceId,
@@ -184,7 +184,7 @@ export default Capability.makeModule((context) =>
           Effect.gen(function* () {
             const thread = _thread ?? (Relation.getSource(anchor) as Thread.Thread);
             const { state } = context.getCapability(ThreadCapabilities.MutableState);
-            const { invokePromise } = context.getCapability(Common.Capability.OperationInvoker);
+            const scheduler = yield* FollowupScheduler.Service;
             const subjectId = Obj.getDXN(subject).toString();
             const draft = state.drafts[subjectId];
             if (draft) {
@@ -207,7 +207,8 @@ export default Capability.makeModule((context) =>
             yield* Effect.promise(() => sleep(100));
             db.remove(thread);
 
-            void invokePromise(ObservabilityOperation.SendEvent, {
+            // Schedule analytics event as followup (doesn't block return).
+            yield* scheduler.schedule(ObservabilityOperation.SendEvent, {
               name: 'threads.delete',
               properties: {
                 spaceId: db.spaceId,
@@ -230,6 +231,7 @@ export default Capability.makeModule((context) =>
             const thread = Relation.getSource(anchor) as Thread.Thread;
             const { state } = context.getCapability(ThreadCapabilities.MutableState);
             const { invoke } = context.getCapability(Common.Capability.OperationInvoker);
+            const scheduler = yield* FollowupScheduler.Service;
             const subjectId = Obj.getDXN(subject).toString();
             const db = Obj.getDatabase(subject);
             invariant(db, 'Database not found');
@@ -254,7 +256,7 @@ export default Capability.makeModule((context) =>
                 target: subject,
                 fields: { anchor: draft.anchor },
               });
-              yield* invoke(ObservabilityOperation.SendEvent, {
+              yield* scheduler.schedule(ObservabilityOperation.SendEvent, {
                 name: 'threads.create',
                 properties: {
                   spaceId: db.spaceId,
@@ -263,7 +265,7 @@ export default Capability.makeModule((context) =>
               });
             }
 
-            yield* invoke(ObservabilityOperation.SendEvent, {
+            yield* scheduler.schedule(ObservabilityOperation.SendEvent, {
               name: 'threads.message.add',
               properties: {
                 spaceId: db.spaceId,
@@ -285,6 +287,7 @@ export default Capability.makeModule((context) =>
           Effect.gen(function* () {
             const thread = Relation.getSource(anchor) as Thread.Thread;
             const { invoke } = context.getCapability(Common.Capability.OperationInvoker);
+            const scheduler = yield* FollowupScheduler.Service;
             const db = Obj.getDatabase(subject);
             invariant(db, 'Database not found');
 
@@ -302,7 +305,7 @@ export default Capability.makeModule((context) =>
 
             thread.messages.splice(msgIndex, 1);
 
-            yield* invoke(ObservabilityOperation.SendEvent, {
+            yield* scheduler.schedule(ObservabilityOperation.SendEvent, {
               name: 'threads.message.delete',
               properties: {
                 spaceId: db.spaceId,
@@ -334,8 +337,9 @@ export default Capability.makeModule((context) =>
             yield* Effect.promise(() => sleep(100));
             db.add(anchor);
 
-            const { invokePromise } = context.getCapability(Common.Capability.OperationInvoker);
-            void invokePromise(ObservabilityOperation.SendEvent, {
+            // Schedule analytics event as followup (doesn't block return).
+            const scheduler = yield* FollowupScheduler.Service;
+            yield* scheduler.schedule(ObservabilityOperation.SendEvent, {
               name: 'threads.undo-delete',
               properties: {
                 spaceId: db.spaceId,
@@ -353,13 +357,13 @@ export default Capability.makeModule((context) =>
         handler: ({ anchor, message, messageIndex }) =>
           Effect.gen(function* () {
             const thread = Relation.getSource(anchor) as Thread.Thread;
+            const scheduler = yield* FollowupScheduler.Service;
             const db = Obj.getDatabase(thread);
             invariant(db, 'Database not found');
 
             thread.messages.splice(messageIndex, 0, Ref.make(message));
 
-            const { invoke } = context.getCapability(Common.Capability.OperationInvoker);
-            yield* invoke(ObservabilityOperation.SendEvent, {
+            yield* scheduler.schedule(ObservabilityOperation.SendEvent, {
               name: 'threads.message.undo-delete',
               properties: {
                 spaceId: db.spaceId,

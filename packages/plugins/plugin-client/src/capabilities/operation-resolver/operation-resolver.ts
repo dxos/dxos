@@ -4,7 +4,7 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capability, Common, OperationResolver } from '@dxos/app-framework';
+import { Capability, Common, FollowupScheduler, OperationResolver } from '@dxos/app-framework';
 import { PublicKey } from '@dxos/client';
 import { runAndForwardErrors } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
@@ -34,10 +34,10 @@ export default Capability.makeModule(({ context, appName = 'Composer' }: Operati
           Effect.gen(function* () {
             const manager = context.getCapability(Common.Capability.PluginManager);
             const client = context.getCapability(ClientCapabilities.Client);
-            const { invoke } = context.getCapability(Common.Capability.OperationInvoker);
+            const scheduler = yield* FollowupScheduler.Service;
             const data = yield* Effect.promise(() => client.halo.createIdentity(profile));
             yield* Effect.promise(() => runAndForwardErrors(manager.activate(ClientEvents.IdentityCreated)));
-            yield* invoke(ObservabilityOperation.SendEvent, { name: 'identity.create' });
+            yield* scheduler.schedule(ObservabilityOperation.SendEvent, { name: 'identity.create' });
             return data;
           }),
       }),
@@ -66,9 +66,10 @@ export default Capability.makeModule(({ context, appName = 'Composer' }: Operati
         handler: () =>
           Effect.gen(function* () {
             const { invoke } = context.getCapability(Common.Capability.OperationInvoker);
+            const scheduler = yield* FollowupScheduler.Service;
             yield* invoke(Common.LayoutOperation.SwitchWorkspace, { subject: Account.id });
             yield* invoke(Common.LayoutOperation.Open, { subject: [Account.Profile] });
-            yield* invoke(ObservabilityOperation.SendEvent, { name: 'identity.share' });
+            yield* scheduler.schedule(ObservabilityOperation.SendEvent, { name: 'identity.share' });
           }),
       }),
 

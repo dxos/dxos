@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 import * as Function from 'effect/Function';
 import * as Option from 'effect/Option';
 
-import { Capability, Common, OperationResolver } from '@dxos/app-framework';
+import { Capability, Common, FollowupScheduler, OperationResolver } from '@dxos/app-framework';
 import { Obj } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { isLiveObject } from '@dxos/live-object';
@@ -271,6 +271,7 @@ export default Capability.makeModule((context) =>
             const state = context.getCapability(DeckCapabilities.MutableDeckState);
             const attention = context.getCapability(AttentionCapabilities.Attention);
             const { invoke } = context.getCapability(Common.Capability.OperationInvoker);
+            const scheduler = yield* FollowupScheduler.Service;
             const settings = context
               .getCapabilities(Common.Capability.SettingsStore)[0]
               ?.getStore<DeckSettingsProps>(meta.id)?.value;
@@ -320,8 +321,7 @@ export default Capability.makeModule((context) =>
                   return isLiveObject(active) ? Obj.getTypename(active) : undefined;
                 },
               });
-              // TODO(burdon): Migrate observability to operations.
-              yield* invoke(ObservabilityOperation.SendEvent, {
+              yield* scheduler.schedule(ObservabilityOperation.SendEvent, {
                 name: 'navigation.activate',
                 properties: { subjectId, typename },
               });
