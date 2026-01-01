@@ -1,94 +1,93 @@
 {
-  "name": "@dxos/react-ui-canvas-compute",
-  "version": "0.8.3",
-  "description": "A compute graph extension for the canvas editor component.",
-  "homepage": "https://dxos.org",
-  "bugs": "https://github.com/dxos/dxos/issues",
-  "license": "MIT",
-  "author": "DXOS.org",
-  "type": "module",
-  "exports": {
-    ".": {
-      "source": "./src/index.ts",
-      "types": "./dist/types/src/index.d.ts",
-      "browser": "./dist/lib/browser/index.mjs",
-      "node": "./dist/lib/node-esm/index.mjs"
-    }
-  },
-  "types": "dist/types/src/index.d.ts",
-  "typesVersions": {
-    "*": {}
-  },
-  "files": [
-    "dist",
-    "src"
-  ],
-  "dependencies": {
-    "@antv/graphlib": "catalog:",
-    "@antv/layout": "catalog:",
-    "@dxos/ai": "workspace:*",
-    "@dxos/app-framework": "workspace:*",
-    "@dxos/assistant": "workspace:*",
-    "@dxos/async": "workspace:*",
-    "@dxos/blueprints": "workspace:*",
-    "@dxos/conductor": "workspace:*",
-    "@dxos/context": "workspace:*",
-    "@dxos/debug": "workspace:*",
-    "@dxos/echo": "workspace:*",
-    "@dxos/edge-client": "workspace:*",
-    "@dxos/effect": "workspace:*",
-    "@dxos/functions": "workspace:*",
-    "@dxos/functions-runtime": "workspace:*",
-    "@dxos/graph": "workspace:*",
-    "@dxos/invariant": "workspace:*",
-    "@dxos/keys": "workspace:*",
-    "@dxos/live-object": "workspace:*",
-    "@dxos/log": "workspace:*",
-    "@dxos/react-client": "workspace:*",
-    "@dxos/react-edge-client": "workspace:*",
-    "@dxos/react-ui-attention": "workspace:*",
-    "@dxos/react-ui-canvas": "workspace:*",
-    "@dxos/react-ui-canvas-editor": "workspace:*",
-    "@dxos/react-ui-editor": "workspace:*",
-    "@dxos/react-ui-form": "workspace:*",
-    "@dxos/react-ui-sfx": "workspace:*",
-    "@dxos/react-ui-stack": "workspace:*",
-    "@dxos/react-ui-syntax-highlighter": "workspace:*",
-    "@dxos/schema": "workspace:*",
-    "@dxos/types": "workspace:*",
-    "@dxos/util": "workspace:*",
-    "@effect/platform": "catalog:",
-    "@preact-signals/safe-react": "catalog:",
-    "chess.js": "catalog:"
-  },
-  "devDependencies": {
-    "@dxos/app-framework": "workspace:*",
-    "@dxos/assistant-toolkit": "workspace:*",
-    "@dxos/compute": "workspace:*",
-    "@dxos/echo-signals": "workspace:*",
-    "@dxos/random": "workspace:*",
-    "@dxos/react-ui": "workspace:*",
-    "@dxos/storybook-utils": "workspace:*",
-    "@dxos/ui-theme": "workspace:*",
-    "@effect/ai": "catalog:",
-    "@effect/experimental": "catalog:",
-    "@types/lodash.defaultsdeep": "catalog:",
-    "@types/react": "catalog:",
-    "@types/react-dom": "catalog:",
-    "effect": "catalog:",
-    "lodash.defaultsdeep": "catalog:",
-    "react": "catalog:",
-    "react-dom": "catalog:",
-    "vite": "catalog:"
-  },
-  "peerDependencies": {
-    "@dxos/react-ui": "workspace:*",
-    "@dxos/ui-theme": "workspace:*",
-    "effect": "catalog:",
-    "react": "catalog:",
-    "react-dom": "catalog:"
-  },
-  "publishConfig": {
-    "access": "public"
-  }
+	"name": "@dxos/react-ui-canvas-compute",
+	"version": "0.8.3",
+	"description": "A compute graph extension for the canvas editor component.",
+	"homepage": "https://dxos.org",
+	"bugs": "https://github.com/dxos/dxos/issues",
+	"license": "MIT",
+	"author": "DXOS.org",
+	"type": "module",
+	"exports": {
+		".": {
+			"source": "./src/index.ts",
+			"types": "./dist/types/src/index.d.ts",
+			"browser": "./dist/lib/browser/index.mjs",
+			"node": "./dist/lib/node-esm/index.mjs"
+		}
+	},
+	"types": "dist/types/src/index.d.ts",
+	"typesVersions": {
+		"*": {}
+	},
+	"files": [
+		"dist",
+		"src"
+	],
+	"dependencies": {
+		"@antv/graphlib": "catalog:",
+		"@antv/layout": "catalog:",
+		"@dxos/ai": "workspace:*",
+		"@dxos/app-framework": "workspace:*",
+		"@dxos/assistant": "workspace:*",
+		"@dxos/async": "workspace:*",
+		"@dxos/blueprints": "workspace:*",
+		"@dxos/conductor": "workspace:*",
+		"@dxos/context": "workspace:*",
+		"@dxos/debug": "workspace:*",
+		"@dxos/echo": "workspace:*",
+		"@dxos/edge-client": "workspace:*",
+		"@dxos/effect": "workspace:*",
+		"@dxos/functions": "workspace:*",
+		"@dxos/functions-runtime": "workspace:*",
+		"@dxos/graph": "workspace:*",
+		"@dxos/invariant": "workspace:*",
+		"@dxos/keys": "workspace:*",
+		"@dxos/live-object": "workspace:*",
+		"@dxos/log": "workspace:*",
+		"@dxos/react-client": "workspace:*",
+		"@dxos/react-edge-client": "workspace:*",
+		"@dxos/react-ui-attention": "workspace:*",
+		"@dxos/react-ui-canvas": "workspace:*",
+		"@dxos/react-ui-canvas-editor": "workspace:*",
+		"@dxos/react-ui-editor": "workspace:*",
+		"@dxos/react-ui-form": "workspace:*",
+		"@dxos/react-ui-sfx": "workspace:*",
+		"@dxos/react-ui-syntax-highlighter": "workspace:*",
+		"@dxos/schema": "workspace:*",
+		"@dxos/types": "workspace:*",
+		"@dxos/util": "workspace:*",
+		"@effect/platform": "catalog:",
+		"@preact-signals/safe-react": "catalog:",
+		"chess.js": "catalog:"
+	},
+	"devDependencies": {
+		"@dxos/app-framework": "workspace:*",
+		"@dxos/assistant-toolkit": "workspace:*",
+		"@dxos/compute": "workspace:*",
+		"@dxos/echo-signals": "workspace:*",
+		"@dxos/random": "workspace:*",
+		"@dxos/react-ui": "workspace:*",
+		"@dxos/storybook-utils": "workspace:*",
+		"@dxos/ui-theme": "workspace:*",
+		"@effect/ai": "catalog:",
+		"@effect/experimental": "catalog:",
+		"@types/lodash.defaultsdeep": "catalog:",
+		"@types/react": "catalog:",
+		"@types/react-dom": "catalog:",
+		"effect": "catalog:",
+		"lodash.defaultsdeep": "catalog:",
+		"react": "catalog:",
+		"react-dom": "catalog:",
+		"vite": "catalog:"
+	},
+	"peerDependencies": {
+		"@dxos/react-ui": "workspace:*",
+		"@dxos/ui-theme": "workspace:*",
+		"effect": "catalog:",
+		"react": "catalog:",
+		"react-dom": "catalog:"
+	},
+	"publishConfig": {
+		"access": "public"
+	}
 }
