@@ -7,7 +7,14 @@ import * as Effect from 'effect/Effect';
 import React, { type KeyboardEvent, useCallback, useRef } from 'react';
 import { expect, userEvent, within } from 'storybook/test';
 
-import { Capability, Common, OperationPlugin, OperationResolver, SettingsPlugin } from '@dxos/app-framework';
+import {
+  Capability,
+  Common,
+  OperationPlugin,
+  OperationResolver,
+  RuntimePlugin,
+  SettingsPlugin,
+} from '@dxos/app-framework';
 import { useCapability } from '@dxos/app-framework/react';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { live } from '@dxos/live-object';
@@ -124,9 +131,9 @@ const meta = {
     withTheme,
     withPluginManager({
       plugins: [
+        RuntimePlugin(),
         ThemePlugin({ tx: defaultTx }),
         GraphPlugin(),
-        OperationPlugin(),
         OperationPlugin(),
         SettingsPlugin(),
         AttentionPlugin(),
