@@ -19,7 +19,7 @@ import { translationKey } from '../../translations';
 import { Image } from '../Image';
 import { StackItem } from '../StackItem';
 
-import { cardChrome, cardHeading, cardRoot, cardSpacing, cardText } from './fragments';
+import { cardChrome, cardGrid, cardHeading, cardRoot, cardSpacing, cardText } from './fragments';
 
 /**
  * The default width of cards. It should be no larger than 320px per WCAG 2.1 SC 1.4.10.
@@ -115,7 +115,7 @@ const CardHeading = forwardRef<HTMLDivElement, CardHeadingProps>(
 
 const CardToolbar = forwardRef<HTMLDivElement, ToolbarRootProps>(({ children, classNames, ...props }, forwardedRef) => {
   return (
-    <Toolbar.Root {...props} classNames={['bg-transparent density-fine', classNames]} ref={forwardedRef}>
+    <Toolbar.Root {...props} classNames={['density-fine bg-transparent', cardGrid, classNames]} ref={forwardedRef}>
       {children}
     </Toolbar.Root>
   );

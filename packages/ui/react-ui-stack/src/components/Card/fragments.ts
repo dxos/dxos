@@ -7,6 +7,8 @@ export const cardRoot = [
   'rounded bg-cardSurface border border-separator dark:border-subduedSeparator dx-focus-ring-group-y-indicator',
 ].join(' ');
 
+export const cardGrid = 'grid grid-cols-[var(--rail-item)_1fr_var(--rail-item)]';
+
 export const cardSpacing = 'pli-cardSpacingInline mlb-cardSpacingBlock';
 export const cardNoSpacing = 'pli-0 mlb-0';
 

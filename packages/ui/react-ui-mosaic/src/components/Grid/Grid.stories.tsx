@@ -104,17 +104,9 @@ const TextCell: GridCellProps['Cell'] = ({ object, dragging }) => {
   return <Editor.Content classNames='plb-2' extensions={extensions} initialValue={initialValue} focusable={false} />;
 };
 
-// TODO(burdon): Compact card surface (incl. document).
+// TODO(burdon): Compact card surface (incl. document). Actions, dragging indicator.
 const DebugCell: GridCellProps['Cell'] = ({ object }) => {
   return <Surface role='card' data={{ subject: object }} limit={1} />;
-
-  return (
-    <div role='none' className='flex flex-col'>
-      <div>{Obj.getLabel(object)}</div>
-      <div className='text-xs text-subdued'>{Obj.getTypename(object)}</div>
-      <div className='text-xs text-subdued'>{object.id}</div>
-    </div>
-  );
 };
 
 const DefaultStory = () => {
