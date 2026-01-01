@@ -24,7 +24,7 @@ const DefaultStory = ({ title, description, image }: CardStoryProps) => {
       <Card.Toolbar>
         <Card.DragHandle toolbarItem />
         <Card.ToolbarSeparator variant='gap' />
-        <Card.ToolbarIconButton iconOnly variant='ghost' icon='ph--x--regular' label={'remove card label'} />
+        <Card.Menu items={[]} />
       </Card.Toolbar>
       {image && <Card.Poster alt={title} image={image} />}
       <Card.Heading>{title}</Card.Heading>

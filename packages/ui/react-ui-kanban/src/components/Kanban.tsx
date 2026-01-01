@@ -5,7 +5,7 @@
 import React, { useCallback, useEffect } from 'react';
 
 import { Surface } from '@dxos/app-framework/react';
-import { DropdownMenu, IconButton, Tag, useTranslation } from '@dxos/react-ui';
+import { IconButton, Tag, useTranslation } from '@dxos/react-ui';
 import { AttentionGlyph, type UseSelectionActions, useSelected, useSelectionActions } from '@dxos/react-ui-attention';
 import { Card, CardDragPreview } from '@dxos/react-ui-mosaic';
 import {
@@ -208,26 +208,14 @@ const CardComponent = ({
             {onRemoveCard && (
               <>
                 <Card.ToolbarSeparator variant='gap' />
-                <DropdownMenu.Root>
-                  <DropdownMenu.Trigger asChild>
-                    <Card.ToolbarIconButton
-                      iconOnly
-                      variant='ghost'
-                      icon='ph--list--regular'
-                      label={t('action menu label')}
-                    />
-                  </DropdownMenu.Trigger>
-                  <DropdownMenu.Portal>
-                    <DropdownMenu.Content>
-                      <DropdownMenu.Viewport>
-                        {/* TODO(burdon): Convert to action. Menu context? */}
-                        <DropdownMenu.Item onSelect={() => onRemoveCard(item)}>
-                          {t('remove card label')}
-                        </DropdownMenu.Item>
-                      </DropdownMenu.Viewport>
-                    </DropdownMenu.Content>
-                  </DropdownMenu.Portal>
-                </DropdownMenu.Root>
+                <Card.Menu
+                  items={[
+                    {
+                      label: t('remove card label'),
+                      onSelect: () => onRemoveCard(item),
+                    },
+                  ]}
+                />
               </>
             )}
           </Card.Toolbar>

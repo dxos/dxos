@@ -8,7 +8,7 @@ import { mx } from '@dxos/ui-theme';
 
 import { cardRoot } from './fragments';
 
-// TODO(burdon): Indent?
+// TODO(burdon): Why p-2?
 const CardDragPreviewRoot = ({ children }: PropsWithChildren<{}>) => {
   return <div className='p-2'>{children}</div>;
 };

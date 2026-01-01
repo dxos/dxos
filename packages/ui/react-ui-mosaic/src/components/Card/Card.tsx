@@ -2,17 +2,18 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Primitive } from '@radix-ui/react-primitive';
 import { Slot } from '@radix-ui/react-slot';
-import React, {
-  type ComponentPropsWithRef,
-  type ComponentPropsWithoutRef,
-  type FC,
-  type PropsWithChildren,
-  forwardRef,
-} from 'react';
+import React, { type ComponentPropsWithoutRef, type PropsWithChildren, forwardRef } from 'react';
 
-import { Icon, IconButton, type ThemedClassName, Toolbar, type ToolbarRootProps, useTranslation } from '@dxos/react-ui';
+import {
+  DropdownMenu,
+  Icon,
+  IconButton,
+  type ThemedClassName,
+  Toolbar,
+  type ToolbarRootProps,
+  useTranslation,
+} from '@dxos/react-ui';
 import { cardMinInlineSize, hoverableControls, mx } from '@dxos/ui-theme';
 
 import { translationKey } from '../../translations';
@@ -140,7 +141,31 @@ const CardDragHandle = forwardRef<HTMLButtonElement, { toolbarItem?: boolean }>(
 // Menu
 //
 
-const CardMenu = Primitive.div as FC<ComponentPropsWithRef<'div'>>;
+type CardMenuProps = {
+  items: { label: string; onSelect: () => void }[];
+};
+
+const CardMenu = ({ items }: CardMenuProps) => {
+  const { t } = useTranslation(translationKey);
+  return (
+    <DropdownMenu.Root>
+      <DropdownMenu.Trigger asChild>
+        <Card.ToolbarIconButton iconOnly variant='ghost' icon='ph--list--regular' label={t('action menu label')} />
+      </DropdownMenu.Trigger>
+      <DropdownMenu.Portal>
+        <DropdownMenu.Content>
+          <DropdownMenu.Viewport>
+            {items.map(({ label, onSelect }, i) => (
+              <DropdownMenu.Item key={i} onSelect={onSelect}>
+                {label}
+              </DropdownMenu.Item>
+            ))}
+          </DropdownMenu.Viewport>
+        </DropdownMenu.Content>
+      </DropdownMenu.Portal>
+    </DropdownMenu.Root>
+  );
+};
 
 //
 // Poster
@@ -225,5 +250,7 @@ export const Card = {
   Chrome: CardChrome,
   Text: CardText,
 };
+
+export type { CardMenuProps };
 
 export { cardRoot, cardHeading, cardText, cardChrome, cardSpacing, cardDefaultInlineSize };
