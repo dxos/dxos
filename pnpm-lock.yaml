@@ -1207,7 +1207,7 @@ catalogs:
       specifier: ^7.2.3
       version: 7.2.3
     globby:
-      specifier: ^14.1.0
+      specifier: 14.1.0
       version: 14.1.0
     globrex:
       specifier: ^0.1.2
@@ -1414,7 +1414,7 @@ catalogs:
       specifier: ^3.4.4
       version: 3.4.4
     madge:
-      specifier: ^8.0.0
+      specifier: 8.0.0
       version: 8.0.0
     main-thread-scheduling:
       specifier: ^14.1.1
@@ -16011,9 +16011,6 @@ importers:
       '@dxos/react-ui-menu':
         specifier: workspace:*
         version: link:../react-ui-menu
-      '@dxos/react-ui-stack':
-        specifier: workspace:*
-        version: link:../react-ui-stack
       '@dxos/ui':
         specifier: workspace:*
         version: link:../ui
@@ -17468,12 +17465,6 @@ importers:
       '@dxos/echo-db':
         specifier: workspace:*
         version: link:../../core/echo/echo-db
-      '@dxos/plugin-preview':
-        specifier: workspace:*
-        version: link:../../plugins/plugin-preview
-      '@dxos/plugin-testing':
-        specifier: workspace:*
-        version: link:../../plugins/plugin-testing
       '@dxos/random':
         specifier: workspace:*
         version: link:../../common/random
@@ -17486,9 +17477,6 @@ importers:
       '@dxos/react-ui-components':
         specifier: workspace:*
         version: link:../react-ui-components
-      '@dxos/react-ui-editor':
-        specifier: workspace:*
-        version: link:../react-ui-editor
       '@dxos/schema':
         specifier: workspace:*
         version: link:../../sdk/schema
@@ -17501,9 +17489,6 @@ importers:
       '@dxos/types':
         specifier: workspace:*
         version: link:../../sdk/types
-      '@dxos/ui-editor':
-        specifier: workspace:*
-        version: link:../ui-editor
       '@dxos/ui-theme':
         specifier: workspace:*
         version: link:../ui-theme

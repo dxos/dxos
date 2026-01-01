@@ -12,7 +12,6 @@ import { Surface } from '@dxos/app-framework/react';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { DXN, Obj, Ref, Type } from '@dxos/echo';
 import { createDocAccessor, createObject } from '@dxos/echo-db';
-import { PreviewPlugin } from '@dxos/plugin-preview';
 import { ClientPlugin, StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
 import { faker } from '@dxos/random';
 import { useClient } from '@dxos/react-client';
@@ -306,7 +305,7 @@ const meta = {
           },
         }),
         StorybookPlugin(),
-        PreviewPlugin(),
+        // PreviewPlugin(),
       ],
     })),
   ],

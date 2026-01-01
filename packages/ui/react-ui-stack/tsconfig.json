@@ -36,12 +36,6 @@
       "path": "../../core/echo/live-object"
     },
     {
-      "path": "../../plugins/plugin-preview"
-    },
-    {
-      "path": "../../plugins/plugin-testing"
-    },
-    {
       "path": "../../sdk/app-framework"
     },
     {
@@ -72,13 +66,7 @@
       "path": "../react-ui-dnd"
     },
     {
-      "path": "../react-ui-editor"
-    },
-    {
       "path": "../react-ui-mosaic"
-    },
-    {
-      "path": "../ui-editor"
     },
     {
       "path": "../ui-theme"

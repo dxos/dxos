@@ -436,7 +436,7 @@ catalog:
   get-port-please: ^3.1.1
   git-rev-sync: ^3.0.2
   glob: ^7.2.3
-  globby: ^14.1.0
+  globby: 14.1.0
   globrex: ^0.1.2
   glsl-curl-noise2: ^0.0.4
   glsl-noise: ^0.0.0
@@ -508,7 +508,7 @@ catalog:
   log-update: ^4.0.0
   loupe: 2.3.7
   luxon: ^3.4.4
-  madge: ^8.0.0
+  madge: 8.0.0
   main-thread-scheduling: ^14.1.1
   marked: ^12.0.2
   masonic: ^4.1.0
