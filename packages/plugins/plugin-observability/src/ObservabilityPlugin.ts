@@ -13,7 +13,7 @@ import {
   IntentResolver,
   ObservabilitySettings,
   ObservabilityState,
-  OperationHandler,
+  OperationResolver,
   ReactSurface,
 } from './capabilities';
 import { ClientReadyEvent, ObservabilityEvents } from './events';
@@ -53,9 +53,9 @@ export const ObservabilityPlugin = Plugin.define<ObservabilityPluginOptions>(met
     activate: (context) => IntentResolver({ context, namespace }),
   })),
   Plugin.addModule(({ namespace }) => ({
-    id: Capability.getModuleTag(OperationHandler),
-    activatesOn: Common.ActivationEvent.SetupOperationHandler,
-    activate: (context) => OperationHandler({ context, namespace }),
+    id: Capability.getModuleTag(OperationResolver),
+    activatesOn: Common.ActivationEvent.SetupOperationResolver,
+    activate: (context) => OperationResolver({ context, namespace }),
   })),
   Common.Plugin.addSurfaceModule({ activate: ReactSurface }),
   Common.Plugin.addAppGraphModule({ activate: AppGraphBuilder }),

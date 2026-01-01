@@ -14,7 +14,7 @@ import {
   FileState,
   IntentResolver,
   Markdown,
-  OperationHandler,
+  OperationResolver,
   ReactSurface,
 } from './capabilities';
 import { meta } from './meta';
@@ -41,7 +41,7 @@ export const FilesPlugin = Plugin.define(meta).pipe(
   }),
   Common.Plugin.addSurfaceModule({ activate: ReactSurface }),
   Common.Plugin.addIntentResolverModule({ activate: IntentResolver }),
-  Common.Plugin.addOperationHandlerModule({ activate: OperationHandler }),
+  Common.Plugin.addOperationResolverModule({ activate: OperationResolver }),
   Common.Plugin.addAppGraphModule({ activate: AppGraphBuilder }),
   Plugin.addModule({
     id: 'app-graph-serializer',

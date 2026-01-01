@@ -3,5 +3,5 @@
 //
 
 export * from './intent-resolver';
-export * from './operation-handler';
+export * from './operation-resolver';
 export * from './state';

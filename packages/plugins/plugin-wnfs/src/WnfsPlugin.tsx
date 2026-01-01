@@ -9,7 +9,7 @@ import { ClientEvents } from '@dxos/plugin-client';
 import { MarkdownEvents } from '@dxos/plugin-markdown';
 import { type CreateObject } from '@dxos/plugin-space/types';
 
-import { Blockstore, FileUploader, IntentResolver, Markdown, OperationHandler, ReactSurface } from './capabilities';
+import { Blockstore, FileUploader, IntentResolver, Markdown, OperationResolver, ReactSurface } from './capabilities';
 import { meta } from './meta';
 import { translations } from './translations';
 import { WnfsAction, WnfsCapabilities, WnfsFile, WnfsOperation } from './types';
@@ -61,6 +61,6 @@ export const WnfsPlugin = Plugin.define(meta).pipe(
   }),
   Common.Plugin.addSurfaceModule({ activate: ReactSurface }),
   Common.Plugin.addIntentResolverModule({ activate: IntentResolver }),
-  Common.Plugin.addOperationHandlerModule({ activate: OperationHandler }),
+  Common.Plugin.addOperationResolverModule({ activate: OperationResolver }),
   Plugin.make,
 );

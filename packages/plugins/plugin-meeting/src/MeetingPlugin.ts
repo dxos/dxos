@@ -15,7 +15,7 @@ import {
   IntentResolver,
   MeetingSettings,
   MeetingState,
-  OperationHandler,
+  OperationResolver,
   ReactSurface,
   Repair,
 } from './capabilities';
@@ -64,7 +64,7 @@ export const MeetingPlugin = Plugin.define(meta).pipe(
   }),
   Common.Plugin.addSurfaceModule({ activate: ReactSurface }),
   Common.Plugin.addIntentResolverModule({ activate: IntentResolver }),
-  Common.Plugin.addOperationHandlerModule({ activate: OperationHandler }),
+  Common.Plugin.addOperationResolverModule({ activate: OperationResolver }),
   Common.Plugin.addAppGraphModule({ activate: AppGraphBuilder }),
   Plugin.addModule({
     activatesOn: ActivationEvent.allOf(Common.ActivationEvent.SettingsReady, ClientEvents.ClientReady),

@@ -34,7 +34,7 @@ export namespace ActivationEvent {
   /**
    * Fired before the operation invoker is activated.
    */
-  export const SetupOperationHandler = ActivationEvent$.make('dxos.org/app-framework/event/setup-operation-handler');
+  export const SetupOperationResolver = ActivationEvent$.make('dxos.org/app-framework/event/setup-operation-resolver');
 
   /**
    * Fired before the settings store is activated.

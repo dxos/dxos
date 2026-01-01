@@ -22,7 +22,7 @@ import {
   EdgeModelResolver,
   IntentResolver,
   LocalModelResolver,
-  OperationHandler,
+  OperationResolver,
   ReactSurface,
   Repair,
   Settings,
@@ -111,7 +111,7 @@ export const AssistantPlugin = Plugin.define(meta).pipe(
   }),
   Common.Plugin.addAppGraphModule({ activate: AppGraphBuilder }),
   Common.Plugin.addIntentResolverModule({ activate: IntentResolver }),
-  Common.Plugin.addOperationHandlerModule({ activate: OperationHandler }),
+  Common.Plugin.addOperationResolverModule({ activate: OperationResolver }),
   Common.Plugin.addSurfaceModule({
     activate: ReactSurface,
     activatesBefore: [Common.ActivationEvent.SetupArtifactDefinition],

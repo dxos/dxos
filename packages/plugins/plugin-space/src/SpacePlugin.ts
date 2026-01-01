@@ -31,7 +31,7 @@ import {
   AppGraphSerializer,
   IdentityCreated,
   IntentResolver,
-  OperationHandler,
+  OperationResolver,
   ReactRoot,
   ReactSurface,
   Repair,
@@ -176,9 +176,9 @@ export const SpacePlugin = Plugin.define<SpacePluginOptions>(meta).pipe(
         return baseUrl.toString();
       };
       return {
-        id: Capability.getModuleTag(OperationHandler),
-        activatesOn: Common.ActivationEvent.SetupOperationHandler,
-        activate: (context) => OperationHandler({ context, createInvitationUrl, observability }),
+        id: Capability.getModuleTag(OperationResolver),
+        activatesOn: Common.ActivationEvent.SetupOperationResolver,
+        activate: (context) => OperationResolver({ context, createInvitationUrl, observability }),
       };
     },
   ),

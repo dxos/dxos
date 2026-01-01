@@ -56,7 +56,7 @@ export namespace Plugin {
   }
 
   // TODO(wittjosiah): Restrict type to only allow operation handlers.
-  export type OperationHandlerModuleOptions = PluginModuleOptions;
+  export type OperationResolverModuleOptions = PluginModuleOptions;
 
   /**
    * Creates a module that contributes operation handlers.
@@ -67,9 +67,9 @@ export namespace Plugin {
    * @example
    * ```ts
    * Plugin.define(meta).pipe(
-   *   Common.Plugin.addOperationHandlerModule({
+   *   Common.Plugin.addOperationResolverModule({
    *     activate: (context) =>
-   *       Capability.contributes(Common.Capability.OperationHandler, [{
+   *       Capability.contributes(Common.Capability.OperationResolver, [{
    *         operation: MyOperation,
    *         handler: (input) => Effect.succeed(...)
    *       }])
@@ -77,12 +77,12 @@ export namespace Plugin {
    * )
    * ```
    */
-  export function addOperationHandlerModule<T = void>(
-    options: OperationHandlerModuleOptions,
+  export function addOperationResolverModule<T = void>(
+    options: OperationResolverModuleOptions,
   ): (builder: Plugin$.PluginBuilder<T>) => Plugin$.PluginBuilder<T> {
     return Plugin$.addModule({
-      id: Capability$.getModuleTag(options.activate) ?? options.id ?? 'operation-handler',
-      activatesOn: options.activatesOn ?? ActivationEvent.SetupOperationHandler,
+      id: Capability$.getModuleTag(options.activate) ?? options.id ?? 'operation-resolver',
+      activatesOn: options.activatesOn ?? ActivationEvent.SetupOperationResolver,
       activatesBefore: options.activatesBefore,
       activatesAfter: options.activatesAfter,
       activate: options.activate,

@@ -10,7 +10,7 @@ import { type CreateObject } from '@dxos/plugin-space/types';
 import { translations as kanbanTranslations } from '@dxos/react-ui-kanban';
 import { Kanban } from '@dxos/react-ui-kanban/types';
 
-import { BlueprintDefinition, IntentResolver, OperationHandler, ReactSurface } from './capabilities';
+import { BlueprintDefinition, IntentResolver, OperationResolver, ReactSurface } from './capabilities';
 import { meta } from './meta';
 import { translations } from './translations';
 import { CreateKanbanSchema } from './types';
@@ -31,7 +31,7 @@ export const KanbanPlugin = Plugin.define(meta).pipe(
   Common.Plugin.addSchemaModule({ schema: [Kanban.Kanban] }),
   Common.Plugin.addSurfaceModule({ activate: ReactSurface }),
   Common.Plugin.addIntentResolverModule({ activate: IntentResolver }),
-  Common.Plugin.addOperationHandlerModule({ activate: OperationHandler }),
+  Common.Plugin.addOperationResolverModule({ activate: OperationResolver }),
   Common.Plugin.addBlueprintDefinitionModule({ activate: BlueprintDefinition }),
   Plugin.make,
 );

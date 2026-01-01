@@ -5,5 +5,5 @@
 export * from './app-graph-builder';
 export * from './compute-runtime';
 export * from './intent-resolver';
-export * from './operation-handler';
+export * from './operation-resolver';
 export * from './react-surface';

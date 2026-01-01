@@ -19,7 +19,7 @@ import {
   IntentResolver,
   MarkdownSettings,
   MarkdownState,
-  OperationHandler,
+  OperationResolver,
   ReactSurface,
 } from './capabilities';
 import { MarkdownEvents } from './events';
@@ -76,7 +76,7 @@ export const MarkdownPlugin = Plugin.define(meta).pipe(
     activatesBefore: [MarkdownEvents.SetupExtensions],
   }),
   Common.Plugin.addIntentResolverModule({ activate: IntentResolver }),
-  Common.Plugin.addOperationHandlerModule({ activate: OperationHandler }),
+  Common.Plugin.addOperationResolverModule({ activate: OperationResolver }),
   Plugin.addModule({
     activatesOn: Common.ActivationEvent.AppGraphReady,
     activate: AppGraphSerializer,

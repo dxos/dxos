@@ -8,7 +8,7 @@ import { ActivationEvent, Common, Plugin } from '@dxos/app-framework';
 import { Graph } from '@dxos/plugin-graph';
 import { type TreeData } from '@dxos/react-ui-list';
 
-import { AppGraphBuilder, IntentResolver, Keyboard, OperationHandler, ReactSurface, State } from './capabilities';
+import { AppGraphBuilder, IntentResolver, Keyboard, OperationResolver, ReactSurface, State } from './capabilities';
 import { NODE_TYPE } from './components';
 import { NavTreeEvents } from './events';
 import { meta } from './meta';
@@ -70,7 +70,7 @@ export const NavTreePlugin = Plugin.define(meta).pipe(
   }),
   Common.Plugin.addSurfaceModule({ activate: ReactSurface }),
   Common.Plugin.addIntentResolverModule({ activate: IntentResolver }),
-  Common.Plugin.addOperationHandlerModule({ activate: OperationHandler }),
+  Common.Plugin.addOperationResolverModule({ activate: OperationResolver }),
   Common.Plugin.addAppGraphModule({ activate: AppGraphBuilder }),
   Plugin.make,
 );

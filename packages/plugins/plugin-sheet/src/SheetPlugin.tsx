@@ -10,7 +10,7 @@ import { ClientEvents } from '@dxos/plugin-client';
 import { MarkdownEvents } from '@dxos/plugin-markdown';
 import { type CreateObject } from '@dxos/plugin-space/types';
 
-import { AnchorSort, ComputeGraphRegistry, IntentResolver, Markdown, OperationHandler, ReactSurface } from './capabilities';
+import { AnchorSort, ComputeGraphRegistry, IntentResolver, Markdown, OperationResolver, ReactSurface } from './capabilities';
 import { meta } from './meta';
 import { serializer } from './serializer';
 import { translations } from './translations';
@@ -48,6 +48,6 @@ export const SheetPlugin = Plugin.define(meta).pipe(
   }),
   Common.Plugin.addSurfaceModule({ activate: ReactSurface }),
   Common.Plugin.addIntentResolverModule({ activate: IntentResolver }),
-  Common.Plugin.addOperationHandlerModule({ activate: OperationHandler }),
+  Common.Plugin.addOperationResolverModule({ activate: OperationResolver }),
   Plugin.make,
 );

@@ -5,6 +5,6 @@
 export * from './app-graph-builder';
 export * from './blueprint-definition';
 export * from './intent-resolver';
-export * from './operation-handler';
+export * from './operation-resolver';
 export * from './react-surface';
 export * from './state';

@@ -17,8 +17,8 @@ export default Capability.makeModule((context) =>
   Effect.gen(function* () {
     const invoker = OperationInvoker.make(() =>
       Effect.gen(function* () {
-        yield* context.activate(Common.ActivationEvent.SetupOperationHandler);
-        return context.getCapabilities(Common.Capability.OperationHandler).flat();
+        yield* context.activate(Common.ActivationEvent.SetupOperationResolver);
+        return context.getCapabilities(Common.Capability.OperationResolver).flat();
       }),
     );
 

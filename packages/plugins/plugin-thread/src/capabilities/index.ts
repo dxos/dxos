@@ -7,7 +7,7 @@ export * from './blueprint-definition';
 export * from './call-manager';
 export * from './intent-resolver';
 export * from './markdown';
-export * from './operation-handler';
+export * from './operation-resolver';
 export * from './react-root';
 export * from './react-surface';
 export * from './repair';

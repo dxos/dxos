@@ -32,10 +32,10 @@ export const useOperationResolver = (module: string, resolver: OperationResolver
   useEffect(() => {
     manager.context.contributeCapability({
       module,
-      interface: Common.Capability.OperationHandler,
+      interface: Common.Capability.OperationResolver,
       implementation: resolverArray,
     });
 
-    return () => manager.context.removeCapability(Common.Capability.OperationHandler, resolverArray);
+    return () => manager.context.removeCapability(Common.Capability.OperationResolver, resolverArray);
   }, [module, resolverArray]);
 };

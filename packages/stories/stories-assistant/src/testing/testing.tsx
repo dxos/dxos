@@ -244,11 +244,11 @@ const StoryPlugin = Plugin.define<StoryPluginOptions>({
       }),
   }),
   Plugin.addModule(({ onChatCreated }) => ({
-    id: 'example.com/plugin/testing/module/operation-handler',
-    activatesOn: Common.ActivationEvent.SetupOperationHandler,
+    id: 'example.com/plugin/testing/module/operation-resolver',
+    activatesOn: Common.ActivationEvent.SetupOperationResolver,
     activate: (context) =>
       Effect.succeed(
-        Capability.contributes(Common.Capability.OperationHandler, [
+        Capability.contributes(Common.Capability.OperationResolver, [
           OperationResolver.make({
             operation: DeckOperation.ChangeCompanion,
             handler: () => Effect.void,

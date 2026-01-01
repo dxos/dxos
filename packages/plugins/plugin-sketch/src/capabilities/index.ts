@@ -4,6 +4,6 @@
 
 export * from './app-graph-serializer';
 export * from './intent-resolver';
-export * from './operation-handler';
+export * from './operation-resolver';
 export * from './react-surface';
 export * from './settings';

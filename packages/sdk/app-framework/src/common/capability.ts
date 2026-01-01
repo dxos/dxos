@@ -257,8 +257,8 @@ export namespace Capability {
    * Handler registration for operations - contributed by plugins.
    * @category Capability
    */
-  export const OperationHandler = Capability$.make<OperationResolver[]>(
-    'dxos.org/app-framework/capability/operation-handler',
+  export const OperationResolver = Capability$.make<OperationResolver[]>(
+    'dxos.org/app-framework/capability/operation-resolver',
   );
 
   export type UndoMapping = UndoMapping$.UndoMapping;
