@@ -35,9 +35,9 @@ import { type ThemedClassName } from '../../util';
 
 type Direction = 'ltr' | 'rtl';
 
-/* -------------------------------------------------------------------------------------------------
- * DropdownMenu
- * ----------------------------------------------------------------------------------------------- */
+//
+// DropdownMenu
+//
 
 const DROPDOWN_MENU_NAME = 'DropdownMenu';
 
@@ -97,9 +97,9 @@ const DropdownMenuRoot: FC<DropdownMenuRootProps> = (props: ScopedProps<Dropdown
 
 DropdownMenuRoot.displayName = DROPDOWN_MENU_NAME;
 
-/* -------------------------------------------------------------------------------------------------
- * DropdownMenuTrigger
- * ----------------------------------------------------------------------------------------------- */
+//
+// DropdownMenuTrigger
+//
 
 const TRIGGER_NAME = 'DropdownMenuTrigger';
 
@@ -162,9 +162,9 @@ const DropdownMenuTrigger = forwardRef<DropdownMenuTriggerElement, DropdownMenuT
 
 DropdownMenuTrigger.displayName = TRIGGER_NAME;
 
-/* -------------------------------------------------------------------------------------------------
- * DropdownMenuVirtualTrigger
- * ----------------------------------------------------------------------------------------------- */
+//
+// DropdownMenuVirtualTrigger
+//
 
 const VIRTUAL_TRIGGER_NAME = 'DropdownMenuVirtualTrigger';
 
@@ -186,9 +186,9 @@ const DropdownMenuVirtualTrigger = (props: ScopedProps<DropdownMenuVirtualTrigge
 
 DropdownMenuVirtualTrigger.displayName = VIRTUAL_TRIGGER_NAME;
 
-/* -------------------------------------------------------------------------------------------------
- * DropdownMenuPortal
- * ----------------------------------------------------------------------------------------------- */
+//
+// DropdownMenuPortal
+//
 
 const PORTAL_NAME = 'DropdownMenuPortal';
 
@@ -203,9 +203,9 @@ const DropdownMenuPortal: FC<DropdownMenuPortalProps> = (props: ScopedProps<Drop
 
 DropdownMenuPortal.displayName = PORTAL_NAME;
 
-/* -------------------------------------------------------------------------------------------------
- * DropdownMenuViewport
- * ----------------------------------------------------------------------------------------------- */
+//
+// DropdownMenuViewport
+//
 
 type DropdownMenuViewportProps = ThemedClassName<ComponentPropsWithRef<typeof Primitive.div>> & {
   asChild?: boolean;
@@ -223,9 +223,9 @@ const DropdownMenuViewport = forwardRef<HTMLDivElement, DropdownMenuViewportProp
   },
 );
 
-/* -------------------------------------------------------------------------------------------------
- * DropdownMenuContent
- * ----------------------------------------------------------------------------------------------- */
+//
+// DropdownMenuContent
+//
 
 const CONTENT_NAME = 'DropdownMenuContent';
 
@@ -302,9 +302,9 @@ const DropdownMenuContent = forwardRef<DropdownMenuContentElement, DropdownMenuC
 
 DropdownMenuContent.displayName = CONTENT_NAME;
 
-/* -------------------------------------------------------------------------------------------------
- * DropdownMenuGroup
- * ----------------------------------------------------------------------------------------------- */
+//
+// DropdownMenuGroup
+//
 
 const GROUP_NAME = 'DropdownMenuGroup';
 
@@ -322,9 +322,9 @@ const DropdownMenuGroup = forwardRef<DropdownMenuGroupElement, DropdownMenuGroup
 
 DropdownMenuGroup.displayName = GROUP_NAME;
 
-/* -------------------------------------------------------------------------------------------------
- * DropdownMenuLabel
- * ----------------------------------------------------------------------------------------------- */
+//
+// DropdownMenuLabel
+//
 
 const LABEL_NAME = 'DropdownMenuLabel';
 
@@ -350,9 +350,9 @@ const DropdownMenuGroupLabel = forwardRef<DropdownMenuLabelElement, DropdownMenu
 
 DropdownMenuGroupLabel.displayName = LABEL_NAME;
 
-/* -------------------------------------------------------------------------------------------------
- * DropdownMenuItem
- * ----------------------------------------------------------------------------------------------- */
+//
+// DropdownMenuItem
+//
 
 const ITEM_NAME = 'DropdownMenuItem';
 
@@ -378,9 +378,9 @@ const DropdownMenuItem = forwardRef<DropdownMenuItemElement, DropdownMenuItemPro
 
 DropdownMenuItem.displayName = ITEM_NAME;
 
-/* -------------------------------------------------------------------------------------------------
- * DropdownMenuCheckboxItem
- * ----------------------------------------------------------------------------------------------- */
+//
+// DropdownMenuCheckboxItem
+//
 
 const CHECKBOX_ITEM_NAME = 'DropdownMenuCheckboxItem';
 
@@ -406,9 +406,9 @@ const DropdownMenuCheckboxItem = forwardRef<DropdownMenuCheckboxItemElement, Dro
 
 DropdownMenuCheckboxItem.displayName = CHECKBOX_ITEM_NAME;
 
-/* -------------------------------------------------------------------------------------------------
- * DropdownMenuRadioGroup
- * ----------------------------------------------------------------------------------------------- */
+//
+// DropdownMenuRadioGroup
+//
 
 const RADIO_GROUP_NAME = 'DropdownMenuRadioGroup';
 
@@ -426,9 +426,9 @@ const DropdownMenuRadioGroup = forwardRef<DropdownMenuRadioGroupElement, Dropdow
 
 DropdownMenuRadioGroup.displayName = RADIO_GROUP_NAME;
 
-/* -------------------------------------------------------------------------------------------------
- * DropdownMenuRadioItem
- * ----------------------------------------------------------------------------------------------- */
+//
+// DropdownMenuRadioItem
+//
 
 const RADIO_ITEM_NAME = 'DropdownMenuRadioItem';
 
@@ -454,9 +454,9 @@ const DropdownMenuRadioItem = forwardRef<DropdownMenuRadioItemElement, DropdownM
 
 DropdownMenuRadioItem.displayName = RADIO_ITEM_NAME;
 
-/* -------------------------------------------------------------------------------------------------
- * DropdownMenuItemIndicator
- * ----------------------------------------------------------------------------------------------- */
+//
+// DropdownMenuItemIndicator
+//
 
 const INDICATOR_NAME = 'DropdownMenuItemIndicator';
 
@@ -474,9 +474,9 @@ const DropdownMenuItemIndicator = forwardRef<DropdownMenuItemIndicatorElement, D
 
 DropdownMenuItemIndicator.displayName = INDICATOR_NAME;
 
-/* -------------------------------------------------------------------------------------------------
- * DropdownMenuSeparator
- * ----------------------------------------------------------------------------------------------- */
+//
+// DropdownMenuSeparator
+//
 
 const SEPARATOR_NAME = 'DropdownMenuSeparator';
 
@@ -502,9 +502,9 @@ const DropdownMenuSeparator = forwardRef<DropdownMenuSeparatorElement, DropdownM
 
 DropdownMenuSeparator.displayName = SEPARATOR_NAME;
 
-/* -------------------------------------------------------------------------------------------------
- * DropdownMenuArrow
- * ----------------------------------------------------------------------------------------------- */
+//
+// DropdownMenuArrow
+//
 
 const ARROW_NAME = 'DropdownMenuArrow';
 
@@ -530,9 +530,9 @@ const DropdownMenuArrow = forwardRef<DropdownMenuArrowElement, DropdownMenuArrow
 
 DropdownMenuArrow.displayName = ARROW_NAME;
 
-/* -------------------------------------------------------------------------------------------------
- * DropdownMenuSub
- * ----------------------------------------------------------------------------------------------- */
+//
+// DropdownMenuSub
+//
 
 interface DropdownMenuSubProps {
   children?: ReactNode;
@@ -557,9 +557,9 @@ const DropdownMenuSub: FC<DropdownMenuSubProps> = (props: ScopedProps<DropdownMe
   );
 };
 
-/* -------------------------------------------------------------------------------------------------
- * DropdownMenuSubTrigger
- * ----------------------------------------------------------------------------------------------- */
+//
+// DropdownMenuSubTrigger
+//
 
 const SUB_TRIGGER_NAME = 'DropdownMenuSubTrigger';
 
@@ -577,9 +577,9 @@ const DropdownMenuSubTrigger = forwardRef<DropdownMenuSubTriggerElement, Dropdow
 
 DropdownMenuSubTrigger.displayName = SUB_TRIGGER_NAME;
 
-/* -------------------------------------------------------------------------------------------------
- * DropdownMenuSubContent
- * ----------------------------------------------------------------------------------------------- */
+//
+// DropdownMenuSubContent
+//
 
 const SUB_CONTENT_NAME = 'DropdownMenuSubContent';
 
@@ -615,7 +615,9 @@ const DropdownMenuSubContent = forwardRef<DropdownMenuSubContentElement, Dropdow
 
 DropdownMenuSubContent.displayName = SUB_CONTENT_NAME;
 
-/* ----------------------------------------------------------------------------------------------- */
+//
+// DropdownMenu
+//
 
 export const DropdownMenu = {
   Root: DropdownMenuRoot,

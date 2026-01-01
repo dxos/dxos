@@ -20,12 +20,6 @@ import { isTruthy } from '@dxos/util';
 
 import { type ContainerData, type DragEventHandler, type DropTargetData, type ItemData } from '../../hooks';
 
-// TODO(burdon): DragContext.
-// TODO(burdon): Register containers and drop handlers.
-// TODO(burdon): Demo different "zones".
-// TODO(burdon): Morph preview when over different zones?
-// TODO(burdon): Drop into document.
-
 //
 // Context
 //

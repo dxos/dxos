@@ -106,7 +106,7 @@ const TextCell: GridCellProps['Cell'] = ({ object, dragging }) => {
 
 // TODO(burdon): Compact card surface (incl. document).
 const DebugCell: GridCellProps['Cell'] = ({ object }) => {
-  return <Surface role='card--extrinsic' data={{ subject: object }} limit={1} />;
+  return <Surface role='card' data={{ subject: object }} limit={1} />;
 
   return (
     <div role='none' className='flex flex-col'>

@@ -5,7 +5,7 @@
 import React, { useCallback, useEffect } from 'react';
 
 import { Surface } from '@dxos/app-framework/react';
-import { IconButton, Tag, useTranslation } from '@dxos/react-ui';
+import { DropdownMenu, IconButton, Tag, useTranslation } from '@dxos/react-ui';
 import { AttentionGlyph, type UseSelectionActions, useSelected, useSelectionActions } from '@dxos/react-ui-attention';
 import {
   Card,
@@ -75,15 +75,15 @@ export const Kanban = ({ model, onAddCard, onRemoveCard }: KanbanProps) => {
                   getDropElement={getColumnDropElement}
                   onRearrange={model.handleRearrange}
                 >
-                  {cards.map((card, cardIndex, cardArray) => (
+                  {cards.map((item, i, itemArray) => (
                     <CardComponent
-                      key={card.id}
-                      card={card}
+                      key={item.id}
+                      item={item}
                       projection={model.projection}
                       selected={selected}
                       multiSelect={multiSelect}
-                      prevSiblingId={cardIndex > 0 ? cardArray[cardIndex - 1].id : undefined}
-                      nextSiblingId={cardIndex < cardArray.length - 1 ? cardArray[cardIndex + 1].id : undefined}
+                      prevSiblingId={i > 0 ? itemArray[i - 1].id : undefined}
+                      nextSiblingId={i < itemArray.length - 1 ? itemArray[i + 1].id : undefined}
                       onRemoveCard={onRemoveCard}
                     />
                   ))}
@@ -171,12 +171,8 @@ export const Kanban = ({ model, onAddCard, onRemoveCard }: KanbanProps) => {
   );
 };
 
-const getColumnDropElement = (stackElement: HTMLDivElement) => {
-  return stackElement.closest('.kanban-drop') as HTMLDivElement;
-};
-
 type CardComponentProps<T extends BaseKanbanItem = { id: string }> = {
-  card: T;
+  item: T;
   projection: ProjectionModel;
   selected: string[];
   multiSelect: UseSelectionActions['multiSelect'];
@@ -184,7 +180,7 @@ type CardComponentProps<T extends BaseKanbanItem = { id: string }> = {
 } & Pick<StackItemRootProps, 'prevSiblingId' | 'nextSiblingId'>;
 
 const CardComponent = ({
-  card,
+  item,
   projection,
   selected,
   multiSelect,
@@ -194,43 +190,50 @@ const CardComponent = ({
 }: CardComponentProps) => {
   const { t } = useTranslation(translationKey);
   return (
-    <CardStack.Item key={card.id} asChild>
+    <CardStack.Item key={item.id} asChild>
       {/* TODO(burdon): Why is this required? */}
       <StackItem.Root
-        item={card}
+        item={item}
         focusIndicatorVariant='group-always'
         prevSiblingId={prevSiblingId}
         nextSiblingId={nextSiblingId}
-        onClick={() => multiSelect([card.id])}
+        onClick={() => multiSelect([item.id])}
       >
         <Card.StaticRoot>
           <Card.Toolbar>
             <StackItem.DragHandle asChild>
               <Card.DragHandle toolbarItem />
             </StackItem.DragHandle>
-            <AttentionGlyph attended={selected.includes(card.id)} />
+            <AttentionGlyph attended={selected.includes(item.id)} />
+            {/* TODO(burdon): Coordinate actions. */}
             {onRemoveCard && (
               <>
                 <Card.ToolbarSeparator variant='gap' />
-                <Card.ToolbarIconButton
-                  iconOnly
-                  variant='ghost'
-                  icon='ph--x--regular'
-                  label={t('remove card label')}
-                  onClick={() => onRemoveCard(card)}
-                />
+                <DropdownMenu.Root>
+                  <DropdownMenu.Trigger asChild>
+                    <Card.ToolbarIconButton
+                      iconOnly
+                      variant='ghost'
+                      icon='ph--list--regular'
+                      label={t('action menu label')}
+                    />
+                  </DropdownMenu.Trigger>
+                  <DropdownMenu.Portal>
+                    <DropdownMenu.Content>
+                      <DropdownMenu.Viewport>
+                        {/* TODO(burdon): Convert to action. Menu context? */}
+                        <DropdownMenu.Item onSelect={() => onRemoveCard(item)}>
+                          {t('remove card label')}
+                        </DropdownMenu.Item>
+                      </DropdownMenu.Viewport>
+                    </DropdownMenu.Content>
+                  </DropdownMenu.Portal>
+                </DropdownMenu.Root>
               </>
             )}
           </Card.Toolbar>
           {/* TODO(burdon): Entire card should be inside surface. */}
-          <Surface
-            role='card--intrinsic'
-            limit={1}
-            data={{
-              subject: card,
-              projection,
-            }}
-          />
+          <Surface role='card--intrinsic' limit={1} data={{ subject: item, projection }} />
         </Card.StaticRoot>
         <StackItem.DragPreview>
           {({ item }) => (
@@ -239,14 +242,7 @@ const CardComponent = ({
                 <Card.Toolbar>
                   <Card.DragHandle toolbarItem />
                 </Card.Toolbar>
-                <Surface
-                  role='card--intrinsic'
-                  limit={1}
-                  data={{
-                    subject: item,
-                    projection,
-                  }}
-                />
+                <Surface role='card--intrinsic' limit={1} data={{ subject: item, projection }} />
               </CardDragPreview.Content>
             </CardDragPreview.Root>
           )}
@@ -255,3 +251,5 @@ const CardComponent = ({
     </CardStack.Item>
   );
 };
+
+const getColumnDropElement = (stackElement: HTMLDivElement) => stackElement.closest('.kanban-drop') as HTMLDivElement;

@@ -3380,7 +3380,7 @@ importers:
     dependencies:
       debug:
         specifier: 'catalog:'
-        version: 4.4.3(supports-color@8.1.1)
+        version: 4.4.3(supports-color@5.5.0)
       domain-browser:
         specifier: 'catalog:'
         version: 4.22.0
@@ -6854,7 +6854,7 @@ importers:
         version: 5.0.0(chart.js@4.5.0)
       debug:
         specifier: 'catalog:'
-        version: 4.4.3(supports-color@8.1.1)
+        version: 4.4.3(supports-color@5.5.0)
       effect:
         specifier: 'catalog:'
         version: 3.19.11
@@ -13863,7 +13863,7 @@ importers:
         version: 8.19.0
       debug:
         specifier: 'catalog:'
-        version: 4.4.3(supports-color@8.1.1)
+        version: 4.4.3(supports-color@5.5.0)
       js-yaml:
         specifier: 'catalog:'
         version: 4.1.1
@@ -14997,6 +14997,9 @@ importers:
       react-dom:
         specifier: ~19.2.3
         version: 19.2.3(react@19.2.3)
+      tabster:
+        specifier: 'catalog:'
+        version: 8.5.5
       vite:
         specifier: 'catalog:'
         version: 7.1.9(@types/node@22.10.2)(jiti@2.6.1)(terser@5.19.2)(tsx@4.21.0)(yaml@2.8.2)
