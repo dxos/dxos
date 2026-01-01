@@ -10,13 +10,13 @@ import { type ActionLike, isAction, isActionGroup } from '@dxos/app-graph';
 import { Keyboard, keySymbols } from '@dxos/keyboard';
 import { useActions } from '@dxos/plugin-graph';
 import { Button, Dialog, Icon, toLocalizedString, useTranslation } from '@dxos/react-ui';
-import { SearchList } from '@dxos/react-ui-searchlist';
 import {
   cardDialogContent,
   cardDialogHeader,
   cardDialogPaddedOverflow,
   cardDialogSearchListRoot,
-} from '@dxos/react-ui-stack';
+} from '@dxos/react-ui-mosaic';
+import { SearchList } from '@dxos/react-ui-searchlist';
 import { descriptionText, mx } from '@dxos/ui-theme';
 import { getHostPlatform } from '@dxos/util';
 

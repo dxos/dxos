@@ -35,7 +35,7 @@ import { createPortal } from 'react-dom';
 
 import { type Obj } from '@dxos/echo';
 import { Icon, type ThemedClassName } from '@dxos/react-ui';
-import { type ItemData, type PlaceholderData, CONTAINER_DATA_ACTIVE_ATTR } from '@dxos/react-ui-mosaic';
+import { CONTAINER_DATA_ACTIVE_ATTR, type ItemData, type PlaceholderData } from '@dxos/react-ui-mosaic';
 import { mx } from '@dxos/ui-theme';
 
 //

@@ -7,7 +7,7 @@ import React from 'react';
 import { type SurfaceComponentProps } from '@dxos/app-framework/react';
 import { type Tag } from '@dxos/echo';
 import { DxAvatar } from '@dxos/lit-ui/react';
-import { Card } from '@dxos/react-ui-stack';
+import { Card } from '@dxos/react-ui-mosaic';
 import { type Message } from '@dxos/types';
 
 import { getMessageProps } from '../../util';

@@ -12,13 +12,10 @@ import {
   CardDragPreview,
   CardStack,
   CardStackDragPreview,
-  Stack,
-  StackItem,
-  type StackItemRootProps,
-  autoScrollRootAttributes,
   cardStackDefaultInlineSizeRem,
   cardStackHeading,
-} from '@dxos/react-ui-stack';
+} from '@dxos/react-ui-mosaic';
+import { Stack, StackItem, type StackItemRootProps, autoScrollRootAttributes } from '@dxos/react-ui-stack';
 import { type ProjectionModel } from '@dxos/schema';
 
 import { type BaseKanbanItem, type KanbanModel, UNCATEGORIZED_VALUE } from '../model';

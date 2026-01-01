@@ -11,8 +11,8 @@ import { type AnyProperties, type TypeAnnotation, getTypeAnnotation } from '@dxo
 import { type Space, type SpaceId } from '@dxos/react-client/echo';
 import { Icon, toLocalizedString, useDefaultValue, useTranslation } from '@dxos/react-ui';
 import { Form, omitId } from '@dxos/react-ui-form';
+import { cardDialogOverflow, cardDialogPaddedOverflow, cardDialogSearchListRoot } from '@dxos/react-ui-mosaic';
 import { SearchList } from '@dxos/react-ui-searchlist';
-import { cardDialogOverflow, cardDialogPaddedOverflow, cardDialogSearchListRoot } from '@dxos/react-ui-stack';
 import { type Collection, ViewAnnotation } from '@dxos/schema';
 import { type MaybePromise, isNonNullable } from '@dxos/util';
 
@@ -69,8 +69,14 @@ export const CreateObjectPanel = ({
     .map((schema) => getTypeAnnotation(schema))
     .filter(isNonNullable)
     .sort((a, b) => {
-      const nameA = t('typename label', { ns: a.typename, defaultValue: a.typename });
-      const nameB = t('typename label', { ns: b.typename, defaultValue: b.typename });
+      const nameA = t('typename label', {
+        ns: a.typename,
+        defaultValue: a.typename,
+      });
+      const nameB = t('typename label', {
+        ns: b.typename,
+        defaultValue: b.typename,
+      });
       return nameA.localeCompare(nameB);
     });
 
@@ -146,12 +152,22 @@ const SelectSpace = ({
           .map((space) => (
             <SearchList.Item
               key={space.id}
-              value={toLocalizedString(getSpaceDisplayName(space, { personal: space.id === defaultSpaceId }), t)}
+              value={toLocalizedString(
+                getSpaceDisplayName(space, {
+                  personal: space.id === defaultSpaceId,
+                }),
+                t,
+              )}
               onSelect={() => onChange?.(space.db)}
               classNames='flex items-center gap-2'
             >
               <span className='grow truncate'>
-                {toLocalizedString(getSpaceDisplayName(space, { personal: space.id === defaultSpaceId }), t)}
+                {toLocalizedString(
+                  getSpaceDisplayName(space, {
+                    personal: space.id === defaultSpaceId,
+                  }),
+                  t,
+                )}
               </span>
             </SearchList.Item>
           ))}
@@ -181,13 +197,19 @@ const SelectSchema = ({
         {options.map((option) => (
           <SearchList.Item
             key={option.typename}
-            value={t('typename label', { ns: option.typename, defaultValue: option.typename })}
+            value={t('typename label', {
+              ns: option.typename,
+              defaultValue: option.typename,
+            })}
             onSelect={() => onChange(option.typename)}
             classNames='flex items-center gap-2'
           >
             <span className='flex gap-2 items-center grow truncate'>
               <Icon icon={resolve?.(option.typename)?.icon ?? 'ph--placeholder--regular'} size={5} />
-              {t('typename label', { ns: option.typename, defaultValue: option.typename })}
+              {t('typename label', {
+                ns: option.typename,
+                defaultValue: option.typename,
+              })}
             </span>
           </SearchList.Item>
         ))}

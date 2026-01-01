@@ -7,7 +7,7 @@ import React from 'react';
 
 import { faker } from '@dxos/random';
 import { withTheme } from '@dxos/react-ui/testing';
-import { Card } from '@dxos/react-ui-stack';
+import { Card } from '@dxos/react-ui-mosaic';
 import { IntrinsicCardContainer } from '@dxos/storybook-utils';
 import { Event } from '@dxos/types';
 
