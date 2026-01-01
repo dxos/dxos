@@ -36,7 +36,7 @@ We will adopt **Option 3 (Effect-First)** as the foundation, but refine **Option
 
 **Completed:** Core `Operation` module implemented in [`packages/core/operation`](packages/core/operation/src/operation.ts) with `Operation.make()` factory, Effect-based handlers, and pipeable interface.
 
-### Phase 2: Intent Audit & Simplification [IN PROGRESS]
+### Phase 2: Intent Audit & Simplification [COMPLETE]
 
 *Goal: Prepare the Intent system for replacement by removing its most complex feature: chaining.*
 
@@ -46,7 +46,7 @@ We will adopt **Option 3 (Effect-First)** as the foundation, but refine **Option
     -   **Mutation Chains:** Refactor into atomic operations (e.g., `Type.make()` + `db.add()`) or specific coarse-grained operations.
 -   **Deprecate Chain:** Remove the `chain()` utility once usages are gone.
 
-**Progress:**
+**Completed:**
 
 -   ✅ Replaced `createObjectIntent` with `createObject` in all plugins (24 files updated)
 -   ✅ Updated `CreateObject` type to return `Effect.Effect<Obj.Any, any, any>` instead of intent chain
@@ -57,28 +57,33 @@ We will adopt **Option 3 (Effect-First)** as the foundation, but refine **Option
 -   ✅ Mailbox/Calendar `createObject` uses `ClientCapabilities.Client` to get space from db
 -   ✅ PersistentType `createObject` uses dispatch for `UseStaticSchema`/`AddSchema` intents
 
-### Phase 3: Replace Intents with Operations
+### Phase 3: Replace Intents with Operations [COMPLETE]
 
-*Goal: The Big Switch. Swap the underlying engine of the UI from "Intents" to "Operations".*
+*Goal: The Big Switch. Swap the underlying engine of the UI from "Intents" to "Operations".***Architecture (Pub/Sub):**
 
-**See detailed plan:** [`phase_3_operations.plan.md`](phase_3_operations.plan.md)
-
-**Architecture (Pub/Sub):**
 -   **OperationRegistry:** Collects handlers from `Capability.OperationHandler` contributions
 -   **UndoRegistry:** Collects undo mappings from `Capability.UndoMapping` contributions (independent)
 -   **OperationInvoker:** Invokes operations, exposes `invocations$` Effect stream
 -   **HistoryTracker:** Subscribes to stream, tracks history, provides `undo()`
 
-**Implementation Strategy:**
--   **Phase 3a:** Build and test within app-framework with unit tests
--   **Phase 3b:** Migrate plugins after architecture is validated
+**Completed:**
 
-### Phase 4: Function Invocation via Operations
+-   ✅ Core `OperationInvoker` implemented in `packages/sdk/app-framework/src/plugin-operation/invoker`
+-   ✅ `OperationResolver.make()` factory for type-safe handler registration
+-   ✅ `UndoMapping` and `HistoryTracker` for undo support
+-   ✅ Plugins migrated to contribute `OperationResolver` capabilities
 
-*Goal: Unify the calling convention.*
+### Phase 4: Function Invocation via Operations [IN PROGRESS]
 
--   **Remote Invocation:** Implement `invokeRemote(Op)`.
--   **Routing:** The system identifies that an Operation is backed by a deployed Function and routes the execution to the Edge Runtime.
+*Goal: Unify the calling convention so Operations can be invoked locally or deployed remotely.***See detailed plan:** [`function_to_operation_migration_27db1600.plan.md`](function_to_operation_migration_27db1600.plan.md)**Sub-phases:**
+
+-   **Phase 0:** Followup scheduling (FollowupScheduler service for tracked background operations)
+-   **Phase 1:** Extend OperationDefinition (types, services, deployedId, required executionMode)
+-   **Phase 2:** Unified handler signature (OperationContext service, FunctionHandler adapter)
+-   **Phase 3:** Function.Function bridge (serialize Operations to existing Function schema)
+-   **Phase 4:** Deployment bridge (deploy Operations to EDGE via existing infrastructure)
+-   **Phase 5:** Trigger integration (TriggerDispatcher routes to local OperationResolvers)
+-   **Phase 6:** Deprecate defineFunction (remove FunctionDefinition)
 
 ### Phase 5: Remote Simplification (Future)
 
@@ -288,6 +293,19 @@ export const EdgeDatabaseLayer = Layer.succeed(
     // ... remote/edge implementation ...
   })
 );
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

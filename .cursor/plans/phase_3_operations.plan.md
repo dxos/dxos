@@ -36,29 +36,29 @@ graph TB
     end
 ```
 
+
+
 ## Design Decisions
 
 1. **Two independent registries** in OperationPlugin:
 
-   - `OperationRegistry` - collects handlers (Capability.OperationHandler)
-   - `UndoRegistry` - collects undo mappings (Capability.UndoMapping)
-   - Both independent, both owned by OperationPlugin
+- `OperationRegistry` - collects handlers (Capability.OperationHandler)
+- `UndoRegistry` - collects undo mappings (Capability.UndoMapping)
+- Both independent, both owned by OperationPlugin
 
 2. **Pub/Sub on OperationInvoker** - Not a separate capability:
 
-   - `OperationInvoker` capability exposes `invocations$` Effect stream
-   - HistoryTracker accesses via plugin context, subscribes to stream
-   - Decoupled by going through capability, not direct import
+- `OperationInvoker` capability exposes `invocations$` Effect stream
+- HistoryTracker accesses via plugin context, subscribes to stream
+- Decoupled by going through capability, not direct import
 
 3. **Effect streams** for pub/sub - Use Effect throughout
-
 4. **No redo** - Not needed initially (doesn't exist today)
-
 5. **HistoryTracker in OperationPlugin** - Lives in same plugin but is an independent class:
 
-   - Accesses invoker and registry via capabilities (no internal coupling)
-   - Can be extracted to separate plugin later if needed
-   - Client-specific, not used by functions-runtime
+- Accesses invoker and registry via capabilities (no internal coupling)
+- Can be extracted to separate plugin later if needed
+- Client-specific, not used by functions-runtime
 
 ## Core Components
 
@@ -104,6 +104,8 @@ contributes(Capability.UndoMapping, [{
 }]);
 ```
 
+
+
 ### 2. OperationInvoker Capability (with Stream)
 
 ```typescript
@@ -145,6 +147,8 @@ export const UndoRegistry = Capability<{
   } | undefined;
 }>();
 ```
+
+
 
 ### 4. HistoryTracker Capability
 
@@ -205,6 +209,8 @@ const createHistoryTracker = (context: PluginContext) => {
 };
 ```
 
+
+
 ## Undo Flow
 
 ```mermaid
@@ -234,6 +240,8 @@ sequenceDiagram
     Tracker-->>App: done
 ```
 
+
+
 ## Avoiding Undo-of-Undo Loops
 
 OperationInvoker exposes an internal invoke method that skips stream emission:
@@ -250,6 +258,8 @@ export const OperationInvoker = Capability<{
 }>();
 ```
 
+
+
 ## Benefits
 
 1. **True independence**: Registries are separate, only share capability contracts
@@ -265,43 +275,25 @@ export const OperationInvoker = Capability<{
 
 1. Implement all components in `plugin-operation/`:
 
-   - OperationInvoker with stream
-   - UndoRegistry
-   - HistoryTracker
+- OperationInvoker with stream
+- UndoRegistry
+- HistoryTracker
 
 2. Write comprehensive unit tests within app-framework:
 
-   - Operation registration and invocation
-   - Undo mapping registration and lookup
-   - Stream emission and subscription
-   - History tracking (push on invoke, pop on undo)
-   - Undo invocation via invokeInternal (skips stream)
-   - Edge cases: no handler, no undo mapping, empty history
+- Operation registration and invocation
+- Undo mapping registration and lookup
+- Stream emission and subscription
+- History tracking (push on invoke, pop on undo)
+- Undo invocation via invokeInternal (skips stream)
+- Edge cases: no handler, no undo mapping, empty history
 
 3. Test with mock operations defined in tests—no real plugin dependencies
 
-**Phase 3b: Migrate existing plugins (after confidence in architecture)**
-
-Only after tests pass and architecture is validated:
+**Phase 3b: Migrate existing plugins (after confidence in architecture)**Only after tests pass and architecture is validated:
 
 - Migrate plugin-layout intents to operations (reference implementation)
 - Migrate plugin-space intents to operations
 - Migrate remaining plugins incrementally
 
 ## Key Files
-
-| File | Purpose |
-
-|------|---------|
-
-| `packages/core/operation/src/operation.ts` | Core types (unchanged) |
-
-| `packages/sdk/app-framework/src/plugin-operation/operation-invoker.ts` | Invoker with stream |
-
-| `packages/sdk/app-framework/src/plugin-operation/undo-registry.ts` | Undo operation lookup service |
-
-| `packages/sdk/app-framework/src/plugin-operation/history-tracker.ts` | Stream subscriber, undo |
-
-| `packages/sdk/app-framework/src/plugin-operation/*.test.ts` | Unit tests for all components |
-
-| `packages/sdk/app-framework/src/common/capabilities.ts` | Add Operation capabilities |
