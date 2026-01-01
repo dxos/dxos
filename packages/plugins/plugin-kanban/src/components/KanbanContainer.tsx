@@ -4,8 +4,8 @@
 
 import React, { useCallback, useEffect, useState } from 'react';
 
-import { Common, createIntent } from '@dxos/app-framework';
-import { useCapabilities, useIntentDispatcher } from '@dxos/app-framework/react';
+import { Common } from '@dxos/app-framework';
+import { useCapabilities, useOperationInvoker } from '@dxos/app-framework/react';
 import { Filter, Obj, Type } from '@dxos/echo';
 import { type TypedObject } from '@dxos/echo/internal';
 import { useGlobalFilteredObjects } from '@dxos/plugin-search';
@@ -15,13 +15,13 @@ import { type Kanban } from '@dxos/react-ui-kanban/types';
 import { StackItem } from '@dxos/react-ui-stack';
 import { getTypenameFromQuery } from '@dxos/schema';
 
-import { KanbanAction } from '../types';
+import { KanbanAction, KanbanOperation } from '../types';
 
 export const KanbanContainer = ({ object }: { object: Kanban.Kanban; role: string }) => {
   const schemas = useCapabilities(Common.Capability.Schema);
   const [cardSchema, setCardSchema] = useState<TypedObject<any, any>>();
   const db = Obj.getDatabase(object);
-  const { dispatchPromise: dispatch } = useIntentDispatcher();
+  const { invokePromise } = useOperationInvoker();
   const typename = object.view.target?.query ? getTypenameFromQuery(object.view.target.query.ast) : undefined;
 
   useEffect(() => {
@@ -68,9 +68,9 @@ export const KanbanContainer = ({ object }: { object: Kanban.Kanban; role: strin
 
   const handleRemoveCard = useCallback(
     (card: { id: string }) => {
-      void dispatch(createIntent(KanbanAction.DeleteCard, { card }));
+      void invokePromise(KanbanOperation.DeleteCard, { card });
     },
-    [dispatch],
+    [invokePromise],
   );
 
   return (

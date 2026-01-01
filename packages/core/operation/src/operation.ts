@@ -7,13 +7,19 @@ import * as Pipeable from 'effect/Pipeable';
 import type * as Schema from 'effect/Schema';
 
 /**
+ * Schema type that accepts any Encoded form but requires no Context.
+ * This allows ECHO object schemas where Type !== Encoded due to [KindId] symbol.
+ */
+type OperationSchema<T> = Schema.Schema<T, any, never>;
+
+/**
  * Serializable definition of an Operation.
  * Contains schema and metadata, but no runtime logic.
  */
 export interface OperationDefinition<I, O> extends Pipeable.Pipeable {
   readonly schema: {
-    readonly input: Schema.Schema<I>;
-    readonly output: Schema.Schema<O>;
+    readonly input: OperationSchema<I>;
+    readonly output: OperationSchema<O>;
   };
   readonly meta: {
     readonly key: string;
@@ -33,8 +39,8 @@ export type OperationHandler<I, O, E = Error, R = never> = (input: I) => Effect.
  */
 export interface OperationProps<I, O> {
   readonly schema: {
-    readonly input: Schema.Schema<I>;
-    readonly output: Schema.Schema<O>;
+    readonly input: OperationSchema<I>;
+    readonly output: OperationSchema<O>;
   };
   readonly meta: {
     readonly key: string;

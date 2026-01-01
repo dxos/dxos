@@ -5,7 +5,7 @@
 // NOTE(ZaymonFC): Workaround; see: https://discord.com/channels/837138313172353095/1363955461350621235
 import '@dxos/plugin-inbox/css';
 
-import { IntentPlugin, type Plugin, SettingsPlugin } from '@dxos/app-framework';
+import { IntentPlugin, OperationPlugin, type Plugin, SettingsPlugin } from '@dxos/app-framework';
 import { type ClientServicesProvider, type Config } from '@dxos/client';
 import { type Observability } from '@dxos/observability';
 import { AssistantPlugin } from '@dxos/plugin-assistant';
@@ -84,6 +84,7 @@ export const getCore = ({ isPwa, isTauri }: PluginConfig): string[] =>
     HelpPlugin.meta.id,
     IntentPlugin.meta.id,
     isTauri && NativePlugin.meta.id,
+    OperationPlugin.meta.id,
     NavTreePlugin.meta.id,
     ObservabilityPlugin.meta.id,
     PreviewPlugin.meta.id,
@@ -157,6 +158,7 @@ export const getPlugins = ({
     HelpPlugin({ steps }),
     InboxPlugin(),
     IntentPlugin(),
+    OperationPlugin(),
     KanbanPlugin(),
     MapPlugin(),
     isLabs && MapPluginSolid(),

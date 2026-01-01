@@ -3,3 +3,4 @@
 //
 
 export * from './schema';
+export { TemplateOperation } from './schema';

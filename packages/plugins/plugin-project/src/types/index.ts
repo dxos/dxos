@@ -3,3 +3,4 @@
 //
 
 export * as ProjectAction from './ProjectAction';
+export { ProjectOperation } from './ProjectAction';

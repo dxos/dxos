@@ -4,4 +4,5 @@
 
 export * from './intent-resolver';
 export * from './keyboard';
+export * from './operation-handler';
 export * from './react-context';

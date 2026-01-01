@@ -33,7 +33,8 @@ export default Capability.makeModule((context) =>
     const subscriptions = new SubscriptionList();
     const spaceSubscriptions = new SubscriptionList();
 
-    const { dispatch, dispatchPromise } = context.getCapability(Common.Capability.IntentDispatcher);
+    const { dispatchPromise } = context.getCapability(Common.Capability.IntentDispatcher);
+    const { invokePromise } = context.getCapability(Common.Capability.OperationInvoker);
     const { graph } = context.getCapability(Common.Capability.AppGraph);
     const layout = context.getCapability(Common.Capability.Layout);
     const deck = context.getCapabilities(DeckCapabilities.DeckState)[0];
@@ -45,12 +46,7 @@ export default Capability.makeModule((context) =>
     yield* Effect.tryPromise(() => defaultSpace.waitUntilReady());
 
     if (deck?.activeDeck === 'default') {
-      yield* dispatch(
-        createIntent(Common.LayoutAction.SwitchWorkspace, {
-          part: 'workspace',
-          subject: defaultSpace.id,
-        }),
-      );
+      yield* Effect.promise(() => invokePromise(Common.LayoutOperation.SwitchWorkspace, { subject: defaultSpace.id }));
     }
 
     // Initialize space sharing lock in default space.

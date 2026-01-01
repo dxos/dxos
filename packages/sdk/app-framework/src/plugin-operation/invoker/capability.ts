@@ -15,7 +15,12 @@ import * as OperationInvoker from './operation-invoker';
 
 export default Capability.makeModule((context) =>
   Effect.gen(function* () {
-    const invoker = OperationInvoker.make(() => context.getCapabilities(Common.Capability.OperationHandler).flat());
+    const invoker = OperationInvoker.make(() =>
+      Effect.gen(function* () {
+        yield* context.activate(Common.ActivationEvent.SetupOperationHandler);
+        return context.getCapabilities(Common.Capability.OperationHandler).flat();
+      }),
+    );
 
     return Effect.succeed(Capability.contributes(Common.Capability.OperationInvoker, invoker));
   }).pipe(Effect.flatten),

@@ -8,7 +8,7 @@ import { Common, Plugin } from '@dxos/app-framework';
 import { type CreateObject } from '@dxos/plugin-space/types';
 import { RefArray } from '@dxos/react-client/echo';
 
-import { AppGraphSerializer, IntentResolver, ReactSurface, SketchSettings } from './capabilities';
+import { AppGraphSerializer, IntentResolver, OperationHandler, ReactSurface, SketchSettings } from './capabilities';
 import { meta } from './meta';
 import { translations } from './translations';
 import { Diagram } from './types';
@@ -35,6 +35,7 @@ export const SketchPlugin = Plugin.define(meta).pipe(
   Common.Plugin.addSchemaModule({ schema: [Diagram.Canvas, Diagram.Diagram] }),
   Common.Plugin.addSurfaceModule({ activate: ReactSurface }),
   Common.Plugin.addIntentResolverModule({ activate: IntentResolver }),
+  Common.Plugin.addOperationHandlerModule({ activate: OperationHandler }),
   Plugin.addModule({
     id: 'app-graph-serializer',
     activatesOn: Common.ActivationEvent.AppGraphReady,

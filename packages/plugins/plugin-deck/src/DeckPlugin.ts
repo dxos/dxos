@@ -13,6 +13,7 @@ import {
   DeckSettings,
   DeckState,
   LayoutIntentResolver,
+  LayoutOperationHandler,
   ReactRoot,
   ReactSurface,
   Toolkit,
@@ -51,6 +52,7 @@ export const DeckPlugin = Plugin.define(meta).pipe(
   }),
   Common.Plugin.addSurfaceModule({ activate: ReactSurface }),
   Common.Plugin.addIntentResolverModule({ activate: LayoutIntentResolver }),
+  Common.Plugin.addOperationHandlerModule({ activate: LayoutOperationHandler }),
   Common.Plugin.addAppGraphModule({ activate: AppGraphBuilder }),
   // Plugin.addModule({
   //   activatesOn: Events.SetupArtifactDefinition,

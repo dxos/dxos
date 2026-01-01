@@ -74,6 +74,11 @@ export namespace ActivationEvent {
   export const DispatcherReady = ActivationEvent$.make('dxos.org/app-framework/event/dispatcher-ready');
 
   /**
+   * Fired after the operation invoker is ready.
+   */
+  export const OperationInvokerReady = ActivationEvent$.make('dxos.org/app-framework/event/operation-invoker-ready');
+
+  /**
    * Fired after the settings store is ready.
    */
   export const SettingsReady = ActivationEvent$.make('dxos.org/app-framework/event/settings-ready');

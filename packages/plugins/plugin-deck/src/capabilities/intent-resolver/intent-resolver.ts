@@ -23,6 +23,7 @@ import { meta } from '../../meta';
 import {
   DeckAction,
   DeckCapabilities,
+  DeckOperation,
   type DeckSettingsProps,
   type LayoutMode,
   PLANK_COMPANION_TYPE,
@@ -204,50 +205,46 @@ export default Capability.makeModule((context) =>
         intent: Common.LayoutAction.UpdateLayout,
         filter: (data): data is Schema.Schema.Type<typeof Common.LayoutAction.SwitchWorkspace.fields.input> =>
           Schema.is(Common.LayoutAction.SwitchWorkspace.fields.input)(data),
-        resolve: ({ subject }) => {
-          const { graph } = context.getCapability(Common.Capability.AppGraph);
-          const state = context.getCapability(DeckCapabilities.MutableDeckState);
-          batch(() => {
-            // TODO(wittjosiah): This is a hack to prevent the previous deck from being set for pinned items.
-            //  Ideally this should be worked into the data model in a generic way.
-            if (!state.activeDeck.startsWith('!')) {
-              state.previousDeck = state.activeDeck;
-            }
-            state.activeDeck = subject;
-            if (!state.decks[subject]) {
-              state.decks[subject] = { ...defaultDeck };
-            }
-          });
+        resolve: ({ subject }) =>
+          Effect.gen(function* () {
+            const { graph } = context.getCapability(Common.Capability.AppGraph);
+            const state = context.getCapability(DeckCapabilities.MutableDeckState);
+            const { invoke } = context.getCapability(Common.Capability.OperationInvoker);
+            batch(() => {
+              // TODO(wittjosiah): This is a hack to prevent the previous deck from being set for pinned items.
+              //  Ideally this should be worked into the data model in a generic way.
+              if (!state.activeDeck.startsWith('!')) {
+                state.previousDeck = state.activeDeck;
+              }
+              state.activeDeck = subject;
+              if (!state.decks[subject]) {
+                state.decks[subject] = { ...defaultDeck };
+              }
+            });
 
-          const first = state.deck.solo ? state.deck.solo : state.deck.active[0];
-          if (first) {
-            return {
-              intents: [createIntent(Common.LayoutAction.ScrollIntoView, { part: 'current', subject: first })],
-            };
-          } else {
-            const [item] = Graph.getConnections(graph, subject).filter(
-              (node) => !Node.isActionLike(node) && !node.properties.disposition,
-            );
-            if (item) {
-              return {
-                intents: [createIntent(Common.LayoutAction.Open, { part: 'main', subject: [item.id] })],
-              };
+            const first = state.deck.solo ? state.deck.solo : state.deck.active[0];
+            if (first) {
+              yield* invoke(Common.LayoutOperation.ScrollIntoView, { subject: first });
+            } else {
+              const [item] = Graph.getConnections(graph, subject).filter(
+                (node) => !Node.isActionLike(node) && !node.properties.disposition,
+              );
+              if (item) {
+                yield* invoke(Common.LayoutOperation.Open, { subject: [item.id] });
+              }
             }
-          }
-        },
+          }),
       }),
       createResolver({
         intent: Common.LayoutAction.UpdateLayout,
         filter: (data): data is Schema.Schema.Type<typeof Common.LayoutAction.RevertWorkspace.fields.input> =>
           Schema.is(Common.LayoutAction.RevertWorkspace.fields.input)(data),
-        resolve: () => {
-          const state = context.getCapability(DeckCapabilities.MutableDeckState);
-          return {
-            intents: [
-              createIntent(Common.LayoutAction.SwitchWorkspace, { part: 'workspace', subject: state.previousDeck }),
-            ],
-          };
-        },
+        resolve: () =>
+          Effect.gen(function* () {
+            const state = context.getCapability(DeckCapabilities.MutableDeckState);
+            const { invoke } = context.getCapability(Common.Capability.OperationInvoker);
+            yield* invoke(Common.LayoutOperation.SwitchWorkspace, { subject: state.previousDeck });
+          }),
       }),
       createResolver({
         intent: Common.LayoutAction.UpdateLayout,
@@ -325,26 +322,26 @@ export default Capability.makeModule((context) =>
         intent: Common.LayoutAction.UpdateLayout,
         filter: (data): data is Schema.Schema.Type<typeof Common.LayoutAction.Close.fields.input> =>
           Schema.is(Common.LayoutAction.Close.fields.input)(data),
-        resolve: ({ subject }) => {
-          const state = context.getCapability(DeckCapabilities.MutableDeckState);
-          const attention = context.getCapability(AttentionCapabilities.Attention);
-          const active = state.deck.solo ? [state.deck.solo] : state.deck.active;
-          const next = subject.reduce((acc, id) => closeEntry(acc, id), active);
-          const toAttend = setActive({ next, state, attention });
+        resolve: ({ subject }) =>
+          Effect.gen(function* () {
+            const state = context.getCapability(DeckCapabilities.MutableDeckState);
+            const attention = context.getCapability(AttentionCapabilities.Attention);
+            const { invoke } = context.getCapability(Common.Capability.OperationInvoker);
+            const active = state.deck.solo ? [state.deck.solo] : state.deck.active;
+            const next = subject.reduce((acc, id) => closeEntry(acc, id), active);
+            const toAttend = setActive({ next, state, attention });
 
-          const clearCompanionIntents = subject
-            .filter((id) => state.deck.activeCompanions && id in state.deck.activeCompanions)
-            .map((primary) => createIntent(DeckAction.ChangeCompanion, { primary, companion: null }));
+            // Clear companions for closed entries.
+            for (const id of subject) {
+              if (state.deck.activeCompanions && id in state.deck.activeCompanions) {
+                yield* Effect.fork(invoke(DeckOperation.ChangeCompanion, { primary: id, companion: null }));
+              }
+            }
 
-          return {
-            intents: [
-              ...clearCompanionIntents,
-              ...(toAttend
-                ? [createIntent(Common.LayoutAction.ScrollIntoView, { part: 'current', subject: toAttend })]
-                : []),
-            ],
-          };
-        },
+            if (toAttend) {
+              yield* Effect.fork(invoke(Common.LayoutOperation.ScrollIntoView, { subject: toAttend }));
+            }
+          }),
       }),
       createResolver({
         intent: Common.LayoutAction.UpdateLayout,
@@ -396,22 +393,50 @@ export default Capability.makeModule((context) =>
       }),
       createResolver({
         intent: DeckAction.Adjust,
-        resolve: (adjustment) => {
-          const state = context.getCapability(DeckCapabilities.MutableDeckState);
-          const attention = context.getCapability(AttentionCapabilities.Attention);
-          const { graph } = context.getCapability(Common.Capability.AppGraph);
+        resolve: (adjustment) =>
+          Effect.gen(function* () {
+            const state = context.getCapability(DeckCapabilities.MutableDeckState);
+            const attention = context.getCapability(AttentionCapabilities.Attention);
+            const { graph } = context.getCapability(Common.Capability.AppGraph);
+            const { invoke } = context.getCapability(Common.Capability.OperationInvoker);
 
-          return batch(() => {
-            if (adjustment.type === 'increment-end' || adjustment.type === 'increment-start') {
-              setActive({
-                next: incrementPlank(state.deck.active, adjustment),
-                state,
-                attention,
-              });
-            }
+            batch(() => {
+              if (adjustment.type === 'increment-end' || adjustment.type === 'increment-start') {
+                setActive({
+                  next: incrementPlank(state.deck.active, adjustment),
+                  state,
+                  attention,
+                });
+              }
+
+              if (adjustment.type.startsWith('solo')) {
+                const entryId = adjustment.id;
+                if (!state.deck.solo) {
+                  // Solo the entry.
+                  Effect.runFork(
+                    invoke(Common.LayoutOperation.SetLayoutMode, { subject: entryId, mode: adjustment.type }),
+                  );
+                } else {
+                  if (adjustment.type === 'solo--fullscreen') {
+                    // Toggle fullscreen on the current entry.
+                    Effect.runFork(
+                      invoke(Common.LayoutOperation.SetLayoutMode, { subject: entryId, mode: 'solo--fullscreen' }),
+                    );
+                  } else if (adjustment.type === 'solo') {
+                    // Un-solo the current entry and open it.
+                    Effect.runFork(
+                      Effect.gen(function* () {
+                        yield* invoke(Common.LayoutOperation.SetLayoutMode, { mode: 'deck' });
+                        yield* invoke(Common.LayoutOperation.Open, { subject: [entryId] });
+                      }),
+                    );
+                  }
+                }
+              }
+            });
 
             if (adjustment.type === 'companion') {
-              return Function.pipe(
+              const companion = Function.pipe(
                 Graph.getNode(graph, adjustment.id),
                 Option.map((node) =>
                   Graph.getConnections(graph, node.id)
@@ -419,57 +444,16 @@ export default Capability.makeModule((context) =>
                     .toSorted((a, b) => byPosition(a.properties, b.properties)),
                 ),
                 Option.flatMap((companions) => (companions.length > 0 ? Option.some(companions[0]) : Option.none())),
-                Option.match({
-                  onNone: () => ({}),
-                  onSome: (companion) => ({
-                    intents: [
-                      // TODO(wittjosiah): This should remember the previously selected companion.
-                      createIntent(DeckAction.ChangeCompanion, { primary: adjustment.id, companion: companion.id }),
-                    ],
-                  }),
-                }),
               );
-            }
 
-            if (adjustment.type.startsWith('solo')) {
-              const entryId = adjustment.id;
-              if (!state.deck.solo) {
-                // Solo the entry.
-                return {
-                  intents: [
-                    createIntent(Common.LayoutAction.SetLayoutMode, {
-                      part: 'mode',
-                      subject: entryId,
-                      options: { mode: adjustment.type },
-                    }),
-                  ],
-                };
-              } else {
-                if (adjustment.type === 'solo--fullscreen') {
-                  // Toggle fullscreen on the current entry.
-                  return {
-                    intents: [
-                      createIntent(Common.LayoutAction.SetLayoutMode, {
-                        part: 'mode',
-                        subject: entryId,
-                        options: { mode: 'solo--fullscreen' },
-                      }),
-                    ],
-                  };
-                } else if (adjustment.type === 'solo') {
-                  // Un-solo the current entry.
-                  return {
-                    intents: [
-                      // NOTE: The order of these is important.
-                      createIntent(Common.LayoutAction.SetLayoutMode, { part: 'mode', options: { mode: 'deck' } }),
-                      createIntent(Common.LayoutAction.Open, { part: 'main', subject: [entryId] }),
-                    ],
-                  };
-                }
+              if (Option.isSome(companion)) {
+                // TODO(wittjosiah): This should remember the previously selected companion.
+                yield* Effect.fork(
+                  invoke(DeckOperation.ChangeCompanion, { primary: adjustment.id, companion: companion.value.id }),
+                );
               }
             }
-          });
-        },
+          }),
       }),
     ]),
   ),

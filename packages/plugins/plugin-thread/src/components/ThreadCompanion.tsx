@@ -5,7 +5,7 @@
 import React, { useCallback, useMemo } from 'react';
 
 import { Common, createIntent } from '@dxos/app-framework';
-import { useCapabilities, useCapability, useIntentDispatcher } from '@dxos/app-framework/react';
+import { useCapabilities, useCapability, useIntentDispatcher, useOperationInvoker } from '@dxos/app-framework/react';
 import { Filter, Obj, Query, Relation } from '@dxos/echo';
 import { Ref, useQuery } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
@@ -18,12 +18,12 @@ import { mx } from '@dxos/ui-theme';
 
 import { CommentsContainer, type CommentsContainerProps } from '../components';
 import { meta } from '../meta';
-import { ThreadCapabilities } from '../types';
-import { ThreadAction } from '../types';
+import { ThreadCapabilities, ThreadOperation } from '../types';
 
 export const ThreadCompanion = ({ subject }: { subject: any }) => {
   const { t } = useTranslation(meta.id);
   const { dispatchPromise: dispatch } = useIntentDispatcher();
+  const { invoke, invokePromise } = useOperationInvoker();
   const identity = useIdentity();
   const subjectId = Obj.getDXN(subject).toString();
 
@@ -64,63 +64,52 @@ export const ThreadCompanion = ({ subject }: { subject: any }) => {
         // TODO(wittjosiah): Should this be a thread-specific intent?
         //  The layout doesn't know about threads and this working depends on other plugins conditionally handling it.
         //  This may be overloading this intent or highjacking its intended purpose.
-        void dispatch(
-          createIntent(Common.LayoutAction.ScrollIntoView, {
-            part: 'current',
-            subject: Obj.getDXN(subject).toString(),
-            options: {
-              cursor: anchor.anchor,
-              ref: threadId,
-            },
-          }),
-        );
+        void invokePromise(Common.LayoutOperation.ScrollIntoView, {
+          subject: Obj.getDXN(subject).toString(),
+          cursor: anchor.anchor,
+          ref: threadId,
+        });
       }
     },
-    [state.current, dispatch, subject],
+    [state.current, invokePromise, subject],
   );
 
   const handleComment = useCallback(
     async (anchor: AnchoredTo.AnchoredTo, text: string) => {
-      await dispatch(
-        createIntent(ThreadAction.AddMessage, {
-          anchor,
-          subject,
-          sender: { identityDid: identity?.did },
-          text,
-        }),
-      );
+      await invokePromise(ThreadOperation.AddMessage, {
+        anchor,
+        subject,
+        sender: { identityDid: identity?.did },
+        text,
+      });
 
       const thread = Relation.getSource(anchor) as Thread.Thread;
       state.current = Obj.getDXN(thread).toString();
     },
-    [dispatch, identity, subject],
+    [invokePromise, identity, subject, state],
   );
 
   const handleResolve = useCallback(
     (anchor: AnchoredTo.AnchoredTo) =>
-      dispatch(
-        createIntent(ThreadAction.ToggleResolved, {
-          thread: Relation.getSource(anchor) as Thread.Thread,
-        }),
-      ),
-    [dispatch],
+      invokePromise(ThreadOperation.ToggleResolved, {
+        thread: Relation.getSource(anchor) as Thread.Thread,
+      }),
+    [invokePromise],
   );
 
   const handleThreadDelete = useCallback(
-    (anchor: AnchoredTo.AnchoredTo) => dispatch(createIntent(ThreadAction.Delete, { anchor, subject })),
-    [dispatch, subject],
+    (anchor: AnchoredTo.AnchoredTo) => invokePromise(ThreadOperation.Delete, { anchor, subject }),
+    [invokePromise, subject],
   );
 
   const handleMessageDelete = useCallback(
     (anchor: AnchoredTo.AnchoredTo, messageId: string) =>
-      dispatch(
-        createIntent(ThreadAction.DeleteMessage, {
-          anchor,
-          subject,
-          messageId,
-        }),
-      ),
-    [dispatch, subject],
+      invokePromise(ThreadOperation.DeleteMessage, {
+        anchor,
+        subject,
+        messageId,
+      }),
+    [invokePromise, subject],
   );
 
   const handleAcceptProposal = useCallback<NonNullable<CommentsContainerProps['onAcceptProposal']>>(
@@ -140,9 +129,9 @@ export const ThreadCompanion = ({ subject }: { subject: any }) => {
           proposal,
         }),
       );
-      await dispatch(createIntent(ThreadAction.ToggleResolved, { thread }));
+      await invokePromise(ThreadOperation.ToggleResolved, { thread });
     },
-    [dispatch, subject],
+    [dispatch, invokePromise, subject],
   );
 
   const comments = (

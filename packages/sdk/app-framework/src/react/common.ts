@@ -8,6 +8,8 @@ import { useCapability } from './useCapabilities';
 
 export const useIntentDispatcher = () => useCapability(Common.Capability.IntentDispatcher);
 
+export const useOperationInvoker = () => useCapability(Common.Capability.OperationInvoker);
+
 export const useAppGraph = (): Common.Capability.AppGraph => useCapability(Common.Capability.AppGraph);
 
 export const useLayout = () => useCapability(Common.Capability.Layout);

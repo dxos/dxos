@@ -4,29 +4,21 @@
 
 import React from 'react';
 
-import { Common, createIntent } from '@dxos/app-framework';
-import { useIntentDispatcher } from '@dxos/app-framework/react';
+import { Common } from '@dxos/app-framework';
+import { useOperationInvoker } from '@dxos/app-framework/react';
 import { Button, Icon, useTranslation } from '@dxos/react-ui';
 
 import { COMMANDS_DIALOG, meta } from '../../meta';
 
 // TODO(thure): Refactor to be handled by a more appropriate plugin.
 export const CommandsTrigger = () => {
-  const { dispatchPromise: dispatch } = useIntentDispatcher();
+  const { invokePromise } = useOperationInvoker();
   const { t } = useTranslation(meta.id);
   return (
     <Button
       classNames='m-1 pli-1 lg:pli-2'
       onClick={() =>
-        dispatch(
-          createIntent(Common.LayoutAction.UpdateDialog, {
-            part: 'dialog',
-            subject: COMMANDS_DIALOG,
-            options: {
-              blockAlign: 'start',
-            },
-          }),
-        )
+        invokePromise(Common.LayoutOperation.UpdateDialog, { subject: COMMANDS_DIALOG, blockAlign: 'start' })
       }
     >
       <span className='text-description font-normal grow text-start'>{t('command list input placeholder')}</span>

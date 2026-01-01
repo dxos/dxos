@@ -4,20 +4,20 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capability, Common, createIntent } from '@dxos/app-framework';
+import { Capability, Common } from '@dxos/app-framework';
 import { Obj, Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { ATTENDABLE_PATH_SEPARATOR, DeckAction, PLANK_COMPANION_TYPE } from '@dxos/plugin-deck/types';
+import { ATTENDABLE_PATH_SEPARATOR, DeckOperation, PLANK_COMPANION_TYPE } from '@dxos/plugin-deck/types';
 import { CreateAtom, GraphBuilder } from '@dxos/plugin-graph';
 import { COMPOSER_SPACE_LOCK } from '@dxos/plugin-space';
-import { SpaceAction } from '@dxos/plugin-space/types';
+import { SpaceOperation } from '@dxos/plugin-space/types';
 import { ThreadCapabilities } from '@dxos/plugin-thread';
 import { Channel } from '@dxos/plugin-thread/types';
 import { SpaceState, getSpace } from '@dxos/react-client/echo';
 
 import { meta } from '../../meta';
-import { Meeting, MeetingAction, MeetingCapabilities } from '../../types';
+import { Meeting, MeetingOperation, MeetingCapabilities } from '../../types';
 
 export default Capability.makeModule((context) =>
   Effect.sync(() => {
@@ -36,15 +36,13 @@ export default Capability.makeModule((context) =>
             {
               id: `${Obj.getDXN(channel).toString()}/action/share-meeting-link`,
               data: async () => {
-                const { dispatchPromise: dispatch } = context.getCapability(Common.Capability.IntentDispatcher);
+                const { invokePromise } = context.getCapability(Common.Capability.OperationInvoker);
                 invariant(space);
-                await dispatch(
-                  createIntent(SpaceAction.GetShareLink, {
-                    space,
-                    target: Obj.getDXN(channel).toString(),
-                    copyToClipboard: true,
-                  }),
-                );
+                await invokePromise(SpaceOperation.GetShareLink, {
+                  space,
+                  target: Obj.getDXN(channel).toString(),
+                  copyToClipboard: true,
+                });
               },
               properties: {
                 label: ['share call link label', { ns: meta.id }],
@@ -133,21 +131,19 @@ export default Capability.makeModule((context) =>
                 // NOTE: We are not saving the state of the transcription manager here.
                 // We expect the state to be updated through `onCallStateUpdated` once it is propagated through Swarm.
                 // This is done to avoid race conditions and to not handle optimistic updates.
-                const { dispatchPromise: dispatch } = context.getCapability(Common.Capability.IntentDispatcher);
+                const { invokePromise } = context.getCapability(Common.Capability.OperationInvoker);
 
                 let meeting = state.activeMeeting;
                 if (!meeting) {
                   const db = Obj.getDatabase(channel);
                   invariant(db);
-                  const createResult = await dispatch(createIntent(MeetingAction.Create, { channel }));
-                  const addResult = await dispatch(
-                    createIntent(SpaceAction.AddObject, {
-                      target: db,
-                      hidden: true,
-                      object: createResult.data?.object,
-                    }),
-                  );
-                  await dispatch(createIntent(MeetingAction.SetActive, { object: addResult.data?.object }));
+                  const createResult = await invokePromise(MeetingOperation.Create, { channel });
+                  const addResult = await invokePromise(SpaceOperation.AddObject, {
+                    target: db,
+                    hidden: true,
+                    object: createResult.data?.object,
+                  });
+                  await invokePromise(MeetingOperation.SetActive, { object: addResult.data?.object });
                   meeting = addResult.data?.object as Meeting.Meeting;
                 }
 
@@ -165,7 +161,7 @@ export default Capability.makeModule((context) =>
                 } else {
                   const primary = Obj.getDXN(channel).toString();
                   const companion = `${primary}${ATTENDABLE_PATH_SEPARATOR}transcript`;
-                  await dispatch(createIntent(DeckAction.ChangeCompanion, { primary, companion }));
+                  await invokePromise(DeckOperation.ChangeCompanion, { primary, companion });
                 }
               },
               properties: {

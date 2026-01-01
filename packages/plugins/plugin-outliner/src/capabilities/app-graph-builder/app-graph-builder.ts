@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
-import { Capability, Common, createIntent } from '@dxos/app-framework';
+import { Capability, Common } from '@dxos/app-framework';
 import { Obj, Relation } from '@dxos/echo';
 import { SystemTypeAnnotation } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
@@ -53,8 +53,8 @@ export default Capability.makeModule((context) =>
               },
               data: async () => {
                 invariant(db);
-                const { dispatchPromise: dispatch } = context.getCapability(Common.Capability.IntentDispatcher);
-                const { data } = await dispatch(createIntent(OutlineAction.CreateOutline));
+                const { invokePromise } = context.getCapability(Common.Capability.OperationInvoker);
+                const { data } = await invokePromise(OutlineAction.OutlineOperation.CreateOutline, {});
                 if (data?.object) {
                   db.add(data.object);
                   db.add(

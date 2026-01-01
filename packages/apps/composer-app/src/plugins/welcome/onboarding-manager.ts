@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Common, type PromiseIntentDispatcher, createIntent } from '@dxos/app-framework';
+import { Common, type OperationInvoker, type PromiseIntentDispatcher, createIntent } from '@dxos/app-framework';
 import { SubscriptionList, type Trigger } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
@@ -22,6 +22,7 @@ import { meta } from './meta';
 
 export type OnboardingManagerProps = {
   dispatch: PromiseIntentDispatcher;
+  invokePromise: OperationInvoker.OperationInvoker['invokePromise'];
   client: Client;
   firstRun?: Trigger;
   hubUrl?: string;
@@ -36,6 +37,7 @@ export class OnboardingManager {
   private readonly _ctx = new Context();
   private readonly _subscriptions = new SubscriptionList();
   private readonly _dispatch: PromiseIntentDispatcher;
+  private readonly _invokePromise: OperationInvoker.OperationInvoker['invokePromise'];
   private readonly _client: Client;
   private readonly _hubUrl?: string;
   private readonly _skipAuth: boolean;
@@ -50,6 +52,7 @@ export class OnboardingManager {
 
   constructor({
     dispatch,
+    invokePromise,
     client,
     hubUrl,
     token,
@@ -61,6 +64,7 @@ export class OnboardingManager {
     this._ctx.onDispose(() => this._subscriptions.clear());
 
     this._dispatch = dispatch;
+    this._invokePromise = invokePromise;
     this._client = client;
     this._hubUrl = hubUrl;
     this._skipAuth = ['main', 'labs'].includes(client.config.values.runtime?.app?.env?.DX_ENVIRONMENT) || !this._hubUrl;
@@ -149,27 +153,20 @@ export class OnboardingManager {
       return;
     }
 
-    await this._dispatch(
-      createIntent(Common.LayoutAction.AddToast, {
-        part: 'toast',
-        subject: {
-          id: 'passkey-setup-toast',
-          title: ['passkey setup toast title', { ns: meta.id }],
-          description: ['passkey setup toast description', { ns: meta.id }],
-          duration: Infinity,
-          icon: 'ph--key--regular',
-          closeLabel: ['close label', { ns: 'os' }],
-          actionLabel: ['passkey setup toast action label', { ns: meta.id }],
-          actionAlt: ['passkey setup toast action alt', { ns: meta.id }],
-          onAction: async () => {
-            await this._dispatch(
-              createIntent(Common.LayoutAction.SwitchWorkspace, { part: 'workspace', subject: Account.id }),
-            );
-            await this._dispatch(createIntent(Common.LayoutAction.Open, { part: 'main', subject: [Account.Security] }));
-          },
-        },
-      }),
-    );
+    await this._invokePromise(Common.LayoutOperation.AddToast, {
+      id: 'passkey-setup-toast',
+      title: ['passkey setup toast title', { ns: meta.id }],
+      description: ['passkey setup toast description', { ns: meta.id }],
+      duration: Infinity,
+      icon: 'ph--key--regular',
+      closeLabel: ['close label', { ns: 'os' }],
+      actionLabel: ['passkey setup toast action label', { ns: meta.id }],
+      actionAlt: ['passkey setup toast action alt', { ns: meta.id }],
+      onAction: async () => {
+        await this._invokePromise(Common.LayoutOperation.SwitchWorkspace, { subject: Account.id });
+        await this._invokePromise(Common.LayoutOperation.Open, { subject: [Account.Security] });
+      },
+    });
   }
 
   private async _fetchBetaCredential(): Promise<void> {
@@ -232,22 +229,16 @@ export class OnboardingManager {
 
   private async _showWelcome(): Promise<void> {
     // NOTE: Active parts cannot contain '/' characters currently.
-    await this._dispatch(
-      createIntent(Common.LayoutAction.UpdateDialog, {
-        part: 'dialog',
-        subject: WELCOME_SCREEN,
-        options: { type: 'alert', overlayClasses: OVERLAY_CLASSES, overlayStyle: OVERLAY_STYLE },
-      }),
-    );
+    await this._invokePromise(Common.LayoutOperation.UpdateDialog, {
+      subject: WELCOME_SCREEN,
+      type: 'alert',
+      overlayClasses: OVERLAY_CLASSES,
+      overlayStyle: OVERLAY_STYLE,
+    });
   }
 
   private async _closeWelcome(): Promise<void> {
-    await this._dispatch(
-      createIntent(Common.LayoutAction.UpdateDialog, {
-        part: 'dialog',
-        options: { state: false },
-      }),
-    );
+    await this._invokePromise(Common.LayoutOperation.UpdateDialog, { state: false });
   }
 
   private async _createIdentity(): Promise<void> {

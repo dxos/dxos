@@ -5,6 +5,7 @@
 import * as Schema from 'effect/Schema';
 import { type Context, createContext } from 'react';
 
+import * as Operation from '@dxos/operation';
 import { Markdown } from '@dxos/plugin-markdown/types';
 import { Collection } from '@dxos/schema';
 
@@ -23,6 +24,21 @@ export namespace PresenterAction {
       output: Schema.Void,
     },
   ) {}
+}
+
+const PRESENTER_OPERATION = `${meta.id}/operation`;
+
+export namespace PresenterOperation {
+  export const TogglePresentation = Operation.make({
+    meta: { key: `${PRESENTER_OPERATION}/toggle-presentation`, name: 'Toggle Presentation' },
+    schema: {
+      input: Schema.Struct({
+        object: Schema.Union(Markdown.Document, Collection.Collection),
+        state: Schema.optional(Schema.Boolean),
+      }),
+      output: Schema.Void,
+    },
+  });
 }
 
 export type PresenterContextType = {

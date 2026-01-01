@@ -5,8 +5,8 @@
 import * as Schema from 'effect/Schema';
 import React, { type ChangeEvent, forwardRef, useCallback, useMemo, useState } from 'react';
 
-import { Common, createIntent } from '@dxos/app-framework';
-import { useCapabilities, useIntentDispatcher } from '@dxos/app-framework/react';
+import { Common } from '@dxos/app-framework';
+import { useCapabilities, useOperationInvoker } from '@dxos/app-framework/react';
 import { log } from '@dxos/log';
 import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
 import { useClient } from '@dxos/react-client';
@@ -24,7 +24,7 @@ import { HuePicker, IconPicker } from '@dxos/react-ui-pickers';
 import { StackItem } from '@dxos/react-ui-stack';
 
 import { meta } from '../../meta';
-import { SpaceAction, SpaceCapabilities, SpaceForm } from '../../types';
+import { SpaceCapabilities, SpaceForm, SpaceOperation } from '../../types';
 
 const SpaceFormSchema = SpaceForm.pipe(
   Schema.extend(
@@ -42,7 +42,7 @@ export type SpaceSettingsContainerProps = {
 export const SpaceSettingsContainer = forwardRef<HTMLDivElement, SpaceSettingsContainerProps>(
   ({ space }, forwardedRef) => {
     const { t } = useTranslation(meta.id);
-    const { dispatchPromise: dispatch } = useIntentDispatcher();
+    const { invokePromise } = useOperationInvoker();
     const client = useClient();
     const archived = useMulticastObservable(space.state) === SpaceState.SPACE_INACTIVE;
     const [edgeReplication, setEdgeReplication] = useState(
@@ -75,16 +75,11 @@ export const SpaceSettingsContainer = forwardRef<HTMLDivElement, SpaceSettingsCo
         }
         if (properties.archived && !archived) {
           void (async () => {
-            await dispatch(createIntent(SpaceAction.Close, { space }));
-            await dispatch(
-              createIntent(Common.LayoutAction.SwitchWorkspace, {
-                part: 'workspace',
-                subject: client.spaces.default.id,
-              }),
-            );
+            await invokePromise(SpaceOperation.Close, { space });
+            await invokePromise(Common.LayoutOperation.SwitchWorkspace, { subject: client.spaces.default.id });
           })();
         } else if (!properties.archived && archived) {
-          void dispatch(createIntent(SpaceAction.Open, { space }));
+          void invokePromise(SpaceOperation.Open, { space });
         }
       },
       [space, toggleEdgeReplication, archived],

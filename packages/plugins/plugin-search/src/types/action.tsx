@@ -4,6 +4,8 @@
 
 import * as Schema from 'effect/Schema';
 
+import * as Operation from '@dxos/operation';
+
 import { meta } from '../meta';
 
 export namespace SearchAction {
@@ -13,4 +15,13 @@ export namespace SearchAction {
     input: Schema.Void,
     output: Schema.Void,
   }) {}
+}
+
+const SEARCH_OPERATION = `${meta.id}/operation`;
+
+export namespace SearchOperation {
+  export const OpenSearch = Operation.make({
+    meta: { key: `${SEARCH_OPERATION}/open-search`, name: 'Open Search' },
+    schema: { input: Schema.Void, output: Schema.Void },
+  });
 }

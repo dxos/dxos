@@ -6,6 +6,7 @@ import * as Schema from 'effect/Schema';
 
 import { Database } from '@dxos/echo';
 import { Script } from '@dxos/functions';
+import * as Operation from '@dxos/operation';
 
 import { meta } from '../meta';
 import { templates } from '../templates';
@@ -50,4 +51,38 @@ export namespace ScriptAction {
       object: Notebook.Notebook,
     }),
   }) {}
+}
+
+const SCRIPT_OPERATION = `${meta.id}/operation`;
+
+export namespace ScriptOperation {
+  export const CreateScript = Operation.make({
+    meta: { key: `${SCRIPT_OPERATION}/create-script`, name: 'Create Script' },
+    schema: {
+      input: Schema.extend(
+        ScriptAction.ScriptProps,
+        Schema.Struct({
+          db: Database.Database,
+        }),
+      ),
+      output: Schema.Struct({
+        object: Script.Script,
+      }),
+    },
+  });
+
+  export const CreateNotebook = Operation.make({
+    meta: { key: `${SCRIPT_OPERATION}/create-notebook`, name: 'Create Notebook' },
+    schema: {
+      input: Schema.extend(
+        ScriptAction.NotebookProps,
+        Schema.Struct({
+          db: Database.Database,
+        }),
+      ),
+      output: Schema.Struct({
+        object: Notebook.Notebook,
+      }),
+    },
+  });
 }

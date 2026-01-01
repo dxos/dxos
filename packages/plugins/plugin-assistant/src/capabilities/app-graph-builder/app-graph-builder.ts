@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 import * as Function from 'effect/Function';
 import * as Option from 'effect/Option';
 
-import { Capability, Common, type PromiseIntentDispatcher, createIntent } from '@dxos/app-framework';
+import { Capability, Common, type OperationInvoker } from '@dxos/app-framework';
 import { Prompt } from '@dxos/blueprints';
 import { Sequence } from '@dxos/conductor';
 import { DXN, type Database, Obj } from '@dxos/echo';
@@ -15,7 +15,7 @@ import { ClientCapabilities } from '@dxos/plugin-client';
 import { ATTENDABLE_PATH_SEPARATOR, PLANK_COMPANION_TYPE } from '@dxos/plugin-deck/types';
 import { CreateAtom, GraphBuilder, NodeMatcher } from '@dxos/plugin-graph';
 import { getActiveSpace } from '@dxos/plugin-space';
-import { SpaceAction } from '@dxos/plugin-space/types';
+import { SpaceOperation } from '@dxos/plugin-space/types';
 import { Query } from '@dxos/react-client/echo';
 
 import { ASSISTANT_DIALOG, meta } from '../../meta';
@@ -33,8 +33,8 @@ export default Capability.makeModule((context) =>
             {
               id: `${AssistantAction.UpdateChatName._tag}/${id}`,
               data: async () => {
-                const { dispatchPromise: dispatch } = context.getCapability(Common.Capability.IntentDispatcher);
-                await dispatch(createIntent(AssistantAction.UpdateChatName, { chat }));
+                const { invokePromise } = context.getCapability(Common.Capability.OperationInvoker);
+                await invokePromise(AssistantAction.AssistantOperation.UpdateChatName, { chat });
               },
               properties: {
                 label: ['chat update name label', { ns: meta.id }],
@@ -51,29 +51,24 @@ export default Capability.makeModule((context) =>
         match: NodeMatcher.whenRoot,
         actions: () => [
           {
-            id: `${Common.LayoutAction.UpdateDialog._tag}/assistant/open`,
+            id: `${Common.LayoutOperation.UpdateDialog.meta.key}/assistant/open`,
             data: async () => {
-              const { dispatchPromise: dispatch } = context.getCapability(Common.Capability.IntentDispatcher);
+              const { invokePromise } = context.getCapability(Common.Capability.OperationInvoker);
               const client = context.getCapability(ClientCapabilities.Client);
               const space = getActiveSpace(context) ?? client.spaces.default;
-              const chat = await getOrCreateChat(dispatch, space.db);
+              const chat = await getOrCreateChat(invokePromise, space.db);
               if (!chat) {
                 return;
               }
 
-              await dispatch(
-                createIntent(Common.LayoutAction.UpdateDialog, {
-                  part: 'dialog',
-                  subject: ASSISTANT_DIALOG,
-                  options: {
-                    state: true,
-                    blockAlign: 'end',
-                    props: {
-                      chat,
-                    },
-                  },
-                }),
-              );
+              await invokePromise(Common.LayoutOperation.UpdateDialog, {
+                subject: ASSISTANT_DIALOG,
+                state: true,
+                blockAlign: 'end',
+                props: {
+                  chat,
+                },
+              });
             },
             properties: {
               label: ['open assistant label', { ns: meta.id }],
@@ -171,7 +166,7 @@ export default Capability.makeModule((context) =>
 
 // TODO(burdon): Factor out.
 const getOrCreateChat = async (
-  dispatch: PromiseIntentDispatcher,
+  invokePromise: OperationInvoker.OperationInvoker['invokePromise'],
   db: Database.Database,
 ): Promise<Assistant.Chat | undefined> => {
   // TODO(wittjosiah): This should be possible with a single query.
@@ -183,8 +178,8 @@ const getOrCreateChat = async (
     return chats.at(-1);
   }
 
-  const { data } = await dispatch(createIntent(AssistantAction.CreateChat, { db }));
+  const { data } = await invokePromise(AssistantAction.AssistantOperation.CreateChat, { db });
   invariant(Obj.instanceOf(Assistant.Chat, data?.object));
-  await dispatch(createIntent(SpaceAction.AddObject, { target: db, object: data.object }));
+  await invokePromise(SpaceOperation.AddObject, { target: db, object: data.object });
   return data.object;
 };

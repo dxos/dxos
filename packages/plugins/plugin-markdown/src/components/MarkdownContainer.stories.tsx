@@ -5,8 +5,8 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useMemo } from 'react';
 
-import { Common, IntentPlugin, SettingsPlugin, createIntent } from '@dxos/app-framework';
-import { Surface, useIntentDispatcher } from '@dxos/app-framework/react';
+import { Common, IntentPlugin, OperationPlugin, SettingsPlugin } from '@dxos/app-framework';
+import { Surface, useOperationInvoker } from '@dxos/app-framework/react';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Obj, Query } from '@dxos/echo';
 import { AttentionPlugin } from '@dxos/plugin-attention';
@@ -35,7 +35,7 @@ faker.seed(1);
 const generator: ValueGenerator = faker as any;
 
 const DefaultStory = () => {
-  const { dispatchPromise: dispatch } = useIntentDispatcher();
+  const { invokePromise } = useOperationInvoker();
   const space = useSpace();
   const [doc] = useQuery(space?.db, Query.type(Markdown.Document));
   const data = useMemo(() => ({ subject: doc }), [doc]);
@@ -44,14 +44,9 @@ const DefaultStory = () => {
 
   useAsyncEffect(async () => {
     if (space) {
-      await dispatch(
-        createIntent(Common.LayoutAction.SwitchWorkspace, {
-          part: 'workspace',
-          subject: space.id,
-        }),
-      );
+      await invokePromise(Common.LayoutOperation.SwitchWorkspace, { subject: space.id });
     }
-  }, [space, dispatch]);
+  }, [space, invokePromise]);
 
   return (
     <div className='contents' {...attentionAttrs}>
@@ -107,6 +102,7 @@ const meta = {
         SpacePlugin({}),
         GraphPlugin(),
         IntentPlugin(),
+        OperationPlugin(),
         SettingsPlugin(),
         // UI
         ThemePlugin({ tx: defaultTx }),

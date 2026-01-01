@@ -5,6 +5,7 @@
 import * as Schema from 'effect/Schema';
 
 import { Key } from '@dxos/echo';
+import * as Operation from '@dxos/operation';
 import { EchoObjectSchema, SpaceSchema } from '@dxos/react-client/echo';
 import { Collection } from '@dxos/schema';
 import { Actor, AnchoredTo, Message, Thread } from '@dxos/types';
@@ -97,6 +98,165 @@ export namespace ThreadAction {
     }),
     output: Schema.Void,
   }) {}
+}
+
+const THREAD_OPERATION = `${meta.id}/operation`;
+
+/**
+ * Operations for the Thread plugin.
+ * Note: Complex ECHO types are typed as Schema.Any to avoid serialization issues.
+ */
+export namespace ThreadOperation {
+  export const OnCreateSpace = Operation.make({
+    meta: { key: `${THREAD_OPERATION}/on-create-space`, name: 'On Create Space' },
+    schema: {
+      input: Schema.Struct({
+        space: SpaceSchema,
+        rootCollection: Collection.Collection,
+        isDefault: Schema.Boolean.pipe(Schema.optional),
+      }),
+      output: Schema.Void,
+    },
+  });
+
+  export const CreateChannel = Operation.make({
+    meta: { key: `${THREAD_OPERATION}/create-channel`, name: 'Create Channel' },
+    schema: {
+      input: Schema.Struct({
+        spaceId: Key.SpaceId,
+        name: Schema.optional(Schema.String),
+      }),
+      output: Schema.Struct({
+        object: Channel.Channel,
+      }),
+    },
+  });
+
+  export const CreateChannelThread = Operation.make({
+    meta: { key: `${THREAD_OPERATION}/create-channel-thread`, name: 'Create Channel Thread' },
+    schema: {
+      input: Schema.Struct({
+        channel: Channel.Channel,
+      }),
+      output: Schema.Struct({
+        object: Thread.Thread,
+      }),
+    },
+  });
+
+  export const Create = Operation.make({
+    meta: { key: `${THREAD_OPERATION}/create`, name: 'Create Thread' },
+    schema: {
+      input: Schema.Struct({
+        name: Schema.optional(Schema.String),
+        anchor: Schema.optional(Schema.String),
+        subject: EchoObjectSchema,
+      }),
+      output: Schema.Void,
+    },
+  });
+
+  export const DeleteOutput = Schema.Struct({
+    thread: Thread.Thread.annotations({ description: 'The deleted thread.' }),
+    anchor: AnchoredTo.AnchoredTo.annotations({ description: 'The deleted anchor.' }),
+  }).pipe(Schema.partial);
+
+  export type DeleteOutput = Schema.Schema.Type<typeof DeleteOutput>;
+
+  export const Delete = Operation.make({
+    meta: { key: `${THREAD_OPERATION}/delete`, name: 'Delete Thread' },
+    schema: {
+      input: Schema.Struct({
+        anchor: AnchoredTo.AnchoredTo,
+        subject: EchoObjectSchema,
+        thread: Schema.optional(Thread.Thread),
+      }),
+      output: DeleteOutput,
+    },
+  });
+
+  export const Select = Operation.make({
+    meta: { key: `${THREAD_OPERATION}/select`, name: 'Select Thread' },
+    schema: {
+      input: Schema.Struct({
+        current: Schema.String,
+      }),
+      output: Schema.Void,
+    },
+  });
+
+  export const ToggleResolved = Operation.make({
+    meta: { key: `${THREAD_OPERATION}/toggle-resolved`, name: 'Toggle Resolved' },
+    schema: {
+      input: Schema.Struct({
+        thread: Thread.Thread,
+      }),
+      output: Schema.Void,
+    },
+  });
+
+  export const AddMessage = Operation.make({
+    meta: { key: `${THREAD_OPERATION}/add-message`, name: 'Add Message' },
+    schema: {
+      input: Schema.Struct({
+        subject: EchoObjectSchema,
+        anchor: AnchoredTo.AnchoredTo,
+        sender: Actor.Actor,
+        text: Schema.String,
+      }),
+      output: Schema.Void,
+    },
+  });
+
+  export const DeleteMessageOutput = Schema.partial(
+    Schema.Struct({
+      message: Message.Message.annotations({ description: 'The deleted message.' }),
+      messageIndex: Schema.Number.annotations({ description: 'The index the message was at.' }),
+    }),
+  );
+
+  export type DeleteMessageOutput = Schema.Schema.Type<typeof DeleteMessageOutput>;
+
+  export const DeleteMessage = Operation.make({
+    meta: { key: `${THREAD_OPERATION}/delete-message`, name: 'Delete Message' },
+    schema: {
+      input: Schema.Struct({
+        anchor: AnchoredTo.AnchoredTo,
+        subject: EchoObjectSchema,
+        messageId: Schema.String,
+      }),
+      output: DeleteMessageOutput,
+    },
+  });
+
+  /**
+   * Restore a deleted thread (inverse of Delete).
+   */
+  export const Restore = Operation.make({
+    meta: { key: `${THREAD_OPERATION}/restore`, name: 'Restore Thread' },
+    schema: {
+      input: Schema.Struct({
+        thread: Thread.Thread.annotations({ description: 'The thread to restore.' }),
+        anchor: AnchoredTo.AnchoredTo.annotations({ description: 'The anchor relation to restore.' }),
+      }),
+      output: Schema.Void,
+    },
+  });
+
+  /**
+   * Restore a deleted message (inverse of DeleteMessage).
+   */
+  export const RestoreMessage = Operation.make({
+    meta: { key: `${THREAD_OPERATION}/restore-message`, name: 'Restore Message' },
+    schema: {
+      input: Schema.Struct({
+        anchor: AnchoredTo.AnchoredTo.annotations({ description: 'The anchor of the thread.' }),
+        message: Message.Message.annotations({ description: 'The message to restore.' }),
+        messageIndex: Schema.Number.annotations({ description: 'The index to restore the message at.' }),
+      }),
+      output: Schema.Void,
+    },
+  });
 }
 
 export const ThreadSettingsSchema = Schema.mutable(Schema.Struct({}));

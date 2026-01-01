@@ -6,6 +6,7 @@ import * as Schema from 'effect/Schema';
 
 import { Obj, Type } from '@dxos/echo';
 import { FormInputAnnotation, LabelAnnotation } from '@dxos/echo/internal';
+import * as Operation from '@dxos/operation';
 import { BoardLayout, defaultLayout } from '@dxos/react-ui-board';
 
 import { meta } from '../meta';
@@ -45,3 +46,23 @@ export class Create extends Schema.TaggedClass<Create>()(`${meta.id}/action/crea
     object: Board,
   }),
 }) {}
+
+//
+// Operations
+//
+
+const BOARD_OPERATION = `${meta.id}/operation`;
+
+export namespace BoardOperation {
+  export const Create = Operation.make({
+    meta: { key: `${BOARD_OPERATION}/create`, name: 'Create Board' },
+    schema: {
+      input: Schema.Struct({
+        name: Schema.optional(Schema.String),
+      }),
+      output: Schema.Struct({
+        object: Board,
+      }),
+    },
+  });
+}

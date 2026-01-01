@@ -6,7 +6,7 @@ import { type Instruction } from '@atlaskit/pragmatic-drag-and-drop-hitbox/tree-
 import { Atom } from '@effect-atom/atom-react';
 import type * as Schema from 'effect/Schema';
 
-import { type Capability, Common, type PromiseIntentDispatcher, createIntent } from '@dxos/app-framework';
+import { type Capability, Common, type OperationInvoker } from '@dxos/app-framework';
 import { type Space, SpaceState, isSpace } from '@dxos/client/echo';
 import { type Database, type Entity, Filter, Obj, Query, type QueryResult, Ref, Type } from '@dxos/echo';
 import { EXPANDO_TYPENAME } from '@dxos/echo/internal';
@@ -20,7 +20,7 @@ import { Collection } from '@dxos/schema';
 import { createFilename } from '@dxos/util';
 
 import { meta } from './meta';
-import { SPACE_TYPE, SpaceAction } from './types';
+import { SPACE_TYPE, SpaceAction, SpaceOperation } from './types';
 
 export const SPACES = `${meta.id}-spaces`;
 export const COMPOSER_SPACE_LOCK = `${meta.id}/lock`;
@@ -260,12 +260,12 @@ export const constructSpaceNode = ({
 
 export const constructSpaceActions = ({
   space,
-  dispatch,
+  invokePromise,
   personal,
   migrating,
 }: {
   space: Space;
-  dispatch: PromiseIntentDispatcher;
+  invokePromise: OperationInvoker.OperationInvoker['invokePromise'];
   personal?: boolean;
   migrating?: boolean;
 }) => {
@@ -279,7 +279,7 @@ export const constructSpaceActions = ({
       id: getId(SpaceAction.Migrate._tag),
       type: Node.ActionGroupType,
       data: async () => {
-        await dispatch(createIntent(SpaceAction.Migrate, { space }));
+        await invokePromise(SpaceOperation.Migrate, { space });
       },
       properties: {
         label: ['migrate space label', { ns: meta.id }],
@@ -296,7 +296,7 @@ export const constructSpaceActions = ({
         id: getId(SpaceAction.OpenCreateObject._tag),
         type: Node.ActionType,
         data: async () => {
-          await dispatch(createIntent(SpaceAction.OpenCreateObject, { target: space.db }));
+          await invokePromise(SpaceOperation.OpenCreateObject, { target: space.db });
         },
         properties: {
           label: ['create object in space label', { ns: meta.id }],
@@ -309,7 +309,7 @@ export const constructSpaceActions = ({
         id: getId(SpaceAction.Rename._tag),
         type: Node.ActionType,
         data: async (params?: Node.InvokeProps) => {
-          await dispatch(createIntent(SpaceAction.Rename, { space, caller: params?.caller }));
+          await invokePromise(SpaceOperation.Rename, { space, caller: params?.caller });
         },
         properties: {
           label: ['rename space label', { ns: meta.id }],
@@ -352,12 +352,12 @@ export const createStaticSchemaNode = ({
 export const createStaticSchemaActions = ({
   schema,
   space,
-  dispatch,
+  invokePromise,
   deletable,
 }: {
   schema: Type.Obj.Any;
   space: Space;
-  dispatch: PromiseIntentDispatcher;
+  invokePromise: OperationInvoker.OperationInvoker['invokePromise'];
   deletable: boolean;
 }) => {
   const getId = (id: string) => `${space.id}/${Type.getTypename(schema)}/${id}`;
@@ -367,13 +367,11 @@ export const createStaticSchemaActions = ({
       id: getId(SpaceAction.AddObject._tag),
       type: Node.ActionType,
       data: async () => {
-        await dispatch(
-          createIntent(SpaceAction.OpenCreateObject, {
-            target: space.db,
-            views: true,
-            initialFormValues: { typename: Type.getTypename(schema) },
-          }),
-        );
+        await invokePromise(SpaceOperation.OpenCreateObject, {
+          target: space.db,
+          views: true,
+          initialFormValues: { typename: Type.getTypename(schema) },
+        });
       },
       properties: {
         label: ['add view to schema label', { ns: meta.id }],
@@ -419,12 +417,10 @@ export const createStaticSchemaActions = ({
       id: getId(SpaceAction.Snapshot._tag),
       type: Node.ActionType,
       data: async () => {
-        const result = await dispatch(
-          createIntent(SpaceAction.Snapshot, {
-            db: space.db,
-            query: Query.select(Filter.type(schema)).ast,
-          }),
-        );
+        const result = await invokePromise(SpaceOperation.Snapshot, {
+          db: space.db,
+          query: Query.select(Filter.type(schema)).ast,
+        });
         if (result.data?.snapshot) {
           await downloadBlob(
             result.data.snapshot,
@@ -526,7 +522,7 @@ export const createObjectNode = ({
 export const constructObjectActions = ({
   object,
   graph,
-  dispatch,
+  invokePromise,
   resolve,
   context,
   deletable = true,
@@ -534,7 +530,7 @@ export const constructObjectActions = ({
 }: {
   object: Obj.Any;
   graph: Graph.ReadableGraph;
-  dispatch: PromiseIntentDispatcher;
+  invokePromise: OperationInvoker.OperationInvoker['invokePromise'];
   resolve: (typename: string) => Record<string, any>;
   context: Capability.PluginContext;
   deletable?: boolean;
@@ -559,7 +555,7 @@ export const constructObjectActions = ({
             id: getId(SpaceAction.OpenCreateObject._tag),
             type: Node.ActionType,
             data: async () => {
-              await dispatch(createIntent(SpaceAction.OpenCreateObject, { target: object }));
+              await invokePromise(SpaceOperation.OpenCreateObject, { target: object });
             },
             properties: {
               label: ['create object in collection label', { ns: meta.id }],
@@ -576,13 +572,11 @@ export const constructObjectActions = ({
             id: getId(SpaceAction.AddObject._tag),
             type: Node.ActionType,
             data: async () => {
-              await dispatch(
-                createIntent(SpaceAction.OpenCreateObject, {
-                  target: db,
-                  views: true,
-                  initialFormValues: { typename: object.typename },
-                }),
-              );
+              await invokePromise(SpaceOperation.OpenCreateObject, {
+                target: db,
+                views: true,
+                initialFormValues: { typename: object.typename },
+              });
             },
             properties: {
               label: ['add view to schema label', { ns: meta.id }],
@@ -595,12 +589,10 @@ export const constructObjectActions = ({
             id: getId(SpaceAction.Snapshot._tag),
             type: Node.ActionType,
             data: async () => {
-              const result = await dispatch(
-                createIntent(SpaceAction.Snapshot, {
-                  db,
-                  query: Query.select(Filter.type(Type.toEffectSchema(object.jsonSchema))).ast,
-                }),
-              );
+              const result = await invokePromise(SpaceOperation.Snapshot, {
+                db,
+                query: Query.select(Filter.type(Type.toEffectSchema(object.jsonSchema))).ast,
+              });
               if (result.data?.snapshot) {
                 await downloadBlob(
                   result.data.snapshot,
@@ -623,25 +615,19 @@ export const constructObjectActions = ({
             type: Node.ActionType,
             data: async () => {
               if (inputSchema) {
-                await dispatch(
-                  createIntent(SpaceAction.OpenCreateObject, {
-                    target: db,
-                    typename: managedCollection ? managedCollection.key : undefined,
-                  }),
-                );
+                await invokePromise(SpaceOperation.OpenCreateObject, {
+                  target: db,
+                  typename: managedCollection ? managedCollection.key : undefined,
+                });
               } else {
                 const createdObject = await runAndForwardErrors(createObject({}, { db, context }));
-                const addResult = await dispatch(
-                  createIntent(SpaceAction.AddObject, {
-                    target: db,
-                    hidden: true,
-                    object: createdObject,
-                  }),
-                );
+                const addResult = await invokePromise(SpaceOperation.AddObject, {
+                  target: db,
+                  hidden: true,
+                  object: createdObject,
+                });
                 if (addResult.data?.id) {
-                  await dispatch(
-                    createIntent(Common.LayoutAction.Open, { part: 'main', subject: [addResult.data.id] }),
-                  );
+                  await invokePromise(Common.LayoutOperation.Open, { subject: [addResult.data.id] });
                 }
               }
             },
@@ -661,7 +647,7 @@ export const constructObjectActions = ({
             id: getId(SpaceAction.RenameObject._tag),
             type: Node.ActionType,
             data: async (params?: Node.InvokeProps) => {
-              await dispatch(createIntent(SpaceAction.RenameObject, { object, caller: params?.caller }));
+              await invokePromise(SpaceOperation.RenameObject, { object, caller: params?.caller });
             },
             properties: {
               label: ['rename object label', { ns: typename }],
@@ -682,7 +668,7 @@ export const constructObjectActions = ({
                 (node: Node.Node): node is Node.Node<Collection.Collection> =>
                   Obj.instanceOf(Collection.Collection, node.data),
               )?.data;
-              await dispatch(createIntent(SpaceAction.RemoveObjects, { objects: [object], target: collection }));
+              await invokePromise(SpaceOperation.RemoveObjects, { objects: [object], target: collection });
             },
             properties: {
               label: ['delete object label', { ns: typename }],
@@ -721,9 +707,7 @@ export const constructObjectActions = ({
       id: getId(Common.LayoutAction.Expose._tag),
       type: Node.ActionType,
       data: async () => {
-        await dispatch(
-          createIntent(Common.LayoutAction.Expose, { part: 'navigation', subject: Obj.getDXN(object).toString() }),
-        );
+        await invokePromise(Common.LayoutOperation.Expose, { subject: Obj.getDXN(object).toString() });
       },
       properties: {
         label: ['expose object label', { ns: meta.id }],

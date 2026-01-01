@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 import React, { useCallback, useMemo, useRef, useState } from 'react';
 
 import { Common, createIntent } from '@dxos/app-framework';
-import { useIntentDispatcher, usePluginManager } from '@dxos/app-framework/react';
+import { useIntentDispatcher, useOperationInvoker, usePluginManager } from '@dxos/app-framework/react';
 import { Database, Obj, Type } from '@dxos/echo';
 import { EntityKind, getTypeAnnotation } from '@dxos/echo/internal';
 import { runAndForwardErrors } from '@dxos/effect';
@@ -43,6 +43,7 @@ export const CreateObjectDialog = ({
   const manager = usePluginManager();
   const { t } = useTranslation(meta.id);
   const { dispatch } = useIntentDispatcher();
+  const { invokePromise } = useOperationInvoker();
   const [target, setTarget] = useState<Database.Database | Collection.Collection | undefined>(initialTarget);
   const [typename, setTypename] = useState<string | undefined>(initialTypename);
   const client = useClient();
@@ -95,8 +96,8 @@ export const CreateObjectDialog = ({
           const shouldNavigate = _shouldNavigate ?? (() => true);
           yield* dispatch(addObjectIntent);
           if (shouldNavigate(object)) {
-            yield* dispatch(
-              createIntent(Common.LayoutAction.Open, { part: 'main', subject: [Obj.getDXN(object).toString()] }),
+            yield* Effect.promise(() =>
+              invokePromise(Common.LayoutOperation.Open, { subject: [Obj.getDXN(object).toString()] }),
             );
           }
 

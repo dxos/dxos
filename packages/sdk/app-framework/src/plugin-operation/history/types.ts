@@ -5,15 +5,6 @@
 import type { OperationDefinition } from '@dxos/operation';
 
 /**
- * Undo mapping registration contributed by plugins.
- */
-export type UndoMappingRegistration = {
-  operation: OperationDefinition<any, any>;
-  inverse: OperationDefinition<any, any>;
-  deriveContext: (input: any, output: any) => any;
-};
-
-/**
  * History entry stored by HistoryTracker.
  */
 export type HistoryEntry = {

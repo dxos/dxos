@@ -9,7 +9,7 @@ import * as Function from 'effect/Function';
 import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 
-import { Capability, Common, createIntent } from '@dxos/app-framework';
+import { Capability, Common } from '@dxos/app-framework';
 import { type Space, SpaceState, getSpace, isSpace } from '@dxos/client/echo';
 import { DXN, type Entity, Filter, Obj, type QueryResult, Type } from '@dxos/echo';
 import { log } from '@dxos/log';
@@ -21,7 +21,7 @@ import { isNonNullable } from '@dxos/util';
 
 import { getActiveSpace } from '../../hooks';
 import { meta } from '../../meta';
-import { SPACE_TYPE, SpaceAction, SpaceCapabilities, type SpaceSettingsProps } from '../../types';
+import { SPACE_TYPE, SpaceAction, SpaceCapabilities, SpaceOperation, type SpaceSettingsProps } from '../../types';
 import {
   SHARED,
   SPACES,
@@ -86,8 +86,8 @@ export default Capability.makeModule((context) =>
           {
             id: SpaceAction.OpenCreateSpace._tag,
             data: async () => {
-              const { dispatchPromise: dispatch } = context.getCapability(Common.Capability.IntentDispatcher);
-              await dispatch(createIntent(SpaceAction.OpenCreateSpace));
+              const { invokePromise } = context.getCapability(Common.Capability.OperationInvoker);
+              await invokePromise(SpaceOperation.OpenCreateSpace);
             },
             properties: {
               label: ['create space label', { ns: meta.id }],
@@ -99,8 +99,8 @@ export default Capability.makeModule((context) =>
           {
             id: SpaceAction.Join._tag,
             data: async () => {
-              const { dispatchPromise: dispatch } = context.getCapability(Common.Capability.IntentDispatcher);
-              await dispatch(createIntent(SpaceAction.Join));
+              const { invokePromise } = context.getCapability(Common.Capability.OperationInvoker);
+              await invokePromise(SpaceOperation.Join, {});
             },
             properties: {
               label: ['join space label', { ns: meta.id }],
@@ -112,10 +112,10 @@ export default Capability.makeModule((context) =>
           {
             id: SpaceAction.OpenMembers._tag,
             data: async () => {
-              const { dispatchPromise: dispatch } = context.getCapability(Common.Capability.IntentDispatcher);
+              const { invokePromise } = context.getCapability(Common.Capability.OperationInvoker);
               const client = context.getCapability(ClientCapabilities.Client);
               const space = getActiveSpace(context) ?? client.spaces.default;
-              await dispatch(createIntent(SpaceAction.OpenMembers, { space }));
+              await invokePromise(SpaceOperation.OpenMembers, { space });
             },
             properties: {
               label: ['share space label', { ns: meta.id }],
@@ -130,10 +130,10 @@ export default Capability.makeModule((context) =>
           {
             id: SpaceAction.OpenSettings._tag,
             data: async () => {
-              const { dispatchPromise: dispatch } = context.getCapability(Common.Capability.IntentDispatcher);
+              const { invokePromise } = context.getCapability(Common.Capability.OperationInvoker);
               const client = context.getCapability(ClientCapabilities.Client);
               const space = getActiveSpace(context) ?? client.spaces.default;
-              await dispatch(createIntent(SpaceAction.OpenSettings, { space }));
+              await invokePromise(SpaceOperation.OpenSettings, { space });
             },
             properties: {
               label: ['open current space settings label', { ns: meta.id }],
@@ -217,17 +217,17 @@ export default Capability.makeModule((context) =>
         id: `${meta.id}/actions`,
         match: (node) => (node.type === SPACE_TYPE && isSpace(node.data) ? Option.some(node.data) : Option.none()),
         actions: (space, get) => {
-          const [dispatcher] = get(context.capabilities(Common.Capability.IntentDispatcher));
+          const [operationInvoker] = get(context.capabilities(Common.Capability.OperationInvoker));
           const [client] = get(context.capabilities(ClientCapabilities.Client));
           const [state] = get(context.capabilities(SpaceCapabilities.State));
 
-          if (!dispatcher || !client || !state) {
+          if (!operationInvoker || !client || !state) {
             return [];
           }
 
           return constructSpaceActions({
             space,
-            dispatch: dispatcher.dispatchPromise,
+            invokePromise: operationInvoker.invokePromise,
             personal: space === client.spaces.default,
             migrating: state.sdkMigrationRunning[space.id],
           });
@@ -429,8 +429,8 @@ export default Capability.makeModule((context) =>
           );
           const deletable = filteredViews.length === 0;
 
-          const [dispatcher] = get(context.capabilities(Common.Capability.IntentDispatcher));
-          if (!dispatcher) {
+          const [operationInvoker] = get(context.capabilities(Common.Capability.OperationInvoker));
+          if (!operationInvoker) {
             return [];
           }
 
@@ -438,7 +438,7 @@ export default Capability.makeModule((context) =>
           return createStaticSchemaActions({
             schema: schema as Type.Obj.Any,
             space,
-            dispatch: dispatcher.dispatchPromise,
+            invokePromise: operationInvoker.invokePromise,
             deletable,
           });
         },
@@ -543,18 +543,18 @@ export default Capability.makeModule((context) =>
             deletable = filteredViews.length === 0;
           }
 
-          const [dispatcher] = get(context.capabilities(Common.Capability.IntentDispatcher));
+          const [operationInvoker] = get(context.capabilities(Common.Capability.OperationInvoker));
           const [appGraph] = get(context.capabilities(Common.Capability.AppGraph));
           const [state] = get(context.capabilities(SpaceCapabilities.State));
 
-          if (!dispatcher || !appGraph || !state) {
+          if (!operationInvoker || !appGraph || !state) {
             return [];
           }
 
           return constructObjectActions({
             object,
             graph: appGraph.graph,
-            dispatch: dispatcher.dispatchPromise,
+            invokePromise: operationInvoker.invokePromise,
             resolve: resolve(get),
             context,
             deletable,

@@ -4,14 +4,14 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capability, Common, createIntent } from '@dxos/app-framework';
+import { Capability, Common } from '@dxos/app-framework';
 import { Obj } from '@dxos/echo';
-import { SpaceAction } from '@dxos/plugin-space/types';
+import { SpaceOperation } from '@dxos/plugin-space/types';
 import { isSpace } from '@dxos/react-client/echo';
 import { Collection } from '@dxos/schema';
 
 import { translations } from '../../translations';
-import { Markdown, MarkdownAction } from '../../types';
+import { Markdown, MarkdownOperation } from '../../types';
 
 export default Capability.makeModule((context) =>
   Effect.succeed(
@@ -41,14 +41,12 @@ export default Capability.makeModule((context) =>
             return;
           }
 
-          const { dispatchPromise: dispatch } = context.getCapability(Common.Capability.IntentDispatcher);
-          const createResult = await dispatch(
-            createIntent(MarkdownAction.Create, { name: data.name, content: data.data }),
-          );
+          const { invokePromise } = context.getCapability(Common.Capability.OperationInvoker);
+          const createResult = await invokePromise(MarkdownOperation.Create, { name: data.name, content: data.data });
           if (!createResult.data?.object) {
             return undefined;
           }
-          await dispatch(createIntent(SpaceAction.AddObject, { target, object: createResult.data.object }));
+          await invokePromise(SpaceOperation.AddObject, { target, object: createResult.data.object });
 
           return createResult.data.object;
         },

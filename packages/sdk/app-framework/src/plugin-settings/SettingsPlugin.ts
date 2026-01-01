@@ -10,6 +10,7 @@ import { translations } from './translations';
 
 const SettingsStore = Capability.lazy('SettingsStore', () => import('./store'));
 const SettingsIntentResolver = Capability.lazy('SettingsIntentResolver', () => import('./intent-resolver'));
+const SettingsOperationHandler = Capability.lazy('SettingsOperationHandler', () => import('./operation-handler'));
 const SettingsAppGraphBuilder = Capability.lazy('SettingsAppGraphBuilder', () => import('./app-graph-builder'));
 
 export const SettingsPlugin = Plugin.define(meta).pipe(
@@ -21,6 +22,7 @@ export const SettingsPlugin = Plugin.define(meta).pipe(
   }),
   Common.Plugin.addTranslationsModule({ translations }),
   Common.Plugin.addIntentResolverModule({ activate: SettingsIntentResolver }),
+  Common.Plugin.addOperationHandlerModule({ activate: SettingsOperationHandler }),
   Common.Plugin.addAppGraphModule({ activate: SettingsAppGraphBuilder }),
   Plugin.make,
 );

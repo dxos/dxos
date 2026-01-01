@@ -14,6 +14,7 @@ import {
   Capability,
   Common,
   IntentPlugin,
+  OperationResolver,
   Plugin,
   SettingsPlugin,
   createIntent,
@@ -28,12 +29,12 @@ import { Obj, Ref } from '@dxos/echo';
 import { Example, Function, Trigger } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { Assistant, AssistantAction, AssistantPlugin } from '@dxos/plugin-assistant';
+import { Assistant, AssistantAction, AssistantOperation, AssistantPlugin } from '@dxos/plugin-assistant';
 import { AttentionPlugin } from '@dxos/plugin-attention';
 import { AutomationPlugin } from '@dxos/plugin-automation';
 import { ClientCapabilities, ClientEvents, ClientPlugin } from '@dxos/plugin-client';
 import { type ClientPluginOptions } from '@dxos/plugin-client/types';
-import { DeckAction } from '@dxos/plugin-deck/types';
+import { DeckAction, DeckOperation } from '@dxos/plugin-deck/types';
 import { GraphPlugin } from '@dxos/plugin-graph';
 import { Markdown } from '@dxos/plugin-markdown/types';
 import { PreviewPlugin } from '@dxos/plugin-preview';
@@ -242,6 +243,51 @@ const StoryPlugin = Plugin.define<StoryPluginOptions>({
         yield* Effect.tryPromise(() => dispatch(createIntent(AssistantAction.CreateChat, { db: space.db })));
       }),
   }),
+  Plugin.addModule(({ onChatCreated }) => ({
+    id: 'example.com/plugin/testing/module/operation-handler',
+    activatesOn: Common.ActivationEvent.SetupOperationHandler,
+    activate: (context) =>
+      Effect.succeed(
+        Capability.contributes(Common.Capability.OperationHandler, [
+          OperationResolver.make({
+            operation: DeckOperation.ChangeCompanion,
+            handler: () => Effect.void,
+          }),
+          OperationResolver.make({
+            operation: AssistantOperation.CreateChat,
+            handler: ({ db, name }) =>
+              Effect.gen(function* () {
+                const client = context.getCapability(ClientCapabilities.Client);
+                const space = client.spaces.get(db.spaceId);
+                invariant(space, 'Space not found');
+
+                const queue = space.queues.create();
+                const traceQueue = space.queues.create();
+                const chat = Obj.make(Assistant.Chat, {
+                  name,
+                  queue: Ref.fromDXN(queue.dxn),
+                  traceQueue: Ref.fromDXN(traceQueue.dxn),
+                });
+                const binder = new AiContextBinder(queue);
+
+                // Story-specific behaviour to allow chat creation to be extended.
+                space.db.add(chat);
+                yield* Effect.tryPromise(() => space.db.flush({ indexes: true }));
+
+                if (onChatCreated) {
+                  yield* Effect.tryPromise(() => binder.open());
+                  yield* Effect.tryPromise(() => onChatCreated({ space, chat, binder }));
+                  yield* Effect.tryPromise(() => binder.close());
+                }
+
+                return {
+                  object: chat,
+                };
+              }),
+          }),
+        ]),
+      ),
+  })),
   Plugin.addModule(({ onChatCreated }) => ({
     id: 'example.com/plugin/testing/module/intent-resolver',
     activatesOn: Common.ActivationEvent.SetupIntentResolver,

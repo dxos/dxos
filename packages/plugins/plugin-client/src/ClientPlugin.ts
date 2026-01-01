@@ -9,6 +9,7 @@ import {
   Client,
   IntentResolver,
   Migrations,
+  OperationHandler,
   ReactContext,
   ReactSurface,
   SchemaDefs,
@@ -53,6 +54,7 @@ export const ClientPlugin = Plugin.define<ClientPluginOptions>(meta).pipe(
   }),
   Common.Plugin.addAppGraphModule({ activate: AppGraphBuilder }),
   Common.Plugin.addIntentResolverModule({ activate: (context) => IntentResolver({ context }) }),
+  Common.Plugin.addOperationHandlerModule({ activate: (context) => OperationHandler({ context }) }),
   Common.Plugin.addTranslationsModule({ translations }),
   Plugin.make,
 );

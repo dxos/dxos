@@ -5,8 +5,8 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useCallback, useRef } from 'react';
 
-import { Common, IntentPlugin, SettingsPlugin, createIntent } from '@dxos/app-framework';
-import { useIntentDispatcher } from '@dxos/app-framework/react';
+import { Common, IntentPlugin, OperationPlugin, SettingsPlugin } from '@dxos/app-framework';
+import { useOperationInvoker } from '@dxos/app-framework/react';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Filter } from '@dxos/echo';
 import { ClientPlugin } from '@dxos/plugin-client';
@@ -25,23 +25,18 @@ import { InboxPlugin } from '../InboxPlugin';
 import { Mailbox } from '../types';
 
 const ContactItem = ({ contact }: { contact: Person.Person }) => {
-  const { dispatchPromise: dispatch } = useIntentDispatcher();
+  const { invokePromise } = useOperationInvoker();
   const ref = useRef<HTMLLIElement>(null);
 
   const handleClick = useCallback(
     () =>
-      dispatch(
-        createIntent(Common.LayoutAction.UpdatePopover, {
-          part: 'popover',
-          subject: contact,
-          options: {
-            state: true,
-            variant: 'virtual',
-            anchor: ref.current,
-          },
-        }),
-      ),
-    [],
+      invokePromise(Common.LayoutOperation.UpdatePopover, {
+        subject: contact,
+        state: true,
+        variant: 'virtual',
+        anchor: ref.current,
+      }),
+    [invokePromise],
   );
 
   return (
@@ -58,23 +53,18 @@ const ContactItem = ({ contact }: { contact: Person.Person }) => {
 };
 
 const OrganizationItem = ({ organization }: { organization: Organization.Organization }) => {
-  const { dispatchPromise: dispatch } = useIntentDispatcher();
+  const { invokePromise } = useOperationInvoker();
   const ref = useRef<HTMLLIElement>(null);
 
   const handleClick = useCallback(
     () =>
-      dispatch(
-        createIntent(Common.LayoutAction.UpdatePopover, {
-          part: 'popover',
-          subject: organization,
-          options: {
-            state: true,
-            variant: 'virtual',
-            anchor: ref.current,
-          },
-        }),
-      ),
-    [],
+      invokePromise(Common.LayoutOperation.UpdatePopover, {
+        subject: organization,
+        state: true,
+        variant: 'virtual',
+        anchor: ref.current,
+      }),
+    [invokePromise],
   );
 
   return (
@@ -113,6 +103,7 @@ const meta = {
         }),
         SpacePlugin({}),
         IntentPlugin(),
+        OperationPlugin(),
         SettingsPlugin(),
 
         // UI

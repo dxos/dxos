@@ -3,11 +3,18 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import * as Schema from 'effect/Schema';
+import * as Effect from 'effect/Effect';
 import React, { type KeyboardEvent, useCallback, useRef } from 'react';
 import { expect, userEvent, within } from 'storybook/test';
 
-import { Capability, Common, IntentPlugin, SettingsPlugin, createResolver } from '@dxos/app-framework';
+import {
+  Capability,
+  Common,
+  IntentPlugin,
+  OperationPlugin,
+  OperationResolver,
+  SettingsPlugin,
+} from '@dxos/app-framework';
 import { useCapability } from '@dxos/app-framework/react';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { live } from '@dxos/live-object';
@@ -127,6 +134,7 @@ const meta = {
         ThemePlugin({ tx: defaultTx }),
         GraphPlugin(),
         IntentPlugin(),
+        OperationPlugin(),
         SettingsPlugin(),
         AttentionPlugin(),
         NavTreePlugin(),
@@ -135,15 +143,14 @@ const meta = {
       capabilities: (context) => [
         Capability.contributes(StoryState, live({ tab: 'space-0' })),
         Capability.contributes(Common.Capability.AppGraphBuilder, storybookGraphBuilders(context)),
-        Capability.contributes(Common.Capability.IntentResolver, [
-          createResolver({
-            intent: Common.LayoutAction.UpdateLayout,
-            filter: (data): data is Schema.Schema.Type<typeof Common.LayoutAction.SwitchWorkspace.fields.input> =>
-              Schema.is(Common.LayoutAction.SwitchWorkspace.fields.input)(data),
-            resolve: ({ subject }) => {
-              const state = context.getCapability(StoryState);
-              state.tab = subject;
-            },
+        Capability.contributes(Common.Capability.OperationHandler, [
+          OperationResolver.make({
+            operation: Common.LayoutOperation.SwitchWorkspace,
+            handler: ({ subject }) =>
+              Effect.sync(() => {
+                const state = context.getCapability(StoryState);
+                state.tab = subject;
+              }),
           }),
         ]),
       ],

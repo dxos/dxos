@@ -4,14 +4,14 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capability, Common, createIntent } from '@dxos/app-framework';
+import { Capability, Common } from '@dxos/app-framework';
 import { isSpace } from '@dxos/client/echo';
 import { Obj } from '@dxos/echo';
 import { Collection } from '@dxos/schema';
 
 import { meta } from '../../meta';
 import { translations } from '../../translations';
-import { SPACE_TYPE, SpaceAction } from '../../types';
+import { SPACE_TYPE, SpaceOperation } from '../../types';
 import { SPACES } from '../../util';
 
 const COLLECTION_TYPE = Collection.Collection.typename;
@@ -43,8 +43,8 @@ export default Capability.makeModule((context) =>
           type: DIRECTORY_TYPE,
         }),
         deserialize: async (data) => {
-          const { dispatchPromise: dispatch } = context.getCapability(Common.Capability.IntentDispatcher);
-          const result = await dispatch(createIntent(SpaceAction.Create, { name: data.name, edgeReplication: true }));
+          const { invokePromise } = context.getCapability(Common.Capability.OperationInvoker);
+          const result = await invokePromise(SpaceOperation.Create, { name: data.name, edgeReplication: true });
           return result.data?.space;
         },
       },
@@ -65,13 +65,11 @@ export default Capability.makeModule((context) =>
             return;
           }
 
-          const { dispatchPromise: dispatch } = context.getCapability(Common.Capability.IntentDispatcher);
-          const result = await dispatch(
-            createIntent(SpaceAction.AddObject, {
-              target: collection,
-              object: Obj.make(Collection.Collection, { name: data.name, objects: [] }),
-            }),
-          );
+          const { invokePromise } = context.getCapability(Common.Capability.OperationInvoker);
+          const result = await invokePromise(SpaceOperation.AddObject, {
+            target: collection,
+            object: Obj.make(Collection.Collection, { name: data.name, objects: [] }),
+          });
 
           return result.data?.object;
         },

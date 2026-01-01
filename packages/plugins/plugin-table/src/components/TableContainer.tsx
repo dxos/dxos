@@ -7,12 +7,12 @@ import * as Match from 'effect/Match';
 import type * as Schema from 'effect/Schema';
 import React, { forwardRef, useCallback, useMemo, useRef } from 'react';
 
-import { Common, createIntent } from '@dxos/app-framework';
-import { useAppGraph, useIntentDispatcher } from '@dxos/app-framework/react';
+import { Common } from '@dxos/app-framework';
+import { useAppGraph, useOperationInvoker } from '@dxos/app-framework/react';
 import { type Database, Filter, Obj, Order, Query, type QueryAST, Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { useGlobalFilteredObjects } from '@dxos/plugin-search';
-import { SpaceAction } from '@dxos/plugin-space/types';
+import { SpaceOperation } from '@dxos/plugin-space/types';
 import { useQuery, useSchema } from '@dxos/react-client/echo';
 import { StackItem } from '@dxos/react-ui-stack';
 import {
@@ -40,7 +40,7 @@ export type TableContainerProps = {
 
 // TODO(wittjosiah): Need to handle more complex queries by restricting add row.
 export const TableContainer = forwardRef<HTMLDivElement, TableContainerProps>(({ role, object }, forwardedRef) => {
-  const { dispatchPromise: dispatch } = useIntentDispatcher();
+  const { invokePromise } = useOperationInvoker();
   const tableRef = useRef<TableController>(null);
 
   const db = Obj.getDatabase(object);
@@ -70,17 +70,17 @@ export const TableContainer = forwardRef<HTMLDivElement, TableContainerProps>(({
 
   const handleDeleteRows = useCallback(
     (_row: number, objects: any[]) => {
-      void dispatch(createIntent(SpaceAction.RemoveObjects, { objects }));
+      void invokePromise(SpaceOperation.RemoveObjects, { objects });
     },
-    [dispatch],
+    [invokePromise],
   );
 
   const handleDeleteColumn = useCallback(
     (fieldId: string) => {
       invariant(view);
-      void dispatch(createIntent(SpaceAction.DeleteField, { view, fieldId }));
+      void invokePromise(SpaceOperation.DeleteField, { view, fieldId });
     },
-    [dispatch, view],
+    [invokePromise, view],
   );
 
   const features: Partial<TableFeatures> = useMemo(
@@ -105,11 +105,11 @@ export const TableContainer = forwardRef<HTMLDivElement, TableContainerProps>(({
     (actionId: string, data: any) =>
       Match.value(actionId).pipe(
         Match.when('open', () =>
-          dispatch(createIntent(Common.LayoutAction.Open, { part: 'main', subject: [Obj.getDXN(data).toString()] })),
+          invokePromise(Common.LayoutOperation.Open, { subject: [Obj.getDXN(data).toString()] }),
         ),
         Match.orElseAbsurd,
       ),
-    [dispatch],
+    [invokePromise],
   );
 
   const handleRowOrderChange = useCallback(() => {

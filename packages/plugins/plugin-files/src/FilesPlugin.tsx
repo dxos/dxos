@@ -8,7 +8,15 @@ import { ActivationEvent, Capability, Common, Plugin } from '@dxos/app-framework
 import { AttentionEvents } from '@dxos/plugin-attention';
 import { Node } from '@dxos/plugin-graph';
 
-import { AppGraphBuilder, FileSettings, FileState, IntentResolver, Markdown, ReactSurface } from './capabilities';
+import {
+  AppGraphBuilder,
+  FileSettings,
+  FileState,
+  IntentResolver,
+  Markdown,
+  OperationHandler,
+  ReactSurface,
+} from './capabilities';
 import { meta } from './meta';
 import { translations } from './translations';
 
@@ -33,6 +41,7 @@ export const FilesPlugin = Plugin.define(meta).pipe(
   }),
   Common.Plugin.addSurfaceModule({ activate: ReactSurface }),
   Common.Plugin.addIntentResolverModule({ activate: IntentResolver }),
+  Common.Plugin.addOperationHandlerModule({ activate: OperationHandler }),
   Common.Plugin.addAppGraphModule({ activate: AppGraphBuilder }),
   Plugin.addModule({
     id: 'app-graph-serializer',

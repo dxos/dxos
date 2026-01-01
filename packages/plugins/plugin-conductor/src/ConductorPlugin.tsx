@@ -10,7 +10,7 @@ import { Obj } from '@dxos/echo';
 import { type CreateObject } from '@dxos/plugin-space/types';
 import { CanvasBoardType } from '@dxos/react-ui-canvas-editor';
 
-import { IntentResolver, ReactSurface } from './capabilities';
+import { IntentResolver, OperationHandler, ReactSurface } from './capabilities';
 import { meta } from './meta';
 import { translations } from './translations';
 
@@ -30,5 +30,6 @@ export const ConductorPlugin = Plugin.define(meta).pipe(
   Common.Plugin.addSchemaModule({ schema: [CanvasBoardType, ComputeGraph] }),
   Common.Plugin.addSurfaceModule({ activate: ReactSurface }),
   Common.Plugin.addIntentResolverModule({ activate: IntentResolver }),
+  Common.Plugin.addOperationHandlerModule({ activate: OperationHandler }),
   Plugin.make,
 );

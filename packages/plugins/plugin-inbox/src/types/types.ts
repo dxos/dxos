@@ -5,6 +5,7 @@
 import * as Schema from 'effect/Schema';
 
 import { Database } from '@dxos/echo';
+import * as Operation from '@dxos/operation';
 import { Actor } from '@dxos/types';
 
 import { meta } from '../meta';
@@ -50,4 +51,55 @@ export namespace InboxAction {
     }),
     output: Schema.Void,
   }) {}
+}
+
+const INBOX_OPERATION = `${meta.id}/operation`;
+
+export namespace InboxOperation {
+  export const CreateMailbox = Operation.make({
+    meta: { key: `${INBOX_OPERATION}/create-mailbox`, name: 'Create Mailbox' },
+    schema: {
+      input: Schema.Struct({
+        db: Database.Database,
+        name: Schema.optional(Schema.String),
+      }),
+      output: Schema.Struct({
+        object: Mailbox.Mailbox,
+      }),
+    },
+  });
+
+  export const CreateCalendar = Operation.make({
+    meta: { key: `${INBOX_OPERATION}/create-calendar`, name: 'Create Calendar' },
+    schema: {
+      input: Schema.Struct({
+        db: Database.Database,
+        name: Schema.optional(Schema.String),
+      }),
+      output: Schema.Struct({
+        object: Calendar.Calendar,
+      }),
+    },
+  });
+
+  export const ExtractContact = Operation.make({
+    meta: { key: `${INBOX_OPERATION}/extract-contact`, name: 'Extract Contact' },
+    schema: {
+      input: Schema.Struct({
+        db: Database.Database,
+        actor: Actor.Actor,
+      }),
+      output: Schema.Void,
+    },
+  });
+
+  export const RunAssistant = Operation.make({
+    meta: { key: `${INBOX_OPERATION}/run-assistant`, name: 'Run Inbox Assistant' },
+    schema: {
+      input: Schema.Struct({
+        mailbox: Mailbox.Mailbox,
+      }),
+      output: Schema.Void,
+    },
+  });
 }

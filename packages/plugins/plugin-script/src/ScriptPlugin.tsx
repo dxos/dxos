@@ -14,6 +14,7 @@ import {
   BlueprintDefinition,
   Compiler,
   IntentResolver,
+  OperationHandler,
   ReactSurface,
   ScriptSettings,
 } from './capabilities';
@@ -62,6 +63,7 @@ export const ScriptPlugin = Plugin.define(meta).pipe(
   Common.Plugin.addSchemaModule({ schema: [Script.Script] }),
   Common.Plugin.addSurfaceModule({ activate: ReactSurface }),
   Common.Plugin.addIntentResolverModule({ activate: IntentResolver }),
+  Common.Plugin.addOperationHandlerModule({ activate: OperationHandler }),
   Common.Plugin.addBlueprintDefinitionModule({ activate: BlueprintDefinition }),
   Plugin.make,
 );

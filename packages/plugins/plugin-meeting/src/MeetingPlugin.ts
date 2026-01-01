@@ -4,7 +4,7 @@
 
 import * as Effect from 'effect/Effect';
 
-import { ActivationEvent, Capability, Common, Plugin, createIntent } from '@dxos/app-framework';
+import { ActivationEvent, Capability, Common, Plugin } from '@dxos/app-framework';
 import { Type } from '@dxos/echo';
 import { ClientEvents } from '@dxos/plugin-client';
 import { SpaceCapabilities, SpaceEvents } from '@dxos/plugin-space';
@@ -15,12 +15,13 @@ import {
   IntentResolver,
   MeetingSettings,
   MeetingState,
+  OperationHandler,
   ReactSurface,
   Repair,
 } from './capabilities';
 import { meta } from './meta';
 import { translations } from './translations';
-import { Meeting, MeetingAction } from './types';
+import { Meeting, MeetingOperation } from './types';
 
 export const MeetingPlugin = Plugin.define(meta).pipe(
   Plugin.addModule({
@@ -49,11 +50,12 @@ export const MeetingPlugin = Plugin.define(meta).pipe(
   Plugin.addModule({
     id: 'on-space-created',
     activatesOn: SpaceEvents.SpaceCreated,
-    activate: () =>
+    activate: (context) =>
       Effect.succeed(
-        Capability.contributes(SpaceCapabilities.OnCreateSpace, (params) =>
-          createIntent(MeetingAction.OnCreateSpace, params),
-        ),
+        Capability.contributes(SpaceCapabilities.OnCreateSpace, (params) => {
+          const { invoke } = context.getCapability(Common.Capability.OperationInvoker);
+          return invoke(MeetingOperation.OnCreateSpace, params);
+        }),
       ),
   }),
   Plugin.addModule({
@@ -62,6 +64,7 @@ export const MeetingPlugin = Plugin.define(meta).pipe(
   }),
   Common.Plugin.addSurfaceModule({ activate: ReactSurface }),
   Common.Plugin.addIntentResolverModule({ activate: IntentResolver }),
+  Common.Plugin.addOperationHandlerModule({ activate: OperationHandler }),
   Common.Plugin.addAppGraphModule({ activate: AppGraphBuilder }),
   Plugin.addModule({
     activatesOn: ActivationEvent.allOf(Common.ActivationEvent.SettingsReady, ClientEvents.ClientReady),

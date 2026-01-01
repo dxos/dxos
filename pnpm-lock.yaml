@@ -144,6 +144,9 @@ catalogs:
     '@dnd-kit/utilities':
       specifier: ^3.2.0
       version: 3.2.0
+    '@dxos/log':
+      specifier: ^0.8.3
+      version: 0.8.3
     '@effect-atom/atom':
       specifier: ^0.4.10
       version: 0.4.10
@@ -7205,6 +7208,9 @@ importers:
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
+      '@dxos/operation':
+        specifier: workspace:*
+        version: link:../../core/operation
       '@dxos/plugin-attention':
         specifier: workspace:*
         version: link:../plugin-attention
@@ -7413,6 +7419,9 @@ importers:
       '@dxos/keyboard':
         specifier: workspace:*
         version: link:../../common/keyboard
+      '@dxos/operation':
+        specifier: workspace:*
+        version: link:../../core/operation
       '@dxos/plugin-graph':
         specifier: workspace:*
         version: link:../plugin-graph
@@ -7492,6 +7501,9 @@ importers:
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
+      '@dxos/operation':
+        specifier: workspace:*
+        version: link:../../core/operation
       '@dxos/plugin-client':
         specifier: workspace:*
         version: link:../plugin-client
@@ -7619,6 +7631,9 @@ importers:
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
+      '@dxos/operation':
+        specifier: workspace:*
+        version: link:../../core/operation
       '@dxos/plugin-client':
         specifier: workspace:*
         version: link:../plugin-client
@@ -7749,6 +7764,9 @@ importers:
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
+      '@dxos/operation':
+        specifier: workspace:*
+        version: link:../../core/operation
       '@dxos/plugin-client':
         specifier: workspace:*
         version: link:../plugin-client
@@ -7864,6 +7882,9 @@ importers:
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
+      '@dxos/operation':
+        specifier: workspace:*
+        version: link:../../core/operation
       '@dxos/plugin-graph':
         specifier: workspace:*
         version: link:../plugin-graph
@@ -7985,6 +8006,9 @@ importers:
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
+      '@dxos/operation':
+        specifier: workspace:*
+        version: link:../../core/operation
       '@dxos/plugin-client':
         specifier: workspace:*
         version: link:../plugin-client
@@ -8287,6 +8311,9 @@ importers:
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
+      '@dxos/operation':
+        specifier: workspace:*
+        version: link:../../core/operation
       '@dxos/plugin-attention':
         specifier: workspace:*
         version: link:../plugin-attention
@@ -8405,6 +8432,9 @@ importers:
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
+      '@dxos/operation':
+        specifier: workspace:*
+        version: link:../../core/operation
       '@dxos/plugin-client':
         specifier: workspace:*
         version: link:../plugin-client
@@ -8517,6 +8547,9 @@ importers:
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
+      '@dxos/operation':
+        specifier: workspace:*
+        version: link:../../core/operation
       '@dxos/plugin-client':
         specifier: workspace:*
         version: link:../plugin-client
@@ -8653,6 +8686,9 @@ importers:
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
+      '@dxos/operation':
+        specifier: workspace:*
+        version: link:../../core/operation
       '@dxos/plugin-attention':
         specifier: workspace:*
         version: link:../plugin-attention
@@ -8802,6 +8838,9 @@ importers:
       '@dxos/local-storage':
         specifier: workspace:*
         version: link:../../common/local-storage
+      '@dxos/operation':
+        specifier: workspace:*
+        version: link:../../core/operation
       '@dxos/plugin-client':
         specifier: workspace:*
         version: link:../plugin-client
@@ -8941,6 +8980,9 @@ importers:
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
+      '@dxos/operation':
+        specifier: workspace:*
+        version: link:../../core/operation
       '@dxos/plugin-attention':
         specifier: workspace:*
         version: link:../plugin-attention
@@ -9128,6 +9170,9 @@ importers:
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
+      '@dxos/operation':
+        specifier: workspace:*
+        version: link:../../core/operation
       '@dxos/plugin-client':
         specifier: workspace:*
         version: link:../plugin-client
@@ -9246,6 +9291,9 @@ importers:
       '@dxos/local-storage':
         specifier: workspace:*
         version: link:../../common/local-storage
+      '@dxos/operation':
+        specifier: workspace:*
+        version: link:../../core/operation
       '@dxos/plugin-client':
         specifier: workspace:*
         version: link:../plugin-client
@@ -9425,6 +9473,9 @@ importers:
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
+      '@dxos/operation':
+        specifier: workspace:*
+        version: link:../../core/operation
       '@dxos/plugin-attention':
         specifier: workspace:*
         version: link:../plugin-attention
@@ -9555,6 +9606,9 @@ importers:
       '@dxos/effect':
         specifier: workspace:*
         version: link:../../common/effect
+      '@dxos/operation':
+        specifier: workspace:*
+        version: link:../../core/operation
       '@dxos/plugin-client':
         specifier: workspace:*
         version: link:../plugin-client
@@ -9691,6 +9745,9 @@ importers:
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
+      '@dxos/operation':
+        specifier: workspace:*
+        version: link:../../core/operation
       '@dxos/plugin-assistant':
         specifier: workspace:*
         version: link:../plugin-assistant
@@ -10115,6 +10172,9 @@ importers:
       '@dxos/observability':
         specifier: workspace:*
         version: link:../../sdk/observability
+      '@dxos/operation':
+        specifier: workspace:*
+        version: link:../../core/operation
       '@dxos/plugin-graph':
         specifier: workspace:*
         version: link:../plugin-graph
@@ -10203,6 +10263,9 @@ importers:
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
+      '@dxos/operation':
+        specifier: workspace:*
+        version: link:../../core/operation
       '@dxos/plugin-client':
         specifier: workspace:*
         version: link:../plugin-client
@@ -10315,6 +10378,9 @@ importers:
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
+      '@dxos/operation':
+        specifier: workspace:*
+        version: link:../../core/operation
       '@dxos/plugin-client':
         specifier: workspace:*
         version: link:../plugin-client
@@ -10554,6 +10620,9 @@ importers:
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
+      '@dxos/operation':
+        specifier: workspace:*
+        version: link:../../core/operation
       '@dxos/plugin-client':
         specifier: workspace:*
         version: link:../plugin-client
@@ -10727,6 +10796,9 @@ importers:
       '@dxos/live-object':
         specifier: workspace:*
         version: link:../../core/echo/live-object
+      '@dxos/operation':
+        specifier: workspace:*
+        version: link:../../core/operation
       '@dxos/plugin-graph':
         specifier: workspace:*
         version: link:../plugin-graph
@@ -10884,6 +10956,9 @@ importers:
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
+      '@dxos/operation':
+        specifier: workspace:*
+        version: link:../../core/operation
       '@dxos/plugin-assistant':
         specifier: workspace:*
         version: link:../plugin-assistant
@@ -11107,6 +11182,9 @@ importers:
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
+      '@dxos/operation':
+        specifier: workspace:*
+        version: link:../../core/operation
       '@dxos/plugin-client':
         specifier: workspace:*
         version: link:../plugin-client
@@ -11255,6 +11333,9 @@ importers:
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
+      '@dxos/operation':
+        specifier: workspace:*
+        version: link:../../core/operation
       '@dxos/plugin-attention':
         specifier: workspace:*
         version: link:../plugin-attention
@@ -11457,6 +11538,9 @@ importers:
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
+      '@dxos/operation':
+        specifier: workspace:*
+        version: link:../../core/operation
       '@dxos/plugin-client':
         specifier: workspace:*
         version: link:../plugin-client
@@ -11629,6 +11713,9 @@ importers:
       '@dxos/migrations':
         specifier: workspace:*
         version: link:../../sdk/migrations
+      '@dxos/operation':
+        specifier: workspace:*
+        version: link:../../core/operation
       '@dxos/plugin-attention':
         specifier: workspace:*
         version: link:../plugin-attention
@@ -11956,6 +12043,9 @@ importers:
       '@dxos/live-object':
         specifier: workspace:*
         version: link:../../core/echo/live-object
+      '@dxos/operation':
+        specifier: workspace:*
+        version: link:../../core/operation
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
@@ -12017,6 +12107,12 @@ importers:
       '@dxos/live-object':
         specifier: workspace:*
         version: link:../../core/echo/live-object
+      '@dxos/log':
+        specifier: 'catalog:'
+        version: 0.8.3
+      '@dxos/operation':
+        specifier: workspace:*
+        version: link:../../core/operation
       '@dxos/plugin-client':
         specifier: workspace:*
         version: link:../plugin-client
@@ -12111,6 +12207,9 @@ importers:
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../core/echo/echo
+      '@dxos/operation':
+        specifier: workspace:*
+        version: link:../../core/operation
       '@dxos/plugin-client':
         specifier: workspace:*
         version: link:../plugin-client
@@ -12351,6 +12450,9 @@ importers:
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
+      '@dxos/operation':
+        specifier: workspace:*
+        version: link:../../core/operation
       '@dxos/plugin-attention':
         specifier: workspace:*
         version: link:../plugin-attention
@@ -12520,6 +12622,9 @@ importers:
       '@dxos/node-std':
         specifier: workspace:*
         version: link:../../common/node-std
+      '@dxos/operation':
+        specifier: workspace:*
+        version: link:../../core/operation
       '@dxos/plugin-client':
         specifier: workspace:*
         version: link:../plugin-client
@@ -12671,6 +12776,9 @@ importers:
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
+      '@dxos/operation':
+        specifier: workspace:*
+        version: link:../../core/operation
       '@dxos/plugin-client':
         specifier: workspace:*
         version: link:../plugin-client
@@ -12940,6 +13048,9 @@ importers:
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
+      '@dxos/operation':
+        specifier: workspace:*
+        version: link:../../core/operation
       '@dxos/plugin-client':
         specifier: workspace:*
         version: link:../plugin-client
@@ -20412,6 +20523,24 @@ packages:
     resolution: {integrity: sha512-h65/pn2IPCCIWwdlR2BMLqRkDxpTEONA+HQW3n765HBijLYGyrnTCLa2YQt8VVjjSQD6EfFlTE6aS2Q/b6nb2g==}
     peerDependencies:
       react: ~19.2.3
+
+  '@dxos/debug@0.8.3':
+    resolution: {integrity: sha512-sDsOvwejoVKdLPpBK3yd4RAX8/sZf3C4ZtmmSJm9rmb8kv6NcyJgiPYZZFOJIArEL6Xm4Z9aHfDhOjrK8p4YtQ==}
+
+  '@dxos/invariant@0.8.3':
+    resolution: {integrity: sha512-PWu7u8LxPwGwOedstv4SfB6q4ZtZpclercV5xERai3HNAf+cl1ExA1KOLjgeKQVZsI7Ip3K5dM4mymhA98+KQg==}
+
+  '@dxos/keys@0.8.3':
+    resolution: {integrity: sha512-+ht+usY5oFawxnZaojtACBRQMj8lLzmh+P0QrJ6MAw8UpCqD+NkTC3IdWnHncUJZyAd597k21Kr1NCn8ukFsAg==}
+
+  '@dxos/log@0.8.3':
+    resolution: {integrity: sha512-DASNu0aGPE2dr2St5SLsGF1hxp26DvYXBlvJuIwHFYF8R3QM8Yv/fFplX3M7imAn9becykMr2GtQ+vXKOB6HdQ==}
+
+  '@dxos/node-std@0.8.3':
+    resolution: {integrity: sha512-aR4HR7nd7/xbvl//3XKxUTXtAPywHrW/n0UI1vuutKodRNgmmnnz+doNkCkUQlkVPe6zf/ITAtty9JJdqjQIEA==}
+
+  '@dxos/util@0.8.3':
+    resolution: {integrity: sha512-g59XyzcFcNx31+Hw/lyWeJaHpWN9qbERlnAeFrcX1Ck0rYKacyiBWLKM7Z7ghXH0xr8eNUCHeGqk7GS+zAuH+g==}
 
   '@effect-atom/atom-react@0.4.4':
     resolution: {integrity: sha512-EWT9WpB67GNCecxQXJdAZNVMhuk3VxpdDfojxg1wOgWmR5TPaGiXA74Jqa2Y9AEjSB0hMMAk7RNve2CoIikg2w==}
@@ -29915,6 +30044,9 @@ packages:
 
   ee-first@1.1.1:
     resolution: {integrity: sha512-WMwm9LhRUo+WUaRN+vRuETqG89IgZphVSNkdFgeb6sS/E4OrDIN7t48CAewSHXc6C8lefD8KKfr5vY61brQlow==}
+
+  effect@3.14.21:
+    resolution: {integrity: sha512-TKR7zfWcuZgEdWd+oIGA8LdREj/c+1Q0wz4pWqQtYT7VHnkW/QQEYCXgrDI5dT6lJgRTgyQAC1bAnpAf6MdjIA==}
 
   effect@3.19.11:
     resolution: {integrity: sha512-UTEj3c1s41Ha3uzSPKKvFBZaDjZ8ez00Q2NYWVm2mKh2LXeX8j6LTg1HcQHnmdUhOjr79KHmhVWYB/zbegLO1A==}
@@ -40627,6 +40759,46 @@ snapshots:
     dependencies:
       react: 19.2.3
       tslib: 2.8.1
+
+  '@dxos/debug@0.8.3':
+    dependencies:
+      '@dxos/node-std': 0.8.3
+
+  '@dxos/invariant@0.8.3': {}
+
+  '@dxos/keys@0.8.3':
+    dependencies:
+      '@dxos/debug': 0.8.3
+      '@dxos/invariant': 0.8.3
+      '@dxos/node-std': 0.8.3
+      effect: 3.14.21
+      ulidx: 2.3.0
+
+  '@dxos/log@0.8.3':
+    dependencies:
+      '@dxos/node-std': 0.8.3
+      '@dxos/util': 0.8.3
+      chalk: 4.1.2
+      js-yaml: 4.1.1
+      lodash.defaultsdeep: 4.6.1
+      lodash.omit: 4.5.0
+
+  '@dxos/node-std@0.8.3':
+    dependencies:
+      assert: 2.0.0
+      events: 3.3.0
+      path-browserify: 1.0.1
+      readable-stream: 3.6.2
+      util: 0.12.5
+
+  '@dxos/util@0.8.3':
+    dependencies:
+      '@dxos/debug': 0.8.3
+      '@dxos/invariant': 0.8.3
+      '@dxos/keys': 0.8.3
+      '@dxos/node-std': 0.8.3
+      lodash.get: 4.4.2
+      lodash.set: 4.3.2
 
   '@effect-atom/atom-react@0.4.4(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/platform@0.93.6(effect@3.19.11))(@effect/rpc@0.72.2(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11))(effect@3.19.11)(react@19.2.3)(scheduler@0.27.0)':
     dependencies:
@@ -51447,6 +51619,11 @@ snapshots:
       semver: 7.7.3
 
   ee-first@1.1.1: {}
+
+  effect@3.14.21:
+    dependencies:
+      '@standard-schema/spec': 1.0.0
+      fast-check: 3.23.2
 
   effect@3.19.11:
     dependencies:

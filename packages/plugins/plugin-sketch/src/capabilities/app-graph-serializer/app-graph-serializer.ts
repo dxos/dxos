@@ -4,14 +4,14 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capability, Common, createIntent } from '@dxos/app-framework';
+import { Capability, Common } from '@dxos/app-framework';
 import { Obj } from '@dxos/echo';
-import { SpaceAction } from '@dxos/plugin-space/types';
+import { SpaceOperation } from '@dxos/plugin-space/types';
 import { isSpace } from '@dxos/react-client/echo';
 import { Collection } from '@dxos/schema';
 
 import { translations } from '../../translations';
-import { Diagram, SketchAction } from '../../types';
+import { Diagram, SketchOperation } from '../../types';
 
 export default Capability.makeModule((context) =>
   Effect.succeed(
@@ -40,12 +40,12 @@ export default Capability.makeModule((context) =>
 
           const { schema, content } = JSON.parse(data.data);
 
-          const { dispatchPromise: dispatch } = context.getCapability(Common.Capability.IntentDispatcher);
-          const createResult = await dispatch(createIntent(SketchAction.Create, { name: data.name, schema, content }));
+          const { invokePromise } = context.getCapability(Common.Capability.OperationInvoker);
+          const createResult = await invokePromise(SketchOperation.Create, { name: data.name, schema, content });
           if (!createResult.data?.object) {
             return undefined;
           }
-          await dispatch(createIntent(SpaceAction.AddObject, { target, object: createResult.data.object }));
+          await invokePromise(SpaceOperation.AddObject, { target, object: createResult.data.object });
 
           return createResult.data.object;
         },

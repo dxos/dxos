@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 import type * as Schema from 'effect/Schema';
 
-import { Capability, Common, createIntent } from '@dxos/app-framework';
+import { Capability, Common } from '@dxos/app-framework';
 import { extractionAnthropicFunction, processTranscriptMessage } from '@dxos/assistant/extraction';
 import { Filter, type Obj, Query, Type } from '@dxos/echo';
 import { FunctionExecutor } from '@dxos/functions-runtime';
@@ -22,7 +22,7 @@ import { type Space } from '@dxos/react-client/echo';
 import { type Message } from '@dxos/types';
 
 import { meta } from '../../meta';
-import { Meeting, MeetingAction, MeetingCapabilities } from '../../types';
+import { Meeting, MeetingOperation, MeetingCapabilities } from '../../types';
 
 // TODO(wittjosiah): Factor out.
 // TODO(wittjosiah): Can we stop using protobuf for this?
@@ -30,7 +30,7 @@ type MeetingPayload = buf.MessageInitShape<typeof MeetingPayloadSchema>;
 
 export default Capability.makeModule((context) =>
   Effect.sync(() => {
-    const { dispatchPromise: dispatch } = context.getCapability(Common.Capability.IntentDispatcher);
+    const { invokePromise } = context.getCapability(Common.Capability.OperationInvoker);
     const client = context.getCapability(ClientCapabilities.Client);
     const state = context.getCapability(MeetingCapabilities.State);
     const _settings = context.getCapability(Common.Capability.SettingsStore).getStore<Meeting.Settings>(meta.id)!.value;
@@ -70,7 +70,7 @@ export default Capability.makeModule((context) =>
         }
 
         const payload: MeetingPayload = activity.payload;
-        await dispatch(createIntent(MeetingAction.HandlePayload, payload));
+        await invokePromise(MeetingOperation.HandlePayload, payload);
       },
       onMediaStateUpdated: async ([mediaState, isSpeaking]: [MediaState, boolean]) => {
         void state.transcriptionManager?.setAudioTrack(mediaState.audioTrack);

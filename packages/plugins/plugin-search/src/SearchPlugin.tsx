@@ -4,7 +4,7 @@
 
 import { Common, Plugin } from '@dxos/app-framework';
 
-import { AppGraphBuilder, IntentResolver, ReactSurface } from './capabilities';
+import { AppGraphBuilder, IntentResolver, OperationHandler, ReactSurface } from './capabilities';
 import { SEARCH_RESULT, meta } from './meta';
 import { translations } from './translations';
 import { type SearchResult } from './types';
@@ -30,6 +30,7 @@ export const SearchPlugin = Plugin.define(meta).pipe(
   }),
   Common.Plugin.addAppGraphModule({ activate: AppGraphBuilder }),
   Common.Plugin.addIntentResolverModule({ activate: IntentResolver }),
+  Common.Plugin.addOperationHandlerModule({ activate: OperationHandler }),
   Common.Plugin.addSurfaceModule({ activate: ReactSurface }),
   Plugin.make,
 );

@@ -8,10 +8,12 @@ import * as Stream from 'effect/Stream';
 import { runAndForwardErrors } from '@dxos/effect';
 import { log } from '@dxos/log';
 
+import { UndoOperation } from '../../common';
 import { type OperationInvoker } from '../invoker';
 
 import { EmptyHistoryError } from './errors';
 import type { HistoryEntry } from './types';
+import { resolveMessage } from './undo-mapping';
 import type { UndoRegistry } from './undo-registry';
 
 const HISTORY_LIMIT = 100;
@@ -48,6 +50,12 @@ export const make = (invoker: OperationInvoker.OperationInvoker, undoRegistry: U
     }
 
     const inverseInput = mapping.deriveContext(event.input, event.output);
+    if (inverseInput === undefined) {
+      // Operation is conditionally not undoable (deriveContext returned undefined).
+      log('operation not undoable', { key: event.operation.meta.key });
+      return;
+    }
+
     const entry: HistoryEntry = {
       operation: event.operation,
       input: event.input,
@@ -64,6 +72,14 @@ export const make = (invoker: OperationInvoker.OperationInvoker, undoRegistry: U
     if (history.length > HISTORY_LIMIT) {
       history.splice(0, history.length - HISTORY_LIMIT);
     }
+
+    // Show undo toast (resolve message if it's a function).
+    const resolvedMessage = resolveMessage(mapping.message, event.input, event.output);
+    Effect.runFork(
+      invoker.invoke(UndoOperation.ShowUndo, {
+        message: resolvedMessage,
+      }),
+    );
   };
 
   // Fork a fiber to consume the invocation stream.

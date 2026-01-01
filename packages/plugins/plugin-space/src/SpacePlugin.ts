@@ -31,6 +31,7 @@ import {
   AppGraphSerializer,
   IdentityCreated,
   IntentResolver,
+  OperationHandler,
   ReactRoot,
   ReactSurface,
   Repair,
@@ -167,6 +168,20 @@ export const SpacePlugin = Plugin.define<SpacePluginOptions>(meta).pipe(
     },
   ),
   Common.Plugin.addAppGraphModule({ activate: AppGraphBuilder }),
+  Plugin.addModule(
+    ({ invitationUrl = window.location.origin, invitationProp = 'spaceInvitationCode', observability = false }) => {
+      const createInvitationUrl = (invitationCode: string) => {
+        const baseUrl = new URL(invitationUrl);
+        baseUrl.searchParams.set(invitationProp, invitationCode);
+        return baseUrl.toString();
+      };
+      return {
+        id: Capability.getModuleTag(OperationHandler),
+        activatesOn: Common.ActivationEvent.SetupOperationHandler,
+        activate: (context) => OperationHandler({ context, createInvitationUrl, observability }),
+      };
+    },
+  ),
   // TODO(wittjosiah): This could probably be deferred.
   Plugin.addModule({
     activatesOn: Common.ActivationEvent.AppGraphReady,

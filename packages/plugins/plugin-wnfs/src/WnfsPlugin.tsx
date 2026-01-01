@@ -4,15 +4,15 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capability, Common, Plugin, createIntent } from '@dxos/app-framework';
+import { Capability, Common, Plugin } from '@dxos/app-framework';
 import { ClientEvents } from '@dxos/plugin-client';
 import { MarkdownEvents } from '@dxos/plugin-markdown';
 import { type CreateObject } from '@dxos/plugin-space/types';
 
-import { Blockstore, FileUploader, IntentResolver, Markdown, ReactSurface } from './capabilities';
+import { Blockstore, FileUploader, IntentResolver, Markdown, OperationHandler, ReactSurface } from './capabilities';
 import { meta } from './meta';
 import { translations } from './translations';
-import { WnfsAction, WnfsCapabilities, WnfsFile } from './types';
+import { WnfsAction, WnfsCapabilities, WnfsFile, WnfsOperation } from './types';
 
 export const WnfsPlugin = Plugin.define(meta).pipe(
   Plugin.addModule({
@@ -40,8 +40,8 @@ export const WnfsPlugin = Plugin.define(meta).pipe(
         inputSchema: WnfsAction.UploadFileSchema,
         createObject: ((props, { db, context }) =>
           Effect.gen(function* () {
-            const { dispatch } = context.getCapability(Common.Capability.IntentDispatcher);
-            const { object } = yield* dispatch(createIntent(WnfsAction.CreateFile, { ...props, db }));
+            const { invoke } = context.getCapability(Common.Capability.OperationInvoker);
+            const { object } = yield* invoke(WnfsOperation.CreateFile, { ...props, db });
             return object;
           })) satisfies CreateObject,
         addToCollectionOnCreate: true,
@@ -61,5 +61,6 @@ export const WnfsPlugin = Plugin.define(meta).pipe(
   }),
   Common.Plugin.addSurfaceModule({ activate: ReactSurface }),
   Common.Plugin.addIntentResolverModule({ activate: IntentResolver }),
+  Common.Plugin.addOperationHandlerModule({ activate: OperationHandler }),
   Plugin.make,
 );

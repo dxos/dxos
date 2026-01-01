@@ -89,10 +89,11 @@ export default Capability.makeModule(({ context, observability, createInvitation
 
           // Allow other plugins to add default content.
           await runAndForwardErrors(context.activate(SpaceEvents.SpaceCreated));
-          const onCreateSpaceCallbacks = context.getCapabilities(SpaceCapabilities.OnCreateSpace);
-          const spaceCreatedIntents = onCreateSpaceCallbacks.map((onCreateSpace: (params: any) => any) =>
-            onCreateSpace({ space, isDefault: false, rootCollection: collection }),
-          );
+          // TODO(migration): OnCreateSpace now returns Effects instead of Intents.
+          // const onCreateSpaceCallbacks = context.getCapabilities(SpaceCapabilities.OnCreateSpace);
+          // const spaceCreatedIntents = onCreateSpaceCallbacks.map((onCreateSpace: (params: any) => any) =>
+          //   onCreateSpace({ space, isDefault: false, rootCollection: collection }),
+          // );
 
           return {
             data: {
@@ -101,7 +102,7 @@ export default Capability.makeModule(({ context, observability, createInvitation
               space,
             },
             intents: [
-              ...spaceCreatedIntents,
+              // ...spaceCreatedIntents,
               ...(observability
                 ? [
                     createIntent(ObservabilityAction.SendEvent, {
@@ -330,7 +331,7 @@ export default Capability.makeModule(({ context, observability, createInvitation
       }),
       createResolver({
         intent: SpaceAction.UseStaticSchema,
-        resolve: async ({ db, typename, show }) => {
+        resolve: async ({ db, typename, show: _show }) => {
           const client = context.getCapability(ClientCapabilities.Client);
           const schema = await client.graph.schemaRegistry.query({ typename, location: ['runtime'] }).first();
           const space = client.spaces.get(db.spaceId);
@@ -345,15 +346,16 @@ export default Capability.makeModule(({ context, observability, createInvitation
           }
 
           await runAndForwardErrors(context.activate(SpaceEvents.SchemaAdded));
-          const onSchemaAdded = context.getCapabilities(SpaceCapabilities.OnSchemaAdded);
-          const schemaAddedIntents = onSchemaAdded.map((onSchemaAdded: (params: any) => any) =>
-            onSchemaAdded({ db, schema, show }),
-          );
+          // TODO(migration): OnSchemaAdded now returns Effects instead of Intents.
+          // const onSchemaAdded = context.getCapabilities(SpaceCapabilities.OnSchemaAdded);
+          // const schemaAddedIntents = onSchemaAdded.map((onSchemaAdded: (params: any) => any) =>
+          //   onSchemaAdded({ db, schema, show }),
+          // );
 
           return {
             data: {},
             intents: [
-              ...schemaAddedIntents,
+              // ...schemaAddedIntents,
               ...(observability
                 ? [
                     createIntent(ObservabilityAction.SendEvent, {
@@ -371,7 +373,7 @@ export default Capability.makeModule(({ context, observability, createInvitation
       }),
       createResolver({
         intent: SpaceAction.AddSchema,
-        resolve: async ({ db, name, typename, version, schema: schemaInput, show }) => {
+        resolve: async ({ db, name, typename, version, schema: schemaInput, show: _show }) => {
           const [schema] = await db.schemaRegistry.register([schemaInput]);
           if (name) {
             schema.storedSchema.name = name;
@@ -384,10 +386,11 @@ export default Capability.makeModule(({ context, observability, createInvitation
           }
 
           await runAndForwardErrors(context.activate(SpaceEvents.SchemaAdded));
-          const onSchemaAdded = context.getCapabilities(SpaceCapabilities.OnSchemaAdded);
-          const schemaAddedIntents = onSchemaAdded.map((onSchemaAdded: (params: any) => any) =>
-            onSchemaAdded({ db, schema, show }),
-          );
+          // TODO(migration): OnSchemaAdded now returns Effects instead of Intents.
+          // const onSchemaAdded = context.getCapabilities(SpaceCapabilities.OnSchemaAdded);
+          // const schemaAddedIntents = onSchemaAdded.map((onSchemaAdded: (params: any) => any) =>
+          //   onSchemaAdded({ db, schema, show }),
+          // );
 
           return {
             data: {
@@ -396,7 +399,7 @@ export default Capability.makeModule(({ context, observability, createInvitation
               schema,
             },
             intents: [
-              ...schemaAddedIntents,
+              // ...schemaAddedIntents,
               ...(observability
                 ? [
                     createIntent(ObservabilityAction.SendEvent, {

@@ -13,8 +13,8 @@ import React, {
   useRef,
 } from 'react';
 
-import { Common, createIntent } from '@dxos/app-framework';
-import { Surface, useAppGraph, useCapability, useIntentDispatcher } from '@dxos/app-framework/react';
+import { Common } from '@dxos/app-framework';
+import { Surface, useAppGraph, useCapability, useOperationInvoker } from '@dxos/app-framework/react';
 import { debounce } from '@dxos/async';
 import { type Node, useNode } from '@dxos/plugin-graph';
 import { ATTENDABLE_PATH_SEPARATOR, useAttentionAttributes } from '@dxos/react-ui-attention';
@@ -23,8 +23,7 @@ import { mainIntrinsicSize, mx } from '@dxos/ui-theme';
 
 import { useCompanions, useMainSize } from '../../hooks';
 import { parseEntryId } from '../../layout';
-import { DeckCapabilities } from '../../types';
-import { DeckAction, type DeckSettingsProps, type LayoutMode, type ResolvedPart } from '../../types';
+import { DeckCapabilities, DeckOperation, type DeckSettingsProps, type LayoutMode, type ResolvedPart } from '../../types';
 
 import { PlankContentError, PlankError } from './PlankError';
 import { PlankHeading } from './PlankHeading';
@@ -158,7 +157,7 @@ const PlankComponent = memo(
     companions,
     settings,
   }: PlankComponentProps) => {
-    const { dispatchPromise: dispatch } = useIntentDispatcher();
+    const { invokePromise } = useOperationInvoker();
     const { deck, popoverAnchorId, scrollIntoView } = useCapability(DeckCapabilities.DeckState);
     const { findFirstFocusable } = useFocusFinders();
     const canResize = layoutMode === 'deck';
@@ -177,9 +176,9 @@ const PlankComponent = memo(
 
     const handleSizeChange = useCallback(
       debounce((nextSize: number) => {
-        return dispatch(createIntent(DeckAction.UpdatePlankSize, { id: sizeKey, size: nextSize }));
+        return invokePromise(DeckOperation.UpdatePlankSize, { id: sizeKey, size: nextSize });
       }, 200),
-      [dispatch, sizeKey],
+      [invokePromise, sizeKey],
     );
 
     // TODO(thure): Tabster’s focus group should handle moving focus to Main, but something is blocking it.
@@ -200,9 +199,9 @@ const PlankComponent = memo(
       if (scrollIntoView === id) {
         layoutMode === 'deck' && rootElement.current?.scrollIntoView({ behavior: 'smooth', inline: 'center' });
         // Clear the scroll into view state once it has been actioned.
-        void dispatch(createIntent(Common.LayoutAction.ScrollIntoView, { part: 'current', subject: undefined }));
+        void invokePromise(Common.LayoutOperation.ScrollIntoView, { subject: undefined });
       }
-    }, [id, scrollIntoView, layoutMode]);
+    }, [id, scrollIntoView, layoutMode, invokePromise]);
 
     const isSolo = layoutMode.startsWith('solo') && part === 'solo';
     const isAttendable =

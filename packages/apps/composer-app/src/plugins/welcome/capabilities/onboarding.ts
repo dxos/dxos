@@ -14,6 +14,7 @@ import { WelcomeCapabilities } from './capabilities';
 export default Capability.makeModule((context) =>
   Effect.gen(function* () {
     const { dispatchPromise: dispatch } = context.getCapability(Common.Capability.IntentDispatcher);
+    const { invokePromise } = context.getCapability(Common.Capability.OperationInvoker);
     const client = context.getCapability(ClientCapabilities.Client);
     const searchProps = new URLSearchParams(window.location.search);
     const hubUrl = client.config.values?.runtime?.app?.env?.DX_HUB_URL;
@@ -23,6 +24,7 @@ export default Capability.makeModule((context) =>
     const tokenType = !token ? undefined : type === 'login' ? 'login' : 'verify';
     const manager = new OnboardingManager({
       dispatch,
+      invokePromise,
       client,
       hubUrl,
       token,

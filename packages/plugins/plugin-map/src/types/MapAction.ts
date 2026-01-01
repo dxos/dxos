@@ -5,6 +5,7 @@
 import * as Schema from 'effect/Schema';
 
 import { Database } from '@dxos/echo';
+import * as Operation from '@dxos/operation';
 import { TypeInputOptionsAnnotation } from '@dxos/plugin-space/types';
 
 import { meta } from '../meta';
@@ -52,3 +53,30 @@ export class Toggle extends Schema.TaggedClass<Toggle>()(`${meta.id}/action/togg
   input: Schema.Void,
   output: Schema.Void,
 }) {}
+
+const MAP_OPERATION = `${meta.id}/operation`;
+
+export namespace MapOperation {
+  export const Create = Operation.make({
+    meta: { key: `${MAP_OPERATION}/create`, name: 'Create Map' },
+    schema: {
+      input: Schema.Struct({
+        db: Database.Database,
+      }).pipe(
+        Schema.extend(CreateMap),
+        Schema.extend(Map.Map.pipe(Schema.pick('center', 'zoom', 'coordinates'))),
+      ),
+      output: Schema.Struct({
+        object: Map.Map,
+      }),
+    },
+  });
+
+  export const Toggle = Operation.make({
+    meta: { key: `${MAP_OPERATION}/toggle`, name: 'Toggle Map' },
+    schema: {
+      input: Schema.Void,
+      output: Schema.Void,
+    },
+  });
+}

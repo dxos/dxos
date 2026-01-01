@@ -23,7 +23,7 @@ import type {
   HistoryTracker as HistoryTracker$,
   OperationInvoker as OperationInvoker$,
   OperationResolver as OperationResolver$,
-  UndoMappingRegistration as UndoMappingRegistration$,
+  UndoMapping as UndoMapping$,
   UndoRegistry as UndoRegistry$,
 } from '../plugin-operation';
 
@@ -261,15 +261,13 @@ export namespace Capability {
     'dxos.org/app-framework/capability/operation-handler',
   );
 
-  export type UndoMappingRegistration = UndoMappingRegistration$;
+  export type UndoMapping = UndoMapping$.UndoMapping;
 
   /**
    * Undo mapping registration - contributed by plugins.
    * @category Capability
    */
-  export const UndoMapping = Capability$.make<UndoMappingRegistration$[]>(
-    'dxos.org/app-framework/capability/undo-mapping',
-  );
+  export const UndoMapping = Capability$.make<UndoMapping[]>('dxos.org/app-framework/capability/undo-mapping');
 
   export type OperationInvoker = OperationInvoker$.OperationInvoker;
 

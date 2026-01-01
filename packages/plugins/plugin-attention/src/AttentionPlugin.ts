@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 import { ActivationEvent, Capability, Common, Plugin } from '@dxos/app-framework';
 import { AttentionManager, SelectionManager } from '@dxos/react-ui-attention';
 
-import { IntentResolver, Keyboard, ReactContext } from './capabilities';
+import { IntentResolver, Keyboard, OperationHandler, ReactContext } from './capabilities';
 import { AttentionEvents } from './events';
 import { meta } from './meta';
 import { AttentionCapabilities } from './types';
@@ -37,6 +37,7 @@ export const AttentionPlugin = Plugin.define(meta).pipe(
     activate: Keyboard,
   }),
   Common.Plugin.addIntentResolverModule({ activate: IntentResolver }),
+  Common.Plugin.addOperationHandlerModule({ activate: OperationHandler }),
   Plugin.make,
 );
 

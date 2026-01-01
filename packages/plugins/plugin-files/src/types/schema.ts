@@ -4,6 +4,8 @@
 
 import * as Schema from 'effect/Schema';
 
+import * as Operation from '@dxos/operation';
+
 import { meta } from '../meta';
 
 export namespace LocalFilesAction {
@@ -62,6 +64,59 @@ export namespace LocalFilesAction {
     }),
     output: Schema.Void,
   }) {}
+}
+
+const FILES_OPERATION = `${meta.id}/operation`;
+
+export namespace LocalFilesOperation {
+  export const SelectRoot = Operation.make({
+    meta: { key: `${FILES_OPERATION}/select-root`, name: 'Select Root Directory' },
+    schema: { input: Schema.Void, output: Schema.Void },
+  });
+
+  export const Export = Operation.make({
+    meta: { key: `${FILES_OPERATION}/export`, name: 'Export Files' },
+    schema: { input: Schema.Void, output: Schema.Void },
+  });
+
+  export const Import = Operation.make({
+    meta: { key: `${FILES_OPERATION}/import`, name: 'Import Files' },
+    schema: {
+      input: Schema.Struct({ rootDir: Schema.optional(Schema.String) }),
+      output: Schema.Void,
+    },
+  });
+
+  export const OpenFile = Operation.make({
+    meta: { key: `${FILES_OPERATION}/open-file`, name: 'Open File' },
+    schema: {
+      input: Schema.Void,
+      output: Schema.Struct({ id: Schema.String, subject: Schema.Array(Schema.String) }),
+    },
+  });
+
+  export const OpenDirectory = Operation.make({
+    meta: { key: `${FILES_OPERATION}/open-directory`, name: 'Open Directory' },
+    schema: {
+      input: Schema.Void,
+      output: Schema.Struct({ id: Schema.String, subject: Schema.Array(Schema.String) }),
+    },
+  });
+
+  export const Reconnect = Operation.make({
+    meta: { key: `${FILES_OPERATION}/reconnect`, name: 'Reconnect File' },
+    schema: { input: Schema.Struct({ id: Schema.String }), output: Schema.Void },
+  });
+
+  export const Close = Operation.make({
+    meta: { key: `${FILES_OPERATION}/close`, name: 'Close File' },
+    schema: { input: Schema.Struct({ id: Schema.String }), output: Schema.Void },
+  });
+
+  export const Save = Operation.make({
+    meta: { key: `${FILES_OPERATION}/save`, name: 'Save File' },
+    schema: { input: Schema.Struct({ id: Schema.String }), output: Schema.Void },
+  });
 }
 
 type PermissionStatus = 'granted' | 'denied' | 'prompt';

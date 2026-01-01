@@ -6,6 +6,7 @@ export * from './app-graph-builder';
 export * from './app-graph-serializer';
 export * from './identity-created';
 export * from './intent-resolver';
+export * from './operation-handler';
 export * from './react-root';
 export * from './react-surface';
 export * from './repair';

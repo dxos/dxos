@@ -6,6 +6,7 @@ import * as Schema from 'effect/Schema';
 
 import { Obj } from '@dxos/echo';
 import { TypedObject } from '@dxos/echo/internal';
+import * as Operation from '@dxos/operation';
 import { ReactiveObjectSchema } from '@dxos/react-client/echo';
 
 import { meta } from '../meta';
@@ -28,4 +29,24 @@ export namespace Template {
   }) {}
 
   export const make = (props: Partial<Data>) => Obj.make(Data, props);
+}
+
+//
+// Operations
+//
+
+const TEMPLATE_OPERATION = `${meta.id}/operation`;
+
+export namespace TemplateOperation {
+  export const Create = Operation.make({
+    meta: { key: `${TEMPLATE_OPERATION}/create`, name: 'Create Template' },
+    schema: {
+      input: Schema.Struct({
+        name: Schema.optional(Schema.String),
+      }),
+      output: Schema.Struct({
+        object: ReactiveObjectSchema,
+      }),
+    },
+  });
 }

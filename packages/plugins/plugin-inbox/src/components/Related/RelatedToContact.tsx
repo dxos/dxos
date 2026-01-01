@@ -6,10 +6,10 @@ import * as Array from 'effect/Array';
 import * as Function from 'effect/Function';
 import React, { useCallback } from 'react';
 
-import { Common, createIntent } from '@dxos/app-framework';
-import { type SurfaceComponentProps, useIntentDispatcher } from '@dxos/app-framework/react';
+import { Common } from '@dxos/app-framework';
+import { type SurfaceComponentProps, useOperationInvoker } from '@dxos/app-framework/react';
 import { Filter, Obj } from '@dxos/echo';
-import { AttentionAction } from '@dxos/plugin-attention/types';
+import { AttentionOperation } from '@dxos/plugin-attention/types';
 import { useActiveSpace } from '@dxos/plugin-space';
 import { useQuery, useQueue } from '@dxos/react-client/echo';
 import { Event, Message, type Person } from '@dxos/types';
@@ -20,7 +20,7 @@ import { RelatedEvents } from './RelatedEvents';
 import { RelatedMessages } from './RelatedMessages';
 
 export const RelatedToContact = ({ subject: contact }: SurfaceComponentProps<Person.Person>) => {
-  const { dispatchPromise: dispatch } = useIntentDispatcher();
+  const { invokePromise } = useOperationInvoker();
   const space = useActiveSpace();
   const [mailbox] = useQuery(space?.db, Filter.type(Mailbox.Mailbox));
   const [calendar] = useQuery(space?.db, Filter.type(Calendar.Calendar));
@@ -56,58 +56,32 @@ export const RelatedToContact = ({ subject: contact }: SurfaceComponentProps<Per
 
   const handleMessageClick = useCallback(
     async (message: Message.Message) => {
-      await dispatch(
-        createIntent(Common.LayoutAction.UpdatePopover, {
-          part: 'popover',
-          options: {
-            state: false,
-            anchorId: '',
-          },
-        }),
-      );
-      await dispatch(
-        createIntent(Common.LayoutAction.Open, {
-          part: 'main',
-          subject: [Obj.getDXN(mailbox).toString()],
-          options: { workspace: space?.id },
-        }),
-      );
-      await dispatch(
-        createIntent(AttentionAction.Select, {
-          contextId: Obj.getDXN(mailbox).toString(),
-          selection: { mode: 'single', id: message.id },
-        }),
-      );
+      await invokePromise(Common.LayoutOperation.UpdatePopover, { state: false, anchorId: '' });
+      await invokePromise(Common.LayoutOperation.Open, {
+        subject: [Obj.getDXN(mailbox).toString()],
+        workspace: space?.id,
+      });
+      await invokePromise(AttentionOperation.Select, {
+        contextId: Obj.getDXN(mailbox).toString(),
+        selection: { mode: 'single', id: message.id },
+      });
     },
-    [dispatch, space, mailbox],
+    [invokePromise, space, mailbox],
   );
 
   const handleEventClick = useCallback(
     async (event: Event.Event) => {
-      await dispatch(
-        createIntent(Common.LayoutAction.UpdatePopover, {
-          part: 'popover',
-          options: {
-            state: false,
-            anchorId: '',
-          },
-        }),
-      );
-      await dispatch(
-        createIntent(Common.LayoutAction.Open, {
-          part: 'main',
-          subject: [Obj.getDXN(calendar).toString()],
-          options: { workspace: space?.id },
-        }),
-      );
-      await dispatch(
-        createIntent(AttentionAction.Select, {
-          contextId: Obj.getDXN(calendar).toString(),
-          selection: { mode: 'single', id: event.id },
-        }),
-      );
+      await invokePromise(Common.LayoutOperation.UpdatePopover, { state: false, anchorId: '' });
+      await invokePromise(Common.LayoutOperation.Open, {
+        subject: [Obj.getDXN(calendar).toString()],
+        workspace: space?.id,
+      });
+      await invokePromise(AttentionOperation.Select, {
+        contextId: Obj.getDXN(calendar).toString(),
+        selection: { mode: 'single', id: event.id },
+      });
     },
-    [dispatch, space, calendar],
+    [invokePromise, space, calendar],
   );
 
   return (

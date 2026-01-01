@@ -4,8 +4,8 @@
 
 import React, { forwardRef, useMemo, useState } from 'react';
 
-import { Common, createIntent } from '@dxos/app-framework';
-import { useAppGraph, useIntentDispatcher } from '@dxos/app-framework/react';
+import { Common } from '@dxos/app-framework';
+import { useAppGraph, useOperationInvoker } from '@dxos/app-framework/react';
 import { Keyboard, keySymbols } from '@dxos/keyboard';
 import { Graph, Node } from '@dxos/plugin-graph';
 import { useActions } from '@dxos/plugin-graph';
@@ -30,7 +30,7 @@ export type CommandsDialogContentProps = {
 export const CommandsDialogContent = forwardRef<HTMLDivElement, CommandsDialogContentProps>(
   ({ selected: initial }, forwardedRef) => {
     const { t } = useTranslation(meta.id);
-    const { dispatchPromise: dispatch } = useIntentDispatcher();
+    const { invokePromise } = useOperationInvoker();
     const { graph } = useAppGraph();
     const [selected, setSelected] = useState<string | undefined>(initial);
 
@@ -94,12 +94,7 @@ export const CommandsDialogContent = forwardRef<HTMLDivElement, CommandsDialogCo
                       return;
                     }
 
-                    void dispatch(
-                      createIntent(Common.LayoutAction.UpdateDialog, {
-                        part: 'dialog',
-                        options: { state: false },
-                      }),
-                    );
+                    void invokePromise(Common.LayoutOperation.UpdateDialog, { state: false });
                     setTimeout(() => {
                       const node = Graph.getConnections(graph, group?.id ?? action.id, 'inbound')[0];
                       void (node && Node.isAction(action) && action.data({ parent: node, caller: KEY_BINDING }));

@@ -5,6 +5,7 @@
 export * from './app-graph-builder';
 export * from './call-extension';
 export * from './intent-resolver';
+export * from './operation-handler';
 export * from './react-surface';
 export * from './repair';
 export * from './settings';

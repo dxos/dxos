@@ -31,8 +31,14 @@ export type InvocationEvent<I = any, O = any> = {
  * OperationInvoker interface - resolves and executes operations.
  */
 export interface OperationInvoker {
-  invoke: <I, O>(op: OperationDefinition<I, O>, input: I) => Effect.Effect<O, Error>;
-  invokePromise: <I, O>(op: OperationDefinition<I, O>, input: I) => Promise<{ data?: O; error?: Error }>;
+  invoke: <I, O>(
+    op: OperationDefinition<I, O>,
+    ...args: void extends I ? [input?: I] : [input: I]
+  ) => Effect.Effect<O, Error>;
+  invokePromise: <I, O>(
+    op: OperationDefinition<I, O>,
+    ...args: void extends I ? [input?: I] : [input: I]
+  ) => Promise<{ data?: O; error?: Error }>;
   /** @internal */
   _invokeCore: <I, O>(op: OperationDefinition<I, O>, input: I) => Effect.Effect<O, Error>;
   /** Effect stream of invocation events. */
@@ -45,9 +51,9 @@ export interface OperationInvoker {
 
 class OperationInvokerImpl implements OperationInvoker {
   private readonly _pubsub: PubSub.PubSub<InvocationEvent>;
-  private readonly _getHandlers: () => OperationResolver[];
+  private readonly _getHandlers: () => Effect.Effect<OperationResolver[], Error>;
 
-  constructor(getHandlers: () => OperationResolver[]) {
+  constructor(getHandlers: () => Effect.Effect<OperationResolver[], Error>) {
     this._getHandlers = getHandlers;
     this._pubsub = Effect.runSync(PubSub.unbounded<InvocationEvent>());
   }
@@ -56,7 +62,12 @@ class OperationInvokerImpl implements OperationInvoker {
     return this._pubsub;
   }
 
-  invoke<I, O>(op: OperationDefinition<I, O>, input: I): Effect.Effect<O, Error> {
+  // Arrow function to preserve `this` context when destructured.
+  invoke = <I, O>(
+    op: OperationDefinition<I, O>,
+    ...args: void extends I ? [input?: I] : [input: I]
+  ): Effect.Effect<O, Error> => {
+    const input = args[0] as I;
     return Effect.gen(this, function* () {
       const output = yield* this._invokeCore(op, input);
 
@@ -70,37 +81,45 @@ class OperationInvokerImpl implements OperationInvoker {
 
       return output;
     });
-  }
+  };
 
-  async invokePromise<I, O>(op: OperationDefinition<I, O>, input: I): Promise<{ data?: O; error?: Error }> {
-    return runAndForwardErrors(this.invoke(op, input))
+  // Arrow function to preserve `this` context when destructured.
+  invokePromise = async <I, O>(
+    op: OperationDefinition<I, O>,
+    ...args: void extends I ? [input?: I] : [input: I]
+  ): Promise<{ data?: O; error?: Error }> => {
+    return runAndForwardErrors(this.invoke(op, ...args))
       .then((data) => ({ data }))
       .catch((error) => {
         log.catch(error);
         return { error };
       });
-  }
+  };
 
   private _resolveHandler(
     operation: OperationDefinition<any, any>,
     input: any,
-  ): OperationHandler<any, any> | undefined {
-    const candidates = this._getHandlers()
-      .filter((reg) => reg.operation.meta.key === operation.meta.key)
-      .filter((reg) => !reg.filter || reg.filter(input))
-      .toSorted(byPosition);
+  ): Effect.Effect<OperationHandler<any, any> | undefined, Error> {
+    return Effect.gen(this, function* () {
+      const candidates = yield* this._getHandlers().pipe(
+        Effect.map((handlers) => handlers.filter((reg) => reg.operation.meta.key === operation.meta.key)),
+        Effect.map((handlers) => handlers.filter((reg) => !reg.filter || reg.filter(input))),
+        Effect.map((handlers) => handlers.toSorted(byPosition)),
+      );
 
-    if (candidates.length === 0) {
-      return undefined;
-    }
+      if (candidates.length === 0) {
+        return undefined;
+      }
 
-    return candidates[0].handler;
+      return candidates[0].handler;
+    });
   }
 
   /** @internal */
-  _invokeCore<I, O>(op: OperationDefinition<I, O>, input: I): Effect.Effect<O, Error> {
+  // Arrow function to preserve `this` context when destructured.
+  _invokeCore = <I, O>(op: OperationDefinition<I, O>, input: I): Effect.Effect<O, Error> => {
     return Effect.gen(this, function* () {
-      const handler = this._resolveHandler(op, input);
+      const handler = yield* this._resolveHandler(op, input);
       if (!handler) {
         return yield* Effect.fail(new NoHandlerError(op.meta.key));
       }
@@ -112,7 +131,7 @@ class OperationInvokerImpl implements OperationInvoker {
 
       return output;
     });
-  }
+  };
 }
 
 //
@@ -123,6 +142,6 @@ class OperationInvokerImpl implements OperationInvoker {
  * Creates an OperationInvoker that resolves handlers and invokes operations.
  * Emits invocation events to subscribers after successful invocations.
  */
-export const make = (getHandlers: () => OperationResolver[]): OperationInvoker => {
+export const make = (getHandlers: () => Effect.Effect<OperationResolver[], Error>): OperationInvoker => {
   return new OperationInvokerImpl(getHandlers);
 };

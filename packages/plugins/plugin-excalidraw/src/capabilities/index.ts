@@ -3,5 +3,6 @@
 //
 
 export * from './intent-resolver';
+export * from './operation-handler';
 export * from './react-surface';
 export * from './settings';

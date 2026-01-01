@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
-import { Capability, Common, createIntent } from '@dxos/app-framework';
+import { Capability, Common } from '@dxos/app-framework';
 import { Obj } from '@dxos/echo';
 import { CreateAtom, GraphBuilder } from '@dxos/plugin-graph';
 import { View } from '@dxos/schema';
@@ -34,8 +34,8 @@ export default Capability.makeModule((context) =>
             {
               id: `${view.id}/toggle-map`,
               data: async () => {
-                const { dispatchPromise: dispatch } = context.getCapability(Common.Capability.IntentDispatcher);
-                await dispatch(createIntent(MapAction.Toggle));
+                const { invokePromise } = context.getCapability(Common.Capability.OperationInvoker);
+                await invokePromise(MapAction.MapOperation.Toggle, undefined);
               },
               properties: {
                 label: ['toggle type label', { ns: meta.id }],

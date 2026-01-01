@@ -85,6 +85,7 @@
     "@dxos/live-object": "workspace:*",
     "@dxos/local-storage": "workspace:*",
     "@dxos/log": "workspace:*",
+    "@dxos/operation": "workspace:*",
     "@dxos/plugin-assistant": "workspace:*",
     "@dxos/plugin-automation": "workspace:*",
     "@dxos/plugin-client": "workspace:*",

@@ -55,6 +55,9 @@
       "path": "../../core/mesh/edge-client"
     },
     {
+      "path": "../../core/operation"
+    },
+    {
       "path": "../../sdk/app-framework"
     },
     {

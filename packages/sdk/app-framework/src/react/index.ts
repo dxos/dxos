@@ -12,3 +12,4 @@ export * from './Surface';
 export * from './useApp';
 export * from './useCapabilities';
 export * from './useIntentResolver';
+export * from './useOperationResolver';

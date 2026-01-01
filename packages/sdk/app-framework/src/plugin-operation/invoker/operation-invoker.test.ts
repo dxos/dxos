@@ -27,7 +27,7 @@ import type { OperationResolver } from './operation-resolver';
 describe('OperationInvoker', () => {
   it.effect('throws error if no handler found', () =>
     Effect.gen(function* () {
-      const invoker = OperationInvoker.make(() => []);
+      const invoker = OperationInvoker.make(() => Effect.succeed([]));
       const result = yield* invoker.invoke(Compute, { value: 1 }).pipe(Effect.either);
 
       expect(result._tag).toBe('Left');
@@ -39,7 +39,7 @@ describe('OperationInvoker', () => {
 
   it.effect('matches operation to handler and executes', () =>
     Effect.gen(function* () {
-      const invoker = OperationInvoker.make(() => [toStringHandler]);
+      const invoker = OperationInvoker.make(() => Effect.succeed([toStringHandler]));
       const result = yield* invoker.invoke(ToString, { value: 42 });
 
       expect(result.string).toBe('42');
@@ -49,7 +49,7 @@ describe('OperationInvoker', () => {
   it.effect('update handlers dynamically', () =>
     Effect.gen(function* () {
       const handlers: OperationResolver[] = [];
-      const invoker = OperationInvoker.make(() => handlers);
+      const invoker = OperationInvoker.make(() => Effect.succeed(handlers));
 
       // No handler registered.
       const error1 = yield* invoker.invoke(ToString, { value: 1 }).pipe(Effect.either);
@@ -69,7 +69,7 @@ describe('OperationInvoker', () => {
 
   it.effect('compose operation effects', () =>
     Effect.gen(function* () {
-      const invoker = OperationInvoker.make(() => [computeHandler]);
+      const invoker = OperationInvoker.make(() => Effect.succeed([computeHandler]));
 
       // Fork both operations.
       const fiberA = yield* Effect.fork(invoker.invoke(Compute, { value: 1 }));
@@ -88,7 +88,7 @@ describe('OperationInvoker', () => {
 
   it.effect('concurrent operation effects', () =>
     Effect.gen(function* () {
-      const invoker = OperationInvoker.make(() => [computeHandler]);
+      const invoker = OperationInvoker.make(() => Effect.succeed([computeHandler]));
 
       // Fork both operations concurrently.
       const fiberA = yield* Effect.fork(invoker.invoke(Compute, { value: 5 }));
@@ -104,7 +104,7 @@ describe('OperationInvoker', () => {
 
   it.effect('mix & match effect and promise APIs', () =>
     Effect.gen(function* () {
-      const invoker = OperationInvoker.make(() => [toStringHandler, computeHandler]);
+      const invoker = OperationInvoker.make(() => Effect.succeed([toStringHandler, computeHandler]));
 
       // Fork the compute operation and advance clock.
       const fiberA = yield* Effect.fork(invoker.invoke(Compute, { value: 2 }));
@@ -125,7 +125,7 @@ describe('OperationInvoker', () => {
         filter: (data: { value: number }) => data?.value > 1,
         handler: (data: { value: number }) => Effect.succeed({ value: data.value * 3 }),
       };
-      const invoker = OperationInvoker.make(() => [conditionalHandler, computeHandler]);
+      const invoker = OperationInvoker.make(() => Effect.succeed([conditionalHandler, computeHandler]));
 
       // value=1 should use computeHandler (multiplies by 2, has sleep).
       const fiberA = yield* Effect.fork(invoker.invoke(Compute, { value: 1 }));
@@ -146,7 +146,7 @@ describe('OperationInvoker', () => {
         position: 'hoist',
         handler: (data: { value: number }) => Effect.succeed({ value: data.value * 3 }),
       };
-      const invoker = OperationInvoker.make(() => [computeHandler, hoistedHandler]);
+      const invoker = OperationInvoker.make(() => Effect.succeed([computeHandler, hoistedHandler]));
       const result = yield* invoker.invoke(Compute, { value: 1 });
 
       expect(result.value).toBe(3);
@@ -165,7 +165,7 @@ describe('OperationInvoker', () => {
         position: 'fallback',
         handler: (data: { value: number }) => Effect.succeed({ value: data.value * 3 }),
       };
-      const invoker = OperationInvoker.make(() => [conditionalHandler, fallbackHandler]);
+      const invoker = OperationInvoker.make(() => Effect.succeed([conditionalHandler, fallbackHandler]));
 
       const a = yield* invoker.invoke(Compute, { value: 1 });
       expect(a.value).toBe(2);
@@ -177,7 +177,7 @@ describe('OperationInvoker', () => {
 
   it.effect('non-struct inputs & outputs', () =>
     Effect.gen(function* () {
-      const invoker = OperationInvoker.make(() => [addHandler]);
+      const invoker = OperationInvoker.make(() => Effect.succeed([addHandler]));
       const result = yield* invoker.invoke(Add, [1, 1]);
 
       expect(result).toBe(2);
@@ -186,7 +186,7 @@ describe('OperationInvoker', () => {
 
   it.effect('empty inputs & outputs', () =>
     Effect.gen(function* () {
-      const invoker = OperationInvoker.make(() => [sideEffectHandler]);
+      const invoker = OperationInvoker.make(() => Effect.succeed([sideEffectHandler]));
       const result = yield* invoker.invoke(SideEffect, undefined);
 
       expect(result).toBe(undefined);
@@ -207,7 +207,7 @@ describe('OperationInvoker', () => {
           }),
       };
 
-      const invoker = OperationInvoker.make(() => [computeAndStringifyHandler, toStringHandler]);
+      const invoker = OperationInvoker.make(() => Effect.succeed([computeAndStringifyHandler, toStringHandler]));
       const collector = yield* createEventCollector(invoker);
 
       const result = yield* invoker.invoke(Compute, { value: 5 });
@@ -251,7 +251,9 @@ describe('OperationInvoker', () => {
           }),
       };
 
-      const invoker = OperationInvoker.make(() => [computeWithForkedSideEffect, trackingSideEffectHandler]);
+      const invoker = OperationInvoker.make(() =>
+        Effect.succeed([computeWithForkedSideEffect, trackingSideEffectHandler]),
+      );
       const collector = yield* createEventCollector(invoker);
 
       // Side effect not executed yet.
@@ -279,7 +281,7 @@ describe('OperationInvoker', () => {
 
   it.effect('emits invocation events via stream', () =>
     Effect.gen(function* () {
-      const invoker = OperationInvoker.make(() => [toStringHandler]);
+      const invoker = OperationInvoker.make(() => Effect.succeed([toStringHandler]));
       const collector = yield* createEventCollector(invoker);
 
       yield* invoker.invoke(ToString, { value: 42 });
@@ -300,7 +302,7 @@ describe('OperationInvoker', () => {
 
   it.effect('_invokeCore does not emit events', () =>
     Effect.gen(function* () {
-      const invoker = OperationInvoker.make(() => [toStringHandler]);
+      const invoker = OperationInvoker.make(() => Effect.succeed([toStringHandler]));
       const collector = yield* createEventCollector(invoker);
 
       // Regular invoke emits.

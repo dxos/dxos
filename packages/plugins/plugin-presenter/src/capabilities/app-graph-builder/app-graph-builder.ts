@@ -74,6 +74,7 @@ export default Capability.makeModule((context) =>
               //  So can set explicit fullscreen state coordinated with current presenter state.
               data: async () => {
                 const { dispatchPromise: dispatch } = context.getCapability(Common.Capability.IntentDispatcher);
+                const { invokePromise } = context.getCapability(Common.Capability.OperationInvoker);
                 const layout = context.getCapability(DeckCapabilities.MutableDeckState);
                 const presenterId = [id, 'presenter'].join(ATTENDABLE_PATH_SEPARATOR);
                 if (!layout.deck.fullscreen) {
@@ -84,13 +85,10 @@ export default Capability.makeModule((context) =>
                     }),
                   );
                 }
-                await dispatch(
-                  createIntent(Common.LayoutAction.Open, {
-                    part: 'main',
-                    subject: [presenterId],
-                    options: { workspace: spaceId },
-                  }),
-                );
+                await invokePromise(Common.LayoutOperation.Open, {
+                  subject: [presenterId],
+                  workspace: spaceId,
+                });
               },
               properties: {
                 label: ['toggle presentation label', { ns: meta.id }],

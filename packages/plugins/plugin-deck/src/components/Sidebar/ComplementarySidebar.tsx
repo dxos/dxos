@@ -12,8 +12,8 @@ import React, {
   useState,
 } from 'react';
 
-import { Common, createIntent } from '@dxos/app-framework';
-import { Surface, useCapability, useIntentDispatcher } from '@dxos/app-framework/react';
+import { Common } from '@dxos/app-framework';
+import { Surface, useCapability, useOperationInvoker } from '@dxos/app-framework/react';
 import { IconButton, type Label, Main, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { Tabs } from '@dxos/react-ui-tabs';
 import { mx } from '@dxos/ui-theme';
@@ -35,7 +35,7 @@ export type ComplementarySidebarProps = {
 
 export const ComplementarySidebar = ({ current }: ComplementarySidebarProps) => {
   const { t } = useTranslation(meta.id);
-  const { dispatchPromise: dispatch } = useIntentDispatcher();
+  const { invokePromise } = useOperationInvoker();
   const layout = useCapability(DeckCapabilities.MutableDeckState);
   const layoutMode = getMode(layout.deck);
   const breakpoint = useBreakpoints();
@@ -59,12 +59,10 @@ export const ComplementarySidebar = ({ current }: ComplementarySidebarProps) => 
       } else {
         setInternalValue(nextValue);
         layout.complementarySidebarState = 'expanded';
-        void dispatch(
-          createIntent(Common.LayoutAction.UpdateComplementary, { part: 'complementary', subject: nextValue }),
-        );
+        void invokePromise(Common.LayoutOperation.UpdateComplementary, { subject: nextValue });
       }
     },
-    [layout, activeId, dispatch],
+    [layout, activeId, invokePromise],
   );
 
   const data = useMemo(
@@ -78,14 +76,9 @@ export const ComplementarySidebar = ({ current }: ComplementarySidebarProps) => 
 
   useEffect(() => {
     if (!activeId) {
-      void dispatch(
-        createIntent(Common.LayoutAction.UpdateComplementary, {
-          part: 'complementary',
-          options: { state: 'collapsed' },
-        }),
-      );
+      void invokePromise(Common.LayoutOperation.UpdateComplementary, { state: 'collapsed' });
     }
-  }, [activeId, dispatch]);
+  }, [activeId, invokePromise]);
 
   return (
     <Main.ComplementarySidebar

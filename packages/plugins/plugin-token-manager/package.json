@@ -45,6 +45,7 @@
     "@dxos/live-object": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/node-std": "workspace:*",
+    "@dxos/operation": "workspace:*",
     "@dxos/plugin-client": "workspace:*",
     "@dxos/plugin-graph": "workspace:*",
     "@dxos/plugin-space": "workspace:*",
