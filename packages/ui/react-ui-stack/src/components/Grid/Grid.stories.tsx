@@ -21,6 +21,7 @@ import { useThemeContext } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { QueryEditor, translations, useQueryBuilder } from '@dxos/react-ui-components';
 import { Editor } from '@dxos/react-ui-editor';
+import { type DragEventHandler, Mosaic, dropHandler } from '@dxos/react-ui-mosaic';
 import { Text } from '@dxos/schema';
 import { type ValueGenerator, createObjectFactory } from '@dxos/schema/testing';
 import { Organization, Person, Project } from '@dxos/types';
@@ -36,9 +37,6 @@ import {
 import { get, isTruthy, range } from '@dxos/util';
 
 const generator = faker as any as ValueGenerator;
-
-import { type DragEventHandler } from '../../hooks';
-import { Mosaic, dropHandler } from '../Mosaic';
 
 import { Grid, type GridCellProps } from './Grid';
 
@@ -88,6 +86,11 @@ const GridData = Schema.Struct({
 
 interface GridData extends Schema.Schema.Type<typeof GridData> {}
 
+// TODO(burdon): Compact card surface (incl. document). Actions, dragging indicator.
+const Cell: GridCellProps['Cell'] = ({ object }) => {
+  return <Surface role='card' data={{ subject: object }} limit={1} />;
+};
+
 // TODO(burdon): Replace with Surface.
 const TextCell: GridCellProps['Cell'] = ({ object, dragging }) => {
   const accessor = useMemo(() => createDocAccessor(object, ['content']), [object]);
@@ -102,11 +105,6 @@ const TextCell: GridCellProps['Cell'] = ({ object, dragging }) => {
   }
 
   return <Editor.Content classNames='plb-2' extensions={extensions} initialValue={initialValue} focusable={false} />;
-};
-
-// TODO(burdon): Compact card surface (incl. document). Actions, dragging indicator.
-const DebugCell: GridCellProps['Cell'] = ({ object }) => {
-  return <Surface role='card' data={{ subject: object }} limit={1} />;
 };
 
 const DefaultStory = () => {
@@ -239,7 +237,7 @@ const DefaultStory = () => {
                   />
                 </div>
                 <Mosaic.Container asChild autoscroll handler={searchHandler}>
-                  <Grid.Stack id={searchHandler.id} objects={searchObjects} Cell={DebugCell} canDrag />
+                  <Grid.Stack id={searchHandler.id} objects={searchObjects} Cell={Cell} canDrag />
                 </Mosaic.Container>
               </Grid.Column>
 

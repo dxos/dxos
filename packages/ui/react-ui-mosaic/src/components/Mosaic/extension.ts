@@ -5,17 +5,20 @@
 import { type Extension, StateEffect, StateField } from '@codemirror/state';
 import { Decoration, type DecorationSet, EditorView, ViewPlugin, WidgetType } from '@codemirror/view';
 
-export type DropEvent = { text: string; url: string };
+export type DropHandlerEvent = { 
+  text: string; 
+  url: string;
+};
 
 export type DropHandlerOptions = {
-  onDrop?: (view: EditorView, pos: number, event: DropEvent) => void;
+  onDrop?: (view: EditorView, pos: number, event: DropHandlerEvent) => void;
 };
 
 export type DropHandler = {
   extension: Extension;
   update: (position: { x: number; y: number } | null) => void;
   cancel: () => void;
-  drop: (event: DropEvent) => void;
+  drop: (event: DropHandlerEvent) => void;
 };
 
 export const dropHandler = ({ onDrop = handleDrop }: DropHandlerOptions = {}): DropHandler => {
@@ -89,7 +92,7 @@ export const dropHandler = ({ onDrop = handleDrop }: DropHandlerOptions = {}): D
   } satisfies DropHandler;
 };
 
-const handleDrop = (view: EditorView, pos: number, event: DropEvent) => {
+const handleDrop = (view: EditorView, pos: number, event: DropHandlerEvent) => {
   const line = view.state.doc.lineAt(pos);
   if (line.text.trim() === '') {
     view.dispatch({

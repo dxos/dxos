@@ -35,10 +35,8 @@ import { createPortal } from 'react-dom';
 
 import { type Obj } from '@dxos/echo';
 import { Icon, type ThemedClassName } from '@dxos/react-ui';
+import { type ItemData, type PlaceholderData, CONTAINER_DATA_ACTIVE_ATTR } from '@dxos/react-ui-mosaic';
 import { mx } from '@dxos/ui-theme';
-
-import { type ItemData, type PlaceholderData } from '../../hooks';
-import { CONTAINER_DATA_ACTIVE_ATTR } from '../Mosaic';
 
 //
 // Styles
@@ -113,22 +111,25 @@ GridViewport.displayName = 'Grid.Viewport';
 
 type GridColumnProps = ThemedClassName<PropsWithChildren>;
 
-const GridColumn = memo(({ classNames, children }: GridColumnProps) => {
-  const focusableGroupAttrs = useFocusableGroup({ tabBehavior: 'limited-trap-focus' });
-  const arrowNavigationAttrs = useArrowNavigationGroup({ axis: 'vertical', memorizeCurrent: true });
-  const tabsterAttrs = useMergedTabsterAttributes_unstable(focusableGroupAttrs, arrowNavigationAttrs);
+const GridColumn = forwardRef<HTMLDivElement, GridColumnProps>(
+  ({ classNames, children }: GridColumnProps, forwardedRef) => {
+    const focusableGroupAttrs = useFocusableGroup({ tabBehavior: 'limited-trap-focus' });
+    const arrowNavigationAttrs = useArrowNavigationGroup({ axis: 'vertical', memorizeCurrent: true });
+    const tabsterAttrs = useMergedTabsterAttributes_unstable(focusableGroupAttrs, arrowNavigationAttrs);
 
-  return (
-    <div
-      role='none'
-      tabIndex={0}
-      {...tabsterAttrs}
-      className={mx('flex flex-col is-full overflow-hidden', classes.borderFocus, classNames)}
-    >
-      {children}
-    </div>
-  );
-});
+    return (
+      <div
+        ref={forwardedRef}
+        role='none'
+        tabIndex={0}
+        {...tabsterAttrs}
+        className={mx('flex flex-col is-full overflow-hidden', classes.borderFocus, classNames)}
+      >
+        {children}
+      </div>
+    );
+  },
+);
 
 GridColumn.displayName = 'Grid.Column';
 
@@ -170,11 +171,11 @@ const GridStack = forwardRef<HTMLDivElement, GridStackProps>(
         {...props}
       >
         {objects?.map((object) => (
-          <div key={object.id} className='p-1'>
-            <Grid.Cell containerId={id} object={object} Cell={Cell} canDrag={canDrag} canDrop={canDrop} />
+          <div key={object.id} role='none' className='p-1'>
+            <GridCell containerId={id} object={object} Cell={Cell} canDrag={canDrag} canDrop={canDrop} />
           </div>
         ))}
-        <div className='p-3' ref={placeholderRef}>
+        <div role='none' className='p-3' ref={placeholderRef}>
           <div
             // TODO(burdon): Display while dragging.
             className={mx('bs-[8rem]', 'outline-none border rounded-sm transition border-transparent border-dashed')}
@@ -203,8 +204,10 @@ type GridCellProps = ThemedClassName<{
   canDrop?: boolean;
 }>;
 
+// TODO(burdon): Memo?
+// TODO(burdon): Move into card.
 const GridCell = memo(({ classNames, containerId, object, Cell, canDrag = false, canDrop = false }: GridCellProps) => {
-  const rootRef = useRef<HTMLDivElement>(null);
+  const rootRef = useRef<HTMLDivElement>(null); // TODO(burdon): forwardedRef.
   const handleRef = useRef<HTMLDivElement>(null);
   const [state, setState] = useState<State>({ type: 'idle' });
   const [closestEdge, setClosestEdge] = useState<Edge | null>(null);
@@ -288,8 +291,6 @@ const GridCell = memo(({ classNames, containerId, object, Cell, canDrag = false,
     );
   }, [rootRef, handleRef, object]);
 
-  // TODO(burdon): Move into card (How does Kanban do this?)
-
   // NOTE: No gaps between cells (so that the drop indicators doesn't flicker).
   // And ensure padding doesn't change position of cursor when dragging.
   return (
@@ -309,7 +310,12 @@ const GridCell = memo(({ classNames, containerId, object, Cell, canDrag = false,
         createPortal(
           <div
             role='none'
-            style={{ width: `${state.rect.width}px`, height: `${state.rect.height}px` } as CSSProperties}
+            style={
+              {
+                width: `${state.rect.width}px`,
+                height: `${state.rect.height}px`,
+              } as CSSProperties
+            }
           >
             <GridCellPrimitive classNames={['bg-inputSurface', classNames]}>
               <Cell object={object} dragging />
@@ -329,8 +335,8 @@ type GridCellPrimitiveProps = ThemedClassName<
   }>
 >;
 
-const GridCellPrimitive = memo(
-  forwardRef<HTMLDivElement, GridCellPrimitiveProps>(({ classNames, children, handleRef }, forwardedRef) => {
+const GridCellPrimitive = forwardRef<HTMLDivElement, GridCellPrimitiveProps>(
+  ({ classNames, children, handleRef }, forwardedRef) => {
     const focusableGroupAttrs = useFocusableGroup();
 
     return (
@@ -355,13 +361,12 @@ const GridCellPrimitive = memo(
         </div>
         <div role='none' className='shrink-0 p-2'>
           <div role='none' className={classes.icon}>
-            {/* TODO(burdon): Menu. */}
             <Icon classNames='cursor-pointer' icon='ph--list--regular' size={5} />
           </div>
         </div>
       </div>
     );
-  }),
+  },
 );
 
 //

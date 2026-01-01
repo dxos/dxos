@@ -17160,9 +17160,6 @@ importers:
       '@dxos/display-name':
         specifier: workspace:*
         version: link:../../common/display-name
-      '@dxos/echo':
-        specifier: workspace:*
-        version: link:../../core/echo/echo
       '@dxos/echo-db':
         specifier: workspace:*
         version: link:../../core/echo/echo-db
@@ -17190,9 +17187,6 @@ importers:
       '@dxos/react-ui-menu':
         specifier: workspace:*
         version: link:../react-ui-menu
-      '@dxos/react-ui-stack':
-        specifier: workspace:*
-        version: link:../react-ui-stack
       '@dxos/ui':
         specifier: workspace:*
         version: link:../ui
@@ -17226,18 +17220,6 @@ importers:
       '@radix-ui/react-use-controllable-state':
         specifier: 'catalog:'
         version: 1.1.0(@types/react@19.2.7)(react@19.2.3)
-      ajv:
-        specifier: 'catalog:'
-        version: 8.17.1
-      lodash.defaultsdeep:
-        specifier: 'catalog:'
-        version: 4.6.1
-      lodash.merge:
-        specifier: 'catalog:'
-        version: 4.6.2
-      lodash.sortby:
-        specifier: 'catalog:'
-        version: 4.7.0
       tabster:
         specifier: 'catalog:'
         version: 8.5.5
@@ -17245,6 +17227,9 @@ importers:
       '@dxos/config':
         specifier: workspace:*
         version: link:../../sdk/config
+      '@dxos/echo':
+        specifier: workspace:*
+        version: link:../../core/echo/echo
       '@dxos/echo-signals':
         specifier: workspace:*
         version: link:../../core/echo/echo-signals
@@ -17260,9 +17245,6 @@ importers:
       '@dxos/random':
         specifier: workspace:*
         version: link:../../common/random
-      '@dxos/react-client':
-        specifier: workspace:*
-        version: link:../../sdk/react-client
       '@dxos/react-ui':
         specifier: workspace:*
         version: link:../react-ui
@@ -17290,66 +17272,18 @@ importers:
       '@dxos/ui-types':
         specifier: workspace:*
         version: link:../ui-types
-      '@effect-atom/atom-react':
-        specifier: 'catalog:'
-        version: 0.4.4(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/platform@0.93.6(effect@3.19.11))(@effect/rpc@0.72.2(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11))(effect@3.19.11)(react@19.2.3)(scheduler@0.27.0)
-      '@effect/platform':
-        specifier: 'catalog:'
-        version: 0.93.6(effect@3.19.11)
-      '@types/chai':
-        specifier: 'catalog:'
-        version: 4.3.5
-      '@types/chai-dom':
-        specifier: 'catalog:'
-        version: 1.11.0
-      '@types/lodash.defaultsdeep':
-        specifier: 'catalog:'
-        version: 4.6.7
-      '@types/lodash.merge':
-        specifier: 'catalog:'
-        version: 4.6.9
-      '@types/lodash.sortby':
-        specifier: 'catalog:'
-        version: 4.7.7
       '@types/react':
         specifier: ~19.2.7
         version: 19.2.7
       '@types/react-dom':
         specifier: ~19.2.3
         version: 19.2.3(@types/react@19.2.7)
-      '@types/react-test-renderer':
-        specifier: 'catalog:'
-        version: 17.0.9
-      chai:
-        specifier: 'catalog:'
-        version: 4.4.1
-      chai-dom:
-        specifier: 'catalog:'
-        version: 1.11.0(chai@4.4.1)(mocha@10.6.0)
-      effect:
-        specifier: 'catalog:'
-        version: 3.19.11
-      mocha:
-        specifier: 'catalog:'
-        version: 10.6.0
       react:
         specifier: ~19.2.3
         version: 19.2.3
       react-dom:
         specifier: ~19.2.3
         version: 19.2.3(react@19.2.3)
-      react-test-renderer:
-        specifier: 'catalog:'
-        version: 19.2.0(react@19.2.3)
-      vite:
-        specifier: 'catalog:'
-        version: 7.1.9(@types/node@22.10.2)(jiti@2.6.1)(terser@5.19.2)(tsx@4.21.0)(yaml@2.8.2)
-      vite-plugin-top-level-await:
-        specifier: 'catalog:'
-        version: 1.6.0(@swc/helpers@0.5.17)(rollup@4.46.2)(vite@7.1.9(@types/node@22.10.2)(jiti@2.6.1)(terser@5.19.2)(tsx@4.21.0)(yaml@2.8.2))
-      vite-plugin-wasm:
-        specifier: 'catalog:'
-        version: 3.5.0(vite@7.1.9(@types/node@22.10.2)(jiti@2.6.1)(terser@5.19.2)(tsx@4.21.0)(yaml@2.8.2))
 
   packages/ui/react-ui-pickers:
     dependencies:
@@ -17557,6 +17491,9 @@ importers:
       '@atlaskit/pragmatic-drag-and-drop-hitbox':
         specifier: 'catalog:'
         version: 1.1.0
+      '@atlaskit/pragmatic-drag-and-drop-react-drop-indicator':
+        specifier: 'catalog:'
+        version: 3.2.10(@types/react@19.2.7)(react@19.2.3)
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../core/echo/echo
@@ -17572,6 +17509,9 @@ importers:
       '@dxos/react-ui-dnd':
         specifier: workspace:*
         version: link:../react-ui-dnd
+      '@dxos/react-ui-mosaic':
+        specifier: workspace:*
+        version: link:../react-ui-mosaic
       '@dxos/storybook-utils':
         specifier: workspace:*
         version: link:../../common/storybook-utils

@@ -18,7 +18,7 @@ import React, { type PropsWithChildren, useEffect, useRef, useState } from 'reac
 import { log } from '@dxos/log';
 import { isTruthy } from '@dxos/util';
 
-import { type ContainerData, type DragEventHandler, type DropTargetData, type ItemData } from '../../hooks';
+import { type ContainerData, type DragEventHandler, type DropTargetData, type ItemData } from './types';
 
 //
 // Context
