@@ -103,6 +103,7 @@ export const Kanban = ({ model, onAddCard, onRemoveCard }: KanbanProps) => {
                               </>
                             )}
                           </Card.Toolbar>
+                          {/* TODO(burdon): Entire card should be inside surface. */}
                           <Surface
                             role='card--intrinsic'
                             limit={1}
