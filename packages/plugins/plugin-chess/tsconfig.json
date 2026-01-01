@@ -75,6 +75,9 @@
       "path": "../../ui/react-ui-gameboard"
     },
     {
+      "path": "../../ui/react-ui-mosaic"
+    },
+    {
       "path": "../../ui/react-ui-sfx"
     },
     {

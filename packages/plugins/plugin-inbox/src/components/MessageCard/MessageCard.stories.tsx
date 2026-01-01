@@ -9,7 +9,7 @@ import { Obj } from '@dxos/echo';
 import { faker } from '@dxos/random';
 import { withTheme } from '@dxos/react-ui/testing';
 import { Card } from '@dxos/react-ui-mosaic';
-import { IntrinsicCardContainer } from '@dxos/storybook-utils';
+import { IntrinsicCardContainer } from '@dxos/react-ui-mosaic/testing';
 import { Message } from '@dxos/types';
 
 import { MessageCard } from './MessageCard';
