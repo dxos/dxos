@@ -14,6 +14,11 @@
       "types": "./dist/types/src/index.d.ts",
       "browser": "./dist/lib/browser/index.mjs",
       "node": "./dist/lib/node-esm/index.mjs"
+    },
+    "./testing": {
+      "types": "./dist/types/src/testing/index.d.ts",
+      "browser": "./dist/lib/browser/testing/index.mjs",
+      "node": "./dist/lib/node-esm/testing/index.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
@@ -36,11 +41,13 @@
     "@codemirror/view": "catalog:",
     "@dxos/echo": "workspace:*",
     "@dxos/log": "workspace:*",
+    "@dxos/react-ui-dnd": "workspace:*",
     "@dxos/util": "workspace:*",
     "@preact-signals/safe-react": "catalog:",
     "@radix-ui/react-context": "catalog:",
     "@radix-ui/react-primitive": "catalog:",
-    "@radix-ui/react-slot": "catalog:"
+    "@radix-ui/react-slot": "catalog:",
+    "@radix-ui/react-use-controllable-state": "catalog:"
   },
   "devDependencies": {
     "@dxos/random": "workspace:*",

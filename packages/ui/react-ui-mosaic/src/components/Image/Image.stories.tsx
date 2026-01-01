@@ -15,13 +15,11 @@ const seed = Math.random();
 faker.seed(seed);
 
 const meta = {
-  title: 'ui/react-ui-stack/Image',
+  title: 'ui/react-ui-mosaic/Image',
   component: Image,
   render: (args) => (
     <div className='absolute inset-0 flex justify-center items-center'>
-      <div className='border border-neutral-500'>
-        <Image {...args} />
-      </div>
+      <Image {...args} />
     </div>
   ),
   decorators: [withTheme],

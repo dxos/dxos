@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { Card } from '@dxos/react-ui-stack';
+import { Card } from '@dxos/react-ui-mosaic';
 import { type Organization } from '@dxos/types';
 
 import { CardHeader, CardLink } from '../components';

@@ -33,6 +33,9 @@
       "path": "../react-ui"
     },
     {
+      "path": "../react-ui-dnd"
+    },
+    {
       "path": "../ui-theme"
     }
   ]

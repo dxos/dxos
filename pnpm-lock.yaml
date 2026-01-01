@@ -3946,9 +3946,6 @@ importers:
       '@dxos/react-ui-dnd':
         specifier: workspace:*
         version: link:../../ui/react-ui-dnd
-      '@radix-ui/react-use-controllable-state':
-        specifier: 'catalog:'
-        version: 1.1.0(@types/react@19.2.7)(react@19.2.3)
       lodash.defaultsdeep:
         specifier: 'catalog:'
         version: 4.6.1
@@ -10477,9 +10474,9 @@ importers:
       '@dxos/react-ui-menu':
         specifier: workspace:*
         version: link:../../ui/react-ui-menu
-      '@dxos/react-ui-stack':
+      '@dxos/react-ui-mosaic':
         specifier: workspace:*
-        version: link:../../ui/react-ui-stack
+        version: link:../../ui/react-ui-mosaic
       '@dxos/react-ui-table':
         specifier: workspace:*
         version: link:../../ui/react-ui-table
@@ -17145,6 +17142,9 @@ importers:
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
+      '@dxos/react-ui-dnd':
+        specifier: workspace:*
+        version: link:../react-ui-dnd
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
@@ -17160,6 +17160,9 @@ importers:
       '@radix-ui/react-slot':
         specifier: 'catalog:'
         version: 1.1.2(@types/react@19.2.7)(react@19.2.3)
+      '@radix-ui/react-use-controllable-state':
+        specifier: 'catalog:'
+        version: 1.1.0(@types/react@19.2.7)(react@19.2.3)
     devDependencies:
       '@dxos/random':
         specifier: workspace:*
@@ -17419,9 +17422,6 @@ importers:
       '@dxos/react-ui-mosaic':
         specifier: workspace:*
         version: link:../react-ui-mosaic
-      '@dxos/storybook-utils':
-        specifier: workspace:*
-        version: link:../../common/storybook-utils
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
@@ -17468,6 +17468,9 @@ importers:
       '@dxos/react-ui':
         specifier: workspace:*
         version: link:../react-ui
+      '@dxos/storybook-utils':
+        specifier: workspace:*
+        version: link:../../common/storybook-utils
       '@dxos/test-utils':
         specifier: workspace:*
         version: link:../../common/test-utils

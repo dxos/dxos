@@ -4,9 +4,11 @@
 
 import React, { type PropsWithChildren } from 'react';
 
-import { ExtrinsicCardContainer, IntrinsicCardContainer, PopoverCardContainer } from '@dxos/storybook-utils';
-
 import { Card } from '../components';
+
+import { ExtrinsicCardContainer } from './ExtrinsicCardContainer';
+import { IntrinsicCardContainer } from './IntrinsicCardContainer';
+import { PopoverCardContainer } from './PopoverCardContainer';
 
 export const CardContainer = ({
   children,

@@ -34,7 +34,7 @@ const DefaultStory = ({ title, description, image }: CardStoryProps) => {
 };
 
 const meta = {
-  title: 'ui/react-ui-stack/Card',
+  title: 'ui/react-ui-mosaic/Card',
   render: DefaultStory,
   decorators: [withTheme],
   parameters: {

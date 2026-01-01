@@ -18,11 +18,6 @@
       "types": "./dist/types/src/playwright/index.d.ts",
       "browser": "./dist/lib/browser/playwright/index.mjs",
       "node": "./dist/lib/node-esm/playwright/index.mjs"
-    },
-    "./testing": {
-      "types": "./dist/types/src/testing/index.d.ts",
-      "browser": "./dist/lib/browser/testing/index.mjs",
-      "node": "./dist/lib/node-esm/testing/index.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
