@@ -54,19 +54,19 @@ export const ToggleComplementarySidebarButton = ({
   classNames,
   current,
 }: ThemedClassName<{ inR0?: boolean; current?: string }>) => {
-  const { invokePromise } = useOperationInvoker();
+  const { invokeSync } = useOperationInvoker();
   const layoutContext = useCapability(DeckCapabilities.MutableDeckState);
   const { t } = useTranslation(meta.id);
 
   const companions = useDeckCompanions();
-  const handleClick = useCallback(async () => {
+  const handleClick = useCallback(() => {
     layoutContext.complementarySidebarState =
       layoutContext.complementarySidebarState === 'expanded' ? 'collapsed' : 'expanded';
     const subject = layoutContext.complementarySidebarPanel ?? (companions[0] && getCompanionId(companions[0].id));
     if (layoutContext.complementarySidebarState === 'expanded' && !current && subject) {
-      await invokePromise(Common.LayoutOperation.UpdateComplementary, { subject });
+      invokeSync(Common.LayoutOperation.UpdateComplementary, { subject });
     }
-  }, [layoutContext, current, companions, invokePromise]);
+  }, [layoutContext, current, companions, invokeSync]);
 
   return (
     <IconButton

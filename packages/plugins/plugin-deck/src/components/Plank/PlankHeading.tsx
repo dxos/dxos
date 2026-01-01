@@ -55,7 +55,7 @@ export const PlankHeading = memo(
     actions = [],
   }: PlankHeadingProps) => {
     const { t } = useTranslation(meta.id);
-    const { invokePromise } = useOperationInvoker();
+    const { invokePromise, invokeSync } = useOperationInvoker();
     const { graph } = useAppGraph();
     const breakpoint = useBreakpoints();
     const icon = node?.properties?.icon ?? 'ph--placeholder--regular';
@@ -118,15 +118,15 @@ export const PlankHeading = memo(
           return invokePromise(DeckOperation.Adjust, { type: eventType, id });
         } else if (eventType === 'close') {
           if (part === 'complementary') {
-            return invokePromise(Common.LayoutOperation.UpdateComplementary, { state: 'collapsed' });
+            return invokeSync(Common.LayoutOperation.UpdateComplementary, { state: 'collapsed' });
           } else {
-            return invokePromise(Common.LayoutOperation.Close, { subject: [id] });
+            return invokeSync(Common.LayoutOperation.Close, { subject: [id] });
           }
         } else {
           return invokePromise(DeckOperation.Adjust, { type: eventType, id });
         }
       },
-      [invokePromise, id, part],
+      [invokePromise, invokeSync, id, part],
     );
 
     const ActionRoot = node && popoverAnchorId === `dxos.org/ui/${meta.id}/${node.id}` ? Popover.Anchor : Fragment;

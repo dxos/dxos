@@ -12,10 +12,10 @@ import { DeckCapabilities, defaultDeck } from '../../types';
 // TODO(wittjosiah): Cleanup the url handling. May justify introducing routing capabilities.
 export default Capability.makeModule((context: Capability.PluginContext) =>
   Effect.gen(function* () {
-    const { invokePromise } = context.getCapability(Common.Capability.OperationInvoker);
+    const { invokeSync } = context.getCapability(Common.Capability.OperationInvoker);
     const state = context.getCapability(DeckCapabilities.MutableDeckState);
 
-    const handleNavigation = async () => {
+    const handleNavigation = () => {
       const pathname = window.location.pathname;
       if (pathname === '/reset') {
         state.activeDeck = 'default';
@@ -28,17 +28,17 @@ export default Capability.makeModule((context: Capability.PluginContext) =>
 
       const [_, nextDeck, nextSolo] = pathname.split('/');
       if (nextDeck && nextDeck !== state.activeDeck) {
-        await invokePromise(Common.LayoutOperation.SwitchWorkspace, { subject: nextDeck });
+        invokeSync(Common.LayoutOperation.SwitchWorkspace, { subject: nextDeck });
       }
 
       if (nextSolo && nextSolo !== state.deck.solo) {
-        await invokePromise(Common.LayoutOperation.SetLayoutMode, { subject: nextSolo, mode: 'solo' });
+        invokeSync(Common.LayoutOperation.SetLayoutMode, { subject: nextSolo, mode: 'solo' });
       } else if (!nextSolo && state.deck.solo) {
-        await invokePromise(Common.LayoutOperation.SetLayoutMode, { mode: 'deck' });
+        invokeSync(Common.LayoutOperation.SetLayoutMode, { mode: 'deck' });
       }
     };
 
-    yield* Effect.tryPromise(() => handleNavigation());
+    yield* Effect.sync(() => handleNavigation());
     window.addEventListener('popstate', handleNavigation);
 
     const unsubscribe = scheduledEffect(

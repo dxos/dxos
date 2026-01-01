@@ -30,7 +30,7 @@ export type CommandsDialogContentProps = {
 export const CommandsDialogContent = forwardRef<HTMLDivElement, CommandsDialogContentProps>(
   ({ selected: initial }, forwardedRef) => {
     const { t } = useTranslation(meta.id);
-    const { invokePromise } = useOperationInvoker();
+    const { invokeSync } = useOperationInvoker();
     const { graph } = useAppGraph();
     const [selected, setSelected] = useState<string | undefined>(initial);
 
@@ -94,7 +94,7 @@ export const CommandsDialogContent = forwardRef<HTMLDivElement, CommandsDialogCo
                       return;
                     }
 
-                    void invokePromise(Common.LayoutOperation.UpdateDialog, { state: false });
+                    invokeSync(Common.LayoutOperation.UpdateDialog, { state: false });
                     setTimeout(() => {
                       const node = Graph.getConnections(graph, group?.id ?? action.id, 'inbound')[0];
                       void (node && Node.isAction(action) && action.data({ parent: node, caller: KEY_BINDING }));

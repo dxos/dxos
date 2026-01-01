@@ -25,6 +25,7 @@ export namespace LayoutOperation {
       name: 'Update Sidebar',
       description: 'Update the sidebar state.',
     },
+    executionMode: 'sync',
     schema: {
       input: Schema.Struct({
         subject: Schema.optional(
@@ -46,6 +47,7 @@ export namespace LayoutOperation {
       name: 'Update Complementary Sidebar',
       description: 'Update the complementary sidebar state.',
     },
+    executionMode: 'sync',
     schema: {
       input: Schema.Struct({
         subject: Schema.optional(
@@ -71,6 +73,7 @@ export namespace LayoutOperation {
       name: 'Update Dialog',
       description: 'Open, close, or update the dialog.',
     },
+    executionMode: 'sync',
     schema: {
       input: Schema.Struct({
         subject: Schema.optional(
@@ -126,6 +129,7 @@ export namespace LayoutOperation {
       name: 'Update Popover',
       description: 'Open, close, or update a popover.',
     },
+    executionMode: 'sync',
     schema: {
       input: Schema.Union(
         PopoverBaseInput.pipe(
@@ -179,6 +183,7 @@ export namespace LayoutOperation {
       name: 'Add Toast',
       description: 'Add a toast notification.',
     },
+    executionMode: 'sync',
     schema: {
       input: Toast,
       output: Schema.Void,
@@ -195,6 +200,7 @@ export namespace LayoutOperation {
       name: 'Set Layout Mode',
       description: 'Set the layout mode (solo, deck, fullscreen, etc.).',
     },
+    executionMode: 'sync',
     schema: {
       input: Schema.Union(
         Schema.Struct({
@@ -221,6 +227,7 @@ export namespace LayoutOperation {
       name: 'Switch Workspace',
       description: 'Switch to a different workspace.',
     },
+    executionMode: 'sync',
     schema: {
       input: Schema.Struct({
         subject: Schema.String.annotations({ description: 'The id of the workspace to switch to.' }),
@@ -235,6 +242,7 @@ export namespace LayoutOperation {
       name: 'Revert Workspace',
       description: 'Revert to the previous workspace.',
     },
+    executionMode: 'sync',
     schema: {
       input: Schema.Void,
       output: Schema.Void,
@@ -251,6 +259,7 @@ export namespace LayoutOperation {
       name: 'Open',
       description: 'Open items in the main content area.',
     },
+    executionMode: 'sync',
     schema: {
       input: Schema.Struct({
         subject: Schema.Array(Schema.String.annotations({ description: 'Ids of the items to open.' })),
@@ -283,6 +292,7 @@ export namespace LayoutOperation {
       name: 'Close',
       description: 'Close items in the main content area.',
     },
+    executionMode: 'sync',
     schema: {
       input: Schema.Struct({
         subject: Schema.Array(Schema.String.annotations({ description: 'Ids of the items to close.' })),
@@ -297,6 +307,7 @@ export namespace LayoutOperation {
       name: 'Set',
       description: 'Override items in the main content area.',
     },
+    executionMode: 'sync',
     schema: {
       input: Schema.Struct({
         subject: Schema.Array(Schema.String.annotations({ description: 'Ids of the items to set.' })),
@@ -356,6 +367,7 @@ export namespace UndoOperation {
       name: 'Show Undo',
       description: 'Show an undo toast notification.',
     },
+    executionMode: 'sync',
     schema: {
       input: Schema.Struct({
         message: Schema.optional(Label.annotations({ description: 'The message to display in the undo toast.' })),

@@ -95,7 +95,7 @@ export type NavTreeContainerProps = {
 export const NavTreeContainer$ = forwardRef<HTMLDivElement, NavTreeContainerProps>(
   ({ tab, popoverAnchorId, topbar }, forwardedRef) => {
     const [isLg] = useMediaQuery('lg');
-    const { invokePromise } = useOperationInvoker();
+    const { invokePromise, invokeSync } = useOperationInvoker();
     const { graph } = useAppGraph();
     const { isOpen, isCurrent, isAlternateTree, setItem } = useCapability(NavTreeCapabilities.State);
     const layout = useLayout();
@@ -142,8 +142,8 @@ export const NavTreeContainer$ = forwardRef<HTMLDivElement, NavTreeContainerProp
     );
 
     const handleTabChange = useCallback(
-      async (node: NavTreeItemGraphNode) => {
-        await invokePromise(Common.LayoutOperation.UpdateSidebar, {
+      (node: NavTreeItemGraphNode) => {
+        invokeSync(Common.LayoutOperation.UpdateSidebar, {
           state:
             node.id === tab
               ? navigationSidebarState === 'expanded'
@@ -154,17 +154,17 @@ export const NavTreeContainer$ = forwardRef<HTMLDivElement, NavTreeContainerProp
               : 'expanded',
         });
 
-        await invokePromise(Common.LayoutOperation.SwitchWorkspace, { subject: node.id });
+        invokeSync(Common.LayoutOperation.SwitchWorkspace, { subject: node.id });
 
         // Open the first item if the workspace is empty.
         if (layout.active.length === 0) {
           const [item] = getItems(graph, node).filter((node) => !Node.isActionLike(node));
           if (item && item.data) {
-            await invokePromise(Common.LayoutOperation.Open, { subject: [item.id] });
+            invokeSync(Common.LayoutOperation.Open, { subject: [item.id] });
           }
         }
       },
-      [invokePromise, layout.active, tab, navigationSidebarState, isLg],
+      [invokeSync, layout.active, tab, navigationSidebarState, isLg],
     );
 
     const blockInstruction = useCallback(
@@ -196,9 +196,9 @@ export const NavTreeContainer$ = forwardRef<HTMLDivElement, NavTreeContainerProp
 
         const current = isCurrent(path, node);
         if (!current) {
-          void invokePromise(Common.LayoutOperation.Open, { subject: [node.id], key: node.properties.key });
+          invokeSync(Common.LayoutOperation.Open, { subject: [node.id], key: node.properties.key });
         } else if (option) {
-          void invokePromise(Common.LayoutOperation.Close, { subject: [node.id] });
+          invokeSync(Common.LayoutOperation.Close, { subject: [node.id] });
         } else {
           void invokePromise(Common.LayoutOperation.ScrollIntoView, { subject: node.id });
         }
@@ -211,16 +211,13 @@ export const NavTreeContainer$ = forwardRef<HTMLDivElement, NavTreeContainerProp
         }
 
         if (!isLg) {
-          void invokePromise(Common.LayoutOperation.UpdateSidebar, { state: 'closed' });
+          invokeSync(Common.LayoutOperation.UpdateSidebar, { state: 'closed' });
         }
       },
-      [graph, invokePromise, isCurrent, isLg],
+      [graph, invokePromise, invokeSync, isCurrent, isLg],
     );
 
-    const handleBack = useCallback(
-      () => invokePromise(Common.LayoutOperation.RevertWorkspace, undefined),
-      [invokePromise],
-    );
+    const handleBack = useCallback(() => invokeSync(Common.LayoutOperation.RevertWorkspace), [invokeSync]);
 
     // TODO(wittjosiah): Factor out hook.
     useEffect(() => {

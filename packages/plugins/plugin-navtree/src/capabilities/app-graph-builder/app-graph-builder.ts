@@ -19,9 +19,9 @@ export default Capability.makeModule((context) =>
         actions: () => [
           {
             id: COMMANDS_DIALOG,
-            data: async () => {
-              const { invokePromise } = context.getCapability(Common.Capability.OperationInvoker);
-              await invokePromise(Common.LayoutOperation.UpdateDialog, {
+            data: () => {
+              const { invokeSync } = context.getCapability(Common.Capability.OperationInvoker);
+              invokeSync(Common.LayoutOperation.UpdateDialog, {
                 subject: COMMANDS_DIALOG,
                 blockAlign: 'start',
               });

@@ -26,7 +26,7 @@ import { StatusBar } from './StatusBar';
 import { Topbar } from './Topbar';
 
 export const DeckMain = () => {
-  const { invokePromise } = useOperationInvoker();
+  const { invokeSync } = useOperationInvoker();
   const settings = useCapability(Common.Capability.SettingsStore).getStore<DeckSettingsProps>(meta.id)?.value;
   const context = useCapability(DeckCapabilities.MutableDeckState);
   const { sidebarState, complementarySidebarState, complementarySidebarPanel, deck } = context;
@@ -68,19 +68,19 @@ export const DeckMain = () => {
       });
 
       shouldRevert.current = true;
-      void invokePromise(Common.LayoutOperation.SetLayoutMode, { subject: attended[0], mode: 'solo' });
+      invokeSync(Common.LayoutOperation.SetLayoutMode, { subject: attended[0], mode: 'solo' });
     } else if (isNotMobile && getMode(deck) === 'solo' && shouldRevert.current) {
-      void invokePromise(Common.LayoutOperation.SetLayoutMode, { revert: true });
+      invokeSync(Common.LayoutOperation.SetLayoutMode, { revert: true });
     }
-  }, [isNotMobile, deck, invokePromise]);
+  }, [isNotMobile, deck, invokeSync]);
 
   // When deck is disabled in settings, set to solo mode if the current layout mode is deck.
   // TODO(thure): Applying this as an effect should be avoided over emitting the operation only when the setting changes.
   useEffect(() => {
     if (!settings?.enableDeck && layoutMode === 'deck') {
-      void invokePromise(Common.LayoutOperation.SetLayoutMode, { subject: active[0], mode: 'solo' });
+      invokeSync(Common.LayoutOperation.SetLayoutMode, { subject: active[0], mode: 'solo' });
     }
-  }, [settings?.enableDeck, invokePromise, active, layoutMode]);
+  }, [settings?.enableDeck, invokeSync, active, layoutMode]);
 
   /**
    * Clear scroll restoration state if the window is resized.

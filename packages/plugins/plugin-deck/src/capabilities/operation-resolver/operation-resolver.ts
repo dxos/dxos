@@ -219,7 +219,7 @@ export default Capability.makeModule((context) =>
           Effect.gen(function* () {
             const { graph } = context.getCapability(Common.Capability.AppGraph);
             const state = context.getCapability(DeckCapabilities.MutableDeckState);
-            const { invoke } = context.getCapability(Common.Capability.OperationInvoker);
+            const scheduler = yield* FollowupScheduler.Service;
 
             batch(() => {
               // TODO(wittjosiah): This is a hack to prevent the previous deck from being set for pinned items.
@@ -235,13 +235,13 @@ export default Capability.makeModule((context) =>
 
             const first = state.deck.solo ? state.deck.solo : state.deck.active[0];
             if (first) {
-              yield* invoke(Common.LayoutOperation.ScrollIntoView, { subject: first });
+              yield* scheduler.schedule(Common.LayoutOperation.ScrollIntoView, { subject: first });
             } else {
               const [item] = Graph.getConnections(graph, input.subject).filter(
                 (node) => !Node.isActionLike(node) && !node.properties.disposition,
               );
               if (item) {
-                yield* invoke(Common.LayoutOperation.Open, { subject: [item.id] });
+                yield* scheduler.schedule(Common.LayoutOperation.Open, { subject: [item.id] });
               }
             }
           }),
@@ -301,15 +301,14 @@ export default Capability.makeModule((context) =>
             const ids = state.deck.solo ? [state.deck.solo] : state.deck.active;
             const newlyOpen = ids.filter((i: string) => !previouslyOpenIds.has(i));
 
-            // Fire follow-up operations.
             if (input.scrollIntoView !== false && (newlyOpen[0] ?? input.subject[0])) {
-              yield* invoke(Common.LayoutOperation.ScrollIntoView, {
+              yield* scheduler.schedule(Common.LayoutOperation.ScrollIntoView, {
                 subject: newlyOpen[0] ?? input.subject[0],
               });
             }
 
             if (newlyOpen[0] ?? input.subject[0]) {
-              yield* invoke(Common.LayoutOperation.Expose, { subject: newlyOpen[0] ?? input.subject[0] });
+              yield* scheduler.schedule(Common.LayoutOperation.Expose, { subject: newlyOpen[0] ?? input.subject[0] });
             }
 
             // Send analytics events for newly opened items.
@@ -447,6 +446,7 @@ export default Capability.makeModule((context) =>
             const state = context.getCapability(DeckCapabilities.MutableDeckState);
             const attention = context.getCapability(AttentionCapabilities.Attention);
             const { invoke } = context.getCapability(Common.Capability.OperationInvoker);
+            const scheduler = yield* FollowupScheduler.Service;
 
             const active = state.deck.solo ? [state.deck.solo] : state.deck.active;
             const next = input.subject.reduce((acc, id) => closeEntry(acc, id), active);
@@ -460,7 +460,7 @@ export default Capability.makeModule((context) =>
             }
 
             if (toAttend) {
-              yield* invoke(Common.LayoutOperation.ScrollIntoView, { subject: toAttend });
+              yield* scheduler.schedule(Common.LayoutOperation.ScrollIntoView, { subject: toAttend });
             }
           }),
       }),
@@ -474,11 +474,11 @@ export default Capability.makeModule((context) =>
           Effect.gen(function* () {
             const state = context.getCapability(DeckCapabilities.MutableDeckState);
             const attention = context.getCapability(AttentionCapabilities.Attention);
-            const { invoke } = context.getCapability(Common.Capability.OperationInvoker);
+            const scheduler = yield* FollowupScheduler.Service;
 
             const toAttend = setActive({ next: input.subject as string[], state, attention });
             if (toAttend) {
-              yield* invoke(Common.LayoutOperation.ScrollIntoView, { subject: toAttend });
+              yield* scheduler.schedule(Common.LayoutOperation.ScrollIntoView, { subject: toAttend });
             }
           }),
       }),

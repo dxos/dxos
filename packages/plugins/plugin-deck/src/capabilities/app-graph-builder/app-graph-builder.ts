@@ -43,12 +43,12 @@ export default Capability.makeModule((context) =>
 
           const closeCurrent = {
             id: `${Common.LayoutOperation.Close.meta.key}/current`,
-            data: async () => {
+            data: () => {
               const attention = context.getCapability(AttentionCapabilities.Attention);
               const attended = attention.current.at(-1);
               if (attended) {
-                const { invokePromise } = context.getCapability(Common.Capability.OperationInvoker);
-                await invokePromise(Common.LayoutOperation.Close, { subject: [attended] });
+                const { invokeSync } = context.getCapability(Common.Capability.OperationInvoker);
+                invokeSync(Common.LayoutOperation.Close, { subject: [attended] });
               }
             },
             properties: {
@@ -59,12 +59,12 @@ export default Capability.makeModule((context) =>
 
           const closeOthers = {
             id: `${Common.LayoutOperation.Close.meta.key}/others`,
-            data: async () => {
-              const { invokePromise } = context.getCapability(Common.Capability.OperationInvoker);
+            data: () => {
+              const { invokeSync } = context.getCapability(Common.Capability.OperationInvoker);
               const attention = context.getCapability(AttentionCapabilities.Attention);
               const attended = attention.current.at(-1);
               const ids = state.deck.active.filter((id) => id !== attended) ?? [];
-              await invokePromise(Common.LayoutOperation.Close, { subject: ids });
+              invokeSync(Common.LayoutOperation.Close, { subject: ids });
             },
             properties: {
               label: ['close others label', { ns: meta.id }],
@@ -74,9 +74,9 @@ export default Capability.makeModule((context) =>
 
           const closeAll = {
             id: `${Common.LayoutOperation.Close.meta.key}/all`,
-            data: async () => {
-              const { invokePromise } = context.getCapability(Common.Capability.OperationInvoker);
-              await invokePromise(Common.LayoutOperation.Close, { subject: state.deck.active });
+            data: () => {
+              const { invokeSync } = context.getCapability(Common.Capability.OperationInvoker);
+              invokeSync(Common.LayoutOperation.Close, { subject: state.deck.active });
             },
             properties: {
               label: ['close all label', { ns: meta.id }],

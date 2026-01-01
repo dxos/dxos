@@ -57,6 +57,15 @@ export interface OperationInvoker {
     op: OperationDefinition<I, O>,
     ...args: void extends I ? [input?: I, options?: InvokeOptions] : [input: I, options?: InvokeOptions]
   ) => Promise<{ data?: O; error?: Error }>;
+  /**
+   * Synchronously invoke an operation.
+   * Only works for operations marked with `executionMode: 'sync'`.
+   * Throws if the operation is async or if the handler performs async work.
+   */
+  invokeSync: <I, O>(
+    op: OperationDefinition<I, O>,
+    ...args: void extends I ? [input?: I, options?: InvokeOptions] : [input: I, options?: InvokeOptions]
+  ) => { data?: O; error?: Error };
   /** @internal */
   _invokeCore: <I, O>(op: OperationDefinition<I, O>, input: I, options?: InvokeOptions) => Effect.Effect<O, Error>;
   /** Effect stream of invocation events. */
@@ -138,6 +147,20 @@ class OperationInvokerImpl implements OperationInvoker {
         log.catch(error);
         return { error };
       });
+  };
+
+  // Arrow function to preserve `this` context when destructured.
+  invokeSync = <I, O>(
+    op: OperationDefinition<I, O>,
+    ...args: void extends I ? [input?: I, options?: InvokeOptions] : [input: I, options?: InvokeOptions]
+  ): { data?: O; error?: Error } => {
+    try {
+      const data = Effect.runSync(this.invoke(op, ...args));
+      return { data };
+    } catch (error) {
+      log.catch(error);
+      return { error: error as Error };
+    }
   };
 
   private _resolveHandler(
