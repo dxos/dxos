@@ -51,7 +51,6 @@
     "@dxos/react-ui-attention": "workspace:*",
     "@dxos/react-ui-dnd": "workspace:*",
     "@dxos/react-ui-mosaic": "workspace:*",
-    "@dxos/storybook-utils": "workspace:*",
     "@dxos/util": "workspace:*",
     "@fluentui/react-tabster": "catalog:",
     "@preact-signals/safe-react": "catalog:",

@@ -17,7 +17,6 @@ import { cardMinInlineSize, hoverableControls, mx } from '@dxos/ui-theme';
 
 import { translationKey } from '../../translations';
 import { Image } from '../Image';
-import { StackItem } from '../StackItem';
 
 import { cardChrome, cardGrid, cardHeading, cardRoot, cardSpacing, cardText } from './fragments';
 
@@ -29,7 +28,7 @@ const cardDefaultInlineSize = cardMinInlineSize;
 /**
  * This is `cardDefaultInlineSize` plus 2 times the sum of the inner and outer spacing applied by CardStack on the inline axis.
  */
-const cardStackDefaultInlineSizeRem = cardDefaultInlineSize + 2.125;
+// const cardStackDefaultInlineSizeRem = cardDefaultInlineSize + 2.125;
 
 type SharedCardProps = ThemedClassName<ComponentPropsWithoutRef<'div'>> & { asChild?: boolean };
 
@@ -142,7 +141,7 @@ const CardDragHandle = forwardRef<HTMLButtonElement, { toolbarItem?: boolean }>(
   );
 });
 
-const CardDragPreview = StackItem.DragPreview;
+// const CardDragPreview = StackItem.DragPreview;
 
 //
 // Menu
@@ -228,7 +227,7 @@ export const Card = {
   ToolbarIconButton: CardToolbarIconButton,
   ToolbarSeparator: CardToolbarSeparator,
   DragHandle: CardDragHandle,
-  DragPreview: CardDragPreview,
+  // DragPreview: CardDragPreview,
   Menu: CardMenu,
   Poster: CardPoster,
   Chrome: CardChrome,
@@ -241,6 +240,6 @@ export {
   cardText,
   cardChrome,
   cardSpacing,
-  cardStackDefaultInlineSizeRem,
+  // cardStackDefaultInlineSizeRem,
   cardDefaultInlineSize,
 };

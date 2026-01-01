@@ -17139,75 +17139,18 @@ importers:
       '@codemirror/view':
         specifier: 'catalog:'
         version: 6.38.5
-      '@dxos/app-framework':
+      '@dxos/echo':
         specifier: workspace:*
-        version: link:../../sdk/app-framework
-      '@dxos/app-graph':
-        specifier: workspace:*
-        version: link:../../sdk/app-graph
-      '@dxos/async':
-        specifier: workspace:*
-        version: link:../../common/async
-      '@dxos/client':
-        specifier: workspace:*
-        version: link:../../sdk/client
-      '@dxos/context':
-        specifier: workspace:*
-        version: link:../../common/context
-      '@dxos/debug':
-        specifier: workspace:*
-        version: link:../../common/debug
-      '@dxos/display-name':
-        specifier: workspace:*
-        version: link:../../common/display-name
-      '@dxos/echo-db':
-        specifier: workspace:*
-        version: link:../../core/echo/echo-db
-      '@dxos/invariant':
-        specifier: workspace:*
-        version: link:../../common/invariant
-      '@dxos/lit-ui':
-        specifier: workspace:*
-        version: link:../lit-ui
-      '@dxos/live-object':
-        specifier: workspace:*
-        version: link:../../core/echo/live-object
+        version: link:../../core/echo/echo
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
-      '@dxos/protocols':
-        specifier: workspace:*
-        version: link:../../core/protocols
-      '@dxos/react-hooks':
-        specifier: workspace:*
-        version: link:../react-primitives/react-hooks
-      '@dxos/react-ui-editor':
-        specifier: workspace:*
-        version: link:../react-ui-editor
-      '@dxos/react-ui-menu':
-        specifier: workspace:*
-        version: link:../react-ui-menu
-      '@dxos/ui':
-        specifier: workspace:*
-        version: link:../ui
-      '@dxos/ui-editor':
-        specifier: workspace:*
-        version: link:../ui-editor
-      '@dxos/ui-theme':
-        specifier: workspace:*
-        version: link:../ui-theme
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
-      '@fluentui/react-tabster':
-        specifier: 'catalog:'
-        version: 9.26.11(@types/react-dom@19.2.3(@types/react@19.2.7))(@types/react@19.2.7)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
       '@preact-signals/safe-react':
         specifier: 'catalog:'
         version: 0.9.0(@babel/core@7.28.0)(@swc/helpers@0.5.17)(react@19.2.3)
-      '@preact/signals-react':
-        specifier: 'catalog:'
-        version: 3.3.1(react@19.2.3)
       '@radix-ui/react-context':
         specifier: 'catalog:'
         version: 1.1.1(@types/react@19.2.7)(react@19.2.3)
@@ -17217,61 +17160,22 @@ importers:
       '@radix-ui/react-slot':
         specifier: 'catalog:'
         version: 1.1.2(@types/react@19.2.7)(react@19.2.3)
-      '@radix-ui/react-use-controllable-state':
-        specifier: 'catalog:'
-        version: 1.1.0(@types/react@19.2.7)(react@19.2.3)
-      tabster:
-        specifier: 'catalog:'
-        version: 8.5.5
     devDependencies:
-      '@dxos/config':
-        specifier: workspace:*
-        version: link:../../sdk/config
-      '@dxos/echo':
-        specifier: workspace:*
-        version: link:../../core/echo/echo
-      '@dxos/echo-signals':
-        specifier: workspace:*
-        version: link:../../core/echo/echo-signals
-      '@dxos/keyboard':
-        specifier: workspace:*
-        version: link:../../common/keyboard
-      '@dxos/plugin-preview':
-        specifier: workspace:*
-        version: link:../../plugins/plugin-preview
-      '@dxos/plugin-testing':
-        specifier: workspace:*
-        version: link:../../plugins/plugin-testing
       '@dxos/random':
         specifier: workspace:*
         version: link:../../common/random
       '@dxos/react-ui':
         specifier: workspace:*
         version: link:../react-ui
-      '@dxos/react-ui-attention':
-        specifier: workspace:*
-        version: link:../react-ui-attention
-      '@dxos/react-ui-components':
-        specifier: workspace:*
-        version: link:../react-ui-components
-      '@dxos/react-ui-form':
-        specifier: workspace:*
-        version: link:../react-ui-form
-      '@dxos/react-ui-syntax-highlighter':
-        specifier: workspace:*
-        version: link:../react-ui-syntax-highlighter
-      '@dxos/schema':
-        specifier: workspace:*
-        version: link:../../sdk/schema
       '@dxos/storybook-utils':
         specifier: workspace:*
         version: link:../../common/storybook-utils
-      '@dxos/types':
+      '@dxos/test-utils':
         specifier: workspace:*
-        version: link:../../sdk/types
-      '@dxos/ui-types':
+        version: link:../../common/test-utils
+      '@dxos/ui-theme':
         specifier: workspace:*
-        version: link:../ui-types
+        version: link:../ui-theme
       '@types/react':
         specifier: ~19.2.7
         version: 19.2.7
@@ -17284,6 +17188,9 @@ importers:
       react-dom:
         specifier: ~19.2.3
         version: 19.2.3(react@19.2.3)
+      vite:
+        specifier: 'catalog:'
+        version: 7.1.9(@types/node@22.10.2)(jiti@2.6.1)(terser@5.19.2)(tsx@4.21.0)(yaml@2.8.2)
 
   packages/ui/react-ui-pickers:
     dependencies:
