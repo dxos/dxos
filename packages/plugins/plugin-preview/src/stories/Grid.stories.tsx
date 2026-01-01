@@ -280,7 +280,7 @@ const PreviewBlock = ({ el, link }: PreviewBlock) => {
 };
 
 const meta = {
-  title: 'ui/react-ui-mosaic/Grid',
+  title: 'plugins/plugin-preview/Grid',
   render: DefaultStory,
   decorators: [
     withTheme,

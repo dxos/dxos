@@ -62,6 +62,7 @@ catalog:
   '@dxos/cli-linux-arm64': 0.8.3
   '@dxos/cli-linux-x64': 0.8.3
   '@dxos/cli-win32-x64': 0.8.3
+  '@dxos/react-ui-mosaic': 0.7.5-feature-compute.4d9d99a
   '@effect-atom/atom': ^0.4.10
   '@effect-atom/atom-react': ^0.4.4
   '@effect/ai': 0.32.1

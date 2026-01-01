@@ -92,6 +92,9 @@
       "path": "../react-ui-menu"
     },
     {
+      "path": "../react-ui-mosaic"
+    },
+    {
       "path": "../react-ui-syntax-highlighter"
     },
     {

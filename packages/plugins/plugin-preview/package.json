@@ -53,6 +53,7 @@
     "@preact-signals/safe-react": "catalog:"
   },
   "devDependencies": {
+    "@dxos/plugin-testing": "workspace:*",
     "@dxos/random": "workspace:*",
     "@dxos/storybook-utils": "workspace:*",
     "effect": "catalog:",
