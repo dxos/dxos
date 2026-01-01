@@ -6,5 +6,5 @@ export * from '@dxos/app-framework';
 
 export * from './common';
 export * from './useCapabilities';
-export * from './useIntentResolver';
+export * from './useOperationResolver';
 export * from './usePluginManager';

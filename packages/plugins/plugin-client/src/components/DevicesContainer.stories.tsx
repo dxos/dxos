@@ -4,7 +4,7 @@
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 
-import { IntentPlugin } from '@dxos/app-framework';
+import { OperationPlugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { withTheme } from '@dxos/react-ui/testing';
 import { translations as shellTranslations } from '@dxos/shell/react';
@@ -26,7 +26,7 @@ const meta = {
             await client.halo.createIdentity();
           },
         }),
-        IntentPlugin(),
+        OperationPlugin(),
       ],
     }),
   ],

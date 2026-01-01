@@ -4,18 +4,18 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capability, Common, Plugin, createIntent } from '@dxos/app-framework';
+import { Capability, Common, Plugin } from '@dxos/app-framework';
 import { Type } from '@dxos/echo';
 import { SpaceCapabilities, SpaceEvents } from '@dxos/plugin-space';
-import { type CreateObjectIntent } from '@dxos/plugin-space/types';
+import { type CreateObject } from '@dxos/plugin-space/types';
 import { translations as formTranslations } from '@dxos/react-ui-form';
 import { translations as tableTranslations } from '@dxos/react-ui-table';
 import { Table } from '@dxos/react-ui-table/types';
 
-import { BlueprintDefinition, IntentResolver, ReactSurface } from './capabilities';
+import { BlueprintDefinition, OperationResolver, ReactSurface } from './capabilities';
 import { meta } from './meta';
 import { translations } from './translations';
-import { CreateTableSchema, TableAction } from './types';
+import { CreateTableSchema, TableOperation } from './types';
 
 export const TablePlugin = Plugin.define(meta).pipe(
   Common.Plugin.addTranslationsModule({ translations: [...translations, ...formTranslations, ...tableTranslations] }),
@@ -27,8 +27,7 @@ export const TablePlugin = Plugin.define(meta).pipe(
         iconHue: 'green',
         comments: 'unanchored',
         inputSchema: CreateTableSchema,
-        createObjectIntent: ((props, options) =>
-          createIntent(TableAction.Create, { ...props, space: options.db })) satisfies CreateObjectIntent,
+        createObject: ((props) => Effect.sync(() => Table.make(props))) satisfies CreateObject,
       },
     },
   }),
@@ -36,25 +35,27 @@ export const TablePlugin = Plugin.define(meta).pipe(
   Plugin.addModule({
     id: 'on-space-created',
     activatesOn: SpaceEvents.SpaceCreated,
-    activate: () =>
+    activate: (context) =>
       Effect.succeed(
-        Capability.contributes(SpaceCapabilities.OnCreateSpace, (params) =>
-          createIntent(TableAction.OnCreateSpace, params),
-        ),
+        Capability.contributes(SpaceCapabilities.OnCreateSpace, (params) => {
+          const { invoke } = context.getCapability(Common.Capability.OperationInvoker);
+          return invoke(TableOperation.OnCreateSpace, params);
+        }),
       ),
   }),
   Plugin.addModule({
     id: 'on-schema-added',
     activatesOn: SpaceEvents.SchemaAdded,
-    activate: () =>
+    activate: (context) =>
       Effect.succeed(
-        Capability.contributes(SpaceCapabilities.OnSchemaAdded, ({ db, schema, show }) =>
-          createIntent(TableAction.OnSchemaAdded, { db, schema, show }),
-        ),
+        Capability.contributes(SpaceCapabilities.OnSchemaAdded, ({ db, schema, show }) => {
+          const { invoke } = context.getCapability(Common.Capability.OperationInvoker);
+          return invoke(TableOperation.OnSchemaAdded, { db, schema, show });
+        }),
       ),
   }),
   Common.Plugin.addSurfaceModule({ activate: ReactSurface }),
-  Common.Plugin.addIntentResolverModule({ activate: IntentResolver }),
+  Common.Plugin.addOperationResolverModule({ activate: OperationResolver }),
   Common.Plugin.addBlueprintDefinitionModule({ activate: BlueprintDefinition }),
   Plugin.make,
 );

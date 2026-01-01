@@ -5,8 +5,8 @@
 import * as Option from 'effect/Option';
 import React, { forwardRef, useCallback, useState } from 'react';
 
-import { Common, createIntent } from '@dxos/app-framework';
-import { useAppGraph, useIntentDispatcher, useLayout } from '@dxos/app-framework/react';
+import { Common } from '@dxos/app-framework';
+import { useAppGraph, useLayout, useOperationInvoker } from '@dxos/app-framework/react';
 import { Obj } from '@dxos/echo';
 import { Graph, type Node } from '@dxos/plugin-graph';
 import { useClient } from '@dxos/react-client';
@@ -57,40 +57,25 @@ export const SearchDialog = ({ pivotId }: SearchDialogProps) => {
   const dangerouslyLoadAllObjects = useQuery(client.spaces, Filter.everything());
   const [pending, results] = useSearchResults(queryString, dangerouslyLoadAllObjects);
   const resultObjects = Array.from(results.keys());
-  const { dispatchPromise: dispatch } = useIntentDispatcher();
+  const { invokePromise } = useOperationInvoker();
 
   const handleSelect = useCallback(
     async (nodeId: string) => {
-      await dispatch(
-        createIntent(Common.LayoutAction.UpdateDialog, {
-          part: 'dialog',
-          options: { state: false },
-        }),
-      );
+      await invokePromise(Common.LayoutOperation.UpdateDialog, { state: false });
 
       // If node is already present in the active parts, scroll to it and close the dialog.
       const index = layout.active.findIndex((id) => id === nodeId);
       if (index !== -1) {
-        await dispatch(
-          createIntent(Common.LayoutAction.ScrollIntoView, {
-            part: 'current',
-            subject: nodeId,
-          }),
-        );
+        await invokePromise(Common.LayoutOperation.ScrollIntoView, { subject: nodeId });
       } else {
-        await dispatch(
-          createIntent(Common.LayoutAction.Open, {
-            part: 'main',
-            subject: [nodeId],
-            options: {
-              pivotId,
-              positioning: 'end',
-            },
-          }),
-        );
+        await invokePromise(Common.LayoutOperation.Open, {
+          subject: [nodeId],
+          pivotId,
+          positioning: 'end',
+        });
       }
     },
-    [pivotId, dispatch, layout],
+    [pivotId, invokePromise, layout],
   );
 
   return (

@@ -12,7 +12,7 @@ import * as Function from 'effect/Function';
 import * as Match from 'effect/Match';
 import * as Schedule from 'effect/Schedule';
 
-import { Capability, Common, createIntent } from '@dxos/app-framework';
+import { Capability, Common } from '@dxos/app-framework';
 import { log } from '@dxos/log';
 
 import { meta } from '../../meta';
@@ -27,7 +27,7 @@ export default Capability.makeModule((context) =>
       return;
     }
 
-    const { dispatch } = context.getCapability(Common.Capability.IntentDispatcher);
+    const { invoke } = context.getCapability(Common.Capability.OperationInvoker);
 
     // https://tauri.app/plugin/updater/#checking-for-updates
     const action = Effect.gen(function* () {
@@ -56,20 +56,15 @@ export default Capability.makeModule((context) =>
 
         yield* Effect.tryPromise(() => update.downloadAndInstall(handleDownload));
 
-        yield* dispatch(
-          createIntent(Common.LayoutAction.AddToast, {
-            part: 'toast',
-            subject: {
-              id: `${meta.id}/update-ready`,
-              title: ['update ready label', { ns: meta.id }],
-              description: ['update ready description', { ns: meta.id }],
-              duration: Infinity,
-              actionLabel: ['update label', { ns: meta.id }],
-              actionAlt: ['update alt', { ns: meta.id }],
-              onAction: () => relaunch(),
-            },
-          }),
-        );
+        yield* invoke(Common.LayoutOperation.AddToast, {
+          id: `${meta.id}/update-ready`,
+          title: ['update ready label', { ns: meta.id }],
+          description: ['update ready description', { ns: meta.id }],
+          duration: Infinity,
+          actionLabel: ['update label', { ns: meta.id }],
+          actionAlt: ['update alt', { ns: meta.id }],
+          onAction: () => relaunch(),
+        });
       }
     });
 

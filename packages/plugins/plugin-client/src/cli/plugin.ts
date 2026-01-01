@@ -6,7 +6,7 @@ import { Common, Plugin } from '@dxos/app-framework';
 
 // NOTE: Must not import from index to avoid pulling in react dependencies.
 import { Client } from '../capabilities/client';
-import { IntentResolver } from '../capabilities/intent-resolver';
+import { OperationResolver } from '../capabilities/operation-resolver';
 import { SchemaDefs } from '../capabilities/schema-defs';
 import { ClientEvents } from '../events';
 import { meta } from '../meta';
@@ -28,15 +28,13 @@ export const ClientPlugin = Plugin.define<ClientPluginOptions>(meta).pipe(
     activatesBefore: [Common.ActivationEvent.SetupSchema],
     activate: SchemaDefs,
   }),
-  // TODO(wittjosiah): Could some of these commands make use of intents?
+  // TODO(wittjosiah): Could some of these commands make use of operations?
   Common.Plugin.addCommandModule({
     id: `${meta.id}/module/cli-commands`,
     commands: [config, device, edge, halo, profile],
   }),
-  Plugin.addModule({
-    id: `${meta.id}/module/intent-resolver`,
-    activatesOn: Common.ActivationEvent.SetupIntentResolver,
-    activate: (context) => IntentResolver({ context }),
+  Common.Plugin.addOperationResolverModule({
+    activate: (context) => OperationResolver({ context }),
   }),
   Plugin.make,
 );

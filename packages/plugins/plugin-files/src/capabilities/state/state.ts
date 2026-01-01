@@ -6,14 +6,14 @@ import { effect } from '@preact/signals-core';
 import * as Effect from 'effect/Effect';
 import localforage from 'localforage';
 
-import { Capability, Common, createIntent } from '@dxos/app-framework';
+import { Capability, Common } from '@dxos/app-framework';
 import { SubscriptionList } from '@dxos/async';
 import { scheduledEffect } from '@dxos/echo-signals/core';
 import { LocalStorageStore } from '@dxos/local-storage';
 import { AttentionCapabilities } from '@dxos/plugin-attention';
 
 import { meta } from '../../meta';
-import { FileCapabilities, type FilesSettingsProps, type FilesState, LocalFilesAction } from '../../types';
+import { FileCapabilities, type FilesSettingsProps, type FilesState, LocalFilesOperation } from '../../types';
 import { PREFIX, findFile, handleToLocalDirectory, handleToLocalFile } from '../../util';
 
 export default Capability.makeModule((context: Capability.PluginContext) =>
@@ -24,7 +24,7 @@ export default Capability.makeModule((context: Capability.PluginContext) =>
       current: undefined,
     });
 
-    const { dispatchPromise: dispatch } = context.getCapability(Common.Capability.IntentDispatcher);
+    const { invokePromise } = context.getCapability(Common.Capability.OperationInvoker);
     const attention = context.getCapability(AttentionCapabilities.Attention);
     const settings = context
       .getCapability(Common.Capability.SettingsStore)
@@ -51,7 +51,7 @@ export default Capability.makeModule((context: Capability.PluginContext) =>
 
     subscriptions.add(
       effect(() => {
-        if (!settings.autoExport || !state.values.rootHandle || !dispatch) {
+        if (!settings.autoExport || !state.values.rootHandle || !invokePromise) {
           return;
         }
 
@@ -61,7 +61,7 @@ export default Capability.makeModule((context: Capability.PluginContext) =>
           }
 
           state.values.exportRunning = true;
-          await dispatch(createIntent(LocalFilesAction.Export));
+          await invokePromise(LocalFilesOperation.Export);
           state.values.exportRunning = false;
         }, settings.autoExportInterval);
 

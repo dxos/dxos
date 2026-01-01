@@ -4,11 +4,11 @@
 
 import React, { useCallback, useRef, useState } from 'react';
 
-import { Common, createIntent } from '@dxos/app-framework';
-import { useIntentDispatcher } from '@dxos/app-framework/react';
+import { Common } from '@dxos/app-framework';
+import { useOperationInvoker } from '@dxos/app-framework/react';
 import { log } from '@dxos/log';
-import { ClientAction } from '@dxos/plugin-client/types';
-import { SpaceAction } from '@dxos/plugin-space/types';
+import { ClientOperation } from '@dxos/plugin-client/types';
+import { SpaceOperation } from '@dxos/plugin-space/types';
 import { PublicKey, useClient } from '@dxos/react-client';
 import { useIdentity } from '@dxos/react-client/halo';
 import { type InvitationResult } from '@dxos/react-client/invitations';
@@ -28,7 +28,7 @@ export const WelcomeScreen = ({ hubUrl }: { hubUrl: string }) => {
 
   const client = useClient();
   const identity = useIdentity();
-  const { dispatchPromise: dispatch } = useIntentDispatcher();
+  const { invokePromise } = useOperationInvoker();
   const [state, setState] = useState<WelcomeState>(
     spaceInvitationCode ? WelcomeState.SPACE_INVITATION : WelcomeState.INIT,
   );
@@ -47,19 +47,12 @@ export const WelcomeScreen = ({ hubUrl }: { hubUrl: string }) => {
 
       if (email === TEST_EMAIL) {
         if (!identity) {
-          await dispatch(
-            createIntent(ClientAction.CreateIdentity, {
-              displayName: 'Test User',
-              data: { emoji: '🧪', hue: 'amber' },
-            }),
-          );
+          await invokePromise(ClientOperation.CreateIdentity, {
+            displayName: 'Test User',
+            data: { emoji: '🧪', hue: 'amber' },
+          });
         }
-        await dispatch(
-          createIntent(Common.LayoutAction.UpdateDialog, {
-            part: 'dialog',
-            options: { state: false },
-          }),
-        );
+        await invokePromise(Common.LayoutOperation.UpdateDialog, { state: false });
         return;
       }
 
@@ -80,24 +73,24 @@ export const WelcomeScreen = ({ hubUrl }: { hubUrl: string }) => {
         pendingRef.current = false;
       }
     },
-    [hubUrl, identity],
+    [hubUrl, identity, invokePromise],
   );
 
   const handlePasskey = useCallback(async () => {
-    await dispatch(createIntent(ClientAction.RedeemPasskey));
-  }, [dispatch]);
+    await invokePromise(ClientOperation.RedeemPasskey);
+  }, [invokePromise]);
 
   const handleJoinIdentity = useCallback(async () => {
-    await dispatch(createIntent(ClientAction.JoinIdentity));
-  }, [dispatch]);
+    await invokePromise(ClientOperation.JoinIdentity, {});
+  }, [invokePromise]);
 
   const handleRecoverIdentity = useCallback(async () => {
-    await dispatch(createIntent(ClientAction.RecoverIdentity));
-  }, [dispatch]);
+    await invokePromise(ClientOperation.RecoverIdentity);
+  }, [invokePromise]);
 
   const handleSpaceInvitation = async () => {
     let identityCreated = true;
-    await dispatch(createIntent(ClientAction.CreateIdentity)).catch(() => {
+    await invokePromise(ClientOperation.CreateIdentity, {}).catch(() => {
       // This will happen if the identity already exists.
       identityCreated = false;
     });
@@ -107,22 +100,14 @@ export const WelcomeScreen = ({ hubUrl }: { hubUrl: string }) => {
     }
 
     const handleDone = async (result: InvitationResult | null) => {
-      await dispatch(
-        createIntent(Common.LayoutAction.UpdateDialog, {
-          part: 'dialog',
-          options: { state: false },
-        }),
-      );
-      await dispatch(
-        createIntent(Common.LayoutAction.SetLayoutMode, {
-          part: 'mode',
-          subject: result?.target ?? undefined,
-          options: { mode: 'solo' },
-        }),
-      );
+      await invokePromise(Common.LayoutOperation.UpdateDialog, { state: false });
+      await invokePromise(Common.LayoutOperation.SetLayoutMode, {
+        subject: result?.target ?? undefined,
+        mode: 'solo',
+      });
 
       if (identityCreated) {
-        await dispatch(createIntent(ClientAction.CreateAgent));
+        await invokePromise(ClientOperation.CreateAgent);
       }
 
       const space = result?.spaceKey && client.spaces.get(result?.spaceKey);
@@ -158,12 +143,10 @@ export const WelcomeScreen = ({ hubUrl }: { hubUrl: string }) => {
       }
     };
 
-    await dispatch(
-      createIntent(SpaceAction.Join, {
-        invitationCode: spaceInvitationCode,
-        onDone: handleDone,
-      }),
-    );
+    await invokePromise(SpaceOperation.Join, {
+      invitationCode: spaceInvitationCode,
+      onDone: handleDone,
+    });
     spaceInvitationCode && removeQueryParamByValue(spaceInvitationCode);
   };
 

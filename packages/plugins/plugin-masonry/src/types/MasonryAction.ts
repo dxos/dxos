@@ -4,14 +4,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Database } from '@dxos/echo';
 import { TypeInputOptionsAnnotation } from '@dxos/plugin-space/types';
-
-import { meta } from '../meta';
-
-import * as Masonry from './Masonry';
-
-const MASONRY_ACTION = `${meta.id}/action`;
 
 export const MasonryProps = Schema.Struct({
   name: Schema.optional(Schema.String),
@@ -26,10 +19,3 @@ export const MasonryProps = Schema.Struct({
     Schema.optional,
   ),
 });
-
-export class CreateMasonry extends Schema.TaggedClass<CreateMasonry>()(`${MASONRY_ACTION}/create`, {
-  input: Schema.extend(Schema.Struct({ db: Database.Database }), MasonryProps),
-  output: Schema.Struct({
-    object: Masonry.Masonry,
-  }),
-}) {}

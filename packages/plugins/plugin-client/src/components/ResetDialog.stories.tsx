@@ -5,7 +5,7 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
-import { IntentPlugin } from '@dxos/app-framework';
+import { OperationPlugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Dialog } from '@dxos/react-ui';
 import { withTheme } from '@dxos/react-ui/testing';
@@ -32,7 +32,7 @@ const meta = {
   decorators: [
     withTheme, // TODO(wittjosiah): Try to write story which does not depend on plugin manager.
     withPluginManager({
-      plugins: [IntentPlugin(), ClientPlugin({})],
+      plugins: [OperationPlugin(), ClientPlugin({})],
     }),
   ],
   parameters: {

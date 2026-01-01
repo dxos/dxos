@@ -241,6 +241,9 @@
       "path": "packages/core/mesh/websocket-rpc/tsconfig.json"
     },
     {
+      "path": "packages/core/operation/tsconfig.json"
+    },
+    {
       "path": "packages/core/protocols/tsconfig.json"
     },
     {

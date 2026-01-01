@@ -3,9 +3,10 @@
 //
 
 import { type Meta } from '@storybook/react-vite';
+import * as Effect from 'effect/Effect';
 import React from 'react';
 
-import { Capability, Common, IntentPlugin, createResolver } from '@dxos/app-framework';
+import { Capability, Common, OperationPlugin, OperationResolver } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Obj } from '@dxos/echo';
 import { GraphPlugin } from '@dxos/plugin-graph';
@@ -17,7 +18,7 @@ import { withAttention } from '@dxos/react-ui-attention/testing';
 
 import { createTestCells, useTestSheet, withComputeGraphDecorator } from '../../testing';
 import { translations } from '../../translations';
-import { Sheet, SheetAction } from '../../types';
+import { Sheet, SheetOperation } from '../../types';
 import { useComputeGraph } from '../ComputeGraph';
 import { RangeList } from '../RangeList';
 
@@ -33,17 +34,19 @@ const meta = {
     withAttention,
     // TODO(wittjosiah): Consider whether we should refactor component so story doesn't need to depend on intents.
     withPluginManager({
-      plugins: [IntentPlugin(), GraphPlugin()],
+      plugins: [OperationPlugin(), GraphPlugin()],
       capabilities: [
-        Capability.contributes(
-          Common.Capability.IntentResolver,
-          createResolver({
-            intent: SheetAction.DropAxis,
-            resolve: ({ model, axis, axisIndex }) => {
-              model[axis === 'col' ? 'dropColumn' : 'dropRow'](axisIndex);
-            },
+        Capability.contributes(Common.Capability.OperationResolver, [
+          OperationResolver.make({
+            operation: SheetOperation.DropAxis,
+            handler: ({ model, axis, axisIndex }) =>
+              Effect.sync(() => {
+                model[axis === 'col' ? 'dropColumn' : 'dropRow'](axisIndex);
+                // Return stub output for story purposes.
+                return { axis, axisIndex, index: 0, axisMeta: null, values: [] };
+              }),
           }),
-        ),
+        ]),
       ],
     }),
   ],

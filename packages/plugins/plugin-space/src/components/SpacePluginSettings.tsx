@@ -4,22 +4,21 @@
 
 import React from 'react';
 
-import { createIntent } from '@dxos/app-framework';
-import { useIntentDispatcher } from '@dxos/app-framework/react';
+import { useOperationInvoker } from '@dxos/app-framework/react';
 import { useClient } from '@dxos/react-client';
 import { useSpaces } from '@dxos/react-client/echo';
 import { IconButton, Input, List, ListItem, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { ControlGroup, ControlItemInput, ControlPage, ControlSection, controlItemClasses } from '@dxos/react-ui-form';
 
 import { meta } from '../meta';
-import { SpaceAction, type SpaceSettingsProps } from '../types';
+import { SpaceOperation, type SpaceSettingsProps } from '../types';
 import { getSpaceDisplayName } from '../util';
 
 export const SpacePluginSettings = ({ settings }: { settings: SpaceSettingsProps }) => {
   const { t } = useTranslation(meta.id);
   const client = useClient();
   const spaces = useSpaces({ all: settings.showHidden });
-  const { dispatchPromise: dispatch } = useIntentDispatcher();
+  const { invokePromise } = useOperationInvoker();
 
   return (
     <ControlPage>
@@ -46,7 +45,7 @@ export const SpacePluginSettings = ({ settings }: { settings: SpaceSettingsProps
               </ListItem.Heading>
               <IconButton
                 icon='ph--faders--regular'
-                onClick={() => dispatch(createIntent(SpaceAction.OpenSettings, { space }))}
+                onClick={() => invokePromise(SpaceOperation.OpenSettings, { space })}
                 label={t('open space settings label')}
               />
             </ListItem.Root>

@@ -3,11 +3,10 @@
 //
 
 import * as Effect from 'effect/Effect';
-import * as Function from 'effect/Function';
 import React, { useCallback } from 'react';
 
-import { Capability, Common, chain, createIntent } from '@dxos/app-framework';
-import { useCapability, useIntentDispatcher } from '@dxos/app-framework/react';
+import { Capability, Common } from '@dxos/app-framework';
+import { useCapability, useOperationInvoker } from '@dxos/app-framework/react';
 import {
   AutomergePanel,
   ConfigPanel,
@@ -40,8 +39,8 @@ import { SettingsStore } from '@dxos/local-storage';
 import { log } from '@dxos/log';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { type Graph } from '@dxos/plugin-graph';
-import { ScriptAction } from '@dxos/plugin-script/types';
-import { SpaceAction } from '@dxos/plugin-space/types';
+import { ScriptOperation } from '@dxos/plugin-script/types';
+import { SpaceOperation } from '@dxos/plugin-space/types';
 import { type Space, SpaceState, isSpace, parseId } from '@dxos/react-client/echo';
 import { StackItem } from '@dxos/react-ui-stack';
 import { Collection } from '@dxos/schema';
@@ -98,7 +97,7 @@ export default Capability.makeModule((context) =>
         role: 'article',
         filter: (data): data is { subject: SpaceDebug } => isSpaceDebug(data.subject),
         component: ({ data }) => {
-          const { dispatchPromise: dispatch } = useIntentDispatcher();
+          const { invokePromise } = useOperationInvoker();
 
           const handleCreateObject = useCallback(
             (objects: Obj.Any[]) => {
@@ -114,15 +113,13 @@ export default Capability.makeModule((context) =>
               }
 
               objects.forEach((object) => {
-                void dispatch(
-                  createIntent(SpaceAction.AddObject, {
-                    target: collection,
-                    object,
-                  }),
-                );
+                void invokePromise(SpaceOperation.AddObject, {
+                  target: collection,
+                  object,
+                });
               });
             },
-            [data.subject.space],
+            [data.subject.space, invokePromise],
           );
 
           return (
@@ -235,16 +232,10 @@ export default Capability.makeModule((context) =>
         role: 'article',
         filter: (data): data is any => data.subject === Devtools.Echo.Spaces,
         component: () => {
-          const { dispatchPromise: dispatch } = useIntentDispatcher();
+          const { invokePromise } = useOperationInvoker();
           const handleSelect = useCallback(
-            () =>
-              dispatch(
-                createIntent(Common.LayoutAction.Open, {
-                  part: 'main',
-                  subject: [Devtools.Echo.Space],
-                }),
-              ),
-            [dispatch],
+            () => invokePromise(Common.LayoutOperation.Open, { subject: [Devtools.Echo.Space] }),
+            [invokePromise],
           );
           return <SpaceListPanel onSelect={handleSelect} />;
         },
@@ -255,16 +246,10 @@ export default Capability.makeModule((context) =>
         filter: (data): data is any => data.subject === Devtools.Echo.Space,
         component: () => {
           const space = useCurrentSpace();
-          const { dispatchPromise: dispatch } = useIntentDispatcher();
+          const { invokePromise } = useOperationInvoker();
           const handleSelect = useCallback(
-            () =>
-              dispatch(
-                createIntent(Common.LayoutAction.Open, {
-                  part: 'main',
-                  subject: [Devtools.Echo.Feeds],
-                }),
-              ),
-            [dispatch],
+            () => invokePromise(Common.LayoutOperation.Open, { subject: [Devtools.Echo.Feeds] }),
+            [invokePromise],
           );
           return <SpaceInfoPanel space={space} onSelectFeed={handleSelect} onSelectPipeline={handleSelect} />;
         },
@@ -384,33 +369,30 @@ export default Capability.makeModule((context) =>
         role: 'article',
         filter: (data): data is any => data.subject === Devtools.Edge.Testing,
         component: () => {
-          const { dispatchPromise: dispatch } = useIntentDispatcher();
+          const { invokePromise } = useOperationInvoker();
           const onSpaceCreate = useCallback(
             async (space: Space) => {
               await space.waitUntilReady();
-              await dispatch(createIntent(SpaceAction.Migrate, { space }));
+              await invokePromise(SpaceOperation.Migrate, { space });
               await space.db.flush();
             },
-            [dispatch],
+            [invokePromise],
           );
           const onScriptPluginOpen = useCallback(
             async (space: Space) => {
               await space.waitUntilReady();
-              const result = await dispatch(
-                Function.pipe(
-                  createIntent(ScriptAction.CreateScript, { db: space.db }),
-                  chain(SpaceAction.AddObject, { target: space.db }),
-                ),
-              );
-              log.info('script created', { result });
-              await dispatch(
-                createIntent(Common.LayoutAction.Open, {
-                  part: 'main',
-                  subject: [`${space.id}:${result.data?.object.id}`],
-                }),
-              );
+              const createResult = await invokePromise(ScriptOperation.CreateScript, { db: space.db });
+              if (createResult.data?.object) {
+                await invokePromise(SpaceOperation.AddObject, { target: space.db, object: createResult.data.object });
+              }
+              log.info('script created', { result: createResult });
+              if (createResult.data?.object?.id) {
+                await invokePromise(Common.LayoutOperation.Open, {
+                  subject: [`${space.id}:${createResult.data.object.id}`],
+                });
+              }
             },
-            [dispatch],
+            [invokePromise],
           );
           return <TestingPanel onSpaceCreate={onSpaceCreate} onScriptPluginOpen={onScriptPluginOpen} />;
         },

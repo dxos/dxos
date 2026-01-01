@@ -4,14 +4,13 @@
 
 import React, { useCallback, useMemo } from 'react';
 
-import { createIntent } from '@dxos/app-framework';
-import { type SurfaceComponentProps, useIntentDispatcher } from '@dxos/app-framework/react';
+import { type SurfaceComponentProps, useOperationInvoker } from '@dxos/app-framework/react';
 import { Obj } from '@dxos/echo';
 import { StackItem } from '@dxos/react-ui-stack';
 import { type Message as MessageType } from '@dxos/types';
 
 import { useActorContact } from '../../hooks';
-import { InboxAction, type Mailbox } from '../../types';
+import { InboxOperation, type Mailbox } from '../../types';
 
 import { Message, type MessageHeaderProps } from './Message';
 import { type ViewMode } from './useToolbar';
@@ -31,14 +30,14 @@ export const MessageArticle = ({
   const db = Obj.getDatabase(mailbox);
   const sender = useActorContact(db, message.sender);
 
-  const { dispatchPromise: dispatch } = useIntentDispatcher();
+  const { invokePromise } = useOperationInvoker();
   const handleContactCreate = useCallback<NonNullable<MessageHeaderProps['onContactCreate']>>(
     (actor) => {
       if (db && actor) {
-        void dispatch(createIntent(InboxAction.ExtractContact, { db, actor }));
+        void invokePromise(InboxOperation.ExtractContact, { db, actor });
       }
     },
-    [db, dispatch],
+    [db, invokePromise],
   );
 
   return (

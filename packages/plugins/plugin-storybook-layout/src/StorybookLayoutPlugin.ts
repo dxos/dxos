@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 
 import { Capability, Common, Plugin } from '@dxos/app-framework';
 
-import { IntentResolver, State } from './capabilities';
+import { OperationResolver, State } from './capabilities';
 import { Layout } from './components';
 import { meta } from './meta';
 import { type LayoutState } from './types';
@@ -31,9 +31,6 @@ export const StorybookLayoutPlugin = Plugin.define<StorybookLayoutPluginOptions>
         }),
       ),
   }),
-  Plugin.addModule({
-    activatesOn: Common.ActivationEvent.SetupIntentResolver,
-    activate: IntentResolver,
-  }),
+  Common.Plugin.addOperationResolverModule({ activate: OperationResolver }),
   Plugin.make,
 );

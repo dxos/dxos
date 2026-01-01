@@ -5,7 +5,7 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
-import { IntentPlugin } from '@dxos/app-framework';
+import { OperationPlugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { testFunctionPlugins } from '@dxos/compute/testing';
 import { useSpace } from '@dxos/react-client/echo';
@@ -45,7 +45,7 @@ const meta = {
     withClientProvider({ types: [Sheet.Sheet], createSpace: true }),
     withComputeGraphDecorator({ plugins: testFunctionPlugins }),
     withPluginManager({
-      plugins: [IntentPlugin()],
+      plugins: [OperationPlugin()],
     }),
   ],
   parameters: {

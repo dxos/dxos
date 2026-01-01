@@ -5,8 +5,8 @@
 import * as Effect from 'effect/Effect';
 import React, { useCallback } from 'react';
 
-import { Capability, Common, createIntent } from '@dxos/app-framework';
-import { Surface, SurfaceCardRole, useIntentDispatcher } from '@dxos/app-framework/react';
+import { Capability, Common } from '@dxos/app-framework';
+import { Surface, SurfaceCardRole, useOperationInvoker } from '@dxos/app-framework/react';
 import { Obj } from '@dxos/echo';
 import { useActiveSpace } from '@dxos/plugin-space';
 import { type ProjectionModel } from '@dxos/schema';
@@ -30,21 +30,16 @@ export default Capability.makeModule(() =>
         role: SurfaceCardRole.literals as any,
         filter: (data): data is { subject: Person.Person } => Obj.instanceOf(Person.Person, data.subject),
         component: ({ data, role }) => {
-          const { dispatchPromise: dispatch } = useIntentDispatcher();
+          const { invokePromise } = useOperationInvoker();
           const db = Obj.getDatabase(data.subject);
           const activeSpace = useActiveSpace(); // TODO(burdon): Disambiguate with space?
           const handleSelect = useCallback<NonNullable<CardPreviewProps['onSelect']>>(
             (object) =>
-              dispatch(
-                createIntent(Common.LayoutAction.Open, {
-                  part: 'main',
-                  subject: [Obj.getDXN(object).toString()],
-                  options: {
-                    workspace: db?.spaceId,
-                  },
-                }),
-              ),
-            [dispatch],
+              invokePromise(Common.LayoutOperation.Open, {
+                subject: [Obj.getDXN(object).toString()],
+                workspace: db?.spaceId,
+              }),
+            [invokePromise],
           );
 
           return (

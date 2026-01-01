@@ -6,6 +6,7 @@ import * as Schema from 'effect/Schema';
 
 import { type Capability } from '@dxos/app-framework';
 import { type Client, type ClientOptions, PublicKey } from '@dxos/client';
+import * as Operation from '@dxos/operation';
 import { type MaybePromise } from '@dxos/util';
 
 import { meta } from '../meta';
@@ -88,6 +89,105 @@ export namespace ClientAction {
     }),
     output: Schema.Void,
   }) {}
+}
+
+const CLIENT_OPERATION = `${meta.id}/operation`;
+
+/**
+ * Operations for the Client plugin.
+ */
+export namespace ClientOperation {
+  const ProfileSchema = Schema.Struct({
+    displayName: Schema.optional(Schema.String),
+    avatarCid: Schema.optional(Schema.String),
+    data: Schema.optional(Schema.Record({ key: Schema.String, value: Schema.Any })),
+  });
+
+  export const CreateIdentity = Operation.make({
+    meta: { key: `${CLIENT_OPERATION}/create-identity`, name: 'Create Identity' },
+    schema: {
+      input: ProfileSchema,
+      output: IdentitySchema,
+    },
+  });
+
+  export const JoinIdentity = Operation.make({
+    meta: { key: `${CLIENT_OPERATION}/join-identity`, name: 'Join Identity' },
+    schema: {
+      input: Schema.Struct({
+        invitationCode: Schema.optional(Schema.String),
+      }),
+      output: Schema.Void,
+    },
+  });
+
+  export const ShareIdentity = Operation.make({
+    meta: { key: `${CLIENT_OPERATION}/share-identity`, name: 'Share Identity' },
+    schema: {
+      input: Schema.Void,
+      output: Schema.Void,
+    },
+  });
+
+  export const RecoverIdentity = Operation.make({
+    meta: { key: `${CLIENT_OPERATION}/recover-identity`, name: 'Recover Identity' },
+    schema: {
+      input: Schema.Void,
+      output: Schema.Void,
+    },
+  });
+
+  export const ResetStorage = Operation.make({
+    meta: { key: `${CLIENT_OPERATION}/reset-storage`, name: 'Reset Storage' },
+    schema: {
+      input: Schema.Struct({
+        mode: Schema.optional(Schema.String),
+      }),
+      output: Schema.Void,
+    },
+  });
+
+  export const CreateAgent = Operation.make({
+    meta: { key: `${CLIENT_OPERATION}/create-agent`, name: 'Create Agent' },
+    schema: {
+      input: Schema.Void,
+      output: Schema.Void,
+    },
+  });
+
+  export const CreateRecoveryCode = Operation.make({
+    meta: { key: `${CLIENT_OPERATION}/create-recovery-code`, name: 'Create Recovery Code' },
+    schema: {
+      input: Schema.Void,
+      output: Schema.Void,
+    },
+  });
+
+  export const CreatePasskey = Operation.make({
+    meta: { key: `${CLIENT_OPERATION}/create-passkey`, name: 'Create Passkey' },
+    schema: {
+      input: Schema.Void,
+      output: Schema.Void,
+    },
+  });
+
+  export const RedeemPasskey = Operation.make({
+    meta: { key: `${CLIENT_OPERATION}/redeem-passkey`, name: 'Redeem Passkey' },
+    schema: {
+      input: Schema.Void,
+      output: Schema.Void,
+    },
+  });
+
+  export const RedeemToken = Operation.make({
+    meta: { key: `${CLIENT_OPERATION}/redeem-token`, name: 'Redeem Token' },
+    schema: {
+      input: Schema.Struct({
+        token: Schema.String,
+      }),
+      output: Schema.Void,
+    },
+  });
 }
 
 export type ClientPluginOptions = ClientOptions & {

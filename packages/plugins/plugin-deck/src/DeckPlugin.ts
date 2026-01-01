@@ -12,7 +12,7 @@ import {
   CheckAppScheme,
   DeckSettings,
   DeckState,
-  LayoutIntentResolver,
+  LayoutOperationResolver,
   ReactRoot,
   ReactSurface,
   Toolkit,
@@ -50,7 +50,7 @@ export const DeckPlugin = Plugin.define(meta).pipe(
     activate: ReactRoot,
   }),
   Common.Plugin.addSurfaceModule({ activate: ReactSurface }),
-  Common.Plugin.addIntentResolverModule({ activate: LayoutIntentResolver }),
+  Common.Plugin.addOperationResolverModule({ activate: LayoutOperationResolver }),
   Common.Plugin.addAppGraphModule({ activate: AppGraphBuilder }),
   // Plugin.addModule({
   //   activatesOn: Events.SetupArtifactDefinition,
@@ -62,7 +62,7 @@ export const DeckPlugin = Plugin.define(meta).pipe(
     activate: Toolkit,
   }),
   Plugin.addModule({
-    activatesOn: ActivationEvent.allOf(Common.ActivationEvent.DispatcherReady, DeckEvents.StateReady),
+    activatesOn: ActivationEvent.allOf(Common.ActivationEvent.OperationInvokerReady, DeckEvents.StateReady),
     activate: UrlHandler,
   }),
   Plugin.make,

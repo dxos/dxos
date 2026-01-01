@@ -13,11 +13,10 @@ import {
   ActivationEvent,
   Capability,
   Common,
-  IntentPlugin,
+  OperationPlugin,
+  OperationResolver,
   Plugin,
   SettingsPlugin,
-  createIntent,
-  createResolver,
 } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { AiContextBinder, ArtifactId, GenericToolkit } from '@dxos/assistant';
@@ -28,12 +27,12 @@ import { Obj, Ref } from '@dxos/echo';
 import { Example, Function, Trigger } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { Assistant, AssistantAction, AssistantPlugin } from '@dxos/plugin-assistant';
+import { Assistant, AssistantOperation, AssistantPlugin } from '@dxos/plugin-assistant';
 import { AttentionPlugin } from '@dxos/plugin-attention';
 import { AutomationPlugin } from '@dxos/plugin-automation';
 import { ClientCapabilities, ClientEvents, ClientPlugin } from '@dxos/plugin-client';
 import { type ClientPluginOptions } from '@dxos/plugin-client/types';
-import { DeckAction } from '@dxos/plugin-deck/types';
+import { DeckOperation } from '@dxos/plugin-deck/types';
 import { GraphPlugin } from '@dxos/plugin-graph';
 import { Markdown } from '@dxos/plugin-markdown/types';
 import { PreviewPlugin } from '@dxos/plugin-preview';
@@ -114,7 +113,7 @@ export const getDecorators = ({
       AttentionPlugin(),
       AutomationPlugin(),
       GraphPlugin(),
-      IntentPlugin(),
+      OperationPlugin(),
       SettingsPlugin(),
       SpacePlugin({}),
       ClientPlugin({
@@ -226,61 +225,61 @@ const StoryPlugin = Plugin.define<StoryPluginOptions>({
   }),
   Plugin.addModule({
     id: 'example.com/plugin/testing/module/setup',
-    activatesOn: ActivationEvent.allOf(Common.ActivationEvent.DispatcherReady, ClientEvents.SpacesReady),
+    activatesOn: ActivationEvent.allOf(Common.ActivationEvent.OperationInvokerReady, ClientEvents.SpacesReady),
     activate: (context) =>
       Effect.gen(function* () {
         const client = context.getCapability(ClientCapabilities.Client);
         const space = client.spaces.default;
-        const { dispatchPromise: dispatch } = context.getCapability(Common.Capability.IntentDispatcher);
+        const { invoke } = context.getCapability(Common.Capability.OperationInvoker);
 
         // Ensure workspace is set.
-        yield* Effect.tryPromise(() =>
-          dispatch(createIntent(Common.LayoutAction.SwitchWorkspace, { part: 'workspace', subject: space.id })),
-        );
+        yield* invoke(Common.LayoutOperation.SwitchWorkspace, { subject: space.id });
 
         // Create initial chat.
-        yield* Effect.tryPromise(() => dispatch(createIntent(AssistantAction.CreateChat, { db: space.db })));
+        yield* invoke(AssistantOperation.CreateChat, { db: space.db });
       }),
   }),
   Plugin.addModule(({ onChatCreated }) => ({
-    id: 'example.com/plugin/testing/module/intent-resolver',
-    activatesOn: Common.ActivationEvent.SetupIntentResolver,
+    id: 'example.com/plugin/testing/module/operation-resolver',
+    activatesOn: Common.ActivationEvent.SetupOperationResolver,
     activate: (context) =>
       Effect.succeed(
-        Capability.contributes(Common.Capability.IntentResolver, [
-          createResolver({
-            intent: DeckAction.ChangeCompanion,
-            resolve: () => ({}),
+        Capability.contributes(Common.Capability.OperationResolver, [
+          OperationResolver.make({
+            operation: DeckOperation.ChangeCompanion,
+            handler: () => Effect.void,
           }),
-          createResolver({
-            intent: AssistantAction.CreateChat,
-            position: 'hoist',
-            resolve: async ({ db, name }) => {
-              const client = context.getCapability(ClientCapabilities.Client);
-              const space = client.spaces.get(db.spaceId);
-              invariant(space, 'Space not found');
+          OperationResolver.make({
+            operation: AssistantOperation.CreateChat,
+            handler: ({ db, name }) =>
+              Effect.gen(function* () {
+                const client = context.getCapability(ClientCapabilities.Client);
+                const space = client.spaces.get(db.spaceId);
+                invariant(space, 'Space not found');
 
-              const queue = space.queues.create();
-              const traceQueue = space.queues.create();
-              const chat = Obj.make(Assistant.Chat, {
-                name,
-                queue: Ref.fromDXN(queue.dxn),
-                traceQueue: Ref.fromDXN(traceQueue.dxn),
-              });
-              const binder = new AiContextBinder(queue);
+                const queue = space.queues.create();
+                const traceQueue = space.queues.create();
+                const chat = Obj.make(Assistant.Chat, {
+                  name,
+                  queue: Ref.fromDXN(queue.dxn),
+                  traceQueue: Ref.fromDXN(traceQueue.dxn),
+                });
+                const binder = new AiContextBinder(queue);
 
-              // Story-specific behaviour to allow chat creation to be extended.
-              space.db.add(chat);
-              await space.db.flush({ indexes: true });
+                // Story-specific behaviour to allow chat creation to be extended.
+                space.db.add(chat);
+                yield* Effect.tryPromise(() => space.db.flush({ indexes: true }));
 
-              await binder.open();
-              await onChatCreated?.({ space, chat, binder });
-              await binder.close();
+                if (onChatCreated) {
+                  yield* Effect.tryPromise(() => binder.open());
+                  yield* Effect.tryPromise(() => onChatCreated({ space, chat, binder }));
+                  yield* Effect.tryPromise(() => binder.close());
+                }
 
-              return {
-                data: { object: chat },
-              };
-            },
+                return {
+                  object: chat,
+                };
+              }),
           }),
         ]),
       ),

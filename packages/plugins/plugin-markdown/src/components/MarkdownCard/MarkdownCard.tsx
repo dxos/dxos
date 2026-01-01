@@ -2,11 +2,10 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as Function from 'effect/Function';
 import React, { forwardRef, useCallback, useMemo } from 'react';
 
-import { Common, chain, createIntent } from '@dxos/app-framework';
-import { useIntentDispatcher } from '@dxos/app-framework/react';
+import { Common } from '@dxos/app-framework';
+import { useOperationInvoker } from '@dxos/app-framework/react';
 import { Obj } from '@dxos/echo';
 import { type CardPreviewProps } from '@dxos/plugin-preview';
 import { IconButton, useTranslation } from '@dxos/react-ui';
@@ -22,27 +21,16 @@ export type MarkdownCardProps = CardPreviewProps<Markdown.Document | Text.Text>;
 
 export const MarkdownCard = forwardRef<HTMLDivElement, MarkdownCardProps>(
   ({ subject, role }: MarkdownCardProps, forwardedRef) => {
-    const { dispatchPromise: dispatch } = useIntentDispatcher();
+    const { invokePromise } = useOperationInvoker();
     const { t } = useTranslation(meta.id);
     const snippet = useMemo(() => getSnippet(subject), [subject]);
     const info = getInfo(subject);
 
     // TODO(wittjosiah): Factor out so this component isn't dependent on the app framework.
-    const handleNavigate = useCallback(() => {
-      void dispatch(
-        Function.pipe(
-          createIntent(Common.LayoutAction.UpdatePopover, {
-            part: 'popover',
-            subject: null,
-            options: { state: false, anchorId: '' },
-          }),
-          chain(Common.LayoutAction.Open, {
-            part: 'main',
-            subject: [Obj.getDXN(subject).toString()],
-          }),
-        ),
-      );
-    }, [dispatch, subject]);
+    const handleNavigate = useCallback(async () => {
+      await invokePromise(Common.LayoutOperation.UpdatePopover, { state: false, anchorId: '' });
+      await invokePromise(Common.LayoutOperation.Open, { subject: [Obj.getDXN(subject).toString()] });
+    }, [invokePromise, subject]);
 
     return (
       <Card.SurfaceRoot role={role} ref={forwardedRef}>

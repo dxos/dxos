@@ -6,21 +6,21 @@
 // @ts-nocheck
 
 import * as Effect from 'effect/Effect';
-import * as Function from 'effect/Function';
 import * as Schema from 'effect/Schema';
 
-import { Capabilities, Capability, type PromiseIntentDispatcher, chain, createIntent } from '@dxos/app-framework';
+import { ToolResult, createTool } from '@dxos/ai';
+import { Capabilities, Capability, type PromiseIntentDispatcher } from '@dxos/app-framework';
 import { createArtifactElement } from '@dxos/assistant';
 import { defineArtifact } from '@dxos/blueprints';
 import { Obj } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
-import { SpaceAction } from '@dxos/plugin-space/types';
+import { SpaceOperation } from '@dxos/plugin-space/types';
 import { Filter, type Space } from '@dxos/react-client/echo';
 import { View } from '@dxos/schema';
 import { isNonNullable } from '@dxos/util';
 
 import { meta } from '../../meta';
-import { Map, MapAction } from '../../types';
+import { Map } from '../../types';
 
 // TODO(burdon): Factor out.
 declare global {
@@ -91,7 +91,7 @@ export default Capability.makeModule(() =>
           }),
           execute: async ({ center, typename, locationFieldId }, { extensions }) => {
             invariant(extensions?.space, 'No space');
-            invariant(extensions?.dispatch, 'No intent dispatcher');
+            invariant(extensions?.invoke, 'No operation invoker');
 
             // Validate schema if provided.
             if (typename) {
@@ -101,21 +101,26 @@ export default Capability.makeModule(() =>
               }
             }
 
-            const intent = Function.pipe(
-              createIntent(MapAction.Create, {
-                space: extensions.space,
+            let view: View.View | undefined;
+            if (typename) {
+              const result = await View.makeFromDatabase({
+                db: extensions.space.db,
                 typename,
-                locationFieldId,
-              }),
-              chain(SpaceAction.AddObject, { target: extensions.space }),
-            );
-
-            const { data, error } = await extensions.dispatch(intent);
-            if (!data || error) {
-              return ToolResult.Error(error?.message ?? 'Failed to create map');
+              });
+              view = result.view;
             }
 
-            return ToolResult.Success(createArtifactElement(data.id));
+            const map = Map.make({ center, view });
+
+            const { error } = await extensions.invoke(SpaceOperation.AddObject, {
+              target: extensions.space,
+              object: map,
+            });
+            if (error) {
+              return ToolResult.Error(error?.message ?? 'Failed to add map to space');
+            }
+
+            return ToolResult.Success(createArtifactElement(map.id));
           },
         }),
       ],

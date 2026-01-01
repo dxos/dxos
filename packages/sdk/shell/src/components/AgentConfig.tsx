@@ -7,6 +7,8 @@ import React from 'react';
 import { Avatar, Button, Icon, IconButton, Link, Tooltip, Trans, useTranslation } from '@dxos/react-ui';
 import { descriptionText, getSize, mx, valenceColorText } from '@dxos/ui-theme';
 
+import { translationKey } from '../translations';
+
 import { type AgentFormProps } from './DeviceList';
 
 export const AgentConfig = ({
@@ -16,7 +18,7 @@ export const AgentConfig = ({
   onAgentCreate,
   onAgentRefresh,
 }: Omit<AgentFormProps, 'agentHostingEnabled'>) => {
-  const { t } = useTranslation('os');
+  const { t } = useTranslation(translationKey);
   return (
     <div role='none' className='p-1'>
       <h2 className={mx(descriptionText, 'text-center mbs-2')}>{t('agent heading')}</h2>

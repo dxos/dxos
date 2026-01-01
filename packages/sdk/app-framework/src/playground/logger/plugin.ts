@@ -8,9 +8,9 @@ import { log } from '@dxos/log';
 
 import * as Common from '../../common';
 import { Capability, Plugin } from '../../core';
-import { createResolver } from '../../plugin-intent';
+import { OperationResolver } from '../../plugin-operation';
 
-import { Log } from './schema';
+import { LogOperation } from './schema';
 
 const Toolbar = Capability.lazy('Toolbar', () => import('./Toolbar'));
 
@@ -20,19 +20,19 @@ const meta = {
 };
 
 export const LoggerPlugin = Plugin.define(meta).pipe(
-  Common.Plugin.addIntentResolverModule({
+  Common.Plugin.addOperationResolverModule({
     activate: () =>
-      Effect.succeed([
-        Capability.contributes(
-          Common.Capability.IntentResolver,
-          createResolver({
-            intent: Log,
-            resolve: ({ message }) => {
-              log.info(message);
-            },
+      Effect.succeed(
+        Capability.contributes(Common.Capability.OperationResolver, [
+          OperationResolver.make({
+            operation: LogOperation,
+            handler: ({ message }) =>
+              Effect.sync(() => {
+                log.info(message);
+              }),
           }),
-        ),
-      ]),
+        ]),
+      ),
   }),
   Plugin.addModule({
     activatesOn: Common.ActivationEvent.Startup,

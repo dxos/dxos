@@ -8,6 +8,8 @@ import React, { type Dispatch, type SetStateAction, forwardRef } from 'react';
 import { Button, type ButtonProps, DropdownMenu, Icon, IconButton, useTranslation } from '@dxos/react-ui';
 import { descriptionText, mx } from '@dxos/ui-theme';
 
+import { translationKey } from '../../translations';
+
 export type LargeButtonProps = ButtonProps & {
   isFull?: boolean;
 };
@@ -59,7 +61,7 @@ export const BifurcatedAction = forwardRef<HTMLButtonElement, BifurcatedActionPr
 
   const activeAction = actions[activeActionKey as string] ?? {};
 
-  const { t } = useTranslation('os');
+  const { t } = useTranslation(translationKey);
 
   return (
     <div role='none' className={mx('mbs-2 flex gap-px items-center', isFull && 'is-full')}>

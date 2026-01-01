@@ -420,6 +420,11 @@
         },
         {
           "type": "json",
+          "path": "packages/core/operation/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/core/protocols/package.json",
           "jsonpath": "$.version"
         },

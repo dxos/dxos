@@ -8,7 +8,7 @@ import React from 'react';
 
 import { withTheme } from '@dxos/react-ui/testing';
 
-import { IntentPlugin } from '../plugin-intent';
+import { OperationPlugin } from '../plugin-operation';
 import { useApp } from '../react';
 
 import { DebugPlugin } from './debug';
@@ -18,7 +18,7 @@ import { LoggerPlugin } from './logger';
 
 const plugins = [
   // prettier-ignore
-  IntentPlugin(),
+  OperationPlugin(),
   LayoutPlugin(),
   DebugPlugin(),
   LoggerPlugin(),

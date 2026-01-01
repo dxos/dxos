@@ -2,14 +2,15 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Common, Plugin, createIntent } from '@dxos/app-framework';
-import { Diagram } from '@dxos/plugin-sketch/types';
-import { type CreateObjectIntent } from '@dxos/plugin-space/types';
+import * as Effect from 'effect/Effect';
 
-import { ExcalidrawSettings, IntentResolvers, ReactSurface } from './capabilities';
+import { Common, Plugin } from '@dxos/app-framework';
+import { Diagram } from '@dxos/plugin-sketch/types';
+import { type CreateObject } from '@dxos/plugin-space/types';
+
+import { ExcalidrawSettings, OperationResolver, ReactSurface } from './capabilities';
 import { meta } from './meta';
 import { translations } from './translations';
-import { SketchAction } from './types';
 
 export const ExcalidrawPlugin = Plugin.define(meta).pipe(
   Common.Plugin.addSettingsModule({ id: 'settings', activate: ExcalidrawSettings }),
@@ -20,13 +21,13 @@ export const ExcalidrawPlugin = Plugin.define(meta).pipe(
       metadata: {
         icon: 'ph--compass-tool--regular',
         iconHue: 'indigo',
-        createObjectIntent: (() => createIntent(SketchAction.Create)) satisfies CreateObjectIntent,
+        createObject: ((props) => Effect.sync(() => Diagram.make(props))) satisfies CreateObject,
         addToCollectionOnCreate: true,
       },
     },
   }),
   Common.Plugin.addSchemaModule({ schema: [Diagram.Canvas, Diagram.Diagram] }),
   Common.Plugin.addSurfaceModule({ activate: ReactSurface }),
-  Common.Plugin.addIntentResolverModule({ activate: IntentResolvers }),
+  Common.Plugin.addOperationResolverModule({ activate: OperationResolver }),
   Plugin.make,
 );

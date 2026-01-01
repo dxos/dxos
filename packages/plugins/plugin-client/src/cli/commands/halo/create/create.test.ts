@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
 
-import { IntentPlugin } from '@dxos/app-framework';
+import { OperationPlugin } from '@dxos/app-framework';
 import { fromPlugins } from '@dxos/app-framework/testing';
 import { TestConsole, TestLayer } from '@dxos/cli-util/testing';
 import { ClientService } from '@dxos/client';
@@ -18,7 +18,7 @@ import { ClientPlugin } from '../../../plugin';
 
 import { handler } from './create';
 
-const layer = Layer.merge(TestLayer, fromPlugins([ClientPlugin({}), IntentPlugin(), ObservabilityPlugin()]));
+const layer = Layer.merge(TestLayer, fromPlugins([ClientPlugin({}), OperationPlugin(), ObservabilityPlugin()]));
 
 // TODO(wittjosiah): Fix these tests.
 describe.skip('halo create', () => {

@@ -5,19 +5,28 @@
 import * as Schema from 'effect/Schema';
 
 import { SpaceSchema } from '@dxos/client/echo';
+import * as Operation from '@dxos/operation';
 import { Transcript } from '@dxos/types';
 
 import { meta } from '../meta';
 
-/**
- * Endpoint to the calls service.
- */
-export class Create extends Schema.TaggedClass<Create>()(`${meta.id}/action/create`, {
-  input: Schema.Struct({
-    name: Schema.optional(Schema.String),
-    space: SpaceSchema,
-  }),
-  output: Schema.Struct({
-    object: Transcript.Transcript,
-  }),
-}) {}
+//
+// Operations
+//
+
+const TRANSCRIPT_OPERATION = `${meta.id}/operation`;
+
+export namespace TranscriptOperation {
+  export const Create = Operation.make({
+    meta: { key: `${TRANSCRIPT_OPERATION}/create`, name: 'Create Transcript' },
+    schema: {
+      input: Schema.Struct({
+        name: Schema.optional(Schema.String),
+        space: SpaceSchema,
+      }),
+      output: Schema.Struct({
+        object: Transcript.Transcript,
+      }),
+    },
+  });
+}

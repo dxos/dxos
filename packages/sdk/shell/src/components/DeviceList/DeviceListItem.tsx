@@ -20,6 +20,8 @@ import {
 } from '@dxos/react-ui';
 import { keyToFallback } from '@dxos/util';
 
+import { translationKey } from '../../translations';
+
 import { type AgentFormProps, type DeviceListItemProps } from './DeviceListProps';
 
 export const DeviceListItem = forwardRef<
@@ -43,7 +45,7 @@ export const DeviceListItem = forwardRef<
     },
     forwardedRef,
   ) => {
-    const { t } = useTranslation('os');
+    const { t } = useTranslation(translationKey);
     const fallbackValue = keyToFallback(device.deviceKey);
     const labelId = useId('identityListItem__label');
     const displayName = device.profile

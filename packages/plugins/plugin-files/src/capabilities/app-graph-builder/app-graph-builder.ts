@@ -3,18 +3,19 @@
 //
 
 import * as Effect from 'effect/Effect';
-import * as Function from 'effect/Function';
 import * as Option from 'effect/Option';
 
-import { Capability, Common, chain, createIntent } from '@dxos/app-framework';
+import { Capability, Common } from '@dxos/app-framework';
 import { CreateAtom, GraphBuilder, NodeMatcher } from '@dxos/plugin-graph';
 
 import { meta } from '../../meta';
-import { FileCapabilities, type FilesSettingsProps, LocalFilesAction } from '../../types';
+import { FileCapabilities, type FilesSettingsProps, LocalFilesOperation } from '../../types';
 import { isLocalDirectory, isLocalEntity, isLocalFile } from '../../util';
 
 export default Capability.makeModule((context) =>
   Effect.sync(() => {
+    const { invokePromise } = context.getCapability(Common.Capability.OperationInvoker);
+
     return Capability.contributes(Common.Capability.AppGraphBuilder, [
       // Create export/import actions.
       GraphBuilder.createExtension({
@@ -22,10 +23,9 @@ export default Capability.makeModule((context) =>
         match: NodeMatcher.whenRoot,
         actions: () => [
           {
-            id: LocalFilesAction.Export._tag,
+            id: LocalFilesOperation.Export.meta.key,
             data: async () => {
-              const { dispatchPromise: dispatch } = context.getCapability(Common.Capability.IntentDispatcher);
-              await dispatch(createIntent(LocalFilesAction.Export));
+              await invokePromise(LocalFilesOperation.Export);
             },
             properties: {
               label: ['export label', { ns: meta.id }],
@@ -33,10 +33,9 @@ export default Capability.makeModule((context) =>
             },
           },
           {
-            id: LocalFilesAction.Import._tag,
+            id: LocalFilesOperation.Import.meta.key,
             data: async () => {
-              const { dispatchPromise: dispatch } = context.getCapability(Common.Capability.IntentDispatcher);
-              await dispatch(createIntent(LocalFilesAction.Import));
+              await invokePromise(LocalFilesOperation.Import, {});
             },
             properties: {
               label: ['import label', { ns: meta.id }],
@@ -79,15 +78,12 @@ export default Capability.makeModule((context) =>
         match: NodeMatcher.whenId(meta.id),
         actions: () => [
           {
-            id: LocalFilesAction.OpenFile._tag,
+            id: LocalFilesOperation.OpenFile.meta.key,
             data: async () => {
-              const { dispatchPromise: dispatch } = context.getCapability(Common.Capability.IntentDispatcher);
-              await dispatch(
-                Function.pipe(
-                  createIntent(LocalFilesAction.OpenFile),
-                  chain(Common.LayoutAction.Open, { part: 'main' }),
-                ),
-              );
+              const result = await invokePromise(LocalFilesOperation.OpenFile);
+              if (result.data?.subject) {
+                await invokePromise(Common.LayoutOperation.Open, { subject: [...result.data.subject] });
+              }
             },
             properties: {
               label: ['open file label', { ns: meta.id }],
@@ -99,13 +95,10 @@ export default Capability.makeModule((context) =>
                 {
                   id: 'open-directory',
                   data: async () => {
-                    const { dispatchPromise: dispatch } = context.getCapability(Common.Capability.IntentDispatcher);
-                    await dispatch(
-                      Function.pipe(
-                        createIntent(LocalFilesAction.OpenDirectory),
-                        chain(Common.LayoutAction.Open, { part: 'main' }),
-                      ),
-                    );
+                    const result = await invokePromise(LocalFilesOperation.OpenDirectory);
+                    if (result.data?.subject) {
+                      await invokePromise(Common.LayoutOperation.Open, { subject: [...result.data.subject] });
+                    }
                   },
                   properties: {
                     label: ['open directory label', { ns: meta.id }],
@@ -152,10 +145,9 @@ export default Capability.makeModule((context) =>
         match: (node) => (isLocalEntity(node.data) ? Option.some(node.data) : Option.none()),
         actions: (entity) => [
           {
-            id: `${LocalFilesAction.Close._tag}:${entity.id}`,
+            id: `${LocalFilesOperation.Close.meta.key}:${entity.id}`,
             data: async () => {
-              const { dispatchPromise: dispatch } = context.getCapability(Common.Capability.IntentDispatcher);
-              await dispatch(createIntent(LocalFilesAction.Close, { id: entity.id }));
+              await invokePromise(LocalFilesOperation.Close, { id: entity.id });
             },
             properties: {
               label: ['close label', { ns: meta.id }],
@@ -165,10 +157,9 @@ export default Capability.makeModule((context) =>
           ...(entity.permission !== 'granted'
             ? [
                 {
-                  id: `${LocalFilesAction.Reconnect._tag}:${entity.id}`,
+                  id: `${LocalFilesOperation.Reconnect.meta.key}:${entity.id}`,
                   data: async () => {
-                    const { dispatchPromise: dispatch } = context.getCapability(Common.Capability.IntentDispatcher);
-                    await dispatch(createIntent(LocalFilesAction.Reconnect, { id: entity.id }));
+                    await invokePromise(LocalFilesOperation.Reconnect, { id: entity.id });
                   },
                   properties: {
                     label: ['re-open label', { ns: meta.id }],
@@ -180,10 +171,9 @@ export default Capability.makeModule((context) =>
           ...(entity.permission === 'granted' && isLocalFile(entity)
             ? [
                 {
-                  id: `${LocalFilesAction.Save._tag}:${entity.id}`,
+                  id: `${LocalFilesOperation.Save.meta.key}:${entity.id}`,
                   data: async () => {
-                    const { dispatchPromise: dispatch } = context.getCapability(Common.Capability.IntentDispatcher);
-                    await dispatch(createIntent(LocalFilesAction.Save, { id: entity.id }));
+                    await invokePromise(LocalFilesOperation.Save, { id: entity.id });
                   },
                   properties: {
                     label: [entity.handle ? 'save label' : 'save as label', { ns: meta.id }],

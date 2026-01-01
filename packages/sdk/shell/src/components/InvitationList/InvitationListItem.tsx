@@ -25,6 +25,7 @@ import {
 import { focusRing, getSize, mx } from '@dxos/ui-theme';
 import { hexToEmoji } from '@dxos/util';
 
+import { translationKey } from '../../translations';
 import { AuthCode } from '../AuthCode';
 
 import { type SharedInvitationListProps } from './InvitationListProps';
@@ -107,7 +108,7 @@ export const InvitationListItemImpl = ({
   reverseEffects,
   ...props
 }: InvitationListItemImplProps) => {
-  const { t } = useTranslation('os');
+  const { t } = useTranslation(translationKey);
   const { cancel, status: invitationStatus, invitationCode, authCode, multiUse, shareable } = propsInvitationStatus;
 
   const isCancellable = !(

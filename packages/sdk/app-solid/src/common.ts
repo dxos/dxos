@@ -8,7 +8,8 @@ import { Common } from '@dxos/app-framework';
 
 import { useCapability } from './useCapabilities';
 
-export const useIntentDispatcher = () => useCapability(Common.Capability.IntentDispatcher);
+export const useOperationInvoker = (): Accessor<Common.Capability.OperationInvoker> =>
+  useCapability(Common.Capability.OperationInvoker);
 
 export const useAppGraph = (): Accessor<Common.Capability.AppGraph> => useCapability(Common.Capability.AppGraph);
 

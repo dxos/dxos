@@ -4,12 +4,12 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capability, Common, createIntent } from '@dxos/app-framework';
+import { Capability, Common } from '@dxos/app-framework';
 import { CreateAtom, GraphBuilder, NodeMatcher } from '@dxos/plugin-graph';
 import { ConnectionState } from '@dxos/react-client/mesh';
 
 import { meta } from '../../meta';
-import { Account, ClientAction, ClientCapabilities } from '../../types';
+import { Account, ClientCapabilities, ClientOperation } from '../../types';
 
 export default Capability.makeModule((context) =>
   Effect.succeed(
@@ -22,8 +22,8 @@ export default Capability.makeModule((context) =>
           {
             id: `${meta.id}/open-user-account`,
             data: async () => {
-              const { dispatchPromise: dispatch } = context.getCapability(Common.Capability.IntentDispatcher);
-              await dispatch(createIntent(ClientAction.ShareIdentity));
+              const { invokePromise } = context.getCapability(Common.Capability.OperationInvoker);
+              await invokePromise(ClientOperation.ShareIdentity);
             },
             properties: {
               label: ['open user account label', { ns: meta.id }],

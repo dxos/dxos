@@ -4,14 +4,14 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capability, Common, Plugin, createIntent } from '@dxos/app-framework';
+import { Capability, Common, Plugin } from '@dxos/app-framework';
 import { ResearchGraph } from '@dxos/assistant-toolkit';
 import { Blueprint, Prompt } from '@dxos/blueprints';
 import { Sequence } from '@dxos/conductor';
-import { Type } from '@dxos/echo';
+import { Obj, Type } from '@dxos/echo';
 import { ClientEvents } from '@dxos/plugin-client';
 import { SpaceCapabilities, SpaceEvents } from '@dxos/plugin-space';
-import { type CreateObjectIntent } from '@dxos/plugin-space/types';
+import { type CreateObject } from '@dxos/plugin-space/types';
 import { HasSubject } from '@dxos/types';
 
 import {
@@ -20,8 +20,8 @@ import {
   AssistantState,
   BlueprintDefinition,
   EdgeModelResolver,
-  IntentResolver,
   LocalModelResolver,
+  OperationResolver,
   ReactSurface,
   Repair,
   Settings,
@@ -30,7 +30,7 @@ import {
 import { AssistantEvents } from './events';
 import { meta } from './meta';
 import { translations } from './translations';
-import { Assistant, AssistantAction } from './types';
+import { Assistant, AssistantOperation } from './types';
 
 export const AssistantPlugin = Plugin.define(meta).pipe(
   Common.Plugin.addTranslationsModule({ translations }),
@@ -50,8 +50,7 @@ export const AssistantPlugin = Plugin.define(meta).pipe(
         metadata: {
           icon: 'ph--atom--regular',
           iconHue: 'sky',
-          createObjectIntent: ((_, options) =>
-            createIntent(AssistantAction.CreateChat, { db: options.db })) satisfies CreateObjectIntent,
+          createObject: ((props) => Effect.sync(() => Assistant.make(props))) satisfies CreateObject,
         },
       },
       {
@@ -59,9 +58,8 @@ export const AssistantPlugin = Plugin.define(meta).pipe(
         metadata: {
           icon: 'ph--blueprint--regular',
           iconHue: 'sky',
-          inputSchema: AssistantAction.BlueprintForm,
-          createObjectIntent: ((props) =>
-            createIntent(AssistantAction.CreateBlueprint, props)) satisfies CreateObjectIntent,
+          inputSchema: AssistantOperation.BlueprintForm,
+          createObject: ((props) => Effect.sync(() => Blueprint.make(props))) satisfies CreateObject,
         },
       },
       {
@@ -69,7 +67,7 @@ export const AssistantPlugin = Plugin.define(meta).pipe(
         metadata: {
           icon: 'ph--scroll--regular',
           iconHue: 'sky',
-          createObjectIntent: (() => createIntent(AssistantAction.CreatePrompt)) satisfies CreateObjectIntent,
+          createObject: ((props) => Effect.sync(() => Prompt.make(props))) satisfies CreateObject,
         },
       },
       {
@@ -77,7 +75,7 @@ export const AssistantPlugin = Plugin.define(meta).pipe(
         metadata: {
           icon: 'ph--circuitry--regular',
           iconHue: 'sky',
-          createObjectIntent: (() => createIntent(AssistantAction.CreateSequence)) satisfies CreateObjectIntent,
+          createObject: ((props) => Effect.sync(() => Obj.make(Sequence, props))) satisfies CreateObject,
           addToCollectionOnCreate: true,
         },
       },
@@ -97,11 +95,12 @@ export const AssistantPlugin = Plugin.define(meta).pipe(
   Plugin.addModule({
     id: 'on-space-created',
     activatesOn: SpaceEvents.SpaceCreated,
-    activate: () =>
+    activate: (context) =>
       Effect.succeed(
-        Capability.contributes(SpaceCapabilities.OnCreateSpace, (params) =>
-          createIntent(AssistantAction.OnCreateSpace, params),
-        ),
+        Capability.contributes(SpaceCapabilities.OnCreateSpace, (params) => {
+          const { invoke } = context.getCapability(Common.Capability.OperationInvoker);
+          return invoke(AssistantOperation.OnCreateSpace, params);
+        }),
       ),
   }),
   Plugin.addModule({
@@ -110,7 +109,7 @@ export const AssistantPlugin = Plugin.define(meta).pipe(
     activate: Repair,
   }),
   Common.Plugin.addAppGraphModule({ activate: AppGraphBuilder }),
-  Common.Plugin.addIntentResolverModule({ activate: IntentResolver }),
+  Common.Plugin.addOperationResolverModule({ activate: OperationResolver }),
   Common.Plugin.addSurfaceModule({
     activate: ReactSurface,
     activatesBefore: [Common.ActivationEvent.SetupArtifactDefinition],

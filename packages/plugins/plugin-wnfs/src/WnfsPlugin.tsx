@@ -3,17 +3,16 @@
 //
 
 import * as Effect from 'effect/Effect';
-import * as Function from 'effect/Function';
 
-import { Capability, Common, Plugin, chain, createIntent } from '@dxos/app-framework';
+import { Capability, Common, Plugin } from '@dxos/app-framework';
 import { ClientEvents } from '@dxos/plugin-client';
 import { MarkdownEvents } from '@dxos/plugin-markdown';
-import { type CreateObjectIntent } from '@dxos/plugin-space/types';
+import { type CreateObject } from '@dxos/plugin-space/types';
 
-import { Blockstore, FileUploader, IntentResolver, Markdown, ReactSurface } from './capabilities';
+import { Blockstore, FileUploader, Markdown, OperationResolver, ReactSurface } from './capabilities';
 import { meta } from './meta';
 import { translations } from './translations';
-import { WnfsAction, WnfsCapabilities, WnfsFile } from './types';
+import { WnfsAction, WnfsCapabilities, WnfsFile, WnfsOperation } from './types';
 
 export const WnfsPlugin = Plugin.define(meta).pipe(
   Plugin.addModule({
@@ -39,11 +38,12 @@ export const WnfsPlugin = Plugin.define(meta).pipe(
         icon: 'ph--file--regular',
         iconHue: 'teal',
         inputSchema: WnfsAction.UploadFileSchema,
-        createObjectIntent: ((props, options) =>
-          Function.pipe(
-            createIntent(WnfsAction.Upload, { ...props, db: options.db }),
-            chain(WnfsAction.Create, {}),
-          )) satisfies CreateObjectIntent,
+        createObject: ((props, { db, context }) =>
+          Effect.gen(function* () {
+            const { invoke } = context.getCapability(Common.Capability.OperationInvoker);
+            const { object } = yield* invoke(WnfsOperation.CreateFile, { ...props, db });
+            return object;
+          })) satisfies CreateObject,
         addToCollectionOnCreate: true,
       },
     },
@@ -60,6 +60,6 @@ export const WnfsPlugin = Plugin.define(meta).pipe(
     activate: Markdown,
   }),
   Common.Plugin.addSurfaceModule({ activate: ReactSurface }),
-  Common.Plugin.addIntentResolverModule({ activate: IntentResolver }),
+  Common.Plugin.addOperationResolverModule({ activate: OperationResolver }),
   Plugin.make,
 );

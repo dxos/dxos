@@ -4,8 +4,8 @@
 
 export * from './app-graph-builder';
 export * from './client';
-export * from './intent-resolver';
 export * from './migrations';
+export * from './operation-resolver';
 export * from './react-context';
 export * from './react-surface';
 export * from './schema-defs';

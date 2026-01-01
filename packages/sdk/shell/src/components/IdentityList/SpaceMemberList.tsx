@@ -10,6 +10,8 @@ import { useMembers } from '@dxos/react-client/echo';
 import { List, useTranslation } from '@dxos/react-ui';
 import { descriptionText, mx } from '@dxos/ui-theme';
 
+import { translationKey } from '../../translations';
+
 import { IdentityListItem } from './IdentityListItem';
 
 // TODO(burdon): Consolidate into single component?
@@ -42,7 +44,7 @@ export const SpaceMemberList = ({ spaceKey, includeSelf, onSelect }: SpaceMember
 };
 
 export const SpaceMemberListImpl = ({ members, onSelect }: SpaceMemberListImplProps) => {
-  const { t } = useTranslation('os');
+  const { t } = useTranslation(translationKey);
   const visibleMembers = members.filter((member) => member.identity);
   return visibleMembers.length > 0 ? (
     <List classNames='flex flex-col gap-2' data-testid='space-members-list'>

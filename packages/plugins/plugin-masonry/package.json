@@ -38,6 +38,7 @@
     "@dxos/app-framework": "workspace:*",
     "@dxos/echo": "workspace:*",
     "@dxos/effect": "workspace:*",
+    "@dxos/operation": "workspace:*",
     "@dxos/plugin-client": "workspace:*",
     "@dxos/plugin-search": "workspace:*",
     "@dxos/plugin-space": "workspace:*",

@@ -2,10 +2,12 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Common, Plugin, createIntent } from '@dxos/app-framework';
+import * as Effect from 'effect/Effect';
+
+import { Common, Plugin } from '@dxos/app-framework';
 import { type Obj, Ref } from '@dxos/echo';
 import { createDocAccessor, getTextInRange } from '@dxos/echo-db';
-import { type CreateObjectIntent } from '@dxos/plugin-space/types';
+import { type CreateObject } from '@dxos/plugin-space/types';
 import { translations as editorTranslations } from '@dxos/react-ui-editor';
 import { Text } from '@dxos/schema';
 
@@ -14,15 +16,15 @@ import {
   AnchorSort,
   AppGraphSerializer,
   BlueprintDefinition,
-  IntentResolver,
   MarkdownSettings,
   MarkdownState,
+  OperationResolver,
   ReactSurface,
 } from './capabilities';
 import { MarkdownEvents } from './events';
 import { meta } from './meta';
 import { translations } from './translations';
-import { Markdown, MarkdownAction } from './types';
+import { Markdown } from './types';
 import { serializer } from './util';
 
 export const MarkdownPlugin = Plugin.define(meta).pipe(
@@ -62,7 +64,7 @@ export const MarkdownPlugin = Plugin.define(meta).pipe(
             return getTextInRange(createDocAccessor(doc.content.target!, ['content']), start, end);
           }
         },
-        createObjectIntent: (() => createIntent(MarkdownAction.Create)) satisfies CreateObjectIntent,
+        createObject: ((props) => Effect.sync(() => Markdown.make(props))) satisfies CreateObject,
         addToCollectionOnCreate: true,
       },
     },
@@ -72,7 +74,7 @@ export const MarkdownPlugin = Plugin.define(meta).pipe(
     activate: ReactSurface,
     activatesBefore: [MarkdownEvents.SetupExtensions],
   }),
-  Common.Plugin.addIntentResolverModule({ activate: IntentResolver }),
+  Common.Plugin.addOperationResolverModule({ activate: OperationResolver }),
   Plugin.addModule({
     activatesOn: Common.ActivationEvent.AppGraphReady,
     activate: AppGraphSerializer,

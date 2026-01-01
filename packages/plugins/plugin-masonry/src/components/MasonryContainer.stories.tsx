@@ -5,7 +5,7 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
-import { IntentPlugin, SettingsPlugin } from '@dxos/app-framework';
+import { OperationPlugin, SettingsPlugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { ClientPlugin } from '@dxos/plugin-client';
 import { PreviewPlugin } from '@dxos/plugin-preview';
@@ -62,7 +62,7 @@ const meta = {
           },
         }),
         SpacePlugin({}),
-        IntentPlugin(),
+        OperationPlugin(),
         SettingsPlugin(),
         ThemePlugin({ tx: defaultTx }),
         PreviewPlugin(),

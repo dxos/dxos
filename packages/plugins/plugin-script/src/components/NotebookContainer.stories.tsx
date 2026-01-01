@@ -6,7 +6,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
 import { SERVICES_CONFIG } from '@dxos/ai/testing';
-import { IntentPlugin, SettingsPlugin } from '@dxos/app-framework';
+import { OperationPlugin, SettingsPlugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Agent } from '@dxos/assistant-toolkit';
 import { Filter } from '@dxos/echo';
@@ -63,7 +63,7 @@ const meta = {
         }),
         SpacePlugin({}),
         SettingsPlugin(),
-        IntentPlugin(),
+        OperationPlugin(),
         AssistantPlugin(),
         AutomationPlugin(),
         ExplorerPlugin(),

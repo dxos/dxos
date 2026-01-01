@@ -30,6 +30,9 @@
       "path": "../../core/echo/echo-signals"
     },
     {
+      "path": "../../core/operation"
+    },
+    {
       "path": "../../sdk/app-framework"
     },
     {

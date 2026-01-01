@@ -6,13 +6,13 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Effect from 'effect/Effect';
 import React from 'react';
 
-import { Common, IntentPlugin, Plugin, SettingsPlugin } from '@dxos/app-framework';
+import { Common, OperationPlugin, Plugin, SettingsPlugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { AttentionPlugin } from '@dxos/plugin-attention';
 import { GraphPlugin } from '@dxos/plugin-graph';
 import { withTheme } from '@dxos/react-ui/testing';
 
-import { DeckStateFactory, LayoutIntentResolver } from '../../capabilities';
+import { DeckStateFactory, LayoutOperationResolver } from '../../capabilities';
 import { translations } from '../../translations';
 
 import { DeckLayout } from './DeckLayout';
@@ -27,7 +27,7 @@ const meta = {
       plugins: [
         AttentionPlugin(),
         SettingsPlugin(),
-        IntentPlugin(),
+        OperationPlugin(),
         GraphPlugin(),
         Plugin.define({
           id: 'example.com/plutin/testing',
@@ -38,10 +38,8 @@ const meta = {
             activatesOn: Common.ActivationEvent.AppGraphReady,
             activate: () => Effect.succeed(DeckStateFactory()),
           }),
-          Plugin.addModule({
-            id: 'layout-intent-resolver',
-            activatesOn: Common.ActivationEvent.SetupIntentResolver,
-            activate: LayoutIntentResolver,
+          Common.Plugin.addOperationResolverModule({
+            activate: LayoutOperationResolver,
           }),
           Plugin.make,
         )(),

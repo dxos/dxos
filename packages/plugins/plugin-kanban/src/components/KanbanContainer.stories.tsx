@@ -5,7 +5,7 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useCallback } from 'react';
 
-import { IntentPlugin, SettingsPlugin } from '@dxos/app-framework';
+import { OperationPlugin, SettingsPlugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Obj, type QueryAST, Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
@@ -145,7 +145,7 @@ const meta = {
           },
         }),
         SpacePlugin({}),
-        IntentPlugin(),
+        OperationPlugin(),
         SettingsPlugin(),
 
         // UI

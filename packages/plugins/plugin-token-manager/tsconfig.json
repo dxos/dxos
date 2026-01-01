@@ -45,6 +45,9 @@
       "path": "../../core/functions-runtime"
     },
     {
+      "path": "../../core/operation"
+    },
+    {
       "path": "../../core/protocols"
     },
     {

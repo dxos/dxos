@@ -1,0 +1,25 @@
+//
+// Copyright 2025 DXOS.org
+//
+
+import * as Common from '../common';
+import { Capability, Plugin } from '../core';
+
+import { meta } from './meta';
+
+const OperationInvoker = Capability.lazy('OperationInvoker', () => import('./invoker/capability'));
+const HistoryCapabilities = Capability.lazy('HistoryCapabilities', () => import('./history/capability'));
+
+export const OperationPlugin = Plugin.define(meta).pipe(
+  Plugin.addModule({
+    activatesOn: Common.ActivationEvent.ManagedRuntimeReady,
+    activatesBefore: [Common.ActivationEvent.SetupOperationResolver],
+    activatesAfter: [Common.ActivationEvent.OperationInvokerReady],
+    activate: OperationInvoker,
+  }),
+  Plugin.addModule({
+    activatesOn: Common.ActivationEvent.OperationInvokerReady,
+    activate: HistoryCapabilities,
+  }),
+  Plugin.make,
+);

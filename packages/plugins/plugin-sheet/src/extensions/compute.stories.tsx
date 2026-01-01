@@ -5,7 +5,7 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useEffect, useMemo } from 'react';
 
-import { IntentPlugin } from '@dxos/app-framework';
+import { OperationPlugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { PublicKey } from '@dxos/keys';
 import { useSpace } from '@dxos/react-client/echo';
@@ -114,7 +114,7 @@ const meta = {
       createSpace: true,
     }),
     // TODO(wittjosiah): Try to write story which does not depend on plugin manager.
-    withPluginManager({ plugins: [IntentPlugin()] }),
+    withPluginManager({ plugins: [OperationPlugin()] }),
     withComputeGraphDecorator(),
   ],
   parameters: {

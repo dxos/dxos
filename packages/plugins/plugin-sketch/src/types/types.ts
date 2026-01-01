@@ -5,23 +5,28 @@
 import { type TLStore } from '@tldraw/tlschema';
 import * as Schema from 'effect/Schema';
 
+import * as Operation from '@dxos/operation';
+
 import { meta } from '../meta';
 
 import * as Diagram from './Diagram';
 
-export namespace SketchAction {
-  const SKETCH_ACTION = `${meta.id}/action`;
+const SKETCH_OPERATION = `${meta.id}/operation`;
 
-  export class Create extends Schema.TaggedClass<Create>()(`${SKETCH_ACTION}/create`, {
-    input: Schema.Struct({
-      name: Schema.optional(Schema.String),
-      schema: Schema.optional(Schema.String),
-      content: Schema.optional(Schema.Record({ key: Schema.String, value: Schema.Any })),
-    }),
-    output: Schema.Struct({
-      object: Diagram.Diagram,
-    }),
-  }) {}
+export namespace SketchOperation {
+  export const Create = Operation.make({
+    meta: { key: `${SKETCH_OPERATION}/create`, name: 'Create Sketch' },
+    schema: {
+      input: Schema.Struct({
+        name: Schema.optional(Schema.String),
+        schema: Schema.optional(Schema.String),
+        content: Schema.optional(Schema.Record({ key: Schema.String, value: Schema.Any })),
+      }),
+      output: Schema.Struct({
+        object: Diagram.Diagram,
+      }),
+    },
+  });
 }
 
 export interface SketchModel {

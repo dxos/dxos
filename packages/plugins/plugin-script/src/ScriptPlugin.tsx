@@ -2,23 +2,25 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Common, Plugin, createIntent } from '@dxos/app-framework';
+import * as Effect from 'effect/Effect';
+
+import { Common, Plugin } from '@dxos/app-framework';
 import { Ref } from '@dxos/echo';
 import { Script } from '@dxos/functions';
-import { type CreateObjectIntent } from '@dxos/plugin-space/types';
+import { type CreateObject } from '@dxos/plugin-space/types';
 
 import {
   AppGraphBuilder,
   BlueprintDefinition,
   Compiler,
-  IntentResolver,
+  OperationResolver,
   ReactSurface,
   ScriptSettings,
 } from './capabilities';
 import { ScriptEvents } from './events';
 import { meta } from './meta';
 import { translations } from './translations';
-import { Notebook, ScriptAction } from './types';
+import { Notebook, ScriptOperation } from './types';
 
 export const ScriptPlugin = Plugin.define(meta).pipe(
   Plugin.addModule({
@@ -39,9 +41,13 @@ export const ScriptPlugin = Plugin.define(meta).pipe(
           iconHue: 'sky',
           // TODO(wittjosiah): Move out of metadata.
           loadReferences: async (script: Script.Script) => await Ref.Array.loadAll([script.source]),
-          inputSchema: ScriptAction.ScriptProps,
-          createObjectIntent: ((props, options) =>
-            createIntent(ScriptAction.CreateScript, { ...props, db: options.db })) satisfies CreateObjectIntent,
+          inputSchema: ScriptOperation.ScriptProps,
+          createObject: ((props, { context }) =>
+            Effect.gen(function* () {
+              const { invoke } = context.getCapability(Common.Capability.OperationInvoker);
+              const { object } = yield* invoke(ScriptOperation.CreateScript, props);
+              return object;
+            })) satisfies CreateObject,
           addToCollectionOnCreate: true,
         },
       },
@@ -50,9 +56,8 @@ export const ScriptPlugin = Plugin.define(meta).pipe(
         metadata: {
           icon: 'ph--notebook--regular',
           iconHue: 'sky',
-          inputSchema: ScriptAction.NotebookProps,
-          createObjectIntent: ((props, options) =>
-            createIntent(ScriptAction.CreateNotebook, { ...props, db: options.db })) satisfies CreateObjectIntent,
+          inputSchema: ScriptOperation.NotebookProps,
+          createObject: ((props) => Effect.sync(() => Notebook.make(props))) satisfies CreateObject,
           addToCollectionOnCreate: true,
         },
       },
@@ -61,7 +66,7 @@ export const ScriptPlugin = Plugin.define(meta).pipe(
   Common.Plugin.addAppGraphModule({ activate: AppGraphBuilder }),
   Common.Plugin.addSchemaModule({ schema: [Script.Script] }),
   Common.Plugin.addSurfaceModule({ activate: ReactSurface }),
-  Common.Plugin.addIntentResolverModule({ activate: IntentResolver }),
+  Common.Plugin.addOperationResolverModule({ activate: OperationResolver }),
   Common.Plugin.addBlueprintDefinitionModule({ activate: BlueprintDefinition }),
   Plugin.make,
 );

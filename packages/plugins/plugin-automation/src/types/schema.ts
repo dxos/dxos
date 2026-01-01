@@ -5,6 +5,7 @@
 import * as Schema from 'effect/Schema';
 
 import { Database } from '@dxos/echo';
+import * as Operation from '@dxos/operation';
 
 import { meta } from '../meta';
 
@@ -28,4 +29,22 @@ export namespace AutomationAction {
       output: Schema.Void,
     },
   ) {}
+}
+
+const AUTOMATION_OPERATION = `${meta.id}/operation`;
+
+export namespace AutomationOperation {
+  export const CreateTriggerFromTemplate = Operation.make({
+    meta: { key: `${AUTOMATION_OPERATION}/create-trigger-from-template`, name: 'Create Trigger From Template' },
+    schema: {
+      input: Schema.Struct({
+        db: Database.Database,
+        template: TriggerTemplate,
+        enabled: Schema.optional(Schema.Boolean),
+        scriptName: Schema.optional(Schema.String),
+        input: Schema.optional(Schema.Record({ key: Schema.String, value: Schema.Any })),
+      }),
+      output: Schema.Void,
+    },
+  });
 }

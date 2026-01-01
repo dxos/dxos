@@ -8,8 +8,6 @@ import { Obj, Type } from '@dxos/echo';
 import { FormInputAnnotation, LabelAnnotation } from '@dxos/echo/internal';
 import { BoardLayout, defaultLayout } from '@dxos/react-ui-board';
 
-import { meta } from '../meta';
-
 /**
  * Board and layout.
  */
@@ -33,15 +31,3 @@ export const makeBoard = (props: Partial<Obj.MakeProps<typeof Board>> = {}) =>
     layout: defaultLayout,
     ...props,
   });
-
-/**
- * Create board.
- */
-export class Create extends Schema.TaggedClass<Create>()(`${meta.id}/action/create`, {
-  input: Schema.Struct({
-    name: Schema.optional(Schema.String),
-  }),
-  output: Schema.Struct({
-    object: Board,
-  }),
-}) {}

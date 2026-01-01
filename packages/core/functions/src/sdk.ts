@@ -10,6 +10,7 @@ import { type AiService } from '@dxos/ai';
 import { Obj, Type } from '@dxos/echo';
 import { type Database } from '@dxos/echo';
 import { assertArgument, failedInvariant } from '@dxos/invariant';
+import * as Operation from '@dxos/operation';
 
 import {
   type CredentialsService,
@@ -188,6 +189,54 @@ const getServiceKeys = (services: readonly Context.Tag<any, any>[]) => {
   });
 };
 
+/**
+ * Converts a FunctionDefinition to an OperationDefinition with handler.
+ * The function handler is adapted to the OperationHandler format.
+ *
+ * Note: FunctionDefinition stores service keys as strings, not Tag types,
+ * so we can't use Operation.withHandler's type inference here.
+ */
+export const toOperation = <T, O, S extends FunctionServices = FunctionServices>(
+  functionDef: FunctionDefinition<T, O, S>,
+): Operation.OperationDefinition<T, O> & { handler: Operation.OperationHandler<T, O, any, S> } => {
+  const op = Operation.make({
+    schema: {
+      input: functionDef.inputSchema,
+      output: functionDef.outputSchema ?? Schema.Any,
+    },
+    meta: {
+      key: functionDef.key,
+      name: functionDef.name,
+      description: functionDef.description,
+    },
+  });
+
+  // Adapt FunctionHandler signature to OperationHandler format.
+  // FunctionHandler expects { context, data }, OperationHandler expects just input.
+  const operationHandler: Operation.OperationHandler<T, O, any, S> = (input: T) => {
+    const result = functionDef.handler({
+      context: {} as FunctionContext,
+      data: input,
+    });
+
+    // Convert Promise or plain value to Effect.
+    if (Effect.isEffect(result)) {
+      return result;
+    }
+    if (result instanceof Promise) {
+      return Effect.tryPromise(() => result);
+    }
+    return Effect.succeed(result as O);
+  };
+
+  // Manually attach handler since FunctionDefinition stores service keys as strings,
+  // not Tag types, so withHandler's type inference doesn't apply.
+  return {
+    ...op,
+    handler: operationHandler,
+  };
+};
+
 export const FunctionDefinition = {
   make: defineFunction,
   isFunction: (value: unknown): value is FunctionDefinition.Any => {
@@ -201,6 +250,7 @@ export const FunctionDefinition = {
     assertArgument(Obj.instanceOf(Function.Function, functionObj), 'functionObj');
     return deserializeFunction(functionObj);
   },
+  toOperation,
 };
 
 export const serializeFunction = (functionDef: FunctionDefinition.Any): Function.Function => {

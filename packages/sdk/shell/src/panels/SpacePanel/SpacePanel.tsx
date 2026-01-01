@@ -12,13 +12,14 @@ import { Icon, useId, useTranslation } from '@dxos/react-ui';
 import { CloseButton, Heading, Viewport } from '../../components';
 import { InvitationManager } from '../../steps';
 import { stepStyles } from '../../styles';
+import { translationKey } from '../../translations';
 
 import { useSpaceMachine } from './spaceMachine';
 import { type SpacePanelHeadingProps, type SpacePanelImplProps, type SpacePanelProps } from './SpacePanelProps';
 import { SpaceManager } from './steps';
 
 const SpacePanelHeading = ({ titleId, space, onDone }: SpacePanelHeadingProps) => {
-  const { t } = useTranslation('os');
+  const { t } = useTranslation(translationKey);
   const name = space.properties.name;
   return (
     <Heading

@@ -4,14 +4,14 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capability, Common, createIntent } from '@dxos/app-framework';
+import { Capability, Common } from '@dxos/app-framework';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { ATTENDABLE_PATH_SEPARATOR, DECK_COMPANION_TYPE } from '@dxos/plugin-deck/types';
 import { CreateAtom, GraphBuilder, NodeMatcher } from '@dxos/plugin-graph';
 import { parseId } from '@dxos/react-client/echo';
 
 import { meta } from '../../meta';
-import { SearchAction } from '../../types';
+import { SearchOperation } from '../../types';
 
 export default Capability.makeModule((context) =>
   Effect.succeed(
@@ -44,10 +44,10 @@ export default Capability.makeModule((context) =>
         match: NodeMatcher.whenRoot,
         actions: () => [
           {
-            id: SearchAction.OpenSearch._tag,
+            id: SearchOperation.OpenSearch.meta.key,
             data: async () => {
-              const { dispatchPromise: dispatch } = context.getCapability(Common.Capability.IntentDispatcher);
-              await dispatch(createIntent(SearchAction.OpenSearch));
+              const { invokePromise } = context.getCapability(Common.Capability.OperationInvoker);
+              await invokePromise(SearchOperation.OpenSearch);
               return false;
             },
             properties: {

@@ -5,7 +5,7 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
-import { IntentPlugin } from '@dxos/app-framework';
+import { OperationPlugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Filter, Obj } from '@dxos/echo';
 import { AttentionPlugin } from '@dxos/plugin-attention';
@@ -67,7 +67,7 @@ const meta: Meta<typeof DefaultStory> = {
             space.db.add(Markdown.make({ content }));
           },
         }),
-        IntentPlugin(),
+        OperationPlugin(),
         AttentionPlugin(),
       ],
     }),

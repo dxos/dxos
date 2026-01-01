@@ -18,7 +18,7 @@ export type HuePickerProps = {
 } & Pick<PickerButtonProps, 'disabled' | 'defaultValue' | 'value' | 'onChange' | 'onReset' | 'rootVariant'>;
 
 export const HuePicker = (props: ThemedClassName<HuePickerProps>) => {
-  const { t } = useTranslation('os');
+  const { t } = useTranslation('@dxos/os');
 
   return (
     <PickerButton

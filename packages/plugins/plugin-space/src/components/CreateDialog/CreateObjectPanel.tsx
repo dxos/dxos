@@ -18,11 +18,11 @@ import { type MaybePromise, isNonNullable } from '@dxos/util';
 
 import { useInputSurfaceLookup } from '../../hooks';
 import { meta } from '../../meta';
-import { type CreateObjectIntent } from '../../types';
+import { type CreateObject } from '../../types';
 import { getSpaceDisplayName } from '../../util';
 
 export type Metadata = {
-  createObjectIntent: CreateObjectIntent;
+  createObject: CreateObject;
   inputSchema?: Schema.Schema.AnyNoContext;
   addToCollectionOnCreate?: boolean;
   icon?: string;

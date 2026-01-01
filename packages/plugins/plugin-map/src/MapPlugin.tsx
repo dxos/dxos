@@ -2,11 +2,13 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Common, Plugin, createIntent } from '@dxos/app-framework';
-import { Type } from '@dxos/echo';
-import { type CreateObjectIntent } from '@dxos/plugin-space/types';
+import * as Effect from 'effect/Effect';
 
-import { AppGraphBuilder, BlueprintDefinition, IntentResolver, MapState, ReactSurface } from './capabilities';
+import { Common, Plugin } from '@dxos/app-framework';
+import { Type } from '@dxos/echo';
+import { type CreateObject } from '@dxos/plugin-space/types';
+
+import { AppGraphBuilder, BlueprintDefinition, MapState, OperationResolver, ReactSurface } from './capabilities';
 import { meta } from './meta';
 import { translations } from './translations';
 import { Map, MapAction } from './types';
@@ -28,14 +30,13 @@ export const MapPlugin = Plugin.define(meta).pipe(
         icon: 'ph--compass--regular',
         iconHue: 'green',
         inputSchema: MapAction.CreateMap,
-        createIntent: ((props, options) =>
-          createIntent(MapAction.Create, { ...props, space: options.db })) satisfies CreateObjectIntent,
+        createObject: ((props) => Effect.sync(() => Map.make(props))) satisfies CreateObject,
       },
     },
   }),
   Common.Plugin.addSchemaModule({ schema: [Map.Map] }),
   Common.Plugin.addSurfaceModule({ activate: ReactSurface }),
-  Common.Plugin.addIntentResolverModule({ activate: IntentResolver }),
+  Common.Plugin.addOperationResolverModule({ activate: OperationResolver }),
   Common.Plugin.addAppGraphModule({ activate: AppGraphBuilder }),
   Common.Plugin.addBlueprintDefinitionModule({ activate: BlueprintDefinition }),
   Plugin.make,

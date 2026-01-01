@@ -4,41 +4,24 @@
 
 import * as Schema from 'effect/Schema';
 
-// eslint-disable-next-line unused-imports/no-unused-imports
-import { View as _View } from '@dxos/schema';
-import { Task } from '@dxos/types';
+import * as Operation from '@dxos/operation';
 
 import { meta } from '../meta';
 
-import * as Journal from './Journal';
 import * as Outline from './Outline';
 
-const OUTLINER_ACTION = `${meta.id}/action`;
+const OUTLINER_OPERATION = `${meta.id}/operation`;
 
-export class CreateJournal extends Schema.TaggedClass<CreateJournal>()(`${OUTLINER_ACTION}/create-journal`, {
-  input: Schema.Struct({
-    name: Schema.optional(Schema.String),
-  }),
-  output: Schema.Struct({
-    object: Journal.Journal,
-  }),
-}) {}
-
-export class CreateOutline extends Schema.TaggedClass<CreateOutline>()(`${OUTLINER_ACTION}/create-outline`, {
-  input: Schema.Struct({
-    name: Schema.optional(Schema.String),
-  }),
-  output: Schema.Struct({
-    object: Outline.Outline,
-  }),
-}) {}
-
-// TODO(burdon): Move to plugin-task.
-export class CreateTask extends Schema.TaggedClass<CreateTask>()(`${OUTLINER_ACTION}/create-task`, {
-  input: Schema.Struct({
-    text: Schema.String,
-  }),
-  output: Schema.Struct({
-    object: Task.Task,
-  }),
-}) {}
+export namespace OutlineOperation {
+  export const CreateOutline = Operation.make({
+    meta: { key: `${OUTLINER_OPERATION}/create-outline`, name: 'Create Outline' },
+    schema: {
+      input: Schema.Struct({
+        name: Schema.optional(Schema.String),
+      }),
+      output: Schema.Struct({
+        object: Outline.Outline,
+      }),
+    },
+  });
+}

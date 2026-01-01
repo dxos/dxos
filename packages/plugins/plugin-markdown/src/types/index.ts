@@ -3,6 +3,7 @@
 //
 
 export * as MarkdownAction from './MarkdownAction';
+export { MarkdownOperation } from './MarkdownAction';
 export * as Markdown from './Markdown';
 
 export * from './capabilities';

@@ -6,10 +6,10 @@ import { useAtomValue } from '@effect-atom/atom-react';
 import * as Effect from 'effect/Effect';
 import React, { useCallback, useMemo } from 'react';
 
-import { Common, type Plugin, SettingsAction, createIntent } from '@dxos/app-framework';
-import { useCapability, useIntentDispatcher, usePluginManager } from '@dxos/app-framework/react';
+import { Common, type Plugin, SettingsOperation } from '@dxos/app-framework';
+import { useCapability, useOperationInvoker, usePluginManager } from '@dxos/app-framework/react';
 import { runAndForwardErrors } from '@dxos/effect';
-import { ObservabilityAction } from '@dxos/plugin-observability/types';
+import { ObservabilityOperation } from '@dxos/plugin-observability/types';
 import { StackItem } from '@dxos/react-ui-stack';
 
 import { PluginList } from './PluginList';
@@ -19,7 +19,7 @@ const sortByPluginMeta = ({ meta: { name: a = '' } }: Plugin.Plugin, { meta: { n
 
 export const RegistryContainer = ({ id, plugins: _plugins }: { id: string; plugins: Plugin.Plugin[] }) => {
   const manager = usePluginManager();
-  const { dispatch, dispatchPromise } = useIntentDispatcher();
+  const { invoke, invokePromise } = useOperationInvoker();
   const plugins = useMemo(() => _plugins.sort(sortByPluginMeta), [_plugins]);
   const enabled = useAtomValue(manager.enabled);
   const settingsStore = useCapability(Common.Capability.SettingsStore);
@@ -34,37 +34,33 @@ export const RegistryContainer = ({ id, plugins: _plugins }: { id: string; plugi
           yield* manager.disable(id);
         }
 
-        yield* dispatch(
-          createIntent(ObservabilityAction.SendEvent, {
-            name: 'plugins.toggle',
-            properties: {
-              plugin: id,
-              enabled,
-            },
-          }),
-        );
+        yield* invoke(ObservabilityOperation.SendEvent, {
+          name: 'plugins.toggle',
+          properties: {
+            plugin: id,
+            enabled,
+          },
+        });
       }).pipe(runAndForwardErrors),
-    [dispatch, manager],
+    [invoke, manager],
   );
 
   const handleClick = useCallback(
     (pluginId: string) =>
-      dispatchPromise(
-        createIntent(Common.LayoutAction.Open, {
-          part: 'main',
-          // TODO(wittjosiah): `/` currently is not supported in ids.
-          subject: [pluginId.replaceAll('/', ':')],
-          options: { pivotId: id, positioning: 'end' },
-        }),
-      ),
-    [dispatch, id],
+      invokePromise(Common.LayoutOperation.Open, {
+        // TODO(wittjosiah): `/` currently is not supported in ids.
+        subject: [pluginId.replaceAll('/', ':')],
+        pivotId: id,
+        positioning: 'end',
+      }),
+    [invokePromise, id],
   );
 
   const hasSettings = useCallback((pluginId: string) => !!settingsStore.getStore(pluginId), [settingsStore]);
 
   const handleSettings = useCallback(
-    (pluginId: string) => dispatchPromise(createIntent(SettingsAction.Open, { plugin: pluginId })),
-    [dispatch],
+    (pluginId: string) => invokePromise(SettingsOperation.Open, { plugin: pluginId }),
+    [invokePromise],
   );
 
   return (

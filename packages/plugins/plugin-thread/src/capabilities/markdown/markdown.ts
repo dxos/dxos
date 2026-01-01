@@ -5,9 +5,9 @@
 import { EditorView } from '@codemirror/view';
 import * as Effect from 'effect/Effect';
 
-import { Capability, Common, createIntent } from '@dxos/app-framework';
+import { Capability, Common } from '@dxos/app-framework';
 import { Obj } from '@dxos/echo';
-import { ATTENDABLE_PATH_SEPARATOR, DeckAction } from '@dxos/plugin-deck/types';
+import { ATTENDABLE_PATH_SEPARATOR, DeckOperation } from '@dxos/plugin-deck/types';
 import { MarkdownCapabilities } from '@dxos/plugin-markdown';
 import { type EditorState, commentClickedEffect, commentsState, overlap } from '@dxos/ui-editor';
 
@@ -18,9 +18,9 @@ export default Capability.makeModule((context) =>
   Effect.succeed(
     Capability.contributes(MarkdownCapabilities.Extensions, [
       ({ document: doc }) => {
-        const { dispatchPromise: dispatch } = context.getCapability(Common.Capability.IntentDispatcher);
+        const { invokePromise } = context.getCapability(Common.Capability.OperationInvoker);
         const { state } = context.getCapability(ThreadCapabilities.MutableState);
-        return threads(state, doc, dispatch);
+        return threads(state, doc, invokePromise);
       },
       ({ document: doc }) => {
         if (!doc) return [];
@@ -34,19 +34,17 @@ export default Capability.makeModule((context) =>
       },
       ({ document: doc }) => {
         if (!doc) return [];
-        const { dispatchPromise: dispatch } = context.getCapability(Common.Capability.IntentDispatcher);
+        const { invokePromise } = context.getCapability(Common.Capability.OperationInvoker);
         const id = Obj.getDXN(doc).toString();
 
         return EditorView.updateListener.of((update) => {
           update.transactions.forEach((transaction) => {
             transaction.effects.forEach(async (effect) => {
               if (effect.is(commentClickedEffect)) {
-                void dispatch(
-                  createIntent(DeckAction.ChangeCompanion, {
-                    primary: id,
-                    companion: `${id}${ATTENDABLE_PATH_SEPARATOR}comments`,
-                  }),
-                );
+                void invokePromise(DeckOperation.ChangeCompanion, {
+                  primary: id,
+                  companion: `${id}${ATTENDABLE_PATH_SEPARATOR}comments`,
+                });
               }
             });
           });

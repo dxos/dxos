@@ -4,8 +4,8 @@
 
 import React, { useCallback } from 'react';
 
-import { Common, createIntent } from '@dxos/app-framework';
-import { useCapability, useIntentDispatcher } from '@dxos/app-framework/react';
+import { Common } from '@dxos/app-framework';
+import { useCapability, useOperationInvoker } from '@dxos/app-framework/react';
 import { IconButton, type IconButtonProps, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 
 import { getCompanionId, useDeckCompanions } from '../../hooks';
@@ -54,24 +54,19 @@ export const ToggleComplementarySidebarButton = ({
   classNames,
   current,
 }: ThemedClassName<{ inR0?: boolean; current?: string }>) => {
-  const { dispatchPromise: dispatch } = useIntentDispatcher();
+  const { invokeSync } = useOperationInvoker();
   const layoutContext = useCapability(DeckCapabilities.MutableDeckState);
   const { t } = useTranslation(meta.id);
 
   const companions = useDeckCompanions();
-  const handleClick = useCallback(async () => {
+  const handleClick = useCallback(() => {
     layoutContext.complementarySidebarState =
       layoutContext.complementarySidebarState === 'expanded' ? 'collapsed' : 'expanded';
     const subject = layoutContext.complementarySidebarPanel ?? (companions[0] && getCompanionId(companions[0].id));
     if (layoutContext.complementarySidebarState === 'expanded' && !current && subject) {
-      await dispatch(
-        createIntent(Common.LayoutAction.UpdateComplementary, {
-          part: 'complementary',
-          subject,
-        }),
-      );
+      invokeSync(Common.LayoutOperation.UpdateComplementary, { subject });
     }
-  }, [layoutContext, current, companions, dispatch]);
+  }, [layoutContext, current, companions, invokeSync]);
 
   return (
     <IconButton

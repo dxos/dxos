@@ -3,23 +3,23 @@
 //
 
 import * as Effect from 'effect/Effect';
-import * as Function from 'effect/Function';
 
-import { Capability, Common, chain, createIntent } from '@dxos/app-framework';
+import { Capability, Common } from '@dxos/app-framework';
 import { runAndForwardErrors } from '@dxos/effect';
-import { SpaceAction } from '@dxos/plugin-space/types';
+import { SpaceOperation } from '@dxos/plugin-space/types';
 
-import { WnfsAction } from '../../types';
+import { WnfsOperation } from '../../types';
 
 export default Capability.makeModule((context) =>
   Effect.succeed(
     Capability.contributes(Common.Capability.FileUploader, (db, file) => {
-      const { dispatch } = context.getCapability(Common.Capability.IntentDispatcher);
+      const { invoke } = context.getCapability(Common.Capability.OperationInvoker);
       const program = Effect.gen(function* () {
-        const fileInfo = yield* dispatch(createIntent(WnfsAction.Upload, { db, file }));
-        yield* dispatch(
-          Function.pipe(createIntent(WnfsAction.Create, fileInfo), chain(SpaceAction.AddObject, { target: db })),
-        );
+        const fileInfo = yield* invoke(WnfsOperation.Upload, { db, file });
+        const createResult = yield* invoke(WnfsOperation.Create, fileInfo);
+        if (createResult?.object) {
+          yield* invoke(SpaceOperation.AddObject, { target: db, object: createResult.object });
+        }
 
         return fileInfo;
       });

@@ -2,13 +2,15 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Common, Plugin, createIntent } from '@dxos/app-framework';
-import { type CreateObjectIntent } from '@dxos/plugin-space/types';
+import * as Effect from 'effect/Effect';
 
-import { AppGraphBuilder, IntentResolver, ReactSurface } from './capabilities';
+import { Common, Plugin } from '@dxos/app-framework';
+import { type CreateObject } from '@dxos/plugin-space/types';
+
+import { AppGraphBuilder, OperationResolver, ReactSurface } from './capabilities';
 import { meta } from './meta';
 import { translations } from './translations';
-import { Journal, Outline, OutlineAction } from './types';
+import { Journal, Outline } from './types';
 
 export const OutlinerPlugin = Plugin.define(meta).pipe(
   Common.Plugin.addTranslationsModule({ translations }),
@@ -19,7 +21,7 @@ export const OutlinerPlugin = Plugin.define(meta).pipe(
         metadata: {
           icon: 'ph--calendar-check--regular',
           iconHue: 'indigo',
-          createObjectIntent: (() => createIntent(OutlineAction.CreateJournal)) satisfies CreateObjectIntent,
+          createObject: ((props) => Effect.sync(() => Journal.make(props))) satisfies CreateObject,
           addToCollectionOnCreate: true,
         },
       },
@@ -28,7 +30,7 @@ export const OutlinerPlugin = Plugin.define(meta).pipe(
         metadata: {
           icon: 'ph--tree-structure--regular',
           iconHue: 'indigo',
-          createObjectIntent: (() => createIntent(OutlineAction.CreateOutline)) satisfies CreateObjectIntent,
+          createObject: ((props) => Effect.sync(() => Outline.make(props))) satisfies CreateObject,
           addToCollectionOnCreate: true,
         },
       },
@@ -39,6 +41,6 @@ export const OutlinerPlugin = Plugin.define(meta).pipe(
   }),
   Common.Plugin.addAppGraphModule({ activate: AppGraphBuilder }),
   Common.Plugin.addSurfaceModule({ activate: ReactSurface }),
-  Common.Plugin.addIntentResolverModule({ activate: IntentResolver }),
+  Common.Plugin.addOperationResolverModule({ activate: OperationResolver }),
   Plugin.make,
 );

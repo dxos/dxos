@@ -10,9 +10,8 @@ import { isNonNullable } from '@dxos/util';
 
 import * as Common from '../common';
 import { Capability, type Plugin } from '../core';
-import { createIntent } from '../plugin-intent';
 
-import { SETTINGS_ID, SETTINGS_KEY, SettingsAction } from './actions';
+import { SETTINGS_ID, SETTINGS_KEY, SettingsOperation } from './actions';
 import { meta } from './meta';
 
 export default Capability.makeModule((context) =>
@@ -25,8 +24,8 @@ export default Capability.makeModule((context) =>
           {
             id: meta.id,
             data: async () => {
-              const { dispatchPromise: dispatch } = context.getCapability(Common.Capability.IntentDispatcher);
-              await dispatch(createIntent(SettingsAction.Open));
+              const { invokePromise } = context.getCapability(Common.Capability.OperationInvoker);
+              await invokePromise(SettingsOperation.Open, {});
             },
             properties: {
               label: ['open settings label', { ns: meta.id }],

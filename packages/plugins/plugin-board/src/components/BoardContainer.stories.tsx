@@ -5,7 +5,7 @@
 import { type StoryObj } from '@storybook/react-vite';
 import React, { useEffect, useState } from 'react';
 
-import { IntentPlugin, SettingsPlugin } from '@dxos/app-framework';
+import { OperationPlugin, SettingsPlugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Obj } from '@dxos/echo';
 import { ClientPlugin } from '@dxos/plugin-client';
@@ -102,7 +102,7 @@ const meta = {
           },
         }),
         SpacePlugin({}),
-        IntentPlugin(),
+        OperationPlugin(),
         SettingsPlugin(),
 
         // UI

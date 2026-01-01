@@ -5,7 +5,7 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
-import { IntentPlugin } from '@dxos/app-framework';
+import { OperationPlugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Obj } from '@dxos/echo';
 import { Format } from '@dxos/echo/internal';
@@ -91,7 +91,7 @@ const meta = {
       },
     }),
     withPluginManager({
-      plugins: [IntentPlugin()],
+      plugins: [OperationPlugin()],
     }),
   ],
   parameters: {

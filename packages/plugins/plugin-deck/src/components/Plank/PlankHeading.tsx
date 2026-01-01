@@ -4,8 +4,8 @@
 
 import React, { Fragment, type MouseEvent, memo, useCallback, useEffect, useMemo } from 'react';
 
-import { Common, createIntent } from '@dxos/app-framework';
-import { Surface, useAppGraph, useIntentDispatcher } from '@dxos/app-framework/react';
+import { Common } from '@dxos/app-framework';
+import { Surface, useAppGraph, useOperationInvoker } from '@dxos/app-framework/react';
 import { Graph, type Node } from '@dxos/plugin-graph';
 import { Icon, IconButton, Popover, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { StackItem, type StackItemSigilAction } from '@dxos/react-ui-stack';
@@ -15,7 +15,7 @@ import { hoverableControls, hoverableFocusedWithinControls } from '@dxos/ui-them
 import { useBreakpoints } from '../../hooks';
 import { parseEntryId } from '../../layout';
 import { meta } from '../../meta';
-import { DeckAction, type LayoutMode, PLANK_COMPANION_TYPE, type ResolvedPart } from '../../types';
+import { DeckOperation, type LayoutMode, PLANK_COMPANION_TYPE, type ResolvedPart } from '../../types';
 import { soloInlinePadding } from '../fragments';
 
 import { PlankCompanionControls, PlankControls } from './PlankControls';
@@ -55,7 +55,7 @@ export const PlankHeading = memo(
     actions = [],
   }: PlankHeadingProps) => {
     const { t } = useTranslation(meta.id);
-    const { dispatchPromise: dispatch } = useIntentDispatcher();
+    const { invokePromise, invokeSync } = useOperationInvoker();
     const { graph } = useAppGraph();
     const breakpoint = useBreakpoints();
     const icon = node?.properties?.icon ?? 'ph--placeholder--regular';
@@ -113,27 +113,20 @@ export const PlankHeading = memo(
     );
 
     const handlePlankAction = useCallback(
-      (eventType: DeckAction.PartAdjustment) => {
+      (eventType: DeckOperation.PartAdjustment) => {
         if (eventType.startsWith('solo')) {
-          return dispatch(createIntent(DeckAction.Adjust, { type: eventType, id }));
+          return invokePromise(DeckOperation.Adjust, { type: eventType, id });
         } else if (eventType === 'close') {
           if (part === 'complementary') {
-            return dispatch(
-              createIntent(Common.LayoutAction.UpdateComplementary, {
-                part: 'complementary',
-                options: { state: 'collapsed' },
-              }),
-            );
+            return invokeSync(Common.LayoutOperation.UpdateComplementary, { state: 'collapsed' });
           } else {
-            return dispatch(
-              createIntent(Common.LayoutAction.Close, { part: 'main', subject: [id], options: { state: false } }),
-            );
+            return invokeSync(Common.LayoutOperation.Close, { subject: [id] });
           }
         } else {
-          return dispatch(createIntent(DeckAction.Adjust, { type: eventType, id }));
+          return invokePromise(DeckOperation.Adjust, { type: eventType, id });
         }
       },
-      [dispatch, id, part],
+      [invokePromise, invokeSync, id, part],
     );
 
     const ActionRoot = node && popoverAnchorId === `dxos.org/ui/${meta.id}/${node.id}` ? Popover.Anchor : Fragment;
@@ -143,15 +136,13 @@ export const PlankHeading = memo(
         const target = (event.target as HTMLElement).closest('[data-id]') as HTMLElement | null;
         const tabId = target?.dataset?.id;
         if (primaryId && tabId) {
-          void dispatch(
-            createIntent(DeckAction.ChangeCompanion, {
-              primary: primaryId,
-              companion: tabId,
-            }),
-          );
+          void invokePromise(DeckOperation.ChangeCompanion, {
+            primary: primaryId,
+            companion: tabId,
+          });
         }
       },
-      [primaryId],
+      [primaryId, invokePromise],
     );
 
     return (

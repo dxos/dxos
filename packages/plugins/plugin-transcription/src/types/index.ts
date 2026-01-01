@@ -4,4 +4,5 @@
 
 export * from './capabilities';
 export * as TranscriptAction from './TranscriptAction';
+export { TranscriptOperation } from './TranscriptAction';
 export * from './types';

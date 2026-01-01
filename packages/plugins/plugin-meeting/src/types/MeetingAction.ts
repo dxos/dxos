@@ -5,6 +5,7 @@
 import * as Schema from 'effect/Schema';
 
 import { SpaceSchema } from '@dxos/client/echo';
+import * as Operation from '@dxos/operation';
 import { Channel } from '@dxos/plugin-thread/types';
 import { Collection } from '@dxos/schema';
 
@@ -12,46 +13,65 @@ import { meta } from '../meta';
 
 import { Meeting } from './Meeting';
 
-export class OnCreateSpace extends Schema.TaggedClass<OnCreateSpace>()(`${meta.id}/on-space-created`, {
-  input: Schema.Struct({
-    space: SpaceSchema,
-    rootCollection: Collection.Collection,
-    isDefault: Schema.Boolean.pipe(Schema.optional),
-  }),
-  output: Schema.Void,
-}) {}
+const MEETING_OPERATION = `${meta.id}/operation`;
 
-export class Create extends Schema.TaggedClass<Create>()(`${meta.id}/action/create`, {
-  input: Schema.Struct({
-    name: Schema.optional(Schema.String),
-    channel: Channel.Channel,
-  }),
-  output: Schema.Struct({
-    object: Meeting,
-  }),
-}) {}
+export namespace MeetingOperation {
+  export const OnCreateSpace = Operation.make({
+    meta: { key: `${MEETING_OPERATION}/on-create-space`, name: 'On Create Space' },
+    schema: {
+      input: Schema.Struct({
+        space: SpaceSchema,
+        rootCollection: Collection.Collection,
+        isDefault: Schema.optional(Schema.Boolean),
+      }),
+      output: Schema.Void,
+    },
+  });
 
-export class SetActive extends Schema.TaggedClass<SetActive>()(`${meta.id}/action/set-active`, {
-  input: Schema.Struct({
-    object: Schema.optional(Meeting),
-  }),
-  output: Schema.Struct({
-    object: Schema.optional(Meeting),
-  }),
-}) {}
+  export const Create = Operation.make({
+    meta: { key: `${MEETING_OPERATION}/create`, name: 'Create Meeting' },
+    schema: {
+      input: Schema.Struct({
+        name: Schema.optional(Schema.String),
+        channel: Channel.Channel,
+      }),
+      output: Schema.Struct({
+        object: Meeting,
+      }),
+    },
+  });
 
-export class HandlePayload extends Schema.TaggedClass<HandlePayload>()(`${meta.id}/action/handle-payload`, {
-  input: Schema.Struct({
-    meetingId: Schema.optional(Schema.String),
-    transcriptDxn: Schema.optional(Schema.String),
-    transcriptionEnabled: Schema.optional(Schema.Boolean),
-  }),
-  output: Schema.Void,
-}) {}
+  export const SetActive = Operation.make({
+    meta: { key: `${MEETING_OPERATION}/set-active`, name: 'Set Active Meeting' },
+    schema: {
+      input: Schema.Struct({
+        object: Schema.optional(Meeting),
+      }),
+      output: Schema.Struct({
+        object: Schema.optional(Meeting),
+      }),
+    },
+  });
 
-export class Summarize extends Schema.TaggedClass<Summarize>()(`${meta.id}/action/summarize`, {
-  input: Schema.Struct({
-    meeting: Meeting,
-  }),
-  output: Schema.Void,
-}) {}
+  export const HandlePayload = Operation.make({
+    meta: { key: `${MEETING_OPERATION}/handle-payload`, name: 'Handle Meeting Payload' },
+    schema: {
+      input: Schema.Struct({
+        meetingId: Schema.optional(Schema.String),
+        transcriptDxn: Schema.optional(Schema.String),
+        transcriptionEnabled: Schema.optional(Schema.Boolean),
+      }),
+      output: Schema.Void,
+    },
+  });
+
+  export const Summarize = Operation.make({
+    meta: { key: `${MEETING_OPERATION}/summarize`, name: 'Summarize Meeting' },
+    schema: {
+      input: Schema.Struct({
+        meeting: Meeting,
+      }),
+      output: Schema.Void,
+    },
+  });
+}

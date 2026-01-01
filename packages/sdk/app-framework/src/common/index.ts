@@ -8,6 +8,7 @@ export * from './collaboration';
 export * from './file';
 export * from './graph';
 export * from './layout';
+export * from './operations';
 export * from './plugin';
 export * from './surface';
 export * from './translations';

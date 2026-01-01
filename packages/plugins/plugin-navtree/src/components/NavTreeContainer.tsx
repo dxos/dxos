@@ -7,8 +7,8 @@ import { type Instruction, extractInstruction } from '@atlaskit/pragmatic-drag-a
 import { untracked } from '@preact/signals-core';
 import React, { forwardRef, memo, useCallback, useEffect, useMemo } from 'react';
 
-import { Common, createIntent } from '@dxos/app-framework';
-import { Surface, useAppGraph, useCapability, useIntentDispatcher, useLayout } from '@dxos/app-framework/react';
+import { Common } from '@dxos/app-framework';
+import { Surface, useAppGraph, useCapability, useLayout, useOperationInvoker } from '@dxos/app-framework/react';
 import { PLANK_COMPANION_TYPE } from '@dxos/plugin-deck/types';
 import { Graph, Node } from '@dxos/plugin-graph';
 import { useConnections, useActions as useGraphActions } from '@dxos/plugin-graph';
@@ -95,7 +95,7 @@ export type NavTreeContainerProps = {
 export const NavTreeContainer$ = forwardRef<HTMLDivElement, NavTreeContainerProps>(
   ({ tab, popoverAnchorId, topbar }, forwardedRef) => {
     const [isLg] = useMediaQuery('lg');
-    const { dispatchPromise: dispatch } = useIntentDispatcher();
+    const { invokePromise, invokeSync } = useOperationInvoker();
     const { graph } = useAppGraph();
     const { isOpen, isCurrent, isAlternateTree, setItem } = useCapability(NavTreeCapabilities.State);
     const layout = useLayout();
@@ -142,44 +142,29 @@ export const NavTreeContainer$ = forwardRef<HTMLDivElement, NavTreeContainerProp
     );
 
     const handleTabChange = useCallback(
-      async (node: NavTreeItemGraphNode) => {
-        await dispatch(
-          createIntent(Common.LayoutAction.UpdateSidebar, {
-            part: 'sidebar',
-            options: {
-              state:
-                node.id === tab
-                  ? navigationSidebarState === 'expanded'
-                    ? isLg
-                      ? 'collapsed'
-                      : 'closed'
-                    : 'expanded'
-                  : 'expanded',
-            },
-          }),
-        );
+      (node: NavTreeItemGraphNode) => {
+        invokeSync(Common.LayoutOperation.UpdateSidebar, {
+          state:
+            node.id === tab
+              ? navigationSidebarState === 'expanded'
+                ? isLg
+                  ? 'collapsed'
+                  : 'closed'
+                : 'expanded'
+              : 'expanded',
+        });
 
-        await dispatch(
-          createIntent(Common.LayoutAction.SwitchWorkspace, {
-            part: 'workspace',
-            subject: node.id,
-          }),
-        );
+        invokeSync(Common.LayoutOperation.SwitchWorkspace, { subject: node.id });
 
         // Open the first item if the workspace is empty.
         if (layout.active.length === 0) {
           const [item] = getItems(graph, node).filter((node) => !Node.isActionLike(node));
           if (item && item.data) {
-            await dispatch(
-              createIntent(Common.LayoutAction.Open, {
-                part: 'main',
-                subject: [item.id],
-              }),
-            );
+            invokeSync(Common.LayoutOperation.Open, { subject: [item.id] });
           }
         }
       },
-      [dispatch, layout.active, tab, navigationSidebarState, isLg],
+      [invokeSync, layout.active, tab, navigationSidebarState, isLg],
     );
 
     const blockInstruction = useCallback(
@@ -211,28 +196,11 @@ export const NavTreeContainer$ = forwardRef<HTMLDivElement, NavTreeContainerProp
 
         const current = isCurrent(path, node);
         if (!current) {
-          void dispatch(
-            createIntent(Common.LayoutAction.Open, {
-              part: 'main',
-              subject: [node.id],
-              options: { key: node.properties.key },
-            }),
-          );
+          invokeSync(Common.LayoutOperation.Open, { subject: [node.id], key: node.properties.key });
         } else if (option) {
-          void dispatch(
-            createIntent(Common.LayoutAction.Close, {
-              part: 'main',
-              subject: [node.id],
-              options: { state: false },
-            }),
-          );
+          invokeSync(Common.LayoutOperation.Close, { subject: [node.id] });
         } else {
-          void dispatch(
-            createIntent(Common.LayoutAction.ScrollIntoView, {
-              part: 'current',
-              subject: node.id,
-            }),
-          );
+          void invokePromise(Common.LayoutOperation.ScrollIntoView, { subject: node.id });
         }
 
         const defaultAction = Graph.getActions(graph, node.id).find(
@@ -243,27 +211,13 @@ export const NavTreeContainer$ = forwardRef<HTMLDivElement, NavTreeContainerProp
         }
 
         if (!isLg) {
-          void dispatch(
-            createIntent(Common.LayoutAction.UpdateSidebar, {
-              part: 'sidebar',
-              options: { state: 'closed' },
-            }),
-          );
+          invokeSync(Common.LayoutOperation.UpdateSidebar, { state: 'closed' });
         }
       },
-      [graph, dispatch, isCurrent, isLg],
+      [graph, invokePromise, invokeSync, isCurrent, isLg],
     );
 
-    const handleBack = useCallback(
-      () =>
-        dispatch(
-          createIntent(Common.LayoutAction.RevertWorkspace, {
-            part: 'workspace',
-            options: { revert: true },
-          }),
-        ),
-      [dispatch],
-    );
+    const handleBack = useCallback(() => invokeSync(Common.LayoutOperation.RevertWorkspace), [invokeSync]);
 
     // TODO(wittjosiah): Factor out hook.
     useEffect(() => {

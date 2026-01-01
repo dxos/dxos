@@ -4,6 +4,8 @@
 
 import * as Schema from 'effect/Schema';
 
+import * as Operation from '@dxos/operation';
+
 import { meta } from './meta';
 
 // TODO(burdon): Document.
@@ -22,4 +24,37 @@ export namespace SettingsAction {
     input: Schema.Void,
     output: Schema.Void,
   }) {}
+}
+
+const SETTINGS_OPERATION = `${meta.id}/operation`;
+
+/**
+ * Operations for the Settings plugin.
+ */
+export namespace SettingsOperation {
+  export const Open = Operation.make({
+    meta: {
+      key: `${SETTINGS_OPERATION}/open`,
+      name: 'Open Settings',
+      description: 'Open the settings panel.',
+    },
+    schema: {
+      input: Schema.Struct({
+        plugin: Schema.optional(Schema.String.annotations({ description: 'The plugin to open settings for.' })),
+      }),
+      output: Schema.Void,
+    },
+  });
+
+  export const OpenPluginRegistry = Operation.make({
+    meta: {
+      key: `${SETTINGS_OPERATION}/open-plugin-registry`,
+      name: 'Open Plugin Registry',
+      description: 'Open the plugin registry.',
+    },
+    schema: {
+      input: Schema.Void,
+      output: Schema.Void,
+    },
+  });
 }

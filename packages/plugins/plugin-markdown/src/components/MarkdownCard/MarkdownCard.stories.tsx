@@ -5,7 +5,7 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
-import { IntentPlugin } from '@dxos/app-framework';
+import { OperationPlugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Markdown } from '@dxos/plugin-markdown/types';
 import { faker } from '@dxos/random';
@@ -31,7 +31,7 @@ const meta: Meta<typeof MarkdownCard> = {
   decorators: [
     withTheme,
     withPluginManager({
-      plugins: [IntentPlugin()],
+      plugins: [OperationPlugin()],
     }),
   ],
   parameters: {

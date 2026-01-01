@@ -4,7 +4,7 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capability, Common, createIntent } from '@dxos/app-framework';
+import { Capability, Common } from '@dxos/app-framework';
 import { Graph } from '@dxos/plugin-graph';
 import { SPACES, SpaceEvents } from '@dxos/plugin-space';
 import { SpaceCapabilities } from '@dxos/plugin-space/types';
@@ -20,7 +20,7 @@ export default Capability.makeModule((context) =>
     const { Markdown } = yield* Effect.tryPromise(() => import('@dxos/plugin-markdown/types'));
     const { Collection } = yield* Effect.tryPromise(() => import('@dxos/schema'));
 
-    const { dispatch } = context.getCapability(Common.Capability.IntentDispatcher);
+    const { invoke } = context.getCapability(Common.Capability.OperationInvoker);
     const { graph } = context.getCapability(Common.Capability.AppGraph);
     const client = context.getCapability(ClientCapabilities.Client);
 
@@ -35,11 +35,9 @@ export default Capability.makeModule((context) =>
     yield* context.activate(SpaceEvents.SpaceCreated);
     const onCreateSpaceCallbacks = context.getCapabilities(SpaceCapabilities.OnCreateSpace);
     yield* Effect.all(
-      onCreateSpaceCallbacks
-        .map((onCreateSpace) =>
-          onCreateSpace({ space: space, isDefault: true, rootCollection: defaultSpaceCollection }),
-        )
-        .map((intent) => dispatch(intent)),
+      onCreateSpaceCallbacks.map((onCreateSpace) =>
+        onCreateSpace({ space: space, isDefault: true, rootCollection: defaultSpaceCollection }),
+      ),
     );
 
     const readme = Markdown.make({
@@ -52,18 +50,10 @@ export default Capability.makeModule((context) =>
     // This will allow the expose action to work before the navtree renders for the first time.
     graph.pipe(Graph.expand(SPACES), Graph.expand(space.id));
 
-    yield* dispatch(
-      createIntent(Common.LayoutAction.SwitchWorkspace, {
-        part: 'workspace',
-        subject: space.id,
-      }),
-    );
-    yield* dispatch(
-      createIntent(Common.LayoutAction.SetLayoutMode, {
-        part: 'mode',
-        subject: Obj.getDXN(readme).toString(),
-        options: { mode: 'solo' },
-      }),
-    );
+    yield* invoke(Common.LayoutOperation.SwitchWorkspace, { subject: space.id });
+    yield* invoke(Common.LayoutOperation.SetLayoutMode, {
+      mode: 'solo',
+      subject: Obj.getDXN(readme).toString(),
+    });
   }),
 );

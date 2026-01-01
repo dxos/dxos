@@ -7,7 +7,7 @@ import './mailbox.css';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useMemo, useState } from 'react';
 
-import { IntentPlugin, SettingsPlugin } from '@dxos/app-framework';
+import { OperationPlugin, SettingsPlugin } from '@dxos/app-framework';
 import { Surface } from '@dxos/app-framework/react';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Obj } from '@dxos/echo';
@@ -93,7 +93,7 @@ export const WithCompanion: Story = {
           },
         }),
         SpacePlugin({}),
-        IntentPlugin(),
+        OperationPlugin(),
         SettingsPlugin(),
 
         // UI

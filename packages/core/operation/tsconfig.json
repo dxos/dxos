@@ -1,0 +1,17 @@
+{
+  "extends": "../../../tsconfig.base.json",
+  "include": [
+    "src"
+  ],
+  "references": [
+    {
+      "path": "../../common/effect"
+    },
+    {
+      "path": "../../sdk/schema"
+    },
+    {
+      "path": "../echo/echo"
+    }
+  ]
+}
