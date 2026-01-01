@@ -59,6 +59,7 @@
     "@babel/core": "catalog:",
     "@dxos/random": "workspace:*",
     "@dxos/react-ui": "workspace:*",
+    "@dxos/react-ui-stack": "workspace:*",
     "@dxos/react-ui-syntax-highlighter": "workspace:*",
     "@dxos/storybook-utils": "workspace:*",
     "@dxos/ui-theme": "workspace:*",

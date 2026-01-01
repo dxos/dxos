@@ -1,127 +1,128 @@
 {
-	"name": "@dxos/react-ui-table",
-	"version": "0.8.3",
-	"description": "A table component.",
-	"homepage": "https://dxos.org",
-	"bugs": "https://github.com/dxos/dxos/issues",
-	"license": "MIT",
-	"author": "DXOS.org",
-	"sideEffects": true,
-	"type": "module",
-	"exports": {
-		"./deprecated": {
-			"source": "./src/deprecated/index.ts",
-			"types": "./dist/types/src/deprecated/index.d.ts",
-			"browser": "./dist/lib/browser/deprecated/index.mjs",
-			"node": "./dist/lib/node-esm/deprecated/index.mjs"
-		},
-		".": {
-			"source": "./src/index.ts",
-			"types": "./dist/types/src/index.d.ts",
-			"browser": "./dist/lib/browser/index.mjs",
-			"node": "./dist/lib/node-esm/index.mjs"
-		},
-		"./testing": {
-			"source": "./src/testing/index.ts",
-			"types": "./dist/types/src/testing/index.d.ts",
-			"browser": "./dist/lib/browser/testing/index.mjs",
-			"node": "./dist/lib/node-esm/testing/index.mjs"
-		},
-		"./types": {
-			"source": "./src/types/index.ts",
-			"types": "./dist/types/src/types/index.d.ts",
-			"browser": "./dist/lib/browser/types/index.mjs",
-			"node": "./dist/lib/node-esm/types/index.mjs"
-		}
-	},
-	"types": "dist/types/src/index.d.ts",
-	"typesVersions": {
-		"*": {
-			"deprecated": [
-				"dist/types/src/deprecated/index.d.ts"
-			],
-			"testing": [
-				"dist/types/src/testing/index.d.ts"
-			],
-			"types": [
-				"dist/types/src/types/index.d.ts"
-			]
-		}
-	},
-	"files": [
-		"dist",
-		"src"
-	],
-	"dependencies": {
-		"@codemirror/autocomplete": "catalog:",
-		"@codemirror/state": "catalog:",
-		"@codemirror/view": "catalog:",
-		"@dxos/async": "workspace:*",
-		"@dxos/context": "workspace:*",
-		"@dxos/debug": "workspace:*",
-		"@dxos/echo": "workspace:*",
-		"@dxos/effect": "workspace:*",
-		"@dxos/invariant": "workspace:*",
-		"@dxos/keys": "workspace:*",
-		"@dxos/lit-grid": "workspace:*",
-		"@dxos/live-object": "workspace:*",
-		"@dxos/log": "workspace:*",
-		"@dxos/plugin-search": "workspace:*",
-		"@dxos/random": "workspace:*",
-		"@dxos/react-client": "workspace:*",
-		"@dxos/react-ui-attention": "workspace:*",
-		"@dxos/react-ui-components": "workspace:*",
-		"@dxos/react-ui-editor": "workspace:*",
-		"@dxos/react-ui-form": "workspace:*",
-		"@dxos/react-ui-grid": "workspace:*",
-		"@dxos/react-ui-menu": "workspace:*",
-		"@dxos/react-ui-searchlist": "workspace:*",
-		"@dxos/react-ui-syntax-highlighter": "workspace:*",
-		"@dxos/schema": "workspace:*",
-		"@dxos/types": "workspace:*",
-		"@dxos/ui-types": "workspace:*",
-		"@dxos/util": "workspace:*",
-		"@fluentui/react-tabster": "catalog:",
-		"@preact-signals/safe-react": "catalog:",
-		"@preact/signals-core": "catalog:",
-		"@radix-ui/react-context": "catalog:",
-		"@radix-ui/react-primitive": "catalog:",
-		"@radix-ui/react-slot": "catalog:",
-		"@radix-ui/react-use-controllable-state": "catalog:",
-		"date-fns": "catalog:",
-		"lodash.orderby": "catalog:"
-	},
-	"devDependencies": {
-		"@dxos/echo-signals": "workspace:*",
-		"@dxos/lit-ui": "workspace:*",
-		"@dxos/plugin-search": "workspace:*",
-		"@dxos/random": "workspace:*",
-		"@dxos/react-client": "workspace:*",
-		"@dxos/react-ui": "workspace:*",
-		"@dxos/storybook-utils": "workspace:*",
-		"@dxos/test-utils": "workspace:*",
-		"@dxos/ui-theme": "workspace:*",
-		"@effect-atom/atom-react": "catalog:",
-		"@effect/platform": "catalog:",
-		"@types/lodash.orderby": "catalog:",
-		"@types/react": "catalog:",
-		"@types/react-dom": "catalog:",
-		"effect": "catalog:",
-		"fast-check": "catalog:",
-		"react": "catalog:",
-		"react-dom": "catalog:",
-		"vite": "catalog:"
-	},
-	"peerDependencies": {
-		"@dxos/react-ui": "workspace:*",
-		"@dxos/ui-theme": "workspace:*",
-		"@effect-atom/atom-react": "catalog:",
-		"@effect/platform": "catalog:",
-		"effect": "catalog:",
-		"react": "catalog:",
-		"react-dom": "catalog:"
-	},
-	"publishConfig": {
-		"access": "public"
-	}
+  "name": "@dxos/react-ui-table",
+  "version": "0.8.3",
+  "description": "A table component.",
+  "homepage": "https://dxos.org",
+  "bugs": "https://github.com/dxos/dxos/issues",
+  "license": "MIT",
+  "author": "DXOS.org",
+  "sideEffects": true,
+  "type": "module",
+  "exports": {
+    "./deprecated": {
+      "source": "./src/deprecated/index.ts",
+      "types": "./dist/types/src/deprecated/index.d.ts",
+      "browser": "./dist/lib/browser/deprecated/index.mjs",
+      "node": "./dist/lib/node-esm/deprecated/index.mjs"
+    },
+    ".": {
+      "source": "./src/index.ts",
+      "types": "./dist/types/src/index.d.ts",
+      "browser": "./dist/lib/browser/index.mjs",
+      "node": "./dist/lib/node-esm/index.mjs"
+    },
+    "./testing": {
+      "source": "./src/testing/index.ts",
+      "types": "./dist/types/src/testing/index.d.ts",
+      "browser": "./dist/lib/browser/testing/index.mjs",
+      "node": "./dist/lib/node-esm/testing/index.mjs"
+    },
+    "./types": {
+      "source": "./src/types/index.ts",
+      "types": "./dist/types/src/types/index.d.ts",
+      "browser": "./dist/lib/browser/types/index.mjs",
+      "node": "./dist/lib/node-esm/types/index.mjs"
+    }
+  },
+  "types": "dist/types/src/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "deprecated": [
+        "dist/types/src/deprecated/index.d.ts"
+      ],
+      "testing": [
+        "dist/types/src/testing/index.d.ts"
+      ],
+      "types": [
+        "dist/types/src/types/index.d.ts"
+      ]
+    }
+  },
+  "files": [
+    "dist",
+    "src"
+  ],
+  "dependencies": {
+    "@codemirror/autocomplete": "catalog:",
+    "@codemirror/state": "catalog:",
+    "@codemirror/view": "catalog:",
+    "@dxos/async": "workspace:*",
+    "@dxos/context": "workspace:*",
+    "@dxos/debug": "workspace:*",
+    "@dxos/echo": "workspace:*",
+    "@dxos/effect": "workspace:*",
+    "@dxos/invariant": "workspace:*",
+    "@dxos/keys": "workspace:*",
+    "@dxos/lit-grid": "workspace:*",
+    "@dxos/live-object": "workspace:*",
+    "@dxos/log": "workspace:*",
+    "@dxos/plugin-search": "workspace:*",
+    "@dxos/random": "workspace:*",
+    "@dxos/react-client": "workspace:*",
+    "@dxos/react-ui-attention": "workspace:*",
+    "@dxos/react-ui-components": "workspace:*",
+    "@dxos/react-ui-editor": "workspace:*",
+    "@dxos/react-ui-form": "workspace:*",
+    "@dxos/react-ui-grid": "workspace:*",
+    "@dxos/react-ui-menu": "workspace:*",
+    "@dxos/react-ui-searchlist": "workspace:*",
+    "@dxos/react-ui-stack": "workspace:*",
+    "@dxos/react-ui-syntax-highlighter": "workspace:*",
+    "@dxos/schema": "workspace:*",
+    "@dxos/types": "workspace:*",
+    "@dxos/ui-types": "workspace:*",
+    "@dxos/util": "workspace:*",
+    "@fluentui/react-tabster": "catalog:",
+    "@preact-signals/safe-react": "catalog:",
+    "@preact/signals-core": "catalog:",
+    "@radix-ui/react-context": "catalog:",
+    "@radix-ui/react-primitive": "catalog:",
+    "@radix-ui/react-slot": "catalog:",
+    "@radix-ui/react-use-controllable-state": "catalog:",
+    "date-fns": "catalog:",
+    "lodash.orderby": "catalog:"
+  },
+  "devDependencies": {
+    "@dxos/echo-signals": "workspace:*",
+    "@dxos/lit-ui": "workspace:*",
+    "@dxos/plugin-search": "workspace:*",
+    "@dxos/random": "workspace:*",
+    "@dxos/react-client": "workspace:*",
+    "@dxos/react-ui": "workspace:*",
+    "@dxos/storybook-utils": "workspace:*",
+    "@dxos/test-utils": "workspace:*",
+    "@dxos/ui-theme": "workspace:*",
+    "@effect-atom/atom-react": "catalog:",
+    "@effect/platform": "catalog:",
+    "@types/lodash.orderby": "catalog:",
+    "@types/react": "catalog:",
+    "@types/react-dom": "catalog:",
+    "effect": "catalog:",
+    "fast-check": "catalog:",
+    "react": "catalog:",
+    "react-dom": "catalog:",
+    "vite": "catalog:"
+  },
+  "peerDependencies": {
+    "@dxos/react-ui": "workspace:*",
+    "@dxos/ui-theme": "workspace:*",
+    "@effect-atom/atom-react": "catalog:",
+    "@effect/platform": "catalog:",
+    "effect": "catalog:",
+    "react": "catalog:",
+    "react-dom": "catalog:"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
 }

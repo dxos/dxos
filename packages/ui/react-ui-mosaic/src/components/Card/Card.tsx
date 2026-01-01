@@ -25,11 +25,6 @@ import { cardChrome, cardGrid, cardHeading, cardRoot, cardSpacing, cardText } fr
  */
 const cardDefaultInlineSize = cardMinInlineSize;
 
-/**
- * This is `cardDefaultInlineSize` plus 2 times the sum of the inner and outer spacing applied by CardStack on the inline axis.
- */
-// const cardStackDefaultInlineSizeRem = cardDefaultInlineSize + 2.125;
-
 type SharedCardProps = ThemedClassName<ComponentPropsWithoutRef<'div'>> & { asChild?: boolean };
 
 /**
@@ -141,8 +136,6 @@ const CardDragHandle = forwardRef<HTMLButtonElement, { toolbarItem?: boolean }>(
   );
 });
 
-// const CardDragPreview = StackItem.DragPreview;
-
 //
 // Menu
 //
@@ -227,19 +220,10 @@ export const Card = {
   ToolbarIconButton: CardToolbarIconButton,
   ToolbarSeparator: CardToolbarSeparator,
   DragHandle: CardDragHandle,
-  // DragPreview: CardDragPreview,
   Menu: CardMenu,
   Poster: CardPoster,
   Chrome: CardChrome,
   Text: CardText,
 };
 
-export {
-  cardRoot,
-  cardHeading,
-  cardText,
-  cardChrome,
-  cardSpacing,
-  // cardStackDefaultInlineSizeRem,
-  cardDefaultInlineSize,
-};
+export { cardRoot, cardHeading, cardText, cardChrome, cardSpacing, cardDefaultInlineSize };

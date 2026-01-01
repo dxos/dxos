@@ -1,61 +1,62 @@
 {
-	"name": "@dxos/react-ui-masonry",
-	"version": "0.8.3",
-	"description": "A masonry component.",
-	"homepage": "https://dxos.org",
-	"bugs": "https://github.com/dxos/dxos/issues",
-	"license": "MIT",
-	"author": "DXOS.org",
-	"sideEffects": true,
-	"type": "module",
-	"exports": {
-		".": {
-			"source": "./src/index.ts",
-			"types": "./dist/types/src/index.d.ts",
-			"browser": "./dist/lib/browser/index.mjs",
-			"node": "./dist/lib/node-esm/index.mjs"
-		}
-	},
-	"types": "dist/types/src/index.d.ts",
-	"files": [
-		"dist",
-		"src"
-	],
-	"dependencies": {
-		"@dxos/react-hooks": "workspace:*",
-		"@dxos/react-ui-mosaic": "workspace:*",
-		"@dxos/types": "workspace:*",
-		"@radix-ui/react-compose-refs": "catalog:",
-		"masonic": "catalog:",
-		"react-resize-detector": "catalog:"
-	},
-	"devDependencies": {
-		"@dxos/client": "workspace:*",
-		"@dxos/echo": "workspace:*",
-		"@dxos/random": "workspace:*",
-		"@dxos/react-client": "workspace:*",
-		"@dxos/react-ui": "workspace:*",
-		"@dxos/react-ui-form": "workspace:*",
-		"@dxos/schema": "workspace:*",
-		"@dxos/storybook-utils": "workspace:*",
-		"@dxos/test-utils": "workspace:*",
-		"@dxos/ui-theme": "workspace:*",
-		"@types/react": "catalog:",
-		"@types/react-dom": "catalog:",
-		"effect": "catalog:",
-		"react": "catalog:",
-		"react-dom": "catalog:",
-		"vite": "catalog:"
-	},
-	"peerDependencies": {
-		"@dxos/random": "workspace:*",
-		"@dxos/react-ui": "workspace:*",
-		"@dxos/ui-theme": "workspace:*",
-		"effect": "catalog:",
-		"react": "catalog:",
-		"react-dom": "catalog:"
-	},
-	"publishConfig": {
-		"access": "public"
-	}
+  "name": "@dxos/react-ui-masonry",
+  "version": "0.8.3",
+  "description": "A masonry component.",
+  "homepage": "https://dxos.org",
+  "bugs": "https://github.com/dxos/dxos/issues",
+  "license": "MIT",
+  "author": "DXOS.org",
+  "sideEffects": true,
+  "type": "module",
+  "exports": {
+    ".": {
+      "source": "./src/index.ts",
+      "types": "./dist/types/src/index.d.ts",
+      "browser": "./dist/lib/browser/index.mjs",
+      "node": "./dist/lib/node-esm/index.mjs"
+    }
+  },
+  "types": "dist/types/src/index.d.ts",
+  "files": [
+    "dist",
+    "src"
+  ],
+  "dependencies": {
+    "@dxos/react-hooks": "workspace:*",
+    "@dxos/react-ui-mosaic": "workspace:*",
+    "@dxos/types": "workspace:*",
+    "@radix-ui/react-compose-refs": "catalog:",
+    "masonic": "catalog:",
+    "react-resize-detector": "catalog:"
+  },
+  "devDependencies": {
+    "@dxos/client": "workspace:*",
+    "@dxos/echo": "workspace:*",
+    "@dxos/random": "workspace:*",
+    "@dxos/react-client": "workspace:*",
+    "@dxos/react-ui": "workspace:*",
+    "@dxos/react-ui-form": "workspace:*",
+    "@dxos/react-ui-stack": "workspace:*",
+    "@dxos/schema": "workspace:*",
+    "@dxos/storybook-utils": "workspace:*",
+    "@dxos/test-utils": "workspace:*",
+    "@dxos/ui-theme": "workspace:*",
+    "@types/react": "catalog:",
+    "@types/react-dom": "catalog:",
+    "effect": "catalog:",
+    "react": "catalog:",
+    "react-dom": "catalog:",
+    "vite": "catalog:"
+  },
+  "peerDependencies": {
+    "@dxos/random": "workspace:*",
+    "@dxos/react-ui": "workspace:*",
+    "@dxos/ui-theme": "workspace:*",
+    "effect": "catalog:",
+    "react": "catalog:",
+    "react-dom": "catalog:"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
 }

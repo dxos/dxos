@@ -24,6 +24,9 @@
     "src"
   ],
   "dependencies": {
+    "@atlaskit/pragmatic-drag-and-drop": "catalog:",
+    "@atlaskit/pragmatic-drag-and-drop-hitbox": "catalog:",
+    "@atlaskit/pragmatic-drag-and-drop-react-drop-indicator": "catalog:",
     "@dxos/app-framework": "workspace:*",
     "@dxos/app-graph": "workspace:*",
     "@dxos/async": "workspace:*",
@@ -50,11 +53,15 @@
     "@dxos/ui-theme": "workspace:*",
     "@dxos/util": "workspace:*",
     "@effect-atom/atom-react": "catalog:",
-    "@preact-signals/safe-react": "catalog:"
+    "@fluentui/react-tabster": "catalog:",
+    "@preact-signals/safe-react": "catalog:",
+    "@radix-ui/react-context": "catalog:"
   },
   "devDependencies": {
+    "@dxos/echo-db": "workspace:*",
     "@dxos/plugin-testing": "workspace:*",
     "@dxos/random": "workspace:*",
+    "@dxos/react-ui-components": "workspace:*",
     "@dxos/storybook-utils": "workspace:*",
     "effect": "catalog:",
     "react": "catalog:",

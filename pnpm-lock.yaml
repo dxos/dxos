@@ -28,16 +28,16 @@ catalogs:
       specifier: ^0.32.5
       version: 0.32.6
     '@atlaskit/pragmatic-drag-and-drop':
-      specifier: ^1.7.7
+      specifier: 1.7.7
       version: 1.7.7
     '@atlaskit/pragmatic-drag-and-drop-auto-scroll':
       specifier: ^2.1.2
       version: 2.1.2
     '@atlaskit/pragmatic-drag-and-drop-hitbox':
-      specifier: ^1.1.0
+      specifier: 1.1.0
       version: 1.1.0
     '@atlaskit/pragmatic-drag-and-drop-react-drop-indicator':
-      specifier: ^3.2.10
+      specifier: 3.2.10
       version: 3.2.10
     '@automerge/automerge-repo':
       specifier: 2.5.1
@@ -223,7 +223,7 @@ catalogs:
       specifier: ^0.18.0
       version: 0.18.0
     '@fluentui/react-tabster':
-      specifier: ^9.26.11
+      specifier: 9.26.11
       version: 9.26.11
     '@fontsource-variable/inter':
       specifier: 5.0.16
@@ -10432,6 +10432,15 @@ importers:
 
   packages/plugins/plugin-preview:
     dependencies:
+      '@atlaskit/pragmatic-drag-and-drop':
+        specifier: 'catalog:'
+        version: 1.7.7
+      '@atlaskit/pragmatic-drag-and-drop-hitbox':
+        specifier: 'catalog:'
+        version: 1.1.0
+      '@atlaskit/pragmatic-drag-and-drop-react-drop-indicator':
+        specifier: 'catalog:'
+        version: 3.2.10(@types/react@19.2.7)(react@19.2.3)
       '@dxos/app-framework':
         specifier: workspace:*
         version: link:../../sdk/app-framework
@@ -10510,16 +10519,28 @@ importers:
       '@effect-atom/atom-react':
         specifier: 'catalog:'
         version: 0.4.4(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/platform@0.93.6(effect@3.19.11))(@effect/rpc@0.72.2(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11))(effect@3.19.11)(react@19.2.3)(scheduler@0.27.0)
+      '@fluentui/react-tabster':
+        specifier: 'catalog:'
+        version: 9.26.11(@types/react-dom@19.2.3(@types/react@19.2.7))(@types/react@19.2.7)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
       '@preact-signals/safe-react':
         specifier: 'catalog:'
         version: 0.9.0(@babel/core@7.28.0)(@swc/helpers@0.5.17)(react@19.2.3)
+      '@radix-ui/react-context':
+        specifier: 'catalog:'
+        version: 1.1.1(@types/react@19.2.7)(react@19.2.3)
     devDependencies:
+      '@dxos/echo-db':
+        specifier: workspace:*
+        version: link:../../core/echo/echo-db
       '@dxos/plugin-testing':
         specifier: workspace:*
         version: link:../plugin-testing
       '@dxos/random':
         specifier: workspace:*
         version: link:../../common/random
+      '@dxos/react-ui-components':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-components
       '@dxos/storybook-utils':
         specifier: workspace:*
         version: link:../../common/storybook-utils

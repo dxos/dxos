@@ -7,15 +7,17 @@ import React, { useCallback, useEffect } from 'react';
 import { Surface } from '@dxos/app-framework/react';
 import { DropdownMenu, IconButton, Tag, useTranslation } from '@dxos/react-ui';
 import { AttentionGlyph, type UseSelectionActions, useSelected, useSelectionActions } from '@dxos/react-ui-attention';
+import { Card, CardDragPreview } from '@dxos/react-ui-mosaic';
 import {
-  Card,
-  CardDragPreview,
   CardStack,
   CardStackDragPreview,
+  Stack,
+  StackItem,
+  type StackItemRootProps,
+  autoScrollRootAttributes,
   cardStackDefaultInlineSizeRem,
   cardStackHeading,
-} from '@dxos/react-ui-mosaic';
-import { Stack, StackItem, type StackItemRootProps, autoScrollRootAttributes } from '@dxos/react-ui-stack';
+} from '@dxos/react-ui-stack';
 import { type ProjectionModel } from '@dxos/schema';
 
 import { type BaseKanbanItem, type KanbanModel, UNCATEGORIZED_VALUE } from '../model';
