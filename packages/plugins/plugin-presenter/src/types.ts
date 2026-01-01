@@ -11,23 +11,9 @@ import { Collection } from '@dxos/schema';
 
 import { meta } from './meta';
 
-export namespace PresenterAction {
-  const PRESENTER_ACTION = `${meta.id}/action`;
-
-  export class TogglePresentation extends Schema.TaggedClass<TogglePresentation>()(
-    `${PRESENTER_ACTION}/toggle-presentation`,
-    {
-      input: Schema.Struct({
-        object: Schema.Union(Markdown.Document, Collection.Collection),
-        state: Schema.optional(Schema.Boolean),
-      }),
-      output: Schema.Void,
-    },
-  ) {}
-}
-
 const PRESENTER_OPERATION = `${meta.id}/operation`;
 
+// TODO(wittjosiah): This appears to be unused.
 export namespace PresenterOperation {
   export const TogglePresentation = Operation.make({
     meta: { key: `${PRESENTER_OPERATION}/toggle-presentation`, name: 'Toggle Presentation' },

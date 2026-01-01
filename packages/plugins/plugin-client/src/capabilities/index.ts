@@ -4,7 +4,6 @@
 
 export * from './app-graph-builder';
 export * from './client';
-export * from './intent-resolver';
 export * from './migrations';
 export * from './operation-resolver';
 export * from './react-context';

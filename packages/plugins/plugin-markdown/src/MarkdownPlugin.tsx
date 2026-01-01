@@ -16,7 +16,6 @@ import {
   AnchorSort,
   AppGraphSerializer,
   BlueprintDefinition,
-  IntentResolver,
   MarkdownSettings,
   MarkdownState,
   OperationResolver,
@@ -75,7 +74,6 @@ export const MarkdownPlugin = Plugin.define(meta).pipe(
     activate: ReactSurface,
     activatesBefore: [MarkdownEvents.SetupExtensions],
   }),
-  Common.Plugin.addIntentResolverModule({ activate: IntentResolver }),
   Common.Plugin.addOperationResolverModule({ activate: OperationResolver }),
   Plugin.addModule({
     activatesOn: Common.ActivationEvent.AppGraphReady,

@@ -332,6 +332,7 @@ export default Capability.makeModule(({ context, createInvitationUrl, observabil
 
         //
         // Lock
+        // TODO(wittjosiah): This appears to be unused.
         //
         OperationResolver.make({
           operation: SpaceOperation.Lock,
@@ -351,6 +352,7 @@ export default Capability.makeModule(({ context, createInvitationUrl, observabil
 
         //
         // Unlock
+        // TODO(wittjosiah): This appears to be unused.
         //
         OperationResolver.make({
           operation: SpaceOperation.Unlock,
@@ -673,6 +675,7 @@ export default Capability.makeModule(({ context, createInvitationUrl, observabil
 
         //
         // DuplicateObject
+        // TODO(wittjosiah): This appears to be unused.
         //
         OperationResolver.make({
           operation: SpaceOperation.DuplicateObject,

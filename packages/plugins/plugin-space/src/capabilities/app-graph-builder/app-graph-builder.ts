@@ -21,7 +21,7 @@ import { isNonNullable } from '@dxos/util';
 
 import { getActiveSpace } from '../../hooks';
 import { meta } from '../../meta';
-import { SPACE_TYPE, SpaceAction, SpaceCapabilities, SpaceOperation, type SpaceSettingsProps } from '../../types';
+import { SPACE_TYPE, SpaceCapabilities, SpaceOperation, type SpaceSettingsProps } from '../../types';
 import {
   SHARED,
   SPACES,
@@ -84,7 +84,7 @@ export default Capability.makeModule((context) =>
         match: NodeMatcher.whenRoot,
         actions: () => [
           {
-            id: SpaceAction.OpenCreateSpace._tag,
+            id: SpaceOperation.OpenCreateSpace.meta.key,
             data: async () => {
               const { invokePromise } = context.getCapability(Common.Capability.OperationInvoker);
               await invokePromise(SpaceOperation.OpenCreateSpace);
@@ -97,7 +97,7 @@ export default Capability.makeModule((context) =>
             },
           },
           {
-            id: SpaceAction.Join._tag,
+            id: SpaceOperation.Join.meta.key,
             data: async () => {
               const { invokePromise } = context.getCapability(Common.Capability.OperationInvoker);
               await invokePromise(SpaceOperation.Join, {});
@@ -110,7 +110,7 @@ export default Capability.makeModule((context) =>
             },
           },
           {
-            id: SpaceAction.OpenMembers._tag,
+            id: SpaceOperation.OpenMembers.meta.key,
             data: async () => {
               const { invokePromise } = context.getCapability(Common.Capability.OperationInvoker);
               const client = context.getCapability(ClientCapabilities.Client);
@@ -128,7 +128,7 @@ export default Capability.makeModule((context) =>
             },
           },
           {
-            id: SpaceAction.OpenSettings._tag,
+            id: SpaceOperation.OpenSettings.meta.key,
             data: async () => {
               const { invokePromise } = context.getCapability(Common.Capability.OperationInvoker);
               const client = context.getCapability(ClientCapabilities.Client);

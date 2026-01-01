@@ -9,16 +9,6 @@ import { AccessToken } from '@dxos/types';
 
 import { meta } from '../meta';
 
-export namespace TokenManagerAction {
-  export class AccessTokenCreated extends Schema.TaggedClass<AccessTokenCreated>()(
-    `${meta.id}/action/access-token-created`,
-    {
-      input: Schema.Struct({ accessToken: AccessToken.AccessToken }),
-      output: Schema.Void,
-    },
-  ) {}
-}
-
 const TOKEN_MANAGER_OPERATION = `${meta.id}/operation`;
 
 export namespace TokenManagerOperation {

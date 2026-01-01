@@ -21,23 +21,16 @@ import {
   Task,
 } from '@dxos/types';
 
+import { IdentityCreated } from '../capabilities/identity-created';
+import { OperationResolver } from '../capabilities/operation-resolver';
 import { SpaceEvents } from '../events';
 import { meta } from '../meta';
 import { type CreateObject, type SpacePluginOptions } from '../types';
 
 import { database, queue, space } from './commands';
 
-const IdentityCreated = Capability.lazy(
-  'IdentityCreated',
-  () => import('../capabilities/identity-created/identity-created'),
-);
-const IntentResolver = Capability.lazy(
-  'IntentResolver',
-  () => import('../capabilities/intent-resolver/intent-resolver'),
-);
-
 export const SpacePlugin = Plugin.define<SpacePluginOptions>(meta).pipe(
-  // TODO(wittjosiah): Could some of these commands make use of intents?
+  // TODO(wittjosiah): Could some of these commands make use of operations?
   Common.Plugin.addCommandModule({
     commands: [database, queue, space],
   }),
@@ -74,9 +67,9 @@ export const SpacePlugin = Plugin.define<SpacePluginOptions>(meta).pipe(
     };
 
     return {
-      id: Capability.getModuleTag(IntentResolver),
-      activatesOn: Common.ActivationEvent.SetupIntentResolver,
-      activate: (context) => IntentResolver({ context, createInvitationUrl, observability: false }),
+      id: Capability.getModuleTag(OperationResolver),
+      activatesOn: Common.ActivationEvent.SetupOperationResolver,
+      activate: (context) => OperationResolver({ context, createInvitationUrl, observability: false }),
     };
   }),
   Plugin.addModule({

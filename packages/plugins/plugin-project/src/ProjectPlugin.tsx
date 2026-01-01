@@ -8,7 +8,7 @@ import { Common, Plugin } from '@dxos/app-framework';
 import { type CreateObject } from '@dxos/plugin-space/types';
 import { Project } from '@dxos/types';
 
-import { AppGraphBuilder, IntentResolver, ReactSurface } from './capabilities';
+import { AppGraphBuilder, ReactSurface } from './capabilities';
 import { meta } from './meta';
 import { translations } from './translations';
 
@@ -27,7 +27,6 @@ export const ProjectPlugin = Plugin.define(meta).pipe(
   }),
   Common.Plugin.addSchemaModule({ schema: [Project.Project] }),
   Common.Plugin.addSurfaceModule({ activate: ReactSurface }),
-  Common.Plugin.addIntentResolverModule({ activate: IntentResolver }),
   Common.Plugin.addAppGraphModule({ activate: AppGraphBuilder }),
   Plugin.make,
 );

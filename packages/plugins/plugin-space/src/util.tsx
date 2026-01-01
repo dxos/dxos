@@ -20,7 +20,7 @@ import { Collection } from '@dxos/schema';
 import { createFilename } from '@dxos/util';
 
 import { meta } from './meta';
-import { SPACE_TYPE, SpaceAction, SpaceOperation } from './types';
+import { SPACE_TYPE, SpaceOperation } from './types';
 
 export const SPACES = `${meta.id}-spaces`;
 export const COMPOSER_SPACE_LOCK = `${meta.id}/lock`;
@@ -276,7 +276,7 @@ export const constructSpaceActions = ({
 
   if (hasPendingMigration) {
     actions.push({
-      id: getId(SpaceAction.Migrate._tag),
+      id: getId(SpaceOperation.Migrate.meta.key),
       type: Node.ActionGroupType,
       data: async () => {
         await invokePromise(SpaceOperation.Migrate, { space });
@@ -293,7 +293,7 @@ export const constructSpaceActions = ({
   if (state === SpaceState.SPACE_READY && !hasPendingMigration) {
     actions.push(
       {
-        id: getId(SpaceAction.OpenCreateObject._tag),
+        id: getId(SpaceOperation.OpenCreateObject.meta.key),
         type: Node.ActionType,
         data: async () => {
           await invokePromise(SpaceOperation.OpenCreateObject, { target: space.db });
@@ -306,7 +306,7 @@ export const constructSpaceActions = ({
         },
       },
       {
-        id: getId(SpaceAction.Rename._tag),
+        id: getId(SpaceOperation.Rename.meta.key),
         type: Node.ActionType,
         data: async (params?: Node.InvokeProps) => {
           await invokePromise(SpaceOperation.Rename, { space, caller: params?.caller });
@@ -364,7 +364,7 @@ export const createStaticSchemaActions = ({
 
   const actions: Node.NodeArg<Node.ActionData>[] = [
     {
-      id: getId(SpaceAction.AddObject._tag),
+      id: getId(SpaceOperation.AddObject.meta.key),
       type: Node.ActionType,
       data: async () => {
         await invokePromise(SpaceOperation.OpenCreateObject, {
@@ -381,7 +381,7 @@ export const createStaticSchemaActions = ({
       },
     },
     {
-      id: getId(SpaceAction.RenameObject._tag),
+      id: getId(SpaceOperation.RenameObject.meta.key),
       type: Node.ActionType,
       data: async (params?: Node.InvokeProps) => {
         throw new Error('Not implemented');
@@ -395,7 +395,7 @@ export const createStaticSchemaActions = ({
       },
     },
     {
-      id: getId(SpaceAction.RemoveObjects._tag),
+      id: getId(SpaceOperation.RemoveObjects.meta.key),
       type: Node.ActionType,
       data: async () => {
         const index = space.properties.staticRecords.findIndex(
@@ -414,7 +414,7 @@ export const createStaticSchemaActions = ({
       },
     },
     {
-      id: getId(SpaceAction.Snapshot._tag),
+      id: getId(SpaceOperation.Snapshot.meta.key),
       type: Node.ActionType,
       data: async () => {
         const result = await invokePromise(SpaceOperation.Snapshot, {
@@ -552,7 +552,7 @@ export const constructObjectActions = ({
     ...(Obj.instanceOf(Collection.Collection, object)
       ? [
           {
-            id: getId(SpaceAction.OpenCreateObject._tag),
+            id: getId(SpaceOperation.OpenCreateObject.meta.key),
             type: Node.ActionType,
             data: async () => {
               await invokePromise(SpaceOperation.OpenCreateObject, { target: object });
@@ -569,7 +569,7 @@ export const constructObjectActions = ({
     ...(Obj.instanceOf(Type.PersistentType, object)
       ? [
           {
-            id: getId(SpaceAction.AddObject._tag),
+            id: getId(SpaceOperation.AddObject.meta.key),
             type: Node.ActionType,
             data: async () => {
               await invokePromise(SpaceOperation.OpenCreateObject, {
@@ -586,7 +586,7 @@ export const constructObjectActions = ({
             },
           },
           {
-            id: getId(SpaceAction.Snapshot._tag),
+            id: getId(SpaceOperation.Snapshot.meta.key),
             type: Node.ActionType,
             data: async () => {
               const result = await invokePromise(SpaceOperation.Snapshot, {
@@ -611,7 +611,7 @@ export const constructObjectActions = ({
     ...(createObject
       ? [
           {
-            id: getId(SpaceAction.OpenCreateObject._tag),
+            id: getId(SpaceOperation.OpenCreateObject.meta.key),
             type: Node.ActionType,
             data: async () => {
               if (inputSchema) {
@@ -644,7 +644,7 @@ export const constructObjectActions = ({
       ? []
       : [
           {
-            id: getId(SpaceAction.RenameObject._tag),
+            id: getId(SpaceOperation.RenameObject.meta.key),
             type: Node.ActionType,
             data: async (params?: Node.InvokeProps) => {
               await invokePromise(SpaceOperation.RenameObject, { object, caller: params?.caller });
@@ -661,7 +661,7 @@ export const constructObjectActions = ({
             },
           },
           {
-            id: getId(SpaceAction.RemoveObjects._tag),
+            id: getId(SpaceOperation.RemoveObjects.meta.key),
             type: Node.ActionType,
             data: async () => {
               const collection = Graph.getConnections(graph, Obj.getDXN(object).toString(), 'inbound').find(

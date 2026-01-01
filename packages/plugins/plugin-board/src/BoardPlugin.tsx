@@ -8,7 +8,7 @@ import { Common, Plugin } from '@dxos/app-framework';
 import { type CreateObject } from '@dxos/plugin-space/types';
 import { translations as boardTranslations } from '@dxos/react-ui-board';
 
-import { IntentResolver, ReactSurface } from './capabilities';
+import { ReactSurface } from './capabilities';
 import { meta } from './meta';
 import { translations } from './translations';
 import { Board } from './types';
@@ -28,6 +28,5 @@ export const BoardPlugin = Plugin.define(meta).pipe(
   }),
   Common.Plugin.addSchemaModule({ schema: [Board.Board] }),
   Common.Plugin.addSurfaceModule({ activate: ReactSurface }),
-  Common.Plugin.addIntentResolverModule({ activate: IntentResolver }),
   Plugin.make,
 );

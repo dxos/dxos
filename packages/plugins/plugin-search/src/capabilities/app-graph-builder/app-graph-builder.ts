@@ -11,7 +11,7 @@ import { CreateAtom, GraphBuilder, NodeMatcher } from '@dxos/plugin-graph';
 import { parseId } from '@dxos/react-client/echo';
 
 import { meta } from '../../meta';
-import { SearchAction, SearchOperation } from '../../types';
+import { SearchOperation } from '../../types';
 
 export default Capability.makeModule((context) =>
   Effect.succeed(
@@ -44,7 +44,7 @@ export default Capability.makeModule((context) =>
         match: NodeMatcher.whenRoot,
         actions: () => [
           {
-            id: SearchAction.OpenSearch._tag,
+            id: SearchOperation.OpenSearch.meta.key,
             data: async () => {
               const { invokePromise } = context.getCapability(Common.Capability.OperationInvoker);
               await invokePromise(SearchOperation.OpenSearch);

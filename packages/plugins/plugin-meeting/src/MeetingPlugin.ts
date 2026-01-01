@@ -12,7 +12,6 @@ import { SpaceCapabilities, SpaceEvents } from '@dxos/plugin-space';
 import {
   AppGraphBuilder,
   CallExtension,
-  IntentResolver,
   MeetingSettings,
   MeetingState,
   OperationResolver,
@@ -63,7 +62,6 @@ export const MeetingPlugin = Plugin.define(meta).pipe(
     activate: Repair,
   }),
   Common.Plugin.addSurfaceModule({ activate: ReactSurface }),
-  Common.Plugin.addIntentResolverModule({ activate: IntentResolver }),
   Common.Plugin.addOperationResolverModule({ activate: OperationResolver }),
   Common.Plugin.addAppGraphModule({ activate: AppGraphBuilder }),
   Plugin.addModule({

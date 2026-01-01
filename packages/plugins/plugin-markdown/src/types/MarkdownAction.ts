@@ -11,24 +11,6 @@ import { meta } from '../meta';
 
 import { Document } from './Markdown';
 
-export class Create extends Schema.TaggedClass<Create>()(`${meta.id}/action/create`, {
-  input: Schema.Struct({
-    name: Schema.optional(Schema.String),
-    content: Schema.optional(Schema.String),
-  }),
-  output: Schema.Struct({
-    object: Document,
-  }),
-}) {}
-
-export class SetViewMode extends Schema.TaggedClass<SetViewMode>()(`${meta.id}/action/set-view-mode`, {
-  input: Schema.Struct({
-    id: Schema.String,
-    viewMode: EditorViewMode,
-  }),
-  output: Schema.Void,
-}) {}
-
 const MARKDOWN_OPERATION = `${meta.id}/operation`;
 
 export namespace MarkdownOperation {
@@ -45,6 +27,7 @@ export namespace MarkdownOperation {
     },
   });
 
+  // TODO(wittjosiah): This appears to be unused.
   export const SetViewMode = Operation.make({
     meta: { key: `${MARKDOWN_OPERATION}/set-view-mode`, name: 'Set View Mode' },
     schema: {

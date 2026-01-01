@@ -5,14 +5,14 @@
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
-import { Capability, Common, createIntent } from '@dxos/app-framework';
+import { Capability, Common } from '@dxos/app-framework';
 import { Obj } from '@dxos/echo';
 import { AttentionCapabilities } from '@dxos/plugin-attention';
 import { ATTENDABLE_PATH_SEPARATOR, DECK_COMPANION_TYPE, PLANK_COMPANION_TYPE } from '@dxos/plugin-deck/types';
 import { CreateAtom, GraphBuilder, NodeMatcher } from '@dxos/plugin-graph';
 
 import { meta } from '../../meta';
-import { Channel, ThreadAction, ThreadCapabilities } from '../../types';
+import { Channel, ThreadCapabilities, ThreadOperation } from '../../types';
 import { getAnchor } from '../../util';
 
 // TODO(wittjosiah): Highlight active calls in L1.
@@ -128,20 +128,18 @@ export default Capability.makeModule((context) =>
             {
               id: `${Obj.getDXN(object).toString()}/comment`,
               data: () => {
-                const { dispatchPromise: dispatch } = context.getCapability(Common.Capability.IntentDispatcher);
+                const { invokePromise } = context.getCapability(Common.Capability.OperationInvoker);
                 const metadata = resolve(Obj.getTypename(object)!);
                 const selection = selectionManager.getSelection(Obj.getDXN(object).toString());
                 // TODO(wittjosiah): Use presence of selection to determine if the comment should be anchored.
                 // Requires all components which support selection (e.g. table/kanban) to support anchored comments.
                 const anchor = metadata.comments === 'anchored' ? getAnchor(selection) : Date.now().toString();
                 const name = metadata.getAnchorLabel?.(object, anchor);
-                void dispatch(
-                  createIntent(ThreadAction.Create, {
-                    anchor,
-                    name,
-                    subject: object,
-                  }),
-                );
+                void invokePromise(ThreadOperation.Create, {
+                  anchor,
+                  name,
+                  subject: object,
+                });
               },
               properties: {
                 label: ['add comment label', { ns: meta.id }],

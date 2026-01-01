@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
-import { Capability, Common, createIntent } from '@dxos/app-framework';
+import { Capability, Common } from '@dxos/app-framework';
 import { SubscriptionList } from '@dxos/async';
 import { Filter, Obj, Type } from '@dxos/echo';
 import { scheduledEffect } from '@dxos/echo-signals/core';
@@ -19,7 +19,7 @@ import { PublicKey } from '@dxos/react-client';
 import { SpaceState, parseId } from '@dxos/react-client/echo';
 import { ComplexMap, reduceGroupBy } from '@dxos/util';
 
-import { SpaceAction, SpaceCapabilities } from '../../types';
+import { SpaceCapabilities, SpaceOperation } from '../../types';
 import { COMPOSER_SPACE_LOCK, SHARED } from '../../util';
 
 const ACTIVE_NODE_BROADCAST_INTERVAL = 30_000;
@@ -33,7 +33,6 @@ export default Capability.makeModule((context) =>
     const subscriptions = new SubscriptionList();
     const spaceSubscriptions = new SubscriptionList();
 
-    const { dispatchPromise } = context.getCapability(Common.Capability.IntentDispatcher);
     const { invokePromise } = context.getCapability(Common.Capability.OperationInvoker);
     const { graph } = context.getCapability(Common.Capability.AppGraph);
     const layout = context.getCapability(Common.Capability.Layout);
@@ -79,7 +78,7 @@ export default Capability.makeModule((context) =>
             const timeout = setTimeout(async () => {
               const node = Graph.getNode(graph, id).pipe(Option.getOrNull);
               if (!node) {
-                await dispatchPromise(createIntent(SpaceAction.WaitForObject, { id }));
+                await invokePromise(SpaceOperation.WaitForObject, { id });
               }
             }, WAIT_FOR_OBJECT_TIMEOUT);
 

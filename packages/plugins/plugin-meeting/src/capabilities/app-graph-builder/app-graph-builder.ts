@@ -17,7 +17,7 @@ import { Channel } from '@dxos/plugin-thread/types';
 import { SpaceState, getSpace } from '@dxos/react-client/echo';
 
 import { meta } from '../../meta';
-import { Meeting, MeetingOperation, MeetingCapabilities } from '../../types';
+import { Meeting, MeetingCapabilities, MeetingOperation } from '../../types';
 
 export default Capability.makeModule((context) =>
   Effect.sync(() => {

@@ -18,7 +18,7 @@ export default Capability.makeModule((context) =>
     return Capability.contributes(
       Common.Capability.AppGraphBuilder,
       GraphBuilder.createExtension({
-        id: MapAction.Toggle._tag,
+        id: MapAction.MapOperation.Toggle.meta.key,
         match: (node) => {
           if (!Obj.instanceOf(View.View, node.data)) {
             return Option.none();

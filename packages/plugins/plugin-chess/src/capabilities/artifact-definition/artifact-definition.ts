@@ -10,17 +10,17 @@ import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
 import { ToolResult, createTool } from '@dxos/ai';
-import { Capabilities, Capability, type PromiseIntentDispatcher, createIntent } from '@dxos/app-framework';
+import { Capabilities, Capability, type PromiseIntentDispatcher } from '@dxos/app-framework';
 import { ArtifactId, VersionPin, createArtifactElement } from '@dxos/assistant';
 import { defineArtifact } from '@dxos/blueprints';
 import { Obj } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
-import { SpaceAction } from '@dxos/plugin-space/types';
+import { SpaceOperation } from '@dxos/plugin-space/types';
 import { Filter, type Space } from '@dxos/react-client/echo';
 import { trim } from '@dxos/util';
 
 import { meta } from '../../meta';
-import { Chess, ChessAction } from '../../types';
+import { Chess } from '../../types';
 
 // TODO(burdon): Factor out.
 declare global {
@@ -51,20 +51,20 @@ export default Capability.makeModule(() =>
           }),
           execute: async ({ pgn }, { extensions }) => {
             invariant(extensions?.space, 'No space');
-            invariant(extensions?.dispatch, 'No intent dispatcher');
-            const createResult = await extensions.dispatch(createIntent(ChessAction.Create, { pgn }));
-            if (!createResult.data?.object) {
-              return ToolResult.Error('Failed to create chess game');
-            }
-            const { data, error } = await extensions.dispatch(
-              createIntent(SpaceAction.AddObject, { target: extensions.space, object: createResult.data.object }),
-            );
-            if (!data || error) {
+            invariant(extensions?.invoke, 'No operation invoker');
+
+            const game = Chess.make({ pgn });
+
+            const { data, error } = await extensions.invoke(SpaceOperation.AddObject, {
+              target: extensions.space,
+              object: game,
+            });
+            if (error) {
               return ToolResult.Error(error?.message ?? 'Failed to add chess game to space');
             }
 
-            return ToolResult.Success(createArtifactElement(data.id), [
-              VersionPin.createBlock(VersionPin.fromObject(data.object)),
+            return ToolResult.Success(createArtifactElement(game.id), [
+              VersionPin.createBlock(VersionPin.fromObject(game)),
             ]);
           },
         }),

@@ -27,11 +27,6 @@ export namespace ActivationEvent {
   export const SetupMetadata = ActivationEvent$.make('dxos.org/app-framework/event/setup-metadata');
 
   /**
-   * Fired before the intent dispatcher is activated.
-   */
-  export const SetupIntentResolver = ActivationEvent$.make('dxos.org/app-framework/event/setup-intent-resolver');
-
-  /**
    * Fired before the operation invoker is activated.
    */
   export const SetupOperationResolver = ActivationEvent$.make('dxos.org/app-framework/event/setup-operation-resolver');
@@ -67,11 +62,6 @@ export namespace ActivationEvent {
   //
   // Triggered Events
   //
-
-  /**
-   * Fired after the intent dispatcher is ready.
-   */
-  export const DispatcherReady = ActivationEvent$.make('dxos.org/app-framework/event/dispatcher-ready');
 
   /**
    * Fired after the operation invoker is ready.

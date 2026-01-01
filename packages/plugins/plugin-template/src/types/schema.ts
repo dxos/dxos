@@ -4,49 +4,19 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Obj } from '@dxos/echo';
-import { TypedObject } from '@dxos/echo/internal';
-import * as Operation from '@dxos/operation';
-import { ReactiveObjectSchema } from '@dxos/react-client/echo';
-
-import { meta } from '../meta';
+import { Obj, Type } from '@dxos/echo';
 
 export namespace Template {
-  export class Create extends Schema.TaggedClass<Create>()(`${meta.id}/action/create`, {
-    input: Schema.Struct({
-      name: Schema.optional(Schema.String),
-    }),
-    output: Schema.Struct({
-      object: ReactiveObjectSchema,
-    }),
-  }) {}
-
-  export class Data extends TypedObject({
-    typename: 'dxos.org/type/Data',
-    version: '0.1.0',
-  })({
+  export const Data = Schema.Struct({
     name: Schema.optional(Schema.String),
-  }) {}
+  }).pipe(
+    Type.Obj({
+      typename: 'dxos.org/type/Data',
+      version: '0.1.0',
+    }),
+  );
+
+  export type Data = Schema.Schema.Type<typeof Data>;
 
   export const make = (props: Partial<Data>) => Obj.make(Data, props);
-}
-
-//
-// Operations
-//
-
-const TEMPLATE_OPERATION = `${meta.id}/operation`;
-
-export namespace TemplateOperation {
-  export const Create = Operation.make({
-    meta: { key: `${TEMPLATE_OPERATION}/create`, name: 'Create Template' },
-    schema: {
-      input: Schema.Struct({
-        name: Schema.optional(Schema.String),
-      }),
-      output: Schema.Struct({
-        object: ReactiveObjectSchema,
-      }),
-    },
-  });
 }

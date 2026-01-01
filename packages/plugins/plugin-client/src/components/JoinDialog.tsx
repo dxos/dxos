@@ -18,10 +18,7 @@ export const JoinDialog = (props: JoinPanelProps) => {
   const { invokePromise } = useOperationInvoker();
   const { t } = useTranslation(meta.id);
 
-  const handleCancelResetStorage = useCallback(
-    () => invokePromise(ClientOperation.ShareIdentity),
-    [invokePromise],
-  );
+  const handleCancelResetStorage = useCallback(() => invokePromise(ClientOperation.ShareIdentity), [invokePromise]);
 
   const handleDone = useCallback(
     async (result: InvitationResult | null) => {

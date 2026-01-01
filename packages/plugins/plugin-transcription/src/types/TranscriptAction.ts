@@ -10,19 +10,6 @@ import { Transcript } from '@dxos/types';
 
 import { meta } from '../meta';
 
-/**
- * Endpoint to the calls service.
- */
-export class Create extends Schema.TaggedClass<Create>()(`${meta.id}/action/create`, {
-  input: Schema.Struct({
-    name: Schema.optional(Schema.String),
-    space: SpaceSchema,
-  }),
-  output: Schema.Struct({
-    object: Transcript.Transcript,
-  }),
-}) {}
-
 //
 // Operations
 //

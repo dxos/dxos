@@ -5,8 +5,8 @@
 import * as Effect from 'effect/Effect';
 import React, { useCallback, useMemo, useRef, useState } from 'react';
 
-import { Common, createIntent } from '@dxos/app-framework';
-import { useIntentDispatcher, useOperationInvoker, usePluginManager } from '@dxos/app-framework/react';
+import { Common } from '@dxos/app-framework';
+import { useOperationInvoker, usePluginManager } from '@dxos/app-framework/react';
 import { Database, Obj, Type } from '@dxos/echo';
 import { EntityKind, getTypeAnnotation } from '@dxos/echo/internal';
 import { runAndForwardErrors } from '@dxos/effect';
@@ -18,7 +18,7 @@ import { cardDialogContent, cardDialogHeader } from '@dxos/react-ui-stack';
 import { type Collection } from '@dxos/schema';
 
 import { meta } from '../../meta';
-import { SpaceAction } from '../../types';
+import { SpaceOperation } from '../../types';
 
 import { CreateObjectPanel, type CreateObjectPanelProps, type Metadata } from './CreateObjectPanel';
 
@@ -42,8 +42,7 @@ export const CreateObjectDialog = ({
 }: CreateObjectDialogProps) => {
   const manager = usePluginManager();
   const { t } = useTranslation(meta.id);
-  const { dispatch } = useIntentDispatcher();
-  const { invokePromise } = useOperationInvoker();
+  const { invoke, invokePromise } = useOperationInvoker();
   const [target, setTarget] = useState<Database.Database | Collection.Collection | undefined>(initialTarget);
   const [typename, setTypename] = useState<string | undefined>(initialTypename);
   const client = useClient();
@@ -88,13 +87,12 @@ export const CreateObjectDialog = ({
         if (isLiveObject(object) && !Obj.instanceOf(Type.PersistentType, object)) {
           // TODO(wittjosiah): Selection in navtree isn't working as expected when hidden typenames evals to true.
           const hidden = !metadata.addToCollectionOnCreate;
-          const addObjectIntent = createIntent(SpaceAction.AddObject, {
+          yield* invoke(SpaceOperation.AddObject, {
             target,
             object,
             hidden,
           });
           const shouldNavigate = _shouldNavigate ?? (() => true);
-          yield* dispatch(addObjectIntent);
           if (shouldNavigate(object)) {
             yield* Effect.promise(() =>
               invokePromise(Common.LayoutOperation.Open, { subject: [Obj.getDXN(object).toString()] }),
@@ -104,7 +102,7 @@ export const CreateObjectDialog = ({
           onCreateObject?.(object);
         }
       }).pipe(runAndForwardErrors),
-    [dispatch, target, _shouldNavigate],
+    [invoke, invokePromise, target, _shouldNavigate, manager.context, onCreateObject],
   );
 
   return (

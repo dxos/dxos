@@ -13,7 +13,7 @@ import { GraphBuilder } from '@dxos/plugin-graph';
 import { HasSubject } from '@dxos/types';
 
 import { meta } from '../../meta';
-import { OutlineAction } from '../../types';
+import { OutlineOperation } from '../../types';
 
 export default Capability.makeModule((context) =>
   Effect.sync(() => {
@@ -45,7 +45,7 @@ export default Capability.makeModule((context) =>
              * Menu item to create new Outline object with a relation to the existing object.
              */
             {
-              id: `${OutlineAction.CreateOutline._tag}/${id}`,
+              id: `${OutlineOperation.CreateOutline.meta.key}/${id}`,
               properties: {
                 label: ['create outline label', { ns: meta.id }],
                 icon: 'ph--tree-structure--regular',
@@ -54,7 +54,7 @@ export default Capability.makeModule((context) =>
               data: async () => {
                 invariant(db);
                 const { invokePromise } = context.getCapability(Common.Capability.OperationInvoker);
-                const { data } = await invokePromise(OutlineAction.OutlineOperation.CreateOutline, {});
+                const { data } = await invokePromise(OutlineOperation.CreateOutline, {});
                 if (data?.object) {
                   db.add(data.object);
                   db.add(

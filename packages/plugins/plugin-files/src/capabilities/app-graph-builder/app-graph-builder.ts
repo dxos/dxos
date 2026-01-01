@@ -9,7 +9,7 @@ import { Capability, Common } from '@dxos/app-framework';
 import { CreateAtom, GraphBuilder, NodeMatcher } from '@dxos/plugin-graph';
 
 import { meta } from '../../meta';
-import { FileCapabilities, type FilesSettingsProps, LocalFilesAction, LocalFilesOperation } from '../../types';
+import { FileCapabilities, type FilesSettingsProps, LocalFilesOperation } from '../../types';
 import { isLocalDirectory, isLocalEntity, isLocalFile } from '../../util';
 
 export default Capability.makeModule((context) =>
@@ -23,7 +23,7 @@ export default Capability.makeModule((context) =>
         match: NodeMatcher.whenRoot,
         actions: () => [
           {
-            id: LocalFilesAction.Export._tag,
+            id: LocalFilesOperation.Export.meta.key,
             data: async () => {
               await invokePromise(LocalFilesOperation.Export);
             },
@@ -33,7 +33,7 @@ export default Capability.makeModule((context) =>
             },
           },
           {
-            id: LocalFilesAction.Import._tag,
+            id: LocalFilesOperation.Import.meta.key,
             data: async () => {
               await invokePromise(LocalFilesOperation.Import, {});
             },
@@ -78,7 +78,7 @@ export default Capability.makeModule((context) =>
         match: NodeMatcher.whenId(meta.id),
         actions: () => [
           {
-            id: LocalFilesAction.OpenFile._tag,
+            id: LocalFilesOperation.OpenFile.meta.key,
             data: async () => {
               const result = await invokePromise(LocalFilesOperation.OpenFile);
               if (result.data?.subject) {
@@ -145,7 +145,7 @@ export default Capability.makeModule((context) =>
         match: (node) => (isLocalEntity(node.data) ? Option.some(node.data) : Option.none()),
         actions: (entity) => [
           {
-            id: `${LocalFilesAction.Close._tag}:${entity.id}`,
+            id: `${LocalFilesOperation.Close.meta.key}:${entity.id}`,
             data: async () => {
               await invokePromise(LocalFilesOperation.Close, { id: entity.id });
             },
@@ -157,7 +157,7 @@ export default Capability.makeModule((context) =>
           ...(entity.permission !== 'granted'
             ? [
                 {
-                  id: `${LocalFilesAction.Reconnect._tag}:${entity.id}`,
+                  id: `${LocalFilesOperation.Reconnect.meta.key}:${entity.id}`,
                   data: async () => {
                     await invokePromise(LocalFilesOperation.Reconnect, { id: entity.id });
                   },
@@ -171,7 +171,7 @@ export default Capability.makeModule((context) =>
           ...(entity.permission === 'granted' && isLocalFile(entity)
             ? [
                 {
-                  id: `${LocalFilesAction.Save._tag}:${entity.id}`,
+                  id: `${LocalFilesOperation.Save.meta.key}:${entity.id}`,
                   data: async () => {
                     await invokePromise(LocalFilesOperation.Save, { id: entity.id });
                   },

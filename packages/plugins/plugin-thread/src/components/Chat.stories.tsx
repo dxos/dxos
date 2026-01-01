@@ -5,7 +5,7 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useState } from 'react';
 
-import { Capability, Common, IntentPlugin } from '@dxos/app-framework';
+import { Capability, Common, OperationPlugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { faker } from '@dxos/random';
 import { useClient } from '@dxos/react-client';
@@ -58,7 +58,7 @@ const meta = {
   decorators: [
     withTheme,
     withPluginManager({
-      plugins: [IntentPlugin()],
+      plugins: [OperationPlugin()],
       capabilities: [
         Capability.contributes(
           Common.Capability.ReactSurface,

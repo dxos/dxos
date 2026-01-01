@@ -9,7 +9,7 @@ import { GraphBuilder, NodeMatcher } from '@dxos/app-graph';
 
 import { SHORTCUTS_DIALOG } from '../../components';
 import { meta } from '../../meta';
-import { HelpAction, HelpCapabilities, HelpOperation } from '../../types';
+import { HelpCapabilities, HelpOperation } from '../../types';
 
 export default Capability.makeModule((context) =>
   Effect.succeed(
@@ -20,7 +20,7 @@ export default Capability.makeModule((context) =>
         match: NodeMatcher.whenRoot,
         actions: () => [
           {
-            id: HelpAction.Start._tag,
+            id: HelpOperation.Start.meta.key,
             data: async () => {
               const { invokePromise } = context.getCapability(Common.Capability.OperationInvoker);
               const state = context.getCapability(HelpCapabilities.MutableState);

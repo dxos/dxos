@@ -12,7 +12,7 @@ import { translations as formTranslations } from '@dxos/react-ui-form';
 import { translations as tableTranslations } from '@dxos/react-ui-table';
 import { Table } from '@dxos/react-ui-table/types';
 
-import { BlueprintDefinition, IntentResolver, OperationResolver, ReactSurface } from './capabilities';
+import { BlueprintDefinition, OperationResolver, ReactSurface } from './capabilities';
 import { meta } from './meta';
 import { translations } from './translations';
 import { CreateTableSchema, TableOperation } from './types';
@@ -55,7 +55,6 @@ export const TablePlugin = Plugin.define(meta).pipe(
       ),
   }),
   Common.Plugin.addSurfaceModule({ activate: ReactSurface }),
-  Common.Plugin.addIntentResolverModule({ activate: IntentResolver }),
   Common.Plugin.addOperationResolverModule({ activate: OperationResolver }),
   Common.Plugin.addBlueprintDefinitionModule({ activate: BlueprintDefinition }),
   Plugin.make,

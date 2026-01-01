@@ -18,6 +18,7 @@ export default Capability.makeModule((context) =>
             object: Markdown.make({ name, content }),
           }),
       }),
+      // TODO(wittjosiah): This appears to be unused.
       OperationResolver.make({
         operation: MarkdownOperation.SetViewMode,
         handler: ({ id, viewMode }) =>
@@ -29,4 +30,3 @@ export default Capability.makeModule((context) =>
     ]),
   ),
 );
-

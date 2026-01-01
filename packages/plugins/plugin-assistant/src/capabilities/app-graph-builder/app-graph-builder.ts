@@ -19,7 +19,7 @@ import { SpaceOperation } from '@dxos/plugin-space/types';
 import { Query } from '@dxos/react-client/echo';
 
 import { ASSISTANT_DIALOG, meta } from '../../meta';
-import { Assistant, AssistantAction, AssistantCapabilities } from '../../types';
+import { Assistant, AssistantCapabilities, AssistantOperation } from '../../types';
 
 export default Capability.makeModule((context) =>
   Effect.sync(() => {
@@ -31,10 +31,10 @@ export default Capability.makeModule((context) =>
           const id = Obj.getDXN(chat).toString();
           return [
             {
-              id: `${AssistantAction.UpdateChatName._tag}/${id}`,
+              id: `${AssistantOperation.UpdateChatName.meta.key}/${id}`,
               data: async () => {
                 const { invokePromise } = context.getCapability(Common.Capability.OperationInvoker);
-                await invokePromise(AssistantAction.AssistantOperation.UpdateChatName, { chat });
+                await invokePromise(AssistantOperation.UpdateChatName, { chat });
               },
               properties: {
                 label: ['chat update name label', { ns: meta.id }],
@@ -178,7 +178,7 @@ const getOrCreateChat = async (
     return chats.at(-1);
   }
 
-  const { data } = await invokePromise(AssistantAction.AssistantOperation.CreateChat, { db });
+  const { data } = await invokePromise(AssistantOperation.CreateChat, { db });
   invariant(Obj.instanceOf(Assistant.Chat, data?.object));
   await invokePromise(SpaceOperation.AddObject, { target: db, object: data.object });
   return data.object;

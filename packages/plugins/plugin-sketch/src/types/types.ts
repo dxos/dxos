@@ -11,21 +11,6 @@ import { meta } from '../meta';
 
 import * as Diagram from './Diagram';
 
-export namespace SketchAction {
-  const SKETCH_ACTION = `${meta.id}/action`;
-
-  export class Create extends Schema.TaggedClass<Create>()(`${SKETCH_ACTION}/create`, {
-    input: Schema.Struct({
-      name: Schema.optional(Schema.String),
-      schema: Schema.optional(Schema.String),
-      content: Schema.optional(Schema.Record({ key: Schema.String, value: Schema.Any })),
-    }),
-    output: Schema.Struct({
-      object: Diagram.Diagram,
-    }),
-  }) {}
-}
-
 const SKETCH_OPERATION = `${meta.id}/operation`;
 
 export namespace SketchOperation {

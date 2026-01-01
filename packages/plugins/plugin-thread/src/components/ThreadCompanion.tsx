@@ -4,8 +4,8 @@
 
 import React, { useCallback, useMemo } from 'react';
 
-import { Common, createIntent } from '@dxos/app-framework';
-import { useCapabilities, useCapability, useIntentDispatcher, useOperationInvoker } from '@dxos/app-framework/react';
+import { Common } from '@dxos/app-framework';
+import { useCapabilities, useCapability, useOperationInvoker } from '@dxos/app-framework/react';
 import { Filter, Obj, Query, Relation } from '@dxos/echo';
 import { Ref, useQuery } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
@@ -22,8 +22,7 @@ import { ThreadCapabilities, ThreadOperation } from '../types';
 
 export const ThreadCompanion = ({ subject }: { subject: any }) => {
   const { t } = useTranslation(meta.id);
-  const { dispatchPromise: dispatch } = useIntentDispatcher();
-  const { invoke, invokePromise } = useOperationInvoker();
+  const { invokePromise } = useOperationInvoker();
   const identity = useIdentity();
   const subjectId = Obj.getDXN(subject).toString();
 
@@ -122,16 +121,14 @@ export const ThreadCompanion = ({ subject }: { subject: any }) => {
         return;
       }
 
-      await dispatch(
-        createIntent(Common.CollaborationActions.AcceptProposal, {
-          subject,
-          anchor: anchor.anchor,
-          proposal,
-        }),
-      );
+      await invokePromise(Common.CollaborationOperation.AcceptProposal, {
+        subject,
+        anchor: anchor.anchor,
+        proposal,
+      });
       await invokePromise(ThreadOperation.ToggleResolved, { thread });
     },
-    [dispatch, invokePromise, subject],
+    [invokePromise, subject],
   );
 
   const comments = (

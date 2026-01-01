@@ -22,39 +22,6 @@ type PluginModuleOptions = Partial<
  * Helper functions for creating common plugin module patterns.
  */
 export namespace Plugin {
-  // TODO(wittjosiah): Restrict type to only allow intent resolvers.
-  export type IntentResolverModuleOptions = PluginModuleOptions;
-
-  /**
-   * Creates a module that contributes intent resolvers.
-   *
-   * @param options Module options including the activate function and optional configuration
-   * @returns A function that can be used with Plugin.addModule() in a pipe chain
-   *
-   * @example
-   * ```ts
-   * Plugin.define(meta).pipe(
-   *   Common.Plugin.addIntentResolverModule({
-   *     activate: (context) =>
-   *       Capability.contributes(Common.Capability.IntentResolver, [
-   *         createResolver({ intent: MyAction.DoSomething, resolve: ... })
-   *       ])
-   *   })
-   * )
-   * ```
-   */
-  export function addIntentResolverModule<T = void>(
-    options: IntentResolverModuleOptions,
-  ): (builder: Plugin$.PluginBuilder<T>) => Plugin$.PluginBuilder<T> {
-    return Plugin$.addModule({
-      id: Capability$.getModuleTag(options.activate) ?? options.id ?? 'intent-resolver',
-      activatesOn: options.activatesOn ?? ActivationEvent.SetupIntentResolver,
-      activatesBefore: options.activatesBefore,
-      activatesAfter: options.activatesAfter,
-      activate: options.activate,
-    });
-  }
-
   // TODO(wittjosiah): Restrict type to only allow operation handlers.
   export type OperationResolverModuleOptions = PluginModuleOptions;
 

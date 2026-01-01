@@ -10,7 +10,6 @@ import { type Observability } from '@dxos/observability';
 import {
   AppGraphBuilder,
   ClientReady,
-  IntentResolver,
   ObservabilitySettings,
   ObservabilityState,
   OperationResolver,
@@ -48,11 +47,6 @@ export const ObservabilityPlugin = Plugin.define<ObservabilityPluginOptions>(met
   })),
   Common.Plugin.addTranslationsModule({ translations }),
   Plugin.addModule(({ namespace }) => ({
-    id: Capability.getModuleTag(IntentResolver),
-    activatesOn: Common.ActivationEvent.SetupIntentResolver,
-    activate: (context) => IntentResolver({ context, namespace }),
-  })),
-  Plugin.addModule(({ namespace }) => ({
     id: Capability.getModuleTag(OperationResolver),
     activatesOn: Common.ActivationEvent.SetupOperationResolver,
     activate: (context) => OperationResolver({ context, namespace }),
@@ -62,7 +56,7 @@ export const ObservabilityPlugin = Plugin.define<ObservabilityPluginOptions>(met
   Plugin.addModule(({ namespace, observability }) => ({
     id: Capability.getModuleTag(ClientReady),
     activatesOn: ActivationEvent.allOf(
-      Common.ActivationEvent.DispatcherReady,
+      Common.ActivationEvent.OperationInvokerReady,
       ObservabilityEvents.StateReady,
       ClientReadyEvent,
     ),

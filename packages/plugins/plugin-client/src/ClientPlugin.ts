@@ -7,7 +7,6 @@ import { ActivationEvent, Capability, Common, Plugin } from '@dxos/app-framework
 import {
   AppGraphBuilder,
   Client,
-  IntentResolver,
   Migrations,
   OperationResolver,
   ReactContext,
@@ -53,7 +52,6 @@ export const ClientPlugin = Plugin.define<ClientPluginOptions>(meta).pipe(
     };
   }),
   Common.Plugin.addAppGraphModule({ activate: AppGraphBuilder }),
-  Common.Plugin.addIntentResolverModule({ activate: (context) => IntentResolver({ context }) }),
   Common.Plugin.addOperationResolverModule({ activate: (context) => OperationResolver({ context }) }),
   Common.Plugin.addTranslationsModule({ translations }),
   Plugin.make,

@@ -87,6 +87,7 @@
     "@dxos/shell": "workspace:*",
     "@dxos/types": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
+    "@dxos/ui-types": "workspace:*",
     "@dxos/util": "workspace:*",
     "@effect/cli": "catalog:",
     "@preact-signals/safe-react": "catalog:",

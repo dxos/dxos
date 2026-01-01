@@ -7,10 +7,9 @@ import * as Effect from 'effect/Effect';
 import { Capability, Common, OperationResolver } from '@dxos/app-framework';
 import { AiContextBinder, AiConversation } from '@dxos/assistant';
 import { Agent } from '@dxos/assistant-toolkit';
-import { Blueprint, Prompt, Template } from '@dxos/blueprints';
+import { Blueprint, Prompt } from '@dxos/blueprints';
 import { type Queue } from '@dxos/client/echo';
-import { Sequence } from '@dxos/conductor';
-import { Filter, Key, Obj, Ref, Type } from '@dxos/echo';
+import { Filter, Obj, Ref, Type } from '@dxos/echo';
 import { TracingService, serializeFunction } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { AutomationCapabilities } from '@dxos/plugin-automation';
@@ -93,40 +92,6 @@ export default Capability.makeModule((context) =>
             yield* Effect.promise(() =>
               new AiConversation(queue).use(async (conversation) => updateName(runtime, conversation, chat)),
             );
-          }),
-      }),
-      OperationResolver.make({
-        operation: AssistantOperation.CreateBlueprint,
-        handler: ({ key, name, description }) =>
-          Effect.succeed({
-            object: Blueprint.make({
-              key,
-              name,
-              description,
-              instructions: Template.make(),
-            }),
-          }),
-      }),
-      OperationResolver.make({
-        operation: AssistantOperation.CreatePrompt,
-        handler: ({ name }) =>
-          Effect.succeed({
-            object: Prompt.make({ name }),
-          }),
-      }),
-      OperationResolver.make({
-        operation: AssistantOperation.CreateSequence,
-        handler: ({ name }) =>
-          Effect.succeed({
-            object: Obj.make(Sequence, {
-              name,
-              steps: [
-                {
-                  id: Key.ObjectId.random(),
-                  instructions: 'You are a helpful assistant.',
-                },
-              ],
-            }),
           }),
       }),
       OperationResolver.make({

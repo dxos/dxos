@@ -13,50 +13,6 @@ import { meta } from '../meta';
 
 import { Meeting } from './Meeting';
 
-export class OnCreateSpace extends Schema.TaggedClass<OnCreateSpace>()(`${meta.id}/on-space-created`, {
-  input: Schema.Struct({
-    space: SpaceSchema,
-    rootCollection: Collection.Collection,
-    isDefault: Schema.Boolean.pipe(Schema.optional),
-  }),
-  output: Schema.Void,
-}) {}
-
-export class Create extends Schema.TaggedClass<Create>()(`${meta.id}/action/create`, {
-  input: Schema.Struct({
-    name: Schema.optional(Schema.String),
-    channel: Channel.Channel,
-  }),
-  output: Schema.Struct({
-    object: Meeting,
-  }),
-}) {}
-
-export class SetActive extends Schema.TaggedClass<SetActive>()(`${meta.id}/action/set-active`, {
-  input: Schema.Struct({
-    object: Schema.optional(Meeting),
-  }),
-  output: Schema.Struct({
-    object: Schema.optional(Meeting),
-  }),
-}) {}
-
-export class HandlePayload extends Schema.TaggedClass<HandlePayload>()(`${meta.id}/action/handle-payload`, {
-  input: Schema.Struct({
-    meetingId: Schema.optional(Schema.String),
-    transcriptDxn: Schema.optional(Schema.String),
-    transcriptionEnabled: Schema.optional(Schema.Boolean),
-  }),
-  output: Schema.Void,
-}) {}
-
-export class Summarize extends Schema.TaggedClass<Summarize>()(`${meta.id}/action/summarize`, {
-  input: Schema.Struct({
-    meeting: Meeting,
-  }),
-  output: Schema.Void,
-}) {}
-
 const MEETING_OPERATION = `${meta.id}/operation`;
 
 export namespace MeetingOperation {

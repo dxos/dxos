@@ -9,14 +9,13 @@ import { Button } from '@dxos/react-ui';
 
 import * as Common from '../../common';
 import { Capability } from '../../core';
-import { createIntent } from '../../plugin-intent';
-import { useIntentDispatcher } from '../../react';
+import { useOperationInvoker } from '../../react';
 
-import { Log } from './schema';
+import { LogOperation } from './schema';
 
 export const Logger = () => {
-  const { dispatchPromise } = useIntentDispatcher();
-  const handleClick = useCallback(() => dispatchPromise(createIntent(Log, { message: 'Hello, world!' })), []);
+  const { invokePromise } = useOperationInvoker();
+  const handleClick = useCallback(() => invokePromise(LogOperation, { message: 'Hello, world!' }), []);
   return <Button onClick={handleClick}>Log</Button>;
 };
 

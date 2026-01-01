@@ -29,47 +29,6 @@ export const CreateTableSchema = Schema.Struct({
 
 export type CreateTableType = Schema.Schema.Type<typeof CreateTableSchema>;
 
-export namespace TableAction {
-  const TABLE_ACTION = `${meta.id}/action`;
-
-  export class OnCreateSpace extends Schema.TaggedClass<OnCreateSpace>()(`${TABLE_ACTION}/on-space-created`, {
-    input: Schema.Struct({
-      space: SpaceSchema,
-    }),
-    output: Schema.Void,
-  }) {}
-
-  export class OnSchemaAdded extends Schema.TaggedClass<OnSchemaAdded>()(`${TABLE_ACTION}/on-schema-added`, {
-    input: Schema.Struct({
-      db: Database.Database,
-      // TODO(wittjosiah): Schema for schema?
-      schema: Schema.Any,
-      show: Schema.optional(Schema.Boolean),
-    }),
-    output: Schema.Void,
-  }) {}
-
-  export class Create extends Schema.TaggedClass<Create>()(`${TABLE_ACTION}/create`, {
-    input: Schema.extend(
-      Schema.Struct({
-        db: Database.Database,
-      }),
-      CreateTableSchema,
-    ),
-    output: Schema.Struct({
-      object: Table.Table,
-    }),
-  }) {}
-
-  export class AddRow extends Schema.TaggedClass<AddRow>()(`${TABLE_ACTION}/add-row`, {
-    input: Schema.Struct({
-      view: View.View,
-      data: Schema.Any,
-    }),
-    output: Schema.Void,
-  }) {}
-}
-
 const TABLE_OPERATION = `${meta.id}/operation`;
 
 export namespace TableOperation {
@@ -110,6 +69,7 @@ export namespace TableOperation {
     },
   });
 
+  // TODO(wittjosiah): This appears to be unused.
   export const AddRow = Operation.make({
     meta: { key: `${TABLE_OPERATION}/add-row`, name: 'Add Row' },
     schema: {

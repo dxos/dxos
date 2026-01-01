@@ -57,6 +57,7 @@ export default Capability.makeModule((context) =>
             return { object: table };
           }),
       }),
+      // TODO(wittjosiah): This appears to be unused.
       OperationResolver.make({
         operation: TableOperation.AddRow,
         handler: ({ view, data }) =>

@@ -13,12 +13,12 @@ export const NativePlugin = Plugin.define(meta).pipe(
   Common.Plugin.addTranslationsModule({ translations }),
   Plugin.addModule({
     id: 'updater',
-    activatesOn: Common.ActivationEvent.DispatcherReady,
+    activatesOn: Common.ActivationEvent.OperationInvokerReady,
     activate: Updater,
   }),
   Plugin.addModule({
     id: 'window',
-    activatesOn: Common.ActivationEvent.DispatcherReady,
+    activatesOn: Common.ActivationEvent.OperationInvokerReady,
     activate: Window,
   }),
   Plugin.addModule({

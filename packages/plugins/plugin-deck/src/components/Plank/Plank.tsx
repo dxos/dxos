@@ -23,7 +23,13 @@ import { mainIntrinsicSize, mx } from '@dxos/ui-theme';
 
 import { useCompanions, useMainSize } from '../../hooks';
 import { parseEntryId } from '../../layout';
-import { DeckCapabilities, DeckOperation, type DeckSettingsProps, type LayoutMode, type ResolvedPart } from '../../types';
+import {
+  DeckCapabilities,
+  DeckOperation,
+  type DeckSettingsProps,
+  type LayoutMode,
+  type ResolvedPart,
+} from '../../types';
 
 import { PlankContentError, PlankError } from './PlankError';
 import { PlankHeading } from './PlankHeading';

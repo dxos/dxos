@@ -18,7 +18,6 @@ import type { RootSettingsStore } from '@dxos/local-storage';
 import type { AnchoredTo } from '@dxos/types';
 
 import { Capability as Capability$, type PluginManager as PluginManager$ } from '../core';
-import type { AnyIntentResolver, IntentContext } from '../plugin-intent';
 import type {
   HistoryTracker as HistoryTracker$,
   OperationInvoker as OperationInvoker$,
@@ -79,20 +78,6 @@ export namespace Capability {
    * @category Capability
    */
   export const ReactSurface = Capability$.make<ReactSurface>('dxos.org/app-framework/common/react-surface');
-
-  export type IntentResolver = AnyIntentResolver | readonly AnyIntentResolver[];
-
-  /**
-   * @category Capability
-   */
-  export const IntentResolver = Capability$.make<IntentResolver>('dxos.org/app-framework/capability/intent-resolver');
-
-  /**
-   * @category Capability
-   */
-  export const IntentDispatcher = Capability$.make<IntentContext>(
-    'dxos.org/app-framework/capability/intent-dispatcher',
-  );
 
   export type Layout = Readonly<{
     mode: string;

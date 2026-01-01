@@ -13,13 +13,6 @@ import { meta } from '../meta';
 import * as File from './File';
 
 export namespace WnfsAction {
-  export class Create extends Schema.TaggedClass<Create>()(`${meta.id}/action/create`, {
-    input: Common.FileInfoSchema.pick('name', 'type', 'cid').pipe(Schema.required),
-    output: Schema.Struct({
-      object: File.File,
-    }),
-  }) {}
-
   export const UploadAnnotationId = Symbol.for(`${meta.id}/annotation/upload`);
 
   export const UploadFileSchema = Schema.Struct({
@@ -34,22 +27,6 @@ export namespace WnfsAction {
   });
 
   export type UploadFileForm = Schema.Schema.Type<typeof UploadFileSchema>;
-
-  export class Upload extends Schema.TaggedClass<Upload>()(`${meta.id}/action/upload`, {
-    input: Schema.extend(UploadFileSchema, Schema.Struct({ db: Database.Database })),
-    output: Schema.required(Common.FileInfoSchema),
-  }) {}
-
-  /**
-   * Consolidated action that uploads a file and creates a WNFS file object.
-   * Combines Upload and Create into a single action for use in CreateObject.
-   */
-  export class CreateFile extends Schema.TaggedClass<CreateFile>()(`${meta.id}/action/create-file`, {
-    input: Schema.extend(UploadFileSchema, Schema.Struct({ db: Database.Database })),
-    output: Schema.Struct({
-      object: File.File,
-    }),
-  }) {}
 }
 
 const WNFS_OPERATION = `${meta.id}/operation`;

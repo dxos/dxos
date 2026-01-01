@@ -20,7 +20,6 @@ import {
   AssistantState,
   BlueprintDefinition,
   EdgeModelResolver,
-  IntentResolver,
   LocalModelResolver,
   OperationResolver,
   ReactSurface,
@@ -31,7 +30,7 @@ import {
 import { AssistantEvents } from './events';
 import { meta } from './meta';
 import { translations } from './translations';
-import { Assistant, AssistantAction, AssistantOperation } from './types';
+import { Assistant, AssistantOperation } from './types';
 
 export const AssistantPlugin = Plugin.define(meta).pipe(
   Common.Plugin.addTranslationsModule({ translations }),
@@ -59,7 +58,7 @@ export const AssistantPlugin = Plugin.define(meta).pipe(
         metadata: {
           icon: 'ph--blueprint--regular',
           iconHue: 'sky',
-          inputSchema: AssistantAction.BlueprintForm,
+          inputSchema: AssistantOperation.BlueprintForm,
           createObject: ((props) => Effect.sync(() => Blueprint.make(props))) satisfies CreateObject,
         },
       },
@@ -110,7 +109,6 @@ export const AssistantPlugin = Plugin.define(meta).pipe(
     activate: Repair,
   }),
   Common.Plugin.addAppGraphModule({ activate: AppGraphBuilder }),
-  Common.Plugin.addIntentResolverModule({ activate: IntentResolver }),
   Common.Plugin.addOperationResolverModule({ activate: OperationResolver }),
   Common.Plugin.addSurfaceModule({
     activate: ReactSurface,

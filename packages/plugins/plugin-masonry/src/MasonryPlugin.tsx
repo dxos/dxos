@@ -8,7 +8,7 @@ import { Common, Plugin } from '@dxos/app-framework';
 import { Type } from '@dxos/echo';
 import { type CreateObject } from '@dxos/plugin-space/types';
 
-import { IntentResolver, ReactSurface } from './capabilities';
+import { ReactSurface } from './capabilities';
 import { meta } from './meta';
 import { translations } from './translations';
 import { Masonry, MasonryAction } from './types';
@@ -28,6 +28,5 @@ export const MasonryPlugin = Plugin.define(meta).pipe(
     },
   }),
   Common.Plugin.addSchemaModule({ schema: [Masonry.Masonry] }),
-  Common.Plugin.addIntentResolverModule({ activate: IntentResolver }),
   Plugin.make,
 );

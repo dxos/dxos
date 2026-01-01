@@ -3,6 +3,4 @@
 //
 
 export * from './app-graph-builder';
-export * from './intent-resolver';
-export * from './operation-resolver';
 export * from './react-surface';

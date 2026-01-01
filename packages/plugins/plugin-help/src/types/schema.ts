@@ -33,13 +33,6 @@ export const HelpContext: Context<HelpContextType> = createContext<HelpContextTy
   stop: () => {},
 });
 
-export namespace HelpAction {
-  export class Start extends Schema.TaggedClass<Start>()(`${meta.id}/action/start`, {
-    input: Schema.Void,
-    output: Schema.Void,
-  }) {}
-}
-
 const HELP_OPERATION = `${meta.id}/operation`;
 
 export namespace HelpOperation {

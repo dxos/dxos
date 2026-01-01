@@ -8,7 +8,7 @@ import { Common, Plugin } from '@dxos/app-framework';
 import { Diagram } from '@dxos/plugin-sketch/types';
 import { type CreateObject } from '@dxos/plugin-space/types';
 
-import { ExcalidrawSettings, IntentResolvers, OperationResolver, ReactSurface } from './capabilities';
+import { ExcalidrawSettings, OperationResolver, ReactSurface } from './capabilities';
 import { meta } from './meta';
 import { translations } from './translations';
 
@@ -28,7 +28,6 @@ export const ExcalidrawPlugin = Plugin.define(meta).pipe(
   }),
   Common.Plugin.addSchemaModule({ schema: [Diagram.Canvas, Diagram.Diagram] }),
   Common.Plugin.addSurfaceModule({ activate: ReactSurface }),
-  Common.Plugin.addIntentResolverModule({ activate: IntentResolvers }),
   Common.Plugin.addOperationResolverModule({ activate: OperationResolver }),
   Plugin.make,
 );

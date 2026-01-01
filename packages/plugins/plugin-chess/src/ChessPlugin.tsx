@@ -8,7 +8,7 @@ import { Common, Plugin } from '@dxos/app-framework';
 import { type CreateObject } from '@dxos/plugin-space/types';
 
 import { ChessBlueprint } from './blueprints';
-import { BlueprintDefinition, IntentResolver, ReactSurface } from './capabilities';
+import { BlueprintDefinition, ReactSurface } from './capabilities';
 import { meta } from './meta';
 import { translations } from './translations';
 import { Chess } from './types';
@@ -29,7 +29,6 @@ export const ChessPlugin = Plugin.define(meta).pipe(
   }),
   Common.Plugin.addSchemaModule({ schema: [Chess.Game] }),
   Common.Plugin.addSurfaceModule({ activate: ReactSurface }),
-  Common.Plugin.addIntentResolverModule({ activate: IntentResolver }),
   Common.Plugin.addBlueprintDefinitionModule({ activate: BlueprintDefinition }),
   Plugin.make,
 );

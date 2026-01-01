@@ -4,10 +4,8 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Database } from '@dxos/echo';
 import * as Operation from '@dxos/operation';
 import { TypeInputOptionsAnnotation } from '@dxos/plugin-space/types';
-import { Kanban } from '@dxos/react-ui-kanban/types';
 import { FieldSchema, View } from '@dxos/schema';
 
 import { meta } from '../meta';
@@ -50,55 +48,9 @@ export const CreateKanbanSchema = Schema.Struct({
   ),
 });
 
-export namespace KanbanAction {
-  const KANBAN_ACTION = `${meta.id}/action`;
-
-  export class Create extends Schema.TaggedClass<Create>()(`${KANBAN_ACTION}/create`, {
-    input: Schema.extend(Schema.Struct({ db: Database.Database }), CreateKanbanSchema),
-    output: Schema.Struct({
-      object: Kanban.Kanban,
-    }),
-  }) {}
-
-  export class DeleteCardField extends Schema.TaggedClass<DeleteCardField>()(`${KANBAN_ACTION}/delete-card-field`, {
-    input: Schema.Struct({
-      view: View.View,
-      fieldId: Schema.String,
-      // TODO(wittjosiah): Separate fields for undo data?
-      deletionData: Schema.optional(
-        Schema.Struct({
-          field: FieldSchema,
-          // TODO(wittjosiah): This creates a type error.
-          // props: PropertySchema,
-          props: Schema.Any,
-          index: Schema.Number,
-        }),
-      ),
-    }),
-    output: Schema.Void,
-  }) {}
-
-  export class DeleteCard extends Schema.TaggedClass<DeleteCard>()(`${KANBAN_ACTION}/delete-card`, {
-    input: Schema.Struct({
-      card: Schema.Any, // The card object to delete
-    }),
-    output: Schema.Void,
-  }) {}
-}
-
 const KANBAN_OPERATION = `${meta.id}/operation`;
 
 export namespace KanbanOperation {
-  export const Create = Operation.make({
-    meta: { key: `${KANBAN_OPERATION}/create`, name: 'Create Kanban' },
-    schema: {
-      input: Schema.extend(Schema.Struct({ db: Database.Database }), CreateKanbanSchema),
-      output: Schema.Struct({
-        object: Kanban.Kanban,
-      }),
-    },
-  });
-
   export const DeleteCardFieldOutput = Schema.Struct({
     field: FieldSchema.annotations({ description: 'The deleted field schema.' }),
     props: Schema.Any.annotations({ description: 'The deleted field properties.' }),

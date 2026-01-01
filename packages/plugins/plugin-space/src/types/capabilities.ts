@@ -5,10 +5,11 @@
 import type * as Effect from 'effect/Effect';
 import type * as Schema from 'effect/Schema';
 
-import { Capability, type Label } from '@dxos/app-framework';
+import { Capability } from '@dxos/app-framework';
 import { type Space } from '@dxos/client/echo';
 import { type Database } from '@dxos/echo';
 import { type Collection } from '@dxos/schema';
+import { type Label } from '@dxos/ui-types';
 import { type DeepReadonly, type Position } from '@dxos/util';
 
 import { meta } from '../meta';

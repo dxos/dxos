@@ -22,7 +22,7 @@ import { type Space } from '@dxos/react-client/echo';
 import { type Message } from '@dxos/types';
 
 import { meta } from '../../meta';
-import { Meeting, MeetingOperation, MeetingCapabilities } from '../../types';
+import { Meeting, MeetingCapabilities, MeetingOperation } from '../../types';
 
 // TODO(wittjosiah): Factor out.
 // TODO(wittjosiah): Can we stop using protobuf for this?

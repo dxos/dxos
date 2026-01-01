@@ -4,7 +4,6 @@
 
 export * from './app-graph-builder';
 export * from './client-ready';
-export * from './intent-resolver';
 export * from './operation-resolver';
 export * from './react-surface';
 export * from './settings';

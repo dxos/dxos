@@ -7,14 +7,13 @@ import * as Effect from 'effect/Effect';
 import * as Predicate from 'effect/Predicate';
 
 import { Capability, Common, OperationResolver } from '@dxos/app-framework';
-import { Obj } from '@dxos/echo';
 import { Script } from '@dxos/functions';
 import { TokenManagerOperation } from '@dxos/plugin-token-manager/types';
 
 import { DEPLOYMENT_DIALOG } from '../../components';
 import { defaultScriptsForIntegration } from '../../meta';
 import { templates } from '../../templates';
-import { Notebook, ScriptOperation } from '../../types';
+import { ScriptOperation } from '../../types';
 
 export default Capability.makeModule((context) =>
   Effect.succeed(
@@ -54,13 +53,6 @@ export default Capability.makeModule((context) =>
           }),
       }),
       OperationResolver.make({
-        operation: ScriptOperation.CreateNotebook,
-        handler: ({ name }) =>
-          Effect.succeed({
-            object: Obj.make(Notebook.Notebook, { name, cells: [] }),
-          }),
-      }),
-      OperationResolver.make({
         operation: TokenManagerOperation.AccessTokenCreated,
         handler: ({ accessToken }) =>
           Effect.gen(function* () {
@@ -82,4 +74,3 @@ export default Capability.makeModule((context) =>
     ]),
   ),
 );
-

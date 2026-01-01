@@ -5,7 +5,6 @@
 export * from './app-graph-builder';
 export * from './blueprint-definition';
 export * from './call-manager';
-export * from './intent-resolver';
 export * from './markdown';
 export * from './operation-resolver';
 export * from './react-root';

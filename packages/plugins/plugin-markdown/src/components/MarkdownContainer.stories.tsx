@@ -5,7 +5,7 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useMemo } from 'react';
 
-import { Common, IntentPlugin, OperationPlugin, SettingsPlugin } from '@dxos/app-framework';
+import { Common, OperationPlugin, SettingsPlugin } from '@dxos/app-framework';
 import { Surface, useOperationInvoker } from '@dxos/app-framework/react';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Obj, Query } from '@dxos/echo';
@@ -101,7 +101,7 @@ const meta = {
         }),
         SpacePlugin({}),
         GraphPlugin(),
-        IntentPlugin(),
+        OperationPlugin(),
         OperationPlugin(),
         SettingsPlugin(),
         // UI

@@ -9,18 +9,18 @@ import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
 import { ToolResult, createTool } from '@dxos/ai';
-import { Capabilities, Capability, type PromiseIntentDispatcher, createIntent } from '@dxos/app-framework';
+import { Capabilities, Capability, type PromiseIntentDispatcher } from '@dxos/app-framework';
 import { createArtifactElement } from '@dxos/assistant';
 import { defineArtifact } from '@dxos/blueprints';
 import { Obj, Query } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
-import { SpaceAction } from '@dxos/plugin-space/types';
+import { SpaceOperation } from '@dxos/plugin-space/types';
 import { Filter, type Space } from '@dxos/react-client/echo';
-import { TableView } from '@dxos/react-ui-table/types';
+import { Table, TableView } from '@dxos/react-ui-table/types';
+import { View } from '@dxos/schema';
 import { isNonNullable } from '@dxos/util';
 
 import { meta } from '../../meta';
-import { TableAction } from '../../types';
 
 // TODO(burdon): Factor out.
 declare global {
@@ -67,7 +67,7 @@ export default Capability.makeModule(() =>
           }),
           execute: async ({ typename, name }, { extensions }) => {
             invariant(extensions?.space, 'No space');
-            invariant(extensions?.dispatch, 'No intent dispatcher');
+            invariant(extensions?.invoke, 'No operation invoker');
 
             // Validate schema exists first.
             const schema = await extensions.space.db.schemaRegistry.query({ typename }).firstOrUndefined();
@@ -75,29 +75,21 @@ export default Capability.makeModule(() =>
               return ToolResult.Error(`Schema not found: ${typename}`);
             }
 
-            const createResult = await extensions.dispatch(
-              createIntent(TableAction.Create, {
-                space: extensions.space,
-                typename,
-                name: name ?? schema.typename,
-              }),
-            );
-            if (!createResult.data?.object) {
-              return ToolResult.Error('Failed to create table');
-            }
-            const { data, error } = await extensions.dispatch(
-              createIntent(SpaceAction.AddObject, { target: extensions.space, object: createResult.data.object }),
-            );
-            if (!data || error) {
+            const { view, jsonSchema } = await View.makeFromDatabase({
+              db: extensions.space.db,
+              typename,
+            });
+            const table = Table.make({ name: name ?? schema.typename, view, jsonSchema });
+
+            const { error } = await extensions.invoke(SpaceOperation.AddObject, {
+              target: extensions.space,
+              object: table,
+            });
+            if (error) {
               return ToolResult.Error(error?.message ?? 'Failed to create table');
             }
 
-            // Verify the table was created with a view
-            const table = data.object;
-            const view = await table.view?.load();
-            invariant(view, 'Table view was not initialized correctly');
-
-            return ToolResult.Success(createArtifactElement(data.id));
+            return ToolResult.Success(createArtifactElement(table.id));
           },
         }),
         createTool(meta.id, {
@@ -191,7 +183,7 @@ export default Capability.makeModule(() =>
           }),
           execute: async ({ id, data }, { extensions }) => {
             invariant(extensions?.space, 'No space');
-            invariant(extensions?.dispatch, 'No intent dispatcher');
+            invariant(extensions?.invoke, 'No operation invoker');
 
             const space = extensions.space;
             const view = (await space.db
@@ -215,8 +207,12 @@ export default Capability.makeModule(() =>
 
             // Add rows sequentially.
             for (const row of data) {
-              const intent = createIntent(TableAction.AddRow, { view, data: row });
-              const { error } = await extensions.dispatch(intent);
+              const object = Obj.make(schema, row);
+              const { error } = await extensions.invoke(SpaceOperation.AddObject, {
+                target: space.db,
+                object,
+                hidden: true,
+              });
               if (error) {
                 return ToolResult.Error(error?.message ?? 'Failed to add rows to table');
               }

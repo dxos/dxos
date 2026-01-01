@@ -3,4 +3,3 @@
 //
 
 export * as Board from './Board';
-export { BoardOperation } from './Board';

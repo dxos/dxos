@@ -185,7 +185,8 @@ export default Capability.makeModule((context) =>
         handler: ({ rootDir: rootDirInput }) =>
           Effect.gen(function* () {
             const rootDir =
-              rootDirInput ?? (yield* Effect.promise(async () => (window as any).showDirectoryPicker({ mode: 'read' })));
+              rootDirInput ??
+              (yield* Effect.promise(async () => (window as any).showDirectoryPicker({ mode: 'read' })));
             if (!rootDir) {
               return;
             }
@@ -329,4 +330,3 @@ export default Capability.makeModule((context) =>
     ]);
   }),
 );
-

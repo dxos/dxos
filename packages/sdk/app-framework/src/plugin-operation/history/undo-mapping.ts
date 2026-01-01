@@ -4,7 +4,7 @@
 
 import type { OperationDefinition } from '@dxos/operation';
 
-import type { Label } from '../../plugin-intent';
+import type { Label } from '../../common/translations';
 
 /**
  * Extract the input type from an OperationDefinition.
@@ -59,10 +59,7 @@ export interface UndoMapping<
 /**
  * Props for creating an UndoMapping.
  */
-export interface UndoMappingProps<
-  Op extends OperationDefinition<any, any>,
-  Inv extends OperationDefinition<any, any>,
-> {
+export interface UndoMappingProps<Op extends OperationDefinition<any, any>, Inv extends OperationDefinition<any, any>> {
   /** The forward operation. */
   operation: Op;
 
@@ -130,4 +127,3 @@ export const resolveMessage = <Op extends OperationDefinition<any, any>>(
   }
   return message;
 };
-

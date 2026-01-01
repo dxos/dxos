@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
-import { ActivationEvent, Capability, Common, Plugin, createIntent } from '@dxos/app-framework';
+import { ActivationEvent, Capability, Common, Plugin } from '@dxos/app-framework';
 import { Ref, Tag, Type } from '@dxos/echo';
 import { AttentionEvents } from '@dxos/plugin-attention';
 import { ClientEvents } from '@dxos/plugin-client';
@@ -30,7 +30,6 @@ import {
   AppGraphBuilder,
   AppGraphSerializer,
   IdentityCreated,
-  IntentResolver,
   OperationResolver,
   ReactRoot,
   ReactSurface,
@@ -42,7 +41,7 @@ import {
 import { SpaceEvents } from './events';
 import { meta } from './meta';
 import { translations } from './translations';
-import { type CreateObject, SpaceAction, type SpacePluginOptions } from './types';
+import { type CreateObject, SpaceOperation, type SpacePluginOptions } from './types';
 
 export const SpacePlugin = Plugin.define<SpacePluginOptions>(meta).pipe(
   Plugin.addModule({
@@ -76,19 +75,19 @@ export const SpacePlugin = Plugin.define<SpacePluginOptions>(meta).pipe(
         metadata: {
           icon: 'ph--database--regular',
           iconHue: 'green',
-          inputSchema: SpaceAction.StoredSchemaForm,
+          inputSchema: SpaceOperation.StoredSchemaForm,
           createObject: ((props, { db, context }) =>
             Effect.gen(function* () {
-              const { dispatch } = context.getCapability(Common.Capability.IntentDispatcher);
+              const { invoke } = context.getCapability(Common.Capability.OperationInvoker);
               if (props.typename) {
-                const result = yield* dispatch(
-                  createIntent(SpaceAction.UseStaticSchema, { db, typename: props.typename }),
-                );
+                const result = yield* invoke(SpaceOperation.UseStaticSchema, { db, typename: props.typename });
                 return result as any;
               } else {
-                const result = yield* dispatch(
-                  createIntent(SpaceAction.AddSchema, { db, name: props.name, schema: createDefaultSchema() }),
-                );
+                const result = yield* invoke(SpaceOperation.AddSchema, {
+                  db,
+                  name: props.name,
+                  schema: createDefaultSchema(),
+                });
                 return result.object;
               }
             })) satisfies CreateObject,
@@ -152,21 +151,6 @@ export const SpacePlugin = Plugin.define<SpacePluginOptions>(meta).pipe(
       activate: () => ReactSurface({ createInvitationUrl }),
     };
   }),
-  Plugin.addModule(
-    ({ invitationUrl = window.location.origin, invitationProp = 'spaceInvitationCode', observability = false }) => {
-      const createInvitationUrl = (invitationCode: string) => {
-        const baseUrl = new URL(invitationUrl);
-        baseUrl.searchParams.set(invitationProp, invitationCode);
-        return baseUrl.toString();
-      };
-
-      return {
-        id: Capability.getModuleTag(IntentResolver),
-        activatesOn: Common.ActivationEvent.SetupIntentResolver,
-        activate: (context) => IntentResolver({ context, createInvitationUrl, observability }),
-      };
-    },
-  ),
   Common.Plugin.addAppGraphModule({ activate: AppGraphBuilder }),
   Plugin.addModule(
     ({ invitationUrl = window.location.origin, invitationProp = 'spaceInvitationCode', observability = false }) => {
@@ -194,7 +178,7 @@ export const SpacePlugin = Plugin.define<SpacePluginOptions>(meta).pipe(
   }),
   Plugin.addModule({
     activatesOn: ActivationEvent.allOf(
-      Common.ActivationEvent.DispatcherReady,
+      Common.ActivationEvent.OperationInvokerReady,
       Common.ActivationEvent.LayoutReady,
       Common.ActivationEvent.AppGraphReady,
       AttentionEvents.AttentionReady,

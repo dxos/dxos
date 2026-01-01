@@ -12,31 +12,11 @@ import { ClientCapabilities } from '@dxos/plugin-client/types';
 import { SpaceOperation } from '@dxos/plugin-space/types';
 import { Organization, Person } from '@dxos/types';
 
-import { Calendar, InboxOperation, Mailbox } from '../../types';
+import { InboxOperation } from '../../types';
 
 export default Capability.makeModule((context) =>
   Effect.succeed(
     Capability.contributes(Common.Capability.OperationResolver, [
-      OperationResolver.make({
-        operation: InboxOperation.CreateMailbox,
-        handler: ({ db, name }) =>
-          Effect.sync(() => {
-            const client = context.getCapability(ClientCapabilities.Client);
-            const space = client.spaces.get(db.spaceId);
-            invariant(space, 'Space not found');
-            return { object: Mailbox.make({ name, space }) };
-          }),
-      }),
-      OperationResolver.make({
-        operation: InboxOperation.CreateCalendar,
-        handler: ({ db, name }) =>
-          Effect.sync(() => {
-            const client = context.getCapability(ClientCapabilities.Client);
-            const space = client.spaces.get(db.spaceId);
-            invariant(space, 'Space not found');
-            return { object: Calendar.make({ space, name }) };
-          }),
-      }),
       OperationResolver.make({
         operation: InboxOperation.ExtractContact,
         handler: ({ db, actor }) =>

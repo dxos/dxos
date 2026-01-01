@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 import { Common, Plugin } from '@dxos/app-framework';
 import { type CreateObject } from '@dxos/plugin-space/types';
 
-import { IntentResolver, ReactSurface } from './capabilities';
+import { ReactSurface } from './capabilities';
 import { meta } from './meta';
 import { translations } from './translations';
 import { Template } from './types';
@@ -27,6 +27,5 @@ export const TemplatePlugin = Plugin.define(meta).pipe(
   }),
   Common.Plugin.addSchemaModule({ schema: [Template.Data] }),
   Common.Plugin.addSurfaceModule({ activate: ReactSurface }),
-  Common.Plugin.addIntentResolverModule({ activate: IntentResolver }),
   Plugin.make,
 );

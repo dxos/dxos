@@ -13,7 +13,6 @@ import {
   AppGraphBuilder,
   BlueprintDefinition,
   Compiler,
-  IntentResolver,
   OperationResolver,
   ReactSurface,
   ScriptSettings,
@@ -21,7 +20,7 @@ import {
 import { ScriptEvents } from './events';
 import { meta } from './meta';
 import { translations } from './translations';
-import { Notebook, ScriptAction } from './types';
+import { Notebook, ScriptOperation } from './types';
 
 export const ScriptPlugin = Plugin.define(meta).pipe(
   Plugin.addModule({
@@ -42,8 +41,13 @@ export const ScriptPlugin = Plugin.define(meta).pipe(
           iconHue: 'sky',
           // TODO(wittjosiah): Move out of metadata.
           loadReferences: async (script: Script.Script) => await Ref.Array.loadAll([script.source]),
-          inputSchema: ScriptAction.ScriptProps,
-          createObject: ((props) => Effect.sync(() => Script.make(props))) satisfies CreateObject,
+          inputSchema: ScriptOperation.ScriptProps,
+          createObject: ((props, { context }) =>
+            Effect.gen(function* () {
+              const { invoke } = context.getCapability(Common.Capability.OperationInvoker);
+              const { object } = yield* invoke(ScriptOperation.CreateScript, props);
+              return object;
+            })) satisfies CreateObject,
           addToCollectionOnCreate: true,
         },
       },
@@ -52,7 +56,7 @@ export const ScriptPlugin = Plugin.define(meta).pipe(
         metadata: {
           icon: 'ph--notebook--regular',
           iconHue: 'sky',
-          inputSchema: ScriptAction.NotebookProps,
+          inputSchema: ScriptOperation.NotebookProps,
           createObject: ((props) => Effect.sync(() => Notebook.make(props))) satisfies CreateObject,
           addToCollectionOnCreate: true,
         },
@@ -62,7 +66,6 @@ export const ScriptPlugin = Plugin.define(meta).pipe(
   Common.Plugin.addAppGraphModule({ activate: AppGraphBuilder }),
   Common.Plugin.addSchemaModule({ schema: [Script.Script] }),
   Common.Plugin.addSurfaceModule({ activate: ReactSurface }),
-  Common.Plugin.addIntentResolverModule({ activate: IntentResolver }),
   Common.Plugin.addOperationResolverModule({ activate: OperationResolver }),
   Common.Plugin.addBlueprintDefinitionModule({ activate: BlueprintDefinition }),
   Plugin.make,

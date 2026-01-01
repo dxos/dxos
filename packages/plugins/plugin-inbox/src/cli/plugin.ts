@@ -4,11 +4,12 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capability, Common, Plugin } from '@dxos/app-framework';
+import { Common, Plugin } from '@dxos/app-framework';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { type CreateObject } from '@dxos/plugin-space/types';
 import { Event, Message } from '@dxos/types';
 
+import { OperationResolver } from '../capabilities/operation-resolver';
 import { meta } from '../meta';
 import { Calendar, Mailbox } from '../types';
 
@@ -45,8 +46,6 @@ export const InboxPlugin = Plugin.define(meta).pipe(
       },
     ],
   }),
-  Common.Plugin.addIntentResolverModule({
-    activate: Capability.lazy('IntentResolver', () => import('../capabilities/intent-resolver/intent-resolver')),
-  }),
+  Common.Plugin.addOperationResolverModule({ activate: OperationResolver }),
   Plugin.make,
 );

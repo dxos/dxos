@@ -8,7 +8,7 @@ import { Common, Plugin } from '@dxos/app-framework';
 import { Type } from '@dxos/echo';
 import { type CreateObject } from '@dxos/plugin-space/types';
 
-import { AppGraphBuilder, BlueprintDefinition, IntentResolver, MapState, OperationResolver, ReactSurface } from './capabilities';
+import { AppGraphBuilder, BlueprintDefinition, MapState, OperationResolver, ReactSurface } from './capabilities';
 import { meta } from './meta';
 import { translations } from './translations';
 import { Map, MapAction } from './types';
@@ -36,7 +36,6 @@ export const MapPlugin = Plugin.define(meta).pipe(
   }),
   Common.Plugin.addSchemaModule({ schema: [Map.Map] }),
   Common.Plugin.addSurfaceModule({ activate: ReactSurface }),
-  Common.Plugin.addIntentResolverModule({ activate: IntentResolver }),
   Common.Plugin.addOperationResolverModule({ activate: OperationResolver }),
   Common.Plugin.addAppGraphModule({ activate: AppGraphBuilder }),
   Common.Plugin.addBlueprintDefinitionModule({ activate: BlueprintDefinition }),

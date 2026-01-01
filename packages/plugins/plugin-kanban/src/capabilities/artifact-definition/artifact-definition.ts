@@ -9,19 +9,18 @@ import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
 import { ToolResult, createTool } from '@dxos/ai';
-import { Capabilities, Capability, type PromiseIntentDispatcher, createIntent } from '@dxos/app-framework';
+import { Capabilities, Capability, type PromiseIntentDispatcher } from '@dxos/app-framework';
 import { createArtifactElement } from '@dxos/assistant';
 import { defineArtifact } from '@dxos/blueprints';
 import { Obj, Query } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
-import { SpaceAction } from '@dxos/plugin-space/types';
+import { SpaceOperation } from '@dxos/plugin-space/types';
 import { Filter, type Space } from '@dxos/react-client/echo';
-import { KanbanView } from '@dxos/react-ui-kanban';
+import { Kanban, KanbanView } from '@dxos/react-ui-kanban';
 import { View } from '@dxos/schema';
 import { isNonNullable } from '@dxos/util';
 
 import { meta } from '../../meta';
-import { KanbanAction } from '../../types';
 
 const QualifiedId = Schema.String.annotations({
   description: 'The fully qualified ID of the kanban `spaceID:objectID`',
@@ -62,7 +61,7 @@ export default Capability.makeModule(() =>
           }),
           execute: async ({ typename, pivotColumn }, { extensions }) => {
             invariant(extensions?.space, 'No space');
-            invariant(extensions?.dispatch, 'No intent dispatcher');
+            invariant(extensions?.invoke, 'No operation invoker');
 
             // Validate schema exists first
             const schema = await extensions.space.db.schemaRegistry.query({ typename }).firstOrUndefined();
@@ -70,25 +69,21 @@ export default Capability.makeModule(() =>
               return ToolResult.Error(`Schema not found: ${typename}`);
             }
 
-            const createResult = await extensions.dispatch(
-              createIntent(KanbanAction.Create, {
-                space: extensions.space,
-                typename,
-                initialPivotColumn: pivotColumn,
-              }),
-            );
-            if (!createResult.data?.object) {
-              return ToolResult.Error('Failed to create kanban board');
-            }
+            const { view } = await View.makeFromDatabase({
+              db: extensions.space.db,
+              typename,
+            });
+            const kanban = Kanban.make({ view });
 
-            const { data, error } = await extensions.dispatch(
-              createIntent(SpaceAction.AddObject, { target: extensions.space, object: createResult.data.object }),
-            );
-            if (!data || error) {
+            const { error } = await extensions.invoke(SpaceOperation.AddObject, {
+              target: extensions.space,
+              object: kanban,
+            });
+            if (error) {
               return ToolResult.Error(error?.message ?? 'Failed to add kanban board to space');
             }
 
-            return ToolResult.Success(createArtifactElement(data.id));
+            return ToolResult.Success(createArtifactElement(kanban.id));
           },
         }),
         createTool(meta.id, {

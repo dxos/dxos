@@ -7,8 +7,7 @@ import * as Effect from 'effect/Effect';
 import { Capability, Common, OperationResolver, UndoMapping } from '@dxos/app-framework';
 import { JsonSchema, Obj } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
-import { Kanban } from '@dxos/react-ui-kanban/types';
-import { ProjectionModel, View, getTypenameFromQuery } from '@dxos/schema';
+import { ProjectionModel, getTypenameFromQuery } from '@dxos/schema';
 
 import { meta } from '../../meta';
 import { KanbanOperation } from '../../types';
@@ -37,17 +36,6 @@ export default Capability.makeModule(() =>
       }),
     ]),
     Capability.contributes(Common.Capability.OperationResolver, [
-      OperationResolver.make({
-        operation: KanbanOperation.Create,
-        handler: ({ db, name, typename, initialPivotColumn }) =>
-          Effect.gen(function* () {
-            const { view } = yield* Effect.promise(() =>
-              View.makeFromDatabase({ db, typename, pivotFieldName: initialPivotColumn }),
-            );
-            const kanban = Kanban.make({ name, view });
-            return { object: kanban };
-          }),
-      }),
       OperationResolver.make({
         operation: KanbanOperation.DeleteCardField,
         handler: ({ view, fieldId }) =>
@@ -123,4 +111,3 @@ export default Capability.makeModule(() =>
     ]),
   ]),
 );
-

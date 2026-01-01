@@ -6,7 +6,6 @@ import * as Effect from 'effect/Effect';
 import * as Match from 'effect/Match';
 
 import { Capability, Common, OperationResolver } from '@dxos/app-framework';
-import { type Selection } from '@dxos/react-ui-attention';
 
 import { AttentionCapabilities, AttentionOperation } from '../../types';
 
@@ -18,7 +17,7 @@ export default Capability.makeModule((context) =>
         handler: (input) =>
           Effect.sync(() => {
             const selection = context.getCapability(AttentionCapabilities.Selection);
-            Match.type<Selection>().pipe(
+            Match.value(input.selection).pipe(
               Match.when({ mode: 'single', id: undefined }, () => {
                 selection.clearSelection(input.contextId);
               }),
@@ -38,7 +37,7 @@ export default Capability.makeModule((context) =>
                 selection.updateMultiRange(input.contextId, s.ranges);
               }),
               Match.exhaustive,
-            )(input.selection);
+            );
           }),
       }),
     ]),

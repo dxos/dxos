@@ -9,7 +9,7 @@ import { invariant } from '@dxos/invariant';
 import { ButtonGroup, type ButtonGroupProps, type ButtonProps, IconButton, useTranslation } from '@dxos/react-ui';
 
 import { meta } from '../../meta';
-import { DeckAction, DeckOperation, type LayoutMode } from '../../types';
+import { type DeckAction, DeckOperation, type LayoutMode } from '../../types';
 
 export type PlankControlHandler = (event: DeckAction.PartAdjustment) => void;
 

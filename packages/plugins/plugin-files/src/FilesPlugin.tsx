@@ -8,15 +8,7 @@ import { ActivationEvent, Capability, Common, Plugin } from '@dxos/app-framework
 import { AttentionEvents } from '@dxos/plugin-attention';
 import { Node } from '@dxos/plugin-graph';
 
-import {
-  AppGraphBuilder,
-  FileSettings,
-  FileState,
-  IntentResolver,
-  Markdown,
-  OperationResolver,
-  ReactSurface,
-} from './capabilities';
+import { AppGraphBuilder, FileSettings, FileState, Markdown, OperationResolver, ReactSurface } from './capabilities';
 import { meta } from './meta';
 import { translations } from './translations';
 
@@ -27,7 +19,7 @@ export const FilesPlugin = Plugin.define(meta).pipe(
   Plugin.addModule({
     id: 'state',
     activatesOn: ActivationEvent.allOf(
-      Common.ActivationEvent.DispatcherReady,
+      Common.ActivationEvent.OperationInvokerReady,
       Common.ActivationEvent.SettingsReady,
       AttentionEvents.AttentionReady,
     ),
@@ -40,7 +32,6 @@ export const FilesPlugin = Plugin.define(meta).pipe(
     activate: Markdown,
   }),
   Common.Plugin.addSurfaceModule({ activate: ReactSurface }),
-  Common.Plugin.addIntentResolverModule({ activate: IntentResolver }),
   Common.Plugin.addOperationResolverModule({ activate: OperationResolver }),
   Common.Plugin.addAppGraphModule({ activate: AppGraphBuilder }),
   Plugin.addModule({

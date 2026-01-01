@@ -9,7 +9,7 @@ import { type CreateObject } from '@dxos/plugin-space/types';
 import { Text } from '@dxos/schema';
 
 // NOTE: Must not import from index to avoid pulling in react dependencies.
-import { IntentResolver } from '../capabilities/intent-resolver';
+import { OperationResolver } from '../capabilities/operation-resolver';
 import { meta } from '../meta';
 import { Markdown } from '../types';
 
@@ -24,6 +24,6 @@ export const MarkdownPlugin = Plugin.define(meta).pipe(
       },
     },
   }),
-  Common.Plugin.addIntentResolverModule({ activate: IntentResolver }),
+  Common.Plugin.addOperationResolverModule({ activate: OperationResolver }),
   Plugin.make,
 );

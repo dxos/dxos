@@ -5,7 +5,7 @@
 import React, { useCallback } from 'react';
 
 import { Common } from '@dxos/app-framework';
-import { useAppGraph, useIntentDispatcher, useOperationInvoker } from '@dxos/app-framework/react';
+import { useAppGraph, useOperationInvoker } from '@dxos/app-framework/react';
 import { Trigger } from '@dxos/async';
 import { Graph } from '@dxos/plugin-graph';
 import { ObservabilityOperation } from '@dxos/plugin-observability/types';
@@ -24,7 +24,6 @@ export type JoinDialogProps = JoinPanelProps & {
 };
 
 export const JoinDialog = ({ navigableCollections, onDone, ...props }: JoinDialogProps) => {
-  const { dispatchPromise: dispatch } = useIntentDispatcher();
   const { invokePromise } = useOperationInvoker();
   const client = useClient();
   const { graph } = useAppGraph();
@@ -87,7 +86,7 @@ export const JoinDialog = ({ navigableCollections, onDone, ...props }: JoinDialo
         });
       }
     },
-    [dispatch, client, graph],
+    [invokePromise, client, graph, navigableCollections, onDone],
   );
 
   return (

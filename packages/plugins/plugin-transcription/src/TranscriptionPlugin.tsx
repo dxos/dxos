@@ -7,7 +7,7 @@ import { Obj } from '@dxos/echo';
 import { getSpace } from '@dxos/react-client/echo';
 import { Message, Transcript } from '@dxos/types';
 
-import { BlueprintDefinition, IntentResolver, ReactSurface, Transcriber } from './capabilities';
+import { BlueprintDefinition, OperationResolver, ReactSurface, Transcriber } from './capabilities';
 import { meta } from './meta';
 import { translations } from './translations';
 import { renderByline } from './util';
@@ -37,7 +37,7 @@ export const TranscriptionPlugin = Plugin.define(meta).pipe(
   }),
   Common.Plugin.addSchemaModule({ schema: [Transcript.Transcript] }),
   Common.Plugin.addSurfaceModule({ activate: ReactSurface }),
-  Common.Plugin.addIntentResolverModule({ activate: IntentResolver }),
+  Common.Plugin.addOperationResolverModule({ activate: OperationResolver }),
   Plugin.addModule({
     id: 'transcription',
     activatesOn: Common.ActivationEvent.SetupAppGraph,

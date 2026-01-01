@@ -15,7 +15,7 @@ import { type Kanban } from '@dxos/react-ui-kanban/types';
 import { StackItem } from '@dxos/react-ui-stack';
 import { getTypenameFromQuery } from '@dxos/schema';
 
-import { KanbanAction, KanbanOperation } from '../types';
+import { KanbanOperation } from '../types';
 
 export const KanbanContainer = ({ object }: { object: Kanban.Kanban; role: string }) => {
   const schemas = useCapabilities(Common.Capability.Schema);

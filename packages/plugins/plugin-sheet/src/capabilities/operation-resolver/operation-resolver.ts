@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 import { Capability, Common, OperationResolver, UndoMapping } from '@dxos/app-framework';
 
 import { meta } from '../../meta';
-import { Sheet, SheetOperation } from '../../types';
+import { SheetOperation } from '../../types';
 
 export default Capability.makeModule(() =>
   Effect.succeed([
@@ -27,13 +27,6 @@ export default Capability.makeModule(() =>
       }),
     ]),
     Capability.contributes(Common.Capability.OperationResolver, [
-      OperationResolver.make({
-        operation: SheetOperation.Create,
-        handler: ({ name }) =>
-          Effect.succeed({
-            object: Sheet.make({ name }),
-          }),
-      }),
       OperationResolver.make({
         operation: SheetOperation.InsertAxis,
         handler: ({ model, axis, index, count }) =>
@@ -70,4 +63,3 @@ export default Capability.makeModule(() =>
     ]),
   ]),
 );
-

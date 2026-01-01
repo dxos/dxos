@@ -8,64 +8,6 @@ import * as Operation from '@dxos/operation';
 
 import { meta } from '../meta';
 
-export namespace LocalFilesAction {
-  const FILES_ACTION = `${meta.id}/action`;
-
-  export class SelectRoot extends Schema.TaggedClass<SelectRoot>()(`${FILES_ACTION}/select-root`, {
-    input: Schema.Void,
-    output: Schema.Void,
-  }) {}
-
-  export class Export extends Schema.TaggedClass<Export>()(`${FILES_ACTION}/export`, {
-    input: Schema.Void,
-    output: Schema.Void,
-  }) {}
-
-  export class Import extends Schema.TaggedClass<Import>()(`${FILES_ACTION}/import`, {
-    input: Schema.Struct({
-      rootDir: Schema.optional(Schema.String),
-    }),
-    output: Schema.Void,
-  }) {}
-
-  export class OpenFile extends Schema.TaggedClass<OpenFile>()(`${FILES_ACTION}/open-file`, {
-    input: Schema.Void,
-    output: Schema.Struct({
-      id: Schema.String,
-      subject: Schema.Array(Schema.String),
-    }),
-  }) {}
-
-  export class OpenDirectory extends Schema.TaggedClass<OpenDirectory>()(`${FILES_ACTION}/open-directory`, {
-    input: Schema.Void,
-    output: Schema.Struct({
-      id: Schema.String,
-      subject: Schema.Array(Schema.String),
-    }),
-  }) {}
-
-  export class Reconnect extends Schema.TaggedClass<Reconnect>()(`${FILES_ACTION}/reconnect`, {
-    input: Schema.Struct({
-      id: Schema.String,
-    }),
-    output: Schema.Void,
-  }) {}
-
-  export class Close extends Schema.TaggedClass<Close>()(`${FILES_ACTION}/close`, {
-    input: Schema.Struct({
-      id: Schema.String,
-    }),
-    output: Schema.Void,
-  }) {}
-
-  export class Save extends Schema.TaggedClass<Save>()(`${FILES_ACTION}/save`, {
-    input: Schema.Struct({
-      id: Schema.String,
-    }),
-    output: Schema.Void,
-  }) {}
-}
-
 const FILES_OPERATION = `${meta.id}/operation`;
 
 export namespace LocalFilesOperation {

@@ -5,7 +5,7 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
-import { Capability, Common, IntentPlugin, SettingsPlugin } from '@dxos/app-framework';
+import { Capability, Common, OperationPlugin, SettingsPlugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Obj, Ref } from '@dxos/echo';
 import { AttentionPlugin } from '@dxos/plugin-attention';
@@ -67,7 +67,7 @@ const meta = {
           },
         }),
         SpacePlugin({}),
-        IntentPlugin(),
+        OperationPlugin(),
         SettingsPlugin(),
         MarkdownPlugin(),
       ],
