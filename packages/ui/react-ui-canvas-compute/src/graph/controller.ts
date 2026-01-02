@@ -25,13 +25,12 @@ import { Resource } from '@dxos/context';
 import { runAndForwardErrors, unwrapExit } from '@dxos/effect';
 import {
   ComputeEventLogger,
+  TracingService,
   type ComputeEventPayload,
   type CredentialsService,
   type FunctionInvocationService,
   type QueueService,
-  type TracingService,
 } from '@dxos/functions';
-import { type ServiceContainer } from '@dxos/functions-runtime';
 import { log } from '@dxos/log';
 import { type CanvasGraphModel } from '@dxos/react-ui-canvas-editor';
 import { type ContentBlock } from '@dxos/types';
@@ -40,7 +39,7 @@ import { createComputeGraph } from '../hooks';
 import { type ComputeShape } from '../shapes';
 
 import { resolveComputeNode } from './node-defs';
-import type { ManagedRuntime } from 'effect';
+import { Layer, type ManagedRuntime } from 'effect';
 import type { AiService } from '@dxos/ai';
 import type { Database } from '@dxos/echo';
 
@@ -83,13 +82,13 @@ type ComputeOutputEvent = {
   value: RuntimeValue;
 };
 
+// TODO(dmaretskyi): Re-use function servies definition.
 export type ComputeServices =
   | AiService.AiService
   | Database.Service
   | QueueService
   | CredentialsService
-  | FunctionInvocationService
-  | TracingService;
+  | FunctionInvocationService;
 
 /**
  * Nodes that will automatically trigger the execution of the graph on startup.
@@ -263,7 +262,11 @@ export class ComputeGraphController extends Resource {
           const effect = (computingOutputs ? executor.computeOutputs(nodeId) : executor.computeInputs(nodeId)).pipe(
             Effect.withSpan('runGraph'),
             Scope.extend(scope),
-            Effect.provide(ComputeEventLogger.layerFromTracing),
+            Effect.provide(
+              ComputeEventLogger.layerFromTracing.pipe(
+                Layer.provideMerge(TracingService.layerNoop), // TODO(dmaretskyi): Plug-in tracing events to visual feedback in the compute graph editor.
+              ),
+            ),
             Effect.flatMap(computeValueBag),
             Effect.withSpan('test'),
             Effect.tap((values) => {
@@ -326,7 +329,11 @@ export class ComputeGraphController extends Resource {
               Effect.withSpan('runGraph'),
               Scope.extend(scope),
               Effect.flatMap(computeValueBag),
-              Effect.provide(ComputeEventLogger.layerFromTracing),
+              Effect.provide(
+                ComputeEventLogger.layerFromTracing.pipe(
+                  Layer.provideMerge(TracingService.layerNoop), // TODO(dmaretskyi): Plug-in tracing events to visual feedback in the compute graph editor.
+                ),
+              ),
 
               Effect.withSpan('test'),
               Effect.tap((values) => {
