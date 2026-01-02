@@ -3380,7 +3380,7 @@ importers:
     dependencies:
       debug:
         specifier: 'catalog:'
-        version: 4.4.3(supports-color@8.1.1)
+        version: 4.4.3(supports-color@5.5.0)
       domain-browser:
         specifier: 'catalog:'
         version: 4.22.0
@@ -6854,7 +6854,7 @@ importers:
         version: 5.0.0(chart.js@4.5.0)
       debug:
         specifier: 'catalog:'
-        version: 4.4.3(supports-color@8.1.1)
+        version: 4.4.3(supports-color@5.5.0)
       effect:
         specifier: 'catalog:'
         version: 3.19.11
@@ -7972,6 +7972,9 @@ importers:
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
+      '@dxos/plugin-automation':
+        specifier: workspace:*
+        version: link:../plugin-automation
       '@dxos/plugin-client':
         specifier: workspace:*
         version: link:../plugin-client
@@ -13863,7 +13866,7 @@ importers:
         version: 8.19.0
       debug:
         specifier: 'catalog:'
-        version: 4.4.3(supports-color@8.1.1)
+        version: 4.4.3(supports-color@5.5.0)
       js-yaml:
         specifier: 'catalog:'
         version: 4.1.1

@@ -76,6 +76,9 @@
       "path": "../../ui/ui-theme"
     },
     {
+      "path": "../plugin-automation"
+    },
+    {
       "path": "../plugin-client"
     },
     {
