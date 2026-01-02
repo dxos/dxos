@@ -55,7 +55,8 @@
     "@radix-ui/react-context": "catalog:",
     "@radix-ui/react-use-controllable-state": "catalog:",
     "date-fns": "catalog:",
-    "jsonpath": "catalog:"
+    "jsonpath": "catalog:",
+    "tabster": "catalog:"
   },
   "devDependencies": {
     "@dxos/echo-signals": "workspace:*",

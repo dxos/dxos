@@ -9,7 +9,7 @@ import React, { useCallback, useState } from 'react';
 import { faker } from '@dxos/random';
 import { withTheme } from '@dxos/react-ui/testing';
 
-import { type StackItemData } from '../defs';
+import { type StackItemData } from '../types';
 import { StackItem } from '../StackItem';
 
 import { Stack } from './Stack';

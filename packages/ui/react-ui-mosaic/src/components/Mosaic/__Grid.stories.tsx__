@@ -20,7 +20,7 @@ import { useThemeContext } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { QueryEditor, translations, useQueryBuilder } from '@dxos/react-ui-components';
 import { Editor } from '@dxos/react-ui-editor';
-import { type DragEventHandler, Mosaic, dropHandler } from '@dxos/react-ui-mosaic';
+import { type MosaicEventHandler, Mosaic, dropHandler } from '@dxos/react-ui-mosaic';
 import { Text } from '@dxos/schema';
 import { type ValueGenerator, createObjectFactory } from '@dxos/schema/testing';
 import { Organization, Person, Project } from '@dxos/types';
@@ -124,7 +124,7 @@ const DefaultStory = () => {
   const [query, setQuery] = useState<string | undefined>();
   const filter = useQueryBuilder(query);
   const searchObjects = useQuery(space?.db, filter).sort(Obj.sort(Obj.sortByTypename, Obj.sortByLabel));
-  const searchHandler = useMemo<DragEventHandler>(
+  const searchHandler = useMemo<MosaicEventHandler>(
     () => ({
       id: 'search',
       canDrop: () => false,
@@ -148,7 +148,7 @@ const DefaultStory = () => {
 
   // TODO(burdon): Generalize for kanban, board, etc.
   const [objects, setObjects] = useState(range(3).map(() => createObject(Text.make(faker.lorem.paragraph()))));
-  const objectHandler = useMemo<DragEventHandler>(() => {
+  const objectHandler = useMemo<MosaicEventHandler>(() => {
     const containerId = 'notes';
     return {
       id: containerId,
@@ -184,7 +184,7 @@ const DefaultStory = () => {
   }, [grid, objects]);
 
   const { extension, update, cancel, drop } = useMemo(() => dropHandler({}), []);
-  const documentHandler = useMemo<DragEventHandler>(() => {
+  const documentHandler = useMemo<MosaicEventHandler>(() => {
     return {
       id: 'document',
       canDrop: () => true,

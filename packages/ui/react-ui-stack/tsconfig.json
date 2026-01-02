@@ -6,6 +6,7 @@
     ]
   },
   "include": [
+    "../react-ui-mosaic/src/components/Mosaic/Grid.tsx",
     "src/**/*.ts",
     "src/**/*.tsx",
     "src/*.ts"

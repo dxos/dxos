@@ -28,8 +28,8 @@ import { ListItem, type ThemedClassName } from '@dxos/react-ui';
 import { resizeAttributes, sizeStyle } from '@dxos/react-ui-dnd';
 import { mx } from '@dxos/ui-theme';
 
-import { type StackItemData, type StackItemSize } from '../defs';
 import { type ItemDragState, StackItemContext, idle, useStack, useStackItem } from '../StackContext';
+import { type StackItemData, type StackItemSize } from '../types';
 
 import { StackItemContent, type StackItemContentProps } from './StackItemContent';
 import { StackItemDragHandle, type StackItemDragHandleProps } from './StackItemDragHandle';
@@ -53,6 +53,10 @@ import {
 export const DEFAULT_HORIZONTAL_SIZE = 48 satisfies StackItemSize;
 export const DEFAULT_VERTICAL_SIZE = 'min-content' satisfies StackItemSize;
 export const DEFAULT_EXTRINSIC_SIZE = DEFAULT_HORIZONTAL_SIZE satisfies StackItemSize;
+
+//
+// StackItemRoot
+//
 
 type StackItemRootProps = ThemedClassName<ComponentPropsWithRef<'div'>> & {
   item: Omit<StackItemData, 'type'>;
@@ -110,6 +114,7 @@ const StackItemRoot = forwardRef<HTMLDivElement, StackItemRootProps>(
 
     const type = orientation === 'horizontal' ? 'column' : 'card';
 
+    // TODO(burdon): Factor out?
     useLayoutEffect(() => {
       if (!itemElement || !onRearrange || disableRearrange) {
         return;
@@ -183,18 +188,18 @@ const StackItemRoot = forwardRef<HTMLDivElement, StackItemRootProps>(
 
     const focusableGroupAttrs = useFocusableGroup({ tabBehavior: 'limited' });
 
-    // Determine if the drop would result in any changes
+    // Determine if the drop would result in any changes.
     const shouldShowDropIndicator = () => {
       if (!closestEdge || !sourceId) {
         return false;
       }
 
-      // Don't show indicator when dragged item is over itself
+      // Don't show indicator when dragged item is over itself.
       if (sourceId === item.id) {
         return false;
       }
 
-      // Don't show indicator when dragged item is over the trailing edge of its previous sibling
+      // Don't show indicator when dragged item is over the trailing edge of its previous sibling.
       const isTrailingEdgeOfPrevSibling =
         prevSiblingId !== undefined &&
         sourceId === prevSiblingId &&
@@ -268,37 +273,45 @@ const StackItemRoot = forwardRef<HTMLDivElement, StackItemRootProps>(
   },
 );
 
+//
+// StackItemDragPreview
+//
+
 type StackItemDragPreviewProps = {
   children: ({ item }: { item: any }) => ReactNode;
 };
 
-export const StackItemDragPreview = ({ children }: StackItemDragPreviewProps) => {
+const StackItemDragPreview = ({ children }: StackItemDragPreviewProps) => {
   const { state } = useStackItem();
   return state?.type === 'preview' ? createPortal(children({ item: state.item }), state.container) : null;
 };
 
+//
+// StackItem
+//
+
 export const StackItem = {
   Root: StackItemRoot,
   Content: StackItemContent,
+  DragHandle: StackItemDragHandle,
+  DragPreview: StackItemDragPreview,
   Heading: StackItemHeading,
   HeadingLabel: StackItemHeadingLabel,
   HeadingStickyContent: StackItemHeadingStickyContent,
   ResizeHandle: StackItemResizeHandle,
-  DragHandle: StackItemDragHandle,
   Sigil: StackItemSigil,
   SigilButton: StackItemSigilButton,
-  DragPreview: StackItemDragPreview,
 };
 
 export type {
   StackItemRootProps,
   StackItemContentProps,
+  StackItemDragHandleProps,
+  StackItemDragPreviewProps,
   StackItemHeadingProps,
   StackItemHeadingLabelProps,
   StackItemResizeHandleProps,
-  StackItemDragHandleProps,
   StackItemSigilProps,
   StackItemSigilButtonProps,
   StackItemSigilAction,
-  StackItemDragPreviewProps,
 };

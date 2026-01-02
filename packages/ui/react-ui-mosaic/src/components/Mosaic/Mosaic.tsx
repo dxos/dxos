@@ -13,20 +13,25 @@ import { autoScrollForElements } from '@atlaskit/pragmatic-drag-and-drop-auto-sc
 import { createContext } from '@radix-ui/react-context';
 import { Primitive } from '@radix-ui/react-primitive';
 import { Slot } from '@radix-ui/react-slot';
-import React, { type PropsWithChildren, useEffect, useRef, useState } from 'react';
+import React, { type PropsWithChildren, forwardRef, useEffect, useRef, useState } from 'react';
 
 import { log } from '@dxos/log';
 import { isTruthy } from '@dxos/util';
 
-import { type ContainerData, type DragEventHandler, type DropTargetData, type ItemData } from './types';
+import {
+  type MosaicCellData,
+  type MosaicContainerData,
+  type MosaicDropTargetData,
+  type MosaicEventHandler,
+} from './types';
 
 //
 // Context
 //
 
 type MosaicContextValue = {
-  containers: Record<string, DragEventHandler>;
-  addContainer: (container: DragEventHandler) => void;
+  containers: Record<string, MosaicEventHandler>;
+  addContainer: (container: MosaicEventHandler) => void;
   removeContainer: (id: string) => void;
 };
 
@@ -39,19 +44,21 @@ const [MosaicContextProvider, useMosaicContext] = createContext<MosaicContextVal
 type RootProps = PropsWithChildren;
 
 const Root = ({ children }: RootProps) => {
-  const [handlers, setHandlers] = useState<Record<string, DragEventHandler>>({});
-  const currentHandler = useRef<DragEventHandler>(undefined);
+  const [handlers, setHandlers] = useState<Record<string, MosaicEventHandler>>({});
+  const currentHandler = useRef<MosaicEventHandler>(undefined);
 
-  const getSourceHandler = (source: ElementDragPayload): { data: ItemData; handler: DragEventHandler | undefined } => {
-    const data = source.data as ItemData;
+  const getSourceHandler = (
+    source: ElementDragPayload,
+  ): { data: MosaicCellData; handler: MosaicEventHandler | undefined } => {
+    const data = source.data as MosaicCellData;
     return { data, handler: handlers[data.containerId] };
   };
 
   const getTargetHandler = (
     location: DragLocationHistory,
-  ): { data: ContainerData; handler: DragEventHandler | undefined } => {
+  ): { data: MosaicContainerData; handler: MosaicEventHandler | undefined } => {
     const targetData = location.current.dropTargets.find((target) => target.data.type === 'container')
-      ?.data as ContainerData;
+      ?.data as MosaicContainerData;
     return { data: targetData, handler: targetData?.id ? handlers[targetData.id] : undefined };
   };
 
@@ -98,14 +105,14 @@ const Root = ({ children }: RootProps) => {
 
           // TODO(burdon): Check doesn't already exist in collection.
           if (sourceHandler === targetHandler) {
-            targetHandler.onDrop?.({ object: sourceData.object, at: target?.data as DropTargetData });
+            targetHandler.onDrop?.({ object: sourceData.object, at: target?.data as MosaicDropTargetData });
           } else {
             if (!sourceHandler.onTake) {
               log.warn('invalid source', { source: sourceData });
               return;
             }
             sourceHandler.onTake?.(sourceData, (object) => {
-              targetHandler.onDrop?.({ object, at: target?.data as DropTargetData });
+              targetHandler.onDrop?.({ object, at: target?.data as MosaicDropTargetData });
               return true;
             });
           }
@@ -141,7 +148,7 @@ export const CONTAINER_DATA_ACTIVE_ATTR = 'data-active';
 
 type ContainerState = { type: 'idle' } | { type: 'active' };
 
-type ContainerProps = PropsWithChildren<{ asChild?: boolean; autoscroll?: boolean; handler: DragEventHandler }>;
+type ContainerProps = PropsWithChildren<{ asChild?: boolean; autoscroll?: boolean; handler: MosaicEventHandler }>;
 
 /**
  * Ref https://www.radix-ui.com/primitives/docs/guides/composition
@@ -171,8 +178,8 @@ const Container = ({ children, asChild, autoscroll, handler }: ContainerProps) =
             ({
               type: 'container',
               id: handler.id,
-            }) satisfies ContainerData,
-          canDrop: ({ source }) => source.data.type === 'item' && handler.canDrop(source.data as ItemData),
+            }) satisfies MosaicContainerData,
+          canDrop: ({ source }) => source.data.type === 'item' && handler.canDrop(source.data as MosaicCellData),
           onDragEnter: () => {
             setState({ type: 'active' });
           },
@@ -196,9 +203,21 @@ const Container = ({ children, asChild, autoscroll, handler }: ContainerProps) =
 };
 
 //
+// Cell
+// TODO(burdon): Replace Grid.
+// TODO(burdon): Common core for StackItem.
+//
+
+type CellProps = PropsWithChildren;
+
+const Cell = forwardRef<HTMLDivElement, CellProps>((props, forwardedRef) => {
+  return <div ref={forwardedRef}>{props.children}</div>;
+});
+
+//
 // Mosaic
 //
 
-export const Mosaic = { Root, Container };
+export const Mosaic = { Root, Container, Cell };
 
-export type { RootProps as MosaicRootProps, ContainerProps as MosaicContainerProps };
+export type { RootProps as MosaicRootProps, ContainerProps as MosaicContainerProps, CellProps as MosaicCellProps };

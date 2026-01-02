@@ -35,8 +35,10 @@ import { createPortal } from 'react-dom';
 
 import { type Obj } from '@dxos/echo';
 import { Icon, type ThemedClassName } from '@dxos/react-ui';
-import { CONTAINER_DATA_ACTIVE_ATTR, type ItemData, type PlaceholderData } from '@dxos/react-ui-mosaic';
 import { mx } from '@dxos/ui-theme';
+
+import { CONTAINER_DATA_ACTIVE_ATTR } from './Mosaic';
+import { type MosaicCellData, type MosaicPlaceholderData } from './types';
 
 //
 // Styles
@@ -92,14 +94,8 @@ GridRoot.displayName = 'Grid.Root';
 type GridViewportProps = ThemedClassName<PropsWithChildren>;
 
 const GridViewport = ({ classNames, children }: GridViewportProps) => {
-  const focusableGroupAttrs = useFocusableGroup({
-    tabBehavior: 'limited-trap-focus',
-  });
-  const arrowNavigationAttrs = useArrowNavigationGroup({
-    axis: 'horizontal',
-    memorizeCurrent: true,
-    tabbable: true,
-  });
+  const focusableGroupAttrs = useFocusableGroup({ tabBehavior: 'limited-trap-focus' });
+  const arrowNavigationAttrs = useArrowNavigationGroup({ axis: 'horizontal', memorizeCurrent: true, tabbable: true });
   const tabsterAttrs = useMergedTabsterAttributes_unstable(focusableGroupAttrs, arrowNavigationAttrs);
 
   return (
@@ -119,13 +115,8 @@ type GridColumnProps = ThemedClassName<PropsWithChildren>;
 
 const GridColumn = forwardRef<HTMLDivElement, GridColumnProps>(
   ({ classNames, children }: GridColumnProps, forwardedRef) => {
-    const focusableGroupAttrs = useFocusableGroup({
-      tabBehavior: 'limited-trap-focus',
-    });
-    const arrowNavigationAttrs = useArrowNavigationGroup({
-      axis: 'vertical',
-      memorizeCurrent: true,
-    });
+    const focusableGroupAttrs = useFocusableGroup({ tabBehavior: 'limited-trap-focus' });
+    const arrowNavigationAttrs = useArrowNavigationGroup({ axis: 'vertical', memorizeCurrent: true });
     const tabsterAttrs = useMergedTabsterAttributes_unstable(focusableGroupAttrs, arrowNavigationAttrs);
 
     return (
@@ -170,7 +161,7 @@ const GridStack = forwardRef<HTMLDivElement, GridStackProps>(
             type: 'placeholder',
             location: 'bottom',
             containerId: id,
-          }) satisfies PlaceholderData,
+          }) satisfies MosaicPlaceholderData,
       });
     }, [placeholderRef, id]);
 
@@ -240,8 +231,8 @@ const GridCell = memo(({ classNames, containerId, object, Cell, canDrag = false,
             id: object.id,
             object,
             containerId,
-          }) satisfies ItemData,
-        onGenerateDragPreview: ({ location, nativeSetDragImage }: any) => {
+          }) satisfies MosaicCellData,
+        onGenerateDragPreview: ({ location, nativeSetDragImage }) => {
           const rect = root.getBoundingClientRect();
           setCustomNativeDragPreview({
             nativeSetDragImage,
@@ -249,7 +240,7 @@ const GridCell = memo(({ classNames, containerId, object, Cell, canDrag = false,
               element: root,
               input: location.current.input,
             }),
-            render: ({ container }: any) => {
+            render: ({ container }) => {
               setState({ type: 'preview', container, rect });
               return () => setState({ type: 'dragging' });
             },
@@ -265,14 +256,14 @@ const GridCell = memo(({ classNames, containerId, object, Cell, canDrag = false,
 
       dropTargetForElements({
         element: root,
-        getData: ({ input, element }: any) => {
+        getData: ({ input, element }) => {
           return attachClosestEdge(
             {
               type: 'item',
               id: object.id,
               object,
               containerId,
-            } satisfies ItemData,
+            } satisfies MosaicCellData,
             {
               input,
               element,
@@ -282,12 +273,12 @@ const GridCell = memo(({ classNames, containerId, object, Cell, canDrag = false,
         },
 
         canDrop: () => canDrop,
-        onDragEnter: ({ source, self }: any) => {
+        onDragEnter: ({ source, self }) => {
           if (source.data.id !== object.id) {
             setClosestEdge(extractClosestEdge(self.data));
           }
         },
-        onDrag: ({ source, self }: any) => {
+        onDrag: ({ source, self }) => {
           if (source.data.id !== object.id) {
             setClosestEdge(extractClosestEdge(self.data));
           }

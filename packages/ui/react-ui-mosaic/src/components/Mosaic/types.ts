@@ -4,63 +4,65 @@
 
 import { type Obj } from '@dxos/echo';
 
-// TODO(burdon): Reconcile with react-ui-dnd.
-
 /**
  * Draggable item.
  */
-export type ItemData = {
+export type MosaicCellData = {
   type: 'item';
   id: string;
-  object: Obj.Any;
   containerId: string;
+  object: Obj.Any; // TODO(burdon): Generalize (has ID).
 };
 
 /**
  * Drop target placeholder.
  */
-export type PlaceholderData<Location = any> = {
+export type MosaicPlaceholderData<Location = any> = {
   type: 'placeholder';
-  location: Location;
   containerId: string;
+  location: Location;
 };
 
 /**
  * Drop target container.
  */
-export type ContainerData = {
+export type MosaicContainerData = {
   type: 'container';
   id: string;
 };
 
-export type DropTargetData = ItemData | PlaceholderData;
+export type MosaicDropTargetData<Location = any> = MosaicCellData | MosaicPlaceholderData<Location>;
 
-export type DropEvent = {
-  source: ItemData;
-  target?: DropTargetData;
-  container: ContainerData;
+/**
+ *
+ */
+export type MosaicEvent<Location = any> = {
+  source: MosaicCellData;
+  target?: MosaicDropTargetData<Location>;
+  container: MosaicContainerData;
 };
 
 /**
  * Handler implemented by drop containers.
  */
-export interface DragEventHandler {
+export interface MosaicEventHandler<Location = any> {
+  // TODO(burdon): cellId?
   id: string;
 
   /**
    * Determine if the item can be dropped into this container.
    */
-  canDrop: (item: ItemData) => boolean;
+  canDrop: (item: MosaicCellData) => boolean;
 
   /**
    * Called during drag for custom visualization.
    */
-  onDrag?: (props: { item: ItemData; position: { x: number; y: number } }) => void;
+  onDrag?: (props: { item: MosaicCellData; position: { x: number; y: number } }) => void;
 
   /**
    * Insert/rearrange the item at the given location.
    */
-  onDrop?: (props: { object: Obj.Any; at?: DropTargetData }) => void;
+  onDrop?: (props: { object: Obj.Any; at?: MosaicDropTargetData<Location> }) => void;
 
   /**
    * Request the object to be dropped.
@@ -68,7 +70,7 @@ export interface DragEventHandler {
    * If the callback returns true, then the callback may decide to remove the item from the source container,
    * completing the transfer.
    */
-  onTake?: (item: ItemData, cb: (objects: Obj.Any) => boolean) => void;
+  onTake?: (item: MosaicCellData, cb: (objects: Obj.Any) => boolean) => void;
 
   /**
    * Dragging ended.
