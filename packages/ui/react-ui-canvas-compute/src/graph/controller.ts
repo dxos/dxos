@@ -6,8 +6,11 @@ import type * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Either from 'effect/Either';
 import * as Exit from 'effect/Exit';
+import * as Layer from 'effect/Layer';
+import type * as ManagedRuntime from 'effect/ManagedRuntime';
 import * as Scope from 'effect/Scope';
 
+import type { AiService } from '@dxos/ai';
 import { Event, synchronized } from '@dxos/async';
 import {
   type ComputeEdge,
@@ -22,14 +25,15 @@ import {
   isNotExecuted,
 } from '@dxos/conductor';
 import { Resource } from '@dxos/context';
-import { runAndForwardErrors, unwrapExit } from '@dxos/effect';
+import type { Database } from '@dxos/echo';
+import { unwrapExit } from '@dxos/effect';
 import {
   ComputeEventLogger,
-  TracingService,
   type ComputeEventPayload,
   type CredentialsService,
   type FunctionInvocationService,
   type QueueService,
+  TracingService,
 } from '@dxos/functions';
 import { log } from '@dxos/log';
 import { type CanvasGraphModel } from '@dxos/react-ui-canvas-editor';
@@ -39,9 +43,6 @@ import { createComputeGraph } from '../hooks';
 import { type ComputeShape } from '../shapes';
 
 import { resolveComputeNode } from './node-defs';
-import { Layer, type ManagedRuntime } from 'effect';
-import type { AiService } from '@dxos/ai';
-import type { Database } from '@dxos/echo';
 
 // TODO(burdon): API package for conductor.
 export const InvalidStateError = Error;

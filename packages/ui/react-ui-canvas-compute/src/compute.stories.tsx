@@ -3,12 +3,17 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
+import * as Layer from 'effect/Layer';
+import * as ManagedRuntime from 'effect/ManagedRuntime';
 import React, { type PropsWithChildren, useEffect, useMemo, useRef, useState } from 'react';
 
+import { AiServiceTestingPreset } from '@dxos/ai/testing';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { capabilities } from '@dxos/assistant-toolkit/testing';
 import { type ComputeGraphModel, type ComputeNode, type GraphDiagnostic } from '@dxos/conductor';
-import { FunctionInvocationServiceLayerTest, ServiceContainer } from '@dxos/functions-runtime';
+import { CredentialsService, TracingService } from '@dxos/functions';
+import { FunctionInvocationServiceLayerTest } from '@dxos/functions-runtime';
+import { TestDatabaseLayer } from '@dxos/functions-runtime/testing';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { Select, Toolbar } from '@dxos/react-ui';
 import { withTheme } from '@dxos/react-ui/testing';
@@ -20,7 +25,7 @@ import { JsonFilter } from '@dxos/react-ui-syntax-highlighter';
 
 import { DiagnosticOverlay } from './components';
 import { ComputeShapeLayout } from './compute-layout';
-import { createComputeGraphController, type ComputeGraphController } from './graph';
+import { type ComputeGraphController, createComputeGraphController } from './graph';
 import { ComputeContext, useComputeGraphController, useGraphMonitor } from './hooks';
 import { computeShapes } from './registry';
 import { type ComputeShape } from './shapes';
@@ -36,10 +41,6 @@ import {
   createTemplateCircuit,
   createTransformCircuit,
 } from './testing';
-import { Layer, ManagedRuntime } from 'effect';
-import { AiServiceTestingPreset, TestAiService } from '@dxos/ai/testing';
-import { TestDatabaseLayer } from '@dxos/functions-runtime/testing';
-import { CredentialsService, TracingService } from '@dxos/functions';
 
 // TODO(burdon): Replace ServiceContainer.
 

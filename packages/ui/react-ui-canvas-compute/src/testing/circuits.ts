@@ -3,13 +3,10 @@
 //
 
 import { createSystemPrompt } from '@dxos/assistant';
-import { type ServiceContainer } from '@dxos/functions-runtime';
 import { DXN, ObjectId, SpaceId } from '@dxos/keys';
 import { type Dimension, type Point } from '@dxos/react-ui-canvas';
 import { CanvasGraphModel, createNote, pointMultiply, pointsToRect, rectToPoints } from '@dxos/react-ui-canvas-editor';
 
-import { ComputeGraphController } from '../graph';
-import { createComputeGraph } from '../hooks';
 import {
   type ComputeShape,
   createAnd,
