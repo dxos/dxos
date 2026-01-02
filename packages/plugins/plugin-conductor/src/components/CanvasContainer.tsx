@@ -4,14 +4,10 @@
 
 import React, { useEffect, useMemo, useRef } from 'react';
 
-import { type Config } from '@dxos/client';
+import { useCapability } from '@dxos/app-framework/react';
 import { ComputeGraphModel } from '@dxos/conductor';
 import { Obj } from '@dxos/echo';
-import { Database } from '@dxos/echo';
-import { QueueService } from '@dxos/functions';
-import { ServiceContainer } from '@dxos/functions-runtime';
-import { useConfig } from '@dxos/react-client';
-import { type Space, getSpace } from '@dxos/react-client/echo';
+import { AutomationCapabilities } from '@dxos/plugin-automation';
 import {
   ComputeContext,
   ComputeGraphController,
@@ -30,8 +26,6 @@ import {
   ShapeRegistry,
 } from '@dxos/react-ui-canvas-editor';
 import { StackItem } from '@dxos/react-ui-stack';
-import { useCapability } from '@dxos/app-framework/react';
-import { AutomationCapabilities } from '@dxos/plugin-automation';
 
 const useGraphController = (canvas: CanvasBoardType) => {
   const db = Obj.getDatabase(canvas);
