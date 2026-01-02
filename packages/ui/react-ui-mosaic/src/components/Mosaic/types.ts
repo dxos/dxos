@@ -8,7 +8,7 @@ import { type Obj } from '@dxos/echo';
  * Draggable item.
  */
 export type MosaicCellData = {
-  type: 'item';
+  type: 'cell';
   id: string;
   containerId: string;
   object: Obj.Any; // TODO(burdon): Generalize (has ID).

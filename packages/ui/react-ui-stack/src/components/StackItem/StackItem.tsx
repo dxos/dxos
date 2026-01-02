@@ -90,6 +90,7 @@ const StackItemRoot = forwardRef<HTMLDivElement, StackItemRootProps>(
     forwardedRef,
   ) => {
     const [itemElement, itemRef] = useState<HTMLDivElement | null>(null);
+    const composedItemRef = composeRefs<HTMLDivElement>(itemRef, forwardedRef);
     const [selfDragHandleElement, selfDragHandleRef] = useState<HTMLDivElement | null>(null);
     const [closestEdge, setEdge] = useState<Edge | null>(null);
     const [sourceId, setSourceId] = useState<string | null>(null);
@@ -99,8 +100,6 @@ const StackItemRoot = forwardRef<HTMLDivElement, StackItemRootProps>(
       useState(propsSize);
 
     const Root = role ?? 'div';
-
-    const composedItemRef = composeRefs<HTMLDivElement>(itemRef, forwardedRef);
 
     const setSize = useCallback(
       (nextSize: StackItemSize, commit?: boolean) => {

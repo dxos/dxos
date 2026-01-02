@@ -45,6 +45,7 @@
     "@dxos/util": "workspace:*",
     "@fluentui/react-tabster": "catalog:",
     "@preact-signals/safe-react": "catalog:",
+    "@radix-ui/react-compose-refs": "catalog:",
     "@radix-ui/react-context": "catalog:",
     "@radix-ui/react-primitive": "catalog:",
     "@radix-ui/react-slot": "catalog:",

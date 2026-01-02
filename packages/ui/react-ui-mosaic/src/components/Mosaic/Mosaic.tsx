@@ -6,15 +6,18 @@ import { combine } from '@atlaskit/pragmatic-drag-and-drop/combine';
 import { type DragLocationHistory } from '@atlaskit/pragmatic-drag-and-drop/dist/types/internal-types';
 import {
   type ElementDragPayload,
+  draggable,
   dropTargetForElements,
   monitorForElements,
 } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
 import { autoScrollForElements } from '@atlaskit/pragmatic-drag-and-drop-auto-scroll/element';
+import { composeRefs } from '@radix-ui/react-compose-refs';
 import { createContext } from '@radix-ui/react-context';
 import { Primitive } from '@radix-ui/react-primitive';
 import { Slot } from '@radix-ui/react-slot';
-import React, { type PropsWithChildren, forwardRef, useEffect, useRef, useState } from 'react';
+import React, { type PropsWithChildren, forwardRef, useEffect, useLayoutEffect, useRef, useState } from 'react';
 
+import { type Obj } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { isTruthy } from '@dxos/util';
 
@@ -144,11 +147,22 @@ const Root = ({ children }: RootProps) => {
 // Container
 //
 
+type MosaicContainerContextValue = {
+  id: string;
+};
+
+const [MosaicContainerContextProvider, useMosaicContainerContext] =
+  createContext<MosaicContainerContextValue>('MosaicContainer');
+
 export const CONTAINER_DATA_ACTIVE_ATTR = 'data-active';
 
 type ContainerState = { type: 'idle' } | { type: 'active' };
 
-type ContainerProps = PropsWithChildren<{ asChild?: boolean; autoscroll?: boolean; handler: MosaicEventHandler }>;
+type ContainerProps = PropsWithChildren<{
+  asChild?: boolean;
+  autoscroll?: boolean;
+  handler: MosaicEventHandler;
+}>;
 
 /**
  * Ref https://www.radix-ui.com/primitives/docs/guides/composition
@@ -196,23 +210,57 @@ const Container = ({ children, asChild, autoscroll, handler }: ContainerProps) =
   }, [rootRef, handler]);
 
   return (
-    <Root {...{ [CONTAINER_DATA_ACTIVE_ATTR]: state.type === 'active' }} ref={rootRef}>
-      {children}
-    </Root>
+    <MosaicContainerContextProvider id={handler.id}>
+      <Root {...{ [CONTAINER_DATA_ACTIVE_ATTR]: state.type === 'active' }} ref={rootRef}>
+        {children}
+      </Root>
+    </MosaicContainerContextProvider>
   );
 };
 
+Container.displayName = 'MosaicContainer';
+
 //
 // Cell
-// TODO(burdon): Replace Grid.
 // TODO(burdon): Common core for StackItem.
+// TODO(burdon): Replace Grid.
 //
 
-type CellProps = PropsWithChildren;
+type CellProps = PropsWithChildren<{ id: string; object: Obj.Any }>;
 
-const Cell = forwardRef<HTMLDivElement, CellProps>((props, forwardedRef) => {
-  return <div ref={forwardedRef}>{props.children}</div>;
+const Cell = forwardRef<HTMLDivElement, CellProps>(({ children, id, object }, forwardedRef) => {
+  const [cellElement, cellRef] = useState<HTMLDivElement | null>(null);
+  const composedCellRef = composeRefs<HTMLDivElement>(cellRef, forwardedRef);
+  const { id: containerId } = useMosaicContainerContext(Cell.displayName!);
+
+  useLayoutEffect(() => {
+    if (!cellElement) {
+      return;
+    }
+
+    return combine(
+      draggable({
+        element: cellElement,
+        getInitialData: () =>
+          ({
+            type: 'cell',
+            id,
+            containerId,
+            object,
+          }) satisfies MosaicCellData,
+      }),
+    );
+  }, [cellElement]);
+
+  // TODO(burdon): Slot asChild, etc.?
+  return (
+    <div role='none' ref={composedCellRef}>
+      {children}
+    </div>
+  );
 });
+
+Cell.displayName = 'MosaicCell';
 
 //
 // Mosaic
