@@ -32,5 +32,5 @@ read -ra PKG_ARRAY <<< "$PUBLIC_PACKAGES"
 echo "Found ${#PKG_ARRAY[@]} public packages to publish"
 
 # Run pkg-pr-new publish with all public packages
-pnpm dlx pkg-pr-new publish "${PKG_ARRAY[@]}"
+pnpm dlx pkg-pr-new publish --pnpm "${PKG_ARRAY[@]}"
 

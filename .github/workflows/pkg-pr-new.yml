@@ -40,5 +40,4 @@ jobs:
           NODE_ENV: production
 
       - name: Publish to pkg.pr.new
-        # run: .github/workflows/scripts/pkg-pr-new-publish.sh
-        run: pnpm dlx pkg-pr-new publish --pnpm "./packages/common/async"
+        run: .github/workflows/scripts/pkg-pr-new-publish.sh
