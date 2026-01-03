@@ -244,6 +244,10 @@ const Container = forwardRef<HTMLDivElement, ContainerProps>(
 
       return combine(
         ...[
+          autoscroll &&
+            autoScrollForElements({
+              element: rootRef.current,
+            }),
           dropTargetForElements({
             element: rootRef.current,
             getData: () => {
@@ -267,7 +271,7 @@ const Container = forwardRef<HTMLDivElement, ContainerProps>(
             onDrag: ({ source, location }) => {
               setDragging({
                 source: source.data as MosaicCellData,
-                // TODO(burdon): Use util.
+                // TODO(burdon): Are these sorted?
                 target: location.current.dropTargets[0]?.data as MosaicData,
               });
             },
@@ -279,10 +283,6 @@ const Container = forwardRef<HTMLDivElement, ContainerProps>(
               setDragging(undefined);
             },
           }),
-          autoscroll &&
-            autoScrollForElements({
-              element: rootRef.current,
-            }),
         ].filter(isTruthy),
       );
     }, [rootRef, handler]);
@@ -332,6 +332,7 @@ const Cell = forwardRef<HTMLDivElement, CellProps>(
     const rootRef = useRef<HTMLDivElement>(null);
     const composedRef = composeRefs<HTMLDivElement>(rootRef, forwardedRef);
     const Root = asChild ? Slot : Primitive.div;
+
     const { id: containerId } = useMosaicContainerContext(Cell.displayName!);
     const [state, setState] = useState<CellState>({ type: 'idle' });
     const [closestEdge, setClosestEdge] = useState<Edge | null>(null);
