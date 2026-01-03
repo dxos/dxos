@@ -1,0 +1,17 @@
+{
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "name": "struct",
+  "tags": ["scope:common"],
+  "sourceRoot": "{projectRoot}/src",
+  "projectType": "library",
+  "targets": {
+    "build": {},
+    "compile": {
+      "entryPoints": ["{projectRoot}/src/index.ts"]
+    },
+    "lint": {},
+    "pack": {},
+    "test": {}
+  },
+  "implicitDependencies": ["esbuild"]
+}
