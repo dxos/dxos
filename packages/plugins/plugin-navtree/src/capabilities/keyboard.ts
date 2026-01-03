@@ -10,7 +10,7 @@ import {
 } from '@dxos/app-framework';
 import { debounce } from '@dxos/async';
 import { Keyboard } from '@dxos/keyboard';
-import { type Node, isAction } from '@dxos/plugin-graph';
+import { Graph, Node } from '@dxos/plugin-graph';
 import { getHostPlatform } from '@dxos/util';
 
 import { KEY_BINDING } from '../meta';
@@ -20,7 +20,7 @@ export default defineCapabilityModule((context: PluginContext) => {
 
   // TODO(wittjosiah): Factor out.
   // TODO(wittjosiah): Handle removal of actions.
-  const visitor = (node: Node, path: string[]) => {
+  const visitor = (node: Node.Node, path: string[]) => {
     let shortcut: string | undefined;
     if (typeof node.properties.keyBinding === 'object') {
       const availablePlatforms = Object.keys(node.properties.keyBinding);
@@ -36,7 +36,7 @@ export default defineCapabilityModule((context: PluginContext) => {
       shortcut = node.properties.keyBinding;
     }
 
-    if (shortcut && isAction(node)) {
+    if (shortcut && Node.isAction(node)) {
       Keyboard.singleton.getContext(path.slice(0, -1).join('/')).bind({
         shortcut,
         handler: () => node.data({ parent: node, caller: KEY_BINDING }),
@@ -46,14 +46,14 @@ export default defineCapabilityModule((context: PluginContext) => {
   };
 
   const eventHandler = debounce(() => {
-    graph.traverse({ visitor });
+    Graph.traverse(graph, { visitor });
   }, 500);
 
   const unsubscribe = graph.onNodeChanged.on(eventHandler);
 
   // TODO(burdon): Create context and plugin.
   Keyboard.singleton.initialize();
-  Keyboard.singleton.setCurrentContext(graph.root.id);
+  Keyboard.singleton.setCurrentContext(Node.RootId);
 
   return contributes(AppCapabilities.Null, null, () => {
     unsubscribe();

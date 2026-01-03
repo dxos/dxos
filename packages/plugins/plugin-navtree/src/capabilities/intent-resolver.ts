@@ -13,6 +13,7 @@ import {
   defineCapabilityModule,
 } from '@dxos/app-framework';
 import { log } from '@dxos/log';
+import { Graph } from '@dxos/plugin-graph';
 
 import { NavTreeCapabilities } from './capabilities';
 
@@ -28,7 +29,7 @@ export default defineCapabilityModule((context: PluginContext) =>
         const { getItem, setItem } = context.getCapability(NavTreeCapabilities.State);
 
         try {
-          const path = await graph.waitForPath({ target: subject }, { timeout: 1_000 });
+          const path = await Graph.waitForPath(graph, { target: subject }, { timeout: 1_000 });
           [...Array(path.length)].forEach((_, index) => {
             const subpath = path.slice(0, index);
             const value = getItem(subpath);

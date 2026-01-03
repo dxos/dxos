@@ -13,8 +13,10 @@ import { Filter } from '@dxos/echo-db';
 import { EchoTestBuilder } from '@dxos/echo-db/testing';
 import { registerSignalsRuntime } from '@dxos/echo-signals';
 
-import { ROOT_ID } from './graph';
-import { GraphBuilder, atomFromSignal, createExtension } from './graph-builder';
+import { fromSignal } from './atoms';
+import * as Graph from './graph';
+import * as GraphBuilder from './graph-builder';
+import * as Node from './node';
 import { atomFromQuery } from './testing';
 
 registerSignalsRuntime();
@@ -25,13 +27,13 @@ describe('signals integration', () => {
   test('creating atom from signal', () => {
     const registry = Registry.make();
     const state = signal<number>(0);
-    const value = atomFromSignal(() => state.value);
+    const value = fromSignal(() => state.value);
     const inline = Atom.make((get) => {
       // NOTE: This will create a new atom instance each time.
       // This test is verifying that this behaves the same as using a stable atom instance.
       // The parent will remain subscribed to one instance until the new one is created.
       // The old one will then be garbage collected because it is no longer referenced.
-      const atom = atomFromSignal(() => get(value));
+      const atom = fromSignal(() => get(value));
       return get(atom);
     });
 
@@ -88,8 +90,8 @@ describe('signals integration', () => {
       await peer.reload();
       {
         await using db = await peer.openLastDatabase();
-        const outer = (await db.query(Filter.id(outerId)).first()) as any;
-        const innerAtom = atomFromSignal(() => outer.inner.target);
+        const outer = await db.query(Filter.id(outerId)).first();
+        const innerAtom = fromSignal(() => outer.inner.target);
         const loaded = new Trigger();
 
         let count = 0;
@@ -129,19 +131,24 @@ describe('signals integration', () => {
 
       {
         await using db = await peer.openLastDatabase();
-        const outer = (await db.query(Filter.id(outerId)).first()) as any;
-        const innerAtom = atomFromSignal(() => outer.inner.target);
+        const outer = await db.query(Filter.id(outerId)).first();
+        const innerAtom = fromSignal(() => outer.inner.target);
         const inner = registry.get(innerAtom);
         expect(inner).to.eq(undefined);
 
-        const builder = new GraphBuilder({ registry });
-        builder.addExtension(
-          createExtension({
+        const builder = GraphBuilder.make({ registry });
+        GraphBuilder.addExtension(
+          builder,
+          GraphBuilder.createExtensionRaw({
             id: 'outbound-connector',
             connector: () =>
               Atom.make((get) => {
-                const inner = get(innerAtom) as any;
-                return inner ? [{ id: inner.id, type: EXAMPLE_TYPE, data: inner.name }] : [];
+                const inner = get(innerAtom);
+                if (!inner) {
+                  return [];
+                }
+                const innerObj = inner as Obj.Any & { name: string };
+                return [{ id: innerObj.id, type: EXAMPLE_TYPE, data: innerObj.name }];
               }),
           }),
         );
@@ -150,21 +157,21 @@ describe('signals integration', () => {
 
         const loaded = new Trigger();
         let count = 0;
-        const cancel = registry.subscribe(graph.connections(ROOT_ID), (nodes) => {
+        const cancel = registry.subscribe(graph.connections(Node.RootId), (nodes: Node.Node[]) => {
           count++;
           if (nodes.length > 0) {
             loaded.wake();
           }
         });
         onTestFinished(() => cancel());
-        registry.get(graph.connections(ROOT_ID));
+        registry.get(graph.connections(Node.RootId));
         expect(count).to.eq(1);
 
-        graph.expand(ROOT_ID);
+        Graph.expand(graph, Node.RootId);
         await loaded.wait();
         expect(count).to.eq(2);
 
-        const nodes = registry.get(graph.connections(ROOT_ID));
+        const nodes = registry.get(graph.connections(Node.RootId));
         expect(nodes).has.length(1);
         expect(nodes[0].id).to.eq(innerId);
         expect(nodes[0].data).to.eq('inner');
@@ -178,20 +185,24 @@ describe('signals integration', () => {
       db.add(Obj.make(Type.Expando, { name: 'a' }));
       db.add(Obj.make(Type.Expando, { name: 'b' }));
 
-      const builder = new GraphBuilder({ registry });
-      builder.addExtension(
-        createExtension({
+      const builder = GraphBuilder.make({ registry });
+      GraphBuilder.addExtension(
+        builder,
+        GraphBuilder.createExtensionRaw({
           id: 'expando',
           connector: () => {
             const query = db.query(Filter.type(Type.Expando));
 
             return Atom.make((get) => {
               const objects = get(atomFromQuery(query));
-              return objects.map((object) => ({
-                id: object.id,
-                type: EXAMPLE_TYPE,
-                data: object.name,
-              }));
+              return objects.map((object) => {
+                const obj = object as Obj.Any & { name: string };
+                return {
+                  id: obj.id,
+                  type: EXAMPLE_TYPE,
+                  data: obj.name,
+                };
+              });
             });
           },
         }),
@@ -199,15 +210,15 @@ describe('signals integration', () => {
 
       const graph = builder.graph;
       let count = 0;
-      const cancel = registry.subscribe(graph.connections(ROOT_ID), (nodes) => {
+      const cancel = registry.subscribe(graph.connections(Node.RootId), (nodes) => {
         count = nodes.length;
       });
       onTestFinished(() => cancel());
 
-      registry.get(graph.connections(ROOT_ID));
+      registry.get(graph.connections(Node.RootId));
       expect(count).to.eq(0);
 
-      graph.expand(ROOT_ID);
+      Graph.expand(graph, Node.RootId);
       expect(count).to.eq(2);
 
       const object = db.add(Obj.make(Type.Expando, { name: 'c' }));

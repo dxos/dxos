@@ -4,7 +4,7 @@
 
 import type { FC } from 'react';
 
-import type { Node } from '@dxos/app-graph';
+import { type Node } from '@dxos/app-graph';
 import type { Density } from '@dxos/react-ui';
 import type { TreeProps } from '@dxos/react-ui-list';
 import type { MaybePromise } from '@dxos/util';
@@ -21,9 +21,9 @@ export type NavTreeContextValue = Pick<
     tab: string;
     topbar?: boolean;
     popoverAnchorId?: string;
-    renderItemEnd?: FC<{ node: Node; open: boolean }>;
-    useActions: (node: Node) => FlattenedActions;
-    loadDescendents?: (node: Node) => MaybePromise<void>;
+    renderItemEnd?: FC<{ node: Node.Node; open: boolean }>;
+    useActions: (node: Node.Node) => FlattenedActions;
+    loadDescendents?: (node: Node.Node) => MaybePromise<void>;
     isAlternateTree?: (path: string[], item: NavTreeItemGraphNode) => boolean;
     setAlternateTree?: (path: string[], open: boolean) => void;
     onTabChange?: (node: NavTreeItemGraphNode) => void;
@@ -31,7 +31,7 @@ export type NavTreeContextValue = Pick<
 
 export type NavTreeItemColumnsProps = {
   path: string[];
-  item: Node;
+  item: Node.Node;
   open: boolean;
   density?: Density;
 };

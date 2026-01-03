@@ -7,6 +7,7 @@ import React, { useCallback } from 'react';
 import { LayoutAction, createIntent } from '@dxos/app-framework';
 import { useAppGraph, useIntentDispatcher } from '@dxos/app-framework/react';
 import { Trigger } from '@dxos/async';
+import { Graph } from '@dxos/plugin-graph';
 import { ObservabilityAction } from '@dxos/plugin-observability/types';
 import { useClient } from '@dxos/react-client';
 import { type Space } from '@dxos/react-client/echo';
@@ -84,7 +85,7 @@ export const JoinDialog = ({ navigableCollections, onDone, ...props }: JoinDialo
       if (target) {
         // Wait before navigating to the target node.
         // If the target has not yet replicated, this will trigger a loading toast.
-        await graph.waitForPath({ target }).catch(() => {});
+        await Graph.waitForPath(graph, { target }).catch(() => {});
         await Promise.all([
           dispatch(
             createIntent(LayoutAction.Open, {

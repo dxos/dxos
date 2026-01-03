@@ -6,6 +6,7 @@ import * as Option from 'effect/Option';
 import React, { type FC, useMemo } from 'react';
 
 import { Surface, useAppGraph } from '@dxos/app-framework/react';
+import { Graph } from '@dxos/plugin-graph';
 import { Button, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { StackItem } from '@dxos/react-ui-stack';
 import { descriptionMessage, mx } from '@dxos/ui-theme';
@@ -34,9 +35,10 @@ const LocalFileContainer: FC<{ file: LocalFile }> = ({ file }) => {
 const PermissionsGate = ({ entity }: { entity: LocalEntity }) => {
   const { t } = useTranslation(meta.id);
   const { graph } = useAppGraph();
-  const node = graph.getNode(entity.id).pipe(Option.getOrNull);
+  const node = Graph.getNode(graph, entity.id).pipe(Option.getOrNull);
   const action =
-    node && graph.getActions(node.id).find((action) => action.id === `${LocalFilesAction.Reconnect._tag}:${node.id}`);
+    node &&
+    Graph.getActions(graph, node.id).find((action) => action.id === `${LocalFilesAction.Reconnect._tag}:${node.id}`);
 
   return (
     <StackItem.Content>

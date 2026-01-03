@@ -19,6 +19,7 @@ import { log } from '@dxos/log';
 import { AttentionCapabilities } from '@dxos/plugin-attention';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { DeckCapabilities } from '@dxos/plugin-deck';
+import { Graph } from '@dxos/plugin-graph';
 import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
 import { PublicKey } from '@dxos/react-client';
 import { SpaceState, parseId } from '@dxos/react-client/echo';
@@ -79,11 +80,11 @@ export default defineCapabilityModule(async (context: PluginContext) => {
         }
 
         const id = active[0];
-        const node = graph.getNode(id).pipe(Option.getOrNull);
+        const node = Graph.getNode(graph, id).pipe(Option.getOrNull);
         if (!node && id.length === ECHO_DXN_LENGTH) {
-          void graph.initialize(id);
+          void Graph.initialize(graph, id);
           const timeout = setTimeout(async () => {
-            const node = graph.getNode(id).pipe(Option.getOrNull);
+            const node = Graph.getNode(graph, id).pipe(Option.getOrNull);
             if (!node) {
               await dispatch(createIntent(SpaceAction.WaitForObject, { id }));
             }

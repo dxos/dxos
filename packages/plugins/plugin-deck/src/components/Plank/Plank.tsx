@@ -138,9 +138,9 @@ type PlankComponentProps = {
   order?: number;
   active?: string[];
   companioned?: 'primary' | 'companion';
-  node?: Node;
-  primary?: Node;
-  companions?: Node[];
+  node?: Node.Node;
+  primary?: Node.Node;
+  companions?: Node.Node[];
   settings?: DeckSettingsProps;
 };
 

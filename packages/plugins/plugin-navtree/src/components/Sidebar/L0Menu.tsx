@@ -57,14 +57,14 @@ type L0ItemData = {
 };
 
 type L0ItemRootProps = {
-  item: Node<any>;
-  parent?: Node<any>;
+  item: Node.Node;
+  parent?: Node.Node;
   path: string[];
 };
 
 type L0ItemProps = L0ItemRootProps & {
-  item: Node<any>;
-  parent?: Node<any>;
+  item: Node.Node;
+  parent?: Node.Node;
   path: string[];
   pinned?: boolean;
   onRearrange?: StackItemRearrangeHandler<L0ItemData>;
@@ -309,10 +309,10 @@ const L0Collection = ({ item, path }: L0ItemProps) => {
 
 export type L0MenuProps = {
   menuActions: MenuItem[];
-  topLevelItems: Node<any>[];
-  pinnedItems: Node<any>[];
-  userAccountItem?: Node<any>;
-  parent?: Node<any>;
+  topLevelItems: Node.Node[];
+  pinnedItems: Node.Node[];
+  userAccountItem?: Node.Node;
+  parent?: Node.Node;
   path: string[];
 };
 

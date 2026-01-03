@@ -5,7 +5,7 @@
 import * as Option from 'effect/Option';
 import { useEffect, useState } from 'react';
 
-import { type ReadableGraph } from '@dxos/plugin-graph';
+import { Graph } from '@dxos/plugin-graph';
 
 /**
  * React hook to get a path from the graph.
@@ -16,9 +16,9 @@ import { type ReadableGraph } from '@dxos/plugin-graph';
  * @returns Path if found, undefined otherwise.
  */
 // TODO(wittjosiah): Factor out.
-export const usePath = (graph: ReadableGraph, id?: string, timeout?: number): Option.Option<string[]> => {
+export const usePath = (graph: Graph.ReadableGraph, id?: string, timeout?: number): Option.Option<string[]> => {
   const [pathState, setPathState] = useState<Option.Option<string[]>>(
-    id ? graph.getPath({ target: id }) : Option.none(),
+    id ? Graph.getPath(graph, { target: id }) : Option.none(),
   );
 
   useEffect(() => {
@@ -33,7 +33,7 @@ export const usePath = (graph: ReadableGraph, id?: string, timeout?: number): Op
     // Set timeout did not seem to effectively not block the UI thread.
     const frame = requestAnimationFrame(async () => {
       try {
-        const path = await graph.waitForPath({ target: id }, { timeout });
+        const path = await Graph.waitForPath(graph, { target: id }, { timeout });
         if (path) {
           setPathState(Option.some(path));
         }

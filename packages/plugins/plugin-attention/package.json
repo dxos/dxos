@@ -39,6 +39,7 @@
     "@dxos/echo": "workspace:*",
     "@dxos/echo-signals": "workspace:*",
     "@dxos/keyboard": "workspace:*",
+    "@dxos/plugin-graph": "workspace:*",
     "@dxos/react-ui-attention": "workspace:*",
     "@dxos/util": "workspace:*",
     "@preact-signals/safe-react": "catalog:",

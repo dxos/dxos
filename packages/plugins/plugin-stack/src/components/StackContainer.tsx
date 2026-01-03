@@ -9,6 +9,7 @@ import { Capabilities, LayoutAction, createIntent } from '@dxos/app-framework';
 import { useAppGraph, useCapabilities, useIntentDispatcher } from '@dxos/app-framework/react';
 import { isLiveObject } from '@dxos/client/echo';
 import { Obj } from '@dxos/echo';
+import { Graph } from '@dxos/plugin-graph';
 import { SpaceAction } from '@dxos/plugin-space/types';
 import { Toolbar, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { AttentionProvider } from '@dxos/react-ui-attention';
@@ -64,7 +65,10 @@ const StackContainer = ({ id, collection }: StackContainerProps) => {
           title:
             (object as any)?.title ??
             // TODO(wittjosiah): `getNode` is not reactive.
-            toLocalizedString(graph.getNode(Obj.getDXN(object).toString()).pipe(Option.getOrNull)?.properties.label, t),
+            toLocalizedString(
+              Graph.getNode(graph, Obj.getDXN(object).toString()).pipe(Option.getOrNull)?.properties.label,
+              t,
+            ),
         } as StackSectionView;
         return { id: Obj.getDXN(object).toString(), object, metadata, view } satisfies StackSectionItem;
       }) ?? [];

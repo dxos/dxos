@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { type Action, type Node } from '@dxos/app-graph';
+import { type Node } from '@dxos/app-graph';
 import { IconButton, toLocalizedString, useDensityContext, useTranslation } from '@dxos/react-ui';
 import { DropdownMenu, type MenuItem, MenuProvider } from '@dxos/react-ui-menu';
 import { hoverableControlItem, hoverableOpenControlItem } from '@dxos/ui-theme';
@@ -13,10 +13,10 @@ import { meta } from '../../meta';
 import { type ActionProperties } from '../../types';
 
 export type NavTreeItemActionMenuProps = ActionProperties & {
-  parent: Node;
+  parent: Node.Node;
   caller?: string;
   monolithic?: boolean;
-  menuActions?: Action[];
+  menuActions?: Node.Action[];
 };
 
 const fallbackIcon = 'ph--placeholder--regular';
@@ -64,7 +64,7 @@ export const NavTreeItemMonolithicAction = ({
   properties: { disabled, caller, testId, icon, variant = 'ghost', iconOnly = true } = { label: 'never' },
   data: invoke,
   baseLabel,
-}: Action & { parent: Node; onAction?: (action: Action) => void; baseLabel: string }) => {
+}: Node.Action & { parent: Node.Node; onAction?: (action: Node.Action) => void; baseLabel: string }) => {
   const density = useDensityContext();
   return (
     <IconButton

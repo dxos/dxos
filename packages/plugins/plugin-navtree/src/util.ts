@@ -2,22 +2,24 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type Action, type Node, type ReadableGraph, isActionLike } from '@dxos/app-graph';
+import { Graph, Node } from '@dxos/plugin-graph';
 import { isNonNullable } from '@dxos/util';
 
 import { type NavTreeItemGraphNode } from './types';
 
 export const getParent = (
-  graph: ReadableGraph,
+  graph: Graph.ReadableGraph,
   node: NavTreeItemGraphNode,
   path: string[],
 ): NavTreeItemGraphNode | undefined => {
   const parentId = path[path.length - 2];
-  return graph.getConnections(node.id, 'inbound').find((n) => n.id === parentId) as NavTreeItemGraphNode | undefined;
+  return Graph.getConnections(graph, node.id, 'inbound').find((n: Node.Node) => n.id === parentId) as
+    | NavTreeItemGraphNode
+    | undefined;
 };
 
 export const getPersistenceParent = (
-  graph: ReadableGraph,
+  graph: Graph.ReadableGraph,
   node: NavTreeItemGraphNode,
   path: string[],
   persistenceClass: string,
@@ -31,7 +33,7 @@ export const getPersistenceParent = (
 };
 
 export const resolveMigrationOperation = (
-  graph: ReadableGraph,
+  graph: Graph.ReadableGraph,
   activeNode: NavTreeItemGraphNode,
   destinationPath: string[],
   destinationRelatedNode?: NavTreeItemGraphNode,
@@ -60,7 +62,7 @@ export const resolveMigrationOperation = (
 };
 
 // TODO(wittjosiah): Move into node implementation?
-export const sortActions = (actions: Action[]): Action[] =>
+export const sortActions = (actions: Node.Action[]): Node.Action[] =>
   actions.sort((a, b) => {
     if (a.properties.disposition === b.properties.disposition) {
       return 0;
@@ -74,13 +76,12 @@ export const sortActions = (actions: Action[]): Action[] =>
   });
 
 export const getChildren = (
-  graph: ReadableGraph,
+  graph: Graph.ReadableGraph,
   node: NavTreeItemGraphNode,
   path: readonly string[] = [],
 ): NavTreeItemGraphNode[] => {
-  return graph
-    .getConnections(node.id, 'outbound')
-    .map((n) => {
+  return Graph.getConnections(graph, node.id, 'outbound')
+    .map((n: Node.Node) => {
       // Break cycles.
       const nextPath = [...path, node.id];
       return nextPath.includes(n.id) ? undefined : (n as NavTreeItemGraphNode);
@@ -88,10 +89,10 @@ export const getChildren = (
     .filter(isNonNullable) as NavTreeItemGraphNode[];
 };
 
-export const l0ItemType = (item: Node<any>) => {
+export const l0ItemType = (item: Node.Node) => {
   if (item.properties.disposition === 'collection') {
     return 'collection';
-  } else if (isActionLike(item)) {
+  } else if (Node.isActionLike(item)) {
     return 'action';
   } else if (item.properties.disposition === 'navigation') {
     return 'link';

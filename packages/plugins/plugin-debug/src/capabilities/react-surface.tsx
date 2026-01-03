@@ -47,7 +47,7 @@ import { Obj } from '@dxos/echo';
 import { SettingsStore } from '@dxos/local-storage';
 import { log } from '@dxos/log';
 import { ClientCapabilities } from '@dxos/plugin-client';
-import { Graph } from '@dxos/plugin-graph';
+import { type Graph } from '@dxos/plugin-graph';
 import { ScriptAction } from '@dxos/plugin-script/types';
 import { SpaceAction } from '@dxos/plugin-space/types';
 import { type Space, SpaceState, isSpace, parseId } from '@dxos/react-client/echo';
@@ -72,12 +72,15 @@ type SpaceDebug = {
 };
 
 type GraphDebug = {
-  graph: Graph;
+  graph: Graph.Graph;
   root: string;
 };
 
 const isSpaceDebug = (data: any): data is SpaceDebug => data?.type === `${meta.id}/space` && isSpace(data.space);
-const isGraphDebug = (data: any): data is GraphDebug => data?.graph instanceof Graph && typeof data?.root === 'string';
+const isGraphDebug = (data: any): data is GraphDebug => {
+  const graph = data?.graph;
+  return graph != null && typeof graph === 'object' && 'toJSON' in graph && typeof data?.root === 'string';
+};
 
 // TODO(wittjosiah): Factor out?
 const useCurrentSpace = () => {

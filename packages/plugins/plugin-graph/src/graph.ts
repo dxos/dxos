@@ -5,7 +5,7 @@
 import * as Record from 'effect/Record';
 
 import { Capabilities, type PluginContext, contributes } from '@dxos/app-framework';
-import { type ExpandableGraph, GraphBuilder, ROOT_ID, flattenExtensions } from '@dxos/app-graph';
+import { Graph, GraphBuilder, Node } from '@dxos/app-graph';
 
 // TODO(wittjosiah): Remove or restore graph caching.
 // import { meta } from './meta';
@@ -22,28 +22,28 @@ export default async (context: PluginContext) => {
   const unsubscribe = registry.subscribe(
     context.capabilities(Capabilities.AppGraphBuilder),
     (extensions) => {
-      const next = flattenExtensions(extensions);
+      const next = GraphBuilder.flattenExtensions(extensions);
       const current = Record.values(registry.get(builder.extensions));
       const removed = current.filter(({ id }) => !next.some(({ id: nextId }) => nextId === id));
-      removed.forEach((extension) => builder.removeExtension(extension.id));
-      next.forEach((extension) => builder.addExtension(extension));
+      removed.forEach((extension) => GraphBuilder.removeExtension(builder, extension.id));
+      next.forEach((extension) => GraphBuilder.addExtension(builder, extension));
     },
     { immediate: true },
   );
 
   // await builder.initialize();
-  void builder.graph.expand(ROOT_ID);
+  void Graph.expand(builder.graph, Node.RootId);
 
   setupDevtools(builder.graph);
 
-  return contributes(Capabilities.AppGraph, { graph: builder.graph, explore: builder.explore }, () => {
+  return contributes(Capabilities.AppGraph, { graph: builder.graph, explore: GraphBuilder.explore }, () => {
     // clearInterval(interval);
     unsubscribe();
   });
 };
 
 // Expose the graph to the window for debugging.
-const setupDevtools = (graph: ExpandableGraph) => {
+const setupDevtools = (graph: Graph.ExpandableGraph) => {
   (globalThis as any).composer ??= {};
   (globalThis as any).composer.graph = graph;
 };

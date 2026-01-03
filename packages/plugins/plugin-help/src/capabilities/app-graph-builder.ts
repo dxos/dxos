@@ -2,10 +2,6 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Atom } from '@effect-atom/atom-react';
-import * as Function from 'effect/Function';
-import * as Option from 'effect/Option';
-
 import {
   Capabilities,
   LayoutAction,
@@ -14,7 +10,7 @@ import {
   createIntent,
   defineCapabilityModule,
 } from '@dxos/app-framework';
-import { createExtension } from '@dxos/app-graph';
+import { GraphBuilder, NodeMatcher } from '@dxos/app-graph';
 
 import { SHORTCUTS_DIALOG } from '../components';
 import { meta } from '../meta';
@@ -25,62 +21,55 @@ import { HelpCapabilities } from './capabilities';
 export default defineCapabilityModule((context: PluginContext) =>
   contributes(
     Capabilities.AppGraphBuilder,
-    createExtension({
+    GraphBuilder.createExtension({
       id: meta.id,
-      actions: (node) =>
-        Atom.make((get) =>
-          Function.pipe(
-            get(node),
-            Option.flatMap((node) => (node.id === 'root' ? Option.some(node) : Option.none())),
-            Option.map(() => [
-              {
-                id: HelpAction.Start._tag,
-                data: async () => {
-                  const { dispatchPromise: dispatch } = context.getCapability(Capabilities.IntentDispatcher);
-                  const state = context.getCapability(HelpCapabilities.MutableState);
-                  state.showHints = true;
-                  await dispatch(createIntent(HelpAction.Start));
+      match: NodeMatcher.whenRoot,
+      actions: () => [
+        {
+          id: HelpAction.Start._tag,
+          data: async () => {
+            const { dispatchPromise: dispatch } = context.getCapability(Capabilities.IntentDispatcher);
+            const state = context.getCapability(HelpCapabilities.MutableState);
+            state.showHints = true;
+            await dispatch(createIntent(HelpAction.Start));
+          },
+          properties: {
+            label: ['open help tour', { ns: meta.id }],
+            icon: 'ph--info--regular',
+            keyBinding: {
+              macos: 'shift+meta+/',
+              // TODO(wittjosiah): Test on windows to see if it behaves the same as linux.
+              windows: 'shift+ctrl+/',
+              linux: 'shift+ctrl+?',
+            },
+            testId: 'helpPlugin.openHelp',
+          },
+        },
+        {
+          id: `${meta.id}/open-shortcuts`,
+          data: async () => {
+            const { dispatchPromise: dispatch } = context.getCapability(Capabilities.IntentDispatcher);
+            const state = context.getCapability(HelpCapabilities.MutableState);
+            state.showHints = true;
+            await dispatch(
+              createIntent(LayoutAction.UpdateDialog, {
+                part: 'dialog',
+                subject: SHORTCUTS_DIALOG,
+                options: {
+                  blockAlign: 'center',
                 },
-                properties: {
-                  label: ['open help tour', { ns: meta.id }],
-                  icon: 'ph--info--regular',
-                  keyBinding: {
-                    macos: 'shift+meta+/',
-                    // TODO(wittjosiah): Test on windows to see if it behaves the same as linux.
-                    windows: 'shift+ctrl+/',
-                    linux: 'shift+ctrl+?',
-                  },
-                  testId: 'helpPlugin.openHelp',
-                },
-              },
-              {
-                id: `${meta.id}/open-shortcuts`,
-                data: async () => {
-                  const { dispatchPromise: dispatch } = context.getCapability(Capabilities.IntentDispatcher);
-                  const state = context.getCapability(HelpCapabilities.MutableState);
-                  state.showHints = true;
-                  await dispatch(
-                    createIntent(LayoutAction.UpdateDialog, {
-                      part: 'dialog',
-                      subject: SHORTCUTS_DIALOG,
-                      options: {
-                        blockAlign: 'center',
-                      },
-                    }),
-                  );
-                },
-                properties: {
-                  label: ['open shortcuts label', { ns: meta.id }],
-                  icon: 'ph--keyboard--regular',
-                  keyBinding: {
-                    macos: 'meta+ctrl+/',
-                  },
-                },
-              },
-            ]),
-            Option.getOrElse(() => []),
-          ),
-        ),
+              }),
+            );
+          },
+          properties: {
+            label: ['open shortcuts label', { ns: meta.id }],
+            icon: 'ph--keyboard--regular',
+            keyBinding: {
+              macos: 'meta+ctrl+/',
+            },
+          },
+        },
+      ],
     }),
   ),
 );

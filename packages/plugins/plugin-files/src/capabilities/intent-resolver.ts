@@ -14,7 +14,7 @@ import {
 } from '@dxos/app-framework';
 import { Trigger } from '@dxos/async';
 import { log } from '@dxos/log';
-import { type Node, isActionLike } from '@dxos/plugin-graph';
+import { Node } from '@dxos/plugin-graph';
 import { type MaybePromise, byPosition } from '@dxos/util';
 
 import { meta } from '../meta';
@@ -34,7 +34,15 @@ export default defineCapabilityModule((context: PluginContext) => {
   const directoryHandles: Record<string, FileSystemDirectoryHandle> = {};
   const directoryNameCounter: Record<string, Record<string, number>> = {};
 
-  const exportFile = async ({ node, path, serialized }: { node: Node; path: string[]; serialized: SerializedNode }) => {
+  const exportFile = async ({
+    node,
+    path,
+    serialized,
+  }: {
+    node: Node.Node;
+    path: string[];
+    serialized: SerializedNode;
+  }) => {
     const state = context.getCapability(FileCapabilities.MutableState);
     if (!state.rootHandle) {
       return;
@@ -114,7 +122,7 @@ export default defineCapabilityModule((context: PluginContext) => {
         //   the files need to be deserialized first in order to restore the relations.
         await explore({
           visitor: async (node, path) => {
-            if (isActionLike(node)) {
+            if (Node.isActionLike(node)) {
               return false;
             }
 

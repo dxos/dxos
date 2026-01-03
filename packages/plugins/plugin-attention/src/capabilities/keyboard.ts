@@ -12,6 +12,7 @@ import {
   defineCapabilityModule,
 } from '@dxos/app-framework';
 import { Keyboard } from '@dxos/keyboard';
+import { Graph } from '@dxos/plugin-graph';
 
 import { AttentionCapabilities } from './capabilities';
 
@@ -21,7 +22,7 @@ export default defineCapabilityModule((context: PluginContext) => {
 
   const unsubscribe = effect(() => {
     const id = Array.from(attention.current)[0];
-    const path = id && graph.getPath({ target: id }).pipe(Option.getOrNull);
+    const path = id && Graph.getPath(graph, { target: id }).pipe(Option.getOrNull);
     if (path) {
       Keyboard.singleton.setCurrentContext(path.join('/'));
     }

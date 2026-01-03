@@ -4,7 +4,7 @@
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 
-import { type NodeArg } from '@dxos/app-graph';
+import { type Node } from '@dxos/app-graph';
 import { faker } from '@dxos/random';
 import { withTheme } from '@dxos/react-ui/testing';
 
@@ -18,7 +18,7 @@ const parent = {
     label: faker.lorem.words(2),
     icon: 'ph--circle--regular',
   },
-} satisfies NodeArg<any>;
+} satisfies Node.NodeArg<any>;
 
 // TODO(burdon): Factor out across tests.
 const menuActions = faker.helpers.multiple(
@@ -33,7 +33,7 @@ const menuActions = faker.helpers.multiple(
         label: faker.lorem.words(2),
         icon: 'ph--circle--regular',
       },
-    }) satisfies NodeArg<any>,
+    }) satisfies Node.NodeArg<any>,
   { count: 20 },
 );
 
