@@ -16,9 +16,8 @@ export const SurfaceCardRole = Schema.Literal(
 
 export type SurfaceCardRole = Schema.Schema.Type<typeof SurfaceCardRole>;
 
-// TODO(burdon): Define all roles.
+// TODO(burdon): Subset of roles used by high-level framework components.
 export type SurfaceRole =
-  | 'item'
   | 'article'
   | 'complementary' // (for companion?)
   | 'section'
