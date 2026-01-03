@@ -504,6 +504,6 @@ const stringifyRef = (ref: Ref.Any) => {
   return ref.dxn.asEchoDXN()?.echoId ?? ref.dxn.asQueueDXN()?.objectId ?? '';
 };
 
-const stringifyObject = (obj: Obj.Any) => {
+const stringifyObject = (obj: Obj.source) => {
   return Obj.getLabel(obj) ?? Obj.getTypename(obj) ?? obj.id;
 };

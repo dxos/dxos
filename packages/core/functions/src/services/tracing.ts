@@ -27,7 +27,7 @@ export class TracingService extends Context.Tag('@dxos/functions/TracingService'
      * Write an event to the tracing queue.
      * @param event - The event to write. Must be an a typed object.
      */
-    write: (event: Obj.Any) => void;
+    write: (event: Obj.source) => void;
   }
 >() {
   static noop: Context.Tag.Service<TracingService> = {

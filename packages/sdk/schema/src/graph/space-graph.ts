@@ -21,7 +21,7 @@ import { visitValues } from '@dxos/util';
 
 export type SpaceGraphNode = Graph.Node.Node<{
   label: string;
-  object?: Obj.Any;
+  object?: Obj.source;
 }>;
 
 // TODO(burdon): Differentiate between refs and relations.
@@ -35,7 +35,7 @@ const truncate = (id: string) => `${id.slice(0, 4)}…${id.slice(-4)}`;
 
 export type SpaceGraphModelOptions = {
   showSchema?: boolean;
-  onCreateNode?: (node: SpaceGraphNode, object: Obj.Any) => void;
+  onCreateNode?: (node: SpaceGraphNode, object: Obj.source) => void;
   onCreateEdge?: (edge: SpaceGraphEdge, relation: Relation.Any) => void;
 };
 
@@ -297,7 +297,7 @@ export class SpaceGraphModel extends GraphModel.ReactiveGraphModel<SpaceGraphNod
   }
 }
 
-const getOutgoingReferences = (object: Obj.Any): Ref.Any[] => {
+const getOutgoingReferences = (object: Obj.source): Ref.Any[] => {
   const refs: Ref.Any[] = [];
   const go = (value: unknown) => {
     if (Ref.isRef(value)) {

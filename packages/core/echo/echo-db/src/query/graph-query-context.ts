@@ -216,7 +216,7 @@ export class SpaceQuerySource implements QuerySource {
     });
   };
 
-  async run(query: QueryAST.Query): Promise<QueryResult.EntityEntry<Obj.Any>[]> {
+  async run(query: QueryAST.Query): Promise<QueryResult.EntityEntry<Obj.source>[]> {
     if (!this._isValidSourceForQuery(query)) {
       return [];
     }
@@ -242,7 +242,7 @@ export class SpaceQuerySource implements QuerySource {
     });
 
     // Dedup
-    const map = new Map<string, QueryResult.EntityEntry<Obj.Any>>();
+    const map = new Map<string, QueryResult.EntityEntry<Obj.source>>();
     for (const result of results) {
       map.set(result.id, result);
     }
@@ -250,7 +250,7 @@ export class SpaceQuerySource implements QuerySource {
     return [...map.values()];
   }
 
-  getResults(): QueryResult.EntityEntry<Obj.Any>[] {
+  getResults(): QueryResult.EntityEntry<Obj.source>[] {
     if (!this._query) {
       return [];
     }
@@ -293,7 +293,7 @@ export class SpaceQuerySource implements QuerySource {
   private _queryWorkingSet(
     filter: QueryAST.Filter,
     options: QueryAST.QueryOptions | undefined,
-  ): QueryResult.EntityEntry<Obj.Any>[] {
+  ): QueryResult.EntityEntry<Obj.source>[] {
     const filteredCores = isObjectIdFilter(filter)
       ? (filter as QueryAST.FilterObject)
           .id!.map((id) => this._database.coreDatabase.getObjectCoreById(id, { load: true }))
@@ -314,7 +314,7 @@ export class SpaceQuerySource implements QuerySource {
     return true;
   }
 
-  private _mapCoreToResult(core: ObjectCore): QueryResult.EntityEntry<Obj.Any> {
+  private _mapCoreToResult(core: ObjectCore): QueryResult.EntityEntry<Obj.source> {
     return {
       id: core.id,
       result: this._database.getObjectById(core.id, { deleted: true }),

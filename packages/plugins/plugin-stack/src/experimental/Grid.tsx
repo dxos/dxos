@@ -35,10 +35,8 @@ import { createPortal } from 'react-dom';
 
 import { type Obj } from '@dxos/echo';
 import { Icon, type ThemedClassName } from '@dxos/react-ui';
+import { CONTAINER_DATA_ACTIVE_ATTR, type ItemData, type PlaceholderData } from '@dxos/react-ui-mosaic';
 import { mx } from '@dxos/ui-theme';
-
-import { MOSAIC_DATA_ACTIVE } from './Mosaic';
-import { type MosaicCellData, type MosaicPlaceholderData } from './types';
 
 //
 // Styles
@@ -54,7 +52,7 @@ const classes: Record<string, string> = {
     // Child has focus.
     'focus-within:border-neutralFocusIndicator',
     // Active drop target.
-    `has-[[${MOSAIC_DATA_ACTIVE}=true]]:border-neutralFocusIndicator`,
+    `has-[[${CONTAINER_DATA_ACTIVE_ATTR}=true]]:border-neutralFocusIndicator`,
   ].join(' '),
 };
 
@@ -142,7 +140,7 @@ GridColumn.displayName = 'Grid.Column';
 type GridStackProps = ThemedClassName<
   {
     id: string;
-    objects?: Obj.Any[];
+    objects?: Obj.source[];
   } & Pick<GridCellProps, 'Cell' | 'canDrag' | 'canDrop'>
 >;
 
@@ -161,7 +159,7 @@ const GridStack = forwardRef<HTMLDivElement, GridStackProps>(
             type: 'placeholder',
             location: 'bottom',
             containerId: id,
-          }) satisfies MosaicPlaceholderData,
+          }) satisfies PlaceholderData,
       });
     }, [placeholderRef, id]);
 
@@ -198,8 +196,8 @@ type State = { type: 'idle' } | { type: 'preview'; container: HTMLElement; rect:
 
 type GridCellProps = ThemedClassName<{
   containerId: string;
-  object: Obj.Any;
-  Cell: FC<{ object: Obj.Any; dragging?: boolean }>;
+  object: Obj.source;
+  Cell: FC<{ object: Obj.source; dragging?: boolean }>;
 
   // TODO(burdon): Make dynamic.
   canDrag?: boolean;
@@ -227,11 +225,11 @@ const GridCell = memo(({ classNames, containerId, object, Cell, canDrag = false,
         element: handle,
         getInitialData: () =>
           ({
-            type: 'cell',
+            type: 'item',
             id: object.id,
             object,
             containerId,
-          }) satisfies MosaicCellData,
+          }) satisfies ItemData,
         onGenerateDragPreview: ({ location, nativeSetDragImage }) => {
           const rect = root.getBoundingClientRect();
           setCustomNativeDragPreview({
@@ -259,11 +257,11 @@ const GridCell = memo(({ classNames, containerId, object, Cell, canDrag = false,
         getData: ({ input, element }) => {
           return attachClosestEdge(
             {
-              type: 'cell',
+              type: 'item',
               id: object.id,
               object,
               containerId,
-            } satisfies MosaicCellData,
+            } satisfies ItemData,
             {
               input,
               element,

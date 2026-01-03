@@ -26,8 +26,8 @@ export const ContextBinding = Schema.Struct({
   }),
 
   objects: Schema.Struct({
-    added: Schema.Array(Type.Ref(Obj.Any)),
-    removed: Schema.Array(Type.Ref(Obj.Any)),
+    added: Schema.Array(Type.Ref(Obj.source)),
+    removed: Schema.Array(Type.Ref(Obj.source)),
   }),
 }).pipe(
   Type.Obj({
@@ -40,14 +40,14 @@ export interface ContextBinding extends Schema.Schema.Type<typeof ContextBinding
 
 export type BindingProps = Partial<{
   blueprints: Ref.Ref<Blueprint.Blueprint>[];
-  objects: Ref.Ref<Obj.Any>[];
+  objects: Ref.Ref<Obj.source>[];
 }>;
 
 export class Bindings {
   readonly blueprints = new ComplexSet<Ref.Ref<Blueprint.Blueprint>>((ref) => ref.dxn.toString());
 
   // TODO(burdon): Some DXNs have the Space prefix so only compare the object ID.
-  readonly objects = new ComplexSet<Ref.Ref<Obj.Any>>((ref) => ref.dxn.asEchoDXN()?.echoId);
+  readonly objects = new ComplexSet<Ref.Ref<Obj.source>>((ref) => ref.dxn.asEchoDXN()?.echoId);
 
   toJSON() {
     return {
@@ -63,7 +63,7 @@ export class Bindings {
 // TODO(burdon): Context should manage ephemeral state of bindings until prompt is issued?
 export class AiContextBinder extends Resource {
   private readonly _blueprints = new Signal<Blueprint.Blueprint[]>([]);
-  private readonly _objects = new Signal<Obj.Any[]>([]);
+  private readonly _objects = new Signal<Obj.source[]>([]);
 
   constructor(private readonly _queue: Queue) {
     super();
@@ -152,7 +152,7 @@ export class AiContextBinder extends Resource {
   /**
    * Process bindings to filter duplicates and determine next state.
    */
-  private _processBindings<T extends Obj.Any>(
+  private _processBindings<T extends Obj.source>(
     refs: Ref.Ref<T>[] | undefined,
     current: T[],
   ): { added: Ref.Ref<T>[]; next: T[] } {

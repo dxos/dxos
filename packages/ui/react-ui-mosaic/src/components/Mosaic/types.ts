@@ -31,7 +31,10 @@ export type MosaicContainerData = {
   id: string;
 };
 
-export type MosaicDropTargetData<Location = any> = MosaicCellData | MosaicPlaceholderData<Location>;
+export type MosaicDropTargetData<Location = any> =
+  | MosaicCellData
+  | MosaicPlaceholderData<Location>
+  | MosaicContainerData;
 
 /**
  *
@@ -46,23 +49,25 @@ export type MosaicEvent<Location = any> = {
  * Handler implemented by drop containers.
  */
 export interface MosaicEventHandler<Location = any> {
-  // TODO(burdon): cellId?
+  /**
+   * Container identifier.
+   */
   id: string;
 
   /**
    * Determine if the item can be dropped into this container.
    */
-  canDrop: (item: MosaicCellData) => boolean;
+  canDrop?: (props: { source: MosaicCellData }) => boolean;
 
   /**
    * Called during drag for custom visualization.
    */
-  onDrag?: (props: { item: MosaicCellData; position: { x: number; y: number } }) => void;
+  onDrag?: (props: { source: MosaicCellData; position: { x: number; y: number } }) => void;
 
   /**
    * Insert/rearrange the item at the given location.
    */
-  onDrop?: (props: { object: Obj.Any; at?: MosaicDropTargetData<Location> }) => void;
+  onDrop?: (props: { source: MosaicCellData; target?: MosaicDropTargetData<Location> }) => void;
 
   /**
    * Request the object to be dropped.
@@ -70,7 +75,7 @@ export interface MosaicEventHandler<Location = any> {
    * If the callback returns true, then the callback may decide to remove the item from the source container,
    * completing the transfer.
    */
-  onTake?: (item: MosaicCellData, cb: (objects: Obj.Any) => boolean) => void;
+  onTake?: (props: { source: MosaicCellData }, cb: (object: Obj.Any) => Promise<boolean>) => void;
 
   /**
    * Dragging ended.
