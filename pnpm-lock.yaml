@@ -17230,6 +17230,9 @@ importers:
       '@dxos/react-ui':
         specifier: workspace:*
         version: link:../react-ui
+      '@dxos/react-ui-syntax-highlighter':
+        specifier: workspace:*
+        version: link:../react-ui-syntax-highlighter
       '@dxos/storybook-utils':
         specifier: workspace:*
         version: link:../../common/storybook-utils

@@ -4,20 +4,23 @@
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Schema from 'effect/Schema';
-import React, { useState } from 'react';
+import React, { Fragment, useMemo, useState } from 'react';
 
 import { Obj, Type } from '@dxos/echo';
 import { faker } from '@dxos/random';
-import { Icon } from '@dxos/react-ui';
+import { Icon, type ThemedClassName } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
+import { Json } from '@dxos/react-ui-syntax-highlighter';
 import { mx } from '@dxos/ui-theme';
 
-import { Mosaic } from './Mosaic';
+import { Mosaic, useMosaicContainerContext, useMosaicContext } from './Mosaic';
 import { styles } from './styles';
+import { type MosaicCellData, type MosaicData } from './types';
 
 faker.seed(1);
 
-// TODO(burdon): Option to insert placeholder while dragging.
+// TODO(burdon): Key nav (as with Grid story).
+// TODO(burdon): Placeholders.
 
 const TestData = Schema.Struct({
   name: Schema.String,
@@ -30,12 +33,61 @@ const TestData = Schema.Struct({
 
 interface TestData extends Schema.Schema.Type<typeof TestData> {}
 
-const Cell = ({ item }: { item: TestData }) => {
+// TODO(burdon): Factor out.
+const splice = <T extends Obj.Any>(items: T[], source: MosaicCellData, target?: MosaicData): T[] => {
+  const from = items.findIndex((item) => item.id === source.id);
+  // TODO(burdon): Deal with placeholder.
+  const to = target?.type === 'cell' ? items.findIndex((item) => item.id === target.id) : -1;
+  if (from !== -1) {
+    const newItems = [...items];
+    newItems.splice(from, 1);
+    if (target) {
+      newItems.splice(to, 0, source.object as T);
+    }
+
+    return newItems;
+  }
+
+  return items;
+};
+
+const Container = ({ items }: { items: TestData[] }) => {
+  const { dragging } = useMosaicContainerContext(Container.displayName);
+
+  // TODO(burdon): Factor out.
+  const visibleItems = useMemo(() => {
+    if (!dragging) {
+      return items;
+    }
+
+    return splice(items, dragging.source);
+  }, [items, dragging]);
+
+  return (
+    <>
+      {visibleItems.map((item) => (
+        <Fragment key={item.id}>
+          <Cell item={item} />
+        </Fragment>
+      ))}
+    </>
+  );
+};
+
+Container.displayName = 'Container';
+
+const Cell = ({ classNames, item }: ThemedClassName<{ item: TestData }>) => {
   const [handleRef, setHandleRef] = useState<HTMLDivElement | null>(null);
   return (
-    <Mosaic.Cell key={item.id} dragHandle={handleRef} object={item} classNames={['p-1', styles.cell.dragging]}>
+    <Mosaic.Cell
+      key={item.id}
+      dragHandle={handleRef}
+      object={item}
+      classNames={[styles.cell.dragging, classNames]}
+      gap={{ y: 4 }}
+    >
       <div className='flex gap-2 items-center p-1 border border-separator'>
-        <div ref={setHandleRef}>
+        <div ref={setHandleRef} className='_cursor-pointer'>
           <Icon icon='ph--dots-six-vertical--regular' />
         </div>
         <div className='truncate'>{item.name}</div>
@@ -43,6 +95,15 @@ const Cell = ({ item }: { item: TestData }) => {
     </Mosaic.Cell>
   );
 };
+
+Cell.displayName = 'Cell';
+
+const Debug = ({ classNames }: ThemedClassName) => {
+  const info = useMosaicContext(Debug.displayName);
+  return <Json data={info} classNames={classNames} />;
+};
+
+Debug.displayName = 'Debug';
 
 const DefaultStory = () => {
   const [items, setItems] = useState<TestData[]>(() =>
@@ -55,35 +116,30 @@ const DefaultStory = () => {
 
   return (
     <Mosaic.Root>
-      <div
-        role='none'
-        className={mx(
-          'm-2 flex flex-col bs-full overflow-hidden',
-          'rounded-sm border border-separator',
-          styles.container.active,
-        )}
-      >
-        <Mosaic.Container
-          classNames='overflow-y-auto p-2'
-          autoscroll
-          handler={{
-            id: 'container',
-            canDrop: () => true,
-            onDrop: ({ source, target }) => {
-              const from = items.findIndex((item) => item.id === source.id);
-              const to = target?.type === 'cell' ? items.findIndex((item) => item.id === target.id) : -1;
-              if (from !== -1) {
-                items.splice(from, 1);
-                items.splice(to, 0, source.object as TestData);
-                setItems([...items]);
-              }
-            },
-          }}
+      <div role='none' className='bs-full is-full p-2 grid grid-cols-2 gap-2'>
+        <div
+          role='none'
+          className={mx(
+            'flex flex-col bs-full overflow-hidden',
+            'border border-separator rounded-sm',
+            styles.container.active,
+          )}
         >
-          {items.map((item) => (
-            <Cell key={item.id} item={item} />
-          ))}
-        </Mosaic.Container>
+          <Mosaic.Container
+            classNames='flex flex-col p-2 overflow-y-auto'
+            autoscroll
+            handler={{
+              id: 'test-container',
+              canDrop: () => true,
+              onDrop: ({ source, target }) => {
+                setItems(splice(items, source, target));
+              },
+            }}
+          >
+            <Container items={items} />
+          </Mosaic.Container>
+        </div>
+        <Debug classNames='text-xs' />
       </div>
     </Mosaic.Root>
   );
@@ -92,7 +148,7 @@ const DefaultStory = () => {
 const meta = {
   title: 'ui/react-ui-mosaic/Mosaic',
   render: DefaultStory,
-  decorators: [withTheme, withLayout({ layout: 'column' })],
+  decorators: [withTheme, withLayout({ layout: 'fullscreen' })],
   parameters: {
     layout: 'fullscreen',
   },

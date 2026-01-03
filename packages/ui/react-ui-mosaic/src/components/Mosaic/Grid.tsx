@@ -37,14 +37,13 @@ import { type Obj } from '@dxos/echo';
 import { Icon, type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
-import { MOSAIC_DATA_ACTIVE } from './Mosaic';
 import { type MosaicCellData, type MosaicPlaceholderData } from './types';
 
 //
 // Styles
 //
 
-const classes: Record<string, string> = {
+const styles: Record<string, string> = {
   icon: 'bs-6 is-6 grid place-items-center hover:bg-inputSurface rounded-sm transition opacity-10 group-hover/cell:opacity-100',
 
   borderFocus: [
@@ -125,7 +124,7 @@ const GridColumn = forwardRef<HTMLDivElement, GridColumnProps>(
         role='none'
         tabIndex={0}
         {...tabsterAttrs}
-        className={mx('flex flex-col is-full overflow-hidden', classes.borderFocus, classNames)}
+        className={mx('flex flex-col is-full overflow-hidden', styles.borderFocus, classNames)}
       >
         {children}
       </div>
@@ -347,14 +346,14 @@ const GridCellPrimitive = forwardRef<HTMLDivElement, GridCellPrimitiveProps>(
         role='none'
         className={mx(
           'group/cell is-full grid grid-cols-[min-content_1fr_min-content] overflow-hidden',
-          classes.borderFocus,
+          styles.borderFocus,
           classNames,
         )}
         tabIndex={0}
         {...focusableGroupAttrs}
       >
         <div role='none' className='shrink-0 p-2'>
-          <div ref={handleRef} role='none' className={classes.icon}>
+          <div ref={handleRef} role='none' className={styles.icon}>
             <Icon classNames='cursor-pointer' icon='ph--dots-six-vertical--regular' size={5} />
           </div>
         </div>
@@ -362,7 +361,7 @@ const GridCellPrimitive = forwardRef<HTMLDivElement, GridCellPrimitiveProps>(
           {children}
         </div>
         <div role='none' className='shrink-0 p-2'>
-          <div role='none' className={classes.icon}>
+          <div role='none' className={styles.icon}>
             <Icon classNames='cursor-pointer' icon='ph--list--regular' size={5} />
           </div>
         </div>
@@ -385,4 +384,4 @@ export const Grid = {
 
 export type { GridRootProps, GridViewportProps, GridColumnProps, GridStackProps, GridCellProps };
 
-export { classes };
+export { styles as classes };

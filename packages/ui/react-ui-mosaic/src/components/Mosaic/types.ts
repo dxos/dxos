@@ -7,11 +7,12 @@ import { type Obj } from '@dxos/echo';
 /**
  * Draggable item.
  */
-export type MosaicCellData = {
+// TODO(burdon): Generalize (has ID).
+export type MosaicCellData<T extends Obj.Any = Obj.Any> = {
   type: 'cell';
   id: string;
   containerId: string;
-  object: Obj.Any; // TODO(burdon): Generalize (has ID).
+  object: T;
 };
 
 /**
@@ -31,24 +32,12 @@ export type MosaicContainerData = {
   id: string;
 };
 
-export type MosaicDropTargetData<Location = any> =
-  | MosaicCellData
-  | MosaicPlaceholderData<Location>
-  | MosaicContainerData;
-
-/**
- *
- */
-export type MosaicEvent<Location = any> = {
-  source: MosaicCellData;
-  target?: MosaicDropTargetData<Location>;
-  container: MosaicContainerData;
-};
+export type MosaicData = MosaicCellData | MosaicPlaceholderData | MosaicContainerData;
 
 /**
  * Handler implemented by drop containers.
  */
-export interface MosaicEventHandler<Location = any> {
+export interface MosaicEventHandler {
   /**
    * Container identifier.
    */
@@ -67,7 +56,7 @@ export interface MosaicEventHandler<Location = any> {
   /**
    * Insert/rearrange the item at the given location.
    */
-  onDrop?: (props: { source: MosaicCellData; target?: MosaicDropTargetData<Location> }) => void;
+  onDrop?: (props: { source: MosaicCellData; target?: MosaicData }) => void;
 
   /**
    * Request the object to be dropped.

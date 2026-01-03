@@ -2,11 +2,13 @@
 // Copyright 2026 DXOS.org
 //
 
+import { MOSAIC_CELL_STATE_ATTR, MOSAIC_CONTAINER_STATE_ATTR } from './Mosaic';
+
 export const styles = {
   container: {
-    active: `[&:has(>_[data-mosaic-container-state=active])]:border-primary-500`,
+    active: `[&:has(>_[data-${MOSAIC_CONTAINER_STATE_ATTR}=active])]:border-primary-500`,
   },
   cell: {
-    dragging: `data-[mosaic-cell-state=dragging]:opacity-20`,
+    dragging: `data-[${MOSAIC_CELL_STATE_ATTR}=dragging]:opacity-20 data-[${MOSAIC_CELL_STATE_ATTR}=preview]:bg-groupSurface`,
   },
 };
