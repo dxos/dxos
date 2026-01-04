@@ -48,8 +48,10 @@
   "dependencies": {
     "@codemirror/autocomplete": "catalog:",
     "@codemirror/lang-html": "catalog:",
+    "@codemirror/lang-markdown": "catalog:",
     "@codemirror/lang-xml": "catalog:",
     "@codemirror/language": "catalog:",
+    "@codemirror/lint": "catalog:",
     "@codemirror/state": "catalog:",
     "@codemirror/view": "catalog:",
     "@dxos/ai": "workspace:*",
@@ -118,6 +120,7 @@
     "@effect/ai-openai": "catalog:",
     "@effect/experimental": "catalog:",
     "@effect/platform-browser": "catalog:",
+    "@phosphor-icons/react": "catalog:",
     "@preact-signals/safe-react": "catalog:",
     "@preact/signals-core": "catalog:",
     "@preact/signals-react": "catalog:",

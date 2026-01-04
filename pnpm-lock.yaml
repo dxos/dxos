@@ -100,7 +100,7 @@ catalogs:
       specifier: ^6.0.2
       version: 6.0.2
     '@codemirror/lang-markdown':
-      specifier: ^6.3.4
+      specifier: 6.3.4
       version: 6.3.4
     '@codemirror/lang-xml':
       specifier: ^6.1.0
@@ -115,7 +115,7 @@ catalogs:
       specifier: ^6.5.1
       version: 6.5.1
     '@codemirror/lint':
-      specifier: ^6.8.5
+      specifier: 6.8.5
       version: 6.8.5
     '@codemirror/search':
       specifier: ^6.5.11
@@ -367,7 +367,7 @@ catalogs:
       specifier: ^2.1.1
       version: 2.1.1
     '@phosphor-icons/react':
-      specifier: ^2.1.10
+      specifier: 2.1.10
       version: 2.1.10
     '@playwright/test':
       specifier: 1.57.0
@@ -7093,12 +7093,18 @@ importers:
       '@codemirror/lang-html':
         specifier: 'catalog:'
         version: 6.4.11
+      '@codemirror/lang-markdown':
+        specifier: 'catalog:'
+        version: 6.3.4
       '@codemirror/lang-xml':
         specifier: 'catalog:'
         version: 6.1.0
       '@codemirror/language':
         specifier: 'catalog:'
         version: 6.11.3
+      '@codemirror/lint':
+        specifier: 'catalog:'
+        version: 6.8.5
       '@codemirror/state':
         specifier: 'catalog:'
         version: 6.5.2
@@ -7303,6 +7309,9 @@ importers:
       '@effect/platform-browser':
         specifier: 'catalog:'
         version: 0.73.0(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)
+      '@phosphor-icons/react':
+        specifier: 'catalog:'
+        version: 2.1.10(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
       '@preact-signals/safe-react':
         specifier: 'catalog:'
         version: 0.9.0(@babel/core@7.28.0)(@swc/helpers@0.5.17)(react@19.2.3)

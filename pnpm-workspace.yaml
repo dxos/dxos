@@ -42,12 +42,12 @@ catalog:
   '@codemirror/lang-html': ^6.4.11
   '@codemirror/lang-javascript': ^6.2.4
   '@codemirror/lang-json': ^6.0.2
-  '@codemirror/lang-markdown': ^6.3.4
+  '@codemirror/lang-markdown': 6.3.4
   '@codemirror/lang-xml': ^6.1.0
   '@codemirror/lang-yaml': ^6.1.2
   '@codemirror/language': ^6.11.3
   '@codemirror/language-data': ^6.5.1
-  '@codemirror/lint': ^6.8.5
+  '@codemirror/lint': 6.8.5
   '@codemirror/search': ^6.5.11
   '@codemirror/state': ^6.5.2
   '@codemirror/theme-one-dark': ^6.1.3
@@ -143,7 +143,7 @@ catalog:
   '@orama/orama': ^3.1.7
   '@peermetrics/webrtc-stats': 5.7.1
   '@phosphor-icons/core': ^2.1.1
-  '@phosphor-icons/react': ^2.1.10
+  '@phosphor-icons/react': 2.1.10
   '@playwright/test': 1.57.0
   '@preact-signals/safe-react': ^0.9.0
   '@preact/signals': ^2.3.1
