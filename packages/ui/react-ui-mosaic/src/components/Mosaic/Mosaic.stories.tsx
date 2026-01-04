@@ -51,7 +51,7 @@ const splice = <T extends Obj.AnyProps>(items: T[], source: MosaicCellData, targ
     const newItems = [...items];
     newItems.splice(from, 1);
     if (target) {
-      newItems.splice(to, 0, source.object as T);
+      newItems.splice(to === -1 ? newItems.length : to, 0, source.object as T);
     }
 
     return newItems;

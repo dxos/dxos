@@ -6,7 +6,7 @@ import { type ClassNameValue } from '@dxos/react-ui';
 
 export const styles: Record<string, Record<string, ClassNameValue>> = {
   container: {
-    active: '[&:has(>_[data-mosaic-container-state=active])]:border-primary-500',
+    active: '[&:has(>_[data-mosaic-container-state=active])]:border-neutralFocusIndicator',
   },
   cell: {
     border:
@@ -15,9 +15,9 @@ export const styles: Record<string, Record<string, ClassNameValue>> = {
   },
   placeholder: {
     active: [
-      'group transition-all opacity-0 plb-0.5 bs-2 duration-100 delay-0',
+      'group transition-all opacity-0 plb-1 bs-2 duration-100 delay-0',
       'data-[mosaic-placeholder-state=active]:opacity-100',
-      'data-[mosaic-placeholder-state=active]:plb-1',
+      'data-[mosaic-placeholder-state=active]:plb-2',
       'data-[mosaic-placeholder-state=active]:bs-16',
       'data-[mosaic-placeholder-state=active]:duration-250',
       'data-[mosaic-placeholder-state=active]:delay-300',

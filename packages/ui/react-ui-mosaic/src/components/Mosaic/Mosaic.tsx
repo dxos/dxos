@@ -254,6 +254,16 @@ const Container = forwardRef<HTMLDivElement, ContainerProps>(
     }, [handler]);
 
     const [state, setState] = useState<ContainerState>({ type: 'idle' });
+    const data = useMemo(
+      () =>
+        ({
+          ts: performance.now(),
+          type: 'container',
+          id: handler.id,
+        }) satisfies MosaicContainerData,
+      [handler.id],
+    );
+
     useEffect(() => {
       if (!rootRef.current) {
         return;
@@ -268,38 +278,41 @@ const Container = forwardRef<HTMLDivElement, ContainerProps>(
 
           dropTargetForElements({
             element: rootRef.current,
-            getData: () => {
-              return {
-                ts: performance.now(),
-                type: 'container',
-                id: handler.id,
-              } satisfies MosaicContainerData;
-            },
+            getData: () => data,
+
+            // Test if permitted to drop here.
             canDrop: ({ source }) => {
               return (
                 (source.data.type === 'cell' && handler.canDrop?.({ source: source.data as MosaicCellData })) || false
               );
             },
+
+            /**
+             * Dragging started in this container.
+             */
             onDragStart: ({ source }) => {
               setState({ type: 'active' });
-              setDragging({ source: source.data as MosaicCellData });
+              setDragging({ source: source.data as MosaicCellData, target: data });
             },
-            onDragEnter: () => {
+            /**
+             * Dragging entered this container.
+             */
+            onDragEnter: ({ source }) => {
               setState({ type: 'active' });
+              setDragging({ source: source.data as MosaicCellData, target: data });
             },
-            // TODO(burdon): Called constantly.
-            onDrag: ({ source, location }) => {
-              // setDragging({
-              //   source: source.data as MosaicCellData,
-              //   // TODO(burdon): Are these ordered?
-              //   target: location.current.dropTargets[0]?.data as MosaicData,
-              // });
-            },
+            /**
+             * Dragging left this container.
+             * NOTE: If the container isn't full-height, then when the dragged item is temporarily removed, the container will shrink,
+             * triggering `onDragLeave`, which then causes the item to be added and removed continually (flickering).
+             */
             onDragLeave: () => {
-              // TODO(burdon): Causes flickering on last object.
-              // setState({ type: 'idle' });
-              // setDragging(undefined);
+              setState({ type: 'idle' });
+              setDragging(undefined);
             },
+            /**
+             * Dropped in this container.
+             */
             onDrop: () => {
               setState({ type: 'idle' });
               setDragging(undefined);
@@ -307,7 +320,7 @@ const Container = forwardRef<HTMLDivElement, ContainerProps>(
           }),
         ].filter(isTruthy),
       );
-    }, [rootRef, handler]);
+    }, [rootRef, handler, data]);
 
     return (
       <MosaicContainerContextProvider
@@ -320,7 +333,7 @@ const Container = forwardRef<HTMLDivElement, ContainerProps>(
         <Root
           {...{ [`data-${MOSAIC_CONTAINER_STATE_ATTR}`]: state.type }}
           role='none'
-          className={mx(classNames)}
+          className={mx('bs-full', classNames)}
           ref={composedRef}
         >
           {children}
@@ -515,14 +528,11 @@ type PlaceholderProps<Location = any> = ThemedClassName<
   }>
 >;
 
-// TODO(burdon): Attach placeholder to cell.
 const Placeholder = <Location = any,>({ classNames, children, asChild, location }: PlaceholderProps<Location>) => {
   const rootRef = useRef<HTMLDivElement>(null);
   const Root = asChild ? Slot : Primitive.div;
   const { id: containerId, activeTarget, setActiveTarget } = useMosaicContainerContext(Placeholder.displayName!);
-
   const [state, setState] = useState<PlaceholderState>({ type: 'idle' });
-
   const data = useMemo(
     () =>
       ({
