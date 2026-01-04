@@ -27,6 +27,8 @@ import { type MosaicCellData, type MosaicData } from './types';
 
 faker.seed(1);
 
+// TODO(burdon): Nail down event handlers.
+// TODO(burdon): Factor out handler utils (e.g., splice).
 // TODO(burdon): Key nav (as with Grid story).
 
 const TestData = Schema.Struct({
