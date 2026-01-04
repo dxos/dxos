@@ -12,7 +12,7 @@ import { type ChunkRenderer, SerializationModel } from '../model';
 /**
  * Model adapter for a queue.
  */
-export const useQueueModelAdapter = <T extends Obj.Any>(
+export const useQueueModelAdapter = <T extends Obj.AnyProps>(
   renderer: ChunkRenderer<T>,
   queue: Queue<T> | undefined,
   initialChunks: T[] = [],

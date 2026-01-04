@@ -13,7 +13,7 @@ import { useQuery } from '@dxos/react-client/echo';
  * The subject may be a queued object, or an object form another space.
  */
 // TODO(burdon): Formalize.
-export const useShadowObject = <T extends Obj.Any>(
+export const useShadowObject = <T extends Obj.AnyProps>(
   db: Database.Database | undefined,
   subject: T,
   type: Type.Obj.Any,

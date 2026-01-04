@@ -7,11 +7,13 @@ import { type Obj } from '@dxos/echo';
 /**
  * Draggable item.
  */
-// TODO(burdon): Generalize (has ID).
-export type MosaicCellData<T extends Obj.Any = Obj.Any> = {
+export type MosaicCellData<T extends Obj.AnyProps = Obj.AnyProps, Location = any> = {
+  ts: number;
   type: 'cell';
   id: string;
   containerId: string;
+  location: Location;
+  // TODO(burdon): Generalize (has ID).
   object: T;
 };
 
@@ -19,6 +21,7 @@ export type MosaicCellData<T extends Obj.Any = Obj.Any> = {
  * Drop target placeholder.
  */
 export type MosaicPlaceholderData<Location = any> = {
+  ts: number;
   type: 'placeholder';
   containerId: string;
   location: Location;
@@ -28,11 +31,14 @@ export type MosaicPlaceholderData<Location = any> = {
  * Drop target container.
  */
 export type MosaicContainerData = {
+  ts: number;
   type: 'container';
   id: string;
 };
 
 export type MosaicData = MosaicCellData | MosaicPlaceholderData | MosaicContainerData;
+
+export type MosaicTargetData = MosaicCellData | MosaicPlaceholderData;
 
 /**
  * Handler implemented by drop containers.
@@ -64,7 +70,7 @@ export interface MosaicEventHandler {
    * If the callback returns true, then the callback may decide to remove the item from the source container,
    * completing the transfer.
    */
-  onTake?: (props: { source: MosaicCellData }, cb: (object: Obj.Any) => Promise<boolean>) => void;
+  onTake?: (props: { source: MosaicCellData }, cb: (object: Obj.AnyProps) => Promise<boolean>) => void;
 
   /**
    * Dragging ended.
