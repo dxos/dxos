@@ -37,7 +37,7 @@ export const assistant = (runtime: Runtime.Runtime<LanguageModel.LanguageModel>)
 const assistantState = (runtime: Runtime.Runtime<LanguageModel.LanguageModel>) =>
   StateField.define<Tooltip | null>({
     create: () => null,
-    update: (tooltip, tr) => {
+    update: (tooltip, tr): Tooltip | null => {
       if (tr.selection || tr.docChanged) {
         const { from, to } = tr.state.selection.main;
         if (from === to) {
@@ -48,15 +48,14 @@ const assistantState = (runtime: Runtime.Runtime<LanguageModel.LanguageModel>) =
         // We return a tooltip object
         return {
           pos: from,
-          above: true,
-          // strictSide: true,
+          above: false,
+          strictSide: true,
           class: 'cm-tooltip-assistant',
           create: (view) => {
             console.log('Creating tooltip');
             const dom = document.createElement('div');
             const root = createRoot(dom);
 
-            // Mount React component
             root.render(React.createElement(AssistantToolbar, { view, runtime, from, to }));
 
             return {

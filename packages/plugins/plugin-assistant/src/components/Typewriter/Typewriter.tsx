@@ -13,6 +13,12 @@ import { Editor, type EditorController } from '@dxos/react-ui-editor';
 
 import { assistant } from './assistant-extension';
 import { Runtime } from 'effect';
+import {
+  createBasicExtensions,
+  createMarkdownExtensions,
+  createThemeExtensions,
+  decorateMarkdown,
+} from '@dxos/ui-editor';
 
 export type TypewriterProps = {
   initialContent?: string;
@@ -22,18 +28,25 @@ export type TypewriterProps = {
 
 export const Typewriter = ({ initialContent = '', extensions = [], runtime }: TypewriterProps) => {
   const editorRef = useRef<EditorController>(null);
-  const extension = useMemo(() => [markdown(), lintGutter(), assistant(runtime), ...extensions], [runtime, extensions]);
+  const extension = useMemo(
+    () => [
+      createBasicExtensions({ scrollPastEnd: true, search: true }),
+      createThemeExtensions({ syntaxHighlighting: true }),
+      createMarkdownExtensions(),
+      decorateMarkdown(),
+      assistant(runtime),
+      ...extensions,
+    ],
+    [runtime, extensions],
+  );
 
   return (
     <ThemeProvider>
       <DensityProvider density='fine'>
-        <div className='relative w-full h-[600px] border border-neutral-200 rounded-md overflow-hidden bg-white dark:bg-neutral-900 dark:border-neutral-700 shadow-sm group'>
+        <div className='is-full bs-full grid overflow-hidden'>
           <Editor.Root ref={editorRef}>
             <Editor.Viewport>
-              <Editor.Content
-                initialValue={initialContent}
-                extensions={[markdown(), lintGutter(), assistant(runtime), ...extensions]}
-              />
+              <Editor.Content initialValue={initialContent} extensions={extension} />
             </Editor.Viewport>
           </Editor.Root>
         </div>
