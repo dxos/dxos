@@ -233,6 +233,7 @@ const Container = forwardRef<HTMLDivElement, ContainerProps>(
     const Root = asChild ? Slot : Primitive.div;
 
     // Dragging state.
+    const [state, setState] = useState<ContainerState>({ type: 'idle' });
     const { setDragging: setRootDragging } = useMosaicContext(Container.displayName!);
     const [dragging, setLocalDragging] = useState<MosaicDraggingState | undefined>();
     const setDragging = useCallback(
@@ -253,11 +254,9 @@ const Container = forwardRef<HTMLDivElement, ContainerProps>(
       return () => removeContainer(handler.id);
     }, [handler]);
 
-    const [state, setState] = useState<ContainerState>({ type: 'idle' });
-    const data = useMemo(
+    const data = useMemo<MosaicContainerData>(
       () =>
         ({
-          ts: performance.now(),
           type: 'container',
           id: handler.id,
         }) satisfies MosaicContainerData,
@@ -276,6 +275,7 @@ const Container = forwardRef<HTMLDivElement, ContainerProps>(
               element: rootRef.current,
             }),
 
+          // Target.
           dropTargetForElements({
             element: rootRef.current,
             getData: () => data,
@@ -391,20 +391,23 @@ const Cell = forwardRef<HTMLDivElement, CellProps>(
       [allowedEdgesProp, layout],
     );
 
+    const data = useMemo<MosaicCellData>(
+      () =>
+        ({
+          type: 'cell',
+          id: object.id,
+          containerId,
+          location,
+          object,
+        }) satisfies MosaicCellData,
+      [containerId, location, object],
+    );
+
     useLayoutEffect(() => {
       const root = rootRef.current;
       if (!root || !containerId) {
         return;
       }
-
-      const data = {
-        ts: performance.now(),
-        type: 'cell',
-        id: object.id,
-        containerId,
-        location,
-        object,
-      } satisfies MosaicCellData;
 
       return combine(
         // Source.
@@ -463,15 +466,7 @@ const Cell = forwardRef<HTMLDivElement, CellProps>(
           },
         }),
       );
-    }, [
-      //
-      rootRef,
-      dragHandle,
-      allowedEdges,
-      object,
-      containerId,
-      setActiveTarget,
-    ]);
+    }, [rootRef, dragHandle, data, allowedEdges, setActiveTarget]);
 
     // NOTE: Ensure no gaps between cells (prevent drop indicators flickering).
     // NOTE: Ensure padding doesn't change position of cursor when dragging (no margins).
@@ -533,10 +528,10 @@ const Placeholder = <Location = any,>({ classNames, children, asChild, location 
   const Root = asChild ? Slot : Primitive.div;
   const { id: containerId, activeTarget, setActiveTarget } = useMosaicContainerContext(Placeholder.displayName!);
   const [state, setState] = useState<PlaceholderState>({ type: 'idle' });
-  const data = useMemo(
+
+  const data = useMemo<MosaicPlaceholderData<Location>>(
     () =>
       ({
-        ts: performance.now(),
         type: 'placeholder',
         containerId,
         location,

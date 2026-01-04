@@ -8,7 +8,6 @@ import { type Obj } from '@dxos/echo';
  * Draggable item.
  */
 export type MosaicCellData<T extends Obj.AnyProps = Obj.AnyProps, Location = any> = {
-  ts: number;
   type: 'cell';
   id: string;
   containerId: string;
@@ -21,7 +20,6 @@ export type MosaicCellData<T extends Obj.AnyProps = Obj.AnyProps, Location = any
  * Drop target placeholder.
  */
 export type MosaicPlaceholderData<Location = any> = {
-  ts: number;
   type: 'placeholder';
   containerId: string;
   location: Location;
@@ -31,7 +29,6 @@ export type MosaicPlaceholderData<Location = any> = {
  * Drop target container.
  */
 export type MosaicContainerData = {
-  ts: number;
   type: 'container';
   id: string;
 };
