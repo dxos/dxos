@@ -10,7 +10,7 @@ import React, { useState } from 'react';
 
 import { log } from '@dxos/log';
 import { Button, Input, ThemeProvider } from '@dxos/react-ui';
-import { unwrapExit } from '@dxos/effect';
+import { runInRuntime } from '@dxos/effect';
 import { Runtime } from 'effect';
 
 export interface AssistantToolbarProps {
@@ -28,14 +28,15 @@ export const AssistantToolbar = ({ view, runtime, from, to }: AssistantToolbarPr
   const runEffect = async (text: string, prompt: string) => {
     setIsProcessing(true);
     try {
-      const newText = unwrapExit(
-        await Effect.gen(function* () {
+      const newText = await runInRuntime(
+        runtime,
+        Effect.gen(function* () {
           // Construct meaningful system prompt context
           const response = yield* LanguageModel.generateText({
             prompt: `${prompt}:\n"${text}"`,
           });
           return response.text;
-        }).pipe(Runtime.runPromiseExit(runtime)),
+        }),
       );
 
       // Apply change - check if selection is still valid/same?
@@ -56,11 +57,17 @@ export const AssistantToolbar = ({ view, runtime, from, to }: AssistantToolbarPr
 
   const handleRegenerate = () => {
     // Basic rephrase
-    void runEffect(currentText, 'Re-write the following text to be more clear and concise, keep the same meaning');
+    void runEffect(
+      currentText,
+      'You are a typewriting agent. Agent only outputs the result; one version; no explanation or formatting. Re-write the following text to be more clear and concise, keep the same meaning.',
+    );
   };
 
   const handleChangeTone = (tone: 'formal' | 'casual') => {
-    void runEffect(currentText, `Rewrite the following text to be more ${tone}`);
+    void runEffect(
+      currentText,
+      `You are a typewriting agent. Agent only outputs the result; one version; no explanation or formatting.  Rewrite the following text to be more ${tone}`,
+    );
   };
 
   const handleEditWithPrompt = () => {

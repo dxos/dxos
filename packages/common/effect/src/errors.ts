@@ -2,6 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
+import { Runtime } from 'effect';
 import * as Cause from 'effect/Cause';
 import * as Chunk from 'effect/Chunk';
 import * as Effect from 'effect/Effect';
@@ -171,6 +172,15 @@ export const runAndForwardErrors = async <A, E>(
   options?: { signal?: AbortSignal },
 ): Promise<A> => {
   const exit = await Effect.runPromiseExit(effect, options);
+  return unwrapExit(exit);
+};
+
+export const runInRuntime = async <A, E, R>(
+  runtime: Runtime.Runtime<R>,
+  effect: Effect.Effect<A, E, R>,
+  options?: { signal?: AbortSignal },
+): Promise<A> => {
+  const exit = await Runtime.runPromiseExit(runtime, effect, options);
   return unwrapExit(exit);
 };
 
