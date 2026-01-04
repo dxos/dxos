@@ -14,6 +14,11 @@
     - Grid (experimental)
     - NOTE: StackItem.Content used everywhere?
 
+- [ ] Show bottom placeholder if none active for container.
+  - [ ] Migrate Grid.stories (multiple containers, text document, etc.) Then delete and land.
+  - [ ] Factor out handler utils (e.g., splice).
+  - [ ] Key nav (as with Grid story).
+
 - [ ] Container should track insertion point (Location)
 - [ ] Test for different layouts (vertical, horizontal, grid)
 
@@ -22,8 +27,6 @@
   - [ ] Create story
   - [ ] Generalize data for cell and container
 
-- [ ] Nav + CTRL-C => CTRL-V to move.
-
 ## Phase 2 (Integration)
 - [ ] Retro-fit react-ui-list (Search) + react-ui-board (BoardCell)
 - [ ] Retro-fit react-ui-kanban
@@ -31,5 +34,6 @@
 - [ ] Context for menu actions?
 
 ## Phase 3 (Tech Debt)
+- [ ] Nav + CTRL-C => CTRL-V to move.
 - [ ] L0
 - [ ] Fix card layout (conform to grid).
