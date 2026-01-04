@@ -22,9 +22,9 @@ export const assistant = (runtime: Runtime.Runtime<LanguageModel.LanguageModel>)
     assistantLinter(runtime),
     EditorView.baseTheme({
       '.cm-tooltip-assistant': {
-        backgroundColor: 'transparent',
-        border: 'none',
-        padding: 0,
+        backgroundColor: 'transparent !important',
+        border: 'none !important',
+        padding: '0 !important',
       },
     }),
   ];
@@ -50,10 +50,10 @@ const assistantState = (runtime: Runtime.Runtime<LanguageModel.LanguageModel>) =
           pos: from,
           above: false,
           strictSide: true,
-          class: 'cm-tooltip-assistant',
           create: (view) => {
             console.log('Creating tooltip');
             const dom = document.createElement('div');
+            dom.classList.add('cm-tooltip-assistant');
             const root = createRoot(dom);
 
             root.render(React.createElement(AssistantToolbar, { view, runtime, from, to }));
