@@ -11,7 +11,7 @@ import type * as JsonSchema from './JsonSchema';
 import type * as Obj from './Obj';
 
 export type Ref<T> = Ref$<T>;
-export type Any = Ref$<Obj.source>;
+export type Any = Ref$<Obj.Any>;
 
 export const Array = RefArray;
 

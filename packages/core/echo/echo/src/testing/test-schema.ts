@@ -199,7 +199,7 @@ export namespace TestSchema {
   }
 
   export const Container = Schema.Struct({
-    objects: Schema.mutable(Schema.Array(Type.Ref(Obj.source))),
+    objects: Schema.mutable(Schema.Array(Type.Ref(Obj.Any))),
     records: Schema.mutable(
       Schema.Array(
         Schema.partial(

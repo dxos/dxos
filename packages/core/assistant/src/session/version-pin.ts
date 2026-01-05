@@ -27,11 +27,11 @@ export interface VersionPin extends Schema.Schema.Type<typeof VersionPinSchema> 
 
 export const VersionPin: typeof VersionPinSchema & {
   DISPOSITION: 'version-pin';
-  fromObject: (object: Obj.source) => VersionPin;
+  fromObject: (object: Obj.Any) => VersionPin;
   createBlock: (pin: VersionPin) => ContentBlock.Any;
 } = class extends VersionPinSchema {
   static readonly DISPOSITION = 'version-pin';
-  static fromObject(object: Obj.source): VersionPin {
+  static fromObject(object: Obj.Any): VersionPin {
     return VersionPin.make({
       objectId: object.id,
       version: getVersion(object),

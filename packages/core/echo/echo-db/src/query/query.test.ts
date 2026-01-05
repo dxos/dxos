@@ -696,7 +696,7 @@ describe('Query', () => {
 
   describe('Reactivity', () => {
     let db: EchoDatabase;
-    let objects: Obj.source[];
+    let objects: Obj.Any[];
 
     beforeEach(async () => {
       ({ db } = await builder.createDatabase());

@@ -13,7 +13,7 @@ import { invariant } from '@dxos/invariant';
 
 export const Collection = Schema.Struct({
   name: Schema.String.pipe(Schema.optional),
-  objects: Schema.Array(Type.Ref(Obj.source)).pipe(Schema.mutable, FormInputAnnotation.set(false)),
+  objects: Schema.Array(Type.Ref(Obj.Any)).pipe(Schema.mutable, FormInputAnnotation.set(false)),
 }).pipe(
   Type.Obj({
     typename: 'dxos.org/type/Collection',
@@ -45,7 +45,7 @@ export type Managed = Schema.Schema.Type<typeof Managed>;
 export const makeManaged = (props: Obj.MakeProps<typeof Managed>) => Obj.make(Managed, props);
 
 type AddProps = {
-  object: Obj.source;
+  object: Obj.Any;
   target?: Collection;
   hidden?: boolean;
 };

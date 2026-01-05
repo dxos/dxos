@@ -100,7 +100,7 @@ export type SpaceSettingsProps = Schema.Schema.Type<typeof SpaceSettingsSchema>;
 
 export type SerializerMap = Record<string, TypedObjectSerializer>;
 
-export interface TypedObjectSerializer<T extends Obj.AnyProps = Obj.AnyProps> {
+export interface TypedObjectSerializer<T extends Obj.Any = Obj.Any> {
   serialize(params: { object: T }): Promise<string>;
 
   /**

@@ -13,7 +13,7 @@ import { Project } from '@dxos/types';
 import { FormCard, OrganizationCard, PersonCard, ProjectCard, TaskCard } from '../cards';
 import { type CardPreviewProps } from '../types';
 
-type CardProps<T extends Obj.AnyProps> = {
+type CardProps<T extends Obj.Any> = {
   Component: FC<CardPreviewProps<T>>;
   subject: T;
   icon?: string;

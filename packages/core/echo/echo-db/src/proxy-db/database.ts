@@ -119,7 +119,7 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
    * Mapping `object core` -> `root proxy` (User facing proxies).
    * @internal
    */
-  readonly _rootProxies = new Map<ObjectCore, Obj.source>();
+  readonly _rootProxies = new Map<ObjectCore, Obj.Any>();
 
   readonly saveStateChanged: ReadOnlyEvent<SaveStateChangedEvent>;
 
@@ -327,7 +327,7 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
   /**
    * @internal
    */
-  async _loadObjectById(objectId: string, options: LoadObjectOptions = {}): Promise<Obj.source | undefined> {
+  async _loadObjectById(objectId: string, options: LoadObjectOptions = {}): Promise<Obj.Any | undefined> {
     const core = await this._coreDatabase.loadObjectCoreById(objectId, options);
     if (!core || core?.isDeleted()) {
       return undefined;

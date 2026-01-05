@@ -12,7 +12,7 @@ import { initEchoReactiveObjectRootProxy, isEchoObject } from './echo-handler';
 import { getObjectCore } from './echo-handler';
 import { symbolInternals } from './echo-proxy-target';
 
-export type CloneOptions<T extends Obj.source> = {
+export type CloneOptions<T extends Obj.Any> = {
   /**
    * @default true
    */
@@ -29,7 +29,7 @@ export type CloneOptions<T extends Obj.source> = {
  * @deprecated
  */
 // TODO(burdon): Remove?
-export const clone = <T extends Obj.source>(obj: T, { retainId = true, additional = [] }: CloneOptions<T> = {}): T => {
+export const clone = <T extends Obj.Any>(obj: T, { retainId = true, additional = [] }: CloneOptions<T> = {}): T => {
   assertArgument(isEchoObject(obj), 'obj', 'expect obj to be an EchoObjectSchema');
   assertArgument(
     retainId === true || additional.length === 0,
@@ -64,13 +64,13 @@ export const clone = <T extends Obj.source>(obj: T, { retainId = true, additiona
   return clone;
 };
 
-const requireAutomergeCore = (obj: Obj.source) => {
+const requireAutomergeCore = (obj: Obj.Any) => {
   const core = getObjectCore(obj);
   invariant(core, 'object is not an EchoObjectSchema');
   return core;
 };
 
-const cloneInner = <T extends Obj.source>(obj: T, id: string): T => {
+const cloneInner = <T extends Obj.Any>(obj: T, id: string): T => {
   const core = requireAutomergeCore(obj);
   const coreClone = new ObjectCore();
   coreClone.initNewObject();

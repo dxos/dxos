@@ -42,21 +42,21 @@ interface BaseRelation<Source, Target>
 /**
  * Base type for all Relations objects.
  */
-export interface Any extends BaseRelation<Obj.source, Obj.source> {}
+export interface Any extends BaseRelation<Obj.Any, Obj.Any> {}
 
 export const Any = Schema.Struct({}).pipe(
   Type.Relation({
     typename: 'dxos.org/type/Any',
     version: '0.1.0',
-    source: Obj.source,
-    target: Obj.source,
+    source: Obj.Any,
+    target: Obj.Any,
   }),
 );
 
 /**
  * Relation type with specific source and target types.
  */
-export type Relation<Source extends Obj.source, Target extends Obj.source, Props> = BaseRelation<Source, Target> & Props;
+export type Relation<Source extends Obj.Any, Target extends Obj.Any, Props> = BaseRelation<Source, Target> & Props;
 
 export const Source: unique symbol = RelationSourceId as any;
 export type Source = typeof Source;

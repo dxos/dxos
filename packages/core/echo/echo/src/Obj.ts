@@ -53,9 +53,9 @@ interface BaseObj extends AnyEchoObject, Entity.OfKind<typeof Entity.Kind.Object
 /**
  * Base type for all Obj objects.
  */
-export interface source extends BaseObj {}
+export interface Any extends BaseObj {}
 
-export const source = Schema.Struct({}).pipe(
+export const Any = Schema.Struct({}).pipe(
   Type.Obj({
     typename: 'dxos.org/type/Any',
     version: '0.1.0',
@@ -128,7 +128,7 @@ export const make = <S extends Schema.Schema.AnyNoContext>(
 /**
  * Determine if object is an ECHO object.
  */
-export const isObject = (obj: unknown): obj is source => {
+export const isObject = (obj: unknown): obj is Any => {
   assumeType<InternalObjectProps>(obj);
   return typeof obj === 'object' && obj !== null && obj[Entity.KindId] === Entity.Kind.Object;
 };
@@ -140,7 +140,7 @@ export const isObject = (obj: unknown): obj is source => {
 /**
  * Returns an immutable snapshot of an object.
  */
-export const getSnapshot: <T extends source>(obj: Obj<T>) => T = getSnapshot$;
+export const getSnapshot: <T extends Any>(obj: Obj<T>) => T = getSnapshot$;
 
 export type CloneOptions = {
   /**
@@ -155,7 +155,7 @@ export type CloneOptions = {
  * This does not clone referenced objects, only the properties in the object.
  * @returns A new object with the same schema and properties.
  */
-export const clone = <T extends source>(obj: T, opts?: CloneOptions): T => {
+export const clone = <T extends Any>(obj: T, opts?: CloneOptions): T => {
   const { id, ...data } = obj;
   const schema = getSchema$(obj);
   invariant(schema != null, 'Object should have a schema');
@@ -427,7 +427,7 @@ export const toJSON = (entity: Entity.Unknown): JSON => objectToJSON(entity);
  * @param options.refResolver - Resolver for references. Produces hydrated references that can be resolved.
  * @param options.dxn - Override object DXN. Changes the result of `Obj.getDXN`.
  */
-export const fromJSON: (json: unknown, options?: { refResolver?: Ref.Resolver; dxn?: DXN }) => Promise<source> =
+export const fromJSON: (json: unknown, options?: { refResolver?: Ref.Resolver; dxn?: DXN }) => Promise<Any> =
   objectFromJSON as any;
 
 //

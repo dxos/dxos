@@ -340,7 +340,7 @@ describe('query api', () => {
     test('Filter.or(Filter.typename(...))', () => {
       const filter = Filter.or(Filter.typename('example.com/type/Person'));
       // TODO(dmaretskyi): Give vitest type-tests a try.
-      const _isAssignable: Obj.source = null as any as Filter.Type<typeof filter>;
+      const _isAssignable: Obj.Any = null as any as Filter.Type<typeof filter>;
     });
   });
 });

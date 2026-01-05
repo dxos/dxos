@@ -944,7 +944,7 @@ export type AnyLiveObject<T extends AnyProperties = any> = Live<T> & HasId & Any
  * @returns True if `value` is a reactive object with an EchoHandler backend.
  */
 // TODO(dmaretskyi): Reconcile with `isTypedObjectProxy`.
-export const isEchoObject = (value: any): value is Obj.source => {
+export const isEchoObject = (value: any): value is Obj.Any => {
   if (!isLiveObject(value)) {
     return false;
   }
@@ -979,7 +979,7 @@ export const isTypedObjectProxy = (value: any): value is Live<any> => {
 /**
  * Helper type to preserve Obj<Props> types, otherwise return Entity.Entity<T>.
  */
-type CreateObjectReturn<T> = T extends Obj.source ? T : Entity.Entity<T>;
+type CreateObjectReturn<T> = T extends Obj.Any ? T : Entity.Entity<T>;
 
 /**
  * Creates a reactive ECHO object backed by a CRDT.

@@ -7,7 +7,7 @@ import { type Obj } from '@dxos/echo';
 /**
  * Draggable item.
  */
-export type MosaicCellData<T extends Obj.AnyProps = Obj.AnyProps, Location = any> = {
+export type MosaicCellData<T extends Obj.Any = Obj.Any, Location = any> = {
   type: 'cell';
   id: string;
   containerId: string;
@@ -67,7 +67,7 @@ export interface MosaicEventHandler {
    * If the callback returns true, then the callback may decide to remove the item from the source container,
    * completing the transfer.
    */
-  onTake?: (props: { source: MosaicCellData }, cb: (object: Obj.AnyProps) => Promise<boolean>) => void;
+  onTake?: (props: { source: MosaicCellData }, cb: (object: Obj.Any) => Promise<boolean>) => void;
 
   /**
    * Dragging ended.

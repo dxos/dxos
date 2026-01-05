@@ -381,7 +381,7 @@ const [CellContextProvider, useCellContext] = createContext<CellContextValue>('M
 /** Target: data-[mosaic-cell-state=dragging] */
 const CELL_STATE_ATTR = 'mosaic-cell-state';
 
-type CellProps<T extends Obj.AnyProps = Obj.AnyProps, Location = any> = ThemedClassName<
+type CellProps<T extends Obj.Any = Obj.Any, Location = any> = ThemedClassName<
   PropsWithChildren<{
     asChild?: boolean;
     dragHandle?: HTMLDivElement | null;
