@@ -10,7 +10,7 @@ import {
 import { useComposedRefs } from '@radix-ui/react-compose-refs';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Schema from 'effect/Schema';
-import React, { Fragment, forwardRef, useCallback, useMemo, useRef, useState } from 'react';
+import React, { Fragment, forwardRef, useMemo, useRef, useState } from 'react';
 
 import { Obj, Ref, Type } from '@dxos/echo';
 import { ObjectId } from '@dxos/keys';
@@ -24,7 +24,7 @@ import { isTruthy } from '@dxos/util';
 
 import { Mosaic, type MosaicCellProps, useMosaic, useMosaicContainer } from './Mosaic';
 import { styles } from './styles';
-import { type MosaicCellData, type MosaicData, type MosaicEventHandler } from './types';
+import { type MosaicCellData, type MosaicData } from './types';
 
 faker.seed(999);
 
@@ -79,30 +79,6 @@ const spliceObjects = (items: Obj.Any[], source: MosaicCellData, target?: Mosaic
   }
 };
 
-const ContainerWrapper = ({ id, items }: { id: string; items: Ref.Ref<TestItem>[] }) => {
-  const handleDrop = useCallback<NonNullable<MosaicEventHandler['onDrop']>>(
-    ({ source, target }) => {
-      spliceRefs(items, source, target);
-    },
-    [id, items],
-  );
-
-  return (
-    <Mosaic.Container
-      asChild
-      autoscroll
-      classNames={styles.container.border}
-      handler={{
-        id: 'test',
-        canDrop: () => true,
-        onDrop: handleDrop,
-      }}
-    >
-      <Container items={items.map((item: any) => item.target).filter(isTruthy)} />
-    </Mosaic.Container>
-  );
-};
-
 // TODO(burdon): Factor out.
 // TODO(burdon): NOTE: asChild should forwared classNames.
 const Container = forwardRef<HTMLDivElement, { className?: string; items: TestItem[] }>(
@@ -122,7 +98,7 @@ const Container = forwardRef<HTMLDivElement, { className?: string; items: TestIt
     }, [items, dragging]);
 
     return (
-      <div className='grid grid-rows-2 bs-full'>
+      <div className='grid grid-rows-2 gap-2 bs-full'>
         <div
           {...tabsterAttrs}
           {...props}
@@ -138,7 +114,7 @@ const Container = forwardRef<HTMLDivElement, { className?: string; items: TestIt
             </Fragment>
           ))}
         </div>
-        <DebugContainer classNames='p-2' />
+        <DebugContainer classNames='p-2 border border-separator rounded-sm' />
       </div>
     );
   },
@@ -225,10 +201,27 @@ const DefaultStory = ({ columns: columnsProp = 1 }: StoryProps) => {
 
   return (
     <Mosaic.Root>
-      <div className='m-2 bs-full is-full grid grid-flow-col gap-2 auto-cols-[minmax(0,1fr)] overflow-hidden'>
+      <div className='p-2 bs-full is-full grid grid-flow-col gap-2 auto-cols-[minmax(0,1fr)] overflow-hidden'>
         {columns.map(({ id, items }) => (
           <div key={id} className='flex flex-col overflow-hidden'>
-            <ContainerWrapper key={id} id={id} items={items} />
+            <Mosaic.Container
+              asChild
+              autoscroll
+              classNames={styles.container.border}
+              handler={{
+                id,
+                canDrop: () => true,
+                onDrop: ({ source, target }) => {
+                  spliceRefs(items, source, target);
+                },
+                onTake: ({ source }, cb) => {
+                  // TODO(burdon): Delete from items.
+                  void cb(source.object);
+                },
+              }}
+            >
+              <Container items={items.map((item: any) => item.target).filter(isTruthy)} />
+            </Mosaic.Container>
           </div>
         ))}
         <div className='flex flex-col overflow-hidden'>

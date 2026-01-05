@@ -148,7 +148,7 @@ const Root = ({ children }: RootProps) => {
             return;
           }
 
-          // TODO(burdon): Check doesn't already exist in collection.
+          // TODO(burdon): Check object doesn't already exist in the collection.
           if (sourceHandler === targetHandler) {
             targetHandler.onDrop?.({ source: sourceData, target: targetData });
           } else {
@@ -206,6 +206,8 @@ type ContainerContextValue = {
   layout?: ContainerLayout;
   state: ContainerState;
   dragging?: DraggingState;
+
+  // TODO(burdon): Reconcile with dragging.
   activeTarget?: MosaicTargetData;
   setActiveTarget: (target: MosaicTargetData | undefined) => void;
 };
@@ -251,6 +253,7 @@ const Container = forwardRef<HTMLDivElement, ContainerProps>(
     );
 
     // Drop target state.
+    // TODO(burdon): Reconcile with global dragging state.
     const [activeTarget, setActiveTarget] = useState<MosaicTargetData | undefined>();
 
     // Register handler.
@@ -297,17 +300,17 @@ const Container = forwardRef<HTMLDivElement, ContainerProps>(
              * Dragging started in this container.
              */
             onDragStart: ({ source }) => {
-              const data = source.data as MosaicCellData;
-              setState({ type: 'active', bounds: data.bounds });
-              setDragging({ source: source.data as MosaicCellData, target: data });
+              const sourceData = source.data as MosaicCellData;
+              setState({ type: 'active', bounds: sourceData.bounds });
+              setDragging({ source: sourceData, target: data });
             },
             /**
              * Dragging entered this container.
              */
             onDragEnter: ({ source }) => {
-              const data = source.data as MosaicCellData;
-              setState({ type: 'active', bounds: data.bounds });
-              setDragging({ source: source.data as MosaicCellData, target: data });
+              const sourceData = source.data as MosaicCellData;
+              setState({ type: 'active', bounds: sourceData.bounds });
+              setDragging({ source: sourceData, target: data });
             },
             /**
              * Dragging left this container.
@@ -400,6 +403,7 @@ const Cell = forwardRef<HTMLDivElement, CellProps>(
     const composedRef = composeRefs<HTMLDivElement>(rootRef, forwardedRef);
     const Root = asChild ? Slot : Primitive.div;
 
+    const { setDragging } = useRootContext(Cell.displayName!);
     const { id: containerId, layout, setActiveTarget } = useContainerContext(Cell.displayName!);
     const [state, setState] = useState<CellState>({ type: 'idle' });
 
@@ -458,10 +462,11 @@ const Cell = forwardRef<HTMLDivElement, CellProps>(
           getData: ({ input, element }) => {
             return attachClosestEdge(data, { input, element, allowedEdges });
           },
-          onDragEnter: ({ source, self }) => {
+          onDragEnter: ({ self, source }) => {
             if (source.data.id !== object.id) {
               setState({ type: 'target', closestEdge: extractClosestEdge(self.data) });
               setActiveTarget(data);
+              setDragging({ source: source.data as MosaicCellData, target: data });
             }
           },
           onDragLeave: () => {
