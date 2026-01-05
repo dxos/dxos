@@ -15,11 +15,11 @@ import React, { Fragment, forwardRef, useMemo, useRef, useState } from 'react';
 import { Obj, Ref, Type } from '@dxos/echo';
 import { ObjectId } from '@dxos/keys';
 import { faker } from '@dxos/random';
-import { Icon, type ThemedClassName } from '@dxos/react-ui';
+import { Button, Icon, type ThemedClassName } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Json } from '@dxos/react-ui-syntax-highlighter';
 import { mx } from '@dxos/ui-theme';
-import { arraySwap, isTruthy } from '@dxos/util';
+import { arrayMove, isTruthy } from '@dxos/util';
 
 import { Mosaic, type MosaicCellProps, useMosaic, useMosaicContainer } from './Mosaic';
 import { styles } from './styles';
@@ -28,6 +28,7 @@ faker.seed(999);
 
 const TestItem = Schema.Struct({
   name: Schema.String,
+  label: Schema.optional(Schema.String),
 }).pipe(
   Type.Obj({
     typename: 'example.com/type/Item',
@@ -55,13 +56,14 @@ type StoryProps = {
 };
 
 const DefaultStory = ({ debug = false, columns: columnsProp = 1 }: StoryProps) => {
-  const [columns, _setColumns] = useState<TestColumn[]>(
+  const [columns, setColumns] = useState<TestColumn[]>(
     Array.from({ length: columnsProp }).map((_, i) =>
       Obj.make(TestColumn, {
         items: Array.from({ length: faker.number.int({ min: 8, max: 20 }) }).map((_, j) =>
           Ref.make(
             Obj.make(TestItem, {
-              name: `[${i}-${j}] ${faker.lorem.sentence(3)}`,
+              name: faker.lorem.sentence(3),
+              label: `[${i}-${j}]`,
             }),
           ),
         ),
@@ -86,8 +88,11 @@ const DefaultStory = ({ debug = false, columns: columnsProp = 1 }: StoryProps) =
                   const from = items.findIndex((item) => item.target?.id === source.object.id);
                   const to = target?.type === 'cell' || target?.type === 'placeholder' ? target.location : -1;
                   if (from !== -1 && to !== -1) {
-                    arraySwap(items, from, to);
+                    arrayMove(items, from, to);
                   }
+
+                  //
+                  console.log(items.map((item) => item.target?.label));
                 },
                 onTake: ({ source }, cb) => {
                   const from = items.findIndex((item) => item.target?.id === source.object.id);
@@ -103,7 +108,8 @@ const DefaultStory = ({ debug = false, columns: columnsProp = 1 }: StoryProps) =
           </div>
         ))}
         {debug && (
-          <div className='flex flex-col overflow-hidden'>
+          <div className='flex flex-col gap-2 overflow-hidden'>
+            <Button onClick={() => setColumns([...columns])}>Refresh</Button>
             <DebugRoot classNames='p-2 border border-separator rounded-sm' />
           </div>
         )}
@@ -175,9 +181,14 @@ const Cell = forwardRef<HTMLDivElement, Pick<MosaicCellProps<TestItem>, 'classNa
           <div role='none' className='cursor-pointer' ref={setHandleRef}>
             <Icon icon='ph--dots-six-vertical--regular' />
           </div>
-          <div role='none' className='truncate'>
+          <div role='none' className='truncate grow'>
             {object.name}
           </div>
+          {object.label && (
+            <div role='none' className='shrink-0 text-sm text-muted font-mono text-subdued'>
+              {object.label}
+            </div>
+          )}
         </div>
       </Mosaic.Cell>
     );
