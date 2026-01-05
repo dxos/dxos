@@ -50,12 +50,12 @@ describe.runIf(process.env.GOOGLE_ACCESS_TOKEN)('Gmail Send API', { timeout: 30_
         blocks: [
           {
             _tag: 'text',
-            text: `This is a test email sent via the Gmail API.\nDate ${new Date().toISOString()}`,
+            text: `Hey,\n\nDid you get my messagex?\nWe can now send emails from the app:\nhttps://github.com/dxos/dxos/pull/10381`,
           },
         ],
         properties: {
-          to: 'rich@braneframe.com', // Replace with actual test recipient
-          subject: 'Test Email from Gmail Send Function',
+          to: 'rich@braneframe.com',
+          subject: 'Sending email',
         },
       });
 
