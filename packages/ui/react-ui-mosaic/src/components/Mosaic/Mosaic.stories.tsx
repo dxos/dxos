@@ -21,7 +21,7 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Json } from '@dxos/react-ui-syntax-highlighter';
 import { mx } from '@dxos/ui-theme';
 
-import { Mosaic, type MosaicCellProps, useMosaicContainerContext, useMosaicContext } from './Mosaic';
+import { Mosaic, type MosaicCellProps, useMosaic, useMosaicContainer } from './Mosaic';
 import { styles } from './styles';
 import { type MosaicCellData, type MosaicData } from './types';
 
@@ -58,7 +58,7 @@ const splice = <T extends Obj.AnyProps>(items: T[], source: MosaicCellData, targ
 
 const Container = forwardRef<HTMLDivElement, { items: TestData[]; debug?: HTMLDivElement | null }>(
   ({ items, debug, ...props }, forwardedRef) => {
-    const { dragging } = useMosaicContainerContext(Container.displayName!);
+    const { dragging } = useMosaicContainer(Container.displayName!);
     const focusableGroupAttrs = useFocusableGroup({ tabBehavior: 'limited-trap-focus' });
     const arrowNavigationAttrs = useArrowNavigationGroup({ axis: 'vertical', memorizeCurrent: true });
     const tabsterAttrs = useMergedTabsterAttributes_unstable(focusableGroupAttrs, arrowNavigationAttrs);
@@ -105,7 +105,7 @@ const Cell = forwardRef<HTMLDivElement, Pick<MosaicCellProps<TestData>, 'classNa
           role='none'
           tabIndex={0}
           {...focusableGroupAttrs}
-          className={mx('flex gap-2 items-center p-1', styles.cell.border, styles.cell.dragging, classNames)}
+          className={mx('flex gap-2 items-center p-1', styles.cell.border, classNames)}
           onClick={() => rootRef.current?.focus()}
           ref={composedRef}
         >
@@ -123,17 +123,13 @@ const Cell = forwardRef<HTMLDivElement, Pick<MosaicCellProps<TestData>, 'classNa
 
 Cell.displayName = 'Cell';
 
-// TODO(burdon): Factor out gaps. Add before and after first and last element.
-// TODO(burdon): Get dimensions from dragging.
+// TODO(burdon): Factor out.
 const Placeholder = ({ location }: Pick<MosaicCellProps<TestData>, 'location'>) => {
   return (
-    <Mosaic.Placeholder location={location} classNames={styles.placeholder.active}>
+    <Mosaic.Placeholder location={location} classNames={styles.placeholder.outer}>
       <div
         role='none'
-        className={mx(
-          'bs-full hidden group-data-[mosaic-placeholder-state=active]:block',
-          'bg-groupSurface border border-dashed border-separator',
-        )}
+        className={mx('bg-groupSurface border border-dashed border-separator', styles.placeholder.inner)}
       />
     </Mosaic.Placeholder>
   );
@@ -142,14 +138,14 @@ const Placeholder = ({ location }: Pick<MosaicCellProps<TestData>, 'location'>) 
 Placeholder.displayName = 'Placeholder';
 
 const DebugRoot = forwardRef<HTMLDivElement, ThemedClassName>(({ classNames = 'text-xs' }, forwardedRef) => {
-  const info = useMosaicContext(DebugRoot.displayName!);
+  const info = useMosaic(DebugRoot.displayName!);
   return <Json data={info} classNames={classNames} ref={forwardedRef} />;
 });
 
 DebugRoot.displayName = 'DebugRoot';
 
 const DebugContainer = forwardRef<HTMLDivElement, ThemedClassName>(({ classNames = 'text-xs' }, forwardedRef) => {
-  const info = useMosaicContainerContext(DebugContainer.displayName!);
+  const info = useMosaicContainer(DebugContainer.displayName!);
   return <Json data={info} classNames={classNames} ref={forwardedRef} />;
 });
 

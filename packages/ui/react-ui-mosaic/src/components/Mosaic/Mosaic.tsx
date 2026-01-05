@@ -58,20 +58,20 @@ import {
 // Context
 //
 
-type MosaicDraggingState = {
+type DraggingState = {
   source: MosaicCellData;
   target?: MosaicData;
 };
 
-type MosaicContextValue = {
+type RootContextValue = {
   containers: Record<string, MosaicEventHandler>;
-  dragging?: MosaicDraggingState;
-  setDragging: (dragging: MosaicDraggingState | undefined) => void;
   addContainer: (container: MosaicEventHandler) => void;
   removeContainer: (id: string) => void;
+  dragging?: DraggingState;
+  setDragging: (dragging: DraggingState | undefined) => void;
 };
 
-const [MosaicContextProvider, useMosaicContext] = createContext<MosaicContextValue>('Mosaic');
+const [RootContextProvider, useRootContext] = createContext<RootContextValue>('Mosaic');
 
 //
 // Root
@@ -81,7 +81,7 @@ type RootProps = PropsWithChildren;
 
 const Root = ({ children }: RootProps) => {
   const [handlers, setHandlers] = useState<Record<string, MosaicEventHandler>>({});
-  const [dragging, setDragging] = useState<MosaicDraggingState | undefined>();
+  const [dragging, setDragging] = useState<DraggingState | undefined>();
   const currentHandler = useRef<MosaicEventHandler>(undefined);
 
   const getSourceHandler = (source: ElementDragPayload): { data: MosaicCellData; handler?: MosaicEventHandler } => {
@@ -171,20 +171,25 @@ const Root = ({ children }: RootProps) => {
   }, [handlers]);
 
   return (
-    <MosaicContextProvider
+    <RootContextProvider
       containers={handlers}
-      dragging={dragging}
-      setDragging={setDragging}
-      addContainer={(container) => setHandlers((containers) => ({ ...containers, [container.id]: container }))}
+      addContainer={(container) =>
+        setHandlers((containers) => ({
+          ...containers,
+          [container.id]: container,
+        }))
+      }
       removeContainer={(id) =>
         setHandlers((containers) => {
           delete containers[id];
           return { ...containers };
         })
       }
+      dragging={dragging}
+      setDragging={setDragging}
     >
       {children}
-    </MosaicContextProvider>
+    </RootContextProvider>
   );
 };
 
@@ -192,29 +197,30 @@ const Root = ({ children }: RootProps) => {
 // Container
 //
 
-type MosaicContainerLayout = 'horizontal' | 'vertical' | 'grid';
+type ContainerState = { type: 'idle' } | { type: 'active'; bounds: DOMRect };
 
-type MosaicContainerContextValue = {
+type ContainerLayout = 'horizontal' | 'vertical' | 'grid';
+
+type ContainerContextValue = {
   id: string;
-  layout?: MosaicContainerLayout;
-  dragging?: MosaicDraggingState;
+  layout?: ContainerLayout;
+  state: ContainerState;
+  dragging?: DraggingState;
   activeTarget?: MosaicTargetData;
   setActiveTarget: (target: MosaicTargetData | undefined) => void;
 };
 
-const [MosaicContainerContextProvider, useMosaicContainerContext] =
-  createContext<MosaicContainerContextValue>('MosaicContainer');
+const [ContainerContextProvider, useContainerContext] = createContext<ContainerContextValue>('MosaicContainer');
 
-/**
- * Target: [&:has(>_[data-mosaic-container-state=active])]
- */
-const MOSAIC_CONTAINER_STATE_ATTR = 'mosaic-container-state';
+/** Target: [&:has(>_[data-mosaic-container-state=active])] */
+const CONTAINER_STATE_ATTR = 'mosaic-container-state';
 
-type ContainerState = { type: 'idle' } | { type: 'active' };
+/** CSS variable: [var(--mosaic-placeholder-height)] */
+const CONTAINER_PLACEHOLDER_HEIGHT = '--mosaic-placeholder-height';
 
 type ContainerProps = ThemedClassName<
   PropsWithChildren<
-    Pick<MosaicContainerContextValue, 'layout'> & {
+    Pick<ContainerContextValue, 'layout'> & {
       asChild?: boolean;
       autoscroll?: boolean;
       handler: MosaicEventHandler;
@@ -234,10 +240,10 @@ const Container = forwardRef<HTMLDivElement, ContainerProps>(
 
     // Dragging state.
     const [state, setState] = useState<ContainerState>({ type: 'idle' });
-    const { setDragging: setRootDragging } = useMosaicContext(Container.displayName!);
-    const [dragging, setLocalDragging] = useState<MosaicDraggingState | undefined>();
+    const { setDragging: setRootDragging } = useRootContext(Container.displayName!);
+    const [dragging, setLocalDragging] = useState<DraggingState | undefined>();
     const setDragging = useCallback(
-      (dragging: MosaicDraggingState | undefined) => {
+      (dragging: DraggingState | undefined) => {
         setLocalDragging(dragging);
         setRootDragging(dragging);
       },
@@ -248,7 +254,7 @@ const Container = forwardRef<HTMLDivElement, ContainerProps>(
     const [activeTarget, setActiveTarget] = useState<MosaicTargetData | undefined>();
 
     // Register handler.
-    const { addContainer, removeContainer } = useMosaicContext(handler.id);
+    const { addContainer, removeContainer } = useRootContext(handler.id);
     useEffect(() => {
       addContainer(handler);
       return () => removeContainer(handler.id);
@@ -291,19 +297,21 @@ const Container = forwardRef<HTMLDivElement, ContainerProps>(
              * Dragging started in this container.
              */
             onDragStart: ({ source }) => {
-              setState({ type: 'active' });
+              const bounds = source.element.getBoundingClientRect();
+              setState({ type: 'active', bounds });
               setDragging({ source: source.data as MosaicCellData, target: data });
             },
             /**
              * Dragging entered this container.
              */
             onDragEnter: ({ source }) => {
-              setState({ type: 'active' });
+              const bounds = source.element.getBoundingClientRect();
+              setState({ type: 'active', bounds });
               setDragging({ source: source.data as MosaicCellData, target: data });
             },
             /**
              * Dragging left this container.
-             * NOTE: If the container isn't full-height, then when the dragged item is temporarily removed, the container will shrink,
+             * NOTE: If the container isn't full-height, then when the dragged item is temporarily removed the container will shrink,
              * triggering `onDragLeave`, which then causes the item to be added and removed continually (flickering).
              */
             onDragLeave: () => {
@@ -323,22 +331,31 @@ const Container = forwardRef<HTMLDivElement, ContainerProps>(
     }, [rootRef, handler, data]);
 
     return (
-      <MosaicContainerContextProvider
+      <ContainerContextProvider
         id={handler.id}
         layout={layout}
+        state={state}
         dragging={dragging}
         activeTarget={activeTarget}
         setActiveTarget={setActiveTarget}
       >
         <Root
-          {...{ [`data-${MOSAIC_CONTAINER_STATE_ATTR}`]: state.type }}
+          {...{
+            [`data-${CONTAINER_STATE_ATTR}`]: state.type,
+          }}
+          style={
+            {
+              [CONTAINER_PLACEHOLDER_HEIGHT]:
+                state.type === 'active' && state.bounds ? `${state.bounds.height}px` : '100px',
+            } as CSSProperties
+          }
           role='none'
           className={mx('bs-full', classNames)}
           ref={composedRef}
         >
           {children}
         </Root>
-      </MosaicContainerContextProvider>
+      </ContainerContextProvider>
     );
   },
 );
@@ -349,22 +366,20 @@ Container.displayName = 'MosaicContainer';
 // Cell
 //
 
-type MosaicCellContextValue = {
-  closestEdge: Edge | null;
-};
-
-const [MosaicCellContextProvider, useMosaicCellContext] = createContext<MosaicCellContextValue>('MosaicCell');
-
-/**
- * Target: data-[mosaic-cell-state=dragging]
- */
-const MOSAIC_CELL_STATE_ATTR = 'mosaic-cell-state';
-
 type CellState =
   | { type: 'idle' }
   | { type: 'preview'; container: HTMLElement; rect: DOMRect }
   | { type: 'dragging' }
-  | { type: 'target' };
+  | { type: 'target'; closestEdge: Edge | null };
+
+type CellContextValue = {
+  state: CellState;
+};
+
+const [CellContextProvider, useCellContext] = createContext<CellContextValue>('MosaicCell');
+
+/** Target: data-[mosaic-cell-state=dragging] */
+const CELL_STATE_ATTR = 'mosaic-cell-state';
 
 type CellProps<T extends Obj.AnyProps = Obj.AnyProps, Location = any> = ThemedClassName<
   PropsWithChildren<{
@@ -382,9 +397,8 @@ const Cell = forwardRef<HTMLDivElement, CellProps>(
     const composedRef = composeRefs<HTMLDivElement>(rootRef, forwardedRef);
     const Root = asChild ? Slot : Primitive.div;
 
-    const { id: containerId, layout, setActiveTarget } = useMosaicContainerContext(Cell.displayName!);
+    const { id: containerId, layout, setActiveTarget } = useContainerContext(Cell.displayName!);
     const [state, setState] = useState<CellState>({ type: 'idle' });
-    const [closestEdge, setClosestEdge] = useState<Edge | null>(null);
 
     const allowedEdges = useMemo<Edge[]>(
       () => allowedEdgesProp || (layout === 'vertical' ? ['top', 'bottom'] : ['left', 'right']),
@@ -414,14 +428,14 @@ const Cell = forwardRef<HTMLDivElement, CellProps>(
         draggable({
           element: root,
           dragHandle: dragHandle && state.type !== 'preview' ? dragHandle : undefined,
+          canDrag: () => true,
           getInitialData: () => data,
           onGenerateDragPreview: ({ location, nativeSetDragImage }) => {
-            const rect = root.getBoundingClientRect();
             setCustomNativeDragPreview({
               nativeSetDragImage,
               getOffset: preserveOffsetOnSource({ element: root, input: location.current.input }),
               render: ({ container }) => {
-                setState({ type: 'preview', container, rect });
+                setState({ type: 'preview', container, rect: root.getBoundingClientRect() });
                 return () => setState({ type: 'dragging' });
               },
             });
@@ -442,26 +456,16 @@ const Cell = forwardRef<HTMLDivElement, CellProps>(
           },
           onDragEnter: ({ source, self }) => {
             if (source.data.id !== object.id) {
-              setState({ type: 'target' });
-              setClosestEdge(extractClosestEdge(self.data));
-              setActiveTarget(data);
-            }
-          },
-          onDrag: ({ source, self }) => {
-            if (source.data.id !== object.id) {
-              setState({ type: 'target' });
-              setClosestEdge(extractClosestEdge(self.data));
+              setState({ type: 'target', closestEdge: extractClosestEdge(self.data) });
               setActiveTarget(data);
             }
           },
           onDragLeave: () => {
             setState({ type: 'idle' });
-            setClosestEdge(null);
             setActiveTarget(undefined);
           },
           onDrop: () => {
             setState({ type: 'idle' });
-            setClosestEdge(null);
             setActiveTarget(undefined);
           },
         }),
@@ -471,9 +475,11 @@ const Cell = forwardRef<HTMLDivElement, CellProps>(
     // NOTE: Ensure no gaps between cells (prevent drop indicators flickering).
     // NOTE: Ensure padding doesn't change position of cursor when dragging (no margins).
     return (
-      <MosaicCellContextProvider closestEdge={closestEdge}>
+      <CellContextProvider state={state}>
         <Root
-          {...{ [`data-${MOSAIC_CELL_STATE_ATTR}`]: state.type }}
+          {...{
+            [`data-${CELL_STATE_ATTR}`]: state.type,
+          }}
           role='none'
           className={mx('relative transition-opacity', classNames)}
           ref={composedRef}
@@ -484,7 +490,9 @@ const Cell = forwardRef<HTMLDivElement, CellProps>(
         {state.type === 'preview' &&
           createPortal(
             <Root
-              {...{ [`data-${MOSAIC_CELL_STATE_ATTR}`]: state.type }}
+              {...{
+                [`data-${CELL_STATE_ATTR}`]: state.type,
+              }}
               role='none'
               className={mx(classNames)}
               style={
@@ -498,7 +506,7 @@ const Cell = forwardRef<HTMLDivElement, CellProps>(
             </Root>,
             state.container,
           )}
-      </MosaicCellContextProvider>
+      </CellContextProvider>
     );
   },
 );
@@ -511,10 +519,8 @@ Cell.displayName = 'MosaicCell';
 
 type PlaceholderState = { type: 'idle' } | { type: 'active' };
 
-/**
- * Target: data-[mosaic-placeholder-state=active]
- */
-const MOSAIC_PLACEHOLDER_STATE_ATTR = 'mosaic-placeholder-state';
+/** Target: data-[mosaic-placeholder-state=active] */
+const PLACEHOLDER_STATE_ATTR = 'mosaic-placeholder-state';
 
 type PlaceholderProps<Location = any> = ThemedClassName<
   PropsWithChildren<{
@@ -526,7 +532,7 @@ type PlaceholderProps<Location = any> = ThemedClassName<
 const Placeholder = <Location = any,>({ classNames, children, asChild, location }: PlaceholderProps<Location>) => {
   const rootRef = useRef<HTMLDivElement>(null);
   const Root = asChild ? Slot : Primitive.div;
-  const { id: containerId, activeTarget, setActiveTarget } = useMosaicContainerContext(Placeholder.displayName!);
+  const { id: containerId, activeTarget, setActiveTarget } = useContainerContext(Placeholder.displayName!);
   const [state, setState] = useState<PlaceholderState>({ type: 'idle' });
 
   const data = useMemo<MosaicPlaceholderData<Location>>(
@@ -570,7 +576,9 @@ const Placeholder = <Location = any,>({ classNames, children, asChild, location 
 
   return (
     <Root
-      {...{ [`data-${MOSAIC_PLACEHOLDER_STATE_ATTR}`]: state.type }}
+      {...{
+        [`data-${PLACEHOLDER_STATE_ATTR}`]: state.type,
+      }}
       role='none'
       className={mx('relative', classNames)}
       ref={rootRef}
@@ -589,8 +597,10 @@ Placeholder.displayName = 'MosaicPlaceholder';
 type DropIndicatorProps = Omit<NativeDropIndicatorProps, 'edge'>;
 
 const DropIndicator = (props: DropIndicatorProps) => {
-  const { closestEdge } = useMosaicCellContext(DropIndicator.displayName!);
-  return closestEdge ? <NativeDropIndicator {...props} edge={closestEdge} /> : null;
+  const { state } = useCellContext(DropIndicator.displayName!);
+  return state.type === 'target' && state.closestEdge ? (
+    <NativeDropIndicator {...props} edge={state.closestEdge} />
+  ) : null;
 };
 
 DropIndicator.displayName = 'MosaicDropIndicator';
@@ -615,6 +625,4 @@ export type {
   DropIndicatorProps as MosaicDropIndicatorProps,
 };
 
-export { useMosaicContext, useMosaicContainerContext };
-
-export { MOSAIC_CONTAINER_STATE_ATTR, MOSAIC_CELL_STATE_ATTR, MOSAIC_PLACEHOLDER_STATE_ATTR };
+export { useRootContext as useMosaic, useContainerContext as useMosaicContainer };
