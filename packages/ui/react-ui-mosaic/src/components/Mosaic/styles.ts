@@ -4,9 +4,14 @@
 
 import { type ClassNameValue } from '@dxos/react-ui';
 
+// TODO(burdon): Adopt this pattern across packages.
 export const styles: Record<string, Record<string, ClassNameValue>> = {
   container: {
-    active: '[&:has(>_[data-mosaic-container-state=active])]:border-neutralFocusIndicator',
+    border: [
+      // TODO(burdon): Highlight focus.
+      'border border-separator rounded-sm',
+      'data-[mosaic-container-state=active]:border-neutralFocusIndicator',
+    ],
   },
   cell: {
     border: [

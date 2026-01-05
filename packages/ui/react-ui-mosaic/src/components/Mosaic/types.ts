@@ -12,6 +12,7 @@ export type MosaicCellData<T extends Obj.Any = Obj.Any, Location = any> = {
   id: string;
   containerId: string;
   location: Location;
+  bounds?: DOMRect;
   // TODO(burdon): Generalize (has ID).
   object: T;
 };

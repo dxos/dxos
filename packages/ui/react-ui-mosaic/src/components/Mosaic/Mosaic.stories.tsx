@@ -80,36 +80,45 @@ const spliceObjects = (items: Obj.Any[], source: MosaicCellData, target?: Mosaic
 };
 
 // TODO(burdon): Factor out.
-const Container = forwardRef<HTMLDivElement, { items: TestItem[] }>(({ items, ...props }, forwardedRef) => {
-  const focusableGroupAttrs = useFocusableGroup({ tabBehavior: 'limited-trap-focus' });
-  const arrowNavigationAttrs = useArrowNavigationGroup({ axis: 'vertical', memorizeCurrent: true });
-  const tabsterAttrs = useMergedTabsterAttributes_unstable(focusableGroupAttrs, arrowNavigationAttrs);
-  const { dragging } = useMosaicContainer(Container.displayName!);
-  const visibleItems = useMemo(() => {
-    if (!dragging) {
-      return items;
-    }
+// TODO(burdon): NOTE: asChild should forwared classNames.
+const Container = forwardRef<HTMLDivElement, { className?: string; items: TestItem[] }>(
+  ({ className, items, ...props }, forwardedRef) => {
+    const focusableGroupAttrs = useFocusableGroup({ tabBehavior: 'limited-trap-focus' });
+    const arrowNavigationAttrs = useArrowNavigationGroup({ axis: 'vertical', memorizeCurrent: true });
+    const tabsterAttrs = useMergedTabsterAttributes_unstable(focusableGroupAttrs, arrowNavigationAttrs);
+    const { dragging } = useMosaicContainer(Container.displayName!);
+    const visibleItems = useMemo(() => {
+      if (!dragging) {
+        return items;
+      }
 
-    const newItems = [...items];
-    spliceObjects(newItems, dragging.source);
-    return newItems;
-  }, [items, dragging]);
+      const newItems = [...items];
+      spliceObjects(newItems, dragging.source);
+      return newItems;
+    }, [items, dragging]);
 
-  return (
-    <div className='grid grid-rows-2 bs-full divide-y divide-separator'>
-      <div role='none' {...tabsterAttrs} {...props} className='flex flex-col pli-3 overflow-y-auto' ref={forwardedRef}>
-        <Placeholder location={0} />
-        {visibleItems.map((item, i) => (
-          <Fragment key={item.id}>
-            <Cell location={i} object={item} />
-            <Placeholder location={i + 1} />
-          </Fragment>
-        ))}
+    return (
+      <div className='grid grid-rows-2 bs-full'>
+        <div
+          {...tabsterAttrs}
+          {...props}
+          tabIndex={0}
+          className={mx('flex flex-col pli-3 overflow-y-auto', className)}
+          ref={forwardedRef}
+        >
+          <Placeholder location={0} />
+          {visibleItems.map((item, i) => (
+            <Fragment key={item.id}>
+              <Cell location={i} object={item} />
+              <Placeholder location={i + 1} />
+            </Fragment>
+          ))}
+        </div>
+        <DebugContainer classNames='p-2' />
       </div>
-      <DebugContainer classNames='p-2' />
-    </div>
-  );
-});
+    );
+  },
+);
 
 Container.displayName = 'Container';
 
@@ -123,9 +132,8 @@ const Cell = forwardRef<HTMLDivElement, Pick<MosaicCellProps<TestItem>, 'classNa
     return (
       <Mosaic.Cell asChild dragHandle={handleRef} object={object} location={location}>
         <div
-          role='none'
-          tabIndex={0}
           {...focusableGroupAttrs}
+          tabIndex={0}
           className={mx('flex gap-2 items-center p-1', styles.cell.border, classNames)}
           onClick={() => rootRef.current?.focus()}
           ref={composedRef}
@@ -179,17 +187,8 @@ type StoryProps = {
 const DefaultStory = ({ columns: columnsProp = 1 }: StoryProps) => {
   const [columns, _setColumns] = useState<TestColumn[]>(
     Array.from({ length: columnsProp }).map((_, i) =>
-      // Obj.make(TestColumn, {
-      //   items: Array.from({ length: faker.number.int({ min: 3, max: 30 }) }).map((_, j) =>
-      //     Obj.make(TestItem, {
-      //       name: `[${i}-${j}] ${faker.lorem.sentence(3)}`,
-      //     }),
-      //   ),
-      // }),
-      // TODO(burdon): Fix error.
       Obj.make(TestColumn, {
         items: Array.from({ length: 10 }).map((_, j) =>
-          // TODO(burdon): Invalid object id format.
           Ref.make(
             Obj.make(TestItem, {
               name: `[${i}-${j}] ${faker.lorem.sentence(3)}`,
@@ -204,9 +203,13 @@ const DefaultStory = ({ columns: columnsProp = 1 }: StoryProps) => {
     <Mosaic.Root>
       <div role='none' className='bs-full is-full grid grid-flow-col auto-cols-[minmax(0,1fr)] overflow-hidden'>
         {columns.map(({ id, items }) => {
-          return <Foo key={id} id={id} items={items} />;
+          return (
+            <GridCell key={id}>
+              <Foo id={id} items={items} />
+            </GridCell>
+          );
         })}
-        <GridCell classNames='p-2'>
+        <GridCell classNames='p-2 border border-separator rounded-sm'>
           <h2>Root</h2>
           <DebugRoot />
         </GridCell>
@@ -216,11 +219,12 @@ const DefaultStory = ({ columns: columnsProp = 1 }: StoryProps) => {
 };
 
 const GridCell = ({ classNames, children }: ThemedClassName<PropsWithChildren>) => (
-  <div role='none' className={mx('flex flex-col m-2 overflow-hidden border border-separator rounded-sm', classNames)}>
+  <div role='none' className={mx('flex flex-col m-2 overflow-hidden', classNames)}>
     {children}
   </div>
 );
 
+// TODO(burdon): What the Foo?
 const Foo = ({ id, items }: any) => {
   console.log(items.map((ref: any) => ref.target?.name));
 
@@ -232,19 +236,18 @@ const Foo = ({ id, items }: any) => {
   );
 
   return (
-    <GridCell key={id} classNames={styles.container.active}>
-      <Mosaic.Container
-        asChild
-        autoscroll
-        handler={{
-          id: 'test',
-          canDrop: () => true,
-          onDrop: handleDrop,
-        }}
-      >
-        <Container items={items.map((item: any) => item.target).filter(isTruthy)} />
-      </Mosaic.Container>
-    </GridCell>
+    <Mosaic.Container
+      asChild
+      autoscroll
+      classNames={styles.container.border}
+      handler={{
+        id: 'test',
+        canDrop: () => true,
+        onDrop: handleDrop,
+      }}
+    >
+      <Container items={items.map((item: any) => item.target).filter(isTruthy)} />
+    </Mosaic.Container>
   );
 };
 

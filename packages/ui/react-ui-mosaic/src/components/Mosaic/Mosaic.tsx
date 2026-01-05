@@ -197,7 +197,7 @@ const Root = ({ children }: RootProps) => {
 // Container
 //
 
-type ContainerState = { type: 'idle' } | { type: 'active'; bounds: DOMRect };
+type ContainerState = { type: 'idle' } | { type: 'active'; bounds?: DOMRect };
 
 type ContainerLayout = 'horizontal' | 'vertical' | 'grid';
 
@@ -297,16 +297,16 @@ const Container = forwardRef<HTMLDivElement, ContainerProps>(
              * Dragging started in this container.
              */
             onDragStart: ({ source }) => {
-              const bounds = source.element.getBoundingClientRect();
-              setState({ type: 'active', bounds });
+              const data = source.data as MosaicCellData;
+              setState({ type: 'active', bounds: data.bounds });
               setDragging({ source: source.data as MosaicCellData, target: data });
             },
             /**
              * Dragging entered this container.
              */
             onDragEnter: ({ source }) => {
-              const bounds = source.element.getBoundingClientRect();
-              setState({ type: 'active', bounds });
+              const data = source.data as MosaicCellData;
+              setState({ type: 'active', bounds: data.bounds });
               setDragging({ source: source.data as MosaicCellData, target: data });
             },
             /**
@@ -346,10 +346,10 @@ const Container = forwardRef<HTMLDivElement, ContainerProps>(
           style={
             {
               [CONTAINER_PLACEHOLDER_HEIGHT]:
-                state.type === 'active' && state.bounds ? `${state.bounds.height}px` : '100px',
+                state.type === 'active' && state.bounds ? `${state.bounds.height}px` : '0px',
             } as CSSProperties
           }
-          role='none'
+          role='list'
           className={mx('bs-full', classNames)}
           ref={composedRef}
         >
@@ -435,6 +435,7 @@ const Cell = forwardRef<HTMLDivElement, CellProps>(
               nativeSetDragImage,
               getOffset: preserveOffsetOnSource({ element: root, input: location.current.input }),
               render: ({ container }) => {
+                data.bounds = root.getBoundingClientRect();
                 setState({ type: 'preview', container, rect: root.getBoundingClientRect() });
                 return () => setState({ type: 'dragging' });
               },
@@ -480,7 +481,7 @@ const Cell = forwardRef<HTMLDivElement, CellProps>(
           {...{
             [`data-${CELL_STATE_ATTR}`]: state.type,
           }}
-          role='none'
+          role='listitem'
           className={mx('relative transition-opacity', classNames)}
           ref={composedRef}
         >
