@@ -10,7 +10,7 @@ import {
 import { useComposedRefs } from '@radix-ui/react-compose-refs';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Schema from 'effect/Schema';
-import React, { Fragment, type PropsWithChildren, forwardRef, useCallback, useMemo, useRef, useState } from 'react';
+import React, { Fragment, forwardRef, useCallback, useMemo, useRef, useState } from 'react';
 
 import { Obj, Ref, Type } from '@dxos/echo';
 import { ObjectId } from '@dxos/keys';
@@ -77,6 +77,30 @@ const spliceObjects = (items: Obj.Any[], source: MosaicCellData, target?: Mosaic
       items.splice(to === -1 ? items.length : to, 0, source.object);
     }
   }
+};
+
+const ContainerWrapper = ({ id, items }: { id: string; items: Ref.Ref<TestItem>[] }) => {
+  const handleDrop = useCallback<NonNullable<MosaicEventHandler['onDrop']>>(
+    ({ source, target }) => {
+      spliceRefs(items, source, target);
+    },
+    [id, items],
+  );
+
+  return (
+    <Mosaic.Container
+      asChild
+      autoscroll
+      classNames={styles.container.border}
+      handler={{
+        id: 'test',
+        canDrop: () => true,
+        onDrop: handleDrop,
+      }}
+    >
+      <Container items={items.map((item: any) => item.target).filter(isTruthy)} />
+    </Mosaic.Container>
+  );
 };
 
 // TODO(burdon): Factor out.
@@ -166,16 +190,16 @@ const Placeholder = ({ location }: Pick<MosaicCellProps<TestItem>, 'location'>) 
 
 Placeholder.displayName = 'Placeholder';
 
-const DebugRoot = forwardRef<HTMLDivElement, ThemedClassName>(({ classNames = 'text-xs' }, forwardedRef) => {
+const DebugRoot = forwardRef<HTMLDivElement, ThemedClassName>(({ classNames }, forwardedRef) => {
   const info = useMosaic(DebugRoot.displayName!);
-  return <Json data={info} classNames={classNames} ref={forwardedRef} />;
+  return <Json data={info} classNames={mx('text-xs', classNames)} ref={forwardedRef} />;
 });
 
 DebugRoot.displayName = 'DebugRoot';
 
-const DebugContainer = forwardRef<HTMLDivElement, ThemedClassName>(({ classNames = 'text-xs' }, forwardedRef) => {
+const DebugContainer = forwardRef<HTMLDivElement, ThemedClassName>(({ classNames }, forwardedRef) => {
   const info = useMosaicContainer(DebugContainer.displayName!);
-  return <Json data={info} classNames={classNames} ref={forwardedRef} />;
+  return <Json data={info} classNames={mx('text-xs', classNames)} ref={forwardedRef} />;
 });
 
 DebugContainer.displayName = 'DebugContainer';
@@ -201,51 +225,19 @@ const DefaultStory = ({ columns: columnsProp = 1 }: StoryProps) => {
 
   return (
     <Mosaic.Root>
-      <div role='none' className='bs-full is-full grid grid-flow-col auto-cols-[minmax(0,1fr)] overflow-hidden'>
-        {columns.map(({ id, items }) => {
-          return (
-            <GridCell key={id}>
-              <ContainerWrapper id={id} items={items} />
-            </GridCell>
-          );
-        })}
-        <GridCell classNames='p-2 border border-separator rounded-sm'>
-          <DebugRoot />
-        </GridCell>
+      <div className='m-2 bs-full is-full grid grid-flow-col gap-2 auto-cols-[minmax(0,1fr)] overflow-hidden'>
+        {columns.map(({ id, items }) => (
+          <div key={id} className='flex flex-col overflow-hidden'>
+            <ContainerWrapper key={id} id={id} items={items} />
+          </div>
+        ))}
+        <div className='flex flex-col overflow-hidden'>
+          <DebugRoot classNames='p-2 border border-separator rounded-sm' />
+        </div>
       </div>
     </Mosaic.Root>
   );
 };
-
-const ContainerWrapper = ({ id, items }: { id: string; items: Ref.Ref<TestItem>[] }) => {
-  const handleDrop = useCallback<NonNullable<MosaicEventHandler['onDrop']>>(
-    ({ source, target }) => {
-      spliceRefs(items, source, target);
-    },
-    [id, items],
-  );
-
-  return (
-    <Mosaic.Container
-      asChild
-      autoscroll
-      classNames={styles.container.border}
-      handler={{
-        id: 'test',
-        canDrop: () => true,
-        onDrop: handleDrop,
-      }}
-    >
-      <Container items={items.map((item: any) => item.target).filter(isTruthy)} />
-    </Mosaic.Container>
-  );
-};
-
-const GridCell = ({ classNames, children }: ThemedClassName<PropsWithChildren>) => (
-  <div role='none' className={mx('flex flex-col m-2 overflow-hidden', classNames)}>
-    {children}
-  </div>
-);
 
 const meta = {
   title: 'ui/react-ui-mosaic/Mosaic',
