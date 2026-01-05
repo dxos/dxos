@@ -59,7 +59,10 @@ import {
 //
 
 type DraggingState = {
+  // TODO(burdon): Split container and target.
   source: MosaicCellData;
+
+  // TODO(burdon): Split container and target.
   target?: MosaicData;
 };
 
@@ -68,7 +71,6 @@ type RootContextValue = {
   addContainer: (container: MosaicEventHandler) => void;
   removeContainer: (id: string) => void;
   dragging?: DraggingState;
-  setDragging: (dragging: DraggingState | undefined) => void;
 };
 
 const [RootContextProvider, useRootContext] = createContext<RootContextValue>('MosaicRoot');
@@ -84,44 +86,55 @@ const Root = ({ children }: RootProps) => {
   const [dragging, setDragging] = useState<DraggingState | undefined>();
   const currentHandler = useRef<MosaicEventHandler>(undefined);
 
-  const getSourceHandler = (source: ElementDragPayload): { data: MosaicCellData; handler?: MosaicEventHandler } => {
-    const data = source.data as MosaicCellData;
-    return { data, handler: handlers[data.containerId] };
-  };
+  const getSourceHandler = useCallback(
+    (source: ElementDragPayload): { data: MosaicCellData; handler?: MosaicEventHandler } => {
+      const data = source.data as MosaicCellData;
+      return { data, handler: handlers[data.containerId] };
+    },
+    [handlers],
+  );
 
-  const getTargetHandler = (location: DragLocationHistory): { data?: MosaicData; handler?: MosaicEventHandler } => {
-    for (const target of location.current.dropTargets) {
-      const data = target.data as MosaicData;
-      let containerId: string;
-      switch (data.type) {
-        case 'cell':
-        case 'placeholder':
-          containerId = data.containerId;
-          break;
-        case 'container':
-          containerId = data.id;
-          break;
+  const getTargetHandler = useCallback(
+    (location: DragLocationHistory): { data?: MosaicData; handler?: MosaicEventHandler } => {
+      for (const target of location.current.dropTargets) {
+        const data = target.data as MosaicData;
+        let containerId: string;
+        switch (data.type) {
+          case 'cell':
+          case 'placeholder':
+            containerId = data.containerId;
+            break;
+          case 'container':
+            containerId = data.id;
+            break;
+        }
+
+        const handler = handlers[containerId];
+        if (handler) {
+          return { data, handler };
+        }
       }
 
-      const handler = handlers[containerId];
-      if (handler) {
-        return { data, handler };
-      }
-    }
-
-    return { data: undefined, handler: undefined };
-  };
+      return {};
+    },
+    [handlers],
+  );
 
   useEffect(() => {
     // Main controller.
-    // TODO(burdon): Remove setDragging callback -- we can manage everything from here.
     return monitorForElements({
+      /**
+       * Dragging started within any container.
+       */
       onDragStart: ({ source, location }) => {
         log.info('Root.onDragStart', {
           source: source.data,
           location: location.current.dropTargets.map((target) => target.data),
         });
       },
+      /**
+       * Dragging within any container.
+       */
       onDrag: ({ source, location }) => {
         const { data } = getSourceHandler(source);
         const { handler } = getTargetHandler(location);
@@ -130,11 +143,24 @@ const Root = ({ children }: RootProps) => {
           handler.onDrag?.({ source: data, position: { x, y } });
         }
       },
-      onDropTargetChange: ({ location }) => {
-        const { handler } = getTargetHandler(location);
-        currentHandler.current?.onCancel?.();
+      /**
+       * Dragging entered a new container.
+       */
+      onDropTargetChange: ({ source, location }) => {
+        log.info('Root.onDropTargetChange', {
+          source: source.data,
+          location: location.current.dropTargets.map((target) => target.data),
+        });
+
+        const { data: sourceData } = getSourceHandler(source);
+        const { data: targetData, handler } = getTargetHandler(location);
+        setDragging({ source: sourceData, target: targetData });
+        currentHandler.current?.onCancel?.(); // TODO(burdon): ???
         currentHandler.current = handler;
       },
+      /**
+       * Dragging ended.
+       */
       onDrop: ({ source, location }) => {
         log.info('Root.onDrop', {
           source: source.data,
@@ -142,41 +168,45 @@ const Root = ({ children }: RootProps) => {
         });
 
         try {
-          // Get the source container.
-          const { data: sourceData, handler: sourceHandler } = getSourceHandler(source);
-          if (!sourceHandler) {
-            log.warn('invalid source', { source: sourceData, handlers: Object.keys(handlers) });
-            return;
-          }
-
-          // Get the target container.
-          const { data: targetData, handler: targetHandler } = getTargetHandler(location);
-          if (!targetHandler) {
-            log.warn('invalid target', { source: sourceData, location, handlers: Object.keys(handlers) });
-            return;
-          }
-
-          // TODO(burdon): Check object doesn't already exist in the collection.
-          if (sourceHandler === targetHandler) {
-            targetHandler.onDrop?.({ source: sourceData, target: targetData });
-          } else {
-            if (!sourceHandler.onTake) {
-              log.warn('invalid source', { source: sourceData });
+          // If cancelled (e.g., user pressed Escape) then there are no drop targets.
+          if (location.current.dropTargets.length > 0) {
+            // Get the source container.
+            const { data: sourceData, handler: sourceHandler } = getSourceHandler(source);
+            if (!sourceHandler) {
+              log.warn('invalid source', { source: sourceData, handlers: Object.keys(handlers) });
               return;
             }
 
-            sourceHandler.onTake?.({ source: sourceData }, async (object) => {
-              targetHandler.onDrop?.({ source: { ...sourceData, object }, target: targetData });
-              return true;
-            });
+            // Get the target container.
+            const { data: targetData, handler: targetHandler } = getTargetHandler(location);
+            if (!targetHandler) {
+              log.warn('invalid target', { source: sourceData, location, handlers: Object.keys(handlers) });
+              return;
+            }
+
+            // TODO(burdon): Check object doesn't already exist in the collection.
+            if (sourceHandler === targetHandler) {
+              targetHandler.onDrop?.({ source: sourceData, target: targetData });
+            } else {
+              if (!sourceHandler.onTake) {
+                log.warn('invalid source', { source: sourceData });
+                return;
+              }
+
+              sourceHandler.onTake?.({ source: sourceData }, async (object) => {
+                targetHandler.onDrop?.({ source: { ...sourceData, object }, target: targetData });
+                return true;
+              });
+            }
           }
         } finally {
+          setDragging(undefined);
           currentHandler.current?.onCancel?.();
           currentHandler.current = undefined;
         }
       },
     });
-  }, [handlers]);
+  }, [handlers, getSourceHandler, getTargetHandler]);
 
   return (
     <RootContextProvider
@@ -194,7 +224,6 @@ const Root = ({ children }: RootProps) => {
         })
       }
       dragging={dragging}
-      setDragging={setDragging}
     >
       {children}
     </RootContextProvider>
@@ -212,10 +241,10 @@ type ContainerLayout = 'horizontal' | 'vertical' | 'grid';
 type ContainerContextValue = {
   id: string;
   layout?: ContainerLayout;
-  state: ContainerState;
   dragging?: DraggingState;
+  state: ContainerState;
 
-  // TODO(burdon): Reconcile with global dragging state.
+  /** Active drop target (used to determine placeholder location). */
   activeTarget?: MosaicTargetData;
   setActiveTarget: (target: MosaicTargetData | undefined) => void;
 };
@@ -248,20 +277,9 @@ const Container = forwardRef<HTMLDivElement, ContainerProps>(
     const composedRef = useComposedRefs<HTMLDivElement>(rootRef, forwardedRef);
     const Root = asChild ? Slot : Primitive.div;
 
-    // Dragging state.
+    // Sstate.
+    const { dragging } = useRootContext(Container.displayName!);
     const [state, setState] = useState<ContainerState>({ type: 'idle' });
-    const { setDragging: setRootDragging } = useRootContext(Container.displayName!);
-    const [dragging, setLocalDragging] = useState<DraggingState | undefined>();
-    const setDragging = useCallback(
-      (dragging: DraggingState | undefined) => {
-        setLocalDragging(dragging);
-        setRootDragging(dragging);
-      },
-      [setLocalDragging, setRootDragging],
-    );
-
-    // Drop target state.
-    // TODO(burdon): Reconcile with global dragging state.
     const [activeTarget, setActiveTarget] = useState<MosaicTargetData | undefined>();
 
     // Register handler.
@@ -310,7 +328,6 @@ const Container = forwardRef<HTMLDivElement, ContainerProps>(
             onDragStart: ({ source }) => {
               const sourceData = source.data as MosaicCellData;
               setState({ type: 'active', bounds: sourceData.bounds });
-              setDragging({ source: sourceData, target: data });
             },
             /**
              * Dragging entered this container.
@@ -318,7 +335,6 @@ const Container = forwardRef<HTMLDivElement, ContainerProps>(
             onDragEnter: ({ source }) => {
               const sourceData = source.data as MosaicCellData;
               setState({ type: 'active', bounds: sourceData.bounds });
-              setDragging({ source: sourceData, target: data });
             },
             /**
              * Dragging left this container.
@@ -327,14 +343,12 @@ const Container = forwardRef<HTMLDivElement, ContainerProps>(
              */
             onDragLeave: () => {
               setState({ type: 'idle' });
-              setDragging(undefined);
             },
             /**
              * Dropped in this container.
              */
             onDrop: () => {
               setState({ type: 'idle' });
-              setDragging(undefined);
             },
           }),
         ].filter(isTruthy),
@@ -346,7 +360,7 @@ const Container = forwardRef<HTMLDivElement, ContainerProps>(
         id={handler.id}
         layout={layout}
         state={state}
-        dragging={dragging}
+        dragging={state.type === 'active' ? dragging : undefined}
         activeTarget={activeTarget}
         setActiveTarget={setActiveTarget}
       >
@@ -411,7 +425,7 @@ const Cell = forwardRef<HTMLDivElement, CellProps>(
     const composedRef = composeRefs<HTMLDivElement>(rootRef, forwardedRef);
     const Root = asChild ? Slot : Primitive.div;
 
-    const { setDragging } = useRootContext(Cell.displayName!);
+    // State.
     const { id: containerId, layout, setActiveTarget } = useContainerContext(Cell.displayName!);
     const [state, setState] = useState<CellState>({ type: 'idle' });
 
@@ -474,7 +488,6 @@ const Cell = forwardRef<HTMLDivElement, CellProps>(
             if (source.data.id !== object.id) {
               setState({ type: 'target', closestEdge: extractClosestEdge(self.data) });
               setActiveTarget(data);
-              setDragging({ source: source.data as MosaicCellData, target: data });
             }
           },
           onDragLeave: () => {
@@ -567,7 +580,6 @@ const Placeholder = <Location extends LocationType = LocationType>({
     [containerId, location],
   );
 
-  // TODO(burdon): Create option.
   useEffect(() => {
     setState({ type: data.location === activeTarget?.location ? 'active' : 'idle' });
   }, [data, activeTarget]);

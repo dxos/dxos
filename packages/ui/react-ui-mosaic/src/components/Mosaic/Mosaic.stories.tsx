@@ -79,10 +79,65 @@ const spliceObjects = (items: Obj.Any[], source: MosaicCellData, target?: Mosaic
   }
 };
 
+type StoryProps = {
+  debug?: boolean;
+  columns?: number;
+};
+
+const DefaultStory = ({ debug = false, columns: columnsProp = 1 }: StoryProps) => {
+  const [columns, _setColumns] = useState<TestColumn[]>(
+    Array.from({ length: columnsProp }).map((_, i) =>
+      Obj.make(TestColumn, {
+        items: Array.from({ length: faker.number.int({ min: 8, max: 20 }) }).map((_, j) =>
+          Ref.make(
+            Obj.make(TestItem, {
+              name: `[${i}-${j}] ${faker.lorem.sentence(3)}`,
+            }),
+          ),
+        ),
+      }),
+    ),
+  );
+
+  return (
+    <Mosaic.Root>
+      <div className='p-2 bs-full is-full grid grid-flow-col gap-2 auto-cols-[minmax(0,1fr)] overflow-hidden'>
+        {columns.map(({ id, items }) => (
+          <div key={id} className='flex flex-col overflow-hidden'>
+            <Mosaic.Container
+              asChild
+              autoscroll
+              classNames={styles.container.border}
+              handler={{
+                id,
+                canDrop: () => true,
+                onDrop: ({ source, target }) => {
+                  spliceRefs(items, source, target);
+                },
+                onTake: ({ source }, cb) => {
+                  // TODO(burdon): Delete from items.
+                  void cb(source.object);
+                },
+              }}
+            >
+              <Container debug={debug} items={items.map((item: any) => item.target).filter(isTruthy)} />
+            </Mosaic.Container>
+          </div>
+        ))}
+        {debug && (
+          <div className='flex flex-col overflow-hidden'>
+            <DebugRoot classNames='p-2 border border-separator rounded-sm' />
+          </div>
+        )}
+      </div>
+    </Mosaic.Root>
+  );
+};
+
 // TODO(burdon): Factor out.
 // TODO(burdon): NOTE: asChild should forwared classNames.
-const Container = forwardRef<HTMLDivElement, { className?: string; items: TestItem[] }>(
-  ({ className, items, ...props }, forwardedRef) => {
+const Container = forwardRef<HTMLDivElement, { debug?: boolean; className?: string; items: TestItem[] }>(
+  ({ debug = false, className, items, ...props }, forwardedRef) => {
     const focusableGroupAttrs = useFocusableGroup({ tabBehavior: 'limited-trap-focus' });
     const arrowNavigationAttrs = useArrowNavigationGroup({ axis: 'vertical', memorizeCurrent: true });
     const tabsterAttrs = useMergedTabsterAttributes_unstable(focusableGroupAttrs, arrowNavigationAttrs);
@@ -98,7 +153,7 @@ const Container = forwardRef<HTMLDivElement, { className?: string; items: TestIt
     }, [items, dragging]);
 
     return (
-      <div className='grid grid-rows-2 gap-2 bs-full'>
+      <div className={mx('grid bs-full', debug && 'grid-rows-2 gap-2')}>
         <div
           {...tabsterAttrs}
           {...props}
@@ -114,7 +169,7 @@ const Container = forwardRef<HTMLDivElement, { className?: string; items: TestIt
             </Fragment>
           ))}
         </div>
-        <DebugContainer classNames='p-2 border border-separator rounded-sm' />
+        {debug && <DebugContainer classNames='p-2 border border-separator rounded-sm' />}
       </div>
     );
   },
@@ -180,58 +235,6 @@ const DebugContainer = forwardRef<HTMLDivElement, ThemedClassName>(({ classNames
 
 DebugContainer.displayName = 'DebugContainer';
 
-type StoryProps = {
-  columns?: number;
-};
-
-const DefaultStory = ({ columns: columnsProp = 1 }: StoryProps) => {
-  const [columns, _setColumns] = useState<TestColumn[]>(
-    Array.from({ length: columnsProp }).map((_, i) =>
-      Obj.make(TestColumn, {
-        items: Array.from({ length: faker.number.int({ min: 8, max: 20 }) }).map((_, j) =>
-          Ref.make(
-            Obj.make(TestItem, {
-              name: `[${i}-${j}] ${faker.lorem.sentence(3)}`,
-            }),
-          ),
-        ),
-      }),
-    ),
-  );
-
-  return (
-    <Mosaic.Root>
-      <div className='p-2 bs-full is-full grid grid-flow-col gap-2 auto-cols-[minmax(0,1fr)] overflow-hidden'>
-        {columns.map(({ id, items }) => (
-          <div key={id} className='flex flex-col overflow-hidden'>
-            <Mosaic.Container
-              asChild
-              autoscroll
-              classNames={styles.container.border}
-              handler={{
-                id,
-                canDrop: () => true,
-                onDrop: ({ source, target }) => {
-                  spliceRefs(items, source, target);
-                },
-                onTake: ({ source }, cb) => {
-                  // TODO(burdon): Delete from items.
-                  void cb(source.object);
-                },
-              }}
-            >
-              <Container items={items.map((item: any) => item.target).filter(isTruthy)} />
-            </Mosaic.Container>
-          </div>
-        ))}
-        <div className='flex flex-col overflow-hidden'>
-          <DebugRoot classNames='p-2 border border-separator rounded-sm' />
-        </div>
-      </div>
-    </Mosaic.Root>
-  );
-};
-
 const meta = {
   title: 'ui/react-ui-mosaic/Mosaic',
   render: DefaultStory,
@@ -247,6 +250,7 @@ type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
   args: {
+    debug: true,
     columns: 2,
   },
 };
