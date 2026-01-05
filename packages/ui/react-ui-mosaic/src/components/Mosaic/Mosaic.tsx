@@ -366,6 +366,9 @@ Container.displayName = 'MosaicContainer';
 // Cell
 //
 
+/** Must implement value equivalence. */
+type LocationType = string | number;
+
 type CellState =
   | { type: 'idle' }
   | { type: 'preview'; container: HTMLElement; rect: DOMRect }
@@ -381,7 +384,7 @@ const [CellContextProvider, useCellContext] = createContext<CellContextValue>('M
 /** Target: data-[mosaic-cell-state=dragging] */
 const CELL_STATE_ATTR = 'mosaic-cell-state';
 
-type CellProps<T extends Obj.Any = Obj.Any, Location = any> = ThemedClassName<
+type CellProps<T extends Obj.Any = Obj.Any, Location = LocationType> = ThemedClassName<
   PropsWithChildren<{
     asChild?: boolean;
     dragHandle?: HTMLDivElement | null;
@@ -523,14 +526,19 @@ type PlaceholderState = { type: 'idle' } | { type: 'active' };
 /** Target: data-[mosaic-placeholder-state=active] */
 const PLACEHOLDER_STATE_ATTR = 'mosaic-placeholder-state';
 
-type PlaceholderProps<Location = any> = ThemedClassName<
+type PlaceholderProps<Location = LocationType> = ThemedClassName<
   PropsWithChildren<{
     asChild?: boolean;
     location: Location;
   }>
 >;
 
-const Placeholder = <Location = any,>({ classNames, children, asChild, location }: PlaceholderProps<Location>) => {
+const Placeholder = <Location extends LocationType = LocationType>({
+  classNames,
+  children,
+  asChild,
+  location,
+}: PlaceholderProps<Location>) => {
   const rootRef = useRef<HTMLDivElement>(null);
   const Root = asChild ? Slot : Primitive.div;
   const { id: containerId, activeTarget, setActiveTarget } = useContainerContext(Placeholder.displayName!);
@@ -626,4 +634,4 @@ export type {
   DropIndicatorProps as MosaicDropIndicatorProps,
 };
 
-export { useRootContext as useMosaic, useContainerContext as useMosaicContainer };
+export { useRootContext as useMosaic, useContainerContext as useMosaicContainer, useCellContext as useMosaicCell };
