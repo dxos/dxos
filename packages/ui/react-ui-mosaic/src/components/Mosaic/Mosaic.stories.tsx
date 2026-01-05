@@ -26,7 +26,7 @@ import { Mosaic, type MosaicCellProps, useMosaic, useMosaicContainer } from './M
 import { styles } from './styles';
 import { type MosaicCellData, type MosaicData, type MosaicEventHandler } from './types';
 
-faker.seed(1);
+faker.seed(999);
 
 const TestItem = Schema.Struct({
   name: Schema.String,
@@ -188,7 +188,7 @@ const DefaultStory = ({ columns: columnsProp = 1 }: StoryProps) => {
   const [columns, _setColumns] = useState<TestColumn[]>(
     Array.from({ length: columnsProp }).map((_, i) =>
       Obj.make(TestColumn, {
-        items: Array.from({ length: 10 }).map((_, j) =>
+        items: Array.from({ length: faker.number.int({ min: 8, max: 20 }) }).map((_, j) =>
           Ref.make(
             Obj.make(TestItem, {
               name: `[${i}-${j}] ${faker.lorem.sentence(3)}`,
@@ -205,12 +205,11 @@ const DefaultStory = ({ columns: columnsProp = 1 }: StoryProps) => {
         {columns.map(({ id, items }) => {
           return (
             <GridCell key={id}>
-              <Foo id={id} items={items} />
+              <ContainerWrapper id={id} items={items} />
             </GridCell>
           );
         })}
         <GridCell classNames='p-2 border border-separator rounded-sm'>
-          <h2>Root</h2>
           <DebugRoot />
         </GridCell>
       </div>
@@ -218,16 +217,7 @@ const DefaultStory = ({ columns: columnsProp = 1 }: StoryProps) => {
   );
 };
 
-const GridCell = ({ classNames, children }: ThemedClassName<PropsWithChildren>) => (
-  <div role='none' className={mx('flex flex-col m-2 overflow-hidden', classNames)}>
-    {children}
-  </div>
-);
-
-// TODO(burdon): What the Foo?
-const Foo = ({ id, items }: any) => {
-  console.log(items.map((ref: any) => ref.target?.name));
-
+const ContainerWrapper = ({ id, items }: any) => {
   const handleDrop = useCallback<NonNullable<MosaicEventHandler['onDrop']>>(
     ({ source, target }) => {
       spliceRefs(items, source, target);
@@ -250,6 +240,12 @@ const Foo = ({ id, items }: any) => {
     </Mosaic.Container>
   );
 };
+
+const GridCell = ({ classNames, children }: ThemedClassName<PropsWithChildren>) => (
+  <div role='none' className={mx('flex flex-col m-2 overflow-hidden', classNames)}>
+    {children}
+  </div>
+);
 
 const meta = {
   title: 'ui/react-ui-mosaic/Mosaic',
