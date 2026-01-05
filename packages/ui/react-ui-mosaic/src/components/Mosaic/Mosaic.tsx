@@ -71,7 +71,7 @@ type RootContextValue = {
   setDragging: (dragging: DraggingState | undefined) => void;
 };
 
-const [RootContextProvider, useRootContext] = createContext<RootContextValue>('Mosaic');
+const [RootContextProvider, useRootContext] = createContext<RootContextValue>('MosaicRoot');
 
 //
 // Root
@@ -113,7 +113,15 @@ const Root = ({ children }: RootProps) => {
   };
 
   useEffect(() => {
+    // Main controller.
+    // TODO(burdon): Remove setDragging callback -- we can manage everything from here.
     return monitorForElements({
+      onDragStart: ({ source, location }) => {
+        log.info('Root.onDragStart', {
+          source: source.data,
+          location: location.current.dropTargets.map((target) => target.data),
+        });
+      },
       onDrag: ({ source, location }) => {
         const { data } = getSourceHandler(source);
         const { handler } = getTargetHandler(location);
@@ -128,7 +136,7 @@ const Root = ({ children }: RootProps) => {
         currentHandler.current = handler;
       },
       onDrop: ({ source, location }) => {
-        log('onDrop', {
+        log.info('Root.onDrop', {
           source: source.data,
           location: location.current.dropTargets.map((target) => target.data),
         });
@@ -207,7 +215,7 @@ type ContainerContextValue = {
   state: ContainerState;
   dragging?: DraggingState;
 
-  // TODO(burdon): Reconcile with dragging.
+  // TODO(burdon): Reconcile with global dragging state.
   activeTarget?: MosaicTargetData;
   setActiveTarget: (target: MosaicTargetData | undefined) => void;
 };
