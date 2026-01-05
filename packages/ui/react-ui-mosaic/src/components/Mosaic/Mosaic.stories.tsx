@@ -91,7 +91,7 @@ const DefaultStory = ({ debug = false, columns: columnsProp = 1 }: StoryProps) =
                     arrayMove(items, from, to);
                   }
 
-                  //
+                  // TODO(burdon): UI doesn't update.
                   console.log(items.map((item) => item.target?.label));
                 },
                 onTake: ({ source }, cb) => {
