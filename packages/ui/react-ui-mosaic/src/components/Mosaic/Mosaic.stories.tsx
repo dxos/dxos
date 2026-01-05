@@ -85,7 +85,9 @@ const DefaultStory = ({ debug = false, columns: columnsProp = 1 }: StoryProps) =
                 onDrop: ({ source, target }) => {
                   const from = items.findIndex((item) => item.target?.id === source.object.id);
                   const to = target?.type === 'cell' || target?.type === 'placeholder' ? target.location : -1;
-                  arraySwap(items, from, to);
+                  if (from !== -1 && to !== -1) {
+                    arraySwap(items, from, to);
+                  }
                 },
                 onTake: ({ source }, cb) => {
                   // TODO(burdon): Delete from items.
