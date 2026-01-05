@@ -14,17 +14,15 @@ import React, { Fragment, forwardRef, useMemo, useRef, useState } from 'react';
 
 import { Obj, Ref, Type } from '@dxos/echo';
 import { ObjectId } from '@dxos/keys';
-import { log } from '@dxos/log';
 import { faker } from '@dxos/random';
 import { Icon, type ThemedClassName } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Json } from '@dxos/react-ui-syntax-highlighter';
 import { mx } from '@dxos/ui-theme';
-import { isTruthy } from '@dxos/util';
+import { arraySwap, isTruthy } from '@dxos/util';
 
 import { Mosaic, type MosaicCellProps, useMosaic, useMosaicContainer } from './Mosaic';
 import { styles } from './styles';
-import { type MosaicCellData, type MosaicData } from './types';
 
 faker.seed(999);
 
@@ -50,34 +48,6 @@ const TestColumn = Schema.Struct({
 );
 
 interface TestColumn extends Schema.Schema.Type<typeof TestColumn> {}
-
-/**
- * Splice in place.
- */
-// TODO(burdon): Factor out.
-const spliceRefs = (items: Ref.Ref<Obj.Any>[], source: MosaicCellData, target?: MosaicData) => {
-  const from = items.findIndex((item) => item.target?.id === source.object.id);
-  const to: number = target?.type === 'cell' || target?.type === 'placeholder' ? target.location : -1;
-  log.info('splice', { from, to });
-  if (from !== -1) {
-    items.splice(from, 1);
-    if (target) {
-      items.splice(to === -1 ? items.length : to, 0, Ref.make(source.object));
-    }
-  }
-};
-
-const spliceObjects = (items: Obj.Any[], source: MosaicCellData, target?: MosaicData) => {
-  const from = items.findIndex((item) => item.id === source.object.id);
-  const to: number = target?.type === 'cell' || target?.type === 'placeholder' ? target.location : -1;
-  log('splice', { from, to });
-  if (from !== -1) {
-    items.splice(from, 1);
-    if (target) {
-      items.splice(to === -1 ? items.length : to, 0, source.object);
-    }
-  }
-};
 
 type StoryProps = {
   debug?: boolean;
@@ -112,7 +82,9 @@ const DefaultStory = ({ debug = false, columns: columnsProp = 1 }: StoryProps) =
                 id,
                 canDrop: () => true,
                 onDrop: ({ source, target }) => {
-                  spliceRefs(items, source, target);
+                  const from = items.findIndex((item) => item.target?.id === source.object.id);
+                  const to = target?.type === 'cell' || target?.type === 'placeholder' ? target.location : -1;
+                  arraySwap(items, from, to);
                 },
                 onTake: ({ source }, cb) => {
                   // TODO(burdon): Delete from items.
@@ -147,8 +119,9 @@ const Container = forwardRef<HTMLDivElement, { debug?: boolean; className?: stri
         return items;
       }
 
-      const newItems = [...items];
-      spliceObjects(newItems, dragging.source);
+      const from = items.findIndex((item) => item.id === dragging.source.object.id);
+      const newItems = items.slice();
+      newItems.splice(from, 1);
       return newItems;
     }, [items, dragging]);
 
