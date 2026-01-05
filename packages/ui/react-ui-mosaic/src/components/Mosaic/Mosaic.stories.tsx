@@ -69,6 +69,7 @@ const DefaultStory = ({ debug = false, columns: columnsProp = 1 }: StoryProps) =
     ),
   );
 
+  // TODO(burdon): Create draggable cell for container.
   return (
     <Mosaic.Root>
       <div className='p-2 bs-full is-full grid grid-flow-col gap-2 auto-cols-[minmax(0,1fr)] overflow-hidden'>

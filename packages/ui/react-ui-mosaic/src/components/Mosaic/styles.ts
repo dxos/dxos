@@ -8,17 +8,16 @@ import { type ClassNameValue } from '@dxos/react-ui';
 export const styles: Record<string, Record<string, ClassNameValue>> = {
   container: {
     border: [
-      // TODO(burdon): Highlight focus.
-      'border border-separator rounded-sm',
+      'outline-none border border-separator rounded-sm focus:border-accentSurface',
       'data-[mosaic-container-state=active]:border-neutralFocusIndicator',
     ],
   },
   cell: {
     border: [
       'outline-none border border-separator focus:border-accentSurface',
+      'data-[mosaic-cell-state=target]:border-neutralFocusIndicator',
       'data-[mosaic-cell-state=preview]:bg-groupSurface',
       'data-[mosaic-cell-state=dragging]:opacity-20',
-      'data-[mosaic-cell-state=target]:border-neutralFocusIndicator',
     ],
   },
   placeholder: {
