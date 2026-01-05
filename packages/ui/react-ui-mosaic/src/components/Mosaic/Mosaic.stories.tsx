@@ -217,7 +217,7 @@ const DefaultStory = ({ columns: columnsProp = 1 }: StoryProps) => {
   );
 };
 
-const ContainerWrapper = ({ id, items }: any) => {
+const ContainerWrapper = ({ id, items }: { id: string; items: Ref.Ref<TestItem>[] }) => {
   const handleDrop = useCallback<NonNullable<MosaicEventHandler['onDrop']>>(
     ({ source, target }) => {
       spliceRefs(items, source, target);
