@@ -90,7 +90,10 @@ const DefaultStory = ({ debug = false, columns: columnsProp = 1 }: StoryProps) =
                   }
                 },
                 onTake: ({ source }, cb) => {
-                  // TODO(burdon): Delete from items.
+                  const from = items.findIndex((item) => item.target?.id === source.object.id);
+                  if (from !== -1) {
+                    items.splice(from, 1);
+                  }
                   void cb(source.object);
                 },
               }}

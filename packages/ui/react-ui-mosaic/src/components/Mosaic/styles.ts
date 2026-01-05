@@ -5,7 +5,7 @@
 import { type ClassNameValue } from '@dxos/react-ui';
 
 // TODO(burdon): Adopt this pattern across packages.
-export const styles: Record<string, Record<string, ClassNameValue>> = {
+export const styles = {
   container: {
     border: [
       'outline-none border border-separator rounded-sm focus:border-accentSurface',
@@ -36,4 +36,4 @@ export const styles: Record<string, Record<string, ClassNameValue>> = {
       'group-data-[mosaic-placeholder-state=active]:duration-100',
     ],
   },
-};
+} satisfies Record<string, Record<string, ClassNameValue>>;
