@@ -13,7 +13,7 @@ import { Obj, Ref, Type } from '@dxos/echo';
 import { ObjectId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { faker } from '@dxos/random';
-import { Button, Icon, ScrollArea, type ThemedClassName } from '@dxos/react-ui';
+import { Icon, IconButton, ScrollArea, type ThemedClassName, Toolbar } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Json } from '@dxos/react-ui-syntax-highlighter';
 import { mx } from '@dxos/ui-theme';
@@ -63,7 +63,7 @@ const DefaultStory = ({ columns: columnsProp = 1, debug = false }: StoryProps) =
           Ref.make(
             Obj.make(TestItem, {
               name: faker.lorem.sentence(3),
-              label: `[${i}-${j}]`,
+              label: `${String.fromCharCode(65 + i)}-${j}`,
             }),
           ),
         ),
@@ -73,20 +73,28 @@ const DefaultStory = ({ columns: columnsProp = 1, debug = false }: StoryProps) =
 
   return (
     <Mosaic.Root>
-      <Focus.Group
-        axis='horizontal'
-        classNames='p-2 bs-full is-full grid grid-flow-col gap-2 auto-cols-[minmax(0,1fr)] overflow-hidden'
-      >
-        {/* <Mosaic.Container autoscroll withFocus> */}
-        {columns.map((column) => (
-          <Column key={column.id} column={column} debug={debug} />
-        ))}
-        {/* </Mosaic.Container> */}
+      <Focus.Group axis='horizontal' classNames='p-2 bs-full is-full grid grid-cols-[1fr_25rem] gap-2 overflow-hidden'>
+        <div className='flex bs-full overflow-x-auto'>
+          <div className='flex gap-2 bs-full'>
+            {/* <Mosaic.Container autoscroll withFocus> */}
+            {columns.map((column) => (
+              <Column key={column.id} column={column} debug={debug} />
+            ))}
+            {/* </Mosaic.Container> */}
+          </div>
+        </div>
 
         {debug && (
-          <Focus.Group classNames='flex flex-col gap-2 overflow-hidden p-2'>
-            <Button onClick={() => setColumns([...columns])}>Refresh</Button>
-            <DebugRoot />
+          <Focus.Group classNames='flex flex-col gap-2 overflow-hidden'>
+            <Toolbar.Root classNames='border-b border-separator'>
+              <IconButton
+                icon='ph--arrows-clockwise--regular'
+                iconOnly
+                label='refresh'
+                onClick={() => setColumns([...columns])}
+              />
+            </Toolbar.Root>
+            <DebugRoot classNames='p-2' />
           </Focus.Group>
         )}
       </Focus.Group>
@@ -99,7 +107,7 @@ const Column = forwardRef<HTMLDivElement, { column: TestColumn; debug?: boolean 
     const debugRef = useRef<HTMLDivElement>(null);
 
     return (
-      <div className={mx('grid bs-full overflow-hidden', debug && 'grid-rows-2 gap-2')}>
+      <div className={mx('grid bs-full min-is-[20rem] max-is-[25rem] overflow-hidden', debug && 'grid-rows-2 gap-2')}>
         <Focus.Group ref={forwardedRef} classNames='flex flex-col overflow-hidden'>
           {/* TODO(burdon): Common header with Card. */}
           <div className='flex gap-2 items-center plb-2 pli-3 border-b border-separator'>
@@ -218,7 +226,7 @@ const Cell = forwardRef<HTMLDivElement, Pick<MosaicCellProps<TestItem>, 'classNa
             {object.name}
           </div>
           {object.label && (
-            <div role='none' className='shrink-0 text-sm text-muted font-mono text-subdued'>
+            <div role='none' className='pli-1 shrink-0 text-sm text-muted font-mono text-infoText'>
               {object.label}
             </div>
           )}

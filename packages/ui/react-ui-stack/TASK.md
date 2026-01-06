@@ -10,6 +10,8 @@
       - Blocks (Layout + Stack, Grid, Tree, List, Document, Canvas)
       - NavTree as hierarchical View?
 
+- Mobile app: 360–390px
+
 ## Next
 - Demo Kanban like Mosaic/Focus
   - Factor out aspects from Stack (Drag and drop, Focus, Key nav, etc.)
