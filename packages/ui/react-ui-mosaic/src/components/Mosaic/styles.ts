@@ -6,8 +6,14 @@ import { type ClassNameValue } from '@dxos/react-ui';
 
 // TODO(burdon): Adopt this pattern across packages.
 export const styles = {
+  // TODO(burdon): Use ring instead of border?
   container: {
+    /**
+     * NOTE: It is not possible to target the FIRST container that matches a value.
+     */
     border: [
+      // TODO(burdon): Factor out tabster focus? Separate Container stack? (re ontology).
+      // TODO(burdon): Pass ref to target state variable.
       'outline-none border border-separator rounded-sm focus:border-accentSurface',
       'data-[mosaic-container-state=active]:border-neutralFocusIndicator',
     ],

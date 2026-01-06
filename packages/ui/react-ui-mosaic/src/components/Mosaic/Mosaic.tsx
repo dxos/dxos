@@ -45,6 +45,8 @@ import { type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 import { isTruthy } from '@dxos/util';
 
+import { useFocus } from '../Focus';
+
 import {
   type MosaicCellData,
   type MosaicContainerData,
@@ -262,6 +264,7 @@ type ContainerProps = ThemedClassName<
     Pick<ContainerContextValue, 'layout'> & {
       asChild?: boolean;
       autoscroll?: boolean;
+      withFocus?: boolean;
       handler: MosaicEventHandler;
     }
   >
@@ -272,15 +275,23 @@ type ContainerProps = ThemedClassName<
  * NOTE: Children must forwardRef and spread props to root element.
  */
 const Container = forwardRef<HTMLDivElement, ContainerProps>(
-  ({ classNames, children, layout = 'vertical', asChild, autoscroll, handler }, forwardedRef) => {
+  ({ classNames, children, layout = 'vertical', asChild, autoscroll, withFocus, handler }, forwardedRef) => {
     const rootRef = useRef<HTMLDivElement>(null);
     const composedRef = useComposedRefs<HTMLDivElement>(rootRef, forwardedRef);
     const Root = asChild ? Slot : Primitive.div;
 
-    // Sstate.
+    // State.
     const { dragging } = useRootContext(Container.displayName!);
     const [state, setState] = useState<ContainerState>({ type: 'idle' });
     const [activeTarget, setActiveTarget] = useState<MosaicTargetData | undefined>();
+
+    // Focus container.
+    const { setFocus } = useFocus();
+    useEffect(() => {
+      if (withFocus) {
+        setFocus?.(state.type === 'active' ? 'active' : undefined);
+      }
+    }, [setFocus, withFocus, state]);
 
     // Register handler.
     const { addContainer, removeContainer } = useRootContext(handler.id);

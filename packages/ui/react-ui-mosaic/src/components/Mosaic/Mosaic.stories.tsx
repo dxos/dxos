@@ -2,15 +2,12 @@
 // Copyright 2023 DXOS.org
 //
 
-import {
-  useArrowNavigationGroup,
-  useFocusableGroup,
-  useMergedTabsterAttributes_unstable,
-} from '@fluentui/react-tabster';
+import { useFocusableGroup } from '@fluentui/react-tabster';
 import { useComposedRefs } from '@radix-ui/react-compose-refs';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Schema from 'effect/Schema';
 import React, { Fragment, forwardRef, useMemo, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 
 import { Obj, Ref, Type } from '@dxos/echo';
 import { ObjectId } from '@dxos/keys';
@@ -21,6 +18,8 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Json } from '@dxos/react-ui-syntax-highlighter';
 import { mx } from '@dxos/ui-theme';
 import { arrayMove, isTruthy } from '@dxos/util';
+
+import { Focus } from '../Focus';
 
 import { Mosaic, type MosaicCellProps, useMosaic, useMosaicContainer } from './Mosaic';
 import { styles } from './styles';
@@ -74,17 +73,20 @@ const DefaultStory = ({ debug = false, columns: columnsProp = 1 }: StoryProps) =
 
   return (
     <Mosaic.Root>
-      <div className='p-2 bs-full is-full grid grid-flow-col gap-2 auto-cols-[minmax(0,1fr)] overflow-hidden'>
+      <Focus.Group
+        axis='horizontal'
+        classNames='p-2 bs-full is-full grid grid-flow-col gap-2 auto-cols-[minmax(0,1fr)] overflow-hidden'
+      >
         {columns.map((column) => (
           <Column key={column.id} column={column} debug={debug} />
         ))}
         {debug && (
-          <div className='flex flex-col gap-2 overflow-hidden'>
+          <Focus.Group classNames='flex flex-col gap-2 overflow-hidden p-2'>
             <Button onClick={() => setColumns([...columns])}>Refresh</Button>
-            <DebugRoot classNames='p-2 border border-separator rounded-sm' />
-          </div>
+            <DebugRoot />
+          </Focus.Group>
         )}
-      </div>
+      </Focus.Group>
     </Mosaic.Root>
   );
 };
@@ -92,91 +94,89 @@ const DefaultStory = ({ debug = false, columns: columnsProp = 1 }: StoryProps) =
 // TODO(burdon): Create draggable cell for container.
 const Column = forwardRef<HTMLDivElement, { column: TestColumn; debug?: boolean }>(
   ({ column: { id, items }, debug }, forwardedRef) => {
-    const focusableGroupAttrs = useFocusableGroup({ tabBehavior: 'limited-trap-focus' });
-    const arrowNavigationAttrs = useArrowNavigationGroup({ axis: 'vertical', memorizeCurrent: true });
-    const tabsterAttrs = useMergedTabsterAttributes_unstable(focusableGroupAttrs, arrowNavigationAttrs);
+    const debugRef = useRef<HTMLDivElement>(null);
 
     return (
-      <div key={id} {...tabsterAttrs} tabIndex={0} className='flex flex-col overflow-hidden' ref={forwardedRef}>
-        <div className='flex justify-between pli-2'>
-          <span>{id}</span>
-          <span>{items.length}</span>
-        </div>
-        <Mosaic.Container
-          asChild
-          autoscroll
-          classNames={styles.container.border}
-          handler={{
-            id,
-            canDrop: () => true,
-            onTake: ({ source }, cb) => {
-              log.info('onTake', { source });
-              const from = items.findIndex((item) => item.target?.id === source.object.id);
-              if (from !== -1) {
-                items.splice(from, 1);
-              }
-              void cb(source.object);
-            },
-            onDrop: ({ source, target }) => {
-              const from = items.findIndex((item) => item.target?.id === source.object.id);
-              const to = target?.type === 'cell' || target?.type === 'placeholder' ? target.location : -1;
-              log.info('onDrop', { source, target, from, to });
-              if (to !== -1) {
+      <div className={mx('grid bs-full overflow-hidden', debug && 'grid-rows-2 gap-2')}>
+        <Focus.Group ref={forwardedRef} classNames='flex flex-col overflow-hidden'>
+          <div className='flex justify-between plb-2 pli-3'>
+            <span>{id}</span>
+            <span>{items.length}</span>
+          </div>
+          <Mosaic.Container
+            asChild
+            autoscroll
+            withFocus
+            handler={{
+              id,
+              canDrop: () => true,
+              onTake: ({ source }, cb) => {
+                log.info('onTake', { source });
+                const from = items.findIndex((item) => item.target?.id === source.object.id);
                 if (from !== -1) {
-                  arrayMove(items, from, to);
-                } else {
-                  const ref = Ref.make(source.object); // TODO(burdon): Cast?
-                  items.splice(to, 0, ref as any);
+                  items.splice(from, 1);
                 }
-              }
+                void cb(source.object);
+              },
+              onDrop: ({ source, target }) => {
+                const from = items.findIndex((item) => item.target?.id === source.object.id);
+                const to = target?.type === 'cell' || target?.type === 'placeholder' ? target.location : -1;
+                log.info('onDrop', { source, target, from, to });
+                if (to !== -1) {
+                  if (from !== -1) {
+                    arrayMove(items, from, to);
+                  } else {
+                    const ref = Ref.make(source.object); // TODO(burdon): Cast?
+                    items.splice(to, 0, ref as any);
+                  }
+                }
 
-              // TODO(burdon): UI doesn't update.
-              console.log(items.map((item) => item.target?.label));
-            },
-          }}
-        >
-          <ContainerInner items={items.map((item: any) => item.target).filter(isTruthy)} debug={debug} />
-        </Mosaic.Container>
+                // TODO(burdon): UI doesn't update.
+                console.log(items.map((item) => item.target?.label));
+              },
+            }}
+          >
+            <ContainerInner items={items.map((item: any) => item.target).filter(isTruthy)} debug={debugRef.current} />
+          </Mosaic.Container>
+        </Focus.Group>
+        <div ref={debugRef} className='overflow-hidden' />
       </div>
     );
   },
 );
 
 // TODO(burdon): NOTE: asChild should forwared classNames?
-const ContainerInner = forwardRef<HTMLDivElement, { className?: string; items: TestItem[]; debug?: boolean }>(
-  ({ className, items, debug = false, ...props }, forwardedRef) => {
-    const { dragging } = useMosaicContainer(ContainerInner.displayName!);
-    const visibleItems = useMemo(() => {
-      if (!dragging) {
-        return items;
-      }
+const ContainerInner = forwardRef<
+  HTMLDivElement,
+  { className?: string; items: TestItem[]; debug?: HTMLDivElement | null }
+>(({ className, items, debug, ...props }, forwardedRef) => {
+  const { dragging } = useMosaicContainer(ContainerInner.displayName!);
+  const visibleItems = useMemo(() => {
+    if (!dragging) {
+      return items;
+    }
 
-      const from = items.findIndex((item) => item.id === dragging.source.object.id);
-      const newItems = items.slice();
-      newItems.splice(from, 1);
-      return newItems;
-    }, [items, dragging]);
+    const from = items.findIndex((item) => item.id === dragging.source.object.id);
+    const newItems = items.slice();
+    newItems.splice(from, 1);
+    return newItems;
+  }, [items, dragging]);
 
-    return (
-      <div className={mx('grid bs-full overflow-hidden', debug && 'grid-rows-2 gap-2')}>
-        <div {...props} className={mx('flex flex-col pli-3 overflow-y-auto', className)} ref={forwardedRef}>
-          <Placeholder location={0} />
-          {visibleItems.map((item, i) => (
-            <Fragment key={item.id}>
-              <Cell location={i} object={item} />
-              <Placeholder location={i + 1} />
-            </Fragment>
-          ))}
-        </div>
-        {debug && (
-          <div className='flex flex-col overflow-hidden'>
-            <DebugContainer classNames='p-2 border border-separator rounded-sm' />
-          </div>
-        )}
+  return (
+    <>
+      <div {...props} className={mx('flex flex-col pli-3 overflow-y-auto', className)} ref={forwardedRef}>
+        <Placeholder location={0} />
+        {visibleItems.map((item, i) => (
+          <Fragment key={item.id}>
+            <Cell location={i} object={item} />
+            <Placeholder location={i + 1} />
+          </Fragment>
+        ))}
       </div>
-    );
-  },
-);
+      {debug && createPortal(<DebugContainer classNames='p-2 border border-separator rounded-sm' />, debug)}
+    </>
+  );
+});
 
 ContainerInner.displayName = 'Container';
 
