@@ -11,15 +11,12 @@ import {
 import { useComposedRefs } from '@radix-ui/react-compose-refs';
 import { Primitive } from '@radix-ui/react-primitive';
 import { Slot } from '@radix-ui/react-slot';
-import { type PropsWithChildren, createContext, forwardRef, useContext, useRef, useState } from 'react';
-import React from 'react';
+import React, { type PropsWithChildren, createContext, forwardRef, useContext, useRef, useState } from 'react';
 
 import { type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
 import { styles } from './styles';
-
-// TODO(burdon): Blocks: Stack, List, Toolbar, Menu.
 
 //
 // Context

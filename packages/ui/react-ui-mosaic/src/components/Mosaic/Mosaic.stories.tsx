@@ -102,7 +102,7 @@ const Column = forwardRef<HTMLDivElement, { column: TestColumn; debug?: boolean 
       <div className={mx('grid bs-full overflow-hidden', debug && 'grid-rows-2 gap-2')}>
         <Focus.Group ref={forwardedRef} classNames='flex flex-col overflow-hidden'>
           {/* TODO(burdon): Common header with Card. */}
-          <div className='flex gap-2 items-center plb-2 pli-3'>
+          <div className='flex gap-2 items-center plb-2 pli-3 border-b border-separator'>
             <div role='none' className='cursor-pointer'>
               <Icon icon='ph--dots-six-vertical--regular' />
             </div>
@@ -171,6 +171,7 @@ const ContainerInner = forwardRef<HTMLDivElement, { items: TestItem[]; debug?: H
 
     return (
       <>
+        {/* TODO(burdon): WARNING: Auto scrolling has been attached to an element that appears not to be scrollable. */}
         <ScrollArea.Root>
           <ScrollArea.Viewport {...props} classNames='pli-3' ref={forwardedRef}>
             <Placeholder location={0} />

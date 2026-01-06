@@ -10,9 +10,9 @@ export const styles = {
     // TODO(burdon): Use ring instead of border?
     root: [
       'outline-none border border-separator rounded-sm',
-      // Focus
+      // Focus (e.g., via tabster).
       'focus:border-accentSurface',
-      // Active (e.g., drop target)
+      // Active (e.g., drop target).
       'data-[focus-state=active]:border-neutralFocusIndicator',
       // Error
       // TODO(burdon): Error token.
