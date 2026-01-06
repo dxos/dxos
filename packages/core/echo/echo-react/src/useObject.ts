@@ -55,7 +55,7 @@ export const useObject: {
           if (property === undefined) {
             throw new Error('Cannot re-assign the entire object');
           }
-          obj[property] = updateOrValue as any;
+          obj[property] = returnValue as any;
         }
       } else {
         if (property === undefined) {
