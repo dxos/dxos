@@ -16,6 +16,8 @@ import { AtomObj } from '@dxos/echo-atom';
  * @param obj - The Echo object to update
  * @param property - Property key to update
  * @returns Update function that accepts a value or updater function
+ *
+ * @deprecated Use `useObject` instead.
  */
 export function useObjectUpdate<T extends Entity.Unknown, K extends keyof T>(
   obj: T,
@@ -41,6 +43,8 @@ export function useObjectUpdate<T extends Entity.Unknown>(
  * @param obj - The Echo object to update
  * @param property - Optional property key to update a specific property
  * @returns Update function
+ *
+ * @deprecated Use `useObject` instead.
  */
 export function useObjectUpdate<T extends Entity.Unknown, K extends keyof T>(
   obj: T,

@@ -22,10 +22,8 @@ export const TaskItem = (props: TaskItemProps) => {
   const { task, index, editingTask, showDeleteTask, onEdit, onShowDelete, onRemove } = props;
 
   // Use hooks for reactive property access
-  const completed = useObject(task, 'completed');
-  const title = useObject(task, 'title');
-  const updateCompleted = useObjectUpdate(task, 'completed');
-  const updateTitle = useObjectUpdate(task, 'title');
+  const [completed, updateCompleted] = useObject(task, 'completed');
+  const [title, updateTitle] = useObject(task, 'title');
 
   const [editingValue, setEditingValue] = useState(title);
 

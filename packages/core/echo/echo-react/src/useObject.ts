@@ -4,50 +4,74 @@
 
 import type * as Registry from '@effect-atom/atom/Registry';
 import { RegistryContext } from '@effect-atom/atom-react';
-import { useContext, useMemo, useSyncExternalStore } from 'react';
+import { useCallback, useContext, useMemo, useSyncExternalStore } from 'react';
 
 import type { Entity } from '@dxos/echo';
 import { AtomObj } from '@dxos/echo-atom';
 
-/**
- * Hook to subscribe to a specific property of an Echo object.
- * Returns the current property value and automatically re-renders when the property changes.
- *
- * @param obj - The Echo object to subscribe to
- * @param property - Property key to subscribe to
- * @returns The current property value
- */
-export function useObject<T extends Entity.Unknown, K extends keyof T>(obj: T, property: K): T[K];
+export interface ObjectUpdateCallback<T> {
+  (update: (obj: T) => void): void;
+  (update: (obj: T) => T): void;
+}
 
-/**
- * Hook to subscribe to an entire Echo object.
- * Returns the current object value and automatically re-renders when the object changes.
- *
- * @param obj - The Echo object to subscribe to
- * @returns The current object value
- */
-export function useObject<T extends Entity.Unknown>(obj: T): T;
+export interface ObjectPropUpdateCallback<T> extends ObjectUpdateCallback<T> {
+  (newValue: T): void;
+}
 
-/**
- * Hook to subscribe to an Echo object (entire object or specific property).
- * Returns the current value and automatically re-renders when the object or property changes.
- *
- * @param obj - The Echo object to subscribe to
- * @param property - Optional property key to subscribe to a specific property
- * @returns The current object value or property value
- */
-export function useObject<T extends Entity.Unknown, K extends keyof T>(obj: T, property?: K): T | T[K] {
+export const useObject: {
+  /**
+   * Hook to subscribe to an entire Echo object.
+   * Returns the current object value and automatically re-renders when the object changes.
+   *
+   * @param obj - The Echo object to subscribe to
+   * @returns The current object value
+   */
+  <T extends Entity.Unknown>(obj: T): [Readonly<T>, ObjectUpdateCallback<T>];
+
+  /**
+   * Hook to subscribe to a specific property of an Echo object.
+   * Returns the current property value and automatically re-renders when the property changes.
+   *
+   * @param obj - The Echo object to subscribe to
+   * @param property - Property key to subscribe to
+   * @returns The current property value
+   */
+  <T extends Entity.Unknown, K extends keyof T>(obj: T, property: K): [Readonly<T[K]>, ObjectPropUpdateCallback<T[K]>];
+} = <T extends Entity.Unknown, K extends keyof T>(
+  obj: T,
+  property?: K,
+): [Readonly<T | T[K]>, ObjectUpdateCallback<T | T[K]>] => {
   const registry = useContext(RegistryContext);
 
   if (!registry) {
     throw new Error('RegistryContext not found. Make sure to wrap your component with RegistryContext.Provider');
   }
 
+  const callback: ObjectPropUpdateCallback<unknown> = useCallback(
+    (updateOrValue: unknown | ((obj: unknown) => unknown)) => {
+      if (typeof updateOrValue === 'function') {
+        const returnValue = updateOrValue(property !== undefined ? obj[property] : obj);
+        if (returnValue !== undefined) {
+          if (property === undefined) {
+            throw new Error('Cannot re-assign the entire object');
+          }
+          obj[property] = updateOrValue as any;
+        }
+      } else {
+        if (property === undefined) {
+          throw new Error('Cannot re-assign the entire object');
+        }
+        obj[property] = updateOrValue as any;
+      }
+    },
+    [obj, property],
+  );
+
   if (property !== undefined) {
-    return useObjectProperty(registry, obj, property);
+    return [useObjectProperty(registry, obj, property), callback];
   }
-  return useObjectValue(registry, obj);
-}
+  return [useObjectValue(registry, obj), callback];
+};
 
 /**
  * Internal hook for subscribing to an entire Echo object.
