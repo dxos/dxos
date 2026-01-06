@@ -31,8 +31,9 @@ describe('useObject', () => {
 
     const { result } = renderHook(() => useObject(obj), { wrapper });
 
-    expect(result.current).toBe(obj);
-    expect(result.current.name).toBe('Test');
+    const [value] = result.current;
+    expect(value).toBe(obj);
+    expect(value.name).toBe('Test');
   });
 
   test('returns property value when property is provided', () => {
@@ -44,7 +45,8 @@ describe('useObject', () => {
 
     const { result } = renderHook(() => useObject(obj, 'name'), { wrapper });
 
-    expect(result.current).toBe('Test');
+    const [value] = result.current;
+    expect(value).toBe('Test');
   });
 
   test('updates when object property changes', async () => {
@@ -56,14 +58,14 @@ describe('useObject', () => {
 
     const { result } = renderHook(() => useObject(obj, 'name'), { wrapper });
 
-    expect(result.current).toBe('Test');
+    expect(result.current[0]).toBe('Test');
 
     // Update the property directly on the object
     obj.name = 'Updated';
 
     // Wait for reactivity to update
     await waitFor(() => {
-      expect(result.current).toBe('Updated');
+      expect(result.current[0]).toBe('Updated');
     });
   });
 
@@ -76,14 +78,14 @@ describe('useObject', () => {
 
     const { result } = renderHook(() => useObject(obj), { wrapper });
 
-    expect(result.current.name).toBe('Test');
+    expect(result.current[0].name).toBe('Test');
 
     // Update a property on the object
     obj.name = 'Updated';
 
     // Wait for reactivity to update
     await waitFor(() => {
-      expect(result.current.name).toBe('Updated');
+      expect(result.current[0].name).toBe('Updated');
     });
   });
 
@@ -96,7 +98,7 @@ describe('useObject', () => {
 
     const { result } = renderHook(() => useObject(obj, 'name'), { wrapper });
 
-    expect(result.current).toBe('Test');
+    expect(result.current[0]).toBe('Test');
 
     // Update a different property
     obj.email = 'newemail@example.com';
@@ -105,7 +107,7 @@ describe('useObject', () => {
     await new Promise((resolve) => setTimeout(resolve, 50));
 
     // Name should still be 'Test'
-    expect(result.current).toBe('Test');
+    expect(result.current[0]).toBe('Test');
   });
 
   test('throws error when RegistryContext is not provided', () => {

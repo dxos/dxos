@@ -56,7 +56,7 @@ describe('useObjectUpdate', () => {
     const { result: updateResult } = renderHook(() => useObjectUpdate(obj), { wrapper });
     const { result: valueResult } = renderHook(() => useObject(obj), { wrapper });
 
-    expect(valueResult.current.name).toBe('Test');
+    expect(valueResult.current[0].name).toBe('Test');
 
     // Update the object
     (updateResult.current as (updater: (obj: any) => void) => void)((obj) => {
@@ -65,7 +65,7 @@ describe('useObjectUpdate', () => {
 
     // Wait for reactivity to update
     await waitFor(() => {
-      expect(valueResult.current.name).toBe('Updated');
+      expect(valueResult.current[0].name).toBe('Updated');
     });
   });
 
@@ -79,14 +79,14 @@ describe('useObjectUpdate', () => {
     const { result: updateResult } = renderHook(() => useObjectUpdate(obj, 'name'), { wrapper });
     const { result: valueResult } = renderHook(() => useObject(obj, 'name'), { wrapper });
 
-    expect(valueResult.current).toBe('Test');
+    expect(valueResult.current[0]).toBe('Test');
 
     // Update the property
     (updateResult.current as (value: string) => void)('Updated');
 
     // Wait for reactivity to update
     await waitFor(() => {
-      expect(valueResult.current).toBe('Updated');
+      expect(valueResult.current[0]).toBe('Updated');
     });
   });
 
@@ -100,7 +100,7 @@ describe('useObjectUpdate', () => {
     const { result: updateResult } = renderHook(() => useObjectUpdate(obj, 'name'), { wrapper });
     const { result: valueResult } = renderHook(() => useObject(obj, 'name'), { wrapper });
 
-    expect(valueResult.current).toBe('Test');
+    expect(valueResult.current[0]).toBe('Test');
 
     // Update the property using updater function
     (updateResult.current as (value: string | ((current: string) => string)) => void)(
@@ -109,7 +109,7 @@ describe('useObjectUpdate', () => {
 
     // Wait for reactivity to update
     await waitFor(() => {
-      expect(valueResult.current).toBe('Test Updated');
+      expect(valueResult.current[0]).toBe('Test Updated');
     });
   });
 
