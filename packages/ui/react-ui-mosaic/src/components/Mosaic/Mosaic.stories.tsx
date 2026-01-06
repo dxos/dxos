@@ -72,48 +72,11 @@ const DefaultStory = ({ debug = false, columns: columnsProp = 1 }: StoryProps) =
     ),
   );
 
-  // TODO(burdon): Create draggable cell for container.
   return (
     <Mosaic.Root>
       <div className='p-2 bs-full is-full grid grid-flow-col gap-2 auto-cols-[minmax(0,1fr)] overflow-hidden'>
-        {columns.map(({ id, items }) => (
-          <div key={id} className='flex flex-col overflow-hidden'>
-            <Mosaic.Container
-              asChild
-              autoscroll
-              classNames={styles.container.border}
-              handler={{
-                id,
-                canDrop: () => true,
-                onTake: ({ source }, cb) => {
-                  log.info('onTake', { source });
-                  const from = items.findIndex((item) => item.target?.id === source.object.id);
-                  if (from !== -1) {
-                    items.splice(from, 1);
-                  }
-                  void cb(source.object);
-                },
-                onDrop: ({ source, target }) => {
-                  const from = items.findIndex((item) => item.target?.id === source.object.id);
-                  const to = target?.type === 'cell' || target?.type === 'placeholder' ? target.location : -1;
-                  log.info('onDrop', { source, target, from, to });
-                  if (to !== -1) {
-                    if (from !== -1) {
-                      arrayMove(items, from, to);
-                    } else {
-                      const ref = Ref.make(source.object); // TODO(burdon): Cast?
-                      items.splice(to, 0, ref as any);
-                    }
-                  }
-
-                  // TODO(burdon): UI doesn't update.
-                  console.log(items.map((item) => item.target?.label));
-                },
-              }}
-            >
-              <Container id={id} items={items.map((item: any) => item.target).filter(isTruthy)} debug={debug} />
-            </Mosaic.Container>
-          </div>
+        {columns.map((column) => (
+          <Column key={column.id} column={column} debug={debug} />
         ))}
         {debug && (
           <div className='flex flex-col gap-2 overflow-hidden'>
@@ -126,14 +89,63 @@ const DefaultStory = ({ debug = false, columns: columnsProp = 1 }: StoryProps) =
   );
 };
 
-// TODO(burdon): Factor out.
-// TODO(burdon): NOTE: asChild should forwared classNames.
-const Container = forwardRef<HTMLDivElement, { className?: string; id: string; items: TestItem[]; debug?: boolean }>(
-  ({ className, id, items, debug = false, ...props }, forwardedRef) => {
+// TODO(burdon): Create draggable cell for container.
+const Column = forwardRef<HTMLDivElement, { column: TestColumn; debug?: boolean }>(
+  ({ column: { id, items }, debug }, forwardedRef) => {
     const focusableGroupAttrs = useFocusableGroup({ tabBehavior: 'limited-trap-focus' });
     const arrowNavigationAttrs = useArrowNavigationGroup({ axis: 'vertical', memorizeCurrent: true });
     const tabsterAttrs = useMergedTabsterAttributes_unstable(focusableGroupAttrs, arrowNavigationAttrs);
-    const { dragging } = useMosaicContainer(Container.displayName!);
+
+    return (
+      <div key={id} {...tabsterAttrs} tabIndex={0} className='flex flex-col overflow-hidden' ref={forwardedRef}>
+        <div className='flex justify-between pli-2'>
+          <span>{id}</span>
+          <span>{items.length}</span>
+        </div>
+        <Mosaic.Container
+          asChild
+          autoscroll
+          classNames={styles.container.border}
+          handler={{
+            id,
+            canDrop: () => true,
+            onTake: ({ source }, cb) => {
+              log.info('onTake', { source });
+              const from = items.findIndex((item) => item.target?.id === source.object.id);
+              if (from !== -1) {
+                items.splice(from, 1);
+              }
+              void cb(source.object);
+            },
+            onDrop: ({ source, target }) => {
+              const from = items.findIndex((item) => item.target?.id === source.object.id);
+              const to = target?.type === 'cell' || target?.type === 'placeholder' ? target.location : -1;
+              log.info('onDrop', { source, target, from, to });
+              if (to !== -1) {
+                if (from !== -1) {
+                  arrayMove(items, from, to);
+                } else {
+                  const ref = Ref.make(source.object); // TODO(burdon): Cast?
+                  items.splice(to, 0, ref as any);
+                }
+              }
+
+              // TODO(burdon): UI doesn't update.
+              console.log(items.map((item) => item.target?.label));
+            },
+          }}
+        >
+          <ContainerInner items={items.map((item: any) => item.target).filter(isTruthy)} debug={debug} />
+        </Mosaic.Container>
+      </div>
+    );
+  },
+);
+
+// TODO(burdon): NOTE: asChild should forwared classNames?
+const ContainerInner = forwardRef<HTMLDivElement, { className?: string; items: TestItem[]; debug?: boolean }>(
+  ({ className, items, debug = false, ...props }, forwardedRef) => {
+    const { dragging } = useMosaicContainer(ContainerInner.displayName!);
     const visibleItems = useMemo(() => {
       if (!dragging) {
         return items;
@@ -146,14 +158,8 @@ const Container = forwardRef<HTMLDivElement, { className?: string; id: string; i
     }, [items, dragging]);
 
     return (
-      <div className={mx('grid bs-full', debug && 'grid-rows-2 gap-2')}>
-        <div
-          {...tabsterAttrs}
-          {...props}
-          tabIndex={0}
-          className={mx('flex flex-col pli-3 overflow-y-auto', className)}
-          ref={forwardedRef}
-        >
+      <div className={mx('grid bs-full overflow-hidden', debug && 'grid-rows-2 gap-2')}>
+        <div {...props} className={mx('flex flex-col pli-3 overflow-y-auto', className)} ref={forwardedRef}>
           <Placeholder location={0} />
           {visibleItems.map((item, i) => (
             <Fragment key={item.id}>
@@ -164,10 +170,6 @@ const Container = forwardRef<HTMLDivElement, { className?: string; id: string; i
         </div>
         {debug && (
           <div className='flex flex-col overflow-hidden'>
-            <div className='flex justify-between pli-2'>
-              <span>{id}</span>
-              <span>{items.length}</span>
-            </div>
             <DebugContainer classNames='p-2 border border-separator rounded-sm' />
           </div>
         )}
@@ -176,7 +178,7 @@ const Container = forwardRef<HTMLDivElement, { className?: string; id: string; i
   },
 );
 
-Container.displayName = 'Container';
+ContainerInner.displayName = 'Container';
 
 const Cell = forwardRef<HTMLDivElement, Pick<MosaicCellProps<TestItem>, 'classNames' | 'object' | 'location'>>(
   ({ classNames, object, location }, forwardedRef) => {
@@ -213,7 +215,6 @@ const Cell = forwardRef<HTMLDivElement, Pick<MosaicCellProps<TestItem>, 'classNa
 
 Cell.displayName = 'Cell';
 
-// TODO(burdon): Factor out (defaults).
 const Placeholder = ({ location }: Pick<MosaicCellProps<TestItem>, 'location'>) => {
   return (
     <Mosaic.Placeholder location={location} classNames={styles.placeholder.outer}>
