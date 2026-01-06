@@ -13,7 +13,7 @@ import { Obj, Ref, Type } from '@dxos/echo';
 import { ObjectId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { faker } from '@dxos/random';
-import { Button, Icon, type ThemedClassName } from '@dxos/react-ui';
+import { Button, Icon, ScrollArea, type ThemedClassName } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Json } from '@dxos/react-ui-syntax-highlighter';
 import { mx } from '@dxos/ui-theme';
@@ -51,11 +51,11 @@ const TestColumn = Schema.Struct({
 interface TestColumn extends Schema.Schema.Type<typeof TestColumn> {}
 
 type StoryProps = {
-  debug?: boolean;
   columns?: number;
+  debug?: boolean;
 };
 
-const DefaultStory = ({ debug = false, columns: columnsProp = 1 }: StoryProps) => {
+const DefaultStory = ({ columns: columnsProp = 1, debug = false }: StoryProps) => {
   const [columns, setColumns] = useState<TestColumn[]>(
     Array.from({ length: columnsProp }).map((_, i) =>
       Obj.make(TestColumn, {
@@ -77,9 +77,12 @@ const DefaultStory = ({ debug = false, columns: columnsProp = 1 }: StoryProps) =
         axis='horizontal'
         classNames='p-2 bs-full is-full grid grid-flow-col gap-2 auto-cols-[minmax(0,1fr)] overflow-hidden'
       >
+        {/* <Mosaic.Container autoscroll withFocus> */}
         {columns.map((column) => (
           <Column key={column.id} column={column} debug={debug} />
         ))}
+        {/* </Mosaic.Container> */}
+
         {debug && (
           <Focus.Group classNames='flex flex-col gap-2 overflow-hidden p-2'>
             <Button onClick={() => setColumns([...columns])}>Refresh</Button>
@@ -91,7 +94,6 @@ const DefaultStory = ({ debug = false, columns: columnsProp = 1 }: StoryProps) =
   );
 };
 
-// TODO(burdon): Create draggable cell for container.
 const Column = forwardRef<HTMLDivElement, { column: TestColumn; debug?: boolean }>(
   ({ column: { id, items }, debug }, forwardedRef) => {
     const debugRef = useRef<HTMLDivElement>(null);
@@ -99,10 +101,16 @@ const Column = forwardRef<HTMLDivElement, { column: TestColumn; debug?: boolean 
     return (
       <div className={mx('grid bs-full overflow-hidden', debug && 'grid-rows-2 gap-2')}>
         <Focus.Group ref={forwardedRef} classNames='flex flex-col overflow-hidden'>
-          <div className='flex justify-between plb-2 pli-3'>
-            <span>{id}</span>
-            <span>{items.length}</span>
+          {/* TODO(burdon): Common header with Card. */}
+          <div className='flex gap-2 items-center plb-2 pli-3'>
+            <div role='none' className='cursor-pointer'>
+              <Icon icon='ph--dots-six-vertical--regular' />
+            </div>
+            <div className='grow truncate'>{id}</div>
+            <div>{items.length}</div>
           </div>
+
+          {/* TODO(burdon): Factor out list/stack. */}
           <Mosaic.Container
             asChild
             autoscroll
@@ -139,44 +147,50 @@ const Column = forwardRef<HTMLDivElement, { column: TestColumn; debug?: boolean 
             <ContainerInner items={items.map((item: any) => item.target).filter(isTruthy)} debug={debugRef.current} />
           </Mosaic.Container>
         </Focus.Group>
-        <div ref={debugRef} className='overflow-hidden' />
+
+        <div role='none' className='overflow-hidden' ref={debugRef} />
       </div>
     );
   },
 );
 
-// TODO(burdon): NOTE: asChild should forwared classNames?
-const ContainerInner = forwardRef<
-  HTMLDivElement,
-  { className?: string; items: TestItem[]; debug?: HTMLDivElement | null }
->(({ className, items, debug, ...props }, forwardedRef) => {
-  const { dragging } = useMosaicContainer(ContainerInner.displayName!);
-  const visibleItems = useMemo(() => {
-    if (!dragging) {
-      return items;
-    }
+// TODO(burdon): Debug Slot?
+const ContainerInner = forwardRef<HTMLDivElement, { items: TestItem[]; debug?: HTMLDivElement | null }>(
+  ({ items, debug, ...props }, forwardedRef) => {
+    const { dragging } = useMosaicContainer(ContainerInner.displayName!);
+    const visibleItems = useMemo(() => {
+      if (!dragging) {
+        return items;
+      }
 
-    const from = items.findIndex((item) => item.id === dragging.source.object.id);
-    const newItems = items.slice();
-    newItems.splice(from, 1);
-    return newItems;
-  }, [items, dragging]);
+      const from = items.findIndex((item) => item.id === dragging.source.object.id);
+      const newItems = items.slice();
+      newItems.splice(from, 1);
+      return newItems;
+    }, [items, dragging]);
 
-  return (
-    <>
-      <div {...props} className={mx('flex flex-col pli-3 overflow-y-auto', className)} ref={forwardedRef}>
-        <Placeholder location={0} />
-        {visibleItems.map((item, i) => (
-          <Fragment key={item.id}>
-            <Cell location={i} object={item} />
-            <Placeholder location={i + 1} />
-          </Fragment>
-        ))}
-      </div>
-      {debug && createPortal(<DebugContainer classNames='p-2 border border-separator rounded-sm' />, debug)}
-    </>
-  );
-});
+    return (
+      <>
+        <ScrollArea.Root>
+          <ScrollArea.Viewport {...props} classNames='pli-3' ref={forwardedRef}>
+            <Placeholder location={0} />
+            {visibleItems.map((item, i) => (
+              <Fragment key={item.id}>
+                <Cell location={i} object={item} />
+                <Placeholder location={i + 1} />
+              </Fragment>
+            ))}
+          </ScrollArea.Viewport>
+          <ScrollArea.Scrollbar orientation='vertical'>
+            <ScrollArea.Thumb />
+          </ScrollArea.Scrollbar>
+        </ScrollArea.Root>
+
+        {debug && createPortal(<DebugContainer classNames='p-2 border border-separator rounded-sm' />, debug)}
+      </>
+    );
+  },
+);
 
 ContainerInner.displayName = 'Container';
 
