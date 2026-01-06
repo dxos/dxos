@@ -14,6 +14,7 @@ import React, { Fragment, forwardRef, useMemo, useRef, useState } from 'react';
 
 import { Obj, Ref, Type } from '@dxos/echo';
 import { ObjectId } from '@dxos/keys';
+import { log } from '@dxos/log';
 import { faker } from '@dxos/random';
 import { Button, Icon, type ThemedClassName } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
@@ -84,26 +85,33 @@ const DefaultStory = ({ debug = false, columns: columnsProp = 1 }: StoryProps) =
               handler={{
                 id,
                 canDrop: () => true,
-                onDrop: ({ source, target }) => {
-                  const from = items.findIndex((item) => item.target?.id === source.object.id);
-                  const to = target?.type === 'cell' || target?.type === 'placeholder' ? target.location : -1;
-                  if (from !== -1 && to !== -1) {
-                    arrayMove(items, from, to);
-                  }
-
-                  // TODO(burdon): UI doesn't update.
-                  console.log(items.map((item) => item.target?.label));
-                },
                 onTake: ({ source }, cb) => {
+                  log.info('onTake', { source });
                   const from = items.findIndex((item) => item.target?.id === source.object.id);
                   if (from !== -1) {
                     items.splice(from, 1);
                   }
                   void cb(source.object);
                 },
+                onDrop: ({ source, target }) => {
+                  const from = items.findIndex((item) => item.target?.id === source.object.id);
+                  const to = target?.type === 'cell' || target?.type === 'placeholder' ? target.location : -1;
+                  log.info('onDrop', { source, target, from, to });
+                  if (to !== -1) {
+                    if (from !== -1) {
+                      arrayMove(items, from, to);
+                    } else {
+                      const ref = Ref.make(source.object); // TODO(burdon): Cast?
+                      items.splice(to, 0, ref as any);
+                    }
+                  }
+
+                  // TODO(burdon): UI doesn't update.
+                  console.log(items.map((item) => item.target?.label));
+                },
               }}
             >
-              <Container debug={debug} items={items.map((item: any) => item.target).filter(isTruthy)} />
+              <Container id={id} items={items.map((item: any) => item.target).filter(isTruthy)} debug={debug} />
             </Mosaic.Container>
           </div>
         ))}
@@ -120,8 +128,8 @@ const DefaultStory = ({ debug = false, columns: columnsProp = 1 }: StoryProps) =
 
 // TODO(burdon): Factor out.
 // TODO(burdon): NOTE: asChild should forwared classNames.
-const Container = forwardRef<HTMLDivElement, { debug?: boolean; className?: string; items: TestItem[] }>(
-  ({ debug = false, className, items, ...props }, forwardedRef) => {
+const Container = forwardRef<HTMLDivElement, { className?: string; id: string; items: TestItem[]; debug?: boolean }>(
+  ({ className, id, items, debug = false, ...props }, forwardedRef) => {
     const focusableGroupAttrs = useFocusableGroup({ tabBehavior: 'limited-trap-focus' });
     const arrowNavigationAttrs = useArrowNavigationGroup({ axis: 'vertical', memorizeCurrent: true });
     const tabsterAttrs = useMergedTabsterAttributes_unstable(focusableGroupAttrs, arrowNavigationAttrs);
@@ -154,7 +162,15 @@ const Container = forwardRef<HTMLDivElement, { debug?: boolean; className?: stri
             </Fragment>
           ))}
         </div>
-        {debug && <DebugContainer classNames='p-2 border border-separator rounded-sm' />}
+        {debug && (
+          <div className='flex flex-col overflow-hidden'>
+            <div className='flex justify-between pli-2'>
+              <span>{id}</span>
+              <span>{items.length}</span>
+            </div>
+            <DebugContainer classNames='p-2 border border-separator rounded-sm' />
+          </div>
+        )}
       </div>
     );
   },
