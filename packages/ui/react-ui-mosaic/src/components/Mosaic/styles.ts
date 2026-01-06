@@ -6,20 +6,8 @@ import { type ClassNameValue } from '@dxos/react-ui';
 
 // TODO(burdon): Adopt this pattern across packages.
 export const styles = {
-  // TODO(burdon): Use ring instead of border?
-  container: {
-    /**
-     * NOTE: It is not possible to target the FIRST container that matches a value.
-     */
-    border: [
-      // TODO(burdon): Factor out tabster focus? Separate Container stack? (re ontology).
-      // TODO(burdon): Pass ref to target state variable.
-      'outline-none border border-separator rounded-sm focus:border-accentSurface',
-      'data-[mosaic-container-state=active]:border-neutralFocusIndicator',
-    ],
-  },
   cell: {
-    border: [
+    root: [
       'outline-none border border-separator focus:border-accentSurface',
       'data-[mosaic-cell-state=target]:border-neutralFocusIndicator',
       'data-[mosaic-cell-state=preview]:bg-groupSurface',
@@ -27,14 +15,14 @@ export const styles = {
     ],
   },
   placeholder: {
-    outer: [
+    root: [
       'group is-full',
       'transition-all plb-1 opacity-0 delay-0 duration-0',
       'data-[mosaic-placeholder-state=active]:plb-2.5',
       'data-[mosaic-placeholder-state=active]:opacity-100',
       'data-[mosaic-placeholder-state=active]:delay-300',
     ],
-    inner: [
+    content: [
       'is-full',
       'transition-all bs-0 delay-0 duration-0',
       'group-data-[mosaic-placeholder-state=active]:bs-[var(--mosaic-placeholder-height)]',

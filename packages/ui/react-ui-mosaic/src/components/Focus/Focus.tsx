@@ -66,7 +66,7 @@ const Group = forwardRef<HTMLDivElement, GroupProps>(
         <Root
           role='none'
           tabIndex={0}
-          className={mx(styles.container.border, classNames)}
+          className={mx(styles.container.root, classNames)}
           {...tabsterAttrs}
           {...(state && {
             [`data-${FOCUS_STATE_ATTR}`]: state,

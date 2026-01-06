@@ -3,6 +3,19 @@
 ## Ideas
 - Generate UI from data
 
+## Ontology
+- ECHO Graph (incl. Stacks)
+  - Views/Collections
+    - App Graph
+      - Blocks (Layout + Stack, Grid, Tree, List, Document, Canvas)
+      - NavTree as hierarchical View?
+
+## Next
+- Demo Kanban like Mosaic/Focus
+  - Factor out aspects from Stack (Drag and drop, Focus, Key nav, etc.)
+  - Factor out Toolbar/Main from StackContent (across all plugins)
+  - Remove all className overrides from storybook
+
 ## Phase 1 (Demo)
 - Fully generalize StackItem and use for all draggable items and containers.
   - Current draggable()

@@ -192,7 +192,7 @@ const Cell = forwardRef<HTMLDivElement, Pick<MosaicCellProps<TestItem>, 'classNa
         <div
           {...focusableGroupAttrs}
           tabIndex={0}
-          className={mx('flex gap-2 items-center p-1', styles.cell.border, classNames)}
+          className={mx('flex gap-2 items-center p-1', styles.cell.root, classNames)}
           onClick={() => rootRef.current?.focus()}
           ref={composedRef}
         >
@@ -217,10 +217,10 @@ Cell.displayName = 'Cell';
 
 const Placeholder = ({ location }: Pick<MosaicCellProps<TestItem>, 'location'>) => {
   return (
-    <Mosaic.Placeholder location={location} classNames={styles.placeholder.outer}>
+    <Mosaic.Placeholder location={location} classNames={styles.placeholder.root}>
       <div
         role='none'
-        className={mx('bg-groupSurface border border-dashed border-separator', styles.placeholder.inner)}
+        className={mx('bg-groupSurface border border-dashed border-separator', styles.placeholder.content)}
       />
     </Mosaic.Placeholder>
   );

@@ -4,9 +4,11 @@
 
 import { type ClassNameValue } from '@dxos/react-ui';
 
+// TODO(burdon): Theme?
 export const styles = {
   container: {
-    border: [
+    // TODO(burdon): Use ring instead of border?
+    root: [
       'outline-none border border-separator rounded-sm',
       // Focus
       'focus:border-accentSurface',
