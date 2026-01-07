@@ -45,10 +45,14 @@ export const TestColumn = Schema.Struct({
 
 export interface TestColumn extends Schema.Schema.Type<typeof TestColumn> {}
 
+//
+// Column
+//
+
 // TODO(burdon): Factor out list/stack.
 export const Column = forwardRef<HTMLDivElement, { column: TestColumn; debug?: boolean }>(
   ({ column: { id, items }, debug }, forwardedRef) => {
-    const debugRef = useRef<HTMLDivElement>(null);
+    const containerRef = useRef<HTMLDivElement | null>(null);
 
     return (
       <div className={mx('grid bs-full min-is-[20rem] max-is-[25rem] overflow-hidden', debug && 'grid-rows-2 gap-2')}>
@@ -85,25 +89,21 @@ export const Column = forwardRef<HTMLDivElement, { column: TestColumn; debug?: b
                   if (from !== -1) {
                     arrayMove(items, from, to);
                   } else {
-                    const ref = Ref.make(source.object); // TODO(burdon): Cast?
-                    items.splice(to, 0, ref as any);
+                    const ref = Ref.make(source.object);
+                    items.splice(to, 0, ref as any); // TODO(burdon): Remove cast?
                   }
                 }
 
                 // TODO(burdon): UI doesn't update.
-                console.log(items.map((item) => item.target?.label));
+                // console.log(items.map((item) => item.target?.label));
               },
             }}
-            debug={
-              debugRef.current &&
-              createPortal(<DebugContainer classNames='p-2 border border-separator rounded-sm' />, debugRef.current)
-            }
+            debug={() => containerRef.current && createPortal(<DebugContainer />, containerRef.current)}
           >
             <ItemList items={items.map((item: any) => item.target).filter(isTruthy)} />
           </Mosaic.Container>
         </Focus.Group>
-
-        {debug && <div role='none' className='overflow-hidden' ref={debugRef} />}
+        {debug && <div ref={containerRef} className='overflow-hidden' />}
       </div>
     );
   },
@@ -123,9 +123,10 @@ const ItemList = forwardRef<HTMLDivElement, { items: TestItem[] }>(({ items, ...
   }, [items, dragging]);
 
   // TODO(burdon): WARNING: Auto scrolling has been attached to an element that appears not to be scrollable.
+  // TODO(burdon): Support DropIndicator or Placeholder variants.
   return (
-    <ScrollArea.Root>
-      <ScrollArea.Viewport {...props} classNames='pli-3' ref={forwardedRef}>
+    <ScrollArea.Root {...props}>
+      <ScrollArea.Viewport classNames='pli-3' ref={forwardedRef}>
         <Placeholder location={0} />
         {visibleItems.map((item, i) => (
           <Fragment key={item.id}>
@@ -143,6 +144,10 @@ const ItemList = forwardRef<HTMLDivElement, { items: TestItem[] }>(({ items, ...
 
 ItemList.displayName = 'Container';
 
+//
+// Cell
+//
+
 const Cell = forwardRef<HTMLDivElement, Pick<MosaicCellProps<TestItem>, 'classNames' | 'object' | 'location'>>(
   ({ classNames, object, location }, forwardedRef) => {
     const rootRef = useRef<HTMLDivElement>(null);
@@ -159,6 +164,7 @@ const Cell = forwardRef<HTMLDivElement, Pick<MosaicCellProps<TestItem>, 'classNa
           onClick={() => rootRef.current?.focus()}
           ref={composedRef}
         >
+          {/* TODO(burdon): Common header with Card. */}
           <div role='none' className='cursor-pointer' ref={setHandleRef}>
             <Icon icon='ph--dots-six-vertical--regular' />
           </div>
@@ -178,6 +184,10 @@ const Cell = forwardRef<HTMLDivElement, Pick<MosaicCellProps<TestItem>, 'classNa
 
 Cell.displayName = 'Cell';
 
+//
+// Placeholder
+//
+
 const Placeholder = ({ location }: Pick<MosaicCellProps<TestItem>, 'location'>) => {
   return (
     <Mosaic.Placeholder location={location} classNames={styles.placeholder.root}>
@@ -190,6 +200,10 @@ const Placeholder = ({ location }: Pick<MosaicCellProps<TestItem>, 'location'>) 
 };
 
 Placeholder.displayName = 'Placeholder';
+
+//
+// Debug
+//
 
 export const DebugRoot = forwardRef<HTMLDivElement, ThemedClassName>(({ classNames }, forwardedRef) => {
   const info = useMosaic(DebugRoot.displayName!);

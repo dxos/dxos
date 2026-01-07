@@ -267,7 +267,7 @@ type ContainerProps = ThemedClassName<
       autoscroll?: boolean;
       withFocus?: boolean;
       handler: MosaicEventHandler;
-      debug?: ReactNode;
+      debug?: () => ReactNode;
     }
   >
 >;
@@ -392,8 +392,8 @@ const Container = forwardRef<HTMLDivElement, ContainerProps>(
           ref={composedRef}
         >
           <Slottable>{children}</Slottable>
-          {debug}
         </Root>
+        {debug?.()}
       </ContainerContextProvider>
     );
   },
