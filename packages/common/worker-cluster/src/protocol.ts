@@ -10,6 +10,11 @@ export interface InitMessage {
   instanceId: number;
 
   /**
+   * Name of this worker instance.
+   */
+  instanceName: string;
+
+  /**
    * Total amount of worker instances started.
    */
   instanceCount: number;

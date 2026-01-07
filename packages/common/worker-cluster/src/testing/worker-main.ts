@@ -1,4 +1,4 @@
-import { WorkerServer } from './worker';
+import { WorkerServer } from '../worker';
 
 const server = new WorkerServer({
   onMainInitialized: (ev) => {
