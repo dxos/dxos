@@ -156,7 +156,7 @@ const Column = forwardRef<HTMLDivElement, { column: TestColumn; debug?: boolean 
           </Mosaic.Container>
         </Focus.Group>
 
-        <div role='none' className='overflow-hidden' ref={debugRef} />
+        {debug && <div role='none' className='overflow-hidden' ref={debugRef} />}
       </div>
     );
   },
