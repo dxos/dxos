@@ -4120,6 +4120,12 @@ importers:
         specifier: 'catalog:'
         version: 2.11.10(@testing-library/jest-dom@6.9.1)(solid-js@1.9.10)(vite@7.1.9(@types/node@22.10.2)(jiti@2.6.1)(terser@5.19.2)(tsx@4.21.0)(yaml@2.8.2))
 
+  packages/common/worker-cluster:
+    dependencies:
+      '@dxos/context':
+        specifier: workspace:*
+        version: link:../context
+
   packages/core/ai:
     dependencies:
       '@dxos/async':

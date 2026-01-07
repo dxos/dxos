@@ -130,6 +130,9 @@
       "path": "packages/common/web-context-solid/tsconfig.json"
     },
     {
+      "path": "packages/common/worker-cluster/tsconfig.json"
+    },
+    {
       "path": "packages/core/ai/tsconfig.json"
     },
     {

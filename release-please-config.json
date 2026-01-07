@@ -235,6 +235,11 @@
         },
         {
           "type": "json",
+          "path": "packages/common/worker-cluster/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/core/ai/package.json",
           "jsonpath": "$.version"
         },
