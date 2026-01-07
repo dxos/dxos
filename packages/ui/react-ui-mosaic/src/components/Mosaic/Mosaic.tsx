@@ -25,10 +25,11 @@ import {
 import { composeRefs, useComposedRefs } from '@radix-ui/react-compose-refs';
 import { createContext } from '@radix-ui/react-context';
 import { Primitive } from '@radix-ui/react-primitive';
-import { Slot } from '@radix-ui/react-slot';
+import { Slot, Slottable } from '@radix-ui/react-slot';
 import React, {
   type CSSProperties,
   type PropsWithChildren,
+  type ReactNode,
   forwardRef,
   useCallback,
   useEffect,
@@ -266,6 +267,7 @@ type ContainerProps = ThemedClassName<
       autoscroll?: boolean;
       withFocus?: boolean;
       handler: MosaicEventHandler;
+      debug?: ReactNode;
     }
   >
 >;
@@ -275,7 +277,7 @@ type ContainerProps = ThemedClassName<
  * NOTE: Children must forwardRef and spread props to root element.
  */
 const Container = forwardRef<HTMLDivElement, ContainerProps>(
-  ({ classNames, children, layout = 'vertical', asChild, autoscroll, withFocus, handler }, forwardedRef) => {
+  ({ classNames, children, layout = 'vertical', asChild, autoscroll, withFocus, handler, debug }, forwardedRef) => {
     const rootRef = useRef<HTMLDivElement>(null);
     const composedRef = useComposedRefs<HTMLDivElement>(rootRef, forwardedRef);
     const Root = asChild ? Slot : Primitive.div;
@@ -389,7 +391,8 @@ const Container = forwardRef<HTMLDivElement, ContainerProps>(
           className={mx('bs-full', classNames)}
           ref={composedRef}
         >
-          {children}
+          <Slottable>{children}</Slottable>
+          {debug}
         </Root>
       </ContainerContextProvider>
     );
@@ -525,7 +528,7 @@ const Cell = forwardRef<HTMLDivElement, CellProps>(
           className={mx('relative transition-opacity', classNames)}
           ref={composedRef}
         >
-          {children}
+          <Slottable>{children}</Slottable>
         </Root>
 
         {state.type === 'preview' &&
@@ -628,7 +631,7 @@ const Placeholder = <Location extends LocationType = LocationType>({
       className={mx('relative', classNames)}
       ref={rootRef}
     >
-      {children}
+      <Slottable>{children}</Slottable>
     </Root>
   );
 };
