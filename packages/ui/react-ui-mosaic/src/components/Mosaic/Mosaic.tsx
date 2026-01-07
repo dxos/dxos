@@ -28,6 +28,7 @@ import { Primitive } from '@radix-ui/react-primitive';
 import { Slot, Slottable } from '@radix-ui/react-slot';
 import React, {
   type CSSProperties,
+  type FC,
   type PropsWithChildren,
   type ReactNode,
   forwardRef,
@@ -43,6 +44,7 @@ import { createPortal } from 'react-dom';
 import { type Obj } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { type ThemedClassName } from '@dxos/react-ui';
+import { Json } from '@dxos/react-ui-syntax-highlighter';
 import { mx } from '@dxos/ui-theme';
 import { isTruthy } from '@dxos/util';
 
@@ -402,6 +404,31 @@ const Container = forwardRef<HTMLDivElement, ContainerProps>(
 Container.displayName = 'MosaicContainer';
 
 //
+// Container Debug
+//
+
+const useContainerDebug = (debug?: boolean): [FC<ThemedClassName>, (() => ReactNode) | undefined] => {
+  const debugRef = useRef<HTMLDivElement | null>(null);
+  return useMemo(() => {
+    if (!debug) {
+      return [() => null, undefined];
+    }
+
+    return [
+      ({ classNames }) => <div role='none' className={mx('overflow-hidden', classNames)} ref={debugRef} />,
+      () => debugRef.current && createPortal(<ContainerInfo />, debugRef.current),
+    ];
+  }, [debug, debugRef]);
+};
+
+const ContainerInfo = forwardRef<HTMLDivElement, ThemedClassName>(({ classNames }, forwardedRef) => {
+  const info = useContainerContext(ContainerInfo.displayName!);
+  return <Json data={info} classNames={mx('text-xs', classNames)} ref={forwardedRef} />;
+});
+
+ContainerInfo.displayName = 'ContainerInfo';
+
+//
 // Cell
 //
 
@@ -660,6 +687,7 @@ DropIndicator.displayName = 'MosaicDropIndicator';
 export const Mosaic = {
   Root,
   Container,
+  ContainerInfo,
   Cell,
   Placeholder,
   DropIndicator,
@@ -673,4 +701,9 @@ export type {
   DropIndicatorProps as MosaicDropIndicatorProps,
 };
 
-export { useRootContext as useMosaic, useContainerContext as useMosaicContainer, useCellContext as useMosaicCell };
+export {
+  useRootContext as useMosaic,
+  useContainerContext as useMosaicContainer,
+  useContainerDebug,
+  useCellContext as useMosaicCell,
+};

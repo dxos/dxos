@@ -6,7 +6,6 @@ import { useFocusableGroup } from '@fluentui/react-tabster';
 import { useComposedRefs } from '@radix-ui/react-compose-refs';
 import * as Schema from 'effect/Schema';
 import React, { Fragment, forwardRef, useMemo, useRef, useState } from 'react';
-import { createPortal } from 'react-dom';
 
 import { Ref, Type } from '@dxos/echo';
 import { ObjectId } from '@dxos/keys';
@@ -18,7 +17,7 @@ import { arrayMove, isTruthy } from '@dxos/util';
 
 import { Focus } from '../Focus';
 
-import { Mosaic, type MosaicCellProps, useMosaic, useMosaicContainer } from './Mosaic';
+import { Mosaic, type MosaicCellProps, useContainerDebug, useMosaic, useMosaicContainer } from './Mosaic';
 import { styles } from './styles';
 
 export const TestItem = Schema.Struct({
@@ -52,7 +51,7 @@ export interface TestColumn extends Schema.Schema.Type<typeof TestColumn> {}
 // TODO(burdon): Factor out list/stack.
 export const Column = forwardRef<HTMLDivElement, { column: TestColumn; debug?: boolean }>(
   ({ column: { id, items }, debug }, forwardedRef) => {
-    const containerRef = useRef<HTMLDivElement | null>(null);
+    const [DebugInfo, debugHandler] = useContainerDebug(debug);
 
     return (
       <div className={mx('grid bs-full min-is-[20rem] max-is-[25rem] overflow-hidden', debug && 'grid-rows-2 gap-2')}>
@@ -70,6 +69,7 @@ export const Column = forwardRef<HTMLDivElement, { column: TestColumn; debug?: b
             asChild
             autoscroll
             withFocus
+            debug={debugHandler}
             handler={{
               id,
               canDrop: () => true,
@@ -98,12 +98,11 @@ export const Column = forwardRef<HTMLDivElement, { column: TestColumn; debug?: b
                 // console.log(items.map((item) => item.target?.label));
               },
             }}
-            debug={() => containerRef.current && createPortal(<DebugContainer />, containerRef.current)}
           >
             <ItemList items={items.map((item: any) => item.target).filter(isTruthy)} />
           </Mosaic.Container>
         </Focus.Group>
-        {debug && <div ref={containerRef} className='overflow-hidden' />}
+        <DebugInfo />
       </div>
     );
   },
@@ -211,10 +210,3 @@ export const DebugRoot = forwardRef<HTMLDivElement, ThemedClassName>(({ classNam
 });
 
 DebugRoot.displayName = 'DebugRoot';
-
-export const DebugContainer = forwardRef<HTMLDivElement, ThemedClassName>(({ classNames }, forwardedRef) => {
-  const info = useMosaicContainer(DebugContainer.displayName!);
-  return <Json data={info} classNames={mx('text-xs', classNames)} ref={forwardedRef} />;
-});
-
-DebugContainer.displayName = 'DebugContainer';
