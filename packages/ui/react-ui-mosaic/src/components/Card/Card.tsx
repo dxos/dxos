@@ -19,19 +19,19 @@ import { cardMinInlineSize, hoverableControls, mx } from '@dxos/ui-theme';
 import { translationKey } from '../../translations';
 import { Image } from '../Image';
 
-import { cardChrome, cardGrid, cardHeading, cardRoot, cardSpacing, cardText } from './fragments';
+import { cardChrome, cardGrid, cardHeading, cardRoot, cardSpacing, cardText } from './styles';
 
 /**
  * The default width of cards. It should be no larger than 320px per WCAG 2.1 SC 1.4.10.
  */
 const cardDefaultInlineSize = cardMinInlineSize;
 
-type SharedCardProps = ThemedClassName<ComponentPropsWithoutRef<'div'>> & { asChild?: boolean };
+type CardSharedProps = ThemedClassName<ComponentPropsWithoutRef<'div'>> & { asChild?: boolean };
 
 /**
- * Use this when ....
+ *
  */
-const CardStaticRoot = forwardRef<HTMLDivElement, SharedCardProps & { id?: string }>(
+const CardStaticRoot = forwardRef<HTMLDivElement, CardSharedProps & { id?: string }>(
   ({ children, classNames, id, asChild, role = 'group', ...props }, forwardedRef) => {
     const Root = asChild ? Slot : 'div';
     const rootProps = asChild ? { classNames: [cardRoot, classNames] } : { className: mx(cardRoot, classNames), role };
@@ -88,7 +88,7 @@ const CardSurfaceRoot = forwardRef<HTMLDivElement, ThemedClassName<PropsWithChil
 // Heading
 //
 
-type CardHeadingProps = SharedCardProps & { truncate?: boolean };
+type CardHeadingProps = CardSharedProps & { truncate?: boolean };
 
 const CardHeading = forwardRef<HTMLDivElement, CardHeadingProps>(
   ({ children, classNames, asChild, truncate, role = 'heading', ...props }, forwardedRef) => {
@@ -123,7 +123,9 @@ const CardToolbarSeparator = Toolbar.Separator;
 // DragHandle
 //
 
-const CardDragHandle = forwardRef<HTMLButtonElement, { toolbarItem?: boolean }>(({ toolbarItem }, forwardedRef) => {
+type CardDragHandleProps = { toolbarItem?: boolean };
+
+const CardDragHandle = forwardRef<HTMLButtonElement, CardDragHandleProps>(({ toolbarItem }, forwardedRef) => {
   const { t } = useTranslation(translationKey);
   const Root = toolbarItem ? Toolbar.IconButton : IconButton;
   return (
@@ -132,6 +134,7 @@ const CardDragHandle = forwardRef<HTMLButtonElement, { toolbarItem?: boolean }>(
       icon='ph--dots-six-vertical--regular'
       variant='ghost'
       label={t('drag handle label')}
+      classNames='cursor-pointer'
       ref={forwardedRef}
     />
   );
@@ -203,7 +206,7 @@ const CardPoster = (props: CardPosterProps) => {
 // Chrome
 //
 
-const CardChrome = forwardRef<HTMLDivElement, SharedCardProps>(
+const CardChrome = forwardRef<HTMLDivElement, CardSharedProps>(
   ({ children, classNames, asChild, role = 'none', ...props }, forwardedRef) => {
     const Root = asChild ? Slot : 'div';
     const rootProps = asChild
@@ -221,7 +224,7 @@ const CardChrome = forwardRef<HTMLDivElement, SharedCardProps>(
 // Text
 //
 
-const CardText = forwardRef<HTMLDivElement, SharedCardProps>(
+const CardText = forwardRef<HTMLDivElement, CardSharedProps>(
   ({ children, classNames, asChild, role = 'none', ...props }, forwardedRef) => {
     const Root = asChild ? Slot : 'div';
     const rootProps = asChild ? { classNames: [cardText, classNames] } : { className: mx(cardText, classNames), role };

@@ -10,11 +10,12 @@ import React, { Fragment, forwardRef, useMemo, useRef, useState } from 'react';
 import { Ref, Type } from '@dxos/echo';
 import { ObjectId } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { Icon, ScrollArea, type ThemedClassName } from '@dxos/react-ui';
+import { ScrollArea, type ThemedClassName } from '@dxos/react-ui';
 import { Json } from '@dxos/react-ui-syntax-highlighter';
 import { mx } from '@dxos/ui-theme';
 import { arrayMove, isTruthy } from '@dxos/util';
 
+import { Card } from '../Card';
 import { Focus } from '../Focus';
 
 import { Mosaic, type MosaicCellProps, useContainerDebug, useMosaic, useMosaicContainer } from './Mosaic';
@@ -22,6 +23,7 @@ import { styles } from './styles';
 
 export const TestItem = Schema.Struct({
   name: Schema.String,
+  description: Schema.optional(Schema.String),
   label: Schema.optional(Schema.String),
 }).pipe(
   Type.Obj({
@@ -58,9 +60,7 @@ export const Column = forwardRef<HTMLDivElement, { column: TestColumn; debug?: b
         <Focus.Group ref={forwardedRef} classNames='flex flex-col overflow-hidden'>
           {/* TODO(burdon): Common header with Card. */}
           <div className='flex gap-2 items-center plb-2 pli-3 border-b border-separator'>
-            <div role='none' className='cursor-pointer'>
-              <Icon icon='ph--dots-six-vertical--regular' />
-            </div>
+            <Card.DragHandle />
             <div className='grow truncate'>{id}</div>
             <div>{items.length}</div>
           </div>
@@ -152,30 +152,28 @@ const Cell = forwardRef<HTMLDivElement, Pick<MosaicCellProps<TestItem>, 'classNa
     const rootRef = useRef<HTMLDivElement>(null);
     const composedRef = useComposedRefs<HTMLDivElement>(rootRef, forwardedRef);
     const focusableGroupAttrs = useFocusableGroup();
-    const [handleRef, setHandleRef] = useState<HTMLDivElement | null>(null);
+    const [handleRef, setHandleRef] = useState<HTMLElement | null>(null);
 
     return (
       <Mosaic.Cell asChild dragHandle={handleRef} object={object} location={location}>
-        <div
-          {...focusableGroupAttrs}
-          tabIndex={0}
-          className={mx('flex gap-2 items-center p-1', styles.cell.root, classNames)}
-          onClick={() => rootRef.current?.focus()}
-          ref={composedRef}
-        >
-          {/* TODO(burdon): Common header with Card. */}
-          <div role='none' className='cursor-pointer' ref={setHandleRef}>
-            <Icon icon='ph--dots-six-vertical--regular' />
-          </div>
-          <div role='none' className='truncate grow'>
+        <Card.StaticRoot>
+          <Card.Toolbar
+            {...focusableGroupAttrs}
+            tabIndex={0}
+            classNames={classNames}
+            onClick={() => rootRef.current?.focus()}
+            ref={composedRef}
+          >
+            <Card.DragHandle ref={setHandleRef} />
             {object.name}
-          </div>
-          {object.label && (
-            <div role='none' className='pli-1 shrink-0 text-sm text-muted font-mono text-infoText'>
-              {object.label}
-            </div>
-          )}
-        </div>
+            {object.label && (
+              <div role='none' className='shrink-0 text-xs text-muted font-mono text-infoText'>
+                {object.label}
+              </div>
+            )}
+          </Card.Toolbar>
+          <Card.Text>{object.description}</Card.Text>
+        </Card.StaticRoot>
       </Mosaic.Cell>
     );
   },

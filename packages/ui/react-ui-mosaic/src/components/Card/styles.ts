@@ -2,9 +2,17 @@
 // Copyright 2025 DXOS.org
 //
 
+import { type ClassNameValue } from '@dxos/react-ui';
+
+export const styles = {
+  body: {
+    grid: 'grid grid-cols-[var(--rail-item)_1fr_var(--rail-item)]',
+  },
+} satisfies Record<string, Record<string, ClassNameValue>>;
+
 export const cardRoot = [
   'group/card relative min-bs-[--rail-item] overflow-hidden',
-  'rounded bg-cardSurface border border-separator dark:border-subduedSeparator dx-focus-ring-group-y-indicator',
+  'rounded-sm bg-cardSurface border border-separator dark:border-subduedSeparator dx-focus-ring-group-y-indicator',
 ].join(' ');
 
 export const cardGrid = 'grid grid-cols-[var(--rail-item)_1fr_var(--rail-item)]';

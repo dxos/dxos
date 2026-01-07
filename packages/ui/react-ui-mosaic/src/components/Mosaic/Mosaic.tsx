@@ -453,7 +453,7 @@ const CELL_STATE_ATTR = 'mosaic-cell-state';
 type CellProps<T extends Obj.Any = Obj.Any, Location = LocationType> = ThemedClassName<
   PropsWithChildren<{
     asChild?: boolean;
-    dragHandle?: HTMLDivElement | null;
+    dragHandle?: HTMLElement | null;
     allowedEdges?: Edge[];
     location: Location;
     object: T;

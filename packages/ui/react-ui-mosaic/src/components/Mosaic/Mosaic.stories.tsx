@@ -30,6 +30,7 @@ const DefaultStory = ({ columns: columnsProp = 1, debug = false }: StoryProps) =
           Ref.make(
             Obj.make(TestItem, {
               name: faker.lorem.sentence(3),
+              description: faker.lorem.paragraph(1),
               label: `${String.fromCharCode(65 + i)}-${j}`,
             }),
           ),
