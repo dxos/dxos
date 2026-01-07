@@ -2,4 +2,6 @@
 // Copyright 2025 DXOS.org
 //
 
-export {};
+export * from './cluster';
+export * from './worker';
+export * from './protocol';
