@@ -17175,6 +17175,9 @@ importers:
       '@codemirror/view':
         specifier: 'catalog:'
         version: 6.38.5
+      '@dxos/async':
+        specifier: workspace:*
+        version: link:../../common/async
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../core/echo/echo
