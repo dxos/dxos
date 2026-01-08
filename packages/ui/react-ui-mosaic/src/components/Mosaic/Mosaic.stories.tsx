@@ -7,8 +7,11 @@ import React, { useState } from 'react';
 
 import { Obj, Ref } from '@dxos/echo';
 import { faker } from '@dxos/random';
+import { useSpaces } from '@dxos/react-client/echo';
+import { withClientProvider } from '@dxos/react-client/testing';
 import { IconButton, Toolbar } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
+import { mx } from '@dxos/ui-theme';
 
 import { Focus } from '../Focus';
 
@@ -23,25 +26,35 @@ type StoryProps = {
 };
 
 const DefaultStory = ({ columns: columnsProp = 1, debug = false }: StoryProps) => {
+  const [space] = useSpaces();
+  const db = space.db;
+
   const [columns, setColumns] = useState<TestColumn[]>(
-    Array.from({ length: columnsProp }).map((_, i) =>
-      Obj.make(TestColumn, {
-        items: Array.from({ length: faker.number.int({ min: 8, max: 20 }) }).map((_, j) =>
-          Ref.make(
+    Array.from({ length: columnsProp }).map((_, i) => {
+      const col = Obj.make(TestColumn, {
+        items: Array.from({ length: faker.number.int({ min: 8, max: 20 }) }).map((_, j) => {
+          const item = db.add(
             Obj.make(TestItem, {
               name: faker.lorem.sentence(3),
               description: faker.lorem.paragraph(1),
               label: `${String.fromCharCode(65 + i)}-${j}`,
             }),
-          ),
-        ),
-      }),
-    ),
+          );
+
+          return Ref.make(item);
+        }),
+      });
+
+      return col;
+    }),
   );
 
   return (
     <Mosaic.Root>
-      <Focus.Group axis='horizontal' classNames='p-2 bs-full is-full grid grid-cols-[1fr_25rem] gap-2 overflow-hidden'>
+      <Focus.Group
+        axis='horizontal'
+        classNames={mx('p-2 bs-full is-full grid overflow-hidden', debug && 'grid-cols-[1fr_25rem] gap-2')}
+      >
         <div className='flex bs-full overflow-x-auto'>
           {/* <Mosaic.Container autoscroll withFocus> */}
           <div className='flex gap-2 bs-full'>
@@ -73,7 +86,17 @@ const DefaultStory = ({ columns: columnsProp = 1, debug = false }: StoryProps) =
 const meta = {
   title: 'ui/react-ui-mosaic/Mosaic',
   render: DefaultStory,
-  decorators: [withTheme, withLayout({ layout: 'fullscreen' })],
+  decorators: [
+    withTheme,
+    withLayout({ layout: 'fullscreen' }),
+    withClientProvider({
+      types: [TestColumn, TestItem],
+      createIdentity: true,
+      onInitialized: () => {
+        console.log('!!');
+      },
+    }),
+  ],
   parameters: {
     layout: 'fullscreen',
   },
@@ -85,7 +108,7 @@ type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
   args: {
-    debug: true,
-    columns: 2,
+    // debug: true,
+    columns: 3,
   },
 };

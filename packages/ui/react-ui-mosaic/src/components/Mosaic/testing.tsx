@@ -115,7 +115,7 @@ const ItemList = forwardRef<HTMLDivElement, { items: TestItem[] }>(({ items, ...
       return items;
     }
 
-    const from = items.findIndex((item) => item.id === dragging.source.object.id);
+    const from = items.findIndex((item) => item.id === dragging.source.data.object.id);
     const newItems = items.slice();
     newItems.splice(from, 1);
     return newItems;
@@ -154,27 +154,29 @@ const Cell = forwardRef<HTMLDivElement, Pick<MosaicCellProps<TestItem>, 'classNa
     const focusableGroupAttrs = useFocusableGroup();
     const [handleRef, setHandleRef] = useState<HTMLElement | null>(null);
 
+    // TODO(burdon): BUG if Focus.Group is after Mosaic.Cell doesn't work.
     return (
-      <Mosaic.Cell asChild dragHandle={handleRef} object={object} location={location}>
-        <Card.StaticRoot>
-          <Card.Toolbar
-            {...focusableGroupAttrs}
+      <Focus.Group asChild>
+        <Mosaic.Cell asChild dragHandle={handleRef} object={object} location={location}>
+          <Card.StaticRoot
             tabIndex={0}
             classNames={classNames}
             onClick={() => rootRef.current?.focus()}
             ref={composedRef}
           >
-            <Card.DragHandle ref={setHandleRef} />
-            {object.name}
-            {object.label && (
-              <div role='none' className='shrink-0 text-xs text-muted font-mono text-infoText'>
-                {object.label}
-              </div>
-            )}
-          </Card.Toolbar>
-          <Card.Text>{object.description}</Card.Text>
-        </Card.StaticRoot>
-      </Mosaic.Cell>
+            <Card.Toolbar {...focusableGroupAttrs}>
+              <Card.DragHandle ref={setHandleRef} />
+              {object.name}
+              {object.label && (
+                <div role='none' className='shrink-0 text-xs text-muted font-mono text-infoText'>
+                  {object.label}
+                </div>
+              )}
+            </Card.Toolbar>
+            <Card.Text>{object.description}</Card.Text>
+          </Card.StaticRoot>
+        </Mosaic.Cell>
+      </Focus.Group>
     );
   },
 );
@@ -185,12 +187,13 @@ Cell.displayName = 'Cell';
 // Placeholder
 //
 
+// TODO(burdon): Need darker surface.
 const Placeholder = ({ location }: Pick<MosaicCellProps<TestItem>, 'location'>) => {
   return (
     <Mosaic.Placeholder location={location} classNames={styles.placeholder.root}>
       <div
         role='none'
-        className={mx('bg-groupSurface border border-dashed border-separator', styles.placeholder.content)}
+        className={mx('bg-baseSurface border border-dashed border-separator rounded-sm', styles.placeholder.content)}
       />
     </Mosaic.Placeholder>
   );

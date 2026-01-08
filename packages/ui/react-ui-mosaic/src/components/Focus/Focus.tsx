@@ -47,7 +47,7 @@ type GroupProps = ThemedClassName<
 >;
 
 const Group = forwardRef<HTMLDivElement, GroupProps>(
-  ({ classNames, children, asChild, axis = 'vertical' }, forwardedRef) => {
+  ({ classNames, children, asChild, axis = 'vertical', ...props }, forwardedRef) => {
     const rootRef = useRef<HTMLDivElement>(null);
     const composedRef = useComposedRefs<HTMLDivElement>(rootRef, forwardedRef);
     const Root = asChild ? Slot : Primitive.div;
@@ -68,6 +68,7 @@ const Group = forwardRef<HTMLDivElement, GroupProps>(
           {...(state && {
             [`data-${FOCUS_STATE_ATTR}`]: state,
           })}
+          {...props}
           ref={composedRef}
         >
           {children}

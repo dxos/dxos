@@ -41,6 +41,7 @@ import React, {
 } from 'react';
 import { createPortal } from 'react-dom';
 
+import { addEventListener } from '@dxos/async';
 import { type Obj } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { type ThemedClassName } from '@dxos/react-ui';
@@ -63,12 +64,20 @@ import {
 // Context
 //
 
-type DraggingState = {
-  // TODO(burdon): Split container and target.
-  source: MosaicCellData;
+type DraggingSource = {
+  data: MosaicCellData;
+  handler?: MosaicEventHandler;
+  container?: Element;
+};
 
-  // TODO(burdon): Split container and target.
-  target?: MosaicData;
+type DraggingTarget = {
+  data: MosaicData;
+  handler?: MosaicEventHandler;
+};
+
+type DraggingState = {
+  source: DraggingSource;
+  target?: DraggingTarget;
 };
 
 type RootContextValue = {
@@ -89,7 +98,6 @@ type RootProps = PropsWithChildren;
 const Root = ({ children }: RootProps) => {
   const [handlers, setHandlers] = useState<Record<string, MosaicEventHandler>>({});
   const [dragging, setDragging] = useState<DraggingState | undefined>();
-  const currentHandler = useRef<MosaicEventHandler>(undefined);
 
   const getSourceHandler = useCallback(
     (source: ElementDragPayload): { data: MosaicCellData; handler?: MosaicEventHandler } => {
@@ -137,6 +145,7 @@ const Root = ({ children }: RootProps) => {
           location: location.current.dropTargets.map((target) => target.data),
         });
       },
+
       /**
        * Dragging within any container.
        */
@@ -148,6 +157,7 @@ const Root = ({ children }: RootProps) => {
           handler.onDrag?.({ source: data, position: { x, y } });
         }
       },
+
       /**
        * Dragging entered a new container.
        */
@@ -159,10 +169,23 @@ const Root = ({ children }: RootProps) => {
 
         const { data: sourceData } = getSourceHandler(source);
         const { data: targetData, handler } = getTargetHandler(location);
-        setDragging({ source: sourceData, target: targetData });
-        currentHandler.current?.onCancel?.(); // TODO(burdon): ???
-        currentHandler.current = handler;
+        setDragging((dragging) => {
+          dragging?.target?.handler?.onCancel?.();
+          return {
+            source: {
+              data: sourceData,
+              handler: handlers[sourceData.containerId],
+              // TOOD(burdon): Check id matches.
+              container: location.initial.dropTargets.find((target) => target.data.type === 'container')?.element,
+            },
+            target: targetData && {
+              data: targetData,
+              handler,
+            },
+          };
+        });
       },
+
       /**
        * Dragging ended.
        */
@@ -172,16 +195,16 @@ const Root = ({ children }: RootProps) => {
           location: location.current.dropTargets.map((target) => target.data),
         });
 
+        // Get the source container.
+        const { data: sourceData, handler: sourceHandler } = getSourceHandler(source);
+        if (!sourceHandler) {
+          log.warn('invalid source', { source: sourceData, handlers: Object.keys(handlers) });
+          return;
+        }
+
         try {
           // If cancelled (e.g., user pressed Escape) then there are no drop targets.
           if (location.current.dropTargets.length > 0) {
-            // Get the source container.
-            const { data: sourceData, handler: sourceHandler } = getSourceHandler(source);
-            if (!sourceHandler) {
-              log.warn('invalid source', { source: sourceData, handlers: Object.keys(handlers) });
-              return;
-            }
-
             // Get the target container.
             const { data: targetData, handler: targetHandler } = getTargetHandler(location);
             if (!targetHandler) {
@@ -205,9 +228,18 @@ const Root = ({ children }: RootProps) => {
             }
           }
         } finally {
-          setDragging(undefined);
-          currentHandler.current?.onCancel?.();
-          currentHandler.current = undefined;
+          // NOTE: When dragging is cancelled (e.g., user presses ESC) then onDrop is eventually called after a subsequent event.
+          // - ESC only flips internal state.
+          // - Completion happens on the next processed input event.
+          // - This avoids reentrancy and keeps pointer/keyboard behavior consistent.
+          setDragging((dragging) => {
+            requestAnimationFrame(() => {
+              dragging?.target?.handler?.onCancel?.();
+              dragging?.source?.container?.dispatchEvent(new CustomEvent('dnd:cancel', { bubbles: true }));
+            });
+
+            return undefined;
+          });
         }
       },
     });
@@ -279,7 +311,10 @@ type ContainerProps = ThemedClassName<
  * NOTE: Children must forwardRef and spread props to root element.
  */
 const Container = forwardRef<HTMLDivElement, ContainerProps>(
-  ({ classNames, children, layout = 'vertical', asChild, autoscroll, withFocus, handler, debug }, forwardedRef) => {
+  (
+    { classNames, children, layout = 'vertical', asChild, autoscroll, withFocus, handler, debug, ...props },
+    forwardedRef,
+  ) => {
     const rootRef = useRef<HTMLDivElement>(null);
     const composedRef = useComposedRefs<HTMLDivElement>(rootRef, forwardedRef);
     const Root = asChild ? Slot : Primitive.div;
@@ -337,6 +372,11 @@ const Container = forwardRef<HTMLDivElement, ContainerProps>(
               );
             },
 
+            // TODO(burdon): Provide semantic intent to onDrop.
+            // getDropEffect: () => {
+            //   return 'move';
+            // },
+
             /**
              * Dragging started in this container.
              */
@@ -356,8 +396,11 @@ const Container = forwardRef<HTMLDivElement, ContainerProps>(
              * NOTE: If the container isn't full-height, then when the dragged item is temporarily removed the container will shrink,
              * triggering `onDragLeave`, which then causes the item to be added and removed continually (flickering).
              */
-            onDragLeave: () => {
-              setState({ type: 'idle' });
+            onDragLeave: ({ source }) => {
+              const sourceData = source.data as MosaicCellData;
+              if (sourceData.containerId !== handler.id) {
+                setState({ type: 'idle' });
+              }
             },
             /**
              * Dropped in this container.
@@ -365,6 +408,13 @@ const Container = forwardRef<HTMLDivElement, ContainerProps>(
             onDrop: () => {
               setState({ type: 'idle' });
             },
+          }),
+
+          /**
+           * Custom event for dragging cancellation.
+           */
+          addEventListener(rootRef.current, 'dnd:cancel' as any, () => {
+            setState({ type: 'idle' });
           }),
         ].filter(isTruthy),
       );
@@ -391,6 +441,7 @@ const Container = forwardRef<HTMLDivElement, ContainerProps>(
           }
           role='list'
           className={mx('bs-full', classNames)}
+          {...props}
           ref={composedRef}
         >
           <Slottable>{children}</Slottable>
@@ -511,6 +562,7 @@ const Cell = forwardRef<HTMLDivElement, CellProps>(
               },
             });
           },
+
           onDragStart: () => {
             setState({ type: 'dragging' });
           },

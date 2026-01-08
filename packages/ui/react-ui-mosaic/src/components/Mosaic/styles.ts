@@ -15,6 +15,7 @@ export const styles = {
     ],
   },
   placeholder: {
+    // NOTE: Delay needs to be long enough not to trigger while autoscrolling (i.e., >300ms)
     root: [
       'group is-full',
       'transition-all plb-1 opacity-0 delay-0 duration-0',
