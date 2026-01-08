@@ -36,7 +36,6 @@ export const AssistantPlugin = Plugin.define(meta).pipe(
   Common.Plugin.addTranslationsModule({ translations }),
   Common.Plugin.addSettingsModule({ activate: Settings }),
   Plugin.addModule({
-    id: 'state',
     // TODO(wittjosiah): Does not integrate with settings store.
     //   Should this be a different event?
     //   Should settings store be renamed to be more generic?
@@ -104,7 +103,6 @@ export const AssistantPlugin = Plugin.define(meta).pipe(
       ),
   }),
   Plugin.addModule({
-    id: 'repair',
     activatesOn: ClientEvents.SpacesReady,
     activate: Repair,
   }),
@@ -115,17 +113,14 @@ export const AssistantPlugin = Plugin.define(meta).pipe(
     activatesBefore: [Common.ActivationEvent.SetupArtifactDefinition],
   }),
   Plugin.addModule({
-    id: 'edge-model-resolver',
     activatesOn: AssistantEvents.SetupAiServiceProviders,
     activate: EdgeModelResolver,
   }),
   Plugin.addModule({
-    id: 'local-model-resolver',
     activatesOn: AssistantEvents.SetupAiServiceProviders,
     activate: LocalModelResolver,
   }),
   Plugin.addModule({
-    id: 'ai-service',
     activatesBefore: [AssistantEvents.SetupAiServiceProviders],
     // TODO(dmaretskyi): This should activate lazily when the AI chat is used.
     activatesOn: Common.ActivationEvent.Startup,
@@ -133,7 +128,6 @@ export const AssistantPlugin = Plugin.define(meta).pipe(
   }),
   Common.Plugin.addBlueprintDefinitionModule({ activate: BlueprintDefinition }),
   Plugin.addModule({
-    id: 'toolkit',
     // TODO(wittjosiah): Use a different event.
     activatesOn: Common.ActivationEvent.Startup,
     activate: Toolkit,

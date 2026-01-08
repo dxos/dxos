@@ -7,12 +7,7 @@ import React, { type PropsWithChildren } from 'react';
 
 import { Capability, Common } from '@dxos/app-framework';
 import { useCapability } from '@dxos/app-framework/react';
-import {
-  type AttentionManager,
-  RootAttentionProvider,
-  type SelectionManager,
-  SelectionProvider,
-} from '@dxos/react-ui-attention';
+import { RootAttentionProvider, SelectionProvider } from '@dxos/react-ui-attention';
 
 import { meta } from '../../meta';
 import { AttentionCapabilities } from '../../types';
@@ -22,8 +17,8 @@ export default Capability.makeModule(() =>
     Capability.contributes(Common.Capability.ReactContext, {
       id: meta.id,
       context: (props: PropsWithChildren) => {
-        const attention = useCapability(AttentionCapabilities.Attention) as AttentionManager | undefined;
-        const selection = useCapability(AttentionCapabilities.Selection) as SelectionManager | undefined;
+        const attention = useCapability(AttentionCapabilities.Attention);
+        const selection = useCapability(AttentionCapabilities.Selection);
 
         return (
           <RootAttentionProvider

@@ -131,7 +131,7 @@ export default Capability.makeModule((context) =>
             const layout = context.getCapability(DeckCapabilities.MutableDeckState);
             const historyTracker = context.getCapability(Common.Capability.HistoryTracker);
 
-            // Remove previous undo toast if exists.
+            // TODO(wittjosiah): Support undoing further back than the last action.
             if (layout.currentUndoId) {
               layout.toasts = layout.toasts.filter((toast) => toast.id !== layout.currentUndoId);
             }

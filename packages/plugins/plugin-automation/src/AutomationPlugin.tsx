@@ -18,7 +18,6 @@ export const AutomationPlugin = Plugin.define(meta).pipe(
   Common.Plugin.addOperationResolverModule({ activate: OperationResolver }),
   Common.Plugin.addSurfaceModule({ activate: ReactSurface }),
   Plugin.addModule({
-    id: 'compute-runtime',
     activatesOn: ClientEvents.ClientReady,
     activatesAfter: [AutomationEvents.ComputeRuntimeReady],
     activate: ComputeRuntime,

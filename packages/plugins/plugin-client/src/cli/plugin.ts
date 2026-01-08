@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Common, Plugin } from '@dxos/app-framework';
+import { Capability, Common, Plugin } from '@dxos/app-framework';
 
 // NOTE: Must not import from index to avoid pulling in react dependencies.
 import { Client } from '../capabilities/client';
@@ -14,29 +14,20 @@ import { type ClientPluginOptions } from '../types';
 
 import { config, device, edge, halo, profile } from './commands';
 
-// TODO(wittjosiah): Refactor capabilities to be able to use them without pulling in react.
 export const ClientPlugin = Plugin.define<ClientPluginOptions>(meta).pipe(
   Plugin.addModule((options) => ({
-    id: `${meta.id}/module/client`,
+    id: Capability.getModuleTag(Client),
     activatesOn: Common.ActivationEvent.Startup,
     activatesAfter: [ClientEvents.ClientReady],
     activate: (context) => Client({ ...options, context }),
   })),
   Plugin.addModule({
-    id: `${meta.id}/module/schema`,
     activatesOn: ClientEvents.ClientReady,
     activatesBefore: [Common.ActivationEvent.SetupSchema],
     activate: SchemaDefs,
   }),
   // TODO(wittjosiah): Could some of these commands make use of operations?
-  Common.Plugin.addCommandModule({
-    id: `${meta.id}/module/cli-commands`,
-    commands: [config, device, edge, halo, profile],
-  }),
-  Common.Plugin.addOperationResolverModule({
-    activate: (context) => OperationResolver({ context }),
-  }),
+  Common.Plugin.addCommandModule({ commands: [config, device, edge, halo, profile] }),
+  Common.Plugin.addOperationResolverModule({ activate: (context) => OperationResolver({ context }) }),
   Plugin.make,
 );
-
-Object.assign(ClientPlugin, { meta });

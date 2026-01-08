@@ -2,4 +2,6 @@
 // Copyright 2023 DXOS.org
 //
 
-export { CanvasContainer } from './CanvasContainer';
+import { lazy } from 'react';
+
+export const CanvasContainer = lazy(() => import('./CanvasContainer'));
