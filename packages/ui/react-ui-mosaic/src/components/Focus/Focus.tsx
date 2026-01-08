@@ -44,10 +44,10 @@ type GroupProps = ThemedClassName<
       asChild?: boolean;
     } & Pick<UseArrowNavigationGroupOptions, 'axis'>
   >
->;
+> & { className?: string };
 
 const Group = forwardRef<HTMLDivElement, GroupProps>(
-  ({ classNames, children, asChild, axis = 'vertical', ...props }, forwardedRef) => {
+  ({ classNames, className, children, asChild, axis = 'vertical', ...props }: GroupProps, forwardedRef) => {
     const rootRef = useRef<HTMLDivElement>(null);
     const composedRef = useComposedRefs<HTMLDivElement>(rootRef, forwardedRef);
     const Root = asChild ? Slot : Primitive.div;
@@ -63,7 +63,7 @@ const Group = forwardRef<HTMLDivElement, GroupProps>(
         <Root
           role='none'
           tabIndex={0}
-          className={mx(styles.container.root, classNames)}
+          className={mx(styles.container.root, className, classNames)}
           {...tabsterAttrs}
           {...(state && {
             [`data-${FOCUS_STATE_ATTR}`]: state,

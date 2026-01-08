@@ -154,30 +154,29 @@ const Cell = forwardRef<HTMLDivElement, Pick<MosaicCellProps<TestItem>, 'classNa
     const focusableGroupAttrs = useFocusableGroup();
     const [handleRef, setHandleRef] = useState<HTMLElement | null>(null);
 
-    // TODO(burdon): Composition BUG if Focus.Group is after Mosaic.Cell doesn't work.
     return (
-      <Focus.Group asChild>
-        <Mosaic.Cell asChild dragHandle={handleRef} object={object} location={location}>
-          <Card.StaticRoot
-            tabIndex={0}
-            // TODO(burdon): Remove classes when focus composition is fixed.
-            classNames={['outline-none focus:!border-accentSurface', classNames]}
-            onClick={() => rootRef.current?.focus()}
-            ref={composedRef}
-          >
-            <Card.Toolbar {...focusableGroupAttrs}>
-              <Card.DragHandle ref={setHandleRef} />
-              {object.name}
-              {object.label && (
-                <div role='none' className='shrink-0 text-xs text-muted font-mono text-infoText'>
-                  {object.label}
-                </div>
-              )}
-            </Card.Toolbar>
-            <Card.Text>{object.description}</Card.Text>
-          </Card.StaticRoot>
-        </Mosaic.Cell>
-      </Focus.Group>
+      // <Focus.Group asChild>
+      <Mosaic.Cell asChild dragHandle={handleRef} object={object} location={location}>
+        <Card.StaticRoot
+          tabIndex={0}
+          // TODO(burdon): Remove classes when focus composition is fixed.
+          classNames={['outline-none focus:!border-accentSurface', classNames]}
+          onClick={() => rootRef.current?.focus()}
+          ref={composedRef}
+        >
+          <Card.Toolbar {...focusableGroupAttrs}>
+            <Card.DragHandle ref={setHandleRef} />
+            {object.name}
+            {object.label && (
+              <div role='none' className='shrink-0 text-xs text-muted font-mono text-infoText'>
+                {object.label}
+              </div>
+            )}
+          </Card.Toolbar>
+          <Card.Text>{object.description}</Card.Text>
+        </Card.StaticRoot>
+      </Mosaic.Cell>
+      // </Focus.Group>
     );
   },
 );

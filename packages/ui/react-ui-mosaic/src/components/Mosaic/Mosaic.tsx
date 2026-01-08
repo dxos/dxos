@@ -304,11 +304,22 @@ type ContainerProps = ThemedClassName<
       debug?: () => ReactNode;
     }
   >
->;
+> & { className?: string };
 
 const Container = forwardRef<HTMLDivElement, ContainerProps>(
   (
-    { classNames, children, layout = 'vertical', asChild, autoscroll, withFocus, handler, debug, ...props },
+    {
+      classNames,
+      className,
+      children,
+      layout = 'vertical',
+      asChild,
+      autoscroll,
+      withFocus,
+      handler,
+      debug,
+      ...props
+    }: ContainerProps,
     forwardedRef,
   ) => {
     const rootRef = useRef<HTMLDivElement>(null);
@@ -426,18 +437,18 @@ const Container = forwardRef<HTMLDivElement, ContainerProps>(
         setActiveTarget={setActiveTarget}
       >
         <Root
-          {...props}
-          {...{
-            [`data-${CONTAINER_STATE_ATTR}`]: state.type,
-          }}
+          role='list'
+          className={mx('bs-full', className, classNames)}
           style={
             {
               [CONTAINER_PLACEHOLDER_HEIGHT]:
                 state.type === 'active' && state.bounds ? `${state.bounds.height}px` : '0px',
             } as CSSProperties
           }
-          role='list'
-          className={mx('bs-full', classNames)}
+          {...{
+            [`data-${CONTAINER_STATE_ATTR}`]: state.type,
+          }}
+          {...props}
           ref={composedRef}
         >
           <Slottable>{children}</Slottable>
@@ -509,7 +520,17 @@ type CellProps<T extends Obj.Any = Obj.Any, Location = LocationType> = ThemedCla
 
 const Cell = forwardRef<HTMLDivElement, CellProps>(
   (
-    { classNames, children, asChild, dragHandle, allowedEdges: allowedEdgesProp, location, object, ...props },
+    {
+      classNames,
+      className,
+      children,
+      asChild,
+      dragHandle,
+      allowedEdges: allowedEdgesProp,
+      location,
+      object,
+      ...props
+    }: CellProps & { className?: string },
     forwardedRef,
   ) => {
     const rootRef = useRef<HTMLDivElement>(null);
@@ -604,7 +625,7 @@ const Cell = forwardRef<HTMLDivElement, CellProps>(
             [`data-${CELL_STATE_ATTR}`]: state.type,
           }}
           role='listitem'
-          className={mx('relative transition-opacity', classNames)}
+          className={mx('relative transition-opacity', className, classNames)}
           ref={composedRef}
         >
           <Slottable>{children}</Slottable>
