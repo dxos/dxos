@@ -92,9 +92,6 @@ const meta = {
     withClientProvider({
       types: [TestColumn, TestItem],
       createIdentity: true,
-      onInitialized: () => {
-        console.log('!!');
-      },
     }),
   ],
   parameters: {

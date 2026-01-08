@@ -31,6 +31,7 @@ type CardSharedProps = ThemedClassName<ComponentPropsWithoutRef<'div'>> & { asCh
 /**
  *
  */
+// TODO(burdon): Document???
 const CardStaticRoot = forwardRef<HTMLDivElement, CardSharedProps & { id?: string }>(
   ({ children, classNames, id, asChild, role = 'group', ...props }, forwardedRef) => {
     const Root = asChild ? Slot : 'div';

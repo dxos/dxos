@@ -154,13 +154,14 @@ const Cell = forwardRef<HTMLDivElement, Pick<MosaicCellProps<TestItem>, 'classNa
     const focusableGroupAttrs = useFocusableGroup();
     const [handleRef, setHandleRef] = useState<HTMLElement | null>(null);
 
-    // TODO(burdon): BUG if Focus.Group is after Mosaic.Cell doesn't work.
+    // TODO(burdon): Composition BUG if Focus.Group is after Mosaic.Cell doesn't work.
     return (
       <Focus.Group asChild>
         <Mosaic.Cell asChild dragHandle={handleRef} object={object} location={location}>
           <Card.StaticRoot
             tabIndex={0}
-            classNames={classNames}
+            // TODO(burdon): Remove classes when focus composition is fixed.
+            classNames={['outline-none focus:!border-accentSurface', classNames]}
             onClick={() => rootRef.current?.focus()}
             ref={composedRef}
           >

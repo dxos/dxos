@@ -306,10 +306,6 @@ type ContainerProps = ThemedClassName<
   >
 >;
 
-/**
- * Ref https://www.radix-ui.com/primitives/docs/guides/composition
- * NOTE: Children must forwardRef and spread props to root element.
- */
 const Container = forwardRef<HTMLDivElement, ContainerProps>(
   (
     { classNames, children, layout = 'vertical', asChild, autoscroll, withFocus, handler, debug, ...props },
@@ -430,6 +426,7 @@ const Container = forwardRef<HTMLDivElement, ContainerProps>(
         setActiveTarget={setActiveTarget}
       >
         <Root
+          {...props}
           {...{
             [`data-${CONTAINER_STATE_ATTR}`]: state.type,
           }}
@@ -441,7 +438,6 @@ const Container = forwardRef<HTMLDivElement, ContainerProps>(
           }
           role='list'
           className={mx('bs-full', classNames)}
-          {...props}
           ref={composedRef}
         >
           <Slottable>{children}</Slottable>
@@ -512,7 +508,10 @@ type CellProps<T extends Obj.Any = Obj.Any, Location = LocationType> = ThemedCla
 >;
 
 const Cell = forwardRef<HTMLDivElement, CellProps>(
-  ({ classNames, children, asChild, dragHandle, allowedEdges: allowedEdgesProp, location, object }, forwardedRef) => {
+  (
+    { classNames, children, asChild, dragHandle, allowedEdges: allowedEdgesProp, location, object, ...props },
+    forwardedRef,
+  ) => {
     const rootRef = useRef<HTMLDivElement>(null);
     const composedRef = composeRefs<HTMLDivElement>(rootRef, forwardedRef);
     const Root = asChild ? Slot : Primitive.div;
@@ -600,6 +599,7 @@ const Cell = forwardRef<HTMLDivElement, CellProps>(
     return (
       <CellContextProvider state={state}>
         <Root
+          {...props}
           {...{
             [`data-${CELL_STATE_ATTR}`]: state.type,
           }}

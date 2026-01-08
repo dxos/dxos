@@ -10,7 +10,7 @@ import {
 } from '@fluentui/react-tabster';
 import { useComposedRefs } from '@radix-ui/react-compose-refs';
 import { Primitive } from '@radix-ui/react-primitive';
-import { Slot } from '@radix-ui/react-slot';
+import { Slot, Slottable } from '@radix-ui/react-slot';
 import React, { type PropsWithChildren, createContext, forwardRef, useContext, useRef, useState } from 'react';
 
 import { type ThemedClassName } from '@dxos/react-ui';
@@ -71,7 +71,7 @@ const Group = forwardRef<HTMLDivElement, GroupProps>(
           {...props}
           ref={composedRef}
         >
-          {children}
+          <Slottable>{children}</Slottable>
         </Root>
       </FocusContext.Provider>
     );
