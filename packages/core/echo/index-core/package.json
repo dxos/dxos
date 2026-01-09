@@ -35,6 +35,7 @@
   "dependencies": {
     "@dxos/debug": "workspace:",
     "@dxos/echo": "workspace:",
+    "@dxos/invariant": "workspace:",
     "@dxos/keys": "workspace:",
     "@effect/experimental": "catalog:",
     "@effect/platform": "catalog:",

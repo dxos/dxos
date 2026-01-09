@@ -31,9 +31,19 @@ export interface IndexDataSource {
   ): Effect.Effect<{ objects: IndexerObject[]; cursors: DataSourceCursor[] }>;
 }
 
+export interface IndexEngineParams {
+  tracker: IndexTracker;
+  objectMetaIndex: ObjectMetaIndex;
+}
+
 export class IndexEngine {
-  #tracker = new IndexTracker();
-  #objectMetaIndex = new ObjectMetaIndex();
+  readonly #tracker: IndexTracker;
+  readonly #objectMetaIndex: ObjectMetaIndex;
+
+  constructor({ tracker, objectMetaIndex }: IndexEngineParams) {
+    this.#tracker = tracker;
+    this.#objectMetaIndex = objectMetaIndex;
+  }
 
   update(dataSource: IndexDataSource, opts: { spaceId: SpaceId; limit?: number }) {
     return Effect.gen(this, function* () {
@@ -42,11 +52,12 @@ export class IndexEngine {
 
       yield* sql`BEGIN TRANSACTION`;
 
-      yield* this.#updateIndex(this.#objectMetaIndex, dataSource, {
+      const { updated: updatedObjects } = yield* this.#updateIndex(this.#objectMetaIndex, dataSource, {
         indexName: 'objectMeta',
         spaceId: opts.spaceId,
         limit: opts.limit,
       });
+      updated += updatedObjects;
 
       yield* sql`COMMIT`;
 

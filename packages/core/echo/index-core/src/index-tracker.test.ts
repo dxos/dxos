@@ -23,16 +23,16 @@ describe('IndexTracker', () => {
       const cursor1: IndexCursor = {
         indexName: 'test-index',
         spaceId: SpaceId.random(),
-        sourceNamespace: 'automerge',
-        sourceId: 'doc-1',
+        sourceName: 'automerge',
+        resourceId: 'doc-1',
         cursor: 'heads-1',
       };
 
       const cursor2: IndexCursor = {
         indexName: 'test-index',
         spaceId: null,
-        sourceNamespace: 'queue',
-        sourceId: 'queue-1',
+        sourceName: 'queue',
+        resourceId: 'queue-1',
         cursor: 123,
       };
 
@@ -46,7 +46,7 @@ describe('IndexTracker', () => {
       expect(results).toContainEqual(cursor2);
 
       // Test Query with Filter
-      const filtered = yield* tracker.queryCursors({ indexName: 'test-index', sourceNamespace: 'automerge' });
+      const filtered = yield* tracker.queryCursors({ indexName: 'test-index', sourceName: 'automerge' });
       expect(filtered.length).toBe(1);
       expect(filtered[0]).toEqual(cursor1);
 
@@ -54,7 +54,7 @@ describe('IndexTracker', () => {
       const updatedCursor1 = { ...cursor1, cursor: 'heads-2' };
       yield* tracker.updateCursors([updatedCursor1]);
 
-      const resultsAfterUpdate = yield* tracker.queryCursors({ indexName: 'test-index', sourceId: 'doc-1' });
+      const resultsAfterUpdate = yield* tracker.queryCursors({ indexName: 'test-index', resourceId: 'doc-1' });
       expect(resultsAfterUpdate[0].cursor).toBe('heads-2');
 
       // Test null handling (empty string in DB)

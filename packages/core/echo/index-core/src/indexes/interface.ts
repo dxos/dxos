@@ -8,7 +8,15 @@ import type { Effect } from 'effect';
  */
 export interface IndexerObject {
   spaceId: SpaceId;
+  /**
+   * Queue id if object is from queue.
+   * If null, `documentId` must be set.
+   */
   queueId: ObjectId | null;
+  /**
+   * Document id if object is from document.
+   * If null, `queueId` must be set.
+   */
   documentId: string | null;
 
   data: Obj.JSON;

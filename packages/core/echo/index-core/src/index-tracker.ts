@@ -23,7 +23,7 @@ export class IndexTracker {
       sourceName TEXT NOT NULL, -- 'automerge' / 'queue' / 'index' (for secondary indexes)
       resourceId TEXT NOT NULL DEFAULT '', -- doc_id, queue_id, '' <empty string> (if indexing entire namespace)
       cursor, -- heads / queue position / version
-      PRIMARY KEY (indexName, spaceId, sourceNamespace, sourceId)
+      PRIMARY KEY (indexName, spaceId, sourceName, resourceId)
     )`;
   });
 
