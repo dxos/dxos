@@ -6,20 +6,20 @@ import * as Command from '@effect/cli/Command';
 import * as Console from 'effect/Console';
 import * as Effect from 'effect/Effect';
 
-import { type Plugin, PluginService } from '@dxos/app-framework';
+import { type Plugin, PluginManager } from '@dxos/app-framework';
 import { CommandConfig, printList } from '@dxos/cli-util';
 
 import { type FormattedPlugin, printPlugin } from './util';
 
 export const handler = Effect.fn(function* () {
   const { json } = yield* CommandConfig;
-  const manager = yield* PluginService;
+  const manager = yield* PluginManager.Service;
 
-  const plugins = manager.plugins;
-  const enabled = manager.enabled;
-  const core = manager.core;
+  const plugins = manager.getPlugins();
+  const enabled = manager.getEnabled();
+  const core = manager.getCore();
 
-  const formattedPlugins: FormattedPlugin[] = plugins.map((plugin: Plugin) => {
+  const formattedPlugins: FormattedPlugin[] = plugins.map((plugin: Plugin.Plugin) => {
     const isEnabled = enabled.includes(plugin.meta.id);
     const isCore = core.includes(plugin.meta.id);
     return {

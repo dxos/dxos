@@ -13,7 +13,7 @@ import { type FunctionDefinition, FunctionInvocationService } from '@dxos/functi
 import { InvocationTracer, TracingServiceExt } from '@dxos/functions-runtime';
 import { log } from '@dxos/log';
 
-import { AutomationCapabilities } from '../capabilities';
+import { AutomationCapabilities } from '../types';
 
 /**
  * Create an effectful function that has access to compute services

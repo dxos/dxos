@@ -35,6 +35,7 @@
     "@dxos/cli-util": "workspace:*",
     "@dxos/client-protocol": "workspace:*",
     "@dxos/echo": "workspace:*",
+    "@dxos/effect": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/live-object": "workspace:*",
     "@dxos/plugin-graph": "workspace:*",
@@ -42,6 +43,7 @@
     "@dxos/react-ui-form": "workspace:*",
     "@dxos/react-ui-stack": "workspace:*",
     "@dxos/util": "workspace:*",
+    "@effect-atom/atom-react": "catalog:",
     "@effect/cli": "catalog:",
     "@preact-signals/safe-react": "catalog:"
   },

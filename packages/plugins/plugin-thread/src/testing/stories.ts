@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { IntentPlugin, SettingsPlugin } from '@dxos/app-framework';
+import { IntentPlugin, type Plugin, SettingsPlugin } from '@dxos/app-framework';
 import { ClientPlugin } from '@dxos/plugin-client';
 import { GraphPlugin } from '@dxos/plugin-graph';
 import { SpacePlugin } from '@dxos/plugin-space';
@@ -13,7 +13,7 @@ import { defaultTx } from '@dxos/ui-theme';
 import { ThreadPlugin } from '../ThreadPlugin';
 import { Channel } from '../types';
 
-export const createThreadPlugins = async () => [
+export const createThreadPlugins = async (): Promise<Array<Plugin.Plugin>> => [
   ThemePlugin({ tx: defaultTx }),
   ClientPlugin({
     onClientInitialized: async ({ client }) => {

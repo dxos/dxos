@@ -5,7 +5,7 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useMemo } from 'react';
 
-import { type Capabilities, LayoutAction, createIntent } from '@dxos/app-framework';
+import { Common, createIntent } from '@dxos/app-framework';
 import { Surface, useIntentDispatcher } from '@dxos/app-framework/react';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Obj, Query } from '@dxos/echo';
@@ -40,7 +40,7 @@ const DefaultStory = () => {
   useAsyncEffect(async () => {
     if (space) {
       await dispatch(
-        createIntent(LayoutAction.SwitchWorkspace, {
+        createIntent(Common.LayoutAction.SwitchWorkspace, {
           part: 'workspace',
           subject: space.id,
         }),
@@ -113,7 +113,7 @@ const meta = {
     controls: { disable: true },
     translations,
   },
-} satisfies Meta<typeof Capabilities>;
+} satisfies Meta<typeof DefaultStory>;
 
 export default meta;
 

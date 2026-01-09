@@ -4,9 +4,9 @@
 
 import React, { Fragment, type MouseEvent, memo, useCallback, useEffect, useMemo } from 'react';
 
-import { LayoutAction, createIntent } from '@dxos/app-framework';
+import { Common, createIntent } from '@dxos/app-framework';
 import { Surface, useAppGraph, useIntentDispatcher } from '@dxos/app-framework/react';
-import { type Node } from '@dxos/plugin-graph';
+import { Graph, type Node } from '@dxos/plugin-graph';
 import { Icon, IconButton, Popover, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { StackItem, type StackItemSigilAction } from '@dxos/react-ui-stack';
 import { TextTooltip } from '@dxos/react-ui-text-tooltip';
@@ -26,7 +26,7 @@ export type PlankHeadingProps = {
   id: string;
   part: ResolvedPart;
   layoutMode?: LayoutMode;
-  node?: Node;
+  node?: Node.Node;
   deckEnabled?: boolean;
   canIncrementStart?: boolean;
   canIncrementEnd?: boolean;
@@ -34,7 +34,7 @@ export type PlankHeadingProps = {
   primaryId?: string;
   pending?: boolean;
   companioned?: 'primary' | 'companion';
-  companions?: Node[];
+  companions?: Node.Node[];
   actions?: StackItemSigilAction[];
 };
 
@@ -69,7 +69,7 @@ export const PlankHeading = memo(
       const frame = requestAnimationFrame(() => {
         // Load actions for the node.
         if (node) {
-          void graph.expand(node.id);
+          void Graph.expand(graph, node.id);
         }
       });
 
@@ -98,9 +98,9 @@ export const PlankHeading = memo(
       } else {
         return [
           actions,
-          graph
-            .getActions(node.id)
-            .filter((a) => ['list-item', 'list-item-primary', 'heading-list-item'].includes(a.properties.disposition)),
+          Graph.getActions(graph, node.id).filter((a) =>
+            ['list-item', 'list-item-primary', 'heading-list-item'].includes(a.properties.disposition),
+          ),
         ].filter((a) => a.length > 0);
       }
     }, [actions, node, variant, graph]);
@@ -119,14 +119,14 @@ export const PlankHeading = memo(
         } else if (eventType === 'close') {
           if (part === 'complementary') {
             return dispatch(
-              createIntent(LayoutAction.UpdateComplementary, {
+              createIntent(Common.LayoutAction.UpdateComplementary, {
                 part: 'complementary',
                 options: { state: 'collapsed' },
               }),
             );
           } else {
             return dispatch(
-              createIntent(LayoutAction.Close, { part: 'main', subject: [id], options: { state: false } }),
+              createIntent(Common.LayoutAction.Close, { part: 'main', subject: [id], options: { state: false } }),
             );
           }
         } else {

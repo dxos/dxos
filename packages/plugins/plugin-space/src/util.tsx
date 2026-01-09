@@ -7,22 +7,13 @@ import { Atom } from '@effect-atom/atom-react';
 import * as Function from 'effect/Function';
 import type * as Schema from 'effect/Schema';
 
-import { LayoutAction, type PromiseIntentDispatcher, chain, createIntent } from '@dxos/app-framework';
+import { Common, type PromiseIntentDispatcher, chain, createIntent } from '@dxos/app-framework';
 import { type Space, SpaceState, isSpace } from '@dxos/client/echo';
 import { type Database, type Entity, Filter, Obj, Query, type QueryResult, Ref, Type } from '@dxos/echo';
 import { EXPANDO_TYPENAME } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
 import { Migrations } from '@dxos/migrations';
-import {
-  ACTION_GROUP_TYPE,
-  ACTION_TYPE,
-  type ActionData,
-  type InvokeProps,
-  type Node,
-  type NodeArg,
-  type ReadableGraph,
-  isGraphNode,
-} from '@dxos/plugin-graph';
+import { Graph, Node } from '@dxos/plugin-graph';
 import { ATTENDABLE_PATH_SEPARATOR } from '@dxos/react-ui-attention/types';
 import { type TreeData } from '@dxos/react-ui-list';
 import { Collection } from '@dxos/schema';
@@ -81,7 +72,7 @@ const getCollectionGraphNodePartials = ({
       // Change on disk.
       collection.objects = nextOrder.filter(Obj.isObject).map(Ref.make);
     },
-    onTransferStart: (child: Node<Obj.Any>, index?: number) => {
+    onTransferStart: (child: Node.Node<Obj.Any>, index?: number) => {
       // TODO(wittjosiah): Support transfer between spaces.
       // const childSpace = getSpace(child.data);
       // if (space && childSpace && !childSpace.key.equals(space.key)) {
@@ -110,7 +101,7 @@ const getCollectionGraphNodePartials = ({
 
       // }
     },
-    onTransferEnd: (child: Node<Obj.Any>, destination: Node) => {
+    onTransferEnd: (child: Node.Node<Obj.Any>, destination: Node.Node) => {
       // Remove child from origin collection.
       const index = collection.objects.findIndex((object) => object.target === child.data);
       if (index > -1) {
@@ -126,7 +117,7 @@ const getCollectionGraphNodePartials = ({
       //   childSpace.db.remove(child.data);
       // }
     },
-    onCopy: async (child: Node<Obj.Any>, index?: number) => {
+    onCopy: async (child: Node.Node<Obj.Any>, index?: number) => {
       // Create clone of child and add to destination space.
       const newObject = await cloneObject(child.data, resolve, db);
       db.add(newObject);
@@ -281,12 +272,12 @@ export const constructSpaceActions = ({
   const state = space.state.get();
   const hasPendingMigration = checkPendingMigration(space);
   const getId = (id: string) => `${id}/${space.id}`;
-  const actions: NodeArg<ActionData>[] = [];
+  const actions: Node.NodeArg<Node.ActionData>[] = [];
 
   if (hasPendingMigration) {
     actions.push({
       id: getId(SpaceAction.Migrate._tag),
-      type: ACTION_GROUP_TYPE,
+      type: Node.ActionGroupType,
       data: async () => {
         await dispatch(createIntent(SpaceAction.Migrate, { space }));
       },
@@ -303,7 +294,7 @@ export const constructSpaceActions = ({
     actions.push(
       {
         id: getId(SpaceAction.OpenCreateObject._tag),
-        type: ACTION_TYPE,
+        type: Node.ActionType,
         data: async () => {
           await dispatch(createIntent(SpaceAction.OpenCreateObject, { target: space.db }));
         },
@@ -316,8 +307,8 @@ export const constructSpaceActions = ({
       },
       {
         id: getId(SpaceAction.Rename._tag),
-        type: ACTION_TYPE,
-        data: async (params?: InvokeProps) => {
+        type: Node.ActionType,
+        data: async (params?: Node.InvokeProps) => {
           await dispatch(createIntent(SpaceAction.Rename, { space, caller: params?.caller }));
         },
         properties: {
@@ -341,7 +332,7 @@ export const createStaticSchemaNode = ({
 }: {
   schema: Schema.Schema.AnyNoContext;
   space: Space;
-}): Node => {
+}): Node.Node => {
   return {
     id: `${space.id}/${Type.getTypename(schema)}`,
     type: `${meta.id}/static-schema`,
@@ -371,10 +362,10 @@ export const createStaticSchemaActions = ({
 }) => {
   const getId = (id: string) => `${space.id}/${Type.getTypename(schema)}/${id}`;
 
-  const actions: NodeArg<ActionData>[] = [
+  const actions: Node.NodeArg<Node.ActionData>[] = [
     {
       id: getId(SpaceAction.AddObject._tag),
-      type: ACTION_TYPE,
+      type: Node.ActionType,
       data: async () => {
         await dispatch(
           createIntent(SpaceAction.OpenCreateObject, {
@@ -393,8 +384,8 @@ export const createStaticSchemaActions = ({
     },
     {
       id: getId(SpaceAction.RenameObject._tag),
-      type: ACTION_TYPE,
-      data: async (params?: InvokeProps) => {
+      type: Node.ActionType,
+      data: async (params?: Node.InvokeProps) => {
         throw new Error('Not implemented');
       },
       properties: {
@@ -407,7 +398,7 @@ export const createStaticSchemaActions = ({
     },
     {
       id: getId(SpaceAction.RemoveObjects._tag),
-      type: ACTION_TYPE,
+      type: Node.ActionType,
       data: async () => {
         const index = space.properties.staticRecords.findIndex(
           (typename: string) => typename === Type.getTypename(schema),
@@ -426,7 +417,7 @@ export const createStaticSchemaActions = ({
     },
     {
       id: getId(SpaceAction.Snapshot._tag),
-      type: ACTION_TYPE,
+      type: Node.ActionType,
       data: async () => {
         const result = await dispatch(
           createIntent(SpaceAction.Snapshot, {
@@ -525,7 +516,7 @@ export const createObjectNode = ({
         return managedCollectionChild;
       },
       canDrop: (source: TreeData) => {
-        return droppable && isGraphNode(source.item) && Obj.isObject(source.item.data);
+        return droppable && Node.isGraphNode(source.item) && Obj.isObject(source.item.data);
       },
       ...partials,
     },
@@ -541,7 +532,7 @@ export const constructObjectActions = ({
   navigable = false,
 }: {
   object: Obj.Any;
-  graph: ReadableGraph;
+  graph: Graph.ReadableGraph;
   dispatch: PromiseIntentDispatcher;
   resolve: (typename: string) => Record<string, any>;
   deletable?: boolean;
@@ -559,12 +550,12 @@ export const constructObjectActions = ({
   const createObjectIntent = metadata.createObjectIntent;
   const inputSchema = metadata.inputSchema;
 
-  const actions: NodeArg<ActionData>[] = [
+  const actions: Node.NodeArg<Node.ActionData>[] = [
     ...(Obj.instanceOf(Collection.Collection, object)
       ? [
           {
             id: getId(SpaceAction.OpenCreateObject._tag),
-            type: ACTION_TYPE,
+            type: Node.ActionType,
             data: async () => {
               await dispatch(createIntent(SpaceAction.OpenCreateObject, { target: object }));
             },
@@ -581,7 +572,7 @@ export const constructObjectActions = ({
       ? [
           {
             id: getId(SpaceAction.AddObject._tag),
-            type: ACTION_TYPE,
+            type: Node.ActionType,
             data: async () => {
               await dispatch(
                 createIntent(SpaceAction.OpenCreateObject, {
@@ -600,7 +591,7 @@ export const constructObjectActions = ({
           },
           {
             id: getId(SpaceAction.Snapshot._tag),
-            type: ACTION_TYPE,
+            type: Node.ActionType,
             data: async () => {
               const result = await dispatch(
                 createIntent(SpaceAction.Snapshot, {
@@ -627,7 +618,7 @@ export const constructObjectActions = ({
       ? [
           {
             id: getId(SpaceAction.OpenCreateObject._tag),
-            type: ACTION_TYPE,
+            type: Node.ActionType,
             data: async () => {
               if (inputSchema) {
                 await dispatch(
@@ -641,7 +632,7 @@ export const constructObjectActions = ({
                   Function.pipe(
                     createObjectIntent({}, { db }),
                     chain(SpaceAction.AddObject, { target: db, hidden: true }),
-                    chain(LayoutAction.Open, { part: 'main' }),
+                    chain(Common.LayoutAction.Open, { part: 'main' }),
                   ),
                 );
               }
@@ -660,8 +651,8 @@ export const constructObjectActions = ({
       : [
           {
             id: getId(SpaceAction.RenameObject._tag),
-            type: ACTION_TYPE,
-            data: async (params?: InvokeProps) => {
+            type: Node.ActionType,
+            data: async (params?: Node.InvokeProps) => {
               await dispatch(createIntent(SpaceAction.RenameObject, { object, caller: params?.caller }));
             },
             properties: {
@@ -677,11 +668,12 @@ export const constructObjectActions = ({
           },
           {
             id: getId(SpaceAction.RemoveObjects._tag),
-            type: ACTION_TYPE,
+            type: Node.ActionType,
             data: async () => {
-              const collection = graph
-                .getConnections(Obj.getDXN(object).toString(), 'inbound')
-                .find(({ data }) => Obj.instanceOf(Collection.Collection, data))?.data;
+              const collection = Graph.getConnections(graph, Obj.getDXN(object).toString(), 'inbound').find(
+                (node: Node.Node): node is Node.Node<Collection.Collection> =>
+                  Obj.instanceOf(Collection.Collection, node.data),
+              )?.data;
               await dispatch(createIntent(SpaceAction.RemoveObjects, { objects: [object], target: collection }));
             },
             properties: {
@@ -702,7 +694,7 @@ export const constructObjectActions = ({
       ? [
           {
             id: getId('copy-link'),
-            type: ACTION_TYPE,
+            type: Node.ActionType,
             data: async () => {
               const url = `${window.location.origin}/${db.spaceId}/${Obj.getDXN(object).toString()}`;
               await navigator.clipboard.writeText(url);
@@ -718,11 +710,11 @@ export const constructObjectActions = ({
       : []),
     // TODO(wittjosiah): Factor out and apply to all nodes.
     {
-      id: getId(LayoutAction.Expose._tag),
-      type: ACTION_TYPE,
+      id: getId(Common.LayoutAction.Expose._tag),
+      type: Node.ActionType,
       data: async () => {
         await dispatch(
-          createIntent(LayoutAction.Expose, { part: 'navigation', subject: Obj.getDXN(object).toString() }),
+          createIntent(Common.LayoutAction.Expose, { part: 'navigation', subject: Obj.getDXN(object).toString() }),
         );
       },
       properties: {

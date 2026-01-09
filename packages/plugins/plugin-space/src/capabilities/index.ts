@@ -2,15 +2,13 @@
 // Copyright 2025 DXOS.org
 //
 
-import { lazy } from '@dxos/app-framework';
-
-export const AppGraphBuilder = lazy(() => import('./app-graph-builder'));
-export const AppGraphSerializer = lazy(() => import('./app-graph-serializer'));
-export const IdentityCreated = lazy(() => import('./identity-created'));
-export const IntentResolver = lazy(() => import('./intent-resolver'));
-export const ReactRoot = lazy(() => import('./react-root'));
-export const ReactSurface = lazy(() => import('./react-surface'));
-export const Repair = lazy(() => import('./repair'));
-export const SpaceSettings = lazy(() => import('./settings'));
-export const SpaceState = lazy(() => import('./state'));
-export const SpacesReady = lazy(() => import('./spaces-ready'));
+export * from './app-graph-builder';
+export * from './app-graph-serializer';
+export * from './identity-created';
+export * from './intent-resolver';
+export * from './react-root';
+export * from './react-surface';
+export * from './repair';
+export * from './settings';
+export * from './spaces-ready';
+export * from './state';

@@ -4,7 +4,7 @@
 
 import { type EditorView } from '@codemirror/view';
 
-import { type Action } from '@dxos/app-graph';
+import { type Node } from '@dxos/app-graph';
 import { type MenuActionProperties } from '@dxos/ui-types';
 
 import { createComment } from '../comments';
@@ -53,7 +53,7 @@ export type EditorActionPayload = {
   data?: any;
 };
 
-export type EditorAction = Action<MenuActionProperties & EditorActionPayload>;
+export type EditorAction = Node.Action<MenuActionProperties & EditorActionPayload>;
 
 export type EditorPayloadHandler = (view: EditorView, payload: EditorActionPayload) => void;
 

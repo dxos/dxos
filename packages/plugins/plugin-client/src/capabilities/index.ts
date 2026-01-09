@@ -2,12 +2,10 @@
 // Copyright 2025 DXOS.org
 //
 
-import { lazy } from '@dxos/app-framework';
-
-export const AppGraphBuilder = lazy(async () => import('./app-graph-builder'));
-export const Client = lazy(async () => import('./client'));
-export const IntentResolver = lazy(async () => import('./intent-resolver'));
-export const Migrations = lazy(async () => import('./migrations'));
-export const ReactContext = lazy(async () => import('./react-context'));
-export const ReactSurface = lazy(async () => import('./react-surface'));
-export const SchemaDefs = lazy(async () => import('./schema-defs'));
+export * from './app-graph-builder';
+export * from './client';
+export * from './intent-resolver';
+export * from './migrations';
+export * from './react-context';
+export * from './react-surface';
+export * from './schema-defs';

@@ -10,7 +10,7 @@ import { useWebComponentContext } from '@dxos/web-context-solid';
  * Hook to access the plugin manager.
  * @returns The plugin manager.
  */
-export const usePluginManager = (): PluginManager => {
+export const usePluginManager = (): PluginManager.PluginManager => {
   const manager = useWebComponentContext(PluginManagerContext);
   const value = manager();
   invariant(value, 'PluginManager not found');

@@ -4,9 +4,10 @@
 
 import React, { useCallback } from 'react';
 
-import { LayoutAction, createIntent } from '@dxos/app-framework';
+import { Common, createIntent } from '@dxos/app-framework';
 import { useAppGraph, useIntentDispatcher } from '@dxos/app-framework/react';
 import { Trigger } from '@dxos/async';
+import { Graph } from '@dxos/plugin-graph';
 import { ObservabilityAction } from '@dxos/plugin-observability/types';
 import { useClient } from '@dxos/react-client';
 import { type Space } from '@dxos/react-client/echo';
@@ -37,7 +38,7 @@ export const JoinDialog = ({ navigableCollections, onDone, ...props }: JoinDialo
 
       await Promise.all([
         dispatch(
-          createIntent(LayoutAction.AddToast, {
+          createIntent(Common.LayoutAction.AddToast, {
             part: 'toast',
             subject: {
               id: `${meta.id}/join-success`,
@@ -48,7 +49,7 @@ export const JoinDialog = ({ navigableCollections, onDone, ...props }: JoinDialo
           }),
         ),
         dispatch(
-          createIntent(LayoutAction.UpdateDialog, {
+          createIntent(Common.LayoutAction.UpdateDialog, {
             part: 'dialog',
             options: {
               state: false,
@@ -71,7 +72,7 @@ export const JoinDialog = ({ navigableCollections, onDone, ...props }: JoinDialo
       }
 
       await dispatch(
-        createIntent(LayoutAction.SwitchWorkspace, {
+        createIntent(Common.LayoutAction.SwitchWorkspace, {
           part: 'workspace',
           subject: space.id,
         }),
@@ -84,16 +85,16 @@ export const JoinDialog = ({ navigableCollections, onDone, ...props }: JoinDialo
       if (target) {
         // Wait before navigating to the target node.
         // If the target has not yet replicated, this will trigger a loading toast.
-        await graph.waitForPath({ target }).catch(() => {});
+        await Graph.waitForPath(graph, { target }).catch(() => {});
         await Promise.all([
           dispatch(
-            createIntent(LayoutAction.Open, {
+            createIntent(Common.LayoutAction.Open, {
               part: 'main',
               subject: [target],
             }),
           ),
           dispatch(
-            createIntent(LayoutAction.Expose, {
+            createIntent(Common.LayoutAction.Expose, {
               part: 'navigation',
               subject: target,
             }),

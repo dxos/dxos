@@ -4,10 +4,10 @@
 
 import React, { forwardRef, useMemo, useState } from 'react';
 
-import { LayoutAction, createIntent } from '@dxos/app-framework';
+import { Common, createIntent } from '@dxos/app-framework';
 import { useAppGraph, useIntentDispatcher } from '@dxos/app-framework/react';
-import { type ActionLike, isAction, isActionGroup } from '@dxos/app-graph';
 import { Keyboard, keySymbols } from '@dxos/keyboard';
+import { Graph, Node } from '@dxos/plugin-graph';
 import { useActions } from '@dxos/plugin-graph';
 import { Button, Dialog, Icon, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import {
@@ -40,11 +40,11 @@ export const CommandsDialogContent = forwardRef<HTMLDivElement, CommandsDialogCo
       // TODO(burdon): Get from navtree (not keyboard).
       const current = Keyboard.singleton.getCurrentContext();
       const actionMap = new Set<string>();
-      const actions: ActionLike[] = [];
-      graph.traverse({
+      const actions: Node.ActionLike[] = [];
+      Graph.traverse(graph, {
         visitor: (node, path) => {
           if (
-            (isAction(node) || isActionGroup(node)) &&
+            (Node.isAction(node) || Node.isActionGroup(node)) &&
             !actionMap.has(node.id) &&
             current.startsWith(path.slice(0, -1).join('/'))
           ) {
@@ -65,7 +65,7 @@ export const CommandsDialogContent = forwardRef<HTMLDivElement, CommandsDialogCo
 
     const group = allActions.find(({ id }) => id === selected);
     const groupActions = useActions(graph, group?.id);
-    const actions = isActionGroup(group) ? groupActions : allActions;
+    const actions = Node.isActionGroup(group) ? groupActions : allActions;
 
     return (
       <Dialog.Content classNames={cardDialogContent} ref={forwardedRef}>
@@ -89,20 +89,20 @@ export const CommandsDialogContent = forwardRef<HTMLDivElement, CommandsDialogCo
                       return;
                     }
 
-                    if (isActionGroup(action)) {
+                    if (Node.isActionGroup(action)) {
                       setSelected(action.id);
                       return;
                     }
 
                     void dispatch(
-                      createIntent(LayoutAction.UpdateDialog, {
+                      createIntent(Common.LayoutAction.UpdateDialog, {
                         part: 'dialog',
                         options: { state: false },
                       }),
                     );
                     setTimeout(() => {
-                      const node = graph.getConnections(group?.id ?? action.id, 'inbound')[0];
-                      void (node && isAction(action) && action.data({ parent: node, caller: KEY_BINDING }));
+                      const node = Graph.getConnections(graph, group?.id ?? action.id, 'inbound')[0];
+                      void (node && Node.isAction(action) && action.data({ parent: node, caller: KEY_BINDING }));
                     });
                   }}
                   classNames='flex items-center gap-2'

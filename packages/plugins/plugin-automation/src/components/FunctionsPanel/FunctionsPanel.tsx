@@ -5,7 +5,7 @@
 import * as Schema from 'effect/Schema';
 import React, { useCallback, useMemo } from 'react';
 
-import { LayoutAction, createIntent } from '@dxos/app-framework';
+import { Common, createIntent } from '@dxos/app-framework';
 import { useIntentDispatcher } from '@dxos/app-framework/react';
 import { Obj } from '@dxos/echo';
 import { Function, Script } from '@dxos/functions';
@@ -61,7 +61,7 @@ export const FunctionsPanel = ({ space }: FunctionsPanelProps) => {
       const script = functionToScriptMap[func.id];
       if (script) {
         void dispatch(
-          createIntent(LayoutAction.Open, {
+          createIntent(Common.LayoutAction.Open, {
             part: 'main',
             subject: [Obj.getDXN(script).toString()],
           }),

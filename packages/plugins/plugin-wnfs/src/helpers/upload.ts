@@ -10,7 +10,7 @@ import { sha256 } from 'multiformats/hashes/sha2';
 import type { Space } from '@dxos/client/echo';
 import { log } from '@dxos/log';
 
-import { type WnfsCapabilities } from '../capabilities';
+import { type WnfsCapabilities } from '../types';
 
 import { Rng, filePath, store } from './common';
 import { loadWnfs } from './load';

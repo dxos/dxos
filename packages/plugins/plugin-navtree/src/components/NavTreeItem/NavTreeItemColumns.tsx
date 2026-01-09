@@ -4,7 +4,7 @@
 
 import React, { Fragment, memo } from 'react';
 
-import { isAction } from '@dxos/app-graph';
+import { Node } from '@dxos/app-graph';
 import { Popover, Treegrid, toLocalizedString, useTranslation } from '@dxos/react-ui';
 
 import { useLoadDescendents } from '../../hooks';
@@ -26,11 +26,11 @@ export const NavTreeItemColumns = memo(({ path, item, open }: NavTreeItemColumns
   );
 
   const actions = (primaryAction?.properties?.disposition === 'list-item-primary' ? secondaryActions : _actions)
-    .flatMap((action) => (isAction(action) ? [action] : []))
+    .flatMap((action) => (Node.isAction(action) ? [action] : []))
     .filter((a) => ['list-item', 'list-item-primary'].includes(a.properties?.disposition));
 
   useLoadDescendents(item);
-  useLoadDescendents(primaryAction && !isAction(primaryAction) ? primaryAction : undefined);
+  useLoadDescendents(primaryAction && !Node.isAction(primaryAction) ? (primaryAction as Node.Node) : undefined);
 
   const ActionRoot = popoverAnchorId === `dxos.org/ui/${NAV_TREE_ITEM}/${item.id}` ? Popover.Anchor : Fragment;
 
@@ -43,8 +43,8 @@ export const NavTreeItemColumns = memo(({ path, item, open }: NavTreeItemColumns
             label={toLocalizedString(primaryAction.properties?.label, t)}
             icon={primaryAction.properties?.icon ?? 'ph--placeholder--regular'}
             parent={item}
-            monolithic={isAction(primaryAction)}
-            menuActions={isAction(primaryAction) ? [primaryAction] : groupedActions[primaryAction.id]}
+            monolithic={Node.isAction(primaryAction)}
+            menuActions={Node.isAction(primaryAction) ? [primaryAction] : groupedActions[primaryAction?.id ?? '']}
             menuType={primaryAction.properties?.menuType}
             caller={NAV_TREE_ITEM}
           />

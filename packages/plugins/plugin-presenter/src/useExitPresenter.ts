@@ -4,7 +4,7 @@
 
 import { useCallback } from 'react';
 
-import { LayoutAction, createIntent } from '@dxos/app-framework';
+import { Common, createIntent } from '@dxos/app-framework';
 import { useCapability, useIntentDispatcher } from '@dxos/app-framework/react';
 import { Obj } from '@dxos/echo';
 import { type Live } from '@dxos/live-object';
@@ -26,7 +26,7 @@ export const useExitPresenter = (object: Live<any>) => {
       );
     }
     return dispatch(
-      createIntent(LayoutAction.Open, {
+      createIntent(Common.LayoutAction.Open, {
         part: 'main',
         subject: [objectId],
         options: { workspace: Obj.getDatabase(object)?.spaceId },

@@ -5,23 +5,19 @@
 import * as Tool from '@effect/ai/Tool';
 import * as Toolkit from '@effect/ai/Toolkit';
 import * as Console from 'effect/Console';
+import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
 import { SERVICES_CONFIG } from '@dxos/ai/testing';
 import {
-  Capabilities,
-  Events,
+  ActivationEvent,
+  Capability,
+  Common,
   IntentPlugin,
-  LayoutAction,
-  type Plugin,
-  type PluginContext,
+  Plugin,
   SettingsPlugin,
-  allOf,
-  contributes,
   createIntent,
   createResolver,
-  defineModule,
-  definePlugin,
 } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { AiContextBinder, ArtifactId, GenericToolkit } from '@dxos/assistant';
@@ -89,14 +85,14 @@ const Toolkit$ = Toolkit.make(
 namespace TestingToolkit {
   export const Toolkit = Toolkit$;
 
-  export const createLayer = (_context: PluginContext) =>
+  export const createLayer = (_context: Capability.PluginContext) =>
     Toolkit$.toLayer({
       'open-item': ({ id }) => Console.log('Called open-item', { id }),
     });
 }
 
 type DecoratorsProps = {
-  plugins?: Plugin[];
+  plugins?: Plugin.Plugin[];
   accessTokens?: AccessToken.AccessToken[];
   onInit?: (props: { client: Client; space: Space }) => Promise<void>;
 } & (Omit<ClientPluginOptions, 'onClientInitialized' | 'onSpacesReady'> & Pick<StoryPluginOptions, 'onChatCreated'>);
@@ -199,57 +195,59 @@ type StoryPluginOptions = {
   onChatCreated?: (props: { space: Space; chat: Assistant.Chat; binder: AiContextBinder }) => Promise<void>;
 };
 
-const StoryPlugin = definePlugin<StoryPluginOptions>(
-  {
-    id: 'example.com/plugin/testing',
-    name: 'Testing',
-  },
-  ({ onChatCreated }) => [
-    defineModule({
-      id: 'example.com/plugin/testing/module/testing',
-      activatesOn: Events.SetupArtifactDefinition,
-      activate: () => [
-        contributes(Capabilities.BlueprintDefinition, DesignBlueprint),
-        contributes(Capabilities.BlueprintDefinition, PlanningBlueprint),
-        contributes(Capabilities.Functions, [Agent.prompt]),
-        contributes(Capabilities.Functions, [Document.read, Document.update]),
-        contributes(Capabilities.Functions, [Tasks.read, Tasks.update]),
-        contributes(Capabilities.Functions, [Research.create, Research.research]),
-        contributes(Capabilities.Functions, [Example.reply]),
-      ],
-    }),
-    defineModule({
-      id: 'example.com/plugin/testing/module/toolkit',
-      activatesOn: Events.Startup,
-      activate: (context) => [
-        contributes(
-          Capabilities.Toolkit,
+const StoryPlugin = Plugin.define<StoryPluginOptions>({
+  id: 'example.com/plugin/testing',
+  name: 'Testing',
+}).pipe(
+  Plugin.addModule({
+    id: 'example.com/plugin/testing/module/testing',
+    activatesOn: Common.ActivationEvent.SetupArtifactDefinition,
+    activate: () =>
+      Effect.succeed([
+        Capability.contributes(Common.Capability.BlueprintDefinition, DesignBlueprint),
+        Capability.contributes(Common.Capability.BlueprintDefinition, PlanningBlueprint),
+        Capability.contributes(Common.Capability.Functions, [Agent.prompt]),
+        Capability.contributes(Common.Capability.Functions, [Document.read, Document.update]),
+        Capability.contributes(Common.Capability.Functions, [Tasks.read, Tasks.update]),
+        Capability.contributes(Common.Capability.Functions, [Research.create, Research.research]),
+        Capability.contributes(Common.Capability.Functions, [Example.reply]),
+      ]),
+  }),
+  Plugin.addModule({
+    id: 'example.com/plugin/testing/module/toolkit',
+    activatesOn: Common.ActivationEvent.Startup,
+    activate: (context) =>
+      Effect.succeed([
+        Capability.contributes(
+          Common.Capability.Toolkit,
           GenericToolkit.make(TestingToolkit.Toolkit, TestingToolkit.createLayer(context)),
         ),
-      ],
-    }),
-    defineModule({
-      id: 'example.com/plugin/testing/module/setup',
-      activatesOn: allOf(Events.DispatcherReady, ClientEvents.SpacesReady),
-      activate: async (context) => {
+      ]),
+  }),
+  Plugin.addModule({
+    id: 'example.com/plugin/testing/module/setup',
+    activatesOn: ActivationEvent.allOf(Common.ActivationEvent.DispatcherReady, ClientEvents.SpacesReady),
+    activate: (context) =>
+      Effect.gen(function* () {
         const client = context.getCapability(ClientCapabilities.Client);
         const space = client.spaces.default;
-        const { dispatchPromise: dispatch } = context.getCapability(Capabilities.IntentDispatcher);
+        const { dispatchPromise: dispatch } = context.getCapability(Common.Capability.IntentDispatcher);
 
         // Ensure workspace is set.
-        await dispatch(createIntent(LayoutAction.SwitchWorkspace, { part: 'workspace', subject: space.id }));
+        yield* Effect.tryPromise(() =>
+          dispatch(createIntent(Common.LayoutAction.SwitchWorkspace, { part: 'workspace', subject: space.id })),
+        );
 
         // Create initial chat.
-        await dispatch(createIntent(AssistantAction.CreateChat, { db: space.db }));
-
-        return [];
-      },
-    }),
-    defineModule({
-      id: 'example.com/plugin/testing/module/intent-resolver',
-      activatesOn: Events.SetupIntentResolver,
-      activate: (context) => [
-        contributes(Capabilities.IntentResolver, [
+        yield* Effect.tryPromise(() => dispatch(createIntent(AssistantAction.CreateChat, { db: space.db })));
+      }),
+  }),
+  Plugin.addModule(({ onChatCreated }) => ({
+    id: 'example.com/plugin/testing/module/intent-resolver',
+    activatesOn: Common.ActivationEvent.SetupIntentResolver,
+    activate: (context) =>
+      Effect.succeed(
+        Capability.contributes(Common.Capability.IntentResolver, [
           createResolver({
             intent: DeckAction.ChangeCompanion,
             resolve: () => ({}),
@@ -285,7 +283,7 @@ const StoryPlugin = definePlugin<StoryPluginOptions>(
             },
           }),
         ]),
-      ],
-    }),
-  ],
+      ),
+  })),
+  Plugin.make,
 );

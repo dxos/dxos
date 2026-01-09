@@ -7,7 +7,7 @@ import { type Context, type Provider, createContext, useContext, useEffect } fro
 import { raise } from '@dxos/debug';
 import { pick } from '@dxos/util';
 
-import { Capabilities } from '../common';
+import * as Common from '../common';
 import { type AnyIntentResolver, type IntentContext } from '../plugin-intent';
 
 import { usePluginManager } from './PluginManagerProvider';
@@ -24,11 +24,11 @@ export const useIntentResolver = (module: string, resolver: AnyIntentResolver) =
   useEffect(() => {
     manager.context.contributeCapability({
       module,
-      interface: Capabilities.IntentResolver,
+      interface: Common.Capability.IntentResolver,
       implementation: resolver,
     });
 
-    return () => manager.context.removeCapability(Capabilities.IntentResolver, resolver);
+    return () => manager.context.removeCapability(Common.Capability.IntentResolver, resolver);
   }, [module, resolver]);
 };
 

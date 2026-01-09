@@ -6,7 +6,7 @@ import { EditorView } from '@codemirror/view';
 import * as Schema from 'effect/Schema';
 import { useMemo } from 'react';
 
-import { LayoutAction, createResolver } from '@dxos/app-framework';
+import { Common, createResolver } from '@dxos/app-framework';
 import { useIntentResolver } from '@dxos/app-framework/react';
 import { invariant } from '@dxos/invariant';
 import { Cursor, setSelection } from '@dxos/ui-editor';
@@ -20,7 +20,7 @@ export const useSelectCurrentThread = (editorView: EditorView | null, documentId
   const scrollIntoViewResolver = useMemo(
     () =>
       createResolver({
-        intent: LayoutAction.UpdateLayout,
+        intent: Common.LayoutAction.UpdateLayout,
         position: 'hoist',
         filter: (
           data,
@@ -29,7 +29,7 @@ export const useSelectCurrentThread = (editorView: EditorView | null, documentId
           subject: string;
           options: { cursor: string };
         } => {
-          if (!Schema.is(LayoutAction.ScrollIntoView.fields.input)(data)) {
+          if (!Schema.is(Common.LayoutAction.ScrollIntoView.fields.input)(data)) {
             return false;
           }
 

@@ -13,8 +13,8 @@ import { live } from '@dxos/live-object';
 import { log } from '@dxos/log';
 import { type GuardedType, type MaybePromise, type Position, byPosition } from '@dxos/util';
 
-import { Capabilities, Events } from '../common';
-import { type PluginContext, contributes, defineCapabilityModule } from '../core';
+import * as Common from '../common';
+import { Capability } from '../core';
 
 import { IntentAction } from './actions';
 import { CycleDetectedError, NoResolversError } from './errors';
@@ -312,7 +312,7 @@ export const createDispatcher = (
 const defaultEffect = () => Effect.fail(new Error('Intent runtime not ready'));
 const defaultPromise = () => runAndForwardErrors(defaultEffect());
 
-export default defineCapabilityModule((context: PluginContext) => {
+export default Capability.makeModule((context) => {
   const state = live<IntentContext>({
     dispatch: defaultEffect,
     dispatchPromise: defaultPromise,
@@ -321,23 +321,29 @@ export default defineCapabilityModule((context: PluginContext) => {
   });
 
   // TODO(wittjosiah): Make getResolver callback async and allow resolvers to be requested on demand.
-  const { dispatch, dispatchPromise, undo, undoPromise } = createDispatcher(() =>
-    context.getCapabilities(Capabilities.IntentResolver).flat(),
-  );
+  const { dispatch, undo } = createDispatcher(() => context.getCapabilities(Common.Capability.IntentResolver).flat());
 
-  const manager = context.getCapability(Capabilities.PluginManager);
+  const manager = context.getCapability(Common.Capability.PluginManager);
   state.dispatch = (intentChain, depth) => {
     return Effect.gen(function* () {
-      yield* manager._activate(Events.SetupIntentResolver);
+      yield* manager.activate(Common.ActivationEvent.SetupIntentResolver);
       return yield* dispatch(intentChain, depth);
     });
   };
-  state.dispatchPromise = async (intentChain) => {
-    await manager.activate(Events.SetupIntentResolver);
-    return await dispatchPromise(intentChain);
+  state.dispatchPromise = (intentChain) => {
+    return runAndForwardErrors(state.dispatch(intentChain))
+      .then((data: any) => ({ data }))
+      .catch((error: any) => {
+        log.catch(error);
+        return { error };
+      });
   };
   state.undo = undo;
-  state.undoPromise = undoPromise;
+  state.undoPromise = () => {
+    return runAndForwardErrors(state.undo())
+      .then((data: any) => ({ data }))
+      .catch((error: any) => ({ error }));
+  };
 
-  return contributes(Capabilities.IntentDispatcher, state);
+  return Effect.succeed(Capability.contributes(Common.Capability.IntentDispatcher, state));
 });

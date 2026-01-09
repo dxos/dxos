@@ -20,9 +20,10 @@ import { Path, Tree } from '@dxos/react-ui-list';
 import { getSize, mx } from '@dxos/ui-theme';
 import { byPosition, isNonNullable, safeParseInt } from '@dxos/util';
 
-import { type ExpandableGraph, ROOT_ID } from '../graph';
-import { GraphBuilder, atomFromObservable, atomFromSignal, createExtension } from '../graph-builder';
-import { type Node } from '../node';
+import * as CreateAtom from '../atoms';
+import * as Graph from '../graph';
+import * as GraphBuilder from '../graph-builder';
+import * as Node from '../node';
 import { atomFromQuery } from '../testing';
 
 import { JsonTree } from './Tree';
@@ -47,23 +48,23 @@ const actionWeights = {
   [Action.RENAME_OBJECT]: 4,
 };
 
-const createGraph = (client: Client, registry: Registry.Registry): ExpandableGraph => {
-  const spaceBuilderExtension = createExtension({
+const createGraph = (client: Client, registry: Registry.Registry): Graph.ExpandableGraph => {
+  const spaceBuilderExtension = GraphBuilder.createExtensionRaw({
     id: 'space',
     connector: (node) =>
       Atom.make((get) =>
         Function.pipe(
           get(node),
-          Option.flatMap((node) => (node.id === ROOT_ID ? Option.some(node) : Option.none())),
+          Option.flatMap((node) => (node.id === Node.RootId ? Option.some(node) : Option.none())),
           Option.map(() => {
-            const spaces = get(atomFromObservable(client.spaces)) ?? [];
+            const spaces = get(CreateAtom.fromObservable(client.spaces)) ?? [];
             return spaces
-              .filter((space) => get(atomFromObservable(space.state)) === SpaceState.SPACE_READY)
+              .filter((space: any) => get(CreateAtom.fromObservable(space.state)) === SpaceState.SPACE_READY)
               .map((space) => ({
                 id: space.id,
                 type: 'dxos.org/type/Space',
                 properties: {
-                  label: get(atomFromSignal(() => space.properties.name)),
+                  label: get(CreateAtom.fromSignal(() => space.properties.name)),
                 },
                 data: space,
               }));
@@ -73,7 +74,7 @@ const createGraph = (client: Client, registry: Registry.Registry): ExpandableGra
       ),
   });
 
-  const objectBuilderExtension = createExtension({
+  const objectBuilderExtension = GraphBuilder.createExtensionRaw({
     id: 'object',
     connector: (node) => {
       // TODO(wittjosiah): Find a simpler way to define this type.
@@ -101,13 +102,14 @@ const createGraph = (client: Client, registry: Registry.Registry): ExpandableGra
     },
   });
 
-  const graph = new GraphBuilder({ registry })
-    .addExtension(spaceBuilderExtension)
-    .addExtension(objectBuilderExtension).graph;
+  const builder = GraphBuilder.make({ registry });
+  GraphBuilder.addExtension(builder, spaceBuilderExtension);
+  GraphBuilder.addExtension(builder, objectBuilderExtension);
+  const graph = builder.graph;
   graph.onNodeChanged.on(({ id }) => {
-    graph.expand(id);
+    Graph.expand(graph, id);
   });
-  graph.expand(ROOT_ID);
+  Graph.expand(graph, Node.RootId);
   (window as any).graph = graph;
   return graph;
 };
@@ -287,23 +289,22 @@ export const TreeView: Story = {
     const state = useMemo(() => new Map<string, Live<{ open: boolean; current: boolean }>>(), []);
 
     const useItems = useCallback(
-      (node?: Node, options?: { disposition?: string; sort?: boolean }) => {
-        const connections = useAtomValue(graph.connections(node?.id ?? ROOT_ID));
+      (node?: Node.Node, options?: { disposition?: string; sort?: boolean }) => {
+        const connections = useAtomValue(graph.connections(node?.id ?? Node.RootId));
         return options?.sort ? connections.toSorted((a, b) => byPosition(a.properties, b.properties)) : connections;
       },
       [graph],
     );
 
     const getProps = useCallback(
-      (node: Node, path: string[]) => {
-        const children = graph
-          .getConnections(node.id, 'outbound')
+      (node: Node.Node, path: string[]) => {
+        const children = Graph.getConnections(graph, node.id, 'outbound')
           .map((n) => {
             // Break cycles.
             const nextPath = [...path, node.id];
-            return nextPath.includes(n.id) ? undefined : (n as Node);
+            return nextPath.includes(n.id) ? undefined : (n as Node.Node);
           })
-          .filter(isNonNullable) as Node[];
+          .filter(isNonNullable) as Node.Node[];
         const parentOf =
           children.length > 0 ? children.map(({ id }) => id) : node.properties.role === 'branch' ? [] : undefined;
         return {
@@ -364,7 +365,7 @@ export const TreeView: Story = {
       <>
         <Controls />
         <Tree
-          id={ROOT_ID}
+          id={Node.RootId}
           useItems={useItems}
           getProps={getProps}
           isOpen={isOpen}

@@ -5,10 +5,11 @@
 import * as Option from 'effect/Option';
 import React, { useCallback, useState } from 'react';
 
-import { Capabilities, LayoutAction, createIntent } from '@dxos/app-framework';
+import { Common, createIntent } from '@dxos/app-framework';
 import { useAppGraph, useCapabilities, useIntentDispatcher } from '@dxos/app-framework/react';
 import { isLiveObject } from '@dxos/client/echo';
 import { Obj } from '@dxos/echo';
+import { Graph } from '@dxos/plugin-graph';
 import { SpaceAction } from '@dxos/plugin-space/types';
 import { Toolbar, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { AttentionProvider } from '@dxos/react-ui-attention';
@@ -37,7 +38,7 @@ const StackContainer = ({ id, collection }: StackContainerProps) => {
   const { dispatchPromise: dispatch } = useIntentDispatcher();
   const { graph } = useAppGraph();
   const { t } = useTranslation(meta.id);
-  const allMetadata = useCapabilities(Capabilities.Metadata);
+  const allMetadata = useCapabilities(Common.Capability.Metadata);
   const [collapsedSections, setCollapsedSections] = useState<CollapsedSections>({});
 
   // TODO(wittjosiah): Re-implement stack views with relations.
@@ -64,7 +65,10 @@ const StackContainer = ({ id, collection }: StackContainerProps) => {
           title:
             (object as any)?.title ??
             // TODO(wittjosiah): `getNode` is not reactive.
-            toLocalizedString(graph.getNode(Obj.getDXN(object).toString()).pipe(Option.getOrNull)?.properties.label, t),
+            toLocalizedString(
+              Graph.getNode(graph, Obj.getDXN(object).toString()).pipe(Option.getOrNull)?.properties.label,
+              t,
+            ),
         } as StackSectionView;
         return { id: Obj.getDXN(object).toString(), object, metadata, view } satisfies StackSectionItem;
       }) ?? [];
@@ -95,7 +99,7 @@ const StackContainer = ({ id, collection }: StackContainerProps) => {
     async (id: string, position: AddSectionPosition) => {
       await dispatch?.(
         // TODO(wittjosiah): Use object creation dialog.
-        createIntent(LayoutAction.UpdateDialog, {
+        createIntent(Common.LayoutAction.UpdateDialog, {
           part: 'dialog',
           subject: `${meta.id}/AddSectionDialog`,
           options: {
@@ -114,7 +118,7 @@ const StackContainer = ({ id, collection }: StackContainerProps) => {
 
   const handleNavigate = useCallback(
     async (id: string) => {
-      await dispatch(createIntent(LayoutAction.Open, { part: 'main', subject: [id] }));
+      await dispatch(createIntent(Common.LayoutAction.Open, { part: 'main', subject: [id] }));
     },
     [dispatch],
   );

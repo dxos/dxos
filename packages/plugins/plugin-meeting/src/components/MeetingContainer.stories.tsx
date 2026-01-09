@@ -5,10 +5,10 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
-import { contributes } from '@dxos/app-framework';
+import { Capability, Common } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Obj, Ref } from '@dxos/echo';
-import { ClientCapabilities, ClientPlugin } from '@dxos/plugin-client';
+import { ClientPlugin } from '@dxos/plugin-client';
 import { MarkdownPlugin } from '@dxos/plugin-markdown';
 import { corePlugins } from '@dxos/plugin-testing';
 import { Channel } from '@dxos/plugin-thread/types';
@@ -63,7 +63,9 @@ const meta = {
         }),
         MarkdownPlugin(),
       ],
-      capabilities: [contributes(ClientCapabilities.Schema, [Channel.Channel, Thread.Thread, Message.Message])],
+      capabilities: [
+        Capability.contributes(Common.Capability.Schema, [Channel.Channel, Thread.Thread, Message.Message]),
+      ],
     }),
   ],
 } satisfies Meta<typeof MeetingContainer>;

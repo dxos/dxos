@@ -2,17 +2,9 @@
 // Copyright 2023 DXOS.org
 //
 
-import {
-  Capabilities,
-  Events,
-  allOf,
-  contributes,
-  createIntent,
-  defineModule,
-  definePlugin,
-} from '@dxos/app-framework';
+import { ActivationEvent, Common, Plugin, createIntent } from '@dxos/app-framework';
 import { AutomationEvents } from '@dxos/plugin-automation';
-import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
+import { ClientEvents } from '@dxos/plugin-client';
 import { MarkdownEvents } from '@dxos/plugin-markdown';
 import { type CreateObjectIntent } from '@dxos/plugin-space/types';
 
@@ -22,58 +14,37 @@ import { serializer } from './serializer';
 import { translations } from './translations';
 import { Sheet, SheetAction } from './types';
 
-export const SheetPlugin = definePlugin(meta, () => [
-  defineModule({
-    id: `${meta.id}/module/compute-graph-registry`,
-    activatesOn: allOf(ClientEvents.ClientReady, AutomationEvents.ComputeRuntimeReady),
+export const SheetPlugin = Plugin.define(meta).pipe(
+  Plugin.addModule({
+    activatesOn: ActivationEvent.allOf(ClientEvents.ClientReady, AutomationEvents.ComputeRuntimeReady),
     activate: ComputeGraphRegistry,
   }),
-  defineModule({
-    id: `${meta.id}/module/translations`,
-    activatesOn: Events.SetupTranslations,
-    activate: () => contributes(Capabilities.Translations, translations),
+  Common.Plugin.addTranslationsModule({ translations }),
+  Common.Plugin.addMetadataModule({
+    metadata: {
+      id: Sheet.Sheet.typename,
+      metadata: {
+        label: (object: Sheet.Sheet) => object.name,
+        icon: 'ph--grid-nine--regular',
+        iconHue: 'indigo',
+        serializer,
+        comments: 'anchored',
+        createObjectIntent: ((props) => createIntent(SheetAction.Create, { ...props })) satisfies CreateObjectIntent,
+        addToCollectionOnCreate: true,
+      },
+    },
   }),
-  defineModule({
-    id: `${meta.id}/module/metadata`,
-    activatesOn: Events.SetupMetadata,
-    activate: () =>
-      contributes(Capabilities.Metadata, {
-        id: Sheet.Sheet.typename,
-        metadata: {
-          label: (object: Sheet.Sheet) => object.name,
-          icon: 'ph--grid-nine--regular',
-          iconHue: 'indigo',
-          serializer,
-          comments: 'anchored',
-          createObjectIntent: ((props) => createIntent(SheetAction.Create, { ...props })) satisfies CreateObjectIntent,
-          addToCollectionOnCreate: true,
-        },
-      }),
-  }),
-  defineModule({
-    id: `${meta.id}/module/schema`,
-    activatesOn: ClientEvents.SetupSchema,
-    activate: () => contributes(ClientCapabilities.Schema, [Sheet.Sheet]),
-  }),
-  defineModule({
-    id: `${meta.id}/module/markdown`,
+  Common.Plugin.addSchemaModule({ schema: [Sheet.Sheet] }),
+  Plugin.addModule({
     activatesOn: MarkdownEvents.SetupExtensions,
     activate: Markdown,
   }),
-  defineModule({
-    id: `${meta.id}/module/anchor-sort`,
+  Plugin.addModule({
     // TODO(wittjosiah): More relevant event?
-    activatesOn: Events.AppGraphReady,
+    activatesOn: Common.ActivationEvent.AppGraphReady,
     activate: AnchorSort,
   }),
-  defineModule({
-    id: `${meta.id}/module/react-surface`,
-    activatesOn: Events.SetupReactSurface,
-    activate: ReactSurface,
-  }),
-  defineModule({
-    id: `${meta.id}/module/intent-resolver`,
-    activatesOn: Events.SetupIntentResolver,
-    activate: IntentResolver,
-  }),
-]);
+  Common.Plugin.addSurfaceModule({ activate: ReactSurface }),
+  Common.Plugin.addIntentResolverModule({ activate: IntentResolver }),
+  Plugin.make,
+);

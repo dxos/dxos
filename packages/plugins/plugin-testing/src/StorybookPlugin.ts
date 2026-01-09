@@ -2,35 +2,38 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Capabilities, Events, contributes, defineModule, definePlugin } from '@dxos/app-framework';
+import * as Effect from 'effect/Effect';
 
-import { IntentResolver, type LayoutState, State } from './capabilities';
+import { Capability, Common, Plugin } from '@dxos/app-framework';
+
+import { IntentResolver, State } from './capabilities';
 import { Layout } from './components';
 import { meta } from './meta';
+import { type LayoutState } from './types';
 
 export type StorybookPluginOptions = {
   initialState?: Partial<LayoutState>;
 };
 
-export const StorybookPlugin = definePlugin<StorybookPluginOptions | void>(meta, ({ initialState } = {}) => [
-  defineModule({
-    id: `${meta.id}/module/state`,
-    activatesOn: Events.Startup,
-    activatesAfter: [Events.LayoutReady],
+export const StorybookPlugin = Plugin.define<StorybookPluginOptions>(meta).pipe(
+  Plugin.addModule(({ initialState }) => ({
+    id: Capability.getModuleTag(State),
+    activatesOn: Common.ActivationEvent.Startup,
+    activatesAfter: [Common.ActivationEvent.LayoutReady],
     activate: () => State({ initialState }),
-  }),
-  defineModule({
-    id: `${meta.id}/module/react-context`,
-    activatesOn: Events.Startup,
+  })),
+  Common.Plugin.addReactContextModule({
     activate: () =>
-      contributes(Capabilities.ReactContext, {
-        id: 'storybook-layout',
-        context: Layout,
-      }),
+      Effect.succeed(
+        Capability.contributes(Common.Capability.ReactContext, {
+          id: 'storybook-layout',
+          context: Layout,
+        }),
+      ),
   }),
-  defineModule({
-    id: `${meta.id}/module/intent-resolver`,
-    activatesOn: Events.SetupIntentResolver,
+  Plugin.addModule({
+    activatesOn: Common.ActivationEvent.SetupIntentResolver,
     activate: IntentResolver,
   }),
-]);
+  Plugin.make,
+);
