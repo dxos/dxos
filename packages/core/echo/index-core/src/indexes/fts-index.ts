@@ -17,12 +17,18 @@ export class FtsIndex implements Index {
   migrate = Effect.fn('FtsIndex.migrate')(function* () {
     const sql = yield* SqlClient.SqlClient;
 
-    yield* sql`CREATE TABLE IF NOT EXISTS ftsIndex (
-      recordId INTEGER PRIMARY KEY AUTOINCREMENT,
-      snapshot TEXT NOT NULL default '', -- JSON snapshot of the document
-      USING fts5(snapshot),
-    )`;
+    // https://sqlite.org/fts5.html
+    // FTS5 tables are created as virtual tables; they implicitly have a `rowid`.
+    yield* sql`CREATE VIRTUAL TABLE IF NOT EXISTS ftsIndex USING fts5(snapshot)`;
   });
+
+  query(query: string) {
+    return Effect.gen(function* () {
+      const sql = yield* SqlClient.SqlClient;
+      const result = yield* sql`SELECT * FROM ftsIndex WHERE ftsIndex MATCH ${query}`;
+      return result;
+    });
+  }
 
   update(objects: IndexerObject[]) {
     return Effect.gen(function* () {

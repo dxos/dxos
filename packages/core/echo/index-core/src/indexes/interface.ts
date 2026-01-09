@@ -28,7 +28,7 @@ export interface IndexerObject {
   /**
    * JSON data of the object.
    */
-  data: Obj.JSON;
+  data: Obj.JSON & Record<string, any>;
 }
 
 export interface Index {

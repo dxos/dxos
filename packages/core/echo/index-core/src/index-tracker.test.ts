@@ -22,7 +22,7 @@ const TestLayer = Layer.merge(
 describe('IndexTracker', () => {
   it.effect(
     'should store and retrieve index cursors',
-    Effect.fnUntraced(function* ({}) {
+    Effect.fnUntraced(function* () {
       const tracker = new IndexTracker();
       yield* tracker.migrate();
 
