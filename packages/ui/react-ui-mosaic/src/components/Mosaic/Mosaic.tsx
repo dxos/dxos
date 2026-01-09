@@ -54,12 +54,12 @@ import { isTruthy } from '@dxos/util';
 import { useFocus } from '../Focus';
 
 import {
-  type MosaicCellData,
   type MosaicContainerData,
   type MosaicData,
   type MosaicEventHandler,
   type MosaicPlaceholderData,
   type MosaicTargetData,
+  type MosaicTileData,
 } from './types';
 
 /**
@@ -71,16 +71,16 @@ import {
 // Drop targets:
 // - Placeholders exist to allow gaps but prevent deadspace when dragging within a container.
 // - Placeholders expand when active.
-// - When dragging over a Cell, the placeholer next to the closest edge is activated.
+// - When dragging over a Tile, the placeholer next to the closest edge is activated.
 // - Placeholders should not change while scrolling.
 //
 // [Container]
 //   [Placeholder 0.5]
-//   [Cell        1]
+//   [Tile        1]
 //   [Placeholder 1.5]
-//   [Cell        2]
+//   [Tile        2]
 //   [Placeholder 2.5]
-//   [Cell        3]
+//   [Tile        3]
 //   [Placeholder 3.5]
 //
 
@@ -89,7 +89,7 @@ import {
 //
 
 type DraggingSource = {
-  data: MosaicCellData;
+  data: MosaicTileData;
   handler?: MosaicEventHandler;
   container?: Element;
 };
@@ -125,8 +125,8 @@ const Root = ({ children }: RootProps) => {
   const [dragging, setDragging] = useState<DraggingState | undefined>();
 
   const getSourceHandler = useCallback(
-    (source: ElementDragPayload): { data: MosaicCellData; handler?: MosaicEventHandler } => {
-      const data = source.data as MosaicCellData;
+    (source: ElementDragPayload): { data: MosaicTileData; handler?: MosaicEventHandler } => {
+      const data = source.data as MosaicTileData;
       return { data, handler: handlers[data.containerId] };
     },
     [handlers],
@@ -138,7 +138,7 @@ const Root = ({ children }: RootProps) => {
         const data = target.data as MosaicData;
         let containerId: string;
         switch (data.type) {
-          case 'cell':
+          case 'tile':
           case 'placeholder':
             containerId = data.containerId;
             break;
@@ -442,9 +442,9 @@ const Container = forwardRef<HTMLDivElement, ContainerProps>(
             // Test if permitted to drop here.
             canDrop: ({ source }) => {
               return (
-                (source.data.type === 'cell' &&
+                (source.data.type === 'tile' &&
                   handler.canDrop?.({
-                    source: source.data as MosaicCellData,
+                    source: source.data as MosaicTileData,
                   })) ||
                 false
               );
@@ -459,14 +459,14 @@ const Container = forwardRef<HTMLDivElement, ContainerProps>(
              * Dragging started in this container.
              */
             onDragStart: ({ source }) => {
-              const sourceData = source.data as MosaicCellData;
+              const sourceData = source.data as MosaicTileData;
               setState({ type: 'active', bounds: sourceData.bounds });
             },
             /**
              * Dragging entered this container.
              */
             onDragEnter: ({ source }) => {
-              const sourceData = source.data as MosaicCellData;
+              const sourceData = source.data as MosaicTileData;
               setState({ type: 'active', bounds: sourceData.bounds });
             },
             /**
@@ -475,7 +475,7 @@ const Container = forwardRef<HTMLDivElement, ContainerProps>(
              * triggering `onDragLeave`, which then causes the item to be added and removed continually (flickering).
              */
             onDragLeave: ({ source }) => {
-              const sourceData = source.data as MosaicCellData;
+              const sourceData = source.data as MosaicTileData;
               if (sourceData.containerId !== handler.id) {
                 setState({ type: 'idle' });
               }
@@ -561,28 +561,28 @@ const ContainerInfo = forwardRef<HTMLDivElement, ThemedClassName>(({ classNames 
 ContainerInfo.displayName = 'ContainerInfo';
 
 //
-// Cell
+// Tile
 //
 
 /** Must implement value equivalence. */
 type LocationType = string | number;
 
-type CellState =
+type TileState =
   | { type: 'idle' }
   | { type: 'preview'; container: HTMLElement; rect: DOMRect }
   | { type: 'dragging' }
   | { type: 'target'; closestEdge: Edge | null };
 
-type CellContextValue = {
-  state: CellState;
+type TileContextValue = {
+  state: TileState;
 };
 
-const [CellContextProvider, useCellContext] = createContext<CellContextValue>('MosaicCell');
+const [TileContextProvider, useTileContext] = createContext<TileContextValue>('MosaicTile');
 
-/** Target: data-[mosaic-cell-state=dragging] */
-const CELL_STATE_ATTR = 'mosaic-cell-state';
+/** Target: data-[mosaic-tile-state=dragging] */
+const TILE_STATE_ATTR = 'mosaic-tile-state';
 
-type CellProps<T extends Obj.Any = Obj.Any, Location = LocationType> = ThemedClassName<
+type TileProps<T extends Obj.Any = Obj.Any, Location = LocationType> = ThemedClassName<
   PropsWithChildren<{
     asChild?: boolean;
     dragHandle?: HTMLElement | null;
@@ -592,7 +592,7 @@ type CellProps<T extends Obj.Any = Obj.Any, Location = LocationType> = ThemedCla
   }>
 > & { className?: string };
 
-const Cell = forwardRef<HTMLDivElement, CellProps>(
+const Tile = forwardRef<HTMLDivElement, TileProps>(
   (
     {
       classNames,
@@ -604,7 +604,7 @@ const Cell = forwardRef<HTMLDivElement, CellProps>(
       location,
       object,
       ...props
-    }: CellProps,
+    }: TileProps,
     forwardedRef,
   ) => {
     const rootRef = useRef<HTMLDivElement>(null);
@@ -612,23 +612,23 @@ const Cell = forwardRef<HTMLDivElement, CellProps>(
     const Root = asChild ? Slot : Primitive.div;
 
     // State.
-    const { id: containerId, axis: layout, setActiveTarget } = useContainerContext(Cell.displayName!);
-    const [state, setState] = useState<CellState>({ type: 'idle' });
+    const { id: containerId, axis: layout, setActiveTarget } = useContainerContext(Tile.displayName!);
+    const [state, setState] = useState<TileState>({ type: 'idle' });
 
     const allowedEdges = useMemo<Edge[]>(
       () => allowedEdgesProp || (layout === 'vertical' ? ['top', 'bottom'] : ['left', 'right']),
       [allowedEdgesProp, layout],
     );
 
-    const data = useMemo<MosaicCellData>(
+    const data = useMemo<MosaicTileData>(
       () =>
         ({
-          type: 'cell',
+          type: 'tile',
           id: object.id,
           containerId,
           location,
           object,
-        }) satisfies MosaicCellData,
+        }) satisfies MosaicTileData,
       [containerId, location, object],
     );
 
@@ -708,11 +708,11 @@ const Cell = forwardRef<HTMLDivElement, CellProps>(
       : { className: mx('relative transition-opacity', className, classNames) };
 
     return (
-      <CellContextProvider state={state}>
+      <TileContextProvider state={state}>
         <Root
           {...props}
           {...{
-            [`data-${CELL_STATE_ATTR}`]: state.type,
+            [`data-${TILE_STATE_ATTR}`]: state.type,
           }}
           role='listitem'
           {...rootProps}
@@ -725,7 +725,7 @@ const Cell = forwardRef<HTMLDivElement, CellProps>(
           createPortal(
             <Root
               {...{
-                [`data-${CELL_STATE_ATTR}`]: state.type,
+                [`data-${TILE_STATE_ATTR}`]: state.type,
               }}
               className={mx(classNames)}
               style={
@@ -739,12 +739,12 @@ const Cell = forwardRef<HTMLDivElement, CellProps>(
             </Root>,
             state.container,
           )}
-      </CellContextProvider>
+      </TileContextProvider>
     );
   },
 );
 
-Cell.displayName = 'MosaicCell';
+Tile.displayName = 'MosaicTile';
 
 //
 // Placeholder
@@ -789,7 +789,6 @@ const Placeholder = <Location extends LocationType = LocationType>({
     }
 
     const edge = activeTarget && extractClosestEdge(activeTarget);
-    console.log('###', activeTarget, edge);
     setState({
       type: data.location === activeTarget?.location ? 'active' : 'idle',
     });
@@ -842,7 +841,7 @@ Placeholder.displayName = 'MosaicPlaceholder';
 type DropIndicatorProps = Omit<NativeDropIndicatorProps, 'edge'>;
 
 const DropIndicator = (props: DropIndicatorProps) => {
-  const { state } = useCellContext(DropIndicator.displayName!);
+  const { state } = useTileContext(DropIndicator.displayName!);
   return state.type === 'target' && state.closestEdge ? (
     <NativeDropIndicator {...props} edge={state.closestEdge} />
   ) : null;
@@ -859,7 +858,7 @@ export const Mosaic = {
   Root,
   Container,
   ContainerInfo,
-  Cell,
+  Tile,
   Placeholder,
   DropIndicator,
 };
@@ -867,7 +866,7 @@ export const Mosaic = {
 export type {
   RootProps as MosaicRootProps,
   ContainerProps as MosaicContainerProps,
-  CellProps as MosaicCellProps,
+  TileProps as MosaicTileProps,
   PlaceholderProps as MosiacPlaceholderProps,
   DropIndicatorProps as MosaicDropIndicatorProps,
 };
@@ -876,5 +875,5 @@ export {
   useRootContext as useMosaic,
   useContainerContext as useMosaicContainer,
   useContainerDebug,
-  useCellContext as useMosaicCell,
+  useTileContext as useMosaicTile,
 };

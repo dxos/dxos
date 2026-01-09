@@ -7,8 +7,8 @@ import { type Obj } from '@dxos/echo';
 /**
  * Draggable item.
  */
-export type MosaicCellData<T extends Obj.Any = Obj.Any, Location = any> = {
-  type: 'cell';
+export type MosaicTileData<T extends Obj.Any = Obj.Any, Location = any> = {
+  type: 'tile';
   id: string;
   containerId: string;
   location: Location;
@@ -34,9 +34,9 @@ export type MosaicContainerData = {
   id: string;
 };
 
-export type MosaicData = MosaicCellData | MosaicPlaceholderData | MosaicContainerData;
+export type MosaicData = MosaicTileData | MosaicPlaceholderData | MosaicContainerData;
 
-export type MosaicTargetData = MosaicCellData | MosaicPlaceholderData;
+export type MosaicTargetData = MosaicTileData | MosaicPlaceholderData;
 
 /**
  * Handler implemented by drop containers.
@@ -50,17 +50,17 @@ export interface MosaicEventHandler {
   /**
    * Determine if the item can be dropped into this container.
    */
-  canDrop?: (props: { source: MosaicCellData }) => boolean;
+  canDrop?: (props: { source: MosaicTileData }) => boolean;
 
   /**
    * Called during drag for custom visualization.
    */
-  onDrag?: (props: { source: MosaicCellData; position: { x: number; y: number } }) => void;
+  onDrag?: (props: { source: MosaicTileData; position: { x: number; y: number } }) => void;
 
   /**
    * Insert/rearrange the item at the given location.
    */
-  onDrop?: (props: { source: MosaicCellData; target?: MosaicData }) => void;
+  onDrop?: (props: { source: MosaicTileData; target?: MosaicData }) => void;
 
   /**
    * Request the object to be dropped.
@@ -68,7 +68,7 @@ export interface MosaicEventHandler {
    * If the callback returns true, then the callback may decide to remove the item from the source container,
    * completing the transfer.
    */
-  onTake?: (props: { source: MosaicCellData }, cb: (object: Obj.Any) => Promise<boolean>) => void;
+  onTake?: (props: { source: MosaicTileData }, cb: (object: Obj.Any) => Promise<boolean>) => void;
 
   /**
    * Dragging ended.

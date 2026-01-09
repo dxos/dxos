@@ -113,7 +113,7 @@
     "eslint-plugin-prettier": "catalog:",
     "eslint-plugin-react": "catalog:",
     "eslint-plugin-sort-exports": "catalog:",
-    "eslint-plugin-storybook": "10.1.11",
+    "eslint-plugin-storybook": "catalog:",
     "eslint-plugin-unused-imports": "catalog:",
     "execa": "catalog:",
     "extensionless": "catalog:",

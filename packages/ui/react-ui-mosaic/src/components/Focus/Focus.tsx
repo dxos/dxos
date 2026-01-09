@@ -52,6 +52,7 @@ const Group = forwardRef<HTMLDivElement, GroupProps>(
     const composedRef = useComposedRefs<HTMLDivElement>(rootRef, forwardedRef);
     const Root = asChild ? Slot : Primitive.div;
 
+    // TODO(burdon): Configure.
     const focusableGroupAttrs = useFocusableGroup({
       tabBehavior: 'limited-trap-focus',
     });

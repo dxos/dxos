@@ -17,7 +17,7 @@ import { arrayMove, isTruthy } from '@dxos/util';
 import { Card } from '../Card';
 import { Focus } from '../Focus';
 
-import { Mosaic, type MosaicCellProps, useContainerDebug, useMosaic, useMosaicContainer } from './Mosaic';
+import { Mosaic, type MosaicTileProps, useContainerDebug, useMosaic, useMosaicContainer } from './Mosaic';
 import { styles } from './styles';
 
 export const TestItem = Schema.Struct({
@@ -83,7 +83,7 @@ export const Column = forwardRef<HTMLDivElement, { column: TestColumn; debug?: b
               },
               onDrop: ({ source, target }) => {
                 const from = items.findIndex((item) => item.target?.id === source.object.id);
-                const to = target?.type === 'cell' || target?.type === 'placeholder' ? target.location : -1;
+                const to = target?.type === 'tile' || target?.type === 'placeholder' ? target.location : -1;
                 log.info('onDrop', { source, target, from, to });
                 if (to !== -1) {
                   if (from !== -1) {
@@ -131,7 +131,7 @@ const ItemList = forwardRef<HTMLDivElement, { items: TestItem[] }>(({ items, ...
         <Placeholder location={0} />
         {visibleItems.map((item, i) => (
           <Fragment key={item.id}>
-            <Cell location={i + 1} object={item} />
+            <Tile location={i + 1} object={item} />
             <Placeholder location={i + 1} />
           </Fragment>
         ))}
@@ -146,10 +146,10 @@ const ItemList = forwardRef<HTMLDivElement, { items: TestItem[] }>(({ items, ...
 ItemList.displayName = 'Container';
 
 //
-// Cell
+// Tile
 //
 
-const Cell = forwardRef<HTMLDivElement, Pick<MosaicCellProps<TestItem>, 'classNames' | 'object' | 'location'>>(
+const Tile = forwardRef<HTMLDivElement, Pick<MosaicTileProps<TestItem>, 'classNames' | 'object' | 'location'>>(
   ({ classNames, object, location }, forwardedRef) => {
     // Keep a local ref for click-to-focus behavior.
     const rootRef = useRef<HTMLDivElement>(null);
@@ -157,10 +157,9 @@ const Cell = forwardRef<HTMLDivElement, Pick<MosaicCellProps<TestItem>, 'classNa
     const composedRef = useComposedRefs<HTMLDivElement>(rootRef, forwardedRef);
     const [handleRef, setHandleRef] = useState<HTMLElement | null>(null);
 
-    // Testing nested asChild composition (Focus.Group asChild wrapping Mosaic.Cell asChild).
     return (
       <Focus.Group asChild>
-        <Mosaic.Cell asChild dragHandle={handleRef} object={object} location={location}>
+        <Mosaic.Tile asChild dragHandle={handleRef} object={object} location={location}>
           <Card.StaticRoot classNames={classNames} onClick={() => rootRef.current?.focus()} ref={composedRef}>
             <Card.Toolbar>
               <Card.DragHandle ref={setHandleRef} />
@@ -173,20 +172,20 @@ const Cell = forwardRef<HTMLDivElement, Pick<MosaicCellProps<TestItem>, 'classNa
             </Card.Toolbar>
             <Card.Text>{object.description}</Card.Text>
           </Card.StaticRoot>
-        </Mosaic.Cell>
+        </Mosaic.Tile>
       </Focus.Group>
     );
   },
 );
 
-Cell.displayName = 'Cell';
+Tile.displayName = 'Tile';
 
 //
 // Placeholder
 //
 
 // TODO(burdon): Need darker surface.
-const Placeholder = ({ location }: Pick<MosaicCellProps<TestItem>, 'location'>) => {
+const Placeholder = ({ location }: Pick<MosaicTileProps<TestItem>, 'location'>) => {
   return (
     <Mosaic.Placeholder location={location} classNames={styles.placeholder.root}>
       <div
