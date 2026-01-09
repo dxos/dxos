@@ -441,31 +441,8 @@ export class AutomergeHost extends Resource {
   }
 
   private readonly _shareConfig = {
-    // Called on `repo.find`.
     access: async (peerId: PeerId, documentId: DocumentId): Promise<boolean> => {
       return true;
-      if (
-        !this._createdDocuments.has(documentId) &&
-        !this._documentsToSync.has(documentId) &&
-        !this._documentsToRequest.has(documentId)
-      ) {
-        const peerMetadata = this._repo.peerMetadataByPeerId[peerId];
-        if (isEchoPeerMetadata(peerMetadata) && this._documentsRequested.get(peerId)?.has(documentId)) {
-          return true; // Allow access if the peer has requested the document.
-        }
-
-        // Skip advertising documents that don't need to be synced.
-        log('skip access', { peerId, documentId });
-        return false;
-      }
-
-      const peerMetadata = this._repo.peerMetadataByPeerId[peerId];
-      if (isEchoPeerMetadata(peerMetadata)) {
-        // TODO(dmaretskyi): We need to document the `shouldAdvertise` method better so that it's clear that it's also called for access.
-        return this._echoNetworkAdapter.shouldAdvertise(peerId, { documentId });
-      }
-
-      return false;
     },
 
     // TODO(dmaretskyi): Share based on HALO permissions and space affinity.

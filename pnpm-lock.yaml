@@ -5109,6 +5109,15 @@ importers:
 
   packages/core/echo/index-core:
     dependencies:
+      '@dxos/debug':
+        specifier: 'workspace:'
+        version: link:../../../common/debug
+      '@dxos/echo':
+        specifier: 'workspace:'
+        version: link:../echo
+      '@dxos/keys':
+        specifier: 'workspace:'
+        version: link:../../../common/keys
       '@effect/experimental':
         specifier: 'catalog:'
         version: 0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2)

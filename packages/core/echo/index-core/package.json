@@ -33,6 +33,9 @@
     "src"
   ],
   "dependencies": {
+    "@dxos/debug": "workspace:",
+    "@dxos/echo": "workspace:",
+    "@dxos/keys": "workspace:",
     "@effect/experimental": "catalog:",
     "@effect/platform": "catalog:",
     "@effect/sql": "catalog:",
