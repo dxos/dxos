@@ -57,6 +57,7 @@ export const Column = forwardRef<HTMLDivElement, { column: TestColumn; debug?: b
     return (
       <div className={mx('grid bs-full min-is-[20rem] max-is-[25rem] overflow-hidden', debug && 'grid-rows-2 gap-2')}>
         <Focus.Group ref={forwardedRef} classNames='flex flex-col overflow-hidden'>
+          {/* TODO(burdon): Remove focus. */}
           {/* TODO(burdon): Common header with Card. */}
           <div className='flex gap-2 items-center plb-2 pli-3 border-b border-separator'>
             <Card.DragHandle />

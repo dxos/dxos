@@ -11,12 +11,13 @@ export const styles = {
     root: [
       'outline-none border border-separator rounded-sm',
       // Focus (e.g., via tabster).
-      'focus:border-accentSurface',
+      // TODO(burdon): Why is ! required?
+      'focus:!border-accentSurface',
       // Active (e.g., drop target).
-      'data-[focus-state=active]:border-neutralFocusIndicator',
+      '_data-[focus-state=active]:border-neutralFocusIndicator',
       // Error
       // TODO(burdon): Error token.
-      'data-[focus-state=error]:border-rose-500',
+      '_data-[focus-state=error]:border-rose-500',
     ],
   },
 } satisfies Record<string, Record<string, ClassNameValue>>;

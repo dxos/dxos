@@ -10,7 +10,7 @@ import {
 } from '@fluentui/react-tabster';
 import { useComposedRefs } from '@radix-ui/react-compose-refs';
 import { Primitive } from '@radix-ui/react-primitive';
-import { Slot, Slottable } from '@radix-ui/react-slot';
+import { Slot } from '@radix-ui/react-slot';
 import React, { type PropsWithChildren, createContext, forwardRef, useContext, useRef, useState } from 'react';
 
 import { type ThemedClassName } from '@dxos/react-ui';
@@ -60,20 +60,13 @@ const Group = forwardRef<HTMLDivElement, GroupProps>(
       memorizeCurrent: true,
     });
     const tabsterAttrs = useMergedTabsterAttributes_unstable(focusableGroupAttrs, arrowNavigationAttrs);
-
     const [state, setState] = useState<FocusState | undefined>();
-
-    // When asChild=true, merge classes and pass as className for Radix Slot to merge.
-    // When asChild=false, merge classes immediately.
-    const rootProps = asChild
-      ? { className: mx(styles.container.root, className, classNames) }
-      : { className: mx(styles.container.root, className, classNames) };
 
     return (
       <FocusContext.Provider value={{ setFocus: setState }}>
         <Root
           tabIndex={0}
-          {...rootProps}
+          className={mx(styles.container.root, className, classNames)}
           {...tabsterAttrs}
           {...(state && {
             [`data-${FOCUS_STATE_ATTR}`]: state,
@@ -81,7 +74,7 @@ const Group = forwardRef<HTMLDivElement, GroupProps>(
           {...props}
           ref={composedRef}
         >
-          <Slottable>{children}</Slottable>
+          {children}
         </Root>
       </FocusContext.Provider>
     );

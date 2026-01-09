@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Slot, Slottable } from '@radix-ui/react-slot';
+import { Slot } from '@radix-ui/react-slot';
 import React, { type ComponentPropsWithoutRef, type PropsWithChildren, forwardRef } from 'react';
 
 import {
@@ -48,7 +48,7 @@ const CardStaticRoot = forwardRef<HTMLDivElement, CardSharedProps & { id?: strin
 
     return (
       <Root {...(id && { 'data-object-id': id })} {...props} {...rootProps} ref={forwardedRef}>
-        <Slottable>{children}</Slottable>
+        {children}
       </Root>
     );
   },

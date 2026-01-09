@@ -8,7 +8,7 @@ import { type ClassNameValue } from '@dxos/react-ui';
 export const styles = {
   cell: {
     root: [
-      'outline-none border border-separator focus:border-accentSurface',
+      'border border-separator',
       'data-[mosaic-cell-state=target]:border-neutralFocusIndicator',
       'data-[mosaic-cell-state=preview]:bg-groupSurface',
       'data-[mosaic-cell-state=dragging]:opacity-20',
@@ -21,13 +21,13 @@ export const styles = {
       'transition-all plb-1 opacity-0 delay-0 duration-0',
       'data-[mosaic-placeholder-state=active]:plb-2.5',
       'data-[mosaic-placeholder-state=active]:opacity-100',
-      'data-[mosaic-placeholder-state=active]:delay-300',
+      '_data-[mosaic-placeholder-state=active]:delay-300',
     ],
     content: [
       'is-full',
       'transition-all bs-0 delay-0 duration-0',
       'group-data-[mosaic-placeholder-state=active]:bs-[var(--mosaic-placeholder-height)]',
-      'group-data-[mosaic-placeholder-state=active]:delay-300',
+      '_group-data-[mosaic-placeholder-state=active]:delay-300',
       'group-data-[mosaic-placeholder-state=active]:duration-100',
     ],
   },
