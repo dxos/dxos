@@ -108,6 +108,8 @@ export const Column = forwardRef<HTMLDivElement, { column: TestColumn; debug?: b
   },
 );
 
+Column.displayName = 'Column';
+
 const ItemList = forwardRef<HTMLDivElement, { items: TestItem[] }>(({ items, ...props }, forwardedRef) => {
   const { dragging } = useMosaicContainer(ItemList.displayName!);
 
@@ -128,11 +130,11 @@ const ItemList = forwardRef<HTMLDivElement, { items: TestItem[] }>(({ items, ...
   return (
     <ScrollArea.Root {...props}>
       <ScrollArea.Viewport classNames='pli-3' ref={forwardedRef}>
-        <Placeholder location={0} />
+        <Placeholder location={0.5} />
         {visibleItems.map((item, i) => (
           <Fragment key={item.id}>
             <Tile location={i + 1} object={item} />
-            <Placeholder location={i + 1} />
+            <Placeholder location={i + 1.5} />
           </Fragment>
         ))}
       </ScrollArea.Viewport>
@@ -189,7 +191,6 @@ const Placeholder = ({ location }: Pick<MosaicTileProps<TestItem>, 'location'>) 
   return (
     <Mosaic.Placeholder location={location} classNames={styles.placeholder.root}>
       <div
-        role='none'
         className={mx('bg-baseSurface border border-dashed border-separator rounded-sm', styles.placeholder.content)}
       />
     </Mosaic.Placeholder>
