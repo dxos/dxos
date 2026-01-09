@@ -19,6 +19,7 @@ import { Focus } from '../Focus';
 
 import {
   Mosaic,
+  type MosaicContainerProps,
   type MosaicTileProps,
   type MosiacPlaceholderProps,
   useContainerDebug,
@@ -108,61 +109,60 @@ type ColumnProps = { column: TestColumn; debug?: boolean };
 export const Column = forwardRef<HTMLDivElement, ColumnProps>(({ column: { id, items }, debug }, forwardedRef) => {
   const [DebugInfo, debugHandler] = useContainerDebug(debug);
 
+  const handler = useMemo<MosaicContainerProps['handler']>(
+    () => ({
+      id,
+      canDrop: () => true,
+      onTake: ({ source }, cb) => {
+        log.info('onTake', { source });
+        const from = items.findIndex((item) => item.target?.id === source.object.id);
+        if (from !== -1) {
+          items.splice(from, 1);
+        }
+        void cb(source.object);
+      },
+      onDrop: ({ source, target }) => {
+        const from = items.findIndex((item) => item.target?.id === source.object.id);
+        const to = target?.type === 'tile' || target?.type === 'placeholder' ? target.location : -1;
+        log.info('onDrop', { source, target, from, to });
+        if (to !== -1) {
+          if (from !== -1) {
+            arrayMove(items, from, to);
+          } else {
+            const ref = Ref.make(source.object);
+            items.splice(to, 0, ref as any); // TODO(burdon): Remove cast?
+          }
+        }
+      },
+    }),
+    [id, items],
+  );
+
+  const menuItems = useMemo<CardMenuProps<TestItem>['items']>(
+    () => [
+      {
+        label: 'Delete',
+        onSelect: (object) => {
+          const idx = items.findIndex((item) => item.target?.id === object?.id);
+          if (idx !== -1) {
+            items.splice(idx, 1);
+          }
+        },
+      },
+    ],
+    [],
+  );
+
   return (
     <div className={mx('grid bs-full min-is-[20rem] max-is-[25rem] overflow-hidden', debug && 'grid-rows-2 gap-2')}>
       <Focus.Group ref={forwardedRef} classNames='flex flex-col overflow-hidden'>
         <Card.Toolbar>
           <Card.DragHandle />
           <Card.Heading>{id}</Card.Heading>
-          <Card.Menu items={[]} />
+          <Card.Menu items={menuItems} />
         </Card.Toolbar>
-
-        <Mosaic.Container
-          asChild
-          axis='vertical'
-          autoscroll
-          withFocus
-          debug={debugHandler}
-          handler={{
-            id,
-            canDrop: () => true,
-            onTake: ({ source }, cb) => {
-              log.info('onTake', { source });
-              const from = items.findIndex((item) => item.target?.id === source.object.id);
-              if (from !== -1) {
-                items.splice(from, 1);
-              }
-              void cb(source.object);
-            },
-            onDrop: ({ source, target }) => {
-              const from = items.findIndex((item) => item.target?.id === source.object.id);
-              const to = target?.type === 'tile' || target?.type === 'placeholder' ? target.location : -1;
-              log.info('onDrop', { source, target, from, to });
-              if (to !== -1) {
-                if (from !== -1) {
-                  arrayMove(items, from, to);
-                } else {
-                  const ref = Ref.make(source.object);
-                  items.splice(to, 0, ref as any); // TODO(burdon): Remove cast?
-                }
-              }
-            },
-          }}
-        >
-          <ItemList
-            items={items.map((item: any) => item.target).filter(isTruthy)}
-            menuItems={[
-              {
-                label: 'Delete',
-                onSelect: (object) => {
-                  const idx = items.findIndex((item) => item.target?.id === object?.id);
-                  if (idx !== -1) {
-                    items.splice(idx, 1);
-                  }
-                },
-              },
-            ]}
-          />
+        <Mosaic.Container asChild axis='vertical' autoscroll withFocus debug={debugHandler} handler={handler}>
+          <ItemList items={items.map((item: any) => item.target).filter(isTruthy)} menuItems={[]} />
         </Mosaic.Container>
         <div className='grow flex p-1 justify-center text-xs'>{items.length}</div>
       </Focus.Group>

@@ -183,7 +183,7 @@ const Root = ({ children }: RootProps) => {
        * Dragging started within any container.
        */
       onDragStart: ({ source, location }) => {
-        log.info('Root.onDragStart', {
+        log('Root.onDragStart', {
           source: source.data,
           location: location.current.dropTargets.map((target) => target.data),
         });
@@ -195,7 +195,7 @@ const Root = ({ children }: RootProps) => {
        * Dragging entered a new container.
        */
       onDropTargetChange: ({ source, location }) => {
-        log.info('Root.onDropTargetChange', {
+        log('Root.onDropTargetChange', {
           source: source.data,
           location: location.current.dropTargets.map((target) => target.data),
         });
@@ -219,7 +219,7 @@ const Root = ({ children }: RootProps) => {
        * Dragging ended.
        */
       onDrop: ({ source, location }) => {
-        log.info('Root.onDrop', {
+        log('Root.onDrop', {
           source: source.data,
           location: location.current.dropTargets.map((target) => target.data),
         });

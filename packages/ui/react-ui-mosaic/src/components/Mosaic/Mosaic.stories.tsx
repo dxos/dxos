@@ -15,8 +15,8 @@ import { mx } from '@dxos/ui-theme';
 
 import { Focus } from '../Focus';
 
+import { Board, DebugRoot, TestColumn, TestItem } from './Board';
 import { Mosaic } from './Mosaic';
-import { Board, DebugRoot, TestColumn, TestItem } from './testing';
 
 faker.seed(999);
 
