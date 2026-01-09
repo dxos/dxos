@@ -61,25 +61,23 @@ export interface TestColumn extends Schema.Schema.Type<typeof TestColumn> {}
 // Board
 //
 
-type BoardProps = { columns: TestColumn[]; debug?: boolean };
+type BoardProps = { id: string; columns: TestColumn[]; debug?: boolean };
 
-export const Board = forwardRef<HTMLDivElement, BoardProps>(({ columns, debug }, forwardedRef) => {
+export const Board = forwardRef<HTMLDivElement, BoardProps>(({ id, columns, debug }, forwardedRef) => {
   const [DebugInfo, debugHandler] = useContainerDebug(debug);
+
+  const handler = useMemo<MosaicContainerProps['handler']>(
+    () => ({
+      id,
+      canDrop: () => true,
+    }),
+    [id, columns],
+  );
 
   return (
     <div className={mx('p-2 bs-full is-full grid overflow-hidden', debug && 'grid-cols-[1fr_25rem] gap-2')}>
       <Focus.Group asChild axis='horizontal'>
-        <Mosaic.Container
-          asChild
-          autoscroll
-          axis='horizontal'
-          withFocus
-          debug={debugHandler}
-          handler={{
-            id: 'board',
-            canDrop: () => true,
-          }}
-        >
+        <Mosaic.Container asChild autoscroll axis='horizontal' withFocus debug={debugHandler} handler={handler}>
           <div role='list' className='flex bs-full plb-2 overflow-x-auto'>
             <Placeholder axis='horizontal' location={0.5} />
             {columns.map((column, i) => (
@@ -95,10 +93,6 @@ export const Board = forwardRef<HTMLDivElement, BoardProps>(({ columns, debug },
     </div>
   );
 });
-
-//
-// ColumnList
-//
 
 //
 // Column
@@ -188,9 +182,9 @@ const ItemList = forwardRef<HTMLDivElement, ItemListProps>(({ items, menuItems, 
       return items;
     }
 
-    const current = items.findIndex((item) => item.id === dragging.source.data.object.id);
+    const idx = items.findIndex((item) => item.id === dragging.source.data.object.id);
     const newItems = items.slice();
-    newItems.splice(current, 1);
+    newItems.splice(idx, 1);
     return newItems;
   }, [items, dragging]);
 
@@ -245,7 +239,7 @@ const Tile = forwardRef<HTMLDivElement, TileProps>(({ classNames, object, locati
           <Card.Section classNames='text-description'>{object.description}</Card.Section>
           <Card.Section icon='ph--tag--regular'>
             {object.label && (
-              <div role='none' className='flex shrink-0 gap-1 text-xs text-muted font-mono text-infoText'>
+              <div role='none' className='flex shrink-0 gap-1 text-xs'>
                 <Tag palette={getHashStyles(object.label).hue}>{object.label}</Tag>
               </div>
             )}
