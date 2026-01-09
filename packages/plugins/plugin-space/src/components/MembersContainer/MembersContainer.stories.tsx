@@ -7,14 +7,12 @@ import React from 'react';
 
 import { OperationPlugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { corePlugins } from '@dxos/plugin-testing';
 import { useSpace } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { withTheme } from '@dxos/react-ui/testing';
 import { translations as shellTranslations } from '@dxos/shell/react';
 import { render } from '@dxos/storybook-utils';
 
-import { SpacePlugin } from '../../';
 import { translations } from '../../translations';
 
 import { MembersContainer } from './MembersContainer';
