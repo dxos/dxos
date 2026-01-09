@@ -11,7 +11,8 @@ import { invariant } from '@dxos/invariant';
 import { ClientPlugin } from '@dxos/plugin-client';
 import { PreviewPlugin } from '@dxos/plugin-preview';
 import { useGlobalFilteredObjects } from '@dxos/plugin-search';
-import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
+import { SpacePlugin } from '@dxos/plugin-space';
+import { corePlugins } from '@dxos/plugin-testing';
 import { faker } from '@dxos/random';
 import { Filter, useQuery, useSchema, useSpaces } from '@dxos/react-client/echo';
 import { withTheme } from '@dxos/react-ui/testing';
@@ -141,7 +142,8 @@ const meta = {
             });
           },
         }),
-        StorybookPlugin({}),
+        ...corePlugins(),
+        SpacePlugin({}),
         PreviewPlugin(),
       ],
     }),

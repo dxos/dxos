@@ -4,7 +4,7 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capability, Common, SettingsAction, createIntent } from '@dxos/app-framework';
+import { Capability, Common, SettingsOperation } from '@dxos/app-framework';
 import { GraphBuilder, NodeMatcher } from '@dxos/plugin-graph';
 
 import { REGISTRY_ID, REGISTRY_KEY, meta } from '../../meta';
@@ -19,8 +19,8 @@ export default Capability.makeModule((context) =>
           {
             id: meta.id,
             data: async () => {
-              const { dispatchPromise: dispatch } = context.getCapability(Common.Capability.IntentDispatcher);
-              await dispatch(createIntent(SettingsAction.OpenPluginRegistry));
+              const { invokePromise } = context.getCapability(Common.Capability.OperationInvoker);
+              await invokePromise(SettingsOperation.OpenPluginRegistry);
             },
             properties: {
               label: ['open plugin registry label', { ns: meta.id }],

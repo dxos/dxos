@@ -2,9 +2,10 @@
 // Copyright 2025 DXOS.org
 //
 
+import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
-import { ActivationEvent, Capability, Common, Plugin, createIntent } from '@dxos/app-framework';
+import { ActivationEvent, Capability, Common, Plugin } from '@dxos/app-framework';
 import { Ref, Tag, Type } from '@dxos/echo';
 import { AttentionEvents } from '@dxos/plugin-attention';
 import { ClientEvents } from '@dxos/plugin-client';
@@ -29,7 +30,7 @@ import {
   AppGraphBuilder,
   AppGraphSerializer,
   IdentityCreated,
-  IntentResolver,
+  OperationResolver,
   ReactRoot,
   ReactSurface,
   Repair,
@@ -40,7 +41,7 @@ import {
 import { SpaceEvents } from './events';
 import { meta } from './meta';
 import { translations } from './translations';
-import { CollectionAction, type CreateObjectIntent, SpaceAction, type SpacePluginOptions } from './types';
+import { type CreateObject, SpaceOperation, type SpacePluginOptions } from './types';
 
 export const SpacePlugin = Plugin.define<SpacePluginOptions>(meta).pipe(
   Plugin.addModule({
@@ -65,7 +66,7 @@ export const SpacePlugin = Plugin.define<SpacePluginOptions>(meta).pipe(
           // TODO(wittjosiah): Move out of metadata.
           loadReferences: async (collection: Collection.Collection) => await Ref.Array.loadAll(collection.objects),
           inputSchema: Schema.Struct({ name: Schema.optional(Schema.String) }),
-          createObjectIntent: ((props) => createIntent(CollectionAction.Create, props)) satisfies CreateObjectIntent,
+          createObject: ((props) => Effect.sync(() => Collection.make(props))) satisfies CreateObject,
           addToCollectionOnCreate: true,
         },
       },
@@ -74,15 +75,22 @@ export const SpacePlugin = Plugin.define<SpacePluginOptions>(meta).pipe(
         metadata: {
           icon: 'ph--database--regular',
           iconHue: 'green',
-          inputSchema: SpaceAction.StoredSchemaForm,
-          createObjectIntent: ((props, options) =>
-            props.typename
-              ? createIntent(SpaceAction.UseStaticSchema, { db: options.db, typename: props.typename })
-              : createIntent(SpaceAction.AddSchema, {
-                  db: options.db,
+          inputSchema: SpaceOperation.StoredSchemaForm,
+          createObject: ((props, { db, context }) =>
+            Effect.gen(function* () {
+              const { invoke } = context.getCapability(Common.Capability.OperationInvoker);
+              if (props.typename) {
+                const result = yield* invoke(SpaceOperation.UseStaticSchema, { db, typename: props.typename });
+                return result as any;
+              } else {
+                const result = yield* invoke(SpaceOperation.AddSchema, {
+                  db,
                   name: props.name,
                   schema: createDefaultSchema(),
-                })) satisfies CreateObjectIntent,
+                });
+                return result.object;
+              }
+            })) satisfies CreateObject,
         },
       },
       {
@@ -143,6 +151,7 @@ export const SpacePlugin = Plugin.define<SpacePluginOptions>(meta).pipe(
       activate: () => ReactSurface({ createInvitationUrl }),
     };
   }),
+  Common.Plugin.addAppGraphModule({ activate: AppGraphBuilder }),
   Plugin.addModule(
     ({ invitationUrl = window.location.origin, invitationProp = 'spaceInvitationCode', observability = false }) => {
       const createInvitationUrl = (invitationCode: string) => {
@@ -150,15 +159,13 @@ export const SpacePlugin = Plugin.define<SpacePluginOptions>(meta).pipe(
         baseUrl.searchParams.set(invitationProp, invitationCode);
         return baseUrl.toString();
       };
-
       return {
-        id: Capability.getModuleTag(IntentResolver),
-        activatesOn: Common.ActivationEvent.SetupIntentResolver,
-        activate: (context) => IntentResolver({ context, createInvitationUrl, observability }),
+        id: Capability.getModuleTag(OperationResolver),
+        activatesOn: Common.ActivationEvent.SetupOperationResolver,
+        activate: (context) => OperationResolver({ context, createInvitationUrl, observability }),
       };
     },
   ),
-  Common.Plugin.addAppGraphModule({ activate: AppGraphBuilder }),
   // TODO(wittjosiah): This could probably be deferred.
   Plugin.addModule({
     activatesOn: Common.ActivationEvent.AppGraphReady,
@@ -171,7 +178,7 @@ export const SpacePlugin = Plugin.define<SpacePluginOptions>(meta).pipe(
   }),
   Plugin.addModule({
     activatesOn: ActivationEvent.allOf(
-      Common.ActivationEvent.DispatcherReady,
+      Common.ActivationEvent.OperationInvokerReady,
       Common.ActivationEvent.LayoutReady,
       Common.ActivationEvent.AppGraphReady,
       AttentionEvents.AttentionReady,

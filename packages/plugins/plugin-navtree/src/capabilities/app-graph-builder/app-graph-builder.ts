@@ -4,7 +4,7 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capability, Common, createIntent } from '@dxos/app-framework';
+import { Capability, Common } from '@dxos/app-framework';
 import { GraphBuilder, NodeMatcher } from '@dxos/plugin-graph';
 
 import { COMMANDS_DIALOG, meta } from '../../meta';
@@ -19,17 +19,12 @@ export default Capability.makeModule((context) =>
         actions: () => [
           {
             id: COMMANDS_DIALOG,
-            data: async () => {
-              const { dispatchPromise: dispatch } = context.getCapability(Common.Capability.IntentDispatcher);
-              await dispatch(
-                createIntent(Common.LayoutAction.UpdateDialog, {
-                  part: 'dialog',
-                  subject: COMMANDS_DIALOG,
-                  options: {
-                    blockAlign: 'start',
-                  },
-                }),
-              );
+            data: () => {
+              const { invokeSync } = context.getCapability(Common.Capability.OperationInvoker);
+              invokeSync(Common.LayoutOperation.UpdateDialog, {
+                subject: COMMANDS_DIALOG,
+                blockAlign: 'start',
+              });
             },
             properties: {
               label: ['open commands label', { ns: meta.id }],

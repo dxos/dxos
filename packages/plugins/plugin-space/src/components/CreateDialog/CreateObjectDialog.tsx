@@ -3,11 +3,10 @@
 //
 
 import * as Effect from 'effect/Effect';
-import * as Function from 'effect/Function';
 import React, { useCallback, useMemo, useRef, useState } from 'react';
 
-import { Common, chain, createIntent } from '@dxos/app-framework';
-import { useIntentDispatcher, usePluginManager } from '@dxos/app-framework/react';
+import { Common } from '@dxos/app-framework';
+import { useOperationInvoker, usePluginManager } from '@dxos/app-framework/react';
 import { Database, Obj, Type } from '@dxos/echo';
 import { EntityKind, getTypeAnnotation } from '@dxos/echo/internal';
 import { runAndForwardErrors } from '@dxos/effect';
@@ -19,7 +18,7 @@ import { cardDialogContent, cardDialogHeader } from '@dxos/react-ui-mosaic';
 import { type Collection } from '@dxos/schema';
 
 import { meta } from '../../meta';
-import { SpaceAction } from '../../types';
+import { SpaceOperation } from '../../types';
 
 import { CreateObjectPanel, type CreateObjectPanelProps, type Metadata } from './CreateObjectPanel';
 
@@ -43,7 +42,7 @@ export const CreateObjectDialog = ({
 }: CreateObjectDialogProps) => {
   const manager = usePluginManager();
   const { t } = useTranslation(meta.id);
-  const { dispatch } = useIntentDispatcher();
+  const { invoke, invokePromise } = useOperationInvoker();
   const [target, setTarget] = useState<Database.Database | Collection.Collection | undefined>(initialTarget);
   const [typename, setTypename] = useState<string | undefined>(initialTypename);
   const client = useClient();
@@ -55,7 +54,7 @@ export const CreateObjectDialog = ({
       const metadata = manager.context
         .getCapabilities(Common.Capability.Metadata)
         .find(({ id }) => id === typename)?.metadata;
-      return metadata?.createObjectIntent ? (metadata as Metadata) : undefined;
+      return metadata?.createObject ? (metadata as Metadata) : undefined;
     },
     [manager],
   );
@@ -84,26 +83,26 @@ export const CreateObjectDialog = ({
 
         const db = Database.isDatabase(target) ? target : target && Obj.getDatabase(target);
         invariant(db, 'Missing database');
-        const { object } = yield* dispatch(metadata.createObjectIntent(data, { db }));
+        const object = yield* metadata.createObject(data, { db, context: manager.context });
         if (isLiveObject(object) && !Obj.instanceOf(Type.PersistentType, object)) {
           // TODO(wittjosiah): Selection in navtree isn't working as expected when hidden typenames evals to true.
           const hidden = !metadata.addToCollectionOnCreate;
-          const addObjectIntent = createIntent(SpaceAction.AddObject, {
+          yield* invoke(SpaceOperation.AddObject, {
             target,
             object,
             hidden,
           });
           const shouldNavigate = _shouldNavigate ?? (() => true);
           if (shouldNavigate(object)) {
-            yield* dispatch(Function.pipe(addObjectIntent, chain(Common.LayoutAction.Open, { part: 'main' })));
-          } else {
-            yield* dispatch(addObjectIntent);
+            yield* Effect.promise(() =>
+              invokePromise(Common.LayoutOperation.Open, { subject: [Obj.getDXN(object).toString()] }),
+            );
           }
 
           onCreateObject?.(object);
         }
       }).pipe(runAndForwardErrors),
-    [dispatch, target, resolve, _shouldNavigate],
+    [invoke, invokePromise, target, _shouldNavigate, manager.context, onCreateObject],
   );
 
   return (

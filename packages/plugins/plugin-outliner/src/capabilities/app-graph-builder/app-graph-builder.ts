@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
-import { Capability, Common, createIntent } from '@dxos/app-framework';
+import { Capability, Common } from '@dxos/app-framework';
 import { Obj, Relation } from '@dxos/echo';
 import { SystemTypeAnnotation } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
@@ -13,7 +13,7 @@ import { GraphBuilder } from '@dxos/plugin-graph';
 import { HasSubject } from '@dxos/types';
 
 import { meta } from '../../meta';
-import { OutlineAction } from '../../types';
+import { OutlineOperation } from '../../types';
 
 export default Capability.makeModule((context) =>
   Effect.sync(() => {
@@ -45,7 +45,7 @@ export default Capability.makeModule((context) =>
              * Menu item to create new Outline object with a relation to the existing object.
              */
             {
-              id: `${OutlineAction.CreateOutline._tag}/${id}`,
+              id: `${OutlineOperation.CreateOutline.meta.key}/${id}`,
               properties: {
                 label: ['create outline label', { ns: meta.id }],
                 icon: 'ph--tree-structure--regular',
@@ -53,8 +53,8 @@ export default Capability.makeModule((context) =>
               },
               data: async () => {
                 invariant(db);
-                const { dispatchPromise: dispatch } = context.getCapability(Common.Capability.IntentDispatcher);
-                const { data } = await dispatch(createIntent(OutlineAction.CreateOutline));
+                const { invokePromise } = context.getCapability(Common.Capability.OperationInvoker);
+                const { data } = await invokePromise(OutlineOperation.CreateOutline, {});
                 if (data?.object) {
                   db.add(data.object);
                   db.add(

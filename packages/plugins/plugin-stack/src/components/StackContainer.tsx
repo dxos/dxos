@@ -5,12 +5,12 @@
 import * as Option from 'effect/Option';
 import React, { useCallback, useState } from 'react';
 
-import { Common, createIntent } from '@dxos/app-framework';
-import { useAppGraph, useCapabilities, useIntentDispatcher } from '@dxos/app-framework/react';
+import { Common } from '@dxos/app-framework';
+import { useAppGraph, useCapabilities, useOperationInvoker } from '@dxos/app-framework/react';
 import { isLiveObject } from '@dxos/client/echo';
 import { Obj } from '@dxos/echo';
 import { Graph } from '@dxos/plugin-graph';
-import { SpaceAction } from '@dxos/plugin-space/types';
+import { SpaceOperation } from '@dxos/plugin-space/types';
 import { Toolbar, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { AttentionProvider } from '@dxos/react-ui-attention';
 import { Stack, StackItem } from '@dxos/react-ui-stack';
@@ -35,7 +35,7 @@ type StackContainerProps = {
 };
 
 const StackContainer = ({ id, collection }: StackContainerProps) => {
-  const { dispatchPromise: dispatch } = useIntentDispatcher();
+  const { invokePromise } = useOperationInvoker();
   const { graph } = useAppGraph();
   const { t } = useTranslation(meta.id);
   const allMetadata = useCapabilities(Common.Capability.Metadata);
@@ -81,46 +81,39 @@ const StackContainer = ({ id, collection }: StackContainerProps) => {
         .findIndex((section) => Obj.getDXN(section).toString() === id);
       const object = collection.objects[index].target;
       if (isLiveObject(object)) {
-        await dispatch(
-          createIntent(SpaceAction.RemoveObjects, {
-            objects: [object],
-            target: collection,
-          }),
-        );
+        await invokePromise(SpaceOperation.RemoveObjects, {
+          objects: [object],
+          target: collection,
+        });
 
         // TODO(wittjosiah): The section should also be removed, but needs to be restored if the action is undone.
         // delete stack.sections[Path.last(path)];
       }
     },
-    [collection, dispatch],
+    [collection, invokePromise],
   );
 
   const handleAdd = useCallback(
     async (id: string, position: AddSectionPosition) => {
-      await dispatch?.(
-        // TODO(wittjosiah): Use object creation dialog.
-        createIntent(Common.LayoutAction.UpdateDialog, {
-          part: 'dialog',
-          subject: `${meta.id}/AddSectionDialog`,
-          options: {
-            blockAlign: 'start',
-            props: {
-              path: id,
-              position,
-              collection,
-            },
-          },
-        }),
-      );
+      // TODO(wittjosiah): Use object creation dialog.
+      await invokePromise(Common.LayoutOperation.UpdateDialog, {
+        subject: `${meta.id}/AddSectionDialog`,
+        blockAlign: 'start',
+        props: {
+          path: id,
+          position,
+          collection,
+        },
+      });
     },
-    [collection, dispatch],
+    [collection, invokePromise],
   );
 
   const handleNavigate = useCallback(
     async (id: string) => {
-      await dispatch(createIntent(Common.LayoutAction.Open, { part: 'main', subject: [id] }));
+      await invokePromise(Common.LayoutOperation.Open, { subject: [id] });
     },
-    [dispatch],
+    [invokePromise],
   );
 
   const handleCollapse = useCallback(
@@ -130,13 +123,11 @@ const StackContainer = ({ id, collection }: StackContainerProps) => {
 
   const handleAddSection = useCallback(
     () =>
-      dispatch?.(
-        createIntent(SpaceAction.OpenCreateObject, {
-          target: collection,
-          navigable: false,
-        }),
-      ),
-    [collection, dispatch],
+      invokePromise(SpaceOperation.OpenCreateObject, {
+        target: collection,
+        navigable: false,
+      }),
+    [collection, invokePromise],
   );
 
   return (

@@ -2,14 +2,16 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Common, Plugin, createIntent } from '@dxos/app-framework';
-import { type CreateObjectIntent } from '@dxos/plugin-space/types';
+import * as Effect from 'effect/Effect';
+
+import { Common, Plugin } from '@dxos/app-framework';
+import { type CreateObject } from '@dxos/plugin-space/types';
 import { RefArray } from '@dxos/react-client/echo';
 
-import { AppGraphSerializer, IntentResolver, ReactSurface, SketchSettings } from './capabilities';
+import { AppGraphSerializer, OperationResolver, ReactSurface, SketchSettings } from './capabilities';
 import { meta } from './meta';
 import { translations } from './translations';
-import { Diagram, SketchAction } from './types';
+import { Diagram } from './types';
 import { serializer } from './util';
 
 export const SketchPlugin = Plugin.define(meta).pipe(
@@ -25,14 +27,14 @@ export const SketchPlugin = Plugin.define(meta).pipe(
         loadReferences: async (diagram: Diagram.Diagram) => await RefArray.loadAll([diagram.canvas]),
         serializer,
         comments: 'unanchored',
-        createObjectIntent: (() => createIntent(SketchAction.Create)) satisfies CreateObjectIntent,
+        createObject: ((props) => Effect.sync(() => Diagram.make(props))) satisfies CreateObject,
         addToCollectionOnCreate: true,
       },
     },
   }),
   Common.Plugin.addSchemaModule({ schema: [Diagram.Canvas, Diagram.Diagram] }),
   Common.Plugin.addSurfaceModule({ activate: ReactSurface }),
-  Common.Plugin.addIntentResolverModule({ activate: IntentResolver }),
+  Common.Plugin.addOperationResolverModule({ activate: OperationResolver }),
   Plugin.addModule({
     id: 'app-graph-serializer',
     activatesOn: Common.ActivationEvent.AppGraphReady,

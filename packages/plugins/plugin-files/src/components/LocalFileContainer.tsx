@@ -12,7 +12,7 @@ import { StackItem } from '@dxos/react-ui-stack';
 import { descriptionMessage, mx } from '@dxos/ui-theme';
 
 import { meta } from '../meta';
-import { type LocalEntity, type LocalFile, LocalFilesAction } from '../types';
+import { type LocalEntity, type LocalFile, LocalFilesOperation } from '../types';
 
 const LocalFileContainer: FC<{ file: LocalFile }> = ({ file }) => {
   const transformedData = useMemo(
@@ -38,7 +38,9 @@ const PermissionsGate = ({ entity }: { entity: LocalEntity }) => {
   const node = Graph.getNode(graph, entity.id).pipe(Option.getOrNull);
   const action =
     node &&
-    Graph.getActions(graph, node.id).find((action) => action.id === `${LocalFilesAction.Reconnect._tag}:${node.id}`);
+    Graph.getActions(graph, node.id).find(
+      (action) => action.id === `${LocalFilesOperation.Reconnect.meta.key}:${node.id}`,
+    );
 
   return (
     <StackItem.Content>

@@ -2,12 +2,16 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Capability, Common, Plugin, createIntent } from '@dxos/app-framework';
-import { type CreateObjectIntent } from '@dxos/plugin-space/types';
+import * as Effect from 'effect/Effect';
+
+import { Common, Plugin } from '@dxos/app-framework';
+import { ClientCapabilities } from '@dxos/plugin-client';
+import { type CreateObject } from '@dxos/plugin-space/types';
 import { Event, Message } from '@dxos/types';
 
+import { OperationResolver } from '../capabilities/operation-resolver';
 import { meta } from '../meta';
-import { Calendar, InboxAction, Mailbox } from '../types';
+import { Calendar, Mailbox } from '../types';
 
 // TODO(wittjosiah): Factor out shared modules.
 export const InboxPlugin = Plugin.define(meta).pipe(
@@ -19,23 +23,29 @@ export const InboxPlugin = Plugin.define(meta).pipe(
       {
         id: Mailbox.Mailbox.typename,
         metadata: {
-          createObjectIntent: ((_, options) =>
-            createIntent(InboxAction.CreateMailbox, { db: options.db })) satisfies CreateObjectIntent,
+          createObject: ((props, { db, context }) =>
+            Effect.sync(() => {
+              const client = context.getCapability(ClientCapabilities.Client);
+              const space = client.spaces.get(db.spaceId);
+              return Mailbox.make({ ...props, space });
+            })) satisfies CreateObject,
           addToCollectionOnCreate: true,
         },
       },
       {
         id: Calendar.Calendar.typename,
         metadata: {
-          createObjectIntent: ((_, options) =>
-            createIntent(InboxAction.CreateCalendar, { db: options.db })) satisfies CreateObjectIntent,
+          createObject: ((props, { db, context }) =>
+            Effect.sync(() => {
+              const client = context.getCapability(ClientCapabilities.Client);
+              const space = client.spaces.get(db.spaceId);
+              return Calendar.make({ ...props, space });
+            })) satisfies CreateObject,
           addToCollectionOnCreate: true,
         },
       },
     ],
   }),
-  Common.Plugin.addIntentResolverModule({
-    activate: Capability.lazy('IntentResolver', () => import('../capabilities/intent-resolver/intent-resolver')),
-  }),
+  Common.Plugin.addOperationResolverModule({ activate: OperationResolver }),
   Plugin.make,
 );

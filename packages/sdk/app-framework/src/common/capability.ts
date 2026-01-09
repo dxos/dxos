@@ -5,6 +5,7 @@
 import type * as Command$ from '@effect/cli/Command';
 import type { Registry } from '@effect-atom/atom-react';
 import type * as Layer$ from 'effect/Layer';
+import type * as ManagedRuntime$ from 'effect/ManagedRuntime';
 import type * as Schema$ from 'effect/Schema';
 import type { FC, PropsWithChildren } from 'react';
 
@@ -18,7 +19,13 @@ import type { RootSettingsStore } from '@dxos/local-storage';
 import type { AnchoredTo } from '@dxos/types';
 
 import { Capability as Capability$, type PluginManager as PluginManager$ } from '../core';
-import type { AnyIntentResolver, IntentContext } from '../plugin-intent';
+import type {
+  HistoryTracker as HistoryTracker$,
+  OperationInvoker as OperationInvoker$,
+  OperationResolver as OperationResolver$,
+  UndoMapping as UndoMapping$,
+  UndoRegistry as UndoRegistry$,
+} from '../plugin-operation';
 
 import type { FileInfo } from './file';
 import type { NodeSerializer } from './graph';
@@ -72,20 +79,6 @@ export namespace Capability {
    * @category Capability
    */
   export const ReactSurface = Capability$.make<ReactSurface>('dxos.org/app-framework/common/react-surface');
-
-  export type IntentResolver = AnyIntentResolver | readonly AnyIntentResolver[];
-
-  /**
-   * @category Capability
-   */
-  export const IntentResolver = Capability$.make<IntentResolver>('dxos.org/app-framework/capability/intent-resolver');
-
-  /**
-   * @category Capability
-   */
-  export const IntentDispatcher = Capability$.make<IntentContext>(
-    'dxos.org/app-framework/capability/intent-dispatcher',
-  );
 
   export type Layout = Readonly<{
     mode: string;
@@ -239,4 +232,59 @@ export namespace Capability {
    * @category Capability
    */
   export const Layer = Capability$.make<Layer$.Layer<any, any, any>>('dxos.org/app-framework/capability/layer');
+
+  export type ManagedRuntime = ManagedRuntime$.ManagedRuntime<any, any>;
+
+  /**
+   * @category Capability
+   */
+  export const ManagedRuntime = Capability$.make<ManagedRuntime>('dxos.org/app-framework/capability/managed-runtime');
+
+  //
+  // Operation System Capabilities
+  //
+
+  export type OperationResolver = OperationResolver$.OperationResolver;
+
+  /**
+   * Handler registration for operations - contributed by plugins.
+   * @category Capability
+   */
+  export const OperationResolver = Capability$.make<OperationResolver[]>(
+    'dxos.org/app-framework/capability/operation-resolver',
+  );
+
+  export type UndoMapping = UndoMapping$.UndoMapping;
+
+  /**
+   * Undo mapping registration - contributed by plugins.
+   * @category Capability
+   */
+  export const UndoMapping = Capability$.make<UndoMapping[]>('dxos.org/app-framework/capability/undo-mapping');
+
+  export type OperationInvoker = OperationInvoker$.OperationInvoker;
+
+  /**
+   * Operation invoker - provided by OperationPlugin.
+   * @category Capability
+   */
+  export const OperationInvoker = Capability$.make<OperationInvoker>(
+    'dxos.org/app-framework/capability/operation-invoker',
+  );
+
+  export type UndoRegistry = UndoRegistry$.UndoRegistry;
+
+  /**
+   * Undo registry - provided by OperationPlugin.
+   * @category Capability
+   */
+  export const UndoRegistry = Capability$.make<UndoRegistry>('dxos.org/app-framework/capability/undo-registry');
+
+  export type HistoryTracker = HistoryTracker$.HistoryTracker;
+
+  /**
+   * History tracker - provided by OperationPlugin.
+   * @category Capability
+   */
+  export const HistoryTracker = Capability$.make<HistoryTracker>('dxos.org/app-framework/capability/history-tracker');
 }

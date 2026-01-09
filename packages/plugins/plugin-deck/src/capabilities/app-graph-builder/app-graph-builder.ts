@@ -4,7 +4,7 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capability, Common, createIntent } from '@dxos/app-framework';
+import { Capability, Common } from '@dxos/app-framework';
 import { AttentionCapabilities } from '@dxos/plugin-attention';
 import { CreateAtom, GraphBuilder, NodeMatcher } from '@dxos/plugin-graph';
 
@@ -42,19 +42,13 @@ export default Capability.makeModule((context) =>
           // };
 
           const closeCurrent = {
-            id: `${Common.LayoutAction.Close._tag}/current`,
-            data: async () => {
+            id: `${Common.LayoutOperation.Close.meta.key}/current`,
+            data: () => {
               const attention = context.getCapability(AttentionCapabilities.Attention);
               const attended = attention.current.at(-1);
               if (attended) {
-                const { dispatchPromise: dispatch } = context.getCapability(Common.Capability.IntentDispatcher);
-                await dispatch(
-                  createIntent(Common.LayoutAction.Close, {
-                    part: 'main',
-                    subject: [attended],
-                    options: { state: false },
-                  }),
-                );
+                const { invokeSync } = context.getCapability(Common.Capability.OperationInvoker);
+                invokeSync(Common.LayoutOperation.Close, { subject: [attended] });
               }
             },
             properties: {
@@ -64,15 +58,13 @@ export default Capability.makeModule((context) =>
           };
 
           const closeOthers = {
-            id: `${Common.LayoutAction.Close._tag}/others`,
-            data: async () => {
-              const { dispatchPromise: dispatch } = context.getCapability(Common.Capability.IntentDispatcher);
+            id: `${Common.LayoutOperation.Close.meta.key}/others`,
+            data: () => {
+              const { invokeSync } = context.getCapability(Common.Capability.OperationInvoker);
               const attention = context.getCapability(AttentionCapabilities.Attention);
               const attended = attention.current.at(-1);
               const ids = state.deck.active.filter((id) => id !== attended) ?? [];
-              await dispatch(
-                createIntent(Common.LayoutAction.Close, { part: 'main', subject: ids, options: { state: false } }),
-              );
+              invokeSync(Common.LayoutOperation.Close, { subject: ids });
             },
             properties: {
               label: ['close others label', { ns: meta.id }],
@@ -81,16 +73,10 @@ export default Capability.makeModule((context) =>
           };
 
           const closeAll = {
-            id: `${Common.LayoutAction.Close._tag}/all`,
-            data: async () => {
-              const { dispatchPromise: dispatch } = context.getCapability(Common.Capability.IntentDispatcher);
-              await dispatch(
-                createIntent(Common.LayoutAction.Close, {
-                  part: 'main',
-                  subject: state.deck.active,
-                  options: { state: false },
-                }),
-              );
+            id: `${Common.LayoutOperation.Close.meta.key}/all`,
+            data: () => {
+              const { invokeSync } = context.getCapability(Common.Capability.OperationInvoker);
+              invokeSync(Common.LayoutOperation.Close, { subject: state.deck.active });
             },
             properties: {
               label: ['close all label', { ns: meta.id }],
@@ -99,7 +85,7 @@ export default Capability.makeModule((context) =>
           };
 
           const toggleSidebar = {
-            id: `${Common.LayoutAction.UpdateSidebar._tag}/nav`,
+            id: `${Common.LayoutOperation.UpdateSidebar.meta.key}/nav`,
             data: async () => {
               state.sidebarState = state.sidebarState === 'expanded' ? 'collapsed' : 'expanded';
             },

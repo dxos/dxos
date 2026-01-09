@@ -22,11 +22,11 @@ type PluginModuleOptions = Partial<
  * Helper functions for creating common plugin module patterns.
  */
 export namespace Plugin {
-  // TODO(wittjosiah): Restrict type to only allow intent resolvers.
-  export type IntentResolverModuleOptions = PluginModuleOptions;
+  // TODO(wittjosiah): Restrict type to only allow operation handlers.
+  export type OperationResolverModuleOptions = PluginModuleOptions;
 
   /**
-   * Creates a module that contributes intent resolvers.
+   * Creates a module that contributes operation handlers.
    *
    * @param options Module options including the activate function and optional configuration
    * @returns A function that can be used with Plugin.addModule() in a pipe chain
@@ -34,21 +34,22 @@ export namespace Plugin {
    * @example
    * ```ts
    * Plugin.define(meta).pipe(
-   *   Common.Plugin.addIntentResolverModule({
+   *   Common.Plugin.addOperationResolverModule({
    *     activate: (context) =>
-   *       Capability.contributes(Common.Capability.IntentResolver, [
-   *         createResolver({ intent: MyAction.DoSomething, resolve: ... })
-   *       ])
+   *       Capability.contributes(Common.Capability.OperationResolver, [{
+   *         operation: MyOperation,
+   *         handler: (input) => Effect.succeed(...)
+   *       }])
    *   })
    * )
    * ```
    */
-  export function addIntentResolverModule<T = void>(
-    options: IntentResolverModuleOptions,
+  export function addOperationResolverModule<T = void>(
+    options: OperationResolverModuleOptions,
   ): (builder: Plugin$.PluginBuilder<T>) => Plugin$.PluginBuilder<T> {
     return Plugin$.addModule({
-      id: Capability$.getModuleTag(options.activate) ?? options.id ?? 'intent-resolver',
-      activatesOn: options.activatesOn ?? ActivationEvent.SetupIntentResolver,
+      id: Capability$.getModuleTag(options.activate) ?? options.id ?? 'operation-resolver',
+      activatesOn: options.activatesOn ?? ActivationEvent.SetupOperationResolver,
       activatesBefore: options.activatesBefore,
       activatesAfter: options.activatesAfter,
       activate: options.activate,

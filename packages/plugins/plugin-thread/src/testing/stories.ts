@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { IntentPlugin, type Plugin, SettingsPlugin } from '@dxos/app-framework';
+import { OperationPlugin, type Plugin, SettingsPlugin } from '@dxos/app-framework';
 import { ClientPlugin } from '@dxos/plugin-client';
 import { GraphPlugin } from '@dxos/plugin-graph';
 import { SpacePlugin } from '@dxos/plugin-space';
@@ -44,7 +44,7 @@ export const createThreadPlugins = async (): Promise<Array<Plugin.Plugin>> => [
     }),
   }),
   SpacePlugin({}),
-  IntentPlugin(),
+  OperationPlugin(),
   SettingsPlugin(),
   GraphPlugin(),
   ThreadPlugin(),

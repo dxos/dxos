@@ -4,12 +4,12 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capability, Common, Plugin, createIntent } from '@dxos/app-framework';
+import { Capability, Common, Plugin } from '@dxos/app-framework';
 import { Ref, Type } from '@dxos/echo';
 import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
 import { MarkdownEvents } from '@dxos/plugin-markdown';
 import { SpaceCapabilities, SpaceEvents } from '@dxos/plugin-space';
-import { type CreateObjectIntent } from '@dxos/plugin-space/types';
+import { type CreateObject } from '@dxos/plugin-space/types';
 import { translations as threadTranslations } from '@dxos/react-ui-thread';
 import { AnchoredTo, Message, Thread } from '@dxos/types';
 
@@ -17,8 +17,8 @@ import {
   AppGraphBuilder,
   BlueprintDefinition,
   CallManager,
-  IntentResolver,
   Markdown,
+  OperationResolver,
   ReactRoot,
   ReactSurface,
   Repair,
@@ -26,7 +26,7 @@ import {
 } from './capabilities';
 import { THREAD_ITEM, meta } from './meta';
 import { translations } from './translations';
-import { Channel, ThreadAction } from './types';
+import { Channel, ThreadOperation } from './types';
 
 // TODO(Zan): Every instance of `cursor` should be replaced with `anchor`.
 //  NOTE(burdon): Review/discuss CursorConverter semantics.
@@ -61,10 +61,7 @@ export const ThreadPlugin = Plugin.define(meta).pipe(
         metadata: {
           icon: 'ph--hash--regular',
           iconHue: 'rose',
-          createObjectIntent: ((_, options) =>
-            createIntent(ThreadAction.CreateChannel, {
-              spaceId: options.db.spaceId,
-            })) satisfies CreateObjectIntent,
+          createObject: ((props) => Effect.sync(() => Channel.make(props))) satisfies CreateObject,
         },
       },
       {
@@ -109,11 +106,12 @@ export const ThreadPlugin = Plugin.define(meta).pipe(
   Plugin.addModule({
     id: 'on-space-created',
     activatesOn: SpaceEvents.SpaceCreated,
-    activate: () =>
+    activate: (context) =>
       Effect.succeed(
-        Capability.contributes(SpaceCapabilities.OnCreateSpace, (params) =>
-          createIntent(ThreadAction.OnCreateSpace, params),
-        ),
+        Capability.contributes(SpaceCapabilities.OnCreateSpace, (params) => {
+          const { invoke } = context.getCapability(Common.Capability.OperationInvoker);
+          return invoke(ThreadOperation.OnCreateSpace, params);
+        }),
       ),
   }),
   Plugin.addModule({
@@ -128,7 +126,7 @@ export const ThreadPlugin = Plugin.define(meta).pipe(
   }),
   Common.Plugin.addReactRootModule({ activate: ReactRoot }),
   Common.Plugin.addSurfaceModule({ activate: ReactSurface }),
-  Common.Plugin.addIntentResolverModule({ activate: IntentResolver }),
+  Common.Plugin.addOperationResolverModule({ activate: OperationResolver }),
   Common.Plugin.addAppGraphModule({ activate: AppGraphBuilder }),
   Common.Plugin.addBlueprintDefinitionModule({ activate: BlueprintDefinition }),
   Plugin.make,

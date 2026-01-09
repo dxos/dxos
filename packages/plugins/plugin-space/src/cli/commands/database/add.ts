@@ -17,12 +17,12 @@ import { Database, Filter, Obj, Ref, Type } from '@dxos/echo';
 import { EntityKind, getTypeAnnotation } from '@dxos/echo/internal';
 import { Collection } from '@dxos/schema';
 
-import { type CreateObjectIntent } from '../../../types';
+import { type CreateObject } from '../../../types';
 
 import { printObject } from './util';
 
 export type Metadata = {
-  createObjectIntent: CreateObjectIntent;
+  createObject: CreateObject;
   inputSchema?: Schema.Schema.AnyNoContext;
   addToCollectionOnCreate?: boolean;
 };
@@ -45,7 +45,7 @@ export const add = Command.make(
         const metadata = manager.context
           .getCapabilities(AppFrameworkCommon.Capability.Metadata)
           .find(({ id }) => id === typename)?.metadata;
-        return metadata?.createObjectIntent ? (metadata as Metadata) : undefined;
+        return metadata?.createObject ? (metadata as Metadata) : undefined;
       };
 
       const [properties] = yield* Database.Service.runQuery(Filter.type(SpaceProperties));
@@ -62,8 +62,7 @@ export const add = Command.make(
         return yield* Effect.fail(new Error(`Unknown typename: ${selectedTypename}`));
       }
 
-      const { dispatch } = manager.context.getCapability(AppFrameworkCommon.Capability.IntentDispatcher);
-      const { object } = yield* dispatch(metadata.createObjectIntent({}, { db }));
+      const object = yield* metadata.createObject({}, { db, context: manager.context });
       if (!Obj.isObject(object)) {
         return yield* Effect.fail(new Error(`Invalid object: ${object}`));
       }

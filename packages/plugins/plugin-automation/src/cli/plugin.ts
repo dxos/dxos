@@ -13,11 +13,8 @@ import { meta } from '../meta';
 import { trigger } from './commands';
 
 export const AutomationPlugin = Plugin.define(meta).pipe(
-  Common.Plugin.addCommandModule({
-    commands: [trigger],
-  }),
+  Common.Plugin.addCommandModule({ commands: [trigger] }),
   Plugin.addModule({
-    id: 'compute-runtime',
     activatesOn: ClientEvents.ClientReady,
     activatesAfter: [AutomationEvents.ComputeRuntimeReady],
     activate: ComputeRuntime,

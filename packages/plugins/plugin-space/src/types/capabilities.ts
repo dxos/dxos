@@ -2,12 +2,14 @@
 // Copyright 2025 DXOS.org
 //
 
+import type * as Effect from 'effect/Effect';
 import type * as Schema from 'effect/Schema';
 
-import { type AnyIntentChain, Capability, type Label } from '@dxos/app-framework';
+import { Capability } from '@dxos/app-framework';
 import { type Space } from '@dxos/client/echo';
 import { type Database } from '@dxos/echo';
 import { type Collection } from '@dxos/schema';
+import { type Label } from '@dxos/ui-types';
 import { type DeepReadonly, type Position } from '@dxos/util';
 
 import { meta } from '../meta';
@@ -25,7 +27,7 @@ export namespace SpaceCapabilities {
     space: Space;
     isDefault: boolean;
     rootCollection: Collection.Collection;
-  }) => AnyIntentChain;
+  }) => Effect.Effect<void, Error>;
   export const OnCreateSpace = Capability.make<OnCreateSpace>(`${meta.id}/capability/on-space-created`);
 
   export type OnSchemaAdded = (params: {
@@ -33,7 +35,7 @@ export namespace SpaceCapabilities {
     schema: Schema.Schema.AnyNoContext;
     // TODO(wittjosiah): This is leaky.
     show?: boolean;
-  }) => AnyIntentChain;
+  }) => Effect.Effect<void, Error>;
   export const OnSchemaAdded = Capability.make<OnSchemaAdded>(`${meta.id}/capability/on-schema-added`);
 
   // TODO(wittjosiah): Replace with migrations, this is not a sustainable solution.

@@ -10,15 +10,14 @@ import { Button } from '@dxos/react-ui';
 
 import * as Common from '../../common';
 import { Capability, type Plugin } from '../../core';
-import { createIntent } from '../../plugin-intent';
-import { useCapabilities, useIntentDispatcher, usePluginManager } from '../../react';
+import { useCapabilities, useOperationInvoker, usePluginManager } from '../../react';
 
-import { Number, createGeneratorIntent, createPluginId } from './generator';
+import { Number, createAlertOperation, createPluginId } from './generator';
 
 export const Toolbar = () => {
   const manager = usePluginManager();
   const plugins = useAtomValue(manager.plugins);
-  const { dispatchPromise: dispatch } = useIntentDispatcher();
+  const { invokePromise } = useOperationInvoker();
 
   const handleAdd = useCallback(async () => {
     const id = createPluginId(Math.random().toString(16).substring(2, 8));
@@ -36,7 +35,7 @@ export const Toolbar = () => {
       <Button onClick={handleAdd}>Add</Button>
       <div className='flex items-center'>Count: {count}</div>
       {generatorPlugins.map((plugin: Plugin.Plugin) => (
-        <Button key={plugin.meta.id} onClick={() => dispatch(createIntent(createGeneratorIntent(plugin.meta.id)))}>
+        <Button key={plugin.meta.id} onClick={() => invokePromise(createAlertOperation(plugin.meta.id))}>
           {plugin.meta.id.replace('dxos.org/test/generator/', '')}
         </Button>
       ))}

@@ -2,7 +2,9 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Capability, Common, Plugin, createIntent } from '@dxos/app-framework';
+import * as Effect from 'effect/Effect';
+
+import { Capability, Common, Plugin } from '@dxos/app-framework';
 import { Tag } from '@dxos/echo';
 import { ClientEvents } from '@dxos/plugin-client';
 import { Collection, DataTypes } from '@dxos/schema';
@@ -19,23 +21,16 @@ import {
   Task,
 } from '@dxos/types';
 
+import { IdentityCreated } from '../capabilities/identity-created';
+import { OperationResolver } from '../capabilities/operation-resolver';
 import { SpaceEvents } from '../events';
 import { meta } from '../meta';
-import { CollectionAction, type CreateObjectIntent, type SpacePluginOptions } from '../types';
+import { type CreateObject, type SpacePluginOptions } from '../types';
 
 import { database, queue, space } from './commands';
 
-const IdentityCreated = Capability.lazy(
-  'IdentityCreated',
-  () => import('../capabilities/identity-created/identity-created'),
-);
-const IntentResolver = Capability.lazy(
-  'IntentResolver',
-  () => import('../capabilities/intent-resolver/intent-resolver'),
-);
-
 export const SpacePlugin = Plugin.define<SpacePluginOptions>(meta).pipe(
-  // TODO(wittjosiah): Could some of these commands make use of intents?
+  // TODO(wittjosiah): Could some of these commands make use of operations?
   Common.Plugin.addCommandModule({
     commands: [database, queue, space],
   }),
@@ -59,7 +54,7 @@ export const SpacePlugin = Plugin.define<SpacePluginOptions>(meta).pipe(
     metadata: {
       id: Collection.Collection.typename,
       metadata: {
-        createObjectIntent: ((props) => createIntent(CollectionAction.Create, props)) satisfies CreateObjectIntent,
+        createObject: ((props) => Effect.sync(() => Collection.make(props))) satisfies CreateObject,
         addToCollectionOnCreate: true,
       },
     },
@@ -72,9 +67,9 @@ export const SpacePlugin = Plugin.define<SpacePluginOptions>(meta).pipe(
     };
 
     return {
-      id: Capability.getModuleTag(IntentResolver),
-      activatesOn: Common.ActivationEvent.SetupIntentResolver,
-      activate: (context) => IntentResolver({ context, createInvitationUrl, observability: false }),
+      id: Capability.getModuleTag(OperationResolver),
+      activatesOn: Common.ActivationEvent.SetupOperationResolver,
+      activate: (context) => OperationResolver({ context, createInvitationUrl, observability: false }),
     };
   }),
   Plugin.addModule({

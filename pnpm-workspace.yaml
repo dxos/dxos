@@ -62,7 +62,10 @@ catalog:
   '@dxos/cli-linux-arm64': 0.8.3
   '@dxos/cli-linux-x64': 0.8.3
   '@dxos/cli-win32-x64': 0.8.3
-  '@dxos/react-ui-mosaic': 0.7.5-feature-compute.4d9d99a
+  '@dxos/echo': ^0.8.3
+  '@dxos/echo-db': ^0.8.3
+  '@dxos/log': ^0.8.3
+  '@dxos/test-utils': ^0.8.3
   '@effect-atom/atom': ^0.4.10
   '@effect-atom/atom-react': ^0.4.4
   '@effect/ai': 0.32.1
@@ -83,7 +86,7 @@ catalog:
   '@effect/schema': ^0.75.5
   '@effect/sql': 0.48.6
   '@effect/typeclass': 0.38.0
-  '@effect/vitest': ~0.27.0
+  '@effect/vitest': 0.27.0
   '@effect/workflow': ^0.15.2
   '@emoji-mart/data': ^1.1.2
   '@emoji-mart/react': ^1.1.1

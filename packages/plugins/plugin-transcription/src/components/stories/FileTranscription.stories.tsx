@@ -16,6 +16,7 @@ import { FunctionExecutor, ServiceContainer } from '@dxos/functions-runtime';
 import { log } from '@dxos/log';
 import { ClientPlugin } from '@dxos/plugin-client';
 import { PreviewPlugin } from '@dxos/plugin-preview';
+import { SpacePlugin } from '@dxos/plugin-space';
 import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { TestSchema } from '@dxos/schema/testing';
@@ -199,6 +200,8 @@ const meta = {
             await seedTestData(client.spaces.default);
           },
         }),
+        ...corePlugins(),
+        SpacePlugin({}),
         PreviewPlugin(),
         TranscriptionPlugin(),
         StorybookPlugin({}),

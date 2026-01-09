@@ -3,7 +3,7 @@
 //
 
 export * from './app-graph-builder';
-export * from './intent-resolver';
 export * from './keyboard';
+export * from './operation-resolver';
 export * from './react-surface';
 export * from './state';

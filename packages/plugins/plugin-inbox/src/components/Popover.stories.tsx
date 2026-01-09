@@ -5,12 +5,13 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useCallback, useRef } from 'react';
 
-import { Common, createIntent } from '@dxos/app-framework';
-import { useIntentDispatcher } from '@dxos/app-framework/react';
+import { Common } from '@dxos/app-framework';
+import { useOperationInvoker } from '@dxos/app-framework/react';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Filter } from '@dxos/echo';
 import { ClientPlugin } from '@dxos/plugin-client';
 import { PreviewPlugin } from '@dxos/plugin-preview';
+import { SpacePlugin } from '@dxos/plugin-space';
 import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
 import { useDatabase, useQuery } from '@dxos/react-client/echo';
 import { List, ListItem } from '@dxos/react-ui';
@@ -22,23 +23,18 @@ import { InboxPlugin } from '../InboxPlugin';
 import { Mailbox } from '../types';
 
 const ContactItem = ({ contact }: { contact: Person.Person }) => {
-  const { dispatchPromise: dispatch } = useIntentDispatcher();
+  const { invokePromise } = useOperationInvoker();
   const ref = useRef<HTMLLIElement>(null);
 
   const handleClick = useCallback(
     () =>
-      dispatch(
-        createIntent(Common.LayoutAction.UpdatePopover, {
-          part: 'popover',
-          subject: contact,
-          options: {
-            state: true,
-            variant: 'virtual',
-            anchor: ref.current,
-          },
-        }),
-      ),
-    [],
+      invokePromise(Common.LayoutOperation.UpdatePopover, {
+        subject: contact,
+        state: true,
+        variant: 'virtual',
+        anchor: ref.current,
+      }),
+    [invokePromise],
   );
 
   return (
@@ -55,23 +51,18 @@ const ContactItem = ({ contact }: { contact: Person.Person }) => {
 };
 
 const OrganizationItem = ({ organization }: { organization: Organization.Organization }) => {
-  const { dispatchPromise: dispatch } = useIntentDispatcher();
+  const { invokePromise } = useOperationInvoker();
   const ref = useRef<HTMLLIElement>(null);
 
   const handleClick = useCallback(
     () =>
-      dispatch(
-        createIntent(Common.LayoutAction.UpdatePopover, {
-          part: 'popover',
-          subject: organization,
-          options: {
-            state: true,
-            variant: 'virtual',
-            anchor: ref.current,
-          },
-        }),
-      ),
-    [],
+      invokePromise(Common.LayoutOperation.UpdatePopover, {
+        subject: organization,
+        state: true,
+        variant: 'virtual',
+        anchor: ref.current,
+      }),
+    [invokePromise],
   );
 
   return (
@@ -109,8 +100,10 @@ const meta = {
             space.db.add(mailbox);
           },
         }),
-        StorybookPlugin({}),
+        ...corePlugins(),
+        SpacePlugin({}),
         PreviewPlugin(),
+        StorybookPlugin({}),
         InboxPlugin(),
       ],
     }),

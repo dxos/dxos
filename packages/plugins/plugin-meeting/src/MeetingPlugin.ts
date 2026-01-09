@@ -4,7 +4,7 @@
 
 import * as Effect from 'effect/Effect';
 
-import { ActivationEvent, Capability, Common, Plugin, createIntent } from '@dxos/app-framework';
+import { ActivationEvent, Capability, Common, Plugin } from '@dxos/app-framework';
 import { Type } from '@dxos/echo';
 import { ClientEvents } from '@dxos/plugin-client';
 import { SpaceCapabilities, SpaceEvents } from '@dxos/plugin-space';
@@ -12,15 +12,17 @@ import { SpaceCapabilities, SpaceEvents } from '@dxos/plugin-space';
 import {
   AppGraphBuilder,
   CallExtension,
-  IntentResolver,
   MeetingSettings,
   MeetingState,
+  OperationResolver,
   ReactSurface,
   Repair,
 } from './capabilities';
 import { meta } from './meta';
 import { translations } from './translations';
-import { Meeting, MeetingAction } from './types';
+import { Meeting, MeetingOperation } from './types';
+
+const StateReady = Common.ActivationEvent.createStateEvent(meta.id);
 
 export const MeetingPlugin = Plugin.define(meta).pipe(
   Plugin.addModule({
@@ -32,6 +34,7 @@ export const MeetingPlugin = Plugin.define(meta).pipe(
     //   Should this be a different event?
     //   Should settings store be renamed to be more generic?
     activatesOn: ActivationEvent.oneOf(Common.ActivationEvent.SetupSettings, Common.ActivationEvent.SetupAppGraph),
+    activatesAfter: [StateReady],
     activate: MeetingState,
   }),
   Common.Plugin.addTranslationsModule({ translations }),
@@ -49,11 +52,12 @@ export const MeetingPlugin = Plugin.define(meta).pipe(
   Plugin.addModule({
     id: 'on-space-created',
     activatesOn: SpaceEvents.SpaceCreated,
-    activate: () =>
+    activate: (context) =>
       Effect.succeed(
-        Capability.contributes(SpaceCapabilities.OnCreateSpace, (params) =>
-          createIntent(MeetingAction.OnCreateSpace, params),
-        ),
+        Capability.contributes(SpaceCapabilities.OnCreateSpace, (params) => {
+          const { invoke } = context.getCapability(Common.Capability.OperationInvoker);
+          return invoke(MeetingOperation.OnCreateSpace, params);
+        }),
       ),
   }),
   Plugin.addModule({
@@ -61,10 +65,10 @@ export const MeetingPlugin = Plugin.define(meta).pipe(
     activate: Repair,
   }),
   Common.Plugin.addSurfaceModule({ activate: ReactSurface }),
-  Common.Plugin.addIntentResolverModule({ activate: IntentResolver }),
+  Common.Plugin.addOperationResolverModule({ activate: OperationResolver }),
   Common.Plugin.addAppGraphModule({ activate: AppGraphBuilder }),
   Plugin.addModule({
-    activatesOn: ActivationEvent.allOf(Common.ActivationEvent.SettingsReady, ClientEvents.ClientReady),
+    activatesOn: ActivationEvent.allOf(Common.ActivationEvent.SettingsReady, StateReady),
     activate: CallExtension,
   }),
   Plugin.make,

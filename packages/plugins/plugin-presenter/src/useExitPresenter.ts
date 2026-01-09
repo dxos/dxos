@@ -4,33 +4,28 @@
 
 import { useCallback } from 'react';
 
-import { Common, createIntent } from '@dxos/app-framework';
-import { useCapability, useIntentDispatcher } from '@dxos/app-framework/react';
+import { Common } from '@dxos/app-framework';
+import { useCapability, useOperationInvoker } from '@dxos/app-framework/react';
 import { Obj } from '@dxos/echo';
 import { type Live } from '@dxos/live-object';
 import { DeckCapabilities } from '@dxos/plugin-deck';
-import { DeckAction } from '@dxos/plugin-deck/types';
+import { DeckOperation } from '@dxos/plugin-deck/types';
 
 export const useExitPresenter = (object: Live<any>) => {
-  const { dispatchPromise: dispatch } = useIntentDispatcher();
+  const { invokePromise } = useOperationInvoker();
   const layout = useCapability(DeckCapabilities.MutableDeckState);
 
   return useCallback(() => {
     const objectId = Obj.getDXN(object).toString();
     if (layout.deck.fullscreen) {
-      void dispatch(
-        createIntent(DeckAction.Adjust, {
-          type: 'solo--fullscreen',
-          id: objectId,
-        }),
-      );
+      void invokePromise(DeckOperation.Adjust, {
+        type: 'solo--fullscreen',
+        id: objectId,
+      });
     }
-    return dispatch(
-      createIntent(Common.LayoutAction.Open, {
-        part: 'main',
-        subject: [objectId],
-        options: { workspace: Obj.getDatabase(object)?.spaceId },
-      }),
-    );
-  }, [dispatch, object]);
+    return invokePromise(Common.LayoutOperation.Open, {
+      subject: [objectId],
+      workspace: Obj.getDatabase(object)?.spaceId,
+    });
+  }, [invokePromise, object, layout]);
 };

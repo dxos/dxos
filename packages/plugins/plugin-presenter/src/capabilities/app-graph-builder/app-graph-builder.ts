@@ -5,16 +5,16 @@
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
-import { Capability, Common, createIntent } from '@dxos/app-framework';
+import { Capability, Common } from '@dxos/app-framework';
 import { Obj } from '@dxos/echo';
 import { DeckCapabilities } from '@dxos/plugin-deck';
-import { ATTENDABLE_PATH_SEPARATOR, DeckAction } from '@dxos/plugin-deck/types';
+import { ATTENDABLE_PATH_SEPARATOR, DeckOperation } from '@dxos/plugin-deck/types';
 import { CreateAtom, GraphBuilder } from '@dxos/plugin-graph';
 import { Markdown } from '@dxos/plugin-markdown/types';
 import { Collection } from '@dxos/schema';
 
 import { meta } from '../../meta';
-import { PresenterAction, type PresenterSettingsProps } from '../../types';
+import { PresenterOperation, type PresenterSettingsProps } from '../../types';
 
 export default Capability.makeModule((context) =>
   Effect.sync(() => {
@@ -69,28 +69,23 @@ export default Capability.makeModule((context) =>
           const { spaceId } = dxn.asEchoDXN()!;
           return [
             {
-              id: `${PresenterAction.TogglePresentation._tag}/${id}`,
+              id: `${PresenterOperation.TogglePresentation.meta.key}/${id}`,
               // TODO(burdon): Allow function so can generate state when activated.
               //  So can set explicit fullscreen state coordinated with current presenter state.
               data: async () => {
-                const { dispatchPromise: dispatch } = context.getCapability(Common.Capability.IntentDispatcher);
+                const { invokePromise } = context.getCapability(Common.Capability.OperationInvoker);
                 const layout = context.getCapability(DeckCapabilities.MutableDeckState);
                 const presenterId = [id, 'presenter'].join(ATTENDABLE_PATH_SEPARATOR);
                 if (!layout.deck.fullscreen) {
-                  void dispatch(
-                    createIntent(DeckAction.Adjust, {
-                      type: 'solo--fullscreen',
-                      id: presenterId,
-                    }),
-                  );
+                  void invokePromise(DeckOperation.Adjust, {
+                    type: 'solo--fullscreen' as const,
+                    id: presenterId,
+                  });
                 }
-                await dispatch(
-                  createIntent(Common.LayoutAction.Open, {
-                    part: 'main',
-                    subject: [presenterId],
-                    options: { workspace: spaceId },
-                  }),
-                );
+                await invokePromise(Common.LayoutOperation.Open, {
+                  subject: [presenterId],
+                  workspace: spaceId,
+                });
               },
               properties: {
                 label: ['toggle presentation label', { ns: meta.id }],

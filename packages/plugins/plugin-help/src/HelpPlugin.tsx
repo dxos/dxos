@@ -2,14 +2,12 @@
 // Copyright 2023 DXOS.org
 //
 
-import * as Effect from 'effect/Effect';
+import { Common, Plugin } from '@dxos/app-framework';
 
-import { Capability, Common, Plugin, createResolver } from '@dxos/app-framework';
-
-import { AppGraphBuilder, HelpState, ReactRoot, ReactSurface } from './capabilities';
+import { AppGraphBuilder, HelpState, OperationResolver, ReactRoot, ReactSurface } from './capabilities';
 import { meta } from './meta';
 import { translations } from './translations';
-import { HelpAction, HelpCapabilities, type Step } from './types';
+import { type Step } from './types';
 
 export type HelpPluginOptions = { steps?: Step[] };
 
@@ -25,21 +23,7 @@ export const HelpPlugin = Plugin.define<HelpPluginOptions>(meta).pipe(
     activate: () => ReactRoot(steps),
   })),
   Common.Plugin.addSurfaceModule({ activate: ReactSurface }),
-  Common.Plugin.addIntentResolverModule({
-    activate: (context) =>
-      Effect.succeed(
-        Capability.contributes(
-          Common.Capability.IntentResolver,
-          createResolver({
-            intent: HelpAction.Start,
-            resolve: () => {
-              const state = context.getCapability(HelpCapabilities.MutableState);
-              state.running = true;
-            },
-          }),
-        ),
-      ),
-  }),
+  Common.Plugin.addOperationResolverModule({ activate: OperationResolver }),
   Common.Plugin.addAppGraphModule({ activate: AppGraphBuilder }),
   Plugin.make,
 );

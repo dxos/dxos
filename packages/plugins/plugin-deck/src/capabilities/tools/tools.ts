@@ -15,11 +15,12 @@ import {
   type PromiseIntentDispatcher,
   createIntent,
 } from '@dxos/app-framework';
+import { type OperationInvoker } from '@dxos/app-framework/plugin-operation/invoker';
 import { invariant } from '@dxos/invariant';
 import { trim } from '@dxos/util';
 
 import { meta } from '../../meta';
-import { DeckAction } from '../../types';
+import { DeckOperation } from '../../types';
 
 // TODO(burdon): Factor out.
 declare global {
@@ -48,22 +49,25 @@ export default Capability.makeModule(() =>
         }),
         execute: async ({ id }, { extensions }) => {
           invariant(extensions);
-          const { pivotId, dispatch, part } = extensions;
+          const { pivotId, dispatch, invokePromise, part } = extensions as {
+            pivotId: string;
+            dispatch: PromiseIntentDispatcher;
+            invokePromise: OperationInvoker['invokePromise'];
+            part: string;
+          };
           invariant(pivotId, 'No pivot ID');
-          invariant(dispatch, 'No intent dispatcher');
+          invariant(invokePromise, 'No operation invoker');
 
           if (part === 'deck') {
-            const { data, error } = await dispatch(
-              createIntent(DeckAction.ChangeCompanion, {
-                primary: pivotId,
-                companion: id,
-              }),
-            );
+            const { error } = await invokePromise(DeckOperation.ChangeCompanion, {
+              primary: pivotId,
+              companion: id,
+            });
             if (error) {
               return ToolResult.Error(error.message);
             }
 
-            return ToolResult.Success(data);
+            return ToolResult.Success({});
           } else {
             const { data, error } = await dispatch(
               createIntent(LayoutAction.Open, {

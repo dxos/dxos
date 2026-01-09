@@ -2,40 +2,33 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as Function from 'effect/Function';
 import React, { useCallback } from 'react';
 
-import { Common, chain, createIntent } from '@dxos/app-framework';
-import { useIntentDispatcher } from '@dxos/app-framework/react';
+import { Common } from '@dxos/app-framework';
+import { useOperationInvoker } from '@dxos/app-framework/react';
 
 import { meta } from '../meta';
-import { ObservabilityAction, type UserFeedback } from '../types';
+import { ObservabilityOperation, type UserFeedback } from '../types';
 
 import { FeedbackForm } from './FeedbackForm';
 
 export const HelpContainer = () => {
-  const { dispatchPromise: dispatch } = useIntentDispatcher();
+  const { invokePromise } = useOperationInvoker();
 
   const handleSave = useCallback(
-    (values: UserFeedback) =>
-      dispatch(
-        Function.pipe(
-          createIntent(ObservabilityAction.CaptureUserFeedback, values),
-          chain(Common.LayoutAction.UpdateComplementary, { part: 'complementary', options: { state: 'collapsed' } }),
-          chain(Common.LayoutAction.AddToast, {
-            part: 'toast',
-            subject: {
-              id: `${meta.id}/feedback-success`,
-              icon: 'ph--paper-plane-tilt--regular',
-              duration: 3000,
-              title: ['feedback toast label', { ns: meta.id }],
-              description: ['feedback toast description', { ns: meta.id }],
-              closeLabel: ['close label', { ns: 'os' }],
-            },
-          }),
-        ),
-      ),
-    [dispatch],
+    async (values: UserFeedback) => {
+      await invokePromise(ObservabilityOperation.CaptureUserFeedback, values);
+      await invokePromise(Common.LayoutOperation.UpdateComplementary, { state: 'collapsed' });
+      await invokePromise(Common.LayoutOperation.AddToast, {
+        id: `${meta.id}/feedback-success`,
+        icon: 'ph--paper-plane-tilt--regular',
+        duration: 3000,
+        title: ['feedback toast label', { ns: meta.id }],
+        description: ['feedback toast description', { ns: meta.id }],
+        closeLabel: ['close label', { ns: 'os' }],
+      });
+    },
+    [invokePromise],
   );
 
   return <FeedbackForm onSave={handleSave} />;

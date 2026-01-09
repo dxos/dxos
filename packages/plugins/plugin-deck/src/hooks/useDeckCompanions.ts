@@ -2,10 +2,10 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type Label } from '@dxos/app-framework';
 import { useAppGraph } from '@dxos/app-framework/react';
 import { Node, type Node as NodeType } from '@dxos/plugin-graph';
 import { useConnections } from '@dxos/plugin-graph';
+import { type Label } from '@dxos/ui-types';
 import { type Position, byPosition } from '@dxos/util';
 
 import { ATTENDABLE_PATH_SEPARATOR, DECK_COMPANION_TYPE } from '../types';

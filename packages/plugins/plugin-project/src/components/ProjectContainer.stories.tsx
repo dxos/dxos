@@ -11,6 +11,7 @@ import { Obj, Query, Tag, Type } from '@dxos/echo';
 import { ClientPlugin } from '@dxos/plugin-client';
 import { InboxPlugin } from '@dxos/plugin-inbox';
 import { PreviewPlugin } from '@dxos/plugin-preview';
+import { SpacePlugin } from '@dxos/plugin-space';
 import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
 import { faker } from '@dxos/random';
 import { useDatabase, useQuery } from '@dxos/react-client/echo';
@@ -205,6 +206,8 @@ const meta = {
             await messageQueue.append(messages);
           },
         }),
+        ...corePlugins(),
+        SpacePlugin({}),
         PreviewPlugin(),
         InboxPlugin(),
         StorybookPlugin({}),

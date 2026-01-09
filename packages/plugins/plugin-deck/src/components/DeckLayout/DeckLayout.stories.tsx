@@ -11,7 +11,7 @@ import { withPluginManager } from '@dxos/app-framework/testing';
 import { corePlugins } from '@dxos/plugin-testing';
 import { withTheme } from '@dxos/react-ui/testing';
 
-import { DeckStateFactory, LayoutIntentResolver } from '../../capabilities';
+import { DeckStateFactory, LayoutOperationResolver } from '../../capabilities';
 import { translations } from '../../translations';
 
 import { DeckLayout } from './DeckLayout';
@@ -34,10 +34,8 @@ const meta = {
             activatesOn: Common.ActivationEvent.AppGraphReady,
             activate: () => Effect.succeed(DeckStateFactory()),
           }),
-          Plugin.addModule({
-            id: 'layout-intent-resolver',
-            activatesOn: Common.ActivationEvent.SetupIntentResolver,
-            activate: LayoutIntentResolver,
+          Common.Plugin.addOperationResolverModule({
+            activate: LayoutOperationResolver,
           }),
           Plugin.make,
         )(),

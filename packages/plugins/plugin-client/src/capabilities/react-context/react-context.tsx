@@ -16,10 +16,10 @@ export default Capability.makeModule(() =>
   Effect.succeed(
     Capability.contributes(Common.Capability.ReactContext, {
       id: meta.id,
-      context: (({ children }: { children?: React.ReactNode }) => {
+      context: ({ children }: { children?: React.ReactNode }) => {
         const client = useCapability(ClientCapabilities.Client);
         return <ClientProvider client={client}>{children}</ClientProvider>;
-      }) as React.FC<{ children?: React.ReactNode }>,
+      },
     }),
   ),
 );

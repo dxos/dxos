@@ -2,14 +2,16 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Common, Plugin, createIntent } from '@dxos/app-framework';
-import { type CreateObjectIntent } from '@dxos/plugin-space/types';
+import * as Effect from 'effect/Effect';
+
+import { Common, Plugin } from '@dxos/app-framework';
+import { type CreateObject } from '@dxos/plugin-space/types';
 import { Text } from '@dxos/schema';
 
 // NOTE: Must not import from index to avoid pulling in react dependencies.
-import { IntentResolver } from '../capabilities/intent-resolver';
+import { OperationResolver } from '../capabilities/operation-resolver';
 import { meta } from '../meta';
-import { Markdown, MarkdownAction } from '../types';
+import { Markdown } from '../types';
 
 export const MarkdownPlugin = Plugin.define(meta).pipe(
   Common.Plugin.addSchemaModule({ schema: [Markdown.Document, Text.Text] }),
@@ -17,11 +19,11 @@ export const MarkdownPlugin = Plugin.define(meta).pipe(
     metadata: {
       id: Markdown.Document.typename,
       metadata: {
-        createObjectIntent: (() => createIntent(MarkdownAction.Create)) satisfies CreateObjectIntent,
+        createObject: ((props) => Effect.sync(() => Markdown.make(props))) satisfies CreateObject,
         addToCollectionOnCreate: true,
       },
     },
   }),
-  Common.Plugin.addIntentResolverModule({ activate: IntentResolver }),
+  Common.Plugin.addOperationResolverModule({ activate: OperationResolver }),
   Plugin.make,
 );

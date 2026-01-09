@@ -16,10 +16,10 @@ export const WelcomePlugin = Plugin.define(meta).pipe(
   Plugin.addModule({
     id: `${meta.id}/module/onboarding`,
     activatesOn: ActivationEvent.allOf(
-      Common.ActivationEvent.DispatcherReady,
       Common.ActivationEvent.AppGraphReady,
-      Common.ActivationEvent.SettingsReady,
+      Common.ActivationEvent.OperationInvokerReady,
       Common.ActivationEvent.LayoutReady,
+      Common.ActivationEvent.SettingsReady,
       ClientEvents.ClientReady,
     ),
     activate: Onboarding,

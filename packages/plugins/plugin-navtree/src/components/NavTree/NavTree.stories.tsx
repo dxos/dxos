@@ -3,11 +3,11 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import * as Schema from 'effect/Schema';
+import * as Effect from 'effect/Effect';
 import React, { type KeyboardEvent, useCallback, useRef } from 'react';
 import { expect, userEvent, within } from 'storybook/test';
 
-import { Capability, Common, createResolver } from '@dxos/app-framework';
+import { Capability, Common, OperationResolver, RuntimePlugin } from '@dxos/app-framework';
 import { useCapability } from '@dxos/app-framework/react';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { live } from '@dxos/live-object';
@@ -120,19 +120,23 @@ const meta = {
   decorators: [
     withTheme,
     withPluginManager({
-      plugins: [...corePlugins(), StorybookPlugin({ initialState: { sidebarState: 'expanded' } }), NavTreePlugin()],
+      plugins: [
+        RuntimePlugin(),
+        ...corePlugins(),
+        NavTreePlugin(),
+        StorybookPlugin({ initialState: { sidebarState: 'expanded' } }),
+      ],
       capabilities: (context) => [
         Capability.contributes(StoryState, live({ tab: 'space-0' })),
         Capability.contributes(Common.Capability.AppGraphBuilder, storybookGraphBuilders(context)),
-        Capability.contributes(Common.Capability.IntentResolver, [
-          createResolver({
-            intent: Common.LayoutAction.UpdateLayout,
-            filter: (data): data is Schema.Schema.Type<typeof Common.LayoutAction.SwitchWorkspace.fields.input> =>
-              Schema.is(Common.LayoutAction.SwitchWorkspace.fields.input)(data),
-            resolve: ({ subject }) => {
-              const state = context.getCapability(StoryState);
-              state.tab = subject;
-            },
+        Capability.contributes(Common.Capability.OperationResolver, [
+          OperationResolver.make({
+            operation: Common.LayoutOperation.SwitchWorkspace,
+            handler: ({ subject }) =>
+              Effect.sync(() => {
+                const state = context.getCapability(StoryState);
+                state.tab = subject;
+              }),
           }),
         ]),
       ],

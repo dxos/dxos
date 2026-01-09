@@ -6,20 +6,19 @@
 // @ts-nocheck
 
 import * as Effect from 'effect/Effect';
-import * as Function from 'effect/Function';
 import * as Schema from 'effect/Schema';
 
 import { ToolResult, createTool } from '@dxos/ai';
-import { Capability, Common, chain } from '@dxos/app-framework';
+import { Capability, Common } from '@dxos/app-framework';
 import { ArtifactId, createArtifactElement } from '@dxos/assistant';
 import { defineArtifact } from '@dxos/blueprints';
 import { Obj } from '@dxos/echo';
 import { assertArgument, invariant } from '@dxos/invariant';
-import { SpaceAction } from '@dxos/plugin-space/types';
+import { SpaceOperation } from '@dxos/plugin-space/types';
 import { Filter } from '@dxos/react-client/echo';
 
 import { meta } from '../../meta';
-import { Markdown, MarkdownAction } from '../../types';
+import { Markdown } from '../../types';
 
 export default Capability.makeModule(() =>
   Effect.sync(() => {
@@ -47,23 +46,19 @@ export default Capability.makeModule(() =>
           }),
           execute: async ({ name, content }, { extensions }) => {
             invariant(extensions?.space, 'No space');
-            invariant(extensions?.dispatch, 'No intent dispatcher');
+            invariant(extensions?.invoke, 'No operation invoker');
 
-            const intent = Function.pipe(
-              createIntent(MarkdownAction.Create, {
-                spaceId: extensions.space.id,
-                name,
-                content,
-              }),
-              chain(SpaceAction.AddObject, { target: extensions.space }),
-            );
+            const document = Markdown.make({ name, content });
 
-            const { data, error } = await extensions.dispatch(intent);
-            if (!data || error) {
-              return ToolResult.Error(error?.message ?? 'Failed to create document');
+            const { error } = await extensions.invoke(SpaceOperation.AddObject, {
+              target: extensions.space,
+              object: document,
+            });
+            if (error) {
+              return ToolResult.Error(error?.message ?? 'Failed to add document to space');
             }
 
-            return ToolResult.Success(createArtifactElement(data.id));
+            return ToolResult.Success(createArtifactElement(document.id));
           },
         }),
         createTool(meta.id, {
