@@ -5,7 +5,7 @@
 import { type Meta } from '@storybook/react-vite';
 import React from 'react';
 
-import { Capability, Common, IntentPlugin, createResolver } from '@dxos/app-framework';
+import { Capability, Common, createResolver } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Obj } from '@dxos/echo';
 import { corePlugins } from '@dxos/plugin-testing';
