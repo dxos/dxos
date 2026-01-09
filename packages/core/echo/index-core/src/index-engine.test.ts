@@ -17,7 +17,7 @@ const TestLayer = Layer.merge(
 );
 
 class MockIndexDataSource implements IndexDataSource {
-  readonly dataSourceId = 'mock-source';
+  readonly sourceName = 'mock-source';
 
   // Composite Key -> { object, hash, timestamp }
   // Key: `${spaceId}:${documentId}`

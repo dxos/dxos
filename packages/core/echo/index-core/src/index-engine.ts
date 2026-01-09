@@ -23,7 +23,7 @@ export interface DataSourceCursor {
 }
 
 export interface IndexDataSource {
-  readonly dataSourceId: string; // e.g. queue, automerge, etc.
+  readonly sourceName: string; // e.g. queue, automerge, etc.
 
   getChangedObjects(
     cursors: IndexCursor[],
@@ -81,7 +81,7 @@ export class IndexEngine {
     return Effect.gen(this, function* () {
       const cursors = yield* this.#tracker.queryCursors({
         indexName: opts.indexName,
-        sourceName: source.dataSourceId,
+        sourceName: source.sourceName,
         spaceId: opts.spaceId,
       });
       const { objects, cursors: updatedCursors } = yield* source.getChangedObjects(cursors, { limit: opts.limit });
@@ -92,7 +92,7 @@ export class IndexEngine {
           (_): IndexCursor => ({
             indexName: opts.indexName,
             spaceId: opts.spaceId,
-            sourceName: source.dataSourceId,
+            sourceName: source.sourceName,
             resourceId: _.resourceId,
             cursor: _.cursor,
           }),
