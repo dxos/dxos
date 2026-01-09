@@ -2,11 +2,11 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type Action, type ActionLike, type Node } from '@dxos/app-graph';
+import { type Node } from '@dxos/app-graph';
 import { type Label } from '@dxos/react-ui';
 import { type MaybePromise, type Position } from '@dxos/util';
 
-export type NavTreeItemGraphNode = Node<
+export type NavTreeItemGraphNode = Node.Node<
   any,
   Partial<
     NodeProperties & {
@@ -23,8 +23,8 @@ export type NavTreeItemGraphNode = Node<
 >;
 
 export type FlattenedActions = {
-  actions: ActionLike[];
-  groupedActions: Record<string, Action[]>;
+  actions: Node.ActionLike[];
+  groupedActions: Record<string, Node.Action[]>;
 };
 
 type SharedProperties = {

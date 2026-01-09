@@ -4,7 +4,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { type NodeArg } from '@dxos/app-graph';
+import { type Node } from '@dxos/app-graph';
 import { Obj, Type } from '@dxos/echo';
 import { type Live } from '@dxos/live-object';
 import { faker } from '@dxos/random';
@@ -175,7 +175,7 @@ export const createTree = () => {
                   },
                 },
               ],
-            } satisfies NodeArg<any>;
+            } satisfies Node.NodeArg<any>;
           }),
           {
             id: `${faker.string.uuid()}__a1`,
@@ -196,9 +196,9 @@ export const createTree = () => {
             },
           },
         ],
-      } satisfies NodeArg<any>;
+      } satisfies Node.NodeArg<any>;
     }),
-  } satisfies NodeArg<any>;
+  } satisfies Node.NodeArg<any>;
 
   return initialContent;
 };

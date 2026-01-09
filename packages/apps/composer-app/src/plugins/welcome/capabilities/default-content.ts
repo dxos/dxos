@@ -3,6 +3,7 @@
 //
 
 import { Capabilities, LayoutAction, type PluginContext, contributes, createIntent } from '@dxos/app-framework';
+import { Graph } from '@dxos/plugin-graph';
 import { SPACES, SpaceCapabilities, SpaceEvents } from '@dxos/plugin-space';
 
 import README_CONTENT from '../content/README.md?raw';
@@ -43,8 +44,7 @@ export default async (context: PluginContext) => {
 
   // Ensure the default content is in the graph and connected.
   // This will allow the expose action to work before the navtree renders for the first time.
-  graph.expand(SPACES);
-  graph.expand(space.id);
+  graph.pipe(Graph.expand(SPACES), Graph.expand(space.id));
 
   await dispatch(
     createIntent(LayoutAction.SwitchWorkspace, {

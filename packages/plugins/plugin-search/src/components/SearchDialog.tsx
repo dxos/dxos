@@ -8,7 +8,7 @@ import React, { forwardRef, useCallback, useState } from 'react';
 import { LayoutAction, createIntent } from '@dxos/app-framework';
 import { useAppGraph, useIntentDispatcher, useLayout } from '@dxos/app-framework/react';
 import { Obj } from '@dxos/echo';
-import { type Node } from '@dxos/plugin-graph';
+import { Graph, type Node } from '@dxos/plugin-graph';
 import { useClient } from '@dxos/react-client';
 import { Filter, useQuery } from '@dxos/react-client/echo';
 import { Button, Dialog, Icon, toLocalizedString, useTranslation } from '@dxos/react-ui';
@@ -21,7 +21,7 @@ import { meta } from '../meta';
 export const SEARCH_DIALOG = `${meta.id}/SearchDialog`;
 
 type SearchListResultProps = {
-  node: Node;
+  node: Node.Node;
 } & Pick<SearchListItemProps, 'onSelect'>;
 
 const SearchListResult = forwardRef<HTMLDivElement, SearchListResultProps>(({ node, onSelect }, forwardedRef) => {
@@ -50,7 +50,7 @@ export const SearchDialog = ({ pivotId }: SearchDialogProps) => {
   const { graph } = useAppGraph();
   const layout = useLayout();
   const closed = (Array.isArray(layout.inactive) ? layout.inactive : [layout.inactive])
-    .map((id) => graph?.getNode(id))
+    .map((id) => (graph ? Graph.getNode(graph, id) : Option.none()))
     .filter(Boolean);
   const [queryString, setQueryString] = useState('');
   const client = useClient();
@@ -109,7 +109,7 @@ export const SearchDialog = ({ pivotId }: SearchDialogProps) => {
           {queryString.length > 0 ? (
             resultObjects.length > 0 ? (
               resultObjects
-                .map((object) => graph.getNode(Obj.getDXN(object).toString()))
+                .map((object) => Graph.getNode(graph, Obj.getDXN(object).toString()))
                 .filter(Option.isSome)
                 .map((node) => <SearchListResult key={node.value.id} node={node.value} onSelect={handleSelect} />)
             ) : (

@@ -5,7 +5,7 @@
 import React from 'react';
 
 import { Capabilities, contributes, createSurface, defineCapabilityModule } from '@dxos/app-framework';
-import { isGraphNode } from '@dxos/plugin-graph';
+import { Node } from '@dxos/plugin-graph';
 
 import { CommandsDialogContent, CommandsTrigger, NavTreeContainer, NavTreeDocumentTitle } from '../components';
 import { COMMANDS_DIALOG, meta } from '../meta';
@@ -37,7 +37,9 @@ export default defineCapabilityModule(() =>
     createSurface({
       id: `${meta.id}/document-title`,
       role: 'document-title',
-      component: ({ data }) => <NavTreeDocumentTitle node={isGraphNode(data.subject) ? data.subject : undefined} />,
+      component: ({ data }) => (
+        <NavTreeDocumentTitle node={Node.isGraphNode(data.subject) ? data.subject : undefined} />
+      ),
     }),
     createSurface({
       id: `${meta.id}/search-input`,

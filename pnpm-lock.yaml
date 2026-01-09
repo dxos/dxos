@@ -7409,6 +7409,9 @@ importers:
       '@dxos/keyboard':
         specifier: workspace:*
         version: link:../../common/keyboard
+      '@dxos/plugin-graph':
+        specifier: workspace:*
+        version: link:../plugin-graph
       '@dxos/react-ui-attention':
         specifier: workspace:*
         version: link:../../ui/react-ui-attention

@@ -24,7 +24,7 @@ import { invariant } from '@dxos/invariant';
 import { isLiveObject } from '@dxos/live-object';
 import { log } from '@dxos/log';
 import { AttentionCapabilities } from '@dxos/plugin-attention';
-import { isActionLike } from '@dxos/plugin-graph';
+import { Graph, Node } from '@dxos/plugin-graph';
 import { ObservabilityAction } from '@dxos/plugin-observability/types';
 import { byPosition, isNonNullable } from '@dxos/util';
 
@@ -231,9 +231,9 @@ export default defineCapabilityModule((context: PluginContext) =>
             intents: [createIntent(LayoutAction.ScrollIntoView, { part: 'current', subject: first })],
           };
         } else {
-          const [item] = graph
-            .getConnections(subject)
-            .filter((node) => !isActionLike(node) && !node.properties.disposition);
+          const [item] = Graph.getConnections(graph, subject).filter(
+            (node) => !Node.isActionLike(node) && !node.properties.disposition,
+          );
           if (item) {
             return {
               intents: [createIntent(LayoutAction.Open, { part: 'main', subject: [item.id] })],
@@ -301,7 +301,7 @@ export default defineCapabilityModule((context: PluginContext) =>
                 : []),
               createIntent(LayoutAction.Expose, { part: 'navigation', subject: newlyOpen[0] ?? subject[0] }),
               ...newlyOpen.map((subjectId) => {
-                const typename = Option.match(graph.getNode(subjectId), {
+                const typename = Option.match(Graph.getNode(graph, subjectId), {
                   onNone: () => undefined,
                   onSome: (node) => {
                     const active = node.data;
@@ -407,10 +407,9 @@ export default defineCapabilityModule((context: PluginContext) =>
 
           if (adjustment.type === 'companion') {
             return Function.pipe(
-              graph.getNode(adjustment.id),
+              Graph.getNode(graph, adjustment.id),
               Option.map((node) =>
-                graph
-                  .getConnections(node.id)
+                Graph.getConnections(graph, node.id)
                   .filter((n) => n.type === PLANK_COMPANION_TYPE)
                   .toSorted((a, b) => byPosition(a.properties, b.properties)),
               ),
