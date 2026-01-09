@@ -52,18 +52,28 @@ const Group = forwardRef<HTMLDivElement, GroupProps>(
     const composedRef = useComposedRefs<HTMLDivElement>(rootRef, forwardedRef);
     const Root = asChild ? Slot : Primitive.div;
 
-    const focusableGroupAttrs = useFocusableGroup({ tabBehavior: 'limited-trap-focus' });
-    const arrowNavigationAttrs = useArrowNavigationGroup({ axis, memorizeCurrent: true });
+    const focusableGroupAttrs = useFocusableGroup({
+      tabBehavior: 'limited-trap-focus',
+    });
+    const arrowNavigationAttrs = useArrowNavigationGroup({
+      axis,
+      memorizeCurrent: true,
+    });
     const tabsterAttrs = useMergedTabsterAttributes_unstable(focusableGroupAttrs, arrowNavigationAttrs);
 
     const [state, setState] = useState<FocusState | undefined>();
 
+    // When asChild=true, merge classes and pass as className for Radix Slot to merge.
+    // When asChild=false, merge classes immediately.
+    const rootProps = asChild
+      ? { className: mx(styles.container.root, className, classNames) }
+      : { className: mx(styles.container.root, className, classNames) };
+
     return (
       <FocusContext.Provider value={{ setFocus: setState }}>
         <Root
-          role='none'
           tabIndex={0}
-          className={mx(styles.container.root, className, classNames)}
+          {...rootProps}
           {...tabsterAttrs}
           {...(state && {
             [`data-${FOCUS_STATE_ATTR}`]: state,

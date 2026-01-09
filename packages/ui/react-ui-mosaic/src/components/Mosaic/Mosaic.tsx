@@ -25,7 +25,7 @@ import {
 import { composeRefs, useComposedRefs } from '@radix-ui/react-compose-refs';
 import { createContext } from '@radix-ui/react-context';
 import { Primitive } from '@radix-ui/react-primitive';
-import { Slot, Slottable } from '@radix-ui/react-slot';
+import { Slot } from '@radix-ui/react-slot';
 import React, {
   type CSSProperties,
   type FC,
@@ -59,6 +59,11 @@ import {
   type MosaicPlaceholderData,
   type MosaicTargetData,
 } from './types';
+
+/**
+ * NOTE: We use [Radix composition](https://www.radix-ui.com/primitives/docs/guides/composition) to factor out different aspects (e.g., Focus, Drag-and-Drop, etc.), which may be composed.
+ * NOTE: Only use Slottable if needed; otherwise a suspected Radix bug causes compositional problems.
+ */
 
 //
 // Context
@@ -198,7 +203,10 @@ const Root = ({ children }: RootProps) => {
         // Get the source container.
         const { data: sourceData, handler: sourceHandler } = getSourceHandler(source);
         if (!sourceHandler) {
-          log.warn('invalid source', { source: sourceData, handlers: Object.keys(handlers) });
+          log.warn('invalid source', {
+            source: sourceData,
+            handlers: Object.keys(handlers),
+          });
           return;
         }
 
@@ -208,13 +216,20 @@ const Root = ({ children }: RootProps) => {
             // Get the target container.
             const { data: targetData, handler: targetHandler } = getTargetHandler(location);
             if (!targetHandler) {
-              log.warn('invalid target', { source: sourceData, location, handlers: Object.keys(handlers) });
+              log.warn('invalid target', {
+                source: sourceData,
+                location,
+                handlers: Object.keys(handlers),
+              });
               return;
             }
 
             // TODO(burdon): Check object doesn't already exist in the collection.
             if (sourceHandler === targetHandler) {
-              targetHandler.onDrop?.({ source: sourceData, target: targetData });
+              targetHandler.onDrop?.({
+                source: sourceData,
+                target: targetData,
+              });
             } else {
               if (!sourceHandler.onTake) {
                 log.warn('invalid source', { source: sourceData });
@@ -222,7 +237,10 @@ const Root = ({ children }: RootProps) => {
               }
 
               sourceHandler.onTake?.({ source: sourceData }, async (object) => {
-                targetHandler.onDrop?.({ source: { ...sourceData, object }, target: targetData });
+                targetHandler.onDrop?.({
+                  source: { ...sourceData, object },
+                  target: targetData,
+                });
                 return true;
               });
             }
@@ -375,7 +393,11 @@ const Container = forwardRef<HTMLDivElement, ContainerProps>(
             // Test if permitted to drop here.
             canDrop: ({ source }) => {
               return (
-                (source.data.type === 'cell' && handler.canDrop?.({ source: source.data as MosaicCellData })) || false
+                (source.data.type === 'cell' &&
+                  handler.canDrop?.({
+                    source: source.data as MosaicCellData,
+                  })) ||
+                false
               );
             },
 
@@ -451,7 +473,7 @@ const Container = forwardRef<HTMLDivElement, ContainerProps>(
           {...props}
           ref={composedRef}
         >
-          <Slottable>{children}</Slottable>
+          {children}
         </Root>
         {debug?.()}
       </ContainerContextProvider>
@@ -516,7 +538,7 @@ type CellProps<T extends Obj.Any = Obj.Any, Location = LocationType> = ThemedCla
     location: Location;
     object: T;
   }>
->;
+> & { className?: string };
 
 const Cell = forwardRef<HTMLDivElement, CellProps>(
   (
@@ -530,7 +552,7 @@ const Cell = forwardRef<HTMLDivElement, CellProps>(
       location,
       object,
       ...props
-    }: CellProps & { className?: string },
+    }: CellProps,
     forwardedRef,
   ) => {
     const rootRef = useRef<HTMLDivElement>(null);
@@ -574,10 +596,17 @@ const Cell = forwardRef<HTMLDivElement, CellProps>(
           onGenerateDragPreview: ({ location, nativeSetDragImage }) => {
             setCustomNativeDragPreview({
               nativeSetDragImage,
-              getOffset: preserveOffsetOnSource({ element: root, input: location.current.input }),
+              getOffset: preserveOffsetOnSource({
+                element: root,
+                input: location.current.input,
+              }),
               render: ({ container }) => {
                 data.bounds = root.getBoundingClientRect();
-                setState({ type: 'preview', container, rect: root.getBoundingClientRect() });
+                setState({
+                  type: 'preview',
+                  container,
+                  rect: root.getBoundingClientRect(),
+                });
                 return () => setState({ type: 'dragging' });
               },
             });
@@ -599,7 +628,10 @@ const Cell = forwardRef<HTMLDivElement, CellProps>(
           },
           onDragEnter: ({ self, source }) => {
             if (source.data.id !== object.id) {
-              setState({ type: 'target', closestEdge: extractClosestEdge(self.data) });
+              setState({
+                type: 'target',
+                closestEdge: extractClosestEdge(self.data),
+              });
               setActiveTarget(data);
             }
           },
@@ -617,6 +649,12 @@ const Cell = forwardRef<HTMLDivElement, CellProps>(
 
     // NOTE: Ensure no gaps between cells (prevent drop indicators flickering).
     // NOTE: Ensure padding doesn't change position of cursor when dragging (no margins).
+    // When asChild=true, merge classes and pass as className for Radix Slot to merge.
+    // When asChild=false, merge classes immediately.
+    const rootProps = asChild
+      ? { className: mx('relative transition-opacity', className, classNames) }
+      : { className: mx('relative transition-opacity', className, classNames) };
+
     return (
       <CellContextProvider state={state}>
         <Root
@@ -625,10 +663,10 @@ const Cell = forwardRef<HTMLDivElement, CellProps>(
             [`data-${CELL_STATE_ATTR}`]: state.type,
           }}
           role='listitem'
-          className={mx('relative transition-opacity', className, classNames)}
+          {...rootProps}
           ref={composedRef}
         >
-          <Slottable>{children}</Slottable>
+          {children}
         </Root>
 
         {state.type === 'preview' &&
@@ -637,7 +675,6 @@ const Cell = forwardRef<HTMLDivElement, CellProps>(
               {...{
                 [`data-${CELL_STATE_ATTR}`]: state.type,
               }}
-              role='none'
               className={mx(classNames)}
               style={
                 {
@@ -695,7 +732,9 @@ const Placeholder = <Location extends LocationType = LocationType>({
   );
 
   useEffect(() => {
-    setState({ type: data.location === activeTarget?.location ? 'active' : 'idle' });
+    setState({
+      type: data.location === activeTarget?.location ? 'active' : 'idle',
+    });
   }, [data, activeTarget]);
 
   useLayoutEffect(() => {
@@ -731,7 +770,7 @@ const Placeholder = <Location extends LocationType = LocationType>({
       className={mx('relative', classNames)}
       ref={rootRef}
     >
-      <Slottable>{children}</Slottable>
+      {children}
     </Root>
   );
 };
@@ -757,6 +796,7 @@ DropIndicator.displayName = 'MosaicDropIndicator';
 // Mosaic
 //
 
+// TOOD(burdon): Rename? (Use name Mosaic for package).
 export const Mosaic = {
   Root,
   Container,

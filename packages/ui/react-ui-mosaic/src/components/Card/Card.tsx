@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Slot } from '@radix-ui/react-slot';
+import { Slot, Slottable } from '@radix-ui/react-slot';
 import React, { type ComponentPropsWithoutRef, type PropsWithChildren, forwardRef } from 'react';
 
 import {
@@ -19,6 +19,7 @@ import { cardMinInlineSize, hoverableControls, mx } from '@dxos/ui-theme';
 import { translationKey } from '../../translations';
 import { Image } from '../Image';
 
+// TODO(burdon): Use new styles.
 import { cardChrome, cardGrid, cardHeading, cardRoot, cardSpacing, cardText } from './styles';
 
 /**
@@ -26,19 +27,28 @@ import { cardChrome, cardGrid, cardHeading, cardRoot, cardSpacing, cardText } fr
  */
 const cardDefaultInlineSize = cardMinInlineSize;
 
-type CardSharedProps = ThemedClassName<ComponentPropsWithoutRef<'div'>> & { asChild?: boolean };
+type CardSharedProps = ThemedClassName<ComponentPropsWithoutRef<'div'>> & {
+  asChild?: boolean;
+  className?: string;
+};
 
 /**
  *
  */
 // TODO(burdon): Document???
 const CardStaticRoot = forwardRef<HTMLDivElement, CardSharedProps & { id?: string }>(
-  ({ children, classNames, id, asChild, role = 'group', ...props }, forwardedRef) => {
+  ({ children, classNames, className, id, asChild, role = 'group', ...props }, forwardedRef) => {
     const Root = asChild ? Slot : 'div';
-    const rootProps = asChild ? { classNames: [cardRoot, classNames] } : { className: mx(cardRoot, classNames), role };
+
+    // When asChild=true, merge classes and pass as className for Radix Slot to merge.
+    // When asChild=false, merge classes immediately.
+    const rootProps = asChild
+      ? { className: mx(cardRoot, className, classNames) }
+      : { className: mx(cardRoot, className, classNames), role };
+
     return (
       <Root {...(id && { 'data-object-id': id })} {...props} {...rootProps} ref={forwardedRef}>
-        {children}
+        <Slottable>{children}</Slottable>
       </Root>
     );
   },
@@ -92,11 +102,17 @@ const CardSurfaceRoot = forwardRef<HTMLDivElement, ThemedClassName<PropsWithChil
 type CardHeadingProps = CardSharedProps & { truncate?: boolean };
 
 const CardHeading = forwardRef<HTMLDivElement, CardHeadingProps>(
-  ({ children, classNames, asChild, truncate, role = 'heading', ...props }, forwardedRef) => {
+  ({ children, classNames, className, asChild, truncate, role = 'heading', ...props }, forwardedRef) => {
     const Root = asChild ? Slot : 'div';
     const rootProps = asChild
-      ? { classNames: [cardHeading, cardText, truncate && 'truncate', classNames] }
-      : { className: mx(cardHeading, cardText, truncate && 'truncate', classNames), role };
+      ? {
+          classNames: [cardHeading, cardText, truncate && 'truncate', classNames],
+          className,
+        }
+      : {
+          className: mx(cardHeading, cardText, truncate && 'truncate', classNames, className),
+          role,
+        };
     return (
       <Root {...props} {...rootProps} ref={forwardedRef}>
         {children}
@@ -208,11 +224,11 @@ const CardPoster = (props: CardPosterProps) => {
 //
 
 const CardChrome = forwardRef<HTMLDivElement, CardSharedProps>(
-  ({ children, classNames, asChild, role = 'none', ...props }, forwardedRef) => {
+  ({ children, classNames, className, asChild, role = 'none', ...props }, forwardedRef) => {
     const Root = asChild ? Slot : 'div';
     const rootProps = asChild
-      ? { classNames: [cardChrome, classNames] }
-      : { className: mx(cardChrome, classNames), role };
+      ? { classNames: [cardChrome, classNames], className }
+      : { className: mx(cardChrome, classNames, className), role };
     return (
       <Root {...props} {...rootProps} ref={forwardedRef}>
         {children}
@@ -226,9 +242,11 @@ const CardChrome = forwardRef<HTMLDivElement, CardSharedProps>(
 //
 
 const CardText = forwardRef<HTMLDivElement, CardSharedProps>(
-  ({ children, classNames, asChild, role = 'none', ...props }, forwardedRef) => {
+  ({ children, classNames, className, asChild, role = 'none', ...props }, forwardedRef) => {
     const Root = asChild ? Slot : 'div';
-    const rootProps = asChild ? { classNames: [cardText, classNames] } : { className: mx(cardText, classNames), role };
+    const rootProps = asChild
+      ? { classNames: [cardText, classNames], className }
+      : { className: mx(cardText, classNames, className), role };
     return (
       <Root {...props} {...rootProps} ref={forwardedRef}>
         {children}

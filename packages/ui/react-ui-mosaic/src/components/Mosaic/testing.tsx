@@ -2,7 +2,6 @@
 // Copyright 2023 DXOS.org
 //
 
-import { useFocusableGroup } from '@fluentui/react-tabster';
 import { useComposedRefs } from '@radix-ui/react-compose-refs';
 import * as Schema from 'effect/Schema';
 import React, { Fragment, forwardRef, useMemo, useRef, useState } from 'react';
@@ -149,34 +148,30 @@ ItemList.displayName = 'Container';
 
 const Cell = forwardRef<HTMLDivElement, Pick<MosaicCellProps<TestItem>, 'classNames' | 'object' | 'location'>>(
   ({ classNames, object, location }, forwardedRef) => {
+    // Keep a local ref for click-to-focus behavior.
     const rootRef = useRef<HTMLDivElement>(null);
+    // Compose the local ref with the forwarded ref so both work.
     const composedRef = useComposedRefs<HTMLDivElement>(rootRef, forwardedRef);
-    const focusableGroupAttrs = useFocusableGroup();
     const [handleRef, setHandleRef] = useState<HTMLElement | null>(null);
 
+    // Testing nested asChild composition (Focus.Group asChild wrapping Mosaic.Cell asChild).
     return (
-      // <Focus.Group asChild>
-      <Mosaic.Cell asChild dragHandle={handleRef} object={object} location={location}>
-        <Card.StaticRoot
-          tabIndex={0}
-          // TODO(burdon): Remove classes when focus composition is fixed.
-          classNames={['outline-none focus:!border-accentSurface', classNames]}
-          onClick={() => rootRef.current?.focus()}
-          ref={composedRef}
-        >
-          <Card.Toolbar {...focusableGroupAttrs}>
-            <Card.DragHandle ref={setHandleRef} />
-            {object.name}
-            {object.label && (
-              <div role='none' className='shrink-0 text-xs text-muted font-mono text-infoText'>
-                {object.label}
-              </div>
-            )}
-          </Card.Toolbar>
-          <Card.Text>{object.description}</Card.Text>
-        </Card.StaticRoot>
-      </Mosaic.Cell>
-      // </Focus.Group>
+      <Focus.Group asChild>
+        <Mosaic.Cell asChild dragHandle={handleRef} object={object} location={location}>
+          <Card.StaticRoot classNames={classNames} onClick={() => rootRef.current?.focus()} ref={composedRef}>
+            <Card.Toolbar>
+              <Card.DragHandle ref={setHandleRef} />
+              {object.name}
+              {object.label && (
+                <div role='none' className='shrink-0 text-xs text-muted font-mono text-infoText'>
+                  {object.label}
+                </div>
+              )}
+            </Card.Toolbar>
+            <Card.Text>{object.description}</Card.Text>
+          </Card.StaticRoot>
+        </Mosaic.Cell>
+      </Focus.Group>
     );
   },
 );
