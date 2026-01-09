@@ -8,6 +8,7 @@ import { Button, Icon, useTranslation } from '@dxos/react-ui';
 import { descriptionText, mx } from '@dxos/ui-theme';
 
 import { Heading } from '../../components';
+import { translationKey } from '../../translations';
 
 import { type JoinPanelMode } from './JoinPanelProps';
 
@@ -21,7 +22,7 @@ export interface JoinSpaceHeadingProps {
 // TODO(wittjosiah): Accesses the space properties directly which will trigger ECHO warnings without observer.
 export const JoinHeading = forwardRef(
   ({ mode, titleId, exitActionParent, onExit }: JoinSpaceHeadingProps, forwardedRef: ForwardedRef<HTMLDivElement>) => {
-    const { t } = useTranslation('os');
+    const { t } = useTranslation(translationKey);
 
     const exitButton = (
       <Button

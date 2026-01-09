@@ -66,6 +66,7 @@
   },
   "devDependencies": {
     "@dxos/plugin-preview": "workspace:*",
+    "@dxos/plugin-testing": "workspace:*",
     "@dxos/plugin-theme": "workspace:*",
     "@dxos/react-ui-syntax-highlighter": "workspace:*",
     "@dxos/storybook-utils": "workspace:*",

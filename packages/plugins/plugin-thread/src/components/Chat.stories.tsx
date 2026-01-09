@@ -7,6 +7,7 @@ import React, { useState } from 'react';
 
 import { Capability, Common, IntentPlugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
+import { corePlugins } from '@dxos/plugin-testing';
 import { faker } from '@dxos/random';
 import { useClient } from '@dxos/react-client';
 import { type Space } from '@dxos/react-client/echo';
@@ -58,7 +59,7 @@ const meta = {
   decorators: [
     withTheme,
     withPluginManager({
-      plugins: [IntentPlugin()],
+      plugins: [...corePlugins()],
       capabilities: [
         Capability.contributes(
           Common.Capability.ReactSurface,

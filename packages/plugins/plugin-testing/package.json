@@ -1,0 +1,53 @@
+{
+  "name": "@dxos/plugin-testing",
+  "version": "0.8.3",
+  "description": "Plugin testing utils",
+  "homepage": "https://dxos.org",
+  "bugs": "https://github.com/dxos/dxos/issues",
+  "license": "MIT",
+  "author": "DXOS.org",
+  "sideEffects": true,
+  "type": "module",
+  "exports": {
+    ".": {
+      "source": "./src/index.ts",
+      "types": "./dist/types/src/index.d.ts",
+      "browser": "./dist/lib/browser/index.mjs"
+    }
+  },
+  "types": "dist/types/src/index.d.ts",
+  "files": [
+    "dist",
+    "src"
+  ],
+  "dependencies": {
+    "@dxos/app-framework": "workspace:*",
+    "@dxos/live-object": "workspace:*",
+    "@dxos/plugin-attention": "workspace:*",
+    "@dxos/plugin-client": "workspace:*",
+    "@dxos/plugin-graph": "workspace:*",
+    "@dxos/plugin-theme": "workspace:*",
+    "@dxos/util": "workspace:*",
+    "@preact-signals/safe-react": "catalog:"
+  },
+  "devDependencies": {
+    "@dxos/react-ui": "workspace:*",
+    "@dxos/ui-theme": "workspace:*",
+    "@types/react": "catalog:",
+    "@types/react-dom": "catalog:",
+    "effect": "catalog:",
+    "react": "catalog:",
+    "react-dom": "catalog:",
+    "vite": "catalog:"
+  },
+  "peerDependencies": {
+    "@dxos/react-ui": "workspace:*",
+    "@dxos/ui-theme": "workspace:*",
+    "effect": "catalog:",
+    "react": "catalog:",
+    "react-dom": "catalog:"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

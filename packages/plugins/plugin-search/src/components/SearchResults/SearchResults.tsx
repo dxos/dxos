@@ -6,7 +6,7 @@ import React, { type FC, forwardRef } from 'react';
 
 import { Surface } from '@dxos/app-framework/react';
 import { Obj } from '@dxos/echo';
-import { Card } from '@dxos/react-ui-stack';
+import { Card } from '@dxos/react-ui-mosaic';
 import { ghostHover } from '@dxos/ui-theme';
 
 import { type SearchResult } from '../../types';

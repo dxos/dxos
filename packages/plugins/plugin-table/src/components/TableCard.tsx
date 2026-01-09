@@ -7,7 +7,7 @@ import React, { useMemo, useRef } from 'react';
 import { Filter, Obj } from '@dxos/echo';
 import { useGlobalFilteredObjects } from '@dxos/plugin-search';
 import { useQuery, useSchema } from '@dxos/react-client/echo';
-import { Card } from '@dxos/react-ui-stack';
+import { Card } from '@dxos/react-ui-mosaic';
 import {
   Table as TableComponent,
   type TableController,

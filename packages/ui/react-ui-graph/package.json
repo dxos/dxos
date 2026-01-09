@@ -44,6 +44,7 @@
     "@dxos/invariant": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/node-std": "workspace:*",
+    "@dxos/react-ui-mosaic": "workspace:*",
     "@preact-signals/safe-react": "catalog:",
     "@preact/signals-core": "catalog:",
     "d3": "catalog:",

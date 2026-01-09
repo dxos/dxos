@@ -92,6 +92,7 @@
     "@dxos/react-ui-editor": "workspace:*",
     "@dxos/react-ui-grid": "workspace:*",
     "@dxos/react-ui-menu": "workspace:*",
+    "@dxos/react-ui-mosaic": "workspace:*",
     "@dxos/react-ui-stack": "workspace:*",
     "@dxos/react-ui-table": "workspace:*",
     "@dxos/schema": "workspace:*",
@@ -112,7 +113,7 @@
   },
   "devDependencies": {
     "@dxos/config": "workspace:*",
-    "@dxos/plugin-storybook-layout": "workspace:*",
+    "@dxos/plugin-testing": "workspace:*",
     "@dxos/plugin-theme": "workspace:*",
     "@dxos/protocols": "workspace:*",
     "@dxos/random": "workspace:*",

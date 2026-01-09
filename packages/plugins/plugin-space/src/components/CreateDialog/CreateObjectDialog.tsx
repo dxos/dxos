@@ -15,7 +15,7 @@ import { invariant } from '@dxos/invariant';
 import { useClient } from '@dxos/react-client';
 import { isLiveObject, useSpaces } from '@dxos/react-client/echo';
 import { Dialog, IconButton, useTranslation } from '@dxos/react-ui';
-import { cardDialogContent, cardDialogHeader } from '@dxos/react-ui-stack';
+import { cardDialogContent, cardDialogHeader } from '@dxos/react-ui-mosaic';
 import { type Collection } from '@dxos/schema';
 
 import { meta } from '../../meta';

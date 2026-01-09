@@ -10,7 +10,7 @@ import { useIntentDispatcher } from '@dxos/app-framework/react';
 import { Obj } from '@dxos/echo';
 import { type CardPreviewProps } from '@dxos/plugin-preview';
 import { IconButton, useTranslation } from '@dxos/react-ui';
-import { Card } from '@dxos/react-ui-stack';
+import { Card } from '@dxos/react-ui-mosaic';
 import { Text } from '@dxos/schema';
 
 import { meta } from '../../meta';

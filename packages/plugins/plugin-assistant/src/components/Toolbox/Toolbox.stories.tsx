@@ -5,14 +5,13 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
-import { IntentPlugin, SettingsPlugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { capabilities } from '@dxos/assistant-toolkit/testing';
 import { ChessPlugin } from '@dxos/plugin-chess';
 import { ClientPlugin } from '@dxos/plugin-client';
 import { MapPlugin } from '@dxos/plugin-map';
-import { SpacePlugin } from '@dxos/plugin-space';
 import { TablePlugin } from '@dxos/plugin-table';
+import { corePlugins } from '@dxos/plugin-testing';
 import { withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '../../translations';
@@ -31,14 +30,12 @@ const meta = {
     withTheme,
     withPluginManager({
       plugins: [
+        ...corePlugins(),
         ClientPlugin({
           onClientInitialized: async ({ client }) => {
             await client.halo.createIdentity();
           },
         }),
-        SpacePlugin({}),
-        SettingsPlugin(),
-        IntentPlugin(),
         ChessPlugin(),
         MapPlugin(),
         TablePlugin(),

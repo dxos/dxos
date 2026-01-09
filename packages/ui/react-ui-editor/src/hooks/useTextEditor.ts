@@ -72,7 +72,7 @@ export const useTextEditor = (
   useEffect(() => {
     let view: EditorView | null = null;
     if (parentRef.current) {
-      log.info('create', { id, instanceId, doc: initialValue?.length ?? 0 });
+      log('create', { id, instanceId, doc: initialValue?.length ?? 0 });
 
       let initialSelection;
       if (selection?.anchor && initialValue?.length) {

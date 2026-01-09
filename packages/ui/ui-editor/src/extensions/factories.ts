@@ -31,7 +31,7 @@ import { type HuePalette } from '@dxos/ui-theme';
 import { type ThemeMode } from '@dxos/ui-types';
 import { hexToHue, isTruthy } from '@dxos/util';
 
-import { createBaseTheme, createFontTheme, editorGutter } from '../styles';
+import { baseTheme, createFontTheme, editorGutter } from '../styles';
 
 import { automerge } from './automerge';
 import { SpaceAwarenessProvider, awareness } from './awareness';
@@ -226,8 +226,8 @@ export const createThemeExtensions = ({
 }: ThemeExtensionsOptions = {}): Extension => {
   const slots = defaultsDeep({}, slotsProp, defaultThemeSlots);
   return [
+    baseTheme,
     EditorView.darkTheme.of(themeMode === 'dark'),
-    createBaseTheme(),
     createFontTheme({ monospace }),
     syntaxHighlightingProp &&
       syntaxHighlighting(HighlightStyle.define(themeMode === 'dark' ? defaultStyles.dark : defaultStyles.light)),

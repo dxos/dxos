@@ -222,8 +222,8 @@
       "@dxos/plugin-status-bar": [
         "packages/plugins/plugin-status-bar/src/index.ts"
       ],
-      "@dxos/plugin-storybook-layout": [
-        "packages/plugins/plugin-storybook-layout/src/index.ts"
+      "@dxos/plugin-testing": [
+        "packages/plugins/plugin-testing/src/index.ts"
       ],
       "@dxos/plugin-table": [
         "packages/plugins/plugin-table/src/index.ts"

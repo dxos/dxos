@@ -8,7 +8,7 @@ import React from 'react';
 import { Capability, Common, IntentPlugin, createResolver } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Obj } from '@dxos/echo';
-import { GraphPlugin } from '@dxos/plugin-graph';
+import { corePlugins } from '@dxos/plugin-testing';
 import { useSpace } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { withTheme } from '@dxos/react-ui/testing';
@@ -33,7 +33,7 @@ const meta = {
     withAttention,
     // TODO(wittjosiah): Consider whether we should refactor component so story doesn't need to depend on intents.
     withPluginManager({
-      plugins: [IntentPlugin(), GraphPlugin()],
+      plugins: [...corePlugins()],
       capabilities: [
         Capability.contributes(
           Common.Capability.IntentResolver,

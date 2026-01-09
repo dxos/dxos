@@ -12,7 +12,7 @@ import { invariant } from '@dxos/invariant';
 import { faker } from '@dxos/random';
 import { Popover } from '@dxos/react-ui';
 import { withTheme } from '@dxos/react-ui/testing';
-import { Card } from '@dxos/react-ui-stack';
+import { Card } from '@dxos/react-ui-mosaic';
 import {
   type PreviewBlock,
   type PreviewLinkRef,
@@ -218,7 +218,6 @@ export const Default: Story = {
     }, []);
 
     // TODO(burdon): Migrate to Editor.Root.
-    // TODO(burdon): Ranges must be sorted error (decorate.enter).
     return (
       <EditorPreviewProvider onLookup={handlePreviewLookup}>
         <EditorStory ref={setController} text={text} extensions={extensions} />

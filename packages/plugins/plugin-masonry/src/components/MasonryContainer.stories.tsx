@@ -5,20 +5,16 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
-import { IntentPlugin, SettingsPlugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { ClientPlugin } from '@dxos/plugin-client';
 import { PreviewPlugin } from '@dxos/plugin-preview';
-import { SpacePlugin } from '@dxos/plugin-space';
-import { StorybookLayoutPlugin } from '@dxos/plugin-storybook-layout';
-import { ThemePlugin } from '@dxos/plugin-theme';
+import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
 import { faker } from '@dxos/random';
 import { Filter, useQuery, useSpaces } from '@dxos/react-client/echo';
 import { withTheme } from '@dxos/react-ui/testing';
 import { View } from '@dxos/schema';
 import { createObjectFactory } from '@dxos/schema/testing';
 import { Organization } from '@dxos/types';
-import { defaultTx } from '@dxos/ui-theme';
 
 import { Masonry } from '../types';
 
@@ -43,6 +39,7 @@ const meta = {
     withTheme,
     withPluginManager({
       plugins: [
+        ...corePlugins(),
         ClientPlugin({
           types: [Organization.Organization, View.View, Masonry.Masonry],
           onClientInitialized: async ({ client }) => {
@@ -61,12 +58,8 @@ const meta = {
             await factory([{ type: Organization.Organization, count: 64 }]);
           },
         }),
-        SpacePlugin({}),
-        IntentPlugin(),
-        SettingsPlugin(),
-        ThemePlugin({ tx: defaultTx }),
         PreviewPlugin(),
-        StorybookLayoutPlugin({}),
+        StorybookPlugin({}),
       ],
     }),
   ],

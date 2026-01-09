@@ -54,6 +54,9 @@
       "path": "../react-ui-dnd"
     },
     {
+      "path": "../react-ui-mosaic"
+    },
+    {
       "path": "../react-ui-stack"
     },
     {
