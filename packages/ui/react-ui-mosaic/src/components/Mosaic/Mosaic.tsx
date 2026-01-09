@@ -403,13 +403,14 @@ const Container = forwardRef<HTMLDivElement, ContainerProps>(
         return;
       }
 
+      // Determine if scrolling (pause drag/drop handlers).
       let timeout: ReturnType<typeof setTimeout>;
       const handleScroll = () => {
         setScrolling(true);
         clearTimeout(timeout);
         timeout = setTimeout(() => {
           setScrolling(false);
-        }, 200);
+        }, 500);
       };
 
       return combine(
@@ -417,10 +418,13 @@ const Container = forwardRef<HTMLDivElement, ContainerProps>(
           autoscroll && [
             autoScrollForElements({
               element: rootRef.current,
-              canScroll: () => true,
+              canScroll: ({ element: _ }) => {
+                // const delta = element.scrollHeight - element.scrollTop - element.clientHeight;
+                return true;
+              },
               getAllowedAxis: () => axis,
               getConfiguration: () => ({
-                maxScrollSpeed: 'standard',
+                maxScrollSpeed: 'fast',
               }),
             }),
 
@@ -610,12 +614,12 @@ const Tile = forwardRef<HTMLDivElement, TileProps>(
     const Root = asChild ? Slot : Primitive.div;
 
     // State.
-    const { id: containerId, axis: layout, setActiveLocation } = useContainerContext(Tile.displayName!);
+    const { id: containerId, axis, scrolling, setActiveLocation } = useContainerContext(Tile.displayName!);
     const [state, setState] = useState<TileState>({ type: 'idle' });
 
     const allowedEdges = useMemo<Edge[]>(
-      () => allowedEdgesProp || (layout === 'vertical' ? ['top', 'bottom'] : ['left', 'right']),
-      [allowedEdgesProp, layout],
+      () => allowedEdgesProp || (axis === 'vertical' ? ['top', 'bottom'] : ['left', 'right']),
+      [allowedEdgesProp, axis],
     );
 
     const data = useMemo<MosaicTileData>(
@@ -632,7 +636,7 @@ const Tile = forwardRef<HTMLDivElement, TileProps>(
 
     useLayoutEffect(() => {
       const root = rootRef.current;
-      if (!root || !containerId) {
+      if (!root || !containerId || scrolling) {
         return;
       }
 
@@ -701,7 +705,7 @@ const Tile = forwardRef<HTMLDivElement, TileProps>(
           },
         }),
       );
-    }, [rootRef, dragHandle, data, allowedEdges, setActiveLocation]);
+    }, [rootRef, dragHandle, data, scrolling, allowedEdges, setActiveLocation]);
 
     // NOTE: Ensure no gaps between cells (prevent drop indicators flickering).
     // NOTE: Ensure padding doesn't change position of cursor when dragging (no margins).
@@ -748,8 +752,6 @@ Tile.displayName = 'MosaicTile';
 // Placeholder
 //
 
-type PlaceholderState = { type: 'idle' } | { type: 'active' };
-
 /** Target: data-[mosaic-placeholder-state=active] */
 const PLACEHOLDER_STATE_ATTR = 'mosaic-placeholder-state';
 
@@ -787,7 +789,7 @@ const Placeholder = <Location extends LocationType = LocationType>({
 
   useLayoutEffect(() => {
     const root = rootRef.current;
-    if (!root) {
+    if (!root || scrolling) {
       return;
     }
 
@@ -804,7 +806,7 @@ const Placeholder = <Location extends LocationType = LocationType>({
         setActiveLocation(undefined);
       },
     });
-  }, [rootRef, data, setActiveLocation]);
+  }, [rootRef, data, scrolling, setActiveLocation]);
 
   return (
     <Root

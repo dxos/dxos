@@ -24,7 +24,7 @@ export const styles = {
       'is-full',
       'transition-all bs-0 delay-0 duration-0',
       'group-data-[mosaic-placeholder-state=active]:bs-[var(--mosaic-placeholder-height)]',
-      'group-data-[mosaic-placeholder-state=active]:duration-200',
+      'group-data-[mosaic-placeholder-state=active]:duration-100',
     ],
   },
 } satisfies Record<string, Record<string, ClassNameValue>>;
