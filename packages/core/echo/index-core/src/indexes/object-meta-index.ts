@@ -3,7 +3,8 @@ import type { ObjectId, SpaceId } from '@dxos/keys';
 import { SqlClient, type SqlError } from '@effect/sql';
 import { Effect, Schema } from 'effect';
 
-import type { IndexerObject } from '../indexer-object';
+import type { IndexerObject } from './interface';
+import type { Index } from './interface';
 
 export const ObjectMeta = Schema.Struct({
   recordId: Schema.Number,
@@ -20,7 +21,7 @@ export const ObjectMeta = Schema.Struct({
 });
 export interface ObjectMeta extends Schema.Schema.Type<typeof ObjectMeta> {}
 
-export class ObjectMetaIndex {
+export class ObjectMetaIndex implements Index {
   runMigrations = Effect.fn('ObjectMetaIndex.runMigrations')(function* () {
     const sql = yield* SqlClient.SqlClient;
 
