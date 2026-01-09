@@ -11,7 +11,7 @@ import {
 } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
 import { preserveOffsetOnSource } from '@atlaskit/pragmatic-drag-and-drop/element/preserve-offset-on-source';
 import { setCustomNativeDragPreview } from '@atlaskit/pragmatic-drag-and-drop/element/set-custom-native-drag-preview';
-import { type DragLocationHistory } from '@atlaskit/pragmatic-drag-and-drop/types';
+import { type DragLocationHistory, type DropTargetRecord } from '@atlaskit/pragmatic-drag-and-drop/types';
 import { type AllowedAxis } from '@atlaskit/pragmatic-drag-and-drop-auto-scroll/dist/types/internal-types';
 import { autoScrollForElements } from '@atlaskit/pragmatic-drag-and-drop-auto-scroll/element';
 import {
@@ -58,7 +58,6 @@ import {
   type MosaicData,
   type MosaicEventHandler,
   type MosaicPlaceholderData,
-  type MosaicTargetData,
   type MosaicTileData,
 } from './types';
 
@@ -317,17 +316,16 @@ const Root = ({ children }: RootProps) => {
 
 type ContainerState = { type: 'idle' } | { type: 'active'; bounds?: DOMRect };
 
-type ContainerContextValue = {
+type ContainerContextValue<Location = LocationType> = {
   id: string;
   axis?: AllowedAxis;
   dragging?: DraggingState;
   scrolling?: boolean;
   state: ContainerState;
 
-  // TODO(burdon): Replace with dragging state?
-  /** Active drop target (used to determine placeholder location). */
-  activeTarget?: MosaicTargetData;
-  setActiveTarget: (target: MosaicTargetData | undefined) => void;
+  /** Active drop location. */
+  activeLocation?: Location;
+  setActiveLocation: (location: Location | undefined) => void;
 };
 
 const [ContainerContextProvider, useContainerContext] = createContext<ContainerContextValue>('MosaicContainer');
@@ -373,7 +371,7 @@ const Container = forwardRef<HTMLDivElement, ContainerProps>(
     // State.
     const { dragging } = useRootContext(Container.displayName!);
     const [state, setState] = useState<ContainerState>({ type: 'idle' });
-    const [activeTarget, setActiveTarget] = useState<MosaicTargetData | undefined>();
+    const [activeLocation, setActiveLocation] = useState<LocationType | undefined>();
     const [scrolling, setScrolling] = useState(false);
 
     // Focus container.
@@ -405,13 +403,14 @@ const Container = forwardRef<HTMLDivElement, ContainerProps>(
         return;
       }
 
+      // Determine if scrolling (pause drag/drop handlers).
       let timeout: ReturnType<typeof setTimeout>;
       const handleScroll = () => {
         setScrolling(true);
         clearTimeout(timeout);
         timeout = setTimeout(() => {
           setScrolling(false);
-        }, 200);
+        }, 500);
       };
 
       return combine(
@@ -419,10 +418,13 @@ const Container = forwardRef<HTMLDivElement, ContainerProps>(
           autoscroll && [
             autoScrollForElements({
               element: rootRef.current,
-              canScroll: () => true,
+              canScroll: ({ element: _ }) => {
+                // const delta = element.scrollHeight - element.scrollTop - element.clientHeight;
+                return true;
+              },
               getAllowedAxis: () => axis,
               getConfiguration: () => ({
-                maxScrollSpeed: 'standard',
+                maxScrollSpeed: 'fast',
               }),
             }),
 
@@ -507,8 +509,8 @@ const Container = forwardRef<HTMLDivElement, ContainerProps>(
         state={state}
         dragging={state.type === 'active' ? dragging : undefined}
         scrolling={scrolling}
-        activeTarget={activeTarget}
-        setActiveTarget={setActiveTarget}
+        activeLocation={activeLocation}
+        setActiveLocation={setActiveLocation}
       >
         <Root
           role='list'
@@ -612,12 +614,12 @@ const Tile = forwardRef<HTMLDivElement, TileProps>(
     const Root = asChild ? Slot : Primitive.div;
 
     // State.
-    const { id: containerId, axis: layout, setActiveTarget } = useContainerContext(Tile.displayName!);
+    const { id: containerId, axis, scrolling, setActiveLocation } = useContainerContext(Tile.displayName!);
     const [state, setState] = useState<TileState>({ type: 'idle' });
 
     const allowedEdges = useMemo<Edge[]>(
-      () => allowedEdgesProp || (layout === 'vertical' ? ['top', 'bottom'] : ['left', 'right']),
-      [allowedEdgesProp, layout],
+      () => allowedEdgesProp || (axis === 'vertical' ? ['top', 'bottom'] : ['left', 'right']),
+      [allowedEdgesProp, axis],
     );
 
     const data = useMemo<MosaicTileData>(
@@ -634,9 +636,18 @@ const Tile = forwardRef<HTMLDivElement, TileProps>(
 
     useLayoutEffect(() => {
       const root = rootRef.current;
-      if (!root || !containerId) {
+      if (!root || !containerId || scrolling) {
         return;
       }
+
+      const handleChange = ({ self, source }: { self: DropTargetRecord; source: ElementDragPayload }) => {
+        if (source.data.id !== object.id) {
+          const closestEdge = extractClosestEdge(self.data);
+          const location = data.location + (closestEdge === 'top' || closestEdge === 'left' ? -0.5 : 0.5);
+          setActiveLocation(location);
+          setState({ type: 'target', closestEdge });
+        }
+      };
 
       return combine(
         // Source.
@@ -679,34 +690,25 @@ const Tile = forwardRef<HTMLDivElement, TileProps>(
             return attachClosestEdge(data, { input, element, allowedEdges });
           },
           onDragEnter: ({ self, source }) => {
-            if (source.data.id !== object.id) {
-              setState({
-                type: 'target',
-                closestEdge: extractClosestEdge(self.data),
-              });
-              setActiveTarget(data);
-            }
+            handleChange({ self, source });
           },
           onDragLeave: () => {
             setState({ type: 'idle' });
-            setActiveTarget(undefined);
+            setActiveLocation(undefined);
+          },
+          onDrag: ({ self, source }) => {
+            handleChange({ self, source });
           },
           onDrop: () => {
             setState({ type: 'idle' });
-            setActiveTarget(undefined);
+            setActiveLocation(undefined);
           },
         }),
       );
-    }, [rootRef, dragHandle, data, allowedEdges, setActiveTarget]);
+    }, [rootRef, dragHandle, data, scrolling, allowedEdges, setActiveLocation]);
 
     // NOTE: Ensure no gaps between cells (prevent drop indicators flickering).
     // NOTE: Ensure padding doesn't change position of cursor when dragging (no margins).
-    // When asChild=true, merge classes and pass as className for Radix Slot to merge.
-    // When asChild=false, merge classes immediately.
-    const rootProps = asChild
-      ? { className: mx('relative transition-opacity', className, classNames) }
-      : { className: mx('relative transition-opacity', className, classNames) };
-
     return (
       <TileContextProvider state={state}>
         <Root
@@ -715,7 +717,7 @@ const Tile = forwardRef<HTMLDivElement, TileProps>(
             [`data-${TILE_STATE_ATTR}`]: state.type,
           }}
           role='listitem'
-          {...rootProps}
+          className={mx('relative transition-opacity', className, classNames)}
           ref={composedRef}
         >
           {children}
@@ -750,8 +752,6 @@ Tile.displayName = 'MosaicTile';
 // Placeholder
 //
 
-type PlaceholderState = { type: 'idle' } | { type: 'active' };
-
 /** Target: data-[mosaic-placeholder-state=active] */
 const PLACEHOLDER_STATE_ATTR = 'mosaic-placeholder-state';
 
@@ -770,8 +770,12 @@ const Placeholder = <Location extends LocationType = LocationType>({
 }: PlaceholderProps<Location>) => {
   const rootRef = useRef<HTMLDivElement>(null);
   const Root = asChild ? Slot : Primitive.div;
-  const { id: containerId, scrolling, activeTarget, setActiveTarget } = useContainerContext(Placeholder.displayName!);
-  const [state, setState] = useState<PlaceholderState>({ type: 'idle' });
+  const {
+    id: containerId,
+    scrolling,
+    activeLocation,
+    setActiveLocation,
+  } = useContainerContext(Placeholder.displayName!);
 
   const data = useMemo<MosaicPlaceholderData<Location>>(
     () =>
@@ -783,20 +787,9 @@ const Placeholder = <Location extends LocationType = LocationType>({
     [containerId, location],
   );
 
-  useEffect(() => {
-    if (scrolling) {
-      return;
-    }
-
-    const edge = activeTarget && extractClosestEdge(activeTarget);
-    setState({
-      type: data.location === activeTarget?.location ? 'active' : 'idle',
-    });
-  }, [data, scrolling, activeTarget]);
-
   useLayoutEffect(() => {
     const root = rootRef.current;
-    if (!root) {
+    if (!root || scrolling) {
       return;
     }
 
@@ -804,24 +797,21 @@ const Placeholder = <Location extends LocationType = LocationType>({
       element: root,
       getData: () => data,
       onDragEnter: () => {
-        setState({ type: 'active' });
-        setActiveTarget(data);
+        setActiveLocation(data.location);
       },
       onDragLeave: () => {
-        setState({ type: 'idle' });
-        setActiveTarget(undefined);
+        setActiveLocation(undefined);
       },
       onDrop: () => {
-        setState({ type: 'idle' });
-        setActiveTarget(undefined);
+        setActiveLocation(undefined);
       },
     });
-  }, [rootRef, data, setActiveTarget]);
+  }, [rootRef, data, scrolling, setActiveLocation]);
 
   return (
     <Root
       {...{
-        [`data-${PLACEHOLDER_STATE_ATTR}`]: state.type,
+        [`data-${PLACEHOLDER_STATE_ATTR}`]: data.location === activeLocation ? 'active' : 'idle',
       }}
       role='none'
       className={mx('relative', classNames)}
