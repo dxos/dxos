@@ -12,7 +12,7 @@ export const IndexCursor = Schema.Struct({
 export interface IndexCursor extends Schema.Schema.Type<typeof IndexCursor> {}
 
 export class IndexTracker {
-  runMigrations = Effect.fn('IndexTracker.runMigrations')(function* () {
+  migrate = Effect.fn('IndexTracker.migrate')(function* () {
     const sql = yield* SqlClient.SqlClient;
 
     // For automerge: last-indexed heads of the document

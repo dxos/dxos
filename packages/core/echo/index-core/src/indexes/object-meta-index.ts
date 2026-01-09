@@ -22,7 +22,7 @@ export const ObjectMeta = Schema.Struct({
 export interface ObjectMeta extends Schema.Schema.Type<typeof ObjectMeta> {}
 
 export class ObjectMetaIndex implements Index {
-  runMigrations = Effect.fn('ObjectMetaIndex.runMigrations')(function* () {
+  migrate = Effect.fn('ObjectMetaIndex.runMigrations')(function* () {
     const sql = yield* SqlClient.SqlClient;
 
     yield* sql`CREATE TABLE IF NOT EXISTS objectMeta (

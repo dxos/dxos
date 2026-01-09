@@ -9,19 +9,23 @@ import type { Effect } from 'effect';
 export interface IndexerObject {
   spaceId: SpaceId;
   /**
-   * Queue id if object is from queue.
+   * Queue id if object is from the queue.
    * If null, `documentId` must be set.
    */
   queueId: ObjectId | null;
   /**
-   * Document id if object is from document.
+   * Document id if object is from the automerge document.
    * If null, `queueId` must be set.
    */
   documentId: string | null;
 
+  /**
+   * JSON data of the object.
+   */
   data: Obj.JSON;
 }
 
 export interface Index {
+  migrate: () => Effect.Effect<void, SqlError.SqlError, SqlClient.SqlClient>;
   update: (objects: IndexerObject[]) => Effect.Effect<void, SqlError.SqlError, SqlClient.SqlClient>;
 }

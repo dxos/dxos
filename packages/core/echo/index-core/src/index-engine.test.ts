@@ -79,9 +79,9 @@ class MockIndexDataSource implements IndexDataSource {
 describe('IndexEngine', () => {
   const setup = Effect.gen(function* () {
     const tracker = new IndexTracker();
-    yield* tracker.runMigrations();
+    yield* tracker.migrate();
     const metaIndex = new ObjectMetaIndex();
-    yield* metaIndex.runMigrations();
+    yield* metaIndex.migrate();
     return { tracker, metaIndex };
   });
 

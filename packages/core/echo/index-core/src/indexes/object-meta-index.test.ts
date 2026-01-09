@@ -3,8 +3,8 @@ import { Effect, Layer } from 'effect';
 import { describe, it, expect } from '@effect/vitest';
 import * as Reactivity from '@effect/experimental/Reactivity';
 import { ObjectMetaIndex, ObjectMeta } from './object-meta-index';
-import { IndexerObject } from '../indexer-object';
 import { SpaceId, ObjectId } from '@dxos/keys';
+import type { IndexerObject } from './interface';
 
 const TestLayer = Layer.merge(
   SqliteClient.layer({
@@ -17,7 +17,7 @@ describe('ObjectMetaIndex', () => {
   it.effect('should store and update object metadata', () =>
     Effect.gen(function* () {
       const index = new ObjectMetaIndex();
-      yield* index.runMigrations();
+      yield* index.migrate();
 
       const spaceId = SpaceId.random();
       const objectId1 = ObjectId.random();
