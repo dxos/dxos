@@ -1,10 +1,16 @@
-import { SqliteClient } from '@effect/sql-sqlite-node';
-import { Effect } from 'effect';
-import { describe, it, expect } from '@effect/vitest';
+//
+// Copyright 2026 DXOS.org
+//
+
 import * as Reactivity from '@effect/experimental/Reactivity';
-import { IndexTracker, IndexCursor } from './index-tracker';
+import * as SqliteClient from '@effect/sql-sqlite-node/SqliteClient';
+import { describe, expect, it } from '@effect/vitest';
+import * as Effect from 'effect/Effect';
+import * as Layer from 'effect/Layer';
+
 import { SpaceId } from '@dxos/keys';
-import { Layer } from 'effect';
+
+import { type IndexCursor, IndexTracker } from './index-tracker';
 
 const TestLayer = Layer.merge(
   SqliteClient.layer({
@@ -18,7 +24,7 @@ describe('IndexTracker', () => {
     'should store and retrieve index cursors',
     Effect.fnUntraced(function* ({}) {
       const tracker = new IndexTracker();
-      yield* tracker.runMigrations();
+      yield* tracker.migrate();
 
       const cursor1: IndexCursor = {
         indexName: 'test-index',

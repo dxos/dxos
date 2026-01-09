@@ -1,5 +1,12 @@
-import { SqlClient, type SqlError } from '@effect/sql';
-import { Effect, Schema } from 'effect';
+//
+// Copyright 2026 DXOS.org
+//
+
+import * as SqlClient from '@effect/sql/SqlClient';
+import type * as SqlError from '@effect/sql/SqlError';
+import * as Effect from 'effect/Effect';
+import * as Schema from 'effect/Schema';
+
 import { SpaceId } from '@dxos/keys';
 
 export const IndexCursor = Schema.Struct({

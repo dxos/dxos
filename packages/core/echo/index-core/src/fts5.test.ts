@@ -1,7 +1,11 @@
-import { SqliteClient } from '@effect/sql-sqlite-node';
-import { Effect } from 'effect';
-import { describe, it, expect } from 'vitest';
+//
+// Copyright 2026 DXOS.org
+//
+
 import * as Reactivity from '@effect/experimental/Reactivity';
+import * as SqliteClient from '@effect/sql-sqlite-node/SqliteClient';
+import * as Effect from 'effect/Effect';
+import { describe, expect, it } from 'vitest';
 
 describe('FTS5', () => {
   it('should create an FTS5 table and search it', () =>

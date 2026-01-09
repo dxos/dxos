@@ -1,6 +1,12 @@
-import { Effect, Schema } from 'effect';
+//
+// Copyright 2026 DXOS.org
+//
+
+import * as SqlClient from '@effect/sql/SqlClient';
+import * as Effect from 'effect/Effect';
+import * as Schema from 'effect/Schema';
+
 import type { Index, IndexerObject } from './interface';
-import { SqlClient } from '@effect/sql';
 
 export const Snapshot = Schema.Struct({
   snapshot: Schema.String,

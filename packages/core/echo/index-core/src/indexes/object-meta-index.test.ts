@@ -1,10 +1,17 @@
-import { SqliteClient } from '@effect/sql-sqlite-node';
-import { Effect, Layer } from 'effect';
-import { describe, it, expect } from '@effect/vitest';
+//
+// Copyright 2026 DXOS.org
+//
+
 import * as Reactivity from '@effect/experimental/Reactivity';
-import { ObjectMetaIndex, ObjectMeta } from './object-meta-index';
-import { SpaceId, ObjectId } from '@dxos/keys';
+import * as SqliteClient from '@effect/sql-sqlite-node/SqliteClient';
+import { describe, expect, it } from '@effect/vitest';
+import * as Effect from 'effect/Effect';
+import * as Layer from 'effect/Layer';
+
+import { ObjectId, SpaceId } from '@dxos/keys';
+
 import type { IndexerObject } from './interface';
+import { ObjectMetaIndex } from './object-meta-index';
 
 const TestLayer = Layer.merge(
   SqliteClient.layer({

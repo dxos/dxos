@@ -1,9 +1,16 @@
-import { Effect } from 'effect';
-import { IndexTracker, type IndexCursor } from './index-tracker';
-import type { Index, IndexerObject } from './indexes/interface';
-import { ObjectMetaIndex } from './indexes/object-meta-index';
+//
+// Copyright 2026 DXOS.org
+//
+
+import * as SqlClient from '@effect/sql/SqlClient';
+import type * as SqlError from '@effect/sql/SqlError';
+import * as Effect from 'effect/Effect';
+
 import type { SpaceId } from '@dxos/keys';
-import { SqlClient, SqlError } from '@effect/sql';
+
+import { type IndexCursor, type IndexTracker } from './index-tracker';
+import type { Index, IndexerObject } from './indexes/interface';
+import { type ObjectMetaIndex } from './indexes/object-meta-index';
 
 /**
  * Cursor into indexable data-source
