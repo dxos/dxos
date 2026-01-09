@@ -32,8 +32,14 @@
     "dist",
     "src"
   ],
-  "dependencies": {},
-  "devDependencies": {},
+  "dependencies": {
+    "@effect/experimental": "catalog:",
+    "@effect/platform": "catalog:",
+    "@effect/sql": "catalog:",
+    "@effect/sql-sqlite-node": "^0.49.0",
+    "better-sqlite3": "latest",
+    "effect": "catalog:"
+  },
   "publishConfig": {
     "access": "public"
   },

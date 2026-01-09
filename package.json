@@ -180,6 +180,7 @@
       "@parcel/watcher",
       "@sentry/cli",
       "@swc/core",
+      "better-sqlite3",
       "canvas",
       "cbor-extract",
       "classic-level",

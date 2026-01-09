@@ -673,7 +673,7 @@ catalog:
   vite-plugin-turbosnap: ^1.0.3
   vite-plugin-wasm: ^3.5.0
   vite-tsconfig-paths: ^5.1.4
-  vitest: ^3.2.4
+  vitest: 3.2.4
   wait-on: ^8.0.3
   wavefile: ^11.0.0
   web-tree-sitter: ^0.25.10
