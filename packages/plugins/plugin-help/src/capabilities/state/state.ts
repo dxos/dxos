@@ -1,0 +1,27 @@
+//
+// Copyright 2025 DXOS.org
+//
+
+import * as Effect from 'effect/Effect';
+
+import { Capability } from '@dxos/app-framework';
+import { LocalStorageStore } from '@dxos/local-storage';
+
+import { meta } from '../../meta';
+import { HelpCapabilities } from '../../types';
+
+export default Capability.makeModule(() =>
+  Effect.sync(() => {
+    const state = new LocalStorageStore<HelpCapabilities.State>(meta.id, {
+      running: false,
+      showHints: true,
+      showWelcome: true,
+    });
+
+    state
+      .prop({ key: 'showHints', type: LocalStorageStore.bool() })
+      .prop({ key: 'showWelcome', type: LocalStorageStore.bool() });
+
+    return Capability.contributes(HelpCapabilities.State, state.values);
+  }),
+);

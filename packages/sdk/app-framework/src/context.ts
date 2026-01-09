@@ -6,4 +6,4 @@ import { createContext } from '@dxos/web-context';
 
 import { type PluginManager } from './core';
 
-export const PluginManagerContext = createContext<PluginManager>('dxos.org/app-framework/plugin-manager');
+export const PluginManagerContext = createContext<PluginManager.PluginManager>('dxos.org/app-framework/plugin-manager');

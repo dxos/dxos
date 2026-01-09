@@ -2,23 +2,28 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Capabilities, Events, contributes, createResolver, defineModule, definePlugin } from '@dxos/app-framework';
+import * as Effect from 'effect/Effect';
+
+import { Capability, Common, Plugin, createResolver } from '@dxos/app-framework';
 
 import { meta } from '../meta';
 import { ObservabilityAction } from '../types';
 
 // TODO(wittjosiah): Hook up.
-export const ObservabilityPlugin = definePlugin(meta, () => [
-  defineModule({
+export const ObservabilityPlugin = Plugin.define(meta).pipe(
+  Plugin.addModule({
     id: `${meta.id}/module/intent-resolver`,
-    activatesOn: Events.SetupIntentResolver,
+    activatesOn: Common.ActivationEvent.SetupIntentResolver,
     activate: () =>
-      contributes(
-        Capabilities.IntentResolver,
-        createResolver({
-          intent: ObservabilityAction.SendEvent,
-          resolve: () => {},
-        }),
+      Effect.succeed(
+        Capability.contributes(
+          Common.Capability.IntentResolver,
+          createResolver({
+            intent: ObservabilityAction.SendEvent,
+            resolve: () => {},
+          }),
+        ),
       ),
   }),
-]);
+  Plugin.make,
+);

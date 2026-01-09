@@ -7,7 +7,7 @@
 import * as Effect from 'effect/Effect';
 import React, { useCallback } from 'react';
 
-import { LayoutAction, createIntent } from '@dxos/app-framework';
+import { Common, createIntent } from '@dxos/app-framework';
 import { type SurfaceComponentProps, useIntentDispatcher } from '@dxos/app-framework/react';
 import { Filter, Obj } from '@dxos/echo';
 import { runAndForwardErrors } from '@dxos/effect';
@@ -46,7 +46,7 @@ export const RelatedToOrganization = ({ subject: organization }: SurfaceComponen
       Effect.gen(function* () {
         const view = currentSpaceContacts.includes(contact) ? currentSpaceContactTable : defaultSpaceContactTable;
         yield* dispatch(
-          createIntent(LayoutAction.UpdatePopover, {
+          createIntent(Common.LayoutAction.UpdatePopover, {
             part: 'popover',
             options: {
               state: false,
@@ -57,7 +57,7 @@ export const RelatedToOrganization = ({ subject: organization }: SurfaceComponen
         if (view) {
           const id = Obj.getDXN(view).toString();
           yield* dispatch(
-            createIntent(LayoutAction.Open, {
+            createIntent(Common.LayoutAction.Open, {
               part: 'main',
               subject: [id],
               options: { workspace: db?.spaceId },

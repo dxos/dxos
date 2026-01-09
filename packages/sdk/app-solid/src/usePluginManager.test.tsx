@@ -16,7 +16,7 @@ describe('usePluginManager', () => {
       context: {
         capabilities: () => ({ pipe: () => {} }),
       },
-    } as unknown as PluginManager;
+    } as unknown as PluginManager.PluginManager;
 
     const TestComponent = () => {
       const manager = usePluginManager();

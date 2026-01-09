@@ -6,7 +6,7 @@ import * as Function from 'effect/Function';
 import * as Schema from 'effect/Schema';
 import React, { type ChangeEvent, forwardRef, useCallback, useMemo, useState } from 'react';
 
-import { LayoutAction, chain, createIntent } from '@dxos/app-framework';
+import { Common, chain, createIntent } from '@dxos/app-framework';
 import { useCapabilities, useIntentDispatcher } from '@dxos/app-framework/react';
 import { log } from '@dxos/log';
 import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
@@ -78,7 +78,7 @@ export const SpaceSettingsContainer = forwardRef<HTMLDivElement, SpaceSettingsCo
           void dispatch(
             Function.pipe(
               createIntent(SpaceAction.Close, { space }),
-              chain(LayoutAction.SwitchWorkspace, {
+              chain(Common.LayoutAction.SwitchWorkspace, {
                 part: 'workspace',
                 subject: client.spaces.default.id,
               }),

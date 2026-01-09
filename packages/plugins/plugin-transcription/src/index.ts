@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-export { TranscriptionCapabilities } from './capabilities';
+export { TranscriptionCapabilities } from './types';
 
 export * from './components';
 export * from './hooks';

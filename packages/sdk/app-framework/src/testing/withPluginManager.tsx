@@ -3,22 +3,15 @@
 //
 
 import { type Decorator, type StoryContext } from '@storybook/react';
+import * as Effect from 'effect/Effect';
 import React, { useEffect, useMemo } from 'react';
 
 import { raise } from '@dxos/debug';
 import { useAsyncEffect } from '@dxos/react-hooks';
 import { type MaybeProvider, getProviderValue } from '@dxos/util';
 
-import { Capabilities, Events } from '../common';
-import {
-  type ActivationEvent,
-  type AnyCapability,
-  type PluginContext,
-  PluginManager,
-  contributes,
-  defineModule,
-  definePlugin,
-} from '../core';
+import * as Common from '../common';
+import { type ActivationEvent, Capability, Plugin, PluginManager } from '../core';
 import { type UseAppOptions, useApp } from '../react';
 
 /**
@@ -30,9 +23,9 @@ export const setupPluginManager = ({
   core = plugins.map(({ meta }) => meta.id),
   ...options
 }: UseAppOptions & Pick<WithPluginManagerOptions, 'capabilities'> = {}) => {
-  const pluginManager = new PluginManager({
+  const pluginManager = PluginManager.make({
     pluginLoader: () => raise(new Error('Not implemented')),
-    plugins: [StoryPlugin(), ...plugins],
+    plugins: [StoryPlugin, ...plugins],
     core: [StoryPlugin.meta.id, ...core],
     ...options,
   });
@@ -52,9 +45,9 @@ export const setupPluginManager = ({
 
 export type WithPluginManagerOptions = UseAppOptions & {
   /** @deprecated */
-  capabilities?: MaybeProvider<AnyCapability[], PluginContext>;
+  capabilities?: MaybeProvider<Capability.Any[], Capability.PluginContext>;
   /** @deprecated */
-  fireEvents?: (ActivationEvent | string)[];
+  fireEvents?: (ActivationEvent.ActivationEvent | string)[];
 };
 
 export type WithPluginManagerInitializer<Args = void> =
@@ -72,7 +65,7 @@ export const withPluginManager = <Args,>(init: WithPluginManagerInitializer<Args
 
     // Set-up root capability.
     useEffect(() => {
-      const capability = contributes(Capabilities.ReactRoot, {
+      const capability = Capability.contributes(Common.Capability.ReactRoot, {
         id: context.id,
         root: () => <Story />,
       });
@@ -106,6 +99,11 @@ const storyMeta = {
 
 // No-op plugin to ensure there exists at least one plugin for the startup event.
 // This is necessary because `createApp` expects the startup event to complete before the app is ready.
-const StoryPlugin = definePlugin(storyMeta, () => [
-  defineModule({ id: storyMeta.id, activatesOn: Events.Startup, activate: () => [] }),
-]);
+const StoryPlugin = Plugin.define(storyMeta).pipe(
+  Plugin.addModule({
+    id: 'Story',
+    activatesOn: Common.ActivationEvent.Startup,
+    activate: () => Effect.succeed([]),
+  }),
+  Plugin.make,
+)();

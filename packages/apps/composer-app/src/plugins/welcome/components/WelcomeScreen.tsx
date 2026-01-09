@@ -4,7 +4,7 @@
 
 import React, { useCallback, useRef, useState } from 'react';
 
-import { LayoutAction, createIntent } from '@dxos/app-framework';
+import { Common, createIntent } from '@dxos/app-framework';
 import { useIntentDispatcher } from '@dxos/app-framework/react';
 import { log } from '@dxos/log';
 import { ClientAction } from '@dxos/plugin-client/types';
@@ -55,7 +55,7 @@ export const WelcomeScreen = ({ hubUrl }: { hubUrl: string }) => {
           );
         }
         await dispatch(
-          createIntent(LayoutAction.UpdateDialog, {
+          createIntent(Common.LayoutAction.UpdateDialog, {
             part: 'dialog',
             options: { state: false },
           }),
@@ -108,13 +108,13 @@ export const WelcomeScreen = ({ hubUrl }: { hubUrl: string }) => {
 
     const handleDone = async (result: InvitationResult | null) => {
       await dispatch(
-        createIntent(LayoutAction.UpdateDialog, {
+        createIntent(Common.LayoutAction.UpdateDialog, {
           part: 'dialog',
           options: { state: false },
         }),
       );
       await dispatch(
-        createIntent(LayoutAction.SetLayoutMode, {
+        createIntent(Common.LayoutAction.SetLayoutMode, {
           part: 'mode',
           subject: result?.target ?? undefined,
           options: { mode: 'solo' },

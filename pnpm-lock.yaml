@@ -1184,7 +1184,7 @@ catalogs:
       version: 1.9.9
     fast-check:
       specifier: ^3.19.0
-      version: 3.23.2
+      version: 3.23.1
     fast-xml-parser:
       specifier: ^4.3.2
       version: 4.4.1
@@ -1934,7 +1934,7 @@ catalogs:
       version: 4.54.0
     ws:
       specifier: ^8.14.2
-      version: 8.18.3
+      version: 8.18.2
     wtfnode:
       specifier: ^0.10.0
       version: 0.10.0
@@ -2241,7 +2241,7 @@ importers:
         version: 1.9.9
       fast-check:
         specifier: 'catalog:'
-        version: 3.23.2
+        version: 3.23.1
       fast-xml-parser:
         specifier: 'catalog:'
         version: 4.4.1
@@ -4948,7 +4948,7 @@ importers:
         version: 4.5.6
       fast-check:
         specifier: 'catalog:'
-        version: 3.23.2
+        version: 3.23.1
       get-port-please:
         specifier: 'catalog:'
         version: 3.1.1
@@ -5606,10 +5606,10 @@ importers:
         version: 0.93.6(effect@3.19.11)
       isomorphic-ws:
         specifier: 'catalog:'
-        version: 5.0.0(ws@8.18.3)
+        version: 5.0.0(ws@8.18.2)
       ws:
         specifier: 'catalog:'
-        version: 8.18.3
+        version: 8.18.2
     devDependencies:
       '@dxos/test-utils':
         specifier: workspace:*
@@ -5655,10 +5655,10 @@ importers:
         version: link:../../../common/util
       isomorphic-ws:
         specifier: 'catalog:'
-        version: 5.0.0(ws@8.18.3)
+        version: 5.0.0(ws@8.18.2)
       ws:
         specifier: 'catalog:'
-        version: 8.18.3
+        version: 8.18.2
     devDependencies:
       '@dxos/keyring':
         specifier: workspace:*
@@ -5994,7 +5994,7 @@ importers:
         version: link:../../../common/random-access-storage
       fast-check:
         specifier: 'catalog:'
-        version: 3.23.2
+        version: 3.23.1
 
   packages/core/mesh/websocket-rpc:
     dependencies:
@@ -6015,10 +6015,10 @@ importers:
         version: link:../rpc
       isomorphic-ws:
         specifier: 'catalog:'
-        version: 5.0.0(ws@8.18.3)
+        version: 5.0.0(ws@8.18.2)
       ws:
         specifier: 'catalog:'
-        version: 8.18.3
+        version: 8.18.2
 
   packages/core/protocols:
     dependencies:
@@ -6507,7 +6507,7 @@ importers:
         version: 3.3.0(react-dom@19.2.3(react@19.2.3))(react@19.2.3)(use-resize-observer@9.1.0(react-dom@19.2.3(react@19.2.3))(react@19.2.3))
       isomorphic-ws:
         specifier: 'catalog:'
-        version: 5.0.0(ws@8.18.3)
+        version: 5.0.0(ws@8.18.2)
       localforage:
         specifier: 'catalog:'
         version: 1.10.0
@@ -6546,7 +6546,7 @@ importers:
         version: 9.1.0(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
       ws:
         specifier: 'catalog:'
-        version: 8.18.3
+        version: 8.18.2
     devDependencies:
       '@babel/core':
         specifier: 'catalog:'
@@ -6875,7 +6875,7 @@ importers:
         version: 5.3.2
       isomorphic-ws:
         specifier: 'catalog:'
-        version: 5.0.0(ws@8.18.3)
+        version: 5.0.0(ws@8.18.2)
       js-yaml:
         specifier: 'catalog:'
         version: 4.1.1
@@ -6902,7 +6902,7 @@ importers:
         version: 5.5.2
       ws:
         specifier: 'catalog:'
-        version: 8.18.3
+        version: 8.18.2
       yargs:
         specifier: 'catalog:'
         version: 16.2.0
@@ -10123,6 +10123,9 @@ importers:
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../core/echo/echo
+      '@dxos/effect':
+        specifier: workspace:*
+        version: link:../../common/effect
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../common/invariant
@@ -10759,6 +10762,9 @@ importers:
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../core/echo/echo
+      '@dxos/effect':
+        specifier: workspace:*
+        version: link:../../common/effect
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../common/invariant
@@ -10780,6 +10786,9 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
+      '@effect-atom/atom-react':
+        specifier: 'catalog:'
+        version: 0.4.4(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/platform@0.93.6(effect@3.19.11))(@effect/rpc@0.72.2(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11))(effect@3.19.11)(react@19.2.3)(scheduler@0.27.0)
       '@effect/cli':
         specifier: 'catalog:'
         version: 0.72.1(@effect/platform@0.93.6(effect@3.19.11))(@effect/printer-ansi@0.47.0(@effect/typeclass@0.38.0(effect@3.19.11))(effect@3.19.11))(@effect/printer@0.47.0(@effect/typeclass@0.38.0(effect@3.19.11))(effect@3.19.11))(effect@3.19.11)
@@ -10799,9 +10808,6 @@ importers:
       '@dxos/ui-theme':
         specifier: workspace:*
         version: link:../../ui/ui-theme
-      '@effect-atom/atom-react':
-        specifier: 'catalog:'
-        version: 0.4.4(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/platform@0.93.6(effect@3.19.11))(@effect/rpc@0.72.2(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11))(effect@3.19.11)(react@19.2.3)(scheduler@0.27.0)
       '@effect/platform':
         specifier: 'catalog:'
         version: 0.93.6(effect@3.19.11)
@@ -13177,15 +13183,6 @@ importers:
       '@effect/cli':
         specifier: 'catalog:'
         version: 0.72.1(@effect/platform@0.93.6(effect@3.19.11))(@effect/printer-ansi@0.47.0(@effect/typeclass@0.38.0(effect@3.19.11))(effect@3.19.11))(@effect/printer@0.47.0(@effect/typeclass@0.38.0(effect@3.19.11))(effect@3.19.11))(effect@3.19.11)
-      '@effect/experimental':
-        specifier: 'catalog:'
-        version: 0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2)
-      '@preact-signals/safe-react':
-        specifier: 'catalog:'
-        version: 0.9.0(@babel/core@7.28.0)(@swc/helpers@0.5.17)(react@19.2.3)
-      '@preact/signals-core':
-        specifier: 'catalog:'
-        version: 1.12.1
     devDependencies:
       '@dxos/echo-signals':
         specifier: workspace:*
@@ -13477,7 +13474,7 @@ importers:
         version: 0.7.39
       fast-check:
         specifier: 'catalog:'
-        version: 3.23.2
+        version: 3.23.1
       typedoc:
         specifier: 'catalog:'
         version: 0.28.1(typescript@5.9.3)
@@ -14150,7 +14147,7 @@ importers:
         version: 0.2.4
       fast-check:
         specifier: 'catalog:'
-        version: 3.23.2
+        version: 3.23.1
       vite:
         specifier: 'catalog:'
         version: 7.1.9(@types/node@22.10.2)(jiti@2.6.1)(terser@5.19.2)(tsx@4.21.0)(yaml@2.8.2)
@@ -14366,7 +14363,7 @@ importers:
         version: 0.2.4
       fast-check:
         specifier: 'catalog:'
-        version: 3.23.2
+        version: 3.23.1
       vite:
         specifier: 'catalog:'
         version: 7.1.9(@types/node@22.10.2)(jiti@2.6.1)(terser@5.19.2)(tsx@4.21.0)(yaml@2.8.2)
@@ -16381,7 +16378,7 @@ importers:
         version: 3.19.11
       fast-check:
         specifier: 'catalog:'
-        version: 3.23.2
+        version: 3.23.1
       react:
         specifier: ~19.2.3
         version: 19.2.3
@@ -17802,7 +17799,7 @@ importers:
         version: 3.19.11
       fast-check:
         specifier: 'catalog:'
-        version: 3.23.2
+        version: 3.23.1
       react:
         specifier: ~19.2.3
         version: 19.2.3
@@ -21476,11 +21473,17 @@ packages:
   '@floating-ui/core@0.7.3':
     resolution: {integrity: sha512-buc8BXHmG9l82+OQXOFU3Kr2XQx9ys01U/Q9HMIrZ300iLc8HLMgh7dcCqgYzAzf4BkoQvDcXf5Y+CuEZ5JBYg==}
 
+  '@floating-ui/core@1.2.6':
+    resolution: {integrity: sha512-EvYTiXet5XqweYGClEmpu3BoxmsQ4hkj3QaYA6qEnigCWffTP3vNRwBReTdrwDwo7OoJ3wM8Uoe9Uk4n+d4hfg==}
+
   '@floating-ui/core@1.7.3':
     resolution: {integrity: sha512-sGnvb5dmrJaKEZ+LDIpguvdX3bDlEllmv4/ClQ9awcmCZrlx5jQyyMWFM5kBI+EyNOCDDiKk8il0zeuX3Zlg/w==}
 
   '@floating-ui/dom@0.5.4':
     resolution: {integrity: sha512-419BMceRLq0RrmTSDxn8hf9R3VCJv2K9PUfugh5JyEFmdjzDo+e8U5EdR8nzKq8Yj1htzLm3b6eQEEam3/rrtg==}
+
+  '@floating-ui/dom@1.2.9':
+    resolution: {integrity: sha512-sosQxsqgxMNkV3C+3UqTS6LxP7isRLwX8WMepp843Rb3/b0Wz8+MdUkxJksByip3C2WwLugLHN1b4ibn//zKwQ==}
 
   '@floating-ui/dom@1.7.4':
     resolution: {integrity: sha512-OOchDgh4F2CchOX94cRVqhvy7b3AFb+/rQXyswmzmGakRfkMgoWVjfnLWkRirfLEfuD4ysVW16eXzwt3jHIzKA==}
@@ -29580,6 +29583,10 @@ packages:
     engines: {node: '>=0.10'}
     hasBin: true
 
+  detect-libc@2.1.0:
+    resolution: {integrity: sha512-vEtk+OcP7VBRtQZ1EJ3bdgzSfBjgnEalLTp5zjJrS+2Z1w2KZly4SBdac/WDU3hhsNAZ9E8SC96ME4Ey8MZ7cg==}
+    engines: {node: '>=8'}
+
   detect-libc@2.1.2:
     resolution: {integrity: sha512-Btj2BOOO83o3WyH59e8MgXsxEQVcarkUOpEYrubB0urwnN10yQ364rsiByU11nZlqWYZm05i/of7io4mzihBtQ==}
     engines: {node: '>=8'}
@@ -30351,6 +30358,10 @@ packages:
 
   fast-bitfield@1.2.2:
     resolution: {integrity: sha512-t8HYqkuE3YEqNcyWlAfh55479aTxO+GpYwvQvJppYqyBfSmRdNIhzY2m09FKN/MENTzq4wH6heHOIvsPyMAwvQ==}
+
+  fast-check@3.23.1:
+    resolution: {integrity: sha512-u/MudsoQEgBUZgR5N1v87vEgybeVYus9VnDVaIkxkkGP2jt54naghQ3PCQHJiogS8U/GavZCUPFfx3Xkp+NaHw==}
+    engines: {node: '>=8.0.0'}
 
   fast-check@3.23.2:
     resolution: {integrity: sha512-h5+1OzzfCC3Ef7VbtKdcv7zsstUQwUDlYpUTvjeUsJAssPgLn7QzbboPtL5ro04Mq0rPOsMzl7q5hIbRs2wD1A==}
@@ -37552,7 +37563,6 @@ packages:
   whatwg-encoding@3.1.1:
     resolution: {integrity: sha512-6qN4hJdMwfYBtE3YBTTHhoeuUrDBPZmbQaxWAqSALV/MeEnR5z1xd8UKud2RAkFoPkmB+hli1TZSnyi84xz1vQ==}
     engines: {node: '>=18'}
-    deprecated: Use @exodus/bytes instead for a more spec-conformant and faster implementation
 
   whatwg-fetch@3.6.20:
     resolution: {integrity: sha512-EqhiFU6daOA8kpjOWTL0olhVOF3i7OrFzSYiGsEMB8GcXS+RrzauAERX65xMeNWVqxA6HXH2m69Z9LaKKdisfg==}
@@ -37800,6 +37810,18 @@ packages:
 
   ws@8.18.0:
     resolution: {integrity: sha512-8VbfWfHLbbwu3+N6OKsOMpBdT4kXPDDB9cJk2bJ6mh9ucxdlnNvH1e+roYkKmN9Nxw2yjz7VzeO9oOz2zJ04Pw==}
+    engines: {node: '>=10.0.0'}
+    peerDependencies:
+      bufferutil: ^4.0.1
+      utf-8-validate: '>=5.0.2'
+    peerDependenciesMeta:
+      bufferutil:
+        optional: true
+      utf-8-validate:
+        optional: true
+
+  ws@8.18.2:
+    resolution: {integrity: sha512-DMricUmwGZUVr++AEAe2uiVM7UoO9MAVZMDu05UQOaUII0lp+zOzLLU4Xqh/JvTqklB1T4uELaaPBKyjE1r4fQ==}
     engines: {node: '>=10.0.0'}
     peerDependencies:
       bufferutil: ^4.0.1
@@ -40685,7 +40707,7 @@ snapshots:
   '@effect/schema@0.75.5(effect@3.19.11)':
     dependencies:
       effect: 3.19.11
-      fast-check: 3.23.2
+      fast-check: 3.23.1
 
   '@effect/sql@0.48.6(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)':
     dependencies:
@@ -41263,6 +41285,8 @@ snapshots:
 
   '@floating-ui/core@0.7.3': {}
 
+  '@floating-ui/core@1.2.6': {}
+
   '@floating-ui/core@1.7.3':
     dependencies:
       '@floating-ui/utils': 0.2.10
@@ -41270,6 +41294,10 @@ snapshots:
   '@floating-ui/dom@0.5.4':
     dependencies:
       '@floating-ui/core': 0.7.3
+
+  '@floating-ui/dom@1.2.9':
+    dependencies:
+      '@floating-ui/core': 1.2.6
 
   '@floating-ui/dom@1.7.4':
     dependencies:
@@ -41287,7 +41315,7 @@ snapshots:
 
   '@floating-ui/react-dom@2.0.0(react-dom@19.2.3(react@19.2.3))(react@19.2.3)':
     dependencies:
-      '@floating-ui/dom': 1.7.4
+      '@floating-ui/dom': 1.2.9
       react: 19.2.3
       react-dom: 19.2.3(react@19.2.3)
 
@@ -42092,7 +42120,7 @@ snapshots:
 
   '@moonrepo/cli@1.41.7':
     dependencies:
-      detect-libc: 2.1.2
+      detect-libc: 2.1.0
     optionalDependencies:
       '@moonrepo/core-linux-arm64-gnu': 1.41.7
       '@moonrepo/core-linux-arm64-musl': 1.41.7
@@ -47789,7 +47817,7 @@ snapshots:
       sirv: 3.0.1
       tinyrainbow: 2.0.0
       vitest: 3.2.4(@types/debug@4.1.12)(@types/node@22.10.2)(@vitest/browser@3.2.4)(@vitest/ui@3.2.4)(happy-dom@13.3.4)(jiti@2.6.1)(jsdom@27.0.0(canvas@3.2.0)(postcss@8.5.6))(terser@5.19.2)(tsx@4.21.0)(yaml@2.8.2)
-      ws: 8.18.3
+      ws: 8.18.2
     optionalDependencies:
       playwright: 1.57.0
       webdriverio: 8.33.1(typescript@5.9.3)
@@ -50991,6 +51019,8 @@ snapshots:
 
   detect-libc@1.0.3: {}
 
+  detect-libc@2.1.0: {}
+
   detect-libc@2.1.2: {}
 
   detect-newline@3.1.0: {}
@@ -52101,6 +52131,10 @@ snapshots:
   fast-bitfield@1.2.2:
     dependencies:
       count-trailing-zeros: 1.0.1
+
+  fast-check@3.23.1:
+    dependencies:
+      pure-rand: 6.1.0
 
   fast-check@3.23.2:
     dependencies:
@@ -53588,7 +53622,7 @@ snapshots:
       type-fest: 4.41.0
       widest-line: 5.0.0
       wrap-ansi: 9.0.2
-      ws: 8.18.3
+      ws: 8.18.2
       yoga-layout: 3.2.1
     optionalDependencies:
       '@types/react': 19.2.7
@@ -53989,6 +54023,10 @@ snapshots:
       whatwg-fetch: 3.6.20
     transitivePeerDependencies:
       - encoding
+
+  isomorphic-ws@5.0.0(ws@8.18.2):
+    dependencies:
+      ws: 8.18.2
 
   isomorphic-ws@5.0.0(ws@8.18.3):
     dependencies:
@@ -55711,7 +55749,7 @@ snapshots:
       stoppable: 1.1.0
       undici: 5.29.0
       workerd: 1.20240320.1
-      ws: 8.18.3
+      ws: 8.18.2
       youch: 3.3.3
       zod: 3.25.76
     transitivePeerDependencies:
@@ -56948,7 +56986,7 @@ snapshots:
 
   prebuild-install@7.1.3:
     dependencies:
-      detect-libc: 2.1.2
+      detect-libc: 2.1.0
       expand-template: 2.0.3
       github-from-package: 0.0.0
       minimist: 1.2.8
@@ -58652,7 +58690,7 @@ snapshots:
   sharp@0.32.6:
     dependencies:
       color: 4.2.3
-      detect-libc: 2.1.2
+      detect-libc: 2.1.0
       node-addon-api: 6.1.0
       prebuild-install: 7.1.3
       semver: 7.7.3
@@ -58689,7 +58727,7 @@ snapshots:
   sharp@0.34.1:
     dependencies:
       color: 4.2.3
-      detect-libc: 2.1.2
+      detect-libc: 2.1.0
       semver: 7.7.3
     optionalDependencies:
       '@img/sharp-darwin-arm64': 0.34.1
@@ -61354,6 +61392,8 @@ snapshots:
   ws@8.14.2: {}
 
   ws@8.18.0: {}
+
+  ws@8.18.2: {}
 
   ws@8.18.3: {}
 

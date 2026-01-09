@@ -2,18 +2,11 @@
 // Copyright 2023 DXOS.org
 //
 
-import {
-  Capabilities,
-  Events,
-  allOf,
-  contributes,
-  createIntent,
-  defineModule,
-  definePlugin,
-  oneOf,
-} from '@dxos/app-framework';
+import * as Effect from 'effect/Effect';
+
+import { ActivationEvent, Capability, Common, Plugin, createIntent } from '@dxos/app-framework';
 import { Type } from '@dxos/echo';
-import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
+import { ClientEvents } from '@dxos/plugin-client';
 import { SpaceCapabilities, SpaceEvents } from '@dxos/plugin-space';
 
 import {
@@ -29,73 +22,50 @@ import { meta } from './meta';
 import { translations } from './translations';
 import { Meeting, MeetingAction } from './types';
 
-export const MeetingPlugin = definePlugin(meta, () => [
-  defineModule({
-    id: `${meta.id}/module/settings`,
-    activatesOn: Events.SetupSettings,
+export const MeetingPlugin = Plugin.define(meta).pipe(
+  Plugin.addModule({
+    activatesOn: Common.ActivationEvent.SetupSettings,
     activate: MeetingSettings,
   }),
-  defineModule({
-    id: `${meta.id}/module/state`,
+  Plugin.addModule({
     // TODO(wittjosiah): Does not integrate with settings store.
     //   Should this be a different event?
     //   Should settings store be renamed to be more generic?
-    activatesOn: oneOf(Events.SetupSettings, Events.SetupAppGraph),
+    activatesOn: ActivationEvent.oneOf(Common.ActivationEvent.SetupSettings, Common.ActivationEvent.SetupAppGraph),
     activate: MeetingState,
   }),
-  defineModule({
-    id: `${meta.id}/module/translations`,
-    activatesOn: Events.SetupTranslations,
-    activate: () => contributes(Capabilities.Translations, translations),
+  Common.Plugin.addTranslationsModule({ translations }),
+  Common.Plugin.addMetadataModule({
+    metadata: {
+      id: Type.getTypename(Meeting.Meeting),
+      metadata: {
+        label: (object: Meeting.Meeting) => object.name || new Date(object.created).toLocaleString(),
+        icon: 'ph--note--regular',
+        iconHue: 'rose',
+      },
+    },
   }),
-  defineModule({
-    id: `${meta.id}/module/metadata`,
-    activatesOn: Events.SetupMetadata,
-    activate: () => [
-      contributes(Capabilities.Metadata, {
-        id: Type.getTypename(Meeting.Meeting),
-        metadata: {
-          label: (object: Meeting.Meeting) => object.name || new Date(object.created).toLocaleString(),
-          icon: 'ph--note--regular',
-          iconHue: 'rose',
-        },
-      }),
-    ],
-  }),
-  defineModule({
-    id: `${meta.id}/module/schemas`,
-    activatesOn: ClientEvents.SetupSchema,
-    activate: () => contributes(ClientCapabilities.Schema, [Meeting.Meeting]),
-  }),
-  defineModule({
-    id: `${meta.id}/module/on-space-created`,
+  Common.Plugin.addSchemaModule({ schema: [Meeting.Meeting], id: 'schemas' }),
+  Plugin.addModule({
+    id: 'on-space-created',
     activatesOn: SpaceEvents.SpaceCreated,
     activate: () =>
-      contributes(SpaceCapabilities.OnCreateSpace, (params) => createIntent(MeetingAction.OnCreateSpace, params)),
+      Effect.succeed(
+        Capability.contributes(SpaceCapabilities.OnCreateSpace, (params) =>
+          createIntent(MeetingAction.OnCreateSpace, params),
+        ),
+      ),
   }),
-  defineModule({
-    id: `${meta.id}/module/repair`,
+  Plugin.addModule({
     activatesOn: ClientEvents.SpacesReady,
     activate: Repair,
   }),
-  defineModule({
-    id: `${meta.id}/module/react-surface`,
-    activatesOn: Events.SetupReactSurface,
-    activate: ReactSurface,
-  }),
-  defineModule({
-    id: `${meta.id}/module/intent-resolver`,
-    activatesOn: Events.SetupIntentResolver,
-    activate: IntentResolver,
-  }),
-  defineModule({
-    id: `${meta.id}/module/app-graph-builder`,
-    activatesOn: Events.SetupAppGraph,
-    activate: AppGraphBuilder,
-  }),
-  defineModule({
-    id: `${meta.id}/module/call-extension`,
-    activatesOn: allOf(Events.SettingsReady, ClientEvents.ClientReady),
+  Common.Plugin.addSurfaceModule({ activate: ReactSurface }),
+  Common.Plugin.addIntentResolverModule({ activate: IntentResolver }),
+  Common.Plugin.addAppGraphModule({ activate: AppGraphBuilder }),
+  Plugin.addModule({
+    activatesOn: ActivationEvent.allOf(Common.ActivationEvent.SettingsReady, ClientEvents.ClientReady),
     activate: CallExtension,
   }),
-]);
+  Plugin.make,
+);

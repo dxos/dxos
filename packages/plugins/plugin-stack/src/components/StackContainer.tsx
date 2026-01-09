@@ -5,7 +5,7 @@
 import * as Option from 'effect/Option';
 import React, { useCallback, useState } from 'react';
 
-import { Capabilities, LayoutAction, createIntent } from '@dxos/app-framework';
+import { Common, createIntent } from '@dxos/app-framework';
 import { useAppGraph, useCapabilities, useIntentDispatcher } from '@dxos/app-framework/react';
 import { isLiveObject } from '@dxos/client/echo';
 import { Obj } from '@dxos/echo';
@@ -38,7 +38,7 @@ const StackContainer = ({ id, collection }: StackContainerProps) => {
   const { dispatchPromise: dispatch } = useIntentDispatcher();
   const { graph } = useAppGraph();
   const { t } = useTranslation(meta.id);
-  const allMetadata = useCapabilities(Capabilities.Metadata);
+  const allMetadata = useCapabilities(Common.Capability.Metadata);
   const [collapsedSections, setCollapsedSections] = useState<CollapsedSections>({});
 
   // TODO(wittjosiah): Re-implement stack views with relations.
@@ -99,7 +99,7 @@ const StackContainer = ({ id, collection }: StackContainerProps) => {
     async (id: string, position: AddSectionPosition) => {
       await dispatch?.(
         // TODO(wittjosiah): Use object creation dialog.
-        createIntent(LayoutAction.UpdateDialog, {
+        createIntent(Common.LayoutAction.UpdateDialog, {
           part: 'dialog',
           subject: `${meta.id}/AddSectionDialog`,
           options: {
@@ -118,7 +118,7 @@ const StackContainer = ({ id, collection }: StackContainerProps) => {
 
   const handleNavigate = useCallback(
     async (id: string) => {
-      await dispatch(createIntent(LayoutAction.Open, { part: 'main', subject: [id] }));
+      await dispatch(createIntent(Common.LayoutAction.Open, { part: 'main', subject: [id] }));
     },
     [dispatch],
   );

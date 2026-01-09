@@ -4,13 +4,13 @@
 
 import React, { useCallback } from 'react';
 
-import { LayoutAction, createIntent } from '@dxos/app-framework';
+import { Common, createIntent } from '@dxos/app-framework';
 import { useCapability, useIntentDispatcher } from '@dxos/app-framework/react';
 import { IconButton, type IconButtonProps, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 
-import { DeckCapabilities } from '../../capabilities';
 import { getCompanionId, useDeckCompanions } from '../../hooks';
 import { meta } from '../../meta';
+import { DeckCapabilities } from '../../types';
 
 export const ToggleSidebarButton = ({
   classNames,
@@ -65,7 +65,7 @@ export const ToggleComplementarySidebarButton = ({
     const subject = layoutContext.complementarySidebarPanel ?? (companions[0] && getCompanionId(companions[0].id));
     if (layoutContext.complementarySidebarState === 'expanded' && !current && subject) {
       await dispatch(
-        createIntent(LayoutAction.UpdateComplementary, {
+        createIntent(Common.LayoutAction.UpdateComplementary, {
           part: 'complementary',
           subject,
         }),

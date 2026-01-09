@@ -4,9 +4,9 @@
 
 import type { PropsWithChildren, ReactNode, RefCallback } from 'react';
 
-import { type MakeOptional, type Position } from '@dxos/util';
+import type { MakeOptional, Position } from '@dxos/util';
 
-import { type ErrorBoundary } from '../react';
+import type { ErrorBoundary } from '../react';
 
 /**
  * SurfaceProps are the props that are passed to the Surface component.

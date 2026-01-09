@@ -5,7 +5,7 @@
 import { type EditorView } from '@codemirror/view';
 import React, { useCallback, useState } from 'react';
 
-import { type FileInfo } from '@dxos/app-framework';
+import { type Common } from '@dxos/app-framework';
 import { invariant } from '@dxos/invariant';
 import { type ThemedClassName } from '@dxos/react-ui';
 import { EditorToolbar, type EditorToolbarProps } from '@dxos/react-ui-editor';
@@ -17,7 +17,7 @@ export type MarkdownEditorToolbarProps = ThemedClassName<
   {
     id: string;
     editorView?: EditorView;
-    onFileUpload?: (file: File) => Promise<FileInfo | undefined>;
+    onFileUpload?: (file: File) => Promise<Common.FileInfo | undefined>;
   } & Pick<EditorToolbarProps, 'role' | 'state' | 'customActions' | 'onViewModeChange'>
 >;
 

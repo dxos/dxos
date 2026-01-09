@@ -30,7 +30,7 @@ describe('useIntentResolver', () => {
         contributeCapability: contributeMock,
         removeCapability: removeMock,
       },
-    } as unknown as PluginManager;
+    } as unknown as PluginManager.PluginManager;
 
     const resolver = createResolver({
       intent: TestIntent,

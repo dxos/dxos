@@ -6,7 +6,7 @@ import * as Array from 'effect/Array';
 import * as Function from 'effect/Function';
 import React, { useCallback } from 'react';
 
-import { LayoutAction, chain, createIntent } from '@dxos/app-framework';
+import { Common, chain, createIntent } from '@dxos/app-framework';
 import { type SurfaceComponentProps, useIntentDispatcher } from '@dxos/app-framework/react';
 import { Filter, Obj } from '@dxos/echo';
 import { AttentionAction } from '@dxos/plugin-attention/types';
@@ -58,14 +58,14 @@ export const RelatedToContact = ({ subject: contact }: SurfaceComponentProps<Per
     (message: Message.Message) => {
       void dispatch(
         Function.pipe(
-          createIntent(LayoutAction.UpdatePopover, {
+          createIntent(Common.LayoutAction.UpdatePopover, {
             part: 'popover',
             options: {
               state: false,
               anchorId: '',
             },
           }),
-          chain(LayoutAction.Open, {
+          chain(Common.LayoutAction.Open, {
             part: 'main',
             subject: [Obj.getDXN(mailbox).toString()],
             options: { workspace: space?.id },
@@ -84,14 +84,14 @@ export const RelatedToContact = ({ subject: contact }: SurfaceComponentProps<Per
     (event: Event.Event) => {
       void dispatch(
         Function.pipe(
-          createIntent(LayoutAction.UpdatePopover, {
+          createIntent(Common.LayoutAction.UpdatePopover, {
             part: 'popover',
             options: {
               state: false,
               anchorId: '',
             },
           }),
-          chain(LayoutAction.Open, {
+          chain(Common.LayoutAction.Open, {
             part: 'main',
             subject: [Obj.getDXN(calendar).toString()],
             options: { workspace: space?.id },

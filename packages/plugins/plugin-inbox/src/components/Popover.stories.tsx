@@ -5,7 +5,7 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useCallback, useRef } from 'react';
 
-import { LayoutAction, createIntent } from '@dxos/app-framework';
+import { Common, createIntent } from '@dxos/app-framework';
 import { useIntentDispatcher } from '@dxos/app-framework/react';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Filter } from '@dxos/echo';
@@ -28,7 +28,7 @@ const ContactItem = ({ contact }: { contact: Person.Person }) => {
   const handleClick = useCallback(
     () =>
       dispatch(
-        createIntent(LayoutAction.UpdatePopover, {
+        createIntent(Common.LayoutAction.UpdatePopover, {
           part: 'popover',
           subject: contact,
           options: {
@@ -61,7 +61,7 @@ const OrganizationItem = ({ organization }: { organization: Organization.Organiz
   const handleClick = useCallback(
     () =>
       dispatch(
-        createIntent(LayoutAction.UpdatePopover, {
+        createIntent(Common.LayoutAction.UpdatePopover, {
           part: 'popover',
           subject: organization,
           options: {

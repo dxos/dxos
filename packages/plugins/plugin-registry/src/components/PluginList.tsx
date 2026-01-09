@@ -10,7 +10,7 @@ import { List } from '@dxos/react-ui';
 import { PluginItem, type PluginItemProps } from './PluginItem';
 
 export type PluginListProps = Omit<PluginItemProps, 'plugin'> & {
-  plugins?: readonly Plugin[];
+  plugins?: readonly Plugin.Plugin[];
 };
 
 export const PluginList = ({ plugins = [], ...props }: PluginListProps) => {

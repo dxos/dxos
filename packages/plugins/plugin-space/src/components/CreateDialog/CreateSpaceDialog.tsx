@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 import type * as Schema from 'effect/Schema';
 import React, { useCallback, useRef } from 'react';
 
-import { LayoutAction, createIntent } from '@dxos/app-framework';
+import { Common, createIntent } from '@dxos/app-framework';
 import { useIntentDispatcher } from '@dxos/app-framework/react';
 import { runAndForwardErrors } from '@dxos/effect';
 import { Dialog, IconButton, useTranslation } from '@dxos/react-ui';
@@ -34,13 +34,13 @@ export const CreateSpaceDialog = () => {
       const program = Effect.gen(function* () {
         const { space } = yield* dispatch(createIntent(SpaceAction.Create, data));
         yield* dispatch(
-          createIntent(LayoutAction.SwitchWorkspace, {
+          createIntent(Common.LayoutAction.SwitchWorkspace, {
             part: 'workspace',
             subject: space.id,
           }),
         );
         yield* dispatch(
-          createIntent(LayoutAction.UpdateDialog, {
+          createIntent(Common.LayoutAction.UpdateDialog, {
             part: 'dialog',
             options: { state: false },
           }),

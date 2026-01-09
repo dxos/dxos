@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { type LayoutAction } from '@dxos/app-framework';
+import { type Common } from '@dxos/app-framework';
 import {
   Button,
   Icon,
@@ -28,7 +28,7 @@ export const Toast = ({
   closeLabel,
   onAction,
   onOpenChange,
-}: LayoutAction.Toast & Pick<ToastRootProps, 'onOpenChange'>) => {
+}: Common.LayoutAction.Toast & Pick<ToastRootProps, 'onOpenChange'>) => {
   const { t } = useTranslation(meta.id);
 
   return (
@@ -61,7 +61,7 @@ export const Toast = ({
 };
 
 export type ToasterProps = {
-  toasts?: LayoutAction.Toast[];
+  toasts?: Common.LayoutAction.Toast[];
   onDismissToast?: (id: string) => void;
 };
 
@@ -72,7 +72,7 @@ export const Toaster = ({ toasts, onDismissToast }: ToasterProps) => {
         <Toast
           {...toast}
           key={toast.id}
-          onOpenChange={(open) => {
+          onOpenChange={(open: boolean) => {
             if (!open) {
               onDismissToast?.(toast.id);
             }
