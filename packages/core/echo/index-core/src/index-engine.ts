@@ -9,8 +9,7 @@ import * as Effect from 'effect/Effect';
 import type { SpaceId } from '@dxos/keys';
 
 import { type IndexCursor, type IndexTracker } from './index-tracker';
-import type { Index, IndexerObject } from './indexes/interface';
-import { type ObjectMetaIndex } from './indexes/object-meta-index';
+import type { FtsIndex, Index, IndexerObject, ObjectMetaIndex } from './indexes';
 
 /**
  * Cursor into indexable data-source
@@ -40,16 +39,19 @@ export interface IndexDataSource {
 
 export interface IndexEngineParams {
   tracker: IndexTracker;
+  ftsIndex: FtsIndex;
   objectMetaIndex: ObjectMetaIndex;
 }
 
 export class IndexEngine {
   readonly #tracker: IndexTracker;
   readonly #objectMetaIndex: ObjectMetaIndex;
+  readonly #ftsIndex: FtsIndex;
 
-  constructor({ tracker, objectMetaIndex }: IndexEngineParams) {
+  constructor({ tracker, objectMetaIndex, ftsIndex }: IndexEngineParams) {
     this.#tracker = tracker;
     this.#objectMetaIndex = objectMetaIndex;
+    this.#ftsIndex = ftsIndex;
   }
 
   update(dataSource: IndexDataSource, opts: { spaceId: SpaceId; limit?: number }) {
@@ -59,12 +61,18 @@ export class IndexEngine {
 
       yield* sql`BEGIN TRANSACTION`;
 
-      const { updated: updatedObjects } = yield* this.#updateIndex(this.#objectMetaIndex, dataSource, {
+      const { updated: updatedObjectMetaIndex } = yield* this.#updateIndex(this.#objectMetaIndex, dataSource, {
         indexName: 'objectMeta',
         spaceId: opts.spaceId,
         limit: opts.limit,
       });
-      updated += updatedObjects;
+      updated += updatedObjectMetaIndex;
+      const { updated: updatedFtsIndex } = yield* this.#updateIndex(this.#ftsIndex, dataSource, {
+        indexName: 'fts',
+        spaceId: opts.spaceId,
+        limit: opts.limit,
+      });
+      updated += updatedFtsIndex;
 
       yield* sql`COMMIT`;
 

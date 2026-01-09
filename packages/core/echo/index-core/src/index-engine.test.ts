@@ -13,8 +13,7 @@ import { ObjectId, SpaceId } from '@dxos/keys';
 
 import { type DataSourceCursor, type IndexDataSource, IndexEngine } from './index-engine';
 import { type IndexCursor, IndexTracker } from './index-tracker';
-import type { IndexerObject } from './indexes/interface';
-import { ObjectMetaIndex } from './indexes/object-meta-index';
+import { FtsIndex, type IndexerObject, ObjectMetaIndex } from './indexes';
 
 const TestLayer = Layer.merge(
   SqliteClient.layer({
@@ -48,7 +47,7 @@ class MockIndexDataSource implements IndexDataSource {
     return Effect.sync(() => {
       const results: { object: IndexerObject; hash: string }[] = [];
 
-      for (const [key, entry] of this._state.entries()) {
+      for (const [, entry] of this._state.entries()) {
         const { object, hash } = entry;
 
         // Find cursor for this object
@@ -89,16 +88,19 @@ describe('IndexEngine', () => {
     yield* tracker.migrate();
     const metaIndex = new ObjectMetaIndex();
     yield* metaIndex.migrate();
-    return { tracker, metaIndex };
+    const ftsIndex = new FtsIndex();
+    yield* ftsIndex.migrate();
+    const indexEngine = new IndexEngine({ tracker, ftsIndex, objectMetaIndex: metaIndex });
+    return { indexEngine, tracker, metaIndex, ftsIndex };
   });
 
   it.effect(
     'should index and update objects',
     Effect.fnUntraced(function* () {
-      const { tracker, metaIndex } = yield* setup;
+      const { tracker, metaIndex, ftsIndex } = yield* setup;
 
       // Inject dependencies
-      const engine = new IndexEngine({ tracker, objectMetaIndex: metaIndex });
+      const engine = new IndexEngine({ tracker, ftsIndex, objectMetaIndex: metaIndex });
       const dataSource = new MockIndexDataSource();
       const spaceId = SpaceId.random();
 
@@ -113,13 +115,19 @@ describe('IndexEngine', () => {
 
       // First update
       const { updated } = yield* engine.update(dataSource, { spaceId });
-      expect(updated).toBe(1);
+      // Updates both object meta and FTS indexes.
+      expect(updated).toBe(2);
 
       // Verify using the SAME index instance
       const results1 = yield* metaIndex.query({ spaceId: spaceId.toString(), typeDxn: 'test.Type' });
       expect(results1).toHaveLength(1);
       expect(results1[0].objectId).toBe(obj1.data.id);
       expect(results1[0].version).toBeGreaterThan(0);
+
+      // Verify FTS index gets updated (documentId is part of the snapshot JSON).
+      const ftsResults1 = yield* ftsIndex.query('doc');
+      expect(ftsResults1.length).toBeGreaterThan(0);
+      expect(ftsResults1.some((row: any) => String(row.snapshot).includes('doc-1'))).toBe(true);
 
       // Update object
       const obj1Updated: IndexerObject = {
@@ -132,22 +140,25 @@ describe('IndexEngine', () => {
 
       // Second update
       const { updated: updated2 } = yield* engine.update(dataSource, { spaceId });
-      expect(updated2).toBe(1);
+      expect(updated2).toBe(2);
 
       // Verify update
       const results2 = yield* metaIndex.query({ spaceId: spaceId.toString(), typeDxn: 'test.Type' });
       expect(results2).toHaveLength(1);
       expect(results2[0].objectId).toBe(obj1Updated.data.id);
       expect(results2[0].version).toBeGreaterThan(results1[0].version);
+
+      const ftsResults2 = yield* ftsIndex.query('doc');
+      expect(ftsResults2.length).toBeGreaterThanOrEqual(ftsResults1.length);
     }, Effect.provide(TestLayer)),
   );
 
   it.effect(
     'should handle multiple objects',
     Effect.fnUntraced(function* () {
-      const { tracker, metaIndex } = yield* setup;
+      const { tracker, metaIndex, ftsIndex } = yield* setup;
 
-      const engine = new IndexEngine({ tracker, objectMetaIndex: metaIndex });
+      const engine = new IndexEngine({ tracker, objectMetaIndex: metaIndex, ftsIndex });
       const dataSource = new MockIndexDataSource();
       const spaceId = SpaceId.random();
 
@@ -181,6 +192,10 @@ describe('IndexEngine', () => {
 
       const resultsB = yield* metaIndex.query({ spaceId: spaceId.toString(), typeDxn: 'test.TypeB' });
       expect(resultsB).toHaveLength(1);
+
+      const ftsResults = yield* ftsIndex.query('d1');
+      expect(ftsResults.length).toBeGreaterThan(0);
+      expect(ftsResults.some((row: any) => String(row.snapshot).includes('"documentId":"d1"'))).toBe(true);
     }, Effect.provide(TestLayer)),
   );
 });
