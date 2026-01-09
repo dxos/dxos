@@ -12,7 +12,7 @@ import {
 import { preserveOffsetOnSource } from '@atlaskit/pragmatic-drag-and-drop/element/preserve-offset-on-source';
 import { setCustomNativeDragPreview } from '@atlaskit/pragmatic-drag-and-drop/element/set-custom-native-drag-preview';
 import { type DragLocationHistory, type DropTargetRecord } from '@atlaskit/pragmatic-drag-and-drop/types';
-import { type AllowedAxis } from '@atlaskit/pragmatic-drag-and-drop-auto-scroll/dist/types/internal-types';
+import { type AllowedAxis, type Axis } from '@atlaskit/pragmatic-drag-and-drop-auto-scroll/dist/types/internal-types';
 import { autoScrollForElements } from '@atlaskit/pragmatic-drag-and-drop-auto-scroll/element';
 import {
   type Edge,
@@ -43,7 +43,6 @@ import React, {
 } from 'react';
 import { createPortal } from 'react-dom';
 
-import { addEventListener } from '@dxos/async';
 import { type Obj } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { type ThemedClassName } from '@dxos/react-ui';
@@ -493,8 +492,11 @@ const Container = forwardRef<HTMLDivElement, ContainerProps>(
           /**
            * Custom event for dragging cancellation.
            */
-          addEventListener(rootRef.current, 'dnd:cancel' as any, () => {
-            setState({ type: 'idle' });
+          bind(rootRef.current, {
+            type: 'dnd:cancel',
+            listener: () => {
+              setState({ type: 'idle' });
+            },
           }),
         ]
           .filter(isTruthy)
@@ -521,10 +523,10 @@ const Container = forwardRef<HTMLDivElement, ContainerProps>(
                 state.type === 'active' && state.bounds ? `${state.bounds.height}px` : '0px',
             } as CSSProperties
           }
+          {...props}
           {...{
             [`data-${CONTAINER_STATE_ATTR}`]: state.type,
           }}
-          {...props}
           ref={composedRef}
         >
           {children}
@@ -752,12 +754,16 @@ Tile.displayName = 'MosaicTile';
 // Placeholder
 //
 
+/** Target: data-[mosaic-placeholder-axis=vertical] */
+const PLACEHOLDER_AXIS_ATTR = 'mosaic-placeholder-axis';
+
 /** Target: data-[mosaic-placeholder-state=active] */
 const PLACEHOLDER_STATE_ATTR = 'mosaic-placeholder-state';
 
 type PlaceholderProps<Location = LocationType> = ThemedClassName<
   PropsWithChildren<{
     asChild?: boolean;
+    axis?: Axis;
     location: Location;
   }>
 >;
@@ -766,6 +772,7 @@ const Placeholder = <Location extends LocationType = LocationType>({
   classNames,
   children,
   asChild,
+  axis = 'vertical',
   location,
 }: PlaceholderProps<Location>) => {
   const rootRef = useRef<HTMLDivElement>(null);
@@ -811,6 +818,7 @@ const Placeholder = <Location extends LocationType = LocationType>({
   return (
     <Root
       {...{
+        [`data-${PLACEHOLDER_AXIS_ATTR}`]: axis,
         [`data-${PLACEHOLDER_STATE_ATTR}`]: data.location === activeLocation ? 'active' : 'idle',
       }}
       role='none'

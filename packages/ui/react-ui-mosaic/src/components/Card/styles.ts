@@ -15,7 +15,8 @@ export const cardRoot = [
   'rounded-sm bg-cardSurface border border-separator dark:border-subduedSeparator dx-focus-ring-group-y-indicator',
 ].join(' ');
 
-export const cardGrid = 'grid grid-cols-[var(--rail-item)_1fr_var(--rail-item)]';
+export const cardGrid = 'grid grid-cols-[var(--rail-item)_1fr_var(--rail-item)] gap-1';
+export const cardSection = 'grid grid-cols-[var(--rail-item)_1fr] gap-1';
 
 export const cardSpacing = 'pli-cardSpacingInline mlb-cardSpacingBlock';
 export const cardNoSpacing = 'pli-0 mlb-0';
@@ -29,9 +30,9 @@ export const cardDialogPaddedOverflow = [cardDialogOverflow, 'plb-cardSpacingBlo
 export const cardDialogSearchListRoot =
   'pli-cardSpacingInline pbs-cardSpacingBlock [&>input]:mbe-0 min-bs-0 flex flex-1 flex-col';
 
-export const cardText = cardSpacing;
+export const cardHeading = 'grow truncate';
 
-export const cardHeading = 'text-lg font-medium line-clamp-2 grow';
+export const cardText = cardSpacing;
 
 export const cardChrome =
   'pli-[--dx-cardSpacingChrome] mlb-[--dx-cardSpacingChrome] [&_.dx-button]:text-start [&_.dx-button]:is-full [&_.dx-button]:pis-[calc(var(--dx-cardSpacingInline)-var(--dx-cardSpacingChrome))]';
