@@ -7,27 +7,17 @@ import * as Effect from 'effect/Effect';
 import React, { type KeyboardEvent, useCallback, useRef } from 'react';
 import { expect, userEvent, within } from 'storybook/test';
 
-import {
-  Capability,
-  Common,
-  OperationPlugin,
-  OperationResolver,
-  RuntimePlugin,
-  SettingsPlugin,
-} from '@dxos/app-framework';
+import { Capability, Common, OperationResolver, RuntimePlugin } from '@dxos/app-framework';
 import { useCapability } from '@dxos/app-framework/react';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { live } from '@dxos/live-object';
-import { AttentionPlugin } from '@dxos/plugin-attention';
-import { GraphPlugin } from '@dxos/plugin-graph';
-import { StorybookLayoutPlugin } from '@dxos/plugin-storybook-layout';
-import { ThemePlugin } from '@dxos/plugin-theme';
+import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
 import { faker } from '@dxos/random';
 import { IconButton, Input, Main, Toolbar } from '@dxos/react-ui';
 import { withTheme } from '@dxos/react-ui/testing';
 import { useAttention, useAttentionAttributes } from '@dxos/react-ui-attention';
 import { Stack, StackItem } from '@dxos/react-ui-stack';
-import { defaultTx, mx } from '@dxos/ui-theme';
+import { mx } from '@dxos/ui-theme';
 
 import { NavTreePlugin } from '../../NavTreePlugin';
 import { storybookGraphBuilders } from '../../testing';
@@ -132,13 +122,9 @@ const meta = {
     withPluginManager({
       plugins: [
         RuntimePlugin(),
-        ThemePlugin({ tx: defaultTx }),
-        GraphPlugin(),
-        OperationPlugin(),
-        SettingsPlugin(),
-        AttentionPlugin(),
+        ...corePlugins(),
         NavTreePlugin(),
-        StorybookLayoutPlugin({ initialState: { sidebarState: 'expanded' } }),
+        StorybookPlugin({ initialState: { sidebarState: 'expanded' } }),
       ],
       capabilities: (context) => [
         Capability.contributes(StoryState, live({ tab: 'space-0' })),

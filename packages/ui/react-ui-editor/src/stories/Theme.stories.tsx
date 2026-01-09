@@ -7,7 +7,7 @@ import React, { useMemo } from 'react';
 
 import { useThemeContext } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
-import { createThemeExtensions } from '@dxos/ui-editor';
+import { createBasicExtensions, createThemeExtensions } from '@dxos/ui-editor';
 
 import { Editor } from '../components';
 
@@ -19,8 +19,14 @@ const DefaultStory = () => {
   const [ext1, ext2] = useMemo(
     () => [
       //
-      [createThemeExtensions({ themeMode, monospace: false })],
-      [createThemeExtensions({ themeMode, monospace: true })],
+      [
+        createBasicExtensions({ placeholder: 'Enter text', search: true }),
+        createThemeExtensions({ themeMode, monospace: false }),
+      ],
+      [
+        createBasicExtensions({ placeholder: 'Enter text', search: true }),
+        createThemeExtensions({ themeMode, monospace: true }),
+      ],
     ],
     [],
   );

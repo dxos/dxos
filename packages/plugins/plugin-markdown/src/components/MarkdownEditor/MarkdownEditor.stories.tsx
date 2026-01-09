@@ -5,11 +5,10 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
-import { OperationPlugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Filter, Obj } from '@dxos/echo';
-import { AttentionPlugin } from '@dxos/plugin-attention';
 import { ClientPlugin } from '@dxos/plugin-client';
+import { corePlugins } from '@dxos/plugin-testing';
 import { useQuery, useSpace } from '@dxos/react-client/echo';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { useAttentionAttributes } from '@dxos/react-ui-attention';
@@ -54,9 +53,9 @@ const meta: Meta<typeof DefaultStory> = {
   decorators: [
     withTheme,
     withLayout({ layout: 'column' }),
-    // TODO(burdon): Create story without client.
     withPluginManager({
       plugins: [
+        ...corePlugins(),
         ClientPlugin({
           types: [Markdown.Document],
           onClientInitialized: async ({ client }) => {
@@ -64,11 +63,11 @@ const meta: Meta<typeof DefaultStory> = {
             await client.spaces.waitUntilReady();
             const space = client.spaces.default;
             await space.waitUntilReady();
+
             space.db.add(Markdown.make({ content }));
           },
         }),
-        OperationPlugin(),
-        AttentionPlugin(),
+        ...corePlugins(),
       ],
     }),
   ],

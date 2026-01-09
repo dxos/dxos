@@ -5,17 +5,14 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
-import { OperationPlugin, SettingsPlugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Filter, Ref } from '@dxos/client/echo';
 import { Obj, Query, Tag, Type } from '@dxos/echo';
-import { AttentionPlugin } from '@dxos/plugin-attention';
 import { ClientPlugin } from '@dxos/plugin-client';
 import { InboxPlugin } from '@dxos/plugin-inbox';
 import { PreviewPlugin } from '@dxos/plugin-preview';
 import { SpacePlugin } from '@dxos/plugin-space';
-import { StorybookLayoutPlugin } from '@dxos/plugin-storybook-layout';
-import { ThemePlugin } from '@dxos/plugin-theme';
+import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
 import { faker } from '@dxos/random';
 import { useDatabase, useQuery } from '@dxos/react-client/echo';
 import { withTheme } from '@dxos/react-ui/testing';
@@ -24,7 +21,6 @@ import { Stack } from '@dxos/react-ui-stack';
 import { Collection, View } from '@dxos/schema';
 import { createObjectFactory } from '@dxos/schema/testing';
 import { Message, Organization, Person, Project, Task } from '@dxos/types';
-import { defaultTx } from '@dxos/ui-theme';
 
 import { translations } from '../translations';
 
@@ -57,6 +53,7 @@ const meta = {
     withTheme,
     withPluginManager({
       plugins: [
+        ...corePlugins(),
         ClientPlugin({
           types: [
             Tag.Tag,
@@ -209,16 +206,11 @@ const meta = {
             await messageQueue.append(messages);
           },
         }),
+        ...corePlugins(),
         SpacePlugin({}),
-        OperationPlugin(),
-        SettingsPlugin(),
-
-        // UI
-        ThemePlugin({ tx: defaultTx }),
-        AttentionPlugin(),
         PreviewPlugin(),
         InboxPlugin(),
-        StorybookLayoutPlugin({}),
+        StorybookPlugin({}),
       ],
     }),
   ],

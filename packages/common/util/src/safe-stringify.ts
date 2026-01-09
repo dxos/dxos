@@ -7,15 +7,29 @@ export const SKIP = Object.freeze({});
 export type StringifyReplacer = (key: string, value: any) => typeof SKIP | any;
 
 export function safeStringify(obj: any, filter: StringifyReplacer = defaultFilter, indent = 2) {
-  const seen = new WeakSet();
+  const seen = new WeakMap<object, string>();
 
-  function replacer(key: string, value: any) {
+  // NOTE: Called for the root object with undefined key.
+  function replacer(this: any, key: string, value: any) {
+    let path = key;
+    if (!key) {
+      path = '$';
+    } else if (this) {
+      const parentPath = seen.get(this);
+      path = parentPath ? `${parentPath}.${key}` : key;
+    }
+
+    if (typeof value === 'function') {
+      return undefined;
+    }
+
     if (typeof value === 'object' && value !== null) {
-      if (seen.has(value)) {
-        return '[Circular]';
+      const exists = seen.get(value);
+      if (exists) {
+        return `[${path} => ${exists}]`;
       }
 
-      seen.add(value);
+      seen.set(value, path);
     }
 
     if (filter) {
@@ -28,14 +42,12 @@ export function safeStringify(obj: any, filter: StringifyReplacer = defaultFilte
     return value;
   }
 
-  let result = '';
   try {
-    result = JSON.stringify(obj, replacer, indent);
+    const str = JSON.stringify(obj, replacer, indent);
+    return str;
   } catch (error: any) {
-    result = `Error: ${error.message}`;
+    return `Error: ${error.message}`;
   }
-
-  return result;
 }
 
 export type CreateReplacerProps = {
@@ -59,6 +71,7 @@ export const createReplacer = ({
   return function (this: any, key: string, value: any) {
     // Track depth.
     if (key === '') {
+      // Root.
       currentDepth = 0;
     } else if (this && typeof this === 'object') {
       const parentDepth = depthMap.get(this) ?? 0;
@@ -83,6 +96,7 @@ export const createReplacer = ({
     if (omit?.includes(key)) {
       return undefined;
     }
+
     if (parse?.includes(key) && typeof value === 'string') {
       try {
         return JSON.parse(value);
@@ -90,9 +104,11 @@ export const createReplacer = ({
         return value;
       }
     }
+
     if (maxArrayLen != null && Array.isArray(value) && value.length > maxArrayLen) {
       return `[length: ${value.length}]`;
     }
+
     if (maxStringLen != null && typeof value === 'string' && value.length > maxStringLen) {
       return value.slice(0, maxStringLen) + '...';
     }

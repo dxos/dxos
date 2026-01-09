@@ -5,22 +5,19 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
-import { Capability, Common, OperationPlugin, SettingsPlugin } from '@dxos/app-framework';
+import { Capability, Common } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Obj, Ref } from '@dxos/echo';
-import { AttentionPlugin } from '@dxos/plugin-attention';
 import { ClientPlugin } from '@dxos/plugin-client';
 import { MarkdownPlugin } from '@dxos/plugin-markdown';
 import { SpacePlugin } from '@dxos/plugin-space';
-import { ThemePlugin } from '@dxos/plugin-theme';
+import { corePlugins } from '@dxos/plugin-testing';
 import { Channel } from '@dxos/plugin-thread/types';
 import { Query, useDatabase, useQuery } from '@dxos/react-client/echo';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Text } from '@dxos/schema';
 import { Message, Thread, Transcript } from '@dxos/types';
-import { defaultTx } from '@dxos/ui-theme';
 
-import { translations } from '../translations';
 import { Meeting } from '../types';
 
 import { MeetingContainer, type MeetingContainerProps } from './MeetingContainer';
@@ -44,8 +41,7 @@ const meta = {
     withLayout({ layout: 'column' }),
     withPluginManager({
       plugins: [
-        AttentionPlugin(),
-        ThemePlugin({ tx: defaultTx, resourceExtensions: translations }),
+        ...corePlugins(),
         ClientPlugin({
           types: [Meeting.Meeting],
           onClientInitialized: async ({ client }) => {
@@ -66,9 +62,8 @@ const meta = {
             );
           },
         }),
+        ...corePlugins(),
         SpacePlugin({}),
-        OperationPlugin(),
-        SettingsPlugin(),
         MarkdownPlugin(),
       ],
       capabilities: [

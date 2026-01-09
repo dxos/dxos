@@ -154,10 +154,10 @@
       "path": "../../plugins/plugin-stack"
     },
     {
-      "path": "../../plugins/plugin-storybook-layout"
+      "path": "../../plugins/plugin-table"
     },
     {
-      "path": "../../plugins/plugin-table"
+      "path": "../../plugins/plugin-testing"
     },
     {
       "path": "../../plugins/plugin-theme"

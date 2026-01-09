@@ -11,7 +11,7 @@ import { useOperationInvoker } from '@dxos/app-framework/react';
 import { runAndForwardErrors } from '@dxos/effect';
 import { Dialog, IconButton, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
-import { cardDialogContent, cardDialogHeader } from '@dxos/react-ui-stack';
+import { cardDialogContent, cardDialogHeader } from '@dxos/react-ui-mosaic';
 
 import { useInputSurfaceLookup } from '../../hooks';
 import { meta } from '../../meta';

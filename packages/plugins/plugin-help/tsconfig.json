@@ -69,7 +69,7 @@
       "path": "../plugin-space"
     },
     {
-      "path": "../plugin-storybook-layout"
+      "path": "../plugin-testing"
     }
   ]
 }

@@ -5,7 +5,7 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { Common, OperationPlugin, SettingsPlugin } from '@dxos/app-framework';
+import { Common } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { scheduleTask } from '@dxos/async';
 import { Context } from '@dxos/context';
@@ -17,13 +17,11 @@ import { log } from '@dxos/log';
 import { ClientPlugin } from '@dxos/plugin-client';
 import { PreviewPlugin } from '@dxos/plugin-preview';
 import { SpacePlugin } from '@dxos/plugin-space';
-import { StorybookLayoutPlugin } from '@dxos/plugin-storybook-layout';
-import { ThemePlugin } from '@dxos/plugin-theme';
+import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { TestSchema } from '@dxos/schema/testing';
 import { type Actor, Message, Organization, Person } from '@dxos/types';
 import { seedTestData } from '@dxos/types/testing';
-import { defaultTx } from '@dxos/ui-theme';
 
 import { useAudioFile, useQueueModelAdapter, useTranscriber } from '../../hooks';
 import { MessageNormalizer, getActorId } from '../../segments-normalization';
@@ -192,6 +190,7 @@ const meta = {
     withLayout({ layout: 'column' }),
     withPluginManager({
       plugins: [
+        ...corePlugins(),
         ClientPlugin({
           types: [TestItem, Person.Person, Organization.Organization, TestSchema.DocumentType],
           onClientInitialized: async ({ client }) => {
@@ -201,15 +200,11 @@ const meta = {
             await seedTestData(client.spaces.default);
           },
         }),
+        ...corePlugins(),
         SpacePlugin({}),
-        OperationPlugin(),
-
-        // UI
-        ThemePlugin({ tx: defaultTx }),
-        SettingsPlugin(),
         PreviewPlugin(),
         TranscriptionPlugin(),
-        StorybookLayoutPlugin({}),
+        StorybookPlugin({}),
       ],
       fireEvents: [Common.ActivationEvent.SetupAppGraph],
     }),

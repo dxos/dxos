@@ -9,7 +9,8 @@ import { Obj, Query, Type } from '@dxos/echo';
 import { getQueryTarget, resolveSchemaWithRegistry } from '@dxos/plugin-space';
 import { Filter, getSpace, isSpace, useQuery } from '@dxos/react-client/echo';
 import { useAsyncEffect, useTranslation } from '@dxos/react-ui';
-import { Card, CardStack, StackItem, cardStackDefaultInlineSizeRem, cardStackHeading } from '@dxos/react-ui-stack';
+import { Card } from '@dxos/react-ui-mosaic';
+import { CardStack, StackItem, cardStackDefaultInlineSizeRem, cardStackHeading } from '@dxos/react-ui-stack';
 import { ProjectionModel } from '@dxos/schema';
 import { type Project } from '@dxos/types';
 

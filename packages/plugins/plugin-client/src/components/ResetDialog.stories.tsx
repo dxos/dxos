@@ -30,7 +30,7 @@ const meta = {
   component: ResetDialog,
   render: Render,
   decorators: [
-    withTheme, // TODO(wittjosiah): Try to write story which does not depend on plugin manager.
+    withTheme,
     withPluginManager({
       plugins: [OperationPlugin(), ClientPlugin({})],
     }),

@@ -6,7 +6,7 @@ import * as SchemaAST from 'effect/SchemaAST';
 import React from 'react';
 
 import { type PropertyMetaAnnotation, PropertyMetaAnnotationId } from '@dxos/echo/internal';
-import { Card, cardNoSpacing, cardSpacing } from '@dxos/react-ui-stack';
+import { Card, cardNoSpacing, cardSpacing } from '@dxos/react-ui-mosaic';
 import { Task } from '@dxos/types';
 import { mx } from '@dxos/ui-theme';
 

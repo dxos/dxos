@@ -7,22 +7,19 @@ import './mailbox.css';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useMemo, useState } from 'react';
 
-import { OperationPlugin, SettingsPlugin } from '@dxos/app-framework';
 import { Surface } from '@dxos/app-framework/react';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Obj } from '@dxos/echo';
 import { ClientPlugin } from '@dxos/plugin-client';
 import { PreviewPlugin } from '@dxos/plugin-preview';
 import { SpacePlugin } from '@dxos/plugin-space';
-import { StorybookLayoutPlugin } from '@dxos/plugin-storybook-layout';
-import { ThemePlugin } from '@dxos/plugin-theme';
+import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
 import { Filter, useDatabase, useQuery } from '@dxos/react-client/echo';
 import { withTheme } from '@dxos/react-ui/testing';
 import { useAttentionAttributes, useSelected } from '@dxos/react-ui-attention';
 import { withAttention } from '@dxos/react-ui-attention/testing';
 import { render } from '@dxos/storybook-utils';
 import { Message, Person } from '@dxos/types';
-import { defaultTx } from '@dxos/ui-theme';
 
 import { InboxPlugin } from '../../InboxPlugin';
 import { LABELS, createMessages } from '../../testing';
@@ -82,6 +79,7 @@ export const WithCompanion: Story = {
   decorators: [
     withPluginManager({
       plugins: [
+        ...corePlugins(),
         ClientPlugin({
           types: [Mailbox.Mailbox, Message.Message, Person.Person],
           onClientInitialized: async ({ client }) => {
@@ -92,15 +90,11 @@ export const WithCompanion: Story = {
             await initializeMailbox(client.spaces.default);
           },
         }),
+        ...corePlugins(),
         SpacePlugin({}),
-        OperationPlugin(),
-        SettingsPlugin(),
-
-        // UI
-        ThemePlugin({ tx: defaultTx }),
         PreviewPlugin(),
         InboxPlugin(),
-        StorybookLayoutPlugin({}),
+        StorybookPlugin({}),
       ],
     }),
   ],

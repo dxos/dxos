@@ -72,7 +72,7 @@ export const Toaster = ({ toasts, onDismissToast }: ToasterProps) => {
         <Toast
           {...toast}
           key={toast.id}
-          onOpenChange={(open) => {
+          onOpenChange={(open: boolean) => {
             if (!open) {
               onDismissToast?.(toast.id);
             }

@@ -229,6 +229,7 @@ export const DeckMain = () => {
               ))}
             </Stack>
           </div>
+
           {/* Solo mode. */}
           <div
             role='none'

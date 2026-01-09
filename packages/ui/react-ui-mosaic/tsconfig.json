@@ -8,26 +8,15 @@
   "include": [
     "src/**/*.ts",
     "src/**/*.tsx",
-    "src/*.ts"
+    "src/*.ts",
+    "src/components/Mosaic/__Grid.stories.tsx__"
   ],
   "references": [
     {
       "path": "../../common/async"
     },
     {
-      "path": "../../common/context"
-    },
-    {
-      "path": "../../common/debug"
-    },
-    {
-      "path": "../../common/display-name"
-    },
-    {
       "path": "../../common/invariant"
-    },
-    {
-      "path": "../../common/keyboard"
     },
     {
       "path": "../../common/log"
@@ -39,82 +28,28 @@
       "path": "../../common/storybook-utils"
     },
     {
+      "path": "../../common/test-utils"
+    },
+    {
       "path": "../../common/util"
     },
     {
       "path": "../../core/echo/echo"
     },
     {
-      "path": "../../core/echo/echo-db"
-    },
-    {
-      "path": "../../core/echo/echo-signals"
-    },
-    {
-      "path": "../../core/echo/live-object"
-    },
-    {
-      "path": "../../core/protocols"
-    },
-    {
-      "path": "../../sdk/app-graph"
-    },
-    {
-      "path": "../../sdk/client"
-    },
-    {
-      "path": "../../sdk/config"
-    },
-    {
       "path": "../../sdk/react-client"
-    },
-    {
-      "path": "../../sdk/schema"
-    },
-    {
-      "path": "../../sdk/types"
-    },
-    {
-      "path": "../lit-ui"
-    },
-    {
-      "path": "../react-primitives/react-hooks"
     },
     {
       "path": "../react-ui"
     },
     {
-      "path": "../react-ui-attention"
-    },
-    {
-      "path": "../react-ui-components"
-    },
-    {
-      "path": "../react-ui-editor"
-    },
-    {
-      "path": "../react-ui-form"
-    },
-    {
-      "path": "../react-ui-menu"
-    },
-    {
-      "path": "../react-ui-stack"
+      "path": "../react-ui-dnd"
     },
     {
       "path": "../react-ui-syntax-highlighter"
     },
     {
-      "path": "../ui"
-    },
-    {
-      "path": "../ui-editor"
-    },
-    {
       "path": "../ui-theme"
-    },
-    {
-      "path": "../ui-types"
     }
   ]
 }

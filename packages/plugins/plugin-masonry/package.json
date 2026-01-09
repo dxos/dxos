@@ -56,6 +56,7 @@
   },
   "devDependencies": {
     "@dxos/plugin-preview": "workspace:*",
+    "@dxos/plugin-testing": "workspace:*",
     "@dxos/plugin-theme": "workspace:*",
     "@dxos/random": "workspace:*",
     "@dxos/storybook-utils": "workspace:*",

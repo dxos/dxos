@@ -132,6 +132,9 @@
       "path": "../../ui/react-ui-menu"
     },
     {
+      "path": "../../ui/react-ui-mosaic"
+    },
+    {
       "path": "../../ui/react-ui-stack"
     },
     {
@@ -168,10 +171,10 @@
       "path": "../plugin-space"
     },
     {
-      "path": "../plugin-storybook-layout"
+      "path": "../plugin-table"
     },
     {
-      "path": "../plugin-table"
+      "path": "../plugin-testing"
     },
     {
       "path": "../plugin-theme"

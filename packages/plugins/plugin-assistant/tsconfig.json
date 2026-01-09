@@ -8,6 +8,7 @@
     ]
   },
   "exclude": [
+    "*.stories.tsx",
     "*.t.ts",
     "vite.config.ts"
   ],
@@ -163,6 +164,9 @@
       "path": "../../ui/react-ui-menu"
     },
     {
+      "path": "../../ui/react-ui-mosaic"
+    },
+    {
       "path": "../../ui/react-ui-searchlist"
     },
     {
@@ -215,6 +219,9 @@
     },
     {
       "path": "../plugin-table"
+    },
+    {
+      "path": "../plugin-testing"
     },
     {
       "path": "../plugin-transcription"

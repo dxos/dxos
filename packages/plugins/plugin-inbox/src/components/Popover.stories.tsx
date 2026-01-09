@@ -5,21 +5,19 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useCallback, useRef } from 'react';
 
-import { Common, OperationPlugin, SettingsPlugin } from '@dxos/app-framework';
+import { Common } from '@dxos/app-framework';
 import { useOperationInvoker } from '@dxos/app-framework/react';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Filter } from '@dxos/echo';
 import { ClientPlugin } from '@dxos/plugin-client';
 import { PreviewPlugin } from '@dxos/plugin-preview';
 import { SpacePlugin } from '@dxos/plugin-space';
-import { StorybookLayoutPlugin } from '@dxos/plugin-storybook-layout';
-import { ThemePlugin } from '@dxos/plugin-theme';
+import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
 import { useDatabase, useQuery } from '@dxos/react-client/echo';
 import { List, ListItem } from '@dxos/react-ui';
 import { withTheme } from '@dxos/react-ui/testing';
 import { Message, Organization, Person } from '@dxos/types';
 import { seedTestData } from '@dxos/types/testing';
-import { defaultTx } from '@dxos/ui-theme';
 
 import { InboxPlugin } from '../InboxPlugin';
 import { Mailbox } from '../types';
@@ -86,6 +84,7 @@ const meta = {
     withTheme,
     withPluginManager({
       plugins: [
+        ...corePlugins(),
         ClientPlugin({
           types: [Mailbox.Mailbox, Message.Message, Person.Person, Organization.Organization],
           onClientInitialized: async ({ client }) => {
@@ -101,15 +100,10 @@ const meta = {
             space.db.add(mailbox);
           },
         }),
+        ...corePlugins(),
         SpacePlugin({}),
-        OperationPlugin(),
-        OperationPlugin(),
-        SettingsPlugin(),
-
-        // UI
-        ThemePlugin({ tx: defaultTx }),
-        StorybookLayoutPlugin({}),
         PreviewPlugin(),
+        StorybookPlugin({}),
         InboxPlugin(),
       ],
     }),

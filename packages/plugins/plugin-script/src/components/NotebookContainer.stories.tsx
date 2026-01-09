@@ -6,7 +6,6 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
 import { SERVICES_CONFIG } from '@dxos/ai/testing';
-import { OperationPlugin, SettingsPlugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Agent } from '@dxos/assistant-toolkit';
 import { Filter } from '@dxos/echo';
@@ -17,6 +16,7 @@ import { ClientPlugin } from '@dxos/plugin-client';
 import { ExplorerPlugin } from '@dxos/plugin-explorer';
 import { Markdown, MarkdownPlugin } from '@dxos/plugin-markdown';
 import { SpacePlugin } from '@dxos/plugin-space';
+import { corePlugins } from '@dxos/plugin-testing';
 import { Config, useClient } from '@dxos/react-client';
 import { useQuery } from '@dxos/react-client/echo';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
@@ -61,9 +61,8 @@ const meta = {
             space.db.add(serializeFunction(Agent.prompt));
           },
         }),
+        ...corePlugins(),
         SpacePlugin({}),
-        SettingsPlugin(),
-        OperationPlugin(),
         AssistantPlugin(),
         AutomationPlugin(),
         ExplorerPlugin(),

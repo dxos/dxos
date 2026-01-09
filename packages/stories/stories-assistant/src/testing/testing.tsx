@@ -37,7 +37,7 @@ import { GraphPlugin } from '@dxos/plugin-graph';
 import { Markdown } from '@dxos/plugin-markdown/types';
 import { PreviewPlugin } from '@dxos/plugin-preview';
 import { SpacePlugin } from '@dxos/plugin-space';
-import { StorybookLayoutPlugin } from '@dxos/plugin-storybook-layout';
+import { StorybookPlugin } from '@dxos/plugin-testing';
 import { ThemePlugin } from '@dxos/plugin-theme';
 import { type Client, Config } from '@dxos/react-client';
 import { AccessToken } from '@dxos/types';
@@ -157,7 +157,7 @@ export const getDecorators = ({
 
       // Cards
       ThemePlugin({ tx: defaultTx }),
-      StorybookLayoutPlugin({}),
+      StorybookPlugin({}),
       PreviewPlugin(),
 
       // User plugins.

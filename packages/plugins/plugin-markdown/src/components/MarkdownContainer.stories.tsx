@@ -5,17 +5,14 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useMemo } from 'react';
 
-import { Common, OperationPlugin, SettingsPlugin } from '@dxos/app-framework';
+import { Common } from '@dxos/app-framework';
 import { Surface, useOperationInvoker } from '@dxos/app-framework/react';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Obj, Query } from '@dxos/echo';
-import { AttentionPlugin } from '@dxos/plugin-attention';
 import { ClientPlugin } from '@dxos/plugin-client';
-import { GraphPlugin } from '@dxos/plugin-graph';
 import { PreviewPlugin } from '@dxos/plugin-preview';
 import { SpacePlugin } from '@dxos/plugin-space';
-import { StorybookLayoutPlugin } from '@dxos/plugin-storybook-layout';
-import { ThemePlugin } from '@dxos/plugin-theme';
+import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
 import { faker } from '@dxos/random';
 import { useQuery, useSpace } from '@dxos/react-client/echo';
 import { useAsyncEffect } from '@dxos/react-ui';
@@ -24,7 +21,6 @@ import { useAttentionAttributes } from '@dxos/react-ui-attention';
 import { Text } from '@dxos/schema';
 import { type ValueGenerator, createObjectFactory } from '@dxos/schema/testing';
 import { Organization, Person } from '@dxos/types';
-import { defaultTx } from '@dxos/ui-theme';
 
 import { MarkdownPlugin } from '../MarkdownPlugin';
 import { translations } from '../translations';
@@ -63,6 +59,7 @@ const meta = {
     withLayout({ layout: 'column' }),
     withPluginManager<{ title?: string; content?: string }>((context) => ({
       plugins: [
+        ...corePlugins(),
         ClientPlugin({
           types: [Markdown.Document, Text.Text, Person.Person, Organization.Organization],
           onClientInitialized: async ({ client }) => {
@@ -99,17 +96,11 @@ const meta = {
             await space.db.flush({ indexes: true });
           },
         }),
+        ...corePlugins(),
         SpacePlugin({}),
-        GraphPlugin(),
-        OperationPlugin(),
-        OperationPlugin(),
-        SettingsPlugin(),
-        // UI
-        ThemePlugin({ tx: defaultTx }),
-        AttentionPlugin(),
+        StorybookPlugin({}),
         MarkdownPlugin(),
         PreviewPlugin(),
-        StorybookLayoutPlugin({}),
       ],
     })),
   ],

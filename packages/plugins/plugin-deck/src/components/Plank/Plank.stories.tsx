@@ -5,10 +5,8 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
-import { OperationPlugin, SettingsPlugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { AttentionPlugin } from '@dxos/plugin-attention';
-import { GraphPlugin } from '@dxos/plugin-graph';
+import { corePlugins } from '@dxos/plugin-testing';
 import { withTheme } from '@dxos/react-ui/testing';
 import { Stack } from '@dxos/react-ui-stack';
 
@@ -30,7 +28,7 @@ const meta = {
   decorators: [
     withTheme,
     withPluginManager({
-      plugins: [AttentionPlugin(), SettingsPlugin(), OperationPlugin(), GraphPlugin()],
+      plugins: [...corePlugins()],
       capabilities: () => DeckStateFactory(),
     }),
   ],
