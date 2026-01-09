@@ -5,7 +5,7 @@
 import React from 'react';
 
 import { Button, Icon, useTranslation } from '@dxos/react-ui';
-import { Card, cardText } from '@dxos/react-ui-stack';
+import { Card, cardText } from '@dxos/react-ui-mosaic';
 import { type Event } from '@dxos/types';
 import { mx } from '@dxos/ui-theme';
 

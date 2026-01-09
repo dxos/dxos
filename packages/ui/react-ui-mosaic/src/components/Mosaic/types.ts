@@ -4,63 +4,63 @@
 
 import { type Obj } from '@dxos/echo';
 
-// TODO(burdon): Reconcile with react-ui-dnd.
-
 /**
  * Draggable item.
  */
-export type ItemData = {
-  type: 'item';
+export type MosaicTileData<T extends Obj.Any = Obj.Any, Location = any> = {
+  type: 'tile';
   id: string;
-  object: Obj.Any;
   containerId: string;
+  location: Location;
+  bounds?: DOMRect;
+  // TODO(burdon): Generalize (has ID).
+  object: T;
 };
 
 /**
  * Drop target placeholder.
  */
-export type PlaceholderData<Location = any> = {
+export type MosaicPlaceholderData<Location = any> = {
   type: 'placeholder';
-  location: Location;
   containerId: string;
+  location: Location;
 };
 
 /**
  * Drop target container.
  */
-export type ContainerData = {
+export type MosaicContainerData = {
   type: 'container';
   id: string;
 };
 
-export type DropTargetData = ItemData | PlaceholderData;
+export type MosaicData = MosaicTileData | MosaicPlaceholderData | MosaicContainerData;
 
-export type DropEvent = {
-  source: ItemData;
-  target?: DropTargetData;
-  container: ContainerData;
-};
+export type MosaicTargetData = MosaicTileData | MosaicPlaceholderData;
 
 /**
  * Handler implemented by drop containers.
  */
-export interface DragEventHandler {
+export interface MosaicEventHandler {
+  /**
+   * Container identifier.
+   */
   id: string;
 
   /**
    * Determine if the item can be dropped into this container.
    */
-  canDrop: (item: ItemData) => boolean;
+  canDrop?: (props: { source: MosaicTileData }) => boolean;
 
   /**
    * Called during drag for custom visualization.
    */
-  onDrag?: (props: { item: ItemData; position: { x: number; y: number } }) => void;
+  onDrag?: (props: { source: MosaicTileData; position: { x: number; y: number } }) => void;
 
   /**
    * Insert/rearrange the item at the given location.
    */
-  onDrop?: (props: { object: Obj.Any; at?: DropTargetData }) => void;
+  onDrop?: (props: { source: MosaicTileData; target?: MosaicData }) => void;
 
   /**
    * Request the object to be dropped.
@@ -68,7 +68,7 @@ export interface DragEventHandler {
    * If the callback returns true, then the callback may decide to remove the item from the source container,
    * completing the transfer.
    */
-  onTake?: (item: ItemData, cb: (objects: Obj.Any) => boolean) => void;
+  onTake?: (props: { source: MosaicTileData }, cb: (object: Obj.Any) => Promise<boolean>) => void;
 
   /**
    * Dragging ended.

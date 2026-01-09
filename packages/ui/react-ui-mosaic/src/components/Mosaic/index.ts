@@ -2,5 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-export * from './drop';
+export * from './extension';
+export * from './types';
+
 export * from './Mosaic';

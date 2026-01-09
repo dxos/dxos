@@ -6,7 +6,8 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useCallback, useRef, useState } from 'react';
 
 import { withTheme } from '@dxos/react-ui/testing';
-import { Card, translations as stackTranslations } from '@dxos/react-ui-stack';
+import { Card } from '@dxos/react-ui-mosaic';
+import { translations as stackTranslations } from '@dxos/react-ui-stack';
 
 import { translations } from '../../translations';
 
@@ -31,7 +32,10 @@ const DefaultStory = ({ layout: _layout, items: _items, grid, ...props }: StoryP
     (_element, position = { x: 0, y: 0 }) => {
       const id = items.length.toString();
       setItems([...items, { id, title: 'New item' }]);
-      setLayout((layout) => ({ ...layout, cells: { ...layout.cells, [id]: position } }));
+      setLayout((layout) => ({
+        ...layout,
+        cells: { ...layout.cells, [id]: position },
+      }));
       controller.current?.center(position);
     },
     [items, layout, controller],
@@ -51,7 +55,10 @@ const DefaultStory = ({ layout: _layout, items: _items, grid, ...props }: StoryP
   const handleMove = useCallback<NonNullable<BoardRootProps['onMove']>>(
     (id, position) => {
       // TODO(burdon): Preserve size (if space available, otherwise shrink to fit -- or prevent drop).
-      setLayout((layout) => ({ ...layout, cells: { ...layout.cells, [id]: position } }));
+      setLayout((layout) => ({
+        ...layout,
+        cells: { ...layout.cells, [id]: position },
+      }));
       controller.current?.center(position);
     },
     [layout, controller],

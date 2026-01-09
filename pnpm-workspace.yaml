@@ -17,10 +17,10 @@ catalog:
   '@antv/layout': ^1.2.13
   '@ark-ui/solid': ^5.30.0
   '@astrojs/starlight': ^0.32.5
-  '@atlaskit/pragmatic-drag-and-drop': ^1.7.7
+  '@atlaskit/pragmatic-drag-and-drop': 1.7.7
   '@atlaskit/pragmatic-drag-and-drop-auto-scroll': ^2.1.2
-  '@atlaskit/pragmatic-drag-and-drop-hitbox': ^1.1.0
-  '@atlaskit/pragmatic-drag-and-drop-react-drop-indicator': ^3.2.10
+  '@atlaskit/pragmatic-drag-and-drop-hitbox': 1.1.0
+  '@atlaskit/pragmatic-drag-and-drop-react-drop-indicator': 3.2.10
   '@automerge/automerge': 3.2.1
   '@automerge/automerge-repo': 2.5.1
   '@automerge/automerge-repo-network-broadcastchannel': 2.5.1
@@ -62,6 +62,7 @@ catalog:
   '@dxos/cli-linux-arm64': 0.8.3
   '@dxos/cli-linux-x64': 0.8.3
   '@dxos/cli-win32-x64': 0.8.3
+  '@dxos/react-ui-mosaic': 0.7.5-feature-compute.4d9d99a
   '@effect-atom/atom': ^0.4.10
   '@effect-atom/atom-react': ^0.4.4
   '@effect/ai': 0.32.1
@@ -88,7 +89,7 @@ catalog:
   '@emoji-mart/react': ^1.1.1
   '@eslint/js': ^9.37.0
   '@excalidraw/excalidraw': ^0.18.0
-  '@fluentui/react-tabster': ^9.26.11
+  '@fluentui/react-tabster': 9.26.11
   '@fontsource-variable/inter': 5.0.16
   '@fontsource-variable/jetbrains-mono': 5.0.21
   '@fontsource/k2d': ^5.0.18
@@ -199,15 +200,15 @@ catalog:
   '@sentry/vite-plugin': ^4.0.2
   '@solid-primitives/utils': ^6.3.2
   '@solidjs/testing-library': ^0.8.10
-  '@storybook/addon-docs': ^10.1.0
-  '@storybook/addon-links': ^10.1.0
-  '@storybook/addon-themes': ^10.1.0
-  '@storybook/addon-vitest': ^10.1.0
-  '@storybook/builder-vite': ^10.1.0
-  '@storybook/html-vite': ^10.1.0
+  '@storybook/addon-docs': ^10.1.11
+  '@storybook/addon-links': ^10.1.11
+  '@storybook/addon-themes': ^10.1.11
+  '@storybook/addon-vitest': ^10.1.11
+  '@storybook/builder-vite': ^10.1.11
+  '@storybook/html-vite': ^10.1.11
   '@storybook/mdx2-csf': ^1.1.0
-  '@storybook/react-vite': ^10.1.0
-  '@storybook/web-components-vite': ^10.1.0
+  '@storybook/react-vite': ^10.1.11
+  '@storybook/web-components-vite': ^10.1.11
   '@svgr/cli': ^8.1.0
   '@swc/core': 1.13.5
   '@swc/types': ^0.1.25
@@ -411,7 +412,7 @@ catalog:
   eslint-plugin-prettier: ^5.5.4
   eslint-plugin-react: ^7.37.5
   eslint-plugin-sort-exports: ^0.9.1
-  eslint-plugin-storybook: 10.1.0
+  eslint-plugin-storybook: 10.1.11
   eslint-plugin-unused-imports: ^4.1.4
   eventemitter3: ^5.0.1
   events: ^3.3.0
@@ -436,7 +437,7 @@ catalog:
   get-port-please: ^3.1.1
   git-rev-sync: ^3.0.2
   glob: ^7.2.3
-  globby: ^14.1.0
+  globby: 14.1.0
   globrex: ^0.1.2
   glsl-curl-noise2: ^0.0.4
   glsl-noise: ^0.0.0
@@ -508,7 +509,7 @@ catalog:
   log-update: ^4.0.0
   loupe: 2.3.7
   luxon: ^3.4.4
-  madge: ^8.0.0
+  madge: 8.0.0
   main-thread-scheduling: ^14.1.1
   marked: ^12.0.2
   masonic: ^4.1.0
@@ -617,7 +618,7 @@ catalog:
   sort-package-json: ^1.57.0
   stage-js: 1.0.0-alpha.17
   starlight-links-validator: ^0.14.3
-  storybook: ^10.1.10
+  storybook: ^10.1.11
   storybook-solidjs-vite: ^10.0.9
   streamx: ^2.12.5
   style-mod: ^4.1.0

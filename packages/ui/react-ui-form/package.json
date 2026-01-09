@@ -41,6 +41,7 @@
     "@dxos/react-ui-components": "workspace:*",
     "@dxos/react-ui-editor": "workspace:*",
     "@dxos/react-ui-list": "workspace:*",
+    "@dxos/react-ui-mosaic": "workspace:*",
     "@dxos/react-ui-pickers": "workspace:*",
     "@dxos/react-ui-searchlist": "workspace:*",
     "@dxos/react-ui-stack": "workspace:*",
@@ -54,7 +55,8 @@
     "@radix-ui/react-context": "catalog:",
     "@radix-ui/react-use-controllable-state": "catalog:",
     "date-fns": "catalog:",
-    "jsonpath": "catalog:"
+    "jsonpath": "catalog:",
+    "tabster": "catalog:"
   },
   "devDependencies": {
     "@dxos/echo-signals": "workspace:*",

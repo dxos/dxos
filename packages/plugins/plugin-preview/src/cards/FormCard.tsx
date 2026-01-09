@@ -9,7 +9,7 @@ import { Obj } from '@dxos/echo';
 import { type JsonPath, splitJsonPath } from '@dxos/effect';
 import { useTranslation } from '@dxos/react-ui';
 import { Form, omitId } from '@dxos/react-ui-form';
-import { Card } from '@dxos/react-ui-stack';
+import { Card } from '@dxos/react-ui-mosaic';
 import { type ProjectionModel } from '@dxos/schema';
 import { descriptionMessage, mx } from '@dxos/ui-theme';
 

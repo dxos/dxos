@@ -2,44 +2,50 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Primitive } from '@radix-ui/react-primitive';
 import { Slot } from '@radix-ui/react-slot';
-import React, {
-  type ComponentPropsWithRef,
-  type ComponentPropsWithoutRef,
-  type FC,
-  type PropsWithChildren,
-  forwardRef,
-} from 'react';
+import React, { type ComponentPropsWithoutRef, type PropsWithChildren, forwardRef } from 'react';
 
-import { Icon, IconButton, type ThemedClassName, Toolbar, type ToolbarRootProps, useTranslation } from '@dxos/react-ui';
+import {
+  DropdownMenu,
+  Icon,
+  IconButton,
+  type ThemedClassName,
+  Toolbar,
+  type ToolbarRootProps,
+  useTranslation,
+} from '@dxos/react-ui';
 import { cardMinInlineSize, hoverableControls, mx } from '@dxos/ui-theme';
 
 import { translationKey } from '../../translations';
 import { Image } from '../Image';
-import { StackItem } from '../StackItem';
 
-import { cardChrome, cardHeading, cardRoot, cardSpacing, cardText } from './fragments';
+// TODO(burdon): Use new styles.
+import { cardChrome, cardGrid, cardHeading, cardRoot, cardSpacing, cardText } from './styles';
 
 /**
  * The default width of cards. It should be no larger than 320px per WCAG 2.1 SC 1.4.10.
  */
 const cardDefaultInlineSize = cardMinInlineSize;
 
-/**
- * This is `cardDefaultInlineSize` plus 2 times the sum of the inner and outer spacing applied by CardStack on the inline axis.
- */
-const cardStackDefaultInlineSizeRem = cardDefaultInlineSize + 2.125;
-
-type SharedCardProps = ThemedClassName<ComponentPropsWithoutRef<'div'>> & { asChild?: boolean };
+type CardSharedProps = ThemedClassName<ComponentPropsWithoutRef<'div'>> & {
+  asChild?: boolean;
+  className?: string;
+};
 
 /**
- * Use this when ....
+ *
  */
-const CardStaticRoot = forwardRef<HTMLDivElement, SharedCardProps & { id?: string }>(
-  ({ children, classNames, id, asChild, role = 'group', ...props }, forwardedRef) => {
+// TODO(burdon): Document???
+const CardStaticRoot = forwardRef<HTMLDivElement, CardSharedProps & { id?: string }>(
+  ({ children, classNames, className, id, asChild, role = 'group', ...props }, forwardedRef) => {
     const Root = asChild ? Slot : 'div';
-    const rootProps = asChild ? { classNames: [cardRoot, classNames] } : { className: mx(cardRoot, classNames), role };
+
+    // When asChild=true, merge classes and pass as className for Radix Slot to merge.
+    // When asChild=false, merge classes immediately.
+    const rootProps = asChild
+      ? { className: mx(cardRoot, className, classNames) }
+      : { className: mx(cardRoot, className, classNames), role };
+
     return (
       <Root {...(id && { 'data-object-id': id })} {...props} {...rootProps} ref={forwardedRef}>
         {children}
@@ -89,12 +95,24 @@ const CardSurfaceRoot = forwardRef<HTMLDivElement, ThemedClassName<PropsWithChil
   },
 );
 
-const CardHeading = forwardRef<HTMLDivElement, SharedCardProps>(
-  ({ children, classNames, asChild, role = 'heading', ...props }, forwardedRef) => {
+//
+// Heading
+//
+
+type CardHeadingProps = CardSharedProps & { truncate?: boolean };
+
+const CardHeading = forwardRef<HTMLDivElement, CardHeadingProps>(
+  ({ children, classNames, className, asChild, truncate, role = 'heading', ...props }, forwardedRef) => {
     const Root = asChild ? Slot : 'div';
     const rootProps = asChild
-      ? { classNames: [cardHeading, cardText, classNames] }
-      : { className: mx(cardHeading, cardText, classNames), role };
+      ? {
+          classNames: [cardHeading, cardText, truncate && 'truncate', classNames],
+          className,
+        }
+      : {
+          className: mx(cardHeading, cardText, truncate && 'truncate', classNames, className),
+          role,
+        };
     return (
       <Root {...props} {...rootProps} ref={forwardedRef}>
         {children}
@@ -103,9 +121,13 @@ const CardHeading = forwardRef<HTMLDivElement, SharedCardProps>(
   },
 );
 
+//
+// Toolbar
+//
+
 const CardToolbar = forwardRef<HTMLDivElement, ToolbarRootProps>(({ children, classNames, ...props }, forwardedRef) => {
   return (
-    <Toolbar.Root {...props} classNames={['bg-transparent density-coarse', classNames]} ref={forwardedRef}>
+    <Toolbar.Root {...props} classNames={['density-fine bg-transparent', cardGrid, classNames]} ref={forwardedRef}>
       {children}
     </Toolbar.Root>
   );
@@ -114,7 +136,13 @@ const CardToolbar = forwardRef<HTMLDivElement, ToolbarRootProps>(({ children, cl
 const CardToolbarIconButton = Toolbar.IconButton;
 const CardToolbarSeparator = Toolbar.Separator;
 
-const CardDragHandle = forwardRef<HTMLButtonElement, { toolbarItem?: boolean }>(({ toolbarItem }, forwardedRef) => {
+//
+// DragHandle
+//
+
+type CardDragHandleProps = { toolbarItem?: boolean };
+
+const CardDragHandle = forwardRef<HTMLButtonElement, CardDragHandleProps>(({ toolbarItem }, forwardedRef) => {
   const { t } = useTranslation(translationKey);
   const Root = toolbarItem ? Toolbar.IconButton : IconButton;
   return (
@@ -123,15 +151,45 @@ const CardDragHandle = forwardRef<HTMLButtonElement, { toolbarItem?: boolean }>(
       icon='ph--dots-six-vertical--regular'
       variant='ghost'
       label={t('drag handle label')}
-      classNames='pli-2'
+      classNames='cursor-pointer'
       ref={forwardedRef}
     />
   );
 });
 
-const CardDragPreview = StackItem.DragPreview;
+//
+// Menu
+//
 
-const CardMenu = Primitive.div as FC<ComponentPropsWithRef<'div'>>;
+type CardMenuProps = {
+  items: { label: string; onSelect: () => void }[];
+};
+
+const CardMenu = ({ items }: CardMenuProps) => {
+  const { t } = useTranslation(translationKey);
+  return (
+    <DropdownMenu.Root>
+      <DropdownMenu.Trigger asChild>
+        <Card.ToolbarIconButton iconOnly variant='ghost' icon='ph--list--regular' label={t('action menu label')} />
+      </DropdownMenu.Trigger>
+      <DropdownMenu.Portal>
+        <DropdownMenu.Content>
+          <DropdownMenu.Viewport>
+            {items.map(({ label, onSelect }, i) => (
+              <DropdownMenu.Item key={i} onSelect={onSelect}>
+                {label}
+              </DropdownMenu.Item>
+            ))}
+          </DropdownMenu.Viewport>
+        </DropdownMenu.Content>
+      </DropdownMenu.Portal>
+    </DropdownMenu.Root>
+  );
+};
+
+//
+// Poster
+//
 
 type CardPosterProps = ThemedClassName<
   {
@@ -161,12 +219,16 @@ const CardPoster = (props: CardPosterProps) => {
   }
 };
 
-const CardChrome = forwardRef<HTMLDivElement, SharedCardProps>(
-  ({ children, classNames, asChild, role = 'none', ...props }, forwardedRef) => {
+//
+// Chrome
+//
+
+const CardChrome = forwardRef<HTMLDivElement, CardSharedProps>(
+  ({ children, classNames, className, asChild, role = 'none', ...props }, forwardedRef) => {
     const Root = asChild ? Slot : 'div';
     const rootProps = asChild
-      ? { classNames: [cardChrome, classNames] }
-      : { className: mx(cardChrome, classNames), role };
+      ? { classNames: [cardChrome, classNames], className }
+      : { className: mx(cardChrome, classNames, className), role };
     return (
       <Root {...props} {...rootProps} ref={forwardedRef}>
         {children}
@@ -175,10 +237,16 @@ const CardChrome = forwardRef<HTMLDivElement, SharedCardProps>(
   },
 );
 
-const CardText = forwardRef<HTMLDivElement, SharedCardProps>(
-  ({ children, classNames, asChild, role = 'none', ...props }, forwardedRef) => {
+//
+// Text
+//
+
+const CardText = forwardRef<HTMLDivElement, CardSharedProps>(
+  ({ children, classNames, className, asChild, role = 'none', ...props }, forwardedRef) => {
     const Root = asChild ? Slot : 'div';
-    const rootProps = asChild ? { classNames: [cardText, classNames] } : { className: mx(cardText, classNames), role };
+    const rootProps = asChild
+      ? { classNames: [cardText, classNames], className }
+      : { className: mx(cardText, classNames, className), role };
     return (
       <Root {...props} {...rootProps} ref={forwardedRef}>
         {children}
@@ -186,6 +254,10 @@ const CardText = forwardRef<HTMLDivElement, SharedCardProps>(
     );
   },
 );
+
+//
+// Card
+//
 
 export const Card = {
   StaticRoot: CardStaticRoot,
@@ -195,19 +267,12 @@ export const Card = {
   ToolbarIconButton: CardToolbarIconButton,
   ToolbarSeparator: CardToolbarSeparator,
   DragHandle: CardDragHandle,
-  DragPreview: CardDragPreview,
   Menu: CardMenu,
   Poster: CardPoster,
   Chrome: CardChrome,
   Text: CardText,
 };
 
-export {
-  cardRoot,
-  cardHeading,
-  cardText,
-  cardChrome,
-  cardSpacing,
-  cardStackDefaultInlineSizeRem,
-  cardDefaultInlineSize,
-};
+export type { CardMenuProps };
+
+export { cardRoot, cardHeading, cardText, cardChrome, cardSpacing, cardDefaultInlineSize };
