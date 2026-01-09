@@ -12,6 +12,7 @@ import {
 import { preserveOffsetOnSource } from '@atlaskit/pragmatic-drag-and-drop/element/preserve-offset-on-source';
 import { setCustomNativeDragPreview } from '@atlaskit/pragmatic-drag-and-drop/element/set-custom-native-drag-preview';
 import { type DragLocationHistory } from '@atlaskit/pragmatic-drag-and-drop/types';
+import { type AllowedAxis } from '@atlaskit/pragmatic-drag-and-drop-auto-scroll/dist/types/internal-types';
 import { autoScrollForElements } from '@atlaskit/pragmatic-drag-and-drop-auto-scroll/element';
 import {
   type Edge,
@@ -26,6 +27,7 @@ import { composeRefs, useComposedRefs } from '@radix-ui/react-compose-refs';
 import { createContext } from '@radix-ui/react-context';
 import { Primitive } from '@radix-ui/react-primitive';
 import { Slot } from '@radix-ui/react-slot';
+import { bind } from 'bind-event-listener';
 import React, {
   type CSSProperties,
   type FC,
@@ -66,6 +68,23 @@ import {
  */
 
 //
+// Drop targets:
+// - Placeholders exist to allow gaps but prevent deadspace when dragging within a container.
+// - Placeholders expand when active.
+// - When dragging over a Cell, the placeholer next to the closest edge is activated.
+// - Placeholders should not change while scrolling.
+//
+// [Container]
+//   [Placeholder 0.5]
+//   [Cell        1]
+//   [Placeholder 1.5]
+//   [Cell        2]
+//   [Placeholder 2.5]
+//   [Cell        3]
+//   [Placeholder 3.5]
+//
+
+//
 // Context
 //
 
@@ -75,6 +94,7 @@ type DraggingSource = {
   container?: Element;
 };
 
+// TODO(burdon): Closest edge?
 type DraggingTarget = {
   data: MosaicData;
   handler?: MosaicEventHandler;
@@ -139,6 +159,26 @@ const Root = ({ children }: RootProps) => {
   );
 
   useEffect(() => {
+    const handleChange = ({ source, location }: { source: ElementDragPayload; location: DragLocationHistory }) => {
+      const { data: sourceData } = getSourceHandler(source);
+      const { data: targetData, handler } = getTargetHandler(location);
+      setDragging((dragging) => {
+        dragging?.target?.handler?.onCancel?.();
+        return {
+          source: {
+            data: sourceData,
+            handler: handlers[sourceData.containerId],
+            // TOOD(burdon): Check id matches.
+            container: location.initial.dropTargets.find((target) => target.data.type === 'container')?.element,
+          },
+          target: targetData && {
+            data: targetData,
+            handler,
+          },
+        };
+      });
+    };
+
     // Main controller.
     return monitorForElements({
       /**
@@ -149,6 +189,20 @@ const Root = ({ children }: RootProps) => {
           source: source.data,
           location: location.current.dropTargets.map((target) => target.data),
         });
+
+        handleChange({ source, location });
+      },
+
+      /**
+       * Dragging entered a new container.
+       */
+      onDropTargetChange: ({ source, location }) => {
+        log.info('Root.onDropTargetChange', {
+          source: source.data,
+          location: location.current.dropTargets.map((target) => target.data),
+        });
+
+        handleChange({ source, location });
       },
 
       /**
@@ -161,34 +215,6 @@ const Root = ({ children }: RootProps) => {
           const { clientX: x, clientY: y } = location.current.input;
           handler.onDrag?.({ source: data, position: { x, y } });
         }
-      },
-
-      /**
-       * Dragging entered a new container.
-       */
-      onDropTargetChange: ({ source, location }) => {
-        log.info('Root.onDropTargetChange', {
-          source: source.data,
-          location: location.current.dropTargets.map((target) => target.data),
-        });
-
-        const { data: sourceData } = getSourceHandler(source);
-        const { data: targetData, handler } = getTargetHandler(location);
-        setDragging((dragging) => {
-          dragging?.target?.handler?.onCancel?.();
-          return {
-            source: {
-              data: sourceData,
-              handler: handlers[sourceData.containerId],
-              // TOOD(burdon): Check id matches.
-              container: location.initial.dropTargets.find((target) => target.data.type === 'container')?.element,
-            },
-            target: targetData && {
-              data: targetData,
-              handler,
-            },
-          };
-        });
       },
 
       /**
@@ -291,14 +317,14 @@ const Root = ({ children }: RootProps) => {
 
 type ContainerState = { type: 'idle' } | { type: 'active'; bounds?: DOMRect };
 
-type ContainerLayout = 'horizontal' | 'vertical' | 'grid';
-
 type ContainerContextValue = {
   id: string;
-  layout?: ContainerLayout;
+  axis?: AllowedAxis;
   dragging?: DraggingState;
+  scrolling?: boolean;
   state: ContainerState;
 
+  // TODO(burdon): Replace with dragging state?
   /** Active drop target (used to determine placeholder location). */
   activeTarget?: MosaicTargetData;
   setActiveTarget: (target: MosaicTargetData | undefined) => void;
@@ -314,7 +340,7 @@ const CONTAINER_PLACEHOLDER_HEIGHT = '--mosaic-placeholder-height';
 
 type ContainerProps = ThemedClassName<
   PropsWithChildren<
-    Pick<ContainerContextValue, 'layout'> & {
+    Pick<ContainerContextValue, 'axis'> & {
       asChild?: boolean;
       autoscroll?: boolean;
       withFocus?: boolean;
@@ -330,7 +356,7 @@ const Container = forwardRef<HTMLDivElement, ContainerProps>(
       classNames,
       className,
       children,
-      layout = 'vertical',
+      axis = 'vertical',
       asChild,
       autoscroll,
       withFocus,
@@ -348,6 +374,7 @@ const Container = forwardRef<HTMLDivElement, ContainerProps>(
     const { dragging } = useRootContext(Container.displayName!);
     const [state, setState] = useState<ContainerState>({ type: 'idle' });
     const [activeTarget, setActiveTarget] = useState<MosaicTargetData | undefined>();
+    const [scrolling, setScrolling] = useState(false);
 
     // Focus container.
     const { setFocus } = useFocus();
@@ -378,12 +405,34 @@ const Container = forwardRef<HTMLDivElement, ContainerProps>(
         return;
       }
 
+      let timeout: ReturnType<typeof setTimeout>;
+      const handleScroll = () => {
+        setScrolling(true);
+        clearTimeout(timeout);
+        timeout = setTimeout(() => {
+          setScrolling(false);
+        }, 200);
+      };
+
       return combine(
         ...[
-          autoscroll &&
+          autoscroll && [
             autoScrollForElements({
               element: rootRef.current,
+              canScroll: () => true,
+              getAllowedAxis: () => axis,
+              getConfiguration: () => ({
+                maxScrollSpeed: 'standard',
+              }),
             }),
+
+            bind(rootRef.current, {
+              type: 'scroll',
+              listener: handleScroll,
+            }),
+
+            () => setScrolling(false),
+          ],
 
           // Target.
           dropTargetForElements({
@@ -445,16 +494,19 @@ const Container = forwardRef<HTMLDivElement, ContainerProps>(
           addEventListener(rootRef.current, 'dnd:cancel' as any, () => {
             setState({ type: 'idle' });
           }),
-        ].filter(isTruthy),
+        ]
+          .filter(isTruthy)
+          .flatMap((x) => x),
       );
     }, [rootRef, handler, data]);
 
     return (
       <ContainerContextProvider
         id={handler.id}
-        layout={layout}
+        axis={axis}
         state={state}
         dragging={state.type === 'active' ? dragging : undefined}
+        scrolling={scrolling}
         activeTarget={activeTarget}
         setActiveTarget={setActiveTarget}
       >
@@ -560,7 +612,7 @@ const Cell = forwardRef<HTMLDivElement, CellProps>(
     const Root = asChild ? Slot : Primitive.div;
 
     // State.
-    const { id: containerId, layout, setActiveTarget } = useContainerContext(Cell.displayName!);
+    const { id: containerId, axis: layout, setActiveTarget } = useContainerContext(Cell.displayName!);
     const [state, setState] = useState<CellState>({ type: 'idle' });
 
     const allowedEdges = useMemo<Edge[]>(
@@ -718,7 +770,7 @@ const Placeholder = <Location extends LocationType = LocationType>({
 }: PlaceholderProps<Location>) => {
   const rootRef = useRef<HTMLDivElement>(null);
   const Root = asChild ? Slot : Primitive.div;
-  const { id: containerId, activeTarget, setActiveTarget } = useContainerContext(Placeholder.displayName!);
+  const { id: containerId, scrolling, activeTarget, setActiveTarget } = useContainerContext(Placeholder.displayName!);
   const [state, setState] = useState<PlaceholderState>({ type: 'idle' });
 
   const data = useMemo<MosaicPlaceholderData<Location>>(
@@ -732,10 +784,16 @@ const Placeholder = <Location extends LocationType = LocationType>({
   );
 
   useEffect(() => {
+    if (scrolling) {
+      return;
+    }
+
+    const edge = activeTarget && extractClosestEdge(activeTarget);
+    console.log('###', activeTarget, edge);
     setState({
       type: data.location === activeTarget?.location ? 'active' : 'idle',
     });
-  }, [data, activeTarget]);
+  }, [data, scrolling, activeTarget]);
 
   useLayoutEffect(() => {
     const root = rootRef.current;

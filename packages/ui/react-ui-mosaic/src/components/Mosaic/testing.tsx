@@ -110,14 +110,16 @@ export const Column = forwardRef<HTMLDivElement, { column: TestColumn; debug?: b
 
 const ItemList = forwardRef<HTMLDivElement, { items: TestItem[] }>(({ items, ...props }, forwardedRef) => {
   const { dragging } = useMosaicContainer(ItemList.displayName!);
+
+  // TODO(burdon): Factor out.
   const visibleItems = useMemo(() => {
     if (!dragging) {
       return items;
     }
 
-    const from = items.findIndex((item) => item.id === dragging.source.data.object.id);
+    const current = items.findIndex((item) => item.id === dragging.source.data.object.id);
     const newItems = items.slice();
-    newItems.splice(from, 1);
+    newItems.splice(current, 1);
     return newItems;
   }, [items, dragging]);
 
@@ -129,7 +131,7 @@ const ItemList = forwardRef<HTMLDivElement, { items: TestItem[] }>(({ items, ...
         <Placeholder location={0} />
         {visibleItems.map((item, i) => (
           <Fragment key={item.id}>
-            <Cell location={i} object={item} />
+            <Cell location={i + 1} object={item} />
             <Placeholder location={i + 1} />
           </Fragment>
         ))}

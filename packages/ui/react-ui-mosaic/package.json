@@ -41,6 +41,7 @@
     "@codemirror/view": "catalog:",
     "@dxos/async": "workspace:*",
     "@dxos/echo": "workspace:*",
+    "@dxos/invariant": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/react-client": "workspace:*",
     "@dxos/react-ui-dnd": "workspace:*",
@@ -52,7 +53,8 @@
     "@radix-ui/react-context": "catalog:",
     "@radix-ui/react-primitive": "catalog:",
     "@radix-ui/react-slot": "catalog:",
-    "@radix-ui/react-use-controllable-state": "catalog:"
+    "@radix-ui/react-use-controllable-state": "catalog:",
+    "bind-event-listener": "catalog:"
   },
   "devDependencies": {
     "@dxos/random": "workspace:*",

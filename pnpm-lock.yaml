@@ -17181,6 +17181,9 @@ importers:
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../core/echo/echo
+      '@dxos/invariant':
+        specifier: workspace:*
+        version: link:../../common/invariant
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
@@ -17217,6 +17220,9 @@ importers:
       '@radix-ui/react-use-controllable-state':
         specifier: 'catalog:'
         version: 1.1.0(@types/react@19.2.7)(react@19.2.3)
+      bind-event-listener:
+        specifier: 'catalog:'
+        version: 3.0.0
     devDependencies:
       '@dxos/random':
         specifier: workspace:*

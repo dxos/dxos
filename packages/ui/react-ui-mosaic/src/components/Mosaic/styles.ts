@@ -15,20 +15,17 @@ export const styles = {
     ],
   },
   placeholder: {
-    // NOTE: Delay needs to be long enough not to trigger while autoscrolling (i.e., >300ms)
     root: [
       'group is-full',
       'transition-all plb-1 opacity-0 delay-0 duration-0',
       'data-[mosaic-placeholder-state=active]:plb-2.5',
-      'data-[mosaic-placeholder-state=active]:opacity-100',
-      '_data-[mosaic-placeholder-state=active]:delay-300',
+      // 'data-[mosaic-placeholder-state=active]:opacity-100',
     ],
     content: [
       'is-full',
       'transition-all bs-0 delay-0 duration-0',
       'group-data-[mosaic-placeholder-state=active]:bs-[var(--mosaic-placeholder-height)]',
-      '_group-data-[mosaic-placeholder-state=active]:delay-300',
-      'group-data-[mosaic-placeholder-state=active]:duration-100',
+      // 'group-data-[mosaic-placeholder-state=active]:duration-200',
     ],
   },
 } satisfies Record<string, Record<string, ClassNameValue>>;
