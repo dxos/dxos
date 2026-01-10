@@ -10,11 +10,11 @@ import * as Layer from 'effect/Layer';
 
 import { ATTR_TYPE } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
-import { ObjectId, SpaceId } from '@dxos/keys';
+import { DXN, ObjectId, SpaceId } from '@dxos/keys';
 
 import { type DataSourceCursor, type IndexDataSource, IndexEngine } from './index-engine';
 import { type IndexCursor, IndexTracker } from './index-tracker';
-import { FtsIndex, type IndexerObject, ObjectMetaIndex, ReverseRefIndex } from './indexes';
+import { FtsIndex, type IndexerObject, ObjectMetaIndex, ReverseRefIndex, type Snapshot } from './indexes';
 
 const TestLayer = Layer.merge(
   SqliteClient.layer({
@@ -112,7 +112,11 @@ describe('IndexEngine', () => {
         documentId: 'doc-1',
         queueId: null,
         recordId: null,
-        data: { id: ObjectId.random(), [ATTR_TYPE]: 'test.Type', title: 'Hello' },
+        data: {
+          id: ObjectId.random(),
+          [ATTR_TYPE]: DXN.parse('dxn:type:test.com/type/Type:0.1.0').toString(),
+          title: 'Hello',
+        },
       };
 
       dataSource.push([obj1]);
@@ -131,7 +135,7 @@ describe('IndexEngine', () => {
       // Verify FTS index gets updated.
       const ftsResults1 = yield* ftsIndex.query('Hello');
       expect(ftsResults1.length).toBeGreaterThan(0);
-      expect(ftsResults1.some((row: any) => String(row.snapshot).includes('Hello'))).toBe(true);
+      expect(ftsResults1.some((row: Snapshot) => row.snapshot.includes('Hello'))).toBe(true);
 
       // Update object.
       const obj1Updated: IndexerObject = {
@@ -173,21 +177,33 @@ describe('IndexEngine', () => {
           queueId: null,
           documentId: 'd1',
           recordId: null,
-          data: { id: ObjectId.random(), [ATTR_TYPE]: 'test.TypeA', val: 1 },
+          data: {
+            id: ObjectId.random(),
+            [ATTR_TYPE]: DXN.parse('dxn:type:test.com/type/TypeA:0.1.0').toString(),
+            val: 1,
+          },
         },
         {
           spaceId,
           queueId: null,
           documentId: 'd2',
           recordId: null,
-          data: { id: ObjectId.random(), [ATTR_TYPE]: 'test.TypeA', val: 2 },
+          data: {
+            id: ObjectId.random(),
+            [ATTR_TYPE]: DXN.parse('dxn:type:test.com/type/TypeA:0.1.0').toString(),
+            val: 2,
+          },
         },
         {
           spaceId,
           queueId: null,
           documentId: 'd3',
           recordId: null,
-          data: { id: ObjectId.random(), [ATTR_TYPE]: 'test.TypeB', val: 3 },
+          data: {
+            id: ObjectId.random(),
+            [ATTR_TYPE]: DXN.parse('dxn:type:test.com/type/TypeB:0.1.0').toString(),
+            val: 3,
+          },
         },
       ];
 

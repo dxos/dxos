@@ -4,3 +4,7 @@ tags:
   - ts-build
   - ts-test
   - pack
+tasks:
+  compile:
+    args:
+      - '--entryPoint=src/index.ts'

@@ -7,13 +7,7 @@ import type * as SqlError from '@effect/sql/SqlError';
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
-import {
-  ATTR_DELETED,
-  ATTR_KIND,
-  ATTR_RELATION_SOURCE,
-  ATTR_RELATION_TARGET,
-  ATTR_TYPE,
-} from '@dxos/echo/internal';
+import { ATTR_DELETED, ATTR_RELATION_SOURCE, ATTR_RELATION_TARGET, ATTR_TYPE } from '@dxos/echo/internal';
 
 import type { IndexerObject } from './interface';
 import type { Index } from './interface';
@@ -62,12 +56,13 @@ export class ObjectMetaIndex implements Index {
     ): Effect.Effect<readonly ObjectMeta[], SqlError.SqlError, SqlClient.SqlClient> =>
       Effect.gen(function* () {
         const sql = yield* SqlClient.SqlClient;
+        // SQLite stores booleans as integers, so we need to specify the raw row type.
         const rows =
-          yield* sql`SELECT * FROM objectMeta WHERE spaceId = ${query.spaceId} AND typeDxn = ${query.typeDxn}`;
-        return (rows[]).map((row) => ({
+          yield* sql<ObjectMeta>`SELECT * FROM objectMeta WHERE spaceId = ${query.spaceId} AND typeDxn = ${query.typeDxn}`;
+        return rows.map((row) => ({
           ...row,
           deleted: !!row.deleted,
-        })) as ObjectMeta[];
+        }));
       }),
   );
 
@@ -108,7 +103,7 @@ export class ObjectMetaIndex implements Index {
               const version = (v ?? 0) + 1;
 
               // Extract metadata.
-              const entityKind = castData[ATTR_KIND] ?? 'object';
+              const entityKind = castData[ATTR_RELATION_SOURCE] ? 'relation' : 'object';
               const typeDxn = castData[ATTR_TYPE] ? String(castData[ATTR_TYPE]) : 'type';
               const deleted = castData[ATTR_DELETED] ? 1 : 0;
               // Relations.
@@ -156,7 +151,7 @@ export class ObjectMetaIndex implements Index {
         const recordIds: number[] = [];
         for (const object of objects) {
           const { spaceId, queueId, documentId, data } = object;
-          const objectId = (data).id;
+          const objectId = data.id;
 
           let result: readonly { recordId: number }[];
           if (documentId) {

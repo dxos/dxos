@@ -8,7 +8,7 @@ import { describe, expect, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
-import { ATTR_DELETED, ATTR_KIND, ATTR_RELATION_SOURCE, ATTR_RELATION_TARGET, ATTR_TYPE } from '@dxos/echo/internal';
+import { ATTR_DELETED, ATTR_RELATION_SOURCE, ATTR_RELATION_TARGET, ATTR_TYPE } from '@dxos/echo/internal';
 import { DXN, ObjectId, SpaceId } from '@dxos/keys';
 
 import type { IndexerObject } from './interface';
@@ -38,7 +38,6 @@ describe('ObjectMetaIndex', () => {
         recordId: null,
         data: {
           id: objectId1,
-          [ATTR_KIND]: 'object',
           [ATTR_TYPE]: DXN.parse('dxn:type:example.com/type/Person:0.1.0').toString(),
           [ATTR_DELETED]: false,
         },
@@ -51,7 +50,6 @@ describe('ObjectMetaIndex', () => {
         recordId: null,
         data: {
           id: objectId2,
-          [ATTR_KIND]: 'relation',
           [ATTR_TYPE]: DXN.parse('dxn:type:example.com/type/Relation:0.1.0').toString(),
           [ATTR_RELATION_SOURCE]: DXN.parse(`dxn:echo:${spaceId}:${ObjectId.random()}}`).toString(),
           [ATTR_RELATION_TARGET]: DXN.parse(`dxn:echo:${spaceId}:${ObjectId.random()}}`).toString(),
@@ -108,7 +106,7 @@ describe('ObjectMetaIndex', () => {
         ...item2,
         data: {
           ...item2.data,
-          [ATTR_TYPE]: 'example.RelationUpdated',
+          [ATTR_TYPE]: DXN.parse('dxn:type:example.com/type/RelationUpdated:0.1.0').toString(),
         },
       };
 

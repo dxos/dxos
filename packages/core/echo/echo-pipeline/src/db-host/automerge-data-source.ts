@@ -7,7 +7,7 @@ import { type DocumentId } from '@automerge/automerge-repo';
 import * as Effect from 'effect/Effect';
 
 import { type Obj } from '@dxos/echo';
-import { ATTR_DELETED, ATTR_KIND, ATTR_RELATION_SOURCE, ATTR_RELATION_TARGET, ATTR_TYPE } from '@dxos/echo/internal';
+import { ATTR_DELETED, ATTR_RELATION_SOURCE, ATTR_RELATION_TARGET, ATTR_TYPE } from '@dxos/echo/internal';
 import { type DatabaseDirectory, ObjectStructure, SpaceDocVersion } from '@dxos/echo-protocol';
 import { type DataSourceCursor, type IndexDataSource, type IndexerObject } from '@dxos/index-core';
 import { type IndexCursor } from '@dxos/index-core';
@@ -66,7 +66,6 @@ const objectStructureToJson = (objectId: string, structure: ObjectStructure): Ob
   return {
     id: objectId,
     [ATTR_TYPE]: (ObjectStructure.getTypeReference(structure)?.['/'] ?? '') as DXN.String,
-    [ATTR_KIND]: ObjectStructure.getEntityKind(structure),
     [ATTR_DELETED]: ObjectStructure.isDeleted(structure),
     [ATTR_RELATION_SOURCE]: ObjectStructure.getRelationSource(structure)?.['/'] as DXN.String | undefined,
     [ATTR_RELATION_TARGET]: ObjectStructure.getRelationTarget(structure)?.['/'] as DXN.String | undefined,

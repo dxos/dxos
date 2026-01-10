@@ -46,11 +46,6 @@ export const ATTR_SELF_DXN = '@dxn';
 export const SelfDXNId = Symbol.for('@dxos/echo/DXN');
 
 /**
- * Property name for entity kind when object is serialized to JSON.
- */
-export const ATTR_KIND = '@kind';
-
-/**
  * Property name for deleted when object is serialized to JSON.
  */
 export const ATTR_DELETED = '@deleted';
@@ -105,7 +100,6 @@ export interface ObjectMetaJSON {
 export interface ObjectJSON {
   id: string;
   [ATTR_TYPE]: DXN.String;
-  [ATTR_KIND]: 'object' | 'relation';
   [ATTR_SELF_DXN]?: DXN.String;
   [ATTR_DELETED]?: boolean;
   [ATTR_META]?: ObjectMetaJSON;

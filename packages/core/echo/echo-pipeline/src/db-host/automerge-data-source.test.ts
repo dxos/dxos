@@ -5,7 +5,7 @@
 import { type DocumentId } from '@automerge/automerge-repo';
 import { describe, expect, test } from 'vitest';
 
-import { ATTR_DELETED, ATTR_KIND, ATTR_TYPE } from '@dxos/echo/internal';
+import { ATTR_DELETED, ATTR_TYPE } from '@dxos/echo/internal';
 import { type DatabaseDirectory, ObjectStructure, SpaceDocVersion } from '@dxos/echo-protocol';
 import { runAndForwardErrors } from '@dxos/effect';
 import { type IndexCursor } from '@dxos/index-core';
@@ -302,7 +302,6 @@ describe('AutomergeDataSource', () => {
     const obj = result.objects[0];
     expect(obj.data.id).toBe('obj1');
     expect(obj.data[ATTR_TYPE]).toBe(PERSON_TYPE);
-    expect(obj.data[ATTR_KIND]).toBe('object');
     expect(obj.data[ATTR_DELETED]).toBe(false);
     expect(obj.data.name).toBe('John');
     expect(obj.data.age).toBe(30);

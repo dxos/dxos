@@ -6,8 +6,18 @@ import type * as SqlClient from '@effect/sql/SqlClient';
 import type * as SqlError from '@effect/sql/SqlError';
 import type * as Effect from 'effect/Effect';
 
-import type { Obj } from '@dxos/echo';
 import type { ObjectId, SpaceId } from '@dxos/keys';
+
+/**
+ * JSON data for objects being indexed.
+ * Uses plain string types since JSON data doesn't have branded types.
+ */
+export interface IndexerObjectData {
+  /** Object identifier. */
+  id: string;
+  /** Additional properties (type attributes, user data, etc.). */
+  [key: string]: unknown;
+}
 
 /**
  * Data describing objects returned from sources to the indexer.
@@ -35,7 +45,7 @@ export interface IndexerObject {
   /**
    * JSON data of the object.
    */
-  data: Obj.JSON;
+  data: IndexerObjectData;
 }
 
 export interface Index {

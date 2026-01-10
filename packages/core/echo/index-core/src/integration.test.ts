@@ -9,7 +9,7 @@ import { describe, expect, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
-import { ATTR_DELETED, ATTR_KIND, ATTR_TYPE } from '@dxos/echo/internal';
+import { ATTR_DELETED, ATTR_TYPE } from '@dxos/echo/internal';
 import { Reference, encodeReference } from '@dxos/echo-protocol';
 import { runAndForwardErrors } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
@@ -98,7 +98,6 @@ const createEchoObject = (spaceId: SpaceId, documentId: string, data: Record<str
   data: {
     id: ObjectId.random(),
     [ATTR_TYPE]: DXN.parse('dxn:type:example.com/type/Person:0.1.0').toString(),
-    [ATTR_KIND]: 'object',
     [ATTR_DELETED]: false,
     ...data,
   },
