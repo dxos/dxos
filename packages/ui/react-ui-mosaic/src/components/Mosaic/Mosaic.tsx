@@ -729,9 +729,10 @@ const Tile = forwardRef<HTMLDivElement, TileProps>(
           createPortal(
             <Root
               {...{
+                // NOTE: Use to control appearance while dragging.
                 [`data-${TILE_STATE_ATTR}`]: state.type,
               }}
-              className={mx(classNames)}
+              className={mx('bg-deckSurface', classNames)}
               style={
                 {
                   width: `${state.rect.width}px`,

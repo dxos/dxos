@@ -4,7 +4,7 @@
 
 import { useComposedRefs } from '@radix-ui/react-compose-refs';
 import * as Schema from 'effect/Schema';
-import React, { Fragment, forwardRef, useMemo, useRef, useState } from 'react';
+import React, { Fragment, forwardRef, useMemo, useRef } from 'react';
 
 import { Ref, Type } from '@dxos/echo';
 import { ObjectId } from '@dxos/keys';
@@ -75,14 +75,17 @@ export const Board = forwardRef<HTMLDivElement, BoardProps>(({ id, columns, debu
   );
 
   return (
-    <div className={mx('p-2 bs-full is-full grid overflow-hidden', debug && 'grid-cols-[1fr_25rem] gap-2')}>
+    <div
+      className={mx('p-2 bs-full is-full grid overflow-hidden', debug && 'grid-cols-[1fr_25rem] gap-2')}
+      ref={forwardedRef}
+    >
       <Focus.Group asChild axis='horizontal'>
         <Mosaic.Container asChild autoscroll axis='horizontal' withFocus debug={debugHandler} handler={handler}>
           <div role='list' className='flex bs-full plb-2 overflow-x-auto'>
             <Placeholder axis='horizontal' location={0.5} />
             {columns.map((column, i) => (
               <Fragment key={column.id}>
-                <Column column={column} debug={debug} />
+                <Column column={column} debug={debug} location={i} object={column} />
                 <Placeholder axis='horizontal' location={i + 1.5} />
               </Fragment>
             ))}
@@ -98,72 +101,80 @@ export const Board = forwardRef<HTMLDivElement, BoardProps>(({ id, columns, debu
 // Column
 //
 
-type ColumnProps = { column: TestColumn; debug?: boolean };
+type ColumnProps = Pick<MosaicTileProps<TestColumn>, 'classNames' | 'object' | 'location'> & {
+  column: TestColumn;
+  debug?: boolean;
+};
 
-export const Column = forwardRef<HTMLDivElement, ColumnProps>(({ column: { id, items }, debug }, forwardedRef) => {
-  const [DebugInfo, debugHandler] = useContainerDebug(debug);
+export const Column = forwardRef<HTMLDivElement, ColumnProps>(
+  ({ classNames, column: { id, items }, debug, object, location }, forwardedRef) => {
+    const [DebugInfo, debugHandler] = useContainerDebug(debug);
+    const dragHandleRef = useRef<HTMLButtonElement>(null);
 
-  const handler = useMemo<MosaicContainerProps['handler']>(
-    () => ({
-      id,
-      canDrop: () => true,
-      onTake: ({ source }, cb) => {
-        log.info('onTake', { source });
-        const from = items.findIndex((item) => item.target?.id === source.object.id);
-        if (from !== -1) {
-          items.splice(from, 1);
-        }
-        void cb(source.object);
-      },
-      onDrop: ({ source, target }) => {
-        const from = items.findIndex((item) => item.target?.id === source.object.id);
-        const to = target?.type === 'tile' || target?.type === 'placeholder' ? target.location : -1;
-        log.info('onDrop', { source, target, from, to });
-        if (to !== -1) {
+    const handler = useMemo<MosaicContainerProps['handler']>(
+      () => ({
+        id,
+        canDrop: () => true,
+        onTake: ({ source }, cb) => {
+          log.info('onTake', { source });
+          const from = items.findIndex((item) => item.target?.id === source.object.id);
           if (from !== -1) {
-            arrayMove(items, from, to);
-          } else {
-            const ref = Ref.make(source.object);
-            items.splice(to, 0, ref as any); // TODO(burdon): Remove cast?
+            items.splice(from, 1);
           }
-        }
-      },
-    }),
-    [id, items],
-  );
-
-  const menuItems = useMemo<CardMenuProps<TestItem>['items']>(
-    () => [
-      {
-        label: 'Delete',
-        onSelect: (object) => {
-          const idx = items.findIndex((item) => item.target?.id === object?.id);
-          if (idx !== -1) {
-            items.splice(idx, 1);
+          void cb(source.object);
+        },
+        onDrop: ({ source, target }) => {
+          const from = items.findIndex((item) => item.target?.id === source.object.id);
+          const to = target?.type === 'tile' || target?.type === 'placeholder' ? target.location : -1;
+          log.info('onDrop', { source, target, from, to });
+          if (to !== -1) {
+            if (from !== -1) {
+              arrayMove(items, from, to);
+            } else {
+              const ref = Ref.make(source.object);
+              items.splice(to, 0, ref as any); // TODO(burdon): Remove cast?
+            }
           }
         },
-      },
-    ],
-    [],
-  );
+      }),
+      [id, items],
+    );
 
-  return (
-    <div className={mx('grid bs-full min-is-[20rem] max-is-[25rem] overflow-hidden', debug && 'grid-rows-2 gap-2')}>
-      <Focus.Group ref={forwardedRef} classNames='flex flex-col overflow-hidden'>
-        <Card.Toolbar>
-          <Card.DragHandle />
-          <Card.Heading>{id}</Card.Heading>
-          <Card.Menu items={menuItems} />
-        </Card.Toolbar>
-        <Mosaic.Container asChild axis='vertical' autoscroll withFocus debug={debugHandler} handler={handler}>
-          <ItemList items={items.map((item: any) => item.target).filter(isTruthy)} menuItems={[]} />
-        </Mosaic.Container>
-        <div className='grow flex p-1 justify-center text-xs'>{items.length}</div>
-      </Focus.Group>
-      <DebugInfo />
-    </div>
-  );
-});
+    const menuItems = useMemo<CardMenuProps<TestItem>['items']>(
+      () => [
+        {
+          label: 'Delete',
+          onSelect: (object) => {
+            const idx = items.findIndex((item) => item.target?.id === object?.id);
+            if (idx !== -1) {
+              items.splice(idx, 1);
+            }
+          },
+        },
+      ],
+      [],
+    );
+
+    return (
+      <Mosaic.Tile asChild dragHandle={dragHandleRef.current} object={object} location={location}>
+        <div className={mx('grid bs-full min-is-[20rem] max-is-[25rem] overflow-hidden', debug && 'grid-rows-2 gap-2')}>
+          <Focus.Group ref={forwardedRef} classNames={mx('flex flex-col overflow-hidden', classNames)}>
+            <Card.Toolbar>
+              <Card.DragHandle ref={dragHandleRef} />
+              <Card.Heading>{id}</Card.Heading>
+              <Card.Menu items={[]} />
+            </Card.Toolbar>
+            <Mosaic.Container asChild axis='vertical' autoscroll withFocus debug={debugHandler} handler={handler}>
+              <ItemList items={items.map((item: any) => item.target).filter(isTruthy)} menuItems={menuItems} />
+            </Mosaic.Container>
+            <div className='grow flex p-1 justify-center text-xs'>{items.length}</div>
+          </Focus.Group>
+          <DebugInfo />
+        </div>
+      </Mosaic.Tile>
+    );
+  },
+);
 
 Column.displayName = 'Column';
 
@@ -219,20 +230,16 @@ type TileProps = Pick<MosaicTileProps<TestItem>, 'classNames' | 'object' | 'loca
 };
 
 const Tile = forwardRef<HTMLDivElement, TileProps>(({ classNames, object, location, menuItems }, forwardedRef) => {
-  // Keep a local ref for click-to-focus behavior.
   const rootRef = useRef<HTMLDivElement>(null);
-  // Compose the local ref with the forwarded ref so both work.
   const composedRef = useComposedRefs<HTMLDivElement>(rootRef, forwardedRef);
-
-  // TODO(burdon): Convert to ref.
-  const [handleRef, setHandleRef] = useState<HTMLElement | null>(null);
+  const dragHandleRef = useRef<HTMLButtonElement>(null);
 
   return (
-    <Focus.Group asChild>
-      <Mosaic.Tile asChild dragHandle={handleRef} object={object} location={location}>
+    <Mosaic.Tile asChild dragHandle={dragHandleRef.current} object={object} location={location}>
+      <Focus.Group asChild>
         <Card.StaticRoot classNames={classNames} onClick={() => rootRef.current?.focus()} ref={composedRef}>
           <Card.Toolbar>
-            <Card.DragHandle ref={setHandleRef} />
+            <Card.DragHandle ref={dragHandleRef} />
             <Card.Heading>{object.name}</Card.Heading>
             <Card.Menu context={object} items={menuItems} />
           </Card.Toolbar>
@@ -245,8 +252,8 @@ const Tile = forwardRef<HTMLDivElement, TileProps>(({ classNames, object, locati
             )}
           </Card.Section>
         </Card.StaticRoot>
-      </Mosaic.Tile>
-    </Focus.Group>
+      </Focus.Group>
+    </Mosaic.Tile>
   );
 });
 

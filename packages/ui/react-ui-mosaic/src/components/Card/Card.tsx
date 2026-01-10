@@ -232,16 +232,22 @@ const CardChrome = forwardRef<HTMLDivElement, CardSharedProps>(
 // Section
 //
 
-type CardSectionProps = CardSharedProps & { icon?: string };
+type CardSectionProps = CardSharedProps & { indent?: boolean; icon?: string };
 
 const CardSection = forwardRef<HTMLDivElement, CardSectionProps>(
-  ({ children, classNames, className, role = 'none', icon, ...props }, forwardedRef) => {
+  ({ children, classNames, className, role = 'none', indent, icon, ...props }, forwardedRef) => {
     return (
-      <div role={role} className={mx(cardSection, 'pli-1', classNames, className)} ref={forwardedRef}>
-        <div className='grid bs-[var(--rail-item)] is-[var(--rail-item)] place-items-center'>
-          {icon && <Icon icon={icon} />}
-        </div>
-        <div {...props} className='plb-1'>
+      <div
+        role={role}
+        className={mx(icon || (indent && cardSection), 'pli-1', classNames, className)}
+        ref={forwardedRef}
+      >
+        {indent && cardSection && (
+          <div role='none' className='grid bs-[var(--rail-item)] is-[var(--rail-item)] place-items-center'>
+            {icon && <Icon icon={icon} />}
+          </div>
+        )}
+        <div {...props} role='none' className='plb-1'>
           {children}
         </div>
       </div>
@@ -253,6 +259,9 @@ const CardSection = forwardRef<HTMLDivElement, CardSectionProps>(
 // Text
 //
 
+/**
+ * @deprecated Use CardSection instead.
+ */
 const CardText = forwardRef<HTMLDivElement, CardSharedProps>(
   ({ children, classNames, className, asChild, role = 'none', ...props }, forwardedRef) => {
     const Root = asChild ? Slot : 'div';
