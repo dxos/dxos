@@ -6,10 +6,7 @@
     ]
   },
   "include": [
-    "src/**/*.ts",
-    "src/**/*.tsx",
-    "src/*.ts",
-    "src/components/Mosaic/__Grid.stories.tsx__"
+    "src",
   ],
   "references": [
     {
@@ -37,16 +34,40 @@
       "path": "../../core/echo/echo"
     },
     {
+      "path": "../../core/echo/echo-db"
+    },
+    {
+      "path": "../../plugins/plugin-testing"
+    },
+    {
+      "path": "../../sdk/app-framework"
+    },
+    {
       "path": "../../sdk/react-client"
+    },
+    {
+      "path": "../../sdk/schema"
+    },
+    {
+      "path": "../../sdk/types"
     },
     {
       "path": "../react-ui"
     },
     {
+      "path": "../react-ui-components"
+    },
+    {
       "path": "../react-ui-dnd"
     },
     {
+      "path": "../react-ui-editor"
+    },
+    {
       "path": "../react-ui-syntax-highlighter"
+    },
+    {
+      "path": "../ui-editor"
     },
     {
       "path": "../ui-theme"
