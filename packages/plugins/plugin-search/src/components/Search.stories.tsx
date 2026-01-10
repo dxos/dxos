@@ -8,7 +8,7 @@ import React, { useState } from 'react';
 import { faker } from '@dxos/random';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
-import { Search, useSearchInput, useSearchItem } from './Search';
+import { Search, useSearchInput, useSearchItem, useSearchResults } from './Search';
 
 faker.seed(1234);
 
@@ -33,16 +33,7 @@ type DefaultStoryProps = {
 };
 
 const DefaultStory = ({ items = defaultItems }: DefaultStoryProps) => {
-  const [results, setResults] = useState<StoryItem[]>(items);
-
-  const handleSearch = (query: string) => {
-    if (!query) {
-      setResults(items);
-      return;
-    }
-    const filtered = items.filter((item) => item.label.toLowerCase().includes(query.toLowerCase()));
-    setResults(filtered);
-  };
+  const { results, handleSearch } = useSearchResults({ items });
 
   return (
     <div className='is-full bs-[400px] flex flex-col'>
@@ -162,16 +153,7 @@ const CustomItem = ({ value, label, description, onSelect }: CustomItemProps) =>
 };
 
 const CustomRenderingStory = ({ items = defaultItems }: DefaultStoryProps) => {
-  const [results, setResults] = useState<StoryItem[]>(items);
-
-  const handleSearch = (query: string) => {
-    if (!query) {
-      setResults(items);
-      return;
-    }
-    const filtered = items.filter((item) => item.label.toLowerCase().includes(query.toLowerCase()));
-    setResults(filtered);
-  };
+  const { results, handleSearch } = useSearchResults({ items });
 
   return (
     <div className='is-full bs-[400px] flex flex-col'>
@@ -233,16 +215,7 @@ const WithEmptyStory = () => {
 //
 
 const WithoutViewportStory = ({ items = defaultItems }: DefaultStoryProps) => {
-  const [results, setResults] = useState<StoryItem[]>(items);
-
-  const handleSearch = (query: string) => {
-    if (!query) {
-      setResults(items);
-      return;
-    }
-    const filtered = items.filter((item) => item.label.toLowerCase().includes(query.toLowerCase()));
-    setResults(filtered);
-  };
+  const { results, handleSearch } = useSearchResults({ items });
 
   return (
     <div className='is-full bs-[300px] flex flex-col'>
@@ -374,16 +347,7 @@ const CustomInput = () => {
 };
 
 const CustomInputStory = ({ items = defaultItems }: DefaultStoryProps) => {
-  const [results, setResults] = useState<StoryItem[]>(items);
-
-  const handleSearch = (query: string) => {
-    if (!query) {
-      setResults(items);
-      return;
-    }
-    const filtered = items.filter((item) => item.label.toLowerCase().includes(query.toLowerCase()));
-    setResults(filtered);
-  };
+  const { results, handleSearch } = useSearchResults({ items });
 
   return (
     <div className='is-full bs-[400px] flex flex-col'>
@@ -400,6 +364,96 @@ const CustomInputStory = ({ items = defaultItems }: DefaultStoryProps) => {
                 onSelect={() => console.log('[Search.Item.onSelect]', item.id)}
               />
             ))}
+          </Search.Viewport>
+        </Search.Content>
+      </Search.Root>
+    </div>
+  );
+};
+
+//
+// With Disabled Items Story
+//
+
+const disabledItems: StoryItem[] = [
+  { id: '1', label: 'Available item 1', icon: 'ph--check--regular' },
+  { id: '2', label: 'Disabled item (cannot select)', icon: 'ph--prohibit--regular' },
+  { id: '3', label: 'Available item 2', icon: 'ph--check--regular' },
+  { id: '4', label: 'Disabled item 2', icon: 'ph--prohibit--regular' },
+  { id: '5', label: 'Available item 3', icon: 'ph--check--regular' },
+];
+
+const WithDisabledItemsStory = () => {
+  return (
+    <div className='is-full flex flex-col'>
+      <Search.Root>
+        <Search.Input placeholder='Arrow keys skip disabled items...' autoFocus />
+        <Search.Content>
+          {disabledItems.map((item, index) => (
+            <Search.Item
+              key={item.id}
+              value={item.id}
+              label={item.label}
+              icon={item.icon}
+              disabled={index === 1 || index === 3}
+              onSelect={() => console.log('[Search.Item.onSelect]', item.id)}
+            />
+          ))}
+        </Search.Content>
+      </Search.Root>
+    </div>
+  );
+};
+
+//
+// With Groups Story
+//
+
+type GroupedItem = StoryItem & { category: string };
+
+const groupedItems: GroupedItem[] = [
+  { id: '1', label: 'Document 1', icon: 'ph--file-text--regular', category: 'Documents' },
+  { id: '2', label: 'Document 2', icon: 'ph--file-text--regular', category: 'Documents' },
+  { id: '3', label: 'Image 1', icon: 'ph--image--regular', category: 'Images' },
+  { id: '4', label: 'Image 2', icon: 'ph--image--regular', category: 'Images' },
+  { id: '5', label: 'Settings', icon: 'ph--gear--regular', category: 'Other' },
+];
+
+const WithGroupsStory = () => {
+  const { results, handleSearch } = useSearchResults({ items: groupedItems });
+
+  // Group items by category.
+  const grouped = results.reduce(
+    (acc, item) => {
+      if (!acc[item.category]) {
+        acc[item.category] = [];
+      }
+      acc[item.category].push(item);
+      return acc;
+    },
+    {} as Record<string, GroupedItem[]>,
+  );
+
+  return (
+    <div className='is-full bs-[400px] flex flex-col'>
+      <Search.Root onSearch={handleSearch}>
+        <Search.Input placeholder='Search grouped items...' autoFocus />
+        <Search.Content>
+          <Search.Viewport>
+            {Object.entries(grouped).map(([category, items]) => (
+              <Search.Group key={category} heading={category}>
+                {items.map((item) => (
+                  <Search.Item
+                    key={item.id}
+                    value={item.id}
+                    label={item.label}
+                    icon={item.icon}
+                    onSelect={() => console.log('[Search.Item.onSelect]', item.id, item.label)}
+                  />
+                ))}
+              </Search.Group>
+            ))}
+            {results.length === 0 && <Search.Empty>No results found</Search.Empty>}
           </Search.Viewport>
         </Search.Content>
       </Search.Root>
@@ -462,4 +516,12 @@ export const CustomInputExample: Story = {
   args: {
     items: defaultItems,
   },
+};
+
+export const WithDisabledItems: Story = {
+  render: WithDisabledItemsStory,
+};
+
+export const WithGroups: Story = {
+  render: WithGroupsStory,
 };

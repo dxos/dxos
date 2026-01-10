@@ -4,6 +4,13 @@
 
 import { createContext } from '@radix-ui/react-context';
 import { useControllableState } from '@radix-ui/react-use-controllable-state';
+// NOTE: We use command-score for fuzzy matching because:
+// 1. It's the same algorithm used by cmdk, providing consistency with SearchList.
+// 2. It's extremely lightweight (~390 bytes minified).
+// 3. Simple API: just score(string, query) → number.
+// For more advanced needs (highlighting, out-of-order matching, large datasets),
+// consider uFuzzy (https://github.com/leeoniya/uFuzzy) instead.
+import commandScore from 'command-score';
 import React, {
   type ComponentPropsWithRef,
   type KeyboardEvent,
@@ -23,8 +30,11 @@ import {
   useDensityContext,
   useElevationContext,
   useThemeContext,
+  useTranslation,
 } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
+
+import { meta } from '../meta';
 
 //
 // Styling
@@ -37,6 +47,12 @@ const searchItem =
 // Context
 //
 
+type ItemData = {
+  element: HTMLElement;
+  onSelect?: () => void;
+  disabled?: boolean;
+};
+
 type SearchContextValue = {
   /** Current search query. */
   query: string;
@@ -47,10 +63,15 @@ type SearchContextValue = {
   /** Update the selected value. */
   onSelectedValueChange: (value: string | undefined) => void;
   /** Register an item for keyboard navigation. */
-  registerItem: (value: string, element: HTMLElement | null, onSelect: (() => void) | undefined) => void;
+  registerItem: (
+    value: string,
+    element: HTMLElement | null,
+    onSelect: (() => void) | undefined,
+    disabled?: boolean,
+  ) => void;
   /** Unregister an item. */
   unregisterItem: (value: string) => void;
-  /** Get ordered list of registered item values. */
+  /** Get ordered list of registered item values (excludes disabled items). */
   getItemValues: () => string[];
   /** Trigger selection of the currently highlighted item. */
   triggerSelect: () => void;
@@ -82,8 +103,8 @@ const SearchRoot = ({ children, onSearch, value: valueProp, defaultValue = '', d
 
   const [selectedValue, setSelectedValue] = React.useState<string | undefined>(undefined);
 
-  // Track registered items: value -> { element, onSelect }.
-  const itemsRef = useRef<Map<string, { element: HTMLElement; onSelect?: () => void }>>(new Map());
+  // Track registered items: value -> { element, onSelect, disabled }.
+  const itemsRef = useRef<Map<string, ItemData>>(new Map());
 
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -117,13 +138,14 @@ const SearchRoot = ({ children, onSearch, value: valueProp, defaultValue = '', d
     };
   }, []);
 
-  // Auto-select first item when items change and no valid selection exists.
+  // Auto-select first non-disabled item when items change and no valid selection exists.
   useEffect(() => {
-    // Check if current selection is still valid.
-    const isSelectionValid = selectedValue !== undefined && itemsRef.current.has(selectedValue);
+    // Check if current selection is still valid (exists and not disabled).
+    const currentItem = selectedValue !== undefined ? itemsRef.current.get(selectedValue) : undefined;
+    const isSelectionValid = currentItem !== undefined && !currentItem.disabled;
     if (!isSelectionValid && itemsRef.current.size > 0) {
-      // Get first item in DOM order.
-      const entries = Array.from(itemsRef.current.entries());
+      // Get first non-disabled item in DOM order.
+      const entries = Array.from(itemsRef.current.entries()).filter(([, data]) => !data.disabled);
       if (entries.length > 0) {
         entries.sort(([, a], [, b]) => {
           const position = a.element.compareDocumentPosition(b.element);
@@ -143,21 +165,24 @@ const SearchRoot = ({ children, onSearch, value: valueProp, defaultValue = '', d
     }
   }, [itemVersion, selectedValue]);
 
-  const registerItem = useCallback((value: string, element: HTMLElement | null, onSelect: (() => void) | undefined) => {
-    if (element) {
-      itemsRef.current.set(value, { element, onSelect });
-      setItemVersion((v) => v + 1);
-    }
-  }, []);
+  const registerItem = useCallback(
+    (value: string, element: HTMLElement | null, onSelect: (() => void) | undefined, disabled?: boolean) => {
+      if (element) {
+        itemsRef.current.set(value, { element, onSelect, disabled });
+        setItemVersion((v) => v + 1);
+      }
+    },
+    [],
+  );
 
   const unregisterItem = useCallback((value: string) => {
     itemsRef.current.delete(value);
     setItemVersion((v) => v + 1);
   }, []);
 
-  // Get item values in DOM order by sorting registered elements.
+  // Get item values in DOM order by sorting registered elements (excludes disabled items).
   const getItemValues = useCallback(() => {
-    const entries = Array.from(itemsRef.current.entries());
+    const entries = Array.from(itemsRef.current.entries()).filter(([, data]) => !data.disabled);
     // Sort by DOM position using compareDocumentPosition.
     entries.sort(([, a], [, b]) => {
       const position = a.element.compareDocumentPosition(b.element);
@@ -262,9 +287,11 @@ const SearchInput = forwardRef<HTMLInputElement, SearchInputProps>(
   ) => {
     const { query, onQueryChange, selectedValue, onSelectedValueChange, getItemValues, triggerSelect } =
       useSearchContext('Search.Input');
+    const { t } = useTranslation(meta.id);
     const { hasIosKeyboard, tx } = useThemeContext();
     const density = useDensityContext(propsDensity);
     const elevation = useElevationContext(propsElevation);
+    const defaultPlaceholder = t('search placeholder');
 
     const handleChange = useCallback(
       (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -349,7 +376,7 @@ const SearchInput = forwardRef<HTMLInputElement, SearchInputProps>(
         value={query}
         onChange={handleChange}
         onKeyDown={handleKeyDown}
-        placeholder={placeholder ?? 'Search...'}
+        placeholder={placeholder ?? defaultPlaceholder}
         className={tx(
           'input.input',
           'input',
@@ -383,23 +410,25 @@ type SearchItemProps = ThemedClassName<{
   icon?: string | ReactNode;
   /** Callback when item is selected. */
   onSelect?: () => void;
+  /** Whether the item is disabled. */
+  disabled?: boolean;
 }>;
 
 const SearchItem = forwardRef<HTMLDivElement, SearchItemProps>(
-  ({ classNames, value, label, icon, onSelect }, forwardedRef) => {
+  ({ classNames, value, label, icon, onSelect, disabled }, forwardedRef) => {
     const { selectedValue, registerItem, unregisterItem } = useSearchContext('Search.Item');
     const internalRef = useRef<HTMLDivElement>(null);
 
-    const isSelected = selectedValue === value;
+    const isSelected = selectedValue === value && !disabled;
 
     // Register this item.
     useEffect(() => {
       const element = internalRef.current;
       if (element) {
-        registerItem(value, element, onSelect);
+        registerItem(value, element, onSelect, disabled);
       }
       return () => unregisterItem(value);
-    }, [value, onSelect, registerItem, unregisterItem]);
+    }, [value, onSelect, disabled, registerItem, unregisterItem]);
 
     // Scroll into view when selected.
     useEffect(() => {
@@ -409,8 +438,10 @@ const SearchItem = forwardRef<HTMLDivElement, SearchItemProps>(
     }, [isSelected]);
 
     const handleClick = useCallback(() => {
-      onSelect?.();
-    }, [onSelect]);
+      if (!disabled) {
+        onSelect?.();
+      }
+    }, [onSelect, disabled]);
 
     // Render icon.
     const iconElement = icon === undefined ? null : typeof icon === 'string' ? <Icon icon={icon} size={5} /> : icon;
@@ -427,10 +458,17 @@ const SearchItem = forwardRef<HTMLDivElement, SearchItemProps>(
         }}
         role='option'
         aria-selected={isSelected}
+        aria-disabled={disabled}
         data-selected={isSelected}
+        data-disabled={disabled}
         data-value={value}
         tabIndex={-1}
-        className={mx('flex gap-2 items-center', searchItem, classNames)}
+        className={mx(
+          'flex gap-2 items-center',
+          searchItem,
+          disabled && 'opacity-50 cursor-not-allowed hover:bg-transparent data-[selected=true]:bg-transparent',
+          classNames,
+        )}
         onClick={handleClick}
       >
         {iconElement}
@@ -459,6 +497,35 @@ const SearchEmpty = ({ classNames, children }: SearchEmptyProps) => {
 SearchEmpty.displayName = 'Search.Empty';
 
 //
+// Group
+//
+
+type SearchGroupProps = ThemedClassName<
+  PropsWithChildren<{
+    /** Heading for the group. */
+    heading?: ReactNode;
+  }>
+>;
+
+/**
+ * Groups related search items with an optional heading.
+ */
+const SearchGroup = forwardRef<HTMLDivElement, SearchGroupProps>(({ classNames, heading, children }, forwardedRef) => {
+  return (
+    <div ref={forwardedRef} role='group' className={mx('flex flex-col', classNames)}>
+      {heading && (
+        <div role='presentation' className='pli-2 plb-1 text-xs font-medium text-description'>
+          {heading}
+        </div>
+      )}
+      {children}
+    </div>
+  );
+});
+
+SearchGroup.displayName = 'Search.Group';
+
+//
 // Hooks
 //
 
@@ -480,6 +547,91 @@ const useSearchItem = () => {
   return { selectedValue, registerItem, unregisterItem };
 };
 
+type UseSearchResultsOptions<T> = {
+  /** Items to filter. */
+  items: T[];
+  /** Custom filter function. Defaults to filtering by 'label' property. */
+  filter?: (item: T, query: string) => boolean;
+  /** Enable fuzzy filtering using command-score algorithm (used by cmdk). Defaults to true. */
+  fuzzy?: boolean;
+  /** Custom function to extract the searchable string from an item. Defaults to 'label' property. */
+  extract?: (item: T) => string;
+  /** Minimum score threshold for fuzzy matches (0-1). Defaults to 0. */
+  minScore?: number;
+};
+
+/**
+ * Hook to manage search results with fuzzy filtering (enabled by default).
+ * Returns filtered results and a handleSearch function to pass to Search.Root.
+ *
+ * @example
+ * // Default fuzzy filtering using command-score
+ * const { results, handleSearch } = useSearchResults({ items });
+ *
+ * @example
+ * // Disable fuzzy for basic case-insensitive substring match
+ * const { results, handleSearch } = useSearchResults({ items, fuzzy: false });
+ *
+ * @example
+ * // Custom extraction for fuzzy filtering
+ * const { results, handleSearch } = useSearchResults({
+ *   items,
+ *   extract: (item) => `${item.name} ${item.description}`,
+ * });
+ */
+const useSearchResults = <T extends { label?: string }>({
+  items,
+  filter,
+  fuzzy = true,
+  extract,
+  minScore = 0,
+}: UseSearchResultsOptions<T>) => {
+  const [results, setResults] = React.useState<T[]>(items);
+
+  // Update results when items change.
+  useEffect(() => {
+    setResults(items);
+  }, [items]);
+
+  const defaultExtract = useCallback((item: T) => item.label ?? '', []);
+  const extractFn = extract ?? defaultExtract;
+
+  const defaultFilter = useCallback((item: T, query: string) => {
+    const label = item.label ?? '';
+    return label.toLowerCase().includes(query.toLowerCase());
+  }, []);
+
+  const filterFn = filter ?? defaultFilter;
+
+  const handleSearch = useCallback(
+    (query: string) => {
+      if (!query) {
+        setResults(items);
+        return;
+      }
+
+      if (fuzzy) {
+        // Score and filter items using command-score.
+        const scored = items
+          .map((item) => ({
+            item,
+            score: commandScore(extractFn(item), query) as number,
+          }))
+          .filter(({ score }) => score > minScore)
+          .sort((a, b) => b.score - a.score);
+
+        setResults(scored.map(({ item }) => item));
+      } else {
+        const filtered = items.filter((item) => filterFn(item, query));
+        setResults(filtered);
+      }
+    },
+    [items, filterFn, fuzzy, extractFn, minScore],
+  );
+
+  return { results, handleSearch };
+};
+
 //
 // Search
 //
@@ -491,9 +643,10 @@ export const Search = {
   Input: SearchInput,
   Item: SearchItem,
   Empty: SearchEmpty,
+  Group: SearchGroup,
 };
 
-export { useSearchContext, useSearchInput, useSearchItem };
+export { useSearchContext, useSearchInput, useSearchItem, useSearchResults };
 
 export type {
   SearchRootProps,
@@ -502,4 +655,5 @@ export type {
   SearchInputProps,
   SearchItemProps,
   SearchEmptyProps,
+  SearchGroupProps,
 };

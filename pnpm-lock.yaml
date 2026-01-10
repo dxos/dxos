@@ -1026,6 +1026,9 @@ catalogs:
     columnify:
       specifier: ^1.6.0
       version: 1.6.0
+    command-score:
+      specifier: 0.1.2
+      version: 0.1.2
     comment-json:
       specifier: ^4.2.3
       version: 4.2.3
@@ -11314,6 +11317,9 @@ importers:
       '@radix-ui/react-use-controllable-state':
         specifier: 'catalog:'
         version: 1.1.0(@types/react@19.2.7)(react@19.2.3)
+      command-score:
+        specifier: 'catalog:'
+        version: 0.1.2
       exa-js:
         specifier: 'catalog:'
         version: 1.7.0
