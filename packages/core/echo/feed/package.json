@@ -32,7 +32,10 @@
     "dist",
     "src"
   ],
-  "dependencies": {},
+  "dependencies": {
+    "@dxos/keys": "workspace:*",
+    "effect": "catalog:"
+  },
   "devDependencies": {},
   "publishConfig": {
     "access": "public"
