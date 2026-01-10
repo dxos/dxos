@@ -278,15 +278,15 @@ const CardText = forwardRef<HTMLDivElement, CardSharedProps>(
 export const Card = {
   Root: CardRoot,
   SurfaceRoot: CardSurfaceRoot,
+  DragHandle: CardDragHandle,
   Toolbar: CardToolbar,
   ToolbarIconButton: CardToolbarIconButton,
   ToolbarSeparator: CardToolbarSeparator,
   Heading: CardHeading,
-  DragHandle: CardDragHandle,
-  Menu: CardMenu,
-  Poster: CardPoster,
   Chrome: CardChrome,
   Section: CardSection,
+  Menu: CardMenu,
+  Poster: CardPoster,
   Text: CardText,
 };
 
