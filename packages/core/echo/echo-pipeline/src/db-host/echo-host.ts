@@ -17,6 +17,7 @@ import { IndexMetadataStore, IndexStore, Indexer } from '@dxos/indexing';
 import { invariant } from '@dxos/invariant';
 import { type PublicKey, type SpaceId } from '@dxos/keys';
 import { type LevelDB } from '@dxos/kv-store';
+import { log } from '@dxos/log';
 import { IndexKind } from '@dxos/protocols/proto/dxos/echo/indexing';
 import { trace } from '@dxos/tracing';
 
@@ -97,6 +98,8 @@ export class EchoHost extends Resource {
 
   private _updateIndexes!: DeferredTask;
 
+  private _indexesUpToDate = false;
+
   constructor({ kv, indexing = {}, peerIdProvider, getSpaceKeyByRootDocumentId, runtime }: EchoHostProps) {
     super();
 
@@ -139,6 +142,8 @@ export class EchoHost extends Resource {
     this._queryService = new QueryServiceImpl({
       automergeHost: this._automergeHost,
       indexer: this._indexer,
+      indexer2: this._indexer2,
+      runtime: this._runtime,
       spaceStateManager: this._spaceStateManager,
     });
 
@@ -147,6 +152,9 @@ export class EchoHost extends Resource {
       spaceStateManager: this._spaceStateManager,
       updateIndexes: async () => {
         await this._indexer.updateIndexes();
+        do {
+          await this._updateIndexes.runBlocking();
+        } while(!this._indexesUpToDate);
       },
     });
 
@@ -215,7 +223,7 @@ export class EchoHost extends Resource {
     await this._indexer.open(ctx);
     await this._queryService.open(ctx);
     await this._spaceStateManager.open(ctx);
-    await this._indexer2.migrate();
+    await this._indexer2.migrate().pipe(runWithRuntimeProvider(this._runtime));
 
     this._updateIndexes = new DeferredTask(this._ctx, this._runUpdateIndexes);
     this._spaceStateManager.spaceDocumentListUpdated.on(this._ctx, (e) => {
@@ -336,15 +344,23 @@ export class EchoHost extends Resource {
     this._automergeHost.refreshCollection(deriveCollectionIdFromSpaceId(spaceId, root.documentId));
   }
 
-  private async _runUpdateIndexes(): Promise<void> {
+  private _runUpdateIndexes = async (): Promise<void> => {
+    if (!this._indexer2) {
+      // Indexer not initialized yet, skip this update cycle.
+      return;
+    }
     const { updated } = await this._indexer2
       .update(this._automergeDataSource, { spaceId: null, limit: 50 })
       .pipe(runWithRuntimeProvider(this._runtime));
-    await sleep(250);
+    log.verbose('indexer2 update completed', { updated });
+    await sleep(1);
     if (updated > 0) {
+      this._indexesUpToDate = false;
       this._updateIndexes.schedule();
+    } else {
+      this._indexesUpToDate = true;
     }
-  }
+  };
 }
 
 export type { EchoDataStats };

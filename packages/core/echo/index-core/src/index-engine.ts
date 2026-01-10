@@ -75,11 +75,42 @@ export class IndexEngine {
     });
   }
 
+  /**
+   * Query text index and return full object metadata.
+   */
   queryText(query: FtsQuery) {
-    return this.#ftsIndex.query(query);
+    return Effect.gen(this, function* () {
+      const ftsResults = yield* this.#ftsIndex.query(query);
+      if (ftsResults.length === 0) {
+        return [];
+      }
+
+      const recordIds = ftsResults.map((r) => r.rowid);
+      const metaResults = yield* this.#objectMetaIndex.lookupByRecordIds(recordIds);
+
+      // Map metadata by recordId for efficient lookup.
+      const metaByRecordId = new Map(metaResults.map((m) => [m.recordId, m]));
+
+      // Return combined results with metadata and snapshot.
+      return ftsResults
+        .map((fts) => {
+          const meta = metaByRecordId.get(fts.rowid);
+          if (!meta) {
+            return null;
+          }
+          return {
+            objectId: meta.objectId,
+            spaceId: meta.spaceId,
+            documentId: meta.documentId,
+            snapshot: fts.snapshot,
+          };
+        })
+        .filter((r) => r !== null);
+    });
   }
 
   queryReverseRef(query: ReverseRefQuery) {
+    // TODO(mykola): Join with metadata table here.
     return this.#reverseRefIndex.query(query);
   }
 

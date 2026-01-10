@@ -631,7 +631,7 @@ describe('Query', () => {
     });
   });
 
-  describe.skip('text search', () => {
+  describe.skip('text search (old indexer)', () => {
     test('vector', async () => {
       const { db } = await builder.createDatabase({
         indexing: { vector: true },
@@ -689,6 +689,90 @@ describe('Query', () => {
 
       {
         const objects = await db.query(Query.select(Filter.text('animal', { type: 'full-text' }))).run();
+        expect(objects).toHaveLength(0);
+      }
+    });
+  });
+
+  describe.only('indexer2 text search', () => {
+    test('full-text search via indexer2', async () => {
+      const { db } = await builder.createDatabase();
+
+      db.add(Obj.make(Type.Expando, { title: 'Introduction to TypeScript' }));
+      db.add(Obj.make(Type.Expando, { title: 'Getting Started with React' }));
+      db.add(Obj.make(Type.Expando, { title: 'Advanced Python Programming' }));
+      await db.flush({ indexes: true });
+      const objects = await db.query(Query.select(Filter.text('TypeScript', { type: 'full-text' }))).run();
+      expect(objects).toHaveLength(1);
+      expect(objects[0].title).toEqual('Introduction to TypeScript');
+
+      // Verify specific search results.
+      {
+        const objects = await db.query(Query.select(Filter.text('TypeScript', { type: 'full-text' }))).run();
+        expect(objects).toHaveLength(1);
+        expect(objects[0].title).toEqual('Introduction to TypeScript');
+      }
+
+      {
+        const objects = await db.query(Query.select(Filter.text('React', { type: 'full-text' }))).run();
+        expect(objects).toHaveLength(1);
+        expect(objects[0].title).toEqual('Getting Started with React');
+      }
+
+      {
+        const objects = await db.query(Query.select(Filter.text('Python', { type: 'full-text' }))).run();
+        expect(objects).toHaveLength(1);
+        expect(objects[0].title).toEqual('Advanced Python Programming');
+      }
+
+      // Non-matching query.
+      {
+        const objects = await db.query(Query.select(Filter.text('JavaScript', { type: 'full-text' }))).run();
+        expect(objects).toHaveLength(0);
+      }
+    });
+
+    test('full-text search across multiple matching objects', async () => {
+      const { db } = await builder.createDatabase();
+
+      db.add(Obj.make(Type.Expando, { title: 'Programming with JavaScript' }));
+      db.add(Obj.make(Type.Expando, { title: 'JavaScript Best Practices' }));
+      db.add(Obj.make(Type.Expando, { title: 'Python for Data Science' }));
+      await db.flush({ indexes: true });
+
+      const objects = await db.query(Query.select(Filter.text('JavaScript', { type: 'full-text' }))).run();
+      expect(objects).toHaveLength(2);
+      expect(objects.map((o) => o.title).sort()).toEqual(
+        ['JavaScript Best Practices', 'Programming with JavaScript'].sort(),
+      );
+    });
+
+    test('full-text search after content update', async () => {
+      const { db } = await builder.createDatabase();
+
+      const obj = db.add(Obj.make(Type.Expando, { title: 'Original Title' }));
+      await db.flush({ indexes: true });
+
+      // Poll until indexer2 has processed the document.
+      {
+        const objects = await db.query(Query.select(Filter.text('Original', { type: 'full-text' }))).run();
+        expect(objects).toHaveLength(1);
+      }
+
+      // Update the object.
+      obj.title = 'Updated Title';
+      await db.flush({ indexes: true });
+
+      // Verify search results.
+      {
+        const objects = await db.query(Query.select(Filter.text('Updated', { type: 'full-text' }))).run();
+        expect(objects).toHaveLength(1);
+        expect(objects[0].title).toEqual('Updated Title');
+      }
+
+      // Original content should no longer match.
+      {
+        const objects = await db.query(Query.select(Filter.text('Original', { type: 'full-text' }))).run();
         expect(objects).toHaveLength(0);
       }
     });

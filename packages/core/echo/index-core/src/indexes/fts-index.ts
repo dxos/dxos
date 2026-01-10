@@ -33,11 +33,11 @@ export class FtsIndex implements Index {
     yield* sql`CREATE VIRTUAL TABLE IF NOT EXISTS ftsIndex USING fts5(snapshot)`;
   });
 
-  query({ query }: FtsQuery) {
+  query({ query }: FtsQuery): Effect.Effect<readonly FtsResult[], SqlError.SqlError, SqlClient.SqlClient> {
     return Effect.gen(function* () {
       const sql = yield* SqlClient.SqlClient;
-      const result = yield* sql<FtsResult>`SELECT rowid, * FROM ftsIndex WHERE ftsIndex MATCH ${query} LIMIT 10`;
-      return result as readonly FtsResult[];
+      // TODO: Join metadata table here.
+      return yield* sql<FtsResult>`SELECT rowid, * FROM ftsIndex WHERE ftsIndex MATCH ${query} LIMIT 10`;
     });
   }
 

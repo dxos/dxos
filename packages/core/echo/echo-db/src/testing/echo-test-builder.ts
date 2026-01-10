@@ -92,7 +92,6 @@ export class EchoTestPeer extends Resource {
     this._kv = kv;
     this._indexing = indexing;
     this._types = types ?? [];
-    this._initEcho();
   }
 
   private _initEcho(): void {
@@ -125,6 +124,7 @@ export class EchoTestPeer extends Resource {
         Reactivity.layer,
       ).pipe(Layer.orDie),
     );
+    this._initEcho();
     this._echoClient.connectToService({
       dataService: this._echoHost.dataService,
       queryService: this._echoHost.queryService,
@@ -149,7 +149,6 @@ export class EchoTestPeer extends Resource {
    */
   async reload(): Promise<void> {
     await this.close();
-    this._initEcho();
     await this.open();
   }
 
