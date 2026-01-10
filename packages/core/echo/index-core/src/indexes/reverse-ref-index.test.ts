@@ -14,6 +14,9 @@ import { DXN, ObjectId, SpaceId } from '@dxos/keys';
 import type { IndexerObject } from './interface';
 import { ReverseRefIndex } from './reverse-ref-index';
 
+const TYPE_PERSON = DXN.parse('dxn:type:example.com/type/Person:0.1.0').toString();
+const TYPE_EXAMPLE = 'example.Type';
+
 const TestLayer = Layer.merge(
   SqliteClient.layer({
     filename: ':memory:',
@@ -39,7 +42,7 @@ describe('ReverseRefIndex', () => {
         recordId: 1,
         data: {
           id: sourceObjectId,
-          [ATTR_TYPE]: DXN.parse('dxn:type:example.com/type/Person:0.1.0').toString(),
+          [ATTR_TYPE]: TYPE_PERSON,
           contact: { '/': targetDxn },
         },
       };
@@ -72,7 +75,7 @@ describe('ReverseRefIndex', () => {
         recordId: 1,
         data: {
           id: sourceObjectId,
-          [ATTR_TYPE]: 'example.Type',
+          [ATTR_TYPE]: TYPE_EXAMPLE,
           nested: {
             deep: {
               ref: { '/': targetDxn1 },
@@ -113,7 +116,7 @@ describe('ReverseRefIndex', () => {
         recordId: 1,
         data: {
           id: sourceObjectId,
-          [ATTR_TYPE]: 'example.Type',
+          [ATTR_TYPE]: TYPE_EXAMPLE,
           items: [{ '/': targetDxn1 }, { '/': targetDxn2 }],
         },
       };
@@ -152,7 +155,7 @@ describe('ReverseRefIndex', () => {
         recordId,
         data: {
           id: sourceObjectId,
-          [ATTR_TYPE]: 'example.Type',
+          [ATTR_TYPE]: TYPE_EXAMPLE,
           contact: { '/': targetDxn1 },
         },
       };
@@ -170,7 +173,7 @@ describe('ReverseRefIndex', () => {
         recordId,
         data: {
           id: sourceObjectId,
-          [ATTR_TYPE]: 'example.Type',
+          [ATTR_TYPE]: TYPE_EXAMPLE,
           contact: { '/': targetDxn2 },
         },
       };
@@ -202,7 +205,7 @@ describe('ReverseRefIndex', () => {
         recordId: 1,
         data: {
           id: sourceObjectId,
-          [ATTR_TYPE]: 'example.Type',
+          [ATTR_TYPE]: TYPE_EXAMPLE,
           name: 'Test Object',
           count: 42,
         },
@@ -233,7 +236,7 @@ describe('ReverseRefIndex', () => {
         recordId: 1,
         data: {
           id: sourceObjectId,
-          [ATTR_TYPE]: 'example.Type',
+          [ATTR_TYPE]: TYPE_EXAMPLE,
           ref: { '/': targetDxn },
         },
       };

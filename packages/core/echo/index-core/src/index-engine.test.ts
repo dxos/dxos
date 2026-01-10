@@ -16,6 +16,10 @@ import { type DataSourceCursor, type IndexDataSource, IndexEngine } from './inde
 import { type IndexCursor, IndexTracker } from './index-tracker';
 import { FtsIndex, type IndexerObject, ObjectMetaIndex, ReverseRefIndex, type Snapshot } from './indexes';
 
+const TYPE_DEFAULT = DXN.parse('dxn:type:test.com/type/Type:0.1.0').toString();
+const TYPE_A = DXN.parse('dxn:type:test.com/type/TypeA:0.1.0').toString();
+const TYPE_B = DXN.parse('dxn:type:test.com/type/TypeB:0.1.0').toString();
+
 const TestLayer = Layer.merge(
   SqliteClient.layer({
     filename: ':memory:',
@@ -114,7 +118,7 @@ describe('IndexEngine', () => {
         recordId: null,
         data: {
           id: ObjectId.random(),
-          [ATTR_TYPE]: DXN.parse('dxn:type:test.com/type/Type:0.1.0').toString(),
+          [ATTR_TYPE]: TYPE_DEFAULT,
           title: 'Hello',
         },
       };
@@ -126,8 +130,8 @@ describe('IndexEngine', () => {
       // Updates objectMeta, FTS, and reverseRef indexes.
       expect(updated).toBe(2);
 
-      // Verify using the SAME index instance
-      const results1 = yield* metaIndex.query({ spaceId: spaceId.toString(), typeDxn: 'test.Type' });
+      // Verify using the SAME index instance.
+      const results1 = yield* metaIndex.query({ spaceId: spaceId.toString(), typeDxn: TYPE_DEFAULT });
       expect(results1).toHaveLength(1);
       expect(results1[0].objectId).toBe(obj1.data.id);
       expect(results1[0].version).toBeGreaterThan(0);
@@ -151,8 +155,8 @@ describe('IndexEngine', () => {
       const { updated: updated2 } = yield* engine.update(dataSource, { spaceId });
       expect(updated2).toBe(2);
 
-      // Verify update
-      const results2 = yield* metaIndex.query({ spaceId: spaceId.toString(), typeDxn: 'test.Type' });
+      // Verify update.
+      const results2 = yield* metaIndex.query({ spaceId: spaceId.toString(), typeDxn: TYPE_DEFAULT });
       expect(results2).toHaveLength(1);
       expect(results2[0].objectId).toBe(obj1Updated.data.id);
       expect(results2[0].version).toBeGreaterThan(results1[0].version);
@@ -179,7 +183,7 @@ describe('IndexEngine', () => {
           recordId: null,
           data: {
             id: ObjectId.random(),
-            [ATTR_TYPE]: DXN.parse('dxn:type:test.com/type/TypeA:0.1.0').toString(),
+            [ATTR_TYPE]: TYPE_A,
             val: 1,
           },
         },
@@ -190,7 +194,7 @@ describe('IndexEngine', () => {
           recordId: null,
           data: {
             id: ObjectId.random(),
-            [ATTR_TYPE]: DXN.parse('dxn:type:test.com/type/TypeA:0.1.0').toString(),
+            [ATTR_TYPE]: TYPE_A,
             val: 2,
           },
         },
@@ -201,7 +205,7 @@ describe('IndexEngine', () => {
           recordId: null,
           data: {
             id: ObjectId.random(),
-            [ATTR_TYPE]: DXN.parse('dxn:type:test.com/type/TypeB:0.1.0').toString(),
+            [ATTR_TYPE]: TYPE_B,
             val: 3,
           },
         },
@@ -211,10 +215,10 @@ describe('IndexEngine', () => {
 
       yield* engine.update(dataSource, { spaceId });
 
-      const resultsA = yield* metaIndex.query({ spaceId: spaceId.toString(), typeDxn: 'test.TypeA' });
+      const resultsA = yield* metaIndex.query({ spaceId: spaceId.toString(), typeDxn: TYPE_A });
       expect(resultsA).toHaveLength(2);
 
-      const resultsB = yield* metaIndex.query({ spaceId: spaceId.toString(), typeDxn: 'test.TypeB' });
+      const resultsB = yield* metaIndex.query({ spaceId: spaceId.toString(), typeDxn: TYPE_B });
       expect(resultsB).toHaveLength(1);
 
       const ftsResults = yield* ftsIndex.query('TypeA');

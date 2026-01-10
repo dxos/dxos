@@ -15,6 +15,9 @@ import { DXN, ObjectId, SpaceId } from '@dxos/keys';
 import { FtsIndex } from './fts-index';
 import type { IndexerObject } from './interface';
 
+const TYPE_PERSON = DXN.parse('dxn:type:example.com/type/Person:0.1.0').toString();
+const TYPE_DEFAULT = DXN.parse('dxn:type:test.com/type/Type:0.1.0').toString();
+
 const TestLayer = Layer.merge(
   SqliteClient.layer({
     filename: ':memory:',
@@ -53,7 +56,7 @@ describe('FtsIndex', () => {
           recordId: 1,
           data: {
             id: ObjectId.random(),
-            [ATTR_TYPE]: DXN.parse('dxn:type:example.com/type/Person:0.1.0').toString(),
+            [ATTR_TYPE]: TYPE_PERSON,
             title: 'Hello Effect',
             body: 'This is a message about Effect and SQL.',
           },
@@ -106,7 +109,7 @@ describe('FtsIndex', () => {
         recordId,
         data: {
           id: objectId,
-          [ATTR_TYPE]: DXN.parse('dxn:type:test.com/type/Type:0.1.0').toString(),
+          [ATTR_TYPE]: TYPE_DEFAULT,
           title: 'Updated Title',
         },
       };
@@ -137,7 +140,7 @@ describe('FtsIndex', () => {
           recordId: 100,
           data: {
             id: ObjectId.random(),
-            [ATTR_TYPE]: DXN.parse('dxn:type:example.com/type/Person:0.1.0').toString(),
+            [ATTR_TYPE]: TYPE_PERSON,
             title: 'Alpha Document',
           },
         },
@@ -148,7 +151,7 @@ describe('FtsIndex', () => {
           recordId: 200,
           data: {
             id: ObjectId.random(),
-            [ATTR_TYPE]: DXN.parse('dxn:type:example.com/type/Person:0.1.0').toString(),
+            [ATTR_TYPE]: TYPE_PERSON,
             title: 'Beta Document',
           },
         },
@@ -159,7 +162,7 @@ describe('FtsIndex', () => {
           recordId: 1000,
           data: {
             id: ObjectId.random(),
-            [ATTR_TYPE]: DXN.parse('dxn:type:example.com/type/Person:0.1.0').toString(),
+            [ATTR_TYPE]: TYPE_PERSON,
             title: 'Gamma Document',
           },
         },

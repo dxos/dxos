@@ -14,6 +14,10 @@ import { DXN, ObjectId, SpaceId } from '@dxos/keys';
 import type { IndexerObject } from './interface';
 import { ObjectMetaIndex } from './object-meta-index';
 
+const TYPE_PERSON = DXN.parse('dxn:type:example.com/type/Person:0.1.0').toString();
+const TYPE_RELATION = DXN.parse('dxn:type:example.com/type/Relation:0.1.0').toString();
+const TYPE_RELATION_UPDATED = DXN.parse('dxn:type:example.com/type/RelationUpdated:0.1.0').toString();
+
 const TestLayer = Layer.merge(
   SqliteClient.layer({
     filename: ':memory:',
@@ -38,7 +42,7 @@ describe('ObjectMetaIndex', () => {
         recordId: null,
         data: {
           id: objectId1,
-          [ATTR_TYPE]: DXN.parse('dxn:type:example.com/type/Person:0.1.0').toString(),
+          [ATTR_TYPE]: TYPE_PERSON,
           [ATTR_DELETED]: false,
         },
       };
@@ -50,7 +54,7 @@ describe('ObjectMetaIndex', () => {
         recordId: null,
         data: {
           id: objectId2,
-          [ATTR_TYPE]: DXN.parse('dxn:type:example.com/type/Relation:0.1.0').toString(),
+          [ATTR_TYPE]: TYPE_RELATION,
           [ATTR_RELATION_SOURCE]: DXN.parse(`dxn:echo:${spaceId}:${ObjectId.random()}}`).toString(),
           [ATTR_RELATION_TARGET]: DXN.parse(`dxn:echo:${spaceId}:${ObjectId.random()}}`).toString(),
           [ATTR_DELETED]: false,
@@ -61,18 +65,12 @@ describe('ObjectMetaIndex', () => {
       yield* index.update([item1, item2]);
 
       // Verify Query.
-      const results = yield* index.query({
-        spaceId,
-        typeDxn: DXN.parse('dxn:type:example.com/type/Person:0.1.0').toString(),
-      });
+      const results = yield* index.query({ spaceId, typeDxn: TYPE_PERSON });
       expect(results.length).toBe(1);
       expect(results[0].objectId).toBe(objectId1);
       expect(results[0].version).toBe(1);
 
-      const relationResults = yield* index.query({
-        spaceId,
-        typeDxn: DXN.parse('dxn:type:example.com/type/Relation:0.1.0').toString(),
-      });
+      const relationResults = yield* index.query({ spaceId, typeDxn: TYPE_RELATION });
       expect(relationResults.length).toBe(1);
       expect(relationResults[0].objectId).toBe(objectId2);
       expect(relationResults[0].entityKind).toBe('relation');
@@ -91,10 +89,7 @@ describe('ObjectMetaIndex', () => {
 
       yield* index.update([item1Update]);
 
-      const updatedResults = yield* index.query({
-        spaceId,
-        typeDxn: DXN.parse('dxn:type:example.com/type/Person:0.1.0').toString(),
-      });
+      const updatedResults = yield* index.query({ spaceId, typeDxn: TYPE_PERSON });
       // Depending on implementation, query might filter deleted or not.
       // Current implementation is SELECT * without deleted filter for queryType
       expect(updatedResults.length).toBe(1);
@@ -106,21 +101,18 @@ describe('ObjectMetaIndex', () => {
         ...item2,
         data: {
           ...item2.data,
-          [ATTR_TYPE]: DXN.parse('dxn:type:example.com/type/RelationUpdated:0.1.0').toString(),
+          [ATTR_TYPE]: TYPE_RELATION_UPDATED,
         },
       };
 
       yield* index.update([item2Update]);
 
-      const newTypeResults = yield* index.query({ spaceId, typeDxn: 'example.RelationUpdated' });
+      const newTypeResults = yield* index.query({ spaceId, typeDxn: TYPE_RELATION_UPDATED });
       expect(newTypeResults.length).toBe(1);
       expect(newTypeResults[0].version).toBe(4);
       expect(newTypeResults[0].objectId).toBe(objectId2);
 
-      const oldTypeResults = yield* index.query({
-        spaceId,
-        typeDxn: DXN.parse('dxn:type:example.com/type/Relation:0.1.0').toString(),
-      });
+      const oldTypeResults = yield* index.query({ spaceId, typeDxn: TYPE_RELATION });
       expect(oldTypeResults.length).toBe(0);
     }).pipe(Effect.provide(TestLayer)),
   );
