@@ -6,7 +6,6 @@
     ]
   },
   "include": [
-    "../../stories/stories-ui/src/MosaicSurface.stories.tsx",
     "src"
   ],
   "references": [

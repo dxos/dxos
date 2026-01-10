@@ -11,9 +11,9 @@ import { ClientPlugin, StorybookPlugin, corePlugins } from '@dxos/plugin-testing
 import { faker } from '@dxos/random';
 import { useSpaces } from '@dxos/react-client/echo';
 import { IconButton, Toolbar } from '@dxos/react-ui';
-import { Board, DebugRoot, TestColumn, TestItem } from '@dxos/react-ui/mosaic/testing';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Focus, Mosaic } from '@dxos/react-ui-mosaic';
+import { Board, DebugRoot, TestColumn, TestItem } from '@dxos/react-ui-mosaic/testing';
 import { type ValueGenerator, createObjectFactory } from '@dxos/schema/testing';
 import { Organization, Person, Project } from '@dxos/types';
 import { mx } from '@dxos/ui-theme';
