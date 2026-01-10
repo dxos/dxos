@@ -7,6 +7,7 @@ import { type AnyDocumentId, type AutomergeUrl, type DocHandle, type DocumentId 
 import { Context, LifecycleState, Resource } from '@dxos/context';
 import { todo } from '@dxos/debug';
 import { type DatabaseDirectory, SpaceDocVersion, createIdFromSpaceKey } from '@dxos/echo-protocol';
+import { Indexer as IndexCoreIndexer } from '@dxos/index-core';
 import { IndexMetadataStore, IndexStore, Indexer } from '@dxos/indexing';
 import { invariant } from '@dxos/invariant';
 import { type PublicKey, type SpaceId } from '@dxos/keys';
@@ -26,6 +27,7 @@ import {
   deriveCollectionIdFromSpaceId,
 } from '../automerge';
 
+import { AutomergeDataSource } from './automerge-data-source';
 import { DataServiceImpl } from './data-service';
 import { type DatabaseRoot } from './database-root';
 import { createSelectedDocumentsIterator } from './documents-iterator';
@@ -67,6 +69,7 @@ export type EchoHostProps = {
 export class EchoHost extends Resource {
   private readonly _indexMetadataStore: IndexMetadataStore;
   private readonly _indexer: Indexer;
+  private readonly _indexer2: IndexCoreIndexer;
   private readonly _automergeHost: AutomergeHost;
   private readonly _queryService: QueryServiceImpl;
   private readonly _dataService: DataServiceImpl;
@@ -105,6 +108,11 @@ export class EchoHost extends Resource {
         ...(indexingConfig.fullText ? [{ kind: IndexKind.Kind.FULL_TEXT }] : []),
         ...(indexingConfig.vector ? [{ kind: IndexKind.Kind.VECTOR }] : []),
       ],
+    });
+
+    // New index-core Indexer for text queries.
+    this._indexer2 = new IndexCoreIndexer({
+      dataSource: new AutomergeDataSource(this._automergeHost),
     });
 
     this._queryService = new QueryServiceImpl({
@@ -172,6 +180,13 @@ export class EchoHost extends Resource {
 
   get roots(): ReadonlyMap<DocumentId, DatabaseRoot> {
     return this._spaceStateManager.roots;
+  }
+
+  /**
+   * New index-core indexer for text and other queries.
+   */
+  get indexer2(): IndexCoreIndexer {
+    return this._indexer2;
   }
 
   protected override async _open(ctx: Context): Promise<void> {
@@ -266,7 +281,7 @@ export class EchoHost extends Resource {
   }
 
   // TODO(dmaretskyi): Change to document id.
-  async closeSpaceRoot(automergeUrl: AutomergeUrl): Promise<void> {
+  async closeSpaceRoot(_automergeUrl: AutomergeUrl): Promise<void> {
     todo();
   }
 

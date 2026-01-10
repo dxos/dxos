@@ -6,30 +6,16 @@ import { type Heads } from '@automerge/automerge';
 import { type DocumentId } from '@automerge/automerge-repo';
 import * as Effect from 'effect/Effect';
 
+import { Context } from '@dxos/context';
 import { type Obj } from '@dxos/echo';
 import { ATTR_DELETED, ATTR_RELATION_SOURCE, ATTR_RELATION_TARGET, ATTR_TYPE } from '@dxos/echo/internal';
-import { type DatabaseDirectory, ObjectStructure, SpaceDocVersion } from '@dxos/echo-protocol';
+import { DatabaseDirectory, ObjectStructure, SpaceDocVersion } from '@dxos/echo-protocol';
 import { type DataSourceCursor, type IndexDataSource, type IndexerObject } from '@dxos/index-core';
 import { type IndexCursor } from '@dxos/index-core';
 import { type DXN, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 
-export interface AutomergeDataSourceParams {
-  /**
-   * Get all document IDs for a space.
-   */
-  getDocumentIds: (spaceId: SpaceId) => DocumentId[];
-
-  /**
-   * Get current heads for documents.
-   */
-  getHeads: (documentIds: DocumentId[]) => Promise<(Heads | undefined)[]>;
-
-  /**
-   * Load a document by ID.
-   */
-  loadDocument: (documentId: DocumentId) => Promise<DatabaseDirectory | undefined>;
-}
+import { type AutomergeHost } from '../automerge';
 
 const HEADS_DELIMITER = '|';
 
@@ -75,15 +61,15 @@ const objectStructureToJson = (objectId: string, structure: ObjectStructure): Ob
 
 /**
  * Data source that fetches objects from AutomergeHost.
- * Tracks document heads as cursors to detect changes.
+ * Iterates all documents from HeadsStore and tracks document heads as cursors to detect changes.
  */
 export class AutomergeDataSource implements IndexDataSource {
   readonly sourceName = 'automerge';
 
-  readonly #params: AutomergeDataSourceParams;
+  readonly #automergeHost: AutomergeHost;
 
-  constructor(params: AutomergeDataSourceParams) {
-    this.#params = params;
+  constructor(automergeHost: AutomergeHost) {
+    this.#automergeHost = automergeHost;
   }
 
   getChangedObjects(
@@ -99,46 +85,33 @@ export class AutomergeDataSource implements IndexDataSource {
         }
       }
 
-      // Get spaceId from cursors (all cursors should have the same spaceId).
-      const spaceId = cursors[0]?.spaceId;
-      if (!spaceId) {
-        return { objects: [], cursors: [] };
-      }
+      // Find changed documents by iterating all documents from HeadsStore.
+      const changedDocuments = yield* Effect.promise(async () => {
+        const result: { documentId: DocumentId; heads: Heads }[] = [];
+        const limit = opts?.limit ?? Infinity;
 
-      // Get all document IDs for the space.
-      const documentIds = this.#params.getDocumentIds(spaceId);
-      if (documentIds.length === 0) {
-        return { objects: [], cursors: [] };
-      }
-
-      // Get current heads for all documents.
-      const heads = yield* Effect.promise(() => this.#params.getHeads(documentIds));
-
-      // Find changed documents.
-      const changedDocuments: { documentId: DocumentId; heads: Heads }[] = [];
-      for (let i = 0; i < documentIds.length; i++) {
-        const documentId = documentIds[i];
-        const currentHeads = heads[i];
-        if (!currentHeads) {
-          continue; // Document not available.
+        for await (const { documentId, heads } of this.#automergeHost.listDocumentHeads()) {
+          const existingCursor = cursorMap.get(documentId);
+          if (hasChanged(existingCursor, heads)) {
+            result.push({ documentId, heads });
+            if (result.length >= limit) {
+              break;
+            }
+          }
         }
-
-        const existingCursor = cursorMap.get(documentId);
-        if (hasChanged(existingCursor, currentHeads)) {
-          changedDocuments.push({ documentId, heads: currentHeads });
-        }
-      }
-
-      // Apply limit if specified.
-      const documentsToProcess = opts?.limit ? changedDocuments.slice(0, opts.limit) : changedDocuments;
+        return result;
+      });
 
       // Load changed documents and extract objects.
       const objects: IndexerObject[] = [];
       const updatedCursors: DataSourceCursor[] = [];
 
-      for (const { documentId, heads: docHeads } of documentsToProcess) {
+      for (const { documentId, heads: docHeads } of changedDocuments) {
         try {
-          const doc = yield* Effect.promise(() => this.#params.loadDocument(documentId));
+          const handle = yield* Effect.promise(() =>
+            this.#automergeHost.loadDoc<DatabaseDirectory>(Context.default(), documentId),
+          );
+          const doc = handle.doc();
           if (!doc) {
             continue;
           }
@@ -147,6 +120,14 @@ export class AutomergeDataSource implements IndexDataSource {
           if (doc.version !== SpaceDocVersion.CURRENT) {
             continue;
           }
+
+          // Extract spaceId from document.
+          const spaceKeyHex = DatabaseDirectory.getSpaceKey(doc);
+          if (!spaceKeyHex) {
+            // Skip documents without a space key.
+            continue;
+          }
+          const spaceId = spaceKeyHex as SpaceId;
 
           // Extract objects from the document.
           const docObjects = doc.objects ?? {};

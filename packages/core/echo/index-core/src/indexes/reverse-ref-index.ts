@@ -47,6 +47,11 @@ export const ReverseRef = Schema.Struct({
 });
 export interface ReverseRef extends Schema.Schema.Type<typeof ReverseRef> {}
 
+export interface ReverseRefQuery {
+  targetDxn: string;
+  // TODO: Add prop filter
+}
+
 /**
  * Indexes reverse references - tracks which objects reference which targets.
  * Only indexes references, not relations.
@@ -69,7 +74,7 @@ export class ReverseRefIndex implements Index {
    * Query all references pointing to a target DXN.
    */
   query = Effect.fn('ReverseRefIndex.query')(
-    (targetDxn: string): Effect.Effect<readonly ReverseRef[], SqlError.SqlError, SqlClient.SqlClient> =>
+    ({ targetDxn }: ReverseRefQuery): Effect.Effect<readonly ReverseRef[], SqlError.SqlError, SqlClient.SqlClient> =>
       Effect.gen(function* () {
         const sql = yield* SqlClient.SqlClient;
         const rows = yield* sql`SELECT * FROM reverseRef WHERE targetDxn = ${targetDxn}`;

@@ -615,6 +615,13 @@ export class AutomergeHost extends Resource {
     return result;
   }
 
+  /**
+   * Iterate over all document heads stored on disk.
+   */
+  listDocumentHeads(): AsyncGenerator<{ documentId: DocumentId; heads: Heads }> {
+    return this._headsStore.iterateAll();
+  }
+
   //
   // Collection sync.
   //

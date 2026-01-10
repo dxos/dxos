@@ -14,6 +14,10 @@ export const Snapshot = Schema.Struct({
 });
 export interface Snapshot extends Schema.Schema.Type<typeof Snapshot> {}
 
+export interface FtsQuery {
+  query: string;
+}
+
 export class FtsIndex implements Index {
   migrate = Effect.fn('FtsIndex.migrate')(function* () {
     const sql = yield* SqlClient.SqlClient;
@@ -23,10 +27,10 @@ export class FtsIndex implements Index {
     yield* sql`CREATE VIRTUAL TABLE IF NOT EXISTS ftsIndex USING fts5(snapshot)`;
   });
 
-  query(query: string) {
+  query({ query }: FtsQuery) {
     return Effect.gen(function* () {
       const sql = yield* SqlClient.SqlClient;
-      const result = yield* sql<Snapshot>`SELECT * FROM ftsIndex WHERE ftsIndex MATCH ${query}`;
+      const result = yield* sql<Snapshot>`SELECT * FROM ftsIndex WHERE ftsIndex MATCH ${query} LIMIT 10`;
       return result as readonly Snapshot[];
     });
   }

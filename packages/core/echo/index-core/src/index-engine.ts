@@ -8,8 +8,8 @@ import * as Effect from 'effect/Effect';
 
 import type { SpaceId } from '@dxos/keys';
 
-import { type IndexCursor, type IndexTracker } from './index-tracker';
-import type { FtsIndex, Index, IndexerObject, ObjectMetaIndex, ReverseRefIndex } from './indexes';
+import { type IndexCursor, IndexTracker } from './index-tracker';
+import { FtsIndex, type FtsQuery, type Index, type IndexerObject, type ObjectMeta, ObjectMetaIndex, ReverseRefIndex, ReverseRefQuery } from './indexes';
 
 /**
  * Cursor into indexable data-source.
@@ -45,19 +45,24 @@ export interface IndexEngineParams {
 }
 
 export class IndexEngine {
-  readonly #tracker: IndexTracker;
-  readonly #objectMetaIndex: ObjectMetaIndex;
-  readonly #ftsIndex: FtsIndex;
-  readonly #reverseRefIndex: ReverseRefIndex;
+  readonly #tracker = new IndexTracker();
+  readonly #objectMetaIndex = new ObjectMetaIndex();
+  readonly #ftsIndex = new FtsIndex();
+  readonly #reverseRefIndex = new ReverseRefIndex();
 
-  constructor({ tracker, objectMetaIndex, ftsIndex, reverseRefIndex }: IndexEngineParams) {
-    this.#tracker = tracker;
-    this.#objectMetaIndex = objectMetaIndex;
-    this.#ftsIndex = ftsIndex;
-    this.#reverseRefIndex = reverseRefIndex;
+  queryText(query: FtsQuery) {
+    return this.#ftsIndex.query(query);
   }
 
-  update(dataSource: IndexDataSource, opts: { spaceId: SpaceId; limit?: number }) {
+  queryReverseRef(query: ReverseRefQuery) {
+    return this.#reverseRefIndex.query(query);
+  }
+
+  queryType(query: Pick<ObjectMeta, 'spaceId' | 'typeDxn'>,) {
+    return this.#objectMetaIndex.query(query);
+  }
+
+  update(dataSource: IndexDataSource, opts: { spaceId: SpaceId | null; limit?: number }) {
     return Effect.gen(this, function* () {
       let updated = 0;
 
@@ -91,7 +96,7 @@ export class IndexEngine {
   #update(
     index: Index,
     source: IndexDataSource,
-    opts: { indexName: string; spaceId: SpaceId; limit?: number },
+    opts: { indexName: string; spaceId: SpaceId | null; limit?: number },
   ): Effect.Effect<{ updated: number }, SqlError.SqlError, SqlClient.SqlClient> {
     return Effect.gen(this, function* () {
       const sql = yield* SqlClient.SqlClient;

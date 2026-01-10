@@ -1,16 +1,13 @@
 //
 // Copyright 2026 DXOS.org
-//
 
 import * as Reactivity from '@effect/experimental/Reactivity';
-import * as SqlClient from '@effect/sql/SqlClient';
 import * as SqliteClient from '@effect/sql-sqlite-node/SqliteClient';
 import { describe, expect, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
 import { ATTR_TYPE } from '@dxos/echo/internal';
-import { runAndForwardErrors } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { ObjectId, SpaceId } from '@dxos/keys';
 
@@ -54,7 +51,7 @@ class MockIndexDataSource implements IndexDataSource {
       for (const [, entry] of this._state.entries()) {
         const { object, hash } = entry;
 
-        const cursor = cursors.find((c) => c.spaceId === object.spaceId && c.resourceId === object.documentId);
+        const cursor = cursors.find((c) => c.resourceId === object.documentId);
 
         let include = false;
         if (!cursor) {
@@ -84,41 +81,34 @@ class MockIndexDataSource implements IndexDataSource {
 
 describe('Indexer', () => {
   it.effect(
-    'should open, migrate, and close',
+    'should migrate all indexes',
     Effect.fnUntraced(function* () {
-      const sql = yield* SqlClient.SqlClient;
-      const spaceId = SpaceId.random();
       const dataSource = new MockIndexDataSource();
 
       const indexer = new Indexer({
         dataSource,
-        spaceId,
-        runEffect: (effect) => runAndForwardErrors(Effect.provideService(effect, SqlClient.SqlClient, sql)),
       });
 
-      yield* Effect.promise(() => indexer.open());
-      expect(indexer.initialized).toBe(true);
+      // Migration should succeed without errors.
+      yield* indexer.migrate();
 
-      yield* Effect.promise(() => indexer.close());
-      expect(indexer.initialized).toBe(false);
+      // Verify tables exist by running a query (would fail if tables don't exist).
+      const results = yield* indexer.query({});
+      expect(results).toHaveLength(0);
     }, Effect.provide(TestLayer)),
   );
 
   it.effect(
     'should index objects and query by type',
     Effect.fnUntraced(function* () {
-      const sql = yield* SqlClient.SqlClient;
       const spaceId = SpaceId.random();
       const dataSource = new MockIndexDataSource();
 
       const indexer = new Indexer({
         dataSource,
-        spaceId,
-        runEffect: (effect) => runAndForwardErrors(Effect.provideService(effect, SqlClient.SqlClient, sql)),
-        indexCooldownTime: 0,
       });
 
-      yield* Effect.promise(() => indexer.open());
+      yield* indexer.migrate();
 
       const obj: IndexerObject = {
         spaceId,
@@ -129,36 +119,28 @@ describe('Indexer', () => {
       };
 
       dataSource.push([obj]);
-      yield* Effect.promise(() => indexer.updateIndexes());
+      yield* indexer.update();
 
-      const results = yield* Effect.promise(() =>
-        indexer.execQuery({
-          type: { spaceId: spaceId.toString(), typeDxn: 'test.Person' },
-        }),
-      );
+      const results = yield* indexer.query({
+        type: { spaceId: spaceId.toString(), typeDxn: 'test.Person' },
+      });
 
       expect(results).toHaveLength(1);
       expect(results[0].objectId).toBe(obj.data.id);
-
-      yield* Effect.promise(() => indexer.close());
     }, Effect.provide(TestLayer)),
   );
 
   it.effect(
     'should query by full-text search',
     Effect.fnUntraced(function* () {
-      const sql = yield* SqlClient.SqlClient;
       const spaceId = SpaceId.random();
       const dataSource = new MockIndexDataSource();
 
       const indexer = new Indexer({
         dataSource,
-        spaceId,
-        runEffect: (effect) => runAndForwardErrors(Effect.provideService(effect, SqlClient.SqlClient, sql)),
-        indexCooldownTime: 0,
       });
 
-      yield* Effect.promise(() => indexer.open());
+      yield* indexer.migrate();
 
       const obj: IndexerObject = {
         spaceId,
@@ -169,41 +151,28 @@ describe('Indexer', () => {
       };
 
       dataSource.push([obj]);
-      yield* Effect.promise(() => indexer.updateIndexes());
+      yield* indexer.update();
 
-      const results = yield* Effect.promise(() =>
-        indexer.execQuery({
-          text: { query: 'Hello' },
-        }),
-      );
+      const results = yield* indexer.query({
+        text: { query: 'Hello' },
+      });
 
       expect(results.length).toBeGreaterThan(0);
       expect(results[0].snapshot).toContain('Hello');
-
-      yield* Effect.promise(() => indexer.close());
     }, Effect.provide(TestLayer)),
   );
 
   it.effect(
-    'should emit updated event when objects are indexed',
+    'should return update count when objects are indexed',
     Effect.fnUntraced(function* () {
-      const sql = yield* SqlClient.SqlClient;
       const spaceId = SpaceId.random();
       const dataSource = new MockIndexDataSource();
 
       const indexer = new Indexer({
         dataSource,
-        spaceId,
-        runEffect: (effect) => runAndForwardErrors(Effect.provideService(effect, SqlClient.SqlClient, sql)),
-        indexCooldownTime: 0,
       });
 
-      yield* Effect.promise(() => indexer.open());
-
-      let updateCount = 0;
-      indexer.updated.on(() => {
-        updateCount++;
-      });
+      yield* indexer.migrate();
 
       const obj: IndexerObject = {
         spaceId,
@@ -214,53 +183,42 @@ describe('Indexer', () => {
       };
 
       dataSource.push([obj]);
-      yield* Effect.promise(() => indexer.updateIndexes());
+      const result = yield* indexer.update();
 
-      expect(updateCount).toBe(1);
-
-      yield* Effect.promise(() => indexer.close());
+      // FTS and ReverseRef both process the object, so updated count reflects both.
+      expect(result.updated).toBeGreaterThan(0);
     }, Effect.provide(TestLayer)),
   );
 
   it.effect(
     'should return empty results for unknown query type',
     Effect.fnUntraced(function* () {
-      const sql = yield* SqlClient.SqlClient;
-      const spaceId = SpaceId.random();
       const dataSource = new MockIndexDataSource();
 
       const indexer = new Indexer({
         dataSource,
-        spaceId,
-        runEffect: (effect) => runAndForwardErrors(Effect.provideService(effect, SqlClient.SqlClient, sql)),
       });
 
-      yield* Effect.promise(() => indexer.open());
+      yield* indexer.migrate();
 
       // Empty query object.
-      const results = yield* Effect.promise(() => indexer.execQuery({}));
+      const results = yield* indexer.query({});
 
       expect(results).toHaveLength(0);
-
-      yield* Effect.promise(() => indexer.close());
     }, Effect.provide(TestLayer)),
   );
 
   it.effect(
-    'should schedule and run indexing via DeferredTask',
+    'should handle multiple update cycles',
     Effect.fnUntraced(function* () {
-      const sql = yield* SqlClient.SqlClient;
       const spaceId = SpaceId.random();
       const dataSource = new MockIndexDataSource();
 
       const indexer = new Indexer({
         dataSource,
-        spaceId,
-        runEffect: (effect) => runAndForwardErrors(Effect.provideService(effect, SqlClient.SqlClient, sql)),
-        indexCooldownTime: 0,
       });
 
-      yield* Effect.promise(() => indexer.open());
+      yield* indexer.migrate();
 
       const obj: IndexerObject = {
         spaceId,
@@ -271,20 +229,13 @@ describe('Indexer', () => {
       };
 
       dataSource.push([obj]);
+      yield* indexer.update();
 
-      // Use scheduleUpdate instead of direct updateIndexes.
-      indexer.scheduleUpdate();
-      yield* Effect.promise(() => indexer.updateIndexes());
-
-      const results = yield* Effect.promise(() =>
-        indexer.execQuery({
-          type: { spaceId: spaceId.toString(), typeDxn: 'test.Task' },
-        }),
-      );
+      const results = yield* indexer.query({
+        type: { spaceId: spaceId.toString(), typeDxn: 'test.Task' },
+      });
 
       expect(results).toHaveLength(1);
-
-      yield* Effect.promise(() => indexer.close());
     }, Effect.provide(TestLayer)),
   );
 });

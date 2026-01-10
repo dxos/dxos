@@ -3,7 +3,6 @@
 //
 
 import * as Reactivity from '@effect/experimental/Reactivity';
-import * as SqlClient from '@effect/sql/SqlClient';
 import * as SqliteClient from '@effect/sql-sqlite-node/SqliteClient';
 import { describe, expect, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
@@ -11,7 +10,6 @@ import * as Layer from 'effect/Layer';
 
 import { ATTR_DELETED, ATTR_TYPE } from '@dxos/echo/internal';
 import { Reference, encodeReference } from '@dxos/echo-protocol';
-import { runAndForwardErrors } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { DXN, ObjectId, SpaceId } from '@dxos/keys';
 
@@ -59,7 +57,8 @@ class MockEchoDataSource implements IndexDataSource {
       for (const [key, entry] of this._state.entries()) {
         const { object, hash } = entry;
 
-        const cursor = cursors.find((c) => c.spaceId === object.spaceId && c.resourceId === object.documentId);
+        // Multi-space indexing: match by resourceId (documentId) only.
+        const cursor = cursors.find((c) => c.resourceId === object.documentId);
 
         let include = false;
         if (!cursor) {
@@ -107,18 +106,14 @@ describe('Integration Tests', () => {
   it.effect(
     'should index and query Echo objects by type',
     Effect.fnUntraced(function* () {
-      const sql = yield* SqlClient.SqlClient;
       const spaceId = SpaceId.random();
       const dataSource = new MockEchoDataSource();
 
       const indexer = new Indexer({
         dataSource,
-        spaceId,
-        runEffect: (effect) => runAndForwardErrors(Effect.provideService(effect, SqlClient.SqlClient, sql)),
-        indexCooldownTime: 0,
       });
 
-      yield* Effect.promise(() => indexer.open());
+      yield* indexer.migrate();
 
       // Create Person objects.
       const person1 = createEchoObject(spaceId, 'doc-1', {
@@ -140,45 +135,35 @@ describe('Integration Tests', () => {
       });
 
       dataSource.push([person1, person2, task1]);
-      yield* Effect.promise(() => indexer.updateIndexes());
+      yield* indexer.update();
 
       // Query by Person type.
-      const persons = yield* Effect.promise(() =>
-        indexer.execQuery({
-          type: { spaceId: spaceId.toString(), typeDxn: 'example.com/type/Person' },
-        }),
-      );
+      const persons = yield* indexer.query({
+        type: { spaceId: spaceId.toString(), typeDxn: 'example.com/type/Person' },
+      });
 
       expect(persons).toHaveLength(2);
 
       // Query by Task type.
-      const tasks = yield* Effect.promise(() =>
-        indexer.execQuery({
-          type: { spaceId: spaceId.toString(), typeDxn: 'example.com/type/Task' },
-        }),
-      );
+      const tasks = yield* indexer.query({
+        type: { spaceId: spaceId.toString(), typeDxn: 'example.com/type/Task' },
+      });
 
       expect(tasks).toHaveLength(1);
-
-      yield* Effect.promise(() => indexer.close());
     }, Effect.provide(TestLayer)),
   );
 
   it.effect(
     'should find Echo objects via full-text search',
     Effect.fnUntraced(function* () {
-      const sql = yield* SqlClient.SqlClient;
       const spaceId = SpaceId.random();
       const dataSource = new MockEchoDataSource();
 
       const indexer = new Indexer({
         dataSource,
-        spaceId,
-        runEffect: (effect) => runAndForwardErrors(Effect.provideService(effect, SqlClient.SqlClient, sql)),
-        indexCooldownTime: 0,
       });
 
-      yield* Effect.promise(() => indexer.open());
+      yield* indexer.migrate();
 
       // Create documents with different content.
       const doc1 = createEchoObject(spaceId, 'doc-1', {
@@ -198,53 +183,41 @@ describe('Integration Tests', () => {
       });
 
       dataSource.push([doc1, doc2, doc3]);
-      yield* Effect.promise(() => indexer.updateIndexes());
+      yield* indexer.update();
 
       // Search for TypeScript.
-      const tsResults = yield* Effect.promise(() =>
-        indexer.execQuery({
-          text: { query: 'TypeScript' },
-        }),
-      );
+      const tsResults = yield* indexer.query({
+        text: { query: 'TypeScript' },
+      });
       expect(tsResults.length).toBeGreaterThan(0);
       expect(tsResults.some((r) => r.snapshot?.includes('TypeScript'))).toBe(true);
 
       // Search for JavaScript (should match 2 docs).
-      const jsResults = yield* Effect.promise(() =>
-        indexer.execQuery({
-          text: { query: 'JavaScript' },
-        }),
-      );
+      const jsResults = yield* indexer.query({
+        text: { query: 'JavaScript' },
+      });
       expect(jsResults.length).toBe(2);
 
       // Search for Python.
-      const pyResults = yield* Effect.promise(() =>
-        indexer.execQuery({
-          text: { query: 'Python' },
-        }),
-      );
+      const pyResults = yield* indexer.query({
+        text: { query: 'Python' },
+      });
       expect(pyResults.length).toBe(1);
       expect(pyResults[0].snapshot).toContain('Python');
-
-      yield* Effect.promise(() => indexer.close());
     }, Effect.provide(TestLayer)),
   );
 
   it.effect(
     'should track and query reverse references',
     Effect.fnUntraced(function* () {
-      const sql = yield* SqlClient.SqlClient;
       const spaceId = SpaceId.random();
       const dataSource = new MockEchoDataSource();
 
       const indexer = new Indexer({
         dataSource,
-        spaceId,
-        runEffect: (effect) => runAndForwardErrors(Effect.provideService(effect, SqlClient.SqlClient, sql)),
-        indexCooldownTime: 0,
       });
 
-      yield* Effect.promise(() => indexer.open());
+      yield* indexer.migrate();
 
       // Create a target object.
       const targetId = ObjectId.random();
@@ -277,39 +250,31 @@ describe('Integration Tests', () => {
       });
 
       dataSource.push([target, source1, source2, unrelated]);
-      yield* Effect.promise(() => indexer.updateIndexes());
+      yield* indexer.update();
 
       // Query reverse references.
-      const refs = yield* Effect.promise(() =>
-        indexer.execQuery({
-          reverseRef: { targetDxn },
-        }),
-      );
+      const refs = yield* indexer.query({
+        reverseRef: { targetDxn },
+      });
 
       // Should find 2 references (source1 and source2 pointing to target).
       expect(refs).toHaveLength(2);
       expect(refs.every((r) => r.targetDxn === targetDxn)).toBe(true);
       expect(refs.every((r) => r.propPath === 'tag')).toBe(true);
-
-      yield* Effect.promise(() => indexer.close());
     }, Effect.provide(TestLayer)),
   );
 
   it.effect(
     'should re-index updated objects',
     Effect.fnUntraced(function* () {
-      const sql = yield* SqlClient.SqlClient;
       const spaceId = SpaceId.random();
       const dataSource = new MockEchoDataSource();
 
       const indexer = new Indexer({
         dataSource,
-        spaceId,
-        runEffect: (effect) => runAndForwardErrors(Effect.provideService(effect, SqlClient.SqlClient, sql)),
-        indexCooldownTime: 0,
       });
 
-      yield* Effect.promise(() => indexer.open());
+      yield* indexer.migrate();
 
       // Create initial object.
       const objectId = ObjectId.random();
@@ -321,14 +286,12 @@ describe('Integration Tests', () => {
       original.data.id = objectId;
 
       dataSource.push([original]);
-      yield* Effect.promise(() => indexer.updateIndexes());
+      yield* indexer.update();
 
       // Verify original is indexed.
-      let results = yield* Effect.promise(() =>
-        indexer.execQuery({
-          text: { query: 'Original' },
-        }),
-      );
+      let results = yield* indexer.query({
+        text: { query: 'Original' },
+      });
       expect(results.length).toBe(1);
 
       // Update the object.
@@ -341,48 +304,33 @@ describe('Integration Tests', () => {
       updated.data.id = objectId;
 
       dataSource.push([updated]);
-      yield* Effect.promise(() => indexer.updateIndexes());
+      yield* indexer.update();
 
       // Verify updated content is searchable.
-      results = yield* Effect.promise(() =>
-        indexer.execQuery({
-          text: { query: 'Updated' },
-        }),
-      );
+      results = yield* indexer.query({
+        text: { query: 'Updated' },
+      });
       expect(results.length).toBe(1);
 
       // Original content should no longer match (it's replaced).
-      results = yield* Effect.promise(() =>
-        indexer.execQuery({
-          text: { query: 'Original' },
-        }),
-      );
+      results = yield* indexer.query({
+        text: { query: 'Original' },
+      });
       expect(results.length).toBe(0);
-
-      yield* Effect.promise(() => indexer.close());
     }, Effect.provide(TestLayer)),
   );
 
   it.effect(
-    'should emit updated events when objects are indexed',
+    'should return update count when objects are indexed',
     Effect.fnUntraced(function* () {
-      const sql = yield* SqlClient.SqlClient;
       const spaceId = SpaceId.random();
       const dataSource = new MockEchoDataSource();
 
       const indexer = new Indexer({
         dataSource,
-        spaceId,
-        runEffect: (effect) => runAndForwardErrors(Effect.provideService(effect, SqlClient.SqlClient, sql)),
-        indexCooldownTime: 0,
       });
 
-      yield* Effect.promise(() => indexer.open());
-
-      let eventCount = 0;
-      indexer.updated.on(() => {
-        eventCount++;
-      });
+      yield* indexer.migrate();
 
       // Index objects.
       const obj1 = createEchoObject(spaceId, 'doc-1', {
@@ -390,14 +338,10 @@ describe('Integration Tests', () => {
         name: 'Item 1',
       });
       dataSource.push([obj1]);
-      yield* Effect.promise(() => indexer.updateIndexes());
+      const result = yield* indexer.update();
 
-      // Updated event should be emitted when objects are indexed.
-      // The IndexEngine runs update for each dependent index (FTS, ReverseRef),
-      // so we might get multiple events if each index has changes.
-      expect(eventCount).toBeGreaterThanOrEqual(1);
-
-      yield* Effect.promise(() => indexer.close());
+      // Updated count reflects objects processed by indexes (FTS + ReverseRef).
+      expect(result.updated).toBeGreaterThan(0);
     }, Effect.provide(TestLayer)),
   );
 });

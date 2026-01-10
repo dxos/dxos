@@ -55,10 +55,9 @@ class MockIndexDataSource implements IndexDataSource {
       for (const [, entry] of this._state.entries()) {
         const { object, hash } = entry;
 
-        // Find cursor for this object
-        // The engine passes cursors filtered by sourceName.
-        // We need to find the specific cursor for this resource (document).
-        const cursor = cursors.find((c) => c.spaceId === object.spaceId && c.resourceId === object.documentId);
+        // Find cursor for this object.
+        // Multi-space indexing: match by resourceId (documentId) only.
+        const cursor = cursors.find((c) => c.resourceId === object.documentId);
 
         let include = false;
         if (!cursor) {
@@ -72,7 +71,7 @@ class MockIndexDataSource implements IndexDataSource {
         }
       }
 
-      // Apply limit if needed (simplistic logic)
+      // Apply limit if needed (simplistic logic).
       const limitedResults = opts?.limit ? results.slice(0, opts.limit) : results;
 
       const objects = limitedResults.map((r) => r.object);
@@ -126,7 +125,7 @@ describe('IndexEngine', () => {
       dataSource.push([obj1]);
 
       // First update.
-      const { updated } = yield* engine.update(dataSource, { spaceId });
+      const { updated } = yield* engine.update(dataSource, {});
       // Updates objectMeta, FTS, and reverseRef indexes.
       expect(updated).toBe(2);
 
@@ -152,7 +151,7 @@ describe('IndexEngine', () => {
       dataSource.push([obj1Updated]);
 
       // Second update.
-      const { updated: updated2 } = yield* engine.update(dataSource, { spaceId });
+      const { updated: updated2 } = yield* engine.update(dataSource, {});
       expect(updated2).toBe(2);
 
       // Verify update.
@@ -213,7 +212,7 @@ describe('IndexEngine', () => {
 
       dataSource.push(objects);
 
-      yield* engine.update(dataSource, { spaceId });
+      yield* engine.update(dataSource, {});
 
       const resultsA = yield* metaIndex.query({ spaceId: spaceId.toString(), typeDxn: TYPE_A });
       expect(resultsA).toHaveLength(2);
