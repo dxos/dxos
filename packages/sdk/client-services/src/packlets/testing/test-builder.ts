@@ -121,6 +121,14 @@ export type TestPeerProps = {
 
 export class TestPeer {
   private _props: TestPeerProps = {};
+  private readonly _runtime = ManagedRuntime.make(
+    Layer.merge(
+      SqliteClient.layer({
+        filename: ':memory:',
+      }),
+      Reactivity.layer,
+    ).pipe(Layer.orDie),
+  );
 
   constructor(
     private readonly _signalContext: MemorySignalManagerContext,
@@ -186,14 +194,7 @@ export class TestPeer {
   get echoHost() {
     return (this._props.echoHost ??= new EchoHost({
       kv: this.level,
-      runtime: ManagedRuntime.make(
-        Layer.merge(
-          SqliteClient.layer({
-            filename: ':memory:',
-          }),
-          Reactivity.layer,
-        ).pipe(Layer.orDie),
-      ).runtimeEffect,
+      runtime: this._runtime.runtimeEffect,
     }));
   }
 
@@ -242,6 +243,7 @@ export class TestPeer {
   async destroy(): Promise<void> {
     await this.level.close();
     await this.storage.reset();
+    await this._runtime.dispose();
   }
 }
 

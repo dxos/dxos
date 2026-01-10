@@ -66,6 +66,8 @@
     "@dxos/indexing": "workspace:*",
     "@dxos/random": "workspace:*",
     "@dxos/test-utils": "workspace:*",
+    "@effect/experimental": "catalog:",
+    "@effect/sql-sqlite-node": "catalog:",
     "@preact/signals-core": "catalog:",
     "@types/lodash.isequal": "catalog:"
   },
