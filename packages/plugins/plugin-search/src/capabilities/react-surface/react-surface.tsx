@@ -7,10 +7,11 @@ import React from 'react';
 
 import { Capability, Common } from '@dxos/app-framework';
 import { useActiveSpace } from '@dxos/plugin-space';
-import { type Space, isSpace } from '@dxos/react-client/echo';
+import { type Space, SpaceState, isSpace } from '@dxos/react-client/echo';
 
-import { SEARCH_DIALOG, SearchDialog, type SearchDialogProps, SearchMain } from '../../components';
+import { SEARCH_DIALOG, SearchDialog, type SearchDialogProps, SearchMain, SpaceMain } from '../../components';
 import { SearchContextProvider } from '../../hooks';
+import { meta } from '../../meta';
 
 export default Capability.makeModule(() =>
   Effect.succeed(
@@ -54,6 +55,15 @@ export default Capability.makeModule(() =>
             </SearchContextProvider>
           );
         },
+      }),
+      Common.createSurface({
+        id: `${meta.id}/space-article`,
+        role: 'article',
+        position: 'hoist',
+        filter: (data): data is { subject: Space } =>
+          // TODO(wittjosiah): Need to avoid shotgun parsing space state everywhere.
+          isSpace(data.subject) && data.subject.state.get() === SpaceState.SPACE_READY,
+        component: ({ data }) => <SpaceMain space={data.subject} />,
       }),
     ]),
   ),

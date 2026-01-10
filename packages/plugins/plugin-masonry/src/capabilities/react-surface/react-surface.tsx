@@ -7,6 +7,7 @@ import React from 'react';
 
 import { Capability, Common } from '@dxos/app-framework';
 import { Obj } from '@dxos/echo';
+import { View } from '@dxos/schema';
 
 import { MasonryContainer } from '../../components/MasonryContainer';
 import { meta } from '../../meta';
@@ -18,8 +19,12 @@ export default Capability.makeModule(() =>
       Common.createSurface({
         id: meta.id,
         role: ['article', 'section'],
-        filter: (data): data is { subject: Masonry.Masonry } => Obj.instanceOf(Masonry.Masonry, data.subject),
-        component: ({ data, role }) => <MasonryContainer object={data.subject} role={role} />,
+        filter: (data): data is { subject: Masonry.Masonry | View.View } =>
+          Obj.instanceOf(Masonry.Masonry, data.subject) || Obj.instanceOf(View.View, data.subject),
+        component: ({ data, role }) => {
+          const view = Obj.instanceOf(View.View, data.subject) ? data.subject : data.subject.view.target;
+          return view ? <MasonryContainer view={view} role={role} /> : null;
+        },
       }),
     ]),
   ),
