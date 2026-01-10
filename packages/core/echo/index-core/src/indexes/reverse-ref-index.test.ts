@@ -11,7 +11,6 @@ import * as Layer from 'effect/Layer';
 import { ObjectId, SpaceId } from '@dxos/keys';
 
 import type { IndexerObject } from './interface';
-import { ObjectMetaIndex } from './object-meta-index';
 import { ReverseRefIndex } from './reverse-ref-index';
 
 const TestLayer = Layer.merge(
@@ -24,10 +23,7 @@ const TestLayer = Layer.merge(
 describe('ReverseRefIndex', () => {
   it.effect('should store and query reverse references', () =>
     Effect.gen(function* () {
-      const objectMetaIndex = new ObjectMetaIndex();
       const reverseRefIndex = new ReverseRefIndex();
-
-      yield* objectMetaIndex.migrate();
       yield* reverseRefIndex.migrate();
 
       const spaceId = SpaceId.random();
@@ -35,11 +31,11 @@ describe('ReverseRefIndex', () => {
       const targetObjectId = ObjectId.random();
       const targetDxn = `dxn:echo:@:${targetObjectId}`;
 
-      // First create an object in objectMeta.
       const sourceObject: IndexerObject = {
         spaceId,
         queueId: ObjectId.random(),
         documentId: null,
+        recordId: 1,
         data: {
           id: sourceObjectId,
           '@kind': 'object',
@@ -48,13 +44,8 @@ describe('ReverseRefIndex', () => {
         } as any,
       };
 
-      // Insert into objectMeta first.
-      yield* objectMetaIndex.update([sourceObject]);
-
-      // Now update reverseRefIndex.
       yield* reverseRefIndex.update([sourceObject]);
 
-      // Query references to target.
       const results = yield* reverseRefIndex.query(targetDxn);
       expect(results.length).toBe(1);
       expect(results[0].targetDxn).toBe(targetDxn);
@@ -64,10 +55,7 @@ describe('ReverseRefIndex', () => {
 
   it.effect('should handle nested references', () =>
     Effect.gen(function* () {
-      const objectMetaIndex = new ObjectMetaIndex();
       const reverseRefIndex = new ReverseRefIndex();
-
-      yield* objectMetaIndex.migrate();
       yield* reverseRefIndex.migrate();
 
       const spaceId = SpaceId.random();
@@ -81,6 +69,7 @@ describe('ReverseRefIndex', () => {
         spaceId,
         queueId: ObjectId.random(),
         documentId: null,
+        recordId: 1,
         data: {
           id: sourceObjectId,
           '@kind': 'object',
@@ -94,7 +83,6 @@ describe('ReverseRefIndex', () => {
         } as any,
       };
 
-      yield* objectMetaIndex.update([sourceObject]);
       yield* reverseRefIndex.update([sourceObject]);
 
       const results1 = yield* reverseRefIndex.query(targetDxn1);
@@ -109,10 +97,7 @@ describe('ReverseRefIndex', () => {
 
   it.effect('should handle array references', () =>
     Effect.gen(function* () {
-      const objectMetaIndex = new ObjectMetaIndex();
       const reverseRefIndex = new ReverseRefIndex();
-
-      yield* objectMetaIndex.migrate();
       yield* reverseRefIndex.migrate();
 
       const spaceId = SpaceId.random();
@@ -126,6 +111,7 @@ describe('ReverseRefIndex', () => {
         spaceId,
         queueId: ObjectId.random(),
         documentId: null,
+        recordId: 1,
         data: {
           id: sourceObjectId,
           '@kind': 'object',
@@ -134,7 +120,6 @@ describe('ReverseRefIndex', () => {
         } as any,
       };
 
-      yield* objectMetaIndex.update([sourceObject]);
       yield* reverseRefIndex.update([sourceObject]);
 
       const results1 = yield* reverseRefIndex.query(targetDxn1);
@@ -149,10 +134,7 @@ describe('ReverseRefIndex', () => {
 
   it.effect('should update references on object change', () =>
     Effect.gen(function* () {
-      const objectMetaIndex = new ObjectMetaIndex();
       const reverseRefIndex = new ReverseRefIndex();
-
-      yield* objectMetaIndex.migrate();
       yield* reverseRefIndex.migrate();
 
       const spaceId = SpaceId.random();
@@ -162,12 +144,14 @@ describe('ReverseRefIndex', () => {
       const targetObjectId2 = ObjectId.random();
       const targetDxn1 = `dxn:echo:@:${targetObjectId1}`;
       const targetDxn2 = `dxn:echo:@:${targetObjectId2}`;
+      const recordId = 1;
 
       // Initial object with reference to target1.
       const sourceObject: IndexerObject = {
         spaceId,
         queueId,
         documentId: null,
+        recordId,
         data: {
           id: sourceObjectId,
           '@kind': 'object',
@@ -176,17 +160,17 @@ describe('ReverseRefIndex', () => {
         } as any,
       };
 
-      yield* objectMetaIndex.update([sourceObject]);
       yield* reverseRefIndex.update([sourceObject]);
 
       let results1 = yield* reverseRefIndex.query(targetDxn1);
       expect(results1.length).toBe(1);
 
-      // Update object to reference target2 instead.
+      // Update object to reference target2 instead (same recordId).
       const updatedObject: IndexerObject = {
         spaceId,
         queueId,
         documentId: null,
+        recordId,
         data: {
           id: sourceObjectId,
           '@kind': 'object',
@@ -195,7 +179,6 @@ describe('ReverseRefIndex', () => {
         } as any,
       };
 
-      yield* objectMetaIndex.update([updatedObject]);
       yield* reverseRefIndex.update([updatedObject]);
 
       // Old reference should be gone.
@@ -210,10 +193,7 @@ describe('ReverseRefIndex', () => {
 
   it.effect('should handle objects without references', () =>
     Effect.gen(function* () {
-      const objectMetaIndex = new ObjectMetaIndex();
       const reverseRefIndex = new ReverseRefIndex();
-
-      yield* objectMetaIndex.migrate();
       yield* reverseRefIndex.migrate();
 
       const spaceId = SpaceId.random();
@@ -223,6 +203,7 @@ describe('ReverseRefIndex', () => {
         spaceId,
         queueId: ObjectId.random(),
         documentId: null,
+        recordId: 1,
         data: {
           id: sourceObjectId,
           '@kind': 'object',
@@ -232,7 +213,6 @@ describe('ReverseRefIndex', () => {
         } as any,
       };
 
-      yield* objectMetaIndex.update([sourceObject]);
       yield* reverseRefIndex.update([sourceObject]);
 
       // Should not throw and no results for random DXN.
@@ -243,10 +223,7 @@ describe('ReverseRefIndex', () => {
 
   it.effect('should work with documentId instead of queueId', () =>
     Effect.gen(function* () {
-      const objectMetaIndex = new ObjectMetaIndex();
       const reverseRefIndex = new ReverseRefIndex();
-
-      yield* objectMetaIndex.migrate();
       yield* reverseRefIndex.migrate();
 
       const spaceId = SpaceId.random();
@@ -258,6 +235,7 @@ describe('ReverseRefIndex', () => {
         spaceId,
         queueId: null,
         documentId: 'doc-123',
+        recordId: 1,
         data: {
           id: sourceObjectId,
           '@kind': 'object',
@@ -266,7 +244,6 @@ describe('ReverseRefIndex', () => {
         } as any,
       };
 
-      yield* objectMetaIndex.update([sourceObject]);
       yield* reverseRefIndex.update([sourceObject]);
 
       const results = yield* reverseRefIndex.query(targetDxn);

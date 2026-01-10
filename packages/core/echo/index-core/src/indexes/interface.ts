@@ -26,6 +26,13 @@ export interface IndexerObject {
   documentId: string | null;
 
   /**
+   * Record id from the objectMeta index.
+   * `Null` before the object is stored in the ObjectMetaIndex.
+   * Enriched by the IndexEngine after the object is stored in the ObjectMetaIndex.
+   */
+  recordId: number | null;
+
+  /**
    * JSON data of the object.
    */
   data: Obj.JSON & Record<string, any>;

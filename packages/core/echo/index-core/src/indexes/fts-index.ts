@@ -3,6 +3,7 @@
 //
 
 import * as SqlClient from '@effect/sql/SqlClient';
+import type * as SqlError from '@effect/sql/SqlError';
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
@@ -30,10 +31,32 @@ export class FtsIndex implements Index {
     });
   }
 
-  update(objects: IndexerObject[]) {
-    return Effect.gen(function* () {
-      const sql = yield* SqlClient.SqlClient;
-      yield* sql`INSERT INTO ftsIndex (snapshot) VALUES (${JSON.stringify(objects)})`;
-    });
-  }
+  update = Effect.fn('FtsIndex.update')(
+    (objects: IndexerObject[]): Effect.Effect<void, SqlError.SqlError, SqlClient.SqlClient> =>
+      Effect.gen(function* () {
+        const sql = yield* SqlClient.SqlClient;
+
+        yield* Effect.forEach(
+          objects,
+          (object) =>
+            Effect.gen(function* () {
+              const { recordId, data } = object;
+              if (recordId === null) {
+                yield* Effect.die(new Error('FtsIndex.update requires recordId to be set'));
+              }
+
+              const snapshot = JSON.stringify(data);
+
+              // FTS5 doesn't support UPDATE, need DELETE + INSERT for upsert.
+              const existing = yield* sql<{ rowid: number }>`SELECT rowid FROM ftsIndex WHERE rowid = ${recordId}`;
+              if (existing.length > 0) {
+                yield* sql`DELETE FROM ftsIndex WHERE rowid = ${recordId}`;
+              }
+
+              yield* sql`INSERT INTO ftsIndex (rowid, snapshot) VALUES (${recordId}, ${snapshot})`;
+            }),
+          { discard: true },
+        );
+      }),
+  );
 }

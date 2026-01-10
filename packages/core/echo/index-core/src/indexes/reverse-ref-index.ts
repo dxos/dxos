@@ -86,34 +86,16 @@ export class ReverseRefIndex implements Index {
           objects,
           (object) =>
             Effect.gen(function* () {
-              const { spaceId, queueId, documentId, data } = object;
-
-              const castData = data as Record<string, unknown>;
-              const objectId = castData.id as string;
-
-              // Look up recordId from objectMeta.
-              let existing: readonly { recordId: number }[];
-              if (documentId) {
-                existing = yield* sql<{
-                  recordId: number;
-                }>`SELECT recordId FROM objectMeta WHERE spaceId = ${spaceId} AND documentId = ${documentId} AND objectId = ${objectId} LIMIT 1`;
-              } else if (queueId) {
-                existing = yield* sql<{
-                  recordId: number;
-                }>`SELECT recordId FROM objectMeta WHERE spaceId = ${spaceId} AND queueId = ${queueId} AND objectId = ${objectId} LIMIT 1`;
-              } else {
-                existing = [];
+              const { recordId, data } = object;
+              if (recordId === null) {
+                yield* Effect.die(new Error('ReverseRefIndex.update requires recordId to be set'));
               }
 
-              const recordId = existing[0].recordId;
-
-              if (recordId) {
-                // Delete existing references for this record.
-                yield* sql`DELETE FROM reverseRef WHERE recordId = ${recordId}`;
-              }
+              // Delete existing references for this record.
+              yield* sql`DELETE FROM reverseRef WHERE recordId = ${recordId}`;
 
               // Extract references from data.
-              const refs = extractReferences(castData);
+              const refs = extractReferences(data as Record<string, unknown>);
 
               // Insert new references.
               yield* Effect.forEach(

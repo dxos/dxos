@@ -25,5 +25,3 @@ describe('FTS5', () => {
       expect(result[0].sender).toEqual('bob@example.com');
     }).pipe(Effect.provide(Reactivity.layer), Effect.scoped, Effect.runPromise));
 });
-
-// Read https://sqlite.org/fts5.html

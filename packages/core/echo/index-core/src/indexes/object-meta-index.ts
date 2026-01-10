@@ -74,12 +74,12 @@ export class ObjectMetaIndex implements Index {
             Effect.gen(function* () {
               const { spaceId, queueId, documentId, data } = object;
 
-              // Extract metadata (Logic emulating Echo APIs as strict imports are unavailable)
-              // TODO(agent): Verify property access matches Obj.JSON structure
+              // Extract metadata (Logic emulating Echo APIs as strict imports are unavailable).
+              // TODO(agent): Verify property access matches Obj.JSON structure.
               const castData = data as any;
               const objectId = castData.id;
 
-              // Check for existing record by (spaceId, queueId) or (spaceId, documentId)
+              // Check for existing record by (spaceId, queueId) or (spaceId, documentId).
               let existing: readonly { recordId: number }[];
               if (documentId) {
                 existing = yield* sql<{
@@ -90,11 +90,11 @@ export class ObjectMetaIndex implements Index {
                   recordId: number;
                 }>`SELECT recordId FROM objectMeta WHERE spaceId = ${spaceId} AND queueId = ${queueId} AND objectId = ${objectId} LIMIT 1`;
               } else {
-                // Should not happen based on IndexerObject definition (one must be present ideally), but handle gracefully
+                // Should not happen based on IndexerObject definition (one must be present ideally), but handle gracefully.
                 existing = [];
               }
 
-              // Get max version + 1
+              // Get max version + 1.
               const result = yield* sql<{ v: number | null }>`SELECT MAX(version) as v FROM objectMeta`;
               const [{ v }] = result;
               const version = (v ?? 0) + 1;
@@ -135,6 +135,46 @@ export class ObjectMetaIndex implements Index {
             }),
           { discard: true },
         );
+      }),
+  );
+
+  /**
+   * Look up recordIds for objects that are already stored in the ObjectMetaIndex.
+   * Returns recordIds in the same order as the input objects.
+   */
+  lookupRecordIds = Effect.fn('ObjectMetaIndex.lookupRecordIds')(
+    (objects: IndexerObject[]): Effect.Effect<number[], SqlError.SqlError, SqlClient.SqlClient> =>
+      Effect.gen(function* () {
+        const sql = yield* SqlClient.SqlClient;
+
+        const recordIds: number[] = [];
+        for (const object of objects) {
+          const { spaceId, queueId, documentId, data } = object;
+          const objectId = (data as any).id;
+
+          let result: readonly { recordId: number }[];
+          if (documentId) {
+            result = yield* sql<{
+              recordId: number;
+            }>`SELECT recordId FROM objectMeta WHERE spaceId = ${spaceId} AND documentId = ${documentId} AND objectId = ${objectId} LIMIT 1`;
+          } else if (queueId) {
+            result = yield* sql<{
+              recordId: number;
+            }>`SELECT recordId FROM objectMeta WHERE spaceId = ${spaceId} AND queueId = ${queueId} AND objectId = ${objectId} LIMIT 1`;
+          } else {
+            result = [];
+          }
+
+          if (result.length === 0) {
+            // TODO(mykola): Handle this case gracefully.
+            yield* Effect.die(
+              new Error(`Object not found in ObjectMetaIndex: ${spaceId}/${documentId ?? queueId}/${objectId}`),
+            );
+          }
+          recordIds.push(result[0].recordId);
+        }
+
+        return recordIds;
       }),
   );
 }

@@ -49,6 +49,7 @@ describe('FtsIndex', () => {
           spaceId,
           queueId: null,
           documentId: 'doc-1',
+          recordId: 1,
           data: {
             id: ObjectId.random(),
             '@type': DXN.parse('dxn:type:example.com/type/Person:0.1.0').toString(),
@@ -66,6 +67,139 @@ describe('FtsIndex', () => {
 
       const noMatch = yield* index.query('DefinitelyNotPresent');
       expect(noMatch).toHaveLength(0);
+    }, Effect.provide(TestLayer)),
+  );
+
+  it.effect(
+    'should upsert objects on update',
+    Effect.fnUntraced(function* () {
+      const index = new FtsIndex();
+      yield* index.migrate();
+
+      const spaceId = SpaceId.random();
+      const objectId = ObjectId.random();
+      const recordId = 1;
+
+      // Initial insert.
+      const obj1: IndexerObject = {
+        spaceId,
+        queueId: null,
+        documentId: 'doc-1',
+        recordId,
+        data: {
+          id: objectId,
+          '@type': DXN.parse('dxn:type:example.com/type/Person:0.1.0').toString(),
+          title: 'Original Title',
+        },
+      };
+      yield* index.update([obj1]);
+
+      let match = yield* index.query('Original');
+      expect(match.length).toBe(1);
+
+      // Update with same recordId.
+      const obj2: IndexerObject = {
+        spaceId,
+        queueId: null,
+        documentId: 'doc-1',
+        recordId,
+        data: {
+          id: objectId,
+          '@type': 'test.Type',
+          title: 'Updated Title',
+        },
+      };
+      yield* index.update([obj2]);
+
+      // Old content should be gone.
+      match = yield* index.query('Original');
+      expect(match.length).toBe(0);
+
+      // New content should exist.
+      match = yield* index.query('Updated');
+      expect(match.length).toBe(1);
+    }, Effect.provide(TestLayer)),
+  );
+
+  it.effect(
+    'should handle non-sequential recordIds',
+    Effect.fnUntraced(function* () {
+      const index = new FtsIndex();
+      yield* index.migrate();
+
+      const spaceId = SpaceId.random();
+      const objects: IndexerObject[] = [
+        {
+          spaceId,
+          queueId: null,
+          documentId: 'doc-100',
+          recordId: 100,
+          data: {
+            id: ObjectId.random(),
+            '@type': DXN.parse('dxn:type:example.com/type/Person:0.1.0').toString(),
+            title: 'Alpha Document',
+          },
+        },
+        {
+          spaceId,
+          queueId: null,
+          documentId: 'doc-200',
+          recordId: 200,
+          data: {
+            id: ObjectId.random(),
+            '@type': DXN.parse('dxn:type:example.com/type/Person:0.1.0').toString(),
+            title: 'Beta Document',
+          },
+        },
+        {
+          spaceId,
+          queueId: null,
+          documentId: 'doc-1000',
+          recordId: 1000,
+          data: {
+            id: ObjectId.random(),
+            '@type': DXN.parse('dxn:type:example.com/type/Person:0.1.0').toString(),
+            title: 'Gamma Document',
+          },
+        },
+      ];
+
+      yield* index.update(objects);
+
+      // All documents should be queryable.
+      const alphaMatch = yield* index.query('Alpha');
+      expect(alphaMatch).toHaveLength(1);
+
+      const betaMatch = yield* index.query('Beta');
+      expect(betaMatch).toHaveLength(1);
+
+      const gammaMatch = yield* index.query('Gamma');
+      expect(gammaMatch).toHaveLength(1);
+
+      // Query that matches all.
+      const allMatch = yield* index.query('Document');
+      expect(allMatch).toHaveLength(3);
+
+      // Update one with non-sequential recordId.
+      const updatedObj: IndexerObject = {
+        spaceId,
+        queueId: null,
+        documentId: 'doc-200',
+        recordId: 200,
+        data: {
+          id: ObjectId.random(),
+          '@type': DXN.parse('dxn:type:example.com/type/Person:0.1.0').toString(),
+          title: 'Delta Document',
+        },
+      };
+      yield* index.update([updatedObj]);
+
+      // Beta should be gone, Delta should exist.
+      const betaAfter = yield* index.query('Beta');
+      expect(betaAfter).toHaveLength(0);
+
+      const deltaMatch = yield* index.query('Delta');
+      expect(deltaMatch).toHaveLength(1);
     }, Effect.provide(TestLayer)),
   );
 });
