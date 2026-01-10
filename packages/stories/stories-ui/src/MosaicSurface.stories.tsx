@@ -22,6 +22,9 @@ const generator = faker as any as ValueGenerator;
 
 faker.seed(999);
 
+// TODO(burdon): Surfaces.
+// TODO(burdon): Editor extension.
+
 type StoryProps = {
   columns?: number;
   debug?: boolean;
@@ -83,7 +86,7 @@ const meta = {
       plugins: [
         ...corePlugins(),
         ClientPlugin({
-          types: [Organization.Organization, Person.Person, Project.Project],
+          types: [TestColumn, TestItem, Organization.Organization, Person.Person, Project.Project],
           onClientInitialized: async ({ client }) => {
             await client.halo.createIdentity();
             await client.spaces.waitUntilReady();

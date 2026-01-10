@@ -13,17 +13,18 @@ import { Json } from '@dxos/react-ui-syntax-highlighter';
 import { getHashStyles, mx } from '@dxos/ui-theme';
 import { isTruthy } from '@dxos/util';
 
-import { Card, type CardMenuProps } from '../components/Card';
-import { Focus } from '../components/Focus';
 import {
+  Card,
+  type CardMenuProps,
+  Focus,
   Mosaic,
   type MosaicTileProps,
   type MosiacPlaceholderProps,
+  mosaicStyles,
   useContainerDebug,
   useMosaic,
   useMosaicContainer,
-} from '../components/Mosaic/Mosaic';
-import { styles } from '../components/Mosaic/styles';
+} from '../components';
 import { useEventHandlerAdapter, useVisibleItems } from '../hooks';
 
 //
@@ -75,6 +76,7 @@ export const Board = forwardRef<HTMLDivElement, BoardProps>(({ id, columns, debu
 
   return (
     <div
+      role='none'
       className={mx('p-2 bs-full is-full grid overflow-hidden', debug && 'grid-cols-[1fr_25rem] gap-2')}
       ref={forwardedRef}
     >
@@ -278,11 +280,11 @@ Tile.displayName = 'Tile';
 
 const Placeholder = (props: MosiacPlaceholderProps<number>) => {
   return (
-    <Mosaic.Placeholder {...props} classNames={styles.placeholder.root}>
+    <Mosaic.Placeholder {...props} classNames={mosaicStyles.placeholder.root}>
       <div
         className={mx(
           'flex bs-full bg-baseSurface border border-dashed border-separator rounded-sm',
-          styles.placeholder.content,
+          mosaicStyles.placeholder.content,
         )}
       />
     </Mosaic.Placeholder>
