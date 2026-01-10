@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { OperationPlugin, type Plugin, SettingsPlugin } from '@dxos/app-framework';
+import { OperationPlugin, type Plugin, RuntimePlugin, SettingsPlugin } from '@dxos/app-framework';
 import { AttentionPlugin } from '@dxos/plugin-attention';
 import { ClientPlugin } from '@dxos/plugin-client';
 import { GraphPlugin } from '@dxos/plugin-graph';
@@ -15,6 +15,7 @@ export {
   ClientPlugin,
   GraphPlugin,
   OperationPlugin,
+  RuntimePlugin,
   SettingsPlugin,
   ThemePlugin,
 };
@@ -28,6 +29,7 @@ export const corePlugins = (): Plugin.Plugin[] => [
   AttentionPlugin(),
   GraphPlugin(),
   OperationPlugin(),
+  RuntimePlugin(),
   SettingsPlugin(),
   ThemePlugin({ tx: defaultTx }),
 ];

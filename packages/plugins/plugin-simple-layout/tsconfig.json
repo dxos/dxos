@@ -5,6 +5,9 @@
   ],
   "references": [
     {
+      "path": "../../common/storybook-utils"
+    },
+    {
       "path": "../../common/util"
     },
     {
@@ -32,7 +35,16 @@
       "path": "../../ui/ui-theme"
     },
     {
+      "path": "../plugin-client"
+    },
+    {
       "path": "../plugin-graph"
+    },
+    {
+      "path": "../plugin-space"
+    },
+    {
+      "path": "../plugin-testing"
     }
   ]
 }
