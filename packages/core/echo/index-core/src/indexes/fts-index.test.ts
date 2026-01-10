@@ -9,6 +9,7 @@ import { describe, expect, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
+import { ATTR_TYPE } from '@dxos/echo/internal';
 import { DXN, ObjectId, SpaceId } from '@dxos/keys';
 
 import { FtsIndex } from './fts-index';
@@ -52,7 +53,7 @@ describe('FtsIndex', () => {
           recordId: 1,
           data: {
             id: ObjectId.random(),
-            '@type': DXN.parse('dxn:type:example.com/type/Person:0.1.0').toString(),
+            [ATTR_TYPE]: DXN.parse('dxn:type:example.com/type/Person:0.1.0').toString(),
             title: 'Hello Effect',
             body: 'This is a message about Effect and SQL.',
           },
@@ -88,7 +89,7 @@ describe('FtsIndex', () => {
         recordId,
         data: {
           id: objectId,
-          '@type': DXN.parse('dxn:type:example.com/type/Person:0.1.0').toString(),
+          [ATTR_TYPE]: DXN.parse('dxn:type:example.com/type/Person:0.1.0').toString(),
           title: 'Original Title',
         },
       };
@@ -105,7 +106,7 @@ describe('FtsIndex', () => {
         recordId,
         data: {
           id: objectId,
-          '@type': 'test.Type',
+          [ATTR_TYPE]: DXN.parse('dxn:type:test.com/type/Type:0.1.0').toString(),
           title: 'Updated Title',
         },
       };
@@ -136,7 +137,7 @@ describe('FtsIndex', () => {
           recordId: 100,
           data: {
             id: ObjectId.random(),
-            '@type': DXN.parse('dxn:type:example.com/type/Person:0.1.0').toString(),
+            [ATTR_TYPE]: DXN.parse('dxn:type:example.com/type/Person:0.1.0').toString(),
             title: 'Alpha Document',
           },
         },
@@ -147,7 +148,7 @@ describe('FtsIndex', () => {
           recordId: 200,
           data: {
             id: ObjectId.random(),
-            '@type': DXN.parse('dxn:type:example.com/type/Person:0.1.0').toString(),
+            [ATTR_TYPE]: DXN.parse('dxn:type:example.com/type/Person:0.1.0').toString(),
             title: 'Beta Document',
           },
         },
@@ -158,7 +159,7 @@ describe('FtsIndex', () => {
           recordId: 1000,
           data: {
             id: ObjectId.random(),
-            '@type': DXN.parse('dxn:type:example.com/type/Person:0.1.0').toString(),
+            [ATTR_TYPE]: DXN.parse('dxn:type:example.com/type/Person:0.1.0').toString(),
             title: 'Gamma Document',
           },
         },
@@ -188,7 +189,7 @@ describe('FtsIndex', () => {
         recordId: 200,
         data: {
           id: ObjectId.random(),
-          '@type': DXN.parse('dxn:type:example.com/type/Person:0.1.0').toString(),
+          [ATTR_TYPE]: DXN.parse('dxn:type:example.com/type/Person:0.1.0').toString(),
           title: 'Delta Document',
         },
       };

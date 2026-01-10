@@ -7,6 +7,14 @@ import type * as SqlError from '@effect/sql/SqlError';
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
+import {
+  ATTR_DELETED,
+  ATTR_KIND,
+  ATTR_RELATION_SOURCE,
+  ATTR_RELATION_TARGET,
+  ATTR_TYPE,
+} from '@dxos/echo/internal';
+
 import type { IndexerObject } from './interface';
 import type { Index } from './interface';
 
@@ -56,7 +64,7 @@ export class ObjectMetaIndex implements Index {
         const sql = yield* SqlClient.SqlClient;
         const rows =
           yield* sql`SELECT * FROM objectMeta WHERE spaceId = ${query.spaceId} AND typeDxn = ${query.typeDxn}`;
-        return (rows as any[]).map((row) => ({
+        return (rows[]).map((row) => ({
           ...row,
           deleted: !!row.deleted,
         })) as ObjectMeta[];
@@ -76,7 +84,7 @@ export class ObjectMetaIndex implements Index {
 
               // Extract metadata (Logic emulating Echo APIs as strict imports are unavailable).
               // TODO(agent): Verify property access matches Obj.JSON structure.
-              const castData = data as any;
+              const castData = data;
               const objectId = castData.id;
 
               // Check for existing record by (spaceId, queueId) or (spaceId, documentId).
@@ -99,15 +107,13 @@ export class ObjectMetaIndex implements Index {
               const [{ v }] = result;
               const version = (v ?? 0) + 1;
 
-              // Extract metadata (Logic emulating Echo APIs as strict imports are unavailable)
-
-              const entityKind = castData['@kind'] ?? 'object'; // Assuming @kind property or default
-              // Type might be @type or type ref; DXN string needed
-              const typeDxn = castData['@type'] ? String(castData['@type']) : 'type'; // Defaulting to 'type' if missing to avoid null constraint issue if strict
-              const deleted = castData['@deleted'] ? 1 : 0;
-              // Relations
-              const source = entityKind === 'relation' ? (castData.source ?? null) : null;
-              const target = entityKind === 'relation' ? (castData.target ?? null) : null;
+              // Extract metadata.
+              const entityKind = castData[ATTR_KIND] ?? 'object';
+              const typeDxn = castData[ATTR_TYPE] ? String(castData[ATTR_TYPE]) : 'type';
+              const deleted = castData[ATTR_DELETED] ? 1 : 0;
+              // Relations.
+              const source = entityKind === 'relation' ? (castData[ATTR_RELATION_SOURCE] ?? null) : null;
+              const target = entityKind === 'relation' ? (castData[ATTR_RELATION_TARGET] ?? null) : null;
 
               if (existing.length > 0) {
                 yield* sql`
@@ -150,7 +156,7 @@ export class ObjectMetaIndex implements Index {
         const recordIds: number[] = [];
         for (const object of objects) {
           const { spaceId, queueId, documentId, data } = object;
-          const objectId = (data as any).id;
+          const objectId = (data).id;
 
           let result: readonly { recordId: number }[];
           if (documentId) {

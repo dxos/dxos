@@ -26,8 +26,8 @@ export class FtsIndex implements Index {
   query(query: string) {
     return Effect.gen(function* () {
       const sql = yield* SqlClient.SqlClient;
-      const result = yield* sql`SELECT * FROM ftsIndex WHERE ftsIndex MATCH ${query}`;
-      return result;
+      const result = yield* sql<Snapshot>`SELECT * FROM ftsIndex WHERE ftsIndex MATCH ${query}`;
+      return result as readonly Snapshot[];
     });
   }
 

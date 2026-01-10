@@ -13,11 +13,6 @@
       "types": "./dist/types/src/index.d.ts",
       "browser": "./dist/lib/browser/index.mjs",
       "node": "./dist/lib/node-esm/index.mjs"
-    },
-    "./testing": {
-      "types": "./dist/types/src/testing/index.d.ts",
-      "browser": "./dist/lib/browser/testing/index.mjs",
-      "node": "./dist/lib/node-esm/testing/index.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
@@ -33,11 +28,15 @@
     "src"
   ],
   "dependencies": {
+    "@dxos/async": "workspace:",
+    "@dxos/context": "workspace:",
     "@dxos/debug": "workspace:",
     "@dxos/echo": "workspace:",
     "@dxos/echo-protocol": "workspace:",
+    "@dxos/effect": "workspace:",
     "@dxos/invariant": "workspace:",
     "@dxos/keys": "workspace:",
+    "@dxos/log": "workspace:",
     "@effect/experimental": "catalog:",
     "@effect/platform": "catalog:",
     "@effect/sql": "catalog:",

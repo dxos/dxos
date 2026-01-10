@@ -8,7 +8,8 @@ import { describe, expect, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
-import { ObjectId, SpaceId } from '@dxos/keys';
+import { ATTR_KIND, ATTR_TYPE } from '@dxos/echo/internal';
+import { DXN, ObjectId, SpaceId } from '@dxos/keys';
 
 import type { IndexerObject } from './interface';
 import { ReverseRefIndex } from './reverse-ref-index';
@@ -38,10 +39,10 @@ describe('ReverseRefIndex', () => {
         recordId: 1,
         data: {
           id: sourceObjectId,
-          '@kind': 'object',
-          '@type': 'example.Type',
+          [ATTR_KIND]: 'object',
+          [ATTR_TYPE]: DXN.parse('dxn:type:example.com/type/Person:0.1.0').toString(),
           contact: { '/': targetDxn },
-        } as any,
+        },
       };
 
       yield* reverseRefIndex.update([sourceObject]);
@@ -72,15 +73,15 @@ describe('ReverseRefIndex', () => {
         recordId: 1,
         data: {
           id: sourceObjectId,
-          '@kind': 'object',
-          '@type': 'example.Type',
+          [ATTR_KIND]: 'object',
+          [ATTR_TYPE]: 'example.Type',
           nested: {
             deep: {
               ref: { '/': targetDxn1 },
             },
           },
           simple: { '/': targetDxn2 },
-        } as any,
+        },
       };
 
       yield* reverseRefIndex.update([sourceObject]);
@@ -114,10 +115,10 @@ describe('ReverseRefIndex', () => {
         recordId: 1,
         data: {
           id: sourceObjectId,
-          '@kind': 'object',
-          '@type': 'example.Type',
+          [ATTR_KIND]: 'object',
+          [ATTR_TYPE]: 'example.Type',
           items: [{ '/': targetDxn1 }, { '/': targetDxn2 }],
-        } as any,
+        },
       };
 
       yield* reverseRefIndex.update([sourceObject]);
@@ -154,10 +155,10 @@ describe('ReverseRefIndex', () => {
         recordId,
         data: {
           id: sourceObjectId,
-          '@kind': 'object',
-          '@type': 'example.Type',
+          [ATTR_KIND]: 'object',
+          [ATTR_TYPE]: 'example.Type',
           contact: { '/': targetDxn1 },
-        } as any,
+        },
       };
 
       yield* reverseRefIndex.update([sourceObject]);
@@ -173,10 +174,10 @@ describe('ReverseRefIndex', () => {
         recordId,
         data: {
           id: sourceObjectId,
-          '@kind': 'object',
-          '@type': 'example.Type',
+          [ATTR_KIND]: 'object',
+          [ATTR_TYPE]: 'example.Type',
           contact: { '/': targetDxn2 },
-        } as any,
+        },
       };
 
       yield* reverseRefIndex.update([updatedObject]);
@@ -206,11 +207,11 @@ describe('ReverseRefIndex', () => {
         recordId: 1,
         data: {
           id: sourceObjectId,
-          '@kind': 'object',
-          '@type': 'example.Type',
+          [ATTR_KIND]: 'object',
+          [ATTR_TYPE]: 'example.Type',
           name: 'Test Object',
           count: 42,
-        } as any,
+        },
       };
 
       yield* reverseRefIndex.update([sourceObject]);
@@ -238,10 +239,10 @@ describe('ReverseRefIndex', () => {
         recordId: 1,
         data: {
           id: sourceObjectId,
-          '@kind': 'object',
-          '@type': 'example.Type',
+          [ATTR_KIND]: 'object',
+          [ATTR_TYPE]: 'example.Type',
           ref: { '/': targetDxn },
-        } as any,
+        },
       };
 
       yield* reverseRefIndex.update([sourceObject]);

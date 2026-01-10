@@ -8,6 +8,7 @@ import { describe, expect, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
+import { ATTR_TYPE } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
 import { ObjectId, SpaceId } from '@dxos/keys';
 
@@ -111,7 +112,7 @@ describe('IndexEngine', () => {
         documentId: 'doc-1',
         queueId: null,
         recordId: null,
-        data: { id: ObjectId.random(), '@type': 'test.Type', title: 'Hello' } as any,
+        data: { id: ObjectId.random(), [ATTR_TYPE]: 'test.Type', title: 'Hello' },
       };
 
       dataSource.push([obj1]);
@@ -138,7 +139,7 @@ describe('IndexEngine', () => {
         documentId: obj1.documentId,
         queueId: null,
         recordId: null,
-        data: { id: obj1.data.id, '@type': obj1.data['@type'], title: 'Hello World' } as any,
+        data: { id: obj1.data.id, [ATTR_TYPE]: obj1.data[ATTR_TYPE], title: 'Hello World' },
       };
       dataSource.push([obj1Updated]);
 
@@ -172,21 +173,21 @@ describe('IndexEngine', () => {
           queueId: null,
           documentId: 'd1',
           recordId: null,
-          data: { id: ObjectId.random(), '@type': 'test.TypeA', val: 1 } as any,
+          data: { id: ObjectId.random(), [ATTR_TYPE]: 'test.TypeA', val: 1 },
         },
         {
           spaceId,
           queueId: null,
           documentId: 'd2',
           recordId: null,
-          data: { id: ObjectId.random(), '@type': 'test.TypeA', val: 2 } as any,
+          data: { id: ObjectId.random(), [ATTR_TYPE]: 'test.TypeA', val: 2 },
         },
         {
           spaceId,
           queueId: null,
           documentId: 'd3',
           recordId: null,
-          data: { id: ObjectId.random(), '@type': 'test.TypeB', val: 3 } as any,
+          data: { id: ObjectId.random(), [ATTR_TYPE]: 'test.TypeB', val: 3 },
         },
       ];
 
