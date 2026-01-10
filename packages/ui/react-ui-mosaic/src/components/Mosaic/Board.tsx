@@ -6,14 +6,15 @@ import { useComposedRefs } from '@radix-ui/react-compose-refs';
 import * as Schema from 'effect/Schema';
 import React, { Fragment, forwardRef, useMemo, useRef } from 'react';
 
-import { Ref, Type } from '@dxos/echo';
+import { Obj, Ref, Type } from '@dxos/echo';
 import { ObjectId } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { ScrollArea, Tag, type ThemedClassName } from '@dxos/react-ui';
+import { ScrollArea, type SlottableClassName, Tag, type ThemedClassName } from '@dxos/react-ui';
 import { Json } from '@dxos/react-ui-syntax-highlighter';
 import { getHashStyles, mx } from '@dxos/ui-theme';
 import { arrayMove, isTruthy } from '@dxos/util';
 
+import { useVisibleItems } from '../../hooks';
 import { Card, type CardMenuProps } from '../Card';
 import { Focus } from '../Focus';
 
@@ -61,7 +62,7 @@ export interface TestColumn extends Schema.Schema.Type<typeof TestColumn> {}
 // Board
 //
 
-type BoardProps = { id: string; columns: TestColumn[]; debug?: boolean };
+type BoardProps = { id: string } & ColumnListProps;
 
 export const Board = forwardRef<HTMLDivElement, BoardProps>(({ id, columns, debug }, forwardedRef) => {
   const [DebugInfo, debugHandler] = useContainerDebug(debug);
@@ -69,7 +70,9 @@ export const Board = forwardRef<HTMLDivElement, BoardProps>(({ id, columns, debu
   const handler = useMemo<MosaicContainerProps['handler']>(
     () => ({
       id,
-      canDrop: () => true,
+      canDrop: ({ source }) => {
+        return Obj.instanceOf(TestColumn, source.object);
+      },
     }),
     [id, columns],
   );
@@ -81,21 +84,45 @@ export const Board = forwardRef<HTMLDivElement, BoardProps>(({ id, columns, debu
     >
       <Focus.Group asChild axis='horizontal'>
         <Mosaic.Container asChild autoscroll axis='horizontal' withFocus debug={debugHandler} handler={handler}>
-          <div role='list' className='flex bs-full plb-2 overflow-x-auto'>
-            <Placeholder axis='horizontal' location={0.5} />
-            {columns.map((column, i) => (
-              <Fragment key={column.id}>
-                <Column column={column} debug={debug} location={i} object={column} />
-                <Placeholder axis='horizontal' location={i + 1.5} />
-              </Fragment>
-            ))}
-          </div>
+          <ColumnList columns={columns} debug={debug} />
         </Mosaic.Container>
       </Focus.Group>
       <DebugInfo />
     </div>
   );
 });
+
+//
+// ColumnList
+//
+
+type ColumnListProps = SlottableClassName<{ columns: TestColumn[]; debug?: boolean }>;
+
+const ColumnList = forwardRef<HTMLDivElement, ColumnListProps>(
+  ({ className, classNames, columns, debug, ...props }, forwardedRef) => {
+    const { dragging } = useMosaicContainer(ColumnList.displayName!);
+    const visibleColumns = useVisibleItems(columns, dragging?.source.data);
+
+    return (
+      <div
+        role='list'
+        {...props}
+        className={mx('flex bs-full plb-2 overflow-x-auto', className, classNames)}
+        ref={forwardedRef}
+      >
+        <Placeholder axis='horizontal' location={0.5} />
+        {visibleColumns.map((column, i) => (
+          <Fragment key={column.id}>
+            <Column column={column} debug={debug} location={i + 1} object={column} />
+            <Placeholder axis='horizontal' location={i + 1.5} />
+          </Fragment>
+        ))}
+      </div>
+    );
+  },
+);
+
+ColumnList.displayName = 'ColumnList';
 
 //
 // Column
@@ -114,7 +141,9 @@ export const Column = forwardRef<HTMLDivElement, ColumnProps>(
     const handler = useMemo<MosaicContainerProps['handler']>(
       () => ({
         id,
-        canDrop: () => true,
+        canDrop: ({ source }) => {
+          return Obj.instanceOf(TestItem, source.object);
+        },
         onTake: ({ source }, cb) => {
           log.info('onTake', { source });
           const from = items.findIndex((item) => item.target?.id === source.object.id);
@@ -157,7 +186,14 @@ export const Column = forwardRef<HTMLDivElement, ColumnProps>(
 
     return (
       <Mosaic.Tile asChild dragHandle={dragHandleRef.current} object={object} location={location}>
-        <div className={mx('grid bs-full min-is-[20rem] max-is-[25rem] overflow-hidden', debug && 'grid-rows-2 gap-2')}>
+        <div
+          className={mx(
+            'grid bs-full min-is-[20rem] max-is-[25rem] overflow-hidden',
+            // TODO(burdon): Color.
+            'bg-deckSurface',
+            debug && 'grid-rows-2 gap-2',
+          )}
+        >
           <Focus.Group ref={forwardedRef} classNames={mx('flex flex-col overflow-hidden', classNames)}>
             <Card.Toolbar>
               <Card.DragHandle ref={dragHandleRef} />
@@ -186,21 +222,9 @@ type ItemListProps = { items: TestItem[] } & Pick<TileProps, 'menuItems'>;
 
 const ItemList = forwardRef<HTMLDivElement, ItemListProps>(({ items, menuItems, ...props }, forwardedRef) => {
   const { dragging } = useMosaicContainer(ItemList.displayName!);
-
-  // TODO(burdon): Factor out.
-  const visibleItems = useMemo(() => {
-    if (!dragging) {
-      return items;
-    }
-
-    const idx = items.findIndex((item) => item.id === dragging.source.data.object.id);
-    const newItems = items.slice();
-    newItems.splice(idx, 1);
-    return newItems;
-  }, [items, dragging]);
+  const visibleItems = useVisibleItems(items, dragging?.source.data);
 
   // TODO(burdon): WARNING: Auto scrolling has been attached to an element that appears not to be scrollable.
-  // TODO(burdon): Support DropIndicator or Placeholder variants.
   return (
     <ScrollArea.Root {...props}>
       <ScrollArea.Viewport classNames='pli-3' ref={forwardedRef}>
@@ -237,13 +261,15 @@ const Tile = forwardRef<HTMLDivElement, TileProps>(({ classNames, object, locati
   return (
     <Mosaic.Tile asChild dragHandle={dragHandleRef.current} object={object} location={location}>
       <Focus.Group asChild>
-        <Card.StaticRoot classNames={classNames} onClick={() => rootRef.current?.focus()} ref={composedRef}>
+        <Card.Root classNames={classNames} onClick={() => rootRef.current?.focus()} ref={composedRef}>
           <Card.Toolbar>
             <Card.DragHandle ref={dragHandleRef} />
             <Card.Heading>{object.name}</Card.Heading>
             <Card.Menu context={object} items={menuItems} />
           </Card.Toolbar>
-          <Card.Section classNames='text-description'>{object.description}</Card.Section>
+          <Card.Section icon='ph--user--regular' classNames='text-description'>
+            {object.description}
+          </Card.Section>
           <Card.Section icon='ph--tag--regular'>
             {object.label && (
               <div role='none' className='flex shrink-0 gap-1 text-xs'>
@@ -251,7 +277,7 @@ const Tile = forwardRef<HTMLDivElement, TileProps>(({ classNames, object, locati
               </div>
             )}
           </Card.Section>
-        </Card.StaticRoot>
+        </Card.Root>
       </Focus.Group>
     </Mosaic.Tile>
   );
@@ -267,7 +293,10 @@ const Placeholder = (props: MosiacPlaceholderProps<number>) => {
   return (
     <Mosaic.Placeholder {...props} classNames={styles.placeholder.root}>
       <div
-        className={mx('bg-baseSurface border border-dashed border-separator rounded-sm', styles.placeholder.content)}
+        className={mx(
+          'flex bs-full bg-baseSurface border border-dashed border-separator rounded-sm',
+          styles.placeholder.content,
+        )}
       />
     </Mosaic.Placeholder>
   );

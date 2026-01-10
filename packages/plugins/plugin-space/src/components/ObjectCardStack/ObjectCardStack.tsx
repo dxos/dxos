@@ -52,9 +52,9 @@ export const ObjectCardStack = forwardRef<HTMLDivElement, ObjectCardStackProps>(
             {selectedObjects.map((object) => (
               <CardStack.Item key={object.id} asChild>
                 <StackItem.Root item={object}>
-                  <Card.StaticRoot>
+                  <Card.Root>
                     <ObjectForm object={object} schema={schema} />
-                  </Card.StaticRoot>
+                  </Card.Root>
                 </StackItem.Root>
               </CardStack.Item>
             ))}

@@ -37,9 +37,9 @@ const meta = {
   render: (args) => {
     return (
       <IntrinsicCardContainer>
-        <Card.StaticRoot>
+        <Card.Root>
           <EventCard {...args} />
-        </Card.StaticRoot>
+        </Card.Root>
       </IntrinsicCardContainer>
     );
   },

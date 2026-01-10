@@ -36,7 +36,7 @@ const Middle = forwardRef<
   );
 });
 
-// Leaf component (like MyButton or Card.StaticRoot).
+// Leaf component (like MyButton or Card.Root).
 const Leaf = forwardRef<HTMLButtonElement, { children: ReactNode; className?: string; role?: string }>(
   ({ className, ...props }, ref) => {
     return (

@@ -60,7 +60,7 @@ export const BoardCell = ({ classNames, children, item, layout, draggable: isDra
   }, [isDraggable, zoom]);
 
   return (
-    <Card.StaticRoot
+    <Card.Root
       ref={rootRef}
       // TODO(burdon): Common fragment for placeholder opacity?
       classNames={mx(
@@ -87,7 +87,7 @@ export const BoardCell = ({ classNames, children, item, layout, draggable: isDra
       <div role='none' {...{ inert: true }} className='pointer-events-none min-bs-0 min-is-0'>
         {children}
       </div>
-    </Card.StaticRoot>
+    </Card.Root>
   );
 };
 

@@ -32,11 +32,12 @@ type CardSharedProps = ThemedClassName<ComponentPropsWithoutRef<'div'>> & {
   className?: string;
 };
 
+type CardRootProps = CardSharedProps & { id?: string };
+
 /**
  *
  */
-// TODO(burdon): Document???
-const CardStaticRoot = forwardRef<HTMLDivElement, CardSharedProps & { id?: string }>(
+const CardRoot = forwardRef<HTMLDivElement, CardRootProps>(
   ({ children, classNames, className, id, asChild, role = 'group', ...props }, forwardedRef) => {
     const Root = asChild ? Slot : 'div';
     return (
@@ -55,7 +56,8 @@ const CardStaticRoot = forwardRef<HTMLDivElement, CardSharedProps & { id?: strin
 
 /**
  * This should be used by Surface fulfillments in cases where the content may or may not already be encapsulated (e.g., in a Popover) and knows this based on the `role` it receives.
- * This will render a `Card.StaticRoot` by default, otherwise it will render a `div` primitive with the appropriate styling for specific handled situations.
+ * This will render a `Card.Root` by default, otherwise it will render a `div` primitive with the appropriate styling for specific handled situations.
+ * @deprecated Use Card.Root.
  */
 const CardSurfaceRoot = forwardRef<HTMLDivElement, ThemedClassName<PropsWithChildren<{ id?: string; role?: string }>>>(
   ({ id, role = 'never', children, classNames }, forwardedRef) => {
@@ -78,7 +80,7 @@ const CardSurfaceRoot = forwardRef<HTMLDivElement, ThemedClassName<PropsWithChil
       );
     } else {
       return (
-        <CardStaticRoot
+        <CardRoot
           id={id}
           classNames={[
             role === 'card--transclusion' && 'mlb-1',
@@ -88,7 +90,7 @@ const CardSurfaceRoot = forwardRef<HTMLDivElement, ThemedClassName<PropsWithChil
           ref={forwardedRef}
         >
           {children}
-        </CardStaticRoot>
+        </CardRoot>
       );
     }
   },
@@ -232,17 +234,13 @@ const CardChrome = forwardRef<HTMLDivElement, CardSharedProps>(
 // Section
 //
 
-type CardSectionProps = CardSharedProps & { indent?: boolean; icon?: string };
+type CardSectionProps = CardSharedProps & { fullWidth?: boolean; icon?: string };
 
 const CardSection = forwardRef<HTMLDivElement, CardSectionProps>(
-  ({ children, classNames, className, role = 'none', indent, icon, ...props }, forwardedRef) => {
+  ({ children, classNames, className, role = 'none', fullWidth, icon, ...props }, forwardedRef) => {
     return (
-      <div
-        role={role}
-        className={mx(icon || (indent && cardSection), 'pli-1', classNames, className)}
-        ref={forwardedRef}
-      >
-        {indent && cardSection && (
+      <div role={role} className={mx(!fullWidth && cardSection, 'pli-1', classNames, className)} ref={forwardedRef}>
+        {(!fullWidth || icon) && (
           <div role='none' className='grid bs-[var(--rail-item)] is-[var(--rail-item)] place-items-center'>
             {icon && <Icon icon={icon} />}
           </div>
@@ -278,7 +276,7 @@ const CardText = forwardRef<HTMLDivElement, CardSharedProps>(
 //
 
 export const Card = {
-  StaticRoot: CardStaticRoot,
+  Root: CardRoot,
   SurfaceRoot: CardSurfaceRoot,
   Toolbar: CardToolbar,
   ToolbarIconButton: CardToolbarIconButton,
@@ -292,6 +290,6 @@ export const Card = {
   Text: CardText,
 };
 
-export type { CardMenuProps };
+export type { CardRootProps, CardMenuProps };
 
 export { cardRoot, cardHeading, cardText, cardChrome, cardSpacing, cardDefaultInlineSize };

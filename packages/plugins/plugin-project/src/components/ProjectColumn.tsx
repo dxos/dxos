@@ -78,9 +78,9 @@ export const ProjectColumn = ({ column }: ProjectColumnProps) => {
               return (
                 <CardStack.Item key={item.id} asChild>
                   <StackItem.Root item={item} focusIndicatorVariant='group'>
-                    <Card.StaticRoot>
+                    <Card.Root>
                       <Item item={item} projectionModel={projectionModel} />
-                    </Card.StaticRoot>
+                    </Card.Root>
                   </StackItem.Root>
                 </CardStack.Item>
               );

@@ -50,7 +50,7 @@ const DefaultStory = ({ columns: columnsProp = 1, debug = false }: StoryProps) =
   );
 
   return (
-    <Mosaic.Root>
+    <Mosaic.Root asChild debug={debug}>
       <div className={mx('grid overflow-hidden', debug && 'grid-cols-[1fr_25rem] gap-2')}>
         <Board id='board' columns={columns} debug={debug} />
         {debug && (
