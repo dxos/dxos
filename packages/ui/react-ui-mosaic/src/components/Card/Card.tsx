@@ -239,13 +239,13 @@ type CardSectionProps = CardSharedProps & { fullWidth?: boolean; icon?: string }
 const CardSection = forwardRef<HTMLDivElement, CardSectionProps>(
   ({ children, classNames, className, role = 'none', fullWidth, icon, ...props }, forwardedRef) => {
     return (
-      <div role={role} className={mx(!fullWidth && cardSection, 'pli-1', classNames, className)} ref={forwardedRef}>
+      <div role={role} className={mx(!fullWidth && cardSection, 'pli-1')} ref={forwardedRef}>
         {(!fullWidth || icon) && (
           <div role='none' className='grid bs-[var(--rail-item)] is-[var(--rail-item)] place-items-center'>
             {icon && <Icon icon={icon} />}
           </div>
         )}
-        <div {...props} role='none' className='plb-1'>
+        <div {...props} role='none' className={mx('plb-1', classNames, className)} ref={forwardedRef}>
           {children}
         </div>
       </div>

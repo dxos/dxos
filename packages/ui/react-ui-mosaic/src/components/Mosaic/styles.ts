@@ -28,10 +28,10 @@ export const styles = {
     ],
     content: [
       'transition-all delay-0 duration-0',
+      'group-data-[mosaic-placeholder-state=active]:duration-200',
       'group-data-[mosaic-placeholder-axis=vertical]:bs-0',
       'group-data-[mosaic-placeholder-axis=vertical]:group-data-[mosaic-placeholder-state=active]:bs-[var(--mosaic-placeholder-height)]',
       'group-data-[mosaic-placeholder-axis=horizontal]:group-data-[mosaic-placeholder-state=active]:is-[var(--mosaic-placeholder-width)]',
-      'group-data-[mosaic-placeholder-state=active]:duration-100',
     ],
   },
 } satisfies Record<string, Record<string, ClassNameValue>>;

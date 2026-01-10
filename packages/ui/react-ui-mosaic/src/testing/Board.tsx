@@ -256,7 +256,7 @@ const Tile = forwardRef<HTMLDivElement, TileProps>(({ classNames, object, locati
             <Card.Heading>{object.name}</Card.Heading>
             <Card.Menu context={object} items={menuItems} />
           </Card.Toolbar>
-          <Card.Section icon='ph--user--regular' classNames='text-description'>
+          <Card.Section icon='ph--note--regular' classNames='text-description'>
             {object.description}
           </Card.Section>
           <Card.Section icon='ph--tag--regular'>
