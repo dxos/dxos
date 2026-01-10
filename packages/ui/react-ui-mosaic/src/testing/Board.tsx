@@ -105,8 +105,8 @@ type ColumnListProps = SlottableClassName<{ columns: TestColumn[]; debug?: boole
 
 const ColumnList = forwardRef<HTMLDivElement, ColumnListProps>(
   ({ className, classNames, columns, debug, ...props }, forwardedRef) => {
-    const { dragging } = useMosaicContainer(ColumnList.displayName!);
-    const visibleColumns = useVisibleItems(columns, dragging?.source.data);
+    const { id, dragging } = useMosaicContainer(ColumnList.displayName!);
+    const visibleColumns = useVisibleItems({ id, items: columns, dragging: dragging?.source.data });
 
     return (
       <div
@@ -210,8 +210,8 @@ Column.displayName = 'Column';
 type ItemListProps = { items: TestItem[] } & Pick<TileProps, 'menuItems'>;
 
 const ItemList = forwardRef<HTMLDivElement, ItemListProps>(({ items, menuItems, ...props }, forwardedRef) => {
-  const { dragging } = useMosaicContainer(ItemList.displayName!);
-  const visibleItems = useVisibleItems(items, dragging?.source.data);
+  const { id, dragging } = useMosaicContainer(ItemList.displayName!);
+  const visibleItems = useVisibleItems({ id, items, dragging: dragging?.source.data });
 
   // TODO(burdon): WARNING: Auto scrolling has been attached to an element that appears not to be scrollable.
   return (

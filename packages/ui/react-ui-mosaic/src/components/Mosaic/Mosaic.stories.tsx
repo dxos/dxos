@@ -32,7 +32,7 @@ const DefaultStory = ({ columns: columnsProp = 1, debug = false }: StoryProps) =
   const [columns, setColumns] = useState<TestColumn[]>(
     Array.from({ length: columnsProp }).map((_, i) => {
       const col = Obj.make(TestColumn, {
-        items: Array.from({ length: faker.number.int({ min: 8, max: 20 }) }).map((_, j) => {
+        items: Array.from({ length: faker.number.int({ min: 0, max: 20 }) }).map((_, j) => {
           const item = db.add(
             Obj.make(TestItem, {
               name: faker.lorem.sentence(3),

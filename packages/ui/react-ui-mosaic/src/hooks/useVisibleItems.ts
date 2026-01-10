@@ -8,12 +8,21 @@ import { type Obj } from '@dxos/echo';
 
 import { type MosaicTileData } from '../components';
 
+export type UseVisibleItemsProps<T extends Obj.Any> = {
+  /** Container id. */
+  id: string;
+  /** Current items. */
+  items: T[];
+  /** Currently dragging item. */
+  dragging: MosaicTileData | undefined;
+};
+
 /**
  * Returns items with the dragging item removed.
  */
-export const useVisibleItems = <T extends Obj.Any>(items: T[], dragging: MosaicTileData | undefined): T[] => {
+export const useVisibleItems = <T extends Obj.Any>({ id, items, dragging }: UseVisibleItemsProps<T>): T[] => {
   return useMemo(() => {
-    if (!dragging) {
+    if (!dragging || id !== dragging.containerId) {
       return items;
     }
 
@@ -21,5 +30,5 @@ export const useVisibleItems = <T extends Obj.Any>(items: T[], dragging: MosaicT
     const newItems = items.slice();
     newItems.splice(idx, 1);
     return newItems;
-  }, [items, dragging]);
+  }, [id, items, dragging]);
 };
