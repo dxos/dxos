@@ -12,10 +12,11 @@ import { ATTR_DELETED, ATTR_RELATION_SOURCE, ATTR_RELATION_TARGET, ATTR_TYPE } f
 import { DatabaseDirectory, ObjectStructure, SpaceDocVersion } from '@dxos/echo-protocol';
 import { type DataSourceCursor, type IndexDataSource, type IndexerObject } from '@dxos/index-core';
 import { type IndexCursor } from '@dxos/index-core';
-import { type DXN, type SpaceId } from '@dxos/keys';
+import { type DXN, PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 
 import { type AutomergeHost } from '../automerge';
+import { createIdFromSpaceKey } from '../common';
 
 const HEADS_DELIMITER = '|';
 
@@ -127,7 +128,8 @@ export class AutomergeDataSource implements IndexDataSource {
             // Skip documents without a space key.
             continue;
           }
-          const spaceId = spaceKeyHex as SpaceId;
+          const spaceKey = PublicKey.fromHex(spaceKeyHex);
+          const spaceId = yield* Effect.promise(() => createIdFromSpaceKey(spaceKey));
 
           // Extract objects from the document.
           const docObjects = doc.objects ?? {};

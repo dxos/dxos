@@ -178,4 +178,28 @@ export class ObjectMetaIndex implements Index {
         return recordIds;
       }),
   );
+
+  /**
+   * Look up object metadata by recordIds.
+   */
+  lookupByRecordIds = Effect.fn('ObjectMetaIndex.lookupByRecordIds')(
+    (recordIds: number[]): Effect.Effect<readonly ObjectMeta[], SqlError.SqlError, SqlClient.SqlClient> =>
+      Effect.gen(function* () {
+        if (recordIds.length === 0) {
+          return [];
+        }
+
+        const sql = yield* SqlClient.SqlClient;
+        const placeholders = recordIds.map(() => '?').join(', ');
+        const rows = yield* sql.unsafe<ObjectMeta>(
+          `SELECT * FROM objectMeta WHERE recordId IN (${placeholders})`,
+          recordIds,
+        );
+
+        return rows.map((row) => ({
+          ...row,
+          deleted: !!row.deleted,
+        }));
+      }),
+  );
 }

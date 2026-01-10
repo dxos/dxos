@@ -14,6 +14,12 @@ export const Snapshot = Schema.Struct({
 });
 export interface Snapshot extends Schema.Schema.Type<typeof Snapshot> {}
 
+export const FtsResult = Schema.Struct({
+  rowid: Schema.Number,
+  snapshot: Schema.String,
+});
+export interface FtsResult extends Schema.Schema.Type<typeof FtsResult> {}
+
 export interface FtsQuery {
   query: string;
 }
@@ -30,8 +36,8 @@ export class FtsIndex implements Index {
   query({ query }: FtsQuery) {
     return Effect.gen(function* () {
       const sql = yield* SqlClient.SqlClient;
-      const result = yield* sql<Snapshot>`SELECT * FROM ftsIndex WHERE ftsIndex MATCH ${query} LIMIT 10`;
-      return result as readonly Snapshot[];
+      const result = yield* sql<FtsResult>`SELECT rowid, * FROM ftsIndex WHERE ftsIndex MATCH ${query} LIMIT 10`;
+      return result as readonly FtsResult[];
     });
   }
 
