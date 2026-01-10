@@ -2,12 +2,40 @@ import { SpaceId } from '@dxos/keys';
 import { Effect, Schema } from 'effect';
 
 export const Block = Schema.Struct({
+  /**
+   * Unique identifier of the peer that created the block.
+   */
   actorId: Schema.String,
+
+  /**
+   * Sequence number of the block in the feed.
+   */
   sequence: Schema.Number,
+
+  /**
+   * Unique identifier of the peer that created the predecessor block.
+   */
   predActorId: Schema.NullOr(Schema.String),
+
+  /**
+   * Sequence number of the predecessor block.
+   */
   predSequence: Schema.NullOr(Schema.Number),
+
+  /**
+   * Global position of the block in the replication log.
+   * `null` if the block has not been assigned a position yet.
+   */
   position: Schema.NullOr(Schema.Number),
+
+  /**
+   * Unix timestamp in milliseconds when the block was created.
+   */
   timestamp: Schema.Number,
+
+  /**
+   * The content of the block.
+   */
   data: Schema.Uint8Array,
 });
 export interface Block extends Schema.Schema.Type<typeof Block> {}

@@ -34,9 +34,11 @@
   ],
   "dependencies": {
     "@dxos/keys": "workspace:*",
+    "@effect/sql": "catalog:",
+    "@effect/sql-sqlite-node": "catalog:",
+    "@effect/vitest": "catalog:",
     "effect": "catalog:"
   },
-  "devDependencies": {},
   "publishConfig": {
     "access": "public"
   },

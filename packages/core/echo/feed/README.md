@@ -42,21 +42,21 @@ Stores the mapping between global feed identifiers and local integer IDs.
 
 Stores the actual feed data. `blockId` and `predecessorId` are split into sequence number and peer ID columns.
 
-| Field                | Type             | Description                                                 |
-| :------------------- | :--------------- | :---------------------------------------------------------- |
-| `feedPrivateId`      | `number`         | Foreign key to `feeds.feedPrivateId`.                       |
-| `position`           | `number \| null` | The global position index. `null` if unpositioned.          |
-| `seq`                | `number`         | **Sequence Number** part of the Block ID.                   |
-| `peerId`             | `string`         | **Peer ID** part of the Block ID.                           |
-| `predSeq`            | `number`         | **Sequence Number** part of the Predecessor ID.             |
-| `predPeerId`         | `string`         | **Peer ID** part of the Predecessor ID.                     |
-| `insertionTimestamp` | `number`         | Unix timestamp in milliseconds when the block was inserted. |
-| `data`               | `Uint8Array`     | The content of the block. **Immutable**.                    |
+| Field           | Type             | Description                                                |
+| :-------------- | :--------------- | :--------------------------------------------------------- |
+| `feedPrivateId` | `number`         | Foreign key to `feeds.feedPrivateId`.                      |
+| `position`      | `number \| null` | The global position index. `null` if unpositioned.         |
+| `sequence`      | `number`         | **Sequence Number** part of the Block ID.                  |
+| `actorId`       | `string`         | **Actor ID** (Public Key) part of the Block ID.            |
+| `predSequence`  | `number`         | **Sequence Number** part of the Predecessor ID.            |
+| `predActorId`   | `string`         | **Actor ID** (Public Key) part of the Predecessor ID.      |
+| `timestamp`     | `number`         | Unix timestamp in milliseconds when the block was created. |
+| `data`          | `Uint8Array`     | The content of the block. **Immutable**.                   |
 
 **Indexes**:
 
 - Unique Index: `(feedPrivateId, position)`
-- Index: `(feedPrivateId, seq, peerId)`
+- Index: `(feedPrivateId, sequence, actorId)`
 
 ### Logic
 
