@@ -2,6 +2,11 @@
 // Copyright 2022 DXOS.org
 //
 
+import * as Reactivity from '@effect/experimental/Reactivity';
+import * as SqliteClient from '@effect/sql-sqlite-node/SqliteClient';
+import * as Layer from 'effect/Layer';
+import * as ManagedRuntime from 'effect/ManagedRuntime';
+
 import { type Config } from '@dxos/config';
 import { Context } from '@dxos/context';
 import { CredentialGenerator, createCredentialSignerWithChain } from '@dxos/credentials';
@@ -179,7 +184,17 @@ export class TestPeer {
   }
 
   get echoHost() {
-    return (this._props.echoHost ??= new EchoHost({ kv: this.level }));
+    return (this._props.echoHost ??= new EchoHost({
+      kv: this.level,
+      runtime: ManagedRuntime.make(
+        Layer.merge(
+          SqliteClient.layer({
+            filename: ':memory:',
+          }),
+          Reactivity.layer,
+        ).pipe(Layer.orDie),
+      ).runtimeEffect,
+    }));
   }
 
   get meshEchoReplicator() {

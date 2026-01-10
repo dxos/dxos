@@ -4,13 +4,14 @@
 
 import { type AnyDocumentId, type AutomergeUrl, type DocHandle, type DocumentId } from '@automerge/automerge-repo';
 import type * as SqlClient from '@effect/sql/SqlClient';
+import type * as Effect from 'effect/Effect';
 import * as Runtime from 'effect/Runtime';
 
 import { DeferredTask, sleep } from '@dxos/async';
 import { Context, LifecycleState, Resource } from '@dxos/context';
 import { todo } from '@dxos/debug';
 import { type DatabaseDirectory, SpaceDocVersion, createIdFromSpaceKey } from '@dxos/echo-protocol';
-import { unwrapExit } from '@dxos/effect';
+import { runAndForwardErrors, unwrapExit } from '@dxos/effect';
 import { IndexEngine } from '@dxos/index-core';
 import { IndexMetadataStore, IndexStore, Indexer } from '@dxos/indexing';
 import { invariant } from '@dxos/invariant';
@@ -62,7 +63,18 @@ export type EchoHostProps = {
   getSpaceKeyByRootDocumentId?: RootDocumentSpaceKeyProvider;
 
   indexing?: Partial<EchoHostIndexingConfig>;
+  runtime: RuntimeProvider<SqlClient.SqlClient>;
 };
+
+// TODO(dmaretskyi): Move to @dxos/effect.
+export type RuntimeProvider<R> = Effect.Effect<Runtime.Runtime<R>>;
+
+const runWithRuntimeProvider =
+  <A, R>(provider: RuntimeProvider<R>) =>
+  async (effect: Effect.Effect<A, any, R>): Promise<A> => {
+    const runtime = await runAndForwardErrors(provider);
+    return unwrapExit(await effect.pipe(Runtime.runPromiseExit(runtime)));
+  };
 
 /**
  * Host for the Echo database.
@@ -73,18 +85,19 @@ export type EchoHostProps = {
 export class EchoHost extends Resource {
   private readonly _indexMetadataStore: IndexMetadataStore;
   private readonly _indexer: Indexer;
-  private readonly _automergeDataSource: AutomergeDataSource;
-  private readonly _indexer2: IndexEngine;
   private readonly _automergeHost: AutomergeHost;
   private readonly _queryService: QueryServiceImpl;
   private readonly _dataService: DataServiceImpl;
   private readonly _spaceStateManager = new SpaceStateManager();
   private readonly _echoDataMonitor: EchoDataMonitor;
-  private readonly _runtime: Runtime.Runtime<SqlClient.SqlClient>;
+
+  private readonly _automergeDataSource: AutomergeDataSource;
+  private readonly _indexer2: IndexEngine;
+  private readonly _runtime: RuntimeProvider<SqlClient.SqlClient>;
 
   private _updateIndexes!: DeferredTask;
 
-  constructor({ kv, indexing = {}, peerIdProvider, getSpaceKeyByRootDocumentId }: EchoHostProps) {
+  constructor({ kv, indexing = {}, peerIdProvider, getSpaceKeyByRootDocumentId, runtime }: EchoHostProps) {
     super();
 
     const indexingConfig = { ...DEFAULT_INDEXING_CONFIG, ...indexing };
@@ -99,6 +112,7 @@ export class EchoHost extends Resource {
       getSpaceKeyByRootDocumentId,
     });
 
+    this._runtime = runtime;
     this._automergeDataSource = new AutomergeDataSource(this._automergeHost);
     this._indexer = new Indexer({
       db: kv,
@@ -323,11 +337,9 @@ export class EchoHost extends Resource {
   }
 
   private async _runUpdateIndexes(): Promise<void> {
-    const { updated } = unwrapExit(
-      await this._indexer2
-        .update(this._automergeDataSource, { spaceId: null, limit: 50 })
-        .pipe(Runtime.runPromiseExit(this._runtime)),
-    );
+    const { updated } = await this._indexer2
+      .update(this._automergeDataSource, { spaceId: null, limit: 50 })
+      .pipe(runWithRuntimeProvider(this._runtime));
     await sleep(250);
     if (updated > 0) {
       this._updateIndexes.schedule();
