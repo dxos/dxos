@@ -340,7 +340,7 @@ type ContainerState = { type: 'idle' } | { type: 'active'; bounds?: DOMRect };
 
 type ContainerContextValue<Location = LocationType> = {
   id: string;
-  handler: MosaicEventHandler;
+  eventHandler: MosaicEventHandler;
   axis?: AllowedAxis;
   dragging?: DraggingState;
   scrolling?: boolean;
@@ -362,7 +362,7 @@ const CONTAINER_PLACEHOLDER_HEIGHT = '--mosaic-placeholder-height';
 
 type ContainerProps = SlottableClassName<
   PropsWithChildren<
-    Pick<ContainerContextValue, 'handler' | 'axis'> & {
+    Pick<ContainerContextValue, 'eventHandler' | 'axis'> & {
       asChild?: boolean;
       autoscroll?: boolean;
       withFocus?: boolean;
@@ -377,7 +377,7 @@ const Container = forwardRef<HTMLDivElement, ContainerProps>(
       className,
       classNames,
       children,
-      handler,
+      eventHandler,
       axis = 'vertical',
       asChild,
       autoscroll,
@@ -406,19 +406,19 @@ const Container = forwardRef<HTMLDivElement, ContainerProps>(
     }, [setFocus, withFocus, state]);
 
     // Register handler.
-    const { addContainer, removeContainer } = useRootContext(handler.id);
+    const { addContainer, removeContainer } = useRootContext(eventHandler.id);
     useEffect(() => {
-      addContainer(handler);
-      return () => removeContainer(handler.id);
-    }, [handler]);
+      addContainer(eventHandler);
+      return () => removeContainer(eventHandler.id);
+    }, [eventHandler]);
 
     const data = useMemo<MosaicContainerData>(
       () =>
         ({
           type: 'container',
-          id: handler.id,
+          id: eventHandler.id,
         }) satisfies MosaicContainerData,
-      [handler.id],
+      [eventHandler.id],
     );
 
     useEffect(() => {
@@ -470,7 +470,7 @@ const Container = forwardRef<HTMLDivElement, ContainerProps>(
              */
             canDrop: ({ source }) => {
               const data = getSourceData(source);
-              return (data && handler.canDrop?.({ source: data })) || false;
+              return (data && eventHandler.canDrop?.({ source: data })) || false;
             },
 
             // TODO(burdon): Provide semantic intent to onDrop.
@@ -499,7 +499,7 @@ const Container = forwardRef<HTMLDivElement, ContainerProps>(
              */
             onDragLeave: ({ source }) => {
               const sourceData = source.data as MosaicTileData;
-              if (sourceData.containerId !== handler.id) {
+              if (sourceData.containerId !== eventHandler.id) {
                 setState({ type: 'idle' });
               }
             },
@@ -524,12 +524,12 @@ const Container = forwardRef<HTMLDivElement, ContainerProps>(
           .filter(isTruthy)
           .flatMap((x) => x),
       );
-    }, [rootRef, handler, data]);
+    }, [rootRef, eventHandler, data]);
 
     return (
       <ContainerContextProvider
-        id={handler.id}
-        handler={handler}
+        id={eventHandler.id}
+        eventHandler={eventHandler}
         axis={axis}
         state={state}
         dragging={state.type === 'active' ? dragging : undefined}
@@ -641,7 +641,13 @@ const Tile = forwardRef<HTMLDivElement, TileProps>(
     const Root = asChild ? Slot : Primitive.div;
 
     // State.
-    const { id: containerId, handler, axis, scrolling, setActiveLocation } = useContainerContext(Tile.displayName!);
+    const {
+      id: containerId,
+      eventHandler,
+      axis,
+      scrolling,
+      setActiveLocation,
+    } = useContainerContext(Tile.displayName!);
     const [state, setState] = useState<TileState>({ type: 'idle' });
 
     const allowedEdges = useMemo<Edge[]>(
@@ -716,7 +722,7 @@ const Tile = forwardRef<HTMLDivElement, TileProps>(
           getData: ({ input, element }) => attachClosestEdge(data, { input, element, allowedEdges }),
           canDrop: ({ source }) => {
             const data = getSourceData(source);
-            return (data && handler.canDrop?.({ source: data })) || false;
+            return (data && eventHandler.canDrop?.({ source: data })) || false;
           },
           onDragEnter: ({ self, source }) => {
             handleChange({ self, source });
@@ -734,7 +740,7 @@ const Tile = forwardRef<HTMLDivElement, TileProps>(
           },
         }),
       );
-    }, [rootRef, dragHandle, handler, data, scrolling, allowedEdges, setActiveLocation]);
+    }, [rootRef, dragHandle, eventHandler, data, scrolling, allowedEdges, setActiveLocation]);
 
     // NOTE: Ensure no gaps between cells (prevent drop indicators flickering).
     // NOTE: Ensure padding doesn't change position of cursor when dragging (no margins).
@@ -807,7 +813,7 @@ const Placeholder = <Location extends LocationType = LocationType>({
   const Root = asChild ? Slot : Primitive.div;
   const {
     id: containerId,
-    handler,
+    eventHandler,
     scrolling,
     activeLocation,
     setActiveLocation,
@@ -834,7 +840,7 @@ const Placeholder = <Location extends LocationType = LocationType>({
       getData: () => data,
       canDrop: ({ source }) => {
         const data = getSourceData(source);
-        return (data && handler.canDrop?.({ source: data })) || false;
+        return (data && eventHandler.canDrop?.({ source: data })) || false;
       },
       onDragEnter: () => {
         setActiveLocation(data.location);

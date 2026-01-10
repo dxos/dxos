@@ -10,18 +10,24 @@ import { arrayMove } from '@dxos/util';
 
 import { type MosaicEventHandler } from '../components';
 
+export type UseEventHandlerProps<TItem, TObject extends Obj.Any> = Pick<MosaicEventHandler, 'id' | 'canDrop'> & {
+  items: TItem[];
+  get: (item: TItem) => TObject | undefined;
+  make: (object: TObject) => TItem;
+};
+
 /**
  * Returns a handler for the given items.
  */
-export const useEventHandler = <T>(
-  id: string,
-  items: T[],
-  get: (item: T) => Obj.Any | undefined,
-  make: (obj: Obj.Any) => T,
-): MosaicEventHandler => {
+export const useEventHandlerAdapter = <TItem, TObject extends Obj.Any>({
+  items,
+  get,
+  make,
+  ...props
+}: UseEventHandlerProps<TItem, TObject>): MosaicEventHandler => {
   return useMemo<MosaicEventHandler>(
     () => ({
-      id,
+      ...props,
       onTake: ({ source }, cb) => {
         log.info('onTake', { source });
         const from = items.findIndex((item) => get(item)?.id === source.object.id);
@@ -39,11 +45,11 @@ export const useEventHandler = <T>(
           if (from !== -1) {
             arrayMove(items, from, to);
           } else {
-            items.splice(to, 0, make(source.object));
+            items.splice(to, 0, make(source.object as TObject));
           }
         }
       },
     }),
-    [id, items, get, make],
+    [items],
   );
 };

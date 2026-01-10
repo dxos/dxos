@@ -8,19 +8,17 @@ import React, { Fragment, forwardRef, useMemo, useRef } from 'react';
 
 import { Obj, Ref, Type } from '@dxos/echo';
 import { ObjectId } from '@dxos/keys';
-import { log } from '@dxos/log';
 import { ScrollArea, type SlottableClassName, Tag, type ThemedClassName } from '@dxos/react-ui';
 import { Json } from '@dxos/react-ui-syntax-highlighter';
 import { getHashStyles, mx } from '@dxos/ui-theme';
-import { arrayMove, isTruthy } from '@dxos/util';
+import { isTruthy } from '@dxos/util';
 
-import { useVisibleItems } from '../../hooks';
+import { useEventHandlerAdapter, useVisibleItems } from '../../hooks';
 import { Card, type CardMenuProps } from '../Card';
 import { Focus } from '../Focus';
 
 import {
   Mosaic,
-  type MosaicContainerProps,
   type MosaicTileProps,
   type MosiacPlaceholderProps,
   useContainerDebug,
@@ -66,16 +64,15 @@ type BoardProps = { id: string } & ColumnListProps;
 
 export const Board = forwardRef<HTMLDivElement, BoardProps>(({ id, columns, debug }, forwardedRef) => {
   const [DebugInfo, debugHandler] = useContainerDebug(debug);
-
-  const handler = useMemo<MosaicContainerProps['handler']>(
-    () => ({
-      id,
-      canDrop: ({ source }) => {
-        return Obj.instanceOf(TestColumn, source.object);
-      },
-    }),
-    [id, columns],
-  );
+  const eventHandler = useEventHandlerAdapter({
+    id,
+    canDrop: ({ source }) => {
+      return Obj.instanceOf(TestColumn, source.object);
+    },
+    items: columns,
+    get: (item) => item,
+    make: (object) => object,
+  });
 
   return (
     <div
@@ -83,7 +80,14 @@ export const Board = forwardRef<HTMLDivElement, BoardProps>(({ id, columns, debu
       ref={forwardedRef}
     >
       <Focus.Group asChild axis='horizontal'>
-        <Mosaic.Container asChild autoscroll axis='horizontal' withFocus debug={debugHandler} handler={handler}>
+        <Mosaic.Container
+          asChild
+          autoscroll
+          axis='horizontal'
+          withFocus
+          debug={debugHandler}
+          eventHandler={eventHandler}
+        >
           <ColumnList columns={columns} debug={debug} />
         </Mosaic.Container>
       </Focus.Group>
@@ -137,37 +141,15 @@ export const Column = forwardRef<HTMLDivElement, ColumnProps>(
   ({ classNames, column: { id, items }, debug, object, location }, forwardedRef) => {
     const [DebugInfo, debugHandler] = useContainerDebug(debug);
     const dragHandleRef = useRef<HTMLButtonElement>(null);
-
-    const handler = useMemo<MosaicContainerProps['handler']>(
-      () => ({
-        id,
-        canDrop: ({ source }) => {
-          return Obj.instanceOf(TestItem, source.object);
-        },
-        onTake: ({ source }, cb) => {
-          log.info('onTake', { source });
-          const from = items.findIndex((item) => item.target?.id === source.object.id);
-          if (from !== -1) {
-            items.splice(from, 1);
-          }
-          void cb(source.object);
-        },
-        onDrop: ({ source, target }) => {
-          const from = items.findIndex((item) => item.target?.id === source.object.id);
-          const to = target?.type === 'tile' || target?.type === 'placeholder' ? target.location : -1;
-          log.info('onDrop', { source, target, from, to });
-          if (to !== -1) {
-            if (from !== -1) {
-              arrayMove(items, from, to);
-            } else {
-              const ref = Ref.make(source.object);
-              items.splice(to, 0, ref as any); // TODO(burdon): Remove cast?
-            }
-          }
-        },
-      }),
-      [id, items],
-    );
+    const eventHandler = useEventHandlerAdapter({
+      id,
+      canDrop: ({ source }) => {
+        return Obj.instanceOf(TestItem, source.object);
+      },
+      items,
+      get: (item) => item.target,
+      make: (object) => Ref.make(object),
+    });
 
     const menuItems = useMemo<CardMenuProps<TestItem>['items']>(
       () => [
@@ -189,8 +171,7 @@ export const Column = forwardRef<HTMLDivElement, ColumnProps>(
         <div
           className={mx(
             'grid bs-full min-is-[20rem] max-is-[25rem] overflow-hidden',
-            // TODO(burdon): Color.
-            'bg-deckSurface',
+            'bg-deckSurface', // TODO(burdon): ???
             debug && 'grid-rows-2 gap-2',
           )}
         >
@@ -200,7 +181,14 @@ export const Column = forwardRef<HTMLDivElement, ColumnProps>(
               <Card.Heading>{id}</Card.Heading>
               <Card.Menu items={[]} />
             </Card.Toolbar>
-            <Mosaic.Container asChild axis='vertical' autoscroll withFocus debug={debugHandler} handler={handler}>
+            <Mosaic.Container
+              asChild
+              axis='vertical'
+              autoscroll
+              withFocus
+              debug={debugHandler}
+              eventHandler={eventHandler}
+            >
               <ItemList items={items.map((item: any) => item.target).filter(isTruthy)} menuItems={menuItems} />
             </Mosaic.Container>
             <div className='grow flex p-1 justify-center text-xs'>{items.length}</div>

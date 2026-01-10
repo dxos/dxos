@@ -2,5 +2,5 @@
 // Copyright 2026 DXOS.org
 //
 
-export * from './useEventHandler';
+export * from './useEventHandlerAdapter';
 export * from './useVisibleItems';
