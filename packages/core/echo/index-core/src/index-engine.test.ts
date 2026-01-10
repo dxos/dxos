@@ -125,7 +125,7 @@ describe('IndexEngine', () => {
       dataSource.push([obj1]);
 
       // First update.
-      const { updated } = yield* engine.update(dataSource, {});
+      const { updated } = yield* engine.update(dataSource, { spaceId: null });
       // Updates objectMeta, FTS, and reverseRef indexes.
       expect(updated).toBe(2);
 
@@ -136,7 +136,7 @@ describe('IndexEngine', () => {
       expect(results1[0].version).toBeGreaterThan(0);
 
       // Verify FTS index gets updated.
-      const ftsResults1 = yield* ftsIndex.query('Hello');
+      const ftsResults1 = yield* ftsIndex.query({ query: 'Hello' });
       expect(ftsResults1.length).toBeGreaterThan(0);
       expect(ftsResults1.some((row: Snapshot) => row.snapshot.includes('Hello'))).toBe(true);
 
@@ -151,7 +151,7 @@ describe('IndexEngine', () => {
       dataSource.push([obj1Updated]);
 
       // Second update.
-      const { updated: updated2 } = yield* engine.update(dataSource, {});
+      const { updated: updated2 } = yield* engine.update(dataSource, { spaceId: null });
       expect(updated2).toBe(2);
 
       // Verify update.
@@ -160,7 +160,7 @@ describe('IndexEngine', () => {
       expect(results2[0].objectId).toBe(obj1Updated.data.id);
       expect(results2[0].version).toBeGreaterThan(results1[0].version);
 
-      const ftsResults2 = yield* ftsIndex.query('World');
+      const ftsResults2 = yield* ftsIndex.query({ query: 'World' });
       expect(ftsResults2.length).toBeGreaterThan(0);
     }, Effect.provide(TestLayer)),
   );
@@ -212,7 +212,7 @@ describe('IndexEngine', () => {
 
       dataSource.push(objects);
 
-      yield* engine.update(dataSource, {});
+      yield* engine.update(dataSource, { spaceId: null });
 
       const resultsA = yield* metaIndex.query({ spaceId: spaceId.toString(), typeDxn: TYPE_A });
       expect(resultsA).toHaveLength(2);
@@ -220,7 +220,7 @@ describe('IndexEngine', () => {
       const resultsB = yield* metaIndex.query({ spaceId: spaceId.toString(), typeDxn: TYPE_B });
       expect(resultsB).toHaveLength(1);
 
-      const ftsResults = yield* ftsIndex.query('TypeA');
+      const ftsResults = yield* ftsIndex.query({ query: 'TypeA' });
       expect(ftsResults).toHaveLength(2);
     }, Effect.provide(TestLayer)),
   );

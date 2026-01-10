@@ -27,8 +27,8 @@
 
     // Set this to true if you are having performance issues with the Typescript Language Server.
     // See: https://www.typescriptlang.org/docs/handbook/release-notes/typescript-3-7.html#build-free-editing-with-project-references
-    "disableSourceOfProjectReferenceRedirect": true,
-    "disableReferencedProjectLoad": true,
+    "disableSourceOfProjectReferenceRedirect": false,
+    "disableReferencedProjectLoad": false,
 
     "plugins": [
       {

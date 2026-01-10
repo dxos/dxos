@@ -9,7 +9,16 @@ import * as Effect from 'effect/Effect';
 import type { SpaceId } from '@dxos/keys';
 
 import { type IndexCursor, IndexTracker } from './index-tracker';
-import { FtsIndex, type FtsQuery, type Index, type IndexerObject, type ObjectMeta, ObjectMetaIndex, ReverseRefIndex, ReverseRefQuery } from './indexes';
+import {
+  FtsIndex,
+  type FtsQuery,
+  type Index,
+  type IndexerObject,
+  type ObjectMeta,
+  ObjectMetaIndex,
+  ReverseRefIndex,
+  type ReverseRefQuery,
+} from './indexes';
 
 /**
  * Cursor into indexable data-source.
@@ -45,10 +54,26 @@ export interface IndexEngineParams {
 }
 
 export class IndexEngine {
-  readonly #tracker = new IndexTracker();
-  readonly #objectMetaIndex = new ObjectMetaIndex();
-  readonly #ftsIndex = new FtsIndex();
-  readonly #reverseRefIndex = new ReverseRefIndex();
+  readonly #tracker: IndexTracker;
+  readonly #objectMetaIndex: ObjectMetaIndex;
+  readonly #ftsIndex: FtsIndex;
+  readonly #reverseRefIndex: ReverseRefIndex;
+
+  constructor(params?: IndexEngineParams) {
+    this.#tracker = params?.tracker ?? new IndexTracker();
+    this.#objectMetaIndex = params?.objectMetaIndex ?? new ObjectMetaIndex();
+    this.#ftsIndex = params?.ftsIndex ?? new FtsIndex();
+    this.#reverseRefIndex = params?.reverseRefIndex ?? new ReverseRefIndex();
+  }
+
+  migrate() {
+    return Effect.gen(this, function* () {
+      yield* this.#tracker.migrate();
+      yield* this.#objectMetaIndex.migrate();
+      yield* this.#ftsIndex.migrate();
+      yield* this.#reverseRefIndex.migrate();
+    });
+  }
 
   queryText(query: FtsQuery) {
     return this.#ftsIndex.query(query);
@@ -58,7 +83,7 @@ export class IndexEngine {
     return this.#reverseRefIndex.query(query);
   }
 
-  queryType(query: Pick<ObjectMeta, 'spaceId' | 'typeDxn'>,) {
+  queryType(query: Pick<ObjectMeta, 'spaceId' | 'typeDxn'>) {
     return this.#objectMetaIndex.query(query);
   }
 

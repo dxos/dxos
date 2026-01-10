@@ -3,11 +3,15 @@
 //
 
 import { type AnyDocumentId, type AutomergeUrl, type DocHandle, type DocumentId } from '@automerge/automerge-repo';
+import type * as SqlClient from '@effect/sql/SqlClient';
+import * as Runtime from 'effect/Runtime';
 
+import { DeferredTask, sleep } from '@dxos/async';
 import { Context, LifecycleState, Resource } from '@dxos/context';
 import { todo } from '@dxos/debug';
 import { type DatabaseDirectory, SpaceDocVersion, createIdFromSpaceKey } from '@dxos/echo-protocol';
-import { Indexer as IndexCoreIndexer } from '@dxos/index-core';
+import { unwrapExit } from '@dxos/effect';
+import { IndexEngine } from '@dxos/index-core';
 import { IndexMetadataStore, IndexStore, Indexer } from '@dxos/indexing';
 import { invariant } from '@dxos/invariant';
 import { type PublicKey, type SpaceId } from '@dxos/keys';
@@ -69,12 +73,16 @@ export type EchoHostProps = {
 export class EchoHost extends Resource {
   private readonly _indexMetadataStore: IndexMetadataStore;
   private readonly _indexer: Indexer;
-  private readonly _indexer2: IndexCoreIndexer;
+  private readonly _automergeDataSource: AutomergeDataSource;
+  private readonly _indexer2: IndexEngine;
   private readonly _automergeHost: AutomergeHost;
   private readonly _queryService: QueryServiceImpl;
   private readonly _dataService: DataServiceImpl;
   private readonly _spaceStateManager = new SpaceStateManager();
   private readonly _echoDataMonitor: EchoDataMonitor;
+  private readonly _runtime: Runtime.Runtime<SqlClient.SqlClient>;
+
+  private _updateIndexes!: DeferredTask;
 
   constructor({ kv, indexing = {}, peerIdProvider, getSpaceKeyByRootDocumentId }: EchoHostProps) {
     super();
@@ -91,6 +99,7 @@ export class EchoHost extends Resource {
       getSpaceKeyByRootDocumentId,
     });
 
+    this._automergeDataSource = new AutomergeDataSource(this._automergeHost);
     this._indexer = new Indexer({
       db: kv,
       indexStore: new IndexStore({ db: kv.sublevel('index-storage') }),
@@ -111,9 +120,7 @@ export class EchoHost extends Resource {
     });
 
     // New index-core Indexer for text queries.
-    this._indexer2 = new IndexCoreIndexer({
-      dataSource: new AutomergeDataSource(this._automergeHost),
-    });
+    this._indexer2 = new IndexEngine();
 
     this._queryService = new QueryServiceImpl({
       automergeHost: this._automergeHost,
@@ -185,7 +192,7 @@ export class EchoHost extends Resource {
   /**
    * New index-core indexer for text and other queries.
    */
-  get indexer2(): IndexCoreIndexer {
+  get indexer2(): IndexEngine {
     return this._indexer2;
   }
 
@@ -194,7 +201,9 @@ export class EchoHost extends Resource {
     await this._indexer.open(ctx);
     await this._queryService.open(ctx);
     await this._spaceStateManager.open(ctx);
+    await this._indexer2.migrate();
 
+    this._updateIndexes = new DeferredTask(this._ctx, this._runUpdateIndexes);
     this._spaceStateManager.spaceDocumentListUpdated.on(this._ctx, (e) => {
       if (e.previousRootId) {
         void this._automergeHost.clearLocalCollectionState(deriveCollectionIdFromSpaceId(e.spaceId, e.previousRootId));
@@ -206,7 +215,9 @@ export class EchoHost extends Resource {
     });
     this._automergeHost.documentsSaved.on(this._ctx, () => {
       this._queryService.invalidateQueries();
+      this._updateIndexes.schedule();
     });
+    this._updateIndexes.schedule();
   }
 
   protected override async _close(ctx: Context): Promise<void> {
@@ -309,6 +320,18 @@ export class EchoHost extends Resource {
       throw new Error(`Space not found: ${spaceId}`);
     }
     this._automergeHost.refreshCollection(deriveCollectionIdFromSpaceId(spaceId, root.documentId));
+  }
+
+  private async _runUpdateIndexes(): Promise<void> {
+    const { updated } = unwrapExit(
+      await this._indexer2
+        .update(this._automergeDataSource, { spaceId: null, limit: 50 })
+        .pipe(Runtime.runPromiseExit(this._runtime)),
+    );
+    await sleep(250);
+    if (updated > 0) {
+      this._updateIndexes.schedule();
+    }
   }
 }
 
