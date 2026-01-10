@@ -28,8 +28,9 @@ const StorybookMasonry = () => {
   const space = spaces[spaces.length - 1];
   const masonries = useQuery(space?.db, Filter.type(Masonry.Masonry));
   const masonry = masonries.at(0);
+  const view = masonry?.view.target;
 
-  return masonry ? <MasonryContainer object={masonry} role='story' /> : null;
+  return view ? <MasonryContainer view={view} role='story' /> : null;
 };
 
 const meta = {

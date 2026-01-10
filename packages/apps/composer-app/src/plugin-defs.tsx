@@ -42,6 +42,7 @@ import { RegistryPlugin } from '@dxos/plugin-registry';
 import { ScriptPlugin } from '@dxos/plugin-script';
 import { SearchPlugin } from '@dxos/plugin-search';
 import { SheetPlugin } from '@dxos/plugin-sheet';
+import { SimpleLayoutPlugin } from '@dxos/plugin-simple-layout';
 import { SketchPlugin } from '@dxos/plugin-sketch';
 import { SpacePlugin } from '@dxos/plugin-space';
 import { StackPlugin } from '@dxos/plugin-stack';
@@ -71,14 +72,17 @@ export type PluginConfig = State & {
   isTauri?: boolean;
   isLabs?: boolean;
   isStrict?: boolean;
+  isPopover?: boolean;
+  isMobile?: boolean;
 };
 
-export const getCore = ({ isPwa, isTauri }: PluginConfig): string[] =>
-  [
+export const getCore = ({ isPwa, isTauri, isPopover, isMobile }: PluginConfig): string[] => {
+  const useSimpleLayout = isPopover || isMobile;
+  return [
     AttentionPlugin.meta.id,
     AutomationPlugin.meta.id,
     ClientPlugin.meta.id,
-    DeckPlugin.meta.id,
+    useSimpleLayout ? SimpleLayoutPlugin.meta.id : DeckPlugin.meta.id,
     FilesPlugin.meta.id,
     GraphPlugin.meta.id,
     HelpPlugin.meta.id,
@@ -90,6 +94,7 @@ export const getCore = ({ isPwa, isTauri }: PluginConfig): string[] =>
     !isTauri && isPwa && PwaPlugin.meta.id,
     RegistryPlugin.meta.id,
     RuntimePlugin.meta.id,
+    SearchPlugin.meta.id,
     SettingsPlugin.meta.id,
     SpacePlugin.meta.id,
     StatusBarPlugin.meta.id,
@@ -99,6 +104,7 @@ export const getCore = ({ isPwa, isTauri }: PluginConfig): string[] =>
   ]
     .filter(isTruthy)
     .flat();
+};
 
 export const getDefaults = ({ isDev, isLabs }: PluginConfig): string[] =>
   [
@@ -136,8 +142,11 @@ export const getPlugins = ({
   isLabs,
   isPwa,
   isTauri,
-}: PluginConfig): Plugin.Plugin[] =>
-  [
+  isPopover,
+  isMobile,
+}: PluginConfig): Plugin.Plugin[] => {
+  const useSimpleLayout = isPopover || isMobile;
+  return [
     AssistantPlugin(),
     AttentionPlugin(),
     AutomationPlugin(),
@@ -150,7 +159,7 @@ export const getPlugins = ({
     }),
     ConductorPlugin(),
     DebugPlugin(),
-    DeckPlugin(),
+    useSimpleLayout ? SimpleLayoutPlugin({ isPopover }) : DeckPlugin(),
     isLabs && ExcalidrawPlugin(),
     ExplorerPlugin(),
     isLabs && FilesPlugin(),
@@ -179,7 +188,7 @@ export const getPlugins = ({
     RegistryPlugin(),
     RuntimePlugin(),
     ScriptPlugin(),
-    isLabs && SearchPlugin(),
+    SearchPlugin(),
     SettingsPlugin(),
     SheetPlugin(),
     SketchPlugin(),
@@ -202,6 +211,7 @@ export const getPlugins = ({
   ]
     .filter(isTruthy)
     .flat();
+};
 
 const handleReset: ClientPluginOptions['onReset'] = ({ target }) => {
   localStorage.clear();
