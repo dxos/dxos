@@ -58,8 +58,8 @@ export const PopoverMode: Story = {
         ClientPlugin({
           onClientInitialized: async ({ client }) => {
             await client.halo.createIdentity();
-            const space = await client.spaces.create({ name: 'Personal Space' });
-            await space.waitUntilReady();
+            await client.spaces.create({ name: 'Work Space' });
+            await client.spaces.create({ name: 'Shared Project' });
           },
         }),
         SpacePlugin({}),

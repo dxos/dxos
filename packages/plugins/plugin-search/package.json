@@ -51,6 +51,8 @@
     "@dxos/types": "workspace:*",
     "@dxos/util": "workspace:*",
     "@preact-signals/safe-react": "catalog:",
+    "@radix-ui/react-context": "catalog:",
+    "@radix-ui/react-use-controllable-state": "catalog:",
     "exa-js": "catalog:",
     "main-thread-scheduling": "catalog:"
   },
