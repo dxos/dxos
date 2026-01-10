@@ -11,15 +11,12 @@ import { ClientPlugin, StorybookPlugin, corePlugins } from '@dxos/plugin-testing
 import { faker } from '@dxos/random';
 import { useSpaces } from '@dxos/react-client/echo';
 import { IconButton, Toolbar } from '@dxos/react-ui';
+import { Board, DebugRoot, TestColumn, TestItem } from '@dxos/react-ui/mosaic/testing';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
+import { Focus, Mosaic } from '@dxos/react-ui-mosaic';
 import { type ValueGenerator, createObjectFactory } from '@dxos/schema/testing';
 import { Organization, Person, Project } from '@dxos/types';
 import { mx } from '@dxos/ui-theme';
-
-import { Focus } from '../Focus';
-
-import { Board, DebugRoot, TestColumn, TestItem } from './Board';
-import { Mosaic } from './Mosaic';
 
 const generator = faker as any as ValueGenerator;
 
@@ -77,7 +74,7 @@ const DefaultStory = ({ columns: columnsProp = 1, debug = false }: StoryProps) =
 };
 
 const meta = {
-  title: 'ui/react-ui-mosaic/MosaicSurface',
+  title: 'stories/stories-ui/MosaicSurface',
   render: DefaultStory,
   decorators: [
     withTheme,

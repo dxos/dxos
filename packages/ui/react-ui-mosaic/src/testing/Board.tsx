@@ -13,10 +13,8 @@ import { Json } from '@dxos/react-ui-syntax-highlighter';
 import { getHashStyles, mx } from '@dxos/ui-theme';
 import { isTruthy } from '@dxos/util';
 
-import { useEventHandlerAdapter, useVisibleItems } from '../../hooks';
-import { Card, type CardMenuProps } from '../Card';
-import { Focus } from '../Focus';
-
+import { Card, type CardMenuProps } from '../components/Card';
+import { Focus } from '../components/Focus';
 import {
   Mosaic,
   type MosaicTileProps,
@@ -24,8 +22,9 @@ import {
   useContainerDebug,
   useMosaic,
   useMosaicContainer,
-} from './Mosaic';
-import { styles } from './styles';
+} from '../components/Mosaic/Mosaic';
+import { styles } from '../components/Mosaic/styles';
+import { useEventHandlerAdapter, useVisibleItems } from '../hooks';
 
 //
 // Test Data

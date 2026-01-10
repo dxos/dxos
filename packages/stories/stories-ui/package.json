@@ -1,5 +1,5 @@
 {
-  "name": "@dxos/react-ui-mosaic",
+  "name": "@dxos/stories-ui",
   "version": "0.8.3",
   "description": "Modular UI components.",
   "homepage": "https://dxos.org",
@@ -8,19 +8,6 @@
   "author": "DXOS.org",
   "sideEffects": true,
   "type": "module",
-  "exports": {
-    ".": {
-      "source": "./src/index.ts",
-      "types": "./dist/types/src/index.d.ts",
-      "browser": "./dist/lib/browser/index.mjs",
-      "node": "./dist/lib/node-esm/index.mjs"
-    },
-    "./testing": {
-      "types": "./dist/types/src/testing/index.d.ts",
-      "browser": "./dist/lib/browser/testing/index.mjs",
-      "node": "./dist/lib/node-esm/testing/index.mjs"
-    }
-  },
   "types": "dist/types/src/index.d.ts",
   "typesVersions": {
     "*": {}
@@ -42,7 +29,6 @@
     "@dxos/async": "workspace:*",
     "@dxos/echo": "workspace:*",
     "@dxos/invariant": "workspace:*",
-    "@dxos/keys": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/react-client": "workspace:*",
     "@dxos/react-ui-dnd": "workspace:*",
@@ -58,17 +44,23 @@
     "bind-event-listener": "catalog:"
   },
   "devDependencies": {
+    "@dxos/app-framework": "workspace:*",
+    "@dxos/echo-db": "workspace:*",
+    "@dxos/plugin-testing": "workspace:*",
     "@dxos/random": "workspace:*",
     "@dxos/react-ui": "workspace:*",
+    "@dxos/react-ui-components": "workspace:*",
+    "@dxos/react-ui-editor": "workspace:*",
+    "@dxos/react-ui-mosaic": "workspace:*",
     "@dxos/react-ui-syntax-highlighter": "workspace:*",
     "@dxos/schema": "workspace:*",
     "@dxos/storybook-utils": "workspace:*",
     "@dxos/test-utils": "workspace:*",
     "@dxos/types": "workspace:*",
+    "@dxos/ui-editor": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
-    "effect": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:",
     "vite": "catalog:"
@@ -77,7 +69,6 @@
     "@dxos/random": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
-    "effect": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:"
   },

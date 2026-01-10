@@ -13,9 +13,9 @@ import { IconButton, Toolbar } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { mx } from '@dxos/ui-theme';
 
+import { Board, DebugRoot, TestColumn, TestItem } from '../../testing';
 import { Focus } from '../Focus';
 
-import { Board, DebugRoot, TestColumn, TestItem } from './Board';
 import { Mosaic } from './Mosaic';
 
 faker.seed(999);

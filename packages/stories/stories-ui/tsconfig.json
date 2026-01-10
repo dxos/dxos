@@ -6,7 +6,6 @@
     ]
   },
   "include": [
-    "../../stories/stories-ui/src/MosaicSurface.stories.tsx",
     "src"
   ],
   "references": [
@@ -15,9 +14,6 @@
     },
     {
       "path": "../../common/invariant"
-    },
-    {
-      "path": "../../common/keys"
     },
     {
       "path": "../../common/log"
@@ -38,6 +34,15 @@
       "path": "../../core/echo/echo"
     },
     {
+      "path": "../../core/echo/echo-db"
+    },
+    {
+      "path": "../../plugins/plugin-testing"
+    },
+    {
+      "path": "../../sdk/app-framework"
+    },
+    {
       "path": "../../sdk/react-client"
     },
     {
@@ -47,16 +52,28 @@
       "path": "../../sdk/types"
     },
     {
-      "path": "../react-ui"
+      "path": "../../ui/react-ui"
     },
     {
-      "path": "../react-ui-dnd"
+      "path": "../../ui/react-ui-components"
     },
     {
-      "path": "../react-ui-syntax-highlighter"
+      "path": "../../ui/react-ui-dnd"
     },
     {
-      "path": "../ui-theme"
+      "path": "../../ui/react-ui-editor"
+    },
+    {
+      "path": "../../ui/react-ui-mosaic"
+    },
+    {
+      "path": "../../ui/react-ui-syntax-highlighter"
+    },
+    {
+      "path": "../../ui/ui-editor"
+    },
+    {
+      "path": "../../ui/ui-theme"
     }
   ]
 }
