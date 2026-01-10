@@ -5,18 +5,5 @@
     "src",
     "src/**/*.json"
   ],
-  "references": [
-    {
-      "path": "../../../common/debug"
-    },
-    {
-      "path": "../../../common/invariant"
-    },
-    {
-      "path": "../../../common/keys"
-    },
-    {
-      "path": "../echo"
-    }
-  ]
+  "references": []
 }
