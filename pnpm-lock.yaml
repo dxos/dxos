@@ -5115,6 +5115,9 @@ importers:
       '@dxos/echo':
         specifier: 'workspace:'
         version: link:../echo
+      '@dxos/echo-protocol':
+        specifier: 'workspace:'
+        version: link:../echo-protocol
       '@dxos/invariant':
         specifier: 'workspace:'
         version: link:../../../common/invariant

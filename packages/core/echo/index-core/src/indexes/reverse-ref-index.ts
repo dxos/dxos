@@ -7,31 +7,11 @@ import type * as SqlError from '@effect/sql/SqlError';
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
+import { decodeReference, isEncodedReference } from '@dxos/echo-protocol';
+
+import { EscapedPropPath } from '../utils';
+
 import type { Index, IndexerObject } from './interface';
-
-/**
- * Encoded reference format: `{ '/': 'dxn:...' }`.
- */
-type EncodedReference = { '/': string };
-
-/**
- * Checks if a value is an encoded reference.
- */
-const isEncodedReference = (value: unknown): value is EncodedReference =>
-  typeof value === 'object' &&
-  value !== null &&
-  Object.keys(value).length === 1 &&
-  typeof (value as any)['/'] === 'string';
-
-/**
- * Escapes property path segments for storage.
- * - '\' becomes '\\'
- * - '.' becomes '\.'
- * - Segments joined with '.'
- */
-const escapePropPath = (path: string[]): string => {
-  return path.map((p) => p.toString().replaceAll('\\', '\\\\').replaceAll('.', '\\.')).join('.');
-};
 
 /**
  * Extracts all outgoing references from an object's data.
@@ -40,7 +20,12 @@ const extractReferences = (data: Record<string, unknown>): { path: string[]; tar
   const refs: { path: string[]; targetDxn: string }[] = [];
   const visit = (path: string[], value: unknown) => {
     if (isEncodedReference(value)) {
-      refs.push({ path, targetDxn: value['/'] });
+      const dxn = decodeReference(value).toDXN();
+      const echoId = dxn.asEchoDXN()?.echoId;
+      if (!echoId) {
+        return; // Skip non-echo references.
+      }
+      refs.push({ path, targetDxn: dxn.toString() });
     } else if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
       for (const [key, v] of Object.entries(value)) {
         visit([...path, key], v);
@@ -120,8 +105,6 @@ export class ReverseRefIndex implements Index {
                 existing = [];
               }
 
-
-
               const recordId = existing[0].recordId;
 
               if (recordId) {
@@ -136,7 +119,7 @@ export class ReverseRefIndex implements Index {
               yield* Effect.forEach(
                 refs,
                 (ref) =>
-                  sql`INSERT INTO reverseRef (recordId, targetDxn, propPath) VALUES (${recordId}, ${ref.targetDxn}, ${escapePropPath(ref.path)})`,
+                  sql`INSERT INTO reverseRef (recordId, targetDxn, propPath) VALUES (${recordId}, ${ref.targetDxn}, ${EscapedPropPath.escape(ref.path)})`,
                 { discard: true },
               );
             }),
