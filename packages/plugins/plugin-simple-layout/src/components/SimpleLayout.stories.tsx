@@ -5,16 +5,30 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
+import { Capability, Common, Plugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { ClientPlugin } from '@dxos/plugin-client';
 import { SpacePlugin } from '@dxos/plugin-space';
 import { corePlugins } from '@dxos/plugin-testing';
 import { withTheme } from '@dxos/react-ui/testing';
 
-import { SimpleLayoutPlugin } from '../SimpleLayoutPlugin';
+import { OperationResolver, type SimpleLayoutStateOptions, State } from '../capabilities';
+import { meta as pluginMeta } from '../meta';
+import { type SimpleLayoutPluginOptions } from '../SimpleLayoutPlugin';
 import { translations } from '../translations';
 
 import { SimpleLayout } from './SimpleLayout';
+
+const TestPlugin = Plugin.define<SimpleLayoutPluginOptions>(pluginMeta).pipe(
+  Plugin.addModule(({ isPopover = false }) => ({
+    id: Capability.getModuleTag(State),
+    activatesOn: Common.ActivationEvent.Startup,
+    activatesAfter: [Common.ActivationEvent.LayoutReady],
+    activate: () => State({ initialState: { isPopover } } satisfies SimpleLayoutStateOptions),
+  })),
+  Common.Plugin.addOperationResolverModule({ activate: OperationResolver }),
+  Plugin.make,
+);
 
 const meta = {
   title: 'plugins/plugin-simple-layout/SimpleLayout',
@@ -33,7 +47,7 @@ const meta = {
           },
         }),
         SpacePlugin({}),
-        SimpleLayoutPlugin({ isPopover: false }),
+        TestPlugin({ isPopover: false }),
       ],
     }),
   ],
@@ -63,7 +77,7 @@ export const PopoverMode: Story = {
           },
         }),
         SpacePlugin({}),
-        SimpleLayoutPlugin({ isPopover: true }),
+        TestPlugin({ isPopover: true }),
       ],
     }),
   ],
