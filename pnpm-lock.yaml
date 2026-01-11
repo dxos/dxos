@@ -10613,9 +10613,6 @@ importers:
       '@dxos/react-ui-mosaic':
         specifier: workspace:*
         version: link:../../ui/react-ui-mosaic
-      '@dxos/react-ui-table':
-        specifier: workspace:*
-        version: link:../../ui/react-ui-table
       '@dxos/schema':
         specifier: workspace:*
         version: link:../../sdk/schema
@@ -11315,6 +11312,12 @@ importers:
         specifier: 'catalog:'
         version: 14.2.0
     devDependencies:
+      '@dxos/plugin-preview':
+        specifier: workspace:*
+        version: link:../plugin-preview
+      '@dxos/plugin-testing':
+        specifier: workspace:*
+        version: link:../plugin-testing
       '@dxos/random':
         specifier: workspace:*
         version: link:../../common/random
@@ -17930,9 +17933,6 @@ importers:
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
-      '@dxos/plugin-search':
-        specifier: workspace:*
-        version: link:../../plugins/plugin-search
       '@dxos/random':
         specifier: workspace:*
         version: link:../../common/random
@@ -18012,6 +18012,9 @@ importers:
       '@dxos/lit-ui':
         specifier: workspace:*
         version: link:../lit-ui
+      '@dxos/plugin-search':
+        specifier: workspace:*
+        version: link:../../plugins/plugin-search
       '@dxos/react-ui':
         specifier: workspace:*
         version: link:../react-ui
