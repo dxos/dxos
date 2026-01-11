@@ -273,18 +273,23 @@ const ComboboxList = forwardRef<HTMLDivElement, ComboboxListProps>(({ classNames
 // Item
 //
 
-type ComboboxItemProps = SearchListItemProps;
+type ComboboxItemProps = SearchListItemProps & {
+  /** Whether to close the popover when this item is selected. Defaults to true. */
+  closeOnSelect?: boolean;
+};
 
 const ComboboxItem = forwardRef<HTMLDivElement, ComboboxItemProps>(
-  ({ classNames, onSelect, value, ...props }, forwardedRef) => {
+  ({ classNames, onSelect, value, closeOnSelect = true, ...props }, forwardedRef) => {
     const { onValueChange, onOpenChange } = useComboboxContext(COMBOBOX_ITEM_NAME);
     const handleSelect = useCallback<NonNullable<SearchListItemProps['onSelect']>>(() => {
       onSelect?.();
       if (value !== undefined) {
         onValueChange?.(value);
       }
-      onOpenChange?.(false);
-    }, [onSelect, onValueChange, onOpenChange, value]);
+      if (closeOnSelect) {
+        onOpenChange?.(false);
+      }
+    }, [onSelect, onValueChange, onOpenChange, value, closeOnSelect]);
 
     return (
       <SearchList.Item

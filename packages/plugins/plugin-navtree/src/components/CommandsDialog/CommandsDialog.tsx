@@ -66,17 +66,9 @@ export const CommandsDialogContent = forwardRef<HTMLDivElement, CommandsDialogCo
     const groupActions = useActions(graph, group?.id);
     const actions = Node.isActionGroup(group) ? groupActions : allActions;
 
-    const actionItems = useMemo(
-      () =>
-        actions.map((action) => ({
-          action,
-          label: toLocalizedString(action.properties.label, t),
-        })),
-      [actions, t],
-    );
-
     const { results, handleSearch } = useSearchListResults({
-      items: actionItems,
+      items: actions,
+      extract: (action) => toLocalizedString(action.properties.label, t),
     });
 
     return (
@@ -91,8 +83,7 @@ export const CommandsDialogContent = forwardRef<HTMLDivElement, CommandsDialogCo
           <SearchList.Input placeholder={t('command list input placeholder')} />
           <SearchList.Content classNames={cardDialogPaddedOverflow}>
             <SearchList.Viewport>
-              {results.map((item) => {
-                const { action } = item;
+              {results.map((action) => {
                 const shortcut =
                   typeof action.properties.keyBinding === 'string'
                     ? action.properties.keyBinding
@@ -101,7 +92,7 @@ export const CommandsDialogContent = forwardRef<HTMLDivElement, CommandsDialogCo
                   <SearchList.Item
                     value={action.id}
                     key={action.id}
-                    label={item.label}
+                    label={toLocalizedString(action.properties.label, t)}
                     icon={action.properties.icon}
                     suffix={shortcut ? keySymbols(shortcut).join('') : undefined}
                     onSelect={() => {

@@ -18,10 +18,8 @@ faker.seed(1234);
 const items = faker.helpers.uniqueArray(faker.commerce.productName, 16).sort();
 
 const DefaultStory = () => {
-  const itemObjects = React.useMemo(() => items.map((value) => ({ value, label: value })), []);
-
   const { results, handleSearch } = useSearchListResults({
-    items: itemObjects,
+    items,
   });
 
   return (
@@ -35,8 +33,8 @@ const DefaultStory = () => {
       <Combobox.Content onSearch={handleSearch}>
         <Combobox.Input placeholder='Search...' />
         <Combobox.List>
-          {results.map((item) => (
-            <Combobox.Item key={item.value} value={item.value} label={item.label} />
+          {results.map((value) => (
+            <Combobox.Item key={value} value={value} label={value} />
           ))}
         </Combobox.List>
         <Combobox.Arrow />

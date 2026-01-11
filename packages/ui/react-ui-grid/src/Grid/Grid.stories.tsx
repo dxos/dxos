@@ -94,18 +94,16 @@ const GridStory = ({ initialCells, ...props }: GridStoryProps) => {
 };
 
 const ComboboxContentWithFiltering = () => {
-  const itemObjects = React.useMemo(() => storybookItems.map((value) => ({ value, label: value })), []);
-
   const { results, handleSearch } = useSearchListResults({
-    items: itemObjects,
+    items: storybookItems,
   });
 
   return (
     <Combobox.Content onSearch={handleSearch}>
       <Combobox.Input placeholder='Search...' />
       <Combobox.List>
-        {results.map((item) => (
-          <Combobox.Item key={item.value} value={item.value} label={item.label} />
+        {results.map((value) => (
+          <Combobox.Item key={value} value={value} label={value} />
         ))}
       </Combobox.List>
       <Combobox.Arrow />

@@ -104,33 +104,25 @@ const BlueprintsPanel = ({
   const activeBlueprints = useActiveBlueprints({ context });
   const { onUpdateBlueprint } = useBlueprintHandlers({ db, context, blueprintRegistry });
 
-  const blueprintItems = useMemo(
-    () =>
-      blueprints.map((blueprint) => ({
-        blueprint,
-        label: blueprint.name,
-      })),
-    [blueprints],
-  );
-
   const { results, handleSearch } = useSearchListResults({
-    items: blueprintItems,
+    items: blueprints,
+    extract: (blueprint) => blueprint.name,
   });
 
   return (
     <SearchList.Root onSearch={handleSearch}>
       <SearchList.Content classNames='plb-cardSpacingChrome'>
         <SearchList.Viewport>
-          {results.map((item) => {
-            const isActive = activeBlueprints.has(item.blueprint.key);
+          {results.map((blueprint) => {
+            const isActive = activeBlueprints.has(blueprint.key);
             return (
               <SearchList.Item
                 classNames='flex items-center overflow-hidden'
-                key={item.blueprint.key}
-                value={item.blueprint.key}
-                label={item.label}
+                key={blueprint.key}
+                value={blueprint.key}
+                label={blueprint.name}
                 checked={isActive}
-                onSelect={() => onUpdateBlueprint?.(item.blueprint.key, !isActive)}
+                onSelect={() => onUpdateBlueprint?.(blueprint.key, !isActive)}
               />
             );
           })}
@@ -191,17 +183,9 @@ const ObjectsPanel = ({ db, context }: Pick<ChatOptionsProps, 'db' | 'context'>)
   const objects = useQuery(db, typename === ANY ? anyFilter : Filter.typename(typename));
   const { objects: contextObjects, onUpdateObject } = useContextObjects({ db, context });
 
-  const objectItems = useMemo(
-    () =>
-      objects.map((object) => ({
-        object,
-        label: Obj.getLabel(object) ?? Obj.getTypename(object) ?? object.id,
-      })),
-    [objects],
-  );
-
   const { results, handleSearch } = useSearchListResults({
-    items: objectItems,
+    items: objects,
+    extract: (object) => Obj.getLabel(object) ?? Obj.getTypename(object) ?? object.id,
   });
 
   return (
@@ -209,16 +193,16 @@ const ObjectsPanel = ({ db, context }: Pick<ChatOptionsProps, 'db' | 'context'>)
       <SearchList.Content classNames='p-cardSpacingChrome [&:has([cmdk-list-sizer]:empty)]:plb-0'>
         <SearchList.Viewport>
           {results.length ? (
-            results.map((item) => {
-              const isActive = contextObjects.findIndex((obj) => obj.id === item.object.id) !== -1;
+            results.map((object) => {
+              const isActive = contextObjects.findIndex((obj) => obj.id === object.id) !== -1;
               return (
                 <SearchList.Item
                   classNames='flex items-center overflow-hidden'
-                  key={item.object.id}
-                  value={item.object.id}
-                  label={item.label}
+                  key={object.id}
+                  value={object.id}
+                  label={Obj.getLabel(object) ?? Obj.getTypename(object) ?? object.id}
                   checked={isActive}
-                  onSelect={() => onUpdateObject?.(Obj.getDXN(item.object), !isActive)}
+                  onSelect={() => onUpdateObject?.(Obj.getDXN(object), !isActive)}
                 />
               );
             })

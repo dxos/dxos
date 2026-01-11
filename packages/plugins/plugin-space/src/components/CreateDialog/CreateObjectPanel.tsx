@@ -135,24 +135,35 @@ const SelectSpace = ({
 }: { onChange?: (db: Database.Database) => void } & Pick<CreateObjectPanelProps, 'spaces' | 'defaultSpaceId'>) => {
   const { t } = useTranslation(meta.id);
 
-  const spaceItems = useMemo(
+  const sortedSpaces = useMemo(
     () =>
-      spaces
-        .map((space) => ({
-          space,
-          label: toLocalizedString(
-            getSpaceDisplayName(space, {
-              personal: space.id === defaultSpaceId,
-            }),
-            t,
-          ),
-        }))
-        .sort((a, b) => a.label.localeCompare(b.label)),
+      [...spaces].sort((a, b) => {
+        const labelA = toLocalizedString(
+          getSpaceDisplayName(a, {
+            personal: a.id === defaultSpaceId,
+          }),
+          t,
+        );
+        const labelB = toLocalizedString(
+          getSpaceDisplayName(b, {
+            personal: b.id === defaultSpaceId,
+          }),
+          t,
+        );
+        return labelA.localeCompare(labelB);
+      }),
     [spaces, defaultSpaceId, t],
   );
 
   const { results, handleSearch } = useSearchListResults({
-    items: spaceItems,
+    items: sortedSpaces,
+    extract: (space) =>
+      toLocalizedString(
+        getSpaceDisplayName(space, {
+          personal: space.id === defaultSpaceId,
+        }),
+        t,
+      ),
   });
 
   return (
@@ -164,12 +175,17 @@ const SelectSpace = ({
       />
       <SearchList.Content classNames={[cardDialogOverflow, 'plb-cardSpacingBlock']}>
         <SearchList.Viewport>
-          {results.map((item) => (
+          {results.map((space) => (
             <SearchList.Item
-              key={item.space.id}
-              value={item.space.id}
-              label={item.label}
-              onSelect={() => onChange?.(item.space.db)}
+              key={space.id}
+              value={space.id}
+              label={toLocalizedString(
+                getSpaceDisplayName(space, {
+                  personal: space.id === defaultSpaceId,
+                }),
+                t,
+              )}
+              onSelect={() => onChange?.(space.db)}
               classNames='flex items-center gap-2'
             />
           ))}

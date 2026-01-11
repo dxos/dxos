@@ -54,7 +54,11 @@ export const useSearchListResults = <T = unknown>({
   }, [items]);
 
   const defaultExtract = useCallback((item: T) => {
-    // Try to access 'label' property if it exists, otherwise return empty string
+    // If item is a string, return it directly
+    if (typeof item === 'string') {
+      return item;
+    }
+    // Otherwise, try to access 'label' property
     return (item as any)?.label ?? '';
   }, []);
   const extractFn = extract ?? defaultExtract;
