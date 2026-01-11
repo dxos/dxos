@@ -216,9 +216,6 @@ catalogs:
     '@effect/vitest':
       specifier: ~0.27.0
       version: 0.27.0
-    '@effect/wa-sqlite':
-      specifier: ^0.1.2
-      version: 0.1.2
     '@effect/workflow':
       specifier: ^0.15.2
       version: 0.15.2
@@ -1965,6 +1962,7 @@ catalogs:
 
 overrides:
   '@automerge/automerge': 3.2.1
+  '@effect/wa-sqlite': npm:@dxos/wa-sqlite@^0.2.1
   '@lezer/lr': ^1.4.2
   '@types/node': 22.10.2
   '@types/react': ~19.2.7
@@ -3937,8 +3935,8 @@ importers:
         specifier: 'catalog:'
         version: 0.45.1(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/platform@0.93.6(effect@3.19.11))(@effect/sql@0.48.6(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11))(effect@3.19.11)
       '@effect/wa-sqlite':
-        specifier: 'catalog:'
-        version: 0.1.2
+        specifier: npm:@dxos/wa-sqlite@^0.2.1
+        version: '@dxos/wa-sqlite@0.2.1'
       effect:
         specifier: 'catalog:'
         version: 3.19.11
@@ -4804,7 +4802,7 @@ importers:
         version: 0.45.1(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/platform@0.93.6(effect@3.19.11))(@effect/sql@0.48.6(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11))(effect@3.19.11)
       '@effect/sql-sqlite-wasm':
         specifier: 'catalog:'
-        version: 0.45.1(@effect/experimental@0.57.11(effect@3.19.11)(ioredis@5.3.2))(@effect/sql@0.48.6(@effect/experimental@0.57.11(effect@3.19.11)(ioredis@5.3.2))(effect@3.19.11))(@effect/wa-sqlite@0.1.2)(effect@3.19.11)
+        version: 0.45.1(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/sql@0.48.6(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11))(effect@3.19.11)
       effect:
         specifier: 'catalog:'
         version: 3.19.11
@@ -13510,7 +13508,7 @@ importers:
         version: 0.48.6(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)
       '@effect/sql-sqlite-wasm':
         specifier: 'catalog:'
-        version: 0.45.1(@effect/experimental@0.57.11(effect@3.19.11)(ioredis@5.3.2))(@effect/sql@0.48.6(@effect/experimental@0.57.11(effect@3.19.11)(ioredis@5.3.2))(effect@3.19.11))(@effect/wa-sqlite@0.1.2)(effect@3.19.11)
+        version: 0.45.1(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/sql@0.48.6(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11))(effect@3.19.11)
       base-x:
         specifier: 'catalog:'
         version: 3.0.9
@@ -13712,10 +13710,10 @@ importers:
         version: 0.45.1(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/platform@0.93.6(effect@3.19.11))(@effect/sql@0.48.6(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11))(effect@3.19.11)
       '@effect/sql-sqlite-wasm':
         specifier: 'catalog:'
-        version: 0.45.1(@effect/experimental@0.57.11(effect@3.19.11)(ioredis@5.3.2))(@effect/sql@0.48.6(@effect/experimental@0.57.11(effect@3.19.11)(ioredis@5.3.2))(effect@3.19.11))(@effect/wa-sqlite@0.1.2)(effect@3.19.11)
+        version: 0.45.1(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/sql@0.48.6(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11))(effect@3.19.11)
       '@effect/wa-sqlite':
-        specifier: 'catalog:'
-        version: 0.1.2
+        specifier: npm:@dxos/wa-sqlite@^0.2.1
+        version: '@dxos/wa-sqlite@0.2.1'
       '@obsidize/tar-browserify':
         specifier: 'catalog:'
         version: 5.2.0
@@ -20770,7 +20768,6 @@ packages:
     peerDependencies:
       '@effect/experimental': ^0.54.6
       '@effect/sql': ^0.44.2
-      '@effect/wa-sqlite': ^0.1.2
       effect: ^3.17.7
 
   '@effect/sql@0.48.6':
@@ -20790,9 +20787,6 @@ packages:
     peerDependencies:
       effect: ^3.19.0
       vitest: ^3.2.0
-
-  '@effect/wa-sqlite@0.1.2':
-    resolution: {integrity: sha512-2JvJ9BDkBOwfeY/gXsC0XwEKC0AwisP2W5ABJ6mx14QyXTK12MGDIybDlHieuZt1TEFSMiKfpg7yyqyRWRooJQ==}
 
   '@effect/workflow@0.15.2':
     resolution: {integrity: sha512-UAo5QWEvyyKsnf4EQ7WL3zwiuZS4Wd5fmAxdpcpZSIxNOvsABp3DOuyRCiidD8l3sQhdPwES/UsVK4QOCQ7wew==}
@@ -40899,11 +40893,11 @@ snapshots:
       better-sqlite3: 11.10.0
       effect: 3.19.11
 
-  '@effect/sql-sqlite-wasm@0.45.1(@effect/experimental@0.57.11(effect@3.19.11)(ioredis@5.3.2))(@effect/sql@0.48.6(@effect/experimental@0.57.11(effect@3.19.11)(ioredis@5.3.2))(effect@3.19.11))(@effect/wa-sqlite@0.1.2)(effect@3.19.11)':
+  '@effect/sql-sqlite-wasm@0.45.1(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/sql@0.48.6(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11))(effect@3.19.11)':
     dependencies:
       '@effect/experimental': 0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2)
       '@effect/sql': 0.48.6(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)
-      '@effect/wa-sqlite': 0.1.2
+      '@effect/wa-sqlite': '@dxos/wa-sqlite@0.2.1'
       effect: 3.19.11
 
   '@effect/sql@0.48.6(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)':
@@ -40921,8 +40915,6 @@ snapshots:
     dependencies:
       effect: 3.19.11
       vitest: 3.2.4(@types/debug@4.1.12)(@types/node@22.10.2)(@vitest/browser@3.2.4)(@vitest/ui@3.2.4)(happy-dom@13.3.4)(jiti@2.6.1)(jsdom@27.0.0(canvas@3.2.0)(postcss@8.5.6))(terser@5.19.2)(tsx@4.21.0)(yaml@2.8.2)
-
-  '@effect/wa-sqlite@0.1.2': {}
 
   '@effect/workflow@0.15.2(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/platform@0.93.6(effect@3.19.11))(@effect/rpc@0.72.2(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11))(effect@3.19.11)':
     dependencies:
