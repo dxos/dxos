@@ -2,12 +2,13 @@
 // Copyright 2025 DXOS.org
 //
 
-import React from 'react';
-import { useCallback } from 'react';
+import React, { useCallback } from 'react';
 
+import { Common } from '@dxos/app-framework';
+import { useOperationInvoker } from '@dxos/app-framework/react';
 import { Obj } from '@dxos/echo';
 import { type JsonPath, splitJsonPath } from '@dxos/effect';
-import { useTranslation } from '@dxos/react-ui';
+import { IconButton, useTranslation } from '@dxos/react-ui';
 import { Form, omitId } from '@dxos/react-ui-form';
 import { Card } from '@dxos/react-ui-mosaic';
 import { type ProjectionModel } from '@dxos/schema';
@@ -21,8 +22,15 @@ export const FormCard = ({
   projection,
   role,
 }: CardPreviewProps<Obj.Any> & { projection?: ProjectionModel }) => {
+  const { invokePromise } = useOperationInvoker();
   const schema = Obj.getSchema(subject);
   const { t } = useTranslation(meta.id);
+
+  const handleNavigate = useCallback(async () => {
+    await invokePromise(Common.LayoutOperation.UpdatePopover, { state: false, anchorId: '' });
+    await invokePromise(Common.LayoutOperation.Open, { subject: [Obj.getDXN(subject).toString()] });
+  }, [invokePromise, subject]);
+
   if (!schema) {
     // TODO(burdon): Use Alert.
     return <p className={mx(descriptionMessage)}>{t('unable to create preview message')}</p>;
@@ -37,8 +45,15 @@ export const FormCard = ({
     }
   }, []);
 
+  const label = Obj.getLabel(subject) ?? Obj.getTypename(subject) ?? t('unable to create preview message');
+
   return (
     <Card.SurfaceRoot id={subject.id} role={role}>
+      <Card.Heading classNames='flex items-center'>
+        {label}
+        <span className='grow' />
+        <IconButton iconOnly icon='ph--arrow-right--regular' label={t('open object label')} onClick={handleNavigate} />
+      </Card.Heading>
       <Form.Root
         schema={omitId(schema)}
         projection={projection}
