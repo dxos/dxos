@@ -28,13 +28,13 @@ import { trace } from '@dxos/tracing';
 import { type AutomergeHost } from '../automerge';
 import { QueryExecutor } from '../query';
 
-import type { RuntimeProvider } from './echo-host';
 import type { SpaceStateManager } from './space-state-manager';
+import { RuntimeProvider } from '@dxos/effect';
 
 export type QueryServiceProps = {
   indexer: Indexer;
   indexer2: IndexEngine;
-  runtime: RuntimeProvider<SqlClient.SqlClient>;
+  runtime: RuntimeProvider.RuntimeProvider<SqlClient.SqlClient>;
   automergeHost: AutomergeHost;
   spaceStateManager: SpaceStateManager;
 };

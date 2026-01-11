@@ -9,6 +9,7 @@ import * as Layer from 'effect/Layer';
 import * as ManagedRuntime from 'effect/ManagedRuntime';
 import type * as Schema from 'effect/Schema';
 import isEqual from 'lodash.isequal';
+import * as SqlClient from '@effect/sql/SqlClient';
 
 import { waitForCondition } from '@dxos/async';
 import { type Context, Resource } from '@dxos/context';
@@ -85,7 +86,7 @@ export class EchoTestPeer extends Resource {
   private _lastDatabaseSpaceKey?: PublicKey = undefined;
   private _lastDatabaseRootUrl?: string = undefined;
 
-  private _managedRuntime!: ManagedRuntime.ManagedRuntime<SqliteClient.SqliteClient, never>;
+  private _managedRuntime!: ManagedRuntime.ManagedRuntime<SqlClient.SqlClient, never>;
 
   constructor({ kv = createTestLevel(), indexing = {}, types }: PeerOptions) {
     super();

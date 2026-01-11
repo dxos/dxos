@@ -35,6 +35,14 @@ export const createServiceHost = (config: Config, signalManagerContext: MemorySi
     config,
     signalManager: new MemorySignalManager(signalManagerContext),
     transportFactory: MemoryTransportFactory,
+    runtime: ManagedRuntime.make(
+      Layer.merge(
+        SqliteClient.layer({
+          filename: ':memory:',
+        }),
+        Reactivity.layer,
+      ).pipe(Layer.orDie),
+    ).runtimeEffect,
   });
 };
 

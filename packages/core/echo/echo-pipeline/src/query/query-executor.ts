@@ -9,7 +9,7 @@ import * as Runtime from 'effect/Runtime';
 
 import { Context, ContextDisposedError, LifecycleState, Resource } from '@dxos/context';
 import { DatabaseDirectory, ObjectStructure, type QueryAST, isEncodedReference } from '@dxos/echo-protocol';
-import { runAndForwardErrors, unwrapExit } from '@dxos/effect';
+import { type RuntimeProvider, runAndForwardErrors, unwrapExit } from '@dxos/effect';
 import { type IndexEngine } from '@dxos/index-core';
 import { EscapedPropPath, type FindResult, type Indexer } from '@dxos/indexing';
 import { invariant } from '@dxos/invariant';
@@ -21,7 +21,7 @@ import { getDeep, isNonNullable } from '@dxos/util';
 
 import type { AutomergeHost } from '../automerge';
 import { createIdFromSpaceKey } from '../common';
-import type { RuntimeProvider, SpaceStateManager } from '../db-host';
+import type { SpaceStateManager } from '../db-host';
 import { filterMatchObject } from '../filter';
 
 import type { QueryPlan } from './plan';
@@ -32,7 +32,7 @@ const isNullable: Predicate.Refinement<unknown, null | undefined> = Predicate.is
 type QueryExecutorOptions = {
   indexer: Indexer;
   indexer2: IndexEngine;
-  runtime: RuntimeProvider<SqlClient.SqlClient>;
+  runtime: RuntimeProvider.RuntimeProvider<SqlClient.SqlClient>;
   automergeHost: AutomergeHost;
   spaceStateManager: SpaceStateManager;
 
@@ -155,7 +155,7 @@ const TRACE_QUERY_EXECUTION = false;
 export class QueryExecutor extends Resource {
   private readonly _indexer: Indexer;
   private readonly _indexer2: IndexEngine;
-  private readonly _runtime: RuntimeProvider<SqlClient.SqlClient>;
+  private readonly _runtime: RuntimeProvider.RuntimeProvider<SqlClient.SqlClient>;
   private readonly _automergeHost: AutomergeHost;
   private readonly _spaceStateManager: SpaceStateManager;
   /**

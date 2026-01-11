@@ -79,6 +79,7 @@
     "@dxos/tracing": "workspace:*",
     "@dxos/typings": "workspace:*",
     "@dxos/util": "workspace:*",
+    "@effect/sql": "catalog:",
     "crc-32": "catalog:",
     "effect": "catalog:",
     "level-transcoder": "catalog:",
