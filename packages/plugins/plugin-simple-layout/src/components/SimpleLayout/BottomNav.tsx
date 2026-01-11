@@ -19,7 +19,7 @@ import {
 import { DropdownMenu, MenuProvider } from '@dxos/react-ui-menu';
 import { mx, surfaceZIndex } from '@dxos/ui-theme';
 
-import { meta } from '../meta';
+import { meta } from '../../meta';
 
 export const bottomNavRoot = mx(
   'fixed inset-inline-0 block-end-[--dx-mobile-bottombar-inset-bottom,0px] bs-[--dx-mobile-bottombar-content-height,64px] bg-baseSurface border-bs border-separator grid grid-cols-[min-content_min-content] place-content-center gap-2',

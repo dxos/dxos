@@ -8,7 +8,7 @@ import { withPluginManager } from '@dxos/app-framework/testing';
 import { corePlugins } from '@dxos/plugin-testing';
 import { withTheme } from '@dxos/react-ui/testing';
 
-import { translations } from '../translations';
+import { translations } from '../../translations';
 
 import { BottomNav } from './BottomNav';
 

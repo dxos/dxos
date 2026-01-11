@@ -10,11 +10,11 @@ import { type Node } from '@dxos/plugin-graph';
 import { IconButton, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { mx, surfaceZIndex } from '@dxos/ui-theme';
 
-import { meta } from '../meta';
-import { SimpleLayoutState } from '../types';
+import { meta } from '../../meta';
+import { SimpleLayoutState } from '../../types';
 
 export const bannerRoot = mx(
-  'fixed block-start-0 inset-inline-0 bs-[--dx-mobile-topbar-content-height,48px] bg-baseSurface border-be border-separator flex items-center gap-2 pli-2',
+  'fixed flex items-center gap-2 pli-2 block-start-0 inset-inline-0 bs-[--dx-mobile-topbar-content-height,48px] bg-baseSurface border-be border-separator',
   surfaceZIndex({ level: 'menu' }),
 );
 
@@ -41,7 +41,8 @@ export const Banner = ({ node }: BannerProps) => {
   }, [invokePromise, layout.active]);
 
   return (
-    // Note that the HTML5 element `header` has a default role of `banner`, hence the name of this component. It should not be confused with the `heading` role (elements h1-6).
+    // Note that the HTML5 element `header` has a default role of `banner`, hence the name of this component.
+    // It should not be confused with the `heading` role (elements h1-6).
     <header className={bannerRoot}>
       <IconButton
         iconOnly

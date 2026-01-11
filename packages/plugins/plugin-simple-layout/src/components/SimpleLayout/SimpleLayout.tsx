@@ -4,9 +4,10 @@
 
 import React from 'react';
 
-import { Dialog } from './Dialog';
+import { Dialog } from '../Dialog';
+import { PopoverContent, PopoverRoot } from '../Popover';
+
 import { Main } from './Main';
-import { PopoverContent, PopoverRoot } from './Popover';
 
 // TODO(wittjosiah): Support toast.
 export const SimpleLayout = () => {
