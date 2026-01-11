@@ -55,6 +55,8 @@
     "main-thread-scheduling": "catalog:"
   },
   "devDependencies": {
+    "@dxos/plugin-preview": "workspace:*",
+    "@dxos/plugin-testing": "workspace:*",
     "@dxos/random": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/storybook-utils": "workspace:*",
