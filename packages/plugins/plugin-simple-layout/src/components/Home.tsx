@@ -2,13 +2,15 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { useCallback, useEffect, useMemo } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef } from 'react';
 
 import { Common } from '@dxos/app-framework';
 import { useAppGraph, useOperationInvoker } from '@dxos/app-framework/react';
 import { Graph, Node, useConnections } from '@dxos/plugin-graph';
 import { Avatar, Icon, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { Card } from '@dxos/react-ui-mosaic';
+import { SearchList, useSearchListItem, useSearchListResults } from '@dxos/react-ui-searchlist';
+import { mx } from '@dxos/ui-theme';
 
 import { meta } from '../meta';
 
@@ -16,20 +18,31 @@ import { bannerHeading, bannerRoot } from './Banner';
 
 export const Home = () => {
   const { t } = useTranslation(meta.id);
-  const { graph } = useAppGraph();
   const workspaces = useWorkspaces();
 
   useLoadDescendents(Node.RootId);
+
+  const { results, handleSearch } = useSearchListResults({
+    items: workspaces,
+    extract: (node) => toLocalizedString(node.properties.label, t),
+  });
 
   return (
     <>
       <Header />
       <Card.Heading classNames='container-max-width'>{t('workspaces heading')}</Card.Heading>
-      <section className='container-max-width pli-cardSpacingInline mbe-8 space-y-cardSpacingBlock'>
-        {workspaces.map((node) => (
-          <Workspace key={node.id} node={node} />
-        ))}
-      </section>
+      <SearchList.Root onSearch={handleSearch} classNames='container-max-width'>
+        <SearchList.Input placeholder={t('search placeholder')} autoFocus />
+        <SearchList.Content>
+          <SearchList.Viewport>
+            <section className='pli-cardSpacingInline mbe-8 space-y-cardSpacingBlock'>
+              {results.map((node) => (
+                <Workspace key={node.id} node={node} />
+              ))}
+            </section>
+          </SearchList.Viewport>
+        </SearchList.Content>
+      </SearchList.Root>
     </>
   );
 };
@@ -47,8 +60,10 @@ const Header = () => {
 const Workspace = ({ node }: { node: Node.Node }) => {
   const { t } = useTranslation(meta.id);
   const { invokePromise } = useOperationInvoker();
+  const { selectedValue, registerItem, unregisterItem } = useSearchListItem();
+  const ref = useRef<HTMLDivElement>(null);
 
-  const handleClick = useCallback(
+  const handleSelect = useCallback(
     () => invokePromise(Common.LayoutOperation.SwitchWorkspace, { subject: node.id }),
     [invokePromise, node.id],
   );
@@ -56,9 +71,32 @@ const Workspace = ({ node }: { node: Node.Node }) => {
   useLoadDescendents(node.id);
 
   const name = toLocalizedString(node.properties.label, t);
+  const isSelected = selectedValue === node.id;
+
+  // Register this workspace with the search context
+  useEffect(() => {
+    if (ref.current) {
+      registerItem(node.id, ref.current, handleSelect);
+    }
+    return () => unregisterItem(node.id);
+  }, [node.id, handleSelect, registerItem, unregisterItem]);
+
+  // Scroll into view when selected
+  useEffect(() => {
+    if (isSelected && ref.current) {
+      ref.current.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+    }
+  }, [isSelected]);
 
   return (
-    <Card.StaticRoot role='button' tabIndex={0} classNames='dx-focus-ring' onClick={handleClick}>
+    <Card.StaticRoot
+      ref={ref}
+      role='button'
+      tabIndex={-1}
+      data-selected={isSelected}
+      classNames={mx('dx-focus-ring', isSelected && 'bg-hoverOverlay')}
+      onClick={handleSelect}
+    >
       <Card.Chrome classNames='grid grid-cols-[min-content_1fr_min-content] items-center gap-cardSpacingInline pie-cardSpacingInline'>
         <Avatar.Root>
           <Avatar.Content

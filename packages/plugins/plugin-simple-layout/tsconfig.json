@@ -11,6 +11,9 @@
       "path": "../../common/util"
     },
     {
+      "path": "../../core/echo/echo-signals"
+    },
+    {
       "path": "../../core/echo/live-object"
     },
     {
@@ -27,6 +30,9 @@
     },
     {
       "path": "../../ui/react-ui-mosaic"
+    },
+    {
+      "path": "../../ui/react-ui-searchlist"
     },
     {
       "path": "../../ui/react-ui-stack"
