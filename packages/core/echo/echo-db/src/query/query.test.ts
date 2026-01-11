@@ -694,7 +694,7 @@ describe('Query', () => {
     });
   });
 
-  describe.only('indexer2 text search', () => {
+  describe('indexer2 text search', () => {
     test('full-text search via indexer2', async () => {
       const { db } = await builder.createDatabase();
 
@@ -702,6 +702,8 @@ describe('Query', () => {
       db.add(Obj.make(Type.Expando, { title: 'Getting Started with React' }));
       db.add(Obj.make(Type.Expando, { title: 'Advanced Python Programming' }));
       await db.flush({ indexes: true });
+
+      // TODO(mykola): Defalut to full-text
       const objects = await db.query(Query.select(Filter.text('TypeScript', { type: 'full-text' }))).run();
       expect(objects).toHaveLength(1);
       expect(objects[0].title).toEqual('Introduction to TypeScript');
@@ -774,6 +776,65 @@ describe('Query', () => {
       {
         const objects = await db.query(Query.select(Filter.text('Original', { type: 'full-text' }))).run();
         expect(objects).toHaveLength(0);
+      }
+    });
+
+    test.skip('stress', { timeout: 1200_000 }, async () => {
+      console.log('begin test');
+      const { db } = await builder.createDatabase();
+
+      const ANIMALS = [
+        'dog',
+        'cat',
+        'bird',
+        'fish',
+        'horse',
+        'rabbit',
+        'snake',
+        'tiger',
+        'lion',
+        'elephant',
+        'zebra',
+        'giraffe',
+        'monkey',
+        'penguin',
+        'koala',
+        'kangaroo',
+        'panda',
+      ];
+
+      console.log('begin create');
+
+      console.time('create');
+      const counts = Object.fromEntries(ANIMALS.map((animal) => [animal, 0]));
+      for (const _ of range(10_000)) {
+        const animal = faker.helpers.arrayElement(ANIMALS);
+        counts[animal]++;
+        db.add(
+          Obj.make(Type.Expando, { title: faker.lorem.sentence(10) + ' ' + animal + ' ' + faker.lorem.sentence(10) }),
+        );
+        if (_ % 1000 === 0) {
+          await sleep(1);
+          console.log('creating', _);
+        }
+      }
+      console.timeEnd('create');
+
+      console.time('flush');
+      await db.flush({ indexes: true });
+      console.timeEnd('flush');
+
+      console.time('query');
+      const needle = faker.helpers.arrayElement(ANIMALS);
+      const objects = await db.query(Query.select(Filter.text(needle, { type: 'full-text' }))).run();
+      console.timeEnd('query');
+      console.log('objects', {
+        needle,
+        count: objects.length,
+        expected: counts[needle],
+      });
+      for (const object of objects) {
+        expect(object.title).toContain(needle);
       }
     });
   });
