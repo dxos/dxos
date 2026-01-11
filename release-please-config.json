@@ -185,6 +185,11 @@
         },
         {
           "type": "json",
+          "path": "packages/common/sql-sqlite-wasm/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/common/storybook-addon-logger/package.json",
           "jsonpath": "$.version"
         },
