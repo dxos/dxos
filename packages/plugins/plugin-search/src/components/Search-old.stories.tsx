@@ -53,7 +53,7 @@ export const Default: Story = {
 };
 
 const meta = {
-  title: 'plugins/plugin-search/Search',
+  title: 'plugins/plugin-search/Search-old',
   component: Searchbar,
   render: DefaultStory,
   decorators: [withTheme, withLayout({ layout: 'column' }), withSearchContext()],
