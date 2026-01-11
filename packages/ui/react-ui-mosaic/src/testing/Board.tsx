@@ -77,7 +77,7 @@ export const Board = forwardRef<HTMLDivElement, BoardProps>(({ id, columns, debu
   return (
     <div
       role='none'
-      className={mx('p-2 bs-full is-full grid overflow-hidden', debug && 'grid-cols-[1fr_25rem] gap-2')}
+      className={mx('p-2 bs-full is-full grid overflow-hidden', debug && 'grid-cols-[1fr_20rem] gap-2')}
       ref={forwardedRef}
     >
       <Focus.Group asChild axis='horizontal'>
@@ -173,7 +173,7 @@ export const Column = forwardRef<HTMLDivElement, ColumnProps>(
           className={mx(
             'grid bs-full min-is-[20rem] max-is-[25rem] overflow-hidden',
             'bg-deckSurface', // TODO(burdon): ???
-            debug && 'grid-rows-2 gap-2',
+            debug && 'grid-rows-[1fr_20rem] gap-2',
           )}
         >
           <Focus.Group ref={forwardedRef} classNames={mx('flex flex-col overflow-hidden', classNames)}>
@@ -194,6 +194,7 @@ export const Column = forwardRef<HTMLDivElement, ColumnProps>(
             </Mosaic.Container>
             <div className='grow flex p-1 justify-center text-xs'>{items.length}</div>
           </Focus.Group>
+
           <DebugInfo />
         </div>
       </Mosaic.Tile>
@@ -298,8 +299,15 @@ Placeholder.displayName = 'Placeholder';
 //
 
 export const DebugRoot = forwardRef<HTMLDivElement, ThemedClassName>(({ classNames }, forwardedRef) => {
-  const info = useMosaic(DebugRoot.displayName!);
-  return <Json data={info} classNames={mx('text-xs', classNames)} ref={forwardedRef} />;
+  const { containers, dragging } = useMosaic(DebugRoot.displayName!);
+  const counter = useRef(0);
+  return (
+    <Json
+      data={{ containers, dragging, count: counter.current++ }}
+      classNames={mx('text-xs', classNames)}
+      ref={forwardedRef}
+    />
+  );
 });
 
 DebugRoot.displayName = 'DebugRoot';

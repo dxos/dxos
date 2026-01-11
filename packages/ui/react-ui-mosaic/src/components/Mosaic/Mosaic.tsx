@@ -583,8 +583,15 @@ const useContainerDebug = (debug?: boolean): [FC<ThemedClassName>, (() => ReactN
 };
 
 const ContainerInfo = forwardRef<HTMLDivElement, ThemedClassName>(({ classNames }, forwardedRef) => {
-  const info = useContainerContext(ContainerInfo.displayName!);
-  return <Json data={info} classNames={mx('text-xs', classNames)} ref={forwardedRef} />;
+  const { id, state, activeLocation, scrolling } = useContainerContext(ContainerInfo.displayName!);
+  const counter = useRef(0);
+  return (
+    <Json
+      data={{ id, activeLocation, scrolling, state, count: counter.current++ }}
+      classNames={mx('text-xs', classNames)}
+      ref={forwardedRef}
+    />
+  );
 });
 
 ContainerInfo.displayName = 'ContainerInfo';
