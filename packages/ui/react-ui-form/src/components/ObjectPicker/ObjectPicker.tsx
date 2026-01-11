@@ -113,12 +113,7 @@ const ObjectPickerContent = forwardRef<HTMLDivElement, ObjectPickerContentProps>
     );
 
     return (
-      <Combobox.Content
-        {...props}
-        ref={ref}
-        onSearch={handleSearch}
-        onKeyDownCapture={handleKeyDown}
-      >
+      <Combobox.Content {...props} ref={ref} onSearch={handleSearch} onKeyDownCapture={handleKeyDown}>
         {showForm && createSchema ? (
           <Popover.Viewport>
             <Form.Root
