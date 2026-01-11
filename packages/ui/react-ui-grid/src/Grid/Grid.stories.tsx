@@ -11,7 +11,7 @@ import { faker } from '@dxos/random';
 import { DropdownMenu } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { toPlaneCellIndex } from '@dxos/react-ui-grid';
-import { Combobox, type ComboboxRootProps } from '@dxos/react-ui-searchlist';
+import { Combobox, type ComboboxRootProps, useSearchListResults } from '@dxos/react-ui-searchlist';
 
 import { Grid, type GridContentProps, type GridEditing, type GridRootProps } from './Grid';
 
@@ -87,17 +87,29 @@ const GridStory = ({ initialCells, ...props }: GridStoryProps) => {
         onValueChange={setMultiselectValue}
       >
         <Combobox.VirtualTrigger virtualRef={triggerRef} />
-        <Combobox.Content filter={(value, search) => (value.includes(search) ? 1 : 0)}>
-          <Combobox.Input placeholder='Search...' />
-          <Combobox.List>
-            {storybookItems.map((value) => (
-              <Combobox.Item key={value}>{value}</Combobox.Item>
-            ))}
-          </Combobox.List>
-          <Combobox.Arrow />
-        </Combobox.Content>
+        <ComboboxContentWithFiltering />
       </Combobox.Root>
     </div>
+  );
+};
+
+const ComboboxContentWithFiltering = () => {
+  const itemObjects = React.useMemo(() => storybookItems.map((value) => ({ value, label: value })), []);
+
+  const { results, handleSearch } = useSearchListResults({
+    items: itemObjects,
+  });
+
+  return (
+    <Combobox.Content onSearch={handleSearch}>
+      <Combobox.Input placeholder='Search...' />
+      <Combobox.List>
+        {results.map((item) => (
+          <Combobox.Item key={item.value} value={item.value} label={item.label} />
+        ))}
+      </Combobox.List>
+      <Combobox.Arrow />
+    </Combobox.Content>
   );
 };
 

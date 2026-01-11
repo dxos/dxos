@@ -9,7 +9,7 @@ import { type Blueprint } from '@dxos/blueprints';
 import { type Database, Filter, Obj, Type } from '@dxos/echo';
 import { useQuery } from '@dxos/react-client/echo';
 import { Icon, IconButton, Popover, Select, useTranslation } from '@dxos/react-ui';
-import { Listbox, SearchList } from '@dxos/react-ui-searchlist';
+import { Listbox, SearchList, useSearchListResults } from '@dxos/react-ui-searchlist';
 import { Tabs } from '@dxos/react-ui-tabs';
 
 import {
@@ -104,23 +104,38 @@ const BlueprintsPanel = ({
   const activeBlueprints = useActiveBlueprints({ context });
   const { onUpdateBlueprint } = useBlueprintHandlers({ db, context, blueprintRegistry });
 
+  const blueprintItems = useMemo(
+    () =>
+      blueprints.map((blueprint) => ({
+        blueprint,
+        label: blueprint.name,
+      })),
+    [blueprints],
+  );
+
+  const { results, handleSearch } = useSearchListResults({
+    items: blueprintItems,
+  });
+
   return (
-    <SearchList.Root>
+    <SearchList.Root onSearch={handleSearch}>
       <SearchList.Content classNames='plb-cardSpacingChrome'>
-        {blueprints.map((blueprint) => {
-          const isActive = activeBlueprints.has(blueprint.key);
-          return (
-            <SearchList.Item
-              classNames='flex items-center overflow-hidden'
-              key={blueprint.key}
-              value={blueprint.name}
-              onSelect={() => onUpdateBlueprint?.(blueprint.key, !isActive)}
-            >
-              <div className='grow truncate'>{blueprint.name}</div>
-              <Icon icon='ph--check--regular' classNames={[!isActive && 'invisible']} />
-            </SearchList.Item>
-          );
-        })}
+        <SearchList.Viewport>
+          {results.map((item) => {
+            const isActive = activeBlueprints.has(item.blueprint.key);
+            return (
+              <SearchList.Item
+                classNames='flex items-center overflow-hidden'
+                key={item.blueprint.key}
+                value={item.blueprint.key}
+                label={item.label}
+                onSelect={() => onUpdateBlueprint?.(item.blueprint.key, !isActive)}
+              >
+                <Icon icon='ph--check--regular' classNames={[!isActive && 'invisible']} />
+              </SearchList.Item>
+            );
+          })}
+        </SearchList.Viewport>
       </SearchList.Content>
       <SearchList.Input placeholder={t('search placeholder')} classNames='mbe-cardSpacingChrome' autoFocus />
     </SearchList.Root>
@@ -177,28 +192,42 @@ const ObjectsPanel = ({ db, context }: Pick<ChatOptionsProps, 'db' | 'context'>)
   const objects = useQuery(db, typename === ANY ? anyFilter : Filter.typename(typename));
   const { objects: contextObjects, onUpdateObject } = useContextObjects({ db, context });
 
+  const objectItems = useMemo(
+    () =>
+      objects.map((object) => ({
+        object,
+        label: Obj.getLabel(object) ?? Obj.getTypename(object) ?? object.id,
+      })),
+    [objects],
+  );
+
+  const { results, handleSearch } = useSearchListResults({
+    items: objectItems,
+  });
+
   return (
-    <SearchList.Root>
+    <SearchList.Root onSearch={handleSearch}>
       <SearchList.Content classNames='p-cardSpacingChrome [&:has([cmdk-list-sizer]:empty)]:plb-0'>
-        {objects.length ? (
-          objects.map((object) => {
-            const label = Obj.getLabel(object) ?? Obj.getTypename(object) ?? object.id;
-            const isActive = contextObjects.findIndex((obj) => obj.id === object.id) !== -1;
-            return (
-              <SearchList.Item
-                classNames='flex items-center overflow-hidden'
-                key={object.id}
-                value={object.id}
-                onSelect={() => onUpdateObject?.(Obj.getDXN(object), !isActive)}
-              >
-                <div className='grow truncate'>{label}</div>
-                <Icon icon='ph--check--regular' classNames={[!isActive && 'invisible']} />
-              </SearchList.Item>
-            );
-          })
-        ) : (
-          <SearchList.Item>{t('no results')}</SearchList.Item>
-        )}
+        <SearchList.Viewport>
+          {results.length ? (
+            results.map((item) => {
+              const isActive = contextObjects.findIndex((obj) => obj.id === item.object.id) !== -1;
+              return (
+                <SearchList.Item
+                  classNames='flex items-center overflow-hidden'
+                  key={item.object.id}
+                  value={item.object.id}
+                  label={item.label}
+                  onSelect={() => onUpdateObject?.(Obj.getDXN(item.object), !isActive)}
+                >
+                  <Icon icon='ph--check--regular' classNames={[!isActive && 'invisible']} />
+                </SearchList.Item>
+              );
+            })
+          ) : (
+            <SearchList.Item value='__empty__' label={t('no results')} />
+          )}
+        </SearchList.Viewport>
       </SearchList.Content>
 
       <div role='none' className='grid grid-cols-[min-content_1fr] gap-2 pli-cardSpacingChrome mbe-cardSpacingChrome'>

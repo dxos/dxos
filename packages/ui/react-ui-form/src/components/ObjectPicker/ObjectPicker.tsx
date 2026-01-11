@@ -6,7 +6,7 @@ import type * as Schema from 'effect/Schema';
 import React, { type KeyboardEvent, type MouseEvent, forwardRef, useCallback, useMemo, useState } from 'react';
 
 import { Icon, type Palette, Popover, type ThemedClassName, useTranslation } from '@dxos/react-ui';
-import { Combobox } from '@dxos/react-ui-searchlist';
+import { Combobox, useSearchListResults } from '@dxos/react-ui-searchlist';
 
 import { translationKey } from '../../translations';
 import { Form } from '../Form';
@@ -46,6 +46,10 @@ const ObjectPickerContent = forwardRef<HTMLDivElement, ObjectPickerContentProps>
     const { t } = useTranslation(translationKey);
     const [showForm, setShowForm] = useState(false);
     const [searchString, setSearchString] = useState('');
+
+    const { results, handleSearch } = useSearchListResults({
+      items: options,
+    });
 
     const handleFormSave = useCallback(
       (values: any) => {
@@ -92,20 +96,20 @@ const ObjectPickerContent = forwardRef<HTMLDivElement, ObjectPickerContentProps>
       [createSchema],
     );
 
-    const labelById = useMemo(
-      () =>
-        options.reduce((acc: Record<string, string>, option) => {
-          acc[option.id.toLowerCase()] = option.label.toLowerCase();
-          return acc;
-        }, {}),
-      [options],
+    const handleSearchWithState = useCallback(
+      (query: string) => {
+        setSearchString(query);
+        handleSearch(query);
+      },
+      [handleSearch],
     );
 
     return (
       <Combobox.Content
         {...props}
         ref={ref}
-        filter={(value, search) => (value === '__create__' || labelById[value]?.includes(search.toLowerCase()) ? 1 : 0)}
+        value={searchString}
+        onSearch={handleSearchWithState}
         onClickCapture={handleClick}
         onKeyDownCapture={handleKeyDown}
       >
@@ -128,28 +132,26 @@ const ObjectPickerContent = forwardRef<HTMLDivElement, ObjectPickerContentProps>
           </Popover.Viewport>
         ) : (
           <>
-            <Combobox.Input
-              placeholder={t('ref field combobox input placeholder')}
-              value={searchString}
-              onValueChange={setSearchString}
-              autoFocus
-            />
+            <Combobox.Input placeholder={t('ref field combobox input placeholder')} autoFocus />
             <Combobox.List>
-              {options.map((option) => (
+              {results.map((option) => (
                 <Combobox.Item
                   key={option.id}
                   value={option.id}
+                  label={option.label}
                   onSelect={() => onSelect(option.id)}
                   classNames='flex items-center gap-2'
                 >
-                  <span className='grow'>{option.label}</span>
                   {selectedIds?.includes(option.id) && <Icon icon='ph--check--regular' />}
                 </Combobox.Item>
               ))}
               {searchString.length > 0 && createOptionLabel && createOptionIcon && createSchema && onCreate && (
-                <Combobox.Item value='__create__' classNames='flex items-center gap-2'>
+                <Combobox.Item
+                  value='__create__'
+                  label={t(createOptionLabel[0], { ns: createOptionLabel[1].ns, text: searchString })}
+                  classNames='flex items-center gap-2'
+                >
                   <Icon icon={createOptionIcon} />
-                  {t(createOptionLabel[0], { ns: createOptionLabel[1].ns, text: searchString })}
                 </Combobox.Item>
               )}
             </Combobox.List>

@@ -4,15 +4,15 @@
 
 import * as Option from 'effect/Option';
 import type * as Schema from 'effect/Schema';
-import React, { useCallback } from 'react';
+import React, { useCallback, useMemo } from 'react';
 
 import { type Database } from '@dxos/echo';
 import { type AnyProperties, type TypeAnnotation, getTypeAnnotation } from '@dxos/echo/internal';
 import { type Space, type SpaceId } from '@dxos/react-client/echo';
-import { Icon, toLocalizedString, useDefaultValue, useTranslation } from '@dxos/react-ui';
+import { toLocalizedString, useDefaultValue, useTranslation } from '@dxos/react-ui';
 import { Form, omitId } from '@dxos/react-ui-form';
 import { cardDialogOverflow, cardDialogPaddedOverflow, cardDialogSearchListRoot } from '@dxos/react-ui-mosaic';
-import { SearchList } from '@dxos/react-ui-searchlist';
+import { SearchList, useSearchListResults } from '@dxos/react-ui-searchlist';
 import { type Collection, ViewAnnotation } from '@dxos/schema';
 import { type MaybePromise, isNonNullable } from '@dxos/util';
 
@@ -135,42 +135,45 @@ const SelectSpace = ({
 }: { onChange?: (db: Database.Database) => void } & Pick<CreateObjectPanelProps, 'spaces' | 'defaultSpaceId'>) => {
   const { t } = useTranslation(meta.id);
 
+  const spaceItems = useMemo(
+    () =>
+      spaces
+        .map((space) => ({
+          space,
+          label: toLocalizedString(
+            getSpaceDisplayName(space, {
+              personal: space.id === defaultSpaceId,
+            }),
+            t,
+          ),
+        }))
+        .sort((a, b) => a.label.localeCompare(b.label)),
+    [spaces, defaultSpaceId, t],
+  );
+
+  const { results, handleSearch } = useSearchListResults({
+    items: spaceItems,
+  });
+
   return (
-    <SearchList.Root label={t('space input label')} classNames={cardDialogSearchListRoot}>
+    <SearchList.Root label={t('space input label')} onSearch={handleSearch} classNames={cardDialogSearchListRoot}>
       <SearchList.Input
         autoFocus
         data-testid='create-object-form.space-input'
         placeholder={t('space input placeholder')}
       />
       <SearchList.Content classNames={[cardDialogOverflow, 'plb-cardSpacingBlock']}>
-        {spaces
-          .sort((a, b) => {
-            const aName = toLocalizedString(getSpaceDisplayName(a, { personal: a.id === defaultSpaceId }), t);
-            const bName = toLocalizedString(getSpaceDisplayName(b, { personal: b.id === defaultSpaceId }), t);
-            return aName.localeCompare(bName);
-          })
-          .map((space) => (
+        <SearchList.Viewport>
+          {results.map((item) => (
             <SearchList.Item
-              key={space.id}
-              value={toLocalizedString(
-                getSpaceDisplayName(space, {
-                  personal: space.id === defaultSpaceId,
-                }),
-                t,
-              )}
-              onSelect={() => onChange?.(space.db)}
+              key={item.space.id}
+              value={item.space.id}
+              label={item.label}
+              onSelect={() => onChange?.(item.space.db)}
               classNames='flex items-center gap-2'
-            >
-              <span className='grow truncate'>
-                {toLocalizedString(
-                  getSpaceDisplayName(space, {
-                    personal: space.id === defaultSpaceId,
-                  }),
-                  t,
-                )}
-              </span>
-            </SearchList.Item>
+            />
           ))}
+        </SearchList.Viewport>
       </SearchList.Content>
     </SearchList.Root>
   );
@@ -186,33 +189,43 @@ const SelectSchema = ({
 } & Pick<CreateObjectPanelProps, 'resolve'>) => {
   const { t } = useTranslation(meta.id);
 
+  const schemaItems = useMemo(
+    () =>
+      options.map((option) => ({
+        option,
+        label: t('typename label', {
+          ns: option.typename,
+          defaultValue: option.typename,
+        }),
+        icon: resolve?.(option.typename)?.icon ?? 'ph--placeholder--regular',
+      })),
+    [options, resolve, t],
+  );
+
+  const { results, handleSearch } = useSearchListResults({
+    items: schemaItems,
+  });
+
   return (
-    <SearchList.Root label={t('schema input label')} classNames={cardDialogSearchListRoot}>
+    <SearchList.Root label={t('schema input label')} onSearch={handleSearch} classNames={cardDialogSearchListRoot}>
       <SearchList.Input
         autoFocus
         data-testid='create-object-form.schema-input'
         placeholder={t('schema input placeholder')}
       />
       <SearchList.Content classNames={cardDialogPaddedOverflow}>
-        {options.map((option) => (
-          <SearchList.Item
-            key={option.typename}
-            value={t('typename label', {
-              ns: option.typename,
-              defaultValue: option.typename,
-            })}
-            onSelect={() => onChange(option.typename)}
-            classNames='flex items-center gap-2'
-          >
-            <span className='flex gap-2 items-center grow truncate'>
-              <Icon icon={resolve?.(option.typename)?.icon ?? 'ph--placeholder--regular'} size={5} />
-              {t('typename label', {
-                ns: option.typename,
-                defaultValue: option.typename,
-              })}
-            </span>
-          </SearchList.Item>
-        ))}
+        <SearchList.Viewport>
+          {results.map((item) => (
+            <SearchList.Item
+              key={item.option.typename}
+              value={item.option.typename}
+              label={item.label}
+              icon={item.icon}
+              onSelect={() => onChange(item.option.typename)}
+              classNames='flex items-center gap-2'
+            />
+          ))}
+        </SearchList.Viewport>
       </SearchList.Content>
     </SearchList.Root>
   );

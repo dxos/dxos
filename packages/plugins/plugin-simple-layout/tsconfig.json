@@ -32,6 +32,9 @@
       "path": "../../ui/react-ui-mosaic"
     },
     {
+      "path": "../../ui/react-ui-searchlist"
+    },
+    {
       "path": "../../ui/react-ui-stack"
     },
     {

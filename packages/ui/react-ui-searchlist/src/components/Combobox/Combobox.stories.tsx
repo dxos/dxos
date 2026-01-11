@@ -9,6 +9,7 @@ import { faker } from '@dxos/random';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '../../translations';
+import { useSearchListResults } from '../SearchList/hooks';
 
 import { Combobox } from './Combobox';
 
@@ -17,6 +18,12 @@ faker.seed(1234);
 const items = faker.helpers.uniqueArray(faker.commerce.productName, 16).sort();
 
 const DefaultStory = () => {
+  const itemObjects = React.useMemo(() => items.map((value) => ({ value, label: value })), []);
+
+  const { results, handleSearch } = useSearchListResults({
+    items: itemObjects,
+  });
+
   return (
     <Combobox.Root
       placeholder='Nothing selected'
@@ -25,11 +32,11 @@ const DefaultStory = () => {
       }}
     >
       <Combobox.Trigger />
-      <Combobox.Content filter={(value, search) => (value.includes(search) ? 1 : 0)}>
+      <Combobox.Content onSearch={handleSearch}>
         <Combobox.Input placeholder='Search...' />
         <Combobox.List>
-          {items.map((value) => (
-            <Combobox.Item key={value}>{value}</Combobox.Item>
+          {results.map((item) => (
+            <Combobox.Item key={item.value} value={item.value} label={item.label} />
           ))}
         </Combobox.List>
         <Combobox.Arrow />

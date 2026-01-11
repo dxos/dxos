@@ -9,14 +9,14 @@ import { useAppGraph, useOperationInvoker } from '@dxos/app-framework/react';
 import { Keyboard, keySymbols } from '@dxos/keyboard';
 import { Graph, Node } from '@dxos/plugin-graph';
 import { useActions } from '@dxos/plugin-graph';
-import { Button, Dialog, Icon, toLocalizedString, useTranslation } from '@dxos/react-ui';
+import { Button, Dialog, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import {
   cardDialogContent,
   cardDialogHeader,
   cardDialogPaddedOverflow,
   cardDialogSearchListRoot,
 } from '@dxos/react-ui-mosaic';
-import { SearchList } from '@dxos/react-ui-searchlist';
+import { SearchList, useSearchListResults } from '@dxos/react-ui-searchlist';
 import { descriptionText, mx } from '@dxos/ui-theme';
 import { getHostPlatform } from '@dxos/util';
 
@@ -67,51 +67,72 @@ export const CommandsDialogContent = forwardRef<HTMLDivElement, CommandsDialogCo
     const groupActions = useActions(graph, group?.id);
     const actions = Node.isActionGroup(group) ? groupActions : allActions;
 
+    const actionItems = useMemo(
+      () =>
+        actions.map((action) => ({
+          action,
+          label: toLocalizedString(action.properties.label, t),
+        })),
+      [actions, t],
+    );
+
+    const { results, handleSearch } = useSearchListResults({
+      items: actionItems,
+    });
+
     return (
       <Dialog.Content classNames={cardDialogContent} ref={forwardedRef}>
         <Dialog.Title classNames={cardDialogHeader}>{t('commands dialog title', { ns: meta.id })}</Dialog.Title>
 
-        <SearchList.Root label={t('command list input placeholder')} classNames={cardDialogSearchListRoot}>
+        <SearchList.Root
+          label={t('command list input placeholder')}
+          onSearch={handleSearch}
+          classNames={cardDialogSearchListRoot}
+        >
           <SearchList.Input placeholder={t('command list input placeholder')} />
           <SearchList.Content classNames={cardDialogPaddedOverflow}>
-            {actions?.map((action) => {
-              const label = toLocalizedString(action.properties.label, t);
-              const shortcut =
-                typeof action.properties.keyBinding === 'string'
-                  ? action.properties.keyBinding
-                  : action.properties.keyBinding?.[getHostPlatform()];
-              return (
-                <SearchList.Item
-                  value={label}
-                  key={action.id}
-                  onSelect={() => {
-                    if (action.properties.disabled) {
-                      return;
-                    }
+            <SearchList.Viewport>
+              {results.map((item) => {
+                const { action } = item;
+                const shortcut =
+                  typeof action.properties.keyBinding === 'string'
+                    ? action.properties.keyBinding
+                    : action.properties.keyBinding?.[getHostPlatform()];
+                return (
+                  <SearchList.Item
+                    value={action.id}
+                    key={action.id}
+                    label={item.label}
+                    icon={action.properties.icon}
+                    onSelect={() => {
+                      if (action.properties.disabled) {
+                        return;
+                      }
 
-                    if (Node.isActionGroup(action)) {
-                      setSelected(action.id);
-                      return;
-                    }
+                      if (Node.isActionGroup(action)) {
+                        setSelected(action.id);
+                        return;
+                      }
 
-                    invokeSync(Common.LayoutOperation.UpdateDialog, { state: false });
-                    setTimeout(() => {
-                      const node = Graph.getConnections(graph, group?.id ?? action.id, 'inbound')[0];
-                      void (node && Node.isAction(action) && action.data({ parent: node, caller: KEY_BINDING }));
-                    });
-                  }}
-                  classNames='flex items-center gap-2'
-                  disabled={action.properties.disabled}
-                  {...(action.properties?.testId && {
-                    'data-testid': action.properties.testId,
-                  })}
-                >
-                  <Icon icon={action.properties.icon} size={4} />
-                  <span className='grow truncate'>{label}</span>
-                  {shortcut && <span className={mx('shrink-0', descriptionText)}>{keySymbols(shortcut).join('')}</span>}
-                </SearchList.Item>
-              );
-            })}
+                      invokeSync(Common.LayoutOperation.UpdateDialog, { state: false });
+                      setTimeout(() => {
+                        const node = Graph.getConnections(graph, group?.id ?? action.id, 'inbound')[0];
+                        void (node && Node.isAction(action) && action.data({ parent: node, caller: KEY_BINDING }));
+                      });
+                    }}
+                    classNames='flex items-center gap-2'
+                    disabled={action.properties.disabled}
+                    {...(action.properties?.testId && {
+                      'data-testid': action.properties.testId,
+                    })}
+                  >
+                    {shortcut && (
+                      <span className={mx('shrink-0', descriptionText)}>{keySymbols(shortcut).join('')}</span>
+                    )}
+                  </SearchList.Item>
+                );
+              })}
+            </SearchList.Viewport>
           </SearchList.Content>
         </SearchList.Root>
         <div role='none' className='pli-cardSpacingInline pbe-cardSpacingBlock'>
