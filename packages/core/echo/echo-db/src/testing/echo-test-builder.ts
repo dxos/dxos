@@ -4,12 +4,12 @@
 
 import type { AutomergeUrl } from '@automerge/automerge-repo';
 import * as Reactivity from '@effect/experimental/Reactivity';
-import * as SqliteClient from '@effect/sql-sqlite-node/SqliteClient';
+import type * as SqlClient from '@effect/sql/SqlClient';
+import * as SqliteClient from '@effect/sql-sqlite-wasm/SqliteClient';
 import * as Layer from 'effect/Layer';
 import * as ManagedRuntime from 'effect/ManagedRuntime';
 import type * as Schema from 'effect/Schema';
 import isEqual from 'lodash.isequal';
-import * as SqlClient from '@effect/sql/SqlClient';
 
 import { waitForCondition } from '@dxos/async';
 import { type Context, Resource } from '@dxos/context';
@@ -118,12 +118,7 @@ export class EchoTestPeer extends Resource {
   protected override async _open(ctx: Context): Promise<void> {
     await this._kv.open();
     this._managedRuntime = ManagedRuntime.make(
-      Layer.merge(
-        SqliteClient.layer({
-          filename: ':memory:',
-        }),
-        Reactivity.layer,
-      ).pipe(Layer.orDie),
+      Layer.merge(SqliteClient.layerMemory({}), Reactivity.layer).pipe(Layer.orDie),
     );
     this._initEcho();
     this._echoClient.connectToService({

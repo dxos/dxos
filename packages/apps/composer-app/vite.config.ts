@@ -89,6 +89,9 @@ export default defineConfig((env) => ({
       },
     },
   },
+  optimizeDeps: {
+    exclude: ['@effect/wa-sqlite'],
+  },
   resolve: {
     alias: {
       ['node-fetch']: 'isomorphic-fetch',

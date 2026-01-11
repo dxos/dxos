@@ -3,7 +3,7 @@
 //
 
 import * as Reactivity from '@effect/experimental/Reactivity';
-import * as SqliteClient from '@effect/sql-sqlite-node/SqliteClient';
+import * as SqliteClient from '@effect/sql-sqlite-wasm/SqliteClient';
 import * as Layer from 'effect/Layer';
 import * as ManagedRuntime from 'effect/ManagedRuntime';
 
@@ -37,9 +37,7 @@ export const createServiceHost = (config: Config, signalManagerContext: MemorySi
     transportFactory: MemoryTransportFactory,
     runtime: ManagedRuntime.make(
       Layer.merge(
-        SqliteClient.layer({
-          filename: ':memory:',
-        }),
+        SqliteClient.layerMemory({}),
         Reactivity.layer,
       ).pipe(Layer.orDie),
     ).runtimeEffect,
@@ -68,9 +66,7 @@ export const createServiceContext = async ({
 
   const runtime = ManagedRuntime.make(
     Layer.merge(
-      SqliteClient.layer({
-        filename: ':memory:',
-      }),
+      SqliteClient.layerMemory({}),
       Reactivity.layer,
     ).pipe(Layer.orDie),
   ).runtimeEffect;
@@ -140,9 +136,7 @@ export class TestPeer {
   private _props: TestPeerProps = {};
   private readonly _runtime = ManagedRuntime.make(
     Layer.merge(
-      SqliteClient.layer({
-        filename: ':memory:',
-      }),
+      SqliteClient.layerMemory({}),
       Reactivity.layer,
     ).pipe(Layer.orDie),
   );
