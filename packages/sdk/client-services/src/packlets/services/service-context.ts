@@ -2,6 +2,8 @@
 // Copyright 2022 DXOS.org
 //
 
+import type * as SqlClient from '@effect/sql/SqlClient';
+
 import { Mutex, Trigger } from '@dxos/async';
 import { Context, Resource } from '@dxos/context';
 import { type CredentialProcessor, getCredentialAssertion } from '@dxos/credentials';
@@ -16,6 +18,7 @@ import {
 } from '@dxos/echo-pipeline';
 import { createChainEdgeIdentity, createEphemeralEdgeIdentity } from '@dxos/edge-client';
 import type { EdgeConnection, EdgeHttpClient, EdgeIdentity } from '@dxos/edge-client';
+import { type RuntimeProvider } from '@dxos/effect';
 import { FeedFactory, FeedStore } from '@dxos/feed-store';
 import { invariant } from '@dxos/invariant';
 import { Keyring } from '@dxos/keyring';
@@ -105,6 +108,7 @@ export class ServiceContext extends Resource {
     public readonly signalManager: SignalManager,
     private readonly _edgeConnection: EdgeConnection | undefined,
     private readonly _edgeHttpClient: EdgeHttpClient | undefined,
+    private readonly _runtime: RuntimeProvider.RuntimeProvider<SqlClient.SqlClient>,
     public readonly _runtimeProps?: ServiceContextRuntimeProps,
     private readonly _edgeFeatures?: Runtime.Client.EdgeFeatures,
   ) {
@@ -162,6 +166,7 @@ export class ServiceContext extends Resource {
       indexing: {
         vector: this._runtimeProps?.enableVectorIndexing,
       },
+      runtime: this._runtime,
     });
 
     this.invitations = new InvitationsHandler(

@@ -4,14 +4,12 @@
 
 import { type AnyDocumentId, type AutomergeUrl, type DocHandle, type DocumentId } from '@automerge/automerge-repo';
 import type * as SqlClient from '@effect/sql/SqlClient';
-import type * as Effect from 'effect/Effect';
-import * as Runtime from 'effect/Runtime';
 
 import { DeferredTask, sleep } from '@dxos/async';
 import { Context, LifecycleState, Resource } from '@dxos/context';
 import { todo } from '@dxos/debug';
 import { type DatabaseDirectory, SpaceDocVersion, createIdFromSpaceKey } from '@dxos/echo-protocol';
-import { runAndForwardErrors, unwrapExit } from '@dxos/effect';
+import { RuntimeProvider } from '@dxos/effect';
 import { IndexEngine } from '@dxos/index-core';
 import { IndexMetadataStore, IndexStore, Indexer } from '@dxos/indexing';
 import { invariant } from '@dxos/invariant';
@@ -64,18 +62,8 @@ export type EchoHostProps = {
   getSpaceKeyByRootDocumentId?: RootDocumentSpaceKeyProvider;
 
   indexing?: Partial<EchoHostIndexingConfig>;
-  runtime: RuntimeProvider<SqlClient.SqlClient>;
+  runtime: RuntimeProvider.RuntimeProvider<SqlClient.SqlClient>;
 };
-
-// TODO(dmaretskyi): Move to @dxos/effect.
-export type RuntimeProvider<R> = Effect.Effect<Runtime.Runtime<R>>;
-
-const runWithRuntimeProvider =
-  <A, R>(provider: RuntimeProvider<R>) =>
-  async (effect: Effect.Effect<A, any, R>): Promise<A> => {
-    const runtime = await runAndForwardErrors(provider);
-    return unwrapExit(await effect.pipe(Runtime.runPromiseExit(runtime)));
-  };
 
 /**
  * Host for the Echo database.
@@ -94,7 +82,7 @@ export class EchoHost extends Resource {
 
   private readonly _automergeDataSource: AutomergeDataSource;
   private readonly _indexer2: IndexEngine;
-  private readonly _runtime: RuntimeProvider<SqlClient.SqlClient>;
+  private readonly _runtime: RuntimeProvider.RuntimeProvider<SqlClient.SqlClient>;
 
   private _updateIndexes!: DeferredTask;
 
@@ -223,7 +211,7 @@ export class EchoHost extends Resource {
     await this._indexer.open(ctx);
     await this._queryService.open(ctx);
     await this._spaceStateManager.open(ctx);
-    await this._indexer2.migrate().pipe(runWithRuntimeProvider(this._runtime));
+    await RuntimeProvider.runPromise(this._runtime)(this._indexer2.migrate());
 
     this._updateIndexes = new DeferredTask(this._ctx, this._runUpdateIndexes);
     this._spaceStateManager.spaceDocumentListUpdated.on(this._ctx, (e) => {
@@ -351,7 +339,7 @@ export class EchoHost extends Resource {
     }
     const { updated } = await this._indexer2
       .update(this._automergeDataSource, { spaceId: null, limit: 50 })
-      .pipe(runWithRuntimeProvider(this._runtime));
+      .pipe(RuntimeProvider.runPromise(this._runtime));
     log.verbose('indexer2 update completed', { updated });
     await sleep(1);
     if (updated > 0) {
