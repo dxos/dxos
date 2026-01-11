@@ -20,7 +20,7 @@ import { translationKey } from '../../translations';
 import { Image } from '../Image';
 
 // TODO(burdon): Use new styles.
-import { cardChrome, cardGrid, cardHeading, cardRoot, cardSpacing, cardText } from './styles';
+import { cardChrome, cardGrid, cardHeading, cardRoot, cardSection, cardSpacing, cardText } from './styles';
 
 /**
  * The default width of cards. It should be no larger than 320px per WCAG 2.1 SC 1.4.10.
@@ -32,22 +32,22 @@ type CardSharedProps = ThemedClassName<ComponentPropsWithoutRef<'div'>> & {
   className?: string;
 };
 
+type CardRootProps = CardSharedProps & { id?: string };
+
 /**
  *
  */
-// TODO(burdon): Document???
-const CardStaticRoot = forwardRef<HTMLDivElement, CardSharedProps & { id?: string }>(
+const CardRoot = forwardRef<HTMLDivElement, CardRootProps>(
   ({ children, classNames, className, id, asChild, role = 'group', ...props }, forwardedRef) => {
     const Root = asChild ? Slot : 'div';
-
-    // When asChild=true, merge classes and pass as className for Radix Slot to merge.
-    // When asChild=false, merge classes immediately.
-    const rootProps = asChild
-      ? { className: mx(cardRoot, className, classNames) }
-      : { className: mx(cardRoot, className, classNames), role };
-
     return (
-      <Root {...(id && { 'data-object-id': id })} {...props} {...rootProps} ref={forwardedRef}>
+      <Root
+        {...(id && { 'data-object-id': id })}
+        role={role}
+        className={mx(cardRoot, className, classNames)}
+        {...props}
+        ref={forwardedRef}
+      >
         {children}
       </Root>
     );
@@ -56,7 +56,8 @@ const CardStaticRoot = forwardRef<HTMLDivElement, CardSharedProps & { id?: strin
 
 /**
  * This should be used by Surface fulfillments in cases where the content may or may not already be encapsulated (e.g., in a Popover) and knows this based on the `role` it receives.
- * This will render a `Card.StaticRoot` by default, otherwise it will render a `div` primitive with the appropriate styling for specific handled situations.
+ * This will render a `Card.Root` by default, otherwise it will render a `div` primitive with the appropriate styling for specific handled situations.
+ * @deprecated Use Card.Root.
  */
 const CardSurfaceRoot = forwardRef<HTMLDivElement, ThemedClassName<PropsWithChildren<{ id?: string; role?: string }>>>(
   ({ id, role = 'never', children, classNames }, forwardedRef) => {
@@ -79,7 +80,7 @@ const CardSurfaceRoot = forwardRef<HTMLDivElement, ThemedClassName<PropsWithChil
       );
     } else {
       return (
-        <CardStaticRoot
+        <CardRoot
           id={id}
           classNames={[
             role === 'card--transclusion' && 'mlb-1',
@@ -89,35 +90,9 @@ const CardSurfaceRoot = forwardRef<HTMLDivElement, ThemedClassName<PropsWithChil
           ref={forwardedRef}
         >
           {children}
-        </CardStaticRoot>
+        </CardRoot>
       );
     }
-  },
-);
-
-//
-// Heading
-//
-
-type CardHeadingProps = CardSharedProps & { truncate?: boolean };
-
-const CardHeading = forwardRef<HTMLDivElement, CardHeadingProps>(
-  ({ children, classNames, className, asChild, truncate, role = 'heading', ...props }, forwardedRef) => {
-    const Root = asChild ? Slot : 'div';
-    const rootProps = asChild
-      ? {
-          classNames: [cardHeading, cardText, truncate && 'truncate', classNames],
-          className,
-        }
-      : {
-          className: mx(cardHeading, cardText, truncate && 'truncate', classNames, className),
-          role,
-        };
-    return (
-      <Root {...props} {...rootProps} ref={forwardedRef}>
-        {children}
-      </Root>
-    );
   },
 );
 
@@ -137,6 +112,23 @@ const CardToolbarIconButton = Toolbar.IconButton;
 const CardToolbarSeparator = Toolbar.Separator;
 
 //
+// Heading
+//
+
+type CardHeadingProps = CardSharedProps;
+
+const CardHeading = forwardRef<HTMLDivElement, CardHeadingProps>(
+  ({ children, classNames, className, asChild, role = 'heading', ...props }, forwardedRef) => {
+    const Root = asChild ? Slot : 'div';
+    return (
+      <Root {...props} role={role} className={mx(cardHeading, classNames, className)} ref={forwardedRef}>
+        {children}
+      </Root>
+    );
+  },
+);
+
+//
 // DragHandle
 //
 
@@ -147,6 +139,7 @@ const CardDragHandle = forwardRef<HTMLButtonElement, CardDragHandleProps>(({ too
   const Root = toolbarItem ? Toolbar.IconButton : IconButton;
   return (
     <Root
+      noTooltip
       iconOnly
       icon='ph--dots-six-vertical--regular'
       variant='ghost'
@@ -161,28 +154,31 @@ const CardDragHandle = forwardRef<HTMLButtonElement, CardDragHandleProps>(({ too
 // Menu
 //
 
-type CardMenuProps = {
-  items: { label: string; onSelect: () => void }[];
+type CardMenuProps<T extends any | void = void> = {
+  context?: T;
+  items?: { label: string; onSelect: (context?: T) => void }[];
 };
 
-const CardMenu = ({ items }: CardMenuProps) => {
+const CardMenu = <T extends any | void = void>({ context, items }: CardMenuProps<T>) => {
   const { t } = useTranslation(translationKey);
   return (
     <DropdownMenu.Root>
       <DropdownMenu.Trigger asChild>
         <Card.ToolbarIconButton iconOnly variant='ghost' icon='ph--list--regular' label={t('action menu label')} />
       </DropdownMenu.Trigger>
-      <DropdownMenu.Portal>
-        <DropdownMenu.Content>
-          <DropdownMenu.Viewport>
-            {items.map(({ label, onSelect }, i) => (
-              <DropdownMenu.Item key={i} onSelect={onSelect}>
-                {label}
-              </DropdownMenu.Item>
-            ))}
-          </DropdownMenu.Viewport>
-        </DropdownMenu.Content>
-      </DropdownMenu.Portal>
+      {(items?.length ?? 0) > 0 && (
+        <DropdownMenu.Portal>
+          <DropdownMenu.Content>
+            <DropdownMenu.Viewport>
+              {items?.map(({ label, onSelect }, i) => (
+                <DropdownMenu.Item key={i} onSelect={() => onSelect(context)}>
+                  {label}
+                </DropdownMenu.Item>
+              ))}
+            </DropdownMenu.Viewport>
+          </DropdownMenu.Content>
+        </DropdownMenu.Portal>
+      )}
     </DropdownMenu.Root>
   );
 };
@@ -226,13 +222,33 @@ const CardPoster = (props: CardPosterProps) => {
 const CardChrome = forwardRef<HTMLDivElement, CardSharedProps>(
   ({ children, classNames, className, asChild, role = 'none', ...props }, forwardedRef) => {
     const Root = asChild ? Slot : 'div';
-    const rootProps = asChild
-      ? { classNames: [cardChrome, classNames], className }
-      : { className: mx(cardChrome, classNames, className), role };
     return (
-      <Root {...props} {...rootProps} ref={forwardedRef}>
+      <Root {...props} role={role} className={mx(cardChrome, classNames, className)} ref={forwardedRef}>
         {children}
       </Root>
+    );
+  },
+);
+
+//
+// Section
+//
+
+type CardSectionProps = CardSharedProps & { fullWidth?: boolean; icon?: string };
+
+const CardSection = forwardRef<HTMLDivElement, CardSectionProps>(
+  ({ children, classNames, className, role = 'none', fullWidth, icon, ...props }, forwardedRef) => {
+    return (
+      <div role={role} className={mx(!fullWidth && cardSection, 'pli-1')} ref={forwardedRef}>
+        {(!fullWidth || icon) && (
+          <div role='none' className='grid bs-[var(--rail-item)] is-[var(--rail-item)] place-items-center'>
+            {icon && <Icon icon={icon} />}
+          </div>
+        )}
+        <div {...props} role='none' className={mx('plb-1', classNames, className)} ref={forwardedRef}>
+          {children}
+        </div>
+      </div>
     );
   },
 );
@@ -241,14 +257,14 @@ const CardChrome = forwardRef<HTMLDivElement, CardSharedProps>(
 // Text
 //
 
+/**
+ * @deprecated Use CardSection instead.
+ */
 const CardText = forwardRef<HTMLDivElement, CardSharedProps>(
   ({ children, classNames, className, asChild, role = 'none', ...props }, forwardedRef) => {
     const Root = asChild ? Slot : 'div';
-    const rootProps = asChild
-      ? { classNames: [cardText, classNames], className }
-      : { className: mx(cardText, classNames, className), role };
     return (
-      <Root {...props} {...rootProps} ref={forwardedRef}>
+      <Root {...props} role={role} className={mx(cardText, classNames, className)} ref={forwardedRef}>
         {children}
       </Root>
     );
@@ -260,19 +276,20 @@ const CardText = forwardRef<HTMLDivElement, CardSharedProps>(
 //
 
 export const Card = {
-  StaticRoot: CardStaticRoot,
+  Root: CardRoot,
   SurfaceRoot: CardSurfaceRoot,
-  Heading: CardHeading,
+  DragHandle: CardDragHandle,
   Toolbar: CardToolbar,
   ToolbarIconButton: CardToolbarIconButton,
   ToolbarSeparator: CardToolbarSeparator,
-  DragHandle: CardDragHandle,
+  Heading: CardHeading,
+  Chrome: CardChrome,
+  Section: CardSection,
   Menu: CardMenu,
   Poster: CardPoster,
-  Chrome: CardChrome,
   Text: CardText,
 };
 
-export type { CardMenuProps };
+export type { CardRootProps, CardMenuProps };
 
 export { cardRoot, cardHeading, cardText, cardChrome, cardSpacing, cardDefaultInlineSize };

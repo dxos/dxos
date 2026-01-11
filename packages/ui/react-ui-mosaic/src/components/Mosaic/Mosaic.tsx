@@ -12,7 +12,7 @@ import {
 import { preserveOffsetOnSource } from '@atlaskit/pragmatic-drag-and-drop/element/preserve-offset-on-source';
 import { setCustomNativeDragPreview } from '@atlaskit/pragmatic-drag-and-drop/element/set-custom-native-drag-preview';
 import { type DragLocationHistory, type DropTargetRecord } from '@atlaskit/pragmatic-drag-and-drop/types';
-import { type AllowedAxis } from '@atlaskit/pragmatic-drag-and-drop-auto-scroll/dist/types/internal-types';
+import { type AllowedAxis, type Axis } from '@atlaskit/pragmatic-drag-and-drop-auto-scroll/dist/types/internal-types';
 import { autoScrollForElements } from '@atlaskit/pragmatic-drag-and-drop-auto-scroll/element';
 import {
   type Edge,
@@ -43,10 +43,9 @@ import React, {
 } from 'react';
 import { createPortal } from 'react-dom';
 
-import { addEventListener } from '@dxos/async';
 import { type Obj } from '@dxos/echo';
 import { log } from '@dxos/log';
-import { type ThemedClassName } from '@dxos/react-ui';
+import { type SlottableClassName, type ThemedClassName } from '@dxos/react-ui';
 import { Json } from '@dxos/react-ui-syntax-highlighter';
 import { mx } from '@dxos/ui-theme';
 import { isTruthy } from '@dxos/util';
@@ -61,27 +60,36 @@ import {
   type MosaicTileData,
 } from './types';
 
-/**
- * NOTE: We use [Radix composition](https://www.radix-ui.com/primitives/docs/guides/composition) to factor out different aspects (e.g., Focus, Drag-and-Drop, etc.), which may be composed.
- * NOTE: Only use Slottable if needed; otherwise a suspected Radix bug causes compositional problems.
- */
-
+//
+// Mosaic Drag-and-drop
 //
 // Drop targets:
 // - Placeholders exist to allow gaps but prevent deadspace when dragging within a container.
-// - Placeholders expand when active.
-// - When dragging over a Tile, the placeholer next to the closest edge is activated.
-// - Placeholders should not change while scrolling.
+// - When dragging over a Tile, the placeholder next to the closest edge is activated.
+// - Placeholders expand when active; event handlers are disabled while the container is scrolling.
 //
 // [Container]
-//   [Placeholder 0.5]
-//   [Tile        1]
-//   [Placeholder 1.5]
-//   [Tile        2]
-//   [Placeholder 2.5]
-//   [Tile        3]
-//   [Placeholder 3.5]
+// - [Placeholder 0.5]
+// - [Tile        1  ]
+// - [Placeholder 1.5]
+// - [Tile        2  ]
+// - [Placeholder 2.5]
+// - [Tile        3  ]
+// - [Placeholder 3.5]
 //
+// Implementation Notes
+// - We use [Radix composition](https://www.radix-ui.com/primitives/docs/guides/composition) to factor out composible aspects (e.g., Focus, Mosaic, etc.)
+// - NOTE: Use Slottable only if needed to disambiguate; otherwise a suspected Radix bug causes compositional problems.
+
+//
+// Types
+//
+
+const getSourceData = <T extends Obj.Any = Obj.Any, Location = any>(
+  source: ElementDragPayload,
+): MosaicTileData<T, Location> | null => {
+  return source.data.type === 'tile' ? (source.data as MosaicTileData<T, Location>) : null;
+};
 
 //
 // Context
@@ -93,7 +101,6 @@ type DraggingSource = {
   container?: Element;
 };
 
-// TODO(burdon): Closest edge?
 type DraggingTarget = {
   data: MosaicData;
   handler?: MosaicEventHandler;
@@ -117,9 +124,16 @@ const [RootContextProvider, useRootContext] = createContext<RootContextValue>('M
 // Root
 //
 
-type RootProps = PropsWithChildren;
+// State attribute: [&:has(>_[data-mosaic-debug=true])]
+const ROOT_DEBUG_ATTR = 'mosaic-debug';
 
-const Root = ({ children }: RootProps) => {
+type RootProps = ThemedClassName<PropsWithChildren<{ asChild?: boolean; debug?: boolean }>>;
+
+const Root = forwardRef<HTMLDivElement, RootProps>(({ classNames, children, asChild, debug }, forwardedRef) => {
+  const rootRef = useRef<HTMLDivElement>(null);
+  const composedRef = useComposedRefs<HTMLDivElement>(rootRef, forwardedRef);
+  const Root = asChild ? Slot : Primitive.div;
+
   const [handlers, setHandlers] = useState<Record<string, MosaicEventHandler>>({});
   const [dragging, setDragging] = useState<DraggingState | undefined>();
 
@@ -184,7 +198,7 @@ const Root = ({ children }: RootProps) => {
        * Dragging started within any container.
        */
       onDragStart: ({ source, location }) => {
-        log.info('Root.onDragStart', {
+        log('Root.onDragStart', {
           source: source.data,
           location: location.current.dropTargets.map((target) => target.data),
         });
@@ -196,7 +210,7 @@ const Root = ({ children }: RootProps) => {
        * Dragging entered a new container.
        */
       onDropTargetChange: ({ source, location }) => {
-        log.info('Root.onDropTargetChange', {
+        log('Root.onDropTargetChange', {
           source: source.data,
           location: location.current.dropTargets.map((target) => target.data),
         });
@@ -220,7 +234,7 @@ const Root = ({ children }: RootProps) => {
        * Dragging ended.
        */
       onDrop: ({ source, location }) => {
-        log.info('Root.onDrop', {
+        log('Root.onDrop', {
           source: source.data,
           location: location.current.dropTargets.map((target) => target.data),
         });
@@ -305,10 +319,18 @@ const Root = ({ children }: RootProps) => {
       }
       dragging={dragging}
     >
-      {children}
+      <Root
+        className={mx('group', classNames)}
+        {...{
+          [`data-${ROOT_DEBUG_ATTR}`]: debug,
+        }}
+        ref={composedRef}
+      >
+        {children}
+      </Root>
     </RootContextProvider>
   );
-};
+});
 
 //
 // Container
@@ -318,6 +340,7 @@ type ContainerState = { type: 'idle' } | { type: 'active'; bounds?: DOMRect };
 
 type ContainerContextValue<Location = LocationType> = {
   id: string;
+  eventHandler: MosaicEventHandler;
   axis?: AllowedAxis;
   dragging?: DraggingState;
   scrolling?: boolean;
@@ -330,35 +353,35 @@ type ContainerContextValue<Location = LocationType> = {
 
 const [ContainerContextProvider, useContainerContext] = createContext<ContainerContextValue>('MosaicContainer');
 
-/** Target: [&:has(>_[data-mosaic-container-state=active])] */
+// State attribute: [&:has(>_[data-mosaic-container-state=active])]
 const CONTAINER_STATE_ATTR = 'mosaic-container-state';
 
-/** CSS variable: [var(--mosaic-placeholder-height)] */
+// CSS variables: [var(--mosaic-placeholder-xxx)]
+const CONTAINER_PLACEHOLDER_WIDTH = '--mosaic-placeholder-width';
 const CONTAINER_PLACEHOLDER_HEIGHT = '--mosaic-placeholder-height';
 
-type ContainerProps = ThemedClassName<
+type ContainerProps = SlottableClassName<
   PropsWithChildren<
-    Pick<ContainerContextValue, 'axis'> & {
+    Pick<ContainerContextValue, 'eventHandler' | 'axis'> & {
       asChild?: boolean;
       autoscroll?: boolean;
       withFocus?: boolean;
-      handler: MosaicEventHandler;
       debug?: () => ReactNode;
     }
   >
-> & { className?: string };
+>;
 
 const Container = forwardRef<HTMLDivElement, ContainerProps>(
   (
     {
-      classNames,
       className,
+      classNames,
       children,
+      eventHandler,
       axis = 'vertical',
       asChild,
       autoscroll,
       withFocus,
-      handler,
       debug,
       ...props
     }: ContainerProps,
@@ -383,19 +406,19 @@ const Container = forwardRef<HTMLDivElement, ContainerProps>(
     }, [setFocus, withFocus, state]);
 
     // Register handler.
-    const { addContainer, removeContainer } = useRootContext(handler.id);
+    const { addContainer, removeContainer } = useRootContext(eventHandler.id);
     useEffect(() => {
-      addContainer(handler);
-      return () => removeContainer(handler.id);
-    }, [handler]);
+      addContainer(eventHandler);
+      return () => removeContainer(eventHandler.id);
+    }, [eventHandler]);
 
     const data = useMemo<MosaicContainerData>(
       () =>
         ({
           type: 'container',
-          id: handler.id,
+          id: eventHandler.id,
         }) satisfies MosaicContainerData,
-      [handler.id],
+      [eventHandler.id],
     );
 
     useEffect(() => {
@@ -441,15 +464,13 @@ const Container = forwardRef<HTMLDivElement, ContainerProps>(
             element: rootRef.current,
             getData: () => data,
 
-            // Test if permitted to drop here.
+            /**
+             * Test if permitted to drop here.
+             * NOTE: Contained Tile and Placeholder elements do the same.
+             */
             canDrop: ({ source }) => {
-              return (
-                (source.data.type === 'tile' &&
-                  handler.canDrop?.({
-                    source: source.data as MosaicTileData,
-                  })) ||
-                false
-              );
+              const data = getSourceData(source);
+              return (data && eventHandler.canDrop?.({ source: data })) || false;
             },
 
             // TODO(burdon): Provide semantic intent to onDrop.
@@ -478,7 +499,7 @@ const Container = forwardRef<HTMLDivElement, ContainerProps>(
              */
             onDragLeave: ({ source }) => {
               const sourceData = source.data as MosaicTileData;
-              if (sourceData.containerId !== handler.id) {
+              if (sourceData.containerId !== eventHandler.id) {
                 setState({ type: 'idle' });
               }
             },
@@ -493,18 +514,22 @@ const Container = forwardRef<HTMLDivElement, ContainerProps>(
           /**
            * Custom event for dragging cancellation.
            */
-          addEventListener(rootRef.current, 'dnd:cancel' as any, () => {
-            setState({ type: 'idle' });
+          bind(rootRef.current, {
+            type: 'dnd:cancel',
+            listener: () => {
+              setState({ type: 'idle' });
+            },
           }),
         ]
           .filter(isTruthy)
           .flatMap((x) => x),
       );
-    }, [rootRef, handler, data]);
+    }, [rootRef, eventHandler, data]);
 
     return (
       <ContainerContextProvider
-        id={handler.id}
+        id={eventHandler.id}
+        eventHandler={eventHandler}
         axis={axis}
         state={state}
         dragging={state.type === 'active' ? dragging : undefined}
@@ -517,14 +542,16 @@ const Container = forwardRef<HTMLDivElement, ContainerProps>(
           className={mx('bs-full', className, classNames)}
           style={
             {
+              [CONTAINER_PLACEHOLDER_WIDTH]:
+                state.type === 'active' && state.bounds ? `${state.bounds.width}px` : '0px',
               [CONTAINER_PLACEHOLDER_HEIGHT]:
                 state.type === 'active' && state.bounds ? `${state.bounds.height}px` : '0px',
             } as CSSProperties
           }
+          {...props}
           {...{
             [`data-${CONTAINER_STATE_ATTR}`]: state.type,
           }}
-          {...props}
           ref={composedRef}
         >
           {children}
@@ -556,8 +583,15 @@ const useContainerDebug = (debug?: boolean): [FC<ThemedClassName>, (() => ReactN
 };
 
 const ContainerInfo = forwardRef<HTMLDivElement, ThemedClassName>(({ classNames }, forwardedRef) => {
-  const info = useContainerContext(ContainerInfo.displayName!);
-  return <Json data={info} classNames={mx('text-xs', classNames)} ref={forwardedRef} />;
+  const { id, state, activeLocation, scrolling } = useContainerContext(ContainerInfo.displayName!);
+  const counter = useRef(0);
+  return (
+    <Json
+      data={{ id, activeLocation, scrolling, state, count: counter.current++ }}
+      classNames={mx('text-xs', classNames)}
+      ref={forwardedRef}
+    />
+  );
 });
 
 ContainerInfo.displayName = 'ContainerInfo';
@@ -581,10 +615,10 @@ type TileContextValue = {
 
 const [TileContextProvider, useTileContext] = createContext<TileContextValue>('MosaicTile');
 
-/** Target: data-[mosaic-tile-state=dragging] */
+// State attribute: data-[mosaic-tile-state=dragging]
 const TILE_STATE_ATTR = 'mosaic-tile-state';
 
-type TileProps<T extends Obj.Any = Obj.Any, Location = LocationType> = ThemedClassName<
+type TileProps<T extends Obj.Any = Obj.Any, Location = LocationType> = SlottableClassName<
   PropsWithChildren<{
     asChild?: boolean;
     dragHandle?: HTMLElement | null;
@@ -592,13 +626,13 @@ type TileProps<T extends Obj.Any = Obj.Any, Location = LocationType> = ThemedCla
     location: Location;
     object: T;
   }>
-> & { className?: string };
+>;
 
 const Tile = forwardRef<HTMLDivElement, TileProps>(
   (
     {
-      classNames,
       className,
+      classNames,
       children,
       asChild,
       dragHandle,
@@ -614,7 +648,13 @@ const Tile = forwardRef<HTMLDivElement, TileProps>(
     const Root = asChild ? Slot : Primitive.div;
 
     // State.
-    const { id: containerId, axis, scrolling, setActiveLocation } = useContainerContext(Tile.displayName!);
+    const {
+      id: containerId,
+      eventHandler,
+      axis,
+      scrolling,
+      setActiveLocation,
+    } = useContainerContext(Tile.displayName!);
     const [state, setState] = useState<TileState>({ type: 'idle' });
 
     const allowedEdges = useMemo<Edge[]>(
@@ -686,8 +726,10 @@ const Tile = forwardRef<HTMLDivElement, TileProps>(
         // Target.
         dropTargetForElements({
           element: root,
-          getData: ({ input, element }) => {
-            return attachClosestEdge(data, { input, element, allowedEdges });
+          getData: ({ input, element }) => attachClosestEdge(data, { input, element, allowedEdges }),
+          canDrop: ({ source }) => {
+            const data = getSourceData(source);
+            return (data && eventHandler.canDrop?.({ source: data })) || false;
           },
           onDragEnter: ({ self, source }) => {
             handleChange({ self, source });
@@ -705,7 +747,7 @@ const Tile = forwardRef<HTMLDivElement, TileProps>(
           },
         }),
       );
-    }, [rootRef, dragHandle, data, scrolling, allowedEdges, setActiveLocation]);
+    }, [rootRef, dragHandle, eventHandler, data, scrolling, allowedEdges, setActiveLocation]);
 
     // NOTE: Ensure no gaps between cells (prevent drop indicators flickering).
     // NOTE: Ensure padding doesn't change position of cursor when dragging (no margins).
@@ -727,6 +769,7 @@ const Tile = forwardRef<HTMLDivElement, TileProps>(
           createPortal(
             <Root
               {...{
+                // NOTE: Use to control appearance while dragging.
                 [`data-${TILE_STATE_ATTR}`]: state.type,
               }}
               className={mx(classNames)}
@@ -752,12 +795,16 @@ Tile.displayName = 'MosaicTile';
 // Placeholder
 //
 
-/** Target: data-[mosaic-placeholder-state=active] */
+// Axis: data-[mosaic-placeholder-axis=vertical]
+const PLACEHOLDER_AXIS_ATTR = 'mosaic-placeholder-axis';
+
+// State attribute: data-[mosaic-placeholder-state=active]
 const PLACEHOLDER_STATE_ATTR = 'mosaic-placeholder-state';
 
 type PlaceholderProps<Location = LocationType> = ThemedClassName<
   PropsWithChildren<{
     asChild?: boolean;
+    axis?: Axis;
     location: Location;
   }>
 >;
@@ -766,12 +813,14 @@ const Placeholder = <Location extends LocationType = LocationType>({
   classNames,
   children,
   asChild,
+  axis = 'vertical',
   location,
 }: PlaceholderProps<Location>) => {
   const rootRef = useRef<HTMLDivElement>(null);
   const Root = asChild ? Slot : Primitive.div;
   const {
     id: containerId,
+    eventHandler,
     scrolling,
     activeLocation,
     setActiveLocation,
@@ -796,6 +845,10 @@ const Placeholder = <Location extends LocationType = LocationType>({
     return dropTargetForElements({
       element: root,
       getData: () => data,
+      canDrop: ({ source }) => {
+        const data = getSourceData(source);
+        return (data && eventHandler.canDrop?.({ source: data })) || false;
+      },
       onDragEnter: () => {
         setActiveLocation(data.location);
       },
@@ -811,6 +864,7 @@ const Placeholder = <Location extends LocationType = LocationType>({
   return (
     <Root
       {...{
+        [`data-${PLACEHOLDER_AXIS_ATTR}`]: axis,
         [`data-${PLACEHOLDER_STATE_ATTR}`]: data.location === activeLocation ? 'active' : 'idle',
       }}
       role='none'
@@ -826,6 +880,7 @@ Placeholder.displayName = 'MosaicPlaceholder';
 
 //
 // DropIndicator
+// TODO(burdon): Support DropIndicator or Placeholder variants.
 //
 
 type DropIndicatorProps = Omit<NativeDropIndicatorProps, 'edge'>;

@@ -5,20 +5,25 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useState } from 'react';
 
+import { withPluginManager } from '@dxos/app-framework/testing';
 import { Obj, Ref } from '@dxos/echo';
+import { ClientPlugin, StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
 import { faker } from '@dxos/random';
 import { useSpaces } from '@dxos/react-client/echo';
-import { withClientProvider } from '@dxos/react-client/testing';
 import { IconButton, Toolbar } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
+import { Focus, Mosaic } from '@dxos/react-ui-mosaic';
+import { Board, DebugRoot, TestColumn, TestItem } from '@dxos/react-ui-mosaic/testing';
+import { type ValueGenerator, createObjectFactory } from '@dxos/schema/testing';
+import { Organization, Person, Project } from '@dxos/types';
 import { mx } from '@dxos/ui-theme';
 
-import { Board, DebugRoot, TestColumn, TestItem } from '../../testing';
-import { Focus } from '../Focus';
-
-import { Mosaic } from './Mosaic';
+const generator = faker as any as ValueGenerator;
 
 faker.seed(999);
+
+// TODO(burdon): Surfaces.
+// TODO(burdon): Editor extension.
 
 type StoryProps = {
   columns?: number;
@@ -32,7 +37,7 @@ const DefaultStory = ({ columns: columnsProp = 1, debug = false }: StoryProps) =
   const [columns, setColumns] = useState<TestColumn[]>(
     Array.from({ length: columnsProp }).map((_, i) => {
       const col = Obj.make(TestColumn, {
-        items: Array.from({ length: faker.number.int({ min: 0, max: 20 }) }).map((_, j) => {
+        items: Array.from({ length: faker.number.int({ min: 8, max: 20 }) }).map((_, j) => {
           const item = db.add(
             Obj.make(TestItem, {
               name: faker.lorem.sentence(3),
@@ -53,6 +58,7 @@ const DefaultStory = ({ columns: columnsProp = 1, debug = false }: StoryProps) =
     <Mosaic.Root asChild debug={debug}>
       <div className={mx('grid overflow-hidden', debug && 'grid-cols-[1fr_20rem] gap-2')}>
         <Board id='board' columns={columns} debug={debug} />
+
         {debug && (
           <Focus.Group classNames='flex flex-col gap-2 overflow-hidden'>
             <Toolbar.Root classNames='border-b border-separator'>
@@ -72,15 +78,34 @@ const DefaultStory = ({ columns: columnsProp = 1, debug = false }: StoryProps) =
 };
 
 const meta = {
-  title: 'ui/react-ui-mosaic/Mosaic',
+  title: 'stories/stories-ui/MosaicSurface',
   render: DefaultStory,
   decorators: [
     withTheme,
     withLayout({ layout: 'fullscreen' }),
-    withClientProvider({
-      types: [TestColumn, TestItem],
-      createIdentity: true,
-    }),
+    withPluginManager<{ title?: string; content?: string }>(() => ({
+      plugins: [
+        ...corePlugins(),
+        ClientPlugin({
+          types: [TestColumn, TestItem, Organization.Organization, Person.Person, Project.Project],
+          onClientInitialized: async ({ client }) => {
+            await client.halo.createIdentity();
+            await client.spaces.waitUntilReady();
+            await client.spaces.default.waitUntilReady();
+            const space = client.spaces.default;
+
+            const factory = createObjectFactory(space.db, generator);
+            await factory([
+              { type: Organization.Organization, count: 20 },
+              { type: Person.Person, count: 30 },
+              { type: Project.Project, count: 10 },
+            ]);
+          },
+        }),
+        StorybookPlugin({}),
+        // PreviewPlugin(),
+      ],
+    })),
   ],
   parameters: {
     layout: 'fullscreen',
@@ -93,7 +118,7 @@ type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
   args: {
-    debug: true,
+    // debug: true,
     columns: 3,
   },
 };

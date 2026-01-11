@@ -49,6 +49,7 @@ export interface MosaicEventHandler {
 
   /**
    * Determine if the item can be dropped into this container.
+   * NOTE: This is continuously called while dragging (doesn't require mouse movement).
    */
   canDrop?: (props: { source: MosaicTileData }) => boolean;
 
