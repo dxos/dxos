@@ -33,9 +33,10 @@
     "@effect/experimental": "catalog:",
     "@effect/platform": "catalog:",
     "@effect/sql": "catalog:",
-    "@effect/sql-sqlite-node": "catalog:",
-    "better-sqlite3": "latest",
     "effect": "catalog:"
+  },
+  "devDependencies": {
+    "@effect/sql-sqlite-node": "catalog:"
   },
   "publishConfig": {
     "access": "public"

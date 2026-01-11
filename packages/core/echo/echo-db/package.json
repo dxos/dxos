@@ -58,7 +58,9 @@
     "@dxos/teleport": "workspace:*",
     "@dxos/tracing": "workspace:*",
     "@dxos/util": "workspace:*",
+    "@effect/experimental": "catalog:",
     "@effect/sql": "catalog:",
+    "@effect/sql-sqlite-node": "catalog:",
     "effect": "catalog:",
     "eventemitter3": "catalog:",
     "lodash.isequal": "catalog:"
@@ -67,8 +69,6 @@
     "@dxos/indexing": "workspace:*",
     "@dxos/random": "workspace:*",
     "@dxos/test-utils": "workspace:*",
-    "@effect/experimental": "catalog:",
-    "@effect/sql-sqlite-node": "catalog:",
     "@preact/signals-core": "catalog:",
     "@types/lodash.isequal": "catalog:"
   },

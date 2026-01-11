@@ -202,7 +202,7 @@ catalogs:
       specifier: 0.48.6
       version: 0.48.6
     '@effect/sql-sqlite-node':
-      specifier: ^0.49.0
+      specifier: 0.49.1
       version: 0.49.1
     '@effect/sql-sqlite-wasm':
       specifier: 0.49.0
@@ -4763,9 +4763,15 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../../../common/util
+      '@effect/experimental':
+        specifier: 'catalog:'
+        version: 0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2)
       '@effect/sql':
         specifier: 'catalog:'
         version: 0.48.6(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)
+      '@effect/sql-sqlite-node':
+        specifier: 'catalog:'
+        version: 0.49.1(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/platform@0.93.6(effect@3.19.11))(@effect/sql@0.48.6(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11))(effect@3.19.11)
       effect:
         specifier: 'catalog:'
         version: 3.19.11
@@ -4785,12 +4791,6 @@ importers:
       '@dxos/test-utils':
         specifier: workspace:*
         version: link:../../../common/test-utils
-      '@effect/experimental':
-        specifier: 'catalog:'
-        version: 0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2)
-      '@effect/sql-sqlite-node':
-        specifier: 'catalog:'
-        version: 0.49.1(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/platform@0.93.6(effect@3.19.11))(@effect/sql@0.48.6(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11))(effect@3.19.11)
       '@preact/signals-core':
         specifier: 'catalog:'
         version: 1.12.1
@@ -5172,15 +5172,13 @@ importers:
       '@effect/sql':
         specifier: 'catalog:'
         version: 0.48.6(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)
-      '@effect/sql-sqlite-node':
-        specifier: 'catalog:'
-        version: 0.49.1(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/platform@0.93.6(effect@3.19.11))(@effect/sql@0.48.6(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11))(effect@3.19.11)
-      better-sqlite3:
-        specifier: latest
-        version: 12.6.0
       effect:
         specifier: 'catalog:'
         version: 3.19.11
+    devDependencies:
+      '@effect/sql-sqlite-node':
+        specifier: 'catalog:'
+        version: 0.49.1(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/platform@0.93.6(effect@3.19.11))(@effect/sql@0.48.6(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11))(effect@3.19.11)
 
   packages/core/echo/indexing:
     dependencies:
@@ -13595,6 +13593,9 @@ importers:
       '@dxos/edge-client':
         specifier: workspace:*
         version: link:../../core/mesh/edge-client
+      '@dxos/effect':
+        specifier: workspace:*
+        version: link:../../common/effect
       '@dxos/feed-store':
         specifier: workspace:*
         version: link:../../common/feed-store
@@ -28255,10 +28256,6 @@ packages:
 
   better-sqlite3@11.10.0:
     resolution: {integrity: sha512-EwhOpyXiOEL/lKzHz9AW1msWFNzGc/z+LzeB3/jnFJpxu+th2yqvzsSWas1v9jgs9+xiXJcD5A8CJxAG2TaghQ==}
-
-  better-sqlite3@12.6.0:
-    resolution: {integrity: sha512-FXI191x+D6UPWSze5IzZjhz+i9MK9nsuHsmTX9bXVl52k06AfZ2xql0lrgIUuzsMsJ7Vgl5kIptvDgBLIV3ZSQ==}
-    engines: {node: 20.x || 22.x || 23.x || 24.x || 25.x}
 
   bezier-js@6.1.4:
     resolution: {integrity: sha512-PA0FW9ZpcHbojUCMu28z9Vg/fNkwTj5YhusSAjHHDfHDGLxJ6YUKrAN2vk1fP2MMOxVw4Oko16FMlRGVBGqLKg==}
@@ -49548,11 +49545,6 @@ snapshots:
   before-after-hook@2.2.3: {}
 
   better-sqlite3@11.10.0:
-    dependencies:
-      bindings: 1.5.0
-      prebuild-install: 7.1.3
-
-  better-sqlite3@12.6.0:
     dependencies:
       bindings: 1.5.0
       prebuild-install: 7.1.3

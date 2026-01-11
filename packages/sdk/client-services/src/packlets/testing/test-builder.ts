@@ -66,7 +66,16 @@ export const createServiceContext = async ({
   const level = createTestLevel();
   await level.open();
 
-  return new ServiceContext(storage, level, networkManager, signalManager, undefined, undefined, {
+  const runtime = ManagedRuntime.make(
+    Layer.merge(
+      SqliteClient.layer({
+        filename: ':memory:',
+      }),
+      Reactivity.layer,
+    ).pipe(Layer.orDie),
+  ).runtimeEffect;
+
+  return new ServiceContext(storage, level, networkManager, signalManager, undefined, undefined, runtime, {
     invitationConnectionDefaultProps: { teleport: { controlHeartbeatInterval: 200 } },
     ...runtimeProps,
   });
