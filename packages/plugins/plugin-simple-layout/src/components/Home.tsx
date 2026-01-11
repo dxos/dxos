@@ -89,7 +89,7 @@ const Workspace = ({ node }: { node: Node.Node }) => {
   }, [isSelected]);
 
   return (
-    <Card.StaticRoot
+    <Card.Root
       ref={ref}
       role='button'
       tabIndex={-1}
@@ -111,7 +111,7 @@ const Workspace = ({ node }: { node: Node.Node }) => {
           <Icon icon='ph--caret-right--regular' />
         </Avatar.Root>
       </Card.Chrome>
-    </Card.StaticRoot>
+    </Card.Root>
   );
 };
 
