@@ -7,6 +7,8 @@ export const isNode = () => typeof process !== 'undefined' && process.versions !
 
 export const isBun = () => (globalThis as any).Bun !== undefined;
 
+export const isTauri = () => !!(globalThis as any).__TAURI__;
+
 /* eslint-disable */
 
 // From https://stackoverflow.com/a/11381730/2804332.

@@ -18,6 +18,9 @@
   ],
   "references": [
     {
+      "path": "../../common/effect"
+    },
+    {
       "path": "../../common/log"
     },
     {
@@ -43,6 +46,9 @@
     },
     {
       "path": "../../core/functions-runtime"
+    },
+    {
+      "path": "../../core/mesh/edge-client"
     },
     {
       "path": "../../core/operation"
@@ -88,6 +94,9 @@
     },
     {
       "path": "../plugin-graph"
+    },
+    {
+      "path": "../plugin-native"
     },
     {
       "path": "../plugin-space"
