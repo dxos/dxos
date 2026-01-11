@@ -3,9 +3,9 @@
 //
 
 import type * as Schema from 'effect/Schema';
-import React, { type KeyboardEvent, type MouseEvent, forwardRef, useCallback, useMemo, useState } from 'react';
+import React, { type KeyboardEvent, type MouseEvent, forwardRef, useCallback, useState } from 'react';
 
-import { Icon, type Palette, Popover, type ThemedClassName, useTranslation } from '@dxos/react-ui';
+import { type Palette, Popover, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { Combobox, useSearchListResults } from '@dxos/react-ui-searchlist';
 
 import { translationKey } from '../../translations';
@@ -139,20 +139,18 @@ const ObjectPickerContent = forwardRef<HTMLDivElement, ObjectPickerContentProps>
                   key={option.id}
                   value={option.id}
                   label={option.label}
+                  checked={selectedIds?.includes(option.id)}
                   onSelect={() => onSelect(option.id)}
                   classNames='flex items-center gap-2'
-                >
-                  {selectedIds?.includes(option.id) && <Icon icon='ph--check--regular' />}
-                </Combobox.Item>
+                />
               ))}
               {searchString.length > 0 && createOptionLabel && createOptionIcon && createSchema && onCreate && (
                 <Combobox.Item
                   value='__create__'
                   label={t(createOptionLabel[0], { ns: createOptionLabel[1].ns, text: searchString })}
+                  icon={createOptionIcon}
                   classNames='flex items-center gap-2'
-                >
-                  <Icon icon={createOptionIcon} />
-                </Combobox.Item>
+                />
               )}
             </Combobox.List>
           </>

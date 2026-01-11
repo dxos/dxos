@@ -17,7 +17,6 @@ import {
   cardDialogSearchListRoot,
 } from '@dxos/react-ui-mosaic';
 import { SearchList, useSearchListResults } from '@dxos/react-ui-searchlist';
-import { descriptionText, mx } from '@dxos/ui-theme';
 import { getHostPlatform } from '@dxos/util';
 
 import { KEY_BINDING, meta } from '../../meta';
@@ -104,6 +103,7 @@ export const CommandsDialogContent = forwardRef<HTMLDivElement, CommandsDialogCo
                     key={action.id}
                     label={item.label}
                     icon={action.properties.icon}
+                    suffix={shortcut ? keySymbols(shortcut).join('') : undefined}
                     onSelect={() => {
                       if (action.properties.disabled) {
                         return;
@@ -125,11 +125,7 @@ export const CommandsDialogContent = forwardRef<HTMLDivElement, CommandsDialogCo
                     {...(action.properties?.testId && {
                       'data-testid': action.properties.testId,
                     })}
-                  >
-                    {shortcut && (
-                      <span className={mx('shrink-0', descriptionText)}>{keySymbols(shortcut).join('')}</span>
-                    )}
-                  </SearchList.Item>
+                  />
                 );
               })}
             </SearchList.Viewport>

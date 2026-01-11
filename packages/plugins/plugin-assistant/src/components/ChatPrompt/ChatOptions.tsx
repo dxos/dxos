@@ -8,7 +8,7 @@ import { type AiContextBinder } from '@dxos/assistant';
 import { type Blueprint } from '@dxos/blueprints';
 import { type Database, Filter, Obj, Type } from '@dxos/echo';
 import { useQuery } from '@dxos/react-client/echo';
-import { Icon, IconButton, Popover, Select, useTranslation } from '@dxos/react-ui';
+import { IconButton, Popover, Select, useTranslation } from '@dxos/react-ui';
 import { Listbox, SearchList, useSearchListResults } from '@dxos/react-ui-searchlist';
 import { Tabs } from '@dxos/react-ui-tabs';
 
@@ -129,10 +129,9 @@ const BlueprintsPanel = ({
                 key={item.blueprint.key}
                 value={item.blueprint.key}
                 label={item.label}
+                checked={isActive}
                 onSelect={() => onUpdateBlueprint?.(item.blueprint.key, !isActive)}
-              >
-                <Icon icon='ph--check--regular' classNames={[!isActive && 'invisible']} />
-              </SearchList.Item>
+              />
             );
           })}
         </SearchList.Viewport>
@@ -218,10 +217,9 @@ const ObjectsPanel = ({ db, context }: Pick<ChatOptionsProps, 'db' | 'context'>)
                   key={item.object.id}
                   value={item.object.id}
                   label={item.label}
+                  checked={isActive}
                   onSelect={() => onUpdateObject?.(Obj.getDXN(item.object), !isActive)}
-                >
-                  <Icon icon='ph--check--regular' classNames={[!isActive && 'invisible']} />
-                </SearchList.Item>
+                />
               );
             })
           ) : (

@@ -27,7 +27,7 @@ import {
   useThemeContext,
   useTranslation,
 } from '@dxos/react-ui';
-import { mx } from '@dxos/ui-theme';
+import { descriptionText, mx } from '@dxos/ui-theme';
 
 import { translationKey } from '../../translations';
 
@@ -429,24 +429,23 @@ type SearchListItemProps = ThemedClassName<{
   /** Unique identifier for the item. */
   value: string;
   /** Display label for the item. */
-  label?: string;
-  /** Icon to display (string for Icon component, or ReactNode for custom). */
-  icon?: string | ReactNode;
+  label: string;
+  /** Icon to display (string identifier for Icon component). */
+  icon?: string;
+  /** Whether to show a check icon. */
+  checked?: boolean;
+  /** Suffix text to display after the label. */
+  suffix?: string;
   /** Callback when item is selected. */
   onSelect?: () => void;
   /** Whether the item is disabled. */
   disabled?: boolean;
-  /** Children can be used instead of label prop for backward compatibility. */
-  children?: ReactNode;
 }>;
 
 const SearchListItem = forwardRef<HTMLDivElement, SearchListItemProps>(
-  ({ classNames, value, label, icon, onSelect, disabled, children }, forwardedRef) => {
+  ({ classNames, value, label, icon, checked, suffix, onSelect, disabled }, forwardedRef) => {
     const { selectedValue, registerItem, unregisterItem } = useSearchListItemContext('SearchList.Item');
     const internalRef = useRef<HTMLDivElement>(null);
-
-    // Use label prop if provided, otherwise use children as fallback for backward compatibility
-    const displayLabel = label ?? (typeof children === 'string' ? children : undefined);
 
     const isSelected = selectedValue === value && !disabled;
 
@@ -471,9 +470,6 @@ const SearchListItem = forwardRef<HTMLDivElement, SearchListItemProps>(
         onSelect?.();
       }
     }, [onSelect, disabled]);
-
-    // Render icon.
-    const iconElement = icon === undefined ? null : typeof icon === 'string' ? <Icon icon={icon} size={5} /> : icon;
 
     return (
       <div
@@ -500,12 +496,10 @@ const SearchListItem = forwardRef<HTMLDivElement, SearchListItemProps>(
         )}
         onClick={handleClick}
       >
-        {iconElement}
-        {displayLabel ? (
-          <span className='is-0 grow truncate'>{displayLabel}</span>
-        ) : (
-          <span className='is-0 grow truncate'>{children}</span>
-        )}
+        {icon && <Icon icon={icon} size={5} />}
+        <span className='is-0 grow truncate'>{label}</span>
+        {suffix && <span className={mx('shrink-0', descriptionText)}>{suffix}</span>}
+        {checked && <Icon icon='ph--check--regular' size={5} />}
       </div>
     );
   },
