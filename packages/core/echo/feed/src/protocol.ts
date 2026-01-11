@@ -40,53 +40,84 @@ export const Block = Schema.Struct({
 });
 export interface Block extends Schema.Schema.Type<typeof Block> {}
 
-export interface FeedSyncMessage {
-  spaceId: SpaceId;
+export namespace FeedSyncMessage {
+  export interface Base<Type extends string> {
+    type: Type;
+    spaceId: SpaceId;
+    messageId: string;
+    replyTo: string | null;
+  }
 
-  /**
-   * Feed intifier. ULID.
-   */
-  feedId: string;
-
-  /**
-   * Last block with position that we have.
-   * null if we don't have blocks with position.
-   */
-  havePosition: number | null;
-
-  /**
-   * Requested range of blocks.
-   * Clients send this to the server and the server replies with blocks in this range.
-   */
-  requestRange: {
+  export interface Request extends Base<'request'> {
     /**
-     * Position.
-     * Exclusive.
+     * Memoized cursor by the other peer.
+     * Server stores a cache of cursors that map to a vector of feed positions.
      */
-    after: number | null;
+    cursor: string | null;
 
     /**
-     * Position.
-     * Inclusive.
+     * Vector of feeds to request.
      */
-    to: number | null;
-  };
+    vector:
+      | [
+          feedId: string,
+          /**
+           * Position.
+           * Exclusive.
+           */
+          after: number | null,
 
-  /**
-   * Blocks that this peer is sending to the other peer.
-   * Server sends blocks that have position.
-   * Client pushes blocks that don't have position.
-   */
-  blocks: Block[];
+          /**
+           * Position.
+           * Inclusive.
+           */
+          to: number | null,
+        ][]
+      | null;
+  }
 
-  /**
-   * Acks for the blocks this peer has recieved from the other peer.
-   * The server will reply with acks when the client pushes data.
-   * The clients don't need to send acks to the server.
-   */
-  acks: {
-    actorId: number;
-    sequence: number;
-    position: number;
-  }[];
+  export interface Sync extends Base<'sync'> {
+    feeds: {
+      /**
+       * Feed intifier. ULID.
+       */
+      feedId: string;
+
+      /**
+       * Last block with position that we have.
+       * null if we don't have blocks with position.
+       */
+      havePosition: number | null;
+
+      /**
+       * Blocks that this peer is sending to the other peer.
+       * Server sends blocks that have position.
+       * Client pushes blocks that don't have position.
+       */
+      blocks: Block[];
+
+      /**
+       * Acks for the blocks this peer has recieved from the other peer.
+       * The server will reply with acks when the client pushes data.
+       * The clients don't need to send acks to the server.
+       */
+      acks: {
+        actorId: number;
+        sequence: number;
+        position: number;
+      }[];
+    }[];
+  }
+
+  export interface Error extends Base<'error'> {
+    error:
+      | {
+          type: 'invalid-cursor';
+          cursor: string;
+        }
+      | {
+          type: 'unknown';
+        };
+    message?: string;
+  }
 }
