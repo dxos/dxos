@@ -33,7 +33,8 @@
     "@effect/sql": "catalog:",
     "@effect/sql-sqlite-node": "catalog:",
     "@effect/wa-sqlite": "catalog:",
-    "effect": "catalog:"
+    "effect": "catalog:",
+    "wa-sqlite": "latest"
   },
   "devDependencies": {},
   "publishConfig": {
