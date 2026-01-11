@@ -205,21 +205,13 @@ const SelectSchema = ({
 } & Pick<CreateObjectPanelProps, 'resolve'>) => {
   const { t } = useTranslation(meta.id);
 
-  const schemaItems = useMemo(
-    () =>
-      options.map((option) => ({
-        option,
-        label: t('typename label', {
-          ns: option.typename,
-          defaultValue: option.typename,
-        }),
-        icon: resolve?.(option.typename)?.icon ?? 'ph--placeholder--regular',
-      })),
-    [options, resolve, t],
-  );
-
   const { results, handleSearch } = useSearchListResults({
-    items: schemaItems,
+    items: options,
+    extract: (option) =>
+      t('typename label', {
+        ns: option.typename,
+        defaultValue: option.typename,
+      }),
   });
 
   return (
@@ -231,13 +223,16 @@ const SelectSchema = ({
       />
       <SearchList.Content classNames={cardDialogPaddedOverflow}>
         <SearchList.Viewport>
-          {results.map((item) => (
+          {results.map((option) => (
             <SearchList.Item
-              key={item.option.typename}
-              value={item.option.typename}
-              label={item.label}
-              icon={item.icon}
-              onSelect={() => onChange(item.option.typename)}
+              key={option.typename}
+              value={option.typename}
+              label={t('typename label', {
+                ns: option.typename,
+                defaultValue: option.typename,
+              })}
+              icon={resolve?.(option.typename)?.icon ?? 'ph--placeholder--regular'}
+              onSelect={() => onChange(option.typename)}
               classNames='flex items-center gap-2'
             />
           ))}
