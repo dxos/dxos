@@ -9,6 +9,7 @@ import * as ManagedRuntime from 'effect/ManagedRuntime';
 
 import { Capability, Common } from '@dxos/app-framework';
 import { GenericToolkit, makeToolExecutionServiceFromFunctions, makeToolResolverFromFunctions } from '@dxos/assistant';
+import { SpaceProperties } from '@dxos/client/echo';
 import { Resource } from '@dxos/context';
 import { Database, Query, Ref } from '@dxos/echo';
 import { CredentialsService, QueueService } from '@dxos/functions';
@@ -23,7 +24,6 @@ import { TriggerStateStore } from '@dxos/functions-runtime';
 import { invariant } from '@dxos/invariant';
 import { type SpaceId } from '@dxos/keys';
 import { ClientCapabilities } from '@dxos/plugin-client';
-import { SpaceProperties } from '@dxos/react-client/echo';
 
 import { AutomationCapabilities } from '../../types';
 

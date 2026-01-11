@@ -4,8 +4,10 @@ use std::sync::Arc;
 
 use tauri_plugin_global_shortcut::ShortcutState;
 
+mod oauth;
 mod spotlight;
 
+use oauth::OAuthServerState;
 use spotlight::{toggle_spotlight, SpotlightConfig, SpotlightState};
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
@@ -44,6 +46,13 @@ pub fn run() {
                 })
                 .build(),
         )
+        .manage(OAuthServerState::new())
+        .invoke_handler(tauri::generate_handler![
+            oauth::start_oauth_server,
+            oauth::stop_oauth_server,
+            oauth::get_oauth_result,
+            oauth::initiate_oauth_flow,
+        ])
         .setup(move |app| {
             // Initialize logging in debug mode.
             if cfg!(debug_assertions) {

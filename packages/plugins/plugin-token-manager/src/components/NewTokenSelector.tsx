@@ -2,17 +2,21 @@
 // Copyright 2025 DXOS.org
 //
 
+import * as Effect from 'effect/Effect';
 import React, { useCallback, useEffect, useState } from 'react';
 
 import { type Key, Obj } from '@dxos/echo';
+import { runAndForwardErrors } from '@dxos/effect';
 import { log } from '@dxos/log';
 import { type OAuthFlowResult } from '@dxos/protocols';
 import { useEdgeClient } from '@dxos/react-edge-client';
 import { DropdownMenu, IconButton, useTranslation } from '@dxos/react-ui';
 import { AccessToken } from '@dxos/types';
+import { isTauri } from '@dxos/util';
 
 import { OAUTH_PRESETS, type OAuthPreset } from '../defs';
 import { meta } from '../meta';
+import { createTauriOAuthInitiator, createTauriServerProvider, openTauriBrowser, performOAuthFlow } from '../oauth';
 
 type NewTokenSelectorProps = {
   spaceId: Key.SpaceId;
@@ -26,6 +30,11 @@ export const NewTokenSelector = ({ spaceId, onAddAccessToken, onCustomToken }: N
   const [tokenMap] = useState(new Map<string, AccessToken.AccessToken>());
 
   useEffect(() => {
+    // Only set up postMessage listener for web (non-Tauri) environment.
+    if (isTauri()) {
+      return;
+    }
+
     const edgeUrl = new URL(edgeClient.baseUrl);
 
     const listener = (event: MessageEvent) => {
@@ -49,7 +58,7 @@ export const NewTokenSelector = ({ spaceId, onAddAccessToken, onCustomToken }: N
     return () => {
       window.removeEventListener('message', listener);
     };
-  }, [tokenMap]);
+  }, [tokenMap, edgeClient.baseUrl, onAddAccessToken]);
 
   const createOauthPreset = async (preset?: OAuthPreset) => {
     if (!preset) {
@@ -65,15 +74,35 @@ export const NewTokenSelector = ({ spaceId, onAddAccessToken, onCustomToken }: N
 
     tokenMap.set(token.id, token);
 
-    const { authUrl } = await edgeClient.initiateOAuthFlow({
-      provider: preset.provider,
-      scopes: preset.scopes,
-      spaceId,
-      accessTokenId: token.id,
-    });
+    if (isTauri()) {
+      // Tauri path: Use shared OAuth flow with Tauri implementations.
+      // Uses Rust to make HTTP request to Edge (bypasses browser Origin header restrictions).
+      await runAndForwardErrors(
+        performOAuthFlow(
+          preset,
+          token,
+          edgeClient,
+          spaceId,
+          createTauriServerProvider(),
+          openTauriBrowser,
+          createTauriOAuthInitiator(),
+        ).pipe(
+          Effect.tap(() => onAddAccessToken(token)),
+          Effect.catchAll((error) => Effect.sync(() => log.catch(error))),
+        ),
+      );
+    } else {
+      // Web path: Use window.open + postMessage approach.
+      const { authUrl } = await edgeClient.initiateOAuthFlow({
+        provider: preset.provider,
+        scopes: preset.scopes,
+        spaceId,
+        accessTokenId: token.id,
+      });
 
-    log.info('open', { authUrl });
-    window.open(authUrl, 'oauthPopup', 'width=500,height=600');
+      log.info('open', { authUrl });
+      window.open(authUrl, 'oauthPopup', 'width=500,height=600');
+    }
   };
 
   return (
