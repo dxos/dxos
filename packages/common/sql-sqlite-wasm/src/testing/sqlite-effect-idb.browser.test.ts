@@ -14,6 +14,7 @@ import * as Scope from 'effect/Scope';
 import * as Stream from 'effect/Stream';
 
 import * as WaSqlite from '@effect/wa-sqlite';
+import { SQLITE_OPEN_CREATE, SQLITE_OPEN_READWRITE } from '@effect/wa-sqlite';
 import SQLiteAsyncESMFactory from '@effect/wa-sqlite/dist/wa-sqlite-async.mjs';
 import { IDBBatchAtomicVFS } from '@effect/wa-sqlite/src/examples/IDBBatchAtomicVFS.js';
 
@@ -21,14 +22,12 @@ import { IDBBatchAtomicVFS } from '@effect/wa-sqlite/src/examples/IDBBatchAtomic
 // Copyright 2025 DXOS.org
 //
 
-const TEST_VFS_NAME = 'idb-batch-vfs';
+const TEST_VFS_NAME = 'idbbatchvfs';
+
+// Resolve WASM URL explicitly for Vite compatibility.
+const wasmUrl = new URL('@effect/wa-sqlite/dist/wa-sqlite-async.wasm', import.meta.url).href;
 
 
-const initModule = Effect.runSync(Effect.cached(Effect.promise(() => SQLiteAsyncESMFactory())));
-
-const initEffect = Effect.runSync(Effect.cached(initModule.pipe(Effect.map((module) => WaSqlite.Factory(module)))));
-
-const registered = globalValue('@effect/sql-sqlite-wasm/registered', () => new Set<string>());
 
 const ATTR_DB_SYSTEM_NAME = 'db.system.name';
 
@@ -67,17 +66,19 @@ export const makeIdb = (
       : undefined;
 
     const makeConnection = Effect.gen(function* () {
-      const sqlite3 = yield* initEffect;
+      const factory = yield*  Effect.promise(() =>
+        SQLiteAsyncESMFactory({
+          locateFile: (path: string) => (path.endsWith('.wasm') ? wasmUrl : path),
+        }),
+      );
+    const sqlite3 = WaSqlite.Factory(factory)
 
-      if (registered.has(TEST_VFS_NAME) === false) {
-        registered.add(TEST_VFS_NAME);
-        const module = yield* initModule;
-        const vfs = yield* Effect.promise(() => IDBBatchAtomicVFS.create(TEST_VFS_NAME, module));
-        sqlite3.vfs_register(vfs as any, false);
-      }
+        const vfs = yield* Effect.promise(() => IDBBatchAtomicVFS.create(TEST_VFS_NAME, factory));
+        console.log({ reg: sqlite3.vfs_register(vfs as any, false) });
+      // }
       const db = yield* Effect.acquireRelease(
         Effect.try({
-          try: () => sqlite3.open_v2(options.dbName, undefined, TEST_VFS_NAME),
+          try: () => sqlite3.open_v2(options.dbName, SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE, TEST_VFS_NAME),
           catch: (cause) => new SqlError.SqlError({ cause, message: 'Failed to open database' }),
         }),
         (db) => Effect.sync(() => sqlite3.close(db)),
