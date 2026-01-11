@@ -10,11 +10,11 @@ import { withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '../../translations';
 
-import { BottomNav } from './BottomNav';
+import { NavBar } from './NavBar';
 
 const meta = {
-  title: 'plugins/plugin-simple-layout/BottomNav',
-  component: BottomNav,
+  title: 'plugins/plugin-simple-layout/NavBar',
+  component: NavBar,
   decorators: [
     withTheme,
     withPluginManager({
@@ -28,7 +28,7 @@ const meta = {
   argTypes: {
     onActiveIdChange: { action: 'activeIdChanged' },
   },
-} satisfies Meta<typeof BottomNav>;
+} satisfies Meta<typeof NavBar>;
 
 export default meta;
 

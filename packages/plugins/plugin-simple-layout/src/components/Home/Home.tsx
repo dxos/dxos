@@ -7,7 +7,7 @@ import React, { useCallback, useEffect, useMemo, useRef } from 'react';
 import { Common } from '@dxos/app-framework';
 import { useAppGraph, useOperationInvoker } from '@dxos/app-framework/react';
 import { Graph, Node, useConnections } from '@dxos/plugin-graph';
-import { Avatar, Icon, ThemedClassName, toLocalizedString, useTranslation } from '@dxos/react-ui';
+import { Avatar, Icon, type ThemedClassName, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { Card } from '@dxos/react-ui-mosaic';
 import { SearchList, useSearchListItem, useSearchListResults } from '@dxos/react-ui-searchlist';
 import { mx } from '@dxos/ui-theme';
@@ -30,30 +30,20 @@ export const Home = ({ classNames }: HomeProps) => {
     <div className={mx('flex flex-col', classNames)}>
       {/* <div className='container-max-width'>{t('workspaces heading')}</div> */}
       <SearchList.Root onSearch={handleSearch} classNames='container-max-width'>
-        <SearchList.Input placeholder={t('search placeholder')} autoFocus />
+        <div className='plb-3'>
+          <SearchList.Input placeholder={t('search placeholder')} autoFocus />
+        </div>
         <SearchList.Content>
-          <SearchList.Viewport>
-            <section>
-              {results.map((node) => (
-                <Workspace key={node.id} node={node} />
-              ))}
-            </section>
+          <SearchList.Viewport classNames='flex flex-col gap-1'>
+            {results.map((node) => (
+              <Workspace key={node.id} node={node} />
+            ))}
           </SearchList.Viewport>
         </SearchList.Content>
       </SearchList.Root>
     </div>
   );
 };
-
-// const Header = () => {
-//   const { t } = useTranslation(meta.id);
-
-//   return (
-//     <nav className={bannerRoot}>
-//       <h1 className={bannerHeading}>{t('current app name', { ns: 'appkit' })}</h1>
-//     </nav>
-//   );
-// };
 
 const Workspace = ({ node }: { node: Node.Node }) => {
   const { t } = useTranslation(meta.id);

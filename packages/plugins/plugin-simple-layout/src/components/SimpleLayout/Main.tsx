@@ -16,7 +16,7 @@ import { ContentLoading } from '../ContentLoading';
 import { Home } from '../Home';
 
 import { Banner } from './Banner';
-import { BottomNav } from './BottomNav';
+import { NavBar } from './NavBar';
 
 export const Main = () => {
   const layout = useCapability(SimpleLayoutState);
@@ -44,20 +44,15 @@ export const Main = () => {
     console.log('[navigate]', nextActiveId);
   };
 
-  // Always show banner when viewing content (not on home).
-  // const showBanner = id !== 'default';
+  const showNavBar = !layout.isPopover;
 
-  // Show bottom nav only in mobile mode (not popover).
-  const showBottomNav = !layout.isPopover;
-
-  // TODO(wittjosiah): Content probably needs a header with title and back button.
   return (
     <NaturalMain.Root complementarySidebarState='closed' navigationSidebarState='closed'>
       <NaturalMain.Content bounce classNames='dx-mobile-main dx-mobile-main-scroll-area--flush !overflow-y-auto'>
         <div
           className={mx(
-            'grid',
-            showBottomNav ? 'grid-rows-[min-content_1fr_min-content]' : 'grid-rows-[min-content_1fr]',
+            'bs-full overflow-hidden grid',
+            showNavBar ? 'grid-rows-[min-content_1fr_min-content]' : 'grid-rows-[min-content_1fr]',
           )}
         >
           <Banner node={node} />
@@ -76,7 +71,7 @@ export const Main = () => {
               />
             </section>
           </Activity>
-          {showBottomNav && <BottomNav activeId={id} onActiveIdChange={handleActiveIdChange} />}
+          {showNavBar && <NavBar activeId={id} onActiveIdChange={handleActiveIdChange} />}
         </div>
       </NaturalMain.Content>
     </NaturalMain.Root>

@@ -13,15 +13,6 @@ import { mx, surfaceZIndex } from '@dxos/ui-theme';
 import { meta } from '../../meta';
 import { SimpleLayoutState } from '../../types';
 
-export const bannerRoot = mx(
-  'fixed flex items-center gap-2 pli-2 block-start-0 inset-inline-0 bs-[--dx-mobile-topbar-content-height,48px] bg-baseSurface border-be border-separator',
-  surfaceZIndex({ level: 'menu' }),
-);
-
-export const bannerButton = 'shrink-0';
-
-export const bannerHeading = 'grow text-center truncate font-medium';
-
 export type BannerProps = {
   node?: Node.Node;
 };
@@ -30,7 +21,7 @@ export const Banner = ({ node }: BannerProps) => {
   const { t } = useTranslation(meta.id);
   const layout = useCapability(SimpleLayoutState);
   const { invokePromise } = useOperationInvoker();
-  const label = node ? toLocalizedString(node.properties.label, t) : 'Unknown';
+  const label = node ? toLocalizedString(node.properties.label, t) : t('current app name', { ns: 'appkit' });
 
   const handleClick = useCallback(async () => {
     if (layout.active) {
@@ -43,16 +34,27 @@ export const Banner = ({ node }: BannerProps) => {
   return (
     // Note that the HTML5 element `header` has a default role of `banner`, hence the name of this component.
     // It should not be confused with the `heading` role (elements h1-6).
-    <header className={bannerRoot}>
-      <IconButton
-        iconOnly
-        variant='ghost'
-        icon='ph--caret-left--regular'
-        label={t('back label')}
-        onClick={handleClick}
-        classNames={bannerButton}
-      />
-      <h1 className={bannerHeading}>{label}</h1>
+    // TODO(burdon): Fixed or not?
+    <header
+      className={mx(
+        '_fixed flex items-center gap-2 pli-2 block-start-0 inset-inline-0 bs-[--dx-mobile-topbar-content-height,48px] bg-baseSurface border-be border-separator',
+        'grid grid-cols-[min-content_1fr_min-content]',
+        surfaceZIndex({ level: 'menu' }),
+      )}
+    >
+      {node ? (
+        <IconButton
+          iconOnly
+          variant='ghost'
+          icon='ph--caret-left--regular'
+          label={t('back label')}
+          onClick={handleClick}
+        />
+      ) : (
+        <div />
+      )}
+      <h1 className={'grow text-center truncate font-medium'}>{label}</h1>
+      {/* TODO(burdon): Menu. */}
     </header>
   );
 };

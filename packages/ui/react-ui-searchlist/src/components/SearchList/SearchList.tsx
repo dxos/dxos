@@ -396,10 +396,9 @@ const SearchListInput = forwardRef<HTMLInputElement, SearchListInputProps>(
     return (
       <input
         {...props}
+        {...(props.autoFocus && !hasIosKeyboard && { autoFocus: true })}
         type='text'
         value={query}
-        onChange={handleChange}
-        onKeyDown={handleKeyDown}
         placeholder={placeholder ?? defaultPlaceholder}
         className={tx(
           'input.input',
@@ -412,7 +411,8 @@ const SearchListInput = forwardRef<HTMLInputElement, SearchListInputProps>(
           },
           classNames,
         )}
-        {...(props.autoFocus && !hasIosKeyboard && { autoFocus: true })}
+        onChange={handleChange}
+        onKeyDown={handleKeyDown}
         ref={forwardedRef}
       />
     );
