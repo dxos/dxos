@@ -56,8 +56,9 @@ const DefaultStory = ({ columns: columnsProp = 1, debug = false }: StoryProps) =
 
   return (
     <Mosaic.Root asChild debug={debug}>
-      <div className={mx('grid overflow-hidden', debug && 'grid-cols-[1fr_25rem] gap-2')}>
+      <div className={mx('grid overflow-hidden', debug && 'grid-cols-[1fr_20rem] gap-2')}>
         <Board id='board' columns={columns} debug={debug} />
+
         {debug && (
           <Focus.Group classNames='flex flex-col gap-2 overflow-hidden'>
             <Toolbar.Root classNames='border-b border-separator'>
