@@ -18,7 +18,7 @@ describe('wa-sqlite in-memory database', () => {
   beforeEach(async () => {
     // Initialize async WASM module.
     const module = await SQLiteAsyncESMFactory({
-      locateFile: (path: string) => (path.endsWith('.wasm') ? wasmUrl : path),
+      locateFile: (path: string) => (wasmUrl),
     });
     sqlite3 = WaSqlite.Factory(module);
 
@@ -49,7 +49,7 @@ describe('wa-sqlite in-memory database', () => {
 
     // Select data using statements API.
     const results: Array<{ id: number; name: string; email: string }> = [];
-    for await (const stmt of sqlite3.statements(db, 'SELECT * FROM users ORDER BY id')) {
+    for (const stmt of sqlite3.statements(db, 'SELECT * FROM users ORDER BY id')) {
       let columns: string[] | undefined;
       while ((sqlite3.step(stmt)) === SQLITE_ROW) {
         columns = columns ?? sqlite3.column_names(stmt);
