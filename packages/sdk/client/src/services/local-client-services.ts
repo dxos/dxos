@@ -2,6 +2,13 @@
 // Copyright 2023 DXOS.org
 //
 
+import * as Reactivity from '@effect/experimental/Reactivity';
+import type * as SqlClient from '@effect/sql/SqlClient';
+import * as SqliteClient from '@effect/sql-sqlite-wasm/SqliteClient';
+import * as Effect from 'effect/Effect';
+import * as Layer from 'effect/Layer';
+import * as ManagedRuntime from 'effect/ManagedRuntime';
+
 import { Event, synchronized } from '@dxos/async';
 import {
   type ClientServices,
@@ -19,13 +26,17 @@ import { type ServiceBundle } from '@dxos/rpc';
 import { trace } from '@dxos/tracing';
 import { isBun } from '@dxos/util';
 
+export type LocalClientServicesParams = Omit<ClientServicesHostProps, 'runtime'> & {
+  createOpfsWorker?: () => Worker;
+};
+
 /**
  * Creates stand-alone services without rpc.
  */
 // TODO(burdon): Rename createLocalServices?
 export const fromHost = async (
   config = new Config(),
-  params?: ClientServicesHostProps,
+  params?: LocalClientServicesParams,
   observabilityGroup?: string,
   signalTelemetryEnabled?: boolean,
 ): Promise<ClientServicesProvider> => {
@@ -98,8 +109,11 @@ const setupNetworking = async (
 export class LocalClientServices implements ClientServicesProvider {
   readonly closed = new Event<Error | undefined>();
   private readonly _ctx = new Context();
-  private readonly _params: ClientServicesHostProps;
+  private readonly _params: LocalClientServicesParams;
+  private readonly _createOpfsWorker?: () => Worker;
   private _host?: ClientServicesHost;
+  private _opfsWorker?: Worker;
+  private _runtime?: ManagedRuntime.ManagedRuntime<SqlClient.SqlClient, never>;
   signalMetadataTags: any = {
     runtime: 'local-client-services',
   };
@@ -107,8 +121,9 @@ export class LocalClientServices implements ClientServicesProvider {
   @trace.info()
   private _isOpen = false;
 
-  constructor(params: ClientServicesHostProps) {
+  constructor(params: LocalClientServicesParams) {
     this._params = params;
+    this._createOpfsWorker = params.createOpfsWorker;
     // TODO(nf): extract
     if (typeof window === 'undefined' || typeof window.location === 'undefined') {
       // TODO(nf): collect ClientServices metadata as param?
@@ -146,8 +161,18 @@ export class LocalClientServices implements ClientServicesProvider {
     const { ClientServicesHost } = await import('@dxos/client-services');
     const { setIdentityTags } = await import('@dxos/messaging');
 
+    // Create SQLite runtime layer.
+    const sqliteLayer = this._createOpfsWorker
+      ? // Use OPFS worker for persistent SQLite storage.
+        SqliteClient.layer({ worker: Effect.succeed((this._opfsWorker = this._createOpfsWorker())) })
+      : // Fallback to in-memory SQLite.
+        SqliteClient.layerMemory({});
+
+    this._runtime = ManagedRuntime.make(Layer.merge(sqliteLayer, Reactivity.layer).pipe(Layer.orDie));
+
     this._host = new ClientServicesHost({
       ...this._params,
+      runtime: this._runtime.runtimeEffect,
       callbacks: {
         ...this._params.callbacks,
         onReset: async () => {
@@ -175,6 +200,17 @@ export class LocalClientServices implements ClientServicesProvider {
     }
 
     await this._host?.close();
+
+    // Clean up OPFS worker and runtime.
+    if (this._opfsWorker) {
+      this._opfsWorker.postMessage({ type: 'kill' });
+      this._opfsWorker = undefined;
+    }
+    if (this._runtime) {
+      await this._runtime.dispose();
+      this._runtime = undefined;
+    }
+
     this._isOpen = false;
   }
 }

@@ -3942,6 +3942,9 @@ importers:
       effect:
         specifier: 'catalog:'
         version: 3.19.11
+      wa-sqlite:
+        specifier: latest
+        version: 1.0.0
 
   packages/common/storybook-addon-logger:
     dependencies:
@@ -13499,6 +13502,15 @@ importers:
       '@dxos/websocket-rpc':
         specifier: workspace:*
         version: link:../../core/mesh/websocket-rpc
+      '@effect/experimental':
+        specifier: 'catalog:'
+        version: 0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2)
+      '@effect/sql':
+        specifier: 'catalog:'
+        version: 0.48.6(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)
+      '@effect/sql-sqlite-wasm':
+        specifier: 'catalog:'
+        version: 0.45.1(@effect/experimental@0.57.11(effect@3.19.11)(ioredis@5.3.2))(@effect/sql@0.48.6(@effect/experimental@0.57.11(effect@3.19.11)(ioredis@5.3.2))(effect@3.19.11))(@effect/wa-sqlite@0.1.2)(effect@3.19.11)
       base-x:
         specifier: 'catalog:'
         version: 3.0.9
@@ -37632,6 +37644,9 @@ packages:
     resolution: {integrity: sha512-o8qghlI8NZHU1lLPrpi2+Uq7abh4GGPpYANlalzWxyWteJOCsr/P+oPBA49TOLu5FTZO4d3F9MnWJfiMo4BkmA==}
     engines: {node: '>=18'}
 
+  wa-sqlite@1.0.0:
+    resolution: {integrity: sha512-Kyybo5/BaJp76z7gDWGk2J6Hthl4NIPsE+swgraEjy3IY6r5zIR02wAs1OJH4XtJp1y3puj3Onp5eMGS0z7nUA==}
+
   wait-on@8.0.3:
     resolution: {integrity: sha512-nQFqAFzZDeRxsu7S3C7LbuxslHhk+gnJZHyethuGKAn2IVleIbTB9I3vJSQiSR+DifUqmdzfPMoMPJfLqMF2vw==}
     engines: {node: '>=12.0.0'}
@@ -61016,6 +61031,8 @@ snapshots:
   w3c-xmlserializer@5.0.0:
     dependencies:
       xml-name-validator: 5.0.0
+
+  wa-sqlite@1.0.0: {}
 
   wait-on@8.0.3:
     dependencies:
