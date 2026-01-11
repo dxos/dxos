@@ -66,6 +66,7 @@ const Workspace = ({ node }: { node: Node.Node }) => {
     if (ref.current) {
       registerItem(node.id, ref.current, handleSelect);
     }
+
     return () => unregisterItem(node.id);
   }, [node.id, handleSelect, registerItem, unregisterItem]);
 
@@ -133,6 +134,5 @@ const useWorkspaces = () => {
   // Get first collection's children as workspaces.
   // TODO(wittjosiah): Support multiple collections or nested workspaces if needed.
   const firstCollection = collections[0];
-  const workspaces = useConnections(graph, firstCollection?.id);
-  return workspaces;
+  return useConnections(graph, firstCollection?.id);
 };
