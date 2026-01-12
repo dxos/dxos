@@ -1,23 +1,28 @@
+//
+// Copyright 2026 DXOS.org
+//
+
 import * as Reactivity from '@effect/experimental/Reactivity';
 import * as SqlClient from '@effect/sql/SqlClient';
-import type { Connection } from '@effect/sql/SqlConnection';
+import type * as SqlConnection from '@effect/sql/SqlConnection';
 import * as SqlError from '@effect/sql/SqlError';
 import * as Statement from '@effect/sql/Statement';
 import { describe, expect, it } from '@effect/vitest';
 import * as Chunk from 'effect/Chunk';
-import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
-import { identity } from 'effect/Function';
-import { globalValue } from 'effect/GlobalValue';
+import * as Function from 'effect/Function';
 import * as Layer from 'effect/Layer';
 import * as Scope from 'effect/Scope';
 import * as Stream from 'effect/Stream';
 
-import * as WaSqlite from '@effect/wa-sqlite';
-import { SQLITE_OPEN_CREATE, SQLITE_OPEN_READWRITE } from '@effect/wa-sqlite';
-import SQLiteAsyncESMFactory from '@effect/wa-sqlite/dist/wa-sqlite-async.mjs';
-// @ts-expect-error
-import { IDBBatchAtomicVFS } from '@effect/wa-sqlite/src/examples/IDBBatchAtomicVFS.js';
+// @ts-expect-error - Type declarations not compatible.
+import { SQLITE_OPEN_CREATE, SQLITE_OPEN_READWRITE } from '@dxos/wa-sqlite';
+// @ts-expect-error - Type declarations not compatible.
+import * as WaSqlite from '@dxos/wa-sqlite';
+// @ts-expect-error - Type declarations not compatible.
+import SQLiteAsyncESMFactory from '@dxos/wa-sqlite/dist/wa-sqlite-async.mjs';
+// @ts-expect-error - Type declarations not compatible.
+import { IDBBatchAtomicVFS } from '@dxos/wa-sqlite/src/examples/IDBBatchAtomicVFS.js';
 
 //
 // Copyright 2025 DXOS.org
@@ -26,7 +31,7 @@ import { IDBBatchAtomicVFS } from '@effect/wa-sqlite/src/examples/IDBBatchAtomic
 const TEST_VFS_NAME = 'idbbatchvfs';
 
 // Resolve WASM URL explicitly for Vite compatibility.
-const wasmUrl = new URL('@effect/wa-sqlite/dist/wa-sqlite-async.wasm', import.meta.url).href;
+const wasmUrl = new URL('@dxos/wa-sqlite/dist/wa-sqlite-async.wasm', import.meta.url).href;
 
 const ATTR_DB_SYSTEM_NAME = 'db.system.name';
 
@@ -117,7 +122,7 @@ export const makeIdb = (
           catch: (cause) => new SqlError.SqlError({ cause, message: 'Failed to execute statement' }),
         });
 
-      return identity<Connection>({
+      return Function.identity<SqlConnection.Connection>({
         execute: (sql, params, transformRows) =>
           transformRows ? Effect.map(run(sql, params), transformRows) : run(sql, params),
         executeRaw: (sql, params) => run(sql, params),
@@ -144,7 +149,7 @@ export const makeIdb = (
           return Stream.suspend(() => Stream.fromIteratorSucceed(stream()[Symbol.iterator]())).pipe(
             transformRows
               ? Stream.mapChunks((chunk) => Chunk.unsafeFromArray(transformRows(Chunk.toReadonlyArray(chunk))))
-              : identity,
+              : Function.identity,
             Stream.mapError((cause) => new SqlError.SqlError({ cause, message: 'Failed to execute statement' })),
           );
         },
