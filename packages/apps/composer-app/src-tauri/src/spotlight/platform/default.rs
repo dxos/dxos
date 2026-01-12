@@ -4,6 +4,7 @@ use super::SpotlightPlatform;
 use tauri::WebviewWindow;
 
 /// Default platform implementation that works on all platforms.
+#[allow(dead_code)]
 pub struct DefaultPlatform;
 
 impl SpotlightPlatform for DefaultPlatform {
@@ -11,9 +12,12 @@ impl SpotlightPlatform for DefaultPlatform {
         // No platform-specific configuration in default implementation.
     }
 
-    fn show(&self, window: &WebviewWindow) {
-        let _ = window.show();
-        let _ = window.set_focus();
+    fn show(&self, _window: &WebviewWindow) {
+        #[cfg(not(any(target_os = "android", target_os = "ios")))]
+        {
+            let _ = _window.show();
+            let _ = _window.set_focus();
+        }
     }
 
     fn store_previous_app(&self) {
