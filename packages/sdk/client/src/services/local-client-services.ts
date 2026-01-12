@@ -202,14 +202,10 @@ export class LocalClientServices implements ClientServicesProvider {
     await this._host?.close();
 
     // Clean up OPFS worker and runtime.
-    if (this._opfsWorker) {
-      this._opfsWorker.postMessage({ type: 'kill' });
-      this._opfsWorker = undefined;
-    }
-    if (this._runtime) {
-      await this._runtime.dispose();
-      this._runtime = undefined;
-    }
+    this._opfsWorker?.terminate();
+    this._opfsWorker = undefined;
+    await this._runtime?.dispose();
+    this._runtime = undefined;
 
     this._isOpen = false;
   }
