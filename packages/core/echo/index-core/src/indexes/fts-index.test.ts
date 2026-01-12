@@ -13,8 +13,8 @@ import { ATTR_TYPE } from '@dxos/echo/internal';
 import { DXN, ObjectId, SpaceId } from '@dxos/keys';
 
 import { FtsIndex } from './fts-index';
-import { ObjectMetaIndex } from './object-meta-index';
 import type { IndexerObject } from './interface';
+import { ObjectMetaIndex } from './object-meta-index';
 
 const TYPE_PERSON = DXN.parse('dxn:type:example.com/type/Person:0.1.0').toString();
 const TYPE_DEFAULT = DXN.parse('dxn:type:test.com/type/Type:0.1.0').toString();

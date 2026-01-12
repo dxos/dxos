@@ -6,8 +6,8 @@ import type * as SqlClient from '@effect/sql/SqlClient';
 import type * as SqlError from '@effect/sql/SqlError';
 import type * as Effect from 'effect/Effect';
 
-import type { ObjectId, SpaceId } from '@dxos/keys';
 import type { Obj } from '@dxos/echo';
+import type { ObjectId, SpaceId } from '@dxos/keys';
 
 /**
  * Data describing objects returned from sources to the indexer.

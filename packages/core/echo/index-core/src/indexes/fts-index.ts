@@ -5,10 +5,10 @@
 import * as SqlClient from '@effect/sql/SqlClient';
 import type * as SqlError from '@effect/sql/SqlError';
 import * as Effect from 'effect/Effect';
-import * as Schema from 'effect/Schema';
+
+import type { SpaceId } from '@dxos/keys';
 
 import type { Index, IndexerObject } from './interface';
-import type { SpaceId } from '@dxos/keys';
 import type { ObjectMeta } from './object-meta-index';
 
 export interface FtsQuery {

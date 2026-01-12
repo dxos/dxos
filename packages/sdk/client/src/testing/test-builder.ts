@@ -88,9 +88,7 @@ export class TestBuilder {
    * Create backend service handlers.
    */
   createClientServicesHost(runtimeProps?: ServiceContextRuntimeProps): ClientServicesHost {
-    const runtime = ManagedRuntime.make(
-      Layer.merge(SqliteClient.layerMemory({}), Reactivity.layer).pipe(Layer.orDie),
-    );
+    const runtime = ManagedRuntime.make(Layer.merge(SqliteClient.layerMemory({}), Reactivity.layer).pipe(Layer.orDie));
 
     const services = new ClientServicesHost({
       config: this.config,
