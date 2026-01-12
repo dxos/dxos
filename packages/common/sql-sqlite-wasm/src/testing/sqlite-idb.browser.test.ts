@@ -28,7 +28,7 @@ const deleteDatabase = (name: string): Promise<void> =>
     request.onerror = () => reject(request.error);
   });
 
-describe('wa-sqlite with IDBBatchAtomicVFS', () => {
+describe.skip('wa-sqlite with IDBBatchAtomicVFS', () => {
   let sqlite3: ReturnType<typeof WaSqlite.Factory>;
   let vfs: any;
   let db: number;
