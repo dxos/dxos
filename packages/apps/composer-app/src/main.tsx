@@ -17,7 +17,7 @@ import { getObservabilityGroup, initializeAppObservability, isObservabilityDisab
 import { ThemeProvider, Tooltip } from '@dxos/react-ui';
 import { TRACE_PROCESSOR } from '@dxos/tracing';
 import { defaultTx } from '@dxos/ui-theme';
-import { getHostPlatform, isMobile as isMobile$ } from '@dxos/util';
+import { getHostPlatform, isMobile as isMobile$, isTauri as isTauri$ } from '@dxos/util';
 
 import { Placeholder, ResetDialog } from './components';
 import { setupConfig } from './config';
@@ -95,7 +95,7 @@ const main = async () => {
     !observabilityDisabled,
   );
 
-  const isTauri = !!(globalThis as any).__TAURI__;
+  const isTauri = isTauri$();
   if (isTauri) {
     const platform = getHostPlatform();
     document.body.setAttribute('data-platform', platform);
