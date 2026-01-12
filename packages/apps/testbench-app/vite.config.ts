@@ -31,6 +31,10 @@ export default defineConfig(
         cors: true,
         // Set isolation to enable performance.measureUserAgentSpecificMemory
         // https://web.dev/articles/coop-coep
+        headers: {
+          'Cross-Origin-Embedder-Policy': 'require-corp',
+          'Cross-Origin-Opener-Policy': 'same-origin',
+        },
         https:
           process.env.HTTPS === 'true'
             ? {

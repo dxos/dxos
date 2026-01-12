@@ -90,7 +90,6 @@
     "@dxos/types": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@effect/sql-sqlite-wasm": "catalog:",
     "@fontsource/poiret-one": "catalog:",
     "@tauri-apps/api": "catalog:",
     "@tauri-apps/plugin-os": "catalog:",
