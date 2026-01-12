@@ -6,6 +6,7 @@ import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
 // @ts-expect-error - Type declarations not compatible.
 import * as WaSqlite from '@dxos/wa-sqlite';
+// @ts-expect-error - Type declarations not compatible.
 import { SQLITE_OPEN_CREATE, SQLITE_OPEN_READWRITE } from '@dxos/wa-sqlite';
 // @ts-expect-error - Type declarations not compatible.
 import { SQLITE_ROW } from '@dxos/wa-sqlite';
@@ -13,7 +14,7 @@ import { SQLITE_ROW } from '@dxos/wa-sqlite';
 import SQLiteAsyncESMFactory from '@dxos/wa-sqlite/dist/wa-sqlite-async.mjs';
 
 // Resolve WASM URL explicitly for Vite compatibility.
-const wasmUrl = new URL('@effect/wa-sqlite/dist/wa-sqlite-async.wasm', import.meta.url).href;
+const wasmUrl = new URL('@dxos/wa-sqlite/dist/wa-sqlite-async.wasm', import.meta.url).href;
 
 describe('wa-sqlite in-memory database', () => {
   let sqlite3: ReturnType<typeof WaSqlite.Factory>;
