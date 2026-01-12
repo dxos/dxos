@@ -53,11 +53,6 @@ export default defineConfig((env) => ({
           cert: '../../../cert.pem',
         }
         : undefined,
-    headers: {
-      // Required for SharedArrayBuffer (used by wa-sqlite OPFS VFS).
-      'Cross-Origin-Opener-Policy': 'same-origin',
-      'Cross-Origin-Embedder-Policy': 'require-corp',
-    },
     fs: {
       strict: false,
       cachedChecks: false,
