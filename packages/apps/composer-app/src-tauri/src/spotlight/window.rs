@@ -14,13 +14,13 @@ use super::state::SpotlightState;
 /// so that the webview content can initialize before the first show.
 /// We use the 1x1 approach because Tauri v2 may not initialize webview content
 /// for windows created with `visible(false)`.
+#[cfg(not(any(target_os = "android", target_os = "ios")))]
 fn create_spotlight_window(
     app: &AppHandle,
     config: &SpotlightConfig,
     state: Arc<SpotlightState>,
 ) -> Result<WebviewWindow, tauri::Error> {
-    let window = WebviewWindowBuilder::new(app, &config.label, WebviewUrl::App("/".into()))
-        .title(&config.title)
+    let mut builder = WebviewWindowBuilder::new(app, &config.label, WebviewUrl::App("/".into()))
         .inner_size(1.0, 1.0)
         .resizable(true) // Must be true for programmatic resize.
         .decorations(false)
@@ -28,8 +28,15 @@ fn create_spotlight_window(
         .always_on_top(true)
         .visible(true)
         .skip_taskbar(true)
-        .position(0.0, 0.0)
-        .build()?;
+        .position(0.0, 0.0);
+    
+    // title() method is only available on desktop platforms
+    #[cfg(not(any(target_os = "android", target_os = "ios")))]
+    {
+        builder = builder.title(&config.title);
+    }
+    
+    let window = builder.build()?;
 
     // Apply platform-specific configuration.
     let platform = get_platform();
@@ -53,6 +60,7 @@ fn create_spotlight_window(
 }
 
 /// Center the window on the given monitor.
+#[cfg(not(any(target_os = "android", target_os = "ios")))]
 fn center_window_on_monitor(window: &WebviewWindow, config: &SpotlightConfig, monitor: &tauri::Monitor) {
     let monitor_size = monitor.size();
     let scale = monitor.scale_factor();
@@ -66,6 +74,7 @@ fn center_window_on_monitor(window: &WebviewWindow, config: &SpotlightConfig, mo
 }
 
 /// Show the spotlight window centered on the current monitor.
+#[cfg(not(any(target_os = "android", target_os = "ios")))]
 pub fn show_spotlight(
     window: &WebviewWindow,
     config: &SpotlightConfig,
@@ -97,7 +106,18 @@ pub fn show_spotlight(
     state.set_visible(true);
 }
 
+/// iOS stub - spotlight is not supported on mobile platforms.
+#[cfg(any(target_os = "android", target_os = "ios"))]
+pub fn show_spotlight(
+    _window: &WebviewWindow,
+    _config: &SpotlightConfig,
+    _state: &SpotlightState,
+) {
+    // No-op on mobile platforms
+}
+
 /// Hide the spotlight window.
+#[cfg(not(any(target_os = "android", target_os = "ios")))]
 pub fn hide_spotlight(window: &WebviewWindow, state: &SpotlightState) {
     let platform = get_platform();
 
@@ -114,8 +134,15 @@ pub fn hide_spotlight(window: &WebviewWindow, state: &SpotlightState) {
     state.set_visible(false);
 }
 
+/// iOS stub - spotlight is not supported on mobile platforms.
+#[cfg(any(target_os = "android", target_os = "ios"))]
+pub fn hide_spotlight(_window: &WebviewWindow, _state: &SpotlightState) {
+    // No-op on mobile platforms
+}
+
 /// Toggle the spotlight window visibility.
 /// Creates the window on first use if it doesn't exist.
+#[cfg(not(any(target_os = "android", target_os = "ios")))]
 pub fn toggle_spotlight(
     app: &AppHandle,
     config: &SpotlightConfig,
@@ -138,5 +165,16 @@ pub fn toggle_spotlight(
         show_spotlight(&window, config, &state);
     }
 
+    Ok(())
+}
+
+/// iOS stub - spotlight is not supported on mobile platforms.
+#[cfg(any(target_os = "android", target_os = "ios"))]
+pub fn toggle_spotlight(
+    _app: &AppHandle,
+    _config: &SpotlightConfig,
+    _state: Arc<SpotlightState>,
+) -> Result<(), tauri::Error> {
+    // No-op on mobile platforms
     Ok(())
 }

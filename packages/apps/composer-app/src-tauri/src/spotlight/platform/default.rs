@@ -12,8 +12,11 @@ impl SpotlightPlatform for DefaultPlatform {
     }
 
     fn show(&self, window: &WebviewWindow) {
-        let _ = window.show();
-        let _ = window.set_focus();
+        #[cfg(not(any(target_os = "android", target_os = "ios")))]
+        {
+            let _ = window.show();
+            let _ = window.set_focus();
+        }
     }
 
     fn store_previous_app(&self) {

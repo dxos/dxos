@@ -103,8 +103,11 @@ impl SpotlightPlatform for MacOSPlatform {
     fn show(&self, window: &WebviewWindow) {
         // TODO: Show window without activating the application (Raycast-like behavior).
         //   Currently, showing the window activates the app and changes the menu bar.
-        let _ = window.show();
-        let _ = window.set_focus();
+        #[cfg(not(any(target_os = "android", target_os = "ios")))]
+        {
+            let _ = window.show();
+            let _ = window.set_focus();
+        }
     }
 
     fn store_previous_app(&self) {

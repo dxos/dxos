@@ -2,8 +2,6 @@
 
 use std::sync::Arc;
 
-use tauri_plugin_global_shortcut::ShortcutState;
-
 mod oauth;
 mod spotlight;
 
@@ -26,14 +24,20 @@ pub fn run() {
     let spotlight_config = SpotlightConfig::default();
     let spotlight_state = Arc::new(SpotlightState::new());
 
-    // Clone for use in shortcut handler.
-    let config_for_shortcut = spotlight_config.clone();
-    let state_for_shortcut = spotlight_state.clone();
-
     builder
         .plugin(tauri_plugin_os::init())
-        .plugin(tauri_plugin_shell::init())
-        .plugin(
+        .plugin(tauri_plugin_shell::init());
+
+    // Only include global shortcut plugin for desktop targets.
+    #[cfg(not(any(target_os = "android", target_os = "ios")))]
+    {
+        use tauri_plugin_global_shortcut::ShortcutState;
+
+        // Clone for use in shortcut handler.
+        let config_for_shortcut = spotlight_config.clone();
+        let state_for_shortcut = spotlight_state.clone();
+
+        builder = builder.plugin(
             tauri_plugin_global_shortcut::Builder::new()
                 .with_shortcuts([spotlight_config.shortcut.as_str()])
                 .unwrap()
@@ -45,7 +49,10 @@ pub fn run() {
                     }
                 })
                 .build(),
-        )
+        );
+    }
+
+    builder
         .manage(OAuthServerState::new())
         .invoke_handler(tauri::generate_handler![
             oauth::start_oauth_server,
