@@ -84,7 +84,6 @@
     "@effect/sql": "catalog:",
     "@effect/sql-sqlite-node": "catalog:",
     "@effect/sql-sqlite-wasm": "catalog:",
-    "@effect/wa-sqlite": "catalog:",
     "@obsidize/tar-browserify": "catalog:",
     "cbor-x": "catalog:",
     "effect": "catalog:",
