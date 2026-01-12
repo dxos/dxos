@@ -141,7 +141,7 @@ export class ObjectMetaIndex implements Index {
   );
 
   /**
-   * Look up recordIds for objects that are already stored in the ObjectMetaIndex.
+   * Look up `recordIds` for objects that are already stored in the ObjectMetaIndex.
    * Mutates the objects in place.
    */
   lookupRecordIds = Effect.fn('ObjectMetaIndex.lookupRecordIds')(
