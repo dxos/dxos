@@ -2,12 +2,41 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type MaybePromise } from '@dxos/util';
+import type * as Effect from 'effect/Effect';
+import * as Option from 'effect/Option';
+import * as Pipeable from 'effect/Pipeable';
 
-import { type AnyCapability, type PluginContext } from './capabilities';
-import { type ActivationEvent, type ActivationEvents } from './events';
+import { invariant } from '@dxos/invariant';
 
-interface PluginModuleInterface {
+import type * as ActivationEvent from './activation-event';
+import * as Capability from './capability';
+
+/**
+ * Computes a module ID from plugin ID and export name.
+ */
+const computeModuleId = (pluginId: string, moduleName: string): string => {
+  return `${pluginId}/module/${moduleName}`;
+};
+
+/**
+ * Identifier denoting a PluginModule.
+ */
+export const PluginModuleTypeId: unique symbol = Symbol.for('@dxos/app-framework/PluginModule');
+export type PluginModuleTypeId = typeof PluginModuleTypeId;
+
+/**
+ * Type guard to check if a value is a PluginModule.
+ */
+export const isPluginModule = (value: unknown): value is PluginModule => {
+  return typeof value === 'object' && value !== null && PluginModuleTypeId in value;
+};
+
+/**
+ * A unit of containment of modular functionality that can be provided to an application.
+ * Activation of a module is async allowing for code to split and loaded lazily.
+ */
+export interface PluginModule {
+  readonly [PluginModuleTypeId]: PluginModuleTypeId;
   /**
    * Unique id of the module.
    */
@@ -16,43 +45,39 @@ interface PluginModuleInterface {
   /**
    * Events for which the module will be activated.
    */
-  activatesOn: ActivationEvents;
+  activatesOn: ActivationEvent.Events;
 
   /**
    * Events which the plugin depends on being activated.
    * Plugin is marked as needing reset a plugin activated by a dependent event is removed.
    * Events are automatically activated before activation of the plugin.
    */
-  activatesBefore?: ActivationEvent[];
+  activatesBefore?: ActivationEvent.ActivationEvent[];
 
   /**
    * Events which this plugin triggers upon activation.
    */
-  activatesAfter?: ActivationEvent[];
+  activatesAfter?: ActivationEvent.ActivationEvent[];
 
   /**
    * Called when the module is activated.
    * @param context The plugin context.
    * @returns The capabilities of the module.
    */
-  activate: (
-    context: PluginContext,
-  ) => MaybePromise<AnyCapability | AnyCapability[]> | Promise<() => Promise<AnyCapability | AnyCapability[]>>;
+  activate: (context: Capability.PluginContext) => Effect.Effect<Capability.ModuleReturn, Error>;
 }
 
-/**
- * A unit of containment of modular functionality that can be provided to an application.
- * Activation of a module is async allowing for code to split and loaded lazily.
- */
-// NOTE: This is implemented as a class to prevent it from being proxied by PluginManager state.
-export class PluginModule implements PluginModuleInterface {
-  readonly id: PluginModuleInterface['id'];
-  readonly activatesOn: PluginModuleInterface['activatesOn'];
-  readonly activatesBefore?: PluginModuleInterface['activatesBefore'];
-  readonly activatesAfter?: PluginModuleInterface['activatesAfter'];
-  readonly activate: PluginModuleInterface['activate'];
+export type PluginModuleOptions = Omit<PluginModule, 'id' | typeof PluginModuleTypeId> & { id?: string };
 
-  constructor(options: PluginModuleInterface) {
+class PluginModuleImpl implements PluginModule {
+  readonly [PluginModuleTypeId]: PluginModuleTypeId = PluginModuleTypeId;
+  readonly id: PluginModule['id'];
+  readonly activatesOn: PluginModule['activatesOn'];
+  readonly activatesBefore?: PluginModule['activatesBefore'];
+  readonly activatesAfter?: PluginModule['activatesAfter'];
+  readonly activate: PluginModule['activate'];
+
+  constructor(options: Omit<PluginModule, typeof PluginModuleTypeId>) {
     this.id = options.id;
     this.activatesOn = options.activatesOn;
     this.activatesBefore = options.activatesBefore;
@@ -61,12 +86,7 @@ export class PluginModule implements PluginModuleInterface {
   }
 }
 
-/**
- * Helper to define a module.
- */
-export const defineModule = (options: PluginModuleInterface) => new PluginModule(options);
-
-export type PluginMeta = {
+export type Meta = {
   /**
    * Globally unique ID.
    *
@@ -118,26 +138,152 @@ export type PluginMeta = {
 };
 
 /**
+ * Identifier denoting a Plugin.
+ */
+export const PluginTypeId: unique symbol = Symbol.for('@dxos/app-framework/Plugin');
+export type PluginTypeId = typeof PluginTypeId;
+
+/**
+ * Type guard to check if a value is a Plugin.
+ */
+export const isPlugin = (value: unknown): value is Plugin => {
+  return typeof value === 'object' && value !== null && PluginTypeId in value;
+};
+
+/**
  * A collection of modules that are be enabled/disabled as a unit.
  * Plugins provide things such as components, state, actions, etc. to the application.
  */
-// NOTE: This is implemented as a class to prevent it from being proxied by PluginManager state.
-export class Plugin {
-  constructor(
-    readonly meta: PluginMeta,
-    readonly modules: PluginModule[],
-  ) {}
+export interface Plugin {
+  readonly [PluginTypeId]: PluginTypeId;
+  readonly meta: Readonly<Meta>;
+  readonly modules: ReadonlyArray<PluginModule>;
 }
 
-export type PluginFactory<T = void> = ((args: T) => Plugin) & { meta: PluginMeta };
+/**
+ * Internal implementation of Plugin.
+ * @internal
+ */
+class PluginImpl implements Plugin {
+  readonly [PluginTypeId]: PluginTypeId = PluginTypeId;
+
+  constructor(
+    private readonly _meta: Meta,
+    private readonly _modules: PluginModule[],
+  ) {}
+
+  get meta(): Readonly<Meta> {
+    return this._meta;
+  }
+
+  get modules(): ReadonlyArray<PluginModule> {
+    return this._modules;
+  }
+}
 
 /**
- * Helper to define a plugin.
+ * Builder interface for creating plugins incrementally.
  */
-export const definePlugin = <T = void>(meta: PluginMeta, provider: (args: T) => PluginModule[]): PluginFactory<T> => {
-  const factory = (args: T) => {
-    return new Plugin(meta, provider(args));
+export interface PluginBuilder<T = void> extends Pipeable.Pipeable {
+  readonly meta: Meta;
+  readonly modules: ReadonlyArray<PluginModuleOptions | ((options: T) => PluginModuleOptions)>;
+  addModule(moduleOptions: PluginModuleOptions | ((options: T) => PluginModuleOptions)): PluginBuilder<T>;
+}
+
+/**
+ * Builder implementation for creating plugins incrementally.
+ */
+class PluginBuilderImpl<T = void> implements PluginBuilder<T> {
+  readonly meta: Meta;
+  private readonly _modules: Array<PluginModuleOptions | ((options: T) => PluginModuleOptions)> = [];
+
+  constructor(meta: Meta) {
+    this.meta = meta;
+  }
+
+  get modules(): ReadonlyArray<PluginModuleOptions | ((options: T) => PluginModuleOptions)> {
+    return this._modules;
+  }
+
+  addModule(moduleOptions: PluginModuleOptions | ((options: T) => PluginModuleOptions)): PluginBuilder<T> {
+    this._modules.push(moduleOptions);
+    return this;
+  }
+
+  pipe() {
+    // eslint-disable-next-line prefer-rest-params
+    return Pipeable.pipeArguments(this, arguments);
+  }
+}
+
+/**
+ * Creates a new PluginBuilder to start building a plugin.
+ */
+export const define = <T = void>(meta: Meta): PluginBuilder<T> => new PluginBuilderImpl<T>(meta);
+
+/**
+ * Adds a module to a plugin builder.
+ * Supports both pipeline and direct call styles.
+ * Modules can be either PluginModuleOptions or functions that receive options.
+ */
+export function addModule<T>(
+  moduleOptions: PluginModuleOptions | ((options: T) => PluginModuleOptions),
+): (builder: PluginBuilder<T>) => PluginBuilder<T>;
+export function addModule<T>(
+  builder: PluginBuilder<T>,
+  moduleOptions: PluginModuleOptions | ((options: T) => PluginModuleOptions),
+): PluginBuilder<T>;
+export function addModule<T>(
+  moduleOptionsOrBuilder: PluginModuleOptions | ((options: T) => PluginModuleOptions) | PluginBuilder<T>,
+  moduleOptions?: PluginModuleOptions | ((options: T) => PluginModuleOptions),
+): ((builder: PluginBuilder<T>) => PluginBuilder<T>) | PluginBuilder<T> {
+  // If second arg is provided, it's the direct call style: addModule(builder, moduleOptions)
+  if (moduleOptions !== undefined) {
+    return (moduleOptionsOrBuilder as PluginBuilder<T>).addModule(moduleOptions);
+  }
+  // Otherwise it's pipeline style: addModule(moduleOptions) returns a function
+  const moduleOpts = moduleOptionsOrBuilder as PluginModuleOptions | ((options: T) => PluginModuleOptions);
+  return (builder: PluginBuilder<T>) => builder.addModule(moduleOpts);
+}
+
+export type PluginFactory<T = void> = ((options: T) => Plugin) & { meta: Meta };
+
+/**
+ * Resolves a module from either PluginModuleOptions or a function that returns PluginModuleOptions.
+ */
+const resolveModule = (
+  meta: Meta,
+  module: PluginModuleOptions | ((options: any) => PluginModuleOptions),
+  options?: any,
+): PluginModuleImpl => {
+  const moduleOptions = typeof module === 'function' ? module(options) : module;
+  const id = Option.fromNullable(moduleOptions.id).pipe(
+    Option.match({
+      onNone: () => {
+        const exportName = Capability.getModuleTag(moduleOptions.activate);
+        invariant(exportName, `Plugin module missing name. Plugin: ${meta.id}`);
+        return computeModuleId(meta.id, exportName);
+      },
+      onSome: (id) => computeModuleId(meta.id, id),
+    }),
+  );
+  return new PluginModuleImpl({ ...moduleOptions, id });
+};
+
+/**
+ * Creates a Plugin from a builder.
+ * Supports both pipeline and direct call styles.
+ * Always returns a factory function (options: T) => Plugin.
+ * When T is void, the function takes no arguments: () => Plugin.
+ */
+export function make<T>(builder: PluginBuilder<T>): PluginFactory<T>;
+export function make<T>(builder: PluginBuilder<T>): PluginFactory<T> {
+  const meta = builder.meta;
+
+  const factory = (options: T) => {
+    const modules = builder.modules.map((module) => resolveModule(meta, module, options));
+    return new PluginImpl(meta, modules);
   };
 
   return Object.assign(factory, { meta });
-};
+}

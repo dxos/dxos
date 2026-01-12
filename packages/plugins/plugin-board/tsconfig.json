@@ -54,6 +54,9 @@
       "path": "../../core/echo/echo"
     },
     {
+      "path": "../../core/operation"
+    },
+    {
       "path": "../../sdk/app-framework"
     },
     {

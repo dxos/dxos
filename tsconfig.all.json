@@ -247,6 +247,9 @@
       "path": "packages/core/mesh/websocket-rpc/tsconfig.json"
     },
     {
+      "path": "packages/core/operation/tsconfig.json"
+    },
+    {
       "path": "packages/core/protocols/tsconfig.json"
     },
     {
@@ -382,6 +385,9 @@
       "path": "packages/plugins/plugin-sheet/tsconfig.json"
     },
     {
+      "path": "packages/plugins/plugin-simple-layout/tsconfig.json"
+    },
+    {
       "path": "packages/plugins/plugin-sketch/tsconfig.json"
     },
     {
@@ -470,6 +476,9 @@
     },
     {
       "path": "packages/stories/stories-assistant/tsconfig.json"
+    },
+    {
+      "path": "packages/stories/stories-ui/tsconfig.json"
     },
     {
       "path": "packages/ui/brand/tsconfig.json"

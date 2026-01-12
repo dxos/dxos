@@ -17,6 +17,7 @@ export const sizeStyle = (
     case 'block-start':
     case 'block-end':
       sizeProperty = 'blockSize';
+      break;
   }
 
   return {

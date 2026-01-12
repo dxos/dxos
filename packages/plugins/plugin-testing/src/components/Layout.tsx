@@ -15,8 +15,8 @@ import {
 } from '@dxos/react-ui';
 import { descriptionMessage, mx } from '@dxos/ui-theme';
 
-import { LayoutState } from '../capabilities';
 import { meta } from '../meta';
+import { LayoutState } from '../types';
 
 const debounce_delay = 100;
 
@@ -61,50 +61,58 @@ export const Layout = ({ children }: PropsWithChildren<{}>) => {
   const DialogOverlay = layout.dialogType === 'alert' ? AlertDialog.Overlay : Dialog.Overlay;
 
   return (
-    <Popover.Root open={open}>
-      <Main.Root
-        navigationSidebarState={layout.sidebarState}
-        complementarySidebarState={layout.complementarySidebarState}
-        onNavigationSidebarStateChange={(next) => (layout.sidebarState = next)}
-        onComplementarySidebarStateChange={(next) => (layout.complementarySidebarState = next)}
-      >
-        {children}
-      </Main.Root>
-
-      <DialogRoot
-        modal={layout.dialogBlockAlign !== 'end'}
-        open={layout.dialogOpen}
-        onOpenChange={(nextOpen) => (layout.dialogOpen = nextOpen)}
-      >
-        {layout.dialogBlockAlign === 'end' ? (
-          <Surface role='dialog' data={layout.dialogContent} limit={1} fallback={ContentError} placeholder={<div />} />
-        ) : (
-          <DialogOverlay
-            blockAlign={layout.dialogBlockAlign}
-            classNames={layout.dialogOverlayClasses}
-            style={layout.dialogOverlayStyle}
-          >
-            <Surface role='dialog' data={layout.dialogContent} limit={1} fallback={ContentError} />
-          </DialogOverlay>
-        )}
-      </DialogRoot>
-
-      <Popover.VirtualTrigger key={iter} virtualRef={trigger} />
-      <Popover.Portal>
-        <Popover.Content
-          side={layout.popoverSide}
-          onInteractOutside={handleInteractOutside}
-          onEscapeKeyDown={handleInteractOutside}
-          sticky='always'
-          hideWhenDetached
+    <div role='none' className='fixed inset-0 flex overflow-hidden'>
+      <Popover.Root open={open}>
+        <Main.Root
+          navigationSidebarState={layout.sidebarState}
+          complementarySidebarState={layout.complementarySidebarState}
+          onNavigationSidebarStateChange={(next) => (layout.sidebarState = next)}
+          onComplementarySidebarStateChange={(next) => (layout.complementarySidebarState = next)}
         >
-          <Popover.Viewport>
-            <Surface role='card--popover' data={layout.popoverContent} limit={1} />
-          </Popover.Viewport>
-          <Popover.Arrow />
-        </Popover.Content>
-      </Popover.Portal>
-    </Popover.Root>
+          {children}
+        </Main.Root>
+
+        <DialogRoot
+          modal={layout.dialogBlockAlign !== 'end'}
+          open={layout.dialogOpen}
+          onOpenChange={(nextOpen) => (layout.dialogOpen = nextOpen)}
+        >
+          {layout.dialogBlockAlign === 'end' ? (
+            <Surface
+              role='dialog'
+              data={layout.dialogContent}
+              limit={1}
+              fallback={ContentError}
+              placeholder={<div />}
+            />
+          ) : (
+            <DialogOverlay
+              blockAlign={layout.dialogBlockAlign}
+              classNames={layout.dialogOverlayClasses}
+              style={layout.dialogOverlayStyle}
+            >
+              <Surface role='dialog' data={layout.dialogContent} limit={1} fallback={ContentError} />
+            </DialogOverlay>
+          )}
+        </DialogRoot>
+
+        <Popover.VirtualTrigger key={iter} virtualRef={trigger} />
+        <Popover.Portal>
+          <Popover.Content
+            side={layout.popoverSide}
+            onInteractOutside={handleInteractOutside}
+            onEscapeKeyDown={handleInteractOutside}
+            sticky='always'
+            hideWhenDetached
+          >
+            <Popover.Viewport>
+              <Surface role='card--popover' data={layout.popoverContent} limit={1} />
+            </Popover.Viewport>
+            <Popover.Arrow />
+          </Popover.Content>
+        </Popover.Portal>
+      </Popover.Root>
+    </div>
   );
 };
 

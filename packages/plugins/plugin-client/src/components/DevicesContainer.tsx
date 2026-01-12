@@ -5,8 +5,7 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { QR } from 'react-qr-rounded';
 
-import { createIntent } from '@dxos/app-framework';
-import { useIntentDispatcher } from '@dxos/app-framework/react';
+import { useOperationInvoker } from '@dxos/app-framework/react';
 import { log } from '@dxos/log';
 import { useClient, useMulticastObservable } from '@dxos/react-client';
 import { type Device, useDevices } from '@dxos/react-client/halo';
@@ -25,7 +24,7 @@ import { AuthCode, Centered, DeviceListItem, Emoji, Viewport } from '@dxos/shell
 import { hexToEmoji } from '@dxos/util';
 
 import { meta } from '../meta';
-import { ClientAction } from '../types';
+import { ClientOperation } from '../types';
 
 export type DevicesContainerProps = {
   createInvitationUrl?: (invitationCode: string) => string;
@@ -33,20 +32,20 @@ export type DevicesContainerProps = {
 
 export const DevicesContainer = ({ createInvitationUrl }: DevicesContainerProps) => {
   const { t } = useTranslation('@dxos/os');
-  const { dispatchPromise: dispatch } = useIntentDispatcher();
+  const { invokePromise } = useOperationInvoker();
   const devices = useDevices();
   const { swarm: connectionState } = useNetworkStatus();
 
-  const handleResetStorage = useCallback(() => dispatch(createIntent(ClientAction.ResetStorage)), [dispatch]);
+  const handleResetStorage = useCallback(() => invokePromise(ClientOperation.ResetStorage, {}), [invokePromise]);
 
   const handleRecover = useCallback(
-    () => dispatch(createIntent(ClientAction.ResetStorage, { mode: 'recover' })),
-    [dispatch],
+    () => invokePromise(ClientOperation.ResetStorage, { mode: 'recover' }),
+    [invokePromise],
   );
 
   const handleJoinNewIdentity = useCallback(
-    () => dispatch(createIntent(ClientAction.ResetStorage, { mode: 'join new identity' })),
-    [dispatch],
+    () => invokePromise(ClientOperation.ResetStorage, { mode: 'join new identity' }),
+    [invokePromise],
   );
 
   return (

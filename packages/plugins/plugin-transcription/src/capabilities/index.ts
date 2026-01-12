@@ -2,11 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { lazy } from '@dxos/app-framework';
-
-export const BlueprintDefinition = lazy(() => import('./blueprint-definition'));
-export const IntentResolver = lazy(() => import('./intent-resolver'));
-export const ReactSurface = lazy(() => import('./react-surface'));
-export const Transcriber = lazy(() => import('./transcriber'));
-
-export * from './capabilities';
+export * from './blueprint-definition';
+export * from './operation-resolver';
+export * from './react-surface';
+export * from './transcriber';

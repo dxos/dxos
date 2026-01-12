@@ -5,7 +5,7 @@
 import React from 'react';
 
 import { Button, Icon } from '@dxos/react-ui';
-import { Card, cardNoSpacing, cardSpacing } from '@dxos/react-ui-stack';
+import { Card, cardNoSpacing, cardSpacing } from '@dxos/react-ui-mosaic';
 import { mx } from '@dxos/ui-theme';
 
 import { type CardPreviewProps } from '../types';

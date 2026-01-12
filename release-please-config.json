@@ -430,6 +430,11 @@
         },
         {
           "type": "json",
+          "path": "packages/core/operation/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/core/protocols/package.json",
           "jsonpath": "$.version"
         },
@@ -660,6 +665,11 @@
         },
         {
           "type": "json",
+          "path": "packages/plugins/plugin-simple-layout/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/plugins/plugin-sketch/package.json",
           "jsonpath": "$.version"
         },
@@ -806,6 +816,11 @@
         {
           "type": "json",
           "path": "packages/stories/stories-assistant/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/stories/stories-ui/package.json",
           "jsonpath": "$.version"
         },
         {

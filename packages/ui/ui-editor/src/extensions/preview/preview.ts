@@ -182,7 +182,7 @@ class PreviewBlockWidget extends WidgetType {
 
   override toDOM(_view: EditorView) {
     const root = document.createElement('div');
-    root.classList.add('cm-preview-block', 'density-coarse');
+    root.classList.add('cm-preview-block', 'density-fine');
     this._options.addBlockContainer?.({ link: this._link, el: root });
     return root;
   }

@@ -5,7 +5,7 @@
 import { useSignalEffect } from '@preact/signals-react';
 import { useCallback, useMemo, useState } from 'react';
 
-import { Capabilities } from '@dxos/app-framework';
+import { Common } from '@dxos/app-framework';
 import { useCapabilities } from '@dxos/app-framework/react';
 import { type AiContextBinder } from '@dxos/assistant';
 import { Blueprint } from '@dxos/blueprints';
@@ -18,7 +18,7 @@ import { distinctBy } from '@dxos/util';
  */
 // TODO(burdon): Reconcile with eventual public registry.
 export const useBlueprintRegistry = () => {
-  const blueprints = useCapabilities(Capabilities.BlueprintDefinition);
+  const blueprints = useCapabilities(Common.Capability.BlueprintDefinition);
   return useMemo(() => new Blueprint.Registry(blueprints), [blueprints]);
 };
 

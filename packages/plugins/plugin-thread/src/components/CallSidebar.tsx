@@ -6,7 +6,7 @@ import React from 'react';
 
 import { useCapability } from '@dxos/app-framework/react';
 
-import { ThreadCapabilities } from '../capabilities';
+import { ThreadCapabilities } from '../types';
 
 import { ChannelContainer } from './ChannelContainer';
 

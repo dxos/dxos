@@ -42,7 +42,7 @@
     "@dxos/react-ui-editor": "workspace:*",
     "@dxos/react-ui-form": "workspace:*",
     "@dxos/react-ui-menu": "workspace:*",
-    "@dxos/react-ui-stack": "workspace:*",
+    "@dxos/react-ui-mosaic": "workspace:*",
     "@dxos/react-ui-table": "workspace:*",
     "@dxos/schema": "workspace:*",
     "@dxos/types": "workspace:*",
@@ -53,7 +53,10 @@
     "@preact-signals/safe-react": "catalog:"
   },
   "devDependencies": {
+    "@dxos/echo-db": "workspace:*",
+    "@dxos/plugin-testing": "workspace:*",
     "@dxos/random": "workspace:*",
+    "@dxos/react-ui-components": "workspace:*",
     "@dxos/storybook-utils": "workspace:*",
     "effect": "catalog:",
     "react": "catalog:",

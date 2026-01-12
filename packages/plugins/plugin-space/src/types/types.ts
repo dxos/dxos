@@ -2,14 +2,16 @@
 // Copyright 2023 DXOS.org
 //
 
+import type * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
-import { type AnyIntentChain } from '@dxos/app-framework';
+import { type Capability } from '@dxos/app-framework';
 import { type PublicKey } from '@dxos/client';
 // TODO(wittjosiah): This pulls in full client.
 import { EchoObjectSchema, ReactiveObjectSchema, SpaceSchema } from '@dxos/client/echo';
 import { CancellableInvitationObservable, Invitation } from '@dxos/client/invitations';
 import { Database, type Obj, QueryAST, Type } from '@dxos/echo';
+import * as Operation from '@dxos/operation';
 import { Collection, FieldSchema, View } from '@dxos/schema';
 import { type ComplexMap } from '@dxos/util';
 
@@ -111,7 +113,18 @@ export interface TypedObjectSerializer<T extends Obj.Any = Obj.Any> {
   deserialize(params: { content: string; db: Database.Database; newId?: boolean }): Promise<T>;
 }
 
-export type CreateObjectIntent = (props: any, options: { db: Database.Database }) => AnyIntentChain;
+/**
+ * Factory function that creates an object directly using Type.make().
+ * Returns an Effect that resolves to the created object.
+ *
+ * Options include:
+ * - `db`: The database to use for object creation.
+ * - `context`: The plugin context for accessing capabilities and dispatch.
+ */
+export type CreateObject = (
+  props: any,
+  options: { db: Database.Database; context: Capability.PluginContext },
+) => Effect.Effect<Obj.Any, Error>;
 
 // TODO(burdon): Move to FormatEnum or SDK.
 export const IconAnnotationId = Symbol.for('@dxos/plugin-space/annotation/Icon');
@@ -125,118 +138,363 @@ export const SpaceForm = Schema.Struct({
   edgeReplication: Schema.optional(Schema.Boolean.annotations({ title: 'Enable EDGE Replication' })),
 });
 
-export const SPACE_ACTION = `${meta.id}/action`;
+const COLLECTION_OPERATION = 'dxos.org/plugin/collection/operation';
 
-export namespace SpaceAction {
-  export class OpenCreateSpace extends Schema.TaggedClass<OpenCreateSpace>()(`${SPACE_ACTION}/open-create-space`, {
-    input: Schema.Void,
-    output: Schema.Void,
-  }) {}
+export namespace CollectionOperation {
+  export const Create = Operation.make({
+    meta: { key: `${COLLECTION_OPERATION}/create`, name: 'Create Collection' },
+    schema: {
+      input: Schema.Struct({
+        name: Schema.optional(Schema.String),
+      }),
+      output: Schema.Struct({
+        object: Collection.Collection,
+      }),
+    },
+  });
+}
 
-  export class Create extends Schema.TaggedClass<Create>()(`${SPACE_ACTION}/create`, {
-    input: SpaceForm,
-    output: Schema.Struct({
-      id: Schema.String,
-      subject: Schema.Array(Schema.String),
-      space: SpaceSchema,
+const SPACE_OPERATION = `${meta.id}/operation`;
+
+/**
+ * Operations for the Space plugin.
+ */
+export namespace SpaceOperation {
+  export const Create = Operation.make({
+    meta: {
+      key: `${SPACE_OPERATION}/create`,
+      name: 'Create Space',
+      description: 'Create a new space.',
+    },
+    schema: {
+      input: SpaceForm,
+      output: Schema.Struct({
+        id: Schema.String,
+        subject: Schema.Array(Schema.String),
+        space: SpaceSchema,
+      }),
+    },
+  });
+
+  export const Join = Operation.make({
+    meta: {
+      key: `${SPACE_OPERATION}/join`,
+      name: 'Join Space',
+      description: 'Join a space via invitation.',
+    },
+    schema: {
+      input: Schema.Struct({
+        invitationCode: Schema.optional(Schema.String),
+        onDone: Schema.optional(Schema.Any),
+      }),
+      output: Schema.Void,
+    },
+  });
+
+  export const Open = Operation.make({
+    meta: {
+      key: `${SPACE_OPERATION}/open`,
+      name: 'Open Space',
+      description: 'Open a space.',
+    },
+    schema: {
+      input: Schema.Struct({
+        space: SpaceSchema,
+      }),
+      output: Schema.Void,
+    },
+  });
+
+  export const Close = Operation.make({
+    meta: {
+      key: `${SPACE_OPERATION}/close`,
+      name: 'Close Space',
+      description: 'Close a space.',
+    },
+    schema: {
+      input: Schema.Struct({
+        space: SpaceSchema,
+      }),
+      output: Schema.Void,
+    },
+  });
+
+  export const Share = Operation.make({
+    meta: {
+      key: `${SPACE_OPERATION}/share`,
+      name: 'Share Space',
+      description: 'Share a space.',
+    },
+    schema: {
+      input: Schema.Struct({
+        space: SpaceSchema,
+        type: Schema.Enums(Invitation.Type),
+        authMethod: Schema.Enums(Invitation.AuthMethod),
+        multiUse: Schema.Boolean,
+        target: Schema.optional(Schema.String),
+      }),
+      output: Schema.instanceOf(CancellableInvitationObservable),
+    },
+  });
+
+  // TODO(wittjosiah): This appears to be unused.
+  export const Lock = Operation.make({
+    meta: {
+      key: `${SPACE_OPERATION}/lock`,
+      name: 'Lock Space',
+      description: 'Lock a space to prevent modifications.',
+    },
+    schema: {
+      input: Schema.Struct({
+        space: SpaceSchema,
+      }),
+      output: Schema.Void,
+    },
+  });
+
+  // TODO(wittjosiah): This appears to be unused.
+  export const Unlock = Operation.make({
+    meta: {
+      key: `${SPACE_OPERATION}/unlock`,
+      name: 'Unlock Space',
+      description: 'Unlock a space to allow modifications.',
+    },
+    schema: {
+      input: Schema.Struct({
+        space: SpaceSchema,
+      }),
+      output: Schema.Void,
+    },
+  });
+
+  export const OpenSettings = Operation.make({
+    meta: {
+      key: `${SPACE_OPERATION}/open-settings`,
+      name: 'Open Space Settings',
+      description: 'Open space settings.',
+    },
+    schema: {
+      input: Schema.Struct({
+        space: SpaceSchema,
+      }),
+      output: Schema.Void,
+    },
+  });
+
+  export const WaitForObject = Operation.make({
+    meta: {
+      key: `${SPACE_OPERATION}/wait-for-object`,
+      name: 'Wait For Object',
+      description: 'Wait for an object to be available.',
+    },
+    schema: {
+      input: Schema.Struct({
+        id: Schema.optional(Schema.String),
+      }),
+      output: Schema.Void,
+    },
+  });
+
+  export const AddObject = Operation.make({
+    meta: {
+      key: `${SPACE_OPERATION}/add-object`,
+      name: 'Add Object',
+      description: 'Add an object to a space.',
+    },
+    schema: {
+      input: Schema.Struct({
+        object: ReactiveObjectSchema.annotations({ description: 'The object to add.' }),
+        target: Schema.Union(Database.Database, Collection.Collection).annotations({
+          description: 'The database or collection to add to.',
+        }),
+        hidden: Schema.optional(Schema.Boolean),
+      }),
+      output: Schema.Struct({
+        id: Schema.String,
+        subject: Schema.Array(Schema.String),
+        object: EchoObjectSchema,
+      }),
+    },
+  });
+
+  export const RemoveObjectsOutput = Schema.Struct({
+    objects: Schema.Array(EchoObjectSchema).annotations({ description: 'The removed objects.' }),
+    parentCollection: Collection.Collection.annotations({ description: 'The collection removed from.' }),
+    indices: Schema.Array(Schema.Number).annotations({ description: 'The indices the objects were at.' }),
+    nestedObjectsList: Schema.Array(Schema.Array(EchoObjectSchema)).annotations({
+      description: 'Nested objects that were removed.',
     }),
-  }) {}
-
-  export class Join extends Schema.TaggedClass<Join>()(`${SPACE_ACTION}/join`, {
-    input: Schema.Struct({
-      invitationCode: Schema.optional(Schema.String),
-      onDone: Schema.optional(Schema.Any),
+    wasActive: Schema.Array(Schema.String).annotations({
+      description: 'IDs of objects that were active before removal.',
     }),
-    output: Schema.Void,
-  }) {}
+  });
 
-  export class OpenMembers extends Schema.TaggedClass<OpenMembers>()(`${SPACE_ACTION}/open-members`, {
-    input: Schema.Struct({
-      space: SpaceSchema,
-    }),
-    output: Schema.Void,
-  }) {}
+  export type RemoveObjectsOutput = Schema.Schema.Type<typeof RemoveObjectsOutput>;
 
-  export class Share extends Schema.TaggedClass<Share>()(`${SPACE_ACTION}/share`, {
-    input: Schema.Struct({
-      space: SpaceSchema,
-      type: Schema.Enums(Invitation.Type),
-      authMethod: Schema.Enums(Invitation.AuthMethod),
-      multiUse: Schema.Boolean,
-      target: Schema.optional(Schema.String),
-    }),
-    output: Schema.instanceOf(CancellableInvitationObservable),
-  }) {}
+  export const RemoveObjects = Operation.make({
+    meta: {
+      key: `${SPACE_OPERATION}/remove-objects`,
+      name: 'Remove Objects',
+      description: 'Remove objects from a space.',
+    },
+    schema: {
+      input: Schema.Struct({
+        objects: Schema.Array(ReactiveObjectSchema).annotations({ description: 'The objects to remove.' }),
+        target: Schema.optional(Collection.Collection).annotations({ description: 'The collection to remove from.' }),
+      }),
+      output: RemoveObjectsOutput,
+    },
+  });
 
-  export class GetShareLink extends Schema.TaggedClass<GetShareLink>()(`${SPACE_ACTION}/get-share-link`, {
-    input: Schema.Struct({
-      space: SpaceSchema,
-      target: Schema.optional(Schema.String),
-      copyToClipboard: Schema.optional(Schema.Boolean),
-    }),
-    output: Schema.String,
-  }) {}
+  export const DeleteFieldOutput = Schema.Struct({
+    field: FieldSchema.annotations({ description: 'The deleted field schema.' }),
+    // TODO(wittjosiah): This creates a type error with PropertySchema.
+    props: Schema.Any.annotations({ description: 'The deleted field properties.' }),
+    index: Schema.Number.annotations({ description: 'The index the field was at.' }),
+  });
 
-  export class Lock extends Schema.TaggedClass<Lock>()(`${SPACE_ACTION}/lock`, {
-    input: Schema.Struct({
-      space: SpaceSchema,
-    }),
-    output: Schema.Void,
-  }) {}
+  export type DeleteFieldOutput = Schema.Schema.Type<typeof DeleteFieldOutput>;
 
-  export class Unlock extends Schema.TaggedClass<Unlock>()(`${SPACE_ACTION}/unlock`, {
-    input: Schema.Struct({
-      space: SpaceSchema,
-    }),
-    output: Schema.Void,
-  }) {}
+  export const DeleteField = Operation.make({
+    meta: {
+      key: `${SPACE_OPERATION}/delete-field`,
+      name: 'Delete Field',
+      description: 'Delete a field from a view.',
+    },
+    schema: {
+      input: Schema.Struct({
+        view: View.View.annotations({ description: 'The view to delete the field from.' }),
+        fieldId: Schema.String,
+      }),
+      output: DeleteFieldOutput,
+    },
+  });
 
-  export class Rename extends Schema.TaggedClass<Rename>()(`${SPACE_ACTION}/rename`, {
-    input: Schema.Struct({
-      space: SpaceSchema,
-      caller: Schema.optional(Schema.String),
-    }),
-    output: Schema.Void,
-  }) {}
+  export const OpenCreateObject = Operation.make({
+    meta: {
+      key: `${SPACE_OPERATION}/open-create-object`,
+      name: 'Open Create Object Dialog',
+      description: 'Open the create object dialog.',
+    },
+    schema: {
+      input: Schema.Struct({
+        target: Schema.Union(Database.Database, Collection.Collection).annotations({
+          description: 'The database or collection to create in.',
+        }),
+        views: Schema.optional(Schema.Boolean),
+        typename: Schema.optional(Schema.String),
+        initialFormValues: Schema.optional(Schema.Any),
+        navigable: Schema.optional(Schema.Boolean),
+        // TODO(wittjosiah): This is a function, is there a better way to handle this?
+        onCreateObject: Schema.optional(Schema.Any),
+      }),
+      output: Schema.Void,
+    },
+  });
 
-  // TODO(wittjosiah): Handle scrolling to section.
-  //   This maybe motivates making the space settings its own deck?
-  export class OpenSettings extends Schema.TaggedClass<OpenSettings>()(`${SPACE_ACTION}/open-settings`, {
-    input: Schema.Struct({ space: SpaceSchema }),
-    output: Schema.Void,
-  }) {}
+  export const OpenCreateSpace = Operation.make({
+    meta: {
+      key: `${SPACE_OPERATION}/open-create-space`,
+      name: 'Open Create Space Dialog',
+      description: 'Open the create space dialog.',
+    },
+    schema: {
+      input: Schema.Void,
+      output: Schema.Void,
+    },
+  });
 
-  export class Open extends Schema.TaggedClass<Open>()(`${SPACE_ACTION}/open`, {
-    input: Schema.Struct({
-      space: SpaceSchema,
-    }),
-    output: Schema.Void,
-  }) {}
+  export const Migrate = Operation.make({
+    meta: {
+      key: `${SPACE_OPERATION}/migrate`,
+      name: 'Migrate Space',
+      description: 'Migrate a space to a new version.',
+    },
+    schema: {
+      input: Schema.Struct({
+        space: SpaceSchema,
+        version: Schema.optional(Schema.String),
+      }),
+      output: Schema.Boolean,
+    },
+  });
 
-  export class Close extends Schema.TaggedClass<Close>()(`${SPACE_ACTION}/close`, {
-    input: Schema.Struct({
-      space: SpaceSchema,
-    }),
-    output: Schema.Void,
-  }) {}
+  export const Snapshot = Operation.make({
+    meta: {
+      key: `${SPACE_OPERATION}/snapshot`,
+      name: 'Create Snapshot',
+      description: 'Create a snapshot of the space.',
+    },
+    schema: {
+      input: Schema.Struct({
+        db: Database.Database,
+        query: QueryAST.Query.pipe(Schema.optional),
+      }),
+      output: Schema.Struct({
+        snapshot: Schema.instanceOf(Blob),
+      }),
+    },
+  });
 
-  export class Migrate extends Schema.TaggedClass<Migrate>()(`${SPACE_ACTION}/migrate`, {
-    input: Schema.Struct({
-      space: SpaceSchema,
-      version: Schema.optional(Schema.String),
-    }),
-    output: Schema.Boolean,
-  }) {}
+  export const Rename = Operation.make({
+    meta: {
+      key: `${SPACE_OPERATION}/rename`,
+      name: 'Rename Space',
+      description: 'Rename a space.',
+    },
+    schema: {
+      input: Schema.Struct({
+        space: SpaceSchema,
+        caller: Schema.optional(Schema.String),
+      }),
+      output: Schema.Void,
+    },
+  });
 
-  export class Snapshot extends Schema.TaggedClass<Snapshot>()(`${SPACE_ACTION}/snapshot`, {
-    input: Schema.Struct({
-      db: Database.Database,
-      query: QueryAST.Query.pipe(Schema.optional),
-    }),
-    output: Schema.Struct({
-      snapshot: Schema.instanceOf(Blob),
-    }),
-  }) {}
+  export const RenameObject = Operation.make({
+    meta: {
+      key: `${SPACE_OPERATION}/rename-object`,
+      name: 'Rename Object',
+      description: 'Rename an object.',
+    },
+    schema: {
+      input: Schema.Struct({
+        object: EchoObjectSchema,
+        caller: Schema.optional(Schema.String),
+      }),
+      output: Schema.Void,
+    },
+  });
+
+  export const OpenMembers = Operation.make({
+    meta: {
+      key: `${SPACE_OPERATION}/open-members`,
+      name: 'Open Members',
+      description: 'Open the members panel for a space.',
+    },
+    schema: {
+      input: Schema.Struct({
+        space: SpaceSchema,
+      }),
+      output: Schema.Void,
+    },
+  });
+
+  export const GetShareLink = Operation.make({
+    meta: {
+      key: `${SPACE_OPERATION}/get-share-link`,
+      name: 'Get Share Link',
+      description: 'Get a shareable link for a space.',
+    },
+    schema: {
+      input: Schema.Struct({
+        space: SpaceSchema,
+        target: Schema.optional(Schema.String),
+        copyToClipboard: Schema.optional(Schema.Boolean),
+      }),
+      output: Schema.String,
+    },
+  });
 
   export const StoredSchemaForm = Schema.Struct({
     name: Schema.optional(Schema.String),
@@ -251,147 +509,127 @@ export namespace SpaceAction {
     ),
   });
 
-  export class UseStaticSchema extends Schema.TaggedClass<UseStaticSchema>()(`${SPACE_ACTION}/use-static-schema`, {
-    input: Schema.Struct({
-      db: Database.Database,
-      typename: Schema.String,
-      // TODO(wittjosiah): This is leaky.
-      show: Schema.optional(Schema.Boolean),
-    }),
-    output: Schema.Struct({}),
-  }) {}
-
-  export class AddSchema extends Schema.TaggedClass<AddSchema>()(`${SPACE_ACTION}/add-schema`, {
-    input: Schema.Struct({
-      db: Database.Database,
-      name: Schema.optional(Schema.String),
-      typename: Schema.optional(Schema.String),
-      // TODO(wittjosiah): Semantic version format.
-      version: Schema.optional(Schema.String),
-      // TODO(wittjosiah): Schema for schema?
-      schema: Schema.Any,
-      // TODO(wittjosiah): This is leaky.
-      show: Schema.optional(Schema.Boolean),
-    }),
-    output: Schema.Struct({
-      // TODO(wittjosiah): ObjectId.
-      id: Schema.String,
-      object: Type.PersistentType,
-      schema: Schema.instanceOf(Type.RuntimeType),
-    }),
-  }) {}
-
-  export class DeleteField extends Schema.TaggedClass<DeleteField>()(`${SPACE_ACTION}/delete-field`, {
-    input: Schema.Struct({
-      view: View.View,
-      fieldId: Schema.String,
-      // TODO(wittjosiah): Separate fields for undo data?
-      deletionData: Schema.optional(
-        Schema.Struct({
-          field: FieldSchema,
-          // TODO(wittjosiah): This creates a type error.
-          // props: PropertySchema,
-          props: Schema.Any,
-          index: Schema.Number,
-        }),
-      ),
-    }),
-    output: Schema.Void,
-  }) {}
-
-  export class OpenCreateObject extends Schema.TaggedClass<OpenCreateObject>()(`${SPACE_ACTION}/open-create-object`, {
-    input: Schema.Struct({
-      target: Schema.Union(Database.Database, Collection.Collection),
-      views: Schema.optional(Schema.Boolean),
-      typename: Schema.optional(Schema.String),
-      initialFormValues: Schema.optional(Schema.Any),
-      navigable: Schema.optional(Schema.Boolean),
-      // TODO(wittjosiah): This is a function, is there a better way to handle this?
-      onCreateObject: Schema.optional(Schema.Any),
-    }),
-    output: Schema.Void,
-  }) {}
-
-  export class AddObject extends Schema.TaggedClass<AddObject>()(`${SPACE_ACTION}/add-object`, {
-    input: Schema.Struct({
-      object: ReactiveObjectSchema,
-      target: Schema.Union(Database.Database, Collection.Collection),
-      hidden: Schema.optional(Schema.Boolean),
-    }),
-    output: Schema.Struct({
-      // TODO(wittjosiah): ObjectId.
-      id: Schema.String,
-      subject: Schema.Array(Schema.String),
-      object: EchoObjectSchema,
-    }),
-  }) {}
-
-  export class AddRelation extends Schema.TaggedClass<AddRelation>()(`${SPACE_ACTION}/add-relation`, {
-    input: Schema.Struct({
-      db: Database.Database,
-      // TODO(wittjosiah): Relation schema.
-      schema: Schema.Any,
-      source: Type.Expando,
-      target: Type.Expando,
-      // TODO(wittjosiah): Type based on relation schema.
-      fields: Schema.optional(Schema.Record({ key: Schema.String, value: Schema.Any })),
-    }),
-    output: Schema.Struct({
-      relation: Schema.Any,
-    }),
-  }) {}
-
-  export const DeletionData = Schema.Struct({
-    objects: Schema.Array(EchoObjectSchema),
-    parentCollection: Collection.Collection,
-    indices: Schema.Array(Schema.Number),
-    nestedObjectsList: Schema.Array(Schema.Array(EchoObjectSchema)),
-    wasActive: Schema.Array(Schema.String),
+  export const UseStaticSchema = Operation.make({
+    meta: {
+      key: `${SPACE_OPERATION}/use-static-schema`,
+      name: 'Use Static Schema',
+      description: 'Use a static schema in the space.',
+    },
+    schema: {
+      input: Schema.Struct({
+        db: Database.Database,
+        typename: Schema.String,
+        show: Schema.optional(Schema.Boolean),
+      }),
+      output: Schema.Struct({}),
+    },
   });
 
-  export type DeletionData = Schema.Schema.Type<typeof DeletionData>;
+  export const AddSchema = Operation.make({
+    meta: {
+      key: `${SPACE_OPERATION}/add-schema`,
+      name: 'Add Schema',
+      description: 'Add a schema to the space.',
+    },
+    schema: {
+      input: Schema.Struct({
+        db: Database.Database,
+        name: Schema.optional(Schema.String),
+        typename: Schema.optional(Schema.String),
+        version: Schema.optional(Schema.String),
+        // TODO(wittjosiah): Schema for schema?
+        schema: Schema.Any,
+        show: Schema.optional(Schema.Boolean),
+      }),
+      output: Schema.Struct({
+        id: Schema.String,
+        object: Type.PersistentType,
+        schema: Schema.instanceOf(Type.RuntimeType),
+      }),
+    },
+  });
 
-  export class RemoveObjects extends Schema.TaggedClass<RemoveObjects>()(`${SPACE_ACTION}/remove-objects`, {
-    input: Schema.Struct({
-      // TODO(wittjosiah): Should be Schema.Union(Type.Obj, Type.Relation).
-      objects: Schema.Array(ReactiveObjectSchema),
-      target: Schema.optional(Collection.Collection),
-      deletionData: Schema.optional(DeletionData),
-    }),
-    output: Schema.Void,
-  }) {}
+  export const AddRelation = Operation.make({
+    meta: {
+      key: `${SPACE_OPERATION}/add-relation`,
+      name: 'Add Relation',
+      description: 'Add a relation between objects.',
+    },
+    schema: {
+      input: Schema.Struct({
+        db: Database.Database,
+        // TODO(wittjosiah): Relation schema.
+        schema: Schema.Any,
+        source: Type.Expando,
+        target: Type.Expando,
+        // TODO(wittjosiah): Type based on relation schema.
+        fields: Schema.optional(Schema.Record({ key: Schema.String, value: Schema.Any })),
+      }),
+      output: Schema.Struct({
+        relation: Schema.Any,
+      }),
+    },
+  });
 
-  export class RenameObject extends Schema.TaggedClass<RenameObject>()(`${SPACE_ACTION}/rename-object`, {
-    input: Schema.Struct({
-      object: EchoObjectSchema,
-      caller: Schema.optional(Schema.String),
-    }),
-    output: Schema.Void,
-  }) {}
+  // TODO(wittjosiah): This appears to be unused.
+  export const DuplicateObject = Operation.make({
+    meta: {
+      key: `${SPACE_OPERATION}/duplicate-object`,
+      name: 'Duplicate Object',
+      description: 'Duplicate an object.',
+    },
+    schema: {
+      input: Schema.Struct({
+        object: EchoObjectSchema,
+        target: Schema.Union(Database.Database, Collection.Collection),
+      }),
+      output: Schema.Void,
+    },
+  });
 
-  export class DuplicateObject extends Schema.TaggedClass<DuplicateObject>()(`${SPACE_ACTION}/duplicate-object`, {
-    input: Schema.Struct({
-      object: EchoObjectSchema,
-      target: Schema.Union(Database.Database, Collection.Collection),
-    }),
-    output: Schema.Void,
-  }) {}
+  /**
+   * Restore a deleted field to a view (inverse of DeleteField).
+   */
+  export const RestoreField = Operation.make({
+    meta: {
+      key: `${SPACE_OPERATION}/restore-field`,
+      name: 'Restore Field',
+      description: 'Restore a deleted field to a view.',
+    },
+    schema: {
+      input: Schema.Struct({
+        view: View.View.annotations({ description: 'The view to restore the field to.' }),
+        field: FieldSchema.annotations({ description: 'The field schema to restore.' }),
+        // TODO(wittjosiah): This creates a type error with PropertySchema.
+        props: Schema.Any.annotations({ description: 'The field properties to restore.' }),
+        index: Schema.Number.annotations({ description: 'The index to restore the field at.' }),
+      }),
+      output: Schema.Void,
+    },
+  });
 
-  export class WaitForObject extends Schema.TaggedClass<WaitForObject>()(`${SPACE_ACTION}/wait-for-object`, {
-    input: Schema.Struct({
-      id: Schema.optional(Schema.String),
-    }),
-    output: Schema.Void,
-  }) {}
-}
-
-export namespace CollectionAction {
-  export class Create extends Schema.TaggedClass<Create>()('dxos.org/plugin/collection/action/create', {
-    input: Schema.Struct({
-      name: Schema.optional(Schema.String),
-    }),
-    output: Schema.Struct({
-      object: Collection.Collection,
-    }),
-  }) {}
+  /**
+   * Restore deleted objects to a space (inverse of RemoveObjects).
+   */
+  export const RestoreObjects = Operation.make({
+    meta: {
+      key: `${SPACE_OPERATION}/restore-objects`,
+      name: 'Restore Objects',
+      description: 'Restore deleted objects to a space.',
+    },
+    schema: {
+      input: Schema.Struct({
+        objects: Schema.Array(EchoObjectSchema).annotations({ description: 'The objects to restore.' }),
+        parentCollection: Collection.Collection.annotations({ description: 'The collection to restore to.' }),
+        indices: Schema.Array(Schema.Number).annotations({ description: 'The indices to restore at.' }),
+        nestedObjectsList: Schema.Array(Schema.Array(EchoObjectSchema)).annotations({
+          description: 'Nested objects to restore.',
+        }),
+        wasActive: Schema.Array(Schema.String).annotations({
+          description: 'IDs of objects that were active before deletion.',
+        }),
+      }),
+      output: Schema.Void,
+    },
+  });
 }

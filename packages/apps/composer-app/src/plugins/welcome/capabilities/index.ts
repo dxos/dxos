@@ -2,10 +2,10 @@
 // Copyright 2025 DXOS.org
 //
 
-import { lazy } from '@dxos/app-framework';
+import { Capability } from '@dxos/app-framework';
 
-export const DefaultContent = lazy(() => import('./default-content'));
-export const Onboarding = lazy(() => import('./onboarding'));
-export const ReactSurface = lazy(() => import('./react-surface'));
+export const DefaultContent = Capability.lazy('DefaultContent', () => import('./default-content'));
+export const Onboarding = Capability.lazy('Onboarding', () => import('./onboarding'));
+export const ReactSurface = Capability.lazy('ReactSurface', () => import('./react-surface'));
 
 export * from './capabilities';

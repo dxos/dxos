@@ -33,7 +33,7 @@ export const PlankError = ({
 }: {
   id: string;
   part: PlankHeadingProps['part'];
-  node?: Node;
+  node?: Node.Node;
   error?: Error;
 }) => {
   const [timedOut, setTimedOut] = useState(false);

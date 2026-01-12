@@ -4,8 +4,8 @@
 
 import React, { useCallback } from 'react';
 
-import { LayoutAction, createIntent } from '@dxos/app-framework';
-import { useIntentDispatcher } from '@dxos/app-framework/react';
+import { Common } from '@dxos/app-framework';
+import { useOperationInvoker } from '@dxos/app-framework/react';
 import { Obj } from '@dxos/echo';
 import { ATTENDABLE_PATH_SEPARATOR } from '@dxos/plugin-deck/types';
 import { Filter, useQuery } from '@dxos/react-client/echo';
@@ -19,21 +19,16 @@ export const MailboxEmpty = ({ mailbox }: { mailbox: Mailbox.Mailbox }) => {
   const db = Obj.getDatabase(mailbox);
   const tokens = useQuery(db, Filter.type(AccessToken.AccessToken));
   const { t } = useTranslation(meta.id);
-  const { dispatchPromise: dispatch } = useIntentDispatcher();
+  const { invokePromise } = useOperationInvoker();
 
   const openSpaceSettings = useCallback(() => {
     if (db) {
-      void dispatch(
-        createIntent(LayoutAction.Open, {
-          part: 'main',
-          subject: [`integrations-settings${ATTENDABLE_PATH_SEPARATOR}${db.spaceId}`],
-          options: {
-            workspace: db.spaceId,
-          },
-        }),
-      );
+      void invokePromise(Common.LayoutOperation.Open, {
+        subject: [`integrations-settings${ATTENDABLE_PATH_SEPARATOR}${db.spaceId}`],
+        workspace: db.spaceId,
+      });
     }
-  }, [db, dispatch]);
+  }, [db, invokePromise]);
 
   // TODO(ZaymonFC): This should be generalised to all tokens that can be used to source messages.
   const gmailToken = tokens.find((t) => t.source.includes('google'));

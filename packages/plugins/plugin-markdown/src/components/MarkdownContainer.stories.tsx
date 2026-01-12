@@ -5,12 +5,13 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useMemo } from 'react';
 
-import { type Capabilities, LayoutAction, createIntent } from '@dxos/app-framework';
-import { Surface, useIntentDispatcher } from '@dxos/app-framework/react';
+import { Common } from '@dxos/app-framework';
+import { Surface, useOperationInvoker } from '@dxos/app-framework/react';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Obj, Query } from '@dxos/echo';
 import { ClientPlugin } from '@dxos/plugin-client';
 import { PreviewPlugin } from '@dxos/plugin-preview';
+import { SpacePlugin } from '@dxos/plugin-space';
 import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
 import { faker } from '@dxos/random';
 import { useQuery, useSpace } from '@dxos/react-client/echo';
@@ -30,7 +31,7 @@ faker.seed(1);
 const generator: ValueGenerator = faker as any;
 
 const DefaultStory = () => {
-  const { dispatchPromise: dispatch } = useIntentDispatcher();
+  const { invokePromise } = useOperationInvoker();
   const space = useSpace();
   const [doc] = useQuery(space?.db, Query.type(Markdown.Document));
   const data = useMemo(() => ({ subject: doc }), [doc]);
@@ -39,14 +40,9 @@ const DefaultStory = () => {
 
   useAsyncEffect(async () => {
     if (space) {
-      await dispatch(
-        createIntent(LayoutAction.SwitchWorkspace, {
-          part: 'workspace',
-          subject: space.id,
-        }),
-      );
+      await invokePromise(Common.LayoutOperation.SwitchWorkspace, { subject: space.id });
     }
-  }, [space, dispatch]);
+  }, [space, invokePromise]);
 
   return (
     <div className='contents' {...attentionAttrs}>
@@ -100,8 +96,8 @@ const meta = {
             await space.db.flush({ indexes: true });
           },
         }),
-
-        // UI
+        ...corePlugins(),
+        SpacePlugin({}),
         StorybookPlugin({}),
         MarkdownPlugin(),
         PreviewPlugin(),
@@ -113,7 +109,7 @@ const meta = {
     controls: { disable: true },
     translations,
   },
-} satisfies Meta<typeof Capabilities>;
+} satisfies Meta<typeof DefaultStory>;
 
 export default meta;
 

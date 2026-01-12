@@ -2,47 +2,48 @@
 // Copyright 2025 DXOS.org
 //
 
+import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
-import { Capabilities, Events } from '../../common';
-import { contributes, defineCapability, defineEvent, defineModule, definePlugin } from '../../core';
-import { type IntentSchema, createResolver } from '../../plugin-intent';
+import * as Operation from '@dxos/operation';
 
-export const Number = defineCapability<number>('dxos.org/test/generator/number');
+import * as Common from '../../common';
+import { ActivationEvent, Capability, Plugin } from '../../core';
+import { OperationResolver } from '../../plugin-operation';
 
-export const CountEvent = defineEvent('dxos.org/test/generator/count');
+export const Number = Capability.make<number>('dxos.org/test/generator/number');
+
+export const CountEvent = ActivationEvent.make('dxos.org/test/generator/count');
 
 export const createPluginId = (id: string) => `dxos.org/test/generator/${id}`;
 
-export const createGeneratorIntent = (id: string) => {
-  class Alert extends Schema.TaggedClass<Alert>()(`${createPluginId(id)}/action/alert`, {
-    input: Schema.Void,
-    output: Schema.Void,
-  }) {}
-
-  return Alert as unknown as IntentSchema<any, any>;
-};
+export const createAlertOperation = (id: string) =>
+  Operation.make({
+    meta: { key: `${createPluginId(id)}/operation/alert`, name: 'Alert' },
+    schema: { input: Schema.Void, output: Schema.Void },
+  });
 
 export const createNumberPlugin = (id: string) => {
   const number = Math.floor(Math.random() * 100);
+  const AlertOperation = createAlertOperation(id);
 
-  return definePlugin({ id, name: `Plugin ${id}` }, () => [
-    defineModule({
-      id: `${id}/main`,
+  return Plugin.define({ id, name: `Plugin ${id}` }).pipe(
+    Plugin.addModule({
+      id: 'Main',
       activatesOn: CountEvent,
-      activate: () => contributes(Number, number),
+      activate: () => Effect.succeed(Capability.contributes(Number, number)),
     }),
-    defineModule({
-      id: `${id}/intent-resolver`,
-      activatesOn: Events.SetupIntentResolver,
+    Common.Plugin.addOperationResolverModule({
       activate: () =>
-        contributes(
-          Capabilities.IntentResolver,
-          createResolver({
-            intent: createGeneratorIntent(id),
-            resolve: () => window.alert(JSON.stringify({ number })),
-          }),
+        Effect.succeed(
+          Capability.contributes(Common.Capability.OperationResolver, [
+            OperationResolver.make({
+              operation: AlertOperation,
+              handler: () => Effect.sync(() => window.alert(JSON.stringify({ number }))),
+            }),
+          ]),
         ),
     }),
-  ]);
+    Plugin.make,
+  )();
 };

@@ -4,12 +4,12 @@
 
 import React, { useCallback, useMemo } from 'react';
 
-import { LayoutAction, createIntent } from '@dxos/app-framework';
-import { type SurfaceComponentProps, useIntentDispatcher } from '@dxos/app-framework/react';
+import { Common } from '@dxos/app-framework';
+import { type SurfaceComponentProps, useOperationInvoker } from '@dxos/app-framework/react';
 import { Obj, Ref } from '@dxos/echo';
 import { Trigger } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
-import { AutomationAction } from '@dxos/plugin-automation/types';
+import { AutomationOperation } from '@dxos/plugin-automation/types';
 import { ATTENDABLE_PATH_SEPARATOR } from '@dxos/plugin-deck/types';
 import { Filter, useQuery } from '@dxos/react-client/echo';
 import { Button, useTranslation } from '@dxos/react-ui';
@@ -19,7 +19,7 @@ import { type Mailbox } from '../../types';
 
 export const MailboxSettings = ({ subject }: SurfaceComponentProps<Mailbox.Mailbox>) => {
   const { t } = useTranslation(meta.id);
-  const { dispatchPromise: dispatch } = useIntentDispatcher();
+  const { invokePromise } = useOperationInvoker();
   const db = useMemo(() => Obj.getDatabase(subject), [subject]);
   const triggers = useQuery(db, Filter.type(Trigger.Trigger));
 
@@ -30,26 +30,19 @@ export const MailboxSettings = ({ subject }: SurfaceComponentProps<Mailbox.Mailb
       (trigger) => trigger.spec?.kind === 'timer' && trigger.input?.mailboxId === subject.id,
     );
     if (syncTrigger) {
-      void dispatch(
-        createIntent(LayoutAction.Open, {
-          part: 'main',
-          subject: [`automation-settings${ATTENDABLE_PATH_SEPARATOR}${db.spaceId}`],
-          options: {
-            workspace: db.spaceId,
-          },
-        }),
-      );
+      void invokePromise(Common.LayoutOperation.Open, {
+        subject: [`automation-settings${ATTENDABLE_PATH_SEPARATOR}${db.spaceId}`],
+        workspace: db.spaceId,
+      });
     } else {
-      void dispatch(
-        createIntent(AutomationAction.CreateTriggerFromTemplate, {
-          db,
-          template: { type: 'timer', cron: '*/5 * * * *' },
-          scriptName: 'Gmail',
-          input: { mailbox: Ref.make(subject) },
-        }),
-      );
+      void invokePromise(AutomationOperation.CreateTriggerFromTemplate, {
+        db,
+        template: { type: 'timer', cron: '*/5 * * * *' },
+        scriptName: 'Gmail',
+        input: { mailbox: Ref.make(subject) },
+      });
     }
-  }, [dispatch, db, subject.id, triggers]);
+  }, [invokePromise, db, subject.id, triggers, subject]);
 
   const handleConfigureSubscription = useCallback(() => {
     invariant(db);
@@ -63,24 +56,17 @@ export const MailboxSettings = ({ subject }: SurfaceComponentProps<Mailbox.Mailb
       return false;
     });
     if (subscriptionTrigger) {
-      void dispatch(
-        createIntent(LayoutAction.Open, {
-          part: 'main',
-          subject: [`automation-settings${ATTENDABLE_PATH_SEPARATOR}${db.spaceId}`],
-          options: {
-            workspace: db.spaceId,
-          },
-        }),
-      );
+      void invokePromise(Common.LayoutOperation.Open, {
+        subject: [`automation-settings${ATTENDABLE_PATH_SEPARATOR}${db.spaceId}`],
+        workspace: db.spaceId,
+      });
     } else {
-      void dispatch(
-        createIntent(AutomationAction.CreateTriggerFromTemplate, {
-          db,
-          template: { type: 'queue', queueDXN: subject.queue.dxn },
-        }),
-      );
+      void invokePromise(AutomationOperation.CreateTriggerFromTemplate, {
+        db,
+        template: { type: 'queue', queueDXN: subject.queue.dxn },
+      });
     }
-  }, [dispatch, db, subject.queue.dxn, triggers]);
+  }, [invokePromise, db, subject.queue.dxn, triggers]);
 
   // TODO(wittjosiah): More than one trigger may be desired, particularly for subscription.
   //   Distinguish between configuring existing triggers and adding new ones.
