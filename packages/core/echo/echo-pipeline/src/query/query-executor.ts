@@ -4,6 +4,7 @@
 
 import type { AutomergeUrl, DocumentId } from '@automerge/automerge-repo';
 import type * as SqlClient from '@effect/sql/SqlClient';
+import * as Match from 'effect/Match';
 import * as Predicate from 'effect/Predicate';
 import * as Runtime from 'effect/Runtime';
 
@@ -421,7 +422,12 @@ export class QueryExecutor extends Resource {
             typenames: [],
             text: {
               query: step.selector.text,
-              kind: 'vector',
+              kind: Match.type<QueryPlan.TextSearchKind>().pipe(
+                Match.withReturnType<'text' | 'vector'>(),
+                Match.when('full-text', () => 'text'),
+                Match.when('vector', () => 'vector'),
+                Match.orElseAbsurd,
+              )(step.selector.searchKind),
             },
           });
           trace.indexHits = +indexHits.length;

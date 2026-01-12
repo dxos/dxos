@@ -236,11 +236,11 @@ const serializeMeta = (meta: ObjectMeta) => {
  */
 export const objectStructureToJson = (objectId: string, structure: ObjectStructure): Obj.JSON => {
   return {
+    ...structure.data,
     id: objectId,
     [ATTR_TYPE]: (ObjectStructure.getTypeReference(structure)?.['/'] ?? '') as DXN.String,
     [ATTR_DELETED]: ObjectStructure.isDeleted(structure),
     [ATTR_RELATION_SOURCE]: ObjectStructure.getRelationSource(structure)?.['/'] as DXN.String | undefined,
     [ATTR_RELATION_TARGET]: ObjectStructure.getRelationTarget(structure)?.['/'] as DXN.String | undefined,
-    ...structure.data,
   };
 };
