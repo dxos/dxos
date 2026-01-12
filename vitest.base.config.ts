@@ -92,6 +92,7 @@ const createBrowserProject = ({ browserName, nodeExternal = false, injectGlobals
           ...(nodeExternal ? [NodeExternalPlugin({ injectGlobals, nodeStd: true })] : []),
         ],
       },
+      exclude: ['@effect/sql-sqlite-wasm', '@effect/wa-sqlite'],
     },
     esbuild: {
       target: 'esnext',
@@ -145,6 +146,7 @@ const createNodeProject = ({ environment = 'node', retry, timeout, setupFiles = 
       fs: {
         allow: [new URL('./vitest', import.meta.url).pathname],
       },
+      
     },
     test: {
       name: 'node',
