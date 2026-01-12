@@ -2,6 +2,7 @@
 $schema: ./cache/schemas/workspace.json
 
 projects:
+  - .
   - docs
   - packages/**/moon.yml
   - tools/*/moon.yml

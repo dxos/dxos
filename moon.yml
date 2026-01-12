@@ -1,0 +1,9 @@
+id: root
+
+tasks:
+  checkPackageCycles:
+    command: 'node ./scripts/check-package-cycles.mjs'
+    inputs:
+      - pnpm-workspace.yaml
+      - '**/package.json'
+    outputs: []
