@@ -35,12 +35,15 @@
     "@radix-ui/react-context": "catalog:"
   },
   "devDependencies": {
+    "@dxos/echo": "workspace:*",
     "@dxos/echo-signals": "workspace:*",
     "@dxos/plugin-client": "workspace:*",
+    "@dxos/plugin-preview": "workspace:*",
     "@dxos/plugin-search": "workspace:*",
     "@dxos/plugin-space": "workspace:*",
     "@dxos/plugin-testing": "workspace:*",
     "@dxos/react-ui": "workspace:*",
+    "@dxos/schema": "workspace:*",
     "@dxos/storybook-utils": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
     "@types/react": "catalog:",
