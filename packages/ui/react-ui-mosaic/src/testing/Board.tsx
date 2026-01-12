@@ -169,14 +169,15 @@ export const Column = forwardRef<HTMLDivElement, ColumnProps>(
 
     return (
       <Mosaic.Tile asChild dragHandle={dragHandleRef.current} object={object} location={location}>
-        <div
-          className={mx(
-            'grid bs-full min-is-[20rem] max-is-[25rem] overflow-hidden',
-            'bg-deckSurface', // TODO(burdon): ???
-            debug && 'grid-rows-[1fr_20rem] gap-2',
-          )}
-        >
-          <Focus.Group ref={forwardedRef} classNames={mx('flex flex-col overflow-hidden', classNames)}>
+        <Focus.Group asChild classNames={mx('flex flex-col overflow-hidden', classNames)}>
+          <div
+            className={mx(
+              'grid bs-full min-is-[20rem] max-is-[25rem] overflow-hidden',
+              'bg-deckSurface',
+              debug && 'grid-rows-[1fr_20rem] gap-2',
+            )}
+            ref={forwardedRef}
+          >
             <Card.Toolbar>
               <Card.DragHandle ref={dragHandleRef} />
               <Card.Heading>{id}</Card.Heading>
@@ -193,10 +194,9 @@ export const Column = forwardRef<HTMLDivElement, ColumnProps>(
               <ItemList items={items.map((item: any) => item.target).filter(isTruthy)} menuItems={menuItems} />
             </Mosaic.Container>
             <div className='grow flex p-1 justify-center text-xs'>{items.length}</div>
-          </Focus.Group>
-
-          <DebugInfo />
-        </div>
+            <DebugInfo />
+          </div>
+        </Focus.Group>
       </Mosaic.Tile>
     );
   },
