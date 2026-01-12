@@ -12,7 +12,7 @@ import { SpaceId } from '@dxos/keys';
 export const IndexCursor = Schema.Struct({
   /**
    * Name of the index owning this cursor.
-   */ 
+   */
   indexName: Schema.String,
   /**
    * Space id.
