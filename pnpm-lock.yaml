@@ -2661,9 +2661,6 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
-      '@effect/sql-sqlite-wasm':
-        specifier: 'catalog:'
-        version: 0.45.1(@effect/experimental@0.57.11(effect@3.19.11)(ioredis@5.3.2))(@effect/sql@0.48.6(@effect/experimental@0.57.11(effect@3.19.11)(ioredis@5.3.2))(effect@3.19.11))(effect@3.19.11)
       '@fontsource/poiret-one':
         specifier: 'catalog:'
         version: 5.2.8
@@ -20942,9 +20939,6 @@ packages:
     peerDependencies:
       react: ~19.2.3
 
-  '@dxos/wa-sqlite@0.2.1':
-    resolution: {integrity: sha512-RVktTCzwJ1ix1MP/LWDjpO1HOOP0JpnAtjB/Zp/csbrlBEhhYYpwIlgDJzCi1Ri4cWHOo04iy+YtlnjfshM1Zw==}
-
   '@dxos/debug@0.8.3':
     resolution: {integrity: sha512-sDsOvwejoVKdLPpBK3yd4RAX8/sZf3C4ZtmmSJm9rmb8kv6NcyJgiPYZZFOJIArEL6Xm4Z9aHfDhOjrK8p4YtQ==}
 
@@ -20962,6 +20956,9 @@ packages:
 
   '@dxos/util@0.8.3':
     resolution: {integrity: sha512-g59XyzcFcNx31+Hw/lyWeJaHpWN9qbERlnAeFrcX1Ck0rYKacyiBWLKM7Z7ghXH0xr8eNUCHeGqk7GS+zAuH+g==}
+
+  '@dxos/wa-sqlite@0.2.1':
+    resolution: {integrity: sha512-RVktTCzwJ1ix1MP/LWDjpO1HOOP0JpnAtjB/Zp/csbrlBEhhYYpwIlgDJzCi1Ri4cWHOo04iy+YtlnjfshM1Zw==}
 
   '@effect-atom/atom-react@0.4.4':
     resolution: {integrity: sha512-EWT9WpB67GNCecxQXJdAZNVMhuk3VxpdDfojxg1wOgWmR5TPaGiXA74Jqa2Y9AEjSB0hMMAk7RNve2CoIikg2w==}
@@ -41031,8 +41028,6 @@ snapshots:
       react: 19.2.3
       tslib: 2.8.1
 
-  '@dxos/wa-sqlite@0.2.1': {}
-
   '@dxos/debug@0.8.3':
     dependencies:
       '@dxos/node-std': 0.8.3
@@ -41072,6 +41067,8 @@ snapshots:
       '@dxos/node-std': 0.8.3
       lodash.get: 4.4.2
       lodash.set: 4.3.2
+
+  '@dxos/wa-sqlite@0.2.1': {}
 
   '@effect-atom/atom-react@0.4.4(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/platform@0.93.6(effect@3.19.11))(@effect/rpc@0.72.2(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11))(effect@3.19.11)(react@19.2.3)(scheduler@0.27.0)':
     dependencies:
