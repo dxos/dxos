@@ -4,6 +4,7 @@ use super::SpotlightPlatform;
 use tauri::WebviewWindow;
 
 /// Default platform implementation that works on all platforms.
+#[allow(dead_code)]
 pub struct DefaultPlatform;
 
 impl SpotlightPlatform for DefaultPlatform {
