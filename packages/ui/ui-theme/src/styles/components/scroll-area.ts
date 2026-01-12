@@ -9,10 +9,10 @@ import { mx } from '../../util';
 export type ScrollAreaStyleProps = {};
 
 export const scrollAreaRoot: ComponentFunction<ScrollAreaStyleProps> = (_props, ...etc) =>
-  mx('overflow-hidden', ...etc);
+  mx('__is-full __bs-full overflow-hidden', ...etc);
 
 export const scrollAreaViewport: ComponentFunction<ScrollAreaStyleProps> = (_props, ...etc) =>
-  mx('is-full bs-full [&>div]:table-fixed [&>div]:is-full', ...etc);
+  mx('is-full bs-full [&>div]:is-full [&>div]:bs-full', ...etc);
 
 export const scrollAreaScrollbar: ComponentFunction<ScrollAreaStyleProps> = (_props, ...etc) =>
   mx(

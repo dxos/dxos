@@ -4,11 +4,11 @@
 
 import { useComposedRefs } from '@radix-ui/react-compose-refs';
 import * as Schema from 'effect/Schema';
-import React, { Fragment, forwardRef, useMemo, useRef } from 'react';
+import React, { forwardRef, useMemo, useRef } from 'react';
 
 import { Obj, Ref, Type } from '@dxos/echo';
 import { ObjectId } from '@dxos/keys';
-import { ScrollArea, type SlottableClassName, Tag, type ThemedClassName } from '@dxos/react-ui';
+import { Tag, type ThemedClassName } from '@dxos/react-ui';
 import { Json } from '@dxos/react-ui-syntax-highlighter';
 import { getHashStyles, mx } from '@dxos/ui-theme';
 import { isTruthy } from '@dxos/util';
@@ -23,9 +23,8 @@ import {
   mosaicStyles,
   useContainerDebug,
   useMosaic,
-  useMosaicContainer,
 } from '../components';
-import { useEventHandlerAdapter, useVisibleItems } from '../hooks';
+import { useEventHandlerAdapter } from '../hooks';
 
 //
 // Test Data
@@ -60,7 +59,7 @@ export interface TestColumn extends Schema.Schema.Type<typeof TestColumn> {}
 // Board
 //
 
-type BoardProps = { id: string } & ColumnListProps;
+type BoardProps = { id: string; columns: TestColumn[]; debug?: boolean };
 
 export const Board = forwardRef<HTMLDivElement, BoardProps>(({ id, columns, debug }, forwardedRef) => {
   const [DebugInfo, debugHandler] = useContainerDebug(debug);
@@ -77,7 +76,7 @@ export const Board = forwardRef<HTMLDivElement, BoardProps>(({ id, columns, debu
   return (
     <div
       role='none'
-      className={mx('p-2 bs-full is-full grid overflow-hidden', debug && 'grid-cols-[1fr_20rem] gap-2')}
+      className={mx('p-2 grid bs-full is-full overflow-hidden', debug && 'grid-cols-[1fr_20rem] gap-2')}
       ref={forwardedRef}
     >
       <Focus.Group asChild axis='horizontal'>
@@ -89,45 +88,22 @@ export const Board = forwardRef<HTMLDivElement, BoardProps>(({ id, columns, debu
           debug={debugHandler}
           eventHandler={eventHandler}
         >
-          <ColumnList columns={columns} debug={debug} />
+          <div role='none' className='overflow-x-auto'>
+            {/* <ScrollArea.Root>
+            <ScrollArea.Viewport> */}
+            <Mosaic.Stack axis='horizontal' className='bs-full plb-2' items={columns} Component={Column} />
+            {/* </ScrollArea.Viewport>
+            <ScrollArea.Scrollbar orientation='horizontal'>
+              <ScrollArea.Thumb />
+            </ScrollArea.Scrollbar>
+          </ScrollArea.Root> */}
+          </div>
         </Mosaic.Container>
       </Focus.Group>
       <DebugInfo />
     </div>
   );
 });
-
-//
-// ColumnList
-//
-
-type ColumnListProps = SlottableClassName<{ columns: TestColumn[]; debug?: boolean }>;
-
-const ColumnList = forwardRef<HTMLDivElement, ColumnListProps>(
-  ({ className, classNames, columns, debug, ...props }, forwardedRef) => {
-    const { id, dragging } = useMosaicContainer(ColumnList.displayName!);
-    const visibleColumns = useVisibleItems({ id, items: columns, dragging: dragging?.source.data });
-
-    return (
-      <div
-        {...props}
-        role='list'
-        className={mx('flex bs-full plb-2 overflow-x-auto', className, classNames)}
-        ref={forwardedRef}
-      >
-        <Placeholder axis='horizontal' location={0.5} />
-        {visibleColumns.map((column, index) => (
-          <Fragment key={column.id}>
-            <Column object={column} location={index + 1} debug={debug} />
-            <Placeholder axis='horizontal' location={index + 1.5} />
-          </Fragment>
-        ))}
-      </div>
-    );
-  },
-);
-
-ColumnList.displayName = 'ColumnList';
 
 //
 // Column
@@ -152,6 +128,7 @@ export const Column = forwardRef<HTMLDivElement, ColumnProps>(
       make: (object) => Ref.make(object),
     });
 
+    // TODO(burdon): Context.
     const menuItems = useMemo<CardMenuProps<TestItem>['items']>(
       () => [
         {
@@ -169,12 +146,12 @@ export const Column = forwardRef<HTMLDivElement, ColumnProps>(
 
     return (
       <Mosaic.Tile asChild dragHandle={dragHandleRef.current} object={object} location={location}>
-        <Focus.Group asChild classNames={mx('flex flex-col overflow-hidden', classNames)}>
+        <Focus.Group asChild>
           <div
             className={mx(
-              'grid bs-full min-is-[20rem] max-is-[25rem] overflow-hidden',
-              'bg-deckSurface',
-              debug && 'grid-rows-[1fr_20rem] gap-2',
+              'grid bs-full min-is-[20rem] max-is-[25rem] overflow-hidden bg-deckSurface',
+              debug ? 'grid-rows-[min-content_1fr_20rem]' : 'grid-rows-[min-content_1fr_min-content]',
+              classNames,
             )}
             ref={forwardedRef}
           >
@@ -183,6 +160,9 @@ export const Column = forwardRef<HTMLDivElement, ColumnProps>(
               <Card.Heading>{id}</Card.Heading>
               <Card.Menu items={[]} />
             </Card.Toolbar>
+            {/* <ScrollArea.Expander> */}
+            {/* <ScrollArea.Root>
+              <ScrollArea.Viewport> */}
             <Mosaic.Container
               asChild
               axis='vertical'
@@ -191,10 +171,25 @@ export const Column = forwardRef<HTMLDivElement, ColumnProps>(
               debug={debugHandler}
               eventHandler={eventHandler}
             >
-              <ItemList items={items.map((item: any) => item.target).filter(isTruthy)} menuItems={menuItems} />
+              <div role='none' className='overflow-y-auto'>
+                <Mosaic.Stack
+                  axis='vertical'
+                  className='pli-2'
+                  items={items.map((item: any) => item.target).filter(isTruthy)}
+                  Component={Tile}
+                />
+              </div>
             </Mosaic.Container>
-            <div className='grow flex p-1 justify-center text-xs'>{items.length}</div>
-            <DebugInfo />
+            {/* </ScrollArea.Viewport>
+              <ScrollArea.Scrollbar orientation='vertical'>
+                <ScrollArea.Thumb />
+              </ScrollArea.Scrollbar>
+            </ScrollArea.Root> */}
+            {/* </ScrollArea.Expander> */}
+            <div>
+              <div className='grow flex p-1 justify-center text-xs'>{items.length}</div>
+              <DebugInfo />
+            </div>
           </div>
         </Focus.Group>
       </Mosaic.Tile>
@@ -203,37 +198,6 @@ export const Column = forwardRef<HTMLDivElement, ColumnProps>(
 );
 
 Column.displayName = 'Column';
-
-//
-// ItemList
-//
-
-type ItemListProps = { items: TestItem[] } & Pick<TileProps, 'menuItems'>;
-
-const ItemList = forwardRef<HTMLDivElement, ItemListProps>(({ items, menuItems, ...props }, forwardedRef) => {
-  const { id, dragging } = useMosaicContainer(ItemList.displayName!);
-  const visibleItems = useVisibleItems({ id, items, dragging: dragging?.source.data });
-
-  // TODO(burdon): WARNING: Auto scrolling has been attached to an element that appears not to be scrollable.
-  return (
-    <ScrollArea.Root {...props}>
-      <ScrollArea.Viewport classNames='pli-3' ref={forwardedRef}>
-        <Placeholder axis='vertical' location={0.5} />
-        {visibleItems.map((item, index) => (
-          <Fragment key={item.id}>
-            <Tile object={item} location={index + 1} menuItems={menuItems} />
-            <Placeholder axis='vertical' location={index + 1.5} />
-          </Fragment>
-        ))}
-      </ScrollArea.Viewport>
-      <ScrollArea.Scrollbar orientation='vertical'>
-        <ScrollArea.Thumb />
-      </ScrollArea.Scrollbar>
-    </ScrollArea.Root>
-  );
-});
-
-ItemList.displayName = 'Container';
 
 //
 // Tile

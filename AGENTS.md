@@ -23,8 +23,6 @@
 
 - Use TypeScript with single quotes for strings.
 - Prefer functional programming and arrow functions.
-- Use inline type imports: `import { type Foo } from 'bar'`.
-- Format: max line 120 chars, trailing commas, JSX single quotes.
 - Import order: builtin → external → @dxos → internal → parent → sibling (with blank lines between groups).
 - Error handling: use Effect-TS patterns.
 - Testing: place tests near modules as `module.test.ts`, use vitest with `describe`/`test` (not `it`), prefer `test('foo', ({ expect }) => ...)`.

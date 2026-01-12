@@ -85,6 +85,14 @@ const meta = {
   parameters: {
     layout: 'fullscreen',
   },
+  argTypes: {
+    columns: {
+      control: 'number',
+    },
+    debug: {
+      control: 'boolean',
+    },
+  },
 } satisfies Meta<typeof DefaultStory>;
 
 export default meta;
@@ -93,7 +101,6 @@ type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
   args: {
-    debug: true,
     columns: 3,
   },
 };
