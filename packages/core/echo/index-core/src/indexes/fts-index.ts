@@ -37,7 +37,7 @@ export class FtsIndex implements Index {
     return Effect.gen(function* () {
       const sql = yield* SqlClient.SqlClient;
       // TODO: Join metadata table here.
-      return yield* sql<FtsResult>`SELECT rowid, * FROM ftsIndex WHERE ftsIndex MATCH ${query} LIMIT 10`;
+      return yield* sql<FtsResult>`SELECT rowid, * FROM ftsIndex WHERE ftsIndex MATCH ${query}`;
     });
   }
 
