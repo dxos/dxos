@@ -140,47 +140,39 @@ export class IndexEngine {
   ): Effect.Effect<{ updated: number; done: boolean }, SqlError.SqlError, SqlClient.SqlClient> {
     return Effect.gen(this, function* () {
       const sql = yield* SqlClient.SqlClient;
-      yield* sql`BEGIN TRANSACTION`;
-
-      const cursors = yield* this.#tracker.queryCursors({
-        indexName: opts.indexName,
-        sourceName: source.sourceName,
-        spaceId: opts.spaceId,
-      });
-      const { objects, cursors: updatedCursors } = yield* source.getChangedObjects(cursors, { limit: opts.limit });
-      if (objects.length === 0) {
-        return { updated: 0, done: true };
-      }
-
-      // Ensure objects exist in ObjectMetaIndex.
-      yield* this.#objectMetaIndex.update(objects);
-
-      // Look up recordIds for the objects.
-      yield* this.#objectMetaIndex.lookupRecordIds(objects);
-
-      yield* index.update(objects);
-      yield* this.#tracker.updateCursors(
-        updatedCursors.map(
-          (_): IndexCursor => ({
-            indexName: opts.indexName,
-            spaceId: opts.spaceId,
-            sourceName: source.sourceName,
-            resourceId: _.resourceId,
-            cursor: _.cursor,
-          }),
-        ),
-      );
-
-      yield* sql`COMMIT`;
-      return { updated: objects.length, done: false };
-    }).pipe(
-      Effect.withSpan('IndexEngine.#updateDependentIndex'),
-      Effect.tapDefect(() =>
+      return yield* sql.withTransaction(
         Effect.gen(this, function* () {
-          const sql = yield* SqlClient.SqlClient;
-          yield* sql`ROLLBACK`;
+          const cursors = yield* this.#tracker.queryCursors({
+            indexName: opts.indexName,
+            sourceName: source.sourceName,
+            spaceId: opts.spaceId,
+          });
+          const { objects, cursors: updatedCursors } = yield* source.getChangedObjects(cursors, { limit: opts.limit });
+          if (objects.length === 0) {
+            return { updated: 0, done: true };
+          }
+
+          // Ensure objects exist in ObjectMetaIndex.
+          yield* this.#objectMetaIndex.update(objects);
+
+          // Look up recordIds for the objects.
+          yield* this.#objectMetaIndex.lookupRecordIds(objects);
+
+          yield* index.update(objects);
+          yield* this.#tracker.updateCursors(
+            updatedCursors.map(
+              (_): IndexCursor => ({
+                indexName: opts.indexName,
+                spaceId: opts.spaceId,
+                sourceName: source.sourceName,
+                resourceId: _.resourceId,
+                cursor: _.cursor,
+              }),
+            ),
+          );
+          return { updated: objects.length, done: false };
         }),
-      ),
-    );
+      );
+    }).pipe(Effect.withSpan('IndexEngine.#updateDependentIndex'));
   }
 }
