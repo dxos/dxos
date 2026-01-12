@@ -11,11 +11,11 @@ impl SpotlightPlatform for DefaultPlatform {
         // No platform-specific configuration in default implementation.
     }
 
-    fn show(&self, window: &WebviewWindow) {
+    fn show(&self, _window: &WebviewWindow) {
         #[cfg(not(any(target_os = "android", target_os = "ios")))]
         {
-            let _ = window.show();
-            let _ = window.set_focus();
+            let _ = _window.show();
+            let _ = _window.set_focus();
         }
     }
 

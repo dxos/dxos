@@ -6,51 +6,55 @@ mod oauth;
 mod spotlight;
 
 use oauth::OAuthServerState;
-use spotlight::{toggle_spotlight, SpotlightConfig, SpotlightState};
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
-    let mut builder = tauri::Builder::default();
+    let builder = tauri::Builder::default();
 
     // Only include updater plugin for non-mobile targets.
     #[cfg(not(any(target_os = "android", target_os = "ios")))]
-    {
-        builder = builder
-            .plugin(tauri_plugin_updater::Builder::new().build())
-            .plugin(tauri_plugin_process::init())
-    }
-
-    // Spotlight configuration and state.
-    let spotlight_config = SpotlightConfig::default();
-    let spotlight_state = Arc::new(SpotlightState::new());
-
-    builder
-        .plugin(tauri_plugin_os::init())
-        .plugin(tauri_plugin_shell::init());
+    let builder = builder
+        .plugin(tauri_plugin_updater::Builder::new().build())
+        .plugin(tauri_plugin_process::init());
 
     // Only include global shortcut plugin for desktop targets.
-    #[cfg(not(any(target_os = "android", target_os = "ios")))]
-    {
-        use tauri_plugin_global_shortcut::ShortcutState;
+    let builder = {
+        let builder = builder
+            .plugin(tauri_plugin_os::init())
+            .plugin(tauri_plugin_shell::init());
 
-        // Clone for use in shortcut handler.
-        let config_for_shortcut = spotlight_config.clone();
-        let state_for_shortcut = spotlight_state.clone();
+        #[cfg(not(any(target_os = "android", target_os = "ios")))]
+        {
+            use tauri_plugin_global_shortcut::ShortcutState;
+            use spotlight::{toggle_spotlight, SpotlightConfig, SpotlightState};
 
-        builder = builder.plugin(
-            tauri_plugin_global_shortcut::Builder::new()
-                .with_shortcuts([spotlight_config.shortcut.as_str()])
-                .unwrap()
-                .with_handler(move |app, _shortcut, event| {
-                    if event.state == ShortcutState::Pressed {
-                        if let Err(e) = toggle_spotlight(app, &config_for_shortcut, state_for_shortcut.clone()) {
-                            eprintln!("Error toggling spotlight: {}", e);
+            // Spotlight configuration and state.
+            let spotlight_config = SpotlightConfig::default();
+            let spotlight_state = Arc::new(SpotlightState::new());
+
+            // Clone for use in shortcut handler.
+            let config_for_shortcut = spotlight_config.clone();
+            let state_for_shortcut = spotlight_state.clone();
+
+            builder.plugin(
+                tauri_plugin_global_shortcut::Builder::new()
+                    .with_shortcuts([spotlight_config.shortcut.as_str()])
+                    .unwrap()
+                    .with_handler(move |app, _shortcut, event| {
+                        if event.state == ShortcutState::Pressed {
+                            if let Err(e) = toggle_spotlight(app, &config_for_shortcut, state_for_shortcut.clone()) {
+                                eprintln!("Error toggling spotlight: {}", e);
+                            }
                         }
-                    }
-                })
-                .build(),
-        );
-    }
+                    })
+                    .build(),
+            )
+        }
+        #[cfg(any(target_os = "android", target_os = "ios"))]
+        {
+            builder
+        }
+    };
 
     builder
         .manage(OAuthServerState::new())

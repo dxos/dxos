@@ -2,9 +2,13 @@
 
 use std::sync::Arc;
 
+#[cfg(not(any(target_os = "android", target_os = "ios")))]
 use tauri::{AppHandle, Manager, WebviewUrl, WebviewWindow, WebviewWindowBuilder, WindowEvent};
+#[cfg(any(target_os = "android", target_os = "ios"))]
+use tauri::{AppHandle, WebviewWindow};
 
 use super::config::SpotlightConfig;
+#[cfg(not(any(target_os = "android", target_os = "ios")))]
 use super::platform::get_platform;
 use super::state::SpotlightState;
 
@@ -20,7 +24,8 @@ fn create_spotlight_window(
     config: &SpotlightConfig,
     state: Arc<SpotlightState>,
 ) -> Result<WebviewWindow, tauri::Error> {
-    let mut builder = WebviewWindowBuilder::new(app, &config.label, WebviewUrl::App("/".into()))
+    let window = WebviewWindowBuilder::new(app, &config.label, WebviewUrl::App("/".into()))
+        .title(&config.title)
         .inner_size(1.0, 1.0)
         .resizable(true) // Must be true for programmatic resize.
         .decorations(false)
@@ -28,15 +33,8 @@ fn create_spotlight_window(
         .always_on_top(true)
         .visible(true)
         .skip_taskbar(true)
-        .position(0.0, 0.0);
-    
-    // title() method is only available on desktop platforms
-    #[cfg(not(any(target_os = "android", target_os = "ios")))]
-    {
-        builder = builder.title(&config.title);
-    }
-    
-    let window = builder.build()?;
+        .position(0.0, 0.0)
+        .build()?;
 
     // Apply platform-specific configuration.
     let platform = get_platform();
