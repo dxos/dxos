@@ -43,6 +43,15 @@ const extractReferences = (data: Record<string, unknown>): { path: string[]; tar
 export const ReverseRef = Schema.Struct({
   recordId: Schema.Number,
   targetDxn: Schema.String,
+  /**
+   * Escaped property path within an object.
+   *
+   * Escaping rules:
+   *
+   * - '.' -> '\.'
+   * - '\' -> '\\'
+   * - contact with .
+   */
   propPath: Schema.String,
 });
 export interface ReverseRef extends Schema.Schema.Type<typeof ReverseRef> {}
@@ -100,7 +109,7 @@ export class ReverseRefIndex implements Index {
               yield* sql`DELETE FROM reverseRef WHERE recordId = ${recordId}`;
 
               // Extract references from data.
-              const refs = extractReferences(data as Record<string, unknown>);
+              const refs = extractReferences(data as unknown as Record<string, unknown>);
 
               // Insert new references.
               yield* Effect.forEach(
