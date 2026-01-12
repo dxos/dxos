@@ -27,7 +27,7 @@ export const Home = ({ classNames }: HomeProps) => {
   });
 
   return (
-    <div className={mx('flex flex-col', classNames)}>
+    <div className={mx('flex flex-col pli-3', classNames)}>
       {/* <div className='container-max-width'>{t('workspaces heading')}</div> */}
       <SearchList.Root onSearch={handleSearch} classNames='container-max-width'>
         <div className='plb-3'>

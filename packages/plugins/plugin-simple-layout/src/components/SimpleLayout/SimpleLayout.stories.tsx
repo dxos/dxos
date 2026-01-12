@@ -7,9 +7,11 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import { Capability, Common, Plugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { ClientPlugin } from '@dxos/plugin-client';
+import { SearchPlugin } from '@dxos/plugin-search';
 import { SpacePlugin } from '@dxos/plugin-space';
 import { corePlugins } from '@dxos/plugin-testing';
 import { withTheme } from '@dxos/react-ui/testing';
+import { translations as searchTranslation } from '@dxos/react-ui-searchlist';
 
 import { OperationResolver, type SimpleLayoutStateOptions, State } from '../../capabilities';
 import { meta as pluginMeta } from '../../meta';
@@ -41,6 +43,7 @@ const createPluginManager = ({ isPopover }: { isPopover: boolean }) => {
         },
       }),
       SpacePlugin({}),
+      SearchPlugin(),
       TestPlugin({ isPopover }),
     ],
   });
@@ -51,7 +54,7 @@ const meta = {
   component: SimpleLayout,
   parameters: {
     layout: 'fullscreen',
-    translations,
+    translations: [...translations, ...searchTranslation],
   },
 } satisfies Meta<typeof SimpleLayout>;
 

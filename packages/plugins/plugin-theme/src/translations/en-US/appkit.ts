@@ -2,10 +2,9 @@
 // Copyright 2022 DXOS.org
 //
 
-// TODO(burdon): Options object?
 // TODO(wittjosiah): Change name. Merge w/ os?
 export const appkit = (appName?: string) => ({
-  'current app name': appName ?? 'This app',
+  'current app name': appName ?? 'Test App',
   'loading translations': 'Loading translations…',
   'generic loading label': 'Loading…',
   'auth choices label': 'Choose an identity',
