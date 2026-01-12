@@ -94,6 +94,7 @@
   "devDependencies": {
     "@dxos/echo-signals": "workspace:*",
     "@dxos/lit-ui": "workspace:*",
+    "@dxos/plugin-search": "workspace:*",
     "@dxos/random": "workspace:*",
     "@dxos/react-client": "workspace:*",
     "@dxos/react-ui": "workspace:*",

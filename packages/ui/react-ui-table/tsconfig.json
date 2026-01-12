@@ -54,6 +54,9 @@
       "path": "../../core/echo/live-object"
     },
     {
+      "path": "../../plugins/plugin-search"
+    },
+    {
       "path": "../../sdk/react-client"
     },
     {
