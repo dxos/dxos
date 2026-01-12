@@ -16,6 +16,7 @@ import * as Stream from 'effect/Stream';
 import * as WaSqlite from '@effect/wa-sqlite';
 import { SQLITE_OPEN_CREATE, SQLITE_OPEN_READWRITE } from '@effect/wa-sqlite';
 import SQLiteAsyncESMFactory from '@effect/wa-sqlite/dist/wa-sqlite-async.mjs';
+// @ts-expect-error
 import { IDBBatchAtomicVFS } from '@effect/wa-sqlite/src/examples/IDBBatchAtomicVFS.js';
 
 //
@@ -26,8 +27,6 @@ const TEST_VFS_NAME = 'idbbatchvfs';
 
 // Resolve WASM URL explicitly for Vite compatibility.
 const wasmUrl = new URL('@effect/wa-sqlite/dist/wa-sqlite-async.wasm', import.meta.url).href;
-
-
 
 const ATTR_DB_SYSTEM_NAME = 'db.system.name';
 
@@ -66,15 +65,15 @@ export const makeIdb = (
       : undefined;
 
     const makeConnection = Effect.gen(function* () {
-      const factory = yield*  Effect.promise(() =>
+      const factory = yield* Effect.promise(() =>
         SQLiteAsyncESMFactory({
           locateFile: (path: string) => (path.endsWith('.wasm') ? wasmUrl : path),
         }),
       );
-    const sqlite3 = WaSqlite.Factory(factory)
+      const sqlite3 = WaSqlite.Factory(factory);
 
-        const vfs = yield* Effect.promise(() => IDBBatchAtomicVFS.create(TEST_VFS_NAME, factory));
-        console.log({ reg: sqlite3.vfs_register(vfs as any, false) });
+      const vfs = yield* Effect.promise(() => IDBBatchAtomicVFS.create(TEST_VFS_NAME, factory));
+      console.log({ reg: sqlite3.vfs_register(vfs as any, false) });
       // }
       const db = yield* Effect.acquireRelease(
         Effect.try({
@@ -195,12 +194,12 @@ export const makeIdb = (
     );
   });
 
-const TestLayer = 
-  Layer.scoped(SqlClient.SqlClient,
-    makeIdb({
-        dbName: 'testing',
-      }),
-    ).pipe(Layer.provideMerge(Reactivity.layer));
+const TestLayer = Layer.scoped(
+  SqlClient.SqlClient,
+  makeIdb({
+    dbName: 'testing',
+  }),
+).pipe(Layer.provideMerge(Reactivity.layer));
 
 describe('effect SQLite with IDBBatchAtomicVFS', () => {
   it.effect(

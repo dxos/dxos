@@ -381,6 +381,9 @@ export class QueryExecutor extends Resource {
       }
 
       case 'TextSelector': {
+        // TODO(dmaretskyi): ranking https://sqlite.org/fts5.html#the_bm25_function
+        // TODO(dmaretskyi): type + FTS queries would be very common so we should support those, maybe chunk the fts index
+        // TODO(dmaretskyi): nice to have matched text snippets/highlighting
         if (step.selector.searchKind === 'full-text' && this._indexer2 && this._runtime) {
           // Use indexer2 for full-text search.
           const beginIndexQuery = performance.now();

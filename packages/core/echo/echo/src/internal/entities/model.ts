@@ -105,6 +105,11 @@ export interface ObjectJSON {
   [ATTR_META]?: ObjectMetaJSON;
   [ATTR_RELATION_SOURCE]?: DXN.String;
   [ATTR_RELATION_TARGET]?: DXN.String;
+
+  /**
+   * Application-specific properties.
+   */
+  [key: string]: unknown;
 }
 
 /**

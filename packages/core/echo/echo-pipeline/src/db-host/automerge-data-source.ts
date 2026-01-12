@@ -8,7 +8,13 @@ import * as Effect from 'effect/Effect';
 
 import { Context } from '@dxos/context';
 import { type Obj } from '@dxos/echo';
-import { ATTR_DELETED, ATTR_RELATION_SOURCE, ATTR_RELATION_TARGET, ATTR_TYPE } from '@dxos/echo/internal';
+import {
+  ATTR_DELETED,
+  ATTR_RELATION_SOURCE,
+  ATTR_RELATION_TARGET,
+  ATTR_TYPE,
+  objectStructureToJson,
+} from '@dxos/echo/internal';
 import { DatabaseDirectory, ObjectStructure, SpaceDocVersion } from '@dxos/echo-protocol';
 import { type DataSourceCursor, type IndexDataSource, type IndexerObject } from '@dxos/index-core';
 import { type IndexCursor } from '@dxos/index-core';
@@ -44,20 +50,6 @@ const hasChanged = (cursor: string | undefined, currentHeads: Heads): boolean =>
     return true; // New document.
   }
   return cursor !== headsCodec.encode(currentHeads);
-};
-
-/**
- * Convert ObjectStructure to JSON data for indexing.
- */
-const objectStructureToJson = (objectId: string, structure: ObjectStructure): Obj.JSON & Record<string, any> => {
-  return {
-    id: objectId,
-    [ATTR_TYPE]: (ObjectStructure.getTypeReference(structure)?.['/'] ?? '') as DXN.String,
-    [ATTR_DELETED]: ObjectStructure.isDeleted(structure),
-    [ATTR_RELATION_SOURCE]: ObjectStructure.getRelationSource(structure)?.['/'] as DXN.String | undefined,
-    [ATTR_RELATION_TARGET]: ObjectStructure.getRelationTarget(structure)?.['/'] as DXN.String | undefined,
-    ...structure.data,
-  };
 };
 
 /**

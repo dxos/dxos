@@ -7,17 +7,7 @@ import type * as SqlError from '@effect/sql/SqlError';
 import type * as Effect from 'effect/Effect';
 
 import type { ObjectId, SpaceId } from '@dxos/keys';
-
-/**
- * JSON data for objects being indexed.
- * Uses plain string types since JSON data doesn't have branded types.
- */
-export interface IndexerObjectData {
-  /** Object identifier. */
-  id: string;
-  /** Additional properties (type attributes, user data, etc.). */
-  [key: string]: unknown;
-}
+import type { Obj } from '@dxos/echo';
 
 /**
  * Data describing objects returned from sources to the indexer.
@@ -45,10 +35,19 @@ export interface IndexerObject {
   /**
    * JSON data of the object.
    */
-  data: IndexerObjectData;
+  data: Obj.JSON;
 }
 
 export interface Index {
+  /**
+   * Runs necessary migrations to the index before it is usable.
+   * Idempotent.
+   */
   migrate: () => Effect.Effect<void, SqlError.SqlError, SqlClient.SqlClient>;
+
+  /**
+   * Updates the index with the given objects.
+   * Idempotent.
+   */
   update: (objects: IndexerObject[]) => Effect.Effect<void, SqlError.SqlError, SqlClient.SqlClient>;
 }
