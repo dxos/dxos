@@ -162,6 +162,9 @@ export class LocalClientServices implements ClientServicesProvider {
     const { setIdentityTags } = await import('@dxos/messaging');
 
     // Create SQLite runtime layer.
+    // TODO(mykola): Worker and runtime leak if _host.open() fails below.
+    //   If _host.open() throws, _isOpen remains false, and close() returns early without
+    //   cleaning up _opfsWorker and _runtime. Consider wrapping in try/catch to clean up on failure.
     let sqliteLayer;
     if (this._createOpfsWorker) {
       this._opfsWorker = this._createOpfsWorker();
