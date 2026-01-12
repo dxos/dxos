@@ -38,6 +38,9 @@ export interface IndexerObject {
   data: Obj.JSON;
 }
 
+/**
+ * SQLite-based index for storing and querying object data.
+ */
 export interface Index {
   /**
    * Runs necessary migrations to the index before it is usable.
