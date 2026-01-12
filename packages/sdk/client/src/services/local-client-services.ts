@@ -164,9 +164,8 @@ export class LocalClientServices implements ClientServicesProvider {
     // Create SQLite runtime layer.
     let sqliteLayer;
     if (this._createOpfsWorker) {
-      sqliteLayer = SqliteClient.layer({
-        worker: Effect.sync(this._createOpfsWorker),
-      });
+      this._opfsWorker = this._createOpfsWorker();
+      sqliteLayer = SqliteClient.layer({ worker: Effect.succeed(this._opfsWorker) });
     } else {
       // Fallback to in-memory SQLite.
       sqliteLayer = SqliteClient.layerMemory({});
