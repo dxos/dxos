@@ -44,7 +44,7 @@ describe('wa-sqlite with IDBBatchAtomicVFS', () => {
     await deleteDatabase(TEST_VFS_NAME).catch(() => {});
   });
 
-  test.only('basic CRUD operations', async () => {
+  test('basic CRUD operations', async () => {
     // Initialize async WASM module.
     console.log(1);
     const module = await SQLiteAsyncESMFactory({
