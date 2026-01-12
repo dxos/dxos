@@ -118,25 +118,32 @@ export class IndexEngine {
     return this.#objectMetaIndex.query(query);
   }
 
-  update(dataSource: IndexDataSource, opts: { spaceId: SpaceId | null; limit?: number }) {
+  update(
+    dataSource: IndexDataSource,
+    opts: { spaceId: SpaceId | null; limit?: number },
+  ): Effect.Effect<{ updated: number; done: boolean }, SqlError.SqlError, SqlClient.SqlClient> {
     return Effect.gen(this, function* () {
       let updated = 0;
 
-      const { updated: updatedFtsIndex } = yield* this.#update(this.#ftsIndex, dataSource, {
+      const { updated: updatedFtsIndex, done: doneFtsIndex } = yield* this.#update(this.#ftsIndex, dataSource, {
         indexName: 'fts',
         spaceId: opts.spaceId,
         limit: opts.limit,
       });
       updated += updatedFtsIndex;
 
-      const { updated: updatedReverseRefIndex } = yield* this.#update(this.#reverseRefIndex, dataSource, {
-        indexName: 'reverseRef',
-        spaceId: opts.spaceId,
-        limit: opts.limit,
-      });
+      const { updated: updatedReverseRefIndex, done: doneReverseRefIndex } = yield* this.#update(
+        this.#reverseRefIndex,
+        dataSource,
+        {
+          indexName: 'reverseRef',
+          spaceId: opts.spaceId,
+          limit: opts.limit,
+        },
+      );
       updated += updatedReverseRefIndex;
 
-      return { updated };
+      return { updated, done: doneFtsIndex && doneReverseRefIndex };
     }).pipe(Effect.withSpan('IndexEngine.update'));
   }
 
@@ -153,7 +160,7 @@ export class IndexEngine {
     index: Index,
     source: IndexDataSource,
     opts: { indexName: string; spaceId: SpaceId | null; limit?: number },
-  ): Effect.Effect<{ updated: number }, SqlError.SqlError, SqlClient.SqlClient> {
+  ): Effect.Effect<{ updated: number; done: boolean }, SqlError.SqlError, SqlClient.SqlClient> {
     return Effect.gen(this, function* () {
       const sql = yield* SqlClient.SqlClient;
       yield* sql`BEGIN TRANSACTION`;
@@ -164,6 +171,9 @@ export class IndexEngine {
         spaceId: opts.spaceId,
       });
       const { objects, cursors: updatedCursors } = yield* source.getChangedObjects(cursors, { limit: opts.limit });
+      if (objects.length === 0) {
+        return { updated: 0, done: true };
+      }
 
       // Ensure objects exist in ObjectMetaIndex.
       yield* this.#objectMetaIndex.update(objects);
@@ -191,7 +201,7 @@ export class IndexEngine {
       );
 
       yield* sql`COMMIT`;
-      return { updated: objects.length };
+      return { updated: objects.length, done: false };
     }).pipe(
       Effect.withSpan('IndexEngine.#updateDependentIndex'),
       Effect.tapDefect(() =>
