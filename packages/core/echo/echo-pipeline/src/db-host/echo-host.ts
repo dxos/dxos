@@ -345,12 +345,12 @@ export class EchoHost extends Resource {
       // Indexer not initialized yet, skip this update cycle.
       return;
     }
-    const { updated } = await this._indexer2
+    const { updated, done } = await this._indexer2
       .update(this._automergeDataSource, { spaceId: null, limit: 50 })
       .pipe(RuntimeProvider.runPromise(this._runtime));
     log.verbose('indexer2 update completed', { updated });
     await sleep(1);
-    if (updated > 0) {
+    if (!done) {
       this._indexesUpToDate = false;
       this._updateIndexes!.schedule();
     } else {

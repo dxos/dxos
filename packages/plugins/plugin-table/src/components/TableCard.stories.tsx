@@ -5,14 +5,14 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
-import { IntentPlugin } from '@dxos/app-framework';
+import { OperationPlugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Obj } from '@dxos/echo';
 import { Format } from '@dxos/echo/internal';
 import { faker } from '@dxos/random';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { withTheme } from '@dxos/react-ui/testing';
-import { CardContainer } from '@dxos/react-ui-stack/testing';
+import { CardContainer } from '@dxos/react-ui-mosaic/testing';
 import { translations as tableTranslations } from '@dxos/react-ui-table';
 import { useTestTableModel } from '@dxos/react-ui-table/testing';
 import { Table } from '@dxos/react-ui-table/types';
@@ -91,7 +91,7 @@ const meta = {
       },
     }),
     withPluginManager({
-      plugins: [IntentPlugin()],
+      plugins: [OperationPlugin()],
     }),
   ],
   parameters: {

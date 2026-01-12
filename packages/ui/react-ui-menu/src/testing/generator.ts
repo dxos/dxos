@@ -5,15 +5,7 @@
 import { Atom } from '@effect-atom/atom-react';
 import { useEffect } from 'react';
 
-import {
-  ACTION_GROUP_TYPE,
-  ACTION_TYPE,
-  type Action,
-  Graph,
-  type NodeArg,
-  ROOT_ID,
-  actionGroupSymbol,
-} from '@dxos/app-graph';
+import { Graph, Node } from '@dxos/app-graph';
 import { live } from '@dxos/live-object';
 import { faker } from '@dxos/random';
 import { type DeepWriteable } from '@dxos/util';
@@ -22,7 +14,7 @@ import { type ActionGraphProps } from '../hooks/useMenuActions';
 import { type MenuAction, type MenuItem, type MenuItemGroup } from '../types';
 
 export type CreateActionsProps = Partial<{
-  type?: typeof ACTION_TYPE | typeof ACTION_GROUP_TYPE;
+  type?: typeof Node.ActionType | typeof Node.ActionGroupType;
   callback: () => void;
   count: number;
 }>;
@@ -47,19 +39,18 @@ const icons = {
 };
 
 export const createActions = (params?: CreateActionsProps) => {
-  // eslint-disable-next-line no-console
-  const { callback = () => console.log('invoke'), count = 12, type = ACTION_TYPE } = params ?? {};
+  const { callback = () => console.log('invoke'), count = 12, type = Node.ActionType } = params ?? {};
   return faker.helpers.multiple(
     () =>
       live({
         id: faker.string.uuid(),
         type,
-        data: type === ACTION_GROUP_TYPE ? actionGroupSymbol : callback,
+        data: type === Node.ActionGroupType ? Node.actionGroupSymbol : callback,
         properties: {
           label: faker.lorem.words(2),
           icon: faker.helpers.arrayElement(icons[faker.helpers.arrayElement(Object.keys(icons)) as keyof typeof icons]),
           disabled: faker.helpers.arrayElement([true, false]),
-          ...(type === ACTION_GROUP_TYPE && { variant: 'dropdownMenu' }),
+          ...(type === Node.ActionGroupType && { variant: 'dropdownMenu' }),
         },
       }),
     { count },
@@ -68,7 +59,7 @@ export const createActions = (params?: CreateActionsProps) => {
 
 export const createNestedActions = Atom.make(() => {
   const result: ActionGraphProps = { edges: [], nodes: [] };
-  const actionGroups = createActions({ type: ACTION_GROUP_TYPE });
+  const actionGroups = createActions({ type: Node.ActionGroupType });
   actionGroups.forEach((group) => {
     const actions = createActions();
     result.nodes.push(group, ...actions);
@@ -80,27 +71,29 @@ export const createNestedActions = Atom.make(() => {
   return result;
 });
 
-export const createNestedActionsResolver = (groupProps?: CreateActionsProps, params?: CreateActionsProps) => {
-  const graph = new Graph();
-  const actionGroups = createActions({ type: ACTION_GROUP_TYPE, ...groupProps });
+export const createNestedActionsResolver = (groupParams?: CreateActionsProps, params?: CreateActionsProps) => {
+  const graph = Graph.make();
+  const actionGroups = createActions({ type: Node.ActionGroupType, ...groupParams });
   actionGroups.forEach((group) => {
     const actions = createActions(params);
-    graph.addNodes([group as NodeArg<any>, ...(actions as NodeArg<any>[])]);
-    graph.addEdges([
-      { source: 'root', target: group.id },
-      ...actions.map((action) => ({ source: group.id, target: action.id })),
-    ]);
-    void graph.expand(group.id);
+    graph.pipe(
+      Graph.addNodes([group as Node.NodeArg<any>, ...(actions as Node.NodeArg<any>[])]),
+      Graph.addEdges([
+        { source: 'root', target: group.id },
+        ...actions.map((action) => ({ source: group.id, target: action.id })),
+      ]),
+      Graph.expand(group.id),
+    );
   });
   const resolveGroupItems = (groupNode?: MenuItemGroup) =>
-    (graph.getActions(groupNode?.id ?? ROOT_ID) || null) as MenuItem[] | null;
+    (Graph.getActions(graph, groupNode?.id ?? Node.RootId) || null) as MenuItem[] | null;
   return { resolveGroupItems };
 };
 
-export const mutateActionsOnInterval = (actions: Action[]) => {
+export const mutateActionsOnInterval = (actions: Node.Action[]) => {
   let cursor = 0;
   return setInterval(() => {
-    const action = actions[cursor] as DeepWriteable<Action>;
+    const action = actions[cursor] as DeepWriteable<Node.Action>;
     action.properties.icon = faker.helpers.arrayElement(
       action.properties.icon.endsWith('regular') ? icons.fill : icons.regular,
     );

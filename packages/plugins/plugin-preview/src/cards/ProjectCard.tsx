@@ -5,7 +5,7 @@
 import React from 'react';
 
 import { Obj } from '@dxos/echo';
-import { Card } from '@dxos/react-ui-stack';
+import { Card } from '@dxos/react-ui-mosaic';
 import { type Project } from '@dxos/types';
 
 import { CardHeader } from '../components';

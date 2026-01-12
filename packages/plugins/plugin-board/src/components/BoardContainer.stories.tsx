@@ -9,6 +9,7 @@ import { withPluginManager } from '@dxos/app-framework/testing';
 import { Obj } from '@dxos/echo';
 import { ClientPlugin } from '@dxos/plugin-client';
 import { PreviewPlugin } from '@dxos/plugin-preview';
+import { SpacePlugin } from '@dxos/plugin-space';
 import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
 import { faker } from '@dxos/random';
 import { Filter, Ref, useQuery, useSpaces } from '@dxos/react-client/echo';
@@ -98,6 +99,8 @@ const meta = {
             });
           },
         }),
+        ...corePlugins(),
+        SpacePlugin({}),
         PreviewPlugin(),
         StorybookPlugin({}),
       ],

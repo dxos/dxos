@@ -5,7 +5,7 @@
 import * as Schema from 'effect/Schema';
 import React from 'react';
 
-import { type AnyCapability, Capabilities, contributes, createSurface } from '@dxos/app-framework';
+import { Capability, Common } from '@dxos/app-framework';
 import { Format, type Obj, Type } from '@dxos/echo';
 import { JsonFilter } from '@dxos/react-ui-syntax-highlighter';
 
@@ -36,10 +36,10 @@ declare global {
 // TODO(dmaretskyi): Removed images from conductor GPT implementation.
 const isImage = (data: any): data is any => false;
 
-export const capabilities: AnyCapability[] = [
-  contributes(
-    Capabilities.ReactSurface,
-    createSurface({
+export const capabilities: Capability.Any[] = [
+  Capability.contributes(
+    Common.Capability.ReactSurface,
+    Common.createSurface({
       id: 'plugin-image',
       role: 'card--extrinsic',
       filter: (data: any): data is any => isImage(data.value),
@@ -56,9 +56,9 @@ export const capabilities: AnyCapability[] = [
   //
   // Default
   //
-  contributes(
-    Capabilities.ReactSurface,
-    createSurface({
+  Capability.contributes(
+    Common.Capability.ReactSurface,
+    Common.createSurface({
       id: 'plugin-default',
       role: 'card--extrinsic',
       position: 'fallback',

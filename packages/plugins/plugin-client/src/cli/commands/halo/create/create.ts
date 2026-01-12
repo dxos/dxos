@@ -8,13 +8,13 @@ import * as Console from 'effect/Console';
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
-import { Capabilities, PluginService, createIntent } from '@dxos/app-framework';
+import { Common, PluginManager } from '@dxos/app-framework';
 import { CommandConfig, flushAndSync, spaceLayer } from '@dxos/cli-util';
 import { print } from '@dxos/cli-util';
 import { ClientService } from '@dxos/client';
 import { invariant } from '@dxos/invariant';
 
-import { ClientAction } from '../../../../types';
+import { ClientOperation } from '../../../../types';
 import { printIdentity } from '../util';
 
 export const handler = Effect.fn(function* ({
@@ -29,14 +29,14 @@ export const handler = Effect.fn(function* ({
   // TODO(wittjosiah): How to surface this error to the user cleanly?
   invariant(!client.halo.identity.get(), 'Identity already exists');
 
-  const manager = yield* PluginService;
-  const { dispatch } = manager.context.getCapability(Capabilities.IntentDispatcher);
-  const identity = yield* dispatch(
-    createIntent(ClientAction.CreateIdentity, { displayName: Option.getOrUndefined(displayName) }),
-  );
+  const manager = yield* PluginManager.Service;
+  const { invoke } = manager.context.getCapability(Common.Capability.OperationInvoker);
+  const identity = yield* invoke(ClientOperation.CreateIdentity, {
+    displayName: Option.getOrUndefined(displayName),
+  });
 
   if (agent) {
-    yield* dispatch(createIntent(ClientAction.CreateAgent));
+    yield* invoke(ClientOperation.CreateAgent);
   }
 
   yield* Effect.promise(() => client.spaces.waitUntilReady());

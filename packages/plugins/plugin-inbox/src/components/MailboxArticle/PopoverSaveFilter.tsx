@@ -4,8 +4,8 @@
 
 import React, { useCallback, useRef, useState } from 'react';
 
-import { LayoutAction, createIntent } from '@dxos/app-framework';
-import { useIntentDispatcher } from '@dxos/app-framework/react';
+import { Common } from '@dxos/app-framework';
+import { useOperationInvoker } from '@dxos/app-framework/react';
 import { Button, Input, Popover, useTranslation } from '@dxos/react-ui';
 
 import { meta } from '../../meta';
@@ -17,17 +17,12 @@ export const PopoverSaveFilter = ({ mailbox, filter }: { mailbox: Mailbox.Mailbo
   const { t } = useTranslation(meta.id);
   const doneButton = useRef<HTMLButtonElement>(null);
   const [name, setName] = useState('');
-  const { dispatchPromise: dispatch } = useIntentDispatcher();
+  const { invokePromise } = useOperationInvoker();
 
   const handleDone = useCallback(() => {
     (mailbox.filters ??= []).push({ name, filter });
-    void dispatch(
-      createIntent(LayoutAction.UpdatePopover, {
-        part: 'popover',
-        options: { variant: 'virtual', anchor: null, state: false },
-      }),
-    );
-  }, [mailbox, name]);
+    void invokePromise(Common.LayoutOperation.UpdatePopover, { state: false, anchorId: '' });
+  }, [mailbox, name, invokePromise]);
 
   // TODO(thure): Why does the input value need to be uncontrolled to work?
   return (

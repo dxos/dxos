@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import type { Node } from '@dxos/app-graph';
+import { type Node } from '@dxos/app-graph';
 import { type MaybePromise, type Position } from '@dxos/util';
 
 // TODO(wittjosiah): Factor out.
@@ -21,7 +21,7 @@ export type NodeSerializer<T = any> = {
   /**
    * Takes a node and serializes it into a format that can be stored.
    */
-  serialize: (node: Node<T>) => MaybePromise<SerializedNode>;
+  serialize: (node: Node.Node<T>) => MaybePromise<SerializedNode>;
 
   /**
    * Takes a serialized node and deserializes it into the application.

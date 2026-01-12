@@ -4,7 +4,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Label } from '../plugin-intent';
+import { Label } from './translations';
 
 const LAYOUT_PLUGIN = 'dxos.org/plugin/layout';
 

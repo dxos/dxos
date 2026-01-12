@@ -30,7 +30,7 @@
     "@radix-ui/react-compose-refs": "catalog:",
     "@radix-ui/react-context": "catalog:",
     "@radix-ui/react-use-controllable-state": "catalog:",
-    "cmdk": "catalog:"
+    "command-score": "catalog:"
   },
   "devDependencies": {
     "@dxos/random": "workspace:*",

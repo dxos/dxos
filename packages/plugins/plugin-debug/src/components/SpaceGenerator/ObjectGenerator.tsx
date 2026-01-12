@@ -4,14 +4,14 @@
 
 import type * as Schema from 'effect/Schema';
 
-import { type PromiseIntentDispatcher, createIntent } from '@dxos/app-framework';
+import { type OperationInvoker } from '@dxos/app-framework';
 import { addressToA1Notation } from '@dxos/compute';
 import { ComputeGraph, ComputeGraphModel, DEFAULT_OUTPUT, NODE_INPUT, NODE_OUTPUT } from '@dxos/conductor';
 import { DXN, Filter, Key, type Type } from '@dxos/echo';
 import { Markdown } from '@dxos/plugin-markdown/types';
 import { Sheet } from '@dxos/plugin-sheet/types';
 import { Diagram } from '@dxos/plugin-sketch/types';
-import { SpaceAction } from '@dxos/plugin-space/types';
+import { SpaceOperation } from '@dxos/plugin-space/types';
 import { faker } from '@dxos/random';
 import { type Client } from '@dxos/react-client';
 import { type Space } from '@dxos/react-client/echo';
@@ -29,7 +29,7 @@ export type ObjectGenerator<T> = (space: Space, n: number, cb?: (objects: T[]) =
 
 export const createGenerator = <S extends Type.Obj.Any>(
   client: Client,
-  dispatch: PromiseIntentDispatcher,
+  invokePromise: OperationInvoker.OperationInvoker['invokePromise'],
   schema: S,
 ): ObjectGenerator<Schema.Schema.Type<S>> => {
   return async (space: Space, n: number): Promise<Schema.Schema.Type<S>[]> => {
@@ -40,9 +40,9 @@ export const createGenerator = <S extends Type.Obj.Any>(
     const view = await findViewByTypename(views, typename);
     const staticSchema = client?.graph.schemaRegistry.query({ typename }).runSync()[0];
     if (!view && !staticSchema) {
-      await dispatch(createIntent(SpaceAction.AddSchema, { db: space.db, schema, show: false }));
+      await invokePromise(SpaceOperation.AddSchema, { db: space.db, schema, show: false });
     } else if (!view && staticSchema) {
-      await dispatch(createIntent(SpaceAction.UseStaticSchema, { db: space.db, typename, show: false }));
+      await invokePromise(SpaceOperation.UseStaticSchema, { db: space.db, typename, show: false });
     }
 
     // Create objects.

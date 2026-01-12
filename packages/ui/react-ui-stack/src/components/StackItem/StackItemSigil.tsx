@@ -4,7 +4,7 @@
 
 import React, { Fragment, type PropsWithChildren, forwardRef, useState } from 'react';
 
-import { type ActionLike } from '@dxos/app-graph';
+import { type Node } from '@dxos/app-graph';
 import { keySymbols } from '@dxos/keyboard';
 import { Button, type ButtonProps, DropdownMenu, Icon, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { type AttendableId, type Related, useAttention } from '@dxos/react-ui-attention';
@@ -23,7 +23,7 @@ export type KeyBinding = {
   unknown?: string;
 };
 
-export type StackItemSigilAction = Pick<ActionLike, 'id' | 'properties' | 'data'>;
+export type StackItemSigilAction = Pick<Node.ActionLike, 'id' | 'properties' | 'data'>;
 
 export type StackItemSigilButtonProps = Omit<ButtonProps, 'variant'> &
   AttendableId &

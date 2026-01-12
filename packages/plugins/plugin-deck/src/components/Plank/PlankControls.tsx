@@ -4,13 +4,12 @@
 
 import React, { forwardRef, useCallback } from 'react';
 
-import { createIntent } from '@dxos/app-framework';
-import { useIntentDispatcher } from '@dxos/app-framework/react';
+import { useOperationInvoker } from '@dxos/app-framework/react';
 import { invariant } from '@dxos/invariant';
 import { ButtonGroup, type ButtonGroupProps, type ButtonProps, IconButton, useTranslation } from '@dxos/react-ui';
 
 import { meta } from '../../meta';
-import { DeckAction, type LayoutMode } from '../../types';
+import { type DeckAction, DeckOperation, type LayoutMode } from '../../types';
 
 export type PlankControlHandler = (event: DeckAction.PartAdjustment) => void;
 
@@ -45,11 +44,11 @@ type PlankComplimentControlsProps = {
 export const PlankCompanionControls = forwardRef<HTMLDivElement, PlankComplimentControlsProps>(
   ({ primary }, forwardedRef) => {
     const { t } = useTranslation(meta.id);
-    const { dispatchPromise: dispatch } = useIntentDispatcher();
+    const { invokePromise } = useOperationInvoker();
     const handleCloseCompanion = useCallback(() => {
       invariant(primary);
-      return dispatch(createIntent(DeckAction.ChangeCompanion, { primary, companion: null }));
-    }, []);
+      return invokePromise(DeckOperation.ChangeCompanion, { primary, companion: null });
+    }, [invokePromise, primary]);
     return (
       <div ref={forwardedRef} className='contents app-no-drag'>
         <PlankControl

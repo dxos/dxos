@@ -35,6 +35,7 @@
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-attention": "workspace:*",
     "@dxos/react-ui-dnd": "workspace:*",
+    "@dxos/react-ui-mosaic": "workspace:*",
     "@dxos/react-ui-stack": "workspace:*",
     "@dxos/react-ui-text-tooltip": "workspace:*",
     "@dxos/ui-types": "workspace:*",

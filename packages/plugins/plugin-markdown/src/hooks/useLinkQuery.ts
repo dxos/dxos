@@ -5,7 +5,7 @@
 import * as Option from 'effect/Option';
 import { useCallback, useMemo } from 'react';
 
-import { Capabilities } from '@dxos/app-framework';
+import { Common } from '@dxos/app-framework';
 import { usePluginManager } from '@dxos/app-framework/react';
 import { type Database, Filter, Obj, Query, Type } from '@dxos/echo';
 import { EntityKind, SystemTypeAnnotation, getTypeAnnotation } from '@dxos/echo/internal';
@@ -19,7 +19,7 @@ export const useLinkQuery = (db: Database.Database | undefined) => {
   const manager = usePluginManager();
   const resolve = useCallback(
     (typename: string) =>
-      manager.context.getCapabilities(Capabilities.Metadata).find(({ id }) => id === typename)?.metadata ?? {},
+      manager.context.getCapabilities(Common.Capability.Metadata).find(({ id }) => id === typename)?.metadata ?? {},
     [manager],
   );
 

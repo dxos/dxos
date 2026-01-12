@@ -4,7 +4,7 @@
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 
-import { IntentPlugin } from '@dxos/app-framework';
+import { OperationPlugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Script } from '@dxos/functions';
 import { ClientPlugin } from '@dxos/plugin-client';
@@ -22,7 +22,7 @@ const meta = {
     withTheme,
     withLayout({ classNames: 'is-prose' }),
     withPluginManager({
-      plugins: [IntentPlugin(), ClientPlugin({})],
+      plugins: [OperationPlugin(), ClientPlugin({})],
     }),
   ],
   parameters: {

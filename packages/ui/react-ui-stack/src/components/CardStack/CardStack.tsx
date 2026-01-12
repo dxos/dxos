@@ -6,10 +6,15 @@ import { Slot } from '@radix-ui/react-slot';
 import React, { type ComponentPropsWithoutRef, forwardRef } from 'react';
 
 import type { ThemedClassName } from '@dxos/react-ui';
+import { Card, cardDefaultInlineSize } from '@dxos/react-ui-mosaic';
 import { mx } from '@dxos/ui-theme';
 
-import { Card } from '../Card';
 import { Stack, type StackProps, railGridHorizontalContainFitContent } from '../Stack';
+
+/**
+ * This is `cardDefaultInlineSize` plus 2 times the sum of the inner and outer spacing applied by CardStack on the inline axis.
+ */
+const cardStackDefaultInlineSizeRem = cardDefaultInlineSize + 2.125;
 
 //
 // Root
@@ -178,4 +183,11 @@ export const CardStack = {
   Item: CardStackItem,
 };
 
-export { cardStackRoot, cardStackFooter, cardStackHeading, cardStackContent, cardStackItem };
+export {
+  cardStackRoot,
+  cardStackFooter,
+  cardStackHeading,
+  cardStackContent,
+  cardStackItem,
+  cardStackDefaultInlineSizeRem,
+};

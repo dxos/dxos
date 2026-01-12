@@ -7,7 +7,7 @@ import React, { forwardRef, useEffect, useImperativeHandle } from 'react';
 import { createPortal } from 'react-dom';
 import { useDropzone } from 'react-dropzone';
 
-import { type FileInfo } from '@dxos/app-framework';
+import { type Common } from '@dxos/app-framework';
 import { addLink } from '@dxos/ui-editor';
 
 export const IMAGE_FILES = ['.jpg', '.jpeg', '.png', '.gif'];
@@ -16,7 +16,7 @@ export type FileUploadAction = () => void;
 
 export type FileUploadProps = {
   editorView?: EditorView;
-  onFileUpload?: (file: File) => Promise<FileInfo | undefined>;
+  onFileUpload?: (file: File) => Promise<Common.FileInfo | undefined>;
 };
 
 // TODO(burdon): Factor out.

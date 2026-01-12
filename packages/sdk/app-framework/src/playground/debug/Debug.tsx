@@ -2,23 +2,30 @@
 // Copyright 2025 DXOS.org
 //
 
+import { useAtomValue } from '@effect-atom/atom-react';
+import * as Effect from 'effect/Effect';
 import React from 'react';
 
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
 
-import { Capabilities, createSurface } from '../../common';
-import { contributes, defineCapabilityModule } from '../../core';
+import * as Common from '../../common';
+import { Capability } from '../../core';
 import { usePluginManager } from '../../react';
 
 export const Debug = () => {
   const manager = usePluginManager();
+  const core = useAtomValue(manager.core);
+  const enabled = useAtomValue(manager.enabled);
+  const active = useAtomValue(manager.active);
+  const pendingReset = useAtomValue(manager.pendingReset);
+  const eventsFired = useAtomValue(manager.eventsFired);
 
   const object = {
-    core: manager.core,
-    enabled: manager.enabled,
-    active: manager.active,
-    pendingReset: manager.pendingReset,
-    eventsFired: manager.eventsFired,
+    core,
+    enabled,
+    active,
+    pendingReset,
+    eventsFired,
   };
 
   return (
@@ -28,13 +35,15 @@ export const Debug = () => {
   );
 };
 
-export default defineCapabilityModule(() =>
-  contributes(
-    Capabilities.ReactSurface,
-    createSurface({
-      id: 'dxos.org/test/debug/main',
-      role: 'secondary',
-      component: Debug,
-    }),
+export default Capability.makeModule(() =>
+  Effect.succeed(
+    Capability.contributes(
+      Common.Capability.ReactSurface,
+      Common.createSurface({
+        id: 'dxos.org/test/debug/main',
+        role: 'secondary',
+        component: Debug,
+      }),
+    ),
   ),
 );

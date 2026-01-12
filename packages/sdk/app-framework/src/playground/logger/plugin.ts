@@ -2,40 +2,41 @@
 // Copyright 2025 DXOS.org
 //
 
+import * as Effect from 'effect/Effect';
+
 import { log } from '@dxos/log';
 
-import { Capabilities, Events } from '../../common';
-import { contributes, defineModule, definePlugin, lazy } from '../../core';
-import { createResolver } from '../../plugin-intent';
+import * as Common from '../../common';
+import { Capability, Plugin } from '../../core';
+import { OperationResolver } from '../../plugin-operation';
 
-import { Log } from './schema';
+import { LogOperation } from './schema';
 
-const Toolbar = lazy(() => import('./Toolbar'));
+const Toolbar = Capability.lazy('Toolbar', () => import('./Toolbar'));
 
 const meta = {
   id: 'dxos.org/test/logger',
   name: 'Logger',
 };
 
-export const LoggerPlugin = definePlugin(meta, () => [
-  defineModule({
-    id: 'dxos.org/test/logger/intents',
-    activatesOn: Events.SetupIntentResolver,
-    activate: () => [
-      contributes(
-        Capabilities.IntentResolver,
-        createResolver({
-          intent: Log,
-          resolve: ({ message }) => {
-            log.info(message);
-          },
-        }),
+export const LoggerPlugin = Plugin.define(meta).pipe(
+  Common.Plugin.addOperationResolverModule({
+    activate: () =>
+      Effect.succeed(
+        Capability.contributes(Common.Capability.OperationResolver, [
+          OperationResolver.make({
+            operation: LogOperation,
+            handler: ({ message }) =>
+              Effect.sync(() => {
+                log.info(message);
+              }),
+          }),
+        ]),
       ),
-    ],
   }),
-  defineModule({
-    id: 'dxos.org/test/logger/surfaces',
-    activatesOn: Events.Startup,
+  Plugin.addModule({
+    activatesOn: Common.ActivationEvent.Startup,
     activate: Toolbar,
   }),
-]);
+  Plugin.make,
+);

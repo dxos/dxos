@@ -5,7 +5,7 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { Events } from '@dxos/app-framework';
+import { Common } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { scheduleTask } from '@dxos/async';
 import { Context } from '@dxos/context';
@@ -16,6 +16,7 @@ import { FunctionExecutor, ServiceContainer } from '@dxos/functions-runtime';
 import { log } from '@dxos/log';
 import { ClientPlugin } from '@dxos/plugin-client';
 import { PreviewPlugin } from '@dxos/plugin-preview';
+import { SpacePlugin } from '@dxos/plugin-space';
 import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { TestSchema } from '@dxos/schema/testing';
@@ -199,11 +200,13 @@ const meta = {
             await seedTestData(client.spaces.default);
           },
         }),
+        ...corePlugins(),
+        SpacePlugin({}),
         PreviewPlugin(),
         TranscriptionPlugin(),
         StorybookPlugin({}),
       ],
-      fireEvents: [Events.SetupAppGraph],
+      fireEvents: [Common.ActivationEvent.SetupAppGraph],
     }),
   ],
 } satisfies Meta;

@@ -7,18 +7,18 @@ import { type Instruction, extractInstruction } from '@atlaskit/pragmatic-drag-a
 import { untracked } from '@preact/signals-core';
 import React, { forwardRef, memo, useCallback, useEffect, useMemo } from 'react';
 
-import { LayoutAction, createIntent } from '@dxos/app-framework';
-import { Surface, useAppGraph, useCapability, useIntentDispatcher, useLayout } from '@dxos/app-framework/react';
-import { type Node, ROOT_ID, type ReadableGraph, isAction, isActionLike } from '@dxos/app-graph';
+import { Common } from '@dxos/app-framework';
+import { Surface, useAppGraph, useCapability, useLayout, useOperationInvoker } from '@dxos/app-framework/react';
 import { PLANK_COMPANION_TYPE } from '@dxos/plugin-deck/types';
+import { Graph, Node } from '@dxos/plugin-graph';
 import { useConnections, useActions as useGraphActions } from '@dxos/plugin-graph';
 import { useMediaQuery, useSidebars } from '@dxos/react-ui';
 import { type TreeData, type TreeItemDataProps, isTreeData } from '@dxos/react-ui-list';
 import { mx } from '@dxos/ui-theme';
 import { arrayMove, byPosition } from '@dxos/util';
 
-import { NavTreeCapabilities } from '../capabilities';
 import { meta } from '../meta';
+import { NavTreeCapabilities } from '../types';
 import { type FlattenedActions, type NavTreeItemGraphNode } from '../types';
 import { getChildren, getParent, resolveMigrationOperation } from '../util';
 
@@ -29,38 +29,40 @@ import { type NavTreeContextValue } from './types';
 // TODO(thure): Is NavTree truly authoritative in this regard?
 export const NODE_TYPE = 'dxos/app-graph/node';
 
-const renderItemEnd = ({ node, open }: { node: Node; open: boolean }) => (
+const renderItemEnd = ({ node, open }: { node: Node.Node; open: boolean }) => (
   <Surface role='navtree-item-end' data={{ id: node.id, subject: node.data, open }} limit={1} />
 );
 
-const getChildrenFilter = (node: Node): node is Node =>
+const getChildrenFilter = (node: Node.Node): node is Node.Node =>
   untracked(
-    () => !isActionLike(node) && node.type !== PLANK_COMPANION_TYPE && node.properties.disposition !== 'hidden',
+    () => !Node.isActionLike(node) && node.type !== PLANK_COMPANION_TYPE && node.properties.disposition !== 'hidden',
   );
 
-const filterItems = (node: Node, disposition?: string) => {
+const filterItems = (node: Node.Node, disposition?: string) => {
   if (!disposition && (node.properties.disposition === 'hidden' || node.properties.disposition === 'alternate-tree')) {
     return false;
   } else if (!disposition) {
-    const action = isAction(node);
+    const action = Node.isAction(node);
     return !action || node.properties.disposition === 'item';
   } else {
     return node.properties.disposition === disposition;
   }
 };
 
-const getItems = (graph: ReadableGraph, node?: Node, disposition?: string) => {
-  return graph.getConnections(node?.id ?? ROOT_ID, 'outbound').filter((node) => filterItems(node, disposition));
+const getItems = (graph: Graph.ReadableGraph, node?: Node.Node, disposition?: string) => {
+  return Graph.getConnections(graph, node?.id ?? Node.RootId, 'outbound').filter((node) =>
+    filterItems(node, disposition),
+  );
 };
 
-const useItems = (node?: Node, options?: { disposition?: string; sort?: boolean }) => {
+const useItems = (node?: Node.Node, options?: { disposition?: string; sort?: boolean }) => {
   const { graph } = useAppGraph();
-  const connections = useConnections(graph, node?.id ?? ROOT_ID);
+  const connections = useConnections(graph, node?.id ?? Node.RootId);
   const filtered = connections.filter((node) => filterItems(node, options?.disposition));
   return options?.sort ? filtered.toSorted((a, b) => byPosition(a.properties, b.properties)) : filtered;
 };
 
-const useActions = (node: Node): FlattenedActions => {
+const useActions = (node: Node.Node): FlattenedActions => {
   const { graph } = useAppGraph();
   const actions = useGraphActions(graph, node.id);
 
@@ -73,8 +75,8 @@ const useActions = (node: Node): FlattenedActions => {
           }
 
           acc.actions.push(arg);
-          if (!isAction(arg)) {
-            const actionGroup = graph.getActions(arg.id);
+          if (!Node.isAction(arg)) {
+            const actionGroup = Graph.getActions(graph, arg.id);
             acc.groupedActions[arg.id] = actionGroup;
           }
           return acc;
@@ -93,14 +95,14 @@ export type NavTreeContainerProps = {
 export const NavTreeContainer$ = forwardRef<HTMLDivElement, NavTreeContainerProps>(
   ({ tab, popoverAnchorId, topbar }, forwardedRef) => {
     const [isLg] = useMediaQuery('lg');
-    const { dispatchPromise: dispatch } = useIntentDispatcher();
+    const { invokePromise, invokeSync } = useOperationInvoker();
     const { graph } = useAppGraph();
     const { isOpen, isCurrent, isAlternateTree, setItem } = useCapability(NavTreeCapabilities.State);
     const layout = useLayout();
     const { navigationSidebarState } = useSidebars(meta.id);
 
     const getProps = useCallback(
-      (node: Node, path: string[]): TreeItemDataProps => {
+      (node: Node.Node, path: string[]): TreeItemDataProps => {
         const children = getChildren(graph, node, path).filter(getChildrenFilter);
         const parentOf =
           children.length > 0 ? children.map(({ id }) => id) : node.properties.role === 'branch' ? [] : undefined;
@@ -120,64 +122,49 @@ export const NavTreeContainer$ = forwardRef<HTMLDivElement, NavTreeContainerProp
     );
 
     const loadDescendents = useCallback(
-      (node: Node) => {
-        graph.expand(node.id, 'outbound');
+      (node: Node.Node) => {
+        Graph.expand(graph, node.id, 'outbound');
         // Load one level deeper, which resolves some juddering observed on open/close.
-        graph.getConnections(node.id, 'outbound').forEach((child) => {
-          graph.expand(child.id, 'outbound');
+        Graph.getConnections(graph, node.id, 'outbound').forEach((child) => {
+          Graph.expand(graph, child.id, 'outbound');
         });
       },
       [graph],
     );
 
     const handleOpenChange = useCallback(
-      ({ item: { id }, path, open }: { item: Node; path: string[]; open: boolean }) => {
+      ({ item: { id }, path, open }: { item: Node.Node; path: string[]; open: boolean }) => {
         // TODO(thure): This might become a localstorage leak; openItemIds that no longer exist should be removed from this map.
         setItem(path, 'open', open);
-        graph.expand(id, 'outbound');
+        Graph.expand(graph, id, 'outbound');
       },
       [graph],
     );
 
     const handleTabChange = useCallback(
-      async (node: NavTreeItemGraphNode) => {
-        await dispatch(
-          createIntent(LayoutAction.UpdateSidebar, {
-            part: 'sidebar',
-            options: {
-              state:
-                node.id === tab
-                  ? navigationSidebarState === 'expanded'
-                    ? isLg
-                      ? 'collapsed'
-                      : 'closed'
-                    : 'expanded'
-                  : 'expanded',
-            },
-          }),
-        );
+      (node: NavTreeItemGraphNode) => {
+        invokeSync(Common.LayoutOperation.UpdateSidebar, {
+          state:
+            node.id === tab
+              ? navigationSidebarState === 'expanded'
+                ? isLg
+                  ? 'collapsed'
+                  : 'closed'
+                : 'expanded'
+              : 'expanded',
+        });
 
-        await dispatch(
-          createIntent(LayoutAction.SwitchWorkspace, {
-            part: 'workspace',
-            subject: node.id,
-          }),
-        );
+        invokeSync(Common.LayoutOperation.SwitchWorkspace, { subject: node.id });
 
         // Open the first item if the workspace is empty.
         if (layout.active.length === 0) {
-          const [item] = getItems(graph, node).filter((node) => !isActionLike(node));
+          const [item] = getItems(graph, node).filter((node) => !Node.isActionLike(node));
           if (item && item.data) {
-            await dispatch(
-              createIntent(LayoutAction.Open, {
-                part: 'main',
-                subject: [item.id],
-              }),
-            );
+            invokeSync(Common.LayoutOperation.Open, { subject: [item.id] });
           }
         }
       },
-      [dispatch, layout.active, tab, navigationSidebarState, isLg],
+      [invokeSync, layout.active, tab, navigationSidebarState, isLg],
     );
 
     const blockInstruction = useCallback(
@@ -191,75 +178,46 @@ export const NavTreeContainer$ = forwardRef<HTMLDivElement, NavTreeContainerProp
       return target.item.properties.canDrop?.(source) ?? false;
     }, []);
 
-    const canSelect = useCallback(({ item }: { item: Node }) => {
+    const canSelect = useCallback(({ item }: { item: Node.Node }) => {
       return item.properties.selectable ?? true;
     }, []);
 
     const handleSelect = useCallback(
-      ({ item: node, path, option }: { item: Node; path: string[]; option: boolean }) => {
+      ({ item: node, path, option }: { item: Node.Node; path: string[]; option: boolean }) => {
         if (!node.data) {
           return;
         }
 
-        if (isAction(node)) {
-          const [parent] = graph.getConnections(node.id, 'inbound');
+        if (Node.isAction(node)) {
+          const [parent] = Graph.getConnections(graph, node.id, 'inbound');
           void (parent && node.data({ parent, caller: NAV_TREE_ITEM }));
           return;
         }
 
         const current = isCurrent(path, node);
         if (!current) {
-          void dispatch(
-            createIntent(LayoutAction.Open, {
-              part: 'main',
-              subject: [node.id],
-              options: { key: node.properties.key },
-            }),
-          );
+          invokeSync(Common.LayoutOperation.Open, { subject: [node.id], key: node.properties.key });
         } else if (option) {
-          void dispatch(
-            createIntent(LayoutAction.Close, {
-              part: 'main',
-              subject: [node.id],
-              options: { state: false },
-            }),
-          );
+          invokeSync(Common.LayoutOperation.Close, { subject: [node.id] });
         } else {
-          void dispatch(
-            createIntent(LayoutAction.ScrollIntoView, {
-              part: 'current',
-              subject: node.id,
-            }),
-          );
+          void invokePromise(Common.LayoutOperation.ScrollIntoView, { subject: node.id });
         }
 
-        const defaultAction = graph.getActions(node.id).find((action) => action.properties?.disposition === 'default');
-        if (isAction(defaultAction)) {
+        const defaultAction = Graph.getActions(graph, node.id).find(
+          (action) => action.properties?.disposition === 'default',
+        );
+        if (Node.isAction(defaultAction)) {
           void (defaultAction.data as () => void)();
         }
 
         if (!isLg) {
-          void dispatch(
-            createIntent(LayoutAction.UpdateSidebar, {
-              part: 'sidebar',
-              options: { state: 'closed' },
-            }),
-          );
+          invokeSync(Common.LayoutOperation.UpdateSidebar, { state: 'closed' });
         }
       },
-      [graph, dispatch, isCurrent, isLg],
+      [graph, invokePromise, invokeSync, isCurrent, isLg],
     );
 
-    const handleBack = useCallback(
-      () =>
-        dispatch(
-          createIntent(LayoutAction.RevertWorkspace, {
-            part: 'workspace',
-            options: { revert: true },
-          }),
-        ),
-      [dispatch],
-    );
+    const handleBack = useCallback(() => invokeSync(Common.LayoutOperation.RevertWorkspace), [invokeSync]);
 
     // TODO(wittjosiah): Factor out hook.
     useEffect(() => {
@@ -373,7 +331,7 @@ export const NavTreeContainer$ = forwardRef<HTMLDivElement, NavTreeContainerProp
 
     return (
       <NavTreeContext.Provider value={navTreeContextValue}>
-        <NavTree id={ROOT_ID} root={graph.root} open={layout.sidebarOpen} ref={forwardedRef} />
+        <NavTree id={Node.RootId} root={Graph.getRoot(graph)} open={layout.sidebarOpen} ref={forwardedRef} />
       </NavTreeContext.Provider>
     );
   },

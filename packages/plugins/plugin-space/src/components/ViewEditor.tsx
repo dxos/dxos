@@ -5,8 +5,7 @@
 import * as Schema from 'effect/Schema';
 import React, { useCallback, useState } from 'react';
 
-import { createIntent } from '@dxos/app-framework';
-import { useIntentDispatcher } from '@dxos/app-framework/react';
+import { useOperationInvoker } from '@dxos/app-framework/react';
 import { DXN, Filter, Obj, Query, type QueryAST, Tag, Type } from '@dxos/echo';
 import { useClient } from '@dxos/react-client';
 import { getSpace, useQuery } from '@dxos/react-client/echo';
@@ -16,12 +15,12 @@ import { View } from '@dxos/schema';
 
 import { resolveSchemaWithRegistry } from '../helpers';
 import { useTypeOptions } from '../hooks';
-import { SpaceAction } from '../types';
+import { SpaceOperation } from '../types';
 
 export type ViewEditorProps = { view: View.View };
 
 export const ViewEditor = ({ view }: ViewEditorProps) => {
-  const { dispatchPromise: dispatch } = useIntentDispatcher();
+  const { invokePromise } = useOperationInvoker();
   const client = useClient();
   const space = getSpace(view);
   const [schema, setSchema] = useState<Schema.Schema.AnyNoContext>(() => Schema.Struct({}));
@@ -73,9 +72,9 @@ export const ViewEditor = ({ view }: ViewEditorProps) => {
 
   const handleDelete = useCallback(
     (fieldId: string) => {
-      void dispatch(createIntent(SpaceAction.DeleteField, { view, fieldId }));
+      void invokePromise(SpaceOperation.DeleteField, { view, fieldId });
     },
-    [dispatch, view],
+    [invokePromise, view],
   );
 
   if (!space || !schema) {

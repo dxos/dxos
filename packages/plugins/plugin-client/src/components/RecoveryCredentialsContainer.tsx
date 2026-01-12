@@ -4,20 +4,19 @@
 
 import React from 'react';
 
-import { createIntent } from '@dxos/app-framework';
-import { useIntentDispatcher } from '@dxos/app-framework/react';
+import { useOperationInvoker } from '@dxos/app-framework/react';
 import { useCredentials } from '@dxos/react-client/halo';
 import { Icon, IconButton, List, ListItem, Message, useTranslation } from '@dxos/react-ui';
 import { ControlGroup, ControlItem, ControlPage, ControlSection } from '@dxos/react-ui-form';
 
 import { meta } from '../meta';
-import { ClientAction } from '../types';
+import { ClientOperation } from '../types';
 
 export const MANAGE_CREDENTIALS_DIALOG = `${meta.id}/ManageCredentialsDialog`;
 
 export const RecoveryCredentialsContainer = () => {
   const { t } = useTranslation(meta.id);
-  const { dispatchPromise: dispatch } = useIntentDispatcher();
+  const { invokePromise } = useOperationInvoker();
   const credentials = useCredentials();
   const recoveryCredentials = credentials.filter(
     (credential) => credential.subject.assertion['@type'] === 'dxos.halo.credentials.IdentityRecovery',
@@ -32,7 +31,7 @@ export const RecoveryCredentialsContainer = () => {
               label={t('create passkey label')}
               icon='ph--key--duotone'
               variant='primary'
-              onClick={() => dispatch(createIntent(ClientAction.CreatePasskey))}
+              onClick={() => invokePromise(ClientOperation.CreatePasskey)}
             />
           </ControlItem>
           <ControlItem title={t('create recovery code label')} description={t('create recovery code description')}>
@@ -40,7 +39,7 @@ export const RecoveryCredentialsContainer = () => {
               label={t('create recovery code label')}
               icon='ph--receipt--duotone'
               variant='default'
-              onClick={() => dispatch(createIntent(ClientAction.CreateRecoveryCode))}
+              onClick={() => invokePromise(ClientOperation.CreateRecoveryCode)}
             />
           </ControlItem>
         </ControlGroup>

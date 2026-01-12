@@ -67,6 +67,7 @@ const meta: Meta<typeof DefaultStory> = {
             space.db.add(Markdown.make({ content }));
           },
         }),
+        ...corePlugins(),
       ],
     }),
   ],

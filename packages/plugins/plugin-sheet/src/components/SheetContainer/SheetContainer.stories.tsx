@@ -3,9 +3,10 @@
 //
 
 import { type Meta } from '@storybook/react-vite';
+import * as Effect from 'effect/Effect';
 import React from 'react';
 
-import { Capabilities, contributes, createResolver } from '@dxos/app-framework';
+import { Capability, Common, OperationResolver } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Obj } from '@dxos/echo';
 import { corePlugins } from '@dxos/plugin-testing';
@@ -17,7 +18,7 @@ import { withAttention } from '@dxos/react-ui-attention/testing';
 
 import { createTestCells, useTestSheet, withComputeGraphDecorator } from '../../testing';
 import { translations } from '../../translations';
-import { Sheet, SheetAction } from '../../types';
+import { Sheet, SheetOperation } from '../../types';
 import { useComputeGraph } from '../ComputeGraph';
 import { RangeList } from '../RangeList';
 
@@ -35,15 +36,17 @@ const meta = {
     withPluginManager({
       plugins: [...corePlugins()],
       capabilities: [
-        contributes(
-          Capabilities.IntentResolver,
-          createResolver({
-            intent: SheetAction.DropAxis,
-            resolve: ({ model, axis, axisIndex }) => {
-              model[axis === 'col' ? 'dropColumn' : 'dropRow'](axisIndex);
-            },
+        Capability.contributes(Common.Capability.OperationResolver, [
+          OperationResolver.make({
+            operation: SheetOperation.DropAxis,
+            handler: ({ model, axis, axisIndex }) =>
+              Effect.sync(() => {
+                model[axis === 'col' ? 'dropColumn' : 'dropRow'](axisIndex);
+                // Return stub output for story purposes.
+                return { axis, axisIndex, index: 0, axisMeta: null, values: [] };
+              }),
           }),
-        ),
+        ]),
       ],
     }),
   ],
