@@ -388,8 +388,11 @@ export class QueryExecutor extends Resource {
           // Use indexer2 for full-text search.
           const beginIndexQuery = performance.now();
           const runtime = await runAndForwardErrors(this._runtime);
+          invariant(step.spaces.length <= 1, 'Multiple spaces are not supported for full-text search');
           const textResults = await unwrapExit(
-            await this._indexer2.queryText({ query: step.selector.text }).pipe(Runtime.runPromiseExit(runtime)),
+            await this._indexer2
+              .queryText({ query: step.selector.text, spaceId: step.spaces[0] })
+              .pipe(Runtime.runPromiseExit(runtime)),
           );
           trace.indexHits = textResults.length;
           trace.indexQueryTime += performance.now() - beginIndexQuery;

@@ -11,6 +11,7 @@ import { DXN, ObjectId } from '@dxos/keys';
 import { defineHiddenProperty } from '@dxos/live-object';
 import { assumeType, deepMapValues, visitValues } from '@dxos/util';
 
+import type * as Obj from '../../Obj';
 import { getTypeDXN, setTypename } from '../annotations';
 import {
   ATTR_DELETED,
@@ -37,7 +38,6 @@ import {
   TypeId,
   setSchema,
 } from '../types';
-import type * as Obj from '../../Obj';
 
 type DeepReplaceRef<T> =
   T extends Ref<any>
