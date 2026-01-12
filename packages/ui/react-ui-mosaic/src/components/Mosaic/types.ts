@@ -4,6 +4,10 @@
 
 import { type Obj } from '@dxos/echo';
 
+// These are not exported from the pragmatic-drag-and-drop-auto-scroll package.
+export type Axis = 'vertical' | 'horizontal';
+export type AllowedAxis = Axis | 'all';
+
 /**
  * Draggable item.
  */

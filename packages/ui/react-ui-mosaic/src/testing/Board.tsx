@@ -110,16 +110,16 @@ const ColumnList = forwardRef<HTMLDivElement, ColumnListProps>(
 
     return (
       <div
-        role='list'
         {...props}
+        role='list'
         className={mx('flex bs-full plb-2 overflow-x-auto', className, classNames)}
         ref={forwardedRef}
       >
         <Placeholder axis='horizontal' location={0.5} />
-        {visibleColumns.map((column, i) => (
+        {visibleColumns.map((column, index) => (
           <Fragment key={column.id}>
-            <Column column={column} debug={debug} location={i + 1} object={column} />
-            <Placeholder axis='horizontal' location={i + 1.5} />
+            <Column object={column} location={index + 1} debug={debug} />
+            <Placeholder axis='horizontal' location={index + 1.5} />
           </Fragment>
         ))}
       </div>
@@ -134,12 +134,12 @@ ColumnList.displayName = 'ColumnList';
 //
 
 type ColumnProps = Pick<MosaicTileProps<TestColumn>, 'classNames' | 'object' | 'location'> & {
-  column: TestColumn;
   debug?: boolean;
 };
 
 export const Column = forwardRef<HTMLDivElement, ColumnProps>(
-  ({ classNames, column: { id, items }, debug, object, location }, forwardedRef) => {
+  ({ classNames, object, debug, location }, forwardedRef) => {
+    const { id, items } = object;
     const [DebugInfo, debugHandler] = useContainerDebug(debug);
     const dragHandleRef = useRef<HTMLButtonElement>(null);
     const eventHandler = useEventHandlerAdapter({
@@ -164,7 +164,7 @@ export const Column = forwardRef<HTMLDivElement, ColumnProps>(
           },
         },
       ],
-      [],
+      [items],
     );
 
     return (
@@ -219,10 +219,10 @@ const ItemList = forwardRef<HTMLDivElement, ItemListProps>(({ items, menuItems, 
     <ScrollArea.Root {...props}>
       <ScrollArea.Viewport classNames='pli-3' ref={forwardedRef}>
         <Placeholder axis='vertical' location={0.5} />
-        {visibleItems.map((item, i) => (
+        {visibleItems.map((item, index) => (
           <Fragment key={item.id}>
-            <Tile location={i + 1} object={item} menuItems={menuItems} />
-            <Placeholder axis='vertical' location={i + 1.5} />
+            <Tile object={item} location={index + 1} menuItems={menuItems} />
+            <Placeholder axis='vertical' location={index + 1.5} />
           </Fragment>
         ))}
       </ScrollArea.Viewport>
