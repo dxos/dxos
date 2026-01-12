@@ -66,6 +66,7 @@ export class ObjectMetaIndex implements Index {
       }),
   );
 
+  // TODO(dmaretskyi): Update recordId on objects so that we don't need to look it up separately.
   update = Effect.fn('ObjectMetaIndex.update')(
     (objects: IndexerObject[]): Effect.Effect<void, SqlError.SqlError, SqlClient.SqlClient> =>
       Effect.gen(function* () {
