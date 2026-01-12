@@ -8,14 +8,15 @@ import { Surface, useAppGraph, useCapability } from '@dxos/app-framework/react';
 import { useNode } from '@dxos/plugin-graph';
 import { Main as NaturalMain } from '@dxos/react-ui';
 import { ATTENDABLE_PATH_SEPARATOR } from '@dxos/react-ui-attention';
+import { mx } from '@dxos/ui-theme';
 
-import { SimpleLayoutState } from '../types';
+import { SimpleLayoutState } from '../../types';
+import { ContentError } from '../ContentError';
+import { ContentLoading } from '../ContentLoading';
+import { Home } from '../Home';
 
 import { Banner } from './Banner';
-import { BottomNav } from './BottomNav';
-import { ContentError } from './ContentError';
-import { ContentLoading } from './ContentLoading';
-import { Home } from './Home';
+import { NavBar } from './NavBar';
 
 export const Main = () => {
   const layout = useCapability(SimpleLayoutState);
@@ -43,25 +44,35 @@ export const Main = () => {
     console.log('[navigate]', nextActiveId);
   };
 
-  // Show bottom nav only in mobile mode (not popover).
-  const showBottomNav = !layout.isPopover;
-  // Always show banner when viewing content (not on home).
-  const showBanner = id !== 'default';
+  const showNavBar = !layout.isPopover;
 
-  // TODO(wittjosiah): Content probably needs a header with title and back button.
   return (
     <NaturalMain.Root complementarySidebarState='closed' navigationSidebarState='closed'>
       <NaturalMain.Content bounce classNames='dx-mobile-main dx-mobile-main-scroll-area--flush !overflow-y-auto'>
-        <Activity mode={id === 'default' ? 'visible' : 'hidden'}>
-          <Home />
-        </Activity>
-        <Activity mode={id !== 'default' ? 'visible' : 'hidden'}>
-          {showBanner && <Banner node={node} />}
-          <section className={showBanner ? 'pbs-[60px]' : ''}>
-            <Surface key={id} role='article' data={data} limit={1} fallback={ContentError} placeholder={placeholder} />
-          </section>
-        </Activity>
-        {showBottomNav && <BottomNav activeId={id} onActiveIdChange={handleActiveIdChange} />}
+        <div
+          className={mx(
+            'bs-full overflow-hidden grid',
+            showNavBar ? 'grid-rows-[min-content_1fr_min-content]' : 'grid-rows-[min-content_1fr]',
+          )}
+        >
+          <Banner node={node} />
+          <Activity mode={id === 'default' ? 'visible' : 'hidden'}>
+            <Home />
+          </Activity>
+          <Activity mode={id !== 'default' ? 'visible' : 'hidden'}>
+            <section>
+              <Surface
+                key={id}
+                role='article'
+                data={data}
+                limit={1}
+                fallback={ContentError}
+                placeholder={placeholder}
+              />
+            </section>
+          </Activity>
+          {showNavBar && <NavBar activeId={id} onActiveIdChange={handleActiveIdChange} />}
+        </div>
       </NaturalMain.Content>
     </NaturalMain.Root>
   );

@@ -7,9 +7,8 @@ import React from 'react';
 import { Surface, useCapability } from '@dxos/app-framework/react';
 import { AlertDialog, Dialog as NaturalDialog } from '@dxos/react-ui';
 
-import { SimpleLayoutState } from '../types';
-
-import { ContentError } from './ContentError';
+import { SimpleLayoutState } from '../../types';
+import { ContentError } from '../ContentError';
 
 export const Dialog = () => {
   const layout = useCapability(SimpleLayoutState);

@@ -1,7 +1,7 @@
 {
   "extends": "../../../tsconfig.base.json",
   "include": [
-    "**/*"
+    "src"
   ],
   "references": [
     {
@@ -45,6 +45,9 @@
     },
     {
       "path": "../plugin-graph"
+    },
+    {
+      "path": "../plugin-search"
     },
     {
       "path": "../plugin-space"

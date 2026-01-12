@@ -12,7 +12,6 @@ import {
 import { preserveOffsetOnSource } from '@atlaskit/pragmatic-drag-and-drop/element/preserve-offset-on-source';
 import { setCustomNativeDragPreview } from '@atlaskit/pragmatic-drag-and-drop/element/set-custom-native-drag-preview';
 import { type DragLocationHistory, type DropTargetRecord } from '@atlaskit/pragmatic-drag-and-drop/types';
-import { type AllowedAxis, type Axis } from '@atlaskit/pragmatic-drag-and-drop-auto-scroll/dist/types/internal-types';
 import { autoScrollForElements } from '@atlaskit/pragmatic-drag-and-drop-auto-scroll/element';
 import {
   type Edge,
@@ -52,7 +51,10 @@ import { isTruthy } from '@dxos/util';
 
 import { useFocus } from '../Focus';
 
+import { Stack, type StackProps } from './Stack';
 import {
+  type AllowedAxis,
+  type Axis,
   type MosaicContainerData,
   type MosaicData,
   type MosaicEventHandler,
@@ -906,6 +908,7 @@ export const Mosaic = {
   Tile,
   Placeholder,
   DropIndicator,
+  Stack,
 };
 
 export type {
@@ -914,6 +917,7 @@ export type {
   TileProps as MosaicTileProps,
   PlaceholderProps as MosiacPlaceholderProps,
   DropIndicatorProps as MosaicDropIndicatorProps,
+  StackProps as MosaicStackProps,
 };
 
 export {
