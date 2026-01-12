@@ -23,6 +23,7 @@ export const ObjectMeta = Schema.Struct({
   deleted: Schema.Boolean,
   source: Schema.NullOr(Schema.String),
   target: Schema.NullOr(Schema.String),
+  /** Monotonically increasing sequence number assigned on insert/update for tracking indexing order. */
   version: Schema.Number,
 });
 export interface ObjectMeta extends Schema.Schema.Type<typeof ObjectMeta> {}

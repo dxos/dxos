@@ -7,6 +7,7 @@
 import * as OpfsWorker from '@effect/sql-sqlite-wasm/OpfsWorker';
 import * as Effect from 'effect/Effect';
 
+// TODO(mykola): Factor out.
 const DB_NAME = 'DXOS';
 
 void Effect.runFork(OpfsWorker.run({ port: self, dbName: DB_NAME }));

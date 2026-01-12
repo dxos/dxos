@@ -146,7 +146,6 @@ const createNodeProject = ({ environment = 'node', retry, timeout, setupFiles = 
       fs: {
         allow: [new URL('./vitest', import.meta.url).pathname],
       },
-      
     },
     test: {
       name: 'node',
