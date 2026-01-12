@@ -160,9 +160,6 @@ export const Column = forwardRef<HTMLDivElement, ColumnProps>(
               <Card.Heading>{id}</Card.Heading>
               <Card.Menu items={[]} />
             </Card.Toolbar>
-            {/* <ScrollArea.Expander> */}
-            {/* <ScrollArea.Root>
-              <ScrollArea.Viewport> */}
             <Mosaic.Container
               asChild
               axis='vertical'
@@ -171,6 +168,9 @@ export const Column = forwardRef<HTMLDivElement, ColumnProps>(
               debug={debugHandler}
               eventHandler={eventHandler}
             >
+              {/* <ScrollArea.Expander> */}
+              {/* <ScrollArea.Root>
+                <ScrollArea.Viewport> */}
               <div role='none' className='overflow-y-auto'>
                 <Mosaic.Stack
                   axis='vertical'
@@ -179,13 +179,13 @@ export const Column = forwardRef<HTMLDivElement, ColumnProps>(
                   Component={Tile}
                 />
               </div>
+              {/* </ScrollArea.Viewport>
+                <ScrollArea.Scrollbar orientation='vertical'>
+                  <ScrollArea.Thumb />
+                </ScrollArea.Scrollbar>
+              </ScrollArea.Root> */}
+              {/* </ScrollArea.Expander> */}
             </Mosaic.Container>
-            {/* </ScrollArea.Viewport>
-              <ScrollArea.Scrollbar orientation='vertical'>
-                <ScrollArea.Thumb />
-              </ScrollArea.Scrollbar>
-            </ScrollArea.Root> */}
-            {/* </ScrollArea.Expander> */}
             <div>
               <div className='grow flex p-1 justify-center text-xs'>{items.length}</div>
               <DebugInfo />
