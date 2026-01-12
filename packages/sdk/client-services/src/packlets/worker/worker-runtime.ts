@@ -212,6 +212,7 @@ const DB_NAME = 'DXOS';
  * Uses OPFS sync API as an FS backend.
  * Does NOT spawn a new worker.
  * NOTE: Only usable within a worker.
+ * TODO(mykola): This does not work right now. Fix.
  */
 const LocalSqliteOpfsLayer = Layer.unwrapScoped(
   Effect.gen(function* () {
