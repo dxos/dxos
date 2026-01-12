@@ -15,13 +15,13 @@ import * as Layer from 'effect/Layer';
 import * as Scope from 'effect/Scope';
 import * as Stream from 'effect/Stream';
 
-// @ts-expect-error - Type declarations not compatible.
+// @ts-expect-error
 import { SQLITE_OPEN_CREATE, SQLITE_OPEN_READWRITE } from '@dxos/wa-sqlite';
-// @ts-expect-error - Type declarations not compatible.
+// @ts-expect-error
 import * as WaSqlite from '@dxos/wa-sqlite';
-// @ts-expect-error - Type declarations not compatible.
+// @ts-expect-error
 import SQLiteAsyncESMFactory from '@dxos/wa-sqlite/dist/wa-sqlite-async.mjs';
-// @ts-expect-error - Type declarations not compatible.
+// @ts-expect-error
 import { IDBBatchAtomicVFS } from '@dxos/wa-sqlite/src/examples/IDBBatchAtomicVFS.js';
 
 //

@@ -4,13 +4,13 @@
 
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
-// @ts-expect-error - Type declarations not compatible.
+// @ts-expect-error
 import * as WaSqlite from '@dxos/wa-sqlite';
-// @ts-expect-error - Type declarations not compatible.
+// @ts-expect-error
 import { SQLITE_OPEN_CREATE, SQLITE_OPEN_READWRITE } from '@dxos/wa-sqlite';
-// @ts-expect-error - Type declarations not compatible.
+// @ts-expect-error
 import { SQLITE_ROW } from '@dxos/wa-sqlite';
-// @ts-expect-error - Type declarations not compatible.
+// @ts-expect-error
 import SQLiteAsyncESMFactory from '@dxos/wa-sqlite/dist/wa-sqlite-async.mjs';
 
 // Resolve WASM URL explicitly for Vite compatibility.
