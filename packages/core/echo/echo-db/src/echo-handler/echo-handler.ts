@@ -23,6 +23,7 @@ import {
   MetaId,
   ObjectDatabaseId,
   ObjectDeletedId,
+  ParentId,
   type ObjectJSON,
   type ObjectMeta,
   ObjectMetaSchema,
@@ -194,7 +195,10 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
         case ObjectVersionId:
           return this._getVersion(target);
         case ObjectDatabaseId:
+        case ObjectDatabaseId:
           return target[symbolInternals].database;
+        case ParentId:
+          return target[symbolInternals].core.getParent();
       }
     } else {
       switch (prop) {
@@ -244,6 +248,10 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
   // TODO(burdon): arg `receiver` not used.
   set(target: ProxyTarget, prop: string | symbol, value: any, receiver: any): boolean {
     invariant(Array.isArray(target[symbolPath]));
+    if (prop === ParentId) {
+      target[symbolInternals].core.setParent(value);
+      return true;
+    }
     invariant(typeof prop === 'string');
     if (target instanceof EchoArray && prop === 'length') {
       this._arraySetLength(target, target[symbolPath], value);

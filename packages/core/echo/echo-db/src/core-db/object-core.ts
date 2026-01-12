@@ -399,6 +399,16 @@ export class ObjectCore {
     this.setDecoded([SYSTEM_NAMESPACE, 'target'], ref);
   }
 
+  getParent(): Reference | undefined {
+    const res = this.getDecoded([SYSTEM_NAMESPACE, 'parent']);
+    invariant(res === undefined || res instanceof Reference);
+    return res;
+  }
+
+  setParent(ref: Reference | undefined): void {
+    this.setDecoded([SYSTEM_NAMESPACE, 'parent'], ref);
+  }
+
   getType(): Reference | undefined {
     const value = this.decode(this._getRaw([SYSTEM_NAMESPACE, 'type']));
     if (!value) {
@@ -423,7 +433,32 @@ export class ObjectCore {
 
   isDeleted(): boolean {
     const value = this._getRaw([SYSTEM_NAMESPACE, 'deleted']);
-    return typeof value === 'boolean' ? value : false;
+    const ownDeleted = typeof value === 'boolean' ? value : false;
+    if (ownDeleted) {
+      return true;
+    }
+
+    if (this.database) {
+      const parentRef = this.getParent();
+      // TODO(dmaretskyi): Support cross-space parents?
+      // Checks if the reference is pointing to an object in the same space.
+      // TODO(dmaretskyi): This logic is brittle and should be unified with how references are handled elsewhere.
+      if (
+        parentRef &&
+        parentRef.objectId &&
+        (parentRef.host === undefined || parentRef.host === this.database.spaceKey.toHex())
+      ) {
+        const parentId = parentRef.objectId;
+        // NOTE: We can't use `loadObjectCoreById` here because it might be async and we need a sync check.
+        // If the parent is not loaded, we assume it's not deleted for now, or should we assume deleted?
+        // Given strong dependencies, the parent SHOULD be loaded if the child is loaded.
+        const parent = this.database.getObjectCoreById(parentId);
+        if (parent && parent.isDeleted()) {
+          return true;
+        }
+      }
+    }
+    return false;
   }
 
   setDeleted(value: boolean): void {
@@ -452,6 +487,11 @@ export class ObjectCore {
       if (target) {
         res.push(target);
       }
+    }
+
+    const parent = this.getParent()?.toDXN();
+    if (parent) {
+      res.push(parent);
     }
 
     return res;

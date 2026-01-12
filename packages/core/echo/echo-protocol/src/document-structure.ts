@@ -137,6 +137,10 @@ export const ObjectStructure = Object.freeze({
     return object.system?.target;
   },
 
+  getParent: (object: ObjectStructure): EncodedReference | undefined => {
+    return object.system?.parent;
+  },
+
   /**
    * @returns All references in the data section of the object.
    */
@@ -249,12 +253,18 @@ export type ObjectSystem = {
   deleted?: boolean;
 
   /**
+   * Object parent.
+   * Objects with no parent are at the top level of the object hierarchy in the space.
+   */
+  parent?: EncodedReference;
+
+  /**
    * Only for relations.
    */
   source?: EncodedReference;
 
   /**
-   * Only for relations.w
+   * Only for relations.
    */
   target?: EncodedReference;
 };

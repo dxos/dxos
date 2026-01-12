@@ -23,6 +23,8 @@ import {
   type ObjectJSON,
   type ObjectMeta,
   ObjectVersionId,
+  // TODO(dmaretskyi): Export ParentId?
+  ParentId,
   VersionTypeId,
   getDescription as getDescription$,
   getLabel as getLabel$,
@@ -370,9 +372,7 @@ export const isDeleted = (entity: Entity.Unknown): boolean => {
   return deleted;
 };
 
-//
-// Annotations
-//
+// ... (will be determined after viewing internal)
 
 export const getLabel = (entity: Entity.Unknown): string | undefined => {
   const schema = getSchema$(entity);
@@ -399,6 +399,34 @@ export const setDescription = (entity: Entity.Unknown, description: string) => {
   const schema = getSchema$(entity);
   if (schema != null) {
     setDescription$(schema, entity, description);
+  }
+};
+
+export const getParent = (entity: Entity.Unknown): Any | undefined => {
+  const ref = (entity as any)[ParentId];
+  if (!ref) {
+    return undefined;
+  }
+  // TODO(dmaretskyi): Helper to load object from ref?
+  // We need to access database to resolve reference.
+  const db = getDatabase(entity);
+  if (db && ref.objectId) {
+    // TODO(dmaretskyi): Support cross-space parents?
+    return db.getObjectById(ref.objectId);
+  }
+  return undefined;
+};
+
+export const setParent = (entity: Entity.Unknown, parent: Any | undefined | null) => {
+  if (parent) {
+    const db = getDatabase(entity);
+    if (db) {
+      // TODO(dmaretskyi): Check parent is in the same database or use cross-space reference.
+    }
+    (entity as any)[ParentId] = Ref.make(parent);
+  } else {
+    // TODO(dmaretskyi): Better way to clear property.
+    (entity as any)[ParentId] = undefined;
   }
 };
 
@@ -431,8 +459,26 @@ export const fromJSON: (json: unknown, options?: { refResolver?: Ref.Resolver; d
   objectFromJSON as any;
 
 //
-// Sorting
+// Annotations
 //
+
+export const setDeleted = (entity: Entity.Unknown, value: boolean) => {
+  if (value === false) {
+    const parent = getParent(entity);
+    if (parent && isDeleted(parent)) {
+      throw new Error('Cannot restore object when parent is deleted.');
+    }
+  }
+
+  // TODO(dmaretskyi): Move this to a more appropriate place or expose via public API.
+  const db = getDatabase(entity) as any;
+  if (db && typeof db.getObjectCoreById === 'function') {
+    const core = db.getObjectCoreById(entity.id);
+    if (core) {
+      core.setDeleted(value);
+    }
+  }
+};
 
 const compare = (a?: string, b?: string) => {
   if (a == null) {

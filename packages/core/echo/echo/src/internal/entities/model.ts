@@ -12,6 +12,7 @@ import { assumeType } from '@dxos/util';
 import type * as Database from '../../Database';
 import {
   type ATTR_META,
+  type ATTR_PARENT,
   type ATTR_TYPE,
   EntityKind,
   KindId,
@@ -101,6 +102,7 @@ export interface ObjectJSON {
   id: string;
   [ATTR_TYPE]: DXN.String;
   [ATTR_SELF_DXN]?: DXN.String;
+  [ATTR_PARENT]?: string; // Encoded reference
   [ATTR_DELETED]?: boolean;
   [ATTR_META]?: ObjectMetaJSON;
   [ATTR_RELATION_SOURCE]?: DXN.String;

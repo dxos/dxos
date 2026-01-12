@@ -5,7 +5,7 @@
 import * as Schema from 'effect/Schema';
 
 import { raise } from '@dxos/debug';
-import { type EncodedReference, type ObjectMeta, isEncodedReference } from '@dxos/echo-protocol';
+import { type EncodedReference, type ObjectMeta, Reference, isEncodedReference } from '@dxos/echo-protocol';
 import { assertArgument, invariant } from '@dxos/invariant';
 import { DXN, ObjectId } from '@dxos/keys';
 import { defineHiddenProperty } from '@dxos/live-object';
@@ -28,12 +28,14 @@ import {
 import { Ref, type RefResolver, refFromEncodedReference, setRefResolver } from '../ref';
 import {
   ATTR_META,
+  ATTR_PARENT,
   ATTR_TYPE,
   type AnyEchoObject,
   EntityKind,
   KindId,
   MetaId,
   ObjectMetaSchema,
+  ParentId,
   TypeId,
   setSchema,
 } from '../types';
@@ -119,6 +121,11 @@ export const objectFromJSON = async (
     defineHiddenProperty(obj, MetaId, meta);
   }
 
+  if (jsonData[ATTR_PARENT]) {
+    const parentDxn = DXN.parse(jsonData[ATTR_PARENT]);
+    defineHiddenProperty(obj, ParentId, Reference.fromDXN(parentDxn));
+  }
+
   if (dxn) {
     defineHiddenProperty(obj, SelfDXNId, dxn);
   }
@@ -193,6 +200,16 @@ const typedJsonSerializer = function (this: any) {
 
   if (this[MetaId]) {
     result[ATTR_META] = serializeMeta(this[MetaId]);
+  }
+
+  if (this[ParentId]) {
+    if (this[ParentId] instanceof Reference) {
+      result[ATTR_PARENT] = this[ParentId].toDXN().toString();
+    } else if (Ref.isRef(this[ParentId])) {
+      result[ATTR_PARENT] = this[ParentId].dxn.toString();
+    } else {
+      result[ATTR_PARENT] = String(this[ParentId]);
+    }
   }
 
   if (this[SelfDXNId]) {

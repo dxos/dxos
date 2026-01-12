@@ -8,6 +8,7 @@ import * as Schema from 'effect/Schema';
 import * as SchemaAST from 'effect/SchemaAST';
 
 import { inspectCustom } from '@dxos/debug';
+import { type EncodedReference } from '@dxos/echo-protocol';
 import { type GenericSignal, compositeRuntime } from '@dxos/echo-signals/runtime';
 import { invariant } from '@dxos/invariant';
 import {
@@ -23,7 +24,7 @@ import {
 import { getSchemaDXN } from '../annotations';
 import { ObjectDeletedId } from '../entities';
 import { SchemaValidator } from '../object';
-import { SchemaId, TypeId } from '../types';
+import { ParentId, SchemaId, TypeId } from '../types';
 
 const symbolSignal = Symbol('signal');
 const symbolPropertySignal = Symbol('property-signal');
@@ -38,6 +39,7 @@ type ProxyTarget = {
    * Schema for the root.
    */
   [SchemaId]: Schema.Schema.AnyNoContext;
+  [ParentId]?: EncodedReference;
 
   /**
    * For get and set operations on value properties.
@@ -151,6 +153,9 @@ export class TypedReactiveHandler implements ReactiveHandler<ProxyTarget> {
   }
 
   private _validateValue(target: any, prop: string | symbol, value: any) {
+    if (prop === ParentId) {
+      return value;
+    }
     const schema = SchemaValidator.getTargetPropertySchema(target, prop);
     const _ = Schema.asserts(schema)(value);
     if (Array.isArray(value)) {
