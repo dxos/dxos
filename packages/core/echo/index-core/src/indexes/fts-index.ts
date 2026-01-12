@@ -41,7 +41,7 @@ export class FtsIndex implements Index {
         conditions.push(sql`m.spaceId = ${spaceId}`);
       }
 
-      return yield* sql<ObjectMeta>`SELECT m.* FROM ftsIndex AS f JOIN objectMeta AS m ON f.rowid = m.rowid WHERE ${sql.and(conditions)}`;
+      return yield* sql<ObjectMeta>`SELECT m.* FROM ftsIndex AS f JOIN objectMeta AS m ON f.rowid = m.recordId WHERE ${sql.and(conditions)}`;
     });
   }
 

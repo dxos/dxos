@@ -86,6 +86,7 @@ export class ReverseRefIndex implements Index {
     ({ targetDxn }: ReverseRefQuery): Effect.Effect<readonly ReverseRef[], SqlError.SqlError, SqlClient.SqlClient> =>
       Effect.gen(function* () {
         const sql = yield* SqlClient.SqlClient;
+        // TODO(mykola): Join objectMeta table here.
         const rows = yield* sql`SELECT * FROM reverseRef WHERE targetDxn = ${targetDxn}`;
         return rows as ReverseRef[];
       }),
