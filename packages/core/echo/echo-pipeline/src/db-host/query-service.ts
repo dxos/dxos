@@ -12,6 +12,7 @@ import { Stream } from '@dxos/codec-protobuf/stream';
 import { Context, Resource } from '@dxos/context';
 import { raise } from '@dxos/debug';
 import { DatabaseDirectory, QueryAST } from '@dxos/echo-protocol';
+import { type RuntimeProvider } from '@dxos/effect';
 import { type IndexEngine } from '@dxos/index-core';
 import { type IdToHeads, type Indexer, type ObjectSnapshot } from '@dxos/indexing';
 import { log } from '@dxos/log';
@@ -29,12 +30,11 @@ import { type AutomergeHost } from '../automerge';
 import { QueryExecutor } from '../query';
 
 import type { SpaceStateManager } from './space-state-manager';
-import { RuntimeProvider } from '@dxos/effect';
 
 export type QueryServiceProps = {
   indexer: Indexer;
-  indexer2: IndexEngine;
-  runtime: RuntimeProvider.RuntimeProvider<SqlClient.SqlClient>;
+  indexer2?: IndexEngine;
+  runtime?: RuntimeProvider.RuntimeProvider<SqlClient.SqlClient>;
   automergeHost: AutomergeHost;
   spaceStateManager: SpaceStateManager;
 };

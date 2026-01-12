@@ -63,6 +63,7 @@ export type ServiceContextRuntimeProps = Pick<
     invitationConnectionDefaultProps?: InvitationConnectionProps;
     disableP2pReplication?: boolean;
     enableVectorIndexing?: boolean;
+    enableFullTextIndexing?: boolean;
   };
 /**
  * Shared backend for all client services.
@@ -165,6 +166,7 @@ export class ServiceContext extends Resource {
       getSpaceKeyByRootDocumentId: (documentId) => this.spaceManager.findSpaceByRootDocumentId(documentId)?.key,
       indexing: {
         vector: this._runtimeProps?.enableVectorIndexing,
+        fullText: this._runtimeProps?.enableFullTextIndexing,
       },
       runtime: this._runtime,
     });

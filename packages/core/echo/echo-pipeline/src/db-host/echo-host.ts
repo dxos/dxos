@@ -51,7 +51,7 @@ export interface EchoHostIndexingConfig {
 }
 
 const DEFAULT_INDEXING_CONFIG: EchoHostIndexingConfig = {
-  // TODO(dmaretskyi): Disabled by default since embedding generation is expensive.
+  // TODO(mykola): Enable by default when SQLite indexer is stable.
   fullText: false,
   vector: false,
 };
@@ -82,6 +82,7 @@ export class EchoHost extends Resource {
 
   private readonly _automergeDataSource: AutomergeDataSource;
   private readonly _indexer2: IndexEngine;
+  private readonly _indexConfig: EchoHostIndexingConfig;
   private readonly _runtime: RuntimeProvider.RuntimeProvider<SqlClient.SqlClient>;
 
   private _updateIndexes!: DeferredTask;
@@ -91,7 +92,7 @@ export class EchoHost extends Resource {
   constructor({ kv, indexing = {}, peerIdProvider, getSpaceKeyByRootDocumentId, runtime }: EchoHostProps) {
     super();
 
-    const indexingConfig = { ...DEFAULT_INDEXING_CONFIG, ...indexing };
+    this._indexConfig = { ...DEFAULT_INDEXING_CONFIG, ...indexing };
 
     this._indexMetadataStore = new IndexMetadataStore({ db: kv.sublevel('index-metadata') });
     this._echoDataMonitor = new EchoDataMonitor();
@@ -119,8 +120,7 @@ export class EchoHost extends Resource {
         { kind: IndexKind.Kind.SCHEMA_MATCH },
         { kind: IndexKind.Kind.GRAPH },
 
-        ...(indexingConfig.fullText ? [{ kind: IndexKind.Kind.FULL_TEXT }] : []),
-        ...(indexingConfig.vector ? [{ kind: IndexKind.Kind.VECTOR }] : []),
+        ...(this._indexConfig.vector ? [{ kind: IndexKind.Kind.VECTOR }] : []),
       ],
     });
 
@@ -130,8 +130,8 @@ export class EchoHost extends Resource {
     this._queryService = new QueryServiceImpl({
       automergeHost: this._automergeHost,
       indexer: this._indexer,
-      indexer2: this._indexer2,
-      runtime: this._runtime,
+      indexer2: this._indexConfig.fullText ? this._indexer2 : undefined,
+      runtime: this._indexConfig.fullText ? this._runtime : undefined,
       spaceStateManager: this._spaceStateManager,
     });
 
@@ -140,9 +140,11 @@ export class EchoHost extends Resource {
       spaceStateManager: this._spaceStateManager,
       updateIndexes: async () => {
         await this._indexer.updateIndexes();
-        do {
-          await this._updateIndexes.runBlocking();
-        } while(!this._indexesUpToDate);
+        if (this._indexConfig.fullText) {
+          do {
+            await this._updateIndexes.runBlocking();
+          } while (!this._indexesUpToDate);
+        }
       },
     });
 
@@ -211,9 +213,11 @@ export class EchoHost extends Resource {
     await this._indexer.open(ctx);
     await this._queryService.open(ctx);
     await this._spaceStateManager.open(ctx);
-    await RuntimeProvider.runPromise(this._runtime)(this._indexer2.migrate());
+    if (this._indexConfig.fullText) {
+      await RuntimeProvider.runPromise(this._runtime)(this._indexer2.migrate());
+      this._updateIndexes = new DeferredTask(this._ctx, this._runUpdateIndexes);
+    }
 
-    this._updateIndexes = new DeferredTask(this._ctx, this._runUpdateIndexes);
     this._spaceStateManager.spaceDocumentListUpdated.on(this._ctx, (e) => {
       if (e.previousRootId) {
         void this._automergeHost.clearLocalCollectionState(deriveCollectionIdFromSpaceId(e.spaceId, e.previousRootId));
@@ -225,9 +229,13 @@ export class EchoHost extends Resource {
     });
     this._automergeHost.documentsSaved.on(this._ctx, () => {
       this._queryService.invalidateQueries();
-      this._updateIndexes.schedule();
+      if (this._indexConfig.fullText) {
+        this._updateIndexes.schedule();
+      }
     });
-    this._updateIndexes.schedule();
+    if (this._indexConfig.fullText) {
+      this._updateIndexes.schedule();
+    }
   }
 
   protected override async _close(ctx: Context): Promise<void> {
@@ -344,7 +352,7 @@ export class EchoHost extends Resource {
     await sleep(1);
     if (updated > 0) {
       this._indexesUpToDate = false;
-      this._updateIndexes.schedule();
+      this._updateIndexes!.schedule();
     } else {
       this._indexesUpToDate = true;
     }

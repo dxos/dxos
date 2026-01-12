@@ -53,5 +53,13 @@ export const createClientServices = (
 
   return createWorker && useWorker
     ? fromWorker(config, { createWorker, observabilityGroup, signalTelemetryEnabled })
-    : fromHost(config, { createOpfsWorker }, observabilityGroup, signalTelemetryEnabled);
+    : fromHost(
+        config,
+        {
+          createOpfsWorker,
+          runtimeProps: { enableFullTextIndexing: true },
+        },
+        observabilityGroup,
+        signalTelemetryEnabled,
+      );
 };

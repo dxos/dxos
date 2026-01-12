@@ -31,8 +31,8 @@ const isNullable: Predicate.Refinement<unknown, null | undefined> = Predicate.is
 
 type QueryExecutorOptions = {
   indexer: Indexer;
-  indexer2: IndexEngine;
-  runtime: RuntimeProvider.RuntimeProvider<SqlClient.SqlClient>;
+  indexer2?: IndexEngine;
+  runtime?: RuntimeProvider.RuntimeProvider<SqlClient.SqlClient>;
   automergeHost: AutomergeHost;
   spaceStateManager: SpaceStateManager;
 
@@ -154,8 +154,8 @@ const TRACE_QUERY_EXECUTION = false;
  */
 export class QueryExecutor extends Resource {
   private readonly _indexer: Indexer;
-  private readonly _indexer2: IndexEngine;
-  private readonly _runtime: RuntimeProvider.RuntimeProvider<SqlClient.SqlClient>;
+  private readonly _indexer2?: IndexEngine;
+  private readonly _runtime?: RuntimeProvider.RuntimeProvider<SqlClient.SqlClient>;
   private readonly _automergeHost: AutomergeHost;
   private readonly _spaceStateManager: SpaceStateManager;
   /**
@@ -381,7 +381,7 @@ export class QueryExecutor extends Resource {
       }
 
       case 'TextSelector': {
-        if (step.selector.searchKind === 'full-text') {
+        if (step.selector.searchKind === 'full-text' && this._indexer2 && this._runtime) {
           // Use indexer2 for full-text search.
           const beginIndexQuery = performance.now();
           const runtime = await runAndForwardErrors(this._runtime);
