@@ -162,11 +162,15 @@ export class LocalClientServices implements ClientServicesProvider {
     const { setIdentityTags } = await import('@dxos/messaging');
 
     // Create SQLite runtime layer.
-    const sqliteLayer = this._createOpfsWorker
-      ? // Use OPFS worker for persistent SQLite storage.
-        SqliteClient.layer({ worker: Effect.succeed((this._opfsWorker = this._createOpfsWorker())) })
-      : // Fallback to in-memory SQLite.
-        SqliteClient.layerMemory({});
+    let sqliteLayer;
+    if (this._createOpfsWorker) {
+      sqliteLayer = SqliteClient.layer({
+        worker: Effect.sync(this._createOpfsWorker),
+      });
+    } else {
+      // Fallback to in-memory SQLite.
+      sqliteLayer = SqliteClient.layerMemory({});
+    }
 
     this._runtime = ManagedRuntime.make(Layer.merge(sqliteLayer, Reactivity.layer).pipe(Layer.orDie));
 

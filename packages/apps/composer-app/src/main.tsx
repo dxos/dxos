@@ -89,7 +89,7 @@ const main = async () => {
           }),
     observabilityGroup,
     !observabilityDisabled,
-    () => new Worker(new URL('@dxos/client/opfs-worker', import.meta.url), { type: 'module' }),
+    () => new Worker(new URL('./opfs-worker', import.meta.url), { type: 'module' }),
   );
 
   const conf: PluginConfig = {

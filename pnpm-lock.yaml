@@ -2643,6 +2643,9 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
+      '@effect/sql-sqlite-wasm':
+        specifier: 'catalog:'
+        version: 0.45.1(@effect/experimental@0.57.11(effect@3.19.11)(ioredis@5.3.2))(@effect/sql@0.48.6(@effect/experimental@0.57.11(effect@3.19.11)(ioredis@5.3.2))(effect@3.19.11))(effect@3.19.11)
       '@fontsource/poiret-one':
         specifier: 'catalog:'
         version: 5.2.8
@@ -3934,6 +3937,9 @@ importers:
       '@effect/sql-sqlite-node':
         specifier: 'catalog:'
         version: 0.45.1(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/platform@0.93.6(effect@3.19.11))(@effect/sql@0.48.6(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11))(effect@3.19.11)
+      '@effect/sql-sqlite-wasm':
+        specifier: 'catalog:'
+        version: 0.45.1(@effect/experimental@0.57.11(effect@3.19.11)(ioredis@5.3.2))(@effect/sql@0.48.6(@effect/experimental@0.57.11(effect@3.19.11)(ioredis@5.3.2))(effect@3.19.11))(effect@3.19.11)
       effect:
         specifier: 'catalog:'
         version: 3.19.11
@@ -4796,7 +4802,7 @@ importers:
         version: 0.45.1(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/platform@0.93.6(effect@3.19.11))(@effect/sql@0.48.6(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11))(effect@3.19.11)
       '@effect/sql-sqlite-wasm':
         specifier: 'catalog:'
-        version: 0.45.1(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/sql@0.48.6(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11))(effect@3.19.11)
+        version: 0.45.1(@effect/experimental@0.57.11(effect@3.19.11)(ioredis@5.3.2))(@effect/sql@0.48.6(@effect/experimental@0.57.11(effect@3.19.11)(ioredis@5.3.2))(effect@3.19.11))(effect@3.19.11)
       effect:
         specifier: 'catalog:'
         version: 3.19.11
@@ -13502,7 +13508,7 @@ importers:
         version: 0.48.6(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)
       '@effect/sql-sqlite-wasm':
         specifier: 'catalog:'
-        version: 0.45.1(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/sql@0.48.6(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11))(effect@3.19.11)
+        version: 0.45.1(@effect/experimental@0.57.11(effect@3.19.11)(ioredis@5.3.2))(@effect/sql@0.48.6(@effect/experimental@0.57.11(effect@3.19.11)(ioredis@5.3.2))(effect@3.19.11))(effect@3.19.11)
       base-x:
         specifier: 'catalog:'
         version: 3.0.9
@@ -13704,7 +13710,7 @@ importers:
         version: 0.45.1(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/platform@0.93.6(effect@3.19.11))(@effect/sql@0.48.6(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11))(effect@3.19.11)
       '@effect/sql-sqlite-wasm':
         specifier: 'catalog:'
-        version: 0.45.1(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/sql@0.48.6(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11))(effect@3.19.11)
+        version: 0.45.1(@effect/experimental@0.57.11(effect@3.19.11)(ioredis@5.3.2))(@effect/sql@0.48.6(@effect/experimental@0.57.11(effect@3.19.11)(ioredis@5.3.2))(effect@3.19.11))(effect@3.19.11)
       '@obsidize/tar-browserify':
         specifier: 'catalog:'
         version: 5.2.0
@@ -40881,7 +40887,7 @@ snapshots:
       better-sqlite3: 11.10.0
       effect: 3.19.11
 
-  '@effect/sql-sqlite-wasm@0.45.1(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/sql@0.48.6(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11))(effect@3.19.11)':
+  '@effect/sql-sqlite-wasm@0.45.1(@effect/experimental@0.57.11(effect@3.19.11)(ioredis@5.3.2))(@effect/sql@0.48.6(@effect/experimental@0.57.11(effect@3.19.11)(ioredis@5.3.2))(effect@3.19.11))(effect@3.19.11)':
     dependencies:
       '@effect/experimental': 0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2)
       '@effect/sql': 0.48.6(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)
