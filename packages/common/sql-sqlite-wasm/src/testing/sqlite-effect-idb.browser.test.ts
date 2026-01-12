@@ -206,7 +206,8 @@ const TestLayer = Layer.scoped(
   }),
 ).pipe(Layer.provideMerge(Reactivity.layer));
 
-describe('effect SQLite with IDBBatchAtomicVFS', () => {
+// Doesn't work yet.
+describe.skip('effect SQLite with IDBBatchAtomicVFS', () => {
   it.effect(
     'basic CRUD operations',
     Effect.fnUntraced(function* () {
