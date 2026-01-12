@@ -78,34 +78,9 @@ export class IndexEngine {
   /**
    * Query text index and return full object metadata.
    */
-  queryText(query: FtsQuery) {
+  queryText(query: FtsQuery): Effect.Effect<readonly ObjectMeta[], SqlError.SqlError, SqlClient.SqlClient> {
     return Effect.gen(this, function* () {
-      const ftsResults = yield* this.#ftsIndex.query(query);
-      if (ftsResults.length === 0) {
-        return [];
-      }
-
-      const recordIds = ftsResults.map((r) => r.rowid);
-      const metaResults = yield* this.#objectMetaIndex.lookupByRecordIds(recordIds);
-
-      // Map metadata by recordId for efficient lookup.
-      const metaByRecordId = new Map(metaResults.map((m) => [m.recordId, m]));
-
-      // Return combined results with metadata and snapshot.
-      return ftsResults
-        .map((fts) => {
-          const meta = metaByRecordId.get(fts.rowid);
-          if (!meta) {
-            return null;
-          }
-          return {
-            objectId: meta.objectId,
-            spaceId: meta.spaceId,
-            documentId: meta.documentId,
-            snapshot: fts.snapshot,
-          };
-        })
-        .filter((r) => r !== null);
+      return yield* this.#ftsIndex.query(query);
     });
   }
 
@@ -114,7 +89,9 @@ export class IndexEngine {
     return this.#reverseRefIndex.query(query);
   }
 
-  queryType(query: Pick<ObjectMeta, 'spaceId' | 'typeDxn'>) {
+  queryType(
+    query: Pick<ObjectMeta, 'spaceId' | 'typeDxn'>,
+  ): Effect.Effect<readonly ObjectMeta[], SqlError.SqlError, SqlClient.SqlClient> {
     return this.#objectMetaIndex.query(query);
   }
 
@@ -169,15 +146,9 @@ export class IndexEngine {
       yield* this.#objectMetaIndex.update(objects);
 
       // Look up recordIds for the objects.
-      const recordIds = yield* this.#objectMetaIndex.lookupRecordIds(objects);
+      yield* this.#objectMetaIndex.lookupRecordIds(objects);
 
-      // Enrich objects with recordIds.
-      const enrichedObjects: IndexerObject[] = objects.map((obj, i) => ({
-        ...obj,
-        recordId: recordIds[i],
-      }));
-
-      yield* index.update(enrichedObjects);
+      yield* index.update(objects);
       yield* this.#tracker.updateCursors(
         updatedCursors.map(
           (_): IndexCursor => ({

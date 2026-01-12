@@ -141,14 +141,13 @@ export class ObjectMetaIndex implements Index {
 
   /**
    * Look up recordIds for objects that are already stored in the ObjectMetaIndex.
-   * Returns recordIds in the same order as the input objects.
+   * Mutates the objects in place.
    */
   lookupRecordIds = Effect.fn('ObjectMetaIndex.lookupRecordIds')(
-    (objects: IndexerObject[]): Effect.Effect<number[], SqlError.SqlError, SqlClient.SqlClient> =>
+    (objects: IndexerObject[]): Effect.Effect<void, SqlError.SqlError, SqlClient.SqlClient> =>
       Effect.gen(function* () {
         const sql = yield* SqlClient.SqlClient;
 
-        const recordIds: number[] = [];
         for (const object of objects) {
           const { spaceId, queueId, documentId, data } = object;
           const objectId = data.id;
@@ -172,10 +171,8 @@ export class ObjectMetaIndex implements Index {
               new Error(`Object not found in ObjectMetaIndex: ${spaceId}/${documentId ?? queueId}/${objectId}`),
             );
           }
-          recordIds.push(result[0].recordId);
+          object.recordId = result[0].recordId;
         }
-
-        return recordIds;
       }),
   );
 

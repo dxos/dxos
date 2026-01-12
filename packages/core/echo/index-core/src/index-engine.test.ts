@@ -14,7 +14,7 @@ import { DXN, ObjectId, SpaceId } from '@dxos/keys';
 
 import { type DataSourceCursor, type IndexDataSource, IndexEngine } from './index-engine';
 import { type IndexCursor, IndexTracker } from './index-tracker';
-import { FtsIndex, type IndexerObject, ObjectMetaIndex, ReverseRefIndex, type Snapshot } from './indexes';
+import { FtsIndex, type IndexerObject, ObjectMetaIndex, ReverseRefIndex } from './indexes';
 
 const TYPE_DEFAULT = DXN.parse('dxn:type:test.com/type/Type:0.1.0').toString();
 const TYPE_A = DXN.parse('dxn:type:test.com/type/TypeA:0.1.0').toString();
@@ -138,7 +138,7 @@ describe('IndexEngine', () => {
       // Verify FTS index gets updated.
       const ftsResults1 = yield* ftsIndex.query({ query: 'Hello' });
       expect(ftsResults1.length).toBeGreaterThan(0);
-      expect(ftsResults1.some((row: Snapshot) => row.snapshot.includes('Hello'))).toBe(true);
+      expect(ftsResults1.some((row) => row.objectId === obj1.data.id)).toBe(true);
 
       // Update object.
       const obj1Updated: IndexerObject = {

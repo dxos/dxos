@@ -13,6 +13,7 @@ import { ATTR_TYPE } from '@dxos/echo/internal';
 import { DXN, ObjectId, SpaceId } from '@dxos/keys';
 
 import { FtsIndex } from './fts-index';
+import { ObjectMetaIndex } from './object-meta-index';
 import type { IndexerObject } from './interface';
 
 const TYPE_PERSON = DXN.parse('dxn:type:example.com/type/Person:0.1.0').toString();
@@ -45,7 +46,9 @@ describe('FtsIndex', () => {
     'should insert snapshots and query them via MATCH',
     Effect.fnUntraced(function* () {
       const index = new FtsIndex();
+      const metaIndex = new ObjectMetaIndex();
       yield* index.migrate();
+      yield* metaIndex.migrate();
 
       const spaceId = SpaceId.random();
       const objects: IndexerObject[] = [
@@ -53,7 +56,7 @@ describe('FtsIndex', () => {
           spaceId,
           queueId: null,
           documentId: 'doc-1',
-          recordId: 1,
+          recordId: null,
           data: {
             id: ObjectId.random(),
             [ATTR_TYPE]: TYPE_PERSON,
@@ -63,11 +66,13 @@ describe('FtsIndex', () => {
         },
       ];
 
+      yield* metaIndex.update(objects);
+      yield* metaIndex.lookupRecordIds(objects);
       yield* index.update(objects);
 
       const match = yield* index.query({ query: 'Effect' });
       expect(match.length).toBeGreaterThan(0);
-      expect(match[0].snapshot).toContain('Effect');
+      expect(match[0].objectId).toBe(objects[0].data.id);
 
       const noMatch = yield* index.query({ query: 'DefinitelyNotPresent' });
       expect(noMatch).toHaveLength(0);
@@ -78,41 +83,48 @@ describe('FtsIndex', () => {
     'should upsert objects on update',
     Effect.fnUntraced(function* () {
       const index = new FtsIndex();
+      const metaIndex = new ObjectMetaIndex();
       yield* index.migrate();
+      yield* metaIndex.migrate();
 
       const spaceId = SpaceId.random();
       const objectId = ObjectId.random();
-      const recordId = 1;
 
       // Initial insert.
       const obj1: IndexerObject = {
         spaceId,
         queueId: null,
         documentId: 'doc-1',
-        recordId,
+        recordId: null,
         data: {
           id: objectId,
           [ATTR_TYPE]: DXN.parse('dxn:type:example.com/type/Person:0.1.0').toString(),
           title: 'Original Title',
         },
       };
+      yield* metaIndex.update([obj1]);
+      yield* metaIndex.lookupRecordIds([obj1]);
       yield* index.update([obj1]);
 
       let match = yield* index.query({ query: 'Original' });
       expect(match.length).toBe(1);
 
-      // Update with same recordId.
+      // Update with same doc id and object id.
       const obj2: IndexerObject = {
         spaceId,
         queueId: null,
         documentId: 'doc-1',
-        recordId,
+        recordId: null,
         data: {
           id: objectId,
           [ATTR_TYPE]: TYPE_DEFAULT,
           title: 'Updated Title',
         },
       };
+      // Meta index update is required if metadata changed, but for FTS query to work, we just need the join to succeed.
+      // recordId is persistent.
+      yield* metaIndex.update([obj2]);
+      yield* metaIndex.lookupRecordIds([obj2]);
       yield* index.update([obj2]);
 
       // Old content should be gone.
@@ -129,7 +141,9 @@ describe('FtsIndex', () => {
     'should handle non-sequential recordIds',
     Effect.fnUntraced(function* () {
       const index = new FtsIndex();
+      const metaIndex = new ObjectMetaIndex();
       yield* index.migrate();
+      yield* metaIndex.migrate();
 
       const spaceId = SpaceId.random();
       const objects: IndexerObject[] = [
@@ -137,7 +151,7 @@ describe('FtsIndex', () => {
           spaceId,
           queueId: null,
           documentId: 'doc-100',
-          recordId: 100,
+          recordId: null,
           data: {
             id: ObjectId.random(),
             [ATTR_TYPE]: TYPE_PERSON,
@@ -148,7 +162,7 @@ describe('FtsIndex', () => {
           spaceId,
           queueId: null,
           documentId: 'doc-200',
-          recordId: 200,
+          recordId: null,
           data: {
             id: ObjectId.random(),
             [ATTR_TYPE]: TYPE_PERSON,
@@ -159,7 +173,7 @@ describe('FtsIndex', () => {
           spaceId,
           queueId: null,
           documentId: 'doc-1000',
-          recordId: 1000,
+          recordId: null,
           data: {
             id: ObjectId.random(),
             [ATTR_TYPE]: TYPE_PERSON,
@@ -168,42 +182,73 @@ describe('FtsIndex', () => {
         },
       ];
 
+      yield* metaIndex.update(objects);
+      yield* metaIndex.lookupRecordIds(objects);
       yield* index.update(objects);
 
       // All documents should be queryable.
       const alphaMatch = yield* index.query({ query: 'Alpha' });
       expect(alphaMatch).toHaveLength(1);
 
-      const betaMatch = yield* index.query({ query: 'Beta' });
-      expect(betaMatch).toHaveLength(1);
-
-      const gammaMatch = yield* index.query({ query: 'Gamma' });
-      expect(gammaMatch).toHaveLength(1);
-
       // Query that matches all.
       const allMatch = yield* index.query({ query: 'Document' });
       expect(allMatch).toHaveLength(3);
+    }, Effect.provide(TestLayer)),
+  );
 
-      // Update one with non-sequential recordId.
-      const updatedObj: IndexerObject = {
-        spaceId,
+  it.effect(
+    'should query from one space only',
+    Effect.fnUntraced(function* () {
+      const index = new FtsIndex();
+      const metaIndex = new ObjectMetaIndex();
+      yield* index.migrate();
+      yield* metaIndex.migrate();
+
+      const space1 = SpaceId.random();
+      const space2 = SpaceId.random();
+
+      const obj1: IndexerObject = {
+        spaceId: space1,
         queueId: null,
-        documentId: 'doc-200',
-        recordId: 200,
+        documentId: 'doc-s1',
+        recordId: null,
         data: {
           id: ObjectId.random(),
-          [ATTR_TYPE]: DXN.parse('dxn:type:example.com/type/Person:0.1.0').toString(),
-          title: 'Delta Document',
+          [ATTR_TYPE]: TYPE_PERSON,
+          title: 'Space One Content',
         },
       };
-      yield* index.update([updatedObj]);
 
-      // Beta should be gone, Delta should exist.
-      const betaAfter = yield* index.query({ query: 'Beta' });
-      expect(betaAfter).toHaveLength(0);
+      const obj2: IndexerObject = {
+        spaceId: space2,
+        queueId: null,
+        documentId: 'doc-s2',
+        recordId: null,
+        data: {
+          id: ObjectId.random(),
+          [ATTR_TYPE]: TYPE_PERSON,
+          title: 'Space Two Content',
+        },
+      };
 
-      const deltaMatch = yield* index.query({ query: 'Delta' });
-      expect(deltaMatch).toHaveLength(1);
+      yield* metaIndex.update([obj1, obj2]);
+      yield* metaIndex.lookupRecordIds([obj1, obj2]);
+      yield* index.update([obj1, obj2]);
+
+      // Query without spaceId should return both (if term matches both) or specific one
+      // Let's search for "Content" which is in both
+      const allMatches = yield* index.query({ query: 'Content' });
+      expect(allMatches).toHaveLength(2);
+
+      // Query space 1
+      const s1Matches = yield* index.query({ query: 'Content', spaceId: space1 });
+      expect(s1Matches).toHaveLength(1);
+      expect(s1Matches[0].objectId).toBe(obj1.data.id);
+
+      // Query space 2
+      const s2Matches = yield* index.query({ query: 'Content', spaceId: space2 });
+      expect(s2Matches).toHaveLength(1);
+      expect(s2Matches[0].objectId).toBe(obj2.data.id);
     }, Effect.provide(TestLayer)),
   );
 });

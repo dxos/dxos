@@ -8,20 +8,19 @@ import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
 import type { Index, IndexerObject } from './interface';
-
-export const Snapshot = Schema.Struct({
-  snapshot: Schema.String,
-});
-export interface Snapshot extends Schema.Schema.Type<typeof Snapshot> {}
-
-export const FtsResult = Schema.Struct({
-  rowid: Schema.Number,
-  snapshot: Schema.String,
-});
-export interface FtsResult extends Schema.Schema.Type<typeof FtsResult> {}
+import type { SpaceId } from '@dxos/keys';
+import type { ObjectMeta } from './object-meta-index';
 
 export interface FtsQuery {
+  /**
+   * Text to search.
+   */
   query: string;
+
+  /**
+   * Space ID to search within.
+   */
+  spaceId?: SpaceId;
 }
 
 export class FtsIndex implements Index {
@@ -33,11 +32,16 @@ export class FtsIndex implements Index {
     yield* sql`CREATE VIRTUAL TABLE IF NOT EXISTS ftsIndex USING fts5(snapshot)`;
   });
 
-  query({ query }: FtsQuery): Effect.Effect<readonly FtsResult[], SqlError.SqlError, SqlClient.SqlClient> {
+  query({ query, spaceId }: FtsQuery): Effect.Effect<readonly ObjectMeta[], SqlError.SqlError, SqlClient.SqlClient> {
     return Effect.gen(function* () {
       const sql = yield* SqlClient.SqlClient;
-      // TODO: Join metadata table here.
-      return yield* sql<FtsResult>`SELECT rowid, * FROM ftsIndex WHERE ftsIndex MATCH ${query}`;
+
+      const conditions = [sql`f.snapshot MATCH ${query}`];
+      if (spaceId) {
+        conditions.push(sql`m.spaceId = ${spaceId}`);
+      }
+
+      return yield* sql<ObjectMeta>`SELECT m.* FROM ftsIndex AS f JOIN objectMeta AS m ON f.rowid = m.rowid WHERE ${sql.and(conditions)}`;
     });
   }
 
