@@ -65,7 +65,6 @@ catalog:
   '@dxos/echo': ^0.8.3
   '@dxos/echo-db': ^0.8.3
   '@dxos/log': ^0.8.3
-  '@dxos/schema': ^0.8.3
   '@dxos/test-utils': ^0.8.3
   '@effect-atom/atom': ^0.4.10
   '@effect-atom/atom-react': ^0.4.4
