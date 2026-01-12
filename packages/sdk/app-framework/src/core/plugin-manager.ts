@@ -307,8 +307,8 @@ class ManagerImpl implements PluginManager {
     event: ActivationEvent.ActivationEvent | string,
     params?: { before?: string; after?: string },
   ): Effect.Effect<boolean, Error> {
+    const key = typeof event === 'string' ? event : ActivationEvent.eventKey(event);
     return Effect.gen(this, function* () {
-      const key = typeof event === 'string' ? event : ActivationEvent.eventKey(event);
       log('activating', { key, ...params });
       yield* Ref.update(this._activatingEvents, (activating) => Array.append(activating, key));
       const pendingIndex = this._get(this._pendingResetAtom).findIndex((event) => event === key);
@@ -355,14 +355,29 @@ class ManagerImpl implements PluginManager {
       yield* PubSub.publish(this.activation, { event: key, state: 'activating' });
 
       // Fire activatesBefore events.
-      yield* Function.pipe(
+      const beforeEvents = Function.pipe(
         modules,
         Array.flatMap((module) => module.activatesBefore ?? []),
         HashSet.fromIterable,
         HashSet.toValues,
         Array.filter((event) => !activatingEvents.includes(ActivationEvent.eventKey(event))),
+      );
+      yield* Function.pipe(
+        beforeEvents,
         Array.map((event) => this.activate(event, { before: key })),
         Effect.allWith({ concurrency: 'unbounded' }),
+        together(
+          Effect.sleep(Duration.seconds(10)).pipe(
+            Effect.andThen(
+              Effect.sync(() =>
+                log.warn('activatesBefore is taking a long time', {
+                  event: key,
+                  beforeEvents: beforeEvents.map(ActivationEvent.eventKey),
+                }),
+              ),
+            ),
+          ),
+        ),
       );
 
       // Concurrently triggers loading of lazy capabilities.
@@ -389,14 +404,29 @@ class ManagerImpl implements PluginManager {
       );
 
       // Fire activatesAfter events.
-      yield* Function.pipe(
+      const afterEvents = Function.pipe(
         modules,
         Array.flatMap((module) => module.activatesAfter ?? []),
         HashSet.fromIterable,
         HashSet.toValues,
         Array.filter((event) => !activatingEvents.includes(ActivationEvent.eventKey(event))),
+      );
+      yield* Function.pipe(
+        afterEvents,
         Array.map((event) => this.activate(event, { after: key })),
         Effect.allWith({ concurrency: 'unbounded' }),
+        together(
+          Effect.sleep(Duration.seconds(10)).pipe(
+            Effect.andThen(
+              Effect.sync(() =>
+                log.warn('activatesAfter is taking a long time', {
+                  event: key,
+                  afterEvents: afterEvents.map(ActivationEvent.eventKey),
+                }),
+              ),
+            ),
+          ),
+        ),
       );
 
       yield* Ref.update(this._activatingEvents, (activating) => Array.filter(activating, (event) => event !== key));
@@ -412,7 +442,13 @@ class ManagerImpl implements PluginManager {
       log('activated', { key });
 
       return true;
-    });
+    }).pipe(
+      together(
+        Effect.sleep(Duration.seconds(15)).pipe(
+          Effect.andThen(Effect.sync(() => log.warn('event activation is taking a long time', { event: key }))),
+        ),
+      ),
+    );
   }
 
   /**
