@@ -10,10 +10,27 @@ import * as Schema from 'effect/Schema';
 import { SpaceId } from '@dxos/keys';
 
 export const IndexCursor = Schema.Struct({
+  /**
+   * Name of the index owning this cursor.
+   */ 
   indexName: Schema.String,
+  /**
+   * Space id.
+   */
   spaceId: Schema.NullOr(SpaceId),
+  /**
+   * Source name.
+   * 'automerge' / 'queue' / 'index' (for secondary indexes)
+   */
   sourceName: Schema.String,
+  /**
+   * Document id or queue id.
+   * doc_id, queue_id, '' <empty string> (if indexing entire namespace)
+   */
   resourceId: Schema.NullOr(Schema.String),
+  /**
+   * Heads, queue position, version.
+   */
   cursor: Schema.Union(Schema.Number, Schema.String),
 });
 export interface IndexCursor extends Schema.Schema.Type<typeof IndexCursor> {}
@@ -25,11 +42,11 @@ export class IndexTracker {
     // For automerge: last-indexed heads of the document
     // For queue: the position of the item that was indexed last
     yield* sql`CREATE TABLE IF NOT EXISTS indexCursor (
-      indexName TEXT NOT NULL, -- name of the index owning this cursor
-      spaceId TEXT NOT NULL DEFAULT '', -- '' <empty string> if multi-space index
-      sourceName TEXT NOT NULL, -- 'automerge' / 'queue' / 'index' (for secondary indexes)
-      resourceId TEXT NOT NULL DEFAULT '', -- doc_id, queue_id, '' <empty string> (if indexing entire namespace)
-      cursor, -- heads / queue position / version
+      indexName TEXT NOT NULL,
+      spaceId TEXT NOT NULL DEFAULT '',
+      sourceName TEXT NOT NULL,
+      resourceId TEXT NOT NULL DEFAULT '',
+      cursor,
       PRIMARY KEY (indexName, spaceId, sourceName, resourceId)
     )`;
   });
