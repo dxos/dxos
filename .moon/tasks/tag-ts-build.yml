@@ -7,7 +7,8 @@ tasks:
       - ^:build
       - ^:compile
       - compile
-      - root:checkPackageCycles
+      # TODO(burdon): Add root moon.yml?
+      # - root:checkPackageCycles
     inputs:
       - /tsconfig.base.json
       - tsconfig.json
