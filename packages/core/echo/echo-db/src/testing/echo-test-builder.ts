@@ -5,7 +5,7 @@
 import type { AutomergeUrl } from '@automerge/automerge-repo';
 import * as Reactivity from '@effect/experimental/Reactivity';
 import type * as SqlClient from '@effect/sql/SqlClient';
-import { layerMemory } from '@dxos/sql-sqlite-wasm/platform';
+import { layerMemory } from '@dxos/sql-sqlite/platform';
 import * as Layer from 'effect/Layer';
 import * as ManagedRuntime from 'effect/ManagedRuntime';
 import type * as Schema from 'effect/Schema';

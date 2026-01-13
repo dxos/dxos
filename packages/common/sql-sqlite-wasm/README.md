@@ -1,11 +1,11 @@
-# @dxos/@dxos/sql-sqlite-wasm
+# @dxos/@dxos/sql-sqlite
 
 Sqlite client
 
 ## Installation
 
 ```bash
-pnpm i @dxos/@dxos/sql-sqlite-wasm
+pnpm i @dxos/@dxos/sql-sqlite
 ```
 
 ## DXOS Resources
