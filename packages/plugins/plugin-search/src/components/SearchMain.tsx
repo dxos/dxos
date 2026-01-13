@@ -25,6 +25,8 @@ export const SearchMain = ({ space }: { space?: Space }) => {
     space?.db,
     query === undefined
       ? Query.select(Filter.nothing())
+      
+      // TODO(dmaretskyi): Final version would walk the ancestry of the object until we find a non-system type.
       : Query.all(
           Query.select(Filter.text(query, { type: 'full-text' })).select(Filter.not(Filter.type(Text.Text))),
           Query.select(Filter.text(query, { type: 'full-text' }))
