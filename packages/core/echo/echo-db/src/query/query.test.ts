@@ -779,7 +779,7 @@ describe('Query', () => {
       }
     });
 
-    test.only('full-text search with wrong word order', async () => {
+    test('full-text search with wrong word order', async () => {
       const { db } = await builder.createDatabase({ indexing: { fullText: true } });
 
       db.add(Obj.make(Type.Expando, { title: 'Python Programming Guide' }));
