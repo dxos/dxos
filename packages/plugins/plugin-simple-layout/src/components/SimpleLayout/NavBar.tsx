@@ -47,7 +47,7 @@ export const NavBar = ({ activeId, onActiveIdChange }: NavBarProps) => {
         className={mx(
           'fixed inset-inline-0',
           'grid grid-cols-[min-content_min-content] gap-2 place-content-center',
-          'block-end-[--dx-mobile-bottombar-inset-bottom,0px] bs-[--dx-mobile-bottombar-content-height,64px]',
+          'block-end-0 pbe-[env(safe-area-inset-bottom)] bs-[calc(env(safe-area-inset-bottom)+var(--dx-mobile-bottombar-content-height,64px))]',
           'bg-baseSurface border-bs border-separator',
           surfaceZIndex({ level: 'menu' }),
         )}
