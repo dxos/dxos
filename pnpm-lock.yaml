@@ -1500,6 +1500,12 @@ catalogs:
     openapi-types:
       specifier: ^12.1.3
       version: 12.1.3
+    overlayscrollbars:
+      specifier: ^2.13.0
+      version: 2.13.0
+    overlayscrollbars-react:
+      specifier: ^0.5.6
+      version: 0.5.6
     oxc-resolver:
       specifier: ^11.6.0
       version: 11.9.0
@@ -17649,6 +17655,12 @@ importers:
       bind-event-listener:
         specifier: 'catalog:'
         version: 3.0.0
+      overlayscrollbars:
+        specifier: 'catalog:'
+        version: 2.13.0
+      overlayscrollbars-react:
+        specifier: 'catalog:'
+        version: 0.5.6(overlayscrollbars@2.13.0)(react@19.2.3)
     devDependencies:
       '@dxos/random':
         specifier: workspace:*
@@ -34119,6 +34131,15 @@ packages:
   os-homedir@1.0.2:
     resolution: {integrity: sha512-B5JU3cabzk8c67mRRd3ECmROafjYMXbuzlwtqdM8IbS8ktlTix8aFGb2bAGKrSRIlnfKwovGUUr72JUPyOb6kQ==}
     engines: {node: '>=0.10.0'}
+
+  overlayscrollbars-react@0.5.6:
+    resolution: {integrity: sha512-E5To04bL5brn9GVCZ36SnfGanxa2I2MDkWoa4Cjo5wol7l+diAgi4DBc983V7l2nOk/OLJ6Feg4kySspQEGDBw==}
+    peerDependencies:
+      overlayscrollbars: ^2.0.0
+      react: ~19.2.3
+
+  overlayscrollbars@2.13.0:
+    resolution: {integrity: sha512-uQGpLESrbFDLTWucWAKX9ceIANj7detMwH/2yJ315Llt72ZcWN3P6ckMotoqVv2Mk29R/pnhDtgYjy4K+kwAyQ==}
 
   own-keys@1.0.1:
     resolution: {integrity: sha512-qFOyK5PjiWZd+QQIh+1jhdb9LpxTF0qs7Pm8o5QHYZ0M3vKqSqzsZaEB6oWlxZ+q2sJBMI/Ktgd2N5ZwQoRHfg==}
@@ -56749,6 +56770,13 @@ snapshots:
       wcwidth: 1.0.1
 
   os-homedir@1.0.2: {}
+
+  overlayscrollbars-react@0.5.6(overlayscrollbars@2.13.0)(react@19.2.3):
+    dependencies:
+      overlayscrollbars: 2.13.0
+      react: 19.2.3
+
+  overlayscrollbars@2.13.0: {}
 
   own-keys@1.0.1:
     dependencies:

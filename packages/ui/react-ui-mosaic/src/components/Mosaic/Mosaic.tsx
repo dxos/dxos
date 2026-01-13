@@ -27,8 +27,10 @@ import { createContext } from '@radix-ui/react-context';
 import { Primitive } from '@radix-ui/react-primitive';
 import { Slot } from '@radix-ui/react-slot';
 import { bind } from 'bind-event-listener';
+import { OverlayScrollbarsComponent, type OverlayScrollbarsComponentRef } from 'overlayscrollbars-react';
 import React, {
   type CSSProperties,
+  type ComponentProps,
   type FC,
   type PropsWithChildren,
   type ReactNode,
@@ -41,6 +43,9 @@ import React, {
   useState,
 } from 'react';
 import { createPortal } from 'react-dom';
+
+import 'overlayscrollbars/styles/overlayscrollbars.css';
+import './style.css';
 
 import { type Obj } from '@dxos/echo';
 import { log } from '@dxos/log';
@@ -366,7 +371,7 @@ type ContainerProps = SlottableClassName<
   PropsWithChildren<
     Pick<ContainerContextValue, 'eventHandler' | 'axis'> & {
       asChild?: boolean;
-      autoscroll?: boolean;
+      autoScroll?: HTMLElement | null;
       withFocus?: boolean;
       debug?: () => ReactNode;
     }
@@ -383,7 +388,7 @@ const Container = forwardRef<HTMLDivElement, ContainerProps>(
       eventHandler,
       axis = 'vertical',
       asChild,
-      autoscroll,
+      autoScroll: autoscrollElement,
       withFocus,
       debug,
       ...props
@@ -441,9 +446,9 @@ const Container = forwardRef<HTMLDivElement, ContainerProps>(
 
       return combine(
         ...[
-          autoscroll && [
+          autoscrollElement && [
             autoScrollForElements({
-              element: rootRef.current,
+              element: autoscrollElement,
               canScroll: ({ element: _ }) => {
                 // const delta = element.scrollHeight - element.scrollTop - element.clientHeight;
                 return true;
@@ -454,7 +459,7 @@ const Container = forwardRef<HTMLDivElement, ContainerProps>(
               }),
             }),
 
-            bind(rootRef.current, {
+            bind(autoscrollElement, {
               type: 'scroll',
               listener: handleScroll,
             }),
@@ -527,7 +532,7 @@ const Container = forwardRef<HTMLDivElement, ContainerProps>(
           .filter(isTruthy)
           .flatMap((x) => x),
       );
-    }, [rootRef, eventHandler, data]);
+    }, [rootRef, eventHandler, data, autoscrollElement]);
 
     return (
       <ContainerContextProvider
@@ -566,6 +571,39 @@ const Container = forwardRef<HTMLDivElement, ContainerProps>(
 );
 
 Container.displayName = 'MosaicContainer';
+
+//
+// Viewport
+//
+
+type ViewportProps = ComponentProps<typeof OverlayScrollbarsComponent> & {
+  onViewportReady?: (viewport: HTMLElement | null) => void;
+};
+
+const Viewport = forwardRef<HTMLDivElement, ViewportProps>(({ onViewportReady, ...props }, forwardedRef) => {
+  const osRef = useRef<OverlayScrollbarsComponentRef<'div'>>(null);
+
+  // Forward the host element to the forwardedRef for asChild/Slot compatibility.
+  useEffect(() => {
+    const hostElement = osRef.current?.getElement();
+    if (forwardedRef) {
+      if (typeof forwardedRef === 'function') {
+        forwardedRef(hostElement ?? null);
+      } else {
+        forwardedRef.current = hostElement ?? null;
+      }
+    }
+  });
+
+  // Notify parent when viewport is ready.
+  useEffect(() => {
+    const instance = osRef.current?.osInstance();
+    const viewport = instance?.elements().viewport ?? null;
+    onViewportReady?.(viewport);
+  }, [onViewportReady]);
+
+  return <OverlayScrollbarsComponent {...props} ref={osRef} />;
+});
 
 //
 // Container Debug
@@ -906,6 +944,7 @@ export const Mosaic = {
   Root,
   Container,
   ContainerInfo,
+  Viewport,
   Tile,
   Placeholder,
   DropIndicator,
@@ -915,6 +954,7 @@ export const Mosaic = {
 export type {
   RootProps as MosaicRootProps,
   ContainerProps as MosaicContainerProps,
+  ViewportProps as MosaicViewportProps,
   TileProps as MosaicTileProps,
   PlaceholderProps as MosiacPlaceholderProps,
   DropIndicatorProps as MosaicDropIndicatorProps,

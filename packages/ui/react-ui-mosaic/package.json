@@ -56,7 +56,9 @@
     "@radix-ui/react-primitive": "catalog:",
     "@radix-ui/react-slot": "catalog:",
     "@radix-ui/react-use-controllable-state": "catalog:",
-    "bind-event-listener": "catalog:"
+    "bind-event-listener": "catalog:",
+    "overlayscrollbars": "catalog:",
+    "overlayscrollbars-react": "catalog:"
   },
   "devDependencies": {
     "@dxos/random": "workspace:*",

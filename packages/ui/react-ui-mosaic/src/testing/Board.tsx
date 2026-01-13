@@ -4,7 +4,7 @@
 
 import { useComposedRefs } from '@radix-ui/react-compose-refs';
 import * as Schema from 'effect/Schema';
-import React, { forwardRef, useMemo, useRef } from 'react';
+import React, { forwardRef, useMemo, useRef, useState } from 'react';
 
 import { Obj, Ref, Type } from '@dxos/echo';
 import { ObjectId } from '@dxos/keys';
@@ -63,6 +63,8 @@ type BoardProps = { id: string; columns: TestColumn[]; debug?: boolean };
 
 export const Board = forwardRef<HTMLDivElement, BoardProps>(({ id, columns, debug }, forwardedRef) => {
   const [DebugInfo, debugHandler] = useContainerDebug(debug);
+  const [scrollViewport, setViewportElement] = useState<HTMLElement | null>(null);
+
   const eventHandler = useEventHandlerAdapter({
     id,
     canDrop: ({ source }) => {
@@ -82,22 +84,15 @@ export const Board = forwardRef<HTMLDivElement, BoardProps>(({ id, columns, debu
       <Focus.Group asChild axis='horizontal'>
         <Mosaic.Container
           asChild
-          autoscroll
           axis='horizontal'
           withFocus
-          debug={debugHandler}
+          autoScroll={scrollViewport}
           eventHandler={eventHandler}
+          debug={debugHandler}
         >
-          <div role='none' className='overflow-x-auto'>
-            {/* <ScrollArea.Root>
-            <ScrollArea.Viewport> */}
-            <Mosaic.Stack axis='horizontal' className='bs-full plb-2' items={columns} Component={Column} />
-            {/* </ScrollArea.Viewport>
-            <ScrollArea.Scrollbar orientation='horizontal'>
-              <ScrollArea.Thumb />
-            </ScrollArea.Scrollbar>
-          </ScrollArea.Root> */}
-          </div>
+          <Mosaic.Viewport onViewportReady={setViewportElement}>
+            <Mosaic.Stack axis='horizontal' className='bs-full pbs-2 pbe-3' items={columns} Component={Column} />
+          </Mosaic.Viewport>
         </Mosaic.Container>
       </Focus.Group>
       <DebugInfo />
@@ -160,17 +155,7 @@ export const Column = forwardRef<HTMLDivElement, ColumnProps>(
               <Card.Heading>{id}</Card.Heading>
               <Card.Menu items={[]} />
             </Card.Toolbar>
-            <Mosaic.Container
-              asChild
-              axis='vertical'
-              autoscroll
-              withFocus
-              debug={debugHandler}
-              eventHandler={eventHandler}
-            >
-              {/* <ScrollArea.Expander> */}
-              {/* <ScrollArea.Root>
-                <ScrollArea.Viewport> */}
+            <Mosaic.Container asChild axis='vertical' withFocus debug={debugHandler} eventHandler={eventHandler}>
               <div role='none' className='overflow-y-auto'>
                 <Mosaic.Stack
                   axis='vertical'
@@ -179,12 +164,6 @@ export const Column = forwardRef<HTMLDivElement, ColumnProps>(
                   Component={Tile}
                 />
               </div>
-              {/* </ScrollArea.Viewport>
-                <ScrollArea.Scrollbar orientation='vertical'>
-                  <ScrollArea.Thumb />
-                </ScrollArea.Scrollbar>
-              </ScrollArea.Root> */}
-              {/* </ScrollArea.Expander> */}
             </Mosaic.Container>
             <div>
               <div className='grow flex p-1 justify-center text-xs'>{items.length}</div>

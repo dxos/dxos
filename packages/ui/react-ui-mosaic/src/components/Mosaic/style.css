@@ -1,0 +1,11 @@
+/**
+ * Override OverlayScrollbars theme variables.
+ * This file should be imported after 'overlayscrollbars/styles/overlayscrollbars.css'
+ * to ensure proper CSS cascade order.
+ */
+/** TODO(burdon): Tailwind. */
+.os-theme-dark {
+  --os-handle-bg: rgba(100, 100, 100, 0.5);
+  --os-handle-bg-hover: rgba(100, 100, 100, 0.7);
+  --os-handle-bg-active: rgba(100, 100, 100, 0.9);
+}
