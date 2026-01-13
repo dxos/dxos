@@ -695,8 +695,8 @@ describe('Query', () => {
   });
 
   describe('indexer2 text search', () => {
-    test('full-text search via indexer2', async () => {
-      const { db } = await builder.createDatabase();
+    test.only('full-text search via indexer2', async () => {
+      const { db } = await builder.createDatabase({ indexing: { fullText: true } });
 
       db.add(Obj.make(Type.Expando, { title: 'Introduction to TypeScript' }));
       db.add(Obj.make(Type.Expando, { title: 'Getting Started with React' }));
@@ -735,7 +735,7 @@ describe('Query', () => {
     });
 
     test('full-text search across multiple matching objects', async () => {
-      const { db } = await builder.createDatabase();
+      const { db } = await builder.createDatabase({ indexing: { fullText: true } });
 
       db.add(Obj.make(Type.Expando, { title: 'Programming with JavaScript' }));
       db.add(Obj.make(Type.Expando, { title: 'JavaScript Best Practices' }));
@@ -750,7 +750,7 @@ describe('Query', () => {
     });
 
     test('full-text search after content update', async () => {
-      const { db } = await builder.createDatabase();
+      const { db } = await builder.createDatabase({ indexing: { fullText: true } });
 
       const obj = db.add(Obj.make(Type.Expando, { title: 'Original Title' }));
       await db.flush({ indexes: true });
