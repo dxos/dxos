@@ -1,0 +1,42 @@
+{
+  "name": "@dxos/sql-sqlite",
+  "version": "0.8.3",
+  "description": "Sqlite client",
+  "homepage": "https://dxos.org",
+  "bugs": "https://github.com/dxos/dxos/issues",
+  "license": "MIT",
+  "author": "info@dxos.org",
+  "sideEffects": true,
+  "type": "module",
+  "exports": {
+    ".": {
+      "source": "./src/index.ts",
+      "types": "./dist/types/src/index.d.ts",
+      "browser": "./dist/lib/browser/index.mjs",
+      "node": "./dist/lib/node-esm/index.mjs"
+    },
+    "./platform": {
+      "types": "./dist/types/src/platform/browser.d.ts",
+      "browser": "./dist/lib/browser/platform/browser.mjs",
+      "node": "./dist/lib/node-esm/platform/node.mjs"
+    }
+  },
+  "files": [
+    "dist",
+    "src"
+  ],
+  "dependencies": {
+    "@dxos/wa-sqlite": "catalog:",
+    "@effect/experimental": "catalog:",
+    "@effect/platform": "catalog:",
+    "@effect/sql": "catalog:",
+    "@effect/sql-sqlite-node": "catalog:",
+    "@effect/sql-sqlite-wasm": "catalog:",
+    "effect": "catalog:"
+  },
+  "devDependencies": {},
+  "publishConfig": {
+    "access": "public"
+  },
+  "beast": {}
+}

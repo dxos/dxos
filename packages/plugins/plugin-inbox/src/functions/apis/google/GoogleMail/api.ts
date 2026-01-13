@@ -83,3 +83,18 @@ export const getMessage = Effect.fn(function* (userId: string, messageId: string
   const url = createUrl([API_URL, 'users', userId, 'messages', messageId]).toString();
   return yield* makeGoogleApiRequest(url).pipe(Effect.flatMap(decodeAndHandleErrors(Message)));
 });
+
+/**
+ * Sends a message.
+ * https://developers.google.com/workspace/gmail/api/reference/rest/v1/users.messages/send
+ */
+export const sendMessage = Effect.fn('sendMessage')(function* (userId: string, message: { raw: string }) {
+  const url = createUrl([API_URL, 'users', userId, 'messages', 'send']).toString();
+  return yield* makeGoogleApiRequest(url, { method: 'POST', body: JSON.stringify(message) }).pipe(
+    Effect.flatMap(
+      decodeAndHandleErrors(
+        Schema.Struct({ id: Schema.String, threadId: Schema.String, labelIds: Schema.Array(Schema.String) }),
+      ),
+    ),
+  );
+});

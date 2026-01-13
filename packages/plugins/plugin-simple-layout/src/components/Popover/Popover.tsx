@@ -8,7 +8,7 @@ import React, { type PropsWithChildren, useCallback, useEffect, useMemo, useRef,
 import { Surface, useCapability } from '@dxos/app-framework/react';
 import { Popover, type PopoverContentInteractOutsideEvent } from '@dxos/react-ui';
 
-import { SimpleLayoutState } from '../types';
+import { SimpleLayoutState } from '../../types';
 
 const DEBOUNCE_DELAY = 40;
 

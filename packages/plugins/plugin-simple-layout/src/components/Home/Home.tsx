@@ -7,19 +7,18 @@ import React, { useCallback, useEffect, useMemo, useRef } from 'react';
 import { Common } from '@dxos/app-framework';
 import { useAppGraph, useOperationInvoker } from '@dxos/app-framework/react';
 import { Graph, Node, useConnections } from '@dxos/plugin-graph';
-import { Avatar, Icon, toLocalizedString, useTranslation } from '@dxos/react-ui';
+import { Avatar, Icon, type ThemedClassName, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { Card } from '@dxos/react-ui-mosaic';
 import { SearchList, useSearchListItem, useSearchListResults } from '@dxos/react-ui-searchlist';
 import { mx } from '@dxos/ui-theme';
 
-import { meta } from '../meta';
+import { meta } from '../../meta';
 
-import { bannerHeading, bannerRoot } from './Banner';
+type HomeProps = ThemedClassName;
 
-export const Home = () => {
+export const Home = ({ classNames }: HomeProps) => {
   const { t } = useTranslation(meta.id);
   const workspaces = useWorkspaces();
-
   useLoadDescendents(Node.RootId);
 
   const { results, handleSearch } = useSearchListResults({
@@ -28,32 +27,21 @@ export const Home = () => {
   });
 
   return (
-    <>
-      <Header />
-      <Card.Heading classNames='container-max-width'>{t('workspaces heading')}</Card.Heading>
+    <div className={mx('flex flex-col pli-3', classNames)}>
+      {/* <div className='container-max-width'>{t('workspaces heading')}</div> */}
       <SearchList.Root onSearch={handleSearch} classNames='container-max-width'>
-        <SearchList.Input placeholder={t('search placeholder')} autoFocus />
+        <div className='plb-3'>
+          <SearchList.Input placeholder={t('search placeholder')} autoFocus />
+        </div>
         <SearchList.Content>
-          <SearchList.Viewport>
-            <section className='pli-cardSpacingInline mbe-8 space-y-cardSpacingBlock'>
-              {results.map((node) => (
-                <Workspace key={node.id} node={node} />
-              ))}
-            </section>
+          <SearchList.Viewport classNames='flex flex-col gap-1'>
+            {results.map((node) => (
+              <Workspace key={node.id} node={node} />
+            ))}
           </SearchList.Viewport>
         </SearchList.Content>
       </SearchList.Root>
-    </>
-  );
-};
-
-const Header = () => {
-  const { t } = useTranslation(meta.id);
-
-  return (
-    <nav className={bannerRoot}>
-      <h1 className={bannerHeading}>{t('current app name', { ns: 'appkit' })}</h1>
-    </nav>
+    </div>
   );
 };
 
@@ -73,15 +61,16 @@ const Workspace = ({ node }: { node: Node.Node }) => {
   const name = toLocalizedString(node.properties.label, t);
   const isSelected = selectedValue === node.id;
 
-  // Register this workspace with the search context
+  // Register this workspace with the search context.
   useEffect(() => {
     if (ref.current) {
       registerItem(node.id, ref.current, handleSelect);
     }
+
     return () => unregisterItem(node.id);
   }, [node.id, handleSelect, registerItem, unregisterItem]);
 
-  // Scroll into view when selected
+  // Scroll into view when selected.
   useEffect(() => {
     if (isSelected && ref.current) {
       ref.current.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
@@ -127,6 +116,7 @@ const useLoadDescendents = (nodeId?: string) => {
         });
       }
     });
+
     return () => cancelAnimationFrame(frame);
   }, [nodeId, graph]);
 };
@@ -144,7 +134,5 @@ const useWorkspaces = () => {
   // Get first collection's children as workspaces.
   // TODO(wittjosiah): Support multiple collections or nested workspaces if needed.
   const firstCollection = collections[0];
-  const workspaces = useConnections(graph, firstCollection?.id);
-
-  return workspaces;
+  return useConnections(graph, firstCollection?.id);
 };

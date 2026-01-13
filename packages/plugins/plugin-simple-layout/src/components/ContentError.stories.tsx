@@ -4,9 +4,7 @@
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 
-import { withPluginManager } from '@dxos/app-framework/testing';
-import { corePlugins } from '@dxos/plugin-testing';
-import { withLayout, withTheme } from '@dxos/react-ui/testing';
+import { withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '../translations';
 
@@ -15,14 +13,9 @@ import { ContentError } from './ContentError';
 const meta = {
   title: 'plugins/plugin-simple-layout/ContentError',
   component: ContentError,
-  decorators: [
-    withTheme,
-    withLayout({ layout: 'fullscreen' }),
-    withPluginManager({
-      plugins: [...corePlugins()],
-    }),
-  ],
+  decorators: [withTheme],
   parameters: {
+    layout: 'centered',
     translations,
   },
 } satisfies Meta<typeof ContentError>;

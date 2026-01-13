@@ -5,6 +5,7 @@
 import { Atom, Registry } from '@effect-atom/atom-react';
 import * as Array from 'effect/Array';
 import * as Context from 'effect/Context';
+import * as Deferred from 'effect/Deferred';
 import * as Duration from 'effect/Duration';
 import * as Effect from 'effect/Effect';
 import * as Fiber from 'effect/Fiber';
@@ -100,7 +101,8 @@ class ManagerImpl implements PluginManager {
   private readonly _pendingResetAtom: Atom.Writable<string[]>;
   private readonly _pluginLoader: ManagerOptions['pluginLoader'];
   private readonly _capabilities = new Map<string, Capability.Any[]>();
-  private readonly _moduleMemoMap = new Map<Plugin.PluginModule['id'], Effect.Effect<Capability.Any[], Error>>();
+  private readonly _moduleMemoMap = new Map<Plugin.PluginModule['id'], Deferred.Deferred<Capability.Any[], Error>>();
+  private readonly _moduleSemaphores = new Map<Plugin.PluginModule['id'], Effect.Semaphore>();
   private readonly _activatingEvents = Effect.runSync(Ref.make<string[]>([]));
   private readonly _activatingModules = Effect.runSync(Ref.make<string[]>([]));
 
@@ -307,8 +309,8 @@ class ManagerImpl implements PluginManager {
     event: ActivationEvent.ActivationEvent | string,
     params?: { before?: string; after?: string },
   ): Effect.Effect<boolean, Error> {
+    const key = typeof event === 'string' ? event : ActivationEvent.eventKey(event);
     return Effect.gen(this, function* () {
-      const key = typeof event === 'string' ? event : ActivationEvent.eventKey(event);
       log('activating', { key, ...params });
       yield* Ref.update(this._activatingEvents, (activating) => Array.append(activating, key));
       const pendingIndex = this._get(this._pendingResetAtom).findIndex((event) => event === key);
@@ -355,14 +357,29 @@ class ManagerImpl implements PluginManager {
       yield* PubSub.publish(this.activation, { event: key, state: 'activating' });
 
       // Fire activatesBefore events.
-      yield* Function.pipe(
+      const beforeEvents = Function.pipe(
         modules,
         Array.flatMap((module) => module.activatesBefore ?? []),
         HashSet.fromIterable,
         HashSet.toValues,
         Array.filter((event) => !activatingEvents.includes(ActivationEvent.eventKey(event))),
+      );
+      yield* Function.pipe(
+        beforeEvents,
         Array.map((event) => this.activate(event, { before: key })),
         Effect.allWith({ concurrency: 'unbounded' }),
+        together(
+          Effect.sleep(Duration.seconds(10)).pipe(
+            Effect.andThen(
+              Effect.sync(() =>
+                log.warn('activatesBefore is taking a long time', {
+                  event: key,
+                  beforeEvents: beforeEvents.map(ActivationEvent.eventKey),
+                }),
+              ),
+            ),
+          ),
+        ),
       );
 
       // Concurrently triggers loading of lazy capabilities.
@@ -389,14 +406,29 @@ class ManagerImpl implements PluginManager {
       );
 
       // Fire activatesAfter events.
-      yield* Function.pipe(
+      const afterEvents = Function.pipe(
         modules,
         Array.flatMap((module) => module.activatesAfter ?? []),
         HashSet.fromIterable,
         HashSet.toValues,
         Array.filter((event) => !activatingEvents.includes(ActivationEvent.eventKey(event))),
+      );
+      yield* Function.pipe(
+        afterEvents,
         Array.map((event) => this.activate(event, { after: key })),
         Effect.allWith({ concurrency: 'unbounded' }),
+        together(
+          Effect.sleep(Duration.seconds(10)).pipe(
+            Effect.andThen(
+              Effect.sync(() =>
+                log.warn('activatesAfter is taking a long time', {
+                  event: key,
+                  afterEvents: afterEvents.map(ActivationEvent.eventKey),
+                }),
+              ),
+            ),
+          ),
+        ),
       );
 
       yield* Ref.update(this._activatingEvents, (activating) => Array.filter(activating, (event) => event !== key));
@@ -412,7 +444,13 @@ class ManagerImpl implements PluginManager {
       log('activated', { key });
 
       return true;
-    });
+    }).pipe(
+      together(
+        Effect.sleep(Duration.seconds(15)).pipe(
+          Effect.andThen(Effect.sync(() => log.warn('event activation is taking a long time', { event: key }))),
+        ),
+      ),
+    );
   }
 
   /**
@@ -534,44 +572,64 @@ class ManagerImpl implements PluginManager {
     }
   }
 
-  // Memoized with _moduleMemoMap
+  private _getModuleSemaphore(moduleId: Plugin.PluginModule['id']): Effect.Semaphore {
+    let semaphore = this._moduleSemaphores.get(moduleId);
+    if (!semaphore) {
+      semaphore = Effect.runSync(Effect.makeSemaphore(1));
+      this._moduleSemaphores.set(moduleId, semaphore);
+    }
+    return semaphore;
+  }
+
   private _loadModule = (module: Plugin.PluginModule): Effect.Effect<Capability.Any[], Error> =>
     Effect.gen(this, function* () {
-      const memoized = this._moduleMemoMap.get(module.id);
-      if (memoized) {
-        return yield* memoized;
-      }
+      const semaphore = this._getModuleSemaphore(module.id);
 
-      const loadEffect = Effect.gen(this, function* () {
-        log('loading module', { module: module.id });
-        const [duration, capabilities] = yield* Effect.timed(module.activate(this.context));
-        const normalized = capabilities == null ? [] : Array.isArray(capabilities) ? capabilities : [capabilities];
-        return { capabilities: normalized, duration };
-      }).pipe(
-        Effect.tap(({ duration }) =>
-          Effect.sync(() =>
-            log('loaded module', {
-              module: module.id,
-              elapsed: Duration.toMillis(duration),
-              failed: false,
-            }),
-          ),
-        ),
-        Effect.map(({ capabilities }) => capabilities as Capability.Any[]),
-        Effect.withSpan('PluginManager._loadModule'),
-        together(
-          Effect.sleep(Duration.seconds(10)).pipe(
-            Effect.andThen(
-              Effect.sync(() => log.warn(`module is taking a long time to activate`, { module: module.id })),
+      // Atomically check-and-set under per-module semaphore to prevent race conditions.
+      const deferredToAwait = yield* Effect.gen(this, function* () {
+        const existing = this._moduleMemoMap.get(module.id);
+        if (existing) {
+          return existing;
+        }
+
+        // First caller - create deferred, store it, and start loading in background.
+        const deferred = yield* Deferred.make<Capability.Any[], Error>();
+        this._moduleMemoMap.set(module.id, deferred);
+
+        const loadEffect = Effect.gen(this, function* () {
+          log('loading module', { module: module.id });
+          const [duration, capabilities] = yield* Effect.timed(module.activate(this.context));
+          const normalized = capabilities == null ? [] : Array.isArray(capabilities) ? capabilities : [capabilities];
+          log('loaded module', {
+            module: module.id,
+            elapsed: Duration.toMillis(duration),
+            failed: false,
+          });
+          return normalized as Capability.Any[];
+        }).pipe(
+          Effect.withSpan('PluginManager._loadModule'),
+          together(
+            Effect.sleep(Duration.seconds(10)).pipe(
+              Effect.andThen(
+                Effect.sync(() => log.warn(`module is taking a long time to activate`, { module: module.id })),
+              ),
             ),
           ),
-        ),
-      );
+        );
 
-      const fiber = yield* Effect.fork(loadEffect);
-      const joined = Fiber.join(fiber);
-      this._moduleMemoMap.set(module.id, joined);
-      return yield* joined;
+        // Fork the load to run in background, completing the deferred when done.
+        yield* Effect.forkDaemon(
+          loadEffect.pipe(
+            Effect.tap((result) => Deferred.succeed(deferred, result)),
+            Effect.catchAll((error) => Deferred.fail(deferred, error)),
+          ),
+        );
+
+        return deferred;
+      }).pipe(semaphore.withPermits(1));
+
+      // Wait for result outside the semaphore so multiple waiters can proceed concurrently.
+      return yield* Deferred.await(deferredToAwait);
     });
 
   private _contributeCapabilities(

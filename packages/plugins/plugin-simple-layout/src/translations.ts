@@ -21,6 +21,7 @@ export const translations = [
         'app menu label': 'App menu',
         'main menu label': 'Main menu',
         'error fallback message': 'An error occurred',
+        'search placeholder': 'Search...',
       },
     },
   },

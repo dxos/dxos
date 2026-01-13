@@ -19,25 +19,20 @@ import {
 import { DropdownMenu, MenuProvider } from '@dxos/react-ui-menu';
 import { mx, surfaceZIndex } from '@dxos/ui-theme';
 
-import { meta } from '../meta';
+import { meta } from '../../meta';
 
-export const bottomNavRoot = mx(
-  'fixed inset-inline-0 block-end-[--dx-mobile-bottombar-inset-bottom,0px] bs-[--dx-mobile-bottombar-content-height,64px] bg-baseSurface border-bs border-separator grid grid-cols-[min-content_min-content] place-content-center gap-2',
-  surfaceZIndex({ level: 'menu' }),
-);
-
-export type BottomNavProps = {
-  activeId?: string;
-  onActiveIdChange?: (nextActiveId: string | null) => void;
-};
-
-const navButtonProps = {
+const buttonProps = {
   iconOnly: true,
   size: 6 as Size,
   classNames: 'aspect-square',
 };
 
-export const BottomNav = ({ activeId, onActiveIdChange }: BottomNavProps) => {
+export type NavBarProps = {
+  activeId?: string;
+  onActiveIdChange?: (nextActiveId: string | null) => void;
+};
+
+export const NavBar = ({ activeId, onActiveIdChange }: NavBarProps) => {
   const { t } = useTranslation(meta.id);
   const { graph } = useAppGraph();
 
@@ -48,10 +43,18 @@ export const BottomNav = ({ activeId, onActiveIdChange }: BottomNavProps) => {
 
   return (
     <DensityProvider density='coarse'>
-      <nav className={bottomNavRoot}>
+      <nav
+        className={mx(
+          'fixed inset-inline-0',
+          'grid grid-cols-[min-content_min-content] gap-2 place-content-center',
+          'block-end-[--dx-mobile-bottombar-inset-bottom,0px] bs-[--dx-mobile-bottombar-content-height,64px]',
+          'bg-baseSurface border-bs border-separator',
+          surfaceZIndex({ level: 'menu' }),
+        )}
+      >
         <ButtonGroup>
           <IconButton
-            {...navButtonProps}
+            {...buttonProps}
             label={t('browse label')}
             icon='ph--squares-four--regular'
             onClick={() => onActiveIdChange?.(null)}
@@ -59,7 +62,7 @@ export const BottomNav = ({ activeId, onActiveIdChange }: BottomNavProps) => {
             {...(isBrowseActive && { 'aria-current': 'location' })}
           />
           <IconButton
-            {...navButtonProps}
+            {...buttonProps}
             label={t('notifications label')}
             icon='ph--bell-simple--regular'
             onClick={() => onActiveIdChange?.('notifications')}
@@ -69,7 +72,7 @@ export const BottomNav = ({ activeId, onActiveIdChange }: BottomNavProps) => {
           <Button
             variant={activeId === 'profile' ? 'primary' : 'default'}
             onClick={() => onActiveIdChange?.('profile')}
-            classNames={navButtonProps.classNames}
+            classNames={buttonProps.classNames}
           >
             <span className='sr-only'>{t('profile label')}</span>
             <Avatar.Root>
@@ -80,9 +83,9 @@ export const BottomNav = ({ activeId, onActiveIdChange }: BottomNavProps) => {
         </ButtonGroup>
         <MenuProvider>
           <DropdownMenu.Root items={menuActions}>
-            <Tooltip.Trigger content={t('app menu label')} side='right' asChild>
-              <DropdownMenu.Trigger data-testid='spacePlugin.addSpace' asChild>
-                <IconButton {...navButtonProps} icon='ph--plus--regular' label={t('main menu label')} />
+            <Tooltip.Trigger asChild content={t('app menu label')} side='right'>
+              <DropdownMenu.Trigger asChild data-testid='spacePlugin.addSpace'>
+                <IconButton {...buttonProps} icon='ph--plus--regular' label={t('main menu label')} />
               </DropdownMenu.Trigger>
             </Tooltip.Trigger>
           </DropdownMenu.Root>

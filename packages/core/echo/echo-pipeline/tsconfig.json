@@ -25,6 +25,9 @@
       "path": "../../../common/debug"
     },
     {
+      "path": "../../../common/effect"
+    },
+    {
       "path": "../../../common/errors"
     },
     {
@@ -104,6 +107,9 @@
     },
     {
       "path": "../echo-protocol"
+    },
+    {
+      "path": "../index-core"
     },
     {
       "path": "../indexing"
