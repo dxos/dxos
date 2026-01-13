@@ -29,13 +29,15 @@ const handlePreviewLookup = async (
   }
 };
 
-export default Capability.makeModule((context) =>
-  Effect.sync(() => {
+export default Capability.makeModule(
+  Effect.fnUntraced(function* () {
+    const context = yield* Capability.PluginContextService;
+    const { invokePromise } = yield* Capability.get(Common.Capability.OperationInvoker);
+    const client = yield* Capability.get(ClientCapabilities.Client);
+    const layout = yield* Capability.get(Common.Capability.Layout);
+
     // TODO(wittjosiah): Factor out lookup handlers to other plugins to make not ECHO-specific.
     const handleAnchorActivate = async ({ refId, label, trigger }: DxAnchorActivate) => {
-      const { invokePromise } = context.getCapability(Common.Capability.OperationInvoker);
-      const client = context.getCapability(ClientCapabilities.Client);
-      const [layout] = context.getCapabilities(Common.Capability.Layout);
       const { spaceId } = parseId(layout.workspace);
       const space = (spaceId && client.spaces.get(spaceId)) ?? client.spaces.default;
       const result = await handlePreviewLookup(client, space, { ref: refId, label });

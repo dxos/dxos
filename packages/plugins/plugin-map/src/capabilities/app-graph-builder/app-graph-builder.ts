@@ -13,8 +13,10 @@ import { View } from '@dxos/schema';
 import { meta } from '../../meta';
 import { Map, MapAction } from '../../types';
 
-export default Capability.makeModule((context) =>
-  Effect.sync(() => {
+export default Capability.makeModule(
+  Effect.fnUntraced(function* () {
+    const context = yield* Capability.PluginContextService;
+
     return Capability.contributes(
       Common.Capability.AppGraphBuilder,
       GraphBuilder.createExtension({

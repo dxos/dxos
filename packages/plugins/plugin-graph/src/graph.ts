@@ -6,24 +6,26 @@ import * as Effect from 'effect/Effect';
 import * as Record from 'effect/Record';
 
 import { Capability, Common } from '@dxos/app-framework';
-import { Graph, GraphBuilder, Node } from '@dxos/app-graph';
+import { type BuilderExtensions, Graph, GraphBuilder, Node } from '@dxos/app-graph';
 
 // TODO(wittjosiah): Remove or restore graph caching.
 // import { meta } from './meta';
 
 // const KEY = `${meta.id}/app-graph`;
 
-export default Capability.makeModule((context) =>
-  Effect.sync(() => {
-    const registry = context.getCapability(Common.Capability.AtomRegistry);
+export default Capability.makeModule(
+  Effect.fnUntraced(function* () {
+    const registry = yield* Capability.get(Common.Capability.AtomRegistry);
+    const extensionsAtom = yield* Capability.atom(Common.Capability.AppGraphBuilder);
+
     const builder = GraphBuilder.from(/* localStorage.getItem(KEY) ?? */ undefined, registry);
     // const interval = setInterval(() => {
     //   localStorage.setItem(KEY, builder.graph.pickle());
     // }, 5_000);
 
     const unsubscribe = registry.subscribe(
-      context.capabilities(Common.Capability.AppGraphBuilder),
-      (extensions) => {
+      extensionsAtom,
+      (extensions: BuilderExtensions[]) => {
         const next = GraphBuilder.flattenExtensions(extensions);
         const current = Record.values(registry.get(builder.extensions));
         const removed = current.filter(({ id }) => !next.some(({ id: nextId }) => nextId === id));

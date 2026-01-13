@@ -226,18 +226,17 @@ const StoryPlugin = Plugin.define<StoryPluginOptions>({
   Plugin.addModule({
     id: 'example.com/plugin/testing/module/setup',
     activatesOn: ActivationEvent.allOf(Common.ActivationEvent.OperationInvokerReady, ClientEvents.SpacesReady),
-    activate: (context) =>
-      Effect.gen(function* () {
-        const client = context.getCapability(ClientCapabilities.Client);
-        const space = client.spaces.default;
-        const { invoke } = context.getCapability(Common.Capability.OperationInvoker);
+    activate: Effect.fnUntraced(function* () {
+      const client = yield* Capability.get(ClientCapabilities.Client);
+      const space = client.spaces.default;
+      const { invoke } = yield* Capability.get(Common.Capability.OperationInvoker);
 
-        // Ensure workspace is set.
-        yield* invoke(Common.LayoutOperation.SwitchWorkspace, { subject: space.id });
+      // Ensure workspace is set.
+      yield* invoke(Common.LayoutOperation.SwitchWorkspace, { subject: space.id });
 
-        // Create initial chat.
-        yield* invoke(AssistantOperation.CreateChat, { db: space.db });
-      }),
+      // Create initial chat.
+      yield* invoke(AssistantOperation.CreateChat, { db: space.db });
+    }),
   }),
   Plugin.addModule(({ onChatCreated }) => ({
     id: 'example.com/plugin/testing/module/operation-resolver',

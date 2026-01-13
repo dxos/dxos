@@ -14,14 +14,15 @@ import { Task } from '@dxos/types';
 
 import { TableOperation } from '../../types';
 
-export default Capability.makeModule((context) =>
-  Effect.succeed(
-    Capability.contributes(Common.Capability.OperationResolver, [
+export default Capability.makeModule(
+  Effect.fnUntraced(function* () {
+    const { invoke } = yield* Capability.get(Common.Capability.OperationInvoker);
+
+    return Capability.contributes(Common.Capability.OperationResolver, [
       OperationResolver.make({
         operation: TableOperation.OnCreateSpace,
         handler: ({ space }) =>
           Effect.gen(function* () {
-            const { invoke } = context.getCapability(Common.Capability.OperationInvoker);
             const { object } = yield* invoke(TableOperation.Create, {
               db: space.db,
               typename: Task.Task.typename,
@@ -34,7 +35,6 @@ export default Capability.makeModule((context) =>
         operation: TableOperation.OnSchemaAdded,
         handler: ({ db, schema, show = true }) =>
           Effect.gen(function* () {
-            const { invoke } = context.getCapability(Common.Capability.OperationInvoker);
             const { object } = yield* invoke(TableOperation.Create, {
               db,
               typename: Type.getTypename(schema),
@@ -62,7 +62,6 @@ export default Capability.makeModule((context) =>
         operation: TableOperation.AddRow,
         handler: ({ view, data }) =>
           Effect.gen(function* () {
-            const { invoke } = context.getCapability(Common.Capability.OperationInvoker);
             const db = Obj.getDatabase(view);
             invariant(db);
             const typename = view.query ? getTypenameFromQuery(view.query.ast) : undefined;
@@ -73,6 +72,6 @@ export default Capability.makeModule((context) =>
             yield* invoke(SpaceOperation.AddObject, { target: db, object, hidden: true });
           }),
       }),
-    ]),
-  ),
+    ]);
+  }),
 );

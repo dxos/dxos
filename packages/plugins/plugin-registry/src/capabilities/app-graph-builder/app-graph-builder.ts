@@ -4,14 +4,16 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capability, Common, SettingsOperation } from '@dxos/app-framework';
+import { Capability, Common, type Plugin, SettingsOperation } from '@dxos/app-framework';
 import { GraphBuilder, NodeMatcher } from '@dxos/plugin-graph';
 
 import { REGISTRY_ID, REGISTRY_KEY, meta } from '../../meta';
 
-export default Capability.makeModule((context) =>
-  Effect.succeed(
-    Capability.contributes(Common.Capability.AppGraphBuilder, [
+export default Capability.makeModule(
+  Effect.fnUntraced(function* () {
+    const context = yield* Capability.PluginContextService;
+
+    return Capability.contributes(Common.Capability.AppGraphBuilder, [
       GraphBuilder.createExtension({
         id: meta.id,
         match: NodeMatcher.whenRoot,
@@ -112,7 +114,7 @@ export default Capability.makeModule((context) =>
         match: NodeMatcher.whenId(REGISTRY_ID),
         connector: () => {
           const manager = context.getCapability(Common.Capability.PluginManager);
-          return manager.getPlugins().map((plugin) => ({
+          return manager.getPlugins().map((plugin: Plugin.Plugin) => ({
             id: plugin.meta.id.replaceAll('/', ':'),
             type: 'dxos.org/plugin',
             data: plugin,
@@ -124,6 +126,6 @@ export default Capability.makeModule((context) =>
           }));
         },
       }),
-    ]),
-  ),
+    ]);
+  }),
 );

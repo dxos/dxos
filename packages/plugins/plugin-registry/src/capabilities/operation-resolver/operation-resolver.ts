@@ -8,17 +8,18 @@ import { Capability, Common, OperationResolver, SettingsOperation } from '@dxos/
 
 import { REGISTRY_ID } from '../../meta';
 
-export default Capability.makeModule((context) =>
-  Effect.succeed(
-    Capability.contributes(Common.Capability.OperationResolver, [
+export default Capability.makeModule(
+  Effect.fnUntraced(function* () {
+    const { invoke } = yield* Capability.get(Common.Capability.OperationInvoker);
+
+    return Capability.contributes(Common.Capability.OperationResolver, [
       OperationResolver.make({
         operation: SettingsOperation.OpenPluginRegistry,
         handler: () =>
           Effect.gen(function* () {
-            const { invoke } = context.getCapability(Common.Capability.OperationInvoker);
             yield* invoke(Common.LayoutOperation.SwitchWorkspace, { subject: REGISTRY_ID });
           }),
       }),
-    ]),
-  ),
+    ]);
+  }),
 );

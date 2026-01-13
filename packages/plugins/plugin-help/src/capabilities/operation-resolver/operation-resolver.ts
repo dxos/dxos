@@ -8,9 +8,11 @@ import { Capability, Common, OperationResolver } from '@dxos/app-framework';
 
 import { HelpCapabilities, HelpOperation } from '../../types';
 
-export default Capability.makeModule((context) =>
-  Effect.sync(() =>
-    Capability.contributes(Common.Capability.OperationResolver, [
+export default Capability.makeModule(
+  Effect.fnUntraced(function* () {
+    const context = yield* Capability.PluginContextService;
+
+    return Capability.contributes(Common.Capability.OperationResolver, [
       OperationResolver.make({
         operation: HelpOperation.Start,
         handler: () =>
@@ -19,6 +21,6 @@ export default Capability.makeModule((context) =>
             state.running = true;
           }),
       }),
-    ]),
-  ),
+    ]);
+  }),
 );

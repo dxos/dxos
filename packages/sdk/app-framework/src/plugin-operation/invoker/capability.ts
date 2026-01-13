@@ -13,10 +13,13 @@ import * as OperationInvoker from './operation-invoker';
 // Capability Module
 //
 
-export default Capability.makeModule((context) =>
-  Effect.gen(function* () {
+export default Capability.makeModule(
+  Effect.fnUntraced(function* () {
+    // Get the context for synchronous access in callbacks.
+    const context = yield* Capability.PluginContextService;
+
     // Get the ManagedRuntime capability (should be available since we activate after ManagedRuntimeReady).
-    const managedRuntimes = context.getCapabilities(Common.Capability.ManagedRuntime);
+    const managedRuntimes = yield* Capability.getAll(Common.Capability.ManagedRuntime);
     const managedRuntime = managedRuntimes.length > 0 ? managedRuntimes[0] : undefined;
 
     const invoker = OperationInvoker.make(

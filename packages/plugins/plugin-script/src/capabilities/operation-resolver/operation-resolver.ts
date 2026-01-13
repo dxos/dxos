@@ -15,9 +15,11 @@ import { defaultScriptsForIntegration } from '../../meta';
 import { templates } from '../../templates';
 import { ScriptOperation } from '../../types';
 
-export default Capability.makeModule((context) =>
-  Effect.succeed(
-    Capability.contributes(Common.Capability.OperationResolver, [
+export default Capability.makeModule(
+  Effect.fnUntraced(function* () {
+    const { invoke } = yield* Capability.get(Common.Capability.OperationInvoker);
+
+    return Capability.contributes(Common.Capability.OperationResolver, [
       OperationResolver.make({
         operation: ScriptOperation.CreateScript,
         handler: ({ name, gistUrl, initialTemplateId }) =>
@@ -56,7 +58,6 @@ export default Capability.makeModule((context) =>
         operation: TokenManagerOperation.AccessTokenCreated,
         handler: ({ accessToken }) =>
           Effect.gen(function* () {
-            const { invoke } = context.getCapability(Common.Capability.OperationInvoker);
             const scriptTemplates = (defaultScriptsForIntegration[accessToken.source] ?? [])
               .map((id) => templates.find((t) => t.id === id))
               .filter(Predicate.isNotNullable);
@@ -71,6 +72,6 @@ export default Capability.makeModule((context) =>
             }
           }),
       }),
-    ]),
-  ),
+    ]);
+  }),
 );

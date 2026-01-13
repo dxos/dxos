@@ -14,15 +14,16 @@ import { Organization, Person } from '@dxos/types';
 
 import { InboxOperation } from '../../types';
 
-export default Capability.makeModule((context) =>
-  Effect.succeed(
-    Capability.contributes(Common.Capability.OperationResolver, [
+export default Capability.makeModule(
+  Effect.fnUntraced(function* () {
+    const { invoke } = yield* Capability.get(Common.Capability.OperationInvoker);
+    const client = yield* Capability.get(ClientCapabilities.Client);
+
+    return Capability.contributes(Common.Capability.OperationResolver, [
       OperationResolver.make({
         operation: InboxOperation.ExtractContact,
         handler: ({ db, actor }) =>
           Effect.gen(function* () {
-            const { invoke } = context.getCapability(Common.Capability.OperationInvoker);
-            const client = context.getCapability(ClientCapabilities.Client);
             const space = client.spaces.get(db.spaceId);
             invariant(space, 'Space not found');
 
@@ -117,6 +118,6 @@ export default Capability.makeModule((context) =>
         operation: InboxOperation.RunAssistant,
         handler: () => Effect.fail(new Error('Not implemented')),
       }),
-    ]),
-  ),
+    ]);
+  }),
 );

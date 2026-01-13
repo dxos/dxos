@@ -11,8 +11,9 @@ import { type EditorViewMode, createEditorStateStore } from '@dxos/ui-editor';
 import { meta } from '../../meta';
 import { type Markdown, MarkdownCapabilities, type MarkdownPluginState } from '../../types';
 
-export default Capability.makeModule((context) =>
-  Effect.sync(() => {
+export default Capability.makeModule(
+  Effect.fnUntraced(function* () {
+    const settingsStore = yield* Capability.get(Common.Capability.SettingsStore);
     const state = new LocalStorageStore<MarkdownPluginState>(meta.id, { extensionProviders: [], viewMode: {} });
     state.prop({ key: 'viewMode', type: LocalStorageStore.json<{ [key: string]: EditorViewMode }>() });
 
@@ -20,9 +21,7 @@ export default Capability.makeModule((context) =>
     const editorState = createEditorStateStore(`${meta.id}/editor`);
 
     const getViewMode = (id: string) => {
-      const defaultViewMode = context
-        .getCapability(Common.Capability.SettingsStore)
-        .getStore<Markdown.Settings>(meta.id)!.value.defaultViewMode;
+      const defaultViewMode = settingsStore.getStore<Markdown.Settings>(meta.id)!.value.defaultViewMode;
       return (id && state.values.viewMode[id]) || defaultViewMode;
     };
 

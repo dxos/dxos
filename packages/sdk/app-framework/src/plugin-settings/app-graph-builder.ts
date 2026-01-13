@@ -14,9 +14,13 @@ import { Capability, type Plugin } from '../core';
 import { SETTINGS_ID, SETTINGS_KEY, SettingsOperation } from './actions';
 import { meta } from './meta';
 
-export default Capability.makeModule((context) =>
-  Effect.succeed(
-    Capability.contributes(Common.Capability.AppGraphBuilder, [
+export default Capability.makeModule(
+  Effect.fnUntraced(function* () {
+    const { invokePromise } = yield* Capability.get(Common.Capability.OperationInvoker);
+    const managerAtom = yield* Capability.atom(Common.Capability.PluginManager);
+    const settingsStoreAtom = yield* Capability.atom(Common.Capability.SettingsStore);
+
+    return Capability.contributes(Common.Capability.AppGraphBuilder, [
       GraphBuilder.createExtension({
         id: `${meta.id}/action`,
         match: NodeMatcher.whenRoot,
@@ -24,7 +28,6 @@ export default Capability.makeModule((context) =>
           {
             id: meta.id,
             data: async () => {
-              const { invokePromise } = context.getCapability(Common.Capability.OperationInvoker);
               await invokePromise(SettingsOperation.Open, {});
             },
             properties: {
@@ -60,8 +63,8 @@ export default Capability.makeModule((context) =>
         id: `${meta.id}/core-plugins`,
         match: NodeMatcher.whenId(SETTINGS_ID),
         connector: (node, get) => {
-          const manager = get(context.capability(Common.Capability.PluginManager));
-          const [settingsStore] = get(context.capabilities(Common.Capability.SettingsStore));
+          const [manager] = get(managerAtom);
+          const [settingsStore] = get(settingsStoreAtom);
           return [
             ...manager
               .getPlugins()
@@ -102,8 +105,8 @@ export default Capability.makeModule((context) =>
         id: `${meta.id}/custom-plugins`,
         match: NodeMatcher.whenId(`${SETTINGS_KEY}:custom-plugins`),
         connector: (node, get) => {
-          const manager = get(context.capability(Common.Capability.PluginManager));
-          const [settingsStore] = get(context.capabilities(Common.Capability.SettingsStore));
+          const [manager] = get(managerAtom);
+          const [settingsStore] = get(settingsStoreAtom);
           return manager
             .getPlugins()
             .filter((plugin: Plugin.Plugin) => !manager.getCore().includes(plugin.meta.id))
@@ -127,6 +130,6 @@ export default Capability.makeModule((context) =>
             }));
         },
       }),
-    ]),
-  ),
+    ]);
+  }),
 );

@@ -9,14 +9,15 @@ import { Capability, Common, OperationResolver } from '@dxos/app-framework';
 
 import { AttentionCapabilities, AttentionOperation } from '../../types';
 
-export default Capability.makeModule((context) =>
-  Effect.succeed(
-    Capability.contributes(Common.Capability.OperationResolver, [
+export default Capability.makeModule(
+  Effect.fnUntraced(function* () {
+    const selection = yield* Capability.get(AttentionCapabilities.Selection);
+
+    return Capability.contributes(Common.Capability.OperationResolver, [
       OperationResolver.make({
         operation: AttentionOperation.Select,
         handler: (input) =>
           Effect.sync(() => {
-            const selection = context.getCapability(AttentionCapabilities.Selection);
             Match.value(input.selection).pipe(
               Match.when({ mode: 'single', id: undefined }, () => {
                 selection.clearSelection(input.contextId);
@@ -40,6 +41,6 @@ export default Capability.makeModule((context) =>
             );
           }),
       }),
-    ]),
-  ),
+    ]);
+  }),
 );

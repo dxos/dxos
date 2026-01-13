@@ -21,14 +21,19 @@ import { type AiChatServices, updateName } from '../../processor';
 import { Assistant, AssistantCapabilities, AssistantOperation } from '../../types';
 import { AssistantBlueprint, createBlueprint } from '../blueprint-definition/blueprint-definition';
 
-export default Capability.makeModule((context) =>
-  Effect.succeed(
-    Capability.contributes(Common.Capability.OperationResolver, [
+export default Capability.makeModule(
+  Effect.fnUntraced(function* () {
+    const context = yield* Capability.PluginContextService;
+    const { invoke } = yield* Capability.get(Common.Capability.OperationInvoker);
+    const client = yield* Capability.get(ClientCapabilities.Client);
+    const runtimeResolver = yield* Capability.get(AutomationCapabilities.ComputeRuntime);
+    const mutableState = yield* Capability.get(AssistantCapabilities.MutableState);
+
+    return Capability.contributes(Common.Capability.OperationResolver, [
       OperationResolver.make({
         operation: AssistantOperation.OnCreateSpace,
         handler: ({ space, rootCollection }) =>
           Effect.gen(function* () {
-            const { invoke } = context.getCapability(Common.Capability.OperationInvoker);
             const chatCollection = Collection.makeManaged({ key: Assistant.Chat.typename });
             const blueprintCollection = Collection.makeManaged({ key: Blueprint.Blueprint.typename });
             const promptCollection = Collection.makeManaged({ key: Type.getTypename(Prompt.Prompt) });
@@ -50,7 +55,6 @@ export default Capability.makeModule((context) =>
         operation: AssistantOperation.CreateChat,
         handler: ({ db, name }) =>
           Effect.gen(function* () {
-            const client = context.getCapability(ClientCapabilities.Client);
             const space = client.spaces.get(db.spaceId);
             invariant(space, 'Space not found');
             const queue = space.queues.create();
@@ -82,7 +86,6 @@ export default Capability.makeModule((context) =>
               return;
             }
 
-            const runtimeResolver = context.getCapability(AutomationCapabilities.ComputeRuntime);
             const runtime = yield* Effect.promise(() =>
               runtimeResolver
                 .getRuntime(db.spaceId)
@@ -98,10 +101,9 @@ export default Capability.makeModule((context) =>
         operation: AssistantOperation.SetCurrentChat,
         handler: ({ companionTo, chat }) =>
           Effect.sync(() => {
-            const state = context.getCapability(AssistantCapabilities.MutableState);
-            state.currentChat[Obj.getDXN(companionTo).toString()] = chat && Obj.getDXN(chat).toString();
+            mutableState.currentChat[Obj.getDXN(companionTo).toString()] = chat && Obj.getDXN(chat).toString();
           }),
       }),
-    ]),
-  ),
+    ]);
+  }),
 );

@@ -9,15 +9,16 @@ import { type Type } from '@dxos/echo';
 
 import { ClientCapabilities } from '../../types';
 
-export default Capability.makeModule((context) =>
-  Effect.sync(() => {
-    const registry = context.getCapability(Common.Capability.AtomRegistry);
-    const client = context.getCapability(ClientCapabilities.Client);
+export default Capability.makeModule(
+  Effect.fnUntraced(function* () {
+    const registry = yield* Capability.get(Common.Capability.AtomRegistry);
+    const client = yield* Capability.get(ClientCapabilities.Client);
+    const schemasAtom = yield* Capability.atom(Common.Capability.Schema);
 
     // TODO(wittjosiah): Unregister schemas when they are disabled.
     let previous: Type.Entity.Any[] = [];
     const cancel = registry.subscribe(
-      context.capabilities(Common.Capability.Schema),
+      schemasAtom,
       async (_schemas: any[]) => {
         // TODO(wittjosiah): This doesn't seem to de-dupe schemas as expected.
         const schemas = Array.from(new Set(_schemas.flat())) as Type.Entity.Any[];

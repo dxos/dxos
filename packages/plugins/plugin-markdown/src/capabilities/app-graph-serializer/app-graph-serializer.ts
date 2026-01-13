@@ -13,9 +13,11 @@ import { Collection } from '@dxos/schema';
 import { translations } from '../../translations';
 import { Markdown, MarkdownOperation } from '../../types';
 
-export default Capability.makeModule((context) =>
-  Effect.succeed(
-    Capability.contributes(Common.Capability.AppGraphSerializer, [
+export default Capability.makeModule(
+  Effect.fnUntraced(function* () {
+    const { invokePromise } = yield* Capability.get(Common.Capability.OperationInvoker);
+
+    return Capability.contributes(Common.Capability.AppGraphSerializer, [
       {
         inputType: Markdown.Document.typename,
         outputType: 'text/markdown',
@@ -41,7 +43,6 @@ export default Capability.makeModule((context) =>
             return;
           }
 
-          const { invokePromise } = context.getCapability(Common.Capability.OperationInvoker);
           const createResult = await invokePromise(MarkdownOperation.Create, { name: data.name, content: data.data });
           if (!createResult.data?.object) {
             return undefined;
@@ -51,6 +52,6 @@ export default Capability.makeModule((context) =>
           return createResult.data.object;
         },
       },
-    ]),
-  ),
+    ]);
+  }),
 );

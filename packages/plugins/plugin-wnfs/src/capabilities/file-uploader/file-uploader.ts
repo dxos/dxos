@@ -10,10 +10,11 @@ import { SpaceOperation } from '@dxos/plugin-space/types';
 
 import { WnfsOperation } from '../../types';
 
-export default Capability.makeModule((context) =>
-  Effect.succeed(
-    Capability.contributes(Common.Capability.FileUploader, (db, file) => {
-      const { invoke } = context.getCapability(Common.Capability.OperationInvoker);
+export default Capability.makeModule(
+  Effect.fnUntraced(function* () {
+    const { invoke } = yield* Capability.get(Common.Capability.OperationInvoker);
+
+    return Capability.contributes(Common.Capability.FileUploader, (db, file) => {
       const program = Effect.gen(function* () {
         const fileInfo = yield* invoke(WnfsOperation.Upload, { db, file });
         const createResult = yield* invoke(WnfsOperation.Create, fileInfo);
@@ -25,6 +26,6 @@ export default Capability.makeModule((context) =>
       });
 
       return runAndForwardErrors(program);
-    }),
-  ),
+    });
+  }),
 );

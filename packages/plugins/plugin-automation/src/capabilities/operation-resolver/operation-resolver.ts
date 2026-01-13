@@ -14,14 +14,15 @@ import { Filter } from '@dxos/react-client/echo';
 
 import { AutomationOperation } from '../../types';
 
-export default Capability.makeModule((context) =>
-  Effect.succeed(
-    Capability.contributes(Common.Capability.OperationResolver, [
+export default Capability.makeModule(
+  Effect.fnUntraced(function* () {
+    const { invoke } = yield* Capability.get(Common.Capability.OperationInvoker);
+
+    return Capability.contributes(Common.Capability.OperationResolver, [
       OperationResolver.make({
         operation: AutomationOperation.CreateTriggerFromTemplate,
         handler: ({ db, template, enabled = false, scriptName, input }) =>
           Effect.gen(function* () {
-            const { invoke } = context.getCapability(Common.Capability.OperationInvoker);
             const trigger = Trigger.make({ enabled, input });
 
             // TODO(wittjosiah): Factor out function lookup by script name?
@@ -69,6 +70,6 @@ export default Capability.makeModule((context) =>
             });
           }),
       }),
-    ]),
-  ),
+    ]);
+  }),
 );

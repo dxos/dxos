@@ -8,17 +8,18 @@ import { Capability, Common, OperationResolver } from '@dxos/app-framework';
 
 import { MapCapabilities, MapOperation } from '../../types';
 
-export default Capability.makeModule((context) =>
-  Effect.succeed(
-    Capability.contributes(Common.Capability.OperationResolver, [
+export default Capability.makeModule(
+  Effect.fnUntraced(function* () {
+    const mutableState = yield* Capability.get(MapCapabilities.MutableState);
+
+    return Capability.contributes(Common.Capability.OperationResolver, [
       OperationResolver.make({
         operation: MapOperation.Toggle,
         handler: () =>
           Effect.sync(() => {
-            const state = context.getCapability(MapCapabilities.MutableState);
-            state.type = state.type === 'globe' ? 'map' : 'globe';
+            mutableState.type = mutableState.type === 'globe' ? 'map' : 'globe';
           }),
       }),
-    ]),
-  ),
+    ]);
+  }),
 );

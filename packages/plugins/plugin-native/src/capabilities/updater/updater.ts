@@ -19,15 +19,15 @@ import { meta } from '../../meta';
 
 const SUPPORTS_OTA = ['linux', 'macos', 'windows'];
 
-export default Capability.makeModule((context) =>
-  Effect.sync(() => {
+export default Capability.makeModule(
+  Effect.fnUntraced(function* () {
     // Skip updates if not supported or in dev mode.
     const platform = type();
     if (!SUPPORTS_OTA.includes(platform) || window.location.hostname === 'localhost') {
       return;
     }
 
-    const { invoke } = context.getCapability(Common.Capability.OperationInvoker);
+    const { invoke } = yield* Capability.get(Common.Capability.OperationInvoker);
 
     // https://tauri.app/plugin/updater/#checking-for-updates
     const action = Effect.gen(function* () {
@@ -68,7 +68,7 @@ export default Capability.makeModule((context) =>
       }
     });
 
-    const fiber = Function.pipe(
+    const fiber: Fiber.RuntimeFiber<number, unknown> = Function.pipe(
       // prettier-ignore
       action,
       Effect.repeat(Schedule.fixed(Duration.hours(1))),

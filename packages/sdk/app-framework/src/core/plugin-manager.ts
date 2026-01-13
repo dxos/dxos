@@ -598,7 +598,9 @@ class ManagerImpl implements PluginManager {
 
         const loadEffect = Effect.gen(this, function* () {
           log('loading module', { module: module.id });
-          const [duration, capabilities] = yield* Effect.timed(module.activate(this.context));
+          const [duration, capabilities] = yield* module
+            .activate()
+            .pipe(Effect.provideService(Capability.PluginContextService, this.context), Effect.timed);
           const normalized = capabilities == null ? [] : Array.isArray(capabilities) ? capabilities : [capabilities];
           log('loaded module', {
             module: module.id,

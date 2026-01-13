@@ -17,17 +17,21 @@ import { getAnchor } from '../../util';
 
 // TODO(wittjosiah): Highlight active calls in L1.
 //  Track active meetings by subscribing to meetings query and polling the swarms of recent meetings in the space.
-export default Capability.makeModule((context) =>
-  Effect.sync(() => {
+export default Capability.makeModule(
+  Effect.fnUntraced(function* () {
+    const context = yield* Capability.PluginContextService;
+
     const resolve = (typename: string) =>
-      context.getCapabilities(Common.Capability.Metadata).find(({ id }) => id === typename)?.metadata ?? {};
+      context.getCapabilities(Common.Capability.Metadata).find(({ id }: { id: string }) => id === typename)?.metadata ??
+      {};
 
     return Capability.contributes(Common.Capability.AppGraphBuilder, [
       GraphBuilder.createExtension({
         id: `${meta.id}/active-call`,
         match: NodeMatcher.whenRoot,
         connector: (node, get) => {
-          const [call] = get(context.capabilities(ThreadCapabilities.CallManager));
+          const callManagerAtom = context.capabilities(ThreadCapabilities.CallManager);
+          const [call] = get(callManagerAtom);
           return get(
             CreateAtom.fromSignal(() =>
               call?.joined
@@ -111,8 +115,9 @@ export default Capability.makeModule((context) =>
           return typeof metadata.comments === 'string' ? Option.some(node.data) : Option.none();
         },
         actions: (object, get) => {
+          const stateAtom = context.capabilities(ThreadCapabilities.State);
+          const toolbar = get(stateAtom)[0]?.state.toolbar ?? {};
           const selectionManager = context.getCapability(AttentionCapabilities.Selection);
-          const toolbar = get(context.capabilities(ThreadCapabilities.State))[0]?.state.toolbar ?? {};
           const disabled = get(
             CreateAtom.fromSignal(() => {
               const metadata = resolve(Obj.getTypename(object)!);

@@ -31,9 +31,11 @@ import {
 } from '../../types';
 import { setActive } from '../../util';
 
-export default Capability.makeModule((context) =>
-  Effect.succeed(
-    Capability.contributes(Common.Capability.OperationResolver, [
+export default Capability.makeModule(
+  Effect.fnUntraced(function* () {
+    const context = yield* Capability.PluginContextService;
+
+    return Capability.contributes(Common.Capability.OperationResolver, [
       //
       // UpdateSidebar
       //
@@ -494,6 +496,6 @@ export default Capability.makeModule((context) =>
             layout.scrollIntoView = input.subject;
           }),
       }),
-    ]),
-  ),
+    ]);
+  }),
 );

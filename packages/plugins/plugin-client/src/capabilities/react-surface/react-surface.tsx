@@ -25,9 +25,11 @@ type ReactSurfaceOptions = Pick<ClientPluginOptions, 'onReset'> & {
   createInvitationUrl: (invitationCode: string) => string;
 };
 
-export default Capability.makeModule(({ createInvitationUrl, onReset }: ReactSurfaceOptions) =>
-  Effect.succeed(
-    Capability.contributes(Common.Capability.ReactSurface, [
+export default Capability.makeModule(
+  Effect.fnUntraced(function* (props?: ReactSurfaceOptions) {
+    const { createInvitationUrl, onReset } = props!;
+
+    return Capability.contributes(Common.Capability.ReactSurface, [
       Common.createSurface({
         id: Account.Profile,
         role: 'article',
@@ -64,6 +66,6 @@ export default Capability.makeModule(({ createInvitationUrl, onReset }: ReactSur
         filter: (data): data is { props: ResetDialogProps } => data.component === RESET_DIALOG,
         component: ({ data }: { data: any }) => <ResetDialog {...data.props} onReset={onReset} />,
       }),
-    ]),
-  ),
+    ]);
+  }),
 );

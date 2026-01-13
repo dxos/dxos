@@ -4,7 +4,6 @@
 
 import * as Schema from 'effect/Schema';
 
-import { type Capability } from '@dxos/app-framework';
 import { type Client, type ClientOptions, PublicKey } from '@dxos/client';
 import * as Operation from '@dxos/operation';
 import { type MaybePromise } from '@dxos/util';
@@ -204,12 +203,12 @@ export type ClientPluginOptions = ClientOptions & {
   /**
    * Run after the client has been initialized.
    */
-  onClientInitialized?: (params: { context: Capability.PluginContext; client: Client }) => MaybePromise<void>;
+  onClientInitialized?: (params: { client: Client }) => MaybePromise<void>;
 
   /**
    * Called when spaces are ready.
    */
-  onSpacesReady?: (params: { context: Capability.PluginContext; client: Client }) => MaybePromise<void>;
+  onSpacesReady?: (params: { client: Client }) => MaybePromise<void>;
 
   /**
    * Called when the client is reset.

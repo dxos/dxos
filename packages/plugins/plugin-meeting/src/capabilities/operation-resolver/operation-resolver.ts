@@ -17,9 +17,14 @@ import { type Message } from '@dxos/types';
 
 import { Meeting, MeetingCapabilities, MeetingOperation } from '../../types';
 
-export default Capability.makeModule((context) =>
-  Effect.succeed(
-    Capability.contributes(Common.Capability.OperationResolver, [
+export default Capability.makeModule(
+  Effect.fnUntraced(function* () {
+    const { invoke } = yield* Capability.get(Common.Capability.OperationInvoker);
+    const callManager = yield* Capability.get(ThreadCapabilities.CallManager);
+    const state = yield* Capability.get(MeetingCapabilities.State);
+    const client = yield* Capability.get(ClientCapabilities.Client);
+
+    return Capability.contributes(Common.Capability.OperationResolver, [
       OperationResolver.make({
         operation: MeetingOperation.OnCreateSpace,
         handler: ({ isDefault, rootCollection }) =>
@@ -36,7 +41,6 @@ export default Capability.makeModule((context) =>
         operation: MeetingOperation.Create,
         handler: ({ name, channel }) =>
           Effect.gen(function* () {
-            const { invoke } = context.getCapability(Common.Capability.OperationInvoker);
             const space = getSpace(channel);
             invariant(space);
             const { object: transcript } = yield* invoke(TranscriptOperation.Create, { space });
@@ -58,8 +62,6 @@ export default Capability.makeModule((context) =>
         operation: MeetingOperation.SetActive,
         handler: ({ object }) =>
           Effect.sync(() => {
-            const callManager = context.getCapability(ThreadCapabilities.CallManager);
-            const state = context.getCapability(MeetingCapabilities.State);
             state.activeMeeting = object;
             callManager.setActivity(Type.getTypename(Meeting.Meeting)!, {
               meetingId: object ? Obj.getDXN(object).toString() : '',
@@ -71,9 +73,6 @@ export default Capability.makeModule((context) =>
         operation: MeetingOperation.HandlePayload,
         handler: ({ meetingId, transcriptDxn, transcriptionEnabled }) =>
           Effect.gen(function* () {
-            const client = context.getCapability(ClientCapabilities.Client);
-            const state = context.getCapability(MeetingCapabilities.State);
-
             const { spaceId, objectId } = meetingId ? parseId(meetingId) : {};
             const space = spaceId && client.spaces.get(spaceId);
             const meeting =
@@ -98,6 +97,6 @@ export default Capability.makeModule((context) =>
         operation: MeetingOperation.Summarize,
         handler: () => Effect.fail(new Error('Not implemented')),
       }),
-    ]),
-  ),
+    ]);
+  }),
 );

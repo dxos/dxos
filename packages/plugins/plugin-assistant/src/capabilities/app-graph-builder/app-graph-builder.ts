@@ -21,8 +21,10 @@ import { Query } from '@dxos/react-client/echo';
 import { ASSISTANT_DIALOG, meta } from '../../meta';
 import { Assistant, AssistantCapabilities, AssistantOperation } from '../../types';
 
-export default Capability.makeModule((context) =>
-  Effect.sync(() => {
+export default Capability.makeModule(
+  Effect.fnUntraced(function* () {
+    const context = yield* Capability.PluginContextService;
+
     return Capability.contributes(Common.Capability.AppGraphBuilder, [
       GraphBuilder.createTypeExtension({
         id: `${meta.id}/root`,
@@ -88,10 +90,9 @@ export default Capability.makeModule((context) =>
         id: `${meta.id}/companion-chat`,
         match: NodeMatcher.whenObject,
         connector: (object, get) => {
+          const assistantState = context.getCapability(AssistantCapabilities.State);
           const currentChatState = get(
-            CreateAtom.fromSignal(
-              () => context.getCapability(AssistantCapabilities.State).currentChat[Obj.getDXN(object).toString()],
-            ),
+            CreateAtom.fromSignal(() => assistantState.currentChat[Obj.getDXN(object).toString()]),
           );
           // If no state, continue to allow chat initialization.
           if (!currentChatState) {

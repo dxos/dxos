@@ -16,15 +16,18 @@ import { ClientEvents } from '../../events';
 import { Account, ClientCapabilities, ClientOperation } from '../../types';
 
 type OperationResolverOptions = {
-  context: Capability.PluginContext;
   appName?: string;
 };
 
 const RECOVER_IDENTITY_RPC_TIMEOUT = 20_000;
 
-export default Capability.makeModule(({ context, appName = 'Composer' }: OperationResolverOptions) =>
-  Effect.succeed(
-    Capability.contributes(Common.Capability.OperationResolver, [
+export default Capability.makeModule(
+  Effect.fnUntraced(function* (props?: OperationResolverOptions) {
+    const { appName = 'Composer' } = props ?? {};
+    const context = yield* Capability.PluginContextService;
+    const { invoke } = yield* Capability.get(Common.Capability.OperationInvoker);
+
+    return Capability.contributes(Common.Capability.OperationResolver, [
       //
       // CreateIdentity
       //
@@ -48,7 +51,7 @@ export default Capability.makeModule(({ context, appName = 'Composer' }: Operati
       OperationResolver.make({
         operation: ClientOperation.JoinIdentity,
         handler: (data) =>
-          context.getCapability(Common.Capability.OperationInvoker).invoke(Common.LayoutOperation.UpdateDialog, {
+          invoke(Common.LayoutOperation.UpdateDialog, {
             subject: JOIN_DIALOG,
             blockAlign: 'start',
             props: {
@@ -65,7 +68,6 @@ export default Capability.makeModule(({ context, appName = 'Composer' }: Operati
         operation: ClientOperation.ShareIdentity,
         handler: () =>
           Effect.gen(function* () {
-            const { invoke } = context.getCapability(Common.Capability.OperationInvoker);
             const scheduler = yield* FollowupScheduler.Service;
             yield* invoke(Common.LayoutOperation.SwitchWorkspace, { subject: Account.id });
             yield* invoke(Common.LayoutOperation.Open, { subject: [Account.Profile] });
@@ -79,7 +81,7 @@ export default Capability.makeModule(({ context, appName = 'Composer' }: Operati
       OperationResolver.make({
         operation: ClientOperation.RecoverIdentity,
         handler: () =>
-          context.getCapability(Common.Capability.OperationInvoker).invoke(Common.LayoutOperation.UpdateDialog, {
+          invoke(Common.LayoutOperation.UpdateDialog, {
             subject: JOIN_DIALOG,
             blockAlign: 'start',
             props: {
@@ -94,7 +96,7 @@ export default Capability.makeModule(({ context, appName = 'Composer' }: Operati
       OperationResolver.make({
         operation: ClientOperation.ResetStorage,
         handler: (data) =>
-          context.getCapability(Common.Capability.OperationInvoker).invoke(Common.LayoutOperation.UpdateDialog, {
+          invoke(Common.LayoutOperation.UpdateDialog, {
             subject: RESET_DIALOG,
             blockAlign: 'start',
             props: {
@@ -128,14 +130,12 @@ export default Capability.makeModule(({ context, appName = 'Composer' }: Operati
             const { recoveryCode } = yield* Effect.promise(() =>
               client.services.services.IdentityService!.createRecoveryCredential({}),
             );
-            yield* context
-              .getCapability(Common.Capability.OperationInvoker)
-              .invoke(Common.LayoutOperation.UpdateDialog, {
-                subject: RECOVERY_CODE_DIALOG,
-                blockAlign: 'start',
-                type: 'alert',
-                props: { code: recoveryCode },
-              });
+            yield* invoke(Common.LayoutOperation.UpdateDialog, {
+              subject: RECOVERY_CODE_DIALOG,
+              blockAlign: 'start',
+              type: 'alert',
+              props: { code: recoveryCode },
+            });
           }),
       }),
 
@@ -236,6 +236,6 @@ export default Capability.makeModule(({ context, appName = 'Composer' }: Operati
             );
           }),
       }),
-    ]),
-  ),
+    ]);
+  }),
 );

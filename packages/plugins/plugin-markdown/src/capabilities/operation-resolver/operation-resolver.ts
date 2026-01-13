@@ -8,9 +8,11 @@ import { Capability, Common, OperationResolver } from '@dxos/app-framework';
 
 import { Markdown, MarkdownCapabilities, MarkdownOperation } from '../../types';
 
-export default Capability.makeModule((context) =>
-  Effect.succeed(
-    Capability.contributes(Common.Capability.OperationResolver, [
+export default Capability.makeModule(
+  Effect.fnUntraced(function* () {
+    const context = yield* Capability.PluginContextService;
+
+    return Capability.contributes(Common.Capability.OperationResolver, [
       OperationResolver.make({
         operation: MarkdownOperation.Create,
         handler: ({ name, content }) =>
@@ -27,6 +29,6 @@ export default Capability.makeModule((context) =>
             state.viewMode[id] = viewMode;
           }),
       }),
-    ]),
-  ),
+    ]);
+  }),
 );

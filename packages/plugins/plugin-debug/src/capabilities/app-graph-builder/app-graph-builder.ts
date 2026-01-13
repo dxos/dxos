@@ -14,8 +14,10 @@ import { Devtools } from '../../types';
 
 const DEVTOOLS_TYPE = `${meta.id}/devtools`;
 
-export default Capability.makeModule((context) =>
-  Effect.sync(() => {
+export default Capability.makeModule(
+  Effect.fnUntraced(function* () {
+    const context = yield* Capability.PluginContextService;
+
     return Capability.contributes(Common.Capability.AppGraphBuilder, [
       // Devtools node.
       GraphBuilder.createExtension({

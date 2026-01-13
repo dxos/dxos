@@ -20,8 +20,10 @@ import { calendar, gmail } from '../../functions';
 import { meta } from '../../meta';
 import { Calendar, Mailbox } from '../../types';
 
-export default Capability.makeModule((context) =>
-  Effect.sync(() => {
+export default Capability.makeModule(
+  Effect.fnUntraced(function* () {
+    const context = yield* Capability.PluginContextService;
+
     return Capability.contributes(Common.Capability.AppGraphBuilder, [
       GraphBuilder.createExtension({
         id: `${meta.id}/mailbox-filters`,
@@ -81,7 +83,8 @@ export default Capability.makeModule((context) =>
             return [];
           }
 
-          const selection = get(context.capabilities(AttentionCapabilities.Selection))[0];
+          const selectionAtom = context.capabilities(AttentionCapabilities.Selection);
+          const selection = get(selectionAtom)[0];
           const nodeId = Obj.getDXN(mailbox).toString();
           const messageId = get(CreateAtom.fromSignal(() => selection?.getSelected(nodeId, 'single')));
           const query = queue.query(
@@ -111,7 +114,8 @@ export default Capability.makeModule((context) =>
             return [];
           }
 
-          const selection = get(context.capabilities(AttentionCapabilities.Selection))[0];
+          const selectionAtom = context.capabilities(AttentionCapabilities.Selection);
+          const selection = get(selectionAtom)[0];
           const nodeId = Obj.getDXN(calendar).toString();
           const eventId = get(CreateAtom.fromSignal(() => selection?.getSelected(nodeId, 'single')));
           const query = queue.query(
@@ -139,9 +143,9 @@ export default Capability.makeModule((context) =>
           {
             id: `${Obj.getDXN(mailbox).toString()}-sync`,
             data: async () => {
+              const computeRuntime = context.getCapability(AutomationCapabilities.ComputeRuntime);
               const db = Obj.getDatabase(mailbox);
               invariant(db);
-              const computeRuntime = context.getCapability(AutomationCapabilities.ComputeRuntime);
               const runtime = computeRuntime.getRuntime(db.spaceId);
               await runtime.runPromise(invokeFunctionWithTracing(gmail.sync, { mailbox: Ref.make(mailbox) }));
             },
@@ -160,9 +164,9 @@ export default Capability.makeModule((context) =>
           {
             id: `${Obj.getDXN(calendarObj).toString()}-sync`,
             data: async () => {
+              const computeRuntime = context.getCapability(AutomationCapabilities.ComputeRuntime);
               const db = Obj.getDatabase(calendarObj);
               invariant(db);
-              const computeRuntime = context.getCapability(AutomationCapabilities.ComputeRuntime);
               const runtime = computeRuntime.getRuntime(db.spaceId);
               await runtime.runPromise(
                 invokeFunctionWithTracing(calendar.sync, { calendarId: Obj.getDXN(calendarObj).toString() }),
