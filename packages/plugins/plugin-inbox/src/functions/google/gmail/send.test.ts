@@ -8,8 +8,8 @@ import * as Config from 'effect/Config';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
-import { CredentialsService } from '@dxos/functions';
 import { Obj } from '@dxos/echo';
+import { CredentialsService } from '@dxos/functions';
 import { Message } from '@dxos/types';
 
 import { GoogleMail } from '../../apis';
