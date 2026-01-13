@@ -3,6 +3,7 @@ FROM ubuntu:24.04
 # Install dependencies
 RUN apt-get update \
   && apt-get install -y \
+    build-essential \
     ca-certificates \
     curl \
     git-lfs \
@@ -11,6 +12,7 @@ RUN apt-get update \
     libenchant-2-2 \
     libpng++-dev \
     libxtst-dev \
+    python3 \
     sudo \
     unzip \
     xz-utils
