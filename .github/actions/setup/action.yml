@@ -44,32 +44,3 @@ runs:
         pnpm set verify-store-integrity false
         pnpm install --prefer-offline
       shell: bash
-
-    # Native Node.js modules (like better-sqlite3) contain compiled C++ code
-    # that is tied to a specific Node.js ABI version (NODE_MODULE_VERSION).
-    # When a native module doesn't have prebuilt binaries for a particular
-    # Node.js version (e.g., better-sqlite3 lacks Node 24.x prebuilts as of
-    # January 2026), pnpm install may restore a cached binary compiled for
-    # a different Node version, causing "NODE_MODULE_VERSION mismatch" errors.
-    #
-    # This rebuild step recompiles native modules from source for the current
-    # Node.js version, ensuring ABI compatibility. Only runs on Node 24+ since
-    # Node 20 has prebuilt binaries available.
-    #
-    # Remove this step once all native dependencies ship prebuilts for all
-    # Node versions in the test matrix.
-    - name: Rebuild native modules for Node 24+
-      run: |
-        NODE_MAJOR=$(node -p 'process.versions.node.split(".")[0]')
-        if [ "$NODE_MAJOR" -ge 24 ]; then
-          echo "Node $NODE_MAJOR detected, rebuilding native modules..."
-          # Delete existing binaries to force a clean rebuild
-          find node_modules -name "better_sqlite3.node" -delete 2>/dev/null || true
-          # Rebuild from source (--ignore-engines bypasses root package.json engine constraint)
-          pnpm rebuild better-sqlite3 --ignore-engines
-          # Verify the binary exists and show its info
-          find node_modules -name "better_sqlite3.node" -exec file {} \;
-        else
-          echo "Node $NODE_MAJOR detected, skipping rebuild (prebuilts available)"
-        fi
-      shell: bash
