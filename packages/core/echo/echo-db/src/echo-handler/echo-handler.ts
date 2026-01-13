@@ -50,7 +50,7 @@ import {
 } from '@dxos/echo/internal';
 import { DATA_NAMESPACE, type ObjectStructure, PROPERTY_ID, Reference, encodeReference } from '@dxos/echo-protocol';
 import { assertArgument, invariant } from '@dxos/invariant';
-import { DXN } from '@dxos/keys';
+import { DXN, ObjectId } from '@dxos/keys';
 import {
   type Live,
   type ReactiveHandler,
@@ -174,6 +174,8 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
         case KindId: {
           return target[symbolInternals].core.getKind();
         }
+        case ParentId:
+          return this._getParent(target);
         case RelationSourceDXNId: {
           return target[symbolInternals].core.getSource()?.toDXN();
         }
@@ -197,8 +199,6 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
         case ObjectDatabaseId:
         case ObjectDatabaseId:
           return target[symbolInternals].database;
-        case ParentId:
-          return target[symbolInternals].core.getParent();
       }
     } else {
       switch (prop) {
@@ -249,7 +249,10 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
   set(target: ProxyTarget, prop: string | symbol, value: any, receiver: any): boolean {
     invariant(Array.isArray(target[symbolPath]));
     if (prop === ParentId) {
-      target[symbolInternals].core.setParent(value);
+      const objectId = value.id;
+      // TODO(dmaretskyi): Validate object is from the same space.
+      invariant(ObjectId.isValid(objectId));
+      target[symbolInternals].core.setParent(Reference.fromDXN(DXN.fromLocalObjectId(objectId)));
       return true;
     }
     invariant(typeof prop === 'string');
@@ -280,6 +283,27 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
       return (schema as any)[SchemaMetaSymbol].typename;
     }
     return this.getTypeReference(target)?.objectId;
+  }
+
+  private _getParent(target: ProxyTarget): any {
+    const parentRef = target[symbolInternals].core.getParent();
+    if (parentRef === undefined) {
+      return undefined;
+    }
+    const database = target[symbolInternals].database;
+    if (database) {
+      // TODO(dmaretskyi): Put refs into proxy cache.
+      return database.graph
+        .createRefResolver({
+          context: {
+            space: database.spaceId,
+          },
+        })
+        .resolveSync(parentRef.toDXN(), false);
+    } else {
+      invariant(target[symbolInternals].linkCache);
+      return target[symbolInternals].linkCache.get(parentRef.objectId);
+    }
   }
 
   private _getRelationSource(target: ProxyTarget): any {

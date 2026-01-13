@@ -104,54 +104,16 @@ describe('Parent Hierarchy', () => {
   });
 
   test('cannot un-delete child if parent is deleted', async () => {
-    const [spaceKey] = PublicKey.randomSequence();
     await using peer = await builder.createPeer({ types: [TestSchema.Person] });
+    await using db = await peer.createDatabase();
+    const parent = db.add(Obj.make(TestSchema.Person, { name: 'Parent' }));
+    const child = db.add(Obj.make(TestSchema.Person, { name: 'Child' }));
+    Obj.setParent(child, parent);
 
-    let childId: string;
-    let parentId: string;
+    Obj.setDeleted(parent, true);
+    expect(Obj.isDeleted(child)).toEqual(true);
 
-    {
-      await using db = await peer.createDatabase(spaceKey);
-      const parent = db.add(Obj.make(TestSchema.Person, { name: 'Parent' }));
-      const child = db.add(Obj.make(TestSchema.Person, { name: 'Child' }));
-      Obj.setParent(child, parent);
-      db.remove(parent);
-      db.remove(child); // Explicitly delete child too, or just rely on cascading?
-      // If we rely on cascading, child.isDeleted() is true.
-      // But setDeleted(false) implies un-deleting the object itself.
-      // If the object itself was NOT explicitly deleted, but is considered deleted due to parent...
-      // modifying it might be weird.
-      // But typically `db.remove(child)` sets deleted=true.
-      // Let's explicitly delete child to test restoration.
-      childId = child.id;
-      parentId = parent.id;
-    }
-
-    {
-      await using db = await peer.openDatabase(spaceKey, peer['_lastDatabaseRootUrl']!);
-      const child = (
-        await db
-          .query(Filter.id(childId), { models: ['*'], deleted: 'any' })
-          .run()
-          .results()
-      )[0];
-      const parent = (
-        await db
-          .query(Filter.id(parentId), { models: ['*'], deleted: 'any' })
-          .run()
-          .results()
-      )[0];
-
-      expect(child).toBeDefined();
-      expect(parent).toBeDefined();
-      expect(Obj.isDeleted(child)).toBe(true);
-      expect(Obj.isDeleted(parent)).toBe(true);
-
-      expect(() => {
-        // Attempt to un-delete child
-        Obj.setDeleted(child, false);
-      }).toThrow();
-    }
+    expect(() => Obj.setDeleted(child, false)).toThrow();
   });
 
   test('deleted parent implies deleted child', async () => {
