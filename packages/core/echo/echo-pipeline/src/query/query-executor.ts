@@ -28,8 +28,6 @@ import { filterMatchObject } from '../filter';
 import type { QueryPlan } from './plan';
 import { QueryPlanner } from './query-planner';
 
-const isNullable: Predicate.Refinement<unknown, null | undefined> = Predicate.isNullable;
-
 type QueryExecutorOptions = {
   indexer: Indexer;
   indexer2?: IndexEngine;

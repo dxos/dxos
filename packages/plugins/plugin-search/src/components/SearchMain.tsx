@@ -5,7 +5,7 @@
 import React, { useCallback, useState } from 'react';
 
 import { Surface } from '@dxos/app-framework/react';
-import { Obj } from '@dxos/echo';
+import { Obj, Query } from '@dxos/echo';
 import { useClient } from '@dxos/react-client';
 import { Filter, type Space, useQuery } from '@dxos/react-client/echo';
 import { useTranslation } from '@dxos/react-ui';
@@ -14,15 +14,25 @@ import { StackItem } from '@dxos/react-ui-stack';
 
 import { useGlobalSearch, useGlobalSearchResults, useWebSearch } from '../hooks';
 import { meta } from '../meta';
+import { Text } from '@dxos/schema';
 
 export const SearchMain = ({ space }: { space?: Space }) => {
   const { t } = useTranslation(meta.id);
-  const client = useClient();
   const { setMatch } = useGlobalSearch();
   const [query, setQuery] = useState<string>();
   // TODO(burdon): Option to search across spaces.
-  const allSpaces = false;
-  const objects = useQuery(allSpaces ? client.spaces : space?.db, Filter.everything());
+  const objects = useQuery(
+    space?.db,
+    query === undefined
+      ? Query.select(Filter.nothing())
+      : Query.all(
+          Query.select(Filter.text(query, { type: 'full-text' })).select(Filter.not(Filter.type(Text.Text))),
+          Query.select(Filter.text(query, { type: 'full-text' }))
+            .select(Filter.type(Text.Text))
+            .referencedBy('dxos.org/type/Document', 'content'),
+        ),
+  );
+  console.log({ objects });
   const results = useGlobalSearchResults(objects);
 
   const { results: webResults } = useWebSearch({ query });
