@@ -102,6 +102,7 @@ class ManagerImpl implements PluginManager {
   private readonly _pluginLoader: ManagerOptions['pluginLoader'];
   private readonly _capabilities = new Map<string, Capability.Any[]>();
   private readonly _moduleMemoMap = new Map<Plugin.PluginModule['id'], Deferred.Deferred<Capability.Any[], Error>>();
+  private readonly _moduleSemaphores = new Map<Plugin.PluginModule['id'], Effect.Semaphore>();
   private readonly _activatingEvents = Effect.runSync(Ref.make<string[]>([]));
   private readonly _activatingModules = Effect.runSync(Ref.make<string[]>([]));
 
@@ -571,44 +572,64 @@ class ManagerImpl implements PluginManager {
     }
   }
 
+  private _getModuleSemaphore(moduleId: Plugin.PluginModule['id']): Effect.Semaphore {
+    let semaphore = this._moduleSemaphores.get(moduleId);
+    if (!semaphore) {
+      semaphore = Effect.runSync(Effect.makeSemaphore(1));
+      this._moduleSemaphores.set(moduleId, semaphore);
+    }
+    return semaphore;
+  }
+
   private _loadModule = (module: Plugin.PluginModule): Effect.Effect<Capability.Any[], Error> =>
     Effect.gen(this, function* () {
-      // Check for existing deferred (in-flight or completed).
-      const existingDeferred = this._moduleMemoMap.get(module.id);
-      if (existingDeferred) {
-        return yield* Deferred.await(existingDeferred);
-      }
+      const semaphore = this._getModuleSemaphore(module.id);
 
-      // First caller - create deferred and start loading.
-      const deferred = yield* Deferred.make<Capability.Any[], Error>();
-      this._moduleMemoMap.set(module.id, deferred);
+      // Atomically check-and-set under per-module semaphore to prevent race conditions.
+      const deferredToAwait = yield* Effect.gen(this, function* () {
+        const existing = this._moduleMemoMap.get(module.id);
+        if (existing) {
+          return existing;
+        }
 
-      log('loading module', { module: module.id });
+        // First caller - create deferred, store it, and start loading in background.
+        const deferred = yield* Deferred.make<Capability.Any[], Error>();
+        this._moduleMemoMap.set(module.id, deferred);
 
-      const loadResult = yield* Effect.gen(this, function* () {
-        const [duration, capabilities] = yield* Effect.timed(module.activate(this.context));
-        const normalized = capabilities == null ? [] : Array.isArray(capabilities) ? capabilities : [capabilities];
-        log('loaded module', {
-          module: module.id,
-          elapsed: Duration.toMillis(duration),
-          failed: false,
-        });
-        return normalized as Capability.Any[];
-      }).pipe(
-        Effect.withSpan('PluginManager._loadModule'),
-        together(
-          Effect.sleep(Duration.seconds(10)).pipe(
-            Effect.andThen(
-              Effect.sync(() => log.warn(`module is taking a long time to activate`, { module: module.id })),
+        const loadEffect = Effect.gen(this, function* () {
+          log('loading module', { module: module.id });
+          const [duration, capabilities] = yield* Effect.timed(module.activate(this.context));
+          const normalized = capabilities == null ? [] : Array.isArray(capabilities) ? capabilities : [capabilities];
+          log('loaded module', {
+            module: module.id,
+            elapsed: Duration.toMillis(duration),
+            failed: false,
+          });
+          return normalized as Capability.Any[];
+        }).pipe(
+          Effect.withSpan('PluginManager._loadModule'),
+          together(
+            Effect.sleep(Duration.seconds(10)).pipe(
+              Effect.andThen(
+                Effect.sync(() => log.warn(`module is taking a long time to activate`, { module: module.id })),
+              ),
             ),
           ),
-        ),
-      );
+        );
 
-      // Complete deferred to notify waiters.
-      yield* Deferred.succeed(deferred, loadResult);
+        // Fork the load to run in background, completing the deferred when done.
+        yield* Effect.forkDaemon(
+          loadEffect.pipe(
+            Effect.tap((result) => Deferred.succeed(deferred, result)),
+            Effect.catchAll((error) => Deferred.fail(deferred, error)),
+          ),
+        );
 
-      return loadResult;
+        return deferred;
+      }).pipe(semaphore.withPermits(1));
+
+      // Wait for result outside the semaphore so multiple waiters can proceed concurrently.
+      return yield* Deferred.await(deferredToAwait);
     });
 
   private _contributeCapabilities(
