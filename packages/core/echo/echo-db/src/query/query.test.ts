@@ -695,7 +695,7 @@ describe('Query', () => {
   });
 
   describe('indexer2 text search', () => {
-    test.only('full-text search via indexer2', async () => {
+    test('full-text search via indexer2', async () => {
       const { db } = await builder.createDatabase({ indexing: { fullText: true } });
 
       db.add(Obj.make(Type.Expando, { title: 'Introduction to TypeScript' }));
