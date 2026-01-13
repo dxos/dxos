@@ -59,5 +59,11 @@ runs:
     # Remove this step once all native dependencies ship prebuilts for all
     # Node versions in the test matrix.
     - name: Rebuild native modules
-      run: pnpm rebuild better-sqlite3
+      run: |
+        # Delete existing binaries to force a clean rebuild
+        find node_modules -name "better_sqlite3.node" -delete 2>/dev/null || true
+        # Rebuild from source
+        pnpm rebuild better-sqlite3
+        # Verify the binary exists and show its info
+        find node_modules -name "better_sqlite3.node" -exec file {} \;
       shell: bash
