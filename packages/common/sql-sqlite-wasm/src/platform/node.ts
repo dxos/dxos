@@ -1,9 +1,14 @@
-import * as SqlClient from '@effect/sql/SqlClient';
-import * as SqliteClient from '@effect/sql-sqlite-node/SqliteClient';
-import * as Layer from 'effect/Layer';
-import type { ConfigError } from 'effect/ConfigError';
-import type { SqlError } from '@effect/sql/SqlError';
+//
+// Copyright 2026 DXOS.org
+//
 
-export const layerMemory: Layer.Layer<SqlClient.SqlClient, ConfigError | SqlError> = SqliteClient.layer({
-  filename: ':memory:',
-});
+import type * as SqlClient from '@effect/sql/SqlClient';
+import type * as SqlError from '@effect/sql/SqlError';
+import * as SqliteClient from '@effect/sql-sqlite-node/SqliteClient';
+import type * as ConfigError from 'effect/ConfigError';
+import type * as Layer from 'effect/Layer';
+
+export const layerMemory: Layer.Layer<SqlClient.SqlClient, ConfigError.ConfigError | SqlError.SqlError> =
+  SqliteClient.layer({
+    filename: ':memory:',
+  });
