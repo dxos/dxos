@@ -44,3 +44,20 @@ runs:
         pnpm set verify-store-integrity false
         pnpm install --prefer-offline
       shell: bash
+
+    # Native Node.js modules (like better-sqlite3) contain compiled C++ code
+    # that is tied to a specific Node.js ABI version (NODE_MODULE_VERSION).
+    # When a native module doesn't have prebuilt binaries for a particular
+    # Node.js version (e.g., better-sqlite3 lacks Node 24.x prebuilts as of
+    # January 2026), pnpm install may restore a cached binary compiled for
+    # a different Node version, causing "NODE_MODULE_VERSION mismatch" errors.
+    #
+    # This rebuild step recompiles native modules from source for the current
+    # Node.js version, ensuring ABI compatibility. It's safe to run even when
+    # not strictly needed (it no-ops if binaries are already correct).
+    #
+    # Remove this step once all native dependencies ship prebuilts for all
+    # Node versions in the test matrix.
+    - name: Rebuild native modules
+      run: pnpm rebuild better-sqlite3
+      shell: bash
