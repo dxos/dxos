@@ -5,7 +5,6 @@
 import type { AutomergeUrl } from '@automerge/automerge-repo';
 import * as Reactivity from '@effect/experimental/Reactivity';
 import type * as SqlClient from '@effect/sql/SqlClient';
-import { layerMemory } from '@dxos/sql-sqlite/platform';
 import * as Layer from 'effect/Layer';
 import * as ManagedRuntime from 'effect/ManagedRuntime';
 import type * as Schema from 'effect/Schema';
@@ -19,6 +18,7 @@ import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { type LevelDB } from '@dxos/kv-store';
 import { createTestLevel } from '@dxos/kv-store/testing';
+import { layerMemory } from '@dxos/sql-sqlite/platform';
 import { range } from '@dxos/util';
 
 import { EchoClient } from '../client';
