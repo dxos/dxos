@@ -402,32 +402,18 @@ export const setDescription = (entity: Entity.Unknown, description: string) => {
   }
 };
 
-export const getParent = (entity: Entity.Unknown): Any | undefined => {
-  const ref = (entity as any)[ParentId];
-  if (!ref) {
-    return undefined;
-  }
-  // TODO(dmaretskyi): Helper to load object from ref?
-  // We need to access database to resolve reference.
-  const db = getDatabase(entity);
-  if (db && ref.objectId) {
-    // TODO(dmaretskyi): Support cross-space parents?
-    return db.getObjectById(ref.objectId);
-  }
-  return undefined;
+export const getParent = (entity: Any): Any | undefined => {
+  assertArgument(isObject(entity), 'Expected an object');
+  assumeType<InternalObjectProps>(entity);
+  return entity[ParentId] as Any;
 };
 
-export const setParent = (entity: Entity.Unknown, parent: Any | undefined | null) => {
-  if (parent) {
-    const db = getDatabase(entity);
-    if (db) {
-      // TODO(dmaretskyi): Check parent is in the same database or use cross-space reference.
-    }
-    (entity as any)[ParentId] = Ref.make(parent);
-  } else {
-    // TODO(dmaretskyi): Better way to clear property.
-    (entity as any)[ParentId] = undefined;
-  }
+export const setParent = (entity: Entity.Unknown, parent: Any | undefined) => {
+  assertArgument(isObject(entity), 'Expected an object');
+  assertArgument(parent === undefined || isObject(parent), 'Expected an object');
+  assumeType<InternalObjectProps>(entity);
+  assumeType<InternalObjectProps | undefined>(parent);
+  entity[ParentId] = parent;
 };
 
 //
@@ -463,7 +449,7 @@ export const fromJSON: (json: unknown, options?: { refResolver?: Ref.Resolver; d
 //
 
 export const setDeleted = (entity: Entity.Unknown, value: boolean) => {
-  if (value === false) {
+  if (value === false && isObject(entity)) {
     const parent = getParent(entity);
     if (parent && isDeleted(parent)) {
       throw new Error('Cannot restore object when parent is deleted.');

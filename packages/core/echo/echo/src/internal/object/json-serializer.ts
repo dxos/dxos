@@ -5,7 +5,13 @@
 import * as Schema from 'effect/Schema';
 
 import { raise } from '@dxos/debug';
-import { type EncodedReference, type ObjectMeta, Reference, ObjectStructure, isEncodedReference } from '@dxos/echo-protocol';
+import {
+  type EncodedReference,
+  type ObjectMeta,
+  Reference,
+  ObjectStructure,
+  isEncodedReference,
+} from '@dxos/echo-protocol';
 import { assertArgument, invariant } from '@dxos/invariant';
 import { DXN, ObjectId } from '@dxos/keys';
 import { defineHiddenProperty } from '@dxos/live-object';
@@ -124,7 +130,8 @@ export const objectFromJSON = async (
 
   if (jsonData[ATTR_PARENT]) {
     const parentDxn = DXN.parse(jsonData[ATTR_PARENT]);
-    defineHiddenProperty(obj, ParentId, Reference.fromDXN(parentDxn));
+    const parent = (await refResolver?.resolve(parentDxn)) as AnyEchoObject | undefined;
+    defineHiddenProperty(obj, ParentId, parent);
   }
 
   if (dxn) {

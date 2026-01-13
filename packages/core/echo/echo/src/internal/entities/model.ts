@@ -18,6 +18,7 @@ import {
   KindId,
   type MetaId,
   type ObjectMeta,
+  type ParentId,
   type SchemaId,
   TypeId,
   type Version,
@@ -78,6 +79,7 @@ export interface InternalObjectProps {
   readonly [SchemaId]: Schema.Schema.AnyNoContext;
   readonly [TypeId]: DXN;
   readonly [MetaId]?: ObjectMeta;
+  [ParentId]?: InternalObjectProps;
   readonly [ObjectDatabaseId]?: Database.Database;
   readonly [ObjectDeletedId]?: boolean;
   readonly [ObjectVersionId]?: Version;
