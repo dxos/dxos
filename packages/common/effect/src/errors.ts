@@ -21,6 +21,10 @@ const locationRegex = /\((.*)\)/g;
  * Unwraps error proxy.
  */
 const prettyErrorStack = (error: any, appendStacks: string[] = []): any => {
+  if (typeof error !== 'object' || error === null) {
+    return error;
+  }
+
   const span = error[spanSymbol];
 
   const lines = typeof error.stack === 'string' ? error.stack.split('\n') : [];

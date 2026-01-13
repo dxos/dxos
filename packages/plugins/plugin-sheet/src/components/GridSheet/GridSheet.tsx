@@ -13,8 +13,7 @@ import React, {
   useState,
 } from 'react';
 
-import { createIntent } from '@dxos/app-framework';
-import { useIntentDispatcher } from '@dxos/app-framework/react';
+import { useOperationInvoker } from '@dxos/app-framework/react';
 import { type CellRange, rangeToA1Notation } from '@dxos/compute';
 import { defaultColSize, defaultRowSize } from '@dxos/lit-grid';
 import { DropdownMenu, Icon, useTranslation } from '@dxos/react-ui';
@@ -36,7 +35,7 @@ import {
 import { type RangeController, rangeExtension, sheetExtension } from '../../extensions';
 import { useSelectThreadOnCellFocus, useUpdateFocusedCellOnThreadSelection } from '../../integrations';
 import { meta } from '../../meta';
-import { DEFAULT_COLS, DEFAULT_ROWS, SheetAction } from '../../types';
+import { DEFAULT_COLS, DEFAULT_ROWS, SheetOperation } from '../../types';
 import { useSheetContext } from '../SheetContext';
 
 import { colLabelCell, rowLabelCell, useSheetModelDxGridProps } from './util';
@@ -77,7 +76,7 @@ export const GridSheet = () => {
   //  a reliable dependency for `useEffect` whereas `useLayoutEffect` does not guarantee the element will be defined.
   const [dxGrid, setDxGrid] = useState<DxGridElement | null>(null);
   const [extraplanarFocus, setExtraplanarFocus] = useState<DxGridPosition | null>(null);
-  const { dispatchPromise: dispatch } = useIntentDispatcher();
+  const { invokePromise } = useOperationInvoker();
   const rangeController = useRef<RangeController>(null);
   const { hasAttention } = useAttention(id);
 
@@ -266,24 +265,20 @@ export const GridSheet = () => {
       switch (operation) {
         case 'insert-before':
         case 'insert-after':
-          return dispatch(
-            createIntent(SheetAction.InsertAxis, {
-              model,
-              axis: contextMenuAxis,
-              index: contextMenuOpen![contextMenuAxis] + (operation === 'insert-before' ? 0 : 1),
-            }),
-          );
+          return invokePromise(SheetOperation.InsertAxis, {
+            model,
+            axis: contextMenuAxis,
+            index: contextMenuOpen![contextMenuAxis] + (operation === 'insert-before' ? 0 : 1),
+          });
         case 'drop':
-          return dispatch(
-            createIntent(SheetAction.DropAxis, {
-              model,
-              axis: contextMenuAxis,
-              axisIndex: model.sheet[contextMenuAxis === 'row' ? 'rows' : 'columns'][contextMenuOpen![contextMenuAxis]],
-            }),
-          );
+          return invokePromise(SheetOperation.DropAxis, {
+            model,
+            axis: contextMenuAxis,
+            axisIndex: model.sheet[contextMenuAxis === 'row' ? 'rows' : 'columns'][contextMenuOpen![contextMenuAxis]],
+          });
       }
     },
-    [contextMenuAxis, contextMenuOpen, model, dispatch],
+    [contextMenuAxis, contextMenuOpen, model, invokePromise],
   );
 
   const { columns, rows } = useSheetModelDxGridProps(dxGrid, model);

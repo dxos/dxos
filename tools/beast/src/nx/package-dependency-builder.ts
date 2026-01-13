@@ -2,9 +2,10 @@
 // Copyright 2022 DXOS.org
 //
 
-import ColorHash from 'color-hash';
 import fs from 'fs';
 import path, { join } from 'path';
+
+import ColorHash from 'color-hash';
 
 import { ClassDiagram, Flowchart, type SubgraphBuilder } from '../mermaid';
 import { type WorkspaceProcessor } from '../nx';

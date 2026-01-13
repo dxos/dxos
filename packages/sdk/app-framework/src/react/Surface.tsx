@@ -22,8 +22,8 @@ import { log } from '@dxos/log';
 import { useDefaultValue } from '@dxos/react-hooks';
 import { byPosition } from '@dxos/util';
 
-import { Capabilities, type SurfaceDefinition, type SurfaceProps, type WebComponentSurfaceDefinition } from '../common';
-import { type PluginContext } from '../core';
+import * as Common from '../common';
+import { type Capability } from '../core';
 
 import { ErrorBoundary } from './ErrorBoundary';
 import { SurfaceInfo } from './SurfaceInfo';
@@ -33,7 +33,7 @@ const DEFAULT_PLACEHOLDER = <Fragment />;
 
 const DEBUG = import.meta.env.VITE_DEBUG;
 
-export type SurfaceContext = Pick<SurfaceProps, 'id' | 'role' | 'data'>;
+export type SurfaceContext = Pick<Common.SurfaceProps, 'id' | 'role' | 'data'>;
 
 // TODO(burdon): Use @radix-ui/react-context
 const SurfaceContext: Context<SurfaceContext | undefined> = createContext<SurfaceContext | undefined>(undefined);
@@ -43,7 +43,7 @@ const SurfaceContext: Context<SurfaceContext | undefined> = createContext<Surfac
  * Handles creation, prop setting, and cleanup of Web Components.
  */
 const WebComponentWrapper = memo(
-  forwardRef<HTMLElement, SurfaceProps & { definition: WebComponentSurfaceDefinition }>(
+  forwardRef<HTMLElement, Common.SurfaceProps & { definition: Common.WebComponentSurfaceDefinition }>(
     ({ id, role, data, limit, definition, ...rest }, forwardedRef) => {
       const containerRef = useRef<HTMLDivElement>(null);
       const elementRef = useRef<HTMLElement | null>(null);
@@ -108,7 +108,7 @@ WebComponentWrapper.displayName = 'WebComponentWrapper';
  * Wrapper component that provides context for a surface.
  */
 const SurfaceContextProvider = memo(
-  forwardRef<HTMLElement, SurfaceProps & { definition: SurfaceDefinition }>(
+  forwardRef<HTMLElement, Common.SurfaceProps & { definition: Common.SurfaceDefinition }>(
     ({ id, role, data, limit, fallback = DefaultFallback, definition, ...rest }, forwardedRef) => {
       const contextValue = useMemo(() => ({ id, role, data }), [id, role, data]);
 
@@ -169,7 +169,7 @@ export const useSurface = (): SurfaceContext => {
 /**
  * A surface is a named region of the screen that can be populated by plugins.
  */
-export const Surface: NamedExoticComponent<SurfaceProps & RefAttributes<HTMLElement>> = memo(
+export const Surface: NamedExoticComponent<Common.SurfaceProps & RefAttributes<HTMLElement>> = memo(
   forwardRef(({ id: _id, role, data: dataProp, limit, placeholder = DEFAULT_PLACEHOLDER, ...rest }, forwardedRef) => {
     const data = useDefaultValue(dataProp, () => ({}));
 
@@ -209,7 +209,10 @@ export const Surface: NamedExoticComponent<SurfaceProps & RefAttributes<HTMLElem
 
 Surface.displayName = 'Surface';
 
-const findCandidates = (surfaces: SurfaceDefinition[], { role, data }: Pick<SurfaceProps, 'role' | 'data'>) => {
+const findCandidates = (
+  surfaces: Common.SurfaceDefinition[],
+  { role, data }: Pick<Common.SurfaceProps, 'role' | 'data'>,
+) => {
   return Object.values(surfaces)
     .filter((definition) =>
       Array.isArray(definition.role) ? definition.role.includes(role) : definition.role === role,
@@ -243,15 +246,18 @@ const DefaultFallback = ({ data, error, dev }: { data: any; error: Error; dev?: 
  * @internal
  */
 export const useSurfaces = () => {
-  const surfaces = useCapabilities(Capabilities.ReactSurface);
+  const surfaces = useCapabilities(Common.Capability.ReactSurface);
   return useMemo(() => surfaces.flat(), [surfaces]);
 };
 
 /**
  * @returns `true` if there is a contributed surface which matches the specified role & data, `false` otherwise.
  */
-export const isSurfaceAvailable = (context: PluginContext, { role, data }: Pick<SurfaceProps, 'role' | 'data'>) => {
-  const surfaces = context.getCapabilities(Capabilities.ReactSurface);
+export const isSurfaceAvailable = (
+  context: Capability.PluginContext,
+  { role, data }: Pick<Common.SurfaceProps, 'role' | 'data'>,
+) => {
+  const surfaces = context.getCapabilities(Common.Capability.ReactSurface);
   const candidates = findCandidates(surfaces.flat(), { role, data });
   return candidates.length > 0;
 };

@@ -23,6 +23,7 @@
   ],
   "dependencies": {
     "@dxos/react-hooks": "workspace:*",
+    "@dxos/react-ui-mosaic": "workspace:*",
     "@dxos/types": "workspace:*",
     "@radix-ui/react-compose-refs": "catalog:",
     "masonic": "catalog:",

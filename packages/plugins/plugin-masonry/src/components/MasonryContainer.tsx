@@ -4,25 +4,23 @@
 
 import React, { useEffect, useState } from 'react';
 
+import { Common } from '@dxos/app-framework';
 import { Surface, useCapabilities } from '@dxos/app-framework/react';
 import { Filter, Obj, Type } from '@dxos/echo';
 import { type TypedObject } from '@dxos/echo/internal';
-import { ClientCapabilities } from '@dxos/plugin-client';
 import { useGlobalFilteredObjects } from '@dxos/plugin-search';
 import { useQuery } from '@dxos/react-client/echo';
 import { Masonry as MasonryComponent } from '@dxos/react-ui-masonry';
-import { getTypenameFromQuery } from '@dxos/schema';
-
-import { type Masonry } from '../types';
+import { type View, getTypenameFromQuery } from '@dxos/schema';
 
 const Item = ({ data }: { data: any }) => {
   return <Surface role='card' limit={1} data={{ subject: data }} />;
 };
 
-export const MasonryContainer = ({ object, role }: { object: Masonry.Masonry; role?: string }) => {
-  const schemas = useCapabilities(ClientCapabilities.Schema);
-  const db = Obj.getDatabase(object);
-  const typename = object.view.target?.query ? getTypenameFromQuery(object.view.target.query.ast) : undefined;
+export const MasonryContainer = ({ view, role }: { view: View.View; role?: string }) => {
+  const schemas = useCapabilities(Common.Capability.Schema);
+  const db = Obj.getDatabase(view);
+  const typename = view.query ? getTypenameFromQuery(view.query.ast) : undefined;
 
   const [cardSchema, setCardSchema] = useState<TypedObject<any, any>>();
 

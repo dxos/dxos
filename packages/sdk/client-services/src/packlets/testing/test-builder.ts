@@ -2,6 +2,11 @@
 // Copyright 2022 DXOS.org
 //
 
+import * as Reactivity from '@effect/experimental/Reactivity';
+import * as SqliteClient from '@effect/sql-sqlite-wasm/SqliteClient';
+import * as Layer from 'effect/Layer';
+import * as ManagedRuntime from 'effect/ManagedRuntime';
+
 import { type Config } from '@dxos/config';
 import { Context } from '@dxos/context';
 import { CredentialGenerator, createCredentialSignerWithChain } from '@dxos/credentials';
@@ -30,6 +35,8 @@ export const createServiceHost = (config: Config, signalManagerContext: MemorySi
     config,
     signalManager: new MemorySignalManager(signalManagerContext),
     transportFactory: MemoryTransportFactory,
+    runtime: ManagedRuntime.make(Layer.merge(SqliteClient.layerMemory({}), Reactivity.layer).pipe(Layer.orDie))
+      .runtimeEffect,
   });
 };
 
@@ -53,7 +60,11 @@ export const createServiceContext = async ({
   const level = createTestLevel();
   await level.open();
 
-  return new ServiceContext(storage, level, networkManager, signalManager, undefined, undefined, {
+  const runtime = ManagedRuntime.make(
+    Layer.merge(SqliteClient.layerMemory({}), Reactivity.layer).pipe(Layer.orDie),
+  ).runtimeEffect;
+
+  return new ServiceContext(storage, level, networkManager, signalManager, undefined, undefined, runtime, {
     invitationConnectionDefaultProps: { teleport: { controlHeartbeatInterval: 200 } },
     ...runtimeProps,
   });
@@ -116,6 +127,9 @@ export type TestPeerProps = {
 
 export class TestPeer {
   private _props: TestPeerProps = {};
+  private readonly _runtime = ManagedRuntime.make(
+    Layer.merge(SqliteClient.layerMemory({}), Reactivity.layer).pipe(Layer.orDie),
+  );
 
   constructor(
     private readonly _signalContext: MemorySignalManagerContext,
@@ -179,7 +193,10 @@ export class TestPeer {
   }
 
   get echoHost() {
-    return (this._props.echoHost ??= new EchoHost({ kv: this.level }));
+    return (this._props.echoHost ??= new EchoHost({
+      kv: this.level,
+      runtime: this._runtime.runtimeEffect,
+    }));
   }
 
   get meshEchoReplicator() {
@@ -227,6 +244,7 @@ export class TestPeer {
   async destroy(): Promise<void> {
     await this.level.close();
     await this.storage.reset();
+    await this._runtime.dispose();
   }
 }
 

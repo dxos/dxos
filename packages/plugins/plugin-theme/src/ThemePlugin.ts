@@ -2,16 +2,19 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Events, defineModule, definePlugin, lazy } from '@dxos/app-framework';
+import { Capability, Common, Plugin } from '@dxos/app-framework';
 
 import { meta } from './meta';
 import { type ThemePluginOptions } from './react-context';
 
-export const ThemePlugin = definePlugin<ThemePluginOptions>(meta, (options) => [
-  defineModule({
-    id: `${meta.id}/module/react-context`,
-    activatesOn: Events.Startup,
-    activatesBefore: [Events.SetupTranslations],
-    activate: () => lazy(() => import('./react-context'))(options),
-  }),
-]);
+const ReactContext = Capability.lazy('ReactContext', () => import('./react-context'));
+
+export const ThemePlugin = Plugin.define<ThemePluginOptions>(meta).pipe(
+  Plugin.addModule((options: ThemePluginOptions) => ({
+    id: Capability.getModuleTag(ReactContext),
+    activatesOn: Common.ActivationEvent.Startup,
+    activatesBefore: [Common.ActivationEvent.SetupTranslations],
+    activate: () => ReactContext(options),
+  })),
+  Plugin.make,
+);

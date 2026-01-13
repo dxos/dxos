@@ -41,6 +41,9 @@
       "path": "../../common/debug"
     },
     {
+      "path": "../../common/effect"
+    },
+    {
       "path": "../../common/invariant"
     },
     {
@@ -183,6 +186,9 @@
     },
     {
       "path": "../../plugins/plugin-sheet"
+    },
+    {
+      "path": "../../plugins/plugin-simple-layout"
     },
     {
       "path": "../../plugins/plugin-sketch"

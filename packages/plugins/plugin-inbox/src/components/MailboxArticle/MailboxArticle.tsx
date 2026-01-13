@@ -5,12 +5,12 @@
 import { Atom, useAtomSet, useAtomValue } from '@effect-atom/atom-react';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { LayoutAction, createIntent } from '@dxos/app-framework';
-import { type SurfaceComponentProps, useIntentDispatcher } from '@dxos/app-framework/react';
+import { Common } from '@dxos/app-framework';
+import { type SurfaceComponentProps, useOperationInvoker } from '@dxos/app-framework/react';
 import { type Database, Obj, Relation, Tag } from '@dxos/echo';
 import { QueryBuilder } from '@dxos/echo-query';
-import { AttentionAction } from '@dxos/plugin-attention/types';
-import { ATTENDABLE_PATH_SEPARATOR, DeckAction } from '@dxos/plugin-deck/types';
+import { AttentionOperation } from '@dxos/plugin-attention/types';
+import { ATTENDABLE_PATH_SEPARATOR, DeckOperation } from '@dxos/plugin-deck/types';
 import { Filter, useQuery } from '@dxos/react-client/echo';
 import { ElevationProvider, IconButton, useTranslation } from '@dxos/react-ui';
 import { useSelected } from '@dxos/react-ui-attention';
@@ -34,7 +34,7 @@ export type MailboxArticleProps = SurfaceComponentProps<Mailbox.Mailbox> & { fil
 export const MailboxArticle = ({ subject: mailbox, filter: filterProp, attendableId }: MailboxArticleProps) => {
   const { t } = useTranslation(meta.id);
   const id = attendableId ?? Obj.getDXN(mailbox).toString();
-  const { dispatchPromise: dispatch } = useIntentDispatcher();
+  const { invokePromise } = useOperationInvoker();
   const currentMessageId = useSelected(id, 'single');
 
   const filterEditorRef = useRef<EditorController>(null);
@@ -114,18 +114,14 @@ export const MailboxArticle = ({ subject: mailbox, filter: filterProp, attendabl
       switch (action.type) {
         case 'current': {
           const message = sortedMessages.find((message) => message.id === action.messageId);
-          void dispatch(
-            createIntent(AttentionAction.Select, {
-              contextId: id,
-              selection: { mode: 'single', id: message?.id },
-            }),
-          );
-          void dispatch(
-            createIntent(DeckAction.ChangeCompanion, {
-              primary: id,
-              companion: `${id}${ATTENDABLE_PATH_SEPARATOR}message`,
-            }),
-          );
+          void invokePromise(AttentionOperation.Select, {
+            contextId: id,
+            selection: { mode: 'single', id: message?.id },
+          });
+          void invokePromise(DeckOperation.ChangeCompanion, {
+            primary: id,
+            companion: `${id}${ATTENDABLE_PATH_SEPARATOR}message`,
+          });
           break;
         }
 
@@ -145,23 +141,18 @@ export const MailboxArticle = ({ subject: mailbox, filter: filterProp, attendabl
         }
 
         case 'save': {
-          void dispatch(
-            createIntent(LayoutAction.UpdatePopover, {
-              part: 'popover',
-              subject: POPOVER_SAVE_FILTER,
-              options: {
-                state: true,
-                variant: 'virtual',
-                anchor: filterSaveButtonRef.current,
-                props: { mailbox, filter: action.filter },
-              },
-            }),
-          );
+          void invokePromise(Common.LayoutOperation.UpdatePopover, {
+            subject: POPOVER_SAVE_FILTER,
+            state: true,
+            variant: 'virtual',
+            anchor: filterSaveButtonRef.current,
+            props: { mailbox, filter: action.filter },
+          });
           break;
         }
       }
     },
-    [id, mailbox, sortedMessages, dispatch],
+    [id, mailbox, sortedMessages, invokePromise],
   );
 
   const handleCancel = useCallback(() => {

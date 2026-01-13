@@ -2,10 +2,11 @@
 // Copyright 2025 DXOS.org
 //
 
+import * as Effect from 'effect/Effect';
 import React from 'react';
 
-import { Capabilities } from '../../common';
-import { contributes, defineCapabilityModule } from '../../core';
+import * as Common from '../../common';
+import { Capability } from '../../core';
 import { Surface } from '../../react';
 
 export const Layout = () => {
@@ -26,9 +27,11 @@ export const Layout = () => {
   );
 };
 
-export default defineCapabilityModule(() =>
-  contributes(Capabilities.ReactRoot, {
-    id: 'dxos.org/test/layout/root',
-    root: Layout,
-  }),
+export default Capability.makeModule(() =>
+  Effect.succeed(
+    Capability.contributes(Common.Capability.ReactRoot, {
+      id: 'dxos.org/test/layout/root',
+      root: Layout,
+    }),
+  ),
 );

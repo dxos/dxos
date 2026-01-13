@@ -631,7 +631,7 @@ describe('Query', () => {
     });
   });
 
-  describe.skip('text search', () => {
+  describe.skip('text search (old indexer)', () => {
     test('vector', async () => {
       const { db } = await builder.createDatabase({
         indexing: { vector: true },
@@ -690,6 +690,151 @@ describe('Query', () => {
       {
         const objects = await db.query(Query.select(Filter.text('animal', { type: 'full-text' }))).run();
         expect(objects).toHaveLength(0);
+      }
+    });
+  });
+
+  describe('indexer2 text search', () => {
+    test('full-text search via indexer2', async () => {
+      const { db } = await builder.createDatabase({ indexing: { fullText: true } });
+
+      db.add(Obj.make(Type.Expando, { title: 'Introduction to TypeScript' }));
+      db.add(Obj.make(Type.Expando, { title: 'Getting Started with React' }));
+      db.add(Obj.make(Type.Expando, { title: 'Advanced Python Programming' }));
+      await db.flush({ indexes: true });
+
+      // TODO(mykola): Defalut to full-text
+      const objects = await db.query(Query.select(Filter.text('TypeScript', { type: 'full-text' }))).run();
+      expect(objects).toHaveLength(1);
+      expect(objects[0].title).toEqual('Introduction to TypeScript');
+
+      // Verify specific search results.
+      {
+        const objects = await db.query(Query.select(Filter.text('TypeScript', { type: 'full-text' }))).run();
+        expect(objects).toHaveLength(1);
+        expect(objects[0].title).toEqual('Introduction to TypeScript');
+      }
+
+      {
+        const objects = await db.query(Query.select(Filter.text('React', { type: 'full-text' }))).run();
+        expect(objects).toHaveLength(1);
+        expect(objects[0].title).toEqual('Getting Started with React');
+      }
+
+      {
+        const objects = await db.query(Query.select(Filter.text('Python', { type: 'full-text' }))).run();
+        expect(objects).toHaveLength(1);
+        expect(objects[0].title).toEqual('Advanced Python Programming');
+      }
+
+      // Non-matching query.
+      {
+        const objects = await db.query(Query.select(Filter.text('JavaScript', { type: 'full-text' }))).run();
+        expect(objects).toHaveLength(0);
+      }
+    });
+
+    test('full-text search across multiple matching objects', async () => {
+      const { db } = await builder.createDatabase({ indexing: { fullText: true } });
+
+      db.add(Obj.make(Type.Expando, { title: 'Programming with JavaScript' }));
+      db.add(Obj.make(Type.Expando, { title: 'JavaScript Best Practices' }));
+      db.add(Obj.make(Type.Expando, { title: 'Python for Data Science' }));
+      await db.flush({ indexes: true });
+
+      const objects = await db.query(Query.select(Filter.text('JavaScript', { type: 'full-text' }))).run();
+      expect(objects).toHaveLength(2);
+      expect(objects.map((o) => o.title).sort()).toEqual(
+        ['JavaScript Best Practices', 'Programming with JavaScript'].sort(),
+      );
+    });
+
+    test('full-text search after content update', async () => {
+      const { db } = await builder.createDatabase({ indexing: { fullText: true } });
+
+      const obj = db.add(Obj.make(Type.Expando, { title: 'Original Title' }));
+      await db.flush({ indexes: true });
+
+      // Poll until indexer2 has processed the document.
+      {
+        const objects = await db.query(Query.select(Filter.text('Original', { type: 'full-text' }))).run();
+        expect(objects).toHaveLength(1);
+      }
+
+      // Update the object.
+      obj.title = 'Updated Title';
+      await db.flush({ indexes: true });
+
+      // Verify search results.
+      {
+        const objects = await db.query(Query.select(Filter.text('Updated', { type: 'full-text' }))).run();
+        expect(objects).toHaveLength(1);
+        expect(objects[0].title).toEqual('Updated Title');
+      }
+
+      // Original content should no longer match.
+      {
+        const objects = await db.query(Query.select(Filter.text('Original', { type: 'full-text' }))).run();
+        expect(objects).toHaveLength(0);
+      }
+    });
+
+    test.skip('stress', { timeout: 1200_000 }, async () => {
+      console.log('begin test');
+      const { db } = await builder.createDatabase();
+
+      const ANIMALS = [
+        'dog',
+        'cat',
+        'bird',
+        'fish',
+        'horse',
+        'rabbit',
+        'snake',
+        'tiger',
+        'lion',
+        'elephant',
+        'zebra',
+        'giraffe',
+        'monkey',
+        'penguin',
+        'koala',
+        'kangaroo',
+        'panda',
+      ];
+
+      console.log('begin create');
+
+      console.time('create');
+      const counts = Object.fromEntries(ANIMALS.map((animal) => [animal, 0]));
+      for (const _ of range(10_000)) {
+        const animal = faker.helpers.arrayElement(ANIMALS);
+        counts[animal]++;
+        db.add(
+          Obj.make(Type.Expando, { title: faker.lorem.sentence(10) + ' ' + animal + ' ' + faker.lorem.sentence(10) }),
+        );
+        if (_ % 1000 === 0) {
+          await sleep(1);
+          console.log('creating', _);
+        }
+      }
+      console.timeEnd('create');
+
+      console.time('flush');
+      await db.flush({ indexes: true });
+      console.timeEnd('flush');
+
+      console.time('query');
+      const needle = faker.helpers.arrayElement(ANIMALS);
+      const objects = await db.query(Query.select(Filter.text(needle, { type: 'full-text' }))).run();
+      console.timeEnd('query');
+      console.log('objects', {
+        needle,
+        count: objects.length,
+        expected: counts[needle],
+      });
+      for (const object of objects) {
+        expect(object.title).toContain(needle);
       }
     });
   });

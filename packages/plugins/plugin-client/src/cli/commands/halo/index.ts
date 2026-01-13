@@ -15,7 +15,7 @@ import { seed } from './seed';
 // import { share } from './share';
 import { update } from './update';
 
-export const halo = Command.make('halo').pipe(
+export const halo: Command.Command<any, any, any, any> = Command.make('halo').pipe(
   Command.withDescription('Manage HALO identity.'),
   Command.withSubcommands([create, credential, identity, keys, recover, seed, update]),
 );

@@ -2,54 +2,28 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Capabilities, Events, contributes, createResolver, defineModule, definePlugin } from '@dxos/app-framework';
+import { Common, Plugin } from '@dxos/app-framework';
 
-import { AppGraphBuilder, HelpCapabilities, HelpState, ReactRoot, ReactSurface } from './capabilities';
+import { AppGraphBuilder, HelpState, OperationResolver, ReactRoot, ReactSurface } from './capabilities';
 import { meta } from './meta';
 import { translations } from './translations';
-import { HelpAction, type Step } from './types';
+import { type Step } from './types';
 
 export type HelpPluginOptions = { steps?: Step[] };
 
-export const HelpPlugin = definePlugin<HelpPluginOptions>(meta, ({ steps = [] }) => [
-  defineModule({
-    id: `${meta.id}/module/state`,
-    activatesOn: Events.Startup,
+export const HelpPlugin = Plugin.define<HelpPluginOptions>(meta).pipe(
+  Plugin.addModule({
+    activatesOn: Common.ActivationEvent.Startup,
     activate: HelpState,
   }),
-  defineModule({
-    id: `${meta.id}/module/translations`,
-    activatesOn: Events.SetupTranslations,
-    activate: () => contributes(Capabilities.Translations, translations),
-  }),
-  defineModule({
-    id: `${meta.id}/module/react-root`,
-    activatesOn: Events.Startup,
+  Common.Plugin.addTranslationsModule({ translations }),
+  Plugin.addModule(({ steps = [] }) => ({
+    id: 'react-root',
+    activatesOn: Common.ActivationEvent.Startup,
     activate: () => ReactRoot(steps),
-  }),
-  defineModule({
-    id: `${meta.id}/module/react-surface`,
-    activatesOn: Events.SetupReactSurface,
-    activate: ReactSurface,
-  }),
-  defineModule({
-    id: `${meta.id}/module/intent-resolver`,
-    activatesOn: Events.SetupIntentResolver,
-    activate: (context) =>
-      contributes(
-        Capabilities.IntentResolver,
-        createResolver({
-          intent: HelpAction.Start,
-          resolve: () => {
-            const state = context.getCapability(HelpCapabilities.MutableState);
-            state.running = true;
-          },
-        }),
-      ),
-  }),
-  defineModule({
-    id: `${meta.id}/module/app-graph-builder`,
-    activatesOn: Events.SetupAppGraph,
-    activate: AppGraphBuilder,
-  }),
-]);
+  })),
+  Common.Plugin.addSurfaceModule({ activate: ReactSurface }),
+  Common.Plugin.addOperationResolverModule({ activate: OperationResolver }),
+  Common.Plugin.addAppGraphModule({ activate: AppGraphBuilder }),
+  Plugin.make,
+);

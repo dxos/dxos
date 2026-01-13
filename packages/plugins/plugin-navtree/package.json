@@ -45,6 +45,7 @@
     "@dxos/react-ui-attention": "workspace:*",
     "@dxos/react-ui-list": "workspace:*",
     "@dxos/react-ui-menu": "workspace:*",
+    "@dxos/react-ui-mosaic": "workspace:*",
     "@dxos/react-ui-searchlist": "workspace:*",
     "@dxos/react-ui-stack": "workspace:*",
     "@dxos/react-ui-tabs": "workspace:*",

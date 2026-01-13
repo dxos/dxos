@@ -4,8 +4,8 @@
 
 import React, { useCallback, useRef, useState } from 'react';
 
-import { LayoutAction, createIntent } from '@dxos/app-framework';
-import { useIntentDispatcher } from '@dxos/app-framework/react';
+import { Common } from '@dxos/app-framework';
+import { useOperationInvoker } from '@dxos/app-framework/react';
 import { Obj } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { Button, Input, useTranslation } from '@dxos/react-ui';
@@ -18,7 +18,7 @@ export const ObjectRenamePopover = ({ object }: { object: Obj.Any }) => {
   const { t } = useTranslation(meta.id);
   const doneButton = useRef<HTMLButtonElement>(null);
   const [name, setName] = useState(Obj.getLabel(object));
-  const { dispatchPromise: dispatch } = useIntentDispatcher();
+  const { invokePromise } = useOperationInvoker();
 
   const handleDone = useCallback(() => {
     try {
@@ -26,13 +26,8 @@ export const ObjectRenamePopover = ({ object }: { object: Obj.Any }) => {
     } catch (err) {
       log.error('Failed to rename object', { err });
     }
-    void dispatch(
-      createIntent(LayoutAction.UpdatePopover, {
-        part: 'popover',
-        options: { variant: 'react', anchorId: '', state: false },
-      }),
-    );
-  }, [object, name]);
+    void invokePromise(Common.LayoutOperation.UpdatePopover, { anchorId: '', state: false });
+  }, [object, name, invokePromise]);
 
   return (
     <div role='none' className='p-2 flex gap-2'>

@@ -6,14 +6,14 @@ import { type Extension } from '@codemirror/state';
 import { EditorView } from '@codemirror/view';
 import { computed, effect } from '@preact/signals-core';
 
-import { type PromiseIntentDispatcher, createIntent } from '@dxos/app-framework';
+import { type OperationInvoker } from '@dxos/app-framework';
 import { Filter, Obj, Query, Relation } from '@dxos/echo';
 import { createDocAccessor, getTextInRange } from '@dxos/echo-db';
 import { type Markdown } from '@dxos/plugin-markdown/types';
 import { AnchoredTo, Thread } from '@dxos/types';
 import { comments, createExternalCommentSync } from '@dxos/ui-editor';
 
-import { ThreadAction, type ThreadState } from '../types';
+import { ThreadOperation, type ThreadState } from '../types';
 
 // TODO(burdon): Factor out.
 const getName = (doc: Markdown.Document, anchor: string): string | undefined => {
@@ -26,9 +26,13 @@ const getName = (doc: Markdown.Document, anchor: string): string | undefined => 
 /**
  * Construct plugins.
  */
-export const threads = (state: ThreadState, doc?: Markdown.Document, dispatch?: PromiseIntentDispatcher): Extension => {
+export const threads = (
+  state: ThreadState,
+  doc?: Markdown.Document,
+  invokePromise?: OperationInvoker.OperationInvoker['invokePromise'],
+): Extension => {
   const db = doc && Obj.getDatabase(doc);
-  if (!doc || !db || !dispatch) {
+  if (!doc || !db || !invokePromise) {
     // Include no-op comments extension here to ensure that the facets are always present when they are expected.
     // TODO(wittjosiah): The Editor should only look for these facets when comments are available.
     return [comments()];
@@ -85,13 +89,11 @@ export const threads = (state: ThreadState, doc?: Markdown.Document, dispatch?: 
       id: Obj.getDXN(doc).toString(),
       onCreate: ({ cursor }) => {
         const name = getName(doc, cursor);
-        void dispatch(
-          createIntent(ThreadAction.Create, {
-            anchor: cursor,
-            name,
-            subject: doc,
-          }),
-        );
+        void invokePromise(ThreadOperation.Create, {
+          anchor: cursor,
+          name,
+          subject: doc,
+        });
       },
       onDelete: ({ id }) => {
         const draft = state.drafts[Obj.getDXN(doc).toString()];
@@ -127,7 +129,7 @@ export const threads = (state: ThreadState, doc?: Markdown.Document, dispatch?: 
       onSelect: ({ selection }) => {
         const current = selection.current ?? selection.closest;
         if (current) {
-          void dispatch(createIntent(ThreadAction.Select, { current }));
+          void invokePromise(ThreadOperation.Select, { current });
         }
       },
     }),

@@ -2,44 +2,32 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Capabilities, Events, contributes, defineModule, definePlugin } from '@dxos/app-framework';
+import { Capability, Common, Plugin } from '@dxos/app-framework';
 
-import { Client, IntentResolver, SchemaDefs } from '../capabilities';
+// NOTE: Must not import from index to avoid pulling in react dependencies.
+import { Client } from '../capabilities/client';
+import { OperationResolver } from '../capabilities/operation-resolver';
+import { SchemaDefs } from '../capabilities/schema-defs';
 import { ClientEvents } from '../events';
 import { meta } from '../meta';
 import { type ClientPluginOptions } from '../types';
 
 import { config, device, edge, halo, profile } from './commands';
 
-// TODO(wittjosiah): Refactor capabilities to be able to use them without pulling in react.
-export const ClientPlugin = definePlugin<ClientPluginOptions>(meta, (options) => [
-  defineModule({
-    id: `${meta.id}/module/client`,
-    activatesOn: Events.Startup,
+export const ClientPlugin = Plugin.define<ClientPluginOptions>(meta).pipe(
+  Plugin.addModule((options) => ({
+    id: Capability.getModuleTag(Client),
+    activatesOn: Common.ActivationEvent.Startup,
     activatesAfter: [ClientEvents.ClientReady],
     activate: (context) => Client({ ...options, context }),
-  }),
-  defineModule({
-    id: `${meta.id}/module/schema`,
+  })),
+  Plugin.addModule({
     activatesOn: ClientEvents.ClientReady,
-    activatesBefore: [ClientEvents.SetupSchema],
+    activatesBefore: [Common.ActivationEvent.SetupSchema],
     activate: SchemaDefs,
   }),
-  // TODO(wittjosiah): Could some of these commands make use of intents?
-  defineModule({
-    id: `${meta.id}/module/cli-commands`,
-    activatesOn: Events.Startup,
-    activate: () => [
-      contributes(Capabilities.Command, config),
-      contributes(Capabilities.Command, device),
-      contributes(Capabilities.Command, edge),
-      contributes(Capabilities.Command, halo),
-      contributes(Capabilities.Command, profile),
-    ],
-  }),
-  defineModule({
-    id: `${meta.id}/module/intent-resolver`,
-    activatesOn: Events.SetupIntentResolver,
-    activate: (context) => IntentResolver({ context }),
-  }),
-]);
+  // TODO(wittjosiah): Could some of these commands make use of operations?
+  Common.Plugin.addCommandModule({ commands: [config, device, edge, halo, profile] }),
+  Common.Plugin.addOperationResolverModule({ activate: (context) => OperationResolver({ context }) }),
+  Plugin.make,
+);

@@ -2,6 +2,14 @@
 // Copyright 2022 DXOS.org
 //
 
+import * as Reactivity from '@effect/experimental/Reactivity';
+import type * as SqlClient from '@effect/sql/SqlClient';
+import * as OpfsWorker from '@effect/sql-sqlite-wasm/OpfsWorker';
+import * as SqliteClient from '@effect/sql-sqlite-wasm/SqliteClient';
+import * as Effect from 'effect/Effect';
+import * as Layer from 'effect/Layer';
+import * as ManagedRuntime from 'effect/ManagedRuntime';
+
 import { Trigger } from '@dxos/async';
 import { DEFAULT_WORKER_BROADCAST_CHANNEL } from '@dxos/client-protocol';
 import { type Config } from '@dxos/config';
@@ -57,6 +65,7 @@ export class WorkerRuntime {
   private _config!: Config;
   private _signalMetadataTags: any = { runtime: 'worker-runtime' };
   private _signalTelemetryEnabled: boolean = false;
+  private _runtime!: ManagedRuntime.ManagedRuntime<SqlClient.SqlClient, never>;
 
   constructor({
     channel = DEFAULT_WORKER_BROADCAST_CHANNEL,
@@ -70,10 +79,12 @@ export class WorkerRuntime {
     this._releaseLock = releaseLock;
     this._onStop = onStop;
     this._channel = channel;
+    this._runtime = ManagedRuntime.make(Layer.merge(LocalSqliteOpfsLayer, Reactivity.layer).pipe(Layer.orDie));
     this._clientServices = new ClientServicesHost({
       callbacks: {
         onReset: async () => this.stop(),
       },
+      runtime: this._runtime.runtimeEffect,
     });
   }
 
@@ -127,6 +138,7 @@ export class WorkerRuntime {
     this._broadcastChannel?.close();
     this._broadcastChannel = undefined;
     await this._clientServices.close();
+    await this._runtime.dispose();
     await this._onStop?.();
   }
 
@@ -193,3 +205,28 @@ export class WorkerRuntime {
     }
   }
 }
+
+const DB_NAME = 'DXOS';
+/**
+ * Local SQLite layer for the worker.
+ * Uses OPFS sync API as an FS backend.
+ * Does NOT spawn a new worker.
+ * NOTE: Only usable within a worker.
+ * TODO(mykola): This does not work right now. Fix.
+ */
+const LocalSqliteOpfsLayer = Layer.unwrapScoped(
+  Effect.gen(function* () {
+    const { port1: clientPort, port2: serverPort } = new MessageChannel();
+    clientPort.start();
+    serverPort.start();
+    yield* Effect.addFinalizer(() =>
+      Effect.sync(() => {
+        clientPort.close();
+        serverPort.close();
+      }),
+    );
+
+    yield* Effect.forkScoped(OpfsWorker.run({ port: serverPort, dbName: DB_NAME }));
+    return SqliteClient.layer({ worker: Effect.succeed(clientPort) });
+  }),
+);

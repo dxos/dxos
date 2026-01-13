@@ -30,6 +30,9 @@ const LayoutControl = ({ icon, label, ...props }: Omit<ButtonProps, 'children'> 
   return <IconButton iconOnly icon={icon} label={label} tooltipSide='bottom' variant='ghost' {...props} />;
 };
 
+/**
+ * @deprecated
+ */
 export const LayoutControls = forwardRef<HTMLDivElement, LayoutControlsProps>(
   (
     { onClick, variant = 'default', capabilities: can, isSolo, pin, close = false, children, ...props },

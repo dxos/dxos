@@ -3,11 +3,15 @@
 //
 
 import type { AutomergeUrl, DocumentId } from '@automerge/automerge-repo';
+import type * as SqlClient from '@effect/sql/SqlClient';
 import * as Match from 'effect/Match';
 import * as Predicate from 'effect/Predicate';
+import * as Runtime from 'effect/Runtime';
 
 import { Context, ContextDisposedError, LifecycleState, Resource } from '@dxos/context';
 import { DatabaseDirectory, ObjectStructure, type QueryAST, isEncodedReference } from '@dxos/echo-protocol';
+import { type RuntimeProvider, runAndForwardErrors, unwrapExit } from '@dxos/effect';
+import { type IndexEngine } from '@dxos/index-core';
 import { EscapedPropPath, type FindResult, type Indexer } from '@dxos/indexing';
 import { invariant } from '@dxos/invariant';
 import { DXN, type ObjectId, PublicKey, type SpaceId } from '@dxos/keys';
@@ -28,6 +32,8 @@ const isNullable: Predicate.Refinement<unknown, null | undefined> = Predicate.is
 
 type QueryExecutorOptions = {
   indexer: Indexer;
+  indexer2?: IndexEngine;
+  runtime?: RuntimeProvider.RuntimeProvider<SqlClient.SqlClient>;
   automergeHost: AutomergeHost;
   spaceStateManager: SpaceStateManager;
 
@@ -149,6 +155,8 @@ const TRACE_QUERY_EXECUTION = false;
  */
 export class QueryExecutor extends Resource {
   private readonly _indexer: Indexer;
+  private readonly _indexer2?: IndexEngine;
+  private readonly _runtime?: RuntimeProvider.RuntimeProvider<SqlClient.SqlClient>;
   private readonly _automergeHost: AutomergeHost;
   private readonly _spaceStateManager: SpaceStateManager;
   /**
@@ -167,6 +175,8 @@ export class QueryExecutor extends Resource {
     super();
 
     this._indexer = options.indexer;
+    this._indexer2 = options.indexer2;
+    this._runtime = options.runtime;
     this._automergeHost = options.automergeHost;
     this._spaceStateManager = options.spaceStateManager;
 
@@ -372,33 +382,69 @@ export class QueryExecutor extends Resource {
       }
 
       case 'TextSelector': {
-        const beginIndexQuery = performance.now();
-        const indexHits = await this._indexer.execQuery({
-          typenames: [],
-          text: {
-            query: step.selector.text,
-            kind: Match.type<QueryPlan.TextSearchKind>().pipe(
-              Match.withReturnType<'text' | 'vector'>(),
-              Match.when('full-text', () => 'text'),
-              Match.when('vector', () => 'vector'),
-              Match.orElseAbsurd,
-            )(step.selector.searchKind),
-          },
-        });
-        trace.indexHits = +indexHits.length;
-        trace.indexQueryTime += performance.now() - beginIndexQuery;
+        // TODO(dmaretskyi): ranking https://sqlite.org/fts5.html#the_bm25_function
+        // TODO(dmaretskyi): type + FTS queries would be very common so we should support those, maybe chunk the fts index
+        // TODO(dmaretskyi): nice to have matched text snippets/highlighting
+        if (step.selector.searchKind === 'full-text' && this._indexer2 && this._runtime) {
+          // Use indexer2 for full-text search.
+          const beginIndexQuery = performance.now();
+          const runtime = await runAndForwardErrors(this._runtime);
+          invariant(step.spaces.length <= 1, 'Multiple spaces are not supported for full-text search');
+          const textResults = await unwrapExit(
+            await this._indexer2
+              .queryText({ query: step.selector.text, spaceId: step.spaces[0] })
+              .pipe(Runtime.runPromiseExit(runtime)),
+          );
+          trace.indexHits = textResults.length;
+          trace.indexQueryTime += performance.now() - beginIndexQuery;
 
-        if (this._ctx.disposed) {
-          return { workingSet, trace };
+          if (this._ctx.disposed) {
+            return { workingSet, trace };
+          }
+
+          // Load documents from the results.
+          const documentLoadStart = performance.now();
+          const items = await Promise.all(
+            textResults.map(async (result): Promise<QueryItem | null> => {
+              const dxn = DXN.fromLocalObjectId(result.objectId);
+              return this._loadFromDXN(dxn, { sourceSpaceId: result.spaceId as SpaceId });
+            }),
+          );
+          trace.documentsLoaded += items.filter(isNonNullable).length;
+          trace.documentLoadTime += performance.now() - documentLoadStart;
+
+          workingSet.push(...items.filter(isNonNullable).filter((item) => step.spaces.includes(item.spaceId)));
+          trace.objectCount = workingSet.length;
+        } else {
+          // Fall back to old indexer for vector search.
+          const beginIndexQuery = performance.now();
+          const indexHits = await this._indexer.execQuery({
+            typenames: [],
+            text: {
+              query: step.selector.text,
+              kind: Match.type<QueryPlan.TextSearchKind>().pipe(
+                Match.withReturnType<'text' | 'vector'>(),
+                Match.when('full-text', () => 'text'),
+                Match.when('vector', () => 'vector'),
+                Match.orElseAbsurd,
+              )(step.selector.searchKind),
+            },
+          });
+          trace.indexHits = +indexHits.length;
+          trace.indexQueryTime += performance.now() - beginIndexQuery;
+
+          if (this._ctx.disposed) {
+            return { workingSet, trace };
+          }
+
+          const documentLoadStart = performance.now();
+          const results = await this._loadDocumentsAfterIndexQuery(indexHits);
+          trace.documentsLoaded += results.length;
+          trace.documentLoadTime += performance.now() - documentLoadStart;
+
+          workingSet.push(...results.filter(isNonNullable).filter((item) => step.spaces.includes(item.spaceId)));
+          trace.objectCount = workingSet.length;
         }
-
-        const documentLoadStart = performance.now();
-        const results = await this._loadDocumentsAfterIndexQuery(indexHits);
-        trace.documentsLoaded += results.length;
-        trace.documentLoadTime += performance.now() - documentLoadStart;
-
-        workingSet.push(...results.filter(isNonNullable).filter((item) => step.spaces.includes(item.spaceId)));
-        trace.objectCount = workingSet.length;
         break;
       }
 

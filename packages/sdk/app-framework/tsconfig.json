@@ -36,6 +36,9 @@
       "path": "../../common/storybook-utils"
     },
     {
+      "path": "../../common/test-utils"
+    },
+    {
       "path": "../../common/util"
     },
     {
@@ -57,6 +60,9 @@
       "path": "../../core/echo/echo"
     },
     {
+      "path": "../../core/echo/echo-db"
+    },
+    {
       "path": "../../core/echo/echo-signals"
     },
     {
@@ -64,6 +70,9 @@
     },
     {
       "path": "../../core/functions"
+    },
+    {
+      "path": "../../core/operation"
     },
     {
       "path": "../../ui/react-primitives/react-hooks"

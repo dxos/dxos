@@ -6,7 +6,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import type * as Schema from 'effect/Schema';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
-import { Events } from '@dxos/app-framework';
+import { Common } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import {
   type ExtractionFunction,
@@ -23,6 +23,7 @@ import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { ClientPlugin } from '@dxos/plugin-client';
 import { PreviewPlugin } from '@dxos/plugin-preview';
+import { SpacePlugin } from '@dxos/plugin-space';
 import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
 import { IndexKind, useSpace } from '@dxos/react-client/echo';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
@@ -221,11 +222,13 @@ const meta = {
             await seedTestData(client.spaces.default);
           },
         }),
+        ...corePlugins(),
+        SpacePlugin({}),
         PreviewPlugin(),
         TranscriptionPlugin(),
         StorybookPlugin({}),
       ],
-      fireEvents: [Events.SetupAppGraph],
+      fireEvents: [Common.ActivationEvent.SetupAppGraph],
     }),
   ],
 } satisfies Meta<typeof DefaultStory>;

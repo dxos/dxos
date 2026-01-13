@@ -8,6 +8,7 @@ import React from 'react';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { ClientPlugin } from '@dxos/plugin-client';
 import { PreviewPlugin } from '@dxos/plugin-preview';
+import { SpacePlugin } from '@dxos/plugin-space';
 import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
 import { faker } from '@dxos/random';
 import { Filter, useQuery, useSpaces } from '@dxos/react-client/echo';
@@ -27,8 +28,9 @@ const StorybookMasonry = () => {
   const space = spaces[spaces.length - 1];
   const masonries = useQuery(space?.db, Filter.type(Masonry.Masonry));
   const masonry = masonries.at(0);
+  const view = masonry?.view.target;
 
-  return masonry ? <MasonryContainer object={masonry} role='story' /> : null;
+  return view ? <MasonryContainer view={view} role='story' /> : null;
 };
 
 const meta = {
@@ -58,6 +60,8 @@ const meta = {
             await factory([{ type: Organization.Organization, count: 64 }]);
           },
         }),
+        ...corePlugins(),
+        SpacePlugin({}),
         PreviewPlugin(),
         StorybookPlugin({}),
       ],

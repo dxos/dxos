@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { cardDefaultInlineSize } from '@dxos/react-ui-stack';
+import { cardDefaultInlineSize } from '@dxos/react-ui-mosaic';
 
 import { type BoardGeometry } from './geometry';
 import { type BoardLayout } from './types';
@@ -18,4 +18,7 @@ export const defaultGrid: BoardGeometry = {
   overScroll: 0,
 };
 
-export const defaultLayout: BoardLayout = { size: { width: 7, height: 5 }, cells: {} };
+export const defaultLayout: BoardLayout = {
+  size: { width: 7, height: 5 },
+  cells: {},
+};

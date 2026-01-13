@@ -8,7 +8,7 @@ import { type Node } from '@dxos/app-graph';
 
 import { useNavTreeContext } from './components';
 
-export const useLoadDescendents = (root?: Node) => {
+export const useLoadDescendents = (root?: Node.Node) => {
   const { loadDescendents } = useNavTreeContext();
   useEffect(() => {
     const frame = requestAnimationFrame(() => {

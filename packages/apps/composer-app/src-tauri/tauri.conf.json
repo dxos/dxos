@@ -12,12 +12,15 @@
   "app": {
     "windows": [
       {
+        "label": "main",
         "title": "Composer",
         "width": 1600,
         "height": 1200,
         "resizable": true,
         "fullscreen": false,
-        "devtools": true
+        "devtools": true,
+        "titleBarStyle": "Overlay",
+        "hiddenTitle": true
       }
     ],
     "security": {

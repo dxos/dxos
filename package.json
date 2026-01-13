@@ -113,7 +113,7 @@
     "eslint-plugin-prettier": "catalog:",
     "eslint-plugin-react": "catalog:",
     "eslint-plugin-sort-exports": "catalog:",
-    "eslint-plugin-storybook": "10.1.10",
+    "eslint-plugin-storybook": "catalog:",
     "eslint-plugin-unused-imports": "catalog:",
     "execa": "catalog:",
     "extensionless": "catalog:",
@@ -144,7 +144,7 @@
     "rollup-plugin-sourcemaps": "catalog:",
     "semver": "catalog:",
     "serve": "catalog:",
-    "storybook": "10.1.10",
+    "storybook": "10.1.11",
     "ts-morph": "catalog:",
     "tsdown": "catalog:",
     "tsx": "catalog:",
@@ -169,7 +169,7 @@
     "yargs": "catalog:",
     "zx": "catalog:"
   },
-  "packageManager": "pnpm@10.13.1",
+  "packageManager": "pnpm@10.28.0",
   "engines": {
     "node": "^24.0.0"
   },
@@ -180,6 +180,7 @@
       "@parcel/watcher",
       "@sentry/cli",
       "@swc/core",
+      "better-sqlite3",
       "canvas",
       "cbor-extract",
       "classic-level",
@@ -203,6 +204,8 @@
     ],
     "overrides": {
       "@automerge/automerge": "3.2.1",
+      "@effect/wa-sqlite": "npm:@dxos/wa-sqlite@^0.2.1",
+      "better-sqlite3": "12.6.0",
       "@lezer/lr": "^1.4.2",
       "@types/node": "22.10.2",
       "@types/react": "~19.2.7",
