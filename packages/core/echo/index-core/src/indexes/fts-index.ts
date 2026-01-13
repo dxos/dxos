@@ -27,9 +27,10 @@ export class FtsIndex implements Index {
   migrate = Effect.fn('FtsIndex.migrate')(function* () {
     const sql = yield* SqlClient.SqlClient;
 
-    // https://sqlite.org/fts5.html
+    // https://sqlite.org/fts5.html#the_trigram_tokenizer
     // FTS5 tables are created as virtual tables; they implicitly have a `rowid`.
-    yield* sql`CREATE VIRTUAL TABLE IF NOT EXISTS ftsIndex USING fts5(snapshot)`;
+    // Trigram tokenizer enables substring matching (e.g., "rog" matches "programming").
+    yield* sql`CREATE VIRTUAL TABLE IF NOT EXISTS ftsIndex USING fts5(snapshot, tokenize='trigram')`;
   });
 
   query({ query, spaceId }: FtsQuery): Effect.Effect<readonly ObjectMeta[], SqlError.SqlError, SqlClient.SqlClient> {
