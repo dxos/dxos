@@ -30,18 +30,30 @@ export class FtsIndex implements Index {
     // https://sqlite.org/fts5.html#the_trigram_tokenizer
     // FTS5 tables are created as virtual tables; they implicitly have a `rowid`.
     // Trigram tokenizer enables substring matching (e.g., "rog" matches "programming").
+    //
+    // Data structure: inverted index mapping trigrams to document IDs.
+    // "hello" → trigrams ["hel", "ell", "llo"] → B-tree entries: "hel"→[1], "ell"→[1], "llo"→[1].
+    // Query "ell" → O(log n) B-tree lookup → returns [1].
+    // Posting lists are compressed, so index size scales well with document count.
     yield* sql`CREATE VIRTUAL TABLE IF NOT EXISTS ftsIndex USING fts5(snapshot, tokenize='trigram')`;
   });
 
   query({ query, spaceId }: FtsQuery): Effect.Effect<readonly ObjectMeta[], SqlError.SqlError, SqlClient.SqlClient> {
     return Effect.gen(function* () {
+      if (query.length === 0) {
+        return [];
+      }
+
       const sql = yield* SqlClient.SqlClient;
 
-      const conditions = [sql`f.snapshot MATCH ${query}`];
+      // Trigram tokenizer requires at least 3 characters; fall back to LIKE for shorter queries.
+      const conditions =
+        query.length < 3
+          ? [sql`f.snapshot LIKE ${'%' + query + '%'}`] // LIKE - scan the entire table.
+          : [sql`f.snapshot MATCH ${query}`]; // MATCH - fast index lookup.
       if (spaceId) {
         conditions.push(sql`m.spaceId = ${spaceId}`);
       }
-
       return yield* sql<ObjectMeta>`SELECT m.* FROM ftsIndex AS f JOIN objectMeta AS m ON f.rowid = m.recordId WHERE ${sql.and(conditions)}`;
     });
   }

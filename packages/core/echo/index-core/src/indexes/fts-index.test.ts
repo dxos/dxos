@@ -253,7 +253,7 @@ describe('FtsIndex', () => {
   );
 
   it.effect(
-    'should support FTS5 query syntax',
+    'partial word matches',
     Effect.fnUntraced(function* () {
       const index = new FtsIndex();
       const metaIndex = new ObjectMetaIndex();
@@ -296,6 +296,14 @@ describe('FtsIndex', () => {
       const exactMatch = yield* index.query({ query: 'Programming' });
       expect(exactMatch).toHaveLength(1);
       expect(exactMatch[0].objectId).toBe(objects[0].data.id);
+
+      // Empty query should return no results.
+      const emptyMatch = yield* index.query({ query: '' });
+      expect(emptyMatch).toHaveLength(0);
+
+      // Single character query should return all results.
+      const singleCharMatch = yield* index.query({ query: 'P' });
+      expect(singleCharMatch).toHaveLength(2);
 
       // Trigram tokenizer enables substring matching - partial words match.
       const partialMatch = yield* index.query({ query: 'Prog' });
