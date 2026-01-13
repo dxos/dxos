@@ -70,23 +70,17 @@ export class FtsIndex implements Index {
 
       const sql = yield* SqlClient.SqlClient;
 
-      let useLikeFallback = false;
-
       // Trigram tokenizer requires at least 3 characters per term.
       // Check if ALL terms are at least 3 chars; otherwise use LIKE fallback.
       const terms = trimmed.split(/\s+/).filter(Boolean);
       const minTermLength = Math.min(...terms.map((t) => t.length));
-      useLikeFallback = minTermLength < 3;
-      const ftsQuery = escapeFts5Query(trimmed);
 
-      const conditions = useLikeFallback
-        ? // LIKE fallback - scan the entire table, AND all terms.
-          trimmed
-            .split(/\s+/)
-            .filter(Boolean)
-            .map((term) => sql`f.snapshot LIKE ${'%' + term + '%'}`)
-        : // MATCH - fast index lookup.
-          [sql`f.snapshot MATCH ${ftsQuery}`];
+      const conditions =
+        minTermLength < 3
+          ? // LIKE fallback - scan the entire table, AND all terms.
+            terms.map((term) => sql`f.snapshot LIKE ${'%' + term + '%'}`)
+          : // MATCH - fast index lookup.
+            [sql`f.snapshot MATCH ${escapeFts5Query(trimmed)}`];
 
       if (spaceId) {
         conditions.push(sql`m.spaceId = ${spaceId}`);
