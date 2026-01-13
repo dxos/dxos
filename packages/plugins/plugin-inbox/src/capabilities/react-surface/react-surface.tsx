@@ -10,7 +10,6 @@ import { Obj } from '@dxos/echo';
 import { Event, Message, Organization, Person } from '@dxos/types';
 
 import {
-  COMPOSE_EMAIL_DIALOG,
   CalendarArticle,
   ComposeEmailDialog,
   EventArticle,
@@ -19,11 +18,11 @@ import {
   MailboxSettings,
   MessageArticle,
   MessageCard,
-  POPOVER_SAVE_FILTER,
   PopoverSaveFilter,
   RelatedToContact,
   RelatedToOrganization,
 } from '../../components';
+import { COMPOSE_EMAIL_DIALOG, POPOVER_SAVE_FILTER } from '../../constants';
 import { meta } from '../../meta';
 import { Calendar, Mailbox } from '../../types';
 

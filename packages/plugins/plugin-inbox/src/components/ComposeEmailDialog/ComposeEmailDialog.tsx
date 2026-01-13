@@ -19,8 +19,6 @@ import { Message as MessageType } from '@dxos/types';
 import { gmail } from '../../functions';
 import { meta } from '../../meta';
 
-export const COMPOSE_EMAIL_DIALOG = `${meta.id}/ComposeEmailDialog`;
-
 const ComposeEmailForm = Schema.Struct({
   to: Schema.String.annotations({ description: 'Recipient email address' }),
   subject: Schema.optional(Schema.String.annotations({ description: 'Email subject' })),
