@@ -13,7 +13,7 @@ import { IconButton, Toolbar } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { mx } from '@dxos/ui-theme';
 
-import { Board, DebugRoot, TestColumn, TestItem } from '../../testing';
+import { Board as BoardComponent, DebugRoot, TestColumn, TestItem } from '../../testing';
 import { Focus } from '../Focus';
 
 import { Mosaic } from './Mosaic';
@@ -52,7 +52,7 @@ const DefaultStory = ({ columns: columnsProp = 1, debug = false }: StoryProps) =
   return (
     <Mosaic.Root asChild debug={debug}>
       <div className={mx('grid overflow-hidden', debug && 'grid-cols-[1fr_20rem] gap-2')}>
-        <Board id='board' columns={columns} debug={debug} />
+        <BoardComponent id='board' columns={columns} debug={debug} />
         {debug && (
           <Focus.Group classNames='flex flex-col gap-2 overflow-hidden'>
             <Toolbar.Root classNames='border-b border-separator'>

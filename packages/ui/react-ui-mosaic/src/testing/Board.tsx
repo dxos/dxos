@@ -91,7 +91,7 @@ export const Board = forwardRef<HTMLDivElement, BoardProps>(({ id, columns, debu
           debug={debugHandler}
         >
           <Mosaic.Viewport onViewportReady={setViewportElement}>
-            <Mosaic.Stack axis='horizontal' className='bs-full pbs-2 pbe-3' items={columns} Component={Column} />
+            <Mosaic.Stack axis='horizontal' className='bs-full plb-3' items={columns} Component={Column} />
           </Mosaic.Viewport>
         </Mosaic.Container>
       </Focus.Group>
@@ -113,6 +113,7 @@ export const Column = forwardRef<HTMLDivElement, ColumnProps>(
     const { id, items } = object;
     const [DebugInfo, debugHandler] = useContainerDebug(debug);
     const dragHandleRef = useRef<HTMLButtonElement>(null);
+    const [scrollViewport, setViewportElement] = useState<HTMLElement | null>(null);
     const eventHandler = useEventHandlerAdapter({
       id,
       canDrop: ({ source }) => {
@@ -155,15 +156,22 @@ export const Column = forwardRef<HTMLDivElement, ColumnProps>(
               <Card.Heading>{id}</Card.Heading>
               <Card.Menu items={[]} />
             </Card.Toolbar>
-            <Mosaic.Container asChild axis='vertical' withFocus debug={debugHandler} eventHandler={eventHandler}>
-              <div role='none' className='overflow-y-auto'>
+            <Mosaic.Container
+              asChild
+              axis='vertical'
+              withFocus
+              autoScroll={scrollViewport}
+              eventHandler={eventHandler}
+              debug={debugHandler}
+            >
+              <Mosaic.Viewport onViewportReady={setViewportElement}>
                 <Mosaic.Stack
                   axis='vertical'
-                  className='pli-2'
+                  className='pli-3'
                   items={items.map((item: any) => item.target).filter(isTruthy)}
                   Component={Tile}
                 />
-              </div>
+              </Mosaic.Viewport>
             </Mosaic.Container>
             <div>
               <div className='grow flex p-1 justify-center text-xs'>{items.length}</div>

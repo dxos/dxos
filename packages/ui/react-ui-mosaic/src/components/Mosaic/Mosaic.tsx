@@ -576,34 +576,44 @@ Container.displayName = 'MosaicContainer';
 // Viewport
 //
 
+const defaultOptions: ViewportProps['options'] = {
+  scrollbars: {
+    autoHide: 'leave',
+    autoHideDelay: 1_000,
+    autoHideSuspend: true,
+  },
+};
+
 type ViewportProps = ComponentProps<typeof OverlayScrollbarsComponent> & {
   onViewportReady?: (viewport: HTMLElement | null) => void;
 };
 
-const Viewport = forwardRef<HTMLDivElement, ViewportProps>(({ onViewportReady, ...props }, forwardedRef) => {
-  const osRef = useRef<OverlayScrollbarsComponentRef<'div'>>(null);
+const Viewport = forwardRef<HTMLDivElement, ViewportProps>(
+  ({ onViewportReady, options = defaultOptions, ...props }, forwardedRef) => {
+    const osRef = useRef<OverlayScrollbarsComponentRef<'div'>>(null);
 
-  // Forward the host element to the forwardedRef for asChild/Slot compatibility.
-  useEffect(() => {
-    const hostElement = osRef.current?.getElement();
-    if (forwardedRef) {
-      if (typeof forwardedRef === 'function') {
-        forwardedRef(hostElement ?? null);
-      } else {
-        forwardedRef.current = hostElement ?? null;
+    // Forward the host element to the forwardedRef for asChild/Slot compatibility.
+    useEffect(() => {
+      const hostElement = osRef.current?.getElement();
+      if (forwardedRef) {
+        if (typeof forwardedRef === 'function') {
+          forwardedRef(hostElement ?? null);
+        } else {
+          forwardedRef.current = hostElement ?? null;
+        }
       }
-    }
-  });
+    });
 
-  // Notify parent when viewport is ready.
-  useEffect(() => {
-    const instance = osRef.current?.osInstance();
-    const viewport = instance?.elements().viewport ?? null;
-    onViewportReady?.(viewport);
-  }, [onViewportReady]);
+    // Notify parent when viewport is ready.
+    useEffect(() => {
+      const instance = osRef.current?.osInstance();
+      const viewport = instance?.elements().viewport ?? null;
+      onViewportReady?.(viewport);
+    }, [onViewportReady]);
 
-  return <OverlayScrollbarsComponent {...props} ref={osRef} />;
-});
+    return <OverlayScrollbarsComponent options={options} {...props} ref={osRef} />;
+  },
+);
 
 //
 // Container Debug

@@ -2,10 +2,14 @@
  * Override OverlayScrollbars theme variables.
  * This file should be imported after 'overlayscrollbars/styles/overlayscrollbars.css'
  * to ensure proper CSS cascade order.
+ * https://github.com/KingSora/OverlayScrollbars/blob/master/packages/overlayscrollbars/src/styles/scrollbars.scss
  */
 /** TODO(burdon): Tailwind. */
 .os-theme-dark {
-  --os-handle-bg: rgba(100, 100, 100, 0.5);
-  --os-handle-bg-hover: rgba(100, 100, 100, 0.7);
+  /** p-3 */
+  --os-size: 8px;
+  --os-track-border-radius: 0px;
+  --os-handle-bg: rgba(100, 100, 100, 0.6);
+  --os-handle-bg-hover: rgba(100, 100, 100, 0.8);
   --os-handle-bg-active: rgba(100, 100, 100, 0.9);
 }
