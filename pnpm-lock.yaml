@@ -4801,6 +4801,9 @@ importers:
       '@dxos/protocols':
         specifier: workspace:*
         version: link:../../protocols
+      '@dxos/sql-sqlite-wasm':
+        specifier: workspace:*
+        version: link:../../../common/sql-sqlite-wasm
       '@dxos/teleport':
         specifier: workspace:*
         version: link:../../mesh/teleport

@@ -14,6 +14,11 @@
       "types": "./dist/types/src/index.d.ts",
       "browser": "./dist/lib/browser/index.mjs",
       "node": "./dist/lib/node-esm/index.mjs"
+    },
+    "./platform": {
+      "types": "./dist/types/src/platform/browser.d.ts",
+      "browser": "./dist/lib/browser/platform/browser.mjs",
+      "node": "./dist/lib/node-esm/platform/node.mjs"
     }
   },
   "files": [

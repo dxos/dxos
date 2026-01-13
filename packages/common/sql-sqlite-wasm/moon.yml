@@ -8,3 +8,5 @@ tasks:
   compile:
     args:
       - '--entryPoint=src/index.ts'
+      - '--entryPoint=src/platform/node.ts'
+      - '--entryPoint=src/platform/browser.ts'
