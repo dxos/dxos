@@ -53,17 +53,23 @@ runs:
     # a different Node version, causing "NODE_MODULE_VERSION mismatch" errors.
     #
     # This rebuild step recompiles native modules from source for the current
-    # Node.js version, ensuring ABI compatibility. It's safe to run even when
-    # not strictly needed (it no-ops if binaries are already correct).
+    # Node.js version, ensuring ABI compatibility. Only runs on Node 24+ since
+    # Node 20 has prebuilt binaries available.
     #
     # Remove this step once all native dependencies ship prebuilts for all
     # Node versions in the test matrix.
-    - name: Rebuild native modules
+    - name: Rebuild native modules for Node 24+
       run: |
-        # Delete existing binaries to force a clean rebuild
-        find node_modules -name "better_sqlite3.node" -delete 2>/dev/null || true
-        # Rebuild from source
-        pnpm rebuild better-sqlite3
-        # Verify the binary exists and show its info
-        find node_modules -name "better_sqlite3.node" -exec file {} \;
+        NODE_MAJOR=$(node -p 'process.versions.node.split(".")[0]')
+        if [ "$NODE_MAJOR" -ge 24 ]; then
+          echo "Node $NODE_MAJOR detected, rebuilding native modules..."
+          # Delete existing binaries to force a clean rebuild
+          find node_modules -name "better_sqlite3.node" -delete 2>/dev/null || true
+          # Rebuild from source (--ignore-engines bypasses root package.json engine constraint)
+          pnpm rebuild better-sqlite3 --ignore-engines
+          # Verify the binary exists and show its info
+          find node_modules -name "better_sqlite3.node" -exec file {} \;
+        else
+          echo "Node $NODE_MAJOR detected, skipping rebuild (prebuilts available)"
+        fi
       shell: bash
