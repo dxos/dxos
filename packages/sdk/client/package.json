@@ -63,6 +63,11 @@
       "types": "./dist/types/src/worker/index.d.ts",
       "browser": "./dist/lib/browser/worker/index.mjs",
       "node": "./dist/lib/node-esm/worker/index.mjs"
+    },
+    "./opfs-worker": {
+      "source": "./src/worker/opfs-worker.ts",
+      "types": "./dist/types/src/worker/opfs-worker.d.ts",
+      "browser": "./dist/lib/browser/worker/opfs-worker.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
@@ -91,6 +96,9 @@
       ],
       "worker": [
         "dist/types/src/worker/index.d.ts"
+      ],
+      "opfs-worker": [
+        "dist/types/src/worker/opfs-worker.d.ts"
       ]
     }
   },
@@ -132,10 +140,14 @@
     "@dxos/random-access-storage": "workspace:*",
     "@dxos/rpc": "workspace:*",
     "@dxos/rpc-tunnel": "workspace:*",
+    "@dxos/sql-sqlite": "workspace:*",
     "@dxos/timeframe": "workspace:*",
     "@dxos/tracing": "workspace:*",
     "@dxos/util": "workspace:*",
     "@dxos/websocket-rpc": "workspace:*",
+    "@effect/experimental": "catalog:",
+    "@effect/sql": "catalog:",
+    "@effect/sql-sqlite-wasm": "catalog:",
     "base-x": "catalog:",
     "effect": "catalog:",
     "jwt-decode": "catalog:",

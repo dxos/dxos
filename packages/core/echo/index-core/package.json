@@ -1,0 +1,45 @@
+{
+  "name": "@dxos/index-core",
+  "version": "0.8.3",
+  "description": "Indexing core.",
+  "homepage": "https://dxos.org",
+  "bugs": "https://github.com/dxos/dxos/issues",
+  "license": "MIT",
+  "author": "info@dxos.org",
+  "sideEffects": true,
+  "type": "module",
+  "exports": {
+    ".": {
+      "source": "./src/index.ts",
+      "types": "./dist/types/src/index.d.ts",
+      "browser": "./dist/lib/browser/index.mjs",
+      "node": "./dist/lib/node-esm/index.mjs"
+    }
+  },
+  "files": [
+    "dist",
+    "src"
+  ],
+  "dependencies": {
+    "@dxos/async": "workspace:",
+    "@dxos/context": "workspace:",
+    "@dxos/debug": "workspace:",
+    "@dxos/echo": "workspace:",
+    "@dxos/echo-protocol": "workspace:",
+    "@dxos/effect": "workspace:",
+    "@dxos/invariant": "workspace:",
+    "@dxos/keys": "workspace:",
+    "@dxos/log": "workspace:",
+    "@effect/experimental": "catalog:",
+    "@effect/platform": "catalog:",
+    "@effect/sql": "catalog:",
+    "effect": "catalog:"
+  },
+  "devDependencies": {
+    "@effect/sql-sqlite-node": "catalog:"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "beast": {}
+}

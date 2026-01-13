@@ -26,13 +26,18 @@ runs:
       run: echo "pnpm-store=$(pnpm store path)" >> $GITHUB_OUTPUT
       shell: bash
 
+    - name: Get Node version
+      id: node-version
+      run: echo "version=$(node --version)" >> $GITHUB_OUTPUT
+      shell: bash
+
     - name: Cache pnpm store
       uses: actions/cache@v4
       with:
         path: ${{ steps.pnpm-store.outputs.pnpm-store }}
-        key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+        key: ${{ runner.os }}-node-${{ steps.node-version.outputs.version }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
         restore-keys: |
-          ${{ runner.os }}-pnpm-store-
+          ${{ runner.os }}-node-${{ steps.node-version.outputs.version }}-pnpm-store-
 
     - name: Install dependencies
       run: |

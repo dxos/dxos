@@ -3,6 +3,10 @@
 //
 
 import type { AutomergeUrl } from '@automerge/automerge-repo';
+import * as Reactivity from '@effect/experimental/Reactivity';
+import type * as SqlClient from '@effect/sql/SqlClient';
+import * as Layer from 'effect/Layer';
+import * as ManagedRuntime from 'effect/ManagedRuntime';
 import type * as Schema from 'effect/Schema';
 import isEqual from 'lodash.isequal';
 
@@ -14,6 +18,7 @@ import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { type LevelDB } from '@dxos/kv-store';
 import { createTestLevel } from '@dxos/kv-store/testing';
+import { layerMemory } from '@dxos/sql-sqlite/platform';
 import { range } from '@dxos/util';
 
 import { EchoClient } from '../client';
@@ -81,16 +86,21 @@ export class EchoTestPeer extends Resource {
   private _lastDatabaseSpaceKey?: PublicKey = undefined;
   private _lastDatabaseRootUrl?: string = undefined;
 
+  private _managedRuntime!: ManagedRuntime.ManagedRuntime<SqlClient.SqlClient, never>;
+
   constructor({ kv = createTestLevel(), indexing = {}, types }: PeerOptions) {
     super();
     this._kv = kv;
     this._indexing = indexing;
     this._types = types ?? [];
-    this._initEcho();
   }
 
   private _initEcho(): void {
-    this._echoHost = new EchoHost({ kv: this._kv, indexing: this._indexing });
+    this._echoHost = new EchoHost({
+      kv: this._kv,
+      indexing: this._indexing,
+      runtime: this._managedRuntime.runtimeEffect,
+    });
     this._clients.delete(this._echoClient);
     this._echoClient = new EchoClient();
     this._clients.add(this._echoClient);
@@ -107,6 +117,8 @@ export class EchoTestPeer extends Resource {
 
   protected override async _open(ctx: Context): Promise<void> {
     await this._kv.open();
+    this._managedRuntime = ManagedRuntime.make(Layer.merge(layerMemory, Reactivity.layer).pipe(Layer.orDie));
+    this._initEcho();
     this._echoClient.connectToService({
       dataService: this._echoHost.dataService,
       queryService: this._echoHost.queryService,
@@ -123,6 +135,7 @@ export class EchoTestPeer extends Resource {
     }
     await this._echoHost.close(ctx);
     await this._kv.close();
+    await this._managedRuntime.dispose();
   }
 
   /**
@@ -130,7 +143,6 @@ export class EchoTestPeer extends Resource {
    */
   async reload(): Promise<void> {
     await this.close();
-    this._initEcho();
     await this.open();
   }
 

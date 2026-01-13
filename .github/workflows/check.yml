@@ -87,7 +87,7 @@ jobs:
   test:
     strategy:
       matrix:
-        node-version: ['20.19.5', '24.11.1']
+        node-version: ['24.11.1']
     runs-on: depot-ubuntu-24.04-8
     container:
       image: ghcr.io/dxos/gh-actions:${{ matrix.node-version }}

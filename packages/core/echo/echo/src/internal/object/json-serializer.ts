@@ -5,12 +5,13 @@
 import * as Schema from 'effect/Schema';
 
 import { raise } from '@dxos/debug';
-import { type EncodedReference, type ObjectMeta, isEncodedReference } from '@dxos/echo-protocol';
+import { type EncodedReference, type ObjectMeta, ObjectStructure, isEncodedReference } from '@dxos/echo-protocol';
 import { assertArgument, invariant } from '@dxos/invariant';
 import { DXN, ObjectId } from '@dxos/keys';
 import { defineHiddenProperty } from '@dxos/live-object';
 import { assumeType, deepMapValues, visitValues } from '@dxos/util';
 
+import type * as Obj from '../../Obj';
 import { getTypeDXN, setTypename } from '../annotations';
 import {
   ATTR_DELETED,
@@ -227,4 +228,19 @@ const serializeData = (data: unknown) => {
 
 const serializeMeta = (meta: ObjectMeta) => {
   return deepMapValues(meta, (value, recurse) => recurse(value));
+};
+
+/**
+ * Convert ObjectStructure to JSON data for indexing.
+ * Different from {@link objectToJSON} as it takes the internal {@link ObjectStructure} representation directly
+ */
+export const objectStructureToJson = (objectId: string, structure: ObjectStructure): Obj.JSON => {
+  return {
+    ...structure.data,
+    id: objectId,
+    [ATTR_TYPE]: (ObjectStructure.getTypeReference(structure)?.['/'] ?? '') as DXN.String,
+    [ATTR_DELETED]: ObjectStructure.isDeleted(structure),
+    [ATTR_RELATION_SOURCE]: ObjectStructure.getRelationSource(structure)?.['/'] as DXN.String | undefined,
+    [ATTR_RELATION_TARGET]: ObjectStructure.getRelationTarget(structure)?.['/'] as DXN.String | undefined,
+  };
 };

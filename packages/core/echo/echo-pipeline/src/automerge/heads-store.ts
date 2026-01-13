@@ -34,4 +34,16 @@ export class HeadsStore {
       valueEncoding: headsEncoding,
     });
   }
+
+  /**
+   * Iterate over all document IDs and their heads.
+   */
+  async *iterateAll(): AsyncGenerator<{ documentId: DocumentId; heads: Heads }> {
+    for await (const [documentId, heads] of this._db.iterator<DocumentId, Heads>({
+      keyEncoding: 'utf8',
+      valueEncoding: headsEncoding,
+    })) {
+      yield { documentId, heads };
+    }
+  }
 }
