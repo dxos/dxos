@@ -6,15 +6,14 @@ import React, { useCallback, useState } from 'react';
 
 import { Surface } from '@dxos/app-framework/react';
 import { Obj, Query } from '@dxos/echo';
-import { useClient } from '@dxos/react-client';
 import { Filter, type Space, useQuery } from '@dxos/react-client/echo';
 import { useTranslation } from '@dxos/react-ui';
 import { SearchList } from '@dxos/react-ui-searchlist';
 import { StackItem } from '@dxos/react-ui-stack';
+import { Text } from '@dxos/schema';
 
 import { useGlobalSearch, useGlobalSearchResults, useWebSearch } from '../hooks';
 import { meta } from '../meta';
-import { Text } from '@dxos/schema';
 
 export const SearchMain = ({ space }: { space?: Space }) => {
   const { t } = useTranslation(meta.id);
@@ -25,16 +24,14 @@ export const SearchMain = ({ space }: { space?: Space }) => {
     space?.db,
     query === undefined
       ? Query.select(Filter.nothing())
-      
-      // TODO(dmaretskyi): Final version would walk the ancestry of the object until we find a non-system type.
-      : Query.all(
+      : // TODO(dmaretskyi): Final version would walk the ancestry of the object until we find a non-system type.
+        Query.all(
           Query.select(Filter.text(query, { type: 'full-text' })).select(Filter.not(Filter.type(Text.Text))),
           Query.select(Filter.text(query, { type: 'full-text' }))
             .select(Filter.type(Text.Text))
             .referencedBy('dxos.org/type/Document', 'content'),
         ),
   );
-  console.log({ objects });
   const results = useGlobalSearchResults(objects);
 
   const { results: webResults } = useWebSearch({ query });
