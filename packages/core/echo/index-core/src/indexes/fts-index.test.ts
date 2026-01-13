@@ -251,4 +251,81 @@ describe('FtsIndex', () => {
       expect(s2Matches[0].objectId).toBe(obj2.data.id);
     }, Effect.provide(TestLayer)),
   );
+
+  it.effect(
+    'partial word matches',
+    Effect.fnUntraced(function* () {
+      const index = new FtsIndex();
+      const metaIndex = new ObjectMetaIndex();
+      yield* index.migrate();
+      yield* metaIndex.migrate();
+
+      const spaceId = SpaceId.random();
+      const objects: IndexerObject[] = [
+        {
+          spaceId,
+          queueId: null,
+          documentId: 'doc-1',
+          recordId: null,
+          data: {
+            id: ObjectId.random(),
+            [ATTR_TYPE]: TYPE_PERSON,
+            title: 'Programming in TypeScript',
+            body: 'Learn about functional programming patterns.',
+          },
+        },
+        {
+          spaceId,
+          queueId: null,
+          documentId: 'doc-2',
+          recordId: null,
+          data: {
+            id: ObjectId.random(),
+            [ATTR_TYPE]: TYPE_PERSON,
+            title: 'Database Design',
+            body: 'Understanding program architecture.',
+          },
+        },
+      ];
+
+      yield* metaIndex.update(objects);
+      yield* metaIndex.lookupRecordIds(objects);
+      yield* index.update(objects);
+
+      // Full word matches exactly.
+      const exactMatch = yield* index.query({ query: 'Programming' });
+      expect(exactMatch).toHaveLength(1);
+      expect(exactMatch[0].objectId).toBe(objects[0].data.id);
+
+      // Empty query should return no results.
+      const emptyMatch = yield* index.query({ query: '' });
+      expect(emptyMatch).toHaveLength(0);
+
+      // Single character query should return all results.
+      const singleCharMatch = yield* index.query({ query: 'P' });
+      expect(singleCharMatch).toHaveLength(2);
+
+      // Trigram tokenizer enables substring matching - partial words match.
+      const partialMatch = yield* index.query({ query: 'Prog' });
+      expect(partialMatch).toHaveLength(2);
+
+      // Substring in the middle of a word matches (trigram).
+      const substringMatch = yield* index.query({ query: 'rog' });
+      expect(substringMatch).toHaveLength(2); // "Programming" and "program" both contain "rog".
+
+      // Multiple words query matches documents containing all substrings.
+      const multiWord = yield* index.query({ query: 'program architecture' });
+      expect(multiWord).toHaveLength(1);
+      expect(multiWord[0].objectId).toBe(objects[1].data.id);
+
+      // Wrong order of words still matches (implicit AND).
+      const wrongOrderMatch = yield* index.query({ query: 'architecture program' });
+      expect(wrongOrderMatch).toHaveLength(1);
+
+      // Phrase query with double quotes for exact sequence.
+      const phraseMatch = yield* index.query({ query: 'functional programming' });
+      expect(phraseMatch).toHaveLength(1);
+      expect(phraseMatch[0].objectId).toBe(objects[0].data.id);
+    }, Effect.provide(TestLayer)),
+  );
 });
