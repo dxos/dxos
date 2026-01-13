@@ -27,7 +27,6 @@ import { filterMatchObject } from '../filter';
 import type { QueryPlan } from './plan';
 import { QueryPlanner } from './query-planner';
 
-
 type QueryExecutorOptions = {
   indexer: Indexer;
   indexer2?: IndexEngine;
