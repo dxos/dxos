@@ -10,7 +10,9 @@ import { Obj } from '@dxos/echo';
 import { Event, Message, Organization, Person } from '@dxos/types';
 
 import {
+  COMPOSE_EMAIL_DIALOG,
   CalendarArticle,
+  ComposeEmailDialog,
   EventArticle,
   EventCard,
   MailboxArticle,
@@ -92,6 +94,12 @@ export default Capability.makeModule(() =>
           Obj.instanceOf(Mailbox.Mailbox, data.props.mailbox) &&
           typeof data.props.filter === 'string',
         component: ({ data }) => <PopoverSaveFilter mailbox={data.props.mailbox} filter={data.props.filter} />,
+      }),
+      Common.createSurface({
+        id: COMPOSE_EMAIL_DIALOG,
+        role: 'dialog',
+        filter: (data): data is { component: string } => data.component === COMPOSE_EMAIL_DIALOG,
+        component: () => <ComposeEmailDialog />,
       }),
       Common.createSurface({
         id: `${meta.id}/mailbox/companion/settings`,
