@@ -36,4 +36,12 @@ export namespace InboxOperation {
       output: Schema.Void,
     },
   });
+
+  export const OpenComposeEmail = Operation.make({
+    meta: { key: `${INBOX_OPERATION}/open-compose-email`, name: 'Open Compose Email' },
+    schema: {
+      input: Schema.Void,
+      output: Schema.Void,
+    },
+  });
 }
