@@ -323,7 +323,7 @@ describe('FtsIndex', () => {
       expect(wrongOrderMatch).toHaveLength(1);
 
       // Phrase query with double quotes for exact sequence.
-      const phraseMatch = yield* index.query({ query: '"functional programming"' });
+      const phraseMatch = yield* index.query({ query: 'functional programming' });
       expect(phraseMatch).toHaveLength(1);
       expect(phraseMatch[0].objectId).toBe(objects[0].data.id);
     }, Effect.provide(TestLayer)),

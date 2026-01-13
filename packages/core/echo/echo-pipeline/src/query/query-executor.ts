@@ -27,29 +27,6 @@ import { filterMatchObject } from '../filter';
 import type { QueryPlan } from './plan';
 import { QueryPlanner } from './query-planner';
 
-/**
- * Escapes user input for safe FTS5 queries.
- *
- * FTS5 has special syntax characters that can cause errors or unexpected behavior:
- * - `*` suffix for prefix matching (e.g., `prog*` matches "program", "programming")
- * - `"..."` for phrase queries
- * - `.` for column specification
- * - `AND`, `OR`, `NOT` boolean operators
- * - `+`, `-` for required/excluded terms
- * - `^` for boosting first column (not supported, we use Trigram tokenizer)
- *
- * This function wraps each whitespace-separated term in double quotes, treating all
- * characters as literals. Double quotes within terms are escaped by doubling (`""`).
- *
- * Example: `prog* AND test.` becomes `"prog*" "AND" "test."`.
- */
-const escapeFts5Query = (text: string): string => {
-  return text
-    .split(/\s+/)
-    .filter(Boolean)
-    .map((term) => `"${term.replace(/"/g, '""')}"`)
-    .join(' ');
-};
 
 type QueryExecutorOptions = {
   indexer: Indexer;
@@ -413,7 +390,7 @@ export class QueryExecutor extends Resource {
           invariant(step.spaces.length <= 1, 'Multiple spaces are not supported for full-text search');
           const textResults = await unwrapExit(
             await this._indexer2
-              .queryText({ query: escapeFts5Query(step.selector.text), spaceId: step.spaces[0] })
+              .queryText({ query: step.selector.text, spaceId: step.spaces[0] })
               .pipe(Runtime.runPromiseExit(runtime)),
           );
           trace.indexHits = textResults.length;

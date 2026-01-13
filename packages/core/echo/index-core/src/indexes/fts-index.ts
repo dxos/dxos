@@ -23,6 +23,29 @@ export interface FtsQuery {
   spaceId?: SpaceId;
 }
 
+/**
+ * Escapes user input for safe FTS5 queries.
+ *
+ * FTS5 has special syntax characters that can cause errors or unexpected behavior:
+ * - `*` suffix for prefix matching (e.g., `prog*` matches "program", "programming")
+ * - `"..."` for phrase queries
+ * - `.` for column specification
+ * - `AND`, `OR`, `NOT` boolean operators
+ * - `+`, `-` for required/excluded terms
+ *
+ * This function wraps each whitespace-separated term in double quotes, treating all
+ * characters as literals. Double quotes within terms are escaped by doubling (`""`).
+ *
+ * Example: `prog* AND test.` becomes `"prog*" "AND" "test."`.
+ */
+const escapeFts5Query = (text: string): string => {
+  return text
+    .split(/\s+/)
+    .filter(Boolean)
+    .map((term) => `"${term.replace(/"/g, '""')}"`)
+    .join(' ');
+};
+
 export class FtsIndex implements Index {
   migrate = Effect.fn('FtsIndex.migrate')(function* () {
     const sql = yield* SqlClient.SqlClient;
@@ -40,17 +63,31 @@ export class FtsIndex implements Index {
 
   query({ query, spaceId }: FtsQuery): Effect.Effect<readonly ObjectMeta[], SqlError.SqlError, SqlClient.SqlClient> {
     return Effect.gen(function* () {
-      if (query.length === 0) {
+      const trimmed = query.trim();
+      if (trimmed.length === 0) {
         return [];
       }
 
       const sql = yield* SqlClient.SqlClient;
 
-      // Trigram tokenizer requires at least 3 characters; fall back to LIKE for shorter queries.
-      const conditions =
-        query.length < 3
-          ? [sql`f.snapshot LIKE ${'%' + query + '%'}`] // LIKE - scan the entire table.
-          : [sql`f.snapshot MATCH ${query}`]; // MATCH - fast index lookup.
+      let useLikeFallback = false;
+
+      // Trigram tokenizer requires at least 3 characters per term.
+      // Check if ALL terms are at least 3 chars; otherwise use LIKE fallback.
+      const terms = trimmed.split(/\s+/).filter(Boolean);
+      const minTermLength = Math.min(...terms.map((t) => t.length));
+      useLikeFallback = minTermLength < 3;
+      const ftsQuery = escapeFts5Query(trimmed);
+
+      const conditions = useLikeFallback
+        ? // LIKE fallback - scan the entire table, AND all terms.
+          trimmed
+            .split(/\s+/)
+            .filter(Boolean)
+            .map((term) => sql`f.snapshot LIKE ${'%' + term + '%'}`)
+        : // MATCH - fast index lookup.
+          [sql`f.snapshot MATCH ${ftsQuery}`];
+
       if (spaceId) {
         conditions.push(sql`m.spaceId = ${spaceId}`);
       }

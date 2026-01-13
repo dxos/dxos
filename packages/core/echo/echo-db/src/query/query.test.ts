@@ -777,6 +777,12 @@ describe('Query', () => {
         expect(objects).toHaveLength(1);
         expect(objects[0].title).toEqual('Advanced Python Programming');
       }
+      
+      // Single character query uses LIKE fallback and matches all documents
+      {
+        const objects = await db.query(Query.select(Filter.text('I', { type: 'full-text' }))).run();
+        expect(objects).toHaveLength(3);
+      }
     });
 
     test('full-text search with wrong word order', async () => {
