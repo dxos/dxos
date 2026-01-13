@@ -13803,6 +13803,9 @@ importers:
       '@dxos/rpc-tunnel':
         specifier: workspace:*
         version: link:../../core/mesh/rpc-tunnel
+      '@dxos/sql-sqlite':
+        specifier: workspace:*
+        version: link:../../common/sql-sqlite-wasm
       '@dxos/timeframe':
         specifier: workspace:*
         version: link:../../common/timeframe

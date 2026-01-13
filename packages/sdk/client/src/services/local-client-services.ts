@@ -8,6 +8,7 @@ import * as SqliteClient from '@effect/sql-sqlite-wasm/SqliteClient';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as ManagedRuntime from 'effect/ManagedRuntime';
+import { layerMemory } from '@dxos/sql-sqlite/platform';
 
 import { Event, synchronized } from '@dxos/async';
 import {
@@ -171,7 +172,7 @@ export class LocalClientServices implements ClientServicesProvider {
       sqliteLayer = SqliteClient.layer({ worker: Effect.succeed(this._opfsWorker) });
     } else {
       // Fallback to in-memory SQLite.
-      sqliteLayer = SqliteClient.layerMemory({});
+      sqliteLayer = layerMemory;
     }
 
     this._runtime = ManagedRuntime.make(Layer.merge(sqliteLayer, Reactivity.layer).pipe(Layer.orDie));
