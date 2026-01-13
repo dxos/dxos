@@ -695,4 +695,55 @@ describe('PluginManager', () => {
       removeProcessor();
     }),
   );
+
+  it.effect('should prevent concurrent loads of the same module via semaphore', () =>
+    Effect.gen(function* () {
+      // Two different events that both can trigger the same module.
+      const EventA = ActivationEvent.make('dxos.org/test/event-a');
+      const EventB = ActivationEvent.make('dxos.org/test/event-b');
+
+      let activateCallCount = 0;
+      const ConcurrentPlugin = Plugin.define({ id: 'dxos.org/test/concurrent-plugin', name: 'Concurrent Plugin' }).pipe(
+        Plugin.addModule({
+          id: 'ConcurrentModule',
+          // Module activates on either event - this allows two different events to race.
+          activatesOn: ActivationEvent.oneOf(EventA, EventB),
+          activate: Effect.fnUntraced(function* () {
+            activateCallCount++;
+            // Simulate slow activation to create window for race condition.
+            yield* Effect.sleep(Duration.seconds(5));
+            return Capability.contributes(String, { string: 'concurrent' });
+          }),
+        }),
+        Plugin.make,
+      );
+
+      const concurrentPlugin = ConcurrentPlugin();
+      plugins = [concurrentPlugin];
+
+      const manager = PluginManager.make({ pluginLoader });
+      yield* manager.add(ConcurrentPlugin.meta.id);
+
+      // Fork two concurrent activations with DIFFERENT events.
+      // Both events trigger the same module, so both will try to call _loadModule.
+      // Without the semaphore, both would start loading the same module.
+      const fiber1 = yield* Effect.fork(manager.activate(EventA));
+      const fiber2 = yield* Effect.fork(manager.activate(EventB));
+
+      // Advance time to let both activations complete.
+      yield* TestClock.adjust(Duration.seconds(6));
+
+      yield* Fiber.join(fiber1);
+      yield* Fiber.join(fiber2);
+
+      // The semaphore should ensure the module's activate function is only called once,
+      // even when two different events race to load the same module.
+      assert.strictEqual(activateCallCount, 1, 'module activate should only be called once due to semaphore');
+
+      // Verify the capability was contributed.
+      const strings = manager.context.getCapabilities(String);
+      assert.isTrue(strings.length >= 1, 'capability should be contributed');
+      assert.strictEqual(strings[0].string, 'concurrent');
+    }),
+  );
 });
