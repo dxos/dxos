@@ -145,10 +145,14 @@ export const Column = forwardRef<HTMLDivElement, ColumnProps>(
         <Focus.Group asChild>
           <div
             className={mx(
-              'grid bs-full min-is-[20rem] max-is-[25rem] overflow-hidden bg-deckSurface',
+              // TODO(burdon): Classes not updated.
+              'grid bs-full dx-cardDefaWidth __is-[25rem] __min-is-[20rem] __max-is-[25rem] overflow-hidden bg-deckSurface !bg-red-500',
               debug ? 'grid-rows-[min-content_1fr_20rem]' : 'grid-rows-[min-content_1fr_min-content]',
               classNames,
             )}
+            style={{
+              width: 'var(--dx-cardDefaultWidth)',
+            }}
             ref={forwardedRef}
           >
             <Card.Toolbar>

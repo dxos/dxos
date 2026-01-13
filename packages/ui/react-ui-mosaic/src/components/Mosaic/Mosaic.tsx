@@ -45,7 +45,7 @@ import React, {
 import { createPortal } from 'react-dom';
 
 import 'overlayscrollbars/styles/overlayscrollbars.css';
-import './style.css';
+import './styles.css';
 
 import { type Obj } from '@dxos/echo';
 import { log } from '@dxos/log';

@@ -14,6 +14,8 @@ import { Mosaic, type MosiacPlaceholderProps, useMosaicContainer } from '../Mosa
 import { styles } from './styles';
 import { type Axis } from './types';
 
+// TODO(burdon): Move into Mosaic.tsx.
+
 type StackProps<T extends Obj.Any = Obj.Any> = SlottableClassName<{
   role?: string;
   axis?: Axis;
