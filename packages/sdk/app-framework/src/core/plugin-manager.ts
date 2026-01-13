@@ -5,6 +5,7 @@
 import { Atom, Registry } from '@effect-atom/atom-react';
 import * as Array from 'effect/Array';
 import * as Context from 'effect/Context';
+import * as Deferred from 'effect/Deferred';
 import * as Duration from 'effect/Duration';
 import * as Effect from 'effect/Effect';
 import * as Fiber from 'effect/Fiber';
@@ -100,7 +101,7 @@ class ManagerImpl implements PluginManager {
   private readonly _pendingResetAtom: Atom.Writable<string[]>;
   private readonly _pluginLoader: ManagerOptions['pluginLoader'];
   private readonly _capabilities = new Map<string, Capability.Any[]>();
-  private readonly _moduleMemoMap = new Map<Plugin.PluginModule['id'], Effect.Effect<Capability.Any[], Error>>();
+  private readonly _moduleMemoMap = new Map<Plugin.PluginModule['id'], Deferred.Deferred<Capability.Any[], Error>>();
   private readonly _activatingEvents = Effect.runSync(Ref.make<string[]>([]));
   private readonly _activatingModules = Effect.runSync(Ref.make<string[]>([]));
 
@@ -570,30 +571,30 @@ class ManagerImpl implements PluginManager {
     }
   }
 
-  // Memoized with _moduleMemoMap
   private _loadModule = (module: Plugin.PluginModule): Effect.Effect<Capability.Any[], Error> =>
     Effect.gen(this, function* () {
-      const memoized = this._moduleMemoMap.get(module.id);
-      if (memoized) {
-        return yield* memoized;
+      // Check for existing deferred (in-flight or completed).
+      const existingDeferred = this._moduleMemoMap.get(module.id);
+      if (existingDeferred) {
+        return yield* Deferred.await(existingDeferred);
       }
 
-      const loadEffect = Effect.gen(this, function* () {
-        log('loading module', { module: module.id });
+      // First caller - create deferred and start loading.
+      const deferred = yield* Deferred.make<Capability.Any[], Error>();
+      this._moduleMemoMap.set(module.id, deferred);
+
+      log('loading module', { module: module.id });
+
+      const loadResult = yield* Effect.gen(this, function* () {
         const [duration, capabilities] = yield* Effect.timed(module.activate(this.context));
         const normalized = capabilities == null ? [] : Array.isArray(capabilities) ? capabilities : [capabilities];
-        return { capabilities: normalized, duration };
+        log('loaded module', {
+          module: module.id,
+          elapsed: Duration.toMillis(duration),
+          failed: false,
+        });
+        return normalized as Capability.Any[];
       }).pipe(
-        Effect.tap(({ duration }) =>
-          Effect.sync(() =>
-            log('loaded module', {
-              module: module.id,
-              elapsed: Duration.toMillis(duration),
-              failed: false,
-            }),
-          ),
-        ),
-        Effect.map(({ capabilities }) => capabilities as Capability.Any[]),
         Effect.withSpan('PluginManager._loadModule'),
         together(
           Effect.sleep(Duration.seconds(10)).pipe(
@@ -604,10 +605,10 @@ class ManagerImpl implements PluginManager {
         ),
       );
 
-      const fiber = yield* Effect.fork(loadEffect);
-      const joined = Fiber.join(fiber);
-      this._moduleMemoMap.set(module.id, joined);
-      return yield* joined;
+      // Complete deferred to notify waiters.
+      yield* Deferred.succeed(deferred, loadResult);
+
+      return loadResult;
     });
 
   private _contributeCapabilities(
