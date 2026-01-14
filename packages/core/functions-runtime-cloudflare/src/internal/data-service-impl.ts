@@ -79,11 +79,9 @@ export class DataServiceImpl implements DataServiceProto {
     }
   }
 
-  async createDocument(_request: CreateDocumentRequest): Promise<CreateDocumentResponse> {
-    // TODO(fix): When implemented on EDGE.
-    throw new NotImplementedError({
-      message: 'createDocument is not supported.',
-    });
+  async createDocument({ spaceId, initialValue }: CreateDocumentRequest): Promise<CreateDocumentResponse> {
+    using response = await this._dataService.createDocument(this._executionContext, { spaceId, initialValue });
+    return { documentId: response.documentId };
   }
 
   async update({ updates, subscriptionId }: UpdateRequest): Promise<void> {
