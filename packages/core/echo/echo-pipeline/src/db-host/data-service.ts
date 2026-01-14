@@ -88,7 +88,7 @@ export class DataServiceImpl implements DataService {
     }
   }
 
-  async createDocument(request: CreateDocumentRequest, options?: RequestOptions): Promise<CreateDocumentResponse> {
+  async createDocument(request: CreateDocumentRequest): Promise<CreateDocumentResponse> {
     const handle = await this._automergeHost.createDoc(request.initialValue);
     return { documentId: handle.documentId };
   }

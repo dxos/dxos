@@ -218,6 +218,7 @@ export class RepoProxy extends Resource {
         )
         .then((response) => {
           handle._setDocumentId(response.documentId as DocumentId);
+          this._pendingAddIds.add(handle.documentId);
           this._handles[handle.documentId] = handle;
           update();
           handle._wakeReady();
@@ -266,6 +267,11 @@ export class RepoProxy extends Resource {
     this._pendingUpdateIds.clear();
 
     try {
+      await this._dataService.updateSubscription(
+        { subscriptionId: this._subscriptionId, addIds, removeIds },
+        { timeout: RPC_TIMEOUT },
+      );
+
       const updates: DocumentUpdate[] = [];
       const addMutations = (documentIds: DocumentId[]) => {
         for (const documentId of documentIds) {
@@ -288,11 +294,6 @@ export class RepoProxy extends Resource {
           this._handles[documentId]._confirmSync();
         }
       }
-
-      await this._dataService.updateSubscription(
-        { subscriptionId: this._subscriptionId, addIds, removeIds },
-        { timeout: RPC_TIMEOUT },
-      );
 
       this._emitSaveStateEvent();
     } catch (err) {

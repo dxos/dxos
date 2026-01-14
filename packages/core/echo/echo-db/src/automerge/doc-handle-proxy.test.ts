@@ -18,7 +18,7 @@ describe('DocHandleProxy', () => {
   test('get update from handle', async () => {
     const text = 'Hello World!';
     const { documentId } = parseAutomergeUrl(generateAutomergeUrl());
-    const clientHandle = new DocHandleProxy<{ text: string }>(documentId);
+    const clientHandle = new DocHandleProxy<{ text: string }>({ documentId, onDelete: () => {} });
     clientHandle.change((doc: { text: string }) => {
       doc.text = text;
     });
@@ -28,7 +28,7 @@ describe('DocHandleProxy', () => {
     await openAndClose(docsSynchronizer);
 
     const mutation = clientHandle._getPendingChanges()!;
-    await docsSynchronizer.update([{ documentId, mutation, isNew: true }]);
+    await docsSynchronizer.update([{ documentId, mutation }]);
     const workerHandle = await host.loadDoc<{ text: string }>(Context.default(), documentId);
     expect(workerHandle.doc()?.text).to.equal(text);
   });
@@ -37,9 +37,12 @@ describe('DocHandleProxy', () => {
     const text = 'Hello World!';
 
     const { host } = await setup();
-    const workerHandle = host.createDoc<{ text: string }>();
+    const workerHandle = await host.createDoc<{ text: string }>();
 
-    const clientHandle = new DocHandleProxy<{ text: string }>(workerHandle.documentId);
+    const clientHandle = new DocHandleProxy<{ text: string }>({
+      documentId: workerHandle.documentId,
+      onDelete: () => {},
+    });
 
     const docsSynchronizer = new DocumentsSynchronizer({
       automergeHost: host,
@@ -62,7 +65,7 @@ describe('DocHandleProxy', () => {
     type DocType = { clientText: string; foreignPeerText: string };
 
     const { host } = await setup();
-    const workerHandle = host.createDoc<DocType>();
+    const workerHandle = await host.createDoc<DocType>();
     const synchronizer = new DocumentsSynchronizer({
       automergeHost: host,
       sendUpdates: ({ updates }) => updates?.forEach((update) => clientHandle._integrateHostUpdate(update.mutation)),
@@ -72,7 +75,10 @@ describe('DocHandleProxy', () => {
       doc.foreignPeerText = foreignPeerText;
     });
 
-    const clientHandle = new DocHandleProxy<DocType>(workerHandle.documentId);
+    const clientHandle = new DocHandleProxy<DocType>({
+      documentId: workerHandle.documentId,
+      onDelete: () => {},
+    });
     clientHandle.change((doc: DocType) => {
       doc.clientText = clientText;
     });
@@ -87,7 +93,7 @@ describe('DocHandleProxy', () => {
     const clientUpdate = clientHandle._getPendingChanges()!;
     await synchronizer.update([{ documentId: workerHandle.documentId, mutation: clientUpdate }]);
 
-    for (const handle of [clientHandle, workerHandle]) {
+    for (const handle of [clientHandle, workerHandle] as const) {
       expect(handle.doc()?.clientText).to.equal(clientText);
       expect(handle.doc()?.foreignPeerText).to.equal(foreignPeerText);
     }

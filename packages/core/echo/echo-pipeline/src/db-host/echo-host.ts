@@ -273,7 +273,7 @@ export class EchoHost extends Resource {
   /**
    * Create new persisted document.
    */
-  createDoc<T>(initialValue?: T, opts?: CreateDocOptions): DocHandle<T> {
+  async createDoc<T>(initialValue?: T, opts?: CreateDocOptions): Promise<DocHandle<T>> {
     return this._automergeHost.createDoc(initialValue, opts);
   }
 
@@ -284,7 +284,7 @@ export class EchoHost extends Resource {
     invariant(this._lifecycleState === LifecycleState.OPEN);
     const spaceId = await createIdFromSpaceKey(spaceKey);
 
-    const automergeRoot = this._automergeHost.createDoc<DatabaseDirectory>({
+    const automergeRoot = await this._automergeHost.createDoc<DatabaseDirectory>({
       version: SpaceDocVersion.CURRENT,
       access: { spaceKey: spaceKey.toHex() },
 

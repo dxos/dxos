@@ -36,7 +36,6 @@ describe('DocumentsSynchronizer', () => {
       {
         documentId: parseAutomergeUrl(generateAutomergeUrl()).documentId,
         mutation: A.save(A.from({ text: 'hello' })),
-        isNew: true,
       },
     ]);
 
