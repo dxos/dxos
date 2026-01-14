@@ -7,6 +7,7 @@
 
 import { useEffect } from 'react';
 
+import { log } from '@dxos/log';
 import { isTauri } from '@dxos/util';
 
 /**
@@ -56,8 +57,8 @@ export const useSpotlightDismiss = (isPopover: boolean | undefined) => {
           }
         });
         cleanup = unlisten;
-      } catch (e) {
-        console.error('[useSpotlightDismiss] Failed to set up spotlight dismiss:', e);
+      } catch (err) {
+        log.catch(err);
       }
     };
 
@@ -74,16 +75,16 @@ export const useSpotlightDismiss = (isPopover: boolean | undefined) => {
       return;
     }
 
-    const handleKeyDown = async (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
-        e.preventDefault();
+    const handleKeyDown = async (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        event.preventDefault();
         try {
           const tauriCore = getTauriCore();
           if (tauriCore) {
             await tauriCore.invoke('hide_spotlight');
           }
         } catch (err) {
-          console.error('[useSpotlightDismiss] Failed to hide spotlight:', err);
+          log.catch(err);
         }
       }
     };

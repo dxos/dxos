@@ -5,6 +5,9 @@
   ],
   "references": [
     {
+      "path": "../../common/log"
+    },
+    {
       "path": "../../common/storybook-utils"
     },
     {
