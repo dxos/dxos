@@ -90,8 +90,18 @@ export const Board = forwardRef<HTMLDivElement, BoardProps>(({ id, columns, debu
           eventHandler={eventHandler}
           debug={debugHandler}
         >
-          <Mosaic.Viewport onViewportReady={setViewportElement}>
-            <Mosaic.Stack axis='horizontal' className='bs-full plb-3' items={columns} Component={Column} />
+          <Mosaic.Viewport
+            options={{
+              overflow: { x: 'scroll' },
+              scrollbars: {
+                autoHide: 'leave',
+                autoHideDelay: 1_000,
+                autoHideSuspend: true,
+              },
+            }}
+            onViewportReady={setViewportElement}
+          >
+            <Mosaic.Stack axis='horizontal' className='plb-3' items={columns} Component={Column} />
           </Mosaic.Viewport>
         </Mosaic.Container>
       </Focus.Group>
@@ -145,13 +155,13 @@ export const Column = forwardRef<HTMLDivElement, ColumnProps>(
         <Focus.Group asChild>
           <div
             className={mx(
-              // TODO(burdon): Classes not updated.
-              'grid bs-full dx-cardDefaWidth __is-[25rem] __min-is-[20rem] __max-is-[25rem] overflow-hidden bg-deckSurface !bg-red-500',
+              'grid bs-full is-min-[20rem] is-max-[20rem] overflow-hidden bg-deckSurface',
               debug ? 'grid-rows-[min-content_1fr_20rem]' : 'grid-rows-[min-content_1fr_min-content]',
               classNames,
             )}
+            // TODO(burdon): Class for widths.
             style={{
-              width: 'var(--dx-cardDefaultWidth)',
+              width: '25rem', //'var(--dx-cardDefaultWidth)px',
             }}
             ref={forwardedRef}
           >
@@ -168,7 +178,7 @@ export const Column = forwardRef<HTMLDivElement, ColumnProps>(
               eventHandler={eventHandler}
               debug={debugHandler}
             >
-              <Mosaic.Viewport onViewportReady={setViewportElement}>
+              <Mosaic.Viewport options={{ overflow: { y: 'scroll' } }} onViewportReady={setViewportElement}>
                 <Mosaic.Stack
                   axis='vertical'
                   className='pli-3'

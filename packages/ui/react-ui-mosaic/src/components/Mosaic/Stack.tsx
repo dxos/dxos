@@ -39,7 +39,13 @@ const StackInner = forwardRef<HTMLDivElement, StackProps>(
       <div
         {...props}
         role={role}
-        className={mx('flex', axis === 'vertical' && 'flex-col', classNames, className)}
+        className={mx(
+          'flex',
+          axis === 'horizontal' && 'bs-full',
+          axis === 'vertical' && 'flex-col',
+          classNames,
+          className,
+        )}
         ref={forwardedRef}
       >
         <Placeholder axis={axis} location={0.5} />

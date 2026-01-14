@@ -27,10 +27,13 @@ import { createContext } from '@radix-ui/react-context';
 import { Primitive } from '@radix-ui/react-primitive';
 import { Slot } from '@radix-ui/react-slot';
 import { bind } from 'bind-event-listener';
-import { OverlayScrollbarsComponent, type OverlayScrollbarsComponentRef } from 'overlayscrollbars-react';
+import {
+  OverlayScrollbarsComponent,
+  type OverlayScrollbarsComponentProps,
+  type OverlayScrollbarsComponentRef,
+} from 'overlayscrollbars-react';
 import React, {
   type CSSProperties,
-  type ComponentProps,
   type FC,
   type PropsWithChildren,
   type ReactNode,
@@ -546,7 +549,6 @@ const Container = forwardRef<HTMLDivElement, ContainerProps>(
         setActiveLocation={setActiveLocation}
       >
         <Root
-          role='list'
           className={mx('bs-full', className, classNames)}
           style={
             {
@@ -584,10 +586,13 @@ const defaultOptions: ViewportProps['options'] = {
   },
 };
 
-type ViewportProps = ComponentProps<typeof OverlayScrollbarsComponent> & {
+type ViewportProps = OverlayScrollbarsComponentProps & {
   onViewportReady?: (viewport: HTMLElement | null) => void;
 };
 
+/**
+ * https://www.npmjs.com/package/overlayscrollbars-react
+ */
 const Viewport = forwardRef<HTMLDivElement, ViewportProps>(
   ({ onViewportReady, options = defaultOptions, ...props }, forwardedRef) => {
     const osRef = useRef<OverlayScrollbarsComponentRef<'div'>>(null);
@@ -611,7 +616,20 @@ const Viewport = forwardRef<HTMLDivElement, ViewportProps>(
       onViewportReady?.(viewport);
     }, [onViewportReady]);
 
-    return <OverlayScrollbarsComponent options={options} {...props} ref={osRef} />;
+    return (
+      <OverlayScrollbarsComponent
+        // defer
+        options={options}
+        // TODO(burdon): Events.
+        // events={{
+        //   scroll: () => {
+        //     console.log('scroll');
+        //   },
+        // }}
+        {...props}
+        ref={osRef}
+      />
+    );
   },
 );
 

@@ -89,7 +89,7 @@ export const maxSizesFacet = {
       prose: { root: ['size', 50] },
       containerMaxWidth: { root: ['size', 50] },
       popoverMaxWidth: { root: ['size', cardDefaultInlineSize] },
-      cardWidth: { root: ['size', cardDefaultInlineSize] },
+      cardDefaultWidth: { root: ['size', cardDefaultInlineSize] },
       cardMinWidth: { root: ['size', cardMinInlineSize] },
       cardMaxWidth: { root: ['size', cardMaxInlineSize] },
     },
