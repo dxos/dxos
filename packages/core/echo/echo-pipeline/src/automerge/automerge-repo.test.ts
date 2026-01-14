@@ -519,6 +519,97 @@ describe('AutomergeRepo', () => {
     });
   });
 
+  describe('create2 tests', () => {
+    test('basic document creation', async () => {
+      const repo = new Repo({ network: [] });
+
+      const handle = await repo.create2<{ text: string }>();
+      expect(handle.doc()).to.deep.equal({});
+
+      handle.change((doc: any) => {
+        doc.text = 'Hello World';
+      });
+
+      expect(handle.doc()?.text).to.equal('Hello World');
+    });
+
+    test('document mutation', async () => {
+      const repo = new Repo({ network: [] });
+
+      const handle = await repo.create2<{ counter: number }>({ counter: 0 });
+
+      for (let i = 1; i <= 10; i++) {
+        handle.change((doc: any) => {
+          doc.counter = i;
+        });
+      }
+
+      expect(handle.doc()?.counter).to.equal(10);
+    });
+
+    test('import document and mutate', async () => {
+      const repo = new Repo({ network: [] });
+
+      const original = await repo.create2<{ text: string }>({ text: 'original' });
+      const blob = A.save(original.doc()!);
+
+      const imported = repo.import<{ text: string }>(blob);
+      expect(imported.doc()?.text).to.equal('original');
+
+      imported.change((doc: any) => {
+        doc.text = 'mutated';
+      });
+      expect(imported.doc()?.text).to.equal('mutated');
+    });
+
+    test('reload document with flush', async () => {
+      const storage = await createLevelAdapter();
+      const text = 'Hello World!';
+      let url: AutomergeUrl;
+
+      {
+        const repo = new Repo({ network: [], storage });
+        const handle = await repo.create2<{ text: string }>();
+        url = handle.url;
+        handle.change((doc: any) => {
+          doc.text = text;
+        });
+        await repo.flush([handle.documentId]);
+      }
+
+      {
+        const repo = new Repo({ network: [], storage });
+        const handle = await repo.find<{ text: string }>(url);
+        await handle.whenReady();
+        expect(handle.doc()?.text).to.equal(text);
+      }
+    });
+
+    test('reload document without flush', async () => {
+      const storage = await createLevelAdapter();
+      const text = 'Hello World!';
+      let url: AutomergeUrl;
+
+      {
+        const repo = new Repo({ network: [], storage });
+        const handle = await repo.create2<{ text: string }>();
+        url = handle.url;
+        handle.change((doc: any) => {
+          doc.text = text;
+        });
+        // No explicit flush - rely on auto-save.
+        await sleep(200);
+      }
+
+      {
+        const repo = new Repo({ network: [], storage });
+        const handle = await repo.find<{ text: string }>(url);
+        await handle.whenReady();
+        expect(handle.doc()?.text).to.equal(text);
+      }
+    });
+  });
+
   describe('teleport', () => {
     test('integration test with teleport', async () => {
       const [spaceKey] = PublicKey.randomSequence();
