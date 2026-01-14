@@ -12,6 +12,8 @@ import { log } from '@dxos/log';
 import { type EdgeFunctionEnv } from '@dxos/protocols';
 import type {
   BatchedDocumentUpdates,
+  CreateDocumentRequest,
+  CreateDocumentResponse,
   DataService as DataServiceProto,
   GetDocumentHeadsRequest,
   GetDocumentHeadsResponse,
@@ -43,7 +45,7 @@ export class DataServiceImpl implements DataServiceProto {
     });
   }
 
-  async updateSubscription({ subscriptionId, addIds, removeIds }: UpdateSubscriptionRequest): Promise<void> {
+  async updateSubscription({ subscriptionId, addIds }: UpdateSubscriptionRequest): Promise<void> {
     const sub =
       this.dataSubscriptions.get(subscriptionId) ??
       raise(
@@ -75,6 +77,13 @@ export class DataServiceImpl implements DataServiceProto {
         });
       }
     }
+  }
+
+  async createDocument(_request: CreateDocumentRequest): Promise<CreateDocumentResponse> {
+    // TODO(fix): When implemented on EDGE.
+    throw new NotImplementedError({
+      message: 'createDocument is not supported.',
+    });
   }
 
   async update({ updates, subscriptionId }: UpdateRequest): Promise<void> {
