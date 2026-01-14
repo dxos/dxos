@@ -10,6 +10,7 @@ import { Main as NaturalMain } from '@dxos/react-ui';
 import { ATTENDABLE_PATH_SEPARATOR } from '@dxos/react-ui-attention';
 import { mx } from '@dxos/ui-theme';
 
+import { useSpotlightDismiss } from '../../hooks';
 import { SimpleLayoutState } from '../../types';
 import { ContentError } from '../ContentError';
 import { ContentLoading } from '../ContentLoading';
@@ -20,6 +21,8 @@ import { NavBar } from './NavBar';
 
 export const Main = () => {
   const layout = useCapability(SimpleLayoutState);
+  useSpotlightDismiss(layout?.isPopover);
+
   const id = layout.active ?? layout.workspace;
   const { graph } = useAppGraph();
   const node = useNode(graph, id);
