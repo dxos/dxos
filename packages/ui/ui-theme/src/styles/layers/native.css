@@ -1,5 +1,11 @@
 @layer utilities {
 
+  /**
+   * Native app drag regions.
+   * For Tauri apps, the data-tauri-drag-region attribute is applied
+   * automatically by plugin-native (Tauri doesn't support -webkit-app-region).
+   * The CSS properties below are for Electron/PWA compatibility.
+   */
   .app-drag {
     -webkit-user-select: none;
     -webkit-app-region: drag;

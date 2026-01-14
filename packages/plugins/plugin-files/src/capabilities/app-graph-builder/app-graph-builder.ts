@@ -13,10 +13,8 @@ import { FileCapabilities, type FilesSettingsProps, LocalFilesOperation } from '
 import { isLocalDirectory, isLocalEntity, isLocalFile } from '../../util';
 
 export default Capability.makeModule((context) =>
-  Effect.sync(() => {
-    const { invokePromise } = context.getCapability(Common.Capability.OperationInvoker);
-
-    return Capability.contributes(Common.Capability.AppGraphBuilder, [
+  Effect.sync(() =>
+    Capability.contributes(Common.Capability.AppGraphBuilder, [
       // Create export/import actions.
       GraphBuilder.createExtension({
         id: `${meta.id}/export`,
@@ -25,6 +23,7 @@ export default Capability.makeModule((context) =>
           {
             id: LocalFilesOperation.Export.meta.key,
             data: async () => {
+              const { invokePromise } = context.getCapability(Common.Capability.OperationInvoker);
               await invokePromise(LocalFilesOperation.Export);
             },
             properties: {
@@ -35,6 +34,7 @@ export default Capability.makeModule((context) =>
           {
             id: LocalFilesOperation.Import.meta.key,
             data: async () => {
+              const { invokePromise } = context.getCapability(Common.Capability.OperationInvoker);
               await invokePromise(LocalFilesOperation.Import, {});
             },
             properties: {
@@ -80,6 +80,7 @@ export default Capability.makeModule((context) =>
           {
             id: LocalFilesOperation.OpenFile.meta.key,
             data: async () => {
+              const { invokePromise } = context.getCapability(Common.Capability.OperationInvoker);
               const result = await invokePromise(LocalFilesOperation.OpenFile);
               if (result.data?.subject) {
                 await invokePromise(Common.LayoutOperation.Open, { subject: [...result.data.subject] });
@@ -95,6 +96,7 @@ export default Capability.makeModule((context) =>
                 {
                   id: 'open-directory',
                   data: async () => {
+                    const { invokePromise } = context.getCapability(Common.Capability.OperationInvoker);
                     const result = await invokePromise(LocalFilesOperation.OpenDirectory);
                     if (result.data?.subject) {
                       await invokePromise(Common.LayoutOperation.Open, { subject: [...result.data.subject] });
@@ -147,6 +149,7 @@ export default Capability.makeModule((context) =>
           {
             id: `${LocalFilesOperation.Close.meta.key}:${entity.id}`,
             data: async () => {
+              const { invokePromise } = context.getCapability(Common.Capability.OperationInvoker);
               await invokePromise(LocalFilesOperation.Close, { id: entity.id });
             },
             properties: {
@@ -159,6 +162,7 @@ export default Capability.makeModule((context) =>
                 {
                   id: `${LocalFilesOperation.Reconnect.meta.key}:${entity.id}`,
                   data: async () => {
+                    const { invokePromise } = context.getCapability(Common.Capability.OperationInvoker);
                     await invokePromise(LocalFilesOperation.Reconnect, { id: entity.id });
                   },
                   properties: {
@@ -173,6 +177,7 @@ export default Capability.makeModule((context) =>
                 {
                   id: `${LocalFilesOperation.Save.meta.key}:${entity.id}`,
                   data: async () => {
+                    const { invokePromise } = context.getCapability(Common.Capability.OperationInvoker);
                     await invokePromise(LocalFilesOperation.Save, { id: entity.id });
                   },
                   properties: {
@@ -188,6 +193,6 @@ export default Capability.makeModule((context) =>
             : []),
         ],
       }),
-    ]);
-  }),
+    ]),
+  ),
 );

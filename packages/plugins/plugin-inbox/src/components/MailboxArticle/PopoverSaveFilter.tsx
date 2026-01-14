@@ -11,8 +11,6 @@ import { Button, Input, Popover, useTranslation } from '@dxos/react-ui';
 import { meta } from '../../meta';
 import { type Mailbox } from '../../types';
 
-export const POPOVER_SAVE_FILTER = `${meta.id}/PopoverSaveFilter`;
-
 export const PopoverSaveFilter = ({ mailbox, filter }: { mailbox: Mailbox.Mailbox; filter: string }) => {
   const { t } = useTranslation(meta.id);
   const doneButton = useRef<HTMLButtonElement>(null);

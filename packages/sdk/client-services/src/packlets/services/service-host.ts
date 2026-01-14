@@ -2,11 +2,14 @@
 // Copyright 2021 DXOS.org
 //
 
+import type * as SqlClient from '@effect/sql/SqlClient';
+
 import { Event, synchronized } from '@dxos/async';
 import { type ClientServices, clientServiceBundle } from '@dxos/client-protocol';
 import { type Config } from '@dxos/config';
 import { Context } from '@dxos/context';
 import { EdgeClient, type EdgeConnection, EdgeHttpClient, createStubEdgeIdentity } from '@dxos/edge-client';
+import { type RuntimeProvider } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { type LevelDB } from '@dxos/kv-store';
@@ -57,6 +60,7 @@ export type ClientServicesHostProps = {
   level?: LevelDB;
   lockKey?: string;
   callbacks?: ClientServicesHostCallbacks;
+  runtime: RuntimeProvider.RuntimeProvider<SqlClient.SqlClient>;
   runtimeProps?: ServiceContextRuntimeProps;
 };
 
@@ -95,6 +99,7 @@ export class ClientServicesHost {
   private _edgeHttpClient?: EdgeHttpClient = undefined;
 
   private _serviceContext!: ServiceContext;
+  private readonly _runtime: RuntimeProvider.RuntimeProvider<SqlClient.SqlClient>;
   private readonly _runtimeProps: ServiceContextRuntimeProps;
   private diagnosticsBroadcastHandler: CollectDiagnosticsBroadcastHandler;
 
@@ -116,11 +121,13 @@ export class ClientServicesHost {
     // TODO(wittjosiah): Turn this on by default.
     lockKey,
     callbacks,
+    runtime,
     runtimeProps,
-  }: ClientServicesHostProps = {}) {
+  }: ClientServicesHostProps) {
     this._storage = storage;
     this._level = level;
     this._callbacks = callbacks;
+    this._runtime = runtime;
     this._runtimeProps = runtimeProps ?? {};
 
     if (config) {
@@ -291,6 +298,7 @@ export class ClientServicesHost {
       this._signalManager,
       this._edgeConnection,
       this._edgeHttpClient,
+      this._runtime,
       this._runtimeProps,
       this._config.get('runtime.client.edgeFeatures'),
     );

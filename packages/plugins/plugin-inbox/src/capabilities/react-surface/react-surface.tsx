@@ -11,17 +11,18 @@ import { Event, Message, Organization, Person } from '@dxos/types';
 
 import {
   CalendarArticle,
+  ComposeEmailDialog,
   EventArticle,
   EventCard,
   MailboxArticle,
   MailboxSettings,
   MessageArticle,
   MessageCard,
-  POPOVER_SAVE_FILTER,
   PopoverSaveFilter,
   RelatedToContact,
   RelatedToOrganization,
 } from '../../components';
+import { COMPOSE_EMAIL_DIALOG, POPOVER_SAVE_FILTER } from '../../constants';
 import { meta } from '../../meta';
 import { Calendar, Mailbox } from '../../types';
 
@@ -92,6 +93,12 @@ export default Capability.makeModule(() =>
           Obj.instanceOf(Mailbox.Mailbox, data.props.mailbox) &&
           typeof data.props.filter === 'string',
         component: ({ data }) => <PopoverSaveFilter mailbox={data.props.mailbox} filter={data.props.filter} />,
+      }),
+      Common.createSurface({
+        id: COMPOSE_EMAIL_DIALOG,
+        role: 'dialog',
+        filter: (data): data is { component: string } => data.component === COMPOSE_EMAIL_DIALOG,
+        component: () => <ComposeEmailDialog />,
       }),
       Common.createSurface({
         id: `${meta.id}/mailbox/companion/settings`,
