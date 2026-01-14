@@ -2,6 +2,8 @@
 
 mod oauth;
 #[cfg(target_os = "macos")]
+mod menubar;
+#[cfg(target_os = "macos")]
 mod spotlight;
 
 use oauth::OAuthServerState;
@@ -83,6 +85,15 @@ pub fn run() {
                         .level(log::LevelFilter::Info)
                         .build(),
                 )?;
+            }
+
+            // Initialize menu bar (macOS only).
+            #[cfg(target_os = "macos")]
+            {
+                let spotlight_config = spotlight::SpotlightConfig::default();
+                if let Err(e) = menubar::init_menubar(app.handle(), spotlight_config) {
+                    log::error!("Failed to initialize menu bar: {}", e);
+                }
             }
 
             Ok(())
