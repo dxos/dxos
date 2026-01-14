@@ -47,8 +47,9 @@ export class DocHandleProxy<T> extends EventEmitter<ClientDocHandleEvents<T>> im
   private _currentlySendingHeads: A.Heads = [];
   /**
    * Identifier for internal usage.
+   * @internal
    */
-  private readonly _internalId = PublicKey.random().toHex();
+  readonly _internalId = PublicKey.random().toHex();
   /**
    * Present if document is loading from a storage.
    * Undefined if document is new and still is being created.
@@ -71,28 +72,14 @@ export class DocHandleProxy<T> extends EventEmitter<ClientDocHandleEvents<T>> im
     }
   }
 
-  /**
-   * @internal
-   */
-  get internalId(): string {
-    return this._internalId;
-  }
-
   get url() {
-    invariant(this._documentId, 'DocHandleProxy.url called on deleted doc');
+    invariant(this._documentId);
     return stringifyAutomergeUrl(this._documentId);
   }
 
   get documentId(): DocumentId {
-    invariant(this._documentId, 'DocHandleProxy.documentId called on deleted doc');
+    invariant(this._documentId);
     return this._documentId;
-  }
-
-  /**
-   * @internal
-   */
-  _setDocumentId(documentId: DocumentId): void {
-    this._documentId = documentId;
   }
 
   get state() {
@@ -162,6 +149,20 @@ export class DocHandleProxy<T> extends EventEmitter<ClientDocHandleEvents<T>> im
     this._onDelete();
     this.emit('delete', { handle: this });
     this._doc = undefined;
+  }
+
+  /**
+   * @internal
+   */
+  _setDocumentId(documentId: DocumentId): void {
+    this._documentId = documentId;
+  }
+
+  /**
+   * @internal
+   */
+  _wakeReady(): void {
+    this._ready.wake();
   }
 
   /**

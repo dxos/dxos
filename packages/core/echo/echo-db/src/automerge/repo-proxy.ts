@@ -6,6 +6,7 @@ import { next as A } from '@automerge/automerge';
 import { type AnyDocumentId, type DocumentId, interpretAsDocumentId } from '@automerge/automerge-repo';
 
 import { Event, UpdateScheduler } from '@dxos/async';
+import { type Struct } from '@dxos/codec-protobuf';
 import { type Stream } from '@dxos/codec-protobuf/stream';
 import { LifecycleState, Resource } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
@@ -92,10 +93,10 @@ export class RepoProxy extends Resource {
   }
 
   async flush(): Promise<void> {
+    // Wait for all creations to be completed.
     await Promise.all([...this._pendingCreations.values()]);
-    // TODO(mykola): Race condition: Updates job might be triggered before the creations are complete.
-
-    await this._sendUpdatesJob?.join();
+    // Wait for all updates to be sent.
+    await this._sendUpdatesJob?.runBlocking();
   }
 
   protected override async _open(): Promise<void> {
@@ -181,10 +182,10 @@ export class RepoProxy extends Resource {
 
     // TODO(burdon): Called even if not mutations.
     const onChange = () => {
-      log('onChange', { documentId: handle.documentId, internalId: handle.internalId });
+      log('onChange', { documentId: handle.documentId, internalId: handle._internalId });
 
       // If the handle is still being created, do not trigger an update, it will be triggered when the creation is complete.
-      if (this._pendingCreations.has(handle.internalId)) {
+      if (!handle.documentId) {
         return;
       }
 
@@ -192,24 +193,26 @@ export class RepoProxy extends Resource {
     };
 
     const cleanup = () => {
-      log('onDelete', { documentId: handle.documentId, internalId: handle.internalId });
+      log('onDelete', { documentId: handle.documentId, internalId: handle._internalId });
       handle.off('change', onChange);
-      if (handle.documentId) {
-        this._pendingRemoveIds.add(handle.documentId);
-        this._sendUpdatesJob?.trigger();
-        delete this._handles[handle.documentId];
+
+      if (!handle.documentId) {
+        return;
       }
+
+      this._pendingRemoveIds.add(handle.documentId);
+      this._sendUpdatesJob?.trigger();
+      delete this._handles[handle.documentId];
     };
 
     const handle = new DocHandleProxy<T>({ initialValue, onDelete: cleanup });
-
     this._pendingCreations.set(
-      handle.internalId,
+      handle._internalId,
       this._dataService
         .createDocument(
           {
             spaceId: this._spaceId,
-            initialValue: initialValue,
+            initialValue: initialValue as Struct,
           },
           { timeout: RPC_TIMEOUT },
         )
@@ -217,13 +220,14 @@ export class RepoProxy extends Resource {
           handle._setDocumentId(response.documentId as DocumentId);
           this._handles[handle.documentId] = handle;
           update();
+          handle._wakeReady();
         })
         .catch((err) => {
           log.catch(err);
           cleanup();
         })
         .finally(() => {
-          this._pendingCreations.delete(handle.internalId);
+          this._pendingCreations.delete(handle._internalId);
         }),
     );
 
@@ -263,13 +267,13 @@ export class RepoProxy extends Resource {
 
     try {
       const updates: DocumentUpdate[] = [];
-      const addMutations = (documentIds: DocumentId[], isNew?: boolean) => {
+      const addMutations = (documentIds: DocumentId[]) => {
         for (const documentId of documentIds) {
           const handle = this._handles[documentId];
           invariant(handle, `No handle found for documentId ${documentId}`);
           const mutation = handle._getPendingChanges();
           if (mutation) {
-            updates.push({ documentId, mutation, isNew });
+            updates.push({ documentId, mutation });
           }
         }
       };
