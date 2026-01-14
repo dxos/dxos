@@ -4,8 +4,9 @@
 
 import { useEffect, useMemo } from 'react';
 
+import type { OperationResolver } from '@dxos/operation';
+
 import * as Common from '../common';
-import { type OperationResolver } from '../plugin-operation';
 import { usePluginManager } from '../react';
 
 /**

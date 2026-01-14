@@ -7,7 +7,8 @@ import * as Effect from 'effect/Effect';
 import * as Function from 'effect/Function';
 import * as Option from 'effect/Option';
 
-import { Capability, Common, OperationResolver } from '@dxos/app-framework';
+import { Capability, Common } from '@dxos/app-framework';
+import { OperationResolver } from '@dxos/operation';
 import { Obj } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { isLiveObject } from '@dxos/live-object';

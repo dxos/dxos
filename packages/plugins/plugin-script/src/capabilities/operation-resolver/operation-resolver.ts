@@ -6,7 +6,8 @@ import { Octokit } from '@octokit/core';
 import * as Effect from 'effect/Effect';
 import * as Predicate from 'effect/Predicate';
 
-import { Capability, Common, OperationResolver } from '@dxos/app-framework';
+import { Capability, Common } from '@dxos/app-framework';
+import { Operation, OperationResolver } from '@dxos/operation';
 import { Script } from '@dxos/functions';
 import { TokenManagerOperation } from '@dxos/plugin-token-manager/types';
 
@@ -58,20 +59,19 @@ export default Capability.makeModule(
         operation: TokenManagerOperation.AccessTokenCreated,
         handler: ({ accessToken }) =>
           Effect.gen(function* () {
-            const { invoke } = yield* Capability.get(Common.Capability.OperationInvoker);
             const scriptTemplates = (defaultScriptsForIntegration[accessToken.source] ?? [])
               .map((id) => templates.find((t) => t.id === id))
               .filter(Predicate.isNotNullable);
 
             if (scriptTemplates.length > 0) {
-              yield* invoke(Common.LayoutOperation.UpdateDialog, {
+              yield* Operation.invoke(Common.LayoutOperation.UpdateDialog, {
                 subject: DEPLOYMENT_DIALOG,
                 blockAlign: 'start',
                 state: true,
                 props: { accessToken, scriptTemplates },
               });
             }
-          }).pipe(Effect.provideService(Capability.PluginContextService, context)),
+          }),
       }),
     ]);
   }),

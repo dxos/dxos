@@ -4,7 +4,8 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capability, Common, OperationResolver } from '@dxos/app-framework';
+import { Capability, Common } from '@dxos/app-framework';
+import { Operation, OperationResolver } from '@dxos/operation';
 import { DXN, Obj, Ref, Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { ClientCapabilities } from '@dxos/plugin-client';
@@ -41,11 +42,10 @@ export default Capability.makeModule(
         operation: MeetingOperation.Create,
         handler: ({ name, channel }) =>
           Effect.gen(function* () {
-            const { invoke } = yield* Capability.get(Common.Capability.OperationInvoker);
             const space = getSpace(channel);
             invariant(space);
-            const { object: transcript } = yield* invoke(TranscriptOperation.Create, { space });
-            const { object: thread } = yield* invoke(ThreadOperation.CreateChannelThread, { channel });
+            const { object: transcript } = yield* Operation.invoke(TranscriptOperation.Create, { space });
+            const { object: thread } = yield* Operation.invoke(ThreadOperation.CreateChannelThread, { channel });
             const meeting = Obj.make(Meeting.Meeting, {
               name,
               created: new Date().toISOString(),
@@ -57,7 +57,7 @@ export default Capability.makeModule(
             });
 
             return { object: meeting };
-          }).pipe(Effect.provideService(Capability.PluginContextService, context)),
+          }),
       }),
       OperationResolver.make({
         operation: MeetingOperation.SetActive,

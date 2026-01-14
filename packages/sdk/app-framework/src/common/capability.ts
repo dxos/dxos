@@ -18,11 +18,11 @@ import type { FunctionDefinition } from '@dxos/functions';
 import type { RootSettingsStore } from '@dxos/local-storage';
 import type { AnchoredTo } from '@dxos/types';
 
+import type { OperationInvoker as OperationInvoker$, OperationResolver as OperationResolver$ } from '@dxos/operation';
+
 import { Capability as Capability$, type PluginManager as PluginManager$ } from '../core';
 import type {
   HistoryTracker as HistoryTracker$,
-  OperationInvoker as OperationInvoker$,
-  OperationResolver as OperationResolver$,
   UndoMapping as UndoMapping$,
   UndoRegistry as UndoRegistry$,
 } from '../plugin-operation';

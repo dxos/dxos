@@ -4,7 +4,8 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capability, Common, OperationResolver } from '@dxos/app-framework';
+import { Capability, Common } from '@dxos/app-framework';
+import { OperationResolver } from '@dxos/operation';
 
 import { HelpCapabilities, HelpOperation } from '../../types';
 

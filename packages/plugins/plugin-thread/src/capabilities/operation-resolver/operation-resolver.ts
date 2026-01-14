@@ -4,7 +4,8 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capability, Common, OperationResolver, UndoMapping } from '@dxos/app-framework';
+import { Capability, Common, UndoMapping } from '@dxos/app-framework';
+import { OperationResolver } from '@dxos/operation';
 import { sleep } from '@dxos/async';
 import { Obj, Relation, Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
@@ -134,16 +135,15 @@ export default Capability.makeModule(
                 return;
               }
 
-              const { invoke } = yield* Capability.get(Common.Capability.OperationInvoker);
               const collection = Collection.makeManaged({ key: Type.getTypename(Channel.Channel) });
               rootCollection.objects.push(Ref.make(collection));
 
-              const { object: channel } = yield* invoke(ThreadOperation.CreateChannel, {
+              const { object: channel } = yield* Operation.invoke(ThreadOperation.CreateChannel, {
                 name: 'General',
                 spaceId: space.id,
               });
               space.db.add(channel);
-            }).pipe(Effect.provideService(Capability.PluginContextService, context)),
+            }),
         }),
 
         //
@@ -153,7 +153,6 @@ export default Capability.makeModule(
           operation: ThreadOperation.Create,
           handler: ({ name, anchor: _anchor, subject }) =>
             Effect.gen(function* () {
-              const { invoke } = yield* Capability.get(Common.Capability.OperationInvoker);
               const subjectId = Obj.getDXN(subject).toString();
               const thread = Thread.make({ name });
               const anchor = Relation.make(AnchoredTo.AnchoredTo, {
@@ -170,12 +169,12 @@ export default Capability.makeModule(
               }
 
               // Follow-up operations.
-              yield* invoke(ThreadOperation.Select, { current: Obj.getDXN(thread).toString() });
-              yield* invoke(DeckOperation.ChangeCompanion, {
+              yield* Operation.invoke(ThreadOperation.Select, { current: Obj.getDXN(thread).toString() });
+              yield* Operation.invoke(DeckOperation.ChangeCompanion, {
                 primary: subjectId,
                 companion: `${subjectId}${ATTENDABLE_PATH_SEPARATOR}comments`,
               });
-            }).pipe(Effect.provideService(Capability.PluginContextService, context)),
+            }),
         }),
 
         //
@@ -229,7 +228,6 @@ export default Capability.makeModule(
           operation: ThreadOperation.AddMessage,
           handler: ({ anchor, subject, sender, text }) =>
             Effect.gen(function* () {
-              const { invoke } = yield* Capability.get(Common.Capability.OperationInvoker);
               const thread = Relation.getSource(anchor) as Thread.Thread;
               const subjectId = Obj.getDXN(subject).toString();
               const db = Obj.getDatabase(subject);
@@ -247,8 +245,8 @@ export default Capability.makeModule(
                 // Move draft to document.
                 thread.status = 'active';
                 state.drafts[subjectId] = state.drafts[subjectId]?.filter((a: { id: string }) => a.id !== anchor.id);
-                yield* invoke(SpaceOperation.AddObject, { object: thread, target: db, hidden: true });
-                yield* invoke(SpaceOperation.AddRelation, {
+                yield* Operation.invoke(SpaceOperation.AddObject, { object: thread, target: db, hidden: true });
+                yield* Operation.invoke(SpaceOperation.AddRelation, {
                   db,
                   schema: AnchoredTo.AnchoredTo,
                   source: thread,
@@ -274,7 +272,7 @@ export default Capability.makeModule(
                   messageLength: text.length,
                 },
               });
-            }).pipe(Effect.provideService(Capability.PluginContextService, context)),
+            }),
         }),
 
         //
@@ -284,7 +282,6 @@ export default Capability.makeModule(
           operation: ThreadOperation.DeleteMessage,
           handler: ({ subject, anchor, messageId }) =>
             Effect.gen(function* () {
-              const { invoke } = yield* Capability.get(Common.Capability.OperationInvoker);
               const thread = Relation.getSource(anchor) as Thread.Thread;
               const db = Obj.getDatabase(subject);
               invariant(db, 'Database not found');
@@ -297,7 +294,7 @@ export default Capability.makeModule(
 
               if (msgIndex === 0 && thread.messages.length === 1) {
                 // TODO(wittjosiah): This doesn't support restoring the thread.
-                yield* invoke(ThreadOperation.Delete, { subject, anchor });
+                yield* Operation.invoke(ThreadOperation.Delete, { subject, anchor });
                 return { messageIndex: -1 };
               }
 

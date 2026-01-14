@@ -4,7 +4,8 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capability, Common, OperationResolver } from '@dxos/app-framework';
+import { Capability, Common } from '@dxos/app-framework';
+import { Operation, OperationResolver } from '@dxos/operation';
 
 import { SearchOperation } from '../../types';
 
@@ -17,9 +18,8 @@ export default Capability.makeModule(
         operation: SearchOperation.OpenSearch,
         handler: () =>
           Effect.gen(function* () {
-            const { invoke } = yield* Capability.get(Common.Capability.OperationInvoker);
-            yield* invoke(Common.LayoutOperation.UpdateComplementary, { subject: 'search' });
-          }).pipe(Effect.provideService(Capability.PluginContextService, context)),
+            yield* Operation.invoke(Common.LayoutOperation.UpdateComplementary, { subject: 'search' });
+          }),
       }),
     ]);
   }),

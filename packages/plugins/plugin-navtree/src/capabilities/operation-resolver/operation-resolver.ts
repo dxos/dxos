@@ -4,8 +4,9 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capability, Common, OperationResolver } from '@dxos/app-framework';
+import { Capability, Common } from '@dxos/app-framework';
 import { log } from '@dxos/log';
+import { OperationResolver } from '@dxos/operation';
 import { Graph } from '@dxos/plugin-graph';
 
 import { NavTreeCapabilities } from '../../types';

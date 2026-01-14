@@ -4,7 +4,8 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capability, Common, OperationResolver, SettingsOperation } from '@dxos/app-framework';
+import { Capability, Common, SettingsOperation } from '@dxos/app-framework';
+import { Operation, OperationResolver } from '@dxos/operation';
 
 import { REGISTRY_ID } from '../../meta';
 
@@ -17,9 +18,8 @@ export default Capability.makeModule(
         operation: SettingsOperation.OpenPluginRegistry,
         handler: () =>
           Effect.gen(function* () {
-            const { invoke } = yield* Capability.get(Common.Capability.OperationInvoker);
-            yield* invoke(Common.LayoutOperation.SwitchWorkspace, { subject: REGISTRY_ID });
-          }).pipe(Effect.provideService(Capability.PluginContextService, context)),
+            yield* Operation.invoke(Common.LayoutOperation.SwitchWorkspace, { subject: REGISTRY_ID });
+          }),
       }),
     ]);
   }),

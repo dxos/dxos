@@ -27,6 +27,7 @@
     "@dxos/app-framework": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/observability": "workspace:*",
+    "@dxos/operation": "workspace:*",
     "@dxos/util": "workspace:*",
     "@preact-signals/safe-react": "catalog:",
     "effect": "catalog:"

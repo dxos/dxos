@@ -4,7 +4,7 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capability, Common, OperationResolver } from '@dxos/app-framework';
+import { Capability, Common } from '@dxos/app-framework';
 import { AiContextBinder, AiConversation } from '@dxos/assistant';
 import { Agent } from '@dxos/assistant-toolkit';
 import { Blueprint, Prompt } from '@dxos/blueprints';
@@ -12,6 +12,7 @@ import { type Queue } from '@dxos/client/echo';
 import { Filter, Obj, Ref, Type } from '@dxos/echo';
 import { TracingService, serializeFunction } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
+import { Operation, OperationResolver } from '@dxos/operation';
 import { AutomationCapabilities } from '@dxos/plugin-automation';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { Collection } from '@dxos/schema';
@@ -34,7 +35,6 @@ export default Capability.makeModule(
         operation: AssistantOperation.OnCreateSpace,
         handler: ({ space, rootCollection }) =>
           Effect.gen(function* () {
-            const { invoke } = yield* Capability.get(Common.Capability.OperationInvoker);
             const chatCollection = Collection.makeManaged({ key: Assistant.Chat.typename });
             const blueprintCollection = Collection.makeManaged({ key: Blueprint.Blueprint.typename });
             const promptCollection = Collection.makeManaged({ key: Type.getTypename(Prompt.Prompt) });
@@ -48,9 +48,9 @@ export default Capability.makeModule(
             space.db.add(serializeFunction(Agent.prompt));
 
             // Create default chat.
-            const { object: chat } = yield* invoke(AssistantOperation.CreateChat, { db: space.db });
+            const { object: chat } = yield* Operation.invoke(AssistantOperation.CreateChat, { db: space.db });
             space.db.add(chat);
-          }).pipe(Effect.provideService(Capability.PluginContextService, context)),
+          }),
       }),
       OperationResolver.make({
         operation: AssistantOperation.CreateChat,

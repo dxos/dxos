@@ -4,10 +4,10 @@
 
 import * as Effect from 'effect/Effect';
 
-import * as Common from '../../common';
-import { Capability, Plugin } from '../../core';
+import { OperationInvoker } from '@dxos/operation';
 
-import * as OperationInvoker from './operation-invoker';
+import * as Common from '../common';
+import { Capability, Plugin } from '../core';
 
 //
 // Capability Module

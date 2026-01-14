@@ -8,10 +8,22 @@
       "path": "../../common/effect"
     },
     {
+      "path": "../../common/log"
+    },
+    {
+      "path": "../../common/test-utils"
+    },
+    {
+      "path": "../../common/util"
+    },
+    {
       "path": "../../sdk/schema"
     },
     {
       "path": "../echo/echo"
+    },
+    {
+      "path": "../echo/echo-db"
     }
   ]
 }

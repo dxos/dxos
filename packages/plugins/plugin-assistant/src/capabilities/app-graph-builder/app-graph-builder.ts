@@ -6,7 +6,8 @@ import * as Effect from 'effect/Effect';
 import * as Function from 'effect/Function';
 import * as Option from 'effect/Option';
 
-import { Capability, Common, type OperationInvoker } from '@dxos/app-framework';
+import { Capability, Common } from '@dxos/app-framework';
+import { type OperationInvoker } from '@dxos/operation';
 import { Prompt } from '@dxos/blueprints';
 import { Sequence } from '@dxos/conductor';
 import { DXN, type Database, Obj } from '@dxos/echo';

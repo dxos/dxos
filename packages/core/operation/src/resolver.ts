@@ -5,8 +5,10 @@
 import type * as Effect from 'effect/Effect';
 import type * as Schema from 'effect/Schema';
 
-import type { OperationDefinition, OperationHandler, Service as OperationService } from '@dxos/operation';
 import type { Position } from '@dxos/util';
+
+import type { OperationDefinition, OperationHandler } from './operation';
+import type { Service as OperationService } from './service';
 
 /**
  * Base requirements provided to all operation handlers.

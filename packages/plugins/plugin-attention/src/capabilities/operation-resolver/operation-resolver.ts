@@ -5,7 +5,8 @@
 import * as Effect from 'effect/Effect';
 import * as Match from 'effect/Match';
 
-import { Capability, Common, OperationResolver } from '@dxos/app-framework';
+import { Capability, Common } from '@dxos/app-framework';
+import { OperationResolver } from '@dxos/operation';
 
 import { AttentionCapabilities, AttentionOperation } from '../../types';
 

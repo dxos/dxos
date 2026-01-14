@@ -2,19 +2,19 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Fiber from 'effect/Fiber';
 import * as HashSet from 'effect/HashSet';
 import * as Ref from 'effect/Ref';
 
 import { log } from '@dxos/log';
-import type { OperationDefinition } from '@dxos/operation';
 
-import type { InvokeOptions } from './operation-invoker';
+import type { OperationDefinition } from './operation';
+import type { InvokeOptions } from './service';
 
 /**
  * Invocation function type for scheduling operations.
+ * @internal
  */
 export type InvokeFn = <I, O>(
   op: OperationDefinition<I, O>,
@@ -29,6 +29,7 @@ export type InvokeFn = <I, O>(
 /**
  * FollowupScheduler - schedules operations to run as tracked background tasks.
  * Followups are not cancelled when the parent operation completes.
+ * @internal
  */
 export interface FollowupScheduler {
   /**
@@ -150,29 +151,8 @@ class FollowupSchedulerImpl implements FollowupScheduler {
 
 /**
  * Creates a FollowupScheduler that tracks and executes followup operations.
+ * @internal
  *
  * @param invoke - Function to invoke operations (typically from OperationInvoker).
- *
- * @example
- * ```ts
- * const scheduler = FollowupScheduler.make(invoker._invokeCore);
- * yield* scheduler.schedule(ObservabilityOperation.SendEvent, { name: 'test' });
- * ```
  */
 export const make = (invoke: InvokeFn): FollowupScheduler => new FollowupSchedulerImpl(invoke);
-
-//
-// Service Tag
-//
-
-/**
- * Context tag for the FollowupScheduler service.
- * Handlers can yield this to schedule followup operations.
- *
- * @example
- * ```ts
- * const scheduler = yield* FollowupScheduler.Service;
- * yield* scheduler.schedule(MyOperation, { data: 'test' });
- * ```
- */
-export class Service extends Context.Tag('@dxos/operation/FollowupScheduler')<Service, FollowupScheduler>() {}

@@ -4,7 +4,7 @@
 
 import type * as Schema from 'effect/Schema';
 
-import { type OperationInvoker } from '@dxos/app-framework';
+import { type OperationInvoker } from '@dxos/operation';
 import { addressToA1Notation } from '@dxos/compute';
 import { ComputeGraph, ComputeGraphModel, DEFAULT_OUTPUT, NODE_INPUT, NODE_OUTPUT } from '@dxos/conductor';
 import { DXN, Filter, Key, type Type } from '@dxos/echo';

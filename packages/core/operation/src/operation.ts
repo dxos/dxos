@@ -232,3 +232,17 @@ export type InvokeRemote = <I, O, E>(
   input: I,
   options?: { timeout?: number },
 ) => Effect.Effect<O, E>;
+
+//
+// Re-export service types and functions for Operation namespace.
+//
+
+export {
+  type InvokeOptions,
+  type OperationService,
+  Service,
+  invoke,
+  schedule,
+  invokePromise,
+  invokeSync,
+} from './service';

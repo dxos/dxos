@@ -14,10 +14,10 @@ import {
   Capability,
   Common,
   OperationPlugin,
-  OperationResolver,
   Plugin,
   SettingsPlugin,
 } from '@dxos/app-framework';
+import { OperationResolver } from '@dxos/operation';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { AiContextBinder, ArtifactId, GenericToolkit } from '@dxos/assistant';
 import { Agent, DesignBlueprint, Document, PlanningBlueprint, Research, Tasks } from '@dxos/assistant-toolkit';

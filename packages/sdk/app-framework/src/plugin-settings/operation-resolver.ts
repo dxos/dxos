@@ -4,9 +4,10 @@
 
 import * as Effect from 'effect/Effect';
 
+import { OperationResolver } from '@dxos/operation';
+
 import * as Common from '../common';
 import { Capability } from '../core';
-import { OperationResolver } from '../plugin-operation';
 
 import { SETTINGS_ID, SETTINGS_KEY, SettingsOperation } from './actions';
 

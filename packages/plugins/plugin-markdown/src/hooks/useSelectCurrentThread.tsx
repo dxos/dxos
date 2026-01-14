@@ -6,7 +6,8 @@ import { EditorView } from '@codemirror/view';
 import * as Effect from 'effect/Effect';
 import { useMemo } from 'react';
 
-import { Common, OperationResolver } from '@dxos/app-framework';
+import { Common } from '@dxos/app-framework';
+import { OperationResolver } from '@dxos/operation';
 import { useOperationResolver } from '@dxos/app-framework/react';
 import { invariant } from '@dxos/invariant';
 import { Cursor, setSelection } from '@dxos/ui-editor';

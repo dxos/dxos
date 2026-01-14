@@ -4,10 +4,11 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capability, Common, OperationResolver } from '@dxos/app-framework';
+import { Capability, Common } from '@dxos/app-framework';
 import { PublicKey } from '@dxos/client';
 import { runAndForwardErrors } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
+import { OperationResolver } from '@dxos/operation';
 import * as Operation from '@dxos/operation';
 import { ObservabilityOperation } from '@dxos/plugin-observability/types';
 import { type JoinPanelProps } from '@dxos/shell/react';
@@ -51,8 +52,7 @@ export default Capability.makeModule(
         operation: ClientOperation.JoinIdentity,
         handler: (data) =>
           Effect.gen(function* () {
-            const { invoke } = yield* Capability.get(Common.Capability.OperationInvoker);
-            yield* invoke(Common.LayoutOperation.UpdateDialog, {
+            yield* Operation.invoke(Common.LayoutOperation.UpdateDialog, {
               subject: JOIN_DIALOG,
               blockAlign: 'start',
               props: {
@@ -60,7 +60,7 @@ export default Capability.makeModule(
                 initialDisposition: 'accept-halo-invitation',
               },
             });
-          }).pipe(Effect.provideService(Capability.PluginContextService, context)),
+          }),
       }),
 
       //
@@ -83,15 +83,14 @@ export default Capability.makeModule(
         operation: ClientOperation.RecoverIdentity,
         handler: () =>
           Effect.gen(function* () {
-            const { invoke } = yield* Capability.get(Common.Capability.OperationInvoker);
-            yield* invoke(Common.LayoutOperation.UpdateDialog, {
+            yield* Operation.invoke(Common.LayoutOperation.UpdateDialog, {
               subject: JOIN_DIALOG,
               blockAlign: 'start',
               props: {
                 initialDisposition: 'recover-identity',
               } satisfies Partial<JoinPanelProps>,
             });
-          }).pipe(Effect.provideService(Capability.PluginContextService, context)),
+          }),
       }),
 
       //
@@ -101,15 +100,14 @@ export default Capability.makeModule(
         operation: ClientOperation.ResetStorage,
         handler: (data) =>
           Effect.gen(function* () {
-            const { invoke } = yield* Capability.get(Common.Capability.OperationInvoker);
-            yield* invoke(Common.LayoutOperation.UpdateDialog, {
+            yield* Operation.invoke(Common.LayoutOperation.UpdateDialog, {
               subject: RESET_DIALOG,
               blockAlign: 'start',
               props: {
                 mode: data.mode ?? 'reset storage',
               },
             });
-          }).pipe(Effect.provideService(Capability.PluginContextService, context)),
+          }),
       }),
 
       //
@@ -132,19 +130,18 @@ export default Capability.makeModule(
         operation: ClientOperation.CreateRecoveryCode,
         handler: () =>
           Effect.gen(function* () {
-            const { invoke } = yield* Capability.get(Common.Capability.OperationInvoker);
             const client = context.getCapability(ClientCapabilities.Client);
             invariant(client.services.services.IdentityService, 'IdentityService not available');
             const { recoveryCode } = yield* Effect.promise(() =>
               client.services.services.IdentityService!.createRecoveryCredential({}),
             );
-            yield* invoke(Common.LayoutOperation.UpdateDialog, {
+            yield* Operation.invoke(Common.LayoutOperation.UpdateDialog, {
               subject: RECOVERY_CODE_DIALOG,
               blockAlign: 'start',
               type: 'alert',
               props: { code: recoveryCode },
             });
-          }).pipe(Effect.provideService(Capability.PluginContextService, context)),
+          }),
       }),
 
       //

@@ -4,7 +4,8 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capability, Common, OperationResolver, SettingsOperation } from '@dxos/app-framework';
+import { Capability, Common, SettingsOperation } from '@dxos/app-framework';
+import { Operation, OperationResolver } from '@dxos/operation';
 import { Trigger } from '@dxos/async';
 import { log } from '@dxos/log';
 import { Node } from '@dxos/plugin-graph';
@@ -152,8 +153,7 @@ export default Capability.makeModule(
         handler: () =>
           Effect.gen(function* () {
             if (!mutableState.rootHandle) {
-              const { invoke } = yield* Capability.get(Common.Capability.OperationInvoker);
-              yield* invoke(SettingsOperation.Open, { plugin: meta.id });
+              yield* Operation.invoke(SettingsOperation.Open, { plugin: meta.id });
               return;
             }
 

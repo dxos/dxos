@@ -4,7 +4,8 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capability, Common, OperationResolver, Plugin, UndoMapping } from '@dxos/app-framework';
+import { Capability, Common, Plugin, UndoMapping } from '@dxos/app-framework';
+import { OperationResolver } from '@dxos/operation';
 import { SpaceState, getSpace } from '@dxos/client/echo';
 import { Database, Obj, Query, Ref, Relation, Type } from '@dxos/echo';
 import { EchoDatabaseImpl, Serializer } from '@dxos/echo-db';
@@ -107,8 +108,7 @@ export default Capability.makeModule(
           operation: SpaceOperation.Join,
           handler: (input) =>
             Effect.gen(function* () {
-              const { invoke } = yield* Capability.get(Common.Capability.OperationInvoker);
-              yield* invoke(Common.LayoutOperation.UpdateDialog, {
+              yield* Operation.invoke(Common.LayoutOperation.UpdateDialog, {
                 subject: JOIN_DIALOG,
                 blockAlign: 'start',
                 props: {
@@ -116,7 +116,7 @@ export default Capability.makeModule(
                   onDone: input.onDone,
                 } satisfies Partial<JoinDialogProps>,
               });
-            }).pipe(Effect.provideService(Capability.PluginContextService, context)),
+            }),
         }),
 
         //
@@ -138,12 +138,11 @@ export default Capability.makeModule(
           operation: SpaceOperation.OpenSettings,
           handler: (input) =>
             Effect.gen(function* () {
-              const { invoke } = yield* Capability.get(Common.Capability.OperationInvoker);
-              yield* invoke(Common.LayoutOperation.Open, {
+              yield* Operation.invoke(Common.LayoutOperation.Open, {
                 subject: [`properties-settings${ATTENDABLE_PATH_SEPARATOR}${input.space.id}`],
                 workspace: input.space.id,
               });
-            }).pipe(Effect.provideService(Capability.PluginContextService, context)),
+            }),
         }),
 
         //
@@ -207,8 +206,7 @@ export default Capability.makeModule(
               }
 
               if (wasActive.length > 0) {
-                const { invoke } = yield* Capability.get(Common.Capability.OperationInvoker);
-                yield* invoke(Common.LayoutOperation.Close, { subject: wasActive });
+                yield* Operation.invoke(Common.LayoutOperation.Close, { subject: wasActive });
               }
 
               // Return data needed for undo.
@@ -255,10 +253,9 @@ export default Capability.makeModule(
           operation: SpaceOperation.OpenCreateObject,
           handler: (input) =>
             Effect.gen(function* () {
-              const { invoke } = yield* Capability.get(Common.Capability.OperationInvoker);
               const state = context.getCapability(SpaceCapabilities.State);
               const navigable = input.navigable ?? true;
-              yield* invoke(Common.LayoutOperation.UpdateDialog, {
+              yield* Operation.invoke(Common.LayoutOperation.UpdateDialog, {
                 subject: CREATE_OBJECT_DIALOG,
                 blockAlign: 'start',
                 props: {
@@ -379,12 +376,11 @@ export default Capability.makeModule(
           operation: SpaceOperation.OpenCreateSpace,
           handler: () =>
             Effect.gen(function* () {
-              const { invoke } = yield* Capability.get(Common.Capability.OperationInvoker);
-              yield* invoke(Common.LayoutOperation.UpdateDialog, {
+              yield* Operation.invoke(Common.LayoutOperation.UpdateDialog, {
                 subject: CREATE_SPACE_DIALOG,
                 blockAlign: 'start',
               });
-            }).pipe(Effect.provideService(Capability.PluginContextService, context)),
+            }),
         }),
 
         //
@@ -492,13 +488,12 @@ export default Capability.makeModule(
           operation: SpaceOperation.Rename,
           handler: (input) =>
             Effect.gen(function* () {
-              const { invoke } = yield* Capability.get(Common.Capability.OperationInvoker);
-              yield* invoke(Common.LayoutOperation.UpdatePopover, {
+              yield* Operation.invoke(Common.LayoutOperation.UpdatePopover, {
                 subject: SPACE_RENAME_POPOVER,
                 anchorId: `dxos.org/ui/${input.caller}/${input.space.id}`,
                 props: input.space,
               });
-            }).pipe(Effect.provideService(Capability.PluginContextService, context)),
+            }),
         }),
 
         //
@@ -508,14 +503,13 @@ export default Capability.makeModule(
           operation: SpaceOperation.RenameObject,
           handler: (input) =>
             Effect.gen(function* () {
-              const { invoke } = yield* Capability.get(Common.Capability.OperationInvoker);
               const object = input.object as Obj.Any;
-              yield* invoke(Common.LayoutOperation.UpdatePopover, {
+              yield* Operation.invoke(Common.LayoutOperation.UpdatePopover, {
                 subject: OBJECT_RENAME_POPOVER,
                 anchorId: `dxos.org/ui/${input.caller}/${Obj.getDXN(object).toString()}`,
                 props: object,
               });
-            }).pipe(Effect.provideService(Capability.PluginContextService, context)),
+            }),
         }),
 
         //
@@ -525,12 +519,11 @@ export default Capability.makeModule(
           operation: SpaceOperation.OpenMembers,
           handler: (input) =>
             Effect.gen(function* () {
-              const { invoke } = yield* Capability.get(Common.Capability.OperationInvoker);
-              yield* invoke(Common.LayoutOperation.Open, {
+              yield* Operation.invoke(Common.LayoutOperation.Open, {
                 subject: [`members-settings${ATTENDABLE_PATH_SEPARATOR}${input.space.id}`],
                 workspace: input.space.id,
               });
-            }).pipe(Effect.provideService(Capability.PluginContextService, context)),
+            }),
         }),
 
         //
@@ -540,12 +533,11 @@ export default Capability.makeModule(
           operation: SpaceOperation.GetShareLink,
           handler: (input) =>
             Effect.gen(function* () {
-              const { invoke } = yield* Capability.get(Common.Capability.OperationInvoker);
               const { Invitation, InvitationEncoder } = yield* Effect.promise(
                 () => import('@dxos/react-client/invitations'),
               );
 
-              const invitation = yield* invoke(SpaceOperation.Share, {
+              const invitation = yield* Operation.invoke(SpaceOperation.Share, {
                 space: input.space,
                 type: Invitation.Type.DELEGATED,
                 authMethod: Invitation.AuthMethod.KNOWN_PUBLIC_KEY,
@@ -693,13 +685,12 @@ export default Capability.makeModule(
           operation: SpaceOperation.DuplicateObject,
           handler: (input) =>
             Effect.gen(function* () {
-              const { invoke } = yield* Capability.get(Common.Capability.OperationInvoker);
               const object = input.object as Obj.Any;
               const db = Obj.getDatabase(object);
               invariant(db, 'Database not found.');
               const newObject = yield* Effect.promise(() => cloneObject(object, resolve, db));
-              yield* invoke(SpaceOperation.AddObject, { object: newObject, target: db });
-            }).pipe(Effect.provideService(Capability.PluginContextService, context)),
+              yield* Operation.invoke(SpaceOperation.AddObject, { object: newObject, target: db });
+            }),
         }),
 
         //
@@ -759,10 +750,9 @@ export default Capability.makeModule(
 
               // Re-open objects that were active.
               if (wasActive.length > 0) {
-                const { invoke } = yield* Capability.get(Common.Capability.OperationInvoker);
-                yield* invoke(Common.LayoutOperation.Open, { subject: wasActive });
+                yield* Operation.invoke(Common.LayoutOperation.Open, { subject: wasActive });
               }
-            }).pipe(Effect.provideService(Capability.PluginContextService, context)),
+            }),
         }),
       ]),
     ];

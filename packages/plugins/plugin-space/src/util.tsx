@@ -6,7 +6,8 @@ import { type Instruction } from '@atlaskit/pragmatic-drag-and-drop-hitbox/tree-
 import { Atom } from '@effect-atom/atom-react';
 import type * as Schema from 'effect/Schema';
 
-import { type Capability, Common, type OperationInvoker } from '@dxos/app-framework';
+import { type Capability, Common } from '@dxos/app-framework';
+import { type OperationInvoker } from '@dxos/operation';
 import { type Space, SpaceState, isSpace } from '@dxos/client/echo';
 import { type Database, type Entity, Filter, Obj, Query, type QueryResult, Ref, Type } from '@dxos/echo';
 import { EXPANDO_TYPENAME } from '@dxos/echo/internal';

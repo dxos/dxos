@@ -10,17 +10,13 @@ import * as PubSub from 'effect/PubSub';
 import type { Key } from '@dxos/echo';
 import { DynamicRuntime, runAndForwardErrors } from '@dxos/effect';
 import { log } from '@dxos/log';
-import {
-  type OperationDefinition,
-  type OperationHandler,
-  type OperationService,
-  Service as OperationServiceTag,
-} from '@dxos/operation';
 import { byPosition } from '@dxos/util';
 
 import { NoHandlerError } from './errors';
-import * as FollowupScheduler from './followup-scheduler';
-import type { OperationResolver } from './operation-resolver';
+import type { OperationDefinition, OperationHandler } from './operation';
+import type { OperationResolver } from './resolver';
+import * as Scheduler from './scheduler';
+import { type OperationService, type InvokeOptions, Service as OperationServiceTag } from './service';
 
 /**
  * Invocation event emitted after each operation.
@@ -33,16 +29,8 @@ export type InvocationEvent<I = any, O = any> = {
 };
 
 /**
- * Options for operation invocation.
- */
-export interface InvokeOptions {
-  /** Space ID to provide database context for the handler. */
-  spaceId?: Key.SpaceId;
-}
-
-/**
  * Resolves a spaceId to a context containing Database.Service.
- * Provided by the caller to avoid coupling app-framework to client/echo.
+ * Provided by the caller to avoid coupling to client/echo.
  */
 export type DatabaseResolver = (spaceId: Key.SpaceId) => Effect.Effect<Context.Context<any>, Error>;
 
@@ -71,7 +59,10 @@ export interface OperationInvoker {
     op: OperationDefinition<I, O>,
     ...args: void extends I ? [input?: I, options?: InvokeOptions] : [input: I, options?: InvokeOptions]
   ) => { data?: O; error?: Error };
-  /** @internal */
+  /**
+   * Core invocation without event emission.
+   * Used by history tracker to avoid undo-of-undo loops.
+   */
   _invokeCore: <I, O>(op: OperationDefinition<I, O>, input: I, options?: InvokeOptions) => Effect.Effect<O, Error>;
   /** Effect stream of invocation events. */
   invocations: PubSub.PubSub<InvocationEvent>;
@@ -90,13 +81,13 @@ type AnyManagedRuntime = ManagedRuntime.ManagedRuntime<any, any>;
 class OperationInvokerImpl implements OperationInvoker {
   private readonly _pubsub: PubSub.PubSub<InvocationEvent>;
   private readonly _getHandlers: () => Effect.Effect<OperationResolver<any, any, Error, any>[], Error>;
-  private readonly _followupScheduler: FollowupScheduler.FollowupScheduler;
+  private readonly _followupScheduler: Scheduler.FollowupScheduler;
   private readonly _managedRuntime?: AnyManagedRuntime;
   private readonly _databaseResolver?: DatabaseResolver;
 
   constructor(
     getHandlers: () => Effect.Effect<OperationResolver<any, any, Error, any>[], Error>,
-    followupScheduler: FollowupScheduler.FollowupScheduler,
+    followupScheduler: Scheduler.FollowupScheduler,
     managedRuntime?: AnyManagedRuntime,
     databaseResolver?: DatabaseResolver,
   ) {
@@ -202,7 +193,6 @@ class OperationInvokerImpl implements OperationInvoker {
       const operationService: OperationService = {
         invoke: this.invoke,
         schedule: this._followupScheduler.schedule,
-        scheduleEffect: this._followupScheduler.scheduleEffect,
         invokePromise: this.invokePromise,
         invokeSync: this.invokeSync,
       };
@@ -276,14 +266,14 @@ export const make = (
   // Use a ref object so the closure can access the invoker after initialization.
   const ref: { invoker?: OperationInvokerImpl } = {};
 
-  const invokeFn: FollowupScheduler.InvokeFn = (op, input, options) => {
+  const invokeFn: Scheduler.InvokeFn = (op, input, options) => {
     if (!ref.invoker) {
       return Effect.die(new Error('Invoker not initialized'));
     }
     return ref.invoker._invokeCore(op, input, options);
   };
 
-  const scheduler = FollowupScheduler.make(invokeFn);
+  const scheduler = Scheduler.make(invokeFn);
   ref.invoker = new OperationInvokerImpl(getHandlers, scheduler, managedRuntime, databaseResolver);
   return ref.invoker;
 };

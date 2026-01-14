@@ -28,6 +28,7 @@
     "@codemirror/lang-json": "catalog:",
     "@dxos/app-framework": "workspace:*",
     "@dxos/log": "workspace:*",
+    "@dxos/operation": "workspace:*",
     "@dxos/plugin-graph": "workspace:*",
     "@dxos/react-ui-editor": "workspace:*",
     "@dxos/react-ui-menu": "workspace:*",

@@ -4,10 +4,11 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capability, Common, OperationResolver } from '@dxos/app-framework';
+import { Capability, Common } from '@dxos/app-framework';
 import { Filter, Obj, Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
+import { Operation, OperationResolver } from '@dxos/operation';
 import { ClientCapabilities } from '@dxos/plugin-client/types';
 import { SpaceOperation } from '@dxos/plugin-space/types';
 import { Organization, Person } from '@dxos/types';
@@ -23,7 +24,6 @@ export default Capability.makeModule(
         operation: InboxOperation.ExtractContact,
         handler: ({ db, actor }) =>
           Effect.gen(function* () {
-            const { invoke } = yield* Capability.get(Common.Capability.OperationInvoker);
             const client = yield* Capability.get(ClientCapabilities.Client);
             const space = client.spaces.get(db.spaceId);
             invariant(space, 'Space not found');
@@ -56,7 +56,7 @@ export default Capability.makeModule(
             const emailDomain = email.split('@')[1]?.toLowerCase();
             if (!emailDomain) {
               log.warn('Invalid email format, cannot extract domain', { email });
-              yield* invoke(SpaceOperation.AddObject, {
+              yield* Operation.invoke(SpaceOperation.AddObject, {
                 object: newContact,
                 target: db,
                 hidden: true,
@@ -102,13 +102,13 @@ export default Capability.makeModule(
 
             if (!space.properties.staticRecords.includes(Person.Person.typename)) {
               log.info('adding record type for contacts');
-              yield* invoke(SpaceOperation.UseStaticSchema, {
+              yield* Operation.invoke(SpaceOperation.UseStaticSchema, {
                 db,
                 typename: Person.Person.typename,
               });
             }
 
-            yield* invoke(SpaceOperation.AddObject, {
+            yield* Operation.invoke(SpaceOperation.AddObject, {
               object: newContact,
               target: db,
               hidden: true,

@@ -4,7 +4,8 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capability, Common, OperationResolver } from '@dxos/app-framework';
+import { Capability, Common } from '@dxos/app-framework';
+import { Operation, OperationResolver } from '@dxos/operation';
 import { Obj, Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { SpaceOperation } from '@dxos/plugin-space/types';
@@ -23,28 +24,26 @@ export default Capability.makeModule(
         operation: TableOperation.OnCreateSpace,
         handler: ({ space }) =>
           Effect.gen(function* () {
-            const { invoke } = yield* Capability.get(Common.Capability.OperationInvoker);
-            const { object } = yield* invoke(TableOperation.Create, {
+            const { object } = yield* Operation.invoke(TableOperation.Create, {
               db: space.db,
               typename: Task.Task.typename,
             });
             space.db.add(object);
             space.properties.staticRecords = [Task.Task.typename];
-          }).pipe(Effect.provideService(Capability.PluginContextService, context)),
+          }),
       }),
       OperationResolver.make({
         operation: TableOperation.OnSchemaAdded,
         handler: ({ db, schema, show = true }) =>
           Effect.gen(function* () {
-            const { invoke } = yield* Capability.get(Common.Capability.OperationInvoker);
-            const { object } = yield* invoke(TableOperation.Create, {
+            const { object } = yield* Operation.invoke(TableOperation.Create, {
               db,
               typename: Type.getTypename(schema),
             });
-            yield* invoke(SpaceOperation.AddObject, { target: db, object, hidden: true });
+            yield* Operation.invoke(SpaceOperation.AddObject, { target: db, object, hidden: true });
 
             if (show) {
-              yield* invoke(Common.LayoutOperation.Open, {
+              yield* Operation.invoke(Common.LayoutOperation.Open, {
                 subject: [Obj.getDXN(object).toString()],
               });
             }
@@ -64,7 +63,6 @@ export default Capability.makeModule(
         operation: TableOperation.AddRow,
         handler: ({ view, data }) =>
           Effect.gen(function* () {
-            const { invoke } = yield* Capability.get(Common.Capability.OperationInvoker);
             const db = Obj.getDatabase(view);
             invariant(db);
             const typename = view.query ? getTypenameFromQuery(view.query.ast) : undefined;
@@ -72,8 +70,8 @@ export default Capability.makeModule(
             const schema = yield* Effect.promise(() => db.schemaRegistry.query({ typename }).firstOrUndefined());
             invariant(schema);
             const object = Obj.make(schema, data);
-            yield* invoke(SpaceOperation.AddObject, { target: db, object, hidden: true });
-          }).pipe(Effect.provideService(Capability.PluginContextService, context)),
+            yield* Operation.invoke(SpaceOperation.AddObject, { target: db, object, hidden: true });
+          }),
       }),
     ]);
   }),

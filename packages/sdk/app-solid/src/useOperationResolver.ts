@@ -4,7 +4,8 @@
 
 import { createEffect, onCleanup } from 'solid-js';
 
-import { Common, type OperationResolver } from '@dxos/app-framework';
+import { Common } from '@dxos/app-framework';
+import { type OperationResolver } from '@dxos/operation';
 
 import { usePluginManager } from './usePluginManager';
 
