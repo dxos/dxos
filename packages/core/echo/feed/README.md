@@ -132,14 +132,16 @@ The sync protocol is message-based. All messages include a `requestId`. Response
     - Description: Returns blocks from the specified feeds (or subscription) with `position > cursor`.
 
 2.  **Subscribe**
-    - Input: `requestId`, `feedIds: string[]`
+    - Input: `requestId`, `namespace: string`
     - Output: `requestId`, `subscriptionId: string`
-    - Description: Registers a set of feed IDs for future queries. Returns a `subscriptionId`.
+    - Description: Registers a subscription for all feeds in a **Namespace**. Returns a `subscriptionId`.
 
 3.  **Append**
-    - Input: `requestId`, `blocks: Block[]`
+    - Input: `requestId`, `feedId: string`, `namespace?: string`, `blocks: Block[]`
     - Output: `requestId`, `positions: number[]`
-    - Description: Appends blocks to the log. Returns the assigned global positions.
+    - Description: Appends blocks to the specified feed.
+      - If `namespace` is provided and the feed is new, it sets the feed's namespace.
+      - Returns the assigned global positions.
 
 ### Logic
 
@@ -201,6 +203,29 @@ All timestamps (e.g., `insertionTimestamp`) are Unix timestamps in milliseconds.
   "requestId": "req-2",
   "subscriptionId": "sub-123",
   "expiresAt": 1234569999
+}
+```
+
+### 3. List Feeds
+
+**Request:**
+
+```json
+{
+  "requestId": "req-4",
+  "namespace": "data"
+}
+```
+
+**Response:**
+
+```json
+{
+  "requestId": "req-4",
+  "feeds": [
+    { "feedId": "01H1...", "namespace": "data" },
+    { "feedId": "02H2...", "namespace": "data" }
+  ]
 }
 ```
 
