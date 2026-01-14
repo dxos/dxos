@@ -11,7 +11,6 @@ import { SimpleLayoutState } from '../../types';
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     const context = yield* Capability.PluginContextService;
-    const { invoke } = yield* Capability.get(Common.Capability.OperationInvoker);
 
     return Capability.contributes(Common.Capability.OperationResolver, [
       //
@@ -97,11 +96,12 @@ export default Capability.makeModule(
         operation: Common.LayoutOperation.RevertWorkspace,
         handler: () =>
           Effect.gen(function* () {
+            const { invoke } = yield* Capability.get(Common.Capability.OperationInvoker);
             const layout = context.getCapability(SimpleLayoutState);
             yield* invoke(Common.LayoutOperation.SwitchWorkspace, {
               subject: layout.previousWorkspace,
             });
-          }),
+          }).pipe(Effect.provideService(Capability.PluginContextService, context)),
       }),
 
       //

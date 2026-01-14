@@ -13,10 +13,12 @@ import { SheetCapabilities } from '../../types';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    const computeGraphRegistry = yield* Capability.get(SheetCapabilities.ComputeGraphRegistry);
+    // Get context for lazy capability access in callbacks.
+    const context = yield* Capability.PluginContextService;
 
     return Capability.contributes(MarkdownCapabilities.Extensions, [
       ({ document: doc }) => {
+        const computeGraphRegistry = context.getCapability(SheetCapabilities.ComputeGraphRegistry);
         const space = getSpace(doc);
         if (space) {
           const computeGraph = computeGraphRegistry.getOrCreateGraph(space);

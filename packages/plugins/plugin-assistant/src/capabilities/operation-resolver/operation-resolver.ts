@@ -24,7 +24,7 @@ import { AssistantBlueprint, createBlueprint } from '../blueprint-definition/blu
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     const context = yield* Capability.PluginContextService;
-    const { invoke } = yield* Capability.get(Common.Capability.OperationInvoker);
+    // These are accessed eagerly because they're used in sync handlers or need consistent references
     const client = yield* Capability.get(ClientCapabilities.Client);
     const runtimeResolver = yield* Capability.get(AutomationCapabilities.ComputeRuntime);
     const mutableState = yield* Capability.get(AssistantCapabilities.MutableState);
@@ -34,6 +34,7 @@ export default Capability.makeModule(
         operation: AssistantOperation.OnCreateSpace,
         handler: ({ space, rootCollection }) =>
           Effect.gen(function* () {
+            const { invoke } = yield* Capability.get(Common.Capability.OperationInvoker);
             const chatCollection = Collection.makeManaged({ key: Assistant.Chat.typename });
             const blueprintCollection = Collection.makeManaged({ key: Blueprint.Blueprint.typename });
             const promptCollection = Collection.makeManaged({ key: Type.getTypename(Prompt.Prompt) });
@@ -49,7 +50,7 @@ export default Capability.makeModule(
             // Create default chat.
             const { object: chat } = yield* invoke(AssistantOperation.CreateChat, { db: space.db });
             space.db.add(chat);
-          }),
+          }).pipe(Effect.provideService(Capability.PluginContextService, context)),
       }),
       OperationResolver.make({
         operation: AssistantOperation.CreateChat,

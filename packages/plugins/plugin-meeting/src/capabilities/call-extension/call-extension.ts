@@ -30,15 +30,15 @@ type MeetingPayload = buf.MessageInitShape<typeof MeetingPayloadSchema>;
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    const state = yield* Capability.get(MeetingCapabilities.State);
-    const settingsStore = yield* Capability.get(Common.Capability.SettingsStore);
-    const _settings = settingsStore.getStore<Meeting.Settings>(meta.id)!.value;
-    const client = yield* Capability.get(ClientCapabilities.Client);
-    const transcriptionManagerFactory = yield* Capability.get(TranscriptionCapabilities.TranscriptionManager);
-    const { invokePromise } = yield* Capability.get(Common.Capability.OperationInvoker);
+    // Get context for lazy capability access in callbacks.
+    const context = yield* Capability.PluginContextService;
+
+    const state = context.getCapability(MeetingCapabilities.State);
+    const _settings = context.getCapability(Common.Capability.SettingsStore).getStore<Meeting.Settings>(meta.id)!.value;
 
     return Capability.contributes(ThreadCapabilities.CallExtension, {
       onJoin: async ({ channel }: { channel?: Channel.Channel }) => {
+        const client = context.getCapability(ClientCapabilities.Client);
         const identity = client.halo.identity.get();
         invariant(identity);
 
@@ -55,7 +55,9 @@ export default Capability.makeModule(
         // }
 
         // TODO(burdon): The TranscriptionManager singleton is part of the state and should just be updated here.
-        state.transcriptionManager = await transcriptionManagerFactory({}).open();
+        state.transcriptionManager = await context
+          .getCapability(TranscriptionCapabilities.TranscriptionManager)({})
+          .open();
       },
       onLeave: async () => {
         await state.transcriptionManager?.close();
@@ -63,6 +65,7 @@ export default Capability.makeModule(
         state.activeMeeting = undefined;
       },
       onCallStateUpdated: async (callState: CallState) => {
+        const { invokePromise } = context.getCapability(Common.Capability.OperationInvoker);
         const typename = Type.getTypename(Meeting.Meeting);
         const activity = typename ? callState.activities?.[typename] : undefined;
         if (!activity?.payload) {

@@ -31,8 +31,15 @@ export class PluginContextService extends Context.Tag('@dxos/app-framework/Plugi
  * @returns The capability implementation.
  * @throws If no capability is found.
  */
+// TODO(wittjosiah): Add custom tagged errors (Data.TaggedError) for app-framework to enable
+//   type-safe error handling with Effect. Consider CapabilityNotFoundError, ModuleActivationError, etc.
 export const get = <T>(interfaceDef: InterfaceDef<T>): Effect.Effect<T, Error, PluginContextService> =>
-  Effect.flatMap(PluginContextService, (context) => Effect.sync(() => context.getCapability(interfaceDef)));
+  Effect.flatMap(PluginContextService, (context) =>
+    Effect.try({
+      try: () => context.getCapability(interfaceDef),
+      catch: (error) => (error instanceof Error ? error : new Error(String(error))),
+    }),
+  );
 
 /**
  * Get all capabilities from the plugin context for a given interface.

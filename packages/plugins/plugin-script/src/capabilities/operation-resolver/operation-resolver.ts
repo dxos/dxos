@@ -17,7 +17,7 @@ import { ScriptOperation } from '../../types';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    const { invoke } = yield* Capability.get(Common.Capability.OperationInvoker);
+    const context = yield* Capability.PluginContextService;
 
     return Capability.contributes(Common.Capability.OperationResolver, [
       OperationResolver.make({
@@ -58,6 +58,7 @@ export default Capability.makeModule(
         operation: TokenManagerOperation.AccessTokenCreated,
         handler: ({ accessToken }) =>
           Effect.gen(function* () {
+            const { invoke } = yield* Capability.get(Common.Capability.OperationInvoker);
             const scriptTemplates = (defaultScriptsForIntegration[accessToken.source] ?? [])
               .map((id) => templates.find((t) => t.id === id))
               .filter(Predicate.isNotNullable);
@@ -70,7 +71,7 @@ export default Capability.makeModule(
                 props: { accessToken, scriptTemplates },
               });
             }
-          }),
+          }).pipe(Effect.provideService(Capability.PluginContextService, context)),
       }),
     ]);
   }),

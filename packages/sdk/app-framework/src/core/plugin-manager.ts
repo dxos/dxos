@@ -623,7 +623,10 @@ class ManagerImpl implements PluginManager {
         yield* Effect.forkDaemon(
           loadEffect.pipe(
             Effect.tap((result) => Deferred.succeed(deferred, result)),
-            Effect.catchAll((error) => Deferred.fail(deferred, error)),
+            Effect.catchAll((error) => {
+              log.error('module failed to activate', { module: module.id, error });
+              return Deferred.fail(deferred, error);
+            }),
           ),
         );
 

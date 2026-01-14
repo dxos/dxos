@@ -33,7 +33,8 @@ const TRANSCRIBE_AFTER_CHUNKS_AMOUNT = 50;
  */
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    const client = yield* Capability.get(ClientCapabilities.Client);
+    // Get context for lazy capability access in callbacks.
+    const context = yield* Capability.PluginContextService;
 
     const getTranscriber: TranscriptionCapabilities.GetTranscriber = ({
       audioStreamTrack,
@@ -60,6 +61,7 @@ export default Capability.makeModule(
     };
 
     const getTranscriptionManager: TranscriptionCapabilities.GetTranscriptionManager = ({ messageEnricher }) => {
+      const client = context.getCapability(ClientCapabilities.Client);
       const transcriptionManager = new TranscriptionManager({
         edgeClient: client.edge,
         messageEnricher,

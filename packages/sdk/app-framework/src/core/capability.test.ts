@@ -21,6 +21,28 @@ describe('PluginsContext', () => {
     expect(context.getCapabilities(interfaceDef)).toEqual([]);
   });
 
+  it('should throw when getCapability is called and no capability exists', () => {
+    const registry = Registry.make();
+    const context = new Capability.PluginContextImpl({ registry, ...defaultOptions });
+    const interfaceDef = Capability.make<{ example: string }>('@dxos/app-framework/test/example');
+    expect(() => context.getCapability(interfaceDef)).toThrow('No capability found');
+  });
+
+  it.effect('Capability.get should fail when no capability exists', () =>
+    Effect.gen(function* () {
+      const registry = Registry.make();
+      const context = new Capability.PluginContextImpl({ registry, ...defaultOptions });
+      const interfaceDef = Capability.make<{ example: string }>('@dxos/app-framework/test/example');
+
+      const result = yield* Capability.get(interfaceDef).pipe(
+        Effect.provideService(Capability.PluginContextService, context),
+        Effect.either,
+      );
+
+      expect(result._tag).toEqual('Left');
+    }),
+  );
+
   it('should be able to contribute and request capabilities', () => {
     const registry = Registry.make();
     const context = new Capability.PluginContextImpl({ registry, ...defaultOptions });

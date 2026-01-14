@@ -16,9 +16,10 @@ import { meta } from './meta';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    const { invokePromise } = yield* Capability.get(Common.Capability.OperationInvoker);
-    const managerAtom = yield* Capability.atom(Common.Capability.PluginManager);
-    const settingsStoreAtom = yield* Capability.atom(Common.Capability.SettingsStore);
+    // Get context for lazy capability access in callbacks.
+    const context = yield* Capability.PluginContextService;
+    const managerAtom = context.capabilities(Common.Capability.PluginManager);
+    const settingsStoreAtom = context.capabilities(Common.Capability.SettingsStore);
 
     return Capability.contributes(Common.Capability.AppGraphBuilder, [
       GraphBuilder.createExtension({
@@ -28,6 +29,7 @@ export default Capability.makeModule(
           {
             id: meta.id,
             data: async () => {
+              const { invokePromise } = context.getCapability(Common.Capability.OperationInvoker);
               await invokePromise(SettingsOperation.Open, {});
             },
             properties: {

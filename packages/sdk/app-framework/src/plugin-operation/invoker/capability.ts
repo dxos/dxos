@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 
 import * as Common from '../../common';
-import { Capability } from '../../core';
+import { Capability, Plugin } from '../../core';
 
 import * as OperationInvoker from './operation-invoker';
 
@@ -25,9 +25,9 @@ export default Capability.makeModule(
     const invoker = OperationInvoker.make(
       () =>
         Effect.gen(function* () {
-          yield* context.activate(Common.ActivationEvent.SetupOperationResolver);
-          return context.getCapabilities(Common.Capability.OperationResolver).flat();
-        }),
+          yield* Plugin.activate(Common.ActivationEvent.SetupOperationResolver);
+          return (yield* Capability.getAll(Common.Capability.OperationResolver)).flat();
+        }).pipe(Effect.provideService(Capability.PluginContextService, context)),
       managedRuntime,
     );
 

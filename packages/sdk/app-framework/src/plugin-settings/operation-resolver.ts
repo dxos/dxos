@@ -12,7 +12,8 @@ import { SETTINGS_ID, SETTINGS_KEY, SettingsOperation } from './actions';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    const { invoke } = yield* Capability.get(Common.Capability.OperationInvoker);
+    // Get context to provide to handlers so they can use Capability.get().
+    const context = yield* Capability.PluginContextService;
 
     return Capability.contributes(Common.Capability.OperationResolver, [
       //
@@ -22,6 +23,7 @@ export default Capability.makeModule(
         operation: SettingsOperation.Open,
         handler: (input) =>
           Effect.gen(function* () {
+            const { invoke } = yield* Capability.get(Common.Capability.OperationInvoker);
             yield* invoke(Common.LayoutOperation.SwitchWorkspace, { subject: SETTINGS_ID });
             if (input.plugin) {
               // Fire and forget the open operation.
@@ -31,7 +33,7 @@ export default Capability.makeModule(
                 }),
               );
             }
-          }),
+          }).pipe(Effect.provideService(Capability.PluginContextService, context)),
       }),
 
       //
@@ -41,13 +43,14 @@ export default Capability.makeModule(
         operation: SettingsOperation.OpenPluginRegistry,
         handler: () =>
           Effect.gen(function* () {
+            const { invoke } = yield* Capability.get(Common.Capability.OperationInvoker);
             yield* invoke(Common.LayoutOperation.SwitchWorkspace, { subject: SETTINGS_ID });
             yield* Effect.fork(
               invoke(Common.LayoutOperation.Open, {
                 subject: [`${SETTINGS_KEY}:plugins`],
               }),
             );
-          }),
+          }).pipe(Effect.provideService(Capability.PluginContextService, context)),
       }),
     ]);
   }),

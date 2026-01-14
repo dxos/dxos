@@ -21,7 +21,8 @@ const DIRECTORY_TYPE = 'text/directory';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    const { invokePromise } = yield* Capability.get(Common.Capability.OperationInvoker);
+    // Get context for lazy capability access in callbacks.
+    const context = yield* Capability.PluginContextService;
 
     return Capability.contributes(Common.Capability.AppGraphSerializer, [
       {
@@ -45,6 +46,7 @@ export default Capability.makeModule(
           type: DIRECTORY_TYPE,
         }),
         deserialize: async (data) => {
+          const { invokePromise } = context.getCapability(Common.Capability.OperationInvoker);
           const result = await invokePromise(SpaceOperation.Create, { name: data.name, edgeReplication: true });
           return result.data?.space;
         },
@@ -66,6 +68,7 @@ export default Capability.makeModule(
             return;
           }
 
+          const { invokePromise } = context.getCapability(Common.Capability.OperationInvoker);
           const result = await invokePromise(SpaceOperation.AddObject, {
             target: collection,
             object: Obj.make(Collection.Collection, { name: data.name, objects: [] }),

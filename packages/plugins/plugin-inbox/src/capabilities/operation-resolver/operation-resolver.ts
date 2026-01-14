@@ -16,14 +16,15 @@ import { InboxOperation } from '../../types';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    const { invoke } = yield* Capability.get(Common.Capability.OperationInvoker);
-    const client = yield* Capability.get(ClientCapabilities.Client);
+    const context = yield* Capability.PluginContextService;
 
     return Capability.contributes(Common.Capability.OperationResolver, [
       OperationResolver.make({
         operation: InboxOperation.ExtractContact,
         handler: ({ db, actor }) =>
           Effect.gen(function* () {
+            const { invoke } = yield* Capability.get(Common.Capability.OperationInvoker);
+            const client = yield* Capability.get(ClientCapabilities.Client);
             const space = client.spaces.get(db.spaceId);
             invariant(space, 'Space not found');
 
@@ -112,7 +113,7 @@ export default Capability.makeModule(
               target: db,
               hidden: true,
             });
-          }),
+          }).pipe(Effect.provideService(Capability.PluginContextService, context)),
       }),
       OperationResolver.make({
         operation: InboxOperation.RunAssistant,

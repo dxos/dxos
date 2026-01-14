@@ -12,8 +12,7 @@ import { ATTENDABLE_PATH_SEPARATOR, DeckOperation, PLANK_COMPANION_TYPE } from '
 import { CreateAtom, GraphBuilder } from '@dxos/plugin-graph';
 import { COMPOSER_SPACE_LOCK } from '@dxos/plugin-space';
 import { SpaceOperation } from '@dxos/plugin-space/types';
-import { ThreadCapabilities } from '@dxos/plugin-thread';
-import { Channel } from '@dxos/plugin-thread/types';
+import { Channel, ThreadCapabilities } from '@dxos/plugin-thread/types';
 import { SpaceState, getSpace } from '@dxos/react-client/echo';
 
 import { meta } from '../../meta';

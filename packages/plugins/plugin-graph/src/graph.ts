@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 import * as Record from 'effect/Record';
 
 import { Capability, Common } from '@dxos/app-framework';
-import { type BuilderExtensions, Graph, GraphBuilder, Node } from '@dxos/app-graph';
+import { Graph, GraphBuilder, Node } from '@dxos/app-graph';
 
 // TODO(wittjosiah): Remove or restore graph caching.
 // import { meta } from './meta';
@@ -25,7 +25,7 @@ export default Capability.makeModule(
 
     const unsubscribe = registry.subscribe(
       extensionsAtom,
-      (extensions: BuilderExtensions[]) => {
+      (extensions) => {
         const next = GraphBuilder.flattenExtensions(extensions);
         const current = Record.values(registry.get(builder.extensions));
         const removed = current.filter(({ id }) => !next.some(({ id: nextId }) => nextId === id));

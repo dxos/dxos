@@ -12,9 +12,11 @@ import { WnfsOperation } from '../../types';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    const { invoke } = yield* Capability.get(Common.Capability.OperationInvoker);
+    // Get context for lazy capability access in callbacks.
+    const context = yield* Capability.PluginContextService;
 
     return Capability.contributes(Common.Capability.FileUploader, (db, file) => {
+      const { invoke } = context.getCapability(Common.Capability.OperationInvoker);
       const program = Effect.gen(function* () {
         const fileInfo = yield* invoke(WnfsOperation.Upload, { db, file });
         const createResult = yield* invoke(WnfsOperation.Create, fileInfo);

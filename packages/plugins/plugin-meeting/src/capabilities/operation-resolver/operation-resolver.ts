@@ -19,10 +19,10 @@ import { Meeting, MeetingCapabilities, MeetingOperation } from '../../types';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    const { invoke } = yield* Capability.get(Common.Capability.OperationInvoker);
+    const context = yield* Capability.PluginContextService;
+    // These are accessed eagerly because they're used in sync handlers or need consistent references
     const callManager = yield* Capability.get(ThreadCapabilities.CallManager);
     const state = yield* Capability.get(MeetingCapabilities.State);
-    const client = yield* Capability.get(ClientCapabilities.Client);
 
     return Capability.contributes(Common.Capability.OperationResolver, [
       OperationResolver.make({
@@ -41,6 +41,7 @@ export default Capability.makeModule(
         operation: MeetingOperation.Create,
         handler: ({ name, channel }) =>
           Effect.gen(function* () {
+            const { invoke } = yield* Capability.get(Common.Capability.OperationInvoker);
             const space = getSpace(channel);
             invariant(space);
             const { object: transcript } = yield* invoke(TranscriptOperation.Create, { space });
@@ -56,7 +57,7 @@ export default Capability.makeModule(
             });
 
             return { object: meeting };
-          }),
+          }).pipe(Effect.provideService(Capability.PluginContextService, context)),
       }),
       OperationResolver.make({
         operation: MeetingOperation.SetActive,
@@ -73,6 +74,7 @@ export default Capability.makeModule(
         operation: MeetingOperation.HandlePayload,
         handler: ({ meetingId, transcriptDxn, transcriptionEnabled }) =>
           Effect.gen(function* () {
+            const client = yield* Capability.get(ClientCapabilities.Client);
             const { spaceId, objectId } = meetingId ? parseId(meetingId) : {};
             const space = spaceId && client.spaces.get(spaceId);
             const meeting =
@@ -91,7 +93,7 @@ export default Capability.makeModule(
             if (state.transcriptionManager) {
               yield* Effect.promise(() => state.transcriptionManager!.setEnabled(enabled));
             }
-          }),
+          }).pipe(Effect.provideService(Capability.PluginContextService, context)),
       }),
       OperationResolver.make({
         operation: MeetingOperation.Summarize,

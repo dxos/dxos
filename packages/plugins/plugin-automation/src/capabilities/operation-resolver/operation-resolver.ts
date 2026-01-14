@@ -16,13 +16,14 @@ import { AutomationOperation } from '../../types';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    const { invoke } = yield* Capability.get(Common.Capability.OperationInvoker);
+    const context = yield* Capability.PluginContextService;
 
     return Capability.contributes(Common.Capability.OperationResolver, [
       OperationResolver.make({
         operation: AutomationOperation.CreateTriggerFromTemplate,
         handler: ({ db, template, enabled = false, scriptName, input }) =>
           Effect.gen(function* () {
+            const { invoke } = yield* Capability.get(Common.Capability.OperationInvoker);
             const trigger = Trigger.make({ enabled, input });
 
             // TODO(wittjosiah): Factor out function lookup by script name?
@@ -68,7 +69,7 @@ export default Capability.makeModule(
               subject: [`automation-settings${ATTENDABLE_PATH_SEPARATOR}${db.spaceId}`],
               workspace: db.spaceId,
             });
-          }),
+          }).pipe(Effect.provideService(Capability.PluginContextService, context)),
       }),
     ]);
   }),

@@ -72,7 +72,6 @@ const traverseFileSystem = async (
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     const context = yield* Capability.PluginContextService;
-    const { invoke } = yield* Capability.get(Common.Capability.OperationInvoker);
     const { explore } = yield* Capability.get(Common.Capability.AppGraph);
     const mutableState = yield* Capability.get(FileCapabilities.MutableState);
     const serializersAtom = yield* Capability.atom(Common.Capability.AppGraphSerializer);
@@ -153,6 +152,7 @@ export default Capability.makeModule(
         handler: () =>
           Effect.gen(function* () {
             if (!mutableState.rootHandle) {
+              const { invoke } = yield* Capability.get(Common.Capability.OperationInvoker);
               yield* invoke(SettingsOperation.Open, { plugin: meta.id });
               return;
             }
@@ -180,7 +180,7 @@ export default Capability.makeModule(
             );
 
             mutableState.lastExport = Date.now();
-          }),
+          }).pipe(Effect.provideService(Capability.PluginContextService, context)),
       }),
       OperationResolver.make({
         operation: LocalFilesOperation.Import,

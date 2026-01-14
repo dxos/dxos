@@ -20,7 +20,8 @@ import { Channel, ThreadCapabilities, ThreadOperation } from '../../types';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    const { invoke } = yield* Capability.get(Common.Capability.OperationInvoker);
+    const context = yield* Capability.PluginContextService;
+    // State is accessed eagerly because it's used in sync handlers and needs consistent reference
     const { state } = yield* Capability.get(ThreadCapabilities.MutableState);
 
     return [
@@ -133,6 +134,7 @@ export default Capability.makeModule(
                 return;
               }
 
+              const { invoke } = yield* Capability.get(Common.Capability.OperationInvoker);
               const collection = Collection.makeManaged({ key: Type.getTypename(Channel.Channel) });
               rootCollection.objects.push(Ref.make(collection));
 
@@ -141,7 +143,7 @@ export default Capability.makeModule(
                 spaceId: space.id,
               });
               space.db.add(channel);
-            }),
+            }).pipe(Effect.provideService(Capability.PluginContextService, context)),
         }),
 
         //
@@ -151,6 +153,7 @@ export default Capability.makeModule(
           operation: ThreadOperation.Create,
           handler: ({ name, anchor: _anchor, subject }) =>
             Effect.gen(function* () {
+              const { invoke } = yield* Capability.get(Common.Capability.OperationInvoker);
               const subjectId = Obj.getDXN(subject).toString();
               const thread = Thread.make({ name });
               const anchor = Relation.make(AnchoredTo.AnchoredTo, {
@@ -172,7 +175,7 @@ export default Capability.makeModule(
                 primary: subjectId,
                 companion: `${subjectId}${ATTENDABLE_PATH_SEPARATOR}comments`,
               });
-            }),
+            }).pipe(Effect.provideService(Capability.PluginContextService, context)),
         }),
 
         //
@@ -227,6 +230,7 @@ export default Capability.makeModule(
           operation: ThreadOperation.AddMessage,
           handler: ({ anchor, subject, sender, text }) =>
             Effect.gen(function* () {
+              const { invoke } = yield* Capability.get(Common.Capability.OperationInvoker);
               const thread = Relation.getSource(anchor) as Thread.Thread;
               const scheduler = yield* FollowupScheduler.Service;
               const subjectId = Obj.getDXN(subject).toString();
@@ -272,7 +276,7 @@ export default Capability.makeModule(
                   messageLength: text.length,
                 },
               });
-            }),
+            }).pipe(Effect.provideService(Capability.PluginContextService, context)),
         }),
 
         //
@@ -282,6 +286,7 @@ export default Capability.makeModule(
           operation: ThreadOperation.DeleteMessage,
           handler: ({ subject, anchor, messageId }) =>
             Effect.gen(function* () {
+              const { invoke } = yield* Capability.get(Common.Capability.OperationInvoker);
               const thread = Relation.getSource(anchor) as Thread.Thread;
               const scheduler = yield* FollowupScheduler.Service;
               const db = Obj.getDatabase(subject);
@@ -313,7 +318,7 @@ export default Capability.makeModule(
 
               // Return data needed for undo.
               return { message: msg, messageIndex: msgIndex };
-            }),
+            }).pipe(Effect.provideService(Capability.PluginContextService, context)),
         }),
 
         //

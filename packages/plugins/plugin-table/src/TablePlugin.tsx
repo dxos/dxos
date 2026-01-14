@@ -35,24 +35,24 @@ export const TablePlugin = Plugin.define(meta).pipe(
   Plugin.addModule({
     id: 'on-space-created',
     activatesOn: SpaceEvents.SpaceCreated,
-    activate: (context) =>
-      Effect.succeed(
-        Capability.contributes(SpaceCapabilities.OnCreateSpace, (params) => {
-          const { invoke } = context.getCapability(Common.Capability.OperationInvoker);
-          return invoke(TableOperation.OnCreateSpace, params);
-        }),
-      ),
+    activate: Effect.fnUntraced(function* () {
+      const context = yield* Capability.PluginContextService;
+      return Capability.contributes(SpaceCapabilities.OnCreateSpace, (params) => {
+        const { invoke } = context.getCapability(Common.Capability.OperationInvoker);
+        return invoke(TableOperation.OnCreateSpace, params);
+      });
+    }),
   }),
   Plugin.addModule({
     id: 'on-schema-added',
     activatesOn: SpaceEvents.SchemaAdded,
-    activate: (context) =>
-      Effect.succeed(
-        Capability.contributes(SpaceCapabilities.OnSchemaAdded, ({ db, schema, show }) => {
-          const { invoke } = context.getCapability(Common.Capability.OperationInvoker);
-          return invoke(TableOperation.OnSchemaAdded, { db, schema, show });
-        }),
-      ),
+    activate: Effect.fnUntraced(function* () {
+      const context = yield* Capability.PluginContextService;
+      return Capability.contributes(SpaceCapabilities.OnSchemaAdded, ({ db, schema, show }) => {
+        const { invoke } = context.getCapability(Common.Capability.OperationInvoker);
+        return invoke(TableOperation.OnSchemaAdded, { db, schema, show });
+      });
+    }),
   }),
   Common.Plugin.addSurfaceModule({ activate: ReactSurface }),
   Common.Plugin.addOperationResolverModule({ activate: OperationResolver }),

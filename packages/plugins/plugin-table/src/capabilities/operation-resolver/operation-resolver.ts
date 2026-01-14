@@ -16,25 +16,27 @@ import { TableOperation } from '../../types';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    const { invoke } = yield* Capability.get(Common.Capability.OperationInvoker);
+    const context = yield* Capability.PluginContextService;
 
     return Capability.contributes(Common.Capability.OperationResolver, [
       OperationResolver.make({
         operation: TableOperation.OnCreateSpace,
         handler: ({ space }) =>
           Effect.gen(function* () {
+            const { invoke } = yield* Capability.get(Common.Capability.OperationInvoker);
             const { object } = yield* invoke(TableOperation.Create, {
               db: space.db,
               typename: Task.Task.typename,
             });
             space.db.add(object);
             space.properties.staticRecords = [Task.Task.typename];
-          }),
+          }).pipe(Effect.provideService(Capability.PluginContextService, context)),
       }),
       OperationResolver.make({
         operation: TableOperation.OnSchemaAdded,
         handler: ({ db, schema, show = true }) =>
           Effect.gen(function* () {
+            const { invoke } = yield* Capability.get(Common.Capability.OperationInvoker);
             const { object } = yield* invoke(TableOperation.Create, {
               db,
               typename: Type.getTypename(schema),
@@ -46,7 +48,7 @@ export default Capability.makeModule(
                 subject: [Obj.getDXN(object).toString()],
               });
             }
-          }),
+          }).pipe(Effect.provideService(Capability.PluginContextService, context)),
       }),
       OperationResolver.make({
         operation: TableOperation.Create,
@@ -62,6 +64,7 @@ export default Capability.makeModule(
         operation: TableOperation.AddRow,
         handler: ({ view, data }) =>
           Effect.gen(function* () {
+            const { invoke } = yield* Capability.get(Common.Capability.OperationInvoker);
             const db = Obj.getDatabase(view);
             invariant(db);
             const typename = view.query ? getTypenameFromQuery(view.query.ast) : undefined;
@@ -70,7 +73,7 @@ export default Capability.makeModule(
             invariant(schema);
             const object = Obj.make(schema, data);
             yield* invoke(SpaceOperation.AddObject, { target: db, object, hidden: true });
-          }),
+          }).pipe(Effect.provideService(Capability.PluginContextService, context)),
       }),
     ]);
   }),
