@@ -6,9 +6,8 @@ import * as ManagedRuntime from 'effect/ManagedRuntime';
 import { Feed } from './feed';
 import { Block } from './protocol';
 import { SpaceId } from '@dxos/keys';
-import { SqlFeedStore } from './feed-sql';
 
-describe('Feed Sync (SQL)', () => {
+describe('Feed Sync V2 (RPC)', () => {
   const makePeer = () => {
     const layer = SqliteClient.layer({ filename: ':memory:' });
     const runtime = ManagedRuntime.make(layer);
@@ -16,124 +15,75 @@ describe('Feed Sync (SQL)', () => {
     return { run };
   };
 
-  it('should sync from source to destination (simulated network)', async () => {
-    const source = makePeer();
-    const dest = makePeer();
+  it('should sync blocks from server to client via RPC', async () => {
+    const server = makePeer();
+    const client = makePeer();
 
     const spaceId = SpaceId.random();
     const feedId = '01H1V1X1X1X1X1X1X1X1X1X1X3';
 
-    // Source setup
-    await source.run(
+    // Server setup: Append blocks
+    await server.run(
       Effect.gen(function* () {
-        const store = new SqlFeedStore(spaceId, feedId);
-        const feed = new Feed(store, spaceId, feedId);
-
+        const feed = new Feed(spaceId);
         const blocks: Block[] = [
           {
-            actorId: 'a1',
-            sequence: 0,
+            actorId: feedId,
+            sequence: 1,
             predActorId: null,
             predSequence: null,
-            position: 1,
+            position: null,
             timestamp: 100,
             data: new Uint8Array([1]),
           },
           {
-            actorId: 'a1',
-            sequence: 1,
-            predActorId: 'a1',
-            predSequence: 0,
-            position: 2,
+            actorId: feedId,
+            sequence: 2,
+            predActorId: feedId,
+            predSequence: 1,
+            position: null,
             timestamp: 200,
             data: new Uint8Array([2]),
           },
         ];
-        yield* feed.append(blocks);
+        yield* feed.append({ requestId: 'req-0', blocks });
       }),
     );
 
-    // Sync exchange
-    // 1. Dest generates request
-    const req = await dest.run(
+    // Sync Simulation: Client polls Server
+    // 1. Client subscribes
+    const subId = await server.run(
       Effect.gen(function* () {
-        const store = new SqlFeedStore(spaceId, feedId);
-        const feed = new Feed(store, spaceId, feedId);
-        return yield* feed.generateSyncMessage();
+        // Wait, we flattened it. Tests need to update to NOT use SqlFeedStore!
+        // I will fix the class instantiation in a moment.
+        const feed = new Feed(spaceId);
+        const res = yield* feed.subscribe({ requestId: 'req-sub', feedIds: [feedId] });
+        return res.subscriptionId;
       }),
     );
 
-    // 2. Source responds
-    const res = await source.run(
+    // 2. Client queries using subscription
+    const blocks = await server.run(
       Effect.gen(function* () {
-        const store = new SqlFeedStore(spaceId, feedId);
-        const feed = new Feed(store, spaceId, feedId);
-        return yield* feed.receiveSyncMessage(req);
+        const feed = new Feed(spaceId); // Updated class usage
+        const res = yield* feed.query({ requestId: 'req-query', subscriptionId: subId, cursor: 0 });
+        return res.blocks;
       }),
     );
 
-    // 3. Dest receives response
-    await dest.run(
-      Effect.gen(function* () {
-        const store = new SqlFeedStore(spaceId, feedId);
-        const feed = new Feed(store, spaceId, feedId);
-        yield* feed.receiveSyncMessage(res);
+    expect(blocks.length).toBe(2);
+    expect(blocks[0].sequence).toBe(1);
 
-        const destBlocks = yield* feed.getBlocks({ after: null, to: null });
-        expect(destBlocks.length).toBe(2);
-        expect(destBlocks[0].position).toBe(1);
-        expect(destBlocks[1].position).toBe(2);
-      }),
-    );
-  });
-
-  it('should push unpositioned blocks', async () => {
-    const client = makePeer();
-    const server = makePeer();
-
-    const spaceId = SpaceId.random();
-    const feedId = '01H1V1X1X1X1X1X1X1X1X1X1X4';
-
-    // Client adds block
+    // 3. Client stores them (Verify client persistence)
     await client.run(
       Effect.gen(function* () {
-        const store = new SqlFeedStore(spaceId, feedId);
-        const feed = new Feed(store, spaceId, feedId);
-        const block: Block = {
-          actorId: 'c1',
-          sequence: 0,
-          predActorId: null,
-          predSequence: null,
-          position: null,
-          timestamp: 100,
-          data: new Uint8Array([0]),
-        };
-        yield* feed.append([block]);
-      }),
-    );
+        const feed = new Feed(spaceId); // Updated class usage
+        // Client appends them.
+        yield* feed.append({ requestId: 'req-push', blocks });
 
-    // Client -> Server
-    const clientMsg = await client.run(
-      Effect.gen(function* () {
-        const store = new SqlFeedStore(spaceId, feedId);
-        const feed = new Feed(store, spaceId, feedId);
-        return yield* feed.generateSyncMessage();
-      }),
-    );
-
-    expect(clientMsg.blocks.length).toBe(1);
-
-    // Server receives
-    await server.run(
-      Effect.gen(function* () {
-        const store = new SqlFeedStore(spaceId, feedId);
-        const feed = new Feed(store, spaceId, feedId);
-        yield* feed.receiveSyncMessage(clientMsg);
-
-        // Server back to Client
-        const serverMsg = yield* feed.generateSyncMessage();
-        expect(serverMsg.blocks.length).toBe(1);
-        expect(serverMsg.blocks[0].actorId).toBe('c1');
+        // Verify
+        const myBlocks = yield* feed.query({ requestId: 'req-verify', feedIds: [feedId], cursor: 0 });
+        expect(myBlocks.blocks.length).toBe(2);
       }),
     );
   });

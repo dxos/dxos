@@ -1,98 +1,79 @@
 import * as SqliteClient from '@effect/sql-sqlite-node/SqliteClient';
 import { describe, expect, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
-import * as Layer from 'effect/Layer';
 import { Feed } from './feed';
 import { Block } from './protocol';
 import { SpaceId } from '@dxos/keys';
-import { SqlFeedStore } from './feed-sql';
-import { InMemoryFeedStore } from './feed-memory';
-import { FeedStore } from './feed-store';
 
 const TestLayer = SqliteClient.layer({
   filename: ':memory:',
 });
 
-const runTests = (
-  name: string,
-  createStore: (spaceId: string, feedId: string) => Effect.Effect<FeedStore, any, any>,
-) => {
-  describe(`Feed Persistence (${name})`, () => {
-    it.effect('should open a feed and append/read blocks', () =>
-      Effect.gen(function* () {
-        const spaceId = SpaceId.random();
-        const feedId = '01H1V1X1X1X1X1X1X1X1X1X1X1';
+describe('Feed V2', () => {
+  it.effect('should append and query blocks via RPC', () =>
+    Effect.gen(function* () {
+      const spaceId = SpaceId.random();
+      const feedId = '01H1V1X1X1X1X1X1X1X1X1X1X1';
 
-        const store = yield* createStore(spaceId, feedId);
-        const feed = new Feed(store, spaceId, feedId);
+      const feed = new Feed(spaceId);
 
-        // Create a block
-        const block: Block = {
-          actorId: 'actor1',
-          sequence: 0,
-          predActorId: null,
-          predSequence: null,
-          position: 1,
-          timestamp: Date.now(),
-          data: new Uint8Array([1, 2, 3]),
-        };
+      // Append
+      const block: Block = {
+        actorId: feedId,
+        sequence: 123, // Author sequence provided by peer
+        predActorId: null,
+        predSequence: null,
+        position: null, // Input doesn't have position
+        timestamp: Date.now(),
+        data: new Uint8Array([1, 2, 3]),
+      };
 
-        const block2: Block = {
-          actorId: 'actor1',
-          sequence: 1,
-          predActorId: 'actor1',
-          predSequence: 0,
-          position: 2,
-          timestamp: Date.now(),
-          data: new Uint8Array([4, 5, 6]),
-        };
+      const appendRes = yield* feed.append({ requestId: 'req-1', blocks: [block] });
+      expect(appendRes.positions.length).toBe(1);
+      expect(appendRes.positions[0]).toBeGreaterThan(0);
+      expect(appendRes.requestId).toBe('req-1');
 
-        // Append
-        yield* feed.append([block, block2]);
+      // Query by feedId
+      const queryRes = yield* feed.query({ requestId: 'req-2', feedIds: [feedId], cursor: 0 }); // Use cursor '0' to get everything
+      expect(queryRes.blocks.length).toBe(1);
+      expect(queryRes.blocks[0].position).toBe(appendRes.positions[0]);
+      expect(queryRes.blocks[0].sequence).toBe(123); // Verify Author Sequence is preserved
+      expect(queryRes.requestId).toBe('req-2');
+    }).pipe(Effect.provide(TestLayer)),
+  );
 
-        // Query
-        const blocks = yield* feed.getBlocks({ after: 0, to: null });
+  it.effect('should use subscriptions', () =>
+    Effect.gen(function* () {
+      const spaceId = SpaceId.random();
+      const feedId = '01H1V1X1X1X1X1X1X1X1X1X1X2';
 
-        expect(blocks.length).toBe(2);
-        expect(blocks[0].sequence).toBe(0);
-        expect(blocks[1].sequence).toBe(1);
-        expect(blocks[0].data).toEqual(new Uint8Array([1, 2, 3]));
-      }).pipe(Effect.provide(TestLayer)),
-    );
+      const feed = new Feed(spaceId);
 
-    it.effect('should handle unpositioned blocks', () =>
-      Effect.gen(function* () {
-        const spaceId = SpaceId.random();
-        const feedId = '01H1V1X1X1X1X1X1X1X1X1X1X2';
+      // Append some data
+      yield* feed.append({
+        requestId: 'req-1',
+        blocks: [
+          {
+            actorId: feedId,
+            sequence: 1,
+            predActorId: null,
+            predSequence: null,
+            position: null,
+            timestamp: Date.now(),
+            data: new Uint8Array([1]),
+          },
+        ],
+      });
 
-        const store = yield* createStore(spaceId, feedId);
-        const feed = new Feed(store, spaceId, feedId);
+      // Subscribe
+      const subRes = yield* feed.subscribe({ requestId: 'req-2', feedIds: [feedId] });
+      expect(subRes.subscriptionId).toBeDefined();
+      expect(subRes.requestId).toBe('req-2');
 
-        const unpositionedBlock: Block = {
-          actorId: 'actor2',
-          sequence: 0,
-          predActorId: null,
-          predSequence: null,
-          position: null,
-          timestamp: Date.now(),
-          data: new Uint8Array([9, 9]),
-        };
-
-        yield* feed.append([unpositionedBlock]);
-
-        // Standard query gets positioned blocks
-        const positionedBlocks = yield* feed.getBlocks({ after: null, to: null });
-        expect(positionedBlocks.length).toBe(0);
-
-        // Check sync generation (should pick up unpositioned blocks)
-        const syncMsg = yield* feed.generateSyncMessage();
-        expect(syncMsg.blocks.length).toBe(1);
-        expect(syncMsg.blocks[0].actorId).toBe('actor2');
-        expect(syncMsg.blocks[0].position).toBeNull();
-      }).pipe(Effect.provide(TestLayer)),
-    );
-  });
-};
-
-runTests('SQL', (spaceId, feedId) => Effect.succeed(new SqlFeedStore(spaceId, feedId)));
-runTests('InMemory', () => Effect.succeed(new InMemoryFeedStore()));
+      // Query via Subscription
+      const queryRes = yield* feed.query({ requestId: 'req-3', subscriptionId: subRes.subscriptionId, cursor: 0 });
+      expect(queryRes.blocks.length).toBe(1);
+      expect(queryRes.requestId).toBe('req-3');
+    }).pipe(Effect.provide(TestLayer)),
+  );
+});
