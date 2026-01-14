@@ -563,11 +563,13 @@ describe('AutomergeRepo', () => {
     });
 
     test('reload document with flush', async () => {
-      const storage = await createLevelAdapter();
+      const path = createTmpPath();
       const text = 'Hello World!';
       let url: AutomergeUrl;
 
       {
+        const level = createTestLevel(path);
+        const storage = await createLevelAdapter(level);
         const repo = new Repo({ network: [], storage });
         const handle = await repo.create2<{ text: string }>();
         url = handle.url;
@@ -575,13 +577,17 @@ describe('AutomergeRepo', () => {
           doc.text = text;
         });
         await repo.flush([handle.documentId]);
+        await level.close();
       }
 
       {
+        const level = createTestLevel(path);
+        const storage = await createLevelAdapter(level);
         const repo = new Repo({ network: [], storage });
         const handle = await repo.find<{ text: string }>(url);
         await handle.whenReady();
         expect(handle.doc()?.text).to.equal(text);
+        await level.close();
       }
     });
 
@@ -828,8 +834,7 @@ describe('AutomergeRepo', () => {
     });
   });
 
-  const createLevelAdapter = async () => {
-    const level = createTestLevel();
+  const createLevelAdapter = async (level = createTestLevel()) => {
     const storage = new LevelDBStorageAdapter({ db: level.sublevel('automerge') });
     await openAndClose(level, storage);
     return storage;
@@ -970,3 +975,7 @@ const connectPeers = async (
 };
 
 type TeleportTestPeer = { repo: Repo; meshAdapter: MeshEchoReplicator; teleport: TeleportPeer };
+
+export const createTmpPath = (): string => {
+  return `/tmp/dxos-${PublicKey.random().toHex()}`;
+};
