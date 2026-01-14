@@ -147,6 +147,9 @@ catalogs:
     '@dxos/log':
       specifier: ^0.8.3
       version: 0.8.3
+    '@dxos/wa-sqlite':
+      specifier: ^0.2.1
+      version: 0.2.1
     '@effect-atom/atom':
       specifier: ^0.4.10
       version: 0.4.10
@@ -204,6 +207,12 @@ catalogs:
     '@effect/sql':
       specifier: 0.48.6
       version: 0.48.6
+    '@effect/sql-sqlite-node':
+      specifier: 0.49.1
+      version: 0.49.1
+    '@effect/sql-sqlite-wasm':
+      specifier: 0.49.0
+      version: 0.49.0
     '@effect/typeclass':
       specifier: 0.38.0
       version: 0.38.0
@@ -1900,7 +1909,7 @@ catalogs:
       specifier: ^5.1.4
       version: 5.1.4
     vitest:
-      specifier: ^3.2.4
+      specifier: 3.2.4
       version: 3.2.4
     wait-on:
       specifier: ^8.0.3
@@ -1971,6 +1980,8 @@ catalogs:
 
 overrides:
   '@automerge/automerge': 3.2.1
+  '@effect/wa-sqlite': npm:@dxos/wa-sqlite@^0.2.1
+  better-sqlite3: 12.6.0
   '@lezer/lr': ^1.4.2
   '@types/node': 22.10.2
   '@types/react': ~19.2.7
@@ -3937,6 +3948,30 @@ importers:
         specifier: 'catalog:'
         version: 2.1.0
 
+  packages/common/sql-sqlite-wasm:
+    dependencies:
+      '@dxos/wa-sqlite':
+        specifier: 'catalog:'
+        version: 0.2.1
+      '@effect/experimental':
+        specifier: 'catalog:'
+        version: 0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2)
+      '@effect/platform':
+        specifier: 'catalog:'
+        version: 0.93.6(effect@3.19.11)
+      '@effect/sql':
+        specifier: 'catalog:'
+        version: 0.48.6(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)
+      '@effect/sql-sqlite-node':
+        specifier: 'catalog:'
+        version: 0.49.1(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/platform@0.93.6(effect@3.19.11))(@effect/sql@0.48.6(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11))(effect@3.19.11)
+      '@effect/sql-sqlite-wasm':
+        specifier: 'catalog:'
+        version: 0.49.0(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/sql@0.48.6(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11))(effect@3.19.11)
+      effect:
+        specifier: 'catalog:'
+        version: 3.19.11
+
   packages/common/storybook-addon-logger:
     dependencies:
       '@dxos/log':
@@ -4772,6 +4807,9 @@ importers:
       '@dxos/protocols':
         specifier: workspace:*
         version: link:../../protocols
+      '@dxos/sql-sqlite':
+        specifier: workspace:*
+        version: link:../../../common/sql-sqlite-wasm
       '@dxos/teleport':
         specifier: workspace:*
         version: link:../../mesh/teleport
@@ -4781,6 +4819,18 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../../../common/util
+      '@effect/experimental':
+        specifier: 'catalog:'
+        version: 0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2)
+      '@effect/sql':
+        specifier: 'catalog:'
+        version: 0.48.6(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)
+      '@effect/sql-sqlite-node':
+        specifier: 'catalog:'
+        version: 0.49.1(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/platform@0.93.6(effect@3.19.11))(@effect/sql@0.48.6(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11))(effect@3.19.11)
+      '@effect/sql-sqlite-wasm':
+        specifier: 'catalog:'
+        version: 0.49.0(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/sql@0.48.6(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11))(effect@3.19.11)
       effect:
         specifier: 'catalog:'
         version: 3.19.11
@@ -4879,6 +4929,9 @@ importers:
       '@dxos/edge-client':
         specifier: workspace:*
         version: link:../../mesh/edge-client
+      '@dxos/effect':
+        specifier: workspace:*
+        version: link:../../../common/effect
       '@dxos/errors':
         specifier: workspace:*
         version: link:../../../common/errors
@@ -4888,6 +4941,9 @@ importers:
       '@dxos/hypercore':
         specifier: workspace:*
         version: link:../../../common/hypercore
+      '@dxos/index-core':
+        specifier: workspace:*
+        version: link:../index-core
       '@dxos/indexing':
         specifier: workspace:*
         version: link:../indexing
@@ -4948,6 +5004,9 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../../../common/util
+      '@effect/sql':
+        specifier: 'catalog:'
+        version: 0.48.6(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)
       crc-32:
         specifier: 'catalog:'
         version: 1.2.2
@@ -5133,6 +5192,52 @@ importers:
       vitest:
         specifier: 'catalog:'
         version: 3.2.4(@types/debug@4.1.12)(@types/node@22.10.2)(@vitest/browser@3.2.4)(@vitest/ui@3.2.4)(happy-dom@13.3.4)(jiti@2.6.1)(jsdom@27.0.0(canvas@3.2.0)(postcss@8.5.6))(terser@5.19.2)(tsx@4.21.0)(yaml@2.8.2)
+
+  packages/core/echo/index-core:
+    dependencies:
+      '@dxos/async':
+        specifier: 'workspace:'
+        version: link:../../../common/async
+      '@dxos/context':
+        specifier: 'workspace:'
+        version: link:../../../common/context
+      '@dxos/debug':
+        specifier: 'workspace:'
+        version: link:../../../common/debug
+      '@dxos/echo':
+        specifier: 'workspace:'
+        version: link:../echo
+      '@dxos/echo-protocol':
+        specifier: 'workspace:'
+        version: link:../echo-protocol
+      '@dxos/effect':
+        specifier: 'workspace:'
+        version: link:../../../common/effect
+      '@dxos/invariant':
+        specifier: 'workspace:'
+        version: link:../../../common/invariant
+      '@dxos/keys':
+        specifier: 'workspace:'
+        version: link:../../../common/keys
+      '@dxos/log':
+        specifier: 'workspace:'
+        version: link:../../../common/log
+      '@effect/experimental':
+        specifier: 'catalog:'
+        version: 0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2)
+      '@effect/platform':
+        specifier: 'catalog:'
+        version: 0.93.6(effect@3.19.11)
+      '@effect/sql':
+        specifier: 'catalog:'
+        version: 0.48.6(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)
+      effect:
+        specifier: 'catalog:'
+        version: 3.19.11
+    devDependencies:
+      '@effect/sql-sqlite-node':
+        specifier: 'catalog:'
+        version: 0.49.1(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/platform@0.93.6(effect@3.19.11))(@effect/sql@0.48.6(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11))(effect@3.19.11)
 
   packages/core/echo/indexing:
     dependencies:
@@ -9073,6 +9178,9 @@ importers:
       '@dxos/react-ui-editor':
         specifier: workspace:*
         version: link:../../ui/react-ui-editor
+      '@dxos/react-ui-form':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-form
       '@dxos/react-ui-grid':
         specifier: workspace:*
         version: link:../../ui/react-ui-grid
@@ -11619,6 +11727,9 @@ importers:
       '@dxos/live-object':
         specifier: workspace:*
         version: link:../../core/echo/live-object
+      '@dxos/log':
+        specifier: workspace:*
+        version: link:../../common/log
       '@dxos/plugin-graph':
         specifier: workspace:*
         version: link:../plugin-graph
@@ -13704,6 +13815,9 @@ importers:
       '@dxos/rpc-tunnel':
         specifier: workspace:*
         version: link:../../core/mesh/rpc-tunnel
+      '@dxos/sql-sqlite':
+        specifier: workspace:*
+        version: link:../../common/sql-sqlite-wasm
       '@dxos/timeframe':
         specifier: workspace:*
         version: link:../../common/timeframe
@@ -13716,6 +13830,15 @@ importers:
       '@dxos/websocket-rpc':
         specifier: workspace:*
         version: link:../../core/mesh/websocket-rpc
+      '@effect/experimental':
+        specifier: 'catalog:'
+        version: 0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2)
+      '@effect/sql':
+        specifier: 'catalog:'
+        version: 0.48.6(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)
+      '@effect/sql-sqlite-wasm':
+        specifier: 'catalog:'
+        version: 0.49.0(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/sql@0.48.6(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11))(effect@3.19.11)
       base-x:
         specifier: 'catalog:'
         version: 3.0.9
@@ -13840,6 +13963,9 @@ importers:
       '@dxos/edge-client':
         specifier: workspace:*
         version: link:../../core/mesh/edge-client
+      '@dxos/effect':
+        specifier: workspace:*
+        version: link:../../common/effect
       '@dxos/feed-store':
         specifier: workspace:*
         version: link:../../common/feed-store
@@ -13903,12 +14029,27 @@ importers:
       '@dxos/websocket-rpc':
         specifier: workspace:*
         version: link:../../core/mesh/websocket-rpc
+      '@effect/experimental':
+        specifier: 'catalog:'
+        version: 0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2)
+      '@effect/sql':
+        specifier: 'catalog:'
+        version: 0.48.6(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)
+      '@effect/sql-sqlite-node':
+        specifier: 'catalog:'
+        version: 0.49.1(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/platform@0.93.6(effect@3.19.11))(@effect/sql@0.48.6(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11))(effect@3.19.11)
+      '@effect/sql-sqlite-wasm':
+        specifier: 'catalog:'
+        version: 0.49.0(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/sql@0.48.6(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11))(effect@3.19.11)
       '@obsidize/tar-browserify':
         specifier: 'catalog:'
         version: 5.2.0
       cbor-x:
         specifier: 'catalog:'
         version: 1.5.4
+      effect:
+        specifier: 'catalog:'
+        version: 3.19.11
       platform:
         specifier: 'catalog:'
         version: 1.3.6
@@ -20841,6 +20982,9 @@ packages:
   '@dxos/util@0.8.3':
     resolution: {integrity: sha512-g59XyzcFcNx31+Hw/lyWeJaHpWN9qbERlnAeFrcX1Ck0rYKacyiBWLKM7Z7ghXH0xr8eNUCHeGqk7GS+zAuH+g==}
 
+  '@dxos/wa-sqlite@0.2.1':
+    resolution: {integrity: sha512-RVktTCzwJ1ix1MP/LWDjpO1HOOP0JpnAtjB/Zp/csbrlBEhhYYpwIlgDJzCi1Ri4cWHOo04iy+YtlnjfshM1Zw==}
+
   '@effect-atom/atom-react@0.4.4':
     resolution: {integrity: sha512-EWT9WpB67GNCecxQXJdAZNVMhuk3VxpdDfojxg1wOgWmR5TPaGiXA74Jqa2Y9AEjSB0hMMAk7RNve2CoIikg2w==}
     peerDependencies:
@@ -21004,6 +21148,21 @@ packages:
     deprecated: this package has been merged into the main effect package
     peerDependencies:
       effect: ^3.9.2
+
+  '@effect/sql-sqlite-node@0.49.1':
+    resolution: {integrity: sha512-lAh56P8YkivJ20caZFfrj/yFWas0nG2MpAp+hDaFjLnWiLoqhTZTcMS0fXFSRrrkZOQsSlNz9HCPUE9EHR587g==}
+    peerDependencies:
+      '@effect/experimental': ^0.57.5
+      '@effect/platform': ^0.93.4
+      '@effect/sql': ^0.48.1
+      effect: ^3.19.6
+
+  '@effect/sql-sqlite-wasm@0.49.0':
+    resolution: {integrity: sha512-qecBi30g8/bRLRPdATouIFleXlDLG5tJS8A5qU39iIG5ivYt0FKf5i/kD1+bhUFxneGlC3LLO/V4TqMJ8yWc0Q==}
+    peerDependencies:
+      '@effect/experimental': ^0.57.0
+      '@effect/sql': ^0.48.0
+      effect: ^3.19.0
 
   '@effect/sql@0.48.6':
     resolution: {integrity: sha512-OBIG/DYFxYTA9EXXhqi6sAcX0YLz8Huu8L+wj3a0aOSRPpHm9HkL9a5lacRPPvrVl31rKcEteGa/lO6n26gIFg==}
@@ -28488,6 +28647,10 @@ packages:
   before-after-hook@2.2.3:
     resolution: {integrity: sha512-NzUnlZexiaH/46WDhANlyR2bXRopNg4F/zuSA3OpZnllCUgRaOF2znDioDWrmbNVsuZk6l9pMquQB38cfBZwkQ==}
 
+  better-sqlite3@12.6.0:
+    resolution: {integrity: sha512-FXI191x+D6UPWSze5IzZjhz+i9MK9nsuHsmTX9bXVl52k06AfZ2xql0lrgIUuzsMsJ7Vgl5kIptvDgBLIV3ZSQ==}
+    engines: {node: 20.x || 22.x || 23.x || 24.x || 25.x}
+
   bezier-js@6.1.4:
     resolution: {integrity: sha512-PA0FW9ZpcHbojUCMu28z9Vg/fNkwTj5YhusSAjHHDfHDGLxJ6YUKrAN2vk1fP2MMOxVw4Oko16FMlRGVBGqLKg==}
 
@@ -28524,6 +28687,9 @@ packages:
 
   bind-event-listener@3.0.0:
     resolution: {integrity: sha512-PJvH288AWQhKs2v9zyfYdPzlPqf5bXbGMmhmUIY9x4dAUGIWgomO771oBQNwJnMQSnUIXhKu6sgzpBRXTlvb8Q==}
+
+  bindings@1.5.0:
+    resolution: {integrity: sha512-p2q/t/mhvuOj/UeLlV6566GD/guowlr0hHxClI0W9m7MWYkL1F0hLo+0Aexs9HSPCtR1SXQ0TD3MMKrXZajbiQ==}
 
   bip39@3.1.0:
     resolution: {integrity: sha512-c9kiwdk45Do5GL0vJMe7tS95VjCii65mYAH7DfWl3uW8AVzXKQVUm64i3hzVybBDMp9r7j9iNxR85+ul8MdN/A==}
@@ -30871,6 +31037,9 @@ packages:
   file-type@16.5.4:
     resolution: {integrity: sha512-/yFHK0aGjFEgDJjEKP0pWCplsPFPhwyfwevf/pVxiN0tmE4L9LmwWxWukdJSHdoCli4VgQLehjJtwQBnqmsKcw==}
     engines: {node: '>=10'}
+
+  file-uri-to-path@1.0.0:
+    resolution: {integrity: sha512-0Zt+s3L7Vf1biwWZ29aARiVYLx7iMGnEUl9x33fbB/j3jR81u/O2LbqK+Bm1CDSNDKVtJ/YjwY7TUd5SkeLQLw==}
 
   filelist@1.0.4:
     resolution: {integrity: sha512-w1cEuf3S+DrLCQL7ET6kz+gmlJdbq9J7yXCSjK/OZCPA+qEN1WyF4ZAf0YYJa4/shHJra2t/d/r8SV4Ji+x+8Q==}
@@ -40953,6 +41122,8 @@ snapshots:
       lodash.get: 4.4.2
       lodash.set: 4.3.2
 
+  '@dxos/wa-sqlite@0.2.1': {}
+
   '@effect-atom/atom-react@0.4.4(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/platform@0.93.6(effect@3.19.11))(@effect/rpc@0.72.2(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11))(effect@3.19.11)(react@19.2.3)(scheduler@0.27.0)':
     dependencies:
       '@effect-atom/atom': 0.4.10(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/platform@0.93.6(effect@3.19.11))(@effect/rpc@0.72.2(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11))(effect@3.19.11)
@@ -41114,6 +41285,21 @@ snapshots:
     dependencies:
       effect: 3.19.11
       fast-check: 3.23.2
+
+  '@effect/sql-sqlite-node@0.49.1(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/platform@0.93.6(effect@3.19.11))(@effect/sql@0.48.6(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11))(effect@3.19.11)':
+    dependencies:
+      '@effect/experimental': 0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2)
+      '@effect/platform': 0.93.6(effect@3.19.11)
+      '@effect/sql': 0.48.6(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)
+      better-sqlite3: 12.6.0
+      effect: 3.19.11
+
+  '@effect/sql-sqlite-wasm@0.49.0(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/sql@0.48.6(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11))(effect@3.19.11)':
+    dependencies:
+      '@effect/experimental': 0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2)
+      '@effect/sql': 0.48.6(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)
+      '@effect/wa-sqlite': '@dxos/wa-sqlite@0.2.1'
+      effect: 3.19.11
 
   '@effect/sql@0.48.6(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)':
     dependencies:
@@ -49714,6 +49900,11 @@ snapshots:
 
   before-after-hook@2.2.3: {}
 
+  better-sqlite3@12.6.0:
+    dependencies:
+      bindings: 1.5.0
+      prebuild-install: 7.1.3
+
   bezier-js@6.1.4: {}
 
   bidi-js@1.0.3:
@@ -49742,6 +49933,10 @@ snapshots:
       editions: 6.22.0
 
   bind-event-listener@3.0.0: {}
+
+  bindings@1.5.0:
+    dependencies:
+      file-uri-to-path: 1.0.0
 
   bip39@3.1.0:
     dependencies:
@@ -52606,6 +52801,8 @@ snapshots:
       readable-web-to-node-stream: 3.0.4
       strtok3: 6.3.0
       token-types: 4.2.1
+
+  file-uri-to-path@1.0.0: {}
 
   filelist@1.0.4:
     dependencies:
