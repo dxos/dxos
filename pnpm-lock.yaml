@@ -5311,6 +5311,9 @@ importers:
 
   packages/core/echo/live-object:
     dependencies:
+      '@dxos/async':
+        specifier: workspace:*
+        version: link:../../../common/async
       '@dxos/debug':
         specifier: workspace:*
         version: link:../../../common/debug
@@ -6151,31 +6154,13 @@ importers:
       '@dxos/effect':
         specifier: workspace:*
         version: link:../../common/effect
-      '@dxos/log':
-        specifier: workspace:*
-        version: link:../../common/log
       '@dxos/schema':
         specifier: workspace:*
         version: link:../../sdk/schema
-      '@dxos/util':
-        specifier: workspace:*
-        version: link:../../common/util
     devDependencies:
-      '@dxos/echo-db':
-        specifier: workspace:*
-        version: link:../echo/echo-db
-      '@dxos/test-utils':
-        specifier: workspace:*
-        version: link:../../common/test-utils
-      '@effect/vitest':
-        specifier: 'catalog:'
-        version: 0.27.0(effect@3.19.11)(vitest@3.2.4)
       effect:
         specifier: 'catalog:'
         version: 3.19.11
-      vitest:
-        specifier: 'catalog:'
-        version: 3.2.4(@types/debug@4.1.12)(@types/node@22.10.2)(@vitest/browser@3.2.4)(@vitest/ui@3.2.4)(happy-dom@13.3.4)(jiti@2.6.1)(jsdom@27.0.0(canvas@3.2.0)(postcss@8.5.6))(terser@5.19.2)(tsx@4.21.0)(yaml@2.8.2)
 
   packages/core/protocols:
     dependencies:
@@ -8289,9 +8274,6 @@ importers:
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
-      '@dxos/operation':
-        specifier: workspace:*
-        version: link:../../core/operation
       '@dxos/plugin-client':
         specifier: workspace:*
         version: link:../plugin-client
@@ -8945,9 +8927,6 @@ importers:
       '@dxos/debug':
         specifier: workspace:*
         version: link:../../common/debug
-      '@dxos/operation':
-        specifier: workspace:*
-        version: link:../../core/operation
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
@@ -9565,9 +9544,6 @@ importers:
       '@dxos/echo-solid':
         specifier: workspace:*
         version: link:../../core/echo/echo-solid
-      '@dxos/operation':
-        specifier: workspace:*
-        version: link:../../core/operation
       '@dxos/plugin-map':
         specifier: workspace:*
         version: link:../plugin-map
@@ -10079,9 +10055,6 @@ importers:
       '@dxos/app-framework':
         specifier: workspace:*
         version: link:../../sdk/app-framework
-      '@dxos/operation':
-        specifier: workspace:*
-        version: link:../../core/operation
       '@dxos/plugin-markdown':
         specifier: workspace:*
         version: link:../plugin-markdown
@@ -10146,9 +10119,6 @@ importers:
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
-      '@dxos/operation':
-        specifier: workspace:*
-        version: link:../../core/operation
       '@dxos/plugin-assistant':
         specifier: workspace:*
         version: link:../plugin-assistant
@@ -10231,9 +10201,6 @@ importers:
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
-      '@dxos/operation':
-        specifier: workspace:*
-        version: link:../../core/operation
       '@dxos/plugin-deck':
         specifier: workspace:*
         version: link:../plugin-deck
@@ -10727,9 +10694,6 @@ importers:
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
-      '@dxos/operation':
-        specifier: workspace:*
-        version: link:../../core/operation
       '@dxos/plugin-attention':
         specifier: workspace:*
         version: link:../plugin-attention
@@ -10957,9 +10921,6 @@ importers:
       '@dxos/observability':
         specifier: workspace:*
         version: link:../../sdk/observability
-      '@dxos/operation':
-        specifier: workspace:*
-        version: link:../../core/operation
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
@@ -11766,9 +11727,6 @@ importers:
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
-      '@dxos/operation':
-        specifier: workspace:*
-        version: link:../../core/operation
       '@dxos/plugin-graph':
         specifier: workspace:*
         version: link:../plugin-graph
@@ -12228,9 +12186,6 @@ importers:
       '@dxos/local-storage':
         specifier: workspace:*
         version: link:../../common/local-storage
-      '@dxos/operation':
-        specifier: workspace:*
-        version: link:../../core/operation
       '@dxos/plugin-client':
         specifier: workspace:*
         version: link:../plugin-client
@@ -12328,9 +12283,6 @@ importers:
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../core/echo/echo
-      '@dxos/operation':
-        specifier: workspace:*
-        version: link:../../core/operation
       '@dxos/plugin-observability':
         specifier: workspace:*
         version: link:../plugin-observability
@@ -12650,9 +12602,6 @@ importers:
       '@dxos/live-object':
         specifier: workspace:*
         version: link:../../core/echo/live-object
-      '@dxos/operation':
-        specifier: workspace:*
-        version: link:../../core/operation
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
@@ -12702,9 +12651,6 @@ importers:
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
-      '@dxos/operation':
-        specifier: workspace:*
-        version: link:../../core/operation
       '@dxos/plugin-graph':
         specifier: workspace:*
         version: link:../plugin-graph
@@ -13345,9 +13291,6 @@ importers:
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
-      '@dxos/operation':
-        specifier: workspace:*
-        version: link:../../core/operation
       '@dxos/plugin-client':
         specifier: workspace:*
         version: link:../plugin-client
@@ -14933,9 +14876,6 @@ importers:
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
-      '@dxos/operation':
-        specifier: workspace:*
-        version: link:../../core/operation
       '@dxos/plugin-assistant':
         specifier: workspace:*
         version: link:../../plugins/plugin-assistant
@@ -15147,9 +15087,6 @@ importers:
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
-      '@dxos/operation':
-        specifier: workspace:*
-        version: link:../../core/operation
       '@dxos/react-client':
         specifier: workspace:*
         version: link:../../sdk/react-client

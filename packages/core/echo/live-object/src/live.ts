@@ -25,3 +25,6 @@ export type Live<T> = LiveMarker & T;
  * @deprecated The code should not rely on "liveness" of the object. Better way would be to check the type of the object or if object is mutable.
  */
 export const isLiveObject = (value: unknown): boolean => isProxy(value);
+
+// TODO(dmaretskyi): Rename all symbols that are props to end with *Key.
+export const EventId = Symbol.for('@dxos/live-object/EventId');
