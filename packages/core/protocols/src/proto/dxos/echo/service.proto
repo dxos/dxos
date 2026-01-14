@@ -6,6 +6,7 @@ syntax = "proto3";
 
 import "dxos/keys.proto";
 import "google/protobuf/empty.proto";
+import "google/protobuf/Struct.proto";
 
 package dxos.echo.service;
 
@@ -98,7 +99,7 @@ message CreateDocumentRequest {
    * Automerge encoded initial document value.
    * Optional - if not provided, an empty document will be created.
    */
-  optional bytes initial_value = 2;
+  optional google.protobuf.Struct initial_value = 2;
 }
 
 message CreateDocumentResponse {
@@ -172,6 +173,12 @@ service DataService {
   rpc UpdateSubscription(UpdateSubscriptionRequest) returns (google.protobuf.Empty);
 
   /**
+   * Create a new automerge document.
+   * Returns the generated document id which is controlled by the host.
+   */
+   rpc CreateDocument(CreateDocumentRequest) returns (CreateDocumentResponse);
+
+  /**
    * Write incremental updates to multiple automerge documents.
    * Used to propagate changes from client to services.
    */
@@ -191,10 +198,4 @@ service DataService {
 
   // TODO(dmaretskyi): Stream subscription.
   rpc SubscribeSpaceSyncState(GetSpaceSyncStateRequest) returns (stream SpaceSyncState);
-
-  /**
-   * Create a new automerge document.
-   * Returns the generated document id which is controlled by the host.
-   */
-  rpc CreateDocument(CreateDocumentRequest) returns (CreateDocumentResponse);
 }

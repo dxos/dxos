@@ -12,6 +12,8 @@ import { SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import {
   type BatchedDocumentUpdates,
+  type CreateDocumentRequest,
+  type CreateDocumentResponse,
   type DataService,
   type FlushRequest,
   type GetDocumentHeadsRequest,
@@ -84,6 +86,11 @@ export class DataServiceImpl implements DataService {
     if (request.removeIds?.length) {
       await synchronizer.removeDocuments(request.removeIds as DocumentId[]);
     }
+  }
+
+  async createDocument(request: CreateDocumentRequest, options?: RequestOptions): Promise<CreateDocumentResponse> {
+    const handle = await this._automergeHost.createDoc(request.initialValue);
+    return { documentId: handle.documentId };
   }
 
   async update(request: UpdateRequest): Promise<void> {

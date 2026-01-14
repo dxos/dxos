@@ -3,13 +3,7 @@
 //
 
 import { next as A } from '@automerge/automerge';
-import {
-  type AnyDocumentId,
-  type DocumentId,
-  generateAutomergeUrl,
-  interpretAsDocumentId,
-  parseAutomergeUrl,
-} from '@automerge/automerge-repo';
+import { type AnyDocumentId, type DocumentId, interpretAsDocumentId } from '@automerge/automerge-repo';
 
 import { Event, UpdateScheduler } from '@dxos/async';
 import { type Stream } from '@dxos/codec-protobuf/stream';
@@ -43,10 +37,7 @@ export class RepoProxy extends Resource {
    */
   private _subscription?: Stream<BatchedDocumentUpdates> = undefined;
 
-  /**
-   * Document ids pending for init mutation.
-   */
-  private readonly _pendingCreateIds = new Set<DocumentId>();
+  private readonly _pendingCreations = new Map<string, Promise<void>>();
 
   /**
    * Document ids that have pending updates.
@@ -74,6 +65,9 @@ export class RepoProxy extends Resource {
     super();
   }
 
+  /**
+   * Returns handles that are currently loaded excluding the ones that are being created right now.
+   */
   get handles(): Record<string, DocHandleProxy<any>> {
     return this._handles;
   }
@@ -84,10 +78,7 @@ export class RepoProxy extends Resource {
     }
 
     const documentId = interpretAsDocumentId(id);
-    return this._getHandle<T>({
-      documentId,
-      isNew: false,
-    });
+    return this._getOrLoadHandle<T>({ documentId });
   }
 
   import<T>(dump: Uint8Array): DocHandleProxy<T> {
@@ -97,17 +88,14 @@ export class RepoProxy extends Resource {
   }
 
   create<T>(initialValue?: T): DocHandleProxy<T> {
-    // Generate a new UUID and store it in the buffer.
-    const { documentId } = parseAutomergeUrl(generateAutomergeUrl());
-    return this._getHandle<T>({
-      documentId,
-      isNew: true,
-      initialValue,
-    });
+    return this._createHandle<T>({ initialValue });
   }
 
   async flush(): Promise<void> {
-    await this._sendUpdatesJob?.runBlocking();
+    await Promise.all([...this._pendingCreations.values()]);
+    // TODO(mykola): Race condition: Updates job might be triggered before the creations are complete.
+
+    await this._sendUpdatesJob?.join();
   }
 
   protected override async _open(): Promise<void> {
@@ -135,16 +123,11 @@ export class RepoProxy extends Resource {
   }
 
   /** Returns an existing handle if we have it; creates one otherwise. */
-  private _getHandle<T>({
+  private _getOrLoadHandle<T>({
     documentId,
-    isNew,
-    initialValue,
   }: {
     /** The documentId of the handle to look up or create. */
     documentId: DocumentId;
-    /** If we know we're creating a new document, specify this so we can have access to it immediately. */
-    isNew: boolean;
-    initialValue?: T;
   }): DocHandleProxy<T> {
     // If we have the handle cached, return it
     if (this._handles[documentId]) {
@@ -155,31 +138,21 @@ export class RepoProxy extends Resource {
       throw new Error(`Invalid documentId ${documentId}`);
     }
 
-    return this._createHandle<T>({ documentId, isNew, initialValue });
+    return this._loadHandle<T>({ documentId });
   }
 
-  private _createHandle<T>({
-    documentId,
-    isNew,
-    initialValue,
-  }: {
-    documentId: DocumentId;
-    isNew: boolean;
-    initialValue?: T;
-  }): DocHandleProxy<T> {
+  private _loadHandle<T>({ documentId }: { documentId: DocumentId }): DocHandleProxy<T> {
     invariant(this._lifecycleState === LifecycleState.OPEN);
 
     // TODO(burdon): Called even if not mutations.
     const onChange = () => {
       log('onChange', { documentId });
-      if (!this._pendingCreateIds.has(documentId)) {
-        this._pendingUpdateIds.add(documentId);
-      }
+      this._pendingUpdateIds.add(documentId);
       this._sendUpdatesJob?.trigger();
       this._emitSaveStateEvent();
     };
 
-    const onDelete = () => {
+    const cleanup = () => {
       log('onDelete', { documentId });
       handle.off('change', onChange);
       this._pendingRemoveIds.add(documentId);
@@ -187,16 +160,72 @@ export class RepoProxy extends Resource {
       delete this._handles[documentId];
     };
 
-    const handle = new DocHandleProxy<T>(documentId, { isNew, initialValue }, { onDelete });
+    const handle = new DocHandleProxy<T>({ documentId, onDelete: cleanup });
     handle.on('change', onChange);
     this._handles[documentId] = handle;
 
-    if (isNew) {
-      this._pendingCreateIds.add(documentId);
-    } else {
-      this._pendingAddIds.add(documentId);
-    }
+    this._pendingAddIds.add(documentId);
     this._sendUpdatesJob!.trigger();
+
+    return handle;
+  }
+
+  private _createHandle<T>({ initialValue }: { initialValue?: T }): DocHandleProxy<T> {
+    invariant(this._lifecycleState === LifecycleState.OPEN);
+
+    const update = () => {
+      this._pendingUpdateIds.add(handle.documentId);
+      this._sendUpdatesJob?.trigger();
+      this._emitSaveStateEvent();
+    };
+
+    // TODO(burdon): Called even if not mutations.
+    const onChange = () => {
+      log('onChange', { documentId: handle.documentId, internalId: handle.internalId });
+
+      // If the handle is still being created, do not trigger an update, it will be triggered when the creation is complete.
+      if (this._pendingCreations.has(handle.internalId)) {
+        return;
+      }
+
+      update();
+    };
+
+    const cleanup = () => {
+      log('onDelete', { documentId: handle.documentId, internalId: handle.internalId });
+      handle.off('change', onChange);
+      if (handle.documentId) {
+        this._pendingRemoveIds.add(handle.documentId);
+        this._sendUpdatesJob?.trigger();
+        delete this._handles[handle.documentId];
+      }
+    };
+
+    const handle = new DocHandleProxy<T>({ initialValue, onDelete: cleanup });
+
+    this._pendingCreations.set(
+      handle.internalId,
+      this._dataService
+        .createDocument(
+          {
+            spaceId: this._spaceId,
+            initialValue: initialValue,
+          },
+          { timeout: RPC_TIMEOUT },
+        )
+        .then((response) => {
+          handle._setDocumentId(response.documentId as DocumentId);
+          this._handles[handle.documentId] = handle;
+          update();
+        })
+        .catch((err) => {
+          log.catch(err);
+          cleanup();
+        })
+        .finally(() => {
+          this._pendingCreations.delete(handle.internalId);
+        }),
+    );
 
     return handle;
   }
@@ -218,14 +247,16 @@ export class RepoProxy extends Resource {
     }
   }
 
+  /**
+   * Batching updates and sending them to the DataService.
+   * Managing subscription state.
+   */
   private async _sendUpdates(): Promise<void> {
     // Save current state of pending updates to avoid race conditions.
-    const createIds = Array.from(this._pendingCreateIds);
     const updateIds = Array.from(this._pendingUpdateIds);
     const addIds = Array.from(this._pendingAddIds);
     const removeIds = Array.from(this._pendingRemoveIds);
 
-    this._pendingCreateIds.clear();
     this._pendingAddIds.clear();
     this._pendingRemoveIds.clear();
     this._pendingUpdateIds.clear();
@@ -242,7 +273,6 @@ export class RepoProxy extends Resource {
           }
         }
       };
-      addMutations(createIds, true);
       addMutations(updateIds);
 
       if (updates.length > 0) {
@@ -263,7 +293,6 @@ export class RepoProxy extends Resource {
       this._emitSaveStateEvent();
     } catch (err) {
       // Restore the state of pending updates if the RPC call failed.
-      createIds.forEach((id) => this._pendingCreateIds.add(id));
       addIds.forEach((id) => this._pendingAddIds.add(id));
       removeIds.forEach((id) => this._pendingRemoveIds.add(id));
       updateIds.forEach((id) => this._pendingUpdateIds.add(id));
@@ -273,7 +302,7 @@ export class RepoProxy extends Resource {
   }
 
   private _emitSaveStateEvent(): void {
-    const unsavedDocuments = [...this._pendingCreateIds, ...this._pendingUpdateIds];
+    const unsavedDocuments = Array.from(this._pendingUpdateIds);
     this.saveStateChanged.emit({ unsavedDocuments });
   }
 }
