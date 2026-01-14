@@ -30,6 +30,7 @@ describe('RepoProxy', () => {
 
     log.break();
     const clientHandle = clientRepo.create<{ text: string }>();
+    await clientHandle.whenReady();
     log.break();
 
     const hostHandle = await host.loadDoc<{ text: string }>(Context.default(), clientHandle.url);
@@ -68,7 +69,7 @@ describe('RepoProxy', () => {
     await openAndClose(clientRepo);
 
     const text = 'Hello World!';
-    const hostHandle = host.createDoc<{ text: string }>({ text });
+    const hostHandle = await host.createDoc<{ text: string }>({ text });
     const clientHandle = clientRepo.find<{ text: string }>(hostHandle.url);
     await asyncTimeout(clientHandle.whenReady(), 1000);
     expect(clientHandle.doc()?.text).to.equal(text);
@@ -89,6 +90,7 @@ describe('RepoProxy', () => {
 
     const text = 'Hello World!';
     const handle1 = repo1.create<{ text: string }>({ text });
+    await handle1.whenReady();
     await repo1.flush();
 
     const handle2 = repo2.find<{ text: string }>(handle1.url);
@@ -123,6 +125,7 @@ describe('RepoProxy', () => {
       const text = 'Hello World!';
 
       const clientHandle = clientRepo.create<{ text: string }>();
+      await clientHandle.whenReady();
       url = clientHandle.url;
       clientHandle.change((doc: any) => {
         doc.text = text;
@@ -160,8 +163,9 @@ describe('RepoProxy', () => {
 
       const text = 'Hello World!';
       const clientHandle = clientRepo.create<{ text: string }>({ text });
+      await clientHandle.whenReady();
       url = clientHandle.url;
-      await sleep(200); // Wait for the object to be saved without flush.
+      await sleep(1000); // Wait for the object to be saved without flush.
       await level.close();
       await host.close();
       await clientRepo.close();
@@ -196,7 +200,7 @@ describe('RepoProxy', () => {
       await clientRepo.flush();
       clientHandle.change((doc: TestDoc) => (doc.text = text));
       url = clientHandle.url;
-      await sleep(200); // Wait for the object to be saved without flush.
+      await sleep(500); // Wait for the object to be saved without flush.
       await level.close();
       await host.close();
       await clientRepo.close();
@@ -221,6 +225,7 @@ describe('RepoProxy', () => {
     await openAndClose(clientRepo);
 
     const handle = clientRepo.create<{ client: number; host: number }>();
+    await handle.whenReady();
     const hostHandle = await host.loadDoc<{ client: number; host: number }>(Context.default(), handle.url);
 
     const numberOfUpdates = 1000;
@@ -290,6 +295,9 @@ describe('RepoProxy', () => {
       expect(handle.doc()).to.not.equal(text);
     }
 
+    // Wait for all handles to be ready before accessing their URLs.
+    await Promise.all(handles.map((handle) => handle.whenReady()));
+
     const hostHandles = await Promise.all(
       handles.map(async (handle) => host.loadDoc<{ text: string }>(Context.default(), handle.url)),
     );
@@ -318,8 +326,9 @@ describe('RepoProxy', () => {
         doc.text1 = text1;
       });
     }
+    await Promise.all(handles1.map((h) => h.whenReady()));
 
-    // Create documents in repo2.s
+    // Create documents in repo2.
     const handles2: DocHandleProxy<DocStruct>[] = [];
     for (let i = 0; i < amountToCreateInEachRepo; i++) {
       handles2.push(repo2.create<DocStruct>());
@@ -327,6 +336,7 @@ describe('RepoProxy', () => {
         doc.text2 = text2;
       });
     }
+    await Promise.all(handles2.map((h) => h.whenReady()));
 
     // Replicate documents from repo1 to repo2.
     for (const handle of handles1) {
