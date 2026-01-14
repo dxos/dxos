@@ -11,6 +11,7 @@ import { assertArgument, invariant } from '@dxos/invariant';
 import { type DXN, ObjectId } from '@dxos/keys';
 import { getSnapshot as getSnapshot$ } from '@dxos/live-object';
 import { assumeType, deepMapValues } from '@dxos/util';
+import { EventId, getProxyTarget } from '@dxos/live-object';
 
 import type * as Database from './Database';
 import * as Entity from './Entity';
@@ -131,6 +132,20 @@ export const make = <S extends Schema.Schema.AnyNoContext>(
 export const isObject = (obj: unknown): obj is Any => {
   assumeType<InternalObjectProps>(obj);
   return typeof obj === 'object' && obj !== null && obj[Entity.KindId] === Entity.Kind.Object;
+};
+
+/**
+ * Subscribe to object updates.
+ * The callback is called synchronously when the object is modified.
+ * @returns Unsubscribe function.
+ */
+export const subscribe = (obj: Entity.Unknown, callback: () => void): (() => void) => {
+  const target = getProxyTarget(obj);
+  if (target && EventId in target) {
+    return (target as any)[EventId].on(callback);
+  }
+
+  return () => {};
 };
 
 //

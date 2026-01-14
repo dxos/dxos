@@ -98,6 +98,21 @@ describe('ECHO specific proxy properties with schema', () => {
     const obj = createObject(Obj.make(TestSchema.Example, { string: 'bar' }));
     expect(isEchoObject(obj)).to.be.true;
   });
+
+  test('subscribe', () => {
+    const obj = createObject(Obj.make(TestSchema.Example, { string: 'bar' }));
+    let called = 0;
+    const unsubscribe = Obj.subscribe(obj, () => {
+      called++;
+    });
+
+    obj.string = 'baz';
+    expect(called).to.eq(1);
+
+    unsubscribe();
+    obj.string = 'qux';
+    expect(called).to.eq(1);
+  });
 });
 
 describe('without database', () => {

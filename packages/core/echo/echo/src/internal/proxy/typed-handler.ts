@@ -8,9 +8,11 @@ import * as Schema from 'effect/Schema';
 import * as SchemaAST from 'effect/SchemaAST';
 
 import { inspectCustom } from '@dxos/debug';
+import { Event } from '@dxos/async';
 import { type GenericSignal, compositeRuntime } from '@dxos/echo-signals/runtime';
 import { invariant } from '@dxos/invariant';
 import {
+  EventId,
   ReactiveArray,
   type ReactiveHandler,
   createProxy,
@@ -46,6 +48,11 @@ type ProxyTarget = {
   [symbolSignal]: GenericSignal;
 
   /**
+   * For modifications.
+   */
+  [EventId]: Event<void>;
+
+  /**
    * For modifying the structure of the object.
    */
   [symbolPropertySignal]: GenericSignal;
@@ -58,6 +65,7 @@ export class TypedReactiveHandler implements ReactiveHandler<ProxyTarget> {
   public static readonly instance: ReactiveHandler<any> = new TypedReactiveHandler();
 
   readonly _proxyMap = new WeakMap<object, any>();
+  private _inSet = false;
 
   private constructor() {}
 
@@ -68,6 +76,10 @@ export class TypedReactiveHandler implements ReactiveHandler<ProxyTarget> {
     if (!(symbolSignal in target)) {
       defineHiddenProperty(target, symbolSignal, compositeRuntime.createSignal());
       defineHiddenProperty(target, symbolPropertySignal, compositeRuntime.createSignal());
+    }
+
+    if (!(EventId in target)) {
+      defineHiddenProperty(target, EventId, new Event());
     }
 
     defineHiddenProperty(target, ObjectDeletedId, false);
@@ -125,11 +137,17 @@ export class TypedReactiveHandler implements ReactiveHandler<ProxyTarget> {
     }
 
     let result: boolean = false;
-    compositeRuntime.batch(() => {
-      const validatedValue = this._validateValue(target, prop, value);
-      result = Reflect.set(target, prop, validatedValue, receiver);
-      target[symbolSignal].notifyWrite();
-    });
+    this._inSet = true;
+    try {
+      compositeRuntime.batch(() => {
+        const validatedValue = this._validateValue(target, prop, value);
+        result = Reflect.set(target, prop, validatedValue, receiver);
+        target[symbolSignal].notifyWrite();
+        target[EventId].emit();
+      });
+    } finally {
+      this._inSet = false;
+    }
     return result;
   }
 
@@ -147,6 +165,10 @@ export class TypedReactiveHandler implements ReactiveHandler<ProxyTarget> {
       value: validatedValue,
     });
     target[symbolPropertySignal].notifyWrite();
+    target[symbolPropertySignal].notifyWrite();
+    if (!this._inSet) {
+      target[EventId].emit();
+    }
     return result;
   }
 

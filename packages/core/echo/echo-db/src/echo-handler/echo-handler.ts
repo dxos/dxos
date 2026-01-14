@@ -50,7 +50,9 @@ import {
 import { DATA_NAMESPACE, type ObjectStructure, PROPERTY_ID, Reference, encodeReference } from '@dxos/echo-protocol';
 import { assertArgument, invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
+import { Event } from '@dxos/async';
 import {
+  EventId,
   type Live,
   type ReactiveHandler,
   createProxy,
@@ -103,6 +105,10 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     }
 
     defineHiddenProperty(target, symbolHandler, this);
+
+    if (!(EventId in target)) {
+      defineHiddenProperty(target, EventId, new Event());
+    }
 
     // Maybe have been set by `create`.
     Object.defineProperty(target, inspectCustom, {
@@ -259,6 +265,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
       target[symbolInternals].core.setDecoded(fullPath, withLinks);
     }
 
+    target[EventId]?.emit();
     return true;
   }
 
@@ -334,8 +341,9 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
         array[symbolInternals] = target[symbolInternals];
         array[symbolPath] = dataPath;
         array[symbolNamespace] = namespace;
+        array[symbolNamespace] = namespace;
         array[symbolHandler] = this;
-        return array;
+        return array as any as ProxyTarget;
       });
 
       return createProxy(newTarget, this);
@@ -350,6 +358,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
           [symbolInternals]: target[symbolInternals],
           [symbolPath]: dataPath,
           [symbolNamespace]: namespace,
+          [EventId]: new Event(),
         }),
       );
 
@@ -527,6 +536,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     } else if (typeof property === 'string') {
       const fullPath = [getNamespace(target), ...target[symbolPath], property];
       target[symbolInternals].core.delete(fullPath);
+      target[EventId]?.emit();
       return true;
     }
     return false;
@@ -536,7 +546,9 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     const validatedItems = this._validateForArray(target, path, items, target.length);
 
     const encodedItems = this._encodeForArray(target, validatedItems);
-    return target[symbolInternals].core.arrayPush([getNamespace(target), ...path], encodedItems);
+    const result = target[symbolInternals].core.arrayPush([getNamespace(target), ...path], encodedItems);
+    target[EventId]?.emit();
+    return result;
   }
 
   arrayPop(target: Live<ProxyTarget>, path: KeyPath): any {
@@ -549,6 +561,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
       returnValue = array.pop();
     });
 
+    target[EventId]?.emit();
     return returnValue;
   }
 
@@ -562,6 +575,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
       returnValue = array.shift();
     });
 
+    target[EventId]?.emit();
     return returnValue;
   }
 
@@ -577,6 +591,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
       newLength = array.unshift(...encodedItems);
     });
 
+    target[EventId]?.emit();
     invariant(newLength !== -1);
     return newLength;
   }
@@ -598,6 +613,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
       }
     });
 
+    target[EventId]?.emit();
     invariant(deletedElements);
     return deletedElements;
   }
@@ -612,6 +628,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
       setDeep(doc, fullPath, sortedArray);
     });
 
+    target[EventId]?.emit();
     return target as EchoArray<any>;
   }
 
@@ -625,6 +642,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
       setDeep(doc, fullPath, reversedArray);
     });
 
+    target[EventId]?.emit();
     return target as EchoArray<any>;
   }
 
@@ -634,6 +652,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
       [symbolInternals]: target[symbolInternals],
       [symbolPath]: [],
       [symbolNamespace]: META_NAMESPACE,
+      [EventId]: new Event(),
     };
 
     return createProxy(metaTarget, this) as any;
@@ -741,6 +760,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
       trimmedArray.length = newLength;
       setDeep(doc, fullPath, trimmedArray);
     });
+    target[EventId]?.emit();
   }
 
   private _validateForArray(target: ProxyTarget, path: KeyPath, items: any[], start: number) {
@@ -859,6 +879,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
             [symbolInternals]: target[symbolInternals],
             [symbolPath]: [],
             [symbolNamespace]: META_NAMESPACE,
+            [EventId]: new Event(),
           };
           const metaReified = this._getReified(metaTarget);
 
@@ -1031,6 +1052,7 @@ export const createObject = <T extends AnyProperties>(obj: T): CreateObjectRetur
       [symbolInternals]: new ObjectInternals(core),
       [symbolPath]: [],
       [symbolNamespace]: DATA_NAMESPACE,
+      [EventId]: new Event(),
       ...(obj as any),
     };
     target[symbolInternals].rootSchema = schema;
@@ -1078,6 +1100,7 @@ export const initEchoReactiveObjectRootProxy = (core: ObjectCore, database?: Ech
     [symbolInternals]: new ObjectInternals(core, database),
     [symbolPath]: [],
     [symbolNamespace]: DATA_NAMESPACE,
+    [EventId]: new Event(),
   };
 
   // TODO(dmaretskyi): Does this need to be disposed?

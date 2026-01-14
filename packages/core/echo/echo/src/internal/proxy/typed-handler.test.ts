@@ -7,10 +7,12 @@ import { describe, expect, test } from 'vitest';
 
 import { TestSchema } from '../../testing';
 import { isInstanceOf } from '../annotations';
+import { EchoObjectSchema } from '../entities';
 import { TypedObject, createObject } from '../object';
 import { Ref } from '../ref';
 import { foreignKey, getMeta, getSchema } from '../types';
 
+import * as Obj from '../../Obj';
 import { makeObject } from './make-object';
 
 describe('complex schema validations', () => {
@@ -98,5 +100,23 @@ describe('complex schema validations', () => {
     });
 
     expect((object.value as any).name).to.eq('Robert Smith');
+  });
+
+  test('subscribe', () => {
+    const TestSchema = Schema.mutable(Schema.Struct({ field: Schema.String })).pipe(
+      EchoObjectSchema({ typename: 'Test', version: '0.1.0' }),
+    );
+    const object = makeObject(TestSchema, { field: 'value' });
+    let called = 0;
+    const unsubscribe = Obj.subscribe(object as any, () => {
+      called++;
+    });
+
+    object.field = 'value2';
+    expect(called).to.eq(1);
+
+    unsubscribe();
+    object.field = 'value3';
+    expect(called).to.eq(1);
   });
 });
