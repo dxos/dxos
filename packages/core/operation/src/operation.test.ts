@@ -133,12 +133,12 @@ describe('Operation', () => {
 
       // Handler that requires the declared services.
       // The R type parameter captures the service requirements.
-      const handler: Operation.OperationHandler<
+      const handler: Operation.Handler<
         { query: string },
         { results: string[]; summary: string },
         Error,
         DatabaseService | AiService
-      > = (input) =>
+      > = (input: { query: string }) =>
         Effect.gen(function* () {
           const db = yield* DatabaseService;
           const ai = yield* AiService;

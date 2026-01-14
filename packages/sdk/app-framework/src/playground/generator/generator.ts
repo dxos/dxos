@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
-import * as Operation from '@dxos/operation';
+import { Operation } from '@dxos/operation';
 import { OperationResolver } from '@dxos/operation';
 
 import * as Common from '../../common';

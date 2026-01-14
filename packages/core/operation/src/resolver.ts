@@ -7,7 +7,7 @@ import type * as Schema from 'effect/Schema';
 
 import type { Position } from '@dxos/util';
 
-import type { OperationDefinition, OperationHandler } from './operation';
+import type { Definition, Handler } from './operation';
 import type { Service as OperationService } from './service';
 
 /**
@@ -19,15 +19,15 @@ export type HandlerContext = OperationService;
 /**
  * Allowed services for a handler: services declared on the operation plus Operation.Service.
  */
-type AllowedServices<Def extends OperationDefinition<any, any>> = OperationDefinition.Services<Def> | OperationService;
+type AllowedServices<Def extends Definition<any, any>> = Definition.Services<Def> | OperationService;
 
 /**
  * Operation resolver - maps an operation definition to a handler with optional filter.
  * Handlers are provided with HandlerContext (Operation.Service) by the invoker.
  */
 export interface OperationResolver<I = any, O = any, E extends Error = Error, R = HandlerContext> {
-  operation: OperationDefinition<I, O>;
-  handler: OperationHandler<I, O, E, R>;
+  operation: Definition<I, O>;
+  handler: Handler<I, O, E, R>;
   position?: Position;
   filter?: (input: I) => boolean;
 }
@@ -36,7 +36,7 @@ export interface OperationResolver<I = any, O = any, E extends Error = Error, R 
  * Props for creating an operation resolver.
  * Handler can only use services declared on the operation, plus Operation.Service.
  */
-export type OperationResolverProps<Def extends OperationDefinition<any, any>, E extends Error = never> = {
+export type OperationResolverProps<Def extends Definition<any, any>, E extends Error = never> = {
   operation: Def;
   handler: (
     input: Schema.Schema.Type<Def['schema']['input']>,
@@ -69,7 +69,7 @@ export type OperationResolverProps<Def extends OperationDefinition<any, any>, E 
  * })
  * ```
  */
-export const make = <Def extends OperationDefinition<any, any>, E extends Error = never>(
+export const make = <Def extends Definition<any, any>, E extends Error = never>(
   props: OperationResolverProps<Def, E>,
 ): OperationResolver<
   Schema.Schema.Type<Def['schema']['input']>,

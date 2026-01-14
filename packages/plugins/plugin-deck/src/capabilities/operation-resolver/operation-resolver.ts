@@ -8,12 +8,12 @@ import * as Function from 'effect/Function';
 import * as Option from 'effect/Option';
 
 import { Capability, Common } from '@dxos/app-framework';
-import { OperationResolver } from '@dxos/operation';
 import { Obj } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { isLiveObject } from '@dxos/live-object';
 import { log } from '@dxos/log';
-import * as Operation from '@dxos/operation';
+import { OperationResolver } from '@dxos/operation';
+import { Operation } from '@dxos/operation';
 import { AttentionCapabilities } from '@dxos/plugin-attention';
 import { Graph, Node } from '@dxos/plugin-graph';
 import { ObservabilityOperation } from '@dxos/plugin-observability/types';

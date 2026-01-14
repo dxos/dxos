@@ -9,7 +9,7 @@ import { PublicKey } from '@dxos/client';
 import { runAndForwardErrors } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { OperationResolver } from '@dxos/operation';
-import * as Operation from '@dxos/operation';
+import { Operation } from '@dxos/operation';
 import { ObservabilityOperation } from '@dxos/plugin-observability/types';
 import { type JoinPanelProps } from '@dxos/shell/react';
 

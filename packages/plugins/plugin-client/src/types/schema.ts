@@ -5,7 +5,7 @@
 import * as Schema from 'effect/Schema';
 
 import { type Client, type ClientOptions, PublicKey } from '@dxos/client';
-import * as Operation from '@dxos/operation';
+import { Operation } from '@dxos/operation';
 import { type MaybePromise } from '@dxos/util';
 
 import { meta } from '../meta';

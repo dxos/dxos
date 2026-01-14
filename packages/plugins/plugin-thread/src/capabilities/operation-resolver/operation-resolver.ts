@@ -9,7 +9,7 @@ import { OperationResolver } from '@dxos/operation';
 import { sleep } from '@dxos/async';
 import { Obj, Relation, Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
-import * as Operation from '@dxos/operation';
+import { Operation } from '@dxos/operation';
 import { ATTENDABLE_PATH_SEPARATOR, DeckOperation } from '@dxos/plugin-deck/types';
 import { ObservabilityOperation } from '@dxos/plugin-observability/types';
 import { SpaceOperation } from '@dxos/plugin-space/types';

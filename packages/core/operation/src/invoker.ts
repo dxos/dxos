@@ -13,16 +13,16 @@ import { log } from '@dxos/log';
 import { byPosition } from '@dxos/util';
 
 import { NoHandlerError } from './errors';
-import type { OperationDefinition, OperationHandler } from './operation';
+import type { Definition, Handler } from './operation';
 import type { OperationResolver } from './resolver';
 import * as Scheduler from './scheduler';
-import { type OperationService, type InvokeOptions, Service as OperationServiceTag } from './service';
+import { type InvokeOptions, type OperationService, Service as OperationServiceTag } from './service';
 
 /**
  * Invocation event emitted after each operation.
  */
 export type InvocationEvent<I = any, O = any> = {
-  operation: OperationDefinition<I, O>;
+  operation: Definition<I, O>;
   input: I;
   output: O;
   timestamp: number;
@@ -43,11 +43,11 @@ export type DatabaseResolver = (spaceId: Key.SpaceId) => Effect.Effect<Context.C
  */
 export interface OperationInvoker {
   invoke: <I, O>(
-    op: OperationDefinition<I, O>,
+    op: Definition<I, O>,
     ...args: void extends I ? [input?: I, options?: InvokeOptions] : [input: I, options?: InvokeOptions]
   ) => Effect.Effect<O, Error>;
   invokePromise: <I, O>(
-    op: OperationDefinition<I, O>,
+    op: Definition<I, O>,
     ...args: void extends I ? [input?: I, options?: InvokeOptions] : [input: I, options?: InvokeOptions]
   ) => Promise<{ data?: O; error?: Error }>;
   /**
@@ -56,14 +56,14 @@ export interface OperationInvoker {
    * Throws if the operation is async or if the handler performs async work.
    */
   invokeSync: <I, O>(
-    op: OperationDefinition<I, O>,
+    op: Definition<I, O>,
     ...args: void extends I ? [input?: I, options?: InvokeOptions] : [input: I, options?: InvokeOptions]
   ) => { data?: O; error?: Error };
   /**
    * Core invocation without event emission.
    * Used by history tracker to avoid undo-of-undo loops.
    */
-  _invokeCore: <I, O>(op: OperationDefinition<I, O>, input: I, options?: InvokeOptions) => Effect.Effect<O, Error>;
+  _invokeCore: <I, O>(op: Definition<I, O>, input: I, options?: InvokeOptions) => Effect.Effect<O, Error>;
   /** Effect stream of invocation events. */
   invocations: PubSub.PubSub<InvocationEvent>;
   /** Number of pending followup operations. */
@@ -112,7 +112,7 @@ class OperationInvokerImpl implements OperationInvoker {
 
   // Arrow function to preserve `this` context when destructured.
   invoke = <I, O>(
-    op: OperationDefinition<I, O>,
+    op: Definition<I, O>,
     ...args: void extends I ? [input?: I, options?: InvokeOptions] : [input: I, options?: InvokeOptions]
   ): Effect.Effect<O, Error> => {
     const input = args[0] as I;
@@ -134,7 +134,7 @@ class OperationInvokerImpl implements OperationInvoker {
 
   // Arrow function to preserve `this` context when destructured.
   invokePromise = async <I, O>(
-    op: OperationDefinition<I, O>,
+    op: Definition<I, O>,
     ...args: void extends I ? [input?: I, options?: InvokeOptions] : [input: I, options?: InvokeOptions]
   ): Promise<{ data?: O; error?: Error }> => {
     return runAndForwardErrors(this.invoke(op, ...args))
@@ -147,7 +147,7 @@ class OperationInvokerImpl implements OperationInvoker {
 
   // Arrow function to preserve `this` context when destructured.
   invokeSync = <I, O>(
-    op: OperationDefinition<I, O>,
+    op: Definition<I, O>,
     ...args: void extends I ? [input?: I, options?: InvokeOptions] : [input: I, options?: InvokeOptions]
   ): { data?: O; error?: Error } => {
     try {
@@ -160,9 +160,9 @@ class OperationInvokerImpl implements OperationInvoker {
   };
 
   private _resolveHandler(
-    operation: OperationDefinition<any, any>,
+    operation: Definition<any, any>,
     input: any,
-  ): Effect.Effect<OperationHandler<any, any, Error, OperationServiceTag> | undefined, Error> {
+  ): Effect.Effect<Handler<any, any, Error, OperationServiceTag> | undefined, Error> {
     return Effect.gen(this, function* () {
       const candidates = yield* this._getHandlers().pipe(
         Effect.map((handlers) => handlers.filter((reg) => reg.operation.meta.key === operation.meta.key)),
@@ -180,7 +180,7 @@ class OperationInvokerImpl implements OperationInvoker {
 
   /** @internal */
   // Arrow function to preserve `this` context when destructured.
-  _invokeCore = <I, O>(op: OperationDefinition<I, O>, input: I, options?: InvokeOptions): Effect.Effect<O, Error> => {
+  _invokeCore = <I, O>(op: Definition<I, O>, input: I, options?: InvokeOptions): Effect.Effect<O, Error> => {
     return Effect.gen(this, function* () {
       const handler = yield* this._resolveHandler(op, input);
       if (!handler) {

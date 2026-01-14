@@ -705,7 +705,7 @@ export const constructObjectActions = ({
       : []),
     // TODO(wittjosiah): Factor out and apply to all nodes.
     {
-      id: getId(Common.LayoutAction.Expose._tag),
+      id: getId(Common.LayoutOperation.Expose.meta.key),
       type: Node.ActionType,
       data: async () => {
         await invokePromise(Common.LayoutOperation.Expose, { subject: Obj.getDXN(object).toString() });

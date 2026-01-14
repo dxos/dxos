@@ -10,9 +10,7 @@ import { describe, expect } from 'vitest';
 
 import * as OperationInvoker from './invoker';
 import * as Operation from './operation';
-import * as OperationResolver from './resolver';
 import * as Scheduler from './scheduler';
-import { Service as OperationService } from './service';
 
 //
 // Test Operations for Scheduler
@@ -203,7 +201,7 @@ describe('Scheduler', () => {
           operation: TriggerWithFollowup,
           handler: (input: { id: string }) =>
             Effect.gen(function* () {
-              const ops = yield* OperationService;
+              const ops = yield* Operation.Service;
               yield* ops.schedule(CountOp, { id: `followup-${input.id}` });
               return { triggered: true };
             }),
@@ -240,7 +238,7 @@ describe('Scheduler', () => {
           operation: TriggerWithFollowup,
           handler: (input: { id: string }) =>
             Effect.gen(function* () {
-              const ops = yield* OperationService;
+              const ops = yield* Operation.Service;
               yield* ops.schedule(CountOp, { id: input.id });
               return { triggered: true };
             }),
@@ -281,7 +279,7 @@ describe('Scheduler', () => {
           operation: TriggerWithFollowup,
           handler: () =>
             Effect.gen(function* () {
-              const ops = yield* OperationService;
+              const ops = yield* Operation.Service;
               yield* ops.schedule(CountOp, { id: 'child' });
               // Return immediately, before the followup completes.
               return { triggered: true };
@@ -326,7 +324,7 @@ describe('Scheduler', () => {
           operation: SideEffect,
           handler: () =>
             Effect.gen(function* () {
-              const ops = yield* OperationService;
+              const ops = yield* Operation.Service;
               yield* ops.schedule(CountOp, { id: 'from-side-effect' });
               return undefined;
             }),
@@ -336,7 +334,7 @@ describe('Scheduler', () => {
           operation: TriggerWithFollowup,
           handler: (input: { id: string }) =>
             Effect.gen(function* () {
-              const ops = yield* OperationService;
+              const ops = yield* Operation.Service;
               yield* ops.schedule(CountOp, { id: `from-trigger-${input.id}` });
               return { triggered: true };
             }),

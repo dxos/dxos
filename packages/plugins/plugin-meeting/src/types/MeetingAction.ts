@@ -5,7 +5,7 @@
 import * as Schema from 'effect/Schema';
 
 import { SpaceSchema } from '@dxos/client/echo';
-import * as Operation from '@dxos/operation';
+import { Operation } from '@dxos/operation';
 import { Channel } from '@dxos/plugin-thread/types';
 import { Collection } from '@dxos/schema';
 

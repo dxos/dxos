@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 
 import type { Key } from '@dxos/echo';
 
-import type { OperationDefinition } from './operation';
+import type { Definition } from './operation';
 
 /**
  * Options for operation invocation.
@@ -27,7 +27,7 @@ export interface OperationService {
    * Returns an Effect that resolves to the operation output.
    */
   invoke: <I, O>(
-    op: OperationDefinition<I, O>,
+    op: Definition<I, O>,
     ...args: void extends I ? [input?: I, options?: InvokeOptions] : [input: I, options?: InvokeOptions]
   ) => Effect.Effect<O, Error>;
 
@@ -36,17 +36,14 @@ export interface OperationService {
    * The followup is tracked and won't be cancelled when the parent operation completes.
    * Returns an Effect that completes immediately after scheduling.
    */
-  schedule: <I, O>(
-    op: OperationDefinition<I, O>,
-    ...args: void extends I ? [input?: I] : [input: I]
-  ) => Effect.Effect<void>;
+  schedule: <I, O>(op: Definition<I, O>, ...args: void extends I ? [input?: I] : [input: I]) => Effect.Effect<void>;
 
   /**
    * Invoke an operation and return a Promise.
    * Useful for async contexts where Effect is not available.
    */
   invokePromise: <I, O>(
-    op: OperationDefinition<I, O>,
+    op: Definition<I, O>,
     ...args: void extends I ? [input?: I, options?: InvokeOptions] : [input: I, options?: InvokeOptions]
   ) => Promise<{ data?: O; error?: Error }>;
 
@@ -56,7 +53,7 @@ export interface OperationService {
    * Throws if the operation is async or if the handler performs async work.
    */
   invokeSync: <I, O>(
-    op: OperationDefinition<I, O>,
+    op: Definition<I, O>,
     ...args: void extends I ? [input?: I, options?: InvokeOptions] : [input: I, options?: InvokeOptions]
   ) => { data?: O; error?: Error };
 }
@@ -92,7 +89,7 @@ export class Service extends Context.Tag('@dxos/operation/Service')<Service, Ope
  * ```
  */
 export const invoke = <I, O>(
-  op: OperationDefinition<I, O>,
+  op: Definition<I, O>,
   ...args: void extends I ? [input?: I, options?: InvokeOptions] : [input: I, options?: InvokeOptions]
 ): Effect.Effect<O, Error, Service> =>
   Effect.flatMap(Service, (ops) => ops.invoke(op, ...(args as [I, InvokeOptions?])));
@@ -108,47 +105,6 @@ export const invoke = <I, O>(
  * ```
  */
 export const schedule = <I, O>(
-  op: OperationDefinition<I, O>,
+  op: Definition<I, O>,
   ...args: void extends I ? [input?: I] : [input: I]
 ): Effect.Effect<void, never, Service> => Effect.flatMap(Service, (ops) => ops.schedule(op, args[0] as I));
-
-/**
- * Invoke an operation and return a Promise.
- * Requires Operation.Service to be provided in the Effect context.
- * Useful for async contexts where Effect is not available.
- *
- * @example
- * ```ts
- * const result = await Effect.runPromise(
- *   Effect.gen(function* () {
- *     return yield* Operation.invokePromise(MyOperation, { data: 'test' });
- *   }).pipe(Effect.provide(OperationServiceLayer))
- * );
- * ```
- */
-export const invokePromise = <I, O>(
-  op: OperationDefinition<I, O>,
-  ...args: void extends I ? [input?: I, options?: InvokeOptions] : [input: I, options?: InvokeOptions]
-): Effect.Effect<Promise<{ data?: O; error?: Error }>, never, Service> =>
-  Effect.flatMap(Service, (ops) => Effect.sync(() => ops.invokePromise(op, ...(args as [I, InvokeOptions?]))));
-
-/**
- * Synchronously invoke an operation.
- * Requires Operation.Service to be provided in the Effect context.
- * Only works for operations marked with `executionMode: 'sync'`.
- * Throws if the operation is async or if the handler performs async work.
- *
- * @example
- * ```ts
- * const result = Effect.runSync(
- *   Operation.invokeSync(MyOperation, { data: 'test' }).pipe(
- *     Effect.provide(OperationServiceLayer)
- *   )
- * );
- * ```
- */
-export const invokeSync = <I, O>(
-  op: OperationDefinition<I, O>,
-  ...args: void extends I ? [input?: I, options?: InvokeOptions] : [input: I, options?: InvokeOptions]
-): Effect.Effect<{ data?: O; error?: Error }, never, Service> =>
-  Effect.flatMap(Service, (ops) => Effect.sync(() => ops.invokeSync(op, ...(args as [I, InvokeOptions?]))));

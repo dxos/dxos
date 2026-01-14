@@ -12,7 +12,7 @@ import { EchoDatabaseImpl, Serializer } from '@dxos/echo-db';
 import { runAndForwardErrors } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { Migrations } from '@dxos/migrations';
-import * as Operation from '@dxos/operation';
+import { Operation } from '@dxos/operation';
 import { ClientCapabilities } from '@dxos/plugin-client/types';
 import { ObservabilityOperation } from '@dxos/plugin-observability/types';
 import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';

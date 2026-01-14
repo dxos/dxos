@@ -9,7 +9,7 @@ import * as Ref from 'effect/Ref';
 
 import { log } from '@dxos/log';
 
-import type { OperationDefinition } from './operation';
+import type { Definition } from './operation';
 import type { InvokeOptions } from './service';
 
 /**
@@ -17,7 +17,7 @@ import type { InvokeOptions } from './service';
  * @internal
  */
 export type InvokeFn = <I, O>(
-  op: OperationDefinition<I, O>,
+  op: Definition<I, O>,
   input: I,
   options?: InvokeOptions,
 ) => Effect.Effect<O, Error>;
@@ -37,7 +37,7 @@ export interface FollowupScheduler {
    * The followup is tracked and won't be cancelled when the parent completes.
    */
   schedule: <I, O>(
-    op: OperationDefinition<I, O>,
+    op: Definition<I, O>,
     ...args: void extends I ? [input?: I] : [input: I]
   ) => Effect.Effect<void>;
 
@@ -90,7 +90,7 @@ class FollowupSchedulerImpl implements FollowupScheduler {
 
   // Arrow function to preserve `this` context when destructured.
   schedule = <I, O>(
-    op: OperationDefinition<I, O>,
+    op: Definition<I, O>,
     ...args: void extends I ? [input?: I] : [input: I]
   ): Effect.Effect<void> => {
     const effect = this._invoke(op, args[0] as I).pipe(
