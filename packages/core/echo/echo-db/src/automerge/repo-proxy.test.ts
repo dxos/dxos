@@ -162,10 +162,12 @@ describe('RepoProxy', () => {
       await openAndClose(clientRepo);
 
       const text = 'Hello World!';
-      const clientHandle = clientRepo.create<{ text: string }>({ text });
-      await clientHandle.whenReady();
+      const clientHandle = clientRepo.create<{ text: string }>({ text: '' });
+      clientHandle.change((doc: any) => {
+        doc.text = text;
+      });
+      await sleep(200); // Wait for the object to be saved without flush.
       url = clientHandle.url;
-      await sleep(1000); // Wait for the object to be saved without flush.
       await level.close();
       await host.close();
       await clientRepo.close();
@@ -184,7 +186,7 @@ describe('RepoProxy', () => {
     }
   });
 
-  test('document mutation persists without `flush`', async () => {
+  test('document mutation persists with `flush`', async () => {
     const path = createTmpPath();
     let url: AutomergeUrl;
 
@@ -197,10 +199,9 @@ describe('RepoProxy', () => {
       const text = 'Hello World!';
       type TestDoc = { text: string };
       const clientHandle = clientRepo.create<TestDoc>();
-      await clientRepo.flush();
       clientHandle.change((doc: TestDoc) => (doc.text = text));
+      await clientRepo.flush();
       url = clientHandle.url;
-      await sleep(500); // Wait for the object to be saved without flush.
       await level.close();
       await host.close();
       await clientRepo.close();
