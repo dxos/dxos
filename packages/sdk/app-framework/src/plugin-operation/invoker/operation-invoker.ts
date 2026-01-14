@@ -10,7 +10,12 @@ import * as PubSub from 'effect/PubSub';
 import type { Key } from '@dxos/echo';
 import { DynamicRuntime, runAndForwardErrors } from '@dxos/effect';
 import { log } from '@dxos/log';
-import type { OperationDefinition, OperationHandler } from '@dxos/operation';
+import {
+  type OperationDefinition,
+  type OperationHandler,
+  type OperationService,
+  Service as OperationServiceTag,
+} from '@dxos/operation';
 import { byPosition } from '@dxos/util';
 
 import { NoHandlerError } from './errors';
@@ -166,7 +171,7 @@ class OperationInvokerImpl implements OperationInvoker {
   private _resolveHandler(
     operation: OperationDefinition<any, any>,
     input: any,
-  ): Effect.Effect<OperationHandler<any, any, Error, FollowupScheduler.Service> | undefined, Error> {
+  ): Effect.Effect<OperationHandler<any, any, Error, OperationServiceTag> | undefined, Error> {
     return Effect.gen(this, function* () {
       const candidates = yield* this._getHandlers().pipe(
         Effect.map((handlers) => handlers.filter((reg) => reg.operation.meta.key === operation.meta.key)),
@@ -193,10 +198,17 @@ class OperationInvokerImpl implements OperationInvoker {
 
       log('invoking operation', { key: op.meta.key, input });
 
-      // Build the effect with FollowupScheduler provided.
-      let handlerEffect = handler(input).pipe(
-        Effect.provideService(FollowupScheduler.Service, this._followupScheduler),
-      );
+      // Create the Operation.Service implementation for this invocation.
+      const operationService: OperationService = {
+        invoke: this.invoke,
+        schedule: this._followupScheduler.schedule,
+        scheduleEffect: this._followupScheduler.scheduleEffect,
+        invokePromise: this.invokePromise,
+        invokeSync: this.invokeSync,
+      };
+
+      // Build the effect with Operation.Service provided.
+      let handlerEffect = handler(input).pipe(Effect.provideService(OperationServiceTag, operationService));
 
       // Provide database context if spaceId is specified and we have a resolver.
       if (options?.spaceId && this._databaseResolver) {

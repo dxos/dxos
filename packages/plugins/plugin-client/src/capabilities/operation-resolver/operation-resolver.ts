@@ -4,10 +4,11 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capability, Common, FollowupScheduler, OperationResolver } from '@dxos/app-framework';
+import { Capability, Common, OperationResolver } from '@dxos/app-framework';
 import { PublicKey } from '@dxos/client';
 import { runAndForwardErrors } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
+import * as Operation from '@dxos/operation';
 import { ObservabilityOperation } from '@dxos/plugin-observability/types';
 import { type JoinPanelProps } from '@dxos/shell/react';
 
@@ -36,10 +37,9 @@ export default Capability.makeModule(
           Effect.gen(function* () {
             const manager = context.getCapability(Common.Capability.PluginManager);
             const client = context.getCapability(ClientCapabilities.Client);
-            const scheduler = yield* FollowupScheduler.Service;
             const data = yield* Effect.promise(() => client.halo.createIdentity(profile));
             yield* Effect.promise(() => runAndForwardErrors(manager.activate(ClientEvents.IdentityCreated)));
-            yield* scheduler.schedule(ObservabilityOperation.SendEvent, { name: 'identity.create' });
+            yield* Operation.schedule(ObservabilityOperation.SendEvent, { name: 'identity.create' });
             return data;
           }),
       }),
@@ -70,12 +70,10 @@ export default Capability.makeModule(
         operation: ClientOperation.ShareIdentity,
         handler: () =>
           Effect.gen(function* () {
-            const { invoke } = yield* Capability.get(Common.Capability.OperationInvoker);
-            const scheduler = yield* FollowupScheduler.Service;
-            yield* invoke(Common.LayoutOperation.SwitchWorkspace, { subject: Account.id });
-            yield* invoke(Common.LayoutOperation.Open, { subject: [Account.Profile] });
-            yield* scheduler.schedule(ObservabilityOperation.SendEvent, { name: 'identity.share' });
-          }).pipe(Effect.provideService(Capability.PluginContextService, context)),
+            yield* Operation.invoke(Common.LayoutOperation.SwitchWorkspace, { subject: Account.id });
+            yield* Operation.invoke(Common.LayoutOperation.Open, { subject: [Account.Profile] });
+            yield* Operation.schedule(ObservabilityOperation.SendEvent, { name: 'identity.share' });
+          }),
       }),
 
       //

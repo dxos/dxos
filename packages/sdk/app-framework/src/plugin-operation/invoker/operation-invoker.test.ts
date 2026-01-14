@@ -31,7 +31,6 @@ import {
 } from '../testing';
 
 import { NoHandlerError } from './errors';
-import * as FollowupScheduler from './followup-scheduler';
 import * as OperationInvoker from './operation-invoker';
 import * as OperationResolver from './operation-resolver';
 
@@ -819,13 +818,12 @@ describe('OperationResolver.make type safety', () => {
         }),
     });
 
-    // Using FollowupScheduler.Service is always allowed (provided by invoker).
+    // Using Operation.Service is always allowed (provided by invoker).
     OperationResolver.make({
       operation: opWithDeclaredService,
       handler: (_input) =>
         Effect.gen(function* () {
-          const scheduler = yield* FollowupScheduler.Service;
-          void scheduler;
+          yield* Operation.schedule(SideEffect);
         }),
     });
   });

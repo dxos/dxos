@@ -4,13 +4,14 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capability, Common, FollowupScheduler, OperationResolver, Plugin, UndoMapping } from '@dxos/app-framework';
+import { Capability, Common, OperationResolver, Plugin, UndoMapping } from '@dxos/app-framework';
 import { SpaceState, getSpace } from '@dxos/client/echo';
 import { Database, Obj, Query, Ref, Relation, Type } from '@dxos/echo';
 import { EchoDatabaseImpl, Serializer } from '@dxos/echo-db';
 import { runAndForwardErrors } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { Migrations } from '@dxos/migrations';
+import * as Operation from '@dxos/operation';
 import { ClientCapabilities } from '@dxos/plugin-client/types';
 import { ObservabilityOperation } from '@dxos/plugin-observability/types';
 import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
@@ -285,7 +286,6 @@ export default Capability.makeModule(
           operation: SpaceOperation.AddObject,
           handler: (input) =>
             Effect.gen(function* () {
-              const scheduler = yield* FollowupScheduler.Service;
               const target = input.target as any;
               const object = input.object as Obj.Any;
               const db = Database.isDatabase(target) ? target : Obj.getDatabase(target);
@@ -297,7 +297,7 @@ export default Capability.makeModule(
                 hidden: input.hidden,
               }).pipe(Effect.provide(Database.Service.layer(db)));
 
-              yield* scheduler.schedule(ObservabilityOperation.SendEvent, {
+              yield* Operation.schedule(ObservabilityOperation.SendEvent, {
                 name: 'space.object.add',
                 properties: {
                   spaceId: db.spaceId,
@@ -320,11 +320,10 @@ export default Capability.makeModule(
           operation: SpaceOperation.Share,
           handler: (input) =>
             Effect.gen(function* () {
-              const scheduler = yield* FollowupScheduler.Service;
               const { space, type, authMethod, multiUse, target } = input;
               const invitation = space.share({ type, authMethod, multiUse, target });
 
-              yield* scheduler.schedule(ObservabilityOperation.SendEvent, {
+              yield* Operation.schedule(ObservabilityOperation.SendEvent, {
                 name: 'space.share',
                 properties: {
                   spaceId: space.id,
@@ -346,8 +345,7 @@ export default Capability.makeModule(
               space.properties[COMPOSER_SPACE_LOCK] = true;
 
               if (observability) {
-                const scheduler = yield* FollowupScheduler.Service;
-                yield* scheduler.schedule(ObservabilityOperation.SendEvent, {
+                yield* Operation.schedule(ObservabilityOperation.SendEvent, {
                   name: 'space.lock',
                   properties: { spaceId: space.id },
                 });
@@ -366,8 +364,7 @@ export default Capability.makeModule(
               space.properties[COMPOSER_SPACE_LOCK] = false;
 
               if (observability) {
-                const scheduler = yield* FollowupScheduler.Service;
-                yield* scheduler.schedule(ObservabilityOperation.SendEvent, {
+                yield* Operation.schedule(ObservabilityOperation.SendEvent, {
                   name: 'space.unlock',
                   properties: { spaceId: space.id },
                 });
@@ -397,7 +394,6 @@ export default Capability.makeModule(
           operation: SpaceOperation.Create,
           handler: ({ name, hue: hue_, icon: icon_, edgeReplication }) =>
             Effect.gen(function* () {
-              const scheduler = yield* FollowupScheduler.Service;
               const client = context.getCapability(ClientCapabilities.Client);
               const hue = hue_ ?? hues[Math.floor(Math.random() * hues.length)];
               const icon = icon_ ?? iconValues[Math.floor(Math.random() * iconValues.length)];
@@ -433,7 +429,7 @@ export default Capability.makeModule(
               );
 
               if (observability) {
-                yield* scheduler.schedule(ObservabilityOperation.SendEvent, {
+                yield* Operation.schedule(ObservabilityOperation.SendEvent, {
                   name: 'space.create',
                   properties: { spaceId: space.id },
                 });
@@ -451,7 +447,6 @@ export default Capability.makeModule(
           handler: (input) =>
             Effect.gen(function* () {
               const state = context.getCapability(SpaceCapabilities.MutableState);
-              const scheduler = yield* FollowupScheduler.Service;
               const { space, version: targetVersion } = input;
 
               if (space.state.get() === SpaceState.SPACE_REQUIRES_MIGRATION) {
@@ -461,7 +456,7 @@ export default Capability.makeModule(
               }
               const result = yield* Effect.promise(() => Migrations.migrate(space, targetVersion));
 
-              yield* scheduler.schedule(ObservabilityOperation.SendEvent, {
+              yield* Operation.schedule(ObservabilityOperation.SendEvent, {
                 name: 'space.migrate',
                 properties: {
                   spaceId: space.id,
@@ -584,7 +579,6 @@ export default Capability.makeModule(
           operation: SpaceOperation.UseStaticSchema,
           handler: (input) =>
             Effect.gen(function* () {
-              const scheduler = yield* FollowupScheduler.Service;
               const db = input.db as Database.Database;
               const client = context.getCapability(ClientCapabilities.Client) as any;
               const schema: any = yield* Effect.promise(() =>
@@ -614,7 +608,7 @@ export default Capability.makeModule(
                 { concurrency: 'unbounded' },
               );
 
-              yield* scheduler.schedule(ObservabilityOperation.SendEvent, {
+              yield* Operation.schedule(ObservabilityOperation.SendEvent, {
                 name: 'space.schema.use',
                 properties: {
                   spaceId: space.id,
@@ -633,7 +627,6 @@ export default Capability.makeModule(
           operation: SpaceOperation.AddSchema,
           handler: (input) =>
             Effect.gen(function* () {
-              const scheduler = yield* FollowupScheduler.Service;
               const db = input.db as any;
               const schemas = (yield* Effect.promise(() => db.schemaRegistry.register([input.schema]))) as any[];
               const schema = schemas[0];
@@ -660,7 +653,7 @@ export default Capability.makeModule(
                 { concurrency: 'unbounded' },
               );
 
-              yield* scheduler.schedule(ObservabilityOperation.SendEvent, {
+              yield* Operation.schedule(ObservabilityOperation.SendEvent, {
                 name: 'space.schema.add',
                 properties: {
                   spaceId: db.spaceId,

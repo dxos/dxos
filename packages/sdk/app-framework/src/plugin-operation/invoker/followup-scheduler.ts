@@ -35,7 +35,10 @@ export interface FollowupScheduler {
    * Schedule an operation to run as a followup.
    * The followup is tracked and won't be cancelled when the parent completes.
    */
-  schedule: <I, O>(op: OperationDefinition<I, O>, input: I) => Effect.Effect<void>;
+  schedule: <I, O>(
+    op: OperationDefinition<I, O>,
+    ...args: void extends I ? [input?: I] : [input: I]
+  ) => Effect.Effect<void>;
 
   /**
    * Schedule an arbitrary effect as a followup.
@@ -85,8 +88,11 @@ class FollowupSchedulerImpl implements FollowupScheduler {
   }
 
   // Arrow function to preserve `this` context when destructured.
-  schedule = <I, O>(op: OperationDefinition<I, O>, input: I): Effect.Effect<void> => {
-    const effect = this._invoke(op, input).pipe(
+  schedule = <I, O>(
+    op: OperationDefinition<I, O>,
+    ...args: void extends I ? [input?: I] : [input: I]
+  ): Effect.Effect<void> => {
+    const effect = this._invoke(op, args[0] as I).pipe(
       Effect.tap(() => Effect.sync(() => log('followup completed', { key: op.meta.key }))),
       Effect.catchAll((error) =>
         Effect.sync(() => {

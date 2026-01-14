@@ -4,10 +4,11 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capability, Common, FollowupScheduler, OperationResolver, UndoMapping } from '@dxos/app-framework';
+import { Capability, Common, OperationResolver, UndoMapping } from '@dxos/app-framework';
 import { sleep } from '@dxos/async';
 import { Obj, Relation, Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
+import * as Operation from '@dxos/operation';
 import { ATTENDABLE_PATH_SEPARATOR, DeckOperation } from '@dxos/plugin-deck/types';
 import { ObservabilityOperation } from '@dxos/plugin-observability/types';
 import { SpaceOperation } from '@dxos/plugin-space/types';
@@ -101,7 +102,6 @@ export default Capability.makeModule(
           operation: ThreadOperation.ToggleResolved,
           handler: (input) =>
             Effect.gen(function* () {
-              const scheduler = yield* FollowupScheduler.Service;
               const thread = input.thread;
 
               if (thread.status === 'active' || thread.status === undefined) {
@@ -113,7 +113,7 @@ export default Capability.makeModule(
               const db = Obj.getDatabase(thread);
               invariant(db, 'Database not found');
 
-              yield* scheduler.schedule(ObservabilityOperation.SendEvent, {
+              yield* Operation.schedule(ObservabilityOperation.SendEvent, {
                 name: 'threads.toggle-resolved',
                 properties: {
                   spaceId: db.spaceId,
@@ -186,7 +186,6 @@ export default Capability.makeModule(
           handler: ({ subject, anchor, thread: _thread }) =>
             Effect.gen(function* () {
               const thread = _thread ?? (Relation.getSource(anchor) as Thread.Thread);
-              const scheduler = yield* FollowupScheduler.Service;
               const subjectId = Obj.getDXN(subject).toString();
               const draft = state.drafts[subjectId];
               if (draft) {
@@ -210,7 +209,7 @@ export default Capability.makeModule(
               db.remove(thread);
 
               // Schedule analytics event as followup (doesn't block return).
-              yield* scheduler.schedule(ObservabilityOperation.SendEvent, {
+              yield* Operation.schedule(ObservabilityOperation.SendEvent, {
                 name: 'threads.delete',
                 properties: {
                   spaceId: db.spaceId,
@@ -232,7 +231,6 @@ export default Capability.makeModule(
             Effect.gen(function* () {
               const { invoke } = yield* Capability.get(Common.Capability.OperationInvoker);
               const thread = Relation.getSource(anchor) as Thread.Thread;
-              const scheduler = yield* FollowupScheduler.Service;
               const subjectId = Obj.getDXN(subject).toString();
               const db = Obj.getDatabase(subject);
               invariant(db, 'Database not found');
@@ -257,7 +255,7 @@ export default Capability.makeModule(
                   target: subject,
                   fields: { anchor: draft.anchor },
                 });
-                yield* scheduler.schedule(ObservabilityOperation.SendEvent, {
+                yield* Operation.schedule(ObservabilityOperation.SendEvent, {
                   name: 'threads.create',
                   properties: {
                     spaceId: db.spaceId,
@@ -266,7 +264,7 @@ export default Capability.makeModule(
                 });
               }
 
-              yield* scheduler.schedule(ObservabilityOperation.SendEvent, {
+              yield* Operation.schedule(ObservabilityOperation.SendEvent, {
                 name: 'threads.message.add',
                 properties: {
                   spaceId: db.spaceId,
@@ -288,7 +286,6 @@ export default Capability.makeModule(
             Effect.gen(function* () {
               const { invoke } = yield* Capability.get(Common.Capability.OperationInvoker);
               const thread = Relation.getSource(anchor) as Thread.Thread;
-              const scheduler = yield* FollowupScheduler.Service;
               const db = Obj.getDatabase(subject);
               invariant(db, 'Database not found');
 
@@ -306,7 +303,7 @@ export default Capability.makeModule(
 
               thread.messages.splice(msgIndex, 1);
 
-              yield* scheduler.schedule(ObservabilityOperation.SendEvent, {
+              yield* Operation.schedule(ObservabilityOperation.SendEvent, {
                 name: 'threads.message.delete',
                 properties: {
                   spaceId: db.spaceId,
@@ -339,8 +336,7 @@ export default Capability.makeModule(
               db.add(anchor);
 
               // Schedule analytics event as followup (doesn't block return).
-              const scheduler = yield* FollowupScheduler.Service;
-              yield* scheduler.schedule(ObservabilityOperation.SendEvent, {
+              yield* Operation.schedule(ObservabilityOperation.SendEvent, {
                 name: 'threads.undo-delete',
                 properties: {
                   spaceId: db.spaceId,
@@ -358,13 +354,12 @@ export default Capability.makeModule(
           handler: ({ anchor, message, messageIndex }) =>
             Effect.gen(function* () {
               const thread = Relation.getSource(anchor) as Thread.Thread;
-              const scheduler = yield* FollowupScheduler.Service;
               const db = Obj.getDatabase(thread);
               invariant(db, 'Database not found');
 
               thread.messages.splice(messageIndex, 0, Ref.make(message));
 
-              yield* scheduler.schedule(ObservabilityOperation.SendEvent, {
+              yield* Operation.schedule(ObservabilityOperation.SendEvent, {
                 name: 'threads.message.undo-delete',
                 properties: {
                   spaceId: db.spaceId,

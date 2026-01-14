@@ -28,31 +28,31 @@ todos:
     status: completed
   - id: phase2-service
     content: Create Operation.Service and namespace functions (invoke/schedule/invokePromise) with InvokeOptions in @dxos/operation
-    status: pending
+    status: completed
   - id: phase2-move
     content: Move operation-invoker, followup-scheduler (internal), operation-resolver to @dxos/operation
-    status: pending
+    status: cancelled
   - id: phase2-remove-followup
     content: Remove FollowupScheduler.Service entirely - replace with Operation.schedule
-    status: pending
+    status: completed
   - id: phase2-provide
     content: Update operation-invoker to provide only Operation.Service to handlers
-    status: pending
+    status: completed
   - id: phase2-build
     content: Run pnpm build to verify Phase 2 core changes compile
-    status: pending
+    status: completed
   - id: phase2-enumerate
     content: Enumerate all operation resolvers needing updates using grep, create tracking todo list
-    status: pending
+    status: completed
   - id: phase2-resolvers
     content: Update all operation resolvers to use Operation.invoke/schedule instead of FollowupScheduler.Service
-    status: pending
+    status: completed
   - id: final-build
     content: Run pnpm build to verify complete migration compiles
-    status: pending
+    status: completed
   - id: final-lint
     content: Run pnpm lint-changed and fix any linting issues
-    status: pending
+    status: completed
 ---
 
 # Capability and Operation Effect Layers
