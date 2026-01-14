@@ -592,11 +592,13 @@ describe('AutomergeRepo', () => {
     });
 
     test('reload document without flush', async () => {
-      const storage = await createLevelAdapter();
+      const path = createTmpPath();
       const text = 'Hello World!';
       let url: AutomergeUrl;
 
       {
+        const level = createTestLevel(path);
+        const storage = await createLevelAdapter(level);
         const repo = new Repo({ network: [], storage });
         const handle = await repo.create2<{ text: string }>();
         url = handle.url;
@@ -605,9 +607,12 @@ describe('AutomergeRepo', () => {
         });
         // No explicit flush - rely on auto-save.
         await sleep(200);
+        await level.close();
       }
 
       {
+        const level = createTestLevel(path);
+        const storage = await createLevelAdapter(level);
         const repo = new Repo({ network: [], storage });
         const handle = await repo.find<{ text: string }>(url);
         await handle.whenReady();
