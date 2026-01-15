@@ -5,24 +5,33 @@
 import React, { useCallback, useState } from 'react';
 
 import { Surface } from '@dxos/app-framework/react';
-import { Obj } from '@dxos/echo';
-import { useClient } from '@dxos/react-client';
+import { Obj, Query } from '@dxos/echo';
 import { Filter, type Space, useQuery } from '@dxos/react-client/echo';
 import { useTranslation } from '@dxos/react-ui';
 import { SearchList } from '@dxos/react-ui-searchlist';
 import { StackItem } from '@dxos/react-ui-stack';
+import { Text } from '@dxos/schema';
 
 import { useGlobalSearch, useGlobalSearchResults, useWebSearch } from '../hooks';
 import { meta } from '../meta';
 
 export const SearchMain = ({ space }: { space?: Space }) => {
   const { t } = useTranslation(meta.id);
-  const client = useClient();
   const { setMatch } = useGlobalSearch();
   const [query, setQuery] = useState<string>();
   // TODO(burdon): Option to search across spaces.
-  const allSpaces = false;
-  const objects = useQuery(allSpaces ? client.spaces : space?.db, Filter.everything());
+  const objects = useQuery(
+    space?.db,
+    query === undefined
+      ? Query.select(Filter.nothing())
+      : // TODO(dmaretskyi): Final version would walk the ancestry of the object until we find a non-system type.
+        Query.all(
+          Query.select(Filter.text(query, { type: 'full-text' })).select(Filter.not(Filter.type(Text.Text))),
+          Query.select(Filter.text(query, { type: 'full-text' }))
+            .select(Filter.type(Text.Text))
+            .referencedBy('dxos.org/type/Document', 'content'),
+        ),
+  );
   const results = useGlobalSearchResults(objects);
 
   const { results: webResults } = useWebSearch({ query });

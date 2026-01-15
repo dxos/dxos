@@ -749,6 +749,64 @@ describe('Query', () => {
       );
     });
 
+    test('full-text search with partial word matching (trigram)', async () => {
+      const { db } = await builder.createDatabase({ indexing: { fullText: true } });
+
+      db.add(Obj.make(Type.Expando, { title: 'Introduction to TypeScript' }));
+      db.add(Obj.make(Type.Expando, { title: 'Getting Started with React' }));
+      db.add(Obj.make(Type.Expando, { title: 'Advanced Python Programming' }));
+      await db.flush({ indexes: true });
+
+      // Partial word "Script" should match "TypeScript".
+      {
+        const objects = await db.query(Query.select(Filter.text('Script', { type: 'full-text' }))).run();
+        expect(objects).toHaveLength(1);
+        expect(objects[0].title).toEqual('Introduction to TypeScript');
+      }
+
+      // Partial word "Prog" should match "Programming".
+      {
+        const objects = await db.query(Query.select(Filter.text('Prog', { type: 'full-text' }))).run();
+        expect(objects).toHaveLength(1);
+        expect(objects[0].title).toEqual('Advanced Python Programming');
+      }
+
+      // Substring in the middle "Pytho" should match "Python".
+      {
+        const objects = await db.query(Query.select(Filter.text('ytho', { type: 'full-text' }))).run();
+        expect(objects).toHaveLength(1);
+        expect(objects[0].title).toEqual('Advanced Python Programming');
+      }
+
+      // Single character query uses LIKE fallback and matches all documents
+      {
+        const objects = await db.query(Query.select(Filter.text('I', { type: 'full-text' }))).run();
+        expect(objects).toHaveLength(3);
+      }
+    });
+
+    test('full-text search with wrong word order', async () => {
+      const { db } = await builder.createDatabase({ indexing: { fullText: true } });
+
+      db.add(Obj.make(Type.Expando, { title: 'Python Programming Guide' }));
+      db.add(Obj.make(Type.Expando, { title: 'JavaScript Basics' }));
+      await db.flush({ indexes: true });
+
+      // Words in different order should still match.
+      {
+        const objects = await db.query(Query.select(Filter.text('Programming Python', { type: 'full-text' }))).run();
+        expect(objects).toHaveLength(1);
+        expect(objects[0].title).toEqual('Python Programming Guide');
+      }
+
+      // Another wrong order example.
+      {
+        const objects = await db.query(Query.select(Filter.text('Guide Python', { type: 'full-text' }))).run();
+        expect(objects).toHaveLength(1);
+        expect(objects[0].title).toEqual('Python Programming Guide');
+      }
+    });
+
     test('full-text search after content update', async () => {
       const { db } = await builder.createDatabase({ indexing: { fullText: true } });
 

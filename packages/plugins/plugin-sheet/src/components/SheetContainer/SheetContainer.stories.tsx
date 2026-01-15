@@ -86,7 +86,7 @@ export const Spec = () => {
 
   return (
     <AttendableContainer id={Obj.getDXN(sheet).toString()} classNames='contents'>
-      <div role='none' className='grid grid-rows-[66%_33%] bs-full grid-cols-1'>
+      <div role='none' className='grid grid-rows-[66%_33%] h-[100dvh] grid-cols-1'>
         <SheetContainer space={space} sheet={sheet} role='story' ignoreAttention />
         <div role='none' data-testid='grid.range-list'>
           <RangeList sheet={sheet} />

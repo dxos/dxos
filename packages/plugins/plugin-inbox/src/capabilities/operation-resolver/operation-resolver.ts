@@ -13,6 +13,7 @@ import { ClientCapabilities } from '@dxos/plugin-client/types';
 import { SpaceOperation } from '@dxos/plugin-space/types';
 import { Organization, Person } from '@dxos/types';
 
+import { COMPOSE_EMAIL_DIALOG } from '../../constants';
 import { InboxOperation } from '../../types';
 
 export default Capability.makeModule(
@@ -118,6 +119,14 @@ export default Capability.makeModule(
       OperationResolver.make({
         operation: InboxOperation.RunAssistant,
         handler: () => Effect.fail(new Error('Not implemented')),
+      }),
+      OperationResolver.make({
+        operation: InboxOperation.OpenComposeEmail,
+        handler: () =>
+          Operation.invoke(Common.LayoutOperation.UpdateDialog, {
+            subject: COMPOSE_EMAIL_DIALOG,
+            blockAlign: 'start',
+          }),
       }),
     ]);
   }),
