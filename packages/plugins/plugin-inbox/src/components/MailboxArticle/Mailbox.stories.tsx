@@ -4,8 +4,8 @@
 
 import './mailbox.css';
 
-import * as Effect from 'effect/Effect';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
+import * as Effect from 'effect/Effect';
 import React, { useMemo, useState } from 'react';
 
 import { Surface } from '@dxos/app-framework/react';

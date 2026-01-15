@@ -3,7 +3,6 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-
 import * as Effect from 'effect/Effect';
 
 import { OperationPlugin } from '@dxos/app-framework';

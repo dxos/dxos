@@ -2,8 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
-import * as Effect from 'effect/Effect';
 import { type Meta } from '@storybook/react-vite';
+import * as Effect from 'effect/Effect';
 import * as Function from 'effect/Function';
 import * as Match from 'effect/Match';
 import * as Option from 'effect/Option';

@@ -2,8 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
-import * as Effect from 'effect/Effect';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
+import * as Effect from 'effect/Effect';
 import React, { useMemo } from 'react';
 
 import { Common } from '@dxos/app-framework';

@@ -2,8 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
-import * as Effect from 'effect/Effect';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
+import * as Effect from 'effect/Effect';
 import React from 'react';
 
 import { OperationPlugin } from '@dxos/app-framework';
@@ -24,11 +24,7 @@ const Render = (props: Omit<ResetDialogProps, 'context'>) => {
   return (
     <Dialog.Root open>
       <Dialog.Overlay>
-        <ResetDialog
-          onReset={() => Effect.sync(() => console.log('reset'))}
-          context={context}
-          {...props}
-        />
+        <ResetDialog onReset={() => Effect.sync(() => console.log('reset'))} context={context} {...props} />
       </Dialog.Overlay>
     </Dialog.Root>
   );

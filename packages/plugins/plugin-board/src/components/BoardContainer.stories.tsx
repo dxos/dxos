@@ -2,8 +2,8 @@
 // Copyright 2024 DXOS.org
 //
 
-import * as Effect from 'effect/Effect';
 import { type StoryObj } from '@storybook/react-vite';
+import * as Effect from 'effect/Effect';
 import React, { useEffect, useState } from 'react';
 
 import { withPluginManager } from '@dxos/app-framework/testing';

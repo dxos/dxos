@@ -6,8 +6,6 @@ import * as Effect from 'effect/Effect';
 import React, { useCallback } from 'react';
 
 import { Capability, Common } from '@dxos/app-framework';
-
-type PluginContext = Parameters<typeof Capability.PluginContextService.of>[0];
 import { useOperationInvoker } from '@dxos/app-framework/react';
 import { runAndForwardErrors } from '@dxos/effect';
 import { useClient } from '@dxos/react-client';
@@ -19,7 +17,7 @@ import { type ClientPluginOptions } from '../types';
 
 export type ResetDialogProps = Pick<ConfirmResetProps, 'mode'> &
   Pick<ClientPluginOptions, 'onReset'> & {
-    context: PluginContext;
+    context: Capability.PluginContext;
   };
 
 export const ResetDialog = ({ mode, onReset, context }: ResetDialogProps) => {
