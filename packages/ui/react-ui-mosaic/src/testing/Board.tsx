@@ -90,17 +90,7 @@ export const Board = forwardRef<HTMLDivElement, BoardProps>(({ id, columns, debu
           eventHandler={eventHandler}
           debug={debugHandler}
         >
-          <Mosaic.Viewport
-            options={{
-              overflow: { x: 'scroll' },
-              scrollbars: {
-                autoHide: 'leave',
-                autoHideDelay: 1_000,
-                autoHideSuspend: true,
-              },
-            }}
-            onViewportReady={setViewportElement}
-          >
+          <Mosaic.Viewport options={{ overflow: { x: 'scroll' } }} onViewportReady={setViewportElement}>
             <Mosaic.Stack axis='horizontal' className='plb-3' items={columns} Component={Column} />
           </Mosaic.Viewport>
         </Mosaic.Container>
@@ -155,14 +145,10 @@ export const Column = forwardRef<HTMLDivElement, ColumnProps>(
         <Focus.Group asChild>
           <div
             className={mx(
-              'grid bs-full is-min-[20rem] is-max-[20rem] overflow-hidden bg-deckSurface',
+              'grid bs-full is-[--dx-cardDefaultWidth] overflow-hidden bg-deckSurface',
               debug ? 'grid-rows-[min-content_1fr_20rem]' : 'grid-rows-[min-content_1fr_min-content]',
               classNames,
             )}
-            // TODO(burdon): Class for widths.
-            style={{
-              width: '25rem', //'var(--dx-cardDefaultWidth)px',
-            }}
             ref={forwardedRef}
           >
             <Card.Toolbar>
