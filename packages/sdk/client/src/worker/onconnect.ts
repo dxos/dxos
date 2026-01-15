@@ -9,14 +9,14 @@ import { createWorkerPort } from '@dxos/rpc-tunnel';
 import { TRACE_PROCESSOR } from '@dxos/tracing';
 
 import { mountDevtoolsHooks } from '../devtools';
-import { LOCK_KEY } from '../lock-key';
+import { STORAGE_LOCK_KEY } from '../lock-key';
 
 TRACE_PROCESSOR.setInstanceTag('shared-worker');
 
 let releaseLock: () => void;
 const lockPromise = new Promise<void>((resolve) => (releaseLock = resolve));
 const lockAcquired = new Trigger();
-void navigator.locks.request(LOCK_KEY, (lock: Lock | null) => {
+void navigator.locks.request(STORAGE_LOCK_KEY, (lock: Lock | null) => {
   lockAcquired.wake();
   return lockPromise;
 });

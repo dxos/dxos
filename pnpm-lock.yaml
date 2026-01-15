@@ -13860,6 +13860,9 @@ importers:
       ua-parser-js:
         specifier: 'catalog:'
         version: 1.0.39
+      web-worker:
+        specifier: 1.5.0
+        version: 1.5.0
     devDependencies:
       '@dxos/test-utils':
         specifier: workspace:*
@@ -38022,6 +38025,9 @@ packages:
   web-worker@1.2.0:
     resolution: {integrity: sha512-PgF341avzqyx60neE9DD+XS26MMNMoUQRz9NOZwW32nPQrF6p77f1htcnjBSEV8BGMKZ16choqUG4hyI0Hx7mA==}
 
+  web-worker@1.5.0:
+    resolution: {integrity: sha512-RiMReJrTAiA+mBjGONMnjVDP2u3p9R1vkcGz6gDIrOMT3oGuYwX2WRMYI9ipkphSuE5XKEhydbhNEJh4NY9mlw==}
+
   webdriver@8.33.1:
     resolution: {integrity: sha512-QREF4c08omN9BPh3QDmz5h+OEvjdzDliuEcrDuXoDnHSMxIj1rsonzsgRaM2PXhFZuPeMIiKZYqc7Qg9BGbh6A==}
     engines: {node: ^16.13 || >=18}
@@ -55733,7 +55739,7 @@ snapshots:
       stylis: 4.3.0
       ts-dedent: 2.2.0
       uuid: 9.0.1
-      web-worker: 1.2.0
+      web-worker: 1.5.0
     transitivePeerDependencies:
       - supports-color
 
@@ -61369,6 +61375,8 @@ snapshots:
   web-tree-sitter@0.25.10: {}
 
   web-worker@1.2.0: {}
+
+  web-worker@1.5.0: {}
 
   webdriver@8.33.1:
     dependencies:

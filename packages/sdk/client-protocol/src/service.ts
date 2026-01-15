@@ -60,8 +60,8 @@ export interface ClientServicesProvider {
   services: Partial<ClientServices>;
 
   // TODO(burdon): Should take context from parent?
-  open(): Promise<void>;
-  close(): Promise<void>;
+  open(): Promise<unknown>;
+  close(): Promise<unknown>;
 }
 
 /**

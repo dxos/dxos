@@ -153,7 +153,8 @@
     "jwt-decode": "catalog:",
     "lodash.isequal": "catalog:",
     "lodash.isequalwith": "catalog:",
-    "ua-parser-js": "catalog:"
+    "ua-parser-js": "catalog:",
+    "web-worker": "1.5.0"
   },
   "devDependencies": {
     "@automerge/automerge": "catalog:",
