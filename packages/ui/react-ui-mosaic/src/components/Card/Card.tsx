@@ -3,7 +3,13 @@
 //
 
 import { Slot } from '@radix-ui/react-slot';
-import React, { type ComponentPropsWithoutRef, type PropsWithChildren, forwardRef } from 'react';
+import React, {
+  type ComponentPropsWithoutRef,
+  type PropsWithChildren,
+  createContext,
+  forwardRef,
+  useContext,
+} from 'react';
 
 import {
   DropdownMenu,
@@ -26,6 +32,20 @@ import { cardChrome, cardGrid, cardHeading, cardRoot, cardSection, cardSpacing, 
  * The default width of cards. It should be no larger than 320px per WCAG 2.1 SC 1.4.10.
  */
 const cardDefaultInlineSize = cardMinInlineSize;
+
+//
+// Context
+//
+
+type CardContextValue = {
+  menuItems?: CardMenuItem<any>[];
+};
+
+const CardContext = createContext<CardContextValue>({});
+
+//
+// Root
+//
 
 type CardSharedProps = ThemedClassName<ComponentPropsWithoutRef<'div'>> & {
   asChild?: boolean;
@@ -154,24 +174,32 @@ const CardDragHandle = forwardRef<HTMLButtonElement, CardDragHandleProps>(({ too
 // Menu
 //
 
+type CardMenuItem<T extends any | void = void> = {
+  label: string;
+  onSelect: (context: T) => void;
+};
+
 type CardMenuProps<T extends any | void = void> = {
   context?: T;
-  items?: { label: string; onSelect: (context?: T) => void }[];
+  items?: CardMenuItem<T>[];
 };
 
 const CardMenu = <T extends any | void = void>({ context, items }: CardMenuProps<T>) => {
   const { t } = useTranslation(translationKey);
+  const { menuItems } = useContext(CardContext) ?? {};
+  const combinedItems = [...(items ?? []), ...((menuItems as CardMenuItem<T>[]) ?? [])];
+
   return (
     <DropdownMenu.Root>
       <DropdownMenu.Trigger asChild>
         <Card.ToolbarIconButton iconOnly variant='ghost' icon='ph--list--regular' label={t('action menu label')} />
       </DropdownMenu.Trigger>
-      {(items?.length ?? 0) > 0 && (
+      {(combinedItems?.length ?? 0) > 0 && (
         <DropdownMenu.Portal>
           <DropdownMenu.Content>
             <DropdownMenu.Viewport>
-              {items?.map(({ label, onSelect }, i) => (
-                <DropdownMenu.Item key={i} onSelect={() => onSelect(context)}>
+              {combinedItems?.map(({ label, onSelect }, i) => (
+                <DropdownMenu.Item key={i} onSelect={() => onSelect(context as T)}>
                   {label}
                 </DropdownMenu.Item>
               ))}
@@ -276,6 +304,7 @@ const CardText = forwardRef<HTMLDivElement, CardSharedProps>(
 //
 
 export const Card = {
+  Context: CardContext,
   Root: CardRoot,
   SurfaceRoot: CardSurfaceRoot,
   DragHandle: CardDragHandle,
@@ -290,6 +319,6 @@ export const Card = {
   Text: CardText,
 };
 
-export type { CardRootProps, CardMenuProps };
+export type { CardContextValue, CardRootProps, CardMenuProps };
 
 export { cardRoot, cardHeading, cardText, cardChrome, cardSpacing, cardDefaultInlineSize };

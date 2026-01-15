@@ -67,10 +67,8 @@ export const Board = forwardRef<HTMLDivElement, BoardProps>(({ id, columns, debu
 
   const eventHandler = useEventHandlerAdapter({
     id,
-    canDrop: ({ source }) => {
-      return Obj.instanceOf(TestColumn, source.object);
-    },
     items: columns,
+    canDrop: ({ source }) => Obj.instanceOf(TestColumn, source.object),
     get: (item) => item,
     make: (object) => object,
   });
@@ -116,16 +114,14 @@ export const Column = forwardRef<HTMLDivElement, ColumnProps>(
     const [scrollViewport, setViewportElement] = useState<HTMLElement | null>(null);
     const eventHandler = useEventHandlerAdapter({
       id,
-      canDrop: ({ source }) => {
-        return Obj.instanceOf(TestItem, source.object);
-      },
       items,
+      canDrop: ({ source }) => Obj.instanceOf(TestItem, source.object),
       get: (item) => item.target,
       make: (object) => Ref.make(object),
     });
 
-    // TODO(burdon): Context.
-    const menuItems = useMemo<CardMenuProps<TestItem>['items']>(
+    // Context menu.
+    const menuItems = useMemo<NonNullable<CardMenuProps<TestItem>['items']>>(
       () => [
         {
           label: 'Delete',
@@ -156,23 +152,25 @@ export const Column = forwardRef<HTMLDivElement, ColumnProps>(
               <Card.Heading>{id}</Card.Heading>
               <Card.Menu items={[]} />
             </Card.Toolbar>
-            <Mosaic.Container
-              asChild
-              axis='vertical'
-              withFocus
-              autoScroll={scrollViewport}
-              eventHandler={eventHandler}
-              debug={debugHandler}
-            >
-              <Mosaic.Viewport options={{ overflow: { y: 'scroll' } }} onViewportReady={setViewportElement}>
-                <Mosaic.Stack
-                  axis='vertical'
-                  className='pli-3'
-                  items={items.map((item: any) => item.target).filter(isTruthy)}
-                  Component={Tile}
-                />
-              </Mosaic.Viewport>
-            </Mosaic.Container>
+            <Card.Context value={{ menuItems }}>
+              <Mosaic.Container
+                asChild
+                axis='vertical'
+                withFocus
+                autoScroll={scrollViewport}
+                eventHandler={eventHandler}
+                debug={debugHandler}
+              >
+                <Mosaic.Viewport options={{ overflow: { y: 'scroll' } }} onViewportReady={setViewportElement}>
+                  <Mosaic.Stack
+                    axis='vertical'
+                    className='pli-3'
+                    items={items.map((item: any) => item.target).filter(isTruthy)}
+                    Component={Tile}
+                  />
+                </Mosaic.Viewport>
+              </Mosaic.Container>
+            </Card.Context>
             <div>
               <div className='grow flex p-1 justify-center text-xs'>{items.length}</div>
               <DebugInfo />

@@ -41,7 +41,7 @@ const StackInner = forwardRef<HTMLDivElement, StackProps>(
         role={role}
         className={mx(
           'flex',
-          axis === 'horizontal' && ['bs-full', '[&>*]:shrink-0'],
+          axis === 'horizontal' && 'bs-full [&>*]:shrink-0',
           axis === 'vertical' && 'flex-col',
           classNames,
           className,
