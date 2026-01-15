@@ -5,9 +5,9 @@
 import * as Effect from 'effect/Effect';
 
 import { Capability, Common } from '@dxos/app-framework';
-import { Operation, OperationResolver } from '@dxos/operation';
 import { DXN, Obj, Ref, Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
+import { Operation, OperationResolver } from '@dxos/operation';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { ThreadCapabilities } from '@dxos/plugin-thread';
 import { ThreadOperation } from '@dxos/plugin-thread/types';

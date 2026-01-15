@@ -16,11 +16,7 @@ import type { InvokeOptions } from './service';
  * Invocation function type for scheduling operations.
  * @internal
  */
-export type InvokeFn = <I, O>(
-  op: Definition<I, O>,
-  input: I,
-  options?: InvokeOptions,
-) => Effect.Effect<O, Error>;
+export type InvokeFn = <I, O>(op: Definition<I, O>, input: I, options?: InvokeOptions) => Effect.Effect<O, Error>;
 
 //
 // Public Interface
@@ -36,10 +32,7 @@ export interface FollowupScheduler {
    * Schedule an operation to run as a followup.
    * The followup is tracked and won't be cancelled when the parent completes.
    */
-  schedule: <I, O>(
-    op: Definition<I, O>,
-    ...args: void extends I ? [input?: I] : [input: I]
-  ) => Effect.Effect<void>;
+  schedule: <I, O>(op: Definition<I, O>, ...args: void extends I ? [input?: I] : [input: I]) => Effect.Effect<void>;
 
   /**
    * Schedule an arbitrary effect as a followup.
@@ -89,10 +82,7 @@ class FollowupSchedulerImpl implements FollowupScheduler {
   }
 
   // Arrow function to preserve `this` context when destructured.
-  schedule = <I, O>(
-    op: Definition<I, O>,
-    ...args: void extends I ? [input?: I] : [input: I]
-  ): Effect.Effect<void> => {
+  schedule = <I, O>(op: Definition<I, O>, ...args: void extends I ? [input?: I] : [input: I]): Effect.Effect<void> => {
     const effect = this._invoke(op, args[0] as I).pipe(
       Effect.tap(() => Effect.sync(() => log('followup completed', { key: op.meta.key }))),
       Effect.catchAll((error) =>

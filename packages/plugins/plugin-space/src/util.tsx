@@ -7,13 +7,13 @@ import { Atom } from '@effect-atom/atom-react';
 import type * as Schema from 'effect/Schema';
 
 import { type Capability, Common } from '@dxos/app-framework';
-import { type OperationInvoker } from '@dxos/operation';
 import { type Space, SpaceState, isSpace } from '@dxos/client/echo';
 import { type Database, type Entity, Filter, Obj, Query, type QueryResult, Ref, Type } from '@dxos/echo';
 import { EXPANDO_TYPENAME } from '@dxos/echo/internal';
 import { runAndForwardErrors } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { Migrations } from '@dxos/migrations';
+import { type OperationInvoker } from '@dxos/operation';
 import { Graph, Node } from '@dxos/plugin-graph';
 import { ATTENDABLE_PATH_SEPARATOR } from '@dxos/react-ui-attention/types';
 import { type TreeData } from '@dxos/react-ui-list';

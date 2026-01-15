@@ -5,9 +5,9 @@
 import * as Effect from 'effect/Effect';
 
 import { Capability, Common, SettingsOperation } from '@dxos/app-framework';
-import { Operation, OperationResolver } from '@dxos/operation';
 import { Trigger } from '@dxos/async';
 import { log } from '@dxos/log';
+import { Operation, OperationResolver } from '@dxos/operation';
 import { Node } from '@dxos/plugin-graph';
 import { type MaybePromise, byPosition } from '@dxos/util';
 

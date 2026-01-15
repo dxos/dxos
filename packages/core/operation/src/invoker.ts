@@ -4,11 +4,12 @@
 
 import type * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
+import * as Exit from 'effect/Exit';
 import type * as ManagedRuntime from 'effect/ManagedRuntime';
 import * as PubSub from 'effect/PubSub';
 
 import type { Key } from '@dxos/echo';
-import { DynamicRuntime, runAndForwardErrors } from '@dxos/effect';
+import { DynamicRuntime, causeToError, runAndForwardErrors } from '@dxos/effect';
 import { log } from '@dxos/log';
 import { byPosition } from '@dxos/util';
 
@@ -150,12 +151,13 @@ class OperationInvokerImpl implements OperationInvoker {
     op: Definition<I, O>,
     ...args: void extends I ? [input?: I, options?: InvokeOptions] : [input: I, options?: InvokeOptions]
   ): { data?: O; error?: Error } => {
-    try {
-      const data = Effect.runSync(this.invoke(op, ...args));
-      return { data };
-    } catch (error) {
+    const exit = Effect.runSyncExit(this.invoke(op, ...args));
+    if (Exit.isSuccess(exit)) {
+      return { data: exit.value };
+    } else {
+      const error = causeToError(exit.cause);
       log.catch(error);
-      return { error: error as Error };
+      return { error };
     }
   };
 

@@ -7,8 +7,8 @@ import * as Effect from 'effect/Effect';
 import * as Predicate from 'effect/Predicate';
 
 import { Capability, Common } from '@dxos/app-framework';
-import { Operation, OperationResolver } from '@dxos/operation';
 import { Script } from '@dxos/functions';
+import { Operation, OperationResolver } from '@dxos/operation';
 import { TokenManagerOperation } from '@dxos/plugin-token-manager/types';
 
 import { DEPLOYMENT_DIALOG } from '../../components';

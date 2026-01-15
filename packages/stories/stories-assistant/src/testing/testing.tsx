@@ -9,15 +9,7 @@ import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
 import { SERVICES_CONFIG } from '@dxos/ai/testing';
-import {
-  ActivationEvent,
-  Capability,
-  Common,
-  OperationPlugin,
-  Plugin,
-  SettingsPlugin,
-} from '@dxos/app-framework';
-import { OperationResolver } from '@dxos/operation';
+import { ActivationEvent, Capability, Common, OperationPlugin, Plugin, SettingsPlugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { AiContextBinder, ArtifactId, GenericToolkit } from '@dxos/assistant';
 import { Agent, DesignBlueprint, Document, PlanningBlueprint, Research, Tasks } from '@dxos/assistant-toolkit';
@@ -27,6 +19,7 @@ import { Obj, Ref } from '@dxos/echo';
 import { Example, Function, Trigger } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
+import { OperationResolver } from '@dxos/operation';
 import { Assistant, AssistantOperation, AssistantPlugin } from '@dxos/plugin-assistant';
 import { AttentionPlugin } from '@dxos/plugin-attention';
 import { AutomationPlugin } from '@dxos/plugin-automation';

@@ -7,11 +7,11 @@ import * as Function from 'effect/Function';
 import * as Option from 'effect/Option';
 
 import { Capability, Common } from '@dxos/app-framework';
-import { type OperationInvoker } from '@dxos/operation';
 import { Prompt } from '@dxos/blueprints';
 import { Sequence } from '@dxos/conductor';
 import { DXN, type Database, Obj } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
+import { type OperationInvoker } from '@dxos/operation';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { ATTENDABLE_PATH_SEPARATOR, PLANK_COMPANION_TYPE } from '@dxos/plugin-deck/types';
 import { CreateAtom, GraphBuilder, NodeMatcher } from '@dxos/plugin-graph';

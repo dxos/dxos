@@ -5,9 +5,9 @@
 import * as Effect from 'effect/Effect';
 
 import { Capability, Common } from '@dxos/app-framework';
-import { OperationResolver } from '@dxos/operation';
 import { runAndForwardErrors } from '@dxos/effect';
 import { getTelemetryIdentity, storeObservabilityDisabled } from '@dxos/observability';
+import { OperationResolver } from '@dxos/operation';
 
 import { type ObservabilitySettingsProps } from '../../components';
 import { meta } from '../../meta';

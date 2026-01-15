@@ -5,10 +5,10 @@
 import * as Effect from 'effect/Effect';
 
 import { Capability, Common, UndoMapping } from '@dxos/app-framework';
-import { OperationResolver } from '@dxos/operation';
 import { sleep } from '@dxos/async';
 import { Obj, Relation, Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
+import { OperationResolver } from '@dxos/operation';
 import { Operation } from '@dxos/operation';
 import { ATTENDABLE_PATH_SEPARATOR, DeckOperation } from '@dxos/plugin-deck/types';
 import { ObservabilityOperation } from '@dxos/plugin-observability/types';

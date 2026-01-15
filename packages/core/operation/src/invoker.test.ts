@@ -7,18 +7,11 @@ import * as Context from 'effect/Context';
 import * as Deferred from 'effect/Deferred';
 import * as Effect from 'effect/Effect';
 import * as Fiber from 'effect/Fiber';
-import * as Layer from 'effect/Layer';
-import * as ManagedRuntime from 'effect/ManagedRuntime';
-import * as PubSub from 'effect/PubSub';
+import * as Ref from 'effect/Ref';
 import * as Schema from 'effect/Schema';
 import * as Stream from 'effect/Stream';
 import * as TestClock from 'effect/TestClock';
 import { describe, expect, test } from 'vitest';
-
-import { Database, Filter, Key, Obj, Query } from '@dxos/echo';
-import { TestSchema } from '@dxos/echo/testing';
-import { EchoTestBuilder } from '@dxos/echo-db/testing';
-import { openAndClose } from '@dxos/test-utils';
 
 import { NoHandlerError } from './errors';
 import * as OperationInvoker from './invoker';
@@ -100,32 +93,41 @@ type EventCollector = {
   dispose: Effect.Effect<void>;
 };
 
-const createEventCollector = (
-  invoker: OperationInvoker.OperationInvoker,
-): Effect.Effect<EventCollector> =>
+const createEventCollector = (invoker: OperationInvoker.OperationInvoker): Effect.Effect<EventCollector> =>
   Effect.gen(function* () {
     const events: OperationInvoker.InvocationEvent[] = [];
-    const deferred = yield* Deferred.make<void>();
-    let targetCount = 0;
+    const waiterRef = yield* Ref.make<{ count: number; deferred: Deferred.Deferred<void> } | null>(null);
+
+    const checkWaiter = Effect.gen(function* () {
+      const waiter = yield* Ref.get(waiterRef);
+      if (waiter && events.length >= waiter.count) {
+        yield* Deferred.succeed(waiter.deferred, undefined);
+        yield* Ref.set(waiterRef, null);
+      }
+    });
 
     const fiber = yield* Stream.fromPubSub(invoker.invocations).pipe(
       Stream.runForEach((event) =>
-        Effect.sync(() => {
+        Effect.gen(function* () {
           events.push(event);
-          if (events.length >= targetCount) {
-            Effect.runSync(Deferred.succeed(deferred, undefined));
-          }
+          yield* checkWaiter;
         }),
       ),
       Effect.fork,
     );
 
+    // Yield to ensure subscription is established
+    yield* Effect.yieldNow();
+
     return {
       events,
       waitForEvents: (count: number) =>
         Effect.gen(function* () {
-          targetCount = count;
           if (events.length >= count) return;
+          const deferred = yield* Deferred.make<void>();
+          yield* Ref.set(waiterRef, { count, deferred });
+          // Check again in case events arrived between check and setting ref
+          yield* checkWaiter;
           yield* Deferred.await(deferred);
         }),
       dispose: Fiber.interrupt(fiber),
@@ -289,6 +291,9 @@ describe('OperationInvoker', () => {
     Effect.gen(function* () {
       const invoker = OperationInvoker.make(() => Effect.succeed([toStringHandler]));
       const collector = yield* createEventCollector(invoker);
+
+      // Small delay to ensure subscription is ready
+      yield* Effect.yieldNow();
 
       yield* invoker.invoke(ToString, { value: 1 });
       yield* invoker.invoke(ToString, { value: 2 });

@@ -5,9 +5,9 @@
 import * as Effect from 'effect/Effect';
 
 import { Capability, Common, UndoMapping } from '@dxos/app-framework';
-import { OperationResolver } from '@dxos/operation';
 import { JsonSchema, Obj } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
+import { OperationResolver } from '@dxos/operation';
 import { ProjectionModel, getTypenameFromQuery } from '@dxos/schema';
 
 import { meta } from '../../meta';

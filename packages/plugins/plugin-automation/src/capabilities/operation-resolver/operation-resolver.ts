@@ -5,10 +5,10 @@
 import * as Effect from 'effect/Effect';
 
 import { Capability, Common } from '@dxos/app-framework';
-import { Operation, OperationResolver } from '@dxos/operation';
 import { Ref } from '@dxos/echo';
 import { Function, Script, Trigger } from '@dxos/functions';
 import { type DXN } from '@dxos/keys';
+import { Operation, OperationResolver } from '@dxos/operation';
 import { ATTENDABLE_PATH_SEPARATOR } from '@dxos/plugin-deck/types';
 import { SpaceOperation } from '@dxos/plugin-space/types';
 import { Filter } from '@dxos/react-client/echo';

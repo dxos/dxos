@@ -6,9 +6,9 @@ import { type Extension } from '@codemirror/state';
 import { EditorView } from '@codemirror/view';
 import { computed, effect } from '@preact/signals-core';
 
-import { type OperationInvoker } from '@dxos/operation';
 import { Filter, Obj, Query, Relation } from '@dxos/echo';
 import { createDocAccessor, getTextInRange } from '@dxos/echo-db';
+import { type OperationInvoker } from '@dxos/operation';
 import { type Markdown } from '@dxos/plugin-markdown/types';
 import { AnchoredTo, Thread } from '@dxos/types';
 import { comments, createExternalCommentSync } from '@dxos/ui-editor';

@@ -5,8 +5,8 @@
 import * as Effect from 'effect/Effect';
 
 import { Capability, Common } from '@dxos/app-framework';
-import { OperationResolver } from '@dxos/operation';
 import { invariant } from '@dxos/invariant';
+import { OperationResolver } from '@dxos/operation';
 import { ClientCapabilities } from '@dxos/plugin-client';
 
 import { upload } from '../../helpers';

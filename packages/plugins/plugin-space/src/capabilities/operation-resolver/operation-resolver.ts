@@ -5,13 +5,13 @@
 import * as Effect from 'effect/Effect';
 
 import { Capability, Common, Plugin, UndoMapping } from '@dxos/app-framework';
-import { OperationResolver } from '@dxos/operation';
 import { SpaceState, getSpace } from '@dxos/client/echo';
 import { Database, Obj, Query, Ref, Relation, Type } from '@dxos/echo';
 import { EchoDatabaseImpl, Serializer } from '@dxos/echo-db';
 import { runAndForwardErrors } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { Migrations } from '@dxos/migrations';
+import { OperationResolver } from '@dxos/operation';
 import { Operation } from '@dxos/operation';
 import { ClientCapabilities } from '@dxos/plugin-client/types';
 import { ObservabilityOperation } from '@dxos/plugin-observability/types';

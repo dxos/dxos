@@ -5,9 +5,9 @@
 import * as Effect from 'effect/Effect';
 
 import { Capability, Common } from '@dxos/app-framework';
-import { Operation, OperationResolver } from '@dxos/operation';
 import { Obj, Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
+import { Operation, OperationResolver } from '@dxos/operation';
 import { SpaceOperation } from '@dxos/plugin-space/types';
 import { Table } from '@dxos/react-ui-table/types';
 import { View, getTypenameFromQuery } from '@dxos/schema';
