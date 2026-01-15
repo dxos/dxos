@@ -32,6 +32,9 @@
       "path": "../../common/invariant"
     },
     {
+      "path": "../../common/isomorphic-worker"
+    },
+    {
       "path": "../../common/keys"
     },
     {

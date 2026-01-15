@@ -9,7 +9,7 @@ import { createWorkerPort } from '@dxos/rpc-tunnel';
 import { TRACE_PROCESSOR } from '@dxos/tracing';
 
 import { mountDevtoolsHooks } from '../devtools';
-import { STORAGE_LOCK_KEY } from '../lock-key';
+import { STORAGE_LOCK_KEY } from '../lock-key.js';
 
 TRACE_PROCESSOR.setInstanceTag('shared-worker');
 

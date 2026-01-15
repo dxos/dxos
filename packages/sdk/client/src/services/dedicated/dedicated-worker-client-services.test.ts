@@ -1,6 +1,6 @@
 import { describe, test } from 'vitest';
 import { DedicatedWorkerClientServices } from './dedicated-worker-client-services';
-import Worker from 'web-worker';
+import { Worker } from '@dxos/isomorphic-worker';
 
 describe(
   'DedicatedWorkerClientServices',

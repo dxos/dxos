@@ -3596,6 +3596,12 @@ importers:
 
   packages/common/invariant: {}
 
+  packages/common/isomorphic-worker:
+    dependencies:
+      '@dxos/node-std':
+        specifier: workspace:*
+        version: link:../node-std
+
   packages/common/keyboard:
     dependencies:
       '@dxos/invariant':
@@ -13785,6 +13791,9 @@ importers:
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../common/invariant
+      '@dxos/isomorphic-worker':
+        specifier: workspace:*
+        version: link:../../common/isomorphic-worker
       '@dxos/keys':
         specifier: workspace:*
         version: link:../../common/keys

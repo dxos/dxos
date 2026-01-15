@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as WorkerThreads from 'worker_threads';
+import * as WorkerThreads from 'node:worker_threads';
 
 export class Worker extends EventTarget implements globalThis.Worker {
   /**

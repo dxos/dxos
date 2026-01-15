@@ -120,6 +120,11 @@
         },
         {
           "type": "json",
+          "path": "packages/common/isomorphic-worker/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/common/keyboard/package.json",
           "jsonpath": "$.version"
         },

@@ -6,6 +6,7 @@ import { STORAGE_LOCK_KEY } from '../../lock-key';
 import { WorkerRuntime } from '@dxos/client-services';
 import { Config } from '@dxos/config';
 import { createWorkerPort } from '@dxos/rpc-tunnel';
+import { Worker } from '@dxos/isomorphic-worker';
 
 log('worker-entrypoint');
 
@@ -28,7 +29,7 @@ void navigator.locks.request(STORAGE_LOCK_KEY, async () => {
     releaseLock: () => {},
     onStop: async () => {
       // Close the shared worker, lock will be released automatically.
-      self.close();
+      Worker.close();
     },
     automaticallyConnectWebrtc: false,
   });
@@ -40,7 +41,7 @@ void navigator.locks.request(STORAGE_LOCK_KEY, async () => {
   });
   runtime.connectWebrtcBridge(session);
 
-  globalThis.postMessage(
+  Worker.postMessage(
     {
       type: 'init',
       appPort: appChannel.port1,

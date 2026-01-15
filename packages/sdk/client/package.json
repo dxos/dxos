@@ -129,6 +129,7 @@
     "@dxos/effect": "workspace:*",
     "@dxos/indexing": "workspace:*",
     "@dxos/invariant": "workspace:*",
+    "@dxos/isomorphic-worker": "workspace:*",
     "@dxos/keys": "workspace:*",
     "@dxos/kv-store": "workspace:*",
     "@dxos/live-object": "workspace:*",
