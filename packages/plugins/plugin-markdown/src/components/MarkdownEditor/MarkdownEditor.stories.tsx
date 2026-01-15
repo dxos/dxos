@@ -2,6 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
+import * as Effect from 'effect/Effect';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
@@ -58,14 +59,15 @@ const meta: Meta<typeof DefaultStory> = {
         ...corePlugins(),
         ClientPlugin({
           types: [Markdown.Document],
-          onClientInitialized: async ({ client }) => {
-            await client.halo.createIdentity();
-            await client.spaces.waitUntilReady();
-            const space = client.spaces.default;
-            await space.waitUntilReady();
+          onClientInitialized: ({ client }) =>
+            Effect.gen(function* () {
+              yield* Effect.promise(() => client.halo.createIdentity());
+              yield* Effect.promise(() => client.spaces.waitUntilReady());
+              const space = client.spaces.default;
+              yield* Effect.promise(() => space.waitUntilReady());
 
-            space.db.add(Markdown.make({ content }));
-          },
+              space.db.add(Markdown.make({ content }));
+            }),
         }),
         ...corePlugins(),
       ],

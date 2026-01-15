@@ -120,31 +120,34 @@ export const getDecorators = ({
           Trigger.Trigger,
           ...types,
         ],
-        onClientInitialized: async ({ client }) => {
-          log('onClientInitialized', { identity: client.halo.identity.get()?.did });
-          // Abort if already initialized.
-          if (client.halo.identity.get()) {
-            return;
-          }
+        onClientInitialized: ({ client }) =>
+          Effect.gen(function* () {
+            log('onClientInitialized', { identity: client.halo.identity.get()?.did });
+            // Abort if already initialized.
+            if (client.halo.identity.get()) {
+              return;
+            }
 
-          await client.halo.createIdentity();
-          await client.spaces.waitUntilReady();
+            yield* Effect.promise(() => client.halo.createIdentity());
+            yield* Effect.promise(() => client.spaces.waitUntilReady());
 
-          const space = client.spaces.default;
-          // TODO(burdon): Should not require this.
-          //  ERROR: invariant violation: Database was not initialized with root object.
-          // TODO(burdon): onSpacesReady is never called.
-          await space.waitUntilReady();
+            const space = client.spaces.default;
+            // TODO(burdon): Should not require this.
+            //  ERROR: invariant violation: Database was not initialized with root object.
+            // TODO(burdon): onSpacesReady is never called.
+            yield* Effect.promise(() => space.waitUntilReady());
 
-          // Add tokens.
-          for (const accessToken of accessTokens) {
-            space.db.add(Obj.clone(accessToken));
-          }
+            // Add tokens.
+            for (const accessToken of accessTokens) {
+              space.db.add(Obj.clone(accessToken));
+            }
 
-          await space.db.flush({ indexes: true });
-          await onInit?.({ client, space });
-          await space.db.flush({ indexes: true });
-        },
+            yield* Effect.promise(() => space.db.flush({ indexes: true }));
+            if (onInit) {
+              yield* Effect.promise(() => onInit({ client, space }));
+            }
+            yield* Effect.promise(() => space.db.flush({ indexes: true }));
+          }),
         ...props,
       }),
 

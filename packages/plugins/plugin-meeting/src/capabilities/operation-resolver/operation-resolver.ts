@@ -21,9 +21,6 @@ import { Meeting, MeetingCapabilities, MeetingOperation } from '../../types';
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     const context = yield* Capability.PluginContextService;
-    // These are accessed eagerly because they're used in sync handlers or need consistent references
-    const callManager = yield* Capability.get(ThreadCapabilities.CallManager);
-    const state = yield* Capability.get(MeetingCapabilities.State);
 
     return Capability.contributes(Common.Capability.OperationResolver, [
       OperationResolver.make({
@@ -63,6 +60,8 @@ export default Capability.makeModule(
         operation: MeetingOperation.SetActive,
         handler: ({ object }) =>
           Effect.sync(() => {
+            const state = context.getCapability(MeetingCapabilities.State);
+            const callManager = context.getCapability(ThreadCapabilities.CallManager);
             state.activeMeeting = object;
             callManager.setActivity(Type.getTypename(Meeting.Meeting)!, {
               meetingId: object ? Obj.getDXN(object).toString() : '',
@@ -74,7 +73,8 @@ export default Capability.makeModule(
         operation: MeetingOperation.HandlePayload,
         handler: ({ meetingId, transcriptDxn, transcriptionEnabled }) =>
           Effect.gen(function* () {
-            const client = yield* Capability.get(ClientCapabilities.Client);
+            const client = context.getCapability(ClientCapabilities.Client);
+            const state = context.getCapability(MeetingCapabilities.State);
             const { spaceId, objectId } = meetingId ? parseId(meetingId) : {};
             const space = spaceId && client.spaces.get(spaceId);
             const meeting =

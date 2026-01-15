@@ -2,6 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
+import * as Effect from 'effect/Effect';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { type FC, useEffect, useMemo, useState } from 'react';
 
@@ -177,9 +178,10 @@ const meta = {
         ...corePlugins(),
         ClientPlugin({
           types: [TestItem, TestSchema.DocumentType, Person.Person, Organization.Organization],
-          onClientInitialized: async ({ client }) => {
-            await client.halo.createIdentity();
-          },
+          onClientInitialized: ({ client }) =>
+            Effect.gen(function* () {
+              yield* Effect.promise(() => client.halo.createIdentity());
+            }),
         }),
         ...corePlugins(),
         SpacePlugin({}),

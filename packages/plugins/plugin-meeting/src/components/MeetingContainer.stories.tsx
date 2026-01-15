@@ -2,6 +2,7 @@
 // Copyright 20255555 DXOS.org
 //
 
+import * as Effect from 'effect/Effect';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
@@ -44,23 +45,25 @@ const meta = {
         ...corePlugins(),
         ClientPlugin({
           types: [Meeting.Meeting],
-          onClientInitialized: async ({ client }) => {
-            await client.halo.createIdentity();
-          },
-          onSpacesReady: async ({ client }) => {
-            const space = client.spaces.default;
-            await space.waitUntilReady();
-            space.db.add(
-              Obj.make(Meeting.Meeting, {
-                created: new Date().toISOString(),
-                participants: [],
-                transcript: Ref.make(Transcript.make(space.queues.create().dxn)),
-                notes: Ref.make(Text.make('Notes')),
-                summary: Ref.make(Text.make()),
-                thread: Ref.make(Thread.make()),
-              }),
-            );
-          },
+          onClientInitialized: ({ client }) =>
+            Effect.gen(function* () {
+              yield* Effect.promise(() => client.halo.createIdentity());
+            }),
+          onSpacesReady: ({ client }) =>
+            Effect.gen(function* () {
+              const space = client.spaces.default;
+              yield* Effect.promise(() => space.waitUntilReady());
+              space.db.add(
+                Obj.make(Meeting.Meeting, {
+                  created: new Date().toISOString(),
+                  participants: [],
+                  transcript: Ref.make(Transcript.make(space.queues.create().dxn)),
+                  notes: Ref.make(Text.make('Notes')),
+                  summary: Ref.make(Text.make()),
+                  thread: Ref.make(Thread.make()),
+                }),
+              );
+            }),
         }),
         ...corePlugins(),
         SpacePlugin({}),

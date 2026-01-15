@@ -33,7 +33,7 @@ export default Capability.makeModule(
     const subscriptions = new SubscriptionList();
     const spaceSubscriptions = new SubscriptionList();
 
-    const { invokePromise } = yield* Capability.get(Common.Capability.OperationInvoker);
+    const { invoke, invokePromise } = yield* Capability.get(Common.Capability.OperationInvoker);
     const { graph } = yield* Capability.get(Common.Capability.AppGraph);
     const layout = yield* Capability.get(Common.Capability.Layout);
     const deckStates = yield* Capability.getAll(DeckCapabilities.DeckState);
@@ -46,7 +46,7 @@ export default Capability.makeModule(
     yield* Effect.tryPromise(() => defaultSpace.waitUntilReady());
 
     if (deck?.activeDeck === 'default') {
-      yield* Effect.promise(() => invokePromise(Common.LayoutOperation.SwitchWorkspace, { subject: defaultSpace.id }));
+      yield* invoke(Common.LayoutOperation.SwitchWorkspace, { subject: defaultSpace.id });
     }
 
     // Initialize space sharing lock in default space.

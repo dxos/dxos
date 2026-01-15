@@ -13,14 +13,15 @@ import { NavTreeCapabilities } from '../../types';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    const { graph } = yield* Capability.get(Common.Capability.AppGraph);
-    const { getItem, setItem } = yield* Capability.get(NavTreeCapabilities.State);
+    const context = yield* Capability.PluginContextService;
 
     return Capability.contributes(Common.Capability.OperationResolver, [
       OperationResolver.make({
         operation: Common.LayoutOperation.Expose,
         handler: ({ subject }) =>
           Effect.promise(async () => {
+            const { graph } = context.getCapability(Common.Capability.AppGraph);
+            const { getItem, setItem } = context.getCapability(NavTreeCapabilities.State);
             try {
               const path = await Graph.waitForPath(graph, { target: subject }, { timeout: 1_000 });
               [...Array(path.length)].forEach((_, index) => {

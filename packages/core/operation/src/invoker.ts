@@ -65,6 +65,19 @@ export interface OperationInvoker {
       ? [input?: I, options?: Operation.InvokeOptions]
       : [input: I, options?: Operation.InvokeOptions]
   ) => { data?: O; error?: Error };
+  /** Effect stream of invocation events. */
+  invocations: PubSub.PubSub<InvocationEvent>;
+  /** Number of pending followup operations. */
+  pendingFollowups: Effect.Effect<number>;
+  /** Wait for all pending followups to complete. */
+  awaitFollowups: Effect.Effect<void>;
+}
+
+/**
+ * Internal interface extending OperationInvoker with core invocation method.
+ * Used by history tracker and scheduler to avoid event emission loops.
+ */
+export interface OperationInvokerInternal extends OperationInvoker {
   /**
    * Core invocation without event emission.
    * Used by history tracker to avoid undo-of-undo loops.
@@ -74,12 +87,6 @@ export interface OperationInvoker {
     input: I,
     options?: Operation.InvokeOptions,
   ) => Effect.Effect<O, Error>;
-  /** Effect stream of invocation events. */
-  invocations: PubSub.PubSub<InvocationEvent>;
-  /** Number of pending followup operations. */
-  pendingFollowups: Effect.Effect<number>;
-  /** Wait for all pending followups to complete. */
-  awaitFollowups: Effect.Effect<void>;
 }
 
 //
@@ -88,7 +95,7 @@ export interface OperationInvoker {
 
 type AnyManagedRuntime = ManagedRuntime.ManagedRuntime<any, any>;
 
-class OperationInvokerImpl implements OperationInvoker {
+class OperationInvokerImpl implements OperationInvokerInternal {
   private readonly _pubsub: PubSub.PubSub<InvocationEvent>;
   private readonly _getHandlers: () => Effect.Effect<
     OperationResolver.OperationResolver<any, any, Error, any>[],
@@ -285,7 +292,7 @@ export const make = (
   getHandlers: () => Effect.Effect<OperationResolver.OperationResolver<any, any, Error, any>[], Error>,
   managedRuntime?: AnyManagedRuntime,
   databaseResolver?: DatabaseResolver,
-): OperationInvoker => {
+): OperationInvokerInternal => {
   // Use a ref object so the closure can access the invoker after initialization.
   const ref: { invoker?: OperationInvokerImpl } = {};
 

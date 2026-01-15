@@ -38,7 +38,10 @@ export interface HistoryTracker {
 /**
  * Creates a HistoryTracker that subscribes to invocation events and provides undo.
  */
-export const make = (invoker: OperationInvoker.OperationInvoker, undoRegistry: UndoRegistry): HistoryTracker => {
+export const make = (
+  invoker: OperationInvoker.OperationInvokerInternal,
+  undoRegistry: UndoRegistry,
+): HistoryTracker => {
   const history: HistoryEntry[] = [];
 
   // Subscribe to invocation stream.

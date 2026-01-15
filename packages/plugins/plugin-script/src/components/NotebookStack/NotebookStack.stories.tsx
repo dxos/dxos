@@ -2,6 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
+import * as Effect from 'effect/Effect';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 
 import { withPluginManager } from '@dxos/app-framework/testing';
@@ -27,10 +28,11 @@ const meta = {
       plugins: [
         ...corePlugins(),
         ClientPlugin({
-          onClientInitialized: async ({ client }) => {
-            await client.halo.createIdentity();
-            await client.spaces.waitUntilReady();
-          },
+          onClientInitialized: ({ client }) =>
+            Effect.gen(function* () {
+              yield* Effect.promise(() => client.halo.createIdentity());
+              yield* Effect.promise(() => client.spaces.waitUntilReady());
+            }),
         }),
         ...corePlugins(),
         SpacePlugin({}),

@@ -201,8 +201,7 @@ describe('Scheduler', () => {
           operation: TriggerWithFollowup,
           handler: (input: { id: string }) =>
             Effect.gen(function* () {
-              const ops = yield* Operation.Service;
-              yield* ops.schedule(CountOp, { id: `followup-${input.id}` });
+              yield* Operation.schedule(CountOp, { id: `followup-${input.id}` });
               return { triggered: true };
             }),
         };
@@ -238,8 +237,7 @@ describe('Scheduler', () => {
           operation: TriggerWithFollowup,
           handler: (input: { id: string }) =>
             Effect.gen(function* () {
-              const ops = yield* Operation.Service;
-              yield* ops.schedule(CountOp, { id: input.id });
+              yield* Operation.schedule(CountOp, { id: input.id });
               return { triggered: true };
             }),
         };
@@ -279,8 +277,7 @@ describe('Scheduler', () => {
           operation: TriggerWithFollowup,
           handler: () =>
             Effect.gen(function* () {
-              const ops = yield* Operation.Service;
-              yield* ops.schedule(CountOp, { id: 'child' });
+              yield* Operation.schedule(CountOp, { id: 'child' });
               // Return immediately, before the followup completes.
               return { triggered: true };
             }),
@@ -324,8 +321,7 @@ describe('Scheduler', () => {
           operation: SideEffect,
           handler: () =>
             Effect.gen(function* () {
-              const ops = yield* Operation.Service;
-              yield* ops.schedule(CountOp, { id: 'from-side-effect' });
+              yield* Operation.schedule(CountOp, { id: 'from-side-effect' });
               return undefined;
             }),
         };
@@ -334,8 +330,7 @@ describe('Scheduler', () => {
           operation: TriggerWithFollowup,
           handler: (input: { id: string }) =>
             Effect.gen(function* () {
-              const ops = yield* Operation.Service;
-              yield* ops.schedule(CountOp, { id: `from-trigger-${input.id}` });
+              yield* Operation.schedule(CountOp, { id: `from-trigger-${input.id}` });
               return { triggered: true };
             }),
         };

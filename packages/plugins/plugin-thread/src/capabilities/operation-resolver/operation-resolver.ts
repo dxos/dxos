@@ -23,8 +23,6 @@ import { Channel, ThreadCapabilities, ThreadOperation } from '../../types';
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     const context = yield* Capability.PluginContextService;
-    // State is accessed eagerly because it's used in sync handlers and needs consistent reference
-    const { state } = yield* Capability.get(ThreadCapabilities.MutableState);
 
     return [
       Capability.contributes(Common.Capability.UndoMapping, [
@@ -92,6 +90,7 @@ export default Capability.makeModule(
           operation: ThreadOperation.Select,
           handler: (input) =>
             Effect.sync(() => {
+              const { state } = context.getCapability(ThreadCapabilities.MutableState);
               state.current = input.current;
             }),
         }),
@@ -153,6 +152,7 @@ export default Capability.makeModule(
           operation: ThreadOperation.Create,
           handler: ({ name, anchor: _anchor, subject }) =>
             Effect.gen(function* () {
+              const { state } = context.getCapability(ThreadCapabilities.MutableState);
               const subjectId = Obj.getDXN(subject).toString();
               const thread = Thread.make({ name });
               const anchor = Relation.make(AnchoredTo.AnchoredTo, {
@@ -184,6 +184,7 @@ export default Capability.makeModule(
           operation: ThreadOperation.Delete,
           handler: ({ subject, anchor, thread: _thread }) =>
             Effect.gen(function* () {
+              const { state } = context.getCapability(ThreadCapabilities.MutableState);
               const thread = _thread ?? (Relation.getSource(anchor) as Thread.Thread);
               const subjectId = Obj.getDXN(subject).toString();
               const draft = state.drafts[subjectId];
@@ -228,6 +229,7 @@ export default Capability.makeModule(
           operation: ThreadOperation.AddMessage,
           handler: ({ anchor, subject, sender, text }) =>
             Effect.gen(function* () {
+              const { state } = context.getCapability(ThreadCapabilities.MutableState);
               const thread = Relation.getSource(anchor) as Thread.Thread;
               const subjectId = Obj.getDXN(subject).toString();
               const db = Obj.getDatabase(subject);

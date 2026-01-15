@@ -5,8 +5,7 @@
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
-import { Operation } from '@dxos/operation';
-import { OperationResolver } from '@dxos/operation';
+import { Operation, OperationResolver } from '@dxos/operation';
 
 import * as Common from '../../common';
 import { ActivationEvent, Capability, Plugin } from '../../core';

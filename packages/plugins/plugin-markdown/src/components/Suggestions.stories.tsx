@@ -2,6 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
+import * as Effect from 'effect/Effect';
 import { type Meta } from '@storybook/react-vite';
 import * as Function from 'effect/Function';
 import * as Match from 'effect/Match';
@@ -162,9 +163,10 @@ const storybook: Meta<typeof DefaultStory> = {
         ...corePlugins(),
         ClientPlugin({
           types: [Markdown.Document, TestItem],
-          onClientInitialized: async ({ client }) => {
-            await client.halo.createIdentity();
-          },
+          onClientInitialized: ({ client }) =>
+            Effect.gen(function* () {
+              yield* Effect.promise(() => client.halo.createIdentity());
+            }),
         }),
         ...corePlugins(),
         SpacePlugin({}),

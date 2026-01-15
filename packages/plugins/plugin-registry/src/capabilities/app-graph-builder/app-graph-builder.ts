@@ -4,7 +4,7 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capability, Common, type Plugin, SettingsOperation } from '@dxos/app-framework';
+import { Capability, Common, SettingsOperation } from '@dxos/app-framework';
 import { GraphBuilder, NodeMatcher } from '@dxos/plugin-graph';
 
 import { REGISTRY_ID, REGISTRY_KEY, meta } from '../../meta';
@@ -114,7 +114,7 @@ export default Capability.makeModule(
         match: NodeMatcher.whenId(REGISTRY_ID),
         connector: () => {
           const manager = context.getCapability(Common.Capability.PluginManager);
-          return manager.getPlugins().map((plugin: Plugin.Plugin) => ({
+          return manager.getPlugins().map((plugin) => ({
             id: plugin.meta.id.replaceAll('/', ':'),
             type: 'dxos.org/plugin',
             data: plugin,

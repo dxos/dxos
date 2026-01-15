@@ -24,7 +24,9 @@ export default Capability.makeModule(
     log('initializing client');
     yield* Effect.tryPromise(() => client.initialize());
     log('initialized client');
-    yield* Effect.tryPromise(() => onClientInitialized?.({ client }) ?? Promise.resolve());
+    if (onClientInitialized) {
+      yield* onClientInitialized({ client }).pipe(Effect.provideService(Capability.PluginContextService, context));
+    }
     log('called client initialized callback');
 
     // TODO(wittjosiah): Remove. This is a hack to get the app to boot with the new identity after a reset.
@@ -39,12 +41,12 @@ export default Capability.makeModule(
     // TODO(burdon): The callback isn't called?
     const subscription = client.spaces.isReady.subscribe(async (ready) => {
       if (ready) {
-        await runAndForwardErrors(
-          Plugin.activate(ClientEvents.SpacesReady).pipe(
-            Effect.provideService(Capability.PluginContextService, context),
-          ),
-        );
-        await onSpacesReady?.({ client });
+        await Effect.gen(function* () {
+          yield* Plugin.activate(ClientEvents.SpacesReady);
+          if (onSpacesReady) {
+            yield* onSpacesReady({ client });
+          }
+        }).pipe(Effect.provideService(Capability.PluginContextService, context), runAndForwardErrors);
       }
     });
 

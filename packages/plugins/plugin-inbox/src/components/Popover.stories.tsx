@@ -2,6 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
+import * as Effect from 'effect/Effect';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useCallback, useRef } from 'react';
 
@@ -87,18 +88,19 @@ const meta = {
         ...corePlugins(),
         ClientPlugin({
           types: [Mailbox.Mailbox, Message.Message, Person.Person, Organization.Organization],
-          onClientInitialized: async ({ client }) => {
-            await client.halo.createIdentity();
-            await client.spaces.waitUntilReady();
-            await client.spaces.default.waitUntilReady();
-            const space = client.spaces.default;
-            const mailbox = Mailbox.make({ space });
-            const { emails } = await seedTestData(space);
-            const queueDxn = mailbox.queue.dxn;
-            const queue = space.queues.get<Message.Message>(queueDxn);
-            await queue.append(emails);
-            space.db.add(mailbox);
-          },
+          onClientInitialized: ({ client }) =>
+            Effect.gen(function* () {
+              yield* Effect.promise(() => client.halo.createIdentity());
+              yield* Effect.promise(() => client.spaces.waitUntilReady());
+              yield* Effect.promise(() => client.spaces.default.waitUntilReady());
+              const space = client.spaces.default;
+              const mailbox = Mailbox.make({ space });
+              const { emails } = yield* Effect.promise(() => seedTestData(space));
+              const queueDxn = mailbox.queue.dxn;
+              const queue = space.queues.get<Message.Message>(queueDxn);
+              yield* Effect.promise(() => queue.append(emails));
+              space.db.add(mailbox);
+            }),
         }),
         ...corePlugins(),
         SpacePlugin({}),

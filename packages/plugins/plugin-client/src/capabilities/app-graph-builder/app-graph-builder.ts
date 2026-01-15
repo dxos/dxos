@@ -5,8 +5,6 @@
 import * as Effect from 'effect/Effect';
 
 import { Capability, Common } from '@dxos/app-framework';
-import { type Identity } from '@dxos/client/halo';
-import { type NetworkStatus } from '@dxos/client/mesh';
 import { CreateAtom, GraphBuilder, NodeMatcher } from '@dxos/plugin-graph';
 import { ConnectionState } from '@dxos/react-client/mesh';
 
@@ -44,8 +42,8 @@ export default Capability.makeModule(
         ],
         connector: (node, get) => {
           const client = context.getCapability(ClientCapabilities.Client);
-          const identity = get(CreateAtom.fromObservable(client.halo.identity)) as Identity | undefined;
-          const status = get(CreateAtom.fromObservable(client.mesh.networkStatus)) as NetworkStatus;
+          const identity = get(CreateAtom.fromObservable(client.halo.identity));
+          const status = get(CreateAtom.fromObservable(client.mesh.networkStatus));
 
           return [
             {

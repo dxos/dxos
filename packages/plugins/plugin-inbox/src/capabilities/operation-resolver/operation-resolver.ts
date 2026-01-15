@@ -25,7 +25,7 @@ export default Capability.makeModule(
         operation: InboxOperation.ExtractContact,
         handler: ({ db, actor }) =>
           Effect.gen(function* () {
-            const client = yield* Capability.get(ClientCapabilities.Client);
+            const client = context.getCapability(ClientCapabilities.Client);
             const space = client.spaces.get(db.spaceId);
             invariant(space, 'Space not found');
 

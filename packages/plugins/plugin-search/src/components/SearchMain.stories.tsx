@@ -2,6 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
+import * as Effect from 'effect/Effect';
 import { type Decorator, type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
@@ -50,25 +51,26 @@ const meta = {
         ...corePlugins(),
         ClientPlugin({
           types: [TestSchema.Task, TestSchema.Organization, TestSchema.Person],
-          onClientInitialized: async ({ client }) => {
-            await client.halo.createIdentity();
-            await client.spaces.waitUntilReady();
-            const space = await client.spaces.create({ name: 'Test Space' });
-            await space.waitUntilReady();
-            // Create some test data to search.
-            space.db.add(
-              Obj.make(TestSchema.Task, { title: 'Project Proposal', description: 'A proposal for a new project' }),
-            );
-            space.db.add(
-              Obj.make(TestSchema.Task, { title: 'Meeting Notes', description: 'Notes from the team meeting' }),
-            );
-            space.db.add(
-              Obj.make(TestSchema.Task, { title: 'Budget Report', description: 'Q3 financial budget report' }),
-            );
-            space.db.add(Obj.make(TestSchema.Person, { name: 'Alice Smith', email: 'alice@example.com' }));
-            space.db.add(Obj.make(TestSchema.Person, { name: 'Bob Jones', email: 'bob@example.com' }));
-            space.db.add(Obj.make(TestSchema.Organization, { name: 'Composer Project' }));
-          },
+          onClientInitialized: ({ client }) =>
+            Effect.gen(function* () {
+              yield* Effect.promise(() => client.halo.createIdentity());
+              yield* Effect.promise(() => client.spaces.waitUntilReady());
+              const space = yield* Effect.promise(() => client.spaces.create({ name: 'Test Space' }));
+              yield* Effect.promise(() => space.waitUntilReady());
+              // Create some test data to search.
+              space.db.add(
+                Obj.make(TestSchema.Task, { title: 'Project Proposal', description: 'A proposal for a new project' }),
+              );
+              space.db.add(
+                Obj.make(TestSchema.Task, { title: 'Meeting Notes', description: 'Notes from the team meeting' }),
+              );
+              space.db.add(
+                Obj.make(TestSchema.Task, { title: 'Budget Report', description: 'Q3 financial budget report' }),
+              );
+              space.db.add(Obj.make(TestSchema.Person, { name: 'Alice Smith', email: 'alice@example.com' }));
+              space.db.add(Obj.make(TestSchema.Person, { name: 'Bob Jones', email: 'bob@example.com' }));
+              space.db.add(Obj.make(TestSchema.Organization, { name: 'Composer Project' }));
+            }),
         }),
         ...corePlugins(),
         SpacePlugin({}),

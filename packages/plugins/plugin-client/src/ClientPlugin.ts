@@ -52,7 +52,7 @@ export const ClientPlugin = Plugin.define<ClientPluginOptions>(meta).pipe(
     };
   }),
   Common.Plugin.addAppGraphModule({ activate: AppGraphBuilder }),
-  Common.Plugin.addOperationResolverModule({ activate: () => OperationResolver() }),
+  Common.Plugin.addOperationResolverModule({ activate: OperationResolver }),
   Common.Plugin.addTranslationsModule({ translations }),
   Plugin.make,
 );

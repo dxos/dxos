@@ -18,12 +18,10 @@ export const PwaPlugin = Plugin.define(meta).pipe(
     id: 'register-pwa',
     activatesOn: Common.ActivationEvent.OperationInvokerReady,
     activate: Effect.fnUntraced(function* () {
-      // Get context for lazy capability access in callbacks.
-      const context = yield* Capability.PluginContextService;
+      const { invokeSync } = yield* Capability.get(Common.Capability.OperationInvoker);
 
       const updateSW = registerSW({
         onNeedRefresh: () => {
-          const { invokeSync } = context.getCapability(Common.Capability.OperationInvoker);
           invokeSync(Common.LayoutOperation.AddToast, {
             id: `${meta.id}/need-refresh`,
             title: ['need refresh label', { ns: meta.id }],
@@ -35,7 +33,6 @@ export const PwaPlugin = Plugin.define(meta).pipe(
           });
         },
         onOfflineReady: () => {
-          const { invokeSync } = context.getCapability(Common.Capability.OperationInvoker);
           invokeSync(Common.LayoutOperation.AddToast, {
             id: `${meta.id}/offline-ready`,
             title: ['offline ready label', { ns: meta.id }],

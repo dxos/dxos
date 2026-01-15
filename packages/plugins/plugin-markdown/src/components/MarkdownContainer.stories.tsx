@@ -2,6 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
+import * as Effect from 'effect/Effect';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useMemo } from 'react';
 
@@ -62,39 +63,40 @@ const meta = {
         ...corePlugins(),
         ClientPlugin({
           types: [Markdown.Document, Text.Text, Person.Person, Organization.Organization],
-          onClientInitialized: async ({ client }) => {
-            await client.halo.createIdentity();
-            await client.spaces.waitUntilReady();
-            await client.spaces.default.waitUntilReady();
+          onClientInitialized: ({ client }) =>
+            Effect.gen(function* () {
+              yield* Effect.promise(() => client.halo.createIdentity());
+              yield* Effect.promise(() => client.spaces.waitUntilReady());
+              yield* Effect.promise(() => client.spaces.default.waitUntilReady());
 
-            const space = client.spaces.default;
-            const createObjects = createObjectFactory(space.db, generator);
-            await createObjects([{ type: Organization.Organization, count: 10 }]);
+              const space = client.spaces.default;
+              const createObjects = createObjectFactory(space.db, generator);
+              yield* Effect.promise(() => createObjects([{ type: Organization.Organization, count: 10 }]));
 
-            const queue = space.queues.create();
-            const kai = Obj.make(Person.Person, { fullName: 'Kai' });
-            const dxos = Obj.make(Organization.Organization, { name: 'DXOS' });
-            await queue.append([kai, dxos]);
+              const queue = space.queues.create();
+              const kai = Obj.make(Person.Person, { fullName: 'Kai' });
+              const dxos = Obj.make(Organization.Organization, { name: 'DXOS' });
+              yield* Effect.promise(() => queue.append([kai, dxos]));
 
-            space.db.add(
-              Markdown.make({
-                name: context.args.title ?? 'Testing',
-                content: [
-                  `# ${context.args.title ?? 'Testing'}`,
-                  context.args.content ?? '',
-                  // TODO(burdon): Popovers not currently working.
-                  '## Here are some objects',
-                  `![Alice](${Obj.getDXN(kai)})`,
-                  `![DXOS](${Obj.getDXN(dxos)})`,
-                  '',
-                  'END',
-                  '',
-                ].join('\n\n'),
-              }),
-            );
+              space.db.add(
+                Markdown.make({
+                  name: context.args.title ?? 'Testing',
+                  content: [
+                    `# ${context.args.title ?? 'Testing'}`,
+                    context.args.content ?? '',
+                    // TODO(burdon): Popovers not currently working.
+                    '## Here are some objects',
+                    `![Alice](${Obj.getDXN(kai)})`,
+                    `![DXOS](${Obj.getDXN(dxos)})`,
+                    '',
+                    'END',
+                    '',
+                  ].join('\n\n'),
+                }),
+              );
 
-            await space.db.flush({ indexes: true });
-          },
+              yield* Effect.promise(() => space.db.flush({ indexes: true }));
+            }),
         }),
         ...corePlugins(),
         SpacePlugin({}),

@@ -2,10 +2,12 @@
 // Copyright 2023 DXOS.org
 //
 
+import * as Effect from 'effect/Effect';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
 import { OperationPlugin } from '@dxos/app-framework';
+import { usePluginManager } from '@dxos/app-framework/react';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Dialog } from '@dxos/react-ui';
 import { withTheme } from '@dxos/react-ui/testing';
@@ -15,11 +17,18 @@ import { translations } from '../translations';
 
 import { ResetDialog, type ResetDialogProps } from './ResetDialog';
 
-const Render = (props: ResetDialogProps) => {
+const Render = (props: Omit<ResetDialogProps, 'context'>) => {
+  const manager = usePluginManager();
+  const context = manager.context;
+
   return (
     <Dialog.Root open>
       <Dialog.Overlay>
-        <ResetDialog onReset={() => console.log('reset')} {...props} />
+        <ResetDialog
+          onReset={() => Effect.sync(() => console.log('reset'))}
+          context={context}
+          {...props}
+        />
       </Dialog.Overlay>
     </Dialog.Root>
   );
@@ -28,7 +37,7 @@ const Render = (props: ResetDialogProps) => {
 const meta = {
   title: 'plugins/plugin-client/ResetDialog',
   component: ResetDialog,
-  render: Render,
+  render: Render as any,
   decorators: [
     withTheme,
     withPluginManager({
@@ -45,8 +54,8 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-export const Default: Story = { args: { mode: 'reset storage' } };
+export const Default: Story = { args: { mode: 'reset storage' as const } as any };
 
-export const JoinNewIdentity: Story = { args: { mode: 'join new identity' } };
+export const JoinNewIdentity: Story = { args: { mode: 'join new identity' as const } as any };
 
-export const Recover: Story = { args: { mode: 'recover' } };
+export const Recover: Story = { args: { mode: 'recover' as const } as any };

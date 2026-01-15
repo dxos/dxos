@@ -4,6 +4,8 @@
 
 import * as Effect from 'effect/Effect';
 
+import { type OperationInvoker } from '@dxos/operation';
+
 import * as Common from '../../common';
 import { Capability } from '../../core';
 
@@ -24,7 +26,8 @@ export default Capability.makeModule(
 
     // Create HistoryTracker (depends on UndoRegistry and OperationInvoker).
     const invoker = yield* Capability.get(Common.Capability.OperationInvoker);
-    const historyTracker = HistoryTracker.make(invoker, undoRegistry);
+    // Cast to internal type - the factory always returns OperationInvokerInternal.
+    const historyTracker = HistoryTracker.make(invoker as OperationInvoker.OperationInvokerInternal, undoRegistry);
 
     return [
       Capability.contributes(Common.Capability.UndoRegistry, undoRegistry),

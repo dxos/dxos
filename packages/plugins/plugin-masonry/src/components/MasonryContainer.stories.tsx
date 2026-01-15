@@ -2,6 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
+import * as Effect from 'effect/Effect';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
@@ -44,21 +45,24 @@ const meta = {
         ...corePlugins(),
         ClientPlugin({
           types: [Organization.Organization, View.View, Masonry.Masonry],
-          onClientInitialized: async ({ client }) => {
-            await client.halo.createIdentity();
-            const space = await client.spaces.create();
-            await space.waitUntilReady();
+          onClientInitialized: ({ client }) =>
+            Effect.gen(function* () {
+              yield* Effect.promise(() => client.halo.createIdentity());
+              const space = yield* Effect.promise(() => client.spaces.create());
+              yield* Effect.promise(() => space.waitUntilReady());
 
-            const { view } = await View.makeFromDatabase({
-              db: space.db,
-              typename: Organization.Organization.typename,
-            });
-            const masonry = Masonry.make({ view });
-            space.db.add(masonry);
+              const { view } = yield* Effect.promise(() =>
+                View.makeFromDatabase({
+                  db: space.db,
+                  typename: Organization.Organization.typename,
+                }),
+              );
+              const masonry = Masonry.make({ view });
+              space.db.add(masonry);
 
-            const factory = createObjectFactory(space.db, faker as any);
-            await factory([{ type: Organization.Organization, count: 64 }]);
-          },
+              const factory = createObjectFactory(space.db, faker as any);
+              yield* Effect.promise(() => factory([{ type: Organization.Organization, count: 64 }]));
+            }),
         }),
         ...corePlugins(),
         SpacePlugin({}),

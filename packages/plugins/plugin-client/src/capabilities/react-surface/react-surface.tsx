@@ -28,6 +28,7 @@ type ReactSurfaceOptions = Pick<ClientPluginOptions, 'onReset'> & {
 export default Capability.makeModule(
   Effect.fnUntraced(function* (props?: ReactSurfaceOptions) {
     const { createInvitationUrl, onReset } = props!;
+    const context = yield* Capability.PluginContextService;
 
     return Capability.contributes(Common.Capability.ReactSurface, [
       Common.createSurface({
@@ -64,7 +65,7 @@ export default Capability.makeModule(
         id: RESET_DIALOG,
         role: 'dialog',
         filter: (data): data is { props: ResetDialogProps } => data.component === RESET_DIALOG,
-        component: ({ data }: { data: any }) => <ResetDialog {...data.props} onReset={onReset} />,
+        component: ({ data }: { data: any }) => <ResetDialog {...data.props} onReset={onReset} context={context} />,
       }),
     ]);
   }),

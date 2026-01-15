@@ -12,13 +12,14 @@ import { AttentionCapabilities, AttentionOperation } from '../../types';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    const selection = yield* Capability.get(AttentionCapabilities.Selection);
+    const context = yield* Capability.PluginContextService;
 
     return Capability.contributes(Common.Capability.OperationResolver, [
       OperationResolver.make({
         operation: AttentionOperation.Select,
         handler: (input) =>
           Effect.sync(() => {
+            const selection = context.getCapability(AttentionCapabilities.Selection);
             Match.value(input.selection).pipe(
               Match.when({ mode: 'single', id: undefined }, () => {
                 selection.clearSelection(input.contextId);

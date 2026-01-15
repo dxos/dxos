@@ -9,7 +9,7 @@ import { Capability, Common } from '@dxos/app-framework';
 import { CreateAtom, GraphBuilder, NodeMatcher } from '@dxos/plugin-graph';
 
 import { meta } from '../../meta';
-import { FileCapabilities, type FilesSettingsProps, type LocalEntity, LocalFilesOperation } from '../../types';
+import { FileCapabilities, type FilesSettingsProps, LocalFilesOperation } from '../../types';
 import { isLocalDirectory, isLocalEntity, isLocalFile } from '../../util';
 
 export default Capability.makeModule(
@@ -115,7 +115,7 @@ export default Capability.makeModule(
         ],
         connector: () => {
           const filesState = context.getCapability(FileCapabilities.State);
-          return filesState.files.map((entity: LocalEntity) => ({
+          return filesState.files.map((entity) => ({
             id: entity.id,
             type: isLocalDirectory(entity) ? 'directory' : 'file',
             data: entity,

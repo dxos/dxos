@@ -73,9 +73,6 @@ const traverseFileSystem = async (
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     const context = yield* Capability.PluginContextService;
-    const { explore } = yield* Capability.get(Common.Capability.AppGraph);
-    const mutableState = yield* Capability.get(FileCapabilities.MutableState);
-    const serializersAtom = yield* Capability.atom(Common.Capability.AppGraphSerializer);
 
     const directoryHandles: Record<string, FileSystemDirectoryHandle> = {};
     const directoryNameCounter: Record<string, Record<string, number>> = {};
@@ -89,7 +86,7 @@ export default Capability.makeModule(
       path: string[];
       serialized: Common.SerializedNode;
     }) => {
-      const state = mutableState;
+      const state = context.getCapability(FileCapabilities.State);
       if (!state.rootHandle) {
         return;
       }
@@ -140,6 +137,7 @@ export default Capability.makeModule(
         operation: LocalFilesOperation.SelectRoot,
         handler: () =>
           Effect.gen(function* () {
+            const mutableState = context.getCapability(FileCapabilities.MutableState);
             const rootDir = yield* Effect.promise(async () =>
               (window as any).showDirectoryPicker({ mode: 'readwrite' }),
             );
@@ -152,6 +150,8 @@ export default Capability.makeModule(
         operation: LocalFilesOperation.Export,
         handler: () =>
           Effect.gen(function* () {
+            const { explore } = context.getCapability(Common.Capability.AppGraph);
+            const mutableState = context.getCapability(FileCapabilities.MutableState);
             if (!mutableState.rootHandle) {
               yield* Operation.invoke(SettingsOperation.Open, { plugin: meta.id });
               return;
@@ -161,13 +161,13 @@ export default Capability.makeModule(
 
             yield* Effect.promise(async () =>
               explore({
-                visitor: async (node: Node.Node, path: string[]) => {
+                visitor: async (node, path) => {
                   if (Node.isActionLike(node)) {
                     return false;
                   }
 
                   const [serializer] = serializers
-                    .filter((serializer: Common.NodeSerializer) => node.type === serializer.inputType)
+                    .filter((serializer) => node.type === serializer.inputType)
                     .sort(byPosition);
                   if (!serializer && node.data !== null) {
                     return false;
@@ -212,7 +212,7 @@ export default Capability.makeModule(
               }
               const data = handle.kind === 'directory' ? name : await (await (handle as any).getFile()).text();
               const [serializer] = serializers
-                .filter((serializer: Common.NodeSerializer) =>
+                .filter((serializer) =>
                   handle.kind === 'directory' ? type === serializer.inputType : type === serializer.outputType,
                 )
                 .sort(byPosition);
@@ -229,6 +229,7 @@ export default Capability.makeModule(
         operation: LocalFilesOperation.OpenFile,
         handler: () =>
           Effect.gen(function* () {
+            const mutableState = context.getCapability(FileCapabilities.MutableState);
             if ('showOpenFilePicker' in window) {
               const [handle]: FileSystemFileHandle[] = yield* Effect.promise(async () =>
                 (window as any).showOpenFilePicker({
@@ -262,6 +263,7 @@ export default Capability.makeModule(
         operation: LocalFilesOperation.OpenDirectory,
         handler: () =>
           Effect.gen(function* () {
+            const mutableState = context.getCapability(FileCapabilities.MutableState);
             const handle = yield* Effect.promise(async () =>
               (window as any).showDirectoryPicker({ mode: 'readwrite' }),
             );
@@ -274,7 +276,8 @@ export default Capability.makeModule(
         operation: LocalFilesOperation.Reconnect,
         handler: ({ id }) =>
           Effect.gen(function* () {
-            const entity = mutableState.files.find((entity: { id: string }) => entity.id === id);
+            const mutableState = context.getCapability(FileCapabilities.MutableState);
+            const entity = mutableState.files.find((entity) => entity.id === id);
             if (!entity) {
               return;
             }
@@ -307,6 +310,7 @@ export default Capability.makeModule(
         operation: LocalFilesOperation.Save,
         handler: ({ id }) =>
           Effect.gen(function* () {
+            const mutableState = context.getCapability(FileCapabilities.MutableState);
             const file = findFile(mutableState.files, [id]);
             if (file) {
               yield* Effect.promise(async () => handleSave(file));
@@ -317,7 +321,8 @@ export default Capability.makeModule(
         operation: LocalFilesOperation.Close,
         handler: ({ id }) =>
           Effect.sync(() => {
-            const index = mutableState.files.findIndex((f: { id: string }) => f.id === id);
+            const mutableState = context.getCapability(FileCapabilities.MutableState);
+            const index = mutableState.files.findIndex((f) => f.id === id);
             if (index >= 0) {
               mutableState.files.splice(index, 1);
             }
