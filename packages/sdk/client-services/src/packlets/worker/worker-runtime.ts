@@ -43,10 +43,14 @@ export type WorkerRuntimeOptions = {
   acquireLock: () => Promise<void>;
   releaseLock: () => void;
   onStop?: () => Promise<void>;
+  /**
+   * @default false
+   */
+  automaticallyConnectWebrtc?: boolean;
 };
 
 /**
- * Runtime for the shared worker.
+ * Runtime for the shared and dedciated worker.
  * Manages connections from proxies (in tabs).
  * Tabs make requests to the `ClientServicesHost`, and provide a WebRTC gateway.
  */
@@ -60,6 +64,7 @@ export class WorkerRuntime {
   private readonly _sessions = new Set<WorkerSession>();
   private readonly _clientServices!: ClientServicesHost;
   private readonly _channel: string;
+  private readonly _automaticallyConnectWebrtc: boolean;
   private _broadcastChannel?: BroadcastChannel;
   private _sessionForNetworking?: WorkerSession; // TODO(burdon): Expose to client QueryStatusResponse.
   private _config!: Config;
@@ -73,6 +78,7 @@ export class WorkerRuntime {
     acquireLock,
     releaseLock,
     onStop,
+    automaticallyConnectWebrtc = true,
   }: WorkerRuntimeOptions) {
     this._configProvider = configProvider;
     this._acquireLock = acquireLock;
@@ -86,6 +92,7 @@ export class WorkerRuntime {
       },
       runtime: this._runtime.runtimeEffect,
     });
+    this._automaticallyConnectWebrtc = automaticallyConnectWebrtc;
   }
 
   get host() {
@@ -145,7 +152,7 @@ export class WorkerRuntime {
   /**
    * Create a new session.
    */
-  async createSession({ appPort, systemPort, shellPort }: CreateSessionProps): Promise<void> {
+  async createSession({ appPort, systemPort, shellPort }: CreateSessionProps): Promise<WorkerSession> {
     const session = new WorkerSession({
       serviceHost: this._clientServices,
       appPort,
@@ -161,7 +168,9 @@ export class WorkerRuntime {
         // Terminate the worker when all sessions are closed.
         await this.stop();
       } else {
-        this._reconnectWebrtc();
+        if (this._automaticallyConnectWebrtc) {
+          this._reconnectWebrtc();
+        }
       }
     });
 
@@ -178,7 +187,24 @@ export class WorkerRuntime {
     this._signalMetadataTags.origin = session.origin;
     this._sessions.add(session);
 
-    this._reconnectWebrtc();
+    if (this._automaticallyConnectWebrtc) {
+      this._reconnectWebrtc();
+    }
+
+    return session;
+  }
+
+  /**
+   * Connects the WebRTC bridge to the specified session.
+   * If no session is provided, disconnects the WebRTC bridge.
+   *
+   * Called automatically if `automaticallyConnectWebrtc` is true.
+   *
+   * @param session The session to connect the WebRTC bridge to.
+   */
+  connectWebrtcBridge(session: WorkerSession | undefined): void {
+    this._sessionForNetworking = session;
+    this._transportFactory.setBridgeService(session?.bridgeService);
   }
 
   /**
@@ -196,12 +222,7 @@ export class WorkerRuntime {
     // Select existing session.
     if (!this._sessionForNetworking) {
       const selected = Array.from(this._sessions).find((session) => session.bridgeService);
-      if (selected) {
-        this._sessionForNetworking = selected;
-        this._transportFactory.setBridgeService(selected.bridgeService);
-      } else {
-        this._transportFactory.setBridgeService(undefined);
-      }
+      this.connectWebrtcBridge(selected);
     }
   }
 }
