@@ -138,7 +138,7 @@ describe('Operation', () => {
         { results: string[]; summary: string },
         Error,
         DatabaseService | AiService
-      > = (input: { query: string }) =>
+      > = (input) =>
         Effect.gen(function* () {
           const db = yield* DatabaseService;
           const ai = yield* AiService;

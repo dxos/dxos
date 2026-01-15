@@ -14,16 +14,15 @@ import { log } from '@dxos/log';
 import { byPosition } from '@dxos/util';
 
 import { NoHandlerError } from './errors';
-import type { Definition, Handler } from './operation';
-import type { OperationResolver } from './resolver';
+import * as Operation from './operation';
+import type * as OperationResolver from './resolver';
 import * as Scheduler from './scheduler';
-import { type InvokeOptions, type OperationService, Service as OperationServiceTag } from './service';
 
 /**
  * Invocation event emitted after each operation.
  */
 export type InvocationEvent<I = any, O = any> = {
-  operation: Definition<I, O>;
+  operation: Operation.Definition<I, O>;
   input: I;
   output: O;
   timestamp: number;
@@ -44,12 +43,16 @@ export type DatabaseResolver = (spaceId: Key.SpaceId) => Effect.Effect<Context.C
  */
 export interface OperationInvoker {
   invoke: <I, O>(
-    op: Definition<I, O>,
-    ...args: void extends I ? [input?: I, options?: InvokeOptions] : [input: I, options?: InvokeOptions]
+    op: Operation.Definition<I, O>,
+    ...args: void extends I
+      ? [input?: I, options?: Operation.InvokeOptions]
+      : [input: I, options?: Operation.InvokeOptions]
   ) => Effect.Effect<O, Error>;
   invokePromise: <I, O>(
-    op: Definition<I, O>,
-    ...args: void extends I ? [input?: I, options?: InvokeOptions] : [input: I, options?: InvokeOptions]
+    op: Operation.Definition<I, O>,
+    ...args: void extends I
+      ? [input?: I, options?: Operation.InvokeOptions]
+      : [input: I, options?: Operation.InvokeOptions]
   ) => Promise<{ data?: O; error?: Error }>;
   /**
    * Synchronously invoke an operation.
@@ -57,14 +60,20 @@ export interface OperationInvoker {
    * Throws if the operation is async or if the handler performs async work.
    */
   invokeSync: <I, O>(
-    op: Definition<I, O>,
-    ...args: void extends I ? [input?: I, options?: InvokeOptions] : [input: I, options?: InvokeOptions]
+    op: Operation.Definition<I, O>,
+    ...args: void extends I
+      ? [input?: I, options?: Operation.InvokeOptions]
+      : [input: I, options?: Operation.InvokeOptions]
   ) => { data?: O; error?: Error };
   /**
    * Core invocation without event emission.
    * Used by history tracker to avoid undo-of-undo loops.
    */
-  _invokeCore: <I, O>(op: Definition<I, O>, input: I, options?: InvokeOptions) => Effect.Effect<O, Error>;
+  _invokeCore: <I, O>(
+    op: Operation.Definition<I, O>,
+    input: I,
+    options?: Operation.InvokeOptions,
+  ) => Effect.Effect<O, Error>;
   /** Effect stream of invocation events. */
   invocations: PubSub.PubSub<InvocationEvent>;
   /** Number of pending followup operations. */
@@ -81,13 +90,16 @@ type AnyManagedRuntime = ManagedRuntime.ManagedRuntime<any, any>;
 
 class OperationInvokerImpl implements OperationInvoker {
   private readonly _pubsub: PubSub.PubSub<InvocationEvent>;
-  private readonly _getHandlers: () => Effect.Effect<OperationResolver<any, any, Error, any>[], Error>;
+  private readonly _getHandlers: () => Effect.Effect<
+    OperationResolver.OperationResolver<any, any, Error, any>[],
+    Error
+  >;
   private readonly _followupScheduler: Scheduler.FollowupScheduler;
   private readonly _managedRuntime?: AnyManagedRuntime;
   private readonly _databaseResolver?: DatabaseResolver;
 
   constructor(
-    getHandlers: () => Effect.Effect<OperationResolver<any, any, Error, any>[], Error>,
+    getHandlers: () => Effect.Effect<OperationResolver.OperationResolver<any, any, Error, any>[], Error>,
     followupScheduler: Scheduler.FollowupScheduler,
     managedRuntime?: AnyManagedRuntime,
     databaseResolver?: DatabaseResolver,
@@ -113,11 +125,13 @@ class OperationInvokerImpl implements OperationInvoker {
 
   // Arrow function to preserve `this` context when destructured.
   invoke = <I, O>(
-    op: Definition<I, O>,
-    ...args: void extends I ? [input?: I, options?: InvokeOptions] : [input: I, options?: InvokeOptions]
+    op: Operation.Definition<I, O>,
+    ...args: void extends I
+      ? [input?: I, options?: Operation.InvokeOptions]
+      : [input: I, options?: Operation.InvokeOptions]
   ): Effect.Effect<O, Error> => {
     const input = args[0] as I;
-    const options = args[1] as InvokeOptions | undefined;
+    const options = args[1] as Operation.InvokeOptions | undefined;
     return Effect.gen(this, function* () {
       const output = yield* this._invokeCore(op, input, options);
 
@@ -135,8 +149,10 @@ class OperationInvokerImpl implements OperationInvoker {
 
   // Arrow function to preserve `this` context when destructured.
   invokePromise = async <I, O>(
-    op: Definition<I, O>,
-    ...args: void extends I ? [input?: I, options?: InvokeOptions] : [input: I, options?: InvokeOptions]
+    op: Operation.Definition<I, O>,
+    ...args: void extends I
+      ? [input?: I, options?: Operation.InvokeOptions]
+      : [input: I, options?: Operation.InvokeOptions]
   ): Promise<{ data?: O; error?: Error }> => {
     return runAndForwardErrors(this.invoke(op, ...args))
       .then((data) => ({ data }))
@@ -148,8 +164,10 @@ class OperationInvokerImpl implements OperationInvoker {
 
   // Arrow function to preserve `this` context when destructured.
   invokeSync = <I, O>(
-    op: Definition<I, O>,
-    ...args: void extends I ? [input?: I, options?: InvokeOptions] : [input: I, options?: InvokeOptions]
+    op: Operation.Definition<I, O>,
+    ...args: void extends I
+      ? [input?: I, options?: Operation.InvokeOptions]
+      : [input: I, options?: Operation.InvokeOptions]
   ): { data?: O; error?: Error } => {
     const exit = Effect.runSyncExit(this.invoke(op, ...args));
     if (Exit.isSuccess(exit)) {
@@ -162,9 +180,9 @@ class OperationInvokerImpl implements OperationInvoker {
   };
 
   private _resolveHandler(
-    operation: Definition<any, any>,
+    operation: Operation.Definition<any, any>,
     input: any,
-  ): Effect.Effect<Handler<any, any, Error, OperationServiceTag> | undefined, Error> {
+  ): Effect.Effect<Operation.Handler<any, any, Error, Operation.Service> | undefined, Error> {
     return Effect.gen(this, function* () {
       const candidates = yield* this._getHandlers().pipe(
         Effect.map((handlers) => handlers.filter((reg) => reg.operation.meta.key === operation.meta.key)),
@@ -182,7 +200,11 @@ class OperationInvokerImpl implements OperationInvoker {
 
   /** @internal */
   // Arrow function to preserve `this` context when destructured.
-  _invokeCore = <I, O>(op: Definition<I, O>, input: I, options?: InvokeOptions): Effect.Effect<O, Error> => {
+  _invokeCore = <I, O>(
+    op: Operation.Definition<I, O>,
+    input: I,
+    options?: Operation.InvokeOptions,
+  ): Effect.Effect<O, Error> => {
     return Effect.gen(this, function* () {
       const handler = yield* this._resolveHandler(op, input);
       if (!handler) {
@@ -191,16 +213,15 @@ class OperationInvokerImpl implements OperationInvoker {
 
       log('invoking operation', { key: op.meta.key, input });
 
-      // Create the Operation.Service implementation for this invocation.
-      const operationService: OperationService = {
-        invoke: this.invoke,
-        schedule: this._followupScheduler.schedule,
-        invokePromise: this.invokePromise,
-        invokeSync: this.invokeSync,
-      };
-
       // Build the effect with Operation.Service provided.
-      let handlerEffect = handler(input).pipe(Effect.provideService(OperationServiceTag, operationService));
+      let handlerEffect = handler(input).pipe(
+        Effect.provideService(Operation.Service, {
+          invoke: this.invoke,
+          schedule: this._followupScheduler.schedule,
+          invokePromise: this.invokePromise,
+          invokeSync: this.invokeSync,
+        }),
+      );
 
       // Provide database context if spaceId is specified and we have a resolver.
       if (options?.spaceId && this._databaseResolver) {
@@ -261,7 +282,7 @@ class OperationInvokerImpl implements OperationInvoker {
  * ```
  */
 export const make = (
-  getHandlers: () => Effect.Effect<OperationResolver<any, any, Error, any>[], Error>,
+  getHandlers: () => Effect.Effect<OperationResolver.OperationResolver<any, any, Error, any>[], Error>,
   managedRuntime?: AnyManagedRuntime,
   databaseResolver?: DatabaseResolver,
 ): OperationInvoker => {

@@ -17,7 +17,6 @@ import { NoHandlerError } from './errors';
 import * as OperationInvoker from './invoker';
 import * as Operation from './operation';
 import * as OperationResolver from './resolver';
-import * as OperationService from './service';
 
 //
 // Test Operations
@@ -390,7 +389,7 @@ describe('OperationResolver.make type safety', () => {
       operation: opWithDeclaredService,
       handler: (_input) =>
         Effect.gen(function* () {
-          yield* OperationService.schedule(SideEffect);
+          yield* Operation.schedule(SideEffect);
         }),
     });
   });
