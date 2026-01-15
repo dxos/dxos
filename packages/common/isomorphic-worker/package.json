@@ -1,0 +1,28 @@
+{
+  "name": "@dxos/isomorphic-worker",
+  "version": "0.8.3",
+  "description": "Isomorphic workers for browsers and Node.",
+  "homepage": "https://dxos.org",
+  "bugs": "https://github.com/dxos/dxos/issues",
+  "license": "MIT",
+  "author": "info@dxos.org",
+  "sideEffects": true,
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/types/src/browser.d.ts",
+      "browser": "./dist/lib/browser/browser.mjs",
+      "node": "./dist/lib/node-esm/node.mjs"
+    }
+  },
+  "files": [
+    "dist",
+    "src"
+  ],
+  "dependencies": {},
+  "devDependencies": {},
+  "publishConfig": {
+    "access": "public"
+  },
+  "beast": {}
+}
