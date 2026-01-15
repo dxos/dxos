@@ -10,9 +10,9 @@ import { Migrations } from '@dxos/migrations';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { Collection } from '@dxos/schema';
 
-export default Capability.makeModule((context: Capability.PluginContext) =>
-  Effect.gen(function* () {
-    const client = context.getCapability(ClientCapabilities.Client);
+export default Capability.makeModule(
+  Effect.fnUntraced(function* () {
+    const client = yield* Capability.get(ClientCapabilities.Client);
     yield* Effect.tryPromise(() => client.spaces.waitUntilReady());
 
     const defaultSpace = client.spaces.default;

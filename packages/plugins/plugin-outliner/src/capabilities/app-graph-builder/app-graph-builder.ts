@@ -15,8 +15,10 @@ import { HasSubject } from '@dxos/types';
 import { meta } from '../../meta';
 import { OutlineOperation } from '../../types';
 
-export default Capability.makeModule((context) =>
-  Effect.sync(() => {
+export default Capability.makeModule(
+  Effect.fnUntraced(function* () {
+    const context = yield* Capability.PluginContextService;
+
     return Capability.contributes(
       Common.Capability.AppGraphBuilder,
       GraphBuilder.createExtension({

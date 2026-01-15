@@ -13,16 +13,18 @@ import { Graph, GraphBuilder, Node } from '@dxos/app-graph';
 
 // const KEY = `${meta.id}/app-graph`;
 
-export default Capability.makeModule((context) =>
-  Effect.sync(() => {
-    const registry = context.getCapability(Common.Capability.AtomRegistry);
+export default Capability.makeModule(
+  Effect.fnUntraced(function* () {
+    const registry = yield* Capability.get(Common.Capability.AtomRegistry);
+    const extensionsAtom = yield* Capability.atom(Common.Capability.AppGraphBuilder);
+
     const builder = GraphBuilder.from(/* localStorage.getItem(KEY) ?? */ undefined, registry);
     // const interval = setInterval(() => {
     //   localStorage.setItem(KEY, builder.graph.pickle());
     // }, 5_000);
 
     const unsubscribe = registry.subscribe(
-      context.capabilities(Common.Capability.AppGraphBuilder),
+      extensionsAtom,
       (extensions) => {
         const next = GraphBuilder.flattenExtensions(extensions);
         const current = Record.values(registry.get(builder.extensions));

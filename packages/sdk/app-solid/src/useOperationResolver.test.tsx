@@ -7,8 +7,8 @@ import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 import { describe, expect, test, vi } from 'vitest';
 
-import { OperationResolver, type PluginManager, PluginManagerContext } from '@dxos/app-framework';
-import * as Operation from '@dxos/operation';
+import { type PluginManager, PluginManagerContext } from '@dxos/app-framework';
+import { Operation, OperationResolver } from '@dxos/operation';
 import { ContextProtocolProvider } from '@dxos/web-context-solid';
 
 import { useOperationResolver } from './useOperationResolver';

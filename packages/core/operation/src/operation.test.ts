@@ -133,7 +133,7 @@ describe('Operation', () => {
 
       // Handler that requires the declared services.
       // The R type parameter captures the service requirements.
-      const handler: Operation.OperationHandler<
+      const handler: Operation.Handler<
         { query: string },
         { results: string[]; summary: string },
         Error,

@@ -6,8 +6,9 @@ import { Octokit } from '@octokit/core';
 import * as Effect from 'effect/Effect';
 import * as Predicate from 'effect/Predicate';
 
-import { Capability, Common, OperationResolver } from '@dxos/app-framework';
+import { Capability, Common } from '@dxos/app-framework';
 import { Script } from '@dxos/functions';
+import { Operation, OperationResolver } from '@dxos/operation';
 import { TokenManagerOperation } from '@dxos/plugin-token-manager/types';
 
 import { DEPLOYMENT_DIALOG } from '../../components';
@@ -15,9 +16,11 @@ import { defaultScriptsForIntegration } from '../../meta';
 import { templates } from '../../templates';
 import { ScriptOperation } from '../../types';
 
-export default Capability.makeModule((context) =>
-  Effect.succeed(
-    Capability.contributes(Common.Capability.OperationResolver, [
+export default Capability.makeModule(
+  Effect.fnUntraced(function* () {
+    const context = yield* Capability.PluginContextService;
+
+    return Capability.contributes(Common.Capability.OperationResolver, [
       OperationResolver.make({
         operation: ScriptOperation.CreateScript,
         handler: ({ name, gistUrl, initialTemplateId }) =>
@@ -56,13 +59,12 @@ export default Capability.makeModule((context) =>
         operation: TokenManagerOperation.AccessTokenCreated,
         handler: ({ accessToken }) =>
           Effect.gen(function* () {
-            const { invoke } = context.getCapability(Common.Capability.OperationInvoker);
             const scriptTemplates = (defaultScriptsForIntegration[accessToken.source] ?? [])
               .map((id) => templates.find((t) => t.id === id))
               .filter(Predicate.isNotNullable);
 
             if (scriptTemplates.length > 0) {
-              yield* invoke(Common.LayoutOperation.UpdateDialog, {
+              yield* Operation.invoke(Common.LayoutOperation.UpdateDialog, {
                 subject: DEPLOYMENT_DIALOG,
                 blockAlign: 'start',
                 state: true,
@@ -71,6 +73,6 @@ export default Capability.makeModule((context) =>
             }
           }),
       }),
-    ]),
-  ),
+    ]);
+  }),
 );

@@ -12,9 +12,11 @@ import { meta } from '../../meta';
 import { FileCapabilities, type FilesSettingsProps, LocalFilesOperation } from '../../types';
 import { isLocalDirectory, isLocalEntity, isLocalFile } from '../../util';
 
-export default Capability.makeModule((context) =>
-  Effect.sync(() =>
-    Capability.contributes(Common.Capability.AppGraphBuilder, [
+export default Capability.makeModule(
+  Effect.fnUntraced(function* () {
+    const context = yield* Capability.PluginContextService;
+
+    return Capability.contributes(Common.Capability.AppGraphBuilder, [
       // Create export/import actions.
       GraphBuilder.createExtension({
         id: `${meta.id}/export`,
@@ -50,7 +52,8 @@ export default Capability.makeModule((context) =>
         id: `${meta.id}/root`,
         match: NodeMatcher.whenRoot,
         connector: (node, get) => {
-          const settingsStore = get(context.capabilities(Common.Capability.SettingsStore))[0];
+          const settingsStoreAtom = context.capabilities(Common.Capability.SettingsStore);
+          const settingsStore = get(settingsStoreAtom)[0];
           const settings = get(
             CreateAtom.fromSignal(() => settingsStore?.getStore<FilesSettingsProps>(meta.id)?.value),
           );
@@ -111,8 +114,8 @@ export default Capability.makeModule((context) =>
             : []),
         ],
         connector: () => {
-          const state = context.getCapability(FileCapabilities.State);
-          return state.files.map((entity) => ({
+          const filesState = context.getCapability(FileCapabilities.State);
+          return filesState.files.map((entity) => ({
             id: entity.id,
             type: isLocalDirectory(entity) ? 'directory' : 'file',
             data: entity,
@@ -193,6 +196,6 @@ export default Capability.makeModule((context) =>
             : []),
         ],
       }),
-    ]),
-  ),
+    ]);
+  }),
 );

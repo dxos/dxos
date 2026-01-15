@@ -3,6 +3,7 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
+import * as Effect from 'effect/Effect';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { Common } from '@dxos/app-framework';
@@ -193,12 +194,13 @@ const meta = {
         ...corePlugins(),
         ClientPlugin({
           types: [TestItem, Person.Person, Organization.Organization, TestSchema.DocumentType],
-          onClientInitialized: async ({ client }) => {
-            await client.halo.createIdentity();
-            await client.spaces.waitUntilReady();
-            await client.spaces.default.waitUntilReady();
-            await seedTestData(client.spaces.default);
-          },
+          onClientInitialized: ({ client }) =>
+            Effect.gen(function* () {
+              yield* Effect.promise(() => client.halo.createIdentity());
+              yield* Effect.promise(() => client.spaces.waitUntilReady());
+              yield* Effect.promise(() => client.spaces.default.waitUntilReady());
+              yield* Effect.promise(() => seedTestData(client.spaces.default));
+            }),
         }),
         ...corePlugins(),
         SpacePlugin({}),

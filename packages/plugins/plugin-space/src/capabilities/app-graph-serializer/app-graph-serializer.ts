@@ -19,9 +19,12 @@ const COLLECTION_TYPE = Collection.Collection.typename;
 // https://stackoverflow.com/a/19016910
 const DIRECTORY_TYPE = 'text/directory';
 
-export default Capability.makeModule((context) =>
-  Effect.succeed(
-    Capability.contributes(Common.Capability.AppGraphSerializer, [
+export default Capability.makeModule(
+  Effect.fnUntraced(function* () {
+    // Get context for lazy capability access in callbacks.
+    const context = yield* Capability.PluginContextService;
+
+    return Capability.contributes(Common.Capability.AppGraphSerializer, [
       {
         inputType: SPACES,
         outputType: DIRECTORY_TYPE,
@@ -74,6 +77,6 @@ export default Capability.makeModule((context) =>
           return result.data?.object;
         },
       },
-    ]),
-  ),
+    ]);
+  }),
 );

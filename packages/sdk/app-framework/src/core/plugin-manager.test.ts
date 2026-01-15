@@ -455,11 +455,11 @@ describe('PluginManager', () => {
           id: 'Count',
           activatesOn: Common.ActivationEvent.Startup,
           activatesBefore: [CountEvent],
-          activate: (context) =>
-            Effect.sync(() => {
-              computeTotal(context);
-              return Capability.contributes(Total, state);
-            }),
+          activate: Effect.fnUntraced(function* () {
+            const context = yield* Capability.PluginContextService;
+            computeTotal(context);
+            return Capability.contributes(Total, state);
+          }),
         }),
         Plugin.make,
       );

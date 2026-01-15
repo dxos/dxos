@@ -35,8 +35,8 @@ const TestPlugin = Plugin.define<SimpleLayoutPluginOptions>(pluginMeta).pipe(
   Plugin.addModule({
     id: 'setup',
     activatesOn: Common.ActivationEvent.OperationInvokerReady,
-    activate: Effect.fnUntraced(function* (context) {
-      const { invoke } = context.getCapability(Common.Capability.OperationInvoker);
+    activate: Effect.fnUntraced(function* () {
+      const { invoke } = yield* Capability.get(Common.Capability.OperationInvoker);
       yield* invoke(ClientOperation.CreateIdentity, {});
       const { space: work } = yield* invoke(SpaceOperation.Create, { name: 'Work Space' });
       const { space: sharedProject } = yield* invoke(SpaceOperation.Create, { name: 'Shared Project' });

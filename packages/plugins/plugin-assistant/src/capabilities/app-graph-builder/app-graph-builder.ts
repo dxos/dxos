@@ -6,11 +6,12 @@ import * as Effect from 'effect/Effect';
 import * as Function from 'effect/Function';
 import * as Option from 'effect/Option';
 
-import { Capability, Common, type OperationInvoker } from '@dxos/app-framework';
+import { Capability, Common } from '@dxos/app-framework';
 import { Prompt } from '@dxos/blueprints';
 import { Sequence } from '@dxos/conductor';
 import { DXN, type Database, Obj } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
+import { type OperationInvoker } from '@dxos/operation';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { ATTENDABLE_PATH_SEPARATOR, PLANK_COMPANION_TYPE } from '@dxos/plugin-deck/types';
 import { CreateAtom, GraphBuilder, NodeMatcher } from '@dxos/plugin-graph';
@@ -21,8 +22,10 @@ import { Query } from '@dxos/react-client/echo';
 import { ASSISTANT_DIALOG, meta } from '../../meta';
 import { Assistant, AssistantCapabilities, AssistantOperation } from '../../types';
 
-export default Capability.makeModule((context) =>
-  Effect.sync(() => {
+export default Capability.makeModule(
+  Effect.fnUntraced(function* () {
+    const context = yield* Capability.PluginContextService;
+
     return Capability.contributes(Common.Capability.AppGraphBuilder, [
       GraphBuilder.createTypeExtension({
         id: `${meta.id}/root`,
@@ -88,10 +91,9 @@ export default Capability.makeModule((context) =>
         id: `${meta.id}/companion-chat`,
         match: NodeMatcher.whenObject,
         connector: (object, get) => {
+          const assistantState = context.getCapability(AssistantCapabilities.State);
           const currentChatState = get(
-            CreateAtom.fromSignal(
-              () => context.getCapability(AssistantCapabilities.State).currentChat[Obj.getDXN(object).toString()],
-            ),
+            CreateAtom.fromSignal(() => assistantState.currentChat[Obj.getDXN(object).toString()]),
           );
           // If no state, continue to allow chat initialization.
           if (!currentChatState) {

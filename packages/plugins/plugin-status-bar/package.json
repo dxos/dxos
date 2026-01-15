@@ -28,6 +28,7 @@
     "@dxos/app-framework": "workspace:*",
     "@dxos/async": "workspace:*",
     "@dxos/echo": "workspace:*",
+    "@dxos/operation": "workspace:*",
     "@dxos/plugin-observability": "workspace:*",
     "@dxos/react-client": "workspace:*",
     "@dxos/react-ui-form": "workspace:*",

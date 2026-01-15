@@ -49,7 +49,7 @@ export const ObservabilityPlugin = Plugin.define<ObservabilityPluginOptions>(met
   Plugin.addModule(({ namespace }) => ({
     id: Capability.getModuleTag(OperationResolver),
     activatesOn: Common.ActivationEvent.SetupOperationResolver,
-    activate: (context) => OperationResolver({ context, namespace }),
+    activate: () => OperationResolver({ namespace }),
   })),
   Common.Plugin.addSurfaceModule({ activate: ReactSurface }),
   Common.Plugin.addAppGraphModule({ activate: AppGraphBuilder }),
@@ -60,10 +60,10 @@ export const ObservabilityPlugin = Plugin.define<ObservabilityPluginOptions>(met
       ObservabilityEvents.StateReady,
       ClientReadyEvent,
     ),
-    activate: (context) =>
+    activate: () =>
       Effect.gen(function* () {
         const obs = yield* Effect.tryPromise(() => observability());
-        return yield* ClientReady({ context, namespace, observability: obs });
+        return yield* ClientReady({ namespace, observability: obs });
       }),
   })),
   Plugin.make,

@@ -5,13 +5,16 @@
 import * as Effect from 'effect/Effect';
 import * as Match from 'effect/Match';
 
-import { Capability, Common, OperationResolver } from '@dxos/app-framework';
+import { Capability, Common } from '@dxos/app-framework';
+import { OperationResolver } from '@dxos/operation';
 
 import { AttentionCapabilities, AttentionOperation } from '../../types';
 
-export default Capability.makeModule((context) =>
-  Effect.succeed(
-    Capability.contributes(Common.Capability.OperationResolver, [
+export default Capability.makeModule(
+  Effect.fnUntraced(function* () {
+    const context = yield* Capability.PluginContextService;
+
+    return Capability.contributes(Common.Capability.OperationResolver, [
       OperationResolver.make({
         operation: AttentionOperation.Select,
         handler: (input) =>
@@ -40,6 +43,6 @@ export default Capability.makeModule((context) =>
             );
           }),
       }),
-    ]),
-  ),
+    ]);
+  }),
 );

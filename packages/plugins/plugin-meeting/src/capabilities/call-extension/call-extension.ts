@@ -28,8 +28,11 @@ import { Meeting, MeetingCapabilities, MeetingOperation } from '../../types';
 // TODO(wittjosiah): Can we stop using protobuf for this?
 type MeetingPayload = buf.MessageInitShape<typeof MeetingPayloadSchema>;
 
-export default Capability.makeModule((context) =>
-  Effect.sync(() => {
+export default Capability.makeModule(
+  Effect.fnUntraced(function* () {
+    // Get context for lazy capability access in callbacks.
+    const context = yield* Capability.PluginContextService;
+
     const state = context.getCapability(MeetingCapabilities.State);
     const _settings = context.getCapability(Common.Capability.SettingsStore).getStore<Meeting.Settings>(meta.id)!.value;
 

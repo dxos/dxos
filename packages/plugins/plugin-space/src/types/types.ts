@@ -11,7 +11,7 @@ import { type PublicKey } from '@dxos/client';
 import { EchoObjectSchema, ReactiveObjectSchema, SpaceSchema } from '@dxos/client/echo';
 import { CancellableInvitationObservable, Invitation } from '@dxos/client/invitations';
 import { Database, type Obj, QueryAST, Type } from '@dxos/echo';
-import * as Operation from '@dxos/operation';
+import { Operation } from '@dxos/operation';
 import { Collection, FieldSchema, View } from '@dxos/schema';
 import { type ComplexMap } from '@dxos/util';
 

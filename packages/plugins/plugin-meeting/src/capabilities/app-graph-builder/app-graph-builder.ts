@@ -12,15 +12,16 @@ import { ATTENDABLE_PATH_SEPARATOR, DeckOperation, PLANK_COMPANION_TYPE } from '
 import { CreateAtom, GraphBuilder } from '@dxos/plugin-graph';
 import { COMPOSER_SPACE_LOCK } from '@dxos/plugin-space';
 import { SpaceOperation } from '@dxos/plugin-space/types';
-import { ThreadCapabilities } from '@dxos/plugin-thread';
-import { Channel } from '@dxos/plugin-thread/types';
+import { Channel, ThreadCapabilities } from '@dxos/plugin-thread/types';
 import { SpaceState, getSpace } from '@dxos/react-client/echo';
 
 import { meta } from '../../meta';
 import { Meeting, MeetingCapabilities, MeetingOperation } from '../../types';
 
-export default Capability.makeModule((context) =>
-  Effect.sync(() => {
+export default Capability.makeModule(
+  Effect.fnUntraced(function* () {
+    const context = yield* Capability.PluginContextService;
+
     return Capability.contributes(Common.Capability.AppGraphBuilder, [
       // TODO(wittjosiah): This currently won't _start_ the call but will navigate to the correct channel.
       GraphBuilder.createTypeExtension({
@@ -159,9 +160,10 @@ export default Capability.makeModule((context) =>
                 if (!transcriptionEnabled) {
                   log.warn('transcription disabled');
                 } else {
+                  const { invokePromise: invoke } = context.getCapability(Common.Capability.OperationInvoker);
                   const primary = Obj.getDXN(channel).toString();
                   const companion = `${primary}${ATTENDABLE_PATH_SEPARATOR}transcript`;
-                  await invokePromise(DeckOperation.ChangeCompanion, { primary, companion });
+                  await invoke(DeckOperation.ChangeCompanion, { primary, companion });
                 }
               },
               properties: {

@@ -4,13 +4,15 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capability, Common, FollowupScheduler, OperationResolver, UndoMapping } from '@dxos/app-framework';
+import { Capability, Common, Plugin, UndoMapping } from '@dxos/app-framework';
 import { SpaceState, getSpace } from '@dxos/client/echo';
 import { Database, Obj, Query, Ref, Relation, Type } from '@dxos/echo';
 import { EchoDatabaseImpl, Serializer } from '@dxos/echo-db';
 import { runAndForwardErrors } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { Migrations } from '@dxos/migrations';
+import { OperationResolver } from '@dxos/operation';
+import { Operation } from '@dxos/operation';
 import { ClientCapabilities } from '@dxos/plugin-client/types';
 import { ObservabilityOperation } from '@dxos/plugin-observability/types';
 import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
@@ -32,13 +34,15 @@ import { SpaceCapabilities, SpaceOperation } from '../../types';
 import { COMPOSER_SPACE_LOCK, cloneObject, getNestedObjects } from '../../util';
 
 type OperationResolverOptions = {
-  context: Capability.PluginContext;
   createInvitationUrl: (invitationCode: string) => string;
   observability?: boolean;
 };
 
-export default Capability.makeModule(({ context, createInvitationUrl, observability }: OperationResolverOptions) =>
-  Effect.sync(() => {
+export default Capability.makeModule(
+  Effect.fnUntraced(function* (props?: OperationResolverOptions) {
+    const { createInvitationUrl, observability } = props!;
+    const context = yield* Capability.PluginContextService;
+
     const resolve = (typename: string) =>
       context.getCapabilities(Common.Capability.Metadata).find(({ id }: { id: string }) => id === typename)?.metadata ??
       {};
@@ -103,13 +107,15 @@ export default Capability.makeModule(({ context, createInvitationUrl, observabil
         OperationResolver.make({
           operation: SpaceOperation.Join,
           handler: (input) =>
-            context.getCapability(Common.Capability.OperationInvoker).invoke(Common.LayoutOperation.UpdateDialog, {
-              subject: JOIN_DIALOG,
-              blockAlign: 'start',
-              props: {
-                initialInvitationCode: input.invitationCode,
-                onDone: input.onDone,
-              } satisfies Partial<JoinDialogProps>,
+            Effect.gen(function* () {
+              yield* Operation.invoke(Common.LayoutOperation.UpdateDialog, {
+                subject: JOIN_DIALOG,
+                blockAlign: 'start',
+                props: {
+                  initialInvitationCode: input.invitationCode,
+                  onDone: input.onDone,
+                } satisfies Partial<JoinDialogProps>,
+              });
             }),
         }),
 
@@ -132,8 +138,7 @@ export default Capability.makeModule(({ context, createInvitationUrl, observabil
           operation: SpaceOperation.OpenSettings,
           handler: (input) =>
             Effect.gen(function* () {
-              const { invoke } = context.getCapability(Common.Capability.OperationInvoker);
-              yield* invoke(Common.LayoutOperation.Open, {
+              yield* Operation.invoke(Common.LayoutOperation.Open, {
                 subject: [`properties-settings${ATTENDABLE_PATH_SEPARATOR}${input.space.id}`],
                 workspace: input.space.id,
               });
@@ -201,8 +206,7 @@ export default Capability.makeModule(({ context, createInvitationUrl, observabil
               }
 
               if (wasActive.length > 0) {
-                const { invoke } = context.getCapability(Common.Capability.OperationInvoker);
-                yield* invoke(Common.LayoutOperation.Close, { subject: wasActive });
+                yield* Operation.invoke(Common.LayoutOperation.Close, { subject: wasActive });
               }
 
               // Return data needed for undo.
@@ -213,7 +217,7 @@ export default Capability.makeModule(({ context, createInvitationUrl, observabil
                 nestedObjectsList,
                 wasActive,
               };
-            }),
+            }).pipe(Effect.provideService(Capability.PluginContextService, context)),
         }),
 
         //
@@ -250,9 +254,8 @@ export default Capability.makeModule(({ context, createInvitationUrl, observabil
           handler: (input) =>
             Effect.gen(function* () {
               const state = context.getCapability(SpaceCapabilities.State);
-              const { invoke } = context.getCapability(Common.Capability.OperationInvoker);
               const navigable = input.navigable ?? true;
-              yield* invoke(Common.LayoutOperation.UpdateDialog, {
+              yield* Operation.invoke(Common.LayoutOperation.UpdateDialog, {
                 subject: CREATE_OBJECT_DIALOG,
                 blockAlign: 'start',
                 props: {
@@ -270,7 +273,7 @@ export default Capability.makeModule(({ context, createInvitationUrl, observabil
                     : () => false,
                 },
               });
-            }),
+            }).pipe(Effect.provideService(Capability.PluginContextService, context)),
         }),
 
         //
@@ -280,7 +283,6 @@ export default Capability.makeModule(({ context, createInvitationUrl, observabil
           operation: SpaceOperation.AddObject,
           handler: (input) =>
             Effect.gen(function* () {
-              const scheduler = yield* FollowupScheduler.Service;
               const target = input.target as any;
               const object = input.object as Obj.Any;
               const db = Database.isDatabase(target) ? target : Obj.getDatabase(target);
@@ -292,7 +294,7 @@ export default Capability.makeModule(({ context, createInvitationUrl, observabil
                 hidden: input.hidden,
               }).pipe(Effect.provide(Database.Service.layer(db)));
 
-              yield* scheduler.schedule(ObservabilityOperation.SendEvent, {
+              yield* Operation.schedule(ObservabilityOperation.SendEvent, {
                 name: 'space.object.add',
                 properties: {
                   spaceId: db.spaceId,
@@ -315,11 +317,10 @@ export default Capability.makeModule(({ context, createInvitationUrl, observabil
           operation: SpaceOperation.Share,
           handler: (input) =>
             Effect.gen(function* () {
-              const scheduler = yield* FollowupScheduler.Service;
               const { space, type, authMethod, multiUse, target } = input;
               const invitation = space.share({ type, authMethod, multiUse, target });
 
-              yield* scheduler.schedule(ObservabilityOperation.SendEvent, {
+              yield* Operation.schedule(ObservabilityOperation.SendEvent, {
                 name: 'space.share',
                 properties: {
                   spaceId: space.id,
@@ -341,8 +342,7 @@ export default Capability.makeModule(({ context, createInvitationUrl, observabil
               space.properties[COMPOSER_SPACE_LOCK] = true;
 
               if (observability) {
-                const scheduler = yield* FollowupScheduler.Service;
-                yield* scheduler.schedule(ObservabilityOperation.SendEvent, {
+                yield* Operation.schedule(ObservabilityOperation.SendEvent, {
                   name: 'space.lock',
                   properties: { spaceId: space.id },
                 });
@@ -361,8 +361,7 @@ export default Capability.makeModule(({ context, createInvitationUrl, observabil
               space.properties[COMPOSER_SPACE_LOCK] = false;
 
               if (observability) {
-                const scheduler = yield* FollowupScheduler.Service;
-                yield* scheduler.schedule(ObservabilityOperation.SendEvent, {
+                yield* Operation.schedule(ObservabilityOperation.SendEvent, {
                   name: 'space.unlock',
                   properties: { spaceId: space.id },
                 });
@@ -377,8 +376,7 @@ export default Capability.makeModule(({ context, createInvitationUrl, observabil
           operation: SpaceOperation.OpenCreateSpace,
           handler: () =>
             Effect.gen(function* () {
-              const { invoke } = context.getCapability(Common.Capability.OperationInvoker);
-              yield* invoke(Common.LayoutOperation.UpdateDialog, {
+              yield* Operation.invoke(Common.LayoutOperation.UpdateDialog, {
                 subject: CREATE_SPACE_DIALOG,
                 blockAlign: 'start',
               });
@@ -392,7 +390,6 @@ export default Capability.makeModule(({ context, createInvitationUrl, observabil
           operation: SpaceOperation.Create,
           handler: ({ name, hue: hue_, icon: icon_, edgeReplication }) =>
             Effect.gen(function* () {
-              const scheduler = yield* FollowupScheduler.Service;
               const client = context.getCapability(ClientCapabilities.Client);
               const hue = hue_ ?? hues[Math.floor(Math.random() * hues.length)];
               const icon = icon_ ?? iconValues[Math.floor(Math.random() * iconValues.length)];
@@ -417,7 +414,9 @@ export default Capability.makeModule(({ context, createInvitationUrl, observabil
               collection.objects.push(Ref.make(Collection.makeManaged({ key: Type.getTypename(Type.PersistentType) })));
 
               // Allow other plugins to add default content.
-              yield* context.activate(SpaceEvents.SpaceCreated);
+              yield* Plugin.activate(SpaceEvents.SpaceCreated).pipe(
+                Effect.provideService(Capability.PluginContextService, context),
+              );
               const onCreateSpaceCallbacks = context.getCapabilities(SpaceCapabilities.OnCreateSpace);
               yield* Effect.all(
                 onCreateSpaceCallbacks.map((onCreateSpace) =>
@@ -426,7 +425,7 @@ export default Capability.makeModule(({ context, createInvitationUrl, observabil
               );
 
               if (observability) {
-                yield* scheduler.schedule(ObservabilityOperation.SendEvent, {
+                yield* Operation.schedule(ObservabilityOperation.SendEvent, {
                   name: 'space.create',
                   properties: { spaceId: space.id },
                 });
@@ -444,7 +443,6 @@ export default Capability.makeModule(({ context, createInvitationUrl, observabil
           handler: (input) =>
             Effect.gen(function* () {
               const state = context.getCapability(SpaceCapabilities.MutableState);
-              const scheduler = yield* FollowupScheduler.Service;
               const { space, version: targetVersion } = input;
 
               if (space.state.get() === SpaceState.SPACE_REQUIRES_MIGRATION) {
@@ -454,7 +452,7 @@ export default Capability.makeModule(({ context, createInvitationUrl, observabil
               }
               const result = yield* Effect.promise(() => Migrations.migrate(space, targetVersion));
 
-              yield* scheduler.schedule(ObservabilityOperation.SendEvent, {
+              yield* Operation.schedule(ObservabilityOperation.SendEvent, {
                 name: 'space.migrate',
                 properties: {
                   spaceId: space.id,
@@ -490,8 +488,7 @@ export default Capability.makeModule(({ context, createInvitationUrl, observabil
           operation: SpaceOperation.Rename,
           handler: (input) =>
             Effect.gen(function* () {
-              const { invoke } = context.getCapability(Common.Capability.OperationInvoker);
-              yield* invoke(Common.LayoutOperation.UpdatePopover, {
+              yield* Operation.invoke(Common.LayoutOperation.UpdatePopover, {
                 subject: SPACE_RENAME_POPOVER,
                 anchorId: `dxos.org/ui/${input.caller}/${input.space.id}`,
                 props: input.space,
@@ -506,9 +503,8 @@ export default Capability.makeModule(({ context, createInvitationUrl, observabil
           operation: SpaceOperation.RenameObject,
           handler: (input) =>
             Effect.gen(function* () {
-              const { invoke } = context.getCapability(Common.Capability.OperationInvoker);
               const object = input.object as Obj.Any;
-              yield* invoke(Common.LayoutOperation.UpdatePopover, {
+              yield* Operation.invoke(Common.LayoutOperation.UpdatePopover, {
                 subject: OBJECT_RENAME_POPOVER,
                 anchorId: `dxos.org/ui/${input.caller}/${Obj.getDXN(object).toString()}`,
                 props: object,
@@ -523,8 +519,7 @@ export default Capability.makeModule(({ context, createInvitationUrl, observabil
           operation: SpaceOperation.OpenMembers,
           handler: (input) =>
             Effect.gen(function* () {
-              const { invoke } = context.getCapability(Common.Capability.OperationInvoker);
-              yield* invoke(Common.LayoutOperation.Open, {
+              yield* Operation.invoke(Common.LayoutOperation.Open, {
                 subject: [`members-settings${ATTENDABLE_PATH_SEPARATOR}${input.space.id}`],
                 workspace: input.space.id,
               });
@@ -538,12 +533,11 @@ export default Capability.makeModule(({ context, createInvitationUrl, observabil
           operation: SpaceOperation.GetShareLink,
           handler: (input) =>
             Effect.gen(function* () {
-              const { invoke } = context.getCapability(Common.Capability.OperationInvoker);
               const { Invitation, InvitationEncoder } = yield* Effect.promise(
                 () => import('@dxos/react-client/invitations'),
               );
 
-              const invitation = yield* invoke(SpaceOperation.Share, {
+              const invitation = yield* Operation.invoke(SpaceOperation.Share, {
                 space: input.space,
                 type: Invitation.Type.DELEGATED,
                 authMethod: Invitation.AuthMethod.KNOWN_PUBLIC_KEY,
@@ -567,7 +561,7 @@ export default Capability.makeModule(({ context, createInvitationUrl, observabil
                 yield* Effect.tryPromise(() => navigator.clipboard.writeText(url));
               }
               return url;
-            }),
+            }).pipe(Effect.provideService(Capability.PluginContextService, context)),
         }),
 
         //
@@ -577,7 +571,6 @@ export default Capability.makeModule(({ context, createInvitationUrl, observabil
           operation: SpaceOperation.UseStaticSchema,
           handler: (input) =>
             Effect.gen(function* () {
-              const scheduler = yield* FollowupScheduler.Service;
               const db = input.db as Database.Database;
               const client = context.getCapability(ClientCapabilities.Client) as any;
               const schema: any = yield* Effect.promise(() =>
@@ -594,14 +587,20 @@ export default Capability.makeModule(({ context, createInvitationUrl, observabil
                 space.properties.staticRecords.push(input.typename);
               }
 
-              yield* Effect.promise(() => runAndForwardErrors(context.activate(SpaceEvents.SchemaAdded)));
+              yield* Effect.promise(() =>
+                runAndForwardErrors(
+                  Plugin.activate(SpaceEvents.SchemaAdded).pipe(
+                    Effect.provideService(Capability.PluginContextService, context),
+                  ),
+                ),
+              );
               const onSchemaAdded = context.getCapabilities(SpaceCapabilities.OnSchemaAdded);
               yield* Effect.all(
                 onSchemaAdded.map((callback) => callback({ db, schema, show: input.show })),
                 { concurrency: 'unbounded' },
               );
 
-              yield* scheduler.schedule(ObservabilityOperation.SendEvent, {
+              yield* Operation.schedule(ObservabilityOperation.SendEvent, {
                 name: 'space.schema.use',
                 properties: {
                   spaceId: space.id,
@@ -620,7 +619,6 @@ export default Capability.makeModule(({ context, createInvitationUrl, observabil
           operation: SpaceOperation.AddSchema,
           handler: (input) =>
             Effect.gen(function* () {
-              const scheduler = yield* FollowupScheduler.Service;
               const db = input.db as any;
               const schemas = (yield* Effect.promise(() => db.schemaRegistry.register([input.schema]))) as any[];
               const schema = schemas[0];
@@ -634,14 +632,20 @@ export default Capability.makeModule(({ context, createInvitationUrl, observabil
                 schema.storedSchema.version = input.version;
               }
 
-              yield* Effect.promise(() => runAndForwardErrors(context.activate(SpaceEvents.SchemaAdded)));
+              yield* Effect.promise(() =>
+                runAndForwardErrors(
+                  Plugin.activate(SpaceEvents.SchemaAdded).pipe(
+                    Effect.provideService(Capability.PluginContextService, context),
+                  ),
+                ),
+              );
               const onSchemaAdded = context.getCapabilities(SpaceCapabilities.OnSchemaAdded);
               yield* Effect.all(
                 onSchemaAdded.map((callback) => callback({ db, schema, show: input.show })),
                 { concurrency: 'unbounded' },
               );
 
-              yield* scheduler.schedule(ObservabilityOperation.SendEvent, {
+              yield* Operation.schedule(ObservabilityOperation.SendEvent, {
                 name: 'space.schema.add',
                 properties: {
                   spaceId: db.spaceId,
@@ -680,14 +684,12 @@ export default Capability.makeModule(({ context, createInvitationUrl, observabil
         OperationResolver.make({
           operation: SpaceOperation.DuplicateObject,
           handler: (input) =>
-            Effect.promise(async () => {
+            Effect.gen(function* () {
               const object = input.object as Obj.Any;
               const db = Obj.getDatabase(object);
               invariant(db, 'Database not found.');
-              const newObject = await cloneObject(object, resolve, db);
-
-              const { invoke } = context.getCapability(Common.Capability.OperationInvoker);
-              await runAndForwardErrors(invoke(SpaceOperation.AddObject, { object: newObject, target: db }));
+              const newObject = yield* Effect.promise(() => cloneObject(object, resolve, db));
+              yield* Operation.invoke(SpaceOperation.AddObject, { object: newObject, target: db });
             }),
         }),
 
@@ -748,8 +750,7 @@ export default Capability.makeModule(({ context, createInvitationUrl, observabil
 
               // Re-open objects that were active.
               if (wasActive.length > 0) {
-                const { invoke } = context.getCapability(Common.Capability.OperationInvoker);
-                yield* invoke(Common.LayoutOperation.Open, { subject: wasActive });
+                yield* Operation.invoke(Common.LayoutOperation.Open, { subject: wasActive });
               }
             }),
         }),

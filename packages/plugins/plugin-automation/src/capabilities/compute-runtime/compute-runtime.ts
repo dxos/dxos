@@ -27,8 +27,9 @@ import { ClientCapabilities } from '@dxos/plugin-client';
 
 import { AutomationCapabilities } from '../../types';
 
-export default Capability.makeModule((context: Capability.PluginContext) =>
-  Effect.gen(function* () {
+export default Capability.makeModule(
+  Effect.fnUntraced(function* () {
+    const context = yield* Capability.PluginContextService;
     const provider = yield* Effect.tryPromise(() => new ComputeRuntimeProviderImpl(context).open());
     return Capability.contributes(AutomationCapabilities.ComputeRuntime, provider, () =>
       Effect.tryPromise(() => provider.close()),

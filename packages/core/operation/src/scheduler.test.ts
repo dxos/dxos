@@ -8,15 +8,12 @@ import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 import { describe, expect } from 'vitest';
 
-import * as Operation from '@dxos/operation';
-
-import { SideEffect } from '../testing';
-
-import * as FollowupScheduler from './followup-scheduler';
-import * as OperationInvoker from './operation-invoker';
+import * as OperationInvoker from './invoker';
+import * as Operation from './operation';
+import * as Scheduler from './scheduler';
 
 //
-// Test Operations for FollowupScheduler
+// Test Operations for Scheduler
 //
 
 const CountOp = Operation.make({
@@ -27,6 +24,14 @@ const CountOp = Operation.make({
   meta: { key: 'test.count' },
 });
 
+const SideEffect = Operation.make({
+  schema: {
+    input: Schema.Void,
+    output: Schema.Void,
+  },
+  meta: { key: 'test.side-effect' },
+});
+
 const TriggerWithFollowup = Operation.make({
   schema: {
     input: Schema.Struct({ id: Schema.String }),
@@ -35,7 +40,7 @@ const TriggerWithFollowup = Operation.make({
   meta: { key: 'test.trigger-with-followup' },
 });
 
-describe('FollowupScheduler', () => {
+describe('Scheduler', () => {
   describe('standalone (without invoker)', () => {
     it.effect('tracks scheduled operations', () =>
       Effect.gen(function* () {
@@ -44,9 +49,9 @@ describe('FollowupScheduler', () => {
           Effect.sync(() => {
             executed.push(input.id);
             return undefined as any;
-          })) as FollowupScheduler.InvokeFn;
+          })) as Scheduler.InvokeFn;
 
-        const scheduler = FollowupScheduler.make(invokeFn);
+        const scheduler = Scheduler.make(invokeFn);
 
         // Initially no pending.
         expect(yield* scheduler.pending).toBe(0);
@@ -74,9 +79,9 @@ describe('FollowupScheduler', () => {
           Effect.sync(() => {
             executed.push(input.id);
             return undefined as any;
-          })) as FollowupScheduler.InvokeFn;
+          })) as Scheduler.InvokeFn;
 
-        const scheduler = FollowupScheduler.make(invokeFn);
+        const scheduler = Scheduler.make(invokeFn);
 
         yield* scheduler.schedule(CountOp, { id: 'a' });
         yield* scheduler.schedule(CountOp, { id: 'b' });
@@ -98,9 +103,9 @@ describe('FollowupScheduler', () => {
     it.effect('schedules arbitrary effects', () =>
       Effect.gen(function* () {
         let executed = false;
-        const invokeFn = (() => Effect.succeed(undefined as any)) as FollowupScheduler.InvokeFn;
+        const invokeFn = (() => Effect.succeed(undefined as any)) as Scheduler.InvokeFn;
 
-        const scheduler = FollowupScheduler.make(invokeFn);
+        const scheduler = Scheduler.make(invokeFn);
 
         yield* scheduler.scheduleEffect(
           Effect.sync(() => {
@@ -125,9 +130,9 @@ describe('FollowupScheduler', () => {
               return yield* Effect.fail(new Error('Intentional error'));
             }
             return undefined as any;
-          })) as FollowupScheduler.InvokeFn;
+          })) as Scheduler.InvokeFn;
 
-        const scheduler = FollowupScheduler.make(invokeFn);
+        const scheduler = Scheduler.make(invokeFn);
 
         yield* scheduler.schedule(CountOp, { id: 'a' });
         yield* scheduler.schedule(CountOp, { id: 'b' }); // This one will fail.
@@ -155,9 +160,9 @@ describe('FollowupScheduler', () => {
             }
             executed.push(input.id);
             return undefined as any;
-          })) as FollowupScheduler.InvokeFn;
+          })) as Scheduler.InvokeFn;
 
-        const scheduler = FollowupScheduler.make(invokeFn);
+        const scheduler = Scheduler.make(invokeFn);
 
         yield* scheduler.schedule(CountOp, { id: 'fast' });
         yield* scheduler.schedule(CountOp, { id: 'slow' });
@@ -179,7 +184,7 @@ describe('FollowupScheduler', () => {
   });
 
   describe('integrated with OperationInvoker', () => {
-    it.effect('handler can access FollowupScheduler via service', () =>
+    it.effect('handler can schedule followups via Operation.Service', () =>
       Effect.gen(function* () {
         const followupExecuted: string[] = [];
 
@@ -196,8 +201,7 @@ describe('FollowupScheduler', () => {
           operation: TriggerWithFollowup,
           handler: (input: { id: string }) =>
             Effect.gen(function* () {
-              const scheduler = yield* FollowupScheduler.Service;
-              yield* scheduler.schedule(CountOp, { id: `followup-${input.id}` });
+              yield* Operation.schedule(CountOp, { id: `followup-${input.id}` });
               return { triggered: true };
             }),
         };
@@ -233,8 +237,7 @@ describe('FollowupScheduler', () => {
           operation: TriggerWithFollowup,
           handler: (input: { id: string }) =>
             Effect.gen(function* () {
-              const scheduler = yield* FollowupScheduler.Service;
-              yield* scheduler.schedule(CountOp, { id: input.id });
+              yield* Operation.schedule(CountOp, { id: input.id });
               return { triggered: true };
             }),
         };
@@ -274,8 +277,7 @@ describe('FollowupScheduler', () => {
           operation: TriggerWithFollowup,
           handler: () =>
             Effect.gen(function* () {
-              const scheduler = yield* FollowupScheduler.Service;
-              yield* scheduler.schedule(CountOp, { id: 'child' });
+              yield* Operation.schedule(CountOp, { id: 'child' });
               // Return immediately, before the followup completes.
               return { triggered: true };
             }),
@@ -319,8 +321,7 @@ describe('FollowupScheduler', () => {
           operation: SideEffect,
           handler: () =>
             Effect.gen(function* () {
-              const scheduler = yield* FollowupScheduler.Service;
-              yield* scheduler.schedule(CountOp, { id: 'from-side-effect' });
+              yield* Operation.schedule(CountOp, { id: 'from-side-effect' });
               return undefined;
             }),
         };
@@ -329,8 +330,7 @@ describe('FollowupScheduler', () => {
           operation: TriggerWithFollowup,
           handler: (input: { id: string }) =>
             Effect.gen(function* () {
-              const scheduler = yield* FollowupScheduler.Service;
-              yield* scheduler.schedule(CountOp, { id: `from-trigger-${input.id}` });
+              yield* Operation.schedule(CountOp, { id: `from-trigger-${input.id}` });
               return { triggered: true };
             }),
         };
@@ -340,7 +340,7 @@ describe('FollowupScheduler', () => {
         );
 
         // Invoke both operations.
-        yield* invoker.invoke(SideEffect, undefined);
+        yield* invoker.invoke(SideEffect);
         yield* invoker.invoke(TriggerWithFollowup, { id: 'test' });
 
         yield* invoker.awaitFollowups;

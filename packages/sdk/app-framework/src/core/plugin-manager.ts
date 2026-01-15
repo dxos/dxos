@@ -598,7 +598,9 @@ class ManagerImpl implements PluginManager {
 
         const loadEffect = Effect.gen(this, function* () {
           log('loading module', { module: module.id });
-          const [duration, capabilities] = yield* Effect.timed(module.activate(this.context));
+          const [duration, capabilities] = yield* module
+            .activate()
+            .pipe(Effect.provideService(Capability.PluginContextService, this.context), Effect.timed);
           const normalized = capabilities == null ? [] : Array.isArray(capabilities) ? capabilities : [capabilities];
           log('loaded module', {
             module: module.id,
@@ -621,7 +623,10 @@ class ManagerImpl implements PluginManager {
         yield* Effect.forkDaemon(
           loadEffect.pipe(
             Effect.tap((result) => Deferred.succeed(deferred, result)),
-            Effect.catchAll((error) => Deferred.fail(deferred, error)),
+            Effect.catchAll((error) => {
+              log.error('module failed to activate', { module: module.id, error });
+              return Deferred.fail(deferred, error);
+            }),
           ),
         );
 

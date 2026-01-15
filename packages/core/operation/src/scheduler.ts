@@ -2,24 +2,23 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Fiber from 'effect/Fiber';
 import * as HashSet from 'effect/HashSet';
 import * as Ref from 'effect/Ref';
 
 import { log } from '@dxos/log';
-import type { OperationDefinition } from '@dxos/operation';
 
-import type { InvokeOptions } from './operation-invoker';
+import type * as Operation from './operation';
 
 /**
  * Invocation function type for scheduling operations.
+ * @internal
  */
 export type InvokeFn = <I, O>(
-  op: OperationDefinition<I, O>,
+  op: Operation.Definition<I, O>,
   input: I,
-  options?: InvokeOptions,
+  options?: Operation.InvokeOptions,
 ) => Effect.Effect<O, Error>;
 
 //
@@ -29,13 +28,17 @@ export type InvokeFn = <I, O>(
 /**
  * FollowupScheduler - schedules operations to run as tracked background tasks.
  * Followups are not cancelled when the parent operation completes.
+ * @internal
  */
 export interface FollowupScheduler {
   /**
    * Schedule an operation to run as a followup.
    * The followup is tracked and won't be cancelled when the parent completes.
    */
-  schedule: <I, O>(op: OperationDefinition<I, O>, input: I) => Effect.Effect<void>;
+  schedule: <I, O>(
+    op: Operation.Definition<I, O>,
+    ...args: void extends I ? [input?: I] : [input: I]
+  ) => Effect.Effect<void>;
 
   /**
    * Schedule an arbitrary effect as a followup.
@@ -85,8 +88,11 @@ class FollowupSchedulerImpl implements FollowupScheduler {
   }
 
   // Arrow function to preserve `this` context when destructured.
-  schedule = <I, O>(op: OperationDefinition<I, O>, input: I): Effect.Effect<void> => {
-    const effect = this._invoke(op, input).pipe(
+  schedule = <I, O>(
+    op: Operation.Definition<I, O>,
+    ...args: void extends I ? [input?: I] : [input: I]
+  ): Effect.Effect<void> => {
+    const effect = this._invoke(op, args[0] as I).pipe(
       Effect.tap(() => Effect.sync(() => log('followup completed', { key: op.meta.key }))),
       Effect.catchAll((error) =>
         Effect.sync(() => {
@@ -144,29 +150,8 @@ class FollowupSchedulerImpl implements FollowupScheduler {
 
 /**
  * Creates a FollowupScheduler that tracks and executes followup operations.
+ * @internal
  *
  * @param invoke - Function to invoke operations (typically from OperationInvoker).
- *
- * @example
- * ```ts
- * const scheduler = FollowupScheduler.make(invoker._invokeCore);
- * yield* scheduler.schedule(ObservabilityOperation.SendEvent, { name: 'test' });
- * ```
  */
 export const make = (invoke: InvokeFn): FollowupScheduler => new FollowupSchedulerImpl(invoke);
-
-//
-// Service Tag
-//
-
-/**
- * Context tag for the FollowupScheduler service.
- * Handlers can yield this to schedule followup operations.
- *
- * @example
- * ```ts
- * const scheduler = yield* FollowupScheduler.Service;
- * yield* scheduler.schedule(MyOperation, { data: 'test' });
- * ```
- */
-export class Service extends Context.Tag('@dxos/operation/FollowupScheduler')<Service, FollowupScheduler>() {}

@@ -9,7 +9,7 @@ This package provides the core primitives for defining and executing operations 
 ## Usage
 
 ```typescript
-import * as Operation from '@dxos/operation';
+import { Operation } from '@dxos/operation';
 import * as Schema from 'effect/Schema';
 
 // Define an operation

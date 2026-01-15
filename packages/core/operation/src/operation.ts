@@ -5,7 +5,7 @@
 import type * as Context from 'effect/Context';
 import type * as Effect from 'effect/Effect';
 import * as Pipeable from 'effect/Pipeable';
-import type * as Schema from 'effect/Schema';
+import type * as Schema$ from 'effect/Schema';
 
 import { type Type } from '@dxos/echo';
 
@@ -13,16 +13,16 @@ import { type Type } from '@dxos/echo';
  * Schema type that accepts any Encoded form but requires no Context.
  * This allows ECHO object schemas where Type !== Encoded due to [KindId] symbol.
  */
-type OperationSchema<T> = Schema.Schema<T, any, never>;
+type Schema<T> = Schema$.Schema<T, any, never>;
 
 /**
  * Serializable definition of an Operation.
  * Contains schema and metadata, but no runtime logic.
  */
-export interface OperationDefinition<I, O> extends Pipeable.Pipeable {
+export interface Definition<I, O> extends Pipeable.Pipeable {
   readonly schema: {
-    readonly input: OperationSchema<I>;
-    readonly output: OperationSchema<O>;
+    readonly input: Schema<I>;
+    readonly output: Schema<O>;
   };
   readonly meta: {
     readonly key: string;
@@ -57,21 +57,21 @@ export interface OperationDefinition<I, O> extends Pipeable.Pipeable {
 /**
  * Namespace for OperationDefinition helper types.
  */
-export declare namespace OperationDefinition {
+export declare namespace Definition {
   /**
    * Any operation definition, regardless of input/output types.
    */
-  export type Any = OperationDefinition<any, any>;
+  export type Any = Definition<any, any>;
 
   /**
    * Extract the input type from an operation definition.
    */
-  export type Input<T extends Any> = T extends OperationDefinition<infer I, any> ? I : never;
+  export type Input<T extends Any> = T extends Definition<infer I, any> ? I : never;
 
   /**
    * Extract the output type from an operation definition.
    */
-  export type Output<T extends Any> = T extends OperationDefinition<any, infer O> ? O : never;
+  export type Output<T extends Any> = T extends Definition<any, infer O> ? O : never;
 
   /**
    * Extract the service identifier types from an operation's services array.
@@ -87,20 +87,20 @@ export declare namespace OperationDefinition {
 /**
  * Runtime handler for an Operation.
  */
-export type OperationHandler<I, O, E = Error, R = never> = (input: I) => Effect.Effect<O, E, R>;
+export type Handler<I, O, E = Error, R = never> = (input: I) => Effect.Effect<O, E, R>;
 
 /**
  * Props for creating an Operation definition.
  * Derived from OperationDefinition with executionMode made optional (defaults to 'async').
  */
-export type OperationProps<I, O> = Omit<OperationDefinition<I, O>, 'pipe' | 'executionMode'> & {
+export type Props<I, O> = Omit<Definition<I, O>, 'pipe' | 'executionMode'> & {
   readonly executionMode?: 'sync' | 'async';
 };
 
 /**
  * The return type of Operation.make that preserves literal types while ensuring executionMode is set.
  */
-type MakeResult<P extends OperationProps<any, any>> = Omit<P, 'executionMode'> &
+type MakeResult<P extends Props<any, any>> = Omit<P, 'executionMode'> &
   Pipeable.Pipeable & { readonly executionMode: 'sync' | 'async' };
 
 /**
@@ -108,7 +108,7 @@ type MakeResult<P extends OperationProps<any, any>> = Omit<P, 'executionMode'> &
  * Applies default executionMode of 'async' if not specified.
  * The returned type preserves the literal types of props (including services).
  */
-export const make = <const P extends OperationProps<any, any>>(props: P): MakeResult<P> => {
+export const make = <const P extends Props<any, any>>(props: P): MakeResult<P> => {
   return {
     ...props,
     executionMode: props.executionMode ?? 'async',
@@ -144,62 +144,30 @@ export const make = <const P extends OperationProps<any, any>>(props: P): MakeRe
  * const op = MyOp.pipe(Operation.withHandler((input) => Effect.succeed({})));
  * ```
  */
-export function withHandler<Def extends OperationDefinition<any, any>, E = never>(
-  handler: OperationHandler<
-    OperationDefinition.Input<Def>,
-    OperationDefinition.Output<Def>,
-    E,
-    OperationDefinition.Services<Def>
-  >,
+export function withHandler<Def extends Definition<any, any>, E = never>(
+  handler: Handler<Definition.Input<Def>, Definition.Output<Def>, E, Definition.Services<Def>>,
 ): (op: Def) => Def & { handler: typeof handler };
-export function withHandler<Def extends OperationDefinition<any, any>, E = never>(
+export function withHandler<Def extends Definition<any, any>, E = never>(
   op: Def,
-  handler: OperationHandler<
-    OperationDefinition.Input<Def>,
-    OperationDefinition.Output<Def>,
-    E,
-    OperationDefinition.Services<Def>
-  >,
+  handler: Handler<Definition.Input<Def>, Definition.Output<Def>, E, Definition.Services<Def>>,
 ): Def & { handler: typeof handler };
-export function withHandler<Def extends OperationDefinition<any, any>, E = never>(
-  opOrHandler:
-    | Def
-    | OperationHandler<
-        OperationDefinition.Input<Def>,
-        OperationDefinition.Output<Def>,
-        E,
-        OperationDefinition.Services<Def>
-      >,
-  handler?: OperationHandler<
-    OperationDefinition.Input<Def>,
-    OperationDefinition.Output<Def>,
-    E,
-    OperationDefinition.Services<Def>
-  >,
+export function withHandler<Def extends Definition<any, any>, E = never>(
+  opOrHandler: Def | Handler<Definition.Input<Def>, Definition.Output<Def>, E, Definition.Services<Def>>,
+  handler?: Handler<Definition.Input<Def>, Definition.Output<Def>, E, Definition.Services<Def>>,
 ):
   | (Def & {
-      handler: OperationHandler<
-        OperationDefinition.Input<Def>,
-        OperationDefinition.Output<Def>,
-        E,
-        OperationDefinition.Services<Def>
-      >;
+      handler: Handler<Definition.Input<Def>, Definition.Output<Def>, E, Definition.Services<Def>>;
     })
   | ((op: Def) => Def & {
-      handler: OperationHandler<
-        OperationDefinition.Input<Def>,
-        OperationDefinition.Output<Def>,
-        E,
-        OperationDefinition.Services<Def>
-      >;
+      handler: Handler<Definition.Input<Def>, Definition.Output<Def>, E, Definition.Services<Def>>;
     }) {
   // If called with just handler (piped usage).
   if (handler === undefined) {
-    const handlerFn = opOrHandler as OperationHandler<
-      OperationDefinition.Input<Def>,
-      OperationDefinition.Output<Def>,
+    const handlerFn = opOrHandler as Handler<
+      Definition.Input<Def>,
+      Definition.Output<Def>,
       E,
-      OperationDefinition.Services<Def>
+      Definition.Services<Def>
     >;
     return (op: Def) => ({
       ...op,
@@ -222,13 +190,19 @@ export function withHandler<Def extends OperationDefinition<any, any>, E = never
 /**
  * Local invocation of an operation.
  */
-export type Invoke = <I, O, E>(op: OperationDefinition<I, O>, input: I) => Effect.Effect<O, E>;
+export type Invoke = <I, O, E>(op: Definition<I, O>, input: I) => Effect.Effect<O, E>;
 
 /**
  * Remote invocation of an operation.
  */
 export type InvokeRemote = <I, O, E>(
-  op: OperationDefinition<I, O>,
+  op: Definition<I, O>,
   input: I,
   options?: { timeout?: number },
 ) => Effect.Effect<O, E>;
+
+//
+// Re-export service types and functions for Operation namespace.
+//
+
+export { type InvokeOptions, type OperationService, Service, invoke, schedule } from './service';

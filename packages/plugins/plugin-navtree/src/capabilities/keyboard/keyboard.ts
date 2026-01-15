@@ -12,9 +12,9 @@ import { getHostPlatform } from '@dxos/util';
 
 import { KEY_BINDING } from '../../meta';
 
-export default Capability.makeModule((context) =>
-  Effect.sync(() => {
-    const { graph } = context.getCapability(Common.Capability.AppGraph);
+export default Capability.makeModule(
+  Effect.fnUntraced(function* () {
+    const { graph } = yield* Capability.get(Common.Capability.AppGraph);
 
     // TODO(wittjosiah): Factor out.
     // TODO(wittjosiah): Handle removal of actions.

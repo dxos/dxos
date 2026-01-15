@@ -36,6 +36,7 @@
     "@dxos/live-object": "workspace:*",
     "@dxos/local-storage": "workspace:*",
     "@dxos/log": "workspace:*",
+    "@dxos/operation": "workspace:*",
     "@dxos/plugin-assistant": "workspace:*",
     "@dxos/plugin-attention": "workspace:*",
     "@dxos/plugin-automation": "workspace:*",

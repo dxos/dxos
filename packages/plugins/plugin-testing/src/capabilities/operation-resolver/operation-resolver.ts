@@ -4,13 +4,16 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capability, Common, OperationResolver } from '@dxos/app-framework';
+import { Capability, Common } from '@dxos/app-framework';
+import { OperationResolver } from '@dxos/operation';
 
 import { LayoutState } from '../../types';
 
-export default Capability.makeModule((context) =>
-  Effect.succeed(
-    Capability.contributes(Common.Capability.OperationResolver, [
+export default Capability.makeModule(
+  Effect.fnUntraced(function* () {
+    const context = yield* Capability.PluginContextService;
+
+    return Capability.contributes(Common.Capability.OperationResolver, [
       OperationResolver.make({
         operation: Common.LayoutOperation.UpdateSidebar,
         handler: ({ state }) =>
@@ -73,6 +76,6 @@ export default Capability.makeModule((context) =>
             layout.workspace = subject;
           }),
       }),
-    ]),
-  ),
+    ]);
+  }),
 );

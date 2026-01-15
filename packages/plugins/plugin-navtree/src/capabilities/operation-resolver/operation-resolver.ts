@@ -4,22 +4,24 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capability, Common, OperationResolver } from '@dxos/app-framework';
+import { Capability, Common } from '@dxos/app-framework';
 import { log } from '@dxos/log';
+import { OperationResolver } from '@dxos/operation';
 import { Graph } from '@dxos/plugin-graph';
 
 import { NavTreeCapabilities } from '../../types';
 
-export default Capability.makeModule((context) =>
-  Effect.succeed(
-    Capability.contributes(Common.Capability.OperationResolver, [
+export default Capability.makeModule(
+  Effect.fnUntraced(function* () {
+    const context = yield* Capability.PluginContextService;
+
+    return Capability.contributes(Common.Capability.OperationResolver, [
       OperationResolver.make({
         operation: Common.LayoutOperation.Expose,
         handler: ({ subject }) =>
           Effect.promise(async () => {
             const { graph } = context.getCapability(Common.Capability.AppGraph);
             const { getItem, setItem } = context.getCapability(NavTreeCapabilities.State);
-
             try {
               const path = await Graph.waitForPath(graph, { target: subject }, { timeout: 1_000 });
               [...Array(path.length)].forEach((_, index) => {
@@ -34,6 +36,6 @@ export default Capability.makeModule((context) =>
             }
           }),
       }),
-    ]),
-  ),
+    ]);
+  }),
 );

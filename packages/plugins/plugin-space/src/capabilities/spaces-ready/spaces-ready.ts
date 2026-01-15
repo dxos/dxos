@@ -28,24 +28,25 @@ const WAIT_FOR_OBJECT_TIMEOUT = 5_000;
 // E.g., dxn:echo:BA25QRC2FEWCSAMRP4RZL65LWJ7352CKE:01J00J9B45YHYSGZQTQMSKMGJ6
 const ECHO_DXN_LENGTH = 3 + 1 + 4 + 1 + 33 + 1 + 26;
 
-export default Capability.makeModule((context) =>
-  Effect.gen(function* () {
+export default Capability.makeModule(
+  Effect.fnUntraced(function* () {
     const subscriptions = new SubscriptionList();
     const spaceSubscriptions = new SubscriptionList();
 
-    const { invokePromise } = context.getCapability(Common.Capability.OperationInvoker);
-    const { graph } = context.getCapability(Common.Capability.AppGraph);
-    const layout = context.getCapability(Common.Capability.Layout);
-    const deck = context.getCapabilities(DeckCapabilities.DeckState)[0];
-    const attention = context.getCapability(AttentionCapabilities.Attention);
-    const state = context.getCapability(SpaceCapabilities.MutableState);
-    const client = context.getCapability(ClientCapabilities.Client);
+    const { invoke, invokePromise } = yield* Capability.get(Common.Capability.OperationInvoker);
+    const { graph } = yield* Capability.get(Common.Capability.AppGraph);
+    const layout = yield* Capability.get(Common.Capability.Layout);
+    const deckStates = yield* Capability.getAll(DeckCapabilities.DeckState);
+    const deck = deckStates.flat()[0];
+    const attention = yield* Capability.get(AttentionCapabilities.Attention);
+    const state = yield* Capability.get(SpaceCapabilities.MutableState);
+    const client = yield* Capability.get(ClientCapabilities.Client);
 
     const defaultSpace = client.spaces.default;
     yield* Effect.tryPromise(() => defaultSpace.waitUntilReady());
 
     if (deck?.activeDeck === 'default') {
-      yield* Effect.promise(() => invokePromise(Common.LayoutOperation.SwitchWorkspace, { subject: defaultSpace.id }));
+      yield* invoke(Common.LayoutOperation.SwitchWorkspace, { subject: defaultSpace.id });
     }
 
     // Initialize space sharing lock in default space.
@@ -53,9 +54,10 @@ export default Capability.makeModule((context) =>
       defaultSpace.properties[COMPOSER_SPACE_LOCK] = true;
     }
 
-    const [spacesOrder] = yield* Effect.tryPromise(() =>
+    const queryResults = yield* Effect.tryPromise(() =>
       defaultSpace.db.query(Filter.type(Type.Expando, { key: SHARED })).run(),
     );
+    const spacesOrder = queryResults[0];
     if (!spacesOrder) {
       // TODO(wittjosiah): Cannot be a Folder because Spaces are not TypedObjects so can't be saved in the database.
       //  Instead, we store order as an array of space ids.

@@ -4,15 +4,19 @@
 
 import * as Effect from 'effect/Effect';
 
+import { OperationResolver } from '@dxos/operation';
+
 import * as Common from '../common';
 import { Capability } from '../core';
-import { OperationResolver } from '../plugin-operation';
 
 import { SETTINGS_ID, SETTINGS_KEY, SettingsOperation } from './actions';
 
-export default Capability.makeModule((context) =>
-  Effect.succeed(
-    Capability.contributes(Common.Capability.OperationResolver, [
+export default Capability.makeModule(
+  Effect.fnUntraced(function* () {
+    // Get context to provide to handlers so they can use Capability.get().
+    const context = yield* Capability.PluginContextService;
+
+    return Capability.contributes(Common.Capability.OperationResolver, [
       //
       // Open Settings
       //
@@ -20,7 +24,7 @@ export default Capability.makeModule((context) =>
         operation: SettingsOperation.Open,
         handler: (input) =>
           Effect.gen(function* () {
-            const { invoke } = context.getCapability(Common.Capability.OperationInvoker);
+            const { invoke } = yield* Capability.get(Common.Capability.OperationInvoker);
             yield* invoke(Common.LayoutOperation.SwitchWorkspace, { subject: SETTINGS_ID });
             if (input.plugin) {
               // Fire and forget the open operation.
@@ -30,7 +34,7 @@ export default Capability.makeModule((context) =>
                 }),
               );
             }
-          }),
+          }).pipe(Effect.provideService(Capability.PluginContextService, context)),
       }),
 
       //
@@ -40,15 +44,15 @@ export default Capability.makeModule((context) =>
         operation: SettingsOperation.OpenPluginRegistry,
         handler: () =>
           Effect.gen(function* () {
-            const { invoke } = context.getCapability(Common.Capability.OperationInvoker);
+            const { invoke } = yield* Capability.get(Common.Capability.OperationInvoker);
             yield* invoke(Common.LayoutOperation.SwitchWorkspace, { subject: SETTINGS_ID });
             yield* Effect.fork(
               invoke(Common.LayoutOperation.Open, {
                 subject: [`${SETTINGS_KEY}:plugins`],
               }),
             );
-          }),
+          }).pipe(Effect.provideService(Capability.PluginContextService, context)),
       }),
-    ]),
-  ),
+    ]);
+  }),
 );

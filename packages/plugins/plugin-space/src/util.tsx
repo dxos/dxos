@@ -6,13 +6,14 @@ import { type Instruction } from '@atlaskit/pragmatic-drag-and-drop-hitbox/tree-
 import { Atom } from '@effect-atom/atom-react';
 import type * as Schema from 'effect/Schema';
 
-import { type Capability, Common, type OperationInvoker } from '@dxos/app-framework';
+import { type Capability, Common } from '@dxos/app-framework';
 import { type Space, SpaceState, isSpace } from '@dxos/client/echo';
 import { type Database, type Entity, Filter, Obj, Query, type QueryResult, Ref, Type } from '@dxos/echo';
 import { EXPANDO_TYPENAME } from '@dxos/echo/internal';
 import { runAndForwardErrors } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { Migrations } from '@dxos/migrations';
+import { type OperationInvoker } from '@dxos/operation';
 import { Graph, Node } from '@dxos/plugin-graph';
 import { ATTENDABLE_PATH_SEPARATOR } from '@dxos/react-ui-attention/types';
 import { type TreeData } from '@dxos/react-ui-list';
@@ -704,7 +705,7 @@ export const constructObjectActions = ({
       : []),
     // TODO(wittjosiah): Factor out and apply to all nodes.
     {
-      id: getId(Common.LayoutAction.Expose._tag),
+      id: getId(Common.LayoutOperation.Expose.meta.key),
       type: Node.ActionType,
       data: async () => {
         await invokePromise(Common.LayoutOperation.Expose, { subject: Obj.getDXN(object).toString() });
