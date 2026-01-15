@@ -21,8 +21,7 @@ export const Stack = {
     await page.waitForTimeout(100);
     const dialogTrigger = await page.$('[data-testid="stack.addSection"]');
     await dialogTrigger!.click();
-    await page.getByTestId('create-object-form.schema-input').fill(type);
-    await page.keyboard.press('Enter');
+    await page.getByRole('listbox').getByText(type).first().click();
 
     const objectForm = page.getByTestId('create-object-form');
     if (await objectForm.isVisible()) {
