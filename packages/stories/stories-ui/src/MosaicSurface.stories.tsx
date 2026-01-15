@@ -3,6 +3,7 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
+import * as Effect from 'effect/Effect';
 import React, { useState } from 'react';
 
 import { withPluginManager } from '@dxos/app-framework/testing';
@@ -88,19 +89,22 @@ const meta = {
         ...corePlugins(),
         ClientPlugin({
           types: [TestColumn, TestItem, Organization.Organization, Person.Person, Project.Project],
-          onClientInitialized: async ({ client }) => {
-            await client.halo.createIdentity();
-            await client.spaces.waitUntilReady();
-            await client.spaces.default.waitUntilReady();
-            const space = client.spaces.default;
+          onClientInitialized: ({ client }) =>
+            Effect.gen(function* () {
+              yield* Effect.promise(() => client.halo.createIdentity());
+              yield* Effect.promise(() => client.spaces.waitUntilReady());
+              yield* Effect.promise(() => client.spaces.default.waitUntilReady());
+              const space = client.spaces.default;
 
-            const factory = createObjectFactory(space.db, generator);
-            await factory([
-              { type: Organization.Organization, count: 20 },
-              { type: Person.Person, count: 30 },
-              { type: Project.Project, count: 10 },
-            ]);
-          },
+              const factory = createObjectFactory(space.db, generator);
+              yield* Effect.promise(() =>
+                factory([
+                  { type: Organization.Organization, count: 20 },
+                  { type: Person.Person, count: 30 },
+                  { type: Project.Project, count: 10 },
+                ]),
+              );
+            }),
         }),
         StorybookPlugin({}),
         // PreviewPlugin(),

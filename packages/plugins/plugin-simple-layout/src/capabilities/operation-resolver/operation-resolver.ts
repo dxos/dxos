@@ -4,13 +4,16 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capability, Common, OperationResolver } from '@dxos/app-framework';
+import { Capability, Common } from '@dxos/app-framework';
+import { Operation, OperationResolver } from '@dxos/operation';
 
 import { SimpleLayoutState } from '../../types';
 
-export default Capability.makeModule((context) =>
-  Effect.succeed(
-    Capability.contributes(Common.Capability.OperationResolver, [
+export default Capability.makeModule(
+  Effect.fnUntraced(function* () {
+    const context = yield* Capability.PluginContextService;
+
+    return Capability.contributes(Common.Capability.OperationResolver, [
       //
       // UpdateSidebar - No-op for simple layout.
       //
@@ -95,8 +98,7 @@ export default Capability.makeModule((context) =>
         handler: () =>
           Effect.gen(function* () {
             const layout = context.getCapability(SimpleLayoutState);
-            const { invoke } = context.getCapability(Common.Capability.OperationInvoker);
-            yield* invoke(Common.LayoutOperation.SwitchWorkspace, {
+            yield* Operation.invoke(Common.LayoutOperation.SwitchWorkspace, {
               subject: layout.previousWorkspace,
             });
           }),
@@ -137,6 +139,6 @@ export default Capability.makeModule((context) =>
             layout.active = input.subject[0];
           }),
       }),
-    ]),
-  ),
+    ]);
+  }),
 );

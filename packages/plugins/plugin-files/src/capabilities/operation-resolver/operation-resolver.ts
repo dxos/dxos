@@ -4,9 +4,10 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capability, Common, OperationResolver, SettingsOperation } from '@dxos/app-framework';
+import { Capability, Common, SettingsOperation } from '@dxos/app-framework';
 import { Trigger } from '@dxos/async';
 import { log } from '@dxos/log';
+import { Operation, OperationResolver } from '@dxos/operation';
 import { Node } from '@dxos/plugin-graph';
 import { type MaybePromise, byPosition } from '@dxos/util';
 
@@ -69,8 +70,10 @@ const traverseFileSystem = async (
   }
 };
 
-export default Capability.makeModule((context) =>
-  Effect.sync(() => {
+export default Capability.makeModule(
+  Effect.fnUntraced(function* () {
+    const context = yield* Capability.PluginContextService;
+
     const directoryHandles: Record<string, FileSystemDirectoryHandle> = {};
     const directoryNameCounter: Record<string, Record<string, number>> = {};
 
@@ -83,7 +86,7 @@ export default Capability.makeModule((context) =>
       path: string[];
       serialized: Common.SerializedNode;
     }) => {
-      const state = context.getCapability(FileCapabilities.MutableState);
+      const state = context.getCapability(FileCapabilities.State);
       if (!state.rootHandle) {
         return;
       }
@@ -134,12 +137,12 @@ export default Capability.makeModule((context) =>
         operation: LocalFilesOperation.SelectRoot,
         handler: () =>
           Effect.gen(function* () {
-            const state = context.getCapability(FileCapabilities.MutableState);
+            const mutableState = context.getCapability(FileCapabilities.MutableState);
             const rootDir = yield* Effect.promise(async () =>
               (window as any).showDirectoryPicker({ mode: 'readwrite' }),
             );
             if (rootDir) {
-              state.rootHandle = rootDir;
+              mutableState.rootHandle = rootDir;
             }
           }),
       }),
@@ -147,11 +150,10 @@ export default Capability.makeModule((context) =>
         operation: LocalFilesOperation.Export,
         handler: () =>
           Effect.gen(function* () {
-            const { invoke } = context.getCapability(Common.Capability.OperationInvoker);
             const { explore } = context.getCapability(Common.Capability.AppGraph);
-            const state = context.getCapability(FileCapabilities.MutableState);
-            if (!state.rootHandle) {
-              yield* invoke(SettingsOperation.Open, { plugin: meta.id });
+            const mutableState = context.getCapability(FileCapabilities.MutableState);
+            if (!mutableState.rootHandle) {
+              yield* Operation.invoke(SettingsOperation.Open, { plugin: meta.id });
               return;
             }
 
@@ -177,8 +179,8 @@ export default Capability.makeModule((context) =>
               }),
             );
 
-            state.lastExport = Date.now();
-          }),
+            mutableState.lastExport = Date.now();
+          }).pipe(Effect.provideService(Capability.PluginContextService, context)),
       }),
       OperationResolver.make({
         operation: LocalFilesOperation.Import,
@@ -227,8 +229,7 @@ export default Capability.makeModule((context) =>
         operation: LocalFilesOperation.OpenFile,
         handler: () =>
           Effect.gen(function* () {
-            const state = context.getCapability(FileCapabilities.MutableState);
-
+            const mutableState = context.getCapability(FileCapabilities.MutableState);
             if ('showOpenFilePicker' in window) {
               const [handle]: FileSystemFileHandle[] = yield* Effect.promise(async () =>
                 (window as any).showOpenFilePicker({
@@ -237,7 +238,7 @@ export default Capability.makeModule((context) =>
                 }),
               );
               const file = yield* Effect.promise(async () => handleToLocalFile(handle));
-              state.files.push(file);
+              mutableState.files.push(file);
               return { id: file.id, subject: [file.id] };
             }
 
@@ -249,7 +250,7 @@ export default Capability.makeModule((context) =>
               const [legacyFile] = input.files ? Array.from(input.files) : [];
               if (legacyFile) {
                 const file = await legacyFileToLocalFile(legacyFile);
-                state.files.push(file);
+                mutableState.files.push(file);
                 result.wake(file.id);
               }
             };
@@ -262,12 +263,12 @@ export default Capability.makeModule((context) =>
         operation: LocalFilesOperation.OpenDirectory,
         handler: () =>
           Effect.gen(function* () {
-            const state = context.getCapability(FileCapabilities.MutableState);
+            const mutableState = context.getCapability(FileCapabilities.MutableState);
             const handle = yield* Effect.promise(async () =>
               (window as any).showDirectoryPicker({ mode: 'readwrite' }),
             );
             const directory = yield* Effect.promise(async () => handleToLocalDirectory(handle));
-            state.files.push(directory);
+            mutableState.files.push(directory);
             return { id: directory.id, subject: [directory.id] };
           }),
       }),
@@ -275,8 +276,8 @@ export default Capability.makeModule((context) =>
         operation: LocalFilesOperation.Reconnect,
         handler: ({ id }) =>
           Effect.gen(function* () {
-            const state = context.getCapability(FileCapabilities.MutableState);
-            const entity = state.files.find((entity) => entity.id === id);
+            const mutableState = context.getCapability(FileCapabilities.MutableState);
+            const entity = mutableState.files.find((entity) => entity.id === id);
             if (!entity) {
               return;
             }
@@ -309,8 +310,8 @@ export default Capability.makeModule((context) =>
         operation: LocalFilesOperation.Save,
         handler: ({ id }) =>
           Effect.gen(function* () {
-            const state = context.getCapability(FileCapabilities.MutableState);
-            const file = findFile(state.files, [id]);
+            const mutableState = context.getCapability(FileCapabilities.MutableState);
+            const file = findFile(mutableState.files, [id]);
             if (file) {
               yield* Effect.promise(async () => handleSave(file));
             }
@@ -320,10 +321,10 @@ export default Capability.makeModule((context) =>
         operation: LocalFilesOperation.Close,
         handler: ({ id }) =>
           Effect.sync(() => {
-            const state = context.getCapability(FileCapabilities.MutableState);
-            const index = state.files.findIndex((f) => f.id === id);
+            const mutableState = context.getCapability(FileCapabilities.MutableState);
+            const index = mutableState.files.findIndex((f) => f.id === id);
             if (index >= 0) {
-              state.files.splice(index, 1);
+              mutableState.files.splice(index, 1);
             }
           }),
       }),

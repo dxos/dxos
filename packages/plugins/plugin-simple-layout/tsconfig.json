@@ -20,7 +20,13 @@
       "path": "../../core/echo/live-object"
     },
     {
+      "path": "../../core/operation"
+    },
+    {
       "path": "../../sdk/app-framework"
+    },
+    {
+      "path": "../../sdk/schema"
     },
     {
       "path": "../../ui/react-ui"

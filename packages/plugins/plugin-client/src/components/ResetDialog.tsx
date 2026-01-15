@@ -2,10 +2,12 @@
 // Copyright 2025 DXOS.org
 //
 
+import * as Effect from 'effect/Effect';
 import React, { useCallback } from 'react';
 
-import { Common } from '@dxos/app-framework';
+import { Capability, Common } from '@dxos/app-framework';
 import { useOperationInvoker } from '@dxos/app-framework/react';
+import { runAndForwardErrors } from '@dxos/effect';
 import { useClient } from '@dxos/react-client';
 import { Dialog, useTranslation } from '@dxos/react-ui';
 import { ConfirmReset, type ConfirmResetProps } from '@dxos/shell/react';
@@ -13,9 +15,12 @@ import { ConfirmReset, type ConfirmResetProps } from '@dxos/shell/react';
 import { meta } from '../meta';
 import { type ClientPluginOptions } from '../types';
 
-export type ResetDialogProps = Pick<ConfirmResetProps, 'mode'> & Pick<ClientPluginOptions, 'onReset'>;
+export type ResetDialogProps = Pick<ConfirmResetProps, 'mode'> &
+  Pick<ClientPluginOptions, 'onReset'> & {
+    context: Capability.PluginContext;
+  };
 
-export const ResetDialog = ({ mode, onReset }: ResetDialogProps) => {
+export const ResetDialog = ({ mode, onReset, context }: ResetDialogProps) => {
   const { t } = useTranslation(meta.id);
   const { invokePromise } = useOperationInvoker();
   const client = useClient();
@@ -24,8 +29,12 @@ export const ResetDialog = ({ mode, onReset }: ResetDialogProps) => {
     await client.reset();
     const target =
       mode === 'join new identity' ? 'deviceInvitation' : mode === 'recover' ? 'recoverIdentity' : undefined;
-    await onReset?.({ target });
-  }, [client, mode, onReset]);
+    if (onReset) {
+      await runAndForwardErrors(
+        onReset({ target }).pipe(Effect.provideService(Capability.PluginContextService, context)),
+      );
+    }
+  }, [client, mode, onReset, context]);
 
   const handleCancel = useCallback(() => {
     void invokePromise(Common.LayoutOperation.UpdateDialog, { state: false });

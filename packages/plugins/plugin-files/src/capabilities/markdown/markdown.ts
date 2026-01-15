@@ -11,8 +11,11 @@ import { listener } from '@dxos/ui-editor';
 import { meta } from '../../meta';
 import { FileCapabilities, type FilesSettingsProps } from '../../types';
 
-export default Capability.makeModule((context) =>
-  Effect.sync(() => {
+export default Capability.makeModule(
+  Effect.fnUntraced(function* () {
+    // Get context for lazy capability access in callbacks.
+    const context = yield* Capability.PluginContextService;
+
     const extensionProvider = () =>
       listener({
         onChange: ({ id, text }) => {

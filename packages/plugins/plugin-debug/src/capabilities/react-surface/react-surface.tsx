@@ -82,9 +82,11 @@ const useCurrentSpace = () => {
   return space;
 };
 
-export default Capability.makeModule((context) =>
-  Effect.succeed(
-    Capability.contributes(Common.Capability.ReactSurface, [
+export default Capability.makeModule(
+  Effect.fnUntraced(function* () {
+    const context = yield* Capability.PluginContextService;
+
+    return Capability.contributes(Common.Capability.ReactSurface, [
       Common.createSurface({
         id: `${meta.id}/plugin-settings`,
         role: 'article',
@@ -397,6 +399,6 @@ export default Capability.makeModule((context) =>
           return <TestingPanel onSpaceCreate={onSpaceCreate} onScriptPluginOpen={onScriptPluginOpen} />;
         },
       }),
-    ]),
-  ),
+    ]);
+  }),
 );

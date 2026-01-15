@@ -5,40 +5,38 @@
 import type * as Effect from 'effect/Effect';
 import type * as Schema from 'effect/Schema';
 
-import type { OperationDefinition, OperationHandler } from '@dxos/operation';
 import type { Position } from '@dxos/util';
 
-import type * as FollowupScheduler from './followup-scheduler';
+import type { Definition, Handler } from './operation';
+import type { Service as OperationService } from './service';
 
 /**
  * Base requirements provided to all operation handlers.
  * Handlers can optionally use these services.
  */
-export type HandlerContext = FollowupScheduler.Service;
+export type HandlerContext = OperationService;
 
 /**
- * Allowed services for a handler: services declared on the operation plus FollowupScheduler.
+ * Allowed services for a handler: services declared on the operation plus Operation.Service.
  */
-type AllowedServices<Def extends OperationDefinition<any, any>> =
-  | OperationDefinition.Services<Def>
-  | FollowupScheduler.Service;
+type AllowedServices<Def extends Definition<any, any>> = Definition.Services<Def> | OperationService;
 
 /**
  * Operation resolver - maps an operation definition to a handler with optional filter.
- * Handlers are provided with HandlerContext (FollowupScheduler.Service) by the invoker.
+ * Handlers are provided with HandlerContext (Operation.Service) by the invoker.
  */
 export interface OperationResolver<I = any, O = any, E extends Error = Error, R = HandlerContext> {
-  operation: OperationDefinition<I, O>;
-  handler: OperationHandler<I, O, E, R>;
+  operation: Definition<I, O>;
+  handler: Handler<I, O, E, R>;
   position?: Position;
   filter?: (input: I) => boolean;
 }
 
 /**
  * Props for creating an operation resolver.
- * Handler can only use services declared on the operation, plus FollowupScheduler.Service.
+ * Handler can only use services declared on the operation, plus Operation.Service.
  */
-export type OperationResolverProps<Def extends OperationDefinition<any, any>, E extends Error = never> = {
+export type OperationResolverProps<Def extends Definition<any, any>, E extends Error = never> = {
   operation: Def;
   handler: (
     input: Schema.Schema.Type<Def['schema']['input']>,
@@ -50,7 +48,7 @@ export type OperationResolverProps<Def extends OperationDefinition<any, any>, E 
 /**
  * Creates an operation resolver with full type inference from the operation definition.
  * The handler can only use services declared in the operation's `services` field,
- * plus FollowupScheduler.Service which is always available.
+ * plus Operation.Service which is always available.
  *
  * @example
  * ```ts
@@ -71,7 +69,7 @@ export type OperationResolverProps<Def extends OperationDefinition<any, any>, E 
  * })
  * ```
  */
-export const make = <Def extends OperationDefinition<any, any>, E extends Error = never>(
+export const make = <Def extends Definition<any, any>, E extends Error = never>(
   props: OperationResolverProps<Def, E>,
 ): OperationResolver<
   Schema.Schema.Type<Def['schema']['input']>,

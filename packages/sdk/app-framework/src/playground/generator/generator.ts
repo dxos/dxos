@@ -5,11 +5,10 @@
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
-import * as Operation from '@dxos/operation';
+import { Operation, OperationResolver } from '@dxos/operation';
 
 import * as Common from '../../common';
 import { ActivationEvent, Capability, Plugin } from '../../core';
-import { OperationResolver } from '../../plugin-operation';
 
 export const Number = Capability.make<number>('dxos.org/test/generator/number');
 

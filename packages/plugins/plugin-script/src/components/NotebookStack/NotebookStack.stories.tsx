@@ -3,6 +3,7 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
+import * as Effect from 'effect/Effect';
 
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { AutomationPlugin } from '@dxos/plugin-automation';
@@ -27,10 +28,11 @@ const meta = {
       plugins: [
         ...corePlugins(),
         ClientPlugin({
-          onClientInitialized: async ({ client }) => {
-            await client.halo.createIdentity();
-            await client.spaces.waitUntilReady();
-          },
+          onClientInitialized: ({ client }) =>
+            Effect.gen(function* () {
+              yield* Effect.promise(() => client.halo.createIdentity());
+              yield* Effect.promise(() => client.spaces.waitUntilReady());
+            }),
         }),
         ...corePlugins(),
         SpacePlugin({}),

@@ -5,7 +5,7 @@
 import * as Schema from 'effect/Schema';
 
 import { Key } from '@dxos/echo';
-import * as Operation from '@dxos/operation';
+import { Operation } from '@dxos/operation';
 import { EchoObjectSchema, SpaceSchema } from '@dxos/react-client/echo';
 import { Collection } from '@dxos/schema';
 import { Actor, AnchoredTo, Message, Thread } from '@dxos/types';

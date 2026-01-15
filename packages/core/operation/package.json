@@ -25,10 +25,16 @@
   "dependencies": {
     "@dxos/echo": "workspace:*",
     "@dxos/effect": "workspace:*",
-    "@dxos/schema": "workspace:*"
+    "@dxos/log": "workspace:*",
+    "@dxos/schema": "workspace:*",
+    "@dxos/util": "workspace:*"
   },
   "devDependencies": {
-    "effect": "catalog:"
+    "@dxos/echo-db": "workspace:*",
+    "@dxos/test-utils": "workspace:*",
+    "@effect/vitest": "catalog:",
+    "effect": "catalog:",
+    "vitest": "catalog:"
   },
   "peerDependencies": {
     "effect": "catalog:"

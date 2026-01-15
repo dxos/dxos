@@ -10,9 +10,9 @@ import { meta as spaceMeta } from '@dxos/plugin-space';
 
 import { meta } from '../../meta';
 
-export default Capability.makeModule((context) =>
-  Effect.succeed(
-    Capability.contributes(Common.Capability.AppGraphBuilder, [
+export default Capability.makeModule(
+  Effect.fnUntraced(function* () {
+    return Capability.contributes(Common.Capability.AppGraphBuilder, [
       GraphBuilder.createExtension({
         id: `${meta.id}/space-settings`,
         match: NodeMatcher.whenNodeType(`${spaceMeta.id}/settings`),
@@ -28,6 +28,6 @@ export default Capability.makeModule((context) =>
           },
         ],
       }),
-    ]),
-  ),
+    ]);
+  }),
 );

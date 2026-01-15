@@ -7,19 +7,19 @@ import * as Layer from 'effect/Layer';
 import * as ManagedRuntime from 'effect/ManagedRuntime';
 
 import * as Common from '../common';
-import { Capability } from '../core';
+import { Capability, Plugin } from '../core';
 
 //
 // Capability Module
 //
 
-export default Capability.makeModule((context) =>
-  Effect.gen(function* () {
+export default Capability.makeModule(
+  Effect.fnUntraced(function* () {
     // Trigger setup event so plugins can contribute their layers.
-    yield* context.activate(Common.ActivationEvent.SetupLayer);
+    yield* Plugin.activate(Common.ActivationEvent.SetupLayer);
 
     // Gather all contributed layers.
-    const layers = context.getCapabilities(Common.Capability.Layer);
+    const layers = yield* Capability.getAll(Common.Capability.Layer);
 
     // Merge all layers into a single layer.
     // Layer.mergeAll requires a tuple type, so we use a cast for dynamic arrays.

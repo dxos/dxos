@@ -13,15 +13,18 @@ import { parseId } from '@dxos/react-client/echo';
 import { meta } from '../../meta';
 import { SearchOperation } from '../../types';
 
-export default Capability.makeModule((context) =>
-  Effect.succeed(
-    Capability.contributes(Common.Capability.AppGraphBuilder, [
+export default Capability.makeModule(
+  Effect.fnUntraced(function* () {
+    const context = yield* Capability.PluginContextService;
+
+    return Capability.contributes(Common.Capability.AppGraphBuilder, [
       GraphBuilder.createExtension({
         id: `${meta.id}/space-search`,
         match: NodeMatcher.whenRoot,
         connector: (node, get) => {
-          const workspace = get(CreateAtom.fromSignal(() => context.getCapability(Common.Capability.Layout).workspace));
+          const layout = context.getCapability(Common.Capability.Layout);
           const client = context.getCapability(ClientCapabilities.Client);
+          const workspace = get(CreateAtom.fromSignal(() => layout.workspace));
           const { spaceId } = parseId(workspace);
           const space = spaceId ? client.spaces.get(spaceId) : null;
 
@@ -61,6 +64,6 @@ export default Capability.makeModule((context) =>
           },
         ],
       }),
-    ]),
-  ),
+    ]);
+  }),
 );

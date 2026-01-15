@@ -14,9 +14,12 @@ import { type EditorState, commentClickedEffect, commentsState, overlap } from '
 import { threads } from '../../extensions';
 import { ThreadCapabilities } from '../../types';
 
-export default Capability.makeModule((context) =>
-  Effect.succeed(
-    Capability.contributes(MarkdownCapabilities.Extensions, [
+export default Capability.makeModule(
+  Effect.fnUntraced(function* () {
+    // Get context for lazy capability access in callbacks.
+    const context = yield* Capability.PluginContextService;
+
+    return Capability.contributes(MarkdownCapabilities.Extensions, [
       ({ document: doc }) => {
         const { invokePromise } = context.getCapability(Common.Capability.OperationInvoker);
         const { state } = context.getCapability(ThreadCapabilities.MutableState);
@@ -50,8 +53,8 @@ export default Capability.makeModule((context) =>
           });
         });
       },
-    ]),
-  ),
+    ]);
+  }),
 );
 
 const selectionOverlapsComment = (state: EditorState): boolean => {

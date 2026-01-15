@@ -3,6 +3,7 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
+import * as Effect from 'effect/Effect';
 import React, { useCallback } from 'react';
 
 import { withPluginManager } from '@dxos/app-framework/testing';
@@ -124,23 +125,26 @@ const meta = {
         ...corePlugins(),
         ClientPlugin({
           types: [Organization.Organization, Person.Person, View.View, Kanban.Kanban],
-          onClientInitialized: async ({ client }) => {
-            await client.halo.createIdentity();
-            const space = await client.spaces.create();
-            await space.waitUntilReady();
-            const { view } = await View.makeFromDatabase({
-              db: space.db,
-              typename: Organization.Organization.typename,
-              pivotFieldName: 'status',
-            });
-            const kanban = Kanban.make({ view });
-            space.db.add(kanban);
+          onClientInitialized: ({ client }) =>
+            Effect.gen(function* () {
+              yield* Effect.promise(() => client.halo.createIdentity());
+              const space = yield* Effect.promise(() => client.spaces.create());
+              yield* Effect.promise(() => space.waitUntilReady());
+              const { view } = yield* Effect.promise(() =>
+                View.makeFromDatabase({
+                  db: space.db,
+                  typename: Organization.Organization.typename,
+                  pivotFieldName: 'status',
+                }),
+              );
+              const kanban = Kanban.make({ view });
+              space.db.add(kanban);
 
-            // TODO(burdon): Replace with sdk/schema/testing.
-            Array.from({ length: 80 }).map(() => {
-              return space.db.add(Obj.make(Organization.Organization, rollOrg()));
-            });
-          },
+              // TODO(burdon): Replace with sdk/schema/testing.
+              Array.from({ length: 80 }).map(() => {
+                return space.db.add(Obj.make(Organization.Organization, rollOrg()));
+              });
+            }),
         }),
         ...corePlugins(),
         SpacePlugin({}),

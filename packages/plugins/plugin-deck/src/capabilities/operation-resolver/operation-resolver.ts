@@ -7,11 +7,13 @@ import * as Effect from 'effect/Effect';
 import * as Function from 'effect/Function';
 import * as Option from 'effect/Option';
 
-import { Capability, Common, FollowupScheduler, OperationResolver } from '@dxos/app-framework';
+import { Capability, Common } from '@dxos/app-framework';
 import { Obj } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { isLiveObject } from '@dxos/live-object';
 import { log } from '@dxos/log';
+import { OperationResolver } from '@dxos/operation';
+import { Operation } from '@dxos/operation';
 import { AttentionCapabilities } from '@dxos/plugin-attention';
 import { Graph, Node } from '@dxos/plugin-graph';
 import { ObservabilityOperation } from '@dxos/plugin-observability/types';
@@ -31,9 +33,11 @@ import {
 } from '../../types';
 import { setActive } from '../../util';
 
-export default Capability.makeModule((context) =>
-  Effect.succeed(
-    Capability.contributes(Common.Capability.OperationResolver, [
+export default Capability.makeModule(
+  Effect.fnUntraced(function* () {
+    const context = yield* Capability.PluginContextService;
+
+    return Capability.contributes(Common.Capability.OperationResolver, [
       //
       // UpdateSidebar
       //
@@ -219,7 +223,6 @@ export default Capability.makeModule((context) =>
           Effect.gen(function* () {
             const { graph } = context.getCapability(Common.Capability.AppGraph);
             const state = context.getCapability(DeckCapabilities.MutableDeckState);
-            const scheduler = yield* FollowupScheduler.Service;
 
             batch(() => {
               // TODO(wittjosiah): This is a hack to prevent the previous deck from being set for pinned items.
@@ -235,13 +238,13 @@ export default Capability.makeModule((context) =>
 
             const first = state.deck.solo ? state.deck.solo : state.deck.active[0];
             if (first) {
-              yield* scheduler.schedule(Common.LayoutOperation.ScrollIntoView, { subject: first });
+              yield* Operation.schedule(Common.LayoutOperation.ScrollIntoView, { subject: first });
             } else {
               const [item] = Graph.getConnections(graph, input.subject).filter(
                 (node) => !Node.isActionLike(node) && !node.properties.disposition,
               );
               if (item) {
-                yield* scheduler.schedule(Common.LayoutOperation.Open, { subject: [item.id] });
+                yield* Operation.schedule(Common.LayoutOperation.Open, { subject: [item.id] });
               }
             }
           }),
@@ -271,7 +274,6 @@ export default Capability.makeModule((context) =>
             const state = context.getCapability(DeckCapabilities.MutableDeckState);
             const attention = context.getCapability(AttentionCapabilities.Attention);
             const { invoke } = context.getCapability(Common.Capability.OperationInvoker);
-            const scheduler = yield* FollowupScheduler.Service;
             const settings = context
               .getCapabilities(Common.Capability.SettingsStore)[0]
               ?.getStore<DeckSettingsProps>(meta.id)?.value;
@@ -302,13 +304,13 @@ export default Capability.makeModule((context) =>
             const newlyOpen = ids.filter((i: string) => !previouslyOpenIds.has(i));
 
             if (input.scrollIntoView !== false && (newlyOpen[0] ?? input.subject[0])) {
-              yield* scheduler.schedule(Common.LayoutOperation.ScrollIntoView, {
+              yield* Operation.schedule(Common.LayoutOperation.ScrollIntoView, {
                 subject: newlyOpen[0] ?? input.subject[0],
               });
             }
 
             if (newlyOpen[0] ?? input.subject[0]) {
-              yield* scheduler.schedule(Common.LayoutOperation.Expose, { subject: newlyOpen[0] ?? input.subject[0] });
+              yield* Operation.schedule(Common.LayoutOperation.Expose, { subject: newlyOpen[0] ?? input.subject[0] });
             }
 
             // Send analytics events for newly opened items.
@@ -320,7 +322,7 @@ export default Capability.makeModule((context) =>
                   return isLiveObject(active) ? Obj.getTypename(active) : undefined;
                 },
               });
-              yield* scheduler.schedule(ObservabilityOperation.SendEvent, {
+              yield* Operation.schedule(ObservabilityOperation.SendEvent, {
                 name: 'navigation.activate',
                 properties: { subjectId, typename },
               });
@@ -446,7 +448,6 @@ export default Capability.makeModule((context) =>
             const state = context.getCapability(DeckCapabilities.MutableDeckState);
             const attention = context.getCapability(AttentionCapabilities.Attention);
             const { invoke } = context.getCapability(Common.Capability.OperationInvoker);
-            const scheduler = yield* FollowupScheduler.Service;
 
             const active = state.deck.solo ? [state.deck.solo] : state.deck.active;
             const next = input.subject.reduce((acc, id) => closeEntry(acc, id), active);
@@ -460,7 +461,7 @@ export default Capability.makeModule((context) =>
             }
 
             if (toAttend) {
-              yield* scheduler.schedule(Common.LayoutOperation.ScrollIntoView, { subject: toAttend });
+              yield* Operation.schedule(Common.LayoutOperation.ScrollIntoView, { subject: toAttend });
             }
           }),
       }),
@@ -474,11 +475,10 @@ export default Capability.makeModule((context) =>
           Effect.gen(function* () {
             const state = context.getCapability(DeckCapabilities.MutableDeckState);
             const attention = context.getCapability(AttentionCapabilities.Attention);
-            const scheduler = yield* FollowupScheduler.Service;
 
             const toAttend = setActive({ next: input.subject as string[], state, attention });
             if (toAttend) {
-              yield* scheduler.schedule(Common.LayoutOperation.ScrollIntoView, { subject: toAttend });
+              yield* Operation.schedule(Common.LayoutOperation.ScrollIntoView, { subject: toAttend });
             }
           }),
       }),
@@ -494,6 +494,6 @@ export default Capability.makeModule((context) =>
             layout.scrollIntoView = input.subject;
           }),
       }),
-    ]),
-  ),
+    ]);
+  }),
 );

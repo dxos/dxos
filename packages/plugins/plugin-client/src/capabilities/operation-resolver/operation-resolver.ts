@@ -4,10 +4,12 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capability, Common, FollowupScheduler, OperationResolver } from '@dxos/app-framework';
+import { Capability, Common } from '@dxos/app-framework';
 import { PublicKey } from '@dxos/client';
 import { runAndForwardErrors } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
+import { OperationResolver } from '@dxos/operation';
+import { Operation } from '@dxos/operation';
 import { ObservabilityOperation } from '@dxos/plugin-observability/types';
 import { type JoinPanelProps } from '@dxos/shell/react';
 
@@ -16,15 +18,17 @@ import { ClientEvents } from '../../events';
 import { Account, ClientCapabilities, ClientOperation } from '../../types';
 
 type OperationResolverOptions = {
-  context: Capability.PluginContext;
   appName?: string;
 };
 
 const RECOVER_IDENTITY_RPC_TIMEOUT = 20_000;
 
-export default Capability.makeModule(({ context, appName = 'Composer' }: OperationResolverOptions) =>
-  Effect.succeed(
-    Capability.contributes(Common.Capability.OperationResolver, [
+export default Capability.makeModule(
+  Effect.fnUntraced(function* (props?: OperationResolverOptions) {
+    const { appName = 'Composer' } = props ?? {};
+    const context = yield* Capability.PluginContextService;
+
+    return Capability.contributes(Common.Capability.OperationResolver, [
       //
       // CreateIdentity
       //
@@ -34,10 +38,9 @@ export default Capability.makeModule(({ context, appName = 'Composer' }: Operati
           Effect.gen(function* () {
             const manager = context.getCapability(Common.Capability.PluginManager);
             const client = context.getCapability(ClientCapabilities.Client);
-            const scheduler = yield* FollowupScheduler.Service;
             const data = yield* Effect.promise(() => client.halo.createIdentity(profile));
             yield* Effect.promise(() => runAndForwardErrors(manager.activate(ClientEvents.IdentityCreated)));
-            yield* scheduler.schedule(ObservabilityOperation.SendEvent, { name: 'identity.create' });
+            yield* Operation.schedule(ObservabilityOperation.SendEvent, { name: 'identity.create' });
             return data;
           }),
       }),
@@ -48,13 +51,15 @@ export default Capability.makeModule(({ context, appName = 'Composer' }: Operati
       OperationResolver.make({
         operation: ClientOperation.JoinIdentity,
         handler: (data) =>
-          context.getCapability(Common.Capability.OperationInvoker).invoke(Common.LayoutOperation.UpdateDialog, {
-            subject: JOIN_DIALOG,
-            blockAlign: 'start',
-            props: {
-              initialInvitationCode: data.invitationCode,
-              initialDisposition: 'accept-halo-invitation',
-            },
+          Effect.gen(function* () {
+            yield* Operation.invoke(Common.LayoutOperation.UpdateDialog, {
+              subject: JOIN_DIALOG,
+              blockAlign: 'start',
+              props: {
+                initialInvitationCode: data.invitationCode,
+                initialDisposition: 'accept-halo-invitation',
+              },
+            });
           }),
       }),
 
@@ -65,11 +70,9 @@ export default Capability.makeModule(({ context, appName = 'Composer' }: Operati
         operation: ClientOperation.ShareIdentity,
         handler: () =>
           Effect.gen(function* () {
-            const { invoke } = context.getCapability(Common.Capability.OperationInvoker);
-            const scheduler = yield* FollowupScheduler.Service;
-            yield* invoke(Common.LayoutOperation.SwitchWorkspace, { subject: Account.id });
-            yield* invoke(Common.LayoutOperation.Open, { subject: [Account.Profile] });
-            yield* scheduler.schedule(ObservabilityOperation.SendEvent, { name: 'identity.share' });
+            yield* Operation.invoke(Common.LayoutOperation.SwitchWorkspace, { subject: Account.id });
+            yield* Operation.invoke(Common.LayoutOperation.Open, { subject: [Account.Profile] });
+            yield* Operation.schedule(ObservabilityOperation.SendEvent, { name: 'identity.share' });
           }),
       }),
 
@@ -79,12 +82,14 @@ export default Capability.makeModule(({ context, appName = 'Composer' }: Operati
       OperationResolver.make({
         operation: ClientOperation.RecoverIdentity,
         handler: () =>
-          context.getCapability(Common.Capability.OperationInvoker).invoke(Common.LayoutOperation.UpdateDialog, {
-            subject: JOIN_DIALOG,
-            blockAlign: 'start',
-            props: {
-              initialDisposition: 'recover-identity',
-            } satisfies Partial<JoinPanelProps>,
+          Effect.gen(function* () {
+            yield* Operation.invoke(Common.LayoutOperation.UpdateDialog, {
+              subject: JOIN_DIALOG,
+              blockAlign: 'start',
+              props: {
+                initialDisposition: 'recover-identity',
+              } satisfies Partial<JoinPanelProps>,
+            });
           }),
       }),
 
@@ -94,12 +99,14 @@ export default Capability.makeModule(({ context, appName = 'Composer' }: Operati
       OperationResolver.make({
         operation: ClientOperation.ResetStorage,
         handler: (data) =>
-          context.getCapability(Common.Capability.OperationInvoker).invoke(Common.LayoutOperation.UpdateDialog, {
-            subject: RESET_DIALOG,
-            blockAlign: 'start',
-            props: {
-              mode: data.mode ?? 'reset storage',
-            },
+          Effect.gen(function* () {
+            yield* Operation.invoke(Common.LayoutOperation.UpdateDialog, {
+              subject: RESET_DIALOG,
+              blockAlign: 'start',
+              props: {
+                mode: data.mode ?? 'reset storage',
+              },
+            });
           }),
       }),
 
@@ -128,14 +135,12 @@ export default Capability.makeModule(({ context, appName = 'Composer' }: Operati
             const { recoveryCode } = yield* Effect.promise(() =>
               client.services.services.IdentityService!.createRecoveryCredential({}),
             );
-            yield* context
-              .getCapability(Common.Capability.OperationInvoker)
-              .invoke(Common.LayoutOperation.UpdateDialog, {
-                subject: RECOVERY_CODE_DIALOG,
-                blockAlign: 'start',
-                type: 'alert',
-                props: { code: recoveryCode },
-              });
+            yield* Operation.invoke(Common.LayoutOperation.UpdateDialog, {
+              subject: RECOVERY_CODE_DIALOG,
+              blockAlign: 'start',
+              type: 'alert',
+              props: { code: recoveryCode },
+            });
           }),
       }),
 
@@ -236,6 +241,6 @@ export default Capability.makeModule(({ context, appName = 'Composer' }: Operati
             );
           }),
       }),
-    ]),
-  ),
+    ]);
+  }),
 );

@@ -7,7 +7,7 @@ import { Capability, Plugin } from '../core';
 
 import { meta } from './meta';
 
-const OperationInvoker = Capability.lazy('OperationInvoker', () => import('./invoker/capability'));
+const OperationInvoker = Capability.lazy('OperationInvoker', () => import('./invoker-capability'));
 const HistoryCapabilities = Capability.lazy('HistoryCapabilities', () => import('./history/capability'));
 
 export const OperationPlugin = Plugin.define(meta).pipe(

@@ -11,9 +11,11 @@ import { CreateAtom, GraphBuilder, NodeMatcher } from '@dxos/plugin-graph';
 import { meta } from '../../meta';
 import { DeckCapabilities } from '../../types';
 
-export default Capability.makeModule((context) =>
-  Effect.succeed(
-    Capability.contributes(
+export default Capability.makeModule(
+  Effect.fnUntraced(function* () {
+    const context = yield* Capability.PluginContextService;
+
+    return Capability.contributes(
       Common.Capability.AppGraphBuilder,
       GraphBuilder.createExtension({
         id: meta.id,
@@ -117,6 +119,6 @@ export default Capability.makeModule((context) =>
           );
         },
       }),
-    ),
-  ),
+    );
+  }),
 );

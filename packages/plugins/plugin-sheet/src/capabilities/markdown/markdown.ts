@@ -11,9 +11,12 @@ import { MarkdownCapabilities } from '@dxos/plugin-markdown';
 import { computeGraphFacet } from '../../extensions';
 import { SheetCapabilities } from '../../types';
 
-export default Capability.makeModule((context) =>
-  Effect.succeed(
-    Capability.contributes(MarkdownCapabilities.Extensions, [
+export default Capability.makeModule(
+  Effect.fnUntraced(function* () {
+    // Get context for lazy capability access in callbacks.
+    const context = yield* Capability.PluginContextService;
+
+    return Capability.contributes(MarkdownCapabilities.Extensions, [
       ({ document: doc }) => {
         const computeGraphRegistry = context.getCapability(SheetCapabilities.ComputeGraphRegistry);
         const space = getSpace(doc);
@@ -22,6 +25,6 @@ export default Capability.makeModule((context) =>
           return computeGraphFacet.of(computeGraph);
         }
       },
-    ]),
-  ),
+    ]);
+  }),
 );
