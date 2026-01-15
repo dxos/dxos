@@ -107,7 +107,7 @@ export class MigrationBuilder {
   }
 
   async addObject(schema: Schema.Schema.AnyNoContext, props: any): Promise<string> {
-    const core = this._createObject({ schema, props });
+    const core = await this._createObject({ schema, props });
     return core.id;
   }
 
@@ -119,9 +119,9 @@ export class MigrationBuilder {
     this._deleteObjects.push(id);
   }
 
-  changeProperties(changeFn: (properties: ObjectStructure) => void): void {
+  async changeProperties(changeFn: (properties: ObjectStructure) => void): Promise<void> {
     if (!this._newRoot) {
-      this._buildNewRoot();
+      await this._buildNewRoot();
     }
     invariant(this._newRoot, 'New root not created');
 
@@ -137,7 +137,7 @@ export class MigrationBuilder {
    */
   async _commit(): Promise<void> {
     if (!this._newRoot) {
-      this._buildNewRoot();
+      await this._buildNewRoot();
     }
     invariant(this._newRoot, 'New root not created');
 
@@ -161,7 +161,7 @@ export class MigrationBuilder {
     return docHandle;
   }
 
-  private _buildNewRoot(): void {
+  private async _buildNewRoot(): Promise<void> {
     const links = { ...(this._rootDoc.links ?? {}) };
     for (const id of this._deleteObjects) {
       delete links[id];
@@ -179,10 +179,11 @@ export class MigrationBuilder {
       objects: this._rootDoc.objects,
       links,
     });
+    await this._newRoot.whenReady();
     this._addHandleToFlushList(this._newRoot);
   }
 
-  private _createObject({
+  private async _createObject({
     id,
     schema,
     props,
@@ -190,7 +191,7 @@ export class MigrationBuilder {
     id?: string;
     schema: Schema.Schema.AnyNoContext;
     props: any;
-  }): ObjectCore {
+  }): Promise<ObjectCore> {
     const core = new ObjectCore();
     if (id) {
       core.id = id;
@@ -207,6 +208,7 @@ export class MigrationBuilder {
         [core.id]: core.getDoc() as ObjectStructure,
       },
     });
+    await newHandle.whenReady();
     this._newLinks[core.id] = newHandle.url;
     this._addHandleToFlushList(newHandle);
 
