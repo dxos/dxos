@@ -64,6 +64,7 @@ export const Default: Story = {
 export const Virtual = {
   decorators: [withLayout({ layout: 'column' }), withTheme],
   render: () => {
+    const [index, setIndex] = useState(0);
     const items = useMemo<TestItem[]>(
       () =>
         Array.from({ length: 100 }, () =>
@@ -75,8 +76,9 @@ export const Virtual = {
     );
 
     const parentRef = useRef(null);
+    const [viewportElement, setViewportElement] = useState<HTMLElement | null>(null);
     const virtualizer = useVirtualizer({
-      getScrollElement: () => parentRef.current,
+      getScrollElement: () => viewportElement,
       estimateSize: () => 40,
       count: items.length,
     });
@@ -86,7 +88,6 @@ export const Virtual = {
     // TODO(burdon): Issues:
     // - [ ] Item ref.
 
-    const [index, setIndex] = useState(0);
     return (
       <div className='flex flex-col bs-full'>
         <Toolbar.Root>
@@ -113,8 +114,13 @@ export const Virtual = {
             onClick={() => virtualizer.scrollToIndex(items.length - 1)}
           />
         </Toolbar.Root>
-        {/* <Mosaic.Viewport options={{ overflow: { y: 'scroll' } }} className='pli-3'> */}
-        <div ref={parentRef} className='bs-full overflow-y-auto'>
+        {/* <div ref={parentRef} className='bs-full overflow-y-auto'> */}
+        <Mosaic.Viewport
+          onViewportReady={setViewportElement}
+          options={{ overflow: { y: 'scroll' } }}
+          className='pli-3'
+          ref={parentRef}
+        >
           <div
             style={{
               position: 'relative',
@@ -141,7 +147,7 @@ export const Virtual = {
               </div>
             ))}
           </div>
-        </div>
+        </Mosaic.Viewport>
       </div>
     );
   },
