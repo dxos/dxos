@@ -27,6 +27,7 @@ type StackProps<T extends Obj.Any = Obj.Any> = SlottableClassName<{
  * Linear layout of Mosaic tiles.
  * NOTE: This is a low-level component and should be wrapped by a scrollable container.
  */
+// TODO(burdon): Use react-window.
 const StackInner = forwardRef<HTMLDivElement, StackProps>(
   (
     { className, classNames, role = 'list', axis = 'vertical', items, Component = DefaultComponent, ...props },
