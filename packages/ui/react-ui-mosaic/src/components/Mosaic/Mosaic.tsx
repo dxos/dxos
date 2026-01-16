@@ -70,6 +70,8 @@ import {
   type MosaicTileData,
 } from './types';
 
+import { type EventListeners } from 'overlayscrollbars';
+
 //
 // Mosaic Drag-and-drop
 //
@@ -587,6 +589,7 @@ const defaultOptions: ViewportProps['options'] = {
 };
 
 type ViewportProps = OverlayScrollbarsComponentProps & {
+  onScroll?: (event: Event) => void;
   onViewportReady?: (viewport: HTMLElement | null) => void;
 };
 
@@ -594,7 +597,7 @@ type ViewportProps = OverlayScrollbarsComponentProps & {
  * https://www.npmjs.com/package/overlayscrollbars-react
  */
 const Viewport = forwardRef<HTMLDivElement, ViewportProps>(
-  ({ onViewportReady, options = defaultOptions, ...props }, forwardedRef) => {
+  ({ options = defaultOptions, onScroll, onViewportReady, ...props }, forwardedRef) => {
     const osRef = useRef<OverlayScrollbarsComponentRef<'div'>>(null);
 
     // Forward the host element to the forwardedRef for asChild/Slot compatibility.
@@ -614,22 +617,21 @@ const Viewport = forwardRef<HTMLDivElement, ViewportProps>(
       const instance = osRef.current?.osInstance();
       const viewport = instance?.elements().viewport ?? null;
       onViewportReady?.(viewport);
-    }, [onViewportReady]);
+    }, [osRef, onViewportReady]);
 
-    return (
-      <OverlayScrollbarsComponent
-        // defer
-        options={options}
-        // TODO(burdon): Events.
-        // events={{
-        //   scroll: () => {
-        //     console.log('scroll');
-        //   },
-        // }}
-        {...props}
-        ref={osRef}
-      />
-    );
+    const events = useMemo<EventListeners | null>(() => {
+      if (!onScroll) {
+        return null;
+      }
+
+      return {
+        scroll: (_, event: Event) => {
+          onScroll(event);
+        },
+      } satisfies EventListeners;
+    }, [onScroll]);
+
+    return <OverlayScrollbarsComponent options={options} {...props} events={events} ref={osRef} />;
   },
 );
 
