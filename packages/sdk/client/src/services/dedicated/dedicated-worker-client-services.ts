@@ -1,26 +1,21 @@
 import { Event, scheduleTaskInterval, Trigger } from '@dxos/async';
 import { clientServiceBundle, type ClientServices, type ClientServicesProvider } from '@dxos/client-protocol';
-import type { ServiceBundle } from '@dxos/rpc';
-import { ClientServicesProxy } from '../service-proxy';
+import { Config } from '@dxos/config';
 import { Context, Resource } from '@dxos/context';
+import { invariant } from '@dxos/invariant';
+import { Worker } from '@dxos/isomorphic-worker';
+import { log } from '@dxos/log';
+import type { ServiceBundle } from '@dxos/rpc';
 import { createWorkerPort } from '@dxos/rpc-tunnel';
+import type { MaybePromise } from '@dxos/util';
+import { ClientServicesProxy } from '../service-proxy';
+import { SharedWorkerConnection } from '../shared-worker-connection';
 import {
-  DedicatedWorkerSessionMessage,
-  type DedicatedWorkerInitMessage,
   type DedicatedWorkerMessage,
   type DedicatedWorkerReadyMessage,
   type WorkerCoordinator,
-  type WorkerCoordinatorMessage,
+  type WorkerCoordinatorMessage
 } from './types';
-import { log } from '@dxos/log';
-import { Worker } from '@dxos/isomorphic-worker';
-import { SharedWorkerConnection } from '../shared-worker-connection';
-import { Config } from '@dxos/config';
-import type { MaybePromise } from '@dxos/util';
-import { invariant } from '@dxos/invariant';
-import { schedule } from 'effect/Stream';
-import { ScheduleInterval } from 'effect';
-import { AbortedError } from '@dxos/errors';
 
 export type WorkerOrPort = Worker | MessagePort;
 
