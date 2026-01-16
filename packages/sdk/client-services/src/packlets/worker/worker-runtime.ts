@@ -65,6 +65,7 @@ export class WorkerRuntime {
   private readonly _clientServices!: ClientServicesHost;
   private readonly _channel: string;
   private readonly _automaticallyConnectWebrtc: boolean;
+  private readonly _livenessLock = new WebLockWrapper(`@dxos/client-services/WorkerRuntime/${crypto.randomUUID()}`);
   private _broadcastChannel?: BroadcastChannel;
   private _sessionForNetworking?: WorkerSession; // TODO(burdon): Expose to client QueryStatusResponse.
   private _config!: Config;
@@ -99,9 +100,16 @@ export class WorkerRuntime {
     return this._clientServices;
   }
 
+  get livenessLockKey(): string {
+    return this._livenessLock.key;
+  }
+
   async start(): Promise<void> {
     log('starting...');
     try {
+      await this._livenessLock.acquire();
+
+      // Steal the lock from the other worker.
       this._broadcastChannel = new BroadcastChannel(this._channel);
       this._broadcastChannel.postMessage({ action: 'stop' });
       this._broadcastChannel.onmessage = async (event) => {
@@ -147,6 +155,7 @@ export class WorkerRuntime {
     await this._clientServices.close();
     await this._runtime.dispose();
     await this._onStop?.();
+    await this._livenessLock.release();
   }
 
   /**
@@ -251,3 +260,34 @@ const LocalSqliteOpfsLayer = Layer.unwrapScoped(
     return SqliteClient.layer({ worker: Effect.succeed(clientPort) });
   }),
 );
+
+class WebLockWrapper {
+  readonly #key: string;
+  #release?: () => void;
+
+  constructor(key: string) {
+    this.#key = key;
+  }
+
+  get key(): string {
+    return this.#key;
+  }
+
+  async acquire(options: LockOptions = {}) {
+    navigator.locks.request(this.#key, options, async () => {
+      await new Promise<void>((resolve) => {
+        this.#release = resolve;
+      }); // Blocks for the duration of the worker's lifetime.
+      this.#release = undefined;
+    });
+  }
+
+  release() {
+    this.#release?.();
+    this.#release = undefined;
+  }
+
+  [Symbol.dispose]() {
+    this.release();
+  }
+}
