@@ -20,13 +20,11 @@ const meta: Meta<typeof Stack> = {
   title: 'ui/react-ui-mosaic/Stack',
   component: Stack,
   decorators: [
-    withTheme,
-    withLayout({ layout: 'column' }),
     (Story) => {
       const [viewportElement, setViewportElement] = useState<HTMLElement | null>(null);
       return (
-        <Mosaic.Root>
-          <Mosaic.Container axis='vertical' autoScroll={viewportElement} eventHandler={{ id: 'test' }}>
+        <Mosaic.Root asChild>
+          <Mosaic.Container asChild axis='vertical' autoScroll={viewportElement} eventHandler={{ id: 'test' }}>
             <Mosaic.Viewport options={{ overflow: { y: 'scroll' } }} onViewportReady={setViewportElement}>
               <Story />
             </Mosaic.Viewport>
@@ -34,6 +32,8 @@ const meta: Meta<typeof Stack> = {
         </Mosaic.Root>
       );
     },
+    withLayout({ layout: 'column' }),
+    withTheme,
   ],
   parameters: {
     layout: 'fullscreen',
@@ -46,6 +46,8 @@ type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
   args: {
+    axis: 'vertical',
+    className: 'pli-3',
     items: Array.from({ length: 100 }, () =>
       Obj.make(TestItem, {
         name: faker.lorem.paragraph(),
