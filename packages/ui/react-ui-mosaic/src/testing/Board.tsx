@@ -4,7 +4,7 @@
 
 import { useComposedRefs } from '@radix-ui/react-compose-refs';
 import * as Schema from 'effect/Schema';
-import React, { forwardRef, useMemo, useRef, useState } from 'react';
+import React, { forwardRef, useMemo, useRef } from 'react';
 
 import { Obj, Ref, Type } from '@dxos/echo';
 import { ObjectId } from '@dxos/keys';
@@ -63,7 +63,7 @@ type BoardProps = { id: string; columns: TestColumn[]; debug?: boolean };
 
 export const Board = forwardRef<HTMLDivElement, BoardProps>(({ id, columns, debug }, forwardedRef) => {
   const [DebugInfo, debugHandler] = useContainerDebug(debug);
-  const [scrollViewport, setViewportElement] = useState<HTMLElement | null>(null);
+  const viewportRef = useRef<HTMLElement | null>(null);
 
   const eventHandler = useEventHandlerAdapter({
     id,
@@ -84,11 +84,11 @@ export const Board = forwardRef<HTMLDivElement, BoardProps>(({ id, columns, debu
           asChild
           axis='horizontal'
           withFocus
-          autoScroll={scrollViewport}
+          autoScroll={viewportRef.current}
           eventHandler={eventHandler}
           debug={debugHandler}
         >
-          <Mosaic.Viewport options={{ overflow: { x: 'scroll' } }} onViewportReady={setViewportElement}>
+          <Mosaic.Viewport options={{ overflow: { x: 'scroll' } }} viewportRef={viewportRef}>
             <Mosaic.Stack axis='horizontal' className='plb-3' items={columns} Component={Column} />
           </Mosaic.Viewport>
         </Mosaic.Container>
@@ -111,7 +111,7 @@ export const Column = forwardRef<HTMLDivElement, ColumnProps>(
     const { id, items } = object;
     const [DebugInfo, debugHandler] = useContainerDebug(debug);
     const dragHandleRef = useRef<HTMLButtonElement>(null);
-    const [viewportElement, setViewportElement] = useState<HTMLElement | null>(null);
+    const viewportRef = useRef<HTMLElement | null>(null);
     const eventHandler = useEventHandlerAdapter({
       id,
       items,
@@ -157,11 +157,11 @@ export const Column = forwardRef<HTMLDivElement, ColumnProps>(
                 asChild
                 axis='vertical'
                 withFocus
-                autoScroll={viewportElement}
+                autoScroll={viewportRef.current}
                 eventHandler={eventHandler}
                 debug={debugHandler}
               >
-                <Mosaic.Viewport options={{ overflow: { y: 'scroll' } }} onViewportReady={setViewportElement}>
+                <Mosaic.Viewport options={{ overflow: { y: 'scroll' } }} viewportRef={viewportRef}>
                   <Mosaic.Stack
                     axis='vertical'
                     className='pli-3'

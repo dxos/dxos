@@ -3,7 +3,7 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import React, { useState } from 'react';
+import React, { useRef } from 'react';
 
 import { Obj } from '@dxos/echo';
 import { faker } from '@dxos/random';
@@ -21,11 +21,11 @@ const meta: Meta<typeof Stack> = {
   component: Stack,
   decorators: [
     (Story) => {
-      const [viewportElement, setViewportElement] = useState<HTMLElement | null>(null);
+      const viewportRef = useRef<HTMLElement | null>(null);
       return (
         <Mosaic.Root asChild>
-          <Mosaic.Container asChild axis='vertical' autoScroll={viewportElement} eventHandler={{ id: 'test' }}>
-            <Mosaic.Viewport options={{ overflow: { y: 'scroll' } }} onViewportReady={setViewportElement}>
+          <Mosaic.Container asChild axis='vertical' autoScroll={viewportRef.current} eventHandler={{ id: 'test' }}>
+            <Mosaic.Viewport options={{ overflow: { y: 'scroll' } }} viewportRef={viewportRef}>
               <Story />
             </Mosaic.Viewport>
           </Mosaic.Container>

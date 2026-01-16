@@ -27,6 +27,7 @@ import { createContext } from '@radix-ui/react-context';
 import { Primitive } from '@radix-ui/react-primitive';
 import { Slot } from '@radix-ui/react-slot';
 import { bind } from 'bind-event-listener';
+import { type EventListeners } from 'overlayscrollbars';
 import {
   OverlayScrollbarsComponent,
   type OverlayScrollbarsComponentProps,
@@ -37,6 +38,7 @@ import React, {
   type FC,
   type PropsWithChildren,
   type ReactNode,
+  type RefObject,
   forwardRef,
   useCallback,
   useEffect,
@@ -69,8 +71,6 @@ import {
   type MosaicPlaceholderData,
   type MosaicTileData,
 } from './types';
-
-import { type EventListeners } from 'overlayscrollbars';
 
 //
 // Mosaic Drag-and-drop
@@ -590,14 +590,14 @@ const defaultOptions: ViewportProps['options'] = {
 
 type ViewportProps = OverlayScrollbarsComponentProps & {
   onScroll?: (event: Event) => void;
-  onViewportReady?: (viewport: HTMLElement | null) => void;
+  viewportRef?: RefObject<HTMLElement | null>;
 };
 
 /**
  * https://www.npmjs.com/package/overlayscrollbars-react
  */
 const Viewport = forwardRef<HTMLDivElement, ViewportProps>(
-  ({ options = defaultOptions, onScroll, onViewportReady, ...props }, forwardedRef) => {
+  ({ options = defaultOptions, onScroll, viewportRef: onViewportReady, ...props }, forwardedRef) => {
     const osRef = useRef<OverlayScrollbarsComponentRef<'div'>>(null);
 
     // Forward the host element to the forwardedRef for asChild/Slot compatibility.
@@ -616,7 +616,9 @@ const Viewport = forwardRef<HTMLDivElement, ViewportProps>(
     useEffect(() => {
       const instance = osRef.current?.osInstance();
       const viewport = instance?.elements().viewport ?? null;
-      onViewportReady?.(viewport);
+      if (onViewportReady) {
+        onViewportReady.current = viewport;
+      }
     }, [osRef, onViewportReady]);
 
     const events = useMemo<EventListeners | null>(() => {

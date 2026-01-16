@@ -44,9 +44,9 @@ export const Default = {
     );
 
     const parentRef = useRef(null);
-    const [viewportElement, setViewportElement] = useState<HTMLElement | null>(null);
+    const viewportRef = useRef<HTMLElement | null>(null);
     const virtualizer = useVirtualizer({
-      getScrollElement: () => viewportElement,
+      getScrollElement: () => viewportRef.current,
       estimateSize: () => 40,
       count: items.length,
     });
@@ -85,7 +85,7 @@ export const Default = {
         <Mosaic.Viewport
           options={{ overflow: { y: 'scroll' } }}
           className='pli-3'
-          onViewportReady={setViewportElement}
+          viewportRef={viewportRef}
           ref={parentRef}
         >
           <div
