@@ -597,7 +597,7 @@ type ViewportProps = OverlayScrollbarsComponentProps & {
  * https://www.npmjs.com/package/overlayscrollbars-react
  */
 const Viewport = forwardRef<HTMLDivElement, ViewportProps>(
-  ({ options = defaultOptions, onScroll, viewportRef: onViewportReady, ...props }, forwardedRef) => {
+  ({ options = defaultOptions, onScroll, viewportRef, ...props }, forwardedRef) => {
     const osRef = useRef<OverlayScrollbarsComponentRef<'div'>>(null);
 
     // Forward the host element to the forwardedRef for asChild/Slot compatibility.
@@ -612,14 +612,12 @@ const Viewport = forwardRef<HTMLDivElement, ViewportProps>(
       }
     });
 
-    // Notify parent when viewport is ready.
     useEffect(() => {
       const instance = osRef.current?.osInstance();
-      const viewport = instance?.elements().viewport ?? null;
-      if (onViewportReady) {
-        onViewportReady.current = viewport;
+      if (viewportRef) {
+        viewportRef.current = instance?.elements().viewport ?? null;
       }
-    }, [osRef, onViewportReady]);
+    }, [osRef, viewportRef]);
 
     const events = useMemo<EventListeners | null>(() => {
       if (!onScroll) {

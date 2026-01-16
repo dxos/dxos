@@ -4,7 +4,7 @@
 
 import { type Meta } from '@storybook/react-vite';
 import { useVirtualizer } from '@tanstack/react-virtual';
-import React, { useMemo, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 
 import { Obj } from '@dxos/echo';
 import { faker } from '@dxos/random';
@@ -44,12 +44,16 @@ export const Default = {
     );
 
     const parentRef = useRef(null);
-    const viewportRef = useRef<HTMLElement | null>(null);
+    const viewportRef = useRef<HTMLElement>(null);
     const virtualizer = useVirtualizer({
       getScrollElement: () => viewportRef.current,
       estimateSize: () => 40,
       count: items.length,
     });
+
+    useEffect(() => {
+      virtualizer.scrollToIndex(index, { align: 'start' });
+    }, [virtualizer, index]);
 
     const virtualItems = virtualizer.getVirtualItems();
 
@@ -58,29 +62,29 @@ export const Default = {
 
     return (
       <div className='flex flex-col bs-full'>
-        <Toolbar.Root>
-          <Toolbar.IconButton
-            icon='ph--arrow-line-left--regular'
-            iconOnly
-            label='start'
-            onClick={() => virtualizer.scrollToIndex(0)}
-          />
-          <Toolbar.Button
-            onClick={() => {
-              const index = Math.floor(Math.random() * items.length);
-              setIndex(index);
-              virtualizer.scrollToIndex(index, { align: 'start' });
-            }}
-          >
-            Random
-          </Toolbar.Button>
-          <div className='is-[3rem]'>{index}</div>
-          <Toolbar.IconButton
-            icon='ph--arrow-line-right--regular'
-            iconOnly
-            label='start'
-            onClick={() => virtualizer.scrollToIndex(items.length - 1)}
-          />
+        <Toolbar.Root classNames='grid grid-cols-3'>
+          <div />
+          <div className='flex justify-center'>
+            <Toolbar.IconButton
+              icon='ph--arrow-line-left--regular'
+              iconOnly
+              label='start'
+              onClick={() => setIndex(0)}
+            />
+            <Toolbar.IconButton
+              icon='ph--arrows-out-line-horizontal--regular'
+              iconOnly
+              label='random'
+              onClick={() => setIndex(Math.floor(Math.random() * items.length))}
+            />
+            <Toolbar.IconButton
+              icon='ph--arrow-line-right--regular'
+              iconOnly
+              label='start'
+              onClick={() => setIndex(items.length - 1)}
+            />
+          </div>
+          <div className='p-1 text-right'>{index}</div>
         </Toolbar.Root>
         <Mosaic.Viewport
           options={{ overflow: { y: 'scroll' } }}
@@ -89,6 +93,7 @@ export const Default = {
           ref={parentRef}
         >
           <div
+            role='none'
             style={{
               position: 'relative',
               height: virtualizer.getTotalSize(),
