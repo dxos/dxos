@@ -222,6 +222,7 @@ catalog:
   '@swc/types': ^0.1.25
   '@tailwindcss/container-queries': ^0.1.1
   '@tailwindcss/forms': ^0.5.3
+  '@tanstack/react-virtual': ^3.13.18
   '@tauri-apps/api': ^2.8.0
   '@tauri-apps/cli': ^2.8.4
   '@tauri-apps/plugin-global-shortcut': ^2.2.0

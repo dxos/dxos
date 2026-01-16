@@ -588,6 +588,9 @@ catalogs:
     '@tailwindcss/forms':
       specifier: ^0.5.3
       version: 0.5.3
+    '@tanstack/react-virtual':
+      specifier: ^3.13.18
+      version: 3.13.18
     '@tauri-apps/api':
       specifier: ^2.8.0
       version: 2.8.0
@@ -17862,6 +17865,9 @@ importers:
       '@radix-ui/react-use-controllable-state':
         specifier: 'catalog:'
         version: 1.1.0(@types/react@19.2.7)(react@19.2.3)
+      '@tanstack/react-virtual':
+        specifier: 'catalog:'
+        version: 3.13.18(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
       bind-event-listener:
         specifier: 'catalog:'
         version: 3.0.0
@@ -17871,9 +17877,6 @@ importers:
       overlayscrollbars-react:
         specifier: 'catalog:'
         version: 0.5.6(overlayscrollbars@2.13.0)(react@19.2.3)
-      react-window:
-        specifier: 'catalog:'
-        version: 2.2.3(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
     devDependencies:
       '@dxos/random':
         specifier: workspace:*
@@ -17902,9 +17905,6 @@ importers:
       '@types/react-dom':
         specifier: ~19.2.3
         version: 19.2.3(@types/react@19.2.7)
-      '@types/react-window':
-        specifier: 'catalog:'
-        version: 2.0.0(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
       effect:
         specifier: 'catalog:'
         version: 3.19.11
@@ -26763,6 +26763,15 @@ packages:
     resolution: {integrity: sha512-y5mb86JUoiUgBjY/o6FJSFZSEttfb3Q5gllE4xoKjAAD+vBrnIhE4dViwUuow3va8mpH4s9jyUbUbrRGoRdc2Q==}
     peerDependencies:
       tailwindcss: '>=3.0.0 || >= 3.0.0-alpha.1'
+
+  '@tanstack/react-virtual@3.13.18':
+    resolution: {integrity: sha512-dZkhyfahpvlaV0rIKnvQiVoWPyURppl6w4m9IwMDpuIjcJ1sD9YGWrt0wISvgU7ewACXx2Ct46WPgI6qAD4v6A==}
+    peerDependencies:
+      react: ~19.2.3
+      react-dom: ~19.2.3
+
+  '@tanstack/virtual-core@3.13.18':
+    resolution: {integrity: sha512-Mx86Hqu1k39icq2Zusq+Ey2J6dDWTjDvEv43PJtRCoEYTLyfaPnxIQ6iy7YAOK0NV/qOEmZQ/uCufrppZxTgcg==}
 
   '@tauri-apps/api@2.8.0':
     resolution: {integrity: sha512-ga7zdhbS2GXOMTIZRT0mYjKJtR9fivsXzsyq5U3vjDL0s6DTMwYRm0UHNjzTY5dh4+LSC68Sm/7WEiimbQNYlw==}
@@ -47296,6 +47305,14 @@ snapshots:
     dependencies:
       mini-svg-data-uri: 1.4.4
       tailwindcss: 3.4.1
+
+  '@tanstack/react-virtual@3.13.18(react-dom@19.2.3(react@19.2.3))(react@19.2.3)':
+    dependencies:
+      '@tanstack/virtual-core': 3.13.18
+      react: 19.2.3
+      react-dom: 19.2.3(react@19.2.3)
+
+  '@tanstack/virtual-core@3.13.18': {}
 
   '@tauri-apps/api@2.8.0': {}
 

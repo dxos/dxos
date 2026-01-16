@@ -2,13 +2,15 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { type FC, Fragment, type ReactElement, type Ref, forwardRef } from 'react';
+import React, { type FC, Fragment, type ReactElement, type Ref, forwardRef, useRef } from 'react';
 
 import { type Obj } from '@dxos/echo';
+import { invariant } from '@dxos/invariant';
 import { type SlottableClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
 import { useVisibleItems } from '../../hooks';
+import { Card } from '../Card';
 import { Mosaic, type MosiacPlaceholderProps, useMosaicContainer } from '../Mosaic';
 
 import { styles } from './styles';
@@ -27,12 +29,12 @@ type StackProps<T extends Obj.Any = Obj.Any> = SlottableClassName<{
  * Linear layout of Mosaic tiles.
  * NOTE: This is a low-level component and should be wrapped by a scrollable container.
  */
-// TODO(burdon): Use react-window.
 const StackInner = forwardRef<HTMLDivElement, StackProps>(
   (
     { className, classNames, role = 'list', axis = 'vertical', items, Component = DefaultComponent, ...props },
     forwardedRef,
   ) => {
+    invariant(Component);
     const { id, dragging } = useMosaicContainer(StackInner.displayName!);
     const visibleItems = useVisibleItems({ id, items, dragging: dragging?.source.data });
 
@@ -63,11 +65,23 @@ const StackInner = forwardRef<HTMLDivElement, StackProps>(
 
 StackInner.displayName = 'Stack';
 
-const DefaultComponent: FC<{ object: Obj.Any; location: number }> = ({ object }) => <div role='none'>{object.id}</div>;
-
 const Stack = StackInner as <T extends Obj.Any = Obj.Any>(
   props: StackProps<T> & { ref?: Ref<HTMLDivElement> },
 ) => ReactElement;
+
+const DefaultComponent: StackProps['Component'] = (props) => {
+  const dragHandleRef = useRef<HTMLButtonElement>(null);
+  return (
+    <Mosaic.Tile {...props} className='border border-separator rounded-sm font-mono'>
+      <Card.Toolbar>
+        <Card.DragHandle ref={dragHandleRef} />
+        <Card.Heading> {props.object.id}</Card.Heading>
+      </Card.Toolbar>
+    </Mosaic.Tile>
+  );
+};
+
+DefaultComponent.displayName = 'DefaultComponent';
 
 const Placeholder = (props: MosiacPlaceholderProps<number>) => {
   return (

@@ -48,6 +48,7 @@
     "@dxos/react-client": "workspace:*",
     "@dxos/react-ui-dnd": "workspace:*",
     "@dxos/react-ui-syntax-highlighter": "workspace:*",
+    "@dxos/ui-theme": "workspace:*",
     "@dxos/util": "workspace:*",
     "@fluentui/react-tabster": "catalog:",
     "@preact-signals/safe-react": "catalog:",
@@ -56,10 +57,10 @@
     "@radix-ui/react-primitive": "catalog:",
     "@radix-ui/react-slot": "catalog:",
     "@radix-ui/react-use-controllable-state": "catalog:",
+    "@tanstack/react-virtual": "catalog:",
     "bind-event-listener": "catalog:",
     "overlayscrollbars": "catalog:",
-    "overlayscrollbars-react": "catalog:",
-    "react-window": "catalog:"
+    "overlayscrollbars-react": "catalog:"
   },
   "devDependencies": {
     "@dxos/random": "workspace:*",
@@ -72,7 +73,6 @@
     "@dxos/ui-theme": "workspace:*",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
-    "@types/react-window": "catalog:",
     "effect": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:",

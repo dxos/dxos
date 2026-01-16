@@ -111,7 +111,7 @@ export const Column = forwardRef<HTMLDivElement, ColumnProps>(
     const { id, items } = object;
     const [DebugInfo, debugHandler] = useContainerDebug(debug);
     const dragHandleRef = useRef<HTMLButtonElement>(null);
-    const [scrollViewport, setViewportElement] = useState<HTMLElement | null>(null);
+    const [viewportElement, setViewportElement] = useState<HTMLElement | null>(null);
     const eventHandler = useEventHandlerAdapter({
       id,
       items,
@@ -157,7 +157,7 @@ export const Column = forwardRef<HTMLDivElement, ColumnProps>(
                 asChild
                 axis='vertical'
                 withFocus
-                autoScroll={scrollViewport}
+                autoScroll={viewportElement}
                 eventHandler={eventHandler}
                 debug={debugHandler}
               >
