@@ -13,8 +13,8 @@ import { WorkerRuntime } from '@dxos/client-services';
 import { Config } from '@dxos/config';
 import { createWorkerPort } from '@dxos/rpc-tunnel';
 import { Client } from '../../client';
-import { Obj, Type } from '@dxos/echo';
-import { Event } from '@dxos/async';
+import { Filter, Obj, Type } from '@dxos/echo';
+import { Event, sleep } from '@dxos/async';
 
 /**
  * In-thread worker for testing purposes.
@@ -44,13 +44,13 @@ class TestWorkerFactory extends Resource {
               configProvider: async () => {
                 return new Config(); // TODO(dmaretsky): Take using an rpc message from spawning process.
               },
-              // TODO(dmaretskyi): We should split the storage lock and liveness. Keep storage lock fully inside WorkerRuntime, while liveness stays outside.
-              acquireLock: async () => {},
-              releaseLock: () => {},
               onStop: async () => {
                 // Close the shared worker, lock will be released automatically.
                 messageChannel.port1.close();
               },
+              // TODO(dmaretskyi): We should split the storage lock and liveness. Keep storage lock fully inside WorkerRuntime, while liveness stays outside.
+              acquireLock: async () => {},
+              releaseLock: () => {},
               automaticallyConnectWebrtc: false,
             });
             await runtime.start();
@@ -153,7 +153,6 @@ describe('DedicatedWorkerClientServices', { timeout: 1_000, retry: 0 }, () => {
     await using client2 = await new Client({ services: services2 }).initialize();
     expect(client2.halo.identity.get()).toEqual(identity);
 
-    // client1.spaces.default.db.add(Obj.make(Type.Expando, { name: 'Test' }));
-    // await client1.spaces.default.db.flush({ indexes: true });
+    // TODO(dmaretskyi): tried doing DB write -> flush(indexes) -> query here but flush(indexes) doesnt work
   });
 });
