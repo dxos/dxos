@@ -388,6 +388,7 @@ export class Client {
     const { MeshProxy } = await import('../mesh/mesh-proxy');
     const { Shell } = await import('../services');
 
+    // TODO(dmaretskyi): Use Trigger.throw()
     const trigger = new Trigger<Error | undefined>();
     this._services.closed?.on(async (error) => {
       log('terminated', { resetting: this._resetting });

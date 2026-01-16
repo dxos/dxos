@@ -67,6 +67,8 @@ export class Context {
   #flags: ContextFlags = 0;
   #disposePromise?: Promise<boolean> = undefined;
 
+  #signal: AbortSignal | undefined = undefined;
+
   public maxSafeDisposeCallbacks = MAX_SAFE_DISPOSE_CALLBACKS;
 
   constructor(params: CreateContextProps = {}, callMeta?: Partial<CallMetadata>) {
@@ -98,6 +100,16 @@ export class Context {
 
   get disposeCallbacksLength() {
     return this.#disposeCallbacks.length;
+  }
+
+  get signal(): AbortSignal {
+    if (this.#signal) {
+      return this.#signal;
+    }
+    const controller = new AbortController();
+    this.#signal = controller.signal;
+    this.onDispose(() => controller.abort());
+    return this.#signal;
   }
 
   /**
