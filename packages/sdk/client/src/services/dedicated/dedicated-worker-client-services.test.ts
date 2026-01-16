@@ -129,7 +129,6 @@ describe('DedicatedWorkerClientServices', { timeout: 1_000, retry: 0 }, () => {
       createCoordinator: () => new MemoryWorkerCoordiantor(),
     }).open();
     await using client = await new Client({ services }).initialize();
-    await client.diagnostics();
     await client.halo.createIdentity();
     client.spaces.default.db.add(Obj.make(Type.Expando, { name: 'Test' }));
     await client.spaces.default.db.flush({ indexes: true });
@@ -143,7 +142,6 @@ describe('DedicatedWorkerClientServices', { timeout: 1_000, retry: 0 }, () => {
       createCoordinator: () => coordinator,
     }).open();
     await using client1 = await new Client({ services: services1 }).initialize();
-    await client1.diagnostics();
     const identity = await client1.halo.createIdentity();
 
     await using services2 = await new DedicatedWorkerClientServices({
@@ -154,5 +152,28 @@ describe('DedicatedWorkerClientServices', { timeout: 1_000, retry: 0 }, () => {
     expect(client2.halo.identity.get()).toEqual(identity);
 
     // TODO(dmaretskyi): tried doing DB write -> flush(indexes) -> query here but flush(indexes) doesnt work
+  });
+
+  test.skip('leader goes from first client to second', async () => {
+    const coordinator = new MemoryWorkerCoordiantor();
+    await using testWorker = await new TestWorkerFactory().open();
+    await using services1 = await new DedicatedWorkerClientServices({
+      createWorker: () => testWorker.make(),
+      createCoordinator: () => coordinator,
+    }).open();
+    await using client1 = await new Client({ services: services1 }).initialize();
+    const identity = await client1.halo.createIdentity();
+
+    await using services2 = await new DedicatedWorkerClientServices({
+      createWorker: () => testWorker.make(),
+      createCoordinator: () => coordinator,
+    }).open();
+    await using client2 = await new Client({ services: services2 }).initialize();
+    expect(client2.halo.identity.get()).toEqual(identity);
+
+    await client1.destroy();
+
+    // Fails here.
+    await client2.spaces.default.db.query(Filter.everything()).run();
   });
 });
