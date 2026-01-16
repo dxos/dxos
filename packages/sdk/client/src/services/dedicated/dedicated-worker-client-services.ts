@@ -20,6 +20,7 @@ import type { MaybePromise } from '@dxos/util';
 import { invariant } from '@dxos/invariant';
 import { schedule } from 'effect/Stream';
 import { ScheduleInterval } from 'effect';
+import { AbortedError } from '@dxos/errors';
 
 export type WorkerOrPort = Worker | MessagePort;
 
@@ -110,20 +111,29 @@ export class DedicatedWorkerClientServices extends Resource implements ClientSer
   }
 
   #watchLeader() {
-    navigator.locks.request(LEADER_LOCK_KEY, { mode: 'exclusive', signal: this._ctx.signal }, async () => {
-      // I am the leader now.
-      invariant(this.#coordinator);
-      invariant(!this.#leaderSession);
-      this.#leaderSession = new LeaderSession(this.#createWorker, this.#coordinator, this.#clientId);
-      const done = new Trigger();
-      this._ctx.onDispose(() => done.wake());
-      this.#leaderSession.onClose.on((error) => {
-        this.closed.emit(error);
-        this.#leaderSession = undefined;
-        done.wake();
-      });
-      await this.#leaderSession.open();
-      await done.wait(); // Hold until the leader session is closed.
+    queueMicrotask(async () => {
+      try {
+        await navigator.locks.request(LEADER_LOCK_KEY, { mode: 'exclusive', signal: this._ctx.signal }, async () => {
+          // I am the leader now.
+          invariant(this.#coordinator);
+          invariant(!this.#leaderSession);
+          this.#leaderSession = new LeaderSession(this.#createWorker, this.#coordinator, this.#clientId);
+          const done = new Trigger();
+          this._ctx.onDispose(() => done.wake());
+          this.#leaderSession.onClose.on((error) => {
+            this.closed.emit(error);
+            this.#leaderSession = undefined;
+            done.wake();
+          });
+          await this.#leaderSession.open();
+          await done.wait(); // Hold until the leader session is closed.
+        });
+      } catch (error) {
+        if (error instanceof DOMException && error.name === 'AbortError') {
+          return;
+        }
+        log.catch(error);
+      }
     });
   }
 }
