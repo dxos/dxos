@@ -9,6 +9,11 @@ export const Block = Schema.Struct({
   position: Schema.NullOr(Schema.Number),
   timestamp: Schema.Number,
   data: Schema.Uint8Array,
+  /**
+   * Local insertion ID.
+   * Not replicated.
+   */
+  insertionId: Schema.optional(Schema.Number),
 });
 export interface Block extends Schema.Schema.Type<typeof Block> {}
 
@@ -30,7 +35,7 @@ export const QueryRequest = Schema.Struct({
     }),
   ),
   /**
-   * Get changes following this cursor (exclusive).
+   * Get changes following this position (exclusive).
    * Use -1 to get all changes.
    */
   cursor: Schema.Number,

@@ -18,6 +18,7 @@ import { type LevelDB } from '@dxos/kv-store';
 import { log } from '@dxos/log';
 import { IndexKind } from '@dxos/protocols/proto/dxos/echo/indexing';
 import { trace } from '@dxos/tracing';
+import { FeedStore, type Block } from '@dxos/feed';
 
 import {
   AutomergeHost,
@@ -63,6 +64,8 @@ export type EchoHostProps = {
 
   indexing?: Partial<EchoHostIndexingConfig>;
   runtime: RuntimeProvider.RuntimeProvider<SqlClient.SqlClient>;
+
+  localQueues?: boolean;
 };
 
 /**
@@ -84,12 +87,13 @@ export class EchoHost extends Resource {
   private readonly _indexer2: IndexEngine;
   private readonly _indexConfig: EchoHostIndexingConfig;
   private readonly _runtime: RuntimeProvider.RuntimeProvider<SqlClient.SqlClient>;
+  private readonly _feedStore?: FeedStore;
 
   private _updateIndexes!: DeferredTask;
 
   private _indexesUpToDate = false;
 
-  constructor({ kv, indexing = {}, peerIdProvider, getSpaceKeyByRootDocumentId, runtime }: EchoHostProps) {
+  constructor({ kv, localQueues, indexing = {}, peerIdProvider, getSpaceKeyByRootDocumentId, runtime }: EchoHostProps) {
     super();
 
     this._indexConfig = { ...DEFAULT_INDEXING_CONFIG, ...indexing };
@@ -106,6 +110,11 @@ export class EchoHost extends Resource {
 
     this._runtime = runtime;
     this._automergeDataSource = new AutomergeDataSource(this._automergeHost);
+
+    if (localQueues) {
+      this._feedStore = new FeedStore({ assignPositions: false, localActorId: crypto.randomUUID() });
+    }
+
     this._indexer = new Indexer({
       db: kv,
       indexStore: new IndexStore({ db: kv.sublevel('index-storage') }),

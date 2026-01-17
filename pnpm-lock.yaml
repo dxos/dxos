@@ -4932,6 +4932,9 @@ importers:
       '@dxos/errors':
         specifier: workspace:*
         version: link:../../../common/errors
+      '@dxos/feed':
+        specifier: workspace:*
+        version: link:../feed
       '@dxos/feed-store':
         specifier: workspace:*
         version: link:../../../common/feed-store

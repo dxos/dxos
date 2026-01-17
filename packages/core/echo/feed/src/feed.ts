@@ -34,6 +34,7 @@ export class FeedStore {
 
     // Blocks Table
     yield* sql`CREATE TABLE IF NOT EXISTS blocks (
+      insertionId INTEGER PRIMARY KEY AUTOINCREMENT,
       feedPrivateId INTEGER NOT NULL,
       position INTEGER,
       sequence INTEGER NOT NULL,
@@ -134,6 +135,40 @@ export class FeedStore {
         })) as Block[];
 
         return { requestId: request.requestId, blocks };
+      }),
+  );
+
+  queryLocal = Effect.fn('Feed.queryLocal')(
+    (request: {
+      spaceId: string;
+      conversation?: number; // insertionId exclusive
+      limit?: number;
+    }): Effect.Effect<Block[], SqlError.SqlError, SqlClient.SqlClient> =>
+      Effect.gen(this, function* () {
+        const sql = yield* SqlClient.SqlClient;
+        const cursor = request.conversation ?? -1;
+        const limit = request.limit ?? 100;
+
+        const rows = yield* sql`
+            SELECT blocks.* 
+            FROM blocks
+            JOIN feeds ON blocks.feedPrivateId = feeds.feedPrivateId
+            WHERE feeds.spaceId = ${request.spaceId}
+              AND blocks.insertionId > ${cursor}
+            ORDER BY blocks.insertionId ASC
+            LIMIT ${limit}
+        `;
+
+        const blocks = (rows as any[]).map((row) => ({
+          ...row,
+          data: new Uint8Array(row.data),
+          position: row.position,
+          predSequence: row.predSequence,
+          predActorId: row.predActorId,
+          insertionId: row.insertionId,
+        })) as Block[];
+
+        return blocks;
       }),
   );
 

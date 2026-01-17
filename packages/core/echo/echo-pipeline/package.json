@@ -56,6 +56,7 @@
     "@dxos/edge-client": "workspace:*",
     "@dxos/effect": "workspace:*",
     "@dxos/errors": "workspace:*",
+    "@dxos/feed": "workspace:*",
     "@dxos/feed-store": "workspace:*",
     "@dxos/hypercore": "workspace:*",
     "@dxos/index-core": "workspace:*",

@@ -116,6 +116,104 @@ describe('Feed V2', () => {
     }).pipe(Effect.provide(TestLayer)),
   );
 
+  it.effect('should assign monotonic insertionId', () =>
+    Effect.gen(function* () {
+      const feedStore = new FeedStore({ localActorId: ALICE, assignPositions: true });
+      const spaceId = SpaceId.random();
+
+      yield* feedStore.appendLocal([
+        {
+          spaceId,
+          feedId: 'feed-1',
+          feedNamespace: 'default',
+          data: new Uint8Array([1]),
+        },
+      ]);
+
+      yield* feedStore.appendLocal([
+        {
+          spaceId,
+          feedId: 'feed-2',
+          feedNamespace: 'default',
+          data: new Uint8Array([2]),
+        },
+      ]);
+
+      const result1 = yield* feedStore.query({
+        requestId: 'req1',
+        spaceId,
+        query: { feedIds: ['feed-1'] },
+        cursor: -1,
+      });
+
+      const result2 = yield* feedStore.query({
+        requestId: 'req2',
+        spaceId,
+        query: { feedIds: ['feed-2'] },
+        cursor: -1,
+      });
+
+      expect(result1.blocks[0].insertionId).toBeTypeOf('number');
+      expect(result2.blocks[0].insertionId).toBeTypeOf('number');
+      expect(result2.blocks[0].insertionId!).toBeGreaterThan(result1.blocks[0].insertionId!);
+    }).pipe(Effect.provide(TestLayer)),
+  );
+
+  it.effect('queryLocal', () =>
+    Effect.gen(function* () {
+      const feedStore = new FeedStore({ localActorId: ALICE, assignPositions: true });
+      const spaceId = SpaceId.random();
+
+      // Append interleaving blocks
+      yield* feedStore.appendLocal([
+        {
+          spaceId,
+          feedId: 'feed-1',
+          feedNamespace: 'default',
+          data: new Uint8Array([1]),
+        },
+      ]);
+      yield* feedStore.appendLocal([
+        {
+          spaceId,
+          feedId: 'feed-2',
+          feedNamespace: 'default',
+          data: new Uint8Array([2]),
+        },
+      ]);
+      yield* feedStore.appendLocal([
+        {
+          spaceId,
+          feedId: 'feed-1',
+          feedNamespace: 'default',
+          data: new Uint8Array([3]),
+        },
+      ]);
+
+      // Query all local
+      const blocks = yield* feedStore.queryLocal({
+        spaceId,
+        limit: 10,
+      });
+
+      expect(blocks).toHaveLength(3);
+      expect(blocks[0].insertionId).toBeLessThan(blocks[1].insertionId!);
+      expect(blocks[1].insertionId).toBeLessThan(blocks[2].insertionId!);
+      // Check data to confirm order
+      expect(blocks[0].data[0]).toEqual(1);
+      expect(blocks[1].data[0]).toEqual(2);
+      expect(blocks[2].data[0]).toEqual(3);
+
+      // Query with cursor
+      const nextBlocks = yield* feedStore.queryLocal({
+        spaceId,
+        conversation: blocks[1].insertionId!,
+      });
+      expect(nextBlocks).toHaveLength(1);
+      expect(nextBlocks[0].data[0]).toEqual(3);
+    }).pipe(Effect.provide(TestLayer)),
+  );
+
   it.effect('append local', () =>
     Effect.gen(function* () {
       const spaceId = SpaceId.random();
