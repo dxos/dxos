@@ -52,6 +52,7 @@ export interface SubscribeResponse extends Schema.Schema.Type<typeof SubscribeRe
 
 export const AppendRequest = Schema.Struct({
   requestId: Schema.String,
+  namespace: Schema.optional(Schema.String),
   blocks: Schema.Array(Block),
 });
 export interface AppendRequest extends Schema.Schema.Type<typeof AppendRequest> {}

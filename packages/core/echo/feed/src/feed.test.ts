@@ -1,7 +1,7 @@
 import * as SqliteClient from '@effect/sql-sqlite-node/SqliteClient';
 import { describe, expect, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
-import { Feed } from './feed';
+import { FeedStore } from './feed';
 import { Block } from './protocol';
 import { SpaceId } from '@dxos/keys';
 
@@ -15,7 +15,7 @@ describe('Feed V2', () => {
       const spaceId = SpaceId.random();
       const feedId = '01H1V1X1X1X1X1X1X1X1X1X1X1';
 
-      const feed = new Feed(spaceId);
+      const feed = new FeedStore(spaceId);
 
       // Append
       const block: Block = {
@@ -42,12 +42,42 @@ describe('Feed V2', () => {
     }).pipe(Effect.provide(TestLayer)),
   );
 
+  it.effect('should persist feed namespace', () =>
+    Effect.gen(function* () {
+      const spaceId = SpaceId.random();
+      const feedId = '01H1V1X1X1X1X1X1X1X1X1X1X3';
+      const namespace = 'custom-namespace';
+
+      const feed = new FeedStore(spaceId);
+
+      // Append with namespace
+      const block: Block = {
+        actorId: feedId,
+        sequence: 1,
+        predActorId: null,
+        predSequence: null,
+        position: null,
+        timestamp: Date.now(),
+        data: new Uint8Array([1]),
+      };
+
+      yield* feed.append({ requestId: 'req-ns', blocks: [block], namespace });
+
+      // Verify directly from DB (white-box test) to ensure schema is correct
+      const sql = yield* SqliteClient.SqliteClient;
+      const rows = yield* sql<{ feedNamespace: string }>`
+        SELECT feedNamespace FROM feeds WHERE spaceId = ${spaceId} AND feedId = ${feedId}
+      `;
+      expect(rows[0].feedNamespace).toBe(namespace);
+    }).pipe(Effect.provide(TestLayer)),
+  );
+
   it.effect('should use subscriptions', () =>
     Effect.gen(function* () {
       const spaceId = SpaceId.random();
       const feedId = '01H1V1X1X1X1X1X1X1X1X1X1X2';
 
-      const feed = new Feed(spaceId);
+      const feed = new FeedStore(spaceId);
 
       // Append some data
       yield* feed.append({

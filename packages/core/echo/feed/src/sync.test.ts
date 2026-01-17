@@ -3,7 +3,7 @@ import * as SqlClient from '@effect/sql/SqlClient';
 import { describe, expect, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 import * as ManagedRuntime from 'effect/ManagedRuntime';
-import { Feed } from './feed';
+import { FeedStore } from './feed';
 import { Block } from './protocol';
 import { SpaceId } from '@dxos/keys';
 
@@ -25,7 +25,7 @@ describe('Feed Sync V2 (RPC)', () => {
     // Server setup: Append blocks
     await server.run(
       Effect.gen(function* () {
-        const feed = new Feed(spaceId);
+        const feed = new FeedStore(spaceId);
         const blocks: Block[] = [
           {
             actorId: feedId,
@@ -56,7 +56,7 @@ describe('Feed Sync V2 (RPC)', () => {
       Effect.gen(function* () {
         // Wait, we flattened it. Tests need to update to NOT use SqlFeedStore!
         // I will fix the class instantiation in a moment.
-        const feed = new Feed(spaceId);
+        const feed = new FeedStore(spaceId);
         const res = yield* feed.subscribe({ requestId: 'req-sub', feedIds: [feedId] });
         return res.subscriptionId;
       }),
@@ -65,7 +65,7 @@ describe('Feed Sync V2 (RPC)', () => {
     // 2. Client queries using subscription
     const blocks = await server.run(
       Effect.gen(function* () {
-        const feed = new Feed(spaceId); // Updated class usage
+        const feed = new FeedStore(spaceId); // Updated class usage
         const res = yield* feed.query({ requestId: 'req-query', subscriptionId: subId, cursor: 0 });
         return res.blocks;
       }),
@@ -77,7 +77,7 @@ describe('Feed Sync V2 (RPC)', () => {
     // 3. Client stores them (Verify client persistence)
     await client.run(
       Effect.gen(function* () {
-        const feed = new Feed(spaceId); // Updated class usage
+        const feed = new FeedStore(spaceId); // Updated class usage
         // Client appends them.
         yield* feed.append({ requestId: 'req-push', blocks });
 

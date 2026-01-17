@@ -12,16 +12,22 @@ import {
   AppendResponse,
 } from './protocol';
 
-// Helper class for database schema management
-export class FeedHelper {
-  static migrate = Effect.fn('FeedHelper.migrate')(function* () {
+export class FeedStore {
+  constructor(private readonly _spaceId: string) {}
+
+  get spaceId() {
+    return this._spaceId;
+  }
+
+  static migrate = Effect.fn('FeedStore.migrate')(function* () {
     const sql = yield* SqlClient.SqlClient;
 
     // Feeds Table
     yield* sql`CREATE TABLE IF NOT EXISTS feeds (
       feedPrivateId INTEGER PRIMARY KEY AUTOINCREMENT,
       spaceId TEXT NOT NULL,
-      feedId TEXT NOT NULL
+      feedId TEXT NOT NULL,
+      feedNamespace TEXT
     )`;
     yield* sql`CREATE UNIQUE INDEX IF NOT EXISTS idx_feeds_spaceId_feedId ON feeds(spaceId, feedId)`;
 
@@ -47,22 +53,14 @@ export class FeedHelper {
         feedPrivateIds TEXT NOT NULL -- JSON array
     )`;
   });
-}
-
-export class Feed {
-  constructor(private readonly _spaceId: string) {}
-
-  get spaceId() {
-    return this._spaceId;
-  }
 
   // Internal Logic
 
   private _ensureFeed = Effect.fn('Feed.ensureFeed')(
-    (feedId: string): Effect.Effect<number, SqlError.SqlError, SqlClient.SqlClient> =>
+    (feedId: string, namespace?: string): Effect.Effect<number, SqlError.SqlError, SqlClient.SqlClient> =>
       Effect.gen(this, function* () {
         const sql = yield* SqlClient.SqlClient;
-        yield* FeedHelper.migrate(); // Ensure schema
+        yield* FeedStore.migrate(); // Ensure schema
 
         const rows = yield* sql<{ feedPrivateId: number }>`
               SELECT feedPrivateId FROM feeds WHERE spaceId = ${this._spaceId} AND feedId = ${feedId}
@@ -70,7 +68,7 @@ export class Feed {
         if (rows.length > 0) return rows[0].feedPrivateId;
 
         const newRows = yield* sql<{ feedPrivateId: number }>`
-              INSERT INTO feeds (spaceId, feedId) VALUES (${this._spaceId}, ${feedId}) RETURNING feedPrivateId
+              INSERT INTO feeds (spaceId, feedId, feedNamespace) VALUES (${this._spaceId}, ${feedId}, ${namespace}) RETURNING feedPrivateId
           `;
         return newRows[0].feedPrivateId;
       }),
@@ -166,7 +164,7 @@ export class Feed {
         const positions: number[] = [];
 
         for (const block of request.blocks) {
-          const feedPrivateId = yield* this._ensureFeed(block.actorId);
+          const feedPrivateId = yield* this._ensureFeed(block.actorId, request.namespace);
 
           const maxPosResult = yield* sql<{ maxPos: number | null }>`
                 SELECT MAX(position) as maxPos 
