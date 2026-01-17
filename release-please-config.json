@@ -320,12 +320,12 @@
         },
         {
           "type": "json",
-          "path": "packages/core/echo/index-core/package.json",
+          "path": "packages/core/echo/feed/package.json",
           "jsonpath": "$.version"
         },
         {
           "type": "json",
-          "path": "packages/core/echo/feed/package.json",
+          "path": "packages/core/echo/index-core/package.json",
           "jsonpath": "$.version"
         },
         {
