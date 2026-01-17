@@ -122,6 +122,7 @@ export class FeedStore {
               AND blocks.position > ${cursor}
               ${request.spaceId ? sql`AND feeds.spaceId = ${request.spaceId}` : sql``}
             ORDER BY blocks.position ASC
+            ${request.limit ? sql`LIMIT ${request.limit}` : sql``}
         `;
 
         const blocks = (rows as any[]).map((row) => ({

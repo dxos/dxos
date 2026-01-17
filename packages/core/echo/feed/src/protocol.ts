@@ -34,6 +34,7 @@ export const QueryRequest = Schema.Struct({
    * Use -1 to get all changes.
    */
   cursor: Schema.Number,
+  limit: Schema.optional(Schema.Number),
 });
 export interface QueryRequest extends Schema.Schema.Type<typeof QueryRequest> {}
 

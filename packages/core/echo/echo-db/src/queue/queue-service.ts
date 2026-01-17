@@ -9,17 +9,17 @@ import { KEY_QUEUE_POSITION, type QueryResult, type QueueQuery, type QueueServic
 import { ComplexMap } from '@dxos/util';
 import { FeedStore, type Block } from '@dxos/feed';
 import { RuntimeProvider } from '@dxos/effect';
+import { Function } from 'effect';
 import { Effect } from 'effect';
 import type * as SqlClient from '@effect/sql/SqlClient';
 
-/**
- * Writes queue data to a local FeedStore.
- */
 // subspaceTag -> namespace
 // its okay if query is not fully supported
 // Objects are ObjectJSON instances, they should be serialized to JSON using standard method and stored in the data field
 // deletion should be implemented by writing a tombstone object -> { id: ..., "@deleted": true, }
-
+/**
+ * Writes queue data to a local FeedStore.
+ */
 export class LocalQueueServiceImpl implements QueueService {
   #runtime: RuntimeProvider.RuntimeProvider<SqlClient.SqlClient>;
   #feedStore: FeedStore;
@@ -32,11 +32,13 @@ export class LocalQueueServiceImpl implements QueueService {
   queryQueue(subspaceTag: string, spaceId: SpaceId, query: QueueQuery): Promise<QueryResult> {
     return RuntimeProvider.runPromise(this.#runtime)(
       Effect.gen(this, function* () {
+        const cursor = query.after ? parseInt(query.after) : -1;
         const result = yield* this.#feedStore.query({
-          requestId: 'req', // TODO(dmaretskyi): Request Id.
+          requestId: crypto.randomUUID(),
           spaceId: spaceId,
           query: { feedIds: [query.queueId.toString()] },
-          cursor: -1, // TODO(dmaretskyi): Cursor.s.
+          cursor,
+          limit: query.limit,
         });
 
         const objects = result.blocks.map((block: Block) => {
@@ -44,11 +46,14 @@ export class LocalQueueServiceImpl implements QueueService {
           return data;
         });
 
-        return {
+        const lastBlock = result.blocks[result.blocks.length - 1];
+        const nextCursor = lastBlock && lastBlock.position != null ? String(lastBlock.position) : null;
+
+        return Function.identity<QueryResult>({
           objects,
-          nextCursor: null,
+          nextCursor: nextCursor as any, // Cast to QueueCursor
           prevCursor: null,
-        };
+        });
       }),
     );
   }

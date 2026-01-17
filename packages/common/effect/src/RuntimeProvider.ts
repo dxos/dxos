@@ -16,8 +16,8 @@ export type RuntimeProvider<R> = Effect.Effect<Runtime.Runtime<R>>;
  * Run effect, within runitme, clean errors and fix stack-traces.
  */
 export const runPromise =
-  <A, R>(provider: RuntimeProvider<R>) =>
-  async (effect: Effect.Effect<A, any, R>): Promise<A> => {
+  <R>(provider: RuntimeProvider<R>) =>
+  async <A>(effect: Effect.Effect<A, any, R>): Promise<A> => {
     const runtime = await runAndForwardErrors(provider);
     return unwrapExit(await effect.pipe(Runtime.runPromiseExit(runtime)));
   };
