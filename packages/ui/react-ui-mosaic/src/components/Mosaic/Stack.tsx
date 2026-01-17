@@ -2,6 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
+import { useVirtualizer } from '@tanstack/react-virtual';
 import React, { type FC, Fragment, type ReactElement, type Ref, forwardRef, useRef } from 'react';
 
 import { type Obj } from '@dxos/echo';
@@ -15,8 +16,6 @@ import { Mosaic, type MosiacPlaceholderProps, useMosaicContainer } from '../Mosa
 
 import { styles } from './styles';
 import { type Axis } from './types';
-
-// TODO(burdon): Move into Mosaic.tsx.
 
 type StackProps<T extends Obj.Any = Obj.Any> = SlottableClassName<{
   role?: string;
@@ -69,6 +68,80 @@ const Stack = StackInner as <T extends Obj.Any = Obj.Any>(
   props: StackProps<T> & { ref?: Ref<HTMLDivElement> },
 ) => ReactElement;
 
+//
+// VirtualStack
+//
+
+type VirtualStackProps<T extends Obj.Any = Obj.Any> = StackProps<T>;
+
+const VirtualStackInner = forwardRef<HTMLDivElement, VirtualStackProps>(
+  (
+    { className, classNames, role = 'list', axis = 'vertical', items, Component = DefaultComponent, ...props },
+    forwardedRef,
+  ) => {
+    invariant(Component);
+    const { id, dragging } = useMosaicContainer(StackInner.displayName!);
+    const visibleItems = useVisibleItems({ id, items, dragging: dragging?.source.data });
+
+    const viewportRef = useRef<HTMLElement>(null);
+    const virtualizer = useVirtualizer({
+      getScrollElement: () => viewportRef.current,
+      estimateSize: () => 40,
+      count: visibleItems.length * 2 + 1,
+    });
+
+    const virtualItems = virtualizer.getVirtualItems();
+
+    return (
+      <div
+        {...props}
+        role={role}
+        className={mx(
+          'flex',
+          axis === 'horizontal' && 'bs-full [&>*]:shrink-0',
+          axis === 'vertical' && 'flex-col',
+          classNames,
+          className,
+        )}
+        ref={forwardedRef}
+      >
+        {virtualItems.map((virtualItem, index) => (
+          <div
+            key={virtualItem.key}
+            data-index={virtualItem.index}
+            style={{
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              width: axis === 'vertical' ? '100%' : undefined,
+              height: axis === 'horizontal' ? '100%' : undefined,
+              transform:
+                axis === 'vertical' ? `translateY(${virtualItem.start}px)` : `translateX(${virtualItem.start}px)`,
+            }}
+            ref={virtualizer.measureElement}
+          >
+            {index % 2 === 0 ? (
+              <Placeholder axis={axis} location={Math.floor(index / 2) + 0.5} />
+            ) : (
+              <Component object={visibleItems![Math.floor(index / 2)]} location={Math.floor(index / 2) + 1} />
+            )}
+          </div>
+        ))}
+      </div>
+    );
+  },
+);
+
+VirtualStackInner.displayName = 'VirtualStackInner';
+
+const VirtualStack = VirtualStackInner as <T extends Obj.Any = Obj.Any>(
+  props: VirtualStackProps<T> & { ref?: Ref<HTMLDivElement> },
+) => ReactElement;
+
+//
+// DefaultComponent
+//
+
 const DefaultComponent: StackProps['Component'] = (props) => {
   const dragHandleRef = useRef<HTMLButtonElement>(null);
   return (
@@ -82,6 +155,10 @@ const DefaultComponent: StackProps['Component'] = (props) => {
 };
 
 DefaultComponent.displayName = 'DefaultComponent';
+
+//
+// Placeholder
+//
 
 const Placeholder = (props: MosiacPlaceholderProps<number>) => {
   return (
@@ -98,6 +175,10 @@ const Placeholder = (props: MosiacPlaceholderProps<number>) => {
 
 Placeholder.displayName = 'Placeholder';
 
-export { Stack };
+//
+// Stack
+//
 
-export type { StackProps };
+export { Stack, VirtualStack };
+
+export type { StackProps, VirtualStackProps };

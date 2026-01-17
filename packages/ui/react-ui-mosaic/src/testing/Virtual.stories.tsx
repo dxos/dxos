@@ -35,7 +35,7 @@ export const Default = {
     const [index, setIndex] = useState(0);
     const items = useMemo<TestItem[]>(
       () =>
-        Array.from({ length: 100 }, () =>
+        Array.from({ length: 200 }, () =>
           Obj.make(TestItem, {
             name: faker.lorem.paragraph(),
           }),
@@ -49,6 +49,7 @@ export const Default = {
       getScrollElement: () => viewportRef.current,
       estimateSize: () => 40,
       count: items.length,
+      gap: 8,
     });
 
     useEffect(() => {
@@ -57,35 +58,9 @@ export const Default = {
 
     const virtualItems = virtualizer.getVirtualItems();
 
-    // TODO(burdon): Issues:
-    // - [ ] Item ref (surface container).
-
     return (
       <div className='flex flex-col bs-full'>
-        <Toolbar.Root classNames='grid grid-cols-3'>
-          <div />
-          <div className='flex justify-center'>
-            <Toolbar.IconButton
-              icon='ph--arrow-line-left--regular'
-              iconOnly
-              label='start'
-              onClick={() => setIndex(0)}
-            />
-            <Toolbar.IconButton
-              icon='ph--arrows-out-line-horizontal--regular'
-              iconOnly
-              label='random'
-              onClick={() => setIndex(Math.floor(Math.random() * items.length))}
-            />
-            <Toolbar.IconButton
-              icon='ph--arrow-line-right--regular'
-              iconOnly
-              label='start'
-              onClick={() => setIndex(items.length - 1)}
-            />
-          </div>
-          <div className='p-1 text-right'>{index}</div>
-        </Toolbar.Root>
+        <ScrollToolbar items={items} index={index} setIndex={setIndex} />
         <Mosaic.Viewport
           options={{ overflow: { y: 'scroll' } }}
           className='pli-3'
@@ -103,7 +78,7 @@ export const Default = {
             {virtualItems.map((virtualItem) => (
               <div
                 key={virtualItem.key}
-                className='grid grid-cols-[4rem_1fr] overflow-hidden border border-separator border-sm'
+                className='grid grid-cols-[3rem_1fr] overflow-hidden border border-separator border-sm'
                 style={{
                   position: 'absolute',
                   top: 0,
@@ -123,4 +98,36 @@ export const Default = {
       </div>
     );
   },
+};
+
+const ScrollToolbar = ({
+  items,
+  index,
+  setIndex,
+}: {
+  items: any[];
+  index: number;
+  setIndex: (index: number) => void;
+}) => {
+  return (
+    <Toolbar.Root classNames='grid grid-cols-3'>
+      <div />
+      <div className='flex justify-center gap-1'>
+        <Toolbar.IconButton icon='ph--arrow-line-left--regular' iconOnly label='start' onClick={() => setIndex(0)} />
+        <Toolbar.IconButton
+          icon='ph--arrows-out-line-horizontal--regular'
+          iconOnly
+          label='random'
+          onClick={() => setIndex(Math.floor(Math.random() * items.length))}
+        />
+        <Toolbar.IconButton
+          icon='ph--arrow-line-right--regular'
+          iconOnly
+          label='end'
+          onClick={() => setIndex(items.length - 1)}
+        />
+      </div>
+      <div className='p-1 text-right'>{index}</div>
+    </Toolbar.Root>
+  );
 };
