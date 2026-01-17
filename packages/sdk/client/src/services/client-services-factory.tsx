@@ -11,7 +11,7 @@ import { type LocalClientServicesParams, fromHost } from './local-client-service
 import { fromSocket } from './socket';
 import { type WorkerClientServicesProps, fromWorker } from './worker-client-services';
 import { DedicatedWorkerClientServices, type DedeciatedWorkerClientServicesOptions } from './dedicated';
-import { MemoryWorkerCoordiantor } from './dedicated/memory-coordinator';
+import { SharedWorkerCoordinator } from './dedicated';
 
 /**
  * Create services from config.
@@ -57,7 +57,7 @@ export const createClientServices = async (
   return createDedicatedWorker
     ? new DedicatedWorkerClientServices({
         createWorker: createDedicatedWorker,
-        createCoordinator: () => new MemoryWorkerCoordiantor(),
+        createCoordinator: () => new SharedWorkerCoordinator(),
       })
     : createWorker && useWorker
       ? fromWorker(config, { createWorker, observabilityGroup, signalTelemetryEnabled })

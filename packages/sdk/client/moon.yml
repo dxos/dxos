@@ -18,3 +18,4 @@ tasks:
       - '--entryPoint=src/testing/index.ts'
       - '--entryPoint=src/worker/index.ts'
       - '--entryPoint=src/services/dedicated/worker-entrypoint.ts'
+      - '--entryPoint=src/services/dedicated/coordinator-worker-entrypoint.ts'

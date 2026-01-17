@@ -73,6 +73,18 @@
       "source": "./src/services/dedicated/worker-entrypoint.ts",
       "types": "./dist/types/src/services/dedicated/worker-entrypoint.d.ts",
       "browser": "./dist/lib/browser/services/dedicated/worker-entrypoint.mjs"
+    },
+    "./coordinator-worker": {
+      "source": "./src/services/dedicated/coordinator-worker-entrypoint.ts",
+      "types": "./dist/types/src/services/dedicated/coordinator-worker-entrypoint.d.ts",
+      "browser": "./dist/lib/browser/services/dedicated/coordinator-worker-entrypoint.mjs"
+    }
+  },
+  "imports": {
+    "#coordinator-worker": {
+      "source": "./src/services/dedicated/coordinator-worker-entrypoint.ts",
+      "types": "./dist/types/src/services/dedicated/coordinator-worker-entrypoint.d.ts",
+      "browser": "./dist/lib/browser/services/dedicated/coordinator-worker-entrypoint.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",

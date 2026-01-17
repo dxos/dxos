@@ -13,7 +13,7 @@ pnpm i @dxos/client
 Create a client object like this:
 
 ```ts
-import { Client } from "@dxos/client";
+import { Client } from '@dxos/client';
 const client = new Client();
 ```
 
