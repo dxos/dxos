@@ -78,6 +78,7 @@ export const Default = {
             {virtualItems.map((virtualItem) => (
               <div
                 key={virtualItem.key}
+                role='list'
                 className='grid grid-cols-[3rem_1fr] overflow-hidden border border-separator border-sm'
                 style={{
                   position: 'absolute',
