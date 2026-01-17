@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { OperationError } from '../invoker/errors';
+import { OperationError } from '@dxos/operation';
 
 export class EmptyHistoryError extends OperationError {
   constructor() {

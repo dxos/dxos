@@ -7,7 +7,7 @@ import { type Context, createContext } from 'react';
 import { type Step as BaseStep } from 'react-joyride';
 
 import { type Capability } from '@dxos/app-framework';
-import * as Operation from '@dxos/operation';
+import { Operation } from '@dxos/operation';
 
 import { meta } from '../meta';
 

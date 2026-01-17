@@ -22,18 +22,18 @@ export const CardContainer = ({
     case 'card--extrinsic':
       return (
         <ExtrinsicCardContainer>
-          <Card.StaticRoot>{children}</Card.StaticRoot>
+          <Card.Root>{children}</Card.Root>
         </ExtrinsicCardContainer>
       );
 
     case 'card--intrinsic':
       return (
         <IntrinsicCardContainer>
-          <Card.StaticRoot>{children}</Card.StaticRoot>
+          <Card.Root>{children}</Card.Root>
         </IntrinsicCardContainer>
       );
 
     default:
-      return <Card.StaticRoot>{children}</Card.StaticRoot>;
+      return <Card.Root>{children}</Card.Root>;
   }
 };

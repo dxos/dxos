@@ -4,7 +4,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import * as Operation from '@dxos/operation';
+import { Operation } from '@dxos/operation';
 import { EditorViewMode } from '@dxos/ui-editor/types';
 
 import { meta } from '../meta';

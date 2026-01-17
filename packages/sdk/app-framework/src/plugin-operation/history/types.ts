@@ -2,16 +2,16 @@
 // Copyright 2025 DXOS.org
 //
 
-import type { OperationDefinition } from '@dxos/operation';
+import type { Operation } from '@dxos/operation';
 
 /**
  * History entry stored by HistoryTracker.
  */
 export type HistoryEntry = {
-  operation: OperationDefinition<any, any>;
+  operation: Operation.Definition<any, any>;
   input: any;
   output: any;
-  inverse: OperationDefinition<any, any>;
+  inverse: Operation.Definition<any, any>;
   inverseInput: any;
   timestamp: number;
 };

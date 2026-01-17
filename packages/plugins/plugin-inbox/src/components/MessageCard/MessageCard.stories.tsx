@@ -40,9 +40,9 @@ const meta = {
   render: (args) => {
     return (
       <IntrinsicCardContainer>
-        <Card.StaticRoot>
+        <Card.Root>
           <MessageCard {...args} />
-        </Card.StaticRoot>
+        </Card.Root>
       </IntrinsicCardContainer>
     );
   },

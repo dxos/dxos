@@ -3,6 +3,7 @@
 //
 
 import { Atom, type Registry } from '@effect-atom/atom-react';
+import * as Context from 'effect/Context';
 import * as Deferred from 'effect/Deferred';
 import * as Effect from 'effect/Effect';
 
@@ -10,6 +11,59 @@ import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 
 import type * as ActivationEvent from './activation-event';
+
+//
+// PluginContext Service Layer
+//
+
+/**
+ * Effect Context.Tag for accessing PluginContext via the Effect layer system.
+ * This allows capability modules to access the plugin context without having it passed as an argument.
+ */
+export class PluginContextService extends Context.Tag('@dxos/app-framework/PluginContext')<
+  PluginContextService,
+  PluginContext
+>() {}
+
+/**
+ * Get a single capability from the plugin context.
+ * @param interfaceDef The interface definition of the capability.
+ * @returns The capability implementation.
+ * @throws If no capability is found.
+ */
+// TODO(wittjosiah): Add custom tagged errors (Data.TaggedError) for app-framework to enable
+//   type-safe error handling with Effect. Consider CapabilityNotFoundError, ModuleActivationError, etc.
+export const get = <T>(interfaceDef: InterfaceDef<T>): Effect.Effect<T, Error, PluginContextService> =>
+  Effect.flatMap(PluginContextService, (context) =>
+    Effect.try({
+      try: () => context.getCapability(interfaceDef),
+      catch: (error) => (error instanceof Error ? error : new Error(String(error))),
+    }),
+  );
+
+/**
+ * Get all capabilities from the plugin context for a given interface.
+ * @param interfaceDef The interface definition of the capability.
+ * @returns An array of capability implementations.
+ */
+export const getAll = <T>(interfaceDef: InterfaceDef<T>): Effect.Effect<T[], never, PluginContextService> =>
+  Effect.map(PluginContextService, (context) => context.getCapabilities(interfaceDef));
+
+/**
+ * Wait for a capability to be available.
+ * @param interfaceDef The interface definition of the capability.
+ * @returns The capability implementation once available.
+ */
+export const waitFor = <T>(interfaceDef: InterfaceDef<T>): Effect.Effect<T, Error, PluginContextService> =>
+  Effect.flatMap(PluginContextService, (context) => context.waitForCapability(interfaceDef));
+
+/**
+ * Get the Atom reference to capabilities for reactive access.
+ * @param interfaceDef The interface definition of the capability.
+ * @returns An Atom containing the array of capability implementations.
+ */
+export const atom = <T>(interfaceDef: InterfaceDef<T>): Effect.Effect<Atom.Atom<T[]>, never, PluginContextService> =>
+  Effect.map(PluginContextService, (context) => context.capabilities(interfaceDef));
 
 const InterfaceDefTypeId: unique symbol = Symbol.for('InterfaceDefTypeId');
 
@@ -82,10 +136,10 @@ export const contributes = <I extends InterfaceDef<any>>(
 };
 
 type LoadCapability<Props, Capabilities extends ModuleReturn = ModuleReturn> = () => Promise<{
-  default: (props: Props) => Effect.Effect<Capabilities, Error>;
+  default: (props?: Props) => Effect.Effect<Capabilities, Error, PluginContextService | never>;
 }>;
 type LoadCapabilities<Props, Capabilities extends ModuleReturn = ModuleReturn> = () => Promise<{
-  default: (props: Props) => Effect.Effect<Capabilities, Error>;
+  default: (props?: Props) => Effect.Effect<Capabilities, Error, PluginContextService | never>;
 }>;
 
 type NormalizeReturn<R> = R extends readonly (infer A)[]
@@ -96,9 +150,9 @@ type NormalizeReturn<R> = R extends readonly (infer A)[]
       ? [R]
       : Any[];
 
-export type LazyCapability<Props = PluginContext, Capabilities extends ModuleReturn = ModuleReturn> = (
-  props: Props,
-) => Effect.Effect<NormalizeReturn<Capabilities>, Error>;
+export type LazyCapability<Props = void, Capabilities extends ModuleReturn = ModuleReturn, E extends Error = Error> = (
+  props?: Props,
+) => Effect.Effect<NormalizeReturn<Capabilities>, E, PluginContextService | never>;
 
 /**
  * Helper to define a lazily loaded implementation of a capability.
@@ -107,11 +161,11 @@ export type LazyCapability<Props = PluginContext, Capabilities extends ModuleRet
  * @param loader The lazy loader function
  * @returns A lazy capability function with ModuleTag symbol attached
  */
-export const lazy = <T = PluginContext, R extends ModuleReturn = ModuleReturn>(
+export const lazy = <T = void, R extends ModuleReturn = ModuleReturn>(
   name: string,
   c: LoadCapability<T, R> | LoadCapabilities<T, R>,
 ): LazyCapability<T, R> => {
-  const lazyFn: LazyCapability<T, R> = (props: T) =>
+  const lazyFn: LazyCapability<T, R> = (props?: T) =>
     Effect.gen(function* () {
       const { default: getCapability } = yield* Effect.tryPromise(() => c());
       const result = yield* getCapability(props);
@@ -140,7 +194,7 @@ export const getModuleTag = (capability: unknown): string | undefined => {
  *
  * This helper provides explicit typing for the module activation function,
  * making it clear that the function should:
- * - Accept a PluginContext (or no parameters, or an object containing PluginContext)
+ * - Access PluginContext via the Effect layer system (Capability.get, Capability.getAll, etc.)
  * - Return a capability, array of capabilities, or tuple of different capability types (sync or async)
  *
  * Supports returning multiple capabilities of different types as a tuple, which will be normalized
@@ -148,34 +202,41 @@ export const getModuleTag = (capability: unknown): string | undefined => {
  *
  * @example
  * ```ts
- * // Module with context - single capability
- * export default Capability.makeModule((context: PluginContext) => {
- *   const store = new SettingsStore();
- *   return contributes(Capabilities.SettingsStore, store);
- * });
+ * // Module without options - single capability
+ * export default Capability.makeModule(
+ *   Effect.fnUntraced(function* () {
+ *     const client = yield* Capability.get(ClientCapabilities.Client);
+ *     return contributes(Capabilities.SettingsStore, store);
+ *   })
+ * );
  *
- * // Module without context - single capability
- * export default Capability.makeModule(() => {
- *   return contributes(Capabilities.Translations, translations);
- * });
+ * // Module with multiple capabilities
+ * export default Capability.makeModule(
+ *   Effect.fnUntraced(function* () {
+ *     return [
+ *       contributes(Capabilities.SettingsStore, store),
+ *       contributes(Capabilities.Translations, translations),
+ *     ];
+ *   })
+ * );
  *
- * // Module with multiple capabilities of different types
- * export default Capability.makeModule((context: PluginContext) => {
- *   return [
- *     contributes(Capabilities.SettingsStore, store),
- *     contributes(Capabilities.Translations, translations),
- *   ];
- * });
- *
- * // Module with context and additional options
- * export default Capability.makeModule(({ context, observability }: { context: PluginContext; observability?: boolean }) => {
- *   return contributes(Capabilities.IntentResolver, ...);
- * });
+ * // Module with additional options (context accessed via layer)
+ * export default Capability.makeModule(
+ *   Effect.fnUntraced(function* ({ observability }: { observability?: boolean }) {
+ *     const invoker = yield* Capability.get(Common.Capability.OperationInvoker);
+ *     return contributes(Capabilities.IntentResolver, ...);
+ *   })
+ * );
  * ```
  */
-export const makeModule = <TArgs extends any[] = [PluginContext], TReturn extends ModuleReturn = ModuleReturn>(
-  fn: (...args: TArgs) => Effect.Effect<TReturn, Error>,
-): ((...args: TArgs) => Effect.Effect<TReturn, Error>) => fn;
+export const makeModule = <
+  TProps = void,
+  TReturn extends ModuleReturn = ModuleReturn,
+  E extends Error = Error,
+  R extends PluginContextService | never = PluginContextService,
+>(
+  fn: (props?: TProps) => Effect.Effect<TReturn, E, R>,
+): ((props?: TProps) => Effect.Effect<TReturn, E, R>) => fn;
 
 // NOTE: This is implemented as a class to prevent it from being proxied by PluginManager state.
 class CapabilityImpl<T> {

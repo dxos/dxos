@@ -7,6 +7,7 @@ import { type ClassNameValue } from '@dxos/react-ui';
 // TODO(burdon): Theme?
 export const styles = {
   container: {
+    // TODO(burdon): Handle selection (aria-current?)
     // TODO(burdon): Use ring instead of border?
     root: [
       'outline-none border border-separator rounded-sm',
@@ -14,10 +15,10 @@ export const styles = {
       // TODO(burdon): Why is ! required?
       'focus:!border-accentSurface',
       // Active (e.g., drop target).
-      '_data-[focus-state=active]:border-neutralFocusIndicator',
+      'data-[focus-state=active]:border-neutralFocusIndicator',
       // Error
       // TODO(burdon): Error token.
-      '_data-[focus-state=error]:border-rose-500',
+      'data-[focus-state=error]:border-rose-500',
     ],
   },
 } satisfies Record<string, Record<string, ClassNameValue>>;

@@ -9,9 +9,11 @@ import { GraphBuilder, NodeMatcher } from '@dxos/plugin-graph';
 
 import { REGISTRY_ID, REGISTRY_KEY, meta } from '../../meta';
 
-export default Capability.makeModule((context) =>
-  Effect.succeed(
-    Capability.contributes(Common.Capability.AppGraphBuilder, [
+export default Capability.makeModule(
+  Effect.fnUntraced(function* () {
+    const context = yield* Capability.PluginContextService;
+
+    return Capability.contributes(Common.Capability.AppGraphBuilder, [
       GraphBuilder.createExtension({
         id: meta.id,
         match: NodeMatcher.whenRoot,
@@ -124,6 +126,6 @@ export default Capability.makeModule((context) =>
           }));
         },
       }),
-    ]),
-  ),
+    ]);
+  }),
 );

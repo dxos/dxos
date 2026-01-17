@@ -4,7 +4,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import * as Operation from '@dxos/operation';
+import { Operation } from '@dxos/operation';
 import { SelectionSchema } from '@dxos/react-ui-attention';
 
 import { meta } from '../meta';

@@ -334,7 +334,11 @@ export const L0Menu = ({ menuActions, topLevelItems, pinnedItems, userAccountIte
             <Tabs.TabPrimitive value='options' asChild role='button'>
               <DropdownMenu.Trigger
                 data-testid='spacePlugin.addSpace'
-                className={mx(l0ItemRoot, 'grid place-items-center dx-focus-ring-group')}
+                className={mx(
+                  l0ItemRoot,
+                  'grid place-items-center dx-focus-ring-group',
+                  '[body[data-platform="macos"]_&]:mt-[30px]',
+                )}
               >
                 <div
                   role='none'
@@ -358,7 +362,7 @@ export const L0Menu = ({ menuActions, topLevelItems, pinnedItems, userAccountIte
             role='none'
             className={mx([
               'flex flex-col gap-1 pbs-1',
-              '[body[data-platform="darwin"]_&]:pbs-[calc(30px+0.25rem)]',
+              '[body[data-platform="macos"]_&]:pbs-[30px]',
               '[body[data-platform="ios"]_&]:pbs-[max(env(safe-area-inset-top),0.25rem)]',
             ])}
           >
@@ -398,14 +402,6 @@ export const L0Menu = ({ menuActions, topLevelItems, pinnedItems, userAccountIte
           </L0ItemRoot>
         </div>
       )}
-      <div
-        role='none'
-        className='hidden [body[data-platform="darwin"]_&]:block absolute block-start-0 is-[calc(var(--l0-size)-1px)] bs-[calc(40px+0.25rem)]'
-        style={{
-          background:
-            'linear-gradient(to bottom, var(--dx-sidebarSurface) 0%, var(--dx-sidebarSurface) 70%, transparent 100%)',
-        }}
-      />
     </Tabs.Tablist>
   );
 };

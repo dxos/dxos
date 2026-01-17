@@ -94,13 +94,13 @@ export const AssistantPlugin = Plugin.define(meta).pipe(
   Plugin.addModule({
     id: 'on-space-created',
     activatesOn: SpaceEvents.SpaceCreated,
-    activate: (context) =>
-      Effect.succeed(
-        Capability.contributes(SpaceCapabilities.OnCreateSpace, (params) => {
-          const { invoke } = context.getCapability(Common.Capability.OperationInvoker);
-          return invoke(AssistantOperation.OnCreateSpace, params);
-        }),
-      ),
+    activate: Effect.fnUntraced(function* () {
+      const context = yield* Capability.PluginContextService;
+      return Capability.contributes(SpaceCapabilities.OnCreateSpace, (params) => {
+        const { invoke } = context.getCapability(Common.Capability.OperationInvoker);
+        return invoke(AssistantOperation.OnCreateSpace, params);
+      });
+    }),
   }),
   Plugin.addModule({
     activatesOn: ClientEvents.SpacesReady,

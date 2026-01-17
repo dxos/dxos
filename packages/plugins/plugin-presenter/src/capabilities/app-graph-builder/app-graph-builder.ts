@@ -16,8 +16,10 @@ import { Collection } from '@dxos/schema';
 import { meta } from '../../meta';
 import { PresenterOperation, type PresenterSettingsProps } from '../../types';
 
-export default Capability.makeModule((context) =>
-  Effect.sync(() => {
+export default Capability.makeModule(
+  Effect.fnUntraced(function* () {
+    const context = yield* Capability.PluginContextService;
+
     return Capability.contributes(
       Common.Capability.AppGraphBuilder,
       GraphBuilder.createExtension({
@@ -29,7 +31,8 @@ export default Capability.makeModule((context) =>
           return isPresentable ? Option.some(node.data) : Option.none();
         },
         connector: (object, get) => {
-          const [settingsStore] = get(context.capabilities(Common.Capability.SettingsStore));
+          const settingsStoreAtom = context.capabilities(Common.Capability.SettingsStore);
+          const [settingsStore] = get(settingsStoreAtom);
           const settings = get(
             CreateAtom.fromSignal(() => settingsStore?.getStore<PresenterSettingsProps>(meta.id)?.value),
           );
@@ -54,7 +57,8 @@ export default Capability.makeModule((context) =>
           ];
         },
         actions: (object, get) => {
-          const [settingsStore] = get(context.capabilities(Common.Capability.SettingsStore));
+          const settingsStoreAtom = context.capabilities(Common.Capability.SettingsStore);
+          const [settingsStore] = get(settingsStoreAtom);
           const settings = get(
             CreateAtom.fromSignal(() => settingsStore?.getStore<PresenterSettingsProps>(meta.id)?.value),
           );
@@ -74,9 +78,9 @@ export default Capability.makeModule((context) =>
               //  So can set explicit fullscreen state coordinated with current presenter state.
               data: async () => {
                 const { invokePromise } = context.getCapability(Common.Capability.OperationInvoker);
-                const layout = context.getCapability(DeckCapabilities.MutableDeckState);
+                const deckState = context.getCapability(DeckCapabilities.MutableDeckState);
                 const presenterId = [id, 'presenter'].join(ATTENDABLE_PATH_SEPARATOR);
-                if (!layout.deck.fullscreen) {
+                if (!deckState.deck.fullscreen) {
                   void invokePromise(DeckOperation.Adjust, {
                     type: 'solo--fullscreen' as const,
                     id: presenterId,

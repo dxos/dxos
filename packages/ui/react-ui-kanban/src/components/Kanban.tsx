@@ -139,7 +139,7 @@ export const Kanban = ({ model, onAddCard, onRemoveCard }: KanbanProps) => {
                       {/* Cards Container */}
                       <CardStackDragPreview.Content itemsCount={cards.length}>
                         {cards.map((card) => (
-                          <Card.StaticRoot key={card.id}>
+                          <Card.Root key={card.id}>
                             <Surface
                               role='card--intrinsic'
                               limit={1}
@@ -148,7 +148,7 @@ export const Kanban = ({ model, onAddCard, onRemoveCard }: KanbanProps) => {
                                 projection: model.projection,
                               }}
                             />
-                          </Card.StaticRoot>
+                          </Card.Root>
                         ))}
                       </CardStackDragPreview.Content>
 
@@ -198,7 +198,7 @@ const CardComponent = ({
         nextSiblingId={nextSiblingId}
         onClick={() => multiSelect([item.id])}
       >
-        <Card.StaticRoot>
+        <Card.Root>
           <Card.Toolbar>
             <StackItem.DragHandle asChild>
               <Card.DragHandle toolbarItem />
@@ -221,7 +221,7 @@ const CardComponent = ({
           </Card.Toolbar>
           {/* TODO(burdon): Entire card should be inside surface. */}
           <Surface role='card--intrinsic' limit={1} data={{ subject: item, projection }} />
-        </Card.StaticRoot>
+        </Card.Root>
         <StackItem.DragPreview>
           {({ item }) => (
             <CardDragPreview.Root>

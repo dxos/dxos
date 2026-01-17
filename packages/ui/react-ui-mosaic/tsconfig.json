@@ -6,10 +6,7 @@
     ]
   },
   "include": [
-    "src/**/*.ts",
-    "src/**/*.tsx",
-    "src/*.ts",
-    "src/components/Mosaic/__Grid.stories.tsx__"
+    "src"
   ],
   "references": [
     {
@@ -17,6 +14,9 @@
     },
     {
       "path": "../../common/invariant"
+    },
+    {
+      "path": "../../common/keys"
     },
     {
       "path": "../../common/log"
@@ -38,6 +38,12 @@
     },
     {
       "path": "../../sdk/react-client"
+    },
+    {
+      "path": "../../sdk/schema"
+    },
+    {
+      "path": "../../sdk/types"
     },
     {
       "path": "../react-ui"

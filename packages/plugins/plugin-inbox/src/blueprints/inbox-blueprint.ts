@@ -10,7 +10,7 @@ import { gmail, open, summarize } from '../functions';
 
 export const Key = 'dxos.org/blueprint/inbox';
 
-export const functions: FunctionDefinition[] = [open, summarize, gmail.sync];
+export const functions: FunctionDefinition[] = [open, summarize, gmail.sync, gmail.send];
 export const tools: string[] = [];
 
 export const make = () =>

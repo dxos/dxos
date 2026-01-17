@@ -16,19 +16,18 @@ import { meta } from '../../meta';
 import { FileCapabilities, type FilesSettingsProps, type FilesState, LocalFilesOperation } from '../../types';
 import { PREFIX, findFile, handleToLocalDirectory, handleToLocalFile } from '../../util';
 
-export default Capability.makeModule((context: Capability.PluginContext) =>
-  Effect.gen(function* () {
+export default Capability.makeModule(
+  Effect.fnUntraced(function* () {
     const state = new LocalStorageStore<FilesState>(meta.id, {
       exportRunning: false,
       files: [],
       current: undefined,
     });
 
-    const { invokePromise } = context.getCapability(Common.Capability.OperationInvoker);
-    const attention = context.getCapability(AttentionCapabilities.Attention);
-    const settings = context
-      .getCapability(Common.Capability.SettingsStore)
-      .getStore<FilesSettingsProps>(meta.id)!.value;
+    const { invokePromise } = yield* Capability.get(Common.Capability.OperationInvoker);
+    const attention = yield* Capability.get(AttentionCapabilities.Attention);
+    const settingsStore = yield* Capability.get(Common.Capability.SettingsStore);
+    const settings = settingsStore.getStore<FilesSettingsProps>(meta.id)!.value;
 
     const subscriptions = new SubscriptionList();
 

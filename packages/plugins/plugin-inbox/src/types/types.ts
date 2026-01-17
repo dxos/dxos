@@ -5,7 +5,7 @@
 import * as Schema from 'effect/Schema';
 
 import { Database } from '@dxos/echo';
-import * as Operation from '@dxos/operation';
+import { Operation } from '@dxos/operation';
 import { Actor } from '@dxos/types';
 
 import { meta } from '../meta';
@@ -33,6 +33,14 @@ export namespace InboxOperation {
       input: Schema.Struct({
         mailbox: Mailbox.Mailbox,
       }),
+      output: Schema.Void,
+    },
+  });
+
+  export const OpenComposeEmail = Operation.make({
+    meta: { key: `${INBOX_OPERATION}/open-compose-email`, name: 'Open Compose Email' },
+    schema: {
+      input: Schema.Void,
       output: Schema.Void,
     },
   });

@@ -2,58 +2,68 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { useState } from 'react';
+import React, { useCallback, useState } from 'react';
 
-import { useClient } from '@dxos/react-client';
+import { Surface } from '@dxos/app-framework/react';
+import { Obj, Query } from '@dxos/echo';
 import { Filter, type Space, useQuery } from '@dxos/react-client/echo';
 import { useTranslation } from '@dxos/react-ui';
+import { SearchList } from '@dxos/react-ui-searchlist';
 import { StackItem } from '@dxos/react-ui-stack';
-import { mx } from '@dxos/ui-theme';
+import { Text } from '@dxos/schema';
 
 import { useGlobalSearch, useGlobalSearchResults, useWebSearch } from '../hooks';
 import { meta } from '../meta';
 
-import { Searchbar } from './Searchbar';
-import { SearchResults } from './SearchResults';
-
 export const SearchMain = ({ space }: { space?: Space }) => {
   const { t } = useTranslation(meta.id);
-  const client = useClient();
   const { setMatch } = useGlobalSearch();
   const [query, setQuery] = useState<string>();
   // TODO(burdon): Option to search across spaces.
-  const allSpaces = false;
-  const objects = useQuery(allSpaces ? client.spaces : space?.db, Filter.everything());
+  const objects = useQuery(
+    space?.db,
+    query === undefined
+      ? Query.select(Filter.nothing())
+      : // TODO(dmaretskyi): Final version would walk the ancestry of the object until we find a non-system type.
+        Query.all(
+          Query.select(Filter.text(query, { type: 'full-text' })).select(Filter.not(Filter.type(Text.Text))),
+          Query.select(Filter.text(query, { type: 'full-text' }))
+            .select(Filter.type(Text.Text))
+            .referencedBy('dxos.org/type/Document', 'content'),
+        ),
+  );
   const results = useGlobalSearchResults(objects);
 
-  const { runSearch, results: webResults } = useWebSearch({ query });
-
-  // TODO(burdon): Activate and/or filter current main (set context).
-  const [selected, setSelected] = useState<string>();
-  const handleSelect = (id: string) => {
-    setSelected((selected) => (selected === id ? undefined : id));
-  };
+  const { results: webResults } = useWebSearch({ query });
 
   const allResults = [...results, ...webResults];
 
-  return (
-    <StackItem.Content toolbar>
-      <Searchbar
-        classNames='pli-2'
-        placeholder={t('search placeholder')}
-        delay={300}
-        onChange={(text) => {
-          setQuery(text);
-          setMatch?.(text);
-        }}
-        onSubmit={runSearch}
-      />
+  const handleSearch = useCallback(
+    (text: string) => {
+      setQuery(text);
+      setMatch?.(text);
+    },
+    [setMatch],
+  );
 
-      {allResults.length > 0 && (
-        <div className={mx('flex flex-col bs-full overflow-hidden')}>
-          <SearchResults items={allResults} selected={selected} onSelect={handleSelect} />
-        </div>
-      )}
+  return (
+    <StackItem.Content>
+      <SearchList.Root onSearch={handleSearch} classNames='flex flex-col bs-full overflow-hidden'>
+        <SearchList.Input placeholder={t('search placeholder')} classNames='pli-2' />
+        <SearchList.Content classNames='overflow-y-auto'>
+          <SearchList.Viewport>
+            {/* TODO(burdon): Support selection on search results. */}
+            {allResults
+              .filter((item) => Obj.getLabel(item.object))
+              .map((item) => (
+                <div key={item.id} role='none' className='pli-2 first:pbs-2 pbe-2'>
+                  <Surface role='card' data={{ subject: item.object }} limit={1} />
+                </div>
+              ))}
+            {allResults.length === 0 && <SearchList.Empty>{t('empty results message')}</SearchList.Empty>}
+          </SearchList.Viewport>
+        </SearchList.Content>
+      </SearchList.Root>
     </StackItem.Content>
   );
 };

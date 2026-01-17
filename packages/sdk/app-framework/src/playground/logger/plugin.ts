@@ -5,10 +5,10 @@
 import * as Effect from 'effect/Effect';
 
 import { log } from '@dxos/log';
+import { OperationResolver } from '@dxos/operation';
 
 import * as Common from '../../common';
 import { Capability, Plugin } from '../../core';
-import { OperationResolver } from '../../plugin-operation';
 
 import { LogOperation } from './schema';
 

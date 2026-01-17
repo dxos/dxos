@@ -6,7 +6,7 @@ import * as Schema from 'effect/Schema';
 
 import { EchoObjectSchema, SpaceSchema } from '@dxos/client/echo';
 import { Database } from '@dxos/echo';
-import * as Operation from '@dxos/operation';
+import { Operation } from '@dxos/operation';
 import { Collection } from '@dxos/schema';
 
 import { meta } from '../meta';

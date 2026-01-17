@@ -11,8 +11,9 @@ import { getObservabilityGroup } from '@dxos/observability';
 import { meta } from '../../meta';
 import { ObservabilityCapabilities } from '../../types';
 
-export default Capability.makeModule(({ namespace }: { namespace: string }) =>
-  Effect.gen(function* () {
+export default Capability.makeModule(
+  Effect.fnUntraced(function* (props?: { namespace: string }) {
+    const { namespace } = props!;
     const state = new LocalStorageStore<ObservabilityCapabilities.State>(meta.id);
 
     state.prop({ key: 'notified', type: LocalStorageStore.bool({ allowUndefined: true }) });

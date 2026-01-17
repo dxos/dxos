@@ -4,7 +4,7 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capability, Common, OperationResolver } from '@dxos/app-framework';
+import { Capability, Common } from '@dxos/app-framework';
 import { AiContextBinder, AiConversation } from '@dxos/assistant';
 import { Agent } from '@dxos/assistant-toolkit';
 import { Blueprint, Prompt } from '@dxos/blueprints';
@@ -12,6 +12,7 @@ import { type Queue } from '@dxos/client/echo';
 import { Filter, Obj, Ref, Type } from '@dxos/echo';
 import { TracingService, serializeFunction } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
+import { Operation, OperationResolver } from '@dxos/operation';
 import { AutomationCapabilities } from '@dxos/plugin-automation';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { Collection } from '@dxos/schema';
@@ -21,14 +22,15 @@ import { type AiChatServices, updateName } from '../../processor';
 import { Assistant, AssistantCapabilities, AssistantOperation } from '../../types';
 import { AssistantBlueprint, createBlueprint } from '../blueprint-definition/blueprint-definition';
 
-export default Capability.makeModule((context) =>
-  Effect.succeed(
-    Capability.contributes(Common.Capability.OperationResolver, [
+export default Capability.makeModule(
+  Effect.fnUntraced(function* () {
+    const context = yield* Capability.PluginContextService;
+
+    return Capability.contributes(Common.Capability.OperationResolver, [
       OperationResolver.make({
         operation: AssistantOperation.OnCreateSpace,
         handler: ({ space, rootCollection }) =>
           Effect.gen(function* () {
-            const { invoke } = context.getCapability(Common.Capability.OperationInvoker);
             const chatCollection = Collection.makeManaged({ key: Assistant.Chat.typename });
             const blueprintCollection = Collection.makeManaged({ key: Blueprint.Blueprint.typename });
             const promptCollection = Collection.makeManaged({ key: Type.getTypename(Prompt.Prompt) });
@@ -42,7 +44,7 @@ export default Capability.makeModule((context) =>
             space.db.add(serializeFunction(Agent.prompt));
 
             // Create default chat.
-            const { object: chat } = yield* invoke(AssistantOperation.CreateChat, { db: space.db });
+            const { object: chat } = yield* Operation.invoke(AssistantOperation.CreateChat, { db: space.db });
             space.db.add(chat);
           }),
       }),
@@ -98,10 +100,10 @@ export default Capability.makeModule((context) =>
         operation: AssistantOperation.SetCurrentChat,
         handler: ({ companionTo, chat }) =>
           Effect.sync(() => {
-            const state = context.getCapability(AssistantCapabilities.MutableState);
-            state.currentChat[Obj.getDXN(companionTo).toString()] = chat && Obj.getDXN(chat).toString();
+            const mutableState = context.getCapability(AssistantCapabilities.MutableState);
+            mutableState.currentChat[Obj.getDXN(companionTo).toString()] = chat && Obj.getDXN(chat).toString();
           }),
       }),
-    ]),
-  ),
+    ]);
+  }),
 );

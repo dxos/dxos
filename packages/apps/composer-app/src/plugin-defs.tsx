@@ -5,6 +5,8 @@
 // NOTE(ZaymonFC): Workaround; see: https://discord.com/channels/837138313172353095/1363955461350621235
 import '@dxos/plugin-inbox/css';
 
+import * as Effect from 'effect/Effect';
+
 import { OperationPlugin, type Plugin, RuntimePlugin, SettingsPlugin } from '@dxos/app-framework';
 import { type ClientServicesProvider, type Config } from '@dxos/client';
 import { type Observability } from '@dxos/observability';
@@ -42,6 +44,7 @@ import { RegistryPlugin } from '@dxos/plugin-registry';
 import { ScriptPlugin } from '@dxos/plugin-script';
 import { SearchPlugin } from '@dxos/plugin-search';
 import { SheetPlugin } from '@dxos/plugin-sheet';
+import { SimpleLayoutPlugin } from '@dxos/plugin-simple-layout';
 import { SketchPlugin } from '@dxos/plugin-sketch';
 import { SpacePlugin } from '@dxos/plugin-space';
 import { StackPlugin } from '@dxos/plugin-stack';
@@ -71,14 +74,17 @@ export type PluginConfig = State & {
   isTauri?: boolean;
   isLabs?: boolean;
   isStrict?: boolean;
+  isPopover?: boolean;
+  isMobile?: boolean;
 };
 
-export const getCore = ({ isPwa, isTauri }: PluginConfig): string[] =>
-  [
+export const getCore = ({ isPwa, isTauri, isPopover, isMobile }: PluginConfig): string[] => {
+  const useSimpleLayout = isPopover || isMobile;
+  return [
     AttentionPlugin.meta.id,
     AutomationPlugin.meta.id,
     ClientPlugin.meta.id,
-    DeckPlugin.meta.id,
+    useSimpleLayout ? SimpleLayoutPlugin.meta.id : DeckPlugin.meta.id,
     FilesPlugin.meta.id,
     GraphPlugin.meta.id,
     HelpPlugin.meta.id,
@@ -90,6 +96,7 @@ export const getCore = ({ isPwa, isTauri }: PluginConfig): string[] =>
     !isTauri && isPwa && PwaPlugin.meta.id,
     RegistryPlugin.meta.id,
     RuntimePlugin.meta.id,
+    SearchPlugin.meta.id,
     SettingsPlugin.meta.id,
     SpacePlugin.meta.id,
     StatusBarPlugin.meta.id,
@@ -99,6 +106,7 @@ export const getCore = ({ isPwa, isTauri }: PluginConfig): string[] =>
   ]
     .filter(isTruthy)
     .flat();
+};
 
 export const getDefaults = ({ isDev, isLabs }: PluginConfig): string[] =>
   [
@@ -136,8 +144,11 @@ export const getPlugins = ({
   isLabs,
   isPwa,
   isTauri,
-}: PluginConfig): Plugin.Plugin[] =>
-  [
+  isPopover,
+  isMobile,
+}: PluginConfig): Plugin.Plugin[] => {
+  const useSimpleLayout = isPopover || isMobile;
+  return [
     AssistantPlugin(),
     AttentionPlugin(),
     AutomationPlugin(),
@@ -150,7 +161,7 @@ export const getPlugins = ({
     }),
     ConductorPlugin(),
     DebugPlugin(),
-    DeckPlugin(),
+    useSimpleLayout ? SimpleLayoutPlugin({ isPopover }) : DeckPlugin(),
     isLabs && ExcalidrawPlugin(),
     ExplorerPlugin(),
     isLabs && FilesPlugin(),
@@ -179,7 +190,7 @@ export const getPlugins = ({
     RegistryPlugin(),
     RuntimePlugin(),
     ScriptPlugin(),
-    isLabs && SearchPlugin(),
+    SearchPlugin(),
     SettingsPlugin(),
     SheetPlugin(),
     SketchPlugin(),
@@ -202,14 +213,16 @@ export const getPlugins = ({
   ]
     .filter(isTruthy)
     .flat();
-
-const handleReset: ClientPluginOptions['onReset'] = ({ target }) => {
-  localStorage.clear();
-  if (target === 'deviceInvitation') {
-    window.location.assign(new URL('/?deviceInvitationCode=', window.location.origin));
-  } else if (target === 'recoverIdentity') {
-    window.location.assign(new URL('/?recoverIdentity=true', window.location.origin));
-  } else {
-    window.location.pathname = '/';
-  }
 };
+
+const handleReset: ClientPluginOptions['onReset'] = ({ target }) =>
+  Effect.sync(() => {
+    localStorage.clear();
+    if (target === 'deviceInvitation') {
+      window.location.assign(new URL('/?deviceInvitationCode=', window.location.origin));
+    } else if (target === 'recoverIdentity') {
+      window.location.assign(new URL('/?recoverIdentity=true', window.location.origin));
+    } else {
+      window.location.pathname = '/';
+    }
+  });

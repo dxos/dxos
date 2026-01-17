@@ -185,6 +185,11 @@
         },
         {
           "type": "json",
+          "path": "packages/common/sql-sqlite-wasm/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/common/storybook-addon-logger/package.json",
           "jsonpath": "$.version"
         },
@@ -311,6 +316,11 @@
         {
           "type": "json",
           "path": "packages/core/echo/echo-solid/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/core/echo/index-core/package.json",
           "jsonpath": "$.version"
         },
         {
@@ -660,6 +670,11 @@
         },
         {
           "type": "json",
+          "path": "packages/plugins/plugin-simple-layout/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/plugins/plugin-sketch/package.json",
           "jsonpath": "$.version"
         },
@@ -806,6 +821,11 @@
         {
           "type": "json",
           "path": "packages/stories/stories-assistant/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/stories/stories-ui/package.json",
           "jsonpath": "$.version"
         },
         {

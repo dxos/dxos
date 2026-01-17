@@ -13,10 +13,10 @@ import { IconButton, Toolbar } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { mx } from '@dxos/ui-theme';
 
+import { Board, DebugRoot, TestColumn, TestItem } from '../../testing';
 import { Focus } from '../Focus';
 
 import { Mosaic } from './Mosaic';
-import { Column, DebugRoot, TestColumn, TestItem } from './testing';
 
 faker.seed(999);
 
@@ -32,7 +32,7 @@ const DefaultStory = ({ columns: columnsProp = 1, debug = false }: StoryProps) =
   const [columns, setColumns] = useState<TestColumn[]>(
     Array.from({ length: columnsProp }).map((_, i) => {
       const col = Obj.make(TestColumn, {
-        items: Array.from({ length: faker.number.int({ min: 8, max: 20 }) }).map((_, j) => {
+        items: Array.from({ length: faker.number.int({ min: 0, max: 20 }) }).map((_, j) => {
           const item = db.add(
             Obj.make(TestItem, {
               name: faker.lorem.sentence(3),
@@ -50,21 +50,9 @@ const DefaultStory = ({ columns: columnsProp = 1, debug = false }: StoryProps) =
   );
 
   return (
-    <Mosaic.Root>
-      <Focus.Group
-        axis='horizontal'
-        classNames={mx('p-2 bs-full is-full grid overflow-hidden', debug && 'grid-cols-[1fr_25rem] gap-2')}
-      >
-        <div className='flex bs-full overflow-x-auto'>
-          {/* <Mosaic.Container autoscroll withFocus> */}
-          <div className='flex gap-2 bs-full'>
-            {columns.map((column) => (
-              <Column key={column.id} column={column} debug={debug} />
-            ))}
-          </div>
-          {/* </Mosaic.Container> */}
-        </div>
-
+    <Mosaic.Root asChild debug={debug}>
+      <div className={mx('grid overflow-hidden', debug && 'grid-cols-[1fr_20rem] gap-2')}>
+        <Board id='board' columns={columns} debug={debug} />
         {debug && (
           <Focus.Group classNames='flex flex-col gap-2 overflow-hidden'>
             <Toolbar.Root classNames='border-b border-separator'>
@@ -78,7 +66,7 @@ const DefaultStory = ({ columns: columnsProp = 1, debug = false }: StoryProps) =
             <DebugRoot classNames='p-2' />
           </Focus.Group>
         )}
-      </Focus.Group>
+      </div>
     </Mosaic.Root>
   );
 };
@@ -105,7 +93,7 @@ type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
   args: {
-    // debug: true,
+    debug: true,
     columns: 3,
   },
 };

@@ -11,7 +11,7 @@ import * as Schema from 'effect/Schema';
 
 import { Capability, Common } from '@dxos/app-framework';
 import { type Space, SpaceState, getSpace, isSpace } from '@dxos/client/echo';
-import { DXN, type Entity, Filter, Obj, type QueryResult, Type } from '@dxos/echo';
+import { DXN, Filter, Obj, type QueryResult, Type } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { ATTENDABLE_PATH_SEPARATOR, PLANK_COMPANION_TYPE } from '@dxos/plugin-deck/types';
@@ -34,8 +34,10 @@ import {
   createStaticSchemaNode,
 } from '../../util';
 
-export default Capability.makeModule((context) =>
-  Effect.sync(() => {
+export default Capability.makeModule(
+  Effect.fnUntraced(function* () {
+    const context = yield* Capability.PluginContextService;
+
     // TODO(wittjosiah): Using `get` and being reactive seems to cause a bug with Atom where disposed atoms are accessed.
     const resolve = (get: Atom.Context) => (typename: string) =>
       context.getCapabilities(Common.Capability.Metadata).find(({ id }) => id === typename)?.metadata ?? {};
@@ -160,10 +162,10 @@ export default Capability.makeModule((context) =>
         id: SPACES,
         match: NodeMatcher.whenId(SPACES),
         connector: (node, get) => {
+          const client = context.getCapability(ClientCapabilities.Client);
+          const state = context.getCapability(SpaceCapabilities.State);
           // TODO(wittjosiah): Find a simpler way to define this type.
           let query: QueryResult.QueryResult<Schema.Schema.Type<typeof Type.Expando>> | undefined;
-          const state = context.getCapability(SpaceCapabilities.State);
-          const client = context.getCapability(ClientCapabilities.Client);
           const spacesAtom = CreateAtom.fromObservable(client.spaces);
           const isReadyAtom = CreateAtom.fromObservable(client.spaces.isReady);
 
@@ -305,7 +307,6 @@ export default Capability.makeModule((context) =>
           );
         },
         resolver: (id, get) => {
-          let query: QueryResult.QueryResult<Entity.Unknown> | undefined;
           const client = context.getCapability(ClientCapabilities.Client);
           const dxn = DXN.tryParse(id)?.asEchoDXN();
           if (!dxn || !dxn.spaceId) {
@@ -317,10 +318,7 @@ export default Capability.makeModule((context) =>
             return null;
           }
 
-          if (!query) {
-            query = space.db.query(Filter.id(dxn.echoId));
-          }
-
+          const query = space.db.query(Filter.id(dxn.echoId));
           const object = get(atomFromQuery(query)).at(0);
           if (!Obj.isObject(object)) {
             return null;

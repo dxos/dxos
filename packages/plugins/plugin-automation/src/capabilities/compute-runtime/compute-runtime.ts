@@ -9,6 +9,7 @@ import * as ManagedRuntime from 'effect/ManagedRuntime';
 
 import { Capability, Common } from '@dxos/app-framework';
 import { GenericToolkit, makeToolExecutionServiceFromFunctions, makeToolResolverFromFunctions } from '@dxos/assistant';
+import { SpaceProperties } from '@dxos/client/echo';
 import { Resource } from '@dxos/context';
 import { Database, Query, Ref } from '@dxos/echo';
 import { CredentialsService, QueueService } from '@dxos/functions';
@@ -23,12 +24,12 @@ import { TriggerStateStore } from '@dxos/functions-runtime';
 import { invariant } from '@dxos/invariant';
 import { type SpaceId } from '@dxos/keys';
 import { ClientCapabilities } from '@dxos/plugin-client';
-import { SpaceProperties } from '@dxos/react-client/echo';
 
 import { AutomationCapabilities } from '../../types';
 
-export default Capability.makeModule((context: Capability.PluginContext) =>
-  Effect.gen(function* () {
+export default Capability.makeModule(
+  Effect.fnUntraced(function* () {
+    const context = yield* Capability.PluginContextService;
     const provider = yield* Effect.tryPromise(() => new ComputeRuntimeProviderImpl(context).open());
     return Capability.contributes(AutomationCapabilities.ComputeRuntime, provider, () =>
       Effect.tryPromise(() => provider.close()),

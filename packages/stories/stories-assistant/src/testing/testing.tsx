@@ -9,15 +9,7 @@ import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
 import { SERVICES_CONFIG } from '@dxos/ai/testing';
-import {
-  ActivationEvent,
-  Capability,
-  Common,
-  OperationPlugin,
-  OperationResolver,
-  Plugin,
-  SettingsPlugin,
-} from '@dxos/app-framework';
+import { ActivationEvent, Capability, Common, OperationPlugin, Plugin, SettingsPlugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { AiContextBinder, ArtifactId, GenericToolkit } from '@dxos/assistant';
 import { Agent, DesignBlueprint, Document, PlanningBlueprint, Research, Tasks } from '@dxos/assistant-toolkit';
@@ -27,6 +19,7 @@ import { Obj, Ref } from '@dxos/echo';
 import { Example, Function, Trigger } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
+import { OperationResolver } from '@dxos/operation';
 import { Assistant, AssistantOperation, AssistantPlugin } from '@dxos/plugin-assistant';
 import { AttentionPlugin } from '@dxos/plugin-attention';
 import { AutomationPlugin } from '@dxos/plugin-automation';
@@ -127,31 +120,34 @@ export const getDecorators = ({
           Trigger.Trigger,
           ...types,
         ],
-        onClientInitialized: async ({ client }) => {
-          log('onClientInitialized', { identity: client.halo.identity.get()?.did });
-          // Abort if already initialized.
-          if (client.halo.identity.get()) {
-            return;
-          }
+        onClientInitialized: ({ client }) =>
+          Effect.gen(function* () {
+            log('onClientInitialized', { identity: client.halo.identity.get()?.did });
+            // Abort if already initialized.
+            if (client.halo.identity.get()) {
+              return;
+            }
 
-          await client.halo.createIdentity();
-          await client.spaces.waitUntilReady();
+            yield* Effect.promise(() => client.halo.createIdentity());
+            yield* Effect.promise(() => client.spaces.waitUntilReady());
 
-          const space = client.spaces.default;
-          // TODO(burdon): Should not require this.
-          //  ERROR: invariant violation: Database was not initialized with root object.
-          // TODO(burdon): onSpacesReady is never called.
-          await space.waitUntilReady();
+            const space = client.spaces.default;
+            // TODO(burdon): Should not require this.
+            //  ERROR: invariant violation: Database was not initialized with root object.
+            // TODO(burdon): onSpacesReady is never called.
+            yield* Effect.promise(() => space.waitUntilReady());
 
-          // Add tokens.
-          for (const accessToken of accessTokens) {
-            space.db.add(Obj.clone(accessToken));
-          }
+            // Add tokens.
+            for (const accessToken of accessTokens) {
+              space.db.add(Obj.clone(accessToken));
+            }
 
-          await space.db.flush({ indexes: true });
-          await onInit?.({ client, space });
-          await space.db.flush({ indexes: true });
-        },
+            yield* Effect.promise(() => space.db.flush({ indexes: true }));
+            if (onInit) {
+              yield* Effect.promise(() => onInit({ client, space }));
+            }
+            yield* Effect.promise(() => space.db.flush({ indexes: true }));
+          }),
         ...props,
       }),
 
@@ -215,74 +211,74 @@ const StoryPlugin = Plugin.define<StoryPluginOptions>({
   Plugin.addModule({
     id: 'example.com/plugin/testing/module/toolkit',
     activatesOn: Common.ActivationEvent.Startup,
-    activate: (context) =>
-      Effect.succeed([
+    activate: Effect.fnUntraced(function* () {
+      const context = yield* Capability.PluginContextService;
+      return [
         Capability.contributes(
           Common.Capability.Toolkit,
           GenericToolkit.make(TestingToolkit.Toolkit, TestingToolkit.createLayer(context)),
         ),
-      ]),
+      ];
+    }),
   }),
   Plugin.addModule({
     id: 'example.com/plugin/testing/module/setup',
     activatesOn: ActivationEvent.allOf(Common.ActivationEvent.OperationInvokerReady, ClientEvents.SpacesReady),
-    activate: (context) =>
-      Effect.gen(function* () {
-        const client = context.getCapability(ClientCapabilities.Client);
-        const space = client.spaces.default;
-        const { invoke } = context.getCapability(Common.Capability.OperationInvoker);
+    activate: Effect.fnUntraced(function* () {
+      const client = yield* Capability.get(ClientCapabilities.Client);
+      const space = client.spaces.default;
+      const { invoke } = yield* Capability.get(Common.Capability.OperationInvoker);
 
-        // Ensure workspace is set.
-        yield* invoke(Common.LayoutOperation.SwitchWorkspace, { subject: space.id });
+      // Ensure workspace is set.
+      yield* invoke(Common.LayoutOperation.SwitchWorkspace, { subject: space.id });
 
-        // Create initial chat.
-        yield* invoke(AssistantOperation.CreateChat, { db: space.db });
-      }),
+      // Create initial chat.
+      yield* invoke(AssistantOperation.CreateChat, { db: space.db });
+    }),
   }),
   Plugin.addModule(({ onChatCreated }) => ({
     id: 'example.com/plugin/testing/module/operation-resolver',
     activatesOn: Common.ActivationEvent.SetupOperationResolver,
-    activate: (context) =>
-      Effect.succeed(
-        Capability.contributes(Common.Capability.OperationResolver, [
-          OperationResolver.make({
-            operation: DeckOperation.ChangeCompanion,
-            handler: () => Effect.void,
-          }),
-          OperationResolver.make({
-            operation: AssistantOperation.CreateChat,
-            handler: ({ db, name }) =>
-              Effect.gen(function* () {
-                const client = context.getCapability(ClientCapabilities.Client);
-                const space = client.spaces.get(db.spaceId);
-                invariant(space, 'Space not found');
+    activate: Effect.fnUntraced(function* () {
+      const client = yield* Capability.get(ClientCapabilities.Client);
+      return Capability.contributes(Common.Capability.OperationResolver, [
+        OperationResolver.make({
+          operation: DeckOperation.ChangeCompanion,
+          handler: () => Effect.void,
+        }),
+        OperationResolver.make({
+          operation: AssistantOperation.CreateChat,
+          handler: ({ db, name }) =>
+            Effect.gen(function* () {
+              const space = client.spaces.get(db.spaceId);
+              invariant(space, 'Space not found');
 
-                const queue = space.queues.create();
-                const traceQueue = space.queues.create();
-                const chat = Obj.make(Assistant.Chat, {
-                  name,
-                  queue: Ref.fromDXN(queue.dxn),
-                  traceQueue: Ref.fromDXN(traceQueue.dxn),
-                });
-                const binder = new AiContextBinder(queue);
+              const queue = space.queues.create();
+              const traceQueue = space.queues.create();
+              const chat = Obj.make(Assistant.Chat, {
+                name,
+                queue: Ref.fromDXN(queue.dxn),
+                traceQueue: Ref.fromDXN(traceQueue.dxn),
+              });
+              const binder = new AiContextBinder(queue);
 
-                // Story-specific behaviour to allow chat creation to be extended.
-                space.db.add(chat);
-                yield* Effect.tryPromise(() => space.db.flush({ indexes: true }));
+              // Story-specific behaviour to allow chat creation to be extended.
+              space.db.add(chat);
+              yield* Effect.tryPromise(() => space.db.flush({ indexes: true }));
 
-                if (onChatCreated) {
-                  yield* Effect.tryPromise(() => binder.open());
-                  yield* Effect.tryPromise(() => onChatCreated({ space, chat, binder }));
-                  yield* Effect.tryPromise(() => binder.close());
-                }
+              if (onChatCreated) {
+                yield* Effect.tryPromise(() => binder.open());
+                yield* Effect.tryPromise(() => onChatCreated({ space, chat, binder }));
+                yield* Effect.tryPromise(() => binder.close());
+              }
 
-                return {
-                  object: chat,
-                };
-              }),
-          }),
-        ]),
-      ),
+              return {
+                object: chat,
+              };
+            }),
+        }),
+      ]);
+    }),
   })),
   Plugin.make,
 );

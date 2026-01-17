@@ -12,9 +12,9 @@ import { meta } from '../../meta';
 import { FileCapabilities, type FilesSettingsProps, LocalFilesOperation } from '../../types';
 import { isLocalDirectory, isLocalEntity, isLocalFile } from '../../util';
 
-export default Capability.makeModule((context) =>
-  Effect.sync(() => {
-    const { invokePromise } = context.getCapability(Common.Capability.OperationInvoker);
+export default Capability.makeModule(
+  Effect.fnUntraced(function* () {
+    const context = yield* Capability.PluginContextService;
 
     return Capability.contributes(Common.Capability.AppGraphBuilder, [
       // Create export/import actions.
@@ -25,6 +25,7 @@ export default Capability.makeModule((context) =>
           {
             id: LocalFilesOperation.Export.meta.key,
             data: async () => {
+              const { invokePromise } = context.getCapability(Common.Capability.OperationInvoker);
               await invokePromise(LocalFilesOperation.Export);
             },
             properties: {
@@ -35,6 +36,7 @@ export default Capability.makeModule((context) =>
           {
             id: LocalFilesOperation.Import.meta.key,
             data: async () => {
+              const { invokePromise } = context.getCapability(Common.Capability.OperationInvoker);
               await invokePromise(LocalFilesOperation.Import, {});
             },
             properties: {
@@ -50,7 +52,8 @@ export default Capability.makeModule((context) =>
         id: `${meta.id}/root`,
         match: NodeMatcher.whenRoot,
         connector: (node, get) => {
-          const settingsStore = get(context.capabilities(Common.Capability.SettingsStore))[0];
+          const settingsStoreAtom = context.capabilities(Common.Capability.SettingsStore);
+          const settingsStore = get(settingsStoreAtom)[0];
           const settings = get(
             CreateAtom.fromSignal(() => settingsStore?.getStore<FilesSettingsProps>(meta.id)?.value),
           );
@@ -80,6 +83,7 @@ export default Capability.makeModule((context) =>
           {
             id: LocalFilesOperation.OpenFile.meta.key,
             data: async () => {
+              const { invokePromise } = context.getCapability(Common.Capability.OperationInvoker);
               const result = await invokePromise(LocalFilesOperation.OpenFile);
               if (result.data?.subject) {
                 await invokePromise(Common.LayoutOperation.Open, { subject: [...result.data.subject] });
@@ -95,6 +99,7 @@ export default Capability.makeModule((context) =>
                 {
                   id: 'open-directory',
                   data: async () => {
+                    const { invokePromise } = context.getCapability(Common.Capability.OperationInvoker);
                     const result = await invokePromise(LocalFilesOperation.OpenDirectory);
                     if (result.data?.subject) {
                       await invokePromise(Common.LayoutOperation.Open, { subject: [...result.data.subject] });
@@ -109,8 +114,8 @@ export default Capability.makeModule((context) =>
             : []),
         ],
         connector: () => {
-          const state = context.getCapability(FileCapabilities.State);
-          return state.files.map((entity) => ({
+          const filesState = context.getCapability(FileCapabilities.State);
+          return filesState.files.map((entity) => ({
             id: entity.id,
             type: isLocalDirectory(entity) ? 'directory' : 'file',
             data: entity,
@@ -147,6 +152,7 @@ export default Capability.makeModule((context) =>
           {
             id: `${LocalFilesOperation.Close.meta.key}:${entity.id}`,
             data: async () => {
+              const { invokePromise } = context.getCapability(Common.Capability.OperationInvoker);
               await invokePromise(LocalFilesOperation.Close, { id: entity.id });
             },
             properties: {
@@ -159,6 +165,7 @@ export default Capability.makeModule((context) =>
                 {
                   id: `${LocalFilesOperation.Reconnect.meta.key}:${entity.id}`,
                   data: async () => {
+                    const { invokePromise } = context.getCapability(Common.Capability.OperationInvoker);
                     await invokePromise(LocalFilesOperation.Reconnect, { id: entity.id });
                   },
                   properties: {
@@ -173,6 +180,7 @@ export default Capability.makeModule((context) =>
                 {
                   id: `${LocalFilesOperation.Save.meta.key}:${entity.id}`,
                   data: async () => {
+                    const { invokePromise } = context.getCapability(Common.Capability.OperationInvoker);
                     await invokePromise(LocalFilesOperation.Save, { id: entity.id });
                   },
                   properties: {

@@ -12,15 +12,15 @@ import { WelcomeTour } from '../../components';
 import { meta } from '../../meta';
 import { HelpCapabilities, type Step } from '../../types';
 
-export default Capability.makeModule((steps: Step[]) =>
-  Effect.succeed(
-    Capability.contributes(Common.Capability.ReactRoot, {
+export default Capability.makeModule(
+  Effect.fnUntraced(function* (steps?: Step[]) {
+    return Capability.contributes(Common.Capability.ReactRoot, {
       id: meta.id,
       root: () => {
         const state = useCapability(HelpCapabilities.MutableState);
         return (
           <WelcomeTour
-            steps={steps}
+            steps={steps ?? []}
             running={state.running}
             onRunningChanged={(newState) => {
               state.running = newState;
@@ -31,6 +31,6 @@ export default Capability.makeModule((steps: Step[]) =>
           />
         );
       },
-    }),
-  ),
+    });
+  }),
 );

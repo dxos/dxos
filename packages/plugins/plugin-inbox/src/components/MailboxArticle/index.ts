@@ -4,6 +4,6 @@
 
 import { MailboxArticle } from './MailboxArticle';
 
-export { POPOVER_SAVE_FILTER, PopoverSaveFilter } from './PopoverSaveFilter';
+export { PopoverSaveFilter } from './PopoverSaveFilter';
 
 export default MailboxArticle;

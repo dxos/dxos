@@ -4,9 +4,10 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capability, Common, OperationResolver } from '@dxos/app-framework';
+import { Capability, Common } from '@dxos/app-framework';
 import { DXN, Obj, Ref, Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
+import { Operation, OperationResolver } from '@dxos/operation';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { ThreadCapabilities } from '@dxos/plugin-thread';
 import { ThreadOperation } from '@dxos/plugin-thread/types';
@@ -17,9 +18,11 @@ import { type Message } from '@dxos/types';
 
 import { Meeting, MeetingCapabilities, MeetingOperation } from '../../types';
 
-export default Capability.makeModule((context) =>
-  Effect.succeed(
-    Capability.contributes(Common.Capability.OperationResolver, [
+export default Capability.makeModule(
+  Effect.fnUntraced(function* () {
+    const context = yield* Capability.PluginContextService;
+
+    return Capability.contributes(Common.Capability.OperationResolver, [
       OperationResolver.make({
         operation: MeetingOperation.OnCreateSpace,
         handler: ({ isDefault, rootCollection }) =>
@@ -36,11 +39,10 @@ export default Capability.makeModule((context) =>
         operation: MeetingOperation.Create,
         handler: ({ name, channel }) =>
           Effect.gen(function* () {
-            const { invoke } = context.getCapability(Common.Capability.OperationInvoker);
             const space = getSpace(channel);
             invariant(space);
-            const { object: transcript } = yield* invoke(TranscriptOperation.Create, { space });
-            const { object: thread } = yield* invoke(ThreadOperation.CreateChannelThread, { channel });
+            const { object: transcript } = yield* Operation.invoke(TranscriptOperation.Create, { space });
+            const { object: thread } = yield* Operation.invoke(ThreadOperation.CreateChannelThread, { channel });
             const meeting = Obj.make(Meeting.Meeting, {
               name,
               created: new Date().toISOString(),
@@ -58,8 +60,8 @@ export default Capability.makeModule((context) =>
         operation: MeetingOperation.SetActive,
         handler: ({ object }) =>
           Effect.sync(() => {
-            const callManager = context.getCapability(ThreadCapabilities.CallManager);
             const state = context.getCapability(MeetingCapabilities.State);
+            const callManager = context.getCapability(ThreadCapabilities.CallManager);
             state.activeMeeting = object;
             callManager.setActivity(Type.getTypename(Meeting.Meeting)!, {
               meetingId: object ? Obj.getDXN(object).toString() : '',
@@ -73,7 +75,6 @@ export default Capability.makeModule((context) =>
           Effect.gen(function* () {
             const client = context.getCapability(ClientCapabilities.Client);
             const state = context.getCapability(MeetingCapabilities.State);
-
             const { spaceId, objectId } = meetingId ? parseId(meetingId) : {};
             const space = spaceId && client.spaces.get(spaceId);
             const meeting =
@@ -92,12 +93,12 @@ export default Capability.makeModule((context) =>
             if (state.transcriptionManager) {
               yield* Effect.promise(() => state.transcriptionManager!.setEnabled(enabled));
             }
-          }),
+          }).pipe(Effect.provideService(Capability.PluginContextService, context)),
       }),
       OperationResolver.make({
         operation: MeetingOperation.Summarize,
         handler: () => Effect.fail(new Error('Not implemented')),
       }),
-    ]),
-  ),
+    ]);
+  }),
 );

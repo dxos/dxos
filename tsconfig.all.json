@@ -100,6 +100,9 @@
       "path": "packages/common/random-access-storage/tsconfig.json"
     },
     {
+      "path": "packages/common/sql-sqlite-wasm/tsconfig.json"
+    },
+    {
       "path": "packages/common/storybook-addon-logger/tsconfig.json"
     },
     {
@@ -176,6 +179,9 @@
     },
     {
       "path": "packages/core/echo/echo-solid/tsconfig.json"
+    },
+    {
+      "path": "packages/core/echo/index-core/tsconfig.json"
     },
     {
       "path": "packages/core/echo/feed/tsconfig.json"
@@ -382,6 +388,9 @@
       "path": "packages/plugins/plugin-sheet/tsconfig.json"
     },
     {
+      "path": "packages/plugins/plugin-simple-layout/tsconfig.json"
+    },
+    {
       "path": "packages/plugins/plugin-sketch/tsconfig.json"
     },
     {
@@ -470,6 +479,9 @@
     },
     {
       "path": "packages/stories/stories-assistant/tsconfig.json"
+    },
+    {
+      "path": "packages/stories/stories-ui/tsconfig.json"
     },
     {
       "path": "packages/ui/brand/tsconfig.json"

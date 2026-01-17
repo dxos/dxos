@@ -6,7 +6,7 @@ import * as Schema from 'effect/Schema';
 
 import { Common } from '@dxos/app-framework';
 import { Database } from '@dxos/echo';
-import * as Operation from '@dxos/operation';
+import { Operation } from '@dxos/operation';
 
 import { meta } from '../meta';
 

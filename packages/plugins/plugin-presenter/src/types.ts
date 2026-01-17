@@ -5,7 +5,7 @@
 import * as Schema from 'effect/Schema';
 import { type Context, createContext } from 'react';
 
-import * as Operation from '@dxos/operation';
+import { Operation } from '@dxos/operation';
 import { Markdown } from '@dxos/plugin-markdown/types';
 import { Collection } from '@dxos/schema';
 

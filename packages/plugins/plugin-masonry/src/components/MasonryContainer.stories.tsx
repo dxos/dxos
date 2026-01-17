@@ -3,6 +3,7 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
+import * as Effect from 'effect/Effect';
 import React from 'react';
 
 import { withPluginManager } from '@dxos/app-framework/testing';
@@ -28,8 +29,9 @@ const StorybookMasonry = () => {
   const space = spaces[spaces.length - 1];
   const masonries = useQuery(space?.db, Filter.type(Masonry.Masonry));
   const masonry = masonries.at(0);
+  const view = masonry?.view.target;
 
-  return masonry ? <MasonryContainer object={masonry} role='story' /> : null;
+  return view ? <MasonryContainer view={view} role='story' /> : null;
 };
 
 const meta = {
@@ -43,21 +45,24 @@ const meta = {
         ...corePlugins(),
         ClientPlugin({
           types: [Organization.Organization, View.View, Masonry.Masonry],
-          onClientInitialized: async ({ client }) => {
-            await client.halo.createIdentity();
-            const space = await client.spaces.create();
-            await space.waitUntilReady();
+          onClientInitialized: ({ client }) =>
+            Effect.gen(function* () {
+              yield* Effect.promise(() => client.halo.createIdentity());
+              const space = yield* Effect.promise(() => client.spaces.create());
+              yield* Effect.promise(() => space.waitUntilReady());
 
-            const { view } = await View.makeFromDatabase({
-              db: space.db,
-              typename: Organization.Organization.typename,
-            });
-            const masonry = Masonry.make({ view });
-            space.db.add(masonry);
+              const { view } = yield* Effect.promise(() =>
+                View.makeFromDatabase({
+                  db: space.db,
+                  typename: Organization.Organization.typename,
+                }),
+              );
+              const masonry = Masonry.make({ view });
+              space.db.add(masonry);
 
-            const factory = createObjectFactory(space.db, faker as any);
-            await factory([{ type: Organization.Organization, count: 64 }]);
-          },
+              const factory = createObjectFactory(space.db, faker as any);
+              yield* Effect.promise(() => factory([{ type: Organization.Organization, count: 64 }]));
+            }),
         }),
         ...corePlugins(),
         SpacePlugin({}),

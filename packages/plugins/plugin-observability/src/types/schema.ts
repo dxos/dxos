@@ -5,7 +5,7 @@
 import * as Schema from 'effect/Schema';
 
 import { Format } from '@dxos/echo';
-import * as Operation from '@dxos/operation';
+import { Operation } from '@dxos/operation';
 
 import { meta } from '../meta';
 import { translations } from '../translations';

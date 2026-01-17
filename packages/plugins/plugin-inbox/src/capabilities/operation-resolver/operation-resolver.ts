@@ -4,24 +4,27 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capability, Common, OperationResolver } from '@dxos/app-framework';
+import { Capability, Common } from '@dxos/app-framework';
 import { Filter, Obj, Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
+import { Operation, OperationResolver } from '@dxos/operation';
 import { ClientCapabilities } from '@dxos/plugin-client/types';
 import { SpaceOperation } from '@dxos/plugin-space/types';
 import { Organization, Person } from '@dxos/types';
 
+import { COMPOSE_EMAIL_DIALOG } from '../../constants';
 import { InboxOperation } from '../../types';
 
-export default Capability.makeModule((context) =>
-  Effect.succeed(
-    Capability.contributes(Common.Capability.OperationResolver, [
+export default Capability.makeModule(
+  Effect.fnUntraced(function* () {
+    const context = yield* Capability.PluginContextService;
+
+    return Capability.contributes(Common.Capability.OperationResolver, [
       OperationResolver.make({
         operation: InboxOperation.ExtractContact,
         handler: ({ db, actor }) =>
           Effect.gen(function* () {
-            const { invoke } = context.getCapability(Common.Capability.OperationInvoker);
             const client = context.getCapability(ClientCapabilities.Client);
             const space = client.spaces.get(db.spaceId);
             invariant(space, 'Space not found');
@@ -54,7 +57,7 @@ export default Capability.makeModule((context) =>
             const emailDomain = email.split('@')[1]?.toLowerCase();
             if (!emailDomain) {
               log.warn('Invalid email format, cannot extract domain', { email });
-              yield* invoke(SpaceOperation.AddObject, {
+              yield* Operation.invoke(SpaceOperation.AddObject, {
                 object: newContact,
                 target: db,
                 hidden: true,
@@ -100,23 +103,31 @@ export default Capability.makeModule((context) =>
 
             if (!space.properties.staticRecords.includes(Person.Person.typename)) {
               log.info('adding record type for contacts');
-              yield* invoke(SpaceOperation.UseStaticSchema, {
+              yield* Operation.invoke(SpaceOperation.UseStaticSchema, {
                 db,
                 typename: Person.Person.typename,
               });
             }
 
-            yield* invoke(SpaceOperation.AddObject, {
+            yield* Operation.invoke(SpaceOperation.AddObject, {
               object: newContact,
               target: db,
               hidden: true,
             });
-          }),
+          }).pipe(Effect.provideService(Capability.PluginContextService, context)),
       }),
       OperationResolver.make({
         operation: InboxOperation.RunAssistant,
         handler: () => Effect.fail(new Error('Not implemented')),
       }),
-    ]),
-  ),
+      OperationResolver.make({
+        operation: InboxOperation.OpenComposeEmail,
+        handler: () =>
+          Operation.invoke(Common.LayoutOperation.UpdateDialog, {
+            subject: COMPOSE_EMAIL_DIALOG,
+            blockAlign: 'start',
+          }),
+      }),
+    ]);
+  }),
 );

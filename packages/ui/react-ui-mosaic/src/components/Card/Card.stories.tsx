@@ -20,7 +20,7 @@ type CardStoryProps = {
 
 const DefaultStory = ({ title, description, image }: CardStoryProps) => {
   return (
-    <Card.StaticRoot classNames='is-cardMinWidth max-is-cardMinWidth'>
+    <Card.Root classNames='is-cardMinWidth max-is-cardMinWidth'>
       <Card.Toolbar>
         <Card.DragHandle toolbarItem />
         <Card.ToolbarSeparator variant='gap' />
@@ -29,7 +29,7 @@ const DefaultStory = ({ title, description, image }: CardStoryProps) => {
       {image && <Card.Poster alt={title} image={image} />}
       <Card.Heading>{title}</Card.Heading>
       {description && <Card.Text classNames='line-clamp-3'>{description}</Card.Text>}
-    </Card.StaticRoot>
+    </Card.Root>
   );
 };
 

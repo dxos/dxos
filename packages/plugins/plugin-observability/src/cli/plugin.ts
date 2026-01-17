@@ -4,7 +4,8 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capability, Common, OperationResolver, Plugin } from '@dxos/app-framework';
+import { Capability, Common, Plugin } from '@dxos/app-framework';
+import { OperationResolver } from '@dxos/operation';
 
 import { meta } from '../meta';
 import { ObservabilityOperation } from '../types';

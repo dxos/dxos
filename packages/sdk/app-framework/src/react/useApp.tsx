@@ -11,6 +11,7 @@ import React, { type FC, useCallback, useEffect, useMemo, useRef, useState } fro
 
 import { runAndForwardErrors } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
+import { log } from '@dxos/log';
 import { useAsyncEffect, useDefaultValue } from '@dxos/react-hooks';
 import { ContextProtocolProvider } from '@dxos/web-context-react';
 
@@ -167,6 +168,11 @@ export const useApp = ({
     // Set up a timeout for startup.
     const timeoutId = setTimeout(() => {
       if (!readyRef.current && !errorRef.current) {
+        log.warn('startup timeout diagnostic', {
+          eventsFired: manager.getEventsFired(),
+          activeModules: manager.getActive(),
+          pendingReset: manager.getPendingReset(),
+        });
         void runAndForwardErrors(Fiber.interrupt(fiber));
         setError(new Error(`Startup timed out after ${timeout}ms`));
       }

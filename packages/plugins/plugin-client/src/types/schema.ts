@@ -2,12 +2,12 @@
 // Copyright 2024 DXOS.org
 //
 
+import type * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
 import { type Capability } from '@dxos/app-framework';
 import { type Client, type ClientOptions, PublicKey } from '@dxos/client';
-import * as Operation from '@dxos/operation';
-import { type MaybePromise } from '@dxos/util';
+import { Operation } from '@dxos/operation';
 
 import { meta } from '../meta';
 
@@ -203,18 +203,27 @@ export type ClientPluginOptions = ClientOptions & {
 
   /**
    * Run after the client has been initialized.
+   * Plugin context is provided so capabilities are accessible.
    */
-  onClientInitialized?: (params: { context: Capability.PluginContext; client: Client }) => MaybePromise<void>;
+  onClientInitialized?: (params: {
+    client: Client;
+  }) => Effect.Effect<void, Error | never, Capability.PluginContextService | never>;
 
   /**
    * Called when spaces are ready.
+   * Plugin context is provided so capabilities are accessible.
    */
-  onSpacesReady?: (params: { context: Capability.PluginContext; client: Client }) => MaybePromise<void>;
+  onSpacesReady?: (params: {
+    client: Client;
+  }) => Effect.Effect<void, Error | never, Capability.PluginContextService | never>;
 
   /**
    * Called when the client is reset.
+   * Plugin context is provided so capabilities are accessible.
    */
-  onReset?: (params: { target?: string }) => MaybePromise<void>;
+  onReset?: (params: {
+    target?: string;
+  }) => Effect.Effect<void, Error | never, Capability.PluginContextService | never>;
 };
 
 export namespace Account {

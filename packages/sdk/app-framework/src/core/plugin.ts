@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import type * as Effect from 'effect/Effect';
+import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 import * as Pipeable from 'effect/Pipeable';
 
@@ -10,6 +10,32 @@ import { invariant } from '@dxos/invariant';
 
 import type * as ActivationEvent from './activation-event';
 import * as Capability from './capability';
+
+//
+// Lifecycle Functions
+//
+
+/**
+ * Activates plugins based on the activation event.
+ * Accesses the PluginContext via the Effect layer system.
+ * @param event The activation event.
+ * @returns Whether the activation was successful.
+ */
+export const activate = (
+  event: ActivationEvent.ActivationEvent,
+): Effect.Effect<boolean, Error, Capability.PluginContextService> =>
+  Effect.flatMap(Capability.PluginContextService, (context) => context.activate(event));
+
+/**
+ * Re-activates the modules that were activated by the event.
+ * Accesses the PluginContext via the Effect layer system.
+ * @param event The activation event.
+ * @returns Whether the reset was successful.
+ */
+export const reset = (
+  event: ActivationEvent.ActivationEvent,
+): Effect.Effect<boolean, Error, Capability.PluginContextService> =>
+  Effect.flatMap(Capability.PluginContextService, (context) => context.reset(event));
 
 /**
  * Computes a module ID from plugin ID and export name.
@@ -61,10 +87,11 @@ export interface PluginModule {
 
   /**
    * Called when the module is activated.
-   * @param context The plugin context.
+   * PluginContext is accessed via the Effect layer system (Capability.PluginContextService).
+   * @param props Optional props passed to the module.
    * @returns The capabilities of the module.
    */
-  activate: (context: Capability.PluginContext) => Effect.Effect<Capability.ModuleReturn, Error>;
+  activate: (props?: any) => Effect.Effect<Capability.ModuleReturn, Error, Capability.PluginContextService | never>;
 }
 
 export type PluginModuleOptions = Omit<PluginModule, 'id' | typeof PluginModuleTypeId> & { id?: string };
