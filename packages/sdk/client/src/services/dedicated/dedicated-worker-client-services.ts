@@ -110,7 +110,7 @@ export class DedicatedWorkerClientServices extends Resource implements ClientSer
           // I am the leader now.
           invariant(this.#coordinator);
           invariant(!this.#leaderSession);
-          this.#leaderSession = new LeaderSession(this.#createWorker, this.#coordinator, this.#clientId);
+          this.#leaderSession = new LeaderSession(this.#createWorker, this.#coordinator);
           const done = new Trigger();
           this._ctx.onDispose(() => done.wake());
           this.#leaderSession.onClose.on((error) => {
@@ -139,13 +139,11 @@ class LeaderSession extends Resource {
   #coordinator: WorkerCoordinator;
   #worker!: WorkerOrPort;
   #leaderId = `leader-${crypto.randomUUID()}`;
-  #clientId: string;
 
-  constructor(createWorker: () => WorkerOrPort, coordinator: WorkerCoordinator, clientId: string) {
+  constructor(createWorker: () => WorkerOrPort, coordinator: WorkerCoordinator) {
     super();
     this.#createWorker = createWorker;
     this.#coordinator = coordinator;
-    this.#clientId = clientId;
   }
 
   readonly onClose = new Event<Error | undefined>();
