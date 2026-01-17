@@ -38,6 +38,7 @@ import { type DatabaseRoot } from './database-root';
 import { createSelectedDocumentsIterator } from './documents-iterator';
 import { QueryServiceImpl } from './query-service';
 import { SpaceStateManager } from './space-state-manager';
+import type { QueueService } from '@dxos/protocols';
 
 export interface EchoHostIndexingConfig {
   /**
@@ -91,6 +92,8 @@ export class EchoHost extends Resource {
 
   private _updateIndexes!: DeferredTask;
 
+  private _queuesService?: QueueService;
+
   private _indexesUpToDate = false;
 
   constructor({ kv, localQueues, indexing = {}, peerIdProvider, getSpaceKeyByRootDocumentId, runtime }: EchoHostProps) {
@@ -113,6 +116,7 @@ export class EchoHost extends Resource {
 
     if (localQueues) {
       this._feedStore = new FeedStore({ assignPositions: false, localActorId: crypto.randomUUID() });
+      this._queuesService = new LocalQueueService({ feedStore: this._feedStore });
     }
 
     this._indexer = new Indexer({
@@ -204,6 +208,10 @@ export class EchoHost extends Resource {
 
   get dataService(): DataServiceImpl {
     return this._dataService;
+  }
+
+  get queuesService(): QueueService {
+    return this._queuesService;
   }
 
   get roots(): ReadonlyMap<DocumentId, DatabaseRoot> {
