@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { useVirtualizer } from '@tanstack/react-virtual';
+import { type ReactVirtualizerOptions, useVirtualizer } from '@tanstack/react-virtual';
 import React, { type FC, Fragment, type ReactElement, type Ref, forwardRef, useRef } from 'react';
 
 import { type Obj } from '@dxos/echo';
@@ -72,21 +72,32 @@ const Stack = StackInner as <T extends Obj.Any = Obj.Any>(
 // VirtualStack
 //
 
-type VirtualStackProps<T extends Obj.Any = Obj.Any> = StackProps<T>;
+type VirtualStackProps<T extends Obj.Any = Obj.Any> = StackProps<T> &
+  Pick<ReactVirtualizerOptions<HTMLDivElement, HTMLDivElement>, 'estimateSize'>;
 
 const VirtualStackInner = forwardRef<HTMLDivElement, VirtualStackProps>(
   (
-    { className, classNames, role = 'list', axis = 'vertical', items, Component = DefaultComponent, ...props },
+    {
+      className,
+      classNames,
+      role = 'list',
+      axis = 'vertical',
+      items,
+      Component = DefaultComponent,
+      estimateSize,
+      ...props
+    },
     forwardedRef,
   ) => {
     invariant(Component);
-    const { id, dragging } = useMosaicContainer(StackInner.displayName!);
+    const { id, dragging } = useMosaicContainer(VirtualStackInner.displayName!);
     const visibleItems = useVisibleItems({ id, items, dragging: dragging?.source.data });
 
+    // TODO(burdon): Should reference Mosaic.Viewport; move here or provide ref.
     const viewportRef = useRef<HTMLElement>(null);
     const virtualizer = useVirtualizer({
       getScrollElement: () => viewportRef.current,
-      estimateSize: () => 40,
+      estimateSize,
       count: visibleItems.length * 2 + 1,
     });
 
@@ -103,6 +114,11 @@ const VirtualStackInner = forwardRef<HTMLDivElement, VirtualStackProps>(
           classNames,
           className,
         )}
+        style={{
+          position: 'relative',
+          width: axis === 'vertical' ? '100%' : virtualizer.getTotalSize(),
+          height: axis === 'horizontal' ? '100%' : virtualizer.getTotalSize(),
+        }}
         ref={forwardedRef}
       >
         {virtualItems.map((virtualItem, index) => (
