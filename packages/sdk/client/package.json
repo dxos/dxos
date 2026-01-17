@@ -68,6 +68,11 @@
       "source": "./src/worker/opfs-worker.ts",
       "types": "./dist/types/src/worker/opfs-worker.d.ts",
       "browser": "./dist/lib/browser/worker/opfs-worker.mjs"
+    },
+    "./dedicated-worker": {
+      "source": "./src/services/dedicated/worker-entrypoint.ts",
+      "types": "./dist/types/src/services/dedicated/worker-entrypoint.d.ts",
+      "browser": "./dist/lib/browser/services/dedicated/worker-entrypoint.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",

@@ -14,10 +14,9 @@ import {
   type DedicatedWorkerMessage,
   type DedicatedWorkerReadyMessage,
   type WorkerCoordinator,
-  type WorkerCoordinatorMessage
+  type WorkerCoordinatorMessage,
+  type WorkerOrPort,
 } from './types';
-
-export type WorkerOrPort = Worker | MessagePort;
 
 const LEADER_LOCK_KEY = '@dxos/client/DedicatedWorkerClientServices/LeaderLock';
 
@@ -79,7 +78,7 @@ export class DedicatedWorkerClientServices extends Resource implements ClientSer
             clientId: this.#clientId,
           });
         },
-        100,
+        500,
       );
     });
     log.info('connected to worker', { leaderId });
@@ -155,35 +154,43 @@ class LeaderSession extends Resource {
   protected override async _open(_ctx: Context): Promise<void> {
     log('creating worker');
     this.#worker = this.#createWorker();
-
-    const { livenessLockKey } = await new Promise<DedicatedWorkerReadyMessage>((resolve, reject) => {
-      this.#worker!.onmessage = (event: MessageEvent<DedicatedWorkerMessage>) => {
-        log.info('leader got message', { type: event.data.type });
-        switch (event.data.type) {
-          case 'ready':
-            resolve(event.data);
-            break;
-          case 'session':
-            this.#coordinator.sendMessage({
-              type: 'provide-port',
-              appPort: event.data.appPort,
-              systemPort: event.data.systemPort,
-              clientId: event.data.clientId,
-              leaderId: this.#leaderId,
-              livenessLockKey,
-            });
-            break;
-          default:
-            log.error('unknown message', { type: event.data });
-        }
-      };
-      if (this.#worker instanceof Worker) {
-        this.#worker.onerror = (e) => {
-          reject(e.error);
-        };
+    const listening = new Trigger();
+    const ready = new Trigger<DedicatedWorkerReadyMessage>();
+    this.#worker!.onmessage = (event: MessageEvent<DedicatedWorkerMessage>) => {
+      log.info('leader got message', { type: event.data.type });
+      switch (event.data.type) {
+        case 'listening':
+          listening.wake();
+          break;
+        case 'ready':
+          ready.wake(event.data);
+          break;
+        case 'session':
+          this.#coordinator.sendMessage({
+            type: 'provide-port',
+            appPort: event.data.appPort,
+            systemPort: event.data.systemPort,
+            clientId: event.data.clientId,
+            leaderId: this.#leaderId,
+            livenessLockKey,
+          });
+          break;
+        default:
+          log.error('unknown message', { type: event.data });
       }
-      this.#sendMessage({ type: 'init', clientId: this.#leaderId });
-    });
+    };
+    if (this.#worker instanceof Worker) {
+      this.#worker.onerror = (e) => {
+        ready.throw(e.error);
+        listening.throw(e.error);
+      };
+    }
+
+    log.info('waiting for worker to start listening');
+    await listening.wait();
+    this.#sendMessage({ type: 'init', clientId: this.#leaderId });
+    log.info('waiting for worker to be ready');
+    const { livenessLockKey } = await ready.wait();
 
     log.info('got worker ports');
     void navigator.locks.request(livenessLockKey, () => {

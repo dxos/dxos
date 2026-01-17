@@ -1,48 +1,98 @@
 // Entrypoint for dedicated worker.
 
 import { log } from '@dxos/log';
-import type { DedicatedWorkerInitMessage } from './types';
+import type { DedicatedWorkerMessage } from './types';
 import { STORAGE_LOCK_KEY } from '../../lock-key';
 import { WorkerRuntime } from '@dxos/client-services';
 import { Config } from '@dxos/config';
 import { createWorkerPort } from '@dxos/rpc-tunnel';
 import { Worker } from '@dxos/isomorphic-worker';
 
-log('worker-entrypoint');
+log.info('worker-entrypoint 123');
 
 // Lock ensures only a single worker is running.
 void navigator.locks.request(STORAGE_LOCK_KEY, async () => {
-  const appChannel = new MessageChannel();
-  const systemChannel = new MessageChannel();
+  log.info('worker-entrypoint: lock acquired');
 
-  const runtime = new WorkerRuntime({
-    configProvider: async () => {
-      return new Config(); // TODO(dmaretsky): Take using an rpc message from spawning process.
-    },
-    // TODO(dmaretskyi): We should split the storage lock and liveness. Keep storage lock fully inside WorkerRuntime, while liveness stays outside.
-    acquireLock: async () => {},
-    releaseLock: () => {},
-    onStop: async () => {
-      // Close the shared worker, lock will be released automatically.
-      Worker.close();
-    },
-    automaticallyConnectWebrtc: false,
+  let runtime: WorkerRuntime;
+  let owningClientId: string;
+  const tabsProcessed = new Set<string>();
+
+  let releaseLock: () => void;
+  const lockPromise = new Promise<void>((resolve) => {
+    releaseLock = resolve;
   });
-  await runtime.start();
 
-  const session = await runtime.createSession({
-    systemPort: createWorkerPort({ port: systemChannel.port2 }),
-    appPort: createWorkerPort({ port: appChannel.port2 }),
-  });
-  runtime.connectWebrtcBridge(session);
+  const handleMessage = async (ev: MessageEvent<DedicatedWorkerMessage>) => {
+    const message = ev.data;
+    log.info('worker got message', { type: message.type });
+    switch (message.type) {
+      case 'init': {
+        owningClientId = message.clientId;
+        runtime = new WorkerRuntime({
+          configProvider: async () => {
+            return new Config(); // TODO(dmaretsky): Take using an rpc message from spawning process.
+          },
+          onStop: async () => {
+            // Close the shared worker, lock will be released automatically.
+            Worker.close();
+            releaseLock();
+          },
+          // TODO(dmaretskyi): We should split the storage lock and liveness. Keep storage lock fully inside WorkerRuntime, while liveness stays outside.
+          acquireLock: async () => {},
+          releaseLock: () => {},
+          automaticallyConnectWebrtc: false,
+        });
+        await runtime.start();
+        Worker.postMessage({
+          type: 'ready',
+          livenessLockKey: runtime.livenessLockKey,
+        } satisfies DedicatedWorkerMessage);
+        break;
+      }
+      case 'start-session': {
+        if (tabsProcessed.has(message.clientId)) {
+          log.info('ignoring duplicate client');
+          break;
+        }
+        tabsProcessed.add(message.clientId);
 
-  Worker.postMessage(
-    {
-      type: 'init',
-      appPort: appChannel.port1,
-      systemPort: systemChannel.port1,
-      livenessLockKey: runtime.livenessLockKey,
-    } satisfies DedicatedWorkerInitMessage,
-    [appChannel.port1, systemChannel.port1],
-  );
+        const appChannel = new MessageChannel();
+        const systemChannel = new MessageChannel();
+
+        Worker.postMessage(
+          {
+            type: 'session',
+            appPort: appChannel.port1,
+            systemPort: systemChannel.port1,
+            clientId: message.clientId,
+          } satisfies DedicatedWorkerMessage,
+          [appChannel.port1, systemChannel.port1],
+        );
+
+        // Will block until the other side finishes the handshake.
+        {
+          const session = await runtime.createSession({
+            systemPort: createWorkerPort({ port: systemChannel.port2 }),
+            appPort: createWorkerPort({ port: appChannel.port2 }),
+          });
+          if (message.clientId === owningClientId) {
+            runtime.connectWebrtcBridge(session);
+          }
+        }
+        break;
+      }
+
+      default:
+        log.error('unknown message', { type: (message as any).type });
+    }
+  };
+
+  globalThis.addEventListener('message', handleMessage);
+  Worker.postMessage({
+    type: 'listening',
+  } satisfies DedicatedWorkerMessage);
+
+  await lockPromise;
+  globalThis.removeEventListener('message', handleMessage);
 });

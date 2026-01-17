@@ -15,6 +15,7 @@ import { createWorkerPort } from '@dxos/rpc-tunnel';
 import { Client } from '../../client';
 import { Filter, Obj, Type } from '@dxos/echo';
 import { Event, sleep } from '@dxos/async';
+import { MemoryWorkerCoordiantor } from './memory-coordinator';
 
 /**
  * In-thread worker for testing purposes.
@@ -98,18 +99,10 @@ class TestWorkerFactory extends Resource {
             log.error('unknown message', { type: ev.data });
         }
       };
+      messageChannel.port1.postMessage({ type: 'listening' } satisfies DedicatedWorkerMessage);
     });
 
     return messageChannel.port2;
-  }
-}
-
-class MemoryWorkerCoordiantor implements WorkerCoordinator {
-  readonly onMessage = new Event<WorkerCoordinatorMessage>();
-
-  sendMessage(message: WorkerCoordinatorMessage): void {
-    log.info('memory coordinator got message', { type: message.type });
-    this.onMessage.emit(message);
   }
 }
 

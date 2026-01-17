@@ -2,6 +2,13 @@ import type { MaybePromise } from '@dxos/util';
 import type { Event } from '@dxos/async';
 
 /**
+ * Worker -> Leader Client to notify that worker is listening for messages.
+ */
+export interface DedicatedWorkerListeningMessage {
+  type: 'listening';
+}
+
+/**
  * Leader Client -> Worker to start the worker.
  */
 export interface DedicatedWorkerInitMessage {
@@ -44,6 +51,7 @@ export interface DedicatedWorkerSessionMessage {
 }
 
 export type DedicatedWorkerMessage =
+  | DedicatedWorkerListeningMessage
   | DedicatedWorkerInitMessage
   | DedicatedWorkerReadyMessage
   | DedicatedWorkerStartSessionMessage

@@ -91,6 +91,13 @@ const main = async () => {
             type: 'module',
             name: 'dxos-client-worker',
           }),
+    disableSharedWorker
+      ? undefined
+      : () =>
+          new Worker(new URL('@dxos/client/dedicated-worker', import.meta.url), {
+            type: 'module',
+            name: 'dxos-client-worker',
+          }),
     observabilityGroup,
     !observabilityDisabled,
     () => new Worker(new URL('@dxos/client/opfs-worker', import.meta.url), { type: 'module' }),

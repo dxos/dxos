@@ -10,6 +10,8 @@ import { type Config } from '@dxos/config';
 import { type LocalClientServicesParams, fromHost } from './local-client-services';
 import { fromSocket } from './socket';
 import { type WorkerClientServicesProps, fromWorker } from './worker-client-services';
+import { DedicatedWorkerClientServices, type DedeciatedWorkerClientServicesOptions } from './dedicated';
+import { MemoryWorkerCoordiantor } from './dedicated/memory-coordinator';
 
 /**
  * Create services from config.
@@ -18,9 +20,10 @@ import { type WorkerClientServicesProps, fromWorker } from './worker-client-serv
  * @param observabilityGroup - Optional observability group that will be sent with Signaling metadata.
  * @param signalTelemetryEnabled - Optional flag to enable telemetry metadata sent with Signaling requests.
  */
-export const createClientServices = (
+export const createClientServices = async (
   config: Config,
   createWorker?: WorkerClientServicesProps['createWorker'],
+  createDedicatedWorker?: DedeciatedWorkerClientServicesOptions['createWorker'],
   observabilityGroup?: string,
   signalTelemetryEnabled?: boolean,
   createOpfsWorker?: LocalClientServicesParams['createOpfsWorker'],
@@ -51,15 +54,20 @@ export const createClientServices = (
     useWorker = typeof SharedWorker !== 'undefined' && parser.getOS().name !== 'iOS';
   }
 
-  return createWorker && useWorker
-    ? fromWorker(config, { createWorker, observabilityGroup, signalTelemetryEnabled })
-    : fromHost(
-        config,
-        {
-          createOpfsWorker,
-          runtimeProps: { enableFullTextIndexing: true },
-        },
-        observabilityGroup,
-        signalTelemetryEnabled,
-      );
+  return createDedicatedWorker
+    ? new DedicatedWorkerClientServices({
+        createWorker: createDedicatedWorker,
+        createCoordinator: () => new MemoryWorkerCoordiantor(),
+      })
+    : createWorker && useWorker
+      ? fromWorker(config, { createWorker, observabilityGroup, signalTelemetryEnabled })
+      : fromHost(
+          config,
+          {
+            createOpfsWorker,
+            runtimeProps: { enableFullTextIndexing: true },
+          },
+          observabilityGroup,
+          signalTelemetryEnabled,
+        );
 };
