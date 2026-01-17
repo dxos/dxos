@@ -116,8 +116,15 @@ const VirtualStackInner = forwardRef<HTMLDivElement, VirtualStackProps>(
         )}
         style={{
           position: 'relative',
-          width: axis === 'vertical' ? '100%' : virtualizer.getTotalSize(),
-          height: axis === 'horizontal' ? '100%' : virtualizer.getTotalSize(),
+          ...(axis === 'vertical'
+            ? {
+                width: '100%',
+                height: virtualizer.getTotalSize(),
+              }
+            : {
+                width: virtualizer.getTotalSize(),
+                height: '100%',
+              }),
         }}
         ref={forwardedRef}
       >
@@ -129,10 +136,15 @@ const VirtualStackInner = forwardRef<HTMLDivElement, VirtualStackProps>(
               position: 'absolute',
               top: 0,
               left: 0,
-              width: axis === 'vertical' ? '100%' : undefined,
-              height: axis === 'horizontal' ? '100%' : undefined,
-              transform:
-                axis === 'vertical' ? `translateY(${virtualItem.start}px)` : `translateX(${virtualItem.start}px)`,
+              ...(axis === 'vertical'
+                ? {
+                    width: '100%',
+                    transform: `translateY(${virtualItem.start}px)`,
+                  }
+                : {
+                    height: '100%',
+                    transform: `translateX(${virtualItem.start}px)`,
+                  }),
             }}
             ref={virtualizer.measureElement}
           >
