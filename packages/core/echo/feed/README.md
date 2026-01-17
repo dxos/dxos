@@ -89,6 +89,7 @@ Stores the mapping between global feed identifiers and local integer IDs.
 | `feedPrivateId` | `number` | **Primary Key**. Local integer identifier for the feed (private to the peer). |
 | `spaceId`       | `string` | The global Space ID (external).                                               |
 | `feedId`        | `string` | The global Feed ID (ULID).                                                    |
+| `feedNamespace` | `string` | **Optional**. Application specific namespace for filtering feeds.             |
 
 **Indexes**:
 
@@ -132,14 +133,14 @@ The sync protocol is message-based. All messages include a `requestId`. Response
     - Description: Returns blocks from the specified feeds (or subscription) with `position > cursor`.
 
 2.  **Subscribe**
-    - Input: `requestId`, `namespace: string`
+    - Input: `requestId`, `feedIds: string[]`
     - Output: `requestId`, `subscriptionId: string`
-    - Description: Registers a subscription for all feeds in a **Namespace**. Returns a `subscriptionId`.
+    - Description: Registers a subscription for specific feeds. Returns a `subscriptionId`.
 
 3.  **Append**
-    - Input: `requestId`, `feedId: string`, `namespace?: string`, `blocks: Block[]`
+    - Input: `requestId`, `namespace?: string`, `blocks: Block[]`
     - Output: `requestId`, `positions: number[]`
-    - Description: Appends blocks to the specified feed.
+    - Description: Appends blocks to their respective feeds (derived from `actorId` in block).
       - If `namespace` is provided and the feed is new, it sets the feed's namespace.
       - Returns the assigned global positions.
 
@@ -165,6 +166,7 @@ All timestamps (e.g., `insertionTimestamp`) are Unix timestamps in milliseconds.
 ```json
 {
   "requestId": "req-1",
+  "namespace": "my-app-data",
   "blocks": [
     {
       "actorId": "01H1...",

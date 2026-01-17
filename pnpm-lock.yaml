@@ -4780,6 +4780,9 @@ importers:
       '@dxos/effect':
         specifier: workspace:*
         version: link:../../../common/effect
+      '@dxos/feed':
+        specifier: workspace:*
+        version: link:../feed
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../../common/invariant

@@ -3,19 +3,23 @@ import { describe, expect, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 import { FeedStore } from './feed';
 import { Block } from './protocol';
-import { SpaceId } from '@dxos/keys';
+import { ObjectId, SpaceId } from '@dxos/keys';
 
 const TestLayer = SqliteClient.layer({
   filename: ':memory:',
 });
 
+// ActorIds.
+const ALICE = 'alice';
+const BOB = 'bob';
+
 describe('Feed V2', () => {
   it.effect('should append and query blocks via RPC', () =>
     Effect.gen(function* () {
       const spaceId = SpaceId.random();
-      const feedId = '01H1V1X1X1X1X1X1X1X1X1X1X1';
+      const feedId = ObjectId.random();
 
-      const feed = new FeedStore(spaceId);
+      const feed = new FeedStore({ localActorId: ALICE, assignPositions: true });
 
       // Append
       const block: Block = {
@@ -28,13 +32,13 @@ describe('Feed V2', () => {
         data: new Uint8Array([1, 2, 3]),
       };
 
-      const appendRes = yield* feed.append({ requestId: 'req-1', blocks: [block] });
+      const appendRes = yield* feed.append({ requestId: 'req-1', blocks: [block], spaceId });
       expect(appendRes.positions.length).toBe(1);
       expect(appendRes.positions[0]).toBeGreaterThan(0);
       expect(appendRes.requestId).toBe('req-1');
 
       // Query by feedId
-      const queryRes = yield* feed.query({ requestId: 'req-2', feedIds: [feedId], cursor: 0 }); // Use cursor '0' to get everything
+      const queryRes = yield* feed.query({ requestId: 'req-2', query: { feedIds: [feedId] }, cursor: 0, spaceId }); // Use cursor '0' to get everything
       expect(queryRes.blocks.length).toBe(1);
       expect(queryRes.blocks[0].position).toBe(appendRes.positions[0]);
       expect(queryRes.blocks[0].sequence).toBe(123); // Verify Author Sequence is preserved
@@ -45,14 +49,14 @@ describe('Feed V2', () => {
   it.effect('should persist feed namespace', () =>
     Effect.gen(function* () {
       const spaceId = SpaceId.random();
-      const feedId = '01H1V1X1X1X1X1X1X1X1X1X1X3';
-      const namespace = 'custom-namespace';
+      const feedId = ObjectId.random();
+      const namespace = 'data';
 
-      const feed = new FeedStore(spaceId);
+      const feed = new FeedStore({ localActorId: ALICE, assignPositions: true });
 
       // Append with namespace
       const block: Block = {
-        actorId: feedId,
+        actorId: ALICE,
         sequence: 1,
         predActorId: null,
         predSequence: null,
@@ -61,12 +65,12 @@ describe('Feed V2', () => {
         data: new Uint8Array([1]),
       };
 
-      yield* feed.append({ requestId: 'req-ns', blocks: [block], namespace });
+      yield* feed.append({ requestId: 'req-ns', blocks: [block], namespace, spaceId });
 
       // Verify directly from DB (white-box test) to ensure schema is correct
       const sql = yield* SqliteClient.SqliteClient;
       const rows = yield* sql<{ feedNamespace: string }>`
-        SELECT feedNamespace FROM feeds WHERE spaceId = ${spaceId} AND feedId = ${feedId}
+        SELECT feedNamespace FROM feeds WHERE spaceId = ${spaceId} AND feedId = ${ALICE}
       `;
       expect(rows[0].feedNamespace).toBe(namespace);
     }).pipe(Effect.provide(TestLayer)),
@@ -75,9 +79,9 @@ describe('Feed V2', () => {
   it.effect('should use subscriptions', () =>
     Effect.gen(function* () {
       const spaceId = SpaceId.random();
-      const feedId = '01H1V1X1X1X1X1X1X1X1X1X1X2';
+      const feedId = ObjectId.random();
 
-      const feed = new FeedStore(spaceId);
+      const feed = new FeedStore({ localActorId: ALICE, assignPositions: true });
 
       // Append some data
       yield* feed.append({
@@ -93,17 +97,54 @@ describe('Feed V2', () => {
             data: new Uint8Array([1]),
           },
         ],
+        spaceId,
       });
 
       // Subscribe
-      const subRes = yield* feed.subscribe({ requestId: 'req-2', feedIds: [feedId] });
+      const subRes = yield* feed.subscribe({ requestId: 'req-2', feedIds: [feedId], spaceId });
       expect(subRes.subscriptionId).toBeDefined();
       expect(subRes.requestId).toBe('req-2');
 
       // Query via Subscription
-      const queryRes = yield* feed.query({ requestId: 'req-3', subscriptionId: subRes.subscriptionId, cursor: 0 });
+      const queryRes = yield* feed.query({
+        requestId: 'req-3',
+        query: { subscriptionId: subRes.subscriptionId },
+        cursor: 0,
+      });
       expect(queryRes.blocks.length).toBe(1);
       expect(queryRes.requestId).toBe('req-3');
+    }).pipe(Effect.provide(TestLayer)),
+  );
+
+  it.effect('append local', () =>
+    Effect.gen(function* () {
+      const spaceId = SpaceId.random();
+      const feedId = ObjectId.random();
+
+      const feed = new FeedStore({ localActorId: ALICE, assignPositions: true });
+
+      const blocks = yield* feed.appendLocal([
+        {
+          spaceId,
+          feedId,
+          feedNamespace: 'data',
+          data: new Uint8Array([1]),
+        },
+      ]);
+      expect(blocks.length).toBe(1);
+      expect(blocks[0].position).toBeNull();
+      expect(blocks[0].sequence).toBe(0);
+      expect(blocks[0].actorId).toBe(ALICE);
+      expect(blocks[0].predActorId).toBeNull();
+      expect(blocks[0].predSequence).toBeNull();
+      expect(blocks[0].timestamp).toBeGreaterThan(0);
+      expect(blocks[0].data).toEqual(new Uint8Array([1]));
+
+      // Query by feedId
+      const queryRes = yield* feed.query({ query: { feedIds: [feedId] }, cursor: -1, spaceId }); // Use cursor '-1' to get everything
+      expect(queryRes.blocks.length).toBe(1);
+      expect(queryRes.blocks.length).toBe(1);
+      expect(queryRes.blocks[0]).toMatchObject({ ...blocks[0], position: expect.any(Number) });
     }).pipe(Effect.provide(TestLayer)),
   );
 });

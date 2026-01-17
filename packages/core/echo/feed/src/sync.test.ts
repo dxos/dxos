@@ -25,7 +25,7 @@ describe('Feed Sync V2 (RPC)', () => {
     // Server setup: Append blocks
     await server.run(
       Effect.gen(function* () {
-        const feed = new FeedStore(spaceId);
+        const feed = new FeedStore({ localActorId: 'server', assignPositions: true });
         const blocks: Block[] = [
           {
             actorId: feedId,
@@ -46,7 +46,7 @@ describe('Feed Sync V2 (RPC)', () => {
             data: new Uint8Array([2]),
           },
         ];
-        yield* feed.append({ requestId: 'req-0', blocks });
+        yield* feed.append({ requestId: 'req-0', blocks, spaceId });
       }),
     );
 
@@ -56,8 +56,8 @@ describe('Feed Sync V2 (RPC)', () => {
       Effect.gen(function* () {
         // Wait, we flattened it. Tests need to update to NOT use SqlFeedStore!
         // I will fix the class instantiation in a moment.
-        const feed = new FeedStore(spaceId);
-        const res = yield* feed.subscribe({ requestId: 'req-sub', feedIds: [feedId] });
+        const feed = new FeedStore({ localActorId: 'server', assignPositions: true });
+        const res = yield* feed.subscribe({ requestId: 'req-sub', feedIds: [feedId], spaceId });
         return res.subscriptionId;
       }),
     );
@@ -65,8 +65,8 @@ describe('Feed Sync V2 (RPC)', () => {
     // 2. Client queries using subscription
     const blocks = await server.run(
       Effect.gen(function* () {
-        const feed = new FeedStore(spaceId); // Updated class usage
-        const res = yield* feed.query({ requestId: 'req-query', subscriptionId: subId, cursor: 0 });
+        const feed = new FeedStore({ localActorId: 'server', assignPositions: true }); // Updated class usage
+        const res = yield* feed.query({ requestId: 'req-query', query: { subscriptionId: subId }, cursor: 0 });
         return res.blocks;
       }),
     );
@@ -77,12 +77,17 @@ describe('Feed Sync V2 (RPC)', () => {
     // 3. Client stores them (Verify client persistence)
     await client.run(
       Effect.gen(function* () {
-        const feed = new FeedStore(spaceId); // Updated class usage
+        const feed = new FeedStore({ localActorId: 'client', assignPositions: true }); // Updated class usage
         // Client appends them.
-        yield* feed.append({ requestId: 'req-push', blocks });
+        yield* feed.append({ requestId: 'req-push', blocks, spaceId });
 
         // Verify
-        const myBlocks = yield* feed.query({ requestId: 'req-verify', feedIds: [feedId], cursor: 0 });
+        const myBlocks = yield* feed.query({
+          requestId: 'req-verify',
+          query: { feedIds: [feedId] },
+          cursor: 0,
+          spaceId,
+        });
         expect(myBlocks.blocks.length).toBe(2);
       }),
     );

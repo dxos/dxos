@@ -79,6 +79,9 @@
       "path": "../echo-signals"
     },
     {
+      "path": "../feed"
+    },
+    {
       "path": "../indexing"
     },
     {

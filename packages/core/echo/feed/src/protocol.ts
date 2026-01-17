@@ -16,49 +16,60 @@ export interface Block extends Schema.Schema.Type<typeof Block> {}
 // RPC Schemas
 //
 
-export const QueryRequest = Schema.Union(
-  Schema.Struct({
-    requestId: Schema.String,
-    feedIds: Schema.Array(Schema.String),
-    cursor: Schema.Number, // Global position cursor
-  }),
-  Schema.Struct({
-    requestId: Schema.String,
-    subscriptionId: Schema.String,
-    cursor: Schema.Number,
-  }),
-);
+// Request is a union of query by subscription or query by feedIds
+export const QueryRequest = Schema.Struct({
+  requestId: Schema.optional(Schema.String),
+  // TODO(dmaretskyi): Make required.
+  spaceId: Schema.optional(Schema.String),
+  query: Schema.Union(
+    Schema.Struct({
+      feedIds: Schema.Array(Schema.String),
+    }),
+    Schema.Struct({
+      subscriptionId: Schema.String,
+    }),
+  ),
+  /**
+   * Get changes following this cursor (exclusive).
+   * Use -1 to get all changes.
+   */
+  cursor: Schema.Number,
+});
 export interface QueryRequest extends Schema.Schema.Type<typeof QueryRequest> {}
 
 // Response is a stream/array of blocks
 export const QueryResponse = Schema.Struct({
-  requestId: Schema.String,
+  requestId: Schema.optional(Schema.String),
   blocks: Schema.Array(Block),
 });
 export interface QueryResponse extends Schema.Schema.Type<typeof QueryResponse> {}
 
 export const SubscribeRequest = Schema.Struct({
-  requestId: Schema.String,
+  requestId: Schema.optional(Schema.String),
   feedIds: Schema.Array(Schema.String),
+  spaceId: Schema.optional(Schema.String),
 });
 export interface SubscribeRequest extends Schema.Schema.Type<typeof SubscribeRequest> {}
 
 export const SubscribeResponse = Schema.Struct({
-  requestId: Schema.String,
+  requestId: Schema.optional(Schema.String),
   subscriptionId: Schema.String,
   expiresAt: Schema.Number,
 });
 export interface SubscribeResponse extends Schema.Schema.Type<typeof SubscribeResponse> {}
 
 export const AppendRequest = Schema.Struct({
-  requestId: Schema.String,
+  requestId: Schema.optional(Schema.String),
   namespace: Schema.optional(Schema.String),
   blocks: Schema.Array(Block),
+  // TODO(dmaretskyi): Make required.
+  spaceId: Schema.optional(Schema.String),
+  feedId: Schema.optional(Schema.String),
 });
 export interface AppendRequest extends Schema.Schema.Type<typeof AppendRequest> {}
 
 export const AppendResponse = Schema.Struct({
-  requestId: Schema.String,
+  requestId: Schema.optional(Schema.String),
   positions: Schema.Array(Schema.Number),
 });
 export interface AppendResponse extends Schema.Schema.Type<typeof AppendResponse> {}
