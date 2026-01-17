@@ -11,6 +11,7 @@ tasks:
       - $CONFIG_DYNAMIC
       - $DX_ENVIRONMENT
       - $DX_HOST
+      - $DX_DEDICATED_WORKER
       - $DX_HUB_URL
       - $DX_IPDATA_API_KEY
       - $DX_LABS

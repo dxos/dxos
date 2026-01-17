@@ -3,7 +3,6 @@ import { clientServiceBundle, type ClientServices, type ClientServicesProvider }
 import { Config } from '@dxos/config';
 import { Context, Resource } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
-import { Worker } from '@dxos/isomorphic-worker';
 import { log } from '@dxos/log';
 import type { ServiceBundle } from '@dxos/rpc';
 import { createWorkerPort } from '@dxos/rpc-tunnel';
@@ -191,8 +190,9 @@ class LeaderSession extends Resource {
     this.#sendMessage({ type: 'init', clientId: this.#leaderId });
     log.info('waiting for worker to be ready');
     const { livenessLockKey } = await ready.wait();
+    log.info('leader ready');
 
-    log.info('got worker ports');
+    // Listen for worker termination.
     void navigator.locks.request(livenessLockKey, () => {
       log.info('worker terminated');
       if (this.isOpen) {

@@ -47,6 +47,8 @@ export type WorkerRuntimeOptions = {
    * @default false
    */
   automaticallyConnectWebrtc?: boolean;
+
+  enableFullTextIndexing?: boolean;
 };
 
 /**
@@ -80,6 +82,7 @@ export class WorkerRuntime {
     releaseLock,
     onStop,
     automaticallyConnectWebrtc = true,
+    enableFullTextIndexing,
   }: WorkerRuntimeOptions) {
     this._configProvider = configProvider;
     this._acquireLock = acquireLock;
@@ -92,6 +95,9 @@ export class WorkerRuntime {
         onReset: async () => this.stop(),
       },
       runtime: this._runtime.runtimeEffect,
+      runtimeProps: {
+        enableFullTextIndexing: enableFullTextIndexing,
+      },
     });
     this._automaticallyConnectWebrtc = automaticallyConnectWebrtc;
   }

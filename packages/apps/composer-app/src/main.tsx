@@ -82,6 +82,7 @@ const main = async () => {
   const observabilityGroup = await getObservabilityGroup(APP_KEY);
 
   const disableSharedWorker = config.values.runtime?.app?.env?.DX_HOST;
+  const useDedicatedWorker = config.values.runtime?.app?.env?.DX_DEDICATED_WORKER;
   const services = await createClientServices(
     config,
     disableSharedWorker
@@ -91,7 +92,7 @@ const main = async () => {
             type: 'module',
             name: 'dxos-client-worker',
           }),
-    disableSharedWorker
+    disableSharedWorker || !useDedicatedWorker
       ? undefined
       : () =>
           new Worker(new URL('@dxos/client/dedicated-worker', import.meta.url), {

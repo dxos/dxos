@@ -6,7 +6,6 @@ import { STORAGE_LOCK_KEY } from '../../lock-key';
 import { WorkerRuntime } from '@dxos/client-services';
 import { Config } from '@dxos/config';
 import { createWorkerPort } from '@dxos/rpc-tunnel';
-import { Worker } from '@dxos/isomorphic-worker';
 
 log.info('worker-entrypoint 123');
 
@@ -31,20 +30,21 @@ void navigator.locks.request(STORAGE_LOCK_KEY, async () => {
         owningClientId = message.clientId;
         runtime = new WorkerRuntime({
           configProvider: async () => {
-            return new Config(); // TODO(dmaretsky): Take using an rpc message from spawning process.
+            return new Config({}); // TODO(dmaretsky): Take using an rpc message from spawning process.
           },
           onStop: async () => {
             // Close the shared worker, lock will be released automatically.
-            Worker.close();
+            self.close();
             releaseLock();
           },
           // TODO(dmaretskyi): We should split the storage lock and liveness. Keep storage lock fully inside WorkerRuntime, while liveness stays outside.
           acquireLock: async () => {},
           releaseLock: () => {},
           automaticallyConnectWebrtc: false,
+          enableFullTextIndexing: true,
         });
         await runtime.start();
-        Worker.postMessage({
+        self.postMessage({
           type: 'ready',
           livenessLockKey: runtime.livenessLockKey,
         } satisfies DedicatedWorkerMessage);
@@ -60,7 +60,7 @@ void navigator.locks.request(STORAGE_LOCK_KEY, async () => {
         const appChannel = new MessageChannel();
         const systemChannel = new MessageChannel();
 
-        Worker.postMessage(
+        self.postMessage(
           {
             type: 'session',
             appPort: appChannel.port1,
@@ -88,11 +88,11 @@ void navigator.locks.request(STORAGE_LOCK_KEY, async () => {
     }
   };
 
-  globalThis.addEventListener('message', handleMessage);
-  Worker.postMessage({
+  self.addEventListener('message', handleMessage);
+  self.postMessage({
     type: 'listening',
   } satisfies DedicatedWorkerMessage);
 
   await lockPromise;
-  globalThis.removeEventListener('message', handleMessage);
+  self.removeEventListener('message', handleMessage);
 });
