@@ -15,7 +15,7 @@
  *   Packages without "source" condition are NOT touched.
  */
 
-import { readdirSync, readFileSync, statSync, writeFileSync } from 'node:fs';
+import { readFileSync, readdirSync, writeFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 
 interface ConditionMap {
