@@ -8,17 +8,6 @@
   "author": "DXOS.org",
   "sideEffects": true,
   "type": "module",
-  "sourceExports": {
-    ".": {
-      "default": "./src/index.ts"
-    },
-    "./esbuild-plugin": {
-      "default": "./src/plugins/esbuild-plugin.ts"
-    },
-    "./plugin": {
-      "default": "./src/plugins/plugin.ts"
-    }
-  },
   "exports": {
     ".": {
       "types": "./dist/types/src/index.d.ts",
@@ -82,5 +71,16 @@
   },
   "publishConfig": {
     "access": "public"
+  },
+  "sourceExports": {
+    ".": {
+      "default": "./src/index.ts"
+    },
+    "./esbuild-plugin": {
+      "default": "./src/plugins/esbuild-plugin.ts"
+    },
+    "./plugin": {
+      "default": "./src/plugins/plugin.ts"
+    }
   }
 }

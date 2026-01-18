@@ -8,11 +8,6 @@
   "author": "info@dxos.org",
   "sideEffects": true,
   "type": "module",
-  "sourceExports": {
-    ".": {
-      "default": "./dist/src/index.ts"
-    }
-  },
   "exports": {
     ".": {
       "types": "./dist/src/index.d.ts",
@@ -40,5 +35,10 @@
     "@types/lodash.pick": "catalog:",
     "@types/lodash.sortby": "catalog:"
   },
-  "executors": "./executors.json"
+  "executors": "./executors.json",
+  "sourceExports": {
+    ".": {
+      "default": "./dist/src/index.ts"
+    }
+  }
 }

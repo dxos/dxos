@@ -9,11 +9,6 @@
   "author": "DXOS.org",
   "sideEffects": false,
   "type": "module",
-  "sourceExports": {
-    ".": {
-      "default": "./dist/src/index.ts"
-    }
-  },
   "exports": {
     ".": {
       "types": "./dist/src/index.d.ts",
@@ -34,5 +29,10 @@
   },
   "peerDependencies": {
     "vite": "catalog:"
+  },
+  "sourceExports": {
+    ".": {
+      "default": "./dist/src/index.ts"
+    }
   }
 }

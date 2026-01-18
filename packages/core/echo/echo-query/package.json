@@ -11,11 +11,6 @@
   "imports": {
     "#query-lite": "./dist/query-lite/index.js"
   },
-  "sourceExports": {
-    ".": {
-      "default": "./src/index.ts"
-    }
-  },
   "exports": {
     ".": {
       "types": "./dist/types/src/index.d.ts",
@@ -55,5 +50,10 @@
   },
   "publishConfig": {
     "access": "public"
+  },
+  "sourceExports": {
+    ".": {
+      "default": "./src/index.ts"
+    }
   }
 }

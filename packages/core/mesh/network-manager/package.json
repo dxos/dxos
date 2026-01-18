@@ -28,17 +28,6 @@
       "require": "./dist/lib/node-esm/transport/tcp/index.mjs"
     }
   },
-  "sourceExports": {
-    ".": {
-      "default": "./src/index.ts"
-    },
-    "./testing": {
-      "default": "./src/testing/index.ts"
-    },
-    "./transport/tcp": {
-      "default": "./src/transport/tcp/index.ts"
-    }
-  },
   "exports": {
     ".": {
       "types": "./dist/types/src/index.d.ts",
@@ -109,5 +98,16 @@
         "root": "src/network-manager.ts"
       }
     ]
+  },
+  "sourceExports": {
+    ".": {
+      "default": "./src/index.ts"
+    },
+    "./testing": {
+      "default": "./src/testing/index.ts"
+    },
+    "./transport/tcp": {
+      "default": "./src/transport/tcp/index.ts"
+    }
   }
 }

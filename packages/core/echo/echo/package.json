@@ -8,68 +8,6 @@
   "author": "info@dxos.org",
   "sideEffects": false,
   "type": "module",
-  "sourceExports": {
-    ".": {
-      "default": "./src/index.ts"
-    },
-    "./internal": {
-      "default": "./src/internal/index.ts"
-    },
-    "./testing": {
-      "default": "./src/testing/index.ts"
-    },
-    "./Annotation": {
-      "default": "./src/Annotation.ts"
-    },
-    "./Database": {
-      "default": "./src/Database.ts"
-    },
-    "./Entity": {
-      "default": "./src/Entity.ts"
-    },
-    "./Err": {
-      "default": "./src/Err.ts"
-    },
-    "./Filter": {
-      "default": "./src/Filter.ts"
-    },
-    "./Format": {
-      "default": "./src/Format.ts"
-    },
-    "./JsonSchema": {
-      "default": "./src/JsonSchema.ts"
-    },
-    "./Key": {
-      "default": "./src/Key.ts"
-    },
-    "./Obj": {
-      "default": "./src/Obj.ts"
-    },
-    "./Order": {
-      "default": "./src/Order.ts"
-    },
-    "./Query": {
-      "default": "./src/Query.ts"
-    },
-    "./QueryResult": {
-      "default": "./src/QueryResult.ts"
-    },
-    "./Ref": {
-      "default": "./src/Ref.ts"
-    },
-    "./Relation": {
-      "default": "./src/Relation.ts"
-    },
-    "./SchemaRegistry": {
-      "default": "./src/SchemaRegistry.ts"
-    },
-    "./Tag": {
-      "default": "./src/Tag.ts"
-    },
-    "./Type": {
-      "default": "./src/Type.ts"
-    }
-  },
   "exports": {
     ".": {
       "types": "./dist/types/src/index.d.ts",
@@ -255,5 +193,67 @@
   "publishConfig": {
     "access": "public"
   },
-  "beast": {}
+  "beast": {},
+  "sourceExports": {
+    ".": {
+      "default": "./src/index.ts"
+    },
+    "./internal": {
+      "default": "./src/internal/index.ts"
+    },
+    "./testing": {
+      "default": "./src/testing/index.ts"
+    },
+    "./Annotation": {
+      "default": "./src/Annotation.ts"
+    },
+    "./Database": {
+      "default": "./src/Database.ts"
+    },
+    "./Entity": {
+      "default": "./src/Entity.ts"
+    },
+    "./Err": {
+      "default": "./src/Err.ts"
+    },
+    "./Filter": {
+      "default": "./src/Filter.ts"
+    },
+    "./Format": {
+      "default": "./src/Format.ts"
+    },
+    "./JsonSchema": {
+      "default": "./src/JsonSchema.ts"
+    },
+    "./Key": {
+      "default": "./src/Key.ts"
+    },
+    "./Obj": {
+      "default": "./src/Obj.ts"
+    },
+    "./Order": {
+      "default": "./src/Order.ts"
+    },
+    "./Query": {
+      "default": "./src/Query.ts"
+    },
+    "./QueryResult": {
+      "default": "./src/QueryResult.ts"
+    },
+    "./Ref": {
+      "default": "./src/Ref.ts"
+    },
+    "./Relation": {
+      "default": "./src/Relation.ts"
+    },
+    "./SchemaRegistry": {
+      "default": "./src/SchemaRegistry.ts"
+    },
+    "./Tag": {
+      "default": "./src/Tag.ts"
+    },
+    "./Type": {
+      "default": "./src/Type.ts"
+    }
+  }
 }

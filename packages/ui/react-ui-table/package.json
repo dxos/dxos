@@ -8,20 +8,6 @@
   "author": "DXOS.org",
   "sideEffects": true,
   "type": "module",
-  "sourceExports": {
-    "./deprecated": {
-      "default": "./src/deprecated/index.ts"
-    },
-    ".": {
-      "default": "./src/index.ts"
-    },
-    "./testing": {
-      "default": "./src/testing/index.ts"
-    },
-    "./types": {
-      "default": "./src/types/index.ts"
-    }
-  },
   "exports": {
     "./deprecated": {
       "types": "./dist/types/src/deprecated/index.d.ts",
@@ -132,5 +118,19 @@
   },
   "publishConfig": {
     "access": "public"
+  },
+  "sourceExports": {
+    "./deprecated": {
+      "default": "./src/deprecated/index.ts"
+    },
+    ".": {
+      "default": "./src/index.ts"
+    },
+    "./testing": {
+      "default": "./src/testing/index.ts"
+    },
+    "./types": {
+      "default": "./src/types/index.ts"
+    }
   }
 }

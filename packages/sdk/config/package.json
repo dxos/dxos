@@ -8,20 +8,6 @@
   "author": "DXOS.org",
   "sideEffects": true,
   "type": "module",
-  "sourceExports": {
-    ".": {
-      "default": "./src/index.ts"
-    },
-    "./esbuild-plugin": {
-      "default": "./src/esbuild-plugin/index.ts"
-    },
-    "./rollup-plugin": {
-      "default": "./src/rollup-plugin/index.ts"
-    },
-    "./vite-plugin": {
-      "default": "./src/vite-plugin/index.ts"
-    }
-  },
   "exports": {
     ".": {
       "types": "./dist/types/src/index.d.ts",
@@ -99,6 +85,20 @@
   },
   "publishConfig": {
     "access": "public"
+  },
+  "sourceExports": {
+    ".": {
+      "default": "./src/index.ts"
+    },
+    "./esbuild-plugin": {
+      "default": "./src/esbuild-plugin/index.ts"
+    },
+    "./rollup-plugin": {
+      "default": "./src/rollup-plugin/index.ts"
+    },
+    "./vite-plugin": {
+      "default": "./src/vite-plugin/index.ts"
+    }
   },
   "typedoc": {
     "entryPoint": "src/index.ts"

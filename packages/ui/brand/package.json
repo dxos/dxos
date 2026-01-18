@@ -8,11 +8,6 @@
   "author": "DXOS.org",
   "sideEffects": true,
   "type": "module",
-  "sourceExports": {
-    ".": {
-      "default": "./src/index.ts"
-    }
-  },
   "exports": {
     ".": {
       "types": "./dist/types/src/index.d.ts",
@@ -49,5 +44,10 @@
     "@phosphor-icons/react": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:"
+  },
+  "sourceExports": {
+    ".": {
+      "default": "./src/index.ts"
+    }
   }
 }

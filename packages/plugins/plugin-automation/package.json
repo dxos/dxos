@@ -8,20 +8,6 @@
   "author": "DXOS.org",
   "sideEffects": true,
   "type": "module",
-  "sourceExports": {
-    ".": {
-      "default": "./src/index.ts"
-    },
-    "./cli": {
-      "default": "./src/cli/index.ts"
-    },
-    "./hooks": {
-      "default": "./src/hooks/index.ts"
-    },
-    "./types": {
-      "default": "./src/types/index.ts"
-    }
-  },
   "exports": {
     ".": {
       "types": "./dist/types/src/index.d.ts",
@@ -122,5 +108,19 @@
   },
   "publishConfig": {
     "access": "public"
+  },
+  "sourceExports": {
+    ".": {
+      "default": "./src/index.ts"
+    },
+    "./cli": {
+      "default": "./src/cli/index.ts"
+    },
+    "./hooks": {
+      "default": "./src/hooks/index.ts"
+    },
+    "./types": {
+      "default": "./src/types/index.ts"
+    }
   }
 }

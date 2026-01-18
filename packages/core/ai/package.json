@@ -11,17 +11,6 @@
   "imports": {
     "#parsimmon": "./vendor/parsimmon.mjs"
   },
-  "sourceExports": {
-    ".": {
-      "default": "./src/index.ts"
-    },
-    "./resolvers": {
-      "default": "./src/resolvers/index.ts"
-    },
-    "./testing": {
-      "default": "./src/testing/index.ts"
-    }
-  },
   "exports": {
     ".": {
       "types": "./dist/types/src/index.d.ts",
@@ -96,5 +85,16 @@
   "publishConfig": {
     "access": "public"
   },
-  "beast": {}
+  "beast": {},
+  "sourceExports": {
+    ".": {
+      "default": "./src/index.ts"
+    },
+    "./resolvers": {
+      "default": "./src/resolvers/index.ts"
+    },
+    "./testing": {
+      "default": "./src/testing/index.ts"
+    }
+  }
 }

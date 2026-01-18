@@ -8,20 +8,6 @@
   "author": "DXOS.org",
   "sideEffects": true,
   "type": "module",
-  "sourceExports": {
-    ".": {
-      "default": "./src/index.ts"
-    },
-    "./blueprints": {
-      "default": "./src/blueprints/index.ts"
-    },
-    "./cli": {
-      "default": "./src/cli/index.ts"
-    },
-    "./types": {
-      "default": "./src/types/index.ts"
-    }
-  },
   "exports": {
     ".": {
       "browser": "./dist/lib/browser/index.mjs",
@@ -107,5 +93,19 @@
   },
   "publishConfig": {
     "access": "public"
+  },
+  "sourceExports": {
+    ".": {
+      "default": "./src/index.ts"
+    },
+    "./blueprints": {
+      "default": "./src/blueprints/index.ts"
+    },
+    "./cli": {
+      "default": "./src/cli/index.ts"
+    },
+    "./types": {
+      "default": "./src/types/index.ts"
+    }
   }
 }

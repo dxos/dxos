@@ -8,23 +8,6 @@
   "author": "info@dxos.org",
   "sideEffects": false,
   "type": "module",
-  "sourceExports": {
-    ".": {
-      "default": "./src/index.ts"
-    },
-    "./native": {
-      "default": "./src/native/index.ts"
-    },
-    "./bundler": {
-      "default": "./src/bundler/index.ts"
-    },
-    "./edge": {
-      "default": "./src/edge/index.ts"
-    },
-    "./testing": {
-      "default": "./src/testing/index.ts"
-    }
-  },
   "exports": {
     ".": {
       "types": "./dist/types/src/index.d.ts",
@@ -115,5 +98,22 @@
   },
   "publishConfig": {
     "access": "public"
+  },
+  "sourceExports": {
+    ".": {
+      "default": "./src/index.ts"
+    },
+    "./native": {
+      "default": "./src/native/index.ts"
+    },
+    "./bundler": {
+      "default": "./src/bundler/index.ts"
+    },
+    "./edge": {
+      "default": "./src/edge/index.ts"
+    },
+    "./testing": {
+      "default": "./src/testing/index.ts"
+    }
   }
 }

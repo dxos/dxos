@@ -9,38 +9,6 @@
   "author": "DXOS.org",
   "sideEffects": true,
   "type": "module",
-  "sourceExports": {
-    "./devtools": {
-      "default": "./src/devtools/index.ts"
-    },
-    "./echo": {
-      "default": "./src/echo/index.ts"
-    },
-    "./halo": {
-      "default": "./src/halo/index.ts"
-    },
-    "./edge": {
-      "default": "./src/edge/index.ts"
-    },
-    ".": {
-      "default": "./src/index.ts"
-    },
-    "./invitations": {
-      "default": "./src/invitations/index.ts"
-    },
-    "./mesh": {
-      "default": "./src/mesh/index.ts"
-    },
-    "./testing": {
-      "default": "./src/testing/index.ts"
-    },
-    "./worker": {
-      "default": "./src/worker/index.ts"
-    },
-    "./opfs-worker": {
-      "default": "./src/worker/opfs-worker.ts"
-    }
-  },
   "exports": {
     "./devtools": {
       "types": "./dist/types/src/devtools/index.d.ts",
@@ -204,5 +172,37 @@
         ]
       }
     ]
+  },
+  "sourceExports": {
+    "./devtools": {
+      "default": "./src/devtools/index.ts"
+    },
+    "./echo": {
+      "default": "./src/echo/index.ts"
+    },
+    "./halo": {
+      "default": "./src/halo/index.ts"
+    },
+    "./edge": {
+      "default": "./src/edge/index.ts"
+    },
+    ".": {
+      "default": "./src/index.ts"
+    },
+    "./invitations": {
+      "default": "./src/invitations/index.ts"
+    },
+    "./mesh": {
+      "default": "./src/mesh/index.ts"
+    },
+    "./testing": {
+      "default": "./src/testing/index.ts"
+    },
+    "./worker": {
+      "default": "./src/worker/index.ts"
+    },
+    "./opfs-worker": {
+      "default": "./src/worker/opfs-worker.ts"
+    }
   }
 }

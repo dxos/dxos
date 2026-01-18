@@ -9,11 +9,6 @@
   "author": "DXOS.org",
   "sideEffects": true,
   "type": "module",
-  "sourceExports": {
-    ".": {
-      "default": "./dist/src/index.ts"
-    }
-  },
   "exports": {
     ".": {
       "types": "./dist/src/index.d.ts",
@@ -33,5 +28,10 @@
   },
   "devDependencies": {
     "@types/picomatch": "catalog:"
+  },
+  "sourceExports": {
+    ".": {
+      "default": "./dist/src/index.ts"
+    }
   }
 }

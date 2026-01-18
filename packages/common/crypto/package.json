@@ -15,11 +15,6 @@
       "browser": "./vendor/subtle-browser.mjs"
     }
   },
-  "sourceExports": {
-    ".": {
-      "default": "./src/index.ts"
-    }
-  },
   "exports": {
     ".": {
       "types": "./dist/types/src/index.d.ts",
@@ -45,5 +40,10 @@
   "devDependencies": {},
   "publishConfig": {
     "access": "public"
+  },
+  "sourceExports": {
+    ".": {
+      "default": "./src/index.ts"
+    }
   }
 }

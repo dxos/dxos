@@ -7,14 +7,6 @@
   "license": "MIT",
   "author": "info@dxos.org",
   "type": "module",
-  "sourceExports": {
-    ".": {
-      "default": "./src/index.ts"
-    },
-    "./testing": {
-      "default": "./src/testing.ts"
-    }
-  },
   "exports": {
     ".": {
       "types": "./dist/types/src/index.d.ts",
@@ -64,5 +56,13 @@
   "publishConfig": {
     "access": "public"
   },
-  "beast": {}
+  "beast": {},
+  "sourceExports": {
+    ".": {
+      "default": "./src/index.ts"
+    },
+    "./testing": {
+      "default": "./src/testing.ts"
+    }
+  }
 }

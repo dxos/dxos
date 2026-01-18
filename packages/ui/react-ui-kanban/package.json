@@ -8,14 +8,6 @@
   "author": "DXOS.org",
   "sideEffects": true,
   "type": "module",
-  "sourceExports": {
-    "./types": {
-      "default": "./src/types/index.ts"
-    },
-    ".": {
-      "default": "./src/index.ts"
-    }
-  },
   "exports": {
     "./types": {
       "types": "./dist/types/src/types/index.d.ts",
@@ -85,5 +77,13 @@
   },
   "publishConfig": {
     "access": "public"
+  },
+  "sourceExports": {
+    "./types": {
+      "default": "./src/types/index.ts"
+    },
+    ".": {
+      "default": "./src/index.ts"
+    }
   }
 }

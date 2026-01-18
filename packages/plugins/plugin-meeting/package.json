@@ -7,14 +7,6 @@
   "license": "MIT",
   "author": "DXOS.org",
   "type": "module",
-  "sourceExports": {
-    ".": {
-      "default": "./src/index.ts"
-    },
-    "./types": {
-      "default": "./src/types/index.ts"
-    }
-  },
   "exports": {
     ".": {
       "types": "./dist/types/src/index.d.ts",
@@ -116,5 +108,13 @@
   },
   "publishConfig": {
     "access": "public"
+  },
+  "sourceExports": {
+    ".": {
+      "default": "./src/index.ts"
+    },
+    "./types": {
+      "default": "./src/types/index.ts"
+    }
   }
 }
