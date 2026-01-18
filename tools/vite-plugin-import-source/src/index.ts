@@ -74,7 +74,9 @@ const packageJsonCache = new Map<string, { sourceExports?: SourceExports; export
 /**
  * Reads and caches package.json.
  */
-const getPackageJson = (packageJsonPath: string): { sourceExports?: SourceExports; exports?: Record<string, unknown> } => {
+const getPackageJson = (
+  packageJsonPath: string,
+): { sourceExports?: SourceExports; exports?: Record<string, unknown> } => {
   const cached = packageJsonCache.get(packageJsonPath);
   if (cached) {
     return cached;

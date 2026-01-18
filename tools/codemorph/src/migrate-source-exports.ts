@@ -7,8 +7,8 @@
  * Migration script to convert packages from old "source" export condition to sourceExports.
  *
  * Usage:
- *   npx tsx tools/codemorph/migrate-source-exports.ts --dry-run   # Preview changes
- *   npx tsx tools/codemorph/migrate-source-exports.ts --apply      # Apply changes
+ *   npx tsx tools/codemorph/src/migrate-source-exports.ts --dry-run   # Preview changes
+ *   npx tsx tools/codemorph/src/migrate-source-exports.ts --apply      # Apply changes
  *
  * Scope restriction:
  *   Only modifies packages that currently use the "source" condition in exports.

@@ -138,7 +138,7 @@ describe('validateSourceImportsKeys', () => {
   test('returns invalid keys that do not start with #', ({ expect }) => {
     const sourceImports: SourceImports = {
       '#valid': { default: 'node:util' },
-      'invalid': { default: './src/invalid.ts' },
+      invalid: { default: './src/invalid.ts' },
       './also-invalid': { default: './src/also-invalid.ts' },
     };
 
