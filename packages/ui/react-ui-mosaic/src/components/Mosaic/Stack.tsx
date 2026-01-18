@@ -73,7 +73,10 @@ const Stack = StackInner as <T extends Obj.Any = Obj.Any>(
 //
 
 type VirtualStackProps<T extends Obj.Any = Obj.Any> = StackProps<T> &
-  Pick<ReactVirtualizerOptions<HTMLDivElement, HTMLDivElement>, 'getScrollElement' | 'estimateSize'>;
+  Pick<
+    ReactVirtualizerOptions<HTMLDivElement, HTMLDivElement>,
+    'estimateSize' | 'getScrollElement' | 'overscan' | 'onChange'
+  >;
 
 const VirtualStackInner = forwardRef<HTMLDivElement, VirtualStackProps>(
   (
@@ -84,8 +87,10 @@ const VirtualStackInner = forwardRef<HTMLDivElement, VirtualStackProps>(
       axis = 'vertical',
       items,
       Component = DefaultComponent,
-      getScrollElement,
       estimateSize,
+      getScrollElement,
+      overscan = 8,
+      onChange,
       ...props
     },
     forwardedRef,
@@ -94,9 +99,11 @@ const VirtualStackInner = forwardRef<HTMLDivElement, VirtualStackProps>(
     const { id, dragging } = useMosaicContainer(VirtualStackInner.displayName!);
     const visibleItems = useVisibleItems({ id, items, dragging: dragging?.source.data });
     const virtualizer = useVirtualizer({
-      getScrollElement,
-      estimateSize,
       count: visibleItems.length * 2 + 1,
+      estimateSize,
+      getScrollElement,
+      overscan,
+      onChange,
     });
 
     const virtualItems = virtualizer.getVirtualItems();
@@ -126,7 +133,7 @@ const VirtualStackInner = forwardRef<HTMLDivElement, VirtualStackProps>(
         }}
         ref={forwardedRef}
       >
-        {virtualItems.map((virtualItem, index) => (
+        {virtualItems.map((virtualItem) => (
           <div
             key={virtualItem.key}
             data-index={virtualItem.index}
@@ -146,10 +153,13 @@ const VirtualStackInner = forwardRef<HTMLDivElement, VirtualStackProps>(
             }}
             ref={virtualizer.measureElement}
           >
-            {index % 2 === 0 ? (
-              <Placeholder axis={axis} location={Math.floor(index / 2) + 0.5} />
+            {virtualItem.index % 2 === 0 ? (
+              <Placeholder axis={axis} location={Math.floor(virtualItem.index / 2) + 0.5} />
             ) : (
-              <Component object={visibleItems![Math.floor(index / 2)]} location={Math.floor(index / 2) + 1} />
+              <Component
+                object={visibleItems![Math.floor(virtualItem.index / 2)]}
+                location={Math.floor(virtualItem.index / 2) + 1}
+              />
             )}
           </div>
         ))}

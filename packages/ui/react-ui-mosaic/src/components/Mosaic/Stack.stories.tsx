@@ -3,10 +3,11 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import React, { useRef } from 'react';
+import React, { useRef, useState } from 'react';
 
 import { Obj } from '@dxos/echo';
 import { faker } from '@dxos/random';
+import { Toolbar } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { TestItem } from '../../testing';
@@ -43,29 +44,46 @@ export const Default: Story = {
   render: (props) => {
     const viewportRef = useRef<HTMLElement | null>(null);
     return (
-      <Mosaic.Root asChild>
-        <Mosaic.Container asChild axis='vertical' autoScroll={viewportRef.current} eventHandler={{ id: 'test' }}>
-          <Mosaic.Viewport options={{ overflow: { y: 'scroll' } }} viewportRef={viewportRef}>
-            <Stack {...props} />
-          </Mosaic.Viewport>
-        </Mosaic.Container>
-      </Mosaic.Root>
+      <>
+        <Toolbar.Root>
+          <div className='flex grow justify-center'>Items: {props.items?.length}</div>
+        </Toolbar.Root>
+        <Mosaic.Root asChild>
+          <Mosaic.Container asChild axis='vertical' autoScroll={viewportRef.current} eventHandler={{ id: 'test' }}>
+            <Mosaic.Viewport options={{ overflow: { y: 'scroll' } }} viewportRef={viewportRef}>
+              <Stack {...props} />
+            </Mosaic.Viewport>
+          </Mosaic.Container>
+        </Mosaic.Root>
+      </>
     );
   },
 };
 
-// TODO(burdon): This isn't working well yet.
 export const Virtual: Story = {
   render: (props) => {
     const viewportRef = useRef<HTMLDivElement | null>(null);
+    const [info, setInfo] = useState<any>(null);
     return (
-      <Mosaic.Root asChild>
-        <Mosaic.Container asChild axis='vertical' autoScroll={viewportRef.current} eventHandler={{ id: 'test' }}>
-          <Mosaic.Viewport options={{ overflow: { y: 'scroll' } }} viewportRef={viewportRef}>
-            <VirtualStack {...props} getScrollElement={() => viewportRef.current} estimateSize={() => 40} />
-          </Mosaic.Viewport>
-        </Mosaic.Container>
-      </Mosaic.Root>
+      <>
+        <Toolbar.Root>
+          <div className='flex grow justify-center'>{JSON.stringify(info)}</div>
+        </Toolbar.Root>
+        <Mosaic.Root asChild>
+          <Mosaic.Container asChild axis='vertical' autoScroll={viewportRef.current} eventHandler={{ id: 'test' }}>
+            <Mosaic.Viewport options={{ overflow: { y: 'scroll' } }} viewportRef={viewportRef}>
+              <VirtualStack
+                {...props}
+                getScrollElement={() => viewportRef.current}
+                estimateSize={() => 40}
+                onChange={(virtualizer) => {
+                  setInfo({ range: virtualizer.range });
+                }}
+              />
+            </Mosaic.Viewport>
+          </Mosaic.Container>
+        </Mosaic.Root>
+      </>
     );
   },
 };
