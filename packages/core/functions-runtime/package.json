@@ -8,33 +8,45 @@
   "author": "info@dxos.org",
   "sideEffects": false,
   "type": "module",
+  "sourceExports": {
+    ".": {
+      "default": "./src/index.ts"
+    },
+    "./native": {
+      "default": "./src/native/index.ts"
+    },
+    "./bundler": {
+      "default": "./src/bundler/index.ts"
+    },
+    "./edge": {
+      "default": "./src/edge/index.ts"
+    },
+    "./testing": {
+      "default": "./src/testing/index.ts"
+    }
+  },
   "exports": {
     ".": {
-      "source": "./src/index.ts",
       "types": "./dist/types/src/index.d.ts",
       "browser": "./dist/lib/browser/index.mjs",
       "node": "./dist/lib/node-esm/index.mjs"
     },
     "./native": {
-      "source": "./src/native/index.ts",
       "types": "./dist/types/src/native/index.d.ts",
       "browser": "./dist/lib/browser/native/index.mjs",
       "node": "./dist/lib/node-esm/native/index.mjs"
     },
     "./bundler": {
-      "source": "./src/bundler/index.ts",
       "types": "./dist/types/src/bundler/index.d.ts",
       "browser": "./dist/lib/browser/bundler/index.mjs",
       "node": "./dist/lib/node-esm/bundler/index.mjs"
     },
     "./edge": {
-      "source": "./src/edge/index.ts",
       "types": "./dist/types/src/edge/index.d.ts",
       "browser": "./dist/lib/browser/edge/index.mjs",
       "node": "./dist/lib/node-esm/edge/index.mjs"
     },
     "./testing": {
-      "source": "./src/testing/index.ts",
       "types": "./dist/types/src/testing/index.d.ts",
       "browser": "./dist/lib/browser/testing/index.mjs",
       "node": "./dist/lib/node-esm/testing/index.mjs"

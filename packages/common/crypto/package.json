@@ -15,9 +15,13 @@
       "browser": "./vendor/subtle-browser.mjs"
     }
   },
+  "sourceExports": {
+    ".": {
+      "default": "./src/index.ts"
+    }
+  },
   "exports": {
     ".": {
-      "source": "./src/index.ts",
       "types": "./dist/types/src/index.d.ts",
       "browser": "./dist/lib/browser/index.mjs",
       "node": "./dist/lib/node-esm/index.mjs"

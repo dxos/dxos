@@ -7,15 +7,21 @@
   "license": "MIT",
   "author": "info@dxos.org",
   "type": "module",
+  "sourceExports": {
+    ".": {
+      "default": "./src/index.ts"
+    },
+    "./testing": {
+      "default": "./src/testing.ts"
+    }
+  },
   "exports": {
     ".": {
-      "source": "./src/index.ts",
       "types": "./dist/types/src/index.d.ts",
       "browser": "./dist/lib/browser/index.mjs",
       "node": "./dist/lib/node-esm/index.mjs"
     },
     "./testing": {
-      "source": "./src/testing.ts",
       "types": "./dist/types/src/testing.d.ts",
       "browser": "./dist/lib/browser/testing.mjs",
       "node": "./dist/lib/node-esm/testing.mjs"

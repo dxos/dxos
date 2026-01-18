@@ -8,27 +8,37 @@
   "author": "DXOS.org",
   "sideEffects": true,
   "type": "module",
+  "sourceExports": {
+    "./deprecated": {
+      "default": "./src/deprecated/index.ts"
+    },
+    ".": {
+      "default": "./src/index.ts"
+    },
+    "./testing": {
+      "default": "./src/testing/index.ts"
+    },
+    "./types": {
+      "default": "./src/types/index.ts"
+    }
+  },
   "exports": {
     "./deprecated": {
-      "source": "./src/deprecated/index.ts",
       "types": "./dist/types/src/deprecated/index.d.ts",
       "browser": "./dist/lib/browser/deprecated/index.mjs",
       "node": "./dist/lib/node-esm/deprecated/index.mjs"
     },
     ".": {
-      "source": "./src/index.ts",
       "types": "./dist/types/src/index.d.ts",
       "browser": "./dist/lib/browser/index.mjs",
       "node": "./dist/lib/node-esm/index.mjs"
     },
     "./testing": {
-      "source": "./src/testing/index.ts",
       "types": "./dist/types/src/testing/index.d.ts",
       "browser": "./dist/lib/browser/testing/index.mjs",
       "node": "./dist/lib/node-esm/testing/index.mjs"
     },
     "./types": {
-      "source": "./src/types/index.ts",
       "types": "./dist/types/src/types/index.d.ts",
       "browser": "./dist/lib/browser/types/index.mjs",
       "node": "./dist/lib/node-esm/types/index.mjs"

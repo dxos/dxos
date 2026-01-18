@@ -8,9 +8,22 @@
   "author": "DXOS.org",
   "sideEffects": true,
   "type": "module",
+  "sourceExports": {
+    ".": {
+      "default": "./src/index.ts"
+    },
+    "./blueprints": {
+      "default": "./src/blueprints/index.ts"
+    },
+    "./cli": {
+      "default": "./src/cli/index.ts"
+    },
+    "./types": {
+      "default": "./src/types/index.ts"
+    }
+  },
   "exports": {
     ".": {
-      "source": "./src/index.ts",
       "types": "./dist/types/src/index.d.ts",
       "browser": "./dist/lib/browser/index.mjs",
       "node": "./dist/lib/node-esm/index.mjs"
@@ -18,17 +31,14 @@
     "./blueprints": {
       "browser": "./dist/lib/browser/blueprints/index.mjs",
       "node": "./dist/lib/node-esm/blueprints/index.mjs",
-      "source": "./src/blueprints/index.ts",
       "types": "./dist/types/src/blueprints/index.d.ts"
     },
     "./cli": {
-      "source": "./src/cli/index.ts",
       "types": "./dist/types/src/cli/index.d.ts",
       "browser": "./dist/lib/browser/cli/index.mjs",
       "node": "./dist/lib/node-esm/cli/index.mjs"
     },
     "./types": {
-      "source": "./src/types/index.ts",
       "types": "./dist/types/src/types/index.d.ts",
       "browser": "./dist/lib/browser/types/index.mjs",
       "node": "./dist/lib/node-esm/types/index.mjs"

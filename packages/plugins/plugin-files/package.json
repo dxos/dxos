@@ -8,9 +8,13 @@
   "author": "DXOS.org",
   "sideEffects": true,
   "type": "module",
+  "sourceExports": {
+    ".": {
+      "default": "./src/index.ts"
+    }
+  },
   "exports": {
     ".": {
-      "source": "./src/index.ts",
       "types": "./dist/types/src/index.d.ts",
       "browser": "./dist/lib/browser/index.mjs"
     }

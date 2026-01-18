@@ -8,15 +8,21 @@
   "author": "info@dxos.org",
   "sideEffects": true,
   "type": "module",
+  "sourceExports": {
+    ".": {
+      "default": "./src/index.ts"
+    },
+    "./extraction": {
+      "default": "./src/extraction/index.ts"
+    }
+  },
   "exports": {
     ".": {
-      "source": "./src/index.ts",
       "types": "./dist/types/src/index.d.ts",
       "browser": "./dist/lib/browser/index.mjs",
       "node": "./dist/lib/node-esm/index.mjs"
     },
     "./extraction": {
-      "source": "./src/extraction/index.ts",
       "types": "./dist/types/src/extraction/index.d.ts",
       "browser": "./dist/lib/browser/extraction/index.mjs",
       "node": "./dist/lib/node-esm/extraction/index.mjs"

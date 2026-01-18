@@ -9,15 +9,21 @@
   "author": "DXOS.org",
   "sideEffects": true,
   "type": "module",
+  "sourceExports": {
+    ".": {
+      "default": "./src/index.ts"
+    },
+    "./main": {
+      "default": "./src/main.ts"
+    }
+  },
   "exports": {
     ".": {
-      "source": "./src/index.ts",
       "types": "./dist/types/src/index.d.ts",
       "browser": "./dist/lib/browser/index.mjs",
       "node": "./dist/lib/node-esm/index.mjs"
     },
     "./main": {
-      "source": "./src/main.ts",
       "types": "./dist/types/src/main.d.ts",
       "browser": "./dist/lib/browser/main.mjs",
       "node": "./dist/lib/node-esm/main.mjs"

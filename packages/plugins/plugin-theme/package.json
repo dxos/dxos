@@ -8,14 +8,20 @@
   "author": "DXOS.org",
   "sideEffects": true,
   "type": "module",
+  "sourceExports": {
+    ".": {
+      "default": "./src/index.ts"
+    },
+    "./meta": {
+      "default": "./src/meta.ts"
+    }
+  },
   "exports": {
     ".": {
-      "source": "./src/index.ts",
       "types": "./dist/types/src/index.d.ts",
       "browser": "./dist/lib/browser/index.mjs"
     },
     "./meta": {
-      "source": "./src/meta.ts",
       "types": "./dist/types/src/meta.d.ts",
       "browser": "./dist/lib/browser/meta.mjs"
     }

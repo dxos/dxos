@@ -8,123 +8,165 @@
   "author": "info@dxos.org",
   "sideEffects": false,
   "type": "module",
+  "sourceExports": {
+    ".": {
+      "default": "./src/index.ts"
+    },
+    "./internal": {
+      "default": "./src/internal/index.ts"
+    },
+    "./testing": {
+      "default": "./src/testing/index.ts"
+    },
+    "./Annotation": {
+      "default": "./src/Annotation.ts"
+    },
+    "./Database": {
+      "default": "./src/Database.ts"
+    },
+    "./Entity": {
+      "default": "./src/Entity.ts"
+    },
+    "./Err": {
+      "default": "./src/Err.ts"
+    },
+    "./Filter": {
+      "default": "./src/Filter.ts"
+    },
+    "./Format": {
+      "default": "./src/Format.ts"
+    },
+    "./JsonSchema": {
+      "default": "./src/JsonSchema.ts"
+    },
+    "./Key": {
+      "default": "./src/Key.ts"
+    },
+    "./Obj": {
+      "default": "./src/Obj.ts"
+    },
+    "./Order": {
+      "default": "./src/Order.ts"
+    },
+    "./Query": {
+      "default": "./src/Query.ts"
+    },
+    "./QueryResult": {
+      "default": "./src/QueryResult.ts"
+    },
+    "./Ref": {
+      "default": "./src/Ref.ts"
+    },
+    "./Relation": {
+      "default": "./src/Relation.ts"
+    },
+    "./SchemaRegistry": {
+      "default": "./src/SchemaRegistry.ts"
+    },
+    "./Tag": {
+      "default": "./src/Tag.ts"
+    },
+    "./Type": {
+      "default": "./src/Type.ts"
+    }
+  },
   "exports": {
     ".": {
-      "source": "./src/index.ts",
       "types": "./dist/types/src/index.d.ts",
       "browser": "./dist/lib/browser/index.mjs",
       "node": "./dist/lib/node-esm/index.mjs"
     },
     "./internal": {
-      "source": "./src/internal/index.ts",
       "types": "./dist/types/src/internal/index.d.ts",
       "browser": "./dist/lib/browser/internal/index.mjs",
       "node": "./dist/lib/node-esm/internal/index.mjs"
     },
     "./testing": {
-      "source": "./src/testing/index.ts",
       "types": "./dist/types/src/testing/index.d.ts",
       "browser": "./dist/lib/browser/testing/index.mjs",
       "node": "./dist/lib/node-esm/testing/index.mjs"
     },
     "./Annotation": {
-      "source": "./src/Annotation.ts",
       "types": "./dist/types/src/Annotation.d.ts",
       "browser": "./dist/lib/browser/Annotation.mjs",
       "node": "./dist/lib/node-esm/Annotation.mjs"
     },
     "./Database": {
-      "source": "./src/Database.ts",
       "types": "./dist/types/src/Database.d.ts",
       "browser": "./dist/lib/browser/Database.mjs",
       "node": "./dist/lib/node-esm/Database.mjs"
     },
     "./Entity": {
-      "source": "./src/Entity.ts",
       "types": "./dist/types/src/Entity.d.ts",
       "browser": "./dist/lib/browser/Entity.mjs",
       "node": "./dist/lib/node-esm/Entity.mjs"
     },
     "./Err": {
-      "source": "./src/Err.ts",
       "types": "./dist/types/src/Err.d.ts",
       "browser": "./dist/lib/browser/Err.mjs",
       "node": "./dist/lib/node-esm/Err.mjs"
     },
     "./Filter": {
-      "source": "./src/Filter.ts",
       "types": "./dist/types/src/Filter.d.ts",
       "browser": "./dist/lib/browser/Filter.mjs",
       "node": "./dist/lib/node-esm/Filter.mjs"
     },
     "./Format": {
-      "source": "./src/Format.ts",
       "types": "./dist/types/src/Format.d.ts",
       "browser": "./dist/lib/browser/Format.mjs",
       "node": "./dist/lib/node-esm/Format.mjs"
     },
     "./JsonSchema": {
-      "source": "./src/JsonSchema.ts",
       "types": "./dist/types/src/JsonSchema.d.ts",
       "browser": "./dist/lib/browser/JsonSchema.mjs",
       "node": "./dist/lib/node-esm/JsonSchema.mjs"
     },
     "./Key": {
-      "source": "./src/Key.ts",
       "types": "./dist/types/src/Key.d.ts",
       "browser": "./dist/lib/browser/Key.mjs",
       "node": "./dist/lib/node-esm/Key.mjs"
     },
     "./Obj": {
-      "source": "./src/Obj.ts",
       "types": "./dist/types/src/Obj.d.ts",
       "browser": "./dist/lib/browser/Obj.mjs",
       "node": "./dist/lib/node-esm/Obj.mjs"
     },
     "./Order": {
-      "source": "./src/Order.ts",
       "types": "./dist/types/src/Order.d.ts",
       "browser": "./dist/lib/browser/Order.mjs",
       "node": "./dist/lib/node-esm/Order.mjs"
     },
     "./Query": {
-      "source": "./src/Query.ts",
       "types": "./dist/types/src/Query.d.ts",
       "browser": "./dist/lib/browser/Query.mjs",
       "node": "./dist/lib/node-esm/Query.mjs"
     },
     "./QueryResult": {
-      "source": "./src/QueryResult.ts",
       "types": "./dist/types/src/QueryResult.d.ts",
       "browser": "./dist/lib/browser/QueryResult.mjs",
       "node": "./dist/lib/node-esm/QueryResult.mjs"
     },
     "./Ref": {
-      "source": "./src/Ref.ts",
       "types": "./dist/types/src/Ref.d.ts",
       "browser": "./dist/lib/browser/Ref.mjs",
       "node": "./dist/lib/node-esm/Ref.mjs"
     },
     "./Relation": {
-      "source": "./src/Relation.ts",
       "types": "./dist/types/src/Relation.d.ts",
       "browser": "./dist/lib/browser/Relation.mjs",
       "node": "./dist/lib/node-esm/Relation.mjs"
     },
     "./SchemaRegistry": {
-      "source": "./src/SchemaRegistry.ts",
       "types": "./dist/types/src/SchemaRegistry.d.ts",
       "browser": "./dist/lib/browser/SchemaRegistry.mjs",
       "node": "./dist/lib/node-esm/SchemaRegistry.mjs"
     },
     "./Tag": {
-      "source": "./src/Tag.ts",
       "types": "./dist/types/src/Tag.d.ts",
       "browser": "./dist/lib/browser/Tag.mjs",
       "node": "./dist/lib/node-esm/Tag.mjs"
     },
     "./Type": {
-      "source": "./src/Type.ts",
       "types": "./dist/types/src/Type.d.ts",
       "browser": "./dist/lib/browser/Type.mjs",
       "node": "./dist/lib/node-esm/Type.mjs"

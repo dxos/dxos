@@ -8,21 +8,29 @@
   "author": "DXOS.org",
   "sideEffects": true,
   "type": "module",
+  "sourceExports": {
+    ".": {
+      "default": "./src/index.ts"
+    },
+    "./segment": {
+      "default": "./src/segment/index.ts"
+    },
+    "./sentry": {
+      "default": "./src/sentry/index.ts"
+    }
+  },
   "exports": {
     ".": {
-      "source": "./src/index.ts",
       "types": "./dist/types/src/index.d.ts",
       "browser": "./dist/lib/browser/index.mjs",
       "node": "./dist/lib/node-esm/index.mjs"
     },
     "./segment": {
-      "source": "./src/segment/index.ts",
       "types": "./dist/types/src/segment/index.d.ts",
       "browser": "./dist/lib/browser/segment/index.mjs",
       "node": "./dist/lib/node-esm/segment/index.mjs"
     },
     "./sentry": {
-      "source": "./src/sentry/index.ts",
       "types": "./dist/types/src/sentry/index.d.ts",
       "browser": "./dist/lib/browser/sentry/index.mjs",
       "node": "./dist/lib/node-esm/sentry/index.mjs"

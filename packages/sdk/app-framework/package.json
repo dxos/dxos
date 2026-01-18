@@ -8,51 +8,69 @@
   "author": "DXOS.org",
   "sideEffects": true,
   "type": "module",
+  "sourceExports": {
+    ".": {
+      "default": "./src/index.ts"
+    },
+    "./ActivationEvent": {
+      "default": "./src/core/activation-event.ts"
+    },
+    "./Capability": {
+      "default": "./src/core/capability.ts"
+    },
+    "./Common": {
+      "default": "./src/common/index.ts"
+    },
+    "./Plugin": {
+      "default": "./src/core/plugin.ts"
+    },
+    "./PluginManager": {
+      "default": "./src/core/plugin-manager.ts"
+    },
+    "./react": {
+      "default": "./src/react/index.ts"
+    },
+    "./testing": {
+      "default": "./src/testing/index.ts"
+    }
+  },
   "exports": {
     ".": {
-      "source": "./src/index.ts",
       "types": "./dist/types/src/index.d.ts",
       "browser": "./dist/lib/browser/index.mjs",
       "node": "./dist/lib/node-esm/index.mjs"
     },
     "./ActivationEvent": {
-      "source": "./src/core/activation-event.ts",
       "types": "./dist/types/src/activation-event/index.d.ts",
       "browser": "./dist/lib/browser/activation-event/index.mjs",
       "node": "./dist/lib/node-esm/activation-event/index.mjs"
     },
     "./Capability": {
-      "source": "./src/core/capability.ts",
       "types": "./dist/types/src/capability/index.d.ts",
       "browser": "./dist/lib/browser/capability/index.mjs",
       "node": "./dist/lib/node-esm/capability/index.mjs"
     },
     "./Common": {
-      "source": "./src/common/index.ts",
       "types": "./dist/types/src/common/index.d.ts",
       "browser": "./dist/lib/browser/common/index.mjs",
       "node": "./dist/lib/node-esm/common/index.mjs"
     },
     "./Plugin": {
-      "source": "./src/core/plugin.ts",
       "types": "./dist/types/src/plugin/index.d.ts",
       "browser": "./dist/lib/browser/plugin/index.mjs",
       "node": "./dist/lib/node-esm/plugin/index.mjs"
     },
     "./PluginManager": {
-      "source": "./src/core/plugin-manager.ts",
       "types": "./dist/types/src/plugin-manager/index.d.ts",
       "browser": "./dist/lib/browser/plugin-manager/index.mjs",
       "node": "./dist/lib/node-esm/plugin-manager/index.mjs"
     },
     "./react": {
-      "source": "./src/react/index.ts",
       "types": "./dist/types/src/react/index.d.ts",
       "browser": "./dist/lib/browser/react/index.mjs",
       "node": "./dist/lib/node-esm/react/index.mjs"
     },
     "./testing": {
-      "source": "./src/testing/index.ts",
       "types": "./dist/types/src/testing/index.d.ts",
       "browser": "./dist/lib/browser/testing/index.mjs",
       "node": "./dist/lib/node-esm/testing/index.mjs"

@@ -7,15 +7,21 @@
   "license": "MIT",
   "author": "DXOS.org",
   "type": "module",
+  "sourceExports": {
+    ".": {
+      "default": "./src/index.ts"
+    },
+    "./icons": {
+      "default": "./src/components/IconPicker/icons.ts"
+    }
+  },
   "exports": {
     ".": {
-      "source": "./src/index.ts",
       "types": "./dist/types/src/index.d.ts",
       "browser": "./dist/lib/browser/index.mjs",
       "node": "./dist/lib/node-esm/index.mjs"
     },
     "./icons": {
-      "source": "./src/components/IconPicker/icons.ts",
       "types": "./dist/types/src/components/IconPicker/icons.d.ts",
       "browser": "./dist/lib/browser/components/IconPicker/icons.mjs",
       "node": "./dist/lib/node-esm/components/IconPicker/icons.mjs"

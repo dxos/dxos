@@ -8,15 +8,21 @@
   "author": "DXOS.org",
   "sideEffects": true,
   "type": "module",
+  "sourceExports": {
+    ".": {
+      "default": "./src/index.ts"
+    },
+    "./react": {
+      "default": "./src/react.ts"
+    }
+  },
   "exports": {
     ".": {
-      "source": "./src/index.ts",
       "types": "./dist/src/index.d.ts",
       "browser": "./dist/src/index.js",
       "node": "./dist/src/index.js"
     },
     "./react": {
-      "source": "./src/react.ts",
       "types": "./dist/src/react.d.ts",
       "browser": "./dist/src/react.js",
       "node": "./dist/src/react.js"
