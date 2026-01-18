@@ -5,7 +5,7 @@
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
   "author": "DXOS.org",
-  "sideEffects": true,
+  "sideEffects": false,
   "type": "module",
   "exports": {
     ".": {

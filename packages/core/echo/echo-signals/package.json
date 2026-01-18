@@ -6,7 +6,7 @@
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
   "author": "info@dxos.org",
-  "sideEffects": true,
+  "sideEffects": false,
   "type": "module",
   "exports": {
     "./core": {
