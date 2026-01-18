@@ -3,9 +3,9 @@
 //
 
 import { type ReactVirtualizerOptions, useVirtualizer } from '@tanstack/react-virtual';
-import React, { type FC, Fragment, type ReactElement, type Ref, forwardRef, useRef } from 'react';
+import React, { type FC, Fragment, type ReactElement, type Ref, forwardRef, useRef, useState } from 'react';
 
-import { type Obj } from '@dxos/echo';
+import { Obj } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { type SlottableClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
@@ -73,7 +73,7 @@ const Stack = StackInner as <T extends Obj.Any = Obj.Any>(
 //
 
 type VirtualStackProps<T extends Obj.Any = Obj.Any> = StackProps<T> &
-  Pick<ReactVirtualizerOptions<HTMLDivElement, HTMLDivElement>, 'estimateSize'>;
+  Pick<ReactVirtualizerOptions<HTMLDivElement, HTMLDivElement>, 'getScrollElement' | 'estimateSize'>;
 
 const VirtualStackInner = forwardRef<HTMLDivElement, VirtualStackProps>(
   (
@@ -84,6 +84,7 @@ const VirtualStackInner = forwardRef<HTMLDivElement, VirtualStackProps>(
       axis = 'vertical',
       items,
       Component = DefaultComponent,
+      getScrollElement,
       estimateSize,
       ...props
     },
@@ -92,11 +93,8 @@ const VirtualStackInner = forwardRef<HTMLDivElement, VirtualStackProps>(
     invariant(Component);
     const { id, dragging } = useMosaicContainer(VirtualStackInner.displayName!);
     const visibleItems = useVisibleItems({ id, items, dragging: dragging?.source.data });
-
-    // TODO(burdon): Should reference Mosaic.Viewport; move here or provide ref.
-    const viewportRef = useRef<HTMLElement>(null);
     const virtualizer = useVirtualizer({
-      getScrollElement: () => viewportRef.current,
+      getScrollElement,
       estimateSize,
       count: visibleItems.length * 2 + 1,
     });
@@ -172,12 +170,26 @@ const VirtualStack = VirtualStackInner as <T extends Obj.Any = Obj.Any>(
 
 const DefaultComponent: StackProps['Component'] = (props) => {
   const dragHandleRef = useRef<HTMLButtonElement>(null);
+  const [open, setOpen] = useState(false);
   return (
     <Mosaic.Tile {...props} className='border border-separator rounded-sm font-mono'>
       <Card.Toolbar>
         <Card.DragHandle ref={dragHandleRef} />
-        <Card.Heading> {props.object.id}</Card.Heading>
+        <Card.Heading>{Obj.getLabel(props.object) ?? props.object.id}</Card.Heading>
+        <Card.Menu
+          items={[
+            {
+              label: open ? 'Hide details' : 'Show details',
+              onSelect: () => setOpen((open) => !open),
+            },
+          ]}
+        />
       </Card.Toolbar>
+      {open && (
+        <Card.Section>
+          <pre className='text-xs whitespace-pre-wrap text-description'>{JSON.stringify(props.object, null, 2)}</pre>
+        </Card.Section>
+      )}
     </Mosaic.Tile>
   );
 };

@@ -273,7 +273,7 @@ const CardSection = forwardRef<HTMLDivElement, CardSectionProps>(
             {icon && <Icon icon={icon} />}
           </div>
         )}
-        <div {...props} role='none' className={mx('plb-1', classNames, className)} ref={forwardedRef}>
+        <div {...props} role='none' className={mx('plb-1 overflow-hidden', classNames, className)} ref={forwardedRef}>
           {children}
         </div>
       </div>
