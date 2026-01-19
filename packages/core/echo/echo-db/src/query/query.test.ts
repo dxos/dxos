@@ -629,9 +629,15 @@ describe('Query', () => {
       // Should return all objects that reference Alice via regular references: Task 1, Task 2, and the Note.
       // Note: Relations (like HasManager) are not included because they use a different storage mechanism.
       expect(objects).toHaveLength(3);
-      const titles = objects.filter((o) => o.title).map((o) => o.title).sort();
+      const titles = objects
+        .filter((o) => o.title)
+        .map((o) => o.title)
+        .sort();
       expect(titles).toEqual(['Task 1', 'Task 2']);
-      const names = objects.filter((o) => o.name).map((o) => o.name).sort();
+      const names = objects
+        .filter((o) => o.name)
+        .map((o) => o.name)
+        .sort();
       expect(names).toEqual(['Note about Alice']);
     });
 
