@@ -10,7 +10,7 @@ import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 
 import { Capability, Common } from '@dxos/app-framework';
-import { type Space, SpaceState, getSpace, isSpace, parseId } from '@dxos/client/echo';
+import { type Space, SpaceState, getSpace, isSpace } from '@dxos/client/echo';
 import { DXN, Filter, Obj, type QueryResult, Type } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { Operation } from '@dxos/operation';
@@ -20,6 +20,7 @@ import { CreateAtom, Graph, GraphBuilder, type Node, NodeMatcher } from '@dxos/p
 import { Collection, ViewAnnotation, getTypenameFromQuery } from '@dxos/schema';
 import { isNonNullable } from '@dxos/util';
 
+import { getActiveSpace } from '../../hooks';
 import { meta } from '../../meta';
 import { SPACE_TYPE, SpaceCapabilities, SpaceOperation, type SpaceSettingsProps } from '../../types';
 import {
@@ -110,9 +111,7 @@ export default Capability.makeModule(
               id: SpaceOperation.OpenMembers.meta.key,
               data: Effect.fnUntraced(function* () {
                 const client = yield* Capability.get(ClientCapabilities.Client);
-                const layout = yield* Capability.get(Common.Capability.Layout);
-                const { spaceId } = parseId(layout.workspace);
-                const space = (spaceId ? client.spaces.get(spaceId) : undefined) ?? client.spaces.default;
+                const space = getActiveSpace(context) ?? client.spaces.default;
                 yield* Operation.invoke(SpaceOperation.OpenMembers, { space });
               }),
               properties: {
@@ -129,9 +128,7 @@ export default Capability.makeModule(
               id: SpaceOperation.OpenSettings.meta.key,
               data: Effect.fnUntraced(function* () {
                 const client = yield* Capability.get(ClientCapabilities.Client);
-                const layout = yield* Capability.get(Common.Capability.Layout);
-                const { spaceId } = parseId(layout.workspace);
-                const space = (spaceId ? client.spaces.get(spaceId) : undefined) ?? client.spaces.default;
+                const space = getActiveSpace(context) ?? client.spaces.default;
                 yield* Operation.invoke(SpaceOperation.OpenSettings, { space });
               }),
               properties: {
@@ -606,6 +603,6 @@ export default Capability.makeModule(
       }),
     ]);
 
-    return Capability.contributes(Common.Capability.AppGraphBuilder, extensions.flat());
+    return Capability.contributes(Common.Capability.AppGraphBuilder, extensions);
   }),
 );
