@@ -7,6 +7,7 @@ import type * as SqlError from '@effect/sql/SqlError';
 import * as Effect from 'effect/Effect';
 
 import {
+  FeedCursor,
   type AppendRequest,
   type AppendResponse,
   type Block,
@@ -15,6 +16,7 @@ import {
   type SubscribeRequest,
   type SubscribeResponse,
 } from './protocol';
+import { invariant } from '@dxos/invariant';
 
 export interface FeedStoreOptions {
   localActorId: string;
@@ -58,6 +60,12 @@ export class FeedStore {
         expiresAt INTEGER NOT NULL,
         feedPrivateIds TEXT NOT NULL -- JSON array
     )`;
+
+    // Cursor Tokens Table
+    yield* sql`CREATE TABLE IF NOT EXISTS cursor_tokens (
+        spaceId TEXT PRIMARY KEY,
+        token TEXT NOT NULL
+    )`;
   });
 
   // Internal Logic
@@ -83,6 +91,19 @@ export class FeedStore {
       }),
   );
 
+  private _ensureCursorToken = Effect.fn('Feed.ensureCursorToken')(
+    (spaceId: string): Effect.Effect<string, SqlError.SqlError, SqlClient.SqlClient> =>
+      Effect.gen(this, function* () {
+        const sql = yield* SqlClient.SqlClient;
+        const rows = yield* sql<{ token: string }>`SELECT token FROM cursor_tokens WHERE spaceId = ${spaceId}`;
+        if (rows.length > 0) return rows[0].token;
+
+        const token = crypto.randomUUID().replace(/-/g, '').slice(0, 6);
+        yield* sql`INSERT INTO cursor_tokens (spaceId, token) VALUES (${spaceId}, ${token})`;
+        return token;
+      }),
+  );
+
   // RPCs
 
   query = Effect.fn('Feed.query')(
@@ -90,7 +111,41 @@ export class FeedStore {
       Effect.gen(this, function* () {
         const sql = yield* SqlClient.SqlClient;
         let feedIds: string[] = [];
-        const cursor: number = request.cursor ?? -1;
+        let cursorInsertionId = -1;
+        let cursorToken: string | undefined;
+
+        if (!request.spaceId) {
+          return yield* Effect.die(new Error('spaceId is required'));
+        }
+
+        if (request.cursor) {
+          const { token, insertionId } = decodeCursor(request.cursor as FeedCursor);
+          if (!token || insertionId === undefined || isNaN(insertionId)) {
+            return yield* Effect.die(new Error(`Invalid cursor format`));
+          }
+          cursorToken = token;
+          cursorInsertionId = insertionId;
+        }
+
+        // Validate Token if cursor used
+        const validCursorToken = yield* this._ensureCursorToken(request.spaceId);
+        if (request.cursor && cursorToken !== validCursorToken) {
+          return yield* Effect.die(new Error(`Cursor token mismatch`));
+        }
+
+        // If cursor is provided, we must validate it against the space token.
+        // If spaceId is not provided in request (e.g. feedIds query), we can't easily validate token unless we look up spaceId for feedIds.
+        // Ideally spaceId should be required for token validation.
+
+        /* 
+           Logic:
+           1. If `cursor` is present, it's `token|insertionId`.
+           2. If `position` is present, it's `position` (legacy/manual).
+           
+           We prioritize `cursor`.
+        */
+
+        const position = request.position ?? -1;
 
         // Resolve Subscriptions or FeedIds
         if ('subscriptionId' in request.query) {
@@ -114,18 +169,31 @@ export class FeedStore {
         }
 
         if (feedIds.length === 0) {
-          return { requestId: request.requestId, blocks: [] };
+          return { requestId: request.requestId, blocks: [], nextCursor: encodeCursor(validCursorToken, -1) };
         }
 
         // Fetch Blocks
-        const rows = yield* sql<Block>`
+        const query = sql<Block>`
             SELECT blocks.* 
             FROM blocks
             JOIN feeds ON blocks.feedPrivateId = feeds.feedPrivateId
             WHERE feeds.feedId IN ${sql.in(feedIds)}
-              AND (blocks.position > ${cursor} OR blocks.position IS NULL)
-              ${request.spaceId ? sql`AND feeds.spaceId = ${request.spaceId}` : sql``}
-            ORDER BY blocks.position ASC NULLS LAST
+            ${request.spaceId ? sql`AND feeds.spaceId = ${request.spaceId}` : sql``}
+        `;
+
+        // Add filter based on cursor or position
+        const filter = request.cursor
+          ? sql`AND blocks.insertionId > ${cursorInsertionId}`
+          : sql`AND (blocks.position > ${position} OR blocks.position IS NULL)`;
+
+        const orderBy = request.cursor
+          ? sql`ORDER BY blocks.insertionId ASC`
+          : sql`ORDER BY blocks.position ASC NULLS LAST`;
+
+        const rows = yield* sql<Block>`
+            ${query}
+            ${filter}
+            ${orderBy}
             ${request.limit ? sql`LIMIT ${request.limit}` : sql``}
         `;
 
@@ -135,42 +203,15 @@ export class FeedStore {
           data: new Uint8Array(row.data),
         }));
 
-        return { requestId: request.requestId, blocks };
-      }),
-  );
+        let nextCursor: FeedCursor = request.cursor ?? encodeCursor(validCursorToken, -1);
+        if (blocks.length > 0 && request.spaceId) {
+          const lastBlock = blocks[blocks.length - 1];
+          if (lastBlock.insertionId !== undefined) {
+            nextCursor = encodeCursor(validCursorToken, lastBlock.insertionId);
+          }
+        }
 
-  queryLocal = Effect.fn('Feed.queryLocal')(
-    (request: {
-      spaceId: string;
-      // TODO(dmaretskyi): Name doesn't make sense, change to "after"
-      conversation?: number; // insertionId exclusive
-      limit?: number;
-    }): Effect.Effect<Block[], SqlError.SqlError, SqlClient.SqlClient> =>
-      Effect.gen(this, function* () {
-        const sql = yield* SqlClient.SqlClient;
-        const cursor = request.conversation ?? -1;
-        const limit = request.limit ?? 100;
-
-        const rows = yield* sql`
-            SELECT blocks.* 
-            FROM blocks
-            JOIN feeds ON blocks.feedPrivateId = feeds.feedPrivateId
-            WHERE feeds.spaceId = ${request.spaceId}
-              AND blocks.insertionId > ${cursor}
-            ORDER BY blocks.insertionId ASC
-            LIMIT ${limit}
-        `;
-
-        const blocks = (rows as any[]).map((row) => ({
-          ...row,
-          data: new Uint8Array(row.data),
-          position: row.position,
-          predSequence: row.predSequence,
-          predActorId: row.predActorId,
-          insertionId: row.insertionId,
-        })) as Block[];
-
-        return blocks;
+        return { requestId: request.requestId, blocks, nextCursor } satisfies QueryResponse;
       }),
   );
 
@@ -313,3 +354,9 @@ export class FeedStore {
       }),
   );
 }
+
+const encodeCursor = (token: string, insertionId: number) => FeedCursor.make(`${token}|${insertionId}`);
+const decodeCursor = (cursor: FeedCursor) => {
+  const [token, insertionId] = cursor.split('|');
+  return { token, insertionId: Number(insertionId) };
+};

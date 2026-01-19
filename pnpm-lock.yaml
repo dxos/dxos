@@ -5198,6 +5198,9 @@ importers:
 
   packages/core/echo/feed:
     dependencies:
+      '@dxos/invariant':
+        specifier: workspace:*
+        version: link:../../../common/invariant
       '@dxos/keys':
         specifier: workspace:*
         version: link:../../../common/keys

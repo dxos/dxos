@@ -10,6 +10,7 @@ import { ObjectId, SpaceId } from '@dxos/keys';
 
 import { FeedStore } from './feed';
 import { type Block } from './protocol';
+import { log } from '@dxos/log';
 
 const TestLayer = SqliteClient.layer({
   filename: ':memory:',
@@ -39,13 +40,13 @@ describe('Feed V2', () => {
         data: new Uint8Array([1, 2, 3]),
       };
 
-      const appendRes = yield* feed.append({ requestId: 'req-1', blocks: [block], spaceId });
+      const appendRes = yield* feed.append({ requestId: 'req-1', blocks: [block], spaceId, feedId, namespace: 'data' });
       expect(appendRes.positions.length).toBe(1);
       expect(appendRes.positions[0]).toBeDefined();
       expect(appendRes.requestId).toBe('req-1');
 
       // Query by feedId
-      const queryRes = yield* feed.query({ requestId: 'req-2', query: { feedIds: [feedId] }, cursor: -1, spaceId }); // Use cursor '0' to get everything
+      const queryRes = yield* feed.query({ requestId: 'req-2', query: { feedIds: [feedId] }, position: -1, spaceId }); // Use position -1 to get everything
       expect(queryRes.blocks.length).toBe(1);
       expect(queryRes.blocks[0].position).toBe(appendRes.positions[0]);
       expect(queryRes.blocks[0].sequence).toBe(123); // Verify Author Sequence is preserved
@@ -73,13 +74,14 @@ describe('Feed V2', () => {
         data: new Uint8Array([1]),
       };
 
-      yield* feed.append({ requestId: 'req-ns', blocks: [block], namespace, spaceId });
+      yield* feed.append({ requestId: 'req-ns', blocks: [block], namespace, spaceId, feedId });
 
       // Verify directly from DB (white-box test) to ensure schema is correct
       const sql = yield* SqliteClient.SqliteClient;
       const rows = yield* sql<{ feedNamespace: string }>`
-        SELECT feedNamespace FROM feeds WHERE spaceId = ${spaceId} AND feedId = ${ALICE}
+        SELECT feedNamespace FROM feeds WHERE spaceId = ${spaceId} AND feedId = ${feedId}
       `;
+      expect(rows.length).toBeGreaterThan(0);
       expect(rows[0].feedNamespace).toBe(namespace);
     }).pipe(Effect.provide(TestLayer)),
   );
@@ -107,6 +109,8 @@ describe('Feed V2', () => {
           },
         ],
         spaceId,
+        feedId,
+        namespace: 'data',
       });
 
       // Subscribe
@@ -117,8 +121,9 @@ describe('Feed V2', () => {
       // Query via Subscription
       const queryRes = yield* feed.query({
         requestId: 'req-3',
+        spaceId,
         query: { subscriptionId: subRes.subscriptionId },
-        cursor: 0,
+        position: 0,
       });
       expect(queryRes.blocks.length).toBe(0);
       expect(queryRes.requestId).toBe('req-3');
@@ -154,14 +159,14 @@ describe('Feed V2', () => {
         requestId: 'req1',
         spaceId,
         query: { feedIds: ['feed-1'] },
-        cursor: -1,
+        position: -1,
       });
 
       const result2 = yield* feedStore.query({
         requestId: 'req2',
         spaceId,
         query: { feedIds: ['feed-2'] },
-        cursor: -1,
+        position: -1,
       });
 
       expect(result1.blocks[0].insertionId).toBeTypeOf('number');
@@ -170,7 +175,7 @@ describe('Feed V2', () => {
     }).pipe(Effect.provide(TestLayer)),
   );
 
-  it.effect('queryLocal', () =>
+  it.effect('should assign monotonic insertionId and support token based cursor', () =>
     Effect.gen(function* () {
       const feedStore = new FeedStore({ localActorId: ALICE, assignPositions: true });
       yield* feedStore.migrate();
@@ -203,27 +208,76 @@ describe('Feed V2', () => {
         },
       ]);
 
-      // Query all local
-      const blocks = yield* feedStore.queryLocal({
+      // Query all with feedId (simulating unified query with no cursor initially)
+      const feed1Res = yield* feedStore.query({
+        requestId: 'req1',
         spaceId,
-        limit: 10,
+        query: { feedIds: ['feed-1'] },
+        cursor: undefined,
+      });
+      const feed2Res = yield* feedStore.query({
+        requestId: 'req2',
+        spaceId,
+        query: { feedIds: ['feed-2'] },
+        cursor: undefined,
       });
 
-      expect(blocks).toHaveLength(3);
-      expect(blocks[0].insertionId).toBeLessThan(blocks[1].insertionId!);
-      expect(blocks[1].insertionId).toBeLessThan(blocks[2].insertionId!);
-      // Check data to confirm order
-      expect(blocks[0].data[0]).toEqual(1);
-      expect(blocks[1].data[0]).toEqual(2);
-      expect(blocks[2].data[0]).toEqual(3);
+      // Verify insertionId consistency
+      const block1 = feed1Res.blocks[0]; // data=[1]
+      const block2 = feed2Res.blocks[0]; // data=[2]
+      const block3 = feed1Res.blocks[1]; // data=[3]
 
-      // Query with cursor
-      const nextBlocks = yield* feedStore.queryLocal({
+      expect(block1.insertionId).toBeLessThan(block2.insertionId!);
+      expect(block2.insertionId).toBeLessThan(block3.insertionId!);
+
+      // Verify Next Cursor format (Token|InsertionId)
+      expect(feed1Res.nextCursor).toBeDefined();
+      expect(feed1Res.nextCursor).toContain('|');
+
+      // Test Query with invalid cursor token
+      const invalidCursor = 'badtoken|0';
+      const result = yield* feedStore
+        .query({
+          requestId: 'req-bad',
+          spaceId,
+          query: { feedIds: ['feed-1'] },
+          cursor: invalidCursor as any,
+        })
+        .pipe(Effect.exit);
+
+      expect(result._tag).toBe('Failure');
+      if (result._tag === 'Failure') {
+        const cause: any = result.cause;
+
+        // Handling Effect Cause structure which might be diff in this version
+        // Ideally we use Cause.isDie(cause) -> error
+        // But for quick check:
+        let error = cause.value || cause.defect || cause;
+        if (cause._tag === 'Die') error = cause.value || cause.defect;
+
+        expect(error).toBeDefined();
+        expect(error.message).toBe('Cursor token mismatch');
+      }
+
+      // Test Query with VALID cursor
+      // Use the cursor from the first block of feed-1 to get the second block
+      // Construct cursor manually or assume we got it from somewhere.
+      // Actually `nextCursor` points to the END.
+      // Let's manually construct a cursor to point after the first item.
+      // We need the token.
+      // We can get it from nextCursor.
+      const token = feed1Res.nextCursor.split('|')[0];
+      const validCursor = `${token}|${block1.insertionId}`;
+
+      const nextRes = yield* feedStore.query({
+        requestId: 'req-next',
         spaceId,
-        conversation: blocks[1].insertionId!,
+        query: { feedIds: ['feed-1'] },
+        cursor: validCursor as any,
       });
-      expect(nextBlocks).toHaveLength(1);
-      expect(nextBlocks[0].data[0]).toEqual(3);
+
+      expect(nextRes.blocks.length).toBe(1);
+      expect(nextRes.blocks[0].data[0]).toBe(3);
     }).pipe(Effect.provide(TestLayer)),
   );
 
@@ -253,10 +307,48 @@ describe('Feed V2', () => {
       expect(blocks[0].data).toEqual(new Uint8Array([1]));
 
       // Query by feedId
-      const queryRes = yield* feed.query({ query: { feedIds: [feedId] }, cursor: -1, spaceId }); // Use cursor '-1' to get everything
+      const queryRes = yield* feed.query({ query: { feedIds: [feedId] }, position: -1, spaceId }); // Use position '-1' to get everything
       expect(queryRes.blocks.length).toBe(1);
       expect(queryRes.blocks.length).toBe(1);
       expect(queryRes.blocks[0]).toMatchObject({ ...blocks[0], position: expect.any(Number) });
+    }).pipe(Effect.provide(TestLayer)),
+  );
+
+  it.effect('tailing a feed', () =>
+    Effect.gen(function* () {
+      const spaceId = SpaceId.random();
+      const feedId = ObjectId.random();
+
+      const feed = new FeedStore({ localActorId: ALICE, assignPositions: true });
+      yield* feed.migrate();
+
+      yield* feed.appendLocal([
+        {
+          spaceId,
+          feedId,
+          feedNamespace: 'data',
+          data: new Uint8Array([1]),
+        },
+      ]);
+      const query1 = yield* feed.query({ spaceId, query: { feedIds: [feedId] } }); // Use position '-1' to get everything
+      log.info('query 1', { blocks: query1.blocks.length, cursor: query1.nextCursor });
+      expect(query1.blocks.length).toBe(1);
+
+      const query2 = yield* feed.query({ spaceId, query: { feedIds: [feedId] }, cursor: query1.nextCursor });
+      log.info('query 2', { blocks: query2.blocks.length, cursor: query2.nextCursor });
+      expect(query2.blocks.length).toBe(0);
+
+      yield* feed.appendLocal([
+        {
+          spaceId,
+          feedId,
+          feedNamespace: 'data',
+          data: new Uint8Array([2]),
+        },
+      ]);
+      const query3 = yield* feed.query({ spaceId, query: { feedIds: [feedId] }, cursor: query2.nextCursor });
+      log.info('query 3', { blocks: query3.blocks.length, cursor: query3.nextCursor });
+      expect(query3.blocks.length).toBe(1);
     }).pipe(Effect.provide(TestLayer)),
   );
 });
