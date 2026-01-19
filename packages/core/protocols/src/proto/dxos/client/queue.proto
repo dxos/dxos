@@ -1,0 +1,49 @@
+syntax = "proto3";
+
+package dxos.client.services;
+
+import "google/protobuf/struct.proto";
+import "google/protobuf/empty.proto";
+
+
+// TODO(dmaretskyi): Clean-up this protocol after migration to feeds.
+message QueueQuery {
+  string queue_id = 1;
+  optional string after = 2;
+  optional string before = 3;
+  optional int32 limit = 4;
+  optional bool reverse = 5;
+  repeated string object_ids = 6;
+}
+
+message QueueQueryResult {
+  repeated google.protobuf.Struct objects = 1;
+  string next_cursor = 2;
+  string prev_cursor = 3;
+}
+
+message QueryQueueRequest {
+  string subspace_tag = 1;
+  string space_id = 2;
+  QueueQuery query = 3;
+}
+
+message InsertIntoQueueRequest {
+  string subspace_tag = 1;
+  string space_id = 2;
+  string queue_id = 3;
+  repeated google.protobuf.Struct objects = 4;
+}
+
+message DeleteFromQueueRequest {
+  string subspace_tag = 1;
+  string space_id = 2;
+  string queue_id = 3;
+  repeated string object_ids = 4;
+}
+
+service QueueService {
+  rpc QueryQueue(QueryQueueRequest) returns (QueueQueryResult);
+  rpc InsertIntoQueue(InsertIntoQueueRequest) returns (google.protobuf.Empty);
+  rpc DeleteFromQueue(DeleteFromQueueRequest) returns (google.protobuf.Empty);
+}

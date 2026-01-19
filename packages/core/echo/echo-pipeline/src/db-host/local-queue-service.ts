@@ -5,7 +5,15 @@
 import { RuntimeProvider } from '@dxos/effect';
 import { FeedStore, type Block } from '@dxos/feed';
 import type { ObjectId, SpaceId } from '@dxos/keys';
-import { type QueryResult, type QueueQuery, type QueueService } from '@dxos/protocols';
+import {
+  type QueryQueueRequest,
+  type InsertIntoQueueRequest,
+  type DeleteFromQueueRequest,
+  type QueueQueryResult,
+  type QueueQuery,
+  type QueueService,
+} from '@dxos/protocols/proto/dxos/client/services';
+import { invariant } from '@dxos/invariant';
 import type * as SqlClient from '@effect/sql/SqlClient';
 import { Effect, Function } from 'effect';
 
@@ -21,14 +29,16 @@ export class LocalQueueServiceImpl implements QueueService {
     this.#feedStore = feedStore;
   }
 
-  queryQueue(subspaceTag: string, spaceId: SpaceId, query: QueueQuery): Promise<QueryResult> {
+  queryQueue(request: QueryQueueRequest): Promise<QueueQueryResult> {
+    const { subspaceTag, spaceId, query } = request;
     return RuntimeProvider.runPromise(this.#runtime)(
       Effect.gen(this, function* () {
+        invariant(query, 'query is required');
         const cursor = query.after ? parseInt(query.after) : -1;
         const result = yield* this.#feedStore.query({
           requestId: crypto.randomUUID(),
           spaceId: spaceId,
-          query: { feedIds: [query.queueId.toString()] },
+          query: { feedIds: [query.queueId!.toString()] },
           cursor,
           limit: query.limit,
         });
@@ -41,21 +51,24 @@ export class LocalQueueServiceImpl implements QueueService {
         const lastBlock = result.blocks[result.blocks.length - 1];
         const nextCursor = lastBlock && lastBlock.position != null ? String(lastBlock.position) : null;
 
-        return Function.identity<QueryResult>({
+        return Function.identity<QueueQueryResult>({
           objects,
-          nextCursor: nextCursor as any, // Cast to QueueCursor
-          prevCursor: null,
+
+          // TODO(dmaretskyi): This is wrong, fix later - cursors should come directly from the feed.
+          nextCursor: nextCursor?.toString() ?? '',
+          prevCursor: '',
         });
       }),
     );
   }
 
-  insertIntoQueue(subspaceTag: string, spaceId: SpaceId, queueId: ObjectId, objects: unknown[]): Promise<void> {
+  insertIntoQueue(request: InsertIntoQueueRequest): Promise<void> {
+    const { subspaceTag, spaceId, queueId, objects } = request;
     return RuntimeProvider.runPromise(this.#runtime)(
       Effect.gen(this, function* () {
-        const messages = objects.map((obj) => ({
+        const messages = objects!.map((obj) => ({
           spaceId: spaceId,
-          feedId: queueId,
+          feedId: queueId!,
           feedNamespace: subspaceTag,
           data: new TextEncoder().encode(JSON.stringify(obj)),
         }));
@@ -65,12 +78,13 @@ export class LocalQueueServiceImpl implements QueueService {
     );
   }
 
-  deleteFromQueue(subspaceTag: string, spaceId: SpaceId, queueId: ObjectId, objectIds: ObjectId[]): Promise<void> {
+  deleteFromQueue(request: DeleteFromQueueRequest): Promise<void> {
+    const { subspaceTag, spaceId, queueId, objectIds } = request;
     return RuntimeProvider.runPromise(this.#runtime)(
       Effect.gen(this, function* () {
-        const messages = objectIds.map((id) => ({
+        const messages = objectIds!.map((id) => ({
           spaceId: spaceId,
-          feedId: queueId,
+          feedId: queueId!,
           feedNamespace: subspaceTag,
           data: new TextEncoder().encode(JSON.stringify({ id, '@deleted': true })),
         }));

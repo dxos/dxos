@@ -39,6 +39,8 @@ import { createSelectedDocumentsIterator } from './documents-iterator';
 import { QueryServiceImpl } from './query-service';
 import { SpaceStateManager } from './space-state-manager';
 import type { QueueService } from '@dxos/protocols';
+import { LocalQueueServiceImpl } from './local-queue-service';
+import { QueueServiceStub } from './stub';
 
 export interface EchoHostIndexingConfig {
   /**
@@ -92,7 +94,7 @@ export class EchoHost extends Resource {
 
   private _updateIndexes!: DeferredTask;
 
-  private _queuesService?: QueueService;
+  private _queuesService: QueueService;
 
   private _indexesUpToDate = false;
 
@@ -116,7 +118,9 @@ export class EchoHost extends Resource {
 
     if (localQueues) {
       this._feedStore = new FeedStore({ assignPositions: false, localActorId: crypto.randomUUID() });
-      this._queuesService = new LocalQueueService({ feedStore: this._feedStore });
+      this._queuesService = new LocalQueueServiceImpl(runtime, this._feedStore);
+    } else {
+      this._queuesService = new QueueServiceStub();
     }
 
     this._indexer = new Indexer({
@@ -230,6 +234,11 @@ export class EchoHost extends Resource {
     await this._indexer.open(ctx);
     await this._queryService.open(ctx);
     await this._spaceStateManager.open(ctx);
+
+    if (this._feedStore) {
+      await RuntimeProvider.runPromise(this._runtime)(this._feedStore.migrate());
+    }
+
     if (this._indexConfig.fullText) {
       await RuntimeProvider.runPromise(this._runtime)(this._indexer2.migrate());
       this._updateIndexes = new DeferredTask(this._ctx, this._runUpdateIndexes);

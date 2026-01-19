@@ -41,14 +41,18 @@ export class QueueImpl<T extends Entity.Unknown = Entity.Unknown> implements Que
     try {
       TRACE_QUEUE_LOAD &&
         log.info('queue refresh begin', { currentObjects: this._objects.length, refreshId: thisRefreshId });
-      const { objects } = await this._service.queryQueue(this._subspaceTag, this._spaceId, { queueId: this._queueId });
-      TRACE_QUEUE_LOAD && log.info('items fetched', { refreshId: thisRefreshId, count: objects.length });
+      const { objects } = await this._service.queryQueue({
+        subspaceTag: this._subspaceTag,
+        spaceId: this._spaceId,
+        query: { queueId: this._queueId },
+      });
+      TRACE_QUEUE_LOAD && log.info('items fetched', { refreshId: thisRefreshId, count: objects?.length ?? 0 });
       if (thisRefreshId !== this._refreshId) {
         return;
       }
 
       const decodedObjects = await Promise.all(
-        objects.map((obj) =>
+        (objects ?? []).map((obj) =>
           Obj.fromJSON(obj, {
             refResolver: this._refResolver,
             dxn: this._dxn.extend([(obj as any).id]),
@@ -66,7 +70,8 @@ export class QueueImpl<T extends Entity.Unknown = Entity.Unknown> implements Que
 
       changed = objectSetChanged(this._objects, decodedObjects);
 
-      TRACE_QUEUE_LOAD && log.info('queue refresh', { changed, objects: objects.length, refreshId: thisRefreshId });
+      TRACE_QUEUE_LOAD &&
+        log.info('queue refresh', { changed, objects: objects?.length ?? 0, refreshId: thisRefreshId });
       this._objects = decodedObjects as T[];
     } catch (err) {
       log.catch(err);
@@ -170,12 +175,12 @@ export class QueueImpl<T extends Entity.Unknown = Entity.Unknown> implements Que
 
     try {
       for (let i = 0; i < json.length; i += QUEUE_APPEND_BATCH_SIZE) {
-        await this._service.insertIntoQueue(
-          this._subspaceTag,
-          this._spaceId,
-          this._queueId,
-          json.slice(i, i + QUEUE_APPEND_BATCH_SIZE),
-        );
+        await this._service.insertIntoQueue({
+          subspaceTag: this._subspaceTag,
+          spaceId: this._spaceId,
+          queueId: this._queueId,
+          objects: json.slice(i, i + QUEUE_APPEND_BATCH_SIZE) as any,
+        });
       }
     } catch (err) {
       log.catch(err);
@@ -196,7 +201,12 @@ export class QueueImpl<T extends Entity.Unknown = Entity.Unknown> implements Que
     this.updated.emit();
 
     try {
-      await this._service.deleteFromQueue(this._subspaceTag, this._spaceId, this._queueId, ids);
+      await this._service.deleteFromQueue({
+        subspaceTag: this._subspaceTag,
+        spaceId: this._spaceId,
+        queueId: this._queueId,
+        objectIds: ids,
+      });
     } catch (err) {
       this._error = err as Error;
       this._signal.notifyWrite();
@@ -236,7 +246,11 @@ export class QueueImpl<T extends Entity.Unknown = Entity.Unknown> implements Que
   }
 
   async fetchObjectsJSON(): Promise<ObjectJSON[]> {
-    const { objects } = await this._service.queryQueue(this._subspaceTag, this._spaceId, { queueId: this._queueId });
+    const { objects } = await this._service.queryQueue({
+      subspaceTag: this._subspaceTag,
+      spaceId: this._spaceId,
+      query: { queueId: this._queueId },
+    });
     return objects as ObjectJSON[];
   }
 

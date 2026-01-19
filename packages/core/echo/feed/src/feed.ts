@@ -20,7 +20,7 @@ export interface FeedStoreOptions {
 export class FeedStore {
   constructor(private readonly _options: FeedStoreOptions) {}
 
-  static migrate = Effect.fn('FeedStore.migrate')(function* () {
+  migrate = Effect.fn('FeedStore.migrate')(function* () {
     const sql = yield* SqlClient.SqlClient;
 
     // Feeds Table
@@ -66,7 +66,6 @@ export class FeedStore {
     ): Effect.Effect<number, SqlError.SqlError, SqlClient.SqlClient> =>
       Effect.gen(this, function* () {
         const sql = yield* SqlClient.SqlClient;
-        yield* FeedStore.migrate(); // Ensure schema
 
         const rows = yield* sql<{ feedPrivateId: number }>`
               SELECT feedPrivateId FROM feeds WHERE spaceId = ${spaceId} AND feedId = ${feedId}

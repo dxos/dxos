@@ -5,7 +5,14 @@
 import { ATTR_META, type ObjectJSON } from '@dxos/echo/internal';
 import type { EdgeHttpClient } from '@dxos/edge-client';
 import type { ObjectId, SpaceId } from '@dxos/keys';
-import { KEY_QUEUE_POSITION, type QueryResult, type QueueQuery, type QueueService } from '@dxos/protocols';
+import { KEY_QUEUE_POSITION } from '@dxos/protocols';
+import type {
+  QueryQueueRequest,
+  InsertIntoQueueRequest,
+  DeleteFromQueueRequest,
+  QueueQueryResult,
+  QueueService,
+} from '@dxos/protocols/proto/dxos/client/services';
 import { ComplexMap } from '@dxos/util';
 
 /**
@@ -14,33 +21,27 @@ import { ComplexMap } from '@dxos/util';
 export class QueueServiceImpl implements QueueService {
   constructor(private readonly _client: EdgeHttpClient) {}
 
-  queryQueue(subspaceTag: string, spaceId: SpaceId, query: QueueQuery): Promise<QueryResult> {
-    return this._client.queryQueue(subspaceTag, spaceId, query);
+  async queryQueue(request: QueryQueueRequest): Promise<QueueQueryResult> {
+    const result = await this._client.queryQueue(request.subspaceTag!, request.spaceId as SpaceId, request.query!);
+    return result as any as QueueQueryResult;
   }
 
-  insertIntoQueue(subspaceTag: string, spaceId: SpaceId, queueId: ObjectId, objects: unknown[]): Promise<void> {
-    return this._client.insertIntoQueue(subspaceTag, spaceId, queueId, objects);
+  insertIntoQueue(request: InsertIntoQueueRequest): Promise<void> {
+    return this._client.insertIntoQueue(
+      request.subspaceTag!,
+      request.spaceId as SpaceId,
+      request.queueId as ObjectId,
+      request.objects!,
+    );
   }
 
-  deleteFromQueue(subspaceTag: string, spaceId: SpaceId, queueId: ObjectId, objectIds: ObjectId[]): Promise<void> {
-    return this._client.deleteFromQueue(subspaceTag, spaceId, queueId, objectIds);
-  }
-}
-
-/**
- * Stub implementation for when Edge is not available.
- */
-export class QueueServiceStub implements QueueService {
-  queryQueue(subspaceTag: string, spaceId: SpaceId, query: QueueQuery): Promise<QueryResult> {
-    throw new Error('Not available.');
-  }
-
-  insertIntoQueue(subspaceTag: string, spaceId: SpaceId, queueId: ObjectId, objects: unknown[]): Promise<void> {
-    throw new Error('Not available.');
-  }
-
-  deleteFromQueue(subspaceTag: string, spaceId: SpaceId, queueId: ObjectId, objectIds: ObjectId[]): Promise<void> {
-    throw new Error('Not available.');
+  deleteFromQueue(request: DeleteFromQueueRequest): Promise<void> {
+    return this._client.deleteFromQueue(
+      request.subspaceTag!,
+      request.spaceId as SpaceId,
+      request.queueId as ObjectId,
+      request.objectIds as ObjectId[],
+    );
   }
 }
 
@@ -52,36 +53,34 @@ export class MockQueueService implements QueueService {
     ([subspaceTag, spaceId, queueId]) => `${subspaceTag}:${spaceId}:${queueId}`,
   );
 
-  async queryQueue(subspaceTag: string, spaceId: SpaceId, query: QueueQuery): Promise<QueryResult> {
-    const objects = this._queues.get([subspaceTag, spaceId, query.queueId]) ?? [];
+  async queryQueue(request: QueryQueueRequest): Promise<QueueQueryResult> {
+    const { subspaceTag, spaceId, query } = request;
+    const objects = this._queues.get([subspaceTag!, spaceId as SpaceId, query!.queueId as ObjectId]) ?? [];
     return {
-      objects,
-      nextCursor: null,
-      prevCursor: null,
+      objects: objects as any,
+      nextCursor: '',
+      prevCursor: '',
     };
   }
 
-  async insertIntoQueue(subspaceTag: string, spaceId: SpaceId, queueId: ObjectId, objects: unknown[]): Promise<void> {
-    const key: [string, SpaceId, ObjectId] = [subspaceTag, spaceId, queueId];
+  async insertIntoQueue(request: InsertIntoQueueRequest): Promise<void> {
+    const { subspaceTag, spaceId, queueId, objects } = request;
+    const key: [string, SpaceId, ObjectId] = [subspaceTag!, spaceId as SpaceId, queueId as ObjectId];
     const array = this._queues.get(key) ?? [];
     this._queues.set(key, array);
-    for (const obj of objects) {
+    for (const obj of objects!) {
       setQueuePosition(obj as ObjectJSON, array.length);
       array.push(obj);
     }
   }
 
-  async deleteFromQueue(
-    subspaceTag: string,
-    spaceId: SpaceId,
-    queueId: ObjectId,
-    objectIds: ObjectId[],
-  ): Promise<void> {
-    const key: [string, SpaceId, ObjectId] = [subspaceTag, spaceId, queueId];
+  async deleteFromQueue(request: DeleteFromQueueRequest): Promise<void> {
+    const { subspaceTag, spaceId, queueId, objectIds } = request;
+    const key: [string, SpaceId, ObjectId] = [subspaceTag!, spaceId as SpaceId, queueId as ObjectId];
     const existing = this._queues.get(key) ?? [];
     this._queues.set(
       key,
-      existing.filter((obj: any) => !objectIds.includes(obj.id)),
+      existing.filter((obj: any) => !objectIds!.includes(obj.id)),
     );
   }
 }

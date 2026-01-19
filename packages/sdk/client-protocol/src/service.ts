@@ -22,6 +22,8 @@ import type { AppService, ShellService, WorkerService } from '@dxos/protocols/pr
 import type { BridgeService } from '@dxos/protocols/proto/dxos/mesh/bridge';
 import type { TracingService } from '@dxos/protocols/proto/dxos/tracing';
 import { type ServiceBundle, createServiceBundle } from '@dxos/rpc';
+import { type QueueService } from '@dxos/protocols';
+export { type QueueService } from '@dxos/protocols';
 
 //
 // NOTE: Should contain client/proxy dependencies only.
@@ -34,10 +36,13 @@ export type ClientServices = {
 
   IdentityService: IdentityService;
   InvitationsService: InvitationsService;
-  QueryService: QueryService;
   DevicesService: DevicesService;
   SpacesService: SpacesService;
+
   DataService: DataService;
+  QueryService: QueryService;
+  QueueService: QueueService;
+
   ContactsService: ContactsService;
   EdgeAgentService: EdgeAgentService;
 
@@ -80,6 +85,7 @@ export const clientServiceBundle = createServiceBundle<ClientServices>({
   DataService: schema.getService('dxos.echo.service.DataService'),
   ContactsService: schema.getService('dxos.client.services.ContactsService'),
   EdgeAgentService: schema.getService('dxos.client.services.EdgeAgentService'),
+  QueueService: schema.getService('dxos.client.services.QueueService'),
 
   // TODO(burdon): Deprecated.
   DevtoolsHost: schema.getService('dxos.devtools.host.DevtoolsHost'),

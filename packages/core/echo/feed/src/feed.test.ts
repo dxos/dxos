@@ -20,6 +20,7 @@ describe('Feed V2', () => {
       const feedId = ObjectId.random();
 
       const feed = new FeedStore({ localActorId: ALICE, assignPositions: true });
+      yield* feed.migrate();
 
       // Append
       const block: Block = {
@@ -53,6 +54,7 @@ describe('Feed V2', () => {
       const namespace = 'data';
 
       const feed = new FeedStore({ localActorId: ALICE, assignPositions: true });
+      yield* feed.migrate();
 
       // Append with namespace
       const block: Block = {
@@ -82,6 +84,7 @@ describe('Feed V2', () => {
       const feedId = ObjectId.random();
 
       const feed = new FeedStore({ localActorId: ALICE, assignPositions: true });
+      yield* feed.migrate();
 
       // Append some data
       yield* feed.append({
@@ -119,6 +122,8 @@ describe('Feed V2', () => {
   it.effect('should assign monotonic insertionId', () =>
     Effect.gen(function* () {
       const feedStore = new FeedStore({ localActorId: ALICE, assignPositions: true });
+      yield* feedStore.migrate();
+
       const spaceId = SpaceId.random();
 
       yield* feedStore.appendLocal([
@@ -162,6 +167,8 @@ describe('Feed V2', () => {
   it.effect('queryLocal', () =>
     Effect.gen(function* () {
       const feedStore = new FeedStore({ localActorId: ALICE, assignPositions: true });
+      yield* feedStore.migrate();
+
       const spaceId = SpaceId.random();
 
       // Append interleaving blocks
@@ -220,6 +227,7 @@ describe('Feed V2', () => {
       const feedId = ObjectId.random();
 
       const feed = new FeedStore({ localActorId: ALICE, assignPositions: true });
+      yield* feed.migrate();
 
       const blocks = yield* feed.appendLocal([
         {

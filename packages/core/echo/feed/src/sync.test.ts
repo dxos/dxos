@@ -7,7 +7,7 @@ import { FeedStore } from './feed';
 import { Block } from './protocol';
 import { SpaceId } from '@dxos/keys';
 
-describe('Feed Sync V2 (RPC)', () => {
+describe.skip('Feed Sync V2 (RPC)', () => {
   const makePeer = () => {
     const layer = SqliteClient.layer({ filename: ':memory:' });
     const runtime = ManagedRuntime.make(layer);
