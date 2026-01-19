@@ -20,8 +20,8 @@
  * - Otherwise, use flat source
  */
 
-import { existsSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
-import { dirname, join, resolve } from 'node:path';
+import { readFileSync, readdirSync, writeFileSync } from 'node:fs';
+import { join } from 'node:path';
 
 interface ConditionMap {
   default?: string;
@@ -96,10 +96,7 @@ const needsNestedSource = (sourceExportsEntry: ConditionMap): boolean => {
 /**
  * Creates the source condition value (flat or nested).
  */
-const createSourceCondition = (
-  sourceExportsEntry: ConditionMap,
-  useNested: boolean,
-): string | ConditionMap => {
+const createSourceCondition = (sourceExportsEntry: ConditionMap, useNested: boolean): string | ConditionMap => {
   if (!useNested) {
     // Flat source - just return the default path.
     return sourceExportsEntry.default || '';
