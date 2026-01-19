@@ -503,6 +503,7 @@ export class QueryExecutor extends Resource {
       case 'ReferenceTraversal': {
         switch (step.traversal.direction) {
           case 'outgoing': {
+            invariant(step.traversal.property !== null, 'Outgoing reference traversal requires a property');
             const property = EscapedPropPath.unescape(step.traversal.property);
 
             const refs = workingSet

@@ -600,6 +600,47 @@ describe('Query', () => {
       expect(objects).toMatchObject([{ name: 'Contacts' }]);
     });
 
+    test('traverse inbound references with only type filter (any property)', async () => {
+      const objects = await db
+        .query(Query.select(Filter.type(TestSchema.Person, { name: 'Alice' })).referencedBy(TestSchema.Task))
+        .run();
+
+      // Should return Task 1 and Task 2 which reference Alice via assignee property.
+      expect(objects.sort((a, b) => a.title!.localeCompare(b.title!))).toMatchObject([
+        { title: 'Task 1' },
+        { title: 'Task 2' },
+      ]);
+    });
+
+    test('traverse inbound references with no filter (any type, any property)', async () => {
+      // Add an expando that references person1.
+      db.add(
+        Obj.make(Type.Expando, {
+          name: 'Note about Alice',
+          subject: Ref.make(person1),
+        }),
+      );
+      await db.flush({ indexes: true });
+
+      const objects = await db
+        .query(Query.select(Filter.type(TestSchema.Person, { name: 'Alice' })).referencedBy())
+        .run();
+
+      // Should return all objects that reference Alice via regular references: Task 1, Task 2, and the Note.
+      // Note: Relations (like HasManager) are not included because they use a different storage mechanism.
+      expect(objects).toHaveLength(3);
+      const titles = objects
+        .filter((o) => o.title)
+        .map((o) => o.title)
+        .sort();
+      expect(titles).toEqual(['Task 1', 'Task 2']);
+      const names = objects
+        .filter((o) => o.name)
+        .map((o) => o.name)
+        .sort();
+      expect(names).toEqual(['Note about Alice']);
+    });
+
     test('traverse query started from id', async () => {
       const objects = await db
         .query(Query.select(Filter.id(person2.id)).sourceOf(TestSchema.HasManager).target())
