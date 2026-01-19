@@ -10,11 +10,14 @@ import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 import type * as Schema from 'effect/Schema';
 
-import { Common as AppFrameworkCommon, Plugin } from '@dxos/app-framework';
+// eslint-disable-next-line unused-imports/no-unused-imports
+import { Common as AppFrameworkCommon, type Capability, Plugin } from '@dxos/app-framework';
 import { CommandConfig, Common, flushAndSync, print, spaceLayer } from '@dxos/cli-util';
 import { SpaceProperties } from '@dxos/client/echo';
 import { Database, Filter, Obj, Ref, Type } from '@dxos/echo';
 import { EntityKind, getTypeAnnotation } from '@dxos/echo/internal';
+// eslint-disable-next-line unused-imports/no-unused-imports
+import type { Operation } from '@dxos/operation';
 import { Collection } from '@dxos/schema';
 
 import { type CreateObject } from '../../../types';
@@ -62,7 +65,7 @@ export const add = Command.make(
         return yield* Effect.fail(new Error(`Unknown typename: ${selectedTypename}`));
       }
 
-      const object = yield* metadata.createObject({}, { db, capabilities: manager.capabilities });
+      const object = yield* metadata.createObject({}, { db });
       if (!Obj.isObject(object)) {
         return yield* Effect.fail(new Error(`Invalid object: ${object}`));
       }

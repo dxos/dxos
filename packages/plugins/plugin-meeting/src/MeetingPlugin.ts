@@ -6,6 +6,7 @@ import * as Effect from 'effect/Effect';
 
 import { ActivationEvent, Capability, Common, Plugin } from '@dxos/app-framework';
 import { Type } from '@dxos/echo';
+import { Operation } from '@dxos/operation';
 import { ClientEvents } from '@dxos/plugin-client';
 import { SpaceCapabilities, SpaceEvents } from '@dxos/plugin-space';
 
@@ -52,13 +53,12 @@ export const MeetingPlugin = Plugin.define(meta).pipe(
   Plugin.addModule({
     id: 'on-space-created',
     activatesOn: SpaceEvents.SpaceCreated,
-    activate: Effect.fnUntraced(function* () {
-      const capabilities = yield* Capability.Service;
-      return Capability.contributes(SpaceCapabilities.OnCreateSpace, (params) => {
-        const { invoke } = capabilities.get(Common.Capability.OperationInvoker);
-        return invoke(MeetingOperation.OnCreateSpace, params);
-      });
-    }),
+    activate: () =>
+      Effect.succeed(
+        Capability.contributes(SpaceCapabilities.OnCreateSpace, (params) =>
+          Operation.invoke(MeetingOperation.OnCreateSpace, params),
+        ),
+      ),
   }),
   Plugin.addModule({
     activatesOn: ClientEvents.SpacesReady,

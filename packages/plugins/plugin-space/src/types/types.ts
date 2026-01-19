@@ -5,7 +5,7 @@
 import type * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
-import { Capability, type CapabilityManager, Plugin } from '@dxos/app-framework';
+import { Capability, Plugin } from '@dxos/app-framework';
 import { type PublicKey } from '@dxos/client';
 // TODO(wittjosiah): This pulls in full client.
 import { EchoObjectSchema, ReactiveObjectSchema, SpaceSchema } from '@dxos/client/echo';
@@ -119,12 +119,11 @@ export interface TypedObjectSerializer<T extends Obj.Any = Obj.Any> {
  *
  * Options include:
  * - `db`: The database to use for object creation.
- * - `capabilities`: The capability manager for accessing capabilities.
  */
 export type CreateObject = (
   props: any,
-  options: { db: Database.Database; capabilities: CapabilityManager.CapabilityManager },
-) => Effect.Effect<Obj.Any, Error>;
+  options: { db: Database.Database },
+) => Effect.Effect<Obj.Any, Error, Capability.Service | Operation.Service>;
 
 // TODO(burdon): Move to FormatEnum or SDK.
 export const IconAnnotationId = Symbol.for('@dxos/plugin-space/annotation/Icon');

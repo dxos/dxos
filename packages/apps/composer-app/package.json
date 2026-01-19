@@ -32,6 +32,7 @@
     "@dxos/invariant": "workspace:*",
     "@dxos/migrations": "workspace:*",
     "@dxos/observability": "workspace:*",
+    "@dxos/operation": "workspace:*",
     "@dxos/plugin-assistant": "workspace:*",
     "@dxos/plugin-attention": "workspace:*",
     "@dxos/plugin-automation": "workspace:*",

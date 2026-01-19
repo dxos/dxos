@@ -6,6 +6,7 @@ import * as Effect from 'effect/Effect';
 
 import { Capability, Common, Plugin } from '@dxos/app-framework';
 import { Type } from '@dxos/echo';
+import { Operation } from '@dxos/operation';
 import { SpaceCapabilities, SpaceEvents } from '@dxos/plugin-space';
 import { type CreateObject } from '@dxos/plugin-space/types';
 import { translations as formTranslations } from '@dxos/react-ui-form';
@@ -35,24 +36,22 @@ export const TablePlugin = Plugin.define(meta).pipe(
   Plugin.addModule({
     id: 'on-space-created',
     activatesOn: SpaceEvents.SpaceCreated,
-    activate: Effect.fnUntraced(function* () {
-      const capabilities = yield* Capability.Service;
-      return Capability.contributes(SpaceCapabilities.OnCreateSpace, (params) => {
-        const { invoke } = capabilities.get(Common.Capability.OperationInvoker);
-        return invoke(TableOperation.OnCreateSpace, params);
-      });
-    }),
+    activate: () =>
+      Effect.succeed(
+        Capability.contributes(SpaceCapabilities.OnCreateSpace, (params) =>
+          Operation.invoke(TableOperation.OnCreateSpace, params),
+        ),
+      ),
   }),
   Plugin.addModule({
     id: 'on-schema-added',
     activatesOn: SpaceEvents.SchemaAdded,
-    activate: Effect.fnUntraced(function* () {
-      const capabilities = yield* Capability.Service;
-      return Capability.contributes(SpaceCapabilities.OnSchemaAdded, ({ db, schema, show }) => {
-        const { invoke } = capabilities.get(Common.Capability.OperationInvoker);
-        return invoke(TableOperation.OnSchemaAdded, { db, schema, show });
-      });
-    }),
+    activate: () =>
+      Effect.succeed(
+        Capability.contributes(SpaceCapabilities.OnSchemaAdded, ({ db, schema, show }) =>
+          Operation.invoke(TableOperation.OnSchemaAdded, { db, schema, show }),
+        ),
+      ),
   }),
   Common.Plugin.addSurfaceModule({ activate: ReactSurface }),
   Common.Plugin.addOperationResolverModule({ activate: OperationResolver }),
