@@ -140,7 +140,7 @@ The sync protocol is message-based. All messages include a `requestId`. Response
 3.  **Append**
     - Input: `requestId`, `namespace?: string`, `blocks: Block[]`
     - Output: `requestId`, `positions: number[]`
-    - Description: Appends blocks to their respective feeds (derived from `actorId` in block).
+    - Description: Appends blocks to their respective feeds.
       - If `namespace` is provided and the feed is new, it sets the feed's namespace.
       - Returns the assigned global positions.
 

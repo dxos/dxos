@@ -110,7 +110,7 @@ export class FeedStore {
     (request: QueryRequest): Effect.Effect<QueryResponse, SqlError.SqlError, SqlClient.SqlClient> =>
       Effect.gen(this, function* () {
         const sql = yield* SqlClient.SqlClient;
-        let feedIds: string[] = [];
+        let feedIds: string[] | undefined = [];
         let cursorInsertionId = -1;
         let cursorToken: string | undefined;
 
@@ -164,11 +164,13 @@ export class FeedStore {
               }
             }
           }
+        } else if ('feedIds' in request.query) {
+          feedIds = [...(request.query as any).feedIds];
         } else {
-          feedIds = [...request.query.feedIds];
+          feedIds = undefined;
         }
 
-        if (feedIds.length === 0) {
+        if (feedIds !== undefined && feedIds.length === 0) {
           return { requestId: request.requestId, blocks: [], nextCursor: encodeCursor(validCursorToken, -1) };
         }
 
@@ -177,8 +179,14 @@ export class FeedStore {
             SELECT blocks.* 
             FROM blocks
             JOIN feeds ON blocks.feedPrivateId = feeds.feedPrivateId
-            WHERE feeds.feedId IN ${sql.in(feedIds)}
+            WHERE 1=1
+            ${feedIds !== undefined ? sql`AND feeds.feedId IN ${sql.in(feedIds)}` : sql``}
             ${request.spaceId ? sql`AND feeds.spaceId = ${request.spaceId}` : sql``}
+            ${
+              'feedNamespace' in request.query && request.query.feedNamespace
+                ? sql`AND feeds.feedNamespace = ${request.query.feedNamespace}`
+                : sql``
+            }
         `;
 
         // Add filter based on cursor or position

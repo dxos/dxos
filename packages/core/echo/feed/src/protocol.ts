@@ -43,6 +43,9 @@ export const QueryRequest = Schema.Struct({
     Schema.Struct({
       subscriptionId: Schema.String,
     }),
+    Schema.Struct({
+      feedNamespace: Schema.optional(Schema.String),
+    }),
   ),
   /**
    * Get changes following this cursor (exclusive).
