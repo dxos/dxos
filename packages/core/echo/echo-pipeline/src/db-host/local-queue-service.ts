@@ -74,7 +74,7 @@ export class LocalQueueServiceImpl implements QueueService {
       Effect.gen(this, function* () {
         const messages = objects!.map((obj) => {
           const data = structuredClone(obj);
-          if (data[ATTR_META].keys?.find((key: ForeignKey) => key.source === KEY_QUEUE_POSITION)) {
+          if (data[ATTR_META]?.keys?.find((key: ForeignKey) => key.source === KEY_QUEUE_POSITION)) {
             data[ATTR_META].keys = data[ATTR_META].keys.filter((key: ForeignKey) => key.source !== KEY_QUEUE_POSITION);
           }
 

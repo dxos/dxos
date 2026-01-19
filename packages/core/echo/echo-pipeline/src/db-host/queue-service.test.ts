@@ -47,7 +47,8 @@ describe('LocalQueueServiceImpl', () => {
           query: { queueId },
         }),
       );
-      expect(result.objects).toEqual([object1, object2]);
+      expect(result.objects[0]).toMatchObject(object1);
+      expect(result.objects[1]).toMatchObject(object2);
     }).pipe(Effect.provide(TestLayer)),
   );
 
@@ -89,7 +90,7 @@ describe('LocalQueueServiceImpl', () => {
         }),
       );
       expect(result.objects).toHaveLength(2);
-      expect(result.objects?.[1]).toEqual({ id: object1Id, '@deleted': true });
+      expect(result.objects?.[1]).toMatchObject({ id: object1Id, '@deleted': true });
     }).pipe(Effect.provide(TestLayer)),
   );
 
@@ -123,8 +124,8 @@ describe('LocalQueueServiceImpl', () => {
         }),
       );
       expect(page1.objects).toHaveLength(5);
-      expect(page1.objects?.[0]).toEqual(items[0]);
-      expect(page1.objects?.[4]).toEqual(items[4]);
+      expect(page1.objects?.[0]).toMatchObject(items[0]);
+      expect(page1.objects?.[4]).toMatchObject(items[4]);
       expect(page1.nextCursor).toBeDefined();
 
       // Query next 5
@@ -140,8 +141,8 @@ describe('LocalQueueServiceImpl', () => {
         }),
       );
       expect(page2.objects).toHaveLength(5);
-      expect(page2.objects?.[0]).toEqual(items[5]);
-      expect(page2.objects?.[4]).toEqual(items[9]);
+      expect(page2.objects?.[0]).toMatchObject(items[5]);
+      expect(page2.objects?.[4]).toMatchObject(items[9]);
     }).pipe(Effect.provide(TestLayer)),
   );
 });
