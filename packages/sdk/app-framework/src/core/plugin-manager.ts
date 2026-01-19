@@ -113,7 +113,7 @@ class ManagerImpl implements PluginManager {
     registry,
   }: ManagerOptions) {
     this.registry = registry ?? Registry.make();
-    this.capabilities = new CapabilityManager.CapabilityManagerImpl({
+    this.capabilities = CapabilityManager.make({
       registry: this.registry,
     });
 

@@ -12,14 +12,14 @@ import * as CapabilityManager from './capability-manager';
 describe('CapabilityManager', () => {
   it('should return empty array if no capabilities are contributed', () => {
     const registry = Registry.make();
-    const capabilityManager = new CapabilityManager.CapabilityManagerImpl({ registry });
+    const capabilityManager = CapabilityManager.make({ registry });
     const interfaceDef = Capability.make<{ example: string }>('@dxos/app-framework/test/example');
     expect(capabilityManager.getAll(interfaceDef)).toEqual([]);
   });
 
   it('should throw when getCapability is called and no capability exists', () => {
     const registry = Registry.make();
-    const capabilityManager = new CapabilityManager.CapabilityManagerImpl({ registry });
+    const capabilityManager = CapabilityManager.make({ registry });
     const interfaceDef = Capability.make<{ example: string }>('@dxos/app-framework/test/example');
     expect(() => capabilityManager.get(interfaceDef)).toThrow('No capability found');
   });
@@ -27,7 +27,7 @@ describe('CapabilityManager', () => {
   it.effect('Capability.get should fail when no capability exists', () =>
     Effect.gen(function* () {
       const registry = Registry.make();
-      const capabilityManager = new CapabilityManager.CapabilityManagerImpl({ registry });
+      const capabilityManager = CapabilityManager.make({ registry });
       const interfaceDef = Capability.make<{ example: string }>('@dxos/app-framework/test/example');
 
       const result = yield* Capability.get(interfaceDef).pipe(
@@ -41,7 +41,7 @@ describe('CapabilityManager', () => {
 
   it('should be able to contribute and request capabilities', () => {
     const registry = Registry.make();
-    const capabilityManager = new CapabilityManager.CapabilityManagerImpl({ registry });
+    const capabilityManager = CapabilityManager.make({ registry });
     const interfaceDef = Capability.make<{ example: string }>('@dxos/app-framework/test/example');
     const implementation = { example: 'identifier' };
     capabilityManager.contribute({ interface: interfaceDef, implementation, module: 'test' });
@@ -50,7 +50,7 @@ describe('CapabilityManager', () => {
 
   it('should be able to remove capabilities', () => {
     const registry = Registry.make();
-    const capabilityManager = new CapabilityManager.CapabilityManagerImpl({ registry });
+    const capabilityManager = CapabilityManager.make({ registry });
     const interfaceDef = Capability.make<{ example: string }>('@dxos/app-framework/test/example');
     const implementation = { example: 'identifier' };
     capabilityManager.contribute({ interface: interfaceDef, implementation, module: 'test' });
@@ -61,7 +61,7 @@ describe('CapabilityManager', () => {
 
   it('should be able to contribute and request multiple implementations', () => {
     const registry = Registry.make();
-    const capabilityManager = new CapabilityManager.CapabilityManagerImpl({ registry });
+    const capabilityManager = CapabilityManager.make({ registry });
     const interfaceDef = Capability.make<{ example: string }>('@dxos/app-framework/test/example');
     const implementation1 = { example: 'first' };
     const implementation2 = { example: 'second' };
@@ -72,7 +72,7 @@ describe('CapabilityManager', () => {
 
   it('should be able to request multiple capabilities', () => {
     const registry = Registry.make();
-    const capabilityManager = new CapabilityManager.CapabilityManagerImpl({ registry });
+    const capabilityManager = CapabilityManager.make({ registry });
     const interfaceDef1 = Capability.make<{ one: number }>('@dxos/app-framework/test/one');
     const interfaceDef2 = Capability.make<{ two: number }>('@dxos/app-framework/test/two');
     const implementation1 = { one: 1 };
@@ -85,7 +85,7 @@ describe('CapabilityManager', () => {
 
   it('should be reactive', () => {
     const registry = Registry.make();
-    const capabilityManager = new CapabilityManager.CapabilityManagerImpl({ registry });
+    const capabilityManager = CapabilityManager.make({ registry });
     const interfaceDef = Capability.make<{ example: string }>('@dxos/app-framework/test/example');
 
     let count = 0;
@@ -108,7 +108,7 @@ describe('CapabilityManager', () => {
 
   it('should not be reactive to changes within the implementation', () => {
     const registry = Registry.make();
-    const capabilityManager = new CapabilityManager.CapabilityManagerImpl({ registry });
+    const capabilityManager = CapabilityManager.make({ registry });
     const interfaceDef = Capability.make<{ example: string }>('@dxos/app-framework/test/example');
 
     let count = 0;
@@ -137,7 +137,7 @@ describe('CapabilityManager', () => {
   it.effect('should be able to wait for a capability', () =>
     Effect.gen(function* () {
       const registry = Registry.make();
-      const capabilityManager = new CapabilityManager.CapabilityManagerImpl({ registry });
+      const capabilityManager = CapabilityManager.make({ registry });
       const interfaceDef = Capability.make<{ example: string }>('@dxos/app-framework/test/example');
 
       expect(capabilityManager.getAll(interfaceDef)).toHaveLength(0);

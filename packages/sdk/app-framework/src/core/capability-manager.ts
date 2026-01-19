@@ -66,9 +66,8 @@ export interface CapabilityManager {
 
 /**
  * Internal implementation of CapabilityManager.
- * @internal
  */
-export class CapabilityManagerImpl implements CapabilityManager {
+class CapabilityManagerImpl implements CapabilityManager {
   private readonly _registry: Registry.Registry;
 
   private readonly _capabilityImpls = Atom.family<string, Atom.Writable<CapabilityImpl<unknown>[]>>(() => {
