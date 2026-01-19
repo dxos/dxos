@@ -32,11 +32,11 @@
     "@dxos/echo-db": "workspace:*",
     "@dxos/echo-protocol": "workspace:*",
     "@dxos/invariant": "workspace:*",
+    "@dxos/keys": "catalog:",
     "@dxos/log": "workspace:*",
     "@dxos/protocols": "workspace:*",
     "@dxos/util": "workspace:*"
   },
-  "devDependencies": {},
   "publishConfig": {
     "access": "public"
   }

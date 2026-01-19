@@ -445,7 +445,7 @@ describe('Spaces', () => {
       (query) => {
         const objects = query.results;
         expect(objects).to.have.length(2);
-        expect(objects.some((obj) => getObjectCore(obj).getType()?.objectId === Type.getTypename(SpaceProperties))).to
+        expect(objects.some((obj) => getObjectCore(obj).getType()?.asTypeDXN()?.type === Type.getTypename(SpaceProperties))).to
           .be.true;
         expect(objects.some((obj) => obj === objA)).to.be.true;
         inc();
@@ -457,7 +457,7 @@ describe('Spaces', () => {
       (query) => {
         const objects = query.results;
         expect(objects).to.have.length(2);
-        expect(objects.some((obj) => getObjectCore(obj).getType()?.objectId === Type.getTypename(SpaceProperties))).to
+        expect(objects.some((obj) => getObjectCore(obj).getType()?.asTypeDXN()?.type === Type.getTypename(SpaceProperties))).to
           .be.true;
         expect(objects.some((obj) => obj === objB)).to.be.true;
         inc();

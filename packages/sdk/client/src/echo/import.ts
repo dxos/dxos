@@ -4,7 +4,7 @@
 
 import { SpaceProperties } from '@dxos/client-protocol';
 import { Type } from '@dxos/echo';
-import { Filter, type SerializedSpace, Serializer, decodeReferenceJSON } from '@dxos/echo-db';
+import { Filter, type SerializedSpace, Serializer, decodeDXNFromJSON } from '@dxos/echo-db';
 import { type EchoDatabase } from '@dxos/echo-db';
 
 export const importSpace = async (db: EchoDatabase, data: SerializedSpace) => {
@@ -13,9 +13,10 @@ export const importSpace = async (db: EchoDatabase, data: SerializedSpace) => {
   await new Serializer().import(db, data, {
     onObject: async (object) => {
       const { '@type': typeEncoded, ...data } = object;
-      const type = decodeReferenceJSON(typeEncoded);
+      const typeDXN = decodeDXNFromJSON(typeEncoded);
+      const typename = typeDXN?.asTypeDXN()?.type;
       // Handle Space Properties.
-      if (properties && type?.objectId === Type.getTypename(SpaceProperties)) {
+      if (properties && typename === Type.getTypename(SpaceProperties)) {
         Object.entries(data).forEach(([name, value]) => {
           if (!name.startsWith('@')) {
             properties[name] = value;

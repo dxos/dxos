@@ -144,6 +144,9 @@ catalogs:
     '@dnd-kit/utilities':
       specifier: ^3.2.0
       version: 3.2.0
+    '@dxos/keys':
+      specifier: ^0.8.3
+      version: 0.8.3
     '@dxos/log':
       specifier: ^0.8.3
       version: 0.8.3
@@ -14283,6 +14286,9 @@ importers:
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../common/invariant
+      '@dxos/keys':
+        specifier: 'catalog:'
+        version: 0.8.3
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
