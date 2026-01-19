@@ -8,10 +8,12 @@ import "google/protobuf/empty.proto";
 
 // TODO(dmaretskyi): Clean-up this protocol after migration to feeds.
 message QueueQuery {
+  // TODO(dmaretskyi): Allow querying multiple feeds.
   string queue_id = 1;
 
   // TODO(dmaretskyi): Separate postion-based queries (position is global for all peers) and cursor-based (cursors are peer-specific and encoded as such).
   // TODO(dmaretskyi): Add some sort of storageId (perhaps per space) to peer cusors so that there's no chance of using wrong cursor from another peer. 
+  // TODO(dmaretskyi): Maybe we don't even need positon-based queries anymore?
   optional string after = 2;
   optional string before = 3;
   optional int32 limit = 4;
