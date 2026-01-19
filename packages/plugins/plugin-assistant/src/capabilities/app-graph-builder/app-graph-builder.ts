@@ -11,13 +11,12 @@ import { Prompt } from '@dxos/blueprints';
 import { Sequence } from '@dxos/conductor';
 import { DXN, type Database, Obj } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
-import { type OperationInvoker } from '@dxos/operation';
+import { Operation, type OperationInvoker } from '@dxos/operation';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { ATTENDABLE_PATH_SEPARATOR, PLANK_COMPANION_TYPE } from '@dxos/plugin-deck/types';
 import { CreateAtom, GraphBuilder, NodeMatcher } from '@dxos/plugin-graph';
-import { getActiveSpace } from '@dxos/plugin-space';
 import { SpaceOperation } from '@dxos/plugin-space/types';
-import { Query } from '@dxos/react-client/echo';
+import { Query, parseId } from '@dxos/react-client/echo';
 
 import { ASSISTANT_DIALOG, meta } from '../../meta';
 import { Assistant, AssistantCapabilities, AssistantOperation } from '../../types';
@@ -26,65 +25,65 @@ export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     const context = yield* Capability.PluginContextService;
 
-    return Capability.contributes(Common.Capability.AppGraphBuilder, [
+    const extensions = yield* Effect.all([
       GraphBuilder.createTypeExtension({
         id: `${meta.id}/root`,
         type: Assistant.Chat,
         actions: (chat) => {
           const id = Obj.getDXN(chat).toString();
-          return [
+          return Effect.succeed([
             {
               id: `${AssistantOperation.UpdateChatName.meta.key}/${id}`,
-              data: async () => {
-                const { invokePromise } = context.getCapability(Common.Capability.OperationInvoker);
-                await invokePromise(AssistantOperation.UpdateChatName, { chat });
-              },
+              data: () => Operation.invoke(AssistantOperation.UpdateChatName, { chat }),
               properties: {
                 label: ['chat update name label', { ns: meta.id }],
                 icon: 'ph--magic-wand--regular',
                 disposition: 'list-item',
               },
             },
-          ];
+          ]);
         },
       }),
 
       GraphBuilder.createExtension({
         id: `${meta.id}/assistant`,
         match: NodeMatcher.whenRoot,
-        actions: () => [
-          {
-            id: `${Common.LayoutOperation.UpdateDialog.meta.key}/assistant/open`,
-            data: async () => {
-              const { invokePromise } = context.getCapability(Common.Capability.OperationInvoker);
-              const client = context.getCapability(ClientCapabilities.Client);
-              const space = getActiveSpace(context) ?? client.spaces.default;
-              const chat = await getOrCreateChat(invokePromise, space.db);
-              if (!chat) {
-                return;
-              }
+        actions: () =>
+          Effect.succeed([
+            {
+              id: `${Common.LayoutOperation.UpdateDialog.meta.key}/assistant/open`,
+              data: Effect.fnUntraced(function* () {
+                const client = yield* Capability.get(ClientCapabilities.Client);
+                const layout = yield* Capability.get(Common.Capability.Layout);
+                const operationInvoker = yield* Capability.get(Common.Capability.OperationInvoker);
+                const { spaceId } = parseId(layout.workspace);
+                const space = (spaceId ? client.spaces.get(spaceId) : undefined) ?? client.spaces.default;
+                const chat = yield* Effect.tryPromise(() => getOrCreateChat(operationInvoker.invokePromise, space.db));
+                if (!chat) {
+                  return;
+                }
 
-              await invokePromise(Common.LayoutOperation.UpdateDialog, {
-                subject: ASSISTANT_DIALOG,
-                state: true,
-                blockAlign: 'end',
-                props: {
-                  chat,
+                yield* Operation.invoke(Common.LayoutOperation.UpdateDialog, {
+                  subject: ASSISTANT_DIALOG,
+                  state: true,
+                  blockAlign: 'end',
+                  props: {
+                    chat,
+                  },
+                });
+              }),
+              properties: {
+                label: ['open assistant label', { ns: meta.id }],
+                icon: 'ph--sparkle--regular',
+                disposition: 'pin-end',
+                position: 'hoist',
+                keyBinding: {
+                  macos: 'shift+meta+k',
+                  windows: 'shift+ctrl+k',
                 },
-              });
-            },
-            properties: {
-              label: ['open assistant label', { ns: meta.id }],
-              icon: 'ph--sparkle--regular',
-              disposition: 'pin-end',
-              position: 'hoist',
-              keyBinding: {
-                macos: 'shift+meta+k',
-                windows: 'shift+ctrl+k',
               },
             },
-          },
-        ],
+          ]),
       }),
 
       GraphBuilder.createExtension({
@@ -97,7 +96,7 @@ export default Capability.makeModule(
           );
           // If no state, continue to allow chat initialization.
           if (!currentChatState) {
-            return [
+            return Effect.succeed([
               {
                 id: [Obj.getDXN(object).toString(), 'assistant-chat'].join(ATTENDABLE_PATH_SEPARATOR),
                 type: PLANK_COMPANION_TYPE,
@@ -109,7 +108,7 @@ export default Capability.makeModule(
                   disposition: 'hidden',
                 },
               },
-            ];
+            ]);
           }
 
           const db = Obj.getDatabase(object);
@@ -117,10 +116,10 @@ export default Capability.makeModule(
           const currentChatRef = currentChatDxn ? db?.makeRef(currentChatDxn) : undefined;
           const currentChat = get(CreateAtom.fromSignal(() => currentChatRef?.target));
           if (!Obj.isObject(currentChat)) {
-            return [];
+            return Effect.succeed([]);
           }
 
-          return [
+          return Effect.succeed([
             {
               id: [Obj.getDXN(object).toString(), 'assistant-chat'].join(ATTENDABLE_PATH_SEPARATOR),
               type: PLANK_COMPANION_TYPE,
@@ -132,7 +131,7 @@ export default Capability.makeModule(
                 disposition: 'hidden',
               },
             },
-          ];
+          ]);
         },
       }),
 
@@ -149,20 +148,23 @@ export default Capability.makeModule(
               ),
             ),
           ),
-        connector: (node, get) => [
-          {
-            id: [node.id, 'invocations'].join(ATTENDABLE_PATH_SEPARATOR),
-            type: PLANK_COMPANION_TYPE,
-            data: 'invocations',
-            properties: {
-              label: ['invocations label', { ns: meta.id }],
-              icon: 'ph--clock-countdown--regular',
-              disposition: 'hidden',
+        connector: (node, get) =>
+          Effect.succeed([
+            {
+              id: [node.id, 'invocations'].join(ATTENDABLE_PATH_SEPARATOR),
+              type: PLANK_COMPANION_TYPE,
+              data: 'invocations',
+              properties: {
+                label: ['invocations label', { ns: meta.id }],
+                icon: 'ph--clock-countdown--regular',
+                disposition: 'hidden',
+              },
             },
-          },
-        ],
+          ]),
       }),
     ]);
+
+    return Capability.contributes(Common.Capability.AppGraphBuilder, extensions.flat());
   }),
 );
 

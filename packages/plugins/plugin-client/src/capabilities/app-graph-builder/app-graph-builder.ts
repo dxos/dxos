@@ -5,6 +5,7 @@
 import * as Effect from 'effect/Effect';
 
 import { Capability, Common } from '@dxos/app-framework';
+import { Operation } from '@dxos/operation';
 import { CreateAtom, GraphBuilder, NodeMatcher } from '@dxos/plugin-graph';
 import { ConnectionState } from '@dxos/react-client/mesh';
 
@@ -15,18 +16,14 @@ export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     const context = yield* Capability.PluginContextService;
 
-    return Capability.contributes(
-      Common.Capability.AppGraphBuilder,
-      GraphBuilder.createExtension({
-        id: meta.id,
-        match: NodeMatcher.whenRoot,
-        actions: () => [
+    const extensions = yield* GraphBuilder.createExtension({
+      id: meta.id,
+      match: NodeMatcher.whenRoot,
+      actions: () =>
+        Effect.succeed([
           {
             id: `${meta.id}/open-user-account`,
-            data: async () => {
-              const { invokePromise } = context.getCapability(Common.Capability.OperationInvoker);
-              await invokePromise(ClientOperation.ShareIdentity);
-            },
+            data: () => Operation.invoke(ClientOperation.ShareIdentity),
             properties: {
               label: ['open user account label', { ns: meta.id }],
               icon: 'ph--user--regular',
@@ -39,61 +36,62 @@ export default Capability.makeModule(
               },
             },
           },
-        ],
-        connector: (node, get) => {
-          const client = context.getCapability(ClientCapabilities.Client);
-          const identity = get(CreateAtom.fromObservable(client.halo.identity));
-          const status = get(CreateAtom.fromObservable(client.mesh.networkStatus));
+        ]),
+      connector: (node, get) => {
+        const client = context.getCapability(ClientCapabilities.Client);
+        const identity = get(CreateAtom.fromObservable(client.halo.identity));
+        const status = get(CreateAtom.fromObservable(client.mesh.networkStatus));
 
-          return [
-            {
-              id: Account.id,
-              type: meta.id,
-              properties: {
-                label: ['account label', { ns: meta.id }],
-                icon: 'ph--user--regular',
-                disposition: 'user-account',
-                testId: 'clientPlugin.account',
-                // NOTE: This currently needs to be the identity key because the fallback is generated from hex.
-                userId: identity?.identityKey.toHex(),
-                hue: identity?.profile?.data?.hue,
-                emoji: identity?.profile?.data?.emoji,
-                status: status.swarm === ConnectionState.OFFLINE ? 'error' : 'active',
-              },
-              nodes: [
-                {
-                  id: Account.Profile,
-                  data: Account.Profile,
-                  type: meta.id,
-                  properties: {
-                    label: ['profile label', { ns: meta.id }],
-                    icon: 'ph--user--regular',
-                  },
-                },
-                {
-                  id: Account.Devices,
-                  data: Account.Devices,
-                  type: meta.id,
-                  properties: {
-                    label: ['devices label', { ns: meta.id }],
-                    icon: 'ph--devices--regular',
-                    testId: 'clientPlugin.devices',
-                  },
-                },
-                {
-                  id: Account.Security,
-                  data: Account.Security,
-                  type: meta.id,
-                  properties: {
-                    label: ['security label', { ns: meta.id }],
-                    icon: 'ph--key--regular',
-                  },
-                },
-              ],
+        return Effect.succeed([
+          {
+            id: Account.id,
+            type: meta.id,
+            properties: {
+              label: ['account label', { ns: meta.id }],
+              icon: 'ph--user--regular',
+              disposition: 'user-account',
+              testId: 'clientPlugin.account',
+              // NOTE: This currently needs to be the identity key because the fallback is generated from hex.
+              userId: identity?.identityKey.toHex(),
+              hue: identity?.profile?.data?.hue,
+              emoji: identity?.profile?.data?.emoji,
+              status: status.swarm === ConnectionState.OFFLINE ? 'error' : 'active',
             },
-          ];
-        },
-      }),
-    );
+            nodes: [
+              {
+                id: Account.Profile,
+                data: Account.Profile,
+                type: meta.id,
+                properties: {
+                  label: ['profile label', { ns: meta.id }],
+                  icon: 'ph--user--regular',
+                },
+              },
+              {
+                id: Account.Devices,
+                data: Account.Devices,
+                type: meta.id,
+                properties: {
+                  label: ['devices label', { ns: meta.id }],
+                  icon: 'ph--devices--regular',
+                  testId: 'clientPlugin.devices',
+                },
+              },
+              {
+                id: Account.Security,
+                data: Account.Security,
+                type: meta.id,
+                properties: {
+                  label: ['security label', { ns: meta.id }],
+                  icon: 'ph--key--regular',
+                },
+              },
+            ],
+          },
+        ]);
+      },
+      });
+
+    return Capability.contributes(Common.Capability.AppGraphBuilder, extensions);
   }),
 );

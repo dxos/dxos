@@ -10,7 +10,7 @@ import React, { forwardRef, memo, useCallback, useEffect, useMemo } from 'react'
 import { Common } from '@dxos/app-framework';
 import { Surface, useAppGraph, useCapability, useLayout, useOperationInvoker } from '@dxos/app-framework/react';
 import { PLANK_COMPANION_TYPE } from '@dxos/plugin-deck/types';
-import { Graph, Node } from '@dxos/plugin-graph';
+import { Graph, Node, useActionRunner } from '@dxos/plugin-graph';
 import { useConnections, useActions as useGraphActions } from '@dxos/plugin-graph';
 import { useMediaQuery, useSidebars } from '@dxos/react-ui';
 import { type TreeData, type TreeItemDataProps, isTreeData } from '@dxos/react-ui-list';
@@ -95,7 +95,8 @@ export type NavTreeContainerProps = {
 export const NavTreeContainer$ = forwardRef<HTMLDivElement, NavTreeContainerProps>(
   ({ tab, popoverAnchorId, topbar }, forwardedRef) => {
     const [isLg] = useMediaQuery('lg');
-    const { invokePromise, invokeSync } = useOperationInvoker();
+    const invoker = useOperationInvoker();
+    const runAction = useActionRunner();
     const { graph } = useAppGraph();
     const { isOpen, isCurrent, isAlternateTree, setItem } = useCapability(NavTreeCapabilities.State);
     const layout = useLayout();
@@ -143,7 +144,7 @@ export const NavTreeContainer$ = forwardRef<HTMLDivElement, NavTreeContainerProp
 
     const handleTabChange = useCallback(
       (node: NavTreeItemGraphNode) => {
-        invokeSync(Common.LayoutOperation.UpdateSidebar, {
+        invoker.invokeSync(Common.LayoutOperation.UpdateSidebar, {
           state:
             node.id === tab
               ? navigationSidebarState === 'expanded'
@@ -154,17 +155,17 @@ export const NavTreeContainer$ = forwardRef<HTMLDivElement, NavTreeContainerProp
               : 'expanded',
         });
 
-        invokeSync(Common.LayoutOperation.SwitchWorkspace, { subject: node.id });
+        invoker.invokeSync(Common.LayoutOperation.SwitchWorkspace, { subject: node.id });
 
         // Open the first item if the workspace is empty.
         if (layout.active.length === 0) {
           const [item] = getItems(graph, node).filter((node) => !Node.isActionLike(node));
           if (item && item.data) {
-            invokeSync(Common.LayoutOperation.Open, { subject: [item.id] });
+            invoker.invokeSync(Common.LayoutOperation.Open, { subject: [item.id] });
           }
         }
       },
-      [invokeSync, layout.active, tab, navigationSidebarState, isLg],
+      [invoker, layout.active, tab, navigationSidebarState, isLg],
     );
 
     const blockInstruction = useCallback(
@@ -190,34 +191,36 @@ export const NavTreeContainer$ = forwardRef<HTMLDivElement, NavTreeContainerProp
 
         if (Node.isAction(node)) {
           const [parent] = Graph.getConnections(graph, node.id, 'inbound');
-          void (parent && node.data({ parent, caller: NAV_TREE_ITEM }));
+          if (parent) {
+            void runAction(node, { parent, caller: NAV_TREE_ITEM });
+          }
           return;
         }
 
         const current = isCurrent(path, node);
         if (!current) {
-          invokeSync(Common.LayoutOperation.Open, { subject: [node.id], key: node.properties.key });
+          invoker.invokeSync(Common.LayoutOperation.Open, { subject: [node.id], key: node.properties.key });
         } else if (option) {
-          invokeSync(Common.LayoutOperation.Close, { subject: [node.id] });
+          invoker.invokeSync(Common.LayoutOperation.Close, { subject: [node.id] });
         } else {
-          void invokePromise(Common.LayoutOperation.ScrollIntoView, { subject: node.id });
+          void invoker.invokePromise(Common.LayoutOperation.ScrollIntoView, { subject: node.id });
         }
 
         const defaultAction = Graph.getActions(graph, node.id).find(
           (action) => action.properties?.disposition === 'default',
         );
         if (Node.isAction(defaultAction)) {
-          void (defaultAction.data as () => void)();
+          void runAction(defaultAction);
         }
 
         if (!isLg) {
-          invokeSync(Common.LayoutOperation.UpdateSidebar, { state: 'closed' });
+          invoker.invokeSync(Common.LayoutOperation.UpdateSidebar, { state: 'closed' });
         }
       },
-      [graph, invokePromise, invokeSync, isCurrent, isLg],
+      [graph, invoker, isCurrent, isLg, runAction],
     );
 
-    const handleBack = useCallback(() => invokeSync(Common.LayoutOperation.RevertWorkspace), [invokeSync]);
+    const handleBack = useCallback(() => invoker.invokeSync(Common.LayoutOperation.RevertWorkspace), [invoker]);
 
     // TODO(wittjosiah): Factor out hook.
     useEffect(() => {

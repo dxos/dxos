@@ -7,7 +7,7 @@ import React, { forwardRef, useMemo, useState } from 'react';
 import { Common } from '@dxos/app-framework';
 import { useAppGraph, useOperationInvoker } from '@dxos/app-framework/react';
 import { Keyboard, keySymbols } from '@dxos/keyboard';
-import { Graph, Node } from '@dxos/plugin-graph';
+import { Graph, Node, useActionRunner } from '@dxos/plugin-graph';
 import { useActions } from '@dxos/plugin-graph';
 import { Button, Dialog, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import {
@@ -29,7 +29,8 @@ export type CommandsDialogContentProps = {
 export const CommandsDialogContent = forwardRef<HTMLDivElement, CommandsDialogContentProps>(
   ({ selected: initial }, forwardedRef) => {
     const { t } = useTranslation(meta.id);
-    const { invokeSync } = useOperationInvoker();
+    const invoker = useOperationInvoker();
+    const runAction = useActionRunner();
     const { graph } = useAppGraph();
     const [selected, setSelected] = useState<string | undefined>(initial);
 
@@ -105,10 +106,12 @@ export const CommandsDialogContent = forwardRef<HTMLDivElement, CommandsDialogCo
                         return;
                       }
 
-                      invokeSync(Common.LayoutOperation.UpdateDialog, { state: false });
+                      invoker.invokeSync(Common.LayoutOperation.UpdateDialog, { state: false });
                       setTimeout(() => {
                         const node = Graph.getConnections(graph, group?.id ?? action.id, 'inbound')[0];
-                        void (node && Node.isAction(action) && action.data({ parent: node, caller: KEY_BINDING }));
+                        if (node && Node.isAction(action)) {
+                          void runAction(action, { parent: node, caller: KEY_BINDING });
+                        }
                       });
                     }}
                     classNames='flex items-center gap-2'

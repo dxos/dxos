@@ -2,7 +2,10 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type MakeOptional, type MaybePromise } from '@dxos/util';
+import type * as Context from 'effect/Context';
+import type * as Effect from 'effect/Effect';
+
+import { type MakeOptional } from '@dxos/util';
 
 /**
  * Root node ID.
@@ -95,11 +98,23 @@ export type InvokeProps = {
   caller?: string;
 };
 
-export type ActionData = (params?: InvokeProps) => MaybePromise<any>;
+/**
+ * Action data is an Effect-returning function.
+ * The Effect is provided with captured context at execution time.
+ */
+export type ActionData<R = never> = (params?: InvokeProps) => Effect.Effect<any, Error, R>;
+
+/**
+ * Context captured at extension creation time.
+ * Automatically provided to action Effects at execution.
+ */
+export type ActionContext = Context.Context<any>;
 
 export type Action<TProperties extends Record<string, any> = Record<string, any>> = Readonly<
   Omit<Node<ActionData, TProperties>, 'properties'> & {
     properties: Readonly<TProperties>;
+    /** Captured context from extension creation. Provided automatically at action execution. */
+    _actionContext?: ActionContext;
   }
 >;
 

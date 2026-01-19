@@ -12,23 +12,26 @@ import { meta } from '../../meta';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    return Capability.contributes(Common.Capability.AppGraphBuilder, [
+    const extensions = yield* Effect.all([
       GraphBuilder.createExtension({
         id: themeEditorId,
         match: NodeMatcher.whenRoot,
-        connector: () => [
-          {
-            id: themeEditorId,
-            type: themeEditorId,
-            data: themeEditorId,
-            properties: {
-              label: ['theme editor label', { ns: meta.id }],
-              disposition: 'navigation',
-              icon: 'ph--palette--regular',
+        connector: () =>
+          Effect.succeed([
+            {
+              id: themeEditorId,
+              type: themeEditorId,
+              data: themeEditorId,
+              properties: {
+                label: ['theme editor label', { ns: meta.id }],
+                disposition: 'navigation',
+                icon: 'ph--palette--regular',
+              },
             },
-          },
-        ],
+          ]),
       }),
     ]);
+
+    return Capability.contributes(Common.Capability.AppGraphBuilder, extensions.flat());
   }),
 );

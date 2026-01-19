@@ -6,7 +6,7 @@ import React, { Fragment, type MouseEvent, memo, useCallback, useEffect, useMemo
 
 import { Common } from '@dxos/app-framework';
 import { Surface, useAppGraph, useOperationInvoker } from '@dxos/app-framework/react';
-import { Graph, type Node } from '@dxos/plugin-graph';
+import { Graph, type Node, useActionRunner } from '@dxos/plugin-graph';
 import { Icon, IconButton, Popover, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { StackItem, type StackItemSigilAction } from '@dxos/react-ui-stack';
 import { TextTooltip } from '@dxos/react-ui-text-tooltip';
@@ -55,7 +55,9 @@ export const PlankHeading = memo(
     actions = [],
   }: PlankHeadingProps) => {
     const { t } = useTranslation(meta.id);
-    const { invokePromise, invokeSync } = useOperationInvoker();
+    const invoker = useOperationInvoker();
+    const runAction = useActionRunner();
+    const { invokePromise, invokeSync } = invoker;
     const { graph } = useAppGraph();
     const breakpoint = useBreakpoints();
     const icon = node?.properties?.icon ?? 'ph--placeholder--regular';
@@ -107,9 +109,11 @@ export const PlankHeading = memo(
 
     const handleAction = useCallback(
       (action: StackItemSigilAction) => {
-        typeof action.data === 'function' && void action.data?.({ parent: node, caller: meta.id });
+        if (typeof action.data === 'function') {
+          void runAction(action as Node.Action, { parent: node, caller: meta.id });
+        }
       },
-      [node],
+      [node, runAction],
     );
 
     const handlePlankAction = useCallback(

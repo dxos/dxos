@@ -12,55 +12,60 @@ import { meta as spaceMeta } from '@dxos/plugin-space';
 
 import { meta } from '../../meta';
 
-export default Capability.makeModule(() =>
-  Effect.sync(() => {
-    return Capability.contributes(Common.Capability.AppGraphBuilder, [
+export default Capability.makeModule(
+  Effect.fnUntraced(function* () {
+    const extensions = yield* Effect.all([
       GraphBuilder.createExtension({
         id: `${meta.id}/space-settings-automation`,
         match: NodeMatcher.whenNodeType(`${spaceMeta.id}/settings`),
-        connector: (node) => [
-          {
-            id: `automation-${node.id}`,
-            type: `${meta.id}/space-settings-automation`,
-            data: `${meta.id}/space-settings-automation`,
-            properties: {
-              label: ['automation panel label', { ns: meta.id }],
-              icon: 'ph--lightning--regular',
+        connector: (node) =>
+          Effect.succeed([
+            {
+              id: `automation-${node.id}`,
+              type: `${meta.id}/space-settings-automation`,
+              data: `${meta.id}/space-settings-automation`,
+              properties: {
+                label: ['automation panel label', { ns: meta.id }],
+                icon: 'ph--lightning--regular',
+              },
             },
-          },
-        ],
+          ]),
       }),
       GraphBuilder.createExtension({
         id: `${meta.id}/space-settings-functions`,
         match: NodeMatcher.whenNodeType(`${spaceMeta.id}/settings`),
-        connector: (node) => [
-          {
-            id: `functions-${node.id}`,
-            type: `${meta.id}/space-settings-functions`,
-            data: `${meta.id}/space-settings-functions`,
-            properties: {
-              label: ['functions panel label', { ns: meta.id }],
-              icon: 'ph--function--regular',
+        connector: (node) =>
+          Effect.succeed([
+            {
+              id: `functions-${node.id}`,
+              type: `${meta.id}/space-settings-functions`,
+              data: `${meta.id}/space-settings-functions`,
+              properties: {
+                label: ['functions panel label', { ns: meta.id }],
+                icon: 'ph--function--regular',
+              },
             },
-          },
-        ],
+          ]),
       }),
       GraphBuilder.createTypeExtension({
         id: `${meta.id}/script-companion`,
         type: Script.Script,
-        connector: (script) => [
-          {
-            id: [script.id, 'automation'].join(ATTENDABLE_PATH_SEPARATOR),
-            type: PLANK_COMPANION_TYPE,
-            data: 'automation',
-            properties: {
-              label: ['script automation label', { ns: meta.id }],
-              icon: 'ph--lightning--regular',
-              disposition: 'hidden',
+        connector: (script) =>
+          Effect.succeed([
+            {
+              id: [script.id, 'automation'].join(ATTENDABLE_PATH_SEPARATOR),
+              type: PLANK_COMPANION_TYPE,
+              data: 'automation',
+              properties: {
+                label: ['script automation label', { ns: meta.id }],
+                icon: 'ph--lightning--regular',
+                disposition: 'hidden',
+              },
             },
-          },
-        ],
+          ]),
       }),
     ]);
+
+    return Capability.contributes(Common.Capability.AppGraphBuilder, extensions.flat());
   }),
 );

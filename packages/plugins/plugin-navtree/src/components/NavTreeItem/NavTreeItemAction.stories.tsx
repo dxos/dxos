@@ -3,6 +3,7 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
+import * as Effect from 'effect/Effect';
 
 import { type Node } from '@dxos/app-graph';
 import { faker } from '@dxos/random';
@@ -26,9 +27,10 @@ const menuActions = faker.helpers.multiple(
     ({
       id: faker.string.uuid(),
       type: 'action',
-      data: () => {
-        console.log('invoke');
-      },
+      data: () =>
+        Effect.sync(() => {
+          console.log('invoke');
+        }),
       properties: {
         label: faker.lorem.words(2),
         icon: 'ph--circle--regular',

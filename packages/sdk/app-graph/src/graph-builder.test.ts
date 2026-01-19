@@ -3,6 +3,7 @@
 //
 
 import { Atom, Registry } from '@effect-atom/atom-react';
+import * as Effect from 'effect/Effect';
 import * as Function from 'effect/Function';
 import * as Option from 'effect/Option';
 import { describe, expect, onTestFinished, test } from 'vitest';
@@ -543,16 +544,18 @@ describe('GraphBuilder', () => {
     });
 
     describe('createExtension', () => {
-      test('works with plain function connector', () => {
+      test('works with Effect connector', () => {
         const registry = Registry.make();
         const builder = GraphBuilder.make({ registry });
         const graph = builder.graph;
 
-        const extensions = GraphBuilder.createExtension({
-          id: 'test-extension',
-          match: NodeMatcher.whenNodeType(EXAMPLE_TYPE),
-          connector: (node, get) => [{ id: 'child', type: EXAMPLE_TYPE, data: node.data }],
-        });
+        const extensions = Effect.runSync(
+          GraphBuilder.createExtension({
+            id: 'test-extension',
+            match: NodeMatcher.whenNodeType(EXAMPLE_TYPE),
+            connector: (node, get) => Effect.succeed([{ id: 'child', type: EXAMPLE_TYPE, data: node.data }]),
+          }),
+        );
 
         GraphBuilder.addExtension(builder, extensions);
 
@@ -566,24 +569,28 @@ describe('GraphBuilder', () => {
         expect(connections[0].data).to.equal('test');
       });
 
-      test('works with plain function actions', () => {
+      test('works with Effect actions', () => {
         const registry = Registry.make();
         const builder = GraphBuilder.make({ registry });
         const graph = builder.graph;
 
-        const extensions = GraphBuilder.createExtension({
-          id: 'test-extension',
-          match: NodeMatcher.whenNodeType(EXAMPLE_TYPE),
-          actions: (node, get) => [
-            {
-              id: 'test-action',
-              data: async () => {
-                console.log('TestAction');
-              },
-              properties: { label: 'Test' },
-            },
-          ],
-        });
+        const extensions = Effect.runSync(
+          GraphBuilder.createExtension({
+            id: 'test-extension',
+            match: NodeMatcher.whenNodeType(EXAMPLE_TYPE),
+            actions: (node, get) =>
+              Effect.succeed([
+                {
+                  id: 'test-action',
+                  data: () =>
+                    Effect.sync(() => {
+                      console.log('TestAction');
+                    }),
+                  properties: { label: 'Test' },
+                },
+              ]),
+          }),
+        );
 
         GraphBuilder.addExtension(builder, extensions);
 
@@ -601,11 +608,13 @@ describe('GraphBuilder', () => {
         const builder = GraphBuilder.make({ registry });
         const graph = builder.graph;
 
-        const extensions = GraphBuilder.createExtension({
-          id: 'test-extension',
-          match: NodeMatcher.whenNodeType(EXAMPLE_TYPE),
-          resolver: (id, get) => ({ id, type: EXAMPLE_TYPE, properties: {}, data: 'resolved' }),
-        });
+        const extensions = Effect.runSync(
+          GraphBuilder.createExtension({
+            id: 'test-extension',
+            match: NodeMatcher.whenNodeType(EXAMPLE_TYPE),
+            resolver: (id, get) => Effect.succeed({ id, type: EXAMPLE_TYPE, properties: {}, data: 'resolved' }),
+          }),
+        );
 
         GraphBuilder.addExtension(builder, extensions);
         await Graph.initialize(graph, EXAMPLE_ID);
@@ -621,20 +630,24 @@ describe('GraphBuilder', () => {
         const builder = GraphBuilder.make({ registry });
         const graph = builder.graph;
 
-        const extensions = GraphBuilder.createExtension({
-          id: 'test-extension',
-          match: NodeMatcher.whenNodeType(EXAMPLE_TYPE),
-          connector: (node, get) => [{ id: 'child', type: EXAMPLE_TYPE, data: node.data }],
-          actions: (node, get) => [
-            {
-              id: 'test-action',
-              data: async () => {
-                console.log('TestAction');
-              },
-              properties: { label: 'Test' },
-            },
-          ],
-        });
+        const extensions = Effect.runSync(
+          GraphBuilder.createExtension({
+            id: 'test-extension',
+            match: NodeMatcher.whenNodeType(EXAMPLE_TYPE),
+            connector: (node, get) => Effect.succeed([{ id: 'child', type: EXAMPLE_TYPE, data: node.data }]),
+            actions: (node, get) =>
+              Effect.succeed([
+                {
+                  id: 'test-action',
+                  data: () =>
+                    Effect.sync(() => {
+                      console.log('TestAction');
+                    }),
+                  properties: { label: 'Test' },
+                },
+              ]),
+          }),
+        );
 
         GraphBuilder.addExtension(builder, extensions);
 
@@ -643,7 +656,7 @@ describe('GraphBuilder', () => {
         Graph.expand(graph, 'parent');
 
         const connections = registry.get(graph.connections('parent'));
-        // Should have both the child node and the action node
+        // Should have both the child node and the action node.
         expect(connections.length).to.be.greaterThanOrEqual(1);
         const childNode = connections.find((n) => n.id === 'child');
         expect(childNode).to.not.be.undefined;
@@ -661,11 +674,13 @@ describe('GraphBuilder', () => {
 
         const state = Atom.make('initial');
 
-        const extensions = GraphBuilder.createExtension({
-          id: 'test-extension',
-          match: NodeMatcher.whenNodeType(EXAMPLE_TYPE),
-          connector: (node, get) => [{ id: 'child', type: EXAMPLE_TYPE, data: get(state) }],
-        });
+        const extensions = Effect.runSync(
+          GraphBuilder.createExtension({
+            id: 'test-extension',
+            match: NodeMatcher.whenNodeType(EXAMPLE_TYPE),
+            connector: (node, get) => Effect.succeed([{ id: 'child', type: EXAMPLE_TYPE, data: get(state) }]),
+          }),
+        );
 
         GraphBuilder.addExtension(builder, extensions);
 
@@ -695,13 +710,13 @@ describe('GraphBuilder', () => {
         const builder = GraphBuilder.make({ registry });
         const graph = builder.graph;
 
-        const extensions = GraphBuilder.createTypeExtension({
-          id: 'type-extension',
-          type: TestSchema.Person,
-          connector: (object) => {
-            return [{ id: 'child', type: EXAMPLE_TYPE, data: object }];
-          },
-        });
+        const extensions = Effect.runSync(
+          GraphBuilder.createTypeExtension({
+            id: 'type-extension',
+            type: TestSchema.Person,
+            connector: (object) => Effect.succeed([{ id: 'child', type: EXAMPLE_TYPE, data: object }]),
+          }),
+        );
 
         GraphBuilder.addExtension(builder, extensions);
 
