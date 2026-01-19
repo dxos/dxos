@@ -4,7 +4,8 @@
 
 import { describe, expect, onTestFinished, test } from 'vitest';
 
-import { type ObjectStructure, Reference, encodeReference } from '@dxos/echo-protocol';
+import { EncodedReference, type ObjectStructure } from '@dxos/echo-protocol';
+import { DXN } from '@dxos/keys';
 import { createTestLevel } from '@dxos/kv-store/testing';
 import { openAndClose } from '@dxos/test-utils';
 
@@ -24,14 +25,12 @@ describe('IndexStore', () => {
       await index.close();
     });
 
-    const schemaURI = '@example.org/schema/Contact';
+    const schemaURI = 'example.org/schema/Contact';
     const objects: Partial<ObjectStructure>[] = [
-      // TODO(dmaretskyi): Fix references
-      { data: { name: 'John' }, system: { type: encodeReference(Reference.localObjectReference(schemaURI)) } },
+      { data: { name: 'John' }, system: { type: EncodedReference.fromDXN(DXN.fromTypename(schemaURI)) } },
       {
         data: { title: 'first document' },
-        // TODO(dmaretskyi): Fix references
-        system: { type: encodeReference(Reference.localObjectReference('@example.org/schema/Document')) },
+        system: { type: EncodedReference.fromDXN(DXN.fromTypename('example.org/schema/Document')) },
       },
     ];
 
@@ -65,14 +64,12 @@ describe('IndexStore', () => {
       await index.close();
     });
 
-    const schemaURI = '@example.org/schema/Contact';
+    const schemaURI = 'example.org/schema/Contact';
     const objects: Partial<ObjectStructure>[] = [
-      // TODO(dmaretskyi): Fix references
-      { data: { name: 'John' }, system: { type: encodeReference(Reference.localObjectReference(schemaURI)) } },
+      { data: { name: 'John' }, system: { type: EncodedReference.fromDXN(DXN.fromTypename(schemaURI)) } },
       {
         data: { title: 'first document' },
-        // TODO(dmaretskyi): Fix references
-        system: { type: encodeReference(Reference.localObjectReference('@example.org/schema/Document')) },
+        system: { type: EncodedReference.fromDXN(DXN.fromTypename('example.org/schema/Document')) },
       },
     ];
 
@@ -94,8 +91,7 @@ describe('IndexStore', () => {
 
       await loadedIndex.update('3', {
         data: { name: 'John' },
-        // TODO(dmaretskyi): Fix references
-        system: { type: encodeReference(Reference.localObjectReference(schemaURI)) },
+        system: { type: EncodedReference.fromDXN(DXN.fromTypename(schemaURI)) },
         meta: {
           keys: [],
         },
