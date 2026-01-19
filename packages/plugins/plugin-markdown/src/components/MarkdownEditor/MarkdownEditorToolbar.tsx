@@ -18,7 +18,7 @@ export type MarkdownEditorToolbarProps = ThemedClassName<
     id: string;
     editorView?: EditorView;
     onFileUpload?: (file: File) => Promise<Common.FileInfo | undefined>;
-  } & Pick<EditorToolbarProps, 'role' | 'state' | 'customActions' | 'onViewModeChange'>
+  } & Pick<EditorToolbarProps, 'role' | 'state' | 'customActions' | 'onAction' | 'onViewModeChange'>
 >;
 
 export const MarkdownEditorToolbar = ({
@@ -28,6 +28,7 @@ export const MarkdownEditorToolbar = ({
   state,
   editorView,
   customActions,
+  onAction,
   onFileUpload,
   onViewModeChange,
 }: MarkdownEditorToolbarProps) => {
@@ -54,6 +55,7 @@ export const MarkdownEditorToolbar = ({
         state={state}
         customActions={customActions}
         getView={getView}
+        onAction={onAction}
         onImageUpload={upload ?? undefined}
         onViewModeChange={handleViewModeChange}
       />

@@ -27,8 +27,12 @@ export type MenuItem = MenuSeparator | MenuAction | MenuItemGroup;
 
 export type MenuItemsResolver = (group?: MenuItemGroup) => MenuItem[] | null;
 
+export type ActionExecutor = (action: MenuAction, params: Node.InvokeProps) => void;
+
 export type MenuContextValue = {
   useGroupItems: MenuItemsResolver;
   iconSize: IconButtonProps['size'];
   attendableId?: string;
+  /** Optional action executor. If provided, will be used instead of default execution. */
+  onAction?: ActionExecutor;
 };

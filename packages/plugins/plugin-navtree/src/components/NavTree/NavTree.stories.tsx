@@ -129,7 +129,7 @@ const meta = {
       ],
       capabilities: (context) => [
         Capability.contributes(StoryState, live({ tab: 'space-0' })),
-        Capability.contributes(Common.Capability.AppGraphBuilder, storybookGraphBuilders(context)),
+        Capability.contributes(Common.Capability.AppGraphBuilder, storybookGraphBuilders()),
         Capability.contributes(Common.Capability.OperationResolver, [
           OperationResolver.make({
             operation: Common.LayoutOperation.SwitchWorkspace,

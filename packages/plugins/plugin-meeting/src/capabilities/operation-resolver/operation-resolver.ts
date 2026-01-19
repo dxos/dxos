@@ -20,8 +20,6 @@ import { Meeting, MeetingCapabilities, MeetingOperation } from '../../types';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    const context = yield* Capability.PluginContextService;
-
     return Capability.contributes(Common.Capability.OperationResolver, [
       OperationResolver.make({
         operation: MeetingOperation.OnCreateSpace,
@@ -59,9 +57,9 @@ export default Capability.makeModule(
       OperationResolver.make({
         operation: MeetingOperation.SetActive,
         handler: ({ object }) =>
-          Effect.sync(() => {
-            const state = context.getCapability(MeetingCapabilities.State);
-            const callManager = context.getCapability(ThreadCapabilities.CallManager);
+          Effect.gen(function* () {
+            const state = yield* Capability.get(MeetingCapabilities.State);
+            const callManager = yield* Capability.get(ThreadCapabilities.CallManager);
             state.activeMeeting = object;
             callManager.setActivity(Type.getTypename(Meeting.Meeting)!, {
               meetingId: object ? Obj.getDXN(object).toString() : '',
@@ -73,8 +71,8 @@ export default Capability.makeModule(
         operation: MeetingOperation.HandlePayload,
         handler: ({ meetingId, transcriptDxn, transcriptionEnabled }) =>
           Effect.gen(function* () {
-            const client = context.getCapability(ClientCapabilities.Client);
-            const state = context.getCapability(MeetingCapabilities.State);
+            const client = yield* Capability.get(ClientCapabilities.Client);
+            const state = yield* Capability.get(MeetingCapabilities.State);
             const { spaceId, objectId } = meetingId ? parseId(meetingId) : {};
             const space = spaceId && client.spaces.get(spaceId);
             const meeting =
@@ -93,7 +91,7 @@ export default Capability.makeModule(
             if (state.transcriptionManager) {
               yield* Effect.promise(() => state.transcriptionManager!.setEnabled(enabled));
             }
-          }).pipe(Effect.provideService(Capability.PluginContextService, context)),
+          }),
       }),
       OperationResolver.make({
         operation: MeetingOperation.Summarize,
