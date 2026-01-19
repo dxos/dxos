@@ -7,13 +7,13 @@ import * as Schema from 'effect/Schema';
 import { type SchemaRegistry, Type } from '@dxos/echo';
 import {
   type EchoSchema,
+  EchoObjectSchema,
   Format,
   FormatAnnotation,
   type JsonSchemaType,
   PropertyMetaAnnotationId,
   type SelectOption,
   TypeEnum,
-  TypedObject,
   formatToType,
 } from '@dxos/echo/internal';
 import { createEchoSchema } from '@dxos/echo/testing';
@@ -94,7 +94,7 @@ export const getSchemaFromPropertyDefinitions = (
     properties.filter((prop) => prop.name !== 'id').map((prop) => [prop.name, typeToSchema[formatToType[prop.format]]]),
   );
 
-  const schema = createEchoSchema(TypedObject({ typename, version: '0.1.0' })(fields));
+  const schema = createEchoSchema(Schema.Struct(fields).pipe(EchoObjectSchema({ typename, version: '0.1.0' })));
 
   for (const prop of properties) {
     if (prop.config?.options) {

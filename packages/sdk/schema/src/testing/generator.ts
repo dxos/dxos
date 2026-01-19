@@ -13,7 +13,6 @@ import {
   GeneratorAnnotationId,
   type GeneratorAnnotationValue,
   type JsonSchemaType,
-  type TypedObject,
   getSchemaReference,
 } from '@dxos/echo/internal';
 import { type AnyLiveObject, Filter, Query } from '@dxos/echo-db';
@@ -39,7 +38,7 @@ const randomBoolean = (p = 0.5) => Math.random() <= p;
 const randomElement = <T>(elements: T[]): T => elements[Math.floor(Math.random() * elements.length)];
 
 export type TypeSpec = {
-  type: TypedObject;
+  type: Type.Obj.Any;
   count: number;
 };
 

@@ -7,7 +7,6 @@ import React, { useEffect, useState } from 'react';
 import { Common } from '@dxos/app-framework';
 import { Surface, useCapabilities } from '@dxos/app-framework/react';
 import { Filter, Obj, Type } from '@dxos/echo';
-import { type TypedObject } from '@dxos/echo/internal';
 import { useGlobalFilteredObjects } from '@dxos/plugin-search';
 import { useQuery } from '@dxos/react-client/echo';
 import { Masonry as MasonryComponent } from '@dxos/react-ui-masonry';
@@ -22,12 +21,12 @@ export const MasonryContainer = ({ view, role }: { view: View.View; role?: strin
   const db = Obj.getDatabase(view);
   const typename = view.query ? getTypenameFromQuery(view.query.ast) : undefined;
 
-  const [cardSchema, setCardSchema] = useState<TypedObject<any, any>>();
+  const [cardSchema, setCardSchema] = useState<Type.Obj.Any>();
 
   useEffect(() => {
     const staticSchema = schemas.flat().find((schema) => Type.getTypename(schema) === typename);
     if (staticSchema) {
-      setCardSchema(() => staticSchema as TypedObject<any, any>);
+      setCardSchema(() => staticSchema as Type.Obj.Any);
     }
     if (!staticSchema && typename && db) {
       const query = db.schemaRegistry.query({ typename });
