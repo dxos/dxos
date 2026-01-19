@@ -3,15 +3,13 @@
 //
 
 import { NotImplementedError, RuntimeServiceError } from '@dxos/errors';
-import type { ObjectId, SpaceId } from '@dxos/keys';
 import { type QueueService as QueueServiceProto } from '@dxos/protocols';
 import type {
-  EdgeFunctionEnv,
-  QueryResult,
-  QueueQuery,
-  QueryQueueRequest,
-  InsertIntoQueueRequest,
   DeleteFromQueueRequest,
+  EdgeFunctionEnv,
+  InsertIntoQueueRequest,
+  QueryQueueRequest,
+  QueryResult,
 } from '@dxos/protocols';
 
 export class QueueServiceImpl implements QueueServiceProto {
