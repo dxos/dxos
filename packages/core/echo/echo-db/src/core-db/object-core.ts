@@ -36,7 +36,7 @@ export const META_NAMESPACE = 'meta';
 const SYSTEM_NAMESPACE = 'system';
 
 export type ObjectCoreOptions = {
-  type?: DXN;
+  type?: EncodedReference;
   meta?: ObjectMeta;
   immutable?: boolean;
 };
@@ -380,42 +380,42 @@ export class ObjectCore {
     this._setRaw([SYSTEM_NAMESPACE, 'kind'], kind);
   }
 
-  getSource(): DXN | undefined {
+  getSource(): EncodedReference | undefined {
     const res = this._getRaw([SYSTEM_NAMESPACE, 'source']);
     if (!res || !isEncodedReference(res)) {
       return undefined;
     }
-    return EncodedReference.toDXN(res);
+    return res;
   }
 
   // TODO(dmaretskyi): Just set statically during construction.
-  setSource(dxn: DXN): void {
-    this._setRaw([SYSTEM_NAMESPACE, 'source'], EncodedReference.fromDXN(dxn));
+  setSource(ref: EncodedReference): void {
+    this._setRaw([SYSTEM_NAMESPACE, 'source'], ref);
   }
 
-  getTarget(): DXN | undefined {
+  getTarget(): EncodedReference | undefined {
     const res = this._getRaw([SYSTEM_NAMESPACE, 'target']);
     if (!res || !isEncodedReference(res)) {
       return undefined;
     }
-    return EncodedReference.toDXN(res);
+    return res;
   }
 
   // TODO(dmaretskyi): Just set statically during construction.
-  setTarget(dxn: DXN): void {
-    this._setRaw([SYSTEM_NAMESPACE, 'target'], EncodedReference.fromDXN(dxn));
+  setTarget(ref: EncodedReference): void {
+    this._setRaw([SYSTEM_NAMESPACE, 'target'], ref);
   }
 
-  getType(): DXN | undefined {
+  getType(): EncodedReference | undefined {
     const res = this._getRaw([SYSTEM_NAMESPACE, 'type']);
     if (!res || !isEncodedReference(res)) {
       return undefined;
     }
-    return EncodedReference.toDXN(res);
+    return res;
   }
 
-  setType(dxn: DXN): void {
-    this._setRaw([SYSTEM_NAMESPACE, 'type'], EncodedReference.fromDXN(dxn));
+  setType(ref: EncodedReference): void {
+    this._setRaw([SYSTEM_NAMESPACE, 'type'], ref);
   }
 
   getMeta(): ObjectMeta {
@@ -443,19 +443,22 @@ export class ObjectCore {
   getStrongDependencies(): DXN[] {
     const res: DXN[] = [];
 
-    const type = this.getType();
-    if (type && type.kind === DXN.kind.ECHO) {
-      res.push(type);
+    const typeRef = this.getType();
+    if (typeRef) {
+      const typeDXN = EncodedReference.toDXN(typeRef);
+      if (typeDXN.kind === DXN.kind.ECHO) {
+        res.push(typeDXN);
+      }
     }
 
     if (this.getKind() === EntityKind.Relation) {
-      const source = this.getSource();
-      if (source) {
-        res.push(source);
+      const sourceRef = this.getSource();
+      if (sourceRef) {
+        res.push(EncodedReference.toDXN(sourceRef));
       }
-      const target = this.getTarget();
-      if (target) {
-        res.push(target);
+      const targetRef = this.getTarget();
+      if (targetRef) {
+        res.push(EncodedReference.toDXN(targetRef));
       }
     }
 
@@ -493,7 +496,11 @@ const maybeReference = (value: unknown): value is { objectId: string; protocol?:
 /**
  * Convert legacy proto-format reference `{ objectId, protocol, host }` to EncodedReference.
  */
-const convertLegacyProtoReference = (value: { objectId: string; protocol?: string; host?: string }): EncodedReference => {
+const convertLegacyProtoReference = (value: {
+  objectId: string;
+  protocol?: string;
+  host?: string;
+}): EncodedReference => {
   const TYPE_PROTOCOL = 'protobuf';
   let dxn: DXN;
   if (value.protocol === TYPE_PROTOCOL) {

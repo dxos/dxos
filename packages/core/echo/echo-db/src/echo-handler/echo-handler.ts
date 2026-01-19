@@ -180,10 +180,12 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
           return target[symbolInternals].core.getKind();
         }
         case RelationSourceDXNId: {
-          return target[symbolInternals].core.getSource();
+          const sourceRef = target[symbolInternals].core.getSource();
+          return sourceRef ? EncodedReference.toDXN(sourceRef) : undefined;
         }
         case RelationTargetDXNId: {
-          return target[symbolInternals].core.getTarget();
+          const targetRef = target[symbolInternals].core.getTarget();
+          return targetRef ? EncodedReference.toDXN(targetRef) : undefined;
         }
         case RelationSourceId: {
           return this._getRelationSource(target);
@@ -281,8 +283,9 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
   }
 
   private _getRelationSource(target: ProxyTarget): any {
-    const sourceDXN = target[symbolInternals].core.getSource();
-    invariant(sourceDXN);
+    const sourceRef = target[symbolInternals].core.getSource();
+    invariant(sourceRef);
+    const sourceDXN = EncodedReference.toDXN(sourceRef);
     const database = target[symbolInternals].database;
     if (database) {
       // TODO(dmaretskyi): Put refs into proxy cache.
@@ -302,8 +305,9 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
   }
 
   private _getRelationTarget(target: ProxyTarget): any {
-    const targetDXN = target[symbolInternals].core.getTarget();
-    invariant(targetDXN);
+    const targetRef = target[symbolInternals].core.getTarget();
+    invariant(targetRef);
+    const targetDXN = EncodedReference.toDXN(targetRef);
     const database = target[symbolInternals].database;
     if (database) {
       return database.graph
@@ -431,10 +435,10 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     throwIfCustomClass(path[path.length - 1], value);
     const rootObjectSchema = this.getSchema(target);
     if (rootObjectSchema == null) {
-      const typeDXN = target[symbolInternals].core.getType();
-      if (typeDXN) {
+      const typeRef = target[symbolInternals].core.getType();
+      if (typeRef) {
         // The object has schema, but we can't access it to validate the value being set.
-        throw new Error(`Schema not found in schema registry: ${typeDXN.toString()}`);
+        throw new Error(`Schema not found in schema registry: ${EncodedReference.getReferenceString(typeRef)}`);
       }
 
       return value;
@@ -495,11 +499,12 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
       return undefined;
     }
 
-    const typeDXN = target[symbolInternals].core.getType();
-    if (typeDXN == null) {
+    const typeRef = target[symbolInternals].core.getType();
+    if (typeRef == null) {
       return undefined;
     }
 
+    const typeDXN = EncodedReference.toDXN(typeRef);
     const staticSchema = target[symbolInternals].database.graph.schemaRegistry.getSchemaByDXN(typeDXN);
     if (staticSchema != null) {
       return staticSchema;
@@ -515,7 +520,11 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
   }
 
   getTypeDXN(target: ProxyTarget): DXN | undefined {
-    return target[symbolNamespace] === DATA_NAMESPACE ? target[symbolInternals].core.getType() : undefined;
+    if (target[symbolNamespace] !== DATA_NAMESPACE) {
+      return undefined;
+    }
+    const typeRef = target[symbolInternals].core.getType();
+    return typeRef ? EncodedReference.toDXN(typeRef) : undefined;
   }
 
   isDeleted(target: any): boolean {
@@ -810,12 +819,12 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
   // TODO(dmaretskyi): Re-use existing json serializer.
   private _toJSON(target: ProxyTarget): ObjectJSON {
     target[symbolInternals].signal.notifyRead();
-    const typeDXN = target[symbolInternals].core.getType();
+    const typeRef = target[symbolInternals].core.getType();
     const reified = this._getReified(target);
 
     const obj: Partial<ObjectJSON> = {
       id: target[symbolInternals].core.id,
-      [ATTR_TYPE]: typeDXN?.toString(),
+      [ATTR_TYPE]: typeRef ? (EncodedReference.getReferenceString(typeRef) as DXN.String) : undefined,
       [ATTR_META]: { ...this.getMeta(target) },
     };
 
@@ -823,11 +832,13 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
       obj[ATTR_DELETED] = true;
     }
 
-    if (target[symbolInternals].core.getSource()) {
-      obj[ATTR_RELATION_SOURCE] = target[symbolInternals].core.getSource()!.toString();
+    const sourceRef = target[symbolInternals].core.getSource();
+    if (sourceRef) {
+      obj[ATTR_RELATION_SOURCE] = EncodedReference.getReferenceString(sourceRef) as DXN.String;
     }
-    if (target[symbolInternals].core.getTarget()) {
-      obj[ATTR_RELATION_TARGET] = target[symbolInternals].core.getTarget()!.toString();
+    const targetRef = target[symbolInternals].core.getTarget();
+    if (targetRef) {
+      obj[ATTR_RELATION_TARGET] = EncodedReference.getReferenceString(targetRef) as DXN.String;
     }
 
     Object.assign(
@@ -1116,7 +1127,7 @@ const setSchemaPropertiesOnObjectCore = (
   if (schema != null) {
     const dxn = getSchemaDXN(schema);
     invariant(dxn, 'Schema must be defined via TypedObject.');
-    internals.core.setType(dxn);
+    internals.core.setType(EncodedReference.fromDXN(dxn));
 
     const kind = getEntityKind(schema);
     invariant(kind);
@@ -1144,8 +1155,8 @@ const setRelationSourceAndTarget = (
       throw new TypeError('target must be an ECHO object');
     }
 
-    core.setSource(EchoReactiveHandler.instance.createRef(target, sourceRef));
-    core.setTarget(EchoReactiveHandler.instance.createRef(target, targetRef));
+    core.setSource(EncodedReference.fromDXN(EchoReactiveHandler.instance.createRef(target, sourceRef)));
+    core.setTarget(EncodedReference.fromDXN(EchoReactiveHandler.instance.createRef(target, targetRef)));
   }
 };
 

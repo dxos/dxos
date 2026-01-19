@@ -74,14 +74,14 @@ export class Serializer {
     const core = getObjectCore(object);
 
     // TODO(dmaretskyi): Unify JSONinfication with echo-handler.
-    const typeDXN = core.getType();
+    const typeRef = core.getType();
 
     const data = serializeEchoData(core.getDecoded(['data']));
     const meta = serializeEchoData(core.getDecoded(['meta']));
 
     return stripUndefined({
       '@id': core.id,
-      '@type': typeDXN ? EncodedRef.fromDXN(typeDXN) : undefined,
+      '@type': typeRef,
       ...data,
       '@version': Serializer.version,
       '@meta': meta,
@@ -108,7 +108,7 @@ export class Serializer {
     });
     const typeDXN = decodeDXNFromJSON(type);
     if (typeDXN) {
-      core.setType(typeDXN);
+      core.setType(EncodedRef.fromDXN(typeDXN));
     }
     if (deleted) {
       core.setDeleted(deleted);

@@ -643,7 +643,7 @@ describe('Reactive Object with ECHO database', () => {
       const { db } = await builder.createDatabase();
       const obj = db.add(Obj.make(Type.Expando, { field: 1 }));
       const typeDXN = getSchemaDXN(TestSchema.Example)!;
-      getObjectCore(obj).setType(typeDXN);
+      getObjectCore(obj).setType(EncodedReference.fromDXN(typeDXN));
       expect(Obj.getTypeDXN(obj)).to.deep.eq(Type.getDXN(TestSchema.Example));
     });
 
