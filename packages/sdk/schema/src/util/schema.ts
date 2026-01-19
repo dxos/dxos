@@ -6,8 +6,8 @@ import * as Schema from 'effect/Schema';
 
 import { type SchemaRegistry, Type } from '@dxos/echo';
 import {
-  type EchoSchema,
   EchoObjectSchema,
+  type EchoSchema,
   Format,
   FormatAnnotation,
   type JsonSchemaType,
