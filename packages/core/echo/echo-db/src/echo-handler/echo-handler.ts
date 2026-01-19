@@ -42,12 +42,18 @@ import {
   assertObjectModel,
   getEntityKind,
   getRefSavedTarget,
+  getSchemaDXN,
   getTypeAnnotation,
   isInstanceOf,
-  getSchemaDXN,
   setRefResolver,
 } from '@dxos/echo/internal';
-import { DATA_NAMESPACE, EncodedReference, type ObjectStructure, PROPERTY_ID } from '@dxos/echo-protocol';
+import {
+  DATA_NAMESPACE,
+  EncodedReference,
+  type ObjectStructure,
+  PROPERTY_ID,
+  isEncodedReference,
+} from '@dxos/echo-protocol';
 import { assertArgument, invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
 import {
@@ -328,7 +334,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     if (decoded[symbolIsProxy]) {
       return this._handleStoredSchema(target, decoded);
     }
-    if (decoded instanceof DXN) {
+    if (isEncodedReference(decoded)) {
       return this.lookupRef(target, decoded);
     }
     if (Array.isArray(decoded)) {
@@ -691,7 +697,8 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
   /**
    * Lookup referenced object.
    */
-  lookupRef(target: ProxyTarget, dxn: DXN): Ref<any> | undefined {
+  lookupRef(target: ProxyTarget, encodedRef: EncodedReference): Ref<any> | undefined {
+    const dxn = EncodedReference.toDXN(encodedRef);
     const database = target[symbolInternals].database;
     if (database) {
       // TODO(dmaretskyi): Put refs into proxy cache.
@@ -826,8 +833,9 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     Object.assign(
       obj,
       deepMapValues(reified, (value, recurse) => {
-        if (value instanceof DXN) {
-          return EncodedReference.fromDXN(value);
+        // EncodedReference values are already in the correct format for JSON serialization.
+        if (isEncodedReference(value)) {
+          return value;
         }
         return recurse(value);
       }),
@@ -851,7 +859,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
       hasBody: () => true,
       body: () => {
         let data = deepMapValues(this._getReified(target), (value, recurse) => {
-          if (value instanceof DXN) {
+          if (isEncodedReference(value)) {
             return this.lookupRef(target, value);
           }
 

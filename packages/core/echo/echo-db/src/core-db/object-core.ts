@@ -267,8 +267,9 @@ export class ObjectCore {
       return null;
     }
 
-    if (value instanceof DXN) {
-      return EncodedReference.fromDXN(value);
+    // EncodedReference values are already in the correct format for storage.
+    if (isEncodedReference(value)) {
+      return value;
     }
     if (Array.isArray(value)) {
       const values: any = value.map((val) => this.encode(val));
@@ -300,8 +301,9 @@ export class ObjectCore {
       return value.toString();
     }
     // For some reason references without `@type` are being stored in the document.
+    // Keep as EncodedReference format for consistency.
     if (isEncodedReference(value) || maybeReference(value)) {
-      return EncodedReference.toDXN(value);
+      return value as EncodedReference;
     }
     if (typeof value === 'object') {
       return Object.fromEntries(Object.entries(value).map(([key, value]): [string, any] => [key, this.decode(value)]));
@@ -375,39 +377,41 @@ export class ObjectCore {
   }
 
   getSource(): DXN | undefined {
-    const res = this.getDecoded([SYSTEM_NAMESPACE, 'source']);
-    invariant(res === undefined || res instanceof DXN);
-    return res;
+    const res = this._getRaw([SYSTEM_NAMESPACE, 'source']);
+    if (!res || !isEncodedReference(res)) {
+      return undefined;
+    }
+    return EncodedReference.toDXN(res);
   }
 
   // TODO(dmaretskyi): Just set statically during construction.
   setSource(dxn: DXN): void {
-    this.setDecoded([SYSTEM_NAMESPACE, 'source'], dxn);
+    this._setRaw([SYSTEM_NAMESPACE, 'source'], EncodedReference.fromDXN(dxn));
   }
 
   getTarget(): DXN | undefined {
-    const res = this.getDecoded([SYSTEM_NAMESPACE, 'target']);
-    invariant(res === undefined || res instanceof DXN);
-    return res;
+    const res = this._getRaw([SYSTEM_NAMESPACE, 'target']);
+    if (!res || !isEncodedReference(res)) {
+      return undefined;
+    }
+    return EncodedReference.toDXN(res);
   }
 
   // TODO(dmaretskyi): Just set statically during construction.
   setTarget(dxn: DXN): void {
-    this.setDecoded([SYSTEM_NAMESPACE, 'target'], dxn);
+    this._setRaw([SYSTEM_NAMESPACE, 'target'], EncodedReference.fromDXN(dxn));
   }
 
   getType(): DXN | undefined {
-    const value = this.decode(this._getRaw([SYSTEM_NAMESPACE, 'type']));
-    if (!value) {
+    const res = this._getRaw([SYSTEM_NAMESPACE, 'type']);
+    if (!res || !isEncodedReference(res)) {
       return undefined;
     }
-
-    invariant(value instanceof DXN);
-    return value;
+    return EncodedReference.toDXN(res);
   }
 
   setType(dxn: DXN): void {
-    this._setRaw([SYSTEM_NAMESPACE, 'type'], this.encode(dxn));
+    this._setRaw([SYSTEM_NAMESPACE, 'type'], EncodedReference.fromDXN(dxn));
   }
 
   getMeta(): ObjectMeta {

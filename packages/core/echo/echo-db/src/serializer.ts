@@ -3,7 +3,7 @@
 //
 
 import { Filter, type Query } from '@dxos/echo';
-import { type EncodedReference, EncodedReference as EncodedRef } from '@dxos/echo-protocol';
+import { EncodedReference as EncodedRef, type EncodedReference } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
 import { deepMapValues, isNonNullable, stripUndefined } from '@dxos/util';
