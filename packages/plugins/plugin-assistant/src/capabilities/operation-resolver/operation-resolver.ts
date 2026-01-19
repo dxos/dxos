@@ -24,8 +24,6 @@ import { AssistantBlueprint, createBlueprint } from '../blueprint-definition/blu
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    const context = yield* Capability.PluginContextService;
-
     return Capability.contributes(Common.Capability.OperationResolver, [
       OperationResolver.make({
         operation: AssistantOperation.OnCreateSpace,
@@ -52,7 +50,7 @@ export default Capability.makeModule(
         operation: AssistantOperation.CreateChat,
         handler: ({ db, name }) =>
           Effect.gen(function* () {
-            const client = context.getCapability(ClientCapabilities.Client);
+            const client = yield* Capability.get(ClientCapabilities.Client);
             const space = client.spaces.get(db.spaceId);
             invariant(space, 'Space not found');
             const queue = space.queues.create();
@@ -84,7 +82,7 @@ export default Capability.makeModule(
               return;
             }
 
-            const runtimeResolver = context.getCapability(AutomationCapabilities.ComputeRuntime);
+            const runtimeResolver = yield* Capability.get(AutomationCapabilities.ComputeRuntime);
             const runtime = yield* Effect.promise(() =>
               runtimeResolver
                 .getRuntime(db.spaceId)
@@ -99,8 +97,8 @@ export default Capability.makeModule(
       OperationResolver.make({
         operation: AssistantOperation.SetCurrentChat,
         handler: ({ companionTo, chat }) =>
-          Effect.sync(() => {
-            const mutableState = context.getCapability(AssistantCapabilities.MutableState);
+          Effect.gen(function* () {
+            const mutableState = yield* Capability.get(AssistantCapabilities.MutableState);
             mutableState.currentChat[Obj.getDXN(companionTo).toString()] = chat && Obj.getDXN(chat).toString();
           }),
       }),
