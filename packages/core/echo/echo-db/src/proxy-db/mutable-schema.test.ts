@@ -13,7 +13,7 @@ import {
   type TypeAnnotation,
   TypeAnnotationId,
   TypeIdentifierAnnotationId,
-  getTypeReference,
+  getSchemaDXN,
 } from '@dxos/echo/internal';
 
 import { Filter } from '../query';
@@ -121,17 +121,17 @@ describe('EchoSchema', () => {
     expect(queried[0].id).to.eq(object.id);
   });
 
-  test('getTypeReference', async () => {
+  test('getSchemaDXN', async () => {
     const { db } = await setupTest();
     const [schema] = await db.schemaRegistry.register([TestEmpty]);
-    expect(getTypeReference(schema)?.objectId).to.eq(schema.id);
+    expect(getSchemaDXN(schema)?.asEchoDXN()?.echoId).to.eq(schema.id);
   });
 
-  test('getTypeReference on schema with updated typename', async () => {
+  test('getSchemaDXN on schema with updated typename', async () => {
     const { db } = await setupTest();
     const [schema] = await db.schemaRegistry.register([TestEmpty]);
     schema.updateTypename('example.com/type/Updated');
-    expect(getTypeReference(schema)?.objectId).to.eq(schema.id);
+    expect(getSchemaDXN(schema)?.asEchoDXN()?.echoId).to.eq(schema.id);
   });
 
   test('mutable schema refs', async () => {

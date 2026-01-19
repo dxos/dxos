@@ -174,10 +174,10 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
           return target[symbolInternals].core.getKind();
         }
         case RelationSourceDXNId: {
-          return target[symbolInternals].core.getSource()?.toDXN();
+          return target[symbolInternals].core.getSource();
         }
         case RelationTargetDXNId: {
-          return target[symbolInternals].core.getTarget()?.toDXN();
+          return target[symbolInternals].core.getTarget();
         }
         case RelationSourceId: {
           return this._getRelationSource(target);
@@ -275,8 +275,8 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
   }
 
   private _getRelationSource(target: ProxyTarget): any {
-    const sourceRef = target[symbolInternals].core.getSource();
-    invariant(sourceRef);
+    const sourceDXN = target[symbolInternals].core.getSource();
+    invariant(sourceDXN);
     const database = target[symbolInternals].database;
     if (database) {
       // TODO(dmaretskyi): Put refs into proxy cache.
@@ -286,16 +286,18 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
             space: database.spaceId,
           },
         })
-        .resolveSync(sourceRef.toDXN(), false);
+        .resolveSync(sourceDXN, false);
     } else {
       invariant(target[symbolInternals].linkCache);
-      return target[symbolInternals].linkCache.get(sourceRef.objectId);
+      const echoId = sourceDXN.asEchoDXN()?.echoId;
+      invariant(echoId);
+      return target[symbolInternals].linkCache.get(echoId);
     }
   }
 
   private _getRelationTarget(target: ProxyTarget): any {
-    const targetRef = target[symbolInternals].core.getTarget();
-    invariant(targetRef);
+    const targetDXN = target[symbolInternals].core.getTarget();
+    invariant(targetDXN);
     const database = target[symbolInternals].database;
     if (database) {
       return database.graph
@@ -304,10 +306,12 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
             space: database.spaceId,
           },
         })
-        .resolveSync(targetRef.toDXN(), false);
+        .resolveSync(targetDXN, false);
     } else {
       invariant(target[symbolInternals].linkCache);
-      return target[symbolInternals].linkCache.get(targetRef.objectId);
+      const echoId = targetDXN.asEchoDXN()?.echoId;
+      invariant(echoId);
+      return target[symbolInternals].linkCache.get(echoId);
     }
   }
 
