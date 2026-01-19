@@ -94,7 +94,8 @@ export const getSchemaFromPropertyDefinitions = (
     properties.filter((prop) => prop.name !== 'id').map((prop) => [prop.name, typeToSchema[formatToType[prop.format]]]),
   );
 
-  const schema = createEchoSchema(Schema.Struct(fields).pipe(EchoObjectSchema({ typename, version: '0.1.0' })));
+  const typeSchema = Schema.Struct(fields).pipe(EchoObjectSchema({ typename, version: '0.1.0' }));
+  const schema = createEchoSchema(typeSchema as unknown as Schema.Schema.AnyNoContext);
 
   for (const prop of properties) {
     if (prop.config?.options) {
