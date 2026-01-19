@@ -8,7 +8,7 @@ import * as ParseResult from 'effect/ParseResult';
 import * as Schema from 'effect/Schema';
 import * as SchemaAST from 'effect/SchemaAST';
 
-import { type EncodedReference, Reference } from '@dxos/echo-protocol';
+import { type EncodedReference } from '@dxos/echo-protocol';
 import { compositeRuntime } from '@dxos/echo-signals/runtime';
 import { assertArgument, invariant } from '@dxos/invariant';
 import { DXN, ObjectId } from '@dxos/keys';
@@ -218,7 +218,7 @@ Ref.make = <T extends AnyProperties>(obj: T): Ref<T> => {
   // TODO(dmaretskyi): Extract to `getObjectDXN` function.
   const id = obj.id;
   invariant(ObjectId.isValid(id), 'Invalid object ID');
-  const dxn = Reference.localObjectReference(id).toDXN();
+  const dxn = DXN.fromLocalObjectId(id);
   return new RefImpl(dxn, obj);
 };
 
