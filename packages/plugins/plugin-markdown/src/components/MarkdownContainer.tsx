@@ -9,6 +9,7 @@ import React, { forwardRef, useMemo } from 'react';
 import { Common } from '@dxos/app-framework';
 import { useAppGraph, useCapabilities } from '@dxos/app-framework/react';
 import { Obj } from '@dxos/echo';
+import { useActionRunner } from '@dxos/plugin-graph';
 import { type SelectionManager } from '@dxos/react-ui-attention';
 import { StackItem } from '@dxos/react-ui-stack';
 import { Text } from '@dxos/schema';
@@ -57,6 +58,7 @@ export const MarkdownContainer = forwardRef<HTMLDivElement, MarkdownContainerPro
 
     // Toolbar actions from app graph.
     const { graph } = useAppGraph();
+    const runAction = useActionRunner();
     const customActions = useMemo(() => {
       return Atom.make((get) => {
         const actions = get(graph.actions(id));
@@ -86,6 +88,7 @@ export const MarkdownContainer = forwardRef<HTMLDivElement, MarkdownContainerPro
           object={object}
           extensions={extensions}
           settings={settings}
+          onAction={runAction}
           onFileUpload={handleFileUpload}
           onLinkQuery={handleLinkQuery}
           {...props}

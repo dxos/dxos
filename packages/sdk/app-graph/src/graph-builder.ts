@@ -4,6 +4,8 @@
 
 import { Atom, Registry } from '@effect-atom/atom-react';
 import * as Array from 'effect/Array';
+import type * as Context from 'effect/Context';
+import * as Effect from 'effect/Effect';
 import * as Function from 'effect/Function';
 import * as Option from 'effect/Option';
 import * as Pipeable from 'effect/Pipeable';
@@ -40,7 +42,7 @@ export type ConnectorExtension = (node: Atom.Atom<Option.Option<Node.Node>>) => 
  */
 export type ActionsExtension = (
   node: Atom.Atom<Option.Option<Node.Node>>,
-) => Atom.Atom<Omit<Node.NodeArg<Node.ActionData>, 'type' | 'nodes' | 'edges'>[]>;
+) => Atom.Atom<Omit<Node.NodeArg<Node.ActionData<any>>, 'type' | 'nodes' | 'edges'>[]>;
 
 /**
  * Constrained case of the connector extension for more easily adding action groups to the graph.
@@ -554,50 +556,72 @@ export const createExtensionRaw = (extension: CreateExtensionRawOptions): Builde
 
 /**
  * Options for creating a graph builder extension with simplified API.
+ * All callbacks must return Effects for dependency injection.
  */
-export type CreateExtensionOptions<TMatched = Node.Node> = {
+export type CreateExtensionOptions<TMatched = Node.Node, R = never> = {
   id: string;
   match: (node: Node.Node) => Option.Option<TMatched>;
-  actions?: (matched: TMatched, get: Atom.Context) => Omit<Node.NodeArg<Node.ActionData, any>, 'type'>[];
-  connector?: (matched: TMatched, get: Atom.Context) => Node.NodeArg<any, any>[];
-  resolver?: (id: string, get: Atom.Context) => Node.NodeArg<any, any> | null;
+  actions?: (
+    matched: TMatched,
+    get: Atom.Context,
+  ) => Effect.Effect<Omit<Node.NodeArg<Node.ActionData<any>, any>, 'type'>[], never, R>;
+  connector?: (matched: TMatched, get: Atom.Context) => Effect.Effect<Node.NodeArg<any, any>[], never, R>;
+  resolver?: (id: string, get: Atom.Context) => Effect.Effect<Node.NodeArg<any, any> | null, never, R>;
   relation?: Node.Relation;
   position?: Position;
 };
 
 /**
- * Create a graph builder extension with simplified API.
+ * Run an Effect synchronously with the provided context.
+ * @internal
  */
-export const createExtension = <TMatched = Node.Node>(
-  options: CreateExtensionOptions<TMatched>,
-): BuilderExtension[] => {
-  const { id, match, actions, connector, resolver, relation, position } = options;
-
-  const connectorExtension = connector ? createConnector(match, connector) : undefined;
-
-  const actionsExtension = actions
-    ? (node: Atom.Atom<Option.Option<Node.Node>>) =>
-        Atom.make((get) =>
-          Function.pipe(
-            get(node),
-            Option.flatMap(match),
-            Option.map((matched) => actions(matched, get)),
-            Option.getOrElse(() => []),
-          ),
-        )
-    : undefined;
-
-  const resolverExtension = resolver ? (id: string) => Atom.make((get) => resolver(id, get) ?? null) : undefined;
-
-  return createExtensionRaw({
-    id,
-    relation,
-    position,
-    connector: connectorExtension,
-    actions: actionsExtension,
-    resolver: resolverExtension,
-  });
+const runEffectSync = <T, R>(effect: Effect.Effect<T, never, R>, context: Context.Context<R>): T => {
+  return Effect.runSync(effect.pipe(Effect.provide(context)));
 };
+
+/**
+ * Create a graph builder extension with simplified API.
+ * Returns an Effect to allow callbacks to access services via dependency injection.
+ */
+export const createExtension = <TMatched = Node.Node, R = never>(
+  options: CreateExtensionOptions<TMatched, R>,
+): Effect.Effect<BuilderExtension[], never, R> =>
+  Effect.map(Effect.context<R>(), (context) => {
+    const { id, match, actions, connector, resolver, relation, position } = options;
+
+    const connectorExtension = connector ? createConnectorWithRuntime(match, connector, context) : undefined;
+
+    const actionsExtension = actions
+      ? (node: Atom.Atom<Option.Option<Node.Node>>) =>
+          Atom.make((get) =>
+            Function.pipe(
+              get(node),
+              Option.flatMap(match),
+              Option.map((matched) =>
+                runEffectSync(actions(matched, get), context).map((action) => ({
+                  ...action,
+                  // Attach captured context for action execution.
+                  _actionContext: context,
+                })),
+              ),
+              Option.getOrElse(() => []),
+            ),
+          )
+      : undefined;
+
+    const resolverExtension = resolver
+      ? (id: string) => Atom.make((get) => runEffectSync(resolver(id, get), context) ?? null)
+      : undefined;
+
+    return createExtensionRaw({
+      id,
+      relation,
+      position,
+      connector: connectorExtension,
+      actions: actionsExtension,
+      resolver: resolverExtension,
+    });
+  });
 
 /**
  * Create a connector extension from a matcher and factory function.
@@ -619,16 +643,41 @@ export const createConnector = <TData>(
 };
 
 /**
- * Options for creating a type-based extension.
+ * Create a connector extension from a matcher and factory function with Effect support.
+ * The factory must return an Effect.
+ * @internal
  */
-export type CreateTypeExtensionOptions<T extends Type.Entity.Any = Type.Entity.Any> = {
+const createConnectorWithRuntime = <TData, R>(
+  matcher: (node: Node.Node) => Option.Option<TData>,
+  factory: (data: TData, get: Atom.Context) => Effect.Effect<Node.NodeArg<any>[], never, R>,
+  context: Context.Context<R>,
+): ConnectorExtension => {
+  return (node: Atom.Atom<Option.Option<Node.Node>>) =>
+    Atom.make((get) =>
+      Function.pipe(
+        get(node),
+        Option.flatMap(matcher),
+        Option.map((data) => runEffectSync(factory(data, get), context)),
+        Option.getOrElse(() => []),
+      ),
+    );
+};
+
+/**
+ * Options for creating a type-based extension.
+ * All callbacks must return Effects for dependency injection.
+ */
+export type CreateTypeExtensionOptions<T extends Type.Entity.Any = Type.Entity.Any, R = never> = {
   id: string;
   type: T;
   actions?: (
     object: Entity.Entity<Schema.Schema.Type<T>>,
     get: Atom.Context,
-  ) => Omit<Node.NodeArg<Node.ActionData>, 'type'>[];
-  connector?: (object: Entity.Entity<Schema.Schema.Type<T>>, get: Atom.Context) => Node.NodeArg<any>[];
+  ) => Effect.Effect<Omit<Node.NodeArg<Node.ActionData<any>>, 'type'>[], never, R>;
+  connector?: (
+    object: Entity.Entity<Schema.Schema.Type<T>>,
+    get: Atom.Context,
+  ) => Effect.Effect<Node.NodeArg<any>[], never, R>;
   relation?: Node.Relation;
   position?: Position;
 };
@@ -636,12 +685,13 @@ export type CreateTypeExtensionOptions<T extends Type.Entity.Any = Type.Entity.A
 /**
  * Create an extension that matches nodes by schema type.
  * The entity type is inferred from the schema type and works for both object and relation schemas.
+ * Returns an Effect to allow callbacks to access services via dependency injection.
  */
-export const createTypeExtension = <T extends Type.Entity.Any>(
-  options: CreateTypeExtensionOptions<T>,
-): BuilderExtension[] => {
+export const createTypeExtension = <T extends Type.Entity.Any, R = never>(
+  options: CreateTypeExtensionOptions<T, R>,
+): Effect.Effect<BuilderExtension[], never, R> => {
   const { id, type, actions, connector, relation, position } = options;
-  return createExtension({
+  return createExtension<Entity.Entity<Schema.Schema.Type<T>>, R>({
     id,
     match: NodeMatcher.whenType(type),
     actions,
