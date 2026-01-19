@@ -48,6 +48,7 @@
     "@dxos/echo-signals": "workspace:*",
     "@dxos/edge-client": "workspace:*",
     "@dxos/effect": "workspace:*",
+    "@dxos/feed": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/keys": "workspace:*",
     "@dxos/kv-store": "workspace:*",

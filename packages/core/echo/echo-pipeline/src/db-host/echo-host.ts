@@ -10,12 +10,14 @@ import { Context, LifecycleState, Resource } from '@dxos/context';
 import { todo } from '@dxos/debug';
 import { type DatabaseDirectory, SpaceDocVersion, createIdFromSpaceKey } from '@dxos/echo-protocol';
 import { RuntimeProvider } from '@dxos/effect';
+import { FeedStore } from '@dxos/feed';
 import { IndexEngine } from '@dxos/index-core';
 import { IndexMetadataStore, IndexStore, Indexer } from '@dxos/indexing';
 import { invariant } from '@dxos/invariant';
 import { type PublicKey, type SpaceId } from '@dxos/keys';
 import { type LevelDB } from '@dxos/kv-store';
 import { log } from '@dxos/log';
+import type { QueueService } from '@dxos/protocols';
 import { IndexKind } from '@dxos/protocols/proto/dxos/echo/indexing';
 import { trace } from '@dxos/tracing';
 
@@ -35,8 +37,10 @@ import { AutomergeDataSource } from './automerge-data-source';
 import { DataServiceImpl } from './data-service';
 import { type DatabaseRoot } from './database-root';
 import { createSelectedDocumentsIterator } from './documents-iterator';
+import { LocalQueueServiceImpl } from './local-queue-service';
 import { QueryServiceImpl } from './query-service';
 import { SpaceStateManager } from './space-state-manager';
+import { QueueServiceStub } from './stub';
 
 export interface EchoHostIndexingConfig {
   /**
@@ -63,6 +67,18 @@ export type EchoHostProps = {
 
   indexing?: Partial<EchoHostIndexingConfig>;
   runtime: RuntimeProvider.RuntimeProvider<SqlClient.SqlClient>;
+
+  /**
+   * Use SQLite-backed local-first durable queues.
+   * Otherwise defaults to in-memory impl.
+   */
+  localQueues?: boolean;
+
+  /**
+   * This peer is allowed to assign positions (global-order) to items appended to the queue.
+   * @default false
+   */
+  assignQueuePositions?: boolean;
 };
 
 /**
@@ -84,12 +100,23 @@ export class EchoHost extends Resource {
   private readonly _indexer2: IndexEngine;
   private readonly _indexConfig: EchoHostIndexingConfig;
   private readonly _runtime: RuntimeProvider.RuntimeProvider<SqlClient.SqlClient>;
+  private readonly _feedStore?: FeedStore;
 
   private _updateIndexes!: DeferredTask;
 
+  private _queuesService: QueueService;
+
   private _indexesUpToDate = false;
 
-  constructor({ kv, indexing = {}, peerIdProvider, getSpaceKeyByRootDocumentId, runtime }: EchoHostProps) {
+  constructor({
+    kv,
+    localQueues,
+    indexing = {},
+    peerIdProvider,
+    getSpaceKeyByRootDocumentId,
+    runtime,
+    assignQueuePositions = false,
+  }: EchoHostProps) {
     super();
 
     this._indexConfig = { ...DEFAULT_INDEXING_CONFIG, ...indexing };
@@ -106,6 +133,14 @@ export class EchoHost extends Resource {
 
     this._runtime = runtime;
     this._automergeDataSource = new AutomergeDataSource(this._automergeHost);
+
+    if (localQueues) {
+      this._feedStore = new FeedStore({ assignPositions: assignQueuePositions, localActorId: crypto.randomUUID() });
+      this._queuesService = new LocalQueueServiceImpl(runtime, this._feedStore);
+    } else {
+      this._queuesService = new QueueServiceStub();
+    }
+
     this._indexer = new Indexer({
       db: kv,
       indexStore: new IndexStore({ db: kv.sublevel('index-storage') }),
@@ -197,6 +232,10 @@ export class EchoHost extends Resource {
     return this._dataService;
   }
 
+  get queuesService(): QueueService {
+    return this._queuesService;
+  }
+
   get roots(): ReadonlyMap<DocumentId, DatabaseRoot> {
     return this._spaceStateManager.roots;
   }
@@ -213,6 +252,11 @@ export class EchoHost extends Resource {
     await this._indexer.open(ctx);
     await this._queryService.open(ctx);
     await this._spaceStateManager.open(ctx);
+
+    if (this._feedStore) {
+      await RuntimeProvider.runPromise(this._runtime)(this._feedStore.migrate());
+    }
+
     if (this._indexConfig.fullText) {
       await RuntimeProvider.runPromise(this._runtime)(this._indexer2.migrate());
       this._updateIndexes = new DeferredTask(this._ctx, this._runUpdateIndexes);
