@@ -312,6 +312,7 @@ export const Meta: unique symbol = MetaId as any;
 // TODO(burdon): Narrow type.
 // TODO(dmaretskyi): Allow returning undefined.
 export const getMeta = (entity: AnyProperties): ObjectMeta => {
+  assertArgument(entity, 'entity', 'Should be an object.');
   const meta = getMeta$(entity);
   invariant(meta != null, 'Invalid object.');
   return meta;
@@ -324,6 +325,7 @@ export const getKeys: {
   (entity: Entity.Unknown, source: string): ForeignKey[];
   (source: string): (entity: Entity.Unknown) => ForeignKey[];
 } = Function.dual(2, (entity: Entity.Unknown, source?: string): ForeignKey[] => {
+  assertArgument(entity, 'entity', 'Should be an object.');
   const meta = getMeta(entity);
   invariant(meta != null, 'Invalid object.');
   return meta.keys.filter((key) => key.source === source);
@@ -335,6 +337,7 @@ export const getKeys: {
  * @param source
  */
 export const deleteKeys = (entity: Entity.Unknown, source: string) => {
+  assertArgument(entity, 'entity', 'Should be an object.');
   const meta = getMeta(entity);
   for (let i = 0; i < meta.keys.length; i++) {
     if (meta.keys[i].source === source) {

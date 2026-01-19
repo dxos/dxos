@@ -36,7 +36,10 @@ type OpenDatabaseOptions = {
 type PeerOptions = {
   indexing?: Partial<EchoHostIndexingConfig>;
   types?: Schema.Schema.AnyNoContext[];
+  assignQueuePositions?: boolean;
+
   kv?: LevelDB;
+  runtime?: ManagedRuntime.ManagedRuntime<SqlClient.SqlClient, never>;
 };
 
 export class EchoTestBuilder extends Resource {
@@ -79,27 +82,39 @@ export class EchoTestPeer extends Resource {
   private readonly _kv: LevelDB;
   private readonly _indexing: Partial<EchoHostIndexingConfig>;
   private readonly _types: Schema.Schema.AnyNoContext[];
+  private readonly _assignQueuePositions?: boolean;
   private readonly _clients = new Set<EchoClient>();
-  private _queuesService = new MockQueueService();
   private _echoHost!: EchoHost;
   private _echoClient!: EchoClient;
   private _lastDatabaseSpaceKey?: PublicKey = undefined;
   private _lastDatabaseRootUrl?: string = undefined;
 
+  private _foreignRuntime: boolean;
   private _managedRuntime!: ManagedRuntime.ManagedRuntime<SqlClient.SqlClient, never>;
 
-  constructor({ kv = createTestLevel(), indexing = {}, types }: PeerOptions) {
+  constructor({ kv = createTestLevel(), indexing = {}, types, assignQueuePositions, runtime }: PeerOptions) {
     super();
     this._kv = kv;
     this._indexing = indexing;
     this._types = types ?? [];
+    this._assignQueuePositions = assignQueuePositions;
+
+    this._foreignRuntime = !!runtime;
+    if (runtime) {
+      this._managedRuntime = runtime;
+    }
   }
 
   private _initEcho(): void {
+    if (!this._foreignRuntime) {
+      this._managedRuntime = ManagedRuntime.make(Layer.merge(layerMemory, Reactivity.layer).pipe(Layer.orDie));
+    }
     this._echoHost = new EchoHost({
       kv: this._kv,
       indexing: this._indexing,
       runtime: this._managedRuntime.runtimeEffect,
+      localQueues: true,
+      assignQueuePositions: this._assignQueuePositions,
     });
     this._clients.delete(this._echoClient);
     this._echoClient = new EchoClient();
@@ -117,12 +132,11 @@ export class EchoTestPeer extends Resource {
 
   protected override async _open(ctx: Context): Promise<void> {
     await this._kv.open();
-    this._managedRuntime = ManagedRuntime.make(Layer.merge(layerMemory, Reactivity.layer).pipe(Layer.orDie));
     this._initEcho();
     this._echoClient.connectToService({
       dataService: this._echoHost.dataService,
       queryService: this._echoHost.queryService,
-      queueService: this._queuesService,
+      queueService: this._echoHost.queuesService,
     });
     await this._echoHost.open(ctx);
     await this._echoClient.open(ctx);
@@ -135,7 +149,9 @@ export class EchoTestPeer extends Resource {
     }
     await this._echoHost.close(ctx);
     await this._kv.close();
-    await this._managedRuntime.dispose();
+    if (!this._foreignRuntime) {
+      await this._managedRuntime.dispose();
+    }
   }
 
   /**

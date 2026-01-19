@@ -16,6 +16,10 @@ import {
 import { invariant } from '@dxos/invariant';
 import type * as SqlClient from '@effect/sql/SqlClient';
 import { Effect, Function } from 'effect';
+import { log } from '@dxos/log';
+import { ATTR_META, type ObjectJSON } from '@dxos/echo/internal';
+import { KEY_QUEUE_POSITION } from '@dxos/protocols';
+import type { ForeignKey } from '@dxos/echo-protocol';
 
 /**
  * Writes queue data to a local FeedStore.
@@ -45,6 +49,9 @@ export class LocalQueueServiceImpl implements QueueService {
 
         const objects = result.blocks.map((block: Block) => {
           const data = JSON.parse(new TextDecoder().decode(block.data));
+          if (block.position !== null) {
+            setQueuePosition(data, block.position);
+          }
           return data;
         });
 
@@ -66,12 +73,19 @@ export class LocalQueueServiceImpl implements QueueService {
     const { subspaceTag, spaceId, queueId, objects } = request;
     return RuntimeProvider.runPromise(this.#runtime)(
       Effect.gen(this, function* () {
-        const messages = objects!.map((obj) => ({
-          spaceId: spaceId,
-          feedId: queueId!,
-          feedNamespace: subspaceTag,
-          data: new TextEncoder().encode(JSON.stringify(obj)),
-        }));
+        const messages = objects!.map((obj) => {
+          const data = structuredClone(obj);
+          if (data[ATTR_META].keys?.find((key: ForeignKey) => key.source === KEY_QUEUE_POSITION)) {
+            data[ATTR_META].keys = data[ATTR_META].keys.filter((key: ForeignKey) => key.source !== KEY_QUEUE_POSITION);
+          }
+
+          return {
+            spaceId: spaceId,
+            feedId: queueId!,
+            feedNamespace: subspaceTag,
+            data: new TextEncoder().encode(JSON.stringify(obj)),
+          };
+        });
 
         yield* this.#feedStore.appendLocal(messages);
       }),
@@ -94,3 +108,20 @@ export class LocalQueueServiceImpl implements QueueService {
     );
   }
 }
+
+// TODO(dmaretskyi): Duplicated code.
+const setQueuePosition = (obj: ObjectJSON, position: number) => {
+  obj[ATTR_META] ??= { keys: [] };
+  obj[ATTR_META].keys ??= [];
+  for (let i = 0; i < obj[ATTR_META].keys.length; i++) {
+    const key = obj[ATTR_META].keys[i];
+    if (key.source === KEY_QUEUE_POSITION) {
+      obj[ATTR_META].keys.splice(i, 1);
+      i--;
+    }
+  }
+  obj[ATTR_META].keys.push({
+    source: KEY_QUEUE_POSITION,
+    id: position.toString(),
+  });
+};

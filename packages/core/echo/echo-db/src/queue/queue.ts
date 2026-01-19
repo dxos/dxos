@@ -31,11 +31,13 @@ const POLLING_INTERVAL = 1_000;
  * Client-side view onto an EDGE queue.
  */
 export class QueueImpl<T extends Entity.Unknown = Entity.Unknown> implements Queue<T> {
+  private readonly _ctx = new Context();
   private readonly _signal = compositeRuntime.createSignal();
 
   public readonly updated = new Event();
 
-  private readonly _refreshTask = new DeferredTask(Context.default(), async () => {
+  // TODO(dmaretskyi): This task occasionally fails with "The database connection is not open" error in tests -- some issue with teardown ordering.
+  private readonly _refreshTask = new DeferredTask(this._ctx, async () => {
     const thisRefreshId = ++this._refreshId;
     let changed = false;
     try {
@@ -48,6 +50,9 @@ export class QueueImpl<T extends Entity.Unknown = Entity.Unknown> implements Que
       });
       TRACE_QUEUE_LOAD && log.info('items fetched', { refreshId: thisRefreshId, count: objects?.length ?? 0 });
       if (thisRefreshId !== this._refreshId) {
+        return;
+      }
+      if (this._ctx.disposed) {
         return;
       }
 
@@ -318,6 +323,11 @@ export class QueueImpl<T extends Entity.Unknown = Entity.Unknown> implements Que
         this._pollingInterval = null;
       }
     };
+  }
+
+  async dispose() {
+    await this._ctx.dispose();
+    await this._refreshTask.join();
   }
 }
 

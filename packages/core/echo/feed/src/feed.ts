@@ -11,6 +11,8 @@ import {
   AppendRequest,
   AppendResponse,
 } from './protocol';
+import { log } from '@dxos/log';
+import { bufferToArray } from '@dxos/util';
 
 export interface FeedStoreOptions {
   localActorId: string;
@@ -114,24 +116,22 @@ export class FeedStore {
         }
 
         // Fetch Blocks
-        const rows = yield* sql`
+        const rows = yield* sql<Block>`
             SELECT blocks.* 
             FROM blocks
             JOIN feeds ON blocks.feedPrivateId = feeds.feedPrivateId
             WHERE feeds.feedId IN ${sql.in(feedIds)}
-              AND blocks.position > ${cursor}
+              AND (blocks.position > ${cursor} OR blocks.position IS NULL)
               ${request.spaceId ? sql`AND feeds.spaceId = ${request.spaceId}` : sql``}
-            ORDER BY blocks.position ASC
+            ORDER BY blocks.position ASC NULLS LAST
             ${request.limit ? sql`LIMIT ${request.limit}` : sql``}
         `;
 
-        const blocks = (rows as any[]).map((row) => ({
+        const blocks = rows.map((row) => ({
           ...row,
+          // Have to buffer otherwise we get empty Uint8Array.
           data: new Uint8Array(row.data),
-          position: row.position,
-          predSequence: row.predSequence,
-          predActorId: row.predActorId,
-        })) as Block[];
+        }));
 
         return { requestId: request.requestId, blocks };
       }),
@@ -140,6 +140,7 @@ export class FeedStore {
   queryLocal = Effect.fn('Feed.queryLocal')(
     (request: {
       spaceId: string;
+      // TODO(dmaretskyi): Name doesn't make sense, change to "after"
       conversation?: number; // insertionId exclusive
       limit?: number;
     }): Effect.Effect<Block[], SqlError.SqlError, SqlClient.SqlClient> =>
@@ -225,7 +226,7 @@ export class FeedStore {
                   JOIN feeds ON blocks.feedPrivateId = feeds.feedPrivateId
                   WHERE feeds.spaceId = ${request.spaceId}
               `;
-            nextPos = (maxPosResult[0]?.maxPos ?? 0) + 1;
+            nextPos = (maxPosResult[0]?.maxPos ?? -1) + 1;
             positions.push(nextPos);
           }
 

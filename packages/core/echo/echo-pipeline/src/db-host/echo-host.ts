@@ -68,7 +68,17 @@ export type EchoHostProps = {
   indexing?: Partial<EchoHostIndexingConfig>;
   runtime: RuntimeProvider.RuntimeProvider<SqlClient.SqlClient>;
 
+  /**
+   * Use SQLite-backed local-first durable queues.
+   * Otherwise defaults to in-memory impl.
+   */
   localQueues?: boolean;
+
+  /**
+   * This peer is allowed to assign positions (global-order) to items appended to the queue.
+   * @default false
+   */
+  assignQueuePositions?: boolean;
 };
 
 /**
@@ -98,7 +108,15 @@ export class EchoHost extends Resource {
 
   private _indexesUpToDate = false;
 
-  constructor({ kv, localQueues, indexing = {}, peerIdProvider, getSpaceKeyByRootDocumentId, runtime }: EchoHostProps) {
+  constructor({
+    kv,
+    localQueues,
+    indexing = {},
+    peerIdProvider,
+    getSpaceKeyByRootDocumentId,
+    runtime,
+    assignQueuePositions = false,
+  }: EchoHostProps) {
     super();
 
     this._indexConfig = { ...DEFAULT_INDEXING_CONFIG, ...indexing };
@@ -117,7 +135,7 @@ export class EchoHost extends Resource {
     this._automergeDataSource = new AutomergeDataSource(this._automergeHost);
 
     if (localQueues) {
-      this._feedStore = new FeedStore({ assignPositions: false, localActorId: crypto.randomUUID() });
+      this._feedStore = new FeedStore({ assignPositions: assignQueuePositions, localActorId: crypto.randomUUID() });
       this._queuesService = new LocalQueueServiceImpl(runtime, this._feedStore);
     } else {
       this._queuesService = new QueueServiceStub();
