@@ -11,7 +11,7 @@ export const encodeError = (err: any): SerializedErrorProto => {
     return {
       name: err.name,
       message: err.message,
-      context: err.capabilities,
+      context: err.context,
       stack: err.stack,
     };
   } else if (typeof err === 'string') {

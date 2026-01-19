@@ -197,7 +197,7 @@ const getNewBrowserContext = async ({ platform, userDataDir }: ReplicantRuntimeP
   const page = await context.newPage();
 
   return {
-    capabilities,
+    context,
     page,
   };
 };
