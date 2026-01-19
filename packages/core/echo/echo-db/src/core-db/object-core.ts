@@ -300,10 +300,14 @@ export class ObjectCore {
     if (value instanceof A.RawString) {
       return value.toString();
     }
+    // EncodedReference values are already in the correct format.
+    if (isEncodedReference(value)) {
+      return value;
+    }
     // For some reason references without `@type` are being stored in the document.
-    // Keep as EncodedReference format for consistency.
-    if (isEncodedReference(value) || maybeReference(value)) {
-      return value as EncodedReference;
+    // Convert legacy proto-format references to EncodedReference.
+    if (maybeReference(value)) {
+      return convertLegacyProtoReference(value);
     }
     if (typeof value === 'object') {
       return Object.fromEntries(Object.entries(value).map(([key, value]): [string, any] => [key, this.decode(value)]));
@@ -478,10 +482,26 @@ export const objectIsUpdated = (objId: string, event: DocHandleChangePayload<Dat
 };
 
 // TODO(burdon): Move to echo-protocol.
-const maybeReference = (value: unknown) =>
+const maybeReference = (value: unknown): value is { objectId: string; protocol?: string; host?: string } =>
   typeof value === 'object' &&
   value !== null &&
   Object.keys(value).length === 3 &&
   'objectId' in value && // TODO(burdon): 'objectId'
   'protocol' in value &&
   'host' in value;
+
+/**
+ * Convert legacy proto-format reference `{ objectId, protocol, host }` to EncodedReference.
+ */
+const convertLegacyProtoReference = (value: { objectId: string; protocol?: string; host?: string }): EncodedReference => {
+  const TYPE_PROTOCOL = 'protobuf';
+  let dxn: DXN;
+  if (value.protocol === TYPE_PROTOCOL) {
+    dxn = new DXN(DXN.kind.TYPE, [value.objectId]);
+  } else if (value.host) {
+    dxn = new DXN(DXN.kind.ECHO, [value.host, value.objectId]);
+  } else {
+    dxn = DXN.fromLocalObjectId(value.objectId);
+  }
+  return EncodedReference.fromDXN(dxn);
+};

@@ -94,7 +94,7 @@ export class Serializer {
     const dataProperties = Object.fromEntries(Object.entries(data).filter(([key]) => !key.startsWith('@')));
     const decodedData = deepMapValues(dataProperties, (value, recurse) => {
       if (isEncodedReferenceJSON(value)) {
-        return decodeDXNFromJSON(value);
+        return decodeEncodedReferenceFromJSON(value);
       } else {
         return recurse(value);
       }
@@ -106,7 +106,10 @@ export class Serializer {
     core.initNewObject(decodedData, {
       meta,
     });
-    core.setType(decodeDXNFromJSON(type)!);
+    const typeDXN = decodeDXNFromJSON(type);
+    if (typeDXN) {
+      core.setType(typeDXN);
+    }
     if (deleted) {
       core.setDeleted(deleted);
     }
@@ -127,6 +130,21 @@ export const decodeDXNFromJSON = (encoded?: EncodedReference | string): DXN | un
   }
 };
 
+/**
+ * Decode an encoded reference from JSON format to EncodedReference.
+ * Handles both the current `{ '/': string }` format and the legacy `{ '@type': ..., objectId, ... }` format.
+ */
+const decodeEncodedReferenceFromJSON = (value: any): EncodedReference | undefined => {
+  if (typeof value === 'object' && value !== null && '/' in value) {
+    // Already in the correct format.
+    return value as EncodedReference;
+  } else if (typeof value === 'object' && value !== null && value['@type'] === LEGACY_REFERENCE_TYPE_TAG) {
+    // Legacy format: convert to DXN and then to EncodedReference.
+    const dxn = DXN.fromTypename(value.objectId);
+    return EncodedRef.fromDXN(dxn);
+  }
+};
+
 const chunkArray = <T>(arr: T[], chunkSize: number): T[][] => {
   if (arr.length === 0 || chunkSize < 1) {
     return [];
@@ -144,8 +162,9 @@ const chunkArray = <T>(arr: T[], chunkSize: number): T[][] => {
 
 const serializeEchoData = (data: any): any =>
   deepMapValues(data, (value, recurse) => {
-    if (value instanceof DXN) {
-      return EncodedRef.fromDXN(value);
+    // EncodedReference values are already in the correct format for serialization.
+    if (EncodedRef.isEncodedReference(value)) {
+      return value;
     }
     return recurse(value);
   });

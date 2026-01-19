@@ -464,9 +464,9 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
       } else if (Ref.isRef(value)) {
         const savedTarget = getRefSavedTarget(value);
         if (savedTarget) {
-          return this.createRef(target, savedTarget);
+          return EncodedReference.fromDXN(this.createRef(target, savedTarget));
         } else {
-          return value.dxn;
+          return EncodedReference.fromDXN(value.dxn);
         }
       } else {
         return recurse(value);
@@ -1175,18 +1175,18 @@ const validateInitialProps = (target: any, seen: Set<object> = new Set()) => {
 const linkAllNestedProperties = (target: ProxyTarget): DecodedAutomergePrimaryValue => {
   return deepMapValues(target, (value, recurse) => {
     if (Ref.isRef(value)) {
-      return refToDXN(target, value);
+      return refToEncodedReference(target, value);
     }
 
     return recurse(value);
   });
 };
 
-const refToDXN = (target: ProxyTarget, ref: Ref<any>): DXN => {
+const refToEncodedReference = (target: ProxyTarget, ref: Ref<any>): EncodedReference => {
   const savedTarget = getRefSavedTarget(ref);
   if (savedTarget) {
-    return EchoReactiveHandler.instance.createRef(target, savedTarget);
+    return EncodedReference.fromDXN(EchoReactiveHandler.instance.createRef(target, savedTarget));
   } else {
-    return ref.dxn;
+    return EncodedReference.fromDXN(ref.dxn);
   }
 };
