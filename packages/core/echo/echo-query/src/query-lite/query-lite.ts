@@ -395,14 +395,13 @@ class QueryClass implements Query$.Any {
     });
   }
 
-  referencedBy(target: Schema.Schema.All | string, key: string): Query$.Any {
-    assertArgument(typeof target === 'string', 'target');
-    assertArgument(!target.startsWith('dxn:'), 'target');
+  referencedBy(target?: Schema.Schema.All | string, key?: string): Query$.Any {
+    const typename = target !== undefined ? (assertArgument(typeof target === 'string', 'target'), assertArgument(!target.startsWith('dxn:'), 'target'), target) : null;
     return new QueryClass({
       type: 'incoming-references',
       anchor: this.ast,
-      property: key,
-      typename: target,
+      property: key ?? null,
+      typename,
     });
   }
 
