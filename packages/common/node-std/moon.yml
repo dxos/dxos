@@ -113,7 +113,7 @@ tasks:
       - compile-browser
       - compile-node
     inputs:
-      - dist/lib-browser/
-      - dist/lib-node/
+      - 'dist/lib-browser/**/*'
+      - 'dist/lib-node/**/*'
     outputs:
       - dist/lib/
