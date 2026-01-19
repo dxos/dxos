@@ -5,7 +5,7 @@
 import { type MaybeAccessor, access } from '@solid-primitives/utils';
 import { type Accessor, createEffect, createMemo, createSignal, onCleanup } from 'solid-js';
 
-import type { Entity } from '@dxos/echo';
+import { type Entity, Obj } from '@dxos/echo';
 import { AtomObj } from '@dxos/echo-atom';
 import { type Registry, useRegistry } from '@dxos/effect-atom-solid';
 
@@ -119,6 +119,7 @@ export function useObject<T extends Entity.Unknown | undefined, K extends keyof 
 
 /**
  * Internal function for subscribing to an entire Echo object.
+ * Uses snapshots from AtomObj.make() which return new object references on each change.
  */
 function useObjectValue<T extends Entity.Unknown | undefined>(
   registry: Registry.Registry,
@@ -127,32 +128,28 @@ function useObjectValue<T extends Entity.Unknown | undefined>(
   // Memoize the resolved object to track changes.
   const resolvedObj = createMemo(() => access(obj));
 
-  // Store the current value in a signal.
-  // Internally we use T | undefined for runtime safety, but return type is conditional.
-  // Use { equals: false } because Echo objects are mutated in place, and we need to
-  // notify subscribers even when the object reference hasn't changed.
-  const [value, setValue] = createSignal<T | undefined>(resolvedObj(), { equals: false });
+  // Initialize with snapshot of the current object (if available).
+  const initialObj = resolvedObj();
+  const initialSnapshot = initialObj ? (Obj.getSnapshot(initialObj as Obj.Any) as T) : undefined;
+  const [value, setValue] = createSignal<T | undefined>(initialSnapshot);
 
   // Subscribe to atom updates.
   createEffect(() => {
     const currentObj = resolvedObj();
 
-    // If object is undefined, set it (the return type will be conditional).
     if (!currentObj) {
       setValue(() => undefined);
       return;
     }
 
-    // Memoize the atom creation only when we have a valid object.
     const atom = AtomObj.make(currentObj);
-    const currentValue = registry.get(atom).value;
-    setValue(() => currentValue);
+    const currentValue = registry.get(atom);
+    setValue(() => currentValue as T);
 
-    // Subscribe to atom updates.
     const unsubscribe = registry.subscribe(
       atom,
       () => {
-        setValue(() => registry.get(atom).value as T);
+        setValue(() => registry.get(atom) as T);
       },
       { immediate: true },
     );
@@ -160,7 +157,6 @@ function useObjectValue<T extends Entity.Unknown | undefined>(
     onCleanup(unsubscribe);
   });
 
-  // Return with conditional type - TypeScript will narrow based on T.
   return value as Accessor<ConditionalUndefined<T, Exclude<T, undefined>>>;
 }
 
@@ -175,8 +171,6 @@ function useObjectProperty<T extends Entity.Unknown | undefined, K extends keyof
   // Memoize the resolved object to track changes.
   const resolvedObj = createMemo(() => access(obj));
 
-  // Store the current value in a signal.
-  // Internally we use Exclude<T, undefined>[K] | undefined for runtime safety, but return type is conditional.
   type NonUndefinedT = Exclude<T, undefined>;
   const initialValue = resolvedObj() ? (resolvedObj() as NonUndefinedT)[property] : undefined;
   const [value, setValue] = createSignal<NonUndefinedT[K] | undefined>(initialValue);
@@ -185,25 +179,21 @@ function useObjectProperty<T extends Entity.Unknown | undefined, K extends keyof
   createEffect(() => {
     const currentObj = resolvedObj();
 
-    // If object is undefined, set undefined (the return type will be conditional).
     if (!currentObj) {
       setValue(() => undefined);
       return;
     }
 
-    // Memoize the atom creation only when we have a valid object.
-    // currentObj is guaranteed to be Entity.Unknown here (not undefined) due to the check above.
     type NonUndefinedT = Exclude<T, undefined>;
     const echoObj = currentObj as NonUndefinedT;
     const atom = AtomObj.makeProperty(echoObj, property);
-    const currentValue = registry.get(atom).value;
+    const currentValue = registry.get(atom);
     setValue(() => currentValue);
 
-    // Subscribe to atom updates.
     const unsubscribe = registry.subscribe(
       atom,
       () => {
-        setValue(() => registry.get(atom).value as NonUndefinedT[K]);
+        setValue(() => registry.get(atom) as NonUndefinedT[K]);
       },
       { immediate: true },
     );
@@ -211,6 +201,5 @@ function useObjectProperty<T extends Entity.Unknown | undefined, K extends keyof
     onCleanup(unsubscribe);
   });
 
-  // Return with conditional type - TypeScript will narrow based on T.
   return value as Accessor<ConditionalUndefined<T, Exclude<T, undefined>[K]>>;
 }

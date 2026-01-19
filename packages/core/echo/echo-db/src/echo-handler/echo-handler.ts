@@ -265,7 +265,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
       target[symbolInternals].core.setDecoded(fullPath, withLinks);
     }
 
-    target[EventId]?.emit();
+    // Note: EventId.emit() is called centrally in core.updates.on() to handle both local and remote changes.
     return true;
   }
 
@@ -536,7 +536,6 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     } else if (typeof property === 'string') {
       const fullPath = [getNamespace(target), ...target[symbolPath], property];
       target[symbolInternals].core.delete(fullPath);
-      target[EventId]?.emit();
       return true;
     }
     return false;
@@ -547,7 +546,6 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
 
     const encodedItems = this._encodeForArray(target, validatedItems);
     const result = target[symbolInternals].core.arrayPush([getNamespace(target), ...path], encodedItems);
-    target[EventId]?.emit();
     return result;
   }
 
@@ -561,7 +559,6 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
       returnValue = array.pop();
     });
 
-    target[EventId]?.emit();
     return returnValue;
   }
 
@@ -575,7 +572,6 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
       returnValue = array.shift();
     });
 
-    target[EventId]?.emit();
     return returnValue;
   }
 
@@ -591,7 +587,6 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
       newLength = array.unshift(...encodedItems);
     });
 
-    target[EventId]?.emit();
     invariant(newLength !== -1);
     return newLength;
   }
@@ -613,7 +608,6 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
       }
     });
 
-    target[EventId]?.emit();
     invariant(deletedElements);
     return deletedElements;
   }
@@ -628,7 +622,6 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
       setDeep(doc, fullPath, sortedArray);
     });
 
-    target[EventId]?.emit();
     return target as EchoArray<any>;
   }
 
@@ -642,7 +635,6 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
       setDeep(doc, fullPath, reversedArray);
     });
 
-    target[EventId]?.emit();
     return target as EchoArray<any>;
   }
 
@@ -760,7 +752,6 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
       trimmedArray.length = newLength;
       setDeep(doc, fullPath, trimmedArray);
     });
-    target[EventId]?.emit();
   }
 
   private _validateForArray(target: ProxyTarget, path: KeyPath, items: any[], start: number) {
@@ -1031,7 +1022,12 @@ export const createObject = <T extends AnyProperties>(obj: T): CreateObjectRetur
     target[symbolNamespace] = DATA_NAMESPACE;
     slot.handler._proxyMap.set(target, obj);
 
-    target[symbolInternals].subscriptions.push(core.updates.on(() => target[symbolInternals].signal.notifyWrite()));
+    target[symbolInternals].subscriptions.push(
+      core.updates.on(() => {
+        target[symbolInternals].signal.notifyWrite();
+        target[EventId]?.emit();
+      }),
+    );
 
     // NOTE: This call is recursively linking all nested objects
     //  which can cause recursive loops of `createObject` if `EchoReactiveHandler` is not set prior to this call.
@@ -1056,7 +1052,12 @@ export const createObject = <T extends AnyProperties>(obj: T): CreateObjectRetur
       ...(obj as any),
     };
     target[symbolInternals].rootSchema = schema;
-    target[symbolInternals].subscriptions.push(core.updates.on(() => target[symbolInternals].signal.notifyWrite()));
+    target[symbolInternals].subscriptions.push(
+      core.updates.on(() => {
+        target[symbolInternals].signal.notifyWrite();
+        target[EventId]?.emit();
+      }),
+    );
 
     initCore(core, target);
     const proxy = createProxy<ProxyTarget>(target, EchoReactiveHandler.instance);
@@ -1104,7 +1105,10 @@ export const initEchoReactiveObjectRootProxy = (core: ObjectCore, database?: Ech
   };
 
   // TODO(dmaretskyi): Does this need to be disposed?
-  core.updates.on(() => target[symbolInternals].signal.notifyWrite());
+  core.updates.on(() => {
+    target[symbolInternals].signal.notifyWrite();
+    target[EventId]?.emit();
+  });
 
   const obj = createProxy<ProxyTarget>(target, EchoReactiveHandler.instance) as any;
   assertObjectModel(obj);

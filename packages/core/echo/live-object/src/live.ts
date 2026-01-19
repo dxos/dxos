@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { isProxy } from './proxy';
+import { getProxyTarget, isProxy } from './proxy';
 
 /**
  * Marker interface.
@@ -28,3 +28,17 @@ export const isLiveObject = (value: unknown): boolean => isProxy(value);
 
 // TODO(dmaretskyi): Rename all symbols that are props to end with *Key.
 export const EventId = Symbol.for('@dxos/live-object/EventId');
+
+/**
+ * Subscribe to changes on a live object.
+ * @param obj - The live object to subscribe to.
+ * @param callback - Called when the object changes.
+ * @returns Unsubscribe function.
+ */
+export const subscribe = (obj: unknown, callback: () => void): (() => void) => {
+  const target = getProxyTarget(obj as any);
+  if (target && EventId in target) {
+    return (target as any)[EventId].on(callback);
+  }
+  return () => {};
+};

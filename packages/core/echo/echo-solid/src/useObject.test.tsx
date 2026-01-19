@@ -39,8 +39,11 @@ describe('useObject', () => {
       { wrapper: Wrapper },
     );
 
-    expect(result).toBe(obj);
+    // Returns a snapshot (plain object), not the Echo object itself.
+    expect(result).not.toBe(obj);
     expect(result?.name).toBe('Test');
+    expect(result?.username).toBe('test');
+    expect(result?.email).toBe('test@example.com');
   });
 
   test('returns property value when property is provided', () => {
@@ -99,25 +102,28 @@ describe('useObject', () => {
     const registry = Registry.make();
     const Wrapper = createWrapper(registry);
 
-    let result: Entity.Entity<TestSchema.Person> | undefined;
-    render(
+    // Capture the accessor to get the latest snapshot value.
+    let valueAccessor: (() => Entity.Entity<TestSchema.Person> | undefined) | undefined;
+    const { getByTestId } = render(
       () => {
         const [value] = useObject(obj);
-        result = value();
-        return (<div>test</div>) as JSX.Element;
+        valueAccessor = value;
+        return (<div data-testid='name'>{value()?.name}</div>) as JSX.Element;
       },
       { wrapper: Wrapper },
     );
 
-    expect(result?.name).toBe('Test');
+    expect(valueAccessor?.()?.name).toBe('Test');
+    expect(getByTestId('name').textContent).toBe('Test');
 
     // Update a property on the object.
     obj.name = 'Updated';
 
     // Wait for reactivity to update.
     await waitFor(() => {
-      expect(result?.name).toBe('Updated');
+      expect(getByTestId('name').textContent).toBe('Updated');
     });
+    expect(valueAccessor?.()?.name).toBe('Updated');
   });
 
   test('property atom does not update when other properties change', async () => {
@@ -163,7 +169,8 @@ describe('useObject', () => {
       { wrapper: Wrapper },
     );
 
-    expect(result).toBe(obj);
+    // Returns a snapshot (plain object), not the Echo object itself.
+    expect(result).not.toBe(obj);
     expect(result?.name).toBe('Test');
   });
 

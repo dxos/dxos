@@ -20,8 +20,9 @@ describe('Echo Atom - Reactivity', () => {
     const registry = Registry.make();
     const atom = AtomObj.make(obj);
 
-    const initialValue = registry.get(atom);
-    expect(initialValue.value.name).toBe('Test');
+    // Returns a snapshot (plain object), not the Echo object itself.
+    const initialSnapshot = registry.get(atom);
+    expect(initialSnapshot.name).toBe('Test');
 
     // Subscribe to enable reactivity.
     registry.subscribe(atom, () => {});
@@ -29,8 +30,8 @@ describe('Echo Atom - Reactivity', () => {
     // Update the object directly.
     obj.name = 'Updated';
 
-    const updatedValue = registry.get(atom);
-    expect(updatedValue.value.name).toBe('Updated');
+    const updatedSnapshot = registry.get(atom);
+    expect(updatedSnapshot.name).toBe('Updated');
   });
 
   test('property atom updates when its property is mutated', () => {
@@ -41,7 +42,7 @@ describe('Echo Atom - Reactivity', () => {
     const registry = Registry.make();
     const atom = AtomObj.makeProperty(obj, 'name');
 
-    expect(registry.get(atom).value).toBe('Test');
+    expect(registry.get(atom)).toBe('Test');
 
     // Subscribe to enable reactivity.
     registry.subscribe(atom, () => {});
@@ -49,7 +50,7 @@ describe('Echo Atom - Reactivity', () => {
     // Update the property directly.
     obj.name = 'Updated';
 
-    expect(registry.get(atom).value).toBe('Updated');
+    expect(registry.get(atom)).toBe('Updated');
   });
 
   test('property atom does NOT update when other properties change', () => {
@@ -61,8 +62,8 @@ describe('Echo Atom - Reactivity', () => {
     const nameAtom = AtomObj.makeProperty(obj, 'name');
     const emailAtom = AtomObj.makeProperty(obj, 'email');
 
-    const initialName = registry.get(nameAtom).value;
-    const initialEmail = registry.get(emailAtom).value;
+    const initialName = registry.get(nameAtom);
+    const initialEmail = registry.get(emailAtom);
     expect(initialName).toBe('Test');
     expect(initialEmail).toBe('test@example.com');
 
@@ -80,11 +81,11 @@ describe('Echo Atom - Reactivity', () => {
     obj.email = 'updated@example.com';
 
     // Name atom should NOT have changed.
-    expect(registry.get(nameAtom).value).toBe('Test');
+    expect(registry.get(nameAtom)).toBe('Test');
     expect(nameUpdateCount).toBe(0);
 
     // Email atom should have changed.
-    expect(registry.get(emailAtom).value).toBe('updated@example.com');
+    expect(registry.get(emailAtom)).toBe('updated@example.com');
     expect(emailUpdateCount).toBe(1);
   });
 
@@ -105,8 +106,8 @@ describe('Echo Atom - Reactivity', () => {
     obj.name = 'Updated';
     obj.email = 'updated@example.com';
 
-    expect(registry.get(nameAtom).value).toBe('Updated');
-    expect(registry.get(emailAtom).value).toBe('updated@example.com');
+    expect(registry.get(nameAtom)).toBe('Updated');
+    expect(registry.get(emailAtom)).toBe('updated@example.com');
   });
 
   test('direct object mutations flow through to atoms', () => {
@@ -137,9 +138,9 @@ describe('Echo Atom - Reactivity', () => {
     // Updates fire through Obj.subscribe.
     expect(updateCount).toBe(initialCount + 2);
 
-    // Verify final state.
-    const finalValue = registry.get(atom);
-    expect(finalValue.value.name).toBe('Updated');
-    expect(finalValue.value.email).toBe('updated@example.com');
+    // Verify final state - returns snapshot (plain object).
+    const finalSnapshot = registry.get(atom);
+    expect(finalSnapshot.name).toBe('Updated');
+    expect(finalSnapshot.email).toBe('updated@example.com');
   });
 });

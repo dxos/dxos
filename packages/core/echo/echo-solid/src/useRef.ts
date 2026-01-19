@@ -5,7 +5,7 @@
 import { type MaybeAccessor, access } from '@solid-primitives/utils';
 import { type Accessor, createEffect, createMemo, createSignal, onCleanup } from 'solid-js';
 
-import type { Entity, Ref } from '@dxos/echo';
+import { type Entity, Obj, type Ref } from '@dxos/echo';
 import { AtomObj } from '@dxos/echo-atom';
 import { useRegistry } from '@dxos/effect-atom-solid';
 
@@ -52,25 +52,26 @@ export function useRef<T extends Entity.Unknown>(ref: MaybeAccessor<Ref.Ref<T> |
       // Clean up previous subscription.
       unsubscribe?.();
 
-      const atom = AtomObj.make(targetObj);
-      const currentValue = registry.get(atom).value;
+      // Set initial snapshot immediately (before effect would update).
+      const initialSnapshot = Obj.getSnapshot(targetObj as Obj.Any) as T;
 
       // Final check before updating state.
       if (!isActive || loadingRef !== r) {
         return;
       }
 
-      setTarget(() => currentValue);
+      setTarget(() => initialSnapshot);
 
-      // Subscribe to atom updates (same pattern as useObject).
+      // Subscribe to atom updates (returns snapshots directly).
+      const atom = AtomObj.make(targetObj);
       unsubscribe = registry.subscribe(
         atom,
         () => {
           if (!isActive) {
             return;
           }
-          const updatedValue = registry.get(atom).value as T;
-          setTarget(() => updatedValue);
+          const updatedSnapshot = registry.get(atom) as T;
+          setTarget(() => updatedSnapshot);
         },
         { immediate: true },
       );
