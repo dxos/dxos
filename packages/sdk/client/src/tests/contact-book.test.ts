@@ -55,7 +55,9 @@ describe('ContactBook', () => {
       const guestSpace = await waitForSpace(client2, space2.key, { ready: true });
       await expectDocumentReplicated(guestSpace, document);
 
-      document.content = 'Hello, world!';
+      Obj.change(document, (d) => {
+        d.content = 'Hello, world!';
+      });
       await space2.db.flush();
       await expectDocumentReplicated(guestSpace, document);
     });
