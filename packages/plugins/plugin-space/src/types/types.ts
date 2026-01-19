@@ -5,7 +5,7 @@
 import type * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
-import { Capability } from '@dxos/app-framework';
+import { Capability, type CapabilityManager, Plugin } from '@dxos/app-framework';
 import { type PublicKey } from '@dxos/client';
 // TODO(wittjosiah): This pulls in full client.
 import { EchoObjectSchema, ReactiveObjectSchema, SpaceSchema } from '@dxos/client/echo';
@@ -119,11 +119,11 @@ export interface TypedObjectSerializer<T extends Obj.Any = Obj.Any> {
  *
  * Options include:
  * - `db`: The database to use for object creation.
- * - `context`: The plugin context for accessing capabilities and dispatch.
+ * - `capabilities`: The capability manager for accessing capabilities.
  */
 export type CreateObject = (
   props: any,
-  options: { db: Database.Database; context: Capability.PluginContext },
+  options: { db: Database.Database; capabilities: CapabilityManager.CapabilityManager },
 ) => Effect.Effect<Obj.Any, Error>;
 
 // TODO(burdon): Move to FormatEnum or SDK.
@@ -143,7 +143,7 @@ const COLLECTION_OPERATION = 'dxos.org/plugin/collection/operation';
 export namespace CollectionOperation {
   export const Create = Operation.make({
     meta: { key: `${COLLECTION_OPERATION}/create`, name: 'Create Collection' },
-    services: [Capability.PluginContextService],
+    services: [Capability.Service],
     schema: {
       input: Schema.Struct({
         name: Schema.optional(Schema.String),
@@ -167,7 +167,7 @@ export namespace SpaceOperation {
       name: 'Create Space',
       description: 'Create a new space.',
     },
-    services: [Capability.PluginContextService],
+    services: [Capability.Service, Plugin.Service],
     schema: {
       input: SpaceForm,
       output: Schema.Struct({
@@ -184,7 +184,7 @@ export namespace SpaceOperation {
       name: 'Join Space',
       description: 'Join a space via invitation.',
     },
-    services: [Capability.PluginContextService],
+    services: [Capability.Service],
     schema: {
       input: Schema.Struct({
         invitationCode: Schema.optional(Schema.String),
@@ -200,7 +200,7 @@ export namespace SpaceOperation {
       name: 'Open Space',
       description: 'Open a space.',
     },
-    services: [Capability.PluginContextService],
+    services: [Capability.Service],
     schema: {
       input: Schema.Struct({
         space: SpaceSchema,
@@ -215,7 +215,7 @@ export namespace SpaceOperation {
       name: 'Close Space',
       description: 'Close a space.',
     },
-    services: [Capability.PluginContextService],
+    services: [Capability.Service],
     schema: {
       input: Schema.Struct({
         space: SpaceSchema,
@@ -230,7 +230,7 @@ export namespace SpaceOperation {
       name: 'Share Space',
       description: 'Share a space.',
     },
-    services: [Capability.PluginContextService],
+    services: [Capability.Service],
     schema: {
       input: Schema.Struct({
         space: SpaceSchema,
@@ -250,7 +250,7 @@ export namespace SpaceOperation {
       name: 'Lock Space',
       description: 'Lock a space to prevent modifications.',
     },
-    services: [Capability.PluginContextService],
+    services: [Capability.Service],
     schema: {
       input: Schema.Struct({
         space: SpaceSchema,
@@ -266,7 +266,7 @@ export namespace SpaceOperation {
       name: 'Unlock Space',
       description: 'Unlock a space to allow modifications.',
     },
-    services: [Capability.PluginContextService],
+    services: [Capability.Service],
     schema: {
       input: Schema.Struct({
         space: SpaceSchema,
@@ -281,7 +281,7 @@ export namespace SpaceOperation {
       name: 'Open Space Settings',
       description: 'Open space settings.',
     },
-    services: [Capability.PluginContextService],
+    services: [Capability.Service],
     schema: {
       input: Schema.Struct({
         space: SpaceSchema,
@@ -296,7 +296,7 @@ export namespace SpaceOperation {
       name: 'Wait For Object',
       description: 'Wait for an object to be available.',
     },
-    services: [Capability.PluginContextService],
+    services: [Capability.Service],
     schema: {
       input: Schema.Struct({
         id: Schema.optional(Schema.String),
@@ -311,7 +311,7 @@ export namespace SpaceOperation {
       name: 'Add Object',
       description: 'Add an object to a space.',
     },
-    services: [Capability.PluginContextService],
+    services: [Capability.Service],
     schema: {
       input: Schema.Struct({
         object: ReactiveObjectSchema.annotations({ description: 'The object to add.' }),
@@ -348,7 +348,7 @@ export namespace SpaceOperation {
       name: 'Remove Objects',
       description: 'Remove objects from a space.',
     },
-    services: [Capability.PluginContextService],
+    services: [Capability.Service],
     schema: {
       input: Schema.Struct({
         objects: Schema.Array(ReactiveObjectSchema).annotations({ description: 'The objects to remove.' }),
@@ -373,7 +373,7 @@ export namespace SpaceOperation {
       name: 'Delete Field',
       description: 'Delete a field from a view.',
     },
-    services: [Capability.PluginContextService],
+    services: [Capability.Service],
     schema: {
       input: Schema.Struct({
         view: View.View.annotations({ description: 'The view to delete the field from.' }),
@@ -389,7 +389,7 @@ export namespace SpaceOperation {
       name: 'Open Create Object Dialog',
       description: 'Open the create object dialog.',
     },
-    services: [Capability.PluginContextService],
+    services: [Capability.Service],
     schema: {
       input: Schema.Struct({
         target: Schema.Union(Database.Database, Collection.Collection).annotations({
@@ -412,7 +412,7 @@ export namespace SpaceOperation {
       name: 'Open Create Space Dialog',
       description: 'Open the create space dialog.',
     },
-    services: [Capability.PluginContextService],
+    services: [Capability.Service],
     schema: {
       input: Schema.Void,
       output: Schema.Void,
@@ -425,7 +425,7 @@ export namespace SpaceOperation {
       name: 'Migrate Space',
       description: 'Migrate a space to a new version.',
     },
-    services: [Capability.PluginContextService],
+    services: [Capability.Service],
     schema: {
       input: Schema.Struct({
         space: SpaceSchema,
@@ -441,7 +441,7 @@ export namespace SpaceOperation {
       name: 'Create Snapshot',
       description: 'Create a snapshot of the space.',
     },
-    services: [Capability.PluginContextService],
+    services: [Capability.Service],
     schema: {
       input: Schema.Struct({
         db: Database.Database,
@@ -459,7 +459,7 @@ export namespace SpaceOperation {
       name: 'Rename Space',
       description: 'Rename a space.',
     },
-    services: [Capability.PluginContextService],
+    services: [Capability.Service],
     schema: {
       input: Schema.Struct({
         space: SpaceSchema,
@@ -475,7 +475,7 @@ export namespace SpaceOperation {
       name: 'Rename Object',
       description: 'Rename an object.',
     },
-    services: [Capability.PluginContextService],
+    services: [Capability.Service],
     schema: {
       input: Schema.Struct({
         object: EchoObjectSchema,
@@ -491,7 +491,7 @@ export namespace SpaceOperation {
       name: 'Open Members',
       description: 'Open the members panel for a space.',
     },
-    services: [Capability.PluginContextService],
+    services: [Capability.Service],
     schema: {
       input: Schema.Struct({
         space: SpaceSchema,
@@ -506,7 +506,7 @@ export namespace SpaceOperation {
       name: 'Get Share Link',
       description: 'Get a shareable link for a space.',
     },
-    services: [Capability.PluginContextService],
+    services: [Capability.Service],
     schema: {
       input: Schema.Struct({
         space: SpaceSchema,
@@ -536,7 +536,7 @@ export namespace SpaceOperation {
       name: 'Use Static Schema',
       description: 'Use a static schema in the space.',
     },
-    services: [Capability.PluginContextService],
+    services: [Capability.Service, Plugin.Service],
     schema: {
       input: Schema.Struct({
         db: Database.Database,
@@ -553,7 +553,7 @@ export namespace SpaceOperation {
       name: 'Add Schema',
       description: 'Add a schema to the space.',
     },
-    services: [Capability.PluginContextService],
+    services: [Capability.Service, Plugin.Service],
     schema: {
       input: Schema.Struct({
         db: Database.Database,
@@ -578,7 +578,7 @@ export namespace SpaceOperation {
       name: 'Add Relation',
       description: 'Add a relation between objects.',
     },
-    services: [Capability.PluginContextService],
+    services: [Capability.Service],
     schema: {
       input: Schema.Struct({
         db: Database.Database,
@@ -602,7 +602,7 @@ export namespace SpaceOperation {
       name: 'Duplicate Object',
       description: 'Duplicate an object.',
     },
-    services: [Capability.PluginContextService],
+    services: [Capability.Service],
     schema: {
       input: Schema.Struct({
         object: EchoObjectSchema,
@@ -621,7 +621,7 @@ export namespace SpaceOperation {
       name: 'Restore Field',
       description: 'Restore a deleted field to a view.',
     },
-    services: [Capability.PluginContextService],
+    services: [Capability.Service],
     schema: {
       input: Schema.Struct({
         view: View.View.annotations({ description: 'The view to restore the field to.' }),
@@ -643,7 +643,7 @@ export namespace SpaceOperation {
       name: 'Restore Objects',
       description: 'Restore deleted objects to a space.',
     },
-    services: [Capability.PluginContextService],
+    services: [Capability.Service],
     schema: {
       input: Schema.Struct({
         objects: Schema.Array(EchoObjectSchema).annotations({ description: 'The objects to restore.' }),

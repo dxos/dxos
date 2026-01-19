@@ -18,9 +18,9 @@ import { meta } from './meta';
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     // Get context for lazy capability access in callbacks.
-    const context = yield* Capability.PluginContextService;
-    const managerAtom = context.capabilities(Common.Capability.PluginManager);
-    const settingsStoreAtom = context.capabilities(Common.Capability.SettingsStore);
+    const capabilities = yield* Capability.Service;
+    const managerAtom = capabilities.atom(Common.Capability.PluginManager);
+    const settingsStoreAtom = capabilities.atom(Common.Capability.SettingsStore);
 
     const extensions = yield* Effect.all([
       GraphBuilder.createExtension({

@@ -16,7 +16,7 @@ import { isLocalFile } from '../../util';
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     // Get context for lazy capability access in callbacks.
-    const context = yield* Capability.PluginContextService;
+    const capabilities = yield* Capability.Service;
 
     return Capability.contributes(Common.Capability.ReactSurface, [
       Common.createSurface({
@@ -39,8 +39,8 @@ export default Capability.makeModule(
         id: `${meta.id}/status`,
         role: 'status',
         filter: (data): data is any => {
-          const settings = context
-            .getCapability(Common.Capability.SettingsStore)
+          const settings = capabilities
+            .get(Common.Capability.SettingsStore)
             .getStore<FilesSettingsProps>(meta.id)!.value;
           return settings.autoExport;
         },

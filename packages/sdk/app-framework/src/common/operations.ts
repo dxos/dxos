@@ -28,7 +28,7 @@ export namespace LayoutOperation {
       description: 'Update the sidebar state.',
     },
     executionMode: 'sync',
-    services: [Capability.PluginContextService],
+    services: [Capability.Service],
     schema: {
       input: Schema.Struct({
         subject: Schema.optional(
@@ -51,7 +51,7 @@ export namespace LayoutOperation {
       description: 'Update the complementary sidebar state.',
     },
     executionMode: 'sync',
-    services: [Capability.PluginContextService],
+    services: [Capability.Service],
     schema: {
       input: Schema.Struct({
         subject: Schema.optional(
@@ -78,7 +78,7 @@ export namespace LayoutOperation {
       description: 'Open, close, or update the dialog.',
     },
     executionMode: 'sync',
-    services: [Capability.PluginContextService],
+    services: [Capability.Service],
     schema: {
       input: Schema.Struct({
         subject: Schema.optional(
@@ -135,7 +135,7 @@ export namespace LayoutOperation {
       description: 'Open, close, or update a popover.',
     },
     executionMode: 'sync',
-    services: [Capability.PluginContextService],
+    services: [Capability.Service],
     schema: {
       input: Schema.Union(
         PopoverBaseInput.pipe(
@@ -190,7 +190,7 @@ export namespace LayoutOperation {
       description: 'Add a toast notification.',
     },
     executionMode: 'sync',
-    services: [Capability.PluginContextService],
+    services: [Capability.Service],
     schema: {
       input: Toast,
       output: Schema.Void,
@@ -208,7 +208,7 @@ export namespace LayoutOperation {
       description: 'Set the layout mode (solo, deck, fullscreen, etc.).',
     },
     executionMode: 'sync',
-    services: [Capability.PluginContextService],
+    services: [Capability.Service],
     schema: {
       input: Schema.Union(
         Schema.Struct({
@@ -236,7 +236,7 @@ export namespace LayoutOperation {
       description: 'Switch to a different workspace.',
     },
     executionMode: 'sync',
-    services: [Capability.PluginContextService],
+    services: [Capability.Service],
     schema: {
       input: Schema.Struct({
         subject: Schema.String.annotations({ description: 'The id of the workspace to switch to.' }),
@@ -252,7 +252,7 @@ export namespace LayoutOperation {
       description: 'Revert to the previous workspace.',
     },
     executionMode: 'sync',
-    services: [Capability.PluginContextService],
+    services: [Capability.Service],
     schema: {
       input: Schema.Void,
       output: Schema.Void,
@@ -270,7 +270,7 @@ export namespace LayoutOperation {
       description: 'Open items in the main content area.',
     },
     executionMode: 'sync',
-    services: [Capability.PluginContextService],
+    services: [Capability.Service],
     schema: {
       input: Schema.Struct({
         subject: Schema.Array(Schema.String.annotations({ description: 'Ids of the items to open.' })),
@@ -304,7 +304,7 @@ export namespace LayoutOperation {
       description: 'Close items in the main content area.',
     },
     executionMode: 'sync',
-    services: [Capability.PluginContextService],
+    services: [Capability.Service],
     schema: {
       input: Schema.Struct({
         subject: Schema.Array(Schema.String.annotations({ description: 'Ids of the items to close.' })),
@@ -320,7 +320,7 @@ export namespace LayoutOperation {
       description: 'Override items in the main content area.',
     },
     executionMode: 'sync',
-    services: [Capability.PluginContextService],
+    services: [Capability.Service],
     schema: {
       input: Schema.Struct({
         subject: Schema.Array(Schema.String.annotations({ description: 'Ids of the items to set.' })),
@@ -339,7 +339,7 @@ export namespace LayoutOperation {
       name: 'Scroll Into View',
       description: 'Scroll an item into view.',
     },
-    services: [Capability.PluginContextService],
+    services: [Capability.Service],
     schema: {
       input: Schema.Struct({
         subject: Schema.optional(Schema.String.annotations({ description: 'The id of the item to scroll into view.' })),
@@ -356,7 +356,7 @@ export namespace LayoutOperation {
       name: 'Expose',
       description: 'Expose an item in the navigation area.',
     },
-    services: [Capability.PluginContextService],
+    services: [Capability.Service],
     schema: {
       input: Schema.Struct({
         subject: Schema.String.annotations({ description: 'The id of the item to expose.' }),
@@ -383,7 +383,7 @@ export namespace UndoOperation {
       description: 'Show an undo toast notification.',
     },
     executionMode: 'sync',
-    services: [Capability.PluginContextService],
+    services: [Capability.Service],
     schema: {
       input: Schema.Struct({
         message: Schema.optional(Label.annotations({ description: 'The message to display in the undo toast.' })),

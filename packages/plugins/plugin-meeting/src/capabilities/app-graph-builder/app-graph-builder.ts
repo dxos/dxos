@@ -21,7 +21,7 @@ import { Meeting, MeetingCapabilities, MeetingOperation } from '../../types';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    const context = yield* Capability.PluginContextService;
+    const capabilities = yield* Capability.Service;
 
     const extensions = yield* Effect.all([
       // TODO(wittjosiah): This currently won't _start_ the call but will navigate to the correct channel.
@@ -58,13 +58,13 @@ export default Capability.makeModule(
         id: `${meta.id}/call-thread`,
         type: Channel.Channel,
         connector: (channel, get) => {
-          const state = context.getCapability(MeetingCapabilities.State);
+          const state = capabilities.get(MeetingCapabilities.State);
           const meeting = get(CreateAtom.fromSignal(() => state.activeMeeting));
           if (!meeting) {
             return Effect.succeed([]);
           }
 
-          const callManager = context.getCapability(ThreadCapabilities.CallManager);
+          const callManager = capabilities.get(ThreadCapabilities.CallManager);
           const joined = get(
             CreateAtom.fromSignal(() => callManager.joined && callManager.roomId === Obj.getDXN(channel).toString()),
           );
@@ -92,7 +92,7 @@ export default Capability.makeModule(
         id: `${meta.id}/call-companion`,
         type: Channel.Channel,
         connector: (channel, get) => {
-          const callManager = context.getCapability(ThreadCapabilities.CallManager);
+          const callManager = capabilities.get(ThreadCapabilities.CallManager);
           const isCallActive = get(
             CreateAtom.fromSignal(() => callManager.joined && callManager.roomId === Obj.getDXN(channel).toString()),
           );
@@ -100,7 +100,7 @@ export default Capability.makeModule(
             return Effect.succeed([]);
           }
 
-          const state = context.getCapability(MeetingCapabilities.State);
+          const state = capabilities.get(MeetingCapabilities.State);
           const data = get(CreateAtom.fromSignal(() => state.activeMeeting ?? 'meeting'));
 
           return Effect.succeed([
@@ -123,7 +123,7 @@ export default Capability.makeModule(
         id: `${meta.id}/call-transcript`,
         type: Channel.Channel,
         actions: (channel, get) => {
-          const state = context.getCapability(MeetingCapabilities.State);
+          const state = capabilities.get(MeetingCapabilities.State);
           const enabled = get(CreateAtom.fromSignal(() => state.transcriptionManager?.enabled ?? false));
           return Effect.succeed([
             {
@@ -172,7 +172,7 @@ export default Capability.makeModule(
           ]);
         },
         connector: (channel, get) => {
-          const state = context.getCapability(MeetingCapabilities.State);
+          const state = capabilities.get(MeetingCapabilities.State);
           const meeting = get(CreateAtom.fromSignal(() => state.activeMeeting));
           if (!meeting) {
             return Effect.succeed([]);

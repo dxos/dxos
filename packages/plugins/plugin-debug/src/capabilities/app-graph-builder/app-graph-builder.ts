@@ -16,7 +16,7 @@ const DEVTOOLS_TYPE = `${meta.id}/devtools`;
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    const context = yield* Capability.PluginContextService;
+    const capabilities = yield* Capability.Service;
 
     const extensions = yield* Effect.all([
       // Devtools node.
@@ -24,8 +24,8 @@ export default Capability.makeModule(
         id: `${meta.id}/devtools`,
         match: NodeMatcher.whenAny(NodeMatcher.whenRoot, NodeMatcher.whenNodeType(`${spaceMeta.id}/settings`)),
         connector: (node, get) => {
-          const space = get(CreateAtom.fromSignal(() => getActiveSpace(context)));
-          const [graph] = get(context.capabilities(Common.Capability.AppGraph));
+          const space = get(CreateAtom.fromSignal(() => getActiveSpace(capabilities)));
+          const [graph] = get(capabilities.atom(Common.Capability.AppGraph));
 
           return Effect.succeed([
             {

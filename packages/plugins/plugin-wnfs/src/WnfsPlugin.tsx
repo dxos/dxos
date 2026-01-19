@@ -38,9 +38,9 @@ export const WnfsPlugin = Plugin.define(meta).pipe(
         icon: 'ph--file--regular',
         iconHue: 'teal',
         inputSchema: WnfsAction.UploadFileSchema,
-        createObject: ((props, { db, context }) =>
+        createObject: ((props, { db, capabilities }) =>
           Effect.gen(function* () {
-            const { invoke } = context.getCapability(Common.Capability.OperationInvoker);
+            const { invoke } = capabilities.get(Common.Capability.OperationInvoker);
             const { object } = yield* invoke(WnfsOperation.CreateFile, { ...props, db });
             return object;
           })) satisfies CreateObject,

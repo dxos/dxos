@@ -20,7 +20,7 @@ const ASSISTANT_OPERATION = `${meta.id}/operation`;
 export namespace AssistantOperation {
   export const OnCreateSpace = Operation.make({
     meta: { key: `${ASSISTANT_OPERATION}/on-create-space`, name: 'On Create Space' },
-    services: [Capability.PluginContextService],
+    services: [Capability.Service],
     schema: {
       input: Schema.Struct({
         space: SpaceSchema,
@@ -32,7 +32,7 @@ export namespace AssistantOperation {
 
   export const CreateChat = Operation.make({
     meta: { key: `${ASSISTANT_OPERATION}/create-chat`, name: 'Create Chat' },
-    services: [Capability.PluginContextService],
+    services: [Capability.Service],
     schema: {
       input: Schema.Struct({
         db: Database.Database,
@@ -46,7 +46,7 @@ export namespace AssistantOperation {
 
   export const UpdateChatName = Operation.make({
     meta: { key: `${ASSISTANT_OPERATION}/update-chat-name`, name: 'Update Chat Name' },
-    services: [Capability.PluginContextService],
+    services: [Capability.Service],
     schema: {
       input: Schema.Struct({
         chat: Chat,
@@ -57,7 +57,7 @@ export namespace AssistantOperation {
 
   export const SetCurrentChat = Operation.make({
     meta: { key: `${ASSISTANT_OPERATION}/set-current-chat`, name: 'Set Current Chat' },
-    services: [Capability.PluginContextService],
+    services: [Capability.Service],
     schema: {
       input: Schema.Struct({
         companionTo: EchoObjectSchema,

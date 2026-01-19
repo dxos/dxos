@@ -40,7 +40,7 @@ const MAP_OPERATION = `${meta.id}/operation`;
 export namespace MapOperation {
   export const Toggle = Operation.make({
     meta: { key: `${MAP_OPERATION}/toggle`, name: 'Toggle Map' },
-    services: [Capability.PluginContextService],
+    services: [Capability.Service],
     schema: {
       input: Schema.Void,
       output: Schema.Void,

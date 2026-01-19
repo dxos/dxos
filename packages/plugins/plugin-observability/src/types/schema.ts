@@ -38,7 +38,7 @@ export namespace ObservabilityOperation {
       name: 'Toggle Observability',
       description: 'Toggle observability on or off.',
     },
-    services: [Capability.PluginContextService],
+    services: [Capability.Service],
     schema: {
       input: Schema.Struct({
         state: Schema.optional(Schema.Boolean),
@@ -53,7 +53,7 @@ export namespace ObservabilityOperation {
       name: 'Capture User Feedback',
       description: 'Capture user feedback.',
     },
-    services: [Capability.PluginContextService],
+    services: [Capability.Service],
     schema: {
       input: UserFeedback,
       output: Schema.Void,
@@ -66,7 +66,7 @@ export namespace ObservabilityOperation {
       name: 'Send Event',
       description: 'Send an observability event.',
     },
-    services: [Capability.PluginContextService],
+    services: [Capability.Service],
     schema: {
       input: Schema.Struct({
         name: Schema.String.annotations({ description: 'The name of the event.' }),

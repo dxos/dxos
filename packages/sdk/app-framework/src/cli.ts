@@ -9,7 +9,7 @@ import * as Layer from 'effect/Layer';
 import { invariant } from '@dxos/invariant';
 
 import * as Common from './common';
-import { type Plugin, PluginManager } from './core';
+import { Capability, Plugin, PluginManager } from './core';
 
 const defaultPluginLoader =
   (plugins: Plugin.Plugin[]): PluginManager.ManagerOptions['pluginLoader'] =>
@@ -40,7 +40,7 @@ export type CreateCliAppOptions = {
  * @example
  * const plugins = [ClientPluginCLI()];
  * const manager = await createCliApp({ plugins });
- * const commands = manager.context.getCapabilities(Common.Capability.Command);
+ * const commands = manager.capabilities.getAll(Common.Capability.Command);
  *
  * @param options.pluginManager Optional existing PluginManager instance.
  * @param options.pluginLoader Function to load plugins by ID.
@@ -72,13 +72,13 @@ export const createCliApp = Effect.fn(function* ({
       enabled,
     });
 
-  manager.context.contributeCapability({
+  manager.capabilities.contribute({
     interface: Common.Capability.PluginManager,
     implementation: manager,
     module: 'dxos.org/app-framework/plugin-manager',
   });
 
-  manager.context.contributeCapability({
+  manager.capabilities.contribute({
     interface: Common.Capability.AtomRegistry,
     implementation: manager.registry,
     module: 'dxos.org/app-framework/atom-registry',
@@ -88,11 +88,17 @@ export const createCliApp = Effect.fn(function* ({
   yield* manager.activate(Common.ActivationEvent.Startup);
 
   // Gather all layers and merge them into a single layer.
-  const layers = manager.context.getCapabilities(Common.Capability.Layer);
-  const layer = Layer.mergeAll(PluginManager.Service.fromManager(manager), ...layers);
+  const layers = manager.capabilities.getAll(Common.Capability.Layer);
+  const capabilityServiceLayer = Layer.succeed(Capability.Service, manager.capabilities);
+  const pluginServiceLayer = Layer.succeed(Plugin.Service, manager);
+  const layer = (Layer.mergeAll as (...args: Layer.Layer<any, any, any>[]) => Layer.Layer<any, any, never>)(
+    capabilityServiceLayer,
+    pluginServiceLayer,
+    ...layers,
+  );
 
   // Gather all commands and provide them to the root command.
-  const pluginCommands = manager.context.getCapabilities(Common.Capability.Command);
+  const pluginCommands = manager.capabilities.getAll(Common.Capability.Command);
   const subCommands = subCommandsProp ? [...subCommandsProp, ...pluginCommands] : pluginCommands;
   invariant(subCommands.length > 0, 'No subcommands provided');
   const command = rootCommand.pipe(Command.withSubcommands(subCommands as SubCommands));

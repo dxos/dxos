@@ -7,7 +7,7 @@ import { Atom } from '@effect-atom/atom-react';
 import * as Effect from 'effect/Effect';
 import type * as Schema from 'effect/Schema';
 
-import { type Capability, Common } from '@dxos/app-framework';
+import { type CapabilityManager, Common } from '@dxos/app-framework';
 import { type Space, SpaceState, isSpace } from '@dxos/client/echo';
 import { type Database, type Entity, Filter, Obj, Query, type QueryResult, Ref, Type } from '@dxos/echo';
 import { EXPANDO_TYPENAME } from '@dxos/echo/internal';
@@ -511,14 +511,14 @@ export const constructObjectActions = ({
   object,
   graph,
   resolve,
-  context,
+  capabilities,
   deletable = true,
   navigable = false,
 }: {
   object: Obj.Any;
   graph: Graph.ReadableGraph;
   resolve: (typename: string) => Record<string, any>;
-  context: Capability.PluginContext;
+  capabilities: CapabilityManager.CapabilityManager;
   deletable?: boolean;
   navigable?: boolean;
 }) => {
@@ -602,7 +602,11 @@ export const constructObjectActions = ({
                   typename: managedCollection ? managedCollection.key : undefined,
                 });
               } else {
-                const createdObject = yield* createObject({}, { db, context }) as Effect.Effect<Obj.Any, Error, never>;
+                const createdObject = yield* createObject({}, { db, capabilities }) as Effect.Effect<
+                  Obj.Any,
+                  Error,
+                  never
+                >;
                 const addResult = yield* Operation.invoke(SpaceOperation.AddObject, {
                   target: db,
                   hidden: true,

@@ -18,7 +18,7 @@ const INBOX_OPERATION = `${meta.id}/operation`;
 export namespace InboxOperation {
   export const ExtractContact = Operation.make({
     meta: { key: `${INBOX_OPERATION}/extract-contact`, name: 'Extract Contact' },
-    services: [Capability.PluginContextService],
+    services: [Capability.Service],
     schema: {
       input: Schema.Struct({
         db: Database.Database,
@@ -31,7 +31,7 @@ export namespace InboxOperation {
   // TODO(wittjosiah): This appears to be unused.
   export const RunAssistant = Operation.make({
     meta: { key: `${INBOX_OPERATION}/run-assistant`, name: 'Run Inbox Assistant' },
-    services: [Capability.PluginContextService],
+    services: [Capability.Service],
     schema: {
       input: Schema.Struct({
         mailbox: Mailbox.Mailbox,
@@ -42,7 +42,7 @@ export namespace InboxOperation {
 
   export const OpenComposeEmail = Operation.make({
     meta: { key: `${INBOX_OPERATION}/open-compose-email`, name: 'Open Compose Email' },
-    services: [Capability.PluginContextService],
+    services: [Capability.Service],
     schema: {
       input: Schema.Void,
       output: Schema.Void,

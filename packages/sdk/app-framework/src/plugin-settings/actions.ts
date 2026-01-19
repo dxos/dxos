@@ -40,7 +40,7 @@ export namespace SettingsOperation {
       name: 'Open Settings',
       description: 'Open the settings panel.',
     },
-    services: [Capability.PluginContextService],
+    services: [Capability.Service],
     schema: {
       input: Schema.Struct({
         plugin: Schema.optional(Schema.String.annotations({ description: 'The plugin to open settings for.' })),
@@ -55,7 +55,7 @@ export namespace SettingsOperation {
       name: 'Open Plugin Registry',
       description: 'Open the plugin registry.',
     },
-    services: [Capability.PluginContextService],
+    services: [Capability.Service],
     schema: {
       input: Schema.Void,
       output: Schema.Void,

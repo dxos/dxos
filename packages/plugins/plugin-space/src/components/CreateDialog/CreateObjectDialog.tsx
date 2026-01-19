@@ -51,8 +51,8 @@ export const CreateObjectDialog = ({
 
   const resolve = useCallback<NonNullable<CreateObjectPanelProps['resolve']>>(
     (typename) => {
-      const metadata = manager.context
-        .getCapabilities(Common.Capability.Metadata)
+      const metadata = manager.capabilities
+        .getAll(Common.Capability.Metadata)
         .find(({ id }) => id === typename)?.metadata;
       return metadata?.createObject ? (metadata as Metadata) : undefined;
     },
@@ -83,7 +83,7 @@ export const CreateObjectDialog = ({
 
         const db = Database.isDatabase(target) ? target : target && Obj.getDatabase(target);
         invariant(db, 'Missing database');
-        const object = yield* metadata.createObject(data, { db, context: manager.context });
+        const object = yield* metadata.createObject(data, { db, capabilities: manager.capabilities });
         if (isLiveObject(object) && !Obj.instanceOf(Type.PersistentType, object)) {
           // TODO(wittjosiah): Selection in navtree isn't working as expected when hidden typenames evals to true.
           const hidden = !metadata.addToCollectionOnCreate;
@@ -102,7 +102,7 @@ export const CreateObjectDialog = ({
           onCreateObject?.(object);
         }
       }).pipe(runAndForwardErrors),
-    [invoke, invokePromise, target, _shouldNavigate, manager.context, onCreateObject],
+    [invoke, invokePromise, target, _shouldNavigate, manager.capabilities, onCreateObject],
   );
 
   return (

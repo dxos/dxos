@@ -34,7 +34,7 @@ const WNFS_OPERATION = `${meta.id}/operation`;
 export namespace WnfsOperation {
   export const Create = Operation.make({
     meta: { key: `${WNFS_OPERATION}/create`, name: 'Create WNFS File' },
-    services: [Capability.PluginContextService],
+    services: [Capability.Service],
     schema: {
       input: Common.FileInfoSchema.pick('name', 'type', 'cid').pipe(Schema.required),
       output: Schema.Struct({
@@ -45,7 +45,7 @@ export namespace WnfsOperation {
 
   export const Upload = Operation.make({
     meta: { key: `${WNFS_OPERATION}/upload`, name: 'Upload File' },
-    services: [Capability.PluginContextService],
+    services: [Capability.Service],
     schema: {
       input: Schema.extend(WnfsAction.UploadFileSchema, Schema.Struct({ db: Database.Database })),
       output: Schema.required(Common.FileInfoSchema),
@@ -54,7 +54,7 @@ export namespace WnfsOperation {
 
   export const CreateFile = Operation.make({
     meta: { key: `${WNFS_OPERATION}/create-file`, name: 'Create File' },
-    services: [Capability.PluginContextService],
+    services: [Capability.Service],
     schema: {
       input: Schema.extend(WnfsAction.UploadFileSchema, Schema.Struct({ db: Database.Database })),
       output: Schema.Struct({

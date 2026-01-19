@@ -42,9 +42,9 @@ export const ScriptPlugin = Plugin.define(meta).pipe(
           // TODO(wittjosiah): Move out of metadata.
           loadReferences: async (script: Script.Script) => await Ref.Array.loadAll([script.source]),
           inputSchema: ScriptOperation.ScriptProps,
-          createObject: ((props, { context }) =>
+          createObject: ((props, { capabilities }) =>
             Effect.gen(function* () {
-              const { invoke } = context.getCapability(Common.Capability.OperationInvoker);
+              const { invoke } = capabilities.get(Common.Capability.OperationInvoker);
               const { object } = yield* invoke(ScriptOperation.CreateScript, props);
               return object;
             })) satisfies CreateObject,

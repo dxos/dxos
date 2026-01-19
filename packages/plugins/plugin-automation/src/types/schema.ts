@@ -37,7 +37,7 @@ const AUTOMATION_OPERATION = `${meta.id}/operation`;
 export namespace AutomationOperation {
   export const CreateTriggerFromTemplate = Operation.make({
     meta: { key: `${AUTOMATION_OPERATION}/create-trigger-from-template`, name: 'Create Trigger From Template' },
-    services: [Capability.PluginContextService],
+    services: [Capability.Service],
     schema: {
       input: Schema.Struct({
         db: Database.Database,

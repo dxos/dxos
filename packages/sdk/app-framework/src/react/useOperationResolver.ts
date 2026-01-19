@@ -29,12 +29,12 @@ export const useOperationResolver = (module: string, resolver: Common.Capability
   const resolverArray = useMemo(() => [resolver], [resolver]);
 
   useEffect(() => {
-    manager.context.contributeCapability({
+    manager.capabilities.contribute({
       module,
       interface: Common.Capability.OperationResolver,
       implementation: resolverArray,
     });
 
-    return () => manager.context.removeCapability(Common.Capability.OperationResolver, resolverArray);
+    return () => manager.capabilities.remove(Common.Capability.OperationResolver, resolverArray);
   }, [module, resolverArray]);
 };

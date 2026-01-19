@@ -557,6 +557,7 @@ export const createExtensionRaw = (extension: CreateExtensionRawOptions): Builde
 /**
  * Options for creating a graph builder extension with simplified API.
  * All callbacks must return Effects for dependency injection.
+ * Effects may fail - errors are caught, logged, and the extension returns empty results.
  */
 export type CreateExtensionOptions<TMatched = Node.Node, R = never> = {
   id: string;
@@ -564,19 +565,33 @@ export type CreateExtensionOptions<TMatched = Node.Node, R = never> = {
   actions?: (
     matched: TMatched,
     get: Atom.Context,
-  ) => Effect.Effect<Omit<Node.NodeArg<Node.ActionData<any>, any>, 'type'>[], never, R>;
-  connector?: (matched: TMatched, get: Atom.Context) => Effect.Effect<Node.NodeArg<any, any>[], never, R>;
-  resolver?: (id: string, get: Atom.Context) => Effect.Effect<Node.NodeArg<any, any> | null, never, R>;
+  ) => Effect.Effect<Omit<Node.NodeArg<Node.ActionData<any>, any>, 'type'>[], Error, R>;
+  connector?: (matched: TMatched, get: Atom.Context) => Effect.Effect<Node.NodeArg<any, any>[], Error, R>;
+  resolver?: (id: string, get: Atom.Context) => Effect.Effect<Node.NodeArg<any, any> | null, Error, R>;
   relation?: Node.Relation;
   position?: Position;
 };
 
 /**
  * Run an Effect synchronously with the provided context.
+ * If the effect fails, logs the error and returns the fallback value.
  * @internal
  */
-const runEffectSync = <T, R>(effect: Effect.Effect<T, never, R>, context: Context.Context<R>): T => {
-  return Effect.runSync(effect.pipe(Effect.provide(context)));
+const runEffectSyncWithFallback = <T, R>(
+  effect: Effect.Effect<T, Error, R>,
+  context: Context.Context<R>,
+  extensionId: string,
+  fallback: T,
+): T => {
+  return Effect.runSync(
+    effect.pipe(
+      Effect.provide(context),
+      Effect.catchAll((error) => {
+        log.warn('Extension failed', { extension: extensionId, error });
+        return Effect.succeed(fallback);
+      }),
+    ),
+  );
 };
 
 /**
@@ -589,7 +604,7 @@ export const createExtension = <TMatched = Node.Node, R = never>(
   Effect.map(Effect.context<R>(), (context) => {
     const { id, match, actions, connector, resolver, relation, position } = options;
 
-    const connectorExtension = connector ? createConnectorWithRuntime(match, connector, context) : undefined;
+    const connectorExtension = connector ? createConnectorWithRuntime(id, match, connector, context) : undefined;
 
     const actionsExtension = actions
       ? (node: Atom.Atom<Option.Option<Node.Node>>) =>
@@ -598,7 +613,7 @@ export const createExtension = <TMatched = Node.Node, R = never>(
               get(node),
               Option.flatMap(match),
               Option.map((matched) =>
-                runEffectSync(actions(matched, get), context).map((action) => ({
+                runEffectSyncWithFallback(actions(matched, get), context, id, []).map((action) => ({
                   ...action,
                   // Attach captured context for action execution.
                   _actionContext: context,
@@ -610,7 +625,8 @@ export const createExtension = <TMatched = Node.Node, R = never>(
       : undefined;
 
     const resolverExtension = resolver
-      ? (id: string) => Atom.make((get) => runEffectSync(resolver(id, get), context) ?? null)
+      ? (nodeId: string) =>
+          Atom.make((get) => runEffectSyncWithFallback(resolver(nodeId, get), context, id, null) ?? null)
       : undefined;
 
     return createExtensionRaw({
@@ -644,12 +660,13 @@ export const createConnector = <TData>(
 
 /**
  * Create a connector extension from a matcher and factory function with Effect support.
- * The factory must return an Effect.
+ * The factory must return an Effect. Errors are caught and logged.
  * @internal
  */
 const createConnectorWithRuntime = <TData, R>(
+  extensionId: string,
   matcher: (node: Node.Node) => Option.Option<TData>,
-  factory: (data: TData, get: Atom.Context) => Effect.Effect<Node.NodeArg<any>[], never, R>,
+  factory: (data: TData, get: Atom.Context) => Effect.Effect<Node.NodeArg<any>[], Error, R>,
   context: Context.Context<R>,
 ): ConnectorExtension => {
   return (node: Atom.Atom<Option.Option<Node.Node>>) =>
@@ -657,7 +674,7 @@ const createConnectorWithRuntime = <TData, R>(
       Function.pipe(
         get(node),
         Option.flatMap(matcher),
-        Option.map((data) => runEffectSync(factory(data, get), context)),
+        Option.map((data) => runEffectSyncWithFallback(factory(data, get), context, extensionId, [])),
         Option.getOrElse(() => []),
       ),
     );
@@ -666,6 +683,7 @@ const createConnectorWithRuntime = <TData, R>(
 /**
  * Options for creating a type-based extension.
  * All callbacks must return Effects for dependency injection.
+ * Effects may fail - errors are caught, logged, and the extension returns empty results.
  */
 export type CreateTypeExtensionOptions<T extends Type.Entity.Any = Type.Entity.Any, R = never> = {
   id: string;
@@ -673,11 +691,11 @@ export type CreateTypeExtensionOptions<T extends Type.Entity.Any = Type.Entity.A
   actions?: (
     object: Entity.Entity<Schema.Schema.Type<T>>,
     get: Atom.Context,
-  ) => Effect.Effect<Omit<Node.NodeArg<Node.ActionData<any>>, 'type'>[], never, R>;
+  ) => Effect.Effect<Omit<Node.NodeArg<Node.ActionData<any>>, 'type'>[], Error, R>;
   connector?: (
     object: Entity.Entity<Schema.Schema.Type<T>>,
     get: Atom.Context,
-  ) => Effect.Effect<Node.NodeArg<any>[], never, R>;
+  ) => Effect.Effect<Node.NodeArg<any>[], Error, R>;
   relation?: Node.Relation;
   position?: Position;
 };

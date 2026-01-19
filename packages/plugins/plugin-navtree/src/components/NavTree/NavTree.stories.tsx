@@ -135,7 +135,7 @@ const meta = {
             operation: Common.LayoutOperation.SwitchWorkspace,
             handler: ({ subject }) =>
               Effect.sync(() => {
-                const state = context.getCapability(StoryState);
+                const state = context.get(StoryState);
                 state.tab = subject;
               }),
           }),

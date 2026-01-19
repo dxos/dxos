@@ -76,9 +76,9 @@ export const SpacePlugin = Plugin.define<SpacePluginOptions>(meta).pipe(
           icon: 'ph--database--regular',
           iconHue: 'green',
           inputSchema: SpaceOperation.StoredSchemaForm,
-          createObject: ((props, { db, context }) =>
+          createObject: ((props, { db, capabilities }) =>
             Effect.gen(function* () {
-              const { invoke } = context.getCapability(Common.Capability.OperationInvoker);
+              const { invoke } = capabilities.get(Common.Capability.OperationInvoker);
               if (props.typename) {
                 const result = yield* invoke(SpaceOperation.UseStaticSchema, { db, typename: props.typename });
                 return result as any;

@@ -14,8 +14,6 @@ import { Account, ClientCapabilities, ClientOperation } from '../../types';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    const context = yield* Capability.PluginContextService;
-
     const extensions = yield* GraphBuilder.createExtension({
       id: meta.id,
       match: NodeMatcher.whenRoot,
@@ -37,12 +35,12 @@ export default Capability.makeModule(
             },
           },
         ]),
-      connector: (node, get) => {
-        const client = context.getCapability(ClientCapabilities.Client);
+      connector: Effect.fnUntraced(function* (node, get) {
+        const client = yield* Capability.get(ClientCapabilities.Client);
         const identity = get(CreateAtom.fromObservable(client.halo.identity));
         const status = get(CreateAtom.fromObservable(client.mesh.networkStatus));
 
-        return Effect.succeed([
+        return [
           {
             id: Account.id,
             type: meta.id,
@@ -88,8 +86,8 @@ export default Capability.makeModule(
               },
             ],
           },
-        ]);
-      },
+        ];
+      }),
     });
 
     return Capability.contributes(Common.Capability.AppGraphBuilder, extensions);

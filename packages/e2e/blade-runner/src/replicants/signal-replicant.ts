@@ -105,7 +105,7 @@ export class SignalReplicant {
         }
         case 'signaling': {
           await cancelWithContext(
-            context,
+            capabilities,
             peer.sendMessage(PublicKey.from(randomArraySlice(Object.keys(replicants), 1)[0])),
           );
           break;

@@ -29,7 +29,7 @@ export namespace AttentionOperation {
       name: 'Select',
       description: 'Select items in an attention context.',
     },
-    services: [Capability.PluginContextService],
+    services: [Capability.Service],
     schema: {
       input: Schema.Struct({
         contextId: Schema.String.annotations({ description: 'The id of the attention context.' }),

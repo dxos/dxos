@@ -16,7 +16,7 @@ export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     const { graph } = yield* Capability.get(Common.Capability.AppGraph);
     const invoker = yield* Capability.get(Common.Capability.OperationInvoker);
-    const pluginContext = yield* Capability.PluginContextService;
+    const pluginContext = yield* Capability.Service;
 
     // TODO(wittjosiah): Factor out.
     // TODO(wittjosiah): Handle removal of actions.

@@ -29,7 +29,7 @@ type LeaveSwarmOptions = {
  * Join swarm and wait till all peers are connected.
  */
 export const joinSwarm = async ({
-  context,
+  capabilities,
   swarmIdx,
   replicantId,
   numAgents,
@@ -57,7 +57,7 @@ export const joinSwarm = async ({
    */
   const waitTillConnected = async () => {
     await cancelWithContext(
-      context,
+      capabilities,
       swarm.protocol.connected.waitForCondition(() => swarm.protocol.connections.size === numAgents - 1),
     );
     log.info('all peers connected', { replicantId, swarmIdx, swarmTopic: swarm.topic });
@@ -87,7 +87,7 @@ export const leaveSwarm = async ({ context, swarmIdx, swarm, replicantId, fullSw
    */
   const waitTillDisconnected = async () => {
     await cancelWithContext(
-      context,
+      capabilities,
       swarm.protocol.disconnected.waitForCondition(() => swarm.protocol.connections.size === 0),
     );
     log.info('all peers disconnected', { replicantId, swarmIdx, swarmTopic: swarm.topic });

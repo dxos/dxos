@@ -36,9 +36,9 @@ export const TablePlugin = Plugin.define(meta).pipe(
     id: 'on-space-created',
     activatesOn: SpaceEvents.SpaceCreated,
     activate: Effect.fnUntraced(function* () {
-      const context = yield* Capability.PluginContextService;
+      const capabilities = yield* Capability.Service;
       return Capability.contributes(SpaceCapabilities.OnCreateSpace, (params) => {
-        const { invoke } = context.getCapability(Common.Capability.OperationInvoker);
+        const { invoke } = capabilities.get(Common.Capability.OperationInvoker);
         return invoke(TableOperation.OnCreateSpace, params);
       });
     }),
@@ -47,9 +47,9 @@ export const TablePlugin = Plugin.define(meta).pipe(
     id: 'on-schema-added',
     activatesOn: SpaceEvents.SchemaAdded,
     activate: Effect.fnUntraced(function* () {
-      const context = yield* Capability.PluginContextService;
+      const capabilities = yield* Capability.Service;
       return Capability.contributes(SpaceCapabilities.OnSchemaAdded, ({ db, schema, show }) => {
-        const { invoke } = context.getCapability(Common.Capability.OperationInvoker);
+        const { invoke } = capabilities.get(Common.Capability.OperationInvoker);
         return invoke(TableOperation.OnSchemaAdded, { db, schema, show });
       });
     }),

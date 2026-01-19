@@ -24,7 +24,7 @@ const THREAD_OPERATION = `${meta.id}/operation`;
 export namespace ThreadOperation {
   export const OnCreateSpace = Operation.make({
     meta: { key: `${THREAD_OPERATION}/on-create-space`, name: 'On Create Space' },
-    services: [Capability.PluginContextService],
+    services: [Capability.Service],
     schema: {
       input: Schema.Struct({
         space: SpaceSchema,
@@ -37,7 +37,7 @@ export namespace ThreadOperation {
 
   export const CreateChannel = Operation.make({
     meta: { key: `${THREAD_OPERATION}/create-channel`, name: 'Create Channel' },
-    services: [Capability.PluginContextService],
+    services: [Capability.Service],
     schema: {
       input: Schema.Struct({
         spaceId: Key.SpaceId,
@@ -51,7 +51,7 @@ export namespace ThreadOperation {
 
   export const CreateChannelThread = Operation.make({
     meta: { key: `${THREAD_OPERATION}/create-channel-thread`, name: 'Create Channel Thread' },
-    services: [Capability.PluginContextService],
+    services: [Capability.Service],
     schema: {
       input: Schema.Struct({
         channel: Channel.Channel,
@@ -64,7 +64,7 @@ export namespace ThreadOperation {
 
   export const Create = Operation.make({
     meta: { key: `${THREAD_OPERATION}/create`, name: 'Create Thread' },
-    services: [Capability.PluginContextService],
+    services: [Capability.Service],
     schema: {
       input: Schema.Struct({
         name: Schema.optional(Schema.String),
@@ -84,7 +84,7 @@ export namespace ThreadOperation {
 
   export const Delete = Operation.make({
     meta: { key: `${THREAD_OPERATION}/delete`, name: 'Delete Thread' },
-    services: [Capability.PluginContextService],
+    services: [Capability.Service],
     schema: {
       input: Schema.Struct({
         anchor: AnchoredTo.AnchoredTo,
@@ -97,7 +97,7 @@ export namespace ThreadOperation {
 
   export const Select = Operation.make({
     meta: { key: `${THREAD_OPERATION}/select`, name: 'Select Thread' },
-    services: [Capability.PluginContextService],
+    services: [Capability.Service],
     schema: {
       input: Schema.Struct({
         current: Schema.String,
@@ -108,7 +108,7 @@ export namespace ThreadOperation {
 
   export const ToggleResolved = Operation.make({
     meta: { key: `${THREAD_OPERATION}/toggle-resolved`, name: 'Toggle Resolved' },
-    services: [Capability.PluginContextService],
+    services: [Capability.Service],
     schema: {
       input: Schema.Struct({
         thread: Thread.Thread,
@@ -119,7 +119,7 @@ export namespace ThreadOperation {
 
   export const AddMessage = Operation.make({
     meta: { key: `${THREAD_OPERATION}/add-message`, name: 'Add Message' },
-    services: [Capability.PluginContextService],
+    services: [Capability.Service],
     schema: {
       input: Schema.Struct({
         subject: EchoObjectSchema,
@@ -142,7 +142,7 @@ export namespace ThreadOperation {
 
   export const DeleteMessage = Operation.make({
     meta: { key: `${THREAD_OPERATION}/delete-message`, name: 'Delete Message' },
-    services: [Capability.PluginContextService],
+    services: [Capability.Service],
     schema: {
       input: Schema.Struct({
         anchor: AnchoredTo.AnchoredTo,
@@ -158,7 +158,7 @@ export namespace ThreadOperation {
    */
   export const Restore = Operation.make({
     meta: { key: `${THREAD_OPERATION}/restore`, name: 'Restore Thread' },
-    services: [Capability.PluginContextService],
+    services: [Capability.Service],
     schema: {
       input: Schema.Struct({
         thread: Thread.Thread.annotations({ description: 'The thread to restore.' }),
@@ -173,7 +173,7 @@ export namespace ThreadOperation {
    */
   export const RestoreMessage = Operation.make({
     meta: { key: `${THREAD_OPERATION}/restore-message`, name: 'Restore Message' },
-    services: [Capability.PluginContextService],
+    services: [Capability.Service],
     schema: {
       input: Schema.Struct({
         anchor: AnchoredTo.AnchoredTo.annotations({ description: 'The anchor of the thread.' }),

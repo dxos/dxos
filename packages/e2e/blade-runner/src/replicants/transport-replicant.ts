@@ -101,7 +101,7 @@ export class TransportReplicant {
         await Promise.all(
           swarms.map(async (swarm, swarmIdx) => {
             await joinSwarm({
-              context,
+              capabilities,
               swarmIdx,
               swarmPeerId,
               amountOfReplicants,
@@ -180,7 +180,7 @@ export class TransportReplicant {
       {
         log.info('testing delayed swarm', { swarmPeerId, testCounter });
         await joinSwarm({
-          context,
+          capabilities,
           swarmIdx: swarmTopicIds.length,
           swarmPeerId,
           amountOfReplicants,
@@ -202,7 +202,7 @@ export class TransportReplicant {
         );
 
         await leaveSwarm({
-          context,
+          capabilities,
           swarmIdx: swarmTopicIds.length,
           swarm: delayedSwarm,
           swarmPeerId,
@@ -284,7 +284,7 @@ type LeaveSwarmOptions = {
  * Join swarm and wait till all peers are connected.
  */
 export const joinSwarm = async ({
-  context,
+  capabilities,
   swarmIdx,
   swarmPeerId,
   amountOfReplicants,
@@ -312,7 +312,7 @@ export const joinSwarm = async ({
    */
   const waitTillConnected = async () => {
     await cancelWithContext(
-      context,
+      capabilities,
       swarm.protocol.connected.waitForCondition(() => swarm.protocol.connections.size === amountOfReplicants - 1),
     );
     log.info('all peers connected', { swarmPeerId, swarmIdx, swarmTopic: swarm.topic });
@@ -342,7 +342,7 @@ export const leaveSwarm = async ({ context, swarmIdx, swarm, swarmPeerId, fullSw
    */
   const waitTillDisconnected = async () => {
     await cancelWithContext(
-      context,
+      capabilities,
       swarm.protocol.disconnected.waitForCondition(() => swarm.protocol.connections.size === 0),
     );
     log.info('all peers disconnected', { swarmPeerId, swarmIdx, swarmTopic: swarm.topic });

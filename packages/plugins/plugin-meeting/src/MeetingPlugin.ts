@@ -53,9 +53,9 @@ export const MeetingPlugin = Plugin.define(meta).pipe(
     id: 'on-space-created',
     activatesOn: SpaceEvents.SpaceCreated,
     activate: Effect.fnUntraced(function* () {
-      const context = yield* Capability.PluginContextService;
+      const capabilities = yield* Capability.Service;
       return Capability.contributes(SpaceCapabilities.OnCreateSpace, (params) => {
-        const { invoke } = context.getCapability(Common.Capability.OperationInvoker);
+        const { invoke } = capabilities.get(Common.Capability.OperationInvoker);
         return invoke(MeetingOperation.OnCreateSpace, params);
       });
     }),

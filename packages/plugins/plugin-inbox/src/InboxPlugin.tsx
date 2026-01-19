@@ -25,9 +25,9 @@ export const InboxPlugin = Plugin.define(meta).pipe(
           icon: 'ph--tray--regular',
           iconHue: 'rose',
           blueprints: [InboxBlueprint.Key],
-          createObject: ((props, { db, context }) =>
+          createObject: ((props, { db, capabilities }) =>
             Effect.sync(() => {
-              const client = context.getCapability(ClientCapabilities.Client);
+              const client = capabilities.get(ClientCapabilities.Client);
               const space = client.spaces.get(db.spaceId);
               return Mailbox.make({ ...props, space });
             })) satisfies CreateObject,
@@ -47,9 +47,9 @@ export const InboxPlugin = Plugin.define(meta).pipe(
           icon: 'ph--calendar--regular',
           iconHue: 'rose',
           blueprints: [CalendarBlueprint.Key],
-          createObject: ((props, { db, context }) =>
+          createObject: ((props, { db, capabilities }) =>
             Effect.sync(() => {
-              const client = context.getCapability(ClientCapabilities.Client);
+              const client = capabilities.get(ClientCapabilities.Client);
               const space = client.spaces.get(db.spaceId);
               return Calendar.make({ ...props, space });
             })) satisfies CreateObject,

@@ -20,18 +20,17 @@ import { getAnchor } from '../../util';
 //  Track active meetings by subscribing to meetings query and polling the swarms of recent meetings in the space.
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    const context = yield* Capability.PluginContextService;
+    const capabilities = yield* Capability.Service;
 
     const resolve = (typename: string) =>
-      context.getCapabilities(Common.Capability.Metadata).find(({ id }: { id: string }) => id === typename)?.metadata ??
-      {};
+      capabilities.getAll(Common.Capability.Metadata).find(({ id }: { id: string }) => id === typename)?.metadata ?? {};
 
     const extensions = yield* Effect.all([
       GraphBuilder.createExtension({
         id: `${meta.id}/active-call`,
         match: NodeMatcher.whenRoot,
         connector: (node, get) => {
-          const callManagerAtom = context.capabilities(ThreadCapabilities.CallManager);
+          const callManagerAtom = capabilities.atom(ThreadCapabilities.CallManager);
           const [call] = get(callManagerAtom);
           return Effect.succeed(
             get(
@@ -60,7 +59,7 @@ export default Capability.makeModule(
         id: `${meta.id}/channel-chat-companion`,
         type: Channel.Channel,
         connector: (channel, get) => {
-          const callManager = context.getCapability(ThreadCapabilities.CallManager);
+          const callManager = capabilities.get(ThreadCapabilities.CallManager);
           const joined = get(
             CreateAtom.fromSignal(() => callManager.joined && callManager.roomId === Obj.getDXN(channel).toString()),
           );
@@ -117,9 +116,9 @@ export default Capability.makeModule(
           return typeof metadata.comments === 'string' ? Option.some(node.data) : Option.none();
         },
         actions: (object, get) => {
-          const stateAtom = context.capabilities(ThreadCapabilities.State);
+          const stateAtom = capabilities.atom(ThreadCapabilities.State);
           const toolbar = get(stateAtom)[0]?.state.toolbar ?? {};
-          const selectionManager = context.getCapability(AttentionCapabilities.Selection);
+          const selectionManager = capabilities.get(AttentionCapabilities.Selection);
           const disabled = get(
             CreateAtom.fromSignal(() => {
               const metadata = resolve(Obj.getTypename(object)!);
