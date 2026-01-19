@@ -16,15 +16,15 @@ import { SearchOperation } from '../../types';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    const context = yield* Capability.PluginContextService;
+    const capabilities = yield* Capability.Service;
 
     const extensions = yield* Effect.all([
       GraphBuilder.createExtension({
         id: `${meta.id}/space-search`,
         match: NodeMatcher.whenRoot,
         connector: (node, get) => {
-          const layout = context.getCapability(Common.Capability.Layout);
-          const client = context.getCapability(ClientCapabilities.Client);
+          const layout = capabilities.get(Common.Capability.Layout);
+          const client = capabilities.get(ClientCapabilities.Client);
           const workspace = get(CreateAtom.fromSignal(() => layout.workspace));
           const { spaceId } = parseId(workspace);
           const space = spaceId ? client.spaces.get(spaceId) : null;

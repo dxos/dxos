@@ -19,10 +19,10 @@ import * as UndoRegistry from './undo-registry';
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     // Get the context for synchronous access in callbacks.
-    const context = yield* Capability.PluginContextService;
+    const capabilities = yield* Capability.Service;
 
     // Create UndoRegistry.
-    const undoRegistry = UndoRegistry.make(() => context.getCapabilities(Common.Capability.UndoMapping).flat());
+    const undoRegistry = UndoRegistry.make(() => capabilities.getAll(Common.Capability.UndoMapping).flat());
 
     // Create HistoryTracker (depends on UndoRegistry and OperationInvoker).
     const invoker = yield* Capability.get(Common.Capability.OperationInvoker);

@@ -19,7 +19,7 @@ import { PresenterOperation, type PresenterSettingsProps } from '../../types';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    const context = yield* Capability.PluginContextService;
+    const capabilities = yield* Capability.Service;
 
     const extensions = yield* GraphBuilder.createExtension({
       id: `${meta.id}/root`,
@@ -30,7 +30,7 @@ export default Capability.makeModule(
         return isPresentable ? Option.some(node.data) : Option.none();
       },
       connector: (object, get) => {
-        const settingsStoreAtom = context.capabilities(Common.Capability.SettingsStore);
+        const settingsStoreAtom = capabilities.atom(Common.Capability.SettingsStore);
         const [settingsStore] = get(settingsStoreAtom);
         const settings = get(
           CreateAtom.fromSignal(() => settingsStore?.getStore<PresenterSettingsProps>(meta.id)?.value),
@@ -56,7 +56,7 @@ export default Capability.makeModule(
         ]);
       },
       actions: (object, get) => {
-        const settingsStoreAtom = context.capabilities(Common.Capability.SettingsStore);
+        const settingsStoreAtom = capabilities.atom(Common.Capability.SettingsStore);
         const [settingsStore] = get(settingsStoreAtom);
         const settings = get(
           CreateAtom.fromSignal(() => settingsStore?.getStore<PresenterSettingsProps>(meta.id)?.value),

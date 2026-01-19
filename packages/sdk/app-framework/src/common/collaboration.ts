@@ -18,7 +18,7 @@ export namespace CollaborationOperation {
       name: 'Accept Proposal',
       description: 'Accept a proposal from a collaborator.',
     },
-    services: [Capability.PluginContextService],
+    services: [Capability.Service],
     schema: {
       input: Schema.Struct({
         subject: Schema.Any,

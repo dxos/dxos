@@ -40,11 +40,11 @@ type OperationResolverOptions = {
 export default Capability.makeModule(
   Effect.fnUntraced(function* (props?: OperationResolverOptions) {
     const { createInvitationUrl, observability } = props!;
-    const context = yield* Capability.PluginContextService;
+    const capabilityManager = yield* Capability.Service;
 
     const resolve = (typename: string) =>
-      context.getCapabilities(Common.Capability.Metadata).find(({ id }: { id: string }) => id === typename)?.metadata ??
-      {};
+      capabilityManager.getAll(Common.Capability.Metadata).find(({ id }: { id: string }) => id === typename)
+        ?.metadata ?? {};
 
     return [
       Capability.contributes(Common.Capability.UndoMapping, [

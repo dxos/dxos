@@ -37,11 +37,11 @@ import {
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    const context = yield* Capability.PluginContextService;
+    const capabilities = yield* Capability.Service;
 
     // TODO(wittjosiah): Using `get` and being reactive seems to cause a bug with Atom where disposed atoms are accessed.
     const resolve = (get: Atom.Context) => (typename: string) =>
-      context.getCapabilities(Common.Capability.Metadata).find(({ id }) => id === typename)?.metadata ?? {};
+      capabilities.getAll(Common.Capability.Metadata).find(({ id }) => id === typename)?.metadata ?? {};
 
     const spacesNode = {
       id: SPACES,
@@ -56,8 +56,8 @@ export default Capability.makeModule(
         disabled: true,
         childrenPersistenceClass: 'echo',
         onRearrangeChildren: async (nextOrder: Space[]) => {
-          const { graph } = context.getCapability(Common.Capability.AppGraph);
-          const client = context.getCapability(ClientCapabilities.Client);
+          const { graph } = capabilities.get(Common.Capability.AppGraph);
+          const client = capabilities.get(ClientCapabilities.Client);
 
           // NOTE: This is needed to ensure order is updated by next animation frame.
           // TODO(wittjosiah): Is there a better way to do this?
@@ -111,7 +111,7 @@ export default Capability.makeModule(
               id: SpaceOperation.OpenMembers.meta.key,
               data: Effect.fnUntraced(function* () {
                 const client = yield* Capability.get(ClientCapabilities.Client);
-                const space = getActiveSpace(context) ?? client.spaces.default;
+                const space = getActiveSpace(capabilities) ?? client.spaces.default;
                 yield* Operation.invoke(SpaceOperation.OpenMembers, { space });
               }),
               properties: {
@@ -128,7 +128,7 @@ export default Capability.makeModule(
               id: SpaceOperation.OpenSettings.meta.key,
               data: Effect.fnUntraced(function* () {
                 const client = yield* Capability.get(ClientCapabilities.Client);
-                const space = getActiveSpace(context) ?? client.spaces.default;
+                const space = getActiveSpace(capabilities) ?? client.spaces.default;
                 yield* Operation.invoke(SpaceOperation.OpenSettings, { space });
               }),
               properties: {
@@ -156,8 +156,8 @@ export default Capability.makeModule(
         id: SPACES,
         match: NodeMatcher.whenId(SPACES),
         connector: (node, get) => {
-          const client = context.getCapability(ClientCapabilities.Client);
-          const state = context.getCapability(SpaceCapabilities.State);
+          const client = capabilities.get(ClientCapabilities.Client);
+          const state = capabilities.get(SpaceCapabilities.State);
           let query: QueryResult.QueryResult<Schema.Schema.Type<typeof Type.Expando>> | undefined;
           const spacesAtom = CreateAtom.fromObservable(client.spaces);
           const isReadyAtom = CreateAtom.fromObservable(client.spaces.isReady);
@@ -169,7 +169,7 @@ export default Capability.makeModule(
             return Effect.succeed([]);
           }
 
-          const settings = get(context.capabilities(Common.Capability.SettingsStore))[0]?.getStore<SpaceSettingsProps>(
+          const settings = get(capabilities.atom(Common.Capability.SettingsStore))[0]?.getStore<SpaceSettingsProps>(
             meta.id,
           )?.value;
 
@@ -213,8 +213,8 @@ export default Capability.makeModule(
         id: `${meta.id}/actions`,
         match: (node) => (node.type === SPACE_TYPE && isSpace(node.data) ? Option.some(node.data) : Option.none()),
         actions: (space, get) => {
-          const [client] = get(context.capabilities(ClientCapabilities.Client));
-          const [state] = get(context.capabilities(SpaceCapabilities.State));
+          const [client] = get(capabilities.atom(ClientCapabilities.Client));
+          const [state] = get(capabilities.atom(SpaceCapabilities.State));
 
           if (!client || !state) {
             return Effect.succeed([]);
@@ -235,7 +235,7 @@ export default Capability.makeModule(
         id: `${meta.id}/root-collection`,
         match: (node) => (node.type === SPACE_TYPE && isSpace(node.data) ? Option.some(node.data) : Option.none()),
         connector: (space, get) => {
-          const state = context.getCapability(SpaceCapabilities.State);
+          const state = capabilities.get(SpaceCapabilities.State);
           const spaceState = get(CreateAtom.fromObservable(space.state));
           if (spaceState !== SpaceState.SPACE_READY) {
             return Effect.succeed([]);
@@ -278,7 +278,7 @@ export default Capability.makeModule(
         id: `${meta.id}/objects`,
         match: (node) => (Obj.instanceOf(Collection.Collection, node.data) ? Option.some(node.data) : Option.none()),
         connector: (collection, get) => {
-          const state = context.getCapability(SpaceCapabilities.State);
+          const state = capabilities.get(SpaceCapabilities.State);
           const space = getSpace(collection);
 
           return Effect.succeed(
@@ -305,7 +305,7 @@ export default Capability.makeModule(
           );
         },
         resolver: (id, get) => {
-          const client = context.getCapability(ClientCapabilities.Client);
+          const client = capabilities.get(ClientCapabilities.Client);
           const dxn = DXN.tryParse(id)?.asEchoDXN();
           if (!dxn || !dxn.spaceId) {
             return Effect.succeed(null);
@@ -339,7 +339,7 @@ export default Capability.makeModule(
         match: (node) => (Obj.instanceOf(Collection.Managed, node.data) ? Option.some(node.data) : Option.none()),
         connector: (collection, get) => {
           let query: QueryResult.QueryResult<Schema.Schema.Type<typeof Type.Expando>> | undefined;
-          const client = get(context.capabilities(ClientCapabilities.Client)).at(0);
+          const client = get(capabilities.atom(ClientCapabilities.Client)).at(0);
           const space = getSpace(collection);
           const schema = client?.graph.schemaRegistry
             .query({ typename: collection.key, location: ['runtime'] })
@@ -374,7 +374,7 @@ export default Capability.makeModule(
             ? Option.some(node.data)
             : Option.none(),
         connector: (collection, get) => {
-          const client = get(context.capabilities(ClientCapabilities.Client)).at(0);
+          const client = get(capabilities.atom(ClientCapabilities.Client)).at(0);
           const space = getSpace(collection);
           if (!space?.properties.staticRecords) {
             return Effect.succeed([]);
@@ -399,7 +399,7 @@ export default Capability.makeModule(
         actions: ({ space, schema }, get) => {
           let query: QueryResult.QueryResult<Obj.Any> | undefined;
           const schemas =
-            get(context.capabilities(ClientCapabilities.Client))
+            get(capabilities.atom(ClientCapabilities.Client))
               .at(0)
               ?.graph.schemaRegistry.query({ location: ['runtime'] })
               .runSync() ?? [];
@@ -447,7 +447,7 @@ export default Capability.makeModule(
         connector: ({ space, schema }, get) => {
           let query: QueryResult.QueryResult<Obj.Any> | undefined;
           const schemas =
-            get(context.capabilities(ClientCapabilities.Client))
+            get(capabilities.atom(ClientCapabilities.Client))
               .at(0)
               ?.graph.schemaRegistry.query({ location: ['runtime'] })
               .runSync() ?? [];
@@ -500,7 +500,7 @@ export default Capability.makeModule(
         actions: ({ space, object }, get) => {
           let query: QueryResult.QueryResult<Obj.Any> | undefined;
           const schemas =
-            get(context.capabilities(ClientCapabilities.Client))
+            get(capabilities.atom(ClientCapabilities.Client))
               .at(0)
               ?.graph.schemaRegistry.query({ location: ['runtime'] })
               .runSync() ?? [];
@@ -528,8 +528,8 @@ export default Capability.makeModule(
             deletable = filteredViews.length === 0;
           }
 
-          const [appGraph] = get(context.capabilities(Common.Capability.AppGraph));
-          const [state] = get(context.capabilities(SpaceCapabilities.State));
+          const [appGraph] = get(capabilities.atom(Common.Capability.AppGraph));
+          const [state] = get(capabilities.atom(SpaceCapabilities.State));
 
           if (!appGraph || !state) {
             return Effect.succeed([]);
@@ -540,7 +540,7 @@ export default Capability.makeModule(
               object,
               graph: appGraph.graph,
               resolve: resolve(get),
-              context,
+              capabilities,
               deletable,
               navigable: get(CreateAtom.fromSignal(() => state.navigableCollections)),
             }),

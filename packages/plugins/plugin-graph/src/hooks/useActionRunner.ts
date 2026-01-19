@@ -18,7 +18,8 @@ export const useActionRunner = () => {
   const pluginManager = usePluginManager();
 
   return useCallback(
-    (action: Node.Action, params: Node.InvokeProps = {}) => runAction(invoker, pluginManager.context, action, params),
-    [invoker, pluginManager.context],
+    (action: Node.Action, params: Node.InvokeProps = {}) =>
+      runAction(invoker, pluginManager.capabilities, action, params),
+    [invoker, pluginManager.capabilities],
   );
 };

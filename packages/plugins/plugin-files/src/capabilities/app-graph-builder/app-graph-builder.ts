@@ -15,7 +15,7 @@ import { isLocalDirectory, isLocalEntity, isLocalFile } from '../../util';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    const context = yield* Capability.PluginContextService;
+    const capabilities = yield* Capability.Service;
 
     const extensions = yield* Effect.all([
       // Create export/import actions.
@@ -48,7 +48,7 @@ export default Capability.makeModule(
         id: `${meta.id}/root`,
         match: NodeMatcher.whenRoot,
         connector: (node, get) => {
-          const settingsStoreAtom = context.capabilities(Common.Capability.SettingsStore);
+          const settingsStoreAtom = capabilities.atom(Common.Capability.SettingsStore);
           const settingsStore = get(settingsStoreAtom)[0];
           const settings = get(
             CreateAtom.fromSignal(() => settingsStore?.getStore<FilesSettingsProps>(meta.id)?.value),
@@ -111,7 +111,7 @@ export default Capability.makeModule(
               : []),
           ]),
         connector: () => {
-          const filesState = context.getCapability(FileCapabilities.State);
+          const filesState = capabilities.get(FileCapabilities.State);
           return Effect.succeed(
             filesState.files.map((entity) => ({
               id: entity.id,

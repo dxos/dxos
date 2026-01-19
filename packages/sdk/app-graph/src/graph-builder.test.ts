@@ -770,6 +770,121 @@ describe('GraphBuilder', () => {
       });
     });
 
+    describe('extension error handling', () => {
+      test('connector failure is caught and logged, returns empty array', () => {
+        const registry = Registry.make();
+        const builder = GraphBuilder.make({ registry });
+        const graph = builder.graph;
+
+        const extensions = Effect.runSync(
+          GraphBuilder.createExtension({
+            id: 'failing-extension',
+            match: NodeMatcher.whenNodeType(EXAMPLE_TYPE),
+            connector: (node, get) => Effect.fail(new Error('Connector failed intentionally')),
+          }),
+        );
+
+        GraphBuilder.addExtension(builder, extensions);
+
+        const writableGraph = graph as Graph.WritableGraph;
+        Graph.addNode(writableGraph, { id: 'parent', type: EXAMPLE_TYPE, properties: {}, data: 'test' });
+
+        // Should not throw, error is caught internally.
+        Graph.expand(graph, 'parent');
+
+        // Should return empty connections since the connector failed.
+        const connections = registry.get(graph.connections('parent'));
+        expect(connections).has.length(0);
+      });
+
+      test('actions failure is caught and logged, returns empty array', () => {
+        const registry = Registry.make();
+        const builder = GraphBuilder.make({ registry });
+        const graph = builder.graph;
+
+        const extensions = Effect.runSync(
+          GraphBuilder.createExtension({
+            id: 'failing-actions-extension',
+            match: NodeMatcher.whenNodeType(EXAMPLE_TYPE),
+            actions: (node, get) => Effect.fail(new Error('Actions failed intentionally')),
+          }),
+        );
+
+        GraphBuilder.addExtension(builder, extensions);
+
+        const writableGraph = graph as Graph.WritableGraph;
+        Graph.addNode(writableGraph, { id: 'parent', type: EXAMPLE_TYPE, properties: {}, data: 'test' });
+
+        // Should not throw, error is caught internally.
+        Graph.expand(graph, 'parent');
+
+        // Should return empty actions since the actions callback failed.
+        const actions = registry.get(graph.actions('parent'));
+        expect(actions).has.length(0);
+      });
+
+      test('resolver failure is caught and logged, returns null', async () => {
+        const registry = Registry.make();
+        const builder = GraphBuilder.make({ registry });
+        const graph = builder.graph;
+
+        const extensions = Effect.runSync(
+          GraphBuilder.createExtension({
+            id: 'failing-resolver-extension',
+            match: NodeMatcher.whenNodeType(EXAMPLE_TYPE),
+            resolver: (id, get) => Effect.fail(new Error('Resolver failed intentionally')),
+          }),
+        );
+
+        GraphBuilder.addExtension(builder, extensions);
+
+        // Should not throw, error is caught internally.
+        await Graph.initialize(graph, EXAMPLE_ID);
+
+        // Should return null/none since the resolver failed.
+        const node = Graph.getNode(graph, EXAMPLE_ID).pipe(Option.getOrNull);
+        expect(node).to.be.null;
+      });
+
+      test('failing extension does not affect other extensions', () => {
+        const registry = Registry.make();
+        const builder = GraphBuilder.make({ registry });
+        const graph = builder.graph;
+
+        // Add a failing extension.
+        const failingExtensions = Effect.runSync(
+          GraphBuilder.createExtension({
+            id: 'failing-extension',
+            match: NodeMatcher.whenNodeType(EXAMPLE_TYPE),
+            connector: (node, get) => Effect.fail(new Error('This one fails')),
+          }),
+        );
+
+        // Add a working extension.
+        const workingExtensions = Effect.runSync(
+          GraphBuilder.createExtension({
+            id: 'working-extension',
+            match: NodeMatcher.whenNodeType(EXAMPLE_TYPE),
+            connector: (node, get) =>
+              Effect.succeed([{ id: 'child-from-working', type: EXAMPLE_TYPE, data: 'success' }]),
+          }),
+        );
+
+        GraphBuilder.addExtension(builder, failingExtensions);
+        GraphBuilder.addExtension(builder, workingExtensions);
+
+        const writableGraph = graph as Graph.WritableGraph;
+        Graph.addNode(writableGraph, { id: 'parent', type: EXAMPLE_TYPE, properties: {}, data: 'test' });
+        Graph.expand(graph, 'parent');
+
+        // The working extension should still produce its node.
+        const connections = registry.get(graph.connections('parent'));
+        expect(connections).has.length(1);
+        expect(connections[0].id).to.equal('child-from-working');
+        expect(connections[0].data).to.equal('success');
+      });
+    });
+
     describe('createTypeExtension', () => {
       test('creates extension matching by schema type with inferred object type', () => {
         const registry = Registry.make();

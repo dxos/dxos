@@ -22,7 +22,7 @@ import { Calendar, Mailbox } from '../../types';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    const context = yield* Capability.PluginContextService;
+    const capabilities = yield* Capability.Service;
 
     const extensions = yield* Effect.all([
       GraphBuilder.createExtension({
@@ -85,7 +85,7 @@ export default Capability.makeModule(
             return Effect.succeed([]);
           }
 
-          const selectionAtom = context.capabilities(AttentionCapabilities.Selection);
+          const selectionAtom = capabilities.atom(AttentionCapabilities.Selection);
           const selection = get(selectionAtom)[0];
           const nodeId = Obj.getDXN(mailbox).toString();
           const messageId = get(CreateAtom.fromSignal(() => selection?.getSelected(nodeId, 'single')));
@@ -116,7 +116,7 @@ export default Capability.makeModule(
             return Effect.succeed([]);
           }
 
-          const selectionAtom = context.capabilities(AttentionCapabilities.Selection);
+          const selectionAtom = capabilities.atom(AttentionCapabilities.Selection);
           const selection = get(selectionAtom)[0];
           const nodeId = Obj.getDXN(calendar).toString();
           const eventId = get(CreateAtom.fromSignal(() => selection?.getSelected(nodeId, 'single')));

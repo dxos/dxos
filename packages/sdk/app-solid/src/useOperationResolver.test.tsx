@@ -27,9 +27,9 @@ describe('useOperationResolver', () => {
     const removeMock = vi.fn();
 
     const mockManager = {
-      context: {
-        contributeCapability: contributeMock,
-        removeCapability: removeMock,
+      capabilities: {
+        contribute: contributeMock,
+        remove: removeMock,
       },
     } as unknown as PluginManager.PluginManager;
 

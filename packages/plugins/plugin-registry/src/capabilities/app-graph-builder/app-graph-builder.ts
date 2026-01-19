@@ -12,7 +12,7 @@ import { REGISTRY_ID, REGISTRY_KEY, meta } from '../../meta';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    const context = yield* Capability.PluginContextService;
+    const capabilities = yield* Capability.Service;
 
     const extensions = yield* Effect.all([
       GraphBuilder.createExtension({
@@ -114,7 +114,7 @@ export default Capability.makeModule(
         id: `${meta.id}/plugins`,
         match: NodeMatcher.whenId(REGISTRY_ID),
         connector: () => {
-          const manager = context.getCapability(Common.Capability.PluginManager);
+          const manager = capabilities.get(Common.Capability.PluginManager);
           return Effect.succeed(
             manager.getPlugins().map((plugin) => ({
               id: plugin.meta.id.replaceAll('/', ':'),

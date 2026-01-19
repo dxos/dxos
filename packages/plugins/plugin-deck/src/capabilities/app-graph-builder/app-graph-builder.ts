@@ -14,7 +14,7 @@ import { DeckCapabilities } from '../../types';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    const context = yield* Capability.PluginContextService;
+    const capabilities = yield* Capability.Service;
 
     const extensions = yield* GraphBuilder.createExtension({
       id: meta.id,
@@ -22,14 +22,14 @@ export default Capability.makeModule(
       actions: (node, get) =>
         Effect.succeed(
           (() => {
-            const state = context.getCapability(DeckCapabilities.MutableDeckState);
+            const state = capabilities.get(DeckCapabilities.MutableDeckState);
 
             // NOTE(Zan): This is currently disabled.
             // TODO(Zan): Fullscreen needs to know the active node and provide that to the layout part.
             // const _fullscreen = {
             //   id: `${LayoutAction.UpdateLayout._tag}/fullscreen`,
             //   data: async () => {
-            //     const { dispatchPromise: dispatch } = context.getCapability(Capabilities.IntentDispatcher);
+            //     const { dispatchPromise: dispatch } = context.get(Capabilities.IntentDispatcher);
             //     await dispatch(
             //       createIntent(LayoutAction.SetLayoutMode, { part: 'mode', options: { mode: 'fullscreen' } }),
             //     );

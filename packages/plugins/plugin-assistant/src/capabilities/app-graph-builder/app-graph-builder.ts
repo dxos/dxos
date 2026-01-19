@@ -24,7 +24,7 @@ import { Assistant, AssistantCapabilities, AssistantOperation } from '../../type
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    const context = yield* Capability.PluginContextService;
+    const capabilities = yield* Capability.Service;
 
     const extensions = yield* Effect.all([
       GraphBuilder.createTypeExtension({
@@ -54,10 +54,10 @@ export default Capability.makeModule(
             {
               id: `${Common.LayoutOperation.UpdateDialog.meta.key}/assistant/open`,
               data: Effect.fnUntraced(function* () {
-                const pluginContext = yield* Capability.PluginContextService;
-                const client = pluginContext.getCapability(ClientCapabilities.Client);
-                const operationInvoker = pluginContext.getCapability(Common.Capability.OperationInvoker);
-                const space = getActiveSpace(pluginContext) ?? client.spaces.default;
+                const capabilities = yield* Capability.Service;
+                const client = yield* Capability.get(ClientCapabilities.Client);
+                const operationInvoker = yield* Capability.get(Common.Capability.OperationInvoker);
+                const space = getActiveSpace(capabilities) ?? client.spaces.default;
                 const chat = yield* Effect.tryPromise(() => getOrCreateChat(operationInvoker.invokePromise, space.db));
                 if (!chat) {
                   return;
@@ -90,7 +90,7 @@ export default Capability.makeModule(
         id: `${meta.id}/companion-chat`,
         match: NodeMatcher.whenObject,
         connector: (object, get) => {
-          const assistantState = context.getCapability(AssistantCapabilities.State);
+          const assistantState = capabilities.get(AssistantCapabilities.State);
           const currentChatState = get(
             CreateAtom.fromSignal(() => assistantState.currentChat[Obj.getDXN(object).toString()]),
           );

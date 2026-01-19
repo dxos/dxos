@@ -17,14 +17,17 @@ import { translations } from '../translations';
 
 import { ResetDialog, type ResetDialogProps } from './ResetDialog';
 
-const Render = (props: Omit<ResetDialogProps, 'context'>) => {
+const Render = (props: Omit<ResetDialogProps, 'capabilityManager'>) => {
   const manager = usePluginManager();
-  const context = manager.context;
 
   return (
     <Dialog.Root open>
       <Dialog.Overlay>
-        <ResetDialog onReset={() => Effect.sync(() => console.log('reset'))} context={context} {...props} />
+        <ResetDialog
+          onReset={() => Effect.sync(() => console.log('reset'))}
+          capabilityManager={manager.capabilities}
+          {...props}
+        />
       </Dialog.Overlay>
     </Dialog.Root>
   );
