@@ -47,8 +47,8 @@ describe('LocalQueueServiceImpl', () => {
           query: { queueId },
         }),
       );
-      expect(result.objects[0]).toMatchObject(object1);
-      expect(result.objects[1]).toMatchObject(object2);
+      expect(result.objects?.[0]).toMatchObject(object1);
+      expect(result.objects?.[1]).toMatchObject(object2);
     }).pipe(Effect.provide(TestLayer)),
   );
 
