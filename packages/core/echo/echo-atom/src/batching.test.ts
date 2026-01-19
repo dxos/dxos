@@ -2,7 +2,6 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Atom } from '@effect-atom/atom';
 import * as Registry from '@effect-atom/atom/Registry';
 import { describe, expect, test } from 'vitest';
 
@@ -12,8 +11,8 @@ import { createObject } from '@dxos/echo-db';
 
 import { AtomObj } from './atom';
 
-describe('Echo Atom - Batch Updates', () => {
-  test('multiple updates to same object atom in batch fire single update', () => {
+describe('Echo Atom - Update Behavior', () => {
+  test('multiple updates to same object atom fire individual updates', () => {
     const obj = createObject(
       Obj.make(TestSchema.Person, { name: 'Test', username: 'test', email: 'test@example.com' }),
     );
@@ -22,8 +21,7 @@ describe('Echo Atom - Batch Updates', () => {
     const atom = AtomObj.make(obj);
 
     let updateCount = 0;
-    AtomObj.subscribe(
-      registry,
+    registry.subscribe(
       atom,
       () => {
         updateCount++;
@@ -31,34 +29,26 @@ describe('Echo Atom - Batch Updates', () => {
       { immediate: true },
     );
 
-    // Get initial count (immediate: true causes initial update)
+    // Get initial count (immediate: true causes initial update).
     const initialCount = updateCount;
-    expect(initialCount).toBe(1); // Verify immediate update fired
+    expect(initialCount).toBe(1); // Verify immediate update fired.
 
-    // Make multiple updates to the same atom in a batch
-    Atom.batch(() => {
-      AtomObj.update(registry, atom, (obj) => {
-        obj.name = 'Updated1';
-      });
-      AtomObj.update(registry, atom, (obj) => {
-        obj.email = 'updated@example.com';
-      });
-      AtomObj.update(registry, atom, (obj) => {
-        obj.username = 'updated';
-      });
-    });
+    // Make multiple updates to the object.
+    obj.name = 'Updated1';
+    obj.email = 'updated@example.com';
+    obj.username = 'updated';
 
-    // Should have fired once for initial + once for batched update (not once per update)
-    expect(updateCount).toBe(2);
+    // Each direct mutation fires an update.
+    expect(updateCount).toBe(4); // 1 initial + 3 updates.
 
-    // Verify final state
-    const finalValue = AtomObj.get(registry, atom);
-    expect(finalValue.name).toBe('Updated1');
-    expect(finalValue.email).toBe('updated@example.com');
-    expect(finalValue.username).toBe('updated');
+    // Verify final state.
+    const finalValue = registry.get(atom);
+    expect(finalValue.value.name).toBe('Updated1');
+    expect(finalValue.value.email).toBe('updated@example.com');
+    expect(finalValue.value.username).toBe('updated');
   });
 
-  test('multiple updates to same property atom in batch fire single update', () => {
+  test('multiple updates to same property only fires when value changes', () => {
     const obj = createObject(
       Obj.make(TestSchema.Person, { name: 'Test', username: 'test', email: 'test@example.com' }),
     );
@@ -67,8 +57,7 @@ describe('Echo Atom - Batch Updates', () => {
     const atom = AtomObj.makeProperty(obj, 'name');
 
     let updateCount = 0;
-    AtomObj.subscribe(
-      registry,
+    registry.subscribe(
       atom,
       () => {
         updateCount++;
@@ -76,21 +65,49 @@ describe('Echo Atom - Batch Updates', () => {
       { immediate: true },
     );
 
-    // Get initial count (immediate: true causes initial update)
+    // Get initial count (immediate: true causes initial update).
     const initialCount = updateCount;
     expect(initialCount).toBe(1);
 
-    // Make multiple updates to the same property atom in a batch
-    Atom.batch(() => {
-      AtomObj.updateProperty(registry, atom, 'Updated1');
-      AtomObj.updateProperty(registry, atom, 'Updated2');
-      AtomObj.updateProperty(registry, atom, 'Updated3');
-    });
+    // Make multiple updates to the same property.
+    obj.name = 'Updated1';
+    obj.name = 'Updated2';
+    obj.name = 'Updated3';
 
-    // Should have fired once for initial + once for batched update (not once per update)
+    // Property atom only fires when value actually changes.
+    expect(updateCount).toBe(4); // 1 initial + 3 value changes.
+
+    // Verify final state.
+    expect(registry.get(atom).value).toBe('Updated3');
+  });
+
+  test('property atom does not fire when setting same value', () => {
+    const obj = createObject(
+      Obj.make(TestSchema.Person, { name: 'Test', username: 'test', email: 'test@example.com' }),
+    );
+
+    const registry = Registry.make();
+    const atom = AtomObj.makeProperty(obj, 'name');
+
+    let updateCount = 0;
+    registry.subscribe(
+      atom,
+      () => {
+        updateCount++;
+      },
+      { immediate: true },
+    );
+
+    expect(updateCount).toBe(1);
+
+    // Set same value.
+    obj.name = 'Test';
+
+    // Should not fire update since value didn't change.
+    expect(updateCount).toBe(1);
+
+    // Now change to different value.
+    obj.name = 'Different';
     expect(updateCount).toBe(2);
-
-    // Verify final state
-    expect(AtomObj.get(registry, atom)).toBe('Updated3');
   });
 });

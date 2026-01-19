@@ -6,8 +6,6 @@ import { type MaybeAccessor, access } from '@solid-primitives/utils';
 import { createMemo } from 'solid-js';
 
 import type { Entity } from '@dxos/echo';
-import { AtomObj } from '@dxos/echo-atom';
-import { type Registry, useRegistry } from '@dxos/effect-atom-solid';
 
 /**
  * Returns an update function for a specific property of an Echo object.
@@ -46,33 +44,30 @@ export function useObjectUpdate<T extends Entity.Unknown, K extends keyof T>(
   obj: MaybeAccessor<T | undefined>,
   property?: K,
 ): ((value: T[K] | ((current: T[K]) => T[K])) => void) | ((updater: (obj: T) => void) => void) {
-  const registry = useRegistry();
-
   if (property !== undefined) {
-    return useObjectPropertyUpdate(registry, obj, property);
+    return useObjectPropertyUpdate(obj, property);
   }
-  return useObjectValueUpdate(registry, obj);
+  return useObjectValueUpdate(obj);
 }
 
 /**
  * Internal function for updating an entire Echo object.
  */
 function useObjectValueUpdate<T extends Entity.Unknown>(
-  registry: Registry.Registry,
   obj: MaybeAccessor<T | undefined>,
 ): (updater: (obj: T) => void) => void {
-  // Memoize the resolved object to track changes
+  // Memoize the resolved object to track changes.
   const resolvedObj = createMemo(() => access(obj));
 
-  // Return a stable update function that uses the memoized atom
+  // Return a stable update function that mutates the object directly.
   return (updater: (obj: T) => void) => {
     const currentObj = resolvedObj();
     if (!currentObj) {
-      // Can't update undefined object
+      // Can't update undefined object.
       return;
     }
-    const a = AtomObj.make(currentObj);
-    AtomObj.update(registry, a, updater);
+    // Mutate the object directly - Obj.subscribe will notify listeners.
+    updater(currentObj);
   };
 }
 
@@ -80,21 +75,21 @@ function useObjectValueUpdate<T extends Entity.Unknown>(
  * Internal function for updating a specific property of an Echo object.
  */
 function useObjectPropertyUpdate<T extends Entity.Unknown, K extends keyof T>(
-  registry: Registry.Registry,
   obj: MaybeAccessor<T | undefined>,
   property: K,
 ): (value: T[K] | ((current: T[K]) => T[K])) => void {
-  // Memoize the resolved object to track changes
+  // Memoize the resolved object to track changes.
   const resolvedObj = createMemo(() => access(obj));
 
-  // Return a stable update function that uses the memoized atom
+  // Return a stable update function that mutates the property directly.
   return (value: T[K] | ((current: T[K]) => T[K])) => {
     const currentObj = resolvedObj();
     if (!currentObj) {
-      // Can't update property on undefined object
+      // Can't update property on undefined object.
       return;
     }
-    const a = AtomObj.makeProperty(currentObj, property);
-    AtomObj.updateProperty(registry, a, value);
+    // Mutate the property directly - Obj.subscribe will notify listeners.
+    const newValue = typeof value === 'function' ? (value as (current: T[K]) => T[K])(currentObj[property]) : value;
+    currentObj[property] = newValue;
   };
 }

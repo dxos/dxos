@@ -20,9 +20,9 @@ describe('Echo Atom - Basic Functionality', () => {
     const registry = Registry.make();
     const atom = AtomObj.make(obj);
 
-    const value = AtomObj.get(registry, atom);
-    expect(value).toBe(obj);
-    expect(value.name).toBe('Test');
+    const atomValue = registry.get(atom);
+    expect(atomValue.value).toBe(obj);
+    expect(atomValue.value.name).toBe('Test');
   });
 
   test('AtomObj.makeProperty creates atom for specific property', () => {
@@ -33,8 +33,8 @@ describe('Echo Atom - Basic Functionality', () => {
     const registry = Registry.make();
     const atom = AtomObj.makeProperty(obj, 'name');
 
-    const value = AtomObj.get(registry, atom);
-    expect(value).toBe('Test');
+    const atomValue = registry.get(atom);
+    expect(atomValue.value).toBe('Test');
   });
 
   test('AtomObj.makeProperty is type-safe', () => {
@@ -43,15 +43,15 @@ describe('Echo Atom - Basic Functionality', () => {
     );
 
     const registry = Registry.make();
-    // This should compile and work
+    // This should compile and work.
     const nameAtom = AtomObj.makeProperty(obj, 'name');
     const emailAtom = AtomObj.makeProperty(obj, 'email');
 
-    expect(AtomObj.get(registry, nameAtom)).toBe('Test');
-    expect(AtomObj.get(registry, emailAtom)).toBe('test@example.com');
+    expect(registry.get(nameAtom).value).toBe('Test');
+    expect(registry.get(emailAtom).value).toBe('test@example.com');
   });
 
-  test('atoms can be updated through update function', () => {
+  test('atom updates when object is mutated directly', () => {
     const obj = createObject(
       Obj.make(TestSchema.Person, { name: 'Test', username: 'test', email: 'test@example.com' }),
     );
@@ -59,27 +59,27 @@ describe('Echo Atom - Basic Functionality', () => {
     const registry = Registry.make();
     const atom = AtomObj.makeProperty(obj, 'name');
 
-    // Register atom (get() registers but doesn't subscribe)
-    AtomObj.get(registry, atom);
-
-    // Subscribe to registry directly (not through AtomObj.subscribe which sets up Echo subscription)
     let updateCount = 0;
-    registry.subscribe(atom, () => {
-      updateCount++;
-    });
+    registry.subscribe(
+      atom,
+      () => {
+        updateCount++;
+      },
+      { immediate: true },
+    );
 
-    // Update through update function
-    AtomObj.updateProperty(registry, atom, 'Updated');
+    // Mutate object directly.
+    obj.name = 'Updated';
 
-    // Subscription should have fired exactly once (from registry.set in updateProperty)
-    expect(updateCount).toBe(1);
+    // Subscription should have fired: immediate + update.
+    expect(updateCount).toBe(2);
 
-    // Atom should reflect the change
-    expect(AtomObj.get(registry, atom)).toBe('Updated');
+    // Atom should reflect the change.
+    expect(registry.get(atom).value).toBe('Updated');
     expect(obj.name).toBe('Updated');
   });
 
-  test('atoms support updater function', () => {
+  test('property atom supports updater pattern via direct mutation', () => {
     const obj = createObject(
       Obj.make(TestSchema.Task, {
         title: 'Task',
@@ -89,23 +89,23 @@ describe('Echo Atom - Basic Functionality', () => {
     const registry = Registry.make();
     const atom = AtomObj.makeProperty(obj, 'title');
 
-    // Register atom (get() registers but doesn't subscribe)
-    AtomObj.get(registry, atom);
-
-    // Subscribe to registry directly (not through AtomObj.subscribe which sets up Echo subscription)
     let updateCount = 0;
-    registry.subscribe(atom, () => {
-      updateCount++;
-    });
+    registry.subscribe(
+      atom,
+      () => {
+        updateCount++;
+      },
+      { immediate: true },
+    );
 
-    // Update through updater function
-    AtomObj.updateProperty(registry, atom, (current: string | undefined) => (current ?? '') + ' Updated');
+    // Update through direct mutation.
+    obj.title = (obj.title ?? '') + ' Updated';
 
-    // Subscription should have fired exactly once (from registry.set in updateProperty)
-    expect(updateCount).toBe(1);
+    // Subscription should have fired: immediate + update.
+    expect(updateCount).toBe(2);
 
-    // Atom should reflect the change
-    expect(AtomObj.get(registry, atom)).toBe('Task Updated');
+    // Atom should reflect the change.
+    expect(registry.get(atom).value).toBe('Task Updated');
     expect(obj.title).toBe('Task Updated');
   });
 });

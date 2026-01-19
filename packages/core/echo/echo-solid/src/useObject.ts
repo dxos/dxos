@@ -83,36 +83,33 @@ function useObjectValue<T extends Entity.Unknown | undefined>(
   registry: Registry.Registry,
   obj: MaybeAccessor<T>,
 ): Accessor<ConditionalUndefined<T, Exclude<T, undefined>>> {
-  // Memoize the resolved object to track changes
+  // Memoize the resolved object to track changes.
   const resolvedObj = createMemo(() => access(obj));
 
-  // Store the current value in a signal
-  // Internally we use T | undefined for runtime safety, but return type is conditional
+  // Store the current value in a signal.
+  // Internally we use T | undefined for runtime safety, but return type is conditional.
   const [value, setValue] = createSignal<T | undefined>(resolvedObj());
 
-  // Subscribe to atom updates
+  // Subscribe to atom updates.
   createEffect(() => {
     const currentObj = resolvedObj();
 
-    // If object is undefined, set it (the return type will be conditional)
+    // If object is undefined, set it (the return type will be conditional).
     if (!currentObj) {
       setValue(() => undefined);
       return;
     }
 
-    // Memoize the atom creation only when we have a valid object
-    const a = AtomObj.make(currentObj);
-    let currentValue: T | undefined = currentObj;
-
-    currentValue = AtomObj.get(registry, a);
+    // Memoize the atom creation only when we have a valid object.
+    const atom = AtomObj.make(currentObj);
+    const currentValue = registry.get(atom).value;
     setValue(() => currentValue);
 
-    // Subscribe to atom updates
-    const unsubscribe = AtomObj.subscribe(
-      registry,
-      a,
+    // Subscribe to atom updates.
+    const unsubscribe = registry.subscribe(
+      atom,
       () => {
-        setValue(() => AtomObj.get(registry, a) as T);
+        setValue(() => registry.get(atom).value as T);
       },
       { immediate: true },
     );
@@ -120,7 +117,7 @@ function useObjectValue<T extends Entity.Unknown | undefined>(
     onCleanup(unsubscribe);
   });
 
-  // Return with conditional type - TypeScript will narrow based on T
+  // Return with conditional type - TypeScript will narrow based on T.
   return value as Accessor<ConditionalUndefined<T, Exclude<T, undefined>>>;
 }
 
@@ -132,41 +129,38 @@ function useObjectProperty<T extends Entity.Unknown | undefined, K extends keyof
   obj: MaybeAccessor<T>,
   property: K,
 ): Accessor<ConditionalUndefined<T, Exclude<T, undefined>[K]>> {
-  // Memoize the resolved object to track changes
+  // Memoize the resolved object to track changes.
   const resolvedObj = createMemo(() => access(obj));
 
-  // Store the current value in a signal
-  // Internally we use Exclude<T, undefined>[K] | undefined for runtime safety, but return type is conditional
+  // Store the current value in a signal.
+  // Internally we use Exclude<T, undefined>[K] | undefined for runtime safety, but return type is conditional.
   type NonUndefinedT = Exclude<T, undefined>;
   const initialValue = resolvedObj() ? (resolvedObj() as NonUndefinedT)[property] : undefined;
   const [value, setValue] = createSignal<NonUndefinedT[K] | undefined>(initialValue);
 
-  // Subscribe to atom updates
+  // Subscribe to atom updates.
   createEffect(() => {
     const currentObj = resolvedObj();
 
-    // If object is undefined, set undefined (the return type will be conditional)
+    // If object is undefined, set undefined (the return type will be conditional).
     if (!currentObj) {
       setValue(() => undefined);
       return;
     }
 
-    // Memoize the atom creation only when we have a valid object
-    // currentObj is guaranteed to be Entity.Unknown here (not undefined) due to the check above
+    // Memoize the atom creation only when we have a valid object.
+    // currentObj is guaranteed to be Entity.Unknown here (not undefined) due to the check above.
     type NonUndefinedT = Exclude<T, undefined>;
-    const obj = currentObj as NonUndefinedT;
-    const a = AtomObj.makeProperty(obj, property);
-    let currentValue: NonUndefinedT[K] | undefined = obj[property];
-
-    currentValue = AtomObj.get(registry, a);
+    const echoObj = currentObj as NonUndefinedT;
+    const atom = AtomObj.makeProperty(echoObj, property);
+    const currentValue = registry.get(atom).value;
     setValue(() => currentValue);
 
-    // Subscribe to atom updates
-    const unsubscribe = AtomObj.subscribe(
-      registry,
-      a,
+    // Subscribe to atom updates.
+    const unsubscribe = registry.subscribe(
+      atom,
       () => {
-        setValue(() => AtomObj.get(registry, a) as NonUndefinedT[K]);
+        setValue(() => registry.get(atom).value as NonUndefinedT[K]);
       },
       { immediate: true },
     );
@@ -174,6 +168,6 @@ function useObjectProperty<T extends Entity.Unknown | undefined, K extends keyof
     onCleanup(unsubscribe);
   });
 
-  // Return with conditional type - TypeScript will narrow based on T
+  // Return with conditional type - TypeScript will narrow based on T.
   return value as Accessor<ConditionalUndefined<T, Exclude<T, undefined>[K]>>;
 }

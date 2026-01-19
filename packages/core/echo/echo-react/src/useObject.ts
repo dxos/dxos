@@ -81,17 +81,17 @@ function useObjectValue<T extends Entity.Unknown>(registry: Registry.Registry, o
     const atom = AtomObj.make(obj);
     const initialValue = obj;
 
-    // Track subscription state
+    // Track subscription state.
     let unsubscribe: (() => void) | undefined;
     let subscribed = false;
 
     return {
       getValue: () => {
-        // Try to get value from registry (will work after subscription is set up)
+        // Try to get value from registry (will work after subscription is set up).
         try {
-          return AtomObj.get(registry, atom);
+          return registry.get(atom).value;
         } catch {
-          // Atom not registered yet, return initial value
+          // Atom not registered yet, return initial value.
           return initialValue;
         }
       },
@@ -99,9 +99,8 @@ function useObjectValue<T extends Entity.Unknown>(registry: Registry.Registry, o
         if (!subscribed) {
           subscribed = true;
 
-          // Subscribe to atom updates (this will register the atom and set up Echo subscription)
-          unsubscribe = AtomObj.subscribe(
-            registry,
+          // Subscribe to atom updates (this will register the atom and set up Echo subscription).
+          unsubscribe = registry.subscribe(
             atom,
             () => {
               onStoreChange();
@@ -135,17 +134,17 @@ function useObjectProperty<T extends Entity.Unknown, K extends keyof T>(
     const atom = AtomObj.makeProperty(obj, property);
     const initialValue = obj[property];
 
-    // Track subscription state
+    // Track subscription state.
     let unsubscribe: (() => void) | undefined;
     let subscribed = false;
 
     return {
       getValue: () => {
-        // Try to get value from registry (will work after subscription is set up)
+        // Try to get value from registry (will work after subscription is set up).
         try {
-          return AtomObj.get(registry, atom);
+          return registry.get(atom).value;
         } catch {
-          // Atom not registered yet, return initial value
+          // Atom not registered yet, return initial value.
           return initialValue;
         }
       },
@@ -153,9 +152,8 @@ function useObjectProperty<T extends Entity.Unknown, K extends keyof T>(
         if (!subscribed) {
           subscribed = true;
 
-          // Subscribe to atom updates (this will register the atom and set up Echo subscription)
-          unsubscribe = AtomObj.subscribe(
-            registry,
+          // Subscribe to atom updates (this will register the atom and set up Echo subscription).
+          unsubscribe = registry.subscribe(
             atom,
             () => {
               onStoreChange();

@@ -12,7 +12,7 @@ import { createObject } from '@dxos/echo-db';
 import { AtomObj } from './atom';
 
 describe('Echo Atom - Reactivity', () => {
-  test('atom updates when Echo object is updated via AtomObj.update', () => {
+  test('atom updates when Echo object is mutated', () => {
     const obj = createObject(
       Obj.make(TestSchema.Person, { name: 'Test', username: 'test', email: 'test@example.com' }),
     );
@@ -20,22 +20,20 @@ describe('Echo Atom - Reactivity', () => {
     const registry = Registry.make();
     const atom = AtomObj.make(obj);
 
-    const initialValue = AtomObj.get(registry, atom);
-    expect(initialValue.name).toBe('Test');
+    const initialValue = registry.get(atom);
+    expect(initialValue.value.name).toBe('Test');
 
-    // Subscribe to enable reactivity
-    AtomObj.subscribe(registry, atom, () => {});
+    // Subscribe to enable reactivity.
+    registry.subscribe(atom, () => {});
 
-    // Update the object via explicit API
-    AtomObj.update(registry, atom, (obj) => {
-      obj.name = 'Updated';
-    });
+    // Update the object directly.
+    obj.name = 'Updated';
 
-    const updatedValue = AtomObj.get(registry, atom);
-    expect(updatedValue.name).toBe('Updated');
+    const updatedValue = registry.get(atom);
+    expect(updatedValue.value.name).toBe('Updated');
   });
 
-  test('property atom updates when its property is updated via AtomObj.updateProperty', () => {
+  test('property atom updates when its property is mutated', () => {
     const obj = createObject(
       Obj.make(TestSchema.Person, { name: 'Test', username: 'test', email: 'test@example.com' }),
     );
@@ -43,15 +41,15 @@ describe('Echo Atom - Reactivity', () => {
     const registry = Registry.make();
     const atom = AtomObj.makeProperty(obj, 'name');
 
-    expect(AtomObj.get(registry, atom)).toBe('Test');
+    expect(registry.get(atom).value).toBe('Test');
 
-    // Subscribe to enable reactivity
-    AtomObj.subscribe(registry, atom, () => {});
+    // Subscribe to enable reactivity.
+    registry.subscribe(atom, () => {});
 
-    // Update the property via explicit API
-    AtomObj.updateProperty(registry, atom, 'Updated');
+    // Update the property directly.
+    obj.name = 'Updated';
 
-    expect(AtomObj.get(registry, atom)).toBe('Updated');
+    expect(registry.get(atom).value).toBe('Updated');
   });
 
   test('property atom does NOT update when other properties change', () => {
@@ -63,22 +61,31 @@ describe('Echo Atom - Reactivity', () => {
     const nameAtom = AtomObj.makeProperty(obj, 'name');
     const emailAtom = AtomObj.makeProperty(obj, 'email');
 
-    const initialName = AtomObj.get(registry, nameAtom);
-    const initialEmail = AtomObj.get(registry, emailAtom);
+    const initialName = registry.get(nameAtom).value;
+    const initialEmail = registry.get(emailAtom).value;
     expect(initialName).toBe('Test');
     expect(initialEmail).toBe('test@example.com');
 
-    // Subscribe to enable reactivity
-    AtomObj.subscribe(registry, nameAtom, () => {});
-    AtomObj.subscribe(registry, emailAtom, () => {});
+    // Subscribe to enable reactivity.
+    let nameUpdateCount = 0;
+    let emailUpdateCount = 0;
+    registry.subscribe(nameAtom, () => {
+      nameUpdateCount++;
+    });
+    registry.subscribe(emailAtom, () => {
+      emailUpdateCount++;
+    });
 
-    // Update a different property via explicit API
-    AtomObj.updateProperty(registry, emailAtom, 'updated@example.com');
+    // Update only email property.
+    obj.email = 'updated@example.com';
 
-    // Name atom should NOT have changed
-    expect(AtomObj.get(registry, nameAtom)).toBe('Test');
-    // Email atom should have changed
-    expect(AtomObj.get(registry, emailAtom)).toBe('updated@example.com');
+    // Name atom should NOT have changed.
+    expect(registry.get(nameAtom).value).toBe('Test');
+    expect(nameUpdateCount).toBe(0);
+
+    // Email atom should have changed.
+    expect(registry.get(emailAtom).value).toBe('updated@example.com');
+    expect(emailUpdateCount).toBe(1);
   });
 
   test('multiple property updates on same object update respective atoms', () => {
@@ -90,22 +97,19 @@ describe('Echo Atom - Reactivity', () => {
     const nameAtom = AtomObj.makeProperty(obj, 'name');
     const emailAtom = AtomObj.makeProperty(obj, 'email');
 
-    // Subscribe to enable reactivity
-    AtomObj.subscribe(registry, nameAtom, () => {});
-    AtomObj.subscribe(registry, emailAtom, () => {});
+    // Subscribe to enable reactivity.
+    registry.subscribe(nameAtom, () => {});
+    registry.subscribe(emailAtom, () => {});
 
-    // Update multiple properties via explicit API
-    AtomObj.updateProperty(registry, nameAtom, 'Updated');
-    AtomObj.updateProperty(registry, emailAtom, 'updated@example.com');
+    // Update multiple properties directly.
+    obj.name = 'Updated';
+    obj.email = 'updated@example.com';
 
-    expect(AtomObj.get(registry, nameAtom)).toBe('Updated');
-    expect(AtomObj.get(registry, emailAtom)).toBe('updated@example.com');
+    expect(registry.get(nameAtom).value).toBe('Updated');
+    expect(registry.get(emailAtom).value).toBe('updated@example.com');
   });
 
-  // NOTE: Direct object updates are deprecated and only maintained for backwards compatibility.
-  // In the future, if the implicit API is maintained, it should be built on top of the explicit API
-  // to ensure that implicit updates can be disabled.
-  test('direct object updates still work for backwards compatibility', async () => {
+  test('direct object mutations flow through to atoms', () => {
     const obj = createObject(
       Obj.make(TestSchema.Person, { name: 'Test', username: 'test', email: 'test@example.com' }),
     );
@@ -114,8 +118,7 @@ describe('Echo Atom - Reactivity', () => {
     const atom = AtomObj.make(obj);
 
     let updateCount = 0;
-    AtomObj.subscribe(
-      registry,
+    registry.subscribe(
       atom,
       () => {
         updateCount++;
@@ -123,20 +126,20 @@ describe('Echo Atom - Reactivity', () => {
       { immediate: true },
     );
 
-    // Get initial count (immediate: true causes initial update)
+    // Get initial count (immediate: true causes initial update).
     const initialCount = updateCount;
     expect(initialCount).toBe(1);
 
-    // Update object directly (deprecated, but still works)
+    // Update object directly.
     obj.name = 'Updated';
     obj.email = 'updated@example.com';
 
-    // Updates fire through ObjectCore subscriptions
+    // Updates fire through Obj.subscribe.
     expect(updateCount).toBe(initialCount + 2);
 
-    // Verify final state
-    const finalValue = AtomObj.get(registry, atom);
-    expect(finalValue.name).toBe('Updated');
-    expect(finalValue.email).toBe('updated@example.com');
+    // Verify final state.
+    const finalValue = registry.get(atom);
+    expect(finalValue.value.name).toBe('Updated');
+    expect(finalValue.value.email).toBe('updated@example.com');
   });
 });

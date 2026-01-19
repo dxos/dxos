@@ -23,13 +23,13 @@ import { useRegistry } from '@dxos/effect-atom-solid';
 export function useRef<T extends Entity.Unknown>(ref: MaybeAccessor<Ref.Ref<T> | undefined>): Accessor<T | undefined> {
   const registry = useRegistry();
 
-  // Store the current target in a signal
+  // Store the current target in a signal.
   const [target, setTarget] = createSignal<T | undefined>(undefined);
 
-  // Memoize the ref to track changes
+  // Memoize the ref to track changes.
   const memoizedRef = createMemo(() => access(ref));
 
-  // Subscribe to ref target changes
+  // Subscribe to ref target changes.
   createEffect(() => {
     const r = memoizedRef();
     if (!r) {
@@ -39,38 +39,37 @@ export function useRef<T extends Entity.Unknown>(ref: MaybeAccessor<Ref.Ref<T> |
 
     let unsubscribe: (() => void) | undefined;
     let isActive = true;
-    // Track the specific ref we're loading to ignore stale promise resolutions
+    // Track the specific ref we're loading to ignore stale promise resolutions.
     let loadingRef: Ref.Ref<T> | undefined = r;
 
-    // Helper function to set up subscription for a target (similar to useObject)
+    // Helper function to set up subscription for a target (similar to useObject).
     const setupSubscription = (targetObj: T) => {
-      // Double-check we're still active before setting up subscription
+      // Double-check we're still active before setting up subscription.
       if (!isActive || loadingRef !== r) {
         return;
       }
 
-      // Clean up previous subscription
+      // Clean up previous subscription.
       unsubscribe?.();
 
       const atom = AtomObj.make(targetObj);
-      const currentValue = AtomObj.get(registry, atom);
+      const currentValue = registry.get(atom).value;
 
-      // Final check before updating state
+      // Final check before updating state.
       if (!isActive || loadingRef !== r) {
         return;
       }
 
       setTarget(() => currentValue);
 
-      // Subscribe to atom updates (same pattern as useObject)
-      unsubscribe = AtomObj.subscribe(
-        registry,
+      // Subscribe to atom updates (same pattern as useObject).
+      unsubscribe = registry.subscribe(
         atom,
         () => {
           if (!isActive) {
             return;
           }
-          const updatedValue = AtomObj.get(registry, atom) as T;
+          const updatedValue = registry.get(atom).value as T;
           setTarget(() => updatedValue);
         },
         { immediate: true },
@@ -78,26 +77,26 @@ export function useRef<T extends Entity.Unknown>(ref: MaybeAccessor<Ref.Ref<T> |
     };
 
     const currentTarget = r.target;
-    // If target is immediately available, set up subscription
+    // If target is immediately available, set up subscription.
     if (currentTarget) {
       setupSubscription(currentTarget);
     } else {
-      // Target not loaded yet - set to undefined and try to load asynchronously
+      // Target not loaded yet - set to undefined and try to load asynchronously.
       setTarget(() => undefined);
 
-      // Use load() to explicitly load it
+      // Use load() to explicitly load it.
       void r
         .load()
         .then((loadedTarget: T) => {
-          // Only update if this effect is still active and we're still loading the same ref
-          // Check isActive first for early exit, then verify ref hasn't changed
+          // Only update if this effect is still active and we're still loading the same ref.
+          // Check isActive first for early exit, then verify ref hasn't changed.
           if (isActive && loadingRef === r && memoizedRef() === r) {
             setupSubscription(loadedTarget);
           }
         })
         .catch(() => {
-          // Loading failed, keep target as undefined
-          // Only update if still active and still loading the same ref
+          // Loading failed, keep target as undefined.
+          // Only update if still active and still loading the same ref.
           if (isActive && loadingRef === r) {
             setTarget(() => undefined);
           }
@@ -106,7 +105,7 @@ export function useRef<T extends Entity.Unknown>(ref: MaybeAccessor<Ref.Ref<T> |
 
     onCleanup(() => {
       isActive = false;
-      loadingRef = undefined; // Clear ref reference to ignore any pending promises
+      loadingRef = undefined; // Clear ref reference to ignore any pending promises.
       unsubscribe?.();
     });
   });

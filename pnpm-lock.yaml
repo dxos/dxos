@@ -4662,6 +4662,9 @@ importers:
 
   packages/core/echo/echo:
     dependencies:
+      '@dxos/async':
+        specifier: workspace:*
+        version: link:../../../common/async
       '@dxos/context':
         specifier: workspace:*
         version: link:../../../common/context
