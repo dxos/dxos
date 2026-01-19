@@ -4,6 +4,8 @@
 
 import React, { useEffect, useState } from 'react';
 
+import type * as Schema from 'effect/Schema';
+
 import { Common } from '@dxos/app-framework';
 import { Surface, useCapabilities } from '@dxos/app-framework/react';
 import { Filter, Obj, Type } from '@dxos/echo';
@@ -21,12 +23,12 @@ export const MasonryContainer = ({ view, role }: { view: View.View; role?: strin
   const db = Obj.getDatabase(view);
   const typename = view.query ? getTypenameFromQuery(view.query.ast) : undefined;
 
-  const [cardSchema, setCardSchema] = useState<Type.Obj.Any>();
+  const [cardSchema, setCardSchema] = useState<Schema.Schema.AnyNoContext>();
 
   useEffect(() => {
     const staticSchema = schemas.flat().find((schema) => Type.getTypename(schema) === typename);
     if (staticSchema) {
-      setCardSchema(() => staticSchema as Type.Obj.Any);
+      setCardSchema(() => staticSchema);
     }
     if (!staticSchema && typename && db) {
       const query = db.schemaRegistry.query({ typename });
