@@ -47,7 +47,9 @@ describe('AtomQuery', () => {
     db.add(Obj.make(TestItem, { name: 'Object 2', value: 100 }));
     await db.flush({ indexes: true });
 
-    const queryResult: QueryResult.QueryResult<TestItem> = db.query(Query.select(Filter.type(TestItem, { value: 100 })));
+    const queryResult: QueryResult.QueryResult<TestItem> = db.query(
+      Query.select(Filter.type(TestItem, { value: 100 })),
+    );
     await queryResult.run();
 
     const atom = AtomQuery.make(queryResult);
@@ -61,7 +63,9 @@ describe('AtomQuery', () => {
     db.add(Obj.make(TestItem, { name: 'Initial', value: 200 }));
     await db.flush({ indexes: true });
 
-    const queryResult: QueryResult.QueryResult<TestItem> = db.query(Query.select(Filter.type(TestItem, { value: 200 })));
+    const queryResult: QueryResult.QueryResult<TestItem> = db.query(
+      Query.select(Filter.type(TestItem, { value: 200 })),
+    );
     await queryResult.run();
 
     const atom = AtomQuery.make(queryResult);
@@ -92,7 +96,9 @@ describe('AtomQuery', () => {
     db.add(Obj.make(TestItem, { name: 'Object 2', value: 300 }));
     await db.flush({ indexes: true });
 
-    const queryResult: QueryResult.QueryResult<TestItem> = db.query(Query.select(Filter.type(TestItem, { value: 300 })));
+    const queryResult: QueryResult.QueryResult<TestItem> = db.query(
+      Query.select(Filter.type(TestItem, { value: 300 })),
+    );
     await queryResult.run();
 
     const atom = AtomQuery.make(queryResult);
@@ -123,7 +129,9 @@ describe('AtomQuery', () => {
     db.add(Obj.make(TestItem, { name: 'Initial', value: 400 }));
     await db.flush({ indexes: true });
 
-    const queryResult: QueryResult.QueryResult<TestItem> = db.query(Query.select(Filter.type(TestItem, { value: 400 })));
+    const queryResult: QueryResult.QueryResult<TestItem> = db.query(
+      Query.select(Filter.type(TestItem, { value: 400 })),
+    );
     await queryResult.run();
 
     const atom = AtomQuery.make(queryResult);
@@ -156,7 +164,9 @@ describe('AtomQuery', () => {
   });
 
   test('works with empty query results', async () => {
-    const queryResult: QueryResult.QueryResult<TestItem> = db.query(Query.select(Filter.type(TestItem, { value: 999 })));
+    const queryResult: QueryResult.QueryResult<TestItem> = db.query(
+      Query.select(Filter.type(TestItem, { value: 999 })),
+    );
     await queryResult.run();
 
     const atom = AtomQuery.make(queryResult);
@@ -169,7 +179,9 @@ describe('AtomQuery', () => {
     db.add(Obj.make(TestItem, { name: 'Object', value: 500 }));
     await db.flush({ indexes: true });
 
-    const queryResult: QueryResult.QueryResult<TestItem> = db.query(Query.select(Filter.type(TestItem, { value: 500 })));
+    const queryResult: QueryResult.QueryResult<TestItem> = db.query(
+      Query.select(Filter.type(TestItem, { value: 500 })),
+    );
     await queryResult.run();
 
     // Create two atoms from the same query result.
