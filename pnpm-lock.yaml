@@ -17841,6 +17841,9 @@ importers:
       '@dxos/react-ui-syntax-highlighter':
         specifier: workspace:*
         version: link:../react-ui-syntax-highlighter
+      '@dxos/ui-theme':
+        specifier: workspace:*
+        version: link:../ui-theme
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
@@ -17896,9 +17899,6 @@ importers:
       '@dxos/types':
         specifier: workspace:*
         version: link:../../sdk/types
-      '@dxos/ui-theme':
-        specifier: workspace:*
-        version: link:../ui-theme
       '@types/react':
         specifier: ~19.2.7
         version: 19.2.7
