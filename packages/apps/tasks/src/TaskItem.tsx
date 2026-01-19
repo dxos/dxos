@@ -4,7 +4,7 @@
 
 import React, { useEffect, useState } from 'react';
 
-import { useObject, useObjectUpdate } from '@dxos/echo-react';
+import { useObject } from '@dxos/echo-react';
 
 import { type Task } from './types';
 
