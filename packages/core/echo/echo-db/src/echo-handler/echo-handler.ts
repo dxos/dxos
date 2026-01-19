@@ -341,8 +341,8 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
         array[symbolInternals] = target[symbolInternals];
         array[symbolPath] = dataPath;
         array[symbolNamespace] = namespace;
-        array[symbolNamespace] = namespace;
         array[symbolHandler] = this;
+        defineHiddenProperty(array, EventId, target[EventId]);
         return array as any as ProxyTarget;
       });
 
