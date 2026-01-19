@@ -10,6 +10,7 @@
   "type": "module",
   "exports": {
     ".": {
+      "source": "./dist/src/index.ts",
       "types": "./dist/src/index.d.ts",
       "default": "./dist/src/index.js"
     }
@@ -35,10 +36,5 @@
     "@types/lodash.pick": "catalog:",
     "@types/lodash.sortby": "catalog:"
   },
-  "executors": "./executors.json",
-  "sourceExports": {
-    ".": {
-      "default": "./dist/src/index.ts"
-    }
-  }
+  "executors": "./executors.json"
 }

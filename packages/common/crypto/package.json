@@ -17,6 +17,7 @@
   },
   "exports": {
     ".": {
+      "source": "./src/index.ts",
       "types": "./dist/types/src/index.d.ts",
       "browser": "./dist/lib/browser/index.mjs",
       "node": "./dist/lib/node-esm/index.mjs"
@@ -40,10 +41,5 @@
   "devDependencies": {},
   "publishConfig": {
     "access": "public"
-  },
-  "sourceExports": {
-    ".": {
-      "default": "./src/index.ts"
-    }
   }
 }

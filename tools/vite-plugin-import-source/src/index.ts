@@ -20,9 +20,9 @@ interface ConditionMap {
 }
 
 /**
- * sourceExports field in package.json.
+ * Source condition can be either flat (string) or nested (condition map).
  */
-type SourceExports = Record<string, ConditionMap>;
+type SourceCondition = string | ConditionMap;
 
 /**
  * Platform type for condition resolution.
@@ -50,6 +50,19 @@ const resolveCondition = (conditionMap: ConditionMap, platform: Platform): strin
 };
 
 /**
+ * Resolves a source condition (flat or nested) to a file path.
+ */
+const resolveSourceCondition = (source: SourceCondition, platform: Platform): string | undefined => {
+  if (typeof source === 'string') {
+    // Flat source - return as-is.
+    return source;
+  }
+
+  // Nested source - resolve based on platform.
+  return resolveCondition(source, platform);
+};
+
+/**
  * Finds package.json by walking up the directory tree.
  */
 const findPackageJson = (startDir: string): string | undefined => {
@@ -69,14 +82,12 @@ const findPackageJson = (startDir: string): string | undefined => {
 /**
  * Cache for package.json contents.
  */
-const packageJsonCache = new Map<string, { sourceExports?: SourceExports; exports?: Record<string, unknown> }>();
+const packageJsonCache = new Map<string, { exports?: Record<string, unknown> }>();
 
 /**
  * Reads and caches package.json.
  */
-const getPackageJson = (
-  packageJsonPath: string,
-): { sourceExports?: SourceExports; exports?: Record<string, unknown> } => {
+const getPackageJson = (packageJsonPath: string): { exports?: Record<string, unknown> } => {
   const cached = packageJsonCache.get(packageJsonPath);
   if (cached) {
     return cached;
@@ -85,7 +96,6 @@ const getPackageJson = (
   try {
     const content = JSON.parse(readFileSync(packageJsonPath, 'utf-8'));
     const result = {
-      sourceExports: content.sourceExports as SourceExports | undefined,
       exports: content.exports as Record<string, unknown> | undefined,
     };
     packageJsonCache.set(packageJsonPath, result);
@@ -96,33 +106,12 @@ const getPackageJson = (
 };
 
 /**
- * Resolves source path from sourceExports.
+ * Resolves source path from exports.source (flat or nested).
  */
-const resolveFromSourceExports = (
-  sourceExports: SourceExports,
-  subpath: string,
-  platform: Platform,
-  packageDir: string,
-): string | undefined => {
-  const conditionMap = sourceExports[subpath];
-  if (!conditionMap) {
-    return undefined;
-  }
-
-  const resolved = resolveCondition(conditionMap, platform);
-  if (!resolved) {
-    return undefined;
-  }
-
-  return resolve(packageDir, resolved);
-};
-
-/**
- * Extracts source path from old "source" condition in exports.
- */
-const resolveFromLegacyExports = (
+const resolveFromExportsSource = (
   exports: Record<string, unknown>,
   subpath: string,
+  platform: Platform,
   packageDir: string,
 ): string | undefined => {
   const exportEntry = exports[subpath];
@@ -132,16 +121,28 @@ const resolveFromLegacyExports = (
   }
 
   const entry = exportEntry as Record<string, unknown>;
-  const sourcePath = entry.source;
+  const sourceCondition = entry.source;
 
-  if (typeof sourcePath !== 'string') {
+  if (!sourceCondition) {
+    return undefined;
+  }
+
+  // Handle both flat (string) and nested (object) source conditions.
+  let sourcePath: string | undefined;
+  if (typeof sourceCondition === 'string') {
+    sourcePath = sourceCondition;
+  } else if (typeof sourceCondition === 'object' && sourceCondition !== null) {
+    sourcePath = resolveSourceCondition(sourceCondition as ConditionMap, platform);
+  }
+
+  if (!sourcePath) {
     return undefined;
   }
 
   return resolve(packageDir, sourcePath);
 };
 
-// Create resolver for fallback (old behavior).
+// Create resolver for fallback resolution.
 const legacyResolver = new ResolverFactory({
   conditionNames: ['source'],
 });
@@ -203,23 +204,17 @@ const PluginImportSource = ({
           }
 
           const packageDir = dirname(packageJsonPath);
-          const { sourceExports, exports } = getPackageJson(packageJsonPath);
+          const { exports } = getPackageJson(packageJsonPath);
 
           let resolvedPath: string | undefined;
 
-          // Try sourceExports first (new method).
-          if (sourceExports) {
-            resolvedPath = resolveFromSourceExports(sourceExports, subpath, platform, packageDir);
-            verbose && console.log(`[sourceExports] ${source} subpath=${subpath} -> ${resolvedPath}`);
+          // Try to resolve from exports.source (supports both flat and nested).
+          if (exports) {
+            resolvedPath = resolveFromExportsSource(exports, subpath, platform, packageDir);
+            verbose && console.log(`[exports.source] ${source} subpath=${subpath} -> ${resolvedPath}`);
           }
 
-          // Fall back to legacy "source" condition in exports.
-          if (!resolvedPath && exports) {
-            resolvedPath = resolveFromLegacyExports(exports, subpath, packageDir);
-            verbose && console.log(`[legacy exports.source] ${source} subpath=${subpath} -> ${resolvedPath}`);
-          }
-
-          // Final fallback: use the legacy resolver result.
+          // Final fallback: use the legacy resolver result (for packages still using flat source).
           if (!resolvedPath) {
             resolvedPath = legacyResolved.path;
             verbose && console.log(`[legacy resolver] ${source} -> ${resolvedPath}`);

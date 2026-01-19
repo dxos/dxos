@@ -10,10 +10,12 @@
   "type": "module",
   "exports": {
     ".": {
+      "source": "./src/index.ts",
       "types": "./dist/types/src/index.d.ts",
       "browser": "./dist/lib/browser/index.mjs"
     },
     "./meta": {
+      "source": "./src/meta.ts",
       "types": "./dist/types/src/meta.d.ts",
       "browser": "./dist/lib/browser/meta.mjs"
     }
@@ -58,13 +60,5 @@
   },
   "publishConfig": {
     "access": "public"
-  },
-  "sourceExports": {
-    ".": {
-      "default": "./src/index.ts"
-    },
-    "./meta": {
-      "default": "./src/meta.ts"
-    }
   }
 }

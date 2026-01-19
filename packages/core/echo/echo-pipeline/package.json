@@ -10,16 +10,19 @@
   "type": "module",
   "exports": {
     ".": {
+      "source": "./src/index.ts",
       "types": "./dist/types/src/index.d.ts",
       "browser": "./dist/lib/browser/index.mjs",
       "node": "./dist/lib/node-esm/index.mjs"
     },
     "./testing": {
+      "source": "./src/testing/index.ts",
       "types": "./dist/types/src/testing/index.d.ts",
       "browser": "./dist/lib/browser/testing/index.mjs",
       "node": "./dist/lib/node-esm/testing/index.mjs"
     },
     "./filter": {
+      "source": "./src/filter/index.ts",
       "types": "./dist/types/src/filter/index.d.ts",
       "browser": "./dist/lib/browser/filter/index.mjs",
       "node": "./dist/lib/node-esm/filter/index.mjs"
@@ -90,16 +93,5 @@
   },
   "publishConfig": {
     "access": "public"
-  },
-  "sourceExports": {
-    ".": {
-      "default": "./src/index.ts"
-    },
-    "./testing": {
-      "default": "./src/testing/index.ts"
-    },
-    "./filter": {
-      "default": "./src/filter/index.ts"
-    }
   }
 }

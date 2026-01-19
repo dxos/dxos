@@ -10,11 +10,13 @@
   "type": "module",
   "exports": {
     ".": {
+      "source": "./src/index.ts",
       "types": "./dist/types/src/index.d.ts",
       "browser": "./dist/lib/browser/index.mjs",
       "node": "./dist/lib/node-esm/index.mjs"
     },
     "./extraction": {
+      "source": "./src/extraction/index.ts",
       "types": "./dist/types/src/extraction/index.d.ts",
       "browser": "./dist/lib/browser/extraction/index.mjs",
       "node": "./dist/lib/node-esm/extraction/index.mjs"
@@ -78,13 +80,5 @@
   "publishConfig": {
     "access": "public"
   },
-  "beast": {},
-  "sourceExports": {
-    ".": {
-      "default": "./src/index.ts"
-    },
-    "./extraction": {
-      "default": "./src/extraction/index.ts"
-    }
-  }
+  "beast": {}
 }

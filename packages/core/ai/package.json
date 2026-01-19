@@ -13,16 +13,19 @@
   },
   "exports": {
     ".": {
+      "source": "./src/index.ts",
       "types": "./dist/types/src/index.d.ts",
       "browser": "./dist/lib/browser/index.mjs",
       "node": "./dist/lib/node-esm/index.mjs"
     },
     "./resolvers": {
+      "source": "./src/resolvers/index.ts",
       "types": "./dist/types/src/resolvers/index.d.ts",
       "browser": "./dist/lib/browser/resolvers/index.mjs",
       "node": "./dist/lib/node-esm/resolvers/index.mjs"
     },
     "./testing": {
+      "source": "./src/testing/index.ts",
       "types": "./dist/types/src/testing/index.d.ts",
       "browser": "./dist/lib/browser/testing/index.mjs",
       "node": "./dist/lib/node-esm/testing/index.mjs"
@@ -85,16 +88,5 @@
   "publishConfig": {
     "access": "public"
   },
-  "beast": {},
-  "sourceExports": {
-    ".": {
-      "default": "./src/index.ts"
-    },
-    "./resolvers": {
-      "default": "./src/resolvers/index.ts"
-    },
-    "./testing": {
-      "default": "./src/testing/index.ts"
-    }
-  }
+  "beast": {}
 }

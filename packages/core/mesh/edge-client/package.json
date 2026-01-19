@@ -10,16 +10,19 @@
   "type": "module",
   "exports": {
     ".": {
+      "source": "./src/index.ts",
       "types": "./dist/types/src/index.d.ts",
       "browser": "./dist/lib/browser/index.mjs",
       "node": "./dist/lib/node-esm/index.mjs"
     },
     "./muxer": {
+      "source": "./src/edge-ws-muxer.ts",
       "types": "./dist/types/src/edge-ws-muxer.d.ts",
       "browser": "./dist/lib/browser/edge-ws-muxer.mjs",
       "node": "./dist/lib/node-esm/edge-ws-muxer.mjs"
     },
     "./testing": {
+      "source": "./src/testing/index.ts",
       "types": "./dist/types/src/testing/index.d.ts",
       "browser": "./dist/lib/browser/testing/index.mjs",
       "node": "./dist/lib/node-esm/testing/index.mjs"
@@ -64,16 +67,5 @@
   },
   "publishConfig": {
     "access": "public"
-  },
-  "sourceExports": {
-    ".": {
-      "default": "./src/index.ts"
-    },
-    "./muxer": {
-      "default": "./src/edge-ws-muxer.ts"
-    },
-    "./testing": {
-      "default": "./src/testing/index.ts"
-    }
   }
 }

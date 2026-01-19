@@ -11,6 +11,7 @@
   "type": "module",
   "exports": {
     ".": {
+      "source": "./dist/src/index.ts",
       "types": "./dist/src/index.d.ts",
       "default": "./dist/src/index.js"
     }
@@ -28,10 +29,5 @@
   },
   "devDependencies": {
     "@types/picomatch": "catalog:"
-  },
-  "sourceExports": {
-    ".": {
-      "default": "./dist/src/index.ts"
-    }
   }
 }

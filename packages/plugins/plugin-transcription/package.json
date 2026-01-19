@@ -9,16 +9,19 @@
   "type": "module",
   "exports": {
     ".": {
+      "source": "./src/index.ts",
       "types": "./dist/types/src/index.d.ts",
       "browser": "./dist/lib/browser/index.mjs",
       "node": "./dist/lib/node-esm/index.mjs"
     },
     "./blueprints": {
+      "source": "./src/blueprints/index.ts",
       "types": "./dist/types/src/blueprints/index.d.ts",
       "browser": "./dist/lib/browser/blueprints/index.mjs",
       "node": "./dist/lib/node-esm/blueprints/index.mjs"
     },
     "./types": {
+      "source": "./src/types/index.ts",
       "types": "./dist/types/src/types/index.d.ts",
       "browser": "./dist/lib/browser/types/index.mjs",
       "node": "./dist/lib/node-esm/types/index.mjs"
@@ -125,16 +128,5 @@
   },
   "publishConfig": {
     "access": "public"
-  },
-  "sourceExports": {
-    ".": {
-      "default": "./src/index.ts"
-    },
-    "./blueprints": {
-      "default": "./src/blueprints/index.ts"
-    },
-    "./types": {
-      "default": "./src/types/index.ts"
-    }
   }
 }

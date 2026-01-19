@@ -10,16 +10,19 @@
   "type": "module",
   "exports": {
     ".": {
+      "source": "./src/index.ts",
       "types": "./dist/types/src/index.d.ts",
       "browser": "./dist/lib/browser/index.mjs",
       "node": "./dist/lib/node-esm/index.mjs"
     },
     "./sdk": {
+      "source": "./src/sdk.ts",
       "types": "./dist/types/src/sdk.d.ts",
       "browser": "./dist/lib/browser/sdk.mjs",
       "node": "./dist/lib/node-esm/sdk.mjs"
     },
     "./types": {
+      "source": "./src/types/index.ts",
       "types": "./dist/types/src/types/index.d.ts",
       "browser": "./dist/lib/browser/types/index.mjs",
       "node": "./dist/lib/node-esm/types/index.mjs"
@@ -101,16 +104,5 @@
   },
   "publishConfig": {
     "access": "public"
-  },
-  "sourceExports": {
-    ".": {
-      "default": "./src/index.ts"
-    },
-    "./sdk": {
-      "default": "./src/sdk.ts"
-    },
-    "./types": {
-      "default": "./src/types/index.ts"
-    }
   }
 }

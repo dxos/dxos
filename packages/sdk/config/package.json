@@ -10,6 +10,7 @@
   "type": "module",
   "exports": {
     ".": {
+      "source": "./src/index.ts",
       "types": "./dist/types/src/index.d.ts",
       "browser": "./dist/lib/browser/index.mjs",
       "node": {
@@ -18,16 +19,19 @@
       }
     },
     "./esbuild-plugin": {
+      "source": "./src/esbuild-plugin/index.ts",
       "types": "./dist/types/src/esbuild-plugin/index.d.ts",
       "import": "./dist/plugin/node-esm/esbuild-plugin.mjs",
       "require": "./dist/plugin/node/esbuild-plugin.cjs"
     },
     "./rollup-plugin": {
+      "source": "./src/rollup-plugin/index.ts",
       "types": "./dist/types/src/rollup-plugin/index.d.ts",
       "import": "./dist/plugin/node-esm/rollup-plugin.mjs",
       "require": "./dist/plugin/node/rollup-plugin.cjs"
     },
     "./vite-plugin": {
+      "source": "./src/vite-plugin/index.ts",
       "types": "./dist/types/src/vite-plugin/index.d.ts",
       "import": "./dist/plugin/node-esm/vite-plugin.mjs",
       "require": "./dist/plugin/node/vite-plugin.cjs"
@@ -85,20 +89,6 @@
   },
   "publishConfig": {
     "access": "public"
-  },
-  "sourceExports": {
-    ".": {
-      "default": "./src/index.ts"
-    },
-    "./esbuild-plugin": {
-      "default": "./src/esbuild-plugin/index.ts"
-    },
-    "./rollup-plugin": {
-      "default": "./src/rollup-plugin/index.ts"
-    },
-    "./vite-plugin": {
-      "default": "./src/vite-plugin/index.ts"
-    }
   },
   "typedoc": {
     "entryPoint": "src/index.ts"
