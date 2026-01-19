@@ -165,7 +165,6 @@ export class TypedReactiveHandler implements ReactiveHandler<ProxyTarget> {
       value: validatedValue,
     });
     target[symbolPropertySignal].notifyWrite();
-    target[symbolPropertySignal].notifyWrite();
     if (!this._inSet) {
       target[EventId].emit();
     }
