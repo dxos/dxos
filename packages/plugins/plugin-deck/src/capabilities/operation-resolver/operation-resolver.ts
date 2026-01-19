@@ -35,8 +35,6 @@ import { setActive } from '../../util';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    const context = yield* Capability.PluginContextService;
-
     return Capability.contributes(Common.Capability.OperationResolver, [
       //
       // UpdateSidebar
@@ -44,8 +42,8 @@ export default Capability.makeModule(
       OperationResolver.make({
         operation: Common.LayoutOperation.UpdateSidebar,
         handler: (input) =>
-          Effect.sync(() => {
-            const layout = context.getCapability(DeckCapabilities.MutableDeckState);
+          Effect.gen(function* () {
+            const layout = yield* Capability.get(DeckCapabilities.MutableDeckState);
             const next = input.state ?? layout.sidebarState;
             if (next !== layout.sidebarState) {
               layout.sidebarState = next;
@@ -59,8 +57,8 @@ export default Capability.makeModule(
       OperationResolver.make({
         operation: Common.LayoutOperation.UpdateComplementary,
         handler: (input) =>
-          Effect.sync(() => {
-            const layout = context.getCapability(DeckCapabilities.MutableDeckState);
+          Effect.gen(function* () {
+            const layout = yield* Capability.get(DeckCapabilities.MutableDeckState);
             if (layout.complementarySidebarPanel !== input.subject) {
               layout.complementarySidebarPanel = input.subject;
             }
@@ -78,8 +76,8 @@ export default Capability.makeModule(
       OperationResolver.make({
         operation: Common.LayoutOperation.UpdateDialog,
         handler: (input) =>
-          Effect.sync(() => {
-            const layout = context.getCapability(DeckCapabilities.MutableDeckState);
+          Effect.gen(function* () {
+            const layout = yield* Capability.get(DeckCapabilities.MutableDeckState);
             layout.dialogOpen = input.state ?? Boolean(input.subject);
             layout.dialogType = input.type ?? 'default';
             layout.dialogBlockAlign = input.blockAlign ?? 'center';
@@ -95,8 +93,8 @@ export default Capability.makeModule(
       OperationResolver.make({
         operation: Common.LayoutOperation.UpdatePopover,
         handler: (input) =>
-          Effect.sync(() => {
-            const layout = context.getCapability(DeckCapabilities.MutableDeckState);
+          Effect.gen(function* () {
+            const layout = yield* Capability.get(DeckCapabilities.MutableDeckState);
             layout.popoverOpen = input.state ?? Boolean(input.subject);
             layout.popoverContent =
               typeof input.subject === 'string'
@@ -119,8 +117,8 @@ export default Capability.makeModule(
       OperationResolver.make({
         operation: Common.LayoutOperation.AddToast,
         handler: (input) =>
-          Effect.sync(() => {
-            const layout = context.getCapability(DeckCapabilities.MutableDeckState);
+          Effect.gen(function* () {
+            const layout = yield* Capability.get(DeckCapabilities.MutableDeckState);
             layout.toasts.push(input as Common.LayoutOperation.Toast);
           }),
       }),
@@ -131,9 +129,9 @@ export default Capability.makeModule(
       OperationResolver.make({
         operation: Common.UndoOperation.ShowUndo,
         handler: (input) =>
-          Effect.sync(() => {
-            const layout = context.getCapability(DeckCapabilities.MutableDeckState);
-            const historyTracker = context.getCapability(Common.Capability.HistoryTracker);
+          Effect.gen(function* () {
+            const layout = yield* Capability.get(DeckCapabilities.MutableDeckState);
+            const historyTracker = yield* Capability.get(Common.Capability.HistoryTracker);
 
             // TODO(wittjosiah): Support undoing further back than the last action.
             if (layout.currentUndoId) {
@@ -168,8 +166,8 @@ export default Capability.makeModule(
           return true;
         },
         handler: (input) =>
-          Effect.sync(() => {
-            const state = context.getCapability(DeckCapabilities.MutableDeckState);
+          Effect.gen(function* () {
+            const state = yield* Capability.get(DeckCapabilities.MutableDeckState);
 
             const setMode = (mode: LayoutMode, subject?: string) => {
               const deck = state.deck;
@@ -221,8 +219,8 @@ export default Capability.makeModule(
         operation: Common.LayoutOperation.SwitchWorkspace,
         handler: (input) =>
           Effect.gen(function* () {
-            const { graph } = context.getCapability(Common.Capability.AppGraph);
-            const state = context.getCapability(DeckCapabilities.MutableDeckState);
+            const { graph } = yield* Capability.get(Common.Capability.AppGraph);
+            const state = yield* Capability.get(DeckCapabilities.MutableDeckState);
 
             batch(() => {
               // TODO(wittjosiah): This is a hack to prevent the previous deck from being set for pinned items.
@@ -257,8 +255,8 @@ export default Capability.makeModule(
         operation: Common.LayoutOperation.RevertWorkspace,
         handler: () =>
           Effect.gen(function* () {
-            const state = context.getCapability(DeckCapabilities.MutableDeckState);
-            const { invoke } = context.getCapability(Common.Capability.OperationInvoker);
+            const state = yield* Capability.get(DeckCapabilities.MutableDeckState);
+            const { invoke } = yield* Capability.get(Common.Capability.OperationInvoker);
             yield* invoke(Common.LayoutOperation.SwitchWorkspace, { subject: state.previousDeck });
           }),
       }),
@@ -270,13 +268,12 @@ export default Capability.makeModule(
         operation: Common.LayoutOperation.Open,
         handler: (input) =>
           Effect.gen(function* () {
-            const { graph } = context.getCapability(Common.Capability.AppGraph);
-            const state = context.getCapability(DeckCapabilities.MutableDeckState);
-            const attention = context.getCapability(AttentionCapabilities.Attention);
-            const { invoke } = context.getCapability(Common.Capability.OperationInvoker);
-            const settings = context
-              .getCapabilities(Common.Capability.SettingsStore)[0]
-              ?.getStore<DeckSettingsProps>(meta.id)?.value;
+            const { graph } = yield* Capability.get(Common.Capability.AppGraph);
+            const state = yield* Capability.get(DeckCapabilities.MutableDeckState);
+            const attention = yield* Capability.get(AttentionCapabilities.Attention);
+            const { invoke } = yield* Capability.get(Common.Capability.OperationInvoker);
+            const settingsStores = yield* Capability.getAll(Common.Capability.SettingsStore);
+            const settings = settingsStores[0]?.getStore<DeckSettingsProps>(meta.id)?.value;
 
             if (input.workspace && state.activeDeck !== input.workspace) {
               yield* invoke(Common.LayoutOperation.SwitchWorkspace, { subject: input.workspace });
@@ -336,8 +333,8 @@ export default Capability.makeModule(
       OperationResolver.make({
         operation: DeckOperation.UpdatePlankSize,
         handler: (input) =>
-          Effect.sync(() => {
-            const state = context.getCapability(DeckCapabilities.MutableDeckState);
+          Effect.gen(function* () {
+            const state = yield* Capability.get(DeckCapabilities.MutableDeckState);
             state.deck.plankSizing[input.id] = input.size;
           }),
       }),
@@ -349,10 +346,10 @@ export default Capability.makeModule(
         operation: DeckOperation.Adjust,
         handler: (input) =>
           Effect.gen(function* () {
-            const state = context.getCapability(DeckCapabilities.MutableDeckState);
-            const attention = context.getCapability(AttentionCapabilities.Attention);
-            const { graph } = context.getCapability(Common.Capability.AppGraph);
-            const { invoke } = context.getCapability(Common.Capability.OperationInvoker);
+            const state = yield* Capability.get(DeckCapabilities.MutableDeckState);
+            const attention = yield* Capability.get(AttentionCapabilities.Attention);
+            const { graph } = yield* Capability.get(Common.Capability.AppGraph);
+            const { invoke } = yield* Capability.get(Common.Capability.OperationInvoker);
 
             // Collect layout operations to run after batch.
             let soloOperation:
@@ -422,8 +419,8 @@ export default Capability.makeModule(
       OperationResolver.make({
         operation: DeckOperation.ChangeCompanion,
         handler: (input) =>
-          Effect.sync(() => {
-            const state = context.getCapability(DeckCapabilities.MutableDeckState);
+          Effect.gen(function* () {
+            const state = yield* Capability.get(DeckCapabilities.MutableDeckState);
             // TODO(thure): Reactivity only works when creating a lexically new `activeCompanions`… Are these not proxy objects?
             if (input.companion === null) {
               const { [input.primary]: _, ...nextActiveCompanions } = state.deck.activeCompanions ?? {};
@@ -445,9 +442,9 @@ export default Capability.makeModule(
         operation: Common.LayoutOperation.Close,
         handler: (input) =>
           Effect.gen(function* () {
-            const state = context.getCapability(DeckCapabilities.MutableDeckState);
-            const attention = context.getCapability(AttentionCapabilities.Attention);
-            const { invoke } = context.getCapability(Common.Capability.OperationInvoker);
+            const state = yield* Capability.get(DeckCapabilities.MutableDeckState);
+            const attention = yield* Capability.get(AttentionCapabilities.Attention);
+            const { invoke } = yield* Capability.get(Common.Capability.OperationInvoker);
 
             const active = state.deck.solo ? [state.deck.solo] : state.deck.active;
             const next = input.subject.reduce((acc, id) => closeEntry(acc, id), active);
@@ -473,8 +470,8 @@ export default Capability.makeModule(
         operation: Common.LayoutOperation.Set,
         handler: (input) =>
           Effect.gen(function* () {
-            const state = context.getCapability(DeckCapabilities.MutableDeckState);
-            const attention = context.getCapability(AttentionCapabilities.Attention);
+            const state = yield* Capability.get(DeckCapabilities.MutableDeckState);
+            const attention = yield* Capability.get(AttentionCapabilities.Attention);
 
             const toAttend = setActive({ next: input.subject as string[], state, attention });
             if (toAttend) {
@@ -489,8 +486,8 @@ export default Capability.makeModule(
       OperationResolver.make({
         operation: Common.LayoutOperation.ScrollIntoView,
         handler: (input) =>
-          Effect.sync(() => {
-            const layout = context.getCapability(DeckCapabilities.MutableDeckState);
+          Effect.gen(function* () {
+            const layout = yield* Capability.get(DeckCapabilities.MutableDeckState);
             layout.scrollIntoView = input.subject;
           }),
       }),

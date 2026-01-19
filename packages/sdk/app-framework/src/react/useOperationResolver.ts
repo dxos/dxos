@@ -4,8 +4,6 @@
 
 import { useEffect, useMemo } from 'react';
 
-import type { OperationResolver } from '@dxos/operation';
-
 import * as Common from '../common';
 import { usePluginManager } from '../react';
 
@@ -25,7 +23,7 @@ import { usePluginManager } from '../react';
  * useOperationResolver(meta.id, scrollHandler);
  * ```
  */
-export const useOperationResolver = (module: string, resolver: OperationResolver.OperationResolver) => {
+export const useOperationResolver = (module: string, resolver: Common.Capability.OperationResolver) => {
   const manager = usePluginManager();
   // Wrap single resolver in array as the capability expects an array.
   const resolverArray = useMemo(() => [resolver], [resolver]);

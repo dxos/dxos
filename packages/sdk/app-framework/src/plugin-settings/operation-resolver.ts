@@ -13,9 +13,6 @@ import { SETTINGS_ID, SETTINGS_KEY, SettingsOperation } from './actions';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    // Get context to provide to handlers so they can use Capability.get().
-    const context = yield* Capability.PluginContextService;
-
     return Capability.contributes(Common.Capability.OperationResolver, [
       //
       // Open Settings
@@ -34,7 +31,7 @@ export default Capability.makeModule(
                 }),
               );
             }
-          }).pipe(Effect.provideService(Capability.PluginContextService, context)),
+          }),
       }),
 
       //
@@ -51,7 +48,7 @@ export default Capability.makeModule(
                 subject: [`${SETTINGS_KEY}:plugins`],
               }),
             );
-          }).pipe(Effect.provideService(Capability.PluginContextService, context)),
+          }),
       }),
     ]);
   }),

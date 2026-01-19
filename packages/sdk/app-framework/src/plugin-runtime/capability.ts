@@ -15,18 +15,27 @@ import { Capability, Plugin } from '../core';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
+    // Get the PluginContext to create a layer for it.
+    const pluginContext = yield* Capability.PluginContextService;
+
     // Trigger setup event so plugins can contribute their layers.
     yield* Plugin.activate(Common.ActivationEvent.SetupLayer);
 
     // Gather all contributed layers.
     const layers = yield* Capability.getAll(Common.Capability.Layer);
 
-    // Merge all layers into a single layer.
+    // Create layer that provides PluginContextService.
+    const pluginContextLayer = Layer.succeed(Capability.PluginContextService, pluginContext);
+
+    // Merge all layers including PluginContextService.
     // Layer.mergeAll requires a tuple type, so we use a cast for dynamic arrays.
     const composedLayer =
       layers.length > 0
-        ? (Layer.mergeAll as (...args: Layer.Layer<any, any, any>[]) => Layer.Layer<any, any, never>)(...layers)
-        : Layer.empty;
+        ? (Layer.mergeAll as (...args: Layer.Layer<any, any, any>[]) => Layer.Layer<any, any, never>)(
+            pluginContextLayer,
+            ...layers,
+          )
+        : pluginContextLayer;
 
     // Create the managed runtime from the composed layer.
     const runtime = ManagedRuntime.make(composedLayer) as Common.Capability.ManagedRuntime;
