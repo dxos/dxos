@@ -9,10 +9,15 @@ import "google/protobuf/empty.proto";
 // TODO(dmaretskyi): Clean-up this protocol after migration to feeds.
 message QueueQuery {
   string queue_id = 1;
+
+  // TODO(dmaretskyi): Separate postion-based queries (position is global for all peers) and cursor-based (cursors are peer-specific and encoded as such).
+  // TODO(dmaretskyi): Add some sort of storageId (perhaps per space) to peer cusors so that there's no chance of using wrong cursor from another peer. 
   optional string after = 2;
   optional string before = 3;
   optional int32 limit = 4;
   optional bool reverse = 5;
+
+  // TODO(dmaretskyi): Remove this field -- raw queues dont index object IDs anymore.
   repeated string object_ids = 6;
 }
 
