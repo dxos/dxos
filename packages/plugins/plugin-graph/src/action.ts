@@ -3,6 +3,7 @@
 //
 
 import * as Effect from 'effect/Effect';
+import * as Function from 'effect/Function';
 
 import { Capability } from '@dxos/app-framework';
 import { type Node } from '@dxos/app-graph';
@@ -21,27 +22,13 @@ export const runAction = async (
   pluginContext: Capability.PluginContext,
   action: Node.Action,
   params: Node.InvokeProps = {},
-): Promise<void> => {
-  const effect = action.data(params);
-
-  // Build final effect with all required layers.
-  let finalEffect = effect.pipe(
-    // Provide Operation.Service from the invoker.
-    Effect.provideService(Operation.Service, {
-      invoke: invoker.invoke,
-      schedule: (op, ...args) =>
-        Effect.asVoid(invoker.invoke(op, args[0] as never)).pipe(Effect.catchAll(() => Effect.void)),
-      invokePromise: invoker.invokePromise,
-      invokeSync: invoker.invokeSync,
-    }),
-    // Provide PluginContextService.
-    Effect.provideService(Capability.PluginContextService, pluginContext),
+): Promise<void> =>
+  runAndForwardErrors(
+    action
+      .data(params)
+      .pipe(
+        Effect.provideService(Operation.Service, invoker),
+        Effect.provideService(Capability.PluginContextService, pluginContext),
+        action._actionContext ? Effect.provide(action._actionContext) : Function.identity,
+      ),
   );
-
-  // Provide captured action context if available (contains plugin-specific services).
-  if (action._actionContext) {
-    finalEffect = finalEffect.pipe(Effect.provide(action._actionContext));
-  }
-
-  await runAndForwardErrors(finalEffect);
-};

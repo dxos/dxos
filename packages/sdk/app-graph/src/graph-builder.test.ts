@@ -3,6 +3,7 @@
 //
 
 import { Atom, Registry } from '@effect-atom/atom-react';
+import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Function from 'effect/Function';
 import * as Option from 'effect/Option';
@@ -601,6 +602,71 @@ describe('GraphBuilder', () => {
         const actions = registry.get(graph.actions('parent'));
         expect(actions).has.length(1);
         expect(actions[0].id).to.equal('test-action');
+      });
+
+      test('_actionContext captures and provides services to action execution', () => {
+        const registry = Registry.make();
+        const builder = GraphBuilder.make({ registry });
+        const graph = builder.graph;
+
+        // Define a test service using Context.GenericTag pattern.
+        interface TestServiceInterface {
+          getValue(): number;
+        }
+        const TestService = Context.GenericTag<TestServiceInterface>('TestService');
+
+        // Track whether the action was executed with the correct context.
+        let executionResult: number | null = null;
+
+        // Create extension with service requirement.
+        // Note: The actions callback must USE the service for R to be inferred correctly.
+        const extensions = Effect.runSync(
+          GraphBuilder.createExtension({
+            id: 'test-extension',
+            match: NodeMatcher.whenNodeType(EXAMPLE_TYPE),
+            actions: (node, get) =>
+              // Use TestService in the callback to include it in R.
+              Effect.gen(function* () {
+                const service = yield* TestService;
+                return [
+                  {
+                    id: 'test-action',
+                    data: () =>
+                      Effect.gen(function* () {
+                        // Action can use the same service from captured context.
+                        const svc = yield* TestService;
+                        executionResult = svc.getValue();
+                      }).pipe(Effect.asVoid),
+                    properties: { label: `Test ${service.getValue()}` },
+                  },
+                ];
+              }),
+          }).pipe(Effect.provideService(TestService, { getValue: () => 42 })),
+        );
+
+        GraphBuilder.addExtension(builder, extensions);
+
+        const writableGraph = graph as Graph.WritableGraph;
+        Graph.addNode(writableGraph, { id: 'parent', type: EXAMPLE_TYPE, properties: {}, data: 'test' });
+        Graph.expand(graph, 'parent');
+
+        const actions = registry.get(graph.actions('parent'));
+        expect(actions).has.length(1);
+
+        // Verify _actionContext is captured.
+        const action = actions[0] as Node.Action;
+        expect(action._actionContext).to.not.be.undefined;
+
+        // Execute the action with the captured context.
+        const actionEffect = action.data();
+        const effectWithContext = action._actionContext
+          ? actionEffect.pipe(Effect.provide(action._actionContext))
+          : actionEffect;
+
+        Effect.runSync(effectWithContext);
+
+        // Verify the service was accessible during execution.
+        expect(executionResult).to.equal(42);
       });
 
       test('works with resolver', async () => {
