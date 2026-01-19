@@ -35,6 +35,7 @@ export const EventId = Symbol.for('@dxos/live-object/EventId');
  * @param callback - Called when the object changes.
  * @returns Unsubscribe function.
  */
+// TODO(wittjosiah): Consider throwing if obj doesn't have EventId instead of returning no-op.
 export const subscribe = (obj: unknown, callback: () => void): (() => void) => {
   const target = getProxyTarget(obj as any);
   if (target && EventId in target) {
