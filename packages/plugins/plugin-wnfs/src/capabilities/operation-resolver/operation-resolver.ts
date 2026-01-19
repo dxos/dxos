@@ -14,8 +14,6 @@ import { WnfsCapabilities, WnfsFile, WnfsOperation } from '../../types';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    const context = yield* Capability.PluginContextService;
-
     return Capability.contributes(Common.Capability.OperationResolver, [
       OperationResolver.make({
         operation: WnfsOperation.Create,
@@ -28,8 +26,8 @@ export default Capability.makeModule(
         operation: WnfsOperation.Upload,
         handler: ({ file, db }) =>
           Effect.gen(function* () {
-            const client = context.getCapability(ClientCapabilities.Client);
-            const blockstore = context.getCapability(WnfsCapabilities.Blockstore);
+            const client = yield* Capability.get(ClientCapabilities.Client);
+            const blockstore = yield* Capability.get(WnfsCapabilities.Blockstore);
             const space = client.spaces.get(db.spaceId);
             invariant(space, 'Space not found');
             const info = yield* Effect.promise(() => upload({ file, blockstore, space }));
@@ -40,8 +38,8 @@ export default Capability.makeModule(
         operation: WnfsOperation.CreateFile,
         handler: ({ file, db }) =>
           Effect.gen(function* () {
-            const client = context.getCapability(ClientCapabilities.Client);
-            const blockstore = context.getCapability(WnfsCapabilities.Blockstore);
+            const client = yield* Capability.get(ClientCapabilities.Client);
+            const blockstore = yield* Capability.get(WnfsCapabilities.Blockstore);
             const space = client.spaces.get(db.spaceId);
             invariant(space, 'Space not found');
             const info = yield* Effect.promise(() => upload({ file, blockstore, space }));
