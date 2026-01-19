@@ -826,7 +826,15 @@ export function addNodes<T extends WritableGraph>(
 const addNodeImpl = <T extends WritableGraph>(graph: T, nodeArg: Node.NodeArg<any, Record<string, any>>): T => {
   const internal = getInternal(graph);
   // Extract known NodeArg fields, preserve any extra fields (like _actionContext) in rest.
-  const { nodes, edges, id, type, data = null, properties = {}, ...rest } = nodeArg as Node.NodeArg<any> & {
+  const {
+    nodes,
+    edges,
+    id,
+    type,
+    data = null,
+    properties = {},
+    ...rest
+  } = nodeArg as Node.NodeArg<any> & {
     _actionContext?: Node.ActionContext;
   };
   const nodeAtom = internal._node(id);
