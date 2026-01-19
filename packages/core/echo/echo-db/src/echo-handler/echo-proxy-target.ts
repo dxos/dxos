@@ -8,8 +8,8 @@ import type * as Schema from 'effect/Schema';
 import type { CleanupFn, Event } from '@dxos/async';
 import { inspectCustom } from '@dxos/debug';
 import type { SchemaId } from '@dxos/echo/internal';
-import { EventId } from '@dxos/live-object';
 import { type GenericSignal, compositeRuntime } from '@dxos/echo-signals/runtime';
+import { type EventId } from '@dxos/live-object';
 import { ComplexMap } from '@dxos/util';
 
 import type { KeyPath, ObjectCore } from '../core-db';

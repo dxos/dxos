@@ -5,6 +5,7 @@
 import * as Schema from 'effect/Schema';
 import { describe, expect, test } from 'vitest';
 
+import * as Obj from '../../Obj';
 import { TestSchema } from '../../testing';
 import { isInstanceOf } from '../annotations';
 import { EchoObjectSchema } from '../entities';
@@ -12,7 +13,6 @@ import { TypedObject, createObject } from '../object';
 import { Ref } from '../ref';
 import { foreignKey, getMeta, getSchema } from '../types';
 
-import * as Obj from '../../Obj';
 import { makeObject } from './make-object';
 
 describe('complex schema validations', () => {

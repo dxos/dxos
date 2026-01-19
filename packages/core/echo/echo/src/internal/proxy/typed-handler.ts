@@ -7,8 +7,8 @@ import { type InspectOptionsStylized } from 'node:util';
 import * as Schema from 'effect/Schema';
 import * as SchemaAST from 'effect/SchemaAST';
 
-import { inspectCustom } from '@dxos/debug';
 import { Event } from '@dxos/async';
+import { inspectCustom } from '@dxos/debug';
 import { type GenericSignal, compositeRuntime } from '@dxos/echo-signals/runtime';
 import { invariant } from '@dxos/invariant';
 import {

@@ -2,13 +2,13 @@
 // Copyright 2024 DXOS.org
 //
 
+import { Event } from '@dxos/async';
 import { type GenericSignal, compositeRuntime } from '@dxos/echo-signals/runtime';
 import { invariant } from '@dxos/invariant';
 
 import { defineHiddenProperty } from './define-hidden-property';
-import { ReactiveArray, type ReactiveHandler, createProxy, isValidProxyTarget, objectData } from './proxy';
 import { EventId } from './live';
-import { Event } from '@dxos/async';
+import { ReactiveArray, type ReactiveHandler, createProxy, isValidProxyTarget, objectData } from './proxy';
 
 const symbolSignal = Symbol('signal');
 const symbolPropertySignal = Symbol('property-signal');

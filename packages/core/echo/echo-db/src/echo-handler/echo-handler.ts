@@ -7,6 +7,7 @@ import { type InspectOptionsStylized } from 'node:util';
 import * as A from '@automerge/automerge';
 import * as Schema from 'effect/Schema';
 
+import { Event } from '@dxos/async';
 import { type DevtoolsFormatter, devtoolsFormatter, inspectCustom } from '@dxos/debug';
 import { type Entity, Obj } from '@dxos/echo';
 import {
@@ -50,7 +51,6 @@ import {
 import { DATA_NAMESPACE, type ObjectStructure, PROPERTY_ID, Reference, encodeReference } from '@dxos/echo-protocol';
 import { assertArgument, invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
-import { Event } from '@dxos/async';
 import {
   EventId,
   type Live,
