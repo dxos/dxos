@@ -4,8 +4,8 @@
 
 import * as Effect from 'effect/Effect';
 
-import { type Node } from '@dxos/app-graph';
 import { Capability } from '@dxos/app-framework';
+import { type Node } from '@dxos/app-graph';
 import { runAndForwardErrors } from '@dxos/effect';
 import { Operation, type OperationInvoker } from '@dxos/operation';
 

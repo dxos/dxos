@@ -90,7 +90,7 @@ export default Capability.makeModule(
           },
         ]);
       },
-      });
+    });
 
     return Capability.contributes(Common.Capability.AppGraphBuilder, extensions);
   }),

@@ -15,8 +15,9 @@ import { Operation, type OperationInvoker } from '@dxos/operation';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { ATTENDABLE_PATH_SEPARATOR, PLANK_COMPANION_TYPE } from '@dxos/plugin-deck/types';
 import { CreateAtom, GraphBuilder, NodeMatcher } from '@dxos/plugin-graph';
+import { getActiveSpace } from '@dxos/plugin-space';
 import { SpaceOperation } from '@dxos/plugin-space/types';
-import { Query, parseId } from '@dxos/react-client/echo';
+import { Query } from '@dxos/react-client/echo';
 
 import { ASSISTANT_DIALOG, meta } from '../../meta';
 import { Assistant, AssistantCapabilities, AssistantOperation } from '../../types';
@@ -53,11 +54,10 @@ export default Capability.makeModule(
             {
               id: `${Common.LayoutOperation.UpdateDialog.meta.key}/assistant/open`,
               data: Effect.fnUntraced(function* () {
-                const client = yield* Capability.get(ClientCapabilities.Client);
-                const layout = yield* Capability.get(Common.Capability.Layout);
-                const operationInvoker = yield* Capability.get(Common.Capability.OperationInvoker);
-                const { spaceId } = parseId(layout.workspace);
-                const space = (spaceId ? client.spaces.get(spaceId) : undefined) ?? client.spaces.default;
+                const pluginContext = yield* Capability.PluginContextService;
+                const client = pluginContext.getCapability(ClientCapabilities.Client);
+                const operationInvoker = pluginContext.getCapability(Common.Capability.OperationInvoker);
+                const space = getActiveSpace(pluginContext) ?? client.spaces.default;
                 const chat = yield* Effect.tryPromise(() => getOrCreateChat(operationInvoker.invokePromise, space.db));
                 if (!chat) {
                   return;

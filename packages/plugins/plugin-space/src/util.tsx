@@ -578,10 +578,7 @@ export const constructObjectActions = ({
               });
               if (result.snapshot) {
                 yield* Effect.promise(() =>
-                  downloadBlob(
-                    result.snapshot,
-                    createFilename({ parts: [db.spaceId, object.typename], ext: 'json' }),
-                  ),
+                  downloadBlob(result.snapshot, createFilename({ parts: [db.spaceId, object.typename], ext: 'json' })),
                 );
               }
             }),
@@ -605,7 +602,7 @@ export const constructObjectActions = ({
                   typename: managedCollection ? managedCollection.key : undefined,
                 });
               } else {
-                const createdObject = yield* (createObject({}, { db, context }) as Effect.Effect<Obj.Any, Error, never>);
+                const createdObject = yield* createObject({}, { db, context }) as Effect.Effect<Obj.Any, Error, never>;
                 const addResult = yield* Operation.invoke(SpaceOperation.AddObject, {
                   target: db,
                   hidden: true,

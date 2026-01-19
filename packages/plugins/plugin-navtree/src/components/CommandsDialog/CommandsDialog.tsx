@@ -29,7 +29,7 @@ export type CommandsDialogContentProps = {
 export const CommandsDialogContent = forwardRef<HTMLDivElement, CommandsDialogContentProps>(
   ({ selected: initial }, forwardedRef) => {
     const { t } = useTranslation(meta.id);
-    const invoker = useOperationInvoker();
+    const { invokeSync } = useOperationInvoker();
     const runAction = useActionRunner();
     const { graph } = useAppGraph();
     const [selected, setSelected] = useState<string | undefined>(initial);
@@ -106,7 +106,7 @@ export const CommandsDialogContent = forwardRef<HTMLDivElement, CommandsDialogCo
                         return;
                       }
 
-                      invoker.invokeSync(Common.LayoutOperation.UpdateDialog, { state: false });
+                      invokeSync(Common.LayoutOperation.UpdateDialog, { state: false });
                       setTimeout(() => {
                         const node = Graph.getConnections(graph, group?.id ?? action.id, 'inbound')[0];
                         if (node && Node.isAction(action)) {
