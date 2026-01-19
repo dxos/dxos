@@ -404,7 +404,10 @@ export default Capability.makeModule(
 
               if (Option.isSome(companion)) {
                 // TODO(wittjosiah): This should remember the previously selected companion.
-                yield* Operation.invoke(DeckOperation.ChangeCompanion, { primary: input.id, companion: companion.value.id });
+                yield* Operation.invoke(DeckOperation.ChangeCompanion, {
+                  primary: input.id,
+                  companion: companion.value.id,
+                });
               }
             }
           }),
