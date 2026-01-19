@@ -31,41 +31,41 @@ export class FeedStore {
 
     // Feeds Table
     yield* sql`CREATE TABLE IF NOT EXISTS feeds (
-      feedPrivateId INTEGER PRIMARY KEY AUTOINCREMENT,
-      spaceId TEXT NOT NULL,
-      feedId TEXT NOT NULL,
-      feedNamespace TEXT
-    )`;
+        feedPrivateId INTEGER PRIMARY KEY AUTOINCREMENT,
+        spaceId TEXT NOT NULL,
+        feedId TEXT NOT NULL,
+        feedNamespace TEXT
+      )`;
     yield* sql`CREATE UNIQUE INDEX IF NOT EXISTS idx_feeds_spaceId_feedId ON feeds(spaceId, feedId)`;
 
     // Blocks Table
     yield* sql`CREATE TABLE IF NOT EXISTS blocks (
-      insertionId INTEGER PRIMARY KEY AUTOINCREMENT,
-      feedPrivateId INTEGER NOT NULL,
-      position INTEGER,
-      sequence INTEGER NOT NULL,
-      actorId TEXT NOT NULL,
-      predSequence INTEGER,
-      predActorId TEXT,
-      timestamp INTEGER NOT NULL,
-      data BLOB NOT NULL,
-      FOREIGN KEY(feedPrivateId) REFERENCES feeds(feedPrivateId)
-    )`;
+        insertionId INTEGER PRIMARY KEY AUTOINCREMENT,
+        feedPrivateId INTEGER NOT NULL,
+        position INTEGER,
+        sequence INTEGER NOT NULL,
+        actorId TEXT NOT NULL,
+        predSequence INTEGER,
+        predActorId TEXT,
+        timestamp INTEGER NOT NULL,
+        data BLOB NOT NULL,
+        FOREIGN KEY(feedPrivateId) REFERENCES feeds(feedPrivateId)
+      )`;
     yield* sql`CREATE UNIQUE INDEX IF NOT EXISTS idx_blocks_feedPrivateId_position ON blocks(feedPrivateId, position)`;
     yield* sql`CREATE UNIQUE INDEX IF NOT EXISTS idx_blocks_feedPrivateId_sequence_actorId ON blocks(feedPrivateId, sequence, actorId)`;
 
     // Subscriptions Table
     yield* sql`CREATE TABLE IF NOT EXISTS subscriptions (
-        subscriptionId TEXT PRIMARY KEY,
-        expiresAt INTEGER NOT NULL,
-        feedPrivateIds TEXT NOT NULL -- JSON array
-    )`;
+          subscriptionId TEXT PRIMARY KEY,
+          expiresAt INTEGER NOT NULL,
+          feedPrivateIds TEXT NOT NULL -- JSON array
+      )`;
 
     // Cursor Tokens Table
     yield* sql`CREATE TABLE IF NOT EXISTS cursor_tokens (
-        spaceId TEXT PRIMARY KEY,
-        token TEXT NOT NULL
-    )`;
+          spaceId TEXT PRIMARY KEY,
+          token TEXT NOT NULL
+      )`;
   });
 
   // Internal Logic

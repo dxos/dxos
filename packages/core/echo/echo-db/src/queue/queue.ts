@@ -44,9 +44,11 @@ export class QueueImpl<T extends Entity.Unknown = Entity.Unknown> implements Que
       TRACE_QUEUE_LOAD &&
         log.info('queue refresh begin', { currentObjects: this._objects.length, refreshId: thisRefreshId });
       const { objects } = await this._service.queryQueue({
-        subspaceTag: this._subspaceTag,
-        spaceId: this._spaceId,
-        query: { queueId: this._queueId },
+        query: {
+          queuesNamespace: this._subspaceTag,
+          spaceId: this._spaceId,
+          queueIds: [this._queueId],
+        },
       });
       TRACE_QUEUE_LOAD && log.info('items fetched', { refreshId: thisRefreshId, count: objects?.length ?? 0 });
       if (thisRefreshId !== this._refreshId) {
@@ -252,9 +254,10 @@ export class QueueImpl<T extends Entity.Unknown = Entity.Unknown> implements Que
 
   async fetchObjectsJSON(): Promise<ObjectJSON[]> {
     const { objects } = await this._service.queryQueue({
-      subspaceTag: this._subspaceTag,
-      spaceId: this._spaceId,
-      query: { queueId: this._queueId },
+      query: {
+        spaceId: this._spaceId,
+        queueIds: [this._queueId],
+      },
     });
     return objects as ObjectJSON[];
   }

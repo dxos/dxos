@@ -13,6 +13,7 @@ import type {
   QueueQueryResult,
   QueueService,
 } from '@dxos/protocols/proto/dxos/client/services';
+import { invariant } from '@dxos/invariant';
 import { ComplexMap } from '@dxos/util';
 
 /**
@@ -22,7 +23,12 @@ export class QueueServiceImpl implements QueueService {
   constructor(private readonly _client: EdgeHttpClient) {}
 
   async queryQueue(request: QueryQueueRequest): Promise<QueueQueryResult> {
-    const result = await this._client.queryQueue(request.subspaceTag!, request.spaceId as SpaceId, request.query!);
+    invariant(request.query?.queuesNamespace);
+    const result = await this._client.queryQueue(
+      request.query.queuesNamespace,
+      request.query.spaceId as SpaceId,
+      request.query,
+    );
     return result as any as QueueQueryResult;
   }
 
@@ -54,8 +60,10 @@ export class MockQueueService implements QueueService {
   );
 
   async queryQueue(request: QueryQueueRequest): Promise<QueueQueryResult> {
-    const { subspaceTag, spaceId, query } = request;
-    const objects = this._queues.get([subspaceTag!, spaceId as SpaceId, query!.queueId as ObjectId]) ?? [];
+    const { query } = request;
+    const objects =
+      this._queues.get([request.query.queuesNamespace!, query!.spaceId as SpaceId, query!.queueIds![0] as ObjectId]) ??
+      [];
     return {
       objects: objects as any,
       nextCursor: '',

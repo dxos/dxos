@@ -9,23 +9,25 @@ import "google/protobuf/empty.proto";
 message QueueQuery {
   string space_id = 1;
 
+  optional string queues_namespace = 2;
+
   /// Queries the whole space if missing.
-  repeated string queue_ids = 2;
+  repeated string queue_ids = 3;
 
   /// Filter items after this cursor. Exclusive.
-  optional string after = 3;
+  optional string after = 4;
 
   /// Filter items before this cursor. Exclusive.
-  optional string before = 4;
+  optional string before = 5;
 
   /// Filter items after this position. Inclusive.
-  optional int64 begin_position = 5;
+  optional int64 begin_position = 6;
 
   /// Filter items before this position. Exclusive.
-  optional int64 end_position = 6;
+  optional int64 end_position = 7;
 
-  optional int32 limit = 7;
-  optional bool reverse = 8;
+  optional int32 limit = 8;
+  optional bool reverse = 9;
 
   // TODO(dmaretskyi): Remove this field -- raw queues dont index object IDs anymore.
   repeated string object_ids = 100;
@@ -41,9 +43,7 @@ message QueueQueryResult {
 }
 
 message QueryQueueRequest {
-  string subspace_tag = 1;
-  string space_id = 2;
-  QueueQuery query = 3;
+  QueueQuery query = 1;
 }
 
 message InsertIntoQueueRequest {

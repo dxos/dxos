@@ -42,9 +42,7 @@ describe('LocalQueueServiceImpl', () => {
 
       const result = yield* Effect.promise(() =>
         service.queryQueue({
-          subspaceTag: 'default',
-          spaceId,
-          query: { queueId },
+          query: { spaceId, queueIds: [queueId] },
         }),
       );
       expect(result.objects?.[0]).toMatchObject(object1);
@@ -84,9 +82,7 @@ describe('LocalQueueServiceImpl', () => {
 
       const result = yield* Effect.promise(() =>
         service.queryQueue({
-          subspaceTag: 'default',
-          spaceId,
-          query: { queueId },
+          query: { spaceId, queueIds: [queueId] },
         }),
       );
       expect(result.objects).toHaveLength(2);
@@ -118,9 +114,7 @@ describe('LocalQueueServiceImpl', () => {
       // Query first 5
       const page1 = yield* Effect.promise(() =>
         service.queryQueue({
-          subspaceTag: 'default',
-          spaceId,
-          query: { queueId, limit: 5 },
+          query: { spaceId, queueIds: [queueId], limit: 5 },
         }),
       );
       expect(page1.objects).toHaveLength(5);
@@ -131,10 +125,9 @@ describe('LocalQueueServiceImpl', () => {
       // Query next 5
       const page2 = yield* Effect.promise(() =>
         service.queryQueue({
-          subspaceTag: 'default',
-          spaceId,
           query: {
-            queueId,
+            spaceId,
+            queueIds: [queueId],
             limit: 5,
             after: page1.nextCursor!,
           },

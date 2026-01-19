@@ -52,7 +52,7 @@ describe.skip('Feed Sync V2 (RPC)', () => {
             data: new Uint8Array([2]),
           },
         ];
-        yield* feed.append({ requestId: 'req-0', blocks, spaceId });
+        yield* feed.append({ requestId: 'req-0', blocks, spaceId, namespace: 'data', feedId });
       }),
     );
 
@@ -72,7 +72,7 @@ describe.skip('Feed Sync V2 (RPC)', () => {
     const blocks = await server.run(
       Effect.gen(function* () {
         const feed = new FeedStore({ localActorId: 'server', assignPositions: true }); // Updated class usage
-        const res = yield* feed.query({ requestId: 'req-query', query: { subscriptionId: subId }, cursor: 0 });
+        const res = yield* feed.query({ requestId: 'req-query', query: { subscriptionId: subId }, position: 0 });
         return res.blocks;
       }),
     );
@@ -85,13 +85,13 @@ describe.skip('Feed Sync V2 (RPC)', () => {
       Effect.gen(function* () {
         const feed = new FeedStore({ localActorId: 'client', assignPositions: true }); // Updated class usage
         // Client appends them.
-        yield* feed.append({ requestId: 'req-push', blocks, spaceId });
+        yield* feed.append({ requestId: 'req-push', blocks, spaceId, namespace: 'data', feedId });
 
         // Verify
         const myBlocks = yield* feed.query({
           requestId: 'req-verify',
           query: { feedIds: [feedId] },
-          cursor: 0,
+          position: 0,
           spaceId,
         });
         expect(myBlocks.blocks.length).toBe(2);

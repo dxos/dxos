@@ -33,16 +33,17 @@ export class LocalQueueServiceImpl implements QueueService {
   }
 
   queryQueue(request: QueryQueueRequest): Promise<QueueQueryResult> {
-    const { subspaceTag, spaceId, query } = request;
+    const { query } = request;
+    invariant(query, 'query is required');
+    const { spaceId, queueIds } = query;
     return RuntimeProvider.runPromise(this.#runtime)(
       Effect.gen(this, function* () {
-        invariant(query, 'query is required');
         const cursor = query.after ? parseInt(query.after) : -1;
         const result = yield* this.#feedStore.query({
           requestId: crypto.randomUUID(),
-          spaceId: spaceId,
-          query: { feedIds: [query.queueId!.toString()] },
-          cursor,
+          spaceId: spaceId!,
+          query: { feedIds: queueIds ?? [] },
+          position: cursor,
           limit: query.limit,
         });
 

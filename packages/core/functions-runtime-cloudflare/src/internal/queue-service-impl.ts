@@ -3,6 +3,7 @@
 //
 
 import { NotImplementedError, RuntimeServiceError } from '@dxos/errors';
+import { invariant } from '@dxos/invariant';
 import { type QueueService as QueueServiceProto } from '@dxos/protocols';
 import type {
   DeleteFromQueueRequest,
@@ -18,12 +19,15 @@ export class QueueServiceImpl implements QueueServiceProto {
     private readonly _queueService: EdgeFunctionEnv.QueueService,
   ) {}
   async queryQueue(request: QueryQueueRequest): Promise<QueryResult> {
-    const { subspaceTag, spaceId, query } = request;
-    const { queueId, ...filter } = query!;
+    const { query } = request;
+    const { queueIds, ...filter } = query!;
+    const spaceId = query!.spaceId;
+    const queueId = queueIds?.[0];
+    invariant(request.query.queuesNamespace);
     try {
       using result = await this._queueService.query(
         this._ctx,
-        `dxn:queue:${subspaceTag}:${spaceId}:${queueId}`,
+        `dxn:queue:${request.query.queuesNamespace}:${spaceId}:${queueId}`,
         filter,
       );
       return {
@@ -36,7 +40,7 @@ export class QueueServiceImpl implements QueueServiceProto {
     } catch (error) {
       throw RuntimeServiceError.wrap({
         message: 'Queue query failed.',
-        context: { subspaceTag, spaceId, queueId },
+        context: { subspaceTag: request.query.queuesNamespace, spaceId, queueId },
         ifTypeDiffers: true,
       })(error);
     }
