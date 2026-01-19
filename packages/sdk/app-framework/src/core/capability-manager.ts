@@ -11,13 +11,10 @@ import { log } from '@dxos/log';
 
 import type * as Capability from './capability';
 
-// NOTE: This is implemented as a class to prevent it from being proxied by PluginManager state.
-class CapabilityImpl<T> {
-  constructor(
-    readonly moduleId: string,
-    readonly implementation: T,
-  ) {}
-}
+type CapabilityEntry<T> = {
+  moduleId: string;
+  implementation: T;
+};
 
 /**
  * Options for creating a capability manager.
@@ -70,13 +67,13 @@ export interface CapabilityManager {
 class CapabilityManagerImpl implements CapabilityManager {
   private readonly _registry: Registry.Registry;
 
-  private readonly _capabilityImpls = Atom.family<string, Atom.Writable<CapabilityImpl<unknown>[]>>(() => {
-    return Atom.make<CapabilityImpl<unknown>[]>([]).pipe(Atom.keepAlive);
+  private readonly _capabilityEntries = Atom.family<string, Atom.Writable<CapabilityEntry<unknown>[]>>(() => {
+    return Atom.make<CapabilityEntry<unknown>[]>([]).pipe(Atom.keepAlive);
   });
 
   readonly _capabilities = Atom.family<string, Atom.Atom<unknown[]>>((id: string) => {
     return Atom.make((get) => {
-      const current = get(this._capabilityImpls(id));
+      const current = get(this._capabilityEntries(id));
       return current.map((c) => c.implementation);
     });
   });
@@ -102,15 +99,15 @@ class CapabilityManagerImpl implements CapabilityManager {
     interface: Capability.InterfaceDef<T>;
     implementation: T;
   }): void {
-    const current = this._registry.get(this._capabilityImpls(interfaceDef.identifier));
-    const capability = new CapabilityImpl(moduleId, implementation);
+    const current = this._registry.get(this._capabilityEntries(interfaceDef.identifier));
     const isDuplicate = current.some((c) => c.moduleId === moduleId && c.implementation === implementation);
     if (isDuplicate) {
       log('capability already contributed, skipping', { id: interfaceDef.identifier, moduleId });
       return;
     }
 
-    this._registry.set(this._capabilityImpls(interfaceDef.identifier), [...current, capability]);
+    const entry: CapabilityEntry<T> = { moduleId, implementation };
+    this._registry.set(this._capabilityEntries(interfaceDef.identifier), [...current, entry]);
     log('capability contributed', {
       id: interfaceDef.identifier,
       moduleId,
@@ -119,14 +116,14 @@ class CapabilityManagerImpl implements CapabilityManager {
   }
 
   remove<T>(interfaceDef: Capability.InterfaceDef<T>, implementation: T): void {
-    const current = this._registry.get(this._capabilityImpls(interfaceDef.identifier));
+    const current = this._registry.get(this._capabilityEntries(interfaceDef.identifier));
     if (current.length === 0) {
       return;
     }
 
     const next = current.filter((c) => c.implementation !== implementation);
     if (next.length !== current.length) {
-      this._registry.set(this._capabilityImpls(interfaceDef.identifier), next);
+      this._registry.set(this._capabilityEntries(interfaceDef.identifier), next);
       log('capability removed', { id: interfaceDef.identifier, count: current.length });
     } else {
       log.warn('capability not removed', { id: interfaceDef.identifier });
