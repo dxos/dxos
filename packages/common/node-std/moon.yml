@@ -6,19 +6,9 @@ workspace:
   inheritedTasks:
     exclude:
       - lint
-      - compile
 tasks:
-  compile-browser:
-    command: 'pnpm exec dx-compile'
-    deps:
-      - dx-compile:compile
-      - ^:compile
-    inputs:
-      - '@group(production)'
-    outputs:
-      - dist/lib-browser/
+  compile:
     args:
-      - '--outputPath=dist/lib-browser'
       - '--entryPoint=src/_/config.js'
       - '--entryPoint=src/assert.js'
       - '--entryPoint=src/buffer.js'
@@ -78,42 +68,3 @@ tasks:
       - '--bundlePackage=util'
       - '--bundlePackage=util-deprecate'
       - '--bundlePackage=which-typed-array'
-  compile-node:
-    command: 'pnpm exec dx-compile'
-    deps:
-      - dx-compile:compile
-      - ^:compile
-    inputs:
-      - '@group(production)'
-    outputs:
-      - dist/lib-node/
-    args:
-      - '--outputPath=dist/lib-node'
-      - '--entryPoint=src/node/_/config.js'
-      - '--entryPoint=src/node/assert.js'
-      - '--entryPoint=src/node/buffer.js'
-      - '--entryPoint=src/node/crypto.js'
-      - '--entryPoint=src/node/events.js'
-      - '--entryPoint=src/node/fs.js'
-      - '--entryPoint=src/node/fs/promises.js'
-      - '--entryPoint=src/node/globals.js'
-      - '--entryPoint=src/node/inject-globals.js'
-      - '--entryPoint=src/node/path.js'
-      - '--entryPoint=src/node/process.js'
-      - '--entryPoint=src/node/stream.js'
-      - '--entryPoint=src/node/util.js'
-      - '--platform=node'
-  compile:
-    command: |
-      rm -rf dist/lib && mkdir -p dist/lib &&
-      mv dist/lib-browser/browser dist/lib/browser &&
-      mv dist/lib-node/node-esm dist/lib/node-esm &&
-      rm -rf dist/lib-browser dist/lib-node
-    deps:
-      - compile-browser
-      - compile-node
-    inputs:
-      - 'dist/lib-browser/**/*'
-      - 'dist/lib-node/**/*'
-    outputs:
-      - dist/lib/

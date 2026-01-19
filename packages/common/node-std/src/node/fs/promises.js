@@ -2,34 +2,4 @@
 // Copyright 2023 DXOS.org
 //
 
-export {
-  access,
-  copyFile,
-  open,
-  rename,
-  truncate,
-  rmdir,
-  rm,
-  mkdir,
-  readdir,
-  readlink,
-  symlink,
-  lstat,
-  stat,
-  link,
-  unlink,
-  chmod,
-  lchmod,
-  lchown,
-  lutimes,
-  chown,
-  utimes,
-  realpath,
-  mkdtemp,
-  writeFile,
-  appendFile,
-  readFile,
-  opendir,
-  watch,
-  cp,
-} from 'node:fs/promises';
+export * from 'node:fs/promises';

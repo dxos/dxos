@@ -2,6 +2,5 @@
 // Copyright 2023 DXOS.org
 //
 
-import assert from 'node:assert';
-
-export default assert;
+export * from 'node:assert';
+export { default } from 'node:assert';
