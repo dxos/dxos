@@ -2,6 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
+export * from './change-impl';
 export * from './clone';
 export * from './doc-accessor';
 export {
