@@ -10,20 +10,57 @@
   "type": "module",
   "exports": {
     "./_/config": {
-      "import": "./dist/lib/browser/_/config.mjs",
-      "require": "./dist/lib/node-esm/_/config.mjs"
+      "browser": "./dist/lib/browser/_/config.mjs",
+      "node": "./dist/lib/node-esm/_/config.mjs"
     },
-    "./assert": "./dist/lib/browser/assert.mjs",
-    "./buffer": "./dist/lib/browser/buffer.mjs",
-    "./crypto": "./dist/lib/browser/crypto.mjs",
-    "./events": "./dist/lib/browser/events.mjs",
-    "./fs": "./dist/lib/browser/fs.mjs",
-    "./fs/promises": "./dist/lib/browser/fs/promises.mjs",
-    "./globals": "./dist/lib/browser/globals.mjs",
-    "./inject-globals": "./dist/lib/browser/inject-globals.mjs",
-    "./path": "./dist/lib/browser/path.mjs",
-    "./stream": "./dist/lib/browser/stream.mjs",
-    "./util": "./dist/lib/browser/util.mjs"
+    "./assert": {
+      "browser": "./dist/lib/browser/assert.mjs",
+      "node": "./dist/lib/node-esm/assert.mjs"
+    },
+    "./buffer": {
+      "browser": "./dist/lib/browser/buffer.mjs",
+      "node": "./dist/lib/node-esm/buffer.mjs"
+    },
+    "./crypto": {
+      "browser": "./dist/lib/browser/crypto.mjs",
+      "node": "./dist/lib/node-esm/crypto.mjs"
+    },
+    "./events": {
+      "browser": "./dist/lib/browser/events.mjs",
+      "node": "./dist/lib/node-esm/events.mjs"
+    },
+    "./fs": {
+      "browser": "./dist/lib/browser/fs.mjs",
+      "node": "./dist/lib/node-esm/fs.mjs"
+    },
+    "./fs/promises": {
+      "browser": "./dist/lib/browser/fs/promises.mjs",
+      "node": "./dist/lib/node-esm/fs/promises.mjs"
+    },
+    "./globals": {
+      "browser": "./dist/lib/browser/globals.mjs",
+      "node": "./dist/lib/node-esm/globals.mjs"
+    },
+    "./inject-globals": {
+      "browser": "./dist/lib/browser/inject-globals.mjs",
+      "node": "./dist/lib/node-esm/inject-globals.mjs"
+    },
+    "./path": {
+      "browser": "./dist/lib/browser/path.mjs",
+      "node": "./dist/lib/node-esm/path.mjs"
+    },
+    "./process": {
+      "browser": "./dist/lib/browser/process.mjs",
+      "node": "./dist/lib/node-esm/process.mjs"
+    },
+    "./stream": {
+      "browser": "./dist/lib/browser/stream.mjs",
+      "node": "./dist/lib/node-esm/stream.mjs"
+    },
+    "./util": {
+      "browser": "./dist/lib/browser/util.mjs",
+      "node": "./dist/lib/node-esm/util.mjs"
+    }
   },
   "typesVersions": {
     "*": {
