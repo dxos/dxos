@@ -256,8 +256,7 @@ export default Capability.makeModule(
         handler: () =>
           Effect.gen(function* () {
             const state = yield* Capability.get(DeckCapabilities.MutableDeckState);
-            const { invoke } = yield* Capability.get(Common.Capability.OperationInvoker);
-            yield* invoke(Common.LayoutOperation.SwitchWorkspace, { subject: state.previousDeck });
+            yield* Operation.invoke(Common.LayoutOperation.SwitchWorkspace, { subject: state.previousDeck });
           }),
       }),
 
@@ -271,12 +270,11 @@ export default Capability.makeModule(
             const { graph } = yield* Capability.get(Common.Capability.AppGraph);
             const state = yield* Capability.get(DeckCapabilities.MutableDeckState);
             const attention = yield* Capability.get(AttentionCapabilities.Attention);
-            const { invoke } = yield* Capability.get(Common.Capability.OperationInvoker);
             const settingsStores = yield* Capability.getAll(Common.Capability.SettingsStore);
             const settings = settingsStores[0]?.getStore<DeckSettingsProps>(meta.id)?.value;
 
             if (input.workspace && state.activeDeck !== input.workspace) {
-              yield* invoke(Common.LayoutOperation.SwitchWorkspace, { subject: input.workspace });
+              yield* Operation.invoke(Common.LayoutOperation.SwitchWorkspace, { subject: input.workspace });
             }
 
             const previouslyOpenIds = new Set<string>(state.deck.solo ? [state.deck.solo] : state.deck.active);
@@ -349,7 +347,6 @@ export default Capability.makeModule(
             const state = yield* Capability.get(DeckCapabilities.MutableDeckState);
             const attention = yield* Capability.get(AttentionCapabilities.Attention);
             const { graph } = yield* Capability.get(Common.Capability.AppGraph);
-            const { invoke } = yield* Capability.get(Common.Capability.OperationInvoker);
 
             // Collect layout operations to run after batch.
             let soloOperation:
@@ -385,13 +382,13 @@ export default Capability.makeModule(
 
             // Run collected solo operations.
             if (soloOperation?.type === 'solo') {
-              yield* invoke(Common.LayoutOperation.SetLayoutMode, {
+              yield* Operation.invoke(Common.LayoutOperation.SetLayoutMode, {
                 subject: soloOperation.entryId,
                 mode: soloOperation.mode,
               });
             } else if (soloOperation?.type === 'unsolo') {
-              yield* invoke(Common.LayoutOperation.SetLayoutMode, { mode: 'deck' });
-              yield* invoke(Common.LayoutOperation.Open, { subject: [soloOperation.entryId] });
+              yield* Operation.invoke(Common.LayoutOperation.SetLayoutMode, { mode: 'deck' });
+              yield* Operation.invoke(Common.LayoutOperation.Open, { subject: [soloOperation.entryId] });
             }
 
             if (input.type === 'companion') {
@@ -407,7 +404,7 @@ export default Capability.makeModule(
 
               if (Option.isSome(companion)) {
                 // TODO(wittjosiah): This should remember the previously selected companion.
-                yield* invoke(DeckOperation.ChangeCompanion, { primary: input.id, companion: companion.value.id });
+                yield* Operation.invoke(DeckOperation.ChangeCompanion, { primary: input.id, companion: companion.value.id });
               }
             }
           }),
@@ -444,7 +441,6 @@ export default Capability.makeModule(
           Effect.gen(function* () {
             const state = yield* Capability.get(DeckCapabilities.MutableDeckState);
             const attention = yield* Capability.get(AttentionCapabilities.Attention);
-            const { invoke } = yield* Capability.get(Common.Capability.OperationInvoker);
 
             const active = state.deck.solo ? [state.deck.solo] : state.deck.active;
             const next = input.subject.reduce((acc, id) => closeEntry(acc, id), active);
@@ -453,7 +449,7 @@ export default Capability.makeModule(
             // Clear companions for closed entries.
             for (const id of input.subject) {
               if (state.deck.activeCompanions && id in state.deck.activeCompanions) {
-                yield* invoke(DeckOperation.ChangeCompanion, { primary: id, companion: null });
+                yield* Operation.invoke(DeckOperation.ChangeCompanion, { primary: id, companion: null });
               }
             }
 
