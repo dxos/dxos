@@ -1,5 +1,8 @@
-import { SpaceId } from '@dxos/keys';
-import { Schema } from 'effect';
+//
+// Copyright 2026 DXOS.org
+//
+
+import * as Schema from 'effect/Schema';
 
 export const Block = Schema.Struct({
   actorId: Schema.String,

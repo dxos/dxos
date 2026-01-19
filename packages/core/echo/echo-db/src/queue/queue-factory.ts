@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Resource, type Context } from '@dxos/context';
+import { type Context, Resource } from '@dxos/context';
 import { type Entity, type Hypergraph } from '@dxos/echo';
 import { assertArgument, assertState } from '@dxos/invariant';
 import { DXN, ObjectId, type QueueSubspaceTag, QueueSubspaceTags, type SpaceId } from '@dxos/keys';

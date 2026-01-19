@@ -1,12 +1,17 @@
+//
+// Copyright 2026 DXOS.org
+//
+
+import type * as SqlClient from '@effect/sql/SqlClient';
 import * as SqliteClient from '@effect/sql-sqlite-node/SqliteClient';
 import { describe, expect, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
-import * as Layer from 'effect/Layer';
-import { FeedStore } from '@dxos/feed';
+
 import { RuntimeProvider } from '@dxos/effect';
-import { SpaceId, ObjectId } from '@dxos/keys';
+import { FeedStore } from '@dxos/feed';
+import { ObjectId, SpaceId } from '@dxos/keys';
+
 import { LocalQueueServiceImpl } from './local-queue-service';
-import type { SqlClient } from '@effect/sql';
 
 const TestLayer = SqliteClient.layer({
   filename: ':memory:',

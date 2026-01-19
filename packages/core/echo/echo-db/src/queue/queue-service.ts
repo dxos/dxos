@@ -7,9 +7,9 @@ import type { EdgeHttpClient } from '@dxos/edge-client';
 import type { ObjectId, SpaceId } from '@dxos/keys';
 import { KEY_QUEUE_POSITION } from '@dxos/protocols';
 import type {
-  QueryQueueRequest,
-  InsertIntoQueueRequest,
   DeleteFromQueueRequest,
+  InsertIntoQueueRequest,
+  QueryQueueRequest,
   QueueQueryResult,
   QueueService,
 } from '@dxos/protocols/proto/dxos/client/services';

@@ -2,6 +2,9 @@
 // Copyright 2025 DXOS.org
 //
 
+import * as Reactivity from '@effect/experimental/Reactivity';
+import * as Layer from 'effect/Layer';
+import * as ManagedRuntime from 'effect/ManagedRuntime';
 import { afterEach, beforeEach, describe, expect, onTestFinished, test } from 'vitest';
 
 import { Event } from '@dxos/async';
@@ -9,13 +12,11 @@ import { Filter, Obj, Query, type Ref, Relation, Type } from '@dxos/echo';
 import { TestSchema } from '@dxos/echo/testing';
 import { DXN, SpaceId } from '@dxos/keys';
 import { KEY_QUEUE_POSITION } from '@dxos/protocols';
+import { layerMemory } from '@dxos/sql-sqlite/platform';
 
 import { type Queue } from '../queue';
 
 import { EchoTestBuilder } from './echo-test-builder';
-import { Layer, ManagedRuntime } from 'effect';
-import { layerMemory } from '@dxos/sql-sqlite/platform';
-import { Reactivity } from '@effect/experimental';
 
 describe('queues', () => {
   let builder: EchoTestBuilder;

@@ -1,18 +1,20 @@
+//
+// Copyright 2026 DXOS.org
+//
+
 import * as SqlClient from '@effect/sql/SqlClient';
 import type * as SqlError from '@effect/sql/SqlError';
 import * as Effect from 'effect/Effect';
-import { SpaceId } from '@dxos/keys';
+
 import {
-  Block,
-  QueryRequest,
-  QueryResponse,
-  SubscribeRequest,
-  SubscribeResponse,
-  AppendRequest,
-  AppendResponse,
+  type AppendRequest,
+  type AppendResponse,
+  type Block,
+  type QueryRequest,
+  type QueryResponse,
+  type SubscribeRequest,
+  type SubscribeResponse,
 } from './protocol';
-import { log } from '@dxos/log';
-import { bufferToArray } from '@dxos/util';
 
 export interface FeedStoreOptions {
   localActorId: string;
@@ -88,7 +90,7 @@ export class FeedStore {
       Effect.gen(this, function* () {
         const sql = yield* SqlClient.SqlClient;
         let feedIds: string[] = [];
-        let cursor: number = request.cursor ?? -1;
+        const cursor: number = request.cursor ?? -1;
 
         // Resolve Subscriptions or FeedIds
         if ('subscriptionId' in request.query) {

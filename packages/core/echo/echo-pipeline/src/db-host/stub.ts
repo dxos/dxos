@@ -3,9 +3,9 @@
 //
 
 import type {
-  QueryQueueRequest,
-  InsertIntoQueueRequest,
   DeleteFromQueueRequest,
+  InsertIntoQueueRequest,
+  QueryQueueRequest,
   QueueQueryResult,
   QueueService,
 } from '@dxos/protocols/proto/dxos/client/services';

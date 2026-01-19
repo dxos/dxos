@@ -3,6 +3,7 @@
 //
 
 import { type Event } from '@dxos/async';
+import { type QueueService } from '@dxos/protocols';
 import { schema } from '@dxos/protocols/proto';
 import type {
   ContactsService,
@@ -22,7 +23,7 @@ import type { AppService, ShellService, WorkerService } from '@dxos/protocols/pr
 import type { BridgeService } from '@dxos/protocols/proto/dxos/mesh/bridge';
 import type { TracingService } from '@dxos/protocols/proto/dxos/tracing';
 import { type ServiceBundle, createServiceBundle } from '@dxos/rpc';
-import { type QueueService } from '@dxos/protocols';
+
 export { type QueueService } from '@dxos/protocols';
 
 //

@@ -10,15 +10,16 @@ import { Context, LifecycleState, Resource } from '@dxos/context';
 import { todo } from '@dxos/debug';
 import { type DatabaseDirectory, SpaceDocVersion, createIdFromSpaceKey } from '@dxos/echo-protocol';
 import { RuntimeProvider } from '@dxos/effect';
+import { FeedStore } from '@dxos/feed';
 import { IndexEngine } from '@dxos/index-core';
 import { IndexMetadataStore, IndexStore, Indexer } from '@dxos/indexing';
 import { invariant } from '@dxos/invariant';
 import { type PublicKey, type SpaceId } from '@dxos/keys';
 import { type LevelDB } from '@dxos/kv-store';
 import { log } from '@dxos/log';
+import type { QueueService } from '@dxos/protocols';
 import { IndexKind } from '@dxos/protocols/proto/dxos/echo/indexing';
 import { trace } from '@dxos/tracing';
-import { FeedStore, type Block } from '@dxos/feed';
 
 import {
   AutomergeHost,
@@ -36,10 +37,9 @@ import { AutomergeDataSource } from './automerge-data-source';
 import { DataServiceImpl } from './data-service';
 import { type DatabaseRoot } from './database-root';
 import { createSelectedDocumentsIterator } from './documents-iterator';
+import { LocalQueueServiceImpl } from './local-queue-service';
 import { QueryServiceImpl } from './query-service';
 import { SpaceStateManager } from './space-state-manager';
-import type { QueueService } from '@dxos/protocols';
-import { LocalQueueServiceImpl } from './local-queue-service';
 import { QueueServiceStub } from './stub';
 
 export interface EchoHostIndexingConfig {

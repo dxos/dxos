@@ -1,10 +1,15 @@
+//
+// Copyright 2026 DXOS.org
+//
+
 import * as SqliteClient from '@effect/sql-sqlite-node/SqliteClient';
 import { describe, expect, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
-import { FeedStore } from './feed';
-import { Block } from './protocol';
+
 import { ObjectId, SpaceId } from '@dxos/keys';
-import { log } from '@dxos/log';
+
+import { FeedStore } from './feed';
+import { type Block } from './protocol';
 
 const TestLayer = SqliteClient.layer({
   filename: ':memory:',

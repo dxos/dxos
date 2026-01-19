@@ -2,24 +2,23 @@
 // Copyright 2025 DXOS.org
 //
 
+import type * as SqlClient from '@effect/sql/SqlClient';
+import * as Effect from 'effect/Effect';
+import * as Function from 'effect/Function';
+
+import { ATTR_META, type ObjectJSON } from '@dxos/echo/internal';
+import type { ForeignKey } from '@dxos/echo-protocol';
 import { RuntimeProvider } from '@dxos/effect';
-import { FeedStore, type Block } from '@dxos/feed';
-import type { ObjectId, SpaceId } from '@dxos/keys';
+import { type Block, type FeedStore } from '@dxos/feed';
+import { invariant } from '@dxos/invariant';
+import { KEY_QUEUE_POSITION } from '@dxos/protocols';
 import {
-  type QueryQueueRequest,
-  type InsertIntoQueueRequest,
   type DeleteFromQueueRequest,
+  type InsertIntoQueueRequest,
+  type QueryQueueRequest,
   type QueueQueryResult,
-  type QueueQuery,
   type QueueService,
 } from '@dxos/protocols/proto/dxos/client/services';
-import { invariant } from '@dxos/invariant';
-import type * as SqlClient from '@effect/sql/SqlClient';
-import { Effect, Function } from 'effect';
-import { log } from '@dxos/log';
-import { ATTR_META, type ObjectJSON } from '@dxos/echo/internal';
-import { KEY_QUEUE_POSITION } from '@dxos/protocols';
-import type { ForeignKey } from '@dxos/echo-protocol';
 
 /**
  * Writes queue data to a local FeedStore.

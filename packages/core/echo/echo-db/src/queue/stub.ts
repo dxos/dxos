@@ -2,11 +2,10 @@
 // Copyright 2025 DXOS.org
 //
 
-import type { ObjectId, SpaceId } from '@dxos/keys';
 import type {
-  QueryQueueRequest,
-  InsertIntoQueueRequest,
   DeleteFromQueueRequest,
+  InsertIntoQueueRequest,
+  QueryQueueRequest,
   QueueQueryResult,
   QueueService,
 } from '@dxos/protocols/proto/dxos/client/services';

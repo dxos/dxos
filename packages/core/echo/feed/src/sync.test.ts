@@ -1,11 +1,17 @@
+//
+// Copyright 2026 DXOS.org
+//
+
+import type * as SqlClient from '@effect/sql/SqlClient';
 import * as SqliteClient from '@effect/sql-sqlite-node/SqliteClient';
-import * as SqlClient from '@effect/sql/SqlClient';
 import { describe, expect, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 import * as ManagedRuntime from 'effect/ManagedRuntime';
-import { FeedStore } from './feed';
-import { Block } from './protocol';
+
 import { SpaceId } from '@dxos/keys';
+
+import { FeedStore } from './feed';
+import { type Block } from './protocol';
 
 describe.skip('Feed Sync V2 (RPC)', () => {
   const makePeer = () => {
