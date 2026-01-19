@@ -1,7 +1,7 @@
 # https://moonrepo.dev/docs/config/toolchain#node
 node:
   dedupeOnLockfileChange: false
-  packageManager: pnpm
+  packageManager: bun
 
   # TODO(wittjosiah): Doesn't seem to always produce stable package.json; conflicting with toolbox?
   addEnginesConstraint: false
