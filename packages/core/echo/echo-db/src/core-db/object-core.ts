@@ -12,10 +12,8 @@ import { inspectCustom } from '@dxos/debug';
 import { EntityKind, type ObjectMeta } from '@dxos/echo/internal';
 import {
   type DatabaseDirectory,
+  EncodedReference,
   type ObjectStructure,
-  Reference,
-  decodeReference,
-  encodeReference,
   isEncodedReference,
 } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
@@ -38,7 +36,7 @@ export const META_NAMESPACE = 'meta';
 const SYSTEM_NAMESPACE = 'system';
 
 export type ObjectCoreOptions = {
-  type?: Reference;
+  type?: DXN;
   meta?: ObjectMeta;
   immutable?: boolean;
 };
@@ -269,9 +267,8 @@ export class ObjectCore {
       return null;
     }
 
-    if (value instanceof Reference) {
-      // TODO(mykola): Delete this once we clean up Reference 'protobuf' protocols types.
-      return encodeReference(value);
+    if (value instanceof DXN) {
+      return EncodedReference.fromDXN(value);
     }
     if (Array.isArray(value)) {
       const values: any = value.map((val) => this.encode(val));
@@ -304,7 +301,7 @@ export class ObjectCore {
     }
     // For some reason references without `@type` are being stored in the document.
     if (isEncodedReference(value) || maybeReference(value)) {
-      return decodeReference(value);
+      return EncodedReference.toDXN(value);
     }
     if (typeof value === 'object') {
       return Object.fromEntries(Object.entries(value).map(([key, value]): [string, any] => [key, this.decode(value)]));
@@ -377,40 +374,40 @@ export class ObjectCore {
     this._setRaw([SYSTEM_NAMESPACE, 'kind'], kind);
   }
 
-  getSource(): Reference | undefined {
+  getSource(): DXN | undefined {
     const res = this.getDecoded([SYSTEM_NAMESPACE, 'source']);
-    invariant(res === undefined || res instanceof Reference);
+    invariant(res === undefined || res instanceof DXN);
     return res;
   }
 
   // TODO(dmaretskyi): Just set statically during construction.
-  setSource(ref: Reference): void {
-    this.setDecoded([SYSTEM_NAMESPACE, 'source'], ref);
+  setSource(dxn: DXN): void {
+    this.setDecoded([SYSTEM_NAMESPACE, 'source'], dxn);
   }
 
-  getTarget(): Reference | undefined {
+  getTarget(): DXN | undefined {
     const res = this.getDecoded([SYSTEM_NAMESPACE, 'target']);
-    invariant(res === undefined || res instanceof Reference);
+    invariant(res === undefined || res instanceof DXN);
     return res;
   }
 
   // TODO(dmaretskyi): Just set statically during construction.
-  setTarget(ref: Reference): void {
-    this.setDecoded([SYSTEM_NAMESPACE, 'target'], ref);
+  setTarget(dxn: DXN): void {
+    this.setDecoded([SYSTEM_NAMESPACE, 'target'], dxn);
   }
 
-  getType(): Reference | undefined {
+  getType(): DXN | undefined {
     const value = this.decode(this._getRaw([SYSTEM_NAMESPACE, 'type']));
     if (!value) {
       return undefined;
     }
 
-    invariant(value instanceof Reference);
+    invariant(value instanceof DXN);
     return value;
   }
 
-  setType(reference: Reference): void {
-    this._setRaw([SYSTEM_NAMESPACE, 'type'], this.encode(reference));
+  setType(dxn: DXN): void {
+    this._setRaw([SYSTEM_NAMESPACE, 'type'], this.encode(dxn));
   }
 
   getMeta(): ObjectMeta {
@@ -433,22 +430,22 @@ export class ObjectCore {
   /**
    * DXNs of objects that this object strongly depends on.
    * Strong references are loaded together with the source object.
-   * Currently this is the schema reference and the source and target for relations
+   * Currently this is the schema reference and the source and target for relations.
    */
   getStrongDependencies(): DXN[] {
     const res: DXN[] = [];
 
-    const type = this.getType()?.toDXN();
+    const type = this.getType();
     if (type && type.kind === DXN.kind.ECHO) {
       res.push(type);
     }
 
     if (this.getKind() === EntityKind.Relation) {
-      const source = this.getSource()?.toDXN();
+      const source = this.getSource();
       if (source) {
         res.push(source);
       }
-      const target = this.getTarget()?.toDXN();
+      const target = this.getTarget();
       if (target) {
         res.push(target);
       }

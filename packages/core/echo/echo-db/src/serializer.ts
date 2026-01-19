@@ -3,8 +3,9 @@
 //
 
 import { Filter, type Query } from '@dxos/echo';
-import { type EncodedReference, Reference, decodeReference, encodeReference } from '@dxos/echo-protocol';
+import { type EncodedReference, EncodedReference as EncodedRef } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
+import { DXN } from '@dxos/keys';
 import { deepMapValues, isNonNullable, stripUndefined } from '@dxos/util';
 
 import { ObjectCore } from './core-db';
@@ -73,14 +74,14 @@ export class Serializer {
     const core = getObjectCore(object);
 
     // TODO(dmaretskyi): Unify JSONinfication with echo-handler.
-    const typeRef = core.getType();
+    const typeDXN = core.getType();
 
     const data = serializeEchoData(core.getDecoded(['data']));
     const meta = serializeEchoData(core.getDecoded(['meta']));
 
     return stripUndefined({
       '@id': core.id,
-      '@type': typeRef ? encodeReference(typeRef) : undefined,
+      '@type': typeDXN ? EncodedRef.fromDXN(typeDXN) : undefined,
       ...data,
       '@version': Serializer.version,
       '@meta': meta,
@@ -93,7 +94,7 @@ export class Serializer {
     const dataProperties = Object.fromEntries(Object.entries(data).filter(([key]) => !key.startsWith('@')));
     const decodedData = deepMapValues(dataProperties, (value, recurse) => {
       if (isEncodedReferenceJSON(value)) {
-        return decodeReferenceJSON(value);
+        return decodeDXNFromJSON(value);
       } else {
         return recurse(value);
       }
@@ -105,7 +106,7 @@ export class Serializer {
     core.initNewObject(decodedData, {
       meta,
     });
-    core.setType(decodeReferenceJSON(type)!);
+    core.setType(decodeDXNFromJSON(type)!);
     if (deleted) {
       core.setDeleted(deleted);
     }
@@ -117,12 +118,12 @@ export class Serializer {
 const isEncodedReferenceJSON = (value: any): boolean =>
   typeof value === 'object' && value !== null && ('/' in value || value['@type'] === LEGACY_REFERENCE_TYPE_TAG);
 
-export const decodeReferenceJSON = (encoded?: EncodedReference | string): Reference | undefined => {
+export const decodeDXNFromJSON = (encoded?: EncodedReference | string): DXN | undefined => {
   if (typeof encoded === 'object' && encoded !== null && '/' in encoded) {
-    return decodeReference(encoded);
+    return EncodedRef.toDXN(encoded);
   } else if (typeof encoded === 'string') {
     // TODO(mykola): Never reached?
-    return Reference.fromLegacyTypename(encoded);
+    return DXN.fromTypename(encoded);
   }
 };
 
@@ -143,8 +144,8 @@ const chunkArray = <T>(arr: T[], chunkSize: number): T[][] => {
 
 const serializeEchoData = (data: any): any =>
   deepMapValues(data, (value, recurse) => {
-    if (value instanceof Reference) {
-      return encodeReference(value);
+    if (value instanceof DXN) {
+      return EncodedRef.fromDXN(value);
     }
     return recurse(value);
   });
