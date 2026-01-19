@@ -132,7 +132,7 @@ function PersonView({ person }: { person: Person }) {
 For SolidJS applications, use the hooks from `@dxos/echo-solid`:
 
 ```tsx
-import { useObject, useObjectUpdate } from '@dxos/echo-solid';
+import { useObject } from '@dxos/echo-solid';
 import { RegistryContext } from '@dxos/effect-atom-solid';
 import * as Registry from '@effect-atom/atom/Registry';
 
@@ -149,11 +149,11 @@ function App() {
 
 // In your components
 function PersonView(props: { person: Person }) {
-  // Subscribe to specific property (returns accessor)
-  const name = useObject(() => props.person, 'name');
+  // Subscribe to entire object (returns [accessor, updateCallback])
+  const [currentPerson, updatePerson] = useObject(() => props.person);
 
-  // Get update function for property
-  const updateName = useObjectUpdate(() => props.person, 'name');
+  // Subscribe to specific property (returns [accessor, updateCallback])
+  const [name, updateName] = useObject(() => props.person, 'name');
 
   return (
     <div>
@@ -161,6 +161,9 @@ function PersonView(props: { person: Person }) {
         value={name()}
         onInput={(e) => updateName(e.target.value)}
       />
+      <button onClick={() => updatePerson(p => { p.email = 'new@example.com'; })}>
+        Update Email
+      </button>
     </div>
   );
 }

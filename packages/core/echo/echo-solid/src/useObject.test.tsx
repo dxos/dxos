@@ -29,10 +29,10 @@ describe('useObject', () => {
     const registry = Registry.make();
     const Wrapper = createWrapper(registry);
 
-    let result: ReturnType<ReturnType<typeof useObject<typeof obj>>>;
+    let result: Entity.Entity<TestSchema.Person> | undefined;
     render(
       () => {
-        const value = useObject(obj);
+        const [value] = useObject(obj);
         result = value();
         return (<div>test</div>) as JSX.Element;
       },
@@ -53,7 +53,7 @@ describe('useObject', () => {
     let result: string | undefined;
     render(
       () => {
-        const value = useObject(obj, 'name');
+        const [value] = useObject(obj, 'name');
         result = value();
         return (<div>test</div>) as JSX.Element;
       },
@@ -73,7 +73,7 @@ describe('useObject', () => {
     let result: string | undefined;
     const { getByTestId } = render(
       () => {
-        const value = useObject(obj, 'name');
+        const [value] = useObject(obj, 'name');
         result = value();
         return (<div data-testid='value'>{value()}</div>) as JSX.Element;
       },
@@ -83,10 +83,10 @@ describe('useObject', () => {
     expect(result).toBe('Test');
     expect(getByTestId('value').textContent).toBe('Test');
 
-    // Update the property directly on the object
+    // Update the property directly on the object.
     obj.name = 'Updated';
 
-    // Wait for reactivity to update
+    // Wait for reactivity to update.
     await waitFor(() => {
       expect(getByTestId('value').textContent).toBe('Updated');
     });
@@ -99,10 +99,10 @@ describe('useObject', () => {
     const registry = Registry.make();
     const Wrapper = createWrapper(registry);
 
-    let result: ReturnType<ReturnType<typeof useObject<typeof obj>>>;
+    let result: Entity.Entity<TestSchema.Person> | undefined;
     render(
       () => {
-        const value = useObject(obj);
+        const [value] = useObject(obj);
         result = value();
         return (<div>test</div>) as JSX.Element;
       },
@@ -111,10 +111,10 @@ describe('useObject', () => {
 
     expect(result?.name).toBe('Test');
 
-    // Update a property on the object
+    // Update a property on the object.
     obj.name = 'Updated';
 
-    // Wait for reactivity to update
+    // Wait for reactivity to update.
     await waitFor(() => {
       expect(result?.name).toBe('Updated');
     });
@@ -130,7 +130,7 @@ describe('useObject', () => {
     let result: string | undefined;
     render(
       () => {
-        const value = useObject(obj, 'name');
+        const [value] = useObject(obj, 'name');
         result = value();
         return (<div>test</div>) as JSX.Element;
       },
@@ -139,10 +139,10 @@ describe('useObject', () => {
 
     expect(result).toBe('Test');
 
-    // Update a different property
+    // Update a different property.
     obj.email = 'newemail@example.com';
 
-    // Name should still be 'Test'
+    // Name should still be 'Test'.
     expect(result).toBe('Test');
   });
 
@@ -153,10 +153,10 @@ describe('useObject', () => {
     const registry = Registry.make();
     const Wrapper = createWrapper(registry);
 
-    let result: ReturnType<ReturnType<typeof useObject<typeof obj>>>;
+    let result: Entity.Entity<TestSchema.Person> | undefined;
     render(
       () => {
-        const value = useObject(() => obj);
+        const [value] = useObject(() => obj);
         result = value();
         return (<div>test</div>) as JSX.Element;
       },
@@ -178,7 +178,7 @@ describe('useObject', () => {
 
     render(
       () => {
-        const value = useObject(() => obj, 'name');
+        const [value] = useObject(() => obj, 'name');
         result = value();
         return (<div>test</div>) as JSX.Element;
       },
@@ -199,11 +199,11 @@ describe('useObject', () => {
     const Wrapper = createWrapper(registry);
 
     const [objSignal, setObjSignal] = createSignal(obj1);
-    let valueAccessor: ReturnType<typeof useObject<Entity.Entity<TestSchema.Person>, 'name'>> | undefined;
+    let valueAccessor: (() => string | undefined) | undefined;
 
     const { getByTestId } = render(
       () => {
-        const value = useObject(objSignal, 'name');
+        const [value] = useObject(objSignal, 'name');
         valueAccessor = value;
         return (<div data-testid='value'>{value()}</div>) as JSX.Element;
       },
@@ -213,10 +213,10 @@ describe('useObject', () => {
     expect(valueAccessor?.()).toBe('Test1');
     expect(getByTestId('value').textContent).toBe('Test1');
 
-    // Change the object via signal
+    // Change the object via signal.
     setObjSignal(() => obj2);
 
-    // Wait for reactivity to update
+    // Wait for reactivity to update.
     await waitFor(() => {
       expect(getByTestId('value').textContent).toBe('Test2');
     });
@@ -234,10 +234,10 @@ describe('useObject', () => {
     const Wrapper = createWrapper(registry);
 
     const [objSignal, setObjSignal] = createSignal(obj1);
-    let valueAccessor: ReturnType<typeof useObject<typeof obj1>> | undefined;
+    let valueAccessor: (() => Entity.Entity<TestSchema.Person> | undefined) | undefined;
     render(
       () => {
-        const value = useObject(objSignal);
+        const [value] = useObject(objSignal);
         valueAccessor = value;
         return (<div>test</div>) as JSX.Element;
       },
@@ -246,13 +246,104 @@ describe('useObject', () => {
 
     expect(valueAccessor?.()?.name).toBe('Test1');
 
-    // Change the object via signal
+    // Change the object via signal.
     setObjSignal(() => obj2);
 
-    // Wait for reactivity to update
+    // Wait for reactivity to update.
     await waitFor(() => {
       expect(valueAccessor?.()?.name).toBe('Test2');
     });
     expect(valueAccessor?.()?.username).toBe('test2');
+  });
+
+  test('update callback can update property value directly', async () => {
+    const obj = createObject(
+      Obj.make(TestSchema.Person, { name: 'Test', username: 'test', email: 'test@example.com' }),
+    );
+    const registry = Registry.make();
+    const Wrapper = createWrapper(registry);
+
+    let updateName: ((value: string | undefined) => void) | undefined;
+    const { getByTestId } = render(
+      () => {
+        const [value, update] = useObject(obj, 'name');
+        updateName = update;
+        return (<div data-testid='value'>{value()}</div>) as JSX.Element;
+      },
+      { wrapper: Wrapper },
+    );
+
+    expect(getByTestId('value').textContent).toBe('Test');
+
+    // Update using the callback.
+    updateName?.('Updated');
+
+    // Wait for reactivity to update.
+    await waitFor(() => {
+      expect(getByTestId('value').textContent).toBe('Updated');
+    });
+    expect(obj.name).toBe('Updated');
+  });
+
+  test('update callback can update property with updater function', async () => {
+    const obj = createObject(
+      Obj.make(TestSchema.Person, { name: 'Test', username: 'test', email: 'test@example.com' }),
+    );
+    const registry = Registry.make();
+    const Wrapper = createWrapper(registry);
+
+    let updateName: ((updater: (current: string | undefined) => string | undefined) => void) | undefined;
+    const { getByTestId } = render(
+      () => {
+        const [value, update] = useObject(obj, 'name');
+        updateName = update;
+        return (<div data-testid='value'>{value()}</div>) as JSX.Element;
+      },
+      { wrapper: Wrapper },
+    );
+
+    expect(getByTestId('value').textContent).toBe('Test');
+
+    // Update using an updater function.
+    updateName?.((current) => (current ?? '') + ' Updated');
+
+    // Wait for reactivity to update.
+    await waitFor(() => {
+      expect(getByTestId('value').textContent).toBe('Test Updated');
+    });
+    expect(obj.name).toBe('Test Updated');
+  });
+
+  test('update callback can mutate entire object', async () => {
+    const obj = createObject(
+      Obj.make(TestSchema.Person, { name: 'Test', username: 'test', email: 'test@example.com' }),
+    );
+    const registry = Registry.make();
+    const Wrapper = createWrapper(registry);
+
+    let updatePerson: ((updater: (p: Entity.Entity<TestSchema.Person>) => void) => void) | undefined;
+    const { getByTestId } = render(
+      () => {
+        const [value, update] = useObject(obj);
+        updatePerson = update;
+        return (<div data-testid='value'>{value()?.name}</div>) as JSX.Element;
+      },
+      { wrapper: Wrapper },
+    );
+
+    expect(getByTestId('value').textContent).toBe('Test');
+
+    // Update using the callback to mutate the object.
+    updatePerson?.((p) => {
+      p.name = 'Updated';
+      p.email = 'updated@example.com';
+    });
+
+    // Wait for reactivity to update.
+    await waitFor(() => {
+      expect(getByTestId('value').textContent).toBe('Updated');
+    });
+    expect(obj.name).toBe('Updated');
+    expect(obj.email).toBe('updated@example.com');
   });
 });

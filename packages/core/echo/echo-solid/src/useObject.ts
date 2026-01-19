@@ -9,6 +9,15 @@ import type { Entity } from '@dxos/echo';
 import { AtomObj } from '@dxos/echo-atom';
 import { type Registry, useRegistry } from '@dxos/effect-atom-solid';
 
+export interface ObjectUpdateCallback<T> {
+  (update: (obj: T) => void): void;
+  (update: (obj: T) => T): void;
+}
+
+export interface ObjectPropUpdateCallback<T> extends ObjectUpdateCallback<T> {
+  (newValue: T): void;
+}
+
 /**
  * Helper type to conditionally include undefined in return type only if input includes undefined.
  * Only adds undefined if T includes undefined AND R doesn't already include undefined.
@@ -21,59 +30,91 @@ type ConditionalUndefined<T, R> = [T] extends [Exclude<T, undefined>]
 
 /**
  * Subscribe to a specific property of an Echo object.
- * Returns the current property value and automatically updates when the property changes.
+ * Returns the current property value accessor and an update callback.
  *
  * @param obj - The Echo object to subscribe to (can be reactive)
  * @param property - Property key to subscribe to
- * @returns An accessor that returns the current property value
+ * @returns A tuple of [accessor, updateCallback]
  */
 export function useObject<T extends Entity.Unknown | undefined, K extends keyof Exclude<T, undefined>>(
   obj: MaybeAccessor<T>,
   property: K,
-): Accessor<ConditionalUndefined<T, Exclude<T, undefined>[K]>>;
+): [Accessor<ConditionalUndefined<T, Exclude<T, undefined>[K]>>, ObjectPropUpdateCallback<Exclude<T, undefined>[K]>];
 
 /**
  * Subscribe to an entire Echo object.
- * Returns the current object value and automatically updates when the object changes.
+ * Returns the current object value accessor and an update callback.
  *
  * @param obj - The Echo object to subscribe to (can be reactive)
- * @returns An accessor that returns the current object value
+ * @returns A tuple of [accessor, updateCallback]
  */
-export function useObject<T extends Entity.Unknown>(obj: MaybeAccessor<T>): Accessor<ConditionalUndefined<T, T>>;
+export function useObject<T extends Entity.Unknown>(
+  obj: MaybeAccessor<T>,
+): [Accessor<ConditionalUndefined<T, T>>, ObjectUpdateCallback<T>];
 export function useObject<T extends Entity.Unknown | undefined>(
   obj: MaybeAccessor<T>,
-): Accessor<ConditionalUndefined<T, Exclude<T, undefined>>>;
+): [Accessor<ConditionalUndefined<T, Exclude<T, undefined>>>, ObjectUpdateCallback<Exclude<T, undefined>>];
 
 /**
  * Subscribe to an Echo object (entire object or specific property).
- * Returns the current value and automatically updates when the object or property changes.
+ * Returns the current value accessor and an update callback.
  *
  * @param obj - The Echo object to subscribe to (can be reactive)
  * @param property - Optional property key to subscribe to a specific property
- * @returns An accessor that returns the current object value or property value
+ * @returns A tuple of [accessor, updateCallback]
  */
 export function useObject<T extends Entity.Unknown | undefined, K extends keyof Exclude<T, undefined>>(
   obj: MaybeAccessor<T>,
   property?: K,
 ):
-  | Accessor<ConditionalUndefined<T, Exclude<T, undefined>>>
-  | Accessor<ConditionalUndefined<T, Exclude<T, undefined>[K]>>;
+  | [Accessor<ConditionalUndefined<T, Exclude<T, undefined>>>, ObjectUpdateCallback<Exclude<T, undefined>>]
+  | [Accessor<ConditionalUndefined<T, Exclude<T, undefined>[K]>>, ObjectPropUpdateCallback<Exclude<T, undefined>[K]>];
 export function useObject<T extends Entity.Unknown, K extends keyof T>(
   obj: MaybeAccessor<T>,
   property?: K,
-): Accessor<ConditionalUndefined<T, T>> | Accessor<ConditionalUndefined<T, T[K]>>;
+):
+  | [Accessor<ConditionalUndefined<T, T>>, ObjectUpdateCallback<T>]
+  | [Accessor<ConditionalUndefined<T, T[K]>>, ObjectPropUpdateCallback<T[K]>];
 export function useObject<T extends Entity.Unknown | undefined, K extends keyof Exclude<T, undefined>>(
   obj: MaybeAccessor<T>,
   property?: K,
 ):
-  | Accessor<ConditionalUndefined<T, Exclude<T, undefined>>>
-  | Accessor<ConditionalUndefined<T, Exclude<T, undefined>[K]>> {
+  | [Accessor<ConditionalUndefined<T, Exclude<T, undefined>>>, ObjectUpdateCallback<Exclude<T, undefined>>]
+  | [Accessor<ConditionalUndefined<T, Exclude<T, undefined>[K]>>, ObjectPropUpdateCallback<Exclude<T, undefined>[K]>] {
   const registry = useRegistry();
 
+  // Memoize the resolved object to track changes.
+  const resolvedObj = createMemo(() => access(obj));
+
+  // Create a stable callback that handles both object and property updates.
+  const callback = (updateOrValue: unknown | ((obj: unknown) => unknown)) => {
+    const currentObj = resolvedObj();
+    if (!currentObj) {
+      return;
+    }
+
+    if (typeof updateOrValue === 'function') {
+      const returnValue = (updateOrValue as (obj: unknown) => unknown)(
+        property !== undefined ? (currentObj as any)[property] : currentObj,
+      );
+      if (returnValue !== undefined) {
+        if (property === undefined) {
+          throw new Error('Cannot re-assign the entire object');
+        }
+        (currentObj as any)[property] = returnValue;
+      }
+    } else {
+      if (property === undefined) {
+        throw new Error('Cannot re-assign the entire object');
+      }
+      (currentObj as any)[property] = updateOrValue;
+    }
+  };
+
   if (property !== undefined) {
-    return useObjectProperty(registry, obj, property);
+    return [useObjectProperty(registry, obj, property), callback as ObjectPropUpdateCallback<Exclude<T, undefined>[K]>];
   }
-  return useObjectValue(registry, obj);
+  return [useObjectValue(registry, obj), callback as ObjectUpdateCallback<Exclude<T, undefined>>];
 }
 
 /**
@@ -88,7 +129,9 @@ function useObjectValue<T extends Entity.Unknown | undefined>(
 
   // Store the current value in a signal.
   // Internally we use T | undefined for runtime safety, but return type is conditional.
-  const [value, setValue] = createSignal<T | undefined>(resolvedObj());
+  // Use { equals: false } because Echo objects are mutated in place, and we need to
+  // notify subscribers even when the object reference hasn't changed.
+  const [value, setValue] = createSignal<T | undefined>(resolvedObj(), { equals: false });
 
   // Subscribe to atom updates.
   createEffect(() => {
