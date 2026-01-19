@@ -20,13 +20,7 @@ import { Stream } from '@dxos/codec-protobuf/stream';
 import { Context, ContextDisposedError } from '@dxos/context';
 import { raise } from '@dxos/debug';
 import { type Database, Ref } from '@dxos/echo';
-import {
-  type DatabaseDirectory,
-  type ObjectStructure,
-  Reference,
-  type SpaceState,
-  encodeReference,
-} from '@dxos/echo-protocol';
+import { type DatabaseDirectory, EncodedReference, type ObjectStructure, type SpaceState } from '@dxos/echo-protocol';
 import { compositeRuntime } from '@dxos/echo-signals/runtime';
 import { invariant } from '@dxos/invariant';
 import { type ObjectId } from '@dxos/keys';
@@ -523,7 +517,7 @@ export class CoreDatabase {
     };
 
     if (type !== undefined) {
-      newStruct.system!.type = encodeReference(Reference.fromDXN(type));
+      newStruct.system!.type = EncodedReference.fromDXN(type);
     }
 
     core.setDecoded([], newStruct);
