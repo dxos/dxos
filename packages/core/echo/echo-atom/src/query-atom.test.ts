@@ -3,22 +3,37 @@
 //
 
 import * as Registry from '@effect-atom/atom/Registry';
+import * as Schema from 'effect/Schema';
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
-import { Obj, Type } from '@dxos/echo';
+import { Obj, type QueryResult, Type } from '@dxos/echo';
+import { type EchoDatabase, Filter, Query } from '@dxos/echo-db';
 import { EchoTestBuilder } from '@dxos/echo-db/testing';
 
 import { AtomQuery } from './query-atom';
-import { Filter, Query } from '@dxos/echo-db';
+
+/**
+ * Test schema for query-atom tests.
+ */
+const TestItem = Schema.Struct({
+  name: Schema.String,
+  value: Schema.Number,
+}).pipe(
+  Type.Obj({
+    typename: 'example.com/type/TestItem',
+    version: '0.1.0',
+  }),
+);
+type TestItem = Schema.Schema.Type<typeof TestItem>;
 
 describe('AtomQuery', () => {
   let testBuilder: EchoTestBuilder;
-  let db: any;
+  let db: EchoDatabase;
   let registry: Registry.Registry;
 
   beforeEach(async () => {
     testBuilder = await new EchoTestBuilder().open();
-    const { db: database } = await testBuilder.createDatabase();
+    const { db: database } = await testBuilder.createDatabase({ types: [TestItem] });
     db = database;
     registry = Registry.make();
   });
@@ -28,25 +43,25 @@ describe('AtomQuery', () => {
   });
 
   test('creates atom with initial results', async () => {
-    db.add(Obj.make(Type.Expando, { name: 'Object 1', value: 100 }));
-    db.add(Obj.make(Type.Expando, { name: 'Object 2', value: 100 }));
+    db.add(Obj.make(TestItem, { name: 'Object 1', value: 100 }));
+    db.add(Obj.make(TestItem, { name: 'Object 2', value: 100 }));
     await db.flush({ indexes: true });
 
-    const queryResult = db.query(Query.select(Filter.type(Type.Expando, { value: 100 })));
+    const queryResult: QueryResult.QueryResult<TestItem> = db.query(Query.select(Filter.type(TestItem, { value: 100 })));
     await queryResult.run();
 
     const atom = AtomQuery.make(queryResult);
     const results = registry.get(atom);
 
     expect(results).toHaveLength(2);
-    expect(results.map((r: any) => r.name).sort()).toEqual(['Object 1', 'Object 2']);
+    expect(results.map((r) => r.name).sort()).toEqual(['Object 1', 'Object 2']);
   });
 
   test('registry.subscribe fires on QueryResult changes', async () => {
-    db.add(Obj.make(Type.Expando, { name: 'Initial', value: 200 }));
+    db.add(Obj.make(TestItem, { name: 'Initial', value: 200 }));
     await db.flush({ indexes: true });
 
-    const queryResult = db.query(Query.select(Filter.type(Type.Expando, { value: 200 })));
+    const queryResult: QueryResult.QueryResult<TestItem> = db.query(Query.select(Filter.type(TestItem, { value: 200 })));
     await queryResult.run();
 
     const atom = AtomQuery.make(queryResult);
@@ -57,14 +72,14 @@ describe('AtomQuery', () => {
 
     // Subscribe to atom updates.
     let updateCount = 0;
-    let latestResults: any[] = [];
+    let latestResults: TestItem[] = [];
     registry.subscribe(atom, () => {
       updateCount++;
       latestResults = registry.get(atom);
     });
 
     // Add a new object that matches the query.
-    db.add(Obj.make(Type.Expando, { name: 'New Object', value: 200 }));
+    db.add(Obj.make(TestItem, { name: 'New Object', value: 200 }));
     await db.flush({ indexes: true, updates: true });
 
     // Subscription should have fired.
@@ -73,11 +88,11 @@ describe('AtomQuery', () => {
   });
 
   test('registry.subscribe fires when objects are removed', async () => {
-    const obj1 = db.add(Obj.make(Type.Expando, { name: 'Object 1', value: 300 }));
-    db.add(Obj.make(Type.Expando, { name: 'Object 2', value: 300 }));
+    const obj1 = db.add(Obj.make(TestItem, { name: 'Object 1', value: 300 }));
+    db.add(Obj.make(TestItem, { name: 'Object 2', value: 300 }));
     await db.flush({ indexes: true });
 
-    const queryResult = db.query(Query.select(Filter.type(Type.Expando, { value: 300 })));
+    const queryResult: QueryResult.QueryResult<TestItem> = db.query(Query.select(Filter.type(TestItem, { value: 300 })));
     await queryResult.run();
 
     const atom = AtomQuery.make(queryResult);
@@ -88,7 +103,7 @@ describe('AtomQuery', () => {
 
     // Subscribe to atom updates.
     let updateCount = 0;
-    let latestResults: any[] = [];
+    let latestResults: TestItem[] = [];
     registry.subscribe(atom, () => {
       updateCount++;
       latestResults = registry.get(atom);
@@ -105,10 +120,10 @@ describe('AtomQuery', () => {
   });
 
   test('unsubscribing from registry stops receiving updates', async () => {
-    db.add(Obj.make(Type.Expando, { name: 'Initial', value: 400 }));
+    db.add(Obj.make(TestItem, { name: 'Initial', value: 400 }));
     await db.flush({ indexes: true });
 
-    const queryResult = db.query(Query.select(Filter.type(Type.Expando, { value: 400 })));
+    const queryResult: QueryResult.QueryResult<TestItem> = db.query(Query.select(Filter.type(TestItem, { value: 400 })));
     await queryResult.run();
 
     const atom = AtomQuery.make(queryResult);
@@ -124,7 +139,7 @@ describe('AtomQuery', () => {
     });
 
     // Add object and verify subscription fires.
-    db.add(Obj.make(Type.Expando, { name: 'Object 2', value: 400 }));
+    db.add(Obj.make(TestItem, { name: 'Object 2', value: 400 }));
     await db.flush({ indexes: true, updates: true });
     const countAfterFirstAdd = updateCount;
     expect(countAfterFirstAdd).toBeGreaterThan(0);
@@ -133,7 +148,7 @@ describe('AtomQuery', () => {
     unsubscribe();
 
     // Add another object.
-    db.add(Obj.make(Type.Expando, { name: 'Object 3', value: 400 }));
+    db.add(Obj.make(TestItem, { name: 'Object 3', value: 400 }));
     await db.flush({ indexes: true, updates: true });
 
     // Update count should not have changed after unsubscribe.
@@ -141,7 +156,7 @@ describe('AtomQuery', () => {
   });
 
   test('works with empty query results', async () => {
-    const queryResult = db.query(Query.select(Filter.type(Type.Expando, { value: 999 })));
+    const queryResult: QueryResult.QueryResult<TestItem> = db.query(Query.select(Filter.type(TestItem, { value: 999 })));
     await queryResult.run();
 
     const atom = AtomQuery.make(queryResult);
@@ -151,10 +166,10 @@ describe('AtomQuery', () => {
   });
 
   test('multiple atoms from same query share underlying subscription', async () => {
-    db.add(Obj.make(Type.Expando, { name: 'Object', value: 500 }));
+    db.add(Obj.make(TestItem, { name: 'Object', value: 500 }));
     await db.flush({ indexes: true });
 
-    const queryResult = db.query(Query.select(Filter.type(Type.Expando, { value: 500 })));
+    const queryResult: QueryResult.QueryResult<TestItem> = db.query(Query.select(Filter.type(TestItem, { value: 500 })));
     await queryResult.run();
 
     // Create two atoms from the same query result.
