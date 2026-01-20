@@ -30,11 +30,13 @@ export interface DedeciatedWorkerClientServicesOptions {
 export class DedicatedWorkerClientServices extends Resource implements ClientServicesProvider {
   #createWorker: () => WorkerOrPort;
   #createCoordinator: () => MaybePromise<WorkerCoordinator>;
-  #services!: ClientServicesProxy;
-  #leaderSession?: LeaderSession = undefined;
-  #coordinator?: WorkerCoordinator = undefined;
-  #connection!: SharedWorkerConnection;
+  #services: ClientServicesProxy | undefined = undefined;
+  #leaderSession: LeaderSession | undefined = undefined;
+  #coordinator: WorkerCoordinator | undefined = undefined;
+  #connection: SharedWorkerConnection | undefined = undefined;
   readonly #clientId = `dedicated-worker-client-services-${crypto.randomUUID()}`;
+
+  #initialConnection = new Trigger<void>();
 
   readonly closed = new Event<Error | undefined>();
 
@@ -49,60 +51,26 @@ export class DedicatedWorkerClientServices extends Resource implements ClientSer
   }
 
   get services(): Partial<ClientServices> {
+    invariant(this.#services, 'services not initialized');
     return this.#services.services;
   }
 
   override async _open(): Promise<void> {
     this.#coordinator = await this.#createCoordinator();
     this.#watchLeader();
-
-    await using ctx = new Context();
-    const { appPort, systemPort, leaderId, livenessLockKey } = await new Promise<
-      WorkerCoordinatorMessage & { type: 'provide-port' }
-    >((resolve) => {
-      this.#coordinator!.onMessage.on((message) => {
-        if (message.type === 'provide-port' && message.clientId === this.#clientId) {
-          resolve(message);
-        }
-      });
-      this.#coordinator?.sendMessage({
-        type: 'request-port',
-        clientId: this.#clientId,
-      });
-      scheduleTaskInterval(
-        ctx,
-        async () => {
-          this.#coordinator?.sendMessage({
-            type: 'request-port',
-            clientId: this.#clientId,
-          });
-        },
-        500,
-      );
-    });
-    log.info('connected to worker', { leaderId });
-
-    this.#connection = new SharedWorkerConnection({
-      // TODO(dmaretskyi): Config management.
-      config: new Config(),
-      systemPort: createWorkerPort({ port: systemPort }),
-    });
-    log('opening SharedWorkerConnection');
-    await this.#connection.open({
-      origin: typeof location !== 'undefined' ? location.origin : 'unknown',
-    });
-    log('opened SharedWorkerConnection');
-
-    this.#services = new ClientServicesProxy(createWorkerPort({ port: appPort }));
-    await this.#services.open();
+    this.#reconnectLoop();
+    await this.#initialConnection.wait();
   }
 
   override async _close(): Promise<void> {
-    await this.#services.close();
-    await this.#connection.close();
+    await this.#services?.close();
+    await this.#connection?.close();
     await this.#leaderSession?.close();
   }
 
+  /**
+   * Waits until this client becomes a leader and starts the worker.
+   */
   #watchLeader() {
     queueMicrotask(async () => {
       try {
@@ -114,18 +82,106 @@ export class DedicatedWorkerClientServices extends Resource implements ClientSer
           const done = new Trigger();
           this._ctx.onDispose(() => done.wake());
           this.#leaderSession.onClose.on((error) => {
-            this.closed.emit(error);
             this.#leaderSession = undefined;
-            done.wake();
+            if (error) {
+              done.throw(error);
+            } else {
+              done.wake();
+            }
           });
           await this.#leaderSession.open();
           await done.wait(); // Hold until the leader session is closed.
         });
-      } catch (error) {
-        if (error instanceof DOMException && error.name === 'AbortError') {
+      } catch (error: any) {
+        if (isAbortError(error)) {
           return;
         }
         log.catch(error);
+      }
+    });
+  }
+
+  /**
+   * Constantly reconnects as the leader changes.
+   */
+  #reconnectLoop() {
+    queueMicrotask(async () => {
+      while (true) {
+        if (this._ctx.disposed) {
+          break;
+        }
+
+        const leaderStopped = new Trigger();
+
+        try {
+          await using ctx = this._ctx.derive();
+          const { appPort, systemPort, leaderId, livenessLockKey } = await new Promise<
+            WorkerCoordinatorMessage & { type: 'provide-port' }
+          >((resolve) => {
+            invariant(this.#coordinator);
+            this.#coordinator.onMessage.on((message) => {
+              if (message.type === 'provide-port' && message.clientId === this.#clientId) {
+                resolve(message);
+              }
+            });
+            this.#coordinator.sendMessage({
+              type: 'request-port',
+              clientId: this.#clientId,
+            });
+            scheduleTaskInterval(
+              ctx,
+              async () => {
+                this.#coordinator?.sendMessage({
+                  type: 'request-port',
+                  clientId: this.#clientId,
+                });
+              },
+              500,
+            );
+          });
+          log.info('connected to worker', { leaderId });
+
+          queueMicrotask(async () => {
+            try {
+              await navigator.locks.request(livenessLockKey, { mode: 'exclusive', signal: ctx.signal }, async () => {
+                leaderStopped.wake();
+              });
+            } catch (err: any) {
+              if (isAbortError(err)) {
+                return;
+              }
+              log.catch(err);
+            }
+          });
+          this.#coordinator!.onMessage.on(ctx, (msg) => {
+            if (msg.type === 'new-leader' && msg.leaderId !== leaderId) {
+              leaderStopped.wake();
+            }
+          });
+
+          this.#connection = new SharedWorkerConnection({
+            // TODO(dmaretskyi): Config management.
+            config: new Config(),
+            systemPort: createWorkerPort({ port: systemPort }),
+          });
+          log('opening SharedWorkerConnection');
+          await this.#connection.open({
+            origin: typeof location !== 'undefined' ? location.origin : 'unknown',
+          });
+          log('opened SharedWorkerConnection');
+
+          this.#services = new ClientServicesProxy(createWorkerPort({ port: appPort }));
+          await this.#services.open();
+          this.#initialConnection.wake();
+        } catch (err: any) {
+          this.#initialConnection.throw(err);
+          log.catch(err);
+          continue;
+        }
+        // Wait until the leader stops.
+        await leaderStopped.wait();
+
+        log.info('lost connection');
       }
     });
   }
@@ -239,4 +295,8 @@ class LeaderSession extends Resource {
 
 const isWorker = (worker: WorkerOrPort): worker is Worker => {
   return typeof Worker !== 'undefined' && worker instanceof Worker;
+};
+
+const isAbortError = (error: Error) => {
+  return error.name === 'AbortError';
 };
