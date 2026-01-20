@@ -8,6 +8,11 @@ export const FeedCursor = Schema.String.pipe(Schema.brand('@dxos/feed/FeedCursor
 export type FeedCursor = Schema.Schema.Type<typeof FeedCursor>;
 
 export const Block = Schema.Struct({
+  /**
+   * Only set on query.
+   */
+  feedId: Schema.UndefinedOr(Schema.String),
+
   actorId: Schema.String,
   sequence: Schema.Number,
   predActorId: Schema.NullOr(Schema.String),

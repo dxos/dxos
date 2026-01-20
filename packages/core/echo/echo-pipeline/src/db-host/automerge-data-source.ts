@@ -59,7 +59,7 @@ export class AutomergeDataSource implements IndexDataSource {
   }
 
   getChangedObjects(
-    cursors: IndexCursor[],
+    cursors: DataSourceCursor[],
     opts?: { limit?: number },
   ): Effect.Effect<{ objects: IndexerObject[]; cursors: DataSourceCursor[] }> {
     return Effect.gen(this, function* () {

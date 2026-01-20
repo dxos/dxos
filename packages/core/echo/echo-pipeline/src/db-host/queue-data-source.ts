@@ -10,6 +10,7 @@ import { type FeedStore, FeedCursor } from '@dxos/feed';
 import { type DataSourceCursor, type IndexDataSource, type IndexCursor, type IndexerObject } from '@dxos/index-core';
 import { type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
+import { failedInvariant } from '@dxos/invariant';
 
 export class QueueDataSource implements IndexDataSource {
   readonly sourceName = 'queue';
@@ -20,9 +21,14 @@ export class QueueDataSource implements IndexDataSource {
   ) {}
 
   getChangedObjects(
-    cursors: IndexCursor[],
+    cursors: DataSourceCursor[],
     opts?: { limit?: number },
   ): Effect.Effect<{ objects: IndexerObject[]; cursors: DataSourceCursor[] }> {
+    // For queue, the cursor is assumed to have:
+    // spaceId = set
+    // resourceId = null 
+    // cursor = feed cursor
+
     return Effect.promise(() =>
       RuntimeProvider.runPromise(this._runtime)(
         Effect.gen(this, function* () {
@@ -65,8 +71,8 @@ export class QueueDataSource implements IndexDataSource {
 
                   objects.push({
                     spaceId,
-                    queueId: block.feedId, // TODO(dmaretskyi): Need to update feedStore to expose feedId when querying all blocks in the feed.
-                    documentId: null, // Queues don't map to documents in the same way.
+                    queueId: block.feedId ?? failedInvariant(),
+                    documentId: null,
                     recordId: null,
                     data,
                   });
@@ -75,20 +81,12 @@ export class QueueDataSource implements IndexDataSource {
                 }
               }
 
-              if (result.blocks.length > 0) {
-                remainingLimit -= result.blocks.length;
-                updatedCursors.push({
-                  spaceId,
-                  resourceId: null,
-                  cursor: result.nextCursor,
-                });
-              } else {
-                updatedCursors.push({
-                  spaceId,
-                  resourceId: null,
-                  cursor: result.nextCursor,
-                });
-              }
+              remainingLimit -= result.blocks.length;
+              updatedCursors.push({
+                spaceId,
+                resourceId: null,
+                cursor: result.nextCursor,
+              });
             } catch (error) {
               log.error('Error querying queue for indexing', { spaceId, error });
             }

@@ -176,7 +176,7 @@ export class FeedStore {
 
         // Fetch Blocks
         const query = sql<Block>`
-            SELECT blocks.* 
+            SELECT blocks.*, feeds.feedId
             FROM blocks
             JOIN feeds ON blocks.feedPrivateId = feeds.feedPrivateId
             WHERE 1=1
@@ -339,6 +339,7 @@ export class FeedStore {
           const predActorId = lastBlock?.actorId ?? null;
 
           const block: Block = {
+            feedId: undefined,
             actorId: this._options.localActorId,
             sequence,
             predActorId,

@@ -9,7 +9,7 @@ import * as Effect from 'effect/Effect';
 import { ObjectId, SpaceId } from '@dxos/keys';
 
 import { FeedStore } from './feed';
-import { type Block } from './protocol';
+import { Block } from './protocol';
 import { log } from '@dxos/log';
 
 const TestLayer = SqliteClient.layer({
@@ -31,6 +31,7 @@ describe('Feed V2', () => {
 
       // Append
       const block: Block = {
+        feedId: undefined,
         actorId: feedId,
         sequence: 123, // Author sequence provided by peer
         predActorId: null,
@@ -64,7 +65,8 @@ describe('Feed V2', () => {
       yield* feed.migrate();
 
       // Append with namespace
-      const block: Block = {
+      const block = Block.make({
+        feedId: undefined,
         actorId: ALICE,
         sequence: 1,
         predActorId: null,
@@ -72,7 +74,7 @@ describe('Feed V2', () => {
         position: null,
         timestamp: Date.now(),
         data: new Uint8Array([1]),
-      };
+      });
 
       yield* feed.append({ requestId: 'req-ns', blocks: [block], namespace, spaceId, feedId });
 
@@ -98,7 +100,8 @@ describe('Feed V2', () => {
       yield* feed.append({
         requestId: 'req-1',
         blocks: [
-          {
+          Block.make({
+            feedId: undefined,
             actorId: feedId,
             sequence: 1,
             predActorId: null,
@@ -106,7 +109,7 @@ describe('Feed V2', () => {
             position: null,
             timestamp: Date.now(),
             data: new Uint8Array([1]),
-          },
+          }),
         ],
         spaceId,
         feedId,
@@ -310,7 +313,7 @@ describe('Feed V2', () => {
       const queryRes = yield* feed.query({ query: { feedIds: [feedId] }, position: -1, spaceId }); // Use position '-1' to get everything
       expect(queryRes.blocks.length).toBe(1);
       expect(queryRes.blocks.length).toBe(1);
-      expect(queryRes.blocks[0]).toMatchObject({ ...blocks[0], position: expect.any(Number) });
+      expect(queryRes.blocks[0]).toMatchObject({ ...blocks[0], feedId, position: expect.any(Number) });
     }).pipe(Effect.provide(TestLayer)),
   );
 
