@@ -5,7 +5,7 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useEffect, useState } from 'react';
 
-import { withTheme } from '@dxos/react-ui/testing';
+import { withLayout, withRegistry, withTheme } from '@dxos/react-ui/testing';
 import { render } from '@dxos/storybook-utils';
 
 import { CanvasGraphModel, type Connection, type Polygon } from '../../types';
@@ -115,7 +115,7 @@ const meta = {
   title: 'ui/react-ui-canvas-editor/GraphCanvas',
   component: GraphCanvas,
   render: render(DefaultStory),
-  decorators: [withTheme],
+  decorators: [withRegistry, withTheme, withLayout()],
 } satisfies Meta<typeof GraphCanvas>;
 
 export default meta;

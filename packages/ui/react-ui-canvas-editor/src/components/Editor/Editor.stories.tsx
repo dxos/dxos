@@ -11,7 +11,7 @@ import { type Live } from '@dxos/live-object';
 import { faker } from '@dxos/random';
 import { useClientStory, withClientProvider } from '@dxos/react-client/testing';
 import { useAsyncEffect } from '@dxos/react-ui';
-import { withTheme } from '@dxos/react-ui/testing';
+import { withLayout, withRegistry, withTheme } from '@dxos/react-ui/testing';
 import { withAttention } from '@dxos/react-ui-attention/testing';
 import { Form, TupleField } from '@dxos/react-ui-form';
 import { Json } from '@dxos/react-ui-syntax-highlighter';
@@ -105,7 +105,9 @@ const meta = {
   component: Editor.Root as any,
   render: DefaultStory,
   decorators: [
+    withRegistry,
     withTheme,
+    withLayout(),
     withClientProvider({
       createIdentity: true,
       createSpace: true,
