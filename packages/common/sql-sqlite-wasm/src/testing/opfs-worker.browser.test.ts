@@ -4,10 +4,11 @@
 
 import * as Reactivity from '@effect/experimental/Reactivity';
 import * as SqlClient from '@effect/sql/SqlClient';
-import * as SqliteClient from '@dxos/sql-sqlite/SqliteClient';
 import { describe, expect, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
+
+import * as SqliteClient from '@dxos/sql-sqlite/SqliteClient';
 
 describe('opfs-worker browser test', () => {
   it.effect(

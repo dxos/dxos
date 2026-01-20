@@ -72,7 +72,7 @@ export const bundleDepsPlugin = (options: BundleDepsPluginOptions): Plugin => ({
       }
 
       // Check alias again for module aliases.
-      if(options.alias?.[moduleName]) {
+      if (options.alias?.[moduleName]) {
         return build.resolve(options.alias[moduleName] + args.path.slice(moduleName.length), {
           importer: args.importer,
           kind: args.kind,

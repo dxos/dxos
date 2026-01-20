@@ -4,8 +4,9 @@
 
 /// <reference lib="webworker" />
 
-import * as OpfsWorker from '@dxos/sql-sqlite/OpfsWorker';
 import * as Effect from 'effect/Effect';
+
+import * as OpfsWorker from '@dxos/sql-sqlite/OpfsWorker';
 
 const DB_NAME = 'DXOS';
 
