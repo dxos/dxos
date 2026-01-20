@@ -4,6 +4,7 @@
 
 import { ATTR_META, type ObjectJSON } from '@dxos/echo/internal';
 import type { EdgeHttpClient } from '@dxos/edge-client';
+import { invariant } from '@dxos/invariant';
 import type { ObjectId, SpaceId } from '@dxos/keys';
 import { KEY_QUEUE_POSITION } from '@dxos/protocols';
 import type {
@@ -13,7 +14,6 @@ import type {
   QueueQueryResult,
   QueueService,
 } from '@dxos/protocols/proto/dxos/client/services';
-import { invariant } from '@dxos/invariant';
 import { ComplexMap } from '@dxos/util';
 
 /**

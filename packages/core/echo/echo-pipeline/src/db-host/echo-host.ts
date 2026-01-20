@@ -39,9 +39,9 @@ import { type DatabaseRoot } from './database-root';
 import { createSelectedDocumentsIterator } from './documents-iterator';
 import { LocalQueueServiceImpl } from './local-queue-service';
 import { QueryServiceImpl } from './query-service';
+import { QueueDataSource } from './queue-data-source';
 import { SpaceStateManager } from './space-state-manager';
 import { QueueServiceStub } from './stub';
-import { QueueDataSource } from './queue-data-source';
 
 export interface EchoHostIndexingConfig {
   /**

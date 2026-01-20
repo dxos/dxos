@@ -7,10 +7,10 @@ import { describe, expect, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 
 import { ObjectId, SpaceId } from '@dxos/keys';
+import { log } from '@dxos/log';
 
 import { FeedStore } from './feed-store';
 import { Block } from './protocol';
-import { log } from '@dxos/log';
 
 const TestLayer = SqliteClient.layer({
   filename: ':memory:',

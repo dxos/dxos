@@ -2,15 +2,14 @@
 // Copyright 2026 DXOS.org
 //
 
+import type * as SqlClient from '@effect/sql/SqlClient';
 import * as Effect from 'effect/Effect';
 
-import type * as SqlClient from '@effect/sql/SqlClient';
 import { RuntimeProvider } from '@dxos/effect';
-import { type FeedStore, FeedCursor } from '@dxos/feed';
-import { type DataSourceCursor, type IndexDataSource, type IndexCursor, type IndexerObject } from '@dxos/index-core';
-import { type SpaceId } from '@dxos/keys';
-import { log } from '@dxos/log';
+import { FeedCursor, type FeedStore } from '@dxos/feed';
+import { type DataSourceCursor, type IndexDataSource, type IndexerObject } from '@dxos/index-core';
 import { failedInvariant } from '@dxos/invariant';
+import { log } from '@dxos/log';
 
 export class QueueDataSource implements IndexDataSource {
   readonly sourceName = 'queue';

@@ -6,18 +6,18 @@ import * as SqlClient from '@effect/sql/SqlClient';
 import type * as SqlError from '@effect/sql/SqlError';
 import * as Effect from 'effect/Effect';
 
+import { Event } from '@dxos/async';
+
 import {
-  FeedCursor,
   type AppendRequest,
   type AppendResponse,
   type Block,
+  FeedCursor,
   type QueryRequest,
   type QueryResponse,
   type SubscribeRequest,
   type SubscribeResponse,
 } from './protocol';
-import { invariant } from '@dxos/invariant';
-import { Event } from '@dxos/async';
 
 export interface FeedStoreOptions {
   localActorId: string;

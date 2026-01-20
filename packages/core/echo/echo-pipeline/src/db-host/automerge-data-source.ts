@@ -10,7 +10,6 @@ import { Context } from '@dxos/context';
 import { objectStructureToJson } from '@dxos/echo/internal';
 import { DatabaseDirectory, SpaceDocVersion } from '@dxos/echo-protocol';
 import { type DataSourceCursor, type IndexDataSource, type IndexerObject } from '@dxos/index-core';
-import { type IndexCursor } from '@dxos/index-core';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 
