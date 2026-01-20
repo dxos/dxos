@@ -136,7 +136,7 @@ export const createConfig = ({
           },
         },
         optimizeDeps: {
-          exclude: ['@effect/wa-sqlite', '@dxos/wasm-sqlite'],
+          exclude: ['@dxos/wa-sqlite'],
         },
         worker: {
           format: 'es',

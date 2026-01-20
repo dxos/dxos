@@ -219,6 +219,9 @@ catalogs:
     '@effect/vitest':
       specifier: 0.27.0
       version: 0.27.0
+    '@effect/wa-sqlite':
+      specifier: ^0.1.2
+      version: 0.1.2
     '@effect/workflow':
       specifier: ^0.15.2
       version: 0.15.2
@@ -1974,7 +1977,6 @@ catalogs:
 
 overrides:
   '@automerge/automerge': 3.2.1
-  '@effect/wa-sqlite': npm:@dxos/wa-sqlite@^0.2.1
   better-sqlite3: 12.6.0
   '@lezer/lr': ^1.4.2
   '@types/node': 22.10.2
@@ -1986,7 +1988,7 @@ overrides:
   react: ~19.2.3
   react-dom: ~19.2.3
 
-pnpmfileChecksum: sha256-XhsBLb/gGBNhO+rxM/Hlt3CN70bh1cdve6H5R8MA9O0=
+pnpmfileChecksum: sha256-wjQyuGoV+tUt3v7ESmDlZqBpAkltbG8H+T1szikzFeM=
 
 patchedDependencies:
   '@automerge/automerge-repo@2.5.1':
@@ -3962,12 +3964,16 @@ importers:
       '@effect/sql-sqlite-node':
         specifier: 'catalog:'
         version: 0.49.1(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/platform@0.93.6(effect@3.19.11))(@effect/sql@0.48.6(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11))(effect@3.19.11)
-      '@effect/sql-sqlite-wasm':
-        specifier: 'catalog:'
-        version: 0.49.0(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/sql@0.48.6(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11))(effect@3.19.11)
       effect:
         specifier: 'catalog:'
         version: 3.19.11
+    devDependencies:
+      '@effect/sql-sqlite-wasm':
+        specifier: 'catalog:'
+        version: 0.49.0(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/sql@0.48.6(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11))(@effect/wa-sqlite@0.1.2)(effect@3.19.11)
+      '@effect/wa-sqlite':
+        specifier: 'catalog:'
+        version: 0.1.2
 
   packages/common/storybook-addon-logger:
     dependencies:
@@ -4783,6 +4789,9 @@ importers:
       '@dxos/effect':
         specifier: workspace:*
         version: link:../../../common/effect
+      '@dxos/feed':
+        specifier: workspace:*
+        version: link:../feed
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../../common/invariant
@@ -4825,9 +4834,6 @@ importers:
       '@effect/sql-sqlite-node':
         specifier: 'catalog:'
         version: 0.49.1(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/platform@0.93.6(effect@3.19.11))(@effect/sql@0.48.6(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11))(effect@3.19.11)
-      '@effect/sql-sqlite-wasm':
-        specifier: 'catalog:'
-        version: 0.49.0(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/sql@0.48.6(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11))(effect@3.19.11)
       effect:
         specifier: 'catalog:'
         version: 3.19.11
@@ -4932,6 +4938,9 @@ importers:
       '@dxos/errors':
         specifier: workspace:*
         version: link:../../../common/errors
+      '@dxos/feed':
+        specifier: workspace:*
+        version: link:../feed
       '@dxos/feed-store':
         specifier: workspace:*
         version: link:../../../common/feed-store
@@ -5004,6 +5013,9 @@ importers:
       '@effect/sql':
         specifier: 'catalog:'
         version: 0.48.6(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)
+      '@effect/sql-sqlite-node':
+        specifier: 'catalog:'
+        version: 0.49.1(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/platform@0.93.6(effect@3.19.11))(@effect/sql@0.48.6(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11))(effect@3.19.11)
       crc-32:
         specifier: 'catalog:'
         version: 1.2.2
@@ -5190,6 +5202,36 @@ importers:
         specifier: 'catalog:'
         version: 3.2.4(@types/debug@4.1.12)(@types/node@22.10.2)(@vitest/browser@3.2.4)(@vitest/ui@3.2.4)(happy-dom@13.3.4)(jiti@2.6.1)(jsdom@27.0.0(canvas@3.2.0)(postcss@8.5.6))(terser@5.19.2)(tsx@4.21.0)(yaml@2.8.2)
 
+  packages/core/echo/feed:
+    dependencies:
+      '@dxos/async':
+        specifier: workspace:*
+        version: link:../../../common/async
+      '@dxos/invariant':
+        specifier: workspace:*
+        version: link:../../../common/invariant
+      '@dxos/keys':
+        specifier: workspace:*
+        version: link:../../../common/keys
+      '@dxos/log':
+        specifier: workspace:*
+        version: link:../../../common/log
+      '@dxos/util':
+        specifier: workspace:*
+        version: link:../../../common/util
+      '@effect/sql':
+        specifier: 'catalog:'
+        version: 0.48.6(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)
+      '@effect/sql-sqlite-node':
+        specifier: 'catalog:'
+        version: 0.49.1(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/platform@0.93.6(effect@3.19.11))(@effect/sql@0.48.6(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11))(effect@3.19.11)
+      '@effect/vitest':
+        specifier: 'catalog:'
+        version: 0.27.0(effect@3.19.11)(vitest@3.2.4)
+      effect:
+        specifier: 'catalog:'
+        version: 3.19.11
+
   packages/core/echo/index-core:
     dependencies:
       '@dxos/async':
@@ -5219,6 +5261,9 @@ importers:
       '@dxos/log':
         specifier: 'workspace:'
         version: link:../../../common/log
+      '@effect/cli':
+        specifier: 'catalog:'
+        version: 0.72.1(@effect/platform@0.93.6(effect@3.19.11))(@effect/printer-ansi@0.47.0(@effect/typeclass@0.38.0(effect@3.19.11))(effect@3.19.11))(@effect/printer@0.47.0(@effect/typeclass@0.38.0(effect@3.19.11))(effect@3.19.11))(effect@3.19.11)
       '@effect/experimental':
         specifier: 'catalog:'
         version: 0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2)
@@ -13908,9 +13953,6 @@ importers:
       '@effect/sql':
         specifier: 'catalog:'
         version: 0.48.6(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)
-      '@effect/sql-sqlite-wasm':
-        specifier: 'catalog:'
-        version: 0.49.0(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/sql@0.48.6(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11))(effect@3.19.11)
       base-x:
         specifier: 'catalog:'
         version: 3.0.9
@@ -14080,6 +14122,9 @@ importers:
       '@dxos/rpc':
         specifier: workspace:*
         version: link:../../core/mesh/rpc
+      '@dxos/sql-sqlite':
+        specifier: workspace:*
+        version: link:../../common/sql-sqlite-wasm
       '@dxos/teleport':
         specifier: workspace:*
         version: link:../../core/mesh/teleport
@@ -14110,9 +14155,6 @@ importers:
       '@effect/sql-sqlite-node':
         specifier: 'catalog:'
         version: 0.49.1(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/platform@0.93.6(effect@3.19.11))(@effect/sql@0.48.6(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11))(effect@3.19.11)
-      '@effect/sql-sqlite-wasm':
-        specifier: 'catalog:'
-        version: 0.49.0(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/sql@0.48.6(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11))(effect@3.19.11)
       '@obsidize/tar-browserify':
         specifier: 'catalog:'
         version: 5.2.0
@@ -21237,6 +21279,7 @@ packages:
     peerDependencies:
       '@effect/experimental': ^0.57.0
       '@effect/sql': ^0.48.0
+      '@effect/wa-sqlite': ^0.1.2
       effect: ^3.19.0
 
   '@effect/sql@0.48.6':
@@ -21256,6 +21299,9 @@ packages:
     peerDependencies:
       effect: ^3.19.0
       vitest: ^3.2.0
+
+  '@effect/wa-sqlite@0.1.2':
+    resolution: {integrity: sha512-2JvJ9BDkBOwfeY/gXsC0XwEKC0AwisP2W5ABJ6mx14QyXTK12MGDIybDlHieuZt1TEFSMiKfpg7yyqyRWRooJQ==}
 
   '@effect/workflow@0.15.2':
     resolution: {integrity: sha512-UAo5QWEvyyKsnf4EQ7WL3zwiuZS4Wd5fmAxdpcpZSIxNOvsABp3DOuyRCiidD8l3sQhdPwES/UsVK4QOCQ7wew==}
@@ -41360,11 +41406,11 @@ snapshots:
       better-sqlite3: 12.6.0
       effect: 3.19.11
 
-  '@effect/sql-sqlite-wasm@0.49.0(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/sql@0.48.6(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11))(effect@3.19.11)':
+  '@effect/sql-sqlite-wasm@0.49.0(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/sql@0.48.6(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11))(@effect/wa-sqlite@0.1.2)(effect@3.19.11)':
     dependencies:
       '@effect/experimental': 0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2)
       '@effect/sql': 0.48.6(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)
-      '@effect/wa-sqlite': '@dxos/wa-sqlite@0.2.1'
+      '@effect/wa-sqlite': 0.1.2
       effect: 3.19.11
 
   '@effect/sql@0.48.6(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)':
@@ -41382,6 +41428,8 @@ snapshots:
     dependencies:
       effect: 3.19.11
       vitest: 3.2.4(@types/debug@4.1.12)(@types/node@22.10.2)(@vitest/browser@3.2.4)(@vitest/ui@3.2.4)(happy-dom@13.3.4)(jiti@2.6.1)(jsdom@27.0.0(canvas@3.2.0)(postcss@8.5.6))(terser@5.19.2)(tsx@4.21.0)(yaml@2.8.2)
+
+  '@effect/wa-sqlite@0.1.2': {}
 
   '@effect/workflow@0.15.2(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/platform@0.93.6(effect@3.19.11))(@effect/rpc@0.72.2(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11))(effect@3.19.11)':
     dependencies:

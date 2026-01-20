@@ -410,10 +410,17 @@ export class Client {
     await this._services.open();
 
     const edgeUrl = this._config!.get('runtime.services.edge.url');
-    if (edgeUrl) {
+    const useLocalFirstQueues = this._config!.get('runtime.client.edgeFeatures.useLocalFirstQueues' as any);
+    if (useLocalFirstQueues) {
+      log.verbose('running with local-first queues');
+      invariant(this._services.services.QueueService, 'QueueService not available.');
+      this._queuesService = this._services.services.QueueService;
+    } else if (edgeUrl) {
+      log.verbose('running with edge queues');
       this._edgeClient = new EdgeHttpClient(edgeUrl);
       this._queuesService = new QueueServiceImpl(this._edgeClient);
     } else {
+      log.verbose('running with mock queues');
       this._queuesService = new MockQueueService();
     }
 

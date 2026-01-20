@@ -212,7 +212,8 @@ export class EdgeHttpClient {
     query: QueueQuery,
     args?: EdgeHttpGetArgs,
   ): Promise<QueryResult> {
-    const { queueId } = query;
+    const queueId = query.queueIds?.[0];
+    invariant(queueId, 'queueId required');
     return this._call(
       createUrl(new URL(`/spaces/${subspaceTag}/${spaceId}/queue/${queueId}/query`, this.baseUrl), {
         after: query.after,

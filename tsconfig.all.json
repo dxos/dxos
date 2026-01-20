@@ -181,6 +181,9 @@
       "path": "packages/core/echo/echo-solid/tsconfig.json"
     },
     {
+      "path": "packages/core/echo/feed/tsconfig.json"
+    },
+    {
       "path": "packages/core/echo/index-core/tsconfig.json"
     },
     {
