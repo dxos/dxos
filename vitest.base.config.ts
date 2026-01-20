@@ -76,7 +76,12 @@ type BrowserOptions = {
   plugins?: Plugin[];
 };
 
-const createBrowserProject = ({ browserName, nodeExternal = false, injectGlobals = true, plugins = [] }: BrowserOptions) =>
+const createBrowserProject = ({
+  browserName,
+  nodeExternal = false,
+  injectGlobals = true,
+  plugins = [],
+}: BrowserOptions) =>
   defineProject({
     plugins: [
       nodeStdPlugin(),

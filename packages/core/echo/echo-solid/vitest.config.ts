@@ -12,8 +12,8 @@ import { fileURLToPath } from 'node:url';
 // TODO(wittjosiah): Get working with vitest.base.config.ts.
 export default createConfig({
   dirname: typeof __dirname !== 'undefined' ? __dirname : path.dirname(fileURLToPath(import.meta.url)),
-    browser: {
-      browsers: ['chromium'],
-      plugins: [SolidPlugin()],
-    }
+  browser: {
+    browsers: ['chromium'],
+    plugins: [SolidPlugin()],
+  },
 });
