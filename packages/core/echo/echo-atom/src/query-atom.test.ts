@@ -10,7 +10,7 @@ import { Obj, type QueryResult, Type } from '@dxos/echo';
 import { type EchoDatabase, Filter, Query } from '@dxos/echo-db';
 import { EchoTestBuilder } from '@dxos/echo-db/testing';
 
-import { AtomQuery } from './query-atom';
+import * as AtomQuery from './query-atom';
 
 /**
  * Test schema for query-atom tests.

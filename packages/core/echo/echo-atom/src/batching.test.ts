@@ -12,7 +12,7 @@ import { Obj } from '@dxos/echo';
 import { TestSchema } from '@dxos/echo/testing';
 import { createObject } from '@dxos/echo-db';
 
-import { AtomObj } from './atom';
+import * as AtomObj from './atom';
 
 describe('Echo Atom - Batch Updates', () => {
   // TODO(dmaretskyi): Re-enable once Obj.change is introduced to allow batching multiple mutations.
