@@ -28,7 +28,6 @@
     "@dxos/invariant": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@preact-signals/safe-react": "catalog:",
     "@preact/signals-core": "catalog:",
     "@radix-ui/react-context": "catalog:",
     "bind-event-listener": "catalog:",

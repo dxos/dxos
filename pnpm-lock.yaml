@@ -15856,9 +15856,6 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
-      '@preact-signals/safe-react':
-        specifier: 'catalog:'
-        version: 0.9.0(@babel/core@7.28.0)(@swc/helpers@0.5.17)(react@19.2.3)
       '@preact/signals-core':
         specifier: 'catalog:'
         version: 1.12.1
@@ -15929,9 +15926,6 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
-      '@preact-signals/safe-react':
-        specifier: 'catalog:'
-        version: 0.9.0(@babel/core@7.28.0)(@swc/helpers@0.5.17)(react@19.2.3)
       '@preact/signals-core':
         specifier: 'catalog:'
         version: 1.12.1
@@ -16002,9 +15996,6 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
-      '@preact-signals/safe-react':
-        specifier: 'catalog:'
-        version: 0.9.0(@babel/core@7.28.0)(@swc/helpers@0.5.17)(react@19.2.3)
       '@preact/signals-core':
         specifier: 'catalog:'
         version: 1.12.1
@@ -16162,9 +16153,6 @@ importers:
       '@effect/platform':
         specifier: 'catalog:'
         version: 0.93.6(effect@3.19.11)
-      '@preact-signals/safe-react':
-        specifier: 'catalog:'
-        version: 0.9.0(@babel/core@7.28.0)(@swc/helpers@0.5.17)(react@19.2.3)
       chess.js:
         specifier: 'catalog:'
         version: 1.4.0
@@ -16425,9 +16413,6 @@ importers:
       '@fluentui/react-tabster':
         specifier: 'catalog:'
         version: 9.26.11(@types/react-dom@19.2.3(@types/react@19.2.7))(@types/react@19.2.7)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
-      '@preact-signals/safe-react':
-        specifier: 'catalog:'
-        version: 0.9.0(@babel/core@7.28.0)(@swc/helpers@0.5.17)(react@19.2.3)
       '@preact/signals-core':
         specifier: 'catalog:'
         version: 1.12.1
@@ -16546,12 +16531,6 @@ importers:
       '@lezer/xml':
         specifier: 'catalog:'
         version: 1.0.6
-      '@preact-signals/safe-react':
-        specifier: 'catalog:'
-        version: 0.9.0(@babel/core@7.28.0)(@swc/helpers@0.5.17)(react@19.2.3)
-      '@preact/signals-core':
-        specifier: 'catalog:'
-        version: 1.12.1
       '@radix-ui/react-compose-refs':
         specifier: 'catalog:'
         version: 1.1.1(@types/react@19.2.7)(react@19.2.3)
@@ -16592,6 +16571,9 @@ importers:
       '@dxos/ui-theme':
         specifier: workspace:*
         version: link:../ui-theme
+      '@effect-atom/atom-react':
+        specifier: 'catalog:'
+        version: 0.4.4(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/platform@0.93.6(effect@3.19.11))(@effect/rpc@0.72.2(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11))(effect@3.19.11)(react@19.2.3)(scheduler@0.27.0)
       '@types/react':
         specifier: ~19.2.7
         version: 19.2.7
@@ -16613,9 +16595,6 @@ importers:
       '@atlaskit/pragmatic-drag-and-drop':
         specifier: 'catalog:'
         version: 1.7.7
-      '@preact-signals/safe-react':
-        specifier: 'catalog:'
-        version: 0.9.0(@babel/core@7.28.0)(@swc/helpers@0.5.17)(react@19.2.3)
       '@radix-ui/react-use-controllable-state':
         specifier: 'catalog:'
         version: 1.1.0(@types/react@19.2.7)(react@19.2.3)
@@ -16767,12 +16746,6 @@ importers:
       '@lezer/markdown':
         specifier: 'catalog:'
         version: 1.3.1
-      '@preact-signals/safe-react':
-        specifier: 'catalog:'
-        version: 0.9.0(@babel/core@7.28.0)(@swc/helpers@0.5.17)(react@19.2.3)
-      '@preact/signals-react':
-        specifier: 'catalog:'
-        version: 3.3.1(react@19.2.3)
       '@radix-ui/react-context':
         specifier: 'catalog:'
         version: 1.1.1(@types/react@19.2.7)(react@19.2.3)
@@ -16999,9 +16972,6 @@ importers:
       '@fluentui/react-tabster':
         specifier: 'catalog:'
         version: 9.26.11(@types/react-dom@19.2.3(@types/react@19.2.7))(@types/react@19.2.7)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
-      '@preact-signals/safe-react':
-        specifier: 'catalog:'
-        version: 0.9.0(@babel/core@7.28.0)(@swc/helpers@0.5.17)(react@19.2.3)
       '@preact/signals-react':
         specifier: 'catalog:'
         version: 3.3.1(react@19.2.3)
@@ -17151,9 +17121,6 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
-      '@preact-signals/safe-react':
-        specifier: 'catalog:'
-        version: 0.9.0(@babel/core@7.28.0)(@swc/helpers@0.5.17)(react@19.2.3)
       '@radix-ui/react-context':
         specifier: 'catalog:'
         version: 1.1.1(@types/react@19.2.7)(react@19.2.3)
@@ -17376,9 +17343,6 @@ importers:
       '@lit/react':
         specifier: 'catalog:'
         version: 1.0.8(@types/react@19.2.7)
-      '@preact-signals/safe-react':
-        specifier: 'catalog:'
-        version: 0.9.0(@babel/core@7.28.0)(@swc/helpers@0.5.17)(react@19.2.3)
       '@radix-ui/react-context':
         specifier: 'catalog:'
         version: 1.1.1(@types/react@19.2.7)(react@19.2.3)
@@ -17549,9 +17513,6 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
-      '@preact-signals/safe-react':
-        specifier: 'catalog:'
-        version: 0.9.0(@babel/core@7.28.0)(@swc/helpers@0.5.17)(react@19.2.3)
       '@preact/signals-core':
         specifier: 'catalog:'
         version: 1.12.1
@@ -17634,9 +17595,6 @@ importers:
       '@lezer/xml':
         specifier: 'catalog:'
         version: 1.0.6
-      '@preact-signals/safe-react':
-        specifier: 'catalog:'
-        version: 0.9.0(@babel/core@7.28.0)(@swc/helpers@0.5.17)(react@19.2.3)
       '@preact/signals-core':
         specifier: 'catalog:'
         version: 1.12.1
@@ -17795,9 +17753,6 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
-      '@preact-signals/safe-react':
-        specifier: 'catalog:'
-        version: 0.9.0(@babel/core@7.28.0)(@swc/helpers@0.5.17)(react@19.2.3)
       '@preact/signals-react':
         specifier: 'catalog:'
         version: 3.3.1(react@19.2.3)
@@ -17898,9 +17853,6 @@ importers:
       '@fluentui/react-tabster':
         specifier: 'catalog:'
         version: 9.26.11(@types/react-dom@19.2.3(@types/react@19.2.7))(@types/react@19.2.7)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
-      '@preact-signals/safe-react':
-        specifier: 'catalog:'
-        version: 0.9.0(@babel/core@7.28.0)(@swc/helpers@0.5.17)(react@19.2.3)
       '@radix-ui/react-compose-refs':
         specifier: 'catalog:'
         version: 1.1.1(@types/react@19.2.7)(react@19.2.3)
@@ -17977,9 +17929,6 @@ importers:
       '@emoji-mart/react':
         specifier: 'catalog:'
         version: 1.1.1(emoji-mart@5.5.2)(react@19.2.3)
-      '@preact-signals/safe-react':
-        specifier: 'catalog:'
-        version: 0.9.0(@babel/core@7.28.0)(@swc/helpers@0.5.17)(react@19.2.3)
       '@radix-ui/react-use-controllable-state':
         specifier: 'catalog:'
         version: 1.1.0(@types/react@19.2.7)(react@19.2.3)
@@ -18017,9 +17966,6 @@ importers:
       '@fluentui/react-tabster':
         specifier: 'catalog:'
         version: 9.26.11(@types/react-dom@19.2.3(@types/react@19.2.7))(@types/react@19.2.7)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
-      '@preact-signals/safe-react':
-        specifier: 'catalog:'
-        version: 0.9.0(@babel/core@7.28.0)(@swc/helpers@0.5.17)(react@19.2.3)
       '@radix-ui/react-compose-refs':
         specifier: 'catalog:'
         version: 1.1.1(@types/react@19.2.7)(react@19.2.3)
@@ -18075,9 +18021,6 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
-      '@preact-signals/safe-react':
-        specifier: 'catalog:'
-        version: 0.9.0(@babel/core@7.28.0)(@swc/helpers@0.5.17)(react@19.2.3)
       '@react-three/drei':
         specifier: 'catalog:'
         version: 9.112.0(@react-three/fiber@9.3.0(@types/react@19.2.7)(immer@10.1.1)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)(three@0.178.0))(@types/react@19.2.7)(@types/three@0.165.0)(immer@10.1.1)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)(three@0.178.0)
@@ -18193,9 +18136,6 @@ importers:
       '@fluentui/react-tabster':
         specifier: 'catalog:'
         version: 9.26.11(@types/react-dom@19.2.3(@types/react@19.2.7))(@types/react@19.2.7)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
-      '@preact-signals/safe-react':
-        specifier: 'catalog:'
-        version: 0.9.0(@babel/core@7.28.0)(@swc/helpers@0.5.17)(react@19.2.3)
       '@radix-ui/primitive':
         specifier: 'catalog:'
         version: 1.1.1
@@ -18278,9 +18218,6 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
-      '@preact-signals/safe-react':
-        specifier: 'catalog:'
-        version: 0.9.0(@babel/core@7.28.0)(@swc/helpers@0.5.17)(react@19.2.3)
       jsonpath:
         specifier: 'catalog:'
         version: 1.1.1
@@ -18493,9 +18430,6 @@ importers:
       '@fluentui/react-tabster':
         specifier: 'catalog:'
         version: 9.26.11(@types/react-dom@19.2.3(@types/react@19.2.7))(@types/react@19.2.7)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
-      '@preact-signals/safe-react':
-        specifier: 'catalog:'
-        version: 0.9.0(@babel/core@7.28.0)(@swc/helpers@0.5.17)(react@19.2.3)
       '@radix-ui/primitive':
         specifier: 'catalog:'
         version: 1.1.1
@@ -18545,9 +18479,6 @@ importers:
 
   packages/ui/react-ui-text-tooltip:
     dependencies:
-      '@preact-signals/safe-react':
-        specifier: 'catalog:'
-        version: 0.9.0(@babel/core@7.28.0)(@swc/helpers@0.5.17)(react@19.2.3)
       '@radix-ui/react-compose-refs':
         specifier: 'catalog:'
         version: 1.1.1(@types/react@19.2.7)(react@19.2.3)
@@ -18585,9 +18516,6 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
-      '@preact-signals/safe-react':
-        specifier: 'catalog:'
-        version: 0.9.0(@babel/core@7.28.0)(@swc/helpers@0.5.17)(react@19.2.3)
       '@radix-ui/react-primitive':
         specifier: 'catalog:'
         version: 2.0.2(@types/react-dom@19.2.3(@types/react@19.2.7))(@types/react@19.2.7)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)

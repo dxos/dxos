@@ -40,7 +40,6 @@
     "@dxos/react-ui-text-tooltip": "workspace:*",
     "@dxos/ui-types": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@preact-signals/safe-react": "catalog:",
     "@preact/signals-core": "catalog:",
     "@radix-ui/react-context": "catalog:",
     "@xyflow/react": "catalog:",

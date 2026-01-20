@@ -47,7 +47,6 @@
     "@dxos/ui-types": "workspace:*",
     "@dxos/util": "workspace:*",
     "@fluentui/react-tabster": "catalog:",
-    "@preact-signals/safe-react": "catalog:",
     "@preact/signals-core": "catalog:",
     "@radix-ui/react-accordion": "catalog:",
     "@radix-ui/react-context": "catalog:"

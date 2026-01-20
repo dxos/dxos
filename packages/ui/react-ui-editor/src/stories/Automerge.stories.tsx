@@ -2,8 +2,6 @@
 // Copyright 2023 DXOS.org
 //
 
-import '@preact/signals-react';
-
 import { Repo } from '@automerge/automerge-repo';
 import { BroadcastChannelNetworkAdapter } from '@automerge/automerge-repo-network-broadcastchannel';
 import { type Meta, type StoryObj } from '@storybook/react-vite';

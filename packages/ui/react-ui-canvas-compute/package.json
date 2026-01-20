@@ -58,7 +58,6 @@
     "@dxos/types": "workspace:*",
     "@dxos/util": "workspace:*",
     "@effect/platform": "catalog:",
-    "@preact-signals/safe-react": "catalog:",
     "chess.js": "catalog:"
   },
   "devDependencies": {

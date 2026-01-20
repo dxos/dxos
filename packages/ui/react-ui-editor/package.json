@@ -69,8 +69,6 @@
     "@lezer/generator": "catalog:",
     "@lezer/highlight": "catalog:",
     "@lezer/markdown": "catalog:",
-    "@preact-signals/safe-react": "catalog:",
-    "@preact/signals-react": "catalog:",
     "@radix-ui/react-context": "catalog:",
     "@radix-ui/react-use-controllable-state": "catalog:",
     "@replit/codemirror-vim": "catalog:",
