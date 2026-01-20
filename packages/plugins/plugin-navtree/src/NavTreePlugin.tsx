@@ -64,7 +64,10 @@ export const NavTreePlugin = Plugin.define(meta).pipe(
   }),
   Plugin.addModule({
     id: 'keyboard',
-    activatesOn: Common.ActivationEvent.AppGraphReady,
+    activatesOn: ActivationEvent.allOf(
+      Common.ActivationEvent.AppGraphReady,
+      Common.ActivationEvent.OperationInvokerReady,
+    ),
     activate: Keyboard,
   }),
   Common.Plugin.addSurfaceModule({ activate: ReactSurface }),

@@ -4,14 +4,12 @@
 
 import { Atom, Registry } from '@effect-atom/atom-react';
 import * as Array from 'effect/Array';
-import * as Context from 'effect/Context';
 import * as Deferred from 'effect/Deferred';
 import * as Duration from 'effect/Duration';
 import * as Effect from 'effect/Effect';
 import * as Fiber from 'effect/Fiber';
 import * as Function from 'effect/Function';
 import * as HashSet from 'effect/HashSet';
-import * as Layer from 'effect/Layer';
 import * as PubSub from 'effect/PubSub';
 import * as Ref from 'effect/Ref';
 
@@ -20,7 +18,8 @@ import { log } from '@dxos/log';
 
 import * as ActivationEvent from './activation-event';
 import * as Capability from './capability';
-import type * as Plugin from './plugin';
+import * as CapabilityManager from './capability-manager';
+import * as Plugin from './plugin';
 
 /**
  * Identifier denoting a Manager.
@@ -44,7 +43,7 @@ type ActivationMessage = { event: string; state: 'activating' | 'activated' | 'e
 export interface PluginManager {
   readonly [ManagerTypeId]: ManagerTypeId;
   readonly activation: PubSub.PubSub<ActivationMessage>;
-  readonly context: Capability.PluginContext;
+  readonly capabilities: CapabilityManager.CapabilityManager;
   readonly registry: Registry.Registry;
 
   readonly plugins: Atom.Atom<readonly Plugin.Plugin[]>;
@@ -89,7 +88,7 @@ export const isManager = (value: unknown): value is PluginManager => {
 class ManagerImpl implements PluginManager {
   readonly [ManagerTypeId]: ManagerTypeId = ManagerTypeId;
   readonly activation = Effect.runSync(PubSub.unbounded<ActivationMessage>());
-  readonly context: Capability.PluginContext;
+  readonly capabilities: CapabilityManager.CapabilityManager;
   readonly registry: Registry.Registry;
 
   private readonly _pluginsAtom: Atom.Writable<Plugin.Plugin[]>;
@@ -114,10 +113,8 @@ class ManagerImpl implements PluginManager {
     registry,
   }: ManagerOptions) {
     this.registry = registry ?? Registry.make();
-    this.context = new Capability.PluginContextImpl({
+    this.capabilities = CapabilityManager.make({
       registry: this.registry,
-      activate: (event) => this.activate(event),
-      reset: (id) => this.reset(id),
     });
 
     this._pluginLoader = pluginLoader;
@@ -600,7 +597,11 @@ class ManagerImpl implements PluginManager {
           log('loading module', { module: module.id });
           const [duration, capabilities] = yield* module
             .activate()
-            .pipe(Effect.provideService(Capability.PluginContextService, this.context), Effect.timed);
+            .pipe(
+              Effect.provideService(Capability.Service, this.capabilities),
+              Effect.provideService(Plugin.Service, this),
+              Effect.timed,
+            );
           const normalized = capabilities == null ? [] : Array.isArray(capabilities) ? capabilities : [capabilities];
           log('loaded module', {
             module: module.id,
@@ -643,7 +644,7 @@ class ManagerImpl implements PluginManager {
   ): Effect.Effect<void, Error> {
     return Effect.gen(this, function* () {
       capabilities.forEach((capability) => {
-        this.context.contributeCapability({ module: module.id, ...capability });
+        this.capabilities.contribute({ module: module.id, ...capability });
       });
       this._update(this._activeAtom, (active) => [...active, module.id]);
       this._capabilities.set(module.id, capabilities);
@@ -659,7 +660,7 @@ class ManagerImpl implements PluginManager {
       const capabilities = this._capabilities.get(id);
       if (capabilities) {
         for (const capability of capabilities) {
-          this.context.removeCapability(capability.interface, capability.implementation);
+          this.capabilities.remove(capability.interface, capability.implementation);
           const program = capability.deactivate?.() ?? Effect.succeed(undefined);
           yield* program;
         }
@@ -681,10 +682,6 @@ class ManagerImpl implements PluginManager {
  * Creates a new Plugin Manager instance.
  */
 export const make = (options: ManagerOptions): PluginManager => new ManagerImpl(options);
-
-export class Service extends Context.Tag('PluginService')<Service, PluginManager>() {
-  static fromManager = (manager: PluginManager) => Layer.succeed(Service, manager);
-}
 
 /**
  * Runs an effect concurrently with another effect.

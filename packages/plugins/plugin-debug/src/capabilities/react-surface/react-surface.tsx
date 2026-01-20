@@ -84,7 +84,7 @@ const useCurrentSpace = () => {
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    const context = yield* Capability.PluginContextService;
+    const capabilities = yield* Capability.Service;
 
     return Capability.contributes(Common.Capability.ReactSurface, [
       Common.createSurface({
@@ -142,8 +142,8 @@ export default Capability.makeModule(
         role: ['article', 'section'],
         position: 'hoist',
         filter: (data): data is { subject: Obj.Any } => {
-          const settings = context
-            .getCapability(Common.Capability.SettingsStore)
+          const settings = capabilities
+            .get(Common.Capability.SettingsStore)
             .getStore<DebugSettingsProps>(meta.id)!.value;
           return Obj.isObject(data.subject) && !!settings.wireframe;
         },

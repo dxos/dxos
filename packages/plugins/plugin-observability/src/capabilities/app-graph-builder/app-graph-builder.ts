@@ -14,26 +14,29 @@ const ATTENDABLE_PATH_SEPARATOR = '~';
 
 const DECK_COMPANION_TYPE = 'dxos.org/plugin/deck/deck-companion';
 
-export default Capability.makeModule(() =>
-  Effect.succeed(
-    Capability.contributes(Common.Capability.AppGraphBuilder, [
+export default Capability.makeModule(
+  Effect.fnUntraced(function* () {
+    const extensions = yield* Effect.all([
       GraphBuilder.createExtension({
         id: `${meta.id}/help`,
         match: NodeMatcher.whenRoot,
-        connector: (node) => [
-          {
-            id: [node.id, 'help'].join(ATTENDABLE_PATH_SEPARATOR),
-            type: DECK_COMPANION_TYPE,
-            data: null,
-            properties: {
-              label: ['help label', { ns: meta.id }],
-              icon: 'ph--question--regular',
-              disposition: 'hidden',
-              position: 'hoist',
+        connector: (node) =>
+          Effect.succeed([
+            {
+              id: [node.id, 'help'].join(ATTENDABLE_PATH_SEPARATOR),
+              type: DECK_COMPANION_TYPE,
+              data: null,
+              properties: {
+                label: ['help label', { ns: meta.id }],
+                icon: 'ph--question--regular',
+                disposition: 'hidden',
+                position: 'hoist',
+              },
             },
-          },
-        ],
+          ]),
       }),
-    ]),
-  ),
+    ]);
+
+    return Capability.contributes(Common.Capability.AppGraphBuilder, extensions);
+  }),
 );

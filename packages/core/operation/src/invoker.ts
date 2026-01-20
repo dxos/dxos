@@ -48,6 +48,15 @@ export interface OperationInvoker {
       ? [input?: I, options?: Operation.InvokeOptions]
       : [input: I, options?: Operation.InvokeOptions]
   ) => Effect.Effect<O, Error>;
+  /**
+   * Schedule an operation to run as a followup.
+   * The followup is tracked and won't be cancelled when the parent operation completes.
+   * Returns an Effect that completes immediately after scheduling.
+   */
+  schedule: <I, O>(
+    op: Operation.Definition<I, O>,
+    ...args: void extends I ? [input?: I] : [input: I]
+  ) => Effect.Effect<void>;
   invokePromise: <I, O>(
     op: Operation.Definition<I, O>,
     ...args: void extends I
@@ -129,6 +138,12 @@ class OperationInvokerImpl implements OperationInvokerInternal {
   get awaitFollowups(): Effect.Effect<void> {
     return this._followupScheduler.awaitAll;
   }
+
+  // Arrow function to preserve `this` context when destructured.
+  schedule = <I, O>(
+    op: Operation.Definition<I, O>,
+    ...args: void extends I ? [input?: I] : [input: I]
+  ): Effect.Effect<void> => this._followupScheduler.schedule(op, ...(args as [I]));
 
   // Arrow function to preserve `this` context when destructured.
   invoke = <I, O>(

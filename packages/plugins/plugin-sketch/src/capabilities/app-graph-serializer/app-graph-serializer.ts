@@ -16,7 +16,7 @@ import { Diagram, SketchOperation } from '../../types';
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     // Get context for lazy capability access in callbacks.
-    const context = yield* Capability.PluginContextService;
+    const capabilities = yield* Capability.Service;
 
     return Capability.contributes(Common.Capability.AppGraphSerializer, [
       {
@@ -43,7 +43,7 @@ export default Capability.makeModule(
 
           const { schema, content } = JSON.parse(data.data);
 
-          const { invokePromise } = context.getCapability(Common.Capability.OperationInvoker);
+          const { invokePromise } = capabilities.get(Common.Capability.OperationInvoker);
           const createResult = await invokePromise(SketchOperation.Create, { name: data.name, schema, content });
           if (!createResult.data?.object) {
             return undefined;

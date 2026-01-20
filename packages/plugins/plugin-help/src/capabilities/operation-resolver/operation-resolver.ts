@@ -11,14 +11,12 @@ import { HelpCapabilities, HelpOperation } from '../../types';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    const context = yield* Capability.PluginContextService;
-
     return Capability.contributes(Common.Capability.OperationResolver, [
       OperationResolver.make({
         operation: HelpOperation.Start,
         handler: () =>
-          Effect.sync(() => {
-            const state = context.getCapability(HelpCapabilities.MutableState);
+          Effect.gen(function* () {
+            const state = yield* Capability.get(HelpCapabilities.MutableState);
             state.running = true;
           }),
       }),

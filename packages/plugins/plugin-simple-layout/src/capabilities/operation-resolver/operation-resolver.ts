@@ -11,8 +11,6 @@ import { SimpleLayoutState } from '../../types';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    const context = yield* Capability.PluginContextService;
-
     return Capability.contributes(Common.Capability.OperationResolver, [
       //
       // UpdateSidebar - No-op for simple layout.
@@ -36,8 +34,8 @@ export default Capability.makeModule(
       OperationResolver.make({
         operation: Common.LayoutOperation.UpdateDialog,
         handler: (input) =>
-          Effect.sync(() => {
-            const layout = context.getCapability(SimpleLayoutState);
+          Effect.gen(function* () {
+            const layout = yield* Capability.get(SimpleLayoutState);
             layout.dialogOpen = input.state ?? Boolean(input.subject);
             layout.dialogType = input.type ?? 'default';
             layout.dialogBlockAlign = input.blockAlign ?? 'center';
@@ -53,8 +51,8 @@ export default Capability.makeModule(
       OperationResolver.make({
         operation: Common.LayoutOperation.UpdatePopover,
         handler: (input) =>
-          Effect.sync(() => {
-            const layout = context.getCapability(SimpleLayoutState);
+          Effect.gen(function* () {
+            const layout = yield* Capability.get(SimpleLayoutState);
             layout.popoverOpen = input.state ?? Boolean(input.subject);
             layout.popoverContent =
               typeof input.subject === 'string'
@@ -78,8 +76,8 @@ export default Capability.makeModule(
       OperationResolver.make({
         operation: Common.LayoutOperation.SwitchWorkspace,
         handler: (input) =>
-          Effect.sync(() => {
-            const layout = context.getCapability(SimpleLayoutState);
+          Effect.gen(function* () {
+            const layout = yield* Capability.get(SimpleLayoutState);
             // TODO(wittjosiah): This is a hack to prevent the previous deck from being set for pinned items.
             //  Ideally this should be worked into the data model in a generic way.
             if (!layout.workspace.startsWith('!')) {
@@ -97,7 +95,7 @@ export default Capability.makeModule(
         operation: Common.LayoutOperation.RevertWorkspace,
         handler: () =>
           Effect.gen(function* () {
-            const layout = context.getCapability(SimpleLayoutState);
+            const layout = yield* Capability.get(SimpleLayoutState);
             yield* Operation.invoke(Common.LayoutOperation.SwitchWorkspace, {
               subject: layout.previousWorkspace,
             });
@@ -110,8 +108,8 @@ export default Capability.makeModule(
       OperationResolver.make({
         operation: Common.LayoutOperation.Open,
         handler: (input) =>
-          Effect.sync(() => {
-            const layout = context.getCapability(SimpleLayoutState);
+          Effect.gen(function* () {
+            const layout = yield* Capability.get(SimpleLayoutState);
             layout.active = input.subject[0];
           }),
       }),
@@ -122,8 +120,8 @@ export default Capability.makeModule(
       OperationResolver.make({
         operation: Common.LayoutOperation.Close,
         handler: () =>
-          Effect.sync(() => {
-            const layout = context.getCapability(SimpleLayoutState);
+          Effect.gen(function* () {
+            const layout = yield* Capability.get(SimpleLayoutState);
             layout.active = undefined;
           }),
       }),
@@ -134,8 +132,8 @@ export default Capability.makeModule(
       OperationResolver.make({
         operation: Common.LayoutOperation.Set,
         handler: (input) =>
-          Effect.sync(() => {
-            const layout = context.getCapability(SimpleLayoutState);
+          Effect.gen(function* () {
+            const layout = yield* Capability.get(SimpleLayoutState);
             layout.active = input.subject[0];
           }),
       }),

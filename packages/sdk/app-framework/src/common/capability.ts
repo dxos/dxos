@@ -243,7 +243,7 @@ export namespace Capability {
   // Operation System Capabilities
   //
 
-  export type OperationResolver = OperationResolver$.OperationResolver;
+  export type OperationResolver = OperationResolver$.OperationResolver<any, any, any, any>;
 
   /**
    * Handler registration for operations - contributed by plugins.

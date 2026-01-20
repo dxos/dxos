@@ -110,6 +110,12 @@ function readPackage(packageJson, context) {
       break;
     }
 
+    // We use @dxos/wa-sqlite directly instead of @effect/wa-sqlite.
+    case '@effect/sql-sqlite-wasm': {
+      delete packageJson.peerDependencies['@effect/wa-sqlite'];
+      break;
+    }
+
     // https://github.com/dxos/dxos/issues/3330
     case 'simple-hypercore-protocol': {
       packageJson.dependencies['noise-protocol'] = '3.0.1';

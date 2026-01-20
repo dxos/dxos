@@ -16,7 +16,7 @@ import { Markdown, MarkdownOperation } from '../../types';
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     // Get context for lazy capability access in callbacks.
-    const context = yield* Capability.PluginContextService;
+    const capabilities = yield* Capability.Service;
 
     return Capability.contributes(Common.Capability.AppGraphSerializer, [
       {
@@ -44,7 +44,7 @@ export default Capability.makeModule(
             return;
           }
 
-          const { invokePromise } = context.getCapability(Common.Capability.OperationInvoker);
+          const { invokePromise } = capabilities.get(Common.Capability.OperationInvoker);
           const createResult = await invokePromise(MarkdownOperation.Create, { name: data.name, content: data.data });
           if (!createResult.data?.object) {
             return undefined;

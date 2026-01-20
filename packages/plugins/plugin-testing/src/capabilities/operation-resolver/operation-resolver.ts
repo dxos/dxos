@@ -11,14 +11,12 @@ import { LayoutState } from '../../types';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    const context = yield* Capability.PluginContextService;
-
     return Capability.contributes(Common.Capability.OperationResolver, [
       OperationResolver.make({
         operation: Common.LayoutOperation.UpdateSidebar,
         handler: ({ state }) =>
-          Effect.sync(() => {
-            const layout = context.getCapability(LayoutState);
+          Effect.gen(function* () {
+            const layout = yield* Capability.get(LayoutState);
             const next = state ?? layout.sidebarState;
             if (next !== layout.sidebarState) {
               layout.sidebarState = next;
@@ -28,8 +26,8 @@ export default Capability.makeModule(
       OperationResolver.make({
         operation: Common.LayoutOperation.UpdateComplementary,
         handler: ({ state }) =>
-          Effect.sync(() => {
-            const layout = context.getCapability(LayoutState);
+          Effect.gen(function* () {
+            const layout = yield* Capability.get(LayoutState);
             const next = state ?? layout.complementarySidebarState;
             if (next !== layout.complementarySidebarState) {
               layout.complementarySidebarState = next;
@@ -39,8 +37,8 @@ export default Capability.makeModule(
       OperationResolver.make({
         operation: Common.LayoutOperation.UpdateDialog,
         handler: ({ subject, state, type, blockAlign, overlayClasses, overlayStyle, props }) =>
-          Effect.sync(() => {
-            const layout = context.getCapability(LayoutState);
+          Effect.gen(function* () {
+            const layout = yield* Capability.get(LayoutState);
             layout.dialogOpen = state ?? Boolean(subject);
             layout.dialogType = type ?? 'default';
             layout.dialogBlockAlign = blockAlign ?? 'center';
@@ -52,8 +50,8 @@ export default Capability.makeModule(
       OperationResolver.make({
         operation: Common.LayoutOperation.UpdatePopover,
         handler: (input) =>
-          Effect.sync(() => {
-            const layout = context.getCapability(LayoutState);
+          Effect.gen(function* () {
+            const layout = yield* Capability.get(LayoutState);
             const { subject, state, side, props } = input;
             layout.popoverContent =
               typeof subject === 'string' ? { component: subject, props } : subject ? { subject } : undefined;
@@ -71,8 +69,8 @@ export default Capability.makeModule(
       OperationResolver.make({
         operation: Common.LayoutOperation.SwitchWorkspace,
         handler: ({ subject }) =>
-          Effect.sync(() => {
-            const layout = context.getCapability(LayoutState);
+          Effect.gen(function* () {
+            const layout = yield* Capability.get(LayoutState);
             layout.workspace = subject;
           }),
       }),

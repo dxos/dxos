@@ -99,14 +99,14 @@ unsubscribe();
 For React applications, use the hooks from `@dxos/echo-react`:
 
 ```tsx
-import { useObject, useObjectUpdate } from '@dxos/echo-react';
+import { useObject } from '@dxos/echo-react';
 import { RegistryContext } from '@effect-atom/atom-react';
 import * as Registry from '@effect-atom/atom/Registry';
 
 // Wrap your app with RegistryContext
 function App() {
   const registry = useMemo(() => Registry.make(), []);
-  
+
   return (
     <RegistryContext.Provider value={registry}>
       <YourComponents />
@@ -116,16 +116,12 @@ function App() {
 
 // In your components
 function PersonView({ person }: { person: Person }) {
-  // Subscribe to entire object
-  const currentPerson = useObject(person);
-  
-  // Subscribe to specific property
-  const name = useObject(person, 'name');
-  
-  // Get update functions
-  const updatePerson = useObjectUpdate(person);
-  const updateName = useObjectUpdate(person, 'name');
-  
+  // Subscribe to entire object (returns [value, updateCallback])
+  const [currentPerson, updatePerson] = useObject(person);
+
+  // Subscribe to specific property (returns [value, updateCallback])
+  const [name, updateName] = useObject(person, 'name');
+
   return (
     <div>
       <input

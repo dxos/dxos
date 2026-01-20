@@ -12,7 +12,7 @@ import { Node } from '@dxos/plugin-graph';
 import { type MaybePromise, byPosition } from '@dxos/util';
 
 import { meta } from '../../meta';
-import { FileCapabilities, LocalFilesOperation } from '../../types';
+import { FileCapabilities, type FilesState, LocalFilesOperation } from '../../types';
 import {
   findFile,
   getDirectoryChildren,
@@ -70,74 +70,79 @@ const traverseFileSystem = async (
   }
 };
 
+const createExportFile = (
+  directoryHandles: Record<string, FileSystemDirectoryHandle>,
+  directoryNameCounter: Record<string, Record<string, number>>,
+) => {
+  return async ({
+    node,
+    path,
+    serialized,
+    state,
+  }: {
+    node: Node.Node;
+    path: string[];
+    serialized: Common.SerializedNode;
+    state: FilesState;
+  }) => {
+    if (!state.rootHandle) {
+      return;
+    }
+
+    if (node.id === 'root') {
+      Object.keys(directoryHandles).forEach((key) => delete directoryHandles[key]);
+      Object.keys(directoryNameCounter).forEach((key) => delete directoryNameCounter[key]);
+      directoryHandles[''] = state.rootHandle!;
+      directoryNameCounter[''] = {};
+      for await (const name of (state.rootHandle as any).keys()) {
+        await state.rootHandle!.removeEntry(name, { recursive: true });
+      }
+      return;
+    }
+
+    const parentPath = path.slice(0, -1).join('/');
+    const parentHandle = directoryHandles[parentPath];
+    if (!parentHandle || !(parentHandle instanceof FileSystemDirectoryHandle)) {
+      log.warn('missing parent handle', { id: node.id, parentHandle: !!parentHandle });
+      return;
+    }
+
+    try {
+      const nameCounter = directoryNameCounter[parentPath] ?? (directoryNameCounter[parentPath] = {});
+      const count = nameCounter[serialized.name] ?? 0;
+      const name = getFileName(serialized, count);
+      nameCounter[serialized.name] = count + 1;
+
+      if (node.properties.role === 'branch') {
+        const handle = await parentHandle.getDirectoryHandle(name, { create: true });
+        const pathString = path.join('/');
+        directoryHandles[pathString] = handle;
+
+        const metadataHandle = await handle.getFileHandle('.composer.json', { create: true });
+        const metadata = { type: node.type };
+        await writeFile(metadataHandle, JSON.stringify(metadata, null, 2));
+      } else {
+        const handle = await parentHandle.getFileHandle(name, { create: true });
+        await writeFile(handle, serialized.data);
+      }
+    } catch (err) {
+      log.catch(err);
+    }
+  };
+};
+
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    const context = yield* Capability.PluginContextService;
-
     const directoryHandles: Record<string, FileSystemDirectoryHandle> = {};
     const directoryNameCounter: Record<string, Record<string, number>> = {};
-
-    const exportFile = async ({
-      node,
-      path,
-      serialized,
-    }: {
-      node: Node.Node;
-      path: string[];
-      serialized: Common.SerializedNode;
-    }) => {
-      const state = context.getCapability(FileCapabilities.State);
-      if (!state.rootHandle) {
-        return;
-      }
-
-      if (node.id === 'root') {
-        Object.keys(directoryHandles).forEach((key) => delete directoryHandles[key]);
-        Object.keys(directoryNameCounter).forEach((key) => delete directoryNameCounter[key]);
-        directoryHandles[''] = state.rootHandle!;
-        directoryNameCounter[''] = {};
-        for await (const name of (state.rootHandle as any).keys()) {
-          await state.rootHandle!.removeEntry(name, { recursive: true });
-        }
-        return;
-      }
-
-      const parentPath = path.slice(0, -1).join('/');
-      const parentHandle = directoryHandles[parentPath];
-      if (!parentHandle || !(parentHandle instanceof FileSystemDirectoryHandle)) {
-        log.warn('missing parent handle', { id: node.id, parentHandle: !!parentHandle });
-        return;
-      }
-
-      try {
-        const nameCounter = directoryNameCounter[parentPath] ?? (directoryNameCounter[parentPath] = {});
-        const count = nameCounter[serialized.name] ?? 0;
-        const name = getFileName(serialized, count);
-        nameCounter[serialized.name] = count + 1;
-
-        if (node.properties.role === 'branch') {
-          const handle = await parentHandle.getDirectoryHandle(name, { create: true });
-          const pathString = path.join('/');
-          directoryHandles[pathString] = handle;
-
-          const metadataHandle = await handle.getFileHandle('.composer.json', { create: true });
-          const metadata = { type: node.type };
-          await writeFile(metadataHandle, JSON.stringify(metadata, null, 2));
-        } else {
-          const handle = await parentHandle.getFileHandle(name, { create: true });
-          await writeFile(handle, serialized.data);
-        }
-      } catch (err) {
-        log.catch(err);
-      }
-    };
+    const exportFile = createExportFile(directoryHandles, directoryNameCounter);
 
     return Capability.contributes(Common.Capability.OperationResolver, [
       OperationResolver.make({
         operation: LocalFilesOperation.SelectRoot,
         handler: () =>
           Effect.gen(function* () {
-            const mutableState = context.getCapability(FileCapabilities.MutableState);
+            const mutableState = yield* Capability.get(FileCapabilities.MutableState);
             const rootDir = yield* Effect.promise(async () =>
               (window as any).showDirectoryPicker({ mode: 'readwrite' }),
             );
@@ -150,14 +155,15 @@ export default Capability.makeModule(
         operation: LocalFilesOperation.Export,
         handler: () =>
           Effect.gen(function* () {
-            const { explore } = context.getCapability(Common.Capability.AppGraph);
-            const mutableState = context.getCapability(FileCapabilities.MutableState);
+            const { explore } = yield* Capability.get(Common.Capability.AppGraph);
+            const state = yield* Capability.get(FileCapabilities.State);
+            const mutableState = yield* Capability.get(FileCapabilities.MutableState);
             if (!mutableState.rootHandle) {
               yield* Operation.invoke(SettingsOperation.Open, { plugin: meta.id });
               return;
             }
 
-            const serializers = context.getCapabilities(Common.Capability.AppGraphSerializer).flat();
+            const serializers = yield* Capability.getAll(Common.Capability.AppGraphSerializer);
 
             yield* Effect.promise(async () =>
               explore({
@@ -167,6 +173,7 @@ export default Capability.makeModule(
                   }
 
                   const [serializer] = serializers
+                    .flat()
                     .filter((serializer) => node.type === serializer.inputType)
                     .sort(byPosition);
                   if (!serializer && node.data !== null) {
@@ -174,13 +181,13 @@ export default Capability.makeModule(
                   }
 
                   const serialized = await serializer.serialize(node);
-                  await exportFile({ node, path: path.slice(1), serialized });
+                  await exportFile({ node, path: path.slice(1), serialized, state });
                 },
               }),
             );
 
             mutableState.lastExport = Date.now();
-          }).pipe(Effect.provideService(Capability.PluginContextService, context)),
+          }),
       }),
       OperationResolver.make({
         operation: LocalFilesOperation.Import,
@@ -193,7 +200,7 @@ export default Capability.makeModule(
               return;
             }
 
-            const serializers = context.getCapabilities(Common.Capability.AppGraphSerializer).flat();
+            const serializers = yield* Capability.getAll(Common.Capability.AppGraphSerializer);
 
             const importFile = async ({ handle, ancestors }: { handle: FileSystemHandle; ancestors: unknown[] }) => {
               const [name, ...extension] = handle.name.split('.');
@@ -212,6 +219,7 @@ export default Capability.makeModule(
               }
               const data = handle.kind === 'directory' ? name : await (await (handle as any).getFile()).text();
               const [serializer] = serializers
+                .flat()
                 .filter((serializer) =>
                   handle.kind === 'directory' ? type === serializer.inputType : type === serializer.outputType,
                 )
@@ -229,7 +237,7 @@ export default Capability.makeModule(
         operation: LocalFilesOperation.OpenFile,
         handler: () =>
           Effect.gen(function* () {
-            const mutableState = context.getCapability(FileCapabilities.MutableState);
+            const mutableState = yield* Capability.get(FileCapabilities.MutableState);
             if ('showOpenFilePicker' in window) {
               const [handle]: FileSystemFileHandle[] = yield* Effect.promise(async () =>
                 (window as any).showOpenFilePicker({
@@ -263,7 +271,7 @@ export default Capability.makeModule(
         operation: LocalFilesOperation.OpenDirectory,
         handler: () =>
           Effect.gen(function* () {
-            const mutableState = context.getCapability(FileCapabilities.MutableState);
+            const mutableState = yield* Capability.get(FileCapabilities.MutableState);
             const handle = yield* Effect.promise(async () =>
               (window as any).showDirectoryPicker({ mode: 'readwrite' }),
             );
@@ -276,7 +284,7 @@ export default Capability.makeModule(
         operation: LocalFilesOperation.Reconnect,
         handler: ({ id }) =>
           Effect.gen(function* () {
-            const mutableState = context.getCapability(FileCapabilities.MutableState);
+            const mutableState = yield* Capability.get(FileCapabilities.MutableState);
             const entity = mutableState.files.find((entity) => entity.id === id);
             if (!entity) {
               return;
@@ -310,7 +318,7 @@ export default Capability.makeModule(
         operation: LocalFilesOperation.Save,
         handler: ({ id }) =>
           Effect.gen(function* () {
-            const mutableState = context.getCapability(FileCapabilities.MutableState);
+            const mutableState = yield* Capability.get(FileCapabilities.MutableState);
             const file = findFile(mutableState.files, [id]);
             if (file) {
               yield* Effect.promise(async () => handleSave(file));
@@ -320,8 +328,8 @@ export default Capability.makeModule(
       OperationResolver.make({
         operation: LocalFilesOperation.Close,
         handler: ({ id }) =>
-          Effect.sync(() => {
-            const mutableState = context.getCapability(FileCapabilities.MutableState);
+          Effect.gen(function* () {
+            const mutableState = yield* Capability.get(FileCapabilities.MutableState);
             const index = mutableState.files.findIndex((f) => f.id === id);
             if (index >= 0) {
               mutableState.files.splice(index, 1);

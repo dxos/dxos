@@ -25,6 +25,7 @@ import React, {
 import { type Node } from '@dxos/app-graph';
 import { invariant } from '@dxos/invariant';
 import { DxAvatar } from '@dxos/lit-ui/react';
+import { useActionRunner } from '@dxos/plugin-graph';
 import {
   Icon,
   ListItem,
@@ -73,17 +74,14 @@ type L0ItemProps = L0ItemRootProps & {
 const useL0ItemClick = ({ item, parent, path }: L0ItemProps, type: string) => {
   const { tab, isCurrent, onSelect, onTabChange } = useNavTreeContext();
   const [isLg] = useMediaQuery('lg');
+  const runAction = useActionRunner();
 
   return useCallback(
     (event: MouseEvent) => {
       switch (type) {
         case 'action': {
-          const {
-            data: invoke,
-            properties: { caller },
-          } = item;
-
-          return invoke?.(caller ? { node: parent, caller } : { node: parent });
+          const { properties: { caller } = {} } = item;
+          return void runAction(item as Node.Action, caller ? { parent, caller } : { parent });
         }
 
         case 'tab':
@@ -93,7 +91,7 @@ const useL0ItemClick = ({ item, parent, path }: L0ItemProps, type: string) => {
           return onSelect?.({ item, path, current: !isCurrent(path, item), option: event.altKey });
       }
     },
-    [item, parent, type, tab, isCurrent, onSelect, onTabChange, isLg],
+    [item, parent, type, tab, isCurrent, onSelect, onTabChange, isLg, runAction],
   );
 };
 
@@ -318,6 +316,13 @@ export type L0MenuProps = {
 
 export const L0Menu = ({ menuActions, topLevelItems, pinnedItems, userAccountItem, parent, path }: L0MenuProps) => {
   const { t } = useTranslation(meta.id);
+  const runAction = useActionRunner();
+  const handleAction = useCallback(
+    (action: Node.Action, params: Node.InvokeProps) => {
+      void runAction(action, params);
+    },
+    [runAction],
+  );
 
   return (
     <Tabs.Tablist
@@ -328,7 +333,7 @@ export const L0Menu = ({ menuActions, topLevelItems, pinnedItems, userAccountIte
       ]}
     >
       {/* TODO(wittjosiah): Use L0Item trigger. */}
-      <MenuProvider>
+      <MenuProvider onAction={handleAction}>
         <DropdownMenu.Root group={parent} items={menuActions}>
           <Tooltip.Trigger content={t('app menu label')} side='right' asChild>
             <Tabs.TabPrimitive value='options' asChild role='button'>

@@ -124,13 +124,13 @@ export const useApp = ({
   }, [manager]);
 
   useAsyncEffect(async () => {
-    manager.context.contributeCapability({
+    manager.capabilities.contribute({
       interface: Common.Capability.PluginManager,
       implementation: manager,
       module: 'dxos.org/app-framework/plugin-manager',
     });
 
-    manager.context.contributeCapability({
+    manager.capabilities.contribute({
       interface: Common.Capability.AtomRegistry,
       implementation: manager.registry,
       module: 'dxos.org/app-framework/atom-registry',
@@ -181,8 +181,8 @@ export const useApp = ({
     return () => {
       clearTimeout(timeoutId);
       void runAndForwardErrors(Fiber.interrupt(fiber));
-      manager.context.removeCapability(Common.Capability.PluginManager, manager);
-      manager.context.removeCapability(Common.Capability.AtomRegistry, manager.registry);
+      manager.capabilities.remove(Common.Capability.PluginManager, manager);
+      manager.capabilities.remove(Common.Capability.AtomRegistry, manager.registry);
     };
   }, [manager]);
 
