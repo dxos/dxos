@@ -133,7 +133,7 @@ export const ProjectObjectSettings = ({ classNames, project }: ProjectObjectSett
       p.columns.push({
         name: 'Tasks',
         // Type assertion needed due to QueryAST type variance.
-        view: Ref.make(newView) as typeof p.columns[number]['view'],
+        view: Ref.make(newView) as (typeof p.columns)[number]['view'],
         order: [],
       });
     });

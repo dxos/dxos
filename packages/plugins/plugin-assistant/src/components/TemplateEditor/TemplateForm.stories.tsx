@@ -14,7 +14,7 @@ import { trim } from '@dxos/util';
 
 import { translations } from '../../translations';
 
-import { TemplateForm, type TemplateChangeCallback } from './TemplateForm';
+import { type TemplateChangeCallback, TemplateForm } from './TemplateForm';
 
 const TEMPLATE = trim`
   You are a machine that is an expert chess player.
