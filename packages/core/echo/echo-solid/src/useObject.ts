@@ -95,9 +95,7 @@ export function useObject<T extends Entity.Unknown | undefined, K extends keyof 
 
     Obj.change(currentObj, (o: any) => {
       if (typeof updateOrValue === 'function') {
-        const returnValue = (updateOrValue as (obj: unknown) => unknown)(
-          property !== undefined ? o[property] : o,
-        );
+        const returnValue = (updateOrValue as (obj: unknown) => unknown)(property !== undefined ? o[property] : o);
         if (returnValue !== undefined) {
           if (property === undefined) {
             throw new Error('Cannot re-assign the entire object');
