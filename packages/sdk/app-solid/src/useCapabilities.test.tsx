@@ -16,8 +16,8 @@ const TestCapability = Capability.make<{ value: string }>('test.capability');
 const mockAtom = Atom.make([{ value: 'hello' }]);
 
 const mockManager = {
-  context: {
-    capabilities: () => mockAtom,
+  capabilities: {
+    atom: () => mockAtom,
   },
 } as unknown as PluginManager.PluginManager;
 
@@ -57,8 +57,8 @@ describe('useCapability', () => {
   test('throws if no capability is found', () => {
     const emptyAtom = Atom.make([]);
     const emptyManager = {
-      context: {
-        capabilities: () => emptyAtom,
+      capabilities: {
+        atom: () => emptyAtom,
       },
     } as unknown as PluginManager.PluginManager;
 

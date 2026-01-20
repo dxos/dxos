@@ -6,6 +6,7 @@ import React from 'react';
 
 import { useAppGraph, useCapability } from '@dxos/app-framework/react';
 import { Obj } from '@dxos/echo';
+import { Node, useActionRunner } from '@dxos/plugin-graph';
 import { useActions, useNode } from '@dxos/plugin-graph';
 import {
   Icon,
@@ -42,6 +43,7 @@ export const Toolbar = ({
 }: ToolbarProps) => {
   const { t } = useTranslation(meta.id);
   const { graph } = useAppGraph();
+  const runAction = useActionRunner();
   const call = useCapability(ThreadCapabilities.CallManager);
 
   // Channel app graph node.
@@ -117,16 +119,18 @@ export const Toolbar = ({
             />
 
             {/* Companion actions. */}
-            {actions.map((action) => (
-              <IconButton
-                key={action.id}
-                {...defaultButtonProps}
-                icon={action.properties.icon}
-                label={toLocalizedString(action.properties.label, t)}
-                classNames={action.properties.classNames}
-                onClick={() => action.data({ node })}
-              />
-            ))}
+            {actions
+              .filter((action): action is Node.Action => Node.isAction(action))
+              .map((action) => (
+                <IconButton
+                  key={action.id}
+                  {...defaultButtonProps}
+                  icon={action.properties.icon}
+                  label={toLocalizedString(action.properties.label, t)}
+                  classNames={action.properties.classNames}
+                  onClick={() => node && void runAction(action, { parent: node })}
+                />
+              ))}
 
             <ToggleButton
               active={call.raisedHand}

@@ -4,7 +4,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Common } from '@dxos/app-framework';
+import { Capability, Common } from '@dxos/app-framework';
 import { Operation } from '@dxos/operation';
 import { type DeepReadonly } from '@dxos/util';
 
@@ -170,6 +170,7 @@ export namespace DeckOperation {
       name: 'Adjust',
       description: 'Adjust the layout of a plank.',
     },
+    services: [Capability.Service],
     schema: {
       input: Schema.Struct({
         id: Schema.String.annotations({ description: 'The id of the plank to adjust.' }),
@@ -185,6 +186,7 @@ export namespace DeckOperation {
       name: 'Update Plank Size',
       description: 'Update the size of a plank.',
     },
+    services: [Capability.Service],
     schema: {
       input: Schema.Struct({
         id: Schema.String.annotations({ description: 'The id of the plank to resize.' }),
@@ -200,6 +202,7 @@ export namespace DeckOperation {
       name: 'Change Companion',
       description: 'Change the companion plank for a primary plank.',
     },
+    services: [Capability.Service],
     schema: {
       input: Schema.Struct({
         primary: Schema.String,

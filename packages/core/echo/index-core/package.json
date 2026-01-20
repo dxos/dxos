@@ -30,6 +30,7 @@
     "@dxos/invariant": "workspace:",
     "@dxos/keys": "workspace:",
     "@dxos/log": "workspace:",
+    "@effect/cli": "catalog:",
     "@effect/experimental": "catalog:",
     "@effect/platform": "catalog:",
     "@effect/sql": "catalog:",

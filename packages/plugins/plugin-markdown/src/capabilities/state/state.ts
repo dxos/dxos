@@ -14,7 +14,7 @@ import { type Markdown, MarkdownCapabilities, type MarkdownPluginState } from '.
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     // Get context for lazy capability access in callbacks.
-    const context = yield* Capability.PluginContextService;
+    const capabilities = yield* Capability.Service;
 
     const state = new LocalStorageStore<MarkdownPluginState>(meta.id, { extensionProviders: [], viewMode: {} });
     state.prop({ key: 'viewMode', type: LocalStorageStore.json<{ [key: string]: EditorViewMode }>() });
@@ -23,9 +23,8 @@ export default Capability.makeModule(
     const editorState = createEditorStateStore(`${meta.id}/editor`);
 
     const getViewMode = (id: string) => {
-      const defaultViewMode = context
-        .getCapability(Common.Capability.SettingsStore)
-        .getStore<Markdown.Settings>(meta.id)!.value.defaultViewMode;
+      const defaultViewMode = capabilities.get(Common.Capability.SettingsStore).getStore<Markdown.Settings>(meta.id)!
+        .value.defaultViewMode;
       return (id && state.values.viewMode[id]) || defaultViewMode;
     };
 
