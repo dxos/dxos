@@ -9,7 +9,7 @@ import { type ForeignKey } from '@dxos/echo-protocol';
 import { createJsonPath, getValue as getValue$ } from '@dxos/effect';
 import { assertArgument, invariant } from '@dxos/invariant';
 import { type DXN, ObjectId } from '@dxos/keys';
-import { getSnapshot as getSnapshot$ } from '@dxos/live-object';
+import { getSnapshot as getSnapshot$, subscribe as subscribe$ } from '@dxos/live-object';
 import { assumeType, deepMapValues } from '@dxos/util';
 
 import type * as Database from './Database';
@@ -131,6 +131,15 @@ export const make = <S extends Schema.Schema.AnyNoContext>(
 export const isObject = (obj: unknown): obj is Any => {
   assumeType<InternalObjectProps>(obj);
   return typeof obj === 'object' && obj !== null && obj[Entity.KindId] === Entity.Kind.Object;
+};
+
+/**
+ * Subscribe to object updates.
+ * The callback is called synchronously when the object is modified.
+ * @returns Unsubscribe function.
+ */
+export const subscribe = (obj: Entity.Unknown, callback: () => void): (() => void) => {
+  return subscribe$(obj, callback);
 };
 
 //

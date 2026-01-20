@@ -30,9 +30,12 @@ describe('useObject', () => {
 
     const { result } = renderHook(() => useObject(obj), { wrapper });
 
+    // Returns a snapshot (plain object), not the Echo object itself.
     const [value] = result.current;
-    expect(value).toBe(obj);
+    expect(value).not.toBe(obj);
     expect(value.name).toBe('Test');
+    expect(value.username).toBe('test');
+    expect(value.email).toBe('test@example.com');
   });
 
   test('returns property value when property is provided', () => {
