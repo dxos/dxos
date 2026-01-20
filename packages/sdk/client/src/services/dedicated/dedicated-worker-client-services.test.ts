@@ -142,12 +142,15 @@ describe('DedicatedWorkerClientServices', { timeout: 1_000, retry: 0 }, () => {
       createCoordinator: () => coordinator,
     }).open();
     await using client2 = await new Client({ services: services2 }).initialize();
+    await client2.spaces.waitUntilReady();
+
     expect(client2.halo.identity.get()).toEqual(identity);
+    await client2.spaces.default.db.query(Filter.everything()).run();
 
     // TODO(dmaretskyi): tried doing DB write -> flush(indexes) -> query here but flush(indexes) doesnt work
   });
 
-  test.skip('leader goes from first client to second', async () => {
+  test('leader goes from first client to second', async () => {
     const coordinator = new MemoryWorkerCoordiantor();
     await using testWorker = await new TestWorkerFactory().open();
     await using services1 = await new DedicatedWorkerClientServices({
@@ -162,6 +165,7 @@ describe('DedicatedWorkerClientServices', { timeout: 1_000, retry: 0 }, () => {
       createCoordinator: () => coordinator,
     }).open();
     await using client2 = await new Client({ services: services2 }).initialize();
+    await client2.spaces.waitUntilReady();
     expect(client2.halo.identity.get()).toEqual(identity);
 
     await client1.destroy();

@@ -114,6 +114,7 @@ export class DedicatedWorkerClientServices extends Resource implements ClientSer
         const leaderStopped = new Trigger();
 
         try {
+          log.info('trying to connect');
           await using ctx = this._ctx.derive();
           const { appPort, systemPort, leaderId, livenessLockKey } = await new Promise<
             WorkerCoordinatorMessage & { type: 'provide-port' }

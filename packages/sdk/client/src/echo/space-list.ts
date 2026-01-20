@@ -279,7 +279,9 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
 
   get default(): Space {
     if (!this._defaultSpaceId) {
-      throw new ApiError({ message: 'Default space ID not set. Is identity initialized?' });
+      throw new ApiError({
+        message: 'Default space ID not set. Is identity initialized and `spaces.waitUntilReady()` called?',
+      });
     }
     const space = this.get().find((space) => space.id === this._defaultSpaceId);
     invariant(space, 'Default space is not yet available. Use `client.spaces.isReady` to wait for the default space.');
