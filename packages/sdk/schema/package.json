@@ -49,6 +49,7 @@
     "@dxos/log": "workspace:*",
     "@dxos/random": "workspace:*",
     "@dxos/util": "workspace:*",
+    "@effect-atom/atom-react": "catalog:",
     "@effect/schema": "catalog:",
     "@preact/signals-core": "catalog:",
     "date-fns": "catalog:",

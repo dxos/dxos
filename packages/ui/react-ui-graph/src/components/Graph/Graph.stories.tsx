@@ -2,14 +2,14 @@
 // Copyright 2022 DXOS.org
 //
 
-import { effect } from '@preact/signals-core';
+import { RegistryContext } from '@effect-atom/atom-react';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import { select } from 'd3';
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 
 import { type Graph, type GraphModel, SelectionModel } from '@dxos/graph';
 import { IconButton, Popover, Toolbar } from '@dxos/react-ui';
-import { withTheme } from '@dxos/react-ui/testing';
+import { withRegistry, withTheme } from '@dxos/react-ui/testing';
 import { Card } from '@dxos/react-ui-mosaic';
 import { JsonFilter, SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { getHashStyles, mx } from '@dxos/ui-theme';
@@ -75,9 +75,13 @@ const DefaultStory = ({
 }: StoryProps) => {
   const graphRef = useRef<GraphController | null>(null);
   const context = useRef<SVGContext>(null);
+  const registry = useContext(RegistryContext);
 
   // Models.
-  const [model, setModel] = useState<GraphModel.GraphModel | undefined>(() => new TestGraphModel(_graph?.()));
+  const [model, setModel] = useState<GraphModel.GraphModel | undefined>(() => {
+    const graph = _graph?.();
+    return graph ? new TestGraphModel(registry, graph) : undefined;
+  });
   const selection = useMemo(() => new SelectionModel(singleSelect), [singleSelect]);
 
   // Projector.
@@ -155,8 +159,9 @@ const DefaultStory = ({
   }, [model]);
 
   const handleRegenerate = useCallback(() => {
-    setModel(new TestGraphModel(_graph?.()));
-  }, [_graph]);
+    const graph = _graph?.();
+    setModel(graph ? new TestGraphModel(registry, graph) : undefined);
+  }, [_graph, registry]);
 
   const handleClear = useCallback(() => {
     setModel(undefined);
@@ -295,12 +300,10 @@ const Debug = ({
 }) => {
   const [data, setData] = useState({});
   useEffect(() => {
-    effect(() => {
-      setData({
-        projector,
-        selection: selection.toJSON(),
-        model: model?.toJSON(),
-      });
+    setData({
+      projector,
+      selection: selection.toJSON(),
+      model: model?.toJSON(),
     });
   }, [model, selection, projector]);
 
@@ -324,7 +327,7 @@ const Debug = ({
 const meta = {
   title: 'ui/react-ui-graph/Graph',
   render: DefaultStory,
-  decorators: [withTheme],
+  decorators: [withRegistry, withTheme],
   parameters: {
     layout: 'fullscreen',
     controls: { disable: true },

@@ -11,7 +11,7 @@ import { useClient } from '@dxos/react-client';
 import { type Space } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { useAsyncEffect } from '@dxos/react-ui';
-import { withTheme } from '@dxos/react-ui/testing';
+import { withLayout, withRegistry, withTheme } from '@dxos/react-ui/testing';
 import { View } from '@dxos/schema';
 import { type ValueGenerator } from '@dxos/schema/testing';
 import { render } from '@dxos/storybook-utils';
@@ -55,7 +55,9 @@ const meta = {
   component: D3ForceGraph,
   render: render(DefaultStory),
   decorators: [
+    withRegistry,
     withTheme,
+    withLayout(),
     withClientProvider({
       createSpace: true,
       types: [

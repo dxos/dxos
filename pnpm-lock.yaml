@@ -3521,9 +3521,9 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../util
-      '@preact/signals-core':
+      '@effect-atom/atom-react':
         specifier: 'catalog:'
-        version: 1.12.1
+        version: 0.4.4(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/platform@0.93.6(effect@3.19.11))(@effect/rpc@0.72.2(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11))(effect@3.19.11)(react@19.2.3)(scheduler@0.27.0)
     devDependencies:
       '@dxos/echo':
         specifier: workspace:*
@@ -8811,6 +8811,9 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
+      '@effect-atom/atom-react':
+        specifier: 'catalog:'
+        version: 0.4.4(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/platform@0.93.6(effect@3.19.11))(@effect/rpc@0.72.2(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11))(effect@3.19.11)(react@19.2.3)(scheduler@0.27.0)
       '@observablehq/plot':
         specifier: 'catalog:'
         version: 0.6.11
@@ -14647,6 +14650,9 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
+      '@effect-atom/atom-react':
+        specifier: 'catalog:'
+        version: 0.4.4(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/platform@0.93.6(effect@3.19.11))(@effect/rpc@0.72.2(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11))(effect@3.19.11)(react@19.2.3)(scheduler@0.27.0)
       '@effect/schema':
         specifier: 'catalog:'
         version: 0.75.5(effect@3.19.11)
@@ -17254,9 +17260,6 @@ importers:
       '@dxos/debug':
         specifier: workspace:*
         version: link:../../common/debug
-      '@dxos/echo-signals':
-        specifier: workspace:*
-        version: link:../../core/echo/echo-signals
       '@dxos/graph':
         specifier: workspace:*
         version: link:../../common/graph
@@ -17272,12 +17275,9 @@ importers:
       '@dxos/react-ui-mosaic':
         specifier: workspace:*
         version: link:../react-ui-mosaic
-      '@preact-signals/safe-react':
+      '@effect-atom/atom-react':
         specifier: 'catalog:'
-        version: 0.9.0(@babel/core@7.28.0)(@swc/helpers@0.5.17)(react@19.2.3)
-      '@preact/signals-core':
-        specifier: 'catalog:'
-        version: 1.12.1
+        version: 0.4.4(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/platform@0.93.6(effect@3.19.11))(@effect/rpc@0.72.2(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11))(effect@3.19.11)(react@19.2.3)(scheduler@0.27.0)
       d3:
         specifier: 'catalog:'
         version: 7.9.0

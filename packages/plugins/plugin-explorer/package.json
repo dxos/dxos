@@ -67,6 +67,7 @@
     "@dxos/schema": "workspace:*",
     "@dxos/types": "workspace:*",
     "@dxos/util": "workspace:*",
+    "@effect-atom/atom-react": "catalog:",
     "@observablehq/plot": "catalog:",
     "@preact-signals/safe-react": "catalog:",
     "@preact/signals-core": "catalog:",
