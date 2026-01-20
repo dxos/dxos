@@ -5,7 +5,7 @@
 import { useAtomValue } from '@effect-atom/atom-react';
 import { useCallback, useMemo } from 'react';
 
-import type { Entity } from '@dxos/echo';
+import { type Entity, Obj } from '@dxos/echo';
 import { AtomObj } from '@dxos/echo-atom';
 
 export interface ObjectUpdateCallback<T> {
@@ -42,20 +42,22 @@ export const useObject: {
 ): [Readonly<T | T[K]>, ObjectUpdateCallback<T | T[K]>] => {
   const callback: ObjectPropUpdateCallback<unknown> = useCallback(
     (updateOrValue: unknown | ((obj: unknown) => unknown)) => {
-      if (typeof updateOrValue === 'function') {
-        const returnValue = updateOrValue(property !== undefined ? obj[property] : obj);
-        if (returnValue !== undefined) {
+      Obj.change(obj, (o: any) => {
+        if (typeof updateOrValue === 'function') {
+          const returnValue = updateOrValue(property !== undefined ? o[property] : o);
+          if (returnValue !== undefined) {
+            if (property === undefined) {
+              throw new Error('Cannot re-assign the entire object');
+            }
+            o[property] = returnValue;
+          }
+        } else {
           if (property === undefined) {
             throw new Error('Cannot re-assign the entire object');
           }
-          obj[property] = returnValue as any;
+          o[property] = updateOrValue;
         }
-      } else {
-        if (property === undefined) {
-          throw new Error('Cannot re-assign the entire object');
-        }
-        obj[property] = updateOrValue as any;
-      }
+      });
     },
     [obj, property],
   );
