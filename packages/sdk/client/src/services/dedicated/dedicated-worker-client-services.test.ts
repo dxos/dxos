@@ -148,6 +148,10 @@ describe('DedicatedWorkerClientServices', { timeout: 1_000, retry: 0 }, () => {
     await client2.spaces.default.db.query(Filter.everything()).run();
 
     // TODO(dmaretskyi): tried doing DB write -> flush(indexes) -> query here but flush(indexes) doesnt work
+
+    const object = client1.spaces.default.db.add(Obj.make(Type.Expando, { name: 'Test' }));
+    await client1.spaces.default.db.flush({ indexes: true });
+    await client2.spaces.default.db.query(Filter.type(Type.Expando, { name: 'Test' })).run();
   });
 
   test('leader goes from first client to second', async () => {
@@ -170,7 +174,6 @@ describe('DedicatedWorkerClientServices', { timeout: 1_000, retry: 0 }, () => {
 
     await client1.destroy();
 
-    // Fails here.
     await client2.spaces.default.db.query(Filter.everything()).run();
   });
 });
