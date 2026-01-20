@@ -48,7 +48,8 @@
     "effect": "catalog:"
   },
   "devDependencies": {
-    "@effect/sql-sqlite-wasm": "catalog:"
+    "@effect/sql-sqlite-wasm": "catalog:",
+    "@effect/wa-sqlite": "catalog:"
   },
   "publishConfig": {
     "access": "public"
