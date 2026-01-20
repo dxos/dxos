@@ -134,7 +134,10 @@ class OperationInvokerImpl implements OperationInvokerInternal {
    * Caches instances to allow runtime caching to work across invocations.
    */
   private _getDynamicRuntime(services: readonly Context.Tag<any, any>[]): DynamicRuntime.DynamicRuntime<any> {
-    const cacheKey = services.map((s) => s.key).sort().join(',');
+    const cacheKey = services
+      .map((s) => s.key)
+      .sort()
+      .join(',');
     let dynamicRuntime = this._dynamicRuntimeCache.get(cacheKey);
     if (!dynamicRuntime) {
       dynamicRuntime = DynamicRuntime.make(this._managedRuntime!, services);
@@ -210,9 +213,7 @@ class OperationInvokerImpl implements OperationInvokerInternal {
     const effect = this.invoke(op, ...args);
     // Use ManagedRuntime.runSyncExit when available - it handles fiber scheduling correctly.
     // Fall back to Effect.runSyncExit for operations without ManagedRuntime.
-    const exit = this._managedRuntime
-      ? this._managedRuntime.runSyncExit(effect)
-      : Effect.runSyncExit(effect);
+    const exit = this._managedRuntime ? this._managedRuntime.runSyncExit(effect) : Effect.runSyncExit(effect);
     if (Exit.isSuccess(exit)) {
       return { data: exit.value };
     } else {
