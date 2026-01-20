@@ -26,3 +26,10 @@ export const runPromise =
     const runtime = await runAndForwardErrors(provider);
     return unwrapExit(await effect.pipe(Runtime.runPromiseExit(runtime)));
   };
+
+/**
+ * Provide services from runtime provider to effect.
+ */
+export const provide: {
+  <R2>(runtime: RuntimeProvider<R2>): <A, E, R>(self: Effect.Effect<A, E, R>) => Effect.Effect<A, E, Exclude<R, R2>>;
+} = (runtimeProvider) => (effect) => Effect.flatMap(runtimeProvider, (runtime) => Effect.provide(effect, runtime));

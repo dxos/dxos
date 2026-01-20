@@ -5198,6 +5198,9 @@ importers:
 
   packages/core/echo/feed:
     dependencies:
+      '@dxos/async':
+        specifier: workspace:*
+        version: link:../../../common/async
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../../common/invariant

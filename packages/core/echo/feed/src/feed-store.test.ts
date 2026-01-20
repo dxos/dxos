@@ -8,7 +8,7 @@ import * as Effect from 'effect/Effect';
 
 import { ObjectId, SpaceId } from '@dxos/keys';
 
-import { FeedStore } from './feed';
+import { FeedStore } from './feed-store';
 import { Block } from './protocol';
 import { log } from '@dxos/log';
 

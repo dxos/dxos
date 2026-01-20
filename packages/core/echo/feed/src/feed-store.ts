@@ -17,6 +17,7 @@ import {
   type SubscribeResponse,
 } from './protocol';
 import { invariant } from '@dxos/invariant';
+import { Event } from '@dxos/async';
 
 export interface FeedStoreOptions {
   localActorId: string;
@@ -25,6 +26,8 @@ export interface FeedStoreOptions {
 
 export class FeedStore {
   constructor(private readonly _options: FeedStoreOptions) {}
+
+  readonly onNewBlocks = new Event<void>();
 
   migrate = Effect.fn('FeedStore.migrate')(function* () {
     const sql = yield* SqlClient.SqlClient;
@@ -291,6 +294,9 @@ export class FeedStore {
                 ) ON CONFLICT DO NOTHING
             `;
         }
+
+        this.onNewBlocks.emit();
+
         return { requestId: request.requestId, positions };
       }),
   );

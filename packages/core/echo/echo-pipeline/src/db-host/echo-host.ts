@@ -41,6 +41,7 @@ import { LocalQueueServiceImpl } from './local-queue-service';
 import { QueryServiceImpl } from './query-service';
 import { SpaceStateManager } from './space-state-manager';
 import { QueueServiceStub } from './stub';
+import { QueueDataSource } from './queue-data-source';
 
 export interface EchoHostIndexingConfig {
   /**
@@ -101,6 +102,7 @@ export class EchoHost extends Resource {
   private readonly _indexConfig: EchoHostIndexingConfig;
   private readonly _runtime: RuntimeProvider.RuntimeProvider<SqlClient.SqlClient>;
   private readonly _feedStore?: FeedStore;
+  private readonly _queueDataSource?: QueueDataSource;
 
   private _updateIndexes!: DeferredTask;
 
@@ -136,6 +138,7 @@ export class EchoHost extends Resource {
 
     if (localQueues) {
       this._feedStore = new FeedStore({ assignPositions: assignQueuePositions, localActorId: crypto.randomUUID() });
+      this._queueDataSource = new QueueDataSource(this._feedStore, this._runtime);
       this._queuesService = new LocalQueueServiceImpl(runtime, this._feedStore);
     } else {
       this._queuesService = new QueueServiceStub();
@@ -255,6 +258,12 @@ export class EchoHost extends Resource {
 
     if (this._feedStore) {
       await RuntimeProvider.runPromise(this._runtime)(this._feedStore.migrate());
+      this._feedStore.onNewBlocks.on(this._ctx, () => {
+        this._queryService.invalidateQueries();
+        if (this._indexConfig.fullText) {
+          this._updateIndexes.schedule();
+        }
+      });
     }
 
     if (this._indexConfig.fullText) {
@@ -389,12 +398,55 @@ export class EchoHost extends Resource {
       // Indexer not initialized yet, skip this update cycle.
       return;
     }
-    const { updated, done } = await this._indexer2
-      .update(this._automergeDataSource, { spaceId: null, limit: 50 })
-      .pipe(RuntimeProvider.runPromise(this._runtime));
-    log.verbose('indexer2 update completed', { updated });
+
+    let totalUpdated = 0;
+    let totalDone = true;
+
+    {
+      performance.mark('indexer2.update.automerge:start');
+      const { updated, done } = await this._indexer2
+        .update(this._automergeDataSource, { spaceId: null, limit: 50 })
+        .pipe(RuntimeProvider.runPromise(this._runtime));
+      totalUpdated += updated;
+      totalDone &&= done;
+      performance.measure('Index Automerge', {
+        start: 'indexer2.update.automerge:start',
+        detail: {
+          devtools: {
+            dataType: 'track-entry',
+            track: 'Indexing',
+            trackGroup: 'ECHO', // Group related tracks together
+            color: 'tertiary-dark',
+            properties: [['count', updated]],
+          },
+        },
+      });
+    }
+
+    if (this._queueDataSource) {
+      performance.mark('indexer2.update.queue:start');
+      const { updated, done } = await this._indexer2
+        .update(this._queueDataSource, { spaceId: null, limit: 50 })
+        .pipe(RuntimeProvider.runPromise(this._runtime));
+      totalUpdated += updated;
+      totalDone &&= done;
+      performance.measure('Index Queues', {
+        start: 'indexer2.update.queue:start',
+        detail: {
+          devtools: {
+            dataType: 'track-entry',
+            track: 'Indexing',
+            trackGroup: 'ECHO',
+            color: 'tertiary-dark',
+            properties: [['count', updated]],
+          },
+        },
+      });
+    }
+
+    log.verbose('indexer2 update completed', { updated: totalUpdated, done: totalDone });
     await sleep(1);
-    if (!done) {
+    if (!totalDone) {
       this._indexesUpToDate = false;
       this._updateIndexes!.schedule();
     } else {

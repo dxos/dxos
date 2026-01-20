@@ -10,7 +10,7 @@ import * as ManagedRuntime from 'effect/ManagedRuntime';
 
 import { SpaceId } from '@dxos/keys';
 
-import { FeedStore } from './feed';
+import { FeedStore } from './feed-store';
 import { type Block } from './protocol';
 
 describe.skip('Feed Sync V2 (RPC)', () => {
@@ -34,6 +34,7 @@ describe.skip('Feed Sync V2 (RPC)', () => {
         const feed = new FeedStore({ localActorId: 'server', assignPositions: true });
         const blocks: Block[] = [
           {
+            feedId: undefined,
             actorId: feedId,
             sequence: 1,
             predActorId: null,
@@ -43,6 +44,7 @@ describe.skip('Feed Sync V2 (RPC)', () => {
             data: new Uint8Array([1]),
           },
           {
+            feedId: undefined,
             actorId: feedId,
             sequence: 2,
             predActorId: feedId,
