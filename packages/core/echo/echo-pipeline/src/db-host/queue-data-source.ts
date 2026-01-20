@@ -35,6 +35,10 @@ export class QueueDataSource implements IndexDataSource {
       const objects: IndexerObject[] = [];
       const updatedCursors: DataSourceCursor[] = [];
 
+      // TODO(dmaretskyi): Here we should augment cursors with new spaces.
+      // Initially the indexer will pass us an empty array of cursors.
+      // We add new cursors starting for the beginning of the queue.
+
       // Limit per call, but we might have multiple spaces.
       // We should distribute limit or just fill up to limit.
       let remainingLimit = opts?.limit ?? Infinity;
