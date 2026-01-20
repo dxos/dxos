@@ -2,6 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
+import { useAtomValue } from '@effect-atom/atom-react';
 import React, { useCallback, useEffect } from 'react';
 
 import { Surface } from '@dxos/app-framework/react';
@@ -35,6 +36,9 @@ export const Kanban = ({ model, onAddCard, onRemoveCard }: KanbanProps) => {
   const selected = useSelected(model.id, 'multi');
   useEffect(() => () => clear(), []);
 
+  // Subscribe to arranged cards atom for reactivity.
+  const arrangedCards = useAtomValue(model.cardsAtom);
+
   const handleAddCard = useCallback(
     (columnValue: string | undefined) => onAddCard?.(columnValue === UNCATEGORIZED_VALUE ? undefined : columnValue),
     [onAddCard],
@@ -47,10 +51,10 @@ export const Kanban = ({ model, onAddCard, onRemoveCard }: KanbanProps) => {
       rail={false}
       classNames='p-2 gap-4 density-fine'
       onRearrange={model.handleRearrange}
-      itemsCount={model.arrangedCards.length}
+      itemsCount={arrangedCards.length}
       {...autoScrollRootAttributes}
     >
-      {model.arrangedCards.map(({ columnValue, cards }, index, array) => {
+      {arrangedCards.map(({ columnValue, cards }, index, array) => {
         const { color, title } = model.getPivotAttributes(columnValue);
         const uncategorized = columnValue === UNCATEGORIZED_VALUE;
         const prevSiblingId = index > 0 ? array[index - 1].columnValue : undefined;
@@ -115,7 +119,7 @@ export const Kanban = ({ model, onAddCard, onRemoveCard }: KanbanProps) => {
               <StackItem.DragPreview>
                 {({ item }) => {
                   // Find the column data for this item.
-                  const columnData = model.arrangedCards.find((col) => col.columnValue === item.id);
+                  const columnData = arrangedCards.find((col) => col.columnValue === item.id);
                   if (!columnData) {
                     return null;
                   }

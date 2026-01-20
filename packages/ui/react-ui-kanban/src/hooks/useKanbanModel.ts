@@ -2,7 +2,8 @@
 // Copyright 2024 DXOS.org
 //
 
-import { useEffect, useState } from 'react';
+import { RegistryContext } from '@effect-atom/atom-react';
+import { useContext, useEffect, useState } from 'react';
 
 import { type Live } from '@dxos/react-client/echo';
 import { type ProjectionModel } from '@dxos/schema';
@@ -22,6 +23,7 @@ export const useKanbanModel = <T extends BaseKanbanItem = { id: string }>({
   items,
   ...props
 }: UseKanbanModelProps<T>): KanbanModel<T> | undefined => {
+  const registry = useContext(RegistryContext);
   const [model, setModel] = useState<KanbanModel<T>>();
   useEffect(() => {
     if (!object || !projection) {
@@ -30,7 +32,7 @@ export const useKanbanModel = <T extends BaseKanbanItem = { id: string }>({
 
     let model: KanbanModel<T> | undefined;
     const t = setTimeout(async () => {
-      model = new KanbanModel<T>({ object, projection, ...props });
+      model = new KanbanModel<T>({ registry, object, projection, ...props });
       await model.open();
       setModel(model);
     });
@@ -40,7 +42,7 @@ export const useKanbanModel = <T extends BaseKanbanItem = { id: string }>({
       void model?.close();
     };
     // TODO(ZaymonFC): Is there a better way to get notified about deep changes in the json schema?
-  }, [object, projection]);
+  }, [registry, object, projection]);
 
   // Update data.
   useEffect(() => {

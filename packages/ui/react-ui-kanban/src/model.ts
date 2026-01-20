@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { batch, effect, signal, untracked } from '@preact/signals-core';
+import { Atom, type Registry } from '@effect-atom/atom-react';
 
 import { Resource } from '@dxos/context';
 import { Obj } from '@dxos/echo';
@@ -30,21 +30,26 @@ export type ArrangedCards<T extends BaseKanbanItem = { id: string }> = {
 }[];
 
 export type KanbanModelProps = {
+  registry: Registry.Registry;
   object: Kanban.Kanban;
   projection: ProjectionModel;
 };
 
 export class KanbanModel<T extends BaseKanbanItem = { id: string }> extends Resource {
+  private readonly _registry: Registry.Registry;
   private readonly _object: Kanban.Kanban;
   private readonly _projection: ProjectionModel;
 
-  private readonly _items = signal<T[]>([]);
-  private readonly _cards = signal<ArrangedCards<T>>([]);
+  private readonly _items: Atom.Writable<T[]>;
+  private readonly _cards: Atom.Writable<ArrangedCards<T>>;
 
-  constructor({ object, projection }: KanbanModelProps) {
+  constructor({ registry, object, projection }: KanbanModelProps) {
     super();
+    this._registry = registry;
     this._object = object;
     this._projection = projection;
+    this._items = Atom.make<T[]>([]);
+    this._cards = Atom.make<ArrangedCards<T>>([]);
   }
 
   get id() {
@@ -78,22 +83,34 @@ export class KanbanModel<T extends BaseKanbanItem = { id: string }> extends Reso
    * @reactive Gets the current items.
    */
   get items() {
-    return this._items.value;
+    return this._registry.get(this._items);
   }
 
   set items(items: T[]) {
-    untracked(() => {
-      this._items.value = items;
-      this._moveInvalidItemsToUncategorized();
-      this._cards.value = this._computeArrangement();
-    });
+    this._registry.set(this._items, items);
+    this._moveInvalidItemsToUncategorized();
+    this._registry.set(this._cards, this._computeArrangement());
   }
 
   /**
    * @reactive Gets the current arrangement of kanban items.
    */
   get arrangedCards() {
-    return this._cards.value;
+    return this._registry.get(this._cards);
+  }
+
+  /**
+   * Get the items atom for reactive access.
+   */
+  get itemsAtom(): Atom.Atom<T[]> {
+    return this._items;
+  }
+
+  /**
+   * Get the cards atom for reactive access.
+   */
+  get cardsAtom(): Atom.Atom<ArrangedCards<T>> {
+    return this._cards;
   }
 
   //
@@ -102,30 +119,44 @@ export class KanbanModel<T extends BaseKanbanItem = { id: string }> extends Reso
 
   protected override async _open(): Promise<void> {
     await this._object.view.load();
-    this._computeArrangement();
-    this.initializeEffects();
+    this._registry.set(this._cards, this._computeArrangement());
+    this._initializeSubscriptions();
   }
 
-  private initializeEffects(): void {
-    const arrangementWatcher = effect(() => {
-      // Subscribe to changes in:
-      // - the current column field selection
-      const pivotPath = this.columnFieldPath;
-      // - the column field selection options
-      void this._getSelectOptions();
-      // - the list of items
-      const items = this._items.value;
-      // - and each item's column field value
-      if (pivotPath) {
-        for (const item of items) {
-          item[pivotPath];
+  private _initializeSubscriptions(): void {
+    // Track item subscriptions for cleanup.
+    const itemSubscriptions = new Map<string, () => void>();
+
+    const recomputeArrangement = () => {
+      this._registry.set(this._cards, this._computeArrangement());
+    };
+
+    // Subscribe to changes in the items list.
+    const itemsUnsubscribe = this._registry.subscribe(this._items, () => {
+      // Unsubscribe from old items.
+      for (const [id, unsub] of itemSubscriptions) {
+        unsub();
+        itemSubscriptions.delete(id);
+      }
+
+      // Subscribe to each item's changes.
+      const items = this._registry.get(this._items);
+      for (const item of items) {
+        if (Obj.isObject(item) && !itemSubscriptions.has(item.id)) {
+          const unsub = Obj.subscribe(item, recomputeArrangement);
+          itemSubscriptions.set(item.id, unsub);
         }
       }
 
-      // Finally, recompute arrangement.
-      this._cards.value = this._computeArrangement();
+      recomputeArrangement();
     });
-    this._ctx.onDispose(arrangementWatcher);
+
+    this._ctx.onDispose(() => {
+      itemsUnsubscribe();
+      for (const unsub of itemSubscriptions.values()) {
+        unsub();
+      }
+    });
   }
 
   //
@@ -149,28 +180,26 @@ export class KanbanModel<T extends BaseKanbanItem = { id: string }> extends Reso
    * Supports both reordering columns and moving cards between columns.
    */
   public handleRearrange: StackItemRearrangeHandler = (source, target, closestEdge) => {
-    batch(() => {
-      const nextArrangement = this.arrangedCards;
-      const sourceColumn = this._findColumn(source.id, nextArrangement);
-      const targetColumn = this._findColumn(target.id, nextArrangement);
+    const nextArrangement = this.arrangedCards;
+    const sourceColumn = this._findColumn(source.id, nextArrangement);
+    const targetColumn = this._findColumn(target.id, nextArrangement);
 
-      if (!sourceColumn || !targetColumn) {
-        return;
-      }
+    if (!sourceColumn || !targetColumn) {
+      return;
+    }
 
-      if (source.type === 'column' && target.type === 'column') {
-        this._handleColumnReorder(source, target, closestEdge as 'left' | 'right');
-        return;
-      }
+    if (source.type === 'column' && target.type === 'column') {
+      this._handleColumnReorder(source, target, closestEdge as 'left' | 'right');
+      return;
+    }
 
-      this._handleCardMove(sourceColumn, targetColumn, source, target, closestEdge as 'top' | 'bottom');
+    this._handleCardMove(sourceColumn, targetColumn, source, target, closestEdge as 'top' | 'bottom');
 
-      this.object.arrangement = nextArrangement.map(({ columnValue, cards }) => ({
-        columnValue,
-        ids: cards.map(({ id }) => id),
-      }));
-      this._cards.value = nextArrangement;
-    });
+    this.object.arrangement = nextArrangement.map(({ columnValue, cards }) => ({
+      columnValue,
+      ids: cards.map(({ id }) => id),
+    }));
+    this._registry.set(this._cards, nextArrangement);
   };
 
   //
@@ -191,13 +220,11 @@ export class KanbanModel<T extends BaseKanbanItem = { id: string }> extends Reso
       return [];
     }
 
-    return untracked(() => {
-      return computeArrangement<T>({
-        object: this.object,
-        items: this._items.value,
-        pivotPath: this.columnFieldPath,
-        selectOptions: options,
-      });
+    return computeArrangement<T>({
+      object: this.object,
+      items: this._registry.get(this._items),
+      pivotPath: this.columnFieldPath,
+      selectOptions: options,
     });
   }
 
@@ -207,7 +234,7 @@ export class KanbanModel<T extends BaseKanbanItem = { id: string }> extends Reso
   private _moveInvalidItemsToUncategorized(): void {
     const validColumnValues = new Set(this._getSelectOptions()?.map((opt) => opt.id));
     const columnPath = this.columnFieldPath;
-    for (const item of this._items.value) {
+    for (const item of this._registry.get(this._items)) {
       const itemColumn = item[columnPath as keyof typeof item];
       if (itemColumn && !validColumnValues.has(itemColumn as string)) {
         // Set to undefined which will place it in uncategorized.
