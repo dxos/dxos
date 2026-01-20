@@ -71,6 +71,16 @@ export const bundleDepsPlugin = (options: BundleDepsPluginOptions): Plugin => ({
         moduleName = `${split[0]}/${split[1]}`;
       }
 
+      // Check alias again for module aliases.
+      if(options.alias?.[moduleName]) {
+        return build.resolve(options.alias[moduleName] + args.path.slice(moduleName.length), {
+          importer: args.importer,
+          kind: args.kind,
+          namespace: args.namespace,
+          resolveDir: options.packageDir,
+        });
+      }
+
       if (options.packages.includes(moduleName)) {
         return null; // Bundle this dependency.
       }

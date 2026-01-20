@@ -92,7 +92,7 @@ const createBrowserProject = ({ browserName, nodeExternal = false, injectGlobals
           ...(nodeExternal ? [NodeExternalPlugin({ injectGlobals, nodeStd: true })] : []),
         ],
       },
-      exclude: ['@effect/sql-sqlite-wasm', '@effect/wa-sqlite'],
+      exclude: ['@dxos/wa-sqlite'],
     },
     esbuild: {
       target: 'esnext',

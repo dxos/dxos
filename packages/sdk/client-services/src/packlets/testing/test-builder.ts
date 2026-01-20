@@ -3,7 +3,7 @@
 //
 
 import * as Reactivity from '@effect/experimental/Reactivity';
-import * as SqliteClient from '@effect/sql-sqlite-wasm/SqliteClient';
+import * as SqliteClient from '@dxos/sql-sqlite/SqliteClient';
 import * as Layer from 'effect/Layer';
 import * as ManagedRuntime from 'effect/ManagedRuntime';
 

@@ -4,7 +4,7 @@
 
 /// <reference lib="webworker" />
 
-import * as OpfsWorker from '@effect/sql-sqlite-wasm/OpfsWorker';
+import * as OpfsWorker from '@dxos/sql-sqlite/OpfsWorker';
 import * as Effect from 'effect/Effect';
 
 // TODO(mykola): Factor out.
