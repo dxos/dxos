@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { computed, effect } from '@preact-signals/safe-react';
+import { computed, effect } from '@preact/signals-react';
 import { type DependencyList, useEffect, useMemo, useRef } from 'react';
 
 /**

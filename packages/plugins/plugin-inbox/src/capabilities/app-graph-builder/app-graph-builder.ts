@@ -2,6 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
+import { Atom } from '@effect-atom/atom-react';
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
@@ -85,10 +86,15 @@ export default Capability.makeModule(
             return Effect.succeed([]);
           }
 
-          const selectionAtom = capabilities.atom(AttentionCapabilities.Selection);
-          const selection = get(selectionAtom)[0];
+          const selectionManager = capabilities.get(AttentionCapabilities.Selection);
           const nodeId = Obj.getDXN(mailbox).toString();
-          const messageId = get(CreateAtom.fromSignal(() => selection?.getSelected(nodeId, 'single')));
+          const messageId = get(
+            Atom.make((get) => {
+              const state = get(selectionManager.stateAtom);
+              const selection = state.selections[nodeId];
+              return selection?.mode === 'single' ? selection.id : undefined;
+            }),
+          );
           const query = queue.query(
             messageId ? Filter.id(messageId) : Filter.nothing(),
           ) as QueryResult.QueryResult<Message.Message>;
@@ -116,10 +122,15 @@ export default Capability.makeModule(
             return Effect.succeed([]);
           }
 
-          const selectionAtom = capabilities.atom(AttentionCapabilities.Selection);
-          const selection = get(selectionAtom)[0];
+          const selectionManager = capabilities.get(AttentionCapabilities.Selection);
           const nodeId = Obj.getDXN(calendar).toString();
-          const eventId = get(CreateAtom.fromSignal(() => selection?.getSelected(nodeId, 'single')));
+          const eventId = get(
+            Atom.make((get) => {
+              const state = get(selectionManager.stateAtom);
+              const selection = state.selections[nodeId];
+              return selection?.mode === 'single' ? selection.id : undefined;
+            }),
+          );
           const query = queue.query(
             eventId ? Filter.id(eventId) : Filter.nothing(),
           ) as QueryResult.QueryResult<Event.Event>;

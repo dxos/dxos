@@ -2,6 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
+import { Atom } from '@effect-atom/atom-react';
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
@@ -11,6 +12,7 @@ import { Operation } from '@dxos/operation';
 import { AttentionCapabilities } from '@dxos/plugin-attention';
 import { ATTENDABLE_PATH_SEPARATOR, DECK_COMPANION_TYPE, PLANK_COMPANION_TYPE } from '@dxos/plugin-deck/types';
 import { CreateAtom, GraphBuilder, NodeMatcher } from '@dxos/plugin-graph';
+import { type SelectionMode, defaultSelection } from '@dxos/react-ui-attention';
 
 import { meta } from '../../meta';
 import { Channel, ThreadCapabilities, ThreadOperation } from '../../types';
@@ -117,15 +119,19 @@ export default Capability.makeModule(
         },
         actions: (object, get) => {
           const stateAtom = capabilities.atom(ThreadCapabilities.State);
-          const toolbar = get(stateAtom)[0]?.state.toolbar ?? {};
           const selectionManager = capabilities.get(AttentionCapabilities.Selection);
+          const objectId = Obj.getDXN(object).toString();
+          const metadata = resolve(Obj.getTypename(object)!);
+
           const disabled = get(
-            CreateAtom.fromSignal(() => {
-              const metadata = resolve(Obj.getTypename(object)!);
-              const selection = selectionManager.getSelection(Obj.getDXN(object).toString(), metadata.selectionMode);
+            Atom.make((get) => {
+              const toolbar = get(stateAtom)[0]?.state.toolbar ?? {};
+              const selectionState = get(selectionManager.stateAtom);
+              const selection =
+                selectionState.selections[objectId] ?? defaultSelection(metadata.selectionMode as SelectionMode);
               const anchor = getAnchor(selection);
               const invalidSelection = !anchor;
-              const overlappingComment = toolbar[Obj.getDXN(object).toString()];
+              const overlappingComment = toolbar[objectId];
               return (metadata.comments === 'anchored' && invalidSelection) || overlappingComment;
             }),
           );
