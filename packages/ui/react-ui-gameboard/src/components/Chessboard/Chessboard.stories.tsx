@@ -2,11 +2,12 @@
 // Copyright 2024 DXOS.org
 //
 
+import { RegistryContext } from '@effect-atom/atom-react';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useContext, useEffect, useMemo, useState } from 'react';
 
 import { Button, Toolbar } from '@dxos/react-ui';
-import { withLayout, withTheme } from '@dxos/react-ui/testing';
+import { withLayout, withRegistry, withTheme } from '@dxos/react-ui/testing';
 
 import { Gameboard, type GameboardRootProps, type Move, type Player } from '../Gameboard';
 
@@ -18,7 +19,8 @@ type DefaultStoryProps = Pick<ChessboardProps, 'orientation' | 'showLabels' | 'd
 };
 
 const DefaultStory = ({ orientation: _orientation, pgn, ...props }: DefaultStoryProps) => {
-  const model = useMemo(() => new ChessModel(pgn), [pgn]);
+  const registry = useContext(RegistryContext);
+  const model = useMemo(() => new ChessModel(registry, pgn), [registry, pgn]);
   const [orientation, setOrientation] = useState<Player | undefined>(_orientation);
 
   const handleDrop = useCallback<NonNullable<GameboardRootProps<ChessModel>['onDrop']>>(
@@ -52,7 +54,8 @@ const DefaultStory = ({ orientation: _orientation, pgn, ...props }: DefaultStory
 };
 
 const GridStory = () => {
-  const models = useMemo(() => Array.from({ length: 9 }).map(() => new ChessModel()), []);
+  const registry = useContext(RegistryContext);
+  const models = useMemo(() => Array.from({ length: 9 }).map(() => new ChessModel(registry)), [registry]);
   useEffect(() => {
     const i = setInterval(() => {
       const model = models[Math.floor(Math.random() * models.length)];
@@ -80,7 +83,7 @@ const meta = {
   title: 'ui/react-ui-gameboard/Chessboard',
   component: Chessboard,
   render: DefaultStory,
-  decorators: [withTheme, withLayout({ layout: 'column' })],
+  decorators: [withRegistry, withTheme, withLayout({ layout: 'column' })],
 } satisfies Meta<typeof Chessboard>;
 
 export default meta;

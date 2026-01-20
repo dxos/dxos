@@ -2,10 +2,12 @@
 // Copyright 2024 DXOS.org
 //
 
+import { type Registry, RegistryContext } from '@effect-atom/atom-react';
 import React, {
   type PropsWithChildren,
   forwardRef,
   useCallback,
+  useContext,
   useEffect,
   useImperativeHandle,
   useMemo,
@@ -35,8 +37,11 @@ export interface ChessboardController {
 }
 
 export class ExtendedChessModel extends ChessModel {
-  constructor(readonly object: Chess.Game) {
-    super();
+  constructor(
+    registry: Registry.Registry,
+    readonly object: Chess.Game,
+  ) {
+    super(registry);
   }
 }
 
@@ -49,7 +54,8 @@ type RootProps = PropsWithChildren<{
 }>;
 
 const Root = forwardRef<ChessboardController, RootProps>(({ game, children }, forwardedRef) => {
-  const model = useMemo(() => new ExtendedChessModel(game), []);
+  const registry = useContext(RegistryContext);
+  const model = useMemo(() => new ExtendedChessModel(registry, game), [registry]);
   const click = useSoundEffect('Click');
 
   // Controller.
@@ -119,6 +125,7 @@ const Content = ({ classNames, children, role }: ContentProps) => {
 type BoardProps = NaturalChessboardProps;
 
 const Board = (props: BoardProps) => {
+  const registry = useContext(RegistryContext);
   const { model } = useGameboardContext<ChessModel>(Board.displayName);
 
   // Keyboard navigation.
@@ -132,6 +139,7 @@ const Board = (props: BoardProps) => {
     ref.current.setAttribute('data-arrow-keys', 'all');
 
     return addEventListener(ref.current, 'keydown', (ev) => {
+      const moveIndex = registry.get(model.moveIndex);
       switch (ev.key) {
         case 'ArrowUp':
           model.setMoveIndex(0);
@@ -140,18 +148,18 @@ const Board = (props: BoardProps) => {
           model.setMoveIndex(model.game.history().length);
           break;
         case 'ArrowLeft':
-          if (model.moveIndex.value > 0) {
-            model.setMoveIndex(model.moveIndex.value - 1);
+          if (moveIndex > 0) {
+            model.setMoveIndex(moveIndex - 1);
           }
           break;
         case 'ArrowRight':
-          if (model.moveIndex.value < model.game.history().length) {
-            model.setMoveIndex(model.moveIndex.value + 1);
+          if (moveIndex < model.game.history().length) {
+            model.setMoveIndex(moveIndex + 1);
           }
           break;
       }
     });
-  }, [model]);
+  }, [registry, model]);
 
   return <NaturalChessboard ref={ref} {...props} />;
 };
