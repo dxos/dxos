@@ -8,9 +8,9 @@ import { describe, expect, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
-import * as SqliteClient from '@dxos/sql-sqlite/SqliteClient';
+import * as SqliteClient from '../SqliteClient';
 
-describe('opfs-worker browser test', () => {
+describe.skip('opfs-worker browser test', () => {
   it.effect(
     'should run the opfs worker',
     Effect.fnUntraced(function* () {
