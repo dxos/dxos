@@ -7,8 +7,8 @@ import * as Effect from 'effect/Effect';
 
 import { Capability, Common } from '@dxos/app-framework';
 
-export default Capability.makeModule(() =>
-  Effect.gen(function* () {
+export default Capability.makeModule(
+  Effect.fnUntraced(function* () {
     const appWindow = getCurrentWindow();
 
     // Set up drag regions for window dragging.
@@ -50,8 +50,10 @@ export default Capability.makeModule(() =>
     // Save state before closing.
     window.addEventListener('beforeunload', saveWindowState);
 
-    return Capability.contributes(Common.Capability.Null, null, () =>
-      Effect.gen(function* () {
+    return Capability.contributes(
+      Common.Capability.Null,
+      null,
+      Effect.fnUntraced(function* () {
         cleanupDragRegions();
         document.removeEventListener('DOMContentLoaded', restoreWindowState);
         window.removeEventListener('beforeunload', saveWindowState);

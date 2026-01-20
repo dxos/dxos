@@ -39,28 +39,27 @@ export default Capability.makeModule(() =>
     Capability.contributes(Common.Capability.OperationResolver, [
       OperationResolver.make({
         operation: KanbanOperation.DeleteCardField,
-        handler: ({ view, fieldId }) =>
-          Effect.gen(function* () {
-            const db = Obj.getDatabase(view);
-            invariant(db, 'Database not found');
-            const schema = yield* Effect.promise(() =>
-              db.schemaRegistry
-                .query({
-                  typename: getTypenameFromQuery(view.query.ast)!,
-                  location: ['database', 'runtime'],
-                })
-                .first(),
-            );
-            const projection = new ProjectionModel(JsonSchema.toJsonSchema(schema), view.projection);
-            const { deleted, index } = projection.deleteFieldProjection(fieldId);
+        handler: Effect.fnUntraced(function* ({ view, fieldId }) {
+          const db = Obj.getDatabase(view);
+          invariant(db, 'Database not found');
+          const schema = yield* Effect.promise(() =>
+            db.schemaRegistry
+              .query({
+                typename: getTypenameFromQuery(view.query.ast)!,
+                location: ['database', 'runtime'],
+              })
+              .first(),
+          );
+          const projection = new ProjectionModel(JsonSchema.toJsonSchema(schema), view.projection);
+          const { deleted, index } = projection.deleteFieldProjection(fieldId);
 
-            // Return data needed for undo.
-            return {
-              field: deleted.field,
-              props: deleted.props,
-              index,
-            };
-          }),
+          // Return data needed for undo.
+          return {
+            field: deleted.field,
+            props: deleted.props,
+            index,
+          };
+        }),
       }),
       OperationResolver.make({
         operation: KanbanOperation.DeleteCard,
@@ -80,21 +79,20 @@ export default Capability.makeModule(() =>
       //
       OperationResolver.make({
         operation: KanbanOperation.RestoreCardField,
-        handler: ({ view, field, props, index }) =>
-          Effect.gen(function* () {
-            const db = Obj.getDatabase(view);
-            invariant(db, 'Database not found');
-            const schema = yield* Effect.promise(() =>
-              db.schemaRegistry
-                .query({
-                  typename: getTypenameFromQuery(view.query.ast)!,
-                  location: ['database', 'runtime'],
-                })
-                .first(),
-            );
-            const projection = new ProjectionModel(JsonSchema.toJsonSchema(schema), view.projection);
-            projection.setFieldProjection({ field, props }, index);
-          }),
+        handler: Effect.fnUntraced(function* ({ view, field, props, index }) {
+          const db = Obj.getDatabase(view);
+          invariant(db, 'Database not found');
+          const schema = yield* Effect.promise(() =>
+            db.schemaRegistry
+              .query({
+                typename: getTypenameFromQuery(view.query.ast)!,
+                location: ['database', 'runtime'],
+              })
+              .first(),
+          );
+          const projection = new ProjectionModel(JsonSchema.toJsonSchema(schema), view.projection);
+          projection.setFieldProjection({ field, props }, index);
+        }),
       }),
 
       //

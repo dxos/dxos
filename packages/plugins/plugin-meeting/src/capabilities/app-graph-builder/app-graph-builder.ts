@@ -55,146 +55,142 @@ export default Capability.makeModule(
       GraphBuilder.createTypeExtension({
         id: `${meta.id}/call-thread`,
         type: Channel.Channel,
-        connector: (channel, get) =>
-          Effect.gen(function* () {
-            const state = yield* Capability.get(MeetingCapabilities.State);
-            const meeting = get(CreateAtom.fromSignal(() => state.activeMeeting));
-            if (!meeting) {
-              return [];
-            }
+        connector: Effect.fnUntraced(function* (channel, get) {
+          const state = yield* Capability.get(MeetingCapabilities.State);
+          const meeting = get(CreateAtom.fromSignal(() => state.activeMeeting));
+          if (!meeting) {
+            return [];
+          }
 
-            const callManager = yield* Capability.get(ThreadCapabilities.CallManager);
-            const joined = get(
-              CreateAtom.fromSignal(() => callManager.joined && callManager.roomId === Obj.getDXN(channel).toString()),
-            );
-            if (!joined) {
-              return [];
-            }
+          const callManager = yield* Capability.get(ThreadCapabilities.CallManager);
+          const joined = get(
+            CreateAtom.fromSignal(() => callManager.joined && callManager.roomId === Obj.getDXN(channel).toString()),
+          );
+          if (!joined) {
+            return [];
+          }
 
-            return [
-              {
-                id: `${Obj.getDXN(channel).toString()}${ATTENDABLE_PATH_SEPARATOR}meeting-thread`,
-                type: PLANK_COMPANION_TYPE,
-                data: get(CreateAtom.fromSignal(() => meeting.thread.target)),
-                properties: {
-                  label: ['meeting thread label', { ns: meta.id }],
-                  icon: 'ph--chat-text--regular',
-                  position: 'hoist',
-                  disposition: 'hidden',
-                },
+          return [
+            {
+              id: `${Obj.getDXN(channel).toString()}${ATTENDABLE_PATH_SEPARATOR}meeting-thread`,
+              type: PLANK_COMPANION_TYPE,
+              data: get(CreateAtom.fromSignal(() => meeting.thread.target)),
+              properties: {
+                label: ['meeting thread label', { ns: meta.id }],
+                icon: 'ph--chat-text--regular',
+                position: 'hoist',
+                disposition: 'hidden',
               },
-            ];
-          }),
+            },
+          ];
+        }),
       }),
 
       GraphBuilder.createTypeExtension({
         id: `${meta.id}/call-companion`,
         type: Channel.Channel,
-        connector: (channel, get) =>
-          Effect.gen(function* () {
-            const callManager = yield* Capability.get(ThreadCapabilities.CallManager);
-            const isCallActive = get(
-              CreateAtom.fromSignal(() => callManager.joined && callManager.roomId === Obj.getDXN(channel).toString()),
-            );
-            if (!isCallActive) {
-              return [];
-            }
+        connector: Effect.fnUntraced(function* (channel, get) {
+          const callManager = yield* Capability.get(ThreadCapabilities.CallManager);
+          const isCallActive = get(
+            CreateAtom.fromSignal(() => callManager.joined && callManager.roomId === Obj.getDXN(channel).toString()),
+          );
+          if (!isCallActive) {
+            return [];
+          }
 
-            const state = yield* Capability.get(MeetingCapabilities.State);
-            const data = get(CreateAtom.fromSignal(() => state.activeMeeting ?? 'meeting'));
+          const state = yield* Capability.get(MeetingCapabilities.State);
+          const data = get(CreateAtom.fromSignal(() => state.activeMeeting ?? 'meeting'));
 
-            return [
-              {
-                id: `${Obj.getDXN(channel).toString()}${ATTENDABLE_PATH_SEPARATOR}meeting`,
-                type: PLANK_COMPANION_TYPE,
-                data,
-                properties: {
-                  label: [data === 'meeting' ? 'meeting list label' : 'meeting companion label', { ns: meta.id }],
-                  icon: 'ph--note--regular',
-                  position: 'hoist',
-                  disposition: 'hidden',
-                },
+          return [
+            {
+              id: `${Obj.getDXN(channel).toString()}${ATTENDABLE_PATH_SEPARATOR}meeting`,
+              type: PLANK_COMPANION_TYPE,
+              data,
+              properties: {
+                label: [data === 'meeting' ? 'meeting list label' : 'meeting companion label', { ns: meta.id }],
+                icon: 'ph--note--regular',
+                position: 'hoist',
+                disposition: 'hidden',
               },
-            ];
-          }),
+            },
+          ];
+        }),
       }),
 
       GraphBuilder.createTypeExtension({
         id: `${meta.id}/call-transcript`,
         type: Channel.Channel,
-        actions: (channel, get) =>
-          Effect.gen(function* () {
-            const state = yield* Capability.get(MeetingCapabilities.State);
-            const enabled = get(CreateAtom.fromSignal(() => state.transcriptionManager?.enabled ?? false));
-            return [
-              {
-                id: `${Obj.getDXN(channel).toString()}/action/start-stop-transcription`,
-                data: Effect.fnUntraced(function* () {
-                  const state = yield* Capability.get(MeetingCapabilities.State);
-                  let meeting = state.activeMeeting;
-                  if (!meeting) {
-                    const db = Obj.getDatabase(channel);
-                    invariant(db);
-                    const createResult = yield* Operation.invoke(MeetingOperation.Create, { channel });
-                    const addResult = yield* Operation.invoke(SpaceOperation.AddObject, {
-                      target: db,
-                      hidden: true,
-                      object: createResult.object,
-                    });
-                    yield* Operation.invoke(MeetingOperation.SetActive, { object: addResult.object });
-                    meeting = addResult.object as Meeting.Meeting;
-                  }
-
-                  const callManager = yield* Capability.get(ThreadCapabilities.CallManager);
-                  const transcript = yield* Effect.promise(() => meeting.transcript.load());
-                  const transcriptionEnabled = !enabled;
-                  callManager.setActivity(Type.getTypename(Meeting.Meeting)!, {
-                    meetingId: Obj.getDXN(meeting).toString(),
-                    transcriptDxn: transcript.queue.dxn.toString(),
-                    transcriptionEnabled,
+        actions: Effect.fnUntraced(function* (channel, get) {
+          const state = yield* Capability.get(MeetingCapabilities.State);
+          const enabled = get(CreateAtom.fromSignal(() => state.transcriptionManager?.enabled ?? false));
+          return [
+            {
+              id: `${Obj.getDXN(channel).toString()}/action/start-stop-transcription`,
+              data: Effect.fnUntraced(function* () {
+                const state = yield* Capability.get(MeetingCapabilities.State);
+                let meeting = state.activeMeeting;
+                if (!meeting) {
+                  const db = Obj.getDatabase(channel);
+                  invariant(db);
+                  const createResult = yield* Operation.invoke(MeetingOperation.Create, { channel });
+                  const addResult = yield* Operation.invoke(SpaceOperation.AddObject, {
+                    target: db,
+                    hidden: true,
+                    object: createResult.object,
                   });
+                  yield* Operation.invoke(MeetingOperation.SetActive, { object: addResult.object });
+                  meeting = addResult.object as Meeting.Meeting;
+                }
 
-                  if (!transcriptionEnabled) {
-                    log.warn('transcription disabled');
-                  } else {
-                    const primary = Obj.getDXN(channel).toString();
-                    const companion = `${primary}${ATTENDABLE_PATH_SEPARATOR}transcript`;
-                    yield* Operation.invoke(DeckOperation.ChangeCompanion, { primary, companion });
-                  }
-                }),
-                properties: {
-                  label: enabled
-                    ? ['stop transcription label', { ns: meta.id }]
-                    : ['start transcription label', { ns: meta.id }],
-                  icon: 'ph--subtitles--regular',
-                  disposition: 'toolbar',
-                  classNames: enabled ? 'bg-callAlert' : '',
-                },
-              },
-            ];
-          }),
-        connector: (channel, get) =>
-          Effect.gen(function* () {
-            const state = yield* Capability.get(MeetingCapabilities.State);
-            const meeting = get(CreateAtom.fromSignal(() => state.activeMeeting));
-            if (!meeting) {
-              return [];
-            }
+                const callManager = yield* Capability.get(ThreadCapabilities.CallManager);
+                const transcript = yield* Effect.promise(() => meeting.transcript.load());
+                const transcriptionEnabled = !enabled;
+                callManager.setActivity(Type.getTypename(Meeting.Meeting)!, {
+                  meetingId: Obj.getDXN(meeting).toString(),
+                  transcriptDxn: transcript.queue.dxn.toString(),
+                  transcriptionEnabled,
+                });
 
-            return [
-              {
-                id: `${Obj.getDXN(channel).toString()}${ATTENDABLE_PATH_SEPARATOR}transcript`,
-                type: PLANK_COMPANION_TYPE,
-                data: get(CreateAtom.fromSignal(() => meeting.transcript.target)),
-                properties: {
-                  label: ['transcript companion label', { ns: meta.id }],
-                  icon: 'ph--subtitles--regular',
-                  position: 'hoist',
-                  disposition: 'hidden',
-                },
+                if (!transcriptionEnabled) {
+                  log.warn('transcription disabled');
+                } else {
+                  const primary = Obj.getDXN(channel).toString();
+                  const companion = `${primary}${ATTENDABLE_PATH_SEPARATOR}transcript`;
+                  yield* Operation.invoke(DeckOperation.ChangeCompanion, { primary, companion });
+                }
+              }),
+              properties: {
+                label: enabled
+                  ? ['stop transcription label', { ns: meta.id }]
+                  : ['start transcription label', { ns: meta.id }],
+                icon: 'ph--subtitles--regular',
+                disposition: 'toolbar',
+                classNames: enabled ? 'bg-callAlert' : '',
               },
-            ];
-          }),
+            },
+          ];
+        }),
+        connector: Effect.fnUntraced(function* (channel, get) {
+          const state = yield* Capability.get(MeetingCapabilities.State);
+          const meeting = get(CreateAtom.fromSignal(() => state.activeMeeting));
+          if (!meeting) {
+            return [];
+          }
+
+          return [
+            {
+              id: `${Obj.getDXN(channel).toString()}${ATTENDABLE_PATH_SEPARATOR}transcript`,
+              type: PLANK_COMPANION_TYPE,
+              data: get(CreateAtom.fromSignal(() => meeting.transcript.target)),
+              properties: {
+                label: ['transcript companion label', { ns: meta.id }],
+                icon: 'ph--subtitles--regular',
+                position: 'hoist',
+                disposition: 'hidden',
+              },
+            },
+          ];
+        }),
       }),
 
       GraphBuilder.createTypeExtension({

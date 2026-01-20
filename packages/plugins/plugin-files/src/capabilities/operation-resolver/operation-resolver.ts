@@ -140,201 +140,188 @@ export default Capability.makeModule(
     return Capability.contributes(Common.Capability.OperationResolver, [
       OperationResolver.make({
         operation: LocalFilesOperation.SelectRoot,
-        handler: () =>
-          Effect.gen(function* () {
-            const mutableState = yield* Capability.get(FileCapabilities.MutableState);
-            const rootDir = yield* Effect.promise(async () =>
-              (window as any).showDirectoryPicker({ mode: 'readwrite' }),
-            );
-            if (rootDir) {
-              mutableState.rootHandle = rootDir;
-            }
-          }),
+        handler: Effect.fnUntraced(function* () {
+          const mutableState = yield* Capability.get(FileCapabilities.MutableState);
+          const rootDir = yield* Effect.promise(async () => (window as any).showDirectoryPicker({ mode: 'readwrite' }));
+          if (rootDir) {
+            mutableState.rootHandle = rootDir;
+          }
+        }),
       }),
       OperationResolver.make({
         operation: LocalFilesOperation.Export,
-        handler: () =>
-          Effect.gen(function* () {
-            const { explore } = yield* Capability.get(Common.Capability.AppGraph);
-            const state = yield* Capability.get(FileCapabilities.State);
-            const mutableState = yield* Capability.get(FileCapabilities.MutableState);
-            if (!mutableState.rootHandle) {
-              yield* Operation.invoke(SettingsOperation.Open, { plugin: meta.id });
-              return;
-            }
+        handler: Effect.fnUntraced(function* () {
+          const { explore } = yield* Capability.get(Common.Capability.AppGraph);
+          const state = yield* Capability.get(FileCapabilities.State);
+          const mutableState = yield* Capability.get(FileCapabilities.MutableState);
+          if (!mutableState.rootHandle) {
+            yield* Operation.invoke(SettingsOperation.Open, { plugin: meta.id });
+            return;
+          }
 
-            const serializers = yield* Capability.getAll(Common.Capability.AppGraphSerializer);
+          const serializers = yield* Capability.getAll(Common.Capability.AppGraphSerializer);
 
-            yield* Effect.promise(async () =>
-              explore({
-                visitor: async (node, path) => {
-                  if (Node.isActionLike(node)) {
-                    return false;
-                  }
+          yield* Effect.promise(async () =>
+            explore({
+              visitor: async (node, path) => {
+                if (Node.isActionLike(node)) {
+                  return false;
+                }
 
-                  const [serializer] = serializers
-                    .flat()
-                    .filter((serializer) => node.type === serializer.inputType)
-                    .sort(byPosition);
-                  if (!serializer && node.data !== null) {
-                    return false;
-                  }
+                const [serializer] = serializers
+                  .flat()
+                  .filter((serializer) => node.type === serializer.inputType)
+                  .sort(byPosition);
+                if (!serializer && node.data !== null) {
+                  return false;
+                }
 
-                  const serialized = await serializer.serialize(node);
-                  await exportFile({ node, path: path.slice(1), serialized, state });
-                },
-              }),
-            );
+                const serialized = await serializer.serialize(node);
+                await exportFile({ node, path: path.slice(1), serialized, state });
+              },
+            }),
+          );
 
-            mutableState.lastExport = Date.now();
-          }),
+          mutableState.lastExport = Date.now();
+        }),
       }),
       OperationResolver.make({
         operation: LocalFilesOperation.Import,
-        handler: ({ rootDir: rootDirInput }) =>
-          Effect.gen(function* () {
-            const rootDir =
-              rootDirInput ??
-              (yield* Effect.promise(async () => (window as any).showDirectoryPicker({ mode: 'read' })));
-            if (!rootDir) {
+        handler: Effect.fnUntraced(function* ({ rootDir: rootDirInput }) {
+          const rootDir =
+            rootDirInput ?? (yield* Effect.promise(async () => (window as any).showDirectoryPicker({ mode: 'read' })));
+          if (!rootDir) {
+            return;
+          }
+
+          const serializers = yield* Capability.getAll(Common.Capability.AppGraphSerializer);
+
+          const importFile = async ({ handle, ancestors }: { handle: FileSystemHandle; ancestors: unknown[] }) => {
+            const [name, ...extension] = handle.name.split('.');
+
+            let type = getFileType(extension.join('.'));
+            if (!type && handle.kind === 'directory') {
+              const metadataHandle = await (handle as any).getFileHandle('.composer.json');
+              if (metadataHandle) {
+                const file = await metadataHandle.getFile();
+                const metadata = JSON.parse(await file.text());
+                type = metadata.type;
+              }
+            } else if (!type) {
+              log('unsupported file type', { name, extension });
               return;
             }
+            const data = handle.kind === 'directory' ? name : await (await (handle as any).getFile()).text();
+            const [serializer] = serializers
+              .flat()
+              .filter((serializer) =>
+                handle.kind === 'directory' ? type === serializer.inputType : type === serializer.outputType,
+              )
+              .sort(byPosition);
 
-            const serializers = yield* Capability.getAll(Common.Capability.AppGraphSerializer);
+            return serializer?.deserialize({ name, data, type }, ancestors);
+          };
 
-            const importFile = async ({ handle, ancestors }: { handle: FileSystemHandle; ancestors: unknown[] }) => {
-              const [name, ...extension] = handle.name.split('.');
-
-              let type = getFileType(extension.join('.'));
-              if (!type && handle.kind === 'directory') {
-                const metadataHandle = await (handle as any).getFileHandle('.composer.json');
-                if (metadataHandle) {
-                  const file = await metadataHandle.getFile();
-                  const metadata = JSON.parse(await file.text());
-                  type = metadata.type;
-                }
-              } else if (!type) {
-                log('unsupported file type', { name, extension });
-                return;
-              }
-              const data = handle.kind === 'directory' ? name : await (await (handle as any).getFile()).text();
-              const [serializer] = serializers
-                .flat()
-                .filter((serializer) =>
-                  handle.kind === 'directory' ? type === serializer.inputType : type === serializer.outputType,
-                )
-                .sort(byPosition);
-
-              return serializer?.deserialize({ name, data, type }, ancestors);
-            };
-
-            yield* Effect.promise(async () =>
-              traverseFileSystem(rootDir, (handle, ancestors) => importFile({ handle, ancestors })),
-            );
-          }),
+          yield* Effect.promise(async () =>
+            traverseFileSystem(rootDir, (handle, ancestors) => importFile({ handle, ancestors })),
+          );
+        }),
       }),
       OperationResolver.make({
         operation: LocalFilesOperation.OpenFile,
-        handler: () =>
-          Effect.gen(function* () {
-            const mutableState = yield* Capability.get(FileCapabilities.MutableState);
-            if ('showOpenFilePicker' in window) {
-              const [handle]: FileSystemFileHandle[] = yield* Effect.promise(async () =>
-                (window as any).showOpenFilePicker({
-                  mode: 'readwrite',
-                  types: [{ description: 'Markdown', accept: { 'text/markdown': ['.md'] } }],
-                }),
-              );
-              const file = yield* Effect.promise(async () => handleToLocalFile(handle));
-              mutableState.files.push(file);
-              return { id: file.id, subject: [file.id] };
-            }
+        handler: Effect.fnUntraced(function* () {
+          const mutableState = yield* Capability.get(FileCapabilities.MutableState);
+          if ('showOpenFilePicker' in window) {
+            const [handle]: FileSystemFileHandle[] = yield* Effect.promise(async () =>
+              (window as any).showOpenFilePicker({
+                mode: 'readwrite',
+                types: [{ description: 'Markdown', accept: { 'text/markdown': ['.md'] } }],
+              }),
+            );
+            const file = yield* Effect.promise(async () => handleToLocalFile(handle));
+            mutableState.files.push(file);
+            return { id: file.id, subject: [file.id] };
+          }
 
-            const input = document.createElement('input');
-            input.type = 'file';
-            input.accept = '.md,text/markdown';
-            const result = new Trigger<string>();
-            input.onchange = async () => {
-              const [legacyFile] = input.files ? Array.from(input.files) : [];
-              if (legacyFile) {
-                const file = await legacyFileToLocalFile(legacyFile);
-                mutableState.files.push(file);
-                result.wake(file.id);
-              }
-            };
-            input.click();
-            const id = yield* Effect.promise(async () => result.wait());
-            return { id, subject: [id] };
-          }),
+          const input = document.createElement('input');
+          input.type = 'file';
+          input.accept = '.md,text/markdown';
+          const result = new Trigger<string>();
+          input.onchange = async () => {
+            const [legacyFile] = input.files ? Array.from(input.files) : [];
+            if (legacyFile) {
+              const file = await legacyFileToLocalFile(legacyFile);
+              mutableState.files.push(file);
+              result.wake(file.id);
+            }
+          };
+          input.click();
+          const id = yield* Effect.promise(async () => result.wait());
+          return { id, subject: [id] };
+        }),
       }),
       OperationResolver.make({
         operation: LocalFilesOperation.OpenDirectory,
-        handler: () =>
-          Effect.gen(function* () {
-            const mutableState = yield* Capability.get(FileCapabilities.MutableState);
-            const handle = yield* Effect.promise(async () =>
-              (window as any).showDirectoryPicker({ mode: 'readwrite' }),
-            );
-            const directory = yield* Effect.promise(async () => handleToLocalDirectory(handle));
-            mutableState.files.push(directory);
-            return { id: directory.id, subject: [directory.id] };
-          }),
+        handler: Effect.fnUntraced(function* () {
+          const mutableState = yield* Capability.get(FileCapabilities.MutableState);
+          const handle = yield* Effect.promise(async () => (window as any).showDirectoryPicker({ mode: 'readwrite' }));
+          const directory = yield* Effect.promise(async () => handleToLocalDirectory(handle));
+          mutableState.files.push(directory);
+          return { id: directory.id, subject: [directory.id] };
+        }),
       }),
       OperationResolver.make({
         operation: LocalFilesOperation.Reconnect,
-        handler: ({ id }) =>
-          Effect.gen(function* () {
-            const mutableState = yield* Capability.get(FileCapabilities.MutableState);
-            const entity = mutableState.files.find((entity) => entity.id === id);
-            if (!entity) {
-              return;
-            }
+        handler: Effect.fnUntraced(function* ({ id }) {
+          const mutableState = yield* Capability.get(FileCapabilities.MutableState);
+          const entity = mutableState.files.find((entity) => entity.id === id);
+          if (!entity) {
+            return;
+          }
 
-            if ('children' in entity) {
-              const permission = yield* Effect.promise(async () =>
-                (entity.handle as any).requestPermission({ mode: 'readwrite' }),
+          if ('children' in entity) {
+            const permission = yield* Effect.promise(async () =>
+              (entity.handle as any).requestPermission({ mode: 'readwrite' }),
+            );
+            if (permission === 'granted') {
+              entity.children = yield* Effect.promise(async () =>
+                getDirectoryChildren(entity.handle, entity.handle.name),
               );
-              if (permission === 'granted') {
-                entity.children = yield* Effect.promise(async () =>
-                  getDirectoryChildren(entity.handle, entity.handle.name),
-                );
-                entity.permission = permission;
-              }
-            } else {
-              const permission = yield* Effect.promise(async () =>
-                (entity.handle as any)?.requestPermission({ mode: 'readwrite' }),
-              );
-              if (permission === 'granted') {
-                const text = yield* Effect.promise(async () =>
-                  (entity.handle as any).getFile?.().then((file: any) => file.text()),
-                );
-                entity.text = text;
-                entity.permission = permission;
-              }
+              entity.permission = permission;
             }
-          }),
+          } else {
+            const permission = yield* Effect.promise(async () =>
+              (entity.handle as any)?.requestPermission({ mode: 'readwrite' }),
+            );
+            if (permission === 'granted') {
+              const text = yield* Effect.promise(async () =>
+                (entity.handle as any).getFile?.().then((file: any) => file.text()),
+              );
+              entity.text = text;
+              entity.permission = permission;
+            }
+          }
+        }),
       }),
       OperationResolver.make({
         operation: LocalFilesOperation.Save,
-        handler: ({ id }) =>
-          Effect.gen(function* () {
-            const mutableState = yield* Capability.get(FileCapabilities.MutableState);
-            const file = findFile(mutableState.files, [id]);
-            if (file) {
-              yield* Effect.promise(async () => handleSave(file));
-            }
-          }),
+        handler: Effect.fnUntraced(function* ({ id }) {
+          const mutableState = yield* Capability.get(FileCapabilities.MutableState);
+          const file = findFile(mutableState.files, [id]);
+          if (file) {
+            yield* Effect.promise(async () => handleSave(file));
+          }
+        }),
       }),
       OperationResolver.make({
         operation: LocalFilesOperation.Close,
-        handler: ({ id }) =>
-          Effect.gen(function* () {
-            const mutableState = yield* Capability.get(FileCapabilities.MutableState);
-            const index = mutableState.files.findIndex((f) => f.id === id);
-            if (index >= 0) {
-              mutableState.files.splice(index, 1);
-            }
-          }),
+        handler: Effect.fnUntraced(function* ({ id }) {
+          const mutableState = yield* Capability.get(FileCapabilities.MutableState);
+          const index = mutableState.files.findIndex((f) => f.id === id);
+          if (index >= 0) {
+            mutableState.files.splice(index, 1);
+          }
+        }),
       }),
     ]);
   }),
