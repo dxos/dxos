@@ -5,6 +5,7 @@
 import * as Effect from 'effect/Effect';
 
 import { Capability, Common, Plugin } from '@dxos/app-framework';
+import { Operation } from '@dxos/operation';
 import { Graph } from '@dxos/plugin-graph';
 import { SPACES, SpaceEvents } from '@dxos/plugin-space';
 import { SpaceCapabilities } from '@dxos/plugin-space/types';
@@ -20,7 +21,8 @@ export default Capability.makeModule(
     const { Markdown } = yield* Effect.tryPromise(() => import('@dxos/plugin-markdown/types'));
     const { Collection } = yield* Effect.tryPromise(() => import('@dxos/schema'));
 
-    const { invoke } = yield* Capability.get(Common.Capability.OperationInvoker);
+    const operationInvoker = yield* Capability.get(Common.Capability.OperationInvoker);
+    const { invoke } = operationInvoker;
     const { graph } = yield* Capability.get(Common.Capability.AppGraph);
     const client = yield* Capability.get(ClientCapabilities.Client);
 
@@ -41,7 +43,9 @@ export default Capability.makeModule(
     const onCreateSpaceCallbacks = yield* Capability.getAll(SpaceCapabilities.OnCreateSpace);
     yield* Effect.all(
       onCreateSpaceCallbacks.map((onCreateSpace) =>
-        onCreateSpace({ space: space, isDefault: true, rootCollection: defaultSpaceCollection }),
+        onCreateSpace({ space: space, isDefault: true, rootCollection: defaultSpaceCollection }).pipe(
+          Effect.provideService(Operation.Service, operationInvoker),
+        ),
       ),
     );
 

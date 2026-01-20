@@ -22,8 +22,6 @@ import { Channel, ThreadCapabilities, ThreadOperation } from '../../types';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    const context = yield* Capability.PluginContextService;
-
     return [
       Capability.contributes(Common.Capability.UndoMapping, [
         UndoMapping.make({
@@ -92,8 +90,8 @@ export default Capability.makeModule(
         OperationResolver.make({
           operation: ThreadOperation.Select,
           handler: (input) =>
-            Effect.sync(() => {
-              const { state } = context.getCapability(ThreadCapabilities.MutableState);
+            Effect.gen(function* () {
+              const { state } = yield* Capability.get(ThreadCapabilities.MutableState);
               state.current = input.current;
             }),
         }),
@@ -160,7 +158,7 @@ export default Capability.makeModule(
           operation: ThreadOperation.Create,
           handler: ({ name, anchor: _anchor, subject }) =>
             Effect.gen(function* () {
-              const { state } = context.getCapability(ThreadCapabilities.MutableState);
+              const { state } = yield* Capability.get(ThreadCapabilities.MutableState);
               const subjectId = Obj.getDXN(subject).toString();
               const thread = Thread.make({ name });
               const anchor = Relation.make(AnchoredTo.AnchoredTo, {
@@ -192,7 +190,7 @@ export default Capability.makeModule(
           operation: ThreadOperation.Delete,
           handler: ({ subject, anchor, thread: _thread }) =>
             Effect.gen(function* () {
-              const { state } = context.getCapability(ThreadCapabilities.MutableState);
+              const { state } = yield* Capability.get(ThreadCapabilities.MutableState);
               const thread = _thread ?? (Relation.getSource(anchor) as Thread.Thread);
               const subjectId = Obj.getDXN(subject).toString();
               const draft = state.drafts[subjectId];
@@ -237,7 +235,7 @@ export default Capability.makeModule(
           operation: ThreadOperation.AddMessage,
           handler: ({ anchor, subject, sender, text }) =>
             Effect.gen(function* () {
-              const { state } = context.getCapability(ThreadCapabilities.MutableState);
+              const { state } = yield* Capability.get(ThreadCapabilities.MutableState);
               const thread = Relation.getSource(anchor) as Thread.Thread;
               const subjectId = Obj.getDXN(subject).toString();
               const db = Obj.getDatabase(subject);
@@ -329,7 +327,7 @@ export default Capability.makeModule(
 
               // Return data needed for undo.
               return { message: msg, messageIndex: msgIndex };
-            }).pipe(Effect.provideService(Capability.PluginContextService, context)),
+            }),
         }),
 
         //

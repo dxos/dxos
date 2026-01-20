@@ -334,6 +334,7 @@ export class Toolbox {
       const projectPath = join(project.path, 'package.json');
       const projectPackage = await loadJson<PackageJson>(projectPath);
       const tsConfigPath = join(project.path, 'tsconfig.json');
+
       if (fs.existsSync(tsConfigPath)) {
         const tsConfigJson = await loadJson<TsConfigJson>(tsConfigPath);
 
@@ -344,7 +345,7 @@ export class Toolbox {
             ...Object.entries(dependencies),
             ...Object.entries(devDependencies),
             ...Object.entries(peerDependencies),
-          ].filter(([_, value]) => value === 'workspace:*'),
+          ].filter(([_, value]) => value === 'workspace:*' || value === 'workspace:'),
         );
 
         const deps = Array.from(depsMap.entries());

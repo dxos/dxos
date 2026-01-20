@@ -2,4 +2,6 @@
 // Copyright 2025 DXOS.org
 //
 
-export { AtomObj } from './atom';
+export * as AtomObj from './atom';
+export * as AtomQuery from './query-atom';
+export * as AtomRef from './ref-atom';

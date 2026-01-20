@@ -8,7 +8,6 @@ import { Capability, Common, Plugin, UndoMapping } from '@dxos/app-framework';
 import { SpaceState, getSpace } from '@dxos/client/echo';
 import { Database, Obj, Query, Ref, Relation, Type } from '@dxos/echo';
 import { EchoDatabaseImpl, Serializer } from '@dxos/echo-db';
-import { runAndForwardErrors } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { Migrations } from '@dxos/migrations';
 import { OperationResolver } from '@dxos/operation';
@@ -41,11 +40,11 @@ type OperationResolverOptions = {
 export default Capability.makeModule(
   Effect.fnUntraced(function* (props?: OperationResolverOptions) {
     const { createInvitationUrl, observability } = props!;
-    const context = yield* Capability.PluginContextService;
+    const capabilityManager = yield* Capability.Service;
 
     const resolve = (typename: string) =>
-      context.getCapabilities(Common.Capability.Metadata).find(({ id }: { id: string }) => id === typename)?.metadata ??
-      {};
+      capabilityManager.getAll(Common.Capability.Metadata).find(({ id }: { id: string }) => id === typename)
+        ?.metadata ?? {};
 
     return [
       Capability.contributes(Common.Capability.UndoMapping, [
@@ -125,8 +124,8 @@ export default Capability.makeModule(
         OperationResolver.make({
           operation: SpaceOperation.WaitForObject,
           handler: (input) =>
-            Effect.sync(() => {
-              const state = context.getCapability(SpaceCapabilities.MutableState);
+            Effect.gen(function* () {
+              const state = yield* Capability.get(SpaceCapabilities.MutableState);
               state.awaiting = input.id;
             }),
         }),
@@ -152,7 +151,7 @@ export default Capability.makeModule(
           operation: SpaceOperation.RemoveObjects,
           handler: (input) =>
             Effect.gen(function* () {
-              const layout = context.getCapability(Common.Capability.Layout);
+              const layout = yield* Capability.get(Common.Capability.Layout);
               const objects = input.objects as Obj.Any[];
 
               // All objects must be a member of the same space.
@@ -219,7 +218,7 @@ export default Capability.makeModule(
                 nestedObjectsList,
                 wasActive,
               };
-            }).pipe(Effect.provideService(Capability.PluginContextService, context)),
+            }),
         }),
 
         //
@@ -262,7 +261,7 @@ export default Capability.makeModule(
           operation: SpaceOperation.OpenCreateObject,
           handler: (input) =>
             Effect.gen(function* () {
-              const state = context.getCapability(SpaceCapabilities.State);
+              const state = yield* Capability.get(SpaceCapabilities.State);
               const navigable = input.navigable ?? true;
               yield* Operation.invoke(Common.LayoutOperation.UpdateDialog, {
                 subject: CREATE_OBJECT_DIALOG,
@@ -282,7 +281,7 @@ export default Capability.makeModule(
                     : () => false,
                 },
               });
-            }).pipe(Effect.provideService(Capability.PluginContextService, context)),
+            }),
         }),
 
         //
@@ -403,7 +402,7 @@ export default Capability.makeModule(
           operation: SpaceOperation.Create,
           handler: ({ name, hue: hue_, icon: icon_, edgeReplication }) =>
             Effect.gen(function* () {
-              const client = context.getCapability(ClientCapabilities.Client);
+              const client = yield* Capability.get(ClientCapabilities.Client);
               const hue = hue_ ?? hues[Math.floor(Math.random() * hues.length)];
               const icon = icon_ ?? iconValues[Math.floor(Math.random() * iconValues.length)];
               const space = yield* Effect.promise(() => client.spaces.create({ name, hue, icon }));
@@ -434,10 +433,8 @@ export default Capability.makeModule(
               });
 
               // Allow other plugins to add default content.
-              yield* Plugin.activate(SpaceEvents.SpaceCreated).pipe(
-                Effect.provideService(Capability.PluginContextService, context),
-              );
-              const onCreateSpaceCallbacks = context.getCapabilities(SpaceCapabilities.OnCreateSpace);
+              yield* Plugin.activate(SpaceEvents.SpaceCreated);
+              const onCreateSpaceCallbacks = yield* Capability.getAll(SpaceCapabilities.OnCreateSpace);
               yield* Effect.all(
                 onCreateSpaceCallbacks.map((onCreateSpace) =>
                   onCreateSpace({ space, isDefault: false, rootCollection: collection }),
@@ -462,7 +459,7 @@ export default Capability.makeModule(
           operation: SpaceOperation.Migrate,
           handler: (input) =>
             Effect.gen(function* () {
-              const state = context.getCapability(SpaceCapabilities.MutableState);
+              const state = yield* Capability.get(SpaceCapabilities.MutableState);
               const { space, version: targetVersion } = input;
 
               if (space.state.get() === SpaceState.SPACE_REQUIRES_MIGRATION) {
@@ -581,7 +578,7 @@ export default Capability.makeModule(
                 yield* Effect.tryPromise(() => navigator.clipboard.writeText(url));
               }
               return url;
-            }).pipe(Effect.provideService(Capability.PluginContextService, context)),
+            }),
         }),
 
         //
@@ -592,9 +589,9 @@ export default Capability.makeModule(
           handler: (input) =>
             Effect.gen(function* () {
               const db = input.db as Database.Database;
-              const client = context.getCapability(ClientCapabilities.Client) as any;
+              const client = yield* Capability.get(ClientCapabilities.Client);
               const schema: any = yield* Effect.promise(() =>
-                client.graph.schemaRegistry.query({ typename: input.typename, location: ['runtime'] }).first(),
+                (client as any).graph.schemaRegistry.query({ typename: input.typename, location: ['runtime'] }).first(),
               );
               const space = client.spaces.get(db.spaceId);
               invariant(space, 'Space not found');
@@ -611,14 +608,8 @@ export default Capability.makeModule(
                 });
               }
 
-              yield* Effect.promise(() =>
-                runAndForwardErrors(
-                  Plugin.activate(SpaceEvents.SchemaAdded).pipe(
-                    Effect.provideService(Capability.PluginContextService, context),
-                  ),
-                ),
-              );
-              const onSchemaAdded = context.getCapabilities(SpaceCapabilities.OnSchemaAdded);
+              yield* Plugin.activate(SpaceEvents.SchemaAdded);
+              const onSchemaAdded = yield* Capability.getAll(SpaceCapabilities.OnSchemaAdded);
               yield* Effect.all(
                 onSchemaAdded.map((callback) => callback({ db, schema, show: input.show })),
                 { concurrency: 'unbounded' },
@@ -658,14 +649,8 @@ export default Capability.makeModule(
                 }
               });
 
-              yield* Effect.promise(() =>
-                runAndForwardErrors(
-                  Plugin.activate(SpaceEvents.SchemaAdded).pipe(
-                    Effect.provideService(Capability.PluginContextService, context),
-                  ),
-                ),
-              );
-              const onSchemaAdded = context.getCapabilities(SpaceCapabilities.OnSchemaAdded);
+              yield* Plugin.activate(SpaceEvents.SchemaAdded);
+              const onSchemaAdded = yield* Capability.getAll(SpaceCapabilities.OnSchemaAdded);
               yield* Effect.all(
                 onSchemaAdded.map((callback) => callback({ db, schema, show: input.show })),
                 { concurrency: 'unbounded' },

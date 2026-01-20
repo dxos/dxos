@@ -13,6 +13,7 @@ import { Capability, Common } from '@dxos/app-framework';
 import { type Space, SpaceState, getSpace, isSpace } from '@dxos/client/echo';
 import { DXN, Filter, Obj, type QueryResult, Type } from '@dxos/echo';
 import { log } from '@dxos/log';
+import { Operation } from '@dxos/operation';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { ATTENDABLE_PATH_SEPARATOR, PLANK_COMPANION_TYPE } from '@dxos/plugin-deck/types';
 import { CreateAtom, Graph, GraphBuilder, type Node, NodeMatcher } from '@dxos/plugin-graph';
@@ -36,11 +37,11 @@ import {
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    const context = yield* Capability.PluginContextService;
+    const capabilities = yield* Capability.Service;
 
     // TODO(wittjosiah): Using `get` and being reactive seems to cause a bug with Atom where disposed atoms are accessed.
     const resolve = (get: Atom.Context) => (typename: string) =>
-      context.getCapabilities(Common.Capability.Metadata).find(({ id }) => id === typename)?.metadata ?? {};
+      capabilities.getAll(Common.Capability.Metadata).find(({ id }) => id === typename)?.metadata ?? {};
 
     const spacesNode = {
       id: SPACES,
@@ -55,8 +56,8 @@ export default Capability.makeModule(
         disabled: true,
         childrenPersistenceClass: 'echo',
         onRearrangeChildren: async (nextOrder: Space[]) => {
-          const { graph } = context.getCapability(Common.Capability.AppGraph);
-          const client = context.getCapability(ClientCapabilities.Client);
+          const { graph } = capabilities.get(Common.Capability.AppGraph);
+          const client = capabilities.get(ClientCapabilities.Client);
 
           // NOTE: This is needed to ensure order is updated by next animation frame.
           // TODO(wittjosiah): Is there a better way to do this?
@@ -78,75 +79,68 @@ export default Capability.makeModule(
       },
     };
 
-    return Capability.contributes(Common.Capability.AppGraphBuilder, [
+    const extensions = yield* Effect.all([
       // Primary actions.
       GraphBuilder.createExtension({
         id: `${meta.id}/primary-actions`,
         position: 'hoist',
         match: NodeMatcher.whenRoot,
-        actions: () => [
-          {
-            id: SpaceOperation.OpenCreateSpace.meta.key,
-            data: async () => {
-              const { invokePromise } = context.getCapability(Common.Capability.OperationInvoker);
-              await invokePromise(SpaceOperation.OpenCreateSpace);
-            },
-            properties: {
-              label: ['create space label', { ns: meta.id }],
-              icon: 'ph--plus--regular',
-              testId: 'spacePlugin.createSpace',
-              disposition: 'menu',
-            },
-          },
-          {
-            id: SpaceOperation.Join.meta.key,
-            data: async () => {
-              const { invokePromise } = context.getCapability(Common.Capability.OperationInvoker);
-              await invokePromise(SpaceOperation.Join, {});
-            },
-            properties: {
-              label: ['join space label', { ns: meta.id }],
-              icon: 'ph--sign-in--regular',
-              testId: 'spacePlugin.joinSpace',
-              disposition: 'menu',
-            },
-          },
-          {
-            id: SpaceOperation.OpenMembers.meta.key,
-            data: async () => {
-              const { invokePromise } = context.getCapability(Common.Capability.OperationInvoker);
-              const client = context.getCapability(ClientCapabilities.Client);
-              const space = getActiveSpace(context) ?? client.spaces.default;
-              await invokePromise(SpaceOperation.OpenMembers, { space });
-            },
-            properties: {
-              label: ['share space label', { ns: meta.id }],
-              icon: 'ph--users--regular',
-              testId: 'spacePlugin.shareSpace',
-              keyBinding: {
-                macos: 'meta+.',
-                windows: 'alt+.',
+        actions: () =>
+          Effect.succeed([
+            {
+              id: SpaceOperation.OpenCreateSpace.meta.key,
+              data: () => Operation.invoke(SpaceOperation.OpenCreateSpace),
+              properties: {
+                label: ['create space label', { ns: meta.id }],
+                icon: 'ph--plus--regular',
+                testId: 'spacePlugin.createSpace',
+                disposition: 'menu',
               },
             },
-          },
-          {
-            id: SpaceOperation.OpenSettings.meta.key,
-            data: async () => {
-              const { invokePromise } = context.getCapability(Common.Capability.OperationInvoker);
-              const client = context.getCapability(ClientCapabilities.Client);
-              const space = getActiveSpace(context) ?? client.spaces.default;
-              await invokePromise(SpaceOperation.OpenSettings, { space });
-            },
-            properties: {
-              label: ['open current space settings label', { ns: meta.id }],
-              icon: 'ph--faders--regular',
-              keyBinding: {
-                macos: 'meta+shift+,',
-                windows: 'ctrl+shift+,',
+            {
+              id: SpaceOperation.Join.meta.key,
+              data: () => Operation.invoke(SpaceOperation.Join, {}),
+              properties: {
+                label: ['join space label', { ns: meta.id }],
+                icon: 'ph--sign-in--regular',
+                testId: 'spacePlugin.joinSpace',
+                disposition: 'menu',
               },
             },
-          },
-        ],
+            {
+              id: SpaceOperation.OpenMembers.meta.key,
+              data: Effect.fnUntraced(function* () {
+                const client = yield* Capability.get(ClientCapabilities.Client);
+                const space = getActiveSpace(capabilities) ?? client.spaces.default;
+                yield* Operation.invoke(SpaceOperation.OpenMembers, { space });
+              }),
+              properties: {
+                label: ['share space label', { ns: meta.id }],
+                icon: 'ph--users--regular',
+                testId: 'spacePlugin.shareSpace',
+                keyBinding: {
+                  macos: 'meta+.',
+                  windows: 'alt+.',
+                },
+              },
+            },
+            {
+              id: SpaceOperation.OpenSettings.meta.key,
+              data: Effect.fnUntraced(function* () {
+                const client = yield* Capability.get(ClientCapabilities.Client);
+                const space = getActiveSpace(capabilities) ?? client.spaces.default;
+                yield* Operation.invoke(SpaceOperation.OpenSettings, { space });
+              }),
+              properties: {
+                label: ['open current space settings label', { ns: meta.id }],
+                icon: 'ph--faders--regular',
+                keyBinding: {
+                  macos: 'meta+shift+,',
+                  windows: 'ctrl+shift+,',
+                },
+              },
+            },
+          ]),
       }),
 
       // Create spaces group node.
@@ -154,7 +148,7 @@ export default Capability.makeModule(
         id: `${meta.id}/root`,
         position: 'hoist',
         match: NodeMatcher.whenRoot,
-        connector: () => [spacesNode],
+        connector: () => Effect.succeed([spacesNode]),
       }),
 
       // Create space nodes.
@@ -162,9 +156,8 @@ export default Capability.makeModule(
         id: SPACES,
         match: NodeMatcher.whenId(SPACES),
         connector: (node, get) => {
-          const client = context.getCapability(ClientCapabilities.Client);
-          const state = context.getCapability(SpaceCapabilities.State);
-          // TODO(wittjosiah): Find a simpler way to define this type.
+          const client = capabilities.get(ClientCapabilities.Client);
+          const state = capabilities.get(SpaceCapabilities.State);
           let query: QueryResult.QueryResult<Schema.Schema.Type<typeof Type.Expando>> | undefined;
           const spacesAtom = CreateAtom.fromObservable(client.spaces);
           const isReadyAtom = CreateAtom.fromObservable(client.spaces.isReady);
@@ -173,43 +166,44 @@ export default Capability.makeModule(
           const isReady = get(isReadyAtom);
 
           if (!spaces || !isReady) {
-            return [];
+            return Effect.succeed([]);
           }
 
-          const settings = get(context.capabilities(Common.Capability.SettingsStore))[0]?.getStore<SpaceSettingsProps>(
+          const settings = get(capabilities.atom(Common.Capability.SettingsStore))[0]?.getStore<SpaceSettingsProps>(
             meta.id,
           )?.value;
 
-          // TODO(wittjosiah): During client reset, accessing default space throws.
           try {
             if (!query) {
               query = client.spaces.default.db.query(Filter.type(Type.Expando, { key: SHARED }));
             }
             const [spacesOrder] = get(atomFromQuery(query));
-            return get(
-              CreateAtom.fromSignal(() => {
-                const order: string[] = spacesOrder?.order ?? [];
-                const orderMap = new Map(order.map((id, index) => [id, index]));
-                return [
-                  ...spaces
-                    .filter((space) => orderMap.has(space.id))
-                    .sort((a, b) => orderMap.get(a.id)! - orderMap.get(b.id)!),
-                  ...spaces.filter((space) => !orderMap.has(space.id)),
-                ]
-                  .filter((space) => (settings?.showHidden ? true : space.state.get() !== SpaceState.SPACE_INACTIVE))
-                  .map((space) =>
-                    constructSpaceNode({
-                      space,
-                      navigable: state.navigableCollections,
-                      personal: space === client.spaces.default,
-                      namesCache: state.spaceNames,
-                      resolve: resolve(get),
-                    }),
-                  );
-              }),
+            return Effect.succeed(
+              get(
+                CreateAtom.fromSignal(() => {
+                  const order: string[] = spacesOrder?.order ?? [];
+                  const orderMap = new Map(order.map((id, index) => [id, index]));
+                  return [
+                    ...spaces
+                      .filter((space) => orderMap.has(space.id))
+                      .sort((a, b) => orderMap.get(a.id)! - orderMap.get(b.id)!),
+                    ...spaces.filter((space) => !orderMap.has(space.id)),
+                  ]
+                    .filter((space) => (settings?.showHidden ? true : space.state.get() !== SpaceState.SPACE_INACTIVE))
+                    .map((space) =>
+                      constructSpaceNode({
+                        space,
+                        navigable: state.navigableCollections,
+                        personal: space === client.spaces.default,
+                        namesCache: state.spaceNames,
+                        resolve: resolve(get),
+                      }),
+                    );
+                }),
+              ),
             );
           } catch {
-            return [];
+            return Effect.succeed([]);
           }
         },
       }),
@@ -219,20 +213,20 @@ export default Capability.makeModule(
         id: `${meta.id}/actions`,
         match: (node) => (node.type === SPACE_TYPE && isSpace(node.data) ? Option.some(node.data) : Option.none()),
         actions: (space, get) => {
-          const [operationInvoker] = get(context.capabilities(Common.Capability.OperationInvoker));
-          const [client] = get(context.capabilities(ClientCapabilities.Client));
-          const [state] = get(context.capabilities(SpaceCapabilities.State));
+          const [client] = get(capabilities.atom(ClientCapabilities.Client));
+          const [state] = get(capabilities.atom(SpaceCapabilities.State));
 
-          if (!operationInvoker || !client || !state) {
-            return [];
+          if (!client || !state) {
+            return Effect.succeed([]);
           }
 
-          return constructSpaceActions({
-            space,
-            invokePromise: operationInvoker.invokePromise,
-            personal: space === client.spaces.default,
-            migrating: state.sdkMigrationRunning[space.id],
-          });
+          return Effect.succeed(
+            constructSpaceActions({
+              space,
+              personal: space === client.spaces.default,
+              migrating: state.sdkMigrationRunning[space.id],
+            }),
+          );
         },
       }),
 
@@ -241,10 +235,10 @@ export default Capability.makeModule(
         id: `${meta.id}/root-collection`,
         match: (node) => (node.type === SPACE_TYPE && isSpace(node.data) ? Option.some(node.data) : Option.none()),
         connector: (space, get) => {
-          const state = context.getCapability(SpaceCapabilities.State);
+          const state = capabilities.get(SpaceCapabilities.State);
           const spaceState = get(CreateAtom.fromObservable(space.state));
           if (spaceState !== SpaceState.SPACE_READY) {
-            return [];
+            return Effect.succeed([]);
           }
 
           const collection = get(
@@ -253,24 +247,26 @@ export default Capability.makeModule(
             ),
           );
           if (!collection) {
-            return [];
+            return Effect.succeed([]);
           }
 
-          return get(
-            CreateAtom.fromSignal(() =>
-              Function.pipe(
-                collection.objects,
-                Array.map((object) => object.target),
-                Array.filter(isNonNullable),
-                Array.map((object) =>
-                  createObjectNode({
-                    db: space.db,
-                    object,
-                    resolve: resolve(get),
-                    navigable: state.navigableCollections,
-                  }),
+          return Effect.succeed(
+            get(
+              CreateAtom.fromSignal(() =>
+                Function.pipe(
+                  collection.objects,
+                  Array.map((object) => object.target),
+                  Array.filter(isNonNullable),
+                  Array.map((object) =>
+                    createObjectNode({
+                      db: space.db,
+                      object,
+                      resolve: resolve(get),
+                      navigable: state.navigableCollections,
+                    }),
+                  ),
+                  Array.filter(isNonNullable),
                 ),
-                Array.filter(isNonNullable),
               ),
             ),
           );
@@ -282,54 +278,58 @@ export default Capability.makeModule(
         id: `${meta.id}/objects`,
         match: (node) => (Obj.instanceOf(Collection.Collection, node.data) ? Option.some(node.data) : Option.none()),
         connector: (collection, get) => {
-          const state = context.getCapability(SpaceCapabilities.State);
+          const state = capabilities.get(SpaceCapabilities.State);
           const space = getSpace(collection);
 
-          return get(
-            CreateAtom.fromSignal(() =>
-              Function.pipe(
-                collection.objects,
-                Array.map((object) => object.target),
-                Array.filter(isNonNullable),
-                Array.map(
-                  (object) =>
-                    space &&
-                    createObjectNode({
-                      object,
-                      db: space.db,
-                      resolve: resolve(get),
-                      navigable: state.navigableCollections,
-                    }),
+          return Effect.succeed(
+            get(
+              CreateAtom.fromSignal(() =>
+                Function.pipe(
+                  collection.objects,
+                  Array.map((object) => object.target),
+                  Array.filter(isNonNullable),
+                  Array.map(
+                    (object) =>
+                      space &&
+                      createObjectNode({
+                        object,
+                        db: space.db,
+                        resolve: resolve(get),
+                        navigable: state.navigableCollections,
+                      }),
+                  ),
+                  Array.filter(isNonNullable),
                 ),
-                Array.filter(isNonNullable),
               ),
             ),
           );
         },
         resolver: (id, get) => {
-          const client = context.getCapability(ClientCapabilities.Client);
+          const client = capabilities.get(ClientCapabilities.Client);
           const dxn = DXN.tryParse(id)?.asEchoDXN();
           if (!dxn || !dxn.spaceId) {
-            return null;
+            return Effect.succeed(null);
           }
 
           const space = client.spaces.get(dxn.spaceId);
           if (!space) {
-            return null;
+            return Effect.succeed(null);
           }
 
           const query = space.db.query(Filter.id(dxn.echoId));
           const object = get(atomFromQuery(query)).at(0);
           if (!Obj.isObject(object)) {
-            return null;
+            return Effect.succeed(null);
           }
 
-          return createObjectNode({
-            object,
-            db: space.db,
-            resolve: resolve(get),
-            disposition: 'hidden',
-          });
+          return Effect.succeed(
+            createObjectNode({
+              object,
+              db: space.db,
+              resolve: resolve(get),
+              disposition: 'hidden',
+            }),
+          );
         },
       }),
 
@@ -338,31 +338,31 @@ export default Capability.makeModule(
         id: `${meta.id}/system-collections`,
         match: (node) => (Obj.instanceOf(Collection.Managed, node.data) ? Option.some(node.data) : Option.none()),
         connector: (collection, get) => {
-          // TODO(wittjosiah): Find a simpler way to define this type.
           let query: QueryResult.QueryResult<Schema.Schema.Type<typeof Type.Expando>> | undefined;
-          const client = get(context.capabilities(ClientCapabilities.Client)).at(0);
+          const client = get(capabilities.atom(ClientCapabilities.Client)).at(0);
           const space = getSpace(collection);
-          // TODO(wittjosiah): Support reactive schema registry queries.
           const schema = client?.graph.schemaRegistry
             .query({ typename: collection.key, location: ['runtime'] })
             .runSync()[0];
           if (!space || !schema) {
-            return [];
+            return Effect.succeed([]);
           }
 
           if (!query) {
             query = space.db.query(Filter.type(schema));
           }
-          return get(atomFromQuery(query))
-            .map((object) =>
-              createObjectNode({
-                object,
-                db: space.db,
-                managedCollectionChild: true,
-                resolve: resolve(get),
-              }),
-            )
-            .filter(isNonNullable);
+          return Effect.succeed(
+            get(atomFromQuery(query))
+              .map((object) =>
+                createObjectNode({
+                  object,
+                  db: space.db,
+                  managedCollectionChild: true,
+                  resolve: resolve(get),
+                }),
+              )
+              .filter(isNonNullable),
+          );
         },
       }),
 
@@ -374,17 +374,18 @@ export default Capability.makeModule(
             ? Option.some(node.data)
             : Option.none(),
         connector: (collection, get) => {
-          const client = get(context.capabilities(ClientCapabilities.Client)).at(0);
+          const client = get(capabilities.atom(ClientCapabilities.Client)).at(0);
           const space = getSpace(collection);
           if (!space?.properties.staticRecords) {
-            return [];
+            return Effect.succeed([]);
           }
 
-          // TODO(wittjosiah): Support reactive schema registry queries.
-          return get(CreateAtom.fromSignal(() => (space.properties.staticRecords ?? []) as string[]))
-            .map((typename) => client?.graph.schemaRegistry.query({ typename, location: ['runtime'] }).runSync()[0])
-            .filter(isNonNullable)
-            .map((schema) => createStaticSchemaNode({ schema, space }));
+          return Effect.succeed(
+            get(CreateAtom.fromSignal(() => (space.properties.staticRecords ?? []) as string[]))
+              .map((typename) => client?.graph.schemaRegistry.query({ typename, location: ['runtime'] }).runSync()[0])
+              .filter(isNonNullable)
+              .map((schema) => createStaticSchemaNode({ schema, space })),
+          );
         },
       }),
 
@@ -397,9 +398,8 @@ export default Capability.makeModule(
         },
         actions: ({ space, schema }, get) => {
           let query: QueryResult.QueryResult<Obj.Any> | undefined;
-          // TODO(wittjosiah): Support reactive schema registry queries.
           const schemas =
-            get(context.capabilities(ClientCapabilities.Client))
+            get(capabilities.atom(ClientCapabilities.Client))
               .at(0)
               ?.graph.schemaRegistry.query({ location: ['runtime'] })
               .runSync() ?? [];
@@ -410,8 +410,6 @@ export default Capability.makeModule(
           );
 
           if (!query) {
-            // TODO(wittjosiah): Ideally this query would traverse the view reference & filter by the query ast.
-            // TODO(wittjosiah): Remove cast.
             query = space.db.query(filter) as unknown as QueryResult.QueryResult<Obj.Any>;
           }
 
@@ -427,18 +425,13 @@ export default Capability.makeModule(
           );
           const deletable = filteredViews.length === 0;
 
-          const [operationInvoker] = get(context.capabilities(Common.Capability.OperationInvoker));
-          if (!operationInvoker) {
-            return [];
-          }
-
-          // TODO(wittjosiah): Remove cast.
-          return createStaticSchemaActions({
-            schema: schema as Type.Obj.Any,
-            space,
-            invokePromise: operationInvoker.invokePromise,
-            deletable,
-          });
+          return Effect.succeed(
+            createStaticSchemaActions({
+              schema: schema as Type.Obj.Any,
+              space,
+              deletable,
+            }),
+          );
         },
       }),
 
@@ -453,9 +446,8 @@ export default Capability.makeModule(
         },
         connector: ({ space, schema }, get) => {
           let query: QueryResult.QueryResult<Obj.Any> | undefined;
-          // TODO(wittjosiah): Support reactive schema registry queries.
           const schemas =
-            get(context.capabilities(ClientCapabilities.Client))
+            get(capabilities.atom(ClientCapabilities.Client))
               .at(0)
               ?.graph.schemaRegistry.query({ location: ['runtime'] })
               .runSync() ?? [];
@@ -466,32 +458,33 @@ export default Capability.makeModule(
           );
 
           if (!query) {
-            // TODO(wittjosiah): Ideally this query would traverse the view reference & filter by the query ast.
-            // TODO(wittjosiah): Remove cast.
             query = space.db.query(filter) as unknown as QueryResult.QueryResult<Obj.Any>;
           }
 
-          // TODO(wittjosiah): Remove casts.
           const typename = Schema.isSchema(schema) ? Type.getTypename(schema as Type.Obj.Any) : schema.typename;
-          return get(atomFromQuery(query))
-            .filter((object) =>
-              get(
-                CreateAtom.fromSignal(() => getTypenameFromQuery((object as any).view.target?.query.ast) === typename),
-              ),
-            )
-            .map((object) =>
-              get(
-                CreateAtom.fromSignal(() =>
-                  createObjectNode({
-                    object,
-                    db: space.db,
-                    resolve: resolve(get),
-                    droppable: false,
-                  }),
+          return Effect.succeed(
+            get(atomFromQuery(query))
+              .filter((object) =>
+                get(
+                  CreateAtom.fromSignal(
+                    () => getTypenameFromQuery((object as any).view.target?.query.ast) === typename,
+                  ),
                 ),
-              ),
-            )
-            .filter(isNonNullable);
+              )
+              .map((object) =>
+                get(
+                  CreateAtom.fromSignal(() =>
+                    createObjectNode({
+                      object,
+                      db: space.db,
+                      resolve: resolve(get),
+                      droppable: false,
+                    }),
+                  ),
+                ),
+              )
+              .filter(isNonNullable),
+          );
         },
       }),
 
@@ -506,9 +499,8 @@ export default Capability.makeModule(
         },
         actions: ({ space, object }, get) => {
           let query: QueryResult.QueryResult<Obj.Any> | undefined;
-          // TODO(wittjosiah): Support reactive schema registry queries.
           const schemas =
-            get(context.capabilities(ClientCapabilities.Client))
+            get(capabilities.atom(ClientCapabilities.Client))
               .at(0)
               ?.graph.schemaRegistry.query({ location: ['runtime'] })
               .runSync() ?? [];
@@ -520,15 +512,10 @@ export default Capability.makeModule(
 
           const isSchema = Obj.instanceOf(Type.PersistentType, object);
           if (!query && isSchema) {
-            // TODO(wittjosiah): Ideally this query would traverse the view reference & filter by the query ast.
-            // TODO(wittjosiah): Remove cast.
             query = space.db.query(filter) as unknown as QueryResult.QueryResult<Obj.Any>;
           }
 
-          let deletable =
-            !isSchema &&
-            // Don't allow system collections to be deleted.
-            !Obj.instanceOf(Collection.Managed, object);
+          let deletable = !isSchema && !Obj.instanceOf(Collection.Managed, object);
           if (isSchema && query) {
             const objects = get(atomFromQuery(query));
             const filteredViews = get(
@@ -541,23 +528,23 @@ export default Capability.makeModule(
             deletable = filteredViews.length === 0;
           }
 
-          const [operationInvoker] = get(context.capabilities(Common.Capability.OperationInvoker));
-          const [appGraph] = get(context.capabilities(Common.Capability.AppGraph));
-          const [state] = get(context.capabilities(SpaceCapabilities.State));
+          const [appGraph] = get(capabilities.atom(Common.Capability.AppGraph));
+          const [state] = get(capabilities.atom(SpaceCapabilities.State));
 
-          if (!operationInvoker || !appGraph || !state) {
-            return [];
+          if (!appGraph || !state) {
+            return Effect.succeed([]);
           }
 
-          return constructObjectActions({
-            object,
-            graph: appGraph.graph,
-            invokePromise: operationInvoker.invokePromise,
-            resolve: resolve(get),
-            context,
-            deletable,
-            navigable: get(CreateAtom.fromSignal(() => state.navigableCollections)),
-          });
+          return Effect.succeed(
+            constructObjectActions({
+              object,
+              graph: appGraph.graph,
+              resolve: resolve(get),
+              capabilities,
+              deletable,
+              navigable: get(CreateAtom.fromSignal(() => state.navigableCollections)),
+            }),
+          );
         },
       }),
 
@@ -580,38 +567,42 @@ export default Capability.makeModule(
 
           return Option.some(node);
         },
-        connector: (node) => [
-          {
-            id: [node.id, 'selected-objects'].join(ATTENDABLE_PATH_SEPARATOR),
-            type: PLANK_COMPANION_TYPE,
-            data: 'selected-objects',
-            properties: {
-              label: ['companion selected objects label', { ns: meta.id }],
-              icon: 'ph--tree-view--regular',
-              disposition: 'hidden',
+        connector: (node) =>
+          Effect.succeed([
+            {
+              id: [node.id, 'selected-objects'].join(ATTENDABLE_PATH_SEPARATOR),
+              type: PLANK_COMPANION_TYPE,
+              data: 'selected-objects',
+              properties: {
+                label: ['companion selected objects label', { ns: meta.id }],
+                icon: 'ph--tree-view--regular',
+                disposition: 'hidden',
+              },
             },
-          },
-        ],
+          ]),
       }),
 
       // Object settings plank companion.
       GraphBuilder.createExtension({
         id: `${meta.id}/settings`,
         match: (node) => (Obj.isObject(node.data) ? Option.some(node) : Option.none()),
-        connector: (node) => [
-          {
-            id: [node.id, 'settings'].join(ATTENDABLE_PATH_SEPARATOR),
-            type: PLANK_COMPANION_TYPE,
-            data: 'settings',
-            properties: {
-              label: ['object settings label', { ns: meta.id }],
-              icon: 'ph--sliders--regular',
-              disposition: 'hidden',
-              position: 'fallback',
+        connector: (node) =>
+          Effect.succeed([
+            {
+              id: [node.id, 'settings'].join(ATTENDABLE_PATH_SEPARATOR),
+              type: PLANK_COMPANION_TYPE,
+              data: 'settings',
+              properties: {
+                label: ['object settings label', { ns: meta.id }],
+                icon: 'ph--sliders--regular',
+                disposition: 'hidden',
+                position: 'fallback',
+              },
             },
-          },
-        ],
+          ]),
       }),
     ]);
+
+    return Capability.contributes(Common.Capability.AppGraphBuilder, extensions);
   }),
 );

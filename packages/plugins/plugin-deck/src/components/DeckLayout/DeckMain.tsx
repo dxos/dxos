@@ -44,7 +44,7 @@ export const DeckMain = () => {
   useEffect(() => {
     // NOTE: Not `useAttended` so that the layout component is not re-rendered when the attended list changes.
     const attended = untracked(() => {
-      const attention = pluginManager.context.getCapability(AttentionCapabilities.Attention);
+      const attention = pluginManager.capabilities.get(AttentionCapabilities.Attention);
       return attention.current;
     });
     const firstId = solo ?? active[0];
@@ -63,7 +63,7 @@ export const DeckMain = () => {
     if (!isNotMobile && getMode(deck) === 'deck') {
       // NOTE: Not `useAttended` so that the layout component is not re-rendered when the attended list changes.
       const attended = untracked(() => {
-        const attention = pluginManager.context.getCapability(AttentionCapabilities.Attention);
+        const attention = pluginManager.capabilities.get(AttentionCapabilities.Attention);
         return attention.current;
       });
 

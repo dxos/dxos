@@ -48,6 +48,7 @@
     "@dxos/echo-signals": "workspace:*",
     "@dxos/edge-client": "workspace:*",
     "@dxos/effect": "workspace:*",
+    "@dxos/feed": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/keys": "workspace:*",
     "@dxos/kv-store": "workspace:*",
@@ -62,7 +63,6 @@
     "@effect/experimental": "catalog:",
     "@effect/sql": "catalog:",
     "@effect/sql-sqlite-node": "catalog:",
-    "@effect/sql-sqlite-wasm": "catalog:",
     "effect": "catalog:",
     "eventemitter3": "catalog:",
     "lodash.isequal": "catalog:"

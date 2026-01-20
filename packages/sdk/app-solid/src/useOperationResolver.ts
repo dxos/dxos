@@ -15,14 +15,14 @@ export const useOperationResolver = (module: string, resolver: OperationResolver
   createEffect(() => {
     const implementation = [resolver];
 
-    manager.context.contributeCapability({
+    manager.capabilities.contribute({
       module,
       interface: Common.Capability.OperationResolver,
       implementation,
     });
 
     onCleanup(() => {
-      manager.context.removeCapability(Common.Capability.OperationResolver, implementation);
+      manager.capabilities.remove(Common.Capability.OperationResolver, implementation);
     });
   });
 };

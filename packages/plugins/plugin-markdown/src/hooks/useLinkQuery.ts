@@ -19,7 +19,7 @@ export const useLinkQuery = (db: Database.Database | undefined) => {
   const manager = usePluginManager();
   const resolve = useCallback(
     (typename: string) =>
-      manager.context.getCapabilities(Common.Capability.Metadata).find(({ id }) => id === typename)?.metadata ?? {},
+      manager.capabilities.getAll(Common.Capability.Metadata).find(({ id }) => id === typename)?.metadata ?? {},
     [manager],
   );
 

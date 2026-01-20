@@ -17,8 +17,6 @@ import { TableOperation } from '../../types';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    const context = yield* Capability.PluginContextService;
-
     return Capability.contributes(Common.Capability.OperationResolver, [
       OperationResolver.make({
         operation: TableOperation.OnCreateSpace,
@@ -49,7 +47,7 @@ export default Capability.makeModule(
                 subject: [Obj.getDXN(object).toString()],
               });
             }
-          }).pipe(Effect.provideService(Capability.PluginContextService, context)),
+          }),
       }),
       OperationResolver.make({
         operation: TableOperation.Create,
