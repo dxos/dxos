@@ -176,7 +176,7 @@ class LeaderSession extends Resource {
           log.error('unknown message', { type: event.data });
       }
     };
-    if (this.#worker instanceof Worker) {
+    if (isWorker(this.#worker)) {
       this.#worker.onerror = (e) => {
         ready.throw(e.error);
         listening.throw(e.error);
@@ -225,7 +225,7 @@ class LeaderSession extends Resource {
   }
 
   protected override async _close(): Promise<void> {
-    if (this.#worker instanceof Worker) {
+    if (isWorker(this.#worker)) {
       this.#worker?.terminate();
     } else if (this.#worker instanceof MessagePort) {
       this.#worker.close();
@@ -236,3 +236,7 @@ class LeaderSession extends Resource {
     this.#worker.postMessage(msg);
   }
 }
+
+const isWorker = (worker: WorkerOrPort): worker is Worker => {
+  return typeof Worker !== 'undefined' && worker instanceof Worker;
+};
