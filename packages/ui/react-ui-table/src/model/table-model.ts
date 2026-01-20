@@ -5,7 +5,7 @@
 import { type ReadonlySignal, computed, effect, signal } from '@preact/signals-core';
 
 import { Resource } from '@dxos/context';
-import { type Database, Format, Obj, Order, Query, type QueryAST, Ref } from '@dxos/echo';
+import { Entity, type Database, Format, Obj, Order, Query, type QueryAST, Ref } from '@dxos/echo';
 import { type JsonProp, type JsonSchemaType, toEffectSchema } from '@dxos/echo/internal';
 import { getValue, setValue } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
@@ -639,7 +639,12 @@ export class TableModel<T extends TableRow = TableRow> extends Resource {
     } else {
       // Update regular row data (use sorted rows for display index)
       const sortedRows = this._sortedRows.value;
-      setValue(sortedRows[row], field.path, transformedValue);
+      const rowObj = sortedRows[row];
+      // TODO(wittjosiah): Refactor to use a change callback pattern instead of baking Obj.change into the model.
+      // Row objects are ECHO entities at runtime, cast for Obj.change.
+      Obj.change(rowObj as unknown as Entity.Any, (mutable) => {
+        setValue(mutable, field.path, transformedValue);
+      });
     }
   };
 
@@ -652,10 +657,15 @@ export class TableModel<T extends TableRow = TableRow> extends Resource {
     const fields = this._projection?.fields ?? [];
     const field = fields[col];
     const sortedRows = this._sortedRows.value;
+    const rowObj = sortedRows[row];
 
-    const value = getValue(sortedRows[row], field.path);
+    const value = getValue(rowObj, field.path);
     const updatedValue = update(value);
-    setValue(sortedRows[row], field.path, updatedValue);
+    // TODO(wittjosiah): Refactor to use a change callback pattern instead of baking Obj.change into the model.
+    // Row objects are ECHO entities at runtime, cast for Obj.change.
+    Obj.change(rowObj as unknown as Entity.Any, (mutable) => {
+      setValue(mutable, field.path, updatedValue);
+    });
   }
 
   /**

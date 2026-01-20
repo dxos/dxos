@@ -9,6 +9,7 @@ import * as Runtime from 'effect/Runtime';
 
 import { AiService, DEFAULT_EDGE_MODEL, type ModelName } from '@dxos/ai';
 import { type AiConversation, AiSession } from '@dxos/assistant';
+import { Obj } from '@dxos/echo';
 import { throwCause } from '@dxos/effect';
 import { trim } from '@dxos/util';
 
@@ -43,7 +44,9 @@ export const updateName = async (
       const message = messages.find((message) => message.sender.role === 'assistant');
       const title = message?.blocks.find((block) => block._tag === 'text')?.text;
       if (title) {
-        chat.name = title;
+        Obj.change(chat, (c) => {
+          c.name = title;
+        });
       }
     }),
     Runtime.runFork(runtime), // Run in the background.

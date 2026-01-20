@@ -23,7 +23,10 @@ export class QueueLogger implements SequenceLogger {
     let dxn = this._space.properties.invocationTraceQueue?.dxn;
     if (!dxn) {
       dxn = DXN.fromQueue(QueueSubspaceTags.TRACE, this._space.id, Key.ObjectId.random());
-      this._space.properties.invocationTraceQueue = Ref.fromDXN(dxn);
+      const newDxn = dxn;
+      Obj.change(this._space.properties, (p) => {
+        p.invocationTraceQueue = Ref.fromDXN(newDxn);
+      });
     }
     this._invocationTraceQueue = this._space.queues.get(dxn);
   }

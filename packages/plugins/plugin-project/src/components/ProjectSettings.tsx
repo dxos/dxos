@@ -66,8 +66,11 @@ export const ProjectObjectSettings = ({ classNames, project }: ProjectObjectSett
   }, [space, view, schema]);
 
   const handleMove = useCallback(
-    (fromIndex: number, toIndex: number) => arrayMove(project.columns, fromIndex, toIndex),
-    [project.columns],
+    (fromIndex: number, toIndex: number) =>
+      Obj.change(project, (p) => {
+        arrayMove(p.columns, fromIndex, toIndex);
+      }),
+    [project],
   );
 
   const handleQueryChanged = useCallback(
@@ -78,7 +81,9 @@ export const ProjectObjectSettings = ({ classNames, project }: ProjectObjectSett
 
       const queue = target && DXN.tryParse(target) ? target : undefined;
       const query = queue ? Query.fromAst(newQuery).options({ queues: [queue] }) : Query.fromAst(newQuery);
-      view.query.ast = query.ast;
+      Obj.change(view, () => {
+        view.query.ast = query.ast;
+      });
       const newSchema = await resolveSchemaWithRegistry(space.db.schemaRegistry, query.ast);
       if (!newSchema) {
         return;
@@ -88,7 +93,9 @@ export const ProjectObjectSettings = ({ classNames, project }: ProjectObjectSett
         query,
         jsonSchema: Type.toJsonSchema(newSchema),
       });
-      view.projection = Obj.getSnapshot(newView).projection;
+      Obj.change(view, () => {
+        view.projection = Obj.getSnapshot(newView).projection;
+      });
 
       setSchema(() => newSchema);
     },
@@ -108,33 +115,41 @@ export const ProjectObjectSettings = ({ classNames, project }: ProjectObjectSett
       }
 
       const index = project.columns.findIndex((l) => l === column);
-      const view = await column.view.load();
-      project.columns.splice(index, 1);
-      space?.db.remove(view);
+      const viewToRemove = await column.view.load();
+      Obj.change(project, (p) => {
+        p.columns.splice(index, 1);
+      });
+      space?.db.remove(viewToRemove);
     },
     [expandedId, project.columns, space],
   );
 
   const handleAdd = useCallback(() => {
-    const view = View.make({
+    const newView = View.make({
       query: Query.select(Filter.type(Task.Task)),
       jsonSchema: Type.toJsonSchema(Task.Task),
     });
-    project.columns.push({
-      name: 'Tasks',
-      view: Ref.make(view),
-      order: [],
+    Obj.change(project, (p) => {
+      p.columns.push({
+        name: 'Tasks',
+        // Type assertion needed due to QueryAST type variance.
+        view: Ref.make(newView) as typeof p.columns[number]['view'],
+        order: [],
+      });
     });
-    setExpandedId(view.id);
+    setExpandedId(newView.id);
   }, [project]);
 
   const handleColumnSave = useCallback(
     (values: Schema.Schema.Type<typeof ColumnFormSchema>) => {
       if (column) {
-        column.name = values.name;
+        const columnIndex = project.columns.findIndex((c) => c === column);
+        Obj.change(project, (p) => {
+          p.columns[columnIndex].name = values.name;
+        });
       }
     },
-    [column],
+    [column, project],
   );
 
   return (

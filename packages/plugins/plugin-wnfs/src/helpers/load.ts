@@ -7,6 +7,7 @@ import { CID } from 'multiformats';
 import * as Uint8Arrays from 'uint8arrays';
 import { AccessKey, PrivateDirectory, PrivateForest, PrivateNode } from 'wnfs';
 
+import { Obj } from '@dxos/echo';
 import { type Space } from '@dxos/react-client/echo';
 
 import { type WnfsCapabilities } from '../types';
@@ -29,8 +30,10 @@ export const loadWnfs = async ({
   // TODO(wittjosiah): Remove.
   // Delete old properties if they exist.
   if (space.properties.wnfs_access_key !== undefined && space.properties.wnfs_private_forest_cid !== undefined) {
-    delete space.properties.wnfs_access_key;
-    delete space.properties.wnfs_private_forest_cid;
+    Obj.change(space.properties, (p) => {
+      delete (p as any).wnfs_access_key;
+      delete (p as any).wnfs_private_forest_cid;
+    });
   }
 
   const cacheKey = space.properties.wnfs?.privateForestCid;
@@ -65,10 +68,12 @@ const createWnfsDir = async (blockstore: Blockstore, space: Space) => {
 
   const cidBytes = await newForest.store(wnfsStore);
 
-  space.properties.wnfs = {
-    accessKey: Uint8Arrays.toString(accessKeyRaw.toBytes(), 'base64'),
-    privateForestCid: CID.decode(cidBytes).toString(),
-  };
+  Obj.change(space.properties, (p) => {
+    p.wnfs = {
+      accessKey: Uint8Arrays.toString(accessKeyRaw.toBytes(), 'base64'),
+      privateForestCid: CID.decode(cidBytes).toString(),
+    };
+  });
 
   return {
     directory: dir,

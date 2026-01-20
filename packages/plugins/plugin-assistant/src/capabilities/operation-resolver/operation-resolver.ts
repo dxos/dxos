@@ -34,11 +34,12 @@ export default Capability.makeModule(
             const chatCollection = Collection.makeManaged({ key: Assistant.Chat.typename });
             const blueprintCollection = Collection.makeManaged({ key: Blueprint.Blueprint.typename });
             const promptCollection = Collection.makeManaged({ key: Type.getTypename(Prompt.Prompt) });
-            rootCollection.objects.push(
-              Ref.make(chatCollection),
-              Ref.make(blueprintCollection),
-              Ref.make(promptCollection),
-            );
+            const chatCollectionRef = Ref.make(chatCollection);
+            const blueprintCollectionRef = Ref.make(blueprintCollection);
+            const promptCollectionRef = Ref.make(promptCollection);
+            Obj.change(rootCollection, (c) => {
+              c.objects.push(chatCollectionRef, blueprintCollectionRef, promptCollectionRef);
+            });
 
             // TODO(wittjosiah): Remove once function registry is avaiable.
             space.db.add(serializeFunction(Agent.prompt));

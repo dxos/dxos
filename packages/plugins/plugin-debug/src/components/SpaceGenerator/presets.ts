@@ -79,7 +79,9 @@ export const generator = () => ({
 
           const tag = space.db.add(Tag.make({ label: 'Investor' }));
           const tagDxn = Obj.getDXN(tag).toString();
-          Obj.getMeta(doc).tags = [tagDxn];
+          Obj.change(doc, () => {
+            Obj.getMeta(doc).tags = [tagDxn];
+          });
 
           // space.db.add(
           //   Relation.make(HasSubject, {
@@ -765,6 +767,7 @@ const createQueueSinkPreset = <SpecType extends Trigger.Kind>(
 
   const templateComputeNode = computeModel.nodes.find((n) => n.id === template.node);
   invariant(templateComputeNode, 'Template compute node was not created.');
+  // NOTE: These are plain object mutations during model construction, not ECHO object mutations.
   templateComputeNode.value = ['{', '  "@type": "{{type}}",', '  "id": "@{{changeId}}"', '}'].join('\n');
   templateComputeNode.inputSchema = Type.toJsonSchema(Schema.Struct({ type: Schema.String, changeId: Schema.String }));
   attachTrigger(functionTrigger, computeModel);
@@ -804,9 +807,11 @@ const setupQueue = (
 
 const attachTrigger = (functionTrigger: Trigger.Trigger | undefined, computeModel: ComputeGraphModel) => {
   invariant(functionTrigger);
-  functionTrigger.function = Ref.make(computeModel.root);
   const inputNode = computeModel.nodes.find((node) => node.type === NODE_INPUT)!;
-  functionTrigger.inputNodeId = inputNode.id;
+  Obj.change(functionTrigger, (t) => {
+    t.function = Ref.make(computeModel.root);
+    t.inputNodeId = inputNode.id;
+  });
 };
 
 type RawPositionInput = {

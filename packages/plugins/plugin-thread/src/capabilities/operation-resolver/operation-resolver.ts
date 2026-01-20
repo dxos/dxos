@@ -78,7 +78,10 @@ export default Capability.makeModule(
           handler: (input) =>
             Effect.sync(() => {
               const thread = Thread.make({ status: 'active' });
-              input.channel.threads.push(Ref.make(thread));
+              const threadRef = Ref.make(thread);
+              Obj.change(input.channel, (c) => {
+                c.threads.push(threadRef);
+              });
               return { object: thread };
             }),
         }),
@@ -104,11 +107,13 @@ export default Capability.makeModule(
             Effect.gen(function* () {
               const thread = input.thread;
 
-              if (thread.status === 'active' || thread.status === undefined) {
-                thread.status = 'resolved';
-              } else if (thread.status === 'resolved') {
-                thread.status = 'active';
-              }
+              Obj.change(thread, (t) => {
+                if (t.status === 'active' || t.status === undefined) {
+                  t.status = 'resolved';
+                } else if (t.status === 'resolved') {
+                  t.status = 'active';
+                }
+              });
 
               const db = Obj.getDatabase(thread);
               invariant(db, 'Database not found');
@@ -135,7 +140,10 @@ export default Capability.makeModule(
               }
 
               const collection = Collection.makeManaged({ key: Type.getTypename(Channel.Channel) });
-              rootCollection.objects.push(Ref.make(collection));
+              const collectionRef = Ref.make(collection);
+              Obj.change(rootCollection, (c) => {
+                c.objects.push(collectionRef);
+              });
 
               const { object: channel } = yield* Operation.invoke(ThreadOperation.CreateChannel, {
                 name: 'General',
@@ -240,12 +248,17 @@ export default Capability.makeModule(
                 sender,
                 blocks: [{ _tag: 'text', text }],
               });
-              thread.messages.push(Ref.make(message));
+              const messageRef = Ref.make(message);
+              Obj.change(thread, (t) => {
+                t.messages.push(messageRef);
+              });
 
               const draft = state.drafts[subjectId]?.find((a: { id: string }) => a.id === anchor.id);
               if (draft) {
                 // Move draft to document.
-                thread.status = 'active';
+                Obj.change(thread, (t) => {
+                  t.status = 'active';
+                });
                 state.drafts[subjectId] = state.drafts[subjectId]?.filter((a: { id: string }) => a.id !== anchor.id);
                 yield* Operation.invoke(SpaceOperation.AddObject, { object: thread, target: db, hidden: true });
                 yield* Operation.invoke(SpaceOperation.AddRelation, {
@@ -300,7 +313,9 @@ export default Capability.makeModule(
                 return { messageIndex: -1 };
               }
 
-              thread.messages.splice(msgIndex, 1);
+              Obj.change(thread, (t) => {
+                t.messages.splice(msgIndex, 1);
+              });
 
               yield* Operation.schedule(ObservabilityOperation.SendEvent, {
                 name: 'threads.message.delete',
@@ -356,7 +371,10 @@ export default Capability.makeModule(
               const db = Obj.getDatabase(thread);
               invariant(db, 'Database not found');
 
-              thread.messages.splice(messageIndex, 0, Ref.make(message));
+              const messageRef = Ref.make(message);
+              Obj.change(thread, (t) => {
+                t.messages.splice(messageIndex, 0, messageRef);
+              });
 
               yield* Operation.schedule(ObservabilityOperation.SendEvent, {
                 name: 'threads.message.undo-delete',

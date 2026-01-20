@@ -4,7 +4,7 @@
 
 import { describe, test } from 'vitest';
 
-import { change, ChangeId, subscribe } from './live';
+import { ChangeId, change, subscribe } from './live';
 import { live } from './object';
 
 describe('change', () => {
@@ -64,7 +64,7 @@ describe('change', () => {
       [ChangeId]: (callback: (o: any) => void) => {
         // Custom handler that tracks mutations.
         const proxy = new Proxy(obj, {
-          set(target, prop, value) {
+          set: (target, prop, value) => {
             mutations.push(`${String(prop)}=${value}`);
             return Reflect.set(target, prop, value);
           },

@@ -51,7 +51,9 @@ export default Capability.makeModule(
 
     // Initialize space sharing lock in default space.
     if (typeof defaultSpace.properties[COMPOSER_SPACE_LOCK] !== 'boolean') {
-      defaultSpace.properties[COMPOSER_SPACE_LOCK] = true;
+      Obj.change(defaultSpace.properties, (p) => {
+        p[COMPOSER_SPACE_LOCK] = true;
+      });
     }
 
     const queryResults = yield* Effect.tryPromise(() =>

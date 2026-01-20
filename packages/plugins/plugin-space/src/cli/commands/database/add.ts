@@ -67,7 +67,10 @@ export const add = Command.make(
         return yield* Effect.fail(new Error(`Invalid object: ${object}`));
       }
 
-      collection.objects.push(Ref.make(object));
+      const objectRef = Ref.make(object);
+      Obj.change(collection, (c) => {
+        c.objects.push(objectRef);
+      });
 
       if (json) {
         yield* Console.log(JSON.stringify(object, null, 2));

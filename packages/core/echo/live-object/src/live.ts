@@ -74,7 +74,7 @@ export type ChangeCallback<T> = (mutableObj: Mutable<T>) => void;
 export const change = <T>(obj: T, callback: ChangeCallback<T>): void => {
   // Check proxy target first if it's a proxy, otherwise check the object directly.
   const target = isProxy(obj) ? getProxyTarget(obj as any) : null;
-  const changeFn = target?.[ChangeId] ?? (obj as any)[ChangeId];
+  const changeFn = (target as any)?.[ChangeId] ?? (obj as any)[ChangeId];
   if (changeFn) {
     changeFn(callback);
   } else {

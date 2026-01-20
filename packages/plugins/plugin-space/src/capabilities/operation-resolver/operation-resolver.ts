@@ -18,7 +18,7 @@ import { ObservabilityOperation } from '@dxos/plugin-observability/types';
 import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
 import { ATTENDABLE_PATH_SEPARATOR } from '@dxos/react-ui-attention/types';
 import { iconValues } from '@dxos/react-ui-pickers/icons';
-import { Collection, ProjectionModel, getTypenameFromQuery } from '@dxos/schema';
+import { Collection, ProjectionModel, createEchoChangeCallback, getTypenameFromQuery } from '@dxos/schema';
 import { hues } from '@dxos/ui-theme';
 
 import { type JoinDialogProps } from '../../components';
@@ -187,7 +187,9 @@ export default Capability.makeModule(
                 // Remove from parent collection.
                 const index = parentCollection.objects.findIndex((ref) => ref.target === obj);
                 if (index !== -1) {
-                  parentCollection.objects.splice(index, 1);
+                  Obj.change(parentCollection, (c) => {
+                    c.objects.splice(index, 1);
+                  });
                 }
 
                 // Delete nested objects.
@@ -234,14 +236,21 @@ export default Capability.makeModule(
               invariant(typename);
               const schema = await db.schemaRegistry.query({ typename }).firstOrUndefined();
               invariant(schema);
-              const projection = new ProjectionModel(schema.jsonSchema, view.projection);
-              const { deleted, index } = projection.deleteFieldProjection(input.fieldId);
+
+              // Create projection with change callbacks that wrap in Obj.change().
+              const projection = new ProjectionModel(
+                schema.jsonSchema,
+                view.projection,
+                createEchoChangeCallback(view, schema),
+              );
+
+              const result = projection.deleteFieldProjection(input.fieldId);
 
               // Return data needed for undo.
               return {
-                field: deleted.field,
-                props: deleted.props,
-                index,
+                field: result.deleted.field,
+                props: result.deleted.props,
+                index: result.index,
               };
             }),
         }),
@@ -339,7 +348,9 @@ export default Capability.makeModule(
           operation: SpaceOperation.Lock,
           handler: ({ space }) =>
             Effect.gen(function* () {
-              space.properties[COMPOSER_SPACE_LOCK] = true;
+              Obj.change(space.properties, (p) => {
+                p[COMPOSER_SPACE_LOCK] = true;
+              });
 
               if (observability) {
                 yield* Operation.schedule(ObservabilityOperation.SendEvent, {
@@ -358,7 +369,9 @@ export default Capability.makeModule(
           operation: SpaceOperation.Unlock,
           handler: ({ space }) =>
             Effect.gen(function* () {
-              space.properties[COMPOSER_SPACE_LOCK] = false;
+              Obj.change(space.properties, (p) => {
+                p[COMPOSER_SPACE_LOCK] = false;
+              });
 
               if (observability) {
                 yield* Operation.schedule(ObservabilityOperation.SendEvent, {
@@ -403,15 +416,22 @@ export default Capability.makeModule(
 
               // Create root collection.
               const collection = Obj.make(Collection.Collection, { objects: [] });
-              space.properties[Collection.Collection.typename] = Ref.make(collection);
-
-              // Set current migration version.
-              if (Migrations.versionProperty) {
-                space.properties[Migrations.versionProperty] = Migrations.targetVersion;
-              }
+              const collectionRef = Ref.make(collection);
+              const typesCollectionRef = Ref.make(
+                Collection.makeManaged({ key: Type.getTypename(Type.PersistentType) }),
+              );
+              Obj.change(space.properties, (p) => {
+                p[Collection.Collection.typename] = collectionRef;
+                // Set current migration version.
+                if (Migrations.versionProperty) {
+                  p[Migrations.versionProperty] = Migrations.targetVersion;
+                }
+              });
 
               // Create records smart collection.
-              collection.objects.push(Ref.make(Collection.makeManaged({ key: Type.getTypename(Type.PersistentType) })));
+              Obj.change(collection, (c) => {
+                c.objects.push(typesCollectionRef);
+              });
 
               // Allow other plugins to add default content.
               yield* Plugin.activate(SpaceEvents.SpaceCreated).pipe(
@@ -580,11 +600,15 @@ export default Capability.makeModule(
               invariant(space, 'Space not found');
 
               if (!space.properties.staticRecords) {
-                space.properties.staticRecords = [];
+                Obj.change(space.properties, (p) => {
+                  p.staticRecords = [];
+                });
               }
 
               if (!space.properties.staticRecords.includes(input.typename)) {
-                space.properties.staticRecords.push(input.typename);
+                Obj.change(space.properties, (p) => {
+                  p.staticRecords.push(input.typename);
+                });
               }
 
               yield* Effect.promise(() =>
@@ -622,15 +646,17 @@ export default Capability.makeModule(
               const db = input.db as any;
               const schemas = (yield* Effect.promise(() => db.schemaRegistry.register([input.schema]))) as any[];
               const schema = schemas[0];
-              if (input.name) {
-                schema.storedSchema.name = input.name;
-              }
-              if (input.typename) {
-                schema.storedSchema.typename = input.typename;
-              }
-              if (input.version) {
-                schema.storedSchema.version = input.version;
-              }
+              Obj.change(schema.storedSchema, (s) => {
+                if (input.name) {
+                  s.name = input.name;
+                }
+                if (input.typename) {
+                  s.typename = input.typename;
+                }
+                if (input.version) {
+                  s.version = input.version;
+                }
+              });
 
               yield* Effect.promise(() =>
                 runAndForwardErrors(
@@ -707,7 +733,14 @@ export default Capability.makeModule(
               invariant(typename);
               const schema = await db.schemaRegistry.query({ typename }).firstOrUndefined();
               invariant(schema);
-              const projection = new ProjectionModel(schema.jsonSchema, view.projection);
+
+              // Create projection with change callbacks that wrap in Obj.change().
+              const projection = new ProjectionModel(
+                schema.jsonSchema,
+                view.projection,
+                createEchoChangeCallback(view, schema),
+              );
+
               projection.setFieldProjection({ field: input.field, props: input.props }, input.index);
             }),
         }),
@@ -726,26 +759,28 @@ export default Capability.makeModule(
               const wasActive = input.wasActive as string[];
 
               // Get the space from the first object.
-              const space = getSpace(objects[0]);
-              invariant(space);
+              const db = Obj.getDatabase(objects[0]);
+              invariant(db);
 
               // Restore objects to the space.
-              const restoredObjects = objects.map((obj: Obj.Any) => space.db.add(obj));
+              const restoredObjects = objects.map((obj: Obj.Any) => db.add(obj));
 
               // Restore nested objects to the space.
               nestedObjectsList.flat().forEach((obj: Obj.Any) => {
                 if (Obj.isObject(obj)) {
-                  space.db.add(obj);
+                  db.add(obj);
                 } else if (Relation.isRelation(obj)) {
-                  space.db.add(obj);
+                  db.add(obj);
                 }
               });
 
               // Restore objects to the parent collection at their original indices.
-              indices.forEach((index: number, i: number) => {
-                if (index !== -1) {
-                  parentCollection.objects.splice(index, 0, Ref.make(restoredObjects[i] as Obj.Any));
-                }
+              Obj.change(parentCollection, (c) => {
+                indices.forEach((index: number, i: number) => {
+                  if (index !== -1) {
+                    c.objects.splice(index, 0, Ref.make(restoredObjects[i] as Obj.Any));
+                  }
+                });
               });
 
               // Re-open objects that were active.

@@ -3,9 +3,9 @@
 //
 
 import * as Schema from 'effect/Schema';
-import { describe, expect, test } from 'vitest';
+import { describe, test } from 'vitest';
 
-import { Obj, Ref, Type } from '@dxos/echo';
+import { Obj, Type } from '@dxos/echo';
 import { registerSignalsRuntime } from '@dxos/echo-signals';
 
 import { createObject, isEchoObject } from './echo-handler';

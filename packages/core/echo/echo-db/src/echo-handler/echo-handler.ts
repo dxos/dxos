@@ -69,10 +69,10 @@ import { deepMapValues, defaultMap, getDeep, setDeep } from '@dxos/util';
 
 import {
   type DecodedAutomergePrimaryValue,
-  isInChangeContext,
   type KeyPath,
   META_NAMESPACE,
   ObjectCore,
+  isInChangeContext,
   queueNotification,
 } from '../core-db';
 import { type EchoDatabase } from '../proxy-db';

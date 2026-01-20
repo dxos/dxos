@@ -9,9 +9,9 @@ import { invariant } from '@dxos/invariant';
 import { type ObjectId } from '@dxos/keys';
 
 import { type SchemaMeta, SchemaMetaSymbol, type TypeAnnotation, getTypeAnnotation } from '../annotations';
-import { ChangeId } from '../types/entity';
 import { type JsonSchemaType, toEffectSchema, toJsonSchema } from '../json-schema';
 import { type TypedObject, type TypedObjectPrototype } from '../object';
+import { ChangeId } from '../types/entity';
 
 import {
   addFieldsToSchema,

@@ -217,7 +217,10 @@ type ChangeCallback<T> = (mutableObj: Mutable<T>) => void;
  * when the callback completes. Direct mutations outside of `Obj.change` will throw
  * an error for ECHO objects.
  *
- * @param obj - The ECHO object to mutate.
+ * This function also works with nested objects within ECHO objects (e.g., Template structs)
+ * that are reactive at runtime.
+ *
+ * @param obj - The ECHO object or nested reactive object to mutate.
  * @param callback - The callback that performs mutations on the object.
  *
  * @example
@@ -236,7 +239,7 @@ type ChangeCallback<T> = (mutableObj: Mutable<T>) => void;
  * ```
  */
 export const change = <T extends Entity.Unknown>(obj: T, callback: ChangeCallback<T>): void => {
-  change$(obj, callback);
+  change$(obj, callback as any);
 };
 
 /**

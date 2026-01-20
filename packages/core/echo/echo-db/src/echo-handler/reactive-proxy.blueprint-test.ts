@@ -126,8 +126,8 @@ export const reactiveProxyTests = (testConfigFactory: TestConfigurationFactory):
         change(obj, (o) => {
           o.nested = plainObject;
         });
-        expect(obj.nested.field).to.eq('bar');
-        expect(obj.nested).to.deep.eq(plainObject);
+        expect(obj.nested!.field).to.eq('bar');
+        expect(obj.nested!).to.deep.eq(plainObject);
 
         change(obj, (o) => {
           o.nested!.field = 'baz';
@@ -211,17 +211,17 @@ export const reactiveProxyTests = (testConfigFactory: TestConfigurationFactory):
         change(obj, (o) => {
           o.nestedArray = [{ field: 'bar' }, { field: 'baz' }];
         });
-        expect(obj.nestedArray[0].field).to.eq('bar');
+        expect(obj.nestedArray![0].field).to.eq('bar');
 
         change(obj, (o) => {
           o.nestedArray![0].field = 'baz';
         });
-        expect(obj.nestedArray[0].field).to.eq('baz');
+        expect(obj.nestedArray![0].field).to.eq('baz');
 
         change(obj, (o) => {
           o.nestedArray![1].field = 'bar';
         });
-        expect(obj.nestedArray[1].field).to.eq('bar');
+        expect(obj.nestedArray![1].field).to.eq('bar');
       });
 
       test('can assign arrays with arrays', async () => {
@@ -233,12 +233,12 @@ export const reactiveProxyTests = (testConfigFactory: TestConfigurationFactory):
             [4, 5, 6],
           ];
         });
-        expect(obj.twoDimNumberArray[0][0]).to.eq(1);
+        expect(obj.twoDimNumberArray![0][0]).to.eq(1);
 
         change(obj, (o) => {
           o.twoDimNumberArray![0][0] = 4;
         });
-        expect(obj.twoDimNumberArray[0][0]).to.eq(4);
+        expect(obj.twoDimNumberArray![0][0]).to.eq(4);
       });
 
       test('array sub-proxies maintain their identity', async () => {

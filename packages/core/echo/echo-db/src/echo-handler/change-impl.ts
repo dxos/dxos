@@ -2,16 +2,12 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type Entity, Obj } from '@dxos/echo';
+import { type Entity, type Obj } from '@dxos/echo';
 import { compositeRuntime } from '@dxos/echo-signals/runtime';
 import { invariant } from '@dxos/invariant';
 import { EventId } from '@dxos/live-object';
 
-import {
-  clearPendingNotifications,
-  enterChangeContext,
-  hasPendingNotifications,
-} from '../core-db/change-context';
+import { clearPendingNotifications, enterChangeContext, hasPendingNotifications } from '../core-db/change-context';
 
 import { getObjectCore, isEchoObject } from './echo-handler';
 import { type ProxyTarget, symbolInternals } from './echo-proxy-target';
@@ -35,10 +31,7 @@ export type Mutable<T> = T extends Obj.Any
  * @param obj - The ECHO object to mutate.
  * @param callback - The callback that performs mutations.
  */
-export const changeInternal = <T extends Entity.Unknown>(
-  obj: T,
-  callback: (mutableObj: Mutable<T>) => void,
-): void => {
+export const changeInternal = <T extends Entity.Unknown>(obj: T, callback: (mutableObj: Mutable<T>) => void): void => {
   invariant(isEchoObject(obj), 'Object must be an ECHO object');
 
   const core = getObjectCore(obj);
