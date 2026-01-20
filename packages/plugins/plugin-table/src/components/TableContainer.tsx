@@ -2,10 +2,10 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Atom } from '@effect-atom/atom-react';
+import { Atom, RegistryContext } from '@effect-atom/atom-react';
 import * as Match from 'effect/Match';
 import type * as Schema from 'effect/Schema';
-import React, { forwardRef, useCallback, useMemo, useRef } from 'react';
+import React, { forwardRef, useCallback, useContext, useMemo, useRef } from 'react';
 
 import { Common } from '@dxos/app-framework';
 import { useAppGraph, useOperationInvoker } from '@dxos/app-framework/react';
@@ -40,6 +40,7 @@ export type TableContainerProps = {
 
 // TODO(wittjosiah): Need to handle more complex queries by restricting add row.
 export const TableContainer = forwardRef<HTMLDivElement, TableContainerProps>(({ role, object }, forwardedRef) => {
+  const registry = useContext(RegistryContext);
   const { invokePromise } = useOperationInvoker();
   const tableRef = useRef<TableController>(null);
 
@@ -148,7 +149,7 @@ export const TableContainer = forwardRef<HTMLDivElement, TableContainerProps>(({
     model?.saveView();
   }, [model]);
 
-  const presentation = useMemo(() => (model ? new TablePresentation(model) : undefined), [model]);
+  const presentation = useMemo(() => (model ? new TablePresentation(registry, model) : undefined), [registry, model]);
 
   const handleRowClick = useCallback(
     (row: any) => {

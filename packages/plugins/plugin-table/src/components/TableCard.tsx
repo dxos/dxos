@@ -2,7 +2,8 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { useMemo, useRef } from 'react';
+import { RegistryContext } from '@effect-atom/atom-react';
+import React, { useContext, useMemo, useRef } from 'react';
 
 import { Filter, Obj } from '@dxos/echo';
 import { useGlobalFilteredObjects } from '@dxos/plugin-search';
@@ -25,6 +26,7 @@ export type TableCardProps = {
 };
 
 export const TableCard = ({ role, object }: TableCardProps) => {
+  const registry = useContext(RegistryContext);
   const tableRef = useRef<TableController>(null);
 
   const db = Obj.getDatabase(object);
@@ -51,7 +53,7 @@ export const TableCard = ({ role, object }: TableCardProps) => {
     onCellUpdate: (cell) => tableRef.current?.update?.(cell),
   });
 
-  const presentation = useMemo(() => (model ? new TablePresentation(model) : undefined), [model]);
+  const presentation = useMemo(() => (model ? new TablePresentation(registry, model) : undefined), [registry, model]);
 
   return (
     <Card.SurfaceRoot role={role}>

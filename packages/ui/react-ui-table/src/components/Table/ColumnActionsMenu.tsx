@@ -2,6 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
+import { useAtomValue } from '@effect-atom/atom-react';
 import React from 'react';
 
 import { DropdownMenu, useTranslation } from '@dxos/react-ui';
@@ -16,7 +17,7 @@ export type ColumnActionsMenuProps = {
 
 export const ColumnActionsMenu = ({ model, modals }: ColumnActionsMenuProps) => {
   const { t } = useTranslation(translationKey);
-  const state = modals.state.value;
+  const state = useAtomValue(modals.state);
   if (state?.type !== 'column') {
     return null;
   }

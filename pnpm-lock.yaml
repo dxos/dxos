@@ -15753,9 +15753,6 @@ importers:
       '@effect-atom/atom-react':
         specifier: 'catalog:'
         version: 0.4.4(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/platform@0.93.6(effect@3.19.11))(@effect/rpc@0.72.2(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11))(effect@3.19.11)(react@19.2.3)(scheduler@0.27.0)
-      '@preact/signals-react':
-        specifier: 'catalog:'
-        version: 3.3.1(react@19.2.3)
       '@radix-ui/primitive':
         specifier: 'catalog:'
         version: 1.1.1
@@ -18348,6 +18345,9 @@ importers:
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../core/echo/echo
+      '@dxos/echo-atom':
+        specifier: workspace:*
+        version: link:../../core/echo/echo-atom
       '@dxos/effect':
         specifier: workspace:*
         version: link:../../common/effect
@@ -18411,15 +18411,12 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
+      '@effect-atom/atom-react':
+        specifier: 'catalog:'
+        version: 0.4.4(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/platform@0.93.6(effect@3.19.11))(@effect/rpc@0.72.2(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11))(effect@3.19.11)(react@19.2.3)(scheduler@0.27.0)
       '@fluentui/react-tabster':
         specifier: 'catalog:'
         version: 9.26.11(@types/react-dom@19.2.3(@types/react@19.2.7))(@types/react@19.2.7)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
-      '@preact-signals/safe-react':
-        specifier: 'catalog:'
-        version: 0.9.0(@babel/core@7.28.0)(@swc/helpers@0.5.17)(react@19.2.3)
-      '@preact/signals-core':
-        specifier: 'catalog:'
-        version: 1.12.1
       '@radix-ui/react-context':
         specifier: 'catalog:'
         version: 1.1.1(@types/react@19.2.7)(react@19.2.3)
@@ -18457,9 +18454,6 @@ importers:
       '@dxos/ui-theme':
         specifier: workspace:*
         version: link:../ui-theme
-      '@effect-atom/atom-react':
-        specifier: 'catalog:'
-        version: 0.4.4(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/platform@0.93.6(effect@3.19.11))(@effect/rpc@0.72.2(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11))(effect@3.19.11)(react@19.2.3)(scheduler@0.27.0)
       '@effect/platform':
         specifier: 'catalog:'
         version: 0.93.6(effect@3.19.11)

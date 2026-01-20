@@ -106,6 +106,9 @@ export const useSelectionActions = (contextIds: string[], mode: SelectionMode = 
 
   const singleSelect = useCallback(
     (id: string) => {
+      if (!selection) {
+        return;
+      }
       for (const contextId of stableContextIds) {
         selection.updateSingle(contextId, id);
       }
@@ -115,6 +118,9 @@ export const useSelectionActions = (contextIds: string[], mode: SelectionMode = 
 
   const multiSelect = useCallback(
     (ids: string[]) => {
+      if (!selection) {
+        return;
+      }
       for (const contextId of stableContextIds) {
         selection.updateMulti(contextId, ids);
       }
@@ -124,6 +130,9 @@ export const useSelectionActions = (contextIds: string[], mode: SelectionMode = 
 
   const rangeSelect = useCallback(
     (from: string, to: string) => {
+      if (!selection) {
+        return;
+      }
       for (const contextId of stableContextIds) {
         selection.updateRange(contextId, from, to);
       }
@@ -133,6 +142,9 @@ export const useSelectionActions = (contextIds: string[], mode: SelectionMode = 
 
   const toggle = useCallback(
     (id: string) => {
+      if (!selection) {
+        return;
+      }
       for (const contextId of stableContextIds) {
         selection.toggleSelection(contextId, id);
       }
@@ -141,6 +153,9 @@ export const useSelectionActions = (contextIds: string[], mode: SelectionMode = 
   );
 
   const clear = useCallback(() => {
+    if (!selection) {
+      return;
+    }
     for (const contextId of stableContextIds) {
       selection.clearSelection(contextId);
     }

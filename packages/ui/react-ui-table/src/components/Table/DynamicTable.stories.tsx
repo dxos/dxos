@@ -10,7 +10,7 @@ import { Format, type JsonSchemaType } from '@dxos/echo/internal';
 import { faker } from '@dxos/random';
 import { Filter, useQuery, useSchema } from '@dxos/react-client/echo';
 import { useClientStory, withClientProvider } from '@dxos/react-client/testing';
-import { withTheme } from '@dxos/react-ui/testing';
+import { withRegistry, withTheme } from '@dxos/react-ui/testing';
 import { type SchemaPropertyDefinition } from '@dxos/schema';
 import { TestSchema } from '@dxos/schema/testing';
 
@@ -57,7 +57,7 @@ const DynamicTableStory = () => {
 const meta = {
   title: 'ui/react-ui-table/DynamicTable',
   component: DynamicTable,
-  decorators: [withTheme],
+  decorators: [withTheme, withRegistry],
   parameters: {
     layout: 'fullscreen',
     translations,

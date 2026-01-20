@@ -2,7 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { useCallback, useMemo, useRef } from 'react';
+import { RegistryContext } from '@effect-atom/atom-react';
+import React, { useCallback, useContext, useMemo, useRef } from 'react';
 
 import { type Type } from '@dxos/echo';
 import { type JsonSchemaType } from '@dxos/echo/internal';
@@ -45,6 +46,7 @@ export const DynamicTable = <T extends Type.Entity.Any = Type.Entity.Any>({
   onRowAction,
   ...props
 }: DynamicTableProps<T>) => {
+  const registry = useContext(RegistryContext);
   // TODO(burdon): Remove variance from the props (should be normalized externally; possibly via hooks).
   const { jsonSchema } = useMemo(
     () => getBaseSchema({ typename: name, properties, jsonSchema: _jsonSchema, schema }),
@@ -92,9 +94,9 @@ export const DynamicTable = <T extends Type.Entity.Any = Type.Entity.Any>({
 
   const presentation = useMemo(() => {
     if (model) {
-      return new TablePresentation(model);
+      return new TablePresentation(registry, model);
     }
-  }, [model]);
+  }, [registry, model]);
 
   // TODO(burdon): Do we need the outer divs?
   return (

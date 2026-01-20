@@ -51,7 +51,6 @@
     "@dxos/react-hooks": "workspace:*",
     "@dxos/util": "workspace:*",
     "@effect-atom/atom-react": "catalog:",
-    "@preact/signals-react": "catalog:",
     "@radix-ui/primitive": "catalog:",
     "@radix-ui/react-compose-refs": "catalog:",
     "@radix-ui/react-context": "catalog:",

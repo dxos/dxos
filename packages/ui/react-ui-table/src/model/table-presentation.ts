@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { signal } from '@preact/signals-core';
+import { Atom, type Registry } from '@effect-atom/atom-react';
 import * as Predicate from 'effect/Predicate';
 
 import { Obj } from '@dxos/echo';
@@ -29,15 +29,20 @@ import { type TableModel, type TableRow } from './table-model';
  * different grid planes.
  */
 export class TablePresentation<T extends TableRow = TableRow> {
+  private readonly _registry: Registry.Registry;
+  private readonly _visibleRange: Atom.Writable<DxGridPlaneRange>;
   private fieldProjectionCache = new Map<string, ReturnType<typeof this.model.projection.getFieldProjection>>();
 
   constructor(
+    registry: Registry.Registry,
     private readonly model: TableModel<T>,
-    private readonly _visibleRange = signal<DxGridPlaneRange>({
+  ) {
+    this._registry = registry;
+    this._visibleRange = Atom.make<DxGridPlaneRange>({
       start: { row: 0, col: 0 },
       end: { row: 0, col: 0 },
-    }),
-  ) {}
+    });
+  }
 
   public getCells(range: DxGridPlaneRange, plane: DxGridPlane): DxGridPlaneCells {
     // Clear cache at the start of each render pass
@@ -47,7 +52,7 @@ export class TablePresentation<T extends TableRow = TableRow> {
 
     switch (plane) {
       case 'grid':
-        this._visibleRange.value = range;
+        this._registry.set(this._visibleRange, range);
         cells = this.getMainGridCells(range);
         break;
       case 'frozenRowsStart':
@@ -269,7 +274,7 @@ export class TablePresentation<T extends TableRow = TableRow> {
           continue;
         }
 
-        this.createDataCell(cells, this.model.rows.value[row], field, col, row);
+        this.createDataCell(cells, this.model.rows[row], field, col, row);
       }
     }
 
@@ -279,7 +284,7 @@ export class TablePresentation<T extends TableRow = TableRow> {
   private getDraftRowCells(range: DxGridPlaneRange): DxGridPlaneCells {
     const cells: DxGridPlaneCells = {};
     const fields = this.model.projection?.fields ?? [];
-    const draftRows = this.model.draftRows.value;
+    const draftRows = this.model.draftRows;
 
     // Return cells of the CTA row if no draft row is active
     if (draftRows.length === 0) {
@@ -389,7 +394,7 @@ export class TablePresentation<T extends TableRow = TableRow> {
         accessoryHtml: tableControls.checkbox.render({
           rowIndex: 0,
           header: true,
-          checked: this.model.selection.allRowsSeleted.value,
+          checked: this.model.selection.allRowsSelected,
         }),
         className: '!bg-toolbarSurface',
         readonly: true,
@@ -415,7 +420,7 @@ export class TablePresentation<T extends TableRow = TableRow> {
 
   private getDraftActionCells(range: DxGridPlaneRange): DxGridPlaneCells {
     const cells: DxGridPlaneCells = {};
-    const draftRows = this.model.draftRows.value;
+    const draftRows = this.model.draftRows;
 
     // Return cells of the CTA row if no draft row is active
     if (draftRows.length === 0) {
@@ -442,7 +447,7 @@ export class TablePresentation<T extends TableRow = TableRow> {
 
   private getDraftIconCells(range: DxGridPlaneRange): DxGridPlaneCells {
     const cells: DxGridPlaneCells = {};
-    const draftRows = this.model.draftRows.value;
+    const draftRows = this.model.draftRows;
 
     for (let row = range.start.row; row <= range.end.row; row++) {
       cells[toPlaneCellIndex({ col: 0, row })] = {

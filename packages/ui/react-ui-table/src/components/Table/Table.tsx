@@ -2,6 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
+import { Atom, RegistryContext, useAtomValue } from '@effect-atom/atom-react';
 import * as String from 'effect/String';
 import React, {
   type JSX,
@@ -11,6 +12,7 @@ import React, {
   type WheelEvent,
   forwardRef,
   useCallback,
+  useContext,
   useEffect,
   useImperativeHandle,
   useMemo,
@@ -21,6 +23,7 @@ import { type Type } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { useAttention } from '@dxos/react-ui-attention';
 import {
+  type DxGridAxisMeta,
   type DxGridElement,
   type DxGridPlane,
   type DxGridPlaneRange,
@@ -44,6 +47,7 @@ import { RowActionsMenu } from './RowActionsMenu';
 
 const columnDefault = { grid: { minSize: 80, maxSize: 640 } };
 const rowDefault = { frozenRowsStart: { readonly: true, focusUnfurl: false } };
+const emptyColumnMeta = Atom.make<DxGridAxisMeta>({ grid: {} });
 
 //
 // Table.Root
@@ -89,13 +93,21 @@ export type TableMainProps<T extends Type.Entity.Any = Type.Entity.Any> = {
   testId?: string;
 };
 
+const emptyRowsAtom = Atom.make<unknown[]>([]);
+
 const TableMainInner = <T extends Type.Entity.Any = Type.Entity.Any>(
   { schema, model, presentation, ignoreAttention, onCreate, onRowClick, testId }: TableMainProps<T>,
   forwardedRef: Ref<TableController>,
 ) => {
+  const registry = useContext(RegistryContext);
   const [dxGrid, setDxGrid] = useState<DxGridElement | null>(null);
   const { hasAttention } = useAttention(model?.id ?? 'table');
-  const modals = useMemo(() => new ModalController(), []);
+  const modals = useMemo(() => new ModalController(registry), [registry]);
+  const columnMeta = useAtomValue(model?.columnMeta ?? emptyColumnMeta);
+  // Subscribe to rows atom to trigger re-render when rows change.
+  const rows = useAtomValue(model?.rowsAtom ?? emptyRowsAtom);
+  // Derive column count from columnMeta (reactive) with fallback.
+  const columnCount = Object.keys(columnMeta.grid).length || model?.projection.fields.length || 0;
 
   const draftRowCount = model?.getDraftRowCount() ?? 0;
 
@@ -125,6 +137,16 @@ const TableMainInner = <T extends Type.Entity.Any = Type.Entity.Any>(
 
     dxGrid.getCells = getCells;
   }, [dxGrid, presentation, getCells]);
+
+  // Trigger grid update when rows change (e.g., after sorting or data changes).
+  useEffect(() => {
+    if (!dxGrid) {
+      return;
+    }
+
+    dxGrid.updateCells(true);
+    dxGrid.requestUpdate();
+  }, [dxGrid, rows]);
 
   const handleInsertRowResult = useCallback(
     (insertResult?: InsertRowResult) => {
@@ -238,7 +260,7 @@ const TableMainInner = <T extends Type.Entity.Any = Type.Entity.Any>(
         switch (data.type) {
           case 'checkbox': {
             if (data.header) {
-              model?.selection.setSelection(model.selection.allRowsSeleted.value ? 'none' : 'all');
+              model?.selection.setSelection(model.selection.allRowsSelected ? 'none' : 'all');
             } else {
               model?.selection.toggleSelectionForRowIndex(data.rowIndex);
             }
@@ -415,11 +437,11 @@ const TableMainInner = <T extends Type.Entity.Any = Type.Entity.Any>(
       <Grid.Content
         className={mx('[--dx-grid-base:var(--baseSurface)]', gridSeparatorInlineEnd, gridSeparatorBlockEnd)}
         frozen={frozen}
-        columns={model.columnMeta.value}
+        columns={columnMeta}
         columnDefault={columnDefault}
         rowDefault={rowDefault}
-        limitRows={model.getRowCount() ?? 0}
-        limitColumns={model.projection.fields.length}
+        limitRows={rows.length}
+        limitColumns={columnCount}
         overscroll='trap'
         onAxisResize={handleAxisResize}
         onClick={handleGridClick}

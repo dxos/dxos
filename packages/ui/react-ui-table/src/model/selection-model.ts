@@ -2,72 +2,102 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type ReadonlySignal, type Signal, computed, effect, signal } from '@preact/signals-core';
+import { Atom, type Registry } from '@effect-atom/atom-react';
 
 import { Resource } from '@dxos/context';
-
-import { touch } from '../util';
 
 import { type TableRow } from './table-model';
 
 export type SelectionMode = 'single' | 'multiple';
 
 export class SelectionModel<T extends TableRow> extends Resource {
-  private readonly _selection: Signal<Set<string>>;
-
-  private readonly _validSelectedIds = computed<Set<string>>(() => {
-    const rows = this._rows.value;
-    if (!rows) {
-      return new Set<string>();
-    }
-
-    const validIds = new Set(rows.map((row) => row.id));
-    return new Set([...this._selection.value].filter((id) => validIds.has(id)));
-  });
-
-  private readonly _hasSelection = computed<boolean>(() => this._validSelectedIds.value.size > 0);
-
-  private readonly _allSelected = computed<boolean>(() => {
-    const rows = this._rows.value;
-    if (rows.length === 0) {
-      return false;
-    }
-
-    return rows.every((row) => this._selection.value.has(row.id));
-  });
+  private readonly _registry: Registry.Registry;
+  private readonly _rows: Atom.Atom<T[]>;
+  private readonly _selection: Atom.Writable<Set<string>>;
+  private readonly _validSelectedIds: Atom.Atom<Set<string>>;
+  private readonly _hasSelection: Atom.Atom<boolean>;
+  private readonly _allSelected: Atom.Atom<boolean>;
+  private readonly _selectionMode: SelectionMode;
+  private readonly _onSelectionChanged?: () => void;
 
   constructor(
-    private readonly _rows: ReadonlySignal<T[]>,
-    private readonly _selectionMode: SelectionMode,
-    private readonly _initialSelection: string[],
-    private readonly _onSelectionChanged?: () => void,
+    registry: Registry.Registry,
+    rows: Atom.Atom<T[]>,
+    selectionMode: SelectionMode,
+    initialSelection: string[],
+    onSelectionChanged?: () => void,
   ) {
     super();
-    this._selection = signal(new Set(this._initialSelection));
+    this._registry = registry;
+    this._rows = rows;
+    this._selectionMode = selectionMode;
+    this._onSelectionChanged = onSelectionChanged;
+
+    this._selection = Atom.make<Set<string>>(new Set(initialSelection));
+
+    this._validSelectedIds = Atom.make((get) => {
+      const rows = get(this._rows);
+      if (!rows) {
+        return new Set<string>();
+      }
+
+      const validIds = new Set(rows.map((row) => row.id));
+      const selection = get(this._selection);
+      return new Set([...selection].filter((id) => validIds.has(id)));
+    });
+
+    this._hasSelection = Atom.make((get) => get(this._validSelectedIds).size > 0);
+
+    this._allSelected = Atom.make((get) => {
+      const rows = get(this._rows);
+      if (rows.length === 0) {
+        return false;
+      }
+
+      const selection = get(this._selection);
+      return rows.every((row) => selection.has(row.id));
+    });
   }
 
   protected override async _open(): Promise<void> {
-    const selectionWatcher = effect(() => {
-      touch(this._selection.value);
+    const selectionUnsubscribe = this._registry.subscribe(this._selection, () => {
       this._onSelectionChanged?.();
     });
-    this._ctx.onDispose(selectionWatcher);
+    this._ctx.onDispose(selectionUnsubscribe);
   }
 
   //
   // Getters
   //
 
-  public get selection(): ReadonlySignal<Set<string>> {
+  /** Get the selection atom for reactive access. */
+  public get selectionAtom(): Atom.Atom<Set<string>> {
     return this._selection;
   }
 
-  public get hasSelection(): ReadonlySignal<boolean> {
+  /** Get the current selection value. */
+  public get selection(): Set<string> {
+    return this._registry.get(this._selection);
+  }
+
+  /** Get the hasSelection atom for reactive access. */
+  public get hasSelectionAtom(): Atom.Atom<boolean> {
     return this._hasSelection;
   }
 
-  public get allRowsSeleted(): ReadonlySignal<boolean> {
+  /** Check if there is any selection. */
+  public get hasSelection(): boolean {
+    return this._registry.get(this._hasSelection);
+  }
+
+  /** Get the allRowsSelected atom for reactive access. */
+  public get allRowsSelectedAtom(): Atom.Atom<boolean> {
     return this._allSelected;
+  }
+
+  /** Check if all rows are selected. */
+  public get allRowsSelected(): boolean {
+    return this._registry.get(this._allSelected);
   }
 
   public get selectionMode(): SelectionMode {
@@ -75,17 +105,17 @@ export class SelectionModel<T extends TableRow> extends Resource {
   }
 
   public getSelectedRows = (): T[] => {
-    const selectedIds = this._validSelectedIds.value;
-    return this._rows.value.filter((row) => selectedIds.has(row.id));
+    const selectedIds = this._registry.get(this._validSelectedIds);
+    return this._registry.get(this._rows).filter((row) => selectedIds.has(row.id));
   };
 
   public isRowIndexSelected = (rowIndex: number): boolean => {
-    const row = this._rows.value[rowIndex];
-    return this._selection.value.has(row.id);
+    const row = this._registry.get(this._rows)[rowIndex];
+    return this._registry.get(this._selection).has(row.id);
   };
 
   public isObjectSelected = (object: T): boolean => {
-    return this._selection.value.has(object.id);
+    return this._registry.get(this._selection).has(object.id);
   };
 
   //
@@ -93,8 +123,9 @@ export class SelectionModel<T extends TableRow> extends Resource {
   //
 
   public toggleSelectionForRowIndex = (rowIndex: number): void => {
-    const row = this._rows.value[rowIndex];
-    const newSelection = new Set(this._selection.value);
+    const row = this._registry.get(this._rows)[rowIndex];
+    const currentSelection = this._registry.get(this._selection);
+    const newSelection = new Set(currentSelection);
 
     if (newSelection.has(row.id)) {
       newSelection.delete(row.id);
@@ -105,17 +136,17 @@ export class SelectionModel<T extends TableRow> extends Resource {
       newSelection.add(row.id);
     }
 
-    this._selection.value = newSelection;
+    this._registry.set(this._selection, newSelection);
   };
 
   public setSelection = (mode: 'all' | 'none'): void => {
     switch (mode) {
       case 'all': {
-        this._selection.value = new Set(this._rows.value.map((row) => row.id));
+        this._registry.set(this._selection, new Set(this._registry.get(this._rows).map((row) => row.id)));
         break;
       }
       case 'none': {
-        this._selection.value = new Set();
+        this._registry.set(this._selection, new Set());
         break;
       }
     }
