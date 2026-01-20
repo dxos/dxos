@@ -20,54 +20,53 @@ export default Capability.makeModule(
     return Capability.contributes(Common.Capability.OperationResolver, [
       OperationResolver.make({
         operation: AutomationOperation.CreateTriggerFromTemplate,
-        handler: ({ db, template, enabled = false, scriptName, input }) =>
-          Effect.gen(function* () {
-            const trigger = Trigger.make({ enabled, input });
+        handler: Effect.fnUntraced(function* ({ db, template, enabled = false, scriptName, input }) {
+          const trigger = Trigger.make({ enabled, input });
 
-            // TODO(wittjosiah): Factor out function lookup by script name?
-            if (scriptName) {
-              const scripts = yield* Effect.promise(() =>
-                db.query(Filter.type(Script.Script, { name: scriptName })).run(),
+          // TODO(wittjosiah): Factor out function lookup by script name?
+          if (scriptName) {
+            const scripts = yield* Effect.promise(() =>
+              db.query(Filter.type(Script.Script, { name: scriptName })).run(),
+            );
+            const [script] = scripts;
+            if (script) {
+              const functions = yield* Effect.promise(() =>
+                db.query(Filter.type(Function.Function, { source: Ref.make(script) })).run(),
               );
-              const [script] = scripts;
-              if (script) {
-                const functions = yield* Effect.promise(() =>
-                  db.query(Filter.type(Function.Function, { source: Ref.make(script) })).run(),
-                );
-                const [fn] = functions;
-                if (fn) {
-                  trigger.function = Ref.make(fn);
-                }
+              const [fn] = functions;
+              if (fn) {
+                trigger.function = Ref.make(fn);
               }
             }
+          }
 
-            switch (template.type) {
-              case 'timer': {
-                trigger.spec = { kind: 'timer', cron: template.cron };
-                break;
-              }
-              case 'queue': {
-                trigger.spec = {
-                  kind: 'queue',
-                  queue: (template.queueDXN as DXN).toString(),
-                };
-                break;
-              }
-              default: {
-                break;
-              }
+          switch (template.type) {
+            case 'timer': {
+              trigger.spec = { kind: 'timer', cron: template.cron };
+              break;
             }
+            case 'queue': {
+              trigger.spec = {
+                kind: 'queue',
+                queue: (template.queueDXN as DXN).toString(),
+              };
+              break;
+            }
+            default: {
+              break;
+            }
+          }
 
-            yield* Operation.invoke(SpaceOperation.AddObject, {
-              object: trigger,
-              target: db,
-              hidden: true,
-            });
-            yield* Operation.invoke(Common.LayoutOperation.Open, {
-              subject: [`automation-settings${ATTENDABLE_PATH_SEPARATOR}${db.spaceId}`],
-              workspace: db.spaceId,
-            });
-          }),
+          yield* Operation.invoke(SpaceOperation.AddObject, {
+            object: trigger,
+            target: db,
+            hidden: true,
+          });
+          yield* Operation.invoke(Common.LayoutOperation.Open, {
+            subject: [`automation-settings${ATTENDABLE_PATH_SEPARATOR}${db.spaceId}`],
+            workspace: db.spaceId,
+          });
+        }),
       }),
     ]);
   }),

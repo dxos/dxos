@@ -35,6 +35,10 @@ import {
   createStaticSchemaNode,
 } from '../../util';
 
+/** Match space nodes and return the Space object. */
+const whenSpace = (node: Node.Node): Option.Option<Space> =>
+  node.type === SPACE_TYPE && isSpace(node.data) ? Option.some(node.data) : Option.none();
+
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     const capabilities = yield* Capability.Service;
@@ -211,7 +215,7 @@ export default Capability.makeModule(
       // Create space actions.
       GraphBuilder.createExtension({
         id: `${meta.id}/actions`,
-        match: (node) => (node.type === SPACE_TYPE && isSpace(node.data) ? Option.some(node.data) : Option.none()),
+        match: whenSpace,
         actions: (space, get) => {
           const [client] = get(capabilities.atom(ClientCapabilities.Client));
           const [state] = get(capabilities.atom(SpaceCapabilities.State));
@@ -233,7 +237,7 @@ export default Capability.makeModule(
       // Create nodes for objects in the root collection of a space.
       GraphBuilder.createExtension({
         id: `${meta.id}/root-collection`,
-        match: (node) => (node.type === SPACE_TYPE && isSpace(node.data) ? Option.some(node.data) : Option.none()),
+        match: whenSpace,
         connector: (space, get) => {
           const state = capabilities.get(SpaceCapabilities.State);
           const spaceState = get(CreateAtom.fromObservable(space.state));
@@ -585,7 +589,7 @@ export default Capability.makeModule(
       // Object settings plank companion.
       GraphBuilder.createExtension({
         id: `${meta.id}/settings`,
-        match: (node) => (Obj.isObject(node.data) ? Option.some(node) : Option.none()),
+        match: NodeMatcher.whenEchoObjectMatches,
         connector: (node) =>
           Effect.succeed([
             {

@@ -711,7 +711,7 @@ export const createTypeExtension = <T extends Type.Entity.Any, R = never>(
   const { id, type, actions, connector, relation, position } = options;
   return createExtension<Entity.Entity<Schema.Schema.Type<T>>, R>({
     id,
-    match: NodeMatcher.whenType(type),
+    match: NodeMatcher.whenEchoType(type),
     actions,
     connector,
     relation,

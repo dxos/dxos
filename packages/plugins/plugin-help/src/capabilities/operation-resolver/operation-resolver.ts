@@ -14,11 +14,10 @@ export default Capability.makeModule(
     return Capability.contributes(Common.Capability.OperationResolver, [
       OperationResolver.make({
         operation: HelpOperation.Start,
-        handler: () =>
-          Effect.gen(function* () {
-            const state = yield* Capability.get(HelpCapabilities.MutableState);
-            state.running = true;
-          }),
+        handler: Effect.fnUntraced(function* () {
+          const state = yield* Capability.get(HelpCapabilities.MutableState);
+          state.running = true;
+        }),
       }),
     ]);
   }),

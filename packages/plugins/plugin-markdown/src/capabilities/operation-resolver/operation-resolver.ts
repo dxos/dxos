@@ -22,11 +22,10 @@ export default Capability.makeModule(
       // TODO(wittjosiah): This appears to be unused.
       OperationResolver.make({
         operation: MarkdownOperation.SetViewMode,
-        handler: ({ id, viewMode }) =>
-          Effect.gen(function* () {
-            const { state } = yield* Capability.get(MarkdownCapabilities.State);
-            state.viewMode[id] = viewMode;
-          }),
+        handler: Effect.fnUntraced(function* ({ id, viewMode }) {
+          const { state } = yield* Capability.get(MarkdownCapabilities.State);
+          state.viewMode[id] = viewMode;
+        }),
       }),
     ]);
   }),
