@@ -371,7 +371,7 @@ export default Capability.makeModule(
       // Debug object companion.
       GraphBuilder.createExtension({
         id: `${meta.id}/debug-object`,
-        match: NodeMatcher.whenObject,
+        match: NodeMatcher.whenEchoObject,
         connector: (node) =>
           Effect.succeed([
             {

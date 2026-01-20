@@ -40,36 +40,35 @@ export default Capability.makeModule(() =>
     Capability.contributes(Common.Capability.OperationResolver, [
       OperationResolver.make({
         operation: KanbanOperation.DeleteCardField,
-        handler: ({ view, fieldId }) =>
-          Effect.gen(function* () {
-            const db = Obj.getDatabase(view);
-            invariant(db, 'Database not found');
-            const schema = yield* Effect.promise(() =>
-              db.schemaRegistry
-                .query({
-                  typename: getTypenameFromQuery(view.query.ast)!,
-                  location: ['database', 'runtime'],
-                })
-                .first(),
-            );
+        handler: Effect.fnUntraced(function* ({ view, fieldId }) {
+          const db = Obj.getDatabase(view);
+          invariant(db, 'Database not found');
+          const schema = yield* Effect.promise(() =>
+            db.schemaRegistry
+              .query({
+                typename: getTypenameFromQuery(view.query.ast)!,
+                location: ['database', 'runtime'],
+              })
+              .first(),
+          );
 
-            // Create projection with change callbacks that wrap in Obj.change().
-            // Schema from registry is an EchoSchema at runtime.
-            const projection = new ProjectionModel(
-              JsonSchema.toJsonSchema(schema),
-              view.projection,
-              createEchoChangeCallback(view, schema as EchoSchema),
-            );
+          // Create projection with change callbacks that wrap in Obj.change().
+          // Schema from registry is an EchoSchema at runtime.
+          const projection = new ProjectionModel(
+            JsonSchema.toJsonSchema(schema),
+            view.projection,
+            createEchoChangeCallback(view, schema as EchoSchema),
+          );
 
-            const result = projection.deleteFieldProjection(fieldId);
+          const result = projection.deleteFieldProjection(fieldId);
 
-            // Return data needed for undo.
-            return {
-              field: result.deleted.field,
-              props: result.deleted.props,
-              index: result.index,
-            };
-          }),
+          // Return data needed for undo.
+          return {
+            field: result.deleted.field,
+            props: result.deleted.props,
+            index: result.index,
+          };
+        }),
       }),
       OperationResolver.make({
         operation: KanbanOperation.DeleteCard,
@@ -89,29 +88,28 @@ export default Capability.makeModule(() =>
       //
       OperationResolver.make({
         operation: KanbanOperation.RestoreCardField,
-        handler: ({ view, field, props, index }) =>
-          Effect.gen(function* () {
-            const db = Obj.getDatabase(view);
-            invariant(db, 'Database not found');
-            const schema = yield* Effect.promise(() =>
-              db.schemaRegistry
-                .query({
-                  typename: getTypenameFromQuery(view.query.ast)!,
-                  location: ['database', 'runtime'],
-                })
-                .first(),
-            );
+        handler: Effect.fnUntraced(function* ({ view, field, props, index }) {
+          const db = Obj.getDatabase(view);
+          invariant(db, 'Database not found');
+          const schema = yield* Effect.promise(() =>
+            db.schemaRegistry
+              .query({
+                typename: getTypenameFromQuery(view.query.ast)!,
+                location: ['database', 'runtime'],
+              })
+              .first(),
+          );
 
-            // Create projection with change callbacks that wrap in Obj.change().
-            // Schema from registry is an EchoSchema at runtime.
-            const projection = new ProjectionModel(
-              JsonSchema.toJsonSchema(schema),
-              view.projection,
-              createEchoChangeCallback(view, schema as EchoSchema),
-            );
+          // Create projection with change callbacks that wrap in Obj.change().
+          // Schema from registry is an EchoSchema at runtime.
+          const projection = new ProjectionModel(
+            JsonSchema.toJsonSchema(schema),
+            view.projection,
+            createEchoChangeCallback(view, schema as EchoSchema),
+          );
 
-            projection.setFieldProjection({ field, props }, index);
-          }),
+          projection.setFieldProjection({ field, props }, index);
+        }),
       }),
 
       //

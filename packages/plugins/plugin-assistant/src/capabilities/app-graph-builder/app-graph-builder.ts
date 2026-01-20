@@ -3,8 +3,6 @@
 //
 
 import * as Effect from 'effect/Effect';
-import * as Function from 'effect/Function';
-import * as Option from 'effect/Option';
 
 import { Capability, Common } from '@dxos/app-framework';
 import { Prompt } from '@dxos/blueprints';
@@ -88,7 +86,7 @@ export default Capability.makeModule(
 
       GraphBuilder.createExtension({
         id: `${meta.id}/companion-chat`,
-        match: NodeMatcher.whenObject,
+        match: NodeMatcher.whenEchoObject,
         connector: (object, get) => {
           const assistantState = capabilities.get(AssistantCapabilities.State);
           const currentChatState = get(
@@ -137,17 +135,10 @@ export default Capability.makeModule(
 
       GraphBuilder.createExtension({
         id: `${meta.id}/invocations`,
-        match: (node) =>
-          Function.pipe(
-            NodeMatcher.whenType(Sequence)(node),
-            Option.map(() => node),
-            Option.orElse(() =>
-              Function.pipe(
-                NodeMatcher.whenType(Prompt.Prompt)(node),
-                Option.map(() => node),
-              ),
-            ),
-          ),
+        match: NodeMatcher.whenAny(
+          NodeMatcher.whenEchoTypeMatches(Sequence),
+          NodeMatcher.whenEchoTypeMatches(Prompt.Prompt),
+        ),
         connector: (node, get) =>
           Effect.succeed([
             {
