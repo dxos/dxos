@@ -16,6 +16,12 @@ import { meta } from '../../meta';
 import { Channel, ThreadCapabilities, ThreadOperation } from '../../types';
 import { getAnchor } from '../../util';
 
+/** Match ECHO objects that are NOT Channels (i.e. objects that can have comments). */
+const whenCommentableObject = NodeMatcher.whenAll(
+  NodeMatcher.whenEchoObjectMatches,
+  NodeMatcher.whenNot(NodeMatcher.whenEchoTypeMatches(Channel.Channel)),
+);
+
 // TODO(wittjosiah): Highlight active calls in L1.
 //  Track active meetings by subscribing to meetings query and polling the swarms of recent meetings in the space.
 export default Capability.makeModule(
@@ -85,7 +91,7 @@ export default Capability.makeModule(
       GraphBuilder.createExtension({
         id: `${meta.id}/comments-companion`,
         match: (node) => {
-          if (!Obj.isObject(node.data) || Obj.instanceOf(Channel.Channel, node.data)) {
+          if (!Obj.isObject(node.data) || Option.isNone(whenCommentableObject(node))) {
             return Option.none();
           }
           const metadata = resolve(Obj.getTypename(node.data)!);
@@ -109,7 +115,7 @@ export default Capability.makeModule(
       GraphBuilder.createExtension({
         id: `${meta.id}/comment-toolbar`,
         match: (node) => {
-          if (!Obj.isObject(node.data) || Obj.instanceOf(Channel.Channel, node.data)) {
+          if (!Obj.isObject(node.data) || Option.isNone(whenCommentableObject(node))) {
             return Option.none();
           }
           const metadata = resolve(Obj.getTypename(node.data)!);

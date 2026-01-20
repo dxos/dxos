@@ -91,9 +91,9 @@ describe('NodeMatcher', () => {
     });
   });
 
-  describe('whenType', () => {
+  describe('whenEchoType', () => {
     test('creates matcher function', () => {
-      const matcher = NodeMatcher.whenType(TestSchema.Person);
+      const matcher = NodeMatcher.whenEchoType(TestSchema.Person);
       expect(typeof matcher).to.equal('function');
     });
 
@@ -104,7 +104,7 @@ describe('NodeMatcher', () => {
         properties: {},
         data: { name: 'Test' },
       };
-      const matcher = NodeMatcher.whenType(TestSchema.Person);
+      const matcher = NodeMatcher.whenEchoType(TestSchema.Person);
       const result = matcher(node);
       expect(Option.isNone(result)).to.be.true;
     });
@@ -117,14 +117,14 @@ describe('NodeMatcher', () => {
         properties: {},
         data: testObject,
       };
-      const matcher = NodeMatcher.whenType(TestSchema.Person);
+      const matcher = NodeMatcher.whenEchoType(TestSchema.Person);
       const result = matcher(node);
       expect(Option.isSome(result)).to.be.true;
       expect(Option.getOrNull(result)).to.equal(testObject);
     });
   });
 
-  describe('whenObject', () => {
+  describe('whenEchoObject', () => {
     test('creates matcher function', () => {
       const node: Node.Node = {
         id: 'test',
@@ -132,8 +132,8 @@ describe('NodeMatcher', () => {
         properties: {},
         data: { name: 'Test' },
       };
-      const result = NodeMatcher.whenObject(node);
-      // Just verify the function works - actual object matching depends on Obj.isObject implementation
+      const result = NodeMatcher.whenEchoObject(node);
+      // Just verify the function works - actual object matching depends on Obj.isObject implementation.
       expect(Option.isNone(result) || Option.isSome(result)).to.be.true;
     });
 
@@ -144,7 +144,105 @@ describe('NodeMatcher', () => {
         properties: {},
         data: 'string',
       };
-      const result = NodeMatcher.whenObject(node);
+      const result = NodeMatcher.whenEchoObject(node);
+      expect(Option.isNone(result)).to.be.true;
+    });
+  });
+
+  describe('whenEchoTypeMatches', () => {
+    test('returns node for matching type', () => {
+      const testObject = Obj.make(TestSchema.Person, { name: 'Test' });
+      const node: Node.Node = {
+        id: 'test',
+        type: 'test',
+        properties: {},
+        data: testObject,
+      };
+      const matcher = NodeMatcher.whenEchoTypeMatches(TestSchema.Person);
+      const result = matcher(node);
+      expect(Option.isSome(result)).to.be.true;
+      expect(Option.getOrNull(result)).to.equal(node);
+    });
+
+    test('returns none for non-matching type', () => {
+      const node: Node.Node = {
+        id: 'test',
+        type: 'test',
+        properties: {},
+        data: { name: 'Test' },
+      };
+      const matcher = NodeMatcher.whenEchoTypeMatches(TestSchema.Person);
+      const result = matcher(node);
+      expect(Option.isNone(result)).to.be.true;
+    });
+  });
+
+  describe('whenEchoObjectMatches', () => {
+    test('returns node for ECHO object', () => {
+      const testObject = Obj.make(TestSchema.Person, { name: 'Test' });
+      const node: Node.Node = {
+        id: 'test',
+        type: 'test',
+        properties: {},
+        data: testObject,
+      };
+      const result = NodeMatcher.whenEchoObjectMatches(node);
+      expect(Option.isSome(result)).to.be.true;
+      expect(Option.getOrNull(result)).to.equal(node);
+    });
+
+    test('returns none for non-ECHO object', () => {
+      const node: Node.Node = {
+        id: 'test',
+        type: 'test',
+        properties: {},
+        data: 'string',
+      };
+      const result = NodeMatcher.whenEchoObjectMatches(node);
+      expect(Option.isNone(result)).to.be.true;
+    });
+  });
+
+  describe('whenNot', () => {
+    test('negates a matching matcher', () => {
+      const rootNode: Node.Node = {
+        id: Node.RootId,
+        type: Node.RootType,
+        properties: {},
+        data: null,
+      };
+      const matcher = NodeMatcher.whenNot(NodeMatcher.whenRoot);
+      const result = matcher(rootNode);
+      expect(Option.isNone(result)).to.be.true;
+    });
+
+    test('returns node when matcher does not match', () => {
+      const node: Node.Node = {
+        id: 'other',
+        type: 'test',
+        properties: {},
+        data: null,
+      };
+      const matcher = NodeMatcher.whenNot(NodeMatcher.whenRoot);
+      const result = matcher(node);
+      expect(Option.isSome(result)).to.be.true;
+      expect(Option.getOrNull(result)).to.equal(node);
+    });
+
+    test('works with whenAll for complex patterns', () => {
+      const testObject = Obj.make(TestSchema.Person, { name: 'Test' });
+      const node: Node.Node = {
+        id: 'test',
+        type: 'test',
+        properties: {},
+        data: testObject,
+      };
+      // Match ECHO objects that are NOT Person type.
+      const matcher = NodeMatcher.whenAll(
+        NodeMatcher.whenEchoObjectMatches,
+        NodeMatcher.whenNot(NodeMatcher.whenEchoTypeMatches(TestSchema.Person)),
+      );
+      const result = matcher(node);
       expect(Option.isNone(result)).to.be.true;
     });
   });
