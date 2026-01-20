@@ -9,7 +9,7 @@ import { EventId } from '@dxos/live-object';
 
 import { clearPendingNotifications, enterChangeContext, hasPendingNotifications } from '../core-db/change-context';
 
-import { getObjectCore, isEchoObject } from './echo-handler';
+import { getObjectCore, isEchoObject } from './echo-object-utils';
 import { type ProxyTarget, symbolInternals } from './echo-proxy-target';
 
 /**
