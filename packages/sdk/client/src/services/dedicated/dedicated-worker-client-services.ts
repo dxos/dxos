@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { DeferredTask, Event, Trigger, scheduleTaskInterval } from '@dxos/async';
+import { AsyncTask, DeferredTask, Event, Trigger, scheduleTaskInterval } from '@dxos/async';
 import { type ClientServices, type ClientServicesProvider, clientServiceBundle } from '@dxos/client-protocol';
 import { Config } from '@dxos/config';
 import { type Context, Resource } from '@dxos/context';
@@ -64,14 +64,13 @@ export class DedicatedWorkerClientServices extends Resource implements ClientSer
   override async _open(): Promise<void> {
     this.#coordinator = await this.#createCoordinator();
     this.#watchLeader();
-    this.#connectTask = new DeferredTask(this._ctx, async () => this.#connectClient());
+    this.#connectTask.open(this._ctx);
     await this.#connectTask.runBlocking();
     await this.#initialConnection.wait();
   }
 
   override async _close(): Promise<void> {
-    await this.#connectTask?.join();
-    this.#connectTask = undefined;
+    await this.#connectTask.close();
     await this.#services?.close();
     await this.#connection?.close();
     await this.#leaderSession?.close();
@@ -110,8 +109,7 @@ export class DedicatedWorkerClientServices extends Resource implements ClientSer
     });
   }
 
-  #connectTask?: DeferredTask | undefined = undefined;
-  async #connectClient() {
+  #connectTask = new AsyncTask(async () => {
     const ctx = this._ctx.derive();
 
     const handleLeaderStopped = () => {
@@ -189,7 +187,7 @@ export class DedicatedWorkerClientServices extends Resource implements ClientSer
       void ctx.dispose();
       this.#connectTask?.schedule();
     }
-  }
+  });
 }
 
 /**

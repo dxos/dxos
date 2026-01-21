@@ -156,7 +156,8 @@ describe('DedicatedWorkerClientServices', { timeout: 1_000, retry: 0 }, () => {
     // expect(objects[0]).toEqual(object);
   });
 
-  test('leader goes from first client to second',  async () => {
+  // Flaky.
+  test('leader goes from first client to second', async () => {
     log.break();
     const coordinator = new MemoryWorkerCoordiantor();
     await using testWorker = await new TestWorkerFactory().open();
