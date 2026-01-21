@@ -20,6 +20,10 @@ export interface DedicatedWorkerInitMessage {
    * Client that is starting the worker.
    */
   clientId: string;
+  /**
+   * Config values to initialize the worker with.
+   */
+  config?: Record<string, any>;
 }
 
 /**

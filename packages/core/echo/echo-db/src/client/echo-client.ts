@@ -153,6 +153,44 @@ export class EchoClient extends Resource {
     return queueFactory;
   }
 
+  /**
+   * Update service references after reconnection.
+   * Must be called before _notifyReconnect.
+   */
+  _updateServices({ dataService, queryService }: { dataService: DataService; queryService: QueryService }): void {
+    log.info('updating service references');
+    this._dataService = dataService;
+    this._queryService = queryService;
+
+    // Update IndexQuerySourceProvider with new service.
+    if (this._indexQuerySourceProvider) {
+      this._graph.unregisterQuerySourceProvider(this._indexQuerySourceProvider);
+      this._indexQuerySourceProvider = new IndexQuerySourceProvider({
+        service: this._queryService,
+        objectLoader: {
+          loadObject: this._loadObjectFromDocument.bind(this),
+        },
+      });
+      this._graph.registerQuerySourceProvider(this._indexQuerySourceProvider);
+    }
+
+    // Update all databases with new services.
+    for (const db of this._databases.values()) {
+      db._updateServices({ dataService, queryService });
+    }
+  }
+
+  /**
+   * Notify all databases that the service connection has been re-established.
+   * Called after a dedicated worker leader change.
+   */
+  async _notifyReconnect(): Promise<void> {
+    log.info('notifying databases of reconnection');
+    for (const db of this._databases.values()) {
+      await db._onReconnect();
+    }
+  }
+
   private async _loadObjectFromDocument({ spaceId, objectId, documentId }: LoadObjectProps) {
     const db = this._databases.get(spaceId);
     if (!db) {

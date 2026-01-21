@@ -17,6 +17,7 @@ import { LifecycleState, Resource } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { PublicKey, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
+import { RpcClosedError } from '@dxos/protocols';
 import {
   type BatchedDocumentUpdates,
   type DataService,
@@ -65,10 +66,22 @@ export class RepoProxy extends Resource {
 
   private _sendUpdatesJob?: UpdateScheduler = undefined;
 
+  /**
+   * Flag to indicate reconnection is in progress.
+   * When true, in-flight _sendUpdates operations should abort early.
+   */
+  private _isReconnecting = false;
+
+  /**
+   * Generation counter that increments on each reconnection.
+   * Used to identify and suppress errors from abandoned tasks.
+   */
+  private _generation = 0;
+
   readonly saveStateChanged = new Event<SaveStateChangedEvent>();
 
   constructor(
-    private readonly _dataService: DataService,
+    private _dataService: DataService,
     private readonly _spaceId: SpaceId,
   ) {
     super();
@@ -132,6 +145,61 @@ export class RepoProxy extends Resource {
     this._handles = {};
     await this._subscription?.close();
     this._subscription = undefined;
+  }
+
+  /**
+   * Update the data service reference after reconnection.
+   */
+  _updateDataService(dataService: DataService): void {
+    this._dataService = dataService;
+  }
+
+  /**
+   * Handle reconnection to re-establish the data subscription.
+   * Document handles are preserved since they hold local Automerge state.
+   */
+  async _onReconnect(): Promise<void> {
+    log.info('re-establishing data subscription');
+
+    // Signal reconnection to abort any in-flight _sendUpdates operations.
+    // The old task will eventually timeout, but the catch block will suppress the error.
+    this._isReconnecting = true;
+
+    // Increment generation so old tasks know they're abandoned.
+    this._generation++;
+
+    // Abandon the old scheduler - don't wait for it since it may be blocked on dead RPC.
+    // Create a fresh scheduler that will use the new data service.
+    // The old scheduler's task will eventually fail/timeout but we don't care.
+    this._sendUpdatesJob = new UpdateScheduler(this._ctx, async () => this._sendUpdates(), {
+      maxFrequency: MAX_UPDATE_FREQ,
+    });
+
+    // Close old subscription (this should cause old RPC calls to fail faster).
+    await this._subscription?.close();
+
+    // Create new subscription and wait for it to be ready before calling updateSubscription.
+    this._subscription = this._dataService.subscribe({
+      subscriptionId: this._subscriptionId,
+      spaceId: this._spaceId,
+    });
+
+    // Wait for the subscription stream to be ready (services-side registration complete).
+    await this._subscription.waitUntilReady();
+
+    this._subscription.subscribe((updates) => this._receiveUpdate(updates));
+
+    // Re-sync all existing documents.
+    const documentIds = Object.keys(this._handles);
+    if (documentIds.length > 0) {
+      await this._dataService.updateSubscription(
+        { subscriptionId: this._subscriptionId, addIds: documentIds, removeIds: [] },
+        { timeout: RPC_TIMEOUT },
+      );
+    }
+
+    // Reconnection complete, clear the flag.
+    this._isReconnecting = false;
   }
 
   /** Returns an existing handle if we have it; creates one otherwise. */
@@ -219,6 +287,14 @@ export class RepoProxy extends Resource {
   }
 
   private async _sendUpdates(): Promise<void> {
+    // Abort early if reconnection is in progress to avoid blocking on dead RPC.
+    if (this._isReconnecting) {
+      return;
+    }
+
+    // Capture current generation to detect if reconnection happens during this task.
+    const generation = this._generation;
+
     // Save current state of pending updates to avoid race conditions.
     const createIds = Array.from(this._pendingCreateIds);
     const updateIds = Array.from(this._pendingUpdateIds);
@@ -262,13 +338,26 @@ export class RepoProxy extends Resource {
 
       this._emitSaveStateEvent();
     } catch (err) {
-      // Restore the state of pending updates if the RPC call failed.
-      createIds.forEach((id) => this._pendingCreateIds.add(id));
-      addIds.forEach((id) => this._pendingAddIds.add(id));
-      removeIds.forEach((id) => this._pendingRemoveIds.add(id));
-      updateIds.forEach((id) => this._pendingUpdateIds.add(id));
+      // Don't restore pending updates if generation changed - this task is abandoned.
+      const isAbandoned = generation !== this._generation;
+      if (!isAbandoned) {
+        // Restore the state of pending updates if the RPC call failed.
+        createIds.forEach((id) => this._pendingCreateIds.add(id));
+        addIds.forEach((id) => this._pendingAddIds.add(id));
+        removeIds.forEach((id) => this._pendingRemoveIds.add(id));
+        updateIds.forEach((id) => this._pendingUpdateIds.add(id));
+      }
 
-      this._ctx.raise(err as Error);
+      // Don't raise errors if we're closing, reconnecting, abandoned, or if the RPC connection was closed.
+      // RpcClosedError and timeouts can happen during reconnection or shutdown before _close() is called.
+      if (
+        this._lifecycleState !== LifecycleState.CLOSED &&
+        !this._isReconnecting &&
+        !isAbandoned &&
+        !(err instanceof RpcClosedError)
+      ) {
+        this._ctx.raise(err as Error);
+      }
     }
   }
 

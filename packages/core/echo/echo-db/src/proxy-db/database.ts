@@ -325,6 +325,20 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
   }
 
   /**
+   * Update service references after reconnection.
+   */
+  _updateServices({ dataService, queryService }: { dataService: DataService; queryService: QueryService }): void {
+    this._coreDatabase._updateServices({ dataService, queryService });
+  }
+
+  /**
+   * Handle reconnection to re-establish RPC streams.
+   */
+  async _onReconnect(): Promise<void> {
+    await this._coreDatabase._onReconnect();
+  }
+
+  /**
    * @internal
    */
   async _loadObjectById(objectId: string, options: LoadObjectOptions = {}): Promise<Obj.Any | undefined> {

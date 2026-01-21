@@ -13,7 +13,7 @@ import { STORAGE_LOCK_KEY } from '../../lock-key';
 
 import type { DedicatedWorkerMessage } from './types';
 
-log.info('worker-entrypoint 123');
+log.info('worker-entrypoint');
 
 // Lock ensures only a single worker is running.
 void navigator.locks.request(STORAGE_LOCK_KEY, async () => {
@@ -34,10 +34,10 @@ void navigator.locks.request(STORAGE_LOCK_KEY, async () => {
     switch (message.type) {
       case 'init': {
         owningClientId = message.clientId;
+        const config = new Config(message.config ?? {});
+        log.info('worker init with config', { persistent: config.get('runtime.client.storage.persistent') });
         runtime = new WorkerRuntime({
-          configProvider: async () => {
-            return new Config({}); // TODO(dmaretsky): Take using an rpc message from spawning process.
-          },
+          configProvider: async () => config,
           onStop: async () => {
             // Close the shared worker, lock will be released automatically.
             self.close();

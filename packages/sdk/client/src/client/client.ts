@@ -425,6 +425,21 @@ export class Client {
     });
     await this._echoClient.open(this._ctx);
 
+    // Register reconnection callback to re-establish ECHO database streams and status.
+    this._services.onReconnect?.(async () => {
+      log.info('reconnected, re-establishing ECHO streams');
+      // Update service references first (they point to the new RPC connections).
+      const dataService = this._services!.services.DataService;
+      const queryService = this._services!.services.QueryService;
+      invariant(dataService, 'DataService not available');
+      invariant(queryService, 'QueryService not available');
+      this._echoClient._updateServices({ dataService, queryService });
+      await this._echoClient._notifyReconnect();
+
+      // Re-establish status stream.
+      this._setupStatusStream();
+    });
+
     const mesh = new MeshProxy(this._services, this._instanceId);
     const halo = new HaloProxy(this._services, this._instanceId);
     const spaces = new SpaceList(this._config, this._services, this._echoClient, halo, this._instanceId);
@@ -440,24 +455,7 @@ export class Client {
     this._runtime = new ClientRuntime({ spaces, halo, mesh, shell });
 
     invariant(this._services.services.SystemService, 'SystemService is not available.');
-    this._statusStream = this._services.services.SystemService.queryStatus({ interval: 3_000 });
-    this._statusStream.subscribe(
-      async ({ status }) => {
-        this._statusTimeout && clearTimeout(this._statusTimeout);
-        trigger.wake(undefined);
-
-        this._statusUpdate.emit(status);
-        this._statusTimeout = setTimeout(() => {
-          this._statusUpdate.emit(null);
-        }, STATUS_TIMEOUT);
-      },
-      (err) => {
-        trigger.wake(err);
-        if (err) {
-          this._statusUpdate.emit(null);
-        }
-      },
-    );
+    this._setupStatusStream(trigger);
 
     const err = await trigger.wait();
     if (err) {
@@ -527,6 +525,37 @@ export class Client {
     await this._services?.close();
     this._edgeClient = undefined;
     log('closed');
+  }
+
+  /**
+   * Set up the system status stream. Called on initial open and reconnect.
+   * @param trigger - Optional trigger to wake on first status (only during initial open).
+   */
+  private _setupStatusStream(trigger?: Trigger<Error | undefined>): void {
+    // Close existing stream if any.
+    this._statusTimeout && clearTimeout(this._statusTimeout);
+    this._statusStream?.close();
+
+    invariant(this._services?.services.SystemService, 'SystemService is not available.');
+    this._statusStream = this._services.services.SystemService.queryStatus({ interval: 3_000 });
+    this._statusStream.subscribe(
+      async ({ status }) => {
+        this._statusTimeout && clearTimeout(this._statusTimeout);
+        trigger?.wake(undefined);
+
+        this._statusUpdate.emit(status);
+        this._statusTimeout = setTimeout(() => {
+          this._statusUpdate.emit(null);
+        }, STATUS_TIMEOUT);
+      },
+      (err) => {
+        trigger?.wake(err);
+        // Don't emit null on reconnection-related errors; let reconnection handler fix it.
+        if (err && !this._services?.onReconnect) {
+          this._statusUpdate.emit(null);
+        }
+      },
+    );
   }
 
   /**

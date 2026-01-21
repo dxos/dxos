@@ -58,6 +58,7 @@ export const createClientServices = async (
     ? new DedicatedWorkerClientServices({
         createWorker: createDedicatedWorker,
         createCoordinator: () => new SharedWorkerCoordinator(),
+        config,
       })
     : createWorker && useWorker
       ? fromWorker(config, { createWorker, observabilityGroup, signalTelemetryEnabled })

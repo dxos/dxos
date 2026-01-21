@@ -32,6 +32,7 @@ import { invariant } from '@dxos/invariant';
 import { type ObjectId } from '@dxos/keys';
 import { type DXN, type PublicKey, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
+import { RpcClosedError } from '@dxos/protocols';
 import type { QueryService } from '@dxos/protocols/proto/dxos/echo/query';
 import type { DataService, SpaceSyncState } from '@dxos/protocols/proto/dxos/echo/service';
 import { trace } from '@dxos/tracing';
@@ -116,6 +117,9 @@ export class CoreDatabase {
   readonly rootChanged = new Event<void>();
 
   readonly saveStateChanged: ReadOnlyEvent<SaveStateChangedEvent>;
+
+  /** Fires when service connection is re-established after a leader change. */
+  private readonly _reconnected = new Event<void>();
 
   constructor({ graph, dataService, queryService, spaceId, spaceKey }: CoreDatabaseProps) {
     this._hypergraph = graph;
@@ -219,7 +223,8 @@ export class CoreDatabase {
   @synchronized
   async updateSpaceState(spaceState: SpaceState): Promise<void> {
     invariant(this._ctx, 'Must be open');
-    if (spaceState.rootUrl === this._automergeDocLoader.getSpaceRootDocHandle().url) {
+    const currentRootUrl = this._automergeDocLoader.getSpaceRootDocHandle().url;
+    if (spaceState.rootUrl === currentRootUrl) {
       return;
     }
     this._unsubscribeFromHandles();
@@ -632,19 +637,46 @@ export class CoreDatabase {
   }
 
   subscribeToSyncState(ctx: Context, callback: (state: SpaceSyncState) => void): CleanupFn {
-    const stream = this._dataService.subscribeSpaceSyncState({ spaceId: this.spaceId }, { timeout: RPC_TIMEOUT });
-    stream.subscribe(
-      (data) => {
-        void runInContextAsync(ctx, () => callback(data));
-      },
-      (err) => {
-        if (err) {
-          ctx.raise(err);
-        }
-      },
-    );
-    ctx.onDispose(() => stream.close());
-    return () => stream.close();
+    let currentStream: ReturnType<DataService['subscribeSpaceSyncState']> | undefined;
+
+    const setupStream = () => {
+      currentStream = this._dataService.subscribeSpaceSyncState({ spaceId: this.spaceId }, { timeout: RPC_TIMEOUT });
+      currentStream.subscribe(
+        (data) => {
+          void runInContextAsync(ctx, () => callback(data));
+        },
+        (err) => {
+          if (err instanceof RpcClosedError) {
+            // Wait for reconnection and re-establish the stream.
+            this._reconnected.once(ctx, () => setupStream());
+          } else if (err) {
+            ctx.raise(err);
+          }
+        },
+      );
+    };
+
+    setupStream();
+    ctx.onDispose(() => currentStream?.close());
+    return () => currentStream?.close();
+  }
+
+  /**
+   * Update service references after reconnection.
+   */
+  _updateServices({ dataService, queryService }: { dataService: DataService; queryService: QueryService }): void {
+    (this as any)._dataService = dataService;
+    (this as any)._queryService = queryService;
+    this._repoProxy._updateDataService(dataService);
+  }
+
+  /**
+   * Handle reconnection to re-establish RPC streams.
+   */
+  async _onReconnect(): Promise<void> {
+    log.info('re-establishing database streams');
+    await this._repoProxy._onReconnect();
+    this._reconnected.emit();
   }
 
   getLoadedDocumentHandles(): DocHandleProxy<any>[] {

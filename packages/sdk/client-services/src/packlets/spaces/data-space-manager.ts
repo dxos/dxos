@@ -217,14 +217,30 @@ export class DataSpaceManager extends Resource {
     log.trace('dxos.echo.data-space-manager.open', Trace.begin({ id: this._instanceId }));
     log('metadata loaded', { spaces: this._metadataStore.spaces.length });
 
+    // Track spaces that need to be auto-activated (were previously active).
+    const spacesToActivate: DataSpace[] = [];
+
     await forEachAsync(this._metadataStore.spaces, async (spaceMetadata) => {
       try {
         log('load space', { spaceMetadata });
-        await this._constructSpace(spaceMetadata);
+        const space = await this._constructSpace(spaceMetadata);
+        // If the space was previously active, queue it for auto-activation.
+        if (spaceMetadata.state === SpaceState.SPACE_ACTIVE) {
+          spacesToActivate.push(space);
+        }
       } catch (err) {
         log.error('Error loading space', { spaceMetadata, err });
       }
     });
+
+    // Auto-activate spaces that were previously active.
+    // This ensures spaces are fully initialized when the worker restarts.
+    for (const space of spacesToActivate) {
+      log('auto-activating space', { spaceKey: space.key });
+      space.activate().catch((err) => {
+        log.error('Error auto-activating space', { spaceKey: space.key, err });
+      });
+    }
 
     this.updated.emit();
 

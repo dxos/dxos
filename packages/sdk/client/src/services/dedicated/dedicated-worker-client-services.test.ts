@@ -4,6 +4,7 @@
 
 import { describe, expect, test } from 'vitest';
 
+import { Trigger, asyncTimeout } from '@dxos/async';
 import { WorkerRuntime } from '@dxos/client-services';
 import { Config } from '@dxos/config';
 import { Resource } from '@dxos/context';
@@ -176,6 +177,53 @@ describe('DedicatedWorkerClientServices', { timeout: 1_000, retry: 0 }, () => {
 
     await client1.destroy();
 
-    await client2.spaces.default.db.query(Filter.everything()).run();
+    expect(client2.halo.identity.get()).toEqual(identity);
+    const objects = await client2.spaces.default.db.query(Filter.everything()).run();
+    expect(objects).toHaveLength(1);
+  });
+
+  // TODO(wittjosiah): Using shared storage fixes this test but that doesn't seem like a realistic solution.
+  test.fails('identity subscription survives leader change', { timeout: 2_000 }, async () => {
+    const coordinator = new MemoryWorkerCoordiantor();
+    await using testWorker = await new TestWorkerFactory().open();
+    await using services1 = await new DedicatedWorkerClientServices({
+      createWorker: () => testWorker.make(),
+      createCoordinator: () => coordinator,
+    }).open();
+    await using client1 = await new Client({ services: services1 }).initialize();
+    await client1.halo.createIdentity({ displayName: 'initial-name' });
+
+    await using services2 = await new DedicatedWorkerClientServices({
+      createWorker: () => testWorker.make(),
+      createCoordinator: () => coordinator,
+    }).open();
+    await using client2 = await new Client({ services: services2 }).initialize();
+    await client2.spaces.waitUntilReady();
+
+    // Set up identity subscription before leader change.
+    const updatedDisplayName = 'updated-name';
+    const trigger = new Trigger();
+    client2.halo.identity.subscribe((identity) => {
+      if (identity?.profile?.displayName === updatedDisplayName) {
+        trigger.wake();
+      }
+    });
+
+    // Destroy client1 to trigger leader change.
+    const reconnected = new Trigger();
+    services2.reconnected.on(() => {
+      reconnected.wake();
+    });
+    await client1.destroy();
+
+    // Wait for client2 to reconnect to the new worker.
+    await asyncTimeout(reconnected.wait(), 1000);
+
+    // Update display name after leader change.
+    await client2.halo.updateProfile({ displayName: updatedDisplayName });
+
+    // Subscription should still receive the update.
+    await asyncTimeout(trigger.wait(), 500);
+    expect(client2.halo.identity.get()!.profile?.displayName).toEqual(updatedDisplayName);
   });
 });

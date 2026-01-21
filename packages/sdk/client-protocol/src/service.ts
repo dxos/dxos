@@ -56,6 +56,20 @@ export interface ClientServicesProvider {
    * This should fire if the services disconnect unexpectedly or during a client reset.
    */
   closed: Event<Error | undefined>;
+
+  /**
+   * The underlying service connection was re-established.
+   * Fires after all reconnection callbacks have completed.
+   */
+  reconnected?: Event<void>;
+
+  /**
+   * Register a callback to be invoked when services reconnect.
+   * The callback should re-establish any RPC streams.
+   * Reconnection waits for all callbacks to complete before emitting `reconnected`.
+   */
+  onReconnect?: (callback: () => Promise<void>) => void;
+
   descriptors: ServiceBundle<ClientServices>;
   services: Partial<ClientServices>;
 

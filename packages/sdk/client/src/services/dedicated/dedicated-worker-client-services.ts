@@ -28,6 +28,10 @@ const LEADER_LOCK_KEY = '@dxos/client/DedicatedWorkerClientServices/LeaderLock';
 export interface DedeciatedWorkerClientServicesOptions {
   createWorker: () => WorkerOrPort;
   createCoordinator: () => MaybePromise<WorkerCoordinator>;
+  /**
+   * Config to pass to the dedicated worker.
+   */
+  config?: Config;
 }
 /**
  * Runs services in a dedicated worker, exposed to other tabs.
@@ -36,6 +40,7 @@ export interface DedeciatedWorkerClientServicesOptions {
 export class DedicatedWorkerClientServices extends Resource implements ClientServicesProvider {
   #createWorker: () => WorkerOrPort;
   #createCoordinator: () => MaybePromise<WorkerCoordinator>;
+  #config: Config | undefined;
   #services: ClientServicesProxy | undefined = undefined;
   #leaderSession: LeaderSession | undefined = undefined;
   #coordinator: WorkerCoordinator | undefined = undefined;
@@ -43,13 +48,21 @@ export class DedicatedWorkerClientServices extends Resource implements ClientSer
   readonly #clientId = `dedicated-worker-client-services-${crypto.randomUUID()}`;
 
   #initialConnection = new Trigger<void>();
+  #isInitialConnection = true;
+  #reconnectCallbacks: Array<() => Promise<void>> = [];
 
   readonly closed = new Event<Error | undefined>();
+  readonly reconnected = new Event<void>();
+
+  onReconnect = (callback: () => Promise<void>) => {
+    this.#reconnectCallbacks.push(callback);
+  };
 
   constructor(options: DedeciatedWorkerClientServicesOptions) {
     super();
     this.#createWorker = options.createWorker;
     this.#createCoordinator = options.createCoordinator;
+    this.#config = options.config;
   }
 
   get descriptors(): ServiceBundle<ClientServices> {
@@ -84,7 +97,7 @@ export class DedicatedWorkerClientServices extends Resource implements ClientSer
           // I am the leader now.
           invariant(this.#coordinator);
           invariant(!this.#leaderSession);
-          this.#leaderSession = new LeaderSession(this.#createWorker, this.#coordinator);
+          this.#leaderSession = new LeaderSession(this.#createWorker, this.#coordinator, this.#config);
           const done = new Trigger();
           this._ctx.onDispose(() => done.wake());
           this.#leaderSession.onClose.on((error) => {
@@ -127,8 +140,9 @@ export class DedicatedWorkerClientServices extends Resource implements ClientSer
             WorkerCoordinatorMessage & { type: 'provide-port' }
           >((resolve) => {
             invariant(this.#coordinator);
-            this.#coordinator.onMessage.on((message) => {
+            const unsubscribe = this.#coordinator.onMessage.on((message) => {
               if (message.type === 'provide-port' && message.clientId === this.#clientId) {
+                unsubscribe();
                 void connectionCtx.dispose();
                 resolve(message);
               }
@@ -181,7 +195,17 @@ export class DedicatedWorkerClientServices extends Resource implements ClientSer
 
           this.#services = new ClientServicesProxy(createWorkerPort({ port: appPort }));
           await this.#services.open();
-          this.#initialConnection.wake();
+
+          if (this.#isInitialConnection) {
+            this.#isInitialConnection = false;
+            this.#initialConnection.wake();
+          } else {
+            // Call all reconnection callbacks and wait for them to complete.
+            log.info('reconnecting, calling callbacks');
+            await Promise.all(this.#reconnectCallbacks.map((cb) => cb()));
+            log.info('reconnected');
+            this.reconnected.emit();
+          }
         } catch (err: any) {
           this.#initialConnection.throw(err);
           log.catch(err);
@@ -191,6 +215,12 @@ export class DedicatedWorkerClientServices extends Resource implements ClientSer
         await leaderStopped.wait();
 
         log.info('lost connection');
+
+        // Close old services/connection before reconnecting.
+        await this.#services?.close();
+        await this.#connection?.close();
+        this.#services = undefined;
+        this.#connection = undefined;
       }
     });
   }
@@ -202,13 +232,15 @@ export class DedicatedWorkerClientServices extends Resource implements ClientSer
 class LeaderSession extends Resource {
   #createWorker: () => WorkerOrPort;
   #coordinator: WorkerCoordinator;
+  #config: Config | undefined;
   #worker!: WorkerOrPort;
   #leaderId = `leader-${crypto.randomUUID()}`;
 
-  constructor(createWorker: () => WorkerOrPort, coordinator: WorkerCoordinator) {
+  constructor(createWorker: () => WorkerOrPort, coordinator: WorkerCoordinator, config?: Config) {
     super();
     this.#createWorker = createWorker;
     this.#coordinator = coordinator;
+    this.#config = config;
   }
 
   readonly onClose = new Event<Error | undefined>();
@@ -250,7 +282,7 @@ class LeaderSession extends Resource {
 
     log.info('waiting for worker to start listening');
     await listening.wait();
-    this.#sendMessage({ type: 'init', clientId: this.#leaderId });
+    this.#sendMessage({ type: 'init', clientId: this.#leaderId, config: this.#config?.values });
     log.info('waiting for worker to be ready');
     const { livenessLockKey } = await ready.wait();
     log.info('leader ready');
