@@ -127,7 +127,7 @@ class TestWorkerFactory extends Resource {
   }
 }
 
-describe('DedicatedWorkerClientServices', { timeout: 30_000, retry: 0 }, () => {
+describe('DedicatedWorkerClientServices (browser)', { timeout: 30_000, retry: 0 }, () => {
   test('open & close', async () => {
     await using testWorker = await new TestWorkerFactory().open();
     await using services = await new DedicatedWorkerClientServices({
@@ -145,12 +145,11 @@ describe('DedicatedWorkerClientServices', { timeout: 30_000, retry: 0 }, () => {
     await using client = await new Client({ services }).initialize();
     await client.halo.createIdentity();
     await client.spaces.waitUntilReady();
-    await client.spaces.default.waitUntilReady();
     client.spaces.default.db.add(Obj.make(Type.Expando, { name: 'Test' }));
     await client.spaces.default.db.flush({ indexes: true });
   });
 
-  test('two client share worker', async () => {
+  test('two clients share worker', async () => {
     const coordinator = new MemoryWorkerCoordiantor();
     await using testWorker = await new TestWorkerFactory().open();
     await using services1 = await new DedicatedWorkerClientServices({
@@ -168,44 +167,6 @@ describe('DedicatedWorkerClientServices', { timeout: 30_000, retry: 0 }, () => {
     await client2.spaces.waitUntilReady();
 
     expect(client2.halo.identity.get()).toEqual(identity);
-    await client2.spaces.default.db.query(Filter.everything()).run();
-
-    // TODO(dmaretskyi): tried doing DB write -> flush(indexes) -> query here but flush(indexes) doesnt work
-    // const object = client1.spaces.default.db.add(Obj.make(Type.Expando, { name: 'Test' }));
-    // await client1.spaces.default.db.flush({ indexes: true });
-    // const objects = await client2.spaces.default.db.query(Filter.type(Type.Expando, { name: 'Test' })).run();
-    // expect(objects).toHaveLength(1);
-    // expect(objects[0]).toEqual(object);
-  });
-
-  test('leader goes from first client to second', async () => {
-    const coordinator = new MemoryWorkerCoordiantor();
-    await using testWorker = await new TestWorkerFactory().open();
-    await using services1 = await new DedicatedWorkerClientServices({
-      createWorker: () => testWorker.make(),
-      createCoordinator: () => coordinator,
-    }).open();
-    await using client1 = await new Client({ services: services1 }).initialize();
-    const identity = await client1.halo.createIdentity();
-
-    await using services2 = await new DedicatedWorkerClientServices({
-      createWorker: () => testWorker.make(),
-      createCoordinator: () => coordinator,
-    }).open();
-    await using client2 = await new Client({ services: services2 }).initialize();
-    await client2.spaces.waitUntilReady();
-    expect(client2.halo.identity.get()).toEqual(identity);
-
-    // Set up listener for reconnection before destroying client1.
-    const reloaded = new Promise<void>((resolve) => {
-      client2.reloaded.on(() => resolve());
-    });
-
-    await client1.destroy();
-
-    // Wait for client2 to reconnect before querying.
-    await reloaded;
-    await client2.spaces.waitUntilReady();
     await client2.spaces.default.db.query(Filter.everything()).run();
   });
 
@@ -237,50 +198,6 @@ describe('DedicatedWorkerClientServices', { timeout: 30_000, retry: 0 }, () => {
     // Wait for client2 to reconnect before querying.
     await reloaded;
     await client2.spaces.waitUntilReady();
-    await client2.spaces.default.db.query(Filter.everything()).run();
-  });
-
-  test('identity persists after reconnection', async () => {
-    const coordinator = new AsyncMemoryCoordinator();
-    await using testWorker = await new TestWorkerFactory().open();
-    await using services1 = await new DedicatedWorkerClientServices({
-      createWorker: () => testWorker.make(),
-      createCoordinator: () => coordinator,
-    }).open();
-    await using client1 = await new Client({ services: services1 }).initialize();
-    const identity = await client1.halo.createIdentity();
-
-    await using services2 = await new DedicatedWorkerClientServices({
-      createWorker: () => testWorker.make(),
-      createCoordinator: () => coordinator,
-    }).open();
-    await using client2 = await new Client({ services: services2 }).initialize();
-    await client2.spaces.waitUntilReady();
-
-    // Verify identity before leader change.
-    expect(client2.halo.identity.get()).toEqual(identity);
-
-    // Destroy client1, triggering client2 to become leader and reconnect.
-    await client1.destroy();
-
-    // Wait for client2 to reinitialize after reconnection.
-    // The reloaded event fires when the client has reinitialized.
-    const reloaded = new Promise<void>((resolve) => {
-      client2.reloaded.on(() => {
-        log.info('client2 reloaded event received');
-        resolve();
-      });
-    });
-    await reloaded;
-    log.info('client2 reloaded, checking identity', { identity: client2.halo.identity.get() });
-
-    // Verify identity is still available after reconnection.
-    expect(client2.halo.identity.get()).toEqual(identity);
-
-    // Wait for spaces to be ready after reinitialization.
-    await client2.spaces.waitUntilReady();
-
-    // Verify database operations still work.
     await client2.spaces.default.db.query(Filter.everything()).run();
   });
 

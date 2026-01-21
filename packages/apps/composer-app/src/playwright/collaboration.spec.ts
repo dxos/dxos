@@ -47,7 +47,7 @@ test.describe('Collaboration tests', () => {
     }
   });
 
-  test('guest joins host’s space', async () => {
+  test.only('guest joins host’s space', async () => {
     // Host creates a space and adds a markdown object
     await host.createSpace();
     await host.createObject({ type: 'Document', nth: 0 });

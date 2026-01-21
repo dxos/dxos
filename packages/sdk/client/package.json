@@ -9,6 +9,14 @@
   "author": "DXOS.org",
   "sideEffects": true,
   "type": "module",
+  "imports": {
+    "#coordinator-worker": {
+      "source": "./src/services/dedicated/coordinator-worker-entrypoint.ts",
+      "types": "./dist/types/src/services/dedicated/coordinator-worker-entrypoint.d.ts",
+      "browser": "./dist/lib/browser/services/dedicated/coordinator-worker-entrypoint.mjs",
+      "node": "./dist/lib/node-esm/services/dedicated/coordinator-worker-entrypoint.mjs"
+    }
+  },
   "exports": {
     "./devtools": {
       "source": "./src/devtools/index.ts",
@@ -75,13 +83,6 @@
       "browser": "./dist/lib/browser/services/dedicated/worker-entrypoint.mjs"
     },
     "./coordinator-worker": {
-      "source": "./src/services/dedicated/coordinator-worker-entrypoint.ts",
-      "types": "./dist/types/src/services/dedicated/coordinator-worker-entrypoint.d.ts",
-      "browser": "./dist/lib/browser/services/dedicated/coordinator-worker-entrypoint.mjs"
-    }
-  },
-  "imports": {
-    "#coordinator-worker": {
       "source": "./src/services/dedicated/coordinator-worker-entrypoint.ts",
       "types": "./dist/types/src/services/dedicated/coordinator-worker-entrypoint.d.ts",
       "browser": "./dist/lib/browser/services/dedicated/coordinator-worker-entrypoint.mjs"

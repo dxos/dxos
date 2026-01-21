@@ -116,6 +116,8 @@ export class Client {
   private _shellClientProxy?: ProtoRpcPeer<ClientServices>;
   private _edgeClient?: EdgeHttpClient = undefined;
   private _queuesService?: QueueService = undefined;
+  private _serviceHandlersRegistered = false;
+  private _softClosePromise?: Promise<void>;
 
   constructor(options: ClientOptions = {}) {
     if (
@@ -390,24 +392,69 @@ export class Client {
 
     // TODO(dmaretskyi): Use Trigger.throw()
     const trigger = new Trigger<Error | undefined>();
-    this._services.closed?.on(async (error) => {
-      log('terminated', { resetting: this._resetting });
-      if (
-        error instanceof ApiError ||
-        error instanceof InvalidConfigError ||
-        error instanceof AuthorizationError ||
-        error instanceof RemoteServiceConnectionError ||
-        error instanceof RemoteServiceConnectionTimeout
-      ) {
-        log.error('fatal', { error });
-        trigger.wake(error);
-      }
-      if (!this._resetting) {
-        await this._close();
-        await this._open();
-        this.reloaded.emit();
-      }
-    });
+
+    // Register service event handlers only once to avoid duplicate handlers on reconnection.
+    if (!this._serviceHandlersRegistered) {
+      this._serviceHandlersRegistered = true;
+
+      this._services.closed?.on(async (error) => {
+        log('terminated', { resetting: this._resetting });
+        if (
+          error instanceof ApiError ||
+          error instanceof InvalidConfigError ||
+          error instanceof AuthorizationError ||
+          error instanceof RemoteServiceConnectionError ||
+          error instanceof RemoteServiceConnectionTimeout
+        ) {
+          log.error('fatal', { error });
+          trigger.wake(error);
+        }
+        if (!this._resetting) {
+          await this._close();
+          await this._open();
+          this.reloaded.emit();
+        }
+      });
+
+      // Listen for reconnection events (specific to DedicatedWorkerClientServices).
+      // On disconnecting, soft-close immediately to stop using old services.
+      // On reconnected, wait for soft-close to complete, then open with new services.
+      const servicesWithReconnect = this._services as {
+        disconnecting?: Event<void>;
+        reconnected?: Event<void>;
+      };
+      servicesWithReconnect.disconnecting?.on(() => {
+        log.info('services disconnecting, soft closing client');
+        if (!this._resetting) {
+          // Start soft-close and save the promise so reconnected handler can wait.
+          // Errors during soft close are expected since services are dying.
+          this._softClosePromise = this._softClose().catch((err) => {
+            log.warn('soft close during disconnection failed (expected)', { err });
+          });
+        }
+      });
+      servicesWithReconnect.reconnected?.on(async () => {
+        log.info('services reconnected, reinitializing client');
+        if (!this._resetting) {
+          // ALWAYS soft-close before reopening, even if disconnecting didn't fire.
+          // This handles race conditions where reconnected fires without disconnecting.
+          // Without this, _open() would be called on already-open proxies, causing bad state.
+          if (this._softClosePromise) {
+            log.info('waiting for soft close to complete');
+            await this._softClosePromise;
+            this._softClosePromise = undefined;
+          } else {
+            log.info('soft close not started, starting now');
+            await this._softClose().catch((err) => {
+              log.warn('soft close failed (expected during reconnection)', { err });
+            });
+          }
+          await this._open();
+          this.reloaded.emit();
+        }
+      });
+    }
+
     await this._services.open();
 
     const edgeUrl = this._config!.get('runtime.services.edge.url');
@@ -425,19 +472,23 @@ export class Client {
     });
     await this._echoClient.open(this._ctx);
 
-    const mesh = new MeshProxy(this._services, this._instanceId);
-    const halo = new HaloProxy(this._services, this._instanceId);
-    const spaces = new SpaceList(this._config, this._services, this._echoClient, halo, this._instanceId);
+    // Reuse existing runtime and proxies for stable observables across reconnections.
+    // This ensures UI subscriptions continue to work after leader changes.
+    if (!this._runtime) {
+      const mesh = new MeshProxy(this._services, this._instanceId);
+      const halo = new HaloProxy(this._services, this._instanceId);
+      const spaces = new SpaceList(this._config, this._services, this._echoClient, halo, this._instanceId);
 
-    const shell = this._shellManager
-      ? new Shell({
-          shellManager: this._shellManager,
-          identity: halo.identity,
-          devices: halo.devices,
-          spaces,
-        })
-      : undefined;
-    this._runtime = new ClientRuntime({ spaces, halo, mesh, shell });
+      const shell = this._shellManager
+        ? new Shell({
+            shellManager: this._shellManager,
+            identity: halo.identity,
+            devices: halo.devices,
+            spaces,
+          })
+        : undefined;
+      this._runtime = new ClientRuntime({ spaces, halo, mesh, shell });
+    }
 
     invariant(this._services.services.SystemService, 'SystemService is not available.');
     this._statusStream = this._services.services.SystemService.queryStatus({ interval: 3_000 });
@@ -520,13 +571,30 @@ export class Client {
 
   private async _close(): Promise<void> {
     log('closing...');
-    this._statusTimeout && clearTimeout(this._statusTimeout);
-    await this._statusStream?.close();
-    await this._runtime?.close();
-    await this._echoClient.close(this._ctx);
+    await this._softClose();
     await this._services?.close();
-    this._edgeClient = undefined;
     log('closed');
+  }
+
+  /**
+   * Close internal state without closing the services provider.
+   * Used during reconnection to reinitialize with new service bindings.
+   * Errors are caught individually since services may be unavailable during reconnection.
+   */
+  private async _softClose(): Promise<void> {
+    log('soft closing...');
+    this._statusTimeout && clearTimeout(this._statusTimeout);
+    await this._statusStream?.close().catch((err) => {
+      log.warn('failed to close status stream (expected during reconnection)', { err });
+    });
+    await this._runtime?.close().catch((err) => {
+      log.warn('failed to close runtime (expected during reconnection)', { err });
+    });
+    await this._echoClient.close(this._ctx).catch((err) => {
+      log.warn('failed to close echo client (expected during reconnection)', { err });
+    });
+    this._edgeClient = undefined;
+    log('soft closed');
   }
 
   /**

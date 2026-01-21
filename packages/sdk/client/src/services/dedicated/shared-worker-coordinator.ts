@@ -1,4 +1,9 @@
+//
+// Copyright 2026 DXOS.org
+//
+
 import { Event } from '@dxos/async';
+
 import type { WorkerCoordinator, WorkerCoordinatorMessage } from './types';
 
 // `#coordinator-worker` resolves via package.json imports to a module in this package.

@@ -1,17 +1,24 @@
 // Entrypoint for dedicated worker.
 
-import { log } from '@dxos/log';
-import type { DedicatedWorkerMessage } from './types';
-import { STORAGE_LOCK_KEY } from '../../lock-key';
+//
+// Copyright 2026 DXOS.org
+//
+
 import { WorkerRuntime } from '@dxos/client-services';
 import { Config } from '@dxos/config';
+import { log } from '@dxos/log';
 import { createWorkerPort } from '@dxos/rpc-tunnel';
 
-log.info('worker-entrypoint 123');
+import { STORAGE_LOCK_KEY } from '../../lock-key';
+
+import type { DedicatedWorkerMessage } from './types';
+
+const workerId = crypto.randomUUID().slice(0, 8);
+log.info('worker-entrypoint starting', { workerId });
 
 // Lock ensures only a single worker is running.
 void navigator.locks.request(STORAGE_LOCK_KEY, async () => {
-  log.info('worker-entrypoint: lock acquired');
+  log.info('worker-entrypoint: lock acquired', { workerId });
 
   let runtime: WorkerRuntime;
   let owningClientId: string;
@@ -27,12 +34,14 @@ void navigator.locks.request(STORAGE_LOCK_KEY, async () => {
     log.info('worker got message', { type: message.type });
     switch (message.type) {
       case 'init': {
+        log.info('worker received init', { workerId, clientId: message.clientId });
         owningClientId = message.clientId;
         runtime = new WorkerRuntime({
           configProvider: async () => {
             return new Config({}); // TODO(dmaretsky): Take using an rpc message from spawning process.
           },
           onStop: async () => {
+            log.info('worker runtime stopping', { workerId });
             // Close the shared worker, lock will be released automatically.
             self.close();
             releaseLock();
@@ -43,7 +52,9 @@ void navigator.locks.request(STORAGE_LOCK_KEY, async () => {
           automaticallyConnectWebrtc: false,
           enableFullTextIndexing: true,
         });
+        log.info('worker runtime starting', { workerId });
         await runtime.start();
+        log.info('worker runtime started', { workerId, livenessLockKey: runtime.livenessLockKey });
         self.postMessage({
           type: 'ready',
           livenessLockKey: runtime.livenessLockKey,
@@ -51,8 +62,9 @@ void navigator.locks.request(STORAGE_LOCK_KEY, async () => {
         break;
       }
       case 'start-session': {
+        log.info('worker start-session', { workerId, clientId: message.clientId, tabsProcessed: Array.from(tabsProcessed) });
         if (tabsProcessed.has(message.clientId)) {
-          log.info('ignoring duplicate client');
+          log.info('ignoring duplicate client', { workerId, clientId: message.clientId });
           break;
         }
         tabsProcessed.add(message.clientId);
@@ -72,10 +84,12 @@ void navigator.locks.request(STORAGE_LOCK_KEY, async () => {
 
         // Will block until the other side finishes the handshake.
         {
+          log.info('worker creating session', { workerId, clientId: message.clientId });
           const session = await runtime.createSession({
             systemPort: createWorkerPort({ port: systemChannel.port2 }),
             appPort: createWorkerPort({ port: appChannel.port2 }),
           });
+          log.info('worker session created', { workerId, clientId: message.clientId, isOwner: message.clientId === owningClientId });
           if (message.clientId === owningClientId) {
             runtime.connectWebrtcBridge(session);
           }

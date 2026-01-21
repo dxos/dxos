@@ -28,9 +28,23 @@ export default Capability.makeModule(
       log('called client initialized callback');
 
       // TODO(wittjosiah): Remove. This is a hack to get the app to boot with the new identity after a reset.
+      // Track if we've seen identity before - only redirect after a reset (when identity was null then becomes available).
+      let hadIdentityBeforeReload = client.halo.identity.get() != null;
       client.reloaded.on(() => {
+        log.info('CLIENT RELOADED EVENT FIRED', { hadIdentityBeforeReload });
+        // If we had identity before reload, this is a reconnection (not a reset).
+        // Don't redirect - the identity will be loaded from the new services.
+        if (hadIdentityBeforeReload) {
+          log.info('reconnection detected (had identity before), skipping redirect');
+          return;
+        }
+        // This is a reset - we didn't have identity before.
+        // Subscribe and redirect when identity becomes available.
         client.halo.identity.subscribe(async (identity) => {
+          log.info('identity subscription callback', { identity: identity?.did });
           if (identity) {
+            log.info('identity found after reset, redirecting page');
+            hadIdentityBeforeReload = true;
             window.location.href = window.location.origin;
           }
         });

@@ -1,4 +1,9 @@
+//
+// Copyright 2026 DXOS.org
+//
+
 import { log } from '@dxos/log';
+
 import type { WorkerCoordinatorMessage } from './types';
 
 const ports = new Set<MessagePort>();

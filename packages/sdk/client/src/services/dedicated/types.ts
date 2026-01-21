@@ -1,4 +1,7 @@
-import type { MaybePromise } from '@dxos/util';
+//
+// Copyright 2026 DXOS.org
+//
+
 import type { Event } from '@dxos/async';
 
 /**
