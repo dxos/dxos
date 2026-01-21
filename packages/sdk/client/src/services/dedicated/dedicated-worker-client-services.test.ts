@@ -1,21 +1,22 @@
+//
+// Copyright 2026 DXOS.org
+//
+
 import { describe, expect, test } from 'vitest';
-import { DedicatedWorkerClientServices } from './dedicated-worker-client-services';
-import { Resource } from '@dxos/context';
-import { log } from '@dxos/log';
-import type {
-  DedicatedWorkerInitMessage,
-  DedicatedWorkerMessage,
-  WorkerCoordinator,
-  WorkerCoordinatorMessage,
-} from './types';
-import { STORAGE_LOCK_KEY } from '../../lock-key';
+
 import { WorkerRuntime } from '@dxos/client-services';
 import { Config } from '@dxos/config';
-import { createWorkerPort } from '@dxos/rpc-tunnel';
-import { Client } from '../../client';
+import { Resource } from '@dxos/context';
 import { Filter, Obj, Type } from '@dxos/echo';
-import { Event, sleep } from '@dxos/async';
+import { log } from '@dxos/log';
+import { createWorkerPort } from '@dxos/rpc-tunnel';
+
+import { Client } from '../../client';
+import { STORAGE_LOCK_KEY } from '../../lock-key';
+
+import { DedicatedWorkerClientServices } from './dedicated-worker-client-services';
 import { MemoryWorkerCoordiantor } from './memory-coordinator';
+import type { DedicatedWorkerMessage } from './types';
 
 /**
  * In-thread worker for testing purposes.
@@ -109,7 +110,7 @@ class TestWorkerFactory extends Resource {
 describe('DedicatedWorkerClientServices', { timeout: 1_000, retry: 0 }, () => {
   test('open & close', async () => {
     await using testWorker = await new TestWorkerFactory().open();
-    await using services = await new DedicatedWorkerClientServices({
+    await using _services = await new DedicatedWorkerClientServices({
       createWorker: () => testWorker.make(),
       createCoordinator: () => new MemoryWorkerCoordiantor(),
     }).open();

@@ -7,11 +7,11 @@ import UAParser from 'ua-parser-js';
 import { type ClientServicesProvider } from '@dxos/client-protocol';
 import { type Config } from '@dxos/config';
 
+import { type DedeciatedWorkerClientServicesOptions, DedicatedWorkerClientServices } from './dedicated';
+import { SharedWorkerCoordinator } from './dedicated';
 import { type LocalClientServicesParams, fromHost } from './local-client-services';
 import { fromSocket } from './socket';
 import { type WorkerClientServicesProps, fromWorker } from './worker-client-services';
-import { DedicatedWorkerClientServices, type DedeciatedWorkerClientServicesOptions } from './dedicated';
-import { SharedWorkerCoordinator } from './dedicated';
 
 /**
  * Create services from config.

@@ -1,11 +1,17 @@
 // Entrypoint for dedicated worker.
 
-import { log } from '@dxos/log';
-import type { DedicatedWorkerMessage } from './types';
-import { STORAGE_LOCK_KEY } from '../../lock-key';
+//
+// Copyright 2026 DXOS.org
+//
+
 import { WorkerRuntime } from '@dxos/client-services';
 import { Config } from '@dxos/config';
+import { log } from '@dxos/log';
 import { createWorkerPort } from '@dxos/rpc-tunnel';
+
+import { STORAGE_LOCK_KEY } from '../../lock-key';
+
+import type { DedicatedWorkerMessage } from './types';
 
 log.info('worker-entrypoint 123');
 

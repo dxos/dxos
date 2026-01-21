@@ -113,7 +113,7 @@ export class WorkerRuntime {
   async start(): Promise<void> {
     log('starting...');
     try {
-      await this._livenessLock.acquire();
+      void this._livenessLock.acquire();
 
       // Steal the lock from the other worker.
       this._broadcastChannel = new BroadcastChannel(this._channel);
@@ -279,8 +279,8 @@ class WebLockWrapper {
     return this.#key;
   }
 
-  async acquire(options: LockOptions = {}) {
-    navigator.locks.request(this.#key, options, async () => {
+  acquire(options: LockOptions = {}) {
+    return navigator.locks.request(this.#key, options, async () => {
       await new Promise<void>((resolve) => {
         this.#release = resolve;
       }); // Blocks for the duration of the worker's lifetime.

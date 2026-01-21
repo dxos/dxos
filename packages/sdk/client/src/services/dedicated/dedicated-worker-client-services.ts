@@ -1,14 +1,20 @@
-import { Event, scheduleTaskInterval, Trigger } from '@dxos/async';
-import { clientServiceBundle, type ClientServices, type ClientServicesProvider } from '@dxos/client-protocol';
+//
+// Copyright 2026 DXOS.org
+//
+
+import { Event, Trigger, scheduleTaskInterval } from '@dxos/async';
+import { type ClientServices, type ClientServicesProvider, clientServiceBundle } from '@dxos/client-protocol';
 import { Config } from '@dxos/config';
-import { Context, Resource } from '@dxos/context';
+import { type Context, Resource } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import type { ServiceBundle } from '@dxos/rpc';
 import { createWorkerPort } from '@dxos/rpc-tunnel';
 import type { MaybePromise } from '@dxos/util';
+
 import { ClientServicesProxy } from '../service-proxy';
 import { SharedWorkerConnection } from '../shared-worker-connection';
+
 import {
   type DedicatedWorkerMessage,
   type DedicatedWorkerReadyMessage,
