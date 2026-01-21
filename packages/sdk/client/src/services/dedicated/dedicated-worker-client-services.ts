@@ -118,16 +118,18 @@ export class DedicatedWorkerClientServices extends Resource implements ClientSer
         }
 
         const leaderStopped = new Trigger();
+        await using ctx = this._ctx.derive();
 
         try {
           log.info('trying to connect');
-          await using ctx = this._ctx.derive();
+          const connectionCtx = ctx.derive();
           const { appPort, systemPort, leaderId, livenessLockKey } = await new Promise<
             WorkerCoordinatorMessage & { type: 'provide-port' }
           >((resolve) => {
             invariant(this.#coordinator);
             this.#coordinator.onMessage.on((message) => {
               if (message.type === 'provide-port' && message.clientId === this.#clientId) {
+                void connectionCtx.dispose();
                 resolve(message);
               }
             });
@@ -136,7 +138,7 @@ export class DedicatedWorkerClientServices extends Resource implements ClientSer
               clientId: this.#clientId,
             });
             scheduleTaskInterval(
-              ctx,
+              connectionCtx,
               async () => {
                 this.#coordinator?.sendMessage({
                   type: 'request-port',
