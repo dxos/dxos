@@ -98,6 +98,7 @@ export class AsyncTask {
    * Context of the resource that owns the task.
    * When the context is disposed, the task is cancelled and cannot be scheduled again.
    */
+  // TODO(dmaretskyi): We don't really need to pass ctx in here, since close will also signal dispose.
   open(ctx: Context): void {
     this.#ctx = ctx;
   }
