@@ -156,7 +156,8 @@ describe('DedicatedWorkerClientServices', { timeout: 1_000, retry: 0 }, () => {
     // expect(objects[0]).toEqual(object);
   });
 
-  test('leader goes from first client to second', async () => {
+  test('leader goes from first client to second',  async () => {
+    log.break();
     const coordinator = new MemoryWorkerCoordiantor();
     await using testWorker = await new TestWorkerFactory().open();
     await using services1 = await new DedicatedWorkerClientServices({
@@ -177,5 +178,6 @@ describe('DedicatedWorkerClientServices', { timeout: 1_000, retry: 0 }, () => {
     await client1.destroy();
 
     await client2.spaces.default.db.query(Filter.everything()).run();
+    log.break();
   });
 });

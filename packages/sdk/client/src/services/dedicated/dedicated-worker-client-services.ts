@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Event, Trigger, scheduleTaskInterval } from '@dxos/async';
+import { DeferredTask, Event, Trigger, scheduleTaskInterval } from '@dxos/async';
 import { type ClientServices, type ClientServicesProvider, clientServiceBundle } from '@dxos/client-protocol';
 import { Config } from '@dxos/config';
 import { type Context, Resource } from '@dxos/context';
@@ -64,11 +64,14 @@ export class DedicatedWorkerClientServices extends Resource implements ClientSer
   override async _open(): Promise<void> {
     this.#coordinator = await this.#createCoordinator();
     this.#watchLeader();
-    this.#reconnectLoop();
+    this.#connectTask = new DeferredTask(this._ctx, async () => this.#connectClient());
+    await this.#connectTask.runBlocking();
     await this.#initialConnection.wait();
   }
 
   override async _close(): Promise<void> {
+    await this.#connectTask?.join();
+    this.#connectTask = undefined;
     await this.#services?.close();
     await this.#connection?.close();
     await this.#leaderSession?.close();
@@ -107,92 +110,85 @@ export class DedicatedWorkerClientServices extends Resource implements ClientSer
     });
   }
 
-  /**
-   * Constantly reconnects as the leader changes.
-   */
-  #reconnectLoop() {
-    queueMicrotask(async () => {
-      while (true) {
-        if (this._ctx.disposed) {
-          break;
-        }
+  #connectTask?: DeferredTask | undefined = undefined;
+  async #connectClient() {
+    const ctx = this._ctx.derive();
 
-        const leaderStopped = new Trigger();
-        await using ctx = this._ctx.derive();
+    const handleLeaderStopped = () => {
+      ctx.dispose();
+      log.info('lost connection');
 
-        try {
-          log.info('trying to connect');
-          const connectionCtx = ctx.derive();
-          const { appPort, systemPort, leaderId, livenessLockKey } = await new Promise<
-            WorkerCoordinatorMessage & { type: 'provide-port' }
-          >((resolve) => {
-            invariant(this.#coordinator);
-            this.#coordinator.onMessage.on((message) => {
-              if (message.type === 'provide-port' && message.clientId === this.#clientId) {
-                void connectionCtx.dispose();
-                resolve(message);
-              }
-            });
-            this.#coordinator.sendMessage({
+      this.#connectTask?.schedule();
+    };
+
+    try {
+      log.info('trying to connect');
+      const pollingCtx = ctx.derive();
+      const { appPort, systemPort, leaderId, livenessLockKey } = await new Promise<
+        WorkerCoordinatorMessage & { type: 'provide-port' }
+      >((resolve) => {
+        invariant(this.#coordinator);
+        this.#coordinator.onMessage.on((message) => {
+          if (message.type === 'provide-port' && message.clientId === this.#clientId) {
+            void pollingCtx.dispose();
+            resolve(message);
+          }
+        });
+        this.#coordinator.sendMessage({
+          type: 'request-port',
+          clientId: this.#clientId,
+        });
+        scheduleTaskInterval(
+          pollingCtx,
+          async () => {
+            this.#coordinator?.sendMessage({
               type: 'request-port',
               clientId: this.#clientId,
             });
-            scheduleTaskInterval(
-              connectionCtx,
-              async () => {
-                this.#coordinator?.sendMessage({
-                  type: 'request-port',
-                  clientId: this.#clientId,
-                });
-              },
-              500,
-            );
-          });
-          log.info('connected to worker', { leaderId });
+          },
+          500,
+        );
+      });
+      log.info('connected to worker', { leaderId });
 
-          queueMicrotask(async () => {
-            try {
-              await navigator.locks.request(livenessLockKey, { mode: 'exclusive', signal: ctx.signal }, async () => {
-                leaderStopped.wake();
-              });
-            } catch (err: any) {
-              if (isAbortError(err)) {
-                return;
-              }
-              log.catch(err);
-            }
+      queueMicrotask(async () => {
+        try {
+          await navigator.locks.request(livenessLockKey, { mode: 'exclusive', signal: ctx.signal }, async () => {
+            handleLeaderStopped();
           });
-          this.#coordinator!.onMessage.on(ctx, (msg) => {
-            if (msg.type === 'new-leader' && msg.leaderId !== leaderId) {
-              leaderStopped.wake();
-            }
-          });
-
-          this.#connection = new SharedWorkerConnection({
-            // TODO(dmaretskyi): Config management.
-            config: new Config(),
-            systemPort: createWorkerPort({ port: systemPort }),
-          });
-          log('opening SharedWorkerConnection');
-          await this.#connection.open({
-            origin: typeof location !== 'undefined' ? location.origin : 'unknown',
-          });
-          log('opened SharedWorkerConnection');
-
-          this.#services = new ClientServicesProxy(createWorkerPort({ port: appPort }));
-          await this.#services.open();
-          this.#initialConnection.wake();
         } catch (err: any) {
-          this.#initialConnection.throw(err);
+          if (isAbortError(err)) {
+            return;
+          }
           log.catch(err);
-          continue;
         }
-        // Wait until the leader stops.
-        await leaderStopped.wait();
+      });
+      this.#coordinator!.onMessage.on(ctx, (msg) => {
+        if (msg.type === 'new-leader' && msg.leaderId !== leaderId) {
+          handleLeaderStopped();
+        }
+      });
 
-        log.info('lost connection');
-      }
-    });
+      this.#connection = new SharedWorkerConnection({
+        // TODO(dmaretskyi): Config management.
+        config: new Config(),
+        systemPort: createWorkerPort({ port: systemPort }),
+      });
+      log('opening SharedWorkerConnection');
+      await this.#connection.open({
+        origin: typeof location !== 'undefined' ? location.origin : 'unknown',
+      });
+      log('opened SharedWorkerConnection');
+
+      this.#services = new ClientServicesProxy(createWorkerPort({ port: appPort }));
+      await this.#services.open();
+      this.#initialConnection.wake();
+    } catch (err: any) {
+      this.#initialConnection.throw(err);
+      log.catch(err);
+      void ctx.dispose();
+      this.#connectTask?.schedule();
+    }
   }
 }
 
