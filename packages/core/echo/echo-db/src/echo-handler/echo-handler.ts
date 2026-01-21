@@ -90,6 +90,7 @@ import {
   symbolNamespace,
   symbolPath,
 } from './echo-proxy-target';
+import { createArrayMethodError, createPropertyDeleteError, createPropertySetError } from './errors';
 
 /**
  * Shared for all targets within one ECHO object.
@@ -272,10 +273,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     // Check readonly enforcement for ECHO objects.
     const core = target[symbolInternals].core;
     if (!isInChangeContext(core)) {
-      throw new Error(
-        `Cannot modify ECHO object property "${String(prop)}" outside of Obj.change(). ` +
-          `Use Obj.change(obj, (mutableObj) => { mutableObj.${String(prop)} = value; }) instead.`,
-      );
+      throw createPropertySetError(prop);
     }
 
     if (target instanceof EchoArray && prop === 'length') {
@@ -551,10 +549,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     // Check readonly enforcement for ECHO objects.
     const core = target[symbolInternals].core;
     if (!isInChangeContext(core)) {
-      throw new Error(
-        `Cannot delete ECHO object property "${String(property)}" outside of Obj.change(). ` +
-          `Use Obj.change(obj, (mutableObj) => { delete mutableObj.${String(property)}; }) instead.`,
-      );
+      throw createPropertyDeleteError(property);
     }
 
     if (target instanceof EchoArray) {
@@ -687,10 +682,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
   private _checkArrayMutationAllowed(target: Live<ProxyTarget>, method: string): void {
     const core = target[symbolInternals].core;
     if (!isInChangeContext(core)) {
-      throw new Error(
-        `Cannot call array.${method}() on ECHO object outside of Obj.change(). ` +
-          `Use Obj.change(obj, (mutableObj) => { mutableObj.array.${method}(...); }) instead.`,
-      );
+      throw createArrayMethodError(method);
     }
   }
 

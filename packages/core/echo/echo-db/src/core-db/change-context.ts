@@ -5,16 +5,18 @@
 import type { ObjectCore } from './object-core';
 
 /**
- * Tracks which ObjectCore instances are currently open for mutation within an `Obj.change` context.
- * Uses WeakSet to allow garbage collection of ObjectCore instances.
+ * Tracks the ObjectCore currently open for mutation within an `Obj.change` context.
+ * Since change is synchronous and nested Obj.change calls are prohibited,
+ * there can only be one object being changed at a time.
  */
-const changeContexts = new WeakSet<ObjectCore>();
+let currentChangeContext: ObjectCore | null = null;
 
 /**
- * Deferred notifications to be fired when the change context exits.
- * Maps ObjectCore to whether it has pending notifications.
+ * The ObjectCore that has pending notifications, if any.
+ * This is separate from currentChangeContext because notifications need to be
+ * checked and cleared after the change context exits.
  */
-const deferredNotifications = new WeakMap<ObjectCore, boolean>();
+let pendingNotificationCore: ObjectCore | null = null;
 
 /**
  * Enter a change context for the given ObjectCore.
@@ -24,9 +26,9 @@ const deferredNotifications = new WeakMap<ObjectCore, boolean>();
  * @returns A cleanup function that exits the change context.
  */
 export const enterChangeContext = (core: ObjectCore): (() => void) => {
-  changeContexts.add(core);
+  currentChangeContext = core;
   return () => {
-    changeContexts.delete(core);
+    currentChangeContext = null;
   };
 };
 
@@ -37,7 +39,7 @@ export const enterChangeContext = (core: ObjectCore): (() => void) => {
  * @returns True if the ObjectCore is in a change context, false otherwise.
  */
 export const isInChangeContext = (core: ObjectCore): boolean => {
-  return changeContexts.has(core);
+  return currentChangeContext === core;
 };
 
 /**
@@ -46,7 +48,9 @@ export const isInChangeContext = (core: ObjectCore): boolean => {
  * @param core - The ObjectCore to queue a notification for.
  */
 export const queueNotification = (core: ObjectCore): void => {
-  deferredNotifications.set(core, true);
+  if (currentChangeContext === core) {
+    pendingNotificationCore = core;
+  }
 };
 
 /**
@@ -56,7 +60,7 @@ export const queueNotification = (core: ObjectCore): void => {
  * @returns True if there are pending notifications, false otherwise.
  */
 export const hasPendingNotifications = (core: ObjectCore): boolean => {
-  return deferredNotifications.get(core) === true;
+  return pendingNotificationCore === core;
 };
 
 /**
@@ -65,5 +69,7 @@ export const hasPendingNotifications = (core: ObjectCore): boolean => {
  * @param core - The ObjectCore to clear notifications for.
  */
 export const clearPendingNotifications = (core: ObjectCore): void => {
-  deferredNotifications.delete(core);
+  if (pendingNotificationCore === core) {
+    pendingNotificationCore = null;
+  }
 };
