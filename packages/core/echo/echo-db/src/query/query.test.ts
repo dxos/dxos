@@ -262,7 +262,7 @@ describe('Query', () => {
       await createObjects(peer, db, { count: 3 });
 
       expect((await db.query(Query.select(Filter.everything())).run()).length).to.eq(3);
-      root = db.coreDatabase._automergeDocLoader.getSpaceRootDocHandle().url;
+      root = db.coreDatabase._automergeDocLoader.getSpaceRootDocHandle().url!;
       await peer.close();
     }
 
@@ -295,7 +295,7 @@ describe('Query', () => {
         doc.links![obj1.id] = 'automerge:4hjTgo9zLNsfRTJiLcpPY8P4smy';
       });
       await db.flush();
-      root = rootDocHandle.url;
+      root = rootDocHandle.url!;
       expectedObjectId = obj2.id;
       await peer.close();
     }
@@ -334,13 +334,13 @@ describe('Query', () => {
         doc.objects![obj1.id] = obj1DocHandle.doc()!.objects![obj1.id];
       });
       rootDocHandle.change((doc: DatabaseDirectory) => {
-        doc.links![obj1.id] = new A.RawString(anotherDocHandle.url);
+        doc.links![obj1.id] = new A.RawString(anotherDocHandle.url!);
       });
       await db.flush();
       await peer.host.queryService.reindex();
 
-      root = rootDocHandle.url;
-      assertion = { objectId: obj2.id, documentUrl: anotherDocHandle.url };
+      root = rootDocHandle.url!;
+      assertion = { objectId: obj2.id, documentUrl: anotherDocHandle.url! };
     }
 
     await peer.reload();

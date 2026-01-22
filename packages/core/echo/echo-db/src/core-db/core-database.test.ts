@@ -110,7 +110,7 @@ describe('CoreDatabase', () => {
       const db = await createClientDbInSpaceWithObject(createTextObject());
       const newRootDocHandle = await createTestRootDoc(db.coreDatabase._repo);
       const newObject = addObjectToDoc(newRootDocHandle, { id: ObjectId.random(), title: 'title ' });
-      await db.setSpaceRoot(newRootDocHandle.url);
+      await db.setSpaceRoot(newRootDocHandle.url!);
       const retrievedObject = db.getObjectById(newObject.id);
       expect((retrievedObject as any).title).to.eq(newObject.title);
     });
@@ -164,7 +164,7 @@ describe('CoreDatabase', () => {
       // trigger loading but don't wait for it to finish
       db.getObjectById(partiallyLoadedDocumentId);
 
-      await db.setSpaceRoot(newRootDocHandle.url);
+      await db.setSpaceRoot(newRootDocHandle.url!);
       db.getObjectById(loadedDocumentId);
       expect(db.getObjectById(loadedDocumentId)).not.to.be.undefined;
       expect(db.getObjectById(notLoadedDocumentId)).to.be.undefined;

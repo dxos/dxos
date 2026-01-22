@@ -33,7 +33,7 @@ describe('RepoProxy', () => {
     await clientHandle.whenReady();
     log.break();
 
-    const hostHandle = await host.loadDoc<{ text: string }>(Context.default(), clientHandle.url);
+    const hostHandle = await host.loadDoc<{ text: string }>(Context.default(), clientHandle.url!);
     log.break();
     await hostHandle.whenReady();
 
@@ -93,7 +93,7 @@ describe('RepoProxy', () => {
     await handle1.whenReady();
     await repo1.flush();
 
-    const handle2 = repo2.find<{ text: string }>(handle1.url);
+    const handle2 = repo2.find<{ text: string }>(handle1.url!);
     await handle2.whenReady();
     expect(handle2.doc()?.text).to.equal(text);
     await peer1.host.flush();
@@ -225,7 +225,7 @@ describe('RepoProxy', () => {
 
     const handle = clientRepo.create<{ client: number; host: number }>();
     await handle.whenReady();
-    const hostHandle = await host.loadDoc<{ client: number; host: number }>(Context.default(), handle.url);
+    const hostHandle = await host.loadDoc<{ client: number; host: number }>(Context.default(), handle.url!);
 
     const numberOfUpdates = 1000;
     for (let i = 1; i <= numberOfUpdates; i++) {
@@ -264,7 +264,7 @@ describe('RepoProxy', () => {
     await cloneHandle.whenReady();
     expect(cloneHandle.doc()?.text).to.equal(text);
 
-    const hostHandle = await host.loadDoc<{ text: string }>(Context.default(), cloneHandle.url);
+    const hostHandle = await host.loadDoc<{ text: string }>(Context.default(), cloneHandle.url!);
     await hostHandle.whenReady();
     await expect.poll(() => hostHandle.doc()?.text).toEqual(text);
   });
@@ -298,7 +298,7 @@ describe('RepoProxy', () => {
     await Promise.all(handles.map((handle) => handle.whenReady()));
 
     const hostHandles = await Promise.all(
-      handles.map(async (handle) => host.loadDoc<{ text: string }>(Context.default(), handle.url)),
+      handles.map(async (handle) => host.loadDoc<{ text: string }>(Context.default(), handle.url!)),
     );
 
     for (const handle of hostHandles) {
@@ -339,22 +339,22 @@ describe('RepoProxy', () => {
 
     // Replicate documents from repo1 to repo2.
     for (const handle of handles1) {
-      const foundHandle = repo2.find<DocStruct>(handle.url);
+      const foundHandle = repo2.find<DocStruct>(handle.url!);
       await foundHandle.whenReady();
       foundHandle.change((doc: DocStruct) => {
         doc.text2 = text2;
       });
-      handles2.push(repo2.find<DocStruct>(handle.url));
+      handles2.push(repo2.find<DocStruct>(handle.url!));
     }
 
     // Replicate documents from repo2 to repo1.
     for (const handle of handles2) {
-      const foundHandle = repo1.find<DocStruct>(handle.url);
+      const foundHandle = repo1.find<DocStruct>(handle.url!);
       await foundHandle.whenReady();
       foundHandle.change((doc: DocStruct) => {
         doc.text1 = text1;
       });
-      handles1.push(repo1.find<DocStruct>(handle.url));
+      handles1.push(repo1.find<DocStruct>(handle.url!));
     }
 
     // Check that all documents are replicated.

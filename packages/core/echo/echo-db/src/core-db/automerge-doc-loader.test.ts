@@ -48,7 +48,7 @@ describe('AutomergeDocumentLoader', () => {
     const handle = repo.create<DatabaseDirectory>();
     await handle.whenReady();
     const docLoadInfo = waitForDocumentLoad(loader, { objectId, handle });
-    loadLinkedObjects(loader, { [objectId]: handle.url });
+    loadLinkedObjects(loader, { [objectId]: handle.url! });
     await sleep(10);
     expect(docLoadInfo.loaded).to.be.true;
   });
@@ -60,7 +60,7 @@ describe('AutomergeDocumentLoader', () => {
     const newDocHandle = repo.create<DatabaseDirectory>();
     await Promise.all([oldDocHandle.whenReady(), newDocHandle.whenReady()]);
     const docLoadInfo = waitForDocumentLoad(loader, { objectId, handle: oldDocHandle });
-    loadLinkedObjects(loader, { [objectId]: oldDocHandle.url });
+    loadLinkedObjects(loader, { [objectId]: oldDocHandle.url! });
     loader.onObjectBoundToDocument(newDocHandle, objectId);
     await sleep(10);
     expect(docLoadInfo.loaded).to.be.false;
@@ -75,7 +75,7 @@ describe('AutomergeDocumentLoader', () => {
     const newDocHandle = repo.create<DatabaseDirectory>();
     await newDocHandle.whenReady();
     const docLoadInfo = waitForDocumentLoad(loader, { objectId, handle: newDocHandle });
-    loadLinkedObjects(loader, { [objectId]: existingHandle.url });
+    loadLinkedObjects(loader, { [objectId]: existingHandle.url! });
     await sleep(10);
     expect(docLoadInfo.loaded).to.be.false;
   });
