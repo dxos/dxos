@@ -2,7 +2,12 @@
 // Copyright 2025 DXOS.org
 //
 
+import * as FetchHttpClient from '@effect/platform/FetchHttpClient';
+import * as HttpClient from '@effect/platform/HttpClient';
+import * as HttpClientRequest from '@effect/platform/HttpClientRequest';
+import * as HttpClientResponse from '@effect/platform/HttpClientResponse';
 import * as Effect from 'effect/Effect';
+import * as Schema from 'effect/Schema';
 import React, { useCallback, useEffect, useState } from 'react';
 
 import { type Key, Obj } from '@dxos/echo';
@@ -18,29 +23,33 @@ import { OAUTH_PRESETS, type OAuthPreset } from '../defs';
 import { meta } from '../meta';
 import { createTauriOAuthInitiator, createTauriServerProvider, openTauriBrowser, performOAuthFlow } from '../oauth';
 
+const GoogleUserInfo = Schema.Struct({
+  email: Schema.optional(Schema.String),
+});
+
 /**
  * Fetches the Google user's email address using the access token and prepends it to the token's note.
  */
-const enrichGoogleTokenWithEmail = async (token: AccessToken.AccessToken): Promise<void> => {
-  if (token.source !== 'google.com' || !token.token) {
-    return;
-  }
-
-  try {
-    const response = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
-      headers: { Authorization: `Bearer ${token.token}` },
-    });
-
-    if (response.ok) {
-      const userInfo = await response.json();
-      if (userInfo.email) {
-        token.note = `${userInfo.email} - ${token.note ?? ''}`.trim();
-      }
+const enrichGoogleTokenWithEmail = (token: AccessToken.AccessToken) =>
+  Effect.gen(function* () {
+    if (token.source !== 'google.com' || !token.token) {
+      return;
     }
-  } catch (error) {
-    log.warn('failed to fetch google user info', { error });
-  }
-};
+
+    const userInfo = yield* HttpClientRequest.get('https://www.googleapis.com/oauth2/v3/userinfo').pipe(
+      HttpClientRequest.setHeader('Authorization', `Bearer ${token.token}`),
+      HttpClient.execute,
+      Effect.flatMap(HttpClientResponse.schemaBodyJson(GoogleUserInfo)),
+      Effect.scoped,
+    );
+
+    if (userInfo.email) {
+      token.note = `${userInfo.email} - ${token.note ?? ''}`.trim();
+    }
+  }).pipe(
+    Effect.provide(FetchHttpClient.layer),
+    Effect.catchAll((error) => Effect.sync(() => log.warn('failed to fetch google user info', { error }))),
+  );
 
 type NewTokenSelectorProps = {
   spaceId: Key.SpaceId;
@@ -59,25 +68,31 @@ export const NewTokenSelector = ({ spaceId, onAddAccessToken, onCustomToken }: N
       return;
     }
 
-    const edgeUrl = new URL(edgeClient.baseUrl);
-
-    const listener = async (event: MessageEvent) => {
-      if (event.origin === edgeUrl.origin) {
-        const data = event.data as OAuthFlowResult;
-        if (data.success) {
-          const token = tokenMap.get(data.accessTokenId);
-          if (token) {
-            token.token = data.accessToken;
-            await enrichGoogleTokenWithEmail(token);
-            onAddAccessToken(token);
-          } else {
-            log.warn('token object not found', data);
+    const edgeOrigin = new URL(edgeClient.baseUrl).origin;
+    const listener = (event: MessageEvent) =>
+      runAndForwardErrors(
+        Effect.gen(function* () {
+          if (event.origin !== edgeOrigin) {
+            return;
           }
-        } else {
-          log.warn('oauth flow failed', data);
-        }
-      }
-    };
+
+          const data = event.data as OAuthFlowResult;
+          if (!data.success) {
+            log.warn('oauth flow failed', data);
+            return;
+          }
+
+          const token = tokenMap.get(data.accessTokenId);
+          if (!token) {
+            log.warn('token object not found', data);
+            return;
+          }
+
+          token.token = data.accessToken;
+          yield* enrichGoogleTokenWithEmail(token);
+          onAddAccessToken(token);
+        }),
+      ).catch(log.catch);
 
     window.addEventListener('message', listener);
     return () => {
@@ -112,7 +127,7 @@ export const NewTokenSelector = ({ spaceId, onAddAccessToken, onCustomToken }: N
           openTauriBrowser,
           createTauriOAuthInitiator(),
         ).pipe(
-          Effect.tap(() => Effect.promise(() => enrichGoogleTokenWithEmail(token))),
+          Effect.tap(() => enrichGoogleTokenWithEmail(token)),
           Effect.tap(() => onAddAccessToken(token)),
           Effect.catchAll((error) => Effect.sync(() => log.catch(error))),
         ),
