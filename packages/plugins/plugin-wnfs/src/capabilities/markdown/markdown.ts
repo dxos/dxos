@@ -11,12 +11,15 @@ import { getSpace } from '@dxos/react-client/echo';
 import { image } from '../../extensions';
 import { WnfsCapabilities } from '../../types';
 
-export default Capability.makeModule((context) =>
-  Effect.succeed(
-    Capability.contributes(MarkdownCapabilities.Extensions, [
+export default Capability.makeModule(
+  Effect.fnUntraced(function* () {
+    // Get context for lazy capability access in callbacks.
+    const capabilities = yield* Capability.Service;
+
+    return Capability.contributes(MarkdownCapabilities.Extensions, [
       ({ document }: { document?: any }) => {
-        const blockstore = context.getCapability(WnfsCapabilities.Blockstore);
-        const instances = context.getCapability(WnfsCapabilities.Instances);
+        const blockstore = capabilities.get(WnfsCapabilities.Blockstore);
+        const instances = capabilities.get(WnfsCapabilities.Instances);
 
         if (document) {
           const space = getSpace(document);
@@ -25,6 +28,6 @@ export default Capability.makeModule((context) =>
 
         return [];
       },
-    ]),
-  ),
+    ]);
+  }),
 );

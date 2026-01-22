@@ -28,7 +28,7 @@ export const Toast = ({
   closeLabel,
   onAction,
   onOpenChange,
-}: Common.LayoutAction.Toast & Pick<ToastRootProps, 'onOpenChange'>) => {
+}: Common.LayoutOperation.Toast & Pick<ToastRootProps, 'onOpenChange'>) => {
   const { t } = useTranslation(meta.id);
 
   return (
@@ -61,7 +61,7 @@ export const Toast = ({
 };
 
 export type ToasterProps = {
-  toasts?: Common.LayoutAction.Toast[];
+  toasts?: Common.LayoutOperation.Toast[];
   onDismissToast?: (id: string) => void;
 };
 

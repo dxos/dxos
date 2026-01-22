@@ -4,21 +4,21 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capability, Common, OperationResolver } from '@dxos/app-framework';
+import { Capability, Common } from '@dxos/app-framework';
+import { OperationResolver } from '@dxos/operation';
 
 import { HelpCapabilities, HelpOperation } from '../../types';
 
-export default Capability.makeModule((context) =>
-  Effect.sync(() =>
-    Capability.contributes(Common.Capability.OperationResolver, [
+export default Capability.makeModule(
+  Effect.fnUntraced(function* () {
+    return Capability.contributes(Common.Capability.OperationResolver, [
       OperationResolver.make({
         operation: HelpOperation.Start,
-        handler: () =>
-          Effect.sync(() => {
-            const state = context.getCapability(HelpCapabilities.MutableState);
-            state.running = true;
-          }),
+        handler: Effect.fnUntraced(function* () {
+          const state = yield* Capability.get(HelpCapabilities.MutableState);
+          state.running = true;
+        }),
       }),
-    ]),
-  ),
+    ]);
+  }),
 );

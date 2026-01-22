@@ -6,6 +6,7 @@ import * as Effect from 'effect/Effect';
 
 import { Capability, Common, Plugin } from '@dxos/app-framework';
 import { Ref, Type } from '@dxos/echo';
+import { Operation } from '@dxos/operation';
 import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
 import { MarkdownEvents } from '@dxos/plugin-markdown';
 import { SpaceCapabilities, SpaceEvents } from '@dxos/plugin-space';
@@ -106,12 +107,11 @@ export const ThreadPlugin = Plugin.define(meta).pipe(
   Plugin.addModule({
     id: 'on-space-created',
     activatesOn: SpaceEvents.SpaceCreated,
-    activate: (context) =>
+    activate: () =>
       Effect.succeed(
-        Capability.contributes(SpaceCapabilities.OnCreateSpace, (params) => {
-          const { invoke } = context.getCapability(Common.Capability.OperationInvoker);
-          return invoke(ThreadOperation.OnCreateSpace, params);
-        }),
+        Capability.contributes(SpaceCapabilities.OnCreateSpace, (params) =>
+          Operation.invoke(ThreadOperation.OnCreateSpace, params),
+        ),
       ),
   }),
   Plugin.addModule({

@@ -8,3 +8,4 @@ export * from './extension';
 export * from './types';
 
 export * from './Mosaic';
+export * from './Stack';

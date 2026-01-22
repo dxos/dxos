@@ -6,11 +6,12 @@ import { type EditorView } from '@codemirror/view';
 import { Atom } from '@effect-atom/atom-react';
 import React, { memo, useMemo } from 'react';
 
-import { CreateAtom } from '@dxos/app-graph';
+import { CreateAtom, type Node } from '@dxos/app-graph';
 import { type Live } from '@dxos/live-object';
 import { ElevationProvider, type ThemedClassName } from '@dxos/react-ui';
 import {
   type ActionGraphProps,
+  type MenuAction,
   MenuProvider,
   ToolbarMenu,
   createGapSeparator,
@@ -50,16 +51,18 @@ export type EditorToolbarProps = ThemedClassName<
   {
     role?: string;
     attendableId?: string;
+    /** Handler for executing actions. Required when customActions use Operation.invoke. */
+    onAction?: (action: MenuAction, params: Node.InvokeProps) => void;
   } & (EditorToolbarActionGraphProps & EditorToolbarFeatureFlags)
 >;
 
 // TODO(burdon): Remove role dependency.
-export const EditorToolbar = memo(({ classNames, role, attendableId, ...props }: EditorToolbarProps) => {
+export const EditorToolbar = memo(({ classNames, role, attendableId, onAction, ...props }: EditorToolbarProps) => {
   const menuProps = useEditorToolbarActionGraph(props);
 
   return (
     <ElevationProvider elevation={role === 'section' ? 'positioned' : 'base'}>
-      <MenuProvider {...menuProps} attendableId={attendableId}>
+      <MenuProvider {...menuProps} attendableId={attendableId} onAction={onAction}>
         <ToolbarMenu classNames={classNames} textBlockWidth />
       </MenuProvider>
     </ElevationProvider>

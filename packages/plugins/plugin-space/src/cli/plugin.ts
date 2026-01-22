@@ -69,7 +69,7 @@ export const SpacePlugin = Plugin.define<SpacePluginOptions>(meta).pipe(
     return {
       id: Capability.getModuleTag(OperationResolver),
       activatesOn: Common.ActivationEvent.SetupOperationResolver,
-      activate: (context) => OperationResolver({ context, createInvitationUrl, observability: false }),
+      activate: () => OperationResolver({ createInvitationUrl, observability: false }),
     };
   }),
   Plugin.addModule({

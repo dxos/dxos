@@ -4,9 +4,10 @@
 
 import * as Schema from 'effect/Schema';
 
+import { Capability } from '@dxos/app-framework';
 import { EchoObjectSchema, SpaceSchema } from '@dxos/client/echo';
 import { Database } from '@dxos/echo';
-import * as Operation from '@dxos/operation';
+import { Operation } from '@dxos/operation';
 import { Collection } from '@dxos/schema';
 
 import { meta } from '../meta';
@@ -19,6 +20,7 @@ const ASSISTANT_OPERATION = `${meta.id}/operation`;
 export namespace AssistantOperation {
   export const OnCreateSpace = Operation.make({
     meta: { key: `${ASSISTANT_OPERATION}/on-create-space`, name: 'On Create Space' },
+    services: [Capability.Service],
     schema: {
       input: Schema.Struct({
         space: SpaceSchema,
@@ -30,6 +32,7 @@ export namespace AssistantOperation {
 
   export const CreateChat = Operation.make({
     meta: { key: `${ASSISTANT_OPERATION}/create-chat`, name: 'Create Chat' },
+    services: [Capability.Service],
     schema: {
       input: Schema.Struct({
         db: Database.Database,
@@ -43,6 +46,7 @@ export namespace AssistantOperation {
 
   export const UpdateChatName = Operation.make({
     meta: { key: `${ASSISTANT_OPERATION}/update-chat-name`, name: 'Update Chat Name' },
+    services: [Capability.Service],
     schema: {
       input: Schema.Struct({
         chat: Chat,
@@ -53,6 +57,7 @@ export namespace AssistantOperation {
 
   export const SetCurrentChat = Operation.make({
     meta: { key: `${ASSISTANT_OPERATION}/set-current-chat`, name: 'Set Current Chat' },
+    services: [Capability.Service],
     schema: {
       input: Schema.Struct({
         companionTo: EchoObjectSchema,

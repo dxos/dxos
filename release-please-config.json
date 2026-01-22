@@ -190,7 +190,7 @@
         },
         {
           "type": "json",
-          "path": "packages/common/sql-sqlite-wasm/package.json",
+          "path": "packages/common/sql-sqlite/package.json",
           "jsonpath": "$.version"
         },
         {
@@ -321,6 +321,11 @@
         {
           "type": "json",
           "path": "packages/core/echo/echo-solid/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/core/echo/feed/package.json",
           "jsonpath": "$.version"
         },
         {

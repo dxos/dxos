@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as ManagedRuntime from 'effect/ManagedRuntime';
 
-import { Capability, Common } from '@dxos/app-framework';
+import { Capability, type CapabilityManager, Common } from '@dxos/app-framework';
 import { GenericToolkit, makeToolExecutionServiceFromFunctions, makeToolResolverFromFunctions } from '@dxos/assistant';
 import { SpaceProperties } from '@dxos/client/echo';
 import { Resource } from '@dxos/context';
@@ -27,9 +27,10 @@ import { ClientCapabilities } from '@dxos/plugin-client';
 
 import { AutomationCapabilities } from '../../types';
 
-export default Capability.makeModule((context: Capability.PluginContext) =>
-  Effect.gen(function* () {
-    const provider = yield* Effect.tryPromise(() => new ComputeRuntimeProviderImpl(context).open());
+export default Capability.makeModule(
+  Effect.fnUntraced(function* () {
+    const capabilities = yield* Capability.Service;
+    const provider = yield* Effect.tryPromise(() => new ComputeRuntimeProviderImpl(capabilities).open());
     return Capability.contributes(AutomationCapabilities.ComputeRuntime, provider, () =>
       Effect.tryPromise(() => provider.close()),
     );
@@ -41,11 +42,11 @@ export default Capability.makeModule((context: Capability.PluginContext) =>
  */
 class ComputeRuntimeProviderImpl extends Resource implements AutomationCapabilities.ComputeRuntimeProvider {
   readonly #runtimes = new Map<SpaceId, AutomationCapabilities.ComputeRuntime>();
-  readonly #context: Capability.PluginContext;
+  readonly #capabilities: CapabilityManager.CapabilityManager;
 
-  constructor(context: Capability.PluginContext) {
+  constructor(capabilities: CapabilityManager.CapabilityManager) {
     super();
-    this.#context = context;
+    this.#capabilities = capabilities;
   }
 
   protected override async _open() {}
@@ -62,13 +63,13 @@ class ComputeRuntimeProviderImpl extends Resource implements AutomationCapabilit
 
     const layer = Layer.unwrapEffect(
       Effect.gen(this, function* () {
-        const client = this.#context.getCapability(ClientCapabilities.Client);
+        const client = this.#capabilities.get(ClientCapabilities.Client);
         const aiServiceLayer =
-          this.#context.getCapability(Common.Capability.AiServiceLayer) ?? Layer.die('AiService not found');
+          this.#capabilities.get(Common.Capability.AiServiceLayer) ?? Layer.die('AiService not found');
 
         // TODO(dmaretskyi): Make these reactive.
-        const functions = this.#context.getCapabilities(Common.Capability.Functions).flat();
-        const toolkits = this.#context.getCapabilities(Common.Capability.Toolkit);
+        const functions = this.#capabilities.getAll(Common.Capability.Functions).flat();
+        const toolkits = this.#capabilities.getAll(Common.Capability.Toolkit);
         const mergedToolkit = GenericToolkit.merge(...toolkits);
         const toolkit = mergedToolkit.toolkit;
         const toolkitLayer = mergedToolkit.layer;

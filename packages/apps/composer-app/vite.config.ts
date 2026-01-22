@@ -109,7 +109,7 @@ export default defineConfig((env) => ({
     },
   },
   optimizeDeps: {
-    exclude: ['@effect/wa-sqlite', '@dxos/wasm-sqlite'],
+    exclude: ['@dxos/wa-sqlite'],
   },
   resolve: {
     alias: {

@@ -7,7 +7,7 @@
   "repository": "github:dxos/dxos",
   "license": "MIT",
   "author": "DXOS.org",
-  "sideEffects": true,
+  "sideEffects": false,
   "type": "module",
   "imports": {
     "#coordinator-worker": {
@@ -165,7 +165,6 @@
     "@dxos/websocket-rpc": "workspace:*",
     "@effect/experimental": "catalog:",
     "@effect/sql": "catalog:",
-    "@effect/sql-sqlite-wasm": "catalog:",
     "base-x": "catalog:",
     "effect": "catalog:",
     "jwt-decode": "catalog:",

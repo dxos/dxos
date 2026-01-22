@@ -3,6 +3,7 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
+import * as Effect from 'effect/Effect';
 import React from 'react';
 
 import { OperationPlugin } from '@dxos/app-framework';
@@ -32,9 +33,10 @@ const meta = {
     withPluginManager({
       plugins: [
         ClientPlugin({
-          onClientInitialized: async ({ client }) => {
-            await client.halo.createIdentity();
-          },
+          onClientInitialized: ({ client }) =>
+            Effect.gen(function* () {
+              yield* Effect.promise(() => client.halo.createIdentity());
+            }),
         }),
         OperationPlugin(),
       ],

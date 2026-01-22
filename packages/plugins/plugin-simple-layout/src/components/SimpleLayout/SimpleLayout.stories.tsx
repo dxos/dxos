@@ -8,7 +8,6 @@ import * as Effect from 'effect/Effect';
 import { Capability, Common, Plugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { ClientOperation, ClientPlugin } from '@dxos/plugin-client';
-import { PreviewPlugin } from '@dxos/plugin-preview';
 import { SearchPlugin } from '@dxos/plugin-search';
 import { SpacePlugin } from '@dxos/plugin-space';
 import { SpaceOperation } from '@dxos/plugin-space/types';
@@ -17,7 +16,7 @@ import { withTheme } from '@dxos/react-ui/testing';
 import { translations as searchTranslation } from '@dxos/react-ui-searchlist';
 import { Collection } from '@dxos/schema';
 
-import { OperationResolver, State } from '../../capabilities';
+import { OperationResolver, type SimpleLayoutStateOptions, State } from '../../capabilities';
 import { meta as pluginMeta } from '../../meta';
 import { type SimpleLayoutPluginOptions } from '../../SimpleLayoutPlugin';
 import { translations } from '../../translations';
@@ -29,14 +28,14 @@ const TestPlugin = Plugin.define<SimpleLayoutPluginOptions>(pluginMeta).pipe(
     id: Capability.getModuleTag(State),
     activatesOn: Common.ActivationEvent.Startup,
     activatesAfter: [Common.ActivationEvent.LayoutReady],
-    activate: () => State({ initialState: { isPopover } }),
+    activate: () => State({ initialState: { isPopover } } satisfies SimpleLayoutStateOptions),
   })),
   Common.Plugin.addOperationResolverModule({ activate: OperationResolver }),
   Plugin.addModule({
     id: 'setup',
     activatesOn: Common.ActivationEvent.OperationInvokerReady,
-    activate: Effect.fnUntraced(function* (context) {
-      const { invoke } = context.getCapability(Common.Capability.OperationInvoker);
+    activate: Effect.fnUntraced(function* () {
+      const { invoke } = yield* Capability.get(Common.Capability.OperationInvoker);
       yield* invoke(ClientOperation.CreateIdentity, {});
       const { space: work } = yield* invoke(SpaceOperation.Create, { name: 'Work Space' });
       const { space: sharedProject } = yield* invoke(SpaceOperation.Create, { name: 'Shared Project' });
@@ -69,8 +68,16 @@ const createPluginManager = ({ isPopover }: { isPopover: boolean }) => {
   return withPluginManager({
     plugins: [
       ...corePlugins(),
-      ClientPlugin({}),
-      PreviewPlugin(),
+      ClientPlugin({
+        onClientInitialized: ({ client }) =>
+          Effect.gen(function* () {
+            yield* Effect.promise(() => client.halo.createIdentity());
+            yield* Effect.promise(async () => {
+              await client.spaces.create({ name: 'Work Space' });
+              await client.spaces.create({ name: 'Shared Project' });
+            });
+          }),
+      }),
       SpacePlugin({}),
       SearchPlugin(),
       TestPlugin({ isPopover }),

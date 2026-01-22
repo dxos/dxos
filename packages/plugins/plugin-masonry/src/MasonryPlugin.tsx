@@ -7,6 +7,7 @@ import * as Effect from 'effect/Effect';
 import { Common, Plugin } from '@dxos/app-framework';
 import { Type } from '@dxos/echo';
 import { type CreateObject } from '@dxos/plugin-space/types';
+import { View } from '@dxos/schema';
 
 import { ReactSurface } from './capabilities';
 import { meta } from './meta';
@@ -23,7 +24,11 @@ export const MasonryPlugin = Plugin.define(meta).pipe(
         icon: 'ph--wall--regular',
         iconHue: 'green',
         inputSchema: MasonryAction.MasonryProps,
-        createObject: ((props) => Effect.sync(() => Masonry.make(props))) satisfies CreateObject,
+        createObject: ((props, { db }) =>
+          Effect.promise(async () => {
+            const { view } = await View.makeFromDatabase({ db, typename: props.typename });
+            return Masonry.make({ name: props.name, view });
+          })) satisfies CreateObject,
       },
     },
   }),

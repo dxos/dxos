@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import type * as Effect from 'effect/Effect';
+import * as Effect from 'effect/Effect';
 import * as Runtime from 'effect/Runtime';
 
 import { runAndForwardErrors, unwrapExit } from './errors';
@@ -13,11 +13,23 @@ import { runAndForwardErrors, unwrapExit } from './errors';
 export type RuntimeProvider<R> = Effect.Effect<Runtime.Runtime<R>>;
 
 /**
+ * @returns Runtime provider from the current context.
+ */
+export const currentRuntime = <R = never>() => Effect.runtime<R>().pipe(Effect.map(Effect.succeed));
+
+/**
  * Run effect, within runitme, clean errors and fix stack-traces.
  */
 export const runPromise =
-  <A, R>(provider: RuntimeProvider<R>) =>
-  async (effect: Effect.Effect<A, any, R>): Promise<A> => {
+  <R>(provider: RuntimeProvider<R>) =>
+  async <A>(effect: Effect.Effect<A, any, R>): Promise<A> => {
     const runtime = await runAndForwardErrors(provider);
     return unwrapExit(await effect.pipe(Runtime.runPromiseExit(runtime)));
   };
+
+/**
+ * Provide services from runtime provider to effect.
+ */
+export const provide: {
+  <R2>(runtime: RuntimeProvider<R2>): <A, E, R>(self: Effect.Effect<A, E, R>) => Effect.Effect<A, E, Exclude<R, R2>>;
+} = (runtimeProvider) => (effect) => Effect.flatMap(runtimeProvider, (runtime) => Effect.provide(effect, runtime));

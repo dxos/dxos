@@ -10,10 +10,10 @@ import { scheduledEffect } from '@dxos/echo-signals/core';
 import { DeckCapabilities, defaultDeck } from '../../types';
 
 // TODO(wittjosiah): Cleanup the url handling. May justify introducing routing capabilities.
-export default Capability.makeModule((context: Capability.PluginContext) =>
-  Effect.gen(function* () {
-    const { invokeSync } = context.getCapability(Common.Capability.OperationInvoker);
-    const state = context.getCapability(DeckCapabilities.MutableDeckState);
+export default Capability.makeModule(
+  Effect.fnUntraced(function* () {
+    const { invokeSync } = yield* Capability.get(Common.Capability.OperationInvoker);
+    const state = yield* Capability.get(DeckCapabilities.MutableDeckState);
 
     const handleNavigation = () => {
       const pathname = window.location.pathname;

@@ -59,7 +59,7 @@ export class EchoClient extends Resource {
 
   // TODO(burdon): This already exists in Hypergraph.
   private readonly _databases = new Map<SpaceId, EchoDatabaseImpl>();
-  private readonly _queueFactories = new Map<SpaceId, QueueFactory>();
+  private readonly _queues = new Map<SpaceId, QueueFactory>();
 
   private _dataService: DataService | undefined = undefined;
   private _queryService: QueryService | undefined = undefined;
@@ -106,6 +106,7 @@ export class EchoClient extends Resource {
       objectLoader: {
         loadObject: this._loadObjectFromDocument.bind(this),
       },
+      graph: this._graph,
     });
     this._graph.registerQuerySourceProvider(this._indexQuerySourceProvider);
   }
@@ -118,7 +119,12 @@ export class EchoClient extends Resource {
       this._graph._unregisterDatabase(db.spaceId);
       await db.close();
     }
+    for (const [spaceId, queueFactory] of this._queues.entries()) {
+      this._graph._unregisterQueueFactory(spaceId);
+      await queueFactory.close();
+    }
     this._databases.clear();
+    this._queues.clear();
   }
 
   // TODO(dmaretskyi): Make async?
@@ -147,8 +153,9 @@ export class EchoClient extends Resource {
 
   constructQueueFactory(spaceId: SpaceId): QueueFactory {
     const queueFactory = new QueueFactory(spaceId, this._graph);
+    this._queues.set(spaceId, queueFactory);
     this._graph._registerQueueFactory(spaceId, queueFactory);
-    this._queueFactories.set(spaceId, queueFactory);
+    this._queues.set(spaceId, queueFactory);
     if (this._queuesService) {
       queueFactory.setService(this._queuesService);
     }
@@ -193,7 +200,7 @@ export class EchoClient extends Resource {
 
     // Update all queue factories with new service.
     if (queueService) {
-      for (const queueFactory of this._queueFactories.values()) {
+      for (const queueFactory of this._queues.values()) {
         queueFactory.setService(queueService);
       }
     }

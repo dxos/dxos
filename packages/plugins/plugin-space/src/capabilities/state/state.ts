@@ -13,8 +13,8 @@ import { ComplexMap } from '@dxos/util';
 import { meta } from '../../meta';
 import { type PluginState, SpaceCapabilities } from '../../types';
 
-export default Capability.makeModule((context) =>
-  Effect.sync(() => {
+export default Capability.makeModule(
+  Effect.fnUntraced(function* () {
     const state = new LocalStorageStore<PluginState>(meta.id, {
       awaiting: undefined,
       spaceNames: {},
@@ -30,7 +30,7 @@ export default Capability.makeModule((context) =>
       .prop({ key: 'spaceNames', type: LocalStorageStore.json<Record<string, string>>() })
       .prop({ key: 'enabledEdgeReplication', type: LocalStorageStore.bool() });
 
-    const manager = context.getCapability(Common.Capability.PluginManager);
+    const manager = yield* Capability.get(Common.Capability.PluginManager);
     const unsubscribe = effect(() => {
       // TODO(wittjosiah): Find a way to make this capability-based.
       const enabled = manager.getEnabled().includes('dxos.org/plugin/stack');
