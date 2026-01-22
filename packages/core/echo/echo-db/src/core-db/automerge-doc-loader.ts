@@ -13,6 +13,7 @@ import { assertState, invariant } from '@dxos/invariant';
 import { type ObjectId, type PublicKey, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { trace } from '@dxos/tracing';
+import { ComplexSet } from '@dxos/util';
 
 import { type DocHandleProxy, type RepoProxy } from '../automerge';
 
@@ -67,10 +68,12 @@ export class AutomergeDocumentLoaderImpl implements AutomergeDocumentLoader {
 
   /**
    * Keeps track of objects that are currently being loaded.
-   * Prevents multiple concurrent loads of the same object.
+   * Prevents multiple concurrent loads of the same document.
    * This can happen on SpaceRootHandle switch because we don't cancel the previous load.
    */
-  private readonly _currentlyLoadingObjects = new Set<string>();
+  private readonly _currentlyLoadingObjects = new ComplexSet<{ url: AutomergeUrl; objectId: string }>(
+    ({ url, objectId }) => `${url}:${objectId}`,
+  );
 
   /**
    * Tracks pending document creation promises.
@@ -275,35 +278,29 @@ export class AutomergeDocumentLoaderImpl implements AutomergeDocumentLoader {
   }
 
   private async _loadHandleForObject(handle: DocHandleProxy<DatabaseDirectory>, objectId: string): Promise<void> {
-    // Check deduplication before waiting to prevent concurrent loads of the same object.
-    if (this._currentlyLoadingObjects.has(objectId)) {
-      log.verbose('document is already loading', { objectId });
-      return;
-    }
-    this._currentlyLoadingObjects.add(objectId);
-
+    invariant(handle.url, 'Document URL is not available');
     try {
-      // Wait for handle to be ready before accessing url.
-      await handle.whenReady();
-
-      const url = handle.url;
-      if (url == null) {
-        log.warn('document has no url after whenReady', { objectId });
+      if (this._currentlyLoadingObjects.has({ url: handle.url, objectId })) {
+        log.verbose('document is already loading', { objectId });
         return;
       }
+      this._currentlyLoadingObjects.add({ url: handle.url, objectId });
+      await handle.whenReady();
+      this._currentlyLoadingObjects.delete({ url: handle.url, objectId });
 
-      const logMeta = { objectId, docUrl: url };
+      const logMeta = { objectId, docUrl: handle.url };
       if (this.onObjectDocumentLoaded.listenerCount() === 0) {
         log('document loaded after all listeners were removed', logMeta);
         return;
       }
       const objectDocHandle = this._objectDocumentHandles.get(objectId);
-      if (objectDocHandle?.url != null && objectDocHandle.url !== url) {
+      if (objectDocHandle?.url != null && objectDocHandle.url !== handle.url) {
         log.warn('object was rebound while a document was loading, discarding handle', logMeta);
         return;
       }
       this.onObjectDocumentLoaded.emit({ handle, objectId });
     } catch (err) {
+      this._currentlyLoadingObjects.delete({ url: handle.url, objectId });
       const shouldRetryLoading = this.onObjectDocumentLoaded.listenerCount() > 0;
       log.warn('failed to load a document', {
         objectId,
@@ -314,8 +311,6 @@ export class AutomergeDocumentLoaderImpl implements AutomergeDocumentLoader {
       if (shouldRetryLoading) {
         await this._loadHandleForObject(handle, objectId);
       }
-    } finally {
-      this._currentlyLoadingObjects.delete(objectId);
     }
   }
 }
