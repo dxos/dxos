@@ -2,6 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
+import { useAtomValue } from '@effect-atom/atom-react';
 import * as Effect from 'effect/Effect';
 import React, { useCallback } from 'react';
 
@@ -35,7 +36,6 @@ import {
   WorkflowPanel,
 } from '@dxos/devtools';
 import { Obj } from '@dxos/echo';
-import { useAtomValue } from '@effect-atom/atom-react';
 import { log } from '@dxos/log';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { type Graph } from '@dxos/plugin-graph';

@@ -2,10 +2,9 @@
 // Copyright 2025 DXOS.org
 //
 
+import { useAtomValue } from '@effect-atom/atom-react';
 import * as Effect from 'effect/Effect';
 import React from 'react';
-
-import { useAtomValue } from '@effect-atom/atom-react';
 
 import { Capability, Common } from '@dxos/app-framework';
 import { useCapability } from '@dxos/app-framework/react';
