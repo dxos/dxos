@@ -138,7 +138,11 @@ export class EchoHost extends Resource {
 
     if (localQueues) {
       this._feedStore = new FeedStore({ assignPositions: assignQueuePositions, localActorId: crypto.randomUUID() });
-      this._queueDataSource = new QueueDataSource(this._feedStore, this._runtime);
+      this._queueDataSource = new QueueDataSource({
+        feedStore: this._feedStore,
+        runtime: this._runtime,
+        getSpaceIds: () => this._spaceStateManager.spaceIds,
+      });
       this._queuesService = new LocalQueueServiceImpl(runtime, this._feedStore);
     } else {
       this._queuesService = new QueueServiceStub();

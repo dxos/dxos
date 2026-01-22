@@ -9,15 +9,30 @@ import { RuntimeProvider } from '@dxos/effect';
 import { FeedCursor, type FeedStore } from '@dxos/feed';
 import { type DataSourceCursor, type IndexDataSource, type IndexerObject } from '@dxos/index-core';
 import { failedInvariant } from '@dxos/invariant';
+import type { SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
+
+export type QueueDataSourceOptions = {
+  feedStore: FeedStore;
+  runtime: RuntimeProvider.RuntimeProvider<SqlClient.SqlClient>;
+  /**
+   * Callback to get the list of space IDs that should be indexed.
+   */
+  getSpaceIds: () => SpaceId[];
+};
 
 export class QueueDataSource implements IndexDataSource {
   readonly sourceName = 'queue';
 
-  constructor(
-    private readonly _feedStore: FeedStore,
-    private readonly _runtime: RuntimeProvider.RuntimeProvider<SqlClient.SqlClient>,
-  ) {}
+  private readonly _feedStore: FeedStore;
+  private readonly _runtime: RuntimeProvider.RuntimeProvider<SqlClient.SqlClient>;
+  private readonly _getSpaceIds: () => SpaceId[];
+
+  constructor(options: QueueDataSourceOptions) {
+    this._feedStore = options.feedStore;
+    this._runtime = options.runtime;
+    this._getSpaceIds = options.getSpaceIds;
+  }
 
   getChangedObjects(
     cursors: DataSourceCursor[],
@@ -34,15 +49,27 @@ export class QueueDataSource implements IndexDataSource {
       const objects: IndexerObject[] = [];
       const updatedCursors: DataSourceCursor[] = [];
 
-      // TODO(dmaretskyi): Here we should augment cursors with new spaces.
-      // Initially the indexer will pass us an empty array of cursors.
-      // We add new cursors starting for the beginning of the queue.
+      // Augment cursors with new spaces that haven't been indexed yet.
+      const existingSpaceIds = new Set(cursors.map((c) => c.spaceId).filter(Boolean));
+      const allSpaceIds = this._getSpaceIds();
+      const augmentedCursors = [...cursors];
+      for (const spaceId of allSpaceIds) {
+        if (!existingSpaceIds.has(spaceId)) {
+          // Add a new cursor for this space starting from the beginning.
+          // Empty string cursor means "start from beginning".
+          augmentedCursors.push({
+            spaceId,
+            resourceId: null,
+            cursor: '',
+          });
+        }
+      }
 
       // Limit per call, but we might have multiple spaces.
       // We should distribute limit or just fill up to limit.
       let remainingLimit = opts?.limit ?? Infinity;
 
-      for (const cursor of cursors) {
+      for (const cursor of augmentedCursors) {
         if (remainingLimit <= 0) {
           // Remaining cursors are not processed in this call.
           updatedCursors.push(cursor);
@@ -54,7 +81,9 @@ export class QueueDataSource implements IndexDataSource {
           continue;
         }
 
-        const currentCursor = typeof cursor.cursor === 'string' ? FeedCursor.make(cursor.cursor) : undefined;
+        // Empty string cursor means "start from beginning".
+        const currentCursor =
+          typeof cursor.cursor === 'string' && cursor.cursor !== '' ? FeedCursor.make(cursor.cursor) : undefined;
 
         try {
           const result = yield* this._feedStore.query({

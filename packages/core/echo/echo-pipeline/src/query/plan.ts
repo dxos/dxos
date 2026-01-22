@@ -44,12 +44,29 @@ export namespace QueryPlan {
 
   /**
    * Select objects based on id, typename, or other predicates.
-   * Specifies the spaces to select from.
+   * Specifies the spaces and/or queues to select from.
+   * The results from spaces and queues are unioned together.
    */
   export type SelectStep = {
     _tag: 'SelectStep';
 
+    // TODO(dmaretskyi): Extract the object container spec into a separate type in ECHO-protocol that we can share with the indexer.
+
+    /**
+     * Select from specific spaces.
+     */
     spaces: readonly SpaceId[];
+
+    /**
+     * If true, select from all queues in the spaces specified by `spaces`.
+     */
+    allQueuesFromSpaces: boolean;
+
+    /**
+     * Select from specific queues.
+     */
+    queues: readonly DXN.String[];
+
     selector: Selector;
   };
 
@@ -91,6 +108,11 @@ export namespace QueryPlan {
 
     text: string;
     searchKind: TextSearchKind;
+
+    /**
+     * Optionally select only objects of the given typenames.
+     */
+    typename: DXN.String[] | null;
   };
 
   /**

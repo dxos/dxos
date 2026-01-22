@@ -19,6 +19,7 @@ import { PublicKey } from '@dxos/keys';
 import { type LevelDB } from '@dxos/kv-store';
 import { createTestLevel } from '@dxos/kv-store/testing';
 import { layerMemory } from '@dxos/sql-sqlite/platform';
+import type * as SqliteClient from '@dxos/sql-sqlite/SqliteClient';
 import { range } from '@dxos/util';
 
 import { EchoClient } from '../client';
@@ -89,7 +90,7 @@ export class EchoTestPeer extends Resource {
   private _lastDatabaseRootUrl?: string = undefined;
 
   private _foreignRuntime: boolean;
-  private _managedRuntime!: ManagedRuntime.ManagedRuntime<SqlClient.SqlClient, never>;
+  private _managedRuntime!: ManagedRuntime.ManagedRuntime<SqlClient.SqlClient | SqliteClient.SqliteClient, never>;
 
   constructor({ kv = createTestLevel(), indexing = {}, types, assignQueuePositions, runtime }: PeerOptions) {
     super();
