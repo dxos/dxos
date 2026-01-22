@@ -345,6 +345,11 @@ export const QueryOptions = Schema.Struct({
   spaceIds: Schema.optional(Schema.Array(Schema.String)),
 
   /**
+   * If true, the nested select statements will select from all queues in the spaces specified by `spaceIds`.
+   */
+  allQueuesFromSpaces: Schema.optional(Schema.Boolean),
+
+  /**
    * The nested select statemets will select from the given queues.
    *
    * NOTE: Spaces and queues are unioned together if both are specified.

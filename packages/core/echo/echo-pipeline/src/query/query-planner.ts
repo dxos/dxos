@@ -77,6 +77,12 @@ export class QueryPlanner {
     if (query.options.spaceIds) {
       newContext.selectionSpaces = query.options.spaceIds as readonly SpaceId[];
     }
+    if (query.options.allQueuesFromSpaces !== undefined) {
+      newContext.selectionAllQueuesFromSpaces = query.options.allQueuesFromSpaces;
+    }
+    if (query.options.queues) {
+      newContext.selectionQueues = query.options.queues as readonly DXN.String[];
+    }
     if (query.options.deleted) {
       newContext.deletedHandling = query.options.deleted;
     }
@@ -121,6 +127,8 @@ export class QueryPlanner {
             {
               _tag: 'SelectStep',
               spaces: context.selectionSpaces,
+              allQueuesFromSpaces: context.selectionAllQueuesFromSpaces,
+              queues: context.selectionQueues,
               selector: {
                 _tag: 'IdSelector',
                 objectIds: filter.id,
@@ -137,6 +145,8 @@ export class QueryPlanner {
             {
               _tag: 'SelectStep',
               spaces: context.selectionSpaces,
+              allQueuesFromSpaces: context.selectionAllQueuesFromSpaces,
+              queues: context.selectionQueues,
               selector: {
                 _tag: 'TypeSelector',
                 typename: [filter.typename as DXN.String],
@@ -155,6 +165,8 @@ export class QueryPlanner {
             {
               _tag: 'SelectStep',
               spaces: context.selectionSpaces,
+              allQueuesFromSpaces: context.selectionAllQueuesFromSpaces,
+              queues: context.selectionQueues,
               selector: {
                 _tag: 'WildcardSelector',
               },
@@ -174,6 +186,8 @@ export class QueryPlanner {
           {
             _tag: 'SelectStep',
             spaces: context.selectionSpaces,
+            allQueuesFromSpaces: context.selectionAllQueuesFromSpaces,
+            queues: context.selectionQueues,
             selector: {
               _tag: 'WildcardSelector',
             },
@@ -192,10 +206,13 @@ export class QueryPlanner {
           {
             _tag: 'SelectStep',
             spaces: context.selectionSpaces,
+            allQueuesFromSpaces: context.selectionAllQueuesFromSpaces,
+            queues: context.selectionQueues,
             selector: {
               _tag: 'TextSelector',
               text: filter.text,
               searchKind: filter.searchKind ?? this._options.defaultTextSearchKind,
+              typename: null,
             },
           },
           ...this._generateDeletedHandlingSteps(context),
@@ -230,6 +247,8 @@ export class QueryPlanner {
             {
               _tag: 'SelectStep',
               spaces: context.selectionSpaces,
+              allQueuesFromSpaces: context.selectionAllQueuesFromSpaces,
+              queues: context.selectionQueues,
               selector: {
                 _tag: 'TypeSelector',
                 typename: typenames as DXN.String[],
@@ -517,6 +536,16 @@ type GenerationContext = {
   selectionSpaces: readonly SpaceId[];
 
   /**
+   * Whether to select from all queues in the spaces specified by selectionSpaces.
+   */
+  selectionAllQueuesFromSpaces: boolean;
+
+  /**
+   * Which queues to select from.
+   */
+  selectionQueues: readonly DXN.String[];
+
+  /**
    * How to handle deleted objects.
    */
   deletedHandling: 'include' | 'exclude' | 'only';
@@ -530,6 +559,8 @@ type GenerationContext = {
 const DEFAULT_CONTEXT: GenerationContext = {
   originalQuery: null,
   selectionSpaces: [],
+  selectionAllQueuesFromSpaces: false,
+  selectionQueues: [],
   deletedHandling: 'exclude',
   selectionInverted: false,
 };
