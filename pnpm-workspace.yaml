@@ -195,8 +195,8 @@ catalog:
   '@radix-ui/react-tooltip': 1.1.8
   '@radix-ui/react-use-controllable-state': 1.1.0
   '@radix-ui/react-visually-hidden': 1.1.2
-  '@react-three/drei': ^9.99.0
-  '@react-three/fiber': ^9.3.0
+  '@react-three/drei': ^10.7.7
+  '@react-three/fiber': ^9.5.0
   '@replit/codemirror-vim': ^6.2.1
   '@replit/codemirror-vscode-keymap': ^6.0.2
   '@rive-app/react-canvas': ^4.14.0
