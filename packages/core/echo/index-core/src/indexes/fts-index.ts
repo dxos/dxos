@@ -11,6 +11,7 @@ import type { ObjectId, SpaceId } from '@dxos/keys';
 import type { Index, IndexerObject } from './interface';
 import type { ObjectMeta } from './object-meta-index';
 import * as Statement from '@effect/sql/Statement';
+import type { Obj } from '@dxos/echo';
 
 /**
  * The space and queue constrains are combined together using a logical OR.
@@ -35,6 +36,17 @@ export interface FtsQuery {
    * Queue IDs to search within.
    */
   queueIds: readonly ObjectId[] | null;
+}
+
+/**
+ * Result of FTS query including the indexed snapshot data.
+ */
+export interface FtsResult extends ObjectMeta {
+  /**
+   * The indexed snapshot data (JSON string).
+   * Used to load queue objects without going through document loading.
+   */
+  snapshot: string;
 }
 
 /**
@@ -124,6 +136,26 @@ export class FtsIndex implements Index {
       }
 
       return yield* sql<ObjectMeta>`SELECT m.* FROM ftsIndex AS f JOIN objectMeta AS m ON f.rowid = m.recordId WHERE ${sql.and(conditions)}`;
+    });
+  }
+
+  /**
+   * Query snapshots by recordIds.
+   * Returns the parsed JSON snapshots for queue objects.
+   */
+  querySnapshotsJSON(
+    recordIds: number[],
+  ): Effect.Effect<readonly { recordId: number; snapshot: Obj.JSON }[], SqlError.SqlError, SqlClient.SqlClient> {
+    return Effect.gen(function* () {
+      if (recordIds.length === 0) {
+        return [];
+      }
+      const sql = yield* SqlClient.SqlClient;
+      const results = yield* sql<{ rowid: number; snapshot: string }>`SELECT rowid, snapshot FROM ftsIndex WHERE rowid IN ${sql.in(recordIds)}`;
+      return results.map((r) => ({
+        recordId: r.rowid,
+        snapshot: JSON.parse(r.snapshot),
+      }));
     });
   }
 

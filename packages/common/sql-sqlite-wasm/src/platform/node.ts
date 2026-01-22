@@ -8,7 +8,9 @@ import * as SqliteClient from '@effect/sql-sqlite-node/SqliteClient';
 import type * as ConfigError from 'effect/ConfigError';
 import type * as Layer from 'effect/Layer';
 
-export const layerMemory: Layer.Layer<SqlClient.SqlClient, ConfigError.ConfigError | SqlError.SqlError> =
-  SqliteClient.layer({
-    filename: ':memory:',
-  });
+export const layerMemory: Layer.Layer<
+  SqlClient.SqlClient | SqliteClient.SqliteClient,
+  ConfigError.ConfigError | SqlError.SqlError
+> = SqliteClient.layer({
+  filename: ':memory:',
+});

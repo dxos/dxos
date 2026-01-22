@@ -273,7 +273,7 @@ export class QueryExecutor extends Resource {
         // TODO(dmaretskyi): Plumb through the rank.
         rank: 0,
 
-        documentJson: item.doc ? JSON.stringify(item.doc) : undefined,
+        documentJson: item.doc ? JSON.stringify(item.doc) : item.data ? JSON.stringify(item.data) : undefined,
       }),
     );
   }
@@ -451,13 +451,17 @@ export class QueryExecutor extends Resource {
           const beginIndexQuery = performance.now();
           const runtime = await runAndForwardErrors(this._runtime);
           invariant(step.spaces.length <= 1, 'Multiple spaces are not supported for full-text search');
+          // Extract queue IDs from DXN strings.
+          const queueIds = step.queues.length > 0
+            ? step.queues.map((dxnStr) => DXN.parse(dxnStr).asQueueDXN()?.queueId).filter(Boolean) as ObjectId[]
+            : null;
           const textResults = await unwrapExit(
             await this._indexer2
               .queryText({
                 query: step.selector.text,
                 spaceId: step.spaces,
                 includeAllQueues: step.allQueuesFromSpaces,
-                queueIds: step.queues,
+                queueIds,
               })
               .pipe(Runtime.runPromiseExit(runtime)),
           );
@@ -470,16 +474,52 @@ export class QueryExecutor extends Resource {
 
           // Load documents from the results.
           const documentLoadStart = performance.now();
-          const items = await Promise.all(
-            textResults.map(async (result): Promise<QueryItem | null> => {
+
+          // Separate queue items from space items.
+          const queueResults = textResults.filter((r) => r.queueId);
+          const spaceResults = textResults.filter((r) => !r.queueId);
+
+          // Load queue items from indexed snapshots.
+          let queueItems: QueryItem[] = [];
+          if (queueResults.length > 0) {
+            const snapshots = await unwrapExit(
+              await this._indexer2
+                .querySnapshotsJSON(queueResults.map((r) => r.recordId))
+                .pipe(Runtime.runPromiseExit(runtime)),
+            );
+            const snapshotMap = new Map(snapshots.map((s) => [s.recordId, s.snapshot]));
+            queueItems = queueResults
+              .map((result): QueryItem | null => {
+                const snapshot = snapshotMap.get(result.recordId);
+                if (!snapshot || typeof snapshot !== 'object') {
+                  return null;
+                }
+                return {
+                  objectId: result.objectId as ObjectId,
+                  spaceId: result.spaceId as SpaceId,
+                  queueId: result.queueId as ObjectId,
+                  queueNamespace: 'data',
+                  documentId: null,
+                  doc: null,
+                  data: snapshot as Obj.JSON,
+                };
+              })
+              .filter(isNonNullable);
+          }
+
+          // Load space items from documents.
+          const spaceItems = await Promise.all(
+            spaceResults.map(async (result): Promise<QueryItem | null> => {
               const dxn = DXN.fromLocalObjectId(result.objectId);
               return this._loadFromDXN(dxn, { sourceSpaceId: result.spaceId as SpaceId });
             }),
           );
-          trace.documentsLoaded += items.filter(isNonNullable).length;
+
+          const items = [...queueItems, ...spaceItems.filter(isNonNullable)];
+          trace.documentsLoaded += items.length;
           trace.documentLoadTime += performance.now() - documentLoadStart;
 
-          workingSet.push(...items.filter(isNonNullable).filter((item) => step.spaces.includes(item.spaceId)));
+          workingSet.push(...items.filter((item) => step.spaces.includes(item.spaceId)));
           trace.objectCount = workingSet.length;
         } else {
           // Fall back to old indexer for vector search.

@@ -937,7 +937,7 @@ describe('Query', () => {
       }
     });
 
-    test.skip('full-text search in queues via indexer2', async () => {
+    test('full-text search in queues via indexer2', async () => {
       const peer = await builder.createPeer({ indexing: { fullText: true }, types: [TestSchema.Task] });
       const db = await peer.createDatabase();
       const queues = peer.client.constructQueueFactory(db.spaceId);
@@ -984,7 +984,7 @@ describe('Query', () => {
       }
     });
 
-    test.skip('full-text search with allQueuesFromSpaces via indexer2', async () => {
+    test('full-text search with allQueuesFromSpaces via indexer2', async () => {
       const peer = await builder.createPeer({ indexing: { fullText: true }, types: [TestSchema.Task] });
       const db = await peer.createDatabase();
       const queues = peer.client.constructQueueFactory(db.spaceId);

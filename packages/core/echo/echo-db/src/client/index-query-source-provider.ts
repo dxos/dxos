@@ -25,7 +25,7 @@ import { type QuerySource, getTargetSpacesForQuery } from '../query';
 export type LoadObjectProps = {
   spaceId: SpaceId;
   objectId: string;
-  documentId: string;
+  documentId: string | undefined;
 };
 
 export interface ObjectLoader {
@@ -218,6 +218,19 @@ export class IndexQuerySource implements QuerySource {
     }
 
     invariant(SpaceId.isValid(result.spaceId), 'Invalid spaceId');
+
+    // For queue items, use the embedded documentJson directly.
+    if (result.queueId && result.documentJson) {
+      const data = JSON.parse(result.documentJson);
+      const queryResult: QueryResult.EntityEntry = {
+        id: result.id,
+        result: data,
+        match: { rank: result.rank },
+        resolution: { source: 'index', time: Date.now() - queryStartTimestamp },
+      };
+      return queryResult;
+    }
+
     const object = await this._params.objectLoader.loadObject({
       spaceId: result.spaceId,
       objectId: result.id,

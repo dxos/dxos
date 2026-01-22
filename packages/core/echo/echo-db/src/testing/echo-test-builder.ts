@@ -25,6 +25,7 @@ import { EchoClient } from '../client';
 import { type AnyLiveObject } from '../echo-handler';
 import { type EchoDatabase } from '../proxy-db';
 import { Filter, Query } from '../query';
+import * as SqliteClient from '@dxos/sql-sqlite-wasm/SqliteClient';
 
 type OpenDatabaseOptions = {
   client?: EchoClient;
@@ -89,7 +90,7 @@ export class EchoTestPeer extends Resource {
   private _lastDatabaseRootUrl?: string = undefined;
 
   private _foreignRuntime: boolean;
-  private _managedRuntime!: ManagedRuntime.ManagedRuntime<SqlClient.SqlClient, never>;
+  private _managedRuntime!: ManagedRuntime.ManagedRuntime<SqlClient.SqlClient | SqliteClient.SqliteClient, never>;
 
   constructor({ kv = createTestLevel(), indexing = {}, types, assignQueuePositions, runtime }: PeerOptions) {
     super();
