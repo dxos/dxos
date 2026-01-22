@@ -458,8 +458,10 @@ export const setDeleted = (entity: Entity.Unknown, value: boolean) => {
 
   // TODO(dmaretskyi): Move this to a more appropriate place or expose via public API.
   const db = getDatabase(entity) as any;
-  if (db && typeof db.getObjectCoreById === 'function') {
-    const core = db.getObjectCoreById(entity.id);
+  // Try coreDatabase first (EchoDatabase), then fallback to direct method (CoreDatabase).
+  const coreDatabase = db?.coreDatabase ?? db;
+  if (coreDatabase && typeof coreDatabase.getObjectCoreById === 'function') {
+    const core = coreDatabase.getObjectCoreById(entity.id);
     if (core) {
       core.setDeleted(value);
     }

@@ -23,11 +23,11 @@ import {
   MetaId,
   ObjectDatabaseId,
   ObjectDeletedId,
-  ParentId,
   type ObjectJSON,
   type ObjectMeta,
   ObjectMetaSchema,
   ObjectVersionId,
+  ParentId,
   PersistentSchema,
   Ref,
   RefImpl,
@@ -197,7 +197,6 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
         case ObjectVersionId:
           return this._getVersion(target);
         case ObjectDatabaseId:
-        case ObjectDatabaseId:
           return target[symbolInternals].database;
       }
     } else {
@@ -292,14 +291,9 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     }
     const database = target[symbolInternals].database;
     if (database) {
-      // TODO(dmaretskyi): Put refs into proxy cache.
-      return database.graph
-        .createRefResolver({
-          context: {
-            space: database.spaceId,
-          },
-        })
-        .resolveSync(parentRef.toDXN(), false);
+      // Include deleted objects when resolving parent, since parent hierarchy
+      // needs to work even when the parent is deleted.
+      return database.getObjectById(parentRef.objectId, { deleted: true });
     } else {
       invariant(target[symbolInternals].linkCache);
       return target[symbolInternals].linkCache.get(parentRef.objectId);

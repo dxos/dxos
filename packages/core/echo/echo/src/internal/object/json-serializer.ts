@@ -8,8 +8,8 @@ import { raise } from '@dxos/debug';
 import {
   type EncodedReference,
   type ObjectMeta,
-  Reference,
   ObjectStructure,
+  Reference,
   isEncodedReference,
 } from '@dxos/echo-protocol';
 import { assertArgument, invariant } from '@dxos/invariant';

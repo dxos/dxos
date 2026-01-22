@@ -1,7 +1,10 @@
-import { describe, test, expect } from 'vitest';
-import * as Schema from 'effect/Schema';
+//
+// Copyright 2025 DXOS.org
+//
+
+import { describe, expect, test } from 'vitest';
+
 import * as Obj from './Obj';
-import * as Type from './Type';
 import { TestSchema } from './testing';
 
 describe('Hierarchy', () => {
