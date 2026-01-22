@@ -16,7 +16,7 @@ import * as Stream from 'effect/Stream';
 import { Filter, Obj, Query, Type } from '@dxos/echo';
 import { Database } from '@dxos/echo';
 import type { Queue } from '@dxos/echo-db';
-import { QueueService, defineFunction } from '@dxos/functions';
+import { CredentialsService, QueueService, defineFunction } from '@dxos/functions';
 import { log } from '@dxos/log';
 import { Message } from '@dxos/types';
 
@@ -102,8 +102,12 @@ export default defineFunction({
       log('syncing gmail', { mailbox: mailboxRef.dxn.toString(), userId, after, restrictedMode });
       const mailbox = yield* Database.Service.load(mailboxRef);
 
+      // Build credentials layer from mailbox-specific token or fall back to database query.
+      const credentialsLayer = yield* buildCredentialsLayer(mailbox);
+
       // Get labels.
       const labelCount = yield* syncLabels(mailbox, userId).pipe(
+        Effect.provide(credentialsLayer),
         Effect.catchAll((error) => {
           log.catch(error);
           return Effect.succeed(0);
@@ -140,7 +144,7 @@ export default defineFunction({
         label,
         existingGmailIds,
         restrictedMode,
-      );
+      ).pipe(Effect.provide(credentialsLayer));
       log('sync complete', { newMessages: newMessagesCount });
       return {
         newMessages: newMessagesCount,
@@ -151,6 +155,21 @@ export default defineFunction({
 //
 // Helper functions.
 //
+
+/**
+ * Builds a credentials layer from the mailbox's access token if available, otherwise falls back to database query.
+ */
+const buildCredentialsLayer = Effect.fn(function* (mailbox: Mailbox.Mailbox) {
+  if (mailbox.accessToken) {
+    const accessToken = yield* Database.Service.load(mailbox.accessToken);
+    if (accessToken?.token) {
+      log('using mailbox-specific access token', { note: accessToken.note });
+      return CredentialsService.configuredLayer([{ service: 'google.com', apiKey: accessToken.token }]);
+    }
+  }
+  log('using database credentials');
+  return CredentialsService.layerFromDatabase();
+});
 
 /**
  * Sync labels.

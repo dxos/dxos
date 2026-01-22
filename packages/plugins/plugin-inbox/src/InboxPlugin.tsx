@@ -14,6 +14,7 @@ import { AppGraphBuilder, BlueprintDefinition, OperationResolver, ReactSurface }
 import { meta } from './meta';
 import { translations } from './translations';
 import { Calendar, Mailbox } from './types';
+import { CreateMailboxSchema } from './types/Mailbox';
 
 export const InboxPlugin = Plugin.define(meta).pipe(
   Common.Plugin.addTranslationsModule({ translations }),
@@ -25,6 +26,7 @@ export const InboxPlugin = Plugin.define(meta).pipe(
           icon: 'ph--tray--regular',
           iconHue: 'rose',
           blueprints: [InboxBlueprint.Key],
+          inputSchema: CreateMailboxSchema,
           createObject: ((props, { db }) =>
             Effect.gen(function* () {
               const client = yield* Capability.get(ClientCapabilities.Client);

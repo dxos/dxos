@@ -18,6 +18,30 @@ import { OAUTH_PRESETS, type OAuthPreset } from '../defs';
 import { meta } from '../meta';
 import { createTauriOAuthInitiator, createTauriServerProvider, openTauriBrowser, performOAuthFlow } from '../oauth';
 
+/**
+ * Fetches the Google user's email address using the access token and prepends it to the token's note.
+ */
+const enrichGoogleTokenWithEmail = async (token: AccessToken.AccessToken): Promise<void> => {
+  if (token.source !== 'google.com' || !token.token) {
+    return;
+  }
+
+  try {
+    const response = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+      headers: { Authorization: `Bearer ${token.token}` },
+    });
+
+    if (response.ok) {
+      const userInfo = await response.json();
+      if (userInfo.email) {
+        token.note = `${userInfo.email} - ${token.note ?? ''}`.trim();
+      }
+    }
+  } catch (error) {
+    log.warn('failed to fetch google user info', { error });
+  }
+};
+
 type NewTokenSelectorProps = {
   spaceId: Key.SpaceId;
   onAddAccessToken: (token: AccessToken.AccessToken) => void;
@@ -37,13 +61,14 @@ export const NewTokenSelector = ({ spaceId, onAddAccessToken, onCustomToken }: N
 
     const edgeUrl = new URL(edgeClient.baseUrl);
 
-    const listener = (event: MessageEvent) => {
+    const listener = async (event: MessageEvent) => {
       if (event.origin === edgeUrl.origin) {
         const data = event.data as OAuthFlowResult;
         if (data.success) {
           const token = tokenMap.get(data.accessTokenId);
           if (token) {
             token.token = data.accessToken;
+            await enrichGoogleTokenWithEmail(token);
             onAddAccessToken(token);
           } else {
             log.warn('token object not found', data);
@@ -87,6 +112,7 @@ export const NewTokenSelector = ({ spaceId, onAddAccessToken, onCustomToken }: N
           openTauriBrowser,
           createTauriOAuthInitiator(),
         ).pipe(
+          Effect.tap(() => Effect.promise(() => enrichGoogleTokenWithEmail(token))),
           Effect.tap(() => onAddAccessToken(token)),
           Effect.catchAll((error) => Effect.sync(() => log.catch(error))),
         ),
