@@ -102,6 +102,8 @@ export class MigrationBuilder {
     };
     const migratedDoc = migrateDocument(oldHandle.doc() as Doc<DatabaseDirectory>, newState);
     const newHandle = this._repo.import<DatabaseDirectory>(A.save(migratedDoc));
+    await newHandle.whenReady();
+    invariant(newHandle.url, 'Migrated document URL not available after whenReady');
     this._newLinks[id] = newHandle.url;
     this._addHandleToFlushList(newHandle);
   }
@@ -144,6 +146,7 @@ export class MigrationBuilder {
     await this._space.db.flush();
 
     // Create new epoch.
+    invariant(this._newRoot.url, 'New root URL not available');
     await this._space.internal.createEpoch({
       migration: CreateEpochRequest.Migration.REPLACE_AUTOMERGE_ROOT,
       automergeRootUrl: this._newRoot.url,
