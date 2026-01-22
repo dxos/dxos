@@ -11,12 +11,12 @@ import { SheetCapabilities } from '../../types';
 
 // Locally declare the Automation ComputeRuntime capability by ID to avoid direct import dependency.
 
-export default Capability.makeModule((context: Capability.PluginContext) =>
-  Effect.gen(function* () {
+export default Capability.makeModule(
+  Effect.fnUntraced(function* () {
+    const computeRuntimeResolver = yield* Capability.get(AutomationCapabilities.ComputeRuntime);
     // TODO(wittjosiah): This can probably be a module level import now due to lazy capability loading.
     // Async import removes direct dependency on hyperformula.
     const { defaultPlugins, ComputeGraphRegistry } = yield* Effect.tryPromise(() => import('@dxos/compute'));
-    const computeRuntimeResolver = context.getCapability(AutomationCapabilities.ComputeRuntime);
     const computeGraphRegistry = new ComputeGraphRegistry({
       plugins: defaultPlugins,
       computeRuntime: computeRuntimeResolver,

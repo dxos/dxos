@@ -32,9 +32,10 @@ const checkAppScheme = (url: string) => {
   });
 };
 
-export default Capability.makeModule((context) =>
-  Effect.sync(() => {
-    const settings = context.getCapability(Common.Capability.SettingsStore).getStore<DeckSettingsProps>(meta.id)?.value;
+export default Capability.makeModule(
+  Effect.fnUntraced(function* () {
+    const settingsStore = yield* Capability.get(Common.Capability.SettingsStore);
+    const settings = settingsStore.getStore<DeckSettingsProps>(meta.id)?.value;
     if (!isSocket && settings?.enableNativeRedirect) {
       checkAppScheme(appScheme);
     }

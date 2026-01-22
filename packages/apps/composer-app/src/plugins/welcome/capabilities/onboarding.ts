@@ -11,10 +11,10 @@ import { OnboardingManager } from '../onboarding-manager';
 
 import { WelcomeCapabilities } from './capabilities';
 
-export default Capability.makeModule((context) =>
-  Effect.gen(function* () {
-    const { invokePromise } = context.getCapability(Common.Capability.OperationInvoker);
-    const client = context.getCapability(ClientCapabilities.Client);
+export default Capability.makeModule(
+  Effect.fnUntraced(function* () {
+    const { invokePromise } = yield* Capability.get(Common.Capability.OperationInvoker);
+    const client = yield* Capability.get(ClientCapabilities.Client);
     const searchProps = new URLSearchParams(window.location.search);
     const hubUrl = client.config.values?.runtime?.app?.env?.DX_HUB_URL;
 

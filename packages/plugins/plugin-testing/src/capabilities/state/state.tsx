@@ -16,8 +16,9 @@ const defaultState: LayoutState = {
   workspace: 'default',
 };
 
-export default Capability.makeModule(({ initialState }: { initialState?: Partial<LayoutState> }) =>
-  Effect.sync(() => {
+export default Capability.makeModule(
+  Effect.fnUntraced(function* (props?: { initialState?: Partial<LayoutState> }) {
+    const { initialState } = props ?? {};
     const state = live<LayoutState>({ ...defaultState, ...initialState });
 
     const layout = live<Common.Capability.Layout>({

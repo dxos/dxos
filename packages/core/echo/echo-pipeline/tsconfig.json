@@ -109,6 +109,9 @@
       "path": "../echo-protocol"
     },
     {
+      "path": "../feed"
+    },
+    {
       "path": "../index-core"
     },
     {

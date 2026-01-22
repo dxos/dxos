@@ -5,6 +5,7 @@
 import * as Effect from 'effect/Effect';
 
 import { Capability, Common, Plugin } from '@dxos/app-framework';
+import { Operation } from '@dxos/operation';
 import { ClientEvents } from '@dxos/plugin-client';
 import { MarkdownEvents } from '@dxos/plugin-markdown';
 import { type CreateObject } from '@dxos/plugin-space/types';
@@ -38,10 +39,9 @@ export const WnfsPlugin = Plugin.define(meta).pipe(
         icon: 'ph--file--regular',
         iconHue: 'teal',
         inputSchema: WnfsAction.UploadFileSchema,
-        createObject: ((props, { db, context }) =>
+        createObject: ((props, { db }) =>
           Effect.gen(function* () {
-            const { invoke } = context.getCapability(Common.Capability.OperationInvoker);
-            const { object } = yield* invoke(WnfsOperation.CreateFile, { ...props, db });
+            const { object } = yield* Operation.invoke(WnfsOperation.CreateFile, { ...props, db });
             return object;
           })) satisfies CreateObject,
         addToCollectionOnCreate: true,

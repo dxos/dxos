@@ -5,7 +5,7 @@
 import React from 'react';
 
 import { useAppGraph } from '@dxos/app-framework/react';
-import { Node, useConnections } from '@dxos/plugin-graph';
+import { Node, useActionRunner, useConnections } from '@dxos/plugin-graph';
 import {
   Avatar,
   Button,
@@ -35,6 +35,7 @@ export type NavBarProps = {
 export const NavBar = ({ activeId, onActiveIdChange }: NavBarProps) => {
   const { t } = useTranslation(meta.id);
   const { graph } = useAppGraph();
+  const runAction = useActionRunner();
 
   const connections = useConnections(graph, Node.RootId);
   const menuActions = connections.filter((node) => node.properties.disposition === 'menu');
@@ -45,9 +46,9 @@ export const NavBar = ({ activeId, onActiveIdChange }: NavBarProps) => {
     <DensityProvider density='coarse'>
       <nav
         className={mx(
-          'fixed inset-inline-0 block-end-0',
-          'grid grid-cols-[min-content_min-content] gap-2 justify-center content-start',
-          'pbe-[env(safe-area-inset-bottom)] bs-[calc(env(safe-area-inset-bottom)+var(--dx-mobile-bottombar-content-height,64px))]',
+          'fixed inset-inline-0',
+          'grid grid-cols-[min-content_min-content] gap-2 place-content-center',
+          'block-end-[--dx-mobile-bottombar-inset-bottom,0px] bs-[--dx-mobile-bottombar-content-height,64px]',
           'bg-baseSurface border-bs border-separator',
           surfaceZIndex({ level: 'menu' }),
         )}
@@ -81,7 +82,7 @@ export const NavBar = ({ activeId, onActiveIdChange }: NavBarProps) => {
             </Avatar.Root>
           </Button>
         </ButtonGroup>
-        <MenuProvider>
+        <MenuProvider onAction={runAction}>
           <DropdownMenu.Root items={menuActions}>
             <Tooltip.Trigger asChild content={t('app menu label')} side='right'>
               <DropdownMenu.Trigger asChild data-testid='spacePlugin.addSpace'>

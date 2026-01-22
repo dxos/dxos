@@ -5,9 +5,18 @@
 import { type MaybeAccessor, access } from '@solid-primitives/utils';
 import { type Accessor, createEffect, createMemo, createSignal, onCleanup } from 'solid-js';
 
-import type { Entity } from '@dxos/echo';
+import { type Entity, Obj } from '@dxos/echo';
 import { AtomObj } from '@dxos/echo-atom';
 import { type Registry, useRegistry } from '@dxos/effect-atom-solid';
+
+export interface ObjectUpdateCallback<T> {
+  (update: (obj: T) => void): void;
+  (update: (obj: T) => T): void;
+}
+
+export interface ObjectPropUpdateCallback<T> extends ObjectUpdateCallback<T> {
+  (newValue: T): void;
+}
 
 /**
  * Helper type to conditionally include undefined in return type only if input includes undefined.
@@ -21,98 +30,126 @@ type ConditionalUndefined<T, R> = [T] extends [Exclude<T, undefined>]
 
 /**
  * Subscribe to a specific property of an Echo object.
- * Returns the current property value and automatically updates when the property changes.
+ * Returns the current property value accessor and an update callback.
  *
  * @param obj - The Echo object to subscribe to (can be reactive)
  * @param property - Property key to subscribe to
- * @returns An accessor that returns the current property value
+ * @returns A tuple of [accessor, updateCallback]
  */
 export function useObject<T extends Entity.Unknown | undefined, K extends keyof Exclude<T, undefined>>(
   obj: MaybeAccessor<T>,
   property: K,
-): Accessor<ConditionalUndefined<T, Exclude<T, undefined>[K]>>;
+): [Accessor<ConditionalUndefined<T, Exclude<T, undefined>[K]>>, ObjectPropUpdateCallback<Exclude<T, undefined>[K]>];
 
 /**
  * Subscribe to an entire Echo object.
- * Returns the current object value and automatically updates when the object changes.
+ * Returns the current object value accessor and an update callback.
  *
  * @param obj - The Echo object to subscribe to (can be reactive)
- * @returns An accessor that returns the current object value
+ * @returns A tuple of [accessor, updateCallback]
  */
-export function useObject<T extends Entity.Unknown>(obj: MaybeAccessor<T>): Accessor<ConditionalUndefined<T, T>>;
+export function useObject<T extends Entity.Unknown>(
+  obj: MaybeAccessor<T>,
+): [Accessor<ConditionalUndefined<T, T>>, ObjectUpdateCallback<T>];
 export function useObject<T extends Entity.Unknown | undefined>(
   obj: MaybeAccessor<T>,
-): Accessor<ConditionalUndefined<T, Exclude<T, undefined>>>;
+): [Accessor<ConditionalUndefined<T, Exclude<T, undefined>>>, ObjectUpdateCallback<Exclude<T, undefined>>];
 
 /**
  * Subscribe to an Echo object (entire object or specific property).
- * Returns the current value and automatically updates when the object or property changes.
+ * Returns the current value accessor and an update callback.
  *
  * @param obj - The Echo object to subscribe to (can be reactive)
  * @param property - Optional property key to subscribe to a specific property
- * @returns An accessor that returns the current object value or property value
+ * @returns A tuple of [accessor, updateCallback]
  */
 export function useObject<T extends Entity.Unknown | undefined, K extends keyof Exclude<T, undefined>>(
   obj: MaybeAccessor<T>,
   property?: K,
 ):
-  | Accessor<ConditionalUndefined<T, Exclude<T, undefined>>>
-  | Accessor<ConditionalUndefined<T, Exclude<T, undefined>[K]>>;
+  | [Accessor<ConditionalUndefined<T, Exclude<T, undefined>>>, ObjectUpdateCallback<Exclude<T, undefined>>]
+  | [Accessor<ConditionalUndefined<T, Exclude<T, undefined>[K]>>, ObjectPropUpdateCallback<Exclude<T, undefined>[K]>];
 export function useObject<T extends Entity.Unknown, K extends keyof T>(
   obj: MaybeAccessor<T>,
   property?: K,
-): Accessor<ConditionalUndefined<T, T>> | Accessor<ConditionalUndefined<T, T[K]>>;
+):
+  | [Accessor<ConditionalUndefined<T, T>>, ObjectUpdateCallback<T>]
+  | [Accessor<ConditionalUndefined<T, T[K]>>, ObjectPropUpdateCallback<T[K]>];
 export function useObject<T extends Entity.Unknown | undefined, K extends keyof Exclude<T, undefined>>(
   obj: MaybeAccessor<T>,
   property?: K,
 ):
-  | Accessor<ConditionalUndefined<T, Exclude<T, undefined>>>
-  | Accessor<ConditionalUndefined<T, Exclude<T, undefined>[K]>> {
+  | [Accessor<ConditionalUndefined<T, Exclude<T, undefined>>>, ObjectUpdateCallback<Exclude<T, undefined>>]
+  | [Accessor<ConditionalUndefined<T, Exclude<T, undefined>[K]>>, ObjectPropUpdateCallback<Exclude<T, undefined>[K]>] {
   const registry = useRegistry();
 
+  // Memoize the resolved object to track changes.
+  const resolvedObj = createMemo(() => access(obj));
+
+  // Create a stable callback that handles both object and property updates.
+  const callback = (updateOrValue: unknown | ((obj: unknown) => unknown)) => {
+    const currentObj = resolvedObj();
+    if (!currentObj) {
+      return;
+    }
+
+    if (typeof updateOrValue === 'function') {
+      const returnValue = (updateOrValue as (obj: unknown) => unknown)(
+        property !== undefined ? (currentObj as any)[property] : currentObj,
+      );
+      if (returnValue !== undefined) {
+        if (property === undefined) {
+          throw new Error('Cannot re-assign the entire object');
+        }
+        (currentObj as any)[property] = returnValue;
+      }
+    } else {
+      if (property === undefined) {
+        throw new Error('Cannot re-assign the entire object');
+      }
+      (currentObj as any)[property] = updateOrValue;
+    }
+  };
+
   if (property !== undefined) {
-    return useObjectProperty(registry, obj, property);
+    return [useObjectProperty(registry, obj, property), callback as ObjectPropUpdateCallback<Exclude<T, undefined>[K]>];
   }
-  return useObjectValue(registry, obj);
+  return [useObjectValue(registry, obj), callback as ObjectUpdateCallback<Exclude<T, undefined>>];
 }
 
 /**
  * Internal function for subscribing to an entire Echo object.
+ * Uses snapshots from AtomObj.make() which return new object references on each change.
  */
 function useObjectValue<T extends Entity.Unknown | undefined>(
   registry: Registry.Registry,
   obj: MaybeAccessor<T>,
 ): Accessor<ConditionalUndefined<T, Exclude<T, undefined>>> {
-  // Memoize the resolved object to track changes
+  // Memoize the resolved object to track changes.
   const resolvedObj = createMemo(() => access(obj));
 
-  // Store the current value in a signal
-  // Internally we use T | undefined for runtime safety, but return type is conditional
-  const [value, setValue] = createSignal<T | undefined>(resolvedObj());
+  // Initialize with snapshot of the current object (if available).
+  const initialObj = resolvedObj();
+  const initialSnapshot = initialObj ? (Obj.getSnapshot(initialObj as Obj.Any) as T) : undefined;
+  const [value, setValue] = createSignal<T | undefined>(initialSnapshot);
 
-  // Subscribe to atom updates
+  // Subscribe to atom updates.
   createEffect(() => {
     const currentObj = resolvedObj();
 
-    // If object is undefined, set it (the return type will be conditional)
     if (!currentObj) {
       setValue(() => undefined);
       return;
     }
 
-    // Memoize the atom creation only when we have a valid object
-    const a = AtomObj.make(currentObj);
-    let currentValue: T | undefined = currentObj;
+    const atom = AtomObj.make(currentObj);
+    const currentValue = registry.get(atom);
+    setValue(() => currentValue as T);
 
-    currentValue = AtomObj.get(registry, a);
-    setValue(() => currentValue);
-
-    // Subscribe to atom updates
-    const unsubscribe = AtomObj.subscribe(
-      registry,
-      a,
+    const unsubscribe = registry.subscribe(
+      atom,
       () => {
-        setValue(() => AtomObj.get(registry, a) as T);
+        setValue(() => registry.get(atom) as T);
       },
       { immediate: true },
     );
@@ -120,7 +157,6 @@ function useObjectValue<T extends Entity.Unknown | undefined>(
     onCleanup(unsubscribe);
   });
 
-  // Return with conditional type - TypeScript will narrow based on T
   return value as Accessor<ConditionalUndefined<T, Exclude<T, undefined>>>;
 }
 
@@ -132,41 +168,32 @@ function useObjectProperty<T extends Entity.Unknown | undefined, K extends keyof
   obj: MaybeAccessor<T>,
   property: K,
 ): Accessor<ConditionalUndefined<T, Exclude<T, undefined>[K]>> {
-  // Memoize the resolved object to track changes
+  // Memoize the resolved object to track changes.
   const resolvedObj = createMemo(() => access(obj));
 
-  // Store the current value in a signal
-  // Internally we use Exclude<T, undefined>[K] | undefined for runtime safety, but return type is conditional
   type NonUndefinedT = Exclude<T, undefined>;
   const initialValue = resolvedObj() ? (resolvedObj() as NonUndefinedT)[property] : undefined;
   const [value, setValue] = createSignal<NonUndefinedT[K] | undefined>(initialValue);
 
-  // Subscribe to atom updates
+  // Subscribe to atom updates.
   createEffect(() => {
     const currentObj = resolvedObj();
 
-    // If object is undefined, set undefined (the return type will be conditional)
     if (!currentObj) {
       setValue(() => undefined);
       return;
     }
 
-    // Memoize the atom creation only when we have a valid object
-    // currentObj is guaranteed to be Entity.Unknown here (not undefined) due to the check above
     type NonUndefinedT = Exclude<T, undefined>;
-    const obj = currentObj as NonUndefinedT;
-    const a = AtomObj.makeProperty(obj, property);
-    let currentValue: NonUndefinedT[K] | undefined = obj[property];
-
-    currentValue = AtomObj.get(registry, a);
+    const echoObj = currentObj as NonUndefinedT;
+    const atom = AtomObj.makeProperty(echoObj, property);
+    const currentValue = registry.get(atom);
     setValue(() => currentValue);
 
-    // Subscribe to atom updates
-    const unsubscribe = AtomObj.subscribe(
-      registry,
-      a,
+    const unsubscribe = registry.subscribe(
+      atom,
       () => {
-        setValue(() => AtomObj.get(registry, a) as NonUndefinedT[K]);
+        setValue(() => registry.get(atom) as NonUndefinedT[K]);
       },
       { immediate: true },
     );
@@ -174,6 +201,5 @@ function useObjectProperty<T extends Entity.Unknown | undefined, K extends keyof
     onCleanup(unsubscribe);
   });
 
-  // Return with conditional type - TypeScript will narrow based on T
   return value as Accessor<ConditionalUndefined<T, Exclude<T, undefined>[K]>>;
 }

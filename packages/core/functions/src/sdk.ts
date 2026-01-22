@@ -10,7 +10,7 @@ import { type AiService } from '@dxos/ai';
 import { Obj, Type } from '@dxos/echo';
 import { type Database } from '@dxos/echo';
 import { assertArgument, failedInvariant } from '@dxos/invariant';
-import * as Operation from '@dxos/operation';
+import { Operation } from '@dxos/operation';
 
 import {
   type CredentialsService,
@@ -198,7 +198,7 @@ const getServiceKeys = (services: readonly Context.Tag<any, any>[]) => {
  */
 export const toOperation = <T, O, S extends FunctionServices = FunctionServices>(
   functionDef: FunctionDefinition<T, O, S>,
-): Operation.OperationDefinition<T, O> & { handler: Operation.OperationHandler<T, O, any, S> } => {
+): Operation.Definition<T, O> & { handler: Operation.Handler<T, O, any, S> } => {
   const op = Operation.make({
     schema: {
       input: functionDef.inputSchema,
@@ -213,7 +213,7 @@ export const toOperation = <T, O, S extends FunctionServices = FunctionServices>
 
   // Adapt FunctionHandler signature to OperationHandler format.
   // FunctionHandler expects { context, data }, OperationHandler expects just input.
-  const operationHandler: Operation.OperationHandler<T, O, any, S> = (input: T) => {
+  const operationHandler: Operation.Handler<T, O, any, S> = (input: T) => {
     const result = functionDef.handler({
       context: {} as FunctionContext,
       data: input,

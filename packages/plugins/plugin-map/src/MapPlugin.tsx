@@ -7,6 +7,7 @@ import * as Effect from 'effect/Effect';
 import { Common, Plugin } from '@dxos/app-framework';
 import { Type } from '@dxos/echo';
 import { type CreateObject } from '@dxos/plugin-space/types';
+import { View } from '@dxos/schema';
 
 import { AppGraphBuilder, BlueprintDefinition, MapState, OperationResolver, ReactSurface } from './capabilities';
 import { meta } from './meta';
@@ -30,7 +31,13 @@ export const MapPlugin = Plugin.define(meta).pipe(
         icon: 'ph--compass--regular',
         iconHue: 'green',
         inputSchema: MapAction.CreateMap,
-        createObject: ((props) => Effect.sync(() => Map.make(props))) satisfies CreateObject,
+        createObject: ((props, { db }) =>
+          Effect.promise(async () => {
+            const view = props.typename
+              ? (await View.makeFromDatabase({ db, typename: props.typename })).view
+              : undefined;
+            return Map.make({ name: props.name, view });
+          })) satisfies CreateObject,
       },
     },
   }),

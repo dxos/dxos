@@ -11,7 +11,7 @@ import { useAsyncEffect } from '@dxos/react-hooks';
 import { type MaybeProvider, getProviderValue } from '@dxos/util';
 
 import * as Common from '../common';
-import { type ActivationEvent, Capability, Plugin, PluginManager } from '../core';
+import { type ActivationEvent, Capability, type CapabilityManager, Plugin, PluginManager } from '../core';
 import { type UseAppOptions, useApp } from '../react';
 
 /**
@@ -31,8 +31,8 @@ export const setupPluginManager = ({
   });
 
   if (capabilities) {
-    getProviderValue(capabilities, pluginManager.context).forEach((capability) => {
-      pluginManager.context.contributeCapability({
+    getProviderValue(capabilities, pluginManager.capabilities).forEach((capability) => {
+      pluginManager.capabilities.contribute({
         interface: capability.interface,
         implementation: capability.implementation,
         module: 'story',
@@ -45,7 +45,7 @@ export const setupPluginManager = ({
 
 export type WithPluginManagerOptions = UseAppOptions & {
   /** @deprecated */
-  capabilities?: MaybeProvider<Capability.Any[], Capability.PluginContext>;
+  capabilities?: MaybeProvider<Capability.Any[], CapabilityManager.CapabilityManager>;
   /** @deprecated */
   fireEvents?: (ActivationEvent.ActivationEvent | string)[];
 };
@@ -70,13 +70,13 @@ export const withPluginManager = <Args,>(init: WithPluginManagerInitializer<Args
         root: () => <Story />,
       });
 
-      pluginManager.context.contributeCapability({
+      pluginManager.capabilities.contribute({
         ...capability,
         module: 'dxos.org/app-framework/withPluginManager',
       });
 
       return () => {
-        pluginManager.context.removeCapability(capability.interface, capability.implementation);
+        pluginManager.capabilities.remove(capability.interface, capability.implementation);
       };
     }, [pluginManager, context]);
 

@@ -16,7 +16,7 @@ import { usePluginManager } from './usePluginManager';
  */
 export const useCapabilities = <T>(interfaceDef: Capability.InterfaceDef<T>): Accessor<T[]> => {
   const manager = usePluginManager();
-  return useAtomValue(manager.context.capabilities(interfaceDef));
+  return useAtomValue(manager.capabilities.atom(interfaceDef));
 };
 
 /**

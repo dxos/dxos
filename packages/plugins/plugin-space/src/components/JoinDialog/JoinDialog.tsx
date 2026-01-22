@@ -14,6 +14,7 @@ import { type Space } from '@dxos/react-client/echo';
 import { type InvitationResult } from '@dxos/react-client/invitations';
 import { Dialog, useTranslation } from '@dxos/react-ui';
 import { JoinPanel, type JoinPanelProps } from '@dxos/shell/react';
+import { osTranslations } from '@dxos/ui-theme';
 
 import { meta } from '../../meta';
 
@@ -91,7 +92,7 @@ export const JoinDialog = ({ navigableCollections, onDone, ...props }: JoinDialo
 
   return (
     <Dialog.Content>
-      <Dialog.Title classNames='sr-only'>{t('join space label', { ns: 'os' })}</Dialog.Title>
+      <Dialog.Title classNames='sr-only'>{t('join space label', { ns: osTranslations })}</Dialog.Title>
       <JoinPanel
         {...props}
         exitActionParent={<Dialog.Close asChild />}

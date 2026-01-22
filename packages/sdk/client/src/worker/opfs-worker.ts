@@ -4,8 +4,9 @@
 
 /// <reference lib="webworker" />
 
-import * as OpfsWorker from '@effect/sql-sqlite-wasm/OpfsWorker';
 import * as Effect from 'effect/Effect';
+
+import * as OpfsWorker from '@dxos/sql-sqlite/OpfsWorker';
 
 // TODO(mykola): Factor out.
 const DB_NAME = 'DXOS';

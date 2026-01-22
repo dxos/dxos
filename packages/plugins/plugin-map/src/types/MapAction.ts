@@ -4,7 +4,8 @@
 
 import * as Schema from 'effect/Schema';
 
-import * as Operation from '@dxos/operation';
+import { Capability } from '@dxos/app-framework';
+import { Operation } from '@dxos/operation';
 import { TypeInputOptionsAnnotation } from '@dxos/plugin-space/types';
 
 import { meta } from '../meta';
@@ -39,6 +40,7 @@ const MAP_OPERATION = `${meta.id}/operation`;
 export namespace MapOperation {
   export const Toggle = Operation.make({
     meta: { key: `${MAP_OPERATION}/toggle`, name: 'Toggle Map' },
+    services: [Capability.Service],
     schema: {
       input: Schema.Void,
       output: Schema.Void,

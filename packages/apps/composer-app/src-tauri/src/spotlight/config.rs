@@ -3,8 +3,6 @@
 /// Configuration for the spotlight panel.
 #[derive(Debug, Clone)]
 pub struct SpotlightConfig {
-    /// Window label/identifier.
-    pub label: String,
     /// Window title.
     pub title: String,
     /// Window width in logical pixels.
@@ -15,10 +13,14 @@ pub struct SpotlightConfig {
     pub shortcut: String,
 }
 
+impl SpotlightConfig {
+    /// Window label/identifier for the spotlight panel.
+    pub const LABEL: &'static str = "popover";
+}
+
 impl Default for SpotlightConfig {
     fn default() -> Self {
         Self {
-            label: "popover".to_string(),
             title: "Composer Quick Access".to_string(),
             width: 680.0,
             height: 420.0,

@@ -8,6 +8,7 @@ import { Common } from '@dxos/app-framework';
 import { useOperationInvoker } from '@dxos/app-framework/react';
 import { type Space } from '@dxos/client/echo';
 import { Button, Input, Popover, useTranslation } from '@dxos/react-ui';
+import { osTranslations } from '@dxos/ui-theme';
 
 import { meta } from '../../meta';
 
@@ -42,7 +43,7 @@ export const SpaceRenamePopover = ({ space }: { space: Space }) => {
       </div>
       <Popover.Close asChild>
         <Button ref={doneButton} classNames='self-stretch' onClick={handleDone}>
-          {t('done label', { ns: 'os' })}
+          {t('done label', { ns: osTranslations })}
         </Button>
       </Popover.Close>
     </div>

@@ -31,8 +31,14 @@ type MessageRootProps = ThemedClassName<ComponentPropsWithRef<typeof Primitive.d
 };
 
 type MessageContextValue = { titleId?: string; descriptionId: string; valence: MessageValence };
+
 const MESSAGE_NAME = 'Message';
+
 const [MessageProvider, useMessageContext] = createContext<MessageContextValue>(MESSAGE_NAME);
+
+//
+// Root
+//
 
 const MessageRoot = forwardRef<HTMLDivElement, MessageRootProps>(
   (
@@ -73,6 +79,10 @@ const MessageRoot = forwardRef<HTMLDivElement, MessageRootProps>(
 
 MessageRoot.displayName = MESSAGE_NAME;
 
+//
+// Title
+//
+
 type MessageTitleProps = Omit<ThemedClassName<ComponentPropsWithRef<typeof Primitive.h2>>, 'id'> & {
   asChild?: boolean;
   icon?: string;
@@ -108,16 +118,20 @@ const MessageTitle = forwardRef<HTMLHeadingElement, MessageTitleProps>(
 
 MessageTitle.displayName = MESSAGE_TITLE_NAME;
 
+//
+// Content
+//
+
 type MessageContentProps = Omit<ThemedClassName<ComponentPropsWithRef<typeof Primitive.h2>>, 'id'> & {
   asChild?: boolean;
 };
 
-const MESSAGE_BODY_NAME = 'MessageContent';
+const MESSAGE_CONTENT_NAME = 'MessageContent';
 
 const MessageContent = forwardRef<HTMLParagraphElement, MessageContentProps>(
   ({ asChild, classNames, children, ...props }, forwardedRef) => {
     const { tx } = useThemeContext();
-    const { descriptionId } = useMessageContext(MESSAGE_BODY_NAME);
+    const { descriptionId } = useMessageContext(MESSAGE_CONTENT_NAME);
     const Root = asChild ? Slot : Primitive.p;
     return (
       <Root
@@ -132,9 +146,18 @@ const MessageContent = forwardRef<HTMLParagraphElement, MessageContentProps>(
   },
 );
 
-MessageContent.displayName = MESSAGE_BODY_NAME;
+MessageContent.displayName = MESSAGE_CONTENT_NAME;
 
-export const Message = { Root: MessageRoot, Title: MessageTitle, Content: MessageContent };
+//
+// Message
+//
+
+export const Message = {
+  Root: MessageRoot,
+  Title: MessageTitle,
+  Content: MessageContent,
+};
+
 export const Callout = Message;
 
 export type { MessageRootProps, MessageTitleProps, MessageContentProps };
