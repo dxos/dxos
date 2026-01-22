@@ -2,9 +2,8 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { useCallback, useEffect, useState } from 'react';
-
 import type * as Schema from 'effect/Schema';
+import React, { useCallback, useEffect, useState } from 'react';
 
 import { Common } from '@dxos/app-framework';
 import { useCapabilities, useOperationInvoker } from '@dxos/app-framework/react';

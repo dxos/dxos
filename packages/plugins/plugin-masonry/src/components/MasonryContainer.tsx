@@ -2,9 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { useEffect, useState } from 'react';
-
 import type * as Schema from 'effect/Schema';
+import React, { useEffect, useState } from 'react';
 
 import { Common } from '@dxos/app-framework';
 import { Surface, useCapabilities } from '@dxos/app-framework/react';
