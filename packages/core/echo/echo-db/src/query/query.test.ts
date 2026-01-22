@@ -2,6 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
+import * as A from '@automerge/automerge';
 import { type AutomergeUrl } from '@automerge/automerge-repo';
 import * as Schema from 'effect/Schema';
 import { afterEach, beforeEach, describe, expect, onTestFinished, test } from 'vitest';
@@ -299,12 +300,15 @@ describe('Query', () => {
 
       expect((await db.query(Query.select(Filter.everything())).run()).length).to.eq(2);
       const rootDocHandle = db.coreDatabase._automergeDocLoader.getSpaceRootDocHandle();
+      const obj1DocHandle = getObjectCore(obj1).docHandle!;
       const anotherDocHandle = getObjectCore(obj2).docHandle!;
+      // Wait for documents to be ready before accessing url and objects.
+      await Promise.all([rootDocHandle.whenReady(), obj1DocHandle.whenReady(), anotherDocHandle.whenReady()]);
       anotherDocHandle.change((doc: DatabaseDirectory) => {
-        doc.objects![obj1.id] = getObjectCore(obj1).docHandle!.doc()!.objects![obj1.id];
+        doc.objects![obj1.id] = obj1DocHandle.doc()!.objects![obj1.id];
       });
       rootDocHandle.change((doc: DatabaseDirectory) => {
-        doc.links![obj1.id] = anotherDocHandle.url;
+        doc.links![obj1.id] = new A.RawString(anotherDocHandle.url);
       });
       await db.flush();
       await peer.host.queryService.reindex();
@@ -317,6 +321,7 @@ describe('Query', () => {
 
     {
       const db = await peer.openDatabase(spaceKey, root);
+      await db.coreDatabase.updateIndexes();
       const queryResult = await db.query(Query.select(Filter.everything())).run();
       expect(queryResult.length).to.eq(2);
 

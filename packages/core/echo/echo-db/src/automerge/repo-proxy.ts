@@ -175,20 +175,20 @@ export class RepoProxy extends Resource {
     invariant(this._lifecycleState === LifecycleState.OPEN);
 
     const update = () => {
-      this._pendingUpdateIds.add(handle.documentId);
+      // Called only when documentId is known (after onChange check or after creation).
+      this._pendingUpdateIds.add(handle.documentId!);
       this._sendUpdatesJob?.trigger();
       this._emitSaveStateEvent();
     };
 
     // TODO(burdon): Called even if not mutations.
     const onChange = () => {
-      log('onChange', { documentId: handle.documentId, internalId: handle._internalId });
-
       // If the handle is still being created, do not trigger an update, it will be triggered when the creation is complete.
-      if (!handle.documentId) {
+      if (handle.documentId == null) {
         return;
       }
 
+      log('onChange', { documentId: handle.documentId, internalId: handle._internalId });
       update();
     };
 
@@ -206,6 +206,7 @@ export class RepoProxy extends Resource {
     };
 
     const handle = new DocHandleProxy<T>({ initialValue, onDelete: cleanup });
+    handle.on('change', onChange);
     this._pendingCreations.set(
       handle._internalId,
       this._dataService
@@ -217,9 +218,10 @@ export class RepoProxy extends Resource {
           { timeout: RPC_TIMEOUT },
         )
         .then((response) => {
-          handle._setDocumentId(response.documentId as DocumentId);
-          this._pendingAddIds.add(handle.documentId);
-          this._handles[handle.documentId] = handle;
+          const documentId = response.documentId as DocumentId;
+          handle._setDocumentId(documentId);
+          this._pendingAddIds.add(documentId);
+          this._handles[documentId] = handle;
           update();
           handle._wakeReady();
         })

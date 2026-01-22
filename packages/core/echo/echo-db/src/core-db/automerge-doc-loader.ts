@@ -13,7 +13,6 @@ import { assertState, invariant } from '@dxos/invariant';
 import { type ObjectId, type PublicKey, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { trace } from '@dxos/tracing';
-import { ComplexSet } from '@dxos/util';
 
 import { type DocHandleProxy, type RepoProxy } from '../automerge';
 
@@ -40,6 +39,11 @@ export interface AutomergeDocumentLoader {
   onObjectBoundToDocument(handle: DocHandleProxy<DatabaseDirectory>, objectId: string): void;
 
   /**
+   * Wait for all pending document creations to complete.
+   */
+  waitForPendingCreations(): Promise<void>;
+
+  /**
    * @returns objectIds for which we had document handles or were loading one.
    */
   clearHandleReferences(): string[];
@@ -63,12 +67,16 @@ export class AutomergeDocumentLoaderImpl implements AutomergeDocumentLoader {
 
   /**
    * Keeps track of objects that are currently being loaded.
-   * Prevents multiple concurrent loads of the same document.
+   * Prevents multiple concurrent loads of the same object.
    * This can happen on SpaceRootHandle switch because we don't cancel the previous load.
    */
-  private readonly _currentlyLoadingObjects = new ComplexSet<{ url: AutomergeUrl; objectId: string }>(
-    ({ url, objectId }) => `${url}:${objectId}`,
-  );
+  private readonly _currentlyLoadingObjects = new Set<string>();
+
+  /**
+   * Tracks pending document creation promises.
+   * Used by flush() to wait for all documents to be created.
+   */
+  private readonly _pendingDocumentCreations = new Map<string, Promise<void>>();
 
   public readonly onObjectDocumentLoaded = new Event<ObjectDocumentLoaded>();
 
@@ -176,12 +184,34 @@ export class AutomergeDocumentLoaderImpl implements AutomergeDocumentLoader {
       version: SpaceDocVersion.CURRENT,
       access: { spaceKey: this._spaceKey.toHex() },
     });
+    const creationPromise = spaceDocHandle
+      .whenReady()
+      .then(() => {
+        if (this._spaceRootDocHandle == null) {
+          log.warn('space root document handle is not available, skipping object binding', { objectId });
+          return;
+        }
+        const url = spaceDocHandle.url;
+        if (url == null) {
+          log.warn('document has no url after whenReady, skipping object binding', { objectId });
+          return;
+        }
+        this._spaceRootDocHandle.change((newDoc: DatabaseDirectory) => {
+          newDoc.links ??= {};
+          newDoc.links[objectId] = new A.RawString(url);
+        });
+      })
+      .finally(() => {
+        this._pendingDocumentCreations.delete(objectId);
+      });
+    this._pendingDocumentCreations.set(objectId, creationPromise);
     this.onObjectBoundToDocument(spaceDocHandle, objectId);
-    this._spaceRootDocHandle.change((newDoc: DatabaseDirectory) => {
-      newDoc.links ??= {};
-      newDoc.links[objectId] = new A.RawString(spaceDocHandle.url);
-    });
+
     return spaceDocHandle;
+  }
+
+  public async waitForPendingCreations(): Promise<void> {
+    await Promise.all([...this._pendingDocumentCreations.values()]);
   }
 
   public onObjectBoundToDocument(handle: DocHandleProxy<DatabaseDirectory>, objectId: string): void {
@@ -209,7 +239,8 @@ export class AutomergeDocumentLoaderImpl implements AutomergeDocumentLoader {
       const automergeUrl = automergeUrlData.toString();
       const logMeta = { objectId, automergeUrl };
       const objectDocumentHandle = this._objectDocumentHandles.get(objectId);
-      if (objectDocumentHandle != null && objectDocumentHandle.url !== automergeUrl) {
+      // Skip if object is already bound to a different document.
+      if (objectDocumentHandle?.url != null && objectDocumentHandle.url !== automergeUrl) {
         log.warn('object already inlined in a different document, ignoring the link', {
           ...logMeta,
           actualDocumentUrl: objectDocumentHandle.url,
@@ -244,28 +275,35 @@ export class AutomergeDocumentLoaderImpl implements AutomergeDocumentLoader {
   }
 
   private async _loadHandleForObject(handle: DocHandleProxy<DatabaseDirectory>, objectId: string): Promise<void> {
+    // Check deduplication before waiting to prevent concurrent loads of the same object.
+    if (this._currentlyLoadingObjects.has(objectId)) {
+      log.verbose('document is already loading', { objectId });
+      return;
+    }
+    this._currentlyLoadingObjects.add(objectId);
+
     try {
-      if (this._currentlyLoadingObjects.has({ url: handle.url, objectId })) {
-        log.verbose('document is already loading', { objectId });
+      // Wait for handle to be ready before accessing url.
+      await handle.whenReady();
+
+      const url = handle.url;
+      if (url == null) {
+        log.warn('document has no url after whenReady', { objectId });
         return;
       }
-      this._currentlyLoadingObjects.add({ url: handle.url, objectId });
-      await handle.whenReady();
-      this._currentlyLoadingObjects.delete({ url: handle.url, objectId });
 
-      const logMeta = { objectId, docUrl: handle.url };
+      const logMeta = { objectId, docUrl: url };
       if (this.onObjectDocumentLoaded.listenerCount() === 0) {
         log('document loaded after all listeners were removed', logMeta);
         return;
       }
       const objectDocHandle = this._objectDocumentHandles.get(objectId);
-      if (objectDocHandle?.url !== handle.url) {
+      if (objectDocHandle?.url != null && objectDocHandle.url !== url) {
         log.warn('object was rebound while a document was loading, discarding handle', logMeta);
         return;
       }
       this.onObjectDocumentLoaded.emit({ handle, objectId });
     } catch (err) {
-      this._currentlyLoadingObjects.delete({ url: handle.url, objectId });
       const shouldRetryLoading = this.onObjectDocumentLoaded.listenerCount() > 0;
       log.warn('failed to load a document', {
         objectId,
@@ -276,6 +314,8 @@ export class AutomergeDocumentLoaderImpl implements AutomergeDocumentLoader {
       if (shouldRetryLoading) {
         await this._loadHandleForObject(handle, objectId);
       }
+    } finally {
+      this._currentlyLoadingObjects.delete(objectId);
     }
   }
 }

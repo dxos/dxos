@@ -109,7 +109,9 @@ export class ObjectCore {
   }
 
   bind(options: BindOptions): void {
-    invariant(options.docHandle.isReady());
+    // When loading existing documents, wait for the document to be ready.
+    // When creating new documents (assignFromLocalState), the local doc is immediately usable.
+    invariant(options.assignFromLocalState || options.docHandle.isReady());
     this.database = options.db;
     this.docHandle = options.docHandle;
     this.mountPath = options.path;

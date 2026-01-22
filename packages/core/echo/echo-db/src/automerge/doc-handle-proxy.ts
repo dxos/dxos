@@ -3,7 +3,7 @@
 //
 
 import { next as A, type Doc } from '@automerge/automerge';
-import { type DocumentId, stringifyAutomergeUrl } from '@automerge/automerge-repo';
+import { type AutomergeUrl, type DocumentId, stringifyAutomergeUrl } from '@automerge/automerge-repo';
 import { EventEmitter } from 'eventemitter3';
 
 import { Trigger, TriggerState } from '@dxos/async';
@@ -72,13 +72,21 @@ export class DocHandleProxy<T> extends EventEmitter<ClientDocHandleEvents<T>> im
     }
   }
 
-  get url() {
-    invariant(this._documentId);
-    return stringifyAutomergeUrl(this._documentId);
+  /**
+   * Returns the document URL, or undefined if documentId is not yet assigned.
+   * For new documents, this is undefined until the document is created on the host.
+   * For loaded documents, this is always defined.
+   */
+  get url(): AutomergeUrl | undefined {
+    return this._documentId ? stringifyAutomergeUrl(this._documentId) : undefined;
   }
 
-  get documentId(): DocumentId {
-    invariant(this._documentId);
+  /**
+   * Returns the document ID, or undefined if not yet assigned.
+   * For new documents, this is undefined until the document is created on the host.
+   * For loaded documents, this is always defined.
+   */
+  get documentId(): DocumentId | undefined {
     return this._documentId;
   }
 
