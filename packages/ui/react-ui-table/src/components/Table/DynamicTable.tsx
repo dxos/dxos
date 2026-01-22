@@ -8,7 +8,7 @@ import React, { useCallback, useContext, useMemo, useRef } from 'react';
 import { type Type } from '@dxos/echo';
 import { type JsonSchemaType } from '@dxos/echo/internal';
 import { type ThemedClassName, useDefaultValue } from '@dxos/react-ui';
-import { ProjectionModel } from '@dxos/schema';
+import { createDirectChangeCallback, ProjectionModel } from '@dxos/schema';
 import { mx } from '@dxos/ui-theme';
 
 import { useTableModel } from '../../hooks';
@@ -75,7 +75,7 @@ export const DynamicTable = <T extends Type.Entity.Any = Type.Entity.Any>({
 
   const projectionModel = useMemo(() => {
     if (jsonSchema && projection) {
-      const model = new ProjectionModel(jsonSchema, projection);
+      const model = new ProjectionModel(jsonSchema, projection, createDirectChangeCallback(projection, jsonSchema));
       model.normalizeView();
       return model;
     }
