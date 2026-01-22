@@ -4,7 +4,7 @@
 
 import { Atom } from '@effect-atom/atom';
 
-import { Database, type DXN, type Entity, type Filter, Query, type QueryResult } from '@dxos/echo';
+import { DXN, Database, type Entity, type Filter, Query, type QueryResult } from '@dxos/echo';
 
 /**
  * Create a self-updating atom from an existing QueryResult.
@@ -63,17 +63,22 @@ const queryFamily = Atom.family((key: string) => {
 
 /**
  * Derive a stable identifier from a Queryable.
- * Supports Database (spaceId) and Queue (dxn).
+ * Supports Database (spaceId), Queue (dxn), and objects with id.
  */
 const getQueryableIdentifier = (queryable: Database.Queryable): string => {
+  // Database: use spaceId.
   if (Database.isDatabase(queryable)) {
     return queryable.spaceId;
   }
-  // Duck-type check for Queue (has dxn property).
-  if ('dxn' in queryable && queryable.dxn != null) {
-    return (queryable.dxn as DXN).toString();
+  // Queue or similar: use dxn if it's a DXN instance.
+  if ('dxn' in queryable && queryable.dxn instanceof DXN) {
+    return queryable.dxn.toString();
   }
-  throw new Error('Unable to derive identifier from queryable. Use fromQueryable with explicit identifier.');
+  // Fallback: use id if it's a string.
+  if ('id' in queryable && typeof queryable.id === 'string') {
+    return queryable.id;
+  }
+  throw new Error('Unable to derive identifier from queryable.');
 };
 
 /**
@@ -94,16 +99,9 @@ export const make = <T extends Entity.Unknown>(
 };
 
 /**
- * Get a memoized query atom for any Queryable with a custom identifier.
- * Uses a single Atom.family keyed by identifier + serialized query AST.
- * Same queryable + query/filter = same atom instance (proper memoization).
- *
- * @param queryable - The queryable to query (Database, Queue, etc.).
- * @param identifier - A unique identifier for the queryable.
- * @param queryOrFilter - A Query or Filter to execute.
- * @returns A memoized atom that updates when query results change.
+ * Internal: Get a memoized query atom for any Queryable with a custom identifier.
  */
-export const fromQueryable = <T extends Entity.Unknown>(
+const fromQueryable = <T extends Entity.Unknown>(
   queryable: Database.Queryable,
   identifier: string,
   queryOrFilter: Query.Query<T> | Filter.Filter<T>,
