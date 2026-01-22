@@ -36,6 +36,11 @@ export default defineFunction({
 
       const to = message.properties?.to; // Assuming 'to' is stored in properties for now.
       const subject = message.properties?.subject;
+      const cc = message.properties?.cc;
+      const bcc = message.properties?.bcc;
+      const inReplyTo = message.properties?.inReplyTo;
+      const references = message.properties?.references;
+      const threadId = message.properties?.threadId;
       const text = message.blocks.find((b) => b._tag === 'text')?.text;
 
       if (!to || !text) {
@@ -44,17 +49,20 @@ export default defineFunction({
       }
 
       // Construct MIME message.
-      const str = [
+      const headers = [
         `To: ${to}`,
         `Subject: ${subject ?? 'No Subject'}`,
+        ...(cc ? [`Cc: ${cc}`] : []),
+        ...(bcc ? [`Bcc: ${bcc}`] : []),
+        ...(inReplyTo ? [`In-Reply-To: ${inReplyTo}`] : []),
+        ...(references ? [`References: ${references}`] : []),
         'Content-Type: text/plain; charset=utf-8',
-        '',
-        text,
-      ].join('\n');
+      ];
+      const str = [...headers, '', text].join('\n');
 
       const raw = Buffer.from(str).toString('base64').replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
 
-      const response = yield* GoogleMail.sendMessage(userId, { raw });
+      const response = yield* GoogleMail.sendMessage(userId, { raw, ...(threadId && { threadId }) });
 
       log('email sent', { id: response.id });
 
