@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 import React, { useCallback } from 'react';
 
 import { Capability, Common } from '@dxos/app-framework';
-import { useCapability, useOperationInvoker } from '@dxos/app-framework/react';
+import { useAtomCapability, useCapability, useOperationInvoker } from '@dxos/app-framework/react';
 import {
   AutomergePanel,
   ConfigPanel,
@@ -55,7 +55,7 @@ import {
   Wireframe,
 } from '../../components';
 import { meta } from '../../meta';
-import { type DebugSettingsProps, Devtools } from '../../types';
+import { DebugCapabilities, type DebugSettingsProps, Devtools } from '../../types';
 
 type SpaceDebug = {
   type: string;
@@ -82,12 +82,9 @@ const useCurrentSpace = () => {
   return space;
 };
 
-export default Capability.makeModule(
-  Effect.fnUntraced(function* () {
-    const capabilities = yield* Capability.Service;
-    const settingsAtom = capabilities.atom(Common.Capability.Settings);
-
-    return Capability.contributes(Common.Capability.ReactSurface, [
+export default Capability.makeModule(() =>
+  Effect.succeed(
+    Capability.contributes(Common.Capability.ReactSurface, [
       Common.createSurface({
         id: `${meta.id}/plugin-settings`,
         role: 'article',
@@ -145,19 +142,14 @@ export default Capability.makeModule(
         id: `${meta.id}/wireframe`,
         role: ['article', 'section'],
         position: 'hoist',
-        filter: (data, get): data is { subject: Obj.Any } => {
-          const [allSettings] = get(settingsAtom);
-          const settingsObj = allSettings.find((s) => s.prefix === meta.id);
-          if (!settingsObj) {
-            return false;
+        filter: (data): data is { subject: Obj.Any } => Obj.isObject(data.subject),
+        component: ({ data, role }) => {
+          const settings = useAtomCapability(DebugCapabilities.Settings);
+          if (!settings.wireframe) {
+            return null;
           }
-          const registry = capabilities.get(Common.Capability.AtomRegistry);
-          const settings = registry.get(settingsObj.atom) as DebugSettingsProps;
-          return Obj.isObject(data.subject) && !!settings.wireframe;
+          return <Wireframe label={`${role}:${name}`} object={data.subject} classNames='row-span-2 overflow-hidden' />;
         },
-        component: ({ data, role }) => (
-          <Wireframe label={`${role}:${name}`} object={data.subject} classNames='row-span-2 overflow-hidden' />
-        ),
       }),
       Common.createSurface({
         id: `${meta.id}/object-debug`,
@@ -407,6 +399,6 @@ export default Capability.makeModule(
           return <TestingPanel onSpaceCreate={onSpaceCreate} onScriptPluginOpen={onScriptPluginOpen} />;
         },
       }),
-    ]);
-  }),
+    ]),
+  ),
 );

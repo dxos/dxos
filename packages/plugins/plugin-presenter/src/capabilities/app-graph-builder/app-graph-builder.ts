@@ -15,7 +15,7 @@ import { Markdown } from '@dxos/plugin-markdown/types';
 import { Collection } from '@dxos/schema';
 
 import { meta } from '../../meta';
-import { PresenterOperation, type PresenterSettingsProps } from '../../types';
+import { PresenterCapabilities, PresenterOperation, type PresenterSettingsProps } from '../../types';
 
 /** Match nodes that can be presented (Collection or Document). */
 const whenPresentable = (node: Node.Node) =>
@@ -32,11 +32,9 @@ export default Capability.makeModule(
       // TODO(wittjosiah): This is a hack to work around presenter previously relying on "variant". Remove.
       match: whenPresentable,
       connector: (object, get) => {
-        const settingsStoreAtom = capabilities.atom(Common.Capability.SettingsStore);
-        const [settingsStore] = get(settingsStoreAtom);
-        const settings = get(
-          CreateAtom.fromSignal(() => settingsStore?.getStore<PresenterSettingsProps>(meta.id)?.value),
-        );
+        const registry = capabilities.get(Common.Capability.AtomRegistry);
+        const settingsAtom = capabilities.get(PresenterCapabilities.Settings);
+        const settings = registry.get(settingsAtom);
         const isPresentable = settings?.presentCollections
           ? Obj.instanceOf(Collection.Collection, object) || Obj.instanceOf(Markdown.Document, object)
           : Obj.instanceOf(Markdown.Document, object);
@@ -58,11 +56,9 @@ export default Capability.makeModule(
         ]);
       },
       actions: (object, get) => {
-        const settingsStoreAtom = capabilities.atom(Common.Capability.SettingsStore);
-        const [settingsStore] = get(settingsStoreAtom);
-        const settings = get(
-          CreateAtom.fromSignal(() => settingsStore?.getStore<PresenterSettingsProps>(meta.id)?.value),
-        );
+        const registry = capabilities.get(Common.Capability.AtomRegistry);
+        const settingsAtom = capabilities.get(PresenterCapabilities.Settings);
+        const settings = registry.get(settingsAtom);
         const isPresentable = settings?.presentCollections
           ? Obj.instanceOf(Collection.Collection, object) || Obj.instanceOf(Markdown.Document, object)
           : Obj.instanceOf(Markdown.Document, object);

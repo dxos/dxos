@@ -6,19 +6,24 @@ import * as Effect from 'effect/Effect';
 import React from 'react';
 
 import { Capability, Common } from '@dxos/app-framework';
-import { useCapability } from '@dxos/app-framework/react';
+import { useAtomCapability, useCapability } from '@dxos/app-framework/react';
 
 import { ExportStatus, FilesSettings, LocalFileContainer } from '../../components';
 import { meta } from '../../meta';
 import { FileCapabilities, type FilesSettingsProps, type LocalFile } from '../../types';
 import { isLocalFile } from '../../util';
 
+const StatusComponent = () => {
+  const settings = useAtomCapability(FileCapabilities.Settings);
+  const store = useCapability(FileCapabilities.State);
+  if (!settings.autoExport) {
+    return null;
+  }
+  return <ExportStatus running={store.values.exportRunning} lastExport={store.values.lastExport} />;
+};
+
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    // Get context for lazy capability access in callbacks.
-    const capabilities = yield* Capability.Service;
-    const settingsAtom = capabilities.atom(Common.Capability.Settings);
-
     return Capability.contributes(Common.Capability.ReactSurface, [
       Common.createSurface({
         id: `${meta.id}/article`,
@@ -40,20 +45,7 @@ export default Capability.makeModule(
       Common.createSurface({
         id: `${meta.id}/status`,
         role: 'status',
-        filter: (data, get): data is any => {
-          const [allSettings] = get(settingsAtom);
-          const settingsObj = allSettings.find((s) => s.prefix === meta.id);
-          if (!settingsObj) {
-            return false;
-          }
-          const registry = capabilities.get(Common.Capability.AtomRegistry);
-          const settings = registry.get(settingsObj.atom) as FilesSettingsProps;
-          return !!settings.autoExport;
-        },
-        component: () => {
-          const store = useCapability(FileCapabilities.State);
-          return <ExportStatus running={store.values.exportRunning} lastExport={store.values.lastExport} />;
-        },
+        component: () => <StatusComponent />,
       }),
     ]);
   }),

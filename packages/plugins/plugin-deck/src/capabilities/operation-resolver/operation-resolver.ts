@@ -313,8 +313,9 @@ export default Capability.makeModule(
           const { graph } = yield* Capability.get(Common.Capability.AppGraph);
           const { state, update } = yield* Capability.get(DeckCapabilities.State);
           const attention = yield* Capability.get(AttentionCapabilities.Attention);
-          const settingsStores = yield* Capability.getAll(Common.Capability.SettingsStore);
-          const settings = settingsStores[0]?.getStore<DeckSettingsProps>(meta.id)?.value;
+          const registry = yield* Capability.get(Common.Capability.AtomRegistry);
+          const settingsAtom = yield* Capability.get(DeckCapabilities.Settings);
+          const settings = registry.get(settingsAtom);
 
           if (input.workspace && state.activeDeck !== input.workspace) {
             yield* Operation.invoke(Common.LayoutOperation.SwitchWorkspace, { subject: input.workspace });

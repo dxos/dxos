@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 import { Capability, Common } from '@dxos/app-framework';
 
 import { meta } from '../../meta';
-import { type DeckSettingsProps } from '../../types';
+import { DeckCapabilities, type DeckSettingsProps } from '../../types';
 
 const isSocket = !!(globalThis as any).__args;
 
@@ -34,8 +34,10 @@ const checkAppScheme = (url: string) => {
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    const settingsStore = yield* Capability.get(Common.Capability.SettingsStore);
-    const settings = settingsStore.getStore<DeckSettingsProps>(meta.id)?.value;
+    const capabilities = yield* Capability.Service;
+    const registry = capabilities.get(Common.Capability.AtomRegistry);
+    const settingsAtom = capabilities.get(DeckCapabilities.Settings);
+    const settings = registry.get(settingsAtom);
     if (!isSocket && settings?.enableNativeRedirect) {
       checkAppScheme(appScheme);
     }

@@ -26,13 +26,13 @@ export default Capability.makeModule(
     const registry = yield* Capability.get(Common.Capability.AtomRegistry);
     const { invokePromise } = yield* Capability.get(Common.Capability.OperationInvoker);
     const attention = yield* Capability.get(AttentionCapabilities.Attention);
-    const settingsStore = yield* Capability.get(Common.Capability.SettingsStore);
-    const settings = settingsStore.getStore<FilesSettingsProps>(meta.id)!;
+    const settingsAtom = yield* Capability.get(FileCapabilities.Settings);
+    const getSettings = () => registry.get(settingsAtom);
 
     const subscriptions = new SubscriptionList();
 
     const value = yield* Effect.tryPromise(() => localforage.getItem<FileSystemHandle[]>(meta.id));
-    if (Array.isArray(value) && settings.value.openLocalFiles) {
+    if (Array.isArray(value) && getSettings().openLocalFiles) {
       const files: FilesState['files'] = [];
       yield* Effect.tryPromise(() =>
         Promise.all(
@@ -53,13 +53,13 @@ export default Capability.makeModule(
     // Auto-export subscription.
     let autoExportInterval: ReturnType<typeof setInterval> | undefined;
     subscriptions.add(
-      registry.subscribe(settings.atom, () => {
+      registry.subscribe(settingsAtom, () => {
         if (autoExportInterval) {
           clearInterval(autoExportInterval);
           autoExportInterval = undefined;
         }
 
-        const { autoExport, autoExportInterval: interval } = settings.value;
+        const { autoExport, autoExportInterval: interval } = getSettings();
         if (!autoExport || !store.values.rootHandle || !invokePromise) {
           return;
         }
@@ -84,7 +84,7 @@ export default Capability.makeModule(
     // Persist file handles.
     subscriptions.add(
       registry.subscribe(store.atom, () => {
-        if (!settings.value.openLocalFiles) {
+        if (!getSettings().openLocalFiles) {
           return;
         }
 
@@ -97,7 +97,7 @@ export default Capability.makeModule(
     subscriptions.add(
       scheduledEffect(
         () => ({
-          openLocalFiles: settings.value.openLocalFiles,
+          openLocalFiles: getSettings().openLocalFiles,
           attended: attention.current,
         }),
         ({ openLocalFiles, attended }) => {

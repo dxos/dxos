@@ -34,7 +34,9 @@ export default Capability.makeModule(
     const capabilities = yield* Capability.Service;
 
     const store = capabilities.get(MeetingCapabilities.State);
-    const _settings = capabilities.get(Common.Capability.SettingsStore).getStore<Meeting.Settings>(meta.id)!.value;
+    const registry = capabilities.get(Common.Capability.AtomRegistry);
+    const settingsAtom = capabilities.get(MeetingCapabilities.Settings);
+    const _settings = registry.get(settingsAtom);
 
     return Capability.contributes(ThreadCapabilities.CallExtension, {
       onJoin: async ({ channel }: { channel?: Channel.Channel }) => {

@@ -23,9 +23,10 @@ export default Capability.makeModule(
     const editorState = createEditorStateStore(`${meta.id}/editor`);
 
     const getViewMode = (id: string) => {
-      const defaultViewMode = capabilities.get(Common.Capability.SettingsStore).getStore<Markdown.Settings>(meta.id)!
-        .value.defaultViewMode;
-      return (id && store.values.viewMode[id]) || defaultViewMode;
+      const registry = capabilities.get(Common.Capability.AtomRegistry);
+      const settingsAtom = capabilities.get(MarkdownCapabilities.Settings);
+      const settings = registry.get(settingsAtom);
+      return (id && store.values.viewMode[id]) || settings?.defaultViewMode;
     };
 
     const setViewMode = (id: string, viewMode: EditorViewMode) => {

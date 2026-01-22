@@ -48,11 +48,9 @@ export default Capability.makeModule(
         id: `${meta.id}/root`,
         match: NodeMatcher.whenRoot,
         connector: (node, get) => {
-          const settingsStoreAtom = capabilities.atom(Common.Capability.SettingsStore);
-          const settingsStore = get(settingsStoreAtom)[0];
-          const settings = get(
-            CreateAtom.fromSignal(() => settingsStore?.getStore<FilesSettingsProps>(meta.id)?.value),
-          );
+          const registry = capabilities.get(Common.Capability.AtomRegistry);
+          const settingsAtom = capabilities.get(FileCapabilities.Settings);
+          const settings = registry.get(settingsAtom);
           return Effect.succeed(
             settings && settings.openLocalFiles
               ? [

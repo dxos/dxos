@@ -19,9 +19,9 @@ export default Capability.makeModule(
     const extensionProvider = () =>
       listener({
         onChange: ({ id, text }) => {
-          const settings = capabilities
-            .get(Common.Capability.SettingsStore)
-            .getStore<FilesSettingsProps>(meta.id)!.value;
+          const registry = capabilities.get(Common.Capability.AtomRegistry);
+          const settingsAtom = capabilities.get(FileCapabilities.Settings);
+          const settings = registry.get(settingsAtom);
           const store = capabilities.get(FileCapabilities.State);
           const { current } = store.values;
           if (settings.openLocalFiles && current && current.id === id && current.text !== text) {

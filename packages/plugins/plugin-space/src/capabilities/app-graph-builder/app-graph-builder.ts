@@ -173,9 +173,9 @@ export default Capability.makeModule(
             return Effect.succeed([]);
           }
 
-          const settings = get(capabilities.atom(Common.Capability.SettingsStore))[0]?.getStore<SpaceSettingsProps>(
-            meta.id,
-          )?.value;
+          const registry = capabilities.get(Common.Capability.AtomRegistry);
+          const settingsAtom = capabilities.get(SpaceCapabilities.Settings);
+          const settings = registry.get(settingsAtom);
 
           try {
             if (!query) {
