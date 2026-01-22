@@ -14,11 +14,10 @@ export default Capability.makeModule(
     return Capability.contributes(Common.Capability.OperationResolver, [
       OperationResolver.make({
         operation: MapOperation.Toggle,
-        handler: () =>
-          Effect.gen(function* () {
-            const mutableState = yield* Capability.get(MapCapabilities.MutableState);
-            mutableState.type = mutableState.type === 'globe' ? 'map' : 'globe';
-          }),
+        handler: Effect.fnUntraced(function* () {
+          const mutableState = yield* Capability.get(MapCapabilities.MutableState);
+          mutableState.type = mutableState.type === 'globe' ? 'map' : 'globe';
+        }),
       }),
     ]);
   }),

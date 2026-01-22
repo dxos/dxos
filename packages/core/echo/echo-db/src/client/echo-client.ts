@@ -105,6 +105,7 @@ export class EchoClient extends Resource {
       objectLoader: {
         loadObject: this._loadObjectFromDocument.bind(this),
       },
+      graph: this._graph,
     });
     this._graph.registerQuerySourceProvider(this._indexQuerySourceProvider);
   }

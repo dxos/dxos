@@ -14,10 +14,9 @@ export default Capability.makeModule(
     return Capability.contributes(Common.Capability.OperationResolver, [
       OperationResolver.make({
         operation: SettingsOperation.OpenPluginRegistry,
-        handler: () =>
-          Effect.gen(function* () {
-            yield* Operation.invoke(Common.LayoutOperation.SwitchWorkspace, { subject: REGISTRY_ID });
-          }),
+        handler: Effect.fnUntraced(function* () {
+          yield* Operation.invoke(Common.LayoutOperation.SwitchWorkspace, { subject: REGISTRY_ID });
+        }),
       }),
     ]);
   }),
