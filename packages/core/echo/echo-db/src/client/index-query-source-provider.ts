@@ -5,10 +5,10 @@
 import { Event } from '@dxos/async';
 import { type Stream } from '@dxos/codec-protobuf/stream';
 import { Context } from '@dxos/context';
-import { type Obj, type QueryResult } from '@dxos/echo';
+import { type Hypergraph, Obj, type QueryResult } from '@dxos/echo';
 import { type QueryAST } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
-import { SpaceId } from '@dxos/keys';
+import { DXN, type ObjectId, type QueueSubspaceTag, SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { RpcClosedError } from '@dxos/protocols';
 import {
@@ -35,6 +35,7 @@ export interface ObjectLoader {
 export type IndexQueryProviderProps = {
   service: QueryService;
   objectLoader: ObjectLoader;
+  graph: Hypergraph.Hypergraph;
 };
 
 const QUERY_SERVICE_TIMEOUT = 20_000;
@@ -48,6 +49,7 @@ export class IndexQuerySourceProvider implements QuerySourceProvider {
     return new IndexQuerySource({
       service: this._params.service,
       objectLoader: this._params.objectLoader,
+      graph: this._params.graph,
     });
   }
 }
@@ -55,6 +57,7 @@ export class IndexQuerySourceProvider implements QuerySourceProvider {
 export type IndexQuerySourceProps = {
   service: QueryService;
   objectLoader: ObjectLoader;
+  graph: Hypergraph.Hypergraph;
 };
 
 /**
@@ -219,12 +222,24 @@ export class IndexQuerySource implements QuerySource {
 
     invariant(SpaceId.isValid(result.spaceId), 'Invalid spaceId');
 
-    // For queue items, use the embedded documentJson directly.
+    // For queue items, hydrate using Obj.fromJSON with ref resolver.
     if (result.queueId && result.documentJson) {
-      const data = JSON.parse(result.documentJson);
+      const json = JSON.parse(result.documentJson);
+      const queueDxn = DXN.fromQueue(
+        (result.queueNamespace ?? 'data') as QueueSubspaceTag,
+        result.spaceId as SpaceId,
+        result.queueId as ObjectId,
+      );
+      const refResolver = this._params.graph.createRefResolver({
+        context: { space: result.spaceId as SpaceId, queue: queueDxn },
+      });
+      const object = await Obj.fromJSON(json, {
+        refResolver,
+        dxn: queueDxn.extend([result.id as ObjectId]),
+      });
       const queryResult: QueryResult.EntityEntry = {
         id: result.id,
-        result: data,
+        result: object,
         match: { rank: result.rank },
         resolution: { source: 'index', time: Date.now() - queryStartTimestamp },
       };

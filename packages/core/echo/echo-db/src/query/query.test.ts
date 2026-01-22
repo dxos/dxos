@@ -1001,7 +1001,7 @@ describe('Query', () => {
 
       // Search with allQueuesFromSpaces: true should return both space and queue objects.
       {
-        const objects = await db
+        const objects: TestSchema.Task[] = await db
           .query(
             Query.select(Filter.text('TypeScript', { type: 'full-text' })).options({
               spaceIds: [db.spaceId],
@@ -1010,10 +1010,7 @@ describe('Query', () => {
           )
           .run();
         expect(objects).toHaveLength(2);
-        expect(objects.map((o) => (o as TestSchema.Task).title).sort()).toEqual([
-          'Queue Object TypeScript',
-          'Space Object TypeScript',
-        ]);
+        expect(objects.map((_) => _.title).sort()).toEqual(['Queue Object TypeScript', 'Space Object TypeScript']);
       }
 
       // Search without allQueuesFromSpaces should return only space objects.
@@ -1028,6 +1025,30 @@ describe('Query', () => {
         expect(objects).toHaveLength(1);
         expect((objects[0] as TestSchema.Task).title).toEqual('Space Object TypeScript');
       }
+    });
+
+    test('full-text search from queue returns valid echo objects', async () => {
+      const peer = await builder.createPeer({ indexing: { fullText: true }, types: [TestSchema.Task] });
+      const db = await peer.createDatabase();
+      const queues = peer.client.constructQueueFactory(db.spaceId);
+      const queue = queues.create();
+      const task = Obj.make(TestSchema.Task, { title: 'Queue Object TypeScript' });
+      await queue.append([task]);
+      await db.flush({ indexes: true });
+
+      const obj: TestSchema.Task = await db
+        .query(
+          Query.select(Filter.text('TypeScript', { type: 'full-text' })).options({ queues: [queue.dxn.toString()] }),
+        )
+        .first();
+      expect(obj).toBeDefined();
+      expect(Obj.getDXN(obj)?.toString().startsWith(queue.dxn.toString())).toBe(true);
+      expect(Obj.getTypename(obj)).toBe(TestSchema.Task.typename);
+      expect(Obj.getSchema(obj)).toEqual(TestSchema.Task);
+      expect(obj.id).toEqual(task.id);
+      expect(Obj.isDeleted(obj)).toBe(false);
+      expect(Obj.getMeta(obj).keys).toEqual([]);
+      expect(obj.title).toEqual('Queue Object TypeScript');
     });
   });
 
