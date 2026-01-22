@@ -113,15 +113,15 @@ export default Capability.makeModule(
       GraphBuilder.createTypeExtension({
         id: `${meta.id}/calendar-event`,
         type: Calendar.Calendar,
-        connector: (calendarObj, get) => {
-          const queue = get(CreateAtom.fromSignal(() => calendarObj.queue.target));
+        connector: (cal, get) => {
+          const queue = get(CreateAtom.fromSignal(() => cal.queue.target));
           if (!queue) {
             return Effect.succeed([]);
           }
 
           const selectionAtom = capabilities.atom(AttentionCapabilities.Selection);
           const selection = get(selectionAtom)[0];
-          const nodeId = Obj.getDXN(calendarObj).toString();
+          const nodeId = Obj.getDXN(cal).toString();
           const eventId = get(CreateAtom.fromSignal(() => selection?.getSelected(nodeId, 'single')));
           const event = get(
             AtomQuery.make<Event.Event>(queue, eventId ? Filter.id(eventId) : Filter.nothing()),
@@ -167,18 +167,18 @@ export default Capability.makeModule(
       GraphBuilder.createTypeExtension({
         id: `${meta.id}/sync-calendar`,
         type: Calendar.Calendar,
-        actions: (calendarObj) =>
+        actions: (cal) =>
           Effect.succeed([
             {
-              id: `${Obj.getDXN(calendarObj).toString()}-sync`,
+              id: `${Obj.getDXN(cal).toString()}-sync`,
               data: Effect.fnUntraced(function* () {
                 const computeRuntime = yield* Capability.get(AutomationCapabilities.ComputeRuntime);
-                const db = Obj.getDatabase(calendarObj);
+                const db = Obj.getDatabase(cal);
                 invariant(db);
                 const runtime = computeRuntime.getRuntime(db.spaceId);
                 yield* Effect.tryPromise(() =>
                   runtime.runPromise(
-                    invokeFunctionWithTracing(calendar.sync, { calendarId: Obj.getDXN(calendarObj).toString() }),
+                    invokeFunctionWithTracing(calendar.sync, { calendarId: Obj.getDXN(cal).toString() }),
                   ),
                 );
               }),
