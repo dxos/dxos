@@ -157,8 +157,10 @@ export default defineFunction({
  */
 const syncLabels = Effect.fn(function* (mailbox: Mailbox.Mailbox, userId: string) {
   const { labels } = yield* GoogleMail.listLabels(userId);
-  labels.forEach((label) => {
-    (mailbox.labels ??= {})[label.id] = label.name;
+  Obj.change(mailbox, (m) => {
+    labels.forEach((label) => {
+      (m.labels ??= {})[label.id] = label.name;
+    });
   });
   return labels.length;
 });
