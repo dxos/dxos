@@ -119,7 +119,7 @@ export class HaloProxy implements Halo {
     // Register reconnection callback to re-establish streams.
     // This is called before `reconnected` event fires, ensuring streams are ready.
     this._serviceProvider.onReconnect?.(async () => {
-      log.info('reconnected, re-establishing streams');
+      log('reconnected, re-establishing streams');
       await this._setupInvitationProxy();
       this._setupStreams();
     });

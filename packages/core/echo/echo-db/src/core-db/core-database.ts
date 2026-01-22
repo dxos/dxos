@@ -675,7 +675,7 @@ export class CoreDatabase {
    * Handle reconnection to re-establish RPC streams.
    */
   async _onReconnect(): Promise<void> {
-    log.info('re-establishing database streams');
+    log('re-establishing database streams');
     await this._repoProxy._onReconnect();
     this._reconnected.emit();
   }

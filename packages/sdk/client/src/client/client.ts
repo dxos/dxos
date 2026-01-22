@@ -434,7 +434,7 @@ export class Client {
 
     // Register reconnection callback to re-establish ECHO database streams and status.
     this._services.onReconnect?.(async () => {
-      log.info('reconnected, re-establishing ECHO streams');
+      log('reconnected, re-establishing ECHO streams');
       // Update service references first (they point to the new RPC connections).
       const dataService = this._services!.services.DataService;
       const queryService = this._services!.services.QueryService;

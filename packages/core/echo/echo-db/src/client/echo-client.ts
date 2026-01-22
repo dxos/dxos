@@ -176,7 +176,7 @@ export class EchoClient extends Resource {
     queryService: QueryService;
     queueService?: QueueService;
   }): void {
-    log.info('updating service references');
+    log('updating service references');
     this._dataService = dataService;
     this._queryService = queryService;
     this._queuesService = queueService;
@@ -212,7 +212,7 @@ export class EchoClient extends Resource {
    * Called after a dedicated worker leader change.
    */
   async _notifyReconnect(): Promise<void> {
-    log.info('notifying databases of reconnection');
+    log('notifying databases of reconnection');
     for (const db of this._databases.values()) {
       await db._onReconnect();
     }

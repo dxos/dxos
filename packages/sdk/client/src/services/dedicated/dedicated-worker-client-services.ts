@@ -127,7 +127,7 @@ export class DedicatedWorkerClientServices extends Resource implements ClientSer
     const ctx = this._ctx.derive();
 
     const handleLeaderStopped = async () => {
-      log.info('lost connection');
+      log('lost connection');
 
       // Schedule reconnect immediately, then cleanup in background.
       this.#connectTask?.schedule();
@@ -143,7 +143,7 @@ export class DedicatedWorkerClientServices extends Resource implements ClientSer
     };
 
     try {
-      log.info('trying to connect');
+      log('trying to connect');
       const { appPort, systemPort, leaderId, livenessLockKey } = await new Promise<
         WorkerCoordinatorMessage & { type: 'provide-port' }
       >((resolve) => {
@@ -168,7 +168,7 @@ export class DedicatedWorkerClientServices extends Resource implements ClientSer
           clientId: this.#clientId,
         });
       });
-      log.info('connected to worker', { leaderId });
+      log('connected to worker', { leaderId });
 
       queueMicrotask(async () => {
         try {
@@ -207,9 +207,9 @@ export class DedicatedWorkerClientServices extends Resource implements ClientSer
         this.#initialConnection.wake();
       } else {
         // Call all reconnection callbacks and wait for them to complete.
-        log.info('reconnecting, calling callbacks');
+        log('reconnecting, calling callbacks');
         await Promise.all(this.#reconnectCallbacks.map((cb) => cb()));
-        log.info('reconnected');
+        log('reconnected');
         this.reconnected.emit();
       }
     } catch (err: any) {
@@ -253,7 +253,7 @@ class LeaderSession extends Resource {
     const listening = new Trigger();
     const ready = new Trigger<DedicatedWorkerReadyMessage>();
     this.#worker!.onmessage = (event: MessageEvent<DedicatedWorkerMessage>) => {
-      log.info('leader got message', { type: event.data.type });
+      log('leader got message', { type: event.data.type });
       switch (event.data.type) {
         case 'listening':
           listening.wake();
@@ -282,7 +282,7 @@ class LeaderSession extends Resource {
       };
     }
 
-    log.info('waiting for worker to start listening');
+    log('waiting for worker to start listening');
     await listening.wait();
     this.#sendMessage({
       type: 'init',
@@ -290,13 +290,13 @@ class LeaderSession extends Resource {
       ownerClientId: this.#ownerClientId,
       config: this.#config?.values,
     });
-    log.info('waiting for worker to be ready');
+    log('waiting for worker to be ready');
     const { livenessLockKey } = await ready.wait();
-    log.info('leader ready');
+    log('leader ready');
 
     // Listen for worker termination.
     void navigator.locks.request(livenessLockKey, () => {
-      log.info('worker terminated');
+      log('worker terminated');
       if (this.isOpen) {
         this.onClose.emit(new Error('Dedicated worker terminated.'));
       }

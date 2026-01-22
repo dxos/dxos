@@ -120,7 +120,7 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
 
     // Register reconnection callback to re-establish streams.
     this._serviceProvider.onReconnect?.(async () => {
-      log.info('reconnected, re-establishing streams');
+      log('reconnected, re-establishing streams');
       // Notify all existing spaces that reconnection is starting.
       // They will ignore state updates until the backend reaches READY again.
       for (const space of this._spaces) {

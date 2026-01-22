@@ -44,7 +44,7 @@ export class TestWorkerFactory extends Resource {
     // Lock ensures only a single worker is running.
     void navigator.locks.request(STORAGE_LOCK_KEY, async () => {
       messageChannel.port1.onmessage = async (ev: MessageEvent<DedicatedWorkerMessage>) => {
-        log.info('worker got message', { type: ev.data.type });
+        log('worker got message', { type: ev.data.type });
         switch (ev.data.type) {
           case 'init': {
             owningClientId = ev.data.ownerClientId ?? ev.data.clientId;
@@ -72,7 +72,7 @@ export class TestWorkerFactory extends Resource {
           }
           case 'start-session': {
             if (tabsProcessed.has(ev.data.clientId)) {
-              log.info('ignoring duplicate client');
+              log('ignoring duplicate client');
               break;
             }
             tabsProcessed.add(ev.data.clientId);

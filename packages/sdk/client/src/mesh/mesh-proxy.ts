@@ -58,7 +58,7 @@ export class MeshProxy {
 
     // Register reconnection callback to re-establish streams.
     this._serviceProvider.onReconnect?.(async () => {
-      log.info('reconnected, re-establishing streams');
+      log('reconnected, re-establishing streams');
       this._setupStreams();
     });
 

@@ -13,11 +13,9 @@ import { STORAGE_LOCK_KEY } from '../../lock-key';
 
 import type { DedicatedWorkerMessage } from './types';
 
-log.info('worker-entrypoint');
-
 // Lock ensures only a single worker is running.
 void navigator.locks.request(STORAGE_LOCK_KEY, async () => {
-  log.info('worker-entrypoint: lock acquired');
+  log('lock acquired');
 
   let runtime: WorkerRuntime;
   let owningClientId: string;
@@ -30,12 +28,12 @@ void navigator.locks.request(STORAGE_LOCK_KEY, async () => {
 
   const handleMessage = async (ev: MessageEvent<DedicatedWorkerMessage>) => {
     const message = ev.data;
-    log.info('worker got message', { type: message.type });
+    log('worker got message', { type: message.type });
     switch (message.type) {
       case 'init': {
         owningClientId = message.ownerClientId ?? message.clientId;
         const config = new Config(message.config ?? {});
-        log.info('worker init with config', { persistent: config.get('runtime.client.storage.persistent') });
+        log('worker init with config', { persistent: config.get('runtime.client.storage.persistent') });
         runtime = new WorkerRuntime({
           configProvider: async () => config,
           onStop: async () => {
@@ -58,7 +56,7 @@ void navigator.locks.request(STORAGE_LOCK_KEY, async () => {
       }
       case 'start-session': {
         if (tabsProcessed.has(message.clientId)) {
-          log.info('ignoring duplicate client');
+          log('ignoring duplicate client');
           break;
         }
         tabsProcessed.add(message.clientId);

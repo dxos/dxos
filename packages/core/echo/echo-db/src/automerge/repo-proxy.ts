@@ -159,7 +159,7 @@ export class RepoProxy extends Resource {
    * Document handles are preserved since they hold local Automerge state.
    */
   async _onReconnect(): Promise<void> {
-    log.info('re-establishing data subscription');
+    log('re-establishing data subscription');
 
     // Signal reconnection to abort any in-flight _sendUpdates operations.
     // The old task will eventually timeout, but the catch block will suppress the error.
