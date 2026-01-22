@@ -105,7 +105,7 @@ export class MigrationBuilder {
     await newHandle.whenReady();
     invariant(newHandle.url, 'Migrated document URL not available after whenReady');
     this._newLinks[id] = newHandle.url;
-    this._addHandleToFlushList(newHandle);
+    this._addHandleToFlushList(newHandle.documentId!);
   }
 
   async addObject(schema: Schema.Schema.AnyNoContext, props: any): Promise<string> {
@@ -131,7 +131,8 @@ export class MigrationBuilder {
       const propertiesStructure = doc.objects?.[this._space.properties.id];
       propertiesStructure && changeFn(propertiesStructure);
     });
-    this._addHandleToFlushList(this._newRoot);
+    await this._newRoot.whenReady();
+    this._addHandleToFlushList(this._newRoot.documentId!);
   }
 
   /**
@@ -183,7 +184,7 @@ export class MigrationBuilder {
       links,
     });
     await this._newRoot.whenReady();
-    this._addHandleToFlushList(this._newRoot);
+    this._addHandleToFlushList(this._newRoot.documentId!);
   }
 
   private async _createObject({
@@ -212,13 +213,13 @@ export class MigrationBuilder {
       },
     });
     await newHandle.whenReady();
-    this._newLinks[core.id] = newHandle.url;
-    this._addHandleToFlushList(newHandle);
+    this._newLinks[core.id] = newHandle.url!;
+    this._addHandleToFlushList(newHandle.documentId!);
 
     return core;
   }
 
-  private _addHandleToFlushList(handle: DocHandleProxy<any>): void {
-    this._flushIds.push(handle.documentId);
+  private _addHandleToFlushList(id: DocumentId): void {
+    this._flushIds.push(id);
   }
 }
