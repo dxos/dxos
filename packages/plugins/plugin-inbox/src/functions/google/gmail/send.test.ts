@@ -13,6 +13,7 @@ import { CredentialsService } from '@dxos/functions';
 import { Message } from '@dxos/types';
 
 import { GoogleMail } from '../../apis';
+import { MailboxCredentials } from '../../services/mailbox-credentials';
 
 const TestLayer = Layer.mergeAll(
   CredentialsService.layerConfig([
@@ -23,6 +24,7 @@ const TestLayer = Layer.mergeAll(
     },
   ]),
   FetchHttpClient.layer,
+  MailboxCredentials.default,
 );
 
 /**

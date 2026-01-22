@@ -24,6 +24,7 @@ import { type Event } from '@dxos/types';
 import * as Calendar from '../../../types/Calendar';
 import { GoogleCalendar } from '../../apis';
 import * as InboxResolver from '../../inbox-resolver';
+import { MailboxCredentials } from '../../services/mailbox-credentials';
 
 import { mapEvent } from './mapper';
 
@@ -109,7 +110,11 @@ export default defineFunction({
       return {
         newEvents: queueEvents.length,
       };
-    }).pipe(Effect.provide(FetchHttpClient.layer), Effect.provide(InboxResolver.Live)),
+    }).pipe(
+      Effect.provide(FetchHttpClient.layer),
+      Effect.provide(InboxResolver.Live),
+      Effect.provide(MailboxCredentials.default),
+    ),
 });
 
 type BaseSyncProps<T = unknown> = {

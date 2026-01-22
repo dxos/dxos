@@ -11,6 +11,7 @@ import { log } from '@dxos/log';
 import { Message } from '@dxos/types';
 
 import { GoogleMail } from '../../apis';
+import { MailboxCredentials } from '../../services/mailbox-credentials';
 
 export default defineFunction({
   key: 'dxos.org/function/inbox/google-mail-send',
@@ -70,5 +71,5 @@ export default defineFunction({
         id: response.id,
         threadId: response.threadId,
       };
-    }).pipe(Effect.provide(FetchHttpClient.layer)),
+    }).pipe(Effect.provide(FetchHttpClient.layer), Effect.provide(MailboxCredentials.default)),
 });

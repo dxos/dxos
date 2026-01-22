@@ -10,6 +10,8 @@ import * as Schedule from 'effect/Schedule';
 import { withAuthorization } from '@dxos/functions';
 import { log } from '@dxos/log';
 
+import { MailboxCredentials } from '../../services/mailbox-credentials';
+
 /**
  * Shared utilities for Google API integration (Gmail, Calendar, etc.)
  */
@@ -22,9 +24,10 @@ export const makeGoogleApiRequest = Effect.fn('makeGoogleApiRequest')(function* 
   url: string,
   options: { method?: string; body?: unknown } = {},
 ) {
-  const httpClient = yield* HttpClient.HttpClient.pipe(
-    Effect.map(withAuthorization({ service: 'google.com' }, 'Bearer')),
-  );
+  // Get token from MailboxCredentials (which falls back to CredentialsService).
+  const token = yield* MailboxCredentials.get();
+
+  const httpClient = yield* HttpClient.HttpClient.pipe(Effect.map(withAuthorization(token, 'Bearer')));
 
   // TODO(wittjosiah): Without this, executing the request results in CORS errors when traced.
   //  Is this an issue on Google's side or is it a bug in `@effect/platform`?

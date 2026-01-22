@@ -15,18 +15,20 @@ import { invariant } from '@dxos/invariant';
 
 import { GoogleMail } from '../../apis';
 import * as InboxResolver from '../../inbox-resolver';
+import { MailboxCredentials } from '../../services/mailbox-credentials';
 
 import { mapMessage } from './mapper';
 
 const TestLayer = Layer.mergeAll(
   CredentialsService.layerConfig([
     {
-      service: 'gmail.com',
+      service: 'google.com',
       // TODO(burdon): Rename `credential`.
       apiKey: Config.redacted('GOOGLE_ACCESS_TOKEN'),
     },
   ]),
   FetchHttpClient.layer,
+  MailboxCredentials.default,
 );
 
 /**

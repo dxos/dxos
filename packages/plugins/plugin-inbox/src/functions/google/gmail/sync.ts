@@ -16,7 +16,7 @@ import * as Stream from 'effect/Stream';
 import { Filter, Obj, Query, Type } from '@dxos/echo';
 import { Database } from '@dxos/echo';
 import type { Queue } from '@dxos/echo-db';
-import { CredentialsService, QueueService, defineFunction } from '@dxos/functions';
+import { QueueService, defineFunction } from '@dxos/functions';
 import { log } from '@dxos/log';
 import { Message } from '@dxos/types';
 
@@ -27,6 +27,7 @@ import { Message } from '@dxos/types';
 import * as Mailbox from '../../../types/Mailbox';
 import { GoogleMail } from '../../apis';
 import * as InboxResolver from '../../inbox-resolver';
+import { MailboxCredentials } from '../../services/mailbox-credentials';
 
 import { mapMessage } from './mapper';
 
@@ -102,74 +103,64 @@ export default defineFunction({
       log('syncing gmail', { mailbox: mailboxRef.dxn.toString(), userId, after, restrictedMode });
       const mailbox = yield* Database.Service.load(mailboxRef);
 
-      // Build credentials layer from mailbox-specific token or fall back to database query.
-      const credentialsLayer = yield* buildCredentialsLayer(mailbox);
+      // Build mailbox-scoped credentials layer.
+      const credentialsLayer = MailboxCredentials.layer(mailbox);
 
-      // Get labels.
-      const labelCount = yield* syncLabels(mailbox, userId).pipe(
-        Effect.provide(credentialsLayer),
-        Effect.catchAll((error) => {
-          log.catch(error);
-          return Effect.succeed(0);
-        }),
-      );
-      log('synced labels', { count: labelCount });
+      // Main sync effect that uses mailbox credentials.
+      const syncEffect = Effect.gen(function* () {
+        // Get labels.
+        const labelCount = yield* syncLabels(mailbox, userId).pipe(
+          Effect.catchAll((error) => {
+            log.catch(error);
+            return Effect.succeed(0);
+          }),
+        );
+        log('synced labels', { count: labelCount });
 
-      // Get last message to resume from.
-      const queue = yield* QueueService.getQueue<Message.Message>(mailbox.queue.dxn);
-      const objects = yield* Effect.tryPromise(() => queue.query(Query.select(Filter.type(Message.Message))).run());
-      const lastMessage = objects.at(-1);
+        // Get last message to resume from.
+        const queue = yield* QueueService.getQueue<Message.Message>(mailbox.queue.dxn);
+        const objects = yield* Effect.tryPromise(() => queue.query(Query.select(Filter.type(Message.Message))).run());
+        const lastMessage = objects.at(-1);
 
-      // Build deduplication set from recent messages to prevent duplicates across sync runs.
-      const recentMessages = objects.slice(-STREAMING_CONFIG.maxResults);
-      const existingGmailIds = new Set(
-        recentMessages.flatMap((msg) => {
-          const meta = Obj.getMeta(msg);
-          return meta.keys.filter((key) => key.source === 'gmail.com').map((key) => key.id);
-        }),
-      );
+        // Build deduplication set from recent messages to prevent duplicates across sync runs.
+        const recentMessages = objects.slice(-STREAMING_CONFIG.maxResults);
+        const existingGmailIds = new Set(
+          recentMessages.flatMap((msg) => {
+            const meta = Obj.getMeta(msg);
+            return meta.keys.filter((key) => key.source === 'gmail.com').map((key) => key.id);
+          }),
+        );
 
-      const startDate = lastMessage ? new Date(lastMessage.created) : new Date(after);
-      log('starting sync', {
-        startDate: format(startDate, 'yyyy-MM-dd'),
-        lastMessageId: lastMessage?.id,
-        existingGmailIds: existingGmailIds.size,
+        const startDate = lastMessage ? new Date(lastMessage.created) : new Date(after);
+        log('starting sync', {
+          startDate: format(startDate, 'yyyy-MM-dd'),
+          lastMessageId: lastMessage?.id,
+          existingGmailIds: existingGmailIds.size,
+        });
+
+        // Stream messages oldest-first into queue.
+        const newMessagesCount = yield* streamGmailMessagesToQueue(
+          startDate,
+          queue,
+          userId,
+          label,
+          existingGmailIds,
+          restrictedMode,
+        );
+        log('sync complete', { newMessages: newMessagesCount });
+        return {
+          newMessages: newMessagesCount,
+        };
       });
 
-      // Stream messages oldest-first into queue.
-      const newMessagesCount = yield* streamGmailMessagesToQueue(
-        startDate,
-        queue,
-        userId,
-        label,
-        existingGmailIds,
-        restrictedMode,
-      ).pipe(Effect.provide(credentialsLayer));
-      log('sync complete', { newMessages: newMessagesCount });
-      return {
-        newMessages: newMessagesCount,
-      };
+      // Provide mailbox-scoped credentials to the sync effect.
+      return yield* syncEffect.pipe(Effect.provide(credentialsLayer));
     }).pipe(Effect.provide(Layer.mergeAll(FetchHttpClient.layer, InboxResolver.Live))),
 });
 
 //
 // Helper functions.
 //
-
-/**
- * Builds a credentials layer from the mailbox's access token if available, otherwise falls back to database query.
- */
-const buildCredentialsLayer = Effect.fn(function* (mailbox: Mailbox.Mailbox) {
-  if (mailbox.accessToken) {
-    const accessToken = yield* Database.Service.load(mailbox.accessToken);
-    if (accessToken?.token) {
-      log('using mailbox-specific access token', { note: accessToken.note });
-      return CredentialsService.configuredLayer([{ service: 'google.com', apiKey: accessToken.token }]);
-    }
-  }
-  log('using database credentials');
-  return CredentialsService.layerFromDatabase();
-});
 
 /**
  * Sync labels.

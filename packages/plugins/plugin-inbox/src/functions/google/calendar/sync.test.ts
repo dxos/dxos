@@ -12,6 +12,7 @@ import { CredentialsService } from '@dxos/functions';
 
 import { GoogleCalendar } from '../../apis';
 import * as InboxResolver from '../../inbox-resolver';
+import { MailboxCredentials } from '../../services/mailbox-credentials';
 
 import { mapEvent } from './mapper';
 
@@ -23,6 +24,7 @@ const TestLayer = Layer.mergeAll(
     },
   ]),
   FetchHttpClient.layer,
+  MailboxCredentials.default,
 );
 
 /**
