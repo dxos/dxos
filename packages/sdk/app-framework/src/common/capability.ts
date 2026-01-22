@@ -163,7 +163,7 @@ export namespace Capability {
     prefix: string;
     schema: Schema$.Schema.All;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    atom?: Atom.Writable<any>;
+    atom: Atom.Writable<any>;
   };
 
   /**
