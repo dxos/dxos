@@ -95,7 +95,7 @@ describe('CoreDatabase', () => {
           newDocument.objects = {};
         });
       });
-      
+
       const text = db.getObjectById(object.id)!;
       expect(text).not.to.be.undefined;
       const spaceRootHandle = getDocHandles(db).spaceRootHandle;
