@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 import { Capability, Common } from '@dxos/app-framework';
 import { debounce } from '@dxos/async';
 import { Keyboard } from '@dxos/keyboard';
-import { Graph, Node } from '@dxos/plugin-graph';
+import { Graph, Node, runAction } from '@dxos/plugin-graph';
 import { getHostPlatform } from '@dxos/util';
 
 import { KEY_BINDING } from '../../meta';
@@ -15,6 +15,8 @@ import { KEY_BINDING } from '../../meta';
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     const { graph } = yield* Capability.get(Common.Capability.AppGraph);
+    const invoker = yield* Capability.get(Common.Capability.OperationInvoker);
+    const pluginContext = yield* Capability.Service;
 
     // TODO(wittjosiah): Factor out.
     // TODO(wittjosiah): Handle removal of actions.
@@ -37,7 +39,7 @@ export default Capability.makeModule(
       if (shortcut && Node.isAction(node)) {
         Keyboard.singleton.getContext(path.slice(0, -1).join('/')).bind({
           shortcut,
-          handler: () => node.data({ parent: node, caller: KEY_BINDING }),
+          handler: () => void runAction(invoker, pluginContext, node, { parent: node, caller: KEY_BINDING }),
           data: node.properties.label,
         });
       }

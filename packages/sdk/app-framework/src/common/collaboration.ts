@@ -7,6 +7,8 @@ import * as Schema from 'effect/Schema';
 import { Operation } from '@dxos/operation';
 import { ContentBlock } from '@dxos/types';
 
+import { Capability } from '../core';
+
 const COLLABORATION_OPERATION = 'dxos.org/app-framework/collaboration/operation';
 
 export namespace CollaborationOperation {
@@ -16,6 +18,7 @@ export namespace CollaborationOperation {
       name: 'Accept Proposal',
       description: 'Accept a proposal from a collaborator.',
     },
+    services: [Capability.Service],
     schema: {
       input: Schema.Struct({
         subject: Schema.Any,

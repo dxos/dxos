@@ -3,6 +3,8 @@
 //
 
 import { Atom, Registry } from '@effect-atom/atom-react';
+import * as Context from 'effect/Context';
+import * as Effect from 'effect/Effect';
 import * as Function from 'effect/Function';
 import * as Option from 'effect/Option';
 import { describe, expect, onTestFinished, test } from 'vitest';
@@ -543,16 +545,18 @@ describe('GraphBuilder', () => {
     });
 
     describe('createExtension', () => {
-      test('works with plain function connector', () => {
+      test('works with Effect connector', () => {
         const registry = Registry.make();
         const builder = GraphBuilder.make({ registry });
         const graph = builder.graph;
 
-        const extensions = GraphBuilder.createExtension({
-          id: 'test-extension',
-          match: NodeMatcher.whenNodeType(EXAMPLE_TYPE),
-          connector: (node, get) => [{ id: 'child', type: EXAMPLE_TYPE, data: node.data }],
-        });
+        const extensions = Effect.runSync(
+          GraphBuilder.createExtension({
+            id: 'test-extension',
+            match: NodeMatcher.whenNodeType(EXAMPLE_TYPE),
+            connector: (node, get) => Effect.succeed([{ id: 'child', type: EXAMPLE_TYPE, data: node.data }]),
+          }),
+        );
 
         GraphBuilder.addExtension(builder, extensions);
 
@@ -566,24 +570,28 @@ describe('GraphBuilder', () => {
         expect(connections[0].data).to.equal('test');
       });
 
-      test('works with plain function actions', () => {
+      test('works with Effect actions', () => {
         const registry = Registry.make();
         const builder = GraphBuilder.make({ registry });
         const graph = builder.graph;
 
-        const extensions = GraphBuilder.createExtension({
-          id: 'test-extension',
-          match: NodeMatcher.whenNodeType(EXAMPLE_TYPE),
-          actions: (node, get) => [
-            {
-              id: 'test-action',
-              data: async () => {
-                console.log('TestAction');
-              },
-              properties: { label: 'Test' },
-            },
-          ],
-        });
+        const extensions = Effect.runSync(
+          GraphBuilder.createExtension({
+            id: 'test-extension',
+            match: NodeMatcher.whenNodeType(EXAMPLE_TYPE),
+            actions: (node, get) =>
+              Effect.succeed([
+                {
+                  id: 'test-action',
+                  data: () =>
+                    Effect.sync(() => {
+                      console.log('TestAction');
+                    }),
+                  properties: { label: 'Test' },
+                },
+              ]),
+          }),
+        );
 
         GraphBuilder.addExtension(builder, extensions);
 
@@ -596,16 +604,83 @@ describe('GraphBuilder', () => {
         expect(actions[0].id).to.equal('test-action');
       });
 
+      test('_actionContext captures and provides services to action execution', () => {
+        const registry = Registry.make();
+        const builder = GraphBuilder.make({ registry });
+        const graph = builder.graph;
+
+        // Define a test service using Context.GenericTag pattern.
+        interface TestServiceInterface {
+          getValue(): number;
+        }
+        const TestService = Context.GenericTag<TestServiceInterface>('TestService');
+
+        // Track whether the action was executed with the correct context.
+        let executionResult: number | null = null;
+
+        // Create extension with service requirement.
+        // Note: The actions callback must USE the service for R to be inferred correctly.
+        const extensions = Effect.runSync(
+          GraphBuilder.createExtension({
+            id: 'test-extension',
+            match: NodeMatcher.whenNodeType(EXAMPLE_TYPE),
+            actions: (node, get) =>
+              // Use TestService in the callback to include it in R.
+              Effect.gen(function* () {
+                const service = yield* TestService;
+                return [
+                  {
+                    id: 'test-action',
+                    data: () =>
+                      Effect.gen(function* () {
+                        // Action can use the same service from captured context.
+                        const svc = yield* TestService;
+                        executionResult = svc.getValue();
+                      }).pipe(Effect.asVoid),
+                    properties: { label: `Test ${service.getValue()}` },
+                  },
+                ];
+              }),
+          }).pipe(Effect.provideService(TestService, { getValue: () => 42 })),
+        );
+
+        GraphBuilder.addExtension(builder, extensions);
+
+        const writableGraph = graph as Graph.WritableGraph;
+        Graph.addNode(writableGraph, { id: 'parent', type: EXAMPLE_TYPE, properties: {}, data: 'test' });
+        Graph.expand(graph, 'parent');
+
+        const actions = registry.get(graph.actions('parent'));
+        expect(actions).has.length(1);
+
+        // Verify _actionContext is captured.
+        const action = actions[0] as Node.Action;
+        expect(action._actionContext).to.not.be.undefined;
+
+        // Execute the action with the captured context.
+        const actionEffect = action.data();
+        const effectWithContext = action._actionContext
+          ? actionEffect.pipe(Effect.provide(action._actionContext))
+          : actionEffect;
+
+        Effect.runSync(effectWithContext);
+
+        // Verify the service was accessible during execution.
+        expect(executionResult).to.equal(42);
+      });
+
       test('works with resolver', async () => {
         const registry = Registry.make();
         const builder = GraphBuilder.make({ registry });
         const graph = builder.graph;
 
-        const extensions = GraphBuilder.createExtension({
-          id: 'test-extension',
-          match: NodeMatcher.whenNodeType(EXAMPLE_TYPE),
-          resolver: (id, get) => ({ id, type: EXAMPLE_TYPE, properties: {}, data: 'resolved' }),
-        });
+        const extensions = Effect.runSync(
+          GraphBuilder.createExtension({
+            id: 'test-extension',
+            match: NodeMatcher.whenNodeType(EXAMPLE_TYPE),
+            resolver: (id, get) => Effect.succeed({ id, type: EXAMPLE_TYPE, properties: {}, data: 'resolved' }),
+          }),
+        );
 
         GraphBuilder.addExtension(builder, extensions);
         await Graph.initialize(graph, EXAMPLE_ID);
@@ -621,20 +696,24 @@ describe('GraphBuilder', () => {
         const builder = GraphBuilder.make({ registry });
         const graph = builder.graph;
 
-        const extensions = GraphBuilder.createExtension({
-          id: 'test-extension',
-          match: NodeMatcher.whenNodeType(EXAMPLE_TYPE),
-          connector: (node, get) => [{ id: 'child', type: EXAMPLE_TYPE, data: node.data }],
-          actions: (node, get) => [
-            {
-              id: 'test-action',
-              data: async () => {
-                console.log('TestAction');
-              },
-              properties: { label: 'Test' },
-            },
-          ],
-        });
+        const extensions = Effect.runSync(
+          GraphBuilder.createExtension({
+            id: 'test-extension',
+            match: NodeMatcher.whenNodeType(EXAMPLE_TYPE),
+            connector: (node, get) => Effect.succeed([{ id: 'child', type: EXAMPLE_TYPE, data: node.data }]),
+            actions: (node, get) =>
+              Effect.succeed([
+                {
+                  id: 'test-action',
+                  data: () =>
+                    Effect.sync(() => {
+                      console.log('TestAction');
+                    }),
+                  properties: { label: 'Test' },
+                },
+              ]),
+          }),
+        );
 
         GraphBuilder.addExtension(builder, extensions);
 
@@ -643,7 +722,7 @@ describe('GraphBuilder', () => {
         Graph.expand(graph, 'parent');
 
         const connections = registry.get(graph.connections('parent'));
-        // Should have both the child node and the action node
+        // Should have both the child node and the action node.
         expect(connections.length).to.be.greaterThanOrEqual(1);
         const childNode = connections.find((n) => n.id === 'child');
         expect(childNode).to.not.be.undefined;
@@ -661,11 +740,13 @@ describe('GraphBuilder', () => {
 
         const state = Atom.make('initial');
 
-        const extensions = GraphBuilder.createExtension({
-          id: 'test-extension',
-          match: NodeMatcher.whenNodeType(EXAMPLE_TYPE),
-          connector: (node, get) => [{ id: 'child', type: EXAMPLE_TYPE, data: get(state) }],
-        });
+        const extensions = Effect.runSync(
+          GraphBuilder.createExtension({
+            id: 'test-extension',
+            match: NodeMatcher.whenNodeType(EXAMPLE_TYPE),
+            connector: (node, get) => Effect.succeed([{ id: 'child', type: EXAMPLE_TYPE, data: get(state) }]),
+          }),
+        );
 
         GraphBuilder.addExtension(builder, extensions);
 
@@ -689,19 +770,134 @@ describe('GraphBuilder', () => {
       });
     });
 
+    describe('extension error handling', () => {
+      test('connector failure is caught and logged, returns empty array', () => {
+        const registry = Registry.make();
+        const builder = GraphBuilder.make({ registry });
+        const graph = builder.graph;
+
+        const extensions = Effect.runSync(
+          GraphBuilder.createExtension({
+            id: 'failing-extension',
+            match: NodeMatcher.whenNodeType(EXAMPLE_TYPE),
+            connector: (node, get) => Effect.fail(new Error('Connector failed intentionally')),
+          }),
+        );
+
+        GraphBuilder.addExtension(builder, extensions);
+
+        const writableGraph = graph as Graph.WritableGraph;
+        Graph.addNode(writableGraph, { id: 'parent', type: EXAMPLE_TYPE, properties: {}, data: 'test' });
+
+        // Should not throw, error is caught internally.
+        Graph.expand(graph, 'parent');
+
+        // Should return empty connections since the connector failed.
+        const connections = registry.get(graph.connections('parent'));
+        expect(connections).has.length(0);
+      });
+
+      test('actions failure is caught and logged, returns empty array', () => {
+        const registry = Registry.make();
+        const builder = GraphBuilder.make({ registry });
+        const graph = builder.graph;
+
+        const extensions = Effect.runSync(
+          GraphBuilder.createExtension({
+            id: 'failing-actions-extension',
+            match: NodeMatcher.whenNodeType(EXAMPLE_TYPE),
+            actions: (node, get) => Effect.fail(new Error('Actions failed intentionally')),
+          }),
+        );
+
+        GraphBuilder.addExtension(builder, extensions);
+
+        const writableGraph = graph as Graph.WritableGraph;
+        Graph.addNode(writableGraph, { id: 'parent', type: EXAMPLE_TYPE, properties: {}, data: 'test' });
+
+        // Should not throw, error is caught internally.
+        Graph.expand(graph, 'parent');
+
+        // Should return empty actions since the actions callback failed.
+        const actions = registry.get(graph.actions('parent'));
+        expect(actions).has.length(0);
+      });
+
+      test('resolver failure is caught and logged, returns null', async () => {
+        const registry = Registry.make();
+        const builder = GraphBuilder.make({ registry });
+        const graph = builder.graph;
+
+        const extensions = Effect.runSync(
+          GraphBuilder.createExtension({
+            id: 'failing-resolver-extension',
+            match: NodeMatcher.whenNodeType(EXAMPLE_TYPE),
+            resolver: (id, get) => Effect.fail(new Error('Resolver failed intentionally')),
+          }),
+        );
+
+        GraphBuilder.addExtension(builder, extensions);
+
+        // Should not throw, error is caught internally.
+        await Graph.initialize(graph, EXAMPLE_ID);
+
+        // Should return null/none since the resolver failed.
+        const node = Graph.getNode(graph, EXAMPLE_ID).pipe(Option.getOrNull);
+        expect(node).to.be.null;
+      });
+
+      test('failing extension does not affect other extensions', () => {
+        const registry = Registry.make();
+        const builder = GraphBuilder.make({ registry });
+        const graph = builder.graph;
+
+        // Add a failing extension.
+        const failingExtensions = Effect.runSync(
+          GraphBuilder.createExtension({
+            id: 'failing-extension',
+            match: NodeMatcher.whenNodeType(EXAMPLE_TYPE),
+            connector: (node, get) => Effect.fail(new Error('This one fails')),
+          }),
+        );
+
+        // Add a working extension.
+        const workingExtensions = Effect.runSync(
+          GraphBuilder.createExtension({
+            id: 'working-extension',
+            match: NodeMatcher.whenNodeType(EXAMPLE_TYPE),
+            connector: (node, get) =>
+              Effect.succeed([{ id: 'child-from-working', type: EXAMPLE_TYPE, data: 'success' }]),
+          }),
+        );
+
+        GraphBuilder.addExtension(builder, failingExtensions);
+        GraphBuilder.addExtension(builder, workingExtensions);
+
+        const writableGraph = graph as Graph.WritableGraph;
+        Graph.addNode(writableGraph, { id: 'parent', type: EXAMPLE_TYPE, properties: {}, data: 'test' });
+        Graph.expand(graph, 'parent');
+
+        // The working extension should still produce its node.
+        const connections = registry.get(graph.connections('parent'));
+        expect(connections).has.length(1);
+        expect(connections[0].id).to.equal('child-from-working');
+        expect(connections[0].data).to.equal('success');
+      });
+    });
+
     describe('createTypeExtension', () => {
       test('creates extension matching by schema type with inferred object type', () => {
         const registry = Registry.make();
         const builder = GraphBuilder.make({ registry });
         const graph = builder.graph;
 
-        const extensions = GraphBuilder.createTypeExtension({
-          id: 'type-extension',
-          type: TestSchema.Person,
-          connector: (object) => {
-            return [{ id: 'child', type: EXAMPLE_TYPE, data: object }];
-          },
-        });
+        const extensions = Effect.runSync(
+          GraphBuilder.createTypeExtension({
+            id: 'type-extension',
+            type: TestSchema.Person,
+            connector: (object) => Effect.succeed([{ id: 'child', type: EXAMPLE_TYPE, data: object }]),
+          }),
+        );
 
         GraphBuilder.addExtension(builder, extensions);
 

@@ -11,15 +11,12 @@ import { SearchOperation } from '../../types';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    const context = yield* Capability.PluginContextService;
-
     return Capability.contributes(Common.Capability.OperationResolver, [
       OperationResolver.make({
         operation: SearchOperation.OpenSearch,
-        handler: () =>
-          Effect.gen(function* () {
-            yield* Operation.invoke(Common.LayoutOperation.UpdateComplementary, { subject: 'search' });
-          }),
+        handler: Effect.fnUntraced(function* () {
+          yield* Operation.invoke(Common.LayoutOperation.UpdateComplementary, { subject: 'search' });
+        }),
       }),
     ]);
   }),

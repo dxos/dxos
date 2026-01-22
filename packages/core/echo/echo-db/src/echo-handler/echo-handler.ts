@@ -7,6 +7,7 @@ import { type InspectOptionsStylized } from 'node:util';
 import * as A from '@automerge/automerge';
 import * as Schema from 'effect/Schema';
 
+import { Event } from '@dxos/async';
 import { type DevtoolsFormatter, devtoolsFormatter, inspectCustom } from '@dxos/debug';
 import { type Entity, Obj } from '@dxos/echo';
 import {
@@ -57,6 +58,7 @@ import {
 import { assertArgument, invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
 import {
+  EventId,
   type Live,
   type ReactiveHandler,
   createProxy,
@@ -109,6 +111,10 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     }
 
     defineHiddenProperty(target, symbolHandler, this);
+
+    if (!(EventId in target)) {
+      defineHiddenProperty(target, EventId, new Event());
+    }
 
     // Maybe have been set by `create`.
     Object.defineProperty(target, inspectCustom, {
@@ -267,6 +273,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
       target[symbolInternals].core.setDecoded(fullPath, withLinks);
     }
 
+    // Note: EventId.emit() is called centrally in core.updates.on() to handle both local and remote changes.
     return true;
   }
 
@@ -349,7 +356,8 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
         array[symbolPath] = dataPath;
         array[symbolNamespace] = namespace;
         array[symbolHandler] = this;
-        return array;
+        defineHiddenProperty(array, EventId, target[EventId]);
+        return array as any as ProxyTarget;
       });
 
       return createProxy(newTarget, this);
@@ -364,6 +372,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
           [symbolInternals]: target[symbolInternals],
           [symbolPath]: dataPath,
           [symbolNamespace]: namespace,
+          [EventId]: new Event(),
         }),
       );
 
@@ -556,7 +565,8 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     const validatedItems = this._validateForArray(target, path, items, target.length);
 
     const encodedItems = this._encodeForArray(target, validatedItems);
-    return target[symbolInternals].core.arrayPush([getNamespace(target), ...path], encodedItems);
+    const result = target[symbolInternals].core.arrayPush([getNamespace(target), ...path], encodedItems);
+    return result;
   }
 
   arrayPop(target: Live<ProxyTarget>, path: KeyPath): any {
@@ -654,6 +664,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
       [symbolInternals]: target[symbolInternals],
       [symbolPath]: [],
       [symbolNamespace]: META_NAMESPACE,
+      [EventId]: new Event(),
     };
 
     return createProxy(metaTarget, this) as any;
@@ -882,6 +893,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
             [symbolInternals]: target[symbolInternals],
             [symbolPath]: [],
             [symbolNamespace]: META_NAMESPACE,
+            [EventId]: new Event(),
           };
           const metaReified = this._getReified(metaTarget);
           const typeDXN = this.getTypeDXN(target);
@@ -1034,7 +1046,12 @@ export const createObject = <T extends AnyProperties>(obj: T): CreateObjectRetur
     target[symbolNamespace] = DATA_NAMESPACE;
     slot.handler._proxyMap.set(target, obj);
 
-    target[symbolInternals].subscriptions.push(core.updates.on(() => target[symbolInternals].signal.notifyWrite()));
+    target[symbolInternals].subscriptions.push(
+      core.updates.on(() => {
+        target[symbolInternals].signal.notifyWrite();
+        target[EventId]?.emit();
+      }),
+    );
 
     // NOTE: This call is recursively linking all nested objects
     //  which can cause recursive loops of `createObject` if `EchoReactiveHandler` is not set prior to this call.
@@ -1055,10 +1072,16 @@ export const createObject = <T extends AnyProperties>(obj: T): CreateObjectRetur
       [symbolInternals]: new ObjectInternals(core),
       [symbolPath]: [],
       [symbolNamespace]: DATA_NAMESPACE,
+      [EventId]: new Event(),
       ...(obj as any),
     };
     target[symbolInternals].rootSchema = schema;
-    target[symbolInternals].subscriptions.push(core.updates.on(() => target[symbolInternals].signal.notifyWrite()));
+    target[symbolInternals].subscriptions.push(
+      core.updates.on(() => {
+        target[symbolInternals].signal.notifyWrite();
+        target[EventId]?.emit();
+      }),
+    );
 
     initCore(core, target);
     const proxy = createProxy<ProxyTarget>(target, EchoReactiveHandler.instance);
@@ -1102,10 +1125,14 @@ export const initEchoReactiveObjectRootProxy = (core: ObjectCore, database?: Ech
     [symbolInternals]: new ObjectInternals(core, database),
     [symbolPath]: [],
     [symbolNamespace]: DATA_NAMESPACE,
+    [EventId]: new Event(),
   };
 
   // TODO(dmaretskyi): Does this need to be disposed?
-  core.updates.on(() => target[symbolInternals].signal.notifyWrite());
+  core.updates.on(() => {
+    target[symbolInternals].signal.notifyWrite();
+    target[EventId]?.emit();
+  });
 
   const obj = createProxy<ProxyTarget>(target, EchoReactiveHandler.instance) as any;
   assertObjectModel(obj);

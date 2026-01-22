@@ -57,6 +57,7 @@ catalog:
   '@dnd-kit/modifiers': ^6.0.0
   '@dnd-kit/sortable': ^7.0.1
   '@dnd-kit/utilities': ^3.2.0
+  '@dxos/async': ^0.8.3
   '@dxos/cli-darwin-arm64': 0.8.3
   '@dxos/cli-darwin-x64': 0.8.3
   '@dxos/cli-linux-arm64': 0.8.3
@@ -64,7 +65,9 @@ catalog:
   '@dxos/cli-win32-x64': 0.8.3
   '@dxos/echo': ^0.8.3
   '@dxos/echo-db': ^0.8.3
+  '@dxos/effect': ^0.8.3
   '@dxos/keys': ^0.8.3
+  '@dxos/live-object': ^0.8.3
   '@dxos/log': ^0.8.3
   '@dxos/schema': ^0.8.3
   '@dxos/test-utils': ^0.8.3
@@ -88,6 +91,7 @@ catalog:
   '@effect/rpc': 0.72.2
   '@effect/schema': ^0.75.5
   '@effect/sql': 0.48.6
+  '@effect/sql-sqlite-bun': 0.49.0
   '@effect/sql-sqlite-node': 0.49.1
   '@effect/sql-sqlite-wasm': 0.49.0
   '@effect/typeclass': 0.38.0

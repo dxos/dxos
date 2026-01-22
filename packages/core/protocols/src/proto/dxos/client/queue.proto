@@ -1,0 +1,67 @@
+syntax = "proto3";
+
+package dxos.client.services;
+
+import "google/protobuf/struct.proto";
+import "google/protobuf/empty.proto";
+
+
+message QueueQuery {
+  string space_id = 1;
+
+  optional string queues_namespace = 2;
+
+  /// Queries the whole space if missing.
+  repeated string queue_ids = 3;
+
+  /// Filter items after this cursor. Exclusive.
+  optional string after = 4;
+
+  /// Filter items before this cursor. Exclusive.
+  optional string before = 5;
+
+  /// Filter items after this position. Inclusive.
+  optional int64 begin_position = 6;
+
+  /// Filter items before this position. Exclusive.
+  optional int64 end_position = 7;
+
+  optional int32 limit = 8;
+  optional bool reverse = 9;
+
+  // TODO(dmaretskyi): Remove this field -- raw queues dont index object IDs anymore.
+  repeated string object_ids = 100;
+}
+
+message QueueQueryResult {
+  repeated google.protobuf.Struct objects = 1;
+
+  /// Cursor to query the next items. Can be passed to `after` in query to keep querying. 
+  string next_cursor = 2;
+
+  string prev_cursor = 3;
+}
+
+message QueryQueueRequest {
+  QueueQuery query = 1;
+}
+
+message InsertIntoQueueRequest {
+  string subspace_tag = 1;
+  string space_id = 2;
+  string queue_id = 3;
+  repeated google.protobuf.Struct objects = 4;
+}
+
+message DeleteFromQueueRequest {
+  string subspace_tag = 1;
+  string space_id = 2;
+  string queue_id = 3;
+  repeated string object_ids = 4;
+}
+
+service QueueService {
+  rpc QueryQueue(QueryQueueRequest) returns (QueueQueryResult);
+  rpc InsertIntoQueue(InsertIntoQueueRequest) returns (google.protobuf.Empty);
+  rpc DeleteFromQueue(DeleteFromQueueRequest) returns (google.protobuf.Empty);
+}

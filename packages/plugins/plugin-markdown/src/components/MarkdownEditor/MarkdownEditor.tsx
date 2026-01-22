@@ -51,7 +51,7 @@ type MarkdownEditorContextValue = {
   toolbarState: Live<EditorToolbarState>;
   popoverMenu: Omit<UseEditorMenu, 'extension'>;
 } & (Pick<ExtensionsOptions, 'viewMode'> &
-  Pick<NaturalMarkdownToolbarProps, 'editorView' | 'onFileUpload' | 'onViewModeChange'>);
+  Pick<NaturalMarkdownToolbarProps, 'editorView' | 'onAction' | 'onFileUpload' | 'onViewModeChange'>);
 
 const [MarkdownEditorContextProvider, useMarkdownEditorContext] =
   createContext<MarkdownEditorContextValue>('MarkdownEditor.Context');
@@ -64,7 +64,7 @@ type MarkdownEditorRootProps = PropsWithChildren<
   {
     object?: DocumentType;
     extensions?: Extension[];
-  } & Pick<MarkdownEditorContextValue, 'id' | 'onFileUpload' | 'onViewModeChange' | 'viewMode'> &
+  } & Pick<MarkdownEditorContextValue, 'id' | 'onAction' | 'onFileUpload' | 'onViewModeChange' | 'viewMode'> &
     Pick<UseEditorMenuOptionsProps, 'slashCommandGroups' | 'onLinkQuery'> &
     Pick<ExtensionsOptions, 'editorStateStore' | 'selectionManager' | 'settings'>
 >;
@@ -183,7 +183,7 @@ MarkdownEditorContent.displayName = 'MarkdownEditor.Content';
 
 type MarkdownEditorToolbarProps = Omit<
   NaturalMarkdownToolbarProps,
-  'state' | 'editorView' | 'onFileUpload' | 'onViewModeChange'
+  'state' | 'editorView' | 'onAction' | 'onFileUpload' | 'onViewModeChange'
 >;
 
 const MarkdownEditorToolbar = (props: MarkdownEditorToolbarProps) => {

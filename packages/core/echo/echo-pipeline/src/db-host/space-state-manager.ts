@@ -32,6 +32,10 @@ export class SpaceStateManager extends Resource {
     return this._roots;
   }
 
+  get spaceIds(): SpaceId[] {
+    return Array.from(this._rootBySpace.keys());
+  }
+
   getRootByDocumentId(documentId: DocumentId): DatabaseRoot | undefined {
     return this._roots.get(documentId);
   }

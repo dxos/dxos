@@ -11,8 +11,6 @@ import { Markdown, MarkdownCapabilities, MarkdownOperation } from '../../types';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    const context = yield* Capability.PluginContextService;
-
     return Capability.contributes(Common.Capability.OperationResolver, [
       OperationResolver.make({
         operation: MarkdownOperation.Create,
@@ -24,11 +22,10 @@ export default Capability.makeModule(
       // TODO(wittjosiah): This appears to be unused.
       OperationResolver.make({
         operation: MarkdownOperation.SetViewMode,
-        handler: ({ id, viewMode }) =>
-          Effect.sync(() => {
-            const { state } = context.getCapability(MarkdownCapabilities.State);
-            state.viewMode[id] = viewMode;
-          }),
+        handler: Effect.fnUntraced(function* ({ id, viewMode }) {
+          const { state } = yield* Capability.get(MarkdownCapabilities.State);
+          state.viewMode[id] = viewMode;
+        }),
       }),
     ]);
   }),

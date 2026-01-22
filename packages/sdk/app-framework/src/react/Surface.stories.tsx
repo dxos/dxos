@@ -40,7 +40,7 @@ const DefaultStory = () => {
   const handleAdd = useCallback(() => {
     const id = `test-${faker.number.int({ min: 0, max: 1_000 })}`;
     const styles = getHashStyles(id);
-    manager.context.contributeCapability({
+    manager.capabilities.contribute({
       module: 'test',
       interface: Common.Capability.ReactSurface,
       implementation: Common.createSurface({
@@ -59,7 +59,7 @@ const DefaultStory = () => {
   }, [surfaces]);
 
   const handleError = useCallback(() => {
-    manager.context.contributeCapability({
+    manager.capabilities.contribute({
       module: 'error',
       interface: Common.Capability.ReactSurface,
       implementation: Common.createSurface({

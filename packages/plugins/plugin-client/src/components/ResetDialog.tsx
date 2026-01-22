@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 import React, { useCallback } from 'react';
 
-import { Capability, Common } from '@dxos/app-framework';
+import { Capability, type CapabilityManager, Common } from '@dxos/app-framework';
 import { useOperationInvoker } from '@dxos/app-framework/react';
 import { runAndForwardErrors } from '@dxos/effect';
 import { useClient } from '@dxos/react-client';
@@ -17,10 +17,10 @@ import { type ClientPluginOptions } from '../types';
 
 export type ResetDialogProps = Pick<ConfirmResetProps, 'mode'> &
   Pick<ClientPluginOptions, 'onReset'> & {
-    context: Capability.PluginContext;
+    capabilityManager: CapabilityManager.CapabilityManager;
   };
 
-export const ResetDialog = ({ mode, onReset, context }: ResetDialogProps) => {
+export const ResetDialog = ({ mode, onReset, capabilityManager }: ResetDialogProps) => {
   const { t } = useTranslation(meta.id);
   const { invokePromise } = useOperationInvoker();
   const client = useClient();
@@ -30,11 +30,9 @@ export const ResetDialog = ({ mode, onReset, context }: ResetDialogProps) => {
     const target =
       mode === 'join new identity' ? 'deviceInvitation' : mode === 'recover' ? 'recoverIdentity' : undefined;
     if (onReset) {
-      await runAndForwardErrors(
-        onReset({ target }).pipe(Effect.provideService(Capability.PluginContextService, context)),
-      );
+      await runAndForwardErrors(onReset({ target }).pipe(Effect.provideService(Capability.Service, capabilityManager)));
     }
-  }, [client, mode, onReset, context]);
+  }, [client, mode, onReset, capabilityManager]);
 
   const handleCancel = useCallback(() => {
     void invokePromise(Common.LayoutOperation.UpdateDialog, { state: false });

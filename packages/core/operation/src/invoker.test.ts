@@ -326,6 +326,60 @@ describe('OperationInvoker.invokeSync', () => {
   });
 });
 
+describe('OperationInvoker.invokeSync with services', () => {
+  // Test service that simulates Capability.Service pattern.
+  class TestService extends Context.Tag('@test/TestService')<TestService, { getValue: () => number }>() {}
+
+  // Operation that declares TestService and is marked as sync.
+  const SyncOpWithService = Operation.make({
+    schema: {
+      input: Schema.Struct({ multiplier: Schema.Number }),
+      output: Schema.Struct({ result: Schema.Number }),
+    },
+    meta: { key: 'test.sync-with-service' },
+    executionMode: 'sync',
+    services: [TestService],
+  });
+
+  // Handler that uses the service (like Capability.get pattern).
+  const syncServiceHandler = OperationResolver.make({
+    operation: SyncOpWithService,
+    handler: (input) =>
+      Effect.gen(function* () {
+        const service = yield* TestService;
+        return { result: service.getValue() * input.multiplier };
+      }),
+  });
+
+  test('invokes sync operation with declared service using ManagedRuntime', async ({ expect }) => {
+    const { ManagedRuntime, Layer } = await import('effect');
+
+    // Create a layer that provides the test service.
+    const testServiceLayer = Layer.succeed(TestService, { getValue: () => 42 });
+
+    // Create a ManagedRuntime with the service layer.
+    const managedRuntime = ManagedRuntime.make(testServiceLayer);
+
+    try {
+      // Create invoker with the ManagedRuntime.
+      const invoker = OperationInvoker.make(() => Effect.succeed([syncServiceHandler]), managedRuntime);
+
+      // Pre-warm: Make an async call first to initialize the runtime cache.
+      // In the real app, this happens during plugin activation before any sync operations.
+      const warmupResult = await invoker.invokePromise(SyncOpWithService, { multiplier: 1 });
+      expect(warmupResult.error).toBeUndefined();
+
+      // Now the sync call should work because the runtime is cached.
+      const result = invoker.invokeSync(SyncOpWithService, { multiplier: 2 });
+
+      expect(result.error).toBeUndefined();
+      expect(result.data?.result).toBe(84); // 42 * 2
+    } finally {
+      await managedRuntime.dispose();
+    }
+  });
+});
+
 describe('OperationInvoker.invokePromise', () => {
   test('invokes operation and returns result', async ({ expect }) => {
     const invoker = OperationInvoker.make(() => Effect.succeed([toStringHandler]));
