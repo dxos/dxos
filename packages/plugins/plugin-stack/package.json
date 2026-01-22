@@ -55,8 +55,6 @@
     "@dxos/types": "workspace:*",
     "@dxos/util": "workspace:*",
     "@fluentui/react-tabster": "catalog:",
-    "@preact-signals/safe-react": "catalog:",
-    "@preact/signals-core": "catalog:",
     "@radix-ui/react-collapsible": "catalog:",
     "effect": "catalog:",
     "node-fetch": "catalog:",

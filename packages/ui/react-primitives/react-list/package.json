@@ -26,7 +26,6 @@
   ],
   "dependencies": {
     "@dxos/react-hooks": "workspace:*",
-    "@preact/signals-react": "catalog:",
     "@radix-ui/react-collapsible": "catalog:",
     "@radix-ui/react-context": "catalog:",
     "@radix-ui/react-primitive": "catalog:",

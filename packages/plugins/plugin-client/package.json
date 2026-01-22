@@ -65,8 +65,6 @@
     "@dxos/util": "workspace:*",
     "@effect/cli": "catalog:",
     "@effect/platform": "catalog:",
-    "@preact-signals/safe-react": "catalog:",
-    "@preact/signals-core": "catalog:",
     "effect": "catalog:",
     "react-qr-rounded": "catalog:",
     "yaml": "catalog:"

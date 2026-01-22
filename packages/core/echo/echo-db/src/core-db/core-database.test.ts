@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { effect } from '@preact/signals-core';
+import { effect } from '@dxos/echo-signals';
 import { describe, expect, test } from 'vitest';
 
 import { Trigger } from '@dxos/async';

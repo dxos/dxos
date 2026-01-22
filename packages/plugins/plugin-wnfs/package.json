@@ -54,7 +54,6 @@
     "@dxos/ui-editor": "workspace:*",
     "@dxos/util": "workspace:*",
     "@ipld/car": "catalog:",
-    "@preact-signals/safe-react": "catalog:",
     "blockstore-core": "catalog:",
     "blockstore-idb": "catalog:",
     "debounce": "catalog:",

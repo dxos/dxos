@@ -62,7 +62,6 @@
     "@dxos/util": "workspace:*",
     "@effect/cli": "catalog:",
     "@effect/platform-bun": "catalog:",
-    "@preact-signals/safe-react": "catalog:",
     "@tauri-apps/api": "catalog:",
     "@tauri-apps/plugin-shell": "catalog:",
     "get-port-please": "catalog:"

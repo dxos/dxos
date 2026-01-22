@@ -11,7 +11,6 @@ import {
   type ActionGraphProps,
   MenuProvider,
   ToolbarMenu,
-  atomFromSignal,
   createGapSeparator,
   useMenuActions,
 } from '@dxos/react-ui-menu';
@@ -30,8 +29,8 @@ const createToolbarActions = (
   customActions?: Atom.Atom<ActionGraphProps>,
 ): Atom.Atom<ActionGraphProps> => {
   return Atom.make((get) => {
-    const align = get(atomFromSignal(() => createAlign(model, state, cursorFallbackRange)));
-    const style = get(atomFromSignal(() => createStyle(model, state, cursorFallbackRange)));
+    const align = createAlign(model, state, cursorFallbackRange);
+    const style = createStyle(model, state, cursorFallbackRange);
     const gap = createGapSeparator();
 
     const graph: ActionGraphProps = {

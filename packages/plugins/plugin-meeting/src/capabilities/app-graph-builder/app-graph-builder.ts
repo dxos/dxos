@@ -2,6 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
+import { Atom } from '@effect-atom/atom-react';
 import * as Effect from 'effect/Effect';
 
 import { Capability, Common } from '@dxos/app-framework';
@@ -56,8 +57,8 @@ export default Capability.makeModule(
         id: `${meta.id}/call-thread`,
         type: Channel.Channel,
         connector: Effect.fnUntraced(function* (channel, get) {
-          const state = yield* Capability.get(MeetingCapabilities.State);
-          const meeting = get(CreateAtom.fromSignal(() => state.activeMeeting));
+          const store = yield* Capability.get(MeetingCapabilities.State);
+          const meeting = get(Atom.make((get) => get(store.stateAtom).activeMeeting));
           if (!meeting) {
             return [];
           }
@@ -98,8 +99,8 @@ export default Capability.makeModule(
             return [];
           }
 
-          const state = yield* Capability.get(MeetingCapabilities.State);
-          const data = get(CreateAtom.fromSignal(() => state.activeMeeting ?? 'meeting'));
+          const store = yield* Capability.get(MeetingCapabilities.State);
+          const data = get(Atom.make((get) => get(store.stateAtom).activeMeeting ?? 'meeting'));
 
           return [
             {
@@ -121,14 +122,15 @@ export default Capability.makeModule(
         id: `${meta.id}/call-transcript`,
         type: Channel.Channel,
         actions: Effect.fnUntraced(function* (channel, get) {
-          const state = yield* Capability.get(MeetingCapabilities.State);
-          const enabled = get(CreateAtom.fromSignal(() => state.transcriptionManager?.enabled ?? false));
+          const store = yield* Capability.get(MeetingCapabilities.State);
+          const transcriptionManager = get(Atom.make((get) => get(store.stateAtom).transcriptionManager));
+          const enabled = transcriptionManager ? get(transcriptionManager.enabledAtom) : false;
           return [
             {
               id: `${Obj.getDXN(channel).toString()}/action/start-stop-transcription`,
               data: Effect.fnUntraced(function* () {
-                const state = yield* Capability.get(MeetingCapabilities.State);
-                let meeting = state.activeMeeting;
+                const store = yield* Capability.get(MeetingCapabilities.State);
+                let meeting = store.state.activeMeeting;
                 if (!meeting) {
                   const db = Obj.getDatabase(channel);
                   invariant(db);
@@ -171,8 +173,8 @@ export default Capability.makeModule(
           ];
         }),
         connector: Effect.fnUntraced(function* (channel, get) {
-          const state = yield* Capability.get(MeetingCapabilities.State);
-          const meeting = get(CreateAtom.fromSignal(() => state.activeMeeting));
+          const store = yield* Capability.get(MeetingCapabilities.State);
+          const meeting = get(Atom.make((get) => get(store.stateAtom).activeMeeting));
           if (!meeting) {
             return [];
           }

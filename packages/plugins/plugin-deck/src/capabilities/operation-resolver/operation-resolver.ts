@@ -2,7 +2,6 @@
 // Copyright 2025 DXOS.org
 //
 
-import { batch } from '@preact/signals-core';
 import * as Effect from 'effect/Effect';
 import * as Function from 'effect/Function';
 import * as Option from 'effect/Option';
@@ -24,14 +23,34 @@ import { meta } from '../../meta';
 import {
   DeckCapabilities,
   DeckOperation,
+  type DeckPluginState,
   type DeckSettingsProps,
+  type DeckState,
   type LayoutMode,
   PLANK_COMPANION_TYPE,
   defaultDeck,
   getMode,
   isLayoutMode,
 } from '../../types';
-import { setActive } from '../../util';
+import { computeActiveUpdates } from '../../util';
+
+/**
+ * Helper to update the active deck within the state.
+ */
+const updateActiveDeck = (current: DeckPluginState, deckUpdates: Partial<DeckState>): DeckPluginState => {
+  const currentDeck = current.decks[current.activeDeck];
+  invariant(currentDeck, `Deck not found: ${current.activeDeck}`);
+  return {
+    ...current,
+    decks: {
+      ...current.decks,
+      [current.activeDeck]: {
+        ...currentDeck,
+        ...deckUpdates,
+      },
+    },
+  };
+};
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
@@ -42,10 +61,10 @@ export default Capability.makeModule(
       OperationResolver.make({
         operation: Common.LayoutOperation.UpdateSidebar,
         handler: Effect.fnUntraced(function* (input) {
-          const layout = yield* Capability.get(DeckCapabilities.MutableDeckState);
-          const next = input.state ?? layout.sidebarState;
-          if (next !== layout.sidebarState) {
-            layout.sidebarState = next;
+          const { state, update } = yield* Capability.get(DeckCapabilities.State);
+          const next = input.state ?? state.sidebarState;
+          if (next !== state.sidebarState) {
+            update((s) => ({ ...s, sidebarState: next }));
           }
         }),
       }),
@@ -56,14 +75,17 @@ export default Capability.makeModule(
       OperationResolver.make({
         operation: Common.LayoutOperation.UpdateComplementary,
         handler: Effect.fnUntraced(function* (input) {
-          const layout = yield* Capability.get(DeckCapabilities.MutableDeckState);
-          if (layout.complementarySidebarPanel !== input.subject) {
-            layout.complementarySidebarPanel = input.subject;
-          }
+          const { state, update } = yield* Capability.get(DeckCapabilities.State);
+          const panelChanged = state.complementarySidebarPanel !== input.subject;
+          const next = input.subject ? 'expanded' : (input.state ?? state.complementarySidebarState);
+          const stateChanged = next !== state.complementarySidebarState;
 
-          const next = input.subject ? 'expanded' : (input.state ?? layout.complementarySidebarState);
-          if (next !== layout.complementarySidebarState) {
-            layout.complementarySidebarState = next;
+          if (panelChanged || stateChanged) {
+            update((s) => ({
+              ...s,
+              complementarySidebarPanel: panelChanged ? input.subject : s.complementarySidebarPanel,
+              complementarySidebarState: stateChanged ? next : s.complementarySidebarState,
+            }));
           }
         }),
       }),
@@ -74,13 +96,16 @@ export default Capability.makeModule(
       OperationResolver.make({
         operation: Common.LayoutOperation.UpdateDialog,
         handler: Effect.fnUntraced(function* (input) {
-          const layout = yield* Capability.get(DeckCapabilities.MutableDeckState);
-          layout.dialogOpen = input.state ?? Boolean(input.subject);
-          layout.dialogType = input.type ?? 'default';
-          layout.dialogBlockAlign = input.blockAlign ?? 'center';
-          layout.dialogOverlayClasses = input.overlayClasses;
-          layout.dialogOverlayStyle = input.overlayStyle;
-          layout.dialogContent = input.subject ? { component: input.subject, props: input.props } : null;
+          const { update } = yield* Capability.get(DeckCapabilities.State);
+          update((s) => ({
+            ...s,
+            dialogOpen: input.state ?? Boolean(input.subject),
+            dialogType: input.type ?? 'default',
+            dialogBlockAlign: input.blockAlign ?? 'center',
+            dialogOverlayClasses: input.overlayClasses,
+            dialogOverlayStyle: input.overlayStyle,
+            dialogContent: input.subject ? { component: input.subject, props: input.props } : null,
+          }));
         }),
       }),
 
@@ -90,20 +115,20 @@ export default Capability.makeModule(
       OperationResolver.make({
         operation: Common.LayoutOperation.UpdatePopover,
         handler: Effect.fnUntraced(function* (input) {
-          const layout = yield* Capability.get(DeckCapabilities.MutableDeckState);
-          layout.popoverOpen = input.state ?? Boolean(input.subject);
-          layout.popoverContent =
-            typeof input.subject === 'string'
-              ? { component: input.subject, props: input.props }
-              : input.subject
-                ? { subject: input.subject }
-                : null;
-          layout.popoverSide = input.side;
-          if (input.variant === 'virtual') {
-            layout.popoverAnchor = input.anchor;
-          } else {
-            layout.popoverAnchorId = input.anchorId;
-          }
+          const { update } = yield* Capability.get(DeckCapabilities.State);
+          update((s) => ({
+            ...s,
+            popoverOpen: input.state ?? Boolean(input.subject),
+            popoverContent:
+              typeof input.subject === 'string'
+                ? { component: input.subject, props: input.props }
+                : input.subject
+                  ? { subject: input.subject }
+                  : null,
+            popoverSide: input.side,
+            popoverAnchor: input.variant === 'virtual' ? input.anchor : s.popoverAnchor,
+            popoverAnchorId: input.variant !== 'virtual' ? input.anchorId : s.popoverAnchorId,
+          }));
         }),
       }),
 
@@ -113,8 +138,11 @@ export default Capability.makeModule(
       OperationResolver.make({
         operation: Common.LayoutOperation.AddToast,
         handler: Effect.fnUntraced(function* (input) {
-          const layout = yield* Capability.get(DeckCapabilities.MutableDeckState);
-          layout.toasts.push(input as Common.LayoutOperation.Toast);
+          const { update } = yield* Capability.get(DeckCapabilities.State);
+          update((s) => ({
+            ...s,
+            toasts: [...s.toasts, input as Common.LayoutOperation.Toast],
+          }));
         }),
       }),
 
@@ -124,27 +152,33 @@ export default Capability.makeModule(
       OperationResolver.make({
         operation: Common.UndoOperation.ShowUndo,
         handler: Effect.fnUntraced(function* (input) {
-          const layout = yield* Capability.get(DeckCapabilities.MutableDeckState);
+          const { state, update } = yield* Capability.get(DeckCapabilities.State);
           const historyTracker = yield* Capability.get(Common.Capability.HistoryTracker);
 
+          const newUndoId = `show-undo-${Date.now()}`;
           // TODO(wittjosiah): Support undoing further back than the last action.
-          if (layout.currentUndoId) {
-            layout.toasts = layout.toasts.filter((toast) => toast.id !== layout.currentUndoId);
-          }
+          update((s) => {
+            const filteredToasts = s.currentUndoId
+              ? s.toasts.filter((toast) => toast.id !== s.currentUndoId)
+              : s.toasts;
 
-          layout.currentUndoId = `show-undo-${Date.now()}`;
-          layout.toasts = [
-            ...layout.toasts,
-            {
-              id: layout.currentUndoId,
-              title: input.message ?? ['undo available label', { ns: meta.id }],
-              duration: 10_000,
-              actionLabel: ['undo action label', { ns: meta.id }],
-              actionAlt: ['undo action alt', { ns: meta.id }],
-              closeLabel: ['undo close label', { ns: meta.id }],
-              onAction: () => historyTracker.undoPromise(),
-            },
-          ];
+            return {
+              ...s,
+              currentUndoId: newUndoId,
+              toasts: [
+                ...filteredToasts,
+                {
+                  id: newUndoId,
+                  title: input.message ?? ['undo available label', { ns: meta.id }],
+                  duration: 10_000,
+                  actionLabel: ['undo action label', { ns: meta.id }],
+                  actionAlt: ['undo action alt', { ns: meta.id }],
+                  closeLabel: ['undo close label', { ns: meta.id }],
+                  onAction: () => historyTracker.undoPromise(),
+                },
+              ],
+            };
+          });
         }),
       }),
 
@@ -160,9 +194,9 @@ export default Capability.makeModule(
           return true;
         },
         handler: Effect.fnUntraced(function* (input) {
-          const state = yield* Capability.get(DeckCapabilities.MutableDeckState);
+          const { state, update } = yield* Capability.get(DeckCapabilities.State);
 
-          const setMode = (mode: LayoutMode, subject?: string) => {
+          const computeModeUpdate = (mode: LayoutMode, subject?: string): Partial<DeckState> => {
             const deck = state.deck;
             const current = deck.solo ? [deck.solo] : deck.active;
             // When un-soloing, the solo entry is added to the deck.
@@ -174,34 +208,46 @@ export default Capability.makeModule(
             const closed = Array.from(
               new Set([...deck.inactive.filter((id: string) => !next.includes(id)), ...removed]),
             );
-            deck.inactive = closed;
 
-            if (mode !== 'deck' && next[0]) {
-              deck.solo = next[0];
-            } else if (mode === 'deck' && deck.solo) {
-              deck.solo = undefined;
-              deck.initialized = true;
-            }
+            // Build deckUpdates object without mutating.
+            const soloUpdate =
+              mode !== 'deck' && next[0]
+                ? { solo: next[0] }
+                : mode === 'deck' && deck.solo
+                  ? { solo: undefined, initialized: true }
+                  : {};
 
-            if (mode === 'solo--fullscreen') {
-              deck.fullscreen = !deck.fullscreen;
-            }
+            const fullscreenUpdate = mode === 'solo--fullscreen' ? { fullscreen: !deck.fullscreen } : {};
+
+            return {
+              inactive: closed,
+              ...soloUpdate,
+              ...fullscreenUpdate,
+            };
           };
 
-          batch(() => {
-            if ('mode' in input) {
-              const current = getMode(state.deck);
-              if (current !== input.mode) {
-                state.previousMode[state.activeDeck] = current;
-              }
-              setMode(input.mode as LayoutMode, 'subject' in input ? input.subject : undefined);
-            } else if ('revert' in input) {
-              const last = state.previousMode[state.activeDeck];
-              setMode(last ?? 'solo');
-            } else {
-              log.warn('Invalid layout mode', input);
-            }
-          });
+          if ('mode' in input) {
+            const currentMode = getMode(state.deck);
+            const deckUpdates = computeModeUpdate(
+              input.mode as LayoutMode,
+              'subject' in input ? input.subject : undefined,
+            );
+
+            update((s) => {
+              const newPreviousMode =
+                currentMode !== input.mode ? { ...s.previousMode, [s.activeDeck]: currentMode } : s.previousMode;
+              return {
+                ...updateActiveDeck(s, deckUpdates),
+                previousMode: newPreviousMode,
+              };
+            });
+          } else if ('revert' in input) {
+            const last = state.previousMode[state.activeDeck];
+            const deckUpdates = computeModeUpdate(last ?? 'solo');
+            update((s) => updateActiveDeck(s, deckUpdates));
+          } else {
+            log.warn('Invalid layout mode', input);
+          }
         }),
       }),
 
@@ -212,21 +258,28 @@ export default Capability.makeModule(
         operation: Common.LayoutOperation.SwitchWorkspace,
         handler: Effect.fnUntraced(function* (input) {
           const { graph } = yield* Capability.get(Common.Capability.AppGraph);
-          const state = yield* Capability.get(DeckCapabilities.MutableDeckState);
+          const { state, update } = yield* Capability.get(DeckCapabilities.State);
 
-          batch(() => {
-            // TODO(wittjosiah): This is a hack to prevent the previous deck from being set for pinned items.
-            //   Ideally this should be worked into the data model in a generic way.
-            if (!state.activeDeck.startsWith('!')) {
-              state.previousDeck = state.activeDeck;
-            }
-            state.activeDeck = input.subject;
-            if (!state.decks[input.subject]) {
-              state.decks[input.subject] = { ...defaultDeck };
-            }
+          // TODO(wittjosiah): This is a hack to prevent the previous deck from being set for pinned items.
+          //   Ideally this should be worked into the data model in a generic way.
+          const shouldUpdatePrevious = !state.activeDeck.startsWith('!');
+
+          update((s) => {
+            const newDecks = s.decks[input.subject] ? s.decks : { ...s.decks, [input.subject]: { ...defaultDeck } };
+            return {
+              ...s,
+              previousDeck: shouldUpdatePrevious ? s.activeDeck : s.previousDeck,
+              activeDeck: input.subject,
+              decks: newDecks,
+            };
           });
 
-          const first = state.deck.solo ? state.deck.solo : state.deck.active[0];
+          // Re-read state after update to get the new deck.
+          const { state: newState } = yield* Capability.get(DeckCapabilities.State);
+          const newDeck = newState.decks[input.subject];
+          invariant(newDeck, `Deck not found: ${input.subject}`);
+
+          const first = newDeck.solo ? newDeck.solo : newDeck.active[0];
           if (first) {
             yield* Operation.schedule(Common.LayoutOperation.ScrollIntoView, { subject: first });
           } else {
@@ -246,7 +299,7 @@ export default Capability.makeModule(
       OperationResolver.make({
         operation: Common.LayoutOperation.RevertWorkspace,
         handler: Effect.fnUntraced(function* () {
-          const state = yield* Capability.get(DeckCapabilities.MutableDeckState);
+          const { state } = yield* Capability.get(DeckCapabilities.State);
           yield* Operation.invoke(Common.LayoutOperation.SwitchWorkspace, { subject: state.previousDeck });
         }),
       }),
@@ -258,7 +311,7 @@ export default Capability.makeModule(
         operation: Common.LayoutOperation.Open,
         handler: Effect.fnUntraced(function* (input) {
           const { graph } = yield* Capability.get(Common.Capability.AppGraph);
-          const state = yield* Capability.get(DeckCapabilities.MutableDeckState);
+          const { state, update } = yield* Capability.get(DeckCapabilities.State);
           const attention = yield* Capability.get(AttentionCapabilities.Attention);
           const settingsStores = yield* Capability.getAll(Common.Capability.SettingsStore);
           const settings = settingsStores[0]?.getStore<DeckSettingsProps>(meta.id)?.value;
@@ -267,25 +320,31 @@ export default Capability.makeModule(
             yield* Operation.invoke(Common.LayoutOperation.SwitchWorkspace, { subject: input.workspace });
           }
 
-          const previouslyOpenIds = new Set<string>(state.deck.solo ? [state.deck.solo] : state.deck.active);
-          batch(() => {
-            const next = state.deck.solo
-              ? input.subject.map((id) => createEntryId(id, input.variant))
-              : input.subject.reduce(
-                  (acc, entryId) =>
-                    openEntry(acc, entryId, {
-                      key: input.key,
-                      positioning: input.positioning ?? settings?.newPlankPositioning,
-                      pivotId: input.pivotId,
-                      variant: input.variant,
-                    }),
-                  state.deck.active,
-                );
+          // Re-read state after potential workspace switch.
+          const { state: currentState } = yield* Capability.get(DeckCapabilities.State);
+          const deck = currentState.deck;
 
-            return setActive({ next, state, attention });
-          });
+          const previouslyOpenIds = new Set<string>(deck.solo ? [deck.solo] : deck.active);
+          const next = deck.solo
+            ? input.subject.map((id) => createEntryId(id, input.variant))
+            : input.subject.reduce(
+                (acc, entryId) =>
+                  openEntry(acc, entryId, {
+                    key: input.key,
+                    positioning: input.positioning ?? settings?.newPlankPositioning,
+                    pivotId: input.pivotId,
+                    variant: input.variant,
+                  }),
+                deck.active,
+              );
 
-          const ids = state.deck.solo ? [state.deck.solo] : state.deck.active;
+          const { deckUpdates, toAttend } = computeActiveUpdates({ next, deck, attention });
+          update((s) => updateActiveDeck(s, deckUpdates));
+
+          // Re-read state after update.
+          const { state: afterUpdateState } = yield* Capability.get(DeckCapabilities.State);
+          const afterDeck = afterUpdateState.deck;
+          const ids = afterDeck.solo ? [afterDeck.solo] : afterDeck.active;
           const newlyOpen = ids.filter((i: string) => !previouslyOpenIds.has(i));
 
           if (input.scrollIntoView !== false && (newlyOpen[0] ?? input.subject[0])) {
@@ -321,8 +380,15 @@ export default Capability.makeModule(
       OperationResolver.make({
         operation: DeckOperation.UpdatePlankSize,
         handler: Effect.fnUntraced(function* (input) {
-          const state = yield* Capability.get(DeckCapabilities.MutableDeckState);
-          state.deck.plankSizing[input.id] = input.size;
+          const { update } = yield* Capability.get(DeckCapabilities.State);
+          update((s) =>
+            updateActiveDeck(s, {
+              plankSizing: {
+                ...s.decks[s.activeDeck]?.plankSizing,
+                [input.id]: input.size,
+              },
+            }),
+          );
         }),
       }),
 
@@ -332,41 +398,37 @@ export default Capability.makeModule(
       OperationResolver.make({
         operation: DeckOperation.Adjust,
         handler: Effect.fnUntraced(function* (input) {
-          const state = yield* Capability.get(DeckCapabilities.MutableDeckState);
+          const { state, update } = yield* Capability.get(DeckCapabilities.State);
           const attention = yield* Capability.get(AttentionCapabilities.Attention);
           const { graph } = yield* Capability.get(Common.Capability.AppGraph);
 
-          // Collect layout operations to run after batch.
+          // Collect layout operations to run after state updates.
           let soloOperation:
             | { type: 'solo'; entryId: string; mode: string }
             | { type: 'unsolo'; entryId: string }
             | undefined;
 
-          batch(() => {
-            if (input.type === 'increment-end' || input.type === 'increment-start') {
-              setActive({
-                next: incrementPlank(state.deck.active, input),
-                state,
-                attention,
-              });
-            }
+          if (input.type === 'increment-end' || input.type === 'increment-start') {
+            const next = incrementPlank(state.deck.active, input);
+            const { deckUpdates } = computeActiveUpdates({ next, deck: state.deck, attention });
+            update((s) => updateActiveDeck(s, deckUpdates));
+          }
 
-            if (input.type.startsWith('solo')) {
-              const entryId = input.id;
-              if (!state.deck.solo) {
-                // Solo the entry.
-                soloOperation = { type: 'solo', entryId, mode: input.type };
-              } else {
-                if (input.type === 'solo--fullscreen') {
-                  // Toggle fullscreen on the current entry.
-                  soloOperation = { type: 'solo', entryId, mode: 'solo--fullscreen' };
-                } else if (input.type === 'solo') {
-                  // Un-solo the current entry and open it.
-                  soloOperation = { type: 'unsolo', entryId };
-                }
+          if (input.type.startsWith('solo')) {
+            const entryId = input.id;
+            if (!state.deck.solo) {
+              // Solo the entry.
+              soloOperation = { type: 'solo', entryId, mode: input.type };
+            } else {
+              if (input.type === 'solo--fullscreen') {
+                // Toggle fullscreen on the current entry.
+                soloOperation = { type: 'solo', entryId, mode: 'solo--fullscreen' };
+              } else if (input.type === 'solo') {
+                // Un-solo the current entry and open it.
+                soloOperation = { type: 'unsolo', entryId };
               }
             }
-          });
+          }
 
           // Run collected solo operations.
           if (soloOperation?.type === 'solo') {
@@ -407,18 +469,23 @@ export default Capability.makeModule(
       OperationResolver.make({
         operation: DeckOperation.ChangeCompanion,
         handler: Effect.fnUntraced(function* (input) {
-          const state = yield* Capability.get(DeckCapabilities.MutableDeckState);
-          // TODO(thure): Reactivity only works when creating a lexically new `activeCompanions`… Are these not proxy objects?
-          if (input.companion === null) {
-            const { [input.primary]: _, ...nextActiveCompanions } = state.deck.activeCompanions ?? {};
-            state.deck.activeCompanions = nextActiveCompanions;
-          } else {
-            invariant(input.companion !== input.primary);
-            state.deck.activeCompanions = {
-              ...state.deck.activeCompanions,
-              [input.primary]: input.companion,
-            };
-          }
+          const { update } = yield* Capability.get(DeckCapabilities.State);
+          update((s) => {
+            const currentDeck = s.decks[s.activeDeck];
+            invariant(currentDeck, `Deck not found: ${s.activeDeck}`);
+            if (input.companion === null) {
+              const { [input.primary]: _, ...nextActiveCompanions } = currentDeck.activeCompanions ?? {};
+              return updateActiveDeck(s, { activeCompanions: nextActiveCompanions });
+            } else {
+              invariant(input.companion !== input.primary);
+              return updateActiveDeck(s, {
+                activeCompanions: {
+                  ...currentDeck.activeCompanions,
+                  [input.primary]: input.companion,
+                },
+              });
+            }
+          });
         }),
       }),
 
@@ -428,12 +495,13 @@ export default Capability.makeModule(
       OperationResolver.make({
         operation: Common.LayoutOperation.Close,
         handler: Effect.fnUntraced(function* (input) {
-          const state = yield* Capability.get(DeckCapabilities.MutableDeckState);
+          const { state, update } = yield* Capability.get(DeckCapabilities.State);
           const attention = yield* Capability.get(AttentionCapabilities.Attention);
 
           const active = state.deck.solo ? [state.deck.solo] : state.deck.active;
           const next = input.subject.reduce((acc, id) => closeEntry(acc, id), active);
-          const toAttend = setActive({ next, state, attention });
+          const { deckUpdates, toAttend } = computeActiveUpdates({ next, deck: state.deck, attention });
+          update((s) => updateActiveDeck(s, deckUpdates));
 
           // Clear companions for closed entries.
           for (const id of input.subject) {
@@ -454,10 +522,16 @@ export default Capability.makeModule(
       OperationResolver.make({
         operation: Common.LayoutOperation.Set,
         handler: Effect.fnUntraced(function* (input) {
-          const state = yield* Capability.get(DeckCapabilities.MutableDeckState);
+          const { state, update } = yield* Capability.get(DeckCapabilities.State);
           const attention = yield* Capability.get(AttentionCapabilities.Attention);
 
-          const toAttend = setActive({ next: input.subject as string[], state, attention });
+          const { deckUpdates, toAttend } = computeActiveUpdates({
+            next: input.subject as string[],
+            deck: state.deck,
+            attention,
+          });
+          update((s) => updateActiveDeck(s, deckUpdates));
+
           if (toAttend) {
             yield* Operation.schedule(Common.LayoutOperation.ScrollIntoView, { subject: toAttend });
           }
@@ -470,8 +544,8 @@ export default Capability.makeModule(
       OperationResolver.make({
         operation: Common.LayoutOperation.ScrollIntoView,
         handler: Effect.fnUntraced(function* (input) {
-          const layout = yield* Capability.get(DeckCapabilities.MutableDeckState);
-          layout.scrollIntoView = input.subject;
+          const { update } = yield* Capability.get(DeckCapabilities.State);
+          update((s) => ({ ...s, scrollIntoView: input.subject }));
         }),
       }),
     ]);

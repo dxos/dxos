@@ -5,7 +5,6 @@
 import * as Effect from 'effect/Effect';
 
 import { Capability, Common } from '@dxos/app-framework';
-import { scheduledEffect } from '@dxos/echo-signals/core';
 
 import { DeckCapabilities, defaultDeck } from '../../types';
 
@@ -13,15 +12,19 @@ import { DeckCapabilities, defaultDeck } from '../../types';
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     const { invokeSync } = yield* Capability.get(Common.Capability.OperationInvoker);
-    const state = yield* Capability.get(DeckCapabilities.MutableDeckState);
+    const stateStore = yield* Capability.get(DeckCapabilities.State);
 
     const handleNavigation = () => {
       const pathname = window.location.pathname;
+      const state = stateStore.state;
       if (pathname === '/reset') {
-        state.activeDeck = 'default';
-        state.decks = {
-          default: { ...defaultDeck },
-        };
+        stateStore.update((s) => ({
+          ...s,
+          activeDeck: 'default',
+          decks: {
+            default: { ...defaultDeck },
+          },
+        }));
         window.location.pathname = '/';
         return;
       }
@@ -41,16 +44,26 @@ export default Capability.makeModule(
     yield* Effect.sync(() => handleNavigation());
     window.addEventListener('popstate', handleNavigation);
 
-    const unsubscribe = scheduledEffect(
-      () => ({ solo: state.deck.solo, activeDeck: state.activeDeck }),
-      ({ solo, activeDeck }) => {
+    // Subscribe to state changes to update the URL.
+    let lastSolo: string | undefined;
+    let lastActiveDeck: string | undefined;
+    const unsubscribe = stateStore.subscribe(() => {
+      const state = stateStore.state;
+      const solo = state.deck.solo;
+      const activeDeck = state.activeDeck;
+
+      // Only update URL if relevant state changed.
+      if (solo !== lastSolo || activeDeck !== lastActiveDeck) {
+        lastSolo = solo;
+        lastActiveDeck = activeDeck;
+
         const path = solo ? `/${activeDeck}/${solo}` : `/${activeDeck}`;
         if (window.location.pathname !== path) {
           // TODO(thure): In some browsers, this only preserves the most recent state change, even though this is not `history.replace`…
           history.pushState(null, '', `${path}${window.location.search}`);
         }
-      },
-    );
+      }
+    });
 
     return Capability.contributes(Common.Capability.Null, null, () =>
       Effect.sync(() => {

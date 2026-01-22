@@ -11,11 +11,10 @@ import { Capability } from '../core';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    // TODO(wittjosiah): Replace with atom?
-    const settingsStore = new RootSettingsStore();
+    const registry = yield* Capability.get(Common.Capability.AtomRegistry);
+    const settingsStore = new RootSettingsStore(registry);
 
     let previous: Common.Capability.Settings[] = [];
-    const registry = yield* Capability.get(Common.Capability.AtomRegistry);
     const settingsAtom = yield* Capability.atom(Common.Capability.Settings);
     const cancel = registry.subscribe(
       settingsAtom,

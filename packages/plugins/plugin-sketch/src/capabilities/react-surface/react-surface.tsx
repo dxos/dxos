@@ -6,12 +6,12 @@ import * as Effect from 'effect/Effect';
 import React from 'react';
 
 import { Capability, Common } from '@dxos/app-framework';
-import { useCapability } from '@dxos/app-framework/react';
+import { useAtomCapability } from '@dxos/app-framework/react';
 import { SettingsStore } from '@dxos/local-storage';
 
 import { SketchContainer, SketchSettings } from '../../components';
 import { meta } from '../../meta';
-import { Diagram, type SketchSettingsProps } from '../../types';
+import { Diagram, SketchCapabilities, type SketchSettingsProps } from '../../types';
 
 export default Capability.makeModule(() =>
   Effect.succeed(
@@ -21,10 +21,11 @@ export default Capability.makeModule(() =>
         role: ['article', 'section', 'slide'],
         filter: (data): data is { subject: Diagram.Diagram } => Diagram.isDiagram(data.subject, Diagram.TLDRAW_SCHEMA),
         component: ({ data, role }) => {
-          const settings = useCapability(Common.Capability.SettingsStore).getStore<SketchSettingsProps>(meta.id)!.value;
+          const settings = useAtomCapability(SketchCapabilities.Settings);
           return <SketchContainer sketch={data.subject} role={role} settings={settings} />;
         },
       }),
+      // NOTE: Settings panel still uses SettingsStore until settings components are migrated to use update callbacks.
       Common.createSurface({
         id: `${meta.id}/plugin-settings`,
         role: 'article',

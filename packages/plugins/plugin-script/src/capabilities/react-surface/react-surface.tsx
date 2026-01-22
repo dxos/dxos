@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 import React from 'react';
 
 import { Capability, Common } from '@dxos/app-framework';
-import { useCapability } from '@dxos/app-framework/react';
+import { useAtomCapability } from '@dxos/app-framework/react';
 import { InvocationTraceContainer } from '@dxos/devtools';
 import { Obj } from '@dxos/echo';
 import { Script } from '@dxos/functions';
@@ -27,7 +27,7 @@ import {
 } from '../../components';
 import { useCompiler } from '../../hooks';
 import { meta } from '../../meta';
-import { Notebook, type ScriptSettings } from '../../types';
+import { Notebook, ScriptCapabilities, type ScriptSettings } from '../../types';
 
 export default Capability.makeModule(() =>
   Effect.succeed(
@@ -45,8 +45,7 @@ export default Capability.makeModule(() =>
         filter: (data): data is { subject: Script.Script } => Obj.instanceOf(Script.Script, data.subject),
         component: ({ data, role }) => {
           const compiler = useCompiler();
-          // TODO(dmaretskyi): Since settings store is not reactive, this would break on the script plugin being enabled without a page reload.
-          const settings = useCapability(Common.Capability.SettingsStore).getStore<ScriptSettings>(meta.id)?.value;
+          const settings = useAtomCapability(ScriptCapabilities.Settings);
           // TODO(wittjosiah): Why? The editor should be allow to render even if the environment is not ready.
           if (!compiler?.environment) {
             return null;

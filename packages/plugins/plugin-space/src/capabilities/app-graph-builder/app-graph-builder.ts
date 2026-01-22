@@ -197,9 +197,9 @@ export default Capability.makeModule(
                     .map((space) =>
                       constructSpaceNode({
                         space,
-                        navigable: state.navigableCollections,
+                        navigable: state.values.navigableCollections,
                         personal: space === client.spaces.default,
-                        namesCache: state.spaceNames,
+                        namesCache: state.values.spaceNames,
                         resolve: resolve(get),
                       }),
                     );
@@ -228,7 +228,7 @@ export default Capability.makeModule(
             constructSpaceActions({
               space,
               personal: space === client.spaces.default,
-              migrating: state.sdkMigrationRunning[space.id],
+              migrating: state.values.sdkMigrationRunning[space.id],
             }),
           );
         },
@@ -266,7 +266,7 @@ export default Capability.makeModule(
                       db: space.db,
                       object,
                       resolve: resolve(get),
-                      navigable: state.navigableCollections,
+                      navigable: state.values.navigableCollections,
                     }),
                   ),
                   Array.filter(isNonNullable),
@@ -299,7 +299,7 @@ export default Capability.makeModule(
                         object,
                         db: space.db,
                         resolve: resolve(get),
-                        navigable: state.navigableCollections,
+                        navigable: state.values.navigableCollections,
                       }),
                   ),
                   Array.filter(isNonNullable),
@@ -546,7 +546,7 @@ export default Capability.makeModule(
               resolve: resolve(get),
               capabilities,
               deletable,
-              navigable: get(CreateAtom.fromSignal(() => state.navigableCollections)),
+              navigable: get(CreateAtom.fromSignal(() => state.values.navigableCollections)),
             }),
           );
         },

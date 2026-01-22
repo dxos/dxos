@@ -71,7 +71,6 @@
     "@dxos/indexing": "workspace:*",
     "@dxos/random": "workspace:*",
     "@dxos/test-utils": "workspace:*",
-    "@preact/signals-core": "catalog:",
     "@types/lodash.isequal": "catalog:"
   },
   "publishConfig": {

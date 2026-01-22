@@ -2,24 +2,27 @@
 // Copyright 2025 DXOS.org
 //
 
+import { type Atom } from '@effect-atom/atom-react';
 import type * as Effect from 'effect/Effect';
 import type * as Schema from 'effect/Schema';
 
 import { Capability } from '@dxos/app-framework';
 import { type Space } from '@dxos/client/echo';
 import { type Database } from '@dxos/echo';
+import { type LocalStorageStore } from '@dxos/local-storage';
 import { type Operation } from '@dxos/operation';
 import { type Collection } from '@dxos/schema';
 import { type Label } from '@dxos/ui-types';
-import { type DeepReadonly, type Position } from '@dxos/util';
+import { type Position } from '@dxos/util';
 
 import { meta } from '../meta';
 
-import { type PluginState } from './types';
+import { type PluginState, type SpaceSettingsProps } from './types';
 
 export namespace SpaceCapabilities {
-  export const State = Capability.make<DeepReadonly<PluginState>>(`${meta.id}/capability/state`);
-  export const MutableState = Capability.make<PluginState>(`${meta.id}/capability/state`);
+  export const Settings = Capability.make<Atom.Writable<SpaceSettingsProps>>(`${meta.id}/capability/settings`);
+
+  export const State = Capability.make<LocalStorageStore<PluginState>>(`${meta.id}/capability/state`);
 
   export type SettingsSection = { id: string; label: Label; position?: Position };
   export const SettingsSection = Capability.make<SettingsSection>(`${meta.id}/capability/settings-section`);

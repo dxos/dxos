@@ -29,7 +29,6 @@
     "@dxos/invariant": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@preact/signals-core": "catalog:",
     "@radix-ui/react-context": "catalog:",
     "date-fns": "catalog:",
     "react-resize-detector": "catalog:",

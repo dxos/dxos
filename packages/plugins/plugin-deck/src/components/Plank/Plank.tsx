@@ -14,22 +14,16 @@ import React, {
 } from 'react';
 
 import { Common } from '@dxos/app-framework';
-import { Surface, useAppGraph, useCapability, useOperationInvoker } from '@dxos/app-framework/react';
+import { Surface, useAppGraph, useOperationInvoker } from '@dxos/app-framework/react';
 import { debounce } from '@dxos/async';
 import { type Node, useNode } from '@dxos/plugin-graph';
 import { ATTENDABLE_PATH_SEPARATOR, useAttentionAttributes } from '@dxos/react-ui-attention';
 import { StackItem, railGridHorizontal } from '@dxos/react-ui-stack';
 import { mainIntrinsicSize, mx } from '@dxos/ui-theme';
 
-import { useCompanions, useMainSize } from '../../hooks';
+import { useCompanions, useDeckState, useMainSize } from '../../hooks';
 import { parseEntryId } from '../../layout';
-import {
-  DeckCapabilities,
-  DeckOperation,
-  type DeckSettingsProps,
-  type LayoutMode,
-  type ResolvedPart,
-} from '../../types';
+import { DeckOperation, type DeckSettingsProps, type LayoutMode, type ResolvedPart } from '../../types';
 
 import { PlankContentError, PlankError } from './PlankError';
 import { PlankHeading } from './PlankHeading';
@@ -54,10 +48,10 @@ export type PlankProps = Pick<PlankComponentProps, 'layoutMode' | 'part' | 'path
 //  benefits. I think where we anticipate users will definitely want to quickly switch between showing and hiding entire
 //  articles, over the (again probably large) performance benefit that unmounting them would confer, we can mount and
 //  hide them, but I think that scenario in its most unambiguous form is probably rare. You could extrapolate
-//  the scenario to include all “potential” planks such as companions, which we could keep mounted and hidden, but I
-//  don’t think the resulting performance would be acceptable. I think the real issue is “perceived performance” which
+//  the scenario to include all "potential" planks such as companions, which we could keep mounted and hidden, but I
+//  don't think the resulting performance would be acceptable. I think the real issue is "perceived performance" which
 //  has mitigations that are in between mounting and un-mounting since both of those have tradeoffs; we may need one or more
-//  “partially-mounted” experiences, like loading skeletons at the simple end, or screenshots of “sleeping” planks at
+//  "partially-mounted" experiences, like loading skeletons at the simple end, or screenshots of "sleeping" planks at
 //  the advanced end.
 
 /**
@@ -164,7 +158,8 @@ const PlankComponent = memo(
     settings,
   }: PlankComponentProps) => {
     const { invokePromise } = useOperationInvoker();
-    const { deck, popoverAnchorId, scrollIntoView } = useCapability(DeckCapabilities.DeckState);
+    const { state } = useDeckState();
+    const { deck, popoverAnchorId, scrollIntoView } = state;
     const { findFirstFocusable } = useFocusFinders();
     const canResize = layoutMode === 'deck';
 
@@ -187,7 +182,7 @@ const PlankComponent = memo(
       [invokePromise, sizeKey],
     );
 
-    // TODO(thure): Tabster’s focus group should handle moving focus to Main, but something is blocking it.
+    // TODO(thure): Tabster's focus group should handle moving focus to Main, but something is blocking it.
     const handleKeyDown = useCallback((event: KeyboardEvent) => {
       if (event.target === event.currentTarget) {
         switch (event.key) {

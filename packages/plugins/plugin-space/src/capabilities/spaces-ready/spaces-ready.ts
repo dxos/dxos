@@ -36,16 +36,16 @@ export default Capability.makeModule(
     const { invoke, invokePromise } = yield* Capability.get(Common.Capability.OperationInvoker);
     const { graph } = yield* Capability.get(Common.Capability.AppGraph);
     const layout = yield* Capability.get(Common.Capability.Layout);
-    const deckStates = yield* Capability.getAll(DeckCapabilities.DeckState);
-    const deck = deckStates.flat()[0];
+    const deckStateStores = yield* Capability.getAll(DeckCapabilities.State);
+    const deckStateStore = deckStateStores.flat()[0];
     const attention = yield* Capability.get(AttentionCapabilities.Attention);
-    const state = yield* Capability.get(SpaceCapabilities.MutableState);
+    const store = yield* Capability.get(SpaceCapabilities.State);
     const client = yield* Capability.get(ClientCapabilities.Client);
 
     const defaultSpace = client.spaces.default;
     yield* Effect.tryPromise(() => defaultSpace.waitUntilReady());
 
-    if (deck?.activeDeck === 'default') {
+    if (deckStateStore?.state.activeDeck === 'default') {
       yield* invoke(Common.LayoutOperation.SwitchWorkspace, { subject: defaultSpace.id });
     }
 
@@ -106,9 +106,15 @@ export default Capability.makeModule(
                 () => ({ name: space.properties.name }),
                 ({ name }) => {
                   if (!name) {
-                    delete state.spaceNames[space.id];
+                    store.update((current) => {
+                      const { [space.id]: _, ...rest } = current.spaceNames;
+                      return { ...current, spaceNames: rest };
+                    });
                   } else {
-                    state.spaceNames[space.id] = name;
+                    store.update((current) => ({
+                      ...current,
+                      spaceNames: { ...current.spaceNames, [space.id]: name },
+                    }));
                   }
                 },
               ),
@@ -205,27 +211,29 @@ export default Capability.makeModule(
                 Array.isArray(added) &&
                 Array.isArray(removed)
               ) {
+                // NOTE: Direct mutation of ComplexMap won't trigger atom updates.
+                // TODO(wittjosiah): Stop using (Complex)Map inside reactive object.
                 added.forEach((id) => {
                   if (typeof id === 'string') {
-                    if (!(id in state.viewersByObject)) {
-                      state.viewersByObject[id] = new ComplexMap(PublicKey.hash);
+                    if (!(id in store.values.viewersByObject)) {
+                      store.values.viewersByObject[id] = new ComplexMap(PublicKey.hash);
                     }
-                    state.viewersByObject[id]!.set(identityKey, {
+                    store.values.viewersByObject[id]!.set(identityKey, {
                       lastSeen: Date.now(),
                       currentlyAttended: new Set(attended).has(id),
                     });
-                    if (!state.viewersByIdentity.has(identityKey)) {
-                      state.viewersByIdentity.set(identityKey, new Set());
+                    if (!store.values.viewersByIdentity.has(identityKey)) {
+                      store.values.viewersByIdentity.set(identityKey, new Set());
                     }
-                    state.viewersByIdentity.get(identityKey)!.add(id);
+                    store.values.viewersByIdentity.get(identityKey)!.add(id);
                   }
                 });
 
                 removed.forEach((id) => {
                   if (typeof id === 'string') {
-                    state.viewersByObject[id]?.delete(identityKey);
-                    state.viewersByIdentity.get(identityKey)?.delete(id);
-                    // It’s okay for these to be empty sets/maps, reduces churn.
+                    store.values.viewersByObject[id]?.delete(identityKey);
+                    store.values.viewersByIdentity.get(identityKey)?.delete(id);
+                    // It's okay for these to be empty sets/maps, reduces churn.
                   }
                 });
               }
@@ -244,7 +252,7 @@ export default Capability.makeModule(
             .map((space) => space.internal.setEdgeReplicationPreference(EdgeReplicationSetting.ENABLED)),
         ),
       );
-      state.enabledEdgeReplication = true;
+      store.set({ enabledEdgeReplication: true });
     } catch (err) {
       log.catch(err);
     }

@@ -38,7 +38,6 @@
     "@lezer/highlight": "catalog:",
     "@lezer/markdown": "catalog:",
     "@lezer/xml": "catalog:",
-    "@preact/signals-core": "catalog:",
     "@radix-ui/react-compose-refs": "catalog:",
     "@radix-ui/react-context": "catalog:",
     "effect": "catalog:",

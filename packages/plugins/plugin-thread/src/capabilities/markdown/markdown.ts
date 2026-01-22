@@ -22,16 +22,21 @@ export default Capability.makeModule(
     return Capability.contributes(MarkdownCapabilities.Extensions, [
       ({ document: doc }) => {
         const { invokePromise } = capabilities.get(Common.Capability.OperationInvoker);
-        const { state } = capabilities.get(ThreadCapabilities.MutableState);
-        return threads(state, doc, invokePromise);
+        const threadStore = capabilities.get(ThreadCapabilities.State);
+        return threads(threadStore, doc, invokePromise);
       },
       ({ document: doc }) => {
         if (!doc) return [];
-        const { state } = capabilities.get(ThreadCapabilities.MutableState);
+        const threadStore = capabilities.get(ThreadCapabilities.State);
 
         return EditorView.updateListener.of((update) => {
           if (update.docChanged || update.selectionSet) {
-            state.toolbar[Obj.getDXN(doc).toString()] = selectionOverlapsComment(update.state);
+            const objectId = Obj.getDXN(doc).toString();
+            const overlaps = selectionOverlapsComment(update.state);
+            threadStore.updateState((current) => ({
+              ...current,
+              toolbar: { ...current.toolbar, [objectId]: overlaps },
+            }));
           }
         });
       },

@@ -79,14 +79,14 @@ export class AiConversation extends Resource {
       const history = yield* Effect.promise(() => self.getHistory());
 
       // Create toolkit.
-      const blueprints = self.context.blueprints.value;
+      const blueprints = self.context.blueprintsValue;
       const toolkit = yield* createToolkit({
         toolkit: self._toolkit,
         blueprints,
       });
 
       // Context objects.
-      const objects = self.context.objects.value;
+      const objects = self.context.objectsValue;
 
       log.info('run', {
         history: history.length,

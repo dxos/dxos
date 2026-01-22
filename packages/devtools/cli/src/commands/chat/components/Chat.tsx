@@ -61,18 +61,18 @@ export const Chat = (props: ChatProps) => {
   });
 
   createEffect(() => {
-    // Bridge Preact signals to Solid signals.
+    // Bridge atom subscriptions to Solid signals.
     const onUpdate = () => {
       setBlueprints(
-        props.conversation.context.blueprints.value
+        props.conversation.context.blueprintsValue
           .map((blueprint) => blueprintRegistry.getByKey(blueprint.key))
           .filter(isTruthy),
       );
-      setObjects(props.conversation.context.objects.value);
+      setObjects(props.conversation.context.objectsValue);
     };
 
-    const unsubscribeBlueprints = props.conversation.context.blueprints.subscribe(onUpdate);
-    const unsubscribeObjects = props.conversation.context.objects.subscribe(onUpdate);
+    const unsubscribeBlueprints = props.conversation.context.subscribeBlueprints(onUpdate);
+    const unsubscribeObjects = props.conversation.context.subscribeObjects(onUpdate);
     onCleanup(() => {
       unsubscribeBlueprints();
       unsubscribeObjects();
@@ -175,7 +175,7 @@ export const Chat = (props: ChatProps) => {
           </Match>
           <Match when={popup() === 'blueprints'}>
             <BlueprintPicker
-              selected={props.conversation.context.blueprints.value.map((blueprint) => blueprint.key)}
+              selected={props.conversation.context.blueprintsValue.map((blueprint) => blueprint.key)}
               onSave={(blueprints) => {
                 props.onChatCreate?.({ blueprints });
                 setPopup(undefined);

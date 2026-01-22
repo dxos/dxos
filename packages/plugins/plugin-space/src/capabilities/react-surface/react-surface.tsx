@@ -322,8 +322,8 @@ export default Capability.makeModule(
           typeof data.id === 'string' && Obj.isObject(data.subject),
         component: ({ data }) => {
           // TODO(wittjosiah): Doesn't need to be mutable but readonly type messes with ComplexMap.
-          const state = useCapability(SpaceCapabilities.MutableState);
-          return <SmallPresenceLive id={data.id} open={data.open} viewers={state.viewersByObject[data.id]} />;
+          const store = useCapability(SpaceCapabilities.State);
+          return <SmallPresenceLive id={data.id} open={data.open} viewers={store.values.viewersByObject[data.id]} />;
         },
       }),
       // TODO(wittjosiah): Attention glyph for non-echo items should be handled elsewhere.

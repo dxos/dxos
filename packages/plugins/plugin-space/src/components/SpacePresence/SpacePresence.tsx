@@ -48,7 +48,7 @@ export type SpacePresenceProps = {
 
 export const SpacePresence = ({ object, spaceId }: SpacePresenceProps) => {
   // TODO(wittjosiah): Doesn't need to be mutable but readonly type messes with ComplexMap.
-  const spaceState = useCapability(SpaceCapabilities.MutableState);
+  const store = useCapability(SpaceCapabilities.State);
   const identity = useIdentity();
   const db = Obj.getDatabase(object);
   const space = useSpace(spaceId ?? db?.spaceId);
@@ -70,11 +70,11 @@ export const SpacePresence = ({ object, spaceId }: SpacePresenceProps) => {
 
   // TODO(thure): Could it be a smell to return early when there are interactions with `deepSignal` later, since it
   //  prevents reactivity?
-  if (!identity || !spaceState || !space) {
+  if (!identity || !store || !space) {
     return null;
   }
 
-  const currentObjectViewers = spaceState.viewersByObject[Obj.getDXN(object).toString()] ?? noViewers;
+  const currentObjectViewers = store.values.viewersByObject[Obj.getDXN(object).toString()] ?? noViewers;
 
   const membersForObject = spaceMembers
     .filter((member) => memberOnline(member) && memberIsNotSelf(member))

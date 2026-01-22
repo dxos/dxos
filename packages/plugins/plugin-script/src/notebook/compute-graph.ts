@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type Signal, signal } from '@preact/signals-core';
+import { Atom, type Registry } from '@effect-atom/atom-react';
 
 import { log } from '@dxos/log';
 
@@ -18,38 +18,55 @@ import { type ParsedExpression, VirtualTypeScriptParser } from './vfs-parser';
 export class ComputeGraph {
   private readonly _parser = new VirtualTypeScriptParser();
 
-  private _expressions = signal<Record<string, ParsedExpression>>({});
-  private _valuesByCellId = signal<Record<string, any>>({});
-  private _valuesByName = signal<Record<string, any>>({});
+  private _expressionsAtom = Atom.make<Record<string, ParsedExpression>>({});
+  private _valuesByCellIdAtom = Atom.make<Record<string, any>>({});
+  private _valuesByNameAtom = Atom.make<Record<string, any>>({});
 
-  constructor(private readonly _notebook: Notebook.Notebook) {}
+  constructor(
+    private readonly _notebook: Notebook.Notebook,
+    private readonly _registry: Registry.Registry,
+  ) {}
 
   /**
    * Parsed expressions by cell ID.
    */
-  get expressions(): Signal<Record<string, ParsedExpression>> {
-    return this._expressions;
+  get expressionsAtom(): Atom.Writable<Record<string, ParsedExpression>> {
+    return this._expressionsAtom;
+  }
+
+  /**
+   * Get current expressions by cell ID.
+   */
+  getExpressions(): Record<string, ParsedExpression> {
+    return this._registry.get(this._expressionsAtom);
   }
 
   /**
    * Computed values by cell ID.
    */
-  get values(): Signal<Record<string, any>> {
-    return this._valuesByCellId;
+  get valuesAtom(): Atom.Writable<Record<string, any>> {
+    return this._valuesByCellIdAtom;
   }
 
   /**
    * Computed values by name.
    */
-  get valuesByName(): Signal<Record<string, any>> {
-    return this._valuesByName;
+  get valuesByNameAtom(): Atom.Writable<Record<string, any>> {
+    return this._valuesByNameAtom;
+  }
+
+  /**
+   * Get current values by name.
+   */
+  getValuesByName(): Record<string, any> {
+    return this._registry.get(this._valuesByNameAtom);
   }
 
   /**
    * Get computed value by cell ID.
    */
   getValue(cellId: string) {
-    return this._valuesByCellId.value[cellId];
+    return this._registry.get(this._valuesByCellIdAtom)[cellId];
   }
 
   /**
@@ -58,8 +75,8 @@ export class ComputeGraph {
   async evaluate() {
     // Parse expressions.
     const { expressions, dependencyGraph } = this.parse();
-    this._valuesByCellId.value = {};
-    this._valuesByName.value = {};
+    this._registry.set(this._valuesByCellIdAtom, {});
+    this._registry.set(this._valuesByNameAtom, {});
 
     // Create a map of cell IDs to expressions for easy lookup.
     const cellExpressions = new Map<string, ParsedExpression>();
@@ -124,8 +141,8 @@ export class ComputeGraph {
       }
     }
 
-    this._valuesByCellId.value = valuesByCellId;
-    this._valuesByName.value = valuesByName;
+    this._registry.set(this._valuesByCellIdAtom, valuesByCellId);
+    this._registry.set(this._valuesByNameAtom, valuesByName);
     return valuesByCellId;
   }
 
@@ -151,7 +168,7 @@ export class ComputeGraph {
 
     // Build dependency graph.
     const dependencyGraph = this.buildDependencyGraph(expressions);
-    this._expressions.value = expressions;
+    this._registry.set(this._expressionsAtom, expressions);
     return { expressions, dependencyGraph };
   }
 

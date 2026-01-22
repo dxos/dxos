@@ -2,7 +2,6 @@
 // Copyright 2025 DXOS.org
 //
 
-import { effect } from '@preact/signals-core';
 import * as Effect from 'effect/Effect';
 
 import { Capability, Common } from '@dxos/app-framework';
@@ -15,7 +14,8 @@ import { type PluginState, SpaceCapabilities } from '../../types';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    const state = new LocalStorageStore<PluginState>(meta.id, {
+    const registry = yield* Capability.get(Common.Capability.AtomRegistry);
+    const store = new LocalStorageStore<PluginState>(meta.id, {
       awaiting: undefined,
       spaceNames: {},
       viewersByObject: {},
@@ -26,23 +26,23 @@ export default Capability.makeModule(
       enabledEdgeReplication: false,
     });
 
-    state
+    store
       .prop({ key: 'spaceNames', type: LocalStorageStore.json<Record<string, string>>() })
       .prop({ key: 'enabledEdgeReplication', type: LocalStorageStore.bool() });
 
     const manager = yield* Capability.get(Common.Capability.PluginManager);
-    const unsubscribe = effect(() => {
-      // TODO(wittjosiah): Find a way to make this capability-based.
+    // TODO(wittjosiah): Find a way to make this capability-based.
+    const unsubscribe = registry.subscribe(manager.enabled, () => {
       const enabled = manager.getEnabled().includes('dxos.org/plugin/stack');
-      if (enabled !== state.values.navigableCollections) {
-        state.values.navigableCollections = enabled;
+      if (enabled !== store.values.navigableCollections) {
+        store.set({ navigableCollections: enabled });
       }
     });
 
-    return Capability.contributes(SpaceCapabilities.State, state.values, () =>
+    return Capability.contributes(SpaceCapabilities.State, store, () =>
       Effect.sync(() => {
         unsubscribe();
-        state.close();
+        store.close();
       }),
     );
   }),

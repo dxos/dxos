@@ -33,7 +33,6 @@
     "@dxos/react-ui-searchlist": "workspace:*",
     "@dxos/react-ui-stack": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@preact-signals/safe-react": "catalog:",
     "@radix-ui/react-context": "catalog:"
   },
   "devDependencies": {

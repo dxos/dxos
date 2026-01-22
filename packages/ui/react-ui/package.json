@@ -48,7 +48,6 @@
     "@dxos/util": "workspace:*",
     "@effect-atom/atom-react": "catalog:",
     "@fluentui/react-tabster": "catalog:",
-    "@preact/signals-react": "catalog:",
     "@radix-ui/primitive": "catalog:",
     "@radix-ui/react-alert-dialog": "catalog:",
     "@radix-ui/react-avatar": "catalog:",

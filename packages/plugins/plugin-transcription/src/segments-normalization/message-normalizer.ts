@@ -6,9 +6,8 @@
 // Copyright 2025 DXOS.org
 //
 
-import { effect } from '@preact/signals-core';
-
 import { DeferredTask, asyncTimeout } from '@dxos/async';
+import { effect } from '@dxos/echo-signals';
 import { LifecycleState, Resource } from '@dxos/context';
 import { type Queue } from '@dxos/echo-db';
 import { type FunctionExecutor } from '@dxos/functions-runtime';

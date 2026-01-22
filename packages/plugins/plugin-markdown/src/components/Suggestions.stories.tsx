@@ -10,8 +10,7 @@ import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 import React, { type FC, useEffect, useMemo, useState } from 'react';
 
-import { Common } from '@dxos/app-framework';
-import { useCapability } from '@dxos/app-framework/react';
+import { useAtomCapability, useCapability } from '@dxos/app-framework/react';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Obj, Ref, Type } from '@dxos/echo';
 import { createDocAccessor, toCursorRange } from '@dxos/echo-db';
@@ -31,7 +30,6 @@ import { Message } from '@dxos/types';
 import { type EditorSelection, type Range } from '@dxos/ui-editor';
 
 import { MarkdownPlugin } from '../MarkdownPlugin';
-import { meta } from '../meta';
 import { translations } from '../translations';
 import { Markdown, MarkdownCapabilities } from '../types';
 
@@ -114,7 +112,7 @@ const TestChat: FC<{ doc: Markdown.Document; content: string }> = ({ doc, conten
 const DefaultStory = ({ document, chat }: { document: string; chat: string }) => {
   const space = useSpace();
   const [doc, setDoc] = useState<Markdown.Document>();
-  const settings = useCapability(Common.Capability.SettingsStore).getStore<Markdown.Settings>(meta.id)!.value;
+  const settings = useAtomCapability(MarkdownCapabilities.Settings);
   const { editorState } = useCapability(MarkdownCapabilities.State);
 
   useEffect(() => {

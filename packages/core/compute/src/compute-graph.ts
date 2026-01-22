@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { effect } from '@preact/signals-core';
+import { effect } from '@dxos/echo-signals';
 import type * as ManagedRuntime from 'effect/ManagedRuntime';
 
 import { Event } from '@dxos/async';

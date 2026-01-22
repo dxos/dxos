@@ -2,7 +2,6 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Signal } from '@preact/signals-core';
 import * as EArray from 'effect/Array';
 import * as Context from 'effect/Context';
 import * as Function from 'effect/Function';
@@ -62,57 +61,122 @@ export class Bindings {
  */
 // TODO(burdon): Context should manage ephemeral state of bindings until prompt is issued?
 export class AiContextBinder extends Resource {
-  private readonly _blueprints = new Signal<Blueprint.Blueprint[]>([]);
-  private readonly _objects = new Signal<Obj.Any[]>([]);
+  private _blueprints: Blueprint.Blueprint[] = [];
+  private _objects: Obj.Any[] = [];
+  private readonly _blueprintSubscribers: Set<(blueprints: Blueprint.Blueprint[]) => void> = new Set();
+  private readonly _objectSubscribers: Set<(objects: Obj.Any[]) => void> = new Set();
 
   constructor(private readonly _queue: Queue) {
     super();
   }
 
-  get blueprints() {
+  /**
+   * Get the current blueprints value.
+   */
+  get blueprintsValue(): Blueprint.Blueprint[] {
     return this._blueprints;
   }
 
-  get objects() {
+  /**
+   * Get the current objects value.
+   */
+  get objectsValue(): Obj.Any[] {
     return this._objects;
+  }
+
+  /**
+   * Subscribe to changes in blueprints.
+   */
+  subscribeBlueprints(cb: (blueprints: Blueprint.Blueprint[]) => void): () => void {
+    this._blueprintSubscribers.add(cb);
+    return () => this._blueprintSubscribers.delete(cb);
+  }
+
+  /**
+   * Subscribe to changes in objects.
+   */
+  subscribeObjects(cb: (objects: Obj.Any[]) => void): () => void {
+    this._objectSubscribers.add(cb);
+    return () => this._objectSubscribers.delete(cb);
+  }
+
+  private _notifyBlueprints(): void {
+    for (const cb of this._blueprintSubscribers) {
+      cb(this._blueprints);
+    }
+  }
+
+  private _notifyObjects(): void {
+    for (const cb of this._objectSubscribers) {
+      cb(this._objects);
+    }
   }
 
   protected override async _open(): Promise<void> {
     const query = this._queue.query(Query.type(ContextBinding));
-    this._ctx.onDispose(
-      query.subscribe(
-        async () => {
-          const bindings = this._reduce(query.results);
 
-          // Resolve references.
-          this._blueprints.value = this._resolve(bindings.blueprints, this._blueprints.peek());
-          this._objects.value = this._resolve(bindings.objects, this._objects.peek());
-          log('updated', {
-            blueprints: this._blueprints.value.length,
-            objects: this._objects.value.length,
-          });
-        },
-        {
-          fire: true,
-        },
-      ),
+    // Process initial state before returning.
+    const initialResults = await query.run();
+    await this._updateBindings(initialResults);
+
+    // Subscribe to future changes.
+    this._ctx.onDispose(
+      query.subscribe(async () => {
+        await this._updateBindings(query.results);
+      }),
     );
   }
 
+  private async _updateBindings(items: ContextBinding[]): Promise<void> {
+    const bindings = this._reduce(items);
+
+    // Resolve references (loading them first if needed).
+    const newBlueprints = await this._resolve(bindings.blueprints, this._blueprints);
+    const newObjects = await this._resolve(bindings.objects, this._objects);
+
+    const blueprintsChanged = newBlueprints.length !== this._blueprints.length;
+    const objectsChanged = newObjects.length !== this._objects.length;
+
+    this._blueprints = newBlueprints;
+    this._objects = newObjects;
+
+    if (blueprintsChanged) {
+      this._notifyBlueprints();
+    }
+    if (objectsChanged) {
+      this._notifyObjects();
+    }
+
+    log('updated bindings', {
+      blueprints: newBlueprints.length,
+      objects: newObjects.length,
+    });
+  }
+
   protected override async _close(): Promise<void> {
-    this._blueprints.value = [];
-    this._objects.value = [];
+    this._blueprints = [];
+    this._objects = [];
   }
 
   async bind({ blueprints, objects }: BindingProps): Promise<void> {
-    const { added: addedBlueprints, next: nextBlueprints } = this._processBindings(blueprints, this._blueprints.peek());
-    const { added: addedObjects, next: nextObjects } = this._processBindings(objects, this._objects.peek());
+    const { added: addedBlueprints, next: nextBlueprints } = this._processBindings(blueprints, this._blueprints);
+    const { added: addedObjects, next: nextObjects } = this._processBindings(objects, this._objects);
     if (!addedBlueprints.length && !addedObjects.length) {
       return;
     }
 
-    this._blueprints.value = nextBlueprints;
-    this._objects.value = nextObjects;
+    const blueprintsChanged = nextBlueprints.length !== this._blueprints.length;
+    const objectsChanged = nextObjects.length !== this._objects.length;
+
+    this._blueprints = nextBlueprints;
+    this._objects = nextObjects;
+
+    if (blueprintsChanged) {
+      this._notifyBlueprints();
+    }
+    if (objectsChanged) {
+      this._notifyObjects();
+    }
 
     log('bind', { blueprints: addedBlueprints.length, objects: addedObjects.length });
     await this._queue.append([
@@ -207,10 +271,15 @@ export class AiContextBinder extends Resource {
   }
 
   /**
-   * Resolve references to objects, falling back to existing objects if the reference target is missing.
+   * Resolve references to objects, loading them first if needed and falling back to existing objects.
    */
-  private _resolve<T>(refs: Iterable<Ref.Ref<T>>, current: T[]): T[] {
-    return [...refs]
+  private async _resolve<T>(refs: Iterable<Ref.Ref<T>>, current: T[]): Promise<T[]> {
+    const refArray = [...refs];
+
+    // Load all refs that need loading.
+    await Promise.all(refArray.map((ref) => ref.load()));
+
+    return refArray
       .map((ref) => {
         let target: T | undefined;
         // Only resolve target if available (has target or resolver).

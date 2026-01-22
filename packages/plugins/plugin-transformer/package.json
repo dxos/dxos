@@ -51,8 +51,6 @@
     "@dxos/react-ui-stack": "workspace:*",
     "@dxos/util": "workspace:*",
     "@huggingface/transformers": "catalog:",
-    "@preact-signals/safe-react": "catalog:",
-    "@preact/signals-core": "catalog:",
     "date-fns": "catalog:",
     "effect": "catalog:"
   },

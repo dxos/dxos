@@ -5,19 +5,26 @@
 import React, { useCallback } from 'react';
 
 import { Common } from '@dxos/app-framework';
-import { useCapability, useOperationInvoker } from '@dxos/app-framework/react';
+import { useOperationInvoker } from '@dxos/app-framework/react';
 import { IconButton, type IconButtonProps, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 
-import { getCompanionId, useDeckCompanions } from '../../hooks';
+import { getCompanionId, useDeckCompanions, useDeckState } from '../../hooks';
 import { meta } from '../../meta';
-import { DeckCapabilities } from '../../types';
 
 export const ToggleSidebarButton = ({
   classNames,
   variant = 'ghost',
 }: ThemedClassName<Pick<IconButtonProps, 'variant'>>) => {
-  const layoutContext = useCapability(DeckCapabilities.MutableDeckState);
+  const { state, update } = useDeckState();
   const { t } = useTranslation(meta.id);
+
+  const handleClick = useCallback(() => {
+    update((s) => ({
+      ...s,
+      sidebarState: s.sidebarState === 'expanded' ? 'collapsed' : 'expanded',
+    }));
+  }, [update]);
+
   return (
     <IconButton
       variant={variant}
@@ -25,17 +32,20 @@ export const ToggleSidebarButton = ({
       iconOnly
       size={4}
       label={t('open navigation sidebar label')}
-      onClick={() =>
-        (layoutContext.sidebarState = layoutContext.sidebarState === 'expanded' ? 'collapsed' : 'expanded')
-      }
+      onClick={handleClick}
       classNames={classNames}
     />
   );
 };
 
 export const CloseSidebarButton = () => {
-  const layoutContext = useCapability(DeckCapabilities.MutableDeckState);
+  const { update } = useDeckState();
   const { t } = useTranslation(meta.id);
+
+  const handleClick = useCallback(() => {
+    update((s) => ({ ...s, sidebarState: 'collapsed' }));
+  }, [update]);
+
   return (
     <IconButton
       variant='ghost'
@@ -43,7 +53,7 @@ export const CloseSidebarButton = () => {
       iconOnly
       size={4}
       label={t('close navigation sidebar label')}
-      onClick={() => (layoutContext.sidebarState = 'collapsed')}
+      onClick={handleClick}
       classNames='rounded-none pli-1 dx-focus-ring-inset pie-[max(.5rem,env(safe-area-inset-left))]'
     />
   );
@@ -55,18 +65,19 @@ export const ToggleComplementarySidebarButton = ({
   current,
 }: ThemedClassName<{ inR0?: boolean; current?: string }>) => {
   const { invokeSync } = useOperationInvoker();
-  const layoutContext = useCapability(DeckCapabilities.MutableDeckState);
+  const { state, update } = useDeckState();
   const { t } = useTranslation(meta.id);
 
   const companions = useDeckCompanions();
   const handleClick = useCallback(() => {
-    layoutContext.complementarySidebarState =
-      layoutContext.complementarySidebarState === 'expanded' ? 'collapsed' : 'expanded';
-    const subject = layoutContext.complementarySidebarPanel ?? (companions[0] && getCompanionId(companions[0].id));
-    if (layoutContext.complementarySidebarState === 'expanded' && !current && subject) {
+    const nextState = state.complementarySidebarState === 'expanded' ? 'collapsed' : 'expanded';
+    update((s) => ({ ...s, complementarySidebarState: nextState }));
+
+    const subject = state.complementarySidebarPanel ?? (companions[0] && getCompanionId(companions[0].id));
+    if (nextState === 'expanded' && !current && subject) {
       invokeSync(Common.LayoutOperation.UpdateComplementary, { subject });
     }
-  }, [layoutContext, current, companions, invokeSync]);
+  }, [state, update, current, companions, invokeSync]);
 
   return (
     <IconButton

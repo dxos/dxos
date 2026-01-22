@@ -4,8 +4,9 @@
 
 import { monitorForElements } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
 import { type Instruction, extractInstruction } from '@atlaskit/pragmatic-drag-and-drop-hitbox/tree-item';
-import { untracked } from '@preact/signals-core';
-import React, { forwardRef, memo, useCallback, useEffect, useMemo } from 'react';
+import React, { forwardRef, memo, useCallback, useEffect, useMemo, useRef } from 'react';
+
+import { useAtomValue } from '@effect-atom/atom-react';
 
 import { Common } from '@dxos/app-framework';
 import { Surface, useAppGraph, useCapability, useLayout, useOperationInvoker } from '@dxos/app-framework/react';
@@ -13,7 +14,7 @@ import { PLANK_COMPANION_TYPE } from '@dxos/plugin-deck/types';
 import { Graph, Node, useActionRunner } from '@dxos/plugin-graph';
 import { useConnections, useActions as useGraphActions } from '@dxos/plugin-graph';
 import { useMediaQuery, useSidebars } from '@dxos/react-ui';
-import { type TreeData, type TreeItemDataProps, isTreeData } from '@dxos/react-ui-list';
+import { Path, type TreeData, type TreeItemDataProps, isTreeData } from '@dxos/react-ui-list';
 import { mx } from '@dxos/ui-theme';
 import { arrayMove, byPosition } from '@dxos/util';
 
@@ -34,9 +35,7 @@ const renderItemEnd = ({ node, open }: { node: Node.Node; open: boolean }) => (
 );
 
 const getChildrenFilter = (node: Node.Node): node is Node.Node =>
-  untracked(
-    () => !Node.isActionLike(node) && node.type !== PLANK_COMPANION_TYPE && node.properties.disposition !== 'hidden',
-  );
+  !Node.isActionLike(node) && node.type !== PLANK_COMPANION_TYPE && node.properties.disposition !== 'hidden';
 
 const filterItems = (node: Node.Node, disposition?: string) => {
   if (!disposition && (node.properties.disposition === 'hidden' || node.properties.disposition === 'alternate-tree')) {
@@ -98,7 +97,7 @@ export const NavTreeContainer$ = forwardRef<HTMLDivElement, NavTreeContainerProp
     const { invokeSync, invokePromise } = useOperationInvoker();
     const runAction = useActionRunner();
     const { graph } = useAppGraph();
-    const { isOpen, isCurrent, isAlternateTree, setItem } = useCapability(NavTreeCapabilities.State);
+    const { stateAtom, isOpen, isCurrent, isAlternateTree, setItem } = useCapability(NavTreeCapabilities.State);
     const layout = useLayout();
     const { navigationSidebarState } = useSidebars(meta.id);
 
@@ -280,6 +279,38 @@ export const NavTreeContainer$ = forwardRef<HTMLDivElement, NavTreeContainerProp
         },
       });
     }, [graph]);
+
+    // Track layout.active changes to update current state of navtree items.
+    const state = useAtomValue(stateAtom);
+    const previousActiveRef = useRef<string[]>([]);
+
+    useEffect(() => {
+      const active = layout.active;
+      const removed = previousActiveRef.current.filter((id) => !active.includes(id));
+      previousActiveRef.current = active;
+
+      const handleUpdate = () => {
+        removed.forEach((id) => {
+          const keys = Array.from(state.keys()).filter((key) => Path.last(key) === id);
+          keys.forEach((key) => {
+            setItem(Path.parts(key), 'current', false);
+          });
+        });
+
+        active.forEach((id: string) => {
+          const keys = Array.from(new Set([...state.keys(), id])).filter((key) => Path.last(key) === id);
+          keys.forEach((key) => {
+            setItem(Path.parts(key), 'current', true);
+          });
+        });
+      };
+
+      // TODO(wittjosiah): This is setTimeout because there's a race between the keys being initialized.
+      //   Keys are initialized on the first render of an item in the navtree.
+      //   This could be avoided if the location was a path as well and not just an id.
+      setTimeout(handleUpdate, 500);
+      handleUpdate();
+    }, [layout.active, state, setItem]);
 
     const setAlternateTree = useCallback(
       (path: string[], open: boolean) => {

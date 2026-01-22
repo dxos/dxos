@@ -31,8 +31,8 @@ export default Capability.makeModule(
         filter: (data): data is { subject: SettingsStore<FilesSettingsProps> } =>
           data.subject instanceof SettingsStore && data.subject.prefix === meta.id,
         component: ({ data: { subject } }) => {
-          const state = useCapability(FileCapabilities.State);
-          return <FilesSettings settings={subject.value} state={state} />;
+          const store = useCapability(FileCapabilities.State);
+          return <FilesSettings settings={subject.value} state={store.values} />;
         },
       }),
       Common.createSurface({
@@ -45,8 +45,8 @@ export default Capability.makeModule(
           return settings.autoExport;
         },
         component: () => {
-          const state = useCapability(FileCapabilities.State);
-          return <ExportStatus running={state.exportRunning} lastExport={state.lastExport} />;
+          const store = useCapability(FileCapabilities.State);
+          return <ExportStatus running={store.values.exportRunning} lastExport={store.values.lastExport} />;
         },
       }),
     ]);

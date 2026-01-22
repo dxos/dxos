@@ -2,8 +2,9 @@
 // Copyright 2025 DXOS.org
 //
 
-import { effect } from '@preact/signals-core';
 import { describe, test } from 'vitest';
+
+import { effect } from '@dxos/echo-signals';
 
 import { scheduleTaskInterval } from '@dxos/async';
 import { Context } from '@dxos/context';

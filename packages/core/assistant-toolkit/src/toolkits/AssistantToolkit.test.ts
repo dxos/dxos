@@ -83,8 +83,8 @@ describe('AssistantToolkit', () => {
           observer,
         });
 
-        expect(conversation.context.blueprints.value).toEqual([blueprint]);
-        expect(conversation.context.objects.value).toEqual([organization]);
+        expect(conversation.context.blueprintsValue).toEqual([blueprint]);
+        expect(conversation.context.objectsValue).toEqual([organization]);
       },
       Effect.provide(TestLayer),
       TestHelpers.provideTestContext,

@@ -26,12 +26,14 @@ export const ThreadCompanion = ({ subject }: { subject: any }) => {
   const identity = useIdentity();
   const subjectId = Obj.getDXN(subject).toString();
 
-  const { state, getViewState } = useCapability(ThreadCapabilities.MutableState);
+  const { state, getViewState, updateState } = useCapability(ThreadCapabilities.State);
   const drafts = state.drafts[subjectId];
   const viewState = useMemo(() => getViewState(subjectId), [getViewState, subjectId]);
   const { showResolvedThreads } = viewState;
   const onChangeViewState = useCallback(
     (nextValue: string) => {
+      // Note: viewState is not reactive, so this direct mutation is kept for now.
+      // TODO(migration): Consider making ViewStore part of the atom state.
       viewState.showResolvedThreads = nextValue === 'all';
     },
     [viewState],
@@ -58,7 +60,7 @@ export const ThreadCompanion = ({ subject }: { subject: any }) => {
       const threadId = Obj.getDXN(thread).toString();
 
       if (state.current !== threadId) {
-        state.current = threadId;
+        updateState((current) => ({ ...current, current: threadId }));
 
         // TODO(wittjosiah): Should this be a thread-specific intent?
         //  The layout doesn't know about threads and this working depends on other plugins conditionally handling it.
@@ -70,7 +72,7 @@ export const ThreadCompanion = ({ subject }: { subject: any }) => {
         });
       }
     },
-    [state.current, invokePromise, subject],
+    [state.current, invokePromise, subject, updateState],
   );
 
   const handleComment = useCallback(
@@ -83,9 +85,9 @@ export const ThreadCompanion = ({ subject }: { subject: any }) => {
       });
 
       const thread = Relation.getSource(anchor) as Thread.Thread;
-      state.current = Obj.getDXN(thread).toString();
+      updateState((current) => ({ ...current, current: Obj.getDXN(thread).toString() }));
     },
-    [invokePromise, identity, subject, state],
+    [invokePromise, identity, subject, updateState],
   );
 
   const handleResolve = useCallback(

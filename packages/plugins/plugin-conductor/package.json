@@ -42,7 +42,6 @@
     "@dxos/react-ui-canvas-editor": "workspace:*",
     "@dxos/react-ui-stack": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@preact-signals/safe-react": "catalog:",
     "effect": "catalog:"
   },
   "devDependencies": {

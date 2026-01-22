@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { computed, untracked } from '@preact/signals-core';
+import { computed, untracked } from '@dxos/echo-signals';
 import * as Schema from 'effect/Schema';
 
 import { Format } from '@dxos/echo';

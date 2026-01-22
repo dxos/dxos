@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 import React, { forwardRef, useCallback } from 'react';
 
 import { Capability, Common } from '@dxos/app-framework';
-import { SurfaceCardRole, useCapability } from '@dxos/app-framework/react';
+import { SurfaceCardRole, useAtomCapability, useCapability } from '@dxos/app-framework/react';
 import { Obj } from '@dxos/echo';
 import { SettingsStore } from '@dxos/local-storage';
 import { AttentionCapabilities } from '@dxos/plugin-attention';
@@ -72,8 +72,7 @@ export default Capability.makeModule(() =>
 const Container = forwardRef<HTMLDivElement, { id: string; subject: MarkdownContainerProps['object']; role: string }>(
   ({ id, subject, role }, forwardedRef) => {
     const selectionManager = useCapability(AttentionCapabilities.Selection);
-    const settingsStore = useCapability(Common.Capability.SettingsStore);
-    const settings = settingsStore.getStore<Markdown.Settings>(meta.id)!.value;
+    const settings = useAtomCapability(MarkdownCapabilities.Settings);
     const { state, editorState, getViewMode, setViewMode } = useCapability(MarkdownCapabilities.State);
     const viewMode = getViewMode(id);
     const handleViewModeChange = useCallback<NonNullable<MarkdownContainerProps['onViewModeChange']>>(

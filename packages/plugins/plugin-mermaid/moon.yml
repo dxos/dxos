@@ -9,4 +9,3 @@ tasks:
     args:
       - '--entryPoint=src/index.ts'
       - '--platform=browser'
-      - '--preactSignalTracking'

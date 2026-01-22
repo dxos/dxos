@@ -60,9 +60,6 @@
     "@dxos/schema": "workspace:*",
     "@dxos/types": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@preact-signals/safe-react": "catalog:",
-    "@preact/signals-core": "catalog:",
-    "@preact/signals-react": "catalog:",
     "effect": "catalog:"
   },
   "devDependencies": {

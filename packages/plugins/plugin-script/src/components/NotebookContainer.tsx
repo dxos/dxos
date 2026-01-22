@@ -2,10 +2,11 @@
 // Copyright 2025 DXOS.org
 //
 
+import { RegistryContext } from '@effect-atom/atom-react';
 import * as Cause from 'effect/Cause';
 import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useContext, useMemo, useState } from 'react';
 
 import { Agent } from '@dxos/assistant-toolkit';
 import { Blueprint, Prompt } from '@dxos/blueprints';
@@ -42,13 +43,14 @@ export type NotebookContainerProps = {
 
 export const NotebookContainer = ({ notebook, env }: NotebookContainerProps) => {
   const { t } = useTranslation(meta.id);
+  const registry = useContext(RegistryContext);
   const db = notebook && Obj.getDatabase(notebook);
   const attendableId = notebook ? Obj.getDXN(notebook).toString() : '';
   const { hasAttention } = useAttention(attendableId);
 
   // TODO(burdon): Consolidate execution and state (with graph).
   //  Generalize ComputeGraph evaluation function (using effects).
-  const graph = useMemo(() => notebook && new ComputeGraph(notebook), [notebook]);
+  const graph = useMemo(() => notebook && new ComputeGraph(notebook, registry), [notebook, registry]);
 
   const [queryValues, setQueryValues] = useState<Record<string, any>>({});
   const handleExecQueries = useCallback(async () => {
@@ -100,7 +102,7 @@ export const NotebookContainer = ({ notebook, env }: NotebookContainerProps) => 
       for (const prompt of prompts) {
         yield* runPrompt({
           prompt,
-          input: { ...queryValues, ...graph.valuesByName.value },
+          input: { ...queryValues, ...graph.getValuesByName() },
           onResult: (result) =>
             setPromptResults((prev) => ({
               ...prev,

@@ -2,12 +2,10 @@
 // Copyright 2023 DXOS.org
 //
 
-import { effect } from '@preact/signals-core';
+import { Atom, Registry, type Registry as RegistryType } from '@effect-atom/atom-react';
 
 import { type CleanupFn } from '@dxos/async';
-import { registerSignalsRuntime } from '@dxos/echo-signals';
 import { invariant } from '@dxos/invariant';
-import { type Live, live } from '@dxos/live-object';
 import { hyphenize } from '@dxos/util';
 
 type PropType<T> = {
@@ -118,20 +116,46 @@ export class LocalStorageStore<T extends object> {
   }
 
   private readonly _subscriptions = new Map<string, CleanupFn>();
-
-  private readonly _values: Live<T>;
+  private readonly _atom: Atom.Writable<T>;
+  private readonly _registry: RegistryType.Registry;
 
   constructor(
     private readonly _prefix: string,
     defaults?: T,
+    registry?: RegistryType.Registry,
   ) {
-    // TODO(burdon): Should this be externalized.
-    registerSignalsRuntime();
-    this._values = live(defaults ?? ({} as T));
+    this._registry = registry ?? Registry.make();
+    this._atom = Atom.make<T>(defaults ?? ({} as T));
   }
 
-  get values(): Live<T> {
-    return this._values;
+  get atom(): Atom.Writable<T> {
+    return this._atom;
+  }
+
+  get registry(): RegistryType.Registry {
+    return this._registry;
+  }
+
+  get values(): T {
+    return this._registry.get(this._atom);
+  }
+
+  /**
+   * Update the values using an updater function.
+   * @param updater A function that receives the current values and returns the updated values.
+   */
+  update(updater: (current: T) => T): void {
+    const current = this._registry.get(this._atom);
+    this._registry.set(this._atom, updater(current));
+  }
+
+  /**
+   * Set values directly.
+   * @param values The new values to set.
+   */
+  set(values: Partial<T>): void {
+    const current = this._registry.get(this._atom);
+    this._registry.set(this._atom, { ...current, ...values });
   }
 
   /**
@@ -146,16 +170,23 @@ export class LocalStorageStore<T extends object> {
 
     const current = type.get(storageKey);
     if (current !== undefined) {
-      this._values[key as K] = current;
+      this._registry.set(this._atom, {
+        ...this._registry.get(this._atom),
+        [key]: current,
+      });
     }
 
-    // The subscribe callback is always called.
+    // Prime the atom before subscribing.
+    this._registry.get(this._atom);
+
+    // Subscribe to changes.
     this._subscriptions.set(
       storageKey,
-      effect(() => {
-        const value = this._values[key];
-        const current = type.get(storageKey);
-        if (value !== current) {
+      this._registry.subscribe(this._atom, () => {
+        const values = this._registry.get(this._atom);
+        const value = values[key];
+        const currentStored = type.get(storageKey);
+        if (value !== currentStored) {
           type.set(storageKey, value);
         }
       }),

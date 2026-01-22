@@ -88,10 +88,9 @@ export default Capability.makeModule(
         id: `${meta.id}/companion-chat`,
         match: NodeMatcher.whenEchoObject,
         connector: (object, get) => {
-          const assistantState = capabilities.get(AssistantCapabilities.State);
-          const currentChatState = get(
-            CreateAtom.fromSignal(() => assistantState.currentChat[Obj.getDXN(object).toString()]),
-          );
+          const stateAtom = capabilities.get(AssistantCapabilities.State);
+          const state = get(stateAtom);
+          const currentChatState = state.currentChat[Obj.getDXN(object).toString()];
           // If no state, continue to allow chat initialization.
           if (!currentChatState) {
             return Effect.succeed([

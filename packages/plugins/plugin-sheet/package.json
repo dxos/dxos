@@ -86,8 +86,6 @@
     "@lezer/highlight": "catalog:",
     "@lezer/lezer": "catalog:",
     "@lezer/lr": "catalog:",
-    "@preact-signals/safe-react": "catalog:",
-    "@preact/signals-core": "catalog:",
     "@radix-ui/react-context": "catalog:",
     "codemirror-lang-spreadsheet": "catalog:",
     "date-fns": "catalog:",

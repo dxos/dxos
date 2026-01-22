@@ -45,8 +45,7 @@
     "@dxos/react-ui-stack": "workspace:*",
     "@dxos/util": "workspace:*",
     "@effect-atom/atom-react": "catalog:",
-    "@effect/cli": "catalog:",
-    "@preact-signals/safe-react": "catalog:"
+    "@effect/cli": "catalog:"
   },
   "devDependencies": {
     "@dxos/random": "workspace:*",

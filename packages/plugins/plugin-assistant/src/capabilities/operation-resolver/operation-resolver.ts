@@ -94,8 +94,12 @@ export default Capability.makeModule(
       OperationResolver.make({
         operation: AssistantOperation.SetCurrentChat,
         handler: Effect.fnUntraced(function* ({ companionTo, chat }) {
-          const mutableState = yield* Capability.get(AssistantCapabilities.MutableState);
-          mutableState.currentChat[Obj.getDXN(companionTo).toString()] = chat && Obj.getDXN(chat).toString();
+          const companionToId = Obj.getDXN(companionTo).toString();
+          const chatId = chat && Obj.getDXN(chat).toString();
+          yield* Common.Capability.updateAtomValue(AssistantCapabilities.State, (current) => ({
+            ...current,
+            currentChat: { ...current.currentChat, [companionToId]: chatId },
+          }));
         }),
       }),
     ]);

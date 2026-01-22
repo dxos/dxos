@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type ReadonlySignal, signal } from '@preact/signals-core';
+import { type ReadonlySignal, signal } from '@dxos/echo-signals';
 import chalk from 'chalk';
 
 import { log } from '@dxos/log';

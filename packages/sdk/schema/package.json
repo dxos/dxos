@@ -41,6 +41,7 @@
     "@dxos/echo-db": "workspace:*",
     "@dxos/echo-protocol": "workspace:*",
     "@dxos/echo-query": "workspace:*",
+    "@dxos/echo-signals": "workspace:*",
     "@dxos/effect": "workspace:*",
     "@dxos/graph": "workspace:*",
     "@dxos/invariant": "workspace:*",
@@ -51,7 +52,6 @@
     "@dxos/util": "workspace:*",
     "@effect-atom/atom-react": "catalog:",
     "@effect/schema": "catalog:",
-    "@preact/signals-core": "catalog:",
     "date-fns": "catalog:",
     "effect": "catalog:",
     "jsonpath": "catalog:"

@@ -4,7 +4,7 @@
 
 import { inspect } from 'node:util';
 
-import { effect } from '@preact/signals-core';
+import { effect } from '@dxos/echo-signals';
 import * as Schema from 'effect/Schema';
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 

@@ -2,13 +2,12 @@
 // Copyright 2024 DXOS.org
 //
 
-import { effect, untracked } from '@preact/signals-core';
+import { Atom, type Registry } from '@effect-atom/atom-react';
 import type * as Schema from 'effect/Schema';
 import * as SchemaAST from 'effect/SchemaAST';
 
 import { type Path, findNode, isLiteralUnion, isNestedType } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
-import { type Live, isLiveObject, live } from '@dxos/live-object';
 import { log } from '@dxos/log';
 import { getDeep, hyphenize, setDeep } from '@dxos/util';
 
@@ -24,7 +23,7 @@ export type SettingsValue = Record<string, any>;
 export type SettingsProps<T extends SettingsValue> = {
   schema: Schema.Schema<T>;
   prefix: string;
-  value?: Live<T> | T;
+  atom?: Atom.Writable<T>;
 };
 
 export interface SettingsStoreFactory {
@@ -35,13 +34,20 @@ export interface SettingsStoreFactory {
  * Root store.
  */
 export class RootSettingsStore implements SettingsStoreFactory {
-  private readonly _stores = live<Record<string, SettingsStore<any>>>({});
+  private readonly _stores: Record<string, SettingsStore<any>> = {};
 
-  constructor(private readonly _storage: Storage = localStorage) {}
+  constructor(
+    private readonly _registry: Registry.Registry,
+    private readonly _storage: Storage = localStorage,
+  ) {}
+
+  get registry(): Registry.Registry {
+    return this._registry;
+  }
 
   toJSON() {
     return Object.entries(this._stores).reduce<Record<string, object>>((acc, [prefix, store]) => {
-      acc[prefix] = store.value;
+      acc[prefix] = this._registry.get(store.atom);
       return acc;
     }, {});
   }
@@ -50,40 +56,32 @@ export class RootSettingsStore implements SettingsStoreFactory {
     return this._stores[prefix];
   }
 
-  createStore<T extends SettingsValue>({ schema, prefix, value }: SettingsProps<T>): SettingsStore<T> {
-    return untracked(() => {
-      invariant(!this._stores[prefix]);
-      const store = new SettingsStore<T>(schema, prefix, value, this._storage);
-      this._stores[prefix] = store;
-      return store;
-    });
+  createStore<T extends SettingsValue>({ schema, prefix, atom }: SettingsProps<T>): SettingsStore<T> {
+    invariant(!this._stores[prefix]);
+    const store = new SettingsStore<T>(this._registry, schema, prefix, atom, this._storage);
+    this._stores[prefix] = store;
+    return store;
   }
 
   removeStore(prefix: string): void {
-    untracked(() => {
-      const store = this._stores[prefix];
-      if (store) {
-        store.close();
-        delete this._stores[prefix];
-      }
-    });
+    const store = this._stores[prefix];
+    if (store) {
+      store.close();
+      delete this._stores[prefix];
+    }
   }
 
   destroy(): void {
-    return untracked(() => {
-      for (const [key, store] of Object.entries(this._stores)) {
-        store.close();
-        delete this._stores[key];
-      }
-    });
+    for (const [key, store] of Object.entries(this._stores)) {
+      store.close();
+      delete this._stores[key];
+    }
   }
 
   reset(): void {
-    return untracked(() => {
-      for (const store of Object.values(this._stores)) {
-        store.reset();
-      }
-    });
+    for (const store of Object.values(this._stores)) {
+      store.reset();
+    }
   }
 }
 
@@ -91,18 +89,19 @@ export class RootSettingsStore implements SettingsStoreFactory {
  * Reactive key-value property store.
  */
 export class SettingsStore<T extends SettingsValue> {
-  private readonly _value: Live<T>;
+  private readonly _atom: Atom.Writable<T>;
   private readonly _defaults: T;
   private _unsubscribe?: () => void;
 
   constructor(
+    private readonly _registry: Registry.Registry,
     private readonly _schema: Schema.Schema<T>,
     private readonly _prefix: string,
-    value: Live<T> | T = {} as T,
+    atom?: Atom.Writable<T>,
     private readonly _storage: Storage = localStorage,
   ) {
-    this._value = isLiveObject(value) ? value : live(value);
-    this._defaults = cloneObject(this._value);
+    this._atom = atom ?? Atom.make<T>({} as T);
+    this._defaults = cloneObject(this._registry.get(this._atom));
     this.load();
   }
 
@@ -110,8 +109,12 @@ export class SettingsStore<T extends SettingsValue> {
     return this._prefix;
   }
 
+  get atom(): Atom.Writable<T> {
+    return this._atom;
+  }
+
   get value(): T {
-    return this._value;
+    return this._registry.get(this._atom);
   }
 
   getKey(path: Path): string {
@@ -119,8 +122,9 @@ export class SettingsStore<T extends SettingsValue> {
   }
 
   open(): void {
-    // TODO(burdon): Import from '@dxos/signals' (rename echo-signals).
-    this._unsubscribe = effect(() => {
+    // Prime the atom before subscribing to avoid double-fire on first mutation.
+    this._registry.get(this._atom);
+    this._unsubscribe = this._registry.subscribe(this._atom, () => {
       this.save();
     });
   }
@@ -133,14 +137,17 @@ export class SettingsStore<T extends SettingsValue> {
   reset(): void {
     this.close();
 
-    for (const prop of Object.keys(this._value)) {
+    const current = this._registry.get(this._atom);
+    const updated = { ...current };
+    for (const prop of Object.keys(current)) {
       const value = this._defaults[prop];
       if (value !== undefined) {
-        setDeep(this._value, [prop], value);
+        setDeep(updated, [prop], value);
       } else {
-        delete this._value[prop];
+        delete updated[prop];
       }
     }
+    this._registry.set(this._atom, updated as T);
 
     this._storage.removeItem(this._prefix);
     for (const key of Object.keys(this._storage)) {
@@ -149,11 +156,18 @@ export class SettingsStore<T extends SettingsValue> {
       }
     }
 
+    // Save reset values to storage.
+    this.save();
+
     this.open();
   }
 
   load(): false | undefined {
     this.close();
+
+    const current = this._registry.get(this._atom);
+    const updated = { ...current };
+    let hasTypeLiteral = false;
 
     for (const prop of SchemaAST.getPropertySignatures(this._schema.ast)) {
       const node = findNode(prop.type, nodeTest);
@@ -165,23 +179,23 @@ export class SettingsStore<T extends SettingsValue> {
       if (value != null) {
         try {
           if (SchemaAST.isStringKeyword(node)) {
-            setDeep(this.value, path, value);
+            setDeep(updated, path, value);
           } else if (SchemaAST.isNumberKeyword(node)) {
-            setDeep(this.value, path, parseInt(value));
+            setDeep(updated, path, parseInt(value));
           } else if (SchemaAST.isBooleanKeyword(node)) {
-            setDeep(this.value, path, value === 'true');
+            setDeep(updated, path, value === 'true');
           } else if (SchemaAST.isEnums(node)) {
             const v = node.enums.find(([_, b]) => String(b) === value);
             if (v !== undefined) {
-              setDeep(this.value, path, v[1]);
+              setDeep(updated, path, v[1]);
             }
           } else if (isLiteralUnion(node)) {
-            setDeep(this.value, path, value);
+            setDeep(updated, path, value);
           } else if (SchemaAST.isTupleType(node)) {
-            setDeep(this.value, path, JSON.parse(value));
+            setDeep(updated, path, JSON.parse(value));
           } else if (SchemaAST.isTypeLiteral(node)) {
-            setDeep(this.value, path, JSON.parse(value));
-            return false;
+            setDeep(updated, path, JSON.parse(value));
+            hasTypeLiteral = true;
           }
         } catch (_err) {
           log.warn(`invalid value: ${key}`);
@@ -189,17 +203,29 @@ export class SettingsStore<T extends SettingsValue> {
       }
     }
 
+    this._registry.set(this._atom, updated as T);
+
+    // Save initial values to storage.
+    this.save();
+
     this.open();
+
+    if (hasTypeLiteral) {
+      return false;
+    }
   }
 
   save(): false | undefined {
+    const current = this._registry.get(this._atom);
+    let hasTypeLiteral = false;
+
     for (const prop of SchemaAST.getPropertySignatures(this._schema.ast)) {
       const node = findNode(prop.type, nodeTest);
       invariant(node, `invalid prop: ${prop.name.toString()}`);
 
       const path = [prop.name.toString()];
       const key = this.getKey(path);
-      const value = getDeep(this.value, path);
+      const value = getDeep(current, path);
       if (value == null) {
         this._storage.removeItem(key);
       } else {
@@ -217,9 +243,13 @@ export class SettingsStore<T extends SettingsValue> {
           this._storage.setItem(key, JSON.stringify(value));
         } else if (SchemaAST.isTypeLiteral(node)) {
           this._storage.setItem(key, JSON.stringify(value));
-          return false;
+          hasTypeLiteral = true;
         }
       }
+    }
+
+    if (hasTypeLiteral) {
+      return false;
     }
   }
 }

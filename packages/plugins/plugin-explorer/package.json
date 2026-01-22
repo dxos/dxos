@@ -69,8 +69,6 @@
     "@dxos/util": "workspace:*",
     "@effect-atom/atom-react": "catalog:",
     "@observablehq/plot": "catalog:",
-    "@preact-signals/safe-react": "catalog:",
-    "@preact/signals-core": "catalog:",
     "d3": "catalog:",
     "effect": "catalog:",
     "force-graph": "catalog:",

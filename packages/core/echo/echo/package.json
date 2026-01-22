@@ -208,7 +208,6 @@
     "@dxos/node-std": "workspace:*",
     "@dxos/protocols": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@preact/signals-core": "catalog:",
     "effect": "catalog:"
   },
   "publishConfig": {

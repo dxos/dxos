@@ -123,8 +123,8 @@ export default Capability.makeModule(
         OperationResolver.make({
           operation: SpaceOperation.WaitForObject,
           handler: Effect.fnUntraced(function* (input) {
-            const state = yield* Capability.get(SpaceCapabilities.MutableState);
-            state.awaiting = input.id;
+            const store = yield* Capability.get(SpaceCapabilities.State);
+            store.set({ awaiting: input.id });
           }),
         }),
 
@@ -262,7 +262,7 @@ export default Capability.makeModule(
                   ? (object: Obj.Any) => {
                       const isCollection = Obj.instanceOf(Collection.Collection, object);
                       const isSystemCollection = Obj.instanceOf(Collection.Managed, object);
-                      return (!isCollection && !isSystemCollection) || state.navigableCollections;
+                      return (!isCollection && !isSystemCollection) || state.values.navigableCollections;
                     }
                   : () => false,
               },
@@ -425,13 +425,19 @@ export default Capability.makeModule(
         OperationResolver.make({
           operation: SpaceOperation.Migrate,
           handler: Effect.fnUntraced(function* (input) {
-            const state = yield* Capability.get(SpaceCapabilities.MutableState);
+            const store = yield* Capability.get(SpaceCapabilities.State);
             const { space, version: targetVersion } = input;
 
             if (space.state.get() === SpaceState.SPACE_REQUIRES_MIGRATION) {
-              state.sdkMigrationRunning[space.id] = true;
+              store.update((current) => ({
+                ...current,
+                sdkMigrationRunning: { ...current.sdkMigrationRunning, [space.id]: true },
+              }));
               yield* Effect.promise(() => space.internal.migrate());
-              state.sdkMigrationRunning[space.id] = false;
+              store.update((current) => ({
+                ...current,
+                sdkMigrationRunning: { ...current.sdkMigrationRunning, [space.id]: false },
+              }));
             }
             const result = yield* Effect.promise(() => Migrations.migrate(space, targetVersion));
 

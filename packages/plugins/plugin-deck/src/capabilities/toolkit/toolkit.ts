@@ -35,8 +35,8 @@ export namespace DeckToolkit {
     Toolkit$.toLayer({
       'open-item': ({ id }) =>
         Effect.gen(function* () {
-          const state = capabilityManager.get(DeckCapabilities.DeckState);
-          const dxn = ArtifactId.toDXN(id, state.activeDeck as SpaceId).asEchoDXN();
+          const stateStore = capabilityManager.get(DeckCapabilities.State);
+          const dxn = ArtifactId.toDXN(id, stateStore.state.activeDeck as SpaceId).asEchoDXN();
           if (!dxn) {
             // TODO(wittjosiah): Support other variants.
             throw new Error(`Invalid object ID: ${id}`);

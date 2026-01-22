@@ -29,7 +29,7 @@ const meta = {
     withTheme,
     withPluginManager({
       plugins: [...corePlugins()],
-      capabilities: () => DeckStateFactory(),
+      capabilities: () => [DeckStateFactory()],
     }),
   ],
   parameters: {

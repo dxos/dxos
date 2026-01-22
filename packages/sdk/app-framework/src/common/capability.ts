@@ -3,7 +3,8 @@
 //
 
 import type * as Command$ from '@effect/cli/Command';
-import type { Registry } from '@effect-atom/atom-react';
+import type { Atom, Registry } from '@effect-atom/atom-react';
+import * as Effect from 'effect/Effect';
 import type * as Layer$ from 'effect/Layer';
 import type * as ManagedRuntime$ from 'effect/ManagedRuntime';
 import type * as Schema$ from 'effect/Schema';
@@ -50,6 +51,20 @@ export namespace Capability {
    * @category Capability
    */
   export const AtomRegistry = Capability$.make<Registry.Registry>('dxos.org/app-framework/capability/atom-registry');
+
+  /**
+   * Standard interface for plugin state capabilities backed by Effect Atoms.
+   */
+  export type StateStore<T> = {
+    /** The underlying atom for advanced use cases. */
+    atom: Atom.Writable<T>;
+    /** Current state value (getter). */
+    readonly state: T;
+    /** Update state using a function that receives current state and returns new state. */
+    update: (fn: (current: T) => T) => void;
+    /** Subscribe to state changes. Returns unsubscribe function. */
+    subscribe: (callback: () => void) => () => void;
+  };
 
   export type ReactContext = Readonly<{
     id: string;
@@ -147,7 +162,8 @@ export namespace Capability {
   export type Settings = {
     prefix: string;
     schema: Schema$.Schema.All;
-    value?: Record<string, any>;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    atom?: Atom.Writable<any>;
   };
 
   /**
@@ -286,4 +302,49 @@ export namespace Capability {
    * @category Capability
    */
   export const HistoryTracker = Capability$.make<HistoryTracker>('dxos.org/app-framework/capability/history-tracker');
+
+  //
+  // Atom Capability Helpers
+  //
+
+  /**
+   * Get the current value of an atom capability.
+   * @example const settings = yield* Common.Capability.getAtomValue(ThreadCapabilities.Settings);
+   */
+  export const getAtomValue = <T>(
+    atomCapability: Capability$.InterfaceDef<Atom.Writable<T>>,
+  ): Effect.Effect<T, Error, Capability$.Service> =>
+    Effect.gen(function* () {
+      const registry = yield* Capability$.get(AtomRegistry);
+      const atom = yield* Capability$.get(atomCapability);
+      return registry.get(atom);
+    });
+
+  /**
+   * Update an atom capability value.
+   * @example yield* Common.Capability.updateAtomValue(ThreadCapabilities.Settings, (s) => ({ ...s, foo: true }));
+   */
+  export const updateAtomValue = <T>(
+    atomCapability: Capability$.InterfaceDef<Atom.Writable<T>>,
+    fn: (current: T) => T,
+  ): Effect.Effect<void, Error, Capability$.Service> =>
+    Effect.gen(function* () {
+      const registry = yield* Capability$.get(AtomRegistry);
+      const atom = yield* Capability$.get(atomCapability);
+      registry.set(atom, fn(registry.get(atom)));
+    });
+
+  /**
+   * Subscribe to an atom capability.
+   * @example const unsubscribe = yield* Common.Capability.subscribeAtom(ThreadCapabilities.Settings, (value) => ...);
+   */
+  export const subscribeAtom = <T>(
+    atomCapability: Capability$.InterfaceDef<Atom.Writable<T>>,
+    callback: (value: T) => void,
+  ): Effect.Effect<() => void, Error, Capability$.Service> =>
+    Effect.gen(function* () {
+      const registry = yield* Capability$.get(AtomRegistry);
+      const atom = yield* Capability$.get(atomCapability);
+      return registry.subscribe(atom, () => callback(registry.get(atom)));
+    });
 }

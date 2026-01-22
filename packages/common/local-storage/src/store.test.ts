@@ -2,11 +2,9 @@
 // Copyright 2024 DXOS.org
 //
 
+import { Atom, Registry } from '@effect-atom/atom-react';
 import * as Schema from 'effect/Schema';
 import { describe, expect, test } from 'vitest';
-
-import { registerSignalsRuntime } from '@dxos/echo-signals';
-import { live } from '@dxos/live-object';
 
 import { RootSettingsStore, SettingsStore } from './store';
 import { createLocalStorageMock } from './testing';
@@ -37,14 +35,15 @@ const TestSchema = Schema.mutable(
 export interface TestType extends Schema.Schema.Type<typeof TestSchema> {}
 
 describe('ObjectStore', () => {
-  registerSignalsRuntime();
-
   test('basic', () => {
     const mock = createLocalStorageMock();
+    const registry = Registry.make();
 
-    const value = live<TestType>({ nums: [], services: [] });
-    const store = new SettingsStore(TestSchema, 'dxos.org/setting', value, mock);
-    store.value.num = 42;
+    const atom = Atom.make<TestType>({ nums: [], services: [] });
+    const store = new SettingsStore(registry, TestSchema, 'dxos.org/setting', atom, mock);
+
+    // Update the atom value.
+    registry.set(atom, { ...registry.get(atom), num: 42 });
     expect(mock.store).to.deep.eq({
       'dxos.org/setting/num': '42',
       'dxos.org/setting/nums': '[]',
@@ -60,28 +59,28 @@ describe('ObjectStore', () => {
 
   test('full', () => {
     const mock = createLocalStorageMock();
+    const registry = Registry.make();
 
     {
-      const value = live<TestType>({ nums: [], services: [] });
-      const store = new SettingsStore(TestSchema, 'dxos.org/setting', value, mock);
+      const atom = Atom.make<TestType>({ nums: [], services: [] });
+      const store = new SettingsStore(registry, TestSchema, 'dxos.org/setting', atom, mock);
       expect(store.value.activePreset).to.be.undefined;
 
-      store.value.activePreset = true;
+      registry.set(atom, { ...registry.get(atom), activePreset: true });
       expect(store.value.activePreset).to.be.true;
 
-      store.value.activePreset = false;
+      registry.set(atom, { ...registry.get(atom), activePreset: false });
       expect(store.value.activePreset).to.be.false;
 
-      store.value.num = 42;
-      store.value.nums.push(1);
-      store.value.nums.push(2);
-
-      store.value.name = 'foobar';
-      store.value.services.push({ url: 'example.com/foo' });
-      store.value.services.push({ url: 'example.com/bar' });
-
-      store.value.status = TestEnum.ACTIVE;
-      store.value.literals = 'active';
+      registry.set(atom, {
+        ...registry.get(atom),
+        num: 42,
+        nums: [1, 2],
+        name: 'foobar',
+        services: [{ url: 'example.com/foo' }, { url: 'example.com/bar' }],
+        status: TestEnum.ACTIVE,
+        literals: 'active',
+      });
     }
 
     expect(mock.store).to.deep.eq({
@@ -95,8 +94,8 @@ describe('ObjectStore', () => {
     });
 
     {
-      const value = live<TestType>({ nums: [], services: [] });
-      const store = new SettingsStore(TestSchema, 'dxos.org/setting', value, mock);
+      const atom = Atom.make<TestType>({ nums: [], services: [] });
+      const store = new SettingsStore(registry, TestSchema, 'dxos.org/setting', atom, mock);
 
       expect(store.value.activePreset).to.be.false;
       expect(store.value.num).to.eq(42);
@@ -106,12 +105,15 @@ describe('ObjectStore', () => {
       expect(store.value.status).to.deep.eq(TestEnum.ACTIVE);
       expect(store.value.literals).to.eq('active');
 
-      store.value.activePreset = undefined;
-      store.value.nums.splice(1, 1, 3);
-      store.value.name = undefined;
-      store.value.services.splice(0, 1);
-      store.value.status = TestEnum.INACTIVE;
-      store.value.literals = 'inactive';
+      registry.set(atom, {
+        ...registry.get(atom),
+        activePreset: undefined,
+        nums: [1, 3],
+        name: undefined,
+        services: [{ url: 'example.com/bar' }],
+        status: TestEnum.INACTIVE,
+        literals: 'inactive',
+      });
     }
 
     expect(mock.store).to.deep.eq({
@@ -123,8 +125,8 @@ describe('ObjectStore', () => {
     });
 
     {
-      const value = live<TestType>({ nums: [], services: [] });
-      const store = new SettingsStore(TestSchema, 'dxos.org/setting', value, mock);
+      const atom = Atom.make<TestType>({ nums: [], services: [] });
+      const store = new SettingsStore(registry, TestSchema, 'dxos.org/setting', atom, mock);
 
       expect(store.value.activePreset).to.be.undefined;
       expect(store.value.num).to.eq(42);
@@ -145,10 +147,14 @@ describe('ObjectStore', () => {
 
   test('root', () => {
     const mock = createLocalStorageMock();
-    const root = new RootSettingsStore(mock);
+    const registry = Registry.make();
+    const root = new RootSettingsStore(registry, mock);
 
-    const store1 = root.createStore({ schema: TestSchema, prefix: 'dxos.org/foo', value: { nums: [], services: [] } });
-    const store2 = root.createStore({ schema: TestSchema, prefix: 'dxos.org/bar', value: { nums: [], services: [] } });
+    const atom1 = Atom.make<TestType>({ nums: [], services: [] });
+    const atom2 = Atom.make<TestType>({ nums: [], services: [] });
+
+    const store1 = root.createStore({ schema: TestSchema, prefix: 'dxos.org/foo', atom: atom1 });
+    const store2 = root.createStore({ schema: TestSchema, prefix: 'dxos.org/bar', atom: atom2 });
 
     expect(mock.store).to.deep.eq({
       'dxos.org/foo/services': '[]',
@@ -157,8 +163,8 @@ describe('ObjectStore', () => {
       'dxos.org/bar/nums': '[]',
     });
 
-    store1.value.name = 'foo';
-    store2.value.name = 'bar';
+    registry.set(atom1, { ...registry.get(atom1), name: 'foo' });
+    registry.set(atom2, { ...registry.get(atom2), name: 'bar' });
 
     expect(root.toJSON()).to.deep.eq({
       'dxos.org/foo': { name: 'foo', services: [], nums: [] },

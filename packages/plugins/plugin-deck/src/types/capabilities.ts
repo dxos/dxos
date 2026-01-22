@@ -2,13 +2,15 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Capability } from '@dxos/app-framework';
-import { type DeepReadonly } from '@dxos/util';
+import { type Atom } from '@effect-atom/atom-react';
+
+import { Capability, type Common } from '@dxos/app-framework';
 
 import { meta } from '../meta';
-import { type DeckPluginState } from '../types';
+import { type DeckPluginState, type DeckSettingsProps } from '../types';
 
 export namespace DeckCapabilities {
-  export const DeckState = Capability.make<DeepReadonly<DeckPluginState>>(`${meta.id}/capability/state`);
-  export const MutableDeckState = Capability.make<DeckPluginState>(`${meta.id}/capability/state`);
+  export const Settings = Capability.make<Atom.Writable<DeckSettingsProps>>(`${meta.id}/capability/settings`);
+
+  export const State = Capability.make<Common.Capability.StateStore<DeckPluginState>>(`${meta.id}/capability/state`);
 }

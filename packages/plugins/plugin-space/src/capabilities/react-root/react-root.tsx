@@ -17,8 +17,8 @@ export default Capability.makeModule(() =>
     Capability.contributes(Common.Capability.ReactRoot, {
       id: meta.id,
       root: () => {
-        const state = useCapability(SpaceCapabilities.State);
-        return state.awaiting ? <AwaitingObject id={state.awaiting} /> : null;
+        const store = useCapability(SpaceCapabilities.State);
+        return store.values.awaiting ? <AwaitingObject id={store.values.awaiting} /> : null;
       },
     }),
   ),

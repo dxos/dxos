@@ -111,9 +111,9 @@ export default Capability.makeModule(
               : []),
           ]),
         connector: () => {
-          const filesState = capabilities.get(FileCapabilities.State);
+          const store = capabilities.get(FileCapabilities.State);
           return Effect.succeed(
-            filesState.files.map((entity) => ({
+            store.values.files.map((entity) => ({
               id: entity.id,
               type: isLocalDirectory(entity) ? 'directory' : 'file',
               data: entity,

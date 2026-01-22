@@ -16,8 +16,8 @@ export default Capability.makeModule(
     // Get context for lazy capability access in callbacks.
     const capabilities = yield* Capability.Service;
 
-    const state = new LocalStorageStore<MarkdownPluginState>(meta.id, { extensionProviders: [], viewMode: {} });
-    state.prop({ key: 'viewMode', type: LocalStorageStore.json<{ [key: string]: EditorViewMode }>() });
+    const store = new LocalStorageStore<MarkdownPluginState>(meta.id, { extensionProviders: [], viewMode: {} });
+    store.prop({ key: 'viewMode', type: LocalStorageStore.json<{ [key: string]: EditorViewMode }>() });
 
     // TODO(wittjosiah): Fold into state.
     const editorState = createEditorStateStore(`${meta.id}/editor`);
@@ -25,14 +25,19 @@ export default Capability.makeModule(
     const getViewMode = (id: string) => {
       const defaultViewMode = capabilities.get(Common.Capability.SettingsStore).getStore<Markdown.Settings>(meta.id)!
         .value.defaultViewMode;
-      return (id && state.values.viewMode[id]) || defaultViewMode;
+      return (id && store.values.viewMode[id]) || defaultViewMode;
     };
 
-    const setViewMode = (id: string, viewMode: EditorViewMode) => (state.values.viewMode[id] = viewMode);
+    const setViewMode = (id: string, viewMode: EditorViewMode) => {
+      store.update((current) => ({
+        ...current,
+        viewMode: { ...current.viewMode, [id]: viewMode },
+      }));
+    };
 
     // Return object with methods.
     return Capability.contributes(MarkdownCapabilities.State, {
-      state: state.values,
+      state: store.values,
       editorState,
       getViewMode,
       setViewMode,

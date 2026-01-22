@@ -63,10 +63,10 @@
     "@dxos/schema": "workspace:*",
     "@dxos/types": "workspace:*",
     "@dxos/util": "workspace:*",
+    "@effect-atom/atom-react": "catalog:",
     "@effect/ai": "catalog:",
     "@effect/experimental": "catalog:",
     "@effect/platform": "catalog:",
-    "@preact/signals-core": "catalog:",
     "@xenova/transformers": "catalog:",
     "lodash.defaultsdeep": "catalog:"
   },
