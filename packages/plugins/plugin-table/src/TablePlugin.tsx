@@ -12,6 +12,7 @@ import { type CreateObject } from '@dxos/plugin-space/types';
 import { translations as formTranslations } from '@dxos/react-ui-form';
 import { translations as tableTranslations } from '@dxos/react-ui-table';
 import { Table } from '@dxos/react-ui-table/types';
+import { View } from '@dxos/schema';
 
 import { BlueprintDefinition, OperationResolver, ReactSurface } from './capabilities';
 import { meta } from './meta';
@@ -28,7 +29,11 @@ export const TablePlugin = Plugin.define(meta).pipe(
         iconHue: 'green',
         comments: 'unanchored',
         inputSchema: CreateTableSchema,
-        createObject: ((props) => Effect.sync(() => Table.make(props))) satisfies CreateObject,
+        createObject: ((props, { db }) =>
+          Effect.promise(async () => {
+            const { view, jsonSchema } = await View.makeFromDatabase({ db, typename: props.typename });
+            return Table.make({ name: props.name, view, jsonSchema });
+          })) satisfies CreateObject,
       },
     },
   }),
