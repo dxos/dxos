@@ -320,6 +320,18 @@ const QueryOptionsClause_ = Schema.Struct({
 export interface QueryOptionsClause extends Schema.Schema.Type<typeof QueryOptionsClause_> {}
 export const QueryOptionsClause: Schema.Schema<QueryOptionsClause> = QueryOptionsClause_;
 
+/**
+ * Limit the number of results.
+ */
+const QueryLimitClause_ = Schema.Struct({
+  type: Schema.Literal('limit'),
+  query: Schema.suspend(() => Query),
+  limit: Schema.Number,
+});
+
+export interface QueryLimitClause extends Schema.Schema.Type<typeof QueryLimitClause_> {}
+export const QueryLimitClause: Schema.Schema<QueryLimitClause> = QueryLimitClause_;
+
 const Query_ = Schema.Union(
   QuerySelectClause,
   QueryFilterClause,
@@ -331,6 +343,7 @@ const Query_ = Schema.Union(
   QuerySetDifferenceClause,
   QueryOrderClause,
   QueryOptionsClause,
+  QueryLimitClause,
 ).annotations({ identifier: 'dxos.org/schema/Query' });
 
 export type Query = Schema.Schema.Type<typeof Query_>;
@@ -380,6 +393,7 @@ export const visit = (query: Query, visitor: (node: Query) => void) => {
       visit(exclude, visitor);
     }),
     Match.when({ type: 'order' }, ({ query }) => visit(query, visitor)),
+    Match.when({ type: 'limit' }, ({ query }) => visit(query, visitor)),
     Match.when({ type: 'select' }, () => {}),
     Match.exhaustive,
   );
@@ -399,6 +413,7 @@ export const fold = <T>(query: Query, reducer: (node: Query) => T): T[] => {
       fold(source, reducer).concat(fold(exclude, reducer)),
     ),
     Match.when({ type: 'order' }, ({ query }) => fold(query, reducer)),
+    Match.when({ type: 'limit' }, ({ query }) => fold(query, reducer)),
     Match.when({ type: 'select' }, () => []),
     Match.exhaustive,
   );

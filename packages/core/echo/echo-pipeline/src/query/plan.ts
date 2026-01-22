@@ -33,7 +33,8 @@ export namespace QueryPlan {
     | TraverseStep
     | UnionStep
     | SetDifferenceStep
-    | OrderStep;
+    | OrderStep
+    | LimitStep;
 
   /**
    * Clear the current working set.
@@ -226,5 +227,14 @@ export namespace QueryPlan {
 
     // Defaults to natural order if empty.
     order: readonly QueryAST.Order[];
+  };
+
+  /**
+   * Limit the number of results.
+   */
+  export type LimitStep = {
+    _tag: 'LimitStep';
+
+    limit: number;
   };
 }

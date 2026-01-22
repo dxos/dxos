@@ -360,6 +360,9 @@ export class QueryExecutor extends Resource {
       case 'OrderStep':
         ({ workingSet: newWorkingSet, trace } = await this._execOrderStep(step, workingSet));
         break;
+      case 'LimitStep':
+        ({ workingSet: newWorkingSet, trace } = await this._execLimitStep(step, workingSet));
+        break;
       default:
         throw new Error(`Unknown step type: ${(step as any)._tag}`);
     }
@@ -803,6 +806,20 @@ export class QueryExecutor extends Resource {
         name: 'Order',
         details: JSON.stringify(step.order),
         objectCount: sortedWorkingSet.length,
+      },
+    };
+  }
+
+  private async _execLimitStep(step: QueryPlan.LimitStep, workingSet: QueryItem[]): Promise<StepExecutionResult> {
+    const limitedWorkingSet = workingSet.slice(0, step.limit);
+
+    return {
+      workingSet: limitedWorkingSet,
+      trace: {
+        ...ExecutionTrace.makeEmpty(),
+        name: 'Limit',
+        details: JSON.stringify({ limit: step.limit }),
+        objectCount: limitedWorkingSet.length,
       },
     };
   }

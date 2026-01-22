@@ -62,6 +62,8 @@ export class QueryPlanner {
         return this._generateSetDifferenceClause(query, context);
       case 'order':
         return this._generateOrderClause(query, context);
+      case 'limit':
+        return this._generateLimitClause(query, context);
       default:
         throw new QueryError({
           message: `Unsupported query type: ${(query as any).type}`,
@@ -495,29 +497,69 @@ export class QueryPlanner {
     ]);
   }
 
+  private _generateLimitClause(query: QueryAST.QueryLimitClause, context: GenerationContext): QueryPlan.Plan {
+    return QueryPlan.Plan.make([
+      ...this._generate(query.query, context).steps,
+      {
+        _tag: 'LimitStep',
+        limit: query.limit,
+      },
+    ]);
+  }
+
   // After complete plan is built, inspect it from the end:
   //   - Walk backwards until hitting an object set changer.
   //   - If an order step is found, skip.
-  //   - Otherwise append natural order to the end.
+  //   - Otherwise insert natural order before any limit steps (since limit should be applied after ordering).
+  // This method is recursive and also processes sub-plans in unions and set differences.
   private _ensureOrderStep(plan: QueryPlan.Plan): QueryPlan.Plan {
+    // First, recursively process any sub-plans.
+    const processedSteps = plan.steps.map((step): QueryPlan.Step => {
+      if (step._tag === 'UnionStep') {
+        return {
+          _tag: 'UnionStep',
+          plans: step.plans.map((subPlan) => this._ensureOrderStep(subPlan)),
+        };
+      } else if (step._tag === 'SetDifferenceStep') {
+        return {
+          _tag: 'SetDifferenceStep',
+          source: this._ensureOrderStep(step.source),
+          exclude: this._ensureOrderStep(step.exclude),
+        };
+      }
+      return step;
+    });
+
+    const processedPlan = QueryPlan.Plan.make(processedSteps);
+
     const OBJECT_SET_CHANGERS = new Set(['SelectStep', 'TraverseStep', 'UnionStep', 'SetDifferenceStep']);
-    for (let i = plan.steps.length - 1; i >= 0; i--) {
-      const step = plan.steps[i];
+    for (let i = processedPlan.steps.length - 1; i >= 0; i--) {
+      const step = processedPlan.steps[i];
       if (step._tag === 'OrderStep') {
-        return plan;
+        return processedPlan;
       }
       if (OBJECT_SET_CHANGERS.has(step._tag)) {
         break;
       }
     }
 
-    return QueryPlan.Plan.make([
-      ...plan.steps,
-      {
-        _tag: 'OrderStep',
-        order: [Order.natural.ast],
-      },
-    ]);
+    // Find the position to insert the order step (before any limit steps).
+    let insertIndex = processedPlan.steps.length;
+    for (let i = processedPlan.steps.length - 1; i >= 0; i--) {
+      if (processedPlan.steps[i]._tag === 'LimitStep') {
+        insertIndex = i;
+      } else {
+        break;
+      }
+    }
+
+    const newSteps = [...processedPlan.steps];
+    newSteps.splice(insertIndex, 0, {
+      _tag: 'OrderStep',
+      order: [Order.natural.ast],
+    });
+
+    return QueryPlan.Plan.make(newSteps);
   }
 }
 
