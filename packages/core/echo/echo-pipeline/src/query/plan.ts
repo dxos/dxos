@@ -69,6 +69,12 @@ export namespace QueryPlan {
     queues: readonly DXN.String[];
 
     selector: Selector;
+
+    /**
+     * Optional limit on the number of results to select.
+     * When set, the index scan can be optimized to stop early.
+     */
+    limit?: number;
   };
 
   /**

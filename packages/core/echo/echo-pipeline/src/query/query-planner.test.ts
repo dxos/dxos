@@ -1123,6 +1123,7 @@ describe('QueryPlanner', () => {
           {
             "_tag": "SelectStep",
             "allQueuesFromSpaces": false,
+            "limit": 10,
             "queues": [],
             "selector": {
               "_tag": "TypeSelector",
@@ -1156,10 +1157,6 @@ describe('QueryPlanner', () => {
               },
             ],
           },
-          {
-            "_tag": "LimitStep",
-            "limit": 10,
-          },
         ],
       }
     `);
@@ -1175,6 +1172,7 @@ describe('QueryPlanner', () => {
           {
             "_tag": "SelectStep",
             "allQueuesFromSpaces": false,
+            "limit": 10,
             "queues": [],
             "selector": {
               "_tag": "TypeSelector",
@@ -1210,10 +1208,6 @@ describe('QueryPlanner', () => {
               },
             ],
           },
-          {
-            "_tag": "LimitStep",
-            "limit": 10,
-          },
         ],
       }
     `);
@@ -1237,6 +1231,7 @@ describe('QueryPlanner', () => {
                   {
                     "_tag": "SelectStep",
                     "allQueuesFromSpaces": false,
+                    "limit": 5,
                     "queues": [],
                     "selector": {
                       "_tag": "TypeSelector",
@@ -1270,10 +1265,6 @@ describe('QueryPlanner', () => {
                       },
                     ],
                   },
-                  {
-                    "_tag": "LimitStep",
-                    "limit": 5,
-                  },
                 ],
               },
               {
@@ -1281,6 +1272,7 @@ describe('QueryPlanner', () => {
                   {
                     "_tag": "SelectStep",
                     "allQueuesFromSpaces": false,
+                    "limit": 5,
                     "queues": [],
                     "selector": {
                       "_tag": "TypeSelector",
@@ -1313,10 +1305,6 @@ describe('QueryPlanner', () => {
                         "kind": "natural",
                       },
                     ],
-                  },
-                  {
-                    "_tag": "LimitStep",
-                    "limit": 5,
                   },
                 ],
               },

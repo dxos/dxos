@@ -562,6 +562,12 @@ export class QueryExecutor extends Resource {
         throw new Error(`Unknown selector type: ${(step.selector as any)._tag}`);
     }
 
+    // Apply limit if specified on the select step.
+    if (step.limit !== undefined && workingSet.length > step.limit) {
+      workingSet = workingSet.slice(0, step.limit);
+      trace.objectCount = workingSet.length;
+    }
+
     return { workingSet, trace };
   }
 
