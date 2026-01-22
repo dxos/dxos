@@ -3944,7 +3944,7 @@ importers:
         specifier: 'catalog:'
         version: 2.1.0
 
-  packages/common/sql-sqlite-wasm:
+  packages/common/sql-sqlite:
     dependencies:
       '@dxos/wa-sqlite':
         specifier: 'catalog:'
@@ -4818,7 +4818,7 @@ importers:
         version: link:../../protocols
       '@dxos/sql-sqlite':
         specifier: workspace:*
-        version: link:../../../common/sql-sqlite-wasm
+        version: link:../../../common/sql-sqlite
       '@dxos/teleport':
         specifier: workspace:*
         version: link:../../mesh/teleport
@@ -13940,7 +13940,7 @@ importers:
         version: link:../../core/mesh/rpc-tunnel
       '@dxos/sql-sqlite':
         specifier: workspace:*
-        version: link:../../common/sql-sqlite-wasm
+        version: link:../../common/sql-sqlite
       '@dxos/timeframe':
         specifier: workspace:*
         version: link:../../common/timeframe
@@ -14130,7 +14130,7 @@ importers:
         version: link:../../core/mesh/rpc
       '@dxos/sql-sqlite':
         specifier: workspace:*
-        version: link:../../common/sql-sqlite-wasm
+        version: link:../../common/sql-sqlite
       '@dxos/teleport':
         specifier: workspace:*
         version: link:../../core/mesh/teleport
