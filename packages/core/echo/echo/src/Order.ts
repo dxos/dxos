@@ -32,3 +32,13 @@ export const property = <T>(property: keyof T & string, direction: QueryAST.Orde
     property,
     direction,
   });
+
+/**
+ * Order by relevance rank (for FTS/vector search results).
+ * Higher rank = better match. Default direction is 'desc' (best matches first).
+ */
+export const rank = <T>(direction: QueryAST.OrderDirection = 'desc'): Order<T> =>
+  new OrderClass({
+    kind: 'rank',
+    direction,
+  });
