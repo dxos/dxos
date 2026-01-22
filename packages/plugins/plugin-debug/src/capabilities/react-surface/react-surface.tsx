@@ -94,8 +94,7 @@ export default Capability.makeModule(
         filter: (data): data is { subject: Common.Capability.Settings } =>
           Common.Capability.isSettings(data.subject) && data.subject.prefix === meta.id,
         component: ({ data: { subject } }) => {
-          const registry = useCapability(Common.Capability.AtomRegistry);
-          const settings = useAtomValue(subject.atom, { registry }) as DebugSettingsProps;
+          const settings = useAtomValue(subject.atom) as DebugSettingsProps;
           return <DebugSettings settings={settings} />;
         },
       }),

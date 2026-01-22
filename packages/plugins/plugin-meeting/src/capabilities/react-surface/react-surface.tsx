@@ -24,8 +24,7 @@ export default Capability.makeModule(() =>
         filter: (data): data is { subject: Common.Capability.Settings } =>
           Common.Capability.isSettings(data.subject) && data.subject.prefix === meta.id,
         component: ({ data: { subject } }) => {
-          const registry = useCapability(Common.Capability.AtomRegistry);
-          const settings = useAtomValue(subject.atom, { registry }) as Meeting.Settings;
+          const settings = useAtomValue(subject.atom) as Meeting.Settings;
           return <MeetingSettings settings={settings} />;
         },
       }),
