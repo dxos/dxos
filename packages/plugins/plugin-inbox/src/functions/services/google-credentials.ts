@@ -6,10 +6,10 @@ import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
-import { Database, Ref } from '@dxos/echo';
+import { Database, type Ref } from '@dxos/echo';
 import { CredentialsService } from '@dxos/functions';
 import { log } from '@dxos/log';
-import { AccessToken } from '@dxos/types';
+import { type AccessToken } from '@dxos/types';
 
 import type * as Calendar from '../../types/Calendar';
 import type * as Mailbox from '../../types/Mailbox';
@@ -56,10 +56,7 @@ export class GoogleCredentials extends Context.Tag('GoogleCredentials')<
    * Pre-loads the access token during layer construction.
    */
   static fromMailbox = (mailbox: Mailbox.Mailbox) =>
-    Layer.effect(
-      GoogleCredentials,
-      Effect.map(loadAccessToken(mailbox.accessToken, 'mailbox'), makeService),
-    );
+    Layer.effect(GoogleCredentials, Effect.map(loadAccessToken(mailbox.accessToken, 'mailbox'), makeService));
 
   /**
    * Creates a credentials layer from a mailbox ref.
@@ -78,10 +75,7 @@ export class GoogleCredentials extends Context.Tag('GoogleCredentials')<
    * Pre-loads the access token during layer construction.
    */
   static fromCalendar = (calendar: Calendar.Calendar) =>
-    Layer.effect(
-      GoogleCredentials,
-      Effect.map(loadAccessToken(calendar.accessToken, 'calendar'), makeService),
-    );
+    Layer.effect(GoogleCredentials, Effect.map(loadAccessToken(calendar.accessToken, 'calendar'), makeService));
 
   /**
    * Creates a credentials layer from a calendar ref.
