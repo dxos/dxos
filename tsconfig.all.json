@@ -100,7 +100,7 @@
       "path": "packages/common/random-access-storage/tsconfig.json"
     },
     {
-      "path": "packages/common/sql-sqlite-wasm/tsconfig.json"
+      "path": "packages/common/sql-sqlite/tsconfig.json"
     },
     {
       "path": "packages/common/storybook-addon-logger/tsconfig.json"
