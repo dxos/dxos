@@ -6,8 +6,9 @@ import type * as SqlClient from '@effect/sql/SqlClient';
 import type * as SqlError from '@effect/sql/SqlError';
 import * as SqliteClient from '@effect/sql-sqlite-node/SqliteClient';
 import type * as ConfigError from 'effect/ConfigError';
-import * as Layer from 'effect/Layer';
 import * as Effect from 'effect/Effect';
+import * as Layer from 'effect/Layer';
+
 import * as SqlExport from '../SqlExport';
 
 const sqlExportNode: Layer.Layer<SqlExport.SqlExport, SqlError.SqlError, SqliteClient.SqliteClient> = Layer.effect(

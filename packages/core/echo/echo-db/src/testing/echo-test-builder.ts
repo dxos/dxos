@@ -2,14 +2,16 @@
 // Copyright 2024 DXOS.org
 //
 
+import { writeFile } from 'node:fs/promises';
+
 import type { AutomergeUrl } from '@automerge/automerge-repo';
 import * as Reactivity from '@effect/experimental/Reactivity';
 import type * as SqlClient from '@effect/sql/SqlClient';
+import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as ManagedRuntime from 'effect/ManagedRuntime';
 import type * as Schema from 'effect/Schema';
 import isEqual from 'lodash.isequal';
-import { Effect } from 'effect';
 
 import { waitForCondition } from '@dxos/async';
 import { type Context, Resource } from '@dxos/context';
@@ -27,7 +29,6 @@ import { EchoClient } from '../client';
 import { type AnyLiveObject } from '../echo-handler';
 import { type EchoDatabase } from '../proxy-db';
 import { Filter, Query } from '../query';
-import { writeFile } from 'node:fs/promises';
 
 type OpenDatabaseOptions = {
   client?: EchoClient;
