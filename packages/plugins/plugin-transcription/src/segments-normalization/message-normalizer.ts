@@ -7,9 +7,9 @@
 //
 
 import { DeferredTask, asyncTimeout } from '@dxos/async';
-import { effect } from '@dxos/echo-signals';
 import { LifecycleState, Resource } from '@dxos/context';
 import { type Queue } from '@dxos/echo-db';
+import { effect } from '@dxos/echo-signals';
 import { type FunctionExecutor } from '@dxos/functions-runtime';
 import { log } from '@dxos/log';
 import { type Message } from '@dxos/types';

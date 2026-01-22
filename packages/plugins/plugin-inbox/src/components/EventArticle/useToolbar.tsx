@@ -5,12 +5,7 @@
 import { Atom } from '@effect-atom/atom-react';
 import { useMemo } from 'react';
 
-import {
-  createGapSeparator,
-  createMenuAction,
-  createMenuItemGroup,
-  useMenuActions,
-} from '@dxos/react-ui-menu';
+import { createGapSeparator, createMenuAction, createMenuItemGroup, useMenuActions } from '@dxos/react-ui-menu';
 
 import { meta } from '../../meta';
 

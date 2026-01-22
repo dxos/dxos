@@ -2,10 +2,10 @@
 // Copyright 2024 DXOS.org
 //
 
-import { effect } from '@dxos/echo-signals';
 import type * as Schema from 'effect/Schema';
 import type * as SchemaAST from 'effect/SchemaAST';
 
+import { effect } from '@dxos/echo-signals';
 import { registerSignalsRuntime } from '@dxos/echo-signals';
 import { assertArgument } from '@dxos/invariant';
 import { deepMapValues } from '@dxos/util';

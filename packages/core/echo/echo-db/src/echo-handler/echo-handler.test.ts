@@ -4,7 +4,6 @@
 
 import { inspect } from 'node:util';
 
-import { effect } from '@dxos/echo-signals';
 import * as Schema from 'effect/Schema';
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
@@ -20,6 +19,7 @@ import {
 } from '@dxos/echo/internal';
 import { TestSchema, prepareAstForCompare } from '@dxos/echo/testing';
 import { Reference, decodeReference, encodeReference } from '@dxos/echo-protocol';
+import { effect } from '@dxos/echo-signals';
 import { registerSignalsRuntime } from '@dxos/echo-signals';
 import { DXN, PublicKey, SpaceId } from '@dxos/keys';
 import { createTestLevel } from '@dxos/kv-store/testing';

@@ -2,9 +2,9 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type ReadonlySignal, signal } from '@dxos/echo-signals';
 import chalk from 'chalk';
 
+import { type ReadonlySignal, signal } from '@dxos/echo-signals';
 import { log } from '@dxos/log';
 
 import { type SequenceEvent, type SequenceLogger } from './types';

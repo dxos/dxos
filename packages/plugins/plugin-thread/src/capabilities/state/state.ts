@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 
 import { Capability, Common } from '@dxos/app-framework';
 
-import { ThreadCapabilities, type ThreadState, type ViewStore, type ViewState } from '../../types';
+import { ThreadCapabilities, type ThreadState, type ViewState, type ViewStore } from '../../types';
 
 const initialViewState: ViewState = { showResolvedThreads: false };
 

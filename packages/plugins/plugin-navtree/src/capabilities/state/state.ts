@@ -9,7 +9,7 @@ import { Capability, Common } from '@dxos/app-framework';
 import { Path } from '@dxos/react-ui-list';
 
 import { meta } from '../../meta';
-import { NavTreeCapabilities, type NavTreeCapabilities as NC } from '../../types';
+import { type NavTreeCapabilities as NC, NavTreeCapabilities } from '../../types';
 
 const KEY = `${meta.id}/state/v1`;
 

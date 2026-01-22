@@ -28,9 +28,7 @@ export default Capability.makeModule(
             // Update the current file's text and modified state.
             store.update((state) => ({
               ...state,
-              current: state.current
-                ? { ...state.current, text: text.toString(), modified: true }
-                : undefined,
+              current: state.current ? { ...state.current, text: text.toString(), modified: true } : undefined,
               files: state.files.map((f) =>
                 f.id === id ? ({ ...f, text: text.toString(), modified: true } as LocalFile) : f,
               ),

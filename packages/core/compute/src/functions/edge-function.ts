@@ -2,12 +2,12 @@
 // Copyright 2024 DXOS.org
 //
 
-import { effect } from '@dxos/echo-signals';
 import * as Effect from 'effect/Effect';
 import * as SchemaAST from 'effect/SchemaAST';
 
 import { Filter } from '@dxos/client/echo';
 import { JsonSchema } from '@dxos/echo';
+import { effect } from '@dxos/echo-signals';
 import { Function, FunctionInvocationService, TracingService } from '@dxos/functions';
 import { FunctionDefinition } from '@dxos/functions';
 import { log } from '@dxos/log';

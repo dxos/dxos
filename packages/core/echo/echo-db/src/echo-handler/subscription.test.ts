@@ -2,11 +2,11 @@
 // Copyright 2022 DXOS.org
 //
 
-import { effect } from '@dxos/echo-signals';
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
 import { Trigger, sleep } from '@dxos/async';
 import { Obj, Type } from '@dxos/echo';
+import { effect } from '@dxos/echo-signals';
 import { registerSignalsRuntime } from '@dxos/echo-signals';
 import { log } from '@dxos/log';
 

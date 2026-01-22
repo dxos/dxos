@@ -5,13 +5,7 @@
 import { Atom } from '@effect-atom/atom-react';
 import React, { useMemo, useState } from 'react';
 
-import {
-  MenuProvider,
-  ToolbarMenu,
-  createGapSeparator,
-  createMenuAction,
-  useMenuActions,
-} from '@dxos/react-ui-menu';
+import { MenuProvider, ToolbarMenu, createGapSeparator, createMenuAction, useMenuActions } from '@dxos/react-ui-menu';
 import { StackItem } from '@dxos/react-ui-stack';
 
 import { themeEditorId } from '../defs';

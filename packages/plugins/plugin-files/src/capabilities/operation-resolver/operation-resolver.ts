@@ -263,9 +263,7 @@ export default Capability.makeModule(
         operation: LocalFilesOperation.OpenDirectory,
         handler: Effect.fnUntraced(function* () {
           const store = yield* Capability.get(FileCapabilities.State);
-          const handle = yield* Effect.promise(async () =>
-            (window as any).showDirectoryPicker({ mode: 'readwrite' }),
-          );
+          const handle = yield* Effect.promise(async () => (window as any).showDirectoryPicker({ mode: 'readwrite' }));
           const directory = yield* Effect.promise(async () => handleToLocalDirectory(handle));
           store.update((current) => ({ ...current, files: [...current.files, directory] }));
           return { id: directory.id, subject: [directory.id] };
@@ -305,9 +303,7 @@ export default Capability.makeModule(
               );
               store.update((current) => ({
                 ...current,
-                files: current.files.map((f) =>
-                  f.id === id ? { ...f, text, permission } : f,
-                ) as typeof current.files,
+                files: current.files.map((f) => (f.id === id ? { ...f, text, permission } : f)) as typeof current.files,
               }));
             }
           }

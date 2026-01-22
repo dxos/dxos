@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { batch, computed, effect, signal, untracked, type ReadonlySignal } from '@preact/signals';
+import { type ReadonlySignal, batch, computed, effect, signal, untracked } from '@preact/signals';
 
 import { registerSignalsRuntime as registerRuntimeForEcho } from './runtime';
 

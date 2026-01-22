@@ -2,7 +2,6 @@
 // Copyright 2024 DXOS.org
 //
 
-import { effect } from '@dxos/echo-signals';
 import type * as ManagedRuntime from 'effect/ManagedRuntime';
 
 import { Event } from '@dxos/async';
@@ -10,6 +9,7 @@ import { Filter, type Space } from '@dxos/client/echo';
 import { FQ_ID_LENGTH } from '@dxos/client/echo';
 import { Resource } from '@dxos/context';
 import { Obj } from '@dxos/echo';
+import { effect } from '@dxos/echo-signals';
 import { Function, type FunctionInvocationService } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';

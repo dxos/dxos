@@ -2,13 +2,13 @@
 // Copyright 2024 DXOS.org
 //
 
-import { effect } from '@dxos/echo-signals';
 import { describe, expect, test } from 'vitest';
 
 import { Trigger } from '@dxos/async';
 import { type Entity, Filter, Obj, Ref, Type } from '@dxos/echo';
 import { TestSchema } from '@dxos/echo/testing';
 import { type DatabaseDirectory, SpaceDocVersion, createIdFromSpaceKey } from '@dxos/echo-protocol';
+import { effect } from '@dxos/echo-signals';
 import { registerSignalsRuntime } from '@dxos/echo-signals';
 import { ObjectId } from '@dxos/keys';
 import { DXN, PublicKey } from '@dxos/keys';

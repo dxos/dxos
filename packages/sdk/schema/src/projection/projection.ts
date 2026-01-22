@@ -2,7 +2,6 @@
 // Copyright 2025 DXOS.org
 //
 
-import { computed, untracked } from '@dxos/echo-signals';
 import * as Schema from 'effect/Schema';
 
 import { type Entity, Format, Obj } from '@dxos/echo';
@@ -15,6 +14,7 @@ import {
   typeToFormat,
 } from '@dxos/echo/internal';
 import { createSchemaReference, getSchemaReference } from '@dxos/echo/internal';
+import { computed, untracked } from '@dxos/echo-signals';
 import { invariant } from '@dxos/invariant';
 import { type Live, getSnapshot } from '@dxos/live-object';
 import { log } from '@dxos/log';

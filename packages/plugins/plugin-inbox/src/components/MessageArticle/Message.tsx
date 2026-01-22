@@ -43,7 +43,9 @@ const [MessageContextProvider, useMessageContext] = createContext<MessageContext
 // Root
 //
 
-type MessageRootProps = PropsWithChildren<Omit<MessageContextValue, 'viewMode' | 'setViewMode'> & { viewMode?: ViewMode }>;
+type MessageRootProps = PropsWithChildren<
+  Omit<MessageContextValue, 'viewMode' | 'setViewMode'> & { viewMode?: ViewMode }
+>;
 
 const MessageRoot = ({ children, viewMode: viewModeProp = 'plain', ...props }: MessageRootProps) => {
   const [viewMode, setViewMode] = useState(viewModeProp);

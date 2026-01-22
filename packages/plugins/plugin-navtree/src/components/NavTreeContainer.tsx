@@ -4,9 +4,8 @@
 
 import { monitorForElements } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
 import { type Instruction, extractInstruction } from '@atlaskit/pragmatic-drag-and-drop-hitbox/tree-item';
-import React, { forwardRef, memo, useCallback, useEffect, useMemo, useRef } from 'react';
-
 import { useAtomValue } from '@effect-atom/atom-react';
+import React, { forwardRef, memo, useCallback, useEffect, useMemo, useRef } from 'react';
 
 import { Common } from '@dxos/app-framework';
 import { Surface, useAppGraph, useCapability, useLayout, useOperationInvoker } from '@dxos/app-framework/react';
