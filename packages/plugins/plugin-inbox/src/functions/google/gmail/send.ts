@@ -6,10 +6,12 @@ import * as FetchHttpClient from '@effect/platform/FetchHttpClient';
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
+import { Type } from '@dxos/echo';
 import { defineFunction } from '@dxos/functions';
 import { log } from '@dxos/log';
 import { Message } from '@dxos/types';
 
+import * as Mailbox from '../../../types/Mailbox';
 import { GoogleMail } from '../../apis';
 import { GoogleCredentials } from '../../services/google-credentials';
 
@@ -20,15 +22,19 @@ export default defineFunction({
   inputSchema: Schema.Struct({
     userId: Schema.String.pipe(Schema.optional),
     message: Message.Message,
+    mailbox: Type.Ref(Mailbox.Mailbox).pipe(
+      Schema.annotations({ description: 'Optional mailbox to send from. Uses mailbox credentials if provided.' }),
+      Schema.optional,
+    ),
   }),
   outputSchema: Schema.Struct({
     id: Schema.String,
     threadId: Schema.String,
   }),
-  types: [Message.Message],
-  handler: ({ data: { userId = 'me', message } }) =>
+  types: [Message.Message, Mailbox.Mailbox],
+  handler: ({ data: { userId = 'me', message, mailbox: mailboxRef } }) =>
     Effect.gen(function* () {
-      log('sending email', { userId });
+      log('sending email', { userId, mailbox: mailboxRef?.dxn.toString() });
 
       // Extract details from the message object.
       // TODO(burdon): Refine Message schema to have explicit To/Subject fields or use properties.
@@ -71,5 +77,9 @@ export default defineFunction({
         id: response.id,
         threadId: response.threadId,
       };
-    }).pipe(Effect.provide(FetchHttpClient.layer), Effect.provide(GoogleCredentials.default)),
+    }).pipe(
+      Effect.provide(FetchHttpClient.layer),
+      // Use mailbox credentials if provided, otherwise fall back to database credentials.
+      Effect.provide(mailboxRef ? GoogleCredentials.fromMailboxRef(mailboxRef) : GoogleCredentials.default),
+    ),
 });

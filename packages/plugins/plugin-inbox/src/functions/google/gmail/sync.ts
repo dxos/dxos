@@ -103,79 +103,59 @@ export default defineFunction({
       log('syncing gmail', { mailbox: mailboxRef.dxn.toString(), userId, after, restrictedMode });
       const mailbox = yield* Database.Service.load(mailboxRef);
 
-      // Run sync with mailbox-scoped credentials.
-      return yield* performGmailSync({ mailbox, userId, label, after, restrictedMode }).pipe(
-        Effect.provide(GoogleCredentials.fromMailbox(mailbox)),
+      // Get labels.
+      const labelCount = yield* syncLabels(mailbox, userId).pipe(
+        Effect.catchAll((error) => {
+          log.catch(error);
+          return Effect.succeed(0);
+        }),
       );
-    }).pipe(Effect.provide(Layer.mergeAll(FetchHttpClient.layer, InboxResolver.Live))),
+      log('synced labels', { count: labelCount });
+
+      // Get last message to resume from.
+      const queue = yield* QueueService.getQueue<Message.Message>(mailbox.queue.dxn);
+      const objects = yield* Effect.tryPromise(() => queue.query(Query.select(Filter.type(Message.Message))).run());
+      const lastMessage = objects.at(-1);
+
+      // Build deduplication set from recent messages to prevent duplicates across sync runs.
+      const recentMessages = objects.slice(-STREAMING_CONFIG.maxResults);
+      const existingGmailIds = new Set(
+        recentMessages.flatMap((msg) => {
+          const meta = Obj.getMeta(msg);
+          return meta.keys.filter((key) => key.source === 'gmail.com').map((key) => key.id);
+        }),
+      );
+
+      const startDate = lastMessage ? new Date(lastMessage.created) : new Date(after);
+      log('starting sync', {
+        startDate: format(startDate, 'yyyy-MM-dd'),
+        lastMessageId: lastMessage?.id,
+        existingGmailIds: existingGmailIds.size,
+      });
+
+      // Stream messages oldest-first into queue.
+      const newMessagesCount = yield* streamGmailMessagesToQueue(
+        startDate,
+        queue,
+        userId,
+        label,
+        existingGmailIds,
+        restrictedMode,
+      );
+      log('sync complete', { newMessages: newMessagesCount });
+      return {
+        newMessages: newMessagesCount,
+      };
+    }).pipe(
+      Effect.provide(
+        Layer.mergeAll(FetchHttpClient.layer, InboxResolver.Live, GoogleCredentials.fromMailboxRef(mailboxRef)),
+      ),
+    ),
 });
 
 //
 // Helper functions.
 //
-
-type GmailSyncOptions = {
-  mailbox: Mailbox.Mailbox;
-  userId: string;
-  label: string;
-  after: string | number;
-  restrictedMode: boolean;
-};
-
-/**
- * Performs the Gmail sync operation.
- */
-const performGmailSync = Effect.fnUntraced(function* ({
-  mailbox,
-  userId,
-  label,
-  after,
-  restrictedMode,
-}: GmailSyncOptions) {
-  // Get labels.
-  const labelCount = yield* syncLabels(mailbox, userId).pipe(
-    Effect.catchAll((error) => {
-      log.catch(error);
-      return Effect.succeed(0);
-    }),
-  );
-  log('synced labels', { count: labelCount });
-
-  // Get last message to resume from.
-  const queue = yield* QueueService.getQueue<Message.Message>(mailbox.queue.dxn);
-  const objects = yield* Effect.tryPromise(() => queue.query(Query.select(Filter.type(Message.Message))).run());
-  const lastMessage = objects.at(-1);
-
-  // Build deduplication set from recent messages to prevent duplicates across sync runs.
-  const recentMessages = objects.slice(-STREAMING_CONFIG.maxResults);
-  const existingGmailIds = new Set(
-    recentMessages.flatMap((msg) => {
-      const meta = Obj.getMeta(msg);
-      return meta.keys.filter((key) => key.source === 'gmail.com').map((key) => key.id);
-    }),
-  );
-
-  const startDate = lastMessage ? new Date(lastMessage.created) : new Date(after);
-  log('starting sync', {
-    startDate: format(startDate, 'yyyy-MM-dd'),
-    lastMessageId: lastMessage?.id,
-    existingGmailIds: existingGmailIds.size,
-  });
-
-  // Stream messages oldest-first into queue.
-  const newMessagesCount = yield* streamGmailMessagesToQueue(
-    startDate,
-    queue,
-    userId,
-    label,
-    existingGmailIds,
-    restrictedMode,
-  );
-  log('sync complete', { newMessages: newMessagesCount });
-  return {
-    newMessages: newMessagesCount,
-  };
-});
 
 /**
  * Sync labels.
