@@ -192,7 +192,7 @@ export class MigrationBuilder {
     }
 
     core.initNewObject(props);
-    core.setType(getSchemaDXN(schema)!);
+    core.setType(EncodedReference.fromDXN(getSchemaDXN(schema)!));
     const newHandle = this._repo.create<DatabaseDirectory>({
       version: SpaceDocVersion.CURRENT,
       access: {

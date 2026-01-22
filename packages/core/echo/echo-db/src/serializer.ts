@@ -76,13 +76,14 @@ export class Serializer {
     // TODO(dmaretskyi): Unify JSONinfication with echo-handler.
     const typeRef = core.getType();
 
-    const data = serializeEchoData(core.getDecoded(['data']));
-    const meta = serializeEchoData(core.getDecoded(['meta']));
+    // Note: EncodedReference values are already JSON-serializable ({ '/': string }).
+    const data = core.getDecoded(['data']);
+    const meta = core.getDecoded(['meta']);
 
     return stripUndefined({
       '@id': core.id,
       '@type': typeRef,
-      ...data,
+      ...(data as object),
       '@version': Serializer.version,
       '@meta': meta,
       '@timestamp': new Date().toISOString(),
@@ -159,12 +160,3 @@ const chunkArray = <T>(arr: T[], chunkSize: number): T[][] => {
 
   return result;
 };
-
-const serializeEchoData = (data: any): any =>
-  deepMapValues(data, (value, recurse) => {
-    // EncodedReference values are already in the correct format for serialization.
-    if (EncodedRef.isEncodedReference(value)) {
-      return value;
-    }
-    return recurse(value);
-  });
