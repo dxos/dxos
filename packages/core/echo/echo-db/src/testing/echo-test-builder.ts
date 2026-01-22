@@ -19,7 +19,7 @@ import { PublicKey } from '@dxos/keys';
 import { type LevelDB } from '@dxos/kv-store';
 import { createTestLevel } from '@dxos/kv-store/testing';
 import { layerMemory } from '@dxos/sql-sqlite/platform';
-import { type SqliteClient } from '@dxos/sql-sqlite-wasm';
+import type * as SqliteClient from '@dxos/sql-sqlite/SqliteClient';
 import { range } from '@dxos/util';
 
 import { EchoClient } from '../client';
