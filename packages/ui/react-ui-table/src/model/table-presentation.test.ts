@@ -2,7 +2,6 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Registry } from '@effect-atom/atom-react';
 import * as Schema from 'effect/Schema';
 import { beforeEach, describe, expect, it } from 'vitest';
 
@@ -10,7 +9,7 @@ import { Filter, Query } from '@dxos/echo';
 import { TypedObject } from '@dxos/echo/internal';
 import { createEchoSchema } from '@dxos/echo/testing';
 import { live } from '@dxos/live-object';
-import { ProjectionModel, View } from '@dxos/schema';
+import { ProjectionModel, View, createDirectChangeCallback } from '@dxos/schema';
 
 import { Table } from '../types';
 
@@ -18,55 +17,48 @@ import { TableModel, type TableModelProps } from './table-model';
 import { TablePresentation } from './table-presentation';
 
 describe('TablePresentation', () => {
-  describe('getCells', () => {
-    let registry: Registry.Registry;
+  describe('row reactivity', () => {
     let data: any[];
+    let updateCount: number;
     let model: any;
     let presentation: TablePresentation;
 
     beforeEach(async () => {
-      registry = Registry.make();
+      updateCount = 0;
       ({ data } = live({
         data: [
-          { id: '1', title: 'A', count: 1 },
-          { id: '2', title: 'B', count: 2 },
+          { title: 'A', count: 1 },
+          { title: 'B', count: 2 },
         ],
       }));
 
-      model = createTableModel(registry, {});
+      model = createTableModel({
+        onCellUpdate: () => updateCount++,
+      });
+      model.setRows(data);
       await model.open();
-      model.setRows(data);
-      presentation = new TablePresentation(registry, model);
+      presentation = new TablePresentation(model);
     });
 
-    it('should return cells for the visible range', () => {
-      const cells = presentation.getCells({ start: { row: 0, col: 0 }, end: { row: 1, col: 2 } }, 'grid');
+    it('should update with row-level reactivity', () => {
+      // Set up visible range to include our test data.
+      presentation.getCells({ start: { row: 0, col: 0 }, end: { row: 1, col: 2 } }, 'grid');
 
-      // Verify that cells are returned for the range. The exact column indices depend on the projection.
-      const cellKeys = Object.keys(cells);
-      expect(cellKeys.length).toBeGreaterThan(0);
-
-      // Check that values from the data are present in the cells.
-      const values = Object.values(cells).map((c) => c.value);
-      expect(values).toContain('A');
-      expect(values).toContain('B');
-    });
-
-    it('should reflect row data changes', () => {
-      // Update the row data and refresh.
+      // Trigger a row update.
       data[0].title = 'New Value';
-      model.setRows(data);
+      expect(updateCount).toBe(2);
 
       // Verify the new value through getCells.
-      const cells = presentation.getCells({ start: { row: 0, col: 0 }, end: { row: 0, col: 2 } }, 'grid');
-      const values = Object.values(cells).map((c) => c.value);
-      expect(values).toContain('New Value');
+      const cells = presentation.getCells({ start: { row: 0, col: 0 }, end: { row: 0, col: 0 } }, 'grid');
+      expect(cells['0,0']?.value).toBe('New Value');
     });
 
-    it('should reflect new rows', () => {
-      // Add a new row.
-      data.push({ id: '3', title: 'C', count: 3 });
-      model.setRows(data);
+    it('should update reactively when adding a new row', () => {
+      // Set up visible range to include our test data.
+      presentation.getCells({ start: { row: 0, col: 0 }, end: { row: 2, col: 2 } }, 'grid');
+
+      data.push({ title: 'C', count: 3 });
+      expect(updateCount).toBe(2);
 
       const cells = presentation.getCells({ start: { row: 0, col: 0 }, end: { row: 2, col: 2 } }, 'grid');
 
@@ -75,12 +67,17 @@ describe('TablePresentation', () => {
       expect(cells['1,2']?.value).toBe('3');
     });
 
-    it('should handle row modifications', () => {
-      // Modify the data.
+    it('should handle combined operations reactively', () => {
+      // Set up visible range.
+      presentation.getCells({ start: { row: 0, col: 0 }, end: { row: 2, col: 2 } }, 'grid');
+
+      // Multiple operations.
       data[0].title = 'Updated A';
-      data.push({ id: '3', title: 'C', count: 3 });
+      data.push({ title: 'C', count: 3, completed: true });
       data.splice(1, 1);
-      model.setRows(data);
+
+      // We expect one update per operation affecting visible rows.
+      expect(updateCount).toBe(4);
 
       const cells = presentation.getCells({ start: { row: 0, col: 0 }, end: { row: 1, col: 2 } }, 'grid');
 
@@ -96,13 +93,17 @@ class Test extends TypedObject({ typename: 'example.com/type/Test', version: '0.
   count: Schema.Number,
 }) {}
 
-const createTableModel = (registry: Registry.Registry, props: Partial<TableModelProps> = {}): TableModel => {
+const createTableModel = (props: Partial<TableModelProps> = {}): TableModel => {
   const schema = createEchoSchema(Test);
   const view = View.make({
     query: Query.select(Filter.type(schema)),
     jsonSchema: schema.jsonSchema,
   });
   const object = Table.make({ view });
-  const projection = new ProjectionModel(schema.jsonSchema, view.projection);
-  return new TableModel({ registry, object, projection, ...props });
+  const projection = new ProjectionModel(
+    schema.jsonSchema,
+    view.projection,
+    createDirectChangeCallback(view.projection, schema.jsonSchema),
+  );
+  return new TableModel({ object, projection, ...props });
 };

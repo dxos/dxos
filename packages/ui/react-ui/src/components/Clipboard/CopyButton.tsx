@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { mx } from '@dxos/ui-theme';
+import { mx, osTranslations } from '@dxos/ui-theme';
 
 import { Button, type ButtonProps, IconButton } from '../Button';
 import { Icon, type IconProps } from '../Icon';
@@ -21,7 +21,7 @@ export type CopyButtonProps = ButtonProps &
 const inactiveLabelStyles = 'invisible bs-px -mbe-px overflow-hidden';
 
 export const CopyButton = ({ classNames, value, size = 5, ...props }: CopyButtonProps) => {
-  const { t } = useTranslation('@dxos/os');
+  const { t } = useTranslation(osTranslations);
   const { textValue, setTextValue } = useClipboard();
   const isCopied = textValue === value;
   return (
@@ -55,7 +55,7 @@ export const CopyButtonIconOnly = ({
   variant,
   ...props
 }: TooltipScopedProps<CopyButtonIconOnlyProps>) => {
-  const { t } = useTranslation('@dxos/os');
+  const { t } = useTranslation(osTranslations);
   const { textValue, setTextValue } = useClipboard();
   const isCopied = textValue === value;
   const label = isCopied ? t('copy success label') : (props.label ?? t('copy label'));

@@ -46,7 +46,7 @@
       "path": "../../../common/random"
     },
     {
-      "path": "../../../common/sql-sqlite-wasm"
+      "path": "../../../common/sql-sqlite"
     },
     {
       "path": "../../../common/test-utils"

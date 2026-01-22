@@ -44,7 +44,9 @@ export const ScriptProperties = ({ object }: ScriptObjectSettingsProps) => {
         placeholder={t('description placeholder')}
         value={object.description ?? ''}
         onChange={(event) => {
-          object.description = event.target.value;
+          Obj.change(object, (o) => {
+            o.description = event.target.value;
+          });
         }}
       />
     </Input.Root>
@@ -79,11 +81,15 @@ const BlueprintEditor = ({ object }: ScriptObjectSettingsProps) => {
     try {
       if (existingBlueprint) {
         const text = await existingBlueprint.instructions.source.load();
-        text.content = instructions;
+        Obj.change(text, (t) => {
+          t.content = instructions;
+        });
         if (fn?.key) {
           const toolId = ToolId.make(fn.key);
           if (!existingBlueprint.tools?.includes(toolId)) {
-            existingBlueprint.tools = [...(existingBlueprint.tools ?? []), toolId];
+            Obj.change(existingBlueprint, (b) => {
+              b.tools = [...(b.tools ?? []), toolId];
+            });
           }
         }
       } else if (fn?.key) {
@@ -161,7 +167,9 @@ const Binding = ({ object }: ScriptObjectSettingsProps) => {
   );
 
   const handleBindingBlur = useCallback(() => {
-    fn.binding = binding;
+    Obj.change(fn, (f) => {
+      f.binding = binding;
+    });
   }, [fn, binding]);
 
   if (!fn || !functionUrl) {
@@ -180,7 +188,9 @@ const Binding = ({ object }: ScriptObjectSettingsProps) => {
               disabled
               value={functionUrl}
               onChange={(event) => {
-                fn.name = event.target.value;
+                Obj.change(fn, (f) => {
+                  f.name = event.target.value;
+                });
               }}
             />
             <Clipboard.IconButton value={functionUrl} />
@@ -262,8 +272,11 @@ const Publishing = ({ object }: ScriptObjectSettingsProps) => {
           public: true,
           files,
         });
-        if (response.data.id) {
-          meta.keys.push({ source: 'github.com', id: response.data.id });
+        const gistId = response.data.id;
+        if (gistId) {
+          Obj.change(object, () => {
+            meta.keys.push({ source: 'github.com', id: gistId });
+          });
         }
       }
     } finally {

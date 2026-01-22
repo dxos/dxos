@@ -32,10 +32,14 @@ describe('create subscription', () => {
 
     const counter = createUpdateCounter(task);
 
-    task.title = 'Test title';
+    Obj.change(task, (t) => {
+      t.title = 'Test title';
+    });
     expect(counter.value).to.equal(2);
 
-    task.title = 'Test title revision';
+    Obj.change(task, (t) => {
+      t.title = 'Test title revision';
+    });
     expect(counter.value).to.equal(3);
   });
 
@@ -53,7 +57,9 @@ describe('create subscription', () => {
     expect(actions).to.deep.equal(['update']);
 
     actions.push('before');
-    task.title = 'Test title';
+    Obj.change(task, (t) => {
+      t.title = 'Test title';
+    });
     actions.push('after');
 
     // NOTE: This order is required for input components in react to function properly when directly bound to ECHO objects.
@@ -76,7 +82,9 @@ describe('create subscription', () => {
     expect(actions).to.deep.equal(['update']);
 
     actions.push('before');
-    task.title = 'Test title';
+    Obj.change(task, (t) => {
+      t.title = 'Test title';
+    });
     actions.push('after');
 
     await sleep(10);
@@ -101,7 +109,9 @@ describe('create subscription', () => {
     });
     selection.update([task]);
 
-    task.title = 'Test title';
+    Obj.change(task, (t) => {
+      t.title = 'Test title';
+    });
     expect(await title.wait()).to.equal('Test title');
   });
 
@@ -118,7 +128,9 @@ describe('create subscription', () => {
     const counter = createUpdateCounter(task);
 
     expect(counter.value).to.equal(1);
-    task.nested.title = 'New title';
+    Obj.change(task, (t) => {
+      t.nested.title = 'New title';
+    });
     expect(counter.value).to.equal(2);
   });
 
@@ -132,7 +144,9 @@ describe('create subscription', () => {
     const counter = createUpdateCounter(task);
 
     expect(counter.value).to.equal(1);
-    task.nested.deep_nested.title = 'New title';
+    Obj.change(task, (t) => {
+      t.nested.deep_nested.title = 'New title';
+    });
     expect(counter.value).to.equal(2);
   });
 
@@ -144,7 +158,9 @@ describe('create subscription', () => {
     const counter = createUpdateCounter(task);
 
     expect(counter.value).to.equal(1);
-    task.array[0] = 'New value';
+    Obj.change(task, (t) => {
+      t.array[0] = 'New value';
+    });
     expect(counter.value).to.equal(2);
   });
 
@@ -156,7 +172,9 @@ describe('create subscription', () => {
     const counter = createUpdateCounter(task);
 
     expect(counter.value).to.equal(1);
-    task.array[0].title = 'New value';
+    Obj.change(task, (t) => {
+      t.array[0].title = 'New value';
+    });
     expect(counter.value).to.equal(2);
   });
 
@@ -169,7 +187,9 @@ describe('create subscription', () => {
     const counter = createUpdateCounter(task);
 
     expect(counter.value).to.equal(1);
-    task.array[0].nested_array[0].title = 'New value';
+    Obj.change(task, (t) => {
+      t.array[0].nested_array[0].title = 'New value';
+    });
     expect(counter.value).to.equal(2);
   });
 });

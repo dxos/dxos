@@ -96,8 +96,10 @@ describe('useRef', () => {
       expect(result.current?.name).toBe('Target');
     });
 
-    // Update the target object.
-    targetObj.name = 'Updated Target';
+    // Update the target object via Obj.change.
+    Obj.change(targetObj, (o) => {
+      o.name = 'Updated Target';
+    });
 
     await waitFor(() => {
       expect(result.current?.name).toBe('Updated Target');

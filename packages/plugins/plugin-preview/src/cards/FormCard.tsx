@@ -38,11 +38,13 @@ export const FormCard = ({
 
   const handleSave = useCallback((values: any, { changed }: { changed: Record<string, boolean> }) => {
     const paths = Object.keys(changed).filter((path) => changed[path]);
-    for (const path of paths) {
-      const value = values[path];
-      const parts = splitJsonPath(path as JsonPath);
-      Obj.setValue(subject, parts, value);
-    }
+    Obj.change(subject, () => {
+      for (const path of paths) {
+        const value = values[path];
+        const parts = splitJsonPath(path as JsonPath);
+        Obj.setValue(subject, parts, value);
+      }
+    });
   }, []);
 
   const label = Obj.getLabel(subject) ?? Obj.getTypename(subject) ?? t('unable to create preview message');

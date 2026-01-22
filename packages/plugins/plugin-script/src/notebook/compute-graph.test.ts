@@ -5,6 +5,8 @@
 import { Registry } from '@effect-atom/atom-react';
 import { describe, expect, test } from 'vitest';
 
+import { Obj } from '@dxos/echo';
+
 import { createNotebook } from '../testing';
 
 import { ComputeGraph } from './compute-graph';
@@ -39,8 +41,11 @@ describe('notebook', () => {
     const registry = Registry.make();
     const notebook = createNotebook();
     // Replace one of the cells with code that tries to access window/document.
-    if (notebook.cells[2].source?.target) {
-      notebook.cells[2].source.target.content = 'b = typeof window';
+    const sourceTarget = notebook.cells[2].source?.target;
+    if (sourceTarget) {
+      Obj.change(sourceTarget, (t) => {
+        t.content = 'b = typeof window';
+      });
     }
 
     const graph = new ComputeGraph(notebook, registry);
@@ -51,8 +56,10 @@ describe('notebook', () => {
     expect(values[notebook.cells[2].id]).toBe('undefined');
 
     // Test document access.
-    if (notebook.cells[2].source?.target) {
-      notebook.cells[2].source.target.content = 'b = typeof document';
+    if (sourceTarget) {
+      Obj.change(sourceTarget, (t) => {
+        t.content = 'b = typeof document';
+      });
     }
     graph.parse();
     const values2 = await graph.evaluate();
@@ -61,8 +68,10 @@ describe('notebook', () => {
     expect(values2[notebook.cells[2].id]).toBe('undefined');
 
     // Test that safe globals still work.
-    if (notebook.cells[2].source?.target) {
-      notebook.cells[2].source.target.content = 'b = Math.max(100, 200)';
+    if (sourceTarget) {
+      Obj.change(sourceTarget, (t) => {
+        t.content = 'b = Math.max(100, 200)';
+      });
     }
     graph.parse();
     const values3 = await graph.evaluate();

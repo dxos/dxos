@@ -67,11 +67,18 @@ export const NotebookContainer = ({ notebook, env }: NotebookContainerProps) => 
             const graph = cell.graph?.target;
             if (!graph) {
               const { view } = await View.makeFromDatabase({ db });
-              const graph = Graph.make({ query: { ast }, view });
-              cell.graph = Ref.make(graph);
-              cell.name = name;
+              const newGraph = Graph.make({ query: { ast }, view });
+              Obj.change(notebook!, (n) => {
+                const c = n.cells.find((c) => c.id === cell.id);
+                if (c) {
+                  c.graph = Ref.make(newGraph);
+                  c.name = name;
+                }
+              });
             } else {
-              graph.query.ast = ast;
+              Obj.change(graph, () => {
+                graph.query.ast = ast;
+              });
             }
           }
         }
@@ -128,10 +135,12 @@ export const NotebookContainer = ({ notebook, env }: NotebookContainerProps) => 
       const from = notebook.cells.findIndex((cell) => cell.id === source.id);
       const to = notebook.cells.findIndex((cell) => cell.id === target.id);
       if (from != null && to != null) {
-        const cell = notebook.cells.splice(from, 1)[0];
-        if (cell) {
-          notebook.cells.splice(to, 0, cell);
-        }
+        Obj.change(notebook, (n) => {
+          const cell = n.cells.splice(from, 1)[0];
+          if (cell) {
+            n.cells.splice(to, 0, cell);
+          }
+        });
       }
     },
     [notebook],
@@ -162,7 +171,9 @@ export const NotebookContainer = ({ notebook, env }: NotebookContainerProps) => 
       }
 
       const idx = after ? notebook.cells.findIndex((cell) => cell.id === after) : notebook.cells.length;
-      notebook.cells.splice(idx, 0, cell);
+      Obj.change(notebook, (n) => {
+        n.cells.splice(idx, 0, cell);
+      });
     },
     [db, notebook],
   );
@@ -172,7 +183,9 @@ export const NotebookContainer = ({ notebook, env }: NotebookContainerProps) => 
       invariant(notebook);
       const idx = notebook.cells.findIndex((cell) => cell.id === id);
       if (idx !== -1) {
-        notebook.cells.splice(idx, 1);
+        Obj.change(notebook, (n) => {
+          n.cells.splice(idx, 1);
+        });
       }
     },
     [notebook],

@@ -6,7 +6,7 @@ import * as Schema from 'effect/Schema';
 import * as SchemaAST from 'effect/SchemaAST';
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
-import { Filter, Query, Type } from '@dxos/echo';
+import { type Entity, Filter, Obj, Query, Type } from '@dxos/echo';
 import {
   EntityKind,
   Format,
@@ -27,7 +27,7 @@ import { TestSchema } from '../testing';
 import { View } from '../types';
 
 import { createFieldId } from './field';
-import { ProjectionModel } from './projection';
+import { ProjectionModel, createDirectChangeCallback, createEchoChangeCallback } from './projection';
 
 registerSignalsRuntime();
 
@@ -69,7 +69,11 @@ describe('ProjectionModel', () => {
       query: Query.select(Filter.type(mutable)),
       jsonSchema: mutable.jsonSchema,
     });
-    const projectionModel = new ProjectionModel(mutable.jsonSchema, view.projection);
+    const projectionModel = new ProjectionModel(
+      mutable.jsonSchema,
+      view.projection,
+      createEchoChangeCallback(view, mutable),
+    );
     expect(projectionModel.fields).to.have.length(3);
 
     {
@@ -157,7 +161,11 @@ describe('ProjectionModel', () => {
       registry,
     });
 
-    const projection = new ProjectionModel(jsonSchema, view.projection);
+    const projection = new ProjectionModel(
+      jsonSchema,
+      view.projection,
+      createDirectChangeCallback(view.projection, jsonSchema),
+    );
     const { field, props } = projection.getFieldProjection(getFieldId(view.projection, 'organization'));
 
     expect(field).to.deep.include({
@@ -206,7 +214,11 @@ describe('ProjectionModel', () => {
       query: Query.select(Filter.type(mutable)),
       jsonSchema: mutable.jsonSchema,
     });
-    const projectionModel = new ProjectionModel(mutable.jsonSchema, view.projection);
+    const projectionModel = new ProjectionModel(
+      mutable.jsonSchema,
+      view.projection,
+      createEchoChangeCallback(view, mutable),
+    );
 
     // Initial state.
     expect(projectionModel.fields).to.have.length(2);
@@ -241,7 +253,11 @@ describe('ProjectionModel', () => {
       query: Query.select(Filter.type(mutable)),
       jsonSchema: mutable.jsonSchema,
     });
-    const projectionModel = new ProjectionModel(mutable.jsonSchema, view.projection);
+    const projectionModel = new ProjectionModel(
+      mutable.jsonSchema,
+      view.projection,
+      createEchoChangeCallback(view, mutable),
+    );
 
     // Capture initial states.
     const initialFieldsOrder = projectionModel.fields.map((f) => f.path);
@@ -290,7 +306,11 @@ describe('ProjectionModel', () => {
       query: Query.select(Filter.type(mutable)),
       jsonSchema: mutable.jsonSchema,
     });
-    const projectionModel = new ProjectionModel(mutable.jsonSchema, view.projection);
+    const projectionModel = new ProjectionModel(
+      mutable.jsonSchema,
+      view.projection,
+      createEchoChangeCallback(view, mutable),
+    );
 
     // Capture initial state.
     const initialFieldsOrder = projectionModel.fields.map((f) => f.path);
@@ -341,7 +361,11 @@ describe('ProjectionModel', () => {
       query: Query.select(Filter.type(mutable)),
       jsonSchema: mutable.jsonSchema,
     });
-    const projection = new ProjectionModel(mutable.jsonSchema, view.projection);
+    const projection = new ProjectionModel(
+      mutable.jsonSchema,
+      view.projection,
+      createEchoChangeCallback(view, mutable),
+    );
 
     // Capture initial state.
     const initialPropertyOrder = [...(mutable.jsonSchema.propertyOrder ?? [])];
@@ -397,7 +421,11 @@ describe('ProjectionModel', () => {
       query: Query.select(Filter.type(mutable)),
       jsonSchema: mutable.jsonSchema,
     });
-    const projection = new ProjectionModel(mutable.jsonSchema, view.projection);
+    const projection = new ProjectionModel(
+      mutable.jsonSchema,
+      view.projection,
+      createEchoChangeCallback(view, mutable),
+    );
     const fieldId = getFieldId(view.projection, 'status');
     invariant(fieldId);
 
@@ -507,7 +535,11 @@ describe('ProjectionModel', () => {
       query: Query.select(Filter.type(mutable)),
       jsonSchema: mutable.jsonSchema,
     });
-    const projection = new ProjectionModel(mutable.jsonSchema, view.projection);
+    const projection = new ProjectionModel(
+      mutable.jsonSchema,
+      view.projection,
+      createEchoChangeCallback(view, mutable),
+    );
     const fieldId = getFieldId(view.projection, 'tags');
     invariant(fieldId);
 
@@ -650,7 +682,11 @@ describe('ProjectionModel', () => {
       ],
     });
 
-    const projectionModel = new ProjectionModel(mutable.jsonSchema, view.projection);
+    const projectionModel = new ProjectionModel(
+      mutable.jsonSchema,
+      view.projection,
+      createEchoChangeCallback(view, mutable),
+    );
     projectionModel.normalizeView();
     const initialSchema = mutable.snapshot;
 
@@ -751,7 +787,11 @@ describe('ProjectionModel', () => {
     });
 
     // Create projection.
-    const projectionModel = new ProjectionModel(mutable.jsonSchema, view.projection);
+    const projectionModel = new ProjectionModel(
+      mutable.jsonSchema,
+      view.projection,
+      createEchoChangeCallback(view, mutable),
+    );
     projectionModel.normalizeView();
 
     // Verify all schema fields were hidden.
@@ -787,7 +827,11 @@ describe('ProjectionModel', () => {
     });
 
     // Initialize projection.
-    const projectionModel = new ProjectionModel(mutable.jsonSchema, view.projection);
+    const projectionModel = new ProjectionModel(
+      mutable.jsonSchema,
+      view.projection,
+      createEchoChangeCallback(view, mutable),
+    );
     projectionModel.normalizeView();
 
     // Verify title is in hiddenFields.
@@ -795,7 +839,10 @@ describe('ProjectionModel', () => {
     expect(projectionModel.hiddenFields![0].path).to.equal('title');
 
     // Modify the schema - add a field.
-    mutable.jsonSchema.properties!.status = { type: 'string' };
+    // Type assertion needed because PersistentSchema's type doesn't include [KindId] but runtime value does.
+    Obj.change(mutable.persistentSchema as unknown as Entity.Any, (s: any) => {
+      s.jsonSchema.properties!.status = { type: 'string' };
+    });
     projectionModel.normalizeView();
 
     // Verify status was added to hiddenFields.
@@ -825,7 +872,8 @@ describe('ProjectionModel', () => {
       query: Query.select(Filter.type(mutable)),
       jsonSchema: mutable.jsonSchema,
     });
-    let projectionModel = new ProjectionModel(mutable.jsonSchema, view.projection);
+    const changeCallback = createEchoChangeCallback(view, mutable);
+    let projectionModel = new ProjectionModel(mutable.jsonSchema, view.projection, changeCallback);
 
     // Initial state.
     expect(projectionModel.fields).to.have.length(3);
@@ -844,7 +892,7 @@ describe('ProjectionModel', () => {
     expect(hiddenProps).to.not.include('email');
 
     // Reinitialize projection to trigger normalization.
-    projectionModel = new ProjectionModel(mutable.jsonSchema, view.projection);
+    projectionModel = new ProjectionModel(mutable.jsonSchema, view.projection, changeCallback);
 
     // Verify field is still deleted and not in hidden properties.
     expect(projectionModel.fields).to.have.length(2);
@@ -859,7 +907,11 @@ describe('ProjectionModel', () => {
     const jsonSchema = toJsonSchema(schema);
 
     const view = View.make({ query: Query.select(Filter.type(schema)), jsonSchema });
-    const projection = new ProjectionModel(jsonSchema, view.projection);
+    const projection = new ProjectionModel(
+      jsonSchema,
+      view.projection,
+      createDirectChangeCallback(view.projection, jsonSchema),
+    );
     const fieldId = getFieldId(view.projection, 'status');
     invariant(fieldId);
 
@@ -924,7 +976,11 @@ describe('ProjectionModel', () => {
       query: Query.select(Filter.type(ContactWithArrayOfEmails)),
       jsonSchema,
     });
-    const projection = new ProjectionModel(jsonSchema, view.projection);
+    const projection = new ProjectionModel(
+      jsonSchema,
+      view.projection,
+      createDirectChangeCallback(view.projection, jsonSchema),
+    );
 
     const fieldId = createFieldId();
     projection.setFieldProjection({
@@ -967,7 +1023,11 @@ describe('ProjectionModel', () => {
         query: Query.select(Filter.type(mutable)),
         jsonSchema: mutable.jsonSchema,
       });
-      const projection = new ProjectionModel(mutable.jsonSchema, view.projection);
+      const projection = new ProjectionModel(
+        mutable.jsonSchema,
+        view.projection,
+        createEchoChangeCallback(view, mutable),
+      );
       const fieldId = getFieldId(view.projection, fieldName);
       invariant(fieldId);
 

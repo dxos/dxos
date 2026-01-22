@@ -26,7 +26,9 @@ export default Capability.makeModule(
             typename: Task.Task.typename,
           });
           space.db.add(object);
-          space.properties.staticRecords = [Task.Task.typename];
+          Obj.change(space.properties, (p) => {
+            p.staticRecords = [Task.Task.typename];
+          });
         }),
       }),
       OperationResolver.make({

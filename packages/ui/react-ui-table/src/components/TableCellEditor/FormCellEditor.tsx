@@ -13,7 +13,7 @@ import { type Label, Popover } from '@dxos/react-ui';
 import { Form, type FormRootProps, type RefFieldProps } from '@dxos/react-ui-form';
 import { parseCellIndex, useGridContext } from '@dxos/react-ui-grid';
 import { type FieldProjection } from '@dxos/schema';
-import { getDeep, isTruthy, setDeep } from '@dxos/util';
+import { getDeep, isTruthy } from '@dxos/util';
 
 import { type ModalController, type TableModel, type TableRow } from '../../model';
 import { translationKey } from '../../translations';
@@ -99,7 +99,11 @@ export const FormCellEditor = <T extends Type.Entity.Any = Type.Entity.Any>({
     (values) => {
       const path = fieldProjection.field.path;
       const value = getDeep(values, [path]);
-      setDeep(originalRow, [path], value);
+      if (originalRow && Obj.isObject(originalRow)) {
+        Obj.change(originalRow, () => {
+          Obj.setValue(originalRow, [path], value);
+        });
+      }
       contextEditing?.cellElement?.focus();
       setEditing(null);
       setLocalEditing(false);
@@ -114,7 +118,11 @@ export const FormCellEditor = <T extends Type.Entity.Any = Type.Entity.Any>({
       if (objectWithId) {
         const ref = Ref.make(objectWithId);
         const path = fieldProjection.field.path;
-        setDeep(originalRow, [path], ref);
+        if (originalRow && Obj.isObject(originalRow)) {
+          Obj.change(originalRow, () => {
+            Obj.setValue(originalRow, [path], ref);
+          });
+        }
       }
       contextEditing?.cellElement?.focus();
       setEditing(null);

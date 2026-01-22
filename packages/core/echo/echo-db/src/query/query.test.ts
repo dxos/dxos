@@ -116,6 +116,32 @@ describe('Query', () => {
       expect(objects.map((obj) => obj.label)).to.deep.equal(sortedObjects.map((obj) => obj.label));
     });
 
+    test('limit results', async () => {
+      const objects = await db.query(Query.select(Filter.everything()).limit(5)).run();
+      expect(objects).to.have.length(5);
+    });
+
+    test('limit with ordering', async () => {
+      const allObjects = await db.query(Query.select(Filter.everything()).orderBy(Order.natural)).run();
+      const limitedObjects = await db.query(Query.select(Filter.everything()).orderBy(Order.natural).limit(3)).run();
+
+      expect(limitedObjects).to.have.length(3);
+      // Verify the results are ordered consistently.
+      const limitedIds = limitedObjects.map((obj) => obj.id);
+      const sortedLimitedIds = [...limitedIds].sort();
+      expect(limitedIds).to.deep.equal(sortedLimitedIds);
+      // Verify the limited results are a subset of all results.
+      const allIds = new Set(allObjects.map((obj) => obj.id));
+      for (const id of limitedIds) {
+        expect(allIds.has(id)).to.be.true;
+      }
+    });
+
+    test('limit larger than result set returns all results', async () => {
+      const objects = await db.query(Query.select(Filter.everything()).limit(100)).run();
+      expect(objects).to.have.length(10);
+    });
+
     test('filter by type', async () => {
       {
         const objects = await db.query(Query.select(Filter.type(Type.Expando, { value: undefined }))).run();
@@ -663,6 +689,23 @@ describe('Query', () => {
       expect(objects).toHaveLength(3);
     });
 
+    test('union of limited queries', async () => {
+      // Query for tasks assigned to Alice, limited to 1.
+      const query1 = Query.select(Filter.type(TestSchema.Person, { name: 'Alice' }))
+        .referencedBy(TestSchema.Task, 'assignee')
+        .limit(1);
+      // Query for tasks assigned to Bob, limited to 1.
+      const query2 = Query.select(Filter.type(TestSchema.Person, { name: 'Bob' }))
+        .referencedBy(TestSchema.Task, 'assignee')
+        .limit(1);
+
+      const query = Query.all(query1, query2);
+      const objects = await db.query(query).run();
+
+      // Should get 1 task from Alice (out of 2) + 1 task from Bob (out of 1) = 2 total.
+      expect(objects).toHaveLength(2);
+    });
+
     test('query set difference', async () => {
       const query1 = Query.select(Filter.type(TestSchema.Person));
       const query2 = Query.select(Filter.type(TestSchema.Person)).sourceOf(TestSchema.HasManager).source();
@@ -861,7 +904,9 @@ describe('Query', () => {
       }
 
       // Update the object.
-      obj.title = 'Updated Title';
+      Obj.change(obj, (o) => {
+        o.title = 'Updated Title';
+      });
       await db.flush({ indexes: true });
 
       // Verify search results.
@@ -936,6 +981,117 @@ describe('Query', () => {
         expect(object.title).toContain(needle);
       }
     });
+
+    test('full-text search in queues via indexer2', async () => {
+      const peer = await builder.createPeer({ indexing: { fullText: true }, types: [TestSchema.Task] });
+      const db = await peer.createDatabase();
+      const queues = peer.client.constructQueueFactory(db.spaceId);
+      const queue = queues.create();
+
+      // Add objects to the queue.
+      await queue.append([
+        Obj.make(TestSchema.Task, { title: 'Introduction to TypeScript' }),
+        Obj.make(TestSchema.Task, { title: 'Getting Started with React' }),
+        Obj.make(TestSchema.Task, { title: 'Advanced Python Programming' }),
+      ]);
+
+      // Wait for indexing.
+      await db.flush({ indexes: true });
+
+      // Search in specific queue.
+      {
+        const objects = await db
+          .query(
+            Query.select(Filter.text('TypeScript', { type: 'full-text' })).options({ queues: [queue.dxn.toString()] }),
+          )
+          .run();
+        expect(objects).toHaveLength(1);
+        expect((objects[0] as TestSchema.Task).title).toEqual('Introduction to TypeScript');
+      }
+
+      // Search for React.
+      {
+        const objects = await db
+          .query(Query.select(Filter.text('React', { type: 'full-text' })).options({ queues: [queue.dxn.toString()] }))
+          .run();
+        expect(objects).toHaveLength(1);
+        expect((objects[0] as TestSchema.Task).title).toEqual('Getting Started with React');
+      }
+
+      // Non-matching query.
+      {
+        const objects = await db
+          .query(
+            Query.select(Filter.text('JavaScript', { type: 'full-text' })).options({ queues: [queue.dxn.toString()] }),
+          )
+          .run();
+        expect(objects).toHaveLength(0);
+      }
+    });
+
+    test('full-text search with allQueuesFromSpaces via indexer2', async () => {
+      const peer = await builder.createPeer({ indexing: { fullText: true }, types: [TestSchema.Task] });
+      const db = await peer.createDatabase();
+      const queues = peer.client.constructQueueFactory(db.spaceId);
+      const queue = queues.create();
+
+      // Add objects to the database (space objects).
+      db.add(Obj.make(TestSchema.Task, { title: 'Space Object TypeScript' }));
+
+      // Add objects to the queue.
+      await queue.append([Obj.make(TestSchema.Task, { title: 'Queue Object TypeScript' })]);
+
+      // Wait for indexing.
+      await db.flush({ indexes: true });
+
+      // Search with allQueuesFromSpaces: true should return both space and queue objects.
+      {
+        const objects: TestSchema.Task[] = await db
+          .query(
+            Query.select(Filter.text('TypeScript', { type: 'full-text' })).options({
+              allQueuesFromSpaces: true,
+            }),
+          )
+          .run();
+        expect(objects).toHaveLength(2);
+        expect(objects.map((_) => _.title).sort()).toEqual(['Queue Object TypeScript', 'Space Object TypeScript']);
+      }
+
+      // Search without allQueuesFromSpaces should return only space objects.
+      {
+        const objects = await db
+          .query(Query.select(Filter.text('TypeScript', { type: 'full-text' })).options({}))
+          .run();
+        expect(objects).toHaveLength(1);
+        expect((objects[0] as TestSchema.Task).title).toEqual('Space Object TypeScript');
+      }
+
+      // console.log('dumpSqliteDatabase', await peer.dumpSqliteDatabase());
+    });
+
+    test('full-text search from queue returns valid echo objects', async () => {
+      const peer = await builder.createPeer({ indexing: { fullText: true }, types: [TestSchema.Task] });
+      const db = await peer.createDatabase();
+      const queues = peer.client.constructQueueFactory(db.spaceId);
+      const queue = queues.create();
+      const task = Obj.make(TestSchema.Task, { title: 'Queue Object TypeScript' });
+      await queue.append([task]);
+      await db.flush({ indexes: true });
+
+      const obj: TestSchema.Task = await db
+        .query(
+          Query.select(Filter.text('TypeScript', { type: 'full-text' })).options({ queues: [queue.dxn.toString()] }),
+        )
+        .first();
+      expect(obj).toBeDefined();
+      expect(Obj.getDXN(obj)?.toString().startsWith(queue.dxn.toString())).toBe(true);
+      expect(Obj.getTypename(obj)).toBe(TestSchema.Task.typename);
+      expect(Obj.getSchema(obj)).toEqual(TestSchema.Task);
+      expect(obj.id).toEqual(task.id);
+      expect(Obj.isDeleted(obj)).toBe(false);
+      expect(Obj.getMeta(obj).keys).toEqual([]);
+      expect(obj.title).toEqual('Queue Object TypeScript');
+    });
   });
 
   describe('Reactivity', () => {
@@ -994,7 +1150,9 @@ describe('Query', () => {
       query.subscribe(() => {
         updateCount++;
       });
-      (objects[0] as any).title = 'Task 0a';
+      Obj.change(objects[0], (o: any) => {
+        o.title = 'Task 0a';
+      });
       await sleep(10);
       expect(updateCount).to.equal(0);
     });
@@ -1191,7 +1349,9 @@ describe('Query', () => {
       });
       onTestFinished(() => unsub());
 
-      contact.name = name;
+      Obj.change(contact, (c) => {
+        c.name = name;
+      });
       db.add(Obj.make(TestSchema.Person, {}));
 
       await asyncTimeout(nameUpdate.wait(), 1000);

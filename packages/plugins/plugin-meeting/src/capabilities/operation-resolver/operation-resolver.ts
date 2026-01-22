@@ -29,7 +29,9 @@ export default Capability.makeModule(
           }
 
           const meetingCollection = Collection.makeManaged({ key: Type.getTypename(Meeting.Meeting) });
-          rootCollection.objects.push(Ref.make(meetingCollection));
+          Obj.change(rootCollection, (c) => {
+            c.objects.push(Ref.make(meetingCollection));
+          });
         }),
       }),
       OperationResolver.make({
