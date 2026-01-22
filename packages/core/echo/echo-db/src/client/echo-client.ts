@@ -59,6 +59,7 @@ export class EchoClient extends Resource {
 
   // TODO(burdon): This already exists in Hypergraph.
   private readonly _databases = new Map<SpaceId, EchoDatabaseImpl>();
+  private readonly _queueFactories = new Map<SpaceId, QueueFactory>();
 
   private _dataService: DataService | undefined = undefined;
   private _queryService: QueryService | undefined = undefined;
@@ -94,6 +95,7 @@ export class EchoClient extends Resource {
     invariant(this._lifecycleState === LifecycleState.CLOSED);
     this._dataService = undefined;
     this._queryService = undefined;
+    this._queuesService = undefined;
   }
 
   protected override async _open(ctx: Context): Promise<void> {
@@ -146,6 +148,7 @@ export class EchoClient extends Resource {
   constructQueueFactory(spaceId: SpaceId): QueueFactory {
     const queueFactory = new QueueFactory(spaceId, this._graph);
     this._graph._registerQueueFactory(spaceId, queueFactory);
+    this._queueFactories.set(spaceId, queueFactory);
     if (this._queuesService) {
       queueFactory.setService(this._queuesService);
     }
@@ -157,10 +160,19 @@ export class EchoClient extends Resource {
    * Update service references after reconnection.
    * Must be called before _notifyReconnect.
    */
-  _updateServices({ dataService, queryService }: { dataService: DataService; queryService: QueryService }): void {
+  _updateServices({
+    dataService,
+    queryService,
+    queueService,
+  }: {
+    dataService: DataService;
+    queryService: QueryService;
+    queueService?: QueueService;
+  }): void {
     log.info('updating service references');
     this._dataService = dataService;
     this._queryService = queryService;
+    this._queuesService = queueService;
 
     // Update IndexQuerySourceProvider with new service.
     if (this._indexQuerySourceProvider) {
@@ -177,6 +189,13 @@ export class EchoClient extends Resource {
     // Update all databases with new services.
     for (const db of this._databases.values()) {
       db._updateServices({ dataService, queryService });
+    }
+
+    // Update all queue factories with new service.
+    if (queueService) {
+      for (const queueFactory of this._queueFactories.values()) {
+        queueFactory.setService(queueService);
+      }
     }
   }
 

@@ -433,7 +433,7 @@ export class Client {
       const queryService = this._services!.services.QueryService;
       invariant(dataService, 'DataService not available');
       invariant(queryService, 'QueryService not available');
-      this._echoClient._updateServices({ dataService, queryService });
+      this._echoClient._updateServices({ dataService, queryService, queueService: this._queuesService });
       await this._echoClient._notifyReconnect();
 
       // Re-establish status stream.
