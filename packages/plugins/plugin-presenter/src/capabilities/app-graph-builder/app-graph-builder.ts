@@ -10,12 +10,18 @@ import { Obj } from '@dxos/echo';
 import { Operation } from '@dxos/operation';
 import { DeckCapabilities } from '@dxos/plugin-deck';
 import { ATTENDABLE_PATH_SEPARATOR, DeckOperation } from '@dxos/plugin-deck/types';
-import { CreateAtom, GraphBuilder } from '@dxos/plugin-graph';
+import { CreateAtom, GraphBuilder, type Node, NodeMatcher } from '@dxos/plugin-graph';
 import { Markdown } from '@dxos/plugin-markdown/types';
 import { Collection } from '@dxos/schema';
 
 import { meta } from '../../meta';
 import { PresenterOperation, type PresenterSettingsProps } from '../../types';
+
+/** Match nodes that can be presented (Collection or Document). */
+const whenPresentable = (node: Node.Node) =>
+  Option.orElse(NodeMatcher.whenEchoType(Collection.Collection)(node), () =>
+    NodeMatcher.whenEchoType(Markdown.Document)(node),
+  );
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
@@ -24,11 +30,7 @@ export default Capability.makeModule(
     const extensions = yield* GraphBuilder.createExtension({
       id: `${meta.id}/root`,
       // TODO(wittjosiah): This is a hack to work around presenter previously relying on "variant". Remove.
-      match: (node) => {
-        const isPresentable =
-          Obj.instanceOf(Collection.Collection, node.data) || Obj.instanceOf(Markdown.Document, node.data);
-        return isPresentable ? Option.some(node.data) : Option.none();
-      },
+      match: whenPresentable,
       connector: (object, get) => {
         const settingsStoreAtom = capabilities.atom(Common.Capability.SettingsStore);
         const [settingsStore] = get(settingsStoreAtom);
