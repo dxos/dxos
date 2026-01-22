@@ -12,10 +12,10 @@ import { Graph } from '@dxos/plugin-graph';
 
 import { AttentionCapabilities } from '../../types';
 
-export default Capability.makeModule((context) =>
-  Effect.sync(() => {
-    const { graph } = context.getCapability(Common.Capability.AppGraph);
-    const attention = context.getCapability(AttentionCapabilities.Attention);
+export default Capability.makeModule(
+  Effect.fnUntraced(function* () {
+    const { graph } = yield* Capability.get(Common.Capability.AppGraph);
+    const attention = yield* Capability.get(AttentionCapabilities.Attention);
 
     const unsubscribe = effect(() => {
       const id = Array.from(attention.current)[0];

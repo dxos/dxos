@@ -5,7 +5,6 @@
 import { useEffect, useMemo } from 'react';
 
 import * as Common from '../common';
-import { type OperationResolver } from '../plugin-operation';
 import { usePluginManager } from '../react';
 
 /**
@@ -24,18 +23,18 @@ import { usePluginManager } from '../react';
  * useOperationResolver(meta.id, scrollHandler);
  * ```
  */
-export const useOperationResolver = (module: string, resolver: OperationResolver.OperationResolver) => {
+export const useOperationResolver = (module: string, resolver: Common.Capability.OperationResolver) => {
   const manager = usePluginManager();
   // Wrap single resolver in array as the capability expects an array.
   const resolverArray = useMemo(() => [resolver], [resolver]);
 
   useEffect(() => {
-    manager.context.contributeCapability({
+    manager.capabilities.contribute({
       module,
       interface: Common.Capability.OperationResolver,
       implementation: resolverArray,
     });
 
-    return () => manager.context.removeCapability(Common.Capability.OperationResolver, resolverArray);
+    return () => manager.capabilities.remove(Common.Capability.OperationResolver, resolverArray);
   }, [module, resolverArray]);
 };

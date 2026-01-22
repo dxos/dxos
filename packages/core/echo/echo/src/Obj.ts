@@ -9,7 +9,7 @@ import { type ForeignKey } from '@dxos/echo-protocol';
 import { createJsonPath, getValue as getValue$ } from '@dxos/effect';
 import { assertArgument, invariant } from '@dxos/invariant';
 import { type DXN, ObjectId } from '@dxos/keys';
-import { getSnapshot as getSnapshot$ } from '@dxos/live-object';
+import { getSnapshot as getSnapshot$, subscribe as subscribe$ } from '@dxos/live-object';
 import { assumeType, deepMapValues } from '@dxos/util';
 
 import type * as Database from './Database';
@@ -133,6 +133,15 @@ export const make = <S extends Schema.Schema.AnyNoContext>(
 export const isObject = (obj: unknown): obj is Any => {
   assumeType<InternalObjectProps>(obj);
   return typeof obj === 'object' && obj !== null && obj[Entity.KindId] === Entity.Kind.Object;
+};
+
+/**
+ * Subscribe to object updates.
+ * The callback is called synchronously when the object is modified.
+ * @returns Unsubscribe function.
+ */
+export const subscribe = (obj: Entity.Unknown, callback: () => void): (() => void) => {
+  return subscribe$(obj, callback);
 };
 
 //
@@ -314,6 +323,7 @@ export const Meta: unique symbol = MetaId as any;
 // TODO(burdon): Narrow type.
 // TODO(dmaretskyi): Allow returning undefined.
 export const getMeta = (entity: AnyProperties): ObjectMeta => {
+  assertArgument(entity, 'entity', 'Should be an object.');
   const meta = getMeta$(entity);
   invariant(meta != null, 'Invalid object.');
   return meta;
@@ -326,6 +336,7 @@ export const getKeys: {
   (entity: Entity.Unknown, source: string): ForeignKey[];
   (source: string): (entity: Entity.Unknown) => ForeignKey[];
 } = Function.dual(2, (entity: Entity.Unknown, source?: string): ForeignKey[] => {
+  assertArgument(entity, 'entity', 'Should be an object.');
   const meta = getMeta(entity);
   invariant(meta != null, 'Invalid object.');
   return meta.keys.filter((key) => key.source === source);
@@ -337,6 +348,7 @@ export const getKeys: {
  * @param source
  */
 export const deleteKeys = (entity: Entity.Unknown, source: string) => {
+  assertArgument(entity, 'entity', 'Should be an object.');
   const meta = getMeta(entity);
   for (let i = 0; i < meta.keys.length; i++) {
     if (meta.keys[i].source === source) {

@@ -3,3 +3,4 @@
 //
 
 export { default as sync } from './sync';
+export { default as send } from './send';

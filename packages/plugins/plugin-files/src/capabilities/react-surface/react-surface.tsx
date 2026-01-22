@@ -13,9 +13,12 @@ import { meta } from '../../meta';
 import { FileCapabilities, type FilesSettingsProps, type LocalFile } from '../../types';
 import { isLocalFile } from '../../util';
 
-export default Capability.makeModule((context) =>
-  Effect.succeed(
-    Capability.contributes(Common.Capability.ReactSurface, [
+export default Capability.makeModule(
+  Effect.fnUntraced(function* () {
+    // Get context for lazy capability access in callbacks.
+    const capabilities = yield* Capability.Service;
+
+    return Capability.contributes(Common.Capability.ReactSurface, [
       Common.createSurface({
         id: `${meta.id}/article`,
         role: 'article',
@@ -36,8 +39,8 @@ export default Capability.makeModule((context) =>
         id: `${meta.id}/status`,
         role: 'status',
         filter: (data): data is any => {
-          const settings = context
-            .getCapability(Common.Capability.SettingsStore)
+          const settings = capabilities
+            .get(Common.Capability.SettingsStore)
             .getStore<FilesSettingsProps>(meta.id)!.value;
           return settings.autoExport;
         },
@@ -46,6 +49,6 @@ export default Capability.makeModule((context) =>
           return <ExportStatus running={state.exportRunning} lastExport={state.lastExport} />;
         },
       }),
-    ]),
-  ),
+    ]);
+  }),
 );

@@ -28,14 +28,17 @@ import { Meeting, MeetingCapabilities, MeetingOperation } from '../../types';
 // TODO(wittjosiah): Can we stop using protobuf for this?
 type MeetingPayload = buf.MessageInitShape<typeof MeetingPayloadSchema>;
 
-export default Capability.makeModule((context) =>
-  Effect.sync(() => {
-    const state = context.getCapability(MeetingCapabilities.State);
-    const _settings = context.getCapability(Common.Capability.SettingsStore).getStore<Meeting.Settings>(meta.id)!.value;
+export default Capability.makeModule(
+  Effect.fnUntraced(function* () {
+    // Get context for lazy capability access in callbacks.
+    const capabilities = yield* Capability.Service;
+
+    const state = capabilities.get(MeetingCapabilities.State);
+    const _settings = capabilities.get(Common.Capability.SettingsStore).getStore<Meeting.Settings>(meta.id)!.value;
 
     return Capability.contributes(ThreadCapabilities.CallExtension, {
       onJoin: async ({ channel }: { channel?: Channel.Channel }) => {
-        const client = context.getCapability(ClientCapabilities.Client);
+        const client = capabilities.get(ClientCapabilities.Client);
         const identity = client.halo.identity.get();
         invariant(identity);
 
@@ -52,9 +55,7 @@ export default Capability.makeModule((context) =>
         // }
 
         // TODO(burdon): The TranscriptionManager singleton is part of the state and should just be updated here.
-        state.transcriptionManager = await context
-          .getCapability(TranscriptionCapabilities.TranscriptionManager)({})
-          .open();
+        state.transcriptionManager = await capabilities.get(TranscriptionCapabilities.TranscriptionManager)({}).open();
       },
       onLeave: async () => {
         await state.transcriptionManager?.close();
@@ -62,7 +63,7 @@ export default Capability.makeModule((context) =>
         state.activeMeeting = undefined;
       },
       onCallStateUpdated: async (callState: CallState) => {
-        const { invokePromise } = context.getCapability(Common.Capability.OperationInvoker);
+        const { invokePromise } = capabilities.get(Common.Capability.OperationInvoker);
         const typename = Type.getTypename(Meeting.Meeting);
         const activity = typename ? callState.activities?.[typename] : undefined;
         if (!activity?.payload) {

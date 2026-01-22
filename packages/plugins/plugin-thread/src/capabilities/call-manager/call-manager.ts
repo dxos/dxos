@@ -10,9 +10,9 @@ import { ClientCapabilities } from '@dxos/plugin-client';
 import { CallManager } from '../../calls';
 import { ThreadCapabilities } from '../../types';
 
-export default Capability.makeModule((context: Capability.PluginContext) =>
-  Effect.gen(function* () {
-    const client = context.getCapability(ClientCapabilities.Client);
+export default Capability.makeModule(
+  Effect.fnUntraced(function* () {
+    const client = yield* Capability.get(ClientCapabilities.Client);
     const callManager = new CallManager(client);
     yield* Effect.tryPromise(() => callManager.open());
 

@@ -103,7 +103,10 @@ export function make<const Tags extends ReadonlyArray<Context.Tag<any, any>>>(
   type RequiredContext = TagsToContext<Tags>;
   const managedRuntimeAny = managedRuntime as ManagedRuntime.ManagedRuntime<any, any>;
 
-  // Cache validated runtime for async operations
+  // Cache for the validated runtime - once resolved, can be used synchronously.
+  let cachedRuntime: Runtime.Runtime<RequiredContext> | undefined;
+
+  // Cache validated runtime for async operations.
   let validatedRuntimePromise: Promise<Runtime.Runtime<RequiredContext>> | undefined;
 
   const getValidatedRuntimeAsync = async (): Promise<Runtime.Runtime<RequiredContext>> => {
@@ -119,7 +122,7 @@ export function make<const Tags extends ReadonlyArray<Context.Tag<any, any>>>(
     return validatedRuntimePromise;
   };
 
-  // Get validated runtime for sync operations
+  // Get validated runtime for sync operations.
   const getValidatedRuntime = (): Runtime.Runtime<RequiredContext> => {
     const validationExit = managedRuntimeAny.runSyncExit(
       Effect.gen(function* () {
@@ -169,9 +172,16 @@ export function make<const Tags extends ReadonlyArray<Context.Tag<any, any>>>(
       return Runtime.runFork(runtime)(effect);
     },
     runtimeEffect: Effect.gen(function* () {
+      // Return cached runtime if available.
+      if (cachedRuntime) {
+        return cachedRuntime;
+      }
       const rt = yield* managedRuntimeAny.runtimeEffect;
       yield* validateTags(rt.context, tags);
-      return rt as Runtime.Runtime<RequiredContext>;
+      const runtime = rt as Runtime.Runtime<RequiredContext>;
+      // Cache for future sync calls.
+      cachedRuntime = runtime;
+      return runtime;
     }).pipe(
       Effect.catchAll(() =>
         // This should never happen since validateTags uses Effect.die

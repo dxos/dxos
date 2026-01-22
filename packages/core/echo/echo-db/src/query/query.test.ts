@@ -600,6 +600,47 @@ describe('Query', () => {
       expect(objects).toMatchObject([{ name: 'Contacts' }]);
     });
 
+    test('traverse inbound references with only type filter (any property)', async () => {
+      const objects = await db
+        .query(Query.select(Filter.type(TestSchema.Person, { name: 'Alice' })).referencedBy(TestSchema.Task))
+        .run();
+
+      // Should return Task 1 and Task 2 which reference Alice via assignee property.
+      expect(objects.sort((a, b) => a.title!.localeCompare(b.title!))).toMatchObject([
+        { title: 'Task 1' },
+        { title: 'Task 2' },
+      ]);
+    });
+
+    test('traverse inbound references with no filter (any type, any property)', async () => {
+      // Add an expando that references person1.
+      db.add(
+        Obj.make(Type.Expando, {
+          name: 'Note about Alice',
+          subject: Ref.make(person1),
+        }),
+      );
+      await db.flush({ indexes: true });
+
+      const objects = await db
+        .query(Query.select(Filter.type(TestSchema.Person, { name: 'Alice' })).referencedBy())
+        .run();
+
+      // Should return all objects that reference Alice via regular references: Task 1, Task 2, and the Note.
+      // Note: Relations (like HasManager) are not included because they use a different storage mechanism.
+      expect(objects).toHaveLength(3);
+      const titles = objects
+        .filter((o) => o.title)
+        .map((o) => o.title)
+        .sort();
+      expect(titles).toEqual(['Task 1', 'Task 2']);
+      const names = objects
+        .filter((o) => o.name)
+        .map((o) => o.name)
+        .sort();
+      expect(names).toEqual(['Note about Alice']);
+    });
+
     test('traverse query started from id', async () => {
       const objects = await db
         .query(Query.select(Filter.id(person2.id)).sourceOf(TestSchema.HasManager).target())
@@ -747,6 +788,64 @@ describe('Query', () => {
       expect(objects.map((o) => o.title).sort()).toEqual(
         ['JavaScript Best Practices', 'Programming with JavaScript'].sort(),
       );
+    });
+
+    test('full-text search with partial word matching (trigram)', async () => {
+      const { db } = await builder.createDatabase({ indexing: { fullText: true } });
+
+      db.add(Obj.make(Type.Expando, { title: 'Introduction to TypeScript' }));
+      db.add(Obj.make(Type.Expando, { title: 'Getting Started with React' }));
+      db.add(Obj.make(Type.Expando, { title: 'Advanced Python Programming' }));
+      await db.flush({ indexes: true });
+
+      // Partial word "Script" should match "TypeScript".
+      {
+        const objects = await db.query(Query.select(Filter.text('Script', { type: 'full-text' }))).run();
+        expect(objects).toHaveLength(1);
+        expect(objects[0].title).toEqual('Introduction to TypeScript');
+      }
+
+      // Partial word "Prog" should match "Programming".
+      {
+        const objects = await db.query(Query.select(Filter.text('Prog', { type: 'full-text' }))).run();
+        expect(objects).toHaveLength(1);
+        expect(objects[0].title).toEqual('Advanced Python Programming');
+      }
+
+      // Substring in the middle "Pytho" should match "Python".
+      {
+        const objects = await db.query(Query.select(Filter.text('ytho', { type: 'full-text' }))).run();
+        expect(objects).toHaveLength(1);
+        expect(objects[0].title).toEqual('Advanced Python Programming');
+      }
+
+      // Single character query uses LIKE fallback and matches all documents
+      {
+        const objects = await db.query(Query.select(Filter.text('I', { type: 'full-text' }))).run();
+        expect(objects).toHaveLength(3);
+      }
+    });
+
+    test('full-text search with wrong word order', async () => {
+      const { db } = await builder.createDatabase({ indexing: { fullText: true } });
+
+      db.add(Obj.make(Type.Expando, { title: 'Python Programming Guide' }));
+      db.add(Obj.make(Type.Expando, { title: 'JavaScript Basics' }));
+      await db.flush({ indexes: true });
+
+      // Words in different order should still match.
+      {
+        const objects = await db.query(Query.select(Filter.text('Programming Python', { type: 'full-text' }))).run();
+        expect(objects).toHaveLength(1);
+        expect(objects[0].title).toEqual('Python Programming Guide');
+      }
+
+      // Another wrong order example.
+      {
+        const objects = await db.query(Query.select(Filter.text('Guide Python', { type: 'full-text' }))).run();
+        expect(objects).toHaveLength(1);
+        expect(objects[0].title).toEqual('Python Programming Guide');
+      }
     });
 
     test('full-text search after content update', async () => {

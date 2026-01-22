@@ -41,7 +41,7 @@ export interface IndexDataSource {
   readonly sourceName: string; // e.g. queue, automerge, etc.
 
   getChangedObjects(
-    cursors: IndexCursor[],
+    cursors: DataSourceCursor[],
     opts?: { limit?: number },
   ): Effect.Effect<{ objects: IndexerObject[]; cursors: DataSourceCursor[] }>;
 }

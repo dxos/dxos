@@ -55,8 +55,8 @@ export interface Query<T> {
 
   /**
    * Find objects referencing this object.
-   * @param target - Schema of the referencing object.
-   * @param key - Property path inside the referencing object that is a reference.
+   * @param target - Schema of the referencing object. If not provided, matches any type.
+   * @param key - Property path inside the referencing object that is a reference. If not provided, matches any property.
    * @returns Query for the referencing objects.
    */
   // TODO(dmaretskyi): any way to enforce `Ref.Target<Schema.Schema.Type<S>[key]> == T`?
@@ -65,6 +65,8 @@ export interface Query<T> {
     target: S | string,
     key: RefPropKey<Schema.Schema.Type<S>>,
   ): Query<Schema.Schema.Type<S>>;
+  referencedBy<S extends Schema.Schema.All>(target: S | string): Query<Schema.Schema.Type<S>>;
+  referencedBy(): Query<any>;
 
   /**
    * Find relations where this object is the source.
@@ -149,13 +151,13 @@ class QueryClass implements Any {
     });
   }
 
-  referencedBy(target: Schema.Schema.All | string, key: string): Any {
-    const dxn = getTypeDXNFromSpecifier(target);
+  referencedBy(target?: Schema.Schema.All | string, key?: string): Any {
+    const dxn = target !== undefined ? getTypeDXNFromSpecifier(target) : null;
     return new QueryClass({
       type: 'incoming-references',
       anchor: this.ast,
-      property: key,
-      typename: dxn.toString(),
+      property: key ?? null,
+      typename: dxn?.toString() ?? null,
     });
   }
 

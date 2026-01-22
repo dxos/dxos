@@ -37,7 +37,8 @@ export const Banner = ({ node }: BannerProps) => {
     // TODO(burdon): Fixed or not?
     <header
       className={mx(
-        '_fixed flex items-center gap-2 pli-2 block-start-0 inset-inline-0 bs-[--dx-mobile-topbar-content-height,48px] bg-baseSurface border-be border-separator',
+        '_fixed flex items-center gap-2 pli-2 block-start-0 inset-inline-0 bg-baseSurface border-be border-separator',
+        'pbs-[env(safe-area-inset-top)] bs-[calc(env(safe-area-inset-top)+var(--dx-mobile-topbar-content-height,48px))]',
         'grid grid-cols-[min-content_1fr_min-content]',
         surfaceZIndex({ level: 'menu' }),
       )}

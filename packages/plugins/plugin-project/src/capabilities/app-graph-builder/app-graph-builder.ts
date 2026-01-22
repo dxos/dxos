@@ -11,15 +11,15 @@ import { Project } from '@dxos/types';
 
 import { meta } from '../../meta';
 
-export default Capability.makeModule(() =>
-  Effect.sync(() => {
-    return Capability.contributes(Common.Capability.AppGraphBuilder, [
+export default Capability.makeModule(
+  Effect.fnUntraced(function* () {
+    const extensions = yield* Effect.all([
       GraphBuilder.createTypeExtension({
         id: `${meta.id}/triggers`,
         type: Project.Project,
         connector: (project, get) => {
           const nodeId = project.id;
-          return [
+          return Effect.succeed([
             {
               id: [nodeId, 'invocations'].join(ATTENDABLE_PATH_SEPARATOR),
               type: PLANK_COMPANION_TYPE,
@@ -40,9 +40,11 @@ export default Capability.makeModule(() =>
                 disposition: 'hidden',
               },
             },
-          ];
+          ]);
         },
       }),
     ]);
+
+    return Capability.contributes(Common.Capability.AppGraphBuilder, extensions);
   }),
 );

@@ -3,7 +3,6 @@
 //
 
 import * as Reactivity from '@effect/experimental/Reactivity';
-import * as SqliteClient from '@effect/sql-sqlite-wasm/SqliteClient';
 import * as Layer from 'effect/Layer';
 import * as ManagedRuntime from 'effect/ManagedRuntime';
 
@@ -20,6 +19,7 @@ import { MemorySignalManager, MemorySignalManagerContext, type SignalManager } f
 import { MemoryTransportFactory, SwarmNetworkManager } from '@dxos/network-manager';
 import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 import { type Storage, StorageType, createStorage } from '@dxos/random-access-storage';
+import * as SqliteClient from '@dxos/sql-sqlite/SqliteClient';
 import { BlobStore } from '@dxos/teleport-extension-object-sync';
 
 import { InvitationsHandler, InvitationsManager, SpaceInvitationProtocol } from '../invitations';

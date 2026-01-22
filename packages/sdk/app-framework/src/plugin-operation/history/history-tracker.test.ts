@@ -8,8 +8,9 @@ import * as Fiber from 'effect/Fiber';
 import * as TestClock from 'effect/TestClock';
 import { describe, expect } from 'vitest';
 
+import { OperationInvoker, OperationResolver } from '@dxos/operation';
+
 import { UndoOperation } from '../../common';
-import { OperationInvoker, OperationResolver } from '../invoker';
 import {
   Compute,
   HalveCompute,

@@ -4,10 +4,12 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capability, Common, FollowupScheduler, OperationResolver, UndoMapping } from '@dxos/app-framework';
+import { Capability, Common, UndoMapping } from '@dxos/app-framework';
 import { sleep } from '@dxos/async';
 import { Obj, Relation, Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
+import { OperationResolver } from '@dxos/operation';
+import { Operation } from '@dxos/operation';
 import { ATTENDABLE_PATH_SEPARATOR, DeckOperation } from '@dxos/plugin-deck/types';
 import { ObservabilityOperation } from '@dxos/plugin-observability/types';
 import { SpaceOperation } from '@dxos/plugin-space/types';
@@ -18,86 +20,84 @@ import { AnchoredTo, Message, Thread } from '@dxos/types';
 import { meta } from '../../meta';
 import { Channel, ThreadCapabilities, ThreadOperation } from '../../types';
 
-export default Capability.makeModule((context) =>
-  Effect.succeed([
-    Capability.contributes(Common.Capability.UndoMapping, [
-      UndoMapping.make({
-        operation: ThreadOperation.Delete,
-        inverse: ThreadOperation.Restore,
-        deriveContext: (_input, output) => {
-          // Return undefined if not undoable (e.g., draft deletion or no db).
-          if (!output.thread || !output.anchor) {
-            return;
-          }
-          return {
-            thread: output.thread,
-            anchor: output.anchor,
-          };
-        },
-        message: ['thread deleted label', { ns: meta.id }],
-      }),
-      UndoMapping.make({
-        operation: ThreadOperation.DeleteMessage,
-        inverse: ThreadOperation.RestoreMessage,
-        deriveContext: (input, output) => {
-          // Return undefined if not undoable (e.g., message not found or thread deleted).
-          if (!output.message || output.messageIndex === undefined) {
-            return;
-          }
-          return {
-            anchor: input.anchor,
-            message: output.message,
-            messageIndex: output.messageIndex,
-          };
-        },
-        message: ['message deleted label', { ns: meta.id }],
-      }),
-    ]),
-    Capability.contributes(Common.Capability.OperationResolver, [
-      //
-      // CreateChannel
-      //
-      OperationResolver.make({
-        operation: ThreadOperation.CreateChannel,
-        handler: (input) =>
-          Effect.sync(() => ({
-            object: Channel.make({ name: input.name }),
-          })),
-      }),
+export default Capability.makeModule(
+  Effect.fnUntraced(function* () {
+    return [
+      Capability.contributes(Common.Capability.UndoMapping, [
+        UndoMapping.make({
+          operation: ThreadOperation.Delete,
+          inverse: ThreadOperation.Restore,
+          deriveContext: (_input, output) => {
+            // Return undefined if not undoable (e.g., draft deletion or no db).
+            if (!output.thread || !output.anchor) {
+              return;
+            }
+            return {
+              thread: output.thread,
+              anchor: output.anchor,
+            };
+          },
+          message: ['thread deleted label', { ns: meta.id }],
+        }),
+        UndoMapping.make({
+          operation: ThreadOperation.DeleteMessage,
+          inverse: ThreadOperation.RestoreMessage,
+          deriveContext: (input, output) => {
+            // Return undefined if not undoable (e.g., message not found or thread deleted).
+            if (!output.message || output.messageIndex === undefined) {
+              return;
+            }
+            return {
+              anchor: input.anchor,
+              message: output.message,
+              messageIndex: output.messageIndex,
+            };
+          },
+          message: ['message deleted label', { ns: meta.id }],
+        }),
+      ]),
+      Capability.contributes(Common.Capability.OperationResolver, [
+        //
+        // CreateChannel
+        //
+        OperationResolver.make({
+          operation: ThreadOperation.CreateChannel,
+          handler: (input) =>
+            Effect.sync(() => ({
+              object: Channel.make({ name: input.name }),
+            })),
+        }),
 
-      //
-      // CreateChannelThread
-      //
-      OperationResolver.make({
-        operation: ThreadOperation.CreateChannelThread,
-        handler: (input) =>
-          Effect.sync(() => {
-            const thread = Thread.make({ status: 'active' });
-            input.channel.threads.push(Ref.make(thread));
-            return { object: thread };
-          }),
-      }),
+        //
+        // CreateChannelThread
+        //
+        OperationResolver.make({
+          operation: ThreadOperation.CreateChannelThread,
+          handler: (input) =>
+            Effect.sync(() => {
+              const thread = Thread.make({ status: 'active' });
+              input.channel.threads.push(Ref.make(thread));
+              return { object: thread };
+            }),
+        }),
 
-      //
-      // Select
-      //
-      OperationResolver.make({
-        operation: ThreadOperation.Select,
-        handler: (input) =>
-          Effect.sync(() => {
-            const { state } = context.getCapability(ThreadCapabilities.MutableState);
+        //
+        // Select
+        //
+        OperationResolver.make({
+          operation: ThreadOperation.Select,
+          handler: Effect.fnUntraced(function* (input) {
+            const { state } = yield* Capability.get(ThreadCapabilities.MutableState);
             state.current = input.current;
           }),
-      }),
+        }),
 
-      //
-      // ToggleResolved
-      //
-      OperationResolver.make({
-        operation: ThreadOperation.ToggleResolved,
-        handler: (input) =>
-          Effect.gen(function* () {
-            const scheduler = yield* FollowupScheduler.Service;
+        //
+        // ToggleResolved
+        //
+        OperationResolver.make({
+          operation: ThreadOperation.ToggleResolved,
+          handler: Effect.fnUntraced(function* (input) {
             const thread = input.thread;
 
             if (thread.status === 'active' || thread.status === undefined) {
@@ -109,7 +109,7 @@ export default Capability.makeModule((context) =>
             const db = Obj.getDatabase(thread);
             invariant(db, 'Database not found');
 
-            yield* scheduler.schedule(ObservabilityOperation.SendEvent, {
+            yield* Operation.schedule(ObservabilityOperation.SendEvent, {
               name: 'threads.toggle-resolved',
               properties: {
                 spaceId: db.spaceId,
@@ -117,40 +117,36 @@ export default Capability.makeModule((context) =>
               },
             });
           }),
-      }),
+        }),
 
-      //
-      // OnCreateSpace
-      //
-      OperationResolver.make({
-        operation: ThreadOperation.OnCreateSpace,
-        handler: ({ space, isDefault, rootCollection }) =>
-          Effect.gen(function* () {
+        //
+        // OnCreateSpace
+        //
+        OperationResolver.make({
+          operation: ThreadOperation.OnCreateSpace,
+          handler: Effect.fnUntraced(function* ({ space, isDefault, rootCollection }) {
             if (isDefault) {
               return;
             }
 
-            const { invoke } = context.getCapability(Common.Capability.OperationInvoker);
             const collection = Collection.makeManaged({ key: Type.getTypename(Channel.Channel) });
             rootCollection.objects.push(Ref.make(collection));
 
-            const { object: channel } = yield* invoke(ThreadOperation.CreateChannel, {
+            const { object: channel } = yield* Operation.invoke(ThreadOperation.CreateChannel, {
               name: 'General',
               spaceId: space.id,
             });
             space.db.add(channel);
           }),
-      }),
+        }),
 
-      //
-      // Create
-      //
-      OperationResolver.make({
-        operation: ThreadOperation.Create,
-        handler: ({ name, anchor: _anchor, subject }) =>
-          Effect.gen(function* () {
-            const { state } = context.getCapability(ThreadCapabilities.MutableState);
-            const { invoke } = context.getCapability(Common.Capability.OperationInvoker);
+        //
+        // Create
+        //
+        OperationResolver.make({
+          operation: ThreadOperation.Create,
+          handler: Effect.fnUntraced(function* ({ name, anchor: _anchor, subject }) {
+            const { state } = yield* Capability.get(ThreadCapabilities.MutableState);
             const subjectId = Obj.getDXN(subject).toString();
             const thread = Thread.make({ name });
             const anchor = Relation.make(AnchoredTo.AnchoredTo, {
@@ -167,29 +163,27 @@ export default Capability.makeModule((context) =>
             }
 
             // Follow-up operations.
-            yield* invoke(ThreadOperation.Select, { current: Obj.getDXN(thread).toString() });
-            yield* invoke(DeckOperation.ChangeCompanion, {
+            yield* Operation.invoke(ThreadOperation.Select, { current: Obj.getDXN(thread).toString() });
+            yield* Operation.invoke(DeckOperation.ChangeCompanion, {
               primary: subjectId,
               companion: `${subjectId}${ATTENDABLE_PATH_SEPARATOR}comments`,
             });
           }),
-      }),
+        }),
 
-      //
-      // Delete
-      //
-      OperationResolver.make({
-        operation: ThreadOperation.Delete,
-        handler: ({ subject, anchor, thread: _thread }) =>
-          Effect.gen(function* () {
+        //
+        // Delete
+        //
+        OperationResolver.make({
+          operation: ThreadOperation.Delete,
+          handler: Effect.fnUntraced(function* ({ subject, anchor, thread: _thread }) {
+            const { state } = yield* Capability.get(ThreadCapabilities.MutableState);
             const thread = _thread ?? (Relation.getSource(anchor) as Thread.Thread);
-            const { state } = context.getCapability(ThreadCapabilities.MutableState);
-            const scheduler = yield* FollowupScheduler.Service;
             const subjectId = Obj.getDXN(subject).toString();
             const draft = state.drafts[subjectId];
             if (draft) {
               // Check if we're deleting a draft; if so, remove it.
-              const index = draft.findIndex((a) => a.id === anchor.id);
+              const index = draft.findIndex((a: { id: string }) => a.id === anchor.id);
               if (index !== -1) {
                 draft.splice(index, 1);
                 // Draft deletion is not undoable.
@@ -208,7 +202,7 @@ export default Capability.makeModule((context) =>
             db.remove(thread);
 
             // Schedule analytics event as followup (doesn't block return).
-            yield* scheduler.schedule(ObservabilityOperation.SendEvent, {
+            yield* Operation.schedule(ObservabilityOperation.SendEvent, {
               name: 'threads.delete',
               properties: {
                 spaceId: db.spaceId,
@@ -219,19 +213,16 @@ export default Capability.makeModule((context) =>
             // Return data needed for undo.
             return { thread, anchor };
           }),
-      }),
+        }),
 
-      //
-      // AddMessage
-      //
-      OperationResolver.make({
-        operation: ThreadOperation.AddMessage,
-        handler: ({ anchor, subject, sender, text }) =>
-          Effect.gen(function* () {
+        //
+        // AddMessage
+        //
+        OperationResolver.make({
+          operation: ThreadOperation.AddMessage,
+          handler: Effect.fnUntraced(function* ({ anchor, subject, sender, text }) {
+            const { state } = yield* Capability.get(ThreadCapabilities.MutableState);
             const thread = Relation.getSource(anchor) as Thread.Thread;
-            const { state } = context.getCapability(ThreadCapabilities.MutableState);
-            const { invoke } = context.getCapability(Common.Capability.OperationInvoker);
-            const scheduler = yield* FollowupScheduler.Service;
             const subjectId = Obj.getDXN(subject).toString();
             const db = Obj.getDatabase(subject);
             invariant(db, 'Database not found');
@@ -243,20 +234,20 @@ export default Capability.makeModule((context) =>
             });
             thread.messages.push(Ref.make(message));
 
-            const draft = state.drafts[subjectId]?.find((a) => a.id === anchor.id);
+            const draft = state.drafts[subjectId]?.find((a: { id: string }) => a.id === anchor.id);
             if (draft) {
               // Move draft to document.
               thread.status = 'active';
-              state.drafts[subjectId] = state.drafts[subjectId]?.filter((a) => a.id !== anchor.id);
-              yield* invoke(SpaceOperation.AddObject, { object: thread, target: db, hidden: true });
-              yield* invoke(SpaceOperation.AddRelation, {
+              state.drafts[subjectId] = state.drafts[subjectId]?.filter((a: { id: string }) => a.id !== anchor.id);
+              yield* Operation.invoke(SpaceOperation.AddObject, { object: thread, target: db, hidden: true });
+              yield* Operation.invoke(SpaceOperation.AddRelation, {
                 db,
                 schema: AnchoredTo.AnchoredTo,
                 source: thread,
                 target: subject,
                 fields: { anchor: draft.anchor },
               });
-              yield* scheduler.schedule(ObservabilityOperation.SendEvent, {
+              yield* Operation.schedule(ObservabilityOperation.SendEvent, {
                 name: 'threads.create',
                 properties: {
                   spaceId: db.spaceId,
@@ -265,7 +256,7 @@ export default Capability.makeModule((context) =>
               });
             }
 
-            yield* scheduler.schedule(ObservabilityOperation.SendEvent, {
+            yield* Operation.schedule(ObservabilityOperation.SendEvent, {
               name: 'threads.message.add',
               properties: {
                 spaceId: db.spaceId,
@@ -276,18 +267,15 @@ export default Capability.makeModule((context) =>
               },
             });
           }),
-      }),
+        }),
 
-      //
-      // DeleteMessage
-      //
-      OperationResolver.make({
-        operation: ThreadOperation.DeleteMessage,
-        handler: ({ subject, anchor, messageId }) =>
-          Effect.gen(function* () {
+        //
+        // DeleteMessage
+        //
+        OperationResolver.make({
+          operation: ThreadOperation.DeleteMessage,
+          handler: Effect.fnUntraced(function* ({ subject, anchor, messageId }) {
             const thread = Relation.getSource(anchor) as Thread.Thread;
-            const { invoke } = context.getCapability(Common.Capability.OperationInvoker);
-            const scheduler = yield* FollowupScheduler.Service;
             const db = Obj.getDatabase(subject);
             invariant(db, 'Database not found');
 
@@ -299,13 +287,13 @@ export default Capability.makeModule((context) =>
 
             if (msgIndex === 0 && thread.messages.length === 1) {
               // TODO(wittjosiah): This doesn't support restoring the thread.
-              yield* invoke(ThreadOperation.Delete, { subject, anchor });
+              yield* Operation.invoke(ThreadOperation.Delete, { subject, anchor });
               return { messageIndex: -1 };
             }
 
             thread.messages.splice(msgIndex, 1);
 
-            yield* scheduler.schedule(ObservabilityOperation.SendEvent, {
+            yield* Operation.schedule(ObservabilityOperation.SendEvent, {
               name: 'threads.message.delete',
               properties: {
                 spaceId: db.spaceId,
@@ -318,15 +306,14 @@ export default Capability.makeModule((context) =>
             // Return data needed for undo.
             return { message: msg, messageIndex: msgIndex };
           }),
-      }),
+        }),
 
-      //
-      // Restore (inverse of Delete)
-      //
-      OperationResolver.make({
-        operation: ThreadOperation.Restore,
-        handler: ({ thread, anchor }) =>
-          Effect.gen(function* () {
+        //
+        // Restore (inverse of Delete)
+        //
+        OperationResolver.make({
+          operation: ThreadOperation.Restore,
+          handler: Effect.fnUntraced(function* ({ thread, anchor }) {
             const db = Obj.getDatabase(thread);
             if (!db) {
               return;
@@ -338,8 +325,7 @@ export default Capability.makeModule((context) =>
             db.add(anchor);
 
             // Schedule analytics event as followup (doesn't block return).
-            const scheduler = yield* FollowupScheduler.Service;
-            yield* scheduler.schedule(ObservabilityOperation.SendEvent, {
+            yield* Operation.schedule(ObservabilityOperation.SendEvent, {
               name: 'threads.undo-delete',
               properties: {
                 spaceId: db.spaceId,
@@ -347,23 +333,21 @@ export default Capability.makeModule((context) =>
               },
             });
           }),
-      }),
+        }),
 
-      //
-      // RestoreMessage (inverse of DeleteMessage)
-      //
-      OperationResolver.make({
-        operation: ThreadOperation.RestoreMessage,
-        handler: ({ anchor, message, messageIndex }) =>
-          Effect.gen(function* () {
+        //
+        // RestoreMessage (inverse of DeleteMessage)
+        //
+        OperationResolver.make({
+          operation: ThreadOperation.RestoreMessage,
+          handler: Effect.fnUntraced(function* ({ anchor, message, messageIndex }) {
             const thread = Relation.getSource(anchor) as Thread.Thread;
-            const scheduler = yield* FollowupScheduler.Service;
             const db = Obj.getDatabase(thread);
             invariant(db, 'Database not found');
 
             thread.messages.splice(messageIndex, 0, Ref.make(message));
 
-            yield* scheduler.schedule(ObservabilityOperation.SendEvent, {
+            yield* Operation.schedule(ObservabilityOperation.SendEvent, {
               name: 'threads.message.undo-delete',
               properties: {
                 spaceId: db.spaceId,
@@ -372,7 +356,8 @@ export default Capability.makeModule((context) =>
               },
             });
           }),
-      }),
-    ]),
-  ]),
+        }),
+      ]),
+    ];
+  }),
 );

@@ -10,7 +10,7 @@ import React, { forwardRef, memo, useCallback, useEffect, useMemo } from 'react'
 import { Common } from '@dxos/app-framework';
 import { Surface, useAppGraph, useCapability, useLayout, useOperationInvoker } from '@dxos/app-framework/react';
 import { PLANK_COMPANION_TYPE } from '@dxos/plugin-deck/types';
-import { Graph, Node } from '@dxos/plugin-graph';
+import { Graph, Node, useActionRunner } from '@dxos/plugin-graph';
 import { useConnections, useActions as useGraphActions } from '@dxos/plugin-graph';
 import { useMediaQuery, useSidebars } from '@dxos/react-ui';
 import { type TreeData, type TreeItemDataProps, isTreeData } from '@dxos/react-ui-list';
@@ -95,7 +95,8 @@ export type NavTreeContainerProps = {
 export const NavTreeContainer$ = forwardRef<HTMLDivElement, NavTreeContainerProps>(
   ({ tab, popoverAnchorId, topbar }, forwardedRef) => {
     const [isLg] = useMediaQuery('lg');
-    const { invokePromise, invokeSync } = useOperationInvoker();
+    const { invokeSync, invokePromise } = useOperationInvoker();
+    const runAction = useActionRunner();
     const { graph } = useAppGraph();
     const { isOpen, isCurrent, isAlternateTree, setItem } = useCapability(NavTreeCapabilities.State);
     const layout = useLayout();
@@ -190,7 +191,9 @@ export const NavTreeContainer$ = forwardRef<HTMLDivElement, NavTreeContainerProp
 
         if (Node.isAction(node)) {
           const [parent] = Graph.getConnections(graph, node.id, 'inbound');
-          void (parent && node.data({ parent, caller: NAV_TREE_ITEM }));
+          if (parent) {
+            void runAction(node, { parent, caller: NAV_TREE_ITEM });
+          }
           return;
         }
 
@@ -207,14 +210,14 @@ export const NavTreeContainer$ = forwardRef<HTMLDivElement, NavTreeContainerProp
           (action) => action.properties?.disposition === 'default',
         );
         if (Node.isAction(defaultAction)) {
-          void (defaultAction.data as () => void)();
+          void runAction(defaultAction);
         }
 
         if (!isLg) {
           invokeSync(Common.LayoutOperation.UpdateSidebar, { state: 'closed' });
         }
       },
-      [graph, invokePromise, invokeSync, isCurrent, isLg],
+      [graph, invokeSync, invokePromise, isCurrent, isLg, runAction],
     );
 
     const handleBack = useCallback(() => invokeSync(Common.LayoutOperation.RevertWorkspace), [invokeSync]);

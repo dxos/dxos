@@ -7,3 +7,7 @@ tasks:
   bundle:
     deps:
       - shell:bundle
+
+  serve:
+    deps:
+      - shell:bundle

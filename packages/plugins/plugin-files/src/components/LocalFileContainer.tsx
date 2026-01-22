@@ -6,7 +6,7 @@ import * as Option from 'effect/Option';
 import React, { type FC, useMemo } from 'react';
 
 import { Surface, useAppGraph } from '@dxos/app-framework/react';
-import { Graph } from '@dxos/plugin-graph';
+import { Graph, Node, useActionRunner } from '@dxos/plugin-graph';
 import { Button, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { StackItem } from '@dxos/react-ui-stack';
 import { descriptionMessage, mx } from '@dxos/ui-theme';
@@ -35,6 +35,7 @@ const LocalFileContainer: FC<{ file: LocalFile }> = ({ file }) => {
 const PermissionsGate = ({ entity }: { entity: LocalEntity }) => {
   const { t } = useTranslation(meta.id);
   const { graph } = useAppGraph();
+  const runAction = useActionRunner();
   const node = Graph.getNode(graph, entity.id).pipe(Option.getOrNull);
   const action =
     node &&
@@ -47,8 +48,10 @@ const PermissionsGate = ({ entity }: { entity: LocalEntity }) => {
       <div role='none' className='overflow-auto p-8 grid place-items-center'>
         <p role='alert' className={mx(descriptionMessage, 'break-words rounded-md p-8')}>
           {t('missing file permissions')}
-          {action && node && (
-            <Button onClick={() => action.data({ node })}>{toLocalizedString(action.properties.label, t)}</Button>
+          {action && node && Node.isAction(action) && (
+            <Button onClick={() => void runAction(action, { parent: node })}>
+              {toLocalizedString(action.properties.label, t)}
+            </Button>
           )}
         </p>
       </div>

@@ -326,7 +326,7 @@ export class QueryPlanner {
         traversal: {
           _tag: 'ReferenceTraversal',
           direction: 'incoming',
-          property: query.property,
+          property: query.property ?? null,
         },
       },
       ...this._generateDeletedHandlingSteps(context),

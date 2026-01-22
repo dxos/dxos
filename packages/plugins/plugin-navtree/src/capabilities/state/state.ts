@@ -29,9 +29,9 @@ const getInitialState = () => {
   } catch {}
 };
 
-export default Capability.makeModule((context) =>
-  Effect.sync(() => {
-    const layout = context.getCapability(Common.Capability.Layout);
+export default Capability.makeModule(
+  Effect.fnUntraced(function* () {
+    const layout = yield* Capability.get(Common.Capability.Layout);
 
     // TODO(wittjosiah): This currently needs to be not a Live at the root.
     //   If it is a Live then React errors when initializing new paths because of state change during render.

@@ -126,6 +126,10 @@ export const objectFromJSON = async (
     const meta = await ObjectMetaSchema.pipe(Schema.decodeUnknownPromise)(jsonData[ATTR_META]);
     invariant(Array.isArray(meta.keys));
     defineHiddenProperty(obj, MetaId, meta);
+  } else {
+    defineHiddenProperty(obj, MetaId, {
+      keys: [],
+    });
   }
 
   if (jsonData[ATTR_PARENT]) {

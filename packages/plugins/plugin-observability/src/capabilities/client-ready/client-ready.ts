@@ -11,17 +11,17 @@ import { meta } from '../../meta';
 import { ClientCapability, ObservabilityCapabilities, ObservabilityOperation } from '../../types';
 
 type ClientReadyOptions = {
-  context: Capability.PluginContext;
   namespace: string;
   observability: Observability;
 };
 
-export default Capability.makeModule(({ context, namespace, observability }: ClientReadyOptions) =>
-  Effect.gen(function* () {
-    const manager = context.getCapability(Common.Capability.PluginManager);
-    const { invokePromise } = context.getCapability(Common.Capability.OperationInvoker);
-    const state = context.getCapability(ObservabilityCapabilities.State);
-    const client = context.getCapability(ClientCapability);
+export default Capability.makeModule(
+  Effect.fnUntraced(function* (props?: ClientReadyOptions) {
+    const { namespace, observability } = props!;
+    const manager = yield* Capability.get(Common.Capability.PluginManager);
+    const { invokePromise } = yield* Capability.get(Common.Capability.OperationInvoker);
+    const state = yield* Capability.get(ObservabilityCapabilities.State);
+    const client = yield* Capability.get(ClientCapability);
 
     const sendPrivacyNotice = async () => {
       const environment = client?.config?.values.runtime?.app?.env?.DX_ENVIRONMENT;

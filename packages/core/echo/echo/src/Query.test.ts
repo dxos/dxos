@@ -85,6 +85,34 @@ describe('query api', () => {
       log('TasksForFred', { ast: TasksForFred.ast });
     });
 
+    test('get all objects referencing Fred (any type, specified property)', () => {
+      const fred = Obj.make(TestSchema.Person, { name: 'Fred' });
+      const ObjectsReferencingFred = Query.select(Filter.type(TestSchema.Person, { id: fred.id })).referencedBy(
+        TestSchema.Task,
+      );
+
+      log('query', { ast: ObjectsReferencingFred.ast });
+      Schema.validateSync(QueryAST.Query)(ObjectsReferencingFred.ast);
+      expect(ObjectsReferencingFred.ast).toMatchObject({
+        type: 'incoming-references',
+        property: null,
+        typename: 'dxn:type:example.com/type/Task:0.1.0',
+      });
+    });
+
+    test('get all objects referencing Fred (any type, any property)', () => {
+      const fred = Obj.make(TestSchema.Person, { name: 'Fred' });
+      const AllBacklinks = Query.select(Filter.type(TestSchema.Person, { id: fred.id })).referencedBy();
+
+      log('query', { ast: AllBacklinks.ast });
+      Schema.validateSync(QueryAST.Query)(AllBacklinks.ast);
+      expect(AllBacklinks.ast).toMatchObject({
+        type: 'incoming-references',
+        property: null,
+        typename: null,
+      });
+    });
+
     test('get all tasks for employees of Cyberdyne', () => {
       const TasksForEmployeesOfCyberdyne = Query.select(Filter.type(TestSchema.Organization, { name: 'Cyberdyne' }))
         .targetOf(TestSchema.EmployedBy)

@@ -5,6 +5,9 @@
   ],
   "references": [
     {
+      "path": "../../common/log"
+    },
+    {
       "path": "../../common/storybook-utils"
     },
     {
@@ -18,6 +21,9 @@
     },
     {
       "path": "../../core/echo/live-object"
+    },
+    {
+      "path": "../../core/operation"
     },
     {
       "path": "../../sdk/app-framework"

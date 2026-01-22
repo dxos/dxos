@@ -36,7 +36,8 @@
       },
       "dangerousDisableAssetCspModification": true
     },
-    "withGlobalTauri": true
+    "withGlobalTauri": true,
+    "macOSPrivateApi": true
   },
   "bundle": {
     "active": true,

@@ -151,8 +151,9 @@ export namespace QueryPlan {
 
     /**
      * Property path where the reference is located.
+     * If null, matches references from any property (only valid for incoming direction).
      */
-    property: EscapedPropPath;
+    property: EscapedPropPath | null;
 
     /**
      * outgoing: the reference points from the anchor object to the target.

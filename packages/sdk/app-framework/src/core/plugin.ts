@@ -2,7 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
-import type * as Effect from 'effect/Effect';
+import * as Context from 'effect/Context';
+import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 import * as Pipeable from 'effect/Pipeable';
 
@@ -10,6 +11,39 @@ import { invariant } from '@dxos/invariant';
 
 import type * as ActivationEvent from './activation-event';
 import * as Capability from './capability';
+import type * as PluginManager from './plugin-manager';
+
+//
+// Plugin Service Layer
+//
+
+/**
+ * Effect Context.Tag for accessing PluginManager via the Effect layer system.
+ * This allows lifecycle operations to access the plugin manager without having it passed as an argument.
+ */
+export class Service extends Context.Tag('@dxos/app-framework/PluginManager')<Service, PluginManager.PluginManager>() {}
+
+//
+// Lifecycle Functions
+//
+
+/**
+ * Activates plugins based on the activation event.
+ * Accesses the PluginManager via the Effect layer system.
+ * @param event The activation event.
+ * @returns Whether the activation was successful.
+ */
+export const activate = (event: ActivationEvent.ActivationEvent): Effect.Effect<boolean, Error, Service> =>
+  Effect.flatMap(Service, (manager) => manager.activate(event));
+
+/**
+ * Re-activates the modules that were activated by the event.
+ * Accesses the PluginManager via the Effect layer system.
+ * @param event The activation event.
+ * @returns Whether the reset was successful.
+ */
+export const reset = (event: ActivationEvent.ActivationEvent): Effect.Effect<boolean, Error, Service> =>
+  Effect.flatMap(Service, (manager) => manager.reset(event));
 
 /**
  * Computes a module ID from plugin ID and export name.
@@ -61,10 +95,12 @@ export interface PluginModule {
 
   /**
    * Called when the module is activated.
-   * @param context The plugin context.
+   * CapabilityManager is accessed via the Effect layer system (Capability.Service).
+   * PluginManager is accessed via Plugin.Service.
+   * @param props Optional props passed to the module.
    * @returns The capabilities of the module.
    */
-  activate: (context: Capability.PluginContext) => Effect.Effect<Capability.ModuleReturn, Error>;
+  activate: (props?: any) => Effect.Effect<Capability.ModuleReturn, Error, Capability.Service | Service | never>;
 }
 
 export type PluginModuleOptions = Omit<PluginModule, 'id' | typeof PluginModuleTypeId> & { id?: string };

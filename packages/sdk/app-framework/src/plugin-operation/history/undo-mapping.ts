@@ -2,25 +2,25 @@
 // Copyright 2025 DXOS.org
 //
 
-import type { OperationDefinition } from '@dxos/operation';
+import type { Operation } from '@dxos/operation';
 
 import type { Label } from '../../common/translations';
 
 /**
  * Extract the input type from an OperationDefinition.
  */
-export type InputOf<T> = T extends OperationDefinition<infer I, any> ? I : never;
+export type InputOf<T> = T extends Operation.Definition<infer I, any> ? I : never;
 
 /**
  * Extract the output type from an OperationDefinition.
  */
-export type OutputOf<T> = T extends OperationDefinition<any, infer O> ? O : never;
+export type OutputOf<T> = T extends Operation.Definition<any, infer O> ? O : never;
 
 /**
  * Message provider for undo toast.
  * Can be a static Label or a function that derives the message from input/output.
  */
-export type MessageProvider<Op extends OperationDefinition<any, any>> =
+export type MessageProvider<Op extends Operation.Definition<any, any>> =
   | Label
   | ((input: InputOf<Op>, output: OutputOf<Op>) => Label);
 
@@ -32,8 +32,8 @@ export type MessageProvider<Op extends OperationDefinition<any, any>> =
  * @template Inv - The inverse operation definition type.
  */
 export interface UndoMapping<
-  Op extends OperationDefinition<any, any> = OperationDefinition<any, any>,
-  Inv extends OperationDefinition<any, any> = OperationDefinition<any, any>,
+  Op extends Operation.Definition<any, any> = Operation.Definition<any, any>,
+  Inv extends Operation.Definition<any, any> = Operation.Definition<any, any>,
 > {
   /** The forward operation. */
   readonly operation: Op;
@@ -59,7 +59,10 @@ export interface UndoMapping<
 /**
  * Props for creating an UndoMapping.
  */
-export interface UndoMappingProps<Op extends OperationDefinition<any, any>, Inv extends OperationDefinition<any, any>> {
+export interface UndoMappingProps<
+  Op extends Operation.Definition<any, any>,
+  Inv extends Operation.Definition<any, any>,
+> {
   /** The forward operation. */
   operation: Op;
 
@@ -107,14 +110,14 @@ export interface UndoMappingProps<Op extends OperationDefinition<any, any>, Inv 
  * });
  * ```
  */
-export const make = <Op extends OperationDefinition<any, any>, Inv extends OperationDefinition<any, any>>(
+export const make = <Op extends Operation.Definition<any, any>, Inv extends Operation.Definition<any, any>>(
   props: UndoMappingProps<Op, Inv>,
 ): UndoMapping<Op, Inv> => props;
 
 /**
  * Resolves a message provider to a Label.
  */
-export const resolveMessage = <Op extends OperationDefinition<any, any>>(
+export const resolveMessage = <Op extends Operation.Definition<any, any>>(
   message: MessageProvider<Op> | undefined,
   input: InputOf<Op>,
   output: OutputOf<Op>,

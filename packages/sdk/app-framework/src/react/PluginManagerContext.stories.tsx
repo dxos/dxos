@@ -22,7 +22,7 @@ const Counter = Capability.make<{ count: number; increment: () => void }>('examp
 const CountStatus = () => {
   const manager = useWebComponentContext(PluginManagerContext);
   const capabilitiesAtom = useMemo(
-    () => manager?.context.capabilities(Counter) ?? Atom.make<{ count: number; increment: () => void }[]>([]),
+    () => manager?.capabilities.atom(Counter) ?? Atom.make<{ count: number; increment: () => void }[]>([]),
     [manager],
   );
   const capabilities = useAtomValue(capabilitiesAtom);
@@ -61,7 +61,7 @@ const CounterComponent = () => {
   // Use the web-context hook to get the PluginManager
   const manager = useWebComponentContext(PluginManagerContext);
   const capabilitiesAtom = useMemo(
-    () => manager?.context.capabilities(Counter) ?? Atom.make<{ count: number; increment: () => void }[]>([]),
+    () => manager?.capabilities.atom(Counter) ?? Atom.make<{ count: number; increment: () => void }[]>([]),
     [manager],
   );
   const capabilities = useAtomValue(capabilitiesAtom);
@@ -95,7 +95,7 @@ const CounterComponent = () => {
           <button
             className='px-6 py-3 bg-primary-600 hover:bg-primary-700 text-white font-semibold rounded-full transition-colors shadow-md active:transform active:scale-95'
             onClick={() => {
-              const counter = manager.context.getCapability(Counter);
+              const counter = manager.capabilities.get(Counter);
               counter.increment();
             }}
           >

@@ -52,26 +52,21 @@ export const filterObjectsSync = <T extends Record<string, any>>(objects: T[], m
 
     const fields = mapObjectToTextFields(object);
     Object.entries(fields).some(([, value]) => {
-      const result = value.match(match);
-      if (result) {
-        // TODO(burdon): Use schema.
-        const label = getStringProperty(object, ['label', 'name', 'title']);
+      // TODO(burdon): Use schema.
+      const label = Obj.getLabel(object as any);
 
-        results.push({
-          id: object.id,
-          type: getIcon(Obj.getSchema(object)),
-          label,
-          match,
-          // TODO(burdon): Truncate.
-          // TODO(burdon): Issue with sketch documents.
-          snippet: value !== label ? value : (fields.content ?? fields.description ?? undefined),
-          object,
-        });
+      results.push({
+        id: object.id,
+        type: getIcon(Obj.getSchema(object)),
+        label,
+        match,
+        // TODO(burdon): Truncate.
+        // TODO(burdon): Issue with sketch documents.
+        snippet: value !== label ? value : (fields.content ?? fields.description ?? undefined),
+        object,
+      });
 
-        return true;
-      }
-
-      return false;
+      return true;
     });
 
     return results;
