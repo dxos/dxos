@@ -6,6 +6,7 @@ import { describe, expect, onTestFinished, test } from 'vitest';
 
 import { Trigger, asyncTimeout } from '@dxos/async';
 import { Filter, Obj, Type } from '@dxos/echo';
+import { log } from '@dxos/log';
 
 import { Client } from '../../client';
 import { TestBuilder } from '../../testing';
@@ -51,7 +52,9 @@ describe('DedicatedWorkerClientServices', { timeout: 1_000, retry: 0 }, () => {
     // expect(objects[0]).toEqual(object);
   });
 
+  // Flaky.
   test('leader goes from first client to second', async () => {
+    log.break();
     const testBuilder = new TestBuilder();
     onTestFinished(() => testBuilder.destroy());
 
@@ -69,6 +72,7 @@ describe('DedicatedWorkerClientServices', { timeout: 1_000, retry: 0 }, () => {
     expect(client2.halo.identity.get()).toEqual(identity);
     const objects = await client2.spaces.default.db.query(Filter.everything()).run();
     expect(objects).toHaveLength(1);
+    log.break();
   });
 
   // TODO(wittjosiah): Using shared storage fixes this test but that doesn't seem like a realistic solution.

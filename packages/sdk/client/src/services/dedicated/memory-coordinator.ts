@@ -12,6 +12,6 @@ export class MemoryWorkerCoordiantor implements WorkerCoordinator {
 
   sendMessage(message: WorkerCoordinatorMessage): void {
     log.info('memory coordinator got message', { type: message.type });
-    this.onMessage.emit(message);
+    setTimeout(() => this.onMessage.emit(message));
   }
 }
