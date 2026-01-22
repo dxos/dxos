@@ -162,10 +162,7 @@ describe('RepoProxy', () => {
       await openAndClose(clientRepo);
 
       const text = 'Hello World!';
-      const clientHandle = clientRepo.create<{ text: string }>({ text: '' });
-      clientHandle.change((doc: any) => {
-        doc.text = text;
-      });
+      const clientHandle = clientRepo.create<{ text: string }>({ text: text });
       await sleep(200); // Wait for the object to be saved without flush.
       url = clientHandle.url!;
       await level.close();
