@@ -33,6 +33,11 @@
       "types": "./dist/types/src/platform/browser.d.ts",
       "browser": "./dist/lib/browser/platform/browser.mjs",
       "node": "./dist/lib/node-esm/platform/node.mjs"
+    },
+    "./SqlExport": {
+      "types": "./dist/types/src/SqlExport.d.ts",
+      "browser": "./dist/lib/browser/SqlExport.mjs",
+      "node": "./dist/lib/node-esm/SqlExport.mjs"
     }
   },
   "files": [

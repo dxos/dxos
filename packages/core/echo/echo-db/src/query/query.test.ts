@@ -1020,6 +1020,8 @@ describe('Query', () => {
         expect(objects).toHaveLength(1);
         expect((objects[0] as TestSchema.Task).title).toEqual('Space Object TypeScript');
       }
+
+      // console.log('dumpSqliteDatabase', await peer.dumpSqliteDatabase());
     });
 
     test('full-text search from queue returns valid echo objects', async () => {

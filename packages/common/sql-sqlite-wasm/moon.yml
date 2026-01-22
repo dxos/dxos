@@ -11,6 +11,7 @@ tasks:
       - '--entryPoint=src/SqliteClient.ts'
       - '--entryPoint=src/OpfsWorker.ts'
       - '--entryPoint=src/SqliteMigrator.ts'
+      - '--entryPoint=src/SqlExport.ts'
       - '--entryPoint=src/platform/node.ts'
       - '--entryPoint=src/platform/browser.ts'
       - '--bundlePackage=@effect/sql-sqlite-wasm'

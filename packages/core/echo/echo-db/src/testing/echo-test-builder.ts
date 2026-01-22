@@ -9,6 +9,7 @@ import * as Layer from 'effect/Layer';
 import * as ManagedRuntime from 'effect/ManagedRuntime';
 import type * as Schema from 'effect/Schema';
 import isEqual from 'lodash.isequal';
+import { Effect } from 'effect';
 
 import { waitForCondition } from '@dxos/async';
 import { type Context, Resource } from '@dxos/context';
@@ -19,13 +20,14 @@ import { PublicKey } from '@dxos/keys';
 import { type LevelDB } from '@dxos/kv-store';
 import { createTestLevel } from '@dxos/kv-store/testing';
 import { layerMemory } from '@dxos/sql-sqlite/platform';
-import type * as SqliteClient from '@dxos/sql-sqlite/SqliteClient';
+import * as SqlExport from '@dxos/sql-sqlite/SqlExport';
 import { range } from '@dxos/util';
 
 import { EchoClient } from '../client';
 import { type AnyLiveObject } from '../echo-handler';
 import { type EchoDatabase } from '../proxy-db';
 import { Filter, Query } from '../query';
+import { writeFile } from 'node:fs/promises';
 
 type OpenDatabaseOptions = {
   client?: EchoClient;
@@ -90,7 +92,7 @@ export class EchoTestPeer extends Resource {
   private _lastDatabaseRootUrl?: string = undefined;
 
   private _foreignRuntime: boolean;
-  private _managedRuntime!: ManagedRuntime.ManagedRuntime<SqlClient.SqlClient | SqliteClient.SqliteClient, never>;
+  private _managedRuntime!: ManagedRuntime.ManagedRuntime<SqlClient.SqlClient | SqlExport.SqlExport, never>;
 
   constructor({ kv = createTestLevel(), indexing = {}, types, assignQueuePositions, runtime }: PeerOptions) {
     super();
@@ -212,6 +214,18 @@ export class EchoTestPeer extends Resource {
       reactiveSchemaQuery,
       preloadSchemaOnOpen,
     });
+  }
+
+  async dumpSqliteDatabase({ path }: { path?: string } = {}): Promise<string> {
+    const db = await this._managedRuntime.runPromise(
+      Effect.gen(function* () {
+        const sql = yield* SqlExport.SqlExport;
+        return yield* sql.export;
+      }),
+    );
+    path ??= `/tmp/dxos-sqlte-dump-${Date.now()}.db`;
+    await writeFile(path, db);
+    return path;
   }
 }
 
