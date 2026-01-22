@@ -10,7 +10,7 @@ import { Filter, Query } from '@dxos/echo';
 import { TypedObject } from '@dxos/echo/internal';
 import { createEchoSchema } from '@dxos/echo/testing';
 import { live } from '@dxos/live-object';
-import { createDirectChangeCallback, ProjectionModel, View } from '@dxos/schema';
+import { ProjectionModel, View, createDirectChangeCallback } from '@dxos/schema';
 
 import { Table } from '../types';
 
