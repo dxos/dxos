@@ -2,12 +2,12 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type PluginMeta } from '@dxos/app-framework';
+import { type Plugin } from '@dxos/app-framework';
 import { trim } from '@dxos/util';
 
 export const SECTION_IDENTIFIER = 'dxos.org/type/StackSection';
 
-export const meta: PluginMeta = {
+export const meta: Plugin.Meta = {
   id: 'dxos.org/plugin/stack',
   // TODO(wittjosiah): Prevents "stacks" language from being exposed to users in settings panel.
   //   Conside renaming this to the collection plugin and trying to factor more collections logic from the space plugin.

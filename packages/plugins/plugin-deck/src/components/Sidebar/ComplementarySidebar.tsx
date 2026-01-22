@@ -12,15 +12,15 @@ import React, {
   useState,
 } from 'react';
 
-import { LayoutAction, createIntent } from '@dxos/app-framework';
-import { Surface, useCapability, useIntentDispatcher } from '@dxos/app-framework/react';
+import { Common } from '@dxos/app-framework';
+import { Surface, useCapability, useOperationInvoker } from '@dxos/app-framework/react';
 import { IconButton, type Label, Main, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { Tabs } from '@dxos/react-ui-tabs';
 import { mx } from '@dxos/ui-theme';
 
-import { DeckCapabilities } from '../../capabilities';
 import { type DeckCompanion, getCompanionId, useBreakpoints, useDeckCompanions, useHoistStatusbar } from '../../hooks';
 import { meta } from '../../meta';
+import { DeckCapabilities } from '../../types';
 import { getMode } from '../../types';
 import { layoutAppliesTopbar } from '../../util';
 import { PlankContentError, PlankLoading } from '../Plank';
@@ -35,7 +35,7 @@ export type ComplementarySidebarProps = {
 
 export const ComplementarySidebar = ({ current }: ComplementarySidebarProps) => {
   const { t } = useTranslation(meta.id);
-  const { dispatchPromise: dispatch } = useIntentDispatcher();
+  const { invokeSync } = useOperationInvoker();
   const layout = useCapability(DeckCapabilities.MutableDeckState);
   const layoutMode = getMode(layout.deck);
   const breakpoint = useBreakpoints();
@@ -59,10 +59,10 @@ export const ComplementarySidebar = ({ current }: ComplementarySidebarProps) => 
       } else {
         setInternalValue(nextValue);
         layout.complementarySidebarState = 'expanded';
-        void dispatch(createIntent(LayoutAction.UpdateComplementary, { part: 'complementary', subject: nextValue }));
+        invokeSync(Common.LayoutOperation.UpdateComplementary, { subject: nextValue });
       }
     },
-    [layout, activeId, dispatch],
+    [layout, activeId, invokeSync],
   );
 
   const data = useMemo(
@@ -76,11 +76,9 @@ export const ComplementarySidebar = ({ current }: ComplementarySidebarProps) => 
 
   useEffect(() => {
     if (!activeId) {
-      void dispatch(
-        createIntent(LayoutAction.UpdateComplementary, { part: 'complementary', options: { state: 'collapsed' } }),
-      );
+      invokeSync(Common.LayoutOperation.UpdateComplementary, { state: 'collapsed' });
     }
-  }, [activeId, dispatch]);
+  }, [activeId, invokeSync]);
 
   return (
     <Main.ComplementarySidebar

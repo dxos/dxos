@@ -5,10 +5,11 @@
 import React, { type FC } from 'react';
 
 import { Tree } from '@dxos/devtools';
-import { type Graph } from '@dxos/plugin-graph';
+import { Graph } from '@dxos/plugin-graph';
 
-export const DebugGraph: FC<{ graph: Graph; root: string }> = ({ graph, root }) => {
-  return <Tree data={graph.toJSON(root)} />;
+export type DebugGraphProps = { graph: Graph.Graph; root: string };
+export const DebugGraph: FC<DebugGraphProps> = ({ graph, root }) => {
+  return <Tree data={Graph.toJSON(graph, root)} />;
 };
 
 export default DebugGraph;

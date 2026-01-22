@@ -73,13 +73,20 @@ type BrowserOptions = {
   browserName: string;
   nodeExternal?: boolean;
   injectGlobals?: boolean;
+  plugins?: Plugin[];
 };
 
-const createBrowserProject = ({ browserName, nodeExternal = false, injectGlobals = true }: BrowserOptions) =>
+const createBrowserProject = ({
+  browserName,
+  nodeExternal = false,
+  injectGlobals = true,
+  plugins = [],
+}: BrowserOptions) =>
   defineProject({
     plugins: [
       nodeStdPlugin(),
       WasmPlugin(),
+      ...plugins,
       // Inspect()
     ],
     optimizeDeps: {
@@ -92,6 +99,7 @@ const createBrowserProject = ({ browserName, nodeExternal = false, injectGlobals
           ...(nodeExternal ? [NodeExternalPlugin({ injectGlobals, nodeStd: true })] : []),
         ],
       },
+      exclude: ['@dxos/wa-sqlite'],
     },
     esbuild: {
       target: 'esnext',
@@ -269,6 +277,7 @@ const normalizeBrowserOptions = (
 
 /**
  * Replaces node built-in modules with their browser equivalents.
+ * Only redirects modules that are actually implemented in @dxos/node-std.
  */
 // TODO(dmaretskyi): Extract.
 function nodeStdPlugin(): Plugin {
@@ -278,7 +287,10 @@ function nodeStdPlugin(): Plugin {
       order: 'pre',
       async handler(source, importer, options) {
         if (source.startsWith('node:')) {
-          return this.resolve('@dxos/node-std/' + source.slice('node:'.length), importer, options);
+          const moduleName = source.slice('node:'.length);
+          if (MODULES.includes(moduleName)) {
+            return this.resolve('@dxos/node-std/' + moduleName, importer, options);
+          }
         }
 
         if (MODULES.includes(source)) {

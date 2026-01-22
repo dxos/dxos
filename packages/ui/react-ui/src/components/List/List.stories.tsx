@@ -6,6 +6,7 @@ import { DndContext, type DragEndEvent, type DragStartEvent } from '@dnd-kit/cor
 import { SortableContext, arrayMove, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { useArrowNavigationGroup } from '@fluentui/react-tabster';
+import { useCallback } from '@preact-signals/safe-react/react';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { type ReactNode, useState } from 'react';
 
@@ -63,16 +64,20 @@ export const UniformSizeDraggable: Story = {
       })),
     );
 
-    const handleDragEnd = (event: DragEndEvent) => {
-      const { active, over } = event;
-      if (active.id !== over?.id) {
-        setItems((items) => {
-          const oldIndex = items.findIndex((item) => item.id === active.id);
-          const newIndex = items.findIndex((item) => item.id === over?.id);
-          return arrayMove(items, oldIndex, newIndex);
-        });
-      }
-    };
+    const handleDragEnd = useCallback(
+      (event: DragEndEvent) => {
+        const { active, over } = event;
+        if (active.id !== over?.id) {
+          setItems((items) => {
+            const oldIndex = items.findIndex((item) => item.id === active.id);
+            const newIndex = items.findIndex((item) => item.id === over?.id);
+            return arrayMove(items, oldIndex, newIndex);
+          });
+        }
+      },
+      [items],
+    );
+
     return (
       <DndContext onDragEnd={handleDragEnd}>
         <SortableContext items={items.map(({ id }) => id)} strategy={verticalListSortingStrategy}>

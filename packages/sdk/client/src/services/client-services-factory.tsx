@@ -7,7 +7,7 @@ import UAParser from 'ua-parser-js';
 import { type ClientServicesProvider } from '@dxos/client-protocol';
 import { type Config } from '@dxos/config';
 
-import { fromHost } from './local-client-services';
+import { type LocalClientServicesParams, fromHost } from './local-client-services';
 import { fromSocket } from './socket';
 import { type WorkerClientServicesProps, fromWorker } from './worker-client-services';
 
@@ -23,6 +23,7 @@ export const createClientServices = (
   createWorker?: WorkerClientServicesProps['createWorker'],
   observabilityGroup?: string,
   signalTelemetryEnabled?: boolean,
+  createOpfsWorker?: LocalClientServicesParams['createOpfsWorker'],
 ): Promise<ClientServicesProvider> => {
   const remote = config.values.runtime?.client?.remoteSource;
   if (remote) {
@@ -52,5 +53,13 @@ export const createClientServices = (
 
   return createWorker && useWorker
     ? fromWorker(config, { createWorker, observabilityGroup, signalTelemetryEnabled })
-    : fromHost(config, {}, observabilityGroup, signalTelemetryEnabled);
+    : fromHost(
+        config,
+        {
+          createOpfsWorker,
+          runtimeProps: { enableFullTextIndexing: true },
+        },
+        observabilityGroup,
+        signalTelemetryEnabled,
+      );
 };

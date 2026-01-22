@@ -1,5 +1,6 @@
 //
-// Copyright 2025 DXOS.org
+// Copyright 2026 DXOS.org
 //
 
-export * from './mosaic';
+export * from './useEventHandlerAdapter';
+export * from './useVisibleItems';

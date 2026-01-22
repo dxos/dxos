@@ -125,7 +125,11 @@ const ComboboxContent = forwardRef<HTMLDivElement, ComboboxContentProps>(
       forceMount,
       children,
       classNames,
-      ...props
+      onSearch,
+      value,
+      defaultValue,
+      debounceMs,
+      label,
     },
     forwardedRef,
   ) => {
@@ -159,7 +163,14 @@ const ComboboxContent = forwardRef<HTMLDivElement, ComboboxContentProps>(
         id={modalId}
         ref={forwardedRef}
       >
-        <SearchList.Root {...props} classNames='contents density-fine' role='none'>
+        <SearchList.Root
+          onSearch={onSearch}
+          value={value}
+          defaultValue={defaultValue}
+          debounceMs={debounceMs}
+          label={label}
+          classNames='contents density-fine'
+        >
           {children}
         </SearchList.Root>
       </Popover.Content>
@@ -262,23 +273,28 @@ const ComboboxList = forwardRef<HTMLDivElement, ComboboxListProps>(({ classNames
 // Item
 //
 
-type ComboboxItemProps = SearchListItemProps;
+type ComboboxItemProps = SearchListItemProps & {
+  /** Whether to close the popover when this item is selected. Defaults to true. */
+  closeOnSelect?: boolean;
+};
 
 const ComboboxItem = forwardRef<HTMLDivElement, ComboboxItemProps>(
-  ({ classNames, onSelect, ...props }, forwardedRef) => {
+  ({ classNames, onSelect, value, closeOnSelect = true, ...props }, forwardedRef) => {
     const { onValueChange, onOpenChange } = useComboboxContext(COMBOBOX_ITEM_NAME);
-    const handleSelect = useCallback<NonNullable<SearchListItemProps['onSelect']>>(
-      (nextValue) => {
-        onSelect?.(nextValue);
-        onValueChange?.(nextValue);
+    const handleSelect = useCallback<NonNullable<SearchListItemProps['onSelect']>>(() => {
+      onSelect?.();
+      if (value !== undefined) {
+        onValueChange?.(value);
+      }
+      if (closeOnSelect) {
         onOpenChange?.(false);
-      },
-      [onSelect, onValueChange, onOpenChange],
-    );
+      }
+    }, [onSelect, onValueChange, onOpenChange, value, closeOnSelect]);
 
     return (
       <SearchList.Item
         {...props}
+        value={value}
         classNames={['mli-cardSpacingChrome pli-cardSpacingChrome', classNames]}
         onSelect={handleSelect}
         ref={forwardedRef}

@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { Capabilities } from '@dxos/app-framework';
+import { Common } from '@dxos/app-framework';
 import { useCapability } from '@dxos/app-framework/react';
 import { Filter } from '@dxos/echo';
 import { Script } from '@dxos/functions';
@@ -17,7 +17,7 @@ import { type ComponentProps } from './types';
 export const ScriptModule = ({ space }: ComponentProps) => {
   const [script] = useQuery(space.db, Filter.type(Script.Script));
   const compiler = useCapability(ScriptCapabilities.Compiler);
-  const settings = useCapability(Capabilities.SettingsStore).getStore<ScriptSettings>(meta.id)?.value;
+  const settings = useCapability(Common.Capability.SettingsStore).getStore<ScriptSettings>(meta.id)?.value;
   if (!script) {
     return null;
   }

@@ -2,17 +2,17 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Events } from '../../common';
-import { defineModule, definePlugin, lazy } from '../../core';
+import * as Common from '../../common';
+import { Capability, Plugin } from '../../core';
 
-const Layout = lazy(() => import('./Layout'));
+const Layout = Capability.lazy('Layout', () => import('./Layout'));
 
 const meta = { id: 'dxos.org/test/layout', name: 'Layout' };
 
-export const LayoutPlugin = definePlugin(meta, () => [
-  defineModule({
-    id: 'dxos.org/test/layout/root',
-    activatesOn: Events.Startup,
+export const LayoutPlugin = Plugin.define(meta).pipe(
+  Plugin.addModule({
+    activatesOn: Common.ActivationEvent.Startup,
     activate: Layout,
   }),
-]);
+  Plugin.make,
+);

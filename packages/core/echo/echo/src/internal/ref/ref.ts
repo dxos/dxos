@@ -395,6 +395,9 @@ export class RefImpl<T> implements Ref<T> {
    * @inheritdoc
    */
   async tryLoad(): Promise<T | undefined> {
+    if (this.#target) {
+      return this.#target;
+    }
     invariant(this.#resolver, 'Resolver is not set');
     return (await this.#resolver.resolve(this.#dxn)) as T | undefined;
   }

@@ -6,10 +6,10 @@ import { type RefObject, useCallback, useMemo, useRef } from 'react';
 
 import { type Database, type Type } from '@dxos/echo';
 import { isMutable } from '@dxos/echo/internal';
-import { useGlobalFilteredObjects } from '@dxos/plugin-search';
 import { faker } from '@dxos/random';
 import { Filter, useQuery, useSchema } from '@dxos/react-client/echo';
 import { useClientStory } from '@dxos/react-client/testing';
+import { useGlobalFilteredObjects } from '@dxos/react-ui-searchlist';
 import { type ProjectionModel, getTypenameFromQuery } from '@dxos/schema';
 
 import { type TableController } from '../components';

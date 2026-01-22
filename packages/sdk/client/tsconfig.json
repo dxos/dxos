@@ -47,6 +47,9 @@
       "path": "../../common/random-access-storage"
     },
     {
+      "path": "../../common/sql-sqlite-wasm"
+    },
+    {
       "path": "../../common/test-utils"
     },
     {

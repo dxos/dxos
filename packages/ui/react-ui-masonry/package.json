@@ -6,7 +6,7 @@
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
   "author": "DXOS.org",
-  "sideEffects": true,
+  "sideEffects": false,
   "type": "module",
   "exports": {
     ".": {
@@ -23,6 +23,7 @@
   ],
   "dependencies": {
     "@dxos/react-hooks": "workspace:*",
+    "@dxos/react-ui-mosaic": "workspace:*",
     "@dxos/types": "workspace:*",
     "@radix-ui/react-compose-refs": "catalog:",
     "masonic": "catalog:",

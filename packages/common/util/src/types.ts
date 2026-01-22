@@ -112,9 +112,19 @@ export const sortKeys = <T extends object>(obj: T): T =>
     }, {} as T);
 
 /**
- * Swap position of element within array.
+ * Move element within array.
  */
-export const arrayMove = <T>(array: T[], from: number, to: number): Array<T> => {
+export const arrayMove = <T>(array: T[], from: number, to: number): T[] => {
   array.splice(to < 0 ? array.length + to : to, 0, array.splice(from, 1)[0]);
   return array;
 };
+
+/**
+ * Swap position of element within array.
+ */
+export function arraySwap<T>(array: T[], from: number, to: number): T[] {
+  const current = array[from];
+  array[from] = array[to];
+  array[to] = current;
+  return array;
+}

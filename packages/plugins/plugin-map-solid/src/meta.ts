@@ -2,10 +2,10 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type PluginMeta } from '@dxos/app-framework';
+import { type Plugin } from '@dxos/app-framework';
 import { trim } from '@dxos/util';
 
-export const meta: PluginMeta = {
+export const meta: Plugin.Meta = {
   id: 'dxos.org/plugin/map-solid',
   name: 'Maps (Solid)',
   description: trim`

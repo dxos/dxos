@@ -21,6 +21,9 @@
       "path": "../../core/echo/echo-solid"
     },
     {
+      "path": "../../core/operation"
+    },
+    {
       "path": "../../sdk/app-framework"
     },
     {

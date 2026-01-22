@@ -3,14 +3,16 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
+import * as Effect from 'effect/Effect';
 import React, { useMemo } from 'react';
 
-import { type Capabilities, LayoutAction, createIntent } from '@dxos/app-framework';
-import { Surface, useIntentDispatcher } from '@dxos/app-framework/react';
+import { Common } from '@dxos/app-framework';
+import { Surface, useOperationInvoker } from '@dxos/app-framework/react';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Obj, Query } from '@dxos/echo';
 import { ClientPlugin } from '@dxos/plugin-client';
 import { PreviewPlugin } from '@dxos/plugin-preview';
+import { SpacePlugin } from '@dxos/plugin-space';
 import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
 import { faker } from '@dxos/random';
 import { useQuery, useSpace } from '@dxos/react-client/echo';
@@ -30,7 +32,7 @@ faker.seed(1);
 const generator: ValueGenerator = faker as any;
 
 const DefaultStory = () => {
-  const { dispatchPromise: dispatch } = useIntentDispatcher();
+  const { invokePromise } = useOperationInvoker();
   const space = useSpace();
   const [doc] = useQuery(space?.db, Query.type(Markdown.Document));
   const data = useMemo(() => ({ subject: doc }), [doc]);
@@ -39,14 +41,9 @@ const DefaultStory = () => {
 
   useAsyncEffect(async () => {
     if (space) {
-      await dispatch(
-        createIntent(LayoutAction.SwitchWorkspace, {
-          part: 'workspace',
-          subject: space.id,
-        }),
-      );
+      await invokePromise(Common.LayoutOperation.SwitchWorkspace, { subject: space.id });
     }
-  }, [space, dispatch]);
+  }, [space, invokePromise]);
 
   return (
     <div className='contents' {...attentionAttrs}>
@@ -66,42 +63,43 @@ const meta = {
         ...corePlugins(),
         ClientPlugin({
           types: [Markdown.Document, Text.Text, Person.Person, Organization.Organization],
-          onClientInitialized: async ({ client }) => {
-            await client.halo.createIdentity();
-            await client.spaces.waitUntilReady();
-            await client.spaces.default.waitUntilReady();
+          onClientInitialized: ({ client }) =>
+            Effect.gen(function* () {
+              yield* Effect.promise(() => client.halo.createIdentity());
+              yield* Effect.promise(() => client.spaces.waitUntilReady());
+              yield* Effect.promise(() => client.spaces.default.waitUntilReady());
 
-            const space = client.spaces.default;
-            const createObjects = createObjectFactory(space.db, generator);
-            await createObjects([{ type: Organization.Organization, count: 10 }]);
+              const space = client.spaces.default;
+              const createObjects = createObjectFactory(space.db, generator);
+              yield* Effect.promise(() => createObjects([{ type: Organization.Organization, count: 10 }]));
 
-            const queue = space.queues.create();
-            const kai = Obj.make(Person.Person, { fullName: 'Kai' });
-            const dxos = Obj.make(Organization.Organization, { name: 'DXOS' });
-            await queue.append([kai, dxos]);
+              const queue = space.queues.create();
+              const kai = Obj.make(Person.Person, { fullName: 'Kai' });
+              const dxos = Obj.make(Organization.Organization, { name: 'DXOS' });
+              yield* Effect.promise(() => queue.append([kai, dxos]));
 
-            space.db.add(
-              Markdown.make({
-                name: context.args.title ?? 'Testing',
-                content: [
-                  `# ${context.args.title ?? 'Testing'}`,
-                  context.args.content ?? '',
-                  // TODO(burdon): Popovers not currently working.
-                  '## Here are some objects',
-                  `![Alice](${Obj.getDXN(kai)})`,
-                  `![DXOS](${Obj.getDXN(dxos)})`,
-                  '',
-                  'END',
-                  '',
-                ].join('\n\n'),
-              }),
-            );
+              space.db.add(
+                Markdown.make({
+                  name: context.args.title ?? 'Testing',
+                  content: [
+                    `# ${context.args.title ?? 'Testing'}`,
+                    context.args.content ?? '',
+                    // TODO(burdon): Popovers not currently working.
+                    '## Here are some objects',
+                    `![Alice](${Obj.getDXN(kai)})`,
+                    `![DXOS](${Obj.getDXN(dxos)})`,
+                    '',
+                    'END',
+                    '',
+                  ].join('\n\n'),
+                }),
+              );
 
-            await space.db.flush({ indexes: true });
-          },
+              yield* Effect.promise(() => space.db.flush({ indexes: true }));
+            }),
         }),
-
-        // UI
+        ...corePlugins(),
+        SpacePlugin({}),
         StorybookPlugin({}),
         MarkdownPlugin(),
         PreviewPlugin(),
@@ -113,7 +111,7 @@ const meta = {
     controls: { disable: true },
     translations,
   },
-} satisfies Meta<typeof Capabilities>;
+} satisfies Meta<typeof DefaultStory>;
 
 export default meta;
 

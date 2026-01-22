@@ -4,7 +4,8 @@
 
 import React from 'react';
 
-import { type Action, type Node } from '@dxos/app-graph';
+import { type Node } from '@dxos/app-graph';
+import { useActionRunner } from '@dxos/plugin-graph';
 import { IconButton, toLocalizedString, useDensityContext, useTranslation } from '@dxos/react-ui';
 import { DropdownMenu, type MenuItem, MenuProvider } from '@dxos/react-ui-menu';
 import { hoverableControlItem, hoverableOpenControlItem } from '@dxos/ui-theme';
@@ -13,10 +14,10 @@ import { meta } from '../../meta';
 import { type ActionProperties } from '../../types';
 
 export type NavTreeItemActionMenuProps = ActionProperties & {
-  parent: Node;
+  parent: Node.Node;
   caller?: string;
   monolithic?: boolean;
-  menuActions?: Action[];
+  menuActions?: Node.Action[];
 };
 
 const fallbackIcon = 'ph--placeholder--regular';
@@ -40,8 +41,10 @@ export const NavTreeItemActionDropdownMenu = ({
 }: NavTreeItemActionMenuProps) => {
   const { t } = useTranslation(meta.id);
   const density = useDensityContext();
+  const runAction = useActionRunner();
+
   return (
-    <MenuProvider>
+    <MenuProvider onAction={runAction}>
       <DropdownMenu.Root group={parent} items={menuActions as MenuItem[]} caller={caller}>
         <DropdownMenu.Trigger asChild>
           <IconButton
@@ -59,13 +62,16 @@ export const NavTreeItemActionDropdownMenu = ({
   );
 };
 
-export const NavTreeItemMonolithicAction = ({
-  parent,
-  properties: { disabled, caller, testId, icon, variant = 'ghost', iconOnly = true } = { label: 'never' },
-  data: invoke,
-  baseLabel,
-}: Action & { parent: Node; onAction?: (action: Action) => void; baseLabel: string }) => {
+export const NavTreeItemMonolithicAction = (
+  props: Node.Action & { parent: Node.Node; onAction?: (action: Node.Action) => void; baseLabel: string },
+) => {
+  const {
+    parent,
+    properties: { disabled, caller, testId, icon, variant = 'ghost', iconOnly = true } = { label: 'never' },
+    baseLabel,
+  } = props;
   const density = useDensityContext();
+  const runAction = useActionRunner();
   return (
     <IconButton
       {...(density === 'coarse' ? coarseActionButtonProps : fineActionButtonProps)}
@@ -86,7 +92,7 @@ export const NavTreeItemMonolithicAction = ({
           return;
         }
 
-        void invoke?.(caller ? { parent, caller } : { parent });
+        void runAction(props, caller ? { parent, caller } : { parent });
       }}
       data-testid={testId}
     />

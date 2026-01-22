@@ -5,8 +5,7 @@
 import React, { type Dispatch, type SetStateAction, useCallback, useMemo, useState } from 'react';
 import { QR } from 'react-qr-rounded';
 
-import { createIntent } from '@dxos/app-framework';
-import { useIntentDispatcher } from '@dxos/app-framework/react';
+import { useOperationInvoker } from '@dxos/app-framework/react';
 import { Obj } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { useConfig } from '@dxos/react-client';
@@ -29,7 +28,7 @@ import {
 import { hexToEmoji } from '@dxos/util';
 
 import { meta } from '../../meta';
-import { SpaceAction } from '../../types';
+import { SpaceOperation } from '../../types';
 import { COMPOSER_SPACE_LOCK } from '../../util';
 
 // TODO(wittjosiah): Copied from Shell.
@@ -51,7 +50,7 @@ export type MembersContainerProps = {
 export const MembersContainer = ({ space, createInvitationUrl }: MembersContainerProps) => {
   const { t } = useTranslation(meta.id);
   const config = useConfig();
-  const { dispatchPromise: dispatch } = useIntentDispatcher();
+  const { invokePromise } = useOperationInvoker();
   const invitations = useSpaceInvitations(space.key);
   const visibleInvitations = invitations?.filter(
     (invitation) => ![Invitation.State.CANCELLED].includes(invitation.get().state),
@@ -80,18 +79,16 @@ export const MembersContainer = ({ space, createInvitationUrl }: MembersContaine
         icon: 'ph--user-plus--regular',
         testId: 'membersContainer.inviteOne',
         onClick: async () => {
-          const { data: invitation } = await dispatch(
-            createIntent(SpaceAction.Share, {
-              space,
-              type: Invitation.Type.INTERACTIVE,
-              authMethod: Invitation.AuthMethod.SHARED_SECRET,
-              multiUse: false,
-              target: target && Obj.getDXN(target).toString(),
-            }),
-          );
+          const { data: invitation } = await invokePromise(SpaceOperation.Share, {
+            space,
+            type: Invitation.Type.INTERACTIVE,
+            authMethod: Invitation.AuthMethod.SHARED_SECRET,
+            multiUse: false,
+            target: target && Obj.getDXN(target).toString(),
+          });
           if (invitation && config.values.runtime?.app?.env?.DX_ENVIRONMENT !== 'production') {
-            const subscription: ZenObservable.Subscription = invitation.subscribe((invitation) =>
-              handleInvitationEvent(invitation, subscription),
+            const subscription: ZenObservable.Subscription = (invitation as CancellableInvitationObservable).subscribe(
+              (invitation: Invitation) => handleInvitationEvent(invitation, subscription),
             );
           }
         },
@@ -102,24 +99,22 @@ export const MembersContainer = ({ space, createInvitationUrl }: MembersContaine
         icon: 'ph--users-three--regular',
         testId: 'membersContainer.inviteMany',
         onClick: async () => {
-          const { data: invitation } = await dispatch(
-            createIntent(SpaceAction.Share, {
-              space,
-              type: Invitation.Type.DELEGATED,
-              authMethod: Invitation.AuthMethod.KNOWN_PUBLIC_KEY,
-              multiUse: true,
-              target: target && Obj.getDXN(target).toString(),
-            }),
-          );
+          const { data: invitation } = await invokePromise(SpaceOperation.Share, {
+            space,
+            type: Invitation.Type.DELEGATED,
+            authMethod: Invitation.AuthMethod.KNOWN_PUBLIC_KEY,
+            multiUse: true,
+            target: target && Obj.getDXN(target).toString(),
+          });
           if (invitation && config.values.runtime?.app?.env?.DX_ENVIRONMENT !== 'production') {
-            const subscription: ZenObservable.Subscription = invitation.subscribe((invitation) =>
-              handleInvitationEvent(invitation, subscription),
+            const subscription: ZenObservable.Subscription = (invitation as CancellableInvitationObservable).subscribe(
+              (invitation: Invitation) => handleInvitationEvent(invitation, subscription),
             );
           }
         },
       },
     }),
-    [t, space, target],
+    [t, space, target, invokePromise],
   );
 
   const [selectedInvitation, setSelectedInvitation] = useState<CancellableInvitationObservable | null>(null);

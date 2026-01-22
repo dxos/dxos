@@ -39,6 +39,9 @@
       "path": "../react-ui"
     },
     {
+      "path": "../react-ui-mosaic"
+    },
+    {
       "path": "../react-ui-stack"
     },
     {

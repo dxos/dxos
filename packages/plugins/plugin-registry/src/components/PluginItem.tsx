@@ -13,7 +13,7 @@ import { meta } from '../meta';
 import { type RegistryTagType } from '../types';
 
 export type PluginItemProps = {
-  plugin: Plugin;
+  plugin: Plugin.Plugin;
   installed?: readonly string[];
   enabled?: readonly string[];
   onClick?: (id: string) => void;

@@ -6,7 +6,7 @@ import React, { type FC } from 'react';
 
 import { Obj, Ref } from '@dxos/echo';
 import { faker } from '@dxos/random';
-import { CardContainer } from '@dxos/react-ui-stack/testing';
+import { CardContainer } from '@dxos/react-ui-mosaic/testing';
 import { Organization, Person, Task } from '@dxos/types';
 import { Project } from '@dxos/types';
 

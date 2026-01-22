@@ -6,18 +6,19 @@ import React, { useCallback, useEffect } from 'react';
 
 import { Surface } from '@dxos/app-framework/react';
 import { IconButton, Tag, useTranslation } from '@dxos/react-ui';
-import { AttentionGlyph, useSelected, useSelectionActions } from '@dxos/react-ui-attention';
+import { AttentionGlyph, type UseSelectionActions, useSelected, useSelectionActions } from '@dxos/react-ui-attention';
+import { Card, CardDragPreview } from '@dxos/react-ui-mosaic';
 import {
-  Card,
-  CardDragPreview,
   CardStack,
   CardStackDragPreview,
   Stack,
   StackItem,
+  type StackItemRootProps,
   autoScrollRootAttributes,
   cardStackDefaultInlineSizeRem,
   cardStackHeading,
 } from '@dxos/react-ui-stack';
+import { type ProjectionModel } from '@dxos/schema';
 
 import { type BaseKanbanItem, type KanbanModel, UNCATEGORIZED_VALUE } from '../model';
 import { translationKey } from '../translations';
@@ -73,66 +74,17 @@ export const Kanban = ({ model, onAddCard, onRemoveCard }: KanbanProps) => {
                   getDropElement={getColumnDropElement}
                   onRearrange={model.handleRearrange}
                 >
-                  {/* TODO(burdon): Factor out Card to separate file. */}
-                  {cards.map((card, cardIndex, cardsArray) => (
-                    <CardStack.Item key={card.id} asChild>
-                      {/* TODO(burdon): Why is this required? */}
-                      <StackItem.Root
-                        item={card}
-                        focusIndicatorVariant='group-always'
-                        prevSiblingId={cardIndex > 0 ? cardsArray[cardIndex - 1].id : undefined}
-                        nextSiblingId={cardIndex < cardsArray.length - 1 ? cardsArray[cardIndex + 1].id : undefined}
-                        onClick={() => multiSelect([card.id])}
-                      >
-                        <Card.StaticRoot>
-                          <Card.Toolbar>
-                            <StackItem.DragHandle asChild>
-                              <Card.DragHandle toolbarItem />
-                            </StackItem.DragHandle>
-                            <AttentionGlyph attended={selected.includes(card.id)} />
-                            {onRemoveCard && (
-                              <>
-                                <Card.ToolbarSeparator variant='gap' />
-                                <Card.ToolbarIconButton
-                                  iconOnly
-                                  variant='ghost'
-                                  icon='ph--x--regular'
-                                  label={t('remove card label')}
-                                  onClick={() => onRemoveCard(card)}
-                                />
-                              </>
-                            )}
-                          </Card.Toolbar>
-                          <Surface
-                            role='card--intrinsic'
-                            limit={1}
-                            data={{
-                              subject: card,
-                              projection: model.projection,
-                            }}
-                          />
-                        </Card.StaticRoot>
-                        <StackItem.DragPreview>
-                          {({ item }) => (
-                            <CardDragPreview.Root>
-                              <CardDragPreview.Content>
-                                <Card.Toolbar>
-                                  <Card.DragHandle toolbarItem />
-                                </Card.Toolbar>
-                                <Surface
-                                  role='card--intrinsic'
-                                  limit={1}
-                                  data={{
-                                    subject: item,
-                                    projection: model.projection,
-                                  }}
-                                />
-                              </CardDragPreview.Content>
-                            </CardDragPreview.Root>
-                          )}
-                        </StackItem.DragPreview>
-                      </StackItem.Root>
-                    </CardStack.Item>
+                  {cards.map((item, i, itemArray) => (
+                    <CardComponent
+                      key={item.id}
+                      item={item}
+                      projection={model.projection}
+                      selected={selected}
+                      multiSelect={multiSelect}
+                      prevSiblingId={i > 0 ? itemArray[i - 1].id : undefined}
+                      nextSiblingId={i < itemArray.length - 1 ? itemArray[i + 1].id : undefined}
+                      onRemoveCard={onRemoveCard}
+                    />
                   ))}
                 </CardStack.Stack>
 
@@ -187,7 +139,7 @@ export const Kanban = ({ model, onAddCard, onRemoveCard }: KanbanProps) => {
                       {/* Cards Container */}
                       <CardStackDragPreview.Content itemsCount={cards.length}>
                         {cards.map((card) => (
-                          <Card.StaticRoot key={card.id}>
+                          <Card.Root key={card.id}>
                             <Surface
                               role='card--intrinsic'
                               limit={1}
@@ -196,7 +148,7 @@ export const Kanban = ({ model, onAddCard, onRemoveCard }: KanbanProps) => {
                                 projection: model.projection,
                               }}
                             />
-                          </Card.StaticRoot>
+                          </Card.Root>
                         ))}
                       </CardStackDragPreview.Content>
 
@@ -218,6 +170,73 @@ export const Kanban = ({ model, onAddCard, onRemoveCard }: KanbanProps) => {
   );
 };
 
-const getColumnDropElement = (stackElement: HTMLDivElement) => {
-  return stackElement.closest('.kanban-drop') as HTMLDivElement;
+type CardComponentProps<T extends BaseKanbanItem = { id: string }> = {
+  item: T;
+  projection: ProjectionModel;
+  selected: string[];
+  multiSelect: UseSelectionActions['multiSelect'];
+  onRemoveCard?: (card: T) => void;
+} & Pick<StackItemRootProps, 'prevSiblingId' | 'nextSiblingId'>;
+
+const CardComponent = ({
+  item,
+  projection,
+  selected,
+  multiSelect,
+  prevSiblingId,
+  nextSiblingId,
+  onRemoveCard,
+}: CardComponentProps) => {
+  const { t } = useTranslation(translationKey);
+  return (
+    <CardStack.Item key={item.id} asChild>
+      {/* TODO(burdon): Why is this required? */}
+      <StackItem.Root
+        item={item}
+        focusIndicatorVariant='group-always'
+        prevSiblingId={prevSiblingId}
+        nextSiblingId={nextSiblingId}
+        onClick={() => multiSelect([item.id])}
+      >
+        <Card.Root>
+          <Card.Toolbar>
+            <StackItem.DragHandle asChild>
+              <Card.DragHandle toolbarItem />
+            </StackItem.DragHandle>
+            <AttentionGlyph attended={selected.includes(item.id)} />
+            {/* TODO(burdon): Coordinate actions. */}
+            {onRemoveCard && (
+              <>
+                <Card.ToolbarSeparator variant='gap' />
+                <Card.Menu
+                  items={[
+                    {
+                      label: t('remove card label'),
+                      onSelect: () => onRemoveCard(item),
+                    },
+                  ]}
+                />
+              </>
+            )}
+          </Card.Toolbar>
+          {/* TODO(burdon): Entire card should be inside surface. */}
+          <Surface role='card--intrinsic' limit={1} data={{ subject: item, projection }} />
+        </Card.Root>
+        <StackItem.DragPreview>
+          {({ item }) => (
+            <CardDragPreview.Root>
+              <CardDragPreview.Content>
+                <Card.Toolbar>
+                  <Card.DragHandle toolbarItem />
+                </Card.Toolbar>
+                <Surface role='card--intrinsic' limit={1} data={{ subject: item, projection }} />
+              </CardDragPreview.Content>
+            </CardDragPreview.Root>
+          )}
+        </StackItem.DragPreview>
+      </StackItem.Root>
+    </CardStack.Item>
+  );
 };
+
+const getColumnDropElement = (stackElement: HTMLDivElement) => stackElement.closest('.kanban-drop') as HTMLDivElement;

@@ -10,19 +10,22 @@ import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 import type * as Schema from 'effect/Schema';
 
-import { Capabilities, Events, PluginService } from '@dxos/app-framework';
+// eslint-disable-next-line unused-imports/no-unused-imports
+import { Common as AppFrameworkCommon, type Capability, Plugin } from '@dxos/app-framework';
 import { CommandConfig, Common, flushAndSync, print, spaceLayer } from '@dxos/cli-util';
 import { SpaceProperties } from '@dxos/client/echo';
 import { Database, Filter, Obj, Ref, Type } from '@dxos/echo';
 import { EntityKind, getTypeAnnotation } from '@dxos/echo/internal';
+// eslint-disable-next-line unused-imports/no-unused-imports
+import type { Operation } from '@dxos/operation';
 import { Collection } from '@dxos/schema';
 
-import { type CreateObjectIntent } from '../../../types';
+import { type CreateObject } from '../../../types';
 
 import { printObject } from './util';
 
 export type Metadata = {
-  createObjectIntent: CreateObjectIntent;
+  createObject: CreateObject;
   inputSchema?: Schema.Schema.AnyNoContext;
   addToCollectionOnCreate?: boolean;
 };
@@ -36,16 +39,16 @@ export const add = Command.make(
   ({ typename }) =>
     Effect.gen(function* () {
       const { json } = yield* CommandConfig;
-      const manager = yield* PluginService;
+      const manager = yield* Plugin.Service;
       const { db } = yield* Database.Service;
 
-      yield* manager.context.activate(Events.SetupMetadata);
+      yield* manager.activate(AppFrameworkCommon.ActivationEvent.SetupMetadata);
 
       const resolve = (typename: string) => {
-        const metadata = manager.context
-          .getCapabilities(Capabilities.Metadata)
+        const metadata = manager.capabilities
+          .getAll(AppFrameworkCommon.Capability.Metadata)
           .find(({ id }) => id === typename)?.metadata;
-        return metadata?.createObjectIntent ? (metadata as Metadata) : undefined;
+        return metadata?.createObject ? (metadata as Metadata) : undefined;
       };
 
       const [properties] = yield* Database.Service.runQuery(Filter.type(SpaceProperties));
@@ -62,8 +65,7 @@ export const add = Command.make(
         return yield* Effect.fail(new Error(`Unknown typename: ${selectedTypename}`));
       }
 
-      const { dispatch } = manager.context.getCapability(Capabilities.IntentDispatcher);
-      const { object } = yield* dispatch(metadata.createObjectIntent({}, { db }));
+      const object = yield* metadata.createObject({}, { db });
       if (!Obj.isObject(object)) {
         return yield* Effect.fail(new Error(`Invalid object: ${object}`));
       }

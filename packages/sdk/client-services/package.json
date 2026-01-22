@@ -6,7 +6,7 @@
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
   "author": "DXOS.org",
-  "sideEffects": true,
+  "sideEffects": false,
   "type": "module",
   "exports": {
     ".": {
@@ -58,6 +58,7 @@
     "@dxos/echo-pipeline": "workspace:*",
     "@dxos/echo-protocol": "workspace:*",
     "@dxos/edge-client": "workspace:*",
+    "@dxos/effect": "workspace:*",
     "@dxos/feed-store": "workspace:*",
     "@dxos/indexing": "workspace:*",
     "@dxos/invariant": "workspace:*",
@@ -72,6 +73,7 @@
     "@dxos/protocols": "workspace:*",
     "@dxos/random-access-storage": "workspace:*",
     "@dxos/rpc": "workspace:*",
+    "@dxos/sql-sqlite": "workspace:*",
     "@dxos/teleport": "workspace:*",
     "@dxos/teleport-extension-gossip": "workspace:*",
     "@dxos/teleport-extension-object-sync": "workspace:*",
@@ -79,8 +81,12 @@
     "@dxos/tracing": "workspace:*",
     "@dxos/util": "workspace:*",
     "@dxos/websocket-rpc": "workspace:*",
+    "@effect/experimental": "catalog:",
+    "@effect/sql": "catalog:",
+    "@effect/sql-sqlite-node": "catalog:",
     "@obsidize/tar-browserify": "catalog:",
     "cbor-x": "catalog:",
+    "effect": "catalog:",
     "platform": "catalog:"
   },
   "devDependencies": {

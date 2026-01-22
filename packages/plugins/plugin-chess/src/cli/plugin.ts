@@ -2,37 +2,25 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Capabilities, Events, contributes, createIntent, defineModule, definePlugin, lazy } from '@dxos/app-framework';
-import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
-import { type CreateObjectIntent } from '@dxos/plugin-space/types';
+import * as Effect from 'effect/Effect';
+
+import { Common, Plugin } from '@dxos/app-framework';
+import { type CreateObject } from '@dxos/plugin-space/types';
 
 import { meta } from '../meta';
-import { Chess, ChessAction } from '../types';
-
-const IntentResolver = lazy(() => import('../capabilities/intent-resolver'));
+import { Chess } from '../types';
 
 // TODO(wittjosiah): Factor out shared modules.
-export const ChessPlugin = definePlugin(meta, () => [
-  defineModule({
-    id: `${meta.id}/module/schema`,
-    activatesOn: ClientEvents.SetupSchema,
-    activate: () => contributes(ClientCapabilities.Schema, [Chess.Game]),
+export const ChessPlugin = Plugin.define(meta).pipe(
+  Common.Plugin.addSchemaModule({ schema: [Chess.Game] }),
+  Common.Plugin.addMetadataModule({
+    metadata: {
+      id: Chess.Game.typename,
+      metadata: {
+        createObject: ((props) => Effect.sync(() => Chess.make(props))) satisfies CreateObject,
+        addToCollectionOnCreate: true,
+      },
+    },
   }),
-  defineModule({
-    id: `${meta.id}/module/metadata`,
-    activatesOn: Events.SetupMetadata,
-    activate: () =>
-      contributes(Capabilities.Metadata, {
-        id: Chess.Game.typename,
-        metadata: {
-          createObjectIntent: (() => createIntent(ChessAction.Create)) satisfies CreateObjectIntent,
-          addToCollectionOnCreate: true,
-        },
-      }),
-  }),
-  defineModule({
-    id: `${meta.id}/module/intent-resolver`,
-    activatesOn: Events.SetupIntentResolver,
-    activate: IntentResolver,
-  }),
-]);
+  Plugin.make,
+);

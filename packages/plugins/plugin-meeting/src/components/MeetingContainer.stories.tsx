@@ -3,13 +3,15 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
+import * as Effect from 'effect/Effect';
 import React from 'react';
 
-import { contributes } from '@dxos/app-framework';
+import { Capability, Common } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Obj, Ref } from '@dxos/echo';
-import { ClientCapabilities, ClientPlugin } from '@dxos/plugin-client';
+import { ClientPlugin } from '@dxos/plugin-client';
 import { MarkdownPlugin } from '@dxos/plugin-markdown';
+import { SpacePlugin } from '@dxos/plugin-space';
 import { corePlugins } from '@dxos/plugin-testing';
 import { Channel } from '@dxos/plugin-thread/types';
 import { Query, useDatabase, useQuery } from '@dxos/react-client/echo';
@@ -43,27 +45,33 @@ const meta = {
         ...corePlugins(),
         ClientPlugin({
           types: [Meeting.Meeting],
-          onClientInitialized: async ({ client }) => {
-            await client.halo.createIdentity();
-          },
-          onSpacesReady: async ({ client }) => {
-            const space = client.spaces.default;
-            await space.waitUntilReady();
-            space.db.add(
-              Obj.make(Meeting.Meeting, {
-                created: new Date().toISOString(),
-                participants: [],
-                transcript: Ref.make(Transcript.make(space.queues.create().dxn)),
-                notes: Ref.make(Text.make('Notes')),
-                summary: Ref.make(Text.make()),
-                thread: Ref.make(Thread.make()),
-              }),
-            );
-          },
+          onClientInitialized: ({ client }) =>
+            Effect.gen(function* () {
+              yield* Effect.promise(() => client.halo.createIdentity());
+            }),
+          onSpacesReady: ({ client }) =>
+            Effect.gen(function* () {
+              const space = client.spaces.default;
+              yield* Effect.promise(() => space.waitUntilReady());
+              space.db.add(
+                Obj.make(Meeting.Meeting, {
+                  created: new Date().toISOString(),
+                  participants: [],
+                  transcript: Ref.make(Transcript.make(space.queues.create().dxn)),
+                  notes: Ref.make(Text.make('Notes')),
+                  summary: Ref.make(Text.make()),
+                  thread: Ref.make(Thread.make()),
+                }),
+              );
+            }),
         }),
+        ...corePlugins(),
+        SpacePlugin({}),
         MarkdownPlugin(),
       ],
-      capabilities: [contributes(ClientCapabilities.Schema, [Channel.Channel, Thread.Thread, Message.Message])],
+      capabilities: [
+        Capability.contributes(Common.Capability.Schema, [Channel.Channel, Thread.Thread, Message.Message]),
+      ],
     }),
   ],
 } satisfies Meta<typeof MeetingContainer>;

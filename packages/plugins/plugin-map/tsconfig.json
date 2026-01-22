@@ -55,6 +55,9 @@
       "path": "../../core/functions"
     },
     {
+      "path": "../../core/operation"
+    },
+    {
       "path": "../../sdk/app-framework"
     },
     {

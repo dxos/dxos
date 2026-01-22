@@ -3,10 +3,11 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
+import * as Effect from 'effect/Effect';
 import type * as Schema from 'effect/Schema';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
-import { Events } from '@dxos/app-framework';
+import { Common } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import {
   type ExtractionFunction,
@@ -23,6 +24,7 @@ import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { ClientPlugin } from '@dxos/plugin-client';
 import { PreviewPlugin } from '@dxos/plugin-preview';
+import { SpacePlugin } from '@dxos/plugin-space';
 import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
 import { IndexKind, useSpace } from '@dxos/react-client/echo';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
@@ -201,31 +203,36 @@ const meta = {
         ...corePlugins(),
         ClientPlugin({
           types: [TestItem, Person.Person, Organization.Organization, TestSchema.DocumentType],
-          onClientInitialized: async ({ client }) => {
-            await client.halo.createIdentity();
-            await client.spaces.waitUntilReady();
-            await client.spaces.default.waitUntilReady();
-            // TODO(mykola): Make API easier to use.
-            // TODO(mykola): Delete after enabling vector indexing by default.
-            // Enable vector indexing.
-            await client.services.services.QueryService!.setConfig({
-              enabled: true,
-              indexes: [
-                //
-                { kind: IndexKind.Kind.SCHEMA_MATCH },
-                { kind: IndexKind.Kind.GRAPH },
-                { kind: IndexKind.Kind.VECTOR },
-              ],
-            });
-            await client.services.services.QueryService!.reindex();
-            await seedTestData(client.spaces.default);
-          },
+          onClientInitialized: ({ client }) =>
+            Effect.gen(function* () {
+              yield* Effect.promise(() => client.halo.createIdentity());
+              yield* Effect.promise(() => client.spaces.waitUntilReady());
+              yield* Effect.promise(() => client.spaces.default.waitUntilReady());
+              // TODO(mykola): Make API easier to use.
+              // TODO(mykola): Delete after enabling vector indexing by default.
+              // Enable vector indexing.
+              yield* Effect.promise(() =>
+                client.services.services.QueryService!.setConfig({
+                  enabled: true,
+                  indexes: [
+                    //
+                    { kind: IndexKind.Kind.SCHEMA_MATCH },
+                    { kind: IndexKind.Kind.GRAPH },
+                    { kind: IndexKind.Kind.VECTOR },
+                  ],
+                }),
+              );
+              yield* Effect.promise(() => client.services.services.QueryService!.reindex());
+              yield* Effect.promise(() => seedTestData(client.spaces.default));
+            }),
         }),
+        ...corePlugins(),
+        SpacePlugin({}),
         PreviewPlugin(),
         TranscriptionPlugin(),
         StorybookPlugin({}),
       ],
-      fireEvents: [Events.SetupAppGraph],
+      fireEvents: [Common.ActivationEvent.SetupAppGraph],
     }),
   ],
 } satisfies Meta<typeof DefaultStory>;

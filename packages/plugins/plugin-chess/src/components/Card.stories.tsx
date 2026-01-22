@@ -6,7 +6,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
 import { withTheme } from '@dxos/react-ui/testing';
-import { CardContainer } from '@dxos/react-ui-stack/testing';
+import { CardContainer } from '@dxos/react-ui-mosaic/testing';
 
 import { meta as pluginMeta } from '../meta';
 import { Chess } from '../types';

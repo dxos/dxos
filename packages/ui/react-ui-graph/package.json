@@ -6,7 +6,9 @@
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
   "author": "DXOS.org",
-  "sideEffects": true,
+  "sideEffects": [
+    "*.css"
+  ],
   "type": "module",
   "exports": {
     ".": {
@@ -44,6 +46,7 @@
     "@dxos/invariant": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/node-std": "workspace:*",
+    "@dxos/react-ui-mosaic": "workspace:*",
     "@preact-signals/safe-react": "catalog:",
     "@preact/signals-core": "catalog:",
     "d3": "catalog:",

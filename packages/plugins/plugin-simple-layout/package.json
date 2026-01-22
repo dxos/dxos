@@ -1,0 +1,68 @@
+{
+  "name": "@dxos/plugin-simple-layout",
+  "version": "0.8.3",
+  "description": "Simple layout plugin for minimal UI contexts like popover windows.",
+  "homepage": "https://dxos.org",
+  "bugs": "https://github.com/dxos/dxos/issues",
+  "license": "MIT",
+  "author": "DXOS.org",
+  "sideEffects": true,
+  "type": "module",
+  "exports": {
+    ".": {
+      "source": "./src/index.ts",
+      "types": "./dist/types/src/index.d.ts",
+      "browser": "./dist/lib/browser/index.mjs",
+      "node": "./dist/lib/node-esm/index.mjs"
+    }
+  },
+  "types": "dist/types/src/index.d.ts",
+  "files": [
+    "dist",
+    "src"
+  ],
+  "dependencies": {
+    "@dxos/app-framework": "workspace:*",
+    "@dxos/live-object": "workspace:*",
+    "@dxos/log": "workspace:*",
+    "@dxos/operation": "workspace:*",
+    "@dxos/plugin-graph": "workspace:*",
+    "@dxos/react-ui-attention": "workspace:*",
+    "@dxos/react-ui-menu": "workspace:*",
+    "@dxos/react-ui-mosaic": "workspace:*",
+    "@dxos/react-ui-searchlist": "workspace:*",
+    "@dxos/react-ui-stack": "workspace:*",
+    "@dxos/util": "workspace:*",
+    "@preact-signals/safe-react": "catalog:",
+    "@radix-ui/react-context": "catalog:"
+  },
+  "devDependencies": {
+    "@dxos/echo": "workspace:*",
+    "@dxos/echo-signals": "workspace:*",
+    "@dxos/plugin-client": "workspace:*",
+    "@dxos/plugin-preview": "workspace:*",
+    "@dxos/plugin-search": "workspace:*",
+    "@dxos/plugin-space": "workspace:*",
+    "@dxos/plugin-testing": "workspace:*",
+    "@dxos/react-ui": "workspace:*",
+    "@dxos/schema": "workspace:*",
+    "@dxos/storybook-utils": "workspace:*",
+    "@dxos/ui-theme": "workspace:*",
+    "@types/react": "catalog:",
+    "@types/react-dom": "catalog:",
+    "effect": "catalog:",
+    "react": "catalog:",
+    "react-dom": "catalog:",
+    "vite": "catalog:"
+  },
+  "peerDependencies": {
+    "@dxos/react-ui": "workspace:*",
+    "@dxos/ui-theme": "workspace:*",
+    "effect": "catalog:",
+    "react": "catalog:",
+    "react-dom": "catalog:"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

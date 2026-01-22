@@ -6,7 +6,7 @@ import React, { type FC, forwardRef } from 'react';
 
 import { Surface } from '@dxos/app-framework/react';
 import { Obj } from '@dxos/echo';
-import { Card } from '@dxos/react-ui-stack';
+import { Card } from '@dxos/react-ui-mosaic';
 import { ghostHover } from '@dxos/ui-theme';
 
 import { type SearchResult } from '../../types';
@@ -43,7 +43,7 @@ export const SearchItem = forwardRef<HTMLDivElement, SearchItemProps>((item, for
   const { id, objectType, label, snippet, match, selected, onSelect } = item;
 
   return (
-    <Card.StaticRoot
+    <Card.Root
       ref={forwardRef}
       classNames={['mx-2 mt-2 cursor-pointer', selected && '!bg-activeSurface', ghostHover]}
       onClick={() => onSelect?.(id)}
@@ -51,7 +51,7 @@ export const SearchItem = forwardRef<HTMLDivElement, SearchItemProps>((item, for
       {objectType && <div className='text-xs text-neutral-400 ml-4'>{objectType}</div>}
       <Card.Heading>{label ?? 'Untitled'}</Card.Heading>
       {snippet && <Snippet text={snippet} match={match} />}
-    </Card.StaticRoot>
+    </Card.Root>
   );
 });
 

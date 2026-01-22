@@ -215,9 +215,9 @@ export const Default: Story = {
     const newOrgName = 'Salieri LLC';
     await userEvent.type(newSearchField, newOrgName);
 
-    // Look for an option to select (should be the create new option)
-    const newOption = await body.findAllByRole('option');
-    await expect(newOption[0]).toBeVisible();
+    // Wait for the create option to appear (debounce is 200ms, allow time for render)
+    const createOption = await body.findByRole('option', undefined, { timeout: 500 });
+    await expect(createOption).toBeVisible();
 
     // Press Enter to select/create
     await userEvent.keyboard('{Enter}');

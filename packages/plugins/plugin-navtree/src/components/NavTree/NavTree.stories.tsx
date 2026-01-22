@@ -3,14 +3,15 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import * as Schema from 'effect/Schema';
+import * as Effect from 'effect/Effect';
 import React, { type KeyboardEvent, useCallback, useRef } from 'react';
 import { expect, userEvent, within } from 'storybook/test';
 
-import { Capabilities, LayoutAction, contributes, createResolver, defineCapability } from '@dxos/app-framework';
+import { Capability, Common, RuntimePlugin } from '@dxos/app-framework';
 import { useCapability } from '@dxos/app-framework/react';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { live } from '@dxos/live-object';
+import { OperationResolver } from '@dxos/operation';
 import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
 import { faker } from '@dxos/random';
 import { IconButton, Input, Main, Toolbar } from '@dxos/react-ui';
@@ -26,7 +27,7 @@ import { NavTreeContainer } from '../NavTreeContainer';
 
 faker.seed(1234);
 
-const StoryState = defineCapability<{ tab: string }>('story-state');
+const StoryState = Capability.make<{ tab: string }>('story-state');
 
 // TODO(burdon): Fix outline (e.g., button in sidebar nav is clipped when focused).
 // TODO(burdon): Consider similar containment of: Table, Sheet, Kanban Column, Form, etc.
@@ -120,19 +121,23 @@ const meta = {
   decorators: [
     withTheme,
     withPluginManager({
-      plugins: [...corePlugins(), StorybookPlugin({ initialState: { sidebarState: 'expanded' } }), NavTreePlugin()],
+      plugins: [
+        RuntimePlugin(),
+        ...corePlugins(),
+        NavTreePlugin(),
+        StorybookPlugin({ initialState: { sidebarState: 'expanded' } }),
+      ],
       capabilities: (context) => [
-        contributes(StoryState, live({ tab: 'space-0' })),
-        contributes(Capabilities.AppGraphBuilder, storybookGraphBuilders(context)),
-        contributes(Capabilities.IntentResolver, [
-          createResolver({
-            intent: LayoutAction.UpdateLayout,
-            filter: (data): data is Schema.Schema.Type<typeof LayoutAction.SwitchWorkspace.fields.input> =>
-              Schema.is(LayoutAction.SwitchWorkspace.fields.input)(data),
-            resolve: ({ subject }) => {
-              const state = context.getCapability(StoryState);
-              state.tab = subject;
-            },
+        Capability.contributes(StoryState, live({ tab: 'space-0' })),
+        Capability.contributes(Common.Capability.AppGraphBuilder, storybookGraphBuilders()),
+        Capability.contributes(Common.Capability.OperationResolver, [
+          OperationResolver.make({
+            operation: Common.LayoutOperation.SwitchWorkspace,
+            handler: ({ subject }) =>
+              Effect.sync(() => {
+                const state = context.get(StoryState);
+                state.tab = subject;
+              }),
           }),
         ]),
       ],

@@ -18,7 +18,10 @@ import { log } from '@dxos/log';
  * Makes an authenticated HTTP request to a Google API endpoint.
  * Includes authorization, retry logic, and error handling.
  */
-export const makeGoogleApiRequest = Effect.fn('makeGoogleApiRequest')(function* (url: string) {
+export const makeGoogleApiRequest = Effect.fn('makeGoogleApiRequest')(function* (
+  url: string,
+  options: { method?: string; body?: unknown } = {},
+) {
   const httpClient = yield* HttpClient.HttpClient.pipe(
     Effect.map(withAuthorization({ service: 'google.com' }, 'Bearer')),
   );
@@ -28,7 +31,18 @@ export const makeGoogleApiRequest = Effect.fn('makeGoogleApiRequest')(function* 
   //  https://github.com/Effect-TS/effect/issues/4568
   const httpClientWithTracerDisabled = httpClient.pipe(HttpClient.withTracerDisabledWhen(() => true));
 
-  const response = yield* HttpClientRequest.get(url).pipe(
+  let request;
+  if (options.method === 'POST') {
+    request = HttpClientRequest.post(url);
+  } else {
+    request = HttpClientRequest.get(url);
+  }
+
+  if (options.body) {
+    request = HttpClientRequest.bodyText(request, options.body as string);
+  }
+
+  const response = yield* request.pipe(
     HttpClientRequest.setHeader('accept', 'application/json'),
     httpClientWithTracerDisabled.execute,
     Effect.flatMap((res) => res.json),

@@ -47,6 +47,14 @@
     <style>
       html {
         font-size: 18px;
+        /* Hardcoded to match --dx-baseSurface (neutral 0 in light, neutral 855 in dark) before CSS loads. */
+        background-color: color(display-p3 1 1 1);
+      }
+      @media (prefers-color-scheme: dark) {
+        html {
+          /* Hardcoded to match --dx-baseSurface (neutral 0 in light, neutral 855 in dark) before CSS loads. */
+          background-color: color(display-p3 0.04142 0.03847 0.03926);
+        }
       }
       @media (min-width: 768px) {
         html {
@@ -71,7 +79,7 @@
     <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
     <link rel="manifest" href="/site.webmanifest" />
 
-    <meta name="apple-mobile-web-app-capable" content="Composer" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
   </head>
   <body>
     <div id="root"></div>

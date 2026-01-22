@@ -138,10 +138,10 @@ export const ChatContainer = ({
           </div>
           {/* NOTE(thure): This can’t also be the `overflow-anchor` because `ScrollArea` injects an interceding node that contains this necessary ref’d element. */}
           <div role='none' className='bs-px -mbs-px' ref={threadScrollRef} />
-          <ScrollArea.Scrollbar>
-            <ScrollArea.Thumb />
-          </ScrollArea.Scrollbar>
         </ScrollArea.Viewport>
+        <ScrollArea.Scrollbar>
+          <ScrollArea.Thumb />
+        </ScrollArea.Scrollbar>
       </ScrollArea.Root>
 
       <MessageTextbox extensions={extensions} autoFocus={autoFocus} onSend={handleCreate} {...textboxMetadata} />

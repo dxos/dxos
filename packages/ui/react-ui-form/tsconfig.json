@@ -78,6 +78,9 @@
       "path": "../react-ui-list"
     },
     {
+      "path": "../react-ui-mosaic"
+    },
+    {
       "path": "../react-ui-pickers"
     },
     {

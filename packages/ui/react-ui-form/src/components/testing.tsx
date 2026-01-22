@@ -5,7 +5,7 @@
 import React, { type PropsWithChildren } from 'react';
 
 import { type ThemedClassName } from '@dxos/react-ui';
-import { Card } from '@dxos/react-ui-stack';
+import { Card } from '@dxos/react-ui-mosaic';
 import { JsonFilter } from '@dxos/react-ui-syntax-highlighter';
 import { textBlockWidth } from '@dxos/ui-theme';
 
@@ -25,9 +25,7 @@ export const TestLayout = ({ classNames, children, json }: TestLayoutProps) => {
 type TestPanelProps = ThemedClassName<PropsWithChildren>;
 
 const TestPanel = ({ classNames, children }: TestPanelProps) => {
-  return (
-    <Card.StaticRoot classNames={['bs-full overflow-y-auto', textBlockWidth, classNames]}>{children}</Card.StaticRoot>
-  );
+  return <Card.Root classNames={['bs-full overflow-y-auto', textBlockWidth, classNames]}>{children}</Card.Root>;
 };
 
 // Symbol for accessing debug objects in tests.

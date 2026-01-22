@@ -25,6 +25,7 @@ import React, {
 import { type Node } from '@dxos/app-graph';
 import { invariant } from '@dxos/invariant';
 import { DxAvatar } from '@dxos/lit-ui/react';
+import { useActionRunner } from '@dxos/plugin-graph';
 import {
   Icon,
   ListItem,
@@ -57,14 +58,14 @@ type L0ItemData = {
 };
 
 type L0ItemRootProps = {
-  item: Node<any>;
-  parent?: Node<any>;
+  item: Node.Node;
+  parent?: Node.Node;
   path: string[];
 };
 
 type L0ItemProps = L0ItemRootProps & {
-  item: Node<any>;
-  parent?: Node<any>;
+  item: Node.Node;
+  parent?: Node.Node;
   path: string[];
   pinned?: boolean;
   onRearrange?: StackItemRearrangeHandler<L0ItemData>;
@@ -73,17 +74,14 @@ type L0ItemProps = L0ItemRootProps & {
 const useL0ItemClick = ({ item, parent, path }: L0ItemProps, type: string) => {
   const { tab, isCurrent, onSelect, onTabChange } = useNavTreeContext();
   const [isLg] = useMediaQuery('lg');
+  const runAction = useActionRunner();
 
   return useCallback(
     (event: MouseEvent) => {
       switch (type) {
         case 'action': {
-          const {
-            data: invoke,
-            properties: { caller },
-          } = item;
-
-          return invoke?.(caller ? { node: parent, caller } : { node: parent });
+          const { properties: { caller } = {} } = item;
+          return void runAction(item as Node.Action, caller ? { parent, caller } : { parent });
         }
 
         case 'tab':
@@ -93,7 +91,7 @@ const useL0ItemClick = ({ item, parent, path }: L0ItemProps, type: string) => {
           return onSelect?.({ item, path, current: !isCurrent(path, item), option: event.altKey });
       }
     },
-    [item, parent, type, tab, isCurrent, onSelect, onTabChange, isLg],
+    [item, parent, type, tab, isCurrent, onSelect, onTabChange, isLg, runAction],
   );
 };
 
@@ -309,15 +307,22 @@ const L0Collection = ({ item, path }: L0ItemProps) => {
 
 export type L0MenuProps = {
   menuActions: MenuItem[];
-  topLevelItems: Node<any>[];
-  pinnedItems: Node<any>[];
-  userAccountItem?: Node<any>;
-  parent?: Node<any>;
+  topLevelItems: Node.Node[];
+  pinnedItems: Node.Node[];
+  userAccountItem?: Node.Node;
+  parent?: Node.Node;
   path: string[];
 };
 
 export const L0Menu = ({ menuActions, topLevelItems, pinnedItems, userAccountItem, parent, path }: L0MenuProps) => {
   const { t } = useTranslation(meta.id);
+  const runAction = useActionRunner();
+  const handleAction = useCallback(
+    (action: Node.Action, params: Node.InvokeProps) => {
+      void runAction(action, params);
+    },
+    [runAction],
+  );
 
   return (
     <Tabs.Tablist
@@ -328,13 +333,17 @@ export const L0Menu = ({ menuActions, topLevelItems, pinnedItems, userAccountIte
       ]}
     >
       {/* TODO(wittjosiah): Use L0Item trigger. */}
-      <MenuProvider>
+      <MenuProvider onAction={handleAction}>
         <DropdownMenu.Root group={parent} items={menuActions}>
           <Tooltip.Trigger content={t('app menu label')} side='right' asChild>
             <Tabs.TabPrimitive value='options' asChild role='button'>
               <DropdownMenu.Trigger
                 data-testid='spacePlugin.addSpace'
-                className={mx(l0ItemRoot, 'grid place-items-center dx-focus-ring-group')}
+                className={mx(
+                  l0ItemRoot,
+                  'grid place-items-center dx-focus-ring-group',
+                  '[body[data-platform="macos"]_&]:mt-[30px]',
+                )}
               >
                 <div
                   role='none'
@@ -358,7 +367,7 @@ export const L0Menu = ({ menuActions, topLevelItems, pinnedItems, userAccountIte
             role='none'
             className={mx([
               'flex flex-col gap-1 pbs-1',
-              '[body[data-platform="darwin"]_&]:pbs-[calc(30px+0.25rem)]',
+              '[body[data-platform="macos"]_&]:pbs-[30px]',
               '[body[data-platform="ios"]_&]:pbs-[max(env(safe-area-inset-top),0.25rem)]',
             ])}
           >
@@ -398,14 +407,6 @@ export const L0Menu = ({ menuActions, topLevelItems, pinnedItems, userAccountIte
           </L0ItemRoot>
         </div>
       )}
-      <div
-        role='none'
-        className='hidden [body[data-platform="darwin"]_&]:block absolute block-start-0 is-[calc(var(--l0-size)-1px)] bs-[calc(40px+0.25rem)]'
-        style={{
-          background:
-            'linear-gradient(to bottom, var(--dx-sidebarSurface) 0%, var(--dx-sidebarSurface) 70%, transparent 100%)',
-        }}
-      />
     </Tabs.Tablist>
   );
 };

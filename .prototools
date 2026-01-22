@@ -9,7 +9,7 @@ bun = "1.3.4"
 #  This is only for compability purposes (i.e., supporting Cloudflare Pages deploys).
 #  It is expected that developers will be using moon via proto, but they should be kept in sync.
 # NOTE: Make sure those versions match!
-moon = "1.41.7"
+moon = "1.41.8"
 
 [settings]
 auto-install = true

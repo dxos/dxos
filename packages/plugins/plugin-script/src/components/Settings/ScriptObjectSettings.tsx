@@ -6,8 +6,8 @@ import { Octokit } from '@octokit/core';
 import React, { type ChangeEvent, useCallback, useState } from 'react';
 
 import { ToolId } from '@dxos/ai';
-import { SettingsAction, createIntent } from '@dxos/app-framework';
-import { useIntentDispatcher } from '@dxos/app-framework/react';
+import { SettingsOperation } from '@dxos/app-framework';
+import { useOperationInvoker } from '@dxos/app-framework/react';
 import { Blueprint, Template } from '@dxos/blueprints';
 import { Filter, Obj, Ref } from '@dxos/echo';
 import { Function, type Script, getUserFunctionIdInMetadata } from '@dxos/functions';
@@ -205,7 +205,7 @@ const Binding = ({ object }: ScriptObjectSettingsProps) => {
 // TODO(burdon): Move to separate tab?
 const Publishing = ({ object }: ScriptObjectSettingsProps) => {
   const { t } = useTranslation(meta.id);
-  const { dispatchPromise: dispatch } = useIntentDispatcher();
+  const { invokePromise } = useOperationInvoker();
   const db = Obj.getDatabase(object);
   const [githubToken] = useQuery(db, Filter.type(AccessToken.AccessToken, { source: 'github.com' }));
   const gistKey = Obj.getMeta(object).keys.find(({ source }) => source === 'github.com');
@@ -233,12 +233,10 @@ const Publishing = ({ object }: ScriptObjectSettingsProps) => {
 
   const handleOpenTokenManager = useCallback(
     () =>
-      dispatch(
-        createIntent(SettingsAction.Open, {
-          plugin: 'dxos.org/plugin/token-manager',
-        }),
-      ),
-    [],
+      invokePromise(SettingsOperation.Open, {
+        plugin: 'dxos.org/plugin/token-manager',
+      }),
+    [invokePromise],
   );
 
   const [publishing, setPublishing] = useState(false);

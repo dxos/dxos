@@ -12,9 +12,7 @@
     "vite.config.ts"
   ],
   "include": [
-    "src/**/*.ts",
-    "src/**/*.tsx",
-    "src/*.ts"
+    "src"
   ],
   "references": [
     {
@@ -22,6 +20,9 @@
     },
     {
       "path": "../../common/invariant"
+    },
+    {
+      "path": "../../common/log"
     },
     {
       "path": "../../common/random"
@@ -51,6 +52,9 @@
       "path": "../../core/functions"
     },
     {
+      "path": "../../core/operation"
+    },
+    {
       "path": "../../sdk/app-framework"
     },
     {
@@ -70,6 +74,9 @@
     },
     {
       "path": "../../ui/react-ui-form"
+    },
+    {
+      "path": "../../ui/react-ui-mosaic"
     },
     {
       "path": "../../ui/react-ui-stack"

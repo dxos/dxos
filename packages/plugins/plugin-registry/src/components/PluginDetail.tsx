@@ -12,7 +12,7 @@ import { getStyles, mx } from '@dxos/ui-theme';
 import { meta } from '../meta';
 
 export type PluginDetailProps = {
-  plugin: Plugin;
+  plugin: Plugin.Plugin;
   enabled?: boolean;
   onEnable?: () => void;
 };

@@ -84,6 +84,9 @@
       "path": "../../core/functions-runtime"
     },
     {
+      "path": "../../core/operation"
+    },
+    {
       "path": "../../core/protocols"
     },
     {
@@ -123,10 +126,16 @@
       "path": "../../ui/react-ui-editor"
     },
     {
+      "path": "../../ui/react-ui-form"
+    },
+    {
       "path": "../../ui/react-ui-grid"
     },
     {
       "path": "../../ui/react-ui-menu"
+    },
+    {
+      "path": "../../ui/react-ui-mosaic"
     },
     {
       "path": "../../ui/react-ui-stack"

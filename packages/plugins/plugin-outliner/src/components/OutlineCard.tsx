@@ -5,7 +5,7 @@
 import React from 'react';
 
 import { type SurfaceComponentProps } from '@dxos/app-framework/react';
-import { Card } from '@dxos/react-ui-stack';
+import { Card } from '@dxos/react-ui-mosaic';
 
 import { type Outline as OutlineType } from '../types';
 

@@ -5,7 +5,7 @@
 import React, { Fragment } from 'react';
 
 import { Avatar, Icon } from '@dxos/react-ui';
-import { Card, cardHeading, cardText } from '@dxos/react-ui-stack';
+import { Card, cardHeading, cardText } from '@dxos/react-ui-mosaic';
 import { type Person } from '@dxos/types';
 import { mx } from '@dxos/ui-theme';
 

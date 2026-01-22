@@ -2,6 +2,9 @@
 // Copyright 2020 DXOS.org
 //
 
+import * as Reactivity from '@effect/experimental/Reactivity';
+import * as Layer from 'effect/Layer';
+import * as ManagedRuntime from 'effect/ManagedRuntime';
 import { type ExpectStatic } from 'vitest';
 
 import { Trigger } from '@dxos/async';
@@ -29,6 +32,7 @@ import { TcpTransportFactory } from '@dxos/network-manager/transport/tcp';
 import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 import { type Storage } from '@dxos/random-access-storage';
 import { type ProtoRpcPeer, createLinkedPorts, createProtoRpcPeer } from '@dxos/rpc';
+import * as SqliteClient from '@dxos/sql-sqlite/SqliteClient';
 
 import { Client } from '../client';
 import { ClientServicesProxy, LocalClientServices } from '../services';
@@ -84,14 +88,18 @@ export class TestBuilder {
    * Create backend service handlers.
    */
   createClientServicesHost(runtimeProps?: ServiceContextRuntimeProps): ClientServicesHost {
+    const runtime = ManagedRuntime.make(Layer.merge(SqliteClient.layerMemory({}), Reactivity.layer).pipe(Layer.orDie));
+
     const services = new ClientServicesHost({
       config: this.config,
       storage: this?.storage?.(),
       level: this?.level?.(),
       runtimeProps,
+      runtime: runtime.runtimeEffect,
       ...this.networking,
     });
 
+    this._ctx.onDispose(() => runtime.dispose());
     this._ctx.onDispose(() => services.close());
     return services;
   }

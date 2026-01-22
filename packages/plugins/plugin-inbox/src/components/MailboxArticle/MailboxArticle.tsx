@@ -5,36 +5,36 @@
 import { Atom, useAtomSet, useAtomValue } from '@effect-atom/atom-react';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { LayoutAction, createIntent } from '@dxos/app-framework';
-import { type SurfaceComponentProps, useIntentDispatcher } from '@dxos/app-framework/react';
+import { Common } from '@dxos/app-framework';
+import { type SurfaceComponentProps, useOperationInvoker } from '@dxos/app-framework/react';
 import { type Database, Obj, Relation, Tag } from '@dxos/echo';
 import { QueryBuilder } from '@dxos/echo-query';
-import { AttentionAction } from '@dxos/plugin-attention/types';
-import { ATTENDABLE_PATH_SEPARATOR, DeckAction } from '@dxos/plugin-deck/types';
+import { AttentionOperation } from '@dxos/plugin-attention/types';
+import { ATTENDABLE_PATH_SEPARATOR, DeckOperation } from '@dxos/plugin-deck/types';
 import { Filter, useQuery } from '@dxos/react-client/echo';
 import { ElevationProvider, IconButton, useTranslation } from '@dxos/react-ui';
 import { useSelected } from '@dxos/react-ui-attention';
 import { QueryEditor } from '@dxos/react-ui-components';
 import { type EditorController } from '@dxos/react-ui-editor';
-import { MenuBuilder, useMenuActions } from '@dxos/react-ui-menu';
+import { MenuBuilder, createGapSeparator, useMenuActions } from '@dxos/react-ui-menu';
 import { MenuProvider, ToolbarMenu } from '@dxos/react-ui-menu';
 import { StackItem } from '@dxos/react-ui-stack';
 import { HasSubject, Message } from '@dxos/types';
 
+import { POPOVER_SAVE_FILTER } from '../../constants';
 import { meta } from '../../meta';
-import { type Mailbox } from '../../types';
+import { InboxOperation, type Mailbox } from '../../types';
 import { sortByCreated } from '../../util';
 
 import { type MailboxActionHandler, Mailbox as MailboxComponent } from './Mailbox';
 import { MailboxEmpty } from './MailboxEmpty';
-import { POPOVER_SAVE_FILTER } from './PopoverSaveFilter';
 
 export type MailboxArticleProps = SurfaceComponentProps<Mailbox.Mailbox> & { filter?: string; attendableId?: string };
 
 export const MailboxArticle = ({ subject: mailbox, filter: filterProp, attendableId }: MailboxArticleProps) => {
   const { t } = useTranslation(meta.id);
   const id = attendableId ?? Obj.getDXN(mailbox).toString();
-  const { dispatchPromise: dispatch } = useIntentDispatcher();
+  const { invokePromise } = useOperationInvoker();
   const currentMessageId = useSelected(id, 'single');
 
   const filterEditorRef = useRef<EditorController>(null);
@@ -114,18 +114,14 @@ export const MailboxArticle = ({ subject: mailbox, filter: filterProp, attendabl
       switch (action.type) {
         case 'current': {
           const message = sortedMessages.find((message) => message.id === action.messageId);
-          void dispatch(
-            createIntent(AttentionAction.Select, {
-              contextId: id,
-              selection: { mode: 'single', id: message?.id },
-            }),
-          );
-          void dispatch(
-            createIntent(DeckAction.ChangeCompanion, {
-              primary: id,
-              companion: `${id}${ATTENDABLE_PATH_SEPARATOR}message`,
-            }),
-          );
+          void invokePromise(AttentionOperation.Select, {
+            contextId: id,
+            selection: { mode: 'single', id: message?.id },
+          });
+          void invokePromise(DeckOperation.ChangeCompanion, {
+            primary: id,
+            companion: `${id}${ATTENDABLE_PATH_SEPARATOR}message`,
+          });
           break;
         }
 
@@ -145,23 +141,18 @@ export const MailboxArticle = ({ subject: mailbox, filter: filterProp, attendabl
         }
 
         case 'save': {
-          void dispatch(
-            createIntent(LayoutAction.UpdatePopover, {
-              part: 'popover',
-              subject: POPOVER_SAVE_FILTER,
-              options: {
-                state: true,
-                variant: 'virtual',
-                anchor: filterSaveButtonRef.current,
-                props: { mailbox, filter: action.filter },
-              },
-            }),
-          );
+          void invokePromise(Common.LayoutOperation.UpdatePopover, {
+            subject: POPOVER_SAVE_FILTER,
+            state: true,
+            variant: 'virtual',
+            anchor: filterSaveButtonRef.current,
+            props: { mailbox, filter: action.filter },
+          });
           break;
         }
       }
     },
-    [id, mailbox, sortedMessages, dispatch],
+    [id, mailbox, sortedMessages, invokePromise],
   );
 
   const handleCancel = useCallback(() => {
@@ -295,10 +286,12 @@ const useMailboxActions = ({
   sortDescending: Atom.Writable<boolean>;
   filterVisible: Atom.Writable<boolean>;
 }) => {
+  const { invokePromise } = useOperationInvoker();
+
   const menu = useMemo(
     () =>
-      Atom.make((context) =>
-        MenuBuilder.make()
+      Atom.make((context) => {
+        const base = MenuBuilder.make()
           .root({
             label: ['mailbox toolbar title', { ns: meta.id }],
           })
@@ -320,9 +313,32 @@ const useMailboxActions = ({
             },
             () => context.set(filterVisible, !context.get(filterVisible)),
           )
-          .build(),
-      ),
-    [sortDescending, filterVisible],
+          .action(
+            'composeEmail',
+            {
+              type: 'composeEmail',
+              icon: 'ph--paper-plane-right--regular',
+              label: ['compose email label', { ns: meta.id }],
+            },
+            () => invokePromise(InboxOperation.OpenComposeEmail, undefined),
+          )
+          .build();
+
+        // Add gap separator before compose email action.
+        const gap = createGapSeparator();
+        return {
+          nodes: [...base.nodes, ...gap.nodes],
+          edges: [
+            // Keep edges for sort and filter actions.
+            ...base.edges.filter((e) => e.target !== 'composeEmail'),
+            // Add gap after filter action.
+            ...gap.edges,
+            // Add compose email after gap.
+            { source: 'root', target: 'composeEmail' },
+          ],
+        };
+      }),
+    [sortDescending, filterVisible, invokePromise],
   );
 
   return useMenuActions(menu);

@@ -5,6 +5,7 @@
 import './mailbox.css';
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
+import * as Effect from 'effect/Effect';
 import React, { useMemo, useState } from 'react';
 
 import { Surface } from '@dxos/app-framework/react';
@@ -12,6 +13,7 @@ import { withPluginManager } from '@dxos/app-framework/testing';
 import { Obj } from '@dxos/echo';
 import { ClientPlugin } from '@dxos/plugin-client';
 import { PreviewPlugin } from '@dxos/plugin-preview';
+import { SpacePlugin } from '@dxos/plugin-space';
 import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
 import { Filter, useDatabase, useQuery } from '@dxos/react-client/echo';
 import { withTheme } from '@dxos/react-ui/testing';
@@ -81,14 +83,17 @@ export const WithCompanion: Story = {
         ...corePlugins(),
         ClientPlugin({
           types: [Mailbox.Mailbox, Message.Message, Person.Person],
-          onClientInitialized: async ({ client }) => {
-            await client.halo.createIdentity();
-            await client.spaces.waitUntilReady();
-            await client.spaces.default.waitUntilReady();
-            // TODO(wittjosiah): Share message builder with transcription stories. Factor out to @dxos/schema/testing.
-            await initializeMailbox(client.spaces.default);
-          },
+          onClientInitialized: ({ client }) =>
+            Effect.gen(function* () {
+              yield* Effect.promise(() => client.halo.createIdentity());
+              yield* Effect.promise(() => client.spaces.waitUntilReady());
+              yield* Effect.promise(() => client.spaces.default.waitUntilReady());
+              // TODO(wittjosiah): Share message builder with transcription stories. Factor out to @dxos/schema/testing.
+              yield* Effect.promise(() => initializeMailbox(client.spaces.default));
+            }),
         }),
+        ...corePlugins(),
+        SpacePlugin({}),
         PreviewPlugin(),
         InboxPlugin(),
         StorybookPlugin({}),

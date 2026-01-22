@@ -1,0 +1,45 @@
+{
+  "name": "@dxos/operation",
+  "version": "0.0.1",
+  "description": "Unified Operation Primitives",
+  "homepage": "https://dxos.org",
+  "bugs": "https://github.com/dxos/dxos/issues",
+  "license": "MIT",
+  "author": "info@dxos.org",
+  "sideEffects": false,
+  "type": "module",
+  "exports": {
+    ".": {
+      "source": "./src/index.ts",
+      "types": "./dist/types/src/index.d.ts",
+      "browser": "./dist/lib/browser/index.mjs",
+      "node": "./dist/lib/node-esm/index.mjs"
+    }
+  },
+  "types": "dist/types/src/index.d.ts",
+  "files": [
+    "dist",
+    "src"
+  ],
+  "scripts": {},
+  "dependencies": {
+    "@dxos/echo": "workspace:*",
+    "@dxos/effect": "workspace:*",
+    "@dxos/log": "workspace:*",
+    "@dxos/schema": "workspace:*",
+    "@dxos/util": "workspace:*"
+  },
+  "devDependencies": {
+    "@dxos/echo-db": "workspace:*",
+    "@dxos/test-utils": "workspace:*",
+    "@effect/vitest": "catalog:",
+    "effect": "catalog:",
+    "vitest": "catalog:"
+  },
+  "peerDependencies": {
+    "effect": "catalog:"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

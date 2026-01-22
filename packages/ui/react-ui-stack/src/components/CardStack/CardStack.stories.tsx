@@ -9,8 +9,8 @@ import React, { useCallback, useState } from 'react';
 import { faker } from '@dxos/random';
 import { IconButton } from '@dxos/react-ui';
 import { withTheme } from '@dxos/react-ui/testing';
+import { Card, CardDragPreview } from '@dxos/react-ui-mosaic';
 
-import { Card, CardDragPreview } from '../Card';
 import { StackItem } from '../StackItem';
 
 import { CardStack } from './CardStack';
@@ -109,7 +109,7 @@ const CardStackStory = () => {
                   prevSiblingId={prevCardId}
                   nextSiblingId={nextCardId}
                 >
-                  <Card.StaticRoot>
+                  <Card.Root>
                     <Card.Toolbar>
                       <StackItem.DragHandle asChild>
                         <Card.DragHandle toolbarItem />
@@ -126,7 +126,7 @@ const CardStackStory = () => {
                     <Card.Poster alt={card.title} image={card.image} />
                     <Card.Heading>{card.title}</Card.Heading>
                     <Card.Text classNames='line-clamp-2'>{card.description}</Card.Text>
-                  </Card.StaticRoot>
+                  </Card.Root>
                   <StackItem.DragPreview>
                     {() => (
                       <CardDragPreview.Root>

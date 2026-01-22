@@ -6,6 +6,7 @@
     ]
   },
   "include": [
+    "../react-ui-mosaic/src/components/Mosaic/Grid.tsx",
     "src/**/*.ts",
     "src/**/*.tsx",
     "src/*.ts"
@@ -30,13 +31,28 @@
       "path": "../../core/echo/echo"
     },
     {
+      "path": "../../core/echo/echo-db"
+    },
+    {
       "path": "../../core/echo/live-object"
+    },
+    {
+      "path": "../../sdk/app-framework"
     },
     {
       "path": "../../sdk/app-graph"
     },
     {
       "path": "../../sdk/client"
+    },
+    {
+      "path": "../../sdk/react-client"
+    },
+    {
+      "path": "../../sdk/schema"
+    },
+    {
+      "path": "../../sdk/types"
     },
     {
       "path": "../react-ui"
@@ -46,6 +62,9 @@
     },
     {
       "path": "../react-ui-dnd"
+    },
+    {
+      "path": "../react-ui-mosaic"
     },
     {
       "path": "../ui-theme"

@@ -2,18 +2,18 @@
 
 ## Dependencies
 
-- All dependency versions are managed in the default pnpm catalog
-- To add a new dependency, run `pnpm add --filter "<project>" --save-catalog "<package>"`
+- All dependency versions are managed in the default pnpm catalog.
+- To add a new dependency, run `pnpm add --filter "<project>" --save-catalog "<package>"`.
 
 ## Build, Test, Lint Commands
 
 - Project uses `moon` to run tasks, tests, lint etc. (moon run package-name:task-name).
-- Build all: `moon :build --quiet --no-bail`
-- Build package: `moon run package-name:build`
-- Run single test file: `moon run package-name:test -- path/to/test.test.ts`
-- Run all tests: `MOON_CONCURRENCY=4 moon run :test -- --no-file-parallelism`
-- Lint & fix: `moon run :lint -- --fix`
-- Check package tasks: see `moon.yml` in package directory
+- Build all: `moon :build --quiet --no-bail`.
+- Build package: `moon run package-name:build`.
+- Run single test file: `moon run package-name:test -- path/to/test.test.ts`.
+- Run all tests: `MOON_CONCURRENCY=4 moon run :test -- --no-file-parallelism`.
+- Lint & fix: `moon run :lint -- --fix`.
+- Check package tasks: see `moon.yml` in package directory.
 
 ## Important
 
@@ -21,15 +21,15 @@
 
 ## Code Style
 
-- Use TypeScript with single quotes for strings
-- Prefer functional programming and arrow functions
-- Use inline type imports: `import { type Foo } from 'bar'`
-- Format: max line 120 chars, trailing commas, JSX single quotes
-- Import order: builtin → external → @dxos → internal → parent → sibling (with blank lines between groups)
-- Error handling: use Effect-TS patterns
-- Testing: place tests near modules as `module.test.ts`, use vitest with `describe`/`test` (not `it`), prefer `test('foo', ({ expect }) => ...)`
-- JSDoc comments for public functions, all comments end with period
-- React: arrow function components, TailwindCSS for styles, proper event handler types
+- Use TypeScript with single quotes for strings.
+- Prefer functional programming and arrow functions.
+- Use inline type imports: `import { type Foo } from 'bar'`.
+- Format: max line 120 chars, trailing commas, JSX single quotes.
+- Import order: builtin → external → @dxos → internal → parent → sibling (with blank lines between groups).
+- Error handling: use Effect-TS patterns.
+- Testing: place tests near modules as `module.test.ts`, use vitest with `describe`/`test` (not `it`), prefer `test('foo', ({ expect }) => ...)`.
+- JSDoc comments for public functions, all comments end with period.
+- React: arrow function components, TailwindCSS for styles, proper event handler types.
 - Remember to remove/update TODOs as you go.
 
 ## PR Checklist
@@ -45,8 +45,30 @@ pnpm -w pre-ci
 - Never work on main, create a new git worktree for the branch you are working on.
 - Check `moon.yml` for available package tasks
 - Run linter at natural stopping points
-- Use Conventional Commits for PR titles
 - Confirm work complete before final build/lint check
+
+## PR Naming Convention
+
+**IMPORTANT**: All PR titles MUST use conventional commit format:
+
+- `feat: <description>` - New features or functionality
+- `fix: <description>` - Bug fixes
+- `refactor: <description>` - Code refactoring without behavior changes
+- `docs: <description>` - Documentation changes
+- `test: <description>` - Adding or updating tests
+- `chore: <description>` - Maintenance tasks, dependency updates
+- `perf: <description>` - Performance improvements
+- `style: <description>` - Code style/formatting changes
+- `ci: <description>` - CI/CD configuration changes
+- `build: <description>` - Build system changes
+
+Use scope when relevant: `feat(package-name): <description>`
+
+Examples:
+- `feat: add user authentication flow`
+- `fix(echo): resolve memory leak in subscription handler`
+- `refactor: simplify error handling in client SDK`
+- `docs: update API reference for Space class`
 
 ## Submitting PRs
 

@@ -67,10 +67,19 @@ export const useSelected = <T extends SelectionMode>(
   )(defaultSelection(mode)) as any;
 };
 
+export type UseSelectionActions = {
+  singleSelect: (id: string) => void;
+  multiSelect: (ids: string[]) => void;
+  rangeSelect: (from: string, to: string) => void;
+  toggle: (id: string) => void;
+  clear: () => void;
+};
+
 /**
  * Provides functions to manage the selection state for multiple contexts.
  */
-export const useSelectionActions = (contextIds: string[], mode: SelectionMode = 'multi') => {
+// TODO(burdon): Mode not used.
+export const useSelectionActions = (contextIds: string[], mode: SelectionMode = 'multi'): UseSelectionActions => {
   const stableContextIds = useMemo(() => contextIds, [JSON.stringify(contextIds)]); // TODO(burdon): Avoid stringify.
   const { selection } = useSelectionContext(SELECTION_NAME);
 

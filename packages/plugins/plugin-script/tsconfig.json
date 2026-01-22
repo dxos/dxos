@@ -97,6 +97,9 @@
       "path": "../../core/mesh/rpc-tunnel"
     },
     {
+      "path": "../../core/operation"
+    },
+    {
       "path": "../../core/protocols"
     },
     {

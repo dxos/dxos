@@ -135,6 +135,9 @@ export const createConfig = ({
             overlay: false,
           },
         },
+        optimizeDeps: {
+          exclude: ['@dxos/wa-sqlite'],
+        },
         worker: {
           format: 'es',
           plugins: () => [wasm(), topLevelAwait()],

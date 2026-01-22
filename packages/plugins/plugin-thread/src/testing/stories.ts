@@ -2,7 +2,9 @@
 // Copyright 2023 DXOS.org
 //
 
-import { IntentPlugin, SettingsPlugin } from '@dxos/app-framework';
+import * as Effect from 'effect/Effect';
+
+import { OperationPlugin, type Plugin, SettingsPlugin } from '@dxos/app-framework';
 import { ClientPlugin } from '@dxos/plugin-client';
 import { GraphPlugin } from '@dxos/plugin-graph';
 import { SpacePlugin } from '@dxos/plugin-space';
@@ -13,16 +15,18 @@ import { defaultTx } from '@dxos/ui-theme';
 import { ThreadPlugin } from '../ThreadPlugin';
 import { Channel } from '../types';
 
-export const createThreadPlugins = async () => [
+export const createThreadPlugins = async (): Promise<Array<Plugin.Plugin>> => [
   ThemePlugin({ tx: defaultTx }),
   ClientPlugin({
-    onClientInitialized: async ({ client }) => {
-      await client.halo.createIdentity({ displayName: 'Test User' });
-    },
-    onSpacesReady: async ({ client }) => {
-      await client.spaces.default.waitUntilReady();
-      client.spaces.default.db.add(Channel.make());
-    },
+    onClientInitialized: ({ client }) =>
+      Effect.gen(function* () {
+        yield* Effect.promise(() => client.halo.createIdentity({ displayName: 'Test User' }));
+      }),
+    onSpacesReady: ({ client }) =>
+      Effect.gen(function* () {
+        yield* Effect.promise(() => client.spaces.default.waitUntilReady());
+        client.spaces.default.db.add(Channel.make());
+      }),
     config: new Config({
       runtime: {
         client: {
@@ -44,7 +48,7 @@ export const createThreadPlugins = async () => [
     }),
   }),
   SpacePlugin({}),
-  IntentPlugin(),
+  OperationPlugin(),
   SettingsPlugin(),
   GraphPlugin(),
   ThreadPlugin(),

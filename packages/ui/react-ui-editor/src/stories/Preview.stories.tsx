@@ -12,7 +12,7 @@ import { invariant } from '@dxos/invariant';
 import { faker } from '@dxos/random';
 import { Popover } from '@dxos/react-ui';
 import { withTheme } from '@dxos/react-ui/testing';
-import { Card } from '@dxos/react-ui-stack';
+import { Card } from '@dxos/react-ui-mosaic';
 import {
   type PreviewBlock,
   type PreviewLinkRef,
@@ -133,7 +133,7 @@ const PreviewBlockComponent = ({ link, el, view }: { link: PreviewLinkRef; el: H
   }, [handleAction, link, target]);
 
   return createPortal(
-    <Card.StaticRoot classNames={hoverableControls}>
+    <Card.Root classNames={hoverableControls}>
       <div className='flex items-start'>
         {!view?.state.readOnly && (
           <Card.Toolbar classNames='is-min p-[--dx-cardSpacingInline]'>
@@ -166,7 +166,7 @@ const PreviewBlockComponent = ({ link, el, view }: { link: PreviewLinkRef; el: H
         </Card.Heading>
       </div>
       {target && <Card.Text classNames='line-clamp-3 mbs-0'>{target.text}</Card.Text>}
-    </Card.StaticRoot>,
+    </Card.Root>,
     el,
   );
 };

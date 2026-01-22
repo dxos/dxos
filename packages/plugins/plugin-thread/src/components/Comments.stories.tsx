@@ -3,9 +3,10 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
+import * as Effect from 'effect/Effect';
 import React from 'react';
 
-import { IntentPlugin } from '@dxos/app-framework';
+import { OperationPlugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Obj, Query, Relation, Type } from '@dxos/echo';
 import { ClientPlugin } from '@dxos/plugin-client';
@@ -68,12 +69,13 @@ const meta = {
     //  Currently this is required due to useOnEditAnalytics.
     withPluginManager({
       plugins: [
-        IntentPlugin(),
+        OperationPlugin(),
         ClientPlugin({
           types: [Message.Message, Thread.Thread, AnchoredTo.AnchoredTo],
-          onClientInitialized: async ({ client }) => {
-            await client.halo.createIdentity();
-          },
+          onClientInitialized: ({ client }) =>
+            Effect.gen(function* () {
+              yield* Effect.promise(() => client.halo.createIdentity());
+            }),
         }),
       ],
     }),

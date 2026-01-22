@@ -8,7 +8,6 @@ import { renderHook, waitFor } from '@testing-library/react';
 import React, { type PropsWithChildren } from 'react';
 import { describe, expect, test } from 'vitest';
 
-import type { Entity } from '@dxos/echo';
 import { Obj } from '@dxos/echo';
 import { TestSchema } from '@dxos/echo/testing';
 import { createObject } from '@dxos/echo-db';
@@ -23,7 +22,7 @@ const createWrapper = (registry: Registry.Registry) => {
 
 describe('useObject', () => {
   test('returns entire object when property is not provided', () => {
-    const obj = createObject(
+    const obj: TestSchema.Person = createObject(
       Obj.make(TestSchema.Person, { name: 'Test', username: 'test', email: 'test@example.com' }),
     );
     const registry = Registry.make();
@@ -31,44 +30,49 @@ describe('useObject', () => {
 
     const { result } = renderHook(() => useObject(obj), { wrapper });
 
-    expect(result.current).toBe(obj);
-    expect(result.current.name).toBe('Test');
+    // Returns a snapshot (plain object), not the Echo object itself.
+    const [value] = result.current;
+    expect(value).not.toBe(obj);
+    expect(value.name).toBe('Test');
+    expect(value.username).toBe('test');
+    expect(value.email).toBe('test@example.com');
   });
 
   test('returns property value when property is provided', () => {
-    const obj = createObject(
+    const obj: TestSchema.Person = createObject(
       Obj.make(TestSchema.Person, { name: 'Test', username: 'test', email: 'test@example.com' }),
-    ) as Entity.Entity<TestSchema.Person>;
+    );
     const registry = Registry.make();
     const wrapper = createWrapper(registry);
 
     const { result } = renderHook(() => useObject(obj, 'name'), { wrapper });
 
-    expect(result.current).toBe('Test');
+    const [value] = result.current;
+    expect(value).toBe('Test');
   });
 
   test('updates when object property changes', async () => {
-    const obj = createObject(
+    const obj: TestSchema.Person = createObject(
       Obj.make(TestSchema.Person, { name: 'Test', username: 'test', email: 'test@example.com' }),
-    ) as Entity.Entity<TestSchema.Person>;
+    );
     const registry = Registry.make();
     const wrapper = createWrapper(registry);
 
     const { result } = renderHook(() => useObject(obj, 'name'), { wrapper });
 
-    expect(result.current).toBe('Test');
+    expect(result.current[0]).toBe('Test');
 
     // Update the property directly on the object
     obj.name = 'Updated';
 
     // Wait for reactivity to update
     await waitFor(() => {
-      expect(result.current).toBe('Updated');
+      expect(result.current[0]).toBe('Updated');
     });
   });
 
   test('updates when entire object changes', async () => {
-    const obj = createObject(
+    const obj: TestSchema.Person = createObject(
       Obj.make(TestSchema.Person, { name: 'Test', username: 'test', email: 'test@example.com' }),
     );
     const registry = Registry.make();
@@ -76,27 +80,27 @@ describe('useObject', () => {
 
     const { result } = renderHook(() => useObject(obj), { wrapper });
 
-    expect(result.current.name).toBe('Test');
+    expect(result.current[0].name).toBe('Test');
 
     // Update a property on the object
     obj.name = 'Updated';
 
     // Wait for reactivity to update
     await waitFor(() => {
-      expect(result.current.name).toBe('Updated');
+      expect(result.current[0].name).toBe('Updated');
     });
   });
 
   test('property atom does not update when other properties change', async () => {
-    const obj = createObject(
+    const obj: TestSchema.Person = createObject(
       Obj.make(TestSchema.Person, { name: 'Test', username: 'test', email: 'test@example.com' }),
-    ) as Entity.Entity<TestSchema.Person>;
+    );
     const registry = Registry.make();
     const wrapper = createWrapper(registry);
 
     const { result } = renderHook(() => useObject(obj, 'name'), { wrapper });
 
-    expect(result.current).toBe('Test');
+    expect(result.current[0]).toBe('Test');
 
     // Update a different property
     obj.email = 'newemail@example.com';
@@ -105,7 +109,7 @@ describe('useObject', () => {
     await new Promise((resolve) => setTimeout(resolve, 50));
 
     // Name should still be 'Test'
-    expect(result.current).toBe('Test');
+    expect(result.current[0]).toBe('Test');
   });
 
   test('throws error when RegistryContext is not provided', () => {
@@ -122,5 +126,89 @@ describe('useObject', () => {
     expect(true).toBe(true);
 
     console.error = consoleError;
+  });
+
+  test('update callback for entire object mutates the object', async () => {
+    const obj: TestSchema.Person = createObject(
+      Obj.make(TestSchema.Person, { name: 'Test', username: 'test', email: 'test@example.com' }),
+    );
+    const registry = Registry.make();
+    const wrapper = createWrapper(registry);
+
+    const { result } = renderHook(() => useObject(obj), { wrapper });
+
+    const [value, updateCallback] = result.current;
+    expect(value.name).toBe('Test');
+
+    // Update the object using the callback
+    updateCallback((obj) => {
+      obj.name = 'Updated';
+    });
+
+    // Wait for reactivity to update
+    await waitFor(() => {
+      expect(result.current[0].name).toBe('Updated');
+    });
+  });
+
+  test('update callback for property with direct value', async () => {
+    const obj: TestSchema.Person = createObject(
+      Obj.make(TestSchema.Person, { name: 'Test', username: 'test', email: 'test@example.com' }),
+    );
+    const registry = Registry.make();
+    const wrapper = createWrapper(registry);
+
+    const { result } = renderHook(() => useObject(obj, 'name'), { wrapper });
+
+    const [value, updateCallback] = result.current;
+    expect(value).toBe('Test');
+
+    // Update the property with direct value
+    updateCallback('Updated');
+
+    // Wait for reactivity to update
+    await waitFor(() => {
+      expect(result.current[0]).toBe('Updated');
+    });
+  });
+
+  test('update callback for property with updater function', async () => {
+    const obj: TestSchema.Person = createObject(
+      Obj.make(TestSchema.Person, { name: 'Test', username: 'test', email: 'test@example.com' }),
+    );
+    const registry = Registry.make();
+    const wrapper = createWrapper(registry);
+
+    const { result } = renderHook(() => useObject(obj, 'name'), { wrapper });
+
+    const [value, updateCallback] = result.current;
+    expect(value).toBe('Test');
+
+    // Update the property using updater function
+    updateCallback((current) => `${current} Updated`);
+
+    // Wait for reactivity to update
+    await waitFor(() => {
+      expect(result.current[0]).toBe('Test Updated');
+    });
+  });
+
+  test('update callback is stable across re-renders', () => {
+    const obj: TestSchema.Person = createObject(
+      Obj.make(TestSchema.Person, { name: 'Test', username: 'test', email: 'test@example.com' }),
+    );
+    const registry = Registry.make();
+    const wrapper = createWrapper(registry);
+
+    const { result, rerender } = renderHook(() => useObject(obj, 'name'), { wrapper });
+
+    const [, firstUpdateCallback] = result.current;
+
+    rerender();
+
+    const [, secondUpdateCallback] = result.current;
+
+    // Callback should be the same reference (memoized)
+    expect(firstUpdateCallback).toBe(secondUpdateCallback);
   });
 });

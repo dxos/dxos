@@ -1,0 +1,79 @@
+{
+  "name": "@dxos/stories-ui",
+  "version": "0.8.3",
+  "description": "Modular UI components.",
+  "homepage": "https://dxos.org",
+  "bugs": "https://github.com/dxos/dxos/issues",
+  "license": "MIT",
+  "author": "DXOS.org",
+  "sideEffects": true,
+  "type": "module",
+  "types": "dist/types/src/index.d.ts",
+  "typesVersions": {
+    "*": {}
+  },
+  "files": [
+    "dist",
+    "src"
+  ],
+  "scripts": {
+    "vitest-ui": "vitest --ui"
+  },
+  "dependencies": {
+    "@atlaskit/pragmatic-drag-and-drop": "catalog:",
+    "@atlaskit/pragmatic-drag-and-drop-auto-scroll": "catalog:",
+    "@atlaskit/pragmatic-drag-and-drop-hitbox": "catalog:",
+    "@atlaskit/pragmatic-drag-and-drop-react-drop-indicator": "catalog:",
+    "@codemirror/state": "catalog:",
+    "@codemirror/view": "catalog:",
+    "@dxos/async": "workspace:*",
+    "@dxos/echo": "workspace:*",
+    "@dxos/invariant": "workspace:*",
+    "@dxos/log": "workspace:*",
+    "@dxos/operation": "workspace:*",
+    "@dxos/react-client": "workspace:*",
+    "@dxos/react-ui-dnd": "workspace:*",
+    "@dxos/react-ui-syntax-highlighter": "workspace:*",
+    "@dxos/util": "workspace:*",
+    "@fluentui/react-tabster": "catalog:",
+    "@preact-signals/safe-react": "catalog:",
+    "@radix-ui/react-compose-refs": "catalog:",
+    "@radix-ui/react-context": "catalog:",
+    "@radix-ui/react-primitive": "catalog:",
+    "@radix-ui/react-slot": "catalog:",
+    "@radix-ui/react-use-controllable-state": "catalog:",
+    "bind-event-listener": "catalog:"
+  },
+  "devDependencies": {
+    "@dxos/app-framework": "workspace:*",
+    "@dxos/echo-db": "workspace:*",
+    "@dxos/plugin-testing": "workspace:*",
+    "@dxos/random": "workspace:*",
+    "@dxos/react-ui": "workspace:*",
+    "@dxos/react-ui-components": "workspace:*",
+    "@dxos/react-ui-editor": "workspace:*",
+    "@dxos/react-ui-mosaic": "workspace:*",
+    "@dxos/react-ui-syntax-highlighter": "workspace:*",
+    "@dxos/schema": "workspace:*",
+    "@dxos/storybook-utils": "workspace:*",
+    "@dxos/test-utils": "workspace:*",
+    "@dxos/types": "workspace:*",
+    "@dxos/ui-editor": "workspace:*",
+    "@dxos/ui-theme": "workspace:*",
+    "@types/react": "catalog:",
+    "@types/react-dom": "catalog:",
+    "react": "catalog:",
+    "react-dom": "catalog:",
+    "vite": "catalog:"
+  },
+  "peerDependencies": {
+    "@dxos/random": "workspace:*",
+    "@dxos/react-ui": "workspace:*",
+    "@dxos/ui-theme": "workspace:*",
+    "react": "catalog:",
+    "react-dom": "catalog:"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

@@ -5,14 +5,14 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
-import { Capabilities, contributes, createSurface } from '@dxos/app-framework';
+import { Capability, Common } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Filter, Obj, Ref, Relation, type Type } from '@dxos/echo';
 import { faker } from '@dxos/random';
 import { useQuery } from '@dxos/react-client/echo';
 import { useClientStory, withClientProvider } from '@dxos/react-client/testing';
 import { withTheme } from '@dxos/react-ui/testing';
-import { Card } from '@dxos/react-ui-stack';
+import { Card } from '@dxos/react-ui-mosaic';
 import { Json } from '@dxos/react-ui-syntax-highlighter';
 import { type ValueGenerator, createAsyncGenerator } from '@dxos/schema/testing';
 import { translations as shellTranslations } from '@dxos/shell/react';
@@ -45,8 +45,8 @@ const meta = {
     // TODO(wittjosiah): Try to write story which does not depend on plugin manager.
     withPluginManager({
       capabilities: [
-        contributes(Capabilities.ReactSurface, [
-          createSurface({
+        Capability.contributes(Common.Capability.ReactSurface, [
+          Common.createSurface({
             id: 'section',
             role: 'section',
             component: ({ data }) => (
@@ -55,7 +55,7 @@ const meta = {
               </Card.SurfaceRoot>
             ),
           }),
-          createSurface({
+          Common.createSurface({
             id: 'card',
             role: 'card',
             component: ({ data }) => (

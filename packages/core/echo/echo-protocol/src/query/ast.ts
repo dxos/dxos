@@ -212,7 +212,11 @@ export const QueryReferenceTraversalClause: Schema.Schema<QueryReferenceTraversa
 const QueryIncomingReferencesClause_ = Schema.Struct({
   type: Schema.Literal('incoming-references'),
   anchor: Schema.suspend(() => Query),
-  property: Schema.String,
+  /**
+   * Property path where the reference is located.
+   * If null, matches references from any property.
+   */
+  property: Schema.NullOr(Schema.String),
   typename: TypenameSpecifier,
 });
 

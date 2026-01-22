@@ -12,7 +12,7 @@ import { getSpace, useQuery } from '@dxos/react-client/echo';
 import { IconButton, type ThemedClassName, useAsyncEffect, useTranslation } from '@dxos/react-ui';
 import { Form, ViewEditor } from '@dxos/react-ui-form';
 import { List } from '@dxos/react-ui-list';
-import { cardChrome, cardText } from '@dxos/react-ui-stack';
+import { cardChrome, cardText } from '@dxos/react-ui-mosaic';
 import { type ProjectionModel, View } from '@dxos/schema';
 import { Project, Task } from '@dxos/types';
 import { inputTextLabel, mx, subtleHover } from '@dxos/ui-theme';

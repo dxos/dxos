@@ -7,18 +7,18 @@ import * as Function from 'effect/Function';
 import * as Option from 'effect/Option';
 import React, { forwardRef, useCallback, useEffect, useMemo, useState } from 'react';
 
-import { Capabilities, createIntent } from '@dxos/app-framework';
-import { useCapabilities, useIntentDispatcher } from '@dxos/app-framework/react';
+import { Common } from '@dxos/app-framework';
+import { useCapabilities, useOperationInvoker } from '@dxos/app-framework/react';
 import { Blueprint } from '@dxos/blueprints';
 import { getSpace } from '@dxos/client/echo';
 import { Filter, Obj, Ref } from '@dxos/echo';
-import { SpaceAction } from '@dxos/plugin-space/types';
+import { SpaceOperation } from '@dxos/plugin-space/types';
 import { useQuery } from '@dxos/react-client/echo';
 import { useAsyncEffect } from '@dxos/react-ui';
 
 import { ChatContainer, type ChatEvent } from '../components';
 import { useBlueprintRegistry, useContextBinder } from '../hooks';
-import { Assistant, AssistantAction } from '../types';
+import { Assistant, AssistantOperation } from '../types';
 
 export type ChatCompanionProps = {
   role?: string;
@@ -30,7 +30,7 @@ export type ChatCompanionProps = {
 
 export const ChatCompanion = forwardRef<HTMLDivElement, ChatCompanionProps>(
   ({ role, data }: ChatCompanionProps, forwardedRef) => {
-    const { dispatchPromise: dispatch } = useIntentDispatcher();
+    const { invokePromise } = useOperationInvoker();
     const blueprintRegistry = useBlueprintRegistry();
     const companionTo = data.companionTo;
 
@@ -49,7 +49,7 @@ export const ChatCompanion = forwardRef<HTMLDivElement, ChatCompanionProps>(
         return;
       }
 
-      const { data } = await dispatch(createIntent(AssistantAction.CreateChat, { db: space.db }));
+      const { data } = await invokePromise(AssistantOperation.CreateChat, { db: space.db });
       setChat(data?.object);
     }, [chat, space]);
 
@@ -62,33 +62,27 @@ export const ChatCompanion = forwardRef<HTMLDivElement, ChatCompanionProps>(
         }
 
         if (event.type === 'submit') {
-          await dispatch(
-            createIntent(SpaceAction.AddObject, {
-              object: chat,
-              target: space.db,
-              hidden: true,
-            }),
-          );
-          await dispatch(
-            createIntent(SpaceAction.AddRelation, {
-              db: space.db,
-              schema: Assistant.CompanionTo,
-              source: chat,
-              target: companionTo,
-            }),
-          );
-          await dispatch(
-            createIntent(AssistantAction.SetCurrentChat, {
-              companionTo,
-              chat,
-            }),
-          );
+          await invokePromise(SpaceOperation.AddObject, {
+            object: chat,
+            target: space.db,
+            hidden: true,
+          });
+          await invokePromise(SpaceOperation.AddRelation, {
+            db: space.db,
+            schema: Assistant.CompanionTo,
+            source: chat,
+            target: companionTo,
+          });
+          await invokePromise(AssistantOperation.SetCurrentChat, {
+            companionTo,
+            chat,
+          });
         }
       },
-      [chat, space, companionTo, dispatch],
+      [chat, space, companionTo, invokePromise],
     );
 
-    const metadata = useCapabilities(Capabilities.Metadata);
+    const metadata = useCapabilities(Common.Capability.Metadata);
     const blueprintKeys = useMemo(
       () =>
         Function.pipe(

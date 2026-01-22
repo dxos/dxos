@@ -8,7 +8,8 @@ import { Obj } from '@dxos/echo';
 import { Filter, useQuery, useSchema } from '@dxos/react-client/echo';
 import { Callout, Toolbar, useTranslation } from '@dxos/react-ui';
 import { useSelected } from '@dxos/react-ui-attention';
-import { Card, CardStack, StackItem } from '@dxos/react-ui-stack';
+import { Card } from '@dxos/react-ui-mosaic';
+import { CardStack, StackItem } from '@dxos/react-ui-stack';
 import { type View, getTypenameFromQuery } from '@dxos/schema';
 import { isNonNullable } from '@dxos/util';
 
@@ -51,9 +52,9 @@ export const ObjectCardStack = forwardRef<HTMLDivElement, ObjectCardStackProps>(
             {selectedObjects.map((object) => (
               <CardStack.Item key={object.id} asChild>
                 <StackItem.Root item={object}>
-                  <Card.StaticRoot>
+                  <Card.Root>
                     <ObjectForm object={object} schema={schema} />
-                  </Card.StaticRoot>
+                  </Card.Root>
                 </StackItem.Root>
               </CardStack.Item>
             ))}

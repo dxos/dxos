@@ -18,12 +18,15 @@ import { mx } from '@dxos/ui-theme';
 
 import { translationKey } from '../../translations';
 
+// TODO(burdon): Factor out.
+
 export type ControlPageParams = ThemedClassName<ComponentPropsWithoutRef<'div'>>;
 
 export const ControlPage = ({ children, classNames, ...props }: ControlPageParams) => {
   return (
+    // TODO(burdon): Remove dependency on react-ui-stack.
     <StackItem.Content scrollable classNames='[--control-spacing:var(--dx-trimMd)]'>
-      <div role='none' className={mx('pli-cardSpacingInline pbe-trimLg', classNames)} {...props}>
+      <div role='none' className={mx('pli-cardSpacingInline pbe-trimMd', classNames)} {...props}>
         {children}
       </div>
     </StackItem.Content>
@@ -48,7 +51,7 @@ export const ControlSectionHeading = ({ title, description }: Omit<ControlSectio
   const { t } = useTranslation(translationKey);
   return (
     <>
-      <h2 className='pli-trimMd container-max-width text-xl mbs-trimLg mbe-trimMd'>{toLocalizedString(title, t)}</h2>
+      <h2 className='pli-trimMd container-max-width text-xl mbs-trimMd mbe-trimMd'>{toLocalizedString(title, t)}</h2>
       {description && (
         <p className='pli-trimMd mlb-trimMd container-max-width text-description'>
           {toLocalizedString(description, t)}

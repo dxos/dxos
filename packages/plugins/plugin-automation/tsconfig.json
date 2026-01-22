@@ -60,6 +60,9 @@
       "path": "../../core/functions-runtime"
     },
     {
+      "path": "../../core/operation"
+    },
+    {
       "path": "../../devtools/cli-util"
     },
     {

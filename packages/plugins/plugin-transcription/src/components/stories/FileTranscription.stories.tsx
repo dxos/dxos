@@ -3,9 +3,10 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
+import * as Effect from 'effect/Effect';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { Events } from '@dxos/app-framework';
+import { Common } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { scheduleTask } from '@dxos/async';
 import { Context } from '@dxos/context';
@@ -16,6 +17,7 @@ import { FunctionExecutor, ServiceContainer } from '@dxos/functions-runtime';
 import { log } from '@dxos/log';
 import { ClientPlugin } from '@dxos/plugin-client';
 import { PreviewPlugin } from '@dxos/plugin-preview';
+import { SpacePlugin } from '@dxos/plugin-space';
 import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { TestSchema } from '@dxos/schema/testing';
@@ -192,18 +194,21 @@ const meta = {
         ...corePlugins(),
         ClientPlugin({
           types: [TestItem, Person.Person, Organization.Organization, TestSchema.DocumentType],
-          onClientInitialized: async ({ client }) => {
-            await client.halo.createIdentity();
-            await client.spaces.waitUntilReady();
-            await client.spaces.default.waitUntilReady();
-            await seedTestData(client.spaces.default);
-          },
+          onClientInitialized: ({ client }) =>
+            Effect.gen(function* () {
+              yield* Effect.promise(() => client.halo.createIdentity());
+              yield* Effect.promise(() => client.spaces.waitUntilReady());
+              yield* Effect.promise(() => client.spaces.default.waitUntilReady());
+              yield* Effect.promise(() => seedTestData(client.spaces.default));
+            }),
         }),
+        ...corePlugins(),
+        SpacePlugin({}),
         PreviewPlugin(),
         TranscriptionPlugin(),
         StorybookPlugin({}),
       ],
-      fireEvents: [Events.SetupAppGraph],
+      fireEvents: [Common.ActivationEvent.SetupAppGraph],
     }),
   ],
 } satisfies Meta;

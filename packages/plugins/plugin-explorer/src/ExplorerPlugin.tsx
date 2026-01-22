@@ -2,50 +2,31 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Capabilities, Events, contributes, createIntent, defineModule, definePlugin } from '@dxos/app-framework';
-import { Type } from '@dxos/echo';
-import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
-import { type CreateObjectIntent } from '@dxos/plugin-space/types';
+import * as Effect from 'effect/Effect';
 
-import { IntentResolver, ReactSurface } from './capabilities';
+import { Common, Plugin } from '@dxos/app-framework';
+import { Type } from '@dxos/echo';
+import { type CreateObject } from '@dxos/plugin-space/types';
+
+import { ReactSurface } from './capabilities';
 import { meta } from './meta';
 import { translations } from './translations';
 import { ExplorerAction, Graph } from './types';
 
-export const ExplorerPlugin = definePlugin(meta, () => [
-  defineModule({
-    id: `${meta.id}/module/translations`,
-    activatesOn: Events.SetupTranslations,
-    activate: () => contributes(Capabilities.Translations, translations),
+export const ExplorerPlugin = Plugin.define(meta).pipe(
+  Common.Plugin.addTranslationsModule({ translations }),
+  Common.Plugin.addMetadataModule({
+    metadata: {
+      id: Type.getTypename(Graph.Graph),
+      metadata: {
+        icon: 'ph--graph--regular',
+        iconHue: 'green',
+        inputSchema: ExplorerAction.GraphProps,
+        createObject: ((props) => Effect.sync(() => Graph.make(props))) satisfies CreateObject,
+      },
+    },
   }),
-  defineModule({
-    id: `${meta.id}/module/metadata`,
-    activatesOn: Events.SetupMetadata,
-    activate: () =>
-      contributes(Capabilities.Metadata, {
-        id: Type.getTypename(Graph.Graph),
-        metadata: {
-          icon: 'ph--graph--regular',
-          iconHue: 'green',
-          inputSchema: ExplorerAction.GraphProps,
-          createObjectIntent: ((props, options) =>
-            createIntent(ExplorerAction.CreateGraph, { ...props, space: options.db })) satisfies CreateObjectIntent,
-        },
-      }),
-  }),
-  defineModule({
-    id: `${meta.id}/module/schema`,
-    activatesOn: ClientEvents.SetupSchema,
-    activate: () => contributes(ClientCapabilities.Schema, [Graph.Graph]),
-  }),
-  defineModule({
-    id: `${meta.id}/module/react-surface`,
-    activatesOn: Events.SetupReactSurface,
-    activate: ReactSurface,
-  }),
-  defineModule({
-    id: `${meta.id}/module/intent-resolver`,
-    activatesOn: Events.SetupIntentResolver,
-    activate: IntentResolver,
-  }),
-]);
+  Common.Plugin.addSchemaModule({ schema: [Graph.Graph] }),
+  Common.Plugin.addSurfaceModule({ activate: ReactSurface }),
+  Plugin.make,
+);

@@ -110,6 +110,7 @@ function readPackage(packageJson, context) {
       break;
     }
 
+
     // https://github.com/dxos/dxos/issues/3330
     case 'simple-hypercore-protocol': {
       packageJson.dependencies['noise-protocol'] = '3.0.1';

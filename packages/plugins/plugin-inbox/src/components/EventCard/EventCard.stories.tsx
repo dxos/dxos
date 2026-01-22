@@ -7,8 +7,8 @@ import React from 'react';
 
 import { faker } from '@dxos/random';
 import { withTheme } from '@dxos/react-ui/testing';
-import { Card } from '@dxos/react-ui-stack';
-import { IntrinsicCardContainer } from '@dxos/storybook-utils';
+import { Card } from '@dxos/react-ui-mosaic';
+import { IntrinsicCardContainer } from '@dxos/react-ui-mosaic/testing';
 import { Event } from '@dxos/types';
 
 import { EventCard } from './EventCard';
@@ -37,9 +37,9 @@ const meta = {
   render: (args) => {
     return (
       <IntrinsicCardContainer>
-        <Card.StaticRoot>
+        <Card.Root>
           <EventCard {...args} />
-        </Card.StaticRoot>
+        </Card.Root>
       </IntrinsicCardContainer>
     );
   },

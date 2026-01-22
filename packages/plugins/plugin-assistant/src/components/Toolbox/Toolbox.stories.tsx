@@ -3,6 +3,7 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
+import * as Effect from 'effect/Effect';
 import React from 'react';
 
 import { withPluginManager } from '@dxos/app-framework/testing';
@@ -10,6 +11,7 @@ import { capabilities } from '@dxos/assistant-toolkit/testing';
 import { ChessPlugin } from '@dxos/plugin-chess';
 import { ClientPlugin } from '@dxos/plugin-client';
 import { MapPlugin } from '@dxos/plugin-map';
+import { SpacePlugin } from '@dxos/plugin-space';
 import { TablePlugin } from '@dxos/plugin-table';
 import { corePlugins } from '@dxos/plugin-testing';
 import { withTheme } from '@dxos/react-ui/testing';
@@ -32,10 +34,13 @@ const meta = {
       plugins: [
         ...corePlugins(),
         ClientPlugin({
-          onClientInitialized: async ({ client }) => {
-            await client.halo.createIdentity();
-          },
+          onClientInitialized: ({ client }) =>
+            Effect.gen(function* () {
+              yield* Effect.promise(() => client.halo.createIdentity());
+            }),
         }),
+        ...corePlugins(),
+        SpacePlugin({}),
         ChessPlugin(),
         MapPlugin(),
         TablePlugin(),

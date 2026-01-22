@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { IntentPlugin, type Plugin } from '@dxos/app-framework';
+import { OperationPlugin, type Plugin } from '@dxos/app-framework';
 import { type Config } from '@dxos/client';
 import { AutomationPlugin } from '@dxos/plugin-automation/cli';
 import { ChessPlugin } from '@dxos/plugin-chess/cli';
@@ -24,8 +24,8 @@ export type PluginConfig = {
 export const getCore = (): string[] => [
   AutomationPlugin.meta.id,
   ClientPlugin.meta.id,
-  IntentPlugin.meta.id,
   ObservabilityPlugin.meta.id,
+  OperationPlugin.meta.id,
   RegistryPlugin.meta.id,
   SpacePlugin.meta.id,
   TokenManagerPlugin.meta.id,
@@ -33,14 +33,14 @@ export const getCore = (): string[] => [
 
 export const getDefaults = (): string[] => [ChessPlugin.meta.id, InboxPlugin.meta.id, MarkdownPlugin.meta.id];
 
-export const getPlugins = ({ config }: PluginConfig): Plugin[] => [
+export const getPlugins = ({ config }: PluginConfig): Plugin.Plugin[] => [
   AutomationPlugin(),
   ChessPlugin(),
   ClientPlugin({ config }),
   InboxPlugin(),
-  IntentPlugin(),
   MarkdownPlugin(),
   ObservabilityPlugin(),
+  OperationPlugin(),
   RegistryPlugin(),
   SpacePlugin({}),
   TokenManagerPlugin(),

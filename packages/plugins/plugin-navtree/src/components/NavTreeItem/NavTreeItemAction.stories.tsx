@@ -3,8 +3,12 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
+import * as Effect from 'effect/Effect';
 
-import { type NodeArg } from '@dxos/app-graph';
+import { RuntimePlugin } from '@dxos/app-framework';
+import { withPluginManager } from '@dxos/app-framework/testing';
+import { type Node } from '@dxos/app-graph';
+import { corePlugins } from '@dxos/plugin-testing';
 import { faker } from '@dxos/random';
 import { withTheme } from '@dxos/react-ui/testing';
 
@@ -18,7 +22,7 @@ const parent = {
     label: faker.lorem.words(2),
     icon: 'ph--circle--regular',
   },
-} satisfies NodeArg<any>;
+} satisfies Node.NodeArg<any>;
 
 // TODO(burdon): Factor out across tests.
 const menuActions = faker.helpers.multiple(
@@ -26,14 +30,15 @@ const menuActions = faker.helpers.multiple(
     ({
       id: faker.string.uuid(),
       type: 'action',
-      data: () => {
-        console.log('invoke');
-      },
+      data: () =>
+        Effect.sync(() => {
+          console.log('invoke');
+        }),
       properties: {
         label: faker.lorem.words(2),
         icon: 'ph--circle--regular',
       },
-    }) satisfies NodeArg<any>,
+    }) satisfies Node.NodeArg<any>,
   { count: 20 },
 );
 
@@ -46,7 +51,7 @@ const meta = {
     menuActions,
     label: 'Select action',
   } satisfies Partial<NavTreeItemActionMenuProps>,
-  decorators: [withTheme],
+  decorators: [withTheme, withPluginManager({ plugins: [RuntimePlugin(), ...corePlugins()] })],
   parameters: {
     layout: 'centered',
   },
