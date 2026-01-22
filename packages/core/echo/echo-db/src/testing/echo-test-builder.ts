@@ -5,6 +5,7 @@
 import type { AutomergeUrl } from '@automerge/automerge-repo';
 import * as Reactivity from '@effect/experimental/Reactivity';
 import type * as SqlClient from '@effect/sql/SqlClient';
+import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as ManagedRuntime from 'effect/ManagedRuntime';
 import type * as Schema from 'effect/Schema';
@@ -19,7 +20,7 @@ import { PublicKey } from '@dxos/keys';
 import { type LevelDB } from '@dxos/kv-store';
 import { createTestLevel } from '@dxos/kv-store/testing';
 import { layerMemory } from '@dxos/sql-sqlite/platform';
-import type * as SqliteClient from '@dxos/sql-sqlite/SqliteClient';
+import * as SqlExport from '@dxos/sql-sqlite/SqlExport';
 import { range } from '@dxos/util';
 
 import { EchoClient } from '../client';
@@ -39,7 +40,7 @@ type PeerOptions = {
   assignQueuePositions?: boolean;
 
   kv?: LevelDB;
-  runtime?: ManagedRuntime.ManagedRuntime<SqlClient.SqlClient, never>;
+  runtime?: ManagedRuntime.ManagedRuntime<SqlClient.SqlClient | SqlExport.SqlExport, never>;
 };
 
 export class EchoTestBuilder extends Resource {
@@ -90,7 +91,7 @@ export class EchoTestPeer extends Resource {
   private _lastDatabaseRootUrl?: string = undefined;
 
   private _foreignRuntime: boolean;
-  private _managedRuntime!: ManagedRuntime.ManagedRuntime<SqlClient.SqlClient | SqliteClient.SqliteClient, never>;
+  private _managedRuntime!: ManagedRuntime.ManagedRuntime<SqlClient.SqlClient | SqlExport.SqlExport, never>;
 
   constructor({ kv = createTestLevel(), indexing = {}, types, assignQueuePositions, runtime }: PeerOptions) {
     super();
@@ -212,6 +213,15 @@ export class EchoTestPeer extends Resource {
       reactiveSchemaQuery,
       preloadSchemaOnOpen,
     });
+  }
+
+  async exportSqliteDatabase(): Promise<Uint8Array> {
+    return await this._managedRuntime.runPromise(
+      Effect.gen(function* () {
+        const sql = yield* SqlExport.SqlExport;
+        return yield* sql.export;
+      }),
+    );
   }
 }
 

@@ -185,7 +185,7 @@
         },
         {
           "type": "json",
-          "path": "packages/common/sql-sqlite-wasm/package.json",
+          "path": "packages/common/sql-sqlite/package.json",
           "jsonpath": "$.version"
         },
         {

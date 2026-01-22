@@ -479,6 +479,14 @@ describe('QueryPlanner', () => {
                       "typename": "dxn:type:example.com/type/Person:0.1.0",
                     },
                   },
+                  {
+                    "_tag": "OrderStep",
+                    "order": [
+                      {
+                        "kind": "natural",
+                      },
+                    ],
+                  },
                 ],
               },
               {
@@ -510,6 +518,14 @@ describe('QueryPlanner', () => {
                       "type": "object",
                       "typename": "dxn:type:example.com/type/Organization:0.1.0",
                     },
+                  },
+                  {
+                    "_tag": "OrderStep",
+                    "order": [
+                      {
+                        "kind": "natural",
+                      },
+                    ],
                   },
                 ],
               },
@@ -601,6 +617,14 @@ describe('QueryPlanner', () => {
                   "_tag": "FilterDeletedStep",
                   "mode": "only-non-deleted",
                 },
+                {
+                  "_tag": "OrderStep",
+                  "order": [
+                    {
+                      "kind": "natural",
+                    },
+                  ],
+                },
               ],
             },
             "source": {
@@ -632,6 +656,14 @@ describe('QueryPlanner', () => {
                     "type": "object",
                     "typename": "dxn:type:example.com/type/Person:0.1.0",
                   },
+                },
+                {
+                  "_tag": "OrderStep",
+                  "order": [
+                    {
+                      "kind": "natural",
+                    },
+                  ],
                 },
               ],
             },
@@ -1067,6 +1099,220 @@ describe('QueryPlanner', () => {
               "type": "object",
               "typename": "dxn:type:example.com/type/Task:0.1.0",
             },
+          },
+          {
+            "_tag": "OrderStep",
+            "order": [
+              {
+                "kind": "natural",
+              },
+            ],
+          },
+        ],
+      }
+    `);
+  });
+
+  test('limit results', () => {
+    const query = Query.select(Filter.type(TestSchema.Task)).limit(10);
+
+    const plan = planner.createPlan(withSpaceIdOptions(query.ast));
+    expect(plan).toMatchInlineSnapshot(`
+      {
+        "steps": [
+          {
+            "_tag": "SelectStep",
+            "allQueuesFromSpaces": false,
+            "limit": 10,
+            "queues": [],
+            "selector": {
+              "_tag": "TypeSelector",
+              "inverted": false,
+              "typename": [
+                "dxn:type:example.com/type/Task:0.1.0",
+              ],
+            },
+            "spaces": [
+              "B2NJDFNVZIW77OQSXUBNAD7BUMBD3G5PO",
+            ],
+          },
+          {
+            "_tag": "FilterDeletedStep",
+            "mode": "only-non-deleted",
+          },
+          {
+            "_tag": "FilterStep",
+            "filter": {
+              "id": undefined,
+              "props": {},
+              "type": "object",
+              "typename": "dxn:type:example.com/type/Task:0.1.0",
+            },
+          },
+          {
+            "_tag": "OrderStep",
+            "limit": 10,
+            "order": [
+              {
+                "kind": "natural",
+              },
+            ],
+          },
+        ],
+      }
+    `);
+  });
+
+  test('ordered and limited results', () => {
+    const query = Query.select(Filter.type(TestSchema.Task)).orderBy(Order.property('title', 'asc')).limit(10);
+
+    const plan = planner.createPlan(withSpaceIdOptions(query.ast));
+    expect(plan).toMatchInlineSnapshot(`
+      {
+        "steps": [
+          {
+            "_tag": "SelectStep",
+            "allQueuesFromSpaces": false,
+            "limit": 10,
+            "queues": [],
+            "selector": {
+              "_tag": "TypeSelector",
+              "inverted": false,
+              "typename": [
+                "dxn:type:example.com/type/Task:0.1.0",
+              ],
+            },
+            "spaces": [
+              "B2NJDFNVZIW77OQSXUBNAD7BUMBD3G5PO",
+            ],
+          },
+          {
+            "_tag": "FilterDeletedStep",
+            "mode": "only-non-deleted",
+          },
+          {
+            "_tag": "FilterStep",
+            "filter": {
+              "id": undefined,
+              "props": {},
+              "type": "object",
+              "typename": "dxn:type:example.com/type/Task:0.1.0",
+            },
+          },
+          {
+            "_tag": "OrderStep",
+            "limit": 10,
+            "order": [
+              {
+                "direction": "asc",
+                "kind": "property",
+                "property": "title",
+              },
+            ],
+          },
+        ],
+      }
+    `);
+  });
+
+  test('union of limited queries', () => {
+    const query = Query.all(
+      Query.select(Filter.type(TestSchema.Person)).limit(5),
+      Query.select(Filter.type(TestSchema.Organization)).limit(5),
+    );
+
+    const plan = planner.createPlan(withSpaceIdOptions(query.ast));
+    expect(plan).toMatchInlineSnapshot(`
+      {
+        "steps": [
+          {
+            "_tag": "UnionStep",
+            "plans": [
+              {
+                "steps": [
+                  {
+                    "_tag": "SelectStep",
+                    "allQueuesFromSpaces": false,
+                    "limit": 5,
+                    "queues": [],
+                    "selector": {
+                      "_tag": "TypeSelector",
+                      "inverted": false,
+                      "typename": [
+                        "dxn:type:example.com/type/Person:0.1.0",
+                      ],
+                    },
+                    "spaces": [
+                      "B2NJDFNVZIW77OQSXUBNAD7BUMBD3G5PO",
+                    ],
+                  },
+                  {
+                    "_tag": "FilterDeletedStep",
+                    "mode": "only-non-deleted",
+                  },
+                  {
+                    "_tag": "FilterStep",
+                    "filter": {
+                      "id": undefined,
+                      "props": {},
+                      "type": "object",
+                      "typename": "dxn:type:example.com/type/Person:0.1.0",
+                    },
+                  },
+                  {
+                    "_tag": "OrderStep",
+                    "limit": 5,
+                    "order": [
+                      {
+                        "kind": "natural",
+                      },
+                    ],
+                  },
+                ],
+              },
+              {
+                "steps": [
+                  {
+                    "_tag": "SelectStep",
+                    "allQueuesFromSpaces": false,
+                    "limit": 5,
+                    "queues": [],
+                    "selector": {
+                      "_tag": "TypeSelector",
+                      "inverted": false,
+                      "typename": [
+                        "dxn:type:example.com/type/Organization:0.1.0",
+                      ],
+                    },
+                    "spaces": [
+                      "B2NJDFNVZIW77OQSXUBNAD7BUMBD3G5PO",
+                    ],
+                  },
+                  {
+                    "_tag": "FilterDeletedStep",
+                    "mode": "only-non-deleted",
+                  },
+                  {
+                    "_tag": "FilterStep",
+                    "filter": {
+                      "id": undefined,
+                      "props": {},
+                      "type": "object",
+                      "typename": "dxn:type:example.com/type/Organization:0.1.0",
+                    },
+                  },
+                  {
+                    "_tag": "OrderStep",
+                    "limit": 5,
+                    "order": [
+                      {
+                        "kind": "natural",
+                      },
+                    ],
+                  },
+                ],
+              },
+            ],
           },
           {
             "_tag": "OrderStep",

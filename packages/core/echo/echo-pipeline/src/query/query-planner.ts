@@ -37,6 +37,7 @@ export class QueryPlanner {
     plan = this._optimizeEmptyFilters(plan);
     plan = this._optimizeSoloUnions(plan);
     plan = this._ensureOrderStep(plan);
+    plan = this._optimizeLimits(plan);
     return plan;
   }
 
@@ -62,6 +63,8 @@ export class QueryPlanner {
         return this._generateSetDifferenceClause(query, context);
       case 'order':
         return this._generateOrderClause(query, context);
+      case 'limit':
+        return this._generateLimitClause(query, context);
       default:
         throw new QueryError({
           message: `Unsupported query type: ${(query as any).type}`,
@@ -495,29 +498,164 @@ export class QueryPlanner {
     ]);
   }
 
+  private _generateLimitClause(query: QueryAST.QueryLimitClause, context: GenerationContext): QueryPlan.Plan {
+    return QueryPlan.Plan.make([
+      ...this._generate(query.query, context).steps,
+      {
+        _tag: 'LimitStep',
+        limit: query.limit,
+      },
+    ]);
+  }
+
   // After complete plan is built, inspect it from the end:
   //   - Walk backwards until hitting an object set changer.
   //   - If an order step is found, skip.
-  //   - Otherwise append natural order to the end.
+  //   - Otherwise insert natural order before any limit steps (since limit should be applied after ordering).
+  // This method is recursive and also processes sub-plans in unions and set differences.
   private _ensureOrderStep(plan: QueryPlan.Plan): QueryPlan.Plan {
+    // First, recursively process any sub-plans.
+    const processedSteps = plan.steps.map((step): QueryPlan.Step => {
+      if (step._tag === 'UnionStep') {
+        return {
+          _tag: 'UnionStep',
+          plans: step.plans.map((subPlan) => this._ensureOrderStep(subPlan)),
+        };
+      } else if (step._tag === 'SetDifferenceStep') {
+        return {
+          _tag: 'SetDifferenceStep',
+          source: this._ensureOrderStep(step.source),
+          exclude: this._ensureOrderStep(step.exclude),
+        };
+      }
+      return step;
+    });
+
+    const processedPlan = QueryPlan.Plan.make(processedSteps);
+
     const OBJECT_SET_CHANGERS = new Set(['SelectStep', 'TraverseStep', 'UnionStep', 'SetDifferenceStep']);
-    for (let i = plan.steps.length - 1; i >= 0; i--) {
-      const step = plan.steps[i];
+    for (let i = processedPlan.steps.length - 1; i >= 0; i--) {
+      const step = processedPlan.steps[i];
       if (step._tag === 'OrderStep') {
-        return plan;
+        return processedPlan;
       }
       if (OBJECT_SET_CHANGERS.has(step._tag)) {
         break;
       }
     }
 
-    return QueryPlan.Plan.make([
-      ...plan.steps,
-      {
-        _tag: 'OrderStep',
-        order: [Order.natural.ast],
-      },
-    ]);
+    // Find the position to insert the order step (before any limit steps).
+    let insertIndex = processedPlan.steps.length;
+    for (let i = processedPlan.steps.length - 1; i >= 0; i--) {
+      if (processedPlan.steps[i]._tag === 'LimitStep') {
+        insertIndex = i;
+      } else {
+        break;
+      }
+    }
+
+    const newSteps = [...processedPlan.steps];
+    newSteps.splice(insertIndex, 0, {
+      _tag: 'OrderStep',
+      order: [Order.natural.ast],
+    });
+
+    return QueryPlan.Plan.make(newSteps);
+  }
+
+  /**
+   * Propagates limits from LimitStep to SelectStep and OrderStep when possible.
+   * Limits can only be propagated if there are no unions or traversals between the LimitStep and SelectStep/OrderStep.
+   */
+  private _optimizeLimits(plan: QueryPlan.Plan): QueryPlan.Plan {
+    // First, recursively process any sub-plans.
+    const processedSteps = plan.steps.map((step): QueryPlan.Step => {
+      if (step._tag === 'UnionStep') {
+        return {
+          _tag: 'UnionStep',
+          plans: step.plans.map((subPlan) => this._optimizeLimits(subPlan)),
+        };
+      } else if (step._tag === 'SetDifferenceStep') {
+        return {
+          _tag: 'SetDifferenceStep',
+          source: this._optimizeLimits(step.source),
+          exclude: this._optimizeLimits(step.exclude),
+        };
+      }
+      return step;
+    });
+
+    // Find if there's a LimitStep at the end (possibly after OrderStep).
+    let limitStepIndex = -1;
+    let limitValue: number | undefined;
+
+    for (let i = processedSteps.length - 1; i >= 0; i--) {
+      const step = processedSteps[i];
+      if (step._tag === 'LimitStep') {
+        limitStepIndex = i;
+        limitValue = step.limit;
+        break;
+      }
+      // Only allow OrderStep after LimitStep when looking backwards.
+      if (step._tag !== 'OrderStep') {
+        break;
+      }
+    }
+
+    if (limitStepIndex === -1 || limitValue === undefined) {
+      return QueryPlan.Plan.make(processedSteps);
+    }
+
+    // Check if we can propagate the limit to a SelectStep and/or OrderStep.
+    // We can only do this if there are no unions, traversals, or set differences between them.
+    const BLOCKERS = new Set(['UnionStep', 'TraverseStep', 'SetDifferenceStep']);
+
+    let selectStepIndex = -1;
+    let orderStepIndex = -1;
+    for (let i = 0; i < limitStepIndex; i++) {
+      const step = processedSteps[i];
+      if (step._tag === 'SelectStep') {
+        selectStepIndex = i;
+      }
+      if (step._tag === 'OrderStep') {
+        orderStepIndex = i;
+      }
+      if (BLOCKERS.has(step._tag)) {
+        // Found a blocker after the select/order step - can't propagate.
+        selectStepIndex = -1;
+        orderStepIndex = -1;
+      }
+    }
+
+    if (selectStepIndex === -1 && orderStepIndex === -1) {
+      return QueryPlan.Plan.make(processedSteps);
+    }
+
+    // Create a mutable copy of steps to modify.
+    const newSteps = [...processedSteps];
+
+    // Propagate the limit to the SelectStep if found.
+    if (selectStepIndex !== -1) {
+      const selectStep = newSteps[selectStepIndex] as QueryPlan.SelectStep;
+      newSteps[selectStepIndex] = {
+        ...selectStep,
+        limit: limitValue,
+      };
+    }
+
+    // Propagate the limit to the OrderStep if found.
+    if (orderStepIndex !== -1) {
+      const orderStep = newSteps[orderStepIndex] as QueryPlan.OrderStep;
+      newSteps[orderStepIndex] = {
+        ...orderStep,
+        limit: limitValue,
+      };
+    }
+
+    // Remove the LimitStep since limit is now propagated.
+    newSteps.splice(limitStepIndex, 1);
+
+    return QueryPlan.Plan.make(newSteps);
   }
 }
 
