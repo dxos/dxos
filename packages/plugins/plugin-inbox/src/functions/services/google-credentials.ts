@@ -9,9 +9,36 @@ import * as Layer from 'effect/Layer';
 import { Database, Ref } from '@dxos/echo';
 import { CredentialsService } from '@dxos/functions';
 import { log } from '@dxos/log';
+import { AccessToken } from '@dxos/types';
 
 import type * as Calendar from '../../types/Calendar';
 import type * as Mailbox from '../../types/Mailbox';
+
+/**
+ * Creates the service interface from a cached token.
+ * Falls back to database credentials if no cached token is provided.
+ */
+const makeService = (cachedToken: string | undefined): Context.Tag.Service<GoogleCredentials> => ({
+  get: () =>
+    cachedToken
+      ? Effect.succeed(cachedToken)
+      : Effect.map(CredentialsService.getCredential({ service: 'google.com' }), (c) => c.apiKey!),
+});
+
+/**
+ * Loads access token from a ref if available.
+ */
+const loadAccessToken = (accessTokenRef: Ref.Ref<AccessToken.AccessToken> | undefined, label: string) =>
+  Effect.gen(function* () {
+    if (accessTokenRef) {
+      const accessToken = yield* Database.Service.load(accessTokenRef);
+      if (accessToken?.token) {
+        log(`using ${label}-specific access token`, { note: accessToken.note });
+        return accessToken.token;
+      }
+    }
+    return undefined;
+  });
 
 /**
  * Service for accessing Google API credentials.
@@ -31,30 +58,7 @@ export class GoogleCredentials extends Context.Tag('GoogleCredentials')<
   static fromMailbox = (mailbox: Mailbox.Mailbox) =>
     Layer.effect(
       GoogleCredentials,
-      Effect.gen(function* () {
-        // Pre-load token at layer creation time.
-        let cachedToken: string | undefined;
-        if (mailbox.accessToken) {
-          const accessToken = yield* Database.Service.load(mailbox.accessToken);
-          if (accessToken?.token) {
-            log('using mailbox-specific access token', { note: accessToken.note });
-            cachedToken = accessToken.token;
-          }
-        }
-
-        return {
-          get: () =>
-            Effect.gen(function* () {
-              if (cachedToken) {
-                return cachedToken;
-              }
-              // Fall back to database credentials for google.com.
-              log('using database credentials');
-              const credential = yield* CredentialsService.getCredential({ service: 'google.com' });
-              return credential.apiKey!;
-            }),
-        };
-      }),
+      Effect.map(loadAccessToken(mailbox.accessToken, 'mailbox'), makeService),
     );
 
   /**
@@ -64,31 +68,9 @@ export class GoogleCredentials extends Context.Tag('GoogleCredentials')<
   static fromMailboxRef = (mailboxRef: Ref.Ref<Mailbox.Mailbox>) =>
     Layer.effect(
       GoogleCredentials,
-      Effect.gen(function* () {
-        const mailbox = yield* Database.Service.load(mailboxRef);
-        // Pre-load token at layer creation time.
-        let cachedToken: string | undefined;
-        if (mailbox.accessToken) {
-          const accessToken = yield* Database.Service.load(mailbox.accessToken);
-          if (accessToken?.token) {
-            log('using mailbox-specific access token', { note: accessToken.note });
-            cachedToken = accessToken.token;
-          }
-        }
-
-        return {
-          get: () =>
-            Effect.gen(function* () {
-              if (cachedToken) {
-                return cachedToken;
-              }
-              // Fall back to database credentials for google.com.
-              log('using database credentials');
-              const credential = yield* CredentialsService.getCredential({ service: 'google.com' });
-              return credential.apiKey!;
-            }),
-        };
-      }),
+      Effect.flatMap(Database.Service.load(mailboxRef), (mailbox) =>
+        Effect.map(loadAccessToken(mailbox.accessToken, 'mailbox'), makeService),
+      ),
     );
 
   /**
@@ -98,78 +80,26 @@ export class GoogleCredentials extends Context.Tag('GoogleCredentials')<
   static fromCalendar = (calendar: Calendar.Calendar) =>
     Layer.effect(
       GoogleCredentials,
-      Effect.gen(function* () {
-        // Pre-load token at layer creation time.
-        let cachedToken: string | undefined;
-        if (calendar.accessToken) {
-          const accessToken = yield* Database.Service.load(calendar.accessToken);
-          if (accessToken?.token) {
-            log('using calendar-specific access token', { note: accessToken.note });
-            cachedToken = accessToken.token;
-          }
-        }
-
-        return {
-          get: () =>
-            Effect.gen(function* () {
-              if (cachedToken) {
-                return cachedToken;
-              }
-              // Fall back to database credentials for google.com.
-              log('using database credentials');
-              const credential = yield* CredentialsService.getCredential({ service: 'google.com' });
-              return credential.apiKey!;
-            }),
-        };
-      }),
+      Effect.map(loadAccessToken(calendar.accessToken, 'calendar'), makeService),
     );
 
   /**
    * Creates a credentials layer from a calendar ref.
    * Loads the calendar and pre-loads the access token during layer construction.
    */
-  static fromCalendarRef = (calendarRef: Ref.Decoded<Calendar.Calendar>) =>
+  static fromCalendarRef = (calendarRef: Ref.Ref<Calendar.Calendar>) =>
     Layer.effect(
       GoogleCredentials,
-      Effect.gen(function* () {
-        const calendar = yield* Database.Service.load(calendarRef);
-        // Pre-load token at layer creation time.
-        let cachedToken: string | undefined;
-        if (calendar.accessToken) {
-          const accessToken = yield* Database.Service.load(calendar.accessToken);
-          if (accessToken?.token) {
-            log('using calendar-specific access token', { note: accessToken.note });
-            cachedToken = accessToken.token;
-          }
-        }
-
-        return {
-          get: () =>
-            Effect.gen(function* () {
-              if (cachedToken) {
-                return cachedToken;
-              }
-              // Fall back to database credentials for google.com.
-              log('using database credentials');
-              const credential = yield* CredentialsService.getCredential({ service: 'google.com' });
-              return credential.apiKey!;
-            }),
-        };
-      }),
+      Effect.flatMap(Database.Service.load(calendarRef), (calendar) =>
+        Effect.map(loadAccessToken(calendar.accessToken, 'calendar'), makeService),
+      ),
     );
 
   /**
    * Default layer that uses database credentials.
    * Use this for operations that don't have an associated mailbox or calendar.
    */
-  static default = Layer.succeed(GoogleCredentials, {
-    get: () =>
-      Effect.gen(function* () {
-        log('using database credentials');
-        const credential = yield* CredentialsService.getCredential({ service: 'google.com' });
-        return credential.apiKey!;
-      }),
-  });
+  static default = Layer.succeed(GoogleCredentials, makeService(undefined));
 
   /** Convenience accessor - returns the Google API token. */
   static get = () => Effect.flatMap(GoogleCredentials, (service) => service.get());
