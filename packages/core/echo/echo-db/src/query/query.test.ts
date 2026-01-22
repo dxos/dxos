@@ -116,6 +116,32 @@ describe('Query', () => {
       expect(objects.map((obj) => obj.label)).to.deep.equal(sortedObjects.map((obj) => obj.label));
     });
 
+    test('limit results', async () => {
+      const objects = await db.query(Query.select(Filter.everything()).limit(5)).run();
+      expect(objects).to.have.length(5);
+    });
+
+    test('limit with ordering', async () => {
+      const allObjects = await db.query(Query.select(Filter.everything()).orderBy(Order.natural)).run();
+      const limitedObjects = await db.query(Query.select(Filter.everything()).orderBy(Order.natural).limit(3)).run();
+
+      expect(limitedObjects).to.have.length(3);
+      // Verify the results are ordered consistently.
+      const limitedIds = limitedObjects.map((obj) => obj.id);
+      const sortedLimitedIds = [...limitedIds].sort();
+      expect(limitedIds).to.deep.equal(sortedLimitedIds);
+      // Verify the limited results are a subset of all results.
+      const allIds = new Set(allObjects.map((obj) => obj.id));
+      for (const id of limitedIds) {
+        expect(allIds.has(id)).to.be.true;
+      }
+    });
+
+    test('limit larger than result set returns all results', async () => {
+      const objects = await db.query(Query.select(Filter.everything()).limit(100)).run();
+      expect(objects).to.have.length(10);
+    });
+
     test('filter by type', async () => {
       {
         const objects = await db.query(Query.select(Filter.type(Type.Expando, { value: undefined }))).run();
@@ -661,6 +687,23 @@ describe('Query', () => {
       const query = Query.all(query1, query2);
       const objects = await db.query(query).run();
       expect(objects).toHaveLength(3);
+    });
+
+    test('union of limited queries', async () => {
+      // Query for tasks assigned to Alice, limited to 1.
+      const query1 = Query.select(Filter.type(TestSchema.Person, { name: 'Alice' }))
+        .referencedBy(TestSchema.Task, 'assignee')
+        .limit(1);
+      // Query for tasks assigned to Bob, limited to 1.
+      const query2 = Query.select(Filter.type(TestSchema.Person, { name: 'Bob' }))
+        .referencedBy(TestSchema.Task, 'assignee')
+        .limit(1);
+
+      const query = Query.all(query1, query2);
+      const objects = await db.query(query).run();
+
+      // Should get 1 task from Alice (out of 2) + 1 task from Bob (out of 1) = 2 total.
+      expect(objects).toHaveLength(2);
     });
 
     test('query set difference', async () => {
