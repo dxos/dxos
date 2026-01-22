@@ -47,7 +47,7 @@ export class TestWorkerFactory extends Resource {
         log.info('worker got message', { type: ev.data.type });
         switch (ev.data.type) {
           case 'init': {
-            owningClientId = ev.data.clientId;
+            owningClientId = ev.data.ownerClientId ?? ev.data.clientId;
             runtime = new WorkerRuntime({
               configProvider: async () => {
                 return this._config ?? new Config();

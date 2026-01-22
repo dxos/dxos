@@ -99,7 +99,7 @@ export class DedicatedWorkerClientServices extends Resource implements ClientSer
           // I am the leader now.
           invariant(this.#coordinator);
           invariant(!this.#leaderSession);
-          this.#leaderSession = new LeaderSession(this.#createWorker, this.#coordinator, this.#config);
+          this.#leaderSession = new LeaderSession(this.#createWorker, this.#coordinator, this.#config, this.#clientId);
           const done = new Trigger();
           this._ctx.onDispose(() => done.wake());
           this.#leaderSession.onClose.on((error) => {
@@ -189,7 +189,7 @@ export class DedicatedWorkerClientServices extends Resource implements ClientSer
 
       this.#connection = new SharedWorkerConnection({
         // TODO(dmaretskyi): Config management.
-        config: new Config(),
+        config: this.#config ?? new Config(),
         systemPort: createWorkerPort({ port: systemPort }),
       });
       log('opening SharedWorkerConnection');
@@ -229,12 +229,19 @@ class LeaderSession extends Resource {
   #config: Config | undefined;
   #worker!: WorkerOrPort;
   #leaderId = `leader-${crypto.randomUUID()}`;
+  #ownerClientId: string;
 
-  constructor(createWorker: () => WorkerOrPort, coordinator: WorkerCoordinator, config?: Config) {
+  constructor(
+    createWorker: () => WorkerOrPort,
+    coordinator: WorkerCoordinator,
+    config: Config | undefined,
+    ownerClientId: string,
+  ) {
     super();
     this.#createWorker = createWorker;
     this.#coordinator = coordinator;
     this.#config = config;
+    this.#ownerClientId = ownerClientId;
   }
 
   readonly onClose = new Event<Error | undefined>();
@@ -276,7 +283,12 @@ class LeaderSession extends Resource {
 
     log.info('waiting for worker to start listening');
     await listening.wait();
-    this.#sendMessage({ type: 'init', clientId: this.#leaderId, config: this.#config?.values });
+    this.#sendMessage({
+      type: 'init',
+      clientId: this.#leaderId,
+      ownerClientId: this.#ownerClientId,
+      config: this.#config?.values,
+    });
     log.info('waiting for worker to be ready');
     const { livenessLockKey } = await ready.wait();
     log.info('leader ready');

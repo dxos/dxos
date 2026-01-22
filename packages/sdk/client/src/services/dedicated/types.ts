@@ -21,6 +21,11 @@ export interface DedicatedWorkerInitMessage {
    */
   clientId: string;
   /**
+   * Client ID that should receive the WebRTC bridge connection.
+   * This is the actual client ID used for session requests.
+   */
+  ownerClientId?: string;
+  /**
    * Config values to initialize the worker with.
    */
   config?: Record<string, any>;

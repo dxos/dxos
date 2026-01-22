@@ -33,7 +33,7 @@ void navigator.locks.request(STORAGE_LOCK_KEY, async () => {
     log.info('worker got message', { type: message.type });
     switch (message.type) {
       case 'init': {
-        owningClientId = message.clientId;
+        owningClientId = message.ownerClientId ?? message.clientId;
         const config = new Config(message.config ?? {});
         log.info('worker init with config', { persistent: config.get('runtime.client.storage.persistent') });
         runtime = new WorkerRuntime({
