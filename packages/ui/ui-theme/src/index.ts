@@ -12,3 +12,8 @@ export * from './util';
 const tokens: TailwindConfig['theme'] = tailwindConfig({}).theme;
 
 export { tokens };
+
+/**
+ * Translation namespace for OS-level translations.
+ */
+export const osTranslations = 'dxos.org/i18n/os';

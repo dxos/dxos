@@ -5,6 +5,7 @@
 import React from 'react';
 
 import { type ButtonProps, Icon, type IconProps, type ThemedClassName, useTranslation } from '@dxos/react-ui';
+import { osTranslations } from '@dxos/ui-theme';
 
 import { PickerButton, type PickerButtonProps } from '../PickerButton';
 
@@ -22,7 +23,7 @@ export type IconPickerProps = {
 >;
 
 export const IconPicker = ({ ...props }: ThemedClassName<IconPickerProps>) => {
-  const { t } = useTranslation('@dxos/os');
+  const { t } = useTranslation(osTranslations);
 
   return (
     <PickerButton
