@@ -65,7 +65,7 @@ export default Capability.makeModule(
         match: NodeMatcher.whenId(SETTINGS_ID),
         connector: (node, get) => {
           const [manager] = get(managerAtom);
-          const [allSettings] = get(settingsAtom);
+          const allSettings = get(settingsAtom);
           return Effect.succeed([
             ...manager
               .getPlugins()
@@ -107,7 +107,7 @@ export default Capability.makeModule(
         match: NodeMatcher.whenId(`${SETTINGS_KEY}:custom-plugins`),
         connector: (node, get) => {
           const [manager] = get(managerAtom);
-          const [allSettings] = get(settingsAtom);
+          const allSettings = get(settingsAtom);
           return Effect.succeed(
             manager
               .getPlugins()
