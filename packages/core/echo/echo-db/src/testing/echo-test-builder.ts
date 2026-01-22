@@ -2,8 +2,6 @@
 // Copyright 2024 DXOS.org
 //
 
-import { writeFile } from 'node:fs/promises';
-
 import type { AutomergeUrl } from '@automerge/automerge-repo';
 import * as Reactivity from '@effect/experimental/Reactivity';
 import type * as SqlClient from '@effect/sql/SqlClient';
@@ -217,16 +215,13 @@ export class EchoTestPeer extends Resource {
     });
   }
 
-  async dumpSqliteDatabase({ path }: { path?: string } = {}): Promise<string> {
-    const db = await this._managedRuntime.runPromise(
+  async exportSqliteDatabase(): Promise<Uint8Array> {
+    return await this._managedRuntime.runPromise(
       Effect.gen(function* () {
         const sql = yield* SqlExport.SqlExport;
         return yield* sql.export;
       }),
     );
-    path ??= `/tmp/dxos-sqlte-dump-${Date.now()}.db`;
-    await writeFile(path, db);
-    return path;
   }
 }
 
