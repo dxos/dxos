@@ -33,7 +33,8 @@ export namespace QueryPlan {
     | TraverseStep
     | UnionStep
     | SetDifferenceStep
-    | OrderStep;
+    | OrderStep
+    | LimitStep;
 
   /**
    * Clear the current working set.
@@ -68,6 +69,12 @@ export namespace QueryPlan {
     queues: readonly DXN.String[];
 
     selector: Selector;
+
+    /**
+     * Optional limit on the number of results to select.
+     * When set, the index scan can be optimized to stop early.
+     */
+    limit?: number;
   };
 
   /**
@@ -226,5 +233,20 @@ export namespace QueryPlan {
 
     // Defaults to natural order if empty.
     order: readonly QueryAST.Order[];
+
+    /**
+     * Optional limit on the number of results to return after ordering.
+     * When set, the sorting can be optimized to only track the top N elements.
+     */
+    limit?: number;
+  };
+
+  /**
+   * Limit the number of results.
+   */
+  export type LimitStep = {
+    _tag: 'LimitStep';
+
+    limit: number;
   };
 }

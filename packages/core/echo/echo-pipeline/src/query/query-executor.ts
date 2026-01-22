@@ -360,6 +360,9 @@ export class QueryExecutor extends Resource {
       case 'OrderStep':
         ({ workingSet: newWorkingSet, trace } = await this._execOrderStep(step, workingSet));
         break;
+      case 'LimitStep':
+        ({ workingSet: newWorkingSet, trace } = await this._execLimitStep(step, workingSet));
+        break;
       default:
         throw new Error(`Unknown step type: ${(step as any)._tag}`);
     }
@@ -557,6 +560,12 @@ export class QueryExecutor extends Resource {
 
       default:
         throw new Error(`Unknown selector type: ${(step.selector as any)._tag}`);
+    }
+
+    // Apply limit if specified on the select step.
+    if (step.limit !== undefined && workingSet.length > step.limit) {
+      workingSet = workingSet.slice(0, step.limit);
+      trace.objectCount = workingSet.length;
     }
 
     return { workingSet, trace };
@@ -794,15 +803,34 @@ export class QueryExecutor extends Resource {
   }
 
   private async _execOrderStep(step: QueryPlan.OrderStep, workingSet: QueryItem[]): Promise<StepExecutionResult> {
-    const sortedWorkingSet = [...workingSet].sort((a, b) => this._compareMultiOrder(a, b, step.order));
+    let sortedWorkingSet = [...workingSet].sort((a, b) => this._compareMultiOrder(a, b, step.order));
+
+    // Apply limit if specified on the order step.
+    if (step.limit !== undefined && sortedWorkingSet.length > step.limit) {
+      sortedWorkingSet = sortedWorkingSet.slice(0, step.limit);
+    }
 
     return {
       workingSet: sortedWorkingSet,
       trace: {
         ...ExecutionTrace.makeEmpty(),
         name: 'Order',
-        details: JSON.stringify(step.order),
+        details: JSON.stringify({ order: step.order, limit: step.limit }),
         objectCount: sortedWorkingSet.length,
+      },
+    };
+  }
+
+  private async _execLimitStep(step: QueryPlan.LimitStep, workingSet: QueryItem[]): Promise<StepExecutionResult> {
+    const limitedWorkingSet = workingSet.slice(0, step.limit);
+
+    return {
+      workingSet: limitedWorkingSet,
+      trace: {
+        ...ExecutionTrace.makeEmpty(),
+        name: 'Limit',
+        details: JSON.stringify({ limit: step.limit }),
+        objectCount: limitedWorkingSet.length,
       },
     };
   }
