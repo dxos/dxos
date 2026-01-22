@@ -11,7 +11,8 @@ import * as Schema from 'effect/Schema';
 
 import { Capability, Common } from '@dxos/app-framework';
 import { type Space, SpaceState, getSpace, isSpace } from '@dxos/client/echo';
-import { DXN, Filter, Obj, type QueryResult, Type } from '@dxos/echo';
+import { DXN, Filter, Obj, Type } from '@dxos/echo';
+import { AtomQuery } from '@dxos/echo-atom';
 import { log } from '@dxos/log';
 import { Operation } from '@dxos/operation';
 import { ClientCapabilities } from '@dxos/plugin-client';
@@ -26,7 +27,6 @@ import { SPACE_TYPE, SpaceCapabilities, SpaceOperation, type SpaceSettingsProps 
 import {
   SHARED,
   SPACES,
-  atomFromQuery,
   constructObjectActions,
   constructSpaceActions,
   constructSpaceNode,
@@ -162,7 +162,6 @@ export default Capability.makeModule(
         connector: (node, get) => {
           const client = capabilities.get(ClientCapabilities.Client);
           const state = capabilities.get(SpaceCapabilities.State);
-          let query: QueryResult.QueryResult<Schema.Schema.Type<typeof Type.Expando>> | undefined;
           const spacesAtom = CreateAtom.fromObservable(client.spaces);
           const isReadyAtom = CreateAtom.fromObservable(client.spaces.isReady);
 
@@ -178,10 +177,9 @@ export default Capability.makeModule(
           )?.value;
 
           try {
-            if (!query) {
-              query = client.spaces.default.db.query(Filter.type(Type.Expando, { key: SHARED }));
-            }
-            const [spacesOrder] = get(atomFromQuery(query));
+            const [spacesOrder] = get(
+              AtomQuery.make(client.spaces.default.db, Filter.type(Type.Expando, { key: SHARED })),
+            );
             return Effect.succeed(
               get(
                 CreateAtom.fromSignal(() => {
@@ -320,8 +318,7 @@ export default Capability.makeModule(
             return Effect.succeed(null);
           }
 
-          const query = space.db.query(Filter.id(dxn.echoId));
-          const object = get(atomFromQuery(query)).at(0);
+          const object = get(AtomQuery.make(space.db, Filter.id(dxn.echoId))).at(0);
           if (!Obj.isObject(object)) {
             return Effect.succeed(null);
           }
@@ -342,7 +339,6 @@ export default Capability.makeModule(
         id: `${meta.id}/system-collections`,
         match: (node) => (Obj.instanceOf(Collection.Managed, node.data) ? Option.some(node.data) : Option.none()),
         connector: (collection, get) => {
-          let query: QueryResult.QueryResult<Schema.Schema.Type<typeof Type.Expando>> | undefined;
           const client = get(capabilities.atom(ClientCapabilities.Client)).at(0);
           const space = getSpace(collection);
           const schema = client?.graph.schemaRegistry
@@ -352,11 +348,8 @@ export default Capability.makeModule(
             return Effect.succeed([]);
           }
 
-          if (!query) {
-            query = space.db.query(Filter.type(schema));
-          }
           return Effect.succeed(
-            get(atomFromQuery(query))
+            get(AtomQuery.make(space.db, Filter.type(schema)))
               .map((object) =>
                 createObjectNode({
                   object,
@@ -401,7 +394,6 @@ export default Capability.makeModule(
           return space && Schema.isSchema(node.data) ? Option.some({ space, schema: node.data }) : Option.none();
         },
         actions: ({ space, schema }, get) => {
-          let query: QueryResult.QueryResult<Obj.Any> | undefined;
           const schemas =
             get(capabilities.atom(ClientCapabilities.Client))
               .at(0)
@@ -413,11 +405,7 @@ export default Capability.makeModule(
               .map((schema) => Filter.type(schema)),
           );
 
-          if (!query) {
-            query = space.db.query(filter) as unknown as QueryResult.QueryResult<Obj.Any>;
-          }
-
-          const objects = get(atomFromQuery(query));
+          const objects = get(AtomQuery.make(space.db, filter));
           const filteredViews = get(
             CreateAtom.fromSignal(() =>
               objects.filter(
@@ -449,7 +437,6 @@ export default Capability.makeModule(
             : Option.none();
         },
         connector: ({ space, schema }, get) => {
-          let query: QueryResult.QueryResult<Obj.Any> | undefined;
           const schemas =
             get(capabilities.atom(ClientCapabilities.Client))
               .at(0)
@@ -461,13 +448,9 @@ export default Capability.makeModule(
               .map((schema) => Filter.type(schema)),
           );
 
-          if (!query) {
-            query = space.db.query(filter) as unknown as QueryResult.QueryResult<Obj.Any>;
-          }
-
           const typename = Schema.isSchema(schema) ? Type.getTypename(schema as Type.Obj.Any) : schema.typename;
           return Effect.succeed(
-            get(atomFromQuery(query))
+            get(AtomQuery.make(space.db, filter))
               .filter((object) =>
                 get(
                   CreateAtom.fromSignal(
@@ -502,7 +485,6 @@ export default Capability.makeModule(
             : Option.none();
         },
         actions: ({ space, object }, get) => {
-          let query: QueryResult.QueryResult<Obj.Any> | undefined;
           const schemas =
             get(capabilities.atom(ClientCapabilities.Client))
               .at(0)
@@ -515,13 +497,10 @@ export default Capability.makeModule(
           );
 
           const isSchema = Obj.instanceOf(Type.PersistentType, object);
-          if (!query && isSchema) {
-            query = space.db.query(filter) as unknown as QueryResult.QueryResult<Obj.Any>;
-          }
 
           let deletable = !isSchema && !Obj.instanceOf(Collection.Managed, object);
-          if (isSchema && query) {
-            const objects = get(atomFromQuery(query));
+          if (isSchema) {
+            const objects = get(AtomQuery.make(space.db, filter));
             const filteredViews = get(
               CreateAtom.fromSignal(() =>
                 objects.filter(
