@@ -8,7 +8,13 @@ import * as Match from 'effect/Match';
 import * as Runtime from 'effect/Runtime';
 
 import { Context, ContextDisposedError, LifecycleState, Resource } from '@dxos/context';
-import { DatabaseDirectory, ObjectStructure, type QueryAST, isEncodedReference } from '@dxos/echo-protocol';
+import {
+  DatabaseDirectory,
+  type ObjectPropPath,
+  ObjectStructure,
+  type QueryAST,
+  isEncodedReference,
+} from '@dxos/echo-protocol';
 import { type RuntimeProvider, runAndForwardErrors, unwrapExit } from '@dxos/effect';
 import { type IndexEngine } from '@dxos/index-core';
 import { EscapedPropPath, type FindResult, type Indexer } from '@dxos/indexing';
@@ -22,10 +28,12 @@ import { getDeep, isNonNullable } from '@dxos/util';
 import type { AutomergeHost } from '../automerge';
 import { createIdFromSpaceKey } from '../common';
 import type { SpaceStateManager } from '../db-host';
-import { filterMatchObject } from '../filter';
+import { filterMatchObject, filterMatchObjectJSON } from '../filter';
 
 import type { QueryPlan } from './plan';
 import { QueryPlanner } from './query-planner';
+import type { Obj } from '@dxos/echo';
+import { ATTR_RELATION_SOURCE, ATTR_RELATION_TARGET } from '@dxos/echo/internal';
 
 type QueryExecutorOptions = {
   indexer: Indexer;
@@ -51,10 +59,62 @@ type QueryExecutionResult = {
  */
 type QueryItem = {
   objectId: ObjectId;
-  documentId: DocumentId;
+
   spaceId: SpaceId;
-  doc: ObjectStructure;
+  queueId: ObjectId | null;
+  queueNamespace: string | null;
+
+  // For objects from automerge documents.
+  documentId: DocumentId | null;
+
+  // For objects from automerge documents.
+  doc: ObjectStructure | null;
+
+  // For objects from queues.
+  data: Obj.JSON | null;
 };
+
+const QueryItem = Object.freeze({
+  isDeleted: (item: QueryItem) => {
+    if (item.doc) {
+      return ObjectStructure.isDeleted(item.doc);
+    } else if (item.data) {
+      return item.data['@deleted'] === true;
+    } else {
+      throw new Error('Invalid query item');
+    }
+  },
+
+  getProperty: (item: QueryItem, property: ObjectPropPath) => {
+    if (item.doc) {
+      return getDeep(item.doc.data, property);
+    } else if (item.data) {
+      return getDeep(item.data, property);
+    } else {
+      throw new Error('Invalid query item');
+    }
+  },
+
+  getRelationSource: (item: QueryItem): DXN.String => {
+    if (item.doc) {
+      return ObjectStructure.getRelationSource(item.doc)?.['/'] as DXN.String;
+    } else if (item.data) {
+      return item.data[ATTR_RELATION_SOURCE] as DXN.String;
+    } else {
+      throw new Error('Invalid query item');
+    }
+  },
+
+  getRelationTarget: (item: QueryItem): DXN.String => {
+    if (item.doc) {
+      return ObjectStructure.getRelationTarget(item.doc)?.['/'] as DXN.String;
+    } else if (item.data) {
+      return item.data[ATTR_RELATION_TARGET] as DXN.String;
+    } else {
+      throw new Error('Invalid query item');
+    }
+  },
+});
 
 /**
  * Recursive data structure that represents the execution trace of a query.
@@ -205,11 +265,15 @@ export class QueryExecutor extends Resource {
     return this._lastResultSet.map(
       (item): QueryResult => ({
         id: item.objectId,
-        documentId: item.documentId,
+        documentId: item.documentId ?? undefined,
+        queueId: item.queueId ?? undefined,
+        queueNamespace: item.queueNamespace ?? undefined,
         spaceId: item.spaceId,
 
         // TODO(dmaretskyi): Plumb through the rank.
         rank: 0,
+
+        documentJson: item.doc ? JSON.stringify(item.doc) : undefined,
       }),
     );
   }
@@ -453,13 +517,18 @@ export class QueryExecutor extends Resource {
   }
 
   private async _execFilterStep(step: QueryPlan.FilterStep, workingSet: QueryItem[]): Promise<StepExecutionResult> {
-    const result = workingSet.filter((item) =>
-      filterMatchObject(step.filter, {
-        id: item.objectId,
-        spaceId: item.spaceId,
-        doc: item.doc,
-      }),
-    );
+    const result = workingSet.filter((item) => {
+      if (item.doc) {
+        return filterMatchObject(step.filter, {
+          id: item.objectId,
+          spaceId: item.spaceId,
+          doc: item.doc,
+        });
+      } else if (item.data) {
+        return filterMatchObjectJSON(step.filter, item.data);
+      } else {
+      }
+    });
 
     return {
       workingSet: result,
@@ -477,7 +546,8 @@ export class QueryExecutor extends Resource {
     workingSet: QueryItem[],
   ): Promise<StepExecutionResult> {
     const expected = step.mode === 'only-deleted';
-    const result = workingSet.filter((item) => ObjectStructure.isDeleted(item.doc) === expected);
+    // TODO(dmaretskyi): How do we handle items with parents and cascade deletions? -- perhaps we forbid queue items from having parents -- i.e. queue is their parent.
+    const result = workingSet.filter((item) => QueryItem.isDeleted(item) === expected);
     return {
       workingSet: result,
       trace: {
@@ -508,7 +578,7 @@ export class QueryExecutor extends Resource {
 
             const refs = workingSet
               .flatMap((item) => {
-                const ref = getDeep(item.doc.data, property);
+                const ref = QueryItem.getProperty(item, property);
                 const refs = Array.isArray(ref) ? ref : [ref];
                 return refs.map((ref) => {
                   try {
@@ -568,21 +638,17 @@ export class QueryExecutor extends Resource {
           case 'relation-to-target': {
             const refs = workingSet
               .map((item) => {
-                const ref =
+                const dxn =
                   step.traversal.direction === 'relation-to-source'
-                    ? ObjectStructure.getRelationSource(item.doc)
-                    : ObjectStructure.getRelationTarget(item.doc);
-
-                if (!isEncodedReference(ref)) {
-                  return null;
-                }
+                    ? QueryItem.getRelationSource(item)
+                    : QueryItem.getRelationTarget(item);
                 try {
                   return {
-                    ref: DXN.parse(ref['/']),
+                    ref: DXN.parse(dxn),
                     spaceId: item.spaceId,
                   };
                 } catch {
-                  log.warn('invalid reference', { ref: ref['/'] });
+                  log.warn('invalid reference', { ref: dxn });
                   return null;
                 }
               })
@@ -727,8 +793,8 @@ export class QueryExecutor extends Resource {
   }
 
   private _compareByProperty(a: QueryItem, b: QueryItem, property: string): number {
-    const aValue = a.doc.data[property];
-    const bValue = b.doc.data[property];
+    const aValue = QueryItem.getProperty(a, [property]);
+    const bValue = QueryItem.getProperty(b, [property]);
 
     // Both null or undefined
     if (aValue == null && bValue == null) {
@@ -808,6 +874,9 @@ export class QueryExecutor extends Resource {
       objectId,
       documentId: documentId as DocumentId,
       spaceId,
+      queueId: null,
+      queueNamespace: null,
+      data: null,
       doc: object,
     };
   }
@@ -838,6 +907,9 @@ export class QueryExecutor extends Resource {
         objectId: echoDxn.echoId,
         documentId: spaceRoot.documentId,
         spaceId,
+        queueId: null,
+        queueNamespace: null,
+        data: null,
         doc: inlineObject,
       };
     }
@@ -864,6 +936,9 @@ export class QueryExecutor extends Resource {
       objectId: echoDxn.echoId,
       documentId: handle.documentId,
       spaceId,
+      queueId: null,
+      queueNamespace: null,
+      data: null,
       doc: object,
     };
   }
