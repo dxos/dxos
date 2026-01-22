@@ -11,13 +11,13 @@ tasks:
       - $CONFIG_DYNAMIC
       - $DX_ENVIRONMENT
       - $DX_HOST
-      - $DX_DEDICATED_WORKER
       - $DX_HUB_URL
       - $DX_IPDATA_API_KEY
       - $DX_LABS
       - $DX_MINIFY
       - $DX_PWA
       - $DX_SENTRY_DESTINATION
+      - $DX_SHARED_WORKER
       - $DX_TELEMETRY_API_KEY
       - $LOG_FILTER
       - $LOG_PREFIX

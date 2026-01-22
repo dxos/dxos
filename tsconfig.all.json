@@ -61,9 +61,6 @@
       "path": "packages/common/invariant/tsconfig.json"
     },
     {
-      "path": "packages/common/isomorphic-worker/tsconfig.json"
-    },
-    {
       "path": "packages/common/keyboard/tsconfig.json"
     },
     {

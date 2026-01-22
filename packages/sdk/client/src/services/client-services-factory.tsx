@@ -13,21 +13,27 @@ import { type LocalClientServicesParams, fromHost } from './local-client-service
 import { fromSocket } from './socket';
 import { type WorkerClientServicesProps, fromWorker } from './worker-client-services';
 
+export type CreateClientServicesOptions = {
+  /** Factory for creating a shared worker. */
+  createWorker?: WorkerClientServicesProps['createWorker'];
+  /** Factory for creating a dedicated worker. */
+  createDedicatedWorker?: DedeciatedWorkerClientServicesOptions['createWorker'];
+  /** Factory for creating an OPFS worker. */
+  createOpfsWorker?: LocalClientServicesParams['createOpfsWorker'];
+  /** Observability group sent with signaling metadata. */
+  observabilityGroup?: string;
+  /** Enable telemetry metadata sent with signaling requests. */
+  signalTelemetryEnabled?: boolean;
+};
+
 /**
  * Create services from config.
- * @param config
- * @param createWorker
- * @param observabilityGroup - Optional observability group that will be sent with Signaling metadata.
- * @param signalTelemetryEnabled - Optional flag to enable telemetry metadata sent with Signaling requests.
  */
 export const createClientServices = async (
   config: Config,
-  createWorker?: WorkerClientServicesProps['createWorker'],
-  createDedicatedWorker?: DedeciatedWorkerClientServicesOptions['createWorker'],
-  observabilityGroup?: string,
-  signalTelemetryEnabled?: boolean,
-  createOpfsWorker?: LocalClientServicesParams['createOpfsWorker'],
+  options: CreateClientServicesOptions = {},
 ): Promise<ClientServicesProvider> => {
+  const { createWorker, createDedicatedWorker, createOpfsWorker, observabilityGroup, signalTelemetryEnabled } = options;
   const remote = config.values.runtime?.client?.remoteSource;
   if (remote) {
     const url = new URL(remote);

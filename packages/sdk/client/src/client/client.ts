@@ -361,7 +361,8 @@ export class Client {
     this._ctx = new Context();
     this._config = this._options.config ?? new Config();
     // NOTE: Must currently match the host.
-    this._services = await (this._options.services ?? createClientServices(this._config, this._options.createWorker));
+    this._services = await (this._options.services ??
+      createClientServices(this._config, { createWorker: this._options.createWorker }));
     this._iframeManager = this._options.shell
       ? new IFrameManager({ source: new URL(this._options.shell, window.location.origin) })
       : undefined;

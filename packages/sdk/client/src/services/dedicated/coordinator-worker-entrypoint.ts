@@ -11,6 +11,10 @@ const ports = new Set<MessagePort>();
 // We need to transfer ports to the correct client since they cannot be cloned.
 const portsByClient = new Map<string, MessagePort>();
 
+/**
+ * Entry point for the SharedWorker that coordinates message passing between tabs.
+ * Used by DedicatedWorkerClientServices to broadcast messages to all connected tabs.
+ */
 globalThis.onconnect = (ev: MessageEvent) => {
   const port = ev.ports[0];
   ports.add(port);
@@ -37,6 +41,7 @@ globalThis.onconnect = (ev: MessageEvent) => {
       try {
         p.postMessage(event.data);
       } catch (err) {
+        log.catch(err);
         ports.delete(p);
       }
     }

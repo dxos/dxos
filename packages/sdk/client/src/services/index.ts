@@ -3,7 +3,7 @@
 //
 
 export { getUnixSocket, fromAgent, type FromAgentOptions, AgentClientServiceProvider } from './agent';
-export { createClientServices } from './client-services-factory';
+export { createClientServices, type CreateClientServicesOptions } from './client-services-factory';
 // TODO(wittjosiah): Remove this once this is internal to shell manager.
 export { IFrameManager } from './iframe-manager';
 export { fromHost, LocalClientServices, type LocalClientServicesParams } from './local-client-services';

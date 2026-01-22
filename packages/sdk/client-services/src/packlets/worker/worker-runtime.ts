@@ -44,7 +44,7 @@ export type WorkerRuntimeOptions = {
   releaseLock: () => void;
   onStop?: () => Promise<void>;
   /**
-   * @default false
+   * @default true
    */
   automaticallyConnectWebrtc?: boolean;
 
@@ -267,6 +267,7 @@ const LocalSqliteOpfsLayer = Layer.unwrapScoped(
   }),
 );
 
+// TODO(wittjosiah): Factor out to a separate module.
 class WebLockWrapper {
   readonly #key: string;
   #release?: () => void;
