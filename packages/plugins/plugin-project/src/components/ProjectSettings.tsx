@@ -15,7 +15,7 @@ import { List } from '@dxos/react-ui-list';
 import { cardChrome, cardText } from '@dxos/react-ui-mosaic';
 import { type ProjectionModel, View } from '@dxos/schema';
 import { Project, Task } from '@dxos/types';
-import { inputTextLabel, mx, subtleHover } from '@dxos/ui-theme';
+import { inputTextLabel, mx, osTranslations, subtleHover } from '@dxos/ui-theme';
 import { arrayMove } from '@dxos/util';
 
 import { meta } from '../meta';
@@ -169,7 +169,7 @@ export const ProjectObjectSettings = ({ classNames, project }: ProjectObjectSett
                     <IconButton
                       iconOnly
                       variant='ghost'
-                      label={t('toggle expand label', { ns: 'os' })}
+                      label={t('toggle expand label', { ns: osTranslations })}
                       icon={
                         expandedId === column.view.dxn.toString()
                           ? 'ph--caret-down--regular'

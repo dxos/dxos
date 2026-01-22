@@ -22,7 +22,7 @@ import {
   type View,
   getTypenameFromQuery,
 } from '@dxos/schema';
-import { mx, subtleHover } from '@dxos/ui-theme';
+import { mx, osTranslations, subtleHover } from '@dxos/ui-theme';
 
 import { translationKey } from '../../translations';
 import { FieldEditor } from '../FieldEditor';
@@ -300,7 +300,7 @@ const FieldList = ({ schema, view, registry, readonly, showHeading = false, onDe
                         <IconButton
                           iconOnly
                           variant='ghost'
-                          label={t('toggle expand label', { ns: 'os' })}
+                          label={t('toggle expand label', { ns: osTranslations })}
                           icon={expandedField === field.id ? 'ph--caret-down--regular' : 'ph--caret-right--regular'}
                           onClick={() => handleToggleField(field)}
                           data-testid='field.toggle'

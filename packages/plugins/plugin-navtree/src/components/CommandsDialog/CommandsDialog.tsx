@@ -17,6 +17,7 @@ import {
   cardDialogSearchListRoot,
 } from '@dxos/react-ui-mosaic';
 import { SearchList, useSearchListResults } from '@dxos/react-ui-searchlist';
+import { osTranslations } from '@dxos/ui-theme';
 import { getHostPlatform } from '@dxos/util';
 
 import { KEY_BINDING, meta } from '../../meta';
@@ -127,7 +128,7 @@ export const CommandsDialogContent = forwardRef<HTMLDivElement, CommandsDialogCo
         </SearchList.Root>
         <div role='none' className='pli-cardSpacingInline pbe-cardSpacingBlock'>
           <Dialog.Close asChild>
-            <Button classNames='is-full'>{t('close label', { ns: 'os' })}</Button>
+            <Button classNames='is-full'>{t('close label', { ns: osTranslations })}</Button>
           </Dialog.Close>
         </div>
       </Dialog.Content>

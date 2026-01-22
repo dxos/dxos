@@ -8,7 +8,7 @@ import { Common } from '@dxos/app-framework';
 import { useCapability, useOperationInvoker } from '@dxos/app-framework/react';
 import { type Node } from '@dxos/plugin-graph';
 import { IconButton, toLocalizedString, useTranslation } from '@dxos/react-ui';
-import { mx, surfaceZIndex } from '@dxos/ui-theme';
+import { mx, osTranslations, surfaceZIndex } from '@dxos/ui-theme';
 
 import { meta } from '../../meta';
 import { SimpleLayoutState } from '../../types';
@@ -21,7 +21,7 @@ export const Banner = ({ node }: BannerProps) => {
   const { t } = useTranslation(meta.id);
   const layout = useCapability(SimpleLayoutState);
   const { invokePromise } = useOperationInvoker();
-  const label = node ? toLocalizedString(node.properties.label, t) : t('current app name', { ns: 'appkit' });
+  const label = node ? toLocalizedString(node.properties.label, t) : t('current app name', { ns: osTranslations });
 
   const handleClick = useCallback(async () => {
     if (layout.active) {

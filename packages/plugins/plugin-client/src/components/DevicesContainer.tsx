@@ -21,6 +21,7 @@ import {
   ControlSection,
 } from '@dxos/react-ui-form';
 import { AuthCode, Centered, DeviceListItem, Emoji, Viewport } from '@dxos/shell/react';
+import { osTranslations } from '@dxos/ui-theme';
 import { hexToEmoji } from '@dxos/util';
 
 import { meta } from '../meta';
@@ -31,7 +32,7 @@ export type DevicesContainerProps = {
 };
 
 export const DevicesContainer = ({ createInvitationUrl }: DevicesContainerProps) => {
-  const { t } = useTranslation('@dxos/os');
+  const { t } = useTranslation(osTranslations);
   const { invokePromise } = useOperationInvoker();
   const devices = useDevices();
   const { swarm: connectionState } = useNetworkStatus();
@@ -217,7 +218,7 @@ const InvitationSection = ({
 };
 
 const InvitationQR = ({ id, url, onCancel }: { id: string; url: string; onCancel: () => void }) => {
-  const { t } = useTranslation('@dxos/os');
+  const { t } = useTranslation(osTranslations);
   const qrLabel = useId('devices-container__qr-code');
   const emoji = hexToEmoji(id);
   return (
@@ -257,7 +258,7 @@ const InvitationQR = ({ id, url, onCancel }: { id: string; url: string; onCancel
 };
 
 const InvitationAuthCode = ({ id, code, onCancel }: { id: string; code: string; onCancel: () => void }) => {
-  const { t } = useTranslation('@dxos/os');
+  const { t } = useTranslation(osTranslations);
   const emoji = hexToEmoji(id);
 
   return (
