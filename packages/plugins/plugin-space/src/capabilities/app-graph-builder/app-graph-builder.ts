@@ -22,7 +22,7 @@ import { isNonNullable } from '@dxos/util';
 
 import { getActiveSpace } from '../../hooks';
 import { meta } from '../../meta';
-import { SPACE_TYPE, SpaceCapabilities, SpaceOperation, type SpaceSettingsProps } from '../../types';
+import { SPACE_TYPE, SpaceCapabilities, SpaceOperation } from '../../types';
 import {
   SHARED,
   SPACES,

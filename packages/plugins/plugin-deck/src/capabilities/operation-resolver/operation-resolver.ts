@@ -24,7 +24,6 @@ import {
   DeckCapabilities,
   DeckOperation,
   type DeckPluginState,
-  type DeckSettingsProps,
   type DeckState,
   type LayoutMode,
   PLANK_COMPANION_TYPE,

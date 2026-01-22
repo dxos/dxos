@@ -9,7 +9,7 @@ import { LocalStorageStore } from '@dxos/local-storage';
 import { type EditorViewMode, createEditorStateStore } from '@dxos/ui-editor';
 
 import { meta } from '../../meta';
-import { type Markdown, MarkdownCapabilities, type MarkdownPluginState } from '../../types';
+import { MarkdownCapabilities, type MarkdownPluginState } from '../../types';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {

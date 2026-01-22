@@ -12,7 +12,7 @@ import { LocalStorageStore } from '@dxos/local-storage';
 import { AttentionCapabilities } from '@dxos/plugin-attention';
 
 import { meta } from '../../meta';
-import { FileCapabilities, type FilesSettingsProps, type FilesState, LocalFilesOperation } from '../../types';
+import { FileCapabilities, type FilesState, LocalFilesOperation } from '../../types';
 import { PREFIX, findFile, handleToLocalDirectory, handleToLocalFile } from '../../util';
 
 export default Capability.makeModule(

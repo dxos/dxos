@@ -21,7 +21,6 @@ import { type MeetingPayloadSchema } from '@dxos/protocols/buf/dxos/edge/calls_p
 import { type Space } from '@dxos/react-client/echo';
 import { type Message } from '@dxos/types';
 
-import { meta } from '../../meta';
 import { Meeting, MeetingCapabilities, MeetingOperation } from '../../types';
 
 // TODO(wittjosiah): Factor out.

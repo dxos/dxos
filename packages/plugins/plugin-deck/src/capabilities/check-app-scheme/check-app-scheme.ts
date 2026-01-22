@@ -6,8 +6,7 @@ import * as Effect from 'effect/Effect';
 
 import { Capability, Common } from '@dxos/app-framework';
 
-import { meta } from '../../meta';
-import { DeckCapabilities, type DeckSettingsProps } from '../../types';
+import { DeckCapabilities } from '../../types';
 
 const isSocket = !!(globalThis as any).__args;
 

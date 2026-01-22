@@ -10,12 +10,12 @@ import { Obj } from '@dxos/echo';
 import { Operation } from '@dxos/operation';
 import { DeckCapabilities } from '@dxos/plugin-deck';
 import { ATTENDABLE_PATH_SEPARATOR, DeckOperation } from '@dxos/plugin-deck/types';
-import { CreateAtom, GraphBuilder, type Node, NodeMatcher } from '@dxos/plugin-graph';
+import { GraphBuilder, type Node, NodeMatcher } from '@dxos/plugin-graph';
 import { Markdown } from '@dxos/plugin-markdown/types';
 import { Collection } from '@dxos/schema';
 
 import { meta } from '../../meta';
-import { PresenterCapabilities, PresenterOperation, type PresenterSettingsProps } from '../../types';
+import { PresenterCapabilities, PresenterOperation } from '../../types';
 
 /** Match nodes that can be presented (Collection or Document). */
 const whenPresentable = (node: Node.Node) =>
