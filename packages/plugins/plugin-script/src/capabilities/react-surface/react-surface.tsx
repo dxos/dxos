@@ -2,15 +2,15 @@
 // Copyright 2025 DXOS.org
 //
 
+import { useAtomValue } from '@effect-atom/atom-react';
 import * as Effect from 'effect/Effect';
 import React from 'react';
 
 import { Capability, Common } from '@dxos/app-framework';
-import { useAtomCapability } from '@dxos/app-framework/react';
+import { useAtomCapability, useCapability } from '@dxos/app-framework/react';
 import { InvocationTraceContainer } from '@dxos/devtools';
 import { Obj } from '@dxos/echo';
 import { Script } from '@dxos/functions';
-import { SettingsStore } from '@dxos/local-storage';
 import { getSpace } from '@dxos/react-client/echo';
 import { StackItem } from '@dxos/react-ui-stack';
 import { type AccessToken } from '@dxos/types';
@@ -35,9 +35,13 @@ export default Capability.makeModule(() =>
       Common.createSurface({
         id: `${meta.id}/plugin-settings`,
         role: 'article',
-        filter: (data): data is { subject: SettingsStore<ScriptSettings> } =>
-          data.subject instanceof SettingsStore && data.subject.prefix === meta.id,
-        component: ({ data: { subject } }) => <ScriptPluginSettings settings={subject.value} />,
+        filter: (data): data is { subject: Common.Capability.Settings } =>
+          Common.Capability.isSettings(data.subject) && data.subject.prefix === meta.id,
+        component: ({ data: { subject } }) => {
+          const registry = useCapability(Common.Capability.AtomRegistry);
+          const settings = useAtomValue(subject.atom, { registry }) as ScriptSettings;
+          return <ScriptPluginSettings settings={settings} />;
+        },
       }),
       Common.createSurface({
         id: `${meta.id}/script/article`,

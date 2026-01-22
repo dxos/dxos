@@ -16,7 +16,6 @@ import type { GenericToolkit } from '@dxos/assistant';
 import type { Blueprint } from '@dxos/blueprints';
 import type { Database, Type } from '@dxos/echo';
 import type { FunctionDefinition } from '@dxos/functions';
-import type { RootSettingsStore } from '@dxos/local-storage';
 import type { OperationInvoker as OperationInvoker$, OperationResolver as OperationResolver$ } from '@dxos/operation';
 import type { AnchoredTo } from '@dxos/types';
 
@@ -151,11 +150,6 @@ export namespace Capability {
     'dxos.org/app-framework/capability/app-graph-serializer',
   );
 
-  /**
-   * @category Capability
-   */
-  export const SettingsStore = Capability$.make<RootSettingsStore>('dxos.org/app-framework/capability/settings-store');
-
   // TODO(wittjosiah): The generics caused type inference issues for schemas when contributing settings.
   // export type Settings = Parameters<RootSettingsStore['createStore']>[0];
   // export type Settings<T extends SettingsValue = SettingsValue> = SettingsProps<T>;
@@ -165,6 +159,16 @@ export namespace Capability {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     atom: Atom.Writable<any>;
   };
+
+  /**
+   * Type guard to check if a value is a Settings object.
+   */
+  export const isSettings = (value: unknown): value is Settings =>
+    typeof value === 'object' &&
+    value !== null &&
+    'prefix' in value &&
+    typeof (value as Settings).prefix === 'string' &&
+    'atom' in value;
 
   /**
    * @category Capability

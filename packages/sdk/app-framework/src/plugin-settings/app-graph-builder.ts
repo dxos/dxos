@@ -5,7 +5,6 @@
 import * as Effect from 'effect/Effect';
 
 import { GraphBuilder, NodeMatcher } from '@dxos/app-graph';
-import { type SettingsStore, type SettingsValue } from '@dxos/local-storage';
 import { Operation } from '@dxos/operation';
 import { isNonNullable } from '@dxos/util';
 
@@ -20,7 +19,7 @@ export default Capability.makeModule(
     // Get context for lazy capability access in callbacks.
     const capabilities = yield* Capability.Service;
     const managerAtom = capabilities.atom(Common.Capability.PluginManager);
-    const settingsStoreAtom = capabilities.atom(Common.Capability.SettingsStore);
+    const settingsAtom = capabilities.atom(Common.Capability.Settings);
 
     const extensions = yield* Effect.all([
       GraphBuilder.createExtension({
@@ -66,13 +65,13 @@ export default Capability.makeModule(
         match: NodeMatcher.whenId(SETTINGS_ID),
         connector: (node, get) => {
           const [manager] = get(managerAtom);
-          const [settingsStore] = get(settingsStoreAtom);
+          const [allSettings] = get(settingsAtom);
           return Effect.succeed([
             ...manager
               .getPlugins()
               .filter((plugin: Plugin.Plugin) => manager.getCore().includes(plugin.meta.id))
-              .map((plugin: Plugin.Plugin): [Plugin.Meta, SettingsStore<SettingsValue>] | null => {
-                const settings = settingsStore?.getStore(plugin.meta.id);
+              .map((plugin: Plugin.Plugin): [Plugin.Meta, Common.Capability.Settings] | null => {
+                const settings = allSettings.find((s) => s.prefix === plugin.meta.id);
                 if (!settings) {
                   return null;
                 }
@@ -80,7 +79,7 @@ export default Capability.makeModule(
                 return [plugin.meta, settings];
               })
               .filter(isNonNullable)
-              .map(([meta, settings]: [Plugin.Meta, SettingsStore<SettingsValue>]) => ({
+              .map(([meta, settings]: [Plugin.Meta, Common.Capability.Settings]) => ({
                 id: `${SETTINGS_KEY}:${meta.id.replaceAll('/', ':')}`,
                 type: 'category',
                 data: settings,
@@ -108,13 +107,13 @@ export default Capability.makeModule(
         match: NodeMatcher.whenId(`${SETTINGS_KEY}:custom-plugins`),
         connector: (node, get) => {
           const [manager] = get(managerAtom);
-          const [settingsStore] = get(settingsStoreAtom);
+          const [allSettings] = get(settingsAtom);
           return Effect.succeed(
             manager
               .getPlugins()
               .filter((plugin: Plugin.Plugin) => !manager.getCore().includes(plugin.meta.id))
-              .map((plugin: Plugin.Plugin): [Plugin.Meta, SettingsStore<SettingsValue>] | null => {
-                const settings = settingsStore?.getStore(plugin.meta.id);
+              .map((plugin: Plugin.Plugin): [Plugin.Meta, Common.Capability.Settings] | null => {
+                const settings = allSettings.find((s) => s.prefix === plugin.meta.id);
                 if (!settings) {
                   return null;
                 }
@@ -122,7 +121,7 @@ export default Capability.makeModule(
                 return [plugin.meta, settings];
               })
               .filter(isNonNullable)
-              .map(([meta, settings]: [Plugin.Meta, SettingsStore<SettingsValue>]) => ({
+              .map(([meta, settings]: [Plugin.Meta, Common.Capability.Settings]) => ({
                 id: `${SETTINGS_KEY}:${meta.id.replaceAll('/', ':')}`,
                 type: 'category',
                 data: settings,

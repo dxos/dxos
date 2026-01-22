@@ -2,13 +2,13 @@
 // Copyright 2025 DXOS.org
 //
 
+import { useAtomValue } from '@effect-atom/atom-react';
 import * as Effect from 'effect/Effect';
 import React from 'react';
 
 import { Capability, Common } from '@dxos/app-framework';
-import { useAtomCapability } from '@dxos/app-framework/react';
+import { useAtomCapability, useCapability } from '@dxos/app-framework/react';
 import { Obj } from '@dxos/echo';
-import { SettingsStore } from '@dxos/local-storage';
 import { Diagram } from '@dxos/plugin-sketch/types';
 
 import { SketchContainer, SketchSettings } from '../../components';
@@ -35,13 +35,16 @@ export default Capability.makeModule(() =>
           );
         },
       }),
-      // NOTE: Settings panel still uses SettingsStore until settings components are migrated to use update callbacks.
       Common.createSurface({
         id: `${meta.id}/plugin-settings`,
         role: 'article',
-        filter: (data): data is { subject: SettingsStore<SketchSettingsProps> } =>
-          data.subject instanceof SettingsStore && data.subject.prefix === meta.id,
-        component: ({ data: { subject } }) => <SketchSettings settings={subject.value} />,
+        filter: (data): data is { subject: Common.Capability.Settings } =>
+          Common.Capability.isSettings(data.subject) && data.subject.prefix === meta.id,
+        component: ({ data: { subject } }) => {
+          const registry = useCapability(Common.Capability.AtomRegistry);
+          const settings = useAtomValue(subject.atom, { registry }) as SketchSettingsProps;
+          return <SketchSettings settings={settings} />;
+        },
       }),
     ]),
   ),

@@ -1,12 +1,12 @@
 //
 // Copyright 2025 DXOS.org
 //
+import { useAtomValue } from '@effect-atom/atom-react';
 import * as Effect from 'effect/Effect';
 import React from 'react';
 
 import { Capability, Common } from '@dxos/app-framework';
 import { useCapability } from '@dxos/app-framework/react';
-import { SettingsStore } from '@dxos/local-storage';
 
 import { ExportStatus, FilesSettings, LocalFileContainer } from '../../components';
 import { meta } from '../../meta';
@@ -17,6 +17,7 @@ export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     // Get context for lazy capability access in callbacks.
     const capabilities = yield* Capability.Service;
+    const settingsAtom = capabilities.atom(Common.Capability.Settings);
 
     return Capability.contributes(Common.Capability.ReactSurface, [
       Common.createSurface({
@@ -28,21 +29,27 @@ export default Capability.makeModule(
       Common.createSurface({
         id: `${meta.id}/plugin-settings`,
         role: 'article',
-        filter: (data): data is { subject: SettingsStore<FilesSettingsProps> } =>
-          data.subject instanceof SettingsStore && data.subject.prefix === meta.id,
+        filter: (data): data is { subject: Common.Capability.Settings } =>
+          Common.Capability.isSettings(data.subject) && data.subject.prefix === meta.id,
         component: ({ data: { subject } }) => {
+          const registry = useCapability(Common.Capability.AtomRegistry);
+          const settings = useAtomValue(subject.atom, { registry }) as FilesSettingsProps;
           const store = useCapability(FileCapabilities.State);
-          return <FilesSettings settings={subject.value} state={store.values} />;
+          return <FilesSettings settings={settings} state={store.values} />;
         },
       }),
       Common.createSurface({
         id: `${meta.id}/status`,
         role: 'status',
-        filter: (data): data is any => {
-          const settings = capabilities
-            .get(Common.Capability.SettingsStore)
-            .getStore<FilesSettingsProps>(meta.id)!.value;
-          return settings.autoExport;
+        filter: (data, get): data is any => {
+          const [allSettings] = get(settingsAtom);
+          const settingsObj = allSettings.find((s) => s.prefix === meta.id);
+          if (!settingsObj) {
+            return false;
+          }
+          const registry = capabilities.get(Common.Capability.AtomRegistry);
+          const settings = registry.get(settingsObj.atom) as FilesSettingsProps;
+          return !!settings.autoExport;
         },
         component: () => {
           const store = useCapability(FileCapabilities.State);

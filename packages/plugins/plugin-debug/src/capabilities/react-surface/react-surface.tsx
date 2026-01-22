@@ -35,7 +35,7 @@ import {
   WorkflowPanel,
 } from '@dxos/devtools';
 import { Obj } from '@dxos/echo';
-import { SettingsStore } from '@dxos/local-storage';
+import { useAtomValue } from '@effect-atom/atom-react';
 import { log } from '@dxos/log';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { type Graph } from '@dxos/plugin-graph';
@@ -85,14 +85,19 @@ const useCurrentSpace = () => {
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     const capabilities = yield* Capability.Service;
+    const settingsAtom = capabilities.atom(Common.Capability.Settings);
 
     return Capability.contributes(Common.Capability.ReactSurface, [
       Common.createSurface({
         id: `${meta.id}/plugin-settings`,
         role: 'article',
-        filter: (data): data is { subject: SettingsStore<DebugSettingsProps> } =>
-          data.subject instanceof SettingsStore && data.subject.prefix === meta.id,
-        component: ({ data: { subject } }) => <DebugSettings settings={subject.value} />,
+        filter: (data): data is { subject: Common.Capability.Settings } =>
+          Common.Capability.isSettings(data.subject) && data.subject.prefix === meta.id,
+        component: ({ data: { subject } }) => {
+          const registry = useCapability(Common.Capability.AtomRegistry);
+          const settings = useAtomValue(subject.atom, { registry }) as DebugSettingsProps;
+          return <DebugSettings settings={settings} />;
+        },
       }),
       Common.createSurface({
         id: `${meta.id}/space`,
@@ -141,10 +146,14 @@ export default Capability.makeModule(
         id: `${meta.id}/wireframe`,
         role: ['article', 'section'],
         position: 'hoist',
-        filter: (data): data is { subject: Obj.Any } => {
-          const settings = capabilities
-            .get(Common.Capability.SettingsStore)
-            .getStore<DebugSettingsProps>(meta.id)!.value;
+        filter: (data, get): data is { subject: Obj.Any } => {
+          const [allSettings] = get(settingsAtom);
+          const settingsObj = allSettings.find((s) => s.prefix === meta.id);
+          if (!settingsObj) {
+            return false;
+          }
+          const registry = capabilities.get(Common.Capability.AtomRegistry);
+          const settings = registry.get(settingsObj.atom) as DebugSettingsProps;
           return Obj.isObject(data.subject) && !!settings.wireframe;
         },
         component: ({ data, role }) => (
