@@ -3,6 +3,7 @@
 import eslint from '@eslint/js';
 import sortImports from '@trivago/prettier-plugin-sort-imports';
 import sortExports from 'eslint-plugin-sort-exports';
+import oxlint from 'eslint-plugin-oxlint';
 import reactPlugin from 'eslint-plugin-react';
 import importX from 'eslint-plugin-import-x';
 import arrowFunctions from 'eslint-plugin-prefer-arrow-functions';
@@ -332,4 +333,10 @@ export default tseslint.config(
       'storybook/context-in-play-function': 'off',
     },
   },
+
+  //
+  // Oxlint - Disable rules already handled by oxlint.
+  // This must be last to properly override previous configs.
+  //
+  oxlint.configs['flat/recommended'],
 );

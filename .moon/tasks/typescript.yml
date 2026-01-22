@@ -1,8 +1,9 @@
 $schema: https://moonrepo.dev/schemas/tasks.json
 tasks:
   lint:
-    command: pnpm exec eslint . --format unix --quiet
+    command: pnpm exec oxlint --format unix && pnpm exec eslint . --format unix --quiet
     inputs:
+      - /.oxlintrc.json
       - /eslint.config.mjs
       # Is this fine:
       - /tools/eslint-plugin-rules/**/*
