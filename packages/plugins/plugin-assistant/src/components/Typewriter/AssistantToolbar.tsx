@@ -4,12 +4,12 @@
 
 import { type EditorView } from '@codemirror/view';
 import * as LanguageModel from '@effect/ai/LanguageModel';
-import { runInRuntime } from '@dxos/effect';
 import { ArrowsClockwise, CaretLeft, CaretRight, Keyboard } from '@phosphor-icons/react';
 import * as Effect from 'effect/Effect';
-import { Runtime } from 'effect';
+import type * as Runtime from 'effect/Runtime';
 import React, { useState } from 'react';
 
+import { runInRuntime } from '@dxos/effect';
 import { log } from '@dxos/log';
 import { Button, Input, ThemeProvider } from '@dxos/react-ui';
 

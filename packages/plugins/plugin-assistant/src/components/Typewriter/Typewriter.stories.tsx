@@ -2,14 +2,17 @@
 // Copyright 2026 DXOS.org
 //
 
-import { AiServiceTestingPreset } from '@dxos/ai/testing';
+import type * as LanguageModel from '@effect/ai/LanguageModel';
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import React, { use, useEffect, useState } from 'react';
+import * as Layer from 'effect/Layer';
+import * as ManagedRuntime from 'effect/ManagedRuntime';
+import type * as Runtime from 'effect/Runtime';
+import React, { useEffect, useState } from 'react';
 
 import { AiService } from '@dxos/ai';
-import { Layer, ManagedRuntime, type Runtime } from 'effect';
+import { AiServiceTestingPreset } from '@dxos/ai/testing';
+
 import { Typewriter } from './Typewriter';
-import type { LanguageModel } from '@effect/ai';
 
 const meta: Meta<typeof Typewriter> = {
   title: 'plugins/plugin-assistant/Typewriter',

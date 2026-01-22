@@ -2,23 +2,21 @@
 // Copyright 2026 DXOS.org
 //
 
-import { markdown } from '@codemirror/lang-markdown';
-import { lintGutter } from '@codemirror/lint';
 import { type Extension } from '@codemirror/state';
 import type * as LanguageModel from '@effect/ai/LanguageModel';
+import type * as Runtime from 'effect/Runtime';
 import React, { useMemo, useRef } from 'react';
 
 import { DensityProvider, ThemeProvider } from '@dxos/react-ui';
 import { Editor, type EditorController } from '@dxos/react-ui-editor';
-
-import { assistant } from './assistant-extension';
-import { Runtime } from 'effect';
 import {
   createBasicExtensions,
   createMarkdownExtensions,
   createThemeExtensions,
   decorateMarkdown,
 } from '@dxos/ui-editor';
+
+import { assistant } from './assistant-extension';
 
 export type TypewriterProps = {
   initialContent?: string;

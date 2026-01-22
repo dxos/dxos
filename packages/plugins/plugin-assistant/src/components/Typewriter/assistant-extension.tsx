@@ -7,14 +7,14 @@ import { type Extension, StateField } from '@codemirror/state';
 import { EditorView, type Tooltip, showTooltip } from '@codemirror/view';
 import * as LanguageModel from '@effect/ai/LanguageModel';
 import * as Effect from 'effect/Effect';
+import * as Runtime from 'effect/Runtime';
 import React from 'react';
 import { createRoot } from 'react-dom/client';
 
+import { unwrapExit } from '@dxos/effect';
 import { log } from '@dxos/log';
 
 import { AssistantToolbar } from './AssistantToolbar';
-import { Runtime } from 'effect';
-import { unwrapExit } from '@dxos/effect';
 
 export const assistant = (runtime: Runtime.Runtime<LanguageModel.LanguageModel>): Extension[] => {
   return [
@@ -51,7 +51,6 @@ const assistantState = (runtime: Runtime.Runtime<LanguageModel.LanguageModel>) =
           above: false,
           strictSide: true,
           create: (view) => {
-            console.log('Creating tooltip');
             const dom = document.createElement('div');
             dom.classList.add('cm-tooltip-assistant');
             const root = createRoot(dom);
