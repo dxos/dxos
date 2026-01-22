@@ -9,7 +9,13 @@ import { type ForeignKey } from '@dxos/echo-protocol';
 import { createJsonPath, getValue as getValue$ } from '@dxos/effect';
 import { assertArgument, invariant } from '@dxos/invariant';
 import { type DXN, ObjectId } from '@dxos/keys';
-import { getSnapshot as getSnapshot$, subscribe as subscribe$ } from '@dxos/live-object';
+import {
+  type ChangeCallback,
+  type Mutable,
+  change as change$,
+  getSnapshot as getSnapshot$,
+  subscribe as subscribe$,
+} from '@dxos/live-object';
 import { assumeType, deepMapValues } from '@dxos/util';
 
 import type * as Database from './Database';
@@ -187,6 +193,48 @@ export const clone = <T extends Any>(obj: T, opts?: CloneOptions): T => {
   });
 
   return make(schema as Type.Obj.Any, props);
+};
+
+//
+// Change
+//
+
+/**
+ * Makes all properties mutable recursively.
+ * Used to provide a mutable view of an object within `Obj.change`.
+ */
+export type { Mutable };
+
+/**
+ * Perform mutations on an ECHO object within a controlled context.
+ *
+ * All mutations within the callback are batched and trigger a single notification
+ * when the callback completes. Direct mutations outside of `Obj.change` will throw
+ * an error for ECHO objects.
+ *
+ * This function also works with nested objects within ECHO objects (e.g., Template structs)
+ * that are reactive at runtime.
+ *
+ * @param obj - The ECHO object or nested reactive object to mutate.
+ * @param callback - The callback that performs mutations on the object.
+ *
+ * @example
+ * ```ts
+ * const person = Obj.make(Person, { name: 'John', age: 25 });
+ *
+ * // Mutate within Obj.change
+ * Obj.change(person, (p) => {
+ *   p.name = 'Jane';
+ *   p.age = 30;
+ * });
+ * // ONE notification fires here
+ *
+ * // Direct mutation throws
+ * person.name = 'Bob'; // Error: Cannot modify outside Obj.change()
+ * ```
+ */
+export const change = <T extends Entity.Unknown>(obj: T, callback: ChangeCallback<T>): void => {
+  change$(obj, callback);
 };
 
 /**

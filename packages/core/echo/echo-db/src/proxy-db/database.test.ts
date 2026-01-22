@@ -279,8 +279,10 @@ describe('Database', () => {
       const container = db.add(Obj.make(TestSchema.Container, { objects: [] }));
       await db.flush();
 
-      container.objects!.push(Ref.make(Obj.make(Type.Expando, { foo: 100 })));
-      container.objects!.push(Ref.make(Obj.make(Type.Expando, { bar: 200 })));
+      Obj.change(container, (c) => {
+        c.objects!.push(Ref.make(Obj.make(Type.Expando, { foo: 100 })));
+        c.objects!.push(Ref.make(Obj.make(Type.Expando, { bar: 200 })));
+      });
     }
 
     {
@@ -304,8 +306,10 @@ describe('Database', () => {
       const container = db.add(Obj.make(TestSchema.Container, { objects: [] }));
       await db.flush();
 
-      container.objects!.push(Ref.make(Obj.make(TestSchema.Task, {})));
-      container.objects!.push(Ref.make(Obj.make(TestSchema.Person, {})));
+      Obj.change(container, (c) => {
+        c.objects!.push(Ref.make(Obj.make(TestSchema.Task, {})));
+        c.objects!.push(Ref.make(Obj.make(TestSchema.Person, {})));
+      });
     }
 
     {
@@ -400,7 +404,9 @@ describe('Database', () => {
     expect(Obj.versionValid(version2)).to.be.true;
     expect(Obj.compareVersions(version1, version2)).to.eq('equal');
 
-    task.title = 'Main task 2';
+    Obj.change(task, (t) => {
+      t.title = 'Main task 2';
+    });
     const version3 = Obj.version(task as any);
     expect(Obj.isVersion(version3)).to.be.true;
     expect(Obj.versionValid(version3)).to.be.true;
@@ -460,15 +466,21 @@ describe('Database', () => {
     test('reset array', async () => {
       const { db, obj: root } = await addToDatabase(Obj.make(TestSchema.Container, { records: [] }));
 
-      root.records!.push({ title: 'one' });
+      Obj.change(root, (r) => {
+        r.records!.push({ title: 'one' });
+      });
       expect(root.records).to.have.length(1);
 
-      root.records = [];
+      Obj.change(root, (r) => {
+        r.records = [];
+      });
       expect(root.records).to.have.length(0);
       await db.flush();
       expect(root.records).to.have.length(0);
 
-      root.records.push({ title: 'two' });
+      Obj.change(root, (r) => {
+        r.records!.push({ title: 'two' });
+      });
       expect(root.records).to.have.length(1);
       await db.flush();
       expect(root.records).to.have.length(1);

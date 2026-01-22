@@ -23,7 +23,7 @@ export const ObjectRenamePopover = ({ object }: { object: Obj.Any }) => {
 
   const handleDone = useCallback(() => {
     try {
-      name && Obj.setLabel(object, name);
+      name && Obj.change(object, () => Obj.setLabel(object, name));
     } catch (err) {
       log.error('Failed to rename object', { err });
     }

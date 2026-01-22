@@ -165,7 +165,10 @@ export default defineFunction({
           }),
         );
 
-        rootCollection.objects.push(Ref.make(document));
+        const documentRef = Ref.make(document);
+        Obj.change(rootCollection, (c) => {
+          c.objects.push(documentRef);
+        });
 
         // Create the HasSubject relation
         yield* Database.Service.add(

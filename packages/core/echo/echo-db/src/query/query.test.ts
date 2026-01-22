@@ -904,7 +904,9 @@ describe('Query', () => {
       }
 
       // Update the object.
-      obj.title = 'Updated Title';
+      Obj.change(obj, (o) => {
+        o.title = 'Updated Title';
+      });
       await db.flush({ indexes: true });
 
       // Verify search results.
@@ -1148,7 +1150,9 @@ describe('Query', () => {
       query.subscribe(() => {
         updateCount++;
       });
-      (objects[0] as any).title = 'Task 0a';
+      Obj.change(objects[0], (o: any) => {
+        o.title = 'Task 0a';
+      });
       await sleep(10);
       expect(updateCount).to.equal(0);
     });
@@ -1345,7 +1349,9 @@ describe('Query', () => {
       });
       onTestFinished(() => unsub());
 
-      contact.name = name;
+      Obj.change(contact, (c) => {
+        c.name = name;
+      });
       db.add(Obj.make(TestSchema.Person, {}));
 
       await asyncTimeout(nameUpdate.wait(), 1000);

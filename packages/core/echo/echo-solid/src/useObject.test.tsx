@@ -86,8 +86,10 @@ describe('useObject', () => {
     expect(result).toBe('Test');
     expect(getByTestId('value').textContent).toBe('Test');
 
-    // Update the property directly on the object.
-    obj.name = 'Updated';
+    // Update the property via Obj.change.
+    Obj.change(obj, (o) => {
+      o.name = 'Updated';
+    });
 
     // Wait for reactivity to update.
     await waitFor(() => {
@@ -116,8 +118,10 @@ describe('useObject', () => {
     expect(valueAccessor?.()?.name).toBe('Test');
     expect(getByTestId('name').textContent).toBe('Test');
 
-    // Update a property on the object.
-    obj.name = 'Updated';
+    // Update a property via Obj.change.
+    Obj.change(obj, (o) => {
+      o.name = 'Updated';
+    });
 
     // Wait for reactivity to update.
     await waitFor(() => {
@@ -145,8 +149,10 @@ describe('useObject', () => {
 
     expect(result).toBe('Test');
 
-    // Update a different property.
-    obj.email = 'newemail@example.com';
+    // Update a different property via Obj.change.
+    Obj.change(obj, (o) => {
+      o.email = 'newemail@example.com';
+    });
 
     // Name should still be 'Test'.
     expect(result).toBe('Test');

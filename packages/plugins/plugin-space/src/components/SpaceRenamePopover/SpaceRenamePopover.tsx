@@ -7,6 +7,7 @@ import React, { useCallback, useRef, useState } from 'react';
 import { Common } from '@dxos/app-framework';
 import { useOperationInvoker } from '@dxos/app-framework/react';
 import { type Space } from '@dxos/client/echo';
+import { Obj } from '@dxos/echo';
 import { Button, Input, Popover, useTranslation } from '@dxos/react-ui';
 import { osTranslations } from '@dxos/ui-theme';
 
@@ -21,7 +22,9 @@ export const SpaceRenamePopover = ({ space }: { space: Space }) => {
   const { invokePromise } = useOperationInvoker();
 
   const handleDone = useCallback(() => {
-    space.properties.name = name;
+    Obj.change(space.properties, (p) => {
+      p.name = name;
+    });
     void invokePromise(Common.LayoutOperation.UpdatePopover, { anchorId: '', state: false });
   }, [space, name, invokePromise]);
 

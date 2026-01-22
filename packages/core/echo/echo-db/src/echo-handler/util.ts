@@ -10,7 +10,8 @@ import { type Live, getProxyTarget } from '@dxos/live-object';
 
 import { type EchoDatabase } from '../proxy-db';
 
-import { type AnyLiveObject, isEchoObject } from './echo-handler';
+import { type AnyLiveObject } from './echo-handler';
+import { isEchoObject } from './echo-object-utils';
 import { type ProxyTarget, symbolInternals } from './echo-proxy-target';
 
 export const getDatabaseFromObject = (obj: Live<any>): EchoDatabase | undefined => {

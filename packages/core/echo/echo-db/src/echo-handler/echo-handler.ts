@@ -17,6 +17,7 @@ import {
   ATTR_RELATION_TARGET,
   ATTR_TYPE,
   type AnyProperties,
+  ChangeId,
   EchoSchema,
   EntityKind,
   type HasId,
@@ -66,11 +67,20 @@ import {
 import { log } from '@dxos/log';
 import { deepMapValues, defaultMap, getDeep, setDeep } from '@dxos/util';
 
-import { type DecodedAutomergePrimaryValue, type KeyPath, META_NAMESPACE, ObjectCore } from '../core-db';
+import {
+  type DecodedAutomergePrimaryValue,
+  type KeyPath,
+  META_NAMESPACE,
+  ObjectCore,
+  isInChangeContext,
+  queueNotification,
+} from '../core-db';
 import { type EchoDatabase } from '../proxy-db';
 
+import { changeInternal } from './change-impl';
 import { getBody, getHeader } from './devtools-formatter';
 import { EchoArray } from './echo-array';
+import { getObjectCore, isEchoObject, isRootDataObject } from './echo-object-utils';
 import {
   ObjectInternals,
   type ProxyTarget,
@@ -80,6 +90,7 @@ import {
   symbolNamespace,
   symbolPath,
 } from './echo-proxy-target';
+import { createArrayMethodError, createPropertyDeleteError, createPropertySetError } from './errors';
 
 /**
  * Shared for all targets within one ECHO object.
@@ -179,6 +190,12 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
         case KindId: {
           return target[symbolInternals].core.getKind();
         }
+        case ChangeId: {
+          // Return a function that allows mutations within a controlled context.
+          return (callback: (mutableObj: any) => void) => {
+            changeInternal(receiver, callback);
+          };
+        }
         case RelationSourceDXNId: {
           return target[symbolInternals].core.getSource()?.toDXN();
         }
@@ -213,6 +230,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
         case MetaId:
         case ObjectDeletedId:
         case ObjectDatabaseId:
+        case ChangeId:
           return undefined;
       }
     }
@@ -251,6 +269,13 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
   set(target: ProxyTarget, prop: string | symbol, value: any, receiver: any): boolean {
     invariant(Array.isArray(target[symbolPath]));
     invariant(typeof prop === 'string');
+
+    // Check readonly enforcement for ECHO objects.
+    const core = target[symbolInternals].core;
+    if (!isInChangeContext(core)) {
+      throw createPropertySetError(prop);
+    }
+
     if (target instanceof EchoArray && prop === 'length') {
       this._arraySetLength(target, target[symbolPath], value);
       return true;
@@ -521,6 +546,12 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
   }
 
   deleteProperty(target: ProxyTarget, property: string | symbol): boolean {
+    // Check readonly enforcement for ECHO objects.
+    const core = target[symbolInternals].core;
+    if (!isInChangeContext(core)) {
+      throw createPropertyDeleteError(property);
+    }
+
     if (target instanceof EchoArray) {
       // Note: Automerge support delete array[index] but its behavior is not consistent with JS arrays.
       //       It works as splice but JS arrays substitute `undefined` for deleted elements.
@@ -542,6 +573,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
   }
 
   arrayPush(target: Live<ProxyTarget>, path: KeyPath, ...items: any[]): number {
+    this._checkArrayMutationAllowed(target, 'push');
     const validatedItems = this._validateForArray(target, path, items, target.length);
 
     const encodedItems = this._encodeForArray(target, validatedItems);
@@ -550,6 +582,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
   }
 
   arrayPop(target: Live<ProxyTarget>, path: KeyPath): any {
+    this._checkArrayMutationAllowed(target, 'pop');
     const fullPath = this._getPropertyMountPath(target, path);
 
     let returnValue: any | undefined;
@@ -563,6 +596,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
   }
 
   arrayShift(target: Live<ProxyTarget>, path: KeyPath): any {
+    this._checkArrayMutationAllowed(target, 'shift');
     const fullPath = this._getPropertyMountPath(target, path);
 
     let returnValue: any | undefined;
@@ -576,6 +610,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
   }
 
   arrayUnshift(target: Live<ProxyTarget>, path: KeyPath, ...items: any[]): number {
+    this._checkArrayMutationAllowed(target, 'unshift');
     const validatedItems = this._validateForArray(target, path, items, 0);
     const fullPath = this._getPropertyMountPath(target, path);
     const encodedItems = this._encodeForArray(target, validatedItems);
@@ -592,6 +627,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
   }
 
   arraySplice(target: Live<ProxyTarget>, path: KeyPath, start: number, deleteCount?: number, ...items: any[]): any[] {
+    this._checkArrayMutationAllowed(target, 'splice');
     const validatedItems = this._validateForArray(target, path, items, start);
 
     const fullPath = this._getPropertyMountPath(target, path);
@@ -613,6 +649,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
   }
 
   arraySort(target: Live<ProxyTarget>, path: KeyPath, compareFn?: (v1: any, v2: any) => number): any[] {
+    this._checkArrayMutationAllowed(target, 'sort');
     const fullPath = this._getPropertyMountPath(target, path);
 
     target[symbolInternals].core.change((doc) => {
@@ -626,6 +663,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
   }
 
   arrayReverse(target: Live<ProxyTarget>, path: KeyPath): any[] {
+    this._checkArrayMutationAllowed(target, 'reverse');
     const fullPath = this._getPropertyMountPath(target, path);
 
     target[symbolInternals].core.change((doc) => {
@@ -636,6 +674,16 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     });
 
     return target as EchoArray<any>;
+  }
+
+  /**
+   * Check if array mutation is allowed (inside a change context).
+   */
+  private _checkArrayMutationAllowed(target: Live<ProxyTarget>, method: string): void {
+    const core = target[symbolInternals].core;
+    if (!isInChangeContext(core)) {
+      throw createArrayMethodError(method);
+    }
   }
 
   getMeta(target: ProxyTarget): ObjectMeta {
@@ -901,15 +949,8 @@ export const throwIfCustomClass = (prop: KeyPath[number], value: any) => {
   }
 };
 
-// TODO(burdon): Move ProxyTarget def to echo-schema and make AnyLiveObject inherit?
-export const getObjectCore = <T extends AnyProperties>(obj: Live<T>): ObjectCore => {
-  if (!(obj as any as ProxyTarget)[symbolInternals]) {
-    throw new Error('object is not an EchoObjectSchema');
-  }
-
-  const { core } = (obj as any as ProxyTarget)[symbolInternals];
-  return core;
-};
+// Re-export from echo-object-utils for backward compatibility.
+export { getObjectCore };
 
 /**
  * @returns Automerge document (or a part of it) that backs the object.
@@ -920,14 +961,8 @@ export const getObjectDocument = (obj: AnyLiveObject<any>): A.Doc<ObjectStructur
   return getDeep(core.getDoc(), core.mountPath)!;
 };
 
-export const isRootDataObject = (target: ProxyTarget) => {
-  const path = target[symbolPath];
-  if (!Array.isArray(path) || path.length > 0) {
-    return false;
-  }
-
-  return getNamespace(target) === DATA_NAMESPACE;
-};
+// Re-export from echo-object-utils for backward compatibility.
+export { isRootDataObject };
 
 /**
  * @returns True if `value` is part of another EchoObjectSchema but not the root data object.
@@ -952,22 +987,8 @@ interface DecodedValueAtPath {
 // TODO(burdon): Remove.
 export type AnyLiveObject<T extends AnyProperties = any> = Live<T> & HasId & AnyProperties;
 
-/**
- * @returns True if `value` is a reactive object with an EchoHandler backend.
- */
-// TODO(dmaretskyi): Reconcile with `isTypedObjectProxy`.
-export const isEchoObject = (value: any): value is Obj.Any => {
-  if (!isLiveObject(value)) {
-    return false;
-  }
-
-  const handler = getProxyHandler(value);
-  if (!(handler instanceof EchoReactiveHandler)) {
-    return false;
-  }
-
-  return isRootDataObject(getProxyTarget(value));
-};
+// Re-export from echo-object-utils for backward compatibility.
+export { isEchoObject };
 
 /**
  * Used to determine if the value should be placed at the root of a separate ECHO object.
@@ -1024,8 +1045,14 @@ export const createObject = <T extends AnyProperties>(obj: T): CreateObjectRetur
 
     target[symbolInternals].subscriptions.push(
       core.updates.on(() => {
-        target[symbolInternals].signal.notifyWrite();
-        target[EventId]?.emit();
+        if (isInChangeContext(core)) {
+          // Defer notification until the change context exits.
+          queueNotification(core);
+        } else {
+          // Immediate notification for external changes (sync from peers).
+          target[symbolInternals].signal.notifyWrite();
+          target[EventId]?.emit();
+        }
       }),
     );
 
@@ -1054,8 +1081,14 @@ export const createObject = <T extends AnyProperties>(obj: T): CreateObjectRetur
     target[symbolInternals].rootSchema = schema;
     target[symbolInternals].subscriptions.push(
       core.updates.on(() => {
-        target[symbolInternals].signal.notifyWrite();
-        target[EventId]?.emit();
+        if (isInChangeContext(core)) {
+          // Defer notification until the change context exits.
+          queueNotification(core);
+        } else {
+          // Immediate notification for external changes (sync from peers).
+          target[symbolInternals].signal.notifyWrite();
+          target[EventId]?.emit();
+        }
       }),
     );
 
@@ -1106,8 +1139,14 @@ export const initEchoReactiveObjectRootProxy = (core: ObjectCore, database?: Ech
 
   // TODO(dmaretskyi): Does this need to be disposed?
   core.updates.on(() => {
-    target[symbolInternals].signal.notifyWrite();
-    target[EventId]?.emit();
+    if (isInChangeContext(core)) {
+      // Defer notification until the change context exits.
+      queueNotification(core);
+    } else {
+      // Immediate notification for external changes (sync from peers).
+      target[symbolInternals].signal.notifyWrite();
+      target[EventId]?.emit();
+    }
   });
 
   const obj = createProxy<ProxyTarget>(target, EchoReactiveHandler.instance) as any;
