@@ -14,6 +14,7 @@ import { AppGraphBuilder, BlueprintDefinition, OperationResolver, ReactSurface }
 import { meta } from './meta';
 import { translations } from './translations';
 import { Calendar, Mailbox } from './types';
+import { CreateCalendarSchema } from './types/Calendar';
 import { CreateMailboxSchema } from './types/Mailbox';
 
 export const InboxPlugin = Plugin.define(meta).pipe(
@@ -49,6 +50,7 @@ export const InboxPlugin = Plugin.define(meta).pipe(
           icon: 'ph--calendar--regular',
           iconHue: 'rose',
           blueprints: [CalendarBlueprint.Key],
+          inputSchema: CreateCalendarSchema,
           createObject: ((props, { db }) =>
             Effect.gen(function* () {
               const client = yield* Capability.get(ClientCapabilities.Client);

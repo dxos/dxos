@@ -10,16 +10,17 @@ import { Database } from '@dxos/echo';
 import { CredentialsService } from '@dxos/functions';
 import { log } from '@dxos/log';
 
+import type * as Calendar from '../../types/Calendar';
 import type * as Mailbox from '../../types/Mailbox';
 
 /**
- * Service for accessing credentials scoped to a specific mailbox.
- * Provides the Google API token either from the mailbox's access token or falls back to database credentials.
+ * Service for accessing Google API credentials.
+ * Provides the Google API token either from an object's access token or falls back to database credentials.
  */
-export class MailboxCredentials extends Context.Tag('MailboxCredentials')<
-  MailboxCredentials,
+export class GoogleCredentials extends Context.Tag('GoogleCredentials')<
+  GoogleCredentials,
   {
-    /** Returns the Google API token for this mailbox. */
+    /** Returns the Google API token. */
     get: () => Effect.Effect<string, never, CredentialsService>;
   }
 >() {
@@ -27,9 +28,9 @@ export class MailboxCredentials extends Context.Tag('MailboxCredentials')<
    * Creates a credentials layer from a mailbox.
    * Pre-loads the access token during layer construction.
    */
-  static layer = (mailbox: Mailbox.Mailbox) =>
+  static fromMailbox = (mailbox: Mailbox.Mailbox) =>
     Layer.effect(
-      MailboxCredentials,
+      GoogleCredentials,
       Effect.gen(function* () {
         // Pre-load token at layer creation time.
         let cachedToken: string | undefined;
@@ -57,10 +58,43 @@ export class MailboxCredentials extends Context.Tag('MailboxCredentials')<
     );
 
   /**
-   * Default layer that uses database credentials.
-   * Use this for operations that don't have an associated mailbox (e.g., calendar sync, send email).
+   * Creates a credentials layer from a calendar.
+   * Pre-loads the access token during layer construction.
    */
-  static default = Layer.succeed(MailboxCredentials, {
+  static fromCalendar = (calendar: Calendar.Calendar) =>
+    Layer.effect(
+      GoogleCredentials,
+      Effect.gen(function* () {
+        // Pre-load token at layer creation time.
+        let cachedToken: string | undefined;
+        if (calendar.accessToken) {
+          const accessToken = yield* Database.Service.load(calendar.accessToken);
+          if (accessToken?.token) {
+            log('using calendar-specific access token', { note: accessToken.note });
+            cachedToken = accessToken.token;
+          }
+        }
+
+        return {
+          get: () =>
+            Effect.gen(function* () {
+              if (cachedToken) {
+                return cachedToken;
+              }
+              // Fall back to database credentials for google.com.
+              log('using database credentials');
+              const credential = yield* CredentialsService.getCredential({ service: 'google.com' });
+              return credential.apiKey!;
+            }),
+        };
+      }),
+    );
+
+  /**
+   * Default layer that uses database credentials.
+   * Use this for operations that don't have an associated mailbox or calendar.
+   */
+  static default = Layer.succeed(GoogleCredentials, {
     get: () =>
       Effect.gen(function* () {
         log('using database credentials');
@@ -70,5 +104,5 @@ export class MailboxCredentials extends Context.Tag('MailboxCredentials')<
   });
 
   /** Convenience accessor - returns the Google API token. */
-  static get = () => Effect.flatMap(MailboxCredentials, (service) => service.get());
+  static get = () => Effect.flatMap(GoogleCredentials, (service) => service.get());
 }

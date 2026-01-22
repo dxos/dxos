@@ -15,7 +15,7 @@ import { invariant } from '@dxos/invariant';
 
 import { GoogleMail } from '../../apis';
 import * as InboxResolver from '../../inbox-resolver';
-import { MailboxCredentials } from '../../services/mailbox-credentials';
+import { GoogleCredentials } from '../../services/google-credentials';
 
 import { mapMessage } from './mapper';
 
@@ -28,7 +28,7 @@ const TestLayer = Layer.mergeAll(
     },
   ]),
   FetchHttpClient.layer,
-  MailboxCredentials.default,
+  GoogleCredentials.default,
 );
 
 /**

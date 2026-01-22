@@ -24,7 +24,7 @@ import { type Event } from '@dxos/types';
 import * as Calendar from '../../../types/Calendar';
 import { GoogleCalendar } from '../../apis';
 import * as InboxResolver from '../../inbox-resolver';
-import { MailboxCredentials } from '../../services/mailbox-credentials';
+import { GoogleCredentials } from '../../services/google-credentials';
 
 import { mapEvent } from './mapper';
 
@@ -57,64 +57,85 @@ export default defineFunction({
       });
 
       const calendar = yield* Database.Service.resolve(DXN.parse(calendarId), Calendar.Calendar);
-      const queue = yield* QueueService.getQueue<Event.Event>(calendar.queue.dxn);
 
-      // State management for sync process.
-      const newEvents = yield* Ref.make<Event.Event[]>([]);
-      const nextPage = yield* Ref.make<string | undefined>(undefined);
-      const latestUpdate = yield* Ref.make<string | undefined>(undefined);
+      // Run sync with calendar-scoped credentials.
+      return yield* performCalendarSync({ calendar, googleCalendarId, syncBackDays, syncForwardDays, pageSize }).pipe(
+        Effect.provide(GoogleCredentials.fromCalendar(calendar)),
+      );
+    }).pipe(Effect.provide(FetchHttpClient.layer), Effect.provide(InboxResolver.Live)),
+});
 
-      // Determine sync strategy and execute.
-      const isInitialSync = !calendar.lastSyncedUpdate;
-      if (isInitialSync) {
-        yield* performInitialSync({
-          googleCalendarId,
-          syncBackDays,
-          syncForwardDays,
-          pageSize,
-          newEvents,
-          nextPage,
-          latestUpdate,
-        });
-      } else {
-        yield* performIncrementalSync({
-          googleCalendarId,
-          updatedMin: calendar.lastSyncedUpdate!,
-          pageSize,
-          newEvents,
-          nextPage,
-          latestUpdate,
-        });
-      }
+type CalendarSyncOptions = {
+  calendar: Calendar.Calendar;
+  googleCalendarId: string;
+  syncBackDays: number;
+  syncForwardDays: number;
+  pageSize: number;
+};
 
-      // Update the calendar's last synced update timestamp.
-      const lastUpdate = yield* Ref.get(latestUpdate);
-      if (lastUpdate) {
-        calendar.lastSyncedUpdate = lastUpdate;
-        log('updated lastSyncedUpdate', { lastUpdate });
-      }
+/**
+ * Performs the calendar sync operation.
+ */
+const performCalendarSync = Effect.fnUntraced(function* ({
+  calendar,
+  googleCalendarId,
+  syncBackDays,
+  syncForwardDays,
+  pageSize,
+}: CalendarSyncOptions) {
+  const queue = yield* QueueService.getQueue<Event.Event>(calendar.queue.dxn);
 
-      // Append to queue.
-      const queueEvents = yield* Ref.get(newEvents);
-      if (queueEvents.length > 0) {
-        yield* Function.pipe(
-          queueEvents,
-          Stream.fromIterable,
-          Stream.grouped(10),
-          Stream.flatMap((batch) => Effect.tryPromise(() => queue.append(Chunk.toArray(batch)))),
-          Stream.runDrain,
-        );
-      }
+  // State management for sync process.
+  const newEvents = yield* Ref.make<Event.Event[]>([]);
+  const nextPage = yield* Ref.make<string | undefined>(undefined);
+  const latestUpdate = yield* Ref.make<string | undefined>(undefined);
 
-      log('sync complete', { newEvents: queueEvents.length, isInitialSync });
-      return {
-        newEvents: queueEvents.length,
-      };
-    }).pipe(
-      Effect.provide(FetchHttpClient.layer),
-      Effect.provide(InboxResolver.Live),
-      Effect.provide(MailboxCredentials.default),
-    ),
+  // Determine sync strategy and execute.
+  const isInitialSync = !calendar.lastSyncedUpdate;
+  if (isInitialSync) {
+    yield* performInitialSync({
+      googleCalendarId,
+      syncBackDays,
+      syncForwardDays,
+      pageSize,
+      newEvents,
+      nextPage,
+      latestUpdate,
+    });
+  } else {
+    yield* performIncrementalSync({
+      googleCalendarId,
+      updatedMin: calendar.lastSyncedUpdate!,
+      pageSize,
+      newEvents,
+      nextPage,
+      latestUpdate,
+    });
+  }
+
+  // Update the calendar's last synced update timestamp.
+  const lastUpdate = yield* Ref.get(latestUpdate);
+  if (lastUpdate) {
+    calendar.lastSyncedUpdate = lastUpdate;
+    log('updated lastSyncedUpdate', { lastUpdate });
+  }
+
+  // Append to queue.
+  const queueEvents = yield* Ref.get(newEvents);
+  if (queueEvents.length > 0) {
+    yield* Function.pipe(
+      queueEvents,
+      Stream.fromIterable,
+      Stream.grouped(10),
+      Stream.flatMap((batch) => Effect.tryPromise(() => queue.append(Chunk.toArray(batch)))),
+      Stream.runDrain,
+    );
+  }
+
+  log('sync complete', { newEvents: queueEvents.length, isInitialSync });
+  return {
+    newEvents: queueEvents.length,
+  };
 });
 
 type BaseSyncProps<T = unknown> = {
