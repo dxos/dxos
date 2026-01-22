@@ -1166,7 +1166,7 @@ describe('QueryPlanner', () => {
   });
 
   test('ordered and limited results', () => {
-    const query = Query.select(Filter.type(TestSchema.Task)).orderBy(Order.property('name', 'asc')).limit(10);
+    const query = Query.select(Filter.type(TestSchema.Task)).orderBy(Order.property('title', 'asc')).limit(10);
 
     const plan = planner.createPlan(withSpaceIdOptions(query.ast));
     expect(plan).toMatchInlineSnapshot(`
@@ -1206,7 +1206,7 @@ describe('QueryPlanner', () => {
               {
                 "direction": "asc",
                 "kind": "property",
-                "property": "name",
+                "property": "title",
               },
             ],
           },

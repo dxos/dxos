@@ -350,7 +350,7 @@ describe('query api', () => {
     });
 
     test('ordered and limited results', () => {
-      const query = Query.select(Filter.type(TestSchema.Task)).orderBy(Order.property('name', 'asc')).limit(10);
+      const query = Query.select(Filter.type(TestSchema.Task)).orderBy(Order.property('title', 'asc')).limit(10);
       Schema.validateSync(QueryAST.Query)(query.ast);
       expect(query.ast).toMatchInlineSnapshot(`
         {
@@ -360,7 +360,7 @@ describe('query api', () => {
               {
                 "direction": "asc",
                 "kind": "property",
-                "property": "name",
+                "property": "title",
               },
             ],
             "query": {
