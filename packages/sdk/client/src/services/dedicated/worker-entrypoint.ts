@@ -28,12 +28,12 @@ void navigator.locks.request(STORAGE_LOCK_KEY, async () => {
 
   const handleMessage = async (ev: MessageEvent<DedicatedWorkerMessage>) => {
     const message = ev.data;
-    log('worker got message', { type: message.type });
+    log('worker message received', { type: message.type });
     switch (message.type) {
       case 'init': {
         owningClientId = message.ownerClientId ?? message.clientId;
         const config = new Config(message.config ?? {});
-        log('worker init with config', { persistent: config.get('runtime.client.storage.persistent') });
+        log('worker init with config', { config: message.config });
         runtime = new WorkerRuntime({
           configProvider: async () => config,
           onStop: async () => {
