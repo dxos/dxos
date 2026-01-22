@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { AsyncTask, Event, Trigger, scheduleTaskInterval } from '@dxos/async';
+import { AsyncTask, Event, Trigger } from '@dxos/async';
 import { type ClientServices, type ClientServicesProvider, clientServiceBundle } from '@dxos/client-protocol';
 import { Config } from '@dxos/config';
 import { type Context, Resource } from '@dxos/context';
@@ -33,6 +33,7 @@ export interface DedeciatedWorkerClientServicesOptions {
    */
   config?: Config;
 }
+
 /**
  * Runs services in a dedicated worker, exposed to other tabs.
  * Leader election is used to ensure only a single worker is running.
@@ -126,46 +127,46 @@ export class DedicatedWorkerClientServices extends Resource implements ClientSer
     const ctx = this._ctx.derive();
 
     const handleLeaderStopped = async () => {
-      await ctx.dispose();
       log.info('lost connection');
 
-      // Close old services/connection before reconnecting.
-      await this.#services?.close();
-      await this.#connection?.close();
+      // Schedule reconnect immediately, then cleanup in background.
+      this.#connectTask?.schedule();
+
+      // Close old services/connection.
+      await ctx.dispose();
+      const oldServices = this.#services;
+      const oldConnection = this.#connection;
       this.#services = undefined;
       this.#connection = undefined;
-
-      this.#connectTask?.schedule();
+      await oldServices?.close();
+      await oldConnection?.close();
     };
 
     try {
       log.info('trying to connect');
-      const pollingCtx = ctx.derive();
       const { appPort, systemPort, leaderId, livenessLockKey } = await new Promise<
         WorkerCoordinatorMessage & { type: 'provide-port' }
       >((resolve) => {
         invariant(this.#coordinator);
+
         const unsubscribe = this.#coordinator.onMessage.on((message) => {
           if (message.type === 'provide-port' && message.clientId === this.#clientId) {
-            void pollingCtx.dispose();
             unsubscribe();
             resolve(message);
-          }
-        });
-        this.#coordinator.sendMessage({
-          type: 'request-port',
-          clientId: this.#clientId,
-        });
-        scheduleTaskInterval(
-          pollingCtx,
-          async () => {
+          } else if (message.type === 'new-leader') {
+            // New leader announced, request a port from them.
             this.#coordinator?.sendMessage({
               type: 'request-port',
               clientId: this.#clientId,
             });
-          },
-          500,
-        );
+          }
+        });
+
+        // Send initial request in case leader is already ready.
+        this.#coordinator.sendMessage({
+          type: 'request-port',
+          clientId: this.#clientId,
+        });
       });
       log.info('connected to worker', { leaderId });
 
