@@ -233,6 +233,12 @@ export namespace QueryPlan {
 
     // Defaults to natural order if empty.
     order: readonly QueryAST.Order[];
+
+    /**
+     * Optional limit on the number of results to return after ordering.
+     * When set, the sorting can be optimized to only track the top N elements.
+     */
+    limit?: number;
   };
 
   /**

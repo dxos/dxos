@@ -803,14 +803,19 @@ export class QueryExecutor extends Resource {
   }
 
   private async _execOrderStep(step: QueryPlan.OrderStep, workingSet: QueryItem[]): Promise<StepExecutionResult> {
-    const sortedWorkingSet = [...workingSet].sort((a, b) => this._compareMultiOrder(a, b, step.order));
+    let sortedWorkingSet = [...workingSet].sort((a, b) => this._compareMultiOrder(a, b, step.order));
+
+    // Apply limit if specified on the order step.
+    if (step.limit !== undefined && sortedWorkingSet.length > step.limit) {
+      sortedWorkingSet = sortedWorkingSet.slice(0, step.limit);
+    }
 
     return {
       workingSet: sortedWorkingSet,
       trace: {
         ...ExecutionTrace.makeEmpty(),
         name: 'Order',
-        details: JSON.stringify(step.order),
+        details: JSON.stringify({ order: step.order, limit: step.limit }),
         objectCount: sortedWorkingSet.length,
       },
     };

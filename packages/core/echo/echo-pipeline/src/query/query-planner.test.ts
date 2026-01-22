@@ -1151,6 +1151,7 @@ describe('QueryPlanner', () => {
           },
           {
             "_tag": "OrderStep",
+            "limit": 10,
             "order": [
               {
                 "kind": "natural",
@@ -1200,6 +1201,7 @@ describe('QueryPlanner', () => {
           },
           {
             "_tag": "OrderStep",
+            "limit": 10,
             "order": [
               {
                 "direction": "asc",
@@ -1259,6 +1261,7 @@ describe('QueryPlanner', () => {
                   },
                   {
                     "_tag": "OrderStep",
+                    "limit": 5,
                     "order": [
                       {
                         "kind": "natural",
@@ -1300,6 +1303,7 @@ describe('QueryPlanner', () => {
                   },
                   {
                     "_tag": "OrderStep",
+                    "limit": 5,
                     "order": [
                       {
                         "kind": "natural",

@@ -564,8 +564,8 @@ export class QueryPlanner {
   }
 
   /**
-   * Propagates limits from LimitStep to SelectStep when possible.
-   * Limits can only be propagated if there are no unions or traversals between the LimitStep and SelectStep.
+   * Propagates limits from LimitStep to SelectStep and OrderStep when possible.
+   * Limits can only be propagated if there are no unions or traversals between the LimitStep and SelectStep/OrderStep.
    */
   private _optimizeLimits(plan: QueryPlan.Plan): QueryPlan.Plan {
     // First, recursively process any sub-plans.
@@ -606,40 +606,54 @@ export class QueryPlanner {
       return QueryPlan.Plan.make(processedSteps);
     }
 
-    // Check if we can propagate the limit to a SelectStep.
+    // Check if we can propagate the limit to a SelectStep and/or OrderStep.
     // We can only do this if there are no unions, traversals, or set differences between them.
     const BLOCKERS = new Set(['UnionStep', 'TraverseStep', 'SetDifferenceStep']);
 
     let selectStepIndex = -1;
+    let orderStepIndex = -1;
     for (let i = 0; i < limitStepIndex; i++) {
       const step = processedSteps[i];
       if (step._tag === 'SelectStep') {
         selectStepIndex = i;
       }
+      if (step._tag === 'OrderStep') {
+        orderStepIndex = i;
+      }
       if (BLOCKERS.has(step._tag)) {
-        // Found a blocker after the select step - can't propagate.
+        // Found a blocker after the select/order step - can't propagate.
         selectStepIndex = -1;
+        orderStepIndex = -1;
       }
     }
 
-    if (selectStepIndex === -1) {
+    if (selectStepIndex === -1 && orderStepIndex === -1) {
       return QueryPlan.Plan.make(processedSteps);
     }
 
-    // Propagate the limit to the SelectStep.
-    const selectStep = processedSteps[selectStepIndex] as QueryPlan.SelectStep;
-    const newSelectStep: QueryPlan.SelectStep = {
-      ...selectStep,
-      limit: limitValue,
-    };
+    // Create a mutable copy of steps to modify.
+    const newSteps = [...processedSteps];
 
-    // Create new steps array with the limit propagated and LimitStep removed.
-    const newSteps = [
-      ...processedSteps.slice(0, selectStepIndex),
-      newSelectStep,
-      ...processedSteps.slice(selectStepIndex + 1, limitStepIndex),
-      ...processedSteps.slice(limitStepIndex + 1),
-    ];
+    // Propagate the limit to the SelectStep if found.
+    if (selectStepIndex !== -1) {
+      const selectStep = newSteps[selectStepIndex] as QueryPlan.SelectStep;
+      newSteps[selectStepIndex] = {
+        ...selectStep,
+        limit: limitValue,
+      };
+    }
+
+    // Propagate the limit to the OrderStep if found.
+    if (orderStepIndex !== -1) {
+      const orderStep = newSteps[orderStepIndex] as QueryPlan.OrderStep;
+      newSteps[orderStepIndex] = {
+        ...orderStep,
+        limit: limitValue,
+      };
+    }
+
+    // Remove the LimitStep since limit is now propagated.
+    newSteps.splice(limitStepIndex, 1);
 
     return QueryPlan.Plan.make(newSteps);
   }
