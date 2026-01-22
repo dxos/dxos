@@ -4,7 +4,7 @@
 
 import { Atom } from '@effect-atom/atom';
 
-import { type Database, type Entity, type Filter, Query, type QueryResult } from '@dxos/echo';
+import { Database, type DXN, type Entity, type Filter, Query, type QueryResult } from '@dxos/echo';
 
 /**
  * Create a self-updating atom from an existing QueryResult.
@@ -62,28 +62,44 @@ const queryFamily = Atom.family((key: string) => {
 });
 
 /**
- * Get a memoized query atom for a database query.
- * Uses a single Atom.family keyed by spaceId + serialized query AST.
- * Same db + query/filter = same atom instance (proper memoization).
- *
- * @param db - The database to query.
- * @param queryOrFilter - A Query or Filter to execute.
- * @returns A memoized atom that updates when query results change.
+ * Derive a stable identifier from a Queryable.
+ * Supports Database (spaceId) and Queue (dxn).
  */
-export const make = <T extends Entity.Unknown>(
-  db: Database.Database,
-  queryOrFilter: Query.Query<T> | Filter.Filter<T>,
-): Atom.Atom<T[]> => {
-  return fromQueryable(db, db.spaceId, queryOrFilter);
+const getQueryableIdentifier = (queryable: Database.Queryable): string => {
+  if (Database.isDatabase(queryable)) {
+    return queryable.spaceId;
+  }
+  // Duck-type check for Queue (has dxn property).
+  if ('dxn' in queryable && queryable.dxn != null) {
+    return (queryable.dxn as DXN).toString();
+  }
+  throw new Error('Unable to derive identifier from queryable. Use fromQueryable with explicit identifier.');
 };
 
 /**
  * Get a memoized query atom for any Queryable (Database, Queue, etc.).
+ * Uses a single Atom.family keyed by queryable identifier + serialized query AST.
+ * Same queryable + query/filter = same atom instance (proper memoization).
+ *
+ * @param queryable - The queryable to query (Database, Queue, etc.).
+ * @param queryOrFilter - A Query or Filter to execute.
+ * @returns A memoized atom that updates when query results change.
+ */
+export const make = <T extends Entity.Unknown>(
+  queryable: Database.Queryable,
+  queryOrFilter: Query.Query<T> | Filter.Filter<T>,
+): Atom.Atom<T[]> => {
+  const identifier = getQueryableIdentifier(queryable);
+  return fromQueryable(queryable, identifier, queryOrFilter);
+};
+
+/**
+ * Get a memoized query atom for any Queryable with a custom identifier.
  * Uses a single Atom.family keyed by identifier + serialized query AST.
  * Same queryable + query/filter = same atom instance (proper memoization).
  *
  * @param queryable - The queryable to query (Database, Queue, etc.).
- * @param identifier - A unique identifier for the queryable (e.g., spaceId, dxn.toString()).
+ * @param identifier - A unique identifier for the queryable.
  * @param queryOrFilter - A Query or Filter to execute.
  * @returns A memoized atom that updates when query results change.
  */

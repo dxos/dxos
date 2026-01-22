@@ -94,11 +94,7 @@ export default Capability.makeModule(
           const nodeId = Obj.getDXN(mailbox).toString();
           const messageId = get(CreateAtom.fromSignal(() => selection?.getSelected(nodeId, 'single')));
           const message = get(
-            AtomQuery.fromQueryable<Message.Message>(
-              queue,
-              queue.dxn.toString(),
-              messageId ? Filter.id(messageId) : Filter.nothing(),
-            ),
+            AtomQuery.make<Message.Message>(queue, messageId ? Filter.id(messageId) : Filter.nothing()),
           )[0];
           return Effect.succeed([
             {
@@ -128,11 +124,7 @@ export default Capability.makeModule(
           const nodeId = Obj.getDXN(calendarObj).toString();
           const eventId = get(CreateAtom.fromSignal(() => selection?.getSelected(nodeId, 'single')));
           const event = get(
-            AtomQuery.fromQueryable<Event.Event>(
-              queue,
-              queue.dxn.toString(),
-              eventId ? Filter.id(eventId) : Filter.nothing(),
-            ),
+            AtomQuery.make<Event.Event>(queue, eventId ? Filter.id(eventId) : Filter.nothing()),
           )[0];
           return Effect.succeed([
             {
