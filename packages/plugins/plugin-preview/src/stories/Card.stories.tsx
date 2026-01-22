@@ -20,8 +20,9 @@ const meta = {
   render: Defaultstory,
   decorators: [
     withTheme,
-    // TODO(wittjosiah): Try to write story which does not depend on plugin manager.
-    withPluginManager({ plugins: [OperationPlugin()] }),
+    withPluginManager({
+      plugins: [OperationPlugin()],
+    }),
   ],
   parameters: {
     translations,

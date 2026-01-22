@@ -185,7 +185,7 @@ const DefaultComponent: StackProps['Component'] = (props) => {
     <Mosaic.Tile {...props} className='border border-separator rounded-sm font-mono'>
       <Card.Toolbar>
         <Card.DragHandle ref={dragHandleRef} />
-        <Card.Heading>{Obj.getLabel(props.object) ?? props.object.id}</Card.Heading>
+        <Card.Heading padding={false}>{Obj.getLabel(props.object) ?? props.object.id}</Card.Heading>
         <Card.Menu
           items={[
             {

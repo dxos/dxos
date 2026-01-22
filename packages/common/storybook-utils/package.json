@@ -31,7 +31,7 @@
     "@dxos/log": "workspace:*",
     "@dxos/react-ui-dnd": "workspace:*",
     "lodash.defaultsdeep": "catalog:",
-    "storybook": "10.1.11"
+    "storybook": "10.2.0"
   },
   "devDependencies": {
     "@dxos/react-ui": "workspace:*",

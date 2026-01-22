@@ -15,20 +15,33 @@ faker.seed(0);
 type CardStoryProps = {
   title: string;
   description: string;
+  indent?: boolean;
   image?: string;
 };
 
-const DefaultStory = ({ title, description, image }: CardStoryProps) => {
+// https://m2.material.io/components/cards#anatomy
+// - Drag handle/menu (via surface)
+// - Action bar
+
+const DefaultStory = ({ title, description, indent, image }: CardStoryProps) => {
+  // TODO(burdon): Remove padding from Card.Heading; instead Card.Section should provide padding.
   return (
     <Card.Root classNames='is-cardMinWidth max-is-cardMinWidth'>
       <Card.Toolbar>
         <Card.DragHandle toolbarItem />
-        <Card.ToolbarSeparator variant='gap' />
+        <Card.Heading padding={false}>{title}</Card.Heading>
         <Card.Menu items={[]} />
       </Card.Toolbar>
       {image && <Card.Poster alt={title} image={image} />}
-      <Card.Heading>{title}</Card.Heading>
-      {description && <Card.Text classNames='line-clamp-3'>{description}</Card.Text>}
+      {/* <Card.Section fullWidth={fullWidth}>
+        <Card.Heading padding={false}>{title}</Card.Heading>
+      </Card.Section> */}
+      {description && (
+        <Card.Section indent={indent} classNames='text-description line-clamp-3'>
+          {description}
+          {/* <Card.Text classNames='text-description line-clamp-3'>{description}</Card.Text> */}
+        </Card.Section>
+      )}
     </Card.Root>
   );
 };
@@ -51,14 +64,15 @@ const image = faker.image.url();
 export const Default: Story = {
   args: {
     title: faker.commerce.productName(),
-    description: faker.lorem.paragraph(),
+    description: faker.lorem.paragraph(3),
+    indent: true,
   },
 };
 
 export const WithImage: Story = {
   args: {
     title: faker.commerce.productName(),
-    description: faker.lorem.paragraph(),
+    description: faker.lorem.paragraph(3),
     image,
   },
 };

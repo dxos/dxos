@@ -34,10 +34,6 @@ export const CardSubjectMenu = ({
   const { t } = useTranslation(meta.id);
   const menuProps = useSubjectMenuGroupItems({ subject, db });
 
-  if (!db) {
-    return null;
-  }
-
   return (
     <MenuProvider {...menuProps}>
       <DropdownMenu.Root>

@@ -160,10 +160,7 @@ const PreviewBlockComponent = ({ link, el, view }: { link: PreviewLinkRef; el: H
             )}
           </Card.Toolbar>
         )}
-        <Card.Heading classNames='grow order-first mie-0'>
-          {/* <span className='text-xs text-subdued mie-2'>Prompt</span> */}
-          {link.label}
-        </Card.Heading>
+        <Card.Heading classNames='grow order-first mie-0'>{link.label}</Card.Heading>
       </div>
       {target && <Card.Text classNames='line-clamp-3 mbs-0'>{target.text}</Card.Text>}
     </Card.Root>,

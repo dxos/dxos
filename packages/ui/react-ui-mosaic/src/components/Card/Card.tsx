@@ -20,18 +20,13 @@ import {
   type ToolbarRootProps,
   useTranslation,
 } from '@dxos/react-ui';
-import { cardMinInlineSize, hoverableControls, mx } from '@dxos/ui-theme';
+import { hoverableControls, mx } from '@dxos/ui-theme';
 
 import { translationKey } from '../../translations';
 import { Image } from '../Image';
 
 // TODO(burdon): Use new styles.
 import { cardChrome, cardGrid, cardHeading, cardRoot, cardSection, cardSpacing, cardText } from './styles';
-
-/**
- * The default width of cards. It should be no larger than 320px per WCAG 2.1 SC 1.4.10.
- */
-const cardDefaultInlineSize = cardMinInlineSize;
 
 //
 // Context
@@ -43,20 +38,17 @@ type CardContextValue = {
 
 const CardContext = createContext<CardContextValue>({});
 
-//
-// Root
-//
-
 type CardSharedProps = ThemedClassName<ComponentPropsWithoutRef<'div'>> & {
   asChild?: boolean;
   className?: string;
 };
 
+//
+// Root
+//
+
 type CardRootProps = CardSharedProps & { id?: string };
 
-/**
- *
- */
 const CardRoot = forwardRef<HTMLDivElement, CardRootProps>(
   ({ children, classNames, className, id, asChild, role = 'group', ...props }, forwardedRef) => {
     const Root = asChild ? Slot : 'div';
@@ -135,13 +127,19 @@ const CardToolbarSeparator = Toolbar.Separator;
 // Heading
 //
 
-type CardHeadingProps = CardSharedProps;
+type CardHeadingProps = CardSharedProps & { padding?: boolean };
 
 const CardHeading = forwardRef<HTMLDivElement, CardHeadingProps>(
-  ({ children, classNames, className, asChild, role = 'heading', ...props }, forwardedRef) => {
+  ({ children, classNames, className, asChild, role = 'heading', padding = true, ...props }, forwardedRef) => {
     const Root = asChild ? Slot : 'div';
+
     return (
-      <Root {...props} role={role} className={mx(cardHeading, classNames, className)} ref={forwardedRef}>
+      <Root
+        {...props}
+        role={role}
+        className={mx(cardHeading, padding && cardSpacing, classNames, className)}
+        ref={forwardedRef}
+      >
         {children}
       </Root>
     );
@@ -157,6 +155,7 @@ type CardDragHandleProps = { toolbarItem?: boolean };
 const CardDragHandle = forwardRef<HTMLButtonElement, CardDragHandleProps>(({ toolbarItem }, forwardedRef) => {
   const { t } = useTranslation(translationKey);
   const Root = toolbarItem ? Toolbar.IconButton : IconButton;
+
   return (
     <Root
       noTooltip
@@ -244,39 +243,43 @@ const CardPoster = (props: CardPosterProps) => {
 };
 
 //
-// Chrome
+// Section
 //
 
-const CardChrome = forwardRef<HTMLDivElement, CardSharedProps>(
-  ({ children, classNames, className, asChild, role = 'none', ...props }, forwardedRef) => {
-    const Root = asChild ? Slot : 'div';
+type CardSectionProps = CardSharedProps & { indent?: boolean; icon?: string };
+
+const CardSection = forwardRef<HTMLDivElement, CardSectionProps>(
+  ({ children, classNames, className, role = 'none', indent, icon, ...props }, forwardedRef) => {
     return (
-      <Root {...props} role={role} className={mx(cardChrome, classNames, className)} ref={forwardedRef}>
-        {children}
-      </Root>
+      <div role={role} className={mx(indent && cardSection, 'pli-1')} ref={forwardedRef}>
+        {(indent || icon) && (
+          <div role='none' className='grid bs-[var(--rail-item)] is-[var(--rail-item)] place-items-center'>
+            {icon && <Icon icon={icon} />}
+          </div>
+        )}
+        <div {...props} role='none' className={mx('overflow-hidden', classNames, className)} ref={forwardedRef}>
+          {children}
+        </div>
+      </div>
     );
   },
 );
 
 //
-// Section
+// Chrome
 //
 
-type CardSectionProps = CardSharedProps & { fullWidth?: boolean; icon?: string };
+/**
+ * @deprecated Use Card.Section
+ */
+const CardChrome = forwardRef<HTMLDivElement, CardSharedProps>(
+  ({ children, classNames, className, asChild, role = 'none', ...props }, forwardedRef) => {
+    const Root = asChild ? Slot : 'div';
 
-const CardSection = forwardRef<HTMLDivElement, CardSectionProps>(
-  ({ children, classNames, className, role = 'none', fullWidth, icon, ...props }, forwardedRef) => {
     return (
-      <div role={role} className={mx(!fullWidth && cardSection, 'pli-1')} ref={forwardedRef}>
-        {(!fullWidth || icon) && (
-          <div role='none' className='grid bs-[var(--rail-item)] is-[var(--rail-item)] place-items-center'>
-            {icon && <Icon icon={icon} />}
-          </div>
-        )}
-        <div {...props} role='none' className={mx('plb-1 overflow-hidden', classNames, className)} ref={forwardedRef}>
-          {children}
-        </div>
-      </div>
+      <Root {...props} role={role} className={mx(cardChrome, classNames, className)} ref={forwardedRef}>
+        {children}
+      </Root>
     );
   },
 );
@@ -311,14 +314,12 @@ export const Card = {
   Toolbar: CardToolbar,
   ToolbarIconButton: CardToolbarIconButton,
   ToolbarSeparator: CardToolbarSeparator,
-  Heading: CardHeading,
-  Chrome: CardChrome,
-  Section: CardSection,
   Menu: CardMenu,
+  Heading: CardHeading,
   Poster: CardPoster,
+  Section: CardSection,
+  Chrome: CardChrome,
   Text: CardText,
 };
 
 export type { CardContextValue, CardRootProps, CardMenuProps };
-
-export { cardRoot, cardHeading, cardText, cardChrome, cardSpacing, cardDefaultInlineSize };

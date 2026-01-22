@@ -4,7 +4,7 @@
 
 import { type TailwindConfig, tailwindConfig } from './config';
 
-export { cardMinInlineSize, cardMaxInlineSize, hues, userDefaultTokenSet } from './config';
+export { cardDefaultInlineSize, cardMinInlineSize, cardMaxInlineSize, hues, userDefaultTokenSet } from './config';
 export * from './styles';
 export * from './types';
 export * from './util';
