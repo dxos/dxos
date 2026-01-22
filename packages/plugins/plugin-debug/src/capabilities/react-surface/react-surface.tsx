@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 import React, { useCallback } from 'react';
 
 import { Capability, Common } from '@dxos/app-framework';
-import { useAtomCapability, useCapability, useOperationInvoker } from '@dxos/app-framework/react';
+import { useCapability, useOperationInvoker } from '@dxos/app-framework/react';
 import {
   AutomergePanel,
   ConfigPanel,
@@ -82,9 +82,13 @@ const useCurrentSpace = () => {
   return space;
 };
 
-export default Capability.makeModule(() =>
-  Effect.succeed(
-    Capability.contributes(Common.Capability.ReactSurface, [
+export default Capability.makeModule(
+  Effect.fnUntraced(function* () {
+    const capabilities = yield* Capability.Service;
+    const registry = capabilities.get(Common.Capability.AtomRegistry);
+    const settingsAtom = capabilities.get(DebugCapabilities.Settings);
+
+    return Capability.contributes(Common.Capability.ReactSurface, [
       Common.createSurface({
         id: `${meta.id}/plugin-settings`,
         role: 'article',
@@ -142,14 +146,13 @@ export default Capability.makeModule(() =>
         id: `${meta.id}/wireframe`,
         role: ['article', 'section'],
         position: 'hoist',
-        filter: (data): data is { subject: Obj.Any } => Obj.isObject(data.subject),
-        component: ({ data, role }) => {
-          const settings = useAtomCapability(DebugCapabilities.Settings);
-          if (!settings.wireframe) {
-            return null;
-          }
-          return <Wireframe label={`${role}:${name}`} object={data.subject} classNames='row-span-2 overflow-hidden' />;
+        filter: (data): data is { subject: Obj.Any } => {
+          const settings = registry.get(settingsAtom);
+          return Obj.isObject(data.subject) && !!settings.wireframe;
         },
+        component: ({ data, role }) => (
+          <Wireframe label={`${role}:${name}`} object={data.subject} classNames='row-span-2 overflow-hidden' />
+        ),
       }),
       Common.createSurface({
         id: `${meta.id}/object-debug`,
@@ -399,6 +402,6 @@ export default Capability.makeModule(() =>
           return <TestingPanel onSpaceCreate={onSpaceCreate} onScriptPluginOpen={onScriptPluginOpen} />;
         },
       }),
-    ]),
-  ),
+    ]);
+  }),
 );
