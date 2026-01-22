@@ -5,7 +5,7 @@
 import { useAtomValue } from '@effect-atom/atom-react';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
-import { Obj, type SchemaRegistry } from '@dxos/echo';
+import { type SchemaRegistry } from '@dxos/echo';
 import { Popover } from '@dxos/react-ui';
 import { FieldEditor } from '@dxos/react-ui-form';
 import { type FieldType } from '@dxos/schema';
@@ -51,12 +51,10 @@ export const ColumnSettings = ({ registry, model, modals, onNewColumn }: ColumnS
   }, [modals]);
 
   const handleCancel = useCallback(() => {
-    if (state?.type === 'columnSettings' && state.mode.type === 'create' && newField && model) {
-      Obj.change(model.view, () => {
-        model.projection.deleteFieldProjection(newField.id);
-      });
+    if (state?.type === 'columnSettings' && state.mode.type === 'create' && newField) {
+      model?.projection.deleteFieldProjection(newField.id);
     }
-  }, [model, state, newField]);
+  }, [model?.projection, state, newField]);
 
   if (!model?.projection || !field) {
     return null;
@@ -72,7 +70,6 @@ export const ColumnSettings = ({ registry, model, modals, onNewColumn }: ColumnS
               projection={model.projection}
               field={field}
               registry={registry}
-              view={model.view}
               onSave={handleSave}
               onCancel={handleCancel}
             />
