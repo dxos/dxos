@@ -936,6 +936,99 @@ describe('Query', () => {
         expect(object.title).toContain(needle);
       }
     });
+
+    test.skip('full-text search in queues via indexer2', async () => {
+      const peer = await builder.createPeer({ indexing: { fullText: true }, types: [TestSchema.Task] });
+      const db = await peer.createDatabase();
+      const queues = peer.client.constructQueueFactory(db.spaceId);
+      const queue = queues.create();
+
+      // Add objects to the queue.
+      await queue.append([
+        Obj.make(TestSchema.Task, { title: 'Introduction to TypeScript' }),
+        Obj.make(TestSchema.Task, { title: 'Getting Started with React' }),
+        Obj.make(TestSchema.Task, { title: 'Advanced Python Programming' }),
+      ]);
+
+      // Wait for indexing.
+      await db.flush({ indexes: true });
+
+      // Search in specific queue.
+      {
+        const objects = await db
+          .query(
+            Query.select(Filter.text('TypeScript', { type: 'full-text' })).options({ queues: [queue.dxn.toString()] }),
+          )
+          .run();
+        expect(objects).toHaveLength(1);
+        expect((objects[0] as TestSchema.Task).title).toEqual('Introduction to TypeScript');
+      }
+
+      // Search for React.
+      {
+        const objects = await db
+          .query(Query.select(Filter.text('React', { type: 'full-text' })).options({ queues: [queue.dxn.toString()] }))
+          .run();
+        expect(objects).toHaveLength(1);
+        expect((objects[0] as TestSchema.Task).title).toEqual('Getting Started with React');
+      }
+
+      // Non-matching query.
+      {
+        const objects = await db
+          .query(
+            Query.select(Filter.text('JavaScript', { type: 'full-text' })).options({ queues: [queue.dxn.toString()] }),
+          )
+          .run();
+        expect(objects).toHaveLength(0);
+      }
+    });
+
+    test.skip('full-text search with allQueuesFromSpaces via indexer2', async () => {
+      const peer = await builder.createPeer({ indexing: { fullText: true }, types: [TestSchema.Task] });
+      const db = await peer.createDatabase();
+      const queues = peer.client.constructQueueFactory(db.spaceId);
+      const queue = queues.create();
+
+      // Add objects to the database (space objects).
+      db.add(Obj.make(TestSchema.Task, { title: 'Space Object TypeScript' }));
+
+      // Add objects to the queue.
+      await queue.append([Obj.make(TestSchema.Task, { title: 'Queue Object TypeScript' })]);
+
+      // Wait for indexing.
+      await db.flush({ indexes: true });
+
+      // Search with allQueuesFromSpaces: true should return both space and queue objects.
+      {
+        const objects = await db
+          .query(
+            Query.select(Filter.text('TypeScript', { type: 'full-text' })).options({
+              spaceIds: [db.spaceId],
+              allQueuesFromSpaces: true,
+            }),
+          )
+          .run();
+        expect(objects).toHaveLength(2);
+        expect(objects.map((o) => (o as TestSchema.Task).title).sort()).toEqual([
+          'Queue Object TypeScript',
+          'Space Object TypeScript',
+        ]);
+      }
+
+      // Search without allQueuesFromSpaces should return only space objects.
+      {
+        const objects = await db
+          .query(
+            Query.select(Filter.text('TypeScript', { type: 'full-text' })).options({
+              spaceIds: [db.spaceId],
+            }),
+          )
+          .run();
+        expect(objects).toHaveLength(1);
+        expect((objects[0] as TestSchema.Task).title).toEqual('Space Object TypeScript');
+      }
+    });
   });
 
   describe('Reactivity', () => {

@@ -50,6 +50,8 @@ export namespace QueryPlan {
   export type SelectStep = {
     _tag: 'SelectStep';
 
+    // TODO(dmaretskyi): Extract the object container spec into a separate type in ECHO-protocol that we can share with the indexer.
+
     /**
      * Select from specific spaces.
      */

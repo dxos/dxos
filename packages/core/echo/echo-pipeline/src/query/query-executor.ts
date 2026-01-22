@@ -453,7 +453,12 @@ export class QueryExecutor extends Resource {
           invariant(step.spaces.length <= 1, 'Multiple spaces are not supported for full-text search');
           const textResults = await unwrapExit(
             await this._indexer2
-              .queryText({ query: step.selector.text, spaceId: step.spaces[0] })
+              .queryText({
+                query: step.selector.text,
+                spaceId: step.spaces,
+                includeAllQueues: step.allQueuesFromSpaces,
+                queueIds: step.queues,
+              })
               .pipe(Runtime.runPromiseExit(runtime)),
           );
           trace.indexHits = textResults.length;
