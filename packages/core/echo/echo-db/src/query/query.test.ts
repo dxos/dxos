@@ -1004,7 +1004,6 @@ describe('Query', () => {
         const objects: TestSchema.Task[] = await db
           .query(
             Query.select(Filter.text('TypeScript', { type: 'full-text' })).options({
-              spaceIds: [db.spaceId],
               allQueuesFromSpaces: true,
             }),
           )
@@ -1016,11 +1015,7 @@ describe('Query', () => {
       // Search without allQueuesFromSpaces should return only space objects.
       {
         const objects = await db
-          .query(
-            Query.select(Filter.text('TypeScript', { type: 'full-text' })).options({
-              spaceIds: [db.spaceId],
-            }),
-          )
+          .query(Query.select(Filter.text('TypeScript', { type: 'full-text' })).options({}))
           .run();
         expect(objects).toHaveLength(1);
         expect((objects[0] as TestSchema.Task).title).toEqual('Space Object TypeScript');
