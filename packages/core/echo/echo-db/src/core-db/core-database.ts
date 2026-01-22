@@ -534,6 +534,7 @@ export class CoreDatabase {
     core.setDecoded([], newStruct);
   }
 
+  // TODO(wittjosiah): Handle RpcClosedError and TimeoutError during reconnection gracefully.
   async flush({ disk = true, indexes = false, updates = false }: Database.FlushOptions = {}): Promise<void> {
     log('flush', { disk, indexes, updates });
     if (disk) {
