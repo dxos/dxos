@@ -42,7 +42,7 @@ type PeerOptions = {
   assignQueuePositions?: boolean;
 
   kv?: LevelDB;
-  runtime?: ManagedRuntime.ManagedRuntime<SqlClient.SqlClient, never>;
+  runtime?: ManagedRuntime.ManagedRuntime<SqlClient.SqlClient | SqlExport.SqlExport, never>;
 };
 
 export class EchoTestBuilder extends Resource {
