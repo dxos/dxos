@@ -19,13 +19,13 @@ import { PublicKey } from '@dxos/keys';
 import { type LevelDB } from '@dxos/kv-store';
 import { createTestLevel } from '@dxos/kv-store/testing';
 import { layerMemory } from '@dxos/sql-sqlite/platform';
+import type * as SqliteClient from '@dxos/sql-sqlite-wasm/SqliteClient';
 import { range } from '@dxos/util';
 
 import { EchoClient } from '../client';
 import { type AnyLiveObject } from '../echo-handler';
 import { type EchoDatabase } from '../proxy-db';
 import { Filter, Query } from '../query';
-import * as SqliteClient from '@dxos/sql-sqlite-wasm/SqliteClient';
 
 type OpenDatabaseOptions = {
   client?: EchoClient;

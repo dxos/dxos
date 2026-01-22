@@ -8,6 +8,8 @@ import * as Match from 'effect/Match';
 import * as Runtime from 'effect/Runtime';
 
 import { Context, ContextDisposedError, LifecycleState, Resource } from '@dxos/context';
+import type { Obj } from '@dxos/echo';
+import { ATTR_RELATION_SOURCE, ATTR_RELATION_TARGET } from '@dxos/echo/internal';
 import {
   DatabaseDirectory,
   type ObjectPropPath,
@@ -32,8 +34,6 @@ import { filterMatchObject, filterMatchObjectJSON } from '../filter';
 
 import type { QueryPlan } from './plan';
 import { QueryPlanner } from './query-planner';
-import type { Obj } from '@dxos/echo';
-import { ATTR_RELATION_SOURCE, ATTR_RELATION_TARGET } from '@dxos/echo/internal';
 
 type QueryExecutorOptions = {
   indexer: Indexer;
@@ -452,9 +452,10 @@ export class QueryExecutor extends Resource {
           const runtime = await runAndForwardErrors(this._runtime);
           invariant(step.spaces.length <= 1, 'Multiple spaces are not supported for full-text search');
           // Extract queue IDs from DXN strings.
-          const queueIds = step.queues.length > 0
-            ? step.queues.map((dxnStr) => DXN.parse(dxnStr).asQueueDXN()?.queueId).filter(Boolean) as ObjectId[]
-            : null;
+          const queueIds =
+            step.queues.length > 0
+              ? (step.queues.map((dxnStr) => DXN.parse(dxnStr).asQueueDXN()?.queueId).filter(Boolean) as ObjectId[])
+              : null;
           const textResults = await unwrapExit(
             await this._indexer2
               .queryText({

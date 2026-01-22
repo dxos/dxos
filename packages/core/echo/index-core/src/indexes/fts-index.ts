@@ -4,14 +4,14 @@
 
 import * as SqlClient from '@effect/sql/SqlClient';
 import type * as SqlError from '@effect/sql/SqlError';
+import type * as Statement from '@effect/sql/Statement';
 import * as Effect from 'effect/Effect';
 
+import type { Obj } from '@dxos/echo';
 import type { ObjectId, SpaceId } from '@dxos/keys';
 
 import type { Index, IndexerObject } from './interface';
 import type { ObjectMeta } from './object-meta-index';
-import * as Statement from '@effect/sql/Statement';
-import type { Obj } from '@dxos/echo';
 
 /**
  * The space and queue constrains are combined together using a logical OR.
@@ -151,7 +151,10 @@ export class FtsIndex implements Index {
         return [];
       }
       const sql = yield* SqlClient.SqlClient;
-      const results = yield* sql<{ rowid: number; snapshot: string }>`SELECT rowid, snapshot FROM ftsIndex WHERE rowid IN ${sql.in(recordIds)}`;
+      const results = yield* sql<{
+        rowid: number;
+        snapshot: string;
+      }>`SELECT rowid, snapshot FROM ftsIndex WHERE rowid IN ${sql.in(recordIds)}`;
       return results.map((r) => ({
         recordId: r.rowid,
         snapshot: JSON.parse(r.snapshot),
