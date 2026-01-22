@@ -3435,7 +3435,7 @@ importers:
     dependencies:
       debug:
         specifier: 'catalog:'
-        version: 4.4.3(supports-color@8.1.1)
+        version: 4.4.3(supports-color@5.5.0)
       domain-browser:
         specifier: 'catalog:'
         version: 4.22.0
@@ -7085,7 +7085,7 @@ importers:
         version: 5.0.0(chart.js@4.5.0)
       debug:
         specifier: 'catalog:'
-        version: 4.4.3(supports-color@8.1.1)
+        version: 4.4.3(supports-color@5.5.0)
       effect:
         specifier: 'catalog:'
         version: 3.19.11
@@ -12100,9 +12100,6 @@ importers:
       '@effect/cli':
         specifier: 'catalog:'
         version: 0.72.1(@effect/platform@0.93.6(effect@3.19.11))(@effect/printer-ansi@0.47.0(@effect/typeclass@0.38.0(effect@3.19.11))(effect@3.19.11))(@effect/printer@0.47.0(@effect/typeclass@0.38.0(effect@3.19.11))(effect@3.19.11))(effect@3.19.11)
-      '@preact/signals-core':
-        specifier: 'catalog:'
-        version: 1.12.1
       jszip:
         specifier: 'catalog:'
         version: 3.10.1
@@ -14293,7 +14290,7 @@ importers:
         version: 8.19.0
       debug:
         specifier: 'catalog:'
-        version: 4.4.3(supports-color@8.1.1)
+        version: 4.4.3(supports-color@5.5.0)
       js-yaml:
         specifier: 'catalog:'
         version: 4.1.1
