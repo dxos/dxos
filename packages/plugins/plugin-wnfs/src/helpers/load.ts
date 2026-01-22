@@ -31,8 +31,8 @@ export const loadWnfs = async ({
   // Delete old properties if they exist.
   if (space.properties.wnfs_access_key !== undefined && space.properties.wnfs_private_forest_cid !== undefined) {
     Obj.change(space.properties, (p) => {
-      delete (p as any).wnfs_access_key;
-      delete (p as any).wnfs_private_forest_cid;
+      delete p['wnfs_access_key'];
+      delete p['wnfs_private_forest_cid'];
     });
   }
 

@@ -9,7 +9,13 @@ import { type ForeignKey } from '@dxos/echo-protocol';
 import { createJsonPath, getValue as getValue$ } from '@dxos/effect';
 import { assertArgument, invariant } from '@dxos/invariant';
 import { type DXN, ObjectId } from '@dxos/keys';
-import { change as change$, getSnapshot as getSnapshot$, subscribe as subscribe$ } from '@dxos/live-object';
+import {
+  type ChangeCallback,
+  type Mutable,
+  change as change$,
+  getSnapshot as getSnapshot$,
+  subscribe as subscribe$,
+} from '@dxos/live-object';
 import { assumeType, deepMapValues } from '@dxos/util';
 
 import type * as Database from './Database';
@@ -197,18 +203,7 @@ export const clone = <T extends Any>(obj: T, opts?: CloneOptions): T => {
  * Makes all properties mutable recursively.
  * Used to provide a mutable view of an object within `Obj.change`.
  */
-export type Mutable<T> = T extends Any
-  ? {
-      -readonly [P in keyof T]: T[P] extends object ? Mutable<T[P]> : T[P];
-    }
-  : {
-      -readonly [P in keyof T]: T[P] extends object ? Mutable<T[P]> : T[P];
-    };
-
-/**
- * Type for the change callback that receives a mutable object.
- */
-type ChangeCallback<T> = (mutableObj: Mutable<T>) => void;
+export type { Mutable };
 
 /**
  * Perform mutations on an ECHO object within a controlled context.
@@ -239,7 +234,7 @@ type ChangeCallback<T> = (mutableObj: Mutable<T>) => void;
  * ```
  */
 export const change = <T extends Entity.Unknown>(obj: T, callback: ChangeCallback<T>): void => {
-  change$(obj, callback as any);
+  change$(obj, callback);
 };
 
 /**
