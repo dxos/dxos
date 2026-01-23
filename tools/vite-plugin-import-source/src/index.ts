@@ -23,7 +23,7 @@ const PluginImportSource = ({
   return {
     name: 'plugin-import-source',
 
-    configResolved(config: ResolvedConfig) {
+    configResolved: (config: ResolvedConfig) => {
       // Get Vite's conditions and prepend 'source'.
       const viteConditions = config.resolve.conditions ?? [];
       const conditionNames = ['source', ...viteConditions];
