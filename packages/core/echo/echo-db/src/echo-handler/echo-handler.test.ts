@@ -748,6 +748,8 @@ describe('Reactive Object with ECHO database', () => {
 
     const obj1 = db.add(Obj.make(Type.Expando, { title: 'Object 1' }));
     const obj2 = db.add(Obj.make(Type.Expando, { title: 'Object 2' }));
+    // Wait for document creation to complete so docHandle is ready.
+    await db.flush();
 
     let updateCount = 0;
     using _ = defer(
