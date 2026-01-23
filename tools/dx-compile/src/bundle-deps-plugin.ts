@@ -5,7 +5,7 @@
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 
-import { type Plugin, type Platform } from 'esbuild';
+import { type Platform, type Plugin } from 'esbuild';
 
 export type BundleDepsPluginOptions = {
   /**
