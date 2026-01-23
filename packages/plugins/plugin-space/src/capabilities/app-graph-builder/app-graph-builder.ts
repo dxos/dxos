@@ -12,7 +12,7 @@ import * as Schema from 'effect/Schema';
 import { Capability, Common } from '@dxos/app-framework';
 import { type Space, SpaceState, getSpace, isSpace } from '@dxos/client/echo';
 import { DXN, Filter, Obj, type Ref, Type } from '@dxos/echo';
-import { AtomObj, AtomQuery, AtomRef } from '@dxos/echo-atom';
+import { AtomObj, AtomQuery } from '@dxos/echo-atom';
 import { log } from '@dxos/log';
 import { Operation } from '@dxos/operation';
 import { ClientCapabilities } from '@dxos/plugin-client';
@@ -240,21 +240,6 @@ export default Capability.makeModule(
         id: `${meta.id}/root-collection`,
         match: whenSpace,
         connector: (space, get) => {
-          // #region agent log
-          fetch('http://127.0.0.1:7245/ingest/a2f1dfc3-ad54-4195-adb0-51ebc36b6aab', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              location: 'app-graph-builder.ts:root-collection',
-              message: 'connector called',
-              data: { spaceId: space.id },
-              timestamp: Date.now(),
-              sessionId: 'debug-session',
-              hypothesisId: 'A',
-              runId: 'post-fix-v2',
-            }),
-          }).catch(() => {});
-          // #endregion
           const state = capabilities.get(SpaceCapabilities.State);
           const spaceState = get(CreateAtom.fromObservable(space.state));
           if (spaceState !== SpaceState.SPACE_READY) {
@@ -266,84 +251,26 @@ export default Capability.makeModule(
           const collectionRef = propertiesSnapshot[Collection.Collection.typename] as
             | Ref.Ref<Collection.Collection>
             | undefined;
-          // #region agent log
-          fetch('http://127.0.0.1:7245/ingest/a2f1dfc3-ad54-4195-adb0-51ebc36b6aab', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              location: 'app-graph-builder.ts:root-collection:collectionRef',
-              message: 'got collectionRef',
-              data: { hasRef: !!collectionRef },
-              timestamp: Date.now(),
-              sessionId: 'debug-session',
-              hypothesisId: 'B',
-              runId: 'post-fix-v2',
-            }),
-          }).catch(() => {});
-          // #endregion
-          // Resolve the collection using AtomRef (cached via Atom.family).
-          const collection = collectionRef ? get(AtomRef.make(collectionRef)) : undefined;
-          // #region agent log
-          fetch('http://127.0.0.1:7245/ingest/a2f1dfc3-ad54-4195-adb0-51ebc36b6aab', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              location: 'app-graph-builder.ts:root-collection:collection',
-              message: 'resolved collection',
-              data: { hasCollection: !!collection, objectCount: collection?.objects?.length },
-              timestamp: Date.now(),
-              sessionId: 'debug-session',
-              hypothesisId: 'C',
-              runId: 'post-fix-v2',
-            }),
-          }).catch(() => {});
-          // #endregion
+          // Resolve the collection using AtomObj (subscribes to collection changes).
+          const collection = collectionRef ? get(AtomObj.make(collectionRef)) : undefined;
           if (!collection) {
             return Effect.succeed([]);
           }
 
-          // #region agent log
           const rawRefs = collection.objects ?? [];
-          fetch('http://127.0.0.1:7245/ingest/a2f1dfc3-ad54-4195-adb0-51ebc36b6aab', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              location: 'app-graph-builder.ts:root-collection:refs',
-              message: 'raw refs from collection',
-              data: { refCount: rawRefs.length, firstRefHasTarget: rawRefs[0]?.target !== undefined },
-              timestamp: Date.now(),
-              sessionId: 'debug-session',
-              hypothesisId: 'E',
-              runId: 'post-fix-v4',
-            }),
-          }).catch(() => {});
-          // #endregion
 
-          // Subscribe to each object ref for reactivity, but use live targets for node data.
+          // TODO(wittjosiah): Workaround for Obj.getTypename not working on snapshots.
+          //   AtomObj.make(ref) returns snapshots (plain objects without ECHO metadata),
+          //   but createObjectNode needs live objects to access typename and other metadata.
+          //   Once Obj.getTypename works on snapshots, we can use snapshots directly.
           const objects = rawRefs
             .map((ref) => {
-              // Subscribe to the ref target for reactivity (returns snapshot).
-              get(AtomRef.make(ref));
-              // Use the live target object for node data.
+              // Subscribe to the ref for reactivity (triggers re-render when target changes).
+              get(AtomObj.make(ref));
+              // Return the live object for createObjectNode (has typename metadata).
               return ref.target;
             })
             .filter(isNonNullable);
-
-          // #region agent log
-          fetch('http://127.0.0.1:7245/ingest/a2f1dfc3-ad54-4195-adb0-51ebc36b6aab', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              location: 'app-graph-builder.ts:root-collection:objects',
-              message: 'final objects',
-              data: { objectCount: objects.length, firstObjectId: objects[0]?.id },
-              timestamp: Date.now(),
-              sessionId: 'debug-session',
-              hypothesisId: 'G',
-              runId: 'post-fix-v4',
-            }),
-          }).catch(() => {});
-          // #endregion
 
           return Effect.succeed(
             objects
@@ -365,45 +292,25 @@ export default Capability.makeModule(
         id: `${meta.id}/objects`,
         match: (node) => (Obj.instanceOf(Collection.Collection, node.data) ? Option.some(node.data) : Option.none()),
         connector: (collection, get) => {
-          // #region agent log
-          fetch('http://127.0.0.1:7245/ingest/a2f1dfc3-ad54-4195-adb0-51ebc36b6aab', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              location: 'app-graph-builder.ts:objects',
-              message: 'objects connector called',
-              data: { collectionId: collection.id },
-              timestamp: Date.now(),
-              sessionId: 'debug-session',
-              hypothesisId: 'A',
-            }),
-          }).catch(() => {});
-          // #endregion
           const state = capabilities.get(SpaceCapabilities.State);
           const space = getSpace(collection);
 
           // Get collection snapshot using AtomObj (cached via Atom.family).
           const collectionSnapshot = get(AtomObj.make(collection));
-          // #region agent log
-          fetch('http://127.0.0.1:7245/ingest/a2f1dfc3-ad54-4195-adb0-51ebc36b6aab', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              location: 'app-graph-builder.ts:objects:snapshot',
-              message: 'got collection snapshot',
-              data: { objectCount: collectionSnapshot.objects?.length },
-              timestamp: Date.now(),
-              sessionId: 'debug-session',
-              hypothesisId: 'C',
-            }),
-          }).catch(() => {});
-          // #endregion
+          const refs = collectionSnapshot.objects ?? [];
+
+          // TODO(wittjosiah): Workaround for Obj.getTypename not working on snapshots.
+          //   See root-collection connector for details.
+          const objects = refs
+            .map((ref) => {
+              get(AtomObj.make(ref));
+              return ref.target;
+            })
+            .filter(isNonNullable);
+
           return Effect.succeed(
-            Function.pipe(
-              collectionSnapshot.objects ?? [],
-              Array.map((ref) => ref.target),
-              Array.filter(isNonNullable),
-              Array.map(
+            objects
+              .map(
                 (object) =>
                   space &&
                   createObjectNode({
@@ -412,9 +319,8 @@ export default Capability.makeModule(
                     resolve: resolve(get),
                     navigable: state.values.navigableCollections,
                   }),
-              ),
-              Array.filter(isNonNullable),
-            ),
+              )
+              .filter(isNonNullable),
           );
         },
         resolver: (id, get) => {
@@ -542,7 +448,7 @@ export default Capability.makeModule(
           const filteredViews = objects.filter((viewObject) => {
             const viewSnapshot = get(AtomObj.make(viewObject));
             const viewRef = (viewSnapshot as any).view;
-            const viewTarget = viewRef ? get(AtomRef.make(viewRef)) : undefined;
+            const viewTarget = viewRef ? get(AtomObj.make(viewRef)) : undefined;
             return getTypenameFromQuery((viewTarget as any)?.query?.ast) === targetTypename;
           });
           const deletable = filteredViews.length === 0;
@@ -587,7 +493,7 @@ export default Capability.makeModule(
               .filter((object) => {
                 const objectSnapshot = get(AtomObj.make(object));
                 const viewRef = (objectSnapshot as any).view;
-                const viewTarget = viewRef ? get(AtomRef.make(viewRef)) : undefined;
+                const viewTarget = viewRef ? get(AtomObj.make(viewRef)) : undefined;
                 return getTypenameFromQuery((viewTarget as any)?.query?.ast) === typename;
               })
               .map((object) =>
@@ -633,7 +539,7 @@ export default Capability.makeModule(
             const filteredViews = objects.filter((viewObject) => {
               const viewSnapshot = get(AtomObj.make(viewObject));
               const viewRef = (viewSnapshot as any).view;
-              const viewTarget = viewRef ? get(AtomRef.make(viewRef)) : undefined;
+              const viewTarget = viewRef ? get(AtomObj.make(viewRef)) : undefined;
               return getTypenameFromQuery((viewTarget as any)?.query?.ast) === object.typename;
             });
             deletable = filteredViews.length === 0;

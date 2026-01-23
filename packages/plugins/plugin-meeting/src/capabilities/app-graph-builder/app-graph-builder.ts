@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 
 import { Capability, Common } from '@dxos/app-framework';
 import { Obj, Type } from '@dxos/echo';
-import { AtomRef } from '@dxos/echo-atom';
+import { AtomObj } from '@dxos/echo-atom';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { Operation } from '@dxos/operation';
@@ -76,7 +76,7 @@ export default Capability.makeModule(
             {
               id: `${channelDxn}${ATTENDABLE_PATH_SEPARATOR}meeting-thread`,
               type: PLANK_COMPANION_TYPE,
-              data: get(AtomRef.make(meeting.thread)),
+              data: get(AtomObj.make(meeting.thread)),
               properties: {
                 label: ['meeting thread label', { ns: meta.id }],
                 icon: 'ph--chat-text--regular',
@@ -184,7 +184,7 @@ export default Capability.makeModule(
             {
               id: `${Obj.getDXN(channel).toString()}${ATTENDABLE_PATH_SEPARATOR}transcript`,
               type: PLANK_COMPANION_TYPE,
-              data: get(AtomRef.make(meeting.transcript)),
+              data: get(AtomObj.make(meeting.transcript)),
               properties: {
                 label: ['transcript companion label', { ns: meta.id }],
                 icon: 'ph--subtitles--regular',
@@ -204,7 +204,7 @@ export default Capability.makeModule(
             {
               id: `${Obj.getDXN(meeting).toString()}${ATTENDABLE_PATH_SEPARATOR}transcript`,
               type: PLANK_COMPANION_TYPE,
-              data: get(AtomRef.make(meeting.transcript)),
+              data: get(AtomObj.make(meeting.transcript)),
               properties: {
                 label: ['transcript companion label', { ns: meta.id }],
                 icon: 'ph--subtitles--regular',

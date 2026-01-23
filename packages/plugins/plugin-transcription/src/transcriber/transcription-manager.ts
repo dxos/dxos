@@ -63,7 +63,6 @@ export class TranscriptionManager extends Resource {
     this._registry = options.registry;
   }
 
-  /** @reactive */
   get enabledAtom() {
     return this._enabledAtom;
   }

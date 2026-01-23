@@ -250,7 +250,7 @@ export class EchoSchema<A = any, I = any> extends EchoSchemaConstructor() implem
   }
 
   /**
-   * @reactive
+   * Returns the JSON schema for the schema.
    */
   public get jsonSchema(): JsonSchemaType {
     return this._persistentSchema.jsonSchema;

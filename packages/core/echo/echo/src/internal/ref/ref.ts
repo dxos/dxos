@@ -142,8 +142,6 @@ export interface Ref<T> {
    * @returns The reference target.
    * May return `undefined` if the object is not loaded in the working set.
    * Accessing this property, even if it returns `undefined` will trigger the object to be loaded to the working set.
-   *
-   * @reactive Supports signal subscriptions.
    */
   get target(): T | undefined;
 

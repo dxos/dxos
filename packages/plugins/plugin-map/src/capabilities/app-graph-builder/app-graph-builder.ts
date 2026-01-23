@@ -7,7 +7,7 @@ import * as Option from 'effect/Option';
 
 import { Capability, Common } from '@dxos/app-framework';
 import { Obj } from '@dxos/echo';
-import { AtomRef } from '@dxos/echo-atom';
+import { AtomObj } from '@dxos/echo-atom';
 import { Operation } from '@dxos/operation';
 import { GraphBuilder, NodeMatcher } from '@dxos/plugin-graph';
 import { View } from '@dxos/schema';
@@ -22,7 +22,7 @@ export default Capability.makeModule(
       match: (node) => Option.map(NodeMatcher.whenEchoType(View.View)(node), (view) => ({ view, node })),
       actions: ({ view, node }, get) => {
         const presentationRef = (node.properties as any).presentation;
-        const target = presentationRef ? get(AtomRef.make(presentationRef)) : undefined;
+        const target = presentationRef ? get(AtomObj.make(presentationRef)) : undefined;
         if (!Obj.instanceOf(Map.Map, target)) {
           return Effect.succeed([]);
         }

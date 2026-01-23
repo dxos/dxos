@@ -54,7 +54,6 @@ export const isEqualLocation = (l1: Location, l2: Location): boolean => l1[0] ==
 export interface GameboardModel<T extends PieceType = PieceType> {
   readonly: boolean;
   turn: Player;
-  /** @reactive */
   pieces: Atom.Atom<PieceMap<T>>;
   isValidMove: (move: Move) => boolean;
   canPromote?: (move: Move) => boolean;

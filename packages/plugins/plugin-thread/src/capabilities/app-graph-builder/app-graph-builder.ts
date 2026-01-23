@@ -12,7 +12,7 @@ import { Operation } from '@dxos/operation';
 import { AttentionCapabilities } from '@dxos/plugin-attention';
 import { ATTENDABLE_PATH_SEPARATOR, DECK_COMPANION_TYPE, PLANK_COMPANION_TYPE } from '@dxos/plugin-deck/types';
 import { GraphBuilder, NodeMatcher } from '@dxos/plugin-graph';
-import { type SelectionMode, defaultSelection } from '@dxos/react-ui-attention';
+import { defaultSelection } from '@dxos/react-ui-attention';
 
 import { meta } from '../../meta';
 import { Channel, ThreadCapabilities, ThreadOperation } from '../../types';
@@ -135,8 +135,9 @@ export default Capability.makeModule(
             Atom.make((get) => {
               const toolbar = get(stateAtom)[0]?.state.toolbar ?? {};
               const selectionState = get(selectionManager.stateAtom);
+              const selectionMode = metadata.selectionMode;
               const selection =
-                selectionState.selections[objectId] ?? defaultSelection(metadata.selectionMode as SelectionMode);
+                selectionState.selections[objectId] ?? (selectionMode ? defaultSelection(selectionMode) : undefined);
               const anchor = getAnchor(selection);
               const invalidSelection = !anchor;
               const overlappingComment = toolbar[objectId];

@@ -139,8 +139,6 @@ class ManagerImpl implements PluginManager {
 
   /**
    * Ids of plugins that are currently enabled.
-   *
-   * @reactive
    */
   get enabled(): Atom.Atom<readonly string[]> {
     return this._enabledAtom;
@@ -148,8 +146,6 @@ class ManagerImpl implements PluginManager {
 
   /**
    * Modules of plugins which are currently enabled.
-   *
-   * @reactive
    */
   get modules(): Atom.Atom<readonly Plugin.PluginModule[]> {
     return this._modulesAtom;
@@ -157,8 +153,6 @@ class ManagerImpl implements PluginManager {
 
   /**
    * Ids of modules which are currently active.
-   *
-   * @reactive
    */
   get active(): Atom.Atom<readonly string[]> {
     return this._activeAtom;
@@ -166,8 +160,6 @@ class ManagerImpl implements PluginManager {
 
   /**
    * Ids of events which have been fired.
-   *
-   * @reactive
    */
   get eventsFired(): Atom.Atom<readonly string[]> {
     return this._eventsFiredAtom;
@@ -175,8 +167,6 @@ class ManagerImpl implements PluginManager {
 
   /**
    * Ids of modules which are pending reset.
-   *
-   * @reactive
    */
   get pendingReset(): Atom.Atom<readonly string[]> {
     return this._pendingResetAtom;
