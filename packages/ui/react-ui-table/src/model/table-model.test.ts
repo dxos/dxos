@@ -6,8 +6,7 @@ import { Registry } from '@effect-atom/atom-react';
 import * as Schema from 'effect/Schema';
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
-import { Filter, Query } from '@dxos/echo';
-import { TypedObject } from '@dxos/echo/internal';
+import { Filter, Query, Type } from '@dxos/echo';
 import { createEchoSchema } from '@dxos/echo/testing';
 import { ProjectionModel, View, createDirectChangeCallback } from '@dxos/schema';
 
@@ -113,10 +112,15 @@ describe('TableModel', () => {
   });
 });
 
-class Test extends TypedObject({ typename: 'example.com/type/Test', version: '0.1.0' })({
+const Test = Schema.Struct({
   title: Schema.String,
   completed: Schema.Boolean,
-}) {}
+}).pipe(
+  Type.Obj({
+    typename: 'example.com/type/Test',
+    version: '0.1.0',
+  }),
+);
 
 const createTableModel = (registry: Registry.Registry, props: Partial<TableModelProps> = {}): TableModel => {
   const schema = createEchoSchema(Test);

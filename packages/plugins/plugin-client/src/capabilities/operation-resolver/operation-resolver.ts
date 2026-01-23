@@ -14,7 +14,7 @@ import { ObservabilityOperation } from '@dxos/plugin-observability/types';
 import { type JoinPanelProps } from '@dxos/shell/react';
 
 import { JOIN_DIALOG, RECOVERY_CODE_DIALOG, RESET_DIALOG } from '../../constants';
-import { ClientEvents } from '../../events';
+import { ClientEvents } from '../../types';
 import { Account, ClientCapabilities, ClientOperation } from '../../types';
 
 type OperationResolverOptions = {

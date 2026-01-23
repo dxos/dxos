@@ -33,7 +33,14 @@ export const Participant = memo(({ item: user, debug, ...props }: ResponsiveGrid
       return user.tracks?.video as EncodedTrackName;
     }
     return undefined;
-  }, [isSelf, isScreenshare, user.tracks?.screenshare, user.tracks?.video, user.tracks?.screenshareEnabled, user.tracks?.videoEnabled]);
+  }, [
+    isSelf,
+    isScreenshare,
+    user.tracks?.screenshare,
+    user.tracks?.video,
+    user.tracks?.screenshareEnabled,
+    user.tracks?.videoEnabled,
+  ]);
 
   // Get pulled video streams from media state.
   const pulledVideoStream = useMemo<MediaStream | undefined>(() => {

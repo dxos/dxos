@@ -2,7 +2,9 @@
 // Copyright 2022 DXOS.org
 //
 
-import React from 'react';
+import * as Registry from '@effect-atom/atom/Registry';
+import { RegistryContext } from '@effect-atom/atom-react';
+import React, { useMemo } from 'react';
 import { generatePath, useNavigate } from 'react-router-dom';
 
 import { ClientProvider } from '@dxos/react-client';
@@ -20,6 +22,8 @@ const createWorker = () =>
 
 export const Root = () => {
   const navigate = useNavigate();
+  const registry = useMemo(() => Registry.make(), []);
+
   return (
     <ClientProvider
       config={getConfig}
@@ -46,7 +50,9 @@ export const Root = () => {
         }
       }}
     >
-      <Main />
+      <RegistryContext.Provider value={registry}>
+        <Main />
+      </RegistryContext.Provider>
     </ClientProvider>
   );
 };

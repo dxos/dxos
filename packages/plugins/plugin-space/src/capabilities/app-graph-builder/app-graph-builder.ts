@@ -11,8 +11,8 @@ import * as Schema from 'effect/Schema';
 
 import { Capability, Common } from '@dxos/app-framework';
 import { type Space, SpaceState, getSpace, isSpace } from '@dxos/client/echo';
-import { DXN, Filter, Obj, type QueryResult, Ref, Type } from '@dxos/echo';
-import { AtomObj, AtomRef } from '@dxos/echo-atom';
+import { DXN, Filter, Obj, type Ref, Type } from '@dxos/echo';
+import { AtomObj, AtomQuery, AtomRef } from '@dxos/echo-atom';
 import { log } from '@dxos/log';
 import { Operation } from '@dxos/operation';
 import { ClientCapabilities } from '@dxos/plugin-client';
@@ -27,7 +27,6 @@ import { SPACE_TYPE, SpaceCapabilities, SpaceOperation } from '../../types';
 import {
   SHARED,
   SPACES,
-  atomFromQuery,
   constructObjectActions,
   constructSpaceActions,
   constructSpaceNode,
@@ -163,7 +162,6 @@ export default Capability.makeModule(
         connector: (node, get) => {
           const client = capabilities.get(ClientCapabilities.Client);
           const state = capabilities.get(SpaceCapabilities.State);
-          let query: QueryResult.QueryResult<Schema.Schema.Type<typeof Type.Expando>> | undefined;
           const spacesAtom = CreateAtom.fromObservable(client.spaces);
           const isReadyAtom = CreateAtom.fromObservable(client.spaces.isReady);
 
@@ -179,10 +177,9 @@ export default Capability.makeModule(
           const settings = registry.get(settingsAtom);
 
           try {
-            if (!query) {
-              query = client.spaces.default.db.query(Filter.type(Type.Expando, { key: SHARED }));
-            }
-            const [spacesOrder] = get(atomFromQuery(query));
+            const [spacesOrder] = get(
+              AtomQuery.make(client.spaces.default.db, Filter.type(Type.Expando, { key: SHARED })),
+            );
 
             // Get order from spacesOrder snapshot using AtomObj (cached via Atom.family).
             const spacesOrderSnapshot = spacesOrder ? get(AtomObj.make(spacesOrder)) : undefined;
@@ -244,7 +241,19 @@ export default Capability.makeModule(
         match: whenSpace,
         connector: (space, get) => {
           // #region agent log
-          fetch('http://127.0.0.1:7245/ingest/a2f1dfc3-ad54-4195-adb0-51ebc36b6aab',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'app-graph-builder.ts:root-collection',message:'connector called',data:{spaceId:space.id},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'A',runId:'post-fix-v2'})}).catch(()=>{});
+          fetch('http://127.0.0.1:7245/ingest/a2f1dfc3-ad54-4195-adb0-51ebc36b6aab', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              location: 'app-graph-builder.ts:root-collection',
+              message: 'connector called',
+              data: { spaceId: space.id },
+              timestamp: Date.now(),
+              sessionId: 'debug-session',
+              hypothesisId: 'A',
+              runId: 'post-fix-v2',
+            }),
+          }).catch(() => {});
           // #endregion
           const state = capabilities.get(SpaceCapabilities.State);
           const spaceState = get(CreateAtom.fromObservable(space.state));
@@ -258,12 +267,36 @@ export default Capability.makeModule(
             | Ref.Ref<Collection.Collection>
             | undefined;
           // #region agent log
-          fetch('http://127.0.0.1:7245/ingest/a2f1dfc3-ad54-4195-adb0-51ebc36b6aab',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'app-graph-builder.ts:root-collection:collectionRef',message:'got collectionRef',data:{hasRef:!!collectionRef},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'B',runId:'post-fix-v2'})}).catch(()=>{});
+          fetch('http://127.0.0.1:7245/ingest/a2f1dfc3-ad54-4195-adb0-51ebc36b6aab', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              location: 'app-graph-builder.ts:root-collection:collectionRef',
+              message: 'got collectionRef',
+              data: { hasRef: !!collectionRef },
+              timestamp: Date.now(),
+              sessionId: 'debug-session',
+              hypothesisId: 'B',
+              runId: 'post-fix-v2',
+            }),
+          }).catch(() => {});
           // #endregion
           // Resolve the collection using AtomRef (cached via Atom.family).
           const collection = collectionRef ? get(AtomRef.make(collectionRef)) : undefined;
           // #region agent log
-          fetch('http://127.0.0.1:7245/ingest/a2f1dfc3-ad54-4195-adb0-51ebc36b6aab',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'app-graph-builder.ts:root-collection:collection',message:'resolved collection',data:{hasCollection:!!collection,objectCount:collection?.objects?.length},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'C',runId:'post-fix-v2'})}).catch(()=>{});
+          fetch('http://127.0.0.1:7245/ingest/a2f1dfc3-ad54-4195-adb0-51ebc36b6aab', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              location: 'app-graph-builder.ts:root-collection:collection',
+              message: 'resolved collection',
+              data: { hasCollection: !!collection, objectCount: collection?.objects?.length },
+              timestamp: Date.now(),
+              sessionId: 'debug-session',
+              hypothesisId: 'C',
+              runId: 'post-fix-v2',
+            }),
+          }).catch(() => {});
           // #endregion
           if (!collection) {
             return Effect.succeed([]);
@@ -271,7 +304,19 @@ export default Capability.makeModule(
 
           // #region agent log
           const rawRefs = collection.objects ?? [];
-          fetch('http://127.0.0.1:7245/ingest/a2f1dfc3-ad54-4195-adb0-51ebc36b6aab',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'app-graph-builder.ts:root-collection:refs',message:'raw refs from collection',data:{refCount:rawRefs.length,firstRefHasTarget:rawRefs[0]?.target!==undefined},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'E',runId:'post-fix-v4'})}).catch(()=>{});
+          fetch('http://127.0.0.1:7245/ingest/a2f1dfc3-ad54-4195-adb0-51ebc36b6aab', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              location: 'app-graph-builder.ts:root-collection:refs',
+              message: 'raw refs from collection',
+              data: { refCount: rawRefs.length, firstRefHasTarget: rawRefs[0]?.target !== undefined },
+              timestamp: Date.now(),
+              sessionId: 'debug-session',
+              hypothesisId: 'E',
+              runId: 'post-fix-v4',
+            }),
+          }).catch(() => {});
           // #endregion
 
           // Subscribe to each object ref for reactivity, but use live targets for node data.
@@ -285,18 +330,32 @@ export default Capability.makeModule(
             .filter(isNonNullable);
 
           // #region agent log
-          fetch('http://127.0.0.1:7245/ingest/a2f1dfc3-ad54-4195-adb0-51ebc36b6aab',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'app-graph-builder.ts:root-collection:objects',message:'final objects',data:{objectCount:objects.length,firstObjectId:objects[0]?.id},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'G',runId:'post-fix-v4'})}).catch(()=>{});
+          fetch('http://127.0.0.1:7245/ingest/a2f1dfc3-ad54-4195-adb0-51ebc36b6aab', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              location: 'app-graph-builder.ts:root-collection:objects',
+              message: 'final objects',
+              data: { objectCount: objects.length, firstObjectId: objects[0]?.id },
+              timestamp: Date.now(),
+              sessionId: 'debug-session',
+              hypothesisId: 'G',
+              runId: 'post-fix-v4',
+            }),
+          }).catch(() => {});
           // #endregion
 
           return Effect.succeed(
-            objects.map((object) =>
-              createObjectNode({
-                db: space.db,
-                object,
-                resolve: resolve(get),
-                navigable: state.values.navigableCollections,
-              }),
-            ).filter(isNonNullable),
+            objects
+              .map((object) =>
+                createObjectNode({
+                  db: space.db,
+                  object,
+                  resolve: resolve(get),
+                  navigable: state.values.navigableCollections,
+                }),
+              )
+              .filter(isNonNullable),
           );
         },
       }),
@@ -307,7 +366,18 @@ export default Capability.makeModule(
         match: (node) => (Obj.instanceOf(Collection.Collection, node.data) ? Option.some(node.data) : Option.none()),
         connector: (collection, get) => {
           // #region agent log
-          fetch('http://127.0.0.1:7245/ingest/a2f1dfc3-ad54-4195-adb0-51ebc36b6aab',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'app-graph-builder.ts:objects',message:'objects connector called',data:{collectionId:collection.id},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'A'})}).catch(()=>{});
+          fetch('http://127.0.0.1:7245/ingest/a2f1dfc3-ad54-4195-adb0-51ebc36b6aab', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              location: 'app-graph-builder.ts:objects',
+              message: 'objects connector called',
+              data: { collectionId: collection.id },
+              timestamp: Date.now(),
+              sessionId: 'debug-session',
+              hypothesisId: 'A',
+            }),
+          }).catch(() => {});
           // #endregion
           const state = capabilities.get(SpaceCapabilities.State);
           const space = getSpace(collection);
@@ -315,7 +385,18 @@ export default Capability.makeModule(
           // Get collection snapshot using AtomObj (cached via Atom.family).
           const collectionSnapshot = get(AtomObj.make(collection));
           // #region agent log
-          fetch('http://127.0.0.1:7245/ingest/a2f1dfc3-ad54-4195-adb0-51ebc36b6aab',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'app-graph-builder.ts:objects:snapshot',message:'got collection snapshot',data:{objectCount:collectionSnapshot.objects?.length},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'C'})}).catch(()=>{});
+          fetch('http://127.0.0.1:7245/ingest/a2f1dfc3-ad54-4195-adb0-51ebc36b6aab', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              location: 'app-graph-builder.ts:objects:snapshot',
+              message: 'got collection snapshot',
+              data: { objectCount: collectionSnapshot.objects?.length },
+              timestamp: Date.now(),
+              sessionId: 'debug-session',
+              hypothesisId: 'C',
+            }),
+          }).catch(() => {});
           // #endregion
           return Effect.succeed(
             Function.pipe(
@@ -348,8 +429,7 @@ export default Capability.makeModule(
             return Effect.succeed(null);
           }
 
-          const query = space.db.query(Filter.id(dxn.echoId));
-          const object = get(atomFromQuery(query)).at(0);
+          const object = get(AtomQuery.make(space.db, Filter.id(dxn.echoId))).at(0);
           if (!Obj.isObject(object)) {
             return Effect.succeed(null);
           }
@@ -370,7 +450,6 @@ export default Capability.makeModule(
         id: `${meta.id}/system-collections`,
         match: (node) => (Obj.instanceOf(Collection.Managed, node.data) ? Option.some(node.data) : Option.none()),
         connector: (collection, get) => {
-          let query: QueryResult.QueryResult<Schema.Schema.Type<typeof Type.Expando>> | undefined;
           const client = get(capabilities.atom(ClientCapabilities.Client)).at(0);
           const space = getSpace(collection);
           const schema = client?.graph.schemaRegistry
@@ -380,11 +459,8 @@ export default Capability.makeModule(
             return Effect.succeed([]);
           }
 
-          if (!query) {
-            query = space.db.query(Filter.type(schema));
-          }
           return Effect.succeed(
-            get(atomFromQuery(query))
+            get(AtomQuery.make(space.db, Filter.type(schema)))
               .map((object) =>
                 createObjectNode({
                   object,
@@ -407,7 +483,19 @@ export default Capability.makeModule(
             : Option.none(),
         connector: (collection, get) => {
           // #region agent log
-          fetch('http://127.0.0.1:7245/ingest/a2f1dfc3-ad54-4195-adb0-51ebc36b6aab',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'app-graph-builder.ts:static-schemas',message:'static-schemas connector called',data:{collectionId:collection.id},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'D',runId:'post-fix-v2'})}).catch(()=>{});
+          fetch('http://127.0.0.1:7245/ingest/a2f1dfc3-ad54-4195-adb0-51ebc36b6aab', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              location: 'app-graph-builder.ts:static-schemas',
+              message: 'static-schemas connector called',
+              data: { collectionId: collection.id },
+              timestamp: Date.now(),
+              sessionId: 'debug-session',
+              hypothesisId: 'D',
+              runId: 'post-fix-v2',
+            }),
+          }).catch(() => {});
           // #endregion
           const client = get(capabilities.atom(ClientCapabilities.Client)).at(0);
           const space = getSpace(collection);
@@ -436,7 +524,6 @@ export default Capability.makeModule(
           return space && Schema.isSchema(node.data) ? Option.some({ space, schema: node.data }) : Option.none();
         },
         actions: ({ space, schema }, get) => {
-          let query: QueryResult.QueryResult<Obj.Any> | undefined;
           const schemas =
             get(capabilities.atom(ClientCapabilities.Client))
               .at(0)
@@ -448,11 +535,7 @@ export default Capability.makeModule(
               .map((schema) => Filter.type(schema)),
           );
 
-          if (!query) {
-            query = space.db.query(filter) as unknown as QueryResult.QueryResult<Obj.Any>;
-          }
-
-          const objects = get(atomFromQuery(query));
+          const objects = get(AtomQuery.make(space.db, filter));
 
           // Filter views that match the schema typename using AtomObj and AtomRef (cached via Atom.family).
           const targetTypename = Type.getTypename(schema as Type.Obj.Any);
@@ -484,7 +567,6 @@ export default Capability.makeModule(
             : Option.none();
         },
         connector: ({ space, schema }, get) => {
-          let query: QueryResult.QueryResult<Obj.Any> | undefined;
           const schemas =
             get(capabilities.atom(ClientCapabilities.Client))
               .at(0)
@@ -496,12 +578,8 @@ export default Capability.makeModule(
               .map((schema) => Filter.type(schema)),
           );
 
-          if (!query) {
-            query = space.db.query(filter) as unknown as QueryResult.QueryResult<Obj.Any>;
-          }
-
           const typename = Schema.isSchema(schema) ? Type.getTypename(schema as Type.Obj.Any) : schema.typename;
-          const objects = get(atomFromQuery(query));
+          const objects = get(AtomQuery.make(space.db, filter));
 
           // Filter and map using AtomObj and AtomRef (cached via Atom.family).
           return Effect.succeed(
@@ -535,7 +613,6 @@ export default Capability.makeModule(
             : Option.none();
         },
         actions: ({ space, object }, get) => {
-          let query: QueryResult.QueryResult<Obj.Any> | undefined;
           const schemas =
             get(capabilities.atom(ClientCapabilities.Client))
               .at(0)
@@ -548,13 +625,10 @@ export default Capability.makeModule(
           );
 
           const isSchema = Obj.instanceOf(Type.PersistentType, object);
-          if (!query && isSchema) {
-            query = space.db.query(filter) as unknown as QueryResult.QueryResult<Obj.Any>;
-          }
 
           let deletable = !isSchema && !Obj.instanceOf(Collection.Managed, object);
-          if (isSchema && query) {
-            const objects = get(atomFromQuery(query));
+          if (isSchema) {
+            const objects = get(AtomQuery.make(space.db, filter));
             // Filter views using AtomObj and AtomRef (cached via Atom.family).
             const filteredViews = objects.filter((viewObject) => {
               const viewSnapshot = get(AtomObj.make(viewObject));

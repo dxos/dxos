@@ -84,8 +84,7 @@ const createGraph = (client: Client, registry: Registry.Registry): Graph.Expanda
           get(node),
           Option.flatMap((node) => (isSpace(node.data) ? Option.some(node.data) : Option.none())),
           Option.map((space) => {
-            const queryResult = space.db.query(Query.type(Type.Expando, { type: 'test' }));
-            const objects = get(AtomQuery.make(queryResult));
+            const objects = get(AtomQuery.make(space.db, Query.type(Type.Expando, { type: 'test' })));
             return objects.map((object) => ({
               id: object.id,
               type: 'dxos.org/type/test',

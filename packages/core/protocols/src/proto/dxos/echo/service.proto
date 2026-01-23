@@ -6,6 +6,7 @@ syntax = "proto3";
 
 import "dxos/keys.proto";
 import "google/protobuf/empty.proto";
+import "google/protobuf/struct.proto";
 
 package dxos.echo.service;
 
@@ -61,12 +62,6 @@ message DocumentUpdate {
    * Value returned by `Automerge.saveSince()`.
    */
   bytes mutation = 2;
-
-  /**
-   * Set to true for init mutation of document.
-   * default: undefined.
-   */
-   optional bool is_new = 3;
 }
 
 message DocHeadsList {
@@ -92,6 +87,26 @@ message WaitUntilHeadsReplicatedRequest {
 
 message ReIndexHeadsRequest {
   repeated string document_ids = 1;
+}
+
+message CreateDocumentRequest {
+  /**
+   * Space id where the document will be created.
+   */
+  string space_id = 1;
+
+  /**
+   * Automerge encoded initial document value.
+   * Optional - if not provided, an empty document will be created.
+   */
+  optional google.protobuf.Struct initial_value = 2;
+}
+
+message CreateDocumentResponse {
+  /**
+   * The generated document id.
+   */
+  string document_id = 1;
 }
 
 message GetSpaceSyncStateRequest {
@@ -156,6 +171,12 @@ service DataService {
    * Change which documents are subscribed to for specific subscription.
    */
   rpc UpdateSubscription(UpdateSubscriptionRequest) returns (google.protobuf.Empty);
+
+  /**
+   * Create a new automerge document.
+   * Returns the generated document id which is controlled by the host.
+   */
+   rpc CreateDocument(CreateDocumentRequest) returns (CreateDocumentResponse);
 
   /**
    * Write incremental updates to multiple automerge documents.

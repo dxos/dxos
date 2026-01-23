@@ -43,7 +43,7 @@ describe('AtomRef - Basic Functionality', () => {
     expect(result?.name).toBe('Target');
   });
 
-  test('AtomRef.make updates when target changes', async () => {
+  test('AtomRef.make does not subscribe to target changes (use AtomObj for reactive snapshots)', async () => {
     await db.graph.schemaRegistry.register([TestSchema.Person]);
 
     const targetObj = Obj.make(TestSchema.Person, { name: 'Target', username: 'target', email: 'target@example.com' });
@@ -59,13 +59,13 @@ describe('AtomRef - Basic Functionality', () => {
 
     expect(updateCount).toBe(1);
 
-    // Mutate target.
+    // Mutate target - ref atom does NOT react to this.
     Obj.change(targetObj, (o) => {
       o.name = 'Updated';
     });
 
-    expect(updateCount).toBe(2);
-    expect(registry.get(atom)?.name).toBe('Updated');
+    // Update count should still be 1 - ref atom doesn't subscribe to target changes.
+    expect(updateCount).toBe(1);
   });
 });
 
@@ -153,7 +153,7 @@ describe('AtomRef - Referential Equality', () => {
     expect(registry.get(atom2)?.name).toBe('Target');
   });
 
-  test('cached ref atoms remain reactive after multiple retrievals', async () => {
+  test('cached ref atoms return same instance after multiple retrievals', async () => {
     await db.graph.schemaRegistry.register([TestSchema.Person]);
 
     const targetObj = Obj.make(TestSchema.Person, { name: 'Target', username: 'target', email: 'target@example.com' });
@@ -171,20 +171,10 @@ describe('AtomRef - Referential Equality', () => {
     expect(atom1).toBe(atom2);
     expect(atom2).toBe(atom3);
 
-    // Subscribe to the atom.
-    let updateCount = 0;
-    registry.subscribe(atom1, () => updateCount++, { immediate: true });
-
-    expect(updateCount).toBe(1);
-
-    // Mutate the target object.
-    Obj.change(targetObj, (o) => {
-      o.name = 'Updated';
-    });
-
-    // The subscription should still work.
-    expect(updateCount).toBe(2);
-    expect(registry.get(atom1)?.name).toBe('Updated');
+    // All should return the same target value.
+    expect(registry.get(atom1)?.name).toBe('Target');
+    expect(registry.get(atom2)?.name).toBe('Target');
+    expect(registry.get(atom3)?.name).toBe('Target');
   });
 });
 

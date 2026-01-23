@@ -4,7 +4,7 @@
 
 import * as Atom from '@effect-atom/atom/Atom';
 
-import { getSnapshot, isLiveObject, subscribe, type Live } from '@dxos/live-object';
+import { type Live, getSnapshot, isLiveObject, subscribe } from '@dxos/live-object';
 
 /**
  * Atom family for plain live objects (not ECHO entities).

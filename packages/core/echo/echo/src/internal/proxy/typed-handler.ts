@@ -11,10 +11,10 @@ import { Event } from '@dxos/async';
 import { inspectCustom } from '@dxos/debug';
 import { invariant } from '@dxos/invariant';
 import {
-  batchEvents,
   EventId,
   ReactiveArray,
   type ReactiveHandler,
+  batchEvents,
   createProxy,
   defineHiddenProperty,
   emitEvent,

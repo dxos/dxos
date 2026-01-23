@@ -5,7 +5,7 @@
 import { type Atom } from '@effect-atom/atom-react';
 import * as Effect from 'effect/Effect';
 
-import { Common, Capability } from '@dxos/app-framework';
+import { Capability, Common } from '@dxos/app-framework';
 import { invariant } from '@dxos/invariant';
 
 import { meta } from '../meta';

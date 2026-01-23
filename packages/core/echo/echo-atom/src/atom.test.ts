@@ -146,7 +146,7 @@ describe('Echo Atom - Basic Functionality', () => {
     expect(propertyUpdateCount).toBe(2);
 
     // Verify values are correct.
-    expect(registry.get(objectAtom).name).toBe('Updated Standalone');
+    expect(registry.get(objectAtom)!.name).toBe('Updated Standalone');
     expect(registry.get(propertyAtom)).toBe('Updated Standalone');
   });
 });

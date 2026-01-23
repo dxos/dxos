@@ -4,7 +4,7 @@
 
 import { type Entity, type Obj } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
-import { batchEvents, EventId } from '@dxos/live-object';
+import { EventId, batchEvents } from '@dxos/live-object';
 
 import { clearPendingNotifications, enterChangeContext, hasPendingNotifications } from '../core-db/change-context';
 

@@ -51,15 +51,9 @@ export const useNavTreeState = (): UseNavTreeStateResult => {
     [state],
   );
 
-  const isOpen = useCallback(
-    (path: string[], _item?: NavTreeItemGraphNode) => getItem(path).open,
-    [getItem],
-  );
+  const isOpen = useCallback((path: string[], _item?: NavTreeItemGraphNode) => getItem(path).open, [getItem]);
 
-  const isCurrent = useCallback(
-    (path: string[], _item?: NavTreeItemGraphNode) => getItem(path).current,
-    [getItem],
-  );
+  const isCurrent = useCallback((path: string[], _item?: NavTreeItemGraphNode) => getItem(path).current, [getItem]);
 
   const isAlternateTree = useCallback(
     (path: string[], _item?: NavTreeItemGraphNode) => getItem(path).alternateTree ?? false,

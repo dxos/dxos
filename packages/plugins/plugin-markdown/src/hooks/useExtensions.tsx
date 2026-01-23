@@ -12,7 +12,7 @@ import { debounceAndThrottle } from '@dxos/async';
 import { Obj } from '@dxos/echo';
 import { createDocAccessor } from '@dxos/echo-db';
 import { invariant } from '@dxos/invariant';
-import { getSpace, useRef } from '@dxos/react-client/echo';
+import { getSpace, useObject } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 import { Icon, ThemeProvider } from '@dxos/react-ui';
 import { type SelectionManager } from '@dxos/react-ui-attention';
@@ -73,8 +73,8 @@ export const useExtensions = ({
 
   // Get the content reference from Document objects.
   const contentRef = Obj.instanceOf(Markdown.Document, object) ? (object as Markdown.Document).content : undefined;
-  // Use useRef to trigger re-render when the reference loads (returns snapshot for reactivity).
-  useRef(contentRef);
+  // Use useObject to trigger re-render when the reference loads (returns snapshot for reactivity).
+  useObject(contentRef);
   // Get the actual live object target via .target (needed for createDocAccessor).
   const target = contentRef?.target ?? (Obj.instanceOf(Text.Text, object) ? object : undefined);
 

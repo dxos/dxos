@@ -5,10 +5,10 @@
 import * as Schema from 'effect/Schema';
 import { afterEach, assert, beforeEach, describe, expect, test } from 'vitest';
 
-import { Trigger, asyncTimeout } from '@dxos/async';
+import { asyncTimeout } from '@dxos/async';
 import { Obj, Relation, Type } from '@dxos/echo';
-import { Expando, Ref, getTypeAnnotation, getTypeReference, makeObject } from '@dxos/echo/internal';
-import { TestSchema, updateCounter } from '@dxos/echo/testing';
+import { Expando, Ref, getSchemaDXN, getTypeAnnotation, makeObject } from '@dxos/echo/internal';
+import { TestSchema } from '@dxos/echo/testing';
 import { MeshEchoReplicator } from '@dxos/echo-pipeline';
 import {
   TestReplicationNetwork,
@@ -508,7 +508,7 @@ describe('Integration tests', () => {
         preloadSchemaOnOpen: false,
       });
       const [schema] = await db.schemaRegistry.register([TestSchema.Person]);
-      typeDXN = getTypeReference(schema)!.toDXN();
+      typeDXN = getSchemaDXN(schema)!;
       db.add(makeObject(schema, { name: 'Bob' }));
       await db.flush({ indexes: true });
     }

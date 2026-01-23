@@ -4,7 +4,7 @@
 
 import { ActivationEvent } from '@dxos/app-framework';
 
-import { meta } from './meta';
+import { meta } from '../meta';
 
 export namespace ClientEvents {
   export const ClientReady = ActivationEvent.make(`${meta.id}/event/client-ready`);

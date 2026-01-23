@@ -6,9 +6,9 @@ import { inspect } from 'node:util';
 
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
-import { Trigger, asyncTimeout, sleep } from '@dxos/async';
+import { asyncTimeout, sleep } from '@dxos/async';
 import { Obj, Query, Ref, Type } from '@dxos/echo';
-import { TestSchema, updateCounter } from '@dxos/echo/testing';
+import { TestSchema } from '@dxos/echo/testing';
 import { PublicKey } from '@dxos/keys';
 import { createTestLevel } from '@dxos/kv-store/testing';
 import { openAndClose } from '@dxos/test-utils';

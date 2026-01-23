@@ -4,8 +4,9 @@
 
 import { type ActivationEvent, Common } from '@dxos/app-framework';
 
-import { meta } from './meta';
-import { DeckCapabilities } from './types';
+import { meta } from '../meta';
+
+import { DeckCapabilities } from './capabilities';
 
 export namespace DeckEvents {
   export const StateReady: ActivationEvent.ActivationEvent = Common.ActivationEvent.createStateEvent(

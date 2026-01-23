@@ -9,6 +9,7 @@ import { Obj, Ref, Type } from '@dxos/echo';
 import { FormInputAnnotation } from '@dxos/echo/internal';
 import { Queue } from '@dxos/echo-db';
 import { QueueAnnotation } from '@dxos/schema';
+import { AccessToken } from '@dxos/types';
 
 // TODO(burdon): Implement as labels?
 export enum MessageState {
@@ -37,6 +38,12 @@ export const Mailbox = Schema.Struct({
       filter: Schema.String,
     }),
   ).pipe(FormInputAnnotation.set(false)),
+  accessToken: Schema.optional(
+    Type.Ref(AccessToken.AccessToken).annotations({
+      title: 'Account',
+      description: 'Google account credentials for syncing this mailbox.',
+    }),
+  ),
 }).pipe(
   Type.Obj({
     typename: 'dxos.org/type/Mailbox',
@@ -46,6 +53,16 @@ export const Mailbox = Schema.Struct({
 );
 
 export type Mailbox = Schema.Schema.Type<typeof Mailbox>;
+
+export const CreateMailboxSchema = Schema.Struct({
+  name: Schema.optional(Schema.String.annotations({ title: 'Name' })),
+  accessToken: Schema.optional(
+    Type.Ref(AccessToken.AccessToken).annotations({
+      title: 'Account',
+      description: 'Google account credentials for syncing this mailbox.',
+    }),
+  ),
+});
 
 type MailboxProps = Omit<Obj.MakeProps<typeof Mailbox>, 'queue' | 'filters'> & {
   space: Space;

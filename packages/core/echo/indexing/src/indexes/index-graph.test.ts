@@ -4,7 +4,7 @@
 
 import { describe, expect, test } from 'vitest';
 
-import { Reference, encodeReference } from '@dxos/echo-protocol';
+import { EncodedReference } from '@dxos/echo-protocol';
 import { DXN, type ObjectId, PublicKey } from '@dxos/keys';
 import { objectPointerCodec } from '@dxos/protocols';
 
@@ -34,12 +34,12 @@ describe('IndexGraph', () => {
       await index.update(objectPointerCodec.encode({ spaceKey: spaceKey.toHex(), documentId: id, objectId: id }), doc);
     }
 
-    // Re-assign task1 to Sarah
+    // Re-assign task1 to Sarah.
     await index.update(encodeObjectPointer(TestData.TASKS.task1.id), {
       ...TestData.TASKS.task1.doc,
       data: {
         ...TestData.TASKS.task1.doc.data,
-        assignedTo: encodeReference(Reference.fromDXN(DXN.fromLocalObjectId(TestData.CONTACTS.sarah.id))),
+        assignedTo: EncodedReference.fromDXN(DXN.fromLocalObjectId(TestData.CONTACTS.sarah.id)),
       },
     });
 

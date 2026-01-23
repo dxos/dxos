@@ -8,8 +8,8 @@ import { ActivationEvent, Capability, Common, Plugin } from '@dxos/app-framework
 import { AttentionManager, SelectionManager } from '@dxos/react-ui-attention';
 
 import { Keyboard, OperationResolver, ReactContext } from './capabilities';
-import { AttentionEvents } from './events';
 import { meta } from './meta';
+import { AttentionEvents } from './types';
 import { AttentionCapabilities } from './types';
 
 export const AttentionPlugin = Plugin.define(meta).pipe(
