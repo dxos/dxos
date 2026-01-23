@@ -3,9 +3,7 @@
 //
 
 import { type Atom } from '@effect-atom/atom-react';
-import * as Array from 'effect/Array';
 import * as Effect from 'effect/Effect';
-import * as Function from 'effect/Function';
 import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 
@@ -188,6 +186,13 @@ export default Capability.makeModule(
 
             // Subscribe to space states for filtering.
             const spaceStates = spaces.map((space) => get(CreateAtom.fromObservable(space.state)));
+
+            // Subscribe to space properties to react when root collection is assigned.
+            spaces.forEach((space) => {
+              if (space.state.get() === SpaceState.SPACE_READY) {
+                get(AtomObj.make(space.properties));
+              }
+            });
 
             return Effect.succeed(
               [
@@ -388,21 +393,6 @@ export default Capability.makeModule(
             ? Option.some(node.data)
             : Option.none(),
         connector: (collection, get) => {
-          // #region agent log
-          fetch('http://127.0.0.1:7245/ingest/a2f1dfc3-ad54-4195-adb0-51ebc36b6aab', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              location: 'app-graph-builder.ts:static-schemas',
-              message: 'static-schemas connector called',
-              data: { collectionId: collection.id },
-              timestamp: Date.now(),
-              sessionId: 'debug-session',
-              hypothesisId: 'D',
-              runId: 'post-fix-v2',
-            }),
-          }).catch(() => {});
-          // #endregion
           const client = get(capabilities.atom(ClientCapabilities.Client)).at(0);
           const space = getSpace(collection);
           if (!space) {
