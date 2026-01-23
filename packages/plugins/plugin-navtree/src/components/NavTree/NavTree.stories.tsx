@@ -122,8 +122,8 @@ const meta = {
     withTheme,
     withPluginManager({
       plugins: [
-        RuntimePlugin(),
         ...corePlugins(),
+        RuntimePlugin(),
         NavTreePlugin(),
         StorybookPlugin({ initialState: { sidebarState: 'expanded' } }),
       ],

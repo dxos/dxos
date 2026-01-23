@@ -208,7 +208,6 @@ const meta = {
               yield* Effect.promise(() => messageQueue.append(messages));
             }),
         }),
-        ...corePlugins(),
         SpacePlugin({}),
         PreviewPlugin(),
         InboxPlugin(),

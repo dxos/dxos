@@ -168,7 +168,6 @@ const storybook: Meta<typeof DefaultStory> = {
               yield* Effect.promise(() => client.halo.createIdentity());
             }),
         }),
-        ...corePlugins(),
         SpacePlugin({}),
         MarkdownPlugin(),
         PreviewPlugin(),

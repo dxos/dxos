@@ -34,7 +34,6 @@ const meta = {
               yield* Effect.promise(() => client.spaces.waitUntilReady());
             }),
         }),
-        ...corePlugins(),
         SpacePlugin({}),
         AutomationPlugin(),
       ],

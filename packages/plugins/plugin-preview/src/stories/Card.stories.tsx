@@ -4,10 +4,10 @@
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 
-import { OperationPlugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
+import { corePlugins } from '@dxos/plugin-testing';
 import { faker } from '@dxos/random';
-import { withTheme } from '@dxos/react-ui/testing';
+import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '../translations';
 
@@ -20,12 +20,14 @@ const meta = {
   render: Defaultstory,
   decorators: [
     withTheme,
+    withLayout({ layout: 'fullscreen' }),
     withPluginManager({
-      plugins: [OperationPlugin()],
+      plugins: [...corePlugins()],
     }),
   ],
   parameters: {
     translations,
+    layout: 'fullscreen',
   },
   tags: ['cards'],
 } satisfies Meta<typeof Defaultstory>;

@@ -72,7 +72,6 @@ const meta = {
               space.db.add(Obj.make(TestSchema.Organization, { name: 'Composer Project' }));
             }),
         }),
-        ...corePlugins(),
         SpacePlugin({}),
         PreviewPlugin(),
       ],

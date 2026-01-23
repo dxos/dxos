@@ -39,7 +39,6 @@ const meta = {
               yield* Effect.promise(() => client.halo.createIdentity());
             }),
         }),
-        ...corePlugins(),
         SpacePlugin({}),
         ChessPlugin(),
         MapPlugin(),

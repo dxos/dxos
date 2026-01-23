@@ -43,6 +43,7 @@ const meta = {
     withLayout({ layout: 'column', classNames: 'is-prose' }),
     withPluginManager({
       plugins: [
+        ...corePlugins(),
         ClientPlugin({
           // TODO(wittjosiah): ComputeRuntime requires edge to be configured or it will throw.
           config: new Config({
@@ -63,7 +64,6 @@ const meta = {
               space.db.add(serializeFunction(Agent.prompt));
             }),
         }),
-        ...corePlugins(),
         SpacePlugin({}),
         AssistantPlugin(),
         AutomationPlugin(),

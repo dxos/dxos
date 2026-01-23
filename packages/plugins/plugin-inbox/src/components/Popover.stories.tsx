@@ -102,7 +102,6 @@ const meta = {
               space.db.add(mailbox);
             }),
         }),
-        ...corePlugins(),
         SpacePlugin({}),
         PreviewPlugin(),
         StorybookPlugin({}),

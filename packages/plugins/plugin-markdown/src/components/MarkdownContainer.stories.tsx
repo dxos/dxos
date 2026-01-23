@@ -98,7 +98,6 @@ const meta = {
               yield* Effect.promise(() => space.db.flush({ indexes: true }));
             }),
         }),
-        ...corePlugins(),
         SpacePlugin({}),
         StorybookPlugin({}),
         MarkdownPlugin(),

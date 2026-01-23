@@ -9,6 +9,7 @@ import { faker } from '@dxos/random';
 import { CardContainer } from '@dxos/react-ui-mosaic/testing';
 import { Organization, Person, Task } from '@dxos/types';
 import { Project } from '@dxos/types';
+import { mx } from '@dxos/ui-theme';
 
 import { FormCard, OrganizationCard, PersonCard, ProjectCard, TaskCard } from '../cards';
 import { type CardPreviewProps } from '../types';
@@ -27,10 +28,10 @@ export type DefaultstoryProps = {
 
 export const Defaultstory = ({ role, cards }: DefaultstoryProps) => {
   return (
-    <div className='flex bs-full'>
-      <div className='flex shrink-0 gap-8 overflow-x-auto pbe-4'>
+    <div className='is-full overflow-x-auto plb-4'>
+      <div className='flex'>
         {cards.map(({ Component, icon, image, subject }, i) => (
-          <div key={i} className='flex is-[24rem] justify-center'>
+          <div key={i} className={mx('flex shrink-0 justify-center is-[var(--dx-cardMaxWidth)]')}>
             <CardContainer icon={icon} role={role}>
               <Component role={role} subject={image ? subject : omitImage(subject)} />
             </CardContainer>

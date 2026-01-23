@@ -226,7 +226,6 @@ const meta = {
               yield* Effect.promise(() => seedTestData(client.spaces.default));
             }),
         }),
-        ...corePlugins(),
         SpacePlugin({}),
         PreviewPlugin(),
         TranscriptionPlugin(),

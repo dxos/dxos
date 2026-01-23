@@ -92,7 +92,6 @@ export const WithCompanion: Story = {
               yield* Effect.promise(() => initializeMailbox(client.spaces.default));
             }),
         }),
-        ...corePlugins(),
         SpacePlugin({}),
         PreviewPlugin(),
         InboxPlugin(),

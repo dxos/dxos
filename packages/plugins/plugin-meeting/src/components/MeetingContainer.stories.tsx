@@ -65,7 +65,6 @@ const meta = {
               );
             }),
         }),
-        ...corePlugins(),
         SpacePlugin({}),
         MarkdownPlugin(),
       ],

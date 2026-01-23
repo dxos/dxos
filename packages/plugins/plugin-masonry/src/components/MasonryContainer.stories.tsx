@@ -64,7 +64,6 @@ const meta = {
               yield* Effect.promise(() => factory([{ type: Organization.Organization, count: 64 }]));
             }),
         }),
-        ...corePlugins(),
         SpacePlugin({}),
         PreviewPlugin(),
         StorybookPlugin({}),

@@ -101,7 +101,6 @@ const meta = {
               });
             }),
         }),
-        ...corePlugins(),
         SpacePlugin({}),
         PreviewPlugin(),
         StorybookPlugin({}),
