@@ -8,6 +8,44 @@
   "author": "DXOS.org",
   "sideEffects": false,
   "type": "module",
+  "imports": {
+    "#segment-platform": {
+      "source": {
+        "browser": "./src/segment/browser.ts",
+        "default": "./src/segment/node.ts"
+      },
+      "types": "./dist/types/src/segment/node.d.ts",
+      "browser": "./dist/lib/browser/segment/browser.mjs",
+      "default": "./dist/lib/node-esm/segment/node.mjs"
+    },
+    "#sentry-platform": {
+      "source": {
+        "browser": "./src/sentry/browser.ts",
+        "default": "./src/sentry/node.ts"
+      },
+      "types": "./dist/types/src/sentry/node.d.ts",
+      "browser": "./dist/lib/browser/sentry/browser.mjs",
+      "default": "./dist/lib/node-esm/sentry/node.mjs"
+    },
+    "#otel-traces": {
+      "source": {
+        "browser": "./src/otel/traces-browser.ts",
+        "default": "./src/otel/traces.ts"
+      },
+      "types": "./dist/types/src/otel/traces.d.ts",
+      "browser": "./dist/lib/browser/otel/traces-browser.mjs",
+      "default": "./dist/lib/node-esm/otel/traces.mjs"
+    },
+    "#testkit": {
+      "source": {
+        "browser": "./src/testing/testkit/browser.ts",
+        "default": "./src/testing/testkit/index.ts"
+      },
+      "types": "./dist/types/src/testing/testkit/index.d.ts",
+      "browser": "./dist/lib/browser/testing/testkit/browser.mjs",
+      "default": "./dist/lib/node-esm/testing/testkit/index.mjs"
+    }
+  },
   "exports": {
     ".": {
       "source": "./src/index.ts",
@@ -27,12 +65,6 @@
       "browser": "./dist/lib/browser/sentry/index.mjs",
       "node": "./dist/lib/node-esm/sentry/index.mjs"
     }
-  },
-  "browser": {
-    "./src/segment/node.ts": "./src/segment/browser.ts",
-    "./src/sentry/node.ts": "./src/sentry/browser.ts",
-    "./testing/testkit/index.ts": "./testing/testkit/browser.ts",
-    "./src/otel/traces.ts": "./src/otel/traces-browser.ts"
   },
   "types": "dist/types/src/index.d.ts",
   "typesVersions": {
