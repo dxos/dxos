@@ -5,7 +5,7 @@
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 
-import { type Plugin } from 'esbuild';
+import { type Plugin, type Platform } from 'esbuild';
 
 export type BundleDepsPluginOptions = {
   /**
@@ -27,6 +27,60 @@ export type BundleDepsPluginOptions = {
 };
 
 /**
+ * Resolves a `#` import (subpath import) using the package.json imports field.
+ * Follows the Node.js resolution algorithm for conditional exports.
+ */
+const resolveSubpathImport = (
+  importPath: string,
+  imports: Record<string, any>,
+  platform: Platform,
+  packageDir: string,
+): string | null => {
+  const importSpec = imports[importPath];
+  if (!importSpec) {
+    return null;
+  }
+
+  // Helper to resolve a condition object.
+  const resolveCondition = (spec: any): string | null => {
+    if (typeof spec === 'string') {
+      return join(packageDir, spec);
+    }
+    if (typeof spec !== 'object' || spec === null) {
+      return null;
+    }
+
+    // Check for source condition first (for development/build time resolution).
+    if (spec.source) {
+      const sourceResolved = resolveCondition(spec.source);
+      if (sourceResolved) {
+        return sourceResolved;
+      }
+    }
+
+    // Platform-specific conditions.
+    if (platform === 'browser' && spec.browser) {
+      return resolveCondition(spec.browser);
+    }
+    if (platform === 'node' && spec.node) {
+      return resolveCondition(spec.node);
+    }
+
+    // Default fallbacks.
+    if (spec.default) {
+      return resolveCondition(spec.default);
+    }
+    if (spec.import) {
+      return resolveCondition(spec.import);
+    }
+
+    return null;
+  };
+
+  return resolveCondition(importSpec);
+};
+
+/**
  * Ensures all external dependencies are marked as external unless specifically listed for being included in the package bundle.
  */
 export const bundleDepsPlugin = (options: BundleDepsPluginOptions): Plugin => ({
@@ -38,6 +92,7 @@ export const bundleDepsPlugin = (options: BundleDepsPluginOptions): Plugin => ({
       ...Object.keys(packageJson.peerDependencies ?? {}),
       ...Object.keys(packageJson.optionalDependencies ?? {}),
     ]);
+    const platform = build.initialOptions.platform ?? 'browser';
 
     build.onResolve({ namespace: 'file', filter: /.*/ }, (args) => {
       // Ignore aliased imports.
@@ -50,8 +105,15 @@ export const bundleDepsPlugin = (options: BundleDepsPluginOptions): Plugin => ({
         });
       }
 
-      // Ignore external imports.
+      // Resolve subpath imports (#) using package.json imports field.
       if (args.path.startsWith('#')) {
+        if (packageJson.imports) {
+          const resolved = resolveSubpathImport(args.path, packageJson.imports, platform, options.packageDir);
+          if (resolved) {
+            return { path: resolved };
+          }
+        }
+        // If no resolution found, keep as external (for vendor files etc.).
         return { external: true, path: args.path };
       }
 
