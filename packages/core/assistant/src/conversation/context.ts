@@ -128,6 +128,11 @@ export class AiContextBinder extends Resource {
   }
 
   private async _updateBindings(items: ContextBinding[]): Promise<void> {
+    // Skip update if no items - preserve existing state set by bind().
+    if (items.length === 0) {
+      return;
+    }
+
     const bindings = this._reduce(items);
 
     // Resolve references (loading them first if needed).
