@@ -93,6 +93,8 @@ export const translations = [
         'send email error title': 'Failed to send email',
         'send email error no runtime': 'Email service not available',
         'send email error unknown': 'An unknown error occurred',
+
+        'send as email label': 'Send as email',
       },
     },
   },

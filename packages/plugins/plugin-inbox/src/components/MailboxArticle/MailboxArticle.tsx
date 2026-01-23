@@ -320,7 +320,7 @@ const useMailboxActions = ({
               icon: 'ph--paper-plane-right--regular',
               label: ['compose email label', { ns: meta.id }],
             },
-            () => invokePromise(InboxOperation.OpenComposeEmail, undefined),
+            () => invokePromise(InboxOperation.OpenComposeEmail, {}),
           )
           .build();
 
