@@ -10,12 +10,18 @@ import { AtomRef } from '@dxos/echo-atom';
 
 /**
  * Subscribe to a reference target object.
- * Returns undefined if the reference hasn't loaded yet, and automatically updates when the target loads or changes.
+ * Returns the live object (not a snapshot), or undefined if the reference hasn't loaded yet.
+ * Automatically triggers re-renders when the target loads or changes.
+ *
+ * The returned live object can be passed to useObject for reactive updates and mutations.
  *
  * @param ref - The reference to subscribe to.
- * @returns The current target object or undefined if not loaded.
+ * @returns The live target object or undefined if not loaded.
  */
 export function useRef<T extends Entity.Unknown>(ref: Ref.Ref<T> | undefined): T | undefined {
   const atom = useMemo(() => AtomRef.make(ref), [ref]);
-  return useAtomValue(atom);
+  // Subscribe to the atom to trigger re-renders when the target loads or changes.
+  useAtomValue(atom);
+  // Return the live object directly (not a snapshot).
+  return ref?.target;
 }

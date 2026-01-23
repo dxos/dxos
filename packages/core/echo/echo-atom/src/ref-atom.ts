@@ -8,10 +8,8 @@ import { type Entity, Obj, type Ref } from '@dxos/echo';
 import { getSnapshot } from '@dxos/live-object';
 
 /**
- * Create a read-only atom for a reference target.
- * Returns undefined if the reference is undefined or hasn't loaded yet.
- * Automatically updates when the target loads or changes.
- * The atom handles async loading internally and subscribes to target object changes.
+ * Create an atom for a reference target that triggers re-renders on load/change.
+ * Returns a snapshot for change detection; useRef accesses ref.target for the live object.
  */
 export function make<T extends Entity.Unknown>(ref: Ref.Ref<T> | undefined): Atom.Atom<T | undefined> {
   if (!ref) {
@@ -24,6 +22,7 @@ export function make<T extends Entity.Unknown>(ref: Ref.Ref<T> | undefined): Ato
     const setupTargetSubscription = (target: T) => {
       unsubscribeTarget?.();
       unsubscribeTarget = Obj.subscribe(target, () => {
+        // Return a new snapshot to trigger re-render via reference change.
         get.setSelf(getSnapshot(target) as T);
       });
     };
