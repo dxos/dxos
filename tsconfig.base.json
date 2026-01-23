@@ -11,6 +11,7 @@
     "experimentalDecorators": true,
     "incremental": true,
     "isolatedModules": true,
+    "verbatimModuleSyntax": true,
     "jsx": "react",
     "lib": ["DOM", "ESNext"],
     "module": "Preserve",
