@@ -2,6 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
+import { useAtomValue } from '@effect-atom/atom-react';
 import React, { useCallback, useMemo } from 'react';
 
 import { Common } from '@dxos/app-framework';
@@ -26,7 +27,8 @@ export const ThreadCompanion = ({ subject }: { subject: any }) => {
   const identity = useIdentity();
   const subjectId = Obj.getDXN(subject).toString();
 
-  const { state, getViewState, updateState } = useCapability(ThreadCapabilities.State);
+  const { stateAtom, getViewState, updateState } = useCapability(ThreadCapabilities.State);
+  const state = useAtomValue(stateAtom);
   const drafts = state.drafts[subjectId];
   const viewState = useMemo(() => getViewState(subjectId), [getViewState, subjectId]);
   const { showResolvedThreads } = viewState;
