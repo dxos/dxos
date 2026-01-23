@@ -84,13 +84,14 @@ export const AutomergePanel = (props: { space?: Space }) => {
       .map((handle) => {
         const doc = handle.doc();
         return {
-          id: handle.documentId,
-          documentId: handle.documentId,
+          id: handle.documentId!,
+          documentId: handle.documentId!,
           content: isSpaceRoot(doc) ? 'space root doc' : getStoredObject(doc)?.id,
-          type: getStoredObjectType({ documentId: handle.documentId, accessor: () => doc, id: handle.documentId }),
+          type: getStoredObjectType({ documentId: handle.documentId!, accessor: () => doc, id: handle.documentId! }),
           accessor: () => doc,
         };
       })
+      .filter((item) => item.id != null)
       .filter(textFilter(filter));
   }, [handles, filter]);
 

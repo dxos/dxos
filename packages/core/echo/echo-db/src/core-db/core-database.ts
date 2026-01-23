@@ -20,13 +20,7 @@ import { Stream } from '@dxos/codec-protobuf/stream';
 import { Context, ContextDisposedError } from '@dxos/context';
 import { raise } from '@dxos/debug';
 import { type Database, Ref } from '@dxos/echo';
-import {
-  type DatabaseDirectory,
-  type ObjectStructure,
-  Reference,
-  type SpaceState,
-  encodeReference,
-} from '@dxos/echo-protocol';
+import { type DatabaseDirectory, EncodedReference, type ObjectStructure, type SpaceState } from '@dxos/echo-protocol';
 import { compositeRuntime } from '@dxos/echo-signals/runtime';
 import { invariant } from '@dxos/invariant';
 import { type ObjectId } from '@dxos/keys';
@@ -523,7 +517,7 @@ export class CoreDatabase {
     };
 
     if (type !== undefined) {
-      newStruct.system!.type = encodeReference(Reference.fromDXN(type));
+      newStruct.system!.type = EncodedReference.fromDXN(type);
     }
 
     core.setDecoded([], newStruct);
@@ -531,10 +525,17 @@ export class CoreDatabase {
 
   async flush({ disk = true, indexes = false, updates = false }: Database.FlushOptions = {}): Promise<void> {
     log('flush', { disk, indexes, updates });
+    // Wait for pending document creations to complete before flushing.
+    await this._automergeDocLoader.waitForPendingCreations();
     if (disk) {
       await this._repoProxy.flush();
       await this._dataService.flush(
-        { documentIds: this._automergeDocLoader.getAllHandles().map((handle) => handle.documentId) },
+        {
+          documentIds: this._automergeDocLoader
+            .getAllHandles()
+            .map((handle) => handle.documentId)
+            .filter((id): id is DocumentId => id != null),
+        },
         { timeout: RPC_TIMEOUT },
       );
     }
@@ -554,7 +555,7 @@ export class CoreDatabase {
   async getDocumentHeads(): Promise<SpaceDocumentHeads> {
     const root = this._automergeDocLoader.getSpaceRootDocHandle();
     const doc = root.doc();
-    if (!doc) {
+    if (!doc || root.documentId == null) {
       return { heads: {} };
     }
 
@@ -605,6 +606,7 @@ export class CoreDatabase {
     const root = this._automergeDocLoader.getSpaceRootDocHandle();
     const doc = root.doc();
     invariant(doc);
+    invariant(root.documentId, 'Space root document must have documentId');
 
     await this._dataService.reIndexHeads(
       {
@@ -655,25 +657,31 @@ export class CoreDatabase {
     spaceRootDocHandle: DocHandleProxy<DatabaseDirectory>,
     objectsToLoad: string[],
   ): Promise<void> {
+    const spaceRootUrl = spaceRootDocHandle.url;
+    if (spaceRootUrl == null) {
+      log.warn('space root document has no url');
+      return;
+    }
+
     const spaceRootDoc: DatabaseDirectory = spaceRootDocHandle.doc();
     const inlinedObjectIds = new Set(Object.keys(spaceRootDoc.objects ?? {}));
     const linkedObjectIds = new Map(Object.entries(spaceRootDoc.links ?? {}).map(([k, v]) => [k, v.toString()]));
 
     const objectsToRebind = new Map<string, { handle: DocHandleProxy<DatabaseDirectory>; objectIds: string[] }>();
-    objectsToRebind.set(spaceRootDocHandle.url, { handle: spaceRootDocHandle, objectIds: [] });
+    objectsToRebind.set(spaceRootUrl, { handle: spaceRootDocHandle, objectIds: [] });
 
     const objectsToRemove: string[] = [];
     const objectsToCreate = [...inlinedObjectIds.values()].filter((oid) => !this._objects.has(oid));
 
     for (const object of this._objects.values()) {
       if (inlinedObjectIds.has(object.id)) {
-        if (spaceRootDocHandle.url === object.docHandle?.url) {
+        if (object.docHandle?.url != null && object.docHandle.url === spaceRootUrl) {
           continue;
         }
-        objectsToRebind.get(spaceRootDocHandle.url)!.objectIds.push(object.id);
+        objectsToRebind.get(spaceRootUrl)!.objectIds.push(object.id);
       } else if (linkedObjectIds.has(object.id)) {
         const newObjectDocUrl = linkedObjectIds.get(object.id)!;
-        if (newObjectDocUrl === object.docHandle?.url) {
+        if (object.docHandle?.url != null && object.docHandle.url === newObjectDocUrl) {
           continue;
         }
         const existing = objectsToRebind.get(newObjectDocUrl.toString());
@@ -739,7 +747,11 @@ export class CoreDatabase {
       const objectCore = this._objects.get(updatedObject);
       if (!objectCore) {
         createdObjectIds.push(updatedObject);
-      } else if (objectCore?.docHandle && objectCore.docHandle.url !== event.handle.url) {
+      } else if (
+        objectCore.docHandle?.url != null &&
+        event.handle.url != null &&
+        objectCore.docHandle.url !== event.handle.url
+      ) {
         log.verbose('object bound to incorrect document, going to rebind', {
           updatedObject,
           documentUrl: objectCore.docHandle.url,

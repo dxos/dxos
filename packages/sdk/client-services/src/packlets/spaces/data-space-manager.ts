@@ -16,7 +16,7 @@ import {
   getCredentialAssertion,
 } from '@dxos/credentials';
 import { Type } from '@dxos/echo';
-import { getTypeReference } from '@dxos/echo/internal';
+import { getSchemaDXN } from '@dxos/echo/internal';
 import {
   AuthStatus,
   CredentialServerExtension,
@@ -33,10 +33,10 @@ import {
 } from '@dxos/echo-pipeline';
 import {
   type DatabaseDirectory,
+  EncodedReference,
   type ObjectStructure,
   SpaceDocVersion,
   createIdFromSpaceKey,
-  encodeReference,
 } from '@dxos/echo-protocol';
 import type { EdgeConnection, EdgeHttpClient } from '@dxos/edge-client';
 import { type FeedStore, writeMessages } from '@dxos/feed-store';
@@ -365,7 +365,7 @@ export class DataSpaceManager extends Resource {
     // TODO(dmaretskyi): Better API for low-level data access.
     const properties: ObjectStructure = {
       system: {
-        type: encodeReference(getTypeReference(SpaceProperties)!),
+        type: EncodedReference.fromDXN(getSchemaDXN(SpaceProperties)!),
       },
       data: {
         [DEFAULT_SPACE_KEY]: this._signingContext.identityKey.toHex(),

@@ -4,6 +4,7 @@
 
 import { type SpaceId } from '@dxos/keys';
 
+import { type CreateDocumentRequest, type CreateDocumentResponse } from '../proto/gen/dxos/echo/service';
 import { type QueryResult, type QueueQuery } from '../queue';
 
 /*
@@ -79,6 +80,8 @@ export interface DataService {
   query(ctx: ExecutionContext, request: QueryRequest): Promise<RpcResult<QueryResponse>>;
   queryDocuments(ctx: ExecutionContext, request: QueryRequest): Promise<RpcResult<QueryDocumentsResponse>>;
   queryReferences(ctx: ExecutionContext, request: QueryReferencesRequest): Promise<RpcResult<QueryReferencesResponse>>;
+
+  createDocument(ctx: ExecutionContext, request: CreateDocumentRequest): Promise<RpcResult<CreateDocumentResponse>>;
 
   // TODO(burdon): Update? Return DocumentEntry?
   changeDocument(ctx: ExecutionContext, spaceId: SpaceId, documentId: string, changes: Uint8Array): Promise<void>;
@@ -168,11 +171,6 @@ export type QueryReferencesRequest = {
 
 export type QueryReferencesResponse = {
   references: ObjectReference[];
-};
-
-export type CreateDocumentResponse = {
-  /** Automerge document ID. */
-  documentId: string;
 };
 
 /**

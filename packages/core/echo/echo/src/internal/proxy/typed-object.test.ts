@@ -6,7 +6,6 @@ import * as Schema from 'effect/Schema';
 import { describe, expect, test } from 'vitest';
 
 import { EchoObjectSchema } from '../entities';
-import { TypedObject } from '../object';
 import { getSchema } from '../types';
 
 import { makeObject } from './make-object';
@@ -90,12 +89,14 @@ describe('EchoObjectSchema class DSL', () => {
     }
 
     {
-      class Test2 extends TypedObject({
-        typename: 'dxos.org/type/FunctionTrigger',
-        version: '0.1.0',
-      })({
+      const Test2 = Schema.Struct({
         meta: Schema.optional(Schema.mutable(Schema.Record({ key: Schema.String, value: Schema.Any }))),
-      }) {}
+      }).pipe(
+        EchoObjectSchema({
+          typename: 'dxos.org/type/FunctionTrigger',
+          version: '0.1.0',
+        }),
+      );
 
       const object = makeObject(Test2, {});
       (object.meta ??= {}).test = 100;

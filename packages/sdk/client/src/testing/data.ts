@@ -5,16 +5,22 @@
 import * as Schema from 'effect/Schema';
 
 import { Obj, Type } from '@dxos/echo';
-import { TypedObject } from '@dxos/echo/internal';
 
 /**
  * @deprecated Use @dxos/echo/testing.
  */
 // TODO(burdon): REMOVE.
 export namespace TestSchema {
-  export class TextV0Type extends TypedObject({ typename: 'dxos.org/TextV0', version: '0.1.0' })({
+  export const TextV0Type = Schema.Struct({
     content: Schema.String,
-  }) {}
+  }).pipe(
+    Type.Obj({
+      typename: 'dxos.org/TextV0',
+      version: '0.1.0',
+    }),
+  );
+
+  export interface TextV0Type extends Schema.Schema.Type<typeof TextV0Type> {}
 
   export const DocumentType = Schema.Struct({
     title: Schema.optional(Schema.String), // TODO(burdon): Change to name.

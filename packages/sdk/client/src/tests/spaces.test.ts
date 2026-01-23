@@ -11,6 +11,7 @@ import { performInvitation } from '@dxos/client-services/testing';
 import { Context } from '@dxos/context';
 import { Filter, Obj, Ref, Type } from '@dxos/echo';
 import { getObjectCore } from '@dxos/echo-db';
+import { EncodedReference } from '@dxos/echo-protocol';
 import { SpaceId } from '@dxos/keys';
 import { type Live } from '@dxos/live-object';
 import { log } from '@dxos/log';
@@ -455,12 +456,16 @@ describe('Spaces', () => {
 
     const [wait, inc] = latch({ count: 2, timeout: 1000 });
 
+    const getTypename = (obj: any) => {
+      const typeRef = getObjectCore(obj).getType();
+      return typeRef ? EncodedReference.toDXN(typeRef).asTypeDXN()?.type : undefined;
+    };
+
     spaceA.db.query(Filter.everything()).subscribe(
       (query) => {
         const objects = query.results;
         expect(objects).to.have.length(2);
-        expect(objects.some((obj) => getObjectCore(obj).getType()?.objectId === Type.getTypename(SpaceProperties))).to
-          .be.true;
+        expect(objects.some((obj) => getTypename(obj) === Type.getTypename(SpaceProperties))).to.be.true;
         expect(objects.some((obj) => obj === objA)).to.be.true;
         inc();
       },
@@ -471,8 +476,7 @@ describe('Spaces', () => {
       (query) => {
         const objects = query.results;
         expect(objects).to.have.length(2);
-        expect(objects.some((obj) => getObjectCore(obj).getType()?.objectId === Type.getTypename(SpaceProperties))).to
-          .be.true;
+        expect(objects.some((obj) => getTypename(obj) === Type.getTypename(SpaceProperties))).to.be.true;
         expect(objects.some((obj) => obj === objB)).to.be.true;
         inc();
       },

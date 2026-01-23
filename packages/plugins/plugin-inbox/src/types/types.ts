@@ -7,7 +7,7 @@ import * as Schema from 'effect/Schema';
 import { Capability } from '@dxos/app-framework';
 import { Database } from '@dxos/echo';
 import { Operation } from '@dxos/operation';
-import { Actor } from '@dxos/types';
+import { Actor, Message } from '@dxos/types';
 
 import { meta } from '../meta';
 
@@ -40,11 +40,24 @@ export namespace InboxOperation {
     },
   });
 
+  export const ComposeEmailMode = Schema.Literal('compose', 'reply', 'reply-all', 'forward');
+  export type ComposeEmailMode = Schema.Schema.Type<typeof ComposeEmailMode>;
+
+  export const OpenComposeEmailInputStruct = Schema.Struct({
+    mode: Schema.optional(ComposeEmailMode),
+    originalMessage: Schema.optional(Message.Message),
+    subject: Schema.optional(Schema.String),
+    body: Schema.optional(Schema.String),
+  });
+
+  export const OpenComposeEmailInput = Schema.UndefinedOr(OpenComposeEmailInputStruct);
+  export type OpenComposeEmailInput = Schema.Schema.Type<typeof OpenComposeEmailInputStruct>;
+
   export const OpenComposeEmail = Operation.make({
     meta: { key: `${INBOX_OPERATION}/open-compose-email`, name: 'Open Compose Email' },
     services: [Capability.Service],
     schema: {
-      input: Schema.Void,
+      input: OpenComposeEmailInput,
       output: Schema.Void,
     },
   });

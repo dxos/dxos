@@ -11,7 +11,7 @@ import { Capability, type CapabilityManager, Common } from '@dxos/app-framework'
 import { GenericToolkit, makeToolExecutionServiceFromFunctions, makeToolResolverFromFunctions } from '@dxos/assistant';
 import { SpaceProperties } from '@dxos/client/echo';
 import { Resource } from '@dxos/context';
-import { Database, Query, Ref } from '@dxos/echo';
+import { Database, Obj, Query, Ref } from '@dxos/echo';
 import { CredentialsService, QueueService } from '@dxos/functions';
 import {
   FunctionImplementationResolver,
@@ -121,7 +121,9 @@ const InvocationTracerLive = Layer.unwrapEffect(
     // TODO(burdon): Check ref target has loaded?
     if (!properties.invocationTraceQueue || !properties.invocationTraceQueue.target) {
       const queue = yield* QueueService.createQueue({ subspaceTag: 'trace' });
-      properties.invocationTraceQueue = Ref.fromDXN(queue.dxn);
+      Obj.change(properties, (m) => {
+        m.invocationTraceQueue = Ref.fromDXN(queue.dxn);
+      });
     }
 
     const queue = properties.invocationTraceQueue.target;
