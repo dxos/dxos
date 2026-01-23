@@ -27,6 +27,16 @@ export type BundleDepsPluginOptions = {
 };
 
 /**
+ * Result of resolving a subpath import.
+ */
+interface SubpathResolution {
+  /** Resolved file path (for relative imports). */
+  path?: string;
+  /** External package name (for package imports). */
+  external?: string;
+}
+
+/**
  * Resolves a `#` import (subpath import) using the package.json imports field.
  * Follows the Node.js resolution algorithm for conditional exports.
  */
@@ -35,16 +45,21 @@ const resolveSubpathImport = (
   imports: Record<string, any>,
   platform: Platform,
   packageDir: string,
-): string | null => {
+): SubpathResolution | null => {
   const importSpec = imports[importPath];
   if (!importSpec) {
     return null;
   }
 
   // Helper to resolve a condition object.
-  const resolveCondition = (spec: any): string | null => {
+  const resolveCondition = (spec: any): SubpathResolution | null => {
     if (typeof spec === 'string') {
-      return join(packageDir, spec);
+      // Check if it's a relative path or an external package.
+      if (spec.startsWith('./') || spec.startsWith('../')) {
+        return { path: join(packageDir, spec) };
+      }
+      // It's an external package reference.
+      return { external: spec };
     }
     if (typeof spec !== 'object' || spec === null) {
       return null;
@@ -110,7 +125,12 @@ export const bundleDepsPlugin = (options: BundleDepsPluginOptions): Plugin => ({
         if (packageJson.imports) {
           const resolved = resolveSubpathImport(args.path, packageJson.imports, platform, options.packageDir);
           if (resolved) {
-            return { path: resolved };
+            if (resolved.path) {
+              return { path: resolved.path };
+            }
+            if (resolved.external) {
+              return { external: true, path: resolved.external };
+            }
           }
         }
         // If no resolution found, keep as external (for vendor files etc.).
