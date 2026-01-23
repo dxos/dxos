@@ -7,7 +7,6 @@ import { invariant } from '@dxos/invariant';
 
 import { defineHiddenProperty } from './define-hidden-property';
 import { emitEvent } from './event-batch';
-import { EventId } from './live';
 import {
   ReactiveArray,
   type ReactiveHandler,
@@ -17,6 +16,7 @@ import {
   isValidProxyTarget,
   objectData,
 } from './proxy';
+import { EventId } from './symbols';
 
 /**
  * Symbol to mark typed objects (objects with schema).

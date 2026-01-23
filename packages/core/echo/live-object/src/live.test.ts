@@ -4,8 +4,9 @@
 
 import { describe, test } from 'vitest';
 
-import { ChangeId, change, subscribe } from './live';
+import { change, subscribe } from './live';
 import { live } from './object';
+import { ChangeId } from './symbols';
 
 describe('change', () => {
   test('change on plain object calls callback directly', ({ expect }) => {
