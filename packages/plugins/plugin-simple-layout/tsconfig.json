@@ -14,6 +14,9 @@
       "path": "../../common/util"
     },
     {
+      "path": "../../core/echo/echo"
+    },
+    {
       "path": "../../core/echo/echo-signals"
     },
     {
@@ -54,6 +57,9 @@
     },
     {
       "path": "../plugin-graph"
+    },
+    {
+      "path": "../plugin-preview"
     },
     {
       "path": "../plugin-search"
