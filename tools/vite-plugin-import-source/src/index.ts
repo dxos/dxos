@@ -57,7 +57,7 @@ const PluginImportSource = ({
           !exclude.some((pattern) => Minimatch(source, pattern, { dot: true }));
 
         if (!match) {
-          console.log(`[plugin-import-source] ${source} -> excluded`);
+          verbose && console.log(`[plugin-import-source] ${source} -> excluded`);
           return null;
         }
 
