@@ -32,7 +32,9 @@ export const KanbanViewEditor = ({ object }: KanbanViewEditorProps) => {
   const handleSave = useCallback(
     (values: Partial<{ columnFieldId: string }>) => {
       invariant(view);
-      view.projection.pivotFieldId = values.columnFieldId;
+      Obj.change(view, (v) => {
+        v.projection.pivotFieldId = values.columnFieldId;
+      });
     },
     [view],
   );

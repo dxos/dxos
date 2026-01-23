@@ -34,7 +34,13 @@ export const MapPlugin = Plugin.define(meta).pipe(
         createObject: ((props, { db }) =>
           Effect.promise(async () => {
             const view = props.typename
-              ? (await View.makeFromDatabase({ db, typename: props.typename })).view
+              ? (
+                  await View.makeFromDatabase({
+                    db,
+                    typename: props.typename,
+                    pivotFieldName: props.locationFieldName,
+                  })
+                ).view
               : undefined;
             return Map.make({ name: props.name, view });
           })) satisfies CreateObject,
