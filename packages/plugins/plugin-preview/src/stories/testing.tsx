@@ -7,8 +7,7 @@ import React, { type FC } from 'react';
 import { Obj, Ref } from '@dxos/echo';
 import { faker } from '@dxos/random';
 import { CardContainer } from '@dxos/react-ui-mosaic/testing';
-import { Organization, Person, Task } from '@dxos/types';
-import { Project } from '@dxos/types';
+import { Organization, Person, Project, Task } from '@dxos/types';
 import { mx } from '@dxos/ui-theme';
 
 import { FormCard, OrganizationCard, PersonCard, ProjectCard, TaskCard } from '../cards';
@@ -28,7 +27,7 @@ export type DefaultstoryProps = {
 
 export const Defaultstory = ({ role, cards }: DefaultstoryProps) => {
   return (
-    <div className='is-full overflow-x-auto plb-4'>
+    <div className='is-full plb-4 overflow-x-auto'>
       <div className='flex'>
         {cards.map(({ Component, icon, image, subject }, i) => (
           <div key={i} className={mx('flex shrink-0 justify-center is-[var(--dx-cardMaxWidth)]')}>
