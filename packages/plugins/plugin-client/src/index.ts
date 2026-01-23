@@ -2,8 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-export { ClientCapabilities } from './types/capabilities';
-export { ClientEvents } from './events';
+export { ClientCapabilities, ClientEvents } from './types';
 export * from './meta';
 export * from './types';
 

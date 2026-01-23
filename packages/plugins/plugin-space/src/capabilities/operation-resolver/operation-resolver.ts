@@ -28,7 +28,7 @@ import {
   OBJECT_RENAME_POPOVER,
   SPACE_RENAME_POPOVER,
 } from '../../constants';
-import { SpaceEvents } from '../../events';
+import { SpaceEvents } from '../../types';
 import { SpaceCapabilities, SpaceOperation } from '../../types';
 import { COMPOSER_SPACE_LOCK, cloneObject, getNestedObjects } from '../../util';
 
