@@ -318,6 +318,7 @@ export class SpaceQuerySource implements QuerySource {
     return {
       id: core.id,
       result: this._database.getObjectById(core.id, { deleted: true }),
+      match: { rank: 1 },
       resolution: {
         source: 'local',
         time: 0,

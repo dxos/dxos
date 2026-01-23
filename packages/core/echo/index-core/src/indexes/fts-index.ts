@@ -156,8 +156,9 @@ export class FtsIndex implements Index {
         // Use BM25 ranking for FTS5 MATCH queries.
         // BM25 returns negative values, negate to get higher = better match.
         // Order by rank descending so best matches come first.
+        // Note: bm25() requires the actual table name, not an alias.
         const rows = yield* sql<ObjectMeta & { rank: number }>`
-          SELECT m.*, -bm25(f) AS rank 
+          SELECT m.*, -bm25(ftsIndex) AS rank 
           FROM ftsIndex AS f 
           JOIN objectMeta AS m ON f.rowid = m.recordId 
           WHERE ${sql.and(conditions)}
