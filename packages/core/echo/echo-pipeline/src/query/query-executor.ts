@@ -488,7 +488,7 @@ export class QueryExecutor extends Resource {
           const queueResults = textResults.filter((r) => r.queueId);
           const spaceResults = textResults.filter((r) => !r.queueId);
 
-          // Build a map from recordId to rank for queue items.
+          // Build a map from recordId to rank for all FTS results.
           const rankMap = new Map(textResults.map((r) => [r.recordId, r.rank]));
 
           // Load queue items from indexed snapshots.
@@ -520,9 +520,6 @@ export class QueryExecutor extends Resource {
               .filter(isNonNullable);
           }
 
-          // Build a map from objectId to rank for space items.
-          const spaceRankMap = new Map(spaceResults.map((r) => [r.objectId, r.rank]));
-
           // Load space items from documents.
           const spaceItems = await Promise.all(
             spaceResults.map(async (result): Promise<QueryItem | null> => {
@@ -530,7 +527,7 @@ export class QueryExecutor extends Resource {
               const item = await this._loadFromDXN(dxn, { sourceSpaceId: result.spaceId as SpaceId });
               if (item) {
                 // Override the default rank with the FTS rank.
-                item.rank = spaceRankMap.get(result.objectId) ?? 1;
+                item.rank = rankMap.get(result.recordId) ?? 1;
               }
               return item;
             }),
