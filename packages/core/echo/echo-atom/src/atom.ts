@@ -9,6 +9,8 @@ import { type Entity, Obj, Ref } from '@dxos/echo';
 import { assertArgument } from '@dxos/invariant';
 import { getSnapshot, isLiveObject } from '@dxos/live-object';
 
+import { loadRefTarget } from './ref-utils';
+
 /**
  * Create a read-only atom for a reactive object or ref.
  * Works with Echo objects, plain live objects (from Obj.make), and Refs.
@@ -54,33 +56,17 @@ const makeFromRef = <T extends Entity.Unknown>(ref: Ref.Ref<T>): Atom.Atom<T | u
   return Atom.make<T | undefined>((get) => {
     let unsubscribeTarget: (() => void) | undefined;
 
-    const setupTargetSubscription = (target: T) => {
+    const setupTargetSubscription = (target: T): T => {
       unsubscribeTarget?.();
       unsubscribeTarget = Obj.subscribe(target, () => {
         get.setSelf(getSnapshot(target) as T);
       });
+      return getSnapshot(target) as T;
     };
 
     get.addFinalizer(() => unsubscribeTarget?.());
 
-    const currentTarget = ref.target;
-    if (currentTarget) {
-      setupTargetSubscription(currentTarget);
-      return getSnapshot(currentTarget) as T;
-    }
-
-    // Target not loaded yet - trigger async load.
-    void ref
-      .load()
-      .then((loadedTarget) => {
-        setupTargetSubscription(loadedTarget);
-        get.setSelf(getSnapshot(loadedTarget) as T);
-      })
-      .catch(() => {
-        // Loading failed, keep target as undefined.
-      });
-
-    return undefined;
+    return loadRefTarget(ref, get, setupTargetSubscription);
   });
 };
 

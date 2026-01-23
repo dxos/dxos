@@ -204,7 +204,6 @@ export const useObjects = <T extends Entity.Unknown>(refs: Ref.Ref<T>[]): Readon
   }, [refs]);
 
   // Compute current snapshots by reading each ref's target.
-  // This creates atoms for each target and uses useAtomValue-style reading.
   const snapshots: Readonly<T>[] = [];
   for (const ref of refs) {
     const target = ref.target;
