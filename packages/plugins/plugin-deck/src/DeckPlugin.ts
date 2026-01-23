@@ -18,7 +18,7 @@ import {
   Toolkit,
   UrlHandler,
 } from './capabilities';
-import { DeckEvents } from './events';
+import { DeckEvents } from './types';
 import { meta } from './meta';
 import { translations } from './translations';
 

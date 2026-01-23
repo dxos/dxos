@@ -18,7 +18,7 @@ import {
   ReactSurface,
   ScriptSettings,
 } from './capabilities';
-import { ScriptEvents } from './events';
+import { ScriptEvents } from './types';
 import { meta } from './meta';
 import { translations } from './translations';
 import { Notebook, ScriptOperation } from './types';

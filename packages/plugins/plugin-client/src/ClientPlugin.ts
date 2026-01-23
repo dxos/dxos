@@ -13,7 +13,7 @@ import {
   ReactSurface,
   SchemaDefs,
 } from './capabilities';
-import { ClientEvents } from './events';
+import { ClientEvents } from './types';
 import { meta } from './meta';
 import { translations } from './translations';
 import { type ClientPluginOptions } from './types';

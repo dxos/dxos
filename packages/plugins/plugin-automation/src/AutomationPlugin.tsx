@@ -4,10 +4,10 @@
 
 import { Common, Plugin } from '@dxos/app-framework';
 import { Function, Trigger } from '@dxos/functions';
-import { ClientEvents } from '@dxos/plugin-client';
+import { ClientEvents } from '@dxos/plugin-client/types';
 
 import { AppGraphBuilder, ComputeRuntime, OperationResolver, ReactSurface } from './capabilities';
-import { AutomationEvents } from './events';
+import { AutomationEvents } from './types';
 import { meta } from './meta';
 import { translations } from './translations';
 

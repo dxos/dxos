@@ -10,8 +10,8 @@ import { Blueprint, Prompt } from '@dxos/blueprints';
 import { Sequence } from '@dxos/conductor';
 import { Obj, Type } from '@dxos/echo';
 import { Operation } from '@dxos/operation';
-import { ClientEvents } from '@dxos/plugin-client';
-import { SpaceCapabilities, SpaceEvents } from '@dxos/plugin-space';
+import { ClientEvents } from '@dxos/plugin-client/types';
+import { SpaceCapabilities, SpaceEvents } from '@dxos/plugin-space/types';
 import { type CreateObject } from '@dxos/plugin-space/types';
 import { HasSubject } from '@dxos/types';
 
@@ -28,7 +28,7 @@ import {
   Settings,
   Toolkit,
 } from './capabilities';
-import { AssistantEvents } from './events';
+import { AssistantEvents } from './types';
 import { meta } from './meta';
 import { translations } from './translations';
 import { Assistant, AssistantOperation } from './types';

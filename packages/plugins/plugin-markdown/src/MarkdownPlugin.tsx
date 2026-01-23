@@ -21,7 +21,7 @@ import {
   OperationResolver,
   ReactSurface,
 } from './capabilities';
-import { MarkdownEvents } from './events';
+import { MarkdownEvents } from './types';
 import { meta } from './meta';
 import { translations } from './translations';
 import { Markdown } from './types';
