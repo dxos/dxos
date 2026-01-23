@@ -20,6 +20,9 @@ interface PluginImportSourceOptions {
   verbose?: boolean;
 }
 
+/**
+ * Prefer "source" condition for specifc packages.
+ */
 const PluginImportSource = ({
   include = ['@dxos/**'],
   exclude = [],
