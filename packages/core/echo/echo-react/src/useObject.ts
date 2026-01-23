@@ -6,7 +6,7 @@ import { useAtomValue } from '@effect-atom/atom-react';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { type Entity, Obj, Ref } from '@dxos/echo';
-import { AtomObj, AtomRef } from '@dxos/echo-atom';
+import { AtomObj } from '@dxos/echo-atom';
 
 export interface ObjectUpdateCallback<T> {
   (update: (obj: T) => void): void;
@@ -78,13 +78,14 @@ export const useObject: {
     property: K,
   ): [Readonly<T[K]> | undefined, ObjectPropUpdateCallback<T[K]>];
 } = (<T extends Entity.Unknown, K extends keyof T>(objOrRef: T | Ref.Ref<T> | undefined, property?: K): any => {
-  // Check if input is a Ref and dereference it.
+  // Get the live object for the callback (refs need to dereference).
   const isRef = Ref.isRef(objOrRef);
-  const refTarget = useRefTarget(isRef ? (objOrRef as Ref.Ref<T>) : undefined);
-  const obj = isRef ? refTarget : (objOrRef as T | undefined);
+  const liveObj = isRef ? (objOrRef as Ref.Ref<T>)?.target : (objOrRef as T | undefined);
 
   const callback: ObjectPropUpdateCallback<unknown> = useCallback(
     (updateOrValue: unknown | ((obj: unknown) => unknown)) => {
+      // Get current target for refs (may have loaded since render).
+      const obj = isRef ? (objOrRef as Ref.Ref<T>)?.target : liveObj;
       if (obj === undefined) {
         return;
       }
@@ -105,47 +106,38 @@ export const useObject: {
         }
       });
     },
-    [obj, property],
+    [objOrRef, property, isRef, liveObj],
   );
 
   if (property !== undefined) {
-    return [useObjectProperty(obj as Entity.Unknown | undefined, property as any), callback];
+    // For property subscriptions on refs, we subscribe to trigger re-render on load.
+    // TODO(dxos): Property subscriptions on refs may not update correctly until the ref loads.
+    useObjectValue(objOrRef);
+    return [useObjectProperty(liveObj as Entity.Unknown | undefined, property as any), callback];
   }
-  return [useObjectValue(obj as Entity.Unknown | undefined), callback];
+  return [useObjectValue(objOrRef), callback];
 }) as any;
 
 /**
- * Internal hook for subscribing to a Ref's target.
- * Uses the ref-atom for change detection and returns the live object.
+ * Internal hook for subscribing to an Echo object or Ref.
+ * AtomObj.make handles both objects and refs, returning snapshots.
  */
-function useRefTarget<T extends Entity.Unknown>(ref: Ref.Ref<T> | undefined): T | undefined {
-  const atom = useMemo(() => AtomRef.make(ref), [ref]);
-  // Subscribe to the atom to trigger re-renders when the target loads or changes.
-  useAtomValue(atom);
-  // Return the live object directly.
-  return ref?.target;
-}
-
-/**
- * Internal hook for subscribing to an entire Echo object.
- * Uses useAtomValue directly since AtomObj.make() now returns snapshots.
- */
-function useObjectValue<T extends Entity.Unknown>(obj: T | undefined): T | undefined {
-  const atom = useMemo(() => AtomObj.make(obj), [obj]);
+const useObjectValue = <T extends Entity.Unknown>(objOrRef: T | Ref.Ref<T> | undefined): T | undefined => {
+  const atom = useMemo(() => AtomObj.make(objOrRef), [objOrRef]);
   return useAtomValue(atom);
-}
+};
 
 /**
  * Internal hook for subscribing to a specific property of an Echo object.
  * Uses useAtomValue directly since makeProperty returns the value directly.
  */
-function useObjectProperty<T extends Entity.Unknown, K extends keyof T>(
+const useObjectProperty = <T extends Entity.Unknown, K extends keyof T>(
   obj: T | undefined,
   property: K,
-): T[K] | undefined {
+): T[K] | undefined => {
   const atom = useMemo(() => AtomObj.makeProperty(obj, property), [obj, property]);
   return useAtomValue(atom);
-}
+};
 
 /**
  * Hook to subscribe to multiple Refs' target objects.

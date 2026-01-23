@@ -5,26 +5,34 @@
 import * as Atom from '@effect-atom/atom/Atom';
 import isEqual from 'lodash.isequal';
 
-import { type Entity, Obj } from '@dxos/echo';
+import { type Entity, Obj, Ref } from '@dxos/echo';
 import { assertArgument } from '@dxos/invariant';
 import { getSnapshot, isLiveObject } from '@dxos/live-object';
 
 /**
- * Create a read-only atom for a reactive object.
- * Works with both Echo objects (from createObject) and plain live objects (from Obj.make).
+ * Create a read-only atom for a reactive object or ref.
+ * Works with Echo objects, plain live objects (from Obj.make), and Refs.
  * Returns immutable snapshots of the object data.
  * The atom updates automatically when the object is mutated.
+ * For refs, automatically handles async loading.
  *
- * @param obj - The reactive object to create an atom for, or undefined.
- * @returns An atom that returns the object snapshot, or undefined if obj is undefined.
+ * @param objOrRef - The reactive object or ref to create an atom for, or undefined.
+ * @returns An atom that returns the object snapshot, or undefined if not loaded/undefined.
  */
-export function make<T extends Entity.Unknown>(obj: T): Atom.Atom<T>;
-export function make<T extends Entity.Unknown>(obj: T | undefined): Atom.Atom<T | undefined>;
-export function make<T extends Entity.Unknown>(obj: T | undefined): Atom.Atom<T | undefined> {
-  if (obj === undefined) {
+export function make<T extends Entity.Unknown>(objOrRef: T | Ref.Ref<T>): Atom.Atom<T | undefined>;
+export function make<T extends Entity.Unknown>(objOrRef: T | Ref.Ref<T> | undefined): Atom.Atom<T | undefined>;
+export function make<T extends Entity.Unknown>(objOrRef: T | Ref.Ref<T> | undefined): Atom.Atom<T | undefined> {
+  if (objOrRef === undefined) {
     return Atom.make<T | undefined>(() => undefined);
   }
 
+  // Handle Ref inputs.
+  if (Ref.isRef(objOrRef)) {
+    return makeFromRef(objOrRef as Ref.Ref<T>);
+  }
+
+  // At this point, objOrRef is definitely T (not a Ref).
+  const obj = objOrRef as T;
   assertArgument(isLiveObject(obj), 'obj', 'Object must be a reactive object');
 
   return Atom.make<T | undefined>((get) => {
@@ -37,6 +45,44 @@ export function make<T extends Entity.Unknown>(obj: T | undefined): Atom.Atom<T 
     return getSnapshot(obj) as T;
   });
 }
+
+/**
+ * Internal helper to create an atom from a Ref.
+ * Handles async loading and subscribes to the target for reactive updates.
+ */
+const makeFromRef = <T extends Entity.Unknown>(ref: Ref.Ref<T>): Atom.Atom<T | undefined> => {
+  return Atom.make<T | undefined>((get) => {
+    let unsubscribeTarget: (() => void) | undefined;
+
+    const setupTargetSubscription = (target: T) => {
+      unsubscribeTarget?.();
+      unsubscribeTarget = Obj.subscribe(target, () => {
+        get.setSelf(getSnapshot(target) as T);
+      });
+    };
+
+    get.addFinalizer(() => unsubscribeTarget?.());
+
+    const currentTarget = ref.target;
+    if (currentTarget) {
+      setupTargetSubscription(currentTarget);
+      return getSnapshot(currentTarget) as T;
+    }
+
+    // Target not loaded yet - trigger async load.
+    void ref
+      .load()
+      .then((loadedTarget) => {
+        setupTargetSubscription(loadedTarget);
+        get.setSelf(getSnapshot(loadedTarget) as T);
+      })
+      .catch(() => {
+        // Loading failed, keep target as undefined.
+      });
+
+    return undefined;
+  });
+};
 
 /**
  * Create a read-only atom for a specific property of a reactive object.

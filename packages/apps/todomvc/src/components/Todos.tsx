@@ -23,7 +23,7 @@ export const Todos = () => {
   const completed = state === FILTER.ACTIVE ? false : state === FILTER.COMPLETED ? true : undefined;
 
   // Get space properties with reactive updates (waits for space to be ready).
-  const [spaceProperties] = useSpaceProperties(space);
+  const [spaceProperties] = useSpaceProperties(space?.id);
 
   // Get the TodoList reference from space.properties.
   const listRef = spaceProperties?.[TodoList.typename] as Ref.Ref<TodoList> | undefined;
