@@ -2,13 +2,8 @@
 // Copyright 2022 DXOS.org
 //
 
-import { effect } from '@preact/signals-core';
-
 import { Client } from '@dxos/client';
 import { Obj, Type } from '@dxos/echo';
-import { registerSignalsRuntime } from '@dxos/echo-signals';
-
-registerSignalsRuntime();
 
 const client = new Client();
 
@@ -24,13 +19,15 @@ async () => {
   const object = Obj.make(Type.Expando, { type: 'task', name: 'buy milk' });
   space.db.add(object);
 
-  const names: string[] = [];
+  const names: string[] = [object.name];
 
-  const unsubscribeFn = effect(() => {
-    names.push(object.title);
+  const unsubscribeFn = Obj.subscribe(object, () => {
+    names.push(object.name);
   });
 
-  object.name = 'buy cookies';
+  Obj.change(object, (o) => {
+    o.name = 'buy cookies';
+  });
 
   if (names.join() === ['buy milk', 'buy cookies'].join()) {
     // Success.

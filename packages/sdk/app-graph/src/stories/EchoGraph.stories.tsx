@@ -6,11 +6,11 @@ import { Atom, type Registry, RegistryContext, useAtomValue } from '@effect-atom
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Function from 'effect/Function';
 import * as Option from 'effect/Option';
-import type * as Schema from 'effect/Schema';
 import React, { type PropsWithChildren, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 
-import { Filter, type Live, Query, type Space, SpaceState, isSpace, live } from '@dxos/client/echo';
-import { Obj, type QueryResult, Type } from '@dxos/echo';
+import { Filter, type Live, type Space, SpaceState, isSpace, live } from '@dxos/client/echo';
+import { Obj, Query, Type } from '@dxos/echo';
+import { AtomObj, AtomQuery } from '@dxos/echo-atom';
 import { faker } from '@dxos/random';
 import { type Client, useClient } from '@dxos/react-client';
 import { withClientProvider } from '@dxos/react-client/testing';
@@ -24,7 +24,6 @@ import * as CreateAtom from '../atoms';
 import * as Graph from '../graph';
 import * as GraphBuilder from '../graph-builder';
 import * as Node from '../node';
-import { atomFromQuery } from '../testing';
 
 import { JsonTree } from './Tree';
 
@@ -60,14 +59,17 @@ const createGraph = (client: Client, registry: Registry.Registry): Graph.Expanda
             const spaces = get(CreateAtom.fromObservable(client.spaces)) ?? [];
             return spaces
               .filter((space: any) => get(CreateAtom.fromObservable(space.state)) === SpaceState.SPACE_READY)
-              .map((space) => ({
-                id: space.id,
-                type: 'dxos.org/type/Space',
-                properties: {
-                  label: get(CreateAtom.fromSignal(() => space.properties.name)),
-                },
-                data: space,
-              }));
+              .map((space) => {
+                const propertiesSnapshot = get(AtomObj.make(space.properties));
+                return {
+                  id: space.id,
+                  type: 'dxos.org/type/Space',
+                  properties: {
+                    label: propertiesSnapshot.name,
+                  },
+                  data: space,
+                };
+              });
           }),
           Option.getOrElse(() => []),
         ),
@@ -77,22 +79,17 @@ const createGraph = (client: Client, registry: Registry.Registry): Graph.Expanda
   const objectBuilderExtension = GraphBuilder.createExtensionRaw({
     id: 'object',
     connector: (node) => {
-      // TODO(wittjosiah): Find a simpler way to define this type.
-      let result: QueryResult.QueryResult<Schema.Schema.Type<typeof Type.Expando>> | undefined;
       return Atom.make((get) =>
         Function.pipe(
           get(node),
           Option.flatMap((node) => (isSpace(node.data) ? Option.some(node.data) : Option.none())),
           Option.map((space) => {
-            if (!result) {
-              result = space.db.query(Query.type(Type.Expando, { type: 'test' }));
-            }
-
-            const objects = get(atomFromQuery(result));
+            const queryResult = space.db.query(Query.type(Type.Expando, { type: 'test' }));
+            const objects = get(AtomQuery.make(queryResult));
             return objects.map((object) => ({
               id: object.id,
               type: 'dxos.org/type/test',
-              properties: { label: object.name },
+              properties: { label: (object as any).name },
               data: object,
             }));
           }),

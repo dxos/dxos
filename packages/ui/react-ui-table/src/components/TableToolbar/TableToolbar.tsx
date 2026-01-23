@@ -2,10 +2,9 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Atom } from '@effect-atom/atom-react';
-import React, { useEffect, useMemo } from 'react';
+import { Atom, RegistryContext } from '@effect-atom/atom-react';
+import React, { useContext, useEffect, useMemo } from 'react';
 
-import { live } from '@dxos/live-object';
 import { type ThemedClassName } from '@dxos/react-ui';
 import {
   type ActionGraphEdges,
@@ -18,7 +17,6 @@ import {
   createMenuAction,
   useMenuActions,
 } from '@dxos/react-ui-menu';
-import { atomFromSignal } from '@dxos/react-ui-menu';
 
 import { translationKey } from '../../translations';
 
@@ -42,12 +40,12 @@ export type TableToolbarProps = ThemedClassName<
 >;
 
 const createTableToolbarActions = ({
-  state,
+  stateAtom,
   onAdd,
   onSave,
   customActions,
 }: {
-  state: TableToolbarState;
+  stateAtom: Atom.Atom<TableToolbarState>;
   onAdd?: () => void;
   onSave?: () => void;
   customActions?: Atom.Atom<ActionGraphProps>;
@@ -64,13 +62,14 @@ const createTableToolbarActions = ({
       nodes.push(add);
     }
     if (onSave) {
+      const state = get(stateAtom);
       const save = createMenuAction<TableToolbarActionProperties>('save-view', onSave, {
         type: 'save-view' as const,
         icon: 'ph--floppy-disk--regular',
         label: ['save view label', { ns: translationKey }],
         testId: 'table.toolbar.save-view',
         iconOnly: false,
-        hidden: get(atomFromSignal(() => !state.viewDirty)),
+        hidden: !state.viewDirty,
       });
       nodes.push(save);
     }
@@ -97,17 +96,17 @@ export const TableToolbar = ({
   onSave,
   customActions,
 }: TableToolbarProps) => {
-  const state = useMemo(() => live<TableToolbarState>({ viewDirty }), []);
+  const registry = useContext(RegistryContext);
+  const stateAtom = useMemo(() => Atom.make<TableToolbarState>({ viewDirty }), []);
 
-  // TODO(wittjosiah): This is madness.
-  // Update state.viewDirty when the prop changes
+  // Update state.viewDirty when the prop changes.
   useEffect(() => {
-    state.viewDirty = viewDirty;
-  }, [state, viewDirty]);
+    registry.set(stateAtom, { viewDirty });
+  }, [registry, stateAtom, viewDirty]);
 
   const actionsCreator = useMemo(
-    () => createTableToolbarActions({ state, onAdd, onSave, customActions }),
-    [state, onAdd, onSave, customActions],
+    () => createTableToolbarActions({ stateAtom, onAdd, onSave, customActions }),
+    [stateAtom, onAdd, onSave, customActions],
   );
   const menu = useMenuActions(actionsCreator);
 

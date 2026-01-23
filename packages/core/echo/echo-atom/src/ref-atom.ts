@@ -8,16 +8,10 @@ import { type Entity, Obj, type Ref } from '@dxos/echo';
 import { getSnapshot } from '@dxos/live-object';
 
 /**
- * Create a read-only atom for a reference target.
- * Returns undefined if the reference is undefined or hasn't loaded yet.
- * Automatically updates when the target loads or changes.
- * The atom handles async loading internally and subscribes to target object changes.
+ * Atom family for ECHO refs.
+ * Uses ref reference as key - same ref returns same atom.
  */
-export function make<T extends Entity.Unknown>(ref: Ref.Ref<T> | undefined): Atom.Atom<T | undefined> {
-  if (!ref) {
-    return Atom.make<T | undefined>(() => undefined);
-  }
-
+const refFamily = Atom.family(<T extends Entity.Unknown>(ref: Ref.Ref<T>): Atom.Atom<T | undefined> => {
   return Atom.make<T | undefined>((get) => {
     let unsubscribeTarget: (() => void) | undefined;
 
@@ -49,4 +43,13 @@ export function make<T extends Entity.Unknown>(ref: Ref.Ref<T> | undefined): Ato
 
     return undefined;
   });
-}
+});
+
+/**
+ * Create a read-only atom for a reference target.
+ * Returns undefined if the target hasn't loaded yet.
+ * Automatically updates when the target loads or changes.
+ * The atom handles async loading internally and subscribes to target object changes.
+ * Uses Atom.family internally - same ref reference returns same atom instance.
+ */
+export const make = refFamily;

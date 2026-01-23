@@ -8,7 +8,6 @@ import * as Option from 'effect/Option';
 import { Capability, Common } from '@dxos/app-framework';
 import { SubscriptionList } from '@dxos/async';
 import { Filter, Obj, Type } from '@dxos/echo';
-import { scheduledEffect } from '@dxos/echo-signals/core';
 import { log } from '@dxos/log';
 import { AttentionCapabilities } from '@dxos/plugin-attention';
 import { ClientCapabilities } from '@dxos/plugin-client';
@@ -114,24 +113,22 @@ export default Capability.makeModule(
         spaces
           .filter((space) => space.state.get() === SpaceState.SPACE_READY)
           .forEach((space) => {
-            subscriptions.add(
-              scheduledEffect(
-                () => ({ name: space.properties.name }),
-                ({ name }) => {
-                  if (!name) {
-                    store.update((current) => {
-                      const { [space.id]: _, ...rest } = current.spaceNames;
-                      return { ...current, spaceNames: rest };
-                    });
-                  } else {
-                    store.update((current) => ({
-                      ...current,
-                      spaceNames: { ...current.spaceNames, [space.id]: name },
-                    }));
-                  }
-                },
-              ),
-            );
+            const updateSpaceName = () => {
+              const name = space.properties.name;
+              if (!name) {
+                store.update((current) => {
+                  const { [space.id]: _, ...rest } = current.spaceNames;
+                  return { ...current, spaceNames: rest };
+                });
+              } else {
+                store.update((current) => ({
+                  ...current,
+                  spaceNames: { ...current.spaceNames, [space.id]: name },
+                }));
+              }
+            };
+            updateSpaceName();
+            subscriptions.add(Obj.subscribe(space.properties, updateSpaceName));
           });
       }).unsubscribe,
     );
@@ -208,13 +205,8 @@ export default Capability.makeModule(
 
     // Subscribe to layout changes for broadcast.
     subscriptions.add(registry.subscribe(layoutAtom, setupBroadcast));
-    // Also use scheduledEffect for attention.current changes (attention is still signal-based).
-    subscriptions.add(
-      scheduledEffect(
-        () => ({ current: attention.current }),
-        () => setupBroadcast(),
-      ),
-    );
+    // Subscribe to attention.current changes.
+    subscriptions.add(attention.subscribeCurrent(() => setupBroadcast()));
     // Initial setup.
     setupBroadcast();
     // Cleanup.

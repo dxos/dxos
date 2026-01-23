@@ -11,7 +11,7 @@ import { Obj } from '@dxos/echo';
 import { Operation } from '@dxos/operation';
 import { AttentionCapabilities } from '@dxos/plugin-attention';
 import { ATTENDABLE_PATH_SEPARATOR, DECK_COMPANION_TYPE, PLANK_COMPANION_TYPE } from '@dxos/plugin-deck/types';
-import { CreateAtom, GraphBuilder, NodeMatcher } from '@dxos/plugin-graph';
+import { GraphBuilder, NodeMatcher } from '@dxos/plugin-graph';
 import { type SelectionMode, defaultSelection } from '@dxos/react-ui-attention';
 
 import { meta } from '../../meta';
@@ -40,26 +40,27 @@ export default Capability.makeModule(
         connector: (node, get) => {
           const callManagerAtom = capabilities.atom(ThreadCapabilities.CallManager);
           const [call] = get(callManagerAtom);
+          if (!call) {
+            return Effect.succeed([]);
+          }
+          // Use derived joinedAtom for efficient subscription.
+          const joined = get(call.joinedAtom);
           return Effect.succeed(
-            get(
-              CreateAtom.fromSignal(() =>
-                call?.joined
-                  ? [
-                      {
-                        id: `${node.id}${ATTENDABLE_PATH_SEPARATOR}active-call`,
-                        type: DECK_COMPANION_TYPE,
-                        data: null,
-                        properties: {
-                          label: ['call panel label', { ns: meta.id }],
-                          icon: 'ph--video-conference--regular',
-                          position: 'hoist',
-                          disposition: 'hidden',
-                        },
-                      },
-                    ]
-                  : [],
-              ),
-            ),
+            joined
+              ? [
+                  {
+                    id: `${node.id}${ATTENDABLE_PATH_SEPARATOR}active-call`,
+                    type: DECK_COMPANION_TYPE,
+                    data: null,
+                    properties: {
+                      label: ['call panel label', { ns: meta.id }],
+                      icon: 'ph--video-conference--regular',
+                      position: 'hoist',
+                      disposition: 'hidden',
+                    },
+                  },
+                ]
+              : [],
           );
         },
       }),
@@ -68,10 +69,11 @@ export default Capability.makeModule(
         type: Channel.Channel,
         connector: (channel, get) => {
           const callManager = capabilities.get(ThreadCapabilities.CallManager);
-          const joined = get(
-            CreateAtom.fromSignal(() => callManager.joined && callManager.roomId === Obj.getDXN(channel).toString()),
-          );
-          if (!joined) {
+          // Use derived atoms for efficient subscription.
+          const joined = get(callManager.joinedAtom);
+          const roomId = get(callManager.roomIdAtom);
+          const isActive = joined && roomId === Obj.getDXN(channel).toString();
+          if (!isActive) {
             return Effect.succeed([]);
           }
 

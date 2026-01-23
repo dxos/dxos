@@ -94,6 +94,7 @@ export type TableMainProps<T extends Type.Entity.Any = Type.Entity.Any> = {
 };
 
 const emptyRowsAtom = Atom.make<unknown[]>([]);
+const emptyCellUpdateAtom = Atom.make<number>(0);
 
 const TableMainInner = <T extends Type.Entity.Any = Type.Entity.Any>(
   { schema, model, presentation, ignoreAttention, onCreate, onRowClick, testId }: TableMainProps<T>,
@@ -106,6 +107,8 @@ const TableMainInner = <T extends Type.Entity.Any = Type.Entity.Any>(
   const columnMeta = useAtomValue(model?.columnMeta ?? emptyColumnMeta);
   // Subscribe to rows atom to trigger re-render when rows change.
   const rows = useAtomValue(model?.rowsAtom ?? emptyRowsAtom);
+  // Subscribe to cell update counter to trigger re-render when individual cells change.
+  const cellUpdateCounter = useAtomValue(model?.cellUpdateAtom ?? emptyCellUpdateAtom);
   // Derive column count from columnMeta (reactive) with fallback.
   const columnCount = Object.keys(columnMeta.grid).length || model?.projection.fields.length || 0;
 
@@ -138,7 +141,7 @@ const TableMainInner = <T extends Type.Entity.Any = Type.Entity.Any>(
     dxGrid.getCells = getCells;
   }, [dxGrid, presentation, getCells]);
 
-  // Trigger grid update when rows change (e.g., after sorting or data changes).
+  // Trigger grid update when rows or cell values change.
   useEffect(() => {
     if (!dxGrid) {
       return;
@@ -146,7 +149,7 @@ const TableMainInner = <T extends Type.Entity.Any = Type.Entity.Any>(
 
     dxGrid.updateCells(true);
     dxGrid.requestUpdate();
-  }, [dxGrid, rows]);
+  }, [dxGrid, rows, cellUpdateCounter]);
 
   const handleInsertRowResult = useCallback(
     (insertResult?: InsertRowResult) => {

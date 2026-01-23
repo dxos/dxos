@@ -7,8 +7,8 @@ import { Context } from '@dxos/context';
 import { StackTrace } from '@dxos/debug';
 import { type Database, type Entity, Filter, type Hypergraph, Query, type QueryAST, Ref } from '@dxos/echo';
 import { type AnyProperties, setRefResolver } from '@dxos/echo/internal';
-import { compositeRuntime } from '@dxos/echo-signals/runtime';
 import { failedInvariant } from '@dxos/invariant';
+import { batchEvents } from '@dxos/live-object';
 import { DXN, type ObjectId, type QueueSubspaceTag, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { trace } from '@dxos/tracing';
@@ -395,7 +395,7 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
   private _onUpdate(updateEvent: ItemsUpdatedEvent): void {
     const listenerMap = this._resolveEvents.get(updateEvent.spaceId);
     if (listenerMap) {
-      compositeRuntime.batch(() => {
+      batchEvents(() => {
         // TODO(dmaretskyi): We only care about created items.
         for (const item of updateEvent.itemsUpdated) {
           const listeners = listenerMap.get(item.id);

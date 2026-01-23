@@ -6,8 +6,10 @@ import * as Effect from 'effect/Effect';
 
 import { Capability, Common } from '@dxos/app-framework';
 import { ATTENDABLE_PATH_SEPARATOR, DECK_COMPANION_TYPE, PLANK_COMPANION_TYPE } from '@dxos/plugin-deck/types';
-import { CreateAtom, GraphBuilder, Node, NodeMatcher } from '@dxos/plugin-graph';
-import { getActiveSpace, meta as spaceMeta } from '@dxos/plugin-space';
+import { ClientCapabilities } from '@dxos/plugin-client';
+import { GraphBuilder, Node, NodeMatcher } from '@dxos/plugin-graph';
+import { meta as spaceMeta } from '@dxos/plugin-space';
+import { parseId } from '@dxos/react-client/echo';
 
 import { meta } from '../../meta';
 import { Devtools } from '../../types';
@@ -24,7 +26,11 @@ export default Capability.makeModule(
         id: `${meta.id}/devtools`,
         match: NodeMatcher.whenAny(NodeMatcher.whenRoot, NodeMatcher.whenNodeType(`${spaceMeta.id}/settings`)),
         connector: (node, get) => {
-          const space = get(CreateAtom.fromSignal(() => getActiveSpace(capabilities)));
+          const client = capabilities.get(ClientCapabilities.Client);
+          const layoutAtom = capabilities.get(Common.Capability.Layout);
+          const layout = get(layoutAtom);
+          const { spaceId } = parseId(layout.workspace);
+          const space = spaceId ? client.spaces.get(spaceId) : undefined;
           const [graph] = get(capabilities.atom(Common.Capability.AppGraph));
 
           return Effect.succeed([

@@ -123,6 +123,8 @@ export class TableModel<T extends TableRow = TableRow> extends Resource {
   // Atom for the view's projection - all field-related reactivity derives from this.
   private _projectionAtom?: Atom.Atom<View.Projection>;
   private _columnMeta?: Atom.Atom<DxGridAxisMeta>;
+  // Counter atom that increments when cells are updated - allows UI to react to cell changes.
+  private readonly _cellUpdateCounter: Atom.Writable<number>;
 
   constructor({
     registry,
@@ -163,6 +165,7 @@ export class TableModel<T extends TableRow = TableRow> extends Resource {
     this._rows = Atom.make<T[]>([]);
     this._draftRows = Atom.make<DraftRow<T>[]>([]);
     this._inMemorySort = Atom.make<FieldSortType | undefined>(undefined);
+    this._cellUpdateCounter = Atom.make<number>(0);
 
     // Create derived atom for persisted sort from view.query.ast.
     this._persistedSort = Atom.make((_get) => {
@@ -289,6 +292,23 @@ export class TableModel<T extends TableRow = TableRow> extends Resource {
     return this._sortedRows;
   }
 
+  /** Get the cell update counter atom for reactive access to cell changes. */
+  public get cellUpdateAtom(): Atom.Atom<number> {
+    return this._cellUpdateCounter;
+  }
+
+  /**
+   * Change a row using Obj.change for ECHO objects.
+   * Use this instead of directly mutating to ensure consistent mutation handling.
+   */
+  public changeRow(row: T, mutate: (mutableRow: T) => void): void {
+    if (Obj.isObject(row)) {
+      Obj.change(row, (mutableRow) => mutate(mutableRow as T));
+    } else {
+      mutate(row);
+    }
+  }
+
   public get features(): TableFeatures {
     return this._features;
   }
@@ -401,6 +421,8 @@ export class TableModel<T extends TableRow = TableRow> extends Resource {
         const obj = sortedRows[row];
         if (Obj.isObject(obj) && !rowSubscriptions.has(obj.id)) {
           const unsub = Obj.subscribe(obj, () => {
+            // Increment cell update counter to notify UI of changes.
+            this._registry.set(this._cellUpdateCounter, this._registry.get(this._cellUpdateCounter) + 1);
             this._onCellUpdate?.({ row, col: start.col, plane: 'grid' });
           });
           rowSubscriptions.set(obj.id, unsub);

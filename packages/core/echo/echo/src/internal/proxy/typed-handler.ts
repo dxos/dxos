@@ -9,14 +9,17 @@ import * as SchemaAST from 'effect/SchemaAST';
 
 import { Event } from '@dxos/async';
 import { inspectCustom } from '@dxos/debug';
-import { type GenericSignal, compositeRuntime } from '@dxos/echo-signals/runtime';
 import { invariant } from '@dxos/invariant';
 import {
+  batchEvents,
   EventId,
   ReactiveArray,
   type ReactiveHandler,
   createProxy,
   defineHiddenProperty,
+  emitEvent,
+  getProxyTarget,
+  isProxy,
   isValidProxyTarget,
   objectData,
   symbolIsProxy,
@@ -26,9 +29,6 @@ import { getSchemaDXN } from '../annotations';
 import { ObjectDeletedId } from '../entities';
 import { SchemaValidator } from '../object';
 import { SchemaId, TypeId } from '../types';
-
-const symbolSignal = Symbol('signal');
-const symbolPropertySignal = Symbol('property-signal');
 
 type ProxyTarget = {
   /**
@@ -42,24 +42,52 @@ type ProxyTarget = {
   [SchemaId]: Schema.Schema.AnyNoContext;
 
   /**
-   * For get and set operations on value properties.
-   */
-  // TODO(dmaretskyi): Turn into a map of signals per-field.
-  [symbolSignal]: GenericSignal;
-
-  /**
    * For modifications.
    */
   [EventId]: Event<void>;
-
-  /**
-   * For modifying the structure of the object.
-   */
-  [symbolPropertySignal]: GenericSignal;
 } & ({ [key: keyof any]: any } | any[]);
 
 /**
+ * WeakMap for tracking parent references without mutating user objects.
+ * Maps child objects to their parent targets.
+ */
+const parentMap = new WeakMap<object, object>();
+
+/**
+ * Get the parent reference from a proxy target if it exists.
+ */
+const getParent = (value: object): ProxyTarget | undefined => {
+  return parentMap.get(value) as ProxyTarget | undefined;
+};
+
+/**
+ * Set the parent reference on a proxy target.
+ */
+const setParent = (value: object, parent: object): void => {
+  parentMap.set(value, parent);
+};
+
+/**
+ * Clear the parent reference from a proxy target.
+ */
+const clearParent = (value: object): void => {
+  parentMap.delete(value);
+};
+
+/**
+ * Emit events up the parent chain to notify ancestors of changes.
+ */
+const bubbleEvent = (target: ProxyTarget): void => {
+  let ancestor = getParent(target);
+  while (ancestor) {
+    emitEvent(ancestor);
+    ancestor = getParent(ancestor);
+  }
+};
+
+/**
  * Typed in-memory reactive store (with Schema).
+ * Reactivity is based on Event subscriptions, not signals.
  */
 export class TypedReactiveHandler implements ReactiveHandler<ProxyTarget> {
   public static readonly instance: ReactiveHandler<any> = new TypedReactiveHandler();
@@ -73,25 +101,24 @@ export class TypedReactiveHandler implements ReactiveHandler<ProxyTarget> {
     invariant(typeof target === 'object' && target !== null);
     invariant(SchemaId in target, 'Schema is not defined for the target');
 
-    if (!(symbolSignal in target)) {
-      defineHiddenProperty(target, symbolSignal, compositeRuntime.createSignal());
-      defineHiddenProperty(target, symbolPropertySignal, compositeRuntime.createSignal());
-    }
-
     if (!(EventId in target)) {
       defineHiddenProperty(target, EventId, new Event());
     }
 
     defineHiddenProperty(target, ObjectDeletedId, false);
 
-    for (const key of Object.getOwnPropertyNames(target)) {
-      const descriptor = Object.getOwnPropertyDescriptor(target, key)!;
-      if (descriptor.get) {
-        // Ignore getters.
+    // Set parent references on nested objects for event bubbling.
+    for (const key in target) {
+      if ((target as any)[symbolIsProxy]) {
         continue;
       }
-
-      // Array reactivity is already handled by the schema validator.
+      const value = (target as any)[key];
+      if (isValidProxyTarget(value)) {
+        setParent(value, target);
+      } else if (isProxy(value)) {
+        // Value is already a proxy - set parent on its underlying target.
+        setParent(getProxyTarget(value), target);
+      }
     }
 
     // Maybe have been set by `create`.
@@ -106,24 +133,19 @@ export class TypedReactiveHandler implements ReactiveHandler<ProxyTarget> {
     switch (prop) {
       // TODO(burdon): Remove?
       case objectData: {
-        target[symbolSignal].notifyRead();
         return toJSON(target);
       }
     }
 
-    // Handle getter properties. Will not subscribe the value signal.
+    // Handle getter properties.
     if (Object.getOwnPropertyDescriptor(target, prop)?.get) {
-      target[symbolPropertySignal].notifyRead();
-
-      // TODO(dmaretskyi): Turn getters into computed fields.
       return Reflect.get(target, prop, receiver);
     }
 
-    target[symbolSignal].notifyRead();
-    target[symbolPropertySignal].notifyRead();
-
     const value = Reflect.get(target, prop, receiver);
     if (isValidProxyTarget(value)) {
+      // Set parent reference for event bubbling.
+      setParent(value, target);
       return createProxy(value, this);
     }
 
@@ -131,6 +153,12 @@ export class TypedReactiveHandler implements ReactiveHandler<ProxyTarget> {
   }
 
   set(target: ProxyTarget, prop: string | symbol, value: any, receiver: any): boolean {
+    // Clear parent reference on old value if it exists.
+    const oldValue = target[prop as any];
+    if (isValidProxyTarget(oldValue) && getParent(oldValue) === target) {
+      clearParent(oldValue);
+    }
+
     // Convert arrays to reactive arrays on write.
     if (Array.isArray(value)) {
       value = ReactiveArray.from(value);
@@ -139,11 +167,19 @@ export class TypedReactiveHandler implements ReactiveHandler<ProxyTarget> {
     let result: boolean = false;
     this._inSet = true;
     try {
-      compositeRuntime.batch(() => {
+      batchEvents(() => {
         const validatedValue = this._validateValue(target, prop, value);
+        // Set parent reference on new value for event bubbling.
+        if (isValidProxyTarget(validatedValue)) {
+          setParent(validatedValue, target);
+        } else if (isProxy(validatedValue)) {
+          // Value is already a proxy - set parent on its underlying target.
+          setParent(getProxyTarget(validatedValue), target);
+        }
         result = Reflect.set(target, prop, validatedValue, receiver);
-        target[symbolSignal].notifyWrite();
-        target[EventId].emit();
+        emitEvent(target);
+        // Bubble event up to ancestors.
+        bubbleEvent(target);
       });
     } finally {
       this._inSet = false;
@@ -152,21 +188,26 @@ export class TypedReactiveHandler implements ReactiveHandler<ProxyTarget> {
   }
 
   ownKeys(target: ProxyTarget): ArrayLike<string | symbol> {
-    // Touch both signals since `set` and `delete` operations may create or remove properties.
-    target[symbolSignal].notifyRead();
-    target[symbolPropertySignal].notifyRead();
     return Reflect.ownKeys(target);
   }
 
   defineProperty(target: ProxyTarget, property: string | symbol, attributes: PropertyDescriptor): boolean {
     const validatedValue = this._validateValue(target, property, attributes.value);
+    // Set parent reference on new value for event bubbling.
+    if (isValidProxyTarget(validatedValue)) {
+      setParent(validatedValue, target);
+    } else if (isProxy(validatedValue)) {
+      // Value is already a proxy - set parent on its underlying target.
+      setParent(getProxyTarget(validatedValue), target);
+    }
     const result = Reflect.defineProperty(target, property, {
       ...attributes,
       value: validatedValue,
     });
-    target[symbolPropertySignal].notifyWrite();
     if (!this._inSet) {
-      target[EventId].emit();
+      emitEvent(target);
+      // Bubble event up to ancestors.
+      bubbleEvent(target);
     }
     return result;
   }

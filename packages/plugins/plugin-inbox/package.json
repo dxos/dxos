@@ -65,6 +65,7 @@
     "@dxos/debug": "workspace:*",
     "@dxos/display-name": "workspace:*",
     "@dxos/echo": "workspace:*",
+    "@dxos/echo-atom": "workspace:*",
     "@dxos/echo-db": "workspace:*",
     "@dxos/echo-query": "workspace:*",
     "@dxos/effect": "workspace:*",

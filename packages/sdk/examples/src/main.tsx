@@ -7,7 +7,6 @@ import '@dxos-theme';
 import React, { useState } from 'react';
 import { createRoot } from 'react-dom/client';
 
-import { registerSignalsRuntime } from '@dxos/echo-signals';
 import { Markdown } from '@dxos/plugin-markdown/types';
 import { faker } from '@dxos/random';
 import { Client, ClientProvider } from '@dxos/react-client';
@@ -33,7 +32,6 @@ type PeersInSpaceProps = {
 
 const setupPeersInSpace = async (options: PeersInSpaceProps = {}) => {
   const { count = 1, types, onCreateSpace } = options;
-  registerSignalsRuntime();
   const clients = [...Array(count)].map(
     (_) => new Client({ services: testBuilder.createLocalClientServices(), types }),
   );

@@ -8,7 +8,6 @@ import type * as Schema from 'effect/Schema';
 import type { CleanupFn, Event } from '@dxos/async';
 import { inspectCustom } from '@dxos/debug';
 import type { SchemaId } from '@dxos/echo/internal';
-import { type GenericSignal, compositeRuntime } from '@dxos/echo-signals/runtime';
 // eslint-disable-next-line @typescript-eslint/consistent-type-imports
 import { EventId } from '@dxos/live-object';
 import { ComplexMap } from '@dxos/util';
@@ -61,11 +60,6 @@ export class ObjectInternals {
    * Is set on object adding to database.
    */
   database: EchoDatabase | undefined;
-
-  /**
-   * Signal for reactive updates to the object.
-   */
-  signal: GenericSignal = compositeRuntime.createSignal();
 
   /**
    * Caching targets based on key path.

@@ -7,7 +7,6 @@ import localforage from 'localforage';
 
 import { Capability, Common } from '@dxos/app-framework';
 import { SubscriptionList } from '@dxos/async';
-import { scheduledEffect } from '@dxos/echo-signals/core';
 import { LocalStorageStore } from '@dxos/local-storage';
 import { AttentionCapabilities } from '@dxos/plugin-attention';
 
@@ -94,26 +93,21 @@ export default Capability.makeModule(
     );
 
     // Subscribe to attention to track the currently active file.
-    subscriptions.add(
-      scheduledEffect(
-        () => ({
-          openLocalFiles: getSettings().openLocalFiles,
-          attended: attention.current,
-        }),
-        ({ openLocalFiles, attended }) => {
-          if (!openLocalFiles) {
-            return;
-          }
+    const updateCurrentFile = () => {
+      if (!getSettings().openLocalFiles) {
+        return;
+      }
 
-          const active = attended?.[0];
-          const current =
-            (active?.startsWith(PREFIX) && attended && findFile(store.values.files, attended)) || undefined;
-          if (store.values.current !== current) {
-            store.update((s) => ({ ...s, current }));
-          }
-        },
-      ),
-    );
+      const attended = attention.current;
+      const active = attended?.[0];
+      const current = (active?.startsWith(PREFIX) && attended && findFile(store.values.files, attended)) || undefined;
+      if (store.values.current !== current) {
+        store.update((s) => ({ ...s, current }));
+      }
+    };
+    updateCurrentFile();
+    subscriptions.add(registry.subscribe(settingsAtom, updateCurrentFile));
+    subscriptions.add(attention.subscribeCurrent(updateCurrentFile));
 
     const savedRootHandle = yield* Effect.tryPromise(() =>
       localforage.getItem<FileSystemDirectoryHandle>(`${meta.id}/rootHandle`),

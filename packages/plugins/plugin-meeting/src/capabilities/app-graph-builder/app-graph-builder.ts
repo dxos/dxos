@@ -7,6 +7,7 @@ import * as Effect from 'effect/Effect';
 
 import { Capability, Common } from '@dxos/app-framework';
 import { Obj, Type } from '@dxos/echo';
+import { AtomRef } from '@dxos/echo-atom';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { Operation } from '@dxos/operation';
@@ -64,18 +65,18 @@ export default Capability.makeModule(
           }
 
           const callManager = yield* Capability.get(ThreadCapabilities.CallManager);
-          const joined = get(
-            CreateAtom.fromSignal(() => callManager.joined && callManager.roomId === Obj.getDXN(channel).toString()),
-          );
-          if (!joined) {
+          const channelDxn = Obj.getDXN(channel).toString();
+          const joined = get(callManager.joinedAtom);
+          const roomId = get(callManager.roomIdAtom);
+          if (!joined || roomId !== channelDxn) {
             return [];
           }
 
           return [
             {
-              id: `${Obj.getDXN(channel).toString()}${ATTENDABLE_PATH_SEPARATOR}meeting-thread`,
+              id: `${channelDxn}${ATTENDABLE_PATH_SEPARATOR}meeting-thread`,
               type: PLANK_COMPANION_TYPE,
-              data: get(CreateAtom.fromSignal(() => meeting.thread.target)),
+              data: get(AtomRef.make(meeting.thread)),
               properties: {
                 label: ['meeting thread label', { ns: meta.id }],
                 icon: 'ph--chat-text--regular',
@@ -92,10 +93,10 @@ export default Capability.makeModule(
         type: Channel.Channel,
         connector: Effect.fnUntraced(function* (channel, get) {
           const callManager = yield* Capability.get(ThreadCapabilities.CallManager);
-          const isCallActive = get(
-            CreateAtom.fromSignal(() => callManager.joined && callManager.roomId === Obj.getDXN(channel).toString()),
-          );
-          if (!isCallActive) {
+          const channelDxn = Obj.getDXN(channel).toString();
+          const joined = get(callManager.joinedAtom);
+          const roomId = get(callManager.roomIdAtom);
+          if (!joined || roomId !== channelDxn) {
             return [];
           }
 
@@ -104,7 +105,7 @@ export default Capability.makeModule(
 
           return [
             {
-              id: `${Obj.getDXN(channel).toString()}${ATTENDABLE_PATH_SEPARATOR}meeting`,
+              id: `${channelDxn}${ATTENDABLE_PATH_SEPARATOR}meeting`,
               type: PLANK_COMPANION_TYPE,
               data,
               properties: {
@@ -183,7 +184,7 @@ export default Capability.makeModule(
             {
               id: `${Obj.getDXN(channel).toString()}${ATTENDABLE_PATH_SEPARATOR}transcript`,
               type: PLANK_COMPANION_TYPE,
-              data: get(CreateAtom.fromSignal(() => meeting.transcript.target)),
+              data: get(AtomRef.make(meeting.transcript)),
               properties: {
                 label: ['transcript companion label', { ns: meta.id }],
                 icon: 'ph--subtitles--regular',
@@ -203,7 +204,7 @@ export default Capability.makeModule(
             {
               id: `${Obj.getDXN(meeting).toString()}${ATTENDABLE_PATH_SEPARATOR}transcript`,
               type: PLANK_COMPANION_TYPE,
-              data: get(CreateAtom.fromSignal(() => meeting.transcript.target)),
+              data: get(AtomRef.make(meeting.transcript)),
               properties: {
                 label: ['transcript companion label', { ns: meta.id }],
                 icon: 'ph--subtitles--regular',

@@ -9,7 +9,6 @@
 import { DeferredTask, asyncTimeout } from '@dxos/async';
 import { LifecycleState, Resource } from '@dxos/context';
 import { type Queue } from '@dxos/echo-db';
-import { effect } from '@dxos/echo-signals';
 import { type FunctionExecutor } from '@dxos/functions-runtime';
 import { log } from '@dxos/log';
 import { type Message } from '@dxos/types';
@@ -50,7 +49,8 @@ export class MessageNormalizer extends Resource {
 
   protected override async _open(): Promise<void> {
     this._normalizationTask = new DeferredTask(this._ctx, () => this._processMessages());
-    const unsubscribe = effect(() => {
+
+    const updateMessages = () => {
       if (this._lifecycleState !== LifecycleState.OPEN) {
         return;
       }
@@ -61,7 +61,13 @@ export class MessageNormalizer extends Resource {
       });
 
       this._normalizationTask!.schedule();
-    });
+    };
+
+    // Initial update.
+    updateMessages();
+
+    // Subscribe to queue changes.
+    const unsubscribe = (this._queue as any).updated.on(updateMessages);
     this._ctx.onDispose(() => unsubscribe());
   }
 

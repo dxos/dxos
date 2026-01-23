@@ -12,7 +12,7 @@ import { debounceAndThrottle } from '@dxos/async';
 import { Obj } from '@dxos/echo';
 import { createDocAccessor } from '@dxos/echo-db';
 import { invariant } from '@dxos/invariant';
-import { getSpace } from '@dxos/react-client/echo';
+import { getSpace, useRef } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 import { Icon, ThemeProvider } from '@dxos/react-ui';
 import { type SelectionManager } from '@dxos/react-ui-attention';
@@ -71,12 +71,12 @@ export const useExtensions = ({
   const identity = useIdentity();
   const space = getSpace(object);
 
-  let target: Obj.Any | undefined;
-  if (Obj.instanceOf(Markdown.Document, object)) {
-    target = (object as Markdown.Document).content.target;
-  } else if (Obj.instanceOf(Text.Text, object)) {
-    target = object;
-  }
+  // Get the content reference from Document objects.
+  const contentRef = Obj.instanceOf(Markdown.Document, object) ? (object as Markdown.Document).content : undefined;
+  // Use useRef to trigger re-render when the reference loads (returns snapshot for reactivity).
+  useRef(contentRef);
+  // Get the actual live object target via .target (needed for createDocAccessor).
+  const target = contentRef?.target ?? (Obj.instanceOf(Text.Text, object) ? object : undefined);
 
   // TODO(wittjosiah): Autocomplete is not working and this query is causing performance issues.
   // TODO(burdon): Unsubscribe.

@@ -2,23 +2,31 @@
 // Copyright 2025 DXOS.org
 //
 
-import { effect } from '@preact/signals-core';
+import { type Live, subscribe } from '../live';
 
-import { registerSignalsRuntime } from '@dxos/echo-signals';
+/**
+ * Creates an update counter that tracks changes to live objects.
+ * @param objects - Live objects to subscribe to.
+ * @returns An object with a count property and Symbol.dispose for cleanup.
+ */
+export const updateCounter = (...objects: Live<object>[]) => {
+  let updateCount = 0;
 
-registerSignalsRuntime();
+  const unsubscribes = objects.map((obj) =>
+    subscribe(obj, () => {
+      updateCount++;
+    }),
+  );
 
-// TODO(dmaretskyi): Duplicated here to not add `@preact/signals-core` to deps.
-export const updateCounter = (touch: () => void) => {
-  let updateCount = -1;
-  const unsubscribe = effect(() => {
-    touch();
-    updateCount++;
-  });
+  const unsubscribeAll = () => {
+    for (const unsub of unsubscribes) {
+      unsub();
+    }
+  };
 
   return {
     // https://github.com/tc39/proposal-explicit-resource-management
-    [Symbol.dispose]: unsubscribe,
+    [Symbol.dispose]: unsubscribeAll,
     get count() {
       return updateCount;
     },

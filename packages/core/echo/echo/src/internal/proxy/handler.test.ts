@@ -6,7 +6,6 @@ import { inspect } from 'node:util';
 
 import { describe, expect, test } from 'vitest';
 
-import { registerSignalsRuntime } from '@dxos/echo-signals';
 import { type Live, objectData } from '@dxos/live-object';
 import { isNode } from '@dxos/util';
 
@@ -15,8 +14,6 @@ import { createObject } from '../object';
 import { ATTR_META } from '../types';
 
 import { makeObject } from './make-object';
-
-registerSignalsRuntime();
 
 describe('proxy', () => {
   test.skipIf(!isNode())('inspect', ({ expect }) => {
@@ -104,14 +101,14 @@ for (const schema of [undefined, TestSchema.ExampleSchema]) {
       });
     });
 
-    describe('signal updates', () => {
-      test('not in nested class instances', () => {
+    describe('subscription updates', () => {
+      test('not triggered by nested class instance changes', () => {
         const obj = createObject({ classInstance: new TestSchema.TestClass() });
-        using updates = updateCounter(() => {
-          obj.classInstance!.field;
-        });
+        using updates = updateCounter(obj);
         expect(updates.count, 'update count').to.eq(0);
 
+        // Changes to class instance fields don't trigger subscription updates
+        // because class instances aren't wrapped in live proxies.
         obj.classInstance!.field = 'baz';
         expect(updates.count, 'update count').to.eq(0);
       });
@@ -133,7 +130,7 @@ describe('getters', () => {
     expect(obj.getter).to.eq('bar');
   });
 
-  test('signal updates', () => {
+  test('subscription updates on inner object', () => {
     const innerObj = makeObject({
       string: 'bar',
     });
@@ -145,17 +142,18 @@ describe('getters', () => {
       },
     });
 
-    using updates = updateCounter(() => {
-      const value = obj.getter;
-      expect(value).to.exist;
-    });
+    // Subscribe to innerObj to detect changes.
+    using innerUpdates = updateCounter(innerObj);
+    using objUpdates = updateCounter(obj);
 
     innerObj.string = 'baz';
     expect(obj.getter).to.eq('baz');
-    expect(updates.count, 'update count').to.eq(1);
+    expect(innerUpdates.count, 'inner update count').to.eq(1);
 
+    // Changes to outer obj don't affect inner subscription.
     obj.field = 2;
-    expect(updates.count, 'update count').to.eq(1);
+    expect(innerUpdates.count, 'inner update count').to.eq(1);
+    expect(objUpdates.count, 'obj update count').to.eq(1);
   });
 
   test('getter for array', () => {

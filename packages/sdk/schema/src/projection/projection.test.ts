@@ -20,7 +20,6 @@ import {
 } from '@dxos/echo/internal';
 import { DatabaseSchemaRegistry, RuntimeSchemaRegistry } from '@dxos/echo-db';
 import { EchoTestBuilder } from '@dxos/echo-db/testing';
-import { registerSignalsRuntime } from '@dxos/echo-signals';
 import { invariant } from '@dxos/invariant';
 
 import { TestSchema } from '../testing';
@@ -28,8 +27,6 @@ import { View } from '../types';
 
 import { createFieldId } from './field';
 import { ProjectionModel, createDirectChangeCallback, createEchoChangeCallback } from './projection';
-
-registerSignalsRuntime();
 
 const getFieldId = (projection: View.Projection, path: string): string => {
   const field = projection.fields.find((field) => field.path === path);

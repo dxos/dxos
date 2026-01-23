@@ -4,7 +4,7 @@
 
 import chalk from 'chalk';
 
-import { type ReadonlySignal, signal } from '@dxos/echo-signals';
+import { Event, type ReadOnlyEvent } from '@dxos/async';
 import { log } from '@dxos/log';
 
 import { type SequenceEvent, type SequenceLogger } from './types';
@@ -24,21 +24,28 @@ interface Logger {
 const DEFAULT_LOGGER: Logger = { log: log.info };
 
 /**
- * Reactive bufferedlogger.
+ * Buffered logger with event notifications.
  */
 export class BufferedLogger implements Logger {
-  private _messages = signal<string[]>([]);
+  private _messages: string[] = [];
+  private readonly _changed = new Event<void>();
 
-  get messages(): ReadonlySignal<string[]> {
+  get messages(): string[] {
     return this._messages;
   }
 
+  get changed(): ReadOnlyEvent<void> {
+    return this._changed;
+  }
+
   clear() {
-    this._messages.value = [];
+    this._messages = [];
+    this._changed.emit();
   }
 
   log(message: string) {
-    this._messages.value = [...this._messages.value, message];
+    this._messages = [...this._messages, message];
+    this._changed.emit();
   }
 }
 

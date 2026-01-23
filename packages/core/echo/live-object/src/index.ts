@@ -7,4 +7,5 @@ export * from './snapshot';
 export * from './object';
 export * from './live';
 export * from './define-hidden-property';
+export * from './event-batch';
 export { UntypedReactiveHandler } from './untyped-handler';

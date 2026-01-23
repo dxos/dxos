@@ -9,7 +9,6 @@ import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 import { Filter, Query } from '@dxos/echo';
 import { TypedObject } from '@dxos/echo/internal';
 import { createEchoSchema } from '@dxos/echo/testing';
-import { registerSignalsRuntime } from '@dxos/echo-signals';
 import { ProjectionModel, View, createDirectChangeCallback } from '@dxos/schema';
 
 import { Table } from '../types';
@@ -18,8 +17,6 @@ import { TableModel, type TableModelProps } from './table-model';
 
 // TODO(burdon): Tests are disabled in project.json since they bring in plugin deps.
 //  Restore once factored out into react-ui-table.
-
-registerSignalsRuntime();
 
 describe('TableModel', () => {
   let updateCount = 0;

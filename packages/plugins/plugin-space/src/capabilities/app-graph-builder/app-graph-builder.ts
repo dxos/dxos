@@ -11,7 +11,8 @@ import * as Schema from 'effect/Schema';
 
 import { Capability, Common } from '@dxos/app-framework';
 import { type Space, SpaceState, getSpace, isSpace } from '@dxos/client/echo';
-import { DXN, Filter, Obj, type QueryResult, Type } from '@dxos/echo';
+import { DXN, Filter, Obj, type QueryResult, Ref, Type } from '@dxos/echo';
+import { AtomObj, AtomRef } from '@dxos/echo-atom';
 import { log } from '@dxos/log';
 import { Operation } from '@dxos/operation';
 import { ClientCapabilities } from '@dxos/plugin-client';
@@ -182,29 +183,32 @@ export default Capability.makeModule(
               query = client.spaces.default.db.query(Filter.type(Type.Expando, { key: SHARED }));
             }
             const [spacesOrder] = get(atomFromQuery(query));
+
+            // Get order from spacesOrder snapshot using AtomObj (cached via Atom.family).
+            const spacesOrderSnapshot = spacesOrder ? get(AtomObj.make(spacesOrder)) : undefined;
+            const order: string[] = (spacesOrderSnapshot as any)?.order ?? [];
+            const orderMap = new Map(order.map((id, index) => [id, index]));
+
+            // Subscribe to space states for filtering.
+            const spaceStates = spaces.map((space) => get(CreateAtom.fromObservable(space.state)));
+
             return Effect.succeed(
-              get(
-                CreateAtom.fromSignal(() => {
-                  const order: string[] = spacesOrder?.order ?? [];
-                  const orderMap = new Map(order.map((id, index) => [id, index]));
-                  return [
-                    ...spaces
-                      .filter((space) => orderMap.has(space.id))
-                      .sort((a, b) => orderMap.get(a.id)! - orderMap.get(b.id)!),
-                    ...spaces.filter((space) => !orderMap.has(space.id)),
-                  ]
-                    .filter((space) => (settings?.showHidden ? true : space.state.get() !== SpaceState.SPACE_INACTIVE))
-                    .map((space) =>
-                      constructSpaceNode({
-                        space,
-                        navigable: state.values.navigableCollections,
-                        personal: space === client.spaces.default,
-                        namesCache: state.values.spaceNames,
-                        resolve: resolve(get),
-                      }),
-                    );
-                }),
-              ),
+              [
+                ...spaces
+                  .filter((space) => orderMap.has(space.id))
+                  .sort((a, b) => orderMap.get(a.id)! - orderMap.get(b.id)!),
+                ...spaces.filter((space) => !orderMap.has(space.id)),
+              ]
+                .filter((space, i) => (settings?.showHidden ? true : spaceStates[i] !== SpaceState.SPACE_INACTIVE))
+                .map((space) =>
+                  constructSpaceNode({
+                    space,
+                    navigable: state.values.navigableCollections,
+                    personal: space === client.spaces.default,
+                    namesCache: state.values.spaceNames,
+                    resolve: resolve(get),
+                  }),
+                ),
             );
           } catch {
             return Effect.succeed([]);
@@ -239,40 +243,60 @@ export default Capability.makeModule(
         id: `${meta.id}/root-collection`,
         match: whenSpace,
         connector: (space, get) => {
+          // #region agent log
+          fetch('http://127.0.0.1:7245/ingest/a2f1dfc3-ad54-4195-adb0-51ebc36b6aab',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'app-graph-builder.ts:root-collection',message:'connector called',data:{spaceId:space.id},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'A',runId:'post-fix-v2'})}).catch(()=>{});
+          // #endregion
           const state = capabilities.get(SpaceCapabilities.State);
           const spaceState = get(CreateAtom.fromObservable(space.state));
           if (spaceState !== SpaceState.SPACE_READY) {
             return Effect.succeed([]);
           }
 
-          const collection = get(
-            CreateAtom.fromSignal(
-              () => space.properties[Collection.Collection.typename]?.target as Collection.Collection | undefined,
-            ),
-          );
+          // Get the collection ref from space.properties snapshot (AtomObj cached via Atom.family).
+          const propertiesSnapshot = get(AtomObj.make(space.properties));
+          const collectionRef = propertiesSnapshot[Collection.Collection.typename] as
+            | Ref.Ref<Collection.Collection>
+            | undefined;
+          // #region agent log
+          fetch('http://127.0.0.1:7245/ingest/a2f1dfc3-ad54-4195-adb0-51ebc36b6aab',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'app-graph-builder.ts:root-collection:collectionRef',message:'got collectionRef',data:{hasRef:!!collectionRef},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'B',runId:'post-fix-v2'})}).catch(()=>{});
+          // #endregion
+          // Resolve the collection using AtomRef (cached via Atom.family).
+          const collection = collectionRef ? get(AtomRef.make(collectionRef)) : undefined;
+          // #region agent log
+          fetch('http://127.0.0.1:7245/ingest/a2f1dfc3-ad54-4195-adb0-51ebc36b6aab',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'app-graph-builder.ts:root-collection:collection',message:'resolved collection',data:{hasCollection:!!collection,objectCount:collection?.objects?.length},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'C',runId:'post-fix-v2'})}).catch(()=>{});
+          // #endregion
           if (!collection) {
             return Effect.succeed([]);
           }
 
+          // #region agent log
+          const rawRefs = collection.objects ?? [];
+          fetch('http://127.0.0.1:7245/ingest/a2f1dfc3-ad54-4195-adb0-51ebc36b6aab',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'app-graph-builder.ts:root-collection:refs',message:'raw refs from collection',data:{refCount:rawRefs.length,firstRefHasTarget:rawRefs[0]?.target!==undefined},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'E',runId:'post-fix-v4'})}).catch(()=>{});
+          // #endregion
+
+          // Subscribe to each object ref for reactivity, but use live targets for node data.
+          const objects = rawRefs
+            .map((ref) => {
+              // Subscribe to the ref target for reactivity (returns snapshot).
+              get(AtomRef.make(ref));
+              // Use the live target object for node data.
+              return ref.target;
+            })
+            .filter(isNonNullable);
+
+          // #region agent log
+          fetch('http://127.0.0.1:7245/ingest/a2f1dfc3-ad54-4195-adb0-51ebc36b6aab',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'app-graph-builder.ts:root-collection:objects',message:'final objects',data:{objectCount:objects.length,firstObjectId:objects[0]?.id},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'G',runId:'post-fix-v4'})}).catch(()=>{});
+          // #endregion
+
           return Effect.succeed(
-            get(
-              CreateAtom.fromSignal(() =>
-                Function.pipe(
-                  collection.objects,
-                  Array.map((object) => object.target),
-                  Array.filter(isNonNullable),
-                  Array.map((object) =>
-                    createObjectNode({
-                      db: space.db,
-                      object,
-                      resolve: resolve(get),
-                      navigable: state.values.navigableCollections,
-                    }),
-                  ),
-                  Array.filter(isNonNullable),
-                ),
-              ),
-            ),
+            objects.map((object) =>
+              createObjectNode({
+                db: space.db,
+                object,
+                resolve: resolve(get),
+                navigable: state.values.navigableCollections,
+              }),
+            ).filter(isNonNullable),
           );
         },
       }),
@@ -282,29 +306,33 @@ export default Capability.makeModule(
         id: `${meta.id}/objects`,
         match: (node) => (Obj.instanceOf(Collection.Collection, node.data) ? Option.some(node.data) : Option.none()),
         connector: (collection, get) => {
+          // #region agent log
+          fetch('http://127.0.0.1:7245/ingest/a2f1dfc3-ad54-4195-adb0-51ebc36b6aab',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'app-graph-builder.ts:objects',message:'objects connector called',data:{collectionId:collection.id},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'A'})}).catch(()=>{});
+          // #endregion
           const state = capabilities.get(SpaceCapabilities.State);
           const space = getSpace(collection);
 
+          // Get collection snapshot using AtomObj (cached via Atom.family).
+          const collectionSnapshot = get(AtomObj.make(collection));
+          // #region agent log
+          fetch('http://127.0.0.1:7245/ingest/a2f1dfc3-ad54-4195-adb0-51ebc36b6aab',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'app-graph-builder.ts:objects:snapshot',message:'got collection snapshot',data:{objectCount:collectionSnapshot.objects?.length},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'C'})}).catch(()=>{});
+          // #endregion
           return Effect.succeed(
-            get(
-              CreateAtom.fromSignal(() =>
-                Function.pipe(
-                  collection.objects,
-                  Array.map((object) => object.target),
-                  Array.filter(isNonNullable),
-                  Array.map(
-                    (object) =>
-                      space &&
-                      createObjectNode({
-                        object,
-                        db: space.db,
-                        resolve: resolve(get),
-                        navigable: state.values.navigableCollections,
-                      }),
-                  ),
-                  Array.filter(isNonNullable),
-                ),
+            Function.pipe(
+              collectionSnapshot.objects ?? [],
+              Array.map((ref) => ref.target),
+              Array.filter(isNonNullable),
+              Array.map(
+                (object) =>
+                  space &&
+                  createObjectNode({
+                    object,
+                    db: space.db,
+                    resolve: resolve(get),
+                    navigable: state.values.navigableCollections,
+                  }),
               ),
+              Array.filter(isNonNullable),
             ),
           );
         },
@@ -378,14 +406,21 @@ export default Capability.makeModule(
             ? Option.some(node.data)
             : Option.none(),
         connector: (collection, get) => {
+          // #region agent log
+          fetch('http://127.0.0.1:7245/ingest/a2f1dfc3-ad54-4195-adb0-51ebc36b6aab',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'app-graph-builder.ts:static-schemas',message:'static-schemas connector called',data:{collectionId:collection.id},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'D',runId:'post-fix-v2'})}).catch(()=>{});
+          // #endregion
           const client = get(capabilities.atom(ClientCapabilities.Client)).at(0);
           const space = getSpace(collection);
-          if (!space?.properties.staticRecords) {
+          if (!space) {
             return Effect.succeed([]);
           }
 
+          // Get staticRecords from properties snapshot (AtomObj cached via Atom.family).
+          const propertiesSnapshot = get(AtomObj.make(space.properties));
+          const staticRecords = (propertiesSnapshot.staticRecords ?? []) as string[];
+
           return Effect.succeed(
-            get(CreateAtom.fromSignal(() => (space.properties.staticRecords ?? []) as string[]))
+            staticRecords
               .map((typename) => client?.graph.schemaRegistry.query({ typename, location: ['runtime'] }).runSync()[0])
               .filter(isNonNullable)
               .map((schema) => createStaticSchemaNode({ schema, space })),
@@ -418,15 +453,15 @@ export default Capability.makeModule(
           }
 
           const objects = get(atomFromQuery(query));
-          const filteredViews = get(
-            CreateAtom.fromSignal(() =>
-              objects.filter(
-                (viewObject) =>
-                  getTypenameFromQuery((viewObject as any).view.target?.query.ast) ===
-                  Type.getTypename(schema as Type.Obj.Any),
-              ),
-            ),
-          );
+
+          // Filter views that match the schema typename using AtomObj and AtomRef (cached via Atom.family).
+          const targetTypename = Type.getTypename(schema as Type.Obj.Any);
+          const filteredViews = objects.filter((viewObject) => {
+            const viewSnapshot = get(AtomObj.make(viewObject));
+            const viewRef = (viewSnapshot as any).view;
+            const viewTarget = viewRef ? get(AtomRef.make(viewRef)) : undefined;
+            return getTypenameFromQuery((viewTarget as any)?.query?.ast) === targetTypename;
+          });
           const deletable = filteredViews.length === 0;
 
           return Effect.succeed(
@@ -466,26 +501,24 @@ export default Capability.makeModule(
           }
 
           const typename = Schema.isSchema(schema) ? Type.getTypename(schema as Type.Obj.Any) : schema.typename;
+          const objects = get(atomFromQuery(query));
+
+          // Filter and map using AtomObj and AtomRef (cached via Atom.family).
           return Effect.succeed(
-            get(atomFromQuery(query))
-              .filter((object) =>
-                get(
-                  CreateAtom.fromSignal(
-                    () => getTypenameFromQuery((object as any).view.target?.query.ast) === typename,
-                  ),
-                ),
-              )
+            objects
+              .filter((object) => {
+                const objectSnapshot = get(AtomObj.make(object));
+                const viewRef = (objectSnapshot as any).view;
+                const viewTarget = viewRef ? get(AtomRef.make(viewRef)) : undefined;
+                return getTypenameFromQuery((viewTarget as any)?.query?.ast) === typename;
+              })
               .map((object) =>
-                get(
-                  CreateAtom.fromSignal(() =>
-                    createObjectNode({
-                      object,
-                      db: space.db,
-                      resolve: resolve(get),
-                      droppable: false,
-                    }),
-                  ),
-                ),
+                createObjectNode({
+                  object,
+                  db: space.db,
+                  resolve: resolve(get),
+                  droppable: false,
+                }),
               )
               .filter(isNonNullable),
           );
@@ -522,13 +555,13 @@ export default Capability.makeModule(
           let deletable = !isSchema && !Obj.instanceOf(Collection.Managed, object);
           if (isSchema && query) {
             const objects = get(atomFromQuery(query));
-            const filteredViews = get(
-              CreateAtom.fromSignal(() =>
-                objects.filter(
-                  (viewObject) => getTypenameFromQuery((viewObject as any).view.target?.query.ast) === object.typename,
-                ),
-              ),
-            );
+            // Filter views using AtomObj and AtomRef (cached via Atom.family).
+            const filteredViews = objects.filter((viewObject) => {
+              const viewSnapshot = get(AtomObj.make(viewObject));
+              const viewRef = (viewSnapshot as any).view;
+              const viewTarget = viewRef ? get(AtomRef.make(viewRef)) : undefined;
+              return getTypenameFromQuery((viewTarget as any)?.query?.ast) === object.typename;
+            });
             deletable = filteredViews.length === 0;
           }
 
@@ -546,7 +579,7 @@ export default Capability.makeModule(
               resolve: resolve(get),
               capabilities,
               deletable,
-              navigable: get(CreateAtom.fromSignal(() => state.values.navigableCollections)),
+              navigable: state.values.navigableCollections,
             }),
           );
         },

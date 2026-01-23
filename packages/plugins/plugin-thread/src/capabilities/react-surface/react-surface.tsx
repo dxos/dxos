@@ -2,6 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
+import { useAtomValue } from '@effect-atom/atom-react';
 import * as Effect from 'effect/Effect';
 import React from 'react';
 
@@ -87,7 +88,8 @@ export default Capability.makeModule(() =>
         role: 'devtools-overview',
         component: () => {
           const call = useCapability(ThreadCapabilities.CallManager);
-          return <CallDebugPanel state={call.state} />;
+          const state = useAtomValue(call.stateAtom);
+          return <CallDebugPanel state={state} />;
         },
       }),
     ]),

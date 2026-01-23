@@ -7,8 +7,9 @@ import * as Option from 'effect/Option';
 
 import { Capability, Common } from '@dxos/app-framework';
 import { Obj } from '@dxos/echo';
+import { AtomRef } from '@dxos/echo-atom';
 import { Operation } from '@dxos/operation';
-import { CreateAtom, GraphBuilder, NodeMatcher } from '@dxos/plugin-graph';
+import { GraphBuilder, NodeMatcher } from '@dxos/plugin-graph';
 import { View } from '@dxos/schema';
 
 import { meta } from '../../meta';
@@ -20,7 +21,8 @@ export default Capability.makeModule(
       id: MapAction.MapOperation.Toggle.meta.key,
       match: (node) => Option.map(NodeMatcher.whenEchoType(View.View)(node), (view) => ({ view, node })),
       actions: ({ view, node }, get) => {
-        const target = get(CreateAtom.fromSignal(() => (node.properties as any).presentation?.target));
+        const presentationRef = (node.properties as any).presentation;
+        const target = presentationRef ? get(AtomRef.make(presentationRef)) : undefined;
         if (!Obj.instanceOf(Map.Map, target)) {
           return Effect.succeed([]);
         }

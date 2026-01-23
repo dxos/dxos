@@ -97,31 +97,48 @@ export const FormCellEditor = <T extends Type.Entity.Any = Type.Entity.Any>({
 
   const handleSave = useCallback<NonNullable<FormRootProps<any>['onSave']>>(
     (values) => {
+      if (!originalRow) {
+        return;
+      }
       const path = fieldProjection.field.path;
       const value = getDeep(values, [path]);
-      setDeep(originalRow, [path], value);
-      contextEditing?.cellElement?.focus();
-      setEditing(null);
-      setLocalEditing(false);
-      onSave?.();
-    },
-    [fieldProjection.field.path, onSave, contextEditing, originalRow],
-  );
-
-  const handleCreate = useCallback<NonNullable<FormRootProps<any>['onCreate']>>(
-    (schema, values) => {
-      const objectWithId = onCreate?.(schema, values);
-      if (objectWithId) {
-        const ref = Ref.make(objectWithId);
-        const path = fieldProjection.field.path;
-        setDeep(originalRow, [path], ref);
+      // Use model's changeRow for consistent mutation handling.
+      if (model) {
+        model.changeRow(originalRow, (mutableRow) => {
+          setDeep(mutableRow, [path], value);
+        });
+      } else {
+        setDeep(originalRow, [path], value);
       }
       contextEditing?.cellElement?.focus();
       setEditing(null);
       setLocalEditing(false);
       onSave?.();
     },
-    [fieldProjection.field.path, onSave, contextEditing, originalRow, onCreate],
+    [fieldProjection.field.path, onSave, contextEditing, originalRow, model],
+  );
+
+  const handleCreate = useCallback<NonNullable<FormRootProps<any>['onCreate']>>(
+    (schema, values) => {
+      const objectWithId = onCreate?.(schema, values);
+      if (objectWithId && originalRow) {
+        const ref = Ref.make(objectWithId);
+        const path = fieldProjection.field.path;
+        // Use model's changeRow for consistent mutation handling.
+        if (model) {
+          model.changeRow(originalRow, (mutableRow) => {
+            setDeep(mutableRow, [path], ref);
+          });
+        } else {
+          setDeep(originalRow, [path], ref);
+        }
+      }
+      contextEditing?.cellElement?.focus();
+      setEditing(null);
+      setLocalEditing(false);
+      onSave?.();
+    },
+    [fieldProjection.field.path, onSave, contextEditing, originalRow, onCreate, model],
   );
 
   const getOptions = useCallback<NonNullable<RefFieldProps['getOptions']>>(

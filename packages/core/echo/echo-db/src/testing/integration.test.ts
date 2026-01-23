@@ -15,7 +15,6 @@ import {
   brokenAutomergeReplicatorFactory,
   testAutomergeReplicatorFactory,
 } from '@dxos/echo-pipeline/testing';
-import { registerSignalsRuntime } from '@dxos/echo-signals';
 import { DXN, type ObjectId, PublicKey } from '@dxos/keys';
 import { TestBuilder as TeleportTestBuilder, TestPeer as TeleportTestPeer } from '@dxos/teleport/testing';
 import { deferAsync } from '@dxos/util';
@@ -23,8 +22,6 @@ import { deferAsync } from '@dxos/util';
 import { Filter, Query } from '../query';
 
 import { EchoTestBuilder, createDataAssertion } from './echo-test-builder';
-
-registerSignalsRuntime();
 
 describe('Integration tests', () => {
   let builder: EchoTestBuilder;
@@ -146,9 +143,8 @@ describe('Integration tests', () => {
     await dataAssertion.verify(db2);
   });
 
-  // TODO(dmaretskyi): Test Ref.load() too.
   // TODO(dmaretskyi): Test that accessing the ref DXN doesn't load the target.
-  test('references are loaded lazily and receive signal notifications', async () => {
+  test('references are loaded lazily and can be loaded via load()', async () => {
     await using peer = await builder.createPeer();
 
     let outerId: string;
@@ -164,17 +160,12 @@ describe('Integration tests', () => {
     {
       await using db = await peer.openLastDatabase();
       const outer = (await db.query(Filter.id(outerId)).first()) as any;
-      const loaded = new Trigger();
-      using updates = updateCounter(() => {
-        if (outer.inner.target) {
-          loaded.wake();
-        }
-      });
       expect(outer.inner.target).to.eq(undefined);
 
-      await loaded.wait();
+      // Use explicit load() to load the reference.
+      const loaded = await outer.inner.load();
+      expect(loaded).to.include({ name: 'inner' });
       expect(outer.inner.target).to.include({ name: 'inner' });
-      expect(updates.count).to.eq(1);
     }
   });
 

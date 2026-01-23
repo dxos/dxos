@@ -7,7 +7,6 @@ import { Event } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { type Database, type Entity, Obj, type Ref } from '@dxos/echo';
 import { type HasId, type ObjectJSON, SelfDXNId, assertObjectModel, setRefResolverOnData } from '@dxos/echo/internal';
-import { compositeRuntime } from '@dxos/echo-signals/runtime';
 import { assertArgument, failedInvariant } from '@dxos/invariant';
 import { type DXN, type ObjectId, type SpaceId } from '@dxos/keys';
 import { defineHiddenProperty } from '@dxos/live-object';
@@ -32,7 +31,6 @@ const POLLING_INTERVAL = 1_000;
  */
 export class QueueImpl<T extends Entity.Unknown = Entity.Unknown> implements Queue<T> {
   private readonly _ctx = new Context();
-  private readonly _signal = compositeRuntime.createSignal();
 
   public readonly updated = new Event();
 
@@ -86,7 +84,6 @@ export class QueueImpl<T extends Entity.Unknown = Entity.Unknown> implements Que
     } finally {
       this._isLoading = false;
       if (changed) {
-        this._signal.notifyWrite();
         this.updated.emit();
       }
     }
@@ -135,7 +132,6 @@ export class QueueImpl<T extends Entity.Unknown = Entity.Unknown> implements Que
    * @deprecated Use `query` method instead.
    */
   get isLoading(): boolean {
-    this._signal.notifyRead();
     return this._isLoading;
   }
 
@@ -143,7 +139,6 @@ export class QueueImpl<T extends Entity.Unknown = Entity.Unknown> implements Que
    * @deprecated Use `query` method instead.
    */
   get error(): Error | null {
-    this._signal.notifyRead();
     return this._error;
   }
 
@@ -151,7 +146,6 @@ export class QueueImpl<T extends Entity.Unknown = Entity.Unknown> implements Que
    * @deprecated Use `query` method instead.
    */
   get objects(): T[] {
-    this._signal.notifyRead();
     return this.getObjectsSync();
   }
 
@@ -175,7 +169,6 @@ export class QueueImpl<T extends Entity.Unknown = Entity.Unknown> implements Que
     for (const item of items) {
       this._objectCache.set(item.id, item as T);
     }
-    this._signal.notifyWrite();
     this.updated.emit();
 
     const json = items.map((item) => Obj.toJSON(item));
@@ -192,7 +185,6 @@ export class QueueImpl<T extends Entity.Unknown = Entity.Unknown> implements Que
     } catch (err) {
       log.catch(err);
       this._error = err as Error;
-      this._signal.notifyWrite();
       this.updated.emit();
     }
   }
@@ -204,7 +196,6 @@ export class QueueImpl<T extends Entity.Unknown = Entity.Unknown> implements Que
     for (const id of ids) {
       this._objectCache.delete(id);
     }
-    this._signal.notifyWrite();
     this.updated.emit();
 
     try {
@@ -216,7 +207,6 @@ export class QueueImpl<T extends Entity.Unknown = Entity.Unknown> implements Que
       });
     } catch (err) {
       this._error = err as Error;
-      this._signal.notifyWrite();
       this.updated.emit();
     }
   }
@@ -273,7 +263,7 @@ export class QueueImpl<T extends Entity.Unknown = Entity.Unknown> implements Que
 
   /**
    * Internal use.
-   * Doesn't trigger signals.
+   * Doesn't trigger update events.
    */
   getObjectsSync(): T[] {
     return this._objects;

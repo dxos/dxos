@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { compositeRuntime } from '@dxos/echo-signals/runtime';
+import { batchEvents } from '@dxos/live-object';
 
 import type { KeyPath } from '../core-db';
 
@@ -32,7 +32,7 @@ export class EchoArray<T> extends Array<T> {
 
       const fn = function (this: EchoArray<any>, ...args: any[]) {
         let result!: any;
-        compositeRuntime.batch(() => {
+        batchEvents(() => {
           const handler = this[symbolHandler];
           result = ((handler as any)[handlerMethodName] as Function).apply(handler, [this, this[symbolPath], ...args]);
         });

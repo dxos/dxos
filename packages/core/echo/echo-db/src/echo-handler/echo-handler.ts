@@ -130,8 +130,6 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
   }
 
   ownKeys(target: ProxyTarget): ArrayLike<string | symbol> {
-    target[symbolInternals].signal.notifyRead();
-
     const { value } = this._getDecodedValueAtPath(target);
     const keys = typeof value === 'object' ? Reflect.ownKeys(value) : [];
     if (isRootDataObject(target)) {
@@ -234,8 +232,6 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
           return undefined;
       }
     }
-
-    target[symbolInternals].signal.notifyRead();
 
     // Reactive properties on root and nested records.
     switch (prop) {
@@ -857,7 +853,6 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
 
   // TODO(dmaretskyi): Re-use existing json serializer
   private _toJSON(target: ProxyTarget): ObjectJSON {
-    target[symbolInternals].signal.notifyRead();
     const typeRef = target[symbolInternals].core.getType();
     const reified = this._getReified(target);
 
@@ -1050,7 +1045,6 @@ export const createObject = <T extends AnyProperties>(obj: T): CreateObjectRetur
           queueNotification(core);
         } else {
           // Immediate notification for external changes (sync from peers).
-          target[symbolInternals].signal.notifyWrite();
           target[EventId]?.emit();
         }
       }),
@@ -1086,7 +1080,6 @@ export const createObject = <T extends AnyProperties>(obj: T): CreateObjectRetur
           queueNotification(core);
         } else {
           // Immediate notification for external changes (sync from peers).
-          target[symbolInternals].signal.notifyWrite();
           target[EventId]?.emit();
         }
       }),
@@ -1144,7 +1137,6 @@ export const initEchoReactiveObjectRootProxy = (core: ObjectCore, database?: Ech
       queueNotification(core);
     } else {
       // Immediate notification for external changes (sync from peers).
-      target[symbolInternals].signal.notifyWrite();
       target[EventId]?.emit();
     }
   });

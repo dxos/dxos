@@ -8,12 +8,12 @@ import * as Option from 'effect/Option';
 
 import { Capability, Common } from '@dxos/app-framework';
 import { Filter, Obj, type QueryResult, Ref } from '@dxos/echo';
+import { AtomObj, AtomQuery } from '@dxos/echo-atom';
 import { invariant } from '@dxos/invariant';
 import { AttentionCapabilities } from '@dxos/plugin-attention';
 import { AutomationCapabilities, invokeFunctionWithTracing } from '@dxos/plugin-automation';
 import { ATTENDABLE_PATH_SEPARATOR, PLANK_COMPANION_TYPE } from '@dxos/plugin-deck/types';
-import { CreateAtom, GraphBuilder, Node } from '@dxos/plugin-graph';
-import { atomFromQuery } from '@dxos/plugin-space';
+import { GraphBuilder, Node } from '@dxos/plugin-graph';
 import { type Event, type Message } from '@dxos/types';
 import { kebabize } from '@dxos/util';
 
@@ -34,56 +34,55 @@ export default Capability.makeModule(
           node.properties.filter === undefined
             ? Option.some(node.data)
             : Option.none(),
-        connector: (mailbox, get) =>
-          Effect.succeed(
-            get(
-              CreateAtom.fromSignal(() => [
+        connector: (mailbox, get) => {
+          // Subscribe to mailbox changes to track filter updates.
+          const mailboxSnapshot = get(AtomObj.make(mailbox));
+          return Effect.succeed([
+            {
+              id: `${Obj.getDXN(mailbox).toString()}-unfiltered`,
+              type: `${Mailbox.Mailbox.typename}-filter`,
+              data: mailbox,
+              properties: {
+                label: ['inbox label', { ns: meta.id }],
+                icon: 'ph--tray--regular',
+                filter: null,
+              },
+            },
+            ...(mailboxSnapshot.filters?.map(({ name, filter }: { name: string; filter: any }) => ({
+              id: `${Obj.getDXN(mailbox).toString()}-filter-${kebabize(name)}`,
+              type: `${Mailbox.Mailbox.typename}-filter`,
+              data: mailbox,
+              properties: {
+                label: name,
+                icon: 'ph--tray--regular',
+                filter,
+              },
+              nodes: [
                 {
-                  id: `${Obj.getDXN(mailbox).toString()}-unfiltered`,
-                  type: `${Mailbox.Mailbox.typename}-filter`,
-                  data: mailbox,
+                  id: `${Obj.getDXN(mailbox).toString()}-filter-${kebabize(name)}-delete`,
+                  type: Node.ActionType,
+                  data: Effect.fnUntraced(function* () {
+                    const index = mailbox.filters.findIndex((f: any) => f.name === name);
+                    Obj.change(mailbox, (m) => {
+                      m.filters.splice(index, 1);
+                    });
+                  }),
                   properties: {
-                    label: ['inbox label', { ns: meta.id }],
-                    icon: 'ph--tray--regular',
-                    filter: null,
+                    label: ['delete filter label', { ns: meta.id }],
+                    icon: 'ph--trash--regular',
+                    disposition: 'list-item',
                   },
                 },
-                ...mailbox.filters?.map(({ name, filter }: { name: string; filter: any }) => ({
-                  id: `${Obj.getDXN(mailbox).toString()}-filter-${kebabize(name)}`,
-                  type: `${Mailbox.Mailbox.typename}-filter`,
-                  data: mailbox,
-                  properties: {
-                    label: name,
-                    icon: 'ph--tray--regular',
-                    filter,
-                  },
-                  nodes: [
-                    {
-                      id: `${Obj.getDXN(mailbox).toString()}-filter-${kebabize(name)}-delete`,
-                      type: Node.ActionType,
-                      data: Effect.fnUntraced(function* () {
-                        const index = mailbox.filters.findIndex((f: any) => f.name === name);
-                        Obj.change(mailbox, (m) => {
-                          m.filters.splice(index, 1);
-                        });
-                      }),
-                      properties: {
-                        label: ['delete filter label', { ns: meta.id }],
-                        icon: 'ph--trash--regular',
-                        disposition: 'list-item',
-                      },
-                    },
-                  ],
-                })),
-              ]),
-            ),
-          ),
+              ],
+            })) ?? []),
+          ]);
+        },
       }),
       GraphBuilder.createTypeExtension({
         id: `${meta.id}/mailbox-message`,
         type: Mailbox.Mailbox,
         connector: (mailbox, get) => {
-          const queue = get(CreateAtom.fromSignal(() => mailbox.queue.target));
+          const queue = mailbox.queue.target;
           if (!queue) {
             return Effect.succeed([]);
           }
@@ -100,7 +99,7 @@ export default Capability.makeModule(
           const query = queue.query(
             messageId ? Filter.id(messageId) : Filter.nothing(),
           ) as QueryResult.QueryResult<Message.Message>;
-          const message = get(atomFromQuery(query))[0];
+          const message = get(AtomQuery.make(query))[0];
           return Effect.succeed([
             {
               id: `${nodeId}${ATTENDABLE_PATH_SEPARATOR}message`,
@@ -119,7 +118,7 @@ export default Capability.makeModule(
         id: `${meta.id}/calendar-event`,
         type: Calendar.Calendar,
         connector: (calendar, get) => {
-          const queue = get(CreateAtom.fromSignal(() => calendar.queue.target));
+          const queue = calendar.queue.target;
           if (!queue) {
             return Effect.succeed([]);
           }
@@ -136,7 +135,7 @@ export default Capability.makeModule(
           const query = queue.query(
             eventId ? Filter.id(eventId) : Filter.nothing(),
           ) as QueryResult.QueryResult<Event.Event>;
-          const event = get(atomFromQuery(query))[0];
+          const event = get(AtomQuery.make(query))[0];
           return Effect.succeed([
             {
               id: `${nodeId}${ATTENDABLE_PATH_SEPARATOR}event`,
