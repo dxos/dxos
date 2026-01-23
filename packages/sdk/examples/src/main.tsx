@@ -15,8 +15,8 @@ import { type Space, type TypedObject } from '@dxos/react-client/echo';
 import { ConnectionState } from '@dxos/react-client/mesh';
 import { TestBuilder, performInvitation } from '@dxos/react-client/testing';
 import { Icon, Input, Status, ThemeProvider, Tooltip } from '@dxos/react-ui';
-import { defaultTx, mx } from '@dxos/react-ui-theme';
 import { Text } from '@dxos/schema';
+import { defaultTx, mx } from '@dxos/ui-theme';
 import { type MaybePromise } from '@dxos/util';
 
 import TaskList from './examples/TaskList';
@@ -42,12 +42,12 @@ const setupPeersInSpace = async (options: PeersInSpaceProps = {}) => {
   const space = await clients[0].spaces.create({ name: faker.commerce.productName() });
   await onCreateSpace?.({ space });
   await Promise.all(clients.slice(1).map((client) => performInvitation({ host: space, guest: client.spaces })));
-  return { spaceKey: space.key, clients };
+  return { spaceId: space.id, clients };
 };
 
 // TODO(wittjosiah): Migrate to story once chromatic publish is fixed.
 const main = async () => {
-  const { clients, spaceKey } = await setupPeersInSpace({
+  const { clients, spaceId } = await setupPeersInSpace({
     count: 2,
     types: [Markdown.Document, Text.Text],
     onCreateSpace: ({ space }) => {
@@ -67,7 +67,7 @@ const main = async () => {
   const handleToggleBatching = async (checked: boolean) => {
     const _batchSize = checked ? 64 : 0;
     clients.forEach((client) => {
-      const space = client.spaces.get(spaceKey);
+      const space = client.spaces.get(spaceId);
       if (space) {
         // TODO(dmaretskyi): Is this code still relevant?
         // space.db._backend.maxBatchSize = batchSize;
@@ -118,7 +118,7 @@ const main = async () => {
           </Tooltip.Provider>
           {clients.map((client, index) => (
             <ClientProvider key={index} client={client}>
-              <TaskList id={index} spaceKey={spaceKey} />
+              <TaskList id={index} spaceId={spaceId} />
             </ClientProvider>
           ))}
         </div>

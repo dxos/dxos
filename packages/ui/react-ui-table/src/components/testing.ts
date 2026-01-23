@@ -5,13 +5,14 @@
 import * as Schema from 'effect/Schema';
 import { useEffect } from 'react';
 
-import { FormatEnum, ObjectId, TypeEnum, TypedObject, setValue } from '@dxos/echo/internal';
+import { Format } from '@dxos/echo';
+import { TypeEnum, TypedObject } from '@dxos/echo/internal';
+import { setValue } from '@dxos/effect';
 import { live } from '@dxos/live-object';
 import { faker } from '@dxos/random';
 import { type ProjectionModel } from '@dxos/schema';
 
 export const TestSchema = TypedObject({ typename: 'example.com/type/Test', version: '0.1.0' })({
-  id: ObjectId,
   name: Schema.optional(Schema.String),
   age: Schema.optional(Schema.Number),
   active: Schema.optional(Schema.Boolean),
@@ -88,7 +89,7 @@ export const useSimulator = ({ items, projection, insertInterval, updateInterval
 
         if (format) {
           switch (format) {
-            case FormatEnum.Currency: {
+            case Format.TypeFormat.Currency: {
               item[path] = Math.floor(Math.random() * 1000);
               break;
             }

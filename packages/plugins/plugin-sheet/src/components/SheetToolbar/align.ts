@@ -5,7 +5,13 @@
 import { useEffect } from 'react';
 
 import { type CompleteCellRange, inRange } from '@dxos/compute';
-import { type ToolbarMenuActionGroupProperties, createMenuAction, createMenuItemGroup } from '@dxos/react-ui-menu';
+import { Obj } from '@dxos/echo';
+import {
+  type ActionGraphProps,
+  type ToolbarMenuActionGroupProperties,
+  createMenuAction,
+  createMenuItemGroup,
+} from '@dxos/react-ui-menu';
 
 import { meta } from '../../meta';
 import { type SheetModel } from '../../model';
@@ -65,13 +71,19 @@ const createAlignActions = (model: SheetModel, state: ToolbarState, cursorFallba
           value: alignValue as AlignValue,
         };
         if (index < 0) {
-          model.sheet.ranges?.push(nextRangeEntity);
+          Obj.change(model.sheet, (s) => {
+            s.ranges?.push(nextRangeEntity);
+          });
           state[alignKey] = nextRangeEntity.value;
         } else if (model.sheet.ranges![index].value === nextRangeEntity.value) {
-          model.sheet.ranges?.splice(index, 1);
+          Obj.change(model.sheet, (s) => {
+            s.ranges?.splice(index, 1);
+          });
           state[alignKey] = undefined;
         } else {
-          model.sheet.ranges?.splice(index, 1, nextRangeEntity);
+          Obj.change(model.sheet, (s) => {
+            s.ranges?.splice(index, 1, nextRangeEntity);
+          });
           state[alignKey] = nextRangeEntity.value;
         }
       },
@@ -86,7 +98,11 @@ const createAlignActions = (model: SheetModel, state: ToolbarState, cursorFallba
     );
   });
 
-export const createAlign = (model: SheetModel, state: ToolbarState, cursorFallbackRange?: CompleteCellRange) => {
+export const createAlign = (
+  model: SheetModel,
+  state: ToolbarState,
+  cursorFallbackRange?: CompleteCellRange,
+): ActionGraphProps => {
   const alignGroup = createAlignGroupAction(state[alignKey]);
   const alignActions = createAlignActions(model, state, cursorFallbackRange);
   return {

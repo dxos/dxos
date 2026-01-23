@@ -8,7 +8,7 @@ import * as Layer from 'effect/Layer';
 import { describe } from 'vitest';
 
 import { TestAiService } from '@dxos/ai/testing';
-import { TestHelpers } from '@dxos/effect';
+import { TestHelpers } from '@dxos/effect/testing';
 import { CredentialsService, TracingService } from '@dxos/functions';
 import { FunctionInvocationServiceLayerTest, TestDatabaseLayer } from '@dxos/functions-runtime/testing';
 

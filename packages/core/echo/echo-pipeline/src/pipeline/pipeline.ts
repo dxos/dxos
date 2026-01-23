@@ -19,7 +19,7 @@ import { createMappedFeedWriter } from '../common';
 import { createMessageSelector } from './message-selector';
 import { TimeframeClock, mapFeedIndexesToTimeframe, startAfter } from './timeframe-clock';
 
-export type WaitUntilReachedTargetParams = {
+export type WaitUntilReachedTargetProps = {
   /**
    * For cancellation.
    */
@@ -132,7 +132,7 @@ export class PipelineState {
     ctx = new Context(),
     timeout,
     breakOnStall = true,
-  }: WaitUntilReachedTargetParams = {}): Promise<void> {
+  }: WaitUntilReachedTargetProps = {}): Promise<void> {
     log('waitUntilReachedTargetTimeframe', {
       timeout,
       current: this.timeframe,

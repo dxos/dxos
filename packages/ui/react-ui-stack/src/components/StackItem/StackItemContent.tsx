@@ -5,11 +5,10 @@
 import React, { type ComponentPropsWithoutRef, forwardRef, useMemo } from 'react';
 
 import { type ThemedClassName } from '@dxos/react-ui';
-import { mx } from '@dxos/react-ui-theme';
+import { mx } from '@dxos/ui-theme';
 
 import { useStack, useStackItem } from '../StackContext';
 
-// TODO(burdon): Add prop for container-max-width?
 export type StackItemContentProps = ThemedClassName<Omit<ComponentPropsWithoutRef<'div'>, 'role' | 'scrollable'>> & {
   /**
    * This flag is required in order to clarify a developer experience that seemed like it needed extra boilerplate

@@ -8,7 +8,7 @@ import { type Node } from '@dxos/app-graph';
 import { DensityProvider, IconButton, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { Tree } from '@dxos/react-ui-list';
 import { Tabs } from '@dxos/react-ui-tabs';
-import { hoverableControlItem, hoverableOpenControlItem } from '@dxos/react-ui-theme';
+import { hoverableControlItem, hoverableOpenControlItem } from '@dxos/ui-theme';
 
 import { meta } from '../../meta';
 import { useNavTreeContext } from '../NavTreeContext';
@@ -17,7 +17,7 @@ import { NavTreeItemColumns } from '../NavTreeItem';
 export type L1PanelProps = {
   open?: boolean;
   path: string[];
-  item: Node<any>;
+  item: Node.Node;
   currentItemId: string;
   onBack?: () => void;
 };
@@ -36,7 +36,7 @@ export const L1Panel = ({ open, path, item, currentItemId, onBack }: L1PanelProp
   const alternatePath = useMemo(() => [...path, item.id], [item.id, path]);
   const isAlternate = isAlternateTree?.(alternatePath, item) ?? false;
   const useAlternateItems = useCallback(
-    (node?: Node, { disposition }: { disposition?: string } = {}) => {
+    (node?: Node.Node, { disposition }: { disposition?: string } = {}) => {
       // TODO(wittjosiah): Sorting is expensive, limit to necessary items for now.
       return useItems(node, { disposition, sort: node?.id === alternateTree.id });
     },
@@ -124,6 +124,7 @@ const L1PanelHeader = ({ item, path, onBack }: L1PanelProps) => {
       <h2 className='flex-1 truncate min-is-0'>{title}</h2>
       {(backCapable && (
         <IconButton
+          data-testid='treeView.primaryTreeButton'
           variant='ghost'
           icon='ph--arrow-u-down-left--regular'
           iconOnly

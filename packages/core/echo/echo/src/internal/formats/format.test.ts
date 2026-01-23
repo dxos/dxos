@@ -5,10 +5,10 @@
 import * as Schema from 'effect/Schema';
 import { describe, test } from 'vitest';
 
-import { toJsonSchema } from '../json';
+import { toJsonSchema } from '../json-schema';
 
 import { Format } from './format';
-import { FormatEnum, TypeEnum, getTypeEnum } from './types';
+import { TypeEnum, TypeFormat, getTypeEnum } from './types';
 
 describe('formats', () => {
   test('annotations', ({ expect }) => {
@@ -48,7 +48,7 @@ describe('formats', () => {
       expect(getTypeEnum(prop)).to.eq(TypeEnum.String);
       expect(prop).includes({
         type: TypeEnum.String,
-        format: FormatEnum.Email,
+        format: TypeFormat.Email,
         title: 'Email',
       });
     }
@@ -58,7 +58,7 @@ describe('formats', () => {
       expect(getTypeEnum(prop)).to.eq(TypeEnum.Number);
       expect(prop).includes({
         type: TypeEnum.Number,
-        format: FormatEnum.Currency,
+        format: TypeFormat.Currency,
         title: 'Currency',
         multipleOf: 0.01,
         currency: 'USD',
@@ -70,7 +70,7 @@ describe('formats', () => {
       expect(getTypeEnum(prop)).to.eq(TypeEnum.String);
       expect(prop).includes({
         type: TypeEnum.String,
-        format: FormatEnum.Date,
+        format: TypeFormat.Date,
       });
     }
   });

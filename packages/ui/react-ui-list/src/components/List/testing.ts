@@ -4,11 +4,11 @@
 
 import * as Schema from 'effect/Schema';
 
-import { ObjectId } from '@dxos/echo/internal';
+import { Obj } from '@dxos/echo';
 import { faker } from '@dxos/random';
 
 export const TestItemSchema = Schema.Struct({
-  id: ObjectId,
+  id: Obj.ID,
   name: Schema.String,
 });
 

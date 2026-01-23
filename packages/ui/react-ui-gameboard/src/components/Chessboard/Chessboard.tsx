@@ -6,7 +6,7 @@ import React, { type PropsWithChildren, forwardRef, memo, useEffect, useMemo, us
 import { useResizeDetector } from 'react-resize-detector';
 
 import { type ThemedClassName, useForwardedRef } from '@dxos/react-ui';
-import { mx } from '@dxos/react-ui-theme';
+import { mx } from '@dxos/ui-theme';
 import { isNonNullable } from '@dxos/util';
 
 import {

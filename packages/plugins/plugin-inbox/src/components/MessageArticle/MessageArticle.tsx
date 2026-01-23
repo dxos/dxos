@@ -4,15 +4,13 @@
 
 import React, { useCallback, useMemo } from 'react';
 
-import { createIntent } from '@dxos/app-framework';
-import { type SurfaceComponentProps, useIntentDispatcher } from '@dxos/app-framework/react';
-import { getSpace } from '@dxos/client/echo';
+import { type SurfaceComponentProps, useOperationInvoker } from '@dxos/app-framework/react';
 import { Obj } from '@dxos/echo';
 import { StackItem } from '@dxos/react-ui-stack';
 import { type Message as MessageType } from '@dxos/types';
 
 import { useActorContact } from '../../hooks';
-import { InboxAction, type Mailbox } from '../../types';
+import { InboxOperation, type Mailbox } from '../../types';
 
 import { Message, type MessageHeaderProps } from './Message';
 import { type ViewMode } from './useToolbar';
@@ -29,22 +27,51 @@ export const MessageArticle = ({
     return textBlocks.length > 1 && !!textBlocks[1]?.text ? 'enriched' : 'plain-only';
   }, [message]);
 
-  const space = getSpace(mailbox);
-  const sender = useActorContact(space, message.sender);
+  const db = Obj.getDatabase(mailbox);
+  const sender = useActorContact(db, message.sender);
 
-  const { dispatchPromise: dispatch } = useIntentDispatcher();
+  const { invokePromise } = useOperationInvoker();
   const handleContactCreate = useCallback<NonNullable<MessageHeaderProps['onContactCreate']>>(
     (actor) => {
-      if (space && actor) {
-        void dispatch(createIntent(InboxAction.ExtractContact, { space, actor }));
+      if (db && actor) {
+        void invokePromise(InboxOperation.ExtractContact, { db, actor });
       }
     },
-    [space, dispatch],
+    [db, invokePromise],
   );
+
+  const handleReply = useCallback(() => {
+    void invokePromise(InboxOperation.OpenComposeEmail, {
+      mode: 'reply',
+      originalMessage: message,
+    });
+  }, [invokePromise, message]);
+
+  const handleReplyAll = useCallback(() => {
+    void invokePromise(InboxOperation.OpenComposeEmail, {
+      mode: 'reply-all',
+      originalMessage: message,
+    });
+  }, [invokePromise, message]);
+
+  const handleForward = useCallback(() => {
+    void invokePromise(InboxOperation.OpenComposeEmail, {
+      mode: 'forward',
+      originalMessage: message,
+    });
+  }, [invokePromise, message]);
 
   return (
     <StackItem.Content toolbar>
-      <Message.Root attendableId={Obj.getDXN(mailbox).toString()} viewMode={viewMode} message={message} sender={sender}>
+      <Message.Root
+        attendableId={Obj.getDXN(mailbox).toString()}
+        viewMode={viewMode}
+        message={message}
+        sender={sender}
+        onReply={handleReply}
+        onReplyAll={handleReplyAll}
+        onForward={handleForward}
+      >
         <Message.Toolbar />
         <Message.Viewport role={role}>
           <Message.Header onContactCreate={handleContactCreate} />

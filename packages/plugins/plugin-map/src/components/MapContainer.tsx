@@ -5,8 +5,8 @@
 import * as Predicate from 'effect/Predicate';
 import React from 'react';
 
-import { useClient } from '@dxos/react-client';
-import { Filter, getSpace, useQuery, useSchema } from '@dxos/react-client/echo';
+import { Obj } from '@dxos/echo';
+import { Filter, useQuery, useSchema } from '@dxos/react-client/echo';
 import { useControlledState } from '@dxos/react-ui';
 import { useSelected } from '@dxos/react-ui-attention';
 import { type GeoMarker, type MapRootProps } from '@dxos/react-ui-geo';
@@ -28,15 +28,14 @@ export type MapContainerProps = {
   object?: Map.Map;
 } & (GeoControlProps & Pick<MapRootProps, 'onChange'>);
 
-export const MapContainer = ({ role, type: typeParam = 'map', object, ...props }: MapContainerProps) => {
-  const [type, setType] = useControlledState(typeParam);
-  const client = useClient();
-  const space = getSpace(object);
+export const MapContainer = ({ role, type: typeProp = 'map', object, ...props }: MapContainerProps) => {
+  const [type, setType] = useControlledState(typeProp);
+  const db = object && Obj.getDatabase(object);
 
   const view = object?.view?.target;
   const typename = view?.query ? getTypenameFromQuery(view.query.ast) : undefined;
-  const schema = useSchema(client, space, typename);
-  const objects = useQuery(space, schema ? Filter.type(schema) : Filter.nothing());
+  const schema = useSchema(db, typename);
+  const objects = useQuery(db, schema ? Filter.type(schema) : Filter.nothing());
 
   const markers = objects
     .map((row) => {

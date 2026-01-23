@@ -10,7 +10,7 @@ export type TreeNode = {
   children?: TreeNode[];
 };
 
-export const mapGraphToTreeData = (model: GraphModel, maxDepth = 8): TreeNode | undefined => {
+export const mapGraphToTreeData = (model: GraphModel.GraphModel, maxDepth = 8): TreeNode | undefined => {
   // TODO(burdon): Convert to common/graph.
   // const mapNode = (node: N, depth = 0): TreeNode => {
   //   const treeNode: TreeNode = {

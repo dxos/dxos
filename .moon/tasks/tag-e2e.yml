@@ -1,7 +1,7 @@
 $schema: https://moonrepo.dev/schemas/tasks.json
 tasks:
   e2e:
-    command: playwright test
+    command: pnpm exec playwright test
     args:
       - --config=src/playwright/playwright.config.ts
     deps:

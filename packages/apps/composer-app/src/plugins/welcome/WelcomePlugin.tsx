@@ -2,7 +2,9 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Capabilities, Events, allOf, contributes, defineModule, definePlugin } from '@dxos/app-framework';
+import * as Effect from 'effect/Effect';
+
+import { ActivationEvent, Capability, Common, Plugin } from '@dxos/app-framework';
 import { ClientEvents } from '@dxos/plugin-client';
 import { SpaceEvents } from '@dxos/plugin-space';
 
@@ -10,31 +12,32 @@ import { DefaultContent, Onboarding, ReactSurface } from './capabilities';
 import { meta } from './meta';
 import { translations } from './translations';
 
-export const WelcomePlugin = definePlugin(meta, () => [
-  defineModule({
+export const WelcomePlugin = Plugin.define(meta).pipe(
+  Plugin.addModule({
     id: `${meta.id}/module/onboarding`,
-    activatesOn: allOf(
-      Events.DispatcherReady,
-      Events.AppGraphReady,
-      Events.SettingsReady,
-      Events.LayoutReady,
+    activatesOn: ActivationEvent.allOf(
+      Common.ActivationEvent.AppGraphReady,
+      Common.ActivationEvent.OperationInvokerReady,
+      Common.ActivationEvent.LayoutReady,
+      Common.ActivationEvent.SettingsReady,
       ClientEvents.ClientReady,
     ),
     activate: Onboarding,
   }),
-  defineModule({
+  Plugin.addModule({
     id: `${meta.id}/module/translations`,
-    activatesOn: Events.SetupTranslations,
-    activate: () => contributes(Capabilities.Translations, translations),
+    activatesOn: Common.ActivationEvent.SetupTranslations,
+    activate: () => Effect.succeed(Capability.contributes(Common.Capability.Translations, translations)),
   }),
-  defineModule({
+  Plugin.addModule({
     id: `${meta.id}/module/react-surface`,
-    activatesOn: Events.SetupReactSurface,
+    activatesOn: Common.ActivationEvent.SetupReactSurface,
     activate: ReactSurface,
   }),
-  defineModule({
+  Plugin.addModule({
     id: `${meta.id}/module/default-content`,
     activatesOn: SpaceEvents.DefaultSpaceReady,
     activate: DefaultContent,
   }),
-]);
+  Plugin.make,
+);

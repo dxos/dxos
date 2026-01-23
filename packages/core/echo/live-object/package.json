@@ -6,7 +6,7 @@
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
   "author": "info@dxos.org",
-  "sideEffects": true,
+  "sideEffects": false,
   "type": "module",
   "exports": {
     ".": {
@@ -29,6 +29,7 @@
     "src"
   ],
   "dependencies": {
+    "@dxos/async": "workspace:*",
     "@dxos/debug": "workspace:*",
     "@dxos/echo-protocol": "workspace:*",
     "@dxos/echo-signals": "workspace:*",
@@ -38,11 +39,11 @@
     "@dxos/log": "workspace:*",
     "@dxos/node-std": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@preact/signals-core": "^1.12.1",
-    "effect": "3.18.3"
+    "@preact/signals-core": "catalog:",
+    "effect": "catalog:"
   },
   "devDependencies": {
-    "@preact/signals-core": "^1.12.1"
+    "@preact/signals-core": "catalog:"
   },
   "publishConfig": {
     "access": "public"

@@ -7,8 +7,7 @@ import React, { type PropsWithChildren, type RefObject, useCallback, useEffect, 
 
 import { addEventListener } from '@dxos/async';
 import { DX_ANCHOR_ACTIVATE, type DxAnchorActivate, Popover } from '@dxos/react-ui';
-
-import { type PreviewLinkRef, type PreviewLinkTarget } from '../../extensions';
+import { type PreviewLinkRef, type PreviewLinkTarget } from '@dxos/ui-editor';
 
 type EditorPreviewPopoverValue = Partial<{
   link: PreviewLinkRef;

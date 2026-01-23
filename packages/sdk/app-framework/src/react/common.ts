@@ -2,12 +2,15 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Capabilities } from '../common';
+import type { OperationInvoker } from '@dxos/operation';
+
+import * as Common from '../common';
 
 import { useCapability } from './useCapabilities';
 
-export const useIntentDispatcher = () => useCapability(Capabilities.IntentDispatcher);
+export const useOperationInvoker = (): OperationInvoker.OperationInvoker =>
+  useCapability(Common.Capability.OperationInvoker);
 
-export const useAppGraph = () => useCapability(Capabilities.AppGraph);
+export const useAppGraph = (): Common.Capability.AppGraph => useCapability(Common.Capability.AppGraph);
 
-export const useLayout = () => useCapability(Capabilities.Layout);
+export const useLayout = () => useCapability(Common.Capability.Layout);

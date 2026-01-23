@@ -5,8 +5,8 @@
 import { type Decorator } from '@storybook/react';
 import React, { type ComponentType, type PropsWithChildren } from 'react';
 
-import { mx, surfaceShadow } from '@dxos/react-ui-theme';
-import { type Density, type Elevation } from '@dxos/react-ui-types';
+import { mx, surfaceShadow } from '@dxos/ui-theme';
+import { type Density, type Elevation } from '@dxos/ui-types';
 
 type Config = {
   elevations?: { elevation: Elevation; surface?: string }[];
@@ -14,7 +14,7 @@ type Config = {
 };
 
 const Container = ({ children, elevation, surface }: PropsWithChildren<{ elevation: Elevation; surface?: string }>) => (
-  <div className={mx('rounded-md border border-separator p-2', surface, surfaceShadow({ elevation }))}>{children}</div>
+  <div className={mx('rounded-md border border-separator', surface, surfaceShadow({ elevation }))}>{children}</div>
 );
 
 const Panel = ({

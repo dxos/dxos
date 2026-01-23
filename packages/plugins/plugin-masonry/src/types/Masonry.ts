@@ -15,7 +15,7 @@ const MasonrySchema = Schema.Struct({
 
   arrangement: Schema.Array(
     Schema.Struct({
-      ids: Schema.Array(Type.ObjectId),
+      ids: Schema.Array(Obj.ID),
       hidden: Schema.optional(Schema.Boolean),
     }).pipe(Schema.mutable),
   ).pipe(Schema.mutable, FormInputAnnotation.set(false), Schema.optional),
@@ -50,7 +50,7 @@ export const make = ({ name, arrangement = [], view }: MakeProps): Masonry => {
 export const MasonryV1 = Schema.Struct({
   arrangement: Schema.Array(
     Schema.Struct({
-      ids: Schema.Array(Type.ObjectId),
+      ids: Schema.Array(Obj.ID),
       hidden: Schema.optional(Schema.Boolean),
     }).pipe(Schema.mutable),
   ).pipe(Schema.mutable, Schema.optional),

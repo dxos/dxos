@@ -3,7 +3,7 @@
 //
 
 import { raise } from '@dxos/debug';
-import { type Testing } from '@dxos/schema/testing';
+import { type TestSchema } from '@dxos/schema/testing';
 import { type Message, type Person } from '@dxos/types';
 import { trim } from '@dxos/util';
 
@@ -12,16 +12,16 @@ type ProcessEmailResult = {
   summary: string;
 };
 
-type ProcessEmailParams = {
+type ProcessEmailProps = {
   email: Message.Message;
   context: {
-    labels: Testing.Label[];
-    documents?: Testing.DocumentType[];
+    labels: TestSchema.Label[];
+    documents?: TestSchema.DocumentType[];
     contacts?: Person.Person[];
   };
 };
 
-export const processEmail = async ({ email, context }: ProcessEmailParams): Promise<ProcessEmailResult> => {
+export const processEmail = async ({ email, context }: ProcessEmailProps): Promise<ProcessEmailResult> => {
   const system = trim`
     You are a helpful assistant that processes emails.
     You are given a set of labels and you need to choose one, multiple, or none to apply to the email.

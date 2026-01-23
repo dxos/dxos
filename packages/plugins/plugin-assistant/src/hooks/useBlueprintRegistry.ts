@@ -5,33 +5,32 @@
 import { useSignalEffect } from '@preact/signals-react';
 import { useCallback, useMemo, useState } from 'react';
 
-import { Capabilities } from '@dxos/app-framework';
+import { Common } from '@dxos/app-framework';
 import { useCapabilities } from '@dxos/app-framework/react';
 import { type AiContextBinder } from '@dxos/assistant';
 import { Blueprint } from '@dxos/blueprints';
-import { type Space } from '@dxos/client/echo';
-import { Filter, Obj, Ref } from '@dxos/echo';
+import { type Database, Filter, Obj, Ref } from '@dxos/echo';
 import { useQuery } from '@dxos/react-client/echo';
-import { distinctBy, isNonNullable } from '@dxos/util';
+import { distinctBy } from '@dxos/util';
 
 /**
  * Provide a registry of blueprints from plugins.
  */
 // TODO(burdon): Reconcile with eventual public registry.
 export const useBlueprintRegistry = () => {
-  const blueprints = useCapabilities(Capabilities.BlueprintDefinition);
+  const blueprints = useCapabilities(Common.Capability.BlueprintDefinition);
   return useMemo(() => new Blueprint.Registry(blueprints), [blueprints]);
 };
 
 export const useBlueprints = ({
   blueprintRegistry,
-  space,
+  db,
 }: {
   blueprintRegistry?: Blueprint.Registry;
-  space?: Space;
+  db?: Database.Database;
 }) => {
   const staticBlueprints = useMemo(() => blueprintRegistry?.query() ?? [], [blueprintRegistry]);
-  const spaceBlueprints = useQuery(space, Filter.type(Blueprint.Blueprint));
+  const spaceBlueprints = useQuery(db, Filter.type(Blueprint.Blueprint));
   return useMemo(() => {
     const blueprints = distinctBy([...staticBlueprints, ...spaceBlueprints], (b) => b.key);
     blueprints.sort(({ name: a }, { name: b }) => a.localeCompare(b));
@@ -46,8 +45,7 @@ export const useActiveBlueprints = ({ context }: { context?: AiContextBinder }) 
   const [active, setActive] = useState<Map<string, Blueprint.Blueprint>>(new Map());
 
   useSignalEffect(() => {
-    const refs = [...(context?.blueprints.value ?? [])];
-    const blueprints = refs.map((ref) => ref.target).filter(isNonNullable);
+    const blueprints = context?.blueprints.value ?? [];
     setActive(new Map(blueprints.map((blueprint) => [blueprint.key, blueprint])));
   });
 
@@ -56,11 +54,11 @@ export const useActiveBlueprints = ({ context }: { context?: AiContextBinder }) 
 
 // TODO(burdon): Move logic into binder.
 export const useBlueprintHandlers = ({
-  space,
+  db,
   context,
   blueprintRegistry,
 }: {
-  space: Space;
+  db: Database.Database;
   context?: AiContextBinder;
   blueprintRegistry?: Blueprint.Registry;
 }) => {
@@ -71,7 +69,7 @@ export const useBlueprintHandlers = ({
       }
 
       // Find existing cloned blueprint.
-      const { objects } = await space.db.query(Filter.type(Blueprint.Blueprint)).run();
+      const objects = await db.query(Filter.type(Blueprint.Blueprint)).run();
       let storedBlueprint = objects.find((blueprint) => blueprint.key === key);
       if (checked) {
         if (!storedBlueprint) {
@@ -81,14 +79,14 @@ export const useBlueprintHandlers = ({
           }
 
           // NOTE: Possible race condition with other peers.
-          storedBlueprint = space.db.add(Obj.clone(blueprint));
+          storedBlueprint = db.add(Obj.clone(blueprint));
         }
         await context.bind({ blueprints: [Ref.make(storedBlueprint)] });
       } else if (storedBlueprint) {
         await context.unbind({ blueprints: [Ref.make(storedBlueprint)] });
       }
     },
-    [space, context, blueprintRegistry],
+    [db, context, blueprintRegistry],
   );
 
   return { onUpdateBlueprint };

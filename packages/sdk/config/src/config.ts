@@ -19,7 +19,6 @@ const configRootType = schema.getCodecForType('dxos.config.Config');
 
 /**
  * Maps the given objects onto a flattened set of (key x values).
- *
  * Expects parsed yaml content of the form:
  *
  * ```
@@ -36,7 +35,6 @@ export const mapFromKeyValues = (spec: MappingSpec, values: Record<string, any>)
 
   for (const [key, { path, type }] of Object.entries(spec)) {
     let value = values[key];
-
     if (value !== undefined) {
       if (type) {
         switch (type) {
@@ -101,16 +99,16 @@ export const mapToKeyValues = (spec: MappingSpec, values: any) => {
  */
 export const validateConfig = (config: ConfigProto): ConfigProto => {
   if (!('version' in config)) {
-    throw new InvalidConfigError('Version not specified');
+    throw new InvalidConfigError({ message: 'Version not specified' });
   }
 
   if (config?.version !== 1) {
-    throw new InvalidConfigError(`Invalid config version: ${config.version}`);
+    throw new InvalidConfigError({ message: `Invalid config version: ${config.version}` });
   }
 
   const error = configRootType.protoType.verify(config);
   if (error) {
-    throw new InvalidConfigError(error);
+    throw new InvalidConfigError({ message: String(error) });
   }
 
   return config;

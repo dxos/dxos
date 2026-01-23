@@ -10,7 +10,7 @@ import { describe, test } from 'vitest';
 // Checks that packages can be used in different environments.
 
 describe('build tests', () => {
-  test('workerd', async () => {
+  test('prohibit packages that we know dont work in workerd', async () => {
     await runEnvTest({
       imports: [
         // Place import specifiers that must be running at EDGE here.
@@ -31,6 +31,15 @@ describe('build tests', () => {
         /protobufjs/,
         /@xenova\+transformers/,
       ],
+    });
+  });
+
+  test('prohibit vitest in dist builds', async () => {
+    await runEnvTest({
+      imports: ['@dxos/echo-db', '@dxos/conductor', '@dxos/echo', '@dxos/keys', '@dxos/log', '@dxos/functions'],
+      conditions: ['browser'],
+      external: ['*.wasm', 'node:async_hook'],
+      forbid: [/vitest/, /rollup/],
     });
   });
 });

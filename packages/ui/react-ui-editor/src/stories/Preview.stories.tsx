@@ -12,11 +12,7 @@ import { invariant } from '@dxos/invariant';
 import { faker } from '@dxos/random';
 import { Popover } from '@dxos/react-ui';
 import { withTheme } from '@dxos/react-ui/testing';
-import { Card } from '@dxos/react-ui-stack';
-import { hoverableControlItem, hoverableControlItemTransition, hoverableControls } from '@dxos/react-ui-theme';
-import { trim } from '@dxos/util';
-
-import { type EditorController, EditorPreviewProvider, useEditorPreview } from '../components';
+import { Card } from '@dxos/react-ui-mosaic';
 import {
   type PreviewBlock,
   type PreviewLinkRef,
@@ -24,7 +20,11 @@ import {
   getLinkRef,
   image,
   preview,
-} from '../extensions';
+} from '@dxos/ui-editor';
+import { hoverableControlItem, hoverableControlItemTransition, hoverableControls } from '@dxos/ui-theme';
+import { trim } from '@dxos/util';
+
+import { type EditorController, EditorPreviewProvider, useEditorPreview } from '../components';
 
 import { EditorStory } from './components';
 
@@ -133,7 +133,7 @@ const PreviewBlockComponent = ({ link, el, view }: { link: PreviewLinkRef; el: H
   }, [handleAction, link, target]);
 
   return createPortal(
-    <Card.StaticRoot classNames={hoverableControls}>
+    <Card.Root classNames={hoverableControls}>
       <div className='flex items-start'>
         {!view?.state.readOnly && (
           <Card.Toolbar classNames='is-min p-[--dx-cardSpacingInline]'>
@@ -166,7 +166,7 @@ const PreviewBlockComponent = ({ link, el, view }: { link: PreviewLinkRef; el: H
         </Card.Heading>
       </div>
       {target && <Card.Text classNames='line-clamp-3 mbs-0'>{target.text}</Card.Text>}
-    </Card.StaticRoot>,
+    </Card.Root>,
     el,
   );
 };
@@ -218,7 +218,6 @@ export const Default: Story = {
     }, []);
 
     // TODO(burdon): Migrate to Editor.Root.
-    // TODO(burdon): Ranges must be sorted error (decorate.enter).
     return (
       <EditorPreviewProvider onLookup={handlePreviewLookup}>
         <EditorStory ref={setController} text={text} extensions={extensions} />

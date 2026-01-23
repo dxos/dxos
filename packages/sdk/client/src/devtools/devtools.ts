@@ -17,10 +17,13 @@ import { type DiagnosticMetadata, TRACE_PROCESSOR, type TraceProcessor } from '@
 import { joinTables } from '@dxos/util';
 
 import { type Client } from '../client';
-import { SpaceState, getMeta } from '../echo';
+import { SpaceState } from '../echo';
 
 // Didn't want to add a dependency on feed store.
 type FeedWrapper = unknown;
+
+// TODO(burdon): Remove.
+const getMeta = Obj.getMeta;
 
 exposeModule('@automerge/automerge', A);
 
@@ -130,6 +133,7 @@ export const mountDevtoolsHooks = ({ client, host }: MountOptions) => {
     listDiagnostics: async () => {
       diagnostics = await TRACE_PROCESSOR.diagnosticsChannel.discover();
 
+      // eslint-disable-next-line no-console
       console.table(
         diagnostics.map((diagnostic) => ({
           ...diagnostic,
@@ -141,6 +145,7 @@ export const mountDevtoolsHooks = ({ client, host }: MountOptions) => {
                 return;
               }
 
+              // eslint-disable-next-line no-console
               console.table(data);
             });
             return undefined;
@@ -174,6 +179,7 @@ export const mountDevtoolsHooks = ({ client, host }: MountOptions) => {
   };
 
   if (client) {
+    hook.halo = client.halo;
     hook.spaces = createAccessor({
       getAll: () => client.spaces.get(),
       getByKey: (key) => client.spaces.get().find((space) => space.key.equals(key)),
@@ -183,12 +189,13 @@ export const mountDevtoolsHooks = ({ client, host }: MountOptions) => {
             .get()
             .flatMap((space) => [
               [space.id, space],
-              ...(space.state.get() === SpaceState.SPACE_READY ? ([[space.properties.name, space]] as const) : []),
+              ...(space.state.get() === SpaceState.SPACE_READY
+                ? ([[space.properties.name ?? '', space]] as const)
+                : []),
               [space.key.toHex(), space],
             ]),
         ),
     });
-    hook.halo = client.halo;
 
     hook.get = async (dxn) => {
       if (typeof dxn === 'string') {

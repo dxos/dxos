@@ -7,12 +7,12 @@ import React from 'react';
 import { type Plugin } from '@dxos/app-framework';
 import { Icon, Input, Link, useTranslation } from '@dxos/react-ui';
 import { StackItem } from '@dxos/react-ui-stack';
-import { getStyles, mx } from '@dxos/react-ui-theme';
+import { getStyles, mx } from '@dxos/ui-theme';
 
 import { meta } from '../meta';
 
 export type PluginDetailProps = {
-  plugin: Plugin;
+  plugin: Plugin.Plugin;
   enabled?: boolean;
   onEnable?: () => void;
 };

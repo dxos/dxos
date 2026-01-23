@@ -3,13 +3,13 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
+import * as Effect from 'effect/Effect';
 import React from 'react';
 
-import { IntentPlugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Filter, Obj } from '@dxos/echo';
-import { AttentionPlugin } from '@dxos/plugin-attention';
 import { ClientPlugin } from '@dxos/plugin-client';
+import { corePlugins } from '@dxos/plugin-testing';
 import { useQuery, useSpace } from '@dxos/react-client/echo';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { useAttentionAttributes } from '@dxos/react-ui-attention';
@@ -53,22 +53,23 @@ const meta: Meta<typeof DefaultStory> = {
   render: DefaultStory as any,
   decorators: [
     withTheme,
-    withLayout({ container: 'column' }),
-    // TODO(burdon): Create story without client.
+    withLayout({ layout: 'column' }),
     withPluginManager({
       plugins: [
+        ...corePlugins(),
         ClientPlugin({
           types: [Markdown.Document],
-          onClientInitialized: async ({ client }) => {
-            await client.halo.createIdentity();
-            await client.spaces.waitUntilReady();
-            const space = client.spaces.default;
-            await space.waitUntilReady();
-            space.db.add(Markdown.make({ content }));
-          },
+          onClientInitialized: ({ client }) =>
+            Effect.gen(function* () {
+              yield* Effect.promise(() => client.halo.createIdentity());
+              yield* Effect.promise(() => client.spaces.waitUntilReady());
+              const space = client.spaces.default;
+              yield* Effect.promise(() => space.waitUntilReady());
+
+              space.db.add(Markdown.make({ content }));
+            }),
         }),
-        IntentPlugin(),
-        AttentionPlugin(),
+        ...corePlugins(),
       ],
     }),
   ],

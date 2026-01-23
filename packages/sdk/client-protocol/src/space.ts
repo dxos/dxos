@@ -6,7 +6,8 @@ import * as Schema from 'effect/Schema';
 
 import { type MulticastObservable } from '@dxos/async';
 import { type SpecificCredential } from '@dxos/credentials';
-import { type AnyLiveObject, type EchoDatabase, type QueueFactory, type SpaceSyncState } from '@dxos/echo-db';
+import { type Database, type Obj } from '@dxos/echo';
+import { type EchoDatabase, type QueueFactory, type SpaceSyncState } from '@dxos/echo-db';
 import { type PublicKey, type SpaceId } from '@dxos/keys';
 import { type Messenger } from '@dxos/protocols';
 import {
@@ -24,6 +25,7 @@ import { type SpaceSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
 import { type Credential, type Epoch } from '@dxos/protocols/proto/dxos/halo/credentials';
 
 import { type CancellableInvitation } from './invitations';
+import { type SpaceProperties } from './types';
 
 export type CreateEpochOptions = {
   migration?: CreateEpochRequest.Migration;
@@ -31,6 +33,7 @@ export type CreateEpochOptions = {
 };
 
 export interface SpaceInternal {
+  get db(): EchoDatabase;
   get data(): SpaceData;
 
   getCredentials(): Promise<Credential[]>;
@@ -80,7 +83,7 @@ export interface Space extends Messenger {
   /**
    * Echo database.
    */
-  get db(): EchoDatabase;
+  get db(): Database.Database;
 
   /**
    * Access to queues.
@@ -100,7 +103,7 @@ export interface Space extends Messenger {
   /**
    * Properties object.
    */
-  get properties(): AnyLiveObject<any>;
+  get properties(): Obj.Obj<SpaceProperties>;
 
   /**
    * Current state of space pipeline.
@@ -114,7 +117,7 @@ export interface Space extends Messenger {
   /**
    * @deprecated
    */
-  // TODO(wittjosiah): Remove. This should not be exposed.
+  // TODO(wittjosiah): Audit and remove. This should not be exposed (or marked as internal).
   get internal(): SpaceInternal;
 
   /**

@@ -6,7 +6,7 @@ import React from 'react';
 
 import { Surface } from '@dxos/app-framework/react';
 import { type ThemedClassName, useTranslation } from '@dxos/react-ui';
-import { mx } from '@dxos/react-ui-theme';
+import { mx, osTranslations } from '@dxos/ui-theme';
 
 import { meta } from '../../meta';
 import { CloseSidebarButton, ToggleSidebarButton } from '../Sidebar';
@@ -23,7 +23,7 @@ export const Banner = ({ variant, classNames }: ThemedClassName<{ variant?: 'top
       )}
     >
       {variant === 'sidebar' ? <CloseSidebarButton /> : <ToggleSidebarButton />}
-      <span className='self-center grow mis-1'>{t('current app name', { ns: 'appkit' })}</span>
+      <span className='self-center grow mis-1'>{t('current app name', { ns: osTranslations })}</span>
       {variant === 'topbar' && (
         <div role='none' className='absolute inset-0 pointer-events-none'>
           <div role='none' className='grid bs-full pointer-fine:p-1 max-is-md mli-auto pointer-events-auto'>

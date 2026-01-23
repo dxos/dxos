@@ -7,15 +7,15 @@ import React, { useCallback, useMemo } from 'react';
 import { Filter, Query } from '@dxos/echo';
 import { Trigger } from '@dxos/functions';
 import { useTranslation } from '@dxos/react-ui';
-import { type InputProps, SelectInput, useInputProps } from '@dxos/react-ui-form';
+import { type FormFieldComponentProps, SelectField, useFormFieldState } from '@dxos/react-ui-form';
 
 import { meta } from '../../meta';
 
-export type SpecSelectorProps = InputProps;
+export type SpecSelectorProps = FormFieldComponentProps;
 
 export const SpecSelector = (props: SpecSelectorProps) => {
   const { t } = useTranslation(meta.id);
-  const specProps = useInputProps(['spec' satisfies keyof Trigger.Trigger]);
+  const specProps = useFormFieldState(SpecSelector.displayName, ['spec' satisfies keyof Trigger.Trigger]);
 
   const handleTypeChange = useCallback(
     (_type: any, value: string): Trigger.Spec | undefined => {
@@ -47,9 +47,9 @@ export const SpecSelector = (props: SpecSelectorProps) => {
       }
 
       // Update the entire spec object, not just the `spec.kind`.
-      specProps.onValueChange('object', defaultSpec);
+      specProps.onValueChange(props.type, defaultSpec);
     },
-    [specProps],
+    [props.type, specProps],
   );
 
   const options = useMemo(
@@ -61,5 +61,7 @@ export const SpecSelector = (props: SpecSelectorProps) => {
     [t],
   );
 
-  return <SelectInput {...props} options={options} onValueChange={handleTypeChange} />;
+  return <SelectField {...props} options={options} onValueChange={handleTypeChange} />;
 };
+
+SpecSelector.displayName = 'Form.SpecSelector';

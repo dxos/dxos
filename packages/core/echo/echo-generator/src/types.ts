@@ -22,10 +22,10 @@ export type TestGeneratorMap<T extends string = string> = Record<
 
 export type TestMutationsMap<T extends string = string> = Record<T, TestObjectMutators>;
 
-export type MutationsProviderParams = {
+export type MutationsProviderProps = {
   count: number;
   mutationSize: number;
   maxContentLength: number;
 };
 
-export type TestObjectMutators = (object: AnyLiveObject<any>, params: MutationsProviderParams) => Promise<void>;
+export type TestObjectMutators = (object: AnyLiveObject<any>, params: MutationsProviderProps) => Promise<void>;

@@ -9,7 +9,8 @@ import * as Schema from 'effect/Schema';
 
 import { ArtifactId } from '@dxos/assistant';
 import { Obj } from '@dxos/echo';
-import { DatabaseService, defineFunction } from '@dxos/functions';
+import { Database } from '@dxos/echo';
+import { defineFunction } from '@dxos/functions';
 
 // TODO(burdon): Move to toolkit (i.e., tool not function).
 export default defineFunction({
@@ -25,11 +26,11 @@ export default defineFunction({
     }),
   }),
   outputSchema: Schema.Struct({
-    // TODO(wittjosiah): Type.Obj.Any | Type.Relation.Any
+    // TODO(wittjosiah): Type.Entity.Any
     object: Schema.Any,
   }),
   handler: Effect.fn(function* ({ data: { id, typename } }) {
-    const object = yield* DatabaseService.resolve(ArtifactId.toDXN(id));
+    const object = yield* Database.Service.resolve(ArtifactId.toDXN(id));
     return yield* Function.pipe(
       Option.fromNullable(object),
       Option.flatMap((object) => (Obj.getTypename(object) === typename ? Option.some(object) : Option.none())),

@@ -4,17 +4,18 @@
 
 import { Atom } from '@effect-atom/atom-react';
 
-import { type AnyEchoObject } from '@dxos/echo/internal';
-import { type QueryResult } from '@dxos/echo-db';
+import { type Entity, type QueryResult } from '@dxos/echo';
 
-export const atomFromQuery = <T extends AnyEchoObject>(query: QueryResult<T>): Atom.Atom<T[]> => {
+export const atomFromQuery = <T extends Entity.Unknown = Entity.Unknown>(
+  query: QueryResult.QueryResult<T>,
+): Atom.Atom<T[]> => {
   return Atom.make((get) => {
     const unsubscribe = query.subscribe((result) => {
-      get.setSelf(result.objects);
+      get.setSelf(result.results);
     });
 
     get.addFinalizer(() => unsubscribe());
 
-    return query.objects;
+    return query.results;
   });
 };

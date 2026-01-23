@@ -7,7 +7,7 @@ import React, { useCallback, useRef, useState } from 'react';
 import { Toolbar, useTranslation } from '@dxos/react-ui';
 import { type Player } from '@dxos/react-ui-gameboard';
 import { StackItem } from '@dxos/react-ui-stack';
-import { mx } from '@dxos/react-ui-theme';
+import { mx } from '@dxos/ui-theme';
 
 import { meta } from '../meta';
 import { type Chess } from '../types';

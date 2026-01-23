@@ -19,16 +19,11 @@ import {
 import { Stream } from '@dxos/codec-protobuf/stream';
 import { Context, ContextDisposedError } from '@dxos/context';
 import { raise } from '@dxos/debug';
-import { type ObjectId, Ref } from '@dxos/echo/internal';
-import {
-  type DatabaseDirectory,
-  type ObjectStructure,
-  Reference,
-  type SpaceState,
-  encodeReference,
-} from '@dxos/echo-protocol';
+import { type Database, Ref } from '@dxos/echo';
+import { type DatabaseDirectory, EncodedReference, type ObjectStructure, type SpaceState } from '@dxos/echo-protocol';
 import { compositeRuntime } from '@dxos/echo-signals/runtime';
 import { invariant } from '@dxos/invariant';
+import { type ObjectId } from '@dxos/keys';
 import { type DXN, type PublicKey, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import type { QueryService } from '@dxos/protocols/proto/dxos/echo/query';
@@ -37,7 +32,7 @@ import { trace } from '@dxos/tracing';
 import { chunkArray, deepMapValues, defaultMap } from '@dxos/util';
 
 import { type ChangeEvent, type DocHandleProxy, RepoProxy, type SaveStateChangedEvent } from '../automerge';
-import { type Hypergraph } from '../hypergraph';
+import { type HypergraphImpl } from '../hypergraph';
 
 import {
   type AutomergeDocumentLoader,
@@ -50,8 +45,8 @@ import { getInlineAndLinkChanges } from './util';
 
 export type InitRootProxyFn = (core: ObjectCore) => void;
 
-export type CoreDatabaseParams = {
-  graph: Hypergraph;
+export type CoreDatabaseProps = {
+  graph: HypergraphImpl;
   dataService: DataService;
   queryService: QueryService;
   spaceId: SpaceId;
@@ -63,8 +58,6 @@ export type CoreDatabaseParams = {
  */
 const THROTTLED_UPDATE_FREQUENCY = 10;
 
-export type ObjectPlacement = 'root-doc' | 'linked-doc';
-
 export type AddCoreOptions = {
   /**
    * Where to place the object in the Automerge document tree.
@@ -74,7 +67,7 @@ export type AddCoreOptions = {
    *
    * @default 'linked-doc'
    */
-  placeIn?: ObjectPlacement;
+  placeIn?: Database.ObjectPlacement;
 };
 
 const TRACE_LOADING = false;
@@ -85,12 +78,12 @@ const TRACE_LOADING = false;
 // TODO(burdon): Document.
 @trace.resource()
 export class CoreDatabase {
-  private readonly _hypergraph: Hypergraph;
+  private readonly _spaceKey: PublicKey;
+  private readonly _spaceId: SpaceId;
+  private readonly _hypergraph: HypergraphImpl;
   private readonly _dataService: DataService;
   private readonly _queryService: QueryService;
   private readonly _repoProxy: RepoProxy;
-  private readonly _spaceId: SpaceId;
-  private readonly _spaceKey: PublicKey;
   private readonly _objects = new Map<string, ObjectCore>();
 
   /**
@@ -118,7 +111,7 @@ export class CoreDatabase {
 
   readonly saveStateChanged: ReadOnlyEvent<SaveStateChangedEvent>;
 
-  constructor({ graph, dataService, queryService, spaceId, spaceKey }: CoreDatabaseParams) {
+  constructor({ graph, dataService, queryService, spaceId, spaceKey }: CoreDatabaseProps) {
     this._hypergraph = graph;
     this._dataService = dataService;
     this._queryService = queryService;
@@ -136,7 +129,7 @@ export class CoreDatabase {
     };
   }
 
-  get graph(): Hypergraph {
+  get graph(): HypergraphImpl {
     return this._hypergraph;
   }
 
@@ -501,7 +494,7 @@ export class CoreDatabase {
    * Intended way to change the type of the object (for schema migrations).
    * Any concurrent changes made by other peers will be overwritten.
    */
-  async atomicReplaceObject(id: ObjectId, params: AtomicReplaceObjectParams): Promise<void> {
+  async atomicReplaceObject(id: ObjectId, params: AtomicReplaceObjectProps): Promise<void> {
     const { data, type } = params;
 
     const core = await this.loadObjectCoreById(id);
@@ -524,13 +517,13 @@ export class CoreDatabase {
     };
 
     if (type !== undefined) {
-      newStruct.system!.type = encodeReference(Reference.fromDXN(type));
+      newStruct.system!.type = EncodedReference.fromDXN(type);
     }
 
     core.setDecoded([], newStruct);
   }
 
-  async flush({ disk = true, indexes = false, updates = false }: FlushOptions = {}): Promise<void> {
+  async flush({ disk = true, indexes = false, updates = false }: Database.FlushOptions = {}): Promise<void> {
     log('flush', { disk, indexes, updates });
     if (disk) {
       await this._repoProxy.flush();
@@ -951,7 +944,7 @@ export type GetObjectCoreByIdOptions = {
   load?: boolean;
 };
 
-export type AtomicReplaceObjectParams = {
+export type AtomicReplaceObjectProps = {
   /**
    * Update data.
    * NOTE: This is not merged with the existing data.
@@ -962,26 +955,6 @@ export type AtomicReplaceObjectParams = {
    * Update object type.
    */
   type?: DXN;
-};
-
-export type FlushOptions = {
-  /**
-   * Write any pending changes to disk.
-   * @default true
-   */
-  disk?: boolean;
-
-  /**
-   * Wait for pending index updates.
-   * @default false
-   */
-  indexes?: boolean;
-
-  /**
-   * Flush pending updates to objects and queries.
-   * @default false
-   */
-  updates?: boolean;
 };
 
 const RPC_TIMEOUT = 20_000;

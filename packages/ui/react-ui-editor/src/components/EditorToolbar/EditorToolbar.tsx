@@ -6,18 +6,18 @@ import { type EditorView } from '@codemirror/view';
 import { Atom } from '@effect-atom/atom-react';
 import React, { memo, useMemo } from 'react';
 
-import { atomFromSignal } from '@dxos/app-graph';
+import { CreateAtom, type Node } from '@dxos/app-graph';
 import { type Live } from '@dxos/live-object';
 import { ElevationProvider, type ThemedClassName } from '@dxos/react-ui';
 import {
   type ActionGraphProps,
+  type MenuAction,
   MenuProvider,
   ToolbarMenu,
   createGapSeparator,
   useMenuActions,
 } from '@dxos/react-ui-menu';
-
-import { type EditorViewMode } from '../../types';
+import { type EditorViewMode } from '@dxos/ui-editor';
 
 import { createLists } from './actions';
 import { createBlocks } from './blocks';
@@ -51,16 +51,18 @@ export type EditorToolbarProps = ThemedClassName<
   {
     role?: string;
     attendableId?: string;
+    /** Handler for executing actions. Required when customActions use Operation.invoke. */
+    onAction?: (action: MenuAction, params: Node.InvokeProps) => void;
   } & (EditorToolbarActionGraphProps & EditorToolbarFeatureFlags)
 >;
 
 // TODO(burdon): Remove role dependency.
-export const EditorToolbar = memo(({ classNames, role, attendableId, ...props }: EditorToolbarProps) => {
+export const EditorToolbar = memo(({ classNames, role, attendableId, onAction, ...props }: EditorToolbarProps) => {
   const menuProps = useEditorToolbarActionGraph(props);
 
   return (
     <ElevationProvider elevation={role === 'section' ? 'positioned' : 'base'}>
-      <MenuProvider {...menuProps} attendableId={attendableId}>
+      <MenuProvider {...menuProps} attendableId={attendableId} onAction={onAction}>
         <ToolbarMenu classNames={classNames} textBlockWidth />
       </MenuProvider>
     </ElevationProvider>
@@ -112,19 +114,19 @@ const createToolbarActions = ({
     };
 
     if (features?.showHeadings ?? true) {
-      addSubGraph(graph, get(atomFromSignal(() => createHeadings(state, getView))));
+      addSubGraph(graph, get(CreateAtom.fromSignal(() => createHeadings(state, getView))));
     }
     if (features?.showFormatting ?? true) {
-      addSubGraph(graph, get(atomFromSignal(() => createFormatting(state, getView))));
+      addSubGraph(graph, get(CreateAtom.fromSignal(() => createFormatting(state, getView))));
     }
     if (features?.showLists ?? true) {
-      addSubGraph(graph, get(atomFromSignal(() => createLists(state, getView))));
+      addSubGraph(graph, get(CreateAtom.fromSignal(() => createLists(state, getView))));
     }
     if (features?.showBlocks ?? true) {
-      addSubGraph(graph, get(atomFromSignal(() => createBlocks(state, getView))));
+      addSubGraph(graph, get(CreateAtom.fromSignal(() => createBlocks(state, getView))));
     }
     if (features?.onImageUpload) {
-      addSubGraph(graph, get(atomFromSignal(() => createImageUpload(features.onImageUpload!))));
+      addSubGraph(graph, get(CreateAtom.fromSignal(() => createImageUpload(features.onImageUpload!))));
     }
 
     addSubGraph(graph, createGapSeparator());
@@ -133,10 +135,10 @@ const createToolbarActions = ({
       addSubGraph(graph, get(customActions));
     }
     if (features?.showSearch ?? true) {
-      addSubGraph(graph, get(atomFromSignal(() => createSearch(getView))));
+      addSubGraph(graph, get(CreateAtom.fromSignal(() => createSearch(getView))));
     }
     if (features?.onViewModeChange) {
-      addSubGraph(graph, get(atomFromSignal(() => createViewMode(state, features.onViewModeChange!))));
+      addSubGraph(graph, get(CreateAtom.fromSignal(() => createViewMode(state, features.onViewModeChange!))));
     }
 
     return graph;

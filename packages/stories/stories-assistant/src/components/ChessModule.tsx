@@ -12,6 +12,6 @@ import { useQuery } from '@dxos/react-client/echo';
 import { type ComponentProps } from './types';
 
 export const ChessModule: FC<ComponentProps> = ({ space }) => {
-  const chess = useQuery(space, Filter.type(Chess.Game));
+  const chess = useQuery(space.db, Filter.type(Chess.Game));
   return <Surface role='section' limit={1} data={{ subject: chess.at(-1) }} />;
 };

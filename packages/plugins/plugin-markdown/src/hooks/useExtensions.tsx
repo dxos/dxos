@@ -6,8 +6,8 @@ import { type ViewUpdate } from '@codemirror/view';
 import React, { type AnchorHTMLAttributes, type ReactNode, useMemo } from 'react';
 import { createRoot } from 'react-dom/client';
 
-import { LayoutAction, type PromiseIntentDispatcher, createIntent } from '@dxos/app-framework';
-import { useIntentDispatcher } from '@dxos/app-framework/react';
+import { Common } from '@dxos/app-framework';
+import { useOperationInvoker } from '@dxos/app-framework/react';
 import { debounceAndThrottle } from '@dxos/async';
 import { Obj } from '@dxos/echo';
 import { createDocAccessor } from '@dxos/echo-db';
@@ -16,6 +16,7 @@ import { getSpace } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 import { Icon, ThemeProvider } from '@dxos/react-ui';
 import { type SelectionManager } from '@dxos/react-ui-attention';
+import { Text } from '@dxos/schema';
 import {
   Cursor,
   type EditorStateStore,
@@ -36,9 +37,8 @@ import {
   replacer,
   selectionState,
   typewriter,
-} from '@dxos/react-ui-editor';
-import { defaultTx } from '@dxos/react-ui-theme';
-import { Text } from '@dxos/schema';
+} from '@dxos/ui-editor';
+import { defaultTx } from '@dxos/ui-theme';
 import { isTruthy } from '@dxos/util';
 
 import { Markdown } from '../types';
@@ -49,7 +49,7 @@ export type DocumentType = Markdown.Document | Text.Text | { id: string; text: s
 export type ExtensionsOptions = {
   id: string;
   object?: DocumentType;
-  dispatch?: PromiseIntentDispatcher;
+  invokePromise?: Common.Capability.OperationInvoker['invokePromise'];
   settings?: Markdown.Settings;
   selectionManager?: SelectionManager;
   viewMode?: EditorViewMode;
@@ -67,7 +67,7 @@ export const useExtensions = ({
   editorStateStore,
   previewOptions,
 }: ExtensionsOptions): Extension[] => {
-  const { dispatchPromise: dispatch } = useIntentDispatcher();
+  const { invokePromise } = useOperationInvoker();
   const identity = useIdentity();
   const space = getSpace(object);
 
@@ -92,13 +92,13 @@ export const useExtensions = ({
         selectionManager,
         viewMode,
         previewOptions,
-        dispatch,
+        invokePromise,
       }),
     [
       id,
       object,
       viewMode,
-      dispatch,
+      invokePromise,
       previewOptions,
       settings,
       settings?.debug,
@@ -144,7 +144,7 @@ export const useExtensions = ({
 const createBaseExtensions = ({
   id,
   object,
-  dispatch,
+  invokePromise,
   settings,
   selectionManager,
   viewMode,
@@ -169,17 +169,12 @@ const createBaseExtensions = ({
           // TODO(wittjosiah): For internal links, consider ignoring the link text and rendering the label of the object being linked to.
           // TODO(burdon): Create dx-tag.
           renderLinkButton:
-            dispatch && (object || id)
-              ? createLinkRenderer((id: string) => {
-                  void dispatch(
-                    createIntent(LayoutAction.Open, {
-                      part: 'main',
-                      subject: [id],
-                      options: {
-                        pivotId: object && Obj.isObject(object) ? Obj.getDXN(object).toString() : id,
-                      },
-                    }),
-                  );
+            invokePromise && (object || id)
+              ? createLinkRenderer((targetId: string) => {
+                  void invokePromise(Common.LayoutOperation.Open, {
+                    subject: [targetId],
+                    pivotId: object && Obj.isObject(object) ? Obj.getDXN(object).toString() : id,
+                  });
                 })
               : undefined,
         }),

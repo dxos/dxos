@@ -46,13 +46,13 @@ export const AudioStream: FC<AudioStreamProps> = ({ tracks }) => {
   );
 };
 
-type AudioTrackProps = {
+type AudioTrackParams = {
   track: MediaStreamTrack;
   mediaStream: MediaStream;
   resetSrcObject: () => void;
 };
 
-const AudioTrack = ({ track, mediaStream, resetSrcObject }: AudioTrackProps) => {
+const AudioTrack = ({ track, mediaStream, resetSrcObject }: AudioTrackParams) => {
   useEffect(() => {
     const currentTrack = track;
     mediaStream.addTrack(currentTrack);

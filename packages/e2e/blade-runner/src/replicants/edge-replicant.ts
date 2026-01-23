@@ -124,10 +124,7 @@ export class EdgeReplicant {
 
   @trace.span()
   async deployFunction({ source }: { source?: string } = {}): Promise<{ functionId: string; version: string }> {
-    const buildResult = await bundleFunction({
-      platform: 'node',
-      source: source ?? dataGenerator,
-    });
+    const buildResult = await bundleFunction({ source: source ?? dataGenerator });
 
     if (buildResult.error || !buildResult.bundle) {
       log.error('Bundle creation failed', { buildResult });
@@ -178,7 +175,7 @@ export class EdgeReplicant {
 
     const replicationIsDone = new Trigger();
     let lastDifferentDocuments: number = Infinity;
-    const unsub = space.db.coreDatabase.subscribeToSyncState(Context.default(), (state) => {
+    const unsub = space.internal.db.coreDatabase.subscribeToSyncState(Context.default(), (state) => {
       if (
         state.peers?.length === 1 &&
         state.peers[0].differentDocuments === 0 &&

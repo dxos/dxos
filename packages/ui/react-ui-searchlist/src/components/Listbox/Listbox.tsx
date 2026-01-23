@@ -9,9 +9,11 @@ import { useControllableState } from '@radix-ui/react-use-controllable-state';
 import React, { type ComponentPropsWithRef, forwardRef, useCallback, useEffect, useRef } from 'react';
 
 import { Icon, type IconProps, type ThemedClassName } from '@dxos/react-ui';
-import { mx } from '@dxos/react-ui-theme';
+import { mx } from '@dxos/ui-theme';
 
-import { commandItem, searchListItem } from '../SearchList';
+import { searchListItem } from '../SearchList';
+
+const commandItem = 'flex items-center overflow-hidden';
 
 const LISTBOX_NAME = 'Listbox';
 const LISTBOX_OPTION_NAME = 'ListboxOption';

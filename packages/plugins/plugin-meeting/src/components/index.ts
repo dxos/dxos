@@ -4,9 +4,9 @@
 
 import { type ComponentType, lazy } from 'react';
 
-import { type Channel } from '@dxos/plugin-thread/types';
-
-export const MeetingContainer = lazy(() => import('./MeetingContainer'));
-export const MeetingsList = lazy<ComponentType<{ channel: Channel.Channel }>>(() => import('./MeetingsList'));
+import { type MeetingsListProps } from './MeetingsList';
 
 export * from './MeetingSettings';
+
+export const MeetingContainer = lazy(() => import('./MeetingContainer'));
+export const MeetingsList = lazy<ComponentType<MeetingsListProps>>(() => import('./MeetingsList'));

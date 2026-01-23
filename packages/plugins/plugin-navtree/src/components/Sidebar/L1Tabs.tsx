@@ -14,7 +14,7 @@ import { L1Panel, type L1PanelProps } from './L1Panel';
 
 export type L1TabsProps = Pick<L1PanelProps, 'open' | 'currentItemId' | 'onBack'> & {
   path: string[];
-  topLevelItems: Node<any>[];
+  topLevelItems: Node.Node[];
 };
 
 /**

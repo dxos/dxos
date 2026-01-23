@@ -25,15 +25,16 @@
   ],
   "dependencies": {
     "@dxos/node-std": "workspace:*",
-    "sodium-native": "^3.2.0",
-    "sodium-universal": "^3.0.2",
-    "streamx": "^2.12.5"
+    "sodium-javascript": "catalog:",
+    "sodium-native": "catalog:",
+    "sodium-universal": "catalog:",
+    "streamx": "catalog:"
   },
   "devDependencies": {
-    "hypercore": "^9.12.0",
-    "hypercore-crypto": "^2.3.0",
-    "hypercore-protocol": "^8.0.7",
-    "noise-protocol": "3.0.1"
+    "hypercore": "catalog:",
+    "hypercore-crypto": "catalog:",
+    "hypercore-protocol": "catalog:",
+    "noise-protocol": "catalog:"
   },
   "publishConfig": {
     "access": "public"

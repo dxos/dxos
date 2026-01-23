@@ -8,6 +8,7 @@
     ]
   },
   "exclude": [
+    "*.stories.tsx",
     "*.t.ts",
     "vite.config.ts"
   ],
@@ -85,6 +86,9 @@
       "path": "../../core/mesh/edge-client"
     },
     {
+      "path": "../../core/operation"
+    },
+    {
       "path": "../../core/protocols"
     },
     {
@@ -127,7 +131,7 @@
       "path": "../../ui/react-ui-tabs"
     },
     {
-      "path": "../../ui/react-ui-theme"
+      "path": "../../ui/ui-theme"
     },
     {
       "path": "../plugin-assistant"
@@ -149,6 +153,9 @@
     },
     {
       "path": "../plugin-space"
+    },
+    {
+      "path": "../plugin-testing"
     },
     {
       "path": "../plugin-theme"

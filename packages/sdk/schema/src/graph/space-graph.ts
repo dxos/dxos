@@ -5,10 +5,9 @@
 import { batch, effect } from '@preact/signals-core';
 
 import { type CleanupFn } from '@dxos/async';
-import { type Space } from '@dxos/client-protocol';
-import { Filter, Obj, Query, Ref, Relation, Type } from '@dxos/echo';
+import { type Database, type Entity, Filter, Obj, Query, Ref, Relation, Type } from '@dxos/echo';
 import { type Queue } from '@dxos/echo-db';
-import { AbstractGraphBuilder, type Graph, type GraphEdge, type GraphNode, ReactiveGraphModel } from '@dxos/graph';
+import { type Graph, GraphModel } from '@dxos/graph';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { visitValues } from '@dxos/util';
@@ -20,17 +19,17 @@ import { visitValues } from '@dxos/util';
 // - https://observablehq.com/@d3/psr-b1919-21
 // - https://vasturiano.github.io/react-force-graph/example/basic (3D)
 
-export type SpaceGraphNode = GraphNode.Required<{
+export type SpaceGraphNode = Graph.Node.Node<{
   label: string;
   object?: Obj.Any;
 }>;
 
 // TODO(burdon): Differentiate between refs and relations.
-export type SpaceGraphEdge = GraphEdge.Optional;
+export type SpaceGraphEdge = Graph.Edge.Any;
 
-class SpaceGraphBuilder extends AbstractGraphBuilder<SpaceGraphNode, SpaceGraphEdge, SpaceGraphModel> {}
+class SpaceGraphBuilder extends GraphModel.AbstractBuilder<SpaceGraphNode, SpaceGraphEdge, SpaceGraphModel> {}
 
-const defaultFilter: Filter<any> = Filter.everything();
+const defaultFilter: Filter.Any = Filter.everything();
 
 const truncate = (id: string) => `${id.slice(0, 4)}…${id.slice(-4)}`;
 
@@ -43,15 +42,14 @@ export type SpaceGraphModelOptions = {
 /**
  * Converts ECHO objects to a graph.
  */
-export class SpaceGraphModel extends ReactiveGraphModel<SpaceGraphNode, SpaceGraphEdge> {
+export class SpaceGraphModel extends GraphModel.ReactiveGraphModel<SpaceGraphNode, SpaceGraphEdge> {
   private _options?: SpaceGraphModelOptions;
   private _filter?: Filter.Any;
-
-  private _space?: Space;
+  private _db?: Database.Database;
   private _queue?: Queue;
-  private _schema?: Type.Schema[];
-  private _objects?: (Obj.Any | Relation.Any)[];
-  private _queueItems?: (Obj.Any | Relation.Any)[];
+  private _schema?: Type.RuntimeType[];
+  private _objects?: Entity.Unknown[];
+  private _queueItems?: Entity.Unknown[];
   private _schemaSubscription?: CleanupFn;
   private _objectSubscription?: CleanupFn;
   private _queueSubscription?: CleanupFn;
@@ -61,11 +59,11 @@ export class SpaceGraphModel extends ReactiveGraphModel<SpaceGraphNode, SpaceGra
     return new SpaceGraphBuilder(this);
   }
 
-  override copy(graph?: Partial<Graph>): SpaceGraphModel {
+  override copy(graph?: Partial<Graph.Graph<SpaceGraphNode, SpaceGraphEdge>>): SpaceGraphModel {
     return new SpaceGraphModel(graph);
   }
 
-  get objects(): (Obj.Any | Relation.Any)[] {
+  get objects(): Entity.Unknown[] {
     return this._objects ?? [];
   }
 
@@ -74,7 +72,7 @@ export class SpaceGraphModel extends ReactiveGraphModel<SpaceGraphNode, SpaceGra
   }
 
   isOpen() {
-    return this._space !== undefined;
+    return this._db !== undefined;
   }
 
   setOptions(options?: SpaceGraphModelOptions): this {
@@ -89,38 +87,40 @@ export class SpaceGraphModel extends ReactiveGraphModel<SpaceGraphNode, SpaceGra
   setFilter(filter?: Filter.Any): this {
     this._filter = filter;
     if (this.isOpen()) {
-      this._subscribe();
+      this._subscribeObjects();
     }
 
     return this;
   }
 
-  async open(space: Space, queue?: Queue): Promise<this> {
-    log('open', { space, queue });
+  async open(db: Database.Database, queue?: Queue): Promise<this> {
+    log('open', { db, queue });
     if (this.isOpen()) {
       await this.close();
     }
 
-    this._space = space;
+    this._db = db;
     this._queue = queue;
-    const schemaaQuery = space.db.schemaRegistry.query({});
-    const schemas = await schemaaQuery.run();
 
-    const onSchemaUpdate = ({ results }: { results: Type.Schema[] }) => (this._schema = results);
-    this._schemaSubscription = schemaaQuery.subscribe(onSchemaUpdate);
-    onSchemaUpdate({ results: schemas });
-    this._subscribe();
+    const schemaaQuery = db.schemaRegistry.query({});
+    this._schemaSubscription = schemaaQuery.subscribe(
+      ({ results }: { results: Type.RuntimeType[] }) => (this._schema = results),
+      { fire: true },
+    );
+
+    this._subscribeObjects();
 
     return this;
   }
 
   async close(): Promise<this> {
     log('close');
+
     this._schemaSubscription?.();
     this._schemaSubscription = undefined;
     this._objectSubscription?.();
     this._objectSubscription = undefined;
-    this._space = undefined;
+    this._db = undefined;
 
     return this;
   }
@@ -135,23 +135,23 @@ export class SpaceGraphModel extends ReactiveGraphModel<SpaceGraphNode, SpaceGra
         batch(() => {
           try {
             this._update();
-          } catch (error) {
-            log.catch(error);
+          } catch (err) {
+            log.catch(err);
           }
         });
       }
     });
   }
 
-  private _subscribe() {
+  private _subscribeObjects() {
     this._objectSubscription?.();
     this._queueSubscription?.();
 
-    invariant(this._space);
-    this._objectSubscription = this._space.db.query(Query.select(this._filter ?? defaultFilter)).subscribe(
-      ({ objects }) => {
-        log('update', { objects: objects.length });
-        this._objects = [...objects];
+    invariant(this._db);
+    this._objectSubscription = this._db.query(Query.select(this._filter ?? defaultFilter)).subscribe(
+      (query) => {
+        log('update', { objects: query.results.length });
+        this._objects = [...query.results];
         this.invalidate();
       },
       { fire: true },
@@ -192,14 +192,7 @@ export class SpaceGraphModel extends ReactiveGraphModel<SpaceGraphNode, SpaceGra
 
     // Schema nodes.
     if (this._options?.showSchema) {
-      const schemas = [
-        // Database Schema.
-        ...(this._schema ?? []),
-        // Runtime schema.
-        ...(this._space?.db.graph.schemaRegistry.schemas ?? []),
-      ];
-
-      schemas.forEach((schema) => {
+      this._schema?.forEach((schema) => {
         const typename = Type.getDXN(schema)?.typename;
         if (typename) {
           let node = currentNodes.find((node) => node.id === typename);
@@ -242,7 +235,7 @@ export class SpaceGraphModel extends ReactiveGraphModel<SpaceGraphNode, SpaceGra
         });
 
         this._options?.onCreateEdge?.(edge, object);
-      } else {
+      } else if (Obj.isObject(object)) {
         const typename = Obj.getTypename(object);
         if (typename) {
           let node: SpaceGraphNode | undefined = currentNodes.find((node) => node.id === object.id);
@@ -264,7 +257,7 @@ export class SpaceGraphModel extends ReactiveGraphModel<SpaceGraphNode, SpaceGra
           // Link to schema.
           if (this._options?.showSchema) {
             const schemaNode = this._graph.nodes.find(
-              (node) => node.type === 'schema' && node.data.typename === typename,
+              (node) => node.type === 'schema' && node.data.object && Obj.getTypename(node.data.object) === typename,
             );
             if (!schemaNode) {
               log.warn('schema node not found', { typename });

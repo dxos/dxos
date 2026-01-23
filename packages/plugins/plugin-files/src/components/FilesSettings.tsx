@@ -4,17 +4,16 @@
 
 import React from 'react';
 
-import { createIntent } from '@dxos/app-framework';
-import { useIntentDispatcher } from '@dxos/app-framework/react';
+import { useOperationInvoker } from '@dxos/app-framework/react';
 import { IconButton, Input, Message, useTranslation } from '@dxos/react-ui';
 import { ControlGroup, ControlItemInput, ControlPage, ControlSection } from '@dxos/react-ui-form';
 
 import { meta } from '../meta';
-import { type FilesSettingsProps, type FilesState, LocalFilesAction } from '../types';
+import { type FilesSettingsProps, type FilesState, LocalFilesOperation } from '../types';
 
 export const FilesSettings = ({ settings, state }: { settings: FilesSettingsProps; state: FilesState }) => {
   const { t } = useTranslation(meta.id);
-  const { dispatchPromise: dispatch } = useIntentDispatcher();
+  const { invokePromise } = useOperationInvoker();
 
   return (
     <ControlPage>
@@ -32,7 +31,7 @@ export const FilesSettings = ({ settings, state }: { settings: FilesSettingsProp
               icon='ph--folder--regular'
               iconOnly
               label={t('save files to directory label')}
-              onClick={() => dispatch(createIntent(LocalFilesAction.SelectRoot))}
+              onClick={() => invokePromise(LocalFilesOperation.SelectRoot)}
             />
           </ControlItemInput>
           <ControlItemInput title={t('trigger export label')}>
@@ -41,7 +40,7 @@ export const FilesSettings = ({ settings, state }: { settings: FilesSettingsProp
               icon='ph--floppy-disk--regular'
               iconOnly
               label={t('trigger export label')}
-              onClick={() => dispatch(createIntent(LocalFilesAction.Export))}
+              onClick={() => invokePromise(LocalFilesOperation.Export)}
             />
           </ControlItemInput>
           <ControlItemInput title={t('trigger import label')}>
@@ -50,7 +49,7 @@ export const FilesSettings = ({ settings, state }: { settings: FilesSettingsProp
               icon='ph--folder-open--regular'
               iconOnly
               label={t('trigger import label')}
-              onClick={() => dispatch(createIntent(LocalFilesAction.Import))}
+              onClick={() => invokePromise(LocalFilesOperation.Import, {})}
             />
           </ControlItemInput>
           <ControlItemInput title={t('auto export label')}>

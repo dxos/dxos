@@ -22,7 +22,7 @@ import {
   hoverableControls,
   hoverableFocusedKeyboardControls,
   hoverableFocusedWithinControls,
-} from '@dxos/react-ui-theme';
+} from '@dxos/ui-theme';
 
 import { DEFAULT_INDENTATION, paddingIndentation } from './helpers';
 import { useTree } from './TreeContext';

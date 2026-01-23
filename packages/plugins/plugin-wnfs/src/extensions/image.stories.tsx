@@ -11,14 +11,14 @@ import { useSpace } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { useThemeContext } from '@dxos/react-ui';
 import { withTheme } from '@dxos/react-ui/testing';
+import { useTextEditor } from '@dxos/react-ui-editor';
 import {
   createBasicExtensions,
   createMarkdownExtensions,
   createThemeExtensions,
   decorateMarkdown,
   processEditorPayload,
-  useTextEditor,
-} from '@dxos/react-ui-editor';
+} from '@dxos/ui-editor';
 
 import { create as createBlockstore } from '../blockstore';
 import { upload } from '../helpers';

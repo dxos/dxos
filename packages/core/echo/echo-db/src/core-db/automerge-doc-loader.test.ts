@@ -6,11 +6,10 @@ import { describe, expect, test } from 'vitest';
 
 import { sleep } from '@dxos/async';
 import { Context } from '@dxos/context';
-import { ObjectId } from '@dxos/echo/internal';
 import { AutomergeHost, DataServiceImpl, SpaceStateManager, createIdFromSpaceKey } from '@dxos/echo-pipeline';
 import { type DatabaseDirectory, SpaceDocVersion } from '@dxos/echo-protocol';
 import { IndexMetadataStore } from '@dxos/indexing';
-import { PublicKey, SpaceId } from '@dxos/keys';
+import { ObjectId, PublicKey, SpaceId } from '@dxos/keys';
 import { createTestLevel } from '@dxos/kv-store/testing';
 import { openAndClose } from '@dxos/test-utils';
 

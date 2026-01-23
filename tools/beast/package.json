@@ -20,23 +20,23 @@
   },
   "dependencies": {
     "@dxos/log": "workspace:*",
-    "array-iterate": "~2.0.1",
-    "chalk": "^4.1.0",
-    "color-hash": "^1.0.3",
-    "cosmiconfig": "^8.0.0",
-    "js-yaml": "^4.1.0",
-    "lodash.defaultsdeep": "^4.6.1",
-    "lodash.pick": "^4.4.0",
-    "minimatch": "^5.1.0",
-    "ts-morph": "^16.0.0",
-    "yargs": "~16.2.0"
+    "array-iterate": "catalog:",
+    "chalk": "catalog:",
+    "color-hash": "catalog:",
+    "cosmiconfig": "catalog:",
+    "js-yaml": "catalog:",
+    "lodash.defaultsdeep": "catalog:",
+    "lodash.pick": "catalog:",
+    "minimatch": "catalog:",
+    "ts-morph": "catalog:",
+    "yargs": "catalog:"
   },
   "devDependencies": {
-    "@babel/core": "^7.18.13",
-    "@types/color-hash": "^1.0.1",
-    "@types/lodash.defaultsdeep": "^4.6.6",
-    "@types/lodash.pick": "^4.4.7",
-    "@types/minimatch": "^5.1.2",
-    "@types/yargs": "~16.0.1"
+    "@babel/core": "catalog:",
+    "@types/color-hash": "catalog:",
+    "@types/lodash.defaultsdeep": "catalog:",
+    "@types/lodash.pick": "catalog:",
+    "@types/minimatch": "catalog:",
+    "@types/yargs": "catalog:"
   }
 }

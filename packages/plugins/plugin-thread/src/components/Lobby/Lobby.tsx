@@ -6,10 +6,10 @@ import React, { type FC, type PropsWithChildren, useEffect, useState } from 'rea
 
 import { useCapability } from '@dxos/app-framework/react';
 import { type ThemedClassName, useTranslation } from '@dxos/react-ui';
-import { mx } from '@dxos/react-ui-theme';
+import { mx } from '@dxos/ui-theme';
 
-import { ThreadCapabilities } from '../../capabilities';
 import { meta } from '../../meta';
+import { ThreadCapabilities } from '../../types';
 import { Toolbar, type ToolbarProps } from '../Call';
 import { VideoObject } from '../Media';
 import { ResponsiveContainer } from '../ResponsiveGrid';

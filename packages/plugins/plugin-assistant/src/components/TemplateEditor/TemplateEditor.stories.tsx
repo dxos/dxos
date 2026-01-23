@@ -70,7 +70,7 @@ const meta = {
   render: DefaultStory,
   decorators: [
     withTheme,
-    withLayout({ container: 'column' }),
+    withLayout({ layout: 'column' }),
     withClientProvider({
       types: [Blueprint.Blueprint],
       createIdentity: true,

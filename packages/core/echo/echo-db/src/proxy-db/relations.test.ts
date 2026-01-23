@@ -2,27 +2,24 @@
 // Copyright 2025 DXOS.org
 //
 
-import { afterEach, beforeEach, describe, expect, test } from 'vitest';
+import { afterEach, assert, beforeEach, describe, expect, test } from 'vitest';
 
-import { Filter, Query } from '@dxos/echo';
-import { live } from '@dxos/echo/internal';
-import { RelationSourceId, RelationTargetId } from '@dxos/echo/internal';
-import { TestingDeprecated } from '@dxos/echo/testing';
+import { Filter, type Hypergraph, Obj, Query, Relation } from '@dxos/echo';
+import { TestSchema } from '@dxos/echo/testing';
 
-import { getSource, getTarget, isRelation } from '../echo-handler';
-import type { Hypergraph } from '../hypergraph';
 import { EchoTestBuilder } from '../testing';
 
-import type { EchoDatabase } from './database';
+import { type EchoDatabase } from './database';
 
 describe('Relations', () => {
-  let testBuilder: EchoTestBuilder, db: EchoDatabase, graph: Hypergraph;
+  let testBuilder: EchoTestBuilder;
+  let db: EchoDatabase;
+  let graph: Hypergraph.Hypergraph;
 
   beforeEach(async () => {
     testBuilder = await new EchoTestBuilder().open();
     ({ db, graph } = await testBuilder.createDatabase());
-
-    graph.schemaRegistry.addSchema([TestingDeprecated.Person, TestingDeprecated.HasManager]);
+    await graph.schemaRegistry.register([TestSchema.Person, TestSchema.Organization, TestSchema.EmployedBy]);
   });
 
   afterEach(async () => {
@@ -30,41 +27,34 @@ describe('Relations', () => {
   });
 
   test('create relation between two objects', async () => {
-    const alice = db.add(
-      live(TestingDeprecated.Person, {
-        name: 'Alice',
-      }),
-    );
-    const bob = db.add(
-      live(TestingDeprecated.Person, {
-        name: 'Bob',
-      }),
-    );
-    const hasManager = db.add(
-      live(TestingDeprecated.HasManager, {
-        [RelationSourceId]: bob,
-        [RelationTargetId]: alice,
-        since: '2022',
+    const person = db.add(Obj.make(TestSchema.Person, { name: 'Alice' }));
+    const org = db.add(Obj.make(TestSchema.Organization, { name: 'DXOS' }));
+
+    const manager = db.add(
+      Relation.make(TestSchema.EmployedBy, {
+        [Relation.Source]: person,
+        [Relation.Target]: org,
+        role: 'CEO',
       }),
     );
 
-    expect(isRelation(hasManager)).to.be.true;
-    expect(getSource(hasManager) === bob).to.be.true;
-    expect(getTarget(hasManager) === alice).to.be.true;
-    expect(hasManager.since).to.equal('2022');
+    expect(Relation.isRelation(manager)).to.be.true;
+    expect(Relation.getSource(manager) === person).to.be.true;
+    expect(Relation.getTarget(manager) === org).to.be.true;
 
     await db.flush({ indexes: true });
     await testBuilder.lastPeer!.reload();
     {
       const db = await testBuilder.lastPeer!.openLastDatabase();
-      const { objects } = await db.query(Query.select(Filter.everything())).run();
-      const HasManager = objects.find((obj) => isRelation(obj));
+      const objects = await db.query(Query.select(Filter.everything())).run();
 
-      expect(HasManager).toBeDefined();
-      expect(isRelation(HasManager!)).to.be.true;
-      expect(getSource(HasManager!).name).toEqual('Bob');
-      expect(getTarget(HasManager!).name).toEqual('Alice');
-      expect(HasManager!.since).to.equal('2022');
+      const manager = objects.find((obj) => Obj.instanceOf(TestSchema.EmployedBy, obj));
+      assert(manager, 'manager not found');
+
+      expect(Relation.isRelation(manager)).to.be.true;
+      expect(Relation.getSource(manager).name).toEqual('Alice');
+      expect(Relation.getTarget(manager).name).toEqual('DXOS');
+      expect(manager.role).toBe('CEO');
     }
   });
 });

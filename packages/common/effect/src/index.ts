@@ -3,9 +3,10 @@
 //
 
 export * from './ast';
-export * from './jsonPath';
-export * from './url';
 export * from './context';
+export * as DynamicRuntime from './dynamic-runtime';
 export * from './errors';
-export * from './testing';
+export * from './json-path';
 export * from './resource';
+export * from './url';
+export * as RuntimeProvider from './RuntimeProvider';

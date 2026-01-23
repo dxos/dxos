@@ -15,6 +15,5 @@ export * from './query';
 export * from './queue';
 export * from './serialized-space';
 export * from './serializer';
-export * from './service';
 export * from './text';
 export * from './util';

@@ -13,8 +13,8 @@ import type {
   EchoReplicator,
   EchoReplicatorContext,
   ReplicatorConnection,
-  ShouldAdvertiseParams,
-  ShouldSyncCollectionParams,
+  ShouldAdvertiseProps,
+  ShouldSyncCollectionProps,
 } from '../automerge';
 
 export type TestReplicatorNetworkOptions = {
@@ -30,7 +30,7 @@ export class TestReplicationNetwork extends Resource {
     this._latency = options.latency;
   }
 
-  protected override async _close(ctx: Context): Promise<void> {
+  protected override async _close(_ctx: Context): Promise<void> {
     for (const replicator of this._replicators) {
       for (const connection of replicator.connections) {
         void connection.writable.abort();
@@ -115,13 +115,13 @@ export class TestReplicationNetwork extends Resource {
   }
 }
 
-type TestReplicatorParams = {
+type TestReplicatorProps = {
   onConnect: () => Promise<void>;
   onDisconnect: () => Promise<void>;
 };
 
 export class TestReplicator implements EchoReplicator {
-  constructor(private readonly _params: TestReplicatorParams) {}
+  constructor(private readonly _params: TestReplicatorProps) {}
 
   public connected = false;
   public context: EchoReplicatorContext | undefined = undefined;
@@ -167,11 +167,11 @@ export class TestReplicatorConnection implements ReplicatorConnection {
     return false;
   }
 
-  async shouldAdvertise(params: ShouldAdvertiseParams): Promise<boolean> {
+  async shouldAdvertise(_params: ShouldAdvertiseProps): Promise<boolean> {
     return true;
   }
 
-  shouldSyncCollection(params: ShouldSyncCollectionParams): boolean {
+  shouldSyncCollection(_params: ShouldSyncCollectionProps): boolean {
     return true;
   }
 }
@@ -194,5 +194,6 @@ export const brokenAutomergeReplicatorFactory: AutomergeReplicatorFactory = (par
   params[1]!.onSyncMessage = () => {
     throw new Error();
   };
+
   return testAutomergeReplicatorFactory(params);
 };

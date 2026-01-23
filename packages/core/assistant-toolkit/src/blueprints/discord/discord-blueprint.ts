@@ -4,7 +4,7 @@
 
 import { ToolId } from '@dxos/ai';
 import { Blueprint } from '@dxos/blueprints';
-import { Obj, Ref } from '@dxos/echo';
+import { Ref } from '@dxos/echo';
 import { Text } from '@dxos/schema';
 import { trim } from '@dxos/util';
 
@@ -21,7 +21,7 @@ const instructions = trim`
   DXOS serverId: 837138313172353095
 `;
 
-export const blueprint = Obj.make(Blueprint.Blueprint, {
+export const blueprint = Blueprint.make({
   key: 'dxos.org/blueprint/discord',
   name: 'Discord',
   description: 'Discord integration.',
@@ -30,5 +30,3 @@ export const blueprint = Obj.make(Blueprint.Blueprint, {
   },
   tools: [ToolId.make(Discord.fetch.key)],
 });
-
-export default blueprint;

@@ -7,9 +7,9 @@ import React, { useMemo } from 'react';
 import { Surface, useCapability } from '@dxos/app-framework/react';
 import { type Label, Main } from '@dxos/react-ui';
 
-import { DeckCapabilities } from '../../capabilities';
 import { useBreakpoints, useHoistStatusbar } from '../../hooks';
 import { meta } from '../../meta';
+import { DeckCapabilities } from '../../types';
 import { getMode } from '../../types';
 import { layoutAppliesTopbar } from '../../util';
 

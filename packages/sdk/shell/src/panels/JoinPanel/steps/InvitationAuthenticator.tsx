@@ -6,10 +6,11 @@ import React, { type ChangeEvent, useState } from 'react';
 
 import { Invitation } from '@dxos/react-client/invitations';
 import { Input, useTranslation } from '@dxos/react-ui';
-import { descriptionText } from '@dxos/react-ui-theme';
+import { descriptionText } from '@dxos/ui-theme';
 import { hexToEmoji } from '@dxos/util';
 
 import { Action, Actions, Emoji, Label, StepHeading } from '../../../components';
+import { translationKey } from '../../../translations';
 import { type JoinStepProps } from '../JoinPanelProps';
 
 const pinLength = 6;
@@ -35,7 +36,7 @@ export const InvitationAuthenticator = ({
   onInvitationCancel,
 }: InvitationAuthenticatorProps) => {
   const disabled = !active || pending;
-  const { t } = useTranslation('os');
+  const { t } = useTranslation(translationKey);
   const invitationType = Kind.toLowerCase() as 'space' | 'halo';
   const [authCode, setAuthCode] = useState('');
 

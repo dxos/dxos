@@ -6,7 +6,7 @@ import { signal } from '@preact/signals-core';
 import * as Predicate from 'effect/Predicate';
 
 import { Obj } from '@dxos/echo';
-import { FormatEnum, TypeEnum, getValue } from '@dxos/echo/internal';
+import { Format, TypeEnum, getValue } from '@dxos/echo/internal';
 import { cellClassesForFieldType, formatForDisplay } from '@dxos/react-ui-form';
 import {
   type DxGridCellValue,
@@ -15,8 +15,8 @@ import {
   type DxGridPlaneRange,
   toPlaneCellIndex,
 } from '@dxos/react-ui-grid';
-import { mx } from '@dxos/react-ui-theme';
 import { type FieldType, VIEW_FIELD_LIMIT } from '@dxos/schema';
+import { mx } from '@dxos/ui-theme';
 
 import { tableButtons, tableControls } from '../util';
 
@@ -120,12 +120,12 @@ export class TablePresentation<T extends TableRow = TableRow> {
         }
 
         switch (props.format) {
-          case FormatEnum.Boolean:
-          case FormatEnum.SingleSelect:
-          case FormatEnum.MultiSelect: {
+          case Format.TypeFormat.Boolean:
+          case Format.TypeFormat.SingleSelect:
+          case Format.TypeFormat.MultiSelect: {
             return '';
           }
-          case FormatEnum.Ref: {
+          case Format.TypeFormat.Ref: {
             if (!field.referencePath) {
               return ''; // TODO(burdon): Show error.
             }
@@ -201,7 +201,7 @@ export class TablePresentation<T extends TableRow = TableRow> {
     }
 
     // References.
-    if (props.format === FormatEnum.Ref && props.referenceSchema) {
+    if (props.format === Format.TypeFormat.Ref && props.referenceSchema) {
       const targetObj = getValue(obj, field.path)?.target;
       if (targetObj) {
         const dxn = Obj.getDXN(targetObj)?.toString();
@@ -210,7 +210,7 @@ export class TablePresentation<T extends TableRow = TableRow> {
     }
 
     // Booleans.
-    if (props.format === FormatEnum.Boolean) {
+    if (props.format === Format.TypeFormat.Boolean) {
       const value = getValue(obj, field.path);
       cell.accessoryHtml = tableControls.switch.render({
         colIndex,
@@ -221,7 +221,7 @@ export class TablePresentation<T extends TableRow = TableRow> {
     }
 
     // Single-Selects.
-    if (props.format === FormatEnum.SingleSelect) {
+    if (props.format === Format.TypeFormat.SingleSelect) {
       const value = getValue(obj, field.path);
       const options = this.model.projection.getFieldProjection(field.id).props.options;
       if (options) {
@@ -233,7 +233,7 @@ export class TablePresentation<T extends TableRow = TableRow> {
     }
 
     // Multi-Selects.
-    if (props.format === FormatEnum.MultiSelect) {
+    if (props.format === Format.TypeFormat.MultiSelect) {
       const values = getValue(obj, field.path) as string[] | undefined;
       const options = this.model.projection.getFieldProjection(field.id).props.options;
       if (options && values && values.length > 0) {
@@ -320,10 +320,10 @@ export class TablePresentation<T extends TableRow = TableRow> {
   private getHeaderCells(range: DxGridPlaneRange): DxGridPlaneCells {
     const cells: DxGridPlaneCells = {};
     const fields = this.model.projection?.fields ?? [];
+    const currentSort = this.model.sorting;
     for (let col = range.start.col; col <= range.end.col && col < fields.length; col++) {
       const { field, props } = this.model.projection.getFieldProjection(fields[col].id);
-      const sorting = this.model.sorting?.sorting;
-      const direction = sorting?.fieldId === field.id ? sorting.direction : undefined;
+      const direction = currentSort?.fieldId === field.id ? currentSort.direction : undefined;
 
       cells[toPlaneCellIndex({ col, row: 0 })] = {
         // TODO(burdon): Use same logic as form for fallback title.

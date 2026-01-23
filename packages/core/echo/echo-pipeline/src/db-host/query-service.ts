@@ -4,6 +4,7 @@
 
 import { getHeads } from '@automerge/automerge';
 import { type DocHandle, type DocumentId } from '@automerge/automerge-repo';
+import type * as SqlClient from '@effect/sql/SqlClient';
 import * as Schema from 'effect/Schema';
 
 import { DeferredTask, scheduleMicroTask, synchronized } from '@dxos/async';
@@ -11,6 +12,8 @@ import { Stream } from '@dxos/codec-protobuf/stream';
 import { Context, Resource } from '@dxos/context';
 import { raise } from '@dxos/debug';
 import { DatabaseDirectory, QueryAST } from '@dxos/echo-protocol';
+import { type RuntimeProvider } from '@dxos/effect';
+import { type IndexEngine } from '@dxos/index-core';
 import { type IdToHeads, type Indexer, type ObjectSnapshot } from '@dxos/indexing';
 import { log } from '@dxos/log';
 import { objectPointerCodec } from '@dxos/protocols';
@@ -28,8 +31,10 @@ import { QueryExecutor } from '../query';
 
 import type { SpaceStateManager } from './space-state-manager';
 
-export type QueryServiceParams = {
+export type QueryServiceProps = {
   indexer: Indexer;
+  indexer2?: IndexEngine;
+  runtime?: RuntimeProvider.RuntimeProvider<SqlClient.SqlClient>;
   automergeHost: AutomergeHost;
   spaceStateManager: SpaceStateManager;
 };
@@ -62,7 +67,7 @@ export class QueryServiceImpl extends Resource implements QueryService {
   private _updateQueries!: DeferredTask;
 
   // TODO(burdon): OK for options, but not params. Pass separately and type readonly here.
-  constructor(private readonly _params: QueryServiceParams) {
+  constructor(private readonly _params: QueryServiceProps) {
     super();
 
     trace.diagnostic({
@@ -155,6 +160,8 @@ export class QueryServiceImpl extends Resource implements QueryService {
     const queryEntry: ActiveQuery = {
       executor: new QueryExecutor({
         indexer: this._params.indexer,
+        indexer2: this._params.indexer2,
+        runtime: this._params.runtime,
         automergeHost: this._params.automergeHost,
         queryId: request.queryId ?? raise(new Error('query id required')),
         query: parsedQuery,
@@ -245,7 +252,13 @@ const createDocumentsIterator = (automergeHost: AutomergeHost) =>
           if (visited.has(urlString)) {
             continue;
           }
-          const linkHandle = await automergeHost.loadDoc<DatabaseDirectory>(Context.default(), urlString as DocumentId);
+          const linkHandle = await automergeHost.loadDoc<DatabaseDirectory>(
+            Context.default(),
+            urlString as DocumentId,
+            {
+              fetchFromNetwork: true,
+            },
+          );
           for await (const result of getObjectsFromHandle(linkHandle)) {
             yield result;
           }
@@ -256,7 +269,7 @@ const createDocumentsIterator = (automergeHost: AutomergeHost) =>
     }
 
     // TODO(mykola): Use list of roots instead of iterating over all handles.
-    for (const handle of Object.values(automergeHost.repo.handles)) {
+    for (const handle of Object.values(automergeHost.handles)) {
       if (visited.has(handle.documentId)) {
         continue;
       }

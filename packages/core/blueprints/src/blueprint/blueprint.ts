@@ -5,8 +5,7 @@
 import * as Schema from 'effect/Schema';
 
 import { ToolId } from '@dxos/ai';
-import { Obj, Type } from '@dxos/echo';
-import { LabelAnnotation } from '@dxos/echo/internal';
+import { Annotation, Obj, Type } from '@dxos/echo';
 import { type FunctionDefinition } from '@dxos/functions';
 
 import * as Template from '../template';
@@ -60,9 +59,7 @@ export const Blueprint = Schema.Struct({
     typename: 'dxos.org/type/Blueprint',
     version: '0.1.0',
   }),
-
-  // TODO(burdon): Move to Type.Obj def?
-  LabelAnnotation.set(['name']),
+  Annotation.LabelAnnotation.set(['name']),
 );
 
 /**
@@ -70,14 +67,17 @@ export const Blueprint = Schema.Struct({
  */
 export interface Blueprint extends Schema.Schema.Type<typeof Blueprint> {}
 
+type MakeProps = Pick<Blueprint, 'key' | 'name'> & Partial<Blueprint>;
+
 /**
  * Create a new Blueprint.
  */
-export const make = ({
-  tools = [],
-  instructions = Template.make(),
-  ...props
-}: Pick<Blueprint, 'key' | 'name'> & Partial<Blueprint>) => Obj.make(Blueprint, { tools, instructions, ...props });
+export const make = ({ tools = [], instructions = Template.make(), ...props }: MakeProps) =>
+  Obj.make(Blueprint, {
+    tools,
+    instructions,
+    ...props,
+  });
 
 /**
  * Util to create tool definitions for a blueprint.

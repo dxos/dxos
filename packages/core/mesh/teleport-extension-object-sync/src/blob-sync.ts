@@ -14,7 +14,7 @@ import { BitField, ComplexMap } from '@dxos/util';
 import { type BlobStore } from './blob-store';
 import { BlobSyncExtension } from './blob-sync-extension';
 
-export type BlobSyncParams = {
+export type BlobSyncProps = {
   blobStore: BlobStore;
 };
 
@@ -36,7 +36,7 @@ export class BlobSync {
 
   private readonly _extensions = new Set<BlobSyncExtension>();
 
-  constructor(private readonly _params: BlobSyncParams) {}
+  constructor(private readonly _params: BlobSyncProps) {}
 
   async open(): Promise<void> {}
 

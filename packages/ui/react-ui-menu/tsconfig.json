@@ -12,6 +12,9 @@
   ],
   "references": [
     {
+      "path": "../../common/effect"
+    },
+    {
       "path": "../../common/invariant"
     },
     {
@@ -39,7 +42,10 @@
       "path": "../react-ui-attention"
     },
     {
-      "path": "../react-ui-theme"
+      "path": "../ui-theme"
+    },
+    {
+      "path": "../ui-types"
     }
   ]
 }

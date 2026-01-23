@@ -11,7 +11,7 @@ import { describe } from 'vitest';
 
 import { TestAiService } from '@dxos/ai/testing';
 import { Ref } from '@dxos/echo';
-import { TestHelpers } from '@dxos/effect';
+import { TestHelpers } from '@dxos/effect/testing';
 import { logCustomEvent } from '@dxos/functions';
 import { CredentialsService, TracingService } from '@dxos/functions';
 import { FunctionInvocationServiceLayerTest, TestDatabaseLayer } from '@dxos/functions-runtime/testing';
@@ -28,8 +28,6 @@ import {
   defineComputeNode,
   synchronizedComputeFunction,
 } from '../types';
-
-const ENABLE_LOGGING = false;
 
 const TestLayer = Layer.empty.pipe(
   Layer.provideMerge(FunctionInvocationServiceLayerTest()),
@@ -49,7 +47,7 @@ describe('Graph as a fiber runtime', () => {
     Effect.fnUntraced(
       function* ({ expect }) {
         const runtime = new TestRuntime()
-          // Break line formatting.
+          // prettier-ignore
           .registerNode('dxn:test:sum', sum)
           .registerGraph('dxn:test:g1', g1());
 

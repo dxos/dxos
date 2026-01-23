@@ -6,14 +6,14 @@ import React from 'react';
 
 import { useClient } from '@dxos/react-client';
 import { type PeerSyncState, type Space, type SpaceId, SpaceState, useSpace } from '@dxos/react-client/echo';
-import { mx } from '@dxos/react-ui-theme';
+import { mx } from '@dxos/ui-theme';
 
-// TODO(wittjosiah): Copied from plugin-space. Factor out?
+// TODO(wittjosiah): Factor out (copied from plugin-space).
 export const getSpaceDisplayName = (space: Space, { personal }: { personal?: boolean } = {}): string => {
   return space.state.get() === SpaceState.SPACE_READY && (space.properties.name?.length ?? 0) > 0
-    ? space.properties.name
+    ? space.properties.name!
     : personal
-      ? 'Personal Space'
+      ? 'Personal Space' // TODO(burdon): From translations.
       : 'New space';
 };
 

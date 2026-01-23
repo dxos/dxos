@@ -8,7 +8,9 @@ import * as Fiber from 'effect/Fiber';
 import * as Layer from 'effect/Layer';
 import React, { type CSSProperties, useEffect, useMemo, useState } from 'react';
 
-import { ContextQueueService, DatabaseService } from '@dxos/functions';
+import { Database } from '@dxos/echo';
+import { runAndForwardErrors } from '@dxos/effect';
+import { ContextQueueService } from '@dxos/functions';
 import { faker } from '@dxos/random';
 import { useQueue, useSpace } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
@@ -16,7 +18,7 @@ import { Popover } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { MarkdownStream } from '@dxos/react-ui-components';
 import { EditorPreviewProvider, useEditorPreview } from '@dxos/react-ui-editor';
-import { Card } from '@dxos/react-ui-stack';
+import { Card } from '@dxos/react-ui-mosaic';
 import { render } from '@dxos/storybook-utils';
 import { type Message, Organization, Person } from '@dxos/types';
 
@@ -29,7 +31,7 @@ import TEXT from './testing/thread.md?raw';
 
 faker.seed(1);
 
-type MessageGenerator = Effect.Effect<void, never, DatabaseService | ContextQueueService>;
+type MessageGenerator = Effect.Effect<void, never, Database.Service | ContextQueueService>;
 
 type StoryProps = { generator?: MessageGenerator[]; delay?: number; wait?: boolean } & ChatThreadProps;
 
@@ -54,11 +56,11 @@ const DefaultStory = ({ generator = [], delay = 0, wait, ...props }: StoryProps)
           }
         }
         setDone(true);
-      }).pipe(Effect.provide(Layer.mergeAll(DatabaseService.layer(space.db), ContextQueueService.layer(queue)))),
+      }).pipe(Effect.provide(Layer.mergeAll(Database.Service.layer(space.db), ContextQueueService.layer(queue)))),
     );
 
     return () => {
-      void Effect.runPromise(Fiber.interrupt(fiber));
+      void runAndForwardErrors(Fiber.interrupt(fiber));
     };
   }, [space, queue, generator]);
 
@@ -98,7 +100,7 @@ const meta = {
   render: render(DefaultStory),
   decorators: [
     withTheme,
-    withLayout({ container: 'column' }),
+    withLayout({ layout: 'column' }),
     withClientProvider({
       createIdentity: true,
       createSpace: true,

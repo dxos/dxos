@@ -81,7 +81,7 @@ export class CredentialServerExtension extends RpcExtension<
         ): Promise<GetAdmissionCredentialResponse> => {
           const memberInfo = this._space.spaceState.members.get(request.memberKey);
           if (!memberInfo?.credential) {
-            throw new ProtocolError('Space member not found.', request);
+            throw new ProtocolError({ message: 'Space member not found.', context: { ...request } });
           }
           return { admissionCredential: memberInfo.credential };
         },

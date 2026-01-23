@@ -5,7 +5,8 @@
 import { type Instruction } from '@atlaskit/pragmatic-drag-and-drop-hitbox/tree-item';
 import * as Schema from 'effect/Schema';
 
-import { type HasId, ObjectId } from '@dxos/echo/internal';
+import { Obj } from '@dxos/echo';
+import { type HasId } from '@dxos/echo/internal';
 import { log } from '@dxos/log';
 import { faker } from '@dxos/random';
 
@@ -18,7 +19,7 @@ export type TestItem = HasId & {
 };
 
 export const TestItemSchema = Schema.Struct({
-  id: ObjectId,
+  id: Obj.ID,
   name: Schema.String,
   icon: Schema.optional(Schema.String),
   items: Schema.mutable(Schema.Array(Schema.suspend((): Schema.Schema<TestItem> => TestItemSchema))),

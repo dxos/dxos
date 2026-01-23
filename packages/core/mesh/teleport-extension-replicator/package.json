@@ -6,7 +6,7 @@
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
   "author": "DXOS.org",
-  "sideEffects": true,
+  "sideEffects": false,
   "type": "module",
   "exports": {
     ".": {
@@ -44,7 +44,7 @@
   "devDependencies": {
     "@dxos/keyring": "workspace:*",
     "@dxos/random-access-storage": "workspace:*",
-    "fast-check": "^3.19.0"
+    "fast-check": "catalog:"
   },
   "publishConfig": {
     "access": "public"

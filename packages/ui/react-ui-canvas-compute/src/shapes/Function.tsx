@@ -35,7 +35,11 @@ export type FunctionShape = Schema.Schema.Type<typeof FunctionShape>;
 export type CreateFunctionProps = CreateShapeProps<FunctionShape>;
 
 export const createFunction = (props: CreateFunctionProps) =>
-  createShape<FunctionShape>({ type: 'function', size: { width: 256, height: 192 }, ...props });
+  createShape<FunctionShape>({
+    type: 'function',
+    size: { width: 256, height: 192 },
+    ...props,
+  });
 
 //
 // Component
@@ -62,9 +66,7 @@ const TextInputComponent = ({ shape, title, ...props }: TextInputComponentProps)
         return;
       }
 
-      const {
-        objects: [fn],
-      } = await space.db.query(Filter.type(Function.Function, { source: Ref.make(object) })).run();
+      const [fn] = await space.db.query(Filter.type(Function.Function, { source: Ref.make(object) })).run();
       if (!fn) {
         return;
       }

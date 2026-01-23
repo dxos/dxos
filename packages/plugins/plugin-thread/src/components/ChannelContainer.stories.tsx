@@ -5,10 +5,9 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
-import { contributes } from '@dxos/app-framework';
+import { Capability, Common } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { ClientCapabilities } from '@dxos/plugin-client';
-import { Query, useQuery, useSpace } from '@dxos/react-client/echo';
+import { Query, useDatabase, useQuery } from '@dxos/react-client/echo';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { render } from '@dxos/storybook-utils';
 import { Message, Thread } from '@dxos/types';
@@ -21,8 +20,8 @@ import { ChannelContainer, type ChannelContainerProps } from './ChannelContainer
 
 // TODO(wittjosiah): Channel doesn't render full height.
 const DefaultStory = ({ roomId }: ChannelContainerProps) => {
-  const space = useSpace();
-  const [channel] = useQuery(space, Query.type(Channel.Channel));
+  const db = useDatabase();
+  const [channel] = useQuery(db, Query.type(Channel.Channel));
   if (!channel) {
     return null;
   }
@@ -36,10 +35,12 @@ const meta = {
   render: render(DefaultStory),
   decorators: [
     withTheme,
-    withLayout({ container: 'column' }),
+    withLayout({ layout: 'column' }),
     withPluginManager({
       plugins: [...(await createThreadPlugins())],
-      capabilities: [contributes(ClientCapabilities.Schema, [Channel.Channel, Thread.Thread, Message.Message])],
+      capabilities: [
+        Capability.contributes(Common.Capability.Schema, [Channel.Channel, Thread.Thread, Message.Message]),
+      ],
     }),
   ],
   parameters: {

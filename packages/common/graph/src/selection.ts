@@ -51,12 +51,12 @@ export class SelectionModel {
 
   // TODO(burdon): Handle single select.
 
-  setSelected(ids: string[], shift = false): void {
-    this._selected.value = new Set([...(shift ? Array.from(this._selected.value.values()) : []), ...ids]);
+  setSelected(ids: string[], subtract = false): void {
+    this._selected.value = new Set([...(subtract ? Array.from(this._selected.value.values()) : []), ...ids]);
   }
 
-  toggleSelected(ids: string[], shift = false): void {
-    const set = new Set<string>(shift ? Array.from(this._selected.value.values()) : undefined);
+  toggleSelected(ids: string[], subtract = false): void {
+    const set = new Set<string>(subtract ? Array.from(this._selected.value.values()) : undefined);
     ids.forEach((id) => {
       if (this._selected.value.has(id)) {
         set.delete(id);

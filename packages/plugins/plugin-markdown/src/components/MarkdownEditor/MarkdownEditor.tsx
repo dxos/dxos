@@ -15,12 +15,11 @@ import { useClient } from '@dxos/react-client';
 import {
   EditorMenuProvider,
   type EditorToolbarState,
-  type PreviewBlock,
-  type PreviewOptions,
   type UseEditorMenu,
   useEditorMenu,
   useEditorToolbar,
 } from '@dxos/react-ui-editor';
+import { type PreviewBlock, type PreviewOptions } from '@dxos/ui-editor';
 import { isNonNullable } from '@dxos/util';
 
 import {
@@ -52,7 +51,7 @@ type MarkdownEditorContextValue = {
   toolbarState: Live<EditorToolbarState>;
   popoverMenu: Omit<UseEditorMenu, 'extension'>;
 } & (Pick<ExtensionsOptions, 'viewMode'> &
-  Pick<NaturalMarkdownToolbarProps, 'editorView' | 'onFileUpload' | 'onViewModeChange'>);
+  Pick<NaturalMarkdownToolbarProps, 'editorView' | 'onAction' | 'onFileUpload' | 'onViewModeChange'>);
 
 const [MarkdownEditorContextProvider, useMarkdownEditorContext] =
   createContext<MarkdownEditorContextValue>('MarkdownEditor.Context');
@@ -65,7 +64,7 @@ type MarkdownEditorRootProps = PropsWithChildren<
   {
     object?: DocumentType;
     extensions?: Extension[];
-  } & Pick<MarkdownEditorContextValue, 'id' | 'onFileUpload' | 'onViewModeChange' | 'viewMode'> &
+  } & Pick<MarkdownEditorContextValue, 'id' | 'onAction' | 'onFileUpload' | 'onViewModeChange' | 'viewMode'> &
     Pick<UseEditorMenuOptionsProps, 'slashCommandGroups' | 'onLinkQuery'> &
     Pick<ExtensionsOptions, 'editorStateStore' | 'selectionManager' | 'settings'>
 >;
@@ -78,7 +77,7 @@ const MarkdownEditorRoot = ({
   selectionManager,
   settings,
   viewMode,
-  extensions: extensionsParam,
+  extensions: extensionsProp,
   slashCommandGroups,
   onLinkQuery,
   ...props
@@ -122,8 +121,8 @@ const MarkdownEditorRoot = ({
   });
 
   const extensions = useMemo(
-    () => [coreExtensions, menuExtension, extensionsParam].filter(isNonNullable),
-    [coreExtensions, menuExtension, extensionsParam],
+    () => [coreExtensions, menuExtension, extensionsProp].filter(isNonNullable),
+    [coreExtensions, menuExtension, extensionsProp],
   );
 
   return (
@@ -154,11 +153,11 @@ type MarkdownEditorContentProps = Omit<NaturalMarkdownEditorContentProps, 'id' |
 const MarkdownEditorContent = (props: MarkdownEditorContentProps) => {
   const {
     id,
-    extensions,
     editorView,
     setEditorView,
-    toolbarState,
     viewMode,
+    toolbarState,
+    extensions,
     popoverMenu: { groupsRef, ...menuProps },
   } = useMarkdownEditorContext(MarkdownEditorContent.displayName);
 
@@ -167,9 +166,9 @@ const MarkdownEditorContent = (props: MarkdownEditorContentProps) => {
       <NaturalMarkdownEditorContent
         {...props}
         id={id}
-        extensions={extensions}
-        toolbarState={toolbarState}
         viewMode={viewMode}
+        toolbarState={toolbarState}
+        extensions={extensions}
         ref={setEditorView}
       />
     </EditorMenuProvider>
@@ -184,7 +183,7 @@ MarkdownEditorContent.displayName = 'MarkdownEditor.Content';
 
 type MarkdownEditorToolbarProps = Omit<
   NaturalMarkdownToolbarProps,
-  'state' | 'editorView' | 'onFileUpload' | 'onViewModeChange'
+  'state' | 'editorView' | 'onAction' | 'onFileUpload' | 'onViewModeChange'
 >;
 
 const MarkdownEditorToolbar = (props: MarkdownEditorToolbarProps) => {
@@ -218,7 +217,7 @@ MarkdownEditorBlocks.displayName = 'MarkdownEditor.Blocks';
 const PreviewBlock = ({ el, link }: PreviewBlock) => {
   const client = useClient();
   const dxn = DXN.parse(link.ref);
-  const subject = client.graph.ref(dxn).target;
+  const subject = client.graph.makeRef(dxn).target;
   const data = useMemo(() => ({ subject }), [subject]);
 
   return createPortal(<Surface role='card--transclusion' data={data} limit={1} />, el);

@@ -2,16 +2,19 @@
 // Copyright 2024 DXOS.org
 //
 
+import { Event } from '@dxos/async';
 import { type GenericSignal, compositeRuntime } from '@dxos/echo-signals/runtime';
 import { invariant } from '@dxos/invariant';
 
 import { defineHiddenProperty } from './define-hidden-property';
+import { EventId } from './live';
 import { ReactiveArray, type ReactiveHandler, createProxy, isValidProxyTarget, objectData } from './proxy';
 
 const symbolSignal = Symbol('signal');
 const symbolPropertySignal = Symbol('property-signal');
 
 type ProxyTarget = {
+  [EventId]: Event<void>;
   /**
    * For get and set operations on value properties.
    */
@@ -39,6 +42,10 @@ export class UntypedReactiveHandler implements ReactiveHandler<ProxyTarget> {
 
   init(target: ProxyTarget): void {
     invariant(typeof target === 'object' && target !== null);
+
+    if (!(EventId in target)) {
+      defineHiddenProperty(target, EventId, new Event());
+    }
 
     if (!(symbolSignal in target)) {
       defineHiddenProperty(target, symbolSignal, compositeRuntime.createSignal());
@@ -94,6 +101,7 @@ export class UntypedReactiveHandler implements ReactiveHandler<ProxyTarget> {
 
     const result = Reflect.set(target, prop, value);
     target[symbolSignal].notifyWrite();
+    target[EventId].emit();
     return result;
   }
 
@@ -107,6 +115,7 @@ export class UntypedReactiveHandler implements ReactiveHandler<ProxyTarget> {
   defineProperty(target: ProxyTarget, property: string | symbol, attributes: PropertyDescriptor): boolean {
     const result = Reflect.defineProperty(target, property, attributes);
     target[symbolPropertySignal].notifyWrite();
+    target[EventId].emit();
     return result;
   }
 }

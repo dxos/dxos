@@ -6,15 +6,14 @@ import { type Extension } from '@codemirror/state';
 import { EditorView } from '@codemirror/view';
 import { computed, effect } from '@preact/signals-core';
 
-import { type PromiseIntentDispatcher, createIntent } from '@dxos/app-framework';
 import { Filter, Obj, Query, Relation } from '@dxos/echo';
 import { createDocAccessor, getTextInRange } from '@dxos/echo-db';
+import { type OperationInvoker } from '@dxos/operation';
 import { type Markdown } from '@dxos/plugin-markdown/types';
-import { getSource, getSpace } from '@dxos/react-client/echo';
-import { comments, createExternalCommentSync } from '@dxos/react-ui-editor';
 import { AnchoredTo, Thread } from '@dxos/types';
+import { comments, createExternalCommentSync } from '@dxos/ui-editor';
 
-import { ThreadAction, type ThreadState } from '../types';
+import { ThreadOperation, type ThreadState } from '../types';
 
 // TODO(burdon): Factor out.
 const getName = (doc: Markdown.Document, anchor: string): string | undefined => {
@@ -27,19 +26,23 @@ const getName = (doc: Markdown.Document, anchor: string): string | undefined => 
 /**
  * Construct plugins.
  */
-export const threads = (state: ThreadState, doc?: Markdown.Document, dispatch?: PromiseIntentDispatcher): Extension => {
-  const space = getSpace(doc);
-  if (!doc || !space || !dispatch) {
+export const threads = (
+  state: ThreadState,
+  doc?: Markdown.Document,
+  invokePromise?: OperationInvoker.OperationInvoker['invokePromise'],
+): Extension => {
+  const db = doc && Obj.getDatabase(doc);
+  if (!doc || !db || !invokePromise) {
     // Include no-op comments extension here to ensure that the facets are always present when they are expected.
     // TODO(wittjosiah): The Editor should only look for these facets when comments are available.
     return [comments()];
   }
 
-  const query = space.db.query(Query.select(Filter.ids(doc.id)).targetOf(AnchoredTo.AnchoredTo));
+  const query = db.query(Query.select(Filter.id(doc.id)).targetOf(AnchoredTo.AnchoredTo));
   const unsubscribe = query.subscribe();
 
   const anchors = computed(() =>
-    query.objects
+    query.results
       .filter((anchor) => {
         const thread = Relation.getSource(anchor);
         return Obj.instanceOf(Thread.Thread, thread) && thread.status !== 'resolved';
@@ -63,7 +66,9 @@ export const threads = (state: ThreadState, doc?: Markdown.Document, dispatch?: 
             const name = getName(doc, anchor.anchor);
             const thread = Relation.getSource(anchor) as Thread.Thread;
             if (name && name !== thread.name) {
-              thread.name = name;
+              Obj.change(thread, (t) => {
+                t.name = name;
+              });
             }
           }
         });
@@ -86,13 +91,11 @@ export const threads = (state: ThreadState, doc?: Markdown.Document, dispatch?: 
       id: Obj.getDXN(doc).toString(),
       onCreate: ({ cursor }) => {
         const name = getName(doc, cursor);
-        void dispatch(
-          createIntent(ThreadAction.Create, {
-            anchor: cursor,
-            name,
-            subject: doc,
-          }),
-        );
+        void invokePromise(ThreadOperation.Create, {
+          anchor: cursor,
+          name,
+          subject: doc,
+        });
       },
       onDelete: ({ id }) => {
         const draft = state.drafts[Obj.getDXN(doc).toString()];
@@ -103,32 +106,42 @@ export const threads = (state: ThreadState, doc?: Markdown.Document, dispatch?: 
           }
         }
 
-        const thread = query.objects.find((object) => getSource(object).id === id);
+        const thread = query.results.find((object) => Relation.getSource(object).id === id);
         if (thread) {
-          thread.anchor = undefined;
+          Obj.change(thread, (t) => {
+            t.anchor = undefined;
+          });
         }
       },
       onUpdate: ({ id, cursor }) => {
         const draft = state.drafts[Obj.getDXN(doc).toString()]?.find((thread) => Obj.getDXN(thread).toString() === id);
         if (draft) {
           const thread = Relation.getSource(draft) as Thread.Thread;
-          thread.name = getName(doc, cursor);
-          draft.anchor = cursor;
+          Obj.change(thread, (t) => {
+            t.name = getName(doc, cursor);
+          });
+          Obj.change(draft, (d) => {
+            d.anchor = cursor;
+          });
         }
 
-        const relation = query.objects.find((object) => getSource(object).id === id);
+        const relation = query.results.find((object) => Relation.getSource(object).id === id);
         if (relation) {
-          const thread = getSource(relation);
+          const thread = Relation.getSource(relation);
           if (Obj.instanceOf(Thread.Thread, thread)) {
-            thread.name = getName(doc, cursor);
-            relation.anchor = cursor;
+            Obj.change(thread, (t) => {
+              t.name = getName(doc, cursor);
+            });
+            Obj.change(relation, (r) => {
+              r.anchor = cursor;
+            });
           }
         }
       },
       onSelect: ({ selection }) => {
         const current = selection.current ?? selection.closest;
         if (current) {
-          void dispatch(createIntent(ThreadAction.Select, { current }));
+          void invokePromise(ThreadOperation.Select, { current });
         }
       },
     }),

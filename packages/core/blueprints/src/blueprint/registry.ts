@@ -26,6 +26,10 @@ export class Registry {
     this._blueprints.sort(({ name: a }, { name: b }) => a.localeCompare(b));
   }
 
+  get blueprints(): Blueprint[] {
+    return this._blueprints;
+  }
+
   getByKey(key: string): Blueprint | undefined {
     return this._blueprints.find((blueprint) => blueprint.key === key);
   }

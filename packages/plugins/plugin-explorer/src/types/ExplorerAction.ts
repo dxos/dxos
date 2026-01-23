@@ -5,13 +5,6 @@
 import * as Schema from 'effect/Schema';
 
 import { TypeInputOptionsAnnotation } from '@dxos/plugin-space/types';
-import { SpaceSchema } from '@dxos/react-client/echo';
-
-import { meta } from '../meta';
-
-import * as Graph from './Graph';
-
-const EXPLORER_ACTION = `${meta.id}/action`;
 
 export const GraphProps = Schema.Struct({
   name: Schema.optional(Schema.String),
@@ -26,12 +19,3 @@ export const GraphProps = Schema.Struct({
     Schema.optional,
   ),
 });
-
-export class CreateGraph extends Schema.TaggedClass<CreateGraph>()(`${EXPLORER_ACTION}/create-graph`, {
-  input: Schema.Struct({
-    space: SpaceSchema,
-  }).pipe(Schema.extend(GraphProps)),
-  output: Schema.Struct({
-    object: Graph.Graph,
-  }),
-}) {}

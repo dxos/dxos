@@ -7,7 +7,7 @@ import React from 'react';
 import { Surface, useCapability } from '@dxos/app-framework/react';
 import { AlertDialog, Dialog as NaturalDialog } from '@dxos/react-ui';
 
-import { DeckCapabilities } from '../../capabilities';
+import { DeckCapabilities } from '../../types';
 import { PlankContentError } from '../Plank';
 
 export const Dialog = () => {

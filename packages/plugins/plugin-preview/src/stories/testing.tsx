@@ -6,11 +6,11 @@ import React, { type FC } from 'react';
 
 import { Obj, Ref } from '@dxos/echo';
 import { faker } from '@dxos/random';
-import { CardContainer } from '@dxos/react-ui-stack/testing';
+import { CardContainer } from '@dxos/react-ui-mosaic/testing';
 import { Organization, Person, Task } from '@dxos/types';
 import { Project } from '@dxos/types';
 
-import { OrganizationCard, PersonCard, ProjectCard, TaskCard } from '../cards';
+import { FormCard, OrganizationCard, PersonCard, ProjectCard, TaskCard } from '../cards';
 import { type CardPreviewProps } from '../types';
 
 type CardProps<T extends Obj.Any> = {
@@ -108,6 +108,12 @@ export const createCards = (image = true): CardProps<any>[] => {
       Component: TaskCard,
       subject: task,
       icon: 'ph--list-checks--regular',
+      image,
+    },
+    {
+      Component: FormCard,
+      subject: contact,
+      icon: 'ph--user--regular',
       image,
     },
   ];

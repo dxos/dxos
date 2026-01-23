@@ -1,1 +1,393 @@
-{"conversations":[{"parameters":{"model":"@anthropic/claude-3-5-sonnet-20241022","stream":true,"tools":[]},"prompt":{"content":[{"role":"user","content":"Hello world!","options":{}}]},"response":[{"type":"response-metadata","id":"msg_01Bm496JGgDMgC9YwdYTFFHo","modelId":"claude-3-5-sonnet-20241022","timestamp":"1970-01-01T00:00:00.000Z","metadata":{}},{"type":"text-start","id":"0","metadata":{}},{"type":"text-delta","id":"0","delta":"Hi","metadata":{}},{"type":"text-delta","id":"0","delta":"!","metadata":{}},{"type":"text-delta","id":"0","delta":" How can","metadata":{}},{"type":"text-delta","id":"0","delta":" I help you today?","metadata":{}},{"type":"text-end","id":"0","metadata":{}},{"type":"finish","reason":"stop","usage":{"inputTokens":10,"outputTokens":12,"totalTokens":22},"metadata":{"anthropic":{"usage":{"cache_creation":{"ephemeral_1h_input_tokens":0,"ephemeral_5m_input_tokens":0},"cache_creation_input_tokens":0,"cache_read_input_tokens":0,"input_tokens":10,"output_tokens":1,"server_tool_use":null,"service_tier":"standard"}}}}]},{"parameters":{"model":"@anthropic/claude-3-5-sonnet-20241022","stream":true,"tools":[{"name":"Calculator","description":"Basic calculator tool","inputSchema":{"type":"object","required":["input"],"properties":{"input":{"type":"string","description":"The calculation to perform."}},"additionalProperties":false}}]},"prompt":{"content":[{"role":"user","content":"What is 10 + 30?","options":{}}]},"response":[{"type":"response-metadata","id":"msg_01UNTbjtTHEpdFgGunu2k8Br","modelId":"claude-3-5-sonnet-20241022","timestamp":"1970-01-01T00:00:00.000Z","metadata":{}},{"type":"text-start","id":"0","metadata":{}},{"type":"text-delta","id":"0","delta":"I","metadata":{}},{"type":"text-delta","id":"0","delta":"'ll help","metadata":{}},{"type":"text-delta","id":"0","delta":" you calculate","metadata":{}},{"type":"text-delta","id":"0","delta":" ","metadata":{}},{"type":"text-delta","id":"0","delta":"10 + 30","metadata":{}},{"type":"text-delta","id":"0","delta":" using the","metadata":{}},{"type":"text-delta","id":"0","delta":" Calculator tool.","metadata":{}},{"type":"text-end","id":"0","metadata":{}},{"type":"tool-params-start","id":"toolu_01LTGUgfihCQtVchm1b37xHQ","name":"Calculator","providerExecuted":false,"metadata":{}},{"type":"tool-params-delta","id":"toolu_01LTGUgfihCQtVchm1b37xHQ","delta":"","metadata":{}},{"type":"tool-params-delta","id":"toolu_01LTGUgfihCQtVchm1b37xHQ","delta":"{\"input\": \"","metadata":{}},{"type":"tool-params-delta","id":"toolu_01LTGUgfihCQtVchm1b37xHQ","delta":"10 + 30","metadata":{}},{"type":"tool-params-delta","id":"toolu_01LTGUgfihCQtVchm1b37xHQ","delta":"\"}","metadata":{}},{"type":"tool-params-end","id":"toolu_01LTGUgfihCQtVchm1b37xHQ","metadata":{}},{"type":"tool-call","id":"toolu_01LTGUgfihCQtVchm1b37xHQ","name":"Calculator","params":{"input":"10 + 30"},"providerExecuted":false,"metadata":{}},{"type":"finish","reason":"tool-calls","usage":{"inputTokens":394,"outputTokens":73,"totalTokens":467},"metadata":{"anthropic":{"usage":{"cache_creation":{"ephemeral_1h_input_tokens":0,"ephemeral_5m_input_tokens":0},"cache_creation_input_tokens":0,"cache_read_input_tokens":0,"input_tokens":394,"output_tokens":1,"server_tool_use":null,"service_tier":"standard"}}}}]},{"parameters":{"model":"@anthropic/claude-3-5-sonnet-20241022","stream":true,"tools":[{"name":"Calculator","description":"Basic calculator tool","inputSchema":{"type":"object","required":["input"],"properties":{"input":{"type":"string","description":"The calculation to perform."}},"additionalProperties":false}}]},"prompt":{"content":[{"role":"user","content":"What is 10 + 30?","options":{}},{"role":"assistant","content":[{"type":"text","text":"I'll help you calculate 10 + 30 using the Calculator tool.","options":{}},{"type":"tool-call","id":"toolu_01LTGUgfihCQtVchm1b37xHQ","name":"Calculator","params":{"input":"10 + 30"},"providerExecuted":false,"options":{}}],"options":{}},{"role":"tool","content":[{"type":"tool-result","id":"toolu_01LTGUgfihCQtVchm1b37xHQ","name":"Calculator","result":{"result":40},"options":{}}],"options":{}}]},"response":[{"type":"response-metadata","id":"msg_01AKio3GheJGn38BhvAp33rs","modelId":"claude-3-5-sonnet-20241022","timestamp":"1970-01-01T00:00:00.000Z","metadata":{}},{"type":"text-start","id":"0","metadata":{}},{"type":"text-delta","id":"0","delta":"The result","metadata":{}},{"type":"text-delta","id":"0","delta":" of 10 +","metadata":{}},{"type":"text-delta","id":"0","delta":" 30 is ","metadata":{}},{"type":"text-delta","id":"0","delta":"40.","metadata":{}},{"type":"text-end","id":"0","metadata":{}},{"type":"finish","reason":"stop","usage":{"inputTokens":482,"outputTokens":18,"totalTokens":500},"metadata":{"anthropic":{"usage":{"cache_creation":{"ephemeral_1h_input_tokens":0,"ephemeral_5m_input_tokens":0},"cache_creation_input_tokens":0,"cache_read_input_tokens":0,"input_tokens":482,"output_tokens":3,"server_tool_use":null,"service_tier":"standard"}}}}]}]}
+{
+  "conversations": [
+    {
+      "parameters": {
+        "model": "@anthropic/claude-3-5-sonnet-20241022",
+        "stream": true,
+        "tools": []
+      },
+      "prompt": {
+        "content": [
+          {
+            "role": "user",
+            "content": "Hello world!",
+            "options": {}
+          }
+        ]
+      },
+      "response": [
+        {
+          "type": "response-metadata",
+          "id": "msg_01Bm496JGgDMgC9YwdYTFFHo",
+          "modelId": "claude-3-5-sonnet-20241022",
+          "timestamp": "1970-01-01T00:00:00.000Z",
+          "metadata": {}
+        },
+        {
+          "type": "text-start",
+          "id": "0",
+          "metadata": {}
+        },
+        {
+          "type": "text-delta",
+          "id": "0",
+          "delta": "Hi",
+          "metadata": {}
+        },
+        {
+          "type": "text-delta",
+          "id": "0",
+          "delta": "!",
+          "metadata": {}
+        },
+        {
+          "type": "text-delta",
+          "id": "0",
+          "delta": " How can",
+          "metadata": {}
+        },
+        {
+          "type": "text-delta",
+          "id": "0",
+          "delta": " I help you today?",
+          "metadata": {}
+        },
+        {
+          "type": "text-end",
+          "id": "0",
+          "metadata": {}
+        },
+        {
+          "type": "finish",
+          "reason": "stop",
+          "usage": {
+            "inputTokens": 10,
+            "outputTokens": 12,
+            "totalTokens": 22
+          },
+          "metadata": {
+            "anthropic": {
+              "usage": {
+                "cache_creation": {
+                  "ephemeral_1h_input_tokens": 0,
+                  "ephemeral_5m_input_tokens": 0
+                },
+                "cache_creation_input_tokens": 0,
+                "cache_read_input_tokens": 0,
+                "input_tokens": 10,
+                "output_tokens": 1,
+                "server_tool_use": null,
+                "service_tier": "standard"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "parameters": {
+        "model": "@anthropic/claude-3-5-sonnet-20241022",
+        "stream": true,
+        "tools": [
+          {
+            "name": "Calculator",
+            "description": "Basic calculator tool",
+            "inputSchema": {
+              "type": "object",
+              "required": [
+                "input"
+              ],
+              "properties": {
+                "input": {
+                  "type": "string",
+                  "description": "The calculation to perform."
+                }
+              },
+              "additionalProperties": false
+            }
+          }
+        ]
+      },
+      "prompt": {
+        "content": [
+          {
+            "role": "user",
+            "content": "What is 10 + 30?",
+            "options": {}
+          }
+        ]
+      },
+      "response": [
+        {
+          "type": "response-metadata",
+          "id": "msg_01UNTbjtTHEpdFgGunu2k8Br",
+          "modelId": "claude-3-5-sonnet-20241022",
+          "timestamp": "1970-01-01T00:00:00.000Z",
+          "metadata": {}
+        },
+        {
+          "type": "text-start",
+          "id": "0",
+          "metadata": {}
+        },
+        {
+          "type": "text-delta",
+          "id": "0",
+          "delta": "I",
+          "metadata": {}
+        },
+        {
+          "type": "text-delta",
+          "id": "0",
+          "delta": "'ll help",
+          "metadata": {}
+        },
+        {
+          "type": "text-delta",
+          "id": "0",
+          "delta": " you calculate",
+          "metadata": {}
+        },
+        {
+          "type": "text-delta",
+          "id": "0",
+          "delta": " ",
+          "metadata": {}
+        },
+        {
+          "type": "text-delta",
+          "id": "0",
+          "delta": "10 + 30",
+          "metadata": {}
+        },
+        {
+          "type": "text-delta",
+          "id": "0",
+          "delta": " using the",
+          "metadata": {}
+        },
+        {
+          "type": "text-delta",
+          "id": "0",
+          "delta": " Calculator tool.",
+          "metadata": {}
+        },
+        {
+          "type": "text-end",
+          "id": "0",
+          "metadata": {}
+        },
+        {
+          "type": "tool-params-start",
+          "id": "toolu_01LTGUgfihCQtVchm1b37xHQ",
+          "name": "Calculator",
+          "providerExecuted": false,
+          "metadata": {}
+        },
+        {
+          "type": "tool-params-delta",
+          "id": "toolu_01LTGUgfihCQtVchm1b37xHQ",
+          "delta": "",
+          "metadata": {}
+        },
+        {
+          "type": "tool-params-delta",
+          "id": "toolu_01LTGUgfihCQtVchm1b37xHQ",
+          "delta": "{\"input\": \"",
+          "metadata": {}
+        },
+        {
+          "type": "tool-params-delta",
+          "id": "toolu_01LTGUgfihCQtVchm1b37xHQ",
+          "delta": "10 + 30",
+          "metadata": {}
+        },
+        {
+          "type": "tool-params-delta",
+          "id": "toolu_01LTGUgfihCQtVchm1b37xHQ",
+          "delta": "\"}",
+          "metadata": {}
+        },
+        {
+          "type": "tool-params-end",
+          "id": "toolu_01LTGUgfihCQtVchm1b37xHQ",
+          "metadata": {}
+        },
+        {
+          "type": "tool-call",
+          "id": "toolu_01LTGUgfihCQtVchm1b37xHQ",
+          "name": "Calculator",
+          "params": {
+            "input": "10 + 30"
+          },
+          "providerExecuted": false,
+          "metadata": {}
+        },
+        {
+          "type": "finish",
+          "reason": "tool-calls",
+          "usage": {
+            "inputTokens": 394,
+            "outputTokens": 73,
+            "totalTokens": 467
+          },
+          "metadata": {
+            "anthropic": {
+              "usage": {
+                "cache_creation": {
+                  "ephemeral_1h_input_tokens": 0,
+                  "ephemeral_5m_input_tokens": 0
+                },
+                "cache_creation_input_tokens": 0,
+                "cache_read_input_tokens": 0,
+                "input_tokens": 394,
+                "output_tokens": 1,
+                "server_tool_use": null,
+                "service_tier": "standard"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "parameters": {
+        "model": "@anthropic/claude-3-5-sonnet-20241022",
+        "stream": true,
+        "tools": [
+          {
+            "name": "Calculator",
+            "description": "Basic calculator tool",
+            "inputSchema": {
+              "type": "object",
+              "required": [
+                "input"
+              ],
+              "properties": {
+                "input": {
+                  "type": "string",
+                  "description": "The calculation to perform."
+                }
+              },
+              "additionalProperties": false
+            }
+          }
+        ]
+      },
+      "prompt": {
+        "content": [
+          {
+            "role": "user",
+            "content": "What is 10 + 30?",
+            "options": {}
+          },
+          {
+            "role": "assistant",
+            "content": [
+              {
+                "type": "text",
+                "text": "I'll help you calculate 10 + 30 using the Calculator tool.",
+                "options": {}
+              },
+              {
+                "type": "tool-call",
+                "id": "toolu_01LTGUgfihCQtVchm1b37xHQ",
+                "name": "Calculator",
+                "params": {
+                  "input": "10 + 30"
+                },
+                "providerExecuted": false,
+                "options": {}
+              }
+            ],
+            "options": {}
+          },
+          {
+            "role": "tool",
+            "content": [
+              {
+                "type": "tool-result",
+                "id": "toolu_01LTGUgfihCQtVchm1b37xHQ",
+                "name": "Calculator",
+                "result": {
+                  "result": 40
+                },
+                "options": {},
+                "isFailure": false
+              }
+            ],
+            "options": {}
+          }
+        ]
+      },
+      "response": [
+        {
+          "type": "response-metadata",
+          "id": "msg_01AKio3GheJGn38BhvAp33rs",
+          "modelId": "claude-3-5-sonnet-20241022",
+          "timestamp": "1970-01-01T00:00:00.000Z",
+          "metadata": {}
+        },
+        {
+          "type": "text-start",
+          "id": "0",
+          "metadata": {}
+        },
+        {
+          "type": "text-delta",
+          "id": "0",
+          "delta": "The result",
+          "metadata": {}
+        },
+        {
+          "type": "text-delta",
+          "id": "0",
+          "delta": " of 10 +",
+          "metadata": {}
+        },
+        {
+          "type": "text-delta",
+          "id": "0",
+          "delta": " 30 is ",
+          "metadata": {}
+        },
+        {
+          "type": "text-delta",
+          "id": "0",
+          "delta": "40.",
+          "metadata": {}
+        },
+        {
+          "type": "text-end",
+          "id": "0",
+          "metadata": {}
+        },
+        {
+          "type": "finish",
+          "reason": "stop",
+          "usage": {
+            "inputTokens": 482,
+            "outputTokens": 18,
+            "totalTokens": 500
+          },
+          "metadata": {
+            "anthropic": {
+              "usage": {
+                "cache_creation": {
+                  "ephemeral_1h_input_tokens": 0,
+                  "ephemeral_5m_input_tokens": 0
+                },
+                "cache_creation_input_tokens": 0,
+                "cache_read_input_tokens": 0,
+                "input_tokens": 482,
+                "output_tokens": 3,
+                "server_tool_use": null,
+                "service_tier": "standard"
+              }
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

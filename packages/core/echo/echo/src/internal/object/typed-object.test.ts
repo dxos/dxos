@@ -15,7 +15,7 @@ class Organization extends TypedObject({
   name: Schema.String,
 }) {}
 
-describe('EchoObject class DSL', () => {
+describe('EchoObjectSchema class DSL', () => {
   test('type is a valid schema', async () => {
     expect(Schema.isSchema(Organization)).to.be.true;
   });

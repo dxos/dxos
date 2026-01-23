@@ -2,16 +2,12 @@
 // Copyright 2025 DXOS.org
 //
 
-import type * as Schema from 'effect/Schema';
-
-import { Filter, Obj, Query, Ref } from '@dxos/echo';
-import { getTypename, toJsonSchema } from '@dxos/echo/internal';
-import type { JsonSchemaType } from '@dxos/echo/internal';
+import { Filter, type JsonSchema, Obj, Order, Query, type QueryAST, Ref, Type } from '@dxos/echo';
 import {
   ProjectionModel,
   type SchemaPropertyDefinition,
-  type SortDirectionType,
   View,
+  createDirectChangeCallback,
   getSchemaFromPropertyDefinitions,
 } from '@dxos/schema';
 
@@ -21,7 +17,7 @@ import { Table } from '../types';
 type PropertyDisplayProps = {
   size: number;
   title: string;
-  sort: SortDirectionType;
+  sort: QueryAST.OrderDirection;
 };
 
 export type TablePropertyDefinition = SchemaPropertyDefinition & Partial<PropertyDisplayProps>;
@@ -31,21 +27,21 @@ export type TablePropertyDefinition = SchemaPropertyDefinition & Partial<Propert
  */
 // TODO(burdon): Remove variance.
 export const getBaseSchema = ({
+  schema,
   typename,
   properties,
   jsonSchema,
-  schema,
 }: {
+  schema?: Type.Entity.Any;
   typename?: string;
   properties?: TablePropertyDefinition[];
-  jsonSchema?: JsonSchemaType;
-  schema?: Schema.Schema.AnyNoContext;
-}): { typename: string; jsonSchema: JsonSchemaType } => {
+  jsonSchema?: JsonSchema.JsonSchema;
+}): { typename: string; jsonSchema: JsonSchema.JsonSchema } => {
   if (typename && properties) {
     const schema = getSchemaFromPropertyDefinitions(typename, properties);
     return { typename: schema.typename, jsonSchema: schema.jsonSchema };
   } else if (schema) {
-    return { typename: getTypename(schema)!, jsonSchema: toJsonSchema(schema) };
+    return { typename: Type.getTypename(schema)!, jsonSchema: Type.toJsonSchema(schema) };
   } else if (typename && jsonSchema) {
     return { typename, jsonSchema };
   } else {
@@ -57,7 +53,7 @@ export const makeDynamicTable = ({
   jsonSchema,
   properties,
 }: {
-  jsonSchema: JsonSchemaType;
+  jsonSchema: JsonSchema.JsonSchema;
   properties?: TablePropertyDefinition[];
 }): { projection: ProjectionModel; object: Table.Table } => {
   const view = View.make({
@@ -67,7 +63,12 @@ export const makeDynamicTable = ({
   });
   const object = Obj.make(Table.Table, { view: Ref.make(view), sizes: {} });
 
-  const projection = new ProjectionModel(jsonSchema, view.projection);
+  // Use direct change callback for in-memory objects (non-ECHO backed).
+  const projection = new ProjectionModel(
+    jsonSchema,
+    view.projection,
+    createDirectChangeCallback(view.projection, jsonSchema),
+  );
   projection.normalizeView();
   if (properties && projection.fields) {
     setProperties(view, projection, object, properties);
@@ -86,7 +87,9 @@ const setProperties = (
     const field = projection.fields.find((field) => field.path === property.name);
     if (field) {
       if (property.size !== undefined) {
-        table.sizes[field.path] = property.size;
+        Obj.change(table, (t) => {
+          t.sizes[field.path] = property.size!;
+        });
       }
 
       if (property.title !== undefined) {
@@ -98,8 +101,14 @@ const setProperties = (
       }
 
       if (property.sort) {
-        const fieldId = field.id;
-        view.sort = [{ fieldId, direction: property.sort }];
+        // Apply sort to query instead of deprecated view.sort
+        const currentQuery = Query.fromAst(Obj.getSnapshot(view).query.ast);
+        // Use any type parameter since we're working with dynamic field paths
+        const newQuery = currentQuery.orderBy(Order.property<any>(field.path as string, property.sort));
+        Obj.change(view, (v) => {
+          // Type assertion needed because Query AST types have some variance issues.
+          v.query.ast = newQuery.ast as typeof v.query.ast;
+        });
       }
     }
   }

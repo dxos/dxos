@@ -14,7 +14,7 @@ import { useResizeDetector } from 'react-resize-detector';
 import { debounce } from '@dxos/async';
 import { Obj } from '@dxos/echo';
 import { type ThemedClassName } from '@dxos/react-ui';
-import { mx } from '@dxos/react-ui-theme';
+import { mx } from '@dxos/ui-theme';
 
 import { useStoreAdapter } from '../../hooks';
 import { type Diagram, type SketchGridType, type SketchSettingsProps } from '../../types';

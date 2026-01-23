@@ -19,7 +19,7 @@ import {
   type Index,
   type IndexQuery,
   type IndexStaticProps,
-  type LoadParams,
+  type LoadProps,
   staticImplements,
 } from '../types';
 
@@ -138,7 +138,7 @@ export class IndexVector extends Resource implements Index {
   }
 
   @trace.span({ showInBrowserTimeline: true })
-  static async load({ serialized, identifier }: LoadParams): Promise<IndexVector> {
+  static async load({ serialized, identifier }: LoadProps): Promise<IndexVector> {
     const deserialized = JSON.parse(serialized);
 
     const index = new IndexVector();

@@ -8,8 +8,8 @@ import { describe, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
-import { AiService, ConsolePrinter, MemoizedAiService } from '@dxos/ai';
-import { TestAiService } from '@dxos/ai/testing';
+import { AiService, ConsolePrinter } from '@dxos/ai';
+import { MemoizedAiService, TestAiService } from '@dxos/ai/testing';
 import {
   AiConversation,
   type ContextBinding,
@@ -18,19 +18,14 @@ import {
   makeToolResolverFromFunctions,
 } from '@dxos/assistant';
 import { Blueprint } from '@dxos/blueprints';
-import { Filter, Obj, Query, Ref } from '@dxos/echo';
-import { TestHelpers, acquireReleaseResource } from '@dxos/effect';
-import {
-  CredentialsService,
-  DatabaseService,
-  FunctionInvocationService,
-  QueueService,
-  TracingService,
-} from '@dxos/functions';
+import { Database, Filter, Obj, Query, Ref } from '@dxos/echo';
+import { acquireReleaseResource } from '@dxos/effect';
+import { TestHelpers } from '@dxos/effect/testing';
+import { CredentialsService, FunctionInvocationService, QueueService, TracingService } from '@dxos/functions';
 import { FunctionInvocationServiceLayerTest, TestDatabaseLayer } from '@dxos/functions-runtime/testing';
 import { invariant } from '@dxos/invariant';
 import { ObjectId } from '@dxos/keys';
-import { MarkdownBlueprint, MarkdownFunction } from '@dxos/plugin-markdown/toolkit';
+import { MarkdownBlueprint } from '@dxos/plugin-markdown/blueprints';
 import { Markdown } from '@dxos/plugin-markdown/types';
 import { HasSubject, type Message, Organization } from '@dxos/types';
 
@@ -46,15 +41,12 @@ ObjectId.dangerouslyDisableRandomness();
 
 const TestLayer = Layer.mergeAll(
   AiService.model('@anthropic/claude-opus-4-0'),
-  makeToolResolverFromFunctions(
-    [research, createDocument, MarkdownFunction.create, MarkdownFunction.open, MarkdownFunction.update],
-    testToolkit,
-  ),
+  makeToolResolverFromFunctions([research, createDocument, ...MarkdownBlueprint.functions], testToolkit),
   makeToolExecutionServiceFromFunctions(testToolkit, testToolkit.toLayer({}) as any),
 ).pipe(
   Layer.provideMerge(
     FunctionInvocationServiceLayerTest({
-      functions: [research, createDocument, MarkdownFunction.create, MarkdownFunction.open, MarkdownFunction.update],
+      functions: [research, createDocument, ...MarkdownBlueprint.functions],
     }),
   ),
   Layer.provideMerge(
@@ -76,13 +68,13 @@ describe('Research', () => {
     'call a function to generate a research report',
     Effect.fnUntraced(
       function* (_) {
-        yield* DatabaseService.add(
+        yield* Database.Service.add(
           Obj.make(Organization.Organization, {
             name: 'BlueYard',
             website: 'https://blueyard.com',
           }),
         );
-        yield* DatabaseService.flush({ indexes: true });
+        yield* Database.Service.flush({ indexes: true });
         const result = yield* FunctionInvocationService.invokeFunction(research, {
           query: 'Founders and portfolio of BlueYard.',
         });
@@ -90,10 +82,10 @@ describe('Research', () => {
         console.log(inspect(result, { depth: null, colors: true }));
         console.log(JSON.stringify(result, null, 2));
 
-        yield* DatabaseService.flush({ indexes: true });
+        yield* Database.Service.flush({ indexes: true });
         const researchGraph = yield* queryResearchGraph();
         if (researchGraph) {
-          const data = yield* DatabaseService.load(researchGraph.queue).pipe(
+          const data = yield* Database.Service.load(researchGraph.queue).pipe(
             Effect.flatMap((queue) => Effect.promise(() => queue.queryObjects())),
           );
           console.log(inspect(data, { depth: null, colors: true }));
@@ -109,7 +101,7 @@ describe('Research', () => {
     'create and update research report',
     Effect.fnUntraced(
       function* (_) {
-        const organization = yield* DatabaseService.add(
+        const organization = yield* Database.Service.add(
           Obj.make(Organization.Organization, {
             name: 'BlueYard',
             website: 'https://blueyard.com',
@@ -119,9 +111,9 @@ describe('Research', () => {
         const queue = yield* QueueService.createQueue<Message.Message | ContextBinding>();
         const conversation = yield* acquireReleaseResource(() => new AiConversation(queue));
 
-        yield* DatabaseService.flush({ indexes: true });
-        const researchBlueprint = yield* DatabaseService.add(Obj.clone(ResearchBlueprint));
-        const markdownBlueprint = yield* DatabaseService.add(Obj.clone(MarkdownBlueprint));
+        yield* Database.Service.flush({ indexes: true });
+        const researchBlueprint = yield* Database.Service.add(Obj.clone(ResearchBlueprint));
+        const markdownBlueprint = yield* Database.Service.add(Obj.clone(MarkdownBlueprint.make()));
         yield* Effect.promise(() =>
           conversation.context.bind({
             blueprints: [Ref.make(researchBlueprint), Ref.make(markdownBlueprint)],
@@ -136,8 +128,8 @@ describe('Research', () => {
           prompt: `Create a research summary about ${organization.name}.`,
         });
         {
-          const { objects: docs } = yield* DatabaseService.runQuery(
-            Query.select(Filter.ids(organization.id)).targetOf(HasSubject.HasSubject).source(),
+          const docs = yield* Database.Service.runQuery(
+            Query.select(Filter.id(organization.id)).targetOf(HasSubject.HasSubject).source(),
           );
           if (docs.length !== 1) {
             throw new Error(`Expected 1 research document; got ${docs.length}: ${docs.map((_) => _.name)}`);
@@ -147,7 +139,7 @@ describe('Research', () => {
           invariant(Obj.instanceOf(Markdown.Document, doc));
           console.log({
             name: doc.name,
-            content: yield* DatabaseService.load(doc.content).pipe(Effect.map((_) => _.content)),
+            content: yield* Database.Service.load(doc.content).pipe(Effect.map((_) => _.content)),
           });
         }
 
@@ -156,8 +148,8 @@ describe('Research', () => {
           prompt: 'Add a section about their portfolio.',
         });
         {
-          const { objects: docs } = yield* DatabaseService.runQuery(
-            Query.select(Filter.ids(organization.id)).targetOf(HasSubject.HasSubject).source(),
+          const docs = yield* Database.Service.runQuery(
+            Query.select(Filter.id(organization.id)).targetOf(HasSubject.HasSubject).source(),
           );
           if (docs.length !== 1) {
             throw new Error(`Expected 1 research document; got ${docs.length}: ${docs.map((_) => _.name)}`);
@@ -167,7 +159,7 @@ describe('Research', () => {
           invariant(Obj.instanceOf(Markdown.Document, doc));
           console.log({
             name: doc.name,
-            content: yield* DatabaseService.load(doc.content).pipe(Effect.map((_) => _.content)),
+            content: yield* Database.Service.load(doc.content).pipe(Effect.map((_) => _.content)),
           });
         }
       },

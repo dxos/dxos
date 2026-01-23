@@ -24,10 +24,10 @@
       "path": "../react-ui"
     },
     {
-      "path": "../react-ui-theme"
+      "path": "../ui-theme"
     },
     {
-      "path": "../react-ui-types"
+      "path": "../ui-types"
     }
   ]
 }

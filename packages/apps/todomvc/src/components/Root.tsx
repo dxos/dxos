@@ -27,8 +27,8 @@ export const Root = () => {
       shell='./shell.html'
       types={[TodoList, Todo]}
       onInitialized={async (client) => {
-        const searchParams = new URLSearchParams(location.search);
-        const deviceInvitationCode = searchParams.get('deviceInvitationCode');
+        const searchProps = new URLSearchParams(location.search);
+        const deviceInvitationCode = searchProps.get('deviceInvitationCode');
         if (!client.halo.identity.get() && !deviceInvitationCode) {
           await client.halo.createIdentity();
           await client.spaces.waitUntilReady();
@@ -36,7 +36,7 @@ export const Root = () => {
           createTodoList(client.spaces.default);
         }
 
-        const spaceInvitationCode = searchParams.get('spaceInvitationCode');
+        const spaceInvitationCode = searchProps.get('spaceInvitationCode');
         if (spaceInvitationCode) {
           void client.shell.joinSpace({ invitationCode: spaceInvitationCode }).then(({ space }) => {
             space && navigate(generatePath('/:spaceKey', { spaceKey: space.key.toHex() }));

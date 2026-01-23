@@ -2,13 +2,14 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type BuildOptions, type BuildResult, type Plugin, type PluginBuild, build, initialize } from 'esbuild-wasm';
+import { type BuildResult, type Plugin, type PluginBuild, build, initialize } from 'esbuild-wasm';
 
 import { subtleCrypto } from '@dxos/crypto';
 import { invariant } from '@dxos/invariant';
-import { log } from '@dxos/log';
+import { isNode, trim } from '@dxos/util';
 
-import { httpPlugin } from '../http-plugin-esbuild';
+import { httpPlugin } from './plugins/http-plugin-esbuild';
+import { PluginR2VendoredPackages } from './plugins/r2-vendored-packages';
 
 export type Import = {
   moduleUrl: string;
@@ -21,8 +22,6 @@ export type BundleOptions = {
    * Source code to bundle.
    */
   source: string;
-
-  platform: BuildOptions['platform'];
 };
 
 export type BundleResult =
@@ -36,11 +35,14 @@ export type BundleResult =
       sourceHash: Buffer;
       imports: Import[];
       entryPoint: string;
-      asset: Uint8Array;
-      bundle: string;
+      assets: Record<string, Uint8Array>;
     };
 
 let initialized: Promise<void>;
+/**
+ * Initializes the bundler.
+ * Must be called before using the bundler in browser.
+ */
 export const initializeBundler = async (options: { wasmUrl: string }) => {
   await (initialized ??= initialize({
     wasmURL: options.wasmUrl,
@@ -48,15 +50,20 @@ export const initializeBundler = async (options: { wasmUrl: string }) => {
 };
 
 /**
- * In-browser ESBuild bundler implemented as a function (parity with native bundler API style).
+ * ESBuild bundler implemented as a function (parity with native bundler API style).
+ * Bundles source code directly, does not really on filesystem or Node APIs.
+ *
+ * This is browser friendly version of the bundler, but it could also be used in Node environment.
+ * `initializeBundler` should be called before using it in browser, not required in Node.
  */
-export const bundleFunction = async ({ source, platform }: BundleOptions): Promise<BundleResult> => {
+export const bundleFunction = async ({ source }: BundleOptions): Promise<BundleResult> => {
   const sourceHash = Buffer.from(await subtleCrypto.digest('SHA-256', Buffer.from(source)));
 
-  if (platform === 'browser') {
+  if (!isNode()) {
     invariant(initialized, 'Compiler not initialized.');
     await initialized;
   }
+  const outdir = '/tmp/bundle';
   try {
     const result = await build({
       platform: 'browser',
@@ -67,9 +74,31 @@ export const bundleFunction = async ({ source, platform }: BundleOptions): Promi
         // Keep output name stable as `index.js` to preserve API.
         index: 'dxos:entrypoint',
       },
+      outdir,
       bundle: true,
+
+      // NOTE: Splitting causes an error in Cloudflare-Workers:
+      //   Disallowed operation called within global scope.
+      //   Asynchronous I/O (ex: fetch() or connect()), setting a timeout, and generating random values are not allowed within global scope.
+      //   To fix this error, perform this operation within a handler. https://developers.cloudflare.com/workers/runtime-apis/handlers/
+      //
+      // Likely, workerd is treating asynchronously-loaded modules as if they were executing in global scope.
+      // splitting: true,
       format: 'esm',
-      external: ['./runtime.js', 'cloudflare:workers', 'functions-service:user-script'],
+      target: 'esnext',
+      supported: {
+        'class-private-accessor': true,
+        'class-private-brand-check': true,
+        'class-private-field': true,
+        'class-private-method': true,
+        'class-private-static-accessor': true,
+        'class-private-static-field': true,
+        'class-private-static-method': true,
+      },
+      external: ['cloudflare:workers'],
+      alias: {
+        'node:path': 'path',
+      },
       plugins: [
         httpPlugin as any as Plugin,
         {
@@ -80,48 +109,58 @@ export const bundleFunction = async ({ source, platform }: BundleOptions): Promi
               path: 'dxos:entrypoint',
               namespace: 'dxos:entrypoint',
             }));
+            // TODO(dmaretskyi): Move into memory plugin
             build.onLoad({ filter: /^dxos:entrypoint$/, namespace: 'dxos:entrypoint' }, () => {
               return {
-                contents: [
-                  `import { wrapFunctionHandler } from 'dxos:functions';`,
-                  `import handler from 'memory:source.tsx';`,
-                  `export default wrapFunctionHandler(handler);`,
-                ].join('\n'),
-                loader: 'tsx',
-              };
+                contents: trim`
+                  export default {
+                    fetch: async (...args) => {
+                      const { wrapFunctionHandler } = await import('@dxos/functions');
+                      const { wrapHandlerForCloudflare } = await import('@dxos/functions-runtime-cloudflare');
+                      const { default: handler } = await import('memory:source.tsx');
+
+                      //
+                      // Wrapper to make the function cloudflare-compatible.
+                      //
+                      return wrapHandlerForCloudflare(wrapFunctionHandler(handler))(...args);
+                    },
+                  };
+                `,
+                loader: 'ts',
+              } as const;
             });
           },
         },
         {
           name: 'memory',
           setup: (build) => {
-            build.onResolve({ filter: /^\.\/runtime\.js$/ }, ({ path }) => {
-              return { path, external: true };
-            });
-
-            build.onResolve({ filter: /^dxos:functions$/ }, () => {
-              return { path: './runtime.js', external: true };
-            });
-
             build.onResolve({ filter: /^memory:/ }, ({ path }) => {
               return { path: path.split(':')[1], namespace: 'memory' };
             });
 
             build.onLoad({ filter: /.*/, namespace: 'memory' }, ({ path }) => {
-              if (path === 'source.tsx') {
-                return {
-                  contents: source,
-                  loader: 'tsx',
-                };
+              switch (path) {
+                case 'source.tsx':
+                  return {
+                    contents: source,
+                    loader: 'tsx',
+                  };
+                case 'empty':
+                  return {
+                    contents: '',
+                    loader: 'js',
+                  };
               }
             });
           },
         },
+        // PluginESMSh(),
+        PluginR2VendoredPackages(),
       ],
     });
 
-    log.info('Bundling complete', result.metafile);
-    log.info('Output files', result.outputFiles);
+    // log.info('Bundling complete', result.metafile);
+    // log.info('Output files', { files: result.outputFiles });
 
     const entryPoint = 'index.js';
     return {
@@ -129,8 +168,13 @@ export const bundleFunction = async ({ source, platform }: BundleOptions): Promi
       sourceHash,
       imports: analyzeImports(result),
       entryPoint,
-      asset: result.outputFiles![0].contents,
-      bundle: result.outputFiles![0].text,
+      assets: result.outputFiles.reduce(
+        (acc, file) => {
+          acc[file.path.replace(outdir + '/', '')] = file.contents;
+          return acc;
+        },
+        {} as Record<string, Uint8Array>,
+      ),
     };
   } catch (err) {
     return { timestamp: Date.now(), sourceHash, error: err };

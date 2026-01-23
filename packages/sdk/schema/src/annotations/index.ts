@@ -3,4 +3,5 @@
 //
 
 export * from './icon';
+export * from './queue';
 export * from './view';

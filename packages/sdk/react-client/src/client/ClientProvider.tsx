@@ -81,10 +81,10 @@ export const ClientProvider = forwardRef<Client | undefined, ClientProviderProps
   (
     {
       children,
-      config: configParam,
-      client: clientParam,
-      services: servicesParam,
-      status: statusParam,
+      config: configProp,
+      client: clientProp,
+      services: servicesProp,
+      status: statusProp,
       fallback: Fallback = () => null,
       signalsRuntime = true,
       noBanner,
@@ -109,13 +109,13 @@ export const ClientProvider = forwardRef<Client | undefined, ClientProviderProps
       throw error;
     }
 
-    const [client, setClient] = useState(clientParam instanceof Client ? clientParam : undefined);
+    const [client, setClient] = useState(clientProp instanceof Client ? clientProp : undefined);
 
     // Provide external access.
     useImperativeHandle(forwardedRef, () => client, [client]);
 
     // Client status subscription.
-    const [status, setStatus] = useControlledState(statusParam);
+    const [status, setStatus] = useControlledState(statusProp);
     useEffect(() => {
       if (!client) {
         return;
@@ -148,15 +148,15 @@ export const ClientProvider = forwardRef<Client | undefined, ClientProviderProps
 
       let client: Client;
       try {
-        if (clientParam) {
+        if (clientProp) {
           // Asynchronously request client.
-          client = await getAsyncProviderValue(clientParam);
+          client = await getAsyncProviderValue(clientProp);
           await initialize(client);
         } else {
           // Asynchronously construct client (config may be undefined).
-          const config = await getAsyncProviderValue(configParam);
+          const config = await getAsyncProviderValue(configProp);
           log('resolved config', { config });
-          const services = await getAsyncProviderValue(servicesParam, config);
+          const services = await getAsyncProviderValue(servicesProp, config);
           log('created services', { services });
           client = new Client({ config, services, ...options });
           log('created client');
@@ -172,7 +172,7 @@ export const ClientProvider = forwardRef<Client | undefined, ClientProviderProps
         log('clean up');
         disposed = true;
         // Only destroy if the client is not provided by the parent.
-        if (!clientParam) {
+        if (!clientProp) {
           void client
             ?.destroy()
             .then(() => {
@@ -181,7 +181,7 @@ export const ClientProvider = forwardRef<Client | undefined, ClientProviderProps
             .catch((err) => log.catch(err));
         }
       };
-    }, [configParam, clientParam, servicesParam, noBanner]);
+    }, [configProp, clientProp, servicesProp, noBanner]);
 
     if (!client?.initialized || status !== SystemStatus.ACTIVE) {
       return <Fallback client={client} status={status} />;

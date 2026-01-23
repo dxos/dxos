@@ -12,7 +12,14 @@
     ".": {
       "source": "./src/index.ts",
       "types": "./dist/types/src/index.d.ts",
-      "browser": "./dist/lib/browser/index.mjs"
+      "browser": "./dist/lib/browser/index.mjs",
+      "node": "./dist/lib/node-esm/index.mjs"
+    },
+    "./cli": {
+      "source": "./src/cli/index.ts",
+      "types": "./dist/types/src/cli/index.d.ts",
+      "browser": "./dist/lib/browser/cli/index.mjs",
+      "node": "./dist/lib/node-esm/cli/index.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
@@ -25,38 +32,44 @@
   ],
   "dependencies": {
     "@dxos/app-framework": "workspace:*",
+    "@dxos/cli-util": "workspace:*",
+    "@dxos/client-protocol": "workspace:*",
     "@dxos/echo": "workspace:*",
+    "@dxos/effect": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/live-object": "workspace:*",
+    "@dxos/operation": "workspace:*",
     "@dxos/plugin-graph": "workspace:*",
     "@dxos/plugin-observability": "workspace:*",
     "@dxos/react-ui-form": "workspace:*",
     "@dxos/react-ui-stack": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@preact-signals/safe-react": "^0.9.0"
+    "@effect-atom/atom-react": "catalog:",
+    "@effect/cli": "catalog:",
+    "@preact-signals/safe-react": "catalog:"
   },
   "devDependencies": {
     "@dxos/random": "workspace:*",
     "@dxos/react-ui": "workspace:*",
-    "@dxos/react-ui-theme": "workspace:*",
     "@dxos/storybook-utils": "workspace:*",
-    "@effect-atom/atom-react": "^0.3.4",
-    "@effect/platform": "0.92.1",
-    "@types/react": "~19.2.2",
-    "@types/react-dom": "~19.2.2",
-    "effect": "3.18.3",
-    "react": "~19.2.0",
-    "react-dom": "~19.2.0",
-    "vite": "7.1.9"
+    "@dxos/ui-theme": "workspace:*",
+    "@effect-atom/atom-react": "catalog:",
+    "@effect/platform": "catalog:",
+    "@types/react": "catalog:",
+    "@types/react-dom": "catalog:",
+    "effect": "catalog:",
+    "react": "catalog:",
+    "react-dom": "catalog:",
+    "vite": "catalog:"
   },
   "peerDependencies": {
     "@dxos/react-ui": "workspace:*",
-    "@dxos/react-ui-theme": "workspace:*",
-    "@effect-atom/atom-react": "^0.3.4",
-    "@effect/platform": "^0.80.12",
-    "effect": "^3.13.3",
-    "react": "^19.0.0",
-    "react-dom": "^19.0.0"
+    "@dxos/ui-theme": "workspace:*",
+    "@effect-atom/atom-react": "catalog:",
+    "@effect/platform": "catalog:",
+    "effect": "catalog:",
+    "react": "catalog:",
+    "react-dom": "catalog:"
   },
   "publishConfig": {
     "access": "public"

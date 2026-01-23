@@ -21,7 +21,7 @@ export const AutomationSettings = (props: AutomationPanelProps) => {
         description={t('automation description', { ns: meta.id })}
       >
         <AutomationPanel {...props} />
-        <TriggersSettings space={props.space} />
+        <TriggersSettings db={props.space.db} />
       </ControlSection>
     </ControlPage>
   );

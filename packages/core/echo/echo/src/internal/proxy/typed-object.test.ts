@@ -5,14 +5,16 @@
 import * as Schema from 'effect/Schema';
 import { describe, expect, test } from 'vitest';
 
-import { EchoObject, TypedObject, getSchema } from '..';
+import { EchoObjectSchema } from '../entities';
+import { TypedObject } from '../object';
+import { getSchema } from '../types';
 
-import { live } from './reactive-object';
+import { makeObject } from './make-object';
 
 const Organization = Schema.Struct({
   name: Schema.String,
 }).pipe(
-  EchoObject({
+  EchoObjectSchema({
     typename: 'example.com/type/Organization',
     version: '0.1.0',
   }),
@@ -24,10 +26,13 @@ const Contact = Schema.Struct(
   {
     name: Schema.String,
   },
-  { key: Schema.String, value: Schema.Any },
+  {
+    key: Schema.String,
+    value: Schema.Any,
+  },
 ).pipe(
   Schema.partial,
-  EchoObject({
+  EchoObjectSchema({
     typename: 'example.com/type/Person',
     version: '0.1.0',
   }),
@@ -37,15 +42,15 @@ interface Contact extends Schema.Schema.Type<typeof Contact> {}
 
 const TEST_ORG: Omit<Organization, 'id'> = { name: 'Test' };
 
-describe('EchoObject class DSL', () => {
+describe('EchoObjectSchema class DSL', () => {
   test('can get object schema', async () => {
-    const obj = live(Organization, TEST_ORG);
+    const obj = makeObject(Organization, TEST_ORG);
     expect(getSchema(obj)).to.deep.eq(Organization);
   });
 
   describe('class options', () => {
     test('can assign undefined to partial fields', async () => {
-      const person = live(Contact, { name: 'John' });
+      const person = makeObject(Contact, { name: 'John' });
       person.name = undefined;
       person.recordField = 'hello';
       expect(person.name).to.be.undefined;
@@ -65,13 +70,13 @@ describe('EchoObject class DSL', () => {
     );
 
     {
-      const object = live(schema, {});
+      const object = makeObject(schema, {});
       (object.meta ??= {}).test = 100;
       expect(object.meta.test).to.eq(100);
     }
 
     {
-      const object = live(schema, {});
+      const object = makeObject(schema, {});
       object.meta = { test: { value: 300 } };
       expect(object.meta.test.value).to.eq(300);
     }
@@ -92,7 +97,7 @@ describe('EchoObject class DSL', () => {
         meta: Schema.optional(Schema.mutable(Schema.Record({ key: Schema.String, value: Schema.Any }))),
       }) {}
 
-      const object = live(Test2, {});
+      const object = makeObject(Test2, {});
       (object.meta ??= {}).test = 100;
       expect(object.meta.test).to.eq(100);
     }

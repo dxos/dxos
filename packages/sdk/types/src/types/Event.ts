@@ -18,6 +18,7 @@ import * as Transcript from './Transcript';
  */
 // TODO(burdon): Location (string | Ref<Place>)
 export const Event = Schema.Struct({
+  id: Obj.ID,
   title: Schema.optional(Schema.String),
   description: Schema.optional(Schema.String),
   owner: Actor.Actor,

@@ -7,16 +7,15 @@ import React, { useCallback, useMemo, useRef, useState } from 'react';
 
 import { DXN, Filter, Obj, Query, type QueryAST, Ref, Tag, Type } from '@dxos/echo';
 import { useTypeOptions } from '@dxos/plugin-space';
-import { resolveSchemaWithClientAndSpace } from '@dxos/plugin-space';
-import { useClient } from '@dxos/react-client';
+import { resolveSchemaWithRegistry } from '@dxos/plugin-space';
 import { getSpace, useQuery } from '@dxos/react-client/echo';
 import { IconButton, type ThemedClassName, useAsyncEffect, useTranslation } from '@dxos/react-ui';
 import { Form, ViewEditor } from '@dxos/react-ui-form';
 import { List } from '@dxos/react-ui-list';
-import { cardChrome, cardText } from '@dxos/react-ui-stack';
-import { inputTextLabel, mx, subtleHover } from '@dxos/react-ui-theme';
+import { cardChrome, cardText } from '@dxos/react-ui-mosaic';
 import { type ProjectionModel, View } from '@dxos/schema';
 import { Project, Task } from '@dxos/types';
+import { inputTextLabel, mx, osTranslations, subtleHover } from '@dxos/ui-theme';
 import { arrayMove } from '@dxos/util';
 
 import { meta } from '../meta';
@@ -36,7 +35,6 @@ export type ProjectObjectSettingsProps = ThemedClassName<{
  */
 export const ProjectObjectSettings = ({ classNames, project }: ProjectObjectSettingsProps) => {
   const { t } = useTranslation(meta.id);
-  const client = useClient();
   const space = getSpace(project);
   const [expandedId, setExpandedId] = useState<string>();
   const column = useMemo(
@@ -46,7 +44,7 @@ export const ProjectObjectSettings = ({ classNames, project }: ProjectObjectSett
   const view = column?.view.target;
   const [schema, setSchema] = useState<Schema.Schema.AnyNoContext>(() => Schema.Struct({}));
   const projectionRef = useRef<ProjectionModel>(null);
-  const tags = useQuery(space, Filter.type(Tag.Tag));
+  const tags = useQuery(space?.db, Filter.type(Tag.Tag));
   const types = useTypeOptions({
     space,
     annotation: {
@@ -61,15 +59,18 @@ export const ProjectObjectSettings = ({ classNames, project }: ProjectObjectSett
       return;
     }
 
-    const foundSchema = await resolveSchemaWithClientAndSpace(client, space, view.query.ast);
+    const foundSchema = await resolveSchemaWithRegistry(space.db.schemaRegistry, view.query.ast);
     if (foundSchema && foundSchema !== schema) {
       setSchema(() => foundSchema);
     }
-  }, [client, space, view, schema]);
+  }, [space, view, schema]);
 
   const handleMove = useCallback(
-    (fromIndex: number, toIndex: number) => arrayMove(project.columns, fromIndex, toIndex),
-    [project.columns],
+    (fromIndex: number, toIndex: number) =>
+      Obj.change(project, (p) => {
+        arrayMove(p.columns, fromIndex, toIndex);
+      }),
+    [project],
   );
 
   const handleQueryChanged = useCallback(
@@ -80,8 +81,10 @@ export const ProjectObjectSettings = ({ classNames, project }: ProjectObjectSett
 
       const queue = target && DXN.tryParse(target) ? target : undefined;
       const query = queue ? Query.fromAst(newQuery).options({ queues: [queue] }) : Query.fromAst(newQuery);
-      view.query.ast = query.ast;
-      const newSchema = await resolveSchemaWithClientAndSpace(client, space, query.ast);
+      Obj.change(view, () => {
+        view.query.ast = query.ast;
+      });
+      const newSchema = await resolveSchemaWithRegistry(space.db.schemaRegistry, query.ast);
       if (!newSchema) {
         return;
       }
@@ -90,7 +93,9 @@ export const ProjectObjectSettings = ({ classNames, project }: ProjectObjectSett
         query,
         jsonSchema: Type.toJsonSchema(newSchema),
       });
-      view.projection = Obj.getSnapshot(newView).projection;
+      Obj.change(view, () => {
+        view.projection = Obj.getSnapshot(newView).projection;
+      });
 
       setSchema(() => newSchema);
     },
@@ -110,33 +115,41 @@ export const ProjectObjectSettings = ({ classNames, project }: ProjectObjectSett
       }
 
       const index = project.columns.findIndex((l) => l === column);
-      const view = await column.view.load();
-      project.columns.splice(index, 1);
-      space?.db.remove(view);
+      const viewToRemove = await column.view.load();
+      Obj.change(project, (p) => {
+        p.columns.splice(index, 1);
+      });
+      space?.db.remove(viewToRemove);
     },
     [expandedId, project.columns, space],
   );
 
   const handleAdd = useCallback(() => {
-    const view = View.make({
+    const newView = View.make({
       query: Query.select(Filter.type(Task.Task)),
       jsonSchema: Type.toJsonSchema(Task.Task),
     });
-    project.columns.push({
-      name: 'Tasks',
-      view: Ref.make(view),
-      order: [],
+    Obj.change(project, (p) => {
+      p.columns.push({
+        name: 'Tasks',
+        // Type assertion needed due to QueryAST type variance.
+        view: Ref.make(newView) as (typeof p.columns)[number]['view'],
+        order: [],
+      });
     });
-    setExpandedId(view.id);
+    setExpandedId(newView.id);
   }, [project]);
 
   const handleColumnSave = useCallback(
     (values: Schema.Schema.Type<typeof ColumnFormSchema>) => {
       if (column) {
-        column.name = values.name;
+        const columnIndex = project.columns.findIndex((c) => c === column);
+        Obj.change(project, (p) => {
+          p.columns[columnIndex].name = values.name;
+        });
       }
     },
-    [column],
+    [column, project],
   );
 
   return (
@@ -171,7 +184,7 @@ export const ProjectObjectSettings = ({ classNames, project }: ProjectObjectSett
                     <IconButton
                       iconOnly
                       variant='ghost'
-                      label={t('toggle expand label', { ns: 'os' })}
+                      label={t('toggle expand label', { ns: osTranslations })}
                       icon={
                         expandedId === column.view.dxn.toString()
                           ? 'ph--caret-down--regular'
@@ -181,8 +194,12 @@ export const ProjectObjectSettings = ({ classNames, project }: ProjectObjectSett
                     />
                   </div>
                   {expandedId === column.view.dxn.toString() && view && (
-                    <div role='none' className='col-span-5 mbs-1 mbe-1 border border-separator rounded-md'>
-                      <Form autoSave schema={ColumnFormSchema} values={column} onSave={handleColumnSave} />
+                    <div role='none' className='col-span-5 mlb-2 border border-separator rounded-md'>
+                      <Form.Root schema={ColumnFormSchema} values={column} autoSave onSave={handleColumnSave}>
+                        <Form.Content>
+                          <Form.FieldSet />
+                        </Form.Content>
+                      </Form.Root>
                       <ViewEditor
                         ref={projectionRef}
                         mode='tag'

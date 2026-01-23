@@ -6,7 +6,7 @@ import { type File } from './file';
 import { type StorageType } from './storage';
 import { getFullPath } from './utils';
 
-export type DirectoryParams = {
+export type DirectoryProps = {
   type: StorageType;
   path: string;
   // TODO(burdon): Create interface for these methods (shared with AbstractStorage).
@@ -28,7 +28,7 @@ export class Directory {
   private readonly _remove: () => Promise<void>;
   private readonly _onFlush?: () => Promise<void>;
 
-  constructor({ type, path, list, getOrCreateFile, remove, onFlush }: DirectoryParams) {
+  constructor({ type, path, list, getOrCreateFile, remove, onFlush }: DirectoryProps) {
     this.type = type;
     this.path = path;
     this._list = list;

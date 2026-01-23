@@ -3,9 +3,11 @@
 //
 
 import { getHeads } from '@automerge/automerge';
-import type { DocumentId, Heads } from '@automerge/automerge-repo';
+import * as Automerge from '@automerge/automerge';
+import { type DocumentId, type Heads, generateAutomergeUrl, parseAutomergeUrl } from '@automerge/automerge-repo';
 import { describe, expect, onTestFinished, test } from 'vitest';
 
+import { Context } from '@dxos/context';
 import { IndexMetadataStore } from '@dxos/indexing';
 import { PublicKey } from '@dxos/keys';
 import type { LevelDB } from '@dxos/kv-store';
@@ -21,31 +23,51 @@ describe('AutomergeHost', () => {
   test('can create documents', async () => {
     const level = await createLevel();
     const host = await setupAutomergeHost({ level });
-    const handle = host.repo.create<any>();
+    const handle = host.createDoc<any>();
     handle.change((doc: any) => {
       doc.text = 'Hello world';
     });
-    await host.repo.flush();
+    await host.flush();
     expect(handle.doc()!.text).toEqual('Hello world');
   });
 
   test('changes are preserved in storage', async () => {
     const level = await createLevel();
     const host = await setupAutomergeHost({ level });
-    const handle = host.repo.create();
+    const handle = host.createDoc<any>();
     handle.change((doc: any) => {
       doc.text = 'Hello world';
     });
     const url = handle.url;
 
-    await host.repo.flush();
+    await host.flush();
     await host.close();
 
     const host2 = await setupAutomergeHost({ level });
-    const handle2 = await host2.repo.find<any>(url);
+    const handle2 = await host2.loadDoc<any>(Context.default(), url);
     await handle2.whenReady();
     expect(handle2.doc()!.text).toEqual('Hello world');
-    await host2.repo.flush();
+    await host2.flush();
+  });
+
+  test('load resolves when document is created from binary', async () => {
+    const level = await createLevel();
+    const host = await setupAutomergeHost({ level });
+
+    // Create a document to get its binary representation
+    const document = Automerge.from({ text: 'Hello world' });
+    const binary = Automerge.save(document);
+    const { documentId } = parseAutomergeUrl(generateAutomergeUrl());
+
+    // Start loading a non-existent document (should hang until created)
+    const loadPromise = host.loadDoc(Context.default(), documentId);
+
+    // Create the document from binary - this should resolve the load
+    const createdHandle = host.createDoc(binary, { preserveHistory: true, documentId });
+
+    // The load should now resolve
+    const loadedHandle = await loadPromise;
+    expect(loadedHandle.doc()).toEqual(createdHandle.doc());
   });
 
   test('query single document heads', async () => {
@@ -115,13 +137,13 @@ describe('AutomergeHost', () => {
 
     const host2 = await setupAutomergeHost({ level: level2 });
 
+    const network = await new TestReplicationNetwork().open();
+    await host1.addReplicator(await network.createReplicator());
+    await host2.addReplicator(await network.createReplicator());
+
     const collectionId = 'test-collection';
     await host1.updateLocalCollectionState(collectionId, documentIds);
     await host2.updateLocalCollectionState(collectionId, documentIds);
-
-    await using network = await new TestReplicationNetwork().open();
-    await host1.addReplicator(await network.createReplicator());
-    await host2.addReplicator(await network.createReplicator());
 
     for (const documentId of documentIds) {
       await expect.poll(() => host1.getHeads([documentId])).toEqual(await host2.getHeads([documentId]));
@@ -129,6 +151,7 @@ describe('AutomergeHost', () => {
 
     await host1.close();
     await host2.close();
+    await network.close();
   });
 
   const createLevel = async (tmpPath?: string) => {

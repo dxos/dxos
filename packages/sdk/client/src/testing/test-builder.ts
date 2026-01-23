@@ -2,16 +2,20 @@
 // Copyright 2020 DXOS.org
 //
 
+import * as Reactivity from '@effect/experimental/Reactivity';
+import * as Layer from 'effect/Layer';
+import * as ManagedRuntime from 'effect/ManagedRuntime';
 import { type ExpectStatic } from 'vitest';
 
 import { Trigger } from '@dxos/async';
 import { type ClientServices } from '@dxos/client-protocol';
-import { ClientServicesHost, type ServiceContextRuntimeParams } from '@dxos/client-services';
+import { ClientServicesHost, type ServiceContextRuntimeProps } from '@dxos/client-services';
 import { Config } from '@dxos/config';
 import { Context } from '@dxos/context';
 import { raise } from '@dxos/debug';
 import { Filter } from '@dxos/echo';
 import { Obj, Type } from '@dxos/echo';
+import { type Database } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { type PublicKey } from '@dxos/keys';
 import { type LevelDB } from '@dxos/kv-store';
@@ -28,9 +32,9 @@ import { TcpTransportFactory } from '@dxos/network-manager/transport/tcp';
 import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 import { type Storage } from '@dxos/random-access-storage';
 import { type ProtoRpcPeer, createLinkedPorts, createProtoRpcPeer } from '@dxos/rpc';
+import * as SqliteClient from '@dxos/sql-sqlite/SqliteClient';
 
 import { Client } from '../client';
-import { type EchoDatabase } from '../echo';
 import { ClientServicesProxy, LocalClientServices } from '../services';
 
 export const testConfigWithLocalSignal = new Config({
@@ -83,15 +87,19 @@ export class TestBuilder {
   /**
    * Create backend service handlers.
    */
-  createClientServicesHost(runtimeParams?: ServiceContextRuntimeParams): ClientServicesHost {
+  createClientServicesHost(runtimeProps?: ServiceContextRuntimeProps): ClientServicesHost {
+    const runtime = ManagedRuntime.make(Layer.merge(SqliteClient.layerMemory({}), Reactivity.layer).pipe(Layer.orDie));
+
     const services = new ClientServicesHost({
       config: this.config,
       storage: this?.storage?.(),
       level: this?.level?.(),
-      runtimeParams,
+      runtimeProps,
+      runtime: runtime.runtimeEffect,
       ...this.networking,
     });
 
+    this._ctx.onDispose(() => runtime.dispose());
     this._ctx.onDispose(() => services.close());
     return services;
   }
@@ -105,11 +113,11 @@ export class TestBuilder {
       config: this.config,
       storage: this?.storage?.(),
       level: this?.level?.(),
-      runtimeParams: {
+      runtimeProps: {
         ...(options?.fastPeerPresenceUpdate
           ? { spaceMemberPresenceAnnounceInterval: 200, spaceMemberPresenceOfflineTimeout: 400 }
           : {}),
-        invitationConnectionDefaultParams: { teleport: { controlHeartbeatInterval: 200 } },
+        invitationConnectionDefaultProps: { teleport: { controlHeartbeatInterval: 200 } },
       },
       ...this.networking,
     });
@@ -179,17 +187,17 @@ export class TestBuilder {
 
 export const testSpaceAutomerge = async (
   expect: ExpectStatic,
-  createDb: EchoDatabase,
-  checkDb: EchoDatabase = createDb,
+  createDb: Database.Database,
+  checkDb: Database.Database = createDb,
 ) => {
   const object = Obj.make(Type.Expando, {});
   createDb.add(object);
-  await expect.poll(() => checkDb.query(Filter.ids(object.id)).first({ timeout: 1000 }));
+  await expect.poll(() => checkDb.query(Filter.id(object.id)).first({ timeout: 1000 }));
 
   return { objectId: object.id };
 };
 
-export const syncItemsAutomerge = async (expect: ExpectStatic, db1: EchoDatabase, db2: EchoDatabase) => {
+export const syncItemsAutomerge = async (expect: ExpectStatic, db1: Database.Database, db2: Database.Database) => {
   await testSpaceAutomerge(expect, db1, db2);
   await testSpaceAutomerge(expect, db2, db1);
 };

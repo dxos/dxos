@@ -7,14 +7,8 @@ import debounce from 'lodash.debounce';
 import React, { useMemo } from 'react';
 
 import { useThemeContext } from '@dxos/react-ui';
-import {
-  EditorView,
-  createBasicExtensions,
-  createThemeExtensions,
-  editorMonospace,
-  folding,
-  useTextEditor,
-} from '@dxos/react-ui-editor';
+import { useTextEditor } from '@dxos/react-ui-editor';
+import { EditorView, createBasicExtensions, createThemeExtensions, folding } from '@dxos/ui-editor';
 
 import { themeEditorId } from '../defs';
 import { restore, saveAndRender } from '../util';
@@ -39,11 +33,12 @@ export const JsonEditor = (_: JsonEditorProps) => {
           scrollPastEnd: true,
         }),
         createThemeExtensions({
-          themeMode,
+          monospace: true,
           syntaxHighlighting: true,
+          themeMode,
         }),
         folding(),
-        [editorMonospace, json()],
+        json(),
         EditorView.updateListener.of(handleUpdate),
       ],
     }),

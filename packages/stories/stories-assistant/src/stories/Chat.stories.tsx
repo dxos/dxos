@@ -8,7 +8,7 @@ import React, { type FC, useCallback } from 'react';
 
 import { ToolId } from '@dxos/ai';
 import { EXA_API_KEY } from '@dxos/ai/testing';
-import { Capabilities } from '@dxos/app-framework';
+import { Common } from '@dxos/app-framework';
 import { Surface, useCapabilities } from '@dxos/app-framework/react';
 import { AiContextBinder } from '@dxos/assistant';
 import { Agent, LinearBlueprint, ResearchBlueprint, ResearchDataTypes, ResearchGraph } from '@dxos/assistant-toolkit';
@@ -17,13 +17,11 @@ import { Filter, Obj, Query, Ref, Tag, Type } from '@dxos/echo';
 import { Example, Script, Trigger, serializeFunction } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { ASSISTANT_BLUEPRINT_KEY } from '@dxos/plugin-assistant';
-import { useContextBinder } from '@dxos/plugin-assistant';
-import { translations } from '@dxos/plugin-assistant';
+import { AssistantBlueprint, translations, useContextBinder } from '@dxos/plugin-assistant';
 import { Assistant } from '@dxos/plugin-assistant/types';
 import { Board, BoardPlugin } from '@dxos/plugin-board';
 import { Chess, ChessPlugin } from '@dxos/plugin-chess';
-import * as chessFunctions from '@dxos/plugin-chess/functions';
+import { ChessFunctions } from '@dxos/plugin-chess/blueprints';
 import { InboxPlugin } from '@dxos/plugin-inbox';
 import { Calendar, Mailbox } from '@dxos/plugin-inbox/types';
 import { Map, MapPlugin } from '@dxos/plugin-map';
@@ -99,7 +97,7 @@ type StoryProps = {
 };
 
 const DefaultStory = ({ modules, showContext, blueprints = [] }: StoryProps) => {
-  const blueprintsDefinitions = useCapabilities(Capabilities.BlueprintDefinition);
+  const blueprintsDefinitions = useCapabilities(Common.Capability.BlueprintDefinition);
 
   const space = useSpace();
   useAsyncEffect(async () => {
@@ -107,7 +105,7 @@ const DefaultStory = ({ modules, showContext, blueprints = [] }: StoryProps) => 
       return;
     }
 
-    const { objects: chats = [] } = await space.db.query(Filter.type(Assistant.Chat)).run();
+    const chats = await space.db.query(Filter.type(Assistant.Chat)).run();
     const chat = chats[0];
     if (!chat) {
       return;
@@ -132,12 +130,9 @@ const DefaultStory = ({ modules, showContext, blueprints = [] }: StoryProps) => 
     log.info('event', { event });
   }, []);
 
-  const chats = useQuery(space, Filter.type(Assistant.Chat));
+  const chats = useQuery(space?.db, Filter.type(Assistant.Chat));
   const binder = useContextBinder(chats.at(-1)?.queue.target);
-  const objects = useSignalsMemo(
-    () => binder?.objects.value.map((ref) => ref.target).filter(isNonNullable) ?? [],
-    [binder],
-  );
+  const objects = useSignalsMemo(() => binder?.objects.value ?? [], [binder]);
 
   if (!space) {
     return null;
@@ -300,14 +295,14 @@ export const WithDocument: Story = {
       );
     },
     onChatCreated: async ({ space, binder }) => {
-      const { objects } = await space.db.query(Filter.type(Markdown.Document)).run();
+      const objects = await space.db.query(Filter.type(Markdown.Document)).run();
       await binder.bind({ objects: objects.map((object) => Ref.make(object)) });
     },
   }),
   args: {
     showContext: true,
     modules: [[ChatModule], [CommentsModule]],
-    blueprints: [ASSISTANT_BLUEPRINT_KEY, 'dxos.org/blueprint/markdown', 'dxos.org/blueprint/thread'],
+    blueprints: [AssistantBlueprint.Key, 'dxos.org/blueprint/markdown', 'dxos.org/blueprint/thread'],
   },
 };
 
@@ -319,7 +314,7 @@ export const WithBlueprints: Story = {
       space.db.add(Markdown.make({ name: 'Tasks' }));
     },
     onChatCreated: async ({ space, binder }) => {
-      const { objects } = await space.db.query(Filter.type(Markdown.Document)).run();
+      const objects = await space.db.query(Filter.type(Markdown.Document)).run();
       await binder.bind({ objects: objects.map((object) => Ref.make(object)) });
     },
   }),
@@ -336,7 +331,7 @@ export const WithChess: Story = {
     onInit: async ({ space }) => {
       // TODO(burdon): Add player DID (for user and assistant).
       space.db.add(
-        Chess.makeGame({
+        Chess.make({
           name: 'Challenge',
           pgn: [
             '1. e4 e5',
@@ -358,14 +353,14 @@ export const WithChess: Story = {
       );
     },
     onChatCreated: async ({ space, binder }) => {
-      const { objects } = await space.db.query(Filter.type(Chess.Game)).run();
+      const objects = await space.db.query(Filter.type(Chess.Game)).run();
       await binder.bind({ objects: objects.map((object) => Ref.make(object)) });
     },
   }),
   args: {
     showContext: true,
     modules: [[ChatModule]],
-    blueprints: [ASSISTANT_BLUEPRINT_KEY, 'dxos.org/blueprint/chess'],
+    blueprints: [AssistantBlueprint.Key, 'dxos.org/blueprint/chess'],
   },
 };
 
@@ -382,14 +377,14 @@ export const WithMail: Story = {
       await queue.append(messages);
     },
     onChatCreated: async ({ space, binder }) => {
-      const { objects } = await space.db.query(Filter.type(Mailbox.Mailbox)).run();
+      const objects = await space.db.query(Filter.type(Mailbox.Mailbox)).run();
       await binder.bind({ objects: objects.map((object) => Ref.make(object)) });
     },
   }),
   args: {
     showContext: true,
     modules: [[ChatModule]],
-    blueprints: [ASSISTANT_BLUEPRINT_KEY, 'dxos.org/blueprint/inbox', 'dxos.org/blueprint/markdown'],
+    blueprints: [AssistantBlueprint.Key, 'dxos.org/blueprint/inbox', 'dxos.org/blueprint/markdown'],
   },
 };
 
@@ -403,14 +398,14 @@ export const WithGmail: Story = {
       space.db.add(Mailbox.make({ name: 'Mailbox', space }));
     },
     onChatCreated: async ({ space, binder }) => {
-      const { objects } = await space.db.query(Filter.type(Mailbox.Mailbox)).run();
+      const objects = await space.db.query(Filter.type(Mailbox.Mailbox)).run();
       await binder.bind({ objects: objects.map((object) => Ref.make(object)) });
     },
   }),
   args: {
     showContext: true,
     modules: [[ChatModule], [MessageModule, TokenManagerModule]],
-    blueprints: [ASSISTANT_BLUEPRINT_KEY, 'dxos.org/blueprint/inbox'],
+    blueprints: [AssistantBlueprint.Key, 'dxos.org/blueprint/inbox'],
   },
 };
 
@@ -424,14 +419,14 @@ export const WithCalendar: Story = {
       space.db.add(Calendar.make({ name: 'Calendar', space }));
     },
     onChatCreated: async ({ space, binder }) => {
-      const { objects } = await space.db.query(Filter.type(Calendar.Calendar)).run();
+      const objects = await space.db.query(Filter.type(Calendar.Calendar)).run();
       await binder.bind({ objects: objects.map((object) => Ref.make(object)) });
     },
   }),
   args: {
     showContext: true,
     modules: [[ChatModule], [TokenManagerModule]],
-    blueprints: [ASSISTANT_BLUEPRINT_KEY, 'dxos.org/blueprint/calendar'],
+    blueprints: [AssistantBlueprint.Key, 'dxos.org/blueprint/calendar'],
   },
 };
 
@@ -443,10 +438,10 @@ export const WithMap: Story = {
     types: [View.View, Map.Map, Table.Table],
     onInit: async ({ space }) => {
       const [schema] = await space.db.schemaRegistry.register([createLocationSchema()]);
-      const { view: tableView, jsonSchema } = await View.makeFromSpace({ space, typename: schema.typename });
+      const { view: tableView, jsonSchema } = await View.makeFromDatabase({ db: space.db, typename: schema.typename });
       const table = Table.make({ name: 'Table', view: tableView, jsonSchema });
-      const { view: mapView } = await View.makeFromSpace({
-        space,
+      const { view: mapView } = await View.makeFromDatabase({
+        db: space.db,
         typename: schema.typename,
         pivotFieldName: 'location',
       });
@@ -455,14 +450,14 @@ export const WithMap: Story = {
       space.db.add(map);
     },
     onChatCreated: async ({ space, binder }) => {
-      const { objects } = await space.db.query(Filter.type(View.View)).run();
+      const objects = await space.db.query(Filter.type(View.View)).run();
       await binder.bind({ objects: objects.map((object) => Ref.make(object)) });
     },
   }),
   args: {
     showContext: true,
     modules: [[ChatModule]],
-    blueprints: [ASSISTANT_BLUEPRINT_KEY, 'dxos.org/blueprint/map'],
+    blueprints: [AssistantBlueprint.Key, 'dxos.org/blueprint/map'],
   },
 };
 
@@ -507,7 +502,7 @@ export const WithTrip: Story = {
       );
     },
     onChatCreated: async ({ space, binder }) => {
-      const { objects } = await space.db.query(Filter.or(Filter.type(Map.Map), Filter.type(Markdown.Document))).run();
+      const objects = await space.db.query(Filter.or(Filter.type(Map.Map), Filter.type(Markdown.Document))).run();
       await binder.bind({ objects: objects.map((object) => Ref.make(object)) });
     },
   }),
@@ -526,7 +521,7 @@ export const WithBoard: Story = {
       space.db.add(Board.makeBoard());
     },
     onChatCreated: async ({ space, binder }) => {
-      const { objects } = await space.db.query(Filter.type(Board.Board)).run();
+      const objects = await space.db.query(Filter.type(Board.Board)).run();
       await binder.bind({ objects: objects.map((object) => Ref.make(object)) });
     },
   }),
@@ -550,8 +545,8 @@ export const WithResearch: Story = {
       space.db.add(Markdown.make({ name: 'DXOS', content: DXOS_DOCUMENT }));
     },
     onChatCreated: async ({ space, binder }) => {
-      const { objects: organizations } = await space.db.query(Filter.type(Organization.Organization)).run();
-      const { objects: documents } = await space.db.query(Filter.type(Markdown.Document)).run();
+      const organizations = await space.db.query(Filter.type(Organization.Organization)).run();
+      const documents = await space.db.query(Filter.type(Markdown.Document)).run();
       await binder.bind({ objects: [...organizations, ...documents].map((object) => Ref.make(object)) });
     },
   }),
@@ -559,7 +554,7 @@ export const WithResearch: Story = {
     showContext: true,
     modules: [[ChatModule], [GraphModule, ExecutionGraphModule]],
     blueprints: [
-      // ASSISTANT_BLUEPRINT_KEY, -- too many open-ended tools (querying for tools, querying for schema) confuses the model.
+      // AssistantBlueprint.Key, -- too many open-ended tools (querying for tools, querying for schema) confuses the model.
       ResearchBlueprint.key,
     ],
   },
@@ -587,17 +582,17 @@ export const WithTranscription: Story = {
       const queue = space.queues.create();
       const messages = createTestTranscription();
       await queue.append(messages);
-      space.db.add(Transcript.makeTranscript(queue.dxn));
+      space.db.add(Transcript.make(queue.dxn));
     },
     onChatCreated: async ({ space, binder }) => {
-      const { objects } = await space.db.query(Filter.type(Transcript.Transcript)).run();
+      const objects = await space.db.query(Filter.type(Transcript.Transcript)).run();
       await binder.bind({ objects: objects.map((object) => Ref.make(object)) });
     },
   }),
   args: {
     showContext: true,
     modules: [[ChatModule]],
-    blueprints: [ASSISTANT_BLUEPRINT_KEY, 'dxos.org/blueprint/transcription'],
+    blueprints: [AssistantBlueprint.Key, 'dxos.org/blueprint/transcription'],
   },
 };
 
@@ -650,7 +645,7 @@ export const WithChessTrigger: Story = {
     onInit: async ({ space }) => {
       // TODO(burdon): Add player DID (for user and assistant).
       space.db.add(
-        Chess.makeGame({
+        Chess.make({
           name: 'Challenge',
           pgn: [
             '1. e4 e5',
@@ -673,7 +668,7 @@ export const WithChessTrigger: Story = {
 
       space.db.add(
         Trigger.make({
-          function: Ref.make(serializeFunction(chessFunctions.play)),
+          function: Ref.make(serializeFunction(ChessFunctions.play)),
           enabled: true,
           spec: {
             kind: 'subscription',
@@ -767,14 +762,16 @@ export const WithProject: Story = {
     ],
     onInit: async ({ space }) => {
       await addTestData(space);
-      const { objects: people } = await space.db.query(Filter.type(Person.Person)).run();
-      const { objects: organizations } = await space.db.query(Filter.type(Organization.Organization)).run();
+      const people = await space.db.query(Filter.type(Person.Person)).run();
+      const organizations = await space.db.query(Filter.type(Organization.Organization)).run();
       const tag = space.db.add(Tag.make({ label: 'Project' }));
       const tagDxn = Obj.getDXN(tag).toString();
 
       people.slice(0, 4).forEach((person) => {
-        const meta = Obj.getMeta(person);
-        meta.tags = [tagDxn];
+        Obj.change(person, () => {
+          const meta = Obj.getMeta(person);
+          meta.tags = [tagDxn];
+        });
       });
 
       const mailbox = space.db.add(Mailbox.make({ name: 'Mailbox', space }));
@@ -795,15 +792,19 @@ export const WithProject: Story = {
         }),
       );
       [dxosResearch, blueyardResearch].forEach((research) => {
-        const meta = Obj.getMeta(research);
-        meta.tags = [tagDxn];
+        Obj.change(research, () => {
+          const meta = Obj.getMeta(research);
+          meta.tags = [tagDxn];
+        });
       });
 
       const dxos = organizations.find((org) => org.name === 'DXOS')!;
       const blueyard = organizations.find((org) => org.name === 'BlueYard')!;
       [dxos, blueyard].forEach((organization) => {
-        const meta = Obj.getMeta(organization);
-        meta.tags = [tagDxn];
+        Obj.change(organization, () => {
+          const meta = Obj.getMeta(organization);
+          meta.tags = [tagDxn];
+        });
       });
       // TODO(wittjosiah): Support relations.
       // space.db.add(
@@ -957,7 +958,7 @@ export const WithScript: Story = {
       await space.db.flush();
     },
     onChatCreated: async ({ space, binder }) => {
-      const { objects: blueprints } = await space.db.query(Query.select(Filter.type(Blueprint.Blueprint))).run();
+      const blueprints = await space.db.query(Query.select(Filter.type(Blueprint.Blueprint))).run();
       await binder.bind({ blueprints: blueprints.map((blueprint) => Ref.make(blueprint)) });
     },
   }),

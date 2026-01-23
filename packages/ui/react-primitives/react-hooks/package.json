@@ -1,0 +1,50 @@
+{
+  "name": "@dxos/react-hooks",
+  "version": "0.8.3",
+  "description": "React hooks supporting DXOS React primitives.",
+  "homepage": "https://dxos.org",
+  "bugs": "https://github.com/dxos/dxos/issues",
+  "license": "MIT",
+  "author": "DXOS.org",
+  "sideEffects": false,
+  "type": "module",
+  "exports": {
+    ".": {
+      "source": "./src/index.ts",
+      "types": "./dist/types/src/index.d.ts",
+      "browser": "./dist/lib/browser/index.mjs",
+      "node": "./dist/lib/node-esm/index.mjs"
+    }
+  },
+  "types": "dist/types/src/index.d.ts",
+  "typesVersions": {
+    "*": {}
+  },
+  "files": [
+    "dist",
+    "src"
+  ],
+  "dependencies": {
+    "@dxos/async": "workspace:*",
+    "@dxos/log": "workspace:*",
+    "@preact-signals/safe-react": "catalog:",
+    "@radix-ui/react-id": "catalog:",
+    "alea": "catalog:",
+    "lodash.defaultsdeep": "catalog:",
+    "mini-virtual-list": "catalog:"
+  },
+  "devDependencies": {
+    "@types/lodash.defaultsdeep": "catalog:",
+    "@types/react": "catalog:",
+    "@types/react-dom": "catalog:",
+    "react": "catalog:",
+    "react-dom": "catalog:"
+  },
+  "peerDependencies": {
+    "react": "catalog:",
+    "react-dom": "catalog:"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

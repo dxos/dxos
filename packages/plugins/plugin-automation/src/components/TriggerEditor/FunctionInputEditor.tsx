@@ -2,29 +2,26 @@
 // Copyright 2025 DXOS.org
 //
 
+import type * as SchemaAST from 'effect/SchemaAST';
 import React, { useCallback, useMemo } from 'react';
 
-import { Ref, Type } from '@dxos/echo';
+import { type Database, Ref, Type } from '@dxos/echo';
 import { type JsonPath } from '@dxos/echo/internal';
 import { type Function } from '@dxos/functions';
-import { useOnTransition } from '@dxos/react-ui';
-import { Form, type FormInputStateProps, type QueryRefOptions, useFormValues } from '@dxos/react-ui-form';
+import { useOnTransition, useTranslation } from '@dxos/react-ui';
+import { Form, type FormFieldStateProps, type FormRootProps, useFormValues } from '@dxos/react-ui-form';
+
+import { meta } from '../../meta';
 
 export type FunctionInputEditorProps = {
+  type: SchemaAST.AST;
   functions: Function.Function[];
-  onQueryRefOptions: QueryRefOptions;
-} & FormInputStateProps;
+  db?: Database.Database;
+} & FormFieldStateProps;
 
-/**
- * Editor component for function input parameters.
- */
-export const FunctionInputEditor = ({
-  functions,
-  getValue,
-  onValueChange,
-  onQueryRefOptions,
-}: FunctionInputEditorProps) => {
-  const selectedFunctionValue = useFormValues(['function' as JsonPath]);
+export const FunctionInputEditor = ({ type, functions, db, getValue, onValueChange }: FunctionInputEditorProps) => {
+  const { t } = useTranslation(meta.id);
+  const selectedFunctionValue = useFormValues(FunctionInputEditor.displayName, ['function' as JsonPath]);
   const selectedFunctionId = useMemo(() => {
     if (Ref.isRef(selectedFunctionValue)) {
       return selectedFunctionValue.dxn.toString().split('dxn:echo:@:').at(1);
@@ -47,20 +44,19 @@ export const FunctionInputEditor = ({
       return prevValue.dxn.toString() !== selectedFunctionValue.dxn.toString();
     },
     (currValue) => currValue !== undefined,
-    () => onValueChange('object', {}),
+    () => onValueChange(type, {}),
   );
 
   const inputSchema = useMemo(() => selectedFunction?.inputSchema, [selectedFunction]);
   const effectSchema = useMemo(() => (inputSchema ? Type.toEffectSchema(inputSchema) : undefined), [inputSchema]);
   const propertyCount = inputSchema?.properties ? Object.keys(inputSchema.properties).length : 0;
-
   const values = useMemo(() => getValue() ?? {}, [getValue]);
 
-  const handleValuesChanged = useCallback(
-    (values: any) => {
-      onValueChange('object', values);
+  const handleValuesChanged = useCallback<NonNullable<FormRootProps['onValuesChanged']>>(
+    (values) => {
+      onValueChange(type, values);
     },
-    [onValueChange],
+    [type, onValueChange],
   );
 
   if (selectedFunction === undefined || effectSchema === undefined || propertyCount === 0) {
@@ -69,16 +65,12 @@ export const FunctionInputEditor = ({
 
   return (
     <>
-      <h3 className='text-md'>Function parameters</h3>
-      {/* TODO(ZaymonFC): Try using <FormFields /> internal component for this nesting.
-                          This would allow errors to flow up to the root context. */}
-      <Form
-        schema={effectSchema}
-        values={values}
-        onValuesChanged={handleValuesChanged}
-        onQueryRefOptions={onQueryRefOptions}
-        outerSpacing={false}
-      />
+      <Form.Label label={t('function parameters label')} asChild />
+      <Form.Root schema={effectSchema} values={values} db={db} onValuesChanged={handleValuesChanged}>
+        <Form.FieldSet />
+      </Form.Root>
     </>
   );
 };
+
+FunctionInputEditor.displayName = 'AutomationTrigger.FunctionInputEditor';

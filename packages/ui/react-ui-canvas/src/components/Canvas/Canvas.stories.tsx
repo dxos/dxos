@@ -7,7 +7,7 @@ import React from 'react';
 
 import { withTheme } from '@dxos/react-ui/testing';
 
-import { useCanvasContext, useWheel } from '../../hooks';
+import { useCanvasContext, useDrag, useWheel } from '../../hooks';
 import { type Point } from '../../types';
 import { testId } from '../../util';
 import { Grid, type GridProps } from '../Grid';
@@ -51,6 +51,7 @@ const TwoCanvases = (props: GridProps) => {
 
 const Content = () => {
   useWheel();
+  useDrag();
   return (
     <div>
       {points.map(({ x, y }, i) => (
@@ -106,6 +107,6 @@ export const Default: Story = {
 };
 
 export const SideBySide: Story = {
-  args: { size: 16 },
   render: TwoCanvases,
+  args: { size: 16 },
 };

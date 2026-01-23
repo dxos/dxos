@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { useMemo } from 'react';
+import React, { forwardRef, useMemo } from 'react';
 
 import { type TreeProps } from '@dxos/react-ui-list';
 import { Tabs } from '@dxos/react-ui-tabs';
@@ -16,7 +16,7 @@ export const NAV_TREE_ITEM = 'NavTreeItem';
 
 export type NavTreeProps = Pick<TreeProps<NavTreeItemGraphNode>, 'id' | 'root'> & Pick<L1TabsProps, 'open'>;
 
-export const NavTree = ({ id, root, ...props }: NavTreeProps) => {
+export const NavTree = forwardRef<HTMLDivElement, NavTreeProps>(({ id, root, ...props }, forwardedRef) => {
   const { tab, useItems, onBack } = useNavTreeContext();
   const topLevelActions = useItems(root, { disposition: 'menu', sort: true });
   const topLevelCollections = useItems(root, { disposition: 'collection' });
@@ -51,7 +51,7 @@ export const NavTree = ({ id, root, ...props }: NavTreeProps) => {
     //  it uses RovingFocus and doesn’t support moving focus to an item that is not a tab. Assess whether this situation
     //  should change including whether it should motivate a change in the design/taxonomy, or if this means this should
     //  not use `react-ui-tabs` at all.
-    <Tabs.Root value={tab} orientation='vertical' verticalVariant='stateless' classNames='relative'>
+    <Tabs.Root value={tab} orientation='vertical' verticalVariant='stateless' classNames='relative' ref={forwardedRef}>
       <L0Menu
         menuActions={topLevelActions}
         topLevelItems={l0Items}
@@ -63,4 +63,4 @@ export const NavTree = ({ id, root, ...props }: NavTreeProps) => {
       <L1Tabs topLevelItems={topLevelItems} path={path} currentItemId={tab} onBack={onBack} {...props} />
     </Tabs.Root>
   );
-};
+});

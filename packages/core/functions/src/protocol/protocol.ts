@@ -2,23 +2,28 @@
 // Copyright 2025 DXOS.org
 //
 
+import * as AnthropicClient from '@effect/ai-anthropic/AnthropicClient';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Schema from 'effect/Schema';
 import * as SchemaAST from 'effect/SchemaAST';
 
-import { AiService } from '@dxos/ai';
-import { Type } from '@dxos/echo';
-import { EchoClient } from '@dxos/echo-db';
-import { acquireReleaseResource } from '@dxos/effect';
-import { failedInvariant, invariant } from '@dxos/invariant';
+import { AiModelResolver, AiService } from '@dxos/ai';
+import { AnthropicResolver } from '@dxos/ai/resolvers';
+import { LifecycleState, Resource } from '@dxos/context';
+import { Database, Ref, Type } from '@dxos/echo';
+import { refFromEncodedReference } from '@dxos/echo/internal';
+import { EchoClient, type EchoDatabaseImpl, type QueueFactory } from '@dxos/echo-db';
+import { runAndForwardErrors } from '@dxos/effect';
+import { assertState, failedInvariant, invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { type FunctionProtocol } from '@dxos/protocols';
 
 import { FunctionError } from '../errors';
 import { FunctionDefinition, type FunctionServices } from '../sdk';
-import { CredentialsService, DatabaseService, FunctionInvocationService, TracingService } from '../services';
-import { QueueService } from '../services';
+import { CredentialsService, FunctionInvocationService, QueueService, TracingService } from '../services';
+
+import { FunctionsAiHttpClient } from './functions-ai-http-client';
 
 /**
  * Wraps a function handler made with `defineFunction` to a protocol that the functions-runtime expects.
@@ -39,7 +44,7 @@ export const wrapFunctionHandler = (func: FunctionDefinition): FunctionProtocol.
     },
     handler: async ({ data, context }) => {
       if (
-        (func.services.includes(DatabaseService.key) || func.services.includes(QueueService.key)) &&
+        (func.services.includes(Database.Service.key) || func.services.includes(QueueService.key)) &&
         (!context.services.dataService || !context.services.queryService)
       ) {
         throw new FunctionError({
@@ -47,22 +52,39 @@ export const wrapFunctionHandler = (func: FunctionDefinition): FunctionProtocol.
         });
       }
 
+      // eslint-disable-next-line no-useless-catch
       try {
         if (!SchemaAST.isAnyKeyword(func.inputSchema.ast)) {
-          Schema.validateSync(func.inputSchema)(data);
+          try {
+            Schema.validateSync(func.inputSchema)(data);
+          } catch (error) {
+            throw new FunctionError({ message: 'Invalid input schema', cause: error });
+          }
         }
+
+        await using funcContext = await new FunctionContext(context).open();
+
+        if (func.types.length > 0) {
+          invariant(funcContext.db, 'Database is required for functions with types');
+          await funcContext.db.graph.schemaRegistry.register(func.types as Type.Entity.Any[]);
+        }
+
+        const dataWithDecodedRefs =
+          funcContext.db && !SchemaAST.isAnyKeyword(func.inputSchema.ast)
+            ? decodeRefsFromSchema(func.inputSchema.ast, data, funcContext.db)
+            : data;
 
         let result = await func.handler({
           // TODO(dmaretskyi): Fix the types.
           context: context as any,
-          data,
+          data: dataWithDecodedRefs,
         });
 
         if (Effect.isEffect(result)) {
-          result = await Effect.runPromise(
+          result = await runAndForwardErrors(
             (result as Effect.Effect<unknown, unknown, FunctionServices>).pipe(
               Effect.orDie,
-              Effect.provide(createServiceLayer(context)),
+              Effect.provide(funcContext.createLayer()),
             ),
           );
         }
@@ -73,73 +95,167 @@ export const wrapFunctionHandler = (func: FunctionDefinition): FunctionProtocol.
 
         return result;
       } catch (error) {
-        if (FunctionError.is(error)) {
-          throw error;
-        } else {
-          throw new FunctionError({
-            cause: error,
-            context: { func: func.key },
-          });
-        }
+        // TODO(dmaretskyi): We might do error wrapping here and add extra context.
+        throw error;
       }
     },
   };
 };
 
 /**
- * Creates a layer of services for the function.
+ * Container for services and context for a function.
  */
-const createServiceLayer = (context: FunctionProtocol.Context): Layer.Layer<FunctionServices> => {
-  return Layer.unwrapScoped(
-    Effect.gen(function* () {
-      let client: EchoClient | undefined;
+class FunctionContext extends Resource {
+  readonly context: FunctionProtocol.Context;
+  readonly client: EchoClient | undefined;
+  db: EchoDatabaseImpl | undefined;
+  queues: QueueFactory | undefined;
 
-      if (context.services.dataService && context.services.queryService) {
-        client = yield* acquireReleaseResource(() => {
-          invariant(context.services.dataService && context.services.queryService);
-          // TODO(dmaretskyi): Queues service.
-          return new EchoClient().connectToService({
-            dataService: context.services.dataService,
-            queryService: context.services.queryService,
-            queueService: context.services.queueService,
-          });
-        });
-      }
+  constructor(context: FunctionProtocol.Context) {
+    super();
+    this.context = context;
+    if (context.services.dataService && context.services.queryService) {
+      this.client = new EchoClient().connectToService({
+        dataService: context.services.dataService,
+        queryService: context.services.queryService,
+        queueService: context.services.queueService,
+      });
+    }
+  }
 
-      const db =
-        client && context.spaceId
-          ? yield* acquireReleaseResource(() =>
-              client.constructDatabase({
-                spaceId: context.spaceId ?? failedInvariant(),
-                spaceKey: PublicKey.fromHex(context.spaceKey ?? failedInvariant('spaceKey missing in context')),
-                reactiveSchemaQuery: false,
-              }),
-            )
-          : undefined;
+  override async _open() {
+    await this.client?.open();
+    this.db =
+      this.client && this.context.spaceId
+        ? this.client.constructDatabase({
+            spaceId: this.context.spaceId ?? failedInvariant(),
+            spaceKey: PublicKey.fromHex(this.context.spaceKey ?? failedInvariant('spaceKey missing in context')),
+            reactiveSchemaQuery: false,
+            preloadSchemaOnOpen: false,
+          })
+        : undefined;
 
-      if (db) {
-        console.log('Setting space root', context.spaceRootUrl);
-        yield* Effect.promise(() =>
-          db!.setSpaceRoot(context.spaceRootUrl ?? failedInvariant('spaceRootUrl missing in context')),
-        );
-      }
+    await this.db?.setSpaceRoot(this.context.spaceRootUrl ?? failedInvariant('spaceRootUrl missing in context'));
+    await this.db?.open();
+    this.queues =
+      this.client && this.context.spaceId ? this.client.constructQueueFactory(this.context.spaceId) : undefined;
+  }
 
-      const queues = client && context.spaceId ? client.constructQueueFactory(context.spaceId) : undefined;
+  override async _close() {
+    await this.db?.close();
+    await this.client?.close();
+  }
 
-      const dbLayer = db ? DatabaseService.layer(db) : DatabaseService.notAvailable;
-      const queuesLayer = queues ? QueueService.layer(queues) : QueueService.notAvailable;
-      const credentials = dbLayer
-        ? CredentialsService.layerFromDatabase().pipe(Layer.provide(dbLayer))
-        : CredentialsService.configuredLayer([]);
-      const functionInvocationService = MockedFunctionInvocationService;
-      const aiService = AiService.notAvailable;
-      const tracing = TracingService.layerNoop;
+  createLayer(): Layer.Layer<FunctionServices> {
+    assertState(this._lifecycleState === LifecycleState.OPEN, 'FunctionContext is not open');
 
-      return Layer.mergeAll(dbLayer, queuesLayer, credentials, functionInvocationService, aiService, tracing);
-    }),
-  );
-};
+    const dbLayer = this.db ? Database.Service.layer(this.db) : Database.Service.notAvailable;
+    const queuesLayer = this.queues ? QueueService.layer(this.queues) : QueueService.notAvailable;
+    const credentials = dbLayer
+      ? CredentialsService.layerFromDatabase().pipe(Layer.provide(dbLayer))
+      : CredentialsService.configuredLayer([]);
+    const functionInvocationService = MockedFunctionInvocationService;
+    const tracing = TracingService.layerNoop;
+
+    const aiLayer = this.context.services.functionsAiService
+      ? AiModelResolver.AiModelResolver.buildAiService.pipe(
+          Layer.provide(
+            AnthropicResolver.make().pipe(
+              Layer.provide(
+                AnthropicClient.layer({
+                  // Note: It doesn't matter what is base url here, it will be proxied to ai gateway in edge.
+                  apiUrl: 'http://internal/provider/anthropic',
+                }).pipe(Layer.provide(FunctionsAiHttpClient.layer(this.context.services.functionsAiService))),
+              ),
+            ),
+          ),
+        )
+      : AiService.notAvailable;
+
+    return Layer.mergeAll(
+      dbLayer, //
+      queuesLayer,
+      credentials,
+      functionInvocationService,
+      aiLayer,
+      tracing,
+    );
+  }
+}
 
 const MockedFunctionInvocationService = Layer.succeed(FunctionInvocationService, {
   invokeFunction: () => Effect.die('Calling functions from functions is not implemented yet.'),
 });
+
+const decodeRefsFromSchema = (ast: SchemaAST.AST, value: unknown, db: EchoDatabaseImpl): unknown => {
+  if (value == null) {
+    return value;
+  }
+
+  const encoded = SchemaAST.encodedBoundAST(ast);
+  if (Ref.isRefType(encoded)) {
+    if (Ref.isRef(value)) {
+      return value;
+    }
+
+    if (typeof value === 'object' && value !== null && typeof (value as any)['/'] === 'string') {
+      const resolver = db.graph.createRefResolver({ context: { space: db.spaceId } });
+      return refFromEncodedReference(value as any, resolver);
+    }
+
+    return value;
+  }
+
+  switch (encoded._tag) {
+    case 'TypeLiteral': {
+      if (typeof value !== 'object' || value === null || Array.isArray(value)) {
+        return value;
+      }
+      const result: Record<string, unknown> = { ...(value as any) };
+      for (const prop of SchemaAST.getPropertySignatures(encoded)) {
+        const key = prop.name.toString();
+        if (key in result) {
+          result[key] = decodeRefsFromSchema(prop.type, (result as any)[key], db);
+        }
+      }
+      return result;
+    }
+
+    case 'TupleType': {
+      if (!Array.isArray(value)) {
+        return value;
+      }
+
+      // For arrays, effect uses TupleType with empty elements and a single rest element.
+      if (encoded.elements.length === 0 && encoded.rest.length === 1) {
+        const elementType = encoded.rest[0].type;
+        return (value as unknown[]).map((item) => decodeRefsFromSchema(elementType, item, db));
+      }
+
+      return value;
+    }
+
+    case 'Union': {
+      // Optional values are represented as union with undefined.
+      const nonUndefined = encoded.types.filter((t) => !SchemaAST.isUndefinedKeyword(t));
+      if (nonUndefined.length === 1) {
+        return decodeRefsFromSchema(nonUndefined[0], value, db);
+      }
+
+      // For other unions we can't safely pick a branch without validating.
+      return value;
+    }
+
+    case 'Suspend': {
+      return decodeRefsFromSchema(encoded.f(), value, db);
+    }
+
+    case 'Refinement': {
+      return decodeRefsFromSchema(encoded.from, value, db);
+    }
+
+    default: {
+      return value;
+    }
+  }
+};

@@ -4,7 +4,7 @@
 
 import type * as Schema from 'effect/Schema';
 
-import type { Type } from '@dxos/echo';
+import type { Entity, Type } from '@dxos/echo';
 import { getSchemaDXN } from '@dxos/echo/internal';
 import { type DXN } from '@dxos/keys';
 
@@ -22,7 +22,7 @@ type DefineObjectMigrationOptions<From extends Schema.Schema.AnyNoContext, To ex
   transform: (
     from: Schema.Schema.Type<From>,
     context: ObjectMigrationContext,
-  ) => Promise<Omit<Schema.Schema.Type<To>, 'id' | Type.KindId>>;
+  ) => Promise<Omit<Schema.Schema.Type<To>, 'id' | Entity.KindId>>;
 
   /**
    * Callback that is called after the object is migrated. Called for every object that is migrated.
@@ -30,13 +30,13 @@ type DefineObjectMigrationOptions<From extends Schema.Schema.AnyNoContext, To ex
    * NOTE: Database mutations performed in this callback are not guaranteed to be idempotent.
    *       If multiple peers run the migration separately, the effects may be applied multiple times.
    */
-  onMigration: (params: OnMigrateParams<From, To>) => Promise<void>;
+  onMigration: (params: OnMigrateProps<From, To>) => Promise<void>;
 };
 
 // TODO(dmaretskyi): For future extensibility.
 type ObjectMigrationContext = {};
 
-type OnMigrateParams<From extends Schema.Schema.AnyNoContext, To extends Schema.Schema.AnyNoContext> = {
+type OnMigrateProps<From extends Schema.Schema.AnyNoContext, To extends Schema.Schema.AnyNoContext> = {
   before: Schema.Schema.Type<From>;
   object: AnyLiveObject<Schema.Schema.Type<To>>;
   db: EchoDatabase;
@@ -48,7 +48,7 @@ export type ObjectMigration = {
   fromSchema: Schema.Schema.AnyNoContext;
   toSchema: Schema.Schema.AnyNoContext;
   transform: (from: unknown, context: ObjectMigrationContext) => Promise<unknown>;
-  onMigration: (params: OnMigrateParams<any, any>) => Promise<void>;
+  onMigration: (params: OnMigrateProps<any, any>) => Promise<void>;
 };
 
 export const defineObjectMigration = <From extends Schema.Schema.AnyNoContext, To extends Schema.Schema.AnyNoContext>(

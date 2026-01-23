@@ -25,6 +25,9 @@
       "path": "../../common/display-name"
     },
     {
+      "path": "../../common/effect"
+    },
+    {
       "path": "../../common/graph"
     },
     {
@@ -115,7 +118,7 @@
       "path": "../../sdk/schema"
     },
     {
-      "path": "../../ui/primitives/react-hooks"
+      "path": "../../ui/react-primitives/react-hooks"
     },
     {
       "path": "../../ui/react-ui"
@@ -136,7 +139,7 @@
       "path": "../../ui/react-ui-tabs"
     },
     {
-      "path": "../../ui/react-ui-theme"
+      "path": "../../ui/ui-theme"
     }
   ]
 }

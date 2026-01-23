@@ -19,7 +19,7 @@ import {
   Grid,
   toPlaneCellIndex,
 } from '@dxos/react-ui-grid';
-import { mx } from '@dxos/react-ui-theme';
+import { mx } from '@dxos/ui-theme';
 
 import { meta } from '../../../meta';
 

@@ -7,7 +7,7 @@ import type * as Runtime from 'effect/Runtime';
 import { useMemo } from 'react';
 
 import { useCapability } from '@dxos/app-framework/react';
-import { type Space } from '@dxos/client/echo';
+import { type Key } from '@dxos/echo';
 import { TracingService } from '@dxos/functions';
 import { TracingServiceExt } from '@dxos/functions-runtime';
 import { AutomationCapabilities } from '@dxos/plugin-automation';
@@ -17,7 +17,7 @@ import { type AiChatServices } from '../processor';
 import { type Assistant } from '../types';
 
 export type UseChatServicesProps = {
-  space?: Space;
+  id?: Key.SpaceId;
   chat?: Assistant.Chat;
 };
 
@@ -26,26 +26,22 @@ export type UseChatServicesProps = {
  */
 // TODO(dmaretskyi): Better return type.
 export const useChatServices = ({
-  space,
+  id,
   chat,
 }: UseChatServicesProps): (() => Promise<Runtime.Runtime<AiChatServices>>) | undefined => {
   const client = useClient();
-  space ??= client.spaces.default;
+  id ??= client.spaces.default.id;
 
   const runtimeResolver = useCapability(AutomationCapabilities.ComputeRuntime);
   return useMemo(() => {
-    const runtime = runtimeResolver.getRuntime(space.id);
+    const runtime = runtimeResolver.getRuntime(id);
     return () =>
       runtime.runPromise(
-        Effect.gen(function* () {
-          return yield* Effect.runtime<AiChatServices>().pipe(
-            Effect.provide(
-              chat?.traceQueue?.target
-                ? TracingServiceExt.layerQueue(chat.traceQueue?.target)
-                : TracingService.layerNoop,
-            ),
-          );
-        }),
+        Effect.runtime<AiChatServices>().pipe(
+          Effect.provide(
+            chat?.traceQueue?.target ? TracingServiceExt.layerQueue(chat.traceQueue?.target) : TracingService.layerNoop,
+          ),
+        ),
       );
-  }, [space, chat?.traceQueue?.target]);
+  }, [id, chat?.traceQueue?.target]);
 };

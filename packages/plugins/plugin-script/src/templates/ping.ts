@@ -1,8 +1,17 @@
 //
-// Copyright 2024 DXOS.org
+// Copyright 2025 DXOS.org
 //
 
-/**
- * Echos the request data.
- */
-export default async ({ data }: any) => data;
+import * as Schema from 'effect/Schema';
+
+import { defineFunction } from '@dxos/functions';
+
+export default defineFunction({
+  key: 'dxos.org/script/ping',
+  name: 'Ping',
+  inputSchema: Schema.Any,
+
+  handler: async ({ data }) => {
+    return data;
+  },
+});

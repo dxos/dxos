@@ -3,7 +3,7 @@
 //
 
 import { save } from '@automerge/automerge';
-import { type DocHandle } from '@automerge/automerge-repo';
+import { type AutomergeUrl, type DocHandle } from '@automerge/automerge-repo';
 
 import { Event, Mutex, scheduleTask, sleep, synchronized, trackLeaks } from '@dxos/async';
 import { AUTH_TIMEOUT } from '@dxos/client-protocol';
@@ -13,7 +13,6 @@ import { timed, warnAfterTimeout } from '@dxos/debug';
 import {
   type DatabaseRoot,
   type EchoHost,
-  FIND_PARAMS,
   type MetadataStore,
   type Space,
   createMappedFeedWriter,
@@ -72,7 +71,7 @@ export type DataSpaceCallbacks = {
   beforeClose?: () => Promise<void>;
 };
 
-export type DataSpaceParams = {
+export type DataSpaceProps = {
   initialState: SpaceState;
   inner: Space;
   metadataStore: MetadataStore;
@@ -136,7 +135,7 @@ export class DataSpace {
 
   public metrics: SpaceProto.Metrics = {};
 
-  constructor(params: DataSpaceParams) {
+  constructor(params: DataSpaceProps) {
     this._inner = params.inner;
     this._inner.stateUpdate.on(this._ctx, () => this.stateUpdate.emit());
 
@@ -331,7 +330,7 @@ export class DataSpace {
   @trace.span({ showInBrowserTimeline: true })
   async initializeDataPipeline(): Promise<void> {
     if (this._state !== SpaceState.SPACE_CONTROL_ONLY) {
-      throw new SystemError('Invalid operation');
+      throw new SystemError({ message: 'Invalid operation' });
     }
 
     this._state = SpaceState.SPACE_INITIALIZING;
@@ -471,7 +470,9 @@ export class DataSpace {
         await warnAfterTimeout(5_000, 'Automerge root doc load timeout (DataSpace)', async () => {
           handle = await cancelWithContext(
             this._ctx,
-            this._echoHost.automergeRepo.find<DatabaseDirectory>(rootUrl as any, FIND_PARAMS),
+            this._echoHost.loadDoc<DatabaseDirectory>(Context.default(), rootUrl as AutomergeUrl, {
+              fetchFromNetwork: true,
+            }),
           );
           await cancelWithContext(this._ctx, handle.whenReady());
         });

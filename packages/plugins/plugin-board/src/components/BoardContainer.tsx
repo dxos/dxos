@@ -5,7 +5,6 @@
 import React, { useCallback, useMemo, useRef, useState } from 'react';
 
 import { Surface } from '@dxos/app-framework/react';
-import { getSpace } from '@dxos/client/echo';
 import { Filter, Obj, Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { useQuery } from '@dxos/react-client/echo';
@@ -37,8 +36,9 @@ export const BoardContainer = ({ board }: BoardContainerProps) => {
   const attendableId = Obj.getDXN(board).toString();
   const { hasAttention } = useAttention(attendableId);
 
+  const db = Obj.getDatabase(board);
   // TODO(burdon): Use search.
-  const objects = useQuery(getSpace(board), Filter.everything());
+  const objects = useQuery(db, Filter.everything());
   const options = useMemo<ObjectPickerContentProps['options']>(
     () =>
       objects
@@ -60,8 +60,8 @@ export const BoardContainer = ({ board }: BoardContainerProps) => {
 
   const handleAdd = useCallback<NonNullable<BoardRootProps['onAdd']>>(
     async (anchor, position = DEFAULT_POSITION) => {
-      const space = getSpace(board);
-      invariant(space);
+      const db = Obj.getDatabase(board);
+      invariant(db);
       addTriggerRef.current = anchor;
       setPickerState({
         position,
@@ -75,10 +75,12 @@ export const BoardContainer = ({ board }: BoardContainerProps) => {
     (id) => {
       // TODO(burdon): Impl. DXN.equals and pass in DXN from `id`.
       const idx = board.items.findIndex((ref) => ref.dxn.asEchoDXN()?.echoId === id);
-      if (idx !== -1) {
-        board.items.splice(idx, 1);
-      }
-      delete board.layout.cells[id];
+      Obj.change(board, (b) => {
+        if (idx !== -1) {
+          b.items.splice(idx, 1);
+        }
+        delete b.layout.cells[id];
+      });
     },
     [board],
   );
@@ -86,7 +88,9 @@ export const BoardContainer = ({ board }: BoardContainerProps) => {
   const handleMove = useCallback<NonNullable<BoardRootProps['onMove']>>(
     (id, position) => {
       const layout = board.layout.cells[id];
-      board.layout.cells[id] = { ...layout, ...position };
+      Obj.change(board, (b) => {
+        b.layout.cells[id] = { ...layout, ...position };
+      });
     },
     [board],
   );
@@ -99,7 +103,7 @@ export const BoardContainer = ({ board }: BoardContainerProps) => {
 
       // Find the selected object by id from the space.
       const selectedObject = objects.find((obj) => obj.id === id);
-      if (!selectedObject) {
+      if (!Obj.isObject(selectedObject)) {
         return;
       }
 

@@ -18,7 +18,6 @@ import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { useComputeRuntimeCallback } from '@dxos/plugin-automation';
 import { Graph } from '@dxos/plugin-explorer/types';
-import { getSpace } from '@dxos/react-client/echo';
 import { DropdownMenu, IconButton, Toolbar, useTranslation } from '@dxos/react-ui';
 import { useAttention } from '@dxos/react-ui-attention';
 import { StackItem } from '@dxos/react-ui-stack';
@@ -43,7 +42,7 @@ export type NotebookContainerProps = {
 
 export const NotebookContainer = ({ notebook, env }: NotebookContainerProps) => {
   const { t } = useTranslation(meta.id);
-  const space = getSpace(notebook);
+  const db = notebook && Obj.getDatabase(notebook);
   const attendableId = notebook ? Obj.getDXN(notebook).toString() : '';
   const { hasAttention } = useAttention(attendableId);
 
@@ -53,7 +52,7 @@ export const NotebookContainer = ({ notebook, env }: NotebookContainerProps) => 
 
   const [queryValues, setQueryValues] = useState<Record<string, any>>({});
   const handleExecQueries = useCallback(async () => {
-    invariant(space);
+    invariant(db);
 
     const builder = new QueryBuilder();
     for (const cell of notebook?.cells ?? []) {
@@ -65,12 +64,19 @@ export const NotebookContainer = ({ notebook, env }: NotebookContainerProps) => 
             const ast = Query.select(filter).ast;
             const graph = cell.graph?.target;
             if (!graph) {
-              const { view } = await View.makeFromSpace({ space });
-              const graph = Graph.make({ query: { ast }, view });
-              cell.graph = Ref.make(graph);
-              cell.name = name;
+              const { view } = await View.makeFromDatabase({ db });
+              const newGraph = Graph.make({ query: { ast }, view });
+              Obj.change(notebook!, (n) => {
+                const c = n.cells.find((c) => c.id === cell.id);
+                if (c) {
+                  c.graph = Ref.make(newGraph);
+                  c.name = name;
+                }
+              });
             } else {
-              graph.query.ast = ast;
+              Obj.change(graph, () => {
+                graph.query.ast = ast;
+              });
             }
           }
         }
@@ -78,17 +84,17 @@ export const NotebookContainer = ({ notebook, env }: NotebookContainerProps) => 
         if (cell.name && cell.graph?.target) {
           const graph = Obj.getSnapshot(cell.graph?.target);
           const query = Query.fromAst(graph.query.ast);
-          const result = await space?.db.query(query).run();
-          const objectIds = result?.objects?.map((obj) => obj.id);
+          const objects = await db.query(query).run();
+          const objectIds = objects?.map((obj) => obj.id);
           setQueryValues((prev) => ({ ...prev, [cell.name!]: objectIds }));
         }
       }
     }
-  }, [space, notebook, graph]);
+  }, [db, notebook, graph]);
 
   const [promptResults, setPromptResults] = useState<Record<string, string>>({});
   const handleExecPrompts = useComputeRuntimeCallback(
-    space,
+    db?.spaceId,
     Effect.fnUntraced(function* () {
       invariant(graph);
 
@@ -127,10 +133,12 @@ export const NotebookContainer = ({ notebook, env }: NotebookContainerProps) => 
       const from = notebook.cells.findIndex((cell) => cell.id === source.id);
       const to = notebook.cells.findIndex((cell) => cell.id === target.id);
       if (from != null && to != null) {
-        const cell = notebook.cells.splice(from, 1)[0];
-        if (cell) {
-          notebook.cells.splice(to, 0, cell);
-        }
+        Obj.change(notebook, (n) => {
+          const cell = n.cells.splice(from, 1)[0];
+          if (cell) {
+            n.cells.splice(to, 0, cell);
+          }
+        });
       }
     },
     [notebook],
@@ -149,9 +157,9 @@ export const NotebookContainer = ({ notebook, env }: NotebookContainerProps) => 
         }
 
         case 'prompt': {
-          if (space) {
-            const result = await space.db.query(Query.select(Filter.type(Blueprint.Blueprint))).run();
-            const blueprints = result.objects
+          if (db) {
+            const objects = await db.query(Query.select(Filter.type(Blueprint.Blueprint))).run();
+            const blueprints = objects
               .filter((blueprint) => INCLUDE_BLUEPRINTS.includes(blueprint.key))
               .map((blueprint) => Ref.make(blueprint));
             cell.prompt = Ref.make(Prompt.make({ instructions: '', blueprints }));
@@ -161,9 +169,11 @@ export const NotebookContainer = ({ notebook, env }: NotebookContainerProps) => 
       }
 
       const idx = after ? notebook.cells.findIndex((cell) => cell.id === after) : notebook.cells.length;
-      notebook.cells.splice(idx, 0, cell);
+      Obj.change(notebook, (n) => {
+        n.cells.splice(idx, 0, cell);
+      });
     },
-    [space, notebook],
+    [db, notebook],
   );
 
   const handleCellDelete = useCallback<NonNullable<NotebookStackProps['onCellDelete']>>(
@@ -171,7 +181,9 @@ export const NotebookContainer = ({ notebook, env }: NotebookContainerProps) => 
       invariant(notebook);
       const idx = notebook.cells.findIndex((cell) => cell.id === id);
       if (idx !== -1) {
-        notebook.cells.splice(idx, 1);
+        Obj.change(notebook, (n) => {
+          n.cells.splice(idx, 1);
+        });
       }
     },
     [notebook],
@@ -197,7 +209,7 @@ export const NotebookContainer = ({ notebook, env }: NotebookContainerProps) => 
       <div role='none' className='flex bs-full overflow-hidden -mis-[1px] -mie-[1px]'>
         <NotebookStack
           classNames='container-max-width border-l border-r border-subduedSeparator'
-          space={space}
+          db={db}
           notebook={notebook}
           graph={graph}
           env={env}

@@ -89,7 +89,7 @@ export const Blob = ({
 
     const maxBalls = 50;
     const effectiveBallCount = Math.min(ballCount, maxBalls);
-    const ballParams: { st: number; dtFactor: number; baseScale: number; toggle: number; radius: number }[] = [];
+    const ballProps: { st: number; dtFactor: number; baseScale: number; toggle: number; radius: number }[] = [];
     for (let i = 0; i < effectiveBallCount; i++) {
       const idx = i + 1;
       const h1 = hash31(idx);
@@ -99,7 +99,7 @@ export const Blob = ({
       const h2 = hash33(h1);
       const toggle = Math.floor(h2[0] * 2.0);
       const radiusVal = 0.5 + h2[2] * (2.0 - 0.5);
-      ballParams.push({ st, dtFactor, baseScale, toggle, radius: radiusVal });
+      ballProps.push({ st, dtFactor, baseScale, toggle, radius: radiusVal });
     }
 
     const mouseBallPos = { x: 0, y: 0 };
@@ -155,7 +155,7 @@ export const Blob = ({
       program.uniforms.iTime.value = elapsed;
 
       for (let i = 0; i < effectiveBallCount; i++) {
-        const p = ballParams[i];
+        const p = ballProps[i];
         const dt = elapsed * speed * p.dtFactor;
         const th = p.st + dt;
         const x = Math.cos(th);

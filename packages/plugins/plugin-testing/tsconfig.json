@@ -1,0 +1,51 @@
+{
+  "extends": [
+    "../../../tsconfig.base.json"
+  ],
+  "compilerOptions": {
+    "types": [
+      "node"
+    ]
+  },
+  "exclude": [
+    "*.t.ts",
+    "vite.config.ts"
+  ],
+  "include": [
+    "src/**/*.ts",
+    "src/**/*.tsx",
+    "src/*.ts"
+  ],
+  "references": [
+    {
+      "path": "../../common/util"
+    },
+    {
+      "path": "../../core/echo/live-object"
+    },
+    {
+      "path": "../../core/operation"
+    },
+    {
+      "path": "../../sdk/app-framework"
+    },
+    {
+      "path": "../../ui/react-ui"
+    },
+    {
+      "path": "../../ui/ui-theme"
+    },
+    {
+      "path": "../plugin-attention"
+    },
+    {
+      "path": "../plugin-client"
+    },
+    {
+      "path": "../plugin-graph"
+    },
+    {
+      "path": "../plugin-theme"
+    }
+  ]
+}

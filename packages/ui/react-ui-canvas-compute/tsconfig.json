@@ -21,6 +21,9 @@
       "path": "../../common/debug"
     },
     {
+      "path": "../../common/effect"
+    },
+    {
       "path": "../../common/graph"
     },
     {
@@ -120,7 +123,7 @@
       "path": "../react-ui-syntax-highlighter"
     },
     {
-      "path": "../react-ui-theme"
+      "path": "../ui-theme"
     }
   ]
 }

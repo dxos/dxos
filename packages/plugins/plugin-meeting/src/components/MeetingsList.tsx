@@ -2,23 +2,22 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as Function from 'effect/Function';
 import * as Schema from 'effect/Schema';
 import React, { useCallback, useMemo } from 'react';
 
-import { Capabilities, chain, createIntent } from '@dxos/app-framework';
-import { useCapabilities, useIntentDispatcher } from '@dxos/app-framework/react';
-import { Type } from '@dxos/echo';
+import { Common } from '@dxos/app-framework';
+import { useCapabilities, useOperationInvoker } from '@dxos/app-framework/react';
+import { Obj, Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
-import { SpaceAction } from '@dxos/plugin-space/types';
+import { SpaceOperation } from '@dxos/plugin-space/types';
 import { type Channel } from '@dxos/plugin-thread/types';
-import { Query, getSpace, useQuery } from '@dxos/react-client/echo';
+import { Query, useQuery } from '@dxos/react-client/echo';
 import { Button, useTranslation } from '@dxos/react-ui';
 import { List } from '@dxos/react-ui-list';
-import { ghostHover, mx } from '@dxos/react-ui-theme';
+import { ghostHover, mx } from '@dxos/ui-theme';
 
 import { meta } from '../meta';
-import { Meeting, MeetingAction } from '../types';
+import { Meeting, MeetingOperation } from '../types';
 
 // TODO(wittjosiah): Add a story which renders meetings alongside call?
 
@@ -32,11 +31,11 @@ const MeetingItem = ({
   getLabel: (meeting: Meeting.Meeting) => string;
 }) => {
   const { t } = useTranslation(meta.id);
-  const { dispatchPromise: dispatch } = useIntentDispatcher();
+  const { invokePromise } = useOperationInvoker();
 
   const handleSelectMeeting = useCallback(
-    () => dispatch(createIntent(MeetingAction.SetActive, { object: meeting })),
-    [dispatch, meeting],
+    () => invokePromise(MeetingOperation.SetActive, { object: meeting }),
+    [invokePromise, meeting],
   );
 
   return (
@@ -53,17 +52,21 @@ const MeetingItem = ({
   );
 };
 
-export const MeetingsList = ({ channel }: { channel: Channel.Channel }) => {
+export type MeetingsListProps = {
+  channel: Channel.Channel;
+};
+
+export const MeetingsList = ({ channel }: MeetingsListProps) => {
   const { t } = useTranslation(meta.id);
-  const { dispatchPromise: dispatch } = useIntentDispatcher();
-  const space = getSpace(channel);
-  const meetings = useQuery(space, Query.type(Meeting.Meeting));
+  const { invokePromise } = useOperationInvoker();
+  const db = Obj.getDatabase(channel);
+  const meetings = useQuery(db, Query.type(Meeting.Meeting));
   // TODO(wittjosiah): This should be done in the query.
   const sortedMeetings = useMemo(() => {
     return meetings.toSorted((a, b) => new Date(b.created).getTime() - new Date(a.created).getTime());
   }, [meetings]);
 
-  const metadata = useCapabilities(Capabilities.Metadata);
+  const metadata = useCapabilities(Common.Capability.Metadata);
   const [meetingMetadata] = useMemo(
     () =>
       metadata
@@ -81,14 +84,15 @@ export const MeetingsList = ({ channel }: { channel: Channel.Channel }) => {
 
   const getId = useCallback((meeting: Meeting.Meeting) => meeting.id, []);
   const handleCreateMeeting = useCallback(async () => {
-    invariant(space);
-    const intent = Function.pipe(
-      createIntent(MeetingAction.Create, { channel }),
-      chain(SpaceAction.AddObject, { target: space, hidden: true }),
-      chain(MeetingAction.SetActive),
-    );
-    await dispatch(intent);
-  }, [dispatch, space]);
+    invariant(db);
+    const createResult = await invokePromise(MeetingOperation.Create, { channel });
+    const addResult = await invokePromise(SpaceOperation.AddObject, {
+      target: db,
+      hidden: true,
+      object: createResult.data?.object,
+    });
+    await invokePromise(MeetingOperation.SetActive, { object: addResult.data?.object });
+  }, [invokePromise, db, channel]);
 
   return (
     <div>

@@ -21,7 +21,7 @@ import { getActorId } from './utils';
 const PROCESSING_TIMEOUT = 20_000; // ms
 const MAX_RANGE_ID_COUNT = 10;
 
-export type SegmentsNormalizerParams = {
+export type SegmentsNormalizerProps = {
   functionExecutor: FunctionExecutor;
   queue: Queue<Message.Message>;
   startingCursor: QueueCursor;
@@ -42,7 +42,7 @@ export class MessageNormalizer extends Resource {
   private _normalizationTask?: DeferredTask;
   private _lastProcessedMessageIds?: string[];
 
-  constructor({ functionExecutor, queue, startingCursor }: SegmentsNormalizerParams) {
+  constructor({ functionExecutor, queue, startingCursor }: SegmentsNormalizerProps) {
     super();
     this._functionExecutor = functionExecutor;
     this._queue = queue;

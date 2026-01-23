@@ -31,7 +31,7 @@ export default tseslint.config(
       'packages/core/protocols/proto/**/*',
       'packages/sdk/client/src/version.ts',
       'packages/sdk/client-services/src/version.ts',
-      'packages/devtools/cli-next/src/version.ts',
+      'packages/devtools/cli/src/version.ts',
       'packages/ui/react-ui-calendar/orig/**/*',
 
       // Config
@@ -75,9 +75,10 @@ export default tseslint.config(
       'packages/sdk/config/src/testing',
       'packages/sdk/shell/react-i18next.d.ts',
       'packages/ui/react-ui-geo/data',
+      'packages/ui/solid-ui-geo/data',
       'tools/dx-tools',
       'tools/esbuild/cli.js',
-      'tools/storybook/.storybook/stub.mjs',
+      'tools/storybook-react/.storybook/stub.mjs',
     ],
     // WARNING: Do not add extra keys to this config object
     // See: https://eslint.org/docs/latest/use/configure/configuration-files#globally-ignoring-files-with-ignores
@@ -168,6 +169,7 @@ export default tseslint.config(
       camelcase: 'off',
       'jsx-quotes': ['error', 'prefer-single'],
       'no-unused-vars': 'off',
+      'no-console': 'error',
       'no-constant-binary-expression': 'off',
       'no-unsafe-optional-chaining': 'off',
       'no-dupe-else-if': 'off',
@@ -271,10 +273,50 @@ export default tseslint.config(
   },
 
   //
+  // SolidJS - Exclude React rules
+  //
+  {
+    files: [
+      'packages/devtools/cli/**/*.{js,ts,jsx,tsx,mts,cts,mjs,cjs}',
+      'packages/common/effect-atom-solid/**/*.{js,ts,jsx,tsx,mts,cts,mjs,cjs}',
+      'packages/common/web-context-solid/**/*.{js,ts,jsx,tsx,mts,cts,mjs,cjs}',
+      'packages/core/echo/echo-solid/**/*.{js,ts,jsx,tsx,mts,cts,mjs,cjs}',
+      'packages/plugins/plugin-map-solid/**/*.{js,ts,jsx,tsx,mts,cts,mjs,cjs}',
+      'packages/sdk/app-solid/**/*.{js,ts,jsx,tsx,mts,cts,mjs,cjs}',
+      'packages/ui/solid-ui*/**/*.{js,ts,jsx,tsx,mts,cts,mjs,cjs}',
+      'tools/storybook-solid/**/*.{js,ts,jsx,tsx,mts,cts,mjs,cjs}',
+    ],
+    rules: {
+      ...Object.fromEntries(
+        Object.keys(reactPlugin.rules).map((rule) => [`react/${rule}`, 'off']),
+      ),
+    },
+  },
+
+  //
+  // Tools
+  //
+  {
+    files: [
+      'packages/devtools/cli/**/*.{js,ts,jsx,tsx,mts,cts,mjs,cjs}',
+      'packages/devtools/cli-base/**/*.{js,ts,jsx,tsx,mts,cts,mjs,cjs}',
+      'packages/devtools/cli-composer/**/*.{js,ts,jsx,tsx,mts,cts,mjs,cjs}',
+      'packages/common/log/**/*.{js,ts,jsx,tsx,mts,cts,mjs,cjs}',
+      'tools/**/*.{js,ts,jsx,tsx,mts,cts,mjs,cjs}',
+    ],
+    rules: {
+      'no-console': 'off',
+    },
+  },
+
+  //
   // Tests
   //
   {
-    files: [[SOURCES_GLOB, '**/*.{test,stories,blueprint-test}.{js,ts,jsx,tsx,mts,cts,mjs,cjs}']],
+    files: [
+      [SOURCES_GLOB, '**/*.{test,stories,blueprint-test}.{js,ts,jsx,tsx,mts,cts,mjs,cjs}'],
+      [SOURCES_GLOB, '**/testing/**/*.{js,ts,jsx,tsx,mts,cts,mjs,cjs}'],
+    ],
     rules: {
       'no-console': 'off',
     },

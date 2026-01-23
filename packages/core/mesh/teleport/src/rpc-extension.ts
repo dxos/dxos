@@ -14,7 +14,7 @@ export abstract class RpcExtension<Client, Server> implements TeleportExtension 
 
   private _isClosed = false;
 
-  constructor(private readonly _rpcParams: Omit<ProtoRpcPeerOptions<Client, Server>, 'port' | 'handlers'>) {}
+  constructor(private readonly _rpcProps: Omit<ProtoRpcPeerOptions<Client, Server>, 'port' | 'handlers'>) {}
 
   get initiator() {
     return this._extensionContext?.initiator;
@@ -48,7 +48,7 @@ export abstract class RpcExtension<Client, Server> implements TeleportExtension 
       contentType: 'application/x-protobuf; messageType="dxos.rpc.Message"',
     });
     this._rpc = createProtoRpcPeer({
-      ...this._rpcParams,
+      ...this._rpcProps,
       handlers,
       port,
     });

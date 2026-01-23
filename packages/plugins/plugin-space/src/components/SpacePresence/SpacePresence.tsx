@@ -7,9 +7,9 @@ import React, { forwardRef, useCallback, useEffect, useState } from 'react';
 
 import { useAppGraph, useCapability } from '@dxos/app-framework/react';
 import { generateName } from '@dxos/display-name';
-import { Obj, type Type } from '@dxos/echo';
-import { PublicKey, useClient } from '@dxos/react-client';
-import { type SpaceMember, getSpace, useMembers } from '@dxos/react-client/echo';
+import { type Key, Obj } from '@dxos/echo';
+import { PublicKey } from '@dxos/react-client';
+import { type SpaceMember, useMembers, useSpace } from '@dxos/react-client/echo';
 import { type Identity, useIdentity } from '@dxos/react-client/halo';
 import {
   Avatar,
@@ -27,10 +27,9 @@ import {
 import { AttentionGlyph, type AttentionGlyphProps, useAttended, useAttention } from '@dxos/react-ui-attention';
 import { ComplexMap, keyToFallback } from '@dxos/util';
 
-import { SpaceCapabilities } from '../../capabilities';
 import { usePath } from '../../hooks';
 import { meta } from '../../meta';
-import { type ObjectViewerProps } from '../../types';
+import { type ObjectViewerProps, SpaceCapabilities } from '../../types';
 
 // TODO(thure): Get/derive these values from protocol
 const REFRESH_INTERVAL = 5000;
@@ -43,17 +42,17 @@ const noViewers = new ComplexMap<PublicKey, ObjectViewerProps>(PublicKey.hash);
 const getName = (identity: Identity) => identity.profile?.displayName ?? generateName(identity.identityKey.toHex());
 
 export type SpacePresenceProps = {
-  object: Type.Expando;
-  spaceKey?: PublicKey;
+  object: Obj.Any;
+  spaceId?: Key.SpaceId;
 };
 
-export const SpacePresence = ({ object, spaceKey }: SpacePresenceProps) => {
+export const SpacePresence = ({ object, spaceId }: SpacePresenceProps) => {
   // TODO(wittjosiah): Doesn't need to be mutable but readonly type messes with ComplexMap.
   const spaceState = useCapability(SpaceCapabilities.MutableState);
-  const client = useClient();
   const identity = useIdentity();
-  const space = spaceKey ? client.spaces.get(spaceKey) : getSpace(object);
-  const spaceMembers = useMembers(space?.key);
+  const db = Obj.getDatabase(object);
+  const space = useSpace(spaceId ?? db?.spaceId);
+  const spaceMembers = useMembers(spaceId ?? db?.spaceId);
 
   const [_moment, setMoment] = useState(Date.now());
 

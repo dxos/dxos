@@ -3,9 +3,10 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
+import * as Effect from 'effect/Effect';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { Events, IntentPlugin, SettingsPlugin } from '@dxos/app-framework';
+import { Common } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { scheduleTask } from '@dxos/async';
 import { Context } from '@dxos/context';
@@ -17,20 +18,18 @@ import { log } from '@dxos/log';
 import { ClientPlugin } from '@dxos/plugin-client';
 import { PreviewPlugin } from '@dxos/plugin-preview';
 import { SpacePlugin } from '@dxos/plugin-space';
-import { StorybookLayoutPlugin } from '@dxos/plugin-storybook-layout';
-import { ThemePlugin } from '@dxos/plugin-theme';
+import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
-import { defaultTx } from '@dxos/react-ui-theme';
-import { Testing } from '@dxos/schema/testing';
+import { TestSchema } from '@dxos/schema/testing';
 import { type Actor, Message, Organization, Person } from '@dxos/types';
 import { seedTestData } from '@dxos/types/testing';
 
 import { useAudioFile, useQueueModelAdapter, useTranscriber } from '../../hooks';
 import { MessageNormalizer, getActorId } from '../../segments-normalization';
 import { TestItem } from '../../testing';
-import { type MediaStreamRecorderParams, type TranscriberParams } from '../../transcriber';
+import { type MediaStreamRecorderProps, type TranscriberProps } from '../../transcriber';
 import { TranscriptionPlugin } from '../../TranscriptionPlugin';
-import { renderByline } from '../Transcript';
+import { renderByline } from '../../util';
 
 import { TranscriptionStory } from './TranscriptionStory';
 import { useIsSpeaking } from './useIsSpeaking';
@@ -46,8 +45,8 @@ const AudioFile = ({
   detectSpeaking?: boolean;
   normalizeSentences?: boolean;
   audioUrl: string;
-  transcriberConfig?: TranscriberParams['config'];
-  recorderConfig?: MediaStreamRecorderParams['config'];
+  transcriberConfig?: TranscriberProps['config'];
+  recorderConfig?: MediaStreamRecorderProps['config'];
   audioConstraints?: MediaTrackConstraints;
 }) => {
   const [running, setRunning] = useState(false);
@@ -83,7 +82,7 @@ const AudioFile = ({
   const queue = useMemo(() => new MemoryQueue<Message.Message>(queueDxn), [queueDxn]);
 
   const model = useQueueModelAdapter(renderByline([]), queue);
-  const handleSegments = useCallback<TranscriberParams['onSegments']>(
+  const handleSegments = useCallback<TranscriberProps['onSegments']>(
     async (blocks) => {
       void queue?.append([
         Obj.make(Message.Message, {
@@ -189,29 +188,27 @@ const meta = {
   title: 'plugins/plugin-transcription/FileTranscription',
   decorators: [
     withTheme,
-    withLayout({ container: 'column' }),
+    withLayout({ layout: 'column' }),
     withPluginManager({
       plugins: [
+        ...corePlugins(),
         ClientPlugin({
-          types: [TestItem, Person.Person, Organization.Organization, Testing.DocumentType],
-          onClientInitialized: async ({ client }) => {
-            await client.halo.createIdentity();
-            await client.spaces.waitUntilReady();
-            await client.spaces.default.waitUntilReady();
-            await seedTestData(client.spaces.default);
-          },
+          types: [TestItem, Person.Person, Organization.Organization, TestSchema.DocumentType],
+          onClientInitialized: ({ client }) =>
+            Effect.gen(function* () {
+              yield* Effect.promise(() => client.halo.createIdentity());
+              yield* Effect.promise(() => client.spaces.waitUntilReady());
+              yield* Effect.promise(() => client.spaces.default.waitUntilReady());
+              yield* Effect.promise(() => seedTestData(client.spaces.default));
+            }),
         }),
+        ...corePlugins(),
         SpacePlugin({}),
-        IntentPlugin(),
-
-        // UI
-        ThemePlugin({ tx: defaultTx }),
-        SettingsPlugin(),
         PreviewPlugin(),
         TranscriptionPlugin(),
-        StorybookLayoutPlugin({}),
+        StorybookPlugin({}),
       ],
-      fireEvents: [Events.SetupAppGraph],
+      fireEvents: [Common.ActivationEvent.SetupAppGraph],
     }),
   ],
 } satisfies Meta;

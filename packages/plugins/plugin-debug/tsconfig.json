@@ -72,6 +72,9 @@
       "path": "../../core/functions"
     },
     {
+      "path": "../../core/operation"
+    },
+    {
       "path": "../../core/protocols"
     },
     {
@@ -96,7 +99,7 @@
       "path": "../../sdk/types"
     },
     {
-      "path": "../../ui/primitives/react-hooks"
+      "path": "../../ui/react-primitives/react-hooks"
     },
     {
       "path": "../../ui/react-ui"
@@ -126,7 +129,7 @@
       "path": "../../ui/react-ui-table"
     },
     {
-      "path": "../../ui/react-ui-theme"
+      "path": "../../ui/ui-theme"
     },
     {
       "path": "../plugin-client"

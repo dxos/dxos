@@ -5,36 +5,36 @@
 import { Atom, useAtomSet, useAtomValue } from '@effect-atom/atom-react';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { LayoutAction, createIntent } from '@dxos/app-framework';
-import { type SurfaceComponentProps, useIntentDispatcher } from '@dxos/app-framework/react';
-import { Obj, Tag } from '@dxos/echo';
+import { Common } from '@dxos/app-framework';
+import { type SurfaceComponentProps, useOperationInvoker } from '@dxos/app-framework/react';
+import { type Database, Obj, Relation, Tag } from '@dxos/echo';
 import { QueryBuilder } from '@dxos/echo-query';
-import { AttentionAction } from '@dxos/plugin-attention/types';
-import { ATTENDABLE_PATH_SEPARATOR, DeckAction } from '@dxos/plugin-deck/types';
-import { Filter, getSpace, useQuery } from '@dxos/react-client/echo';
+import { AttentionOperation } from '@dxos/plugin-attention/types';
+import { ATTENDABLE_PATH_SEPARATOR, DeckOperation } from '@dxos/plugin-deck/types';
+import { Filter, useQuery } from '@dxos/react-client/echo';
 import { ElevationProvider, IconButton, useTranslation } from '@dxos/react-ui';
 import { useSelected } from '@dxos/react-ui-attention';
 import { QueryEditor } from '@dxos/react-ui-components';
 import { type EditorController } from '@dxos/react-ui-editor';
-import { MenuBuilder, useMenuActions } from '@dxos/react-ui-menu';
+import { MenuBuilder, createGapSeparator, useMenuActions } from '@dxos/react-ui-menu';
 import { MenuProvider, ToolbarMenu } from '@dxos/react-ui-menu';
 import { StackItem } from '@dxos/react-ui-stack';
-import { type Message } from '@dxos/types';
+import { HasSubject, Message } from '@dxos/types';
 
+import { POPOVER_SAVE_FILTER } from '../../constants';
 import { meta } from '../../meta';
-import { type Mailbox } from '../../types';
+import { InboxOperation, type Mailbox } from '../../types';
 import { sortByCreated } from '../../util';
 
 import { type MailboxActionHandler, Mailbox as MailboxComponent } from './Mailbox';
 import { MailboxEmpty } from './MailboxEmpty';
-import { POPOVER_SAVE_FILTER } from './PopoverSaveFilter';
 
 export type MailboxArticleProps = SurfaceComponentProps<Mailbox.Mailbox> & { filter?: string; attendableId?: string };
 
-export const MailboxArticle = ({ subject: mailbox, filter: filterParam, attendableId }: MailboxArticleProps) => {
+export const MailboxArticle = ({ subject: mailbox, filter: filterProp, attendableId }: MailboxArticleProps) => {
   const { t } = useTranslation(meta.id);
   const id = attendableId ?? Obj.getDXN(mailbox).toString();
-  const { dispatchPromise: dispatch } = useIntentDispatcher();
+  const { invokePromise } = useOperationInvoker();
   const currentMessageId = useSelected(id, 'single');
 
   const filterEditorRef = useRef<EditorController>(null);
@@ -50,12 +50,12 @@ export const MailboxArticle = ({ subject: mailbox, filter: filterParam, attendab
 
   // Filter and messages.
   const [filter, setFilter] = useState<Filter.Any>();
-  const [filterText, setFilterText] = useState<string>(filterParam ?? '');
+  const [filterText, setFilterText] = useState<string>(filterProp ?? '');
   // TODO(burdon): Query not supported on queues.
   //  Query.select(filter ?? Filter.everything()).orderBy(Order.property('createdAt', 'desc')),
   const messages: Message.Message[] = useQuery(
     mailbox.queue.target,
-    filter ?? Filter.everything(),
+    filter ?? Filter.type(Message.Message),
   ) as Message.Message[];
   const sortedMessages = useMemo(
     () => [...messages].sort(sortByCreated('created', sortDescending.value)),
@@ -63,8 +63,8 @@ export const MailboxArticle = ({ subject: mailbox, filter: filterParam, attendab
   );
 
   // Parse filter.
-  const space = getSpace(mailbox);
-  const tags = useQuery(space, Filter.type(Tag.Tag));
+  const db = Obj.getDatabase(mailbox);
+  const tags = useQuery(db, Filter.type(Tag.Tag));
   const tagMap = useMemo(() => {
     return tags.reduce((acc, tag) => {
       acc[tag.id] = tag;
@@ -74,23 +74,54 @@ export const MailboxArticle = ({ subject: mailbox, filter: filterParam, attendab
   const parser = useMemo(() => new QueryBuilder(tagMap), [tagMap]);
   useEffect(() => setFilter(parser.build(filterText).filter), [filterText, parser]);
 
+  // Build message-to-tags map from HasSubject relations incrementally
+  const messageTagsMap = useMessageTagsMap(mailbox.queue.target);
+
+  // Merge tags into mailbox labels
+  const mergedLabels = useMemo(() => {
+    const labels = { ...(mailbox.labels ?? {}) };
+    // Add all tags to the labels object (tag.id -> tag.label)
+    for (const [_messageId, messageTags] of Object.entries(messageTagsMap)) {
+      for (const tag of messageTags) {
+        labels[tag.id] = tag.label;
+      }
+    }
+    return labels;
+  }, [mailbox.labels, messageTagsMap]);
+
+  // Update message properties to include tag IDs in labels array
+  const messagesWithTags = useMemo(() => {
+    return sortedMessages.map((message) => {
+      const messageTags = messageTagsMap[message.id] ?? [];
+      const tagIds = [...new Set(messageTags.map((tag) => tag.id))]; // Deduplicate tag IDs
+      const existingLabels = Array.isArray(message.properties?.labels) ? message.properties.labels : [];
+      // Deduplicate existing labels and filter out tag IDs that are already present
+      const uniqueExistingLabels = [...new Set(existingLabels)];
+      const newTagIds = tagIds.filter((tagId) => !uniqueExistingLabels.includes(tagId));
+      const finalLabels = [...uniqueExistingLabels, ...newTagIds];
+      return {
+        ...message,
+        properties: {
+          ...message.properties,
+          labels: finalLabels,
+        },
+      };
+    });
+  }, [sortedMessages, messageTagsMap]);
+
   const handleAction = useCallback<MailboxActionHandler>(
     (action) => {
       switch (action.type) {
         case 'current': {
           const message = sortedMessages.find((message) => message.id === action.messageId);
-          void dispatch(
-            createIntent(AttentionAction.Select, {
-              contextId: id,
-              selection: { mode: 'single', id: message?.id },
-            }),
-          );
-          void dispatch(
-            createIntent(DeckAction.ChangeCompanion, {
-              primary: id,
-              companion: `${id}${ATTENDABLE_PATH_SEPARATOR}message`,
-            }),
-          );
+          void invokePromise(AttentionOperation.Select, {
+            contextId: id,
+            selection: { mode: 'single', id: message?.id },
+          });
+          void invokePromise(DeckOperation.ChangeCompanion, {
+            primary: id,
+            companion: `${id}${ATTENDABLE_PATH_SEPARATOR}message`,
+          });
           break;
         }
 
@@ -110,30 +141,25 @@ export const MailboxArticle = ({ subject: mailbox, filter: filterParam, attendab
         }
 
         case 'save': {
-          void dispatch(
-            createIntent(LayoutAction.UpdatePopover, {
-              part: 'popover',
-              subject: POPOVER_SAVE_FILTER,
-              options: {
-                state: true,
-                variant: 'virtual',
-                anchor: filterSaveButtonRef.current,
-                props: { mailbox, filter: action.filter },
-              },
-            }),
-          );
+          void invokePromise(Common.LayoutOperation.UpdatePopover, {
+            subject: POPOVER_SAVE_FILTER,
+            state: true,
+            variant: 'virtual',
+            anchor: filterSaveButtonRef.current,
+            props: { mailbox, filter: action.filter },
+          });
           break;
         }
       }
     },
-    [id, mailbox, sortedMessages, dispatch],
+    [id, mailbox, sortedMessages, invokePromise],
   );
 
   const handleCancel = useCallback(() => {
     filterVisible.set(false);
-    setFilterText(filterParam ?? '');
-    setFilter(parser.build(filterParam ?? '').filter);
-  }, [filterVisible, filterParam, parser]);
+    setFilterText(filterProp ?? '');
+    setFilter(parser.build(filterProp ?? '').filter);
+  }, [filterVisible, filterProp, parser]);
 
   return (
     <StackItem.Content
@@ -156,7 +182,7 @@ export const MailboxArticle = ({ subject: mailbox, filter: filterParam, attendab
                 ref={filterEditorRef}
                 classNames='min-is-0 pis-1'
                 autoFocus
-                db={getSpace(mailbox)?.db}
+                db={db}
                 tags={tagMap}
                 value={filterText}
                 onChange={setFilterText}
@@ -182,11 +208,11 @@ export const MailboxArticle = ({ subject: mailbox, filter: filterParam, attendab
         </MenuProvider>
       </ElevationProvider>
 
-      {sortedMessages && sortedMessages.length > 0 ? (
+      {messagesWithTags && messagesWithTags.length > 0 ? (
         <MailboxComponent
           id={id}
-          messages={sortedMessages}
-          labels={mailbox.labels}
+          messages={messagesWithTags}
+          labels={mergedLabels}
           currentMessageId={currentMessageId}
           onAction={handleAction}
         />
@@ -197,6 +223,62 @@ export const MailboxArticle = ({ subject: mailbox, filter: filterParam, attendab
   );
 };
 
+/**
+ * Hook that builds an object mapping message IDs to tags from HasSubject relations.
+ */
+const useMessageTagsMap = (queue: Database.Queryable | undefined): Record<string, Tag.Tag[]> => {
+  const hasSubjectRelations = useQuery(queue, Filter.type(HasSubject.HasSubject));
+  const [messageTagsMap, setMessageTagsMap] = useState<Record<string, Tag.Tag[]>>({});
+
+  useEffect(() => {
+    const map: Record<string, Tag.Tag[]> = {};
+
+    for (const relation of hasSubjectRelations) {
+      try {
+        const source = Relation.getSource(relation);
+        if (!Obj.instanceOf(Tag.Tag, source)) {
+          continue;
+        }
+
+        // Try to get message ID from target DXN (queue DXN with objectId)
+        const targetDXN = Relation.getTargetDXN(relation);
+        const queueDXNInfo = targetDXN.asQueueDXN();
+        let messageId: string | undefined;
+
+        if (queueDXNInfo?.objectId) {
+          messageId = queueDXNInfo.objectId;
+        } else {
+          // Fallback: try to resolve target object
+          try {
+            const target = Relation.getTarget(relation);
+            if (Obj.instanceOf(Message.Message, target)) {
+              messageId = target.id;
+            }
+          } catch {
+            // Target not resolved, skip this relation
+          }
+        }
+
+        if (messageId) {
+          if (!map[messageId]) {
+            map[messageId] = [];
+          }
+          // Prevent duplicates
+          if (!map[messageId].some((tag) => tag.id === source.id)) {
+            map[messageId].push(source);
+          }
+        }
+      } catch {
+        // Skip relations with unresolved source or target
+      }
+    }
+
+    setMessageTagsMap(map);
+  }, [hasSubjectRelations]);
+
+  return messageTagsMap;
+};
+
 const useMailboxActions = ({
   sortDescending,
   filterVisible,
@@ -204,10 +286,12 @@ const useMailboxActions = ({
   sortDescending: Atom.Writable<boolean>;
   filterVisible: Atom.Writable<boolean>;
 }) => {
+  const { invokePromise } = useOperationInvoker();
+
   const menu = useMemo(
     () =>
-      Atom.make((context) =>
-        MenuBuilder.make()
+      Atom.make((context) => {
+        const base = MenuBuilder.make()
           .root({
             label: ['mailbox toolbar title', { ns: meta.id }],
           })
@@ -229,9 +313,32 @@ const useMailboxActions = ({
             },
             () => context.set(filterVisible, !context.get(filterVisible)),
           )
-          .build(),
-      ),
-    [sortDescending, filterVisible],
+          .action(
+            'composeEmail',
+            {
+              type: 'composeEmail',
+              icon: 'ph--paper-plane-right--regular',
+              label: ['compose email label', { ns: meta.id }],
+            },
+            () => invokePromise(InboxOperation.OpenComposeEmail, undefined),
+          )
+          .build();
+
+        // Add gap separator before compose email action.
+        const gap = createGapSeparator();
+        return {
+          nodes: [...base.nodes, ...gap.nodes],
+          edges: [
+            // Keep edges for sort and filter actions.
+            ...base.edges.filter((e) => e.target !== 'composeEmail'),
+            // Add gap after filter action.
+            ...gap.edges,
+            // Add compose email after gap.
+            { source: 'root', target: 'composeEmail' },
+          ],
+        };
+      }),
+    [sortDescending, filterVisible, invokePromise],
   );
 
   return useMenuActions(menu);

@@ -2,9 +2,10 @@
 // Copyright 2025 DXOS.org
 //
 
+import { insertAtLineStart } from '@dxos/ui-editor';
+
 import { type EditorMenuGroup } from './menu';
 import { popoverRangeEffect } from './popover';
-import { insertAtLineStart } from './util';
 
 export const formattingCommands: EditorMenuGroup = {
   id: 'markdown',

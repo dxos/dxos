@@ -63,7 +63,7 @@ export const ListEventsResponse = Schema.Struct({
   summary: Schema.optional(Schema.String),
   updated: Schema.optional(Schema.String),
   timeZone: Schema.optional(Schema.String),
-  items: Schema.Array(Event),
+  items: Schema.optional(Schema.Array(Event)),
   nextPageToken: Schema.optional(Schema.String),
   nextSyncToken: Schema.optional(Schema.String),
 });

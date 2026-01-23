@@ -8,16 +8,11 @@ import type * as Schema from 'effect/Schema';
 
 import { type Space } from '@dxos/client/echo';
 import { CreateEpochRequest } from '@dxos/client/halo';
-import { requireTypeReference } from '@dxos/echo/internal';
+import { getSchemaDXN } from '@dxos/echo/internal';
 import { type DocHandleProxy, ObjectCore, type RepoProxy, migrateDocument } from '@dxos/echo-db';
-import {
-  type DatabaseDirectory,
-  type ObjectStructure,
-  Reference,
-  SpaceDocVersion,
-  encodeReference,
-} from '@dxos/echo-protocol';
+import { type DatabaseDirectory, EncodedReference, type ObjectStructure, SpaceDocVersion } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
+import { DXN } from '@dxos/keys';
 import { type MaybePromise } from '@dxos/util';
 
 /*
@@ -50,9 +45,9 @@ export class MigrationBuilder {
   private _newRoot?: DocHandleProxy<DatabaseDirectory> = undefined;
 
   constructor(private readonly _space: Space) {
-    this._repo = this._space.db.coreDatabase._repo;
+    this._repo = this._space.internal.db.coreDatabase._repo;
     // TODO(wittjosiah): Accessing private API.
-    this._rootDoc = (this._space.db.coreDatabase as any)._automergeDocLoader
+    this._rootDoc = (this._space.internal.db.coreDatabase as any)._automergeDocLoader
       .getSpaceRootDocHandle()
       .doc() as Doc<DatabaseDirectory>;
   }
@@ -91,7 +86,7 @@ export class MigrationBuilder {
       objects: {
         [id]: {
           system: {
-            type: encodeReference(requireTypeReference(schema)),
+            type: EncodedReference.fromDXN(getSchemaDXN(schema)!),
           },
           data: props,
           meta: {
@@ -112,7 +107,7 @@ export class MigrationBuilder {
   }
 
   createReference(id: string) {
-    return encodeReference(Reference.localObjectReference(id));
+    return EncodedReference.fromDXN(DXN.fromLocalObjectId(id));
   }
 
   deleteObject(id: string): void {
@@ -197,7 +192,7 @@ export class MigrationBuilder {
     }
 
     core.initNewObject(props);
-    core.setType(requireTypeReference(schema));
+    core.setType(EncodedReference.fromDXN(getSchemaDXN(schema)!));
     const newHandle = this._repo.create<DatabaseDirectory>({
       version: SpaceDocVersion.CURRENT,
       access: {

@@ -2,11 +2,14 @@
 // Copyright 2021 DXOS.org
 //
 
+import type * as SqlClient from '@effect/sql/SqlClient';
+
 import { Event, synchronized } from '@dxos/async';
 import { type ClientServices, clientServiceBundle } from '@dxos/client-protocol';
 import { type Config } from '@dxos/config';
 import { Context } from '@dxos/context';
 import { EdgeClient, type EdgeConnection, EdgeHttpClient, createStubEdgeIdentity } from '@dxos/edge-client';
+import { type RuntimeProvider } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { type LevelDB } from '@dxos/kv-store';
@@ -42,10 +45,10 @@ import { SpacesServiceImpl } from '../spaces';
 import { createLevel, createStorageObjects } from '../storage';
 import { SystemServiceImpl } from '../system';
 
-import { ServiceContext, type ServiceContextRuntimeParams } from './service-context';
+import { ServiceContext, type ServiceContextRuntimeProps } from './service-context';
 import { ServiceRegistry } from './service-registry';
 
-export type ClientServicesHostParams = {
+export type ClientServicesHostProps = {
   /**
    * Can be omitted if `initialize` is later called.
    */
@@ -57,7 +60,8 @@ export type ClientServicesHostParams = {
   level?: LevelDB;
   lockKey?: string;
   callbacks?: ClientServicesHostCallbacks;
-  runtimeParams?: ServiceContextRuntimeParams;
+  runtime: RuntimeProvider.RuntimeProvider<SqlClient.SqlClient>;
+  runtimeProps?: ServiceContextRuntimeProps;
 };
 
 export type ClientServicesHostCallbacks = {
@@ -95,7 +99,8 @@ export class ClientServicesHost {
   private _edgeHttpClient?: EdgeHttpClient = undefined;
 
   private _serviceContext!: ServiceContext;
-  private readonly _runtimeParams: ServiceContextRuntimeParams;
+  private readonly _runtime: RuntimeProvider.RuntimeProvider<SqlClient.SqlClient>;
+  private readonly _runtimeProps: ServiceContextRuntimeProps;
   private diagnosticsBroadcastHandler: CollectDiagnosticsBroadcastHandler;
 
   @Trace.info()
@@ -116,20 +121,14 @@ export class ClientServicesHost {
     // TODO(wittjosiah): Turn this on by default.
     lockKey,
     callbacks,
-    runtimeParams,
-  }: ClientServicesHostParams = {}) {
+    runtime,
+    runtimeProps,
+  }: ClientServicesHostProps) {
     this._storage = storage;
     this._level = level;
     this._callbacks = callbacks;
-    this._runtimeParams = runtimeParams ?? {};
-
-    if (this._runtimeParams.disableP2pReplication === undefined) {
-      this._runtimeParams.disableP2pReplication = config?.get('runtime.client.disableP2pReplication', false);
-    }
-
-    if (this._runtimeParams.enableVectorIndexing === undefined) {
-      this._runtimeParams.enableVectorIndexing = config?.get('runtime.client.enableVectorIndexing', false);
-    }
+    this._runtime = runtime;
+    this._runtimeProps = runtimeProps ?? {};
 
     if (config) {
       this.initialize({ config, transportFactory, signalManager });
@@ -210,6 +209,14 @@ export class ClientServicesHost {
     log('initializing...');
 
     if (config) {
+      if (this._runtimeProps.disableP2pReplication === undefined) {
+        this._runtimeProps.disableP2pReplication = config?.get('runtime.client.disableP2pReplication', false);
+      }
+
+      if (this._runtimeProps.enableVectorIndexing === undefined) {
+        this._runtimeProps.enableVectorIndexing = config?.get('runtime.client.enableVectorIndexing', false);
+      }
+
       invariant(!this._config, 'config already set');
       this._config = config;
       if (!this._storage) {
@@ -291,7 +298,8 @@ export class ClientServicesHost {
       this._signalManager,
       this._edgeConnection,
       this._edgeHttpClient,
-      this._runtimeParams,
+      this._runtime,
+      this._runtimeProps,
       this._config.get('runtime.client.edgeFeatures'),
     );
 
@@ -335,6 +343,7 @@ export class ClientServicesHost {
 
       DataService: this._serviceContext.echoHost.dataService,
       QueryService: this._serviceContext.echoHost.queryService,
+      QueueService: this._serviceContext.echoHost.queuesService,
 
       NetworkService: new NetworkServiceImpl(
         this._serviceContext.networkManager,

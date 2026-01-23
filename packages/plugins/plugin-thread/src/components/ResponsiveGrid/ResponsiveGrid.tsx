@@ -8,7 +8,7 @@ import { useResizeDetector } from 'react-resize-detector';
 import { invariant } from '@dxos/invariant';
 import { type ThemedClassName } from '@dxos/react-ui';
 import { type Size } from '@dxos/react-ui-dnd';
-import { mx } from '@dxos/react-ui-theme';
+import { mx } from '@dxos/ui-theme';
 
 import { ResponsiveContainer } from './ResponsiveContainer';
 import { type ResponsiveGridItemProps } from './ResponsiveGridItem';

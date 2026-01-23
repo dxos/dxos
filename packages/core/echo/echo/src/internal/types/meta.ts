@@ -1,0 +1,76 @@
+//
+// Copyright 2024 DXOS.org
+//
+
+import * as Schema from 'effect/Schema';
+
+import { ForeignKey } from '@dxos/echo-protocol';
+import { invariant } from '@dxos/invariant';
+import { type Comparator, intersection } from '@dxos/util';
+
+import { type AnyProperties, type WithMeta } from './base';
+
+/**
+ * Property name for meta when object is serialized to JSON.
+ */
+export const ATTR_META = '@meta';
+
+/**
+ * Metadata section.
+ */
+export const MetaId = Symbol.for('@dxos/echo/Meta');
+
+//
+// ObjectMeta
+//
+
+// TODO(dmaretskyi): Rename to ObjectMeta
+export const ObjectMetaSchema = Schema.mutable(
+  Schema.Struct({
+    keys: Schema.mutable(Schema.Array(ForeignKey)),
+
+    /**
+     * A set of tags.
+     * Tags are arbitrary application-defined strings.
+     * ECHO makes no assumptions about the tag structure.
+     */
+    // TODO(dmaretskyi): Has to be optional for compatibility with old data.
+    // Defaulting to an empty array is possible but requires a bit more work.
+    tags: Schema.optional(Schema.mutable(Schema.Array(Schema.String))),
+  }),
+);
+export type ObjectMeta = Schema.Schema.Type<typeof ObjectMetaSchema>;
+
+/*
+ * Get metadata from object.
+ * Only callable on the object root.
+ *
+ * @internal (use Obj.getMeta or Relation.getMeta)
+ */
+// TODO(burdon): Refine type to BaseObj.
+export const getMeta = (obj: AnyProperties): ObjectMeta => {
+  const metadata = (obj as any)[MetaId];
+  invariant(metadata, 'ObjectMeta not found.');
+  return metadata;
+};
+
+/**
+ * Utility to split meta property from raw object.
+ * @deprecated Bad API.
+ */
+export const splitMeta = <T>(object: T & WithMeta): { object: T; meta?: ObjectMeta } => {
+  const meta = object[ATTR_META];
+  delete object[ATTR_META];
+  return { meta, object };
+};
+
+//
+// Foreign keys
+//
+
+export const foreignKey = (source: string, id: string): ForeignKey => ({ source, id });
+export const foreignKeyEquals = (a: ForeignKey, b: ForeignKey) => a.source === b.source && a.id === b.id;
+
+// TODO(dmaretskyi): Move to echo-schema.
+export const compareForeignKeys: Comparator<AnyProperties> = (a: AnyProperties, b: AnyProperties) =>
+  intersection(getMeta(a).keys, getMeta(b).keys, foreignKeyEquals).length > 0;

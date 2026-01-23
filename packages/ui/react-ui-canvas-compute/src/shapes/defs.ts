@@ -6,7 +6,7 @@ import * as Schema from 'effect/Schema';
 import * as SchemaAST from 'effect/SchemaAST';
 
 import { DEFAULT_INPUT, DEFAULT_OUTPUT } from '@dxos/conductor';
-import { ObjectId } from '@dxos/echo/internal';
+import { Obj } from '@dxos/echo';
 import { Polygon } from '@dxos/react-ui-canvas-editor';
 import { type MakeOptional } from '@dxos/util';
 
@@ -37,7 +37,7 @@ export const ComputeShape = Schema.extend(
   Polygon,
   Schema.Struct({
     // TODO(burdon): Rename computeNode?
-    node: Schema.optional(ObjectId.annotations({ description: 'Compute node id' })),
+    node: Schema.optional(Obj.ID.annotations({ description: 'Compute node id' })),
   }).pipe(Schema.mutable),
 );
 
@@ -45,7 +45,7 @@ export type ComputeShape = Schema.Schema.Type<typeof ComputeShape>;
 
 export const createShape = <S extends ComputeShape>({ id, ...rest }: CreateShapeProps<S> & { type: string }): S => {
   return {
-    id: id ?? ObjectId.random(),
+    id: id ?? Obj.ID.random(),
     ...rest,
   } as S;
 };

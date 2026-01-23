@@ -6,7 +6,8 @@ import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
 import { Filter, Obj, Query } from '@dxos/echo';
-import { DatabaseService, defineFunction } from '@dxos/functions';
+import { Database } from '@dxos/echo';
+import { defineFunction } from '@dxos/functions';
 import { trim } from '@dxos/util';
 
 // TODO(burdon): Move to toolkit (i.e., tool not function).
@@ -34,10 +35,10 @@ export default defineFunction({
   }),
   handler: Effect.fn(function* ({ data: { typename } }) {
     // TODO(wittjosiah): Typename query is not working for dynamic schemas.
-    const [schema] = yield* DatabaseService.runSchemaQuery({ typename });
+    const [schema] = yield* Database.Service.runSchemaQuery({ typename });
     const filter = schema ? Filter.type(schema) : Filter.typename(typename);
 
-    const { objects } = yield* DatabaseService.runQuery(Query.select(filter));
+    const objects = yield* Database.Service.runQuery(Query.select(filter));
     const results = objects.map((object) => ({
       dxn: Obj.getDXN(object).toString(),
       label: Obj.getLabel(object),

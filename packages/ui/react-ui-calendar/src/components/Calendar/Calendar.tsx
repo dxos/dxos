@@ -21,7 +21,7 @@ import { List, type ListProps, type ListRowRenderer } from 'react-virtualized';
 
 import { Event } from '@dxos/async';
 import { Icon, IconButton, type ThemedClassName, useTranslation } from '@dxos/react-ui';
-import { mx } from '@dxos/react-ui-theme';
+import { mx } from '@dxos/ui-theme';
 
 import { translationKey } from '../../translations';
 

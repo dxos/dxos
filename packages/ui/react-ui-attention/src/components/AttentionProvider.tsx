@@ -9,9 +9,10 @@ import React, { type ComponentPropsWithRef, type FocusEvent, type PropsWithChild
 
 import { log } from '@dxos/log';
 import { type ThemedClassName, useDefaultValue } from '@dxos/react-ui';
-import { mx } from '@dxos/react-ui-theme';
+import { mx } from '@dxos/ui-theme';
 
-import { ATTENDABLE_PATH_SEPARATOR, type Attention, AttentionManager, getAttendables } from '../attention';
+import { AttentionManager, getAttendables } from '../attention';
+import { ATTENDABLE_PATH_SEPARATOR, type Attention } from '../types';
 
 const ATTENTION_NAME = 'Attention';
 const ATTENDABLE_ATTRIBUTE = 'data-attendable-id';
@@ -27,7 +28,7 @@ const [AttentionContextProvider, useAttentionContext] = createContext<AttentionC
   path: [],
 });
 
-const UNKNOWN_ATTENDABLE: Attention = { hasAttention: false, isAncestor: false, isRelated: false };
+const UNKNOWN_ATTENDABLE = { hasAttention: false, isAncestor: false, isRelated: false } as Attention;
 
 const useAttention = (attendableId?: string): Attention => {
   const { attention, path } = useAttentionContext(ATTENTION_NAME);

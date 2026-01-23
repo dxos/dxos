@@ -3,23 +3,21 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
+import * as Effect from 'effect/Effect';
 import React, { type FC, useEffect, useMemo, useState } from 'react';
 
-import { IntentPlugin, SettingsPlugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Key } from '@dxos/echo';
 import { ClientPlugin } from '@dxos/plugin-client';
 import { PreviewPlugin } from '@dxos/plugin-preview';
 import { SpacePlugin } from '@dxos/plugin-space';
-import { StorybookLayoutPlugin } from '@dxos/plugin-storybook-layout';
-import { ThemePlugin } from '@dxos/plugin-theme';
+import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
 import { faker } from '@dxos/random';
 import { useMembers, useSpace } from '@dxos/react-client/echo';
 import { IconButton, Toolbar } from '@dxos/react-ui';
 import { withTheme } from '@dxos/react-ui/testing';
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
-import { defaultTx } from '@dxos/react-ui-theme';
-import { Testing } from '@dxos/schema/testing';
+import { TestSchema } from '@dxos/schema/testing';
 import { type Message, Organization, Person } from '@dxos/types';
 
 import { useQueueModelAdapter } from '../../hooks';
@@ -31,8 +29,9 @@ import {
   useTestTranscriptionQueueWithEntityExtraction,
 } from '../../testing';
 import { translations } from '../../translations';
+import { renderByline } from '../../util';
 
-import { TranscriptView, type TranscriptViewProps, renderByline } from './Transcript';
+import { TranscriptView, type TranscriptViewProps } from './Transcript';
 
 faker.seed(1);
 
@@ -45,10 +44,10 @@ const TranscriptContainer: FC<
     onRunningChange: (running: boolean) => void;
     onReset?: () => void;
   }
-> = ({ space, model, running, onRunningChange, onReset }) => {
+> = ({ model, running, onRunningChange, onReset }) => {
   return (
     <div className='grid grid-rows-[1fr_40px] grow divide-y divide-separator'>
-      <TranscriptView space={space} model={model} />
+      <TranscriptView model={model} />
       <div className='grid grid-cols-[1fr_16rem] overflow-hidden'>
         <div className='flex items-center'>
           <SyntaxHighlighter language='json' className='text-sm'>
@@ -137,19 +136,12 @@ const QueueStory = ({
 }: StoryProps & { queueId: Key.ObjectId; onReset: () => void }) => {
   const [running, setRunning] = useState(true);
   const space = useSpace();
-  const members = useMembers(space?.key).map((member) => member.identity);
+  const members = useMembers(space?.id).map((member) => member.identity);
   const queue = useTestTranscriptionQueue(space, queueId, running, 2_000);
   const model = useQueueModelAdapter(renderByline(members), queue, initialMessages);
 
   return (
-    <TranscriptContainer
-      space={space}
-      model={model}
-      running={running}
-      onRunningChange={setRunning}
-      onReset={onReset}
-      {...props}
-    />
+    <TranscriptContainer model={model} running={running} onRunningChange={setRunning} onReset={onReset} {...props} />
   );
 };
 
@@ -161,7 +153,7 @@ const EntityExtractionQueueStory = () => {
   const queue = useTestTranscriptionQueueWithEntityExtraction(space, undefined, running, 2_000);
   const model = useQueueModelAdapter(renderByline(members), queue, []);
 
-  return <TranscriptContainer space={space} model={model} running={running} onRunningChange={setRunning} />;
+  return <TranscriptContainer model={model} running={running} onRunningChange={setRunning} />;
 };
 
 /**
@@ -183,20 +175,18 @@ const meta = {
     withTheme,
     withPluginManager({
       plugins: [
+        ...corePlugins(),
         ClientPlugin({
-          types: [TestItem, Testing.DocumentType, Person.Person, Organization.Organization],
-          onClientInitialized: async ({ client }) => {
-            await client.halo.createIdentity();
-          },
+          types: [TestItem, TestSchema.DocumentType, Person.Person, Organization.Organization],
+          onClientInitialized: ({ client }) =>
+            Effect.gen(function* () {
+              yield* Effect.promise(() => client.halo.createIdentity());
+            }),
         }),
+        ...corePlugins(),
         SpacePlugin({}),
-        IntentPlugin(),
-        SettingsPlugin(),
-
-        // UI
         PreviewPlugin(),
-        ThemePlugin({ tx: defaultTx }),
-        StorybookLayoutPlugin({}),
+        StorybookPlugin({}),
       ],
     }),
   ],

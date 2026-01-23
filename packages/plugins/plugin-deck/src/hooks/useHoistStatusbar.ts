@@ -4,7 +4,7 @@
 
 import { useMemo } from 'react';
 
-import { Capabilities } from '@dxos/app-framework';
+import { Common } from '@dxos/app-framework';
 import { useCapability } from '@dxos/app-framework/react';
 import { useThemeContext } from '@dxos/react-ui';
 
@@ -13,7 +13,7 @@ import type { DeckSettingsProps, LayoutMode } from '../types';
 
 export const useHoistStatusbar = (breakpoint: string, layoutMode?: LayoutMode): boolean => {
   const { safeAreaPadding } = useThemeContext();
-  const enableStatusbar = useCapability(Capabilities.SettingsStore).getStore<DeckSettingsProps>(meta.id)?.value
+  const enableStatusbar = useCapability(Common.Capability.SettingsStore).getStore<DeckSettingsProps>(meta.id)?.value
     .enableStatusbar;
 
   return useMemo(() => {

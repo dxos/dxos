@@ -4,7 +4,6 @@
 
 import { useMemo } from 'react';
 
-import { useClient } from '@dxos/react-client';
 import { type Space } from '@dxos/react-client/echo';
 import { useTranslation } from '@dxos/react-ui';
 
@@ -12,8 +11,7 @@ import { type TypeInputOptions, getTypenames } from '../types';
 
 export const useTypeOptions = ({ space, annotation }: { space?: Space; annotation: TypeInputOptions }) => {
   const { t } = useTranslation();
-  const client = useClient();
-  const typenames = getTypenames({ annotation, space, client });
+  const typenames = getTypenames({ annotation, space });
   return useMemo(
     () =>
       typenames

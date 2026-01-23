@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
 import { Obj } from '@dxos/echo';
-import { TestHelpers } from '@dxos/effect';
+import { TestHelpers } from '@dxos/effect/testing';
 import { Message } from '@dxos/types';
 import { trim } from '@dxos/util';
 

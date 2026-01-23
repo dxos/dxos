@@ -2,6 +2,8 @@
 // Copyright 2022 DXOS.org
 //
 
+import type * as SqlClient from '@effect/sql/SqlClient';
+
 import { Mutex, Trigger } from '@dxos/async';
 import { Context, Resource } from '@dxos/context';
 import { type CredentialProcessor, getCredentialAssertion } from '@dxos/credentials';
@@ -16,6 +18,7 @@ import {
 } from '@dxos/echo-pipeline';
 import { createChainEdgeIdentity, createEphemeralEdgeIdentity } from '@dxos/edge-client';
 import type { EdgeConnection, EdgeHttpClient, EdgeIdentity } from '@dxos/edge-client';
+import { type RuntimeProvider } from '@dxos/effect';
 import { FeedFactory, FeedStore } from '@dxos/feed-store';
 import { invariant } from '@dxos/invariant';
 import { Keyring } from '@dxos/keyring';
@@ -38,28 +41,29 @@ import { EdgeAgentManager } from '../agents';
 import {
   type CreateIdentityOptions,
   IdentityManager,
-  type IdentityManagerParams,
-  type JoinIdentityParams,
+  type IdentityManagerProps,
+  type JoinIdentityProps,
 } from '../identity';
 import { EdgeIdentityRecoveryManager } from '../identity/identity-recovery-manager';
 import {
   DeviceInvitationProtocol,
-  type InvitationConnectionParams,
+  type InvitationConnectionProps,
   type InvitationProtocol,
   InvitationsHandler,
   InvitationsManager,
   SpaceInvitationProtocol,
 } from '../invitations';
-import { DataSpaceManager, type DataSpaceManagerRuntimeParams, type SigningContext } from '../spaces';
+import { DataSpaceManager, type DataSpaceManagerRuntimeProps, type SigningContext } from '../spaces';
 
-export type ServiceContextRuntimeParams = Pick<
-  IdentityManagerParams,
+export type ServiceContextRuntimeProps = Pick<
+  IdentityManagerProps,
   'devicePresenceOfflineTimeout' | 'devicePresenceAnnounceInterval'
 > &
-  DataSpaceManagerRuntimeParams & {
-    invitationConnectionDefaultParams?: InvitationConnectionParams;
+  DataSpaceManagerRuntimeProps & {
+    invitationConnectionDefaultProps?: InvitationConnectionProps;
     disableP2pReplication?: boolean;
     enableVectorIndexing?: boolean;
+    enableFullTextIndexing?: boolean;
   };
 /**
  * Shared backend for all client services.
@@ -105,10 +109,14 @@ export class ServiceContext extends Resource {
     public readonly signalManager: SignalManager,
     private readonly _edgeConnection: EdgeConnection | undefined,
     private readonly _edgeHttpClient: EdgeHttpClient | undefined,
-    public readonly _runtimeParams?: ServiceContextRuntimeParams,
+    private readonly _runtime: RuntimeProvider.RuntimeProvider<SqlClient.SqlClient>,
+    public readonly _runtimeProps?: ServiceContextRuntimeProps,
     private readonly _edgeFeatures?: Runtime.Client.EdgeFeatures,
   ) {
     super();
+
+    log('runtimeProps', this._runtimeProps);
+    log('edgeFeatures', this._edgeFeatures);
 
     // TODO(burdon): Move strings to constants.
     this.metadataStore = new MetadataStore(storage.createDirectory('metadata'));
@@ -131,7 +139,7 @@ export class ServiceContext extends Resource {
       networkManager: this.networkManager,
       blobStore: this.blobStore,
       metadataStore: this.metadataStore,
-      disableP2pReplication: this._runtimeParams?.disableP2pReplication,
+      disableP2pReplication: this._runtimeProps?.disableP2pReplication,
     });
 
     this.identityManager = new IdentityManager({
@@ -139,8 +147,8 @@ export class ServiceContext extends Resource {
       keyring: this.keyring,
       feedStore: this.feedStore,
       spaceManager: this.spaceManager,
-      devicePresenceOfflineTimeout: this._runtimeParams?.devicePresenceOfflineTimeout,
-      devicePresenceAnnounceInterval: this._runtimeParams?.devicePresenceAnnounceInterval,
+      devicePresenceOfflineTimeout: this._runtimeProps?.devicePresenceOfflineTimeout,
+      devicePresenceAnnounceInterval: this._runtimeProps?.devicePresenceAnnounceInterval,
       edgeConnection: this._edgeConnection,
       edgeFeatures: this._edgeFeatures,
     });
@@ -157,16 +165,16 @@ export class ServiceContext extends Resource {
       peerIdProvider: () => this.identityManager.identity?.deviceKey?.toHex(),
       getSpaceKeyByRootDocumentId: (documentId) => this.spaceManager.findSpaceByRootDocumentId(documentId)?.key,
       indexing: {
-        vector: this._runtimeParams?.enableVectorIndexing,
+        vector: this._runtimeProps?.enableVectorIndexing,
+        fullText: this._runtimeProps?.enableFullTextIndexing,
       },
+      runtime: this._runtime,
     });
-
-    this._meshReplicator = new MeshEchoReplicator();
 
     this.invitations = new InvitationsHandler(
       this.networkManager, //
       this._edgeHttpClient,
-      _runtimeParams?.invitationConnectionDefaultParams,
+      _runtimeProps?.invitationConnectionDefaultProps,
     );
     this.invitationsManager = new InvitationsManager(
       this.invitations,
@@ -186,7 +194,7 @@ export class ServiceContext extends Resource {
         ),
     );
 
-    if (!this._runtimeParams?.disableP2pReplication) {
+    if (!this._runtimeProps?.disableP2pReplication) {
       this._meshReplicator = new MeshEchoReplicator();
     }
     if (this._edgeConnection && this._edgeFeatures?.echoReplicator && this._edgeHttpClient) {
@@ -283,7 +291,7 @@ export class ServiceContext extends Resource {
     }
   }
 
-  private async _acceptIdentity(params: JoinIdentityParams) {
+  private async _acceptIdentity(params: JoinIdentityProps) {
     const { identity, identityRecord } = await this.identityManager.prepareIdentity(params);
     await this._setNetworkIdentity({ deviceCredential: params.authorizedDeviceCredential! });
     await identity.joinNetwork();
@@ -327,7 +335,7 @@ export class ServiceContext extends Resource {
       edgeHttpClient: this._edgeHttpClient,
       echoEdgeReplicator: this._echoEdgeReplicator,
       meshReplicator: this._meshReplicator,
-      runtimeParams: this._runtimeParams as DataSpaceManagerRuntimeParams,
+      runtimeProps: this._runtimeProps as DataSpaceManagerRuntimeProps,
       edgeFeatures: this._edgeFeatures,
     });
     await this.dataSpaceManager.open();

@@ -84,6 +84,9 @@
       "path": "../../core/functions-runtime"
     },
     {
+      "path": "../../core/operation"
+    },
+    {
       "path": "../../core/protocols"
     },
     {
@@ -132,7 +135,10 @@
       "path": "../../ui/react-ui-syntax-highlighter"
     },
     {
-      "path": "../../ui/react-ui-theme"
+      "path": "../../ui/ui-editor"
+    },
+    {
+      "path": "../../ui/ui-theme"
     },
     {
       "path": "../plugin-client"
@@ -153,7 +159,7 @@
       "path": "../plugin-space"
     },
     {
-      "path": "../plugin-storybook-layout"
+      "path": "../plugin-testing"
     },
     {
       "path": "../plugin-theme"

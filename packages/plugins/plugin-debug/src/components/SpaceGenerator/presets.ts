@@ -57,14 +57,19 @@ export enum PresetName {
 }
 
 export const generator = () => ({
-  schemas: [CanvasBoardType, Trigger.Trigger],
+  schemas: [CanvasBoardType, Trigger.Trigger] as any[],
   types: Object.values(PresetName).map((name) => ({ typename: name })),
   items: [
     [
       PresetName.DXOS_TEAM,
       async (space, n, cb) => {
         const objects = range(n, () => {
-          const org = space.db.add(Obj.make(Organization.Organization, { name: 'DXOS', website: 'https://dxos.org' }));
+          const org = space.db.add(
+            Obj.make(Organization.Organization, {
+              name: 'DXOS',
+              website: 'https://dxos.org',
+            }),
+          );
           const doc = space.db.add(
             Markdown.make({
               name: 'DXOS Research',
@@ -74,7 +79,9 @@ export const generator = () => ({
 
           const tag = space.db.add(Tag.make({ label: 'Investor' }));
           const tagDxn = Obj.getDXN(tag).toString();
-          Obj.getMeta(doc).tags = [tagDxn];
+          Obj.change(doc, () => {
+            Obj.getMeta(doc).tags = [tagDxn];
+          });
 
           // space.db.add(
           //   Relation.make(HasSubject, {
@@ -85,9 +92,24 @@ export const generator = () => ({
           // );
 
           space.db.add(Obj.make(Person.Person, { fullName: 'Rich', organization: Ref.make(org) }, { tags: [tagDxn] }));
-          space.db.add(Obj.make(Person.Person, { fullName: 'Josiah', organization: Ref.make(org) }));
-          space.db.add(Obj.make(Person.Person, { fullName: 'Dima', organization: Ref.make(org) }));
-          space.db.add(Obj.make(Person.Person, { fullName: 'Mykola', organization: Ref.make(org) }));
+          space.db.add(
+            Obj.make(Person.Person, {
+              fullName: 'Josiah',
+              organization: Ref.make(org),
+            }),
+          );
+          space.db.add(
+            Obj.make(Person.Person, {
+              fullName: 'Dima',
+              organization: Ref.make(org),
+            }),
+          );
+          space.db.add(
+            Obj.make(Person.Person, {
+              fullName: 'Mykola',
+              organization: Ref.make(org),
+            }),
+          );
 
           return doc;
         });
@@ -175,7 +197,9 @@ export const generator = () => ({
 
           const mailboxView = View.make({
             query: Query.select(
-              Filter.type(Message.Message, { properties: { labels: Filter.contains('investor') } }),
+              Filter.type(Message.Message, {
+                properties: { labels: Filter.contains('investor') },
+              }),
             ).options({
               queues: [mailbox.queue.dxn.toString()],
             }),
@@ -247,10 +271,24 @@ export const generator = () => ({
             const append = canvasModel.createNode(createAppend(position({ x: 10, y: 6 })));
 
             builder
-              .createEdge({ source: trigger.id, target: gpt.id, input: 'prompt', output: 'bodyText' })
+              .createEdge({
+                source: trigger.id,
+                target: gpt.id,
+                input: 'prompt',
+                output: 'bodyText',
+              })
               .createEdge({ source: gpt.id, target: text.id, output: 'text' })
-              .createEdge({ source: queueId.id, target: append.id, input: 'id' })
-              .createEdge({ source: gpt.id, target: append.id, output: 'messages', input: 'items' });
+              .createEdge({
+                source: queueId.id,
+                target: append.id,
+                input: 'id',
+              })
+              .createEdge({
+                source: gpt.id,
+                target: append.id,
+                output: 'messages',
+                input: 'items',
+              });
 
             functionTrigger = triggerShape.functionTrigger!.target!;
           });
@@ -388,8 +426,17 @@ export const generator = () => ({
             builder
               .createEdge({ source: chat.id, target: gpt.id, input: 'prompt' })
               .createEdge({ source: gpt.id, target: text.id, output: 'text' })
-              .createEdge({ source: queueId.id, target: append.id, input: 'id' })
-              .createEdge({ source: gpt.id, target: append.id, output: 'messages', input: 'items' });
+              .createEdge({
+                source: queueId.id,
+                target: append.id,
+                input: 'id',
+              })
+              .createEdge({
+                source: gpt.id,
+                target: append.id,
+                output: 'messages',
+                input: 'items',
+              });
           });
 
           const computeModel = createComputeGraph(canvasModel);
@@ -513,9 +560,21 @@ export const generator = () => ({
             const view = canvasModel.createNode(createSurface(position({ x: 12, y: 0 })));
 
             builder
-              .createEdge({ source: sourceCurrency.id, target: converter.id, input: 'from' })
-              .createEdge({ source: targetCurrency.id, target: converter.id, input: 'to' })
-              .createEdge({ source: converter.id, target: view.id, output: 'rate' });
+              .createEdge({
+                source: sourceCurrency.id,
+                target: converter.id,
+                input: 'from',
+              })
+              .createEdge({
+                source: targetCurrency.id,
+                target: converter.id,
+                input: 'to',
+              })
+              .createEdge({
+                source: converter.id,
+                target: view.id,
+                output: 'rate',
+              });
           });
 
           const computeModel = createComputeGraph(canvasModel);
@@ -543,7 +602,10 @@ export const generator = () => ({
             const trigger = canvasModel.createNode(triggerShape);
             // DXOS dev-null channel.
             const channelId = canvasModel.createNode(
-              createConstant({ value: '1088569858767212554', ...position({ x: -10, y: 0 }) }),
+              createConstant({
+                value: '1088569858767212554',
+                ...position({ x: -10, y: 0 }),
+              }),
             );
             const queueId = canvasModel.createNode(
               createConstant({
@@ -556,11 +618,31 @@ export const generator = () => ({
             const queue = canvasModel.createNode(createQueue(position({ x: 0, y: 12 })));
 
             builder
-              .createEdge({ source: trigger.id, target: converter.id, input: 'tick' })
-              .createEdge({ source: channelId.id, target: converter.id, input: 'channelId' })
-              .createEdge({ source: queueId.id, target: converter.id, input: 'queueId' })
-              .createEdge({ source: converter.id, target: view.id, output: 'newMessages' })
-              .createEdge({ source: queueId.id, target: queue.id, input: 'input' });
+              .createEdge({
+                source: trigger.id,
+                target: converter.id,
+                input: 'tick',
+              })
+              .createEdge({
+                source: channelId.id,
+                target: converter.id,
+                input: 'channelId',
+              })
+              .createEdge({
+                source: queueId.id,
+                target: converter.id,
+                input: 'queueId',
+              })
+              .createEdge({
+                source: converter.id,
+                target: view.id,
+                output: 'newMessages',
+              })
+              .createEdge({
+                source: queueId.id,
+                target: queue.id,
+                input: 'input',
+              });
 
             functionTrigger = triggerShape.functionTrigger!.target!;
           });
@@ -663,7 +745,12 @@ const createQueueSinkPreset = <SpecType extends Trigger.Kind>(
     builder
       .createEdge({ source: queueId.id, target: append.id, input: 'id' })
       .createEdge({ source: template.id, target: append.id, input: 'items' })
-      .createEdge({ source: trigger.id, target: template.id, output: triggerOutputName, input: 'type' })
+      .createEdge({
+        source: trigger.id,
+        target: template.id,
+        output: triggerOutputName,
+        input: 'type',
+      })
       .createEdge({
         source: random.id,
         target: template.id,
@@ -680,6 +767,7 @@ const createQueueSinkPreset = <SpecType extends Trigger.Kind>(
 
   const templateComputeNode = computeModel.nodes.find((n) => n.id === template.node);
   invariant(templateComputeNode, 'Template compute node was not created.');
+  // NOTE: These are plain object mutations during model construction, not ECHO object mutations.
   templateComputeNode.value = ['{', '  "@type": "{{type}}",', '  "id": "@{{changeId}}"', '}'].join('\n');
   templateComputeNode.inputSchema = Type.toJsonSchema(Schema.Struct({ type: Schema.String, changeId: Schema.String }));
   attachTrigger(functionTrigger, computeModel);
@@ -719,15 +807,25 @@ const setupQueue = (
 
 const attachTrigger = (functionTrigger: Trigger.Trigger | undefined, computeModel: ComputeGraphModel) => {
   invariant(functionTrigger);
-  functionTrigger.function = Ref.make(computeModel.root);
   const inputNode = computeModel.nodes.find((node) => node.type === NODE_INPUT)!;
-  functionTrigger.inputNodeId = inputNode.id;
+  Obj.change(functionTrigger, (t) => {
+    t.function = Ref.make(computeModel.root);
+    t.inputNodeId = inputNode.id;
+  });
 };
 
-type RawPositionInput = { centerX: number; centerY: number; width: number; height: number };
+type RawPositionInput = {
+  centerX: number;
+  centerY: number;
+  width: number;
+  height: number;
+};
 
 const rawPosition = (args: RawPositionInput) => {
-  return { center: { x: args.centerX, y: args.centerY }, size: { width: args.width, height: args.height } };
+  return {
+    center: { x: args.centerX, y: args.centerY },
+    size: { width: args.width, height: args.height },
+  };
 };
 
 const position = (rect: { x: number; y: number; width?: number; height?: number }) => {
@@ -735,7 +833,10 @@ const position = (rect: { x: number; y: number; width?: number; height?: number 
   const [center, size] = rectToPoints({ width: 0, height: 0, ...rect });
   const { x, y, width, height } = pointsToRect([pointMultiply(center, snap), pointMultiply(size, snap)]);
   if (width && height) {
-    return { center: { x, y }, size: width && height ? { width, height } : undefined };
+    return {
+      center: { x, y },
+      size: width && height ? { width, height } : undefined,
+    };
   } else {
     return { center: { x, y } };
   }

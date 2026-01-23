@@ -5,11 +5,10 @@
 import * as Schema from 'effect/Schema';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
-import { Type } from '@dxos/echo';
-import { FormatEnum } from '@dxos/echo/internal';
-import { useClient } from '@dxos/react-client';
-import { getSpace, useSchema } from '@dxos/react-client/echo';
-import { type CustomInputMap, Form, SelectInput } from '@dxos/react-ui-form';
+import { Obj, Type } from '@dxos/echo';
+import { Format } from '@dxos/echo/internal';
+import { useSchema } from '@dxos/react-client/echo';
+import { Form, type FormFieldMap, SelectField } from '@dxos/react-ui-form';
 import { getTypenameFromQuery } from '@dxos/schema';
 
 import { type Map } from '../types';
@@ -23,20 +22,19 @@ export const MapSettingsSchema = Schema.Struct({
 type MapViewEditorProps = { object: Map.Map };
 
 export const MapViewEditor = ({ object }: MapViewEditorProps) => {
-  const client = useClient();
-  const space = getSpace(object);
+  const db = Obj.getDatabase(object);
   const view = object?.view?.target;
   const typename = view?.query ? getTypenameFromQuery(view.query.ast) : undefined;
-  const currentSchema = useSchema(client, space, typename);
+  const currentSchema = useSchema(db, typename);
 
-  const [allSchemata, setAllSchemata] = useState<Type.Schema[]>([]);
+  const [allSchemata, setAllSchemata] = useState<Type.RuntimeType[]>([]);
 
   useEffect(() => {
-    if (!space) {
+    if (!db) {
       return;
     }
 
-    const unsubscribe = space.db.schemaRegistry.query().subscribe(
+    const unsubscribe = db.schemaRegistry.query().subscribe(
       (query) => {
         const schemata = query.results;
         setAllSchemata(schemata);
@@ -44,7 +42,7 @@ export const MapViewEditor = ({ object }: MapViewEditorProps) => {
       { fire: true },
     );
     return () => unsubscribe();
-  }, [space]);
+  }, [db]);
 
   const schemaOptions = useMemo(() => {
     const uniqueTypenames = new Set(allSchemata.map((schema) => schema.typename));
@@ -61,7 +59,7 @@ export const MapViewEditor = ({ object }: MapViewEditorProps) => {
     }
 
     const columns = Object.entries(jsonSchema.properties).reduce<string[]>((acc, [key, value]) => {
-      if (typeof value === 'object' && value?.format === FormatEnum.GeoPoint) {
+      if (typeof value === 'object' && value?.format === Format.TypeFormat.GeoPoint) {
         acc.push(key);
       }
       return acc;
@@ -84,27 +82,21 @@ export const MapViewEditor = ({ object }: MapViewEditorProps) => {
     [view],
   );
 
-  const custom: CustomInputMap = useMemo(
+  const fieldMap = useMemo<FormFieldMap>(
     () => ({
-      coordinateSource: (props) => <SelectInput {...props} options={schemaOptions} />,
-      coordinateColumn: (props) => <SelectInput {...props} options={locationFields} />,
+      coordinateSource: (props) => <SelectField {...props} options={schemaOptions} />,
+      coordinateColumn: (props) => <SelectField {...props} options={locationFields} />,
     }),
     [schemaOptions, locationFields],
   );
 
-  if (!space || !object) {
+  if (!db || !object) {
     return null;
   }
 
   return (
-    <Form
-      schema={MapSettingsSchema}
-      values={initialValues}
-      onSave={onSave}
-      autoSave
-      Custom={custom}
-      outerSpacing='blockStart-0'
-      classNames='pbs-inputSpacingBlock'
-    />
+    <Form.Root schema={MapSettingsSchema} values={initialValues} fieldMap={fieldMap} autoSave onSave={onSave}>
+      <Form.FieldSet />
+    </Form.Root>
   );
 };

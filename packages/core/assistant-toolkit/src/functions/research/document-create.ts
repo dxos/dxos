@@ -7,7 +7,8 @@ import * as Schema from 'effect/Schema';
 
 import { ArtifactId } from '@dxos/assistant';
 import { Obj, Relation } from '@dxos/echo';
-import { DatabaseService, TracingService, defineFunction } from '@dxos/functions';
+import { Database } from '@dxos/echo';
+import { TracingService, defineFunction } from '@dxos/functions';
 import { log } from '@dxos/log';
 import { Markdown } from '@dxos/plugin-markdown/types';
 import { HasSubject } from '@dxos/types';
@@ -42,14 +43,14 @@ export default defineFunction({
     log.info('Creating research document', { subject, name, content });
 
     // TODO(burdon): Auto flush before and after calling function?
-    yield* DatabaseService.flush({ indexes: true });
+    yield* Database.Service.flush({ indexes: true });
     yield* TracingService.emitStatus({ message: 'Creating research document...' });
 
     // TODO(burdon): Type check.
-    const target = (yield* DatabaseService.resolve(ArtifactId.toDXN(subject))) as Obj.Any;
+    const target = (yield* Database.Service.resolve(ArtifactId.toDXN(subject))) as Obj.Any;
 
     // Create document.
-    const object = yield* DatabaseService.add(
+    const object = yield* Database.Service.add(
       Markdown.make({
         name,
         content,
@@ -57,7 +58,7 @@ export default defineFunction({
     );
 
     // Create relation.
-    yield* DatabaseService.add(
+    yield* Database.Service.add(
       Relation.make(HasSubject.HasSubject, {
         [Relation.Source]: object,
         [Relation.Target]: target,
@@ -65,7 +66,7 @@ export default defineFunction({
       }),
     );
 
-    yield* DatabaseService.flush({ indexes: true });
+    yield* Database.Service.flush({ indexes: true });
     log.info('Created research document', { subject, object });
 
     return {

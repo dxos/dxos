@@ -5,15 +5,16 @@
 import * as Schema from 'effect/Schema';
 import { describe, test } from 'vitest';
 
-import { FormatEnum, type JsonProp, TypeEnum } from '@dxos/echo/internal';
+import { Format } from '@dxos/echo';
+import { type JsonProp, TypeEnum } from '@dxos/echo/internal';
+import { getProperties } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 
 import { PropertySchema, type PropertyType, formatToSchema, getFormatSchema } from './format';
-import { getSchemaProperties } from './properties';
 
 describe('format', () => {
   test('get format schema', ({ expect }) => {
-    for (const value of Object.values(FormatEnum)) {
+    for (const value of Object.values(Format.TypeFormat)) {
       const node = getFormatSchema(value);
       expect(node, `Missing schema for: ${value}`).to.exist;
     }
@@ -22,7 +23,7 @@ describe('format', () => {
   test('invalid state', ({ expect }) => {
     const prop: Partial<PropertyType> = { property: 'test' as JsonProp };
     const schema = getFormatSchema(prop.format);
-    expect(schema).to.eq(formatToSchema[FormatEnum.None]);
+    expect(schema).to.eq(formatToSchema[Format.TypeFormat.None]);
     const validate = Schema.validate(PropertySchema);
     expect(() => validate(prop)).to.throw;
   });
@@ -31,7 +32,7 @@ describe('format', () => {
     const prop: PropertyType = {
       property: 'salary' as JsonProp,
       type: TypeEnum.Number,
-      format: FormatEnum.Currency,
+      format: Format.TypeFormat.Currency,
       title: 'Base salary',
       multipleOf: 0.01,
       currency: 'USD',
@@ -54,9 +55,9 @@ describe('format', () => {
     // Changing format will change the schema.
     {
       const { property: _, format, ...props } = prop;
-      expect(format).to.eq(FormatEnum.Currency);
-      const newProp: PropertyType = { property: 'amount' as JsonProp, format: FormatEnum.Percent, ...props };
-      newProp.format = FormatEnum.Percent;
+      expect(format).to.eq(Format.TypeFormat.Currency);
+      const newProp: PropertyType = { property: 'amount' as JsonProp, format: Format.TypeFormat.Percent, ...props };
+      newProp.format = Format.TypeFormat.Percent;
 
       const schema = getFormatSchema(newProp.format);
       invariant(schema);
@@ -72,7 +73,7 @@ describe('format', () => {
     const prop: Partial<PropertyType> = {
       property: 'organization' as JsonProp,
       type: TypeEnum.Ref,
-      format: FormatEnum.Ref,
+      format: Format.TypeFormat.Ref,
     };
 
     // Invalid.
@@ -91,13 +92,13 @@ describe('format', () => {
     const prop: Partial<PropertyType> = {
       property: 'org' as JsonProp,
       type: TypeEnum.Ref,
-      format: FormatEnum.Ref,
+      format: Format.TypeFormat.Ref,
     };
 
     const schema = getFormatSchema(prop.format);
     invariant(schema);
 
-    const props = getSchemaProperties(schema.ast);
+    const props = getProperties(schema.ast);
     expect(props).to.have.length(7);
   });
 });

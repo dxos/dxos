@@ -23,7 +23,7 @@ const space = spaces[0];
 const result = await space.db
   .query(Filter.type(Type.Expando, { type: 'task' }))
   .run();
-const object = result.objects[0];
+const object = result[0];
 
 // Mutate the object directly.
 object.completed = true;

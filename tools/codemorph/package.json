@@ -11,7 +11,7 @@
     "codemorph": "vite-node ./src/main.ts"
   },
   "dependencies": {
-    "ts-morph": "^16.0.0"
+    "ts-morph": "catalog:"
   },
   "devDependencies": {}
 }

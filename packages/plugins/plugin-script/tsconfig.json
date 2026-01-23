@@ -8,6 +8,7 @@
     ]
   },
   "exclude": [
+    "*.stories.tsx",
     "*.t.ts",
     "vite.config.ts"
   ],
@@ -25,6 +26,9 @@
     },
     {
       "path": "../../common/debug"
+    },
+    {
+      "path": "../../common/effect"
     },
     {
       "path": "../../common/invariant"
@@ -84,10 +88,16 @@
       "path": "../../core/functions-runtime"
     },
     {
+      "path": "../../core/functions-simulator-cloudflare"
+    },
+    {
       "path": "../../core/mesh/rpc"
     },
     {
       "path": "../../core/mesh/rpc-tunnel"
+    },
+    {
+      "path": "../../core/operation"
     },
     {
       "path": "../../core/protocols"
@@ -103,6 +113,9 @@
     },
     {
       "path": "../../sdk/client-protocol"
+    },
+    {
+      "path": "../../sdk/config"
     },
     {
       "path": "../../sdk/react-client"
@@ -144,13 +157,22 @@
       "path": "../../ui/react-ui-syntax-highlighter"
     },
     {
-      "path": "../../ui/react-ui-theme"
+      "path": "../../ui/ui"
+    },
+    {
+      "path": "../../ui/ui-editor"
+    },
+    {
+      "path": "../../ui/ui-theme"
     },
     {
       "path": "../plugin-assistant"
     },
     {
       "path": "../plugin-automation"
+    },
+    {
+      "path": "../plugin-chess"
     },
     {
       "path": "../plugin-client"
@@ -172,6 +194,9 @@
     },
     {
       "path": "../plugin-stack"
+    },
+    {
+      "path": "../plugin-testing"
     },
     {
       "path": "../plugin-theme"

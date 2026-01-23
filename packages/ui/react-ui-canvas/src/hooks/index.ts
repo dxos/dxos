@@ -4,4 +4,5 @@
 
 export * from './projection';
 export * from './useCanvasContext';
+export * from './useDrag';
 export * from './useWheel';

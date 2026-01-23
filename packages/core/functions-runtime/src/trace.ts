@@ -5,12 +5,14 @@
 import * as Layer from 'effect/Layer';
 import * as Schema from 'effect/Schema';
 
-import { type Obj, type Ref, Type } from '@dxos/echo';
-import { ObjectId } from '@dxos/echo/internal';
+import { Obj, type Ref, Type } from '@dxos/echo';
 import { Queue } from '@dxos/echo-db';
 import { TracingService } from '@dxos/functions';
 import { Trigger } from '@dxos/functions';
+import { ObjectId } from '@dxos/keys';
 import { log } from '@dxos/log';
+import { SerializedError } from '@dxos/protocols';
+import { FunctionRuntimeKind } from '@dxos/protocols';
 
 export enum InvocationOutcome {
   SUCCESS = 'success',
@@ -24,6 +26,9 @@ export enum InvocationTraceEventType {
   END = 'end',
 }
 
+/**
+ * @deprecated Relace with EncodedError.
+ */
 export const TraceEventException = Schema.Struct({
   timestamp: Schema.Number,
   message: Schema.String,
@@ -58,11 +63,15 @@ export const InvocationTraceStartEvent = Schema.Struct({
   /**
    * DXN of the invoked function/workflow.
    */
-  invocationTarget: Schema.optional(Type.Ref(Type.Expando)),
+  invocationTarget: Schema.optional(Type.Ref(Obj.Any)),
   /**
    * Present for automatic invocations.
    */
   trigger: Schema.optional(Type.Ref(Trigger.Trigger)),
+  /**
+   * Runtime executing the function.
+   */
+  runtime: Schema.optional(FunctionRuntimeKind),
 }).pipe(Type.Obj({ typename: 'dxos.org/type/InvocationTraceStart', version: '0.1.0' }));
 
 export type InvocationTraceStartEvent = Schema.Schema.Type<typeof InvocationTraceStartEvent>;
@@ -82,8 +91,10 @@ export const InvocationTraceEndEvent = Schema.Struct({
    */
   // TODO(burdon): Remove ms suffix.
   timestamp: Schema.Number,
+
   outcome: Schema.Enums(InvocationOutcome),
-  exception: Schema.optional(TraceEventException),
+
+  error: Schema.optional(SerializedError),
 }).pipe(Type.Obj({ typename: 'dxos.org/type/InvocationTraceEnd', version: '0.1.0' }));
 
 export type InvocationTraceEndEvent = Schema.Schema.Type<typeof InvocationTraceEndEvent>;
@@ -121,9 +132,10 @@ export type InvocationSpan = {
   outcome: InvocationOutcome;
   input: object;
   invocationTraceQueue?: Ref.Ref<Queue>;
-  invocationTarget?: Ref.Ref<Type.Expando>;
+  invocationTarget?: Ref.Ref<Obj.Any>;
   trigger?: Ref.Ref<Trigger.Trigger>;
-  exception?: TraceEventException;
+  error?: SerializedError;
+  runtime?: FunctionRuntimeKind;
 };
 
 export const createInvocationSpans = (items?: InvocationTraceEvent[]): InvocationSpan[] => {
@@ -159,7 +171,6 @@ export const createInvocationSpans = (items?: InvocationTraceEvent[]): Invocatio
       log.warn('found end event without matching start', { invocationId });
       continue;
     }
-
     const isInProgress = end === undefined;
 
     result.push({
@@ -167,11 +178,12 @@ export const createInvocationSpans = (items?: InvocationTraceEvent[]): Invocatio
       timestamp: start.timestamp,
       duration: isInProgress ? now - start.timestamp : end!.timestamp - start.timestamp,
       outcome: end?.outcome ?? InvocationOutcome.PENDING,
-      exception: end?.exception,
+      error: end?.error,
       input: start.input,
       invocationTraceQueue: start.invocationTraceQueue,
       invocationTarget: start.invocationTarget,
       trigger: start.trigger,
+      runtime: start.runtime,
     });
   }
 

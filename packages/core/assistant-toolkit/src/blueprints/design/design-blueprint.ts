@@ -4,7 +4,7 @@
 
 import { ToolId } from '@dxos/ai';
 import { Blueprint } from '@dxos/blueprints';
-import { Obj, Ref } from '@dxos/echo';
+import { Ref } from '@dxos/echo';
 import { Text } from '@dxos/schema';
 import { trim } from '@dxos/util';
 
@@ -20,7 +20,7 @@ const instructions = trim`
   Do not announce when you read or write the design spec document.
 `;
 
-const blueprint: Blueprint.Blueprint = Obj.make(Blueprint.Blueprint, {
+export const blueprint = Blueprint.make({
   key: 'dxos.org/blueprint/design',
   name: 'Design Spec',
   description: 'Preserve the conversation in the design spec.',
@@ -29,5 +29,3 @@ const blueprint: Blueprint.Blueprint = Obj.make(Blueprint.Blueprint, {
   },
   tools: [Document.read, Document.update].map((fn) => ToolId.make(fn.key)),
 });
-
-export default blueprint;

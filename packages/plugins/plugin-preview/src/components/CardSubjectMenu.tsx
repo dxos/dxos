@@ -5,11 +5,11 @@
 import { Atom } from '@effect-atom/atom-react';
 import React from 'react';
 
-import { LayoutAction, createIntent } from '@dxos/app-framework';
-import { useIntentDispatcher } from '@dxos/app-framework/react';
-import { ACTION_TYPE } from '@dxos/app-graph';
+import { Common } from '@dxos/app-framework';
+import { useOperationInvoker } from '@dxos/app-framework/react';
+import { Node } from '@dxos/app-graph';
 import { Obj } from '@dxos/echo';
-import { SpaceAction } from '@dxos/plugin-space/types';
+import { SpaceOperation } from '@dxos/plugin-space/types';
 import { IconButton, type IconButtonProps, useTranslation } from '@dxos/react-ui';
 import {
   type ActionGraphProps,
@@ -28,13 +28,13 @@ import { type CardPreviewProps } from '../types';
 // TODO(burdon): Reconcile title and menu with main Card header.
 export const CardSubjectMenu = ({
   subject,
-  activeSpace,
+  db,
   ...props
 }: CardPreviewProps & Omit<IconButtonProps, 'icon' | 'label'>) => {
   const { t } = useTranslation(meta.id);
-  const menuProps = useSubjectMenuGroupItems({ subject, activeSpace });
+  const menuProps = useSubjectMenuGroupItems({ subject, db });
 
-  if (!activeSpace) {
+  if (!db) {
     return null;
   }
 
@@ -55,39 +55,31 @@ export const CardSubjectMenu = ({
   );
 };
 
-const useSubjectMenuGroupItems = ({ subject, activeSpace }: CardPreviewProps): MenuActions => {
-  const { dispatchPromise: dispatch } = useIntentDispatcher();
+const useSubjectMenuGroupItems = ({ subject, db }: CardPreviewProps): MenuActions => {
+  const { invokePromise } = useOperationInvoker();
   const result: ActionGraphProps = { edges: [], nodes: [] };
 
   result.nodes.push({
-    type: ACTION_TYPE,
+    type: Node.ActionType,
     id: `${subject.id}/open`,
-    data: () =>
-      dispatch(
-        createIntent(LayoutAction.Open, {
-          part: 'main',
-          subject: [Obj.getDXN(subject).toString()],
-        }),
-      ),
+    data: () => invokePromise(Common.LayoutOperation.Open, { subject: [Obj.getDXN(subject).toString()] }),
     properties: {
       label: ['open object label', { ns: meta.id }],
       icon: 'ph--arrow-right--regular',
     },
   });
 
-  if (activeSpace && Obj.getDXN(subject).asQueueDXN()) {
+  if (db && Obj.getDXN(subject).asQueueDXN()) {
     result.nodes.push({
-      type: ACTION_TYPE,
+      type: Node.ActionType,
       id: `${subject.id}/add-to-space`,
       // TODO(wittjosiah): Update reference to point to db object when adding?
       data: () =>
-        dispatch(
-          createIntent(SpaceAction.AddObject, {
-            object: subject,
-            target: activeSpace,
-            hidden: true,
-          }),
-        ),
+        invokePromise(SpaceOperation.AddObject, {
+          object: subject,
+          target: db,
+          hidden: true,
+        }),
       properties: {
         label: ['add object to space label', { ns: meta.id }],
         icon: 'ph--file-plus--regular',

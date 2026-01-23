@@ -39,7 +39,7 @@ export const Game = Schema.Struct({
 
 export interface Game extends Schema.Schema.Type<typeof Game> {}
 
-export const makeGame = ({ name, pgn, fen }: { name?: string; pgn?: string; fen?: string } = {}) => {
+export const make = ({ name, pgn, fen }: { name?: string; pgn?: string; fen?: string } = {}) => {
   const chess = new ChessJS();
   if (pgn) {
     try {
@@ -51,8 +51,8 @@ export const makeGame = ({ name, pgn, fen }: { name?: string; pgn?: string; fen?
 
   return Obj.make(Game, {
     name,
-    players: {},
     pgn,
     fen,
+    players: {},
   });
 };

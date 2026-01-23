@@ -10,7 +10,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { invariant } from '@dxos/invariant';
 import { type ThemedClassName } from '@dxos/react-ui';
 import { type Dimension, useCanvasContext } from '@dxos/react-ui-canvas';
-import { mx } from '@dxos/react-ui-theme';
+import { mx } from '@dxos/ui-theme';
 
 import { type DragDropPayload, useEditorContext } from '../../hooks';
 import { getBoundsProperties } from '../../layout';
@@ -18,7 +18,7 @@ import { type Polygon, type Shape } from '../../types';
 import { type Anchor, resizeCursor } from '../anchors';
 import { styles } from '../styles';
 
-export const defaultAnchorSize: Dimension = { width: 12, height: 12 };
+export const defaultAnchorSize: Dimension = { width: 8, height: 8 };
 
 export const DATA_ANCHOR_ID = 'data-anchor-id';
 

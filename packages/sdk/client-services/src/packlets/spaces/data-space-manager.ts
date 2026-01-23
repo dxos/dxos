@@ -6,7 +6,7 @@ import { type Doc } from '@automerge/automerge';
 import { type AutomergeUrl, type DocHandle, type DocumentId, interpretAsDocumentId } from '@automerge/automerge-repo';
 
 import { Event, synchronized, trackLeaks } from '@dxos/async';
-import { PropertiesType, TYPE_PROPERTIES } from '@dxos/client-protocol';
+import { SpaceProperties } from '@dxos/client-protocol';
 import { Context, LifecycleState, Resource, cancelWithContext } from '@dxos/context';
 import {
   type CredentialSigner,
@@ -15,14 +15,14 @@ import {
   createAdmissionCredentials,
   getCredentialAssertion,
 } from '@dxos/credentials';
-import { ObjectId, getTypeReference } from '@dxos/echo/internal';
+import { Type } from '@dxos/echo';
+import { getSchemaDXN } from '@dxos/echo/internal';
 import {
   AuthStatus,
   CredentialServerExtension,
   DatabaseRoot,
   type EchoEdgeReplicator,
   type EchoHost,
-  FIND_PARAMS,
   type MeshEchoReplicator,
   type MetadataStore,
   type Space,
@@ -33,16 +33,16 @@ import {
 } from '@dxos/echo-pipeline';
 import {
   type DatabaseDirectory,
+  EncodedReference,
   type ObjectStructure,
   SpaceDocVersion,
   createIdFromSpaceKey,
-  encodeReference,
 } from '@dxos/echo-protocol';
 import type { EdgeConnection, EdgeHttpClient } from '@dxos/edge-client';
 import { type FeedStore, writeMessages } from '@dxos/feed-store';
 import { assertArgument, assertState, failedInvariant, invariant } from '@dxos/invariant';
 import { type Keyring } from '@dxos/keyring';
-import { PublicKey, type SpaceId } from '@dxos/keys';
+import { ObjectId, PublicKey, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { AlreadyJoinedError, trace as Trace } from '@dxos/protocols';
 import { Invitation, SpaceState } from '@dxos/protocols/proto/dxos/client/services';
@@ -104,7 +104,7 @@ export type AdmitMemberOptions = {
   delegationCredentialId?: PublicKey;
 };
 
-export type DataSpaceManagerParams = {
+export type DataSpaceManagerProps = {
   spaceManager: SpaceManager;
   metadataStore: MetadataStore;
   keyring: Keyring;
@@ -116,11 +116,11 @@ export type DataSpaceManagerParams = {
   edgeHttpClient?: EdgeHttpClient;
   meshReplicator?: MeshEchoReplicator;
   echoEdgeReplicator?: EchoEdgeReplicator;
-  runtimeParams?: DataSpaceManagerRuntimeParams;
+  runtimeProps?: DataSpaceManagerRuntimeProps;
   edgeFeatures?: Runtime.Client.EdgeFeatures;
 };
 
-export type DataSpaceManagerRuntimeParams = {
+export type DataSpaceManagerRuntimeProps = {
   spaceMemberPresenceAnnounceInterval?: number;
   spaceMemberPresenceOfflineTimeout?: number;
   activeEdgeNotarizationPollingInterval?: number;
@@ -152,9 +152,9 @@ export class DataSpaceManager extends Resource {
   private readonly _edgeFeatures?: Runtime.Client.EdgeFeatures = undefined;
   private readonly _meshReplicator?: MeshEchoReplicator = undefined;
   private readonly _echoEdgeReplicator?: EchoEdgeReplicator = undefined;
-  private readonly _runtimeParams?: DataSpaceManagerRuntimeParams = undefined;
+  private readonly _runtimeProps?: DataSpaceManagerRuntimeProps = undefined;
 
-  constructor(params: DataSpaceManagerParams) {
+  constructor(params: DataSpaceManagerProps) {
     super();
 
     this._spaceManager = params.spaceManager;
@@ -169,7 +169,7 @@ export class DataSpaceManager extends Resource {
     this._edgeFeatures = params.edgeFeatures;
     this._echoEdgeReplicator = params.echoEdgeReplicator;
     this._edgeHttpClient = params.edgeHttpClient;
-    this._runtimeParams = params.runtimeParams;
+    this._runtimeProps = params.runtimeProps;
 
     trace.diagnostic({
       id: 'spaces',
@@ -179,12 +179,12 @@ export class DataSpaceManager extends Resource {
           Array.from(this._spaces.values()).map(async (space) => {
             const rootUrl = space.automergeSpaceState.rootUrl;
             const rootHandle = rootUrl
-              ? await this._echoHost.automergeRepo.find<Doc<DatabaseDirectory>>(rootUrl as AutomergeUrl, FIND_PARAMS)
+              ? await this._echoHost.loadDoc<Doc<DatabaseDirectory>>(Context.default(), rootUrl as AutomergeUrl)
               : undefined;
             await rootHandle?.whenReady();
             const rootDoc = rootHandle?.doc();
 
-            const properties = rootDoc && findInlineObjectOfType(rootDoc, TYPE_PROPERTIES);
+            const properties = rootDoc && findInlineObjectOfType(rootDoc, Type.getTypename(SpaceProperties));
 
             return {
               key: space.key.toHex(),
@@ -342,9 +342,12 @@ export class DataSpaceManager extends Resource {
           log.warn('waiting for space root to be ready', { spaceId: space.id });
           await space.databaseRoot.handle.whenReady();
         }
-        const [_, properties] = findInlineObjectOfType(space.databaseRoot.doc()!, TYPE_PROPERTIES) ?? [];
+
+        const [_, properties] =
+          findInlineObjectOfType(space.databaseRoot.doc()!, Type.getTypename(SpaceProperties)) ?? [];
         return properties?.data?.[DEFAULT_SPACE_KEY] === this._signingContext.identityKey.toHex();
       }
+
       case SpaceDocVersion.LEGACY: {
         throw new Error('Legacy space version is not supported');
       }
@@ -362,7 +365,7 @@ export class DataSpaceManager extends Resource {
     // TODO(dmaretskyi): Better API for low-level data access.
     const properties: ObjectStructure = {
       system: {
-        type: encodeReference(getTypeReference(PropertiesType)!),
+        type: EncodedReference.fromDXN(getSchemaDXN(SpaceProperties)!),
       },
       data: {
         [DEFAULT_SPACE_KEY]: this._signingContext.identityKey.toHex(),
@@ -384,7 +387,9 @@ export class DataSpaceManager extends Resource {
   private async _getSpaceRootDocument(space: DataSpace): Promise<DocHandle<DatabaseDirectory>> {
     const automergeIndex = space.automergeSpaceState.rootUrl;
     invariant(automergeIndex);
-    const document = await this._echoHost.automergeRepo.find<DatabaseDirectory>(automergeIndex as any, FIND_PARAMS);
+    const document = await this._echoHost.loadDoc<DatabaseDirectory>(Context.default(), automergeIndex as any, {
+      fetchFromNetwork: true,
+    });
     await document.whenReady();
     return document;
   }
@@ -496,8 +501,8 @@ export class DataSpaceManager extends Resource {
       localPeerId: this._signingContext.deviceKey,
     });
     const presence = new Presence({
-      announceInterval: this._runtimeParams?.spaceMemberPresenceAnnounceInterval ?? PRESENCE_ANNOUNCE_INTERVAL,
-      offlineTimeout: this._runtimeParams?.spaceMemberPresenceOfflineTimeout ?? PRESENCE_OFFLINE_TIMEOUT,
+      announceInterval: this._runtimeProps?.spaceMemberPresenceAnnounceInterval ?? PRESENCE_ANNOUNCE_INTERVAL,
+      offlineTimeout: this._runtimeProps?.spaceMemberPresenceOfflineTimeout ?? PRESENCE_OFFLINE_TIMEOUT,
       identityKey: this._signingContext.identityKey,
       gossip,
     });
@@ -583,7 +588,7 @@ export class DataSpaceManager extends Resource {
       edgeConnection: this._edgeConnection,
       edgeHttpClient: this._edgeHttpClient,
       edgeFeatures: this._edgeFeatures,
-      activeEdgeNotarizationPollingInterval: this._runtimeParams?.activeEdgeNotarizationPollingInterval,
+      activeEdgeNotarizationPollingInterval: this._runtimeProps?.activeEdgeNotarizationPollingInterval,
     });
     dataSpace.postOpen.append(async () => {
       const setting = dataSpace.getEdgeReplicationSetting();

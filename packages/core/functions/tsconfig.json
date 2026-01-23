@@ -11,6 +11,9 @@
   ],
   "references": [
     {
+      "path": "../../common/context"
+    },
+    {
       "path": "../../common/effect"
     },
     {
@@ -42,6 +45,9 @@
     },
     {
       "path": "../echo/echo-db"
+    },
+    {
+      "path": "../operation"
     },
     {
       "path": "../protocols"

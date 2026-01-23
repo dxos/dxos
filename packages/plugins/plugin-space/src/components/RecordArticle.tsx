@@ -6,21 +6,21 @@ import React, { useMemo } from 'react';
 
 import { Surface } from '@dxos/app-framework/react';
 import { type SurfaceComponentProps } from '@dxos/app-framework/react';
-import { Filter, type Obj, Ref, Relation } from '@dxos/echo';
-import { type Space, getSpace, useQuery } from '@dxos/react-client/echo';
+import { type Database, type Entity, Filter, Obj, Ref, Relation } from '@dxos/echo';
+import { useQuery } from '@dxos/react-client/echo';
 import { useTranslation } from '@dxos/react-ui';
 import { Masonry } from '@dxos/react-ui-masonry';
 import { StackItem } from '@dxos/react-ui-stack';
-import { mx } from '@dxos/react-ui-theme';
+import { mx } from '@dxos/ui-theme';
 import { isNonNullable } from '@dxos/util';
 
 import { meta } from '../meta';
 
 export const RecordArticle = ({ subject }: SurfaceComponentProps) => {
   const { t } = useTranslation(meta.id);
-  const space = getSpace(subject);
+  const db = Obj.getDatabase(subject);
   const data = useMemo(() => ({ subject }), [subject]);
-  const related = useRelatedObjects(space, subject, {
+  const related = useRelatedObjects(db, subject, {
     references: true,
     relations: true,
   });
@@ -36,7 +36,7 @@ export const RecordArticle = ({ subject }: SurfaceComponentProps) => {
         {related.length > 0 && (
           <div role='none' className={mx('flex flex-col gap-1', singleColumn ? 'card-max-width' : 'is-full')}>
             <label className='mbs-2 text-sm text-description'>{t('related objects label')}</label>
-            <Masonry.Root<Obj.Any>
+            <Masonry.Root<Entity.Unknown>
               items={related}
               render={Card}
               columnCount={singleColumn ? 1 : undefined}
@@ -49,28 +49,28 @@ export const RecordArticle = ({ subject }: SurfaceComponentProps) => {
   );
 };
 
-const Card = ({ data: subject }: { data: Obj.Any }) => {
+const Card = ({ data: subject }: { data: Entity.Unknown }) => {
   const data = useMemo(() => ({ subject }), [subject]);
   return <Surface role='card' data={data} limit={1} />;
 };
 
 // TODO(wittjosiah): This is a hack. ECHO needs to have a back reference index to easily query for related objects.
 const useRelatedObjects = (
-  space?: Space,
+  db?: Database.Database,
   record?: Obj.Any,
   options: { references?: boolean; relations?: boolean } = {},
 ) => {
-  const objects = useQuery(space, Filter.everything());
+  const objects = useQuery(db, Filter.everything());
   return useMemo(() => {
     if (!record) {
       return [];
     }
 
-    const related: Obj.Any[] = [];
+    const related: Entity.Unknown[] = [];
 
     // TODO(burdon): Change Person => Organization to relations.
     if (options.references) {
-      const getReferences = (obj: Obj.Any): Ref.Any[] => {
+      const getReferences = (obj: Entity.Unknown): Ref.Any[] => {
         return Object.getOwnPropertyNames(obj)
           .map((name) => obj[name as keyof Obj.Any])
           .filter((value) => Ref.isRef(value)) as Ref.Any[];
@@ -88,7 +88,7 @@ const useRelatedObjects = (
 
     if (options.relations) {
       // TODO(dmaretskyi): Workaround until https://github.com/dxos/dxos/pull/10100 lands.
-      const isValidRelation = (obj: Obj.Any) => {
+      const isValidRelation = (obj: Relation.Any) => {
         try {
           return Relation.isRelation(obj) && Relation.getSource(obj) && Relation.getTarget(obj);
         } catch {

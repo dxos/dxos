@@ -5,8 +5,9 @@
 import * as Schema from 'effect/Schema';
 
 import { type Space } from '@dxos/client-protocol';
-import { Obj, type Type } from '@dxos/echo';
+import { Obj } from '@dxos/echo';
 import { type AnyLiveObject, type SpaceSyncState, getDatabaseFromObject } from '@dxos/echo-db';
+import { type ObjectId, type SpaceId } from '@dxos/keys';
 import { type Live, isLiveObject } from '@dxos/live-object';
 
 import { SpaceProxy } from './space-proxy';
@@ -17,6 +18,7 @@ export const ReactiveObjectSchema: Schema.Schema<Live<any>> = Schema.Any.pipe(
   Schema.annotations({ title: 'Live' }),
 );
 
+// TODO(burdon): Rename (remove "Echo").
 export const EchoObjectSchema: Schema.Schema<AnyLiveObject<any>> = Schema.Any.pipe(
   Schema.filter((obj) => Obj.isObject(obj)),
   Schema.annotations({ title: 'EchoObject' }),
@@ -48,23 +50,22 @@ export const SPACE_ID_LENGTH = 33;
 export const OBJECT_ID_LENGTH = 26;
 export const FQ_ID_LENGTH = SPACE_ID_LENGTH + OBJECT_ID_LENGTH + 1;
 
-/** @deprecated */
-export const parseId = (id?: string): { spaceId?: Type.SpaceId; objectId?: Type.ObjectId } => {
+export const parseId = (id?: string): { spaceId?: SpaceId; objectId?: ObjectId } => {
   if (!id) {
     return {};
   } else if (id.length === SPACE_ID_LENGTH) {
     return {
-      spaceId: id as Type.SpaceId,
+      spaceId: id as SpaceId,
     };
   } else if (id.length === OBJECT_ID_LENGTH) {
     return {
-      objectId: id as Type.ObjectId,
+      objectId: id as ObjectId,
     };
   } else if (id.length === FQ_ID_LENGTH && id.indexOf(':') === SPACE_ID_LENGTH) {
     const [spaceId, objectId] = id.split(':');
     return {
-      spaceId: spaceId as Type.SpaceId,
-      objectId: objectId as Type.ObjectId,
+      spaceId: spaceId as SpaceId,
+      objectId: objectId as ObjectId,
     };
   } else {
     return {};
@@ -79,7 +80,7 @@ export type Progress = { count: number; total: number };
 
 export type PeerSyncState = Omit<SpaceSyncState.PeerState, 'peerId'>;
 
-export type SpaceSyncStateMap = Record<Type.SpaceId, PeerSyncState>;
+export type SpaceSyncStateMap = Record<SpaceId, PeerSyncState>;
 
 export const createEmptyEdgeSyncState = (): PeerSyncState => ({
   missingOnLocal: 0,

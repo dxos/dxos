@@ -3,19 +3,17 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
+import * as Effect from 'effect/Effect';
 import React from 'react';
 
-import { IntentPlugin, SettingsPlugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { ClientPlugin } from '@dxos/plugin-client';
 import { PreviewPlugin } from '@dxos/plugin-preview';
 import { SpacePlugin } from '@dxos/plugin-space';
-import { StorybookLayoutPlugin } from '@dxos/plugin-storybook-layout';
-import { ThemePlugin } from '@dxos/plugin-theme';
+import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
 import { faker } from '@dxos/random';
 import { Filter, useQuery, useSpaces } from '@dxos/react-client/echo';
 import { withTheme } from '@dxos/react-ui/testing';
-import { defaultTx } from '@dxos/react-ui-theme';
 import { View } from '@dxos/schema';
 import { createObjectFactory } from '@dxos/schema/testing';
 import { Organization } from '@dxos/types';
@@ -29,10 +27,11 @@ faker.seed(0);
 const StorybookMasonry = () => {
   const spaces = useSpaces();
   const space = spaces[spaces.length - 1];
-  const masonries = useQuery(space, Filter.type(Masonry.Masonry));
+  const masonries = useQuery(space?.db, Filter.type(Masonry.Masonry));
   const masonry = masonries.at(0);
+  const view = masonry?.view.target;
 
-  return masonry ? <MasonryContainer object={masonry} role='story' /> : null;
+  return view ? <MasonryContainer view={view} role='story' /> : null;
 };
 
 const meta = {
@@ -43,27 +42,32 @@ const meta = {
     withTheme,
     withPluginManager({
       plugins: [
+        ...corePlugins(),
         ClientPlugin({
           types: [Organization.Organization, View.View, Masonry.Masonry],
-          onClientInitialized: async ({ client }) => {
-            await client.halo.createIdentity();
-            const space = await client.spaces.create();
-            await space.waitUntilReady();
+          onClientInitialized: ({ client }) =>
+            Effect.gen(function* () {
+              yield* Effect.promise(() => client.halo.createIdentity());
+              const space = yield* Effect.promise(() => client.spaces.create());
+              yield* Effect.promise(() => space.waitUntilReady());
 
-            const { view } = await View.makeFromSpace({ client, space, typename: Organization.Organization.typename });
-            const masonry = Masonry.make({ view });
-            space.db.add(masonry);
+              const { view } = yield* Effect.promise(() =>
+                View.makeFromDatabase({
+                  db: space.db,
+                  typename: Organization.Organization.typename,
+                }),
+              );
+              const masonry = Masonry.make({ view });
+              space.db.add(masonry);
 
-            const factory = createObjectFactory(space.db, faker as any);
-            await factory([{ type: Organization.Organization, count: 64 }]);
-          },
+              const factory = createObjectFactory(space.db, faker as any);
+              yield* Effect.promise(() => factory([{ type: Organization.Organization, count: 64 }]));
+            }),
         }),
+        ...corePlugins(),
         SpacePlugin({}),
-        IntentPlugin(),
-        SettingsPlugin(),
-        ThemePlugin({ tx: defaultTx }),
         PreviewPlugin(),
-        StorybookLayoutPlugin({}),
+        StorybookPlugin({}),
       ],
     }),
   ],

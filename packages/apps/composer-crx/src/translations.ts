@@ -4,7 +4,7 @@
 
 import { type Resource } from '@dxos/react-ui';
 
-export const translationKey = 'composer';
+export const translationKey = '@dxos/composer';
 
 export const translations = [
   {
@@ -14,7 +14,9 @@ export const translations = [
         'composer.description': 'DXOS.org',
         'chat.placeholder': 'Ask or search for anything...',
         'chat.clear.button': 'Clear',
-        'settings.devmode.label': 'Developer Mode',
+        'settings.dev-mode.label': 'Developer Mode',
+        'settings.space-mode.label': 'Space Mode',
+        'settings.space-id.label': 'Space ID',
       },
     },
   },

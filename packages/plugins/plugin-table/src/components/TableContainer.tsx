@@ -5,16 +5,15 @@
 import { Atom } from '@effect-atom/atom-react';
 import * as Match from 'effect/Match';
 import type * as Schema from 'effect/Schema';
-import React, { useCallback, useMemo, useRef } from 'react';
+import React, { forwardRef, useCallback, useMemo, useRef } from 'react';
 
-import { LayoutAction, createIntent } from '@dxos/app-framework';
-import { useAppGraph, useIntentDispatcher } from '@dxos/app-framework/react';
-import { Filter, Obj, Query, Type } from '@dxos/echo';
+import { Common } from '@dxos/app-framework';
+import { useAppGraph, useOperationInvoker } from '@dxos/app-framework/react';
+import { type Database, Filter, Obj, Order, Query, type QueryAST, Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { useGlobalFilteredObjects } from '@dxos/plugin-search';
-import { SpaceAction } from '@dxos/plugin-space/types';
-import { useClient } from '@dxos/react-client';
-import { getSpace, useQuery, useSchema } from '@dxos/react-client/echo';
+import { SpaceOperation } from '@dxos/plugin-space/types';
+import { useQuery, useSchema } from '@dxos/react-client/echo';
 import { StackItem } from '@dxos/react-ui-stack';
 import {
   Table as TableComponent,
@@ -24,6 +23,7 @@ import {
   TablePresentation,
   type TableRowAction,
   TableToolbar,
+  extractOrder,
   useAddRow,
   useProjectionModel,
   useTableModel,
@@ -39,17 +39,19 @@ export type TableContainerProps = {
 };
 
 // TODO(wittjosiah): Need to handle more complex queries by restricting add row.
-export const TableContainer = ({ role, object }: TableContainerProps) => {
-  const { dispatchPromise: dispatch } = useIntentDispatcher();
+export const TableContainer = forwardRef<HTMLDivElement, TableContainerProps>(({ role, object }, forwardedRef) => {
+  const { invokePromise } = useOperationInvoker();
   const tableRef = useRef<TableController>(null);
 
-  const client = useClient();
-  const space = getSpace(object);
+  const db = Obj.getDatabase(object);
   const view = object.view.target;
   const query = view ? Query.fromAst(Obj.getSnapshot(view).query.ast) : Query.select(Filter.nothing());
-  const typename = object.view.target?.query ? getTypenameFromQuery(object.view.target.query.ast) : undefined;
-  const schema = useSchema(client, space, typename);
-  const queriedObjects = useQuery(space, query);
+  const typename = getTypenameFromQuery(query.ast);
+  const schema = useSchema(db, typename);
+  // TODO(wittjosiah): This should use `query` above.
+  //   That currently doesn't work for dynamic schema objects because their indexed typename is the schema object DXN.
+  // const queriedObjects = useQuery(db, query);
+  const queriedObjects = useQueryWorkaround(db, query.ast, schema);
   const filteredObjects = useGlobalFilteredObjects(queriedObjects);
 
   const { graph } = useAppGraph();
@@ -64,21 +66,21 @@ export const TableContainer = ({ role, object }: TableContainerProps) => {
     });
   }, [graph]);
 
-  const addRow = useAddRow({ space, schema });
+  const addRow = useAddRow({ db, schema });
 
   const handleDeleteRows = useCallback(
     (_row: number, objects: any[]) => {
-      void dispatch(createIntent(SpaceAction.RemoveObjects, { objects }));
+      void invokePromise(SpaceOperation.RemoveObjects, { objects });
     },
-    [dispatch],
+    [invokePromise],
   );
 
   const handleDeleteColumn = useCallback(
     (fieldId: string) => {
       invariant(view);
-      void dispatch(createIntent(SpaceAction.DeleteField, { view, fieldId }));
+      void invokePromise(SpaceOperation.DeleteField, { view, fieldId });
     },
-    [dispatch, view],
+    [invokePromise, view],
   );
 
   const features: Partial<TableFeatures> = useMemo(
@@ -103,11 +105,11 @@ export const TableContainer = ({ role, object }: TableContainerProps) => {
     (actionId: string, data: any) =>
       Match.value(actionId).pipe(
         Match.when('open', () =>
-          dispatch(createIntent(LayoutAction.Open, { part: 'main', subject: [Obj.getDXN(data).toString()] })),
+          invokePromise(Common.LayoutOperation.Open, { subject: [Obj.getDXN(data).toString()] }),
         ),
         Match.orElseAbsurd,
       ),
-    [dispatch],
+    [invokePromise],
   );
 
   const handleRowOrderChange = useCallback(() => {
@@ -116,10 +118,10 @@ export const TableContainer = ({ role, object }: TableContainerProps) => {
 
   const handleCreate = useCallback(
     (schema: Schema.Schema.AnyNoContext, values: any) => {
-      invariant(space);
-      return space.db.add(Obj.make(schema, values));
+      invariant(db);
+      return db.add(Obj.make(schema, values));
     },
-    [space],
+    [db],
   );
 
   const projection = useProjectionModel(schema, object);
@@ -158,10 +160,11 @@ export const TableContainer = ({ role, object }: TableContainerProps) => {
   );
 
   return (
-    <StackItem.Content toolbar>
+    <StackItem.Content toolbar ref={forwardedRef}>
       <TableToolbar
         attendableId={Obj.getDXN(object).toString()}
         customActions={customActions}
+        viewDirty={model?.viewDirty}
         onAdd={handleInsertRow}
         onSave={handleSave}
       />
@@ -169,7 +172,6 @@ export const TableContainer = ({ role, object }: TableContainerProps) => {
         <TableComponent.Main
           key={Obj.getDXN(object).toString()}
           ref={tableRef}
-          client={client}
           model={model}
           presentation={presentation}
           schema={schema}
@@ -179,6 +181,41 @@ export const TableContainer = ({ role, object }: TableContainerProps) => {
       </TableComponent.Root>
     </StackItem.Content>
   );
-};
+});
+
+TableContainer.displayName = 'TableContainer';
 
 export default TableContainer;
+
+const useQueryWorkaround = (
+  db: Database.Database | undefined,
+  ast: QueryAST.Query | undefined,
+  schema: Type.Entity.Any | undefined,
+) => {
+  // Extract order from query AST and apply it to the base filter query
+  const query = useMemo(() => {
+    const baseQuery = schema ? Filter.type(schema) : Filter.nothing();
+
+    if (!ast) {
+      return Query.select(baseQuery);
+    }
+
+    const orders = extractOrder(ast);
+    if (orders && orders.length > 0) {
+      // Convert AST orders to Order objects and apply to query
+      const queryWithFilter = Query.select(baseQuery);
+      const orderObjects = orders
+        .filter((order): order is QueryAST.Order & { kind: 'property' } => order.kind === 'property')
+        .map((order) => Order.property<any>(order.property, order.direction));
+
+      if (orderObjects.length > 0) {
+        // TypeScript needs explicit type assertion for spread operator
+        return queryWithFilter.orderBy(...(orderObjects as [Order.Any, ...Order.Any[]]));
+      }
+    }
+
+    return Query.select(baseQuery);
+  }, [ast, schema]);
+
+  return useQuery(db, query);
+};

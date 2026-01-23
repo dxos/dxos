@@ -21,6 +21,10 @@ const locationRegex = /\((.*)\)/g;
  * Unwraps error proxy.
  */
 const prettyErrorStack = (error: any, appendStacks: string[] = []): any => {
+  if (typeof error !== 'object' || error === null) {
+    return error;
+  }
+
   const span = error[spanSymbol];
 
   const lines = typeof error.stack === 'string' ? error.stack.split('\n') : [];
@@ -118,9 +122,10 @@ export const causeToError = (cause: Cause.Cause<any>): Error => {
     const errors = [...Chunk.toArray(Cause.failures(cause)), ...Chunk.toArray(Cause.defects(cause))];
 
     const getStackFrames = (): string[] => {
-      const o: { stack: string } = {} as any;
+      // Bun requies the target object for `captureStackTrace` to be an Error.
+      const o = new Error();
       Error.captureStackTrace(o, getStackFrames);
-      return o.stack.split('\n').slice(1);
+      return o.stack!.split('\n').slice(1);
     };
 
     const stackFrames = getStackFrames();

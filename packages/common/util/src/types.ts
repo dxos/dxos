@@ -12,6 +12,14 @@ export type MaybePromise<T> = T | Promise<T>;
 
 export type GuardedType<T> = T extends (value: any) => value is infer R ? R : never;
 
+export type ToMutable<T> = T extends object
+  ? { -readonly [K in keyof T]: T[K] extends readonly (infer U)[] ? U[] : T[K] }
+  : T;
+
+export type Intersection<Types extends readonly unknown[]> = Types extends [infer First, ...infer Rest]
+  ? First & Intersection<Rest>
+  : unknown;
+
 export type DeepReadonly<T> = {
   readonly [P in keyof T]: T[P] extends Record<string, any>
     ? DeepReadonly<T[P]>
@@ -104,9 +112,19 @@ export const sortKeys = <T extends object>(obj: T): T =>
     }, {} as T);
 
 /**
- * Swap position of element within array.
+ * Move element within array.
  */
-export const arrayMove = <T>(array: T[], from: number, to: number): Array<T> => {
+export const arrayMove = <T>(array: T[], from: number, to: number): T[] => {
   array.splice(to < 0 ? array.length + to : to, 0, array.splice(from, 1)[0]);
   return array;
 };
+
+/**
+ * Swap position of element within array.
+ */
+export function arraySwap<T>(array: T[], from: number, to: number): T[] {
+  const current = array[from];
+  array[from] = array[to];
+  array[to] = current;
+  return array;
+}

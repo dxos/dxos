@@ -8,6 +8,7 @@
     ]
   },
   "exclude": [
+    "*.stories.tsx",
     "*.t.ts",
     "vite.config.ts"
   ],
@@ -22,6 +23,9 @@
     },
     {
       "path": "../../common/debug"
+    },
+    {
+      "path": "../../common/effect"
     },
     {
       "path": "../../common/invariant"
@@ -60,6 +64,9 @@
       "path": "../../core/echo/live-object"
     },
     {
+      "path": "../../core/operation"
+    },
+    {
       "path": "../../sdk/app-framework"
     },
     {
@@ -84,7 +91,10 @@
       "path": "../../ui/react-ui-text-tooltip"
     },
     {
-      "path": "../../ui/react-ui-theme"
+      "path": "../../ui/ui-theme"
+    },
+    {
+      "path": "../../ui/ui-types"
     },
     {
       "path": "../plugin-attention"
@@ -94,6 +104,9 @@
     },
     {
       "path": "../plugin-observability"
+    },
+    {
+      "path": "../plugin-testing"
     },
     {
       "path": "../plugin-theme"

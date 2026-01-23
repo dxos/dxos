@@ -8,6 +8,7 @@
     ]
   },
   "exclude": [
+    "*.stories.tsx",
     "*.t.ts",
     "vite.config.ts"
   ],
@@ -63,6 +64,9 @@
       "path": "../../core/echo/echo-db"
     },
     {
+      "path": "../../core/echo/echo-protocol"
+    },
+    {
       "path": "../../core/echo/echo-signals"
     },
     {
@@ -72,13 +76,22 @@
       "path": "../../core/functions"
     },
     {
+      "path": "../../core/operation"
+    },
+    {
       "path": "../../core/protocols"
+    },
+    {
+      "path": "../../devtools/cli-util"
     },
     {
       "path": "../../sdk/app-framework"
     },
     {
       "path": "../../sdk/client"
+    },
+    {
+      "path": "../../sdk/client-protocol"
     },
     {
       "path": "../../sdk/migrations"
@@ -120,6 +133,9 @@
       "path": "../../ui/react-ui-masonry"
     },
     {
+      "path": "../../ui/react-ui-mosaic"
+    },
+    {
       "path": "../../ui/react-ui-pickers"
     },
     {
@@ -135,7 +151,10 @@
       "path": "../../ui/react-ui-tabs"
     },
     {
-      "path": "../../ui/react-ui-theme"
+      "path": "../../ui/ui-theme"
+    },
+    {
+      "path": "../../ui/ui-types"
     },
     {
       "path": "../plugin-attention"
@@ -154,6 +173,9 @@
     },
     {
       "path": "../plugin-status-bar"
+    },
+    {
+      "path": "../plugin-testing"
     }
   ]
 }

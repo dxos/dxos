@@ -5,14 +5,14 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
-import { IntentPlugin } from '@dxos/app-framework';
+import { OperationPlugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { FormatEnum } from '@dxos/echo/internal';
-import { live } from '@dxos/echo/internal';
+import { Obj } from '@dxos/echo';
+import { Format } from '@dxos/echo/internal';
 import { faker } from '@dxos/random';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { withTheme } from '@dxos/react-ui/testing';
-import { CardContainer } from '@dxos/react-ui-stack/testing';
+import { CardContainer } from '@dxos/react-ui-mosaic/testing';
 import { translations as tableTranslations } from '@dxos/react-ui-table';
 import { useTestTableModel } from '@dxos/react-ui-table/testing';
 import { Table } from '@dxos/react-ui-table/types';
@@ -48,7 +48,7 @@ const meta = {
       types: [View.View, Table.Table],
       createIdentity: true,
       createSpace: true,
-      onCreateSpace: async ({ client, space }) => {
+      onCreateSpace: async ({ space }) => {
         // Configure schema.
         const typename = 'example.com/SingleSelect';
         const selectOptions = [
@@ -63,26 +63,26 @@ const meta = {
         const schema = getSchemaFromPropertyDefinitions(typename, [
           {
             name: 'single',
-            format: FormatEnum.SingleSelect,
+            format: Format.TypeFormat.SingleSelect,
             config: { options: selectOptions },
           },
           {
             name: 'multiple',
-            format: FormatEnum.MultiSelect,
+            format: Format.TypeFormat.MultiSelect,
             config: { options: selectOptions },
           },
         ]);
         const [storedSchema] = await space.db.schemaRegistry.register([schema]);
 
         // Initialize table.
-        const { view, jsonSchema } = await View.makeFromSpace({ client, space, typename });
+        const { view, jsonSchema } = await View.makeFromDatabase({ db: space.db, typename });
         const table = Table.make({ view, jsonSchema });
         space.db.add(table);
 
         // Populate.
         Array.from({ length: 10 }).map(() => {
           return space.db.add(
-            live(storedSchema, {
+            Obj.make(storedSchema, {
               single: faker.helpers.arrayElement([...selectOptionIds, undefined]),
               multiple: faker.helpers.randomSubset(selectOptionIds),
             }),
@@ -91,7 +91,7 @@ const meta = {
       },
     }),
     withPluginManager({
-      plugins: [IntentPlugin()],
+      plugins: [OperationPlugin()],
     }),
   ],
   parameters: {

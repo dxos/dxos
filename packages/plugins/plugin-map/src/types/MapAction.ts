@@ -4,12 +4,12 @@
 
 import * as Schema from 'effect/Schema';
 
+import { Capability } from '@dxos/app-framework';
+import { Operation } from '@dxos/operation';
 import { TypeInputOptionsAnnotation } from '@dxos/plugin-space/types';
-import { SpaceSchema } from '@dxos/react-client/echo';
 
 import { meta } from '../meta';
 
-import * as Map from './Map';
 import { LocationAnnotationId } from './types';
 
 export const CreateMap = Schema.Struct({
@@ -35,20 +35,15 @@ export const CreateMap = Schema.Struct({
 
 export type CreateMap = Schema.Schema.Type<typeof CreateMap>;
 
-export class Create extends Schema.TaggedClass<Create>()(`${meta.id}/action/create`, {
-  input: Schema.Struct({
-    space: SpaceSchema,
-  }).pipe(
-    // prettier-ignore
-    Schema.extend(CreateMap),
-    Schema.extend(Map.Map.pipe(Schema.pick('center', 'zoom', 'coordinates'))),
-  ),
-  output: Schema.Struct({
-    object: Map.Map,
-  }),
-}) {}
+const MAP_OPERATION = `${meta.id}/operation`;
 
-export class Toggle extends Schema.TaggedClass<Toggle>()(`${meta.id}/action/toggle`, {
-  input: Schema.Void,
-  output: Schema.Void,
-}) {}
+export namespace MapOperation {
+  export const Toggle = Operation.make({
+    meta: { key: `${MAP_OPERATION}/toggle`, name: 'Toggle Map' },
+    services: [Capability.Service],
+    schema: {
+      input: Schema.Void,
+      output: Schema.Void,
+    },
+  });
+}

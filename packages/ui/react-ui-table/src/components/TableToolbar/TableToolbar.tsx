@@ -3,7 +3,7 @@
 //
 
 import { Atom } from '@effect-atom/atom-react';
-import React, { useMemo } from 'react';
+import React, { useEffect, useMemo } from 'react';
 
 import { live } from '@dxos/live-object';
 import { type ThemedClassName } from '@dxos/react-ui';
@@ -34,8 +34,8 @@ type TableToolbarState = Partial<{ viewDirty: boolean }>;
 
 export type TableToolbarProps = ThemedClassName<
   TableToolbarState & {
-    onAdd: () => void;
-    onSave: () => void;
+    onAdd?: () => void;
+    onSave?: () => void;
     attendableId?: string;
     customActions?: Atom.Atom<ActionGraphProps>;
   }
@@ -98,6 +98,13 @@ export const TableToolbar = ({
   customActions,
 }: TableToolbarProps) => {
   const state = useMemo(() => live<TableToolbarState>({ viewDirty }), []);
+
+  // TODO(wittjosiah): This is madness.
+  // Update state.viewDirty when the prop changes
+  useEffect(() => {
+    state.viewDirty = viewDirty;
+  }, [state, viewDirty]);
+
   const actionsCreator = useMemo(
     () => createTableToolbarActions({ state, onAdd, onSave, customActions }),
     [state, onAdd, onSave, customActions],

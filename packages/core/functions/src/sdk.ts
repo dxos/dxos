@@ -8,8 +8,9 @@ import * as Schema from 'effect/Schema';
 
 import { type AiService } from '@dxos/ai';
 import { Obj, Type } from '@dxos/echo';
-import { type DatabaseService } from '@dxos/echo-db';
+import { type Database } from '@dxos/echo';
 import { assertArgument, failedInvariant } from '@dxos/invariant';
+import { Operation } from '@dxos/operation';
 
 import {
   type CredentialsService,
@@ -37,7 +38,7 @@ export type FunctionServices =
   | InvocationServices
   | AiService.AiService
   | CredentialsService
-  | DatabaseService
+  | Database.Service
   | QueueService
   | FunctionInvocationService;
 
@@ -76,6 +77,12 @@ export type FunctionDefinition<T = any, O = any, S extends FunctionServices = Fu
   outputSchema?: Schema.Schema<O, any>;
 
   /**
+   * List of types the function uses.
+   * This is used to ensure that the types are available when the function is executed.
+   */
+  types: readonly Type.Entity.Any[];
+
+  /**
    * Keys of the required services.
    */
   services: readonly string[];
@@ -108,6 +115,12 @@ export type FunctionProps<T, O> = {
   description?: string;
   inputSchema: Schema.Schema<T, any>;
   outputSchema?: Schema.Schema<O, any>;
+
+  /**
+   * List of types the function uses.
+   * This is used to ensure that the types are available when the function is executed.
+   */
+  types?: readonly Type.Entity.Any[];
   // TODO(dmaretskyi): This currently doesn't cause a compile-time error if the handler requests a service that is not specified
   services?: readonly Context.Tag<any, any>[];
 
@@ -117,7 +130,7 @@ export type FunctionProps<T, O> = {
 // TODO(dmaretskyi): Output type doesn't get typechecked.
 export const defineFunction: {
   <I, O>(params: FunctionProps<I, O>): FunctionDefinition<I, O, FunctionServices>;
-} = ({ key, name, description, inputSchema, outputSchema = Schema.Any, handler, services }) => {
+} = ({ key, name, description, inputSchema, outputSchema = Schema.Any, handler, types, services }) => {
   if (!Schema.isSchema(inputSchema)) {
     throw new Error('Input schema must be a valid schema');
   }
@@ -162,6 +175,7 @@ export const defineFunction: {
     inputSchema,
     outputSchema,
     handler: handlerWithSpan,
+    types: types ?? [],
     services: !services ? [] : getServiceKeys(services),
   } satisfies FunctionDefinition.Any;
 };
@@ -171,9 +185,56 @@ const getServiceKeys = (services: readonly Context.Tag<any, any>[]) => {
     if (typeof tag.key === 'string') {
       return tag.key;
     }
-    console.log(tag);
     failedInvariant();
   });
+};
+
+/**
+ * Converts a FunctionDefinition to an OperationDefinition with handler.
+ * The function handler is adapted to the OperationHandler format.
+ *
+ * Note: FunctionDefinition stores service keys as strings, not Tag types,
+ * so we can't use Operation.withHandler's type inference here.
+ */
+export const toOperation = <T, O, S extends FunctionServices = FunctionServices>(
+  functionDef: FunctionDefinition<T, O, S>,
+): Operation.Definition<T, O> & { handler: Operation.Handler<T, O, any, S> } => {
+  const op = Operation.make({
+    schema: {
+      input: functionDef.inputSchema,
+      output: functionDef.outputSchema ?? Schema.Any,
+    },
+    meta: {
+      key: functionDef.key,
+      name: functionDef.name,
+      description: functionDef.description,
+    },
+  });
+
+  // Adapt FunctionHandler signature to OperationHandler format.
+  // FunctionHandler expects { context, data }, OperationHandler expects just input.
+  const operationHandler: Operation.Handler<T, O, any, S> = (input: T) => {
+    const result = functionDef.handler({
+      context: {} as FunctionContext,
+      data: input,
+    });
+
+    // Convert Promise or plain value to Effect.
+    if (Effect.isEffect(result)) {
+      return result;
+    }
+    if (result instanceof Promise) {
+      return Effect.tryPromise(() => result);
+    }
+    return Effect.succeed(result as O);
+  };
+
+  // Manually attach handler since FunctionDefinition stores service keys as strings,
+  // not Tag types, so withHandler's type inference doesn't apply.
+  return {
+    ...op,
+    handler: operationHandler,
+  };
 };
 
 export const FunctionDefinition = {
@@ -189,6 +250,7 @@ export const FunctionDefinition = {
     assertArgument(Obj.instanceOf(Function.Function, functionObj), 'functionObj');
     return deserializeFunction(functionObj);
   },
+  toOperation,
 };
 
 export const serializeFunction = (functionDef: FunctionDefinition.Any): Function.Function => {
@@ -219,6 +281,7 @@ export const deserializeFunction = (functionObj: Function.Function): FunctionDef
     // TODO(dmaretskyi): This should throw error.
     handler: () => {},
     services: functionObj.services ?? [],
+    types: [],
     meta: {
       deployedFunctionId: getUserFunctionIdInMetadata(Obj.getMeta(functionObj)),
     },

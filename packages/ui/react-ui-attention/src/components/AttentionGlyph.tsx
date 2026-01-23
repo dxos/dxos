@@ -6,7 +6,7 @@ import { type Primitive } from '@radix-ui/react-primitive';
 import React, { type CSSProperties, type ComponentPropsWithRef, forwardRef, useMemo } from 'react';
 
 import { Icon, type ThemedClassName } from '@dxos/react-ui';
-import { mx } from '@dxos/react-ui-theme';
+import { mx } from '@dxos/ui-theme';
 
 const attentionGlyphStyles =
   'inline-block rounded-sm is-3 bs-3 bg-transparent text-accentText transition-colors [[data-contains-attended=true]_&]:bg-attentionRelated [[data-attention=true]_&]:bg-accentSurface [[data-attention=true]_&]:text-accentSurfaceText [[aria-current][data-attention=true]_&]:bg-accentSurface [[aria-current][data-attention=true]_&]:text-accentSurfaceText';

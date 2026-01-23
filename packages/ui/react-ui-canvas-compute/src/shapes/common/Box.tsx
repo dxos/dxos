@@ -8,7 +8,7 @@ import { invariant } from '@dxos/invariant';
 import { Icon, IconButton, type ThemedClassName } from '@dxos/react-ui';
 import { useEditorContext, useShapeDef } from '@dxos/react-ui-canvas-editor';
 import { type Shape } from '@dxos/react-ui-canvas-editor';
-import { mx } from '@dxos/react-ui-theme';
+import { mx } from '@dxos/ui-theme';
 
 export const headerHeight = 32;
 export const footerHeight = 32;

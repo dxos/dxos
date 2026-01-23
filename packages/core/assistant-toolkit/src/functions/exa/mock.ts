@@ -7,7 +7,7 @@ import * as Schema from 'effect/Schema';
 
 import { defineFunction } from '@dxos/functions';
 
-import { SEARCH_RESULTS } from '../../testing';
+import { SEARCH_RESULTS } from './data';
 
 export default defineFunction({
   key: 'dxos.org/function/exa-mock',

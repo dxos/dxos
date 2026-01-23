@@ -1,0 +1,36 @@
+{
+  "extends": "../../../tsconfig.base.json",
+  "compilerOptions": {},
+  "include": [
+    "src"
+  ],
+  "references": [
+    {
+      "path": "../../common/debug"
+    },
+    {
+      "path": "../../common/effect"
+    },
+    {
+      "path": "../../common/errors"
+    },
+    {
+      "path": "../../common/log"
+    },
+    {
+      "path": "../../common/util"
+    },
+    {
+      "path": "../../core/echo/echo"
+    },
+    {
+      "path": "../../core/functions"
+    },
+    {
+      "path": "../../core/protocols"
+    },
+    {
+      "path": "../../sdk/client"
+    }
+  ]
+}

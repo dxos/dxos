@@ -9,9 +9,9 @@ import { createDocAccessor } from '@dxos/echo-db';
 import { createObject } from '@dxos/react-client/echo';
 import { Toolbar } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
-import { createDataExtensions } from '@dxos/react-ui-editor';
 import { StackItem } from '@dxos/react-ui-stack';
 import { Json } from '@dxos/react-ui-syntax-highlighter';
+import { createDataExtensions } from '@dxos/ui-editor';
 import { trim } from '@dxos/util';
 
 import { TypescriptEditor, type TypescriptEditorProps } from './TypescriptEditor';
@@ -35,7 +35,12 @@ const DefaultStory = (props: TypescriptEditorProps) => {
   // );
 
   const extensions = useMemo(
-    () => [createDataExtensions({ id: object.id, text: createDocAccessor(object, ['content']) })],
+    () => [
+      createDataExtensions({
+        id: object.id,
+        text: createDocAccessor(object, ['content']),
+      }),
+    ],
     [],
   );
 
@@ -78,7 +83,7 @@ const meta = {
   title: 'plugins/plugin-script/TypescriptEditor',
   component: TypescriptEditor,
   render: DefaultStory,
-  decorators: [withTheme, withLayout({ container: 'column', classNames: 'is-prose' })],
+  decorators: [withTheme, withLayout({ layout: 'column', classNames: 'is-prose' })],
 } satisfies Meta<typeof DefaultStory>;
 
 export default meta;

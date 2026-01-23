@@ -8,9 +8,7 @@ import { Obj, Ref } from '@dxos/echo';
 import { type Space, useMembers } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 import { Icon, ScrollArea, type ThemedClassName, useThemeContext, useTranslation } from '@dxos/react-ui';
-import { createBasicExtensions, createThemeExtensions, listener } from '@dxos/react-ui-editor';
 import { StackItem } from '@dxos/react-ui-stack';
-import { mx } from '@dxos/react-ui-theme';
 import {
   MessageTextbox,
   type MessageTextboxProps,
@@ -19,6 +17,8 @@ import {
   threadLayout,
 } from '@dxos/react-ui-thread';
 import { Message, type Thread } from '@dxos/types';
+import { createBasicExtensions, createThemeExtensions, listener } from '@dxos/ui-editor';
+import { mx } from '@dxos/ui-theme';
 import { isNonNullable } from '@dxos/util';
 
 import { useStatus } from '../hooks';
@@ -60,7 +60,7 @@ export const ChatContainer = ({
   const { t } = useTranslation(meta.id);
   const id = Obj.getDXN(thread).toString();
   const identity = useIdentity()!;
-  const members = useMembers(space?.key);
+  const members = useMembers(space?.id);
   const activity = useStatus(space, id);
   // TODO(wittjosiah): This is a hack to reset the editor after a message is sent.
   const [_count, _setCount] = useState(0);
@@ -138,10 +138,10 @@ export const ChatContainer = ({
           </div>
           {/* NOTE(thure): This can’t also be the `overflow-anchor` because `ScrollArea` injects an interceding node that contains this necessary ref’d element. */}
           <div role='none' className='bs-px -mbs-px' ref={threadScrollRef} />
-          <ScrollArea.Scrollbar>
-            <ScrollArea.Thumb />
-          </ScrollArea.Scrollbar>
         </ScrollArea.Viewport>
+        <ScrollArea.Scrollbar>
+          <ScrollArea.Thumb />
+        </ScrollArea.Scrollbar>
       </ScrollArea.Root>
 
       <MessageTextbox extensions={extensions} autoFocus={autoFocus} onSend={handleCreate} {...textboxMetadata} />

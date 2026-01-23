@@ -16,7 +16,7 @@ import { type ChatEditorProps } from '@dxos/react-ui-chat';
 import { type EditorController, QueryEditor } from '@dxos/react-ui-components';
 import { StackItem } from '@dxos/react-ui-stack';
 import { Json } from '@dxos/react-ui-syntax-highlighter';
-import { mx } from '@dxos/react-ui-theme';
+import { mx } from '@dxos/ui-theme';
 
 import { type ComponentProps } from './types';
 
@@ -24,7 +24,7 @@ export const GraphModule = ({ space }: ComponentProps) => {
   const [filter, setFilter] = useState<Filter.Any>();
   const [open, setOpen] = useState(false);
 
-  const [researchGraph] = useQuery(space, Query.type(ResearchGraph));
+  const [researchGraph] = useQuery(space.db, Query.type(ResearchGraph));
   const queue = researchGraph?.queue.target;
 
   // TODO(burdon): Clean-up API.

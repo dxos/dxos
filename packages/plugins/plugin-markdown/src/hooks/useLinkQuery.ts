@@ -5,39 +5,39 @@
 import * as Option from 'effect/Option';
 import { useCallback, useMemo } from 'react';
 
-import { Capabilities } from '@dxos/app-framework';
+import { Common } from '@dxos/app-framework';
 import { usePluginManager } from '@dxos/app-framework/react';
-import { Filter, Obj, Query, Type } from '@dxos/echo';
+import { type Database, Filter, Obj, Query, Type } from '@dxos/echo';
 import { EntityKind, SystemTypeAnnotation, getTypeAnnotation } from '@dxos/echo/internal';
-import { type Space } from '@dxos/react-client/echo';
 import { toLocalizedString, useTranslation } from '@dxos/react-ui';
-import { type EditorMenuGroup, type EditorMenuItem, insertAtCursor, insertAtLineStart } from '@dxos/react-ui-editor';
+import { type EditorMenuGroup, type EditorMenuItem } from '@dxos/react-ui-editor';
+import { insertAtCursor, insertAtLineStart } from '@dxos/ui-editor';
 
-export const useLinkQuery = (space: Space | undefined) => {
+export const useLinkQuery = (db: Database.Database | undefined) => {
   const { t } = useTranslation();
 
   const manager = usePluginManager();
   const resolve = useCallback(
     (typename: string) =>
-      manager.context.getCapabilities(Capabilities.Metadata).find(({ id }) => id === typename)?.metadata ?? {},
+      manager.capabilities.getAll(Common.Capability.Metadata).find(({ id }) => id === typename)?.metadata ?? {},
     [manager],
   );
 
   const filter = useMemo(
     () =>
       Filter.or(
-        ...(space?.db.schemaRegistry.query({ location: ['database', 'runtime'] }).runSync() ?? [])
+        ...(db?.schemaRegistry.query({ location: ['database', 'runtime'] }).runSync() ?? [])
           .filter((schema) => getTypeAnnotation(schema)?.kind !== EntityKind.Relation)
           .filter((schema) => !SystemTypeAnnotation.get(schema).pipe(Option.getOrElse(() => false)))
           .map((schema) => Filter.typename(Type.getTypename(schema))),
       ),
-    [space],
+    [db],
   );
 
   const handleLinkQuery = useCallback(
     async (query?: string): Promise<EditorMenuGroup[]> => {
       const name = query?.startsWith('@') ? query.slice(1).toLowerCase() : (query?.toLowerCase() ?? '');
-      const results = await space?.db.query(Query.select(filter)).run();
+      const results = await db?.query(Query.select(filter)).run();
 
       // TODO(wittjosiah): Use `Obj.Any` type.
       const getLabel = (object: any) => {
@@ -53,8 +53,8 @@ export const useLinkQuery = (space: Space | undefined) => {
       };
 
       const items =
-        results?.objects
-          .filter((object) => toLocalizedString(getLabel(object), t).toLowerCase().includes(name))
+        results
+          ?.filter((object) => toLocalizedString(getLabel(object), t).toLowerCase().includes(name))
           // TODO(wittjosiah): Remove `any` type.
           .map((object: any): EditorMenuItem => {
             const metadata = resolve(Obj.getTypename(object)!);
@@ -76,7 +76,7 @@ export const useLinkQuery = (space: Space | undefined) => {
 
       return [{ id: 'echo', items }];
     },
-    [space, filter, resolve],
+    [db, filter, resolve],
   );
 
   return handleLinkQuery;

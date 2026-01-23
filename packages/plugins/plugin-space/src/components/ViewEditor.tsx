@@ -5,8 +5,7 @@
 import * as Schema from 'effect/Schema';
 import React, { useCallback, useState } from 'react';
 
-import { createIntent } from '@dxos/app-framework';
-import { useIntentDispatcher } from '@dxos/app-framework/react';
+import { useOperationInvoker } from '@dxos/app-framework/react';
 import { DXN, Filter, Obj, Query, type QueryAST, Tag, Type } from '@dxos/echo';
 import { useClient } from '@dxos/react-client';
 import { getSpace, useQuery } from '@dxos/react-client/echo';
@@ -14,18 +13,18 @@ import { useAsyncEffect } from '@dxos/react-ui';
 import { ViewEditor as NaturalViewEditor } from '@dxos/react-ui-form';
 import { View } from '@dxos/schema';
 
-import { resolveSchemaWithClientAndSpace } from '../helpers';
+import { resolveSchemaWithRegistry } from '../helpers';
 import { useTypeOptions } from '../hooks';
-import { SpaceAction } from '../types';
+import { SpaceOperation } from '../types';
 
 export type ViewEditorProps = { view: View.View };
 
 export const ViewEditor = ({ view }: ViewEditorProps) => {
-  const { dispatchPromise: dispatch } = useIntentDispatcher();
+  const { invokePromise } = useOperationInvoker();
   const client = useClient();
   const space = getSpace(view);
   const [schema, setSchema] = useState<Schema.Schema.AnyNoContext>(() => Schema.Struct({}));
-  const tags = useQuery(space, Filter.type(Tag.Tag));
+  const tags = useQuery(space?.db, Filter.type(Tag.Tag));
   const types = useTypeOptions({
     space,
     annotation: {
@@ -40,7 +39,7 @@ export const ViewEditor = ({ view }: ViewEditorProps) => {
       return;
     }
 
-    const foundSchema = await resolveSchemaWithClientAndSpace(client, space, view.query.ast);
+    const foundSchema = await resolveSchemaWithRegistry(space.db.schemaRegistry, view.query.ast);
     if (foundSchema && foundSchema !== schema) {
       setSchema(() => foundSchema);
     }
@@ -55,7 +54,7 @@ export const ViewEditor = ({ view }: ViewEditorProps) => {
       const queue = target && DXN.tryParse(target) ? target : undefined;
       const query = queue ? Query.fromAst(newQuery).options({ queues: [queue] }) : Query.fromAst(newQuery);
       view.query.ast = query.ast;
-      const newSchema = await resolveSchemaWithClientAndSpace(client, space, query.ast);
+      const newSchema = await resolveSchemaWithRegistry(space.db.schemaRegistry, query.ast);
       if (!newSchema) {
         return;
       }
@@ -73,9 +72,9 @@ export const ViewEditor = ({ view }: ViewEditorProps) => {
 
   const handleDelete = useCallback(
     (fieldId: string) => {
-      void dispatch(createIntent(SpaceAction.DeleteField, { view, fieldId }));
+      void invokePromise(SpaceOperation.DeleteField, { view, fieldId });
     },
-    [dispatch, view],
+    [invokePromise, view],
   );
 
   if (!space || !schema) {
@@ -88,7 +87,6 @@ export const ViewEditor = ({ view }: ViewEditorProps) => {
       schema={schema}
       view={view}
       mode='tag'
-      outerSpacing={false}
       tags={tags}
       types={types}
       onQueryChanged={handleQueryChanged}

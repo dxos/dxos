@@ -8,6 +8,7 @@
     ]
   },
   "exclude": [
+    "*.stories.tsx",
     "*.t.ts",
     "vite.config.ts"
   ],
@@ -72,6 +73,9 @@
       "path": "../../core/functions"
     },
     {
+      "path": "../../core/operation"
+    },
+    {
       "path": "../../core/protocols"
     },
     {
@@ -120,10 +124,13 @@
       "path": "../../ui/react-ui-tabs"
     },
     {
-      "path": "../../ui/react-ui-theme"
+      "path": "../../ui/react-ui-thread"
     },
     {
-      "path": "../../ui/react-ui-thread"
+      "path": "../../ui/ui-editor"
+    },
+    {
+      "path": "../../ui/ui-theme"
     },
     {
       "path": "../plugin-attention"
@@ -145,6 +152,9 @@
     },
     {
       "path": "../plugin-space"
+    },
+    {
+      "path": "../plugin-testing"
     },
     {
       "path": "../plugin-theme"

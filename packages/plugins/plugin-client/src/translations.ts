@@ -3,14 +3,15 @@
 //
 
 import { type Resource } from '@dxos/react-ui';
+import { translations as shellTranslations } from '@dxos/shell/react';
 
 import { meta } from './meta';
 
-export const translations = [
+const pluginTranslations = [
   {
     'en-US': {
       [meta.id]: {
-        'account label': 'User Account',
+        'account label': 'User profile',
         'profile label': 'Profile',
         'profile description': 'You can adjust how your user settings here.',
         'devices label': 'Devices',
@@ -68,3 +69,5 @@ export const translations = [
     },
   },
 ] as const satisfies Resource[];
+
+export const translations: Resource[] = [...pluginTranslations, ...shellTranslations];

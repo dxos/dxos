@@ -8,7 +8,7 @@ import React from 'react';
 import { useResizeDetector } from 'react-resize-detector';
 
 import { type ThemedClassName, useStateWithRef } from '@dxos/react-ui';
-import { mx } from '@dxos/react-ui-theme';
+import { mx } from '@dxos/ui-theme';
 
 // TODO(burdon): Show predicted nodes faded out.
 // TODO(burdon): Allow controlled index (like TextBlock).

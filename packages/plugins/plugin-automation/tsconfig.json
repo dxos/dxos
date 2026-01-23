@@ -18,6 +18,9 @@
       "path": "../../common/context"
     },
     {
+      "path": "../../common/effect"
+    },
+    {
       "path": "../../common/invariant"
     },
     {
@@ -57,7 +60,16 @@
       "path": "../../core/functions-runtime"
     },
     {
+      "path": "../../core/operation"
+    },
+    {
+      "path": "../../devtools/cli-util"
+    },
+    {
       "path": "../../sdk/app-framework"
+    },
+    {
+      "path": "../../sdk/client"
     },
     {
       "path": "../../sdk/react-client"
@@ -87,7 +99,7 @@
       "path": "../../ui/react-ui-stack"
     },
     {
-      "path": "../../ui/react-ui-theme"
+      "path": "../../ui/ui-theme"
     },
     {
       "path": "../plugin-client"

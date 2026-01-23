@@ -2,15 +2,16 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type BaseObject, type ForeignKey } from '@dxos/echo/internal';
-import { getMeta } from '@dxos/echo/internal';
-import { Reference } from '@dxos/echo-protocol';
-import { invariant } from '@dxos/invariant';
+import { Obj } from '@dxos/echo';
+import { type AnyProperties } from '@dxos/echo/internal';
+import { type ForeignKey } from '@dxos/echo-protocol';
+import { DXN } from '@dxos/keys';
 import { type Live, getProxyTarget } from '@dxos/live-object';
 
 import { type EchoDatabase } from '../proxy-db';
 
-import { type AnyLiveObject, isEchoObject } from './echo-handler';
+import { type AnyLiveObject } from './echo-handler';
+import { isEchoObject } from './echo-object-utils';
 import { type ProxyTarget, symbolInternals } from './echo-proxy-target';
 
 export const getDatabaseFromObject = (obj: Live<any>): EchoDatabase | undefined => {
@@ -18,25 +19,26 @@ export const getDatabaseFromObject = (obj: Live<any>): EchoDatabase | undefined 
     return undefined;
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
   const target = getProxyTarget(obj) as ProxyTarget;
   return target[symbolInternals].database;
 };
 
 /**
- * @deprecated
+ * @deprecated Use `DXN.fromSpaceAndObjectId(spaceId, obj.id)` instead.
  */
-export const getReferenceWithSpaceKey = (obj: AnyLiveObject<any>): Reference | undefined => {
-  invariant(obj);
+export const getDXNWithSpaceKey = (obj: AnyLiveObject<any>): DXN | undefined => {
   const db = getDatabaseFromObject(obj);
-  return db && Reference.fromObjectIdAndSpaceKey(obj.id, db.spaceKey);
+  return db && DXN.fromSpaceAndObjectId(db.spaceId, obj.id);
 };
 
 // TODO(burdon): Factor out.
 // TODO(burdon): Impl query by meta.
-export const findObjectWithForeignKey = <T extends BaseObject>(objects: AnyLiveObject<T>[], foreignKey: ForeignKey) => {
+export const findObjectWithForeignKey = <T extends AnyProperties>(
+  objects: AnyLiveObject<T>[],
+  foreignKey: ForeignKey,
+) => {
   return objects.find((result) => {
-    return getMeta(result).keys.find(({ source, id }) => source === foreignKey.source && id === foreignKey.id);
+    return Obj.getMeta(result).keys.find(({ source, id }) => source === foreignKey.source && id === foreignKey.id);
   });
 };
 

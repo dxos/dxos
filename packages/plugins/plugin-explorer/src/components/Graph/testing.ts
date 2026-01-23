@@ -24,7 +24,10 @@ export type GenerateOptions = {
   };
 };
 
-const defaultRelations: GenerateOptions['relations'] = { kind: 'friend', count: 10 };
+const defaultRelations: GenerateOptions['relations'] = {
+  kind: 'friend',
+  count: 10,
+};
 
 /**
  * @deprecated Use @dxos/schema.
@@ -38,7 +41,7 @@ export const generate = async (
   await createObjects(spec);
 
   // Add relations between objects.
-  const { objects: contacts } = await space.db.query(Query.type(Person.Person)).run();
+  const contacts = await space.db.query(Query.type(Person.Person)).run();
   for (const _ of range(relations.count)) {
     const source = getObject(contacts);
     const target = getObject(contacts);

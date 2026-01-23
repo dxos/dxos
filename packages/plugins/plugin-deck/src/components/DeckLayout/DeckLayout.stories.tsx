@@ -3,16 +3,15 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
+import * as Effect from 'effect/Effect';
 import React from 'react';
 
-import { Events, IntentPlugin, SettingsPlugin, defineModule, definePlugin } from '@dxos/app-framework';
+import { Common, Plugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { AttentionPlugin } from '@dxos/plugin-attention';
-import { GraphPlugin } from '@dxos/plugin-graph';
+import { corePlugins } from '@dxos/plugin-testing';
 import { withTheme } from '@dxos/react-ui/testing';
 
-import { DeckStateFactory, LayoutIntentResolver } from '../../capabilities';
-import { meta as pluginMeta } from '../../meta';
+import { DeckStateFactory, LayoutOperationResolver } from '../../capabilities';
 import { translations } from '../../translations';
 
 import { DeckLayout } from './DeckLayout';
@@ -25,27 +24,20 @@ const meta = {
     withTheme,
     withPluginManager({
       plugins: [
-        AttentionPlugin(),
-        SettingsPlugin(),
-        IntentPlugin(),
-        GraphPlugin(),
-        definePlugin(
-          {
-            id: 'example.com/plutin/testing',
-            name: 'Testing',
-          },
-          () => [
-            defineModule({
-              id: `${pluginMeta.id}/module/deck-state`,
-              activatesOn: Events.AppGraphReady,
-              activate: () => DeckStateFactory(),
-            }),
-            defineModule({
-              id: `${pluginMeta.id}/module/layout-intent-resolver`,
-              activatesOn: Events.SetupIntentResolver,
-              activate: LayoutIntentResolver,
-            }),
-          ],
+        ...corePlugins(),
+        Plugin.define({
+          id: 'example.com/plutin/testing',
+          name: 'Testing',
+        }).pipe(
+          Plugin.addModule({
+            id: 'deck-state',
+            activatesOn: Common.ActivationEvent.AppGraphReady,
+            activate: () => Effect.succeed(DeckStateFactory()),
+          }),
+          Common.Plugin.addOperationResolverModule({
+            activate: LayoutOperationResolver,
+          }),
+          Plugin.make,
         )(),
       ],
     }),

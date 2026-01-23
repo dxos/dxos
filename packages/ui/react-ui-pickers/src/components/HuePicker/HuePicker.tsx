@@ -5,7 +5,7 @@
 import React from 'react';
 
 import { type ButtonProps, type IconProps, type ThemedClassName, useTranslation } from '@dxos/react-ui';
-import { getSize, hues } from '@dxos/react-ui-theme';
+import { getSize, hues, osTranslations } from '@dxos/ui-theme';
 
 import { PickerButton, type PickerButtonProps } from '../PickerButton';
 
@@ -18,7 +18,7 @@ export type HuePickerProps = {
 } & Pick<PickerButtonProps, 'disabled' | 'defaultValue' | 'value' | 'onChange' | 'onReset' | 'rootVariant'>;
 
 export const HuePicker = (props: ThemedClassName<HuePickerProps>) => {
-  const { t } = useTranslation('os');
+  const { t } = useTranslation(osTranslations);
 
   return (
     <PickerButton

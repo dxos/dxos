@@ -2,18 +2,18 @@
 // Copyright 2024 DXOS.org
 //
 
-import * as Function from 'effect/Function';
-import * as Schema from 'effect/Schema';
+import * as Effect from 'effect/Effect';
 import { useCallback, useEffect, useMemo } from 'react';
 
-import { LayoutAction, chain, createIntent, createResolver } from '@dxos/app-framework';
-import { useIntentDispatcher, useIntentResolver } from '@dxos/app-framework/react';
+import { Common } from '@dxos/app-framework';
+import { useOperationInvoker, useOperationResolver } from '@dxos/app-framework/react';
 import { debounce } from '@dxos/async';
 import { type CellAddress, type CompleteCellRange, inRange } from '@dxos/compute';
 import { Obj, Relation } from '@dxos/echo';
-import { ATTENDABLE_PATH_SEPARATOR, DeckAction } from '@dxos/plugin-deck/types';
-import { ThreadAction } from '@dxos/plugin-thread/types';
-import { Filter, Query, getSpace, useQuery } from '@dxos/react-client/echo';
+import { OperationResolver } from '@dxos/operation';
+import { ATTENDABLE_PATH_SEPARATOR, DeckOperation } from '@dxos/plugin-deck/types';
+import { ThreadOperation } from '@dxos/plugin-thread/types';
+import { Filter, Query, useQuery } from '@dxos/react-client/echo';
 import { type DxGridElement, type GridContentProps } from '@dxos/react-ui-grid';
 import { AnchoredTo, Thread } from '@dxos/types';
 
@@ -39,43 +39,37 @@ export const parseThreadAnchorAsCellRange = (cursor: string): CompleteCellRange 
 
 export const useUpdateFocusedCellOnThreadSelection = (grid: DxGridElement | null) => {
   const { model, setActiveRefs } = useSheetContext();
-  const scrollIntoViewResolver = useMemo(
-    () =>
-      createResolver({
-        intent: LayoutAction.ScrollIntoView,
-        position: 'hoist',
-        filter: (
-          data,
-        ): data is {
-          part: 'current';
-          subject: string;
-          options: { cursor: string; ref: GridContentProps['activeRefs'] };
-        } => {
-          if (!Schema.is(LayoutAction.ScrollIntoView.fields.input)(data)) {
-            return false;
-          }
+  const sheetId = Obj.getDXN(model.sheet).toString();
 
-          return data.subject === Obj.getDXN(model.sheet).toString() && !!data.options?.cursor;
-        },
-        resolve: ({ options: { cursor, ref } }) => {
-          setActiveRefs(ref);
-          // TODO(Zan): Everywhere we refer to the cursor in a thread context should change to `anchor`.
-          const range = parseThreadAnchorAsCellRange(cursor!);
-          range && grid?.setFocus({ ...range.to, plane: 'grid' }, true);
-        },
+  const scrollIntoViewHandler = useMemo(
+    () =>
+      OperationResolver.make({
+        operation: Common.LayoutOperation.ScrollIntoView,
+        position: 'hoist',
+        filter: (input) => input.subject === sheetId && !!input.cursor,
+        handler: (input) =>
+          Effect.sync(() => {
+            const { cursor, ref } = input;
+            if (cursor) {
+              setActiveRefs(ref as GridContentProps['activeRefs']);
+              // TODO(Zan): Everywhere we refer to the cursor in a thread context should change to `anchor`.
+              const range = parseThreadAnchorAsCellRange(cursor);
+              range && grid?.setFocus({ ...range.to, plane: 'grid' }, true);
+            }
+          }),
       }),
-    [model.sheet, setActiveRefs],
+    [sheetId, setActiveRefs, grid],
   );
 
-  useIntentResolver(meta.id, scrollIntoViewResolver);
+  useOperationResolver(meta.id, scrollIntoViewHandler);
 };
 
 export const useSelectThreadOnCellFocus = () => {
   const { model, cursor } = useSheetContext();
-  const { dispatchPromise: dispatch } = useIntentDispatcher();
+  const { invokePromise } = useOperationInvoker();
 
-  const space = getSpace(model.sheet);
-  const anchors = useQuery(space, Query.select(Filter.ids(model.sheet.id)).targetOf(AnchoredTo.AnchoredTo));
+  const db = Obj.getDatabase(model.sheet);
+  const anchors = useQuery(db, Query.select(Filter.id(model.sheet.id)).targetOf(AnchoredTo.AnchoredTo));
 
   const selectClosestThread = useCallback(
     (cellAddress: CellAddress) => {
@@ -95,14 +89,16 @@ export const useSelectThreadOnCellFocus = () => {
 
       if (closestThread) {
         const primary = Obj.getDXN(model.sheet).toString();
-        const intent = Function.pipe(
-          createIntent(ThreadAction.Select, { current: Obj.getDXN(closestThread).toString() }),
-          chain(DeckAction.ChangeCompanion, { primary, companion: `${primary}${ATTENDABLE_PATH_SEPARATOR}comments` }),
-        );
-        void dispatch(intent);
+        void (async () => {
+          await invokePromise(ThreadOperation.Select, { current: Obj.getDXN(closestThread).toString() });
+          await invokePromise(DeckOperation.ChangeCompanion, {
+            primary,
+            companion: `${primary}${ATTENDABLE_PATH_SEPARATOR}comments`,
+          });
+        })();
       }
     },
-    [dispatch, anchors],
+    [invokePromise, anchors],
   );
 
   const debounced = useMemo(() => {

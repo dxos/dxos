@@ -3,32 +3,22 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import * as Schema from 'effect/Schema';
+import * as Effect from 'effect/Effect';
 import React, { type KeyboardEvent, useCallback, useRef } from 'react';
 import { expect, userEvent, within } from 'storybook/test';
 
-import {
-  Capabilities,
-  IntentPlugin,
-  LayoutAction,
-  SettingsPlugin,
-  contributes,
-  createResolver,
-  defineCapability,
-} from '@dxos/app-framework';
+import { Capability, Common, RuntimePlugin } from '@dxos/app-framework';
 import { useCapability } from '@dxos/app-framework/react';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { live } from '@dxos/live-object';
-import { AttentionPlugin } from '@dxos/plugin-attention';
-import { GraphPlugin } from '@dxos/plugin-graph';
-import { StorybookLayoutPlugin } from '@dxos/plugin-storybook-layout';
-import { ThemePlugin } from '@dxos/plugin-theme';
+import { OperationResolver } from '@dxos/operation';
+import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
 import { faker } from '@dxos/random';
 import { IconButton, Input, Main, Toolbar } from '@dxos/react-ui';
 import { withTheme } from '@dxos/react-ui/testing';
 import { useAttention, useAttentionAttributes } from '@dxos/react-ui-attention';
 import { Stack, StackItem } from '@dxos/react-ui-stack';
-import { defaultTx, mx } from '@dxos/react-ui-theme';
+import { mx } from '@dxos/ui-theme';
 
 import { NavTreePlugin } from '../../NavTreePlugin';
 import { storybookGraphBuilders } from '../../testing';
@@ -37,7 +27,7 @@ import { NavTreeContainer } from '../NavTreeContainer';
 
 faker.seed(1234);
 
-const StoryState = defineCapability<{ tab: string }>('story-state');
+const StoryState = Capability.make<{ tab: string }>('story-state');
 
 // TODO(burdon): Fix outline (e.g., button in sidebar nav is clipped when focused).
 // TODO(burdon): Consider similar containment of: Table, Sheet, Kanban Column, Form, etc.
@@ -132,26 +122,22 @@ const meta = {
     withTheme,
     withPluginManager({
       plugins: [
-        ThemePlugin({ tx: defaultTx }),
-        GraphPlugin(),
-        IntentPlugin(),
-        SettingsPlugin(),
-        AttentionPlugin(),
+        RuntimePlugin(),
+        ...corePlugins(),
         NavTreePlugin(),
-        StorybookLayoutPlugin({ initialState: { sidebarState: 'expanded' } }),
+        StorybookPlugin({ initialState: { sidebarState: 'expanded' } }),
       ],
       capabilities: (context) => [
-        contributes(StoryState, live({ tab: 'space-0' })),
-        contributes(Capabilities.AppGraphBuilder, storybookGraphBuilders(context)),
-        contributes(Capabilities.IntentResolver, [
-          createResolver({
-            intent: LayoutAction.UpdateLayout,
-            filter: (data): data is Schema.Schema.Type<typeof LayoutAction.SwitchWorkspace.fields.input> =>
-              Schema.is(LayoutAction.SwitchWorkspace.fields.input)(data),
-            resolve: ({ subject }) => {
-              const state = context.getCapability(StoryState);
-              state.tab = subject;
-            },
+        Capability.contributes(StoryState, live({ tab: 'space-0' })),
+        Capability.contributes(Common.Capability.AppGraphBuilder, storybookGraphBuilders()),
+        Capability.contributes(Common.Capability.OperationResolver, [
+          OperationResolver.make({
+            operation: Common.LayoutOperation.SwitchWorkspace,
+            handler: ({ subject }) =>
+              Effect.sync(() => {
+                const state = context.get(StoryState);
+                state.tab = subject;
+              }),
           }),
         ]),
       ],

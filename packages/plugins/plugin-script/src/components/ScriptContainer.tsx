@@ -8,8 +8,8 @@ import { createDocAccessor } from '@dxos/echo-db';
 import { type Script } from '@dxos/functions';
 import { getSpace } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
-import { createDataExtensions, listener, stackItemContentEditorClassNames } from '@dxos/react-ui-editor';
 import { StackItem } from '@dxos/react-ui-stack';
+import { createDataExtensions, listener, stackItemContentEditorClassNames } from '@dxos/ui-editor';
 
 import { useDeployState, useToolbarState } from '../hooks';
 import { type ScriptSettings } from '../types';
@@ -27,29 +27,33 @@ export const ScriptContainer = ({ role, script, settings = { editorInputMode: 'v
   const identity = useIdentity();
   const space = getSpace(script);
   const state = useToolbarState();
-  useDeployState({ state, script });
+  useDeployState({ script, state });
 
-  const extensions = useMemo(
-    () =>
-      script.source.target
-        ? [
-            listener({
-              onChange: ({ text }) => {
-                if (script.source.target?.content !== text) {
-                  script.changed = true;
-                }
-              },
-            }),
-            createDataExtensions({
-              id: script.id,
-              text: createDocAccessor(script.source.target, ['content']),
-              messenger: space,
-              identity,
-            }),
-          ]
-        : [],
-    [identity, space, script, script.source.target],
-  );
+  const extensions = useMemo(() => {
+    if (!script.source.target) {
+      return [];
+    }
+
+    return [
+      createDataExtensions({
+        id: script.id,
+        text: createDocAccessor(script.source.target, ['content']),
+        messenger: space,
+        identity,
+      }),
+      listener({
+        onChange: ({ text }) => {
+          if (script.source.target?.content !== text) {
+            script.changed = true;
+          }
+        },
+      }),
+    ];
+  }, [identity, space, script, script.source.target]);
+
+  if (!extensions.length) {
+    return null;
+  }
 
   return (
     <StackItem.Content toolbar>

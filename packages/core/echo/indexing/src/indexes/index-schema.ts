@@ -5,7 +5,7 @@
 import { Event } from '@dxos/async';
 import { Resource } from '@dxos/context';
 import { EXPANDO_TYPENAME } from '@dxos/echo/internal';
-import { type ObjectStructure, decodeReference } from '@dxos/echo-protocol';
+import { EncodedReference, type ObjectStructure } from '@dxos/echo-protocol';
 import { DXN, PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type ObjectPointerEncoded } from '@dxos/protocols';
@@ -18,7 +18,7 @@ import {
   type Index,
   type IndexQuery,
   type IndexStaticProps,
-  type LoadParams,
+  type LoadProps,
   staticImplements,
 } from '../types';
 
@@ -116,7 +116,7 @@ export class IndexSchema extends Resource implements Index {
   }
 
   @trace.span({ showInBrowserTimeline: true })
-  static async load({ serialized, identifier }: LoadParams): Promise<IndexSchema> {
+  static async load({ serialized, identifier }: LoadProps): Promise<IndexSchema> {
     const index = new IndexSchema();
     const serializedIndex: { type: string | null; ids: string[] }[] = JSON.parse(serialized).index;
     index._identifier = identifier;
@@ -127,5 +127,11 @@ export class IndexSchema extends Resource implements Index {
   }
 }
 
-const getTypeFromObject = (object: Partial<ObjectStructure>): string | null =>
-  object.system?.type ? (decodeReference(object.system.type).objectId ?? null) : null;
+const getTypeFromObject = (object: Partial<ObjectStructure>): string | null => {
+  if (!object.system?.type) {
+    return null;
+  }
+  const dxn = EncodedReference.toDXN(object.system.type);
+  // For type DXNs, return the typename; for echo DXNs (stored schemas), return the object id.
+  return dxn.asTypeDXN()?.type ?? dxn.asEchoDXN()?.echoId ?? null;
+};

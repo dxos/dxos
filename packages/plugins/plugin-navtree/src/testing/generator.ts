@@ -4,9 +4,9 @@
 
 import * as Schema from 'effect/Schema';
 
-import { type NodeArg } from '@dxos/app-graph';
-import { type Live, Obj, Type } from '@dxos/echo';
-import { TypedObject } from '@dxos/echo/internal';
+import { type Node } from '@dxos/app-graph';
+import { Obj, Type } from '@dxos/echo';
+import { type Live } from '@dxos/live-object';
 import { faker } from '@dxos/random';
 import { range } from '@dxos/util';
 
@@ -58,15 +58,17 @@ export const defaultGenerators: { [type: string]: ObjectDataGenerator } = {
 
   project: {
     createSchema: () =>
-      class ProjectType extends TypedObject({
-        typename: 'example.com/type/Project',
-        version: '0.1.0',
-      })({
+      Schema.Struct({
         title: Schema.String,
         repo: Schema.String,
         status: Schema.String,
         priority: Schema.Number,
-      }) {},
+      }).pipe(
+        Type.Obj({
+          typename: 'example.com/type/Project',
+          version: '0.1.0',
+        }),
+      ),
 
     createData: () => ({
       title: faker.commerce.productName(),
@@ -173,7 +175,7 @@ export const createTree = () => {
                   },
                 },
               ],
-            } satisfies NodeArg<any>;
+            } satisfies Node.NodeArg<any>;
           }),
           {
             id: `${faker.string.uuid()}__a1`,
@@ -194,9 +196,9 @@ export const createTree = () => {
             },
           },
         ],
-      } satisfies NodeArg<any>;
+      } satisfies Node.NodeArg<any>;
     }),
-  } satisfies NodeArg<any>;
+  } satisfies Node.NodeArg<any>;
 
   return initialContent;
 };

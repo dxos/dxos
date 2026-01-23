@@ -9,6 +9,7 @@ import { assertArgument, assertState } from '@dxos/invariant';
 import type { IdentityDid, SpaceId } from '@dxos/keys';
 import { SpaceArchiveFileStructure, type SpaceArchiveMetadata, SpaceArchiveVersion } from '@dxos/protocols';
 import type { SpaceArchive } from '@dxos/protocols/proto/dxos/client/services';
+import { createFilename } from '@dxos/util';
 
 export type SpaceArchiveBeginProps = {
   spaceId?: SpaceId;
@@ -59,6 +60,7 @@ export class SpaceArchiveWriter extends Resource {
   async finish(): Promise<SpaceArchive> {
     assertState(this._archive, 'Not open');
     assertState(this._meta, 'Not started');
+    assertState(this._meta.spaceId, 'No space ID set');
     assertState(this._currentRootUrl, 'No root URL set');
 
     const metadata: SpaceArchiveMetadata = {
@@ -76,8 +78,7 @@ export class SpaceArchiveWriter extends Resource {
     const binary = this._archive.toUint8Array();
 
     return {
-      // TODO(wittjosiah): Factor out file name construction.
-      filename: `${new Date().toISOString()}-${this._meta.spaceId}.tar`,
+      filename: createFilename({ parts: [this._meta.spaceId], ext: 'tar' }),
       contents: binary,
     };
   }

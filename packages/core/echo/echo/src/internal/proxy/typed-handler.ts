@@ -7,10 +7,12 @@ import { type InspectOptionsStylized } from 'node:util';
 import * as Schema from 'effect/Schema';
 import * as SchemaAST from 'effect/SchemaAST';
 
+import { Event } from '@dxos/async';
 import { inspectCustom } from '@dxos/debug';
 import { type GenericSignal, compositeRuntime } from '@dxos/echo-signals/runtime';
 import { invariant } from '@dxos/invariant';
 import {
+  EventId,
   ReactiveArray,
   type ReactiveHandler,
   createProxy,
@@ -20,8 +22,10 @@ import {
   symbolIsProxy,
 } from '@dxos/live-object';
 
-import { getSchemaDXN } from '../ast';
-import { DeletedId, SchemaId, SchemaValidator, TypeId } from '../object';
+import { getSchemaDXN } from '../annotations';
+import { ObjectDeletedId } from '../entities';
+import { SchemaValidator } from '../object';
+import { SchemaId, TypeId } from '../types';
 
 const symbolSignal = Symbol('signal');
 const symbolPropertySignal = Symbol('property-signal');
@@ -44,6 +48,11 @@ type ProxyTarget = {
   [symbolSignal]: GenericSignal;
 
   /**
+   * For modifications.
+   */
+  [EventId]: Event<void>;
+
+  /**
    * For modifying the structure of the object.
    */
   [symbolPropertySignal]: GenericSignal;
@@ -56,6 +65,7 @@ export class TypedReactiveHandler implements ReactiveHandler<ProxyTarget> {
   public static readonly instance: ReactiveHandler<any> = new TypedReactiveHandler();
 
   readonly _proxyMap = new WeakMap<object, any>();
+  private _inSet = false;
 
   private constructor() {}
 
@@ -68,7 +78,11 @@ export class TypedReactiveHandler implements ReactiveHandler<ProxyTarget> {
       defineHiddenProperty(target, symbolPropertySignal, compositeRuntime.createSignal());
     }
 
-    defineHiddenProperty(target, DeletedId, false);
+    if (!(EventId in target)) {
+      defineHiddenProperty(target, EventId, new Event());
+    }
+
+    defineHiddenProperty(target, ObjectDeletedId, false);
 
     for (const key of Object.getOwnPropertyNames(target)) {
       const descriptor = Object.getOwnPropertyDescriptor(target, key)!;
@@ -90,6 +104,7 @@ export class TypedReactiveHandler implements ReactiveHandler<ProxyTarget> {
 
   get(target: ProxyTarget, prop: string | symbol, receiver: any): any {
     switch (prop) {
+      // TODO(burdon): Remove?
       case objectData: {
         target[symbolSignal].notifyRead();
         return toJSON(target);
@@ -122,11 +137,17 @@ export class TypedReactiveHandler implements ReactiveHandler<ProxyTarget> {
     }
 
     let result: boolean = false;
-    compositeRuntime.batch(() => {
-      const validatedValue = this._validateValue(target, prop, value);
-      result = Reflect.set(target, prop, validatedValue, receiver);
-      target[symbolSignal].notifyWrite();
-    });
+    this._inSet = true;
+    try {
+      compositeRuntime.batch(() => {
+        const validatedValue = this._validateValue(target, prop, value);
+        result = Reflect.set(target, prop, validatedValue, receiver);
+        target[symbolSignal].notifyWrite();
+        target[EventId].emit();
+      });
+    } finally {
+      this._inSet = false;
+    }
     return result;
   }
 
@@ -144,6 +165,9 @@ export class TypedReactiveHandler implements ReactiveHandler<ProxyTarget> {
       value: validatedValue,
     });
     target[symbolPropertySignal].notifyWrite();
+    if (!this._inSet) {
+      target[EventId].emit();
+    }
     return result;
   }
 
@@ -170,6 +194,7 @@ export class TypedReactiveHandler implements ReactiveHandler<ProxyTarget> {
       showHidden: false,
       customInspect: false,
     });
+
     return `Typed ${inspected}`;
   }
 }
@@ -177,6 +202,7 @@ export class TypedReactiveHandler implements ReactiveHandler<ProxyTarget> {
 /**
  * @deprecated Use `Obj.toJSON` instead.
  */
+// TODO(burdon): Remove?
 const toJSON = (target: ProxyTarget): any => {
   return { '@type': 'TypedReactiveObject', ...target };
 };

@@ -4,7 +4,7 @@
 
 import React, { type FC, useEffect, useRef, useState } from 'react';
 
-import { Client, type PublicKey } from '@dxos/client';
+import { Client } from '@dxos/client';
 import { TestBuilder, performInvitation } from '@dxos/client/testing';
 import { type TypedObject } from '@dxos/echo/internal';
 import { registerSignalsRuntime } from '@dxos/echo-signals/react';
@@ -12,10 +12,11 @@ import { faker } from '@dxos/random';
 import { useAsyncEffect } from '@dxos/react-hooks';
 
 import { ClientProvider } from '../client';
+import { type SpaceId } from '../echo';
 
 import { type WithClientProviderProps } from './withClientProvider';
 
-export type ClientRepeatedComponentProps = { id: number; count: number; spaceKey?: PublicKey };
+export type ClientRepeatedComponentProps = { id: number; count: number; spaceId?: SpaceId };
 
 export type ClientRepeaterControlsProps = { clients: Client[] };
 
@@ -55,7 +56,7 @@ export const ClientRepeater = <P extends ClientRepeatedComponentProps>(props: Cl
   }, []);
 
   const [clients, setClients] = useState(props.clients ?? []);
-  const [spaceKey, setSpaceKey] = useState<PublicKey>();
+  const [spaceId, setSpaceId] = useState<SpaceId>();
 
   const testBuilder = useRef(new TestBuilder());
   useAsyncEffect(async () => {
@@ -71,7 +72,7 @@ export const ClientRepeater = <P extends ClientRepeatedComponentProps>(props: Cl
     if (createSpace) {
       const client = clients[0];
       const space = await client.spaces.create({ name: faker.commerce.productName() });
-      setSpaceKey(space.key);
+      setSpaceId(space.id);
       await onCreateSpace?.({ client, space }, {});
       await Promise.all(clients.slice(1).flatMap((client) => performInvitation({ host: space, guest: client.spaces })));
     }
@@ -88,7 +89,7 @@ export const ClientRepeater = <P extends ClientRepeatedComponentProps>(props: Cl
       {Controls && <Controls clients={clients} />}
       {clients.map((client, index) => (
         <ClientProvider key={index} client={client}>
-          <Component id={index} count={clients.length} spaceKey={spaceKey} {...{ ...props.args }} />
+          <Component id={index} count={clients.length} spaceId={spaceId} {...{ ...props.args }} />
         </ClientProvider>
       ))}
     </>

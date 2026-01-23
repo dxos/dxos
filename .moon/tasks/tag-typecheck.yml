@@ -1,7 +1,7 @@
 $schema: https://moonrepo.dev/schemas/tasks.json
 tasks:
   build:
-    command: tsc --noEmit
+    command: pnpm exec tsc --noEmit
     deps:
       - ^:build
       - ^:compile

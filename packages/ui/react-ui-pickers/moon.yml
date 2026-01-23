@@ -9,8 +9,7 @@ tasks:
   compile:
     args:
       - '--entryPoint=src/index.ts'
-      - '--platform=browser'
-      - '--platform=node'
+      - '--entryPoint=src/components/IconPicker/icons.ts'
       - '--preactSignalTracking'
   test:
     inputs:

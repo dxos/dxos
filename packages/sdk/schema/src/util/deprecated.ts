@@ -6,9 +6,50 @@ import type * as Schema from 'effect/Schema';
 import * as SchemaAST from 'effect/SchemaAST';
 
 import { QueryAST } from '@dxos/echo';
-import { FormatEnum, TypeEnum } from '@dxos/echo/internal';
-import { visit } from '@dxos/effect';
+import { Format, TypeEnum } from '@dxos/echo/internal';
+import { isDiscriminatedUnion, isTupleType, visit } from '@dxos/effect';
 import { DXN } from '@dxos/keys';
+
+/**
+ * Get the base type; e.g., traverse through refinements.
+ *
+ * @deprecated
+ */
+const getSimpleType = (node: SchemaAST.AST): string | undefined => {
+  if (
+    SchemaAST.isDeclaration(node) ||
+    SchemaAST.isObjectKeyword(node) ||
+    SchemaAST.isTypeLiteral(node) ||
+    // TODO(wittjosiah): Tuples are actually arrays.
+    isTupleType(node) ||
+    isDiscriminatedUnion(node)
+  ) {
+    return 'object';
+  }
+
+  if (SchemaAST.isStringKeyword(node)) {
+    return 'string';
+  }
+  if (SchemaAST.isNumberKeyword(node)) {
+    return 'number';
+  }
+  if (SchemaAST.isBooleanKeyword(node)) {
+    return 'boolean';
+  }
+
+  if (SchemaAST.isEnums(node)) {
+    return 'enum';
+  }
+
+  if (SchemaAST.isLiteral(node)) {
+    return 'literal';
+  }
+};
+
+/**
+ * @deprecated
+ */
+const isSimpleType = (node: SchemaAST.AST): boolean => !!getSimpleType(node);
 
 /**
  * @deprecated
@@ -16,7 +57,7 @@ import { DXN } from '@dxos/keys';
 export type SchemaFieldDescription = {
   property: string;
   type: TypeEnum;
-  format?: FormatEnum;
+  format?: Format.TypeFormat;
 };
 
 /**
@@ -24,10 +65,14 @@ export type SchemaFieldDescription = {
  */
 export const mapSchemaToFields = (schema: Schema.Schema<any, any>): SchemaFieldDescription[] => {
   const fields = [] as SchemaFieldDescription[];
-  visit(schema.ast, (node, path) => {
-    const { type, format } = toFieldValueType(node);
-    fields.push({ property: path.join('.'), type, format });
-  });
+  visit(
+    schema.ast,
+    (node, path) => {
+      const { type, format } = toFieldValueType(node);
+      fields.push({ property: path.join('.'), type, format });
+    },
+    isSimpleType,
+  );
 
   return fields;
 };
@@ -35,9 +80,9 @@ export const mapSchemaToFields = (schema: Schema.Schema<any, any>): SchemaFieldD
 /**
  * @deprecated
  */
-const toFieldValueType = (type: SchemaAST.AST): { format?: FormatEnum; type: TypeEnum } => {
+const toFieldValueType = (type: SchemaAST.AST): { format?: Format.TypeFormat; type: TypeEnum } => {
   if (SchemaAST.isTypeLiteral(type)) {
-    return { type: TypeEnum.Ref, format: FormatEnum.Ref };
+    return { type: TypeEnum.Ref, format: Format.TypeFormat.Ref };
   } else if (SchemaAST.isNumberKeyword(type)) {
     return { type: TypeEnum.Number };
   } else if (SchemaAST.isBooleanKeyword(type)) {
@@ -58,13 +103,13 @@ const toFieldValueType = (type: SchemaAST.AST): { format?: FormatEnum; type: Typ
     const identifier = SchemaAST.getIdentifierAnnotation(type);
     if (identifier._tag === 'Some') {
       if (identifier.value === 'DateFromString') {
-        return { type: TypeEnum.String, format: FormatEnum.Date };
+        return { type: TypeEnum.String, format: Format.TypeFormat.Date };
       }
     }
   }
 
   // TODO(burdon): Better fallback?
-  return { type: TypeEnum.String, format: FormatEnum.JSON };
+  return { type: TypeEnum.String, format: Format.TypeFormat.JSON };
 };
 
 // TODO(wittjosiah): This needs to be cleaned up.

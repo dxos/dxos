@@ -39,13 +39,16 @@
       "path": "../react-ui"
     },
     {
+      "path": "../react-ui-mosaic"
+    },
+    {
       "path": "../react-ui-stack"
     },
     {
       "path": "../react-ui-syntax-highlighter"
     },
     {
-      "path": "../react-ui-theme"
+      "path": "../ui-theme"
     }
   ]
 }

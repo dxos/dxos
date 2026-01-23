@@ -37,6 +37,9 @@
       "path": "packages/common/effect/tsconfig.json"
     },
     {
+      "path": "packages/common/effect-atom-solid/tsconfig.json"
+    },
+    {
       "path": "packages/common/errors/tsconfig.json"
     },
     {
@@ -97,6 +100,9 @@
       "path": "packages/common/random-access-storage/tsconfig.json"
     },
     {
+      "path": "packages/common/sql-sqlite/tsconfig.json"
+    },
+    {
       "path": "packages/common/storybook-addon-logger/tsconfig.json"
     },
     {
@@ -116,6 +122,15 @@
     },
     {
       "path": "packages/common/util/tsconfig.json"
+    },
+    {
+      "path": "packages/common/web-context/tsconfig.json"
+    },
+    {
+      "path": "packages/common/web-context-react/tsconfig.json"
+    },
+    {
+      "path": "packages/common/web-context-solid/tsconfig.json"
     },
     {
       "path": "packages/core/ai/tsconfig.json"
@@ -139,6 +154,9 @@
       "path": "packages/core/echo/echo/tsconfig.json"
     },
     {
+      "path": "packages/core/echo/echo-atom/tsconfig.json"
+    },
+    {
       "path": "packages/core/echo/echo-db/tsconfig.json"
     },
     {
@@ -154,7 +172,19 @@
       "path": "packages/core/echo/echo-query/tsconfig.json"
     },
     {
+      "path": "packages/core/echo/echo-react/tsconfig.json"
+    },
+    {
       "path": "packages/core/echo/echo-signals/tsconfig.json"
+    },
+    {
+      "path": "packages/core/echo/echo-solid/tsconfig.json"
+    },
+    {
+      "path": "packages/core/echo/feed/tsconfig.json"
+    },
+    {
+      "path": "packages/core/echo/index-core/tsconfig.json"
     },
     {
       "path": "packages/core/echo/indexing/tsconfig.json"
@@ -167,6 +197,15 @@
     },
     {
       "path": "packages/core/functions-runtime/tsconfig.json"
+    },
+    {
+      "path": "packages/core/functions-runtime-cloudflare/tsconfig.json"
+    },
+    {
+      "path": "packages/core/functions-simulator-cloudflare/tsconfig.json"
+    },
+    {
+      "path": "packages/core/functions-testing/tsconfig.json"
     },
     {
       "path": "packages/core/halo/credentials/tsconfig.json"
@@ -211,19 +250,16 @@
       "path": "packages/core/mesh/websocket-rpc/tsconfig.json"
     },
     {
+      "path": "packages/core/operation/tsconfig.json"
+    },
+    {
       "path": "packages/core/protocols/tsconfig.json"
     },
     {
       "path": "packages/devtools/cli/tsconfig.json"
     },
     {
-      "path": "packages/devtools/cli-base/tsconfig.json"
-    },
-    {
-      "path": "packages/devtools/cli-composer/tsconfig.json"
-    },
-    {
-      "path": "packages/devtools/cli-next/tsconfig.json"
+      "path": "packages/devtools/cli-util/tsconfig.json"
     },
     {
       "path": "packages/devtools/devtools/tsconfig.json"
@@ -245,12 +281,6 @@
     },
     {
       "path": "packages/experimental/env-tests/tsconfig.json"
-    },
-    {
-      "path": "packages/experimental/metagraph/tsconfig.json"
-    },
-    {
-      "path": "packages/experimental/react-metagraph/tsconfig.json"
     },
     {
       "path": "packages/experimental/script-toolbox/tsconfig.json"
@@ -307,6 +337,9 @@
       "path": "packages/plugins/plugin-map/tsconfig.json"
     },
     {
+      "path": "packages/plugins/plugin-map-solid/tsconfig.json"
+    },
+    {
       "path": "packages/plugins/plugin-markdown/tsconfig.json"
     },
     {
@@ -355,6 +388,9 @@
       "path": "packages/plugins/plugin-sheet/tsconfig.json"
     },
     {
+      "path": "packages/plugins/plugin-simple-layout/tsconfig.json"
+    },
+    {
       "path": "packages/plugins/plugin-sketch/tsconfig.json"
     },
     {
@@ -367,13 +403,13 @@
       "path": "packages/plugins/plugin-status-bar/tsconfig.json"
     },
     {
-      "path": "packages/plugins/plugin-storybook-layout/tsconfig.json"
-    },
-    {
       "path": "packages/plugins/plugin-table/tsconfig.json"
     },
     {
       "path": "packages/plugins/plugin-template/tsconfig.json"
+    },
+    {
+      "path": "packages/plugins/plugin-testing/tsconfig.json"
     },
     {
       "path": "packages/plugins/plugin-theme/tsconfig.json"
@@ -401,6 +437,9 @@
     },
     {
       "path": "packages/sdk/app-graph/tsconfig.json"
+    },
+    {
+      "path": "packages/sdk/app-solid/tsconfig.json"
     },
     {
       "path": "packages/sdk/client/tsconfig.json"
@@ -442,6 +481,9 @@
       "path": "packages/stories/stories-assistant/tsconfig.json"
     },
     {
+      "path": "packages/stories/stories-ui/tsconfig.json"
+    },
+    {
       "path": "packages/ui/brand/tsconfig.json"
     },
     {
@@ -454,13 +496,13 @@
       "path": "packages/ui/lit-ui/tsconfig.json"
     },
     {
-      "path": "packages/ui/primitives/react-hooks/tsconfig.json"
+      "path": "packages/ui/react-primitives/react-hooks/tsconfig.json"
     },
     {
-      "path": "packages/ui/primitives/react-input/tsconfig.json"
+      "path": "packages/ui/react-primitives/react-input/tsconfig.json"
     },
     {
-      "path": "packages/ui/primitives/react-list/tsconfig.json"
+      "path": "packages/ui/react-primitives/react-list/tsconfig.json"
     },
     {
       "path": "packages/ui/react-ui/tsconfig.json"
@@ -517,10 +559,16 @@
       "path": "packages/ui/react-ui-list/tsconfig.json"
     },
     {
+      "path": "packages/ui/react-ui-markdown/tsconfig.json"
+    },
+    {
       "path": "packages/ui/react-ui-masonry/tsconfig.json"
     },
     {
       "path": "packages/ui/react-ui-menu/tsconfig.json"
+    },
+    {
+      "path": "packages/ui/react-ui-mosaic/tsconfig.json"
     },
     {
       "path": "packages/ui/react-ui-pickers/tsconfig.json"
@@ -547,13 +595,25 @@
       "path": "packages/ui/react-ui-text-tooltip/tsconfig.json"
     },
     {
-      "path": "packages/ui/react-ui-theme/tsconfig.json"
-    },
-    {
       "path": "packages/ui/react-ui-thread/tsconfig.json"
     },
     {
-      "path": "packages/ui/react-ui-types/tsconfig.json"
+      "path": "packages/ui/solid-ui/tsconfig.json"
+    },
+    {
+      "path": "packages/ui/solid-ui-geo/tsconfig.json"
+    },
+    {
+      "path": "packages/ui/ui/tsconfig.json"
+    },
+    {
+      "path": "packages/ui/ui-editor/tsconfig.json"
+    },
+    {
+      "path": "packages/ui/ui-theme/tsconfig.json"
+    },
+    {
+      "path": "packages/ui/ui-types/tsconfig.json"
     },
     {
       "path": "tools/beast/tsconfig.json"
@@ -571,16 +631,19 @@
       "path": "tools/dx-tools/tsconfig.json"
     },
     {
-      "path": "tools/lit-storybook/tsconfig.json"
-    },
-    {
       "path": "tools/lockfile-explorer/tsconfig.json"
     },
     {
       "path": "tools/protobuf-test/tsconfig.json"
     },
     {
-      "path": "tools/storybook/tsconfig.json"
+      "path": "tools/storybook-lit/tsconfig.json"
+    },
+    {
+      "path": "tools/storybook-react/tsconfig.json"
+    },
+    {
+      "path": "tools/storybook-solid/tsconfig.json"
     },
     {
       "path": "tools/toolbox/tsconfig.json"

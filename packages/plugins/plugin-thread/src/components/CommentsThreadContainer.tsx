@@ -8,8 +8,6 @@ import { Obj, Ref, Relation } from '@dxos/echo';
 import { getSpace, useMembers } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 import { IconButton, Tag, Tooltip, useThemeContext, useTranslation } from '@dxos/react-ui';
-import { createBasicExtensions, createThemeExtensions, listener } from '@dxos/react-ui-editor';
-import { hoverableControlItem, hoverableControls, hoverableFocusedWithinControls, mx } from '@dxos/react-ui-theme';
 import {
   MessageTextbox,
   type MessageTextboxProps,
@@ -17,6 +15,8 @@ import {
   type ThreadRootProps,
 } from '@dxos/react-ui-thread';
 import { type AnchoredTo, type Thread } from '@dxos/types';
+import { createBasicExtensions, createThemeExtensions, listener } from '@dxos/ui-editor';
+import { hoverableControlItem, hoverableControls, hoverableFocusedWithinControls, mx } from '@dxos/ui-theme';
 import { isNonNullable } from '@dxos/util';
 
 import { useStatus } from '../hooks';
@@ -50,7 +50,7 @@ export const CommentsThreadContainer = ({
   const { t } = useTranslation(meta.id);
   const identity = useIdentity()!;
   const space = getSpace(anchor);
-  const members = useMembers(space?.key);
+  const members = useMembers(space?.id);
   const detached = !anchor.anchor;
   const thread = Relation.getSource(anchor) as Thread.Thread;
   const activity = useStatus(space, Obj.getDXN(thread).toString());

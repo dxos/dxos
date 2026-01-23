@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type FeatureExtractionPipeline, pipeline } from '@xenova/transformers';
+import type { FeatureExtractionPipeline } from '@xenova/transformers';
 
 import { Resource } from '@dxos/context';
 
@@ -43,6 +43,7 @@ export class EmbeddingExtractor extends Resource {
   }
 
   protected override async _open(): Promise<void> {
+    const { pipeline } = await import('@xenova/transformers');
     this._extractor = await pipeline('feature-extraction', this._options.model);
   }
 
@@ -55,6 +56,7 @@ export class EmbeddingExtractor extends Resource {
    * @returns Embeddings for each chunk of the object or a single embedding if chunks are combined.
    */
   async extract(data: ExtractInputBlock[]): Promise<number[][]> {
+    const { pipeline } = await import('@xenova/transformers');
     const extractor = await pipeline('feature-extraction', this._options.model);
 
     const chunks = breakIntoChunks(data, this._options.maxChunkSize);

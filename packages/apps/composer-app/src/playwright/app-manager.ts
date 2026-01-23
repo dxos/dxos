@@ -15,6 +15,8 @@ import { DeckManager } from './plugins';
 // TODO(wittjosiah): Normalize data-testids between snake and camel case.
 // TODO(wittjosiah): Consider structuring tests in such that they could be run with different sets of plugins enabled.
 
+// TODO(wittjosiah): Beware that sometimes the playwright chromium seems to appear as Windows.
+//   At least via `navigator.userAgent.platform`.
 const isMac = os.platform() === 'darwin';
 const modifier = isMac ? 'Meta' : 'Control';
 export const INITIAL_URL = 'http://localhost:4173';
@@ -85,9 +87,7 @@ export class AppManager {
   }
 
   async openUserAccount(): Promise<void> {
-    const platform = os.platform();
-    const shortcut = platform === 'darwin' ? 'Meta+Shift+.' : platform === 'win32' ? 'Alt+Shift+.' : 'Alt+Shift+>';
-    await this.page.keyboard.press(shortcut);
+    await this.page.getByTestId('clientPlugin.account').click();
   }
 
   async openUserDevices(): Promise<void> {
@@ -119,8 +119,9 @@ export class AppManager {
   }
 
   async shareSpace(): Promise<void> {
-    const shortcut = isMac ? 'Meta+.' : 'Alt+.';
-    await this.page.keyboard.press(shortcut);
+    await this.page.getByTestId('treeView.alternateTreeButton').click();
+    await this.page.getByTestId('spacePlugin.members').getByTestId('treeItem.heading').click();
+    await this.page.getByTestId('treeView.primaryTreeButton').click();
   }
 
   async createSpaceInvitation(): Promise<string> {

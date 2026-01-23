@@ -11,22 +11,24 @@ import * as Function from 'effect/Function';
 import * as Layer from 'effect/Layer';
 
 import { CredentialsService } from '@dxos/functions';
-import { TestDatabaseLayer } from '@dxos/functions-runtime/testing';
 import { invariant } from '@dxos/invariant';
 
 import { GoogleMail } from '../../apis';
+import * as InboxResolver from '../../inbox-resolver';
+import { GoogleCredentials } from '../../services/google-credentials';
 
 import { mapMessage } from './mapper';
 
 const TestLayer = Layer.mergeAll(
   CredentialsService.layerConfig([
     {
-      service: 'gmail.com',
+      service: 'google.com',
       // TODO(burdon): Rename `credential`.
       apiKey: Config.redacted('GOOGLE_ACCESS_TOKEN'),
     },
   ]),
   FetchHttpClient.layer,
+  GoogleCredentials.default,
 );
 
 /**
@@ -35,22 +37,22 @@ const TestLayer = Layer.mergeAll(
  * Click Authorize, then Exchange authorization code for tokens.
  *
  * export ACCESS_TOKEN="xxx"
- * pnpm vitest api.test.ts
+ * pnpm vitest sync.test.ts
  */
 describe.runIf(process.env.GOOGLE_ACCESS_TOKEN)('Gmail API', { timeout: 30_000 }, () => {
   it.effect(
     'get labels',
     Effect.fnUntraced(function* ({ expect }) {
-      const userId = 'rich@braneframe.com';
+      const userId = 'me';
       const labels = yield* GoogleMail.listLabels(userId);
       console.log(JSON.stringify(labels, null, 2));
       expect(labels).to.exist;
     }, Effect.provide(TestLayer)),
   );
 
-  it.effect('get messages', ({ expect }) => {
-    return Effect.gen(function* () {
-      const userId = 'rich@braneframe.com';
+  it.effect('get messages', ({ expect }) =>
+    Effect.gen(function* () {
+      const userId = 'me';
       const { messages } = yield* GoogleMail.listMessages(userId, 'label:investor', 50);
       invariant(messages);
 
@@ -68,6 +70,6 @@ describe.runIf(process.env.GOOGLE_ACCESS_TOKEN)('Gmail API', { timeout: 30_000 }
       expect(objects).to.exist;
       console.log(JSON.stringify(objects, null, 2));
       console.log((objects?.[0]?.blocks?.[0] as any)?.text);
-    }).pipe(Effect.provide(Layer.merge(TestLayer, TestDatabaseLayer())));
-  });
+    }).pipe(Effect.provide(Layer.mergeAll(TestLayer, InboxResolver.Mock()))),
+  );
 });

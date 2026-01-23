@@ -7,7 +7,7 @@ import type * as JSONSchema from 'effect/JSONSchema';
 import * as Option from 'effect/Option';
 import * as SchemaAST from 'effect/SchemaAST';
 
-import { createAnnotationHelper } from '../ast';
+import { createAnnotationHelper } from '../annotations';
 import { type JsonSchemaType } from '../json-schema';
 
 // TODO(burdon): Rename PropertyType.
@@ -53,14 +53,20 @@ export const getTypeEnum = (property: JsonSchemaType): TypeEnum | undefined => {
  */
 export const FormatAnnotationId = Symbol.for('@dxos/schema/annotation/Format');
 
-export const FormatAnnotation = createAnnotationHelper<FormatEnum>(FormatAnnotationId);
+export const FormatAnnotation = createAnnotationHelper<TypeFormat>(FormatAnnotationId);
 
-export const getFormatAnnotation = (node: SchemaAST.AST): FormatEnum | undefined =>
-  Function.pipe(SchemaAST.getAnnotation<FormatEnum>(FormatAnnotationId)(node), Option.getOrUndefined);
+/** @deprecated */
+export const getFormatAnnotation = (node: SchemaAST.AST): TypeFormat | undefined =>
+  Function.pipe(SchemaAST.getAnnotation<TypeFormat>(FormatAnnotationId)(node), Option.getOrUndefined);
 
-// TODO(burdon): Rename to FormatType and change to discriminated union.
-export enum FormatEnum {
+// TODO(burdon): Rename Format; Change to discriminated union?
+export enum TypeFormat {
   None = 'none',
+
+  //
+  // Scalar
+  //
+
   String = 'string',
   Number = 'number',
   Boolean = 'boolean',
@@ -79,6 +85,7 @@ export enum FormatEnum {
   Markdown = 'markdown',
   Regex = 'regex',
   SingleSelect = 'single-select',
+  Text = 'text',
   MultiSelect = 'multi-select',
   URL = 'url',
   UUID = 'uuid',
@@ -108,60 +115,61 @@ export enum FormatEnum {
   GeoPoint = 'lnglat',
 }
 
-export const FormatEnums = Object.values(FormatEnum).sort();
+export const FormatEnums = Object.values(TypeFormat).sort();
 
 export const PropertyKind = {
   type: TypeEnum,
-  format: FormatEnum,
+  format: TypeFormat,
 };
 
 /**
  * Default formats
  */
-export const typeToFormat: Partial<Record<TypeEnum, FormatEnum>> = {
-  [TypeEnum.String]: FormatEnum.String,
-  [TypeEnum.Number]: FormatEnum.Number,
-  [TypeEnum.Boolean]: FormatEnum.Boolean,
+export const typeToFormat: Partial<Record<TypeEnum, TypeFormat>> = {
+  [TypeEnum.String]: TypeFormat.String,
+  [TypeEnum.Number]: TypeFormat.Number,
+  [TypeEnum.Boolean]: TypeFormat.Boolean,
 };
 
 /**
  * Map of format to type.
  */
-export const formatToType: Record<FormatEnum, TypeEnum> = {
-  [FormatEnum.None]: undefined as any,
-  [FormatEnum.String]: TypeEnum.String,
-  [FormatEnum.Number]: TypeEnum.Number,
-  [FormatEnum.Boolean]: TypeEnum.Boolean,
-  [FormatEnum.Ref]: TypeEnum.Ref,
+export const formatToType: Record<TypeFormat, TypeEnum> = {
+  [TypeFormat.None]: undefined as any,
+  [TypeFormat.String]: TypeEnum.String,
+  [TypeFormat.Number]: TypeEnum.Number,
+  [TypeFormat.Boolean]: TypeEnum.Boolean,
+  [TypeFormat.Ref]: TypeEnum.Ref,
 
   // Strings
-  [FormatEnum.DID]: TypeEnum.String,
-  [FormatEnum.DXN]: TypeEnum.String,
-  [FormatEnum.Email]: TypeEnum.String,
-  [FormatEnum.Formula]: TypeEnum.String,
-  [FormatEnum.Hostname]: TypeEnum.String,
-  [FormatEnum.JSON]: TypeEnum.String,
-  [FormatEnum.Markdown]: TypeEnum.String,
-  [FormatEnum.Regex]: TypeEnum.String,
-  [FormatEnum.URL]: TypeEnum.String,
-  [FormatEnum.UUID]: TypeEnum.String,
-  [FormatEnum.SingleSelect]: TypeEnum.String,
-  [FormatEnum.MultiSelect]: TypeEnum.Object,
+  [TypeFormat.DID]: TypeEnum.String,
+  [TypeFormat.DXN]: TypeEnum.String,
+  [TypeFormat.Email]: TypeEnum.String,
+  [TypeFormat.Formula]: TypeEnum.String,
+  [TypeFormat.Hostname]: TypeEnum.String,
+  [TypeFormat.JSON]: TypeEnum.String,
+  [TypeFormat.Markdown]: TypeEnum.String,
+  [TypeFormat.Regex]: TypeEnum.String,
+  [TypeFormat.URL]: TypeEnum.String,
+  [TypeFormat.UUID]: TypeEnum.String,
+  [TypeFormat.SingleSelect]: TypeEnum.String,
+  [TypeFormat.Text]: TypeEnum.String,
+  [TypeFormat.MultiSelect]: TypeEnum.Object,
 
   // Dates
-  [FormatEnum.Date]: TypeEnum.String,
-  [FormatEnum.DateTime]: TypeEnum.String,
-  [FormatEnum.Duration]: TypeEnum.String,
-  [FormatEnum.Time]: TypeEnum.String,
+  [TypeFormat.Date]: TypeEnum.String,
+  [TypeFormat.DateTime]: TypeEnum.String,
+  [TypeFormat.Duration]: TypeEnum.String,
+  [TypeFormat.Time]: TypeEnum.String,
 
   // Numbers
-  [FormatEnum.Currency]: TypeEnum.Number,
-  [FormatEnum.Integer]: TypeEnum.Number,
-  [FormatEnum.Percent]: TypeEnum.Number,
-  [FormatEnum.Timestamp]: TypeEnum.Number,
+  [TypeFormat.Currency]: TypeEnum.Number,
+  [TypeFormat.Integer]: TypeEnum.Number,
+  [TypeFormat.Percent]: TypeEnum.Number,
+  [TypeFormat.Timestamp]: TypeEnum.Number,
 
   // Objects
-  [FormatEnum.GeoPoint]: TypeEnum.Array,
+  [TypeFormat.GeoPoint]: TypeEnum.Array,
 };
 
 /**
@@ -169,7 +177,10 @@ export const formatToType: Record<FormatEnum, TypeEnum> = {
  */
 export const OptionsAnnotationId = Symbol.for('@dxos/schema/annotation/Options');
 
-export const getOptionsAnnotation = (node: SchemaAST.AST): OptionsAnnotationType[] | undefined =>
-  Function.pipe(SchemaAST.getAnnotation<OptionsAnnotationType[]>(OptionsAnnotationId)(node), Option.getOrUndefined);
+// TODO(wittjosiah): Reconcile with `SelectOption`.
+export type Options = string | number;
+export const OptionsAnnotation = createAnnotationHelper<Options[]>(OptionsAnnotationId);
 
-export type OptionsAnnotationType = string | number;
+/** @deprecated */
+export const getOptionsAnnotation = (node: SchemaAST.AST): Options[] | undefined =>
+  Function.pipe(SchemaAST.getAnnotation<Options[]>(OptionsAnnotationId)(node), Option.getOrUndefined);

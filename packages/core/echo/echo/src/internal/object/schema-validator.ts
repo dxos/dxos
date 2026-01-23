@@ -6,8 +6,9 @@ import * as Schema from 'effect/Schema';
 import * as SchemaAST from 'effect/SchemaAST';
 
 import { invariant } from '@dxos/invariant';
+import { log } from '@dxos/log';
 
-import { SchemaId } from './model';
+import { SchemaId } from '../types';
 
 // TODO(burdon): Reconcile with @dxos/effect visit().
 
@@ -46,7 +47,7 @@ export class SchemaValidator {
       }
 
       return type.ast.annotations[annotation] != null;
-    } catch (err) {
+    } catch {
       return false;
     }
   }
@@ -67,7 +68,8 @@ export class SchemaValidator {
           getProperty([...propertyPath.slice(0, i), propertyName]),
         );
         if (propertyType == null) {
-          throw new TypeError(`unknown property: ${String(propertyName)} on object. Path: ${propertyPath}`);
+          log.warn('unknown property', { path: propertyPath, property: propertyName });
+          continue;
         }
 
         schema = Schema.make(propertyType).annotations(propertyType.annotations);
@@ -238,4 +240,5 @@ export const checkIdNotPresentOnSchema = (schema: Schema.Schema<any, any, any>) 
   }
 };
 
+// TODO(burdon): Reconcile with JsonPath.
 type KeyPath = readonly (string | number)[];

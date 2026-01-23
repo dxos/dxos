@@ -1,0 +1,76 @@
+{
+  "name": "@dxos/react-ui-markdown",
+  "version": "0.8.3",
+  "description": "Markdown components.",
+  "homepage": "https://dxos.org",
+  "bugs": "https://github.com/dxos/dxos/issues",
+  "license": "MIT",
+  "author": "DXOS.org",
+  "type": "module",
+  "exports": {
+    ".": {
+      "source": "./src/index.ts",
+      "types": "./dist/types/src/index.d.ts",
+      "browser": "./dist/lib/browser/index.mjs"
+    }
+  },
+  "types": "dist/types/src/index.d.ts",
+  "typesVersions": {
+    "*": {}
+  },
+  "files": [
+    "dist",
+    "src"
+  ],
+  "dependencies": {
+    "@codemirror/autocomplete": "catalog:",
+    "@codemirror/language": "catalog:",
+    "@codemirror/state": "catalog:",
+    "@codemirror/view": "catalog:",
+    "@dxos/async": "workspace:*",
+    "@dxos/echo": "workspace:*",
+    "@dxos/invariant": "workspace:*",
+    "@dxos/log": "workspace:*",
+    "@dxos/react-ui-editor": "workspace:*",
+    "@dxos/react-ui-syntax-highlighter": "workspace:*",
+    "@dxos/util": "workspace:*",
+    "@lezer/common": "catalog:",
+    "@lezer/highlight": "catalog:",
+    "@lezer/markdown": "catalog:",
+    "@lezer/xml": "catalog:",
+    "@preact-signals/safe-react": "catalog:",
+    "@preact/signals-core": "catalog:",
+    "@radix-ui/react-compose-refs": "catalog:",
+    "@radix-ui/react-context": "catalog:",
+    "effect": "catalog:",
+    "json5": "catalog:",
+    "react-markdown": "catalog:",
+    "react-resize-detector": "catalog:",
+    "remark-gfm": "catalog:"
+  },
+  "devDependencies": {
+    "@dxos/echo": "workspace:*",
+    "@dxos/lit-ui": "workspace:*",
+    "@dxos/random": "workspace:*",
+    "@dxos/react-client": "workspace:*",
+    "@dxos/react-ui": "workspace:*",
+    "@dxos/schema": "workspace:*",
+    "@dxos/storybook-utils": "workspace:*",
+    "@dxos/ui-theme": "workspace:*",
+    "@types/react": "catalog:",
+    "@types/react-dom": "catalog:",
+    "react": "catalog:",
+    "react-dom": "catalog:",
+    "vite": "catalog:"
+  },
+  "peerDependencies": {
+    "@dxos/react-ui": "workspace:*",
+    "@dxos/ui-theme": "workspace:*",
+    "effect": "catalog:",
+    "react": "catalog:",
+    "react-dom": "catalog:"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

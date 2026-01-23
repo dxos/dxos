@@ -3,43 +3,40 @@
 //
 
 import { DEFAULT_INPUT, DEFAULT_OUTPUT } from '@dxos/conductor';
-import { ObjectId } from '@dxos/echo/internal';
-import { live } from '@dxos/echo/internal';
-import { AbstractGraphBuilder, AbstractGraphModel, Graph } from '@dxos/graph';
+import { Obj } from '@dxos/echo';
+import { type Graph, GraphModel } from '@dxos/graph';
 import { isLiveObject } from '@dxos/live-object';
 import { type MakeOptional } from '@dxos/util';
 
 import { type Connection, type Shape } from './schema';
 
-export class CanvasGraphModel<S extends Shape = Shape> extends AbstractGraphModel<
+export class CanvasGraphModel<S extends Shape = Shape> extends GraphModel.AbstractGraphModel<
   S,
   Connection,
   CanvasGraphModel<S>,
   CanvasGraphBuilder<S>
 > {
-  static create<S extends Shape>(graph?: Partial<Graph>): CanvasGraphModel<S> {
+  static create<S extends Shape>(graph?: Partial<Graph.Any>): CanvasGraphModel<S> {
     if (isLiveObject(graph) as any) {
-      return new CanvasGraphModel<S>(graph as Graph);
+      return new CanvasGraphModel<S>(graph as Graph.Graph<S, Connection>);
     }
 
-    return new CanvasGraphModel<S>(
-      live(Graph, {
-        nodes: graph?.nodes ?? [],
-        edges: graph?.edges ?? [],
-      }),
-    );
+    return new CanvasGraphModel<S>({
+      nodes: (graph?.nodes ?? []) as S[],
+      edges: (graph?.edges ?? []) as Connection[],
+    });
   }
 
   override get builder() {
     return new CanvasGraphBuilder(this);
   }
 
-  override copy(graph?: Partial<Graph>): CanvasGraphModel<S> {
+  override copy(graph?: Partial<Graph.Graph<S, Connection>>): CanvasGraphModel<S> {
     return CanvasGraphModel.create<S>(graph);
   }
 
   createNode({ id, ...rest }: MakeOptional<S, 'id'>): S {
-    const node: S = { id: id ?? ObjectId.random(), ...rest } as S;
+    const node: S = { id: id ?? Obj.ID.random(), ...rest } as S;
     this.addNode(node);
     return node;
   }
@@ -53,7 +50,7 @@ export class CanvasGraphModel<S extends Shape = Shape> extends AbstractGraphMode
     ...rest
   }: MakeOptional<Connection, 'id'>): Connection {
     const edge: Connection = {
-      id: id ?? ObjectId.random(),
+      id: id ?? Obj.ID.random(),
       source,
       target,
       output,
@@ -65,7 +62,7 @@ export class CanvasGraphModel<S extends Shape = Shape> extends AbstractGraphMode
   }
 }
 
-export class CanvasGraphBuilder<S extends Shape = Shape> extends AbstractGraphBuilder<
+export class CanvasGraphBuilder<S extends Shape = Shape> extends GraphModel.AbstractBuilder<
   S,
   Connection,
   CanvasGraphModel<S>

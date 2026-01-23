@@ -1,0 +1,52 @@
+{
+  "name": "@dxos/react-list",
+  "version": "0.8.3",
+  "description": "List primitive components for React.",
+  "homepage": "https://dxos.org",
+  "bugs": "https://github.com/dxos/dxos/issues",
+  "license": "MIT",
+  "author": "DXOS.org",
+  "sideEffects": false,
+  "type": "module",
+  "exports": {
+    ".": {
+      "source": "./src/index.ts",
+      "types": "./dist/types/src/index.d.ts",
+      "browser": "./dist/lib/browser/index.mjs",
+      "node": "./dist/lib/node-esm/index.mjs"
+    }
+  },
+  "types": "dist/types/src/index.d.ts",
+  "typesVersions": {
+    "*": {}
+  },
+  "files": [
+    "dist",
+    "src"
+  ],
+  "dependencies": {
+    "@dxos/react-hooks": "workspace:*",
+    "@preact-signals/safe-react": "catalog:",
+    "@radix-ui/react-collapsible": "catalog:",
+    "@radix-ui/react-context": "catalog:",
+    "@radix-ui/react-primitive": "catalog:",
+    "@radix-ui/react-slot": "catalog:",
+    "@radix-ui/react-use-controllable-state": "catalog:",
+    "lodash.omit": "catalog:"
+  },
+  "devDependencies": {
+    "@radix-ui/react-checkbox": "catalog:",
+    "@types/lodash.omit": "catalog:",
+    "@types/react": "catalog:",
+    "@types/react-dom": "catalog:",
+    "react": "catalog:",
+    "react-dom": "catalog:"
+  },
+  "peerDependencies": {
+    "react": "catalog:",
+    "react-dom": "catalog:"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

@@ -4,33 +4,27 @@
 
 import type * as SchemaAST from 'effect/SchemaAST';
 
-import { FormatEnum, ReferenceAnnotationId } from '@dxos/echo/internal';
-import { findAnnotation } from '@dxos/effect';
-import { type SchemaProperty } from '@dxos/schema';
-
-import { findArrayElementType } from './schema';
+import { Ref } from '@dxos/echo';
+import { getArrayElementType, isArrayType } from '@dxos/effect';
 
 type RefProps = {
   ast: SchemaAST.AST;
   isArray: boolean;
 };
 
-export const getRefProps = (property: SchemaProperty<any>): RefProps | undefined => {
-  const { ast, format, array } = property;
-
+export const getRefProps = (ast: SchemaAST.AST): RefProps | undefined => {
   // Array of references.
-  if (array) {
-    const elementType = findArrayElementType(ast);
+  if (isArrayType(ast)) {
+    const elementType = getArrayElementType(ast);
     if (elementType) {
-      const annotation = findAnnotation(elementType, ReferenceAnnotationId);
-      if (annotation) {
+      if (Ref.isRefType(elementType)) {
         return { ast: elementType, isArray: true };
       }
     }
   }
 
   // Direct reference.
-  if (format === FormatEnum.Ref) {
+  if (Ref.isRefType(ast)) {
     return { ast, isArray: false };
   }
 

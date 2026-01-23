@@ -31,10 +31,10 @@
   },
   "devDependencies": {
     "@dxos/react-ui": "workspace:*",
-    "@dxos/react-ui-theme": "workspace:*",
     "@dxos/storybook-utils": "workspace:*",
-    "react": "~19.2.0",
-    "react-dom": "~19.2.0"
+    "@dxos/ui-theme": "workspace:*",
+    "react": "catalog:",
+    "react-dom": "catalog:"
   },
   "publishConfig": {
     "access": "public"

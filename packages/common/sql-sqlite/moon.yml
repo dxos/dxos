@@ -1,0 +1,20 @@
+type: library
+language: typescript
+tags:
+  - ts-build
+  - ts-test
+  - pack
+tasks:
+  compile:
+    args:
+      - '--entryPoint=src/index.ts'
+      - '--entryPoint=src/SqliteClient.ts'
+      - '--entryPoint=src/OpfsWorker.ts'
+      - '--entryPoint=src/SqliteMigrator.ts'
+      - '--entryPoint=src/SqlExport.ts'
+      - '--entryPoint=src/platform/node.ts'
+      - '--entryPoint=src/platform/browser.ts'
+      - '--entryPoint=src/platform/bun.ts'
+      - '--bundlePackage=@effect/sql-sqlite-wasm'
+      - >-
+        '--alias={"@effect/wa-sqlite":"@dxos/wa-sqlite"}'

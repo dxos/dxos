@@ -70,7 +70,7 @@ const main = async () => {
     // Init client.
     client = new Client({ config: createConfig({ dataRoot: path.join(baseDir, snapshot.dataRoot) }) });
     await client.initialize();
-    client.addTypes([Todo]);
+    await client.addTypes([Todo]);
     await client.halo.createIdentity();
     await client.spaces.waitUntilReady();
   }
@@ -93,7 +93,7 @@ const main = async () => {
     await space.db.flush();
 
     // Generate epoch.
-    const promise = space.db.coreDatabase.rootChanged.waitForCount(1);
+    const promise = space.internal.db.coreDatabase.rootChanged.waitForCount(1);
     await space.internal.createEpoch({ migration: CreateEpochRequest.Migration.PRUNE_AUTOMERGE_ROOT_HISTORY });
     await promise;
     await space.db.flush();
@@ -118,7 +118,7 @@ const main = async () => {
     // TODO(burdon): Should just be example.org/type/Test
     class TestType extends TypedObject({ typename: 'example.org/type/TestType', version: '0.1.0' })({}) {}
     const [dynamicSchema] = await space.db.schemaRegistry.register([TestType]);
-    client.addTypes([TestType]);
+    await client.addTypes([TestType]);
     const object = space.db.add(Obj.make(dynamicSchema, {}));
     dynamicSchema.addFields({ name: Schema.String, todo: Ref(Todo) });
     object.name = 'Test';

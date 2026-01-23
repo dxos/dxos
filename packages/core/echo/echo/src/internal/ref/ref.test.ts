@@ -7,14 +7,15 @@ import { describe, expect, test } from 'vitest';
 
 import { DXN, ObjectId } from '@dxos/keys';
 
-import { EchoObject, create, getObjectDXN } from '../object';
+import { EchoObjectSchema, getObjectDXN } from '../entities';
+import { createObject } from '../object';
 
 import { Ref, getReferenceAst } from './ref';
 
 const Task = Schema.Struct({
   title: Schema.optional(Schema.String),
 }).pipe(
-  EchoObject({
+  EchoObjectSchema({
     typename: 'example.com/type/Task',
     version: '0.1.0',
   }),
@@ -27,7 +28,7 @@ const Contact = Schema.Struct({
   email: Schema.optional(Schema.String),
   tasks: Schema.mutable(Schema.Array(Ref(Task))),
 }).pipe(
-  EchoObject({
+  EchoObjectSchema({
     typename: 'example.com/type/Person',
     version: '0.1.0',
   }),
@@ -49,8 +50,8 @@ describe('Ref', () => {
 
   // TODO(dmaretskyi): Figure out how to expose this in the API.
   test.skip('encode with inlined target', () => {
-    const task = create(Task, { title: 'Fix bugs' });
-    const contact = create(Contact, { name: 'John Doe', tasks: [Ref.make(task)] });
+    const task = createObject(Task, { title: 'Fix bugs' });
+    const contact = createObject(Contact, { name: 'John Doe', tasks: [Ref.make(task)] });
 
     const json = JSON.parse(JSON.stringify(contact));
     expect(json).toEqual({
@@ -70,8 +71,8 @@ describe('Ref', () => {
   });
 
   test('encode without inlining target', () => {
-    const task = create(Task, { title: 'Fix bugs' });
-    const contact = create(Contact, { name: 'John Doe', tasks: [Ref.make(task).noInline()] });
+    const task = createObject(Task, { title: 'Fix bugs' });
+    const contact = createObject(Contact, { name: 'John Doe', tasks: [Ref.make(task).noInline()] });
 
     const json = JSON.parse(JSON.stringify(contact));
     expect(json).toEqual({

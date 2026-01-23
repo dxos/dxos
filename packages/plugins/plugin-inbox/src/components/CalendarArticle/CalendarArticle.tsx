@@ -4,11 +4,10 @@
 
 import React, { useCallback } from 'react';
 
-import { createIntent } from '@dxos/app-framework';
-import { type SurfaceComponentProps, useIntentDispatcher } from '@dxos/app-framework/react';
+import { type SurfaceComponentProps, useOperationInvoker } from '@dxos/app-framework/react';
 import { Obj } from '@dxos/echo';
-import { ATTENDABLE_PATH_SEPARATOR, DeckAction } from '@dxos/plugin-deck/types';
-import { Filter, getSpace, useQuery } from '@dxos/react-client/echo';
+import { ATTENDABLE_PATH_SEPARATOR, DeckOperation } from '@dxos/plugin-deck/types';
+import { Filter, useQuery, useQueue } from '@dxos/react-client/echo';
 import { Toolbar, useTranslation } from '@dxos/react-ui';
 import { useSelected, useSelectionActions } from '@dxos/react-ui-attention';
 import { Calendar as NaturalCalendar } from '@dxos/react-ui-calendar';
@@ -27,26 +26,23 @@ const byDate =
 
 export const CalendarArticle = ({ subject: calendar }: SurfaceComponentProps<Calendar.Calendar>) => {
   const { t } = useTranslation(meta.id);
-  const { dispatchPromise: dispatch } = useIntentDispatcher();
-  const space = getSpace(calendar);
+  const { invokePromise } = useOperationInvoker();
   const id = Obj.getDXN(calendar).toString();
   const { singleSelect } = useSelectionActions([id]);
   const selected = useSelected(id, 'single');
-  const queue = space?.queues.get(calendar.queue.dxn);
+  const queue = useQueue(calendar.queue.dxn);
   const objects = useQuery(queue, Filter.type(Event.Event));
   objects.sort(byDate());
 
   const handleSelect = useCallback(
     (event: Event.Event) => {
       singleSelect(event.id);
-      void dispatch(
-        createIntent(DeckAction.ChangeCompanion, {
-          primary: id,
-          companion: `${id}${ATTENDABLE_PATH_SEPARATOR}event`,
-        }),
-      );
+      void invokePromise(DeckOperation.ChangeCompanion, {
+        primary: id,
+        companion: `${id}${ATTENDABLE_PATH_SEPARATOR}event`,
+      });
     },
-    [singleSelect, dispatch, id],
+    [singleSelect, invokePromise, id],
   );
 
   return (

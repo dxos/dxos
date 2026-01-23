@@ -3,29 +3,29 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
+import * as Layer from 'effect/Layer';
+import * as ManagedRuntime from 'effect/ManagedRuntime';
 import React, { type PropsWithChildren, useEffect, useMemo, useRef, useState } from 'react';
 
+import { AiServiceTestingPreset } from '@dxos/ai/testing';
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { capabilities } from '@dxos/assistant-toolkit';
+import { capabilities } from '@dxos/assistant-toolkit/testing';
 import { type ComputeGraphModel, type ComputeNode, type GraphDiagnostic } from '@dxos/conductor';
-import { ServiceContainer } from '@dxos/functions-runtime';
+import { CredentialsService, TracingService } from '@dxos/functions';
+import { FunctionInvocationServiceLayerTest } from '@dxos/functions-runtime';
+import { TestDatabaseLayer } from '@dxos/functions-runtime/testing';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { Select, Toolbar } from '@dxos/react-ui';
 import { withTheme } from '@dxos/react-ui/testing';
 import { withAttention } from '@dxos/react-ui-attention/testing';
-import {
-  CanvasGraphModel,
-  Editor,
-  type EditorController,
-  type EditorRootProps,
-  ShapeRegistry,
-} from '@dxos/react-ui-canvas-editor';
+import { Editor, type EditorController, type EditorRootProps, ShapeRegistry } from '@dxos/react-ui-canvas-editor';
 import { Container, useSelection } from '@dxos/react-ui-canvas-editor/testing';
+import { Form } from '@dxos/react-ui-form';
 import { JsonFilter } from '@dxos/react-ui-syntax-highlighter';
 
 import { DiagnosticOverlay } from './components';
 import { ComputeShapeLayout } from './compute-layout';
-import { type ComputeGraphController } from './graph';
+import { type ComputeGraphController, createComputeGraphController } from './graph';
 import { ComputeContext, useComputeGraphController, useGraphMonitor } from './hooks';
 import { computeShapes } from './registry';
 import { type ComputeShape } from './shapes';
@@ -33,8 +33,8 @@ import {
   createArtifactCircuit,
   createAudioCircuit,
   createBasicCircuit,
-  createComputeGraphController,
   createControlCircuit,
+  createEmptyCircuit,
   createGPTRealtimeCircuit,
   createGptCircuit,
   createLogicCircuit,
@@ -42,9 +42,11 @@ import {
   createTransformCircuit,
 } from './testing';
 
-// const FormSchema = Schema.omit<any, any, ['subgraph']>('subgraph')(ComputeNode);
+// TODO(burdon): Replace ServiceContainer.
 
 const sidebarTypes: NonNullable<RenderProps['sidebar']>[] = ['canvas', 'compute', 'controller', 'selected'] as const;
+
+const hiddenArg = { table: { disable: true } };
 
 type RenderProps = EditorRootProps<ComputeShape> &
   PropsWithChildren<{
@@ -59,9 +61,10 @@ const DefaultStory = ({
   children,
   graph,
   controller = null,
-  init,
-  sidebar: _sidebar,
+  sidebar: sidebarProp,
   registry,
+  showGrid = true,
+  snapToGrid = true,
   ...props
 }: RenderProps) => {
   const editorRef = useRef<EditorController>(null);
@@ -79,7 +82,7 @@ const DefaultStory = ({
   };
 
   // Sidebar.
-  const [sidebar, setSidebar] = useState(_sidebar);
+  const [sidebar, setSidebar] = useState<RenderProps['sidebar']>(sidebarProp);
   const json = useMemo(() => {
     switch (sidebar) {
       case 'canvas':
@@ -131,6 +134,8 @@ const DefaultStory = ({
             registry={registry}
             selection={selection}
             autoZoom
+            showGrid={showGrid}
+            snapToGrid={snapToGrid}
             {...props}
           >
             <Editor.Canvas>{children}</Editor.Canvas>
@@ -161,11 +166,17 @@ const DefaultStory = ({
           </Toolbar.Root>
 
           <div className='flex flex-col bs-full overflow-hidden divide-y divider-separator'>
+            {/* TODO(burdon): Provide schema. */}
             {sidebar === 'selected' && selected && (
-              <div>Form</div>
-              // <Form<ComputeNode> schema={FormSchema} values={getComputeNode(selected.id) ?? {}} Custom={{}} />
+              <Form.Root<ComputeNode> values={getComputeNode(selected.id) ?? {}}>
+                <Form.Viewport>
+                  <Form.Content>
+                    <Form.FieldSet />
+                    <Form.Actions />
+                  </Form.Content>
+                </Form.Viewport>
+              </Form.Root>
             )}
-
             <JsonFilter data={json} />
           </div>
         </Container>
@@ -187,175 +198,120 @@ const meta = {
   parameters: {
     layout: 'fullscreen',
   },
+  argTypes: {
+    controller: hiddenArg,
+    graph: hiddenArg,
+    registry: hiddenArg,
+    sidebar: {
+      control: 'select',
+      options: [...sidebarTypes, null],
+    },
+  },
 } satisfies Meta<typeof DefaultStory>;
 
 export default meta;
 
 type Story = StoryObj<typeof meta>;
 
+const ServiceLayer = Layer.empty.pipe(
+  Layer.provideMerge(FunctionInvocationServiceLayerTest()),
+  Layer.provideMerge(
+    Layer.mergeAll(
+      AiServiceTestingPreset('direct'),
+      TestDatabaseLayer(),
+      CredentialsService.configuredLayer([]),
+      TracingService.layerNoop,
+    ),
+  ),
+  Layer.orDie,
+);
+
 export const Default: Story = {
   args: {
-    // debug: true,
-    showGrid: false,
-    snapToGrid: false,
-    sidebar: 'selected',
     registry: new ShapeRegistry(computeShapes),
-    ...createComputeGraphController(CanvasGraphModel.create<ComputeShape>(), new ServiceContainer()),
+    ...createComputeGraphController(createEmptyCircuit(), ManagedRuntime.make(ServiceLayer)),
   },
 };
 
 export const Beacon: Story = {
   args: {
-    // debug: true,
-    showGrid: false,
-    snapToGrid: false,
-    sidebar: 'selected',
     registry: new ShapeRegistry(computeShapes),
-    ...createComputeGraphController(createBasicCircuit(), new ServiceContainer()),
+    ...createComputeGraphController(createBasicCircuit(), ManagedRuntime.make(ServiceLayer)),
   },
 };
 
 export const Transform: Story = {
   args: {
-    // debug: true,
-    showGrid: false,
-    snapToGrid: false,
-    sidebar: 'selected',
     registry: new ShapeRegistry(computeShapes),
-    ...createComputeGraphController(createTransformCircuit(), new ServiceContainer()),
+    ...createComputeGraphController(createTransformCircuit(), ManagedRuntime.make(ServiceLayer)),
   },
 };
 
 export const Logic: Story = {
   args: {
-    // debug: true,
-    showGrid: false,
-    snapToGrid: false,
-    sidebar: 'compute',
     registry: new ShapeRegistry(computeShapes),
-    ...createComputeGraphController(createLogicCircuit(), new ServiceContainer()),
+    ...createComputeGraphController(createLogicCircuit(), ManagedRuntime.make(ServiceLayer)),
   },
 };
 
 export const Control: Story = {
   args: {
-    // debug: true,
-    showGrid: false,
-    snapToGrid: false,
-    sidebar: 'compute',
     registry: new ShapeRegistry(computeShapes),
-    ...createComputeGraphController(createControlCircuit(), new ServiceContainer()),
+    ...createComputeGraphController(createControlCircuit(), ManagedRuntime.make(ServiceLayer)),
   },
 };
 
 export const Template: Story = {
   args: {
-    showGrid: false,
-    snapToGrid: false,
-    // sidebar: 'controller',
     registry: new ShapeRegistry(computeShapes),
-    ...createComputeGraphController(
-      createTemplateCircuit(),
-      new ServiceContainer().setServices({
-        // ai: AiService.make(new Edge AiServiceClient({ endpoint: localServiceEndpoints.ai })),
-      }),
-    ),
+    ...createComputeGraphController(createTemplateCircuit(), ManagedRuntime.make(ServiceLayer)),
   },
 };
 
 export const GPT: Story = {
   args: {
-    // debug: true,
-    showGrid: false,
-    snapToGrid: false,
-    // sidebar: 'json',
-    sidebar: 'controller',
     registry: new ShapeRegistry(computeShapes),
-    ...createComputeGraphController(
-      createGptCircuit({ history: true }),
-      new ServiceContainer().setServices({
-        // ai: AiService.make(new Edge AiServiceClient({ endpoint: localServiceEndpoints.ai })),
-      }),
-    ),
+    ...createComputeGraphController(createGptCircuit({ history: true }), ManagedRuntime.make(ServiceLayer)),
   },
 };
 
 export const Plugins: Story = {
   args: {
-    // debug: true,
-    showGrid: false,
-    snapToGrid: false,
-    // sidebar: 'json',
     registry: new ShapeRegistry(computeShapes),
     ...createComputeGraphController(
       createGptCircuit({ history: true, image: true, artifact: true }),
-      new ServiceContainer().setServices({
-        // ai: AiService.make(new Edge AiServiceClient({ endpoint: SERVICES_CONFIG.local.ai.server })),
-      }),
+      ManagedRuntime.make(ServiceLayer),
     ),
   },
 };
 
 export const Artifact: Story = {
   args: {
-    // debug: true,
-    showGrid: false,
-    snapToGrid: false,
-    // sidebar: 'json',
     registry: new ShapeRegistry(computeShapes),
-    ...createComputeGraphController(
-      createArtifactCircuit(),
-      new ServiceContainer().setServices({
-        // ai: AiService.make(new Edge AiServiceClient({ endpoint: SERVICES_CONFIG.local.ai.server })),
-      }),
-    ),
+    ...createComputeGraphController(createArtifactCircuit(), ManagedRuntime.make(ServiceLayer)),
   },
 };
 
 export const ImageGen: Story = {
   args: {
-    // debug: true,
-    showGrid: false,
-    snapToGrid: false,
-    // sidebar: 'json',
-    sidebar: 'controller',
     registry: new ShapeRegistry(computeShapes),
     ...createComputeGraphController(
       createGptCircuit({ image: true, artifact: true }),
-      new ServiceContainer().setServices({
-        // ai: AiService.make(createTestAiServiceClient()),
-      }),
+      ManagedRuntime.make(ServiceLayer),
     ),
   },
 };
 
 export const Audio: Story = {
   args: {
-    // debug: true,
-    showGrid: false,
-    snapToGrid: false,
-    sidebar: 'controller',
     registry: new ShapeRegistry(computeShapes),
-    ...createComputeGraphController(
-      createAudioCircuit(),
-      new ServiceContainer().setServices({
-        // ai: AiService.make(createTestAiServiceClient()),
-      }),
-    ),
+    ...createComputeGraphController(createAudioCircuit(), ManagedRuntime.make(ServiceLayer)),
   },
 };
 
 export const Voice: Story = {
   args: {
-    showGrid: false,
-    snapToGrid: false,
-    sidebar: 'controller',
     registry: new ShapeRegistry(computeShapes),
-    ...createComputeGraphController(
-      createGPTRealtimeCircuit(),
-      new ServiceContainer().setServices({
-        // ai: AiService.make(createTestAiServiceClient()),
-      }),
-    ),
+    ...createComputeGraphController(createGPTRealtimeCircuit(), ManagedRuntime.make(ServiceLayer)),
   },
 };

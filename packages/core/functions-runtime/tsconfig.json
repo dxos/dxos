@@ -80,6 +80,9 @@
       "path": "../functions"
     },
     {
+      "path": "../functions-runtime-cloudflare"
+    },
+    {
       "path": "../mesh/edge-client"
     },
     {

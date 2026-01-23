@@ -22,12 +22,12 @@
     "src"
   ],
   "dependencies": {
-    "@ch-ui/icons": "^1.0.1",
-    "glob": "^7.2.3",
-    "picomatch": "^2.3.0",
-    "vite": "7.1.9"
+    "@ch-ui/icons": "catalog:",
+    "glob": "catalog:",
+    "picomatch": "catalog:",
+    "vite": "catalog:"
   },
   "devDependencies": {
-    "@types/picomatch": "^3.0.1"
+    "@types/picomatch": "catalog:"
   }
 }

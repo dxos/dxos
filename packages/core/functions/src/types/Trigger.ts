@@ -6,7 +6,7 @@ import * as Schema from 'effect/Schema';
 import * as SchemaAST from 'effect/SchemaAST';
 
 import { Obj, QueryAST, Type } from '@dxos/echo';
-import { Expando, OptionsAnnotationId, Ref, SystemTypeAnnotation } from '@dxos/echo/internal';
+import { OptionsAnnotationId, SystemTypeAnnotation } from '@dxos/echo/internal';
 import { DXN } from '@dxos/keys';
 
 /**
@@ -101,7 +101,7 @@ const Trigger_ = Schema.Struct({
    * Function or workflow to invoke.
    */
   // TODO(dmaretskyi): Can be a Ref(FunctionType) or Ref(ComputeGraphType).
-  function: Schema.optional(Ref(Expando).annotations({ title: 'Function' })),
+  function: Schema.optional(Type.Ref(Type.Expando).annotations({ title: 'Function' })),
 
   /**
    * Only used for workflowSchema.
@@ -110,6 +110,8 @@ const Trigger_ = Schema.Struct({
    */
   inputNodeId: Schema.optional(Schema.String.annotations({ title: 'Input Node ID' })),
 
+  // TODO(burdon): NO BOOLEAN PROPERTIES (enabld/disabled/paused, etc.)
+  //  Need lint rule; or agent rule to require PR review for "boolean" key word.
   enabled: Schema.optional(Schema.Boolean.annotations({ title: 'Enabled' })),
 
   spec: Schema.optional(Spec),
@@ -133,6 +135,7 @@ const Trigger_ = Schema.Struct({
   }),
   SystemTypeAnnotation.set(true),
 );
+
 export interface Trigger extends Schema.Schema.Type<typeof Trigger_> {}
 export interface TriggerEncoded extends Schema.Schema.Encoded<typeof Trigger_> {}
 export const Trigger: Schema.Schema<Trigger, TriggerEncoded> = Trigger_;

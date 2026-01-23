@@ -20,8 +20,11 @@ import React, {
 import { createPortal } from 'react-dom';
 
 import { addEventListener } from '@dxos/async';
+import { runAndForwardErrors } from '@dxos/effect';
+import { log } from '@dxos/log';
 import { type ThemedClassName, useDynamicRef, useStateWithRef } from '@dxos/react-ui';
 import { useThemeContext } from '@dxos/react-ui';
+import { useTextEditor } from '@dxos/react-ui-editor';
 import {
   type AutoScrollOptions,
   type StreamerOptions,
@@ -39,13 +42,12 @@ import {
   scrollToBottomEffect,
   smoothScroll,
   streamer,
-  useTextEditor,
   xmlTagContextEffect,
   xmlTagResetEffect,
   xmlTagUpdateEffect,
   xmlTags,
-} from '@dxos/react-ui-editor';
-import { mx } from '@dxos/react-ui-theme';
+} from '@dxos/ui-editor';
+import { mx } from '@dxos/ui-theme';
 import { isNonNullable } from '@dxos/util';
 
 import { createStreamer } from './stream';
@@ -143,7 +145,7 @@ export const MarkdownStream = forwardRef<MarkdownStreamController | null, Markdo
       );
 
       return () => {
-        void Effect.runPromise(Fiber.interrupt(fork));
+        void runAndForwardErrors(Fiber.interrupt(fork));
       };
     }, [view, queue]);
 
@@ -189,7 +191,7 @@ export const MarkdownStream = forwardRef<MarkdownStreamController | null, Markdo
         // Append to queue (and stream).
         append: async (text: string) => {
           if (text.length) {
-            await Effect.runPromise(Queue.offer(queueRef.current, text));
+            await runAndForwardErrors(Queue.offer(queueRef.current, text));
           }
         },
         // Update widget.
@@ -249,7 +251,7 @@ class ErrorBoundary extends Component<PropsWithChildren, { hasError: boolean }> 
   }
 
   override componentDidCatch(error: unknown, info: ErrorInfo) {
-    console.error('ErrorBoundary caught:', error, info);
+    log.catch(error, info);
   }
 
   override render() {

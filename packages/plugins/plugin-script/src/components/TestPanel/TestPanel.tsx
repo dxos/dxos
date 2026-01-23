@@ -7,7 +7,7 @@ import React, { forwardRef, useEffect, useRef, useState } from 'react';
 import { log } from '@dxos/log';
 import { Avatar, Icon, Input, type ThemedClassName, Toolbar, useTranslation } from '@dxos/react-ui';
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
-import { errorText, mx } from '@dxos/react-ui-theme';
+import { errorText, mx } from '@dxos/ui-theme';
 
 import { meta } from '../../meta';
 

@@ -9,7 +9,7 @@ import { Obj } from '@dxos/echo';
 import { type DXN } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { getIconAnnotation } from '@dxos/schema';
-import { Testing } from '@dxos/schema/testing';
+import { TestSchema } from '@dxos/schema/testing';
 
 import { search } from '../search';
 import { type SearchResult } from '../types';
@@ -27,7 +27,7 @@ export const useWebSearch = ({ query, context }: { query?: string; context?: str
       const results = await search({
         query,
         context,
-        schema: [Testing.Project, Testing.Organization, Testing.Person],
+        schema: [TestSchema.Project, TestSchema.Organization, TestSchema.Person],
         exaApiKey: EXA_API_KEY,
       });
 

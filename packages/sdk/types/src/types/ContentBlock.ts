@@ -4,8 +4,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Type } from '@dxos/echo';
-import { ObjectId } from '@dxos/echo/internal';
+import { Obj, Type } from '@dxos/echo';
 import { Unit, isTruthy } from '@dxos/util';
 
 export const Base = Schema.Struct({
@@ -244,7 +243,7 @@ export interface File extends Schema.Schema.Type<typeof File> {}
  * Non-text content embedded in the message (e.g., files, polls, etc.).
  */
 export const Reference = Schema.TaggedStruct('reference', {
-  reference: Type.Ref(Type.Expando),
+  reference: Type.Ref(Obj.Any),
 
   ...Base.fields,
 }).pipe(Schema.mutable);
@@ -291,7 +290,7 @@ export interface Suggestion extends Schema.Schema.Type<typeof Suggestion> {}
  */
 // TODO(burdon): Rename Choice.
 export const Select = Schema.TaggedStruct('select', {
-  options: Schema.Array(Schema.String),
+  options: Schema.mutable(Schema.Array(Schema.String)),
 
   ...Base.fields,
 }).pipe(Schema.mutable);
@@ -305,7 +304,7 @@ export interface Select extends Schema.Schema.Type<typeof Select> {}
 // TODO(dmaretskyi): What's the relation of this to the reference content block?
 const Anchor = Schema.TaggedStruct('anchor', {
   // TODO(dmaretskyi): Consider making this a DXN.
-  objectId: ObjectId,
+  objectId: Obj.ID,
 
   // TODO(dmaretskyi): Better type.
   version: Schema.Unknown,

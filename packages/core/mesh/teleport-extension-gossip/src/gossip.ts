@@ -12,7 +12,7 @@ import { ComplexMap, ComplexSet } from '@dxos/util';
 
 import { GossipExtension } from './gossip-extension';
 
-export type GossipParams = {
+export type GossipProps = {
   localPeerId: PublicKey;
 };
 
@@ -47,7 +47,7 @@ export class Gossip {
 
   public readonly connectionClosed = new Event<PublicKey>();
 
-  constructor(private readonly _params: GossipParams) {}
+  constructor(private readonly _params: GossipProps) {}
 
   get localPeerId() {
     return this._params.localPeerId;

@@ -8,7 +8,7 @@ import { type SurfaceComponentProps } from '@dxos/app-framework/react';
 import { useMediaQuery } from '@dxos/react-ui';
 import { Calendar, type CalendarController } from '@dxos/react-ui-calendar';
 import { StackItem } from '@dxos/react-ui-stack';
-import { mx } from '@dxos/react-ui-theme';
+import { mx } from '@dxos/ui-theme';
 
 import { type Journal } from '../types';
 

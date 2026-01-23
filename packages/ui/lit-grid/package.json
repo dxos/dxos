@@ -6,7 +6,10 @@
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
   "author": "DXOS.org",
-  "sideEffects": true,
+  "sideEffects": [
+    "*.css",
+    "*.pcss"
+  ],
   "type": "module",
   "exports": {
     ".": {
@@ -35,8 +38,8 @@
     "dist"
   ],
   "dependencies": {
-    "@atlaskit/pragmatic-drag-and-drop": "^1.4.0",
-    "lit": "^3.3.1"
+    "@atlaskit/pragmatic-drag-and-drop": "catalog:",
+    "lit": "catalog:"
   },
   "devDependencies": {
     "@dxos/random": "workspace:*",

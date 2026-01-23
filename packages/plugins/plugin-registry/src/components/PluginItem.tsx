@@ -6,14 +6,14 @@ import React, { type MouseEvent, useCallback } from 'react';
 
 import { type Plugin } from '@dxos/app-framework';
 import { type ChromaticPalette, Icon, IconButton, Input, Link, ListItem, Tag, useTranslation } from '@dxos/react-ui';
-import { descriptionText, mx } from '@dxos/react-ui-theme';
-import { getStyles } from '@dxos/react-ui-theme';
+import { descriptionText, mx } from '@dxos/ui-theme';
+import { getStyles } from '@dxos/ui-theme';
 
 import { meta } from '../meta';
 import { type RegistryTagType } from '../types';
 
 export type PluginItemProps = {
-  plugin: Plugin;
+  plugin: Plugin.Plugin;
   installed?: readonly string[];
   enabled?: readonly string[];
   onClick?: (id: string) => void;
@@ -27,7 +27,7 @@ export const PluginItem = ({
   enabled = [],
   onClick,
   onChange,
-  hasSettings: hasSettingsParam,
+  hasSettings: hasSettingsProp,
   onSettings,
 }: PluginItemProps) => {
   const { t } = useTranslation(meta.id);
@@ -46,7 +46,7 @@ export const PluginItem = ({
     [id, isEnabled, onChange],
   );
 
-  const hasSettings = hasSettingsParam?.(id) ?? false;
+  const hasSettings = hasSettingsProp?.(id) ?? false;
   const handleSettings = useCallback(() => onSettings?.(id), [id, onSettings]);
   const styles = getStyles(iconHue);
   const gridCols = 'grid grid-cols-[5rem_1fr]';

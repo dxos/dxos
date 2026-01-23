@@ -5,20 +5,21 @@
 import { draggable } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
 import React, { type PropsWithChildren, useEffect, useRef, useState } from 'react';
 
+import { type Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { type ThemedClassName, useTranslation } from '@dxos/react-ui';
-import { Card } from '@dxos/react-ui-stack';
-import { mx } from '@dxos/react-ui-theme';
+import { Card } from '@dxos/react-ui-mosaic';
+import { mx } from '@dxos/ui-theme';
 
 import { translationKey } from '../../translations';
 
 import { useBoardContext } from './Board';
 import { getBoardRect } from './geometry';
-import { type CellLayout, type HasId, type Position } from './types';
+import { type CellLayout, type Position } from './types';
 
 type DragState = 'idle' | 'dragging';
 
-export type BoardCellProps<T extends HasId = any> = ThemedClassName<
+export type BoardCellProps<T extends Type.Obj.Any = any> = ThemedClassName<
   PropsWithChildren<{
     item: T;
     layout: CellLayout;
@@ -59,7 +60,7 @@ export const BoardCell = ({ classNames, children, item, layout, draggable: isDra
   }, [isDraggable, zoom]);
 
   return (
-    <Card.StaticRoot
+    <Card.Root
       ref={rootRef}
       // TODO(burdon): Common fragment for placeholder opacity?
       classNames={mx(
@@ -86,7 +87,7 @@ export const BoardCell = ({ classNames, children, item, layout, draggable: isDra
       <div role='none' {...{ inert: true }} className='pointer-events-none min-bs-0 min-is-0'>
         {children}
       </div>
-    </Card.StaticRoot>
+    </Card.Root>
   );
 };
 

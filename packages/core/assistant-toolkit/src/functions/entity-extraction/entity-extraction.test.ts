@@ -6,13 +6,14 @@ import { describe, expect, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
-import { AiService, MemoizedAiService } from '@dxos/ai';
-import { TestAiService } from '@dxos/ai/testing';
+import { AiService } from '@dxos/ai';
+import { MemoizedAiService, TestAiService } from '@dxos/ai/testing';
 import { makeToolExecutionServiceFromFunctions, makeToolResolverFromFunctions } from '@dxos/assistant';
 import { Blueprint } from '@dxos/blueprints';
 import { Obj } from '@dxos/echo';
-import { TestHelpers } from '@dxos/effect';
-import { CredentialsService, DatabaseService, FunctionInvocationService, TracingService } from '@dxos/functions';
+import { Database } from '@dxos/echo';
+import { TestHelpers } from '@dxos/effect/testing';
+import { CredentialsService, FunctionInvocationService, TracingService } from '@dxos/functions';
 import { FunctionInvocationServiceLayerTest, TestDatabaseLayer } from '@dxos/functions-runtime/testing';
 import { ObjectId } from '@dxos/keys';
 import { Message, Organization, Person } from '@dxos/types';
@@ -49,7 +50,7 @@ describe('Entity extraction', () => {
     'call a function to generate a research report',
     Effect.fnUntraced(
       function* (_) {
-        const email = yield* DatabaseService.add(
+        const email = yield* Database.Service.add(
           Obj.make(Message.Message, {
             [Obj.Meta]: {
               tags: ['important'],
@@ -75,7 +76,7 @@ describe('Entity extraction', () => {
             ],
           }),
         );
-        yield* DatabaseService.flush({ indexes: true });
+        yield* Database.Service.flush({ indexes: true });
         const result = yield* FunctionInvocationService.invokeFunction(entityExtraction, {
           source: email,
         });

@@ -12,7 +12,7 @@ import { type DxGrid } from '@dxos/lit-grid';
 import '@dxos/lit-ui/dx-tag-picker.pcss';
 import { faker } from '@dxos/random';
 import { useClient } from '@dxos/react-client';
-import { useClientProvider, withClientProvider } from '@dxos/react-client/testing';
+import { useClientStory, withClientProvider } from '@dxos/react-client/testing';
 import { useAsyncEffect } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { translations as formTranslations } from '@dxos/react-ui-form';
@@ -35,8 +35,7 @@ const generator: ValueGenerator = faker as any;
 // TODO(burdon): Reconcile schemas types and utils (see API PR).
 // TODO(burdon): Base type for T (with id); see ECHO API PR?
 const useTestModel = <S extends Type.Obj.Any>(schema: S, count: number) => {
-  const client = useClient();
-  const { space } = useClientProvider();
+  const { space } = useClientStory();
   const [object, setObject] = useState<Table.Table>();
 
   const features = useMemo<TableFeatures>(
@@ -49,15 +48,14 @@ const useTestModel = <S extends Type.Obj.Any>(schema: S, count: number) => {
       return;
     }
 
-    const { view, jsonSchema } = await View.makeFromSpace({ client, space, typename: Type.getTypename(schema) });
+    const { view, jsonSchema } = await View.makeFromDatabase({ db: space.db, typename: Type.getTypename(schema) });
     const object = Table.make({ view, jsonSchema });
     setObject(object);
     space.db.add(object);
-    await space.db.schemaRegistry.register([schema]);
-  }, [client, space, schema]);
+  }, [space, schema]);
 
   const projection = useProjectionModel(schema, object);
-  const model = useTableModel<TableRow>({ object, projection, features });
+  const model = useTableModel<TableRow>({ object, projection, db: space?.db, features });
 
   useEffect(() => {
     if (!model || !space) {
@@ -85,7 +83,7 @@ const DefaultStory = () => {
   const client = useClient();
   const { model: orgModel, presentation: orgPresentation } = useTestModel(Organization.Organization, 50);
   const { model: contactModel, presentation: contactPresentation } = useTestModel(Person.Person, 50);
-  const { space } = useClientProvider();
+  const { space } = useClientStory();
 
   const handleCreate = useCallback(
     (schema: Schema.Schema.AnyNoContext, values: any) => {
@@ -102,7 +100,6 @@ const DefaultStory = () => {
           schema={Organization.Organization}
           presentation={orgPresentation}
           onCreate={handleCreate}
-          client={client}
           ignoreAttention
           testId='relations-0'
         />
@@ -113,7 +110,6 @@ const DefaultStory = () => {
           schema={Person.Person}
           presentation={contactPresentation}
           onCreate={handleCreate}
-          client={client}
           ignoreAttention
           testId='relations-1'
         />
@@ -219,9 +215,9 @@ export const Default: Story = {
     const newOrgName = 'Salieri LLC';
     await userEvent.type(newSearchField, newOrgName);
 
-    // Look for an option to select (should be the create new option)
-    const newOption = await body.findAllByRole('option');
-    await expect(newOption[0]).toBeVisible();
+    // Wait for the create option to appear (debounce is 200ms, allow time for render)
+    const createOption = await body.findByRole('option', undefined, { timeout: 500 });
+    await expect(createOption).toBeVisible();
 
     // Press Enter to select/create
     await userEvent.keyboard('{Enter}');

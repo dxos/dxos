@@ -42,7 +42,10 @@
       "path": "../react-ui-editor"
     },
     {
-      "path": "../react-ui-theme"
+      "path": "../ui-editor"
+    },
+    {
+      "path": "../ui-theme"
     }
   ]
 }

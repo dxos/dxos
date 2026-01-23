@@ -23,7 +23,7 @@ import {
   useListContext,
   useListItemContext,
 } from '@dxos/react-list';
-import { type Density } from '@dxos/react-ui-types';
+import { type Density } from '@dxos/ui-types';
 
 import { useDensityContext, useThemeContext } from '../../hooks';
 import { type ThemedClassName } from '../../util';

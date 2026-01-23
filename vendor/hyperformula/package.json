@@ -19,7 +19,7 @@
   ],
   "dependencies": {},
   "devDependencies": {
-    "hyperformula": "^2.7.1"
+    "hyperformula": "catalog:"
   },
   "publishConfig": {
     "access": "public"

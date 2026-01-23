@@ -11,16 +11,16 @@ import * as Option from 'effect/Option';
 import React, { type PropsWithChildren, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { Event } from '@dxos/async';
-import { Obj } from '@dxos/echo';
+import { type Database, Obj } from '@dxos/echo';
 import { useVoiceInput } from '@dxos/plugin-transcription';
-import { type Space, getSpace, useQueue } from '@dxos/react-client/echo';
+import { useQueue } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 import { Input, type ThemedClassName, useDynamicRef, useTranslation } from '@dxos/react-ui';
 import { ChatEditor, type ChatEditorController, type ChatEditorProps } from '@dxos/react-ui-chat';
 import { type MarkdownStreamController } from '@dxos/react-ui-components';
 import { MenuProvider, ToolbarMenu } from '@dxos/react-ui-menu';
-import { mx } from '@dxos/react-ui-theme';
 import { Message } from '@dxos/types';
+import { mx } from '@dxos/ui-theme';
 import { isTruthy } from '@dxos/util';
 
 import { useChatToolbarActions } from '../../hooks';
@@ -48,7 +48,7 @@ import { type ChatEvent } from './events';
 type ChatContextValue = {
   debug?: boolean;
   event: Event<ChatEvent>;
-  space?: Space;
+  db?: Database.Database;
   chat?: Assistant.Chat;
   messages: Message.Message[];
   processor: AiChatProcessor;
@@ -61,7 +61,7 @@ export const [ChatContextProvider, useChatContext] = createContext<ChatContextVa
 //
 
 type ChatRootProps = PropsWithChildren<
-  Pick<ChatContextValue, 'space' | 'chat' | 'processor'> & {
+  Pick<ChatContextValue, 'db' | 'chat' | 'processor'> & {
     onEvent?: (event: ChatEvent) => void;
   }
 >;
@@ -120,13 +120,13 @@ const ChatRoot = ({ children, chat, processor, onEvent, ...props }: ChatRootProp
     });
   }, [event, processor, streaming, onEvent]);
 
-  const space = props.space ?? getSpace(chat);
+  const db = props.db ?? (chat && Obj.getDatabase(chat));
 
   return (
     <ChatContextProvider
       debug={debug}
       event={event}
-      space={space}
+      db={db}
       chat={chat}
       messages={messages}
       processor={processor}
@@ -152,6 +152,61 @@ const ChatViewport = ({ classNames, children }: ChatViewportProps) => {
     </div>
   );
 };
+
+//
+// Thread
+//
+
+type ChatThreadProps = Omit<NaturalChatThreadProps, 'identity' | 'messages' | 'tools'>;
+
+const ChatThread = (props: ChatThreadProps) => {
+  const { debug, event, messages, processor } = useChatContext(ChatThread.displayName);
+  const identity = useIdentity();
+  const error = useAtomValue(processor.error).pipe(Option.getOrUndefined);
+
+  const controllerRef = useRef<MarkdownStreamController | null>(null);
+  useEffect(() => {
+    return event.on((event) => {
+      switch (event.type) {
+        case 'submit':
+        case 'scroll-to-bottom':
+          controllerRef.current?.scrollToBottom();
+          break;
+        case 'nav-previous':
+          controllerRef.current?.navigatePrevious();
+          break;
+        case 'nav-next':
+          controllerRef.current?.navigateNext();
+          break;
+      }
+    });
+  }, [event]);
+
+  const handleEvent = useCallback<NonNullable<NaturalChatThreadProps['onEvent']>>(
+    (ev) => {
+      event.emit(ev);
+    },
+    [event],
+  );
+
+  if (!identity) {
+    return null;
+  }
+
+  return (
+    <NaturalChatThread
+      {...props}
+      identity={identity}
+      messages={messages}
+      error={error}
+      debug={debug}
+      onEvent={handleEvent}
+      ref={controllerRef}
+    />
+  );
+};
+
+ChatThread.displayName = 'Chat.Thread';
 
 //
 // Prompt
@@ -183,7 +238,7 @@ const ChatPrompt = ({
   onOnlineChange,
 }: ChatPromptProps) => {
   const { t } = useTranslation(meta.id);
-  const { space, processor, event } = useChatContext(ChatPrompt.displayName);
+  const { db, processor, event } = useChatContext(ChatPrompt.displayName);
 
   const error = useAtomValue(processor.error).pipe(Option.getOrUndefined);
   const streaming = useAtomValue(processor.streaming);
@@ -301,10 +356,10 @@ const ChatPrompt = ({
         />
       </div>
 
-      {space && settings && (
+      {db && settings && (
         <div role='none' className='flex items-center overflow-hidden'>
           <ChatOptions
-            space={space}
+            db={db}
             blueprintRegistry={processor.blueprintRegistry}
             context={processor.context}
             preset={preset}
@@ -313,7 +368,7 @@ const ChatPrompt = ({
           />
 
           <div role='none' className='flex grow overflow-x-auto scrollbar-none'>
-            <ChatReferences space={space} context={processor.context} />
+            <ChatReferences db={db} context={processor.context} />
           </div>
 
           <ChatActions
@@ -338,61 +393,6 @@ const ChatPrompt = ({
 };
 
 ChatPrompt.displayName = 'Chat.Prompt';
-
-//
-// Thread
-//
-
-type ChatThreadProps = Omit<NaturalChatThreadProps, 'identity' | 'messages' | 'tools'>;
-
-const ChatThread = (props: ChatThreadProps) => {
-  const { debug, event, messages, processor } = useChatContext(ChatThread.displayName);
-  const identity = useIdentity();
-  const error = useAtomValue(processor.error).pipe(Option.getOrUndefined);
-
-  const controllerRef = useRef<MarkdownStreamController | null>(null);
-  useEffect(() => {
-    return event.on((event) => {
-      switch (event.type) {
-        case 'submit':
-        case 'scroll-to-bottom':
-          controllerRef.current?.scrollToBottom();
-          break;
-        case 'nav-previous':
-          controllerRef.current?.navigatePrevious();
-          break;
-        case 'nav-next':
-          controllerRef.current?.navigateNext();
-          break;
-      }
-    });
-  }, [event]);
-
-  const handleEvent = useCallback<NonNullable<NaturalChatThreadProps['onEvent']>>(
-    (ev) => {
-      event.emit(ev);
-    },
-    [event],
-  );
-
-  if (!identity) {
-    return null;
-  }
-
-  return (
-    <NaturalChatThread
-      {...props}
-      identity={identity}
-      messages={messages}
-      error={error}
-      debug={debug}
-      onEvent={handleEvent}
-      ref={controllerRef}
-    />
-  );
-};
-
-ChatThread.displayName = 'Chat.Thread';
 
 //
 // Toolbar
@@ -423,8 +423,8 @@ ChatToolbar.displayName = 'Chat.Toolbar';
 export const Chat = {
   Root: ChatRoot,
   Viewport: ChatViewport,
-  Prompt: ChatPrompt,
   Thread: ChatThread,
+  Prompt: ChatPrompt,
   Toolbar: ChatToolbar,
 };
 

@@ -9,11 +9,12 @@ import * as FileSystem from '@effect/platform/FileSystem';
 import * as NodeContext from '@effect/platform-node/NodeContext';
 import * as NodeRuntime from '@effect/platform-node/NodeRuntime';
 import * as Effect from 'effect/Effect';
+import * as path from 'node:path';
 
 import { ClientService, ConfigService } from '@dxos/client';
-import { ENV_DX_PROFILE_DEFAULT } from '@dxos/client-protocol';
+import { DEFAULT_PROFILE } from '@dxos/client-protocol';
 import { Filter, Query, Ref, Type } from '@dxos/echo';
-import { DatabaseService, EchoDatabase } from '@dxos/echo-db';
+import { type EchoDatabase } from '@dxos/echo-db';
 import { log } from '@dxos/log';
 import { Graph } from '@dxos/plugin-explorer/types';
 import { Kanban } from '@dxos/react-ui-kanban/types';
@@ -21,6 +22,7 @@ import { Map } from '@dxos/plugin-map/types';
 import { Masonry } from '@dxos/plugin-masonry/types';
 import { Table } from '@dxos/react-ui-table/types';
 import { View } from '@dxos/schema';
+import { Database } from '@dxos/echo';
 
 /**
  * Generic migration function for view types.
@@ -28,23 +30,23 @@ import { View } from '@dxos/schema';
  */
 const migrateViewType = Effect.fn(function* (
   db: EchoDatabase,
-  currentSchema: Type.Obj.Any,
-  targetSchema: Type.Obj.Any,
+  currentSchema: Type.Entity.Any,
+  targetSchema: Type.Entity.Any,
 ) {
   log.info('migrating', {
     currentSchema: Type.getDXN(currentSchema)?.toString(),
     targetSchema: Type.getDXN(targetSchema)?.toString(),
   });
 
-  const { objects } = yield* DatabaseService.runQuery(
+  const objects = yield* Database.Service.runQuery(
     Query.select(Filter.type(currentSchema)).referencedBy(View.ViewV4, 'presentation'),
   );
 
   for (const object of objects) {
     const { name, presentation: ref, ...view } = object;
-    const presentation = yield* DatabaseService.load(ref);
+    const presentation = yield* Database.Service.load(ref);
     yield* Effect.promise(() =>
-      (db as any)._coreDatabase.atomicReplaceObject(presentation.id, {
+      db.coreDatabase.atomicReplaceObject(presentation.id, {
         data: {
           ...presentation,
           name,
@@ -54,7 +56,7 @@ const migrateViewType = Effect.fn(function* (
       }),
     );
     yield* Effect.promise(() =>
-      (db as any)._coreDatabase.atomicReplaceObject(view.id, {
+      db.coreDatabase.atomicReplaceObject(view.id, {
         data: { ...view },
         type: Type.getDXN(View.View),
       }),
@@ -77,51 +79,57 @@ const command = Command.make(
     ),
     profile: Options.text('profile').pipe(
       Options.withDescription('Profile for the config file.'),
-      Options.withDefault(ENV_DX_PROFILE_DEFAULT),
+      Options.withDefault(DEFAULT_PROFILE),
       Options.withAlias('p'),
     ),
     file: Args.fileContent(),
   },
   Effect.fn(function* ({ file: [filename, contents] }: { file: readonly [string, Uint8Array] }) {
     const client = yield* ClientService;
-    yield* Effect.promise(() => client.halo.createIdentity());
+    yield* Effect.promise(async () => {
+      await client.halo.createIdentity();
+      await client.addTypes([
+        Graph.Graph,
+        Graph.GraphV1,
+        Kanban.Kanban,
+        Kanban.KanbanV1,
+        Map.Map,
+        Map.MapV2,
+        Masonry.Masonry,
+        Masonry.MasonryV1,
+        Table.Table,
+        Table.TableV1,
+        View.View,
+        View.ViewV4,
+      ]);
+    });
 
-    client.addTypes([
-      Graph.Graph,
-      Graph.GraphV1,
-      Kanban.Kanban,
-      Kanban.KanbanV1,
-      Map.Map,
-      Map.MapV2,
-      Masonry.Masonry,
-      Masonry.MasonryV1,
-      Table.Table,
-      Table.TableV1,
-      View.View,
-      View.ViewV4,
-    ]);
-
-    log.info('importing', { filename, contents: contents.length });
+    log.info('importing...', { filename, contents: contents.length });
     const space = yield* Effect.promise(() => client.spaces.import({ filename, contents }));
     log.info('imported', { spaceId: space.id, filename });
 
     yield* Effect.all([
-      migrateViewType(space.db, Graph.GraphV1, Graph.Graph),
-      migrateViewType(space.db, Kanban.KanbanV1, Kanban.Kanban),
-      migrateViewType(space.db, Map.MapV2, Map.Map),
-      migrateViewType(space.db, Masonry.MasonryV1, Masonry.Masonry),
-      migrateViewType(space.db, Table.TableV1, Table.Table),
+      migrateViewType(space.internal.db, Graph.GraphV1, Graph.Graph),
+      migrateViewType(space.internal.db, Kanban.KanbanV1, Kanban.Kanban),
+      migrateViewType(space.internal.db, Map.MapV2, Map.Map),
+      migrateViewType(space.internal.db, Masonry.MasonryV1, Masonry.Masonry),
+      migrateViewType(space.internal.db, Table.TableV1, Table.Table),
     ]).pipe(
-      Effect.andThen(() => DatabaseService.flush()),
-      Effect.provide(DatabaseService.layer(space.db)),
+      Effect.andThen(() => Database.Service.flush()),
+      Effect.provide(Database.Service.layer(space.db)),
     );
 
     log.info('exporting', { spaceId: space.id });
     const archive = yield* Effect.promise(() => space.internal.export());
-    log.info('exported', { spaceId: space.id, filename: archive.filename, contents: archive.contents.length });
 
     const fs = yield* FileSystem.FileSystem;
-    yield* fs.writeFile(archive.filename, archive.contents);
+    const out = path.join(path.dirname(filename), archive.filename);
+    yield* fs.writeFile(out, archive.contents);
+    log.info('exported', {
+      spaceId: space.id,
+      filename: out,
+      contents: archive.contents.length,
+    });
   }),
 ).pipe(Command.provide(ClientService.layer), Command.provide(ConfigService.layerMemory));
 
@@ -130,4 +138,9 @@ const cli = Command.run(command, {
   version: '20251117',
 });
 
+/**
+ * ```bash
+ * npx tsx ./scripts/20251117-migrate.ts <path-to-archive>
+ * ```
+ */
 cli(process.argv).pipe(Effect.provide(NodeContext.layer), NodeRuntime.runMain);

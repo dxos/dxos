@@ -49,7 +49,7 @@ const meta = {
   },
   decorators: [
     withTheme,
-    withLayout({ container: 'column' }),
+    withLayout({ layout: 'column' }),
     withClientProvider({
       types: [Organization.Organization, Person.Person, Project.Project, Employer.Employer],
       createIdentity: true,

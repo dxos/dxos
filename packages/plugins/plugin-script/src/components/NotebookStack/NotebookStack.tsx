@@ -20,7 +20,7 @@ export type NotebookStackProps = ThemedClassName<
   {
     notebook?: Notebook.Notebook;
     onRearrange?: StackProps['onRearrange'];
-  } & (Pick<NotebookSectionProps, 'space' | 'graph' | 'promptResults' | 'onCellInsert' | 'onCellDelete'> &
+  } & (Pick<NotebookSectionProps, 'db' | 'graph' | 'promptResults' | 'onCellInsert' | 'onCellDelete'> &
     Pick<TypescriptEditorProps, 'env'>)
 >;
 
@@ -39,7 +39,7 @@ type NotebookSectionProps = NotebookCellProps;
 
 const NotebookSection = ({
   cell,
-  space,
+  db,
   env,
   promptResults,
   onCellInsert,
@@ -73,13 +73,13 @@ const NotebookSection = ({
       <StackItem.DragPreview>
         {({ item: cell }) => (
           <StackItem.Content classNames='overflow-visible bg-groupSurface border border-subduedSeparator'>
-            <NotebookCell space={space} cell={cell} env={env} dragging />
+            <NotebookCell db={db} cell={cell} env={env} dragging />
           </StackItem.Content>
         )}
       </StackItem.DragPreview>
 
       <StackItem.Content classNames='overflow-visible'>
-        <NotebookCell space={space} cell={cell} env={env} promptResults={promptResults} {...props} />
+        <NotebookCell db={db} cell={cell} env={env} promptResults={promptResults} {...props} />
       </StackItem.Content>
     </StackItem.Root>
   );

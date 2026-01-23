@@ -3,9 +3,9 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
+import * as Effect from 'effect/Effect';
 import React, { useCallback } from 'react';
 
-import { IntentPlugin, SettingsPlugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Obj, type QueryAST, Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
@@ -13,17 +13,14 @@ import { ClientPlugin } from '@dxos/plugin-client';
 import { PreviewPlugin } from '@dxos/plugin-preview';
 import { useGlobalFilteredObjects } from '@dxos/plugin-search';
 import { SpacePlugin } from '@dxos/plugin-space';
-import { StorybookLayoutPlugin } from '@dxos/plugin-storybook-layout';
-import { ThemePlugin } from '@dxos/plugin-theme';
+import { corePlugins } from '@dxos/plugin-testing';
 import { faker } from '@dxos/random';
-import { useClient } from '@dxos/react-client';
 import { Filter, useQuery, useSchema, useSpaces } from '@dxos/react-client/echo';
 import { withTheme } from '@dxos/react-ui/testing';
 import { ViewEditor } from '@dxos/react-ui-form';
 import { Kanban as KanbanComponent, useKanbanModel, useProjectionModel } from '@dxos/react-ui-kanban';
 import { Kanban } from '@dxos/react-ui-kanban/types';
-import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
-import { defaultTx } from '@dxos/react-ui-theme';
+import { JsonFilter } from '@dxos/react-ui-syntax-highlighter';
 import { View, getTypenameFromQuery } from '@dxos/schema';
 import { Organization, Person } from '@dxos/types';
 
@@ -44,14 +41,13 @@ const rollOrg = () => ({
 });
 
 const StorybookKanban = () => {
-  const client = useClient();
   const spaces = useSpaces();
   const space = spaces[spaces.length - 1];
-  const [object] = useQuery(space, Filter.type(Kanban.Kanban));
+  const [object] = useQuery(space?.db, Filter.type(Kanban.Kanban));
   const typename = object?.view.target?.query ? getTypenameFromQuery(object.view.target.query.ast) : undefined;
-  const schema = useSchema(client, space, typename);
+  const schema = useSchema(space?.db, typename);
 
-  const objects = useQuery(space, schema ? Filter.type(schema) : Filter.nothing());
+  const objects = useQuery(space?.db, schema ? Filter.type(schema) : Filter.nothing());
   const filteredObjects = useGlobalFilteredObjects(objects);
 
   const projection = useProjectionModel(schema, object);
@@ -77,7 +73,7 @@ const StorybookKanban = () => {
     [space, schema, model],
   );
 
-  const handleRemoveCard = useCallback((card: { id: string }) => space.db.remove(card), [space]);
+  const handleRemoveCard = useCallback((card: { id: string }) => Obj.isObject(card) && space?.db.remove(card), [space]);
 
   const handleUpdateQuery = useCallback(
     (newQuery: QueryAST.Query) => {
@@ -96,9 +92,9 @@ const StorybookKanban = () => {
   }
 
   return (
-    <div className='grow grid grid-cols-[1fr_350px]'>
+    <div className='grow grid grid-cols-[1fr_350px] overflow-hidden'>
       {model ? <KanbanComponent model={model} onAddCard={handleAddCard} onRemoveCard={handleRemoveCard} /> : <div />}
-      <div className='flex flex-col bs-full border-is border-separator overflow-y-auto'>
+      <div className='flex flex-col bs-full overflow-hidden'>
         <ViewEditor
           registry={space?.db.schemaRegistry}
           schema={schema}
@@ -108,16 +104,10 @@ const StorybookKanban = () => {
             console.log('[ViewEditor]', 'onDelete', fieldId);
           }}
         />
-        <SyntaxHighlighter language='json' className='text-xs'>
-          {JSON.stringify({ view: object.view.target, schema }, null, 2)}
-        </SyntaxHighlighter>
+        <JsonFilter data={{ view: object.view.target, schema }} classNames='text-xs' />
       </div>
     </div>
   );
-};
-
-type StoryProps = {
-  rows?: number;
 };
 
 //
@@ -132,35 +122,33 @@ const meta = {
     withTheme,
     withPluginManager({
       plugins: [
+        ...corePlugins(),
         ClientPlugin({
           types: [Organization.Organization, Person.Person, View.View, Kanban.Kanban],
-          onClientInitialized: async ({ client }) => {
-            await client.halo.createIdentity();
-            const space = await client.spaces.create();
-            await space.waitUntilReady();
-            const { view } = await View.makeFromSpace({
-              client,
-              space,
-              typename: Organization.Organization.typename,
-              pivotFieldName: 'status',
-            });
-            const kanban = Kanban.make({ view });
-            space.db.add(kanban);
+          onClientInitialized: ({ client }) =>
+            Effect.gen(function* () {
+              yield* Effect.promise(() => client.halo.createIdentity());
+              const space = yield* Effect.promise(() => client.spaces.create());
+              yield* Effect.promise(() => space.waitUntilReady());
+              const { view } = yield* Effect.promise(() =>
+                View.makeFromDatabase({
+                  db: space.db,
+                  typename: Organization.Organization.typename,
+                  pivotFieldName: 'status',
+                }),
+              );
+              const kanban = Kanban.make({ view });
+              space.db.add(kanban);
 
-            // TODO(burdon): Replace with sdk/schema/testing.
-            Array.from({ length: 80 }).map(() => {
-              return space.db.add(Obj.make(Organization.Organization, rollOrg()));
-            });
-          },
+              // TODO(burdon): Replace with sdk/schema/testing.
+              Array.from({ length: 80 }).map(() => {
+                return space.db.add(Obj.make(Organization.Organization, rollOrg()));
+              });
+            }),
         }),
+        ...corePlugins(),
         SpacePlugin({}),
-        IntentPlugin(),
-        SettingsPlugin(),
-
-        // UI
-        ThemePlugin({ tx: defaultTx }),
         PreviewPlugin(),
-        StorybookLayoutPlugin({}),
       ],
     }),
   ],

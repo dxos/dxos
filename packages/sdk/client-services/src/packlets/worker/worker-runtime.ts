@@ -2,6 +2,12 @@
 // Copyright 2022 DXOS.org
 //
 
+import * as Reactivity from '@effect/experimental/Reactivity';
+import type * as SqlClient from '@effect/sql/SqlClient';
+import * as Effect from 'effect/Effect';
+import * as Layer from 'effect/Layer';
+import * as ManagedRuntime from 'effect/ManagedRuntime';
+
 import { Trigger } from '@dxos/async';
 import { DEFAULT_WORKER_BROADCAST_CHANNEL } from '@dxos/client-protocol';
 import { type Config } from '@dxos/config';
@@ -16,6 +22,8 @@ import {
 } from '@dxos/messaging';
 import { RtcTransportProxyFactory } from '@dxos/network-manager';
 import { type RpcPort } from '@dxos/rpc';
+import * as OpfsWorker from '@dxos/sql-sqlite/OpfsWorker';
+import * as SqliteClient from '@dxos/sql-sqlite/SqliteClient';
 import { type MaybePromise } from '@dxos/util';
 
 import { ClientServicesHost } from '../services';
@@ -23,7 +31,7 @@ import { ClientServicesHost } from '../services';
 import { WorkerSession } from './worker-session';
 
 // NOTE: Keep as RpcPorts to avoid dependency on @dxos/rpc-tunnel so we don't depend on browser-specific apis.
-export type CreateSessionParams = {
+export type CreateSessionProps = {
   appPort: RpcPort;
   systemPort: RpcPort;
   shellPort?: RpcPort;
@@ -57,6 +65,7 @@ export class WorkerRuntime {
   private _config!: Config;
   private _signalMetadataTags: any = { runtime: 'worker-runtime' };
   private _signalTelemetryEnabled: boolean = false;
+  private _runtime!: ManagedRuntime.ManagedRuntime<SqlClient.SqlClient, never>;
 
   constructor({
     channel = DEFAULT_WORKER_BROADCAST_CHANNEL,
@@ -70,10 +79,12 @@ export class WorkerRuntime {
     this._releaseLock = releaseLock;
     this._onStop = onStop;
     this._channel = channel;
+    this._runtime = ManagedRuntime.make(Layer.merge(LocalSqliteOpfsLayer, Reactivity.layer).pipe(Layer.orDie));
     this._clientServices = new ClientServicesHost({
       callbacks: {
         onReset: async () => this.stop(),
       },
+      runtime: this._runtime.runtimeEffect,
     });
   }
 
@@ -127,13 +138,14 @@ export class WorkerRuntime {
     this._broadcastChannel?.close();
     this._broadcastChannel = undefined;
     await this._clientServices.close();
+    await this._runtime.dispose();
     await this._onStop?.();
   }
 
   /**
    * Create a new session.
    */
-  async createSession({ appPort, systemPort, shellPort }: CreateSessionParams): Promise<void> {
+  async createSession({ appPort, systemPort, shellPort }: CreateSessionProps): Promise<void> {
     const session = new WorkerSession({
       serviceHost: this._clientServices,
       appPort,
@@ -193,3 +205,28 @@ export class WorkerRuntime {
     }
   }
 }
+
+const DB_NAME = 'DXOS';
+/**
+ * Local SQLite layer for the worker.
+ * Uses OPFS sync API as an FS backend.
+ * Does NOT spawn a new worker.
+ * NOTE: Only usable within a worker.
+ * TODO(mykola): This does not work right now. Fix.
+ */
+const LocalSqliteOpfsLayer = Layer.unwrapScoped(
+  Effect.gen(function* () {
+    const { port1: clientPort, port2: serverPort } = new MessageChannel();
+    clientPort.start();
+    serverPort.start();
+    yield* Effect.addFinalizer(() =>
+      Effect.sync(() => {
+        clientPort.close();
+        serverPort.close();
+      }),
+    );
+
+    yield* Effect.forkScoped(OpfsWorker.run({ port: serverPort, dbName: DB_NAME }));
+    return SqliteClient.layer({ worker: Effect.succeed(clientPort) });
+  }),
+);

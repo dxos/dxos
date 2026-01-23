@@ -9,16 +9,16 @@ import { Filter, Obj } from '@dxos/echo';
 import { TemplateEditor, meta } from '@dxos/plugin-assistant';
 import { useQuery } from '@dxos/react-client/echo';
 import { Toolbar, useTranslation } from '@dxos/react-ui';
-import { descriptionMessage, mx } from '@dxos/react-ui-theme';
+import { descriptionMessage, mx } from '@dxos/ui-theme';
 
 import { type ComponentProps } from './types';
 
 export const BlueprintModule = ({ space }: ComponentProps) => {
-  const [blueprint] = useQuery(space, Filter.type(Blueprint.Blueprint));
+  const [blueprint] = useQuery(space.db, Filter.type(Blueprint.Blueprint));
   const { t } = useTranslation(meta.id);
 
   return !blueprint?.instructions ? (
-    <p className={mx(descriptionMessage, 'm-trimLg')}>{t('no blueprint message')}</p>
+    <p className={mx(descriptionMessage, 'm-trimMd')}>{t('no blueprint message')}</p>
   ) : (
     <div className='flex flex-col bs-full'>
       <Toolbar.Root classNames='border-be border-subduedSeparator'>

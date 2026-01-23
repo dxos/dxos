@@ -5,9 +5,8 @@
 import { useMemo } from 'react';
 
 import { type ComputeEdge, ComputeGraphModel, type ComputeNode, DEFAULT_INPUT, DEFAULT_OUTPUT } from '@dxos/conductor';
-import { ObjectId, Ref } from '@dxos/echo/internal';
+import { Obj, Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
-import { getSpace } from '@dxos/react-client/echo';
 import { type CanvasGraphModel, type Connection, type GraphMonitor } from '@dxos/react-ui-canvas-editor';
 import { isNonNullable } from '@dxos/util';
 
@@ -27,7 +26,7 @@ export const mapEdge = (
   invariant(targetNode?.node);
 
   return {
-    id: ObjectId.random(),
+    id: Obj.ID.random(),
     source: sourceNode.node,
     target: targetNode.node,
     output,
@@ -118,14 +117,14 @@ const linkTriggerToCompute = (graph: ComputeGraphModel, computeNode: ComputeNode
 };
 
 const deleteTriggerObjects = (computeGraph: ComputeGraphModel, deleted: CanvasGraphModel) => {
-  const space = getSpace(computeGraph.root);
-  if (!space) {
+  const db = Obj.getDatabase(computeGraph.root);
+  if (!db) {
     return;
   }
   for (const node of deleted.nodes) {
     if (node.type === 'trigger') {
       const trigger = node as TriggerShape;
-      space.db.remove(trigger.functionTrigger!.target!);
+      db.remove(trigger.functionTrigger!.target!);
     }
   }
 };

@@ -15,7 +15,7 @@ import { type ReplicantEnv, ReplicantRegistry } from '../env';
 import { TestBuilder, type TestPeer } from '../test-builder';
 import { randomArraySlice } from '../util';
 
-export type ReplicantRunParams = {
+export type ReplicantRunProps = {
   replicants: number;
   peersPerReplicant: number;
 
@@ -48,7 +48,7 @@ export class SignalReplicant {
     duration,
     repeatInterval,
     replicantWaitTime,
-  }: ReplicantRunParams): Promise<void> {
+  }: ReplicantRunProps): Promise<void> {
     const ctx = new Context();
     let testCounter = 0;
 

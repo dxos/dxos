@@ -6,32 +6,24 @@ import { Atom, type Registry, RegistryContext, useAtomValue } from '@effect-atom
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Function from 'effect/Function';
 import * as Option from 'effect/Option';
+import type * as Schema from 'effect/Schema';
 import React, { type PropsWithChildren, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 
-import {
-  Expando,
-  Filter,
-  type Live,
-  Query,
-  type QueryResult,
-  type Space,
-  SpaceState,
-  isSpace,
-  live,
-} from '@dxos/client/echo';
-import { Obj, Type } from '@dxos/echo';
+import { Filter, type Live, Query, type Space, SpaceState, isSpace, live } from '@dxos/client/echo';
+import { Obj, type QueryResult, Type } from '@dxos/echo';
 import { faker } from '@dxos/random';
 import { type Client, useClient } from '@dxos/react-client';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { Icon, IconButton, Input, Select } from '@dxos/react-ui';
 import { withTheme } from '@dxos/react-ui/testing';
 import { Path, Tree } from '@dxos/react-ui-list';
-import { getSize, mx } from '@dxos/react-ui-theme';
+import { getSize, mx } from '@dxos/ui-theme';
 import { byPosition, isNonNullable, safeParseInt } from '@dxos/util';
 
-import { type ExpandableGraph, ROOT_ID } from '../graph';
-import { GraphBuilder, atomFromObservable, createExtension } from '../graph-builder';
-import { type Node } from '../node';
+import * as CreateAtom from '../atoms';
+import * as Graph from '../graph';
+import * as GraphBuilder from '../graph-builder';
+import * as Node from '../node';
 import { atomFromQuery } from '../testing';
 
 import { JsonTree } from './Tree';
@@ -56,23 +48,23 @@ const actionWeights = {
   [Action.RENAME_OBJECT]: 4,
 };
 
-const createGraph = (client: Client, registry: Registry.Registry): ExpandableGraph => {
-  const spaceBuilderExtension = createExtension({
+const createGraph = (client: Client, registry: Registry.Registry): Graph.ExpandableGraph => {
+  const spaceBuilderExtension = GraphBuilder.createExtensionRaw({
     id: 'space',
     connector: (node) =>
       Atom.make((get) =>
         Function.pipe(
           get(node),
-          Option.flatMap((node) => (node.id === ROOT_ID ? Option.some(node) : Option.none())),
+          Option.flatMap((node) => (node.id === Node.RootId ? Option.some(node) : Option.none())),
           Option.map(() => {
-            const spaces = get(atomFromObservable(client.spaces)) ?? [];
+            const spaces = get(CreateAtom.fromObservable(client.spaces)) ?? [];
             return spaces
-              .filter((space) => get(atomFromObservable(space.state)) === SpaceState.SPACE_READY)
+              .filter((space: any) => get(CreateAtom.fromObservable(space.state)) === SpaceState.SPACE_READY)
               .map((space) => ({
                 id: space.id,
                 type: 'dxos.org/type/Space',
                 properties: {
-                  label: get(atomFromObservable(space.properties.name)),
+                  label: get(CreateAtom.fromSignal(() => space.properties.name)),
                 },
                 data: space,
               }));
@@ -82,19 +74,21 @@ const createGraph = (client: Client, registry: Registry.Registry): ExpandableGra
       ),
   });
 
-  const objectBuilderExtension = createExtension({
+  const objectBuilderExtension = GraphBuilder.createExtensionRaw({
     id: 'object',
     connector: (node) => {
-      let query: QueryResult<Live<Expando>> | undefined;
+      // TODO(wittjosiah): Find a simpler way to define this type.
+      let result: QueryResult.QueryResult<Schema.Schema.Type<typeof Type.Expando>> | undefined;
       return Atom.make((get) =>
         Function.pipe(
           get(node),
           Option.flatMap((node) => (isSpace(node.data) ? Option.some(node.data) : Option.none())),
           Option.map((space) => {
-            if (!query) {
-              query = space.db.query(Query.type(Expando, { type: 'test' }));
+            if (!result) {
+              result = space.db.query(Query.type(Type.Expando, { type: 'test' }));
             }
-            const objects = get(atomFromQuery(query));
+
+            const objects = get(atomFromQuery(result));
             return objects.map((object) => ({
               id: object.id,
               type: 'dxos.org/type/test',
@@ -108,15 +102,15 @@ const createGraph = (client: Client, registry: Registry.Registry): ExpandableGra
     },
   });
 
-  const graph = new GraphBuilder({ registry })
-    .addExtension(spaceBuilderExtension)
-    .addExtension(objectBuilderExtension).graph;
+  const builder = GraphBuilder.make({ registry });
+  GraphBuilder.addExtension(builder, spaceBuilderExtension);
+  GraphBuilder.addExtension(builder, objectBuilderExtension);
+  const graph = builder.graph;
   graph.onNodeChanged.on(({ id }) => {
-    graph.expand(id);
+    Graph.expand(graph, id);
   });
-  graph.expand(ROOT_ID);
+  Graph.expand(graph, Node.RootId);
   (window as any).graph = graph;
-
   return graph;
 };
 
@@ -136,9 +130,9 @@ const getRandomSpace = (client: Client): Space | undefined => {
 const getSpaceWithObjects = async (client: Client): Promise<Space | undefined> => {
   const readySpaces = client.spaces.get().filter((space) => space.state.get() === SpaceState.SPACE_READY);
   const spaceQueries = await Promise.all(
-    readySpaces.map((space) => space.db.query(Filter.type(Expando, { type: 'test' })).run()),
+    readySpaces.map((space) => space.db.query(Filter.type(Type.Expando, { type: 'test' })).run()),
   );
-  const spaces = readySpaces.filter((space, index) => spaceQueries[index].objects.length > 0);
+  const spaces = readySpaces.filter((space, index) => spaceQueries[index].length > 0);
   return spaces[Math.floor(Math.random() * spaces.length)];
 };
 
@@ -155,7 +149,9 @@ const runAction = async (client: Client, action: Action) => {
     case Action.RENAME_SPACE: {
       const space = getRandomSpace(client);
       if (space) {
-        space.properties.name = faker.commerce.productName();
+        Obj.change(space.properties, (p) => {
+          p.name = faker.commerce.productName();
+        });
       }
       break;
     }
@@ -172,7 +168,7 @@ const runAction = async (client: Client, action: Action) => {
     case Action.REMOVE_OBJECT: {
       const space = await getSpaceWithObjects(client);
       if (space) {
-        const { objects } = await space.db.query(Filter.type(Expando, { type: 'test' })).run();
+        const objects = await space.db.query(Filter.type(Type.Expando, { type: 'test' })).run();
         space.db.remove(objects[Math.floor(Math.random() * objects.length)]);
       }
       break;
@@ -181,7 +177,7 @@ const runAction = async (client: Client, action: Action) => {
     case Action.RENAME_OBJECT: {
       const space = await getSpaceWithObjects(client);
       if (space) {
-        const { objects } = await space.db.query(Filter.type(Expando, { type: 'test' })).run();
+        const objects = await space.db.query(Filter.type(Type.Expando, { type: 'test' })).run();
         objects[Math.floor(Math.random() * objects.length)].name = faker.commerce.productName();
       }
       break;
@@ -295,23 +291,22 @@ export const TreeView: Story = {
     const state = useMemo(() => new Map<string, Live<{ open: boolean; current: boolean }>>(), []);
 
     const useItems = useCallback(
-      (node?: Node, options?: { disposition?: string; sort?: boolean }) => {
-        const connections = useAtomValue(graph.connections(node?.id ?? ROOT_ID));
+      (node?: Node.Node, options?: { disposition?: string; sort?: boolean }) => {
+        const connections = useAtomValue(graph.connections(node?.id ?? Node.RootId));
         return options?.sort ? connections.toSorted((a, b) => byPosition(a.properties, b.properties)) : connections;
       },
       [graph],
     );
 
     const getProps = useCallback(
-      (node: Node, path: string[]) => {
-        const children = graph
-          .getConnections(node.id, 'outbound')
+      (node: Node.Node, path: string[]) => {
+        const children = Graph.getConnections(graph, node.id, 'outbound')
           .map((n) => {
             // Break cycles.
             const nextPath = [...path, node.id];
-            return nextPath.includes(n.id) ? undefined : (n as Node);
+            return nextPath.includes(n.id) ? undefined : (n as Node.Node);
           })
-          .filter(isNonNullable) as Node[];
+          .filter(isNonNullable) as Node.Node[];
         const parentOf =
           children.length > 0 ? children.map(({ id }) => id) : node.properties.role === 'branch' ? [] : undefined;
         return {
@@ -372,7 +367,7 @@ export const TreeView: Story = {
       <>
         <Controls />
         <Tree
-          id={ROOT_ID}
+          id={Node.RootId}
           useItems={useItems}
           getProps={getProps}
           isOpen={isOpen}

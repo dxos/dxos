@@ -5,14 +5,14 @@
 import React, { Fragment } from 'react';
 
 import { Avatar, Icon } from '@dxos/react-ui';
-import { Card, cardHeading, cardText } from '@dxos/react-ui-stack';
-import { mx } from '@dxos/react-ui-theme';
+import { Card, cardHeading, cardText } from '@dxos/react-ui-mosaic';
 import { type Person } from '@dxos/types';
+import { mx } from '@dxos/ui-theme';
 
 import { CardRow, CardSubjectMenu, gridRow } from '../components';
 import { type CardPreviewProps } from '../types';
 
-export const PersonCard = ({ children, role, subject, activeSpace, onSelect }: CardPreviewProps<Person.Person>) => {
+export const PersonCard = ({ children, role, subject, db, onSelect }: CardPreviewProps<Person.Person>) => {
   const { fullName, image, organization: { target: organization } = {}, emails = [] } = subject;
 
   return (
@@ -20,7 +20,7 @@ export const PersonCard = ({ children, role, subject, activeSpace, onSelect }: C
       <Avatar.Root>
         <Card.Text role='group' classNames={mx('grid gap-2 grid-cols-[1fr_min-content]')}>
           <div role='none' className={mx(gridRow, 'grid-rows-2')}>
-            {activeSpace ? <CardSubjectMenu subject={subject} activeSpace={activeSpace} /> : <div />}
+            {db ? <CardSubjectMenu subject={subject} db={db} /> : <div />}
             <Avatar.Label asChild>
               <h2 className={mx(cardHeading, 'grow truncate')}>{fullName}</h2>
             </Avatar.Label>

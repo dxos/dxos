@@ -7,7 +7,6 @@ import {
   DialogClose as DialogClosePrimitive,
   type DialogCloseProps as DialogClosePrimitiveProps,
   DialogContent as DialogContentPrimitive,
-  type DialogContentProps as DialogContentPrimitiveProps,
   DialogDescription as DialogDescriptionPrimitive,
   type DialogDescriptionProps as DialogDescriptionPrimitiveProps,
   DialogOverlay as DialogOverlayPrimitive,
@@ -21,7 +20,12 @@ import {
   DialogTrigger as DialogTriggerPrimitive,
   type DialogTriggerProps as DialogTriggerPrimitiveProps,
 } from '@radix-ui/react-dialog';
-import React, { type ForwardRefExoticComponent, type FunctionComponent, forwardRef } from 'react';
+import React, {
+  type ComponentPropsWithRef,
+  type ForwardRefExoticComponent,
+  type FunctionComponent,
+  forwardRef,
+} from 'react';
 
 import { useThemeContext } from '../../hooks';
 import { type ThemedClassName } from '../../util';
@@ -107,7 +111,9 @@ const DialogOverlay: ForwardRefExoticComponent<DialogOverlayProps> = forwardRef<
 
 DialogOverlay.displayName = DIALOG_OVERLAY_NAME;
 
-type DialogContentProps = ThemedClassName<DialogContentPrimitiveProps> & { inOverlayLayout?: boolean };
+type DialogContentProps = ThemedClassName<ComponentPropsWithRef<typeof DialogContentPrimitive>> & {
+  inOverlayLayout?: boolean;
+};
 
 const DialogContent: ForwardRefExoticComponent<DialogContentProps> = forwardRef<HTMLDivElement, DialogContentProps>(
   ({ classNames, children, inOverlayLayout: propsInOverlayLayout, ...props }, forwardedRef) => {

@@ -18,6 +18,9 @@
   ],
   "references": [
     {
+      "path": "../../common/effect"
+    },
+    {
       "path": "../../common/invariant"
     },
     {
@@ -36,7 +39,16 @@
       "path": "../../core/echo/live-object"
     },
     {
+      "path": "../../core/operation"
+    },
+    {
+      "path": "../../devtools/cli-util"
+    },
+    {
       "path": "../../sdk/app-framework"
+    },
+    {
+      "path": "../../sdk/client-protocol"
     },
     {
       "path": "../../ui/react-ui"
@@ -48,7 +60,7 @@
       "path": "../../ui/react-ui-stack"
     },
     {
-      "path": "../../ui/react-ui-theme"
+      "path": "../../ui/ui-theme"
     },
     {
       "path": "../plugin-graph"

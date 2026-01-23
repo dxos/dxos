@@ -52,11 +52,14 @@
     }
   },
   "files": [
-    "dist",
+    "dist/lib",
+    "dist/types",
     "schema",
     "src"
   ],
-  "scripts": {},
+  "scripts": {
+    "publish-runtime": "node ./scripts/build-modules.mjs && node ./scripts/upload-modules.mjs --env dev"
+  },
   "dependencies": {
     "@dxos/ai": "workspace:*",
     "@dxos/async": "workspace:*",
@@ -73,6 +76,7 @@
     "@dxos/effect": "workspace:*",
     "@dxos/errors": "workspace:*",
     "@dxos/functions": "workspace:*",
+    "@dxos/functions-runtime-cloudflare": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/keys": "workspace:*",
     "@dxos/kv-store": "workspace:*",
@@ -82,15 +86,20 @@
     "@dxos/protocols": "workspace:*",
     "@dxos/schema": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@effect/platform": "0.92.1",
-    "effect": "3.18.3",
-    "esbuild": "0.25.10",
-    "esbuild-wasm": "^0.16.14",
-    "i18next": "^24.2.1",
-    "iso-did": "^1.6.0"
+    "@effect/platform": "catalog:",
+    "effect": "catalog:",
+    "esbuild": "catalog:",
+    "esbuild-wasm": "catalog:",
+    "i18next": "catalog:",
+    "iso-did": "catalog:",
+    "jsonata": "catalog:"
   },
   "devDependencies": {
-    "@dxos/types": "workspace:*"
+    "@automerge/automerge": "catalog:",
+    "@aws-sdk/client-s3": "3.955.0",
+    "@dxos/ai": "workspace:*",
+    "@dxos/types": "workspace:*",
+    "chess.js": "catalog:"
   },
   "publishConfig": {
     "access": "public"

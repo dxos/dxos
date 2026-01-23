@@ -4,9 +4,6 @@
 
 import * as Schema from 'effect/Schema';
 
-// TODO(burdon): Base UI type (should not depend on ECHO).
-export type HasId = { id: string };
-
 export const Size = Schema.Struct({
   width: Schema.Number,
   height: Schema.Number,

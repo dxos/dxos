@@ -8,17 +8,17 @@ import React, { type PropsWithChildren, useMemo } from 'react';
 
 import { type DXN } from '@dxos/echo';
 import { Icon, type ThemedClassName, useThemeContext } from '@dxos/react-ui';
+import { useTextEditor } from '@dxos/react-ui-editor';
+import { MenuProvider, ToolbarMenu } from '@dxos/react-ui-menu';
+import { type Actor, type Message as MessageType } from '@dxos/types';
 import {
   createBasicExtensions,
   createMarkdownExtensions,
   createThemeExtensions,
   decorateMarkdown,
   preview,
-  useTextEditor,
-} from '@dxos/react-ui-editor';
-import { MenuProvider, ToolbarMenu } from '@dxos/react-ui-menu';
-import { mx } from '@dxos/react-ui-theme';
-import { type Actor, type Message as MessageType } from '@dxos/types';
+} from '@dxos/ui-editor';
+import { mx } from '@dxos/ui-theme';
 
 import { formatDateTime } from '../../util';
 import { UserIconButton } from '../common';
@@ -35,6 +35,9 @@ type MessageContextValue = {
   viewMode: Signal<ViewMode>;
   message: MessageType.Message;
   sender: Signal<DXN | undefined>;
+  onReply?: () => void;
+  onReplyAll?: () => void;
+  onForward?: () => void;
 };
 
 const [MessageContextProvider, useMessageContext] = createContext<MessageContextValue>('Message');
@@ -43,13 +46,30 @@ const [MessageContextProvider, useMessageContext] = createContext<MessageContext
 // Root
 //
 
-type MessageRootProps = PropsWithChildren<Omit<MessageContextValue, 'viewMode'> & { viewMode?: ViewMode }>;
+type MessageRootProps = PropsWithChildren<
+  Omit<MessageContextValue, 'viewMode'> & {
+    viewMode?: ViewMode;
+  }
+>;
 
-const MessageRoot = ({ children, viewMode: viewModeParam = 'plain', ...props }: MessageRootProps) => {
-  const viewMode = useSignal(viewModeParam);
+const MessageRoot = ({
+  children,
+  viewMode: viewModeProp = 'plain',
+  onReply,
+  onReplyAll,
+  onForward,
+  ...props
+}: MessageRootProps) => {
+  const viewMode = useSignal(viewModeProp);
 
   return (
-    <MessageContextProvider viewMode={viewMode} {...props}>
+    <MessageContextProvider
+      viewMode={viewMode}
+      onReply={onReply}
+      onReplyAll={onReplyAll}
+      onForward={onForward}
+      {...props}
+    >
       {children}
     </MessageContextProvider>
   );
@@ -64,8 +84,8 @@ MessageRoot.displayName = 'Message.Root';
 type MessageToolbarProps = ThemedClassName<{}>;
 
 export const MessageToolbar = ({ classNames }: MessageToolbarProps) => {
-  const { attendableId, viewMode } = useMessageContext(MessageToolbar.displayName);
-  const actions = useMessageToolbarActions({ viewMode });
+  const { attendableId, viewMode, onReply, onReplyAll, onForward } = useMessageContext(MessageToolbar.displayName);
+  const actions = useMessageToolbarActions({ viewMode, onReply, onReplyAll, onForward });
 
   return (
     <MenuProvider {...actions} attendableId={attendableId}>
@@ -127,10 +147,7 @@ const MessageHeader = ({ onContactCreate }: MessageHeaderProps) => {
       {/* TODO(burdon): List other To/CC/BCC. */}
       <div role='none'>
         <div role='none' className='grid grid-cols-[2rem_1fr] gap-1 items-center'>
-          <UserIconButton
-            value={sender.value}
-            onContactCreate={() => onContactCreate?.({ email: message.sender.email })}
-          />
+          <UserIconButton value={sender.value} onContactCreate={() => onContactCreate?.(message.sender)} />
           <h3 className='truncate text-primaryText'>{message.sender.name || message.sender.email}</h3>
         </div>
       </div>

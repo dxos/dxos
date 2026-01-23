@@ -3,8 +3,11 @@
 //
 
 import { lazy } from 'react';
+import { type FC } from 'react';
 
-export const DebugGraph = lazy(() => import('./DebugGraph'));
+import { type DebugGraphProps } from './DebugGraph';
+
+export const DebugGraph: ReturnType<typeof lazy<FC<DebugGraphProps>>> = lazy(() => import('./DebugGraph'));
 export const DevtoolsOverviewContainer = lazy(() => import('./DevtoolsOverviewContainer'));
 export const SpaceGenerator = lazy(() => import('./SpaceGenerator'));
 

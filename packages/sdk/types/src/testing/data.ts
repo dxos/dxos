@@ -5,7 +5,7 @@
 import type { Space } from '@dxos/client-protocol';
 import { Obj, Ref } from '@dxos/echo';
 import { faker } from '@dxos/random';
-import { Testing } from '@dxos/schema/testing';
+import { TestSchema } from '@dxos/schema/testing';
 
 import { Message, Organization, Person } from '../types';
 
@@ -22,8 +22,8 @@ const getDate = (daysAgo: number): string => {
 
 // TODO(burdon): Replace with standard data generator pattern from dxos/schema.
 
-const createDocument = (name: string, content: string): Testing.DocumentType => {
-  return Obj.make(Testing.DocumentType, {
+const createDocument = (name: string, content: string): TestSchema.DocumentType => {
+  return Obj.make(TestSchema.DocumentType, {
     name,
     content,
   });
@@ -56,12 +56,10 @@ const createContact = ({
 };
 
 const createTranscriptMessage = (sender: Person.Person, blocks: string[]) => {
-  return Obj.make(Message.Message, {
+  return Message.make({
     sender: {
       name: sender.fullName,
     },
-    // don't care about timestamps
-    created: getDate(0),
     blocks: blocks.map(
       (block) =>
         ({
@@ -128,14 +126,14 @@ export const createTestData = () => {
     }),
   };
 
-  const documents: Testing.DocumentType[] = [
+  const documents: TestSchema.DocumentType[] = [
     createDocument(
       'Q3 Financial Report',
       'Q3 Financial Summary\n\nRevenue: $12.4M (↑8% YoY)\nExpenses: $8.7M (↑15% YoY)\nMargin: 29.8% (↓4.5% YoY)\n\nConcerns:\n- Marketing budget exceeded allocation by 23%\n- Customer acquisition cost increased to $142 (↑18%)\n- New product line underperforming projections by 35%\n\nRecommendations:\n1. Reallocate Q4 marketing budget to high-performing channels\n2. Implement cost-saving measures in non-essential operations\n3. Review pricing strategy for new product line',
     ),
     createDocument(
-      'Testing Protocol',
-      'Beta Testing Protocol v2.3\n\nPhase 1: Internal QA (2 weeks)\n- Unit testing coverage must exceed 85%\n- Integration testing across all supported platforms\n- Performance benchmarking against v4.2\n\nPhase 2: Closed Beta (3 weeks)\n- 250 selected customers from premium tier\n- Daily feedback collection and triage\n- Weekly build updates based on critical issues\n\nPhase 3: Open Beta (2 weeks)\n- Gradual rollout to 10,000 users\n- A/B testing of UI variations\n- Stress testing with simulated peak loads\n\nSuccess Criteria:\n- Crash rate below 0.1%\n- User satisfaction score >4.2/5\n- Performance degradation <5% on target devices',
+      'TestSchema Protocol',
+      'Beta TestSchema Protocol v2.3\n\nPhase 1: Internal QA (2 weeks)\n- Unit testing coverage must exceed 85%\n- Integration testing across all supported platforms\n- Performance benchmarking against v4.2\n\nPhase 2: Closed Beta (3 weeks)\n- 250 selected customers from premium tier\n- Daily feedback collection and triage\n- Weekly build updates based on critical issues\n\nPhase 3: Open Beta (2 weeks)\n- Gradual rollout to 10,000 users\n- A/B testing of UI variations\n- Stress testing with simulated peak loads\n\nSuccess Criteria:\n- Crash rate below 0.1%\n- User satisfaction score >4.2/5\n- Performance degradation <5% on target devices',
     ),
     createDocument(
       'Asia Market Expansion',
@@ -264,7 +262,7 @@ export const createTestData = () => {
 
   const emails: Message.Message[] = [
     // Recent emails.
-    Obj.make(Message.Message, {
+    Message.make({
       blocks: [
         {
           _tag: 'text',
@@ -276,7 +274,7 @@ export const createTestData = () => {
       properties: { subject: 'Q3 Financial Review' },
     }),
 
-    Obj.make(Message.Message, {
+    Message.make({
       blocks: [
         {
           _tag: 'text',
@@ -288,7 +286,7 @@ export const createTestData = () => {
       properties: { subject: 'Board Feedback and Next Steps' },
     }),
 
-    Obj.make(Message.Message, {
+    Message.make({
       blocks: [
         {
           _tag: 'text',
@@ -297,10 +295,10 @@ export const createTestData = () => {
       ],
       sender: { contact: Ref.make(contacts.michael) },
       created: getDate(1),
-      properties: { subject: 'New Feature Ready for Testing' },
+      properties: { subject: 'New Feature Ready for TestSchema' },
     }),
 
-    Obj.make(Message.Message, {
+    Message.make({
       blocks: [
         {
           _tag: 'text',
@@ -312,7 +310,7 @@ export const createTestData = () => {
       properties: { subject: 'URGENT: Bitcoin Wallet Verification Required' },
     }),
 
-    Obj.make(Message.Message, {
+    Message.make({
       blocks: [
         {
           _tag: 'text',
@@ -324,7 +322,7 @@ export const createTestData = () => {
       properties: { subject: 'Potential Strategic Partnership' },
     }),
 
-    Obj.make(Message.Message, {
+    Message.make({
       blocks: [
         {
           _tag: 'text',
@@ -336,7 +334,7 @@ export const createTestData = () => {
       properties: { subject: 'New Hires Starting Next Week' },
     }),
 
-    Obj.make(Message.Message, {
+    Message.make({
       blocks: [
         {
           _tag: 'text',
@@ -348,7 +346,7 @@ export const createTestData = () => {
       properties: { subject: 'Security Incident Report' },
     }),
 
-    Obj.make(Message.Message, {
+    Message.make({
       blocks: [
         {
           _tag: 'text',
@@ -360,7 +358,7 @@ export const createTestData = () => {
       properties: { subject: 'Acquisition Target Concerns' },
     }),
 
-    Obj.make(Message.Message, {
+    Message.make({
       blocks: [
         {
           _tag: 'text',
@@ -372,7 +370,7 @@ export const createTestData = () => {
       properties: { subject: 'Quarterly Tax Filings' },
     }),
 
-    Obj.make(Message.Message, {
+    Message.make({
       blocks: [
         {
           _tag: 'text',
@@ -384,7 +382,7 @@ export const createTestData = () => {
       properties: { subject: 'Speaking Opportunity: International Tech Summit' },
     }),
 
-    Obj.make(Message.Message, {
+    Message.make({
       blocks: [
         {
           _tag: 'text',
@@ -396,7 +394,7 @@ export const createTestData = () => {
       properties: { subject: 'MANDATORY: Security Update Required' },
     }),
 
-    Obj.make(Message.Message, {
+    Message.make({
       blocks: [
         {
           _tag: 'text',
@@ -408,7 +406,7 @@ export const createTestData = () => {
       properties: { subject: 'Q2 Customer Satisfaction Results' },
     }),
 
-    Obj.make(Message.Message, {
+    Message.make({
       blocks: [
         {
           _tag: 'text',
@@ -420,7 +418,7 @@ export const createTestData = () => {
       properties: { subject: 'Annual Company Retreat Planning' },
     }),
 
-    Obj.make(Message.Message, {
+    Message.make({
       blocks: [
         {
           _tag: 'text',
@@ -432,7 +430,7 @@ export const createTestData = () => {
       properties: { subject: 'Competitor Price Change - Strategic Response Needed' },
     }),
 
-    Obj.make(Message.Message, {
+    Message.make({
       blocks: [
         {
           _tag: 'text',
@@ -444,7 +442,7 @@ export const createTestData = () => {
       properties: { subject: 'Privacy Policy Update - Final Review' },
     }),
 
-    Obj.make(Message.Message, {
+    Message.make({
       blocks: [
         {
           _tag: 'text',
@@ -456,7 +454,7 @@ export const createTestData = () => {
       properties: { subject: 'Series C Funding Update - Oversubscribed' },
     }),
 
-    Obj.make(Message.Message, {
+    Message.make({
       blocks: [
         {
           _tag: 'text',
@@ -468,7 +466,7 @@ export const createTestData = () => {
       properties: { subject: 'Product Roadmap Finalized' },
     }),
 
-    Obj.make(Message.Message, {
+    Message.make({
       blocks: [
         {
           _tag: 'text',
@@ -480,7 +478,7 @@ export const createTestData = () => {
       properties: { subject: 'CONFIDENTIAL: Acquisition Offer Received' },
     }),
 
-    Obj.make(Message.Message, {
+    Message.make({
       blocks: [
         {
           _tag: 'text',
@@ -492,7 +490,7 @@ export const createTestData = () => {
       properties: { subject: 'Annual Audit Preparation' },
     }),
 
-    Obj.make(Message.Message, {
+    Message.make({
       blocks: [
         {
           _tag: 'text',
@@ -505,7 +503,7 @@ export const createTestData = () => {
     }),
   ];
 
-  const labels: Testing.Label[] = [
+  const labels: TestSchema.Label[] = [
     { name: 'Fundraising', color: '#000000', description: 'Fundraising campaigns and investor relations' },
     { name: 'Important', color: '#FF0000', description: 'High priority items' },
     { name: 'Personal', color: '#4B0082', description: 'Personal communications' },
@@ -528,10 +526,10 @@ export const createTestData = () => {
 };
 
 export const seedTestData = async (space: Space) => {
-  const schemas = [Person.Person, Organization.Organization, Testing.DocumentType];
+  const schemas = [Person.Person, Organization.Organization, TestSchema.DocumentType];
   for (const schema of schemas) {
     if (!space.db.graph.schemaRegistry.hasSchema(schema)) {
-      space.db.graph.schemaRegistry.addSchema([schema]);
+      await space.db.graph.schemaRegistry.register([schema]);
     }
   }
 

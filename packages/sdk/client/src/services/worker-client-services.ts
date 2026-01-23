@@ -22,10 +22,10 @@ import { SharedWorkerConnection } from './shared-worker-connection';
 /**
  * Creates services provider connected via worker.
  */
-export const fromWorker = async (config: Config = new Config(), options: Omit<WorkerClientServicesParams, 'config'>) =>
+export const fromWorker = async (config: Config = new Config(), options: Omit<WorkerClientServicesProps, 'config'>) =>
   new WorkerClientServices({ config, ...options });
 
-export type WorkerClientServicesParams = {
+export type WorkerClientServicesProps = {
   config: Config;
   createWorker: () => SharedWorker;
   logFilter?: string;
@@ -60,7 +60,7 @@ export class WorkerClientServices implements ClientServicesProvider {
     logFilter = 'error,warn',
     observabilityGroup,
     signalTelemetryEnabled,
-  }: WorkerClientServicesParams) {
+  }: WorkerClientServicesProps) {
     this._config = config;
     this._createWorker = createWorker;
     this._logFilter = parseFilter(logFilter);

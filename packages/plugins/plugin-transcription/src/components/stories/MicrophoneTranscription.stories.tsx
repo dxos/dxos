@@ -3,9 +3,11 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
+import * as Effect from 'effect/Effect';
+import type * as Schema from 'effect/Schema';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
-import { Events, IntentPlugin, SettingsPlugin } from '@dxos/app-framework';
+import { Common } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import {
   type ExtractionFunction,
@@ -14,7 +16,7 @@ import {
   getNer,
   processTranscriptMessage,
 } from '@dxos/assistant/extraction';
-import { Filter, Obj, type Type } from '@dxos/echo';
+import { Filter, type Obj } from '@dxos/echo';
 import { createQueueDXN } from '@dxos/echo/internal';
 import { MemoryQueue } from '@dxos/echo-db';
 import { FunctionExecutor, ServiceContainer } from '@dxos/functions-runtime';
@@ -23,20 +25,18 @@ import { log } from '@dxos/log';
 import { ClientPlugin } from '@dxos/plugin-client';
 import { PreviewPlugin } from '@dxos/plugin-preview';
 import { SpacePlugin } from '@dxos/plugin-space';
-import { StorybookLayoutPlugin } from '@dxos/plugin-storybook-layout';
-import { ThemePlugin } from '@dxos/plugin-theme';
+import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
 import { IndexKind, useSpace } from '@dxos/react-client/echo';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
-import { defaultTx } from '@dxos/react-ui-theme';
-import { Testing } from '@dxos/schema/testing';
+import { TestSchema } from '@dxos/schema/testing';
 import { Message, Organization, Person } from '@dxos/types';
 import { seedTestData } from '@dxos/types/testing';
 
 import { useAudioTrack, useQueueModelAdapter, useTranscriber } from '../../hooks';
 import { TestItem } from '../../testing';
-import { type MediaStreamRecorderParams, type TranscriberParams } from '../../transcriber';
+import { type MediaStreamRecorderProps, type TranscriberProps } from '../../transcriber';
 import { TranscriptionPlugin } from '../../TranscriptionPlugin';
-import { renderByline } from '../Transcript';
+import { renderByline } from '../../util';
 
 import { TranscriptionStory } from './TranscriptionStory';
 import { useIsSpeaking } from './useIsSpeaking';
@@ -52,8 +52,8 @@ const RECORDER_CONFIG = {
 
 type StoryProps = {
   detectSpeaking?: boolean;
-  transcriberConfig: TranscriberParams['config'];
-  recorderConfig: MediaStreamRecorderParams['config'];
+  transcriberConfig: TranscriberProps['config'];
+  recorderConfig: MediaStreamRecorderProps['config'];
   audioConstraints?: MediaTrackConstraints;
   entityExtraction: 'none' | 'ner' | 'llm';
 };
@@ -76,7 +76,8 @@ const DefaultStory = ({
   // Queue.
   // TODO(dmaretskyi): Use space.queues.create() instead.
   const queueDxn = useMemo(() => createQueueDXN(), []);
-  const queue = useMemo(() => new MemoryQueue<Message.Message>(queueDxn), [queueDxn]);
+  // TODO(wittjosiah): Find a simpler way to define this type.
+  const queue = useMemo(() => new MemoryQueue<Schema.Schema.Type<typeof Message.Message>>(queueDxn), [queueDxn]);
   const model = useQueueModelAdapter(renderByline([]), queue);
   const space = useSpace();
 
@@ -95,7 +96,7 @@ const DefaultStory = ({
 
     let executor: FunctionExecutor | undefined;
     let extractionFunction: ExtractionFunction | undefined;
-    let objects: Promise<Type.Expando[]> | undefined;
+    let objects: Promise<Obj.Any[]> | undefined;
 
     if (entityExtraction === 'ner') {
       // Init model loading. Takes time.
@@ -108,11 +109,10 @@ const DefaultStory = ({
           Filter.or(
             Filter.type(Person.Person),
             Filter.type(Organization.Organization),
-            Filter.type(Testing.DocumentType),
+            Filter.type(TestSchema.DocumentType),
           ),
         )
-        .run()
-        .then((result) => result.objects);
+        .run();
     }
     if (entityExtraction !== 'none') {
       executor = new FunctionExecutor(
@@ -131,9 +131,9 @@ const DefaultStory = ({
   }, [entityExtraction, space]);
 
   // Transcriber.
-  const handleSegments = useCallback<TranscriberParams['onSegments']>(
+  const handleSegments = useCallback<TranscriberProps['onSegments']>(
     async (blocks) => {
-      const message = Obj.make(Message.Message, {
+      const message = Message.make({
         sender: { name: 'You' },
         created: new Date().toISOString(),
         blocks,
@@ -197,42 +197,42 @@ const meta = {
   render: DefaultStory,
   decorators: [
     withTheme,
-    withLayout({ container: 'column' }),
+    withLayout({ layout: 'column' }),
     withPluginManager({
       plugins: [
+        ...corePlugins(),
         ClientPlugin({
-          types: [TestItem, Person.Person, Organization.Organization, Testing.DocumentType],
-          onClientInitialized: async ({ client }) => {
-            await client.halo.createIdentity();
-            await client.spaces.waitUntilReady();
-            await client.spaces.default.waitUntilReady();
-            // TODO(mykola): Make API easier to use.
-            // TODO(mykola): Delete after enabling vector indexing by default.
-            // Enable vector indexing.
-            await client.services.services.QueryService!.setConfig({
-              enabled: true,
-              indexes: [
-                //
-                { kind: IndexKind.Kind.SCHEMA_MATCH },
-                { kind: IndexKind.Kind.GRAPH },
-                { kind: IndexKind.Kind.VECTOR },
-              ],
-            });
-            await client.services.services.QueryService!.reindex();
-            await seedTestData(client.spaces.default);
-          },
+          types: [TestItem, Person.Person, Organization.Organization, TestSchema.DocumentType],
+          onClientInitialized: ({ client }) =>
+            Effect.gen(function* () {
+              yield* Effect.promise(() => client.halo.createIdentity());
+              yield* Effect.promise(() => client.spaces.waitUntilReady());
+              yield* Effect.promise(() => client.spaces.default.waitUntilReady());
+              // TODO(mykola): Make API easier to use.
+              // TODO(mykola): Delete after enabling vector indexing by default.
+              // Enable vector indexing.
+              yield* Effect.promise(() =>
+                client.services.services.QueryService!.setConfig({
+                  enabled: true,
+                  indexes: [
+                    //
+                    { kind: IndexKind.Kind.SCHEMA_MATCH },
+                    { kind: IndexKind.Kind.GRAPH },
+                    { kind: IndexKind.Kind.VECTOR },
+                  ],
+                }),
+              );
+              yield* Effect.promise(() => client.services.services.QueryService!.reindex());
+              yield* Effect.promise(() => seedTestData(client.spaces.default));
+            }),
         }),
+        ...corePlugins(),
         SpacePlugin({}),
-        IntentPlugin(),
-        SettingsPlugin(),
-
-        // UI
-        ThemePlugin({ tx: defaultTx }),
         PreviewPlugin(),
         TranscriptionPlugin(),
-        StorybookLayoutPlugin({}),
+        StorybookPlugin({}),
       ],
-      fireEvents: [Events.SetupAppGraph],
+      fireEvents: [Common.ActivationEvent.SetupAppGraph],
     }),
   ],
 } satisfies Meta<typeof DefaultStory>;

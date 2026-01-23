@@ -13,7 +13,8 @@ import { AiService, ConsolePrinter, ModelName } from '@dxos/ai';
 import { AiSession, GenerationObserver, createToolkit } from '@dxos/assistant';
 import { Prompt, Template } from '@dxos/blueprints';
 import { Obj, Ref, Type } from '@dxos/echo';
-import { DatabaseService, TracingService, defineFunction } from '@dxos/functions';
+import { Database } from '@dxos/echo';
+import { TracingService, defineFunction } from '@dxos/functions';
 import { log } from '@dxos/log';
 
 const DEFAULT_MODEL: ModelName = '@anthropic/claude-opus-4-0';
@@ -45,7 +46,7 @@ export default defineFunction({
     // for (const key of Object.keys(data.input)) {
     //   const value = data.input[key];
     //   if (Ref.isRef(value)) {
-    //     const object = yield* DatabaseService.load(value);
+    //     const object = yield* Database.Service.load(value);
     //     input[key] = Obj.toJSON(object);
     //   } else {
     //     input[key] = JSON.stringify(value);
@@ -55,16 +56,16 @@ export default defineFunction({
       Match.when(
         (value: any) => Ref.isRef(value),
         Effect.fnUntraced(function* (ref) {
-          const object = yield* DatabaseService.load(ref);
+          const object = yield* Database.Service.load(ref);
           return Obj.toJSON(object as Obj.Any);
         }),
       ),
       Match.orElse(() => Effect.succeed(data.input)),
     );
 
-    yield* DatabaseService.flush({ indexes: true });
-    const prompt = yield* DatabaseService.load(data.prompt);
-    const systemPrompt = data.systemPrompt ? yield* DatabaseService.load(data.systemPrompt) : undefined;
+    yield* Database.Service.flush({ indexes: true });
+    const prompt = yield* Database.Service.load(data.prompt);
+    const systemPrompt = data.systemPrompt ? yield* Database.Service.load(data.systemPrompt) : undefined;
     yield* TracingService.emitStatus({ message: `Running ${prompt.id}` });
 
     log.info('starting agent', { prompt: prompt.id, input });
@@ -72,23 +73,26 @@ export default defineFunction({
     const blueprints = yield* Function.pipe(
       prompt.blueprints,
       Array.appendAll(systemPrompt?.blueprints ?? []),
-      Effect.forEach(DatabaseService.loadOption),
-      Effect.map(Array.filter(Option.isSome)),
-      Effect.map(Array.map((option) => option.value)),
-    );
-    const objects = yield* Function.pipe(
-      prompt.context,
-      Array.appendAll(systemPrompt?.context ?? []),
-      Effect.forEach(DatabaseService.loadOption),
+      Effect.forEach(Database.Service.loadOption),
       Effect.map(Array.filter(Option.isSome)),
       Effect.map(Array.map((option) => option.value)),
     );
     const toolkit = yield* createToolkit({ blueprints });
 
-    const promptInstructions = yield* DatabaseService.load(prompt.instructions.source);
+    const objects = yield* Function.pipe(
+      prompt.context,
+      Array.appendAll(systemPrompt?.context ?? []),
+      Effect.forEach(Database.Service.loadOption),
+      Effect.map(Array.filter(Option.isSome)),
+      Effect.map(Array.map((option) => option.value)),
+    );
+
+    const promptInstructions = yield* Database.Service.load(prompt.instructions.source);
     const promptText = Template.process(promptInstructions.content, input);
 
-    const systemInstructions = systemPrompt ? yield* DatabaseService.load(systemPrompt.instructions.source) : undefined;
+    const systemInstructions = systemPrompt
+      ? yield* Database.Service.load(systemPrompt.instructions.source)
+      : undefined;
     const systemText = systemInstructions ? Template.process(systemInstructions.content, {}) : undefined;
 
     const session = new AiSession();

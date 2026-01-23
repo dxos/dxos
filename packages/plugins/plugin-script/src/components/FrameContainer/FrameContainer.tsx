@@ -9,9 +9,9 @@ import { type BundleResult } from '@dxos/functions-runtime/bundler';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { useClient } from '@dxos/react-client';
-import { baseSurface, mx } from '@dxos/react-ui-theme';
 import { createProtoRpcPeer } from '@dxos/rpc';
 import { createIFramePort } from '@dxos/rpc-tunnel';
+import { baseSurface, mx } from '@dxos/ui-theme';
 
 export type FrameContainerProps = {
   containerUrl: string;
@@ -49,7 +49,9 @@ export const FrameContainer = ({ containerUrl, result, debug = true }: FrameCont
   invariant(result.sourceHash, 'Source hash is required.');
   const sourceHash = Buffer.from(result.sourceHash).toString('hex');
   const src =
-    'bundle' in result ? `${containerUrl}?ts=${sourceHash}#code=${encodeURIComponent(result.bundle)}` : undefined;
+    'bundle' in result
+      ? `${containerUrl}?ts=${sourceHash}#code=${encodeURIComponent(new TextDecoder().decode(Object.values(result.bundle as any)[0] as Uint8Array))}`
+      : undefined;
 
   return (
     <>

@@ -15,9 +15,9 @@ export type ObjectLinkProps = {
 };
 
 export const ObjectLink = ({ space, dxn }: ObjectLinkProps) => {
-  const ref = useMemo(() => space.db.ref(dxn), [space, dxn.toString()]);
+  const ref = useMemo(() => space.db.makeRef(dxn), [space, dxn.toString()]);
 
-  const title = Obj.getLabel(ref.target) ?? ref.target?.id ?? ref.dxn.toString();
+  const title = (ref.target && Obj.getLabel(ref.target)) ?? ref.target?.id ?? ref.dxn.toString();
   return (
     <DxAnchor rootclassname='dx-tag--anchor' refid={dxn.toString()}>
       {title}

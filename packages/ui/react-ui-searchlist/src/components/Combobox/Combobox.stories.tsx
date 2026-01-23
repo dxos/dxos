@@ -9,6 +9,7 @@ import { faker } from '@dxos/random';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '../../translations';
+import { useSearchListResults } from '../SearchList/hooks';
 
 import { Combobox } from './Combobox';
 
@@ -17,6 +18,10 @@ faker.seed(1234);
 const items = faker.helpers.uniqueArray(faker.commerce.productName, 16).sort();
 
 const DefaultStory = () => {
+  const { results, handleSearch } = useSearchListResults({
+    items,
+  });
+
   return (
     <Combobox.Root
       placeholder='Nothing selected'
@@ -25,11 +30,11 @@ const DefaultStory = () => {
       }}
     >
       <Combobox.Trigger />
-      <Combobox.Content filter={(value, search) => (value.includes(search) ? 1 : 0)}>
+      <Combobox.Content onSearch={handleSearch}>
         <Combobox.Input placeholder='Search...' />
         <Combobox.List>
-          {items.map((value) => (
-            <Combobox.Item key={value}>{value}</Combobox.Item>
+          {results.map((value) => (
+            <Combobox.Item key={value} value={value} label={value} />
           ))}
         </Combobox.List>
         <Combobox.Arrow />
@@ -42,7 +47,7 @@ const meta = {
   title: 'ui/react-ui-searchlist/Combobox',
   component: Combobox.Root as any,
   render: DefaultStory,
-  decorators: [withTheme, withLayout({ container: 'column', classNames: 'p-2' })],
+  decorators: [withTheme, withLayout({ layout: 'column', classNames: 'p-2' })],
   parameters: {
     translations,
   },

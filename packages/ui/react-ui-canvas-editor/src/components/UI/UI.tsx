@@ -6,8 +6,8 @@ import React from 'react';
 
 import { type ThemedClassName } from '@dxos/react-ui';
 import { FPS, testId } from '@dxos/react-ui-canvas';
-import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
-import { mx } from '@dxos/react-ui-theme';
+import { Json } from '@dxos/react-ui-syntax-highlighter';
+import { mx } from '@dxos/ui-theme';
 
 import { useEditorContext } from '../../hooks';
 import { type TestId } from '../defs';
@@ -51,19 +51,15 @@ export const UI = ({ showTools, showToolbar }: UIProps) => {
       <div>
         <div className='absolute bottom-2 left-2'>
           {debug && (
-            <SyntaxHighlighter
-              language='javascript'
-              classNames={mx(
-                'is-[300px] bg-baseSurface rounded-md bg-baseSurface border border-separator text-xs opacity-70',
-              )}
-            >
-              {JSON.stringify(info, null, 2)}
-            </SyntaxHighlighter>
+            <Json
+              classNames={mx('is-[300px] bg-baseSurface border border-separator rounded-sm text-xs opacity-70')}
+              data={info}
+            />
           )}
         </div>
         {showToolbar && (
           <div className='absolute bottom-2 left-2 right-2 flex justify-center'>
-            <div className='p-1 bg-baseSurface rounded-md border border-separator'>
+            <div className='p-1 bg-baseSurface border border-separator rounded-sm '>
               <Toolbar onAction={actionHandler} classNames={mx(eventsAuto)} />
             </div>
           </div>

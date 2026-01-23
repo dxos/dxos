@@ -41,18 +41,18 @@ export type AiSessionRunRequirements =
   | ToolResolverService
   | TracingService;
 
-export type AiSessionRunParams<Tools extends Record<string, Tool.Any>> = {
+export type AiSessionOptions = {};
+
+export type AiSessionRunProps<Tools extends Record<string, Tool.Any>> = {
   prompt: string;
   // TODO(wittjosiah): Rename to systemPrompt.
   system?: string;
   history?: Message.Message[];
   objects?: Obj.Any[];
-  blueprints?: Blueprint.Blueprint[];
+  blueprints?: readonly Blueprint.Blueprint[];
   toolkit?: Toolkit.WithHandler<Tools>;
-  observer?: GenerationObserver;
+  observer?: GenerationObserver<Tools>;
 };
-
-export type AiSessionOptions = {};
 
 /**
  * Contains message history, tools, current context.
@@ -75,7 +75,19 @@ export class AiSession {
   /** Pending messages for this session (incl. the current prompt). */
   private _pending: Message.Message[] = [];
 
+  private _started = 0;
+  private _ended = 0;
+  private _toolCalls = 0;
+
   constructor(private readonly _options: AiSessionOptions = {}) {}
+
+  get duration(): number {
+    return this._ended - this._started;
+  }
+
+  get toolCalls(): number {
+    return this._toolCalls;
+  }
 
   run = <Tools extends Record<string, Tool.Any>>({
     prompt,
@@ -85,8 +97,9 @@ export class AiSession {
     blueprints = [],
     toolkit,
     observer = GenerationObserver.noop(),
-  }: AiSessionRunParams<Tools>): Effect.Effect<Message.Message[], AiSessionRunError, AiSessionRunRequirements> =>
+  }: AiSessionRunProps<Tools>): Effect.Effect<Message.Message[], AiSessionRunError, AiSessionRunRequirements> =>
     Effect.gen(this, function* () {
+      this._started = Date.now();
       this._history = [...history];
       this._pending = [];
       const pending = this._pending;
@@ -176,9 +189,12 @@ export class AiSession {
             blocks: toolResults,
           }),
         );
+
+        this._toolCalls++;
       } while (true);
 
-      log('done', { pending: this._pending.length });
+      this._ended = Date.now();
+      log('done', { pending: this._pending.length, duration: this.duration, tools: this._toolCalls });
       return this._pending;
     }).pipe(this._semaphore.withPermits(1), Effect.withSpan('AiSession.run'));
 
@@ -188,7 +204,7 @@ export class AiSession {
   // TODO(burdon): Implement or remove.
   async runStructured<S extends Schema.Schema.AnyNoContext>(
     _schema: S,
-    _options: AiSessionRunParams<any>,
+    _options: AiSessionRunProps<any>,
   ): Promise<Schema.Schema.Type<S>> {
     return todo();
     // const parser = structuredOutputParser(schema);

@@ -6,12 +6,12 @@ import type * as Schema from 'effect/Schema';
 import React, { useMemo, useState } from 'react';
 
 import { Obj, Query, Type } from '@dxos/echo';
-import { getQueryTarget, resolveSchemaWithClientAndSpace } from '@dxos/plugin-space';
-import { useClient } from '@dxos/react-client';
+import { getQueryTarget, resolveSchemaWithRegistry } from '@dxos/plugin-space';
 import { Filter, getSpace, isSpace, useQuery } from '@dxos/react-client/echo';
 import { useAsyncEffect, useTranslation } from '@dxos/react-ui';
-import { Card, CardStack, StackItem, cardStackDefaultInlineSizeRem, cardStackHeading } from '@dxos/react-ui-stack';
-import { ProjectionModel } from '@dxos/schema';
+import { Card } from '@dxos/react-ui-mosaic';
+import { CardStack, StackItem, cardStackDefaultInlineSizeRem, cardStackHeading } from '@dxos/react-ui-stack';
+import { ProjectionModel, createDirectChangeCallback, createEchoChangeCallback } from '@dxos/schema';
 import { type Project } from '@dxos/types';
 
 import { meta } from '../meta';
@@ -27,7 +27,6 @@ export type ProjectColumnProps = {
 // TODO(wittjosiah): Support item DnD reordering (ordering needs to be stored on the view presentation collection).
 export const ProjectColumn = ({ column }: ProjectColumnProps) => {
   const { t } = useTranslation(meta.id);
-  const client = useClient();
   const view = column.view.target;
   const space = getSpace(view);
   const { Item } = useProject('ViewColumn');
@@ -47,9 +46,9 @@ export const ProjectColumn = ({ column }: ProjectColumnProps) => {
       return;
     }
 
-    const schema = await resolveSchemaWithClientAndSpace(client, space, query.ast);
+    const schema = await resolveSchemaWithRegistry(space.db.schemaRegistry, query.ast);
     setSchema(() => schema);
-  }, [client, space, query]);
+  }, [space, query]);
 
   const queryTarget = getQueryTarget(query.ast, space);
   const items = useQuery(queryTarget, query);
@@ -57,10 +56,17 @@ export const ProjectColumn = ({ column }: ProjectColumnProps) => {
     // TODO(burdon): Hack to reverse queue.
     return isSpace(queryTarget) ? items : [...items.reverse()];
   }, [queryTarget, items]);
-  const projectionModel = useMemo(
-    () => (schema && view ? new ProjectionModel(Type.toJsonSchema(schema), view.projection) : undefined),
-    [schema, view?.projection],
-  );
+  const projectionModel = useMemo(() => {
+    if (!schema || !view) {
+      return undefined;
+    }
+    // For mutable schemas (EchoSchema), use the live jsonSchema reference for reactivity.
+    const jsonSchema = Type.isMutable(schema) ? schema.jsonSchema : Type.toJsonSchema(schema);
+    const change = Type.isMutable(schema)
+      ? createEchoChangeCallback(view, schema)
+      : createDirectChangeCallback(view.projection, jsonSchema);
+    return new ProjectionModel(jsonSchema, view.projection, change);
+  }, [schema, view?.projection]);
 
   if (!view) {
     return null;
@@ -69,7 +75,7 @@ export const ProjectColumn = ({ column }: ProjectColumnProps) => {
   return (
     <CardStack.Root asChild>
       <StackItem.Root item={view} size={cardStackDefaultInlineSizeRem} focusIndicatorVariant='group'>
-        <CardStack.Content classNames='density-fine' footer={false}>
+        <CardStack.Content classNames='density-fine border border-separator rounded-md'>
           <StackItem.Heading classNames={[cardStackHeading, 'min-is-0 pli-cardSpacingChrome']} separateOnScroll>
             <h3 className='grow truncate'>{column.name ?? t('untitled view title')}</h3>
           </StackItem.Heading>
@@ -77,11 +83,11 @@ export const ProjectColumn = ({ column }: ProjectColumnProps) => {
             {sortedItems.map((liveMarker) => {
               const item = liveMarker as unknown as Obj.Any;
               return (
-                <CardStack.Item asChild key={item.id}>
+                <CardStack.Item key={item.id} asChild>
                   <StackItem.Root item={item} focusIndicatorVariant='group'>
-                    <Card.StaticRoot>
+                    <Card.Root>
                       <Item item={item} projectionModel={projectionModel} />
-                    </Card.StaticRoot>
+                    </Card.Root>
                   </StackItem.Root>
                 </CardStack.Item>
               );

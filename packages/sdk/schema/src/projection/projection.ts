@@ -5,8 +5,9 @@
 import { computed, untracked } from '@preact/signals-core';
 import * as Schema from 'effect/Schema';
 
+import { type Entity, Format, Obj } from '@dxos/echo';
 import {
-  FormatEnum,
+  type EchoSchema,
   type JsonProp,
   type JsonSchemaType,
   TypeEnum,
@@ -36,6 +37,44 @@ export type FieldProjection = {
 };
 
 /**
+ * Callback type for wrapping mutations in Obj.change().
+ * Contains separate callbacks for projection and schema mutations
+ * since Obj.change() cannot be nested.
+ * Note: Callbacks return void because Obj.change() returns void.
+ */
+export type ProjectionChangeCallback = {
+  /** Callback to wrap projection mutations. */
+  projection: (mutate: (mutableProjection: View.Projection) => void) => void;
+  /** Callback to wrap schema mutations. */
+  schema: (mutate: (mutableSchema: JsonSchemaType) => void) => void;
+};
+
+/**
+ * Creates a change callback for ECHO-backed View and EchoSchema objects.
+ * Use this when the view and schema are stored in the ECHO database.
+ *
+ * Note: Type assertions are needed because:
+ * 1. PersistentSchema's type doesn't include [KindId] but runtime value does
+ * 2. Inside Obj.change, the mutable object has different type constraints
+ */
+export const createEchoChangeCallback = (view: View.View, schema: EchoSchema): ProjectionChangeCallback => ({
+  projection: (mutate) => Obj.change(view, (v) => mutate(v.projection as View.Projection)),
+  schema: (mutate) => Obj.change(schema.persistentSchema as unknown as Entity.Any, (s: any) => mutate(s.jsonSchema)),
+});
+
+/**
+ * Creates a change callback that directly mutates objects without wrapping.
+ * Use this for plain JavaScript objects (tests, non-ECHO scenarios).
+ */
+export const createDirectChangeCallback = (
+  projection: View.Projection,
+  schema: JsonSchemaType,
+): ProjectionChangeCallback => ({
+  projection: (mutate) => mutate(projection),
+  schema: (mutate) => mutate(schema),
+});
+
+/**
  * Wrapper for Projection that manages Field and Format updates.
  */
 export class ProjectionModel {
@@ -52,6 +91,13 @@ export class ProjectionModel {
     // TODO(burdon): Pass in boolean readonly?
     private readonly _baseSchema: Live<JsonSchemaType>,
     private readonly _projection: Live<View.Projection>,
+    /**
+     * Callbacks to wrap mutations in Obj.change().
+     * Mutating operations will invoke these callbacks with mutator functions.
+     * Each callback is responsible for calling Obj.change() and providing the mutable version.
+     * Use createEchoChangeCallback() for ECHO-backed objects or createDirectChangeCallback() for plain objects.
+     */
+    private readonly _change: ProjectionChangeCallback,
   ) {}
 
   /**
@@ -105,7 +151,9 @@ export class ProjectionModel {
     };
 
     log('createFieldProjection', { field });
-    this._projection.fields.push(field);
+    this._change.projection((projection) => {
+      projection.fields.push(field);
+    });
     return field;
   }
 
@@ -122,8 +170,8 @@ export class ProjectionModel {
     invariant(field, `invalid field: ${fieldId}`);
     invariant(field.path.indexOf('.') === -1);
 
-    const jsonProperty: JsonSchemaType = this._baseSchema.properties[field.path] ?? { format: FormatEnum.None };
-    const { type: schemaType, format: schemaFormat = FormatEnum.None, annotations, ...rest } = jsonProperty;
+    const jsonProperty: JsonSchemaType = this._baseSchema.properties[field.path] ?? { format: Format.TypeFormat.None };
+    const { type: schemaType, format: schemaFormat = Format.TypeFormat.None, annotations, ...rest } = jsonProperty;
 
     const unwrappedProperty =
       'allOf' in jsonProperty && jsonProperty.allOf?.length ? jsonProperty.allOf[0] : jsonProperty;
@@ -133,19 +181,19 @@ export class ProjectionModel {
     const format =
       (() => {
         if (referenceSchema) {
-          return FormatEnum.Ref;
-        } else if (schemaFormat === FormatEnum.None) {
+          return Format.TypeFormat.Ref;
+        } else if (schemaFormat === Format.TypeFormat.None) {
           return typeToFormat[type];
         } else {
-          return schemaFormat as FormatEnum;
+          return schemaFormat as Format.TypeFormat;
         }
-      })() ?? FormatEnum.None;
+      })() ?? Format.TypeFormat.None;
 
     const getOptions = () => {
-      if (format === FormatEnum.SingleSelect) {
+      if (format === Format.TypeFormat.SingleSelect) {
         return annotations?.meta?.singleSelect?.options;
       }
-      if (format === FormatEnum.MultiSelect) {
+      if (format === Format.TypeFormat.MultiSelect) {
         return annotations?.meta?.multiSelect?.options;
       }
     };
@@ -203,10 +251,12 @@ export class ProjectionModel {
    */
   hideFieldProjection(fieldId: string): void {
     untracked(() => {
-      const field = this._projection.fields.find((field) => field.id === fieldId);
-      if (field) {
-        field.visible = false;
-      }
+      this._change.projection((projection) => {
+        const field = projection.fields.find((field) => field.id === fieldId);
+        if (field) {
+          field.visible = false;
+        }
+      });
     });
   }
 
@@ -215,16 +265,18 @@ export class ProjectionModel {
       invariant(this._baseSchema.properties);
       invariant(property in this._baseSchema.properties);
 
-      const existingField = this._projection.fields.find((field) => field.path === property);
-      if (existingField) {
-        existingField.visible = true;
-      } else {
-        this._projection.fields.unshift({
-          id: createFieldId(),
-          path: property,
-          visible: true,
-        } satisfies FieldType);
-      }
+      this._change.projection((projection) => {
+        const existingField = projection.fields.find((field) => field.path === property);
+        if (existingField) {
+          existingField.visible = true;
+        } else {
+          projection.fields.unshift({
+            id: createFieldId(),
+            path: property,
+            visible: true,
+          } satisfies FieldType);
+        }
+      });
     });
   }
 
@@ -242,30 +294,40 @@ export class ProjectionModel {
       const hasSourceAndTarget = !!sourcePropertyName && !!targetPropertyName;
       const isRename = hasSourceAndTarget && sourcePropertyName !== targetPropertyName;
 
-      if (targetPropertyName) {
-        const existingField = this._projection.fields.find((field) => field.path === targetPropertyName);
-        if (existingField && existingField.visible === false) {
-          existingField.visible = true;
-        }
-      }
-
-      // TODO(burdon): Set field if does not exist.
-      if (field) {
-        const propsValues = props ? (pick(props, ['referencePath']) as Partial<FieldType>) : undefined;
-        const clonedField: FieldType = { ...field, ...propsValues };
-        const fieldIndex = this._projection.fields.findIndex((field) => field.path === sourcePropertyName);
-        if (fieldIndex === -1) {
-          invariant(this._projection.fields.length < VIEW_FIELD_LIMIT, `Field limit reached: ${VIEW_FIELD_LIMIT}`);
-          if (index !== undefined && index >= 0 && index <= this._projection.fields.length) {
-            this._projection.fields.splice(index, 0, clonedField);
-          } else {
-            this._projection.fields.push(clonedField);
+      // Update projection fields.
+      if (field || targetPropertyName) {
+        this._change.projection((projection) => {
+          if (targetPropertyName) {
+            const existingField = projection.fields.find((f) => f.path === targetPropertyName);
+            if (existingField && existingField.visible === false) {
+              existingField.visible = true;
+            }
           }
-        } else {
-          Object.assign(this.allFields[fieldIndex], clonedField, isRename ? { path: targetPropertyName } : undefined);
-        }
+
+          // TODO(burdon): Set field if does not exist.
+          if (field) {
+            const propsValues = props ? (pick(props, ['referencePath']) as Partial<FieldType>) : undefined;
+            const clonedField: FieldType = { ...field, ...propsValues };
+            const fieldIndex = projection.fields.findIndex((f) => f.path === sourcePropertyName);
+            if (fieldIndex === -1) {
+              invariant(projection.fields.length < VIEW_FIELD_LIMIT, `Field limit reached: ${VIEW_FIELD_LIMIT}`);
+              if (index !== undefined && index >= 0 && index <= projection.fields.length) {
+                projection.fields.splice(index, 0, clonedField);
+              } else {
+                projection.fields.push(clonedField);
+              }
+            } else {
+              Object.assign(
+                projection.fields[fieldIndex],
+                clonedField,
+                isRename ? { path: targetPropertyName } : undefined,
+              );
+            }
+          }
+        });
       }
 
+      // Update schema properties.
       if (props) {
         let { property, type, format, referenceSchema, options, ...rest }: Partial<PropertyType> = this._encode(
           omit(props, ['referencePath']),
@@ -283,37 +345,39 @@ export class ProjectionModel {
         }
 
         if (options) {
-          if (format === FormatEnum.SingleSelect) {
+          if (format === Format.TypeFormat.SingleSelect) {
             makeSingleSelectAnnotations(jsonProperty, options);
           }
 
-          if (format === FormatEnum.MultiSelect) {
+          if (format === Format.TypeFormat.MultiSelect) {
             makeMultiSelectAnnotations(jsonProperty, options);
           }
         }
 
         invariant(type !== TypeEnum.Ref);
-        this._baseSchema.properties ??= {};
-        this._baseSchema.properties[property] = { type, format, ...jsonProperty, ...rest };
-        if (isRename) {
-          delete this._baseSchema.properties[sourcePropertyName!];
+        this._change.schema((baseSchema) => {
+          baseSchema.properties ??= {};
+          baseSchema.properties[property!] = { type, format, ...jsonProperty, ...rest };
+          if (isRename) {
+            delete baseSchema.properties[sourcePropertyName!];
 
-          // Update propertyOrder array if it exists
-          if (this._baseSchema.propertyOrder) {
-            const orderIndex = this._baseSchema.propertyOrder.indexOf(sourcePropertyName!);
-            if (orderIndex !== -1) {
-              this._baseSchema.propertyOrder[orderIndex] = property;
+            // Update propertyOrder array if it exists
+            if (baseSchema.propertyOrder) {
+              const orderIndex = baseSchema.propertyOrder.indexOf(sourcePropertyName!);
+              if (orderIndex !== -1) {
+                baseSchema.propertyOrder[orderIndex] = property!;
+              }
+            }
+
+            // Update required array if it exists
+            if (baseSchema.required) {
+              const requiredIndex = baseSchema.required.indexOf(sourcePropertyName!);
+              if (requiredIndex !== -1) {
+                baseSchema.required[requiredIndex] = property!;
+              }
             }
           }
-
-          // Update required array if it exists
-          if (this._baseSchema.required) {
-            const requiredIndex = this._baseSchema.required.indexOf(sourcePropertyName!);
-            if (requiredIndex !== -1) {
-              this._baseSchema.required[requiredIndex] = property;
-            }
-          }
-        }
+        });
       }
     });
   }
@@ -329,19 +393,26 @@ export class ProjectionModel {
 
       const snapshot = getSnapshot(current);
 
-      // Delete field.
+      // Calculate field index before deleting (Obj.change returns void, so we can't get return values from the callback).
       const fieldIndex = this._projection.fields.findIndex((field) => field.id === fieldId);
-      if (fieldIndex !== -1) {
-        this._projection.fields.splice(fieldIndex, 1);
-      }
 
-      // Delete property.
-      invariant(this._baseSchema.properties, 'Schema properties must exist');
-      invariant(snapshot.field.path, 'Field path must exist');
-      delete this._baseSchema.properties[snapshot.field.path];
+      // Delete field from projection.
+      this._change.projection((projection) => {
+        const idx = projection.fields.findIndex((field) => field.id === fieldId);
+        if (idx !== -1) {
+          projection.fields.splice(idx, 1);
+        }
+      });
 
-      // check that it's actually gone
-      invariant(!this._baseSchema.properties[snapshot.field.path], 'Field path still exists');
+      // Delete property from schema.
+      this._change.schema((baseSchema) => {
+        invariant(baseSchema.properties, 'Schema properties must exist');
+        invariant(snapshot.field.path, 'Field path must exist');
+        delete baseSchema.properties[snapshot.field.path];
+
+        // Check that it's actually gone.
+        invariant(!baseSchema.properties[snapshot.field.path], 'Field path still exists');
+      });
 
       return { deleted: snapshot, index: fieldIndex };
     });
@@ -357,28 +428,30 @@ export class ProjectionModel {
       // Get all properties from the schema.
       const schemaProperties = new Set(Object.keys(this._baseSchema.properties ?? {}));
 
-      // 1. Remove fields that don't exist in schema anymore.
-      for (let i = this._projection.fields.length - 1; i >= 0; i--) {
-        const field = this.allFields[i];
-        if (!schemaProperties.has(field.path)) {
-          this._projection.fields.splice(i, 1);
+      this._change.projection((projection) => {
+        // 1. Remove fields that don't exist in schema anymore.
+        for (let i = projection.fields.length - 1; i >= 0; i--) {
+          const field = projection.fields[i];
+          if (!schemaProperties.has(field.path)) {
+            projection.fields.splice(i, 1);
+          }
         }
-      }
 
-      // 2. Find schema properties not represented in any field.
-      const fieldPaths = new Set(this._projection.fields.map((field) => field.path));
+        // 2. Find schema properties not represented in any field.
+        const fieldPaths = new Set(projection.fields.map((field) => field.path));
 
-      // 3. Add missing schema properties as hidden fields (excluding 'id').
-      for (const prop of schemaProperties) {
-        if (prop !== 'id' && !fieldPaths.has(prop as JsonProp)) {
-          // Add new hidden field.
-          this._projection.fields.push({
-            id: createFieldId(),
-            path: prop as JsonProp,
-            visible: false,
-          });
+        // 3. Add missing schema properties as hidden fields (excluding 'id').
+        for (const prop of schemaProperties) {
+          if (prop !== 'id' && !fieldPaths.has(prop as JsonProp)) {
+            // Add new hidden field.
+            projection.fields.push({
+              id: createFieldId(),
+              path: prop as JsonProp,
+              visible: false,
+            });
+          }
         }
-      }
+      });
     });
   }
 }

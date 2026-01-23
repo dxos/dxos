@@ -3,39 +3,37 @@
 //
 
 import { type Meta } from '@storybook/react-vite';
+import * as Effect from 'effect/Effect';
 import * as Function from 'effect/Function';
 import * as Match from 'effect/Match';
 import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 import React, { type FC, useEffect, useMemo, useState } from 'react';
 
-import { Capabilities, IntentPlugin, SettingsPlugin } from '@dxos/app-framework';
-import { useCapability, useIntentDispatcher } from '@dxos/app-framework/react';
+import { Common } from '@dxos/app-framework';
+import { useCapability } from '@dxos/app-framework/react';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Obj, Ref, Type } from '@dxos/echo';
 import { createDocAccessor, toCursorRange } from '@dxos/echo-db';
 import { invariant } from '@dxos/invariant';
 import { ClientPlugin } from '@dxos/plugin-client';
-import { GraphPlugin } from '@dxos/plugin-graph';
 import { PreviewPlugin } from '@dxos/plugin-preview';
 import { SpacePlugin } from '@dxos/plugin-space';
-import { StorybookLayoutPlugin } from '@dxos/plugin-storybook-layout';
-import { ThemePlugin } from '@dxos/plugin-theme';
+import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
 import { faker } from '@dxos/random';
 import { useQueue, useSpace } from '@dxos/react-client/echo';
 import { IconButton, Toolbar } from '@dxos/react-ui';
 import { withTheme } from '@dxos/react-ui/testing';
-import { type EditorSelection, type Range, useTextEditor } from '@dxos/react-ui-editor';
+import { useTextEditor } from '@dxos/react-ui-editor';
 import { StackItem } from '@dxos/react-ui-stack';
-import { defaultTx } from '@dxos/react-ui-theme';
 import { render } from '@dxos/storybook-utils';
 import { Message } from '@dxos/types';
+import { type EditorSelection, type Range } from '@dxos/ui-editor';
 
-import { MarkdownCapabilities } from '../capabilities';
 import { MarkdownPlugin } from '../MarkdownPlugin';
 import { meta } from '../meta';
 import { translations } from '../translations';
-import { Markdown } from '../types';
+import { Markdown, MarkdownCapabilities } from '../types';
 
 import { MarkdownContainer } from './MarkdownContainer';
 
@@ -58,7 +56,6 @@ const TestItem = Schema.Struct({
 );
 
 const TestChat: FC<{ doc: Markdown.Document; content: string }> = ({ doc, content }) => {
-  const { dispatchPromise: dispatch } = useIntentDispatcher();
   const { parentRef } = useTextEditor({ initialValue: content });
   const { editorState } = useCapability(MarkdownCapabilities.State);
 
@@ -117,7 +114,7 @@ const TestChat: FC<{ doc: Markdown.Document; content: string }> = ({ doc, conten
 const DefaultStory = ({ document, chat }: { document: string; chat: string }) => {
   const space = useSpace();
   const [doc, setDoc] = useState<Markdown.Document>();
-  const settings = useCapability(Capabilities.SettingsStore).getStore<Markdown.Settings>(meta.id)!.value;
+  const settings = useCapability(Common.Capability.SettingsStore).getStore<Markdown.Settings>(meta.id)!.value;
   const { editorState } = useCapability(MarkdownCapabilities.State);
 
   useEffect(() => {
@@ -148,7 +145,6 @@ const DefaultStory = ({ document, chat }: { document: string; chat: string }) =>
     return null;
   }
 
-  // TODO(burdon): Layout issue.
   return (
     <div className='grid grid-cols-2 bs-full overflow-hidden'>
       <MarkdownContainer id={doc.id} object={doc} settings={settings} editorStateStore={editorState} />
@@ -164,22 +160,19 @@ const storybook: Meta<typeof DefaultStory> = {
     withTheme,
     withPluginManager({
       plugins: [
+        ...corePlugins(),
         ClientPlugin({
           types: [Markdown.Document, TestItem],
-          onClientInitialized: async ({ client }) => {
-            await client.halo.createIdentity();
-          },
+          onClientInitialized: ({ client }) =>
+            Effect.gen(function* () {
+              yield* Effect.promise(() => client.halo.createIdentity());
+            }),
         }),
+        ...corePlugins(),
         SpacePlugin({}),
-        GraphPlugin(),
-        IntentPlugin(),
-        SettingsPlugin(),
-
-        // UI
-        ThemePlugin({ tx: defaultTx }),
         MarkdownPlugin(),
         PreviewPlugin(),
-        StorybookLayoutPlugin({}),
+        StorybookPlugin({}),
       ],
     }),
   ],

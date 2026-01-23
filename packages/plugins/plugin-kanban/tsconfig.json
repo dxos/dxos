@@ -57,6 +57,9 @@
       "path": "../../core/functions"
     },
     {
+      "path": "../../core/operation"
+    },
+    {
       "path": "../../sdk/app-framework"
     },
     {
@@ -84,7 +87,7 @@
       "path": "../../ui/react-ui-syntax-highlighter"
     },
     {
-      "path": "../../ui/react-ui-theme"
+      "path": "../../ui/ui-theme"
     },
     {
       "path": "../plugin-client"
@@ -100,6 +103,9 @@
     },
     {
       "path": "../plugin-space"
+    },
+    {
+      "path": "../plugin-testing"
     },
     {
       "path": "../plugin-theme"

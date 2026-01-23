@@ -17,7 +17,7 @@ import { type ReplicantEnv, ReplicantRegistry } from '../env';
 // Copyright 2023 DXOS.org
 //
 
-export type ReplicantRunParams = {
+export type ReplicantRunProps = {
   swarmPeerId: string;
   transport: TransportKind;
   signalUrl: string;
@@ -59,7 +59,7 @@ export class TransportReplicant {
     streamLoadInterval,
     streamLoadChunkSize,
     streamsDelay,
-  }: ReplicantRunParams): Promise<void> {
+  }: ReplicantRunProps): Promise<void> {
     const networkManagerBuilder = new NetworkManagerTestBuilder({
       signalHosts: [{ server: signalUrl }],
       transport,

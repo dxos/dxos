@@ -6,8 +6,8 @@ import React from 'react';
 
 import { useClient } from '@dxos/react-client';
 import { Button, Select, useTranslation } from '@dxos/react-ui';
-import { type EditorInputMode, EditorInputModes } from '@dxos/react-ui-editor';
 import { ControlGroup, ControlItemInput, ControlPage, ControlSection } from '@dxos/react-ui-form';
+import { type EditorInputMode, EditorInputModes } from '@dxos/ui-editor';
 
 import { meta } from '../../meta';
 import { type ScriptSettings } from '../../types';

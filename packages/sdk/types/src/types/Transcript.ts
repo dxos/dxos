@@ -43,4 +43,4 @@ const TranscriptHeader = Schema.Struct({
 
 export type TranscriptHeader = Schema.Schema.Type<typeof TranscriptHeader>;
 
-export const makeTranscript = (queueDxn: DXN) => Obj.make(Transcript, { queue: Ref.fromDXN(queueDxn) });
+export const make = (queueDxn: DXN) => Obj.make(Transcript, { queue: Ref.fromDXN(queueDxn) });

@@ -5,9 +5,9 @@
 import React from 'react';
 
 import { Button, Icon, useTranslation } from '@dxos/react-ui';
-import { Card, cardText } from '@dxos/react-ui-stack';
-import { mx } from '@dxos/react-ui-theme';
+import { Card, cardText } from '@dxos/react-ui-mosaic';
 import { type Message } from '@dxos/types';
+import { mx } from '@dxos/ui-theme';
 
 import { meta } from '../../meta';
 

@@ -19,9 +19,9 @@ import { Outline as OutlineComponent } from './Outline';
 const meta = {
   title: 'plugins/plugin-outliner/Outline',
   component: OutlineComponent,
-  render: render(({ text: textParam }) => {
+  render: render(({ text: textProp }) => {
     const space = useSpace();
-    const text = useMemo(() => space?.db.add(textParam), [space, textParam]);
+    const text = useMemo(() => space?.db.add(textProp), [space, textProp]);
     if (text) {
       return <OutlineComponent id={text.id} text={text} />;
     }

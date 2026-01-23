@@ -5,15 +5,15 @@
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
-import { PropertiesType } from '@dxos/client-protocol/types';
+import { SpaceProperties } from '@dxos/client-protocol/types';
 import { Obj, Query, Ref, Type } from '@dxos/echo';
+import { Database } from '@dxos/echo';
 import { type Expando, FormInputAnnotation, SystemTypeAnnotation } from '@dxos/echo/internal';
-import { DatabaseService } from '@dxos/echo-db';
 import { invariant } from '@dxos/invariant';
 
 export const Collection = Schema.Struct({
   name: Schema.String.pipe(Schema.optional),
-  objects: Schema.Array(Type.Ref(Type.Expando)).pipe(Schema.mutable, FormInputAnnotation.set(false)),
+  objects: Schema.Array(Type.Ref(Obj.Any)).pipe(Schema.mutable, FormInputAnnotation.set(false)),
 }).pipe(
   Type.Obj({
     typename: 'dxos.org/type/Collection',
@@ -44,29 +44,38 @@ export type Managed = Schema.Schema.Type<typeof Managed>;
 
 export const makeManaged = (props: Obj.MakeProps<typeof Managed>) => Obj.make(Managed, props);
 
-type AddParams = {
+type AddProps = {
   object: Obj.Any;
   target?: Collection;
   hidden?: boolean;
 };
 
-export const add = Effect.fn(function* ({ object, target, hidden }: AddParams) {
+export const add = Effect.fn(function* ({ object, target, hidden }: AddProps) {
+  const objectRef = Ref.make(object);
   if (Obj.instanceOf(Collection, target)) {
-    target.objects.push(Ref.make(object));
+    Obj.change(target, (t) => {
+      t.objects.push(objectRef);
+    });
   } else if (hidden) {
-    yield* DatabaseService.add(object);
+    yield* Database.Service.add(object);
   } else {
-    const { objects } = yield* DatabaseService.runQuery(Query.type(PropertiesType));
+    const objects = yield* Database.Service.runQuery(Query.type(SpaceProperties));
     invariant(objects.length === 1, 'Space properties not found');
     const properties: Expando = objects[0];
 
     const collection = properties[Collection.typename]?.target;
     if (Obj.instanceOf(Collection, collection)) {
-      collection.objects.push(Ref.make(object));
+      Obj.change(collection, (c) => {
+        c.objects.push(objectRef);
+      });
     } else {
       // TODO(wittjosiah): Can't add non-echo objects by including in a collection because of types.
-      const collection = Obj.make(Collection, { objects: [Ref.make(object)] });
-      properties[Collection.typename] = Ref.make(collection);
+      const newCollection = Obj.make(Collection, { objects: [objectRef] });
+      const collectionRef = Ref.make(newCollection);
+      // Use outer reference pattern since Expando doesn't satisfy Obj.change type constraints.
+      Obj.change(properties as Obj.Any, () => {
+        properties[Collection.typename] = collectionRef;
+      });
     }
   }
 });

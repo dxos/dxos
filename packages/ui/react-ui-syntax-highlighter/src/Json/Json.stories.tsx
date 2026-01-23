@@ -56,7 +56,7 @@ const createData = ({ depth = 2, children = 3 } = {}): any => {
 const meta = {
   title: 'ui/react-ui-syntax-highlighter/Json',
   component: Json,
-  decorators: [withTheme, withLayout({ container: 'column' })],
+  decorators: [withTheme, withLayout({ layout: 'column' })],
 } satisfies Meta<typeof Json>;
 
 export default meta;

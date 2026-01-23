@@ -2,13 +2,12 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type EchoDatabase } from '@dxos/client/echo';
-import { type Tag, Type } from '@dxos/echo';
+import { type Database, type Tag, Type } from '@dxos/echo';
 import { QueryDSL } from '@dxos/echo-query';
 import { type GetMenuContext } from '@dxos/react-ui-editor';
 
 export type CompletionOptions = {
-  db?: EchoDatabase;
+  db?: Database.Database;
   tags?: Tag.Map;
 };
 
@@ -28,7 +27,7 @@ export const completions = ({ db, tags }: CompletionOptions) => {
         }
 
         if (range) {
-          const schema = db?.graph.schemaRegistry.schemas ?? [];
+          const schema = db?.graph.schemaRegistry.query({ location: ['runtime'] }).runSync() ?? [];
           return schema.map((schema) => Type.getTypename(schema));
         }
 

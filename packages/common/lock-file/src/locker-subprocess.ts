@@ -2,6 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
+/* eslint-disable no-console */
+
 import { LockFile } from './lock-file';
 
 const filename = process.argv[2];

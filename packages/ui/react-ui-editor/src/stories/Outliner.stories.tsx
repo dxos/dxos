@@ -7,10 +7,9 @@ import React, { useMemo, useState } from 'react';
 
 import { withTheme } from '@dxos/react-ui/testing';
 import { withAttention } from '@dxos/react-ui-attention/testing';
+import { deleteItem, hashtag, join, listItemToString, outliner, treeFacet } from '@dxos/ui-editor';
 
 import { type EditorController, type EditorMenuGroup, EditorMenuProvider } from '../components';
-import { deleteItem, hashtag, listItemToString, outliner, treeFacet } from '../extensions';
-import { str } from '../util';
 
 import { EditorStory } from './components';
 
@@ -85,7 +84,7 @@ export const Empty: Story = {
 
 export const Basic: Story = {
   args: {
-    text: str(
+    text: join(
       //
       '- [ ] A',
       '- [ ] B',
@@ -100,7 +99,7 @@ export const Basic: Story = {
 
 export const Nested: Story = {
   args: {
-    text: str(
+    text: join(
       //
       '- [ ] A',
       '  - [ ] B',
@@ -115,7 +114,7 @@ export const Nested: Story = {
 
 export const Continuation: Story = {
   args: {
-    text: str(
+    text: join(
       //
       '- [ ] A',
       '- [ ] B',

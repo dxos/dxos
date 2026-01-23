@@ -5,7 +5,7 @@
 import React from 'react';
 
 import { type Point } from '@dxos/react-ui-canvas';
-import { mx } from '@dxos/react-ui-theme';
+import { mx } from '@dxos/ui-theme';
 
 import {
   DEFS_ID,

@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { getSpace } from '@dxos/react-client/echo';
+import { Obj } from '@dxos/echo';
 
 import { type Chess } from '../types';
 
@@ -17,8 +17,8 @@ export type ChessboardContainerProps = {
 };
 
 export const ChessboardContainer = ({ game, role }: ChessboardContainerProps) => {
-  const space = getSpace(game);
-  if (!space) {
+  const db = Obj.getDatabase(game);
+  if (!db) {
     return null;
   }
 

@@ -1,7 +1,7 @@
 import { describe, test } from 'vitest';
 import { Client, Config } from '@dxos/client';
-import { Obj, Type } from '@dxos/echo';
-import type { EchoDatabase, SpaceSyncState } from '@dxos/echo-db';
+import { Obj, Type, Database } from '@dxos/echo';
+import type { SpaceSyncState } from '@dxos/echo-db';
 import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
 import type { SpaceId } from '@dxos/keys';
 import { EdgeService } from '@dxos/protocols';
@@ -64,7 +64,7 @@ describe.runIf(process.env.DX_TEST_TAGS?.includes('sync-e2e'))('sync', { timeout
 
     for (let i = 0; i < ITERATIONS; i++) {
       console.log('\n### Iteration', i);
-      const obj = await client.spaces.default.db.ref(dxn).load();
+      const obj = await client.spaces.default.db.makeRef(dxn).load();
       for (let j = 0; j < BURST_SIZE; j++) {
         obj.counter++;
         await sleep(20);
@@ -84,7 +84,7 @@ describe.runIf(process.env.DX_TEST_TAGS?.includes('sync-e2e'))('sync', { timeout
   });
 });
 
-const waitForSync = async (db: EchoDatabase) => {
+const waitForSync = async (db: Database.Database) => {
   let spaceSyncState: SpaceSyncState | null = null;
 
   const start = performance.now();

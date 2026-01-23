@@ -10,9 +10,9 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { type Graph, type GraphModel, SelectionModel } from '@dxos/graph';
 import { IconButton, Popover, Toolbar } from '@dxos/react-ui';
 import { withTheme } from '@dxos/react-ui/testing';
-import { Card } from '@dxos/react-ui-stack';
+import { Card } from '@dxos/react-ui-mosaic';
 import { JsonFilter, SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
-import { getHashStyles, mx } from '@dxos/react-ui-theme';
+import { getHashStyles, mx } from '@dxos/ui-theme';
 
 import { Pulsar } from '../../fx';
 import {
@@ -54,7 +54,7 @@ type StoryProps = GraphProps & {
   grid?: boolean | SVGGridProps;
   inspect?: boolean;
   singleSelect?: boolean;
-  graph: () => Graph;
+  graph: () => Graph.Any;
   projectorType?: ProjectorType;
   projectorOptions?:
     | GraphForceProjectorOptions
@@ -77,7 +77,7 @@ const DefaultStory = ({
   const context = useRef<SVGContext>(null);
 
   // Models.
-  const [model, setModel] = useState<GraphModel | undefined>(() => new TestGraphModel(_graph?.()));
+  const [model, setModel] = useState<GraphModel.GraphModel | undefined>(() => new TestGraphModel(_graph?.()));
   const selection = useMemo(() => new SelectionModel(singleSelect), [singleSelect]);
 
   // Projector.
@@ -200,7 +200,7 @@ const DefaultStory = ({
 
   return (
     <Popover.Root open={!!popover} onOpenChange={(state) => !state && setPopover(undefined)}>
-      <div className={mx('is-full grid divide-x divide-separator', debug && 'grid-cols-[1fr_30rem]')}>
+      <div className={mx('bs-full is-full grid divide-x divide-separator', debug && 'grid-cols-[1fr_30rem]')}>
         <SVG.Root ref={context}>
           <SVG.Markers />
           {grid && <SVG.Grid {...(typeof grid === 'boolean' ? { axis: grid } : grid)} />}
@@ -281,7 +281,7 @@ const Debug = ({
   onDelete,
   onPing,
 }: {
-  model?: GraphModel;
+  model?: GraphModel.GraphModel;
   selection: SelectionModel;
   projector: ProjectorType;
   onToggleProjector: () => void;

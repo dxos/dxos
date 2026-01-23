@@ -9,7 +9,7 @@ import { Obj, Type } from '@dxos/echo';
 import { Organization } from './Organization';
 
 export const HasConnection = Schema.Struct({
-  id: Type.ObjectId,
+  id: Obj.ID,
   kind: Schema.String.annotations({
     description: 'The kind of relationship.',
     examples: ['customer', 'vendor', 'investor'],

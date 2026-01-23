@@ -1,0 +1,15 @@
+type: library
+language: typescript
+tags:
+  - ts-build
+  - ts-test
+  - pack
+  - storybook
+tasks:
+  compile:
+    args:
+      - '--entryPoint=src/data.ts'
+      - '--entryPoint=src/index.ts'
+  test:
+    inputs:
+      - .storybook/*

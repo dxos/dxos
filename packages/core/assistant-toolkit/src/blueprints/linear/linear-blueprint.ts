@@ -4,7 +4,7 @@
 
 import { ToolId } from '@dxos/ai';
 import { Blueprint } from '@dxos/blueprints';
-import { Obj, Ref } from '@dxos/echo';
+import { Ref } from '@dxos/echo';
 import { Text } from '@dxos/schema';
 import { trim } from '@dxos/util';
 
@@ -22,7 +22,7 @@ const instructions = trim`
   DXOS teamId: 1127c63a-6f77-4725-9229-50f6cd47321c
 `;
 
-export const blueprint = Obj.make(Blueprint.Blueprint, {
+export const blueprint = Blueprint.make({
   key: 'dxos.org/blueprint/linear',
   name: 'Linear',
   description: 'Syncs Linear workspaces.',
@@ -31,5 +31,3 @@ export const blueprint = Obj.make(Blueprint.Blueprint, {
   },
   tools: [Linear.sync].map((tool) => ToolId.make(tool.key)),
 });
-
-export default blueprint;

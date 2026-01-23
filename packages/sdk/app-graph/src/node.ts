@@ -2,9 +2,30 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type MakeOptional, type MaybePromise } from '@dxos/util';
+import type * as Context from 'effect/Context';
+import type * as Effect from 'effect/Effect';
 
-import { ACTION_GROUP_TYPE, ACTION_TYPE } from './graph';
+import { type MakeOptional } from '@dxos/util';
+
+/**
+ * Root node ID.
+ */
+export const RootId = 'root';
+
+/**
+ * Root node type.
+ */
+export const RootType = 'dxos.org/type/GraphRoot';
+
+/**
+ * Action node type.
+ */
+export const ActionType = 'dxos.org/type/GraphAction';
+
+/**
+ * Action group node type.
+ */
+export const ActionGroupType = 'dxos.org/type/GraphActionGroup';
 
 /**
  * Represents a node in the graph.
@@ -70,23 +91,35 @@ export type NodeArg<TData, TProperties extends Record<string, any> = Record<stri
 // Actions
 //
 
-export type InvokeParams = {
+export type InvokeProps = {
   /** Node the invoked action is connected to. */
   parent?: Node;
 
   caller?: string;
 };
 
-export type ActionData = (params?: InvokeParams) => MaybePromise<any>;
+/**
+ * Action data is an Effect-returning function.
+ * The Effect is provided with captured context at execution time.
+ */
+export type ActionData<R = never> = (params?: InvokeProps) => Effect.Effect<any, Error, R>;
+
+/**
+ * Context captured at extension creation time.
+ * Automatically provided to action Effects at execution.
+ */
+export type ActionContext = Context.Context<any>;
 
 export type Action<TProperties extends Record<string, any> = Record<string, any>> = Readonly<
   Omit<Node<ActionData, TProperties>, 'properties'> & {
     properties: Readonly<TProperties>;
+    /** Captured context from extension creation. Provided automatically at action execution. */
+    _actionContext?: ActionContext;
   }
 >;
 
 export const isAction = (data: unknown): data is Action =>
-  isGraphNode(data) ? typeof data.data === 'function' && data.type === ACTION_TYPE : false;
+  isGraphNode(data) ? typeof data.data === 'function' && data.type === ActionType : false;
 
 export const actionGroupSymbol = Symbol('ActionGroup');
 
@@ -97,7 +130,7 @@ export type ActionGroup<TProperties extends Record<string, any> = Record<string,
 >;
 
 export const isActionGroup = (data: unknown): data is ActionGroup =>
-  isGraphNode(data) ? data.data === actionGroupSymbol && data.type === ACTION_GROUP_TYPE : false;
+  isGraphNode(data) ? data.data === actionGroupSymbol && data.type === ActionGroupType : false;
 
 export type ActionLike = Action | ActionGroup;
 

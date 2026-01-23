@@ -8,7 +8,7 @@ import React, { Fragment } from 'react';
 import { DEFAULT_OUTPUT, QueueInput, QueueOutput } from '@dxos/conductor';
 import { type ThemedClassName } from '@dxos/react-ui';
 import { type ShapeComponentProps, type ShapeDef } from '@dxos/react-ui-canvas-editor';
-import { mx } from '@dxos/react-ui-theme';
+import { mx } from '@dxos/ui-theme';
 
 import { useComputeNodeState } from '../hooks';
 
@@ -28,7 +28,11 @@ export type QueueShape = Schema.Schema.Type<typeof QueueShape>;
 export type CreateQueueProps = CreateShapeProps<QueueShape>;
 
 export const createQueue = (props: CreateQueueProps) =>
-  createShape<QueueShape>({ type: 'queue', size: { width: 256, height: 512 }, ...props });
+  createShape<QueueShape>({
+    type: 'queue',
+    size: { width: 256, height: 512 },
+    ...props,
+  });
 
 export const QueueComponent = ({ shape }: ShapeComponentProps<QueueShape>) => {
   const { runtime } = useComputeNodeState(shape);

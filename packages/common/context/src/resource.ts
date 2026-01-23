@@ -6,6 +6,8 @@ import { throwUnhandledError } from '@dxos/util';
 
 import { Context } from './context';
 
+import '@hazae41/symbol-dispose-polyfill';
+
 export enum LifecycleState {
   CLOSED = 'CLOSED',
   OPEN = 'OPEN',
@@ -25,6 +27,7 @@ const CLOSE_RESOURCE_ON_UNHANDLED_ERROR = false;
  */
 export abstract class Resource implements Lifecycle {
   #lifecycleState = LifecycleState.CLOSED;
+
   #openPromise: Promise<void> | null = null;
   #closePromise: Promise<void> | null = null;
 

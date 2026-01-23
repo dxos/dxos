@@ -5,13 +5,12 @@
 import React, { type FC, Fragment, useEffect, useState } from 'react';
 
 import { type Blueprint } from '@dxos/blueprints';
-import { type Ref } from '@dxos/echo';
+import { type Database, type Ref } from '@dxos/echo';
 import { Function } from '@dxos/functions';
 import { log } from '@dxos/log';
-import { Filter, type Space, useQuery } from '@dxos/react-client/echo';
-import { type ThemedClassName } from '@dxos/react-ui';
-import { useTranslation } from '@dxos/react-ui';
-import { mx } from '@dxos/react-ui-theme';
+import { Filter, useQuery } from '@dxos/react-client/echo';
+import { type ThemedClassName, useTranslation } from '@dxos/react-ui';
+import { mx } from '@dxos/ui-theme';
 
 import { meta } from '../../meta';
 import { type AiChatProcessor } from '../../processor';
@@ -21,7 +20,7 @@ export type ToolboxProps = ThemedClassName<{
   services?: { service: ServiceType }[];
   functions?: Function.Function[];
   // TODO(burdon): Combine into single array.
-  blueprints?: readonly Ref.Ref<Blueprint.Blueprint>[];
+  blueprints?: readonly Blueprint.Blueprint[];
   activeBlueprints?: readonly Ref.Ref<Blueprint.Blueprint>[];
 }>;
 
@@ -33,10 +32,10 @@ export const Toolbox = ({ classNames, functions, services, blueprints, activeBlu
       {blueprints && blueprints.length > 0 && (
         <Section
           title='Blueprints'
-          items={blueprints.map(({ target }) => ({
-            name: target?.name ?? '',
-            description: target?.description ?? '',
-            subitems: target?.tools.map((toolId) => ({ name: `∙ ${safeToolId(toolId)}` })),
+          items={blueprints.map(({ name, description, tools }) => ({
+            name,
+            description,
+            subitems: tools.map((toolId) => ({ name: `∙ ${safeToolId(toolId)}` })),
           }))}
         />
       )}
@@ -105,13 +104,13 @@ const Section: FC<{
 };
 
 export type ToolboxContainerProps = ThemedClassName<{
-  space?: Space;
+  db?: Database.Database;
   processor?: AiChatProcessor;
 }>;
 
-export const ToolboxContainer = ({ classNames, space, processor }: ToolboxContainerProps) => {
+export const ToolboxContainer = ({ classNames, db, processor }: ToolboxContainerProps) => {
   // Registered services.
-  const services = useQuery(space, Filter.type(ServiceType));
+  const services = useQuery(db, Filter.type(ServiceType));
   const [serviceTools, setServiceTools] = useState<{ service: ServiceType }[]>([]);
   useEffect(() => {
     log('creating service tools...', { services: services.length });
@@ -125,7 +124,7 @@ export const ToolboxContainer = ({ classNames, space, processor }: ToolboxContai
   }, [services]);
 
   // Deployed functions.
-  const functions = useQuery(space, Filter.type(Function.Function));
+  const functions = useQuery(db, Filter.type(Function.Function));
 
   return (
     <Toolbox

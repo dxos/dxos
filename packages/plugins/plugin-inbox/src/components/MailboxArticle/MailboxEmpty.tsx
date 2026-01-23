@@ -4,10 +4,11 @@
 
 import React, { useCallback } from 'react';
 
-import { LayoutAction, createIntent } from '@dxos/app-framework';
-import { useIntentDispatcher } from '@dxos/app-framework/react';
+import { Common } from '@dxos/app-framework';
+import { useOperationInvoker } from '@dxos/app-framework/react';
+import { Obj } from '@dxos/echo';
 import { ATTENDABLE_PATH_SEPARATOR } from '@dxos/plugin-deck/types';
-import { Filter, getSpace, useQuery } from '@dxos/react-client/echo';
+import { Filter, useQuery } from '@dxos/react-client/echo';
 import { Button, useTranslation } from '@dxos/react-ui';
 import { AccessToken } from '@dxos/types';
 
@@ -15,24 +16,19 @@ import { meta } from '../../meta';
 import { type Mailbox } from '../../types';
 
 export const MailboxEmpty = ({ mailbox }: { mailbox: Mailbox.Mailbox }) => {
-  const space = getSpace(mailbox);
-  const tokens = useQuery(space, Filter.type(AccessToken.AccessToken));
+  const db = Obj.getDatabase(mailbox);
+  const tokens = useQuery(db, Filter.type(AccessToken.AccessToken));
   const { t } = useTranslation(meta.id);
-  const { dispatchPromise: dispatch } = useIntentDispatcher();
+  const { invokePromise } = useOperationInvoker();
 
   const openSpaceSettings = useCallback(() => {
-    if (space) {
-      void dispatch(
-        createIntent(LayoutAction.Open, {
-          part: 'main',
-          subject: [`integrations-settings${ATTENDABLE_PATH_SEPARATOR}${space.id}`],
-          options: {
-            workspace: space.id,
-          },
-        }),
-      );
+    if (db) {
+      void invokePromise(Common.LayoutOperation.Open, {
+        subject: [`integrations-settings${ATTENDABLE_PATH_SEPARATOR}${db.spaceId}`],
+        workspace: db.spaceId,
+      });
     }
-  }, [space, dispatch]);
+  }, [db, invokePromise]);
 
   // TODO(ZaymonFC): This should be generalised to all tokens that can be used to source messages.
   const gmailToken = tokens.find((t) => t.source.includes('google'));

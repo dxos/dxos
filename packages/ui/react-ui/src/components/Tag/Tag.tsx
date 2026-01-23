@@ -6,7 +6,7 @@ import { Primitive } from '@radix-ui/react-primitive';
 import { Slot } from '@radix-ui/react-slot';
 import React, { type ComponentPropsWithRef, forwardRef } from 'react';
 
-import { type ChromaticPalette, type MessageValence, type NeutralPalette } from '@dxos/react-ui-types';
+import { type ChromaticPalette, type MessageValence, type NeutralPalette } from '@dxos/ui-types';
 
 import { useThemeContext } from '../../hooks';
 import { type ThemedClassName } from '../../util';

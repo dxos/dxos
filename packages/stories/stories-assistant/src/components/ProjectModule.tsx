@@ -12,6 +12,6 @@ import { Project } from '@dxos/types';
 import { type ComponentProps } from './types';
 
 export const ProjectModule: FC<ComponentProps> = ({ space }) => {
-  const projects = useQuery(space, Filter.type(Project.Project));
+  const projects = useQuery(space.db, Filter.type(Project.Project));
   return <Surface role='article' limit={1} data={{ subject: projects.at(-1) }} />;
 };

@@ -5,10 +5,10 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useEffect } from 'react';
 
-import { IntentPlugin } from '@dxos/app-framework';
+import { OperationPlugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Filter, Obj } from '@dxos/echo';
-import { useQuery, useSpace } from '@dxos/react-client/echo';
+import { useDatabase, useQuery } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { Dialog } from '@dxos/react-ui';
 import { withTheme } from '@dxos/react-ui/testing';
@@ -36,7 +36,7 @@ const meta = {
   render: Story,
   decorators: [
     withTheme, // TODO(wittjosiah): Try to write story which does not depend on plugin manager.
-    withPluginManager({ plugins: [IntentPlugin()] }),
+    withPluginManager({ plugins: [OperationPlugin()] }),
     withClientProvider({ createIdentity: true, createSpace: true, types: [Collection.Collection] }),
   ],
   parameters: {
@@ -55,26 +55,24 @@ export const Typename: StoryObj<typeof CreateObjectDialog> = {
 
 export const TargetSpace: StoryObj<typeof CreateObjectDialog> = {
   render: (args) => {
-    const space = useSpace();
+    const db = useDatabase();
 
-    if (!space) {
+    if (!db) {
       return <></>;
     }
 
-    return <Story {...args} target={space} />;
+    return <Story {...args} target={db} />;
   },
 };
 
 export const TargetCollection: StoryObj<typeof CreateObjectDialog> = {
   render: (args) => {
-    const space = useSpace();
-    const [collection] = useQuery(space, Filter.type(Collection.Collection));
+    const db = useDatabase();
+    const [collection] = useQuery(db, Filter.type(Collection.Collection));
 
     useEffect(() => {
-      if (space) {
-        space.db.add(Obj.make(Collection.Collection, { name: 'My Collection', objects: [] }));
-      }
-    }, [space]);
+      db?.add(Obj.make(Collection.Collection, { name: 'My Collection', objects: [] }));
+    }, [db]);
 
     if (!collection) {
       return <></>;

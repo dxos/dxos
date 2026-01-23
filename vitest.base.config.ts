@@ -53,7 +53,7 @@ const createStorybookProject = (dirname: string) =>
         provider: 'playwright',
         instances: [{ browser: 'chromium' }],
       },
-      setupFiles: [new URL('./tools/storybook/.storybook/vitest.setup.ts', import.meta.url).pathname],
+      setupFiles: [new URL('./tools/storybook-react/.storybook/vitest.setup.ts', import.meta.url).pathname],
     },
     optimizeDeps: { include: ['@preact-signals/safe-react/tracking'] },
     plugins: [
@@ -73,13 +73,20 @@ type BrowserOptions = {
   browserName: string;
   nodeExternal?: boolean;
   injectGlobals?: boolean;
+  plugins?: Plugin[];
 };
 
-const createBrowserProject = ({ browserName, nodeExternal = false, injectGlobals = true }: BrowserOptions) =>
+const createBrowserProject = ({
+  browserName,
+  nodeExternal = false,
+  injectGlobals = true,
+  plugins = [],
+}: BrowserOptions) =>
   defineProject({
     plugins: [
       nodeStdPlugin(),
       WasmPlugin(),
+      ...plugins,
       // Inspect()
     ],
     optimizeDeps: {
@@ -92,6 +99,7 @@ const createBrowserProject = ({ browserName, nodeExternal = false, injectGlobals
           ...(nodeExternal ? [NodeExternalPlugin({ injectGlobals, nodeStd: true })] : []),
         ],
       },
+      exclude: ['@dxos/wa-sqlite'],
     },
     esbuild: {
       target: 'esnext',
@@ -104,6 +112,7 @@ const createBrowserProject = ({ browserName, nodeExternal = false, injectGlobals
       include: [
         '**/src/**/*.test.{ts,tsx}',
         '**/test/**/*.test.{ts,tsx}',
+        '!**/src/**/__snapshots__/**',
         '!**/src/**/*.node.test.{ts,tsx}',
         '!**/test/**/*.node.test.{ts,tsx}',
       ],
@@ -153,6 +162,7 @@ const createNodeProject = ({ environment = 'node', retry, timeout, setupFiles = 
       include: [
         '**/src/**/*.test.{ts,tsx}',
         '**/test/**/*.test.{ts,tsx}',
+        '!**/src/**/__snapshots__/**',
         '!**/src/**/*.browser.test.{ts,tsx}',
         '!**/test/**/*.browser.test.{ts,tsx}',
       ],
@@ -267,6 +277,7 @@ const normalizeBrowserOptions = (
 
 /**
  * Replaces node built-in modules with their browser equivalents.
+ * Only redirects modules that are actually implemented in @dxos/node-std.
  */
 // TODO(dmaretskyi): Extract.
 function nodeStdPlugin(): Plugin {
@@ -276,7 +287,10 @@ function nodeStdPlugin(): Plugin {
       order: 'pre',
       async handler(source, importer, options) {
         if (source.startsWith('node:')) {
-          return this.resolve('@dxos/node-std/' + source.slice('node:'.length), importer, options);
+          const moduleName = source.slice('node:'.length);
+          if (MODULES.includes(moduleName)) {
+            return this.resolve('@dxos/node-std/' + moduleName, importer, options);
+          }
         }
 
         if (MODULES.includes(source)) {

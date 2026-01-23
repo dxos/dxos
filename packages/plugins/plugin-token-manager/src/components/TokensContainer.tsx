@@ -5,18 +5,17 @@
 import * as Schema from 'effect/Schema';
 import React, { useCallback, useState } from 'react';
 
-import { createIntent } from '@dxos/app-framework';
-import { useIntentDispatcher } from '@dxos/app-framework/react';
-import { Obj } from '@dxos/echo';
-import { SpaceAction } from '@dxos/plugin-space/types';
-import { Filter, type Space, useQuery } from '@dxos/react-client/echo';
+import { useOperationInvoker } from '@dxos/app-framework/react';
+import { type Database, Filter, Obj } from '@dxos/echo';
+import { SpaceOperation } from '@dxos/plugin-space/types';
+import { useQuery } from '@dxos/react-client/echo';
 import { Separator, useTranslation } from '@dxos/react-ui';
 import { ControlItem, ControlPage, ControlSection, Form, controlItemClasses } from '@dxos/react-ui-form';
 import { StackItem } from '@dxos/react-ui-stack';
 import { AccessToken } from '@dxos/types';
 
 import { meta } from '../meta';
-import { TokenManagerAction } from '../types';
+import { TokenManagerOperation } from '../types';
 
 import { NewTokenSelector } from './NewTokenSelector';
 import { TokenManager } from './TokenManager';
@@ -30,31 +29,28 @@ const initialValues = {
 const FormSchema = AccessToken.AccessToken.pipe(Schema.omit('id'));
 type TokenForm = Schema.Schema.Type<typeof FormSchema>;
 
-export const TokensContainer = ({ space }: { space: Space }) => {
+export const TokensContainer = ({ db }: { db: Database.Database }) => {
   const { t } = useTranslation(meta.id);
-  const { dispatchPromise: dispatch } = useIntentDispatcher();
+  const { invokePromise } = useOperationInvoker();
   const [adding, setAdding] = useState(false);
-  const tokens = useQuery(space, Filter.type(AccessToken.AccessToken));
+  const tokens = useQuery(db, Filter.type(AccessToken.AccessToken));
 
   const handleNew = useCallback(() => setAdding(true), []);
   const handleCancel = useCallback(() => setAdding(false), []);
 
   const handleAddAccessToken = useCallback(
     async (token: AccessToken.AccessToken) => {
-      // TODO(ZaymonFC): Is there a more ergonomic way to do this intent chain?
-      const result = await dispatch(
-        createIntent(SpaceAction.AddObject, {
-          object: token,
-          target: space,
-          hidden: true,
-        }),
-      );
+      const result = await invokePromise(SpaceOperation.AddObject, {
+        object: token,
+        target: db,
+        hidden: true,
+      });
 
       if (Obj.instanceOf(AccessToken.AccessToken, result.data?.object)) {
-        void dispatch(createIntent(TokenManagerAction.AccessTokenCreated, { accessToken: result.data?.object }));
+        void invokePromise(TokenManagerOperation.AccessTokenCreated, { accessToken: result.data?.object });
       }
     },
-    [space, dispatch],
+    [db, invokePromise],
   );
 
   const handleAdd = useCallback(
@@ -66,7 +62,7 @@ export const TokensContainer = ({ space }: { space: Space }) => {
     [handleAddAccessToken],
   );
 
-  const handleDelete = useCallback((token: AccessToken.AccessToken) => space.db.remove(token), [space]);
+  const handleDelete = useCallback((token: AccessToken.AccessToken) => db.remove(token), [db]);
 
   return (
     <StackItem.Content scrollable>
@@ -77,19 +73,20 @@ export const TokensContainer = ({ space }: { space: Space }) => {
         >
           {adding ? (
             <ControlItem title={t('new integration label')}>
-              <Form
-                outerSpacing={false}
-                schema={FormSchema}
-                values={initialValues}
-                onCancel={handleCancel}
-                onSave={handleAdd}
-              />
+              <Form.Root schema={FormSchema} values={initialValues} onCancel={handleCancel} onSave={handleAdd}>
+                <Form.FieldSet />
+                <Form.Actions />
+              </Form.Root>
             </ControlItem>
           ) : (
             <div role='none' className={controlItemClasses}>
               <TokenManager tokens={tokens} onDelete={handleDelete} />
               {tokens.length > 0 && <Separator classNames='mlb-4' />}
-              <NewTokenSelector space={space} onAddAccessToken={handleAddAccessToken} onCustomToken={handleNew} />
+              <NewTokenSelector
+                spaceId={db.spaceId}
+                onAddAccessToken={handleAddAccessToken}
+                onCustomToken={handleNew}
+              />
             </div>
           )}
         </ControlSection>

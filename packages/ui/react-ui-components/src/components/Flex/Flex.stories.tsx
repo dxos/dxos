@@ -31,7 +31,7 @@ const meta = {
   title: 'ui/react-ui-components/Flex',
   component: Flex,
   render: DefaultStory,
-  decorators: [withTheme, withLayout({ container: 'column' })],
+  decorators: [withTheme, withLayout({ layout: 'column' })],
 } satisfies Meta<typeof Flex>;
 
 export default meta;

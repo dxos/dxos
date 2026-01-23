@@ -9,7 +9,7 @@ import { useConfig } from '@dxos/react-client';
 import { useSpaceInvitations } from '@dxos/react-client/echo';
 import { type CancellableInvitationObservable, Invitation, InvitationEncoder } from '@dxos/react-client/invitations';
 import { ScrollArea, useTranslation } from '@dxos/react-ui';
-import { descriptionText, mx } from '@dxos/react-ui-theme';
+import { descriptionText, mx } from '@dxos/ui-theme';
 
 import {
   type ActionMenuItem,
@@ -20,6 +20,7 @@ import {
   SpaceMemberList,
   type SpaceMemberListProps,
 } from '../../../components';
+import { translationKey } from '../../../translations';
 import { type SpacePanelStepProps } from '../SpacePanelProps';
 
 export type SpaceManagerImplProps = SpacePanelStepProps & {
@@ -45,7 +46,7 @@ export type SpaceManagerProps = SpaceManagerImplProps & {};
 
 export const SpaceManager = (props: SpaceManagerProps) => {
   const { space, target } = props;
-  const { t } = useTranslation('os');
+  const { t } = useTranslation(translationKey);
   const config = useConfig();
 
   const invitations = useSpaceInvitations(space?.key);
@@ -108,7 +109,7 @@ export const SpaceManagerImpl = (props: SpaceManagerImplProps) => {
     SpaceMemberList: SpaceMemberListComponent = SpaceMemberList,
     InvitationList: InvitationListComponent = InvitationList,
   } = props;
-  const { t } = useTranslation('os');
+  const { t } = useTranslation(translationKey);
 
   const inviteActions =
     propsInviteActions ??

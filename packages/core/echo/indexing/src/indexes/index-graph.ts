@@ -7,10 +7,10 @@ import * as Schema from 'effect/Schema';
 
 import { Event } from '@dxos/async';
 import { Resource } from '@dxos/context';
-import { EntityKind, ObjectId } from '@dxos/echo/internal';
-import { ObjectStructure, decodeReference } from '@dxos/echo-protocol';
+import { EntityKind } from '@dxos/echo/internal';
+import { EncodedReference, ObjectStructure } from '@dxos/echo-protocol';
 import { InternalError } from '@dxos/errors';
-import { PublicKey } from '@dxos/keys';
+import { ObjectId, PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { ObjectPointerEncoded } from '@dxos/protocols';
 import { IndexKind } from '@dxos/protocols/proto/dxos/echo/indexing';
@@ -23,7 +23,7 @@ import {
   type Index,
   type IndexQuery,
   type IndexStaticProps,
-  type LoadParams,
+  type LoadProps,
   staticImplements,
 } from '../types';
 
@@ -90,7 +90,7 @@ export class IndexGraph extends Resource implements Index {
         const source = ObjectStructure.getRelationSource(object);
         const target = ObjectStructure.getRelationTarget(object);
         if (source) {
-          const sourceObject = decodeReference(source).toDXN().asEchoDXN()?.echoId;
+          const sourceObject = EncodedReference.toDXN(source).asEchoDXN()?.echoId;
           if (sourceObject) {
             defaultMap(this._relationSources, sourceObject, () => new Set()).add(id);
             targetMapping.add(sourceObject);
@@ -99,7 +99,7 @@ export class IndexGraph extends Resource implements Index {
           log.warn('relation has no source', { id });
         }
         if (target) {
-          const targetObject = decodeReference(target).toDXN().asEchoDXN()?.echoId;
+          const targetObject = EncodedReference.toDXN(target).asEchoDXN()?.echoId;
           if (targetObject) {
             defaultMap(this._relationTargets, targetObject, () => new Set()).add(id);
             targetMapping.add(targetObject);
@@ -146,7 +146,7 @@ export class IndexGraph extends Resource implements Index {
 
     const references = ObjectStructure.getAllOutgoingReferences(object);
     for (const { path, reference } of references) {
-      const targetObject = decodeReference(reference).toDXN().asEchoDXN()?.echoId;
+      const targetObject = EncodedReference.toDXN(reference).asEchoDXN()?.echoId;
       if (!targetObject) {
         continue;
       }
@@ -245,7 +245,7 @@ export class IndexGraph extends Resource implements Index {
   }
 
   @trace.span({ showInBrowserTimeline: true })
-  static async load({ serialized, identifier }: LoadParams): Promise<IndexGraph> {
+  static async load({ serialized, identifier }: LoadProps): Promise<IndexGraph> {
     const index = new IndexGraph();
     await index.open();
 

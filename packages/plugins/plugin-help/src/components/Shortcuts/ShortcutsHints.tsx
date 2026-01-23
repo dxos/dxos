@@ -6,11 +6,12 @@ import React from 'react';
 
 import { type KeyBinding, Keyboard } from '@dxos/keyboard';
 import { IconButton, toLocalizedString, useTranslation } from '@dxos/react-ui';
+import { osTranslations } from '@dxos/ui-theme';
 
 import { Key } from './Key';
 
 const Shortcut = ({ binding }: { binding: KeyBinding }) => {
-  const { t } = useTranslation('os');
+  const { t } = useTranslation(osTranslations);
   return (
     <div role='none' className='flex items-center gap-2 whitespace-nowrap'>
       <Key binding={binding.shortcut} />
