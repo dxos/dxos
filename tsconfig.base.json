@@ -13,6 +13,7 @@
     "isolatedModules": true,
     "verbatimModuleSyntax": true,
     "jsx": "react",
+    "rewriteRelativeImportExtensions": true,
     "lib": ["DOM", "ESNext"],
     "module": "Preserve",
     "moduleResolution": "Bundler",
