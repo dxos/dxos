@@ -5,9 +5,8 @@
 import React from 'react';
 
 import { Button, Icon, useTranslation } from '@dxos/react-ui';
-import { Card, cardText } from '@dxos/react-ui-mosaic';
+import { Card } from '@dxos/react-ui-mosaic';
 import { type Message } from '@dxos/types';
-import { mx } from '@dxos/ui-theme';
 
 import { meta } from '../../meta';
 
@@ -24,7 +23,9 @@ export const RelatedMessages = ({ messages, onMessageClick }: RelatedMessagesPro
 
   return (
     <>
-      <h3 className={mx(cardText, 'text-xs text-description uppercase font-medium')}>{t('related messages title')}</h3>
+      <Card.Text>
+        <h3 className='text-xs text-description uppercase font-medium'>{t('related messages title')}</h3>
+      </Card.Text>
       <Card.Chrome>
         {messages.map((message) => (
           <Button

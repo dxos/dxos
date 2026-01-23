@@ -5,9 +5,8 @@
 import React from 'react';
 
 import { Avatar, Button, Icon, useTranslation } from '@dxos/react-ui';
-import { Card, cardText } from '@dxos/react-ui-mosaic';
+import { Card } from '@dxos/react-ui-mosaic';
 import { type Person } from '@dxos/types';
-import { mx } from '@dxos/ui-theme';
 
 import { meta } from '../../meta';
 
@@ -24,7 +23,9 @@ export const RelatedContacts = ({ contacts, onContactClick }: RelatedContactsPro
 
   return (
     <>
-      <h3 className={mx(cardText, 'text-xs text-description uppercase font-medium')}>{t('related contacts title')}</h3>
+      <Card.Text>
+        <h3 className='text-xs text-description uppercase font-medium'>{t('related contacts title')}</h3>
+      </Card.Text>
       <Card.Chrome>
         {contacts.map((contact) => (
           <Avatar.Root key={contact.id}>

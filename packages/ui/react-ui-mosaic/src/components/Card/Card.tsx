@@ -26,7 +26,7 @@ import { translationKey } from '../../translations';
 import { Image } from '../Image';
 
 // TODO(burdon): Use new styles.
-import { cardChrome, cardGrid, cardHeading, cardRoot, cardSection, cardSpacing, cardText } from './styles';
+import { cardChrome, cardGrid, cardRoot, cardSection, cardSpacing } from './styles';
 
 //
 // Context
@@ -137,7 +137,7 @@ const CardHeading = forwardRef<HTMLDivElement, CardHeadingProps>(
       <Root
         {...props}
         role={role}
-        className={mx(cardHeading, padding && cardSpacing, classNames, className)}
+        className={mx('grow truncate', padding && cardSpacing, classNames, className)}
         ref={forwardedRef}
       >
         {children}
@@ -257,7 +257,7 @@ const CardSection = forwardRef<HTMLDivElement, CardSectionProps>(
             {icon && <Icon icon={icon} />}
           </div>
         )}
-        <div {...props} role='none' className={mx('overflow-hidden', classNames, className)} ref={forwardedRef}>
+        <div {...props} role='none' className={mx('flex overflow-hidden', classNames, className)} ref={forwardedRef}>
           {children}
         </div>
       </div>
@@ -295,7 +295,7 @@ const CardText = forwardRef<HTMLDivElement, CardSharedProps>(
   ({ children, classNames, className, asChild, role = 'none', ...props }, forwardedRef) => {
     const Root = asChild ? Slot : 'div';
     return (
-      <Root {...props} role={role} className={mx(cardText, classNames, className)} ref={forwardedRef}>
+      <Root {...props} role={role} className={mx(cardSpacing, classNames, className)} ref={forwardedRef}>
         {children}
       </Root>
     );

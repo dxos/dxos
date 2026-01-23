@@ -5,11 +5,11 @@
 import React, { Fragment } from 'react';
 
 import { Avatar, Icon } from '@dxos/react-ui';
-import { Card, cardHeading, cardText } from '@dxos/react-ui-mosaic';
+import { Card } from '@dxos/react-ui-mosaic';
 import { type Person } from '@dxos/types';
 import { mx } from '@dxos/ui-theme';
 
-import { CardRow, CardSubjectMenu, gridRow } from '../components';
+import { CardRow, gridRow } from '../components';
 import { type CardPreviewProps } from '../types';
 
 export const PersonCard = ({ children, role, subject, db, onSelect }: CardPreviewProps<Person.Person>) => {
@@ -17,14 +17,18 @@ export const PersonCard = ({ children, role, subject, db, onSelect }: CardPrevie
 
   return (
     <Card.SurfaceRoot id={subject.id} role={role}>
+      {/* <Card.Section role='group'>
+        <div role='none' className={mx(gridRow, 'grid-rows-2')}>
+          {db ? <CardSubjectMenu subject={subject} db={db} /> : <div />}
+        </div>
+      </Card.Section> */}
       <Avatar.Root>
-        <Card.Text role='group' classNames={mx('grid gap-2 grid-cols-[1fr_min-content]')}>
-          <div role='none' className={mx(gridRow, 'grid-rows-2')}>
-            {db ? <CardSubjectMenu subject={subject} db={db} /> : <div />}
-            <Avatar.Label asChild>
-              <h2 className={mx(cardHeading, 'grow truncate')}>{fullName}</h2>
-            </Avatar.Label>
-          </div>
+        <Card.Section indent>
+          <Avatar.Label asChild>
+            <h2 className='grow truncate'>{fullName}</h2>
+          </Avatar.Label>
+        </Card.Section>
+        <Card.Section indent>
           <Avatar.Content
             imgSrc={image}
             icon='ph--user--regular'
@@ -33,7 +37,7 @@ export const PersonCard = ({ children, role, subject, db, onSelect }: CardPrevie
             hue='neutral'
             variant='square'
           />
-        </Card.Text>
+        </Card.Section>
       </Avatar.Root>
       {organization?.name && (
         <CardRow
@@ -43,7 +47,7 @@ export const PersonCard = ({ children, role, subject, db, onSelect }: CardPrevie
         />
       )}
       {emails.length > 0 && (
-        <dl className={mx(cardText, gridRow, '[&_dt]:text-subdued [&_dt]:pbs-0.5 [&_dd]:min-is-0')}>
+        <dl className={mx(gridRow, '[&_dt]:text-subdued [&_dt]:pbs-0.5 [&_dd]:min-is-0')}>
           {emails.map(({ label, value }) => (
             <Fragment key={value}>
               <dt>

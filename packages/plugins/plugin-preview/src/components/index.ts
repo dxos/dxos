@@ -3,4 +3,3 @@
 //
 
 export * from './CardComponents';
-export * from './CardSubjectMenu';

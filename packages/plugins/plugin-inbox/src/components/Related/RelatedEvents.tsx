@@ -5,9 +5,8 @@
 import React from 'react';
 
 import { Button, Icon, useTranslation } from '@dxos/react-ui';
-import { Card, cardText } from '@dxos/react-ui-mosaic';
+import { Card } from '@dxos/react-ui-mosaic';
 import { type Event } from '@dxos/types';
-import { mx } from '@dxos/ui-theme';
 
 import { meta } from '../../meta';
 
@@ -24,7 +23,9 @@ export const RelatedEvents = ({ recent, upcoming, onEventClick }: RelatedEventsP
     <>
       {recent.length > 0 ? (
         <>
-          <h3 className={mx(cardText, 'text-xs text-description uppercase font-medium')}>{t('recent events title')}</h3>
+          <Card.Text>
+            <h3 className='text-xs text-description uppercase font-medium'>{t('recent events title')}</h3>
+          </Card.Text>
           <Card.Chrome>
             {recent.map((event) => (
               <Button
@@ -42,9 +43,9 @@ export const RelatedEvents = ({ recent, upcoming, onEventClick }: RelatedEventsP
       ) : null}
       {upcoming.length > 0 ? (
         <>
-          <h3 className={mx(cardText, 'text-xs text-description uppercase font-medium')}>
-            {t('upcoming events title')}
-          </h3>
+          <Card.Text>
+            <h3 className='text-xs text-description uppercase font-medium'>{t('upcoming events title')}</h3>
+          </Card.Text>
           <Card.Chrome>
             {upcoming.map((event) => (
               <Button

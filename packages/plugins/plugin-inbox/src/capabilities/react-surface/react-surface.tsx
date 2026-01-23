@@ -109,6 +109,7 @@ export default Capability.makeModule(() =>
         component: ({ data }) => <MailboxSettings subject={data.subject} />,
       }),
 
+      // TODO(card-cleanup): Remove.
       // TODO(wittjosiah): Generalize the mess below.
       Common.createSurface({
         id: `${meta.id}/contact-related`,

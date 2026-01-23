@@ -39,7 +39,7 @@ export const TaskCard = ({ subject, role, db }: CardPreviewProps<Task.Task>) => 
             {statusOption.title}
           </span>
         )}
-        <CardSubjectMenu subject={subject} db={db} />
+        <CardSubjectMenu db={db} subject={subject} />
       </div>
     </Card.SurfaceRoot>
   );
