@@ -24,6 +24,7 @@ import {
   InvitationList,
   SpaceMemberList,
   Viewport,
+  translationKey as shellTranslationKey,
 } from '@dxos/shell/react';
 import { hexToEmoji } from '@dxos/util';
 
@@ -74,8 +75,8 @@ export const MembersContainer = ({ space, createInvitationUrl }: MembersContaine
   const inviteActions = useMemo(
     (): Record<string, ActionMenuItem> => ({
       inviteOne: {
-        label: t('invite one label', { ns: 'os' }),
-        description: t('invite one description', { ns: 'os' }),
+        label: t('invite one label', { ns: shellTranslationKey }),
+        description: t('invite one description', { ns: shellTranslationKey }),
         icon: 'ph--user-plus--regular',
         testId: 'membersContainer.inviteOne',
         onClick: async () => {
@@ -94,8 +95,8 @@ export const MembersContainer = ({ space, createInvitationUrl }: MembersContaine
         },
       },
       inviteMany: {
-        label: t('invite many label', { ns: 'os' }),
-        description: t('invite many description', { ns: 'os' }),
+        label: t('invite many label', { ns: shellTranslationKey }),
+        description: t('invite many description', { ns: shellTranslationKey }),
         icon: 'ph--users-three--regular',
         testId: 'membersContainer.inviteMany',
         onClick: async () => {
@@ -222,7 +223,7 @@ const InvitationSection = ({
 };
 
 const InvitationQR = ({ id, url, onCancel }: { id: string; url: string; onCancel?: () => void }) => {
-  const { t } = useTranslation('@dxos/os');
+  const { t } = useTranslation(shellTranslationKey);
   const qrLabel = useId('members-container__qr-code');
   const emoji = hexToEmoji(id);
   return (
@@ -257,7 +258,7 @@ const InvitationQR = ({ id, url, onCancel }: { id: string; url: string; onCancel
 };
 
 const InvitationAuthCode = ({ id, code, onCancel }: { id: string; code: string; onCancel?: () => void }) => {
-  const { t } = useTranslation('@dxos/os');
+  const { t } = useTranslation(shellTranslationKey);
   const emoji = hexToEmoji(id);
 
   return (

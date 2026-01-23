@@ -10,15 +10,35 @@
   "type": "module",
   "exports": {
     ".": {
-      "source": "./src/index.ts",
       "types": "./dist/types/src/index.d.ts",
       "browser": "./dist/lib/browser/index.mjs",
       "node": "./dist/lib/node-esm/index.mjs"
     },
+    "./SqliteClient": {
+      "types": "./dist/types/src/SqliteClient.d.ts",
+      "browser": "./dist/lib/browser/SqliteClient.mjs",
+      "node": "./dist/lib/node-esm/SqliteClient.mjs"
+    },
+    "./OpfsWorker": {
+      "types": "./dist/types/src/OpfsWorker.d.ts",
+      "browser": "./dist/lib/browser/OpfsWorker.mjs",
+      "node": "./dist/lib/node-esm/OpfsWorker.mjs"
+    },
+    "./SqliteMigrator": {
+      "types": "./dist/types/src/SqliteMigrator.d.ts",
+      "browser": "./dist/lib/browser/SqliteMigrator.mjs",
+      "node": "./dist/lib/node-esm/SqliteMigrator.mjs"
+    },
     "./platform": {
       "types": "./dist/types/src/platform/browser.d.ts",
       "browser": "./dist/lib/browser/platform/browser.mjs",
+      "bun": "./dist/lib/node-esm/platform/bun.mjs",
       "node": "./dist/lib/node-esm/platform/node.mjs"
+    },
+    "./SqlExport": {
+      "types": "./dist/types/src/SqlExport.d.ts",
+      "browser": "./dist/lib/browser/SqlExport.mjs",
+      "node": "./dist/lib/node-esm/SqlExport.mjs"
     }
   },
   "files": [
@@ -30,11 +50,14 @@
     "@effect/experimental": "catalog:",
     "@effect/platform": "catalog:",
     "@effect/sql": "catalog:",
+    "@effect/sql-sqlite-bun": "catalog:",
     "@effect/sql-sqlite-node": "catalog:",
-    "@effect/sql-sqlite-wasm": "catalog:",
     "effect": "catalog:"
   },
-  "devDependencies": {},
+  "devDependencies": {
+    "@effect/sql-sqlite-wasm": "catalog:",
+    "@effect/wa-sqlite": "catalog:"
+  },
   "publishConfig": {
     "access": "public"
   },

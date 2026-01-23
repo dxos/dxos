@@ -14,15 +14,15 @@ import { FileCapabilities, type FilesSettingsProps } from '../../types';
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     // Get context for lazy capability access in callbacks.
-    const context = yield* Capability.PluginContextService;
+    const capabilities = yield* Capability.Service;
 
     const extensionProvider = () =>
       listener({
         onChange: ({ id, text }) => {
-          const settings = context
-            .getCapability(Common.Capability.SettingsStore)
+          const settings = capabilities
+            .get(Common.Capability.SettingsStore)
             .getStore<FilesSettingsProps>(meta.id)!.value;
-          const state = context.getCapability(FileCapabilities.State);
+          const state = capabilities.get(FileCapabilities.State);
           if (settings.openLocalFiles && state.current && state.current.id === id && state.current.text !== text) {
             state.current.text = text.toString();
             state.current.modified = true;

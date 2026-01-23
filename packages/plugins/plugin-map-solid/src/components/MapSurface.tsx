@@ -25,7 +25,7 @@ const MapSurface = (props: MapSurfaceProps) => {
   noShadowDOM();
 
   const map = props.data?.subject;
-  const viewRef = useObject(map, 'view');
+  const [viewRef] = useObject(map, 'view');
   const view = useRef(viewRef);
   const typename = createMemo(() => {
     const v = view();

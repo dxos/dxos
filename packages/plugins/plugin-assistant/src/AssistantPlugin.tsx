@@ -9,6 +9,7 @@ import { ResearchGraph } from '@dxos/assistant-toolkit';
 import { Blueprint, Prompt } from '@dxos/blueprints';
 import { Sequence } from '@dxos/conductor';
 import { Obj, Type } from '@dxos/echo';
+import { Operation } from '@dxos/operation';
 import { ClientEvents } from '@dxos/plugin-client';
 import { SpaceCapabilities, SpaceEvents } from '@dxos/plugin-space';
 import { type CreateObject } from '@dxos/plugin-space/types';
@@ -94,13 +95,12 @@ export const AssistantPlugin = Plugin.define(meta).pipe(
   Plugin.addModule({
     id: 'on-space-created',
     activatesOn: SpaceEvents.SpaceCreated,
-    activate: Effect.fnUntraced(function* () {
-      const context = yield* Capability.PluginContextService;
-      return Capability.contributes(SpaceCapabilities.OnCreateSpace, (params) => {
-        const { invoke } = context.getCapability(Common.Capability.OperationInvoker);
-        return invoke(AssistantOperation.OnCreateSpace, params);
-      });
-    }),
+    activate: () =>
+      Effect.succeed(
+        Capability.contributes(SpaceCapabilities.OnCreateSpace, (params) =>
+          Operation.invoke(AssistantOperation.OnCreateSpace, params),
+        ),
+      ),
   }),
   Plugin.addModule({
     activatesOn: ClientEvents.SpacesReady,

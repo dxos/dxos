@@ -8,7 +8,7 @@ import { beforeEach, describe, expect, it } from 'vitest';
 import { Filter, Query, Type } from '@dxos/echo';
 import { createEchoSchema } from '@dxos/echo/testing';
 import { live } from '@dxos/live-object';
-import { ProjectionModel, View } from '@dxos/schema';
+import { ProjectionModel, View, createDirectChangeCallback } from '@dxos/schema';
 
 import { Table } from '../types';
 
@@ -104,6 +104,10 @@ const createTableModel = (props: Partial<TableModelProps> = {}): TableModel => {
     jsonSchema: schema.jsonSchema,
   });
   const object = Table.make({ view });
-  const projection = new ProjectionModel(schema.jsonSchema, view.projection);
+  const projection = new ProjectionModel(
+    schema.jsonSchema,
+    view.projection,
+    createDirectChangeCallback(view.projection, schema.jsonSchema),
+  );
   return new TableModel({ object, projection, ...props });
 };

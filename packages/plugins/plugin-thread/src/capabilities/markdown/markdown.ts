@@ -17,17 +17,17 @@ import { ThreadCapabilities } from '../../types';
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     // Get context for lazy capability access in callbacks.
-    const context = yield* Capability.PluginContextService;
+    const capabilities = yield* Capability.Service;
 
     return Capability.contributes(MarkdownCapabilities.Extensions, [
       ({ document: doc }) => {
-        const { invokePromise } = context.getCapability(Common.Capability.OperationInvoker);
-        const { state } = context.getCapability(ThreadCapabilities.MutableState);
+        const { invokePromise } = capabilities.get(Common.Capability.OperationInvoker);
+        const { state } = capabilities.get(ThreadCapabilities.MutableState);
         return threads(state, doc, invokePromise);
       },
       ({ document: doc }) => {
         if (!doc) return [];
-        const { state } = context.getCapability(ThreadCapabilities.MutableState);
+        const { state } = capabilities.get(ThreadCapabilities.MutableState);
 
         return EditorView.updateListener.of((update) => {
           if (update.docChanged || update.selectionSet) {
@@ -37,7 +37,7 @@ export default Capability.makeModule(
       },
       ({ document: doc }) => {
         if (!doc) return [];
-        const { invokePromise } = context.getCapability(Common.Capability.OperationInvoker);
+        const { invokePromise } = capabilities.get(Common.Capability.OperationInvoker);
         const id = Obj.getDXN(doc).toString();
 
         return EditorView.updateListener.of((update) => {

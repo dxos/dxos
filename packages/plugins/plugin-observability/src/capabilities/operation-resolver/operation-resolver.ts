@@ -5,7 +5,6 @@
 import * as Effect from 'effect/Effect';
 
 import { Capability, Common } from '@dxos/app-framework';
-import { runAndForwardErrors } from '@dxos/effect';
 import { getTelemetryIdentity, storeObservabilityDisabled } from '@dxos/observability';
 import { OperationResolver } from '@dxos/operation';
 
@@ -16,7 +15,6 @@ import { ClientCapability, ObservabilityCapabilities, ObservabilityOperation } f
 export default Capability.makeModule(
   Effect.fnUntraced(function* (props?: { namespace: string }) {
     const { namespace } = props!;
-    const context = yield* Capability.PluginContextService;
 
     return Capability.contributes(Common.Capability.OperationResolver, [
       //
@@ -24,25 +22,23 @@ export default Capability.makeModule(
       //
       OperationResolver.make({
         operation: ObservabilityOperation.Toggle,
-        handler: (input) =>
-          Effect.promise(async () => {
-            const client = context.getCapability(ClientCapability);
-            const observability = context.getCapability(ObservabilityCapabilities.Observability);
-            const settings = context
-              .getCapability(Common.Capability.SettingsStore)
-              .getStore<ObservabilitySettingsProps>(meta.id)!.value;
-            settings.enabled = input.state ?? !settings.enabled;
-            observability.track({
-              ...getTelemetryIdentity(client),
-              action: 'observability.toggle',
-              properties: {
-                enabled: settings.enabled,
-              },
-            });
-            observability.setMode(settings.enabled ? 'basic' : 'disabled');
-            await storeObservabilityDisabled(namespace, !settings.enabled);
-            return settings.enabled;
-          }),
+        handler: Effect.fnUntraced(function* (input) {
+          const client = yield* Capability.get(ClientCapability);
+          const observability = yield* Capability.get(ObservabilityCapabilities.Observability);
+          const settingsStore = yield* Capability.get(Common.Capability.SettingsStore);
+          const settings = settingsStore.getStore<ObservabilitySettingsProps>(meta.id)!.value;
+          settings.enabled = input.state ?? !settings.enabled;
+          observability.track({
+            ...getTelemetryIdentity(client),
+            action: 'observability.toggle',
+            properties: {
+              enabled: settings.enabled,
+            },
+          });
+          observability.setMode(settings.enabled ? 'basic' : 'disabled');
+          yield* Effect.promise(() => storeObservabilityDisabled(namespace, !settings.enabled));
+          return settings.enabled;
+        }),
       }),
 
       //
@@ -50,21 +46,18 @@ export default Capability.makeModule(
       //
       OperationResolver.make({
         operation: ObservabilityOperation.SendEvent,
-        handler: (input) =>
-          Effect.gen(function* () {
-            const client = context.getCapability(ClientCapability);
-            const properties = input.properties ?? {};
+        handler: Effect.fnUntraced(function* (input) {
+          // NOTE: This is to ensure that events fired before observability is ready are still sent.
+          const observability = yield* Capability.waitFor(ObservabilityCapabilities.Observability);
+          const client = yield* Capability.get(ClientCapability);
+          const properties = input.properties ?? {};
 
-            // NOTE: This is to ensure that events fired before observability is ready are still sent.
-            void Effect.gen(function* () {
-              const observability = yield* context.waitForCapability(ObservabilityCapabilities.Observability);
-              observability.track({
-                ...getTelemetryIdentity(client),
-                action: input.name,
-                properties,
-              });
-            }).pipe(runAndForwardErrors);
-          }),
+          observability.track({
+            ...getTelemetryIdentity(client),
+            action: input.name,
+            properties,
+          });
+        }),
       }),
 
       //
@@ -72,11 +65,10 @@ export default Capability.makeModule(
       //
       OperationResolver.make({
         operation: ObservabilityOperation.CaptureUserFeedback,
-        handler: (input) =>
-          Effect.sync(() => {
-            const observability = context.getCapability(ObservabilityCapabilities.Observability);
-            observability.captureUserFeedback(input.message);
-          }),
+        handler: Effect.fnUntraced(function* (input) {
+          const observability = yield* Capability.get(ObservabilityCapabilities.Observability);
+          observability.captureUserFeedback(input.message);
+        }),
       }),
     ]);
   }),

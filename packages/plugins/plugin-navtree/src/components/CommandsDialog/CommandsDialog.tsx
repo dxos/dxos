@@ -7,7 +7,7 @@ import React, { forwardRef, useMemo, useState } from 'react';
 import { Common } from '@dxos/app-framework';
 import { useAppGraph, useOperationInvoker } from '@dxos/app-framework/react';
 import { Keyboard, keySymbols } from '@dxos/keyboard';
-import { Graph, Node } from '@dxos/plugin-graph';
+import { Graph, Node, useActionRunner } from '@dxos/plugin-graph';
 import { useActions } from '@dxos/plugin-graph';
 import { Button, Dialog, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import {
@@ -17,6 +17,7 @@ import {
   cardDialogSearchListRoot,
 } from '@dxos/react-ui-mosaic';
 import { SearchList, useSearchListResults } from '@dxos/react-ui-searchlist';
+import { osTranslations } from '@dxos/ui-theme';
 import { getHostPlatform } from '@dxos/util';
 
 import { KEY_BINDING, meta } from '../../meta';
@@ -30,6 +31,7 @@ export const CommandsDialogContent = forwardRef<HTMLDivElement, CommandsDialogCo
   ({ selected: initial }, forwardedRef) => {
     const { t } = useTranslation(meta.id);
     const { invokeSync } = useOperationInvoker();
+    const runAction = useActionRunner();
     const { graph } = useAppGraph();
     const [selected, setSelected] = useState<string | undefined>(initial);
 
@@ -108,7 +110,9 @@ export const CommandsDialogContent = forwardRef<HTMLDivElement, CommandsDialogCo
                       invokeSync(Common.LayoutOperation.UpdateDialog, { state: false });
                       setTimeout(() => {
                         const node = Graph.getConnections(graph, group?.id ?? action.id, 'inbound')[0];
-                        void (node && Node.isAction(action) && action.data({ parent: node, caller: KEY_BINDING }));
+                        if (node && Node.isAction(action)) {
+                          void runAction(action, { parent: node, caller: KEY_BINDING });
+                        }
                       });
                     }}
                     classNames='flex items-center gap-2'
@@ -124,7 +128,7 @@ export const CommandsDialogContent = forwardRef<HTMLDivElement, CommandsDialogCo
         </SearchList.Root>
         <div role='none' className='pli-cardSpacingInline pbe-cardSpacingBlock'>
           <Dialog.Close asChild>
-            <Button classNames='is-full'>{t('close label', { ns: 'os' })}</Button>
+            <Button classNames='is-full'>{t('close label', { ns: osTranslations })}</Button>
           </Dialog.Close>
         </div>
       </Dialog.Content>

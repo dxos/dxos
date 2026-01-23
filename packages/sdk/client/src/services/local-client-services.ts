@@ -4,7 +4,6 @@
 
 import * as Reactivity from '@effect/experimental/Reactivity';
 import type * as SqlClient from '@effect/sql/SqlClient';
-import * as SqliteClient from '@effect/sql-sqlite-wasm/SqliteClient';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as ManagedRuntime from 'effect/ManagedRuntime';
@@ -24,6 +23,7 @@ import { type SignalManager } from '@dxos/messaging';
 import { type SwarmNetworkManagerOptions, type TransportFactory, createIceProvider } from '@dxos/network-manager';
 import { type ServiceBundle } from '@dxos/rpc';
 import { layerMemory } from '@dxos/sql-sqlite/platform';
+import * as SqliteClient from '@dxos/sql-sqlite/SqliteClient';
 import { trace } from '@dxos/tracing';
 import { isBun } from '@dxos/util';
 

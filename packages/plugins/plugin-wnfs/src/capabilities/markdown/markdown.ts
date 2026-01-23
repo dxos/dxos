@@ -14,12 +14,12 @@ import { WnfsCapabilities } from '../../types';
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     // Get context for lazy capability access in callbacks.
-    const context = yield* Capability.PluginContextService;
+    const capabilities = yield* Capability.Service;
 
     return Capability.contributes(MarkdownCapabilities.Extensions, [
       ({ document }: { document?: any }) => {
-        const blockstore = context.getCapability(WnfsCapabilities.Blockstore);
-        const instances = context.getCapability(WnfsCapabilities.Instances);
+        const blockstore = capabilities.get(WnfsCapabilities.Blockstore);
+        const instances = capabilities.get(WnfsCapabilities.Instances);
 
         if (document) {
           const space = getSpace(document);

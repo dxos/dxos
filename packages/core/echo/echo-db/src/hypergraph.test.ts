@@ -34,7 +34,9 @@ describe('HyperGraph', () => {
       }),
     );
 
-    obj1.link = Ref.make(obj2);
+    Obj.change(obj1, (o) => {
+      o.link = Ref.make(obj2);
+    });
     expect(obj1.link.target?.title).to.eq('B');
 
     await Promise.all([db1.flush(), db2.flush()]);
@@ -67,7 +69,9 @@ describe('HyperGraph', () => {
         title: 'B',
       }),
     );
-    obj1.link = Ref.make(obj2);
+    Obj.change(obj1, (o) => {
+      o.link = Ref.make(obj2);
+    });
     await Promise.all([db1.flush(), db2.flush()]);
     expect(obj1.link.target?.title).to.eq('B');
 

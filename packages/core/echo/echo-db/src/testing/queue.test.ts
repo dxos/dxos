@@ -2,13 +2,17 @@
 // Copyright 2025 DXOS.org
 //
 
-import { afterEach, beforeEach, describe, expect, test } from 'vitest';
+import * as Reactivity from '@effect/experimental/Reactivity';
+import * as Layer from 'effect/Layer';
+import * as ManagedRuntime from 'effect/ManagedRuntime';
+import { afterEach, beforeEach, describe, expect, onTestFinished, test } from 'vitest';
 
 import { Event } from '@dxos/async';
 import { Filter, Obj, Query, type Ref, Relation, Type } from '@dxos/echo';
 import { TestSchema } from '@dxos/echo/testing';
 import { DXN, SpaceId } from '@dxos/keys';
 import { KEY_QUEUE_POSITION } from '@dxos/protocols';
+import { layerMemory } from '@dxos/sql-sqlite/platform';
 
 import { type Queue } from '../queue';
 
@@ -79,7 +83,7 @@ describe('queues', () => {
   });
 
   test('objects in queues have positions', async () => {
-    await using peer = await builder.createPeer({ types: [TestSchema.Person] });
+    await using peer = await builder.createPeer({ types: [TestSchema.Person], assignQueuePositions: true });
     const spaceId = SpaceId.random();
     const queues = peer.client.constructQueueFactory(spaceId);
     const queue = queues.create();
@@ -91,16 +95,18 @@ describe('queues', () => {
     ]);
 
     {
-      const [obj1, obj2] = await queue.queryObjects();
-      expect(Obj.getKeys(obj1, KEY_QUEUE_POSITION).at(0)?.id).toEqual('0');
-      expect(Obj.getKeys(obj2, KEY_QUEUE_POSITION).at(0)?.id).toEqual('1');
+      const objects = await queue.query(Filter.everything()).run();
+      expect(objects).toHaveLength(2);
+      expect(Obj.getKeys(objects[0], KEY_QUEUE_POSITION).at(0)?.id).toEqual('0');
+      expect(Obj.getKeys(objects[1], KEY_QUEUE_POSITION).at(0)?.id).toEqual('1');
     }
 
     {
       await queue.refresh();
-      const [obj1, obj2] = queue.objects;
-      expect(Obj.getKeys(obj1, KEY_QUEUE_POSITION).at(0)?.id).toEqual('0');
-      expect(Obj.getKeys(obj2, KEY_QUEUE_POSITION).at(0)?.id).toEqual('1');
+      const objects = queue.objects;
+      expect(objects).toHaveLength(2);
+      expect(Obj.getKeys(objects[0], KEY_QUEUE_POSITION).at(0)?.id).toEqual('0');
+      expect(Obj.getKeys(objects[1], KEY_QUEUE_POSITION).at(0)?.id).toEqual('1');
     }
   });
 
@@ -297,6 +303,37 @@ describe('queues', () => {
       expect(query.results).toHaveLength(2);
       expect(query.results.map((obj) => obj.name).sort()).toEqual(['jane', 'john']);
       sub();
+    });
+  });
+
+  describe('Durability', () => {
+    test('queue objects survive reload', async ({ expect }) => {
+      const runtime = ManagedRuntime.make(Layer.merge(layerMemory, Reactivity.layer).pipe(Layer.orDie));
+      onTestFinished(() => runtime.dispose());
+
+      await using peer = await builder.createPeer({
+        types: [TestSchema.Person],
+        runtime,
+      });
+      const spaceId = SpaceId.random();
+      const queues = peer.client.constructQueueFactory(spaceId);
+      const queue = queues.create();
+
+      await queue.append([
+        Obj.make(TestSchema.Person, {
+          name: 'john',
+        }),
+      ]);
+
+      await peer.reload();
+
+      const queues2 = peer.client.constructQueueFactory(spaceId);
+      const objects2 = await queues2.get(queue.dxn).query(Filter.everything()).run();
+
+      expect(objects2).toHaveLength(1);
+      expect(objects2[0].name).toEqual('john');
+
+      await peer.close();
     });
   });
 });

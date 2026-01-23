@@ -149,7 +149,9 @@ const runAction = async (client: Client, action: Action) => {
     case Action.RENAME_SPACE: {
       const space = getRandomSpace(client);
       if (space) {
-        space.properties.name = faker.commerce.productName();
+        Obj.change(space.properties, (p) => {
+          p.name = faker.commerce.productName();
+        });
       }
       break;
     }

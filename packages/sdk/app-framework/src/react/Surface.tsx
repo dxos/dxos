@@ -23,7 +23,7 @@ import { useDefaultValue } from '@dxos/react-hooks';
 import { byPosition } from '@dxos/util';
 
 import * as Common from '../common';
-import { type Capability } from '../core';
+import { type CapabilityManager } from '../core';
 
 import { ErrorBoundary } from './ErrorBoundary';
 import { SurfaceInfo } from './SurfaceInfo';
@@ -254,10 +254,10 @@ export const useSurfaces = () => {
  * @returns `true` if there is a contributed surface which matches the specified role & data, `false` otherwise.
  */
 export const isSurfaceAvailable = (
-  context: Capability.PluginContext,
+  capabilityManager: CapabilityManager.CapabilityManager,
   { role, data }: Pick<Common.SurfaceProps, 'role' | 'data'>,
 ) => {
-  const surfaces = context.getCapabilities(Common.Capability.ReactSurface);
+  const surfaces = capabilityManager.getAll(Common.Capability.ReactSurface);
   const candidates = findCandidates(surfaces.flat(), { role, data });
   return candidates.length > 0;
 };

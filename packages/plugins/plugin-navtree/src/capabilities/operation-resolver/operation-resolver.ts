@@ -13,28 +13,25 @@ import { NavTreeCapabilities } from '../../types';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    const context = yield* Capability.PluginContextService;
-
     return Capability.contributes(Common.Capability.OperationResolver, [
       OperationResolver.make({
         operation: Common.LayoutOperation.Expose,
-        handler: ({ subject }) =>
-          Effect.promise(async () => {
-            const { graph } = context.getCapability(Common.Capability.AppGraph);
-            const { getItem, setItem } = context.getCapability(NavTreeCapabilities.State);
-            try {
-              const path = await Graph.waitForPath(graph, { target: subject }, { timeout: 1_000 });
-              [...Array(path.length)].forEach((_, index) => {
-                const subpath = path.slice(0, index);
-                const value = getItem(subpath);
-                if (!value.open) {
-                  setItem(subpath, 'open', true);
-                }
-              });
-            } catch {
-              log('Path to node not found', { subject });
-            }
-          }),
+        handler: Effect.fnUntraced(function* ({ subject }) {
+          const { graph } = yield* Capability.get(Common.Capability.AppGraph);
+          const { getItem, setItem } = yield* Capability.get(NavTreeCapabilities.State);
+          try {
+            const path = yield* Effect.promise(() => Graph.waitForPath(graph, { target: subject }, { timeout: 1_000 }));
+            [...Array(path.length)].forEach((_, index) => {
+              const subpath = path.slice(0, index);
+              const value = getItem(subpath);
+              if (!value.open) {
+                setItem(subpath, 'open', true);
+              }
+            });
+          } catch {
+            log('Path to node not found', { subject });
+          }
+        }),
       }),
     ]);
   }),
