@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
 import { ArtifactId } from '@dxos/assistant';
-import { Database } from '@dxos/echo';
+import { Database, Obj } from '@dxos/echo';
 import { defineFunction } from '@dxos/functions';
 
 import { Chess } from '../../types';
@@ -40,7 +40,10 @@ export default defineFunction({
     }
 
     chess.move(move, { strict: false });
-    object.pgn = chess.pgn();
-    return { pgn: object.pgn };
+    const pgn = chess.pgn();
+    Obj.change(object, (o) => {
+      o.pgn = pgn;
+    });
+    return { pgn };
   }),
 });

@@ -8,7 +8,6 @@ import * as Schema from 'effect/Schema';
 import * as SchemaAST from 'effect/SchemaAST';
 
 import { raise } from '@dxos/debug';
-import { Reference } from '@dxos/echo-protocol';
 import { type JsonPath, getField } from '@dxos/effect';
 import { assertArgument, invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
@@ -69,44 +68,12 @@ export const getSchemaDXN = (schema: Schema.Schema.All): DXN | undefined => {
 };
 
 /**
- * Returns a reference that will be used to point to a schema.
- * @deprecated Use {@link getSchemaDXN} instead.
- */
-export const getTypeReference = (schema: Schema.Schema.All | undefined): Reference | undefined => {
-  if (!schema) {
-    return undefined;
-  }
-
-  const schemaDXN = getSchemaDXN(schema);
-  if (!schemaDXN) {
-    return undefined;
-  }
-  return Reference.fromDXN(schemaDXN);
-};
-
-/**
- * Returns a reference that will be used to point to a schema.
- * @throws If it is not possible to reference this schema.
- *
- * @deprecated Use {@link getSchemaDXN} instead.
- */
-export const requireTypeReference = (schema: Schema.Schema.AnyNoContext): Reference => {
-  const typeReference = getTypeReference(schema);
-  if (typeReference == null) {
-    // TODO(burdon): Catalog user-facing errors (this is too verbose).
-    throw new Error('Schema must be defined via TypedObject.');
-  }
-
-  return typeReference;
-};
-
-/**
- * @param input schema or a typename string
- * @return type DXN
+ * @param input schema or a typename string.
+ * @return type DXN.
  */
 export const getTypeDXNFromSpecifier = (input: Schema.Schema.All | string): DXN => {
   if (Schema.isSchema(input)) {
-    return getTypeReference(input)?.toDXN() ?? raise(new TypeError('Schema has no DXN'));
+    return getSchemaDXN(input) ?? raise(new TypeError('Schema has no DXN'));
   } else {
     assertArgument(typeof input === 'string', 'input');
     assertArgument(!input.startsWith('dxn:'), 'input');

@@ -7,7 +7,7 @@ import type * as Schema from 'effect/Schema';
 import React, { forwardRef, useCallback, useEffect, useRef, useState } from 'react';
 
 import { Surface } from '@dxos/app-framework/react';
-import { type Obj, Ref } from '@dxos/echo';
+import { Obj, Ref } from '@dxos/echo';
 import { PublicKey } from '@dxos/react-client';
 import { type SpaceMember } from '@dxos/react-client/echo';
 import { type Identity, useIdentity } from '@dxos/react-client/halo';
@@ -55,9 +55,22 @@ export const MessageContainer = ({
   const handleEdit = useCallback(() => setEditing((editing) => !editing), []);
   const handleDelete = useCallback(() => onDelete?.(message.id), [message, onDelete]);
   const handleAcceptProposal = useCallback(() => onAcceptProposal?.(message.id), [message, onAcceptProposal]);
-  const textBlock = message.blocks.find((block) => block._tag === 'text');
+  const textBlockIndex = message.blocks.findIndex((block) => block._tag === 'text');
+  const textBlock = textBlockIndex !== -1 ? (message.blocks[textBlockIndex] as ContentBlock.Text) : undefined;
   const proposalBlock = message.blocks.find((block) => block._tag === 'proposal');
   const references = message.blocks.filter((block) => block._tag === 'reference').map((block) => block.reference);
+
+  const handleTextBlockChange = useCallback(
+    (newText: string) => {
+      Obj.change(message, (m) => {
+        const targetBlock = m.blocks[textBlockIndex];
+        if (targetBlock && targetBlock._tag === 'text') {
+          targetBlock.text = newText;
+        }
+      });
+    },
+    [message, textBlockIndex],
+  );
 
   useOnEditAnalytics(message, textBlock, !!editing);
 
@@ -101,7 +114,9 @@ export const MessageContainer = ({
           )}
         </div>
       </MessageHeading>
-      {textBlock && <TextboxBlock block={textBlock} isAuthor={userIsAuthor} editing={editing} />}
+      {textBlock && (
+        <TextboxBlock block={textBlock} isAuthor={userIsAuthor} editing={editing} onSave={handleTextBlockChange} />
+      )}
       {proposalBlock && <ProposalBlock block={proposalBlock} />}
       {Ref.Array.targets(references).map((reference, index) => (
         <MessagePart key={index} part={reference as Obj.Any} />
@@ -118,11 +133,13 @@ const TextboxBlock = ({
   block,
   isAuthor,
   editing,
+  onSave,
 }: {
   block: ContentBlock.Text;
   editing?: boolean;
   isAuthor?: boolean;
   identity?: Identity;
+  onSave?: (newText: string) => void;
 }) => {
   const { themeMode } = useThemeContext();
   const inMemoryContentRef = useRef(block.text);
@@ -132,8 +149,8 @@ const TextboxBlock = ({
   }, []);
 
   const saveDocumentChange = useCallback(() => {
-    block.text = inMemoryContentRef.current;
-  }, [block]);
+    onSave?.(inMemoryContentRef.current);
+  }, [onSave]);
 
   useOnTransition(editing, true, false, saveDocumentChange);
 

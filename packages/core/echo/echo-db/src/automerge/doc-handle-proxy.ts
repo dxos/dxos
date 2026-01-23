@@ -3,11 +3,12 @@
 //
 
 import { next as A, type Doc } from '@automerge/automerge';
-import { type DocHandleOptions, type DocumentId, stringifyAutomergeUrl } from '@automerge/automerge-repo';
+import { type AutomergeUrl, type DocumentId, stringifyAutomergeUrl } from '@automerge/automerge-repo';
 import { EventEmitter } from 'eventemitter3';
 
 import { Trigger, TriggerState } from '@dxos/async';
 import { invariant } from '@dxos/invariant';
+import { PublicKey } from '@dxos/keys';
 
 import { type IDocHandle } from '../core-db';
 
@@ -21,6 +22,12 @@ export type ChangeEvent<T> = {
 export type ClientDocHandleEvents<T> = {
   change: ChangeEvent<T>;
   delete: { handle: DocHandleProxy<T> };
+};
+
+export type DocHandleProxyOptions<T> = {
+  initialValue?: T;
+  documentId?: DocumentId;
+  onDelete: () => void;
 };
 
 /**
@@ -38,32 +45,48 @@ export class DocHandleProxy<T> extends EventEmitter<ClientDocHandleEvents<T>> im
    * If sync is successful, they will be moved to `_lastSentHeads`.
    */
   private _currentlySendingHeads: A.Heads = [];
+  /**
+   * Identifier for internal usage.
+   * @internal
+   */
+  readonly _internalId = PublicKey.random().toHex();
+  /**
+   * Present if document is loading from a storage.
+   * Undefined if document is new and still is being created.
+   */
+  private _documentId?: DocumentId;
+  private readonly _onDelete: () => void;
 
-  constructor(
-    private readonly _documentId: DocumentId,
-    options: DocHandleOptions<T> = {},
-    private readonly _callbacks?: {
-      onDelete: () => void;
-    },
-  ) {
+  constructor({ documentId, initialValue, onDelete }: DocHandleProxyOptions<T>) {
     super();
-    if (options.isNew) {
+    this._documentId = documentId;
+    this._onDelete = onDelete;
+    if (initialValue) {
       // T should really be constrained to extend `Record<string, unknown>` (an automerge doc can't be
       // e.g. a primitive, an array, etc. - it must be an object). But adding that constraint creates
       // a bunch of other problems elsewhere so for now we'll just cast it here to make Automerge happy.
-      this._doc = A.from(options.initialValue as Record<string, unknown>) as T;
+      this._doc = A.from(initialValue as Record<string, unknown>) as T;
       this._doc = A.emptyChange<T>(this._doc);
-      this._ready.wake();
     } else {
       this._doc = A.init<T>();
     }
   }
 
-  get url() {
-    return stringifyAutomergeUrl(this._documentId);
+  /**
+   * Returns the document URL, or undefined if documentId is not yet assigned.
+   * For new documents, this is undefined until the document is created on the host.
+   * For loaded documents, this is always defined.
+   */
+  get url(): AutomergeUrl | undefined {
+    return this._documentId ? stringifyAutomergeUrl(this._documentId) : undefined;
   }
 
-  get documentId(): DocumentId {
+  /**
+   * Returns the document ID, or undefined if not yet assigned.
+   * For new documents, this is undefined until the document is created on the host.
+   * For loaded documents, this is always defined.
+   */
+  get documentId(): DocumentId | undefined {
     return this._documentId;
   }
 
@@ -131,9 +154,23 @@ export class DocHandleProxy<T> extends EventEmitter<ClientDocHandleEvents<T>> im
   }
 
   delete(): void {
-    this._callbacks?.onDelete();
+    this._onDelete();
     this.emit('delete', { handle: this });
     this._doc = undefined;
+  }
+
+  /**
+   * @internal
+   */
+  _setDocumentId(documentId: DocumentId): void {
+    this._documentId = documentId;
+  }
+
+  /**
+   * @internal
+   */
+  _wakeReady(): void {
+    this._ready.wake();
   }
 
   /**

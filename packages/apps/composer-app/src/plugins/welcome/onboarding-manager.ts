@@ -12,6 +12,7 @@ import { HelpOperation } from '@dxos/plugin-help/types';
 import { SpaceOperation } from '@dxos/plugin-space/types';
 import { type Client } from '@dxos/react-client';
 import { type Credential, DeviceType, type Identity } from '@dxos/react-client/halo';
+import { osTranslations } from '@dxos/ui-theme';
 
 import { queryAllCredentials, removeQueryParamByValue } from '../../util';
 
@@ -155,7 +156,7 @@ export class OnboardingManager {
       description: ['passkey setup toast description', { ns: meta.id }],
       duration: Infinity,
       icon: 'ph--key--regular',
-      closeLabel: ['close label', { ns: 'os' }],
+      closeLabel: ['close label', { ns: osTranslations }],
       actionLabel: ['passkey setup toast action label', { ns: meta.id }],
       actionAlt: ['passkey setup toast action alt', { ns: meta.id }],
       onAction: async () => {

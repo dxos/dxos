@@ -45,7 +45,7 @@ import { invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
 import { type Live } from '@dxos/live-object';
 
-import { FieldSchema, ProjectionModel } from '../projection';
+import { FieldSchema, ProjectionModel, createDirectChangeCallback } from '../projection';
 import { createDefaultSchema, getSchema } from '../util';
 
 export const Projection = Schema.Struct({
@@ -129,7 +129,11 @@ export const make = ({
     },
   });
 
-  const projection = new ProjectionModel(jsonSchema, view.projection);
+  const projection = new ProjectionModel(
+    jsonSchema,
+    view.projection,
+    createDirectChangeCallback(view.projection, jsonSchema),
+  );
   projection.normalizeView();
   const schema = toEffectSchema(jsonSchema);
   const properties = getProperties(schema.ast);
@@ -194,7 +198,11 @@ export const makeWithReferences = async ({
     pivotFieldName,
   });
 
-  const projection = new ProjectionModel(jsonSchema, view.projection);
+  const projection = new ProjectionModel(
+    jsonSchema,
+    view.projection,
+    createDirectChangeCallback(view.projection, jsonSchema),
+  );
   const schema = toEffectSchema(jsonSchema);
   const properties = getProperties(schema.ast);
   for (const property of properties) {

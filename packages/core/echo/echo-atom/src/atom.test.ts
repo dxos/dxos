@@ -54,7 +54,7 @@ describe('Echo Atom - Basic Functionality', () => {
     expect(registry.get(emailAtom)).toBe('test@example.com');
   });
 
-  test('atom updates when object is mutated directly', () => {
+  test('atom updates when object is mutated via Obj.change', () => {
     const obj = createObject(
       Obj.make(TestSchema.Person, { name: 'Test', username: 'test', email: 'test@example.com' }),
     );
@@ -71,8 +71,10 @@ describe('Echo Atom - Basic Functionality', () => {
       { immediate: true },
     );
 
-    // Mutate object directly.
-    obj.name = 'Updated';
+    // Mutate object via Obj.change.
+    Obj.change(obj, (o) => {
+      o.name = 'Updated';
+    });
 
     // Subscription should have fired: immediate + update.
     expect(updateCount).toBe(2);
@@ -82,7 +84,7 @@ describe('Echo Atom - Basic Functionality', () => {
     expect(obj.name).toBe('Updated');
   });
 
-  test('property atom supports updater pattern via direct mutation', () => {
+  test('property atom supports updater pattern via Obj.change', () => {
     const obj = createObject(
       Obj.make(TestSchema.Task, {
         title: 'Task',
@@ -101,8 +103,10 @@ describe('Echo Atom - Basic Functionality', () => {
       { immediate: true },
     );
 
-    // Update through direct mutation.
-    obj.title = (obj.title ?? '') + ' Updated';
+    // Update through Obj.change.
+    Obj.change(obj, (o) => {
+      o.title = (o.title ?? '') + ' Updated';
+    });
 
     // Subscription should have fired: immediate + update.
     expect(updateCount).toBe(2);

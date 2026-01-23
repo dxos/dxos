@@ -62,7 +62,9 @@ export default Capability.makeModule(
                       type: Node.ActionType,
                       data: Effect.fnUntraced(function* () {
                         const index = mailbox.filters.findIndex((f: any) => f.name === name);
-                        mailbox.filters.splice(index, 1);
+                        Obj.change(mailbox, (m) => {
+                          m.filters.splice(index, 1);
+                        });
                       }),
                       properties: {
                         label: ['delete filter label', { ns: meta.id }],

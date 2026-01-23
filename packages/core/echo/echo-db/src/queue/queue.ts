@@ -255,6 +255,7 @@ export class QueueImpl<T extends Entity.Unknown = Entity.Unknown> implements Que
   async fetchObjectsJSON(): Promise<ObjectJSON[]> {
     const { objects } = await this._service.queryQueue({
       query: {
+        queuesNamespace: this._subspaceTag,
         spaceId: this._spaceId,
         queueIds: [this._queueId],
       },

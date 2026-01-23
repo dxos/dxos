@@ -14,6 +14,7 @@ import { useClientStory, withClientProvider } from '@dxos/react-client/testing';
 import { Button } from '@dxos/react-ui';
 import { withTheme } from '@dxos/react-ui/testing';
 import { Person } from '@dxos/types';
+import { osTranslations } from '@dxos/ui-theme';
 
 import { translations } from '../../translations';
 
@@ -84,7 +85,7 @@ const DefaultStory = () => {
           classNames='popover-card-width'
           options={options}
           createSchema={personSchema}
-          createOptionLabel={['create new person label', { ns: 'os' }]}
+          createOptionLabel={['create new person label', { ns: osTranslations }]}
           createOptionIcon='ph--user-plus--regular'
           createInitialValuePath='fullName'
           onCreate={handleCreateCallback}

@@ -12,6 +12,7 @@ import { Event, Message, Organization, Person } from '@dxos/types';
 import {
   CalendarArticle,
   ComposeEmailDialog,
+  type ComposeEmailDialogProps,
   EventArticle,
   EventCard,
   MailboxArticle,
@@ -97,8 +98,9 @@ export default Capability.makeModule(() =>
       Common.createSurface({
         id: COMPOSE_EMAIL_DIALOG,
         role: 'dialog',
-        filter: (data): data is { component: string } => data.component === COMPOSE_EMAIL_DIALOG,
-        component: () => <ComposeEmailDialog />,
+        filter: (data): data is { component: string; props?: ComposeEmailDialogProps } =>
+          data.component === COMPOSE_EMAIL_DIALOG,
+        component: ({ data }) => <ComposeEmailDialog {...(data.props ?? {})} />,
       }),
       Common.createSurface({
         id: `${meta.id}/mailbox/companion/settings`,
