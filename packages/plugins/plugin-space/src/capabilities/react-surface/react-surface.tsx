@@ -2,14 +2,13 @@
 // Copyright 2025 DXOS.org
 //
 
-import { useAtomValue } from '@effect-atom/atom-react';
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 import type * as Schema from 'effect/Schema';
 import React, { useCallback } from 'react';
 
 import { Capability, Common } from '@dxos/app-framework';
-import { Surface, useCapability, useLayout } from '@dxos/app-framework/react';
+import { Surface, useCapability, useLayout, useSettingsState } from '@dxos/app-framework/react';
 import { Database, Obj, type Ref } from '@dxos/echo';
 import { findAnnotation } from '@dxos/effect';
 import { type Space, SpaceState, getSpace, isLiveObject, isSpace, parseId, useSpace } from '@dxos/react-client/echo';
@@ -107,8 +106,8 @@ export default Capability.makeModule(
         filter: (data): data is { subject: Common.Capability.Settings } =>
           Common.Capability.isSettings(data.subject) && data.subject.prefix === meta.id,
         component: ({ data: { subject } }) => {
-          const settings = useAtomValue(subject.atom) as SpaceSettingsProps;
-          return <SpacePluginSettings settings={settings} />;
+          const { settings, updateSettings } = useSettingsState<SpaceSettingsProps>(subject.atom);
+          return <SpacePluginSettings settings={settings} onSettingsChange={updateSettings} />;
         },
       }),
       Common.createSurface({

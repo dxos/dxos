@@ -25,7 +25,7 @@ import { Topbar } from './Topbar';
 export const DeckMain = () => {
   const { invokeSync } = useOperationInvoker();
   const settings = useAtomCapability(DeckCapabilities.Settings);
-  const { state, deck, update } = useDeckState();
+  const { state, deck, updateState } = useDeckState();
   const { sidebarState, complementarySidebarState, complementarySidebarPanel } = state;
   const { active, activeCompanions, fullscreen, solo, plankSizing } = deck;
   const layoutMode = getMode(deck);
@@ -138,16 +138,16 @@ export const DeckMain = () => {
 
   const handleNavigationSidebarStateChange = useCallback(
     (next: typeof sidebarState) => {
-      update((s) => ({ ...s, sidebarState: next }));
+      updateState((s) => ({ ...s, sidebarState: next }));
     },
-    [update],
+    [updateState],
   );
 
   const handleComplementarySidebarStateChange = useCallback(
     (next: typeof complementarySidebarState) => {
-      update((s) => ({ ...s, complementarySidebarState: next }));
+      updateState((s) => ({ ...s, complementarySidebarState: next }));
     },
-    [update],
+    [updateState],
   );
 
   return (

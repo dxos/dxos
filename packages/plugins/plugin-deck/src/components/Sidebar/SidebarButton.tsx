@@ -15,15 +15,15 @@ export const ToggleSidebarButton = ({
   classNames,
   variant = 'ghost',
 }: ThemedClassName<Pick<IconButtonProps, 'variant'>>) => {
-  const { state, update } = useDeckState();
+  const { state, updateState } = useDeckState();
   const { t } = useTranslation(meta.id);
 
   const handleClick = useCallback(() => {
-    update((s) => ({
+    updateState((s) => ({
       ...s,
       sidebarState: s.sidebarState === 'expanded' ? 'collapsed' : 'expanded',
     }));
-  }, [update]);
+  }, [updateState]);
 
   return (
     <IconButton
@@ -39,12 +39,12 @@ export const ToggleSidebarButton = ({
 };
 
 export const CloseSidebarButton = () => {
-  const { update } = useDeckState();
+  const { updateState } = useDeckState();
   const { t } = useTranslation(meta.id);
 
   const handleClick = useCallback(() => {
-    update((s) => ({ ...s, sidebarState: 'collapsed' }));
-  }, [update]);
+    updateState((s) => ({ ...s, sidebarState: 'collapsed' }));
+  }, [updateState]);
 
   return (
     <IconButton
@@ -65,19 +65,19 @@ export const ToggleComplementarySidebarButton = ({
   current,
 }: ThemedClassName<{ inR0?: boolean; current?: string }>) => {
   const { invokeSync } = useOperationInvoker();
-  const { state, update } = useDeckState();
+  const { state, updateState } = useDeckState();
   const { t } = useTranslation(meta.id);
 
   const companions = useDeckCompanions();
   const handleClick = useCallback(() => {
     const nextState = state.complementarySidebarState === 'expanded' ? 'collapsed' : 'expanded';
-    update((s) => ({ ...s, complementarySidebarState: nextState }));
+    updateState((s) => ({ ...s, complementarySidebarState: nextState }));
 
     const subject = state.complementarySidebarPanel ?? (companions[0] && getCompanionId(companions[0].id));
     if (nextState === 'expanded' && !current && subject) {
       invokeSync(Common.LayoutOperation.UpdateComplementary, { subject });
     }
-  }, [state, update, current, companions, invokeSync]);
+  }, [state, updateState, current, companions, invokeSync]);
 
   return (
     <IconButton

@@ -15,13 +15,13 @@ import { DeckCapabilities } from '../../types';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
+    const stateAtom = yield* Capability.get(DeckCapabilities.State);
+
     const extensions = yield* GraphBuilder.createExtension({
       id: meta.id,
       match: NodeMatcher.whenRoot,
-      actions: (node, get) =>
+      actions: (_node, get) =>
         Effect.gen(function* () {
-          const stateStore = yield* Capability.get(DeckCapabilities.State);
-
           // NOTE(Zan): This is currently disabled.
           // TODO(Zan): Fullscreen needs to know the active node and provide that to the layout part.
           // const _fullscreen = {
@@ -61,9 +61,9 @@ export default Capability.makeModule(
             id: `${Common.LayoutOperation.Close.meta.key}/others`,
             data: Effect.fnUntraced(function* () {
               const attention = yield* Capability.get(AttentionCapabilities.Attention);
-              const { state } = yield* Capability.get(DeckCapabilities.State);
+              const deck = yield* DeckCapabilities.getDeck();
               const attended = attention.current.at(-1);
-              const ids = state.deck.active.filter((id) => id !== attended) ?? [];
+              const ids = deck.active.filter((id: string) => id !== attended) ?? [];
               yield* Operation.invoke(Common.LayoutOperation.Close, { subject: ids });
             }),
             properties: {
@@ -75,8 +75,8 @@ export default Capability.makeModule(
           const closeAll = {
             id: `${Common.LayoutOperation.Close.meta.key}/all`,
             data: Effect.fnUntraced(function* () {
-              const { state } = yield* Capability.get(DeckCapabilities.State);
-              yield* Operation.invoke(Common.LayoutOperation.Close, { subject: state.deck.active });
+              const deck = yield* DeckCapabilities.getDeck();
+              yield* Operation.invoke(Common.LayoutOperation.Close, { subject: deck.active });
             }),
             properties: {
               label: ['close all label', { ns: meta.id }],
@@ -87,17 +87,16 @@ export default Capability.makeModule(
           // Derive state from the atom using the provided `get` function.
           // NOTE: We must compute `deck` from `decks[activeDeck]` because the getter
           // doesn't survive spread operations in state updates.
-          const rawState = get(stateStore.atom);
+          const rawState = get(stateAtom);
           const deck = rawState.decks[rawState.activeDeck];
           invariant(deck, `Deck not found: ${rawState.activeDeck}`);
 
           const toggleSidebar = {
             id: `${Common.LayoutOperation.UpdateSidebar.meta.key}/nav`,
             data: Effect.fnUntraced(function* () {
-              const { update } = yield* Capability.get(DeckCapabilities.State);
-              update((s) => ({
+              yield* Common.Capability.updateAtomValue(DeckCapabilities.State, (s) => ({
                 ...s,
-                sidebarState: s.sidebarState === 'expanded' ? 'collapsed' : 'expanded',
+                sidebarState: s.sidebarState === 'expanded' ? ('collapsed' as const) : ('expanded' as const),
               }));
             }),
             properties: {

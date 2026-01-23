@@ -2,12 +2,11 @@
 // Copyright 2025 DXOS.org
 //
 
-import { useAtomValue } from '@effect-atom/atom-react';
 import * as Effect from 'effect/Effect';
 import React from 'react';
 
 import { Capability, Common } from '@dxos/app-framework';
-import { useAtomCapability } from '@dxos/app-framework/react';
+import { useAtomCapability, useSettingsState } from '@dxos/app-framework/react';
 
 import { SketchContainer, SketchSettings } from '../../components';
 import { meta } from '../../meta';
@@ -31,8 +30,8 @@ export default Capability.makeModule(() =>
         filter: (data): data is { subject: Common.Capability.Settings } =>
           Common.Capability.isSettings(data.subject) && data.subject.prefix === meta.id,
         component: ({ data: { subject } }) => {
-          const settings = useAtomValue(subject.atom) as SketchSettingsProps;
-          return <SketchSettings settings={settings} />;
+          const { settings, updateSettings } = useSettingsState<SketchSettingsProps>(subject.atom);
+          return <SketchSettings settings={settings} onSettingsChange={updateSettings} />;
         },
       }),
     ]),

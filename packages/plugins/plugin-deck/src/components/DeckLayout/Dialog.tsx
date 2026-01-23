@@ -11,16 +11,16 @@ import { useDeckState } from '../../hooks';
 import { PlankContentError } from '../Plank';
 
 export const Dialog = () => {
-  const { state, update } = useDeckState();
+  const { state, updateEphemeral } = useDeckState();
   const { dialogOpen, dialogType, dialogBlockAlign, dialogOverlayClasses, dialogOverlayStyle, dialogContent } = state;
   const Root = dialogType === 'alert' ? AlertDialog.Root : NaturalDialog.Root;
   const Overlay = dialogType === 'alert' ? AlertDialog.Overlay : NaturalDialog.Overlay;
 
   const handleOpenChange = useCallback(
     (nextOpen: boolean) => {
-      update((s) => ({ ...s, dialogOpen: nextOpen }));
+      updateEphemeral((s) => ({ ...s, dialogOpen: nextOpen }));
     },
-    [update],
+    [updateEphemeral],
   );
 
   // TODO(thure): End block alignment affecting `modal` and whether the surface renders in an overlay is tailored to the needs of the ambient chat dialog. As the feature matures, consider separating concerns.

@@ -117,9 +117,11 @@ export namespace Capability {
   }>;
 
   /**
+   * Layout capability - provides reactive access to the current layout state.
+   * Use `useAtomValue(layoutAtom)` in React or `registry.get(layoutAtom)` in Effects.
    * @category Capability
    */
-  export const Layout = Capability$.make<Layout>('dxos.org/app-framework/capability/layout');
+  export const Layout = Capability$.make<Atom.Atom<Layout>>('dxos.org/app-framework/capability/layout');
 
   /**
    * @category Capability
@@ -316,7 +318,7 @@ export namespace Capability {
    * @example const settings = yield* Common.Capability.getAtomValue(ThreadCapabilities.Settings);
    */
   export const getAtomValue = <T>(
-    atomCapability: Capability$.InterfaceDef<Atom.Writable<T>>,
+    atomCapability: Capability$.InterfaceDef<Atom.Atom<T>>,
   ): Effect.Effect<T, Error, Capability$.Service> =>
     Effect.gen(function* () {
       const registry = yield* Capability$.get(AtomRegistry);
@@ -325,7 +327,7 @@ export namespace Capability {
     });
 
   /**
-   * Update an atom capability value.
+   * Update an atom capability value (requires writable atom).
    * @example yield* Common.Capability.updateAtomValue(ThreadCapabilities.Settings, (s) => ({ ...s, foo: true }));
    */
   export const updateAtomValue = <T>(
@@ -343,7 +345,7 @@ export namespace Capability {
    * @example const unsubscribe = yield* Common.Capability.subscribeAtom(ThreadCapabilities.Settings, (value) => ...);
    */
   export const subscribeAtom = <T>(
-    atomCapability: Capability$.InterfaceDef<Atom.Writable<T>>,
+    atomCapability: Capability$.InterfaceDef<Atom.Atom<T>>,
     callback: (value: T) => void,
   ): Effect.Effect<() => void, Error, Capability$.Service> =>
     Effect.gen(function* () {

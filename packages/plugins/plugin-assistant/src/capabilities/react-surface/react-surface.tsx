@@ -2,11 +2,11 @@
 // Copyright 2025 DXOS.org
 //
 
-import { useAtomValue } from '@effect-atom/atom-react';
 import * as Effect from 'effect/Effect';
 import React from 'react';
 
 import { Capability, Common } from '@dxos/app-framework';
+import { useSettingsState } from '@dxos/app-framework/react';
 import { Blueprint, Prompt } from '@dxos/blueprints';
 import { getSpace } from '@dxos/client/echo';
 import { Sequence } from '@dxos/conductor';
@@ -34,8 +34,8 @@ export default Capability.makeModule(() =>
         filter: (data): data is { subject: Common.Capability.Settings } =>
           Common.Capability.isSettings(data.subject) && data.subject.prefix === meta.id,
         component: ({ data: { subject } }) => {
-          const settings = useAtomValue(subject.atom) as Assistant.Settings;
-          return <AssistantSettings settings={settings} />;
+          const { settings, updateSettings } = useSettingsState<Assistant.Settings>(subject.atom);
+          return <AssistantSettings settings={settings} onSettingsChange={updateSettings} />;
         },
       }),
       Common.createSurface({

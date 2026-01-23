@@ -42,7 +42,7 @@ export type ComplementarySidebarProps = {
 export const ComplementarySidebar = ({ current }: ComplementarySidebarProps) => {
   const { t } = useTranslation(meta.id);
   const { invokeSync } = useOperationInvoker();
-  const { state, deck, update } = useDeckState();
+  const { state, deck, updateState } = useDeckState();
   const layoutMode = getMode(deck);
   const breakpoint = useBreakpoints();
   const topbar = layoutAppliesTopbar(breakpoint, layoutMode);
@@ -61,17 +61,17 @@ export const ComplementarySidebar = ({ current }: ComplementarySidebarProps) => 
     (event: MouseEvent) => {
       const nextValue = event.currentTarget.getAttribute('data-value') as string;
       if (nextValue === activeId) {
-        update((s) => ({
+        updateState((s) => ({
           ...s,
           complementarySidebarState: s.complementarySidebarState === 'expanded' ? 'collapsed' : 'expanded',
         }));
       } else {
         setInternalValue(nextValue);
-        update((s) => ({ ...s, complementarySidebarState: 'expanded' }));
+        updateState((s) => ({ ...s, complementarySidebarState: 'expanded' }));
         invokeSync(Common.LayoutOperation.UpdateComplementary, { subject: nextValue });
       }
     },
-    [state.complementarySidebarState, activeId, invokeSync, update],
+    [state.complementarySidebarState, activeId, invokeSync, updateState],
   );
 
   const data = useMemo(

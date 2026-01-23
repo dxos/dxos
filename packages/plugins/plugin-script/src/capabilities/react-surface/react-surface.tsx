@@ -2,12 +2,11 @@
 // Copyright 2025 DXOS.org
 //
 
-import { useAtomValue } from '@effect-atom/atom-react';
 import * as Effect from 'effect/Effect';
 import React from 'react';
 
 import { Capability, Common } from '@dxos/app-framework';
-import { useAtomCapability } from '@dxos/app-framework/react';
+import { useAtomCapability, useSettingsState } from '@dxos/app-framework/react';
 import { InvocationTraceContainer } from '@dxos/devtools';
 import { Obj } from '@dxos/echo';
 import { Script } from '@dxos/functions';
@@ -38,8 +37,8 @@ export default Capability.makeModule(() =>
         filter: (data): data is { subject: Common.Capability.Settings } =>
           Common.Capability.isSettings(data.subject) && data.subject.prefix === meta.id,
         component: ({ data: { subject } }) => {
-          const settings = useAtomValue(subject.atom) as ScriptSettings;
-          return <ScriptPluginSettings settings={settings} />;
+          const { settings, updateSettings } = useSettingsState<ScriptSettings>(subject.atom);
+          return <ScriptPluginSettings settings={settings} onSettingsChange={updateSettings} />;
         },
       }),
       Common.createSurface({

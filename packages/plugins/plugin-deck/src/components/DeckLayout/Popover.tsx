@@ -54,7 +54,7 @@ export const PopoverRoot = ({ children }: DeckPopoverRootProps) => {
 };
 
 export const PopoverContent = () => {
-  const { state, update } = useDeckState();
+  const { state, updateEphemeral } = useDeckState();
   const { setOpen } = useDeckPopoverContext('PopoverContent');
 
   const handleClose = useCallback(
@@ -67,7 +67,7 @@ export const PopoverContent = () => {
         event.preventDefault();
       } else {
         setOpen(false);
-        update((s) => ({
+        updateEphemeral((s) => ({
           ...s,
           popoverOpen: false,
           popoverAnchor: undefined,
@@ -76,7 +76,7 @@ export const PopoverContent = () => {
         }));
       }
     },
-    [setOpen, update],
+    [setOpen, updateEphemeral],
   );
 
   return (

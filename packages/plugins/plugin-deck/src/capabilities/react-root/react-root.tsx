@@ -16,7 +16,7 @@ export default Capability.makeModule(() =>
     Capability.contributes(Common.Capability.ReactRoot, {
       id: meta.id,
       root: () => {
-        const { state, update } = useDeckState();
+        const { state, updateEphemeral } = useDeckState();
 
         const handleDismissToast = useCallback(
           (id: string) => {
@@ -25,7 +25,7 @@ export default Capability.makeModule(() =>
               // Allow time for the toast to animate out.
               // TODO(burdon): Factor out and unregister timeout.
               setTimeout(() => {
-                update((s) => {
+                updateEphemeral((s) => {
                   const toastToRemove = s.toasts[index];
                   const newCurrentUndoId = toastToRemove?.id === s.currentUndoId ? undefined : s.currentUndoId;
                   return {
@@ -37,7 +37,7 @@ export default Capability.makeModule(() =>
               }, 1_000);
             }
           },
-          [state.toasts, update],
+          [state.toasts, updateEphemeral],
         );
 
         return <DeckLayout onDismissToast={handleDismissToast} />;

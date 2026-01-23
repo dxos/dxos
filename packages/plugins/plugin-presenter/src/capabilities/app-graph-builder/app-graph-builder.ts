@@ -74,9 +74,10 @@ export default Capability.makeModule(
             // TODO(burdon): Allow function so can generate state when activated.
             //  So can set explicit fullscreen state coordinated with current presenter state.
             data: Effect.fnUntraced(function* () {
-              const deckStateStore = yield* Capability.get(DeckCapabilities.State);
+              const deckState = yield* Common.Capability.getAtomValue(DeckCapabilities.State);
+              const deck = deckState.decks[deckState.activeDeck];
               const presenterId = [id, 'presenter'].join(ATTENDABLE_PATH_SEPARATOR);
-              if (!deckStateStore.state.deck.fullscreen) {
+              if (!deck?.fullscreen) {
                 yield* Operation.invoke(DeckOperation.Adjust, {
                   type: 'solo--fullscreen' as const,
                   id: presenterId,

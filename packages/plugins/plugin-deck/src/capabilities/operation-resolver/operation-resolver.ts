@@ -23,8 +23,8 @@ import { meta } from '../../meta';
 import {
   DeckCapabilities,
   DeckOperation,
-  type DeckPluginState,
   type DeckState,
+  type DeckStateProps,
   type LayoutMode,
   PLANK_COMPANION_TYPE,
   defaultDeck,
@@ -34,9 +34,9 @@ import {
 import { computeActiveUpdates } from '../../util';
 
 /**
- * Helper to update the active deck within the state.
+ * Helper to update the active deck within the persisted state.
  */
-const updateActiveDeck = (current: DeckPluginState, deckUpdates: Partial<DeckState>): DeckPluginState => {
+const updateActiveDeck = (current: DeckStateProps, deckUpdates: Partial<DeckState>): DeckStateProps => {
   const currentDeck = current.decks[current.activeDeck];
   invariant(currentDeck, `Deck not found: ${current.activeDeck}`);
   return {
@@ -60,10 +60,10 @@ export default Capability.makeModule(
       OperationResolver.make({
         operation: Common.LayoutOperation.UpdateSidebar,
         handler: Effect.fnUntraced(function* (input) {
-          const { state, update } = yield* Capability.get(DeckCapabilities.State);
+          const state = yield* Common.Capability.getAtomValue(DeckCapabilities.State);
           const next = input.state ?? state.sidebarState;
           if (next !== state.sidebarState) {
-            update((s) => ({ ...s, sidebarState: next }));
+            yield* Common.Capability.updateAtomValue(DeckCapabilities.State, (s) => ({ ...s, sidebarState: next }));
           }
         }),
       }),
@@ -74,13 +74,13 @@ export default Capability.makeModule(
       OperationResolver.make({
         operation: Common.LayoutOperation.UpdateComplementary,
         handler: Effect.fnUntraced(function* (input) {
-          const { state, update } = yield* Capability.get(DeckCapabilities.State);
+          const state = yield* Common.Capability.getAtomValue(DeckCapabilities.State);
           const panelChanged = state.complementarySidebarPanel !== input.subject;
           const next = input.subject ? 'expanded' : (input.state ?? state.complementarySidebarState);
           const stateChanged = next !== state.complementarySidebarState;
 
           if (panelChanged || stateChanged) {
-            update((s) => ({
+            yield* Common.Capability.updateAtomValue(DeckCapabilities.State, (s) => ({
               ...s,
               complementarySidebarPanel: panelChanged ? input.subject : s.complementarySidebarPanel,
               complementarySidebarState: stateChanged ? next : s.complementarySidebarState,
@@ -95,8 +95,7 @@ export default Capability.makeModule(
       OperationResolver.make({
         operation: Common.LayoutOperation.UpdateDialog,
         handler: Effect.fnUntraced(function* (input) {
-          const { update } = yield* Capability.get(DeckCapabilities.State);
-          update((s) => ({
+          yield* Common.Capability.updateAtomValue(DeckCapabilities.EphemeralState, (s) => ({
             ...s,
             dialogOpen: input.state ?? Boolean(input.subject),
             dialogType: input.type ?? 'default',
@@ -114,8 +113,7 @@ export default Capability.makeModule(
       OperationResolver.make({
         operation: Common.LayoutOperation.UpdatePopover,
         handler: Effect.fnUntraced(function* (input) {
-          const { update } = yield* Capability.get(DeckCapabilities.State);
-          update((s) => ({
+          yield* Common.Capability.updateAtomValue(DeckCapabilities.EphemeralState, (s) => ({
             ...s,
             popoverOpen: input.state ?? Boolean(input.subject),
             popoverContent:
@@ -137,8 +135,7 @@ export default Capability.makeModule(
       OperationResolver.make({
         operation: Common.LayoutOperation.AddToast,
         handler: Effect.fnUntraced(function* (input) {
-          const { update } = yield* Capability.get(DeckCapabilities.State);
-          update((s) => ({
+          yield* Common.Capability.updateAtomValue(DeckCapabilities.EphemeralState, (s) => ({
             ...s,
             toasts: [...s.toasts, input as Common.LayoutOperation.Toast],
           }));
@@ -151,31 +148,29 @@ export default Capability.makeModule(
       OperationResolver.make({
         operation: Common.UndoOperation.ShowUndo,
         handler: Effect.fnUntraced(function* (input) {
-          const { state, update } = yield* Capability.get(DeckCapabilities.State);
           const historyTracker = yield* Capability.get(Common.Capability.HistoryTracker);
 
           const newUndoId = `show-undo-${Date.now()}`;
           // TODO(wittjosiah): Support undoing further back than the last action.
-          update((s) => {
+          yield* Common.Capability.updateAtomValue(DeckCapabilities.EphemeralState, (s) => {
             const filteredToasts = s.currentUndoId
               ? s.toasts.filter((toast) => toast.id !== s.currentUndoId)
               : s.toasts;
 
+            const toast: Common.LayoutOperation.Toast = {
+              id: newUndoId,
+              title: input.message ?? ['undo available label', { ns: meta.id }],
+              duration: 10_000,
+              actionLabel: ['undo action label', { ns: meta.id }],
+              actionAlt: ['undo action alt', { ns: meta.id }],
+              closeLabel: ['undo close label', { ns: meta.id }],
+              onAction: () => historyTracker.undoPromise(),
+            };
+
             return {
               ...s,
               currentUndoId: newUndoId,
-              toasts: [
-                ...filteredToasts,
-                {
-                  id: newUndoId,
-                  title: input.message ?? ['undo available label', { ns: meta.id }],
-                  duration: 10_000,
-                  actionLabel: ['undo action label', { ns: meta.id }],
-                  actionAlt: ['undo action alt', { ns: meta.id }],
-                  closeLabel: ['undo close label', { ns: meta.id }],
-                  onAction: () => historyTracker.undoPromise(),
-                },
-              ],
+              toasts: [...filteredToasts, toast],
             };
           });
         }),
@@ -193,10 +188,10 @@ export default Capability.makeModule(
           return true;
         },
         handler: Effect.fnUntraced(function* (input) {
-          const { state, update } = yield* Capability.get(DeckCapabilities.State);
+          const state = yield* Common.Capability.getAtomValue(DeckCapabilities.State);
+          const deck = yield* DeckCapabilities.getDeck();
 
           const computeModeUpdate = (mode: LayoutMode, subject?: string): Partial<DeckState> => {
-            const deck = state.deck;
             const current = deck.solo ? [deck.solo] : deck.active;
             // When un-soloing, the solo entry is added to the deck.
             const next = (
@@ -226,13 +221,13 @@ export default Capability.makeModule(
           };
 
           if ('mode' in input) {
-            const currentMode = getMode(state.deck);
+            const currentMode = getMode(deck);
             const deckUpdates = computeModeUpdate(
               input.mode as LayoutMode,
               'subject' in input ? input.subject : undefined,
             );
 
-            update((s) => {
+            yield* Common.Capability.updateAtomValue(DeckCapabilities.State, (s) => {
               const newPreviousMode =
                 currentMode !== input.mode ? { ...s.previousMode, [s.activeDeck]: currentMode } : s.previousMode;
               return {
@@ -243,7 +238,7 @@ export default Capability.makeModule(
           } else if ('revert' in input) {
             const last = state.previousMode[state.activeDeck];
             const deckUpdates = computeModeUpdate(last ?? 'solo');
-            update((s) => updateActiveDeck(s, deckUpdates));
+            yield* Common.Capability.updateAtomValue(DeckCapabilities.State, (s) => updateActiveDeck(s, deckUpdates));
           } else {
             log.warn('Invalid layout mode', input);
           }
@@ -257,13 +252,13 @@ export default Capability.makeModule(
         operation: Common.LayoutOperation.SwitchWorkspace,
         handler: Effect.fnUntraced(function* (input) {
           const { graph } = yield* Capability.get(Common.Capability.AppGraph);
-          const { state, update } = yield* Capability.get(DeckCapabilities.State);
+          const state = yield* Common.Capability.getAtomValue(DeckCapabilities.State);
 
           // TODO(wittjosiah): This is a hack to prevent the previous deck from being set for pinned items.
           //   Ideally this should be worked into the data model in a generic way.
           const shouldUpdatePrevious = !state.activeDeck.startsWith('!');
 
-          update((s) => {
+          yield* Common.Capability.updateAtomValue(DeckCapabilities.State, (s) => {
             const newDecks = s.decks[input.subject] ? s.decks : { ...s.decks, [input.subject]: { ...defaultDeck } };
             return {
               ...s,
@@ -274,7 +269,7 @@ export default Capability.makeModule(
           });
 
           // Re-read state after update to get the new deck.
-          const { state: newState } = yield* Capability.get(DeckCapabilities.State);
+          const newState = yield* Common.Capability.getAtomValue(DeckCapabilities.State);
           const newDeck = newState.decks[input.subject];
           invariant(newDeck, `Deck not found: ${input.subject}`);
 
@@ -298,7 +293,7 @@ export default Capability.makeModule(
       OperationResolver.make({
         operation: Common.LayoutOperation.RevertWorkspace,
         handler: Effect.fnUntraced(function* () {
-          const { state } = yield* Capability.get(DeckCapabilities.State);
+          const state = yield* Common.Capability.getAtomValue(DeckCapabilities.State);
           yield* Operation.invoke(Common.LayoutOperation.SwitchWorkspace, { subject: state.previousDeck });
         }),
       }),
@@ -310,19 +305,18 @@ export default Capability.makeModule(
         operation: Common.LayoutOperation.Open,
         handler: Effect.fnUntraced(function* (input) {
           const { graph } = yield* Capability.get(Common.Capability.AppGraph);
-          const { state, update } = yield* Capability.get(DeckCapabilities.State);
+          const state = yield* Common.Capability.getAtomValue(DeckCapabilities.State);
           const attention = yield* Capability.get(AttentionCapabilities.Attention);
-          const registry = yield* Capability.get(Common.Capability.AtomRegistry);
-          const settingsAtom = yield* Capability.get(DeckCapabilities.Settings);
-          const settings = registry.get(settingsAtom);
+          const settings = yield* Common.Capability.getAtomValue(DeckCapabilities.Settings);
 
           if (input.workspace && state.activeDeck !== input.workspace) {
             yield* Operation.invoke(Common.LayoutOperation.SwitchWorkspace, { subject: input.workspace });
           }
 
           // Re-read state after potential workspace switch.
-          const { state: currentState } = yield* Capability.get(DeckCapabilities.State);
-          const deck = currentState.deck;
+          const currentState = yield* Common.Capability.getAtomValue(DeckCapabilities.State);
+          const deck = currentState.decks[currentState.activeDeck];
+          invariant(deck, `Deck not found: ${currentState.activeDeck}`);
 
           const previouslyOpenIds = new Set<string>(deck.solo ? [deck.solo] : deck.active);
           const next = deck.solo
@@ -338,12 +332,13 @@ export default Capability.makeModule(
                 deck.active,
               );
 
-          const { deckUpdates, toAttend } = computeActiveUpdates({ next, deck, attention });
-          update((s) => updateActiveDeck(s, deckUpdates));
+          const { deckUpdates, toAttend: _toAttend } = computeActiveUpdates({ next, deck, attention });
+          yield* Common.Capability.updateAtomValue(DeckCapabilities.State, (s) => updateActiveDeck(s, deckUpdates));
 
           // Re-read state after update.
-          const { state: afterUpdateState } = yield* Capability.get(DeckCapabilities.State);
-          const afterDeck = afterUpdateState.deck;
+          const afterState = yield* Common.Capability.getAtomValue(DeckCapabilities.State);
+          const afterDeck = afterState.decks[afterState.activeDeck];
+          invariant(afterDeck, `Deck not found: ${afterState.activeDeck}`);
           const ids = afterDeck.solo ? [afterDeck.solo] : afterDeck.active;
           const newlyOpen = ids.filter((i: string) => !previouslyOpenIds.has(i));
 
@@ -380,8 +375,7 @@ export default Capability.makeModule(
       OperationResolver.make({
         operation: DeckOperation.UpdatePlankSize,
         handler: Effect.fnUntraced(function* (input) {
-          const { update } = yield* Capability.get(DeckCapabilities.State);
-          update((s) =>
+          yield* Common.Capability.updateAtomValue(DeckCapabilities.State, (s) =>
             updateActiveDeck(s, {
               plankSizing: {
                 ...s.decks[s.activeDeck]?.plankSizing,
@@ -398,7 +392,8 @@ export default Capability.makeModule(
       OperationResolver.make({
         operation: DeckOperation.Adjust,
         handler: Effect.fnUntraced(function* (input) {
-          const { state, update } = yield* Capability.get(DeckCapabilities.State);
+          const _state = yield* Common.Capability.getAtomValue(DeckCapabilities.State);
+          const deck = yield* DeckCapabilities.getDeck();
           const attention = yield* Capability.get(AttentionCapabilities.Attention);
           const { graph } = yield* Capability.get(Common.Capability.AppGraph);
 
@@ -409,14 +404,14 @@ export default Capability.makeModule(
             | undefined;
 
           if (input.type === 'increment-end' || input.type === 'increment-start') {
-            const next = incrementPlank(state.deck.active, input);
-            const { deckUpdates } = computeActiveUpdates({ next, deck: state.deck, attention });
-            update((s) => updateActiveDeck(s, deckUpdates));
+            const next = incrementPlank(deck.active, input);
+            const { deckUpdates } = computeActiveUpdates({ next, deck, attention });
+            yield* Common.Capability.updateAtomValue(DeckCapabilities.State, (s) => updateActiveDeck(s, deckUpdates));
           }
 
           if (input.type.startsWith('solo')) {
             const entryId = input.id;
-            if (!state.deck.solo) {
+            if (!deck.solo) {
               // Solo the entry.
               soloOperation = { type: 'solo', entryId, mode: input.type };
             } else {
@@ -469,8 +464,7 @@ export default Capability.makeModule(
       OperationResolver.make({
         operation: DeckOperation.ChangeCompanion,
         handler: Effect.fnUntraced(function* (input) {
-          const { update } = yield* Capability.get(DeckCapabilities.State);
-          update((s) => {
+          yield* Common.Capability.updateAtomValue(DeckCapabilities.State, (s) => {
             const currentDeck = s.decks[s.activeDeck];
             invariant(currentDeck, `Deck not found: ${s.activeDeck}`);
             if (input.companion === null) {
@@ -495,17 +489,17 @@ export default Capability.makeModule(
       OperationResolver.make({
         operation: Common.LayoutOperation.Close,
         handler: Effect.fnUntraced(function* (input) {
-          const { state, update } = yield* Capability.get(DeckCapabilities.State);
+          const deck = yield* DeckCapabilities.getDeck();
           const attention = yield* Capability.get(AttentionCapabilities.Attention);
 
-          const active = state.deck.solo ? [state.deck.solo] : state.deck.active;
+          const active = deck.solo ? [deck.solo] : deck.active;
           const next = input.subject.reduce((acc, id) => closeEntry(acc, id), active);
-          const { deckUpdates, toAttend } = computeActiveUpdates({ next, deck: state.deck, attention });
-          update((s) => updateActiveDeck(s, deckUpdates));
+          const { deckUpdates, toAttend } = computeActiveUpdates({ next, deck, attention });
+          yield* Common.Capability.updateAtomValue(DeckCapabilities.State, (s) => updateActiveDeck(s, deckUpdates));
 
           // Clear companions for closed entries.
           for (const id of input.subject) {
-            if (state.deck.activeCompanions && id in state.deck.activeCompanions) {
+            if (deck.activeCompanions && id in deck.activeCompanions) {
               yield* Operation.invoke(DeckOperation.ChangeCompanion, { primary: id, companion: null });
             }
           }
@@ -522,15 +516,15 @@ export default Capability.makeModule(
       OperationResolver.make({
         operation: Common.LayoutOperation.Set,
         handler: Effect.fnUntraced(function* (input) {
-          const { state, update } = yield* Capability.get(DeckCapabilities.State);
+          const deck = yield* DeckCapabilities.getDeck();
           const attention = yield* Capability.get(AttentionCapabilities.Attention);
 
           const { deckUpdates, toAttend } = computeActiveUpdates({
             next: input.subject as string[],
-            deck: state.deck,
+            deck,
             attention,
           });
-          update((s) => updateActiveDeck(s, deckUpdates));
+          yield* Common.Capability.updateAtomValue(DeckCapabilities.State, (s) => updateActiveDeck(s, deckUpdates));
 
           if (toAttend) {
             yield* Operation.schedule(Common.LayoutOperation.ScrollIntoView, { subject: toAttend });
@@ -544,8 +538,10 @@ export default Capability.makeModule(
       OperationResolver.make({
         operation: Common.LayoutOperation.ScrollIntoView,
         handler: Effect.fnUntraced(function* (input) {
-          const { update } = yield* Capability.get(DeckCapabilities.State);
-          update((s) => ({ ...s, scrollIntoView: input.subject }));
+          yield* Common.Capability.updateAtomValue(DeckCapabilities.EphemeralState, (s) => ({
+            ...s,
+            scrollIntoView: input.subject,
+          }));
         }),
       }),
     ]);

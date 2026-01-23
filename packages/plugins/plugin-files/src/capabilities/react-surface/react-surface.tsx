@@ -1,12 +1,11 @@
 //
 // Copyright 2025 DXOS.org
 //
-import { useAtomValue } from '@effect-atom/atom-react';
 import * as Effect from 'effect/Effect';
 import React from 'react';
 
 import { Capability, Common } from '@dxos/app-framework';
-import { useCapability } from '@dxos/app-framework/react';
+import { useCapability, useSettingsState } from '@dxos/app-framework/react';
 
 import { ExportStatus, FilesSettings, LocalFileContainer } from '../../components';
 import { meta } from '../../meta';
@@ -32,9 +31,9 @@ export default Capability.makeModule(
         filter: (data): data is { subject: Common.Capability.Settings } =>
           Common.Capability.isSettings(data.subject) && data.subject.prefix === meta.id,
         component: ({ data: { subject } }) => {
-          const settings = useAtomValue(subject.atom) as FilesSettingsProps;
+          const { settings, updateSettings } = useSettingsState<FilesSettingsProps>(subject.atom);
           const store = useCapability(FileCapabilities.State);
-          return <FilesSettings settings={settings} state={store.values} />;
+          return <FilesSettings settings={settings} state={store.values} onSettingsChange={updateSettings} />;
         },
       }),
       Common.createSurface({

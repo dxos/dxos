@@ -4,11 +4,11 @@
 
 import { monitorForElements } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
 import { type Instruction, extractInstruction } from '@atlaskit/pragmatic-drag-and-drop-hitbox/tree-item';
-import { useAtomValue } from '@effect-atom/atom-react';
-import React, { forwardRef, memo, useCallback, useEffect, useMemo, useRef } from 'react';
+import { RegistryContext } from '@effect-atom/atom-react';
+import React, { forwardRef, memo, useCallback, useContext, useEffect, useMemo, useRef } from 'react';
 
 import { Common } from '@dxos/app-framework';
-import { Surface, useAppGraph, useCapability, useLayout, useOperationInvoker } from '@dxos/app-framework/react';
+import { Surface, useAppGraph, useLayout, useOperationInvoker } from '@dxos/app-framework/react';
 import { PLANK_COMPANION_TYPE } from '@dxos/plugin-deck/types';
 import { Graph, Node, useActionRunner } from '@dxos/plugin-graph';
 import { useConnections, useActions as useGraphActions } from '@dxos/plugin-graph';
@@ -17,8 +17,8 @@ import { Path, type TreeData, type TreeItemDataProps, isTreeData } from '@dxos/r
 import { mx } from '@dxos/ui-theme';
 import { arrayMove, byPosition } from '@dxos/util';
 
+import { useNavTreeState } from '../hooks';
 import { meta } from '../meta';
-import { NavTreeCapabilities } from '../types';
 import { type FlattenedActions, type NavTreeItemGraphNode } from '../types';
 import { getChildren, getParent, resolveMigrationOperation } from '../util';
 
@@ -96,7 +96,8 @@ export const NavTreeContainer$ = forwardRef<HTMLDivElement, NavTreeContainerProp
     const { invokeSync, invokePromise } = useOperationInvoker();
     const runAction = useActionRunner();
     const { graph } = useAppGraph();
-    const { stateAtom, isOpen, isCurrent, isAlternateTree, setItem } = useCapability(NavTreeCapabilities.State);
+    const registry = useContext(RegistryContext);
+    const { stateAtom, isOpen, isCurrent, isAlternateTree, setItem } = useNavTreeState();
     const layout = useLayout();
     const { navigationSidebarState } = useSidebars(meta.id);
 
@@ -280,7 +281,6 @@ export const NavTreeContainer$ = forwardRef<HTMLDivElement, NavTreeContainerProp
     }, [graph]);
 
     // Track layout.active changes to update current state of navtree items.
-    const state = useAtomValue(stateAtom);
     const previousActiveRef = useRef<string[]>([]);
 
     useEffect(() => {
@@ -289,6 +289,9 @@ export const NavTreeContainer$ = forwardRef<HTMLDivElement, NavTreeContainerProp
       previousActiveRef.current = active;
 
       const handleUpdate = () => {
+        // Read state directly from registry to avoid re-triggering effect when state changes.
+        const state = registry.get(stateAtom);
+
         removed.forEach((id) => {
           const keys = Array.from(state.keys()).filter((key) => Path.last(key) === id);
           keys.forEach((key) => {
@@ -309,7 +312,7 @@ export const NavTreeContainer$ = forwardRef<HTMLDivElement, NavTreeContainerProp
       //   This could be avoided if the location was a path as well and not just an id.
       setTimeout(handleUpdate, 500);
       handleUpdate();
-    }, [layout.active, state, setItem]);
+    }, [layout.active, registry, stateAtom, setItem]);
 
     const setAlternateTree = useCallback(
       (path: string[], open: boolean) => {

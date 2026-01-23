@@ -29,12 +29,13 @@ setAutoFreeze(false);
 
 export const DeckPlugin = Plugin.define(meta).pipe(
   Plugin.addModule({
-    activatesOn: Common.ActivationEvent.SettingsReady,
-    activate: CheckAppScheme,
+    activatesOn: Common.ActivationEvent.SetupSettings,
+    activatesAfter: [DeckEvents.SettingsReady],
+    activate: DeckSettings,
   }),
   Plugin.addModule({
-    activatesOn: Common.ActivationEvent.SetupSettings,
-    activate: DeckSettings,
+    activatesOn: DeckEvents.SettingsReady,
+    activate: CheckAppScheme,
   }),
   Plugin.addModule({
     // TODO(wittjosiah): Does not integrate with settings store.

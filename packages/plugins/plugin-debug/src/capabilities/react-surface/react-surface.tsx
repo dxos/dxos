@@ -2,12 +2,11 @@
 // Copyright 2025 DXOS.org
 //
 
-import { useAtomValue } from '@effect-atom/atom-react';
 import * as Effect from 'effect/Effect';
 import React, { useCallback } from 'react';
 
 import { Capability, Common } from '@dxos/app-framework';
-import { useCapability, useOperationInvoker } from '@dxos/app-framework/react';
+import { useCapability, useLayout, useOperationInvoker, useSettingsState } from '@dxos/app-framework/react';
 import {
   AutomergePanel,
   ConfigPanel,
@@ -75,7 +74,7 @@ const isGraphDebug = (data: any): data is GraphDebug => {
 
 // TODO(wittjosiah): Factor out?
 const useCurrentSpace = () => {
-  const layout = useCapability(Common.Capability.Layout);
+  const layout = useLayout();
   const client = useCapability(ClientCapabilities.Client);
   const { spaceId } = parseId(layout.workspace);
   const space = spaceId ? client.spaces.get(spaceId) : undefined;
@@ -95,8 +94,8 @@ export default Capability.makeModule(
         filter: (data): data is { subject: Common.Capability.Settings } =>
           Common.Capability.isSettings(data.subject) && data.subject.prefix === meta.id,
         component: ({ data: { subject } }) => {
-          const settings = useAtomValue(subject.atom) as DebugSettingsProps;
-          return <DebugSettings settings={settings} />;
+          const { settings, updateSettings } = useSettingsState<DebugSettingsProps>(subject.atom);
+          return <DebugSettings settings={settings} onSettingsChange={updateSettings} />;
         },
       }),
       Common.createSurface({

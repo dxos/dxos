@@ -14,8 +14,8 @@ import { DeckOperation } from '@dxos/plugin-deck/types';
 
 export const useExitPresenter = (object: Live<any>) => {
   const { invokePromise } = useOperationInvoker();
-  const stateStore = useCapability(DeckCapabilities.State);
-  const state = useAtomValue(stateStore.atom);
+  const stateAtom = useCapability(DeckCapabilities.State);
+  const state = useAtomValue(stateAtom);
 
   // Compute deck from decks[activeDeck] since the getter doesn't survive spread operations.
   const deck = useMemo(() => state.decks[state.activeDeck], [state.decks, state.activeDeck]);

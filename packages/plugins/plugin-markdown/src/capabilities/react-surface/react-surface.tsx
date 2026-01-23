@@ -2,12 +2,11 @@
 // Copyright 2025 DXOS.org
 //
 
-import { useAtomValue } from '@effect-atom/atom-react';
 import * as Effect from 'effect/Effect';
 import React, { forwardRef, useCallback } from 'react';
 
 import { Capability, Common } from '@dxos/app-framework';
-import { SurfaceCardRole, useAtomCapability, useCapability } from '@dxos/app-framework/react';
+import { SurfaceCardRole, useAtomCapability, useCapability, useSettingsState } from '@dxos/app-framework/react';
 import { Obj } from '@dxos/echo';
 import { AttentionCapabilities } from '@dxos/plugin-attention';
 import { Text } from '@dxos/schema';
@@ -53,8 +52,8 @@ export default Capability.makeModule(() =>
         filter: (data): data is { subject: Common.Capability.Settings } =>
           Common.Capability.isSettings(data.subject) && data.subject.prefix === meta.id,
         component: ({ data: { subject } }) => {
-          const settings = useAtomValue(subject.atom) as Markdown.Settings;
-          return <MarkdownSettings settings={settings} />;
+          const { settings, updateSettings } = useSettingsState<Markdown.Settings>(subject.atom);
+          return <MarkdownSettings settings={settings} onSettingsChange={updateSettings} />;
         },
       }),
       Common.createSurface({

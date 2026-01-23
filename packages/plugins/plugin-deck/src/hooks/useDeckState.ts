@@ -3,47 +3,84 @@
 //
 
 import { useAtomValue } from '@effect-atom/atom-react';
-import { useMemo } from 'react';
+import { useCallback, useMemo } from 'react';
 
+import { Common } from '@dxos/app-framework';
 import { useCapability } from '@dxos/app-framework/react';
 import { invariant } from '@dxos/invariant';
 
-import { DeckCapabilities, type DeckPluginState, type DeckState } from '../types';
+import {
+  DeckCapabilities,
+  type DeckEphemeralStateProps,
+  type DeckPluginState,
+  type DeckState,
+  type DeckStateProps,
+} from '../types';
 
 export type DeckStateHook = {
-  /** Current state value (reactive). Uses the raw state from the atom. */
+  /** Combined state value (reactive). Includes both persisted and ephemeral state. */
   state: DeckPluginState;
   /** The active deck, computed from decks[activeDeck]. */
   deck: DeckState;
-  /** Update state using a function that receives current state and returns new state. */
-  update: (fn: (current: DeckPluginState) => DeckPluginState) => void;
+  /** Update persisted state. */
+  updateState: (fn: (current: DeckStateProps) => DeckStateProps) => void;
+  /** Update ephemeral state. */
+  updateEphemeral: (fn: (current: DeckEphemeralStateProps) => DeckEphemeralStateProps) => void;
 };
 
 /**
  * Hook to access the deck plugin state reactively.
- * Returns the current state, the active deck, and an update function.
+ * Returns the combined state, the active deck, and update functions for each atom.
  *
  * NOTE: The `deck` is returned separately (not spread into state) to avoid creating
  * new object references on every state update, which would cause infinite re-render loops.
  */
 export const useDeckState = (): DeckStateHook => {
-  const stateStore = useCapability(DeckCapabilities.State);
-  const state = useAtomValue(stateStore.atom);
+  const registry = useCapability(Common.Capability.AtomRegistry);
+  const stateAtom = useCapability(DeckCapabilities.State);
+  const ephemeralAtom = useCapability(DeckCapabilities.EphemeralState);
+
+  const persistedState = useAtomValue(stateAtom);
+  const ephemeralState = useAtomValue(ephemeralAtom);
 
   // Compute deck from decks[activeDeck] to ensure it's always current.
-  // This is memoized based on the specific values it depends on, not the whole state.
   const deck = useMemo(() => {
-    const d = state.decks[state.activeDeck];
-    invariant(d, `Deck not found: ${state.activeDeck}`);
+    const d = persistedState.decks[persistedState.activeDeck];
+    invariant(d, `Deck not found: ${persistedState.activeDeck}`);
     return d;
-  }, [state.decks, state.activeDeck]);
+  }, [persistedState.decks, persistedState.activeDeck]);
+
+  // Combine persisted and ephemeral state into a unified view.
+  const state = useMemo(
+    (): DeckPluginState => ({
+      ...persistedState,
+      ...ephemeralState,
+      deck,
+    }),
+    [persistedState, ephemeralState, deck],
+  );
+
+  const updateState = useCallback(
+    (fn: (current: DeckStateProps) => DeckStateProps) => {
+      registry.set(stateAtom, fn(registry.get(stateAtom)));
+    },
+    [registry, stateAtom],
+  );
+
+  const updateEphemeral = useCallback(
+    (fn: (current: DeckEphemeralStateProps) => DeckEphemeralStateProps) => {
+      registry.set(ephemeralAtom, fn(registry.get(ephemeralAtom)));
+    },
+    [registry, ephemeralAtom],
+  );
 
   return useMemo(
     () => ({
       state,
       deck,
-      update: stateStore.update,
+      updateState,
+      updateEphemeral,
     }),
-    [state, deck, stateStore.update],
+    [state, deck, updateState, updateEphemeral],
   );
 };

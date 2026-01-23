@@ -35,9 +35,10 @@ export default Capability.makeModule(
 
     const { invoke, invokePromise } = yield* Capability.get(Common.Capability.OperationInvoker);
     const { graph } = yield* Capability.get(Common.Capability.AppGraph);
-    const layout = yield* Capability.get(Common.Capability.Layout);
-    const deckStateStores = yield* Capability.getAll(DeckCapabilities.State);
-    const deckStateStore = deckStateStores.flat()[0];
+    const registry = yield* Capability.get(Common.Capability.AtomRegistry);
+    const layoutAtom = yield* Capability.get(Common.Capability.Layout);
+    const deckStateAtoms = yield* Capability.getAll(DeckCapabilities.State);
+    const deckStateAtom = deckStateAtoms.flat()[0];
     const attention = yield* Capability.get(AttentionCapabilities.Attention);
     const store = yield* Capability.get(SpaceCapabilities.State);
     const client = yield* Capability.get(ClientCapabilities.Client);
@@ -45,8 +46,12 @@ export default Capability.makeModule(
     const defaultSpace = client.spaces.default;
     yield* Effect.tryPromise(() => defaultSpace.waitUntilReady());
 
-    if (deckStateStore?.state.activeDeck === 'default') {
-      yield* invoke(Common.LayoutOperation.SwitchWorkspace, { subject: defaultSpace.id });
+    // Check if deck state indicates we should switch to default space.
+    if (deckStateAtom) {
+      const deckState = registry.get(deckStateAtom);
+      if (deckState.activeDeck === 'default') {
+        yield* invoke(Common.LayoutOperation.SwitchWorkspace, { subject: defaultSpace.id });
+      }
     }
 
     // Initialize space sharing lock in default space.
@@ -66,31 +71,37 @@ export default Capability.makeModule(
       defaultSpace.db.add(Obj.make(Type.Expando, { key: SHARED, order: [] }));
     }
 
-    // Await missing objects.
+    // Await missing objects - subscribe to layout atom changes.
+    let lastActiveCleanup: (() => void) | undefined;
     subscriptions.add(
-      scheduledEffect(
-        () => ({ active: layout.active }),
-        ({ active }) => {
-          if (active.length !== 1) {
-            return;
-          }
+      registry.subscribe(layoutAtom, () => {
+        // Clean up previous effect.
+        lastActiveCleanup?.();
+        lastActiveCleanup = undefined;
 
-          const id = active[0];
-          const node = Graph.getNode(graph, id).pipe(Option.getOrNull);
-          if (!node && id.length === ECHO_DXN_LENGTH) {
-            void Graph.initialize(graph, id);
-            const timeout = setTimeout(async () => {
-              const node = Graph.getNode(graph, id).pipe(Option.getOrNull);
-              if (!node) {
-                await invokePromise(SpaceOperation.WaitForObject, { id });
-              }
-            }, WAIT_FOR_OBJECT_TIMEOUT);
+        const layout = registry.get(layoutAtom);
+        const active = layout.active;
+        if (active.length !== 1) {
+          return;
+        }
 
-            return () => clearTimeout(timeout);
-          }
-        },
-      ),
+        const id = active[0];
+        const node = Graph.getNode(graph, id).pipe(Option.getOrNull);
+        if (!node && id.length === ECHO_DXN_LENGTH) {
+          void Graph.initialize(graph, id);
+          const timeout = setTimeout(async () => {
+            const node = Graph.getNode(graph, id).pipe(Option.getOrNull);
+            if (!node) {
+              await invokePromise(SpaceOperation.WaitForObject, { id });
+            }
+          }, WAIT_FOR_OBJECT_TIMEOUT);
+
+          lastActiveCleanup = () => clearTimeout(timeout);
+        }
+      }),
     );
+    // Also add cleanup for the last effect.
+    subscriptions.add(() => lastActiveCleanup?.());
 
     // Cache space names.
     subscriptions.add(
@@ -125,76 +136,89 @@ export default Capability.makeModule(
       }).unsubscribe,
     );
 
-    // Broadcast active node to other peers in the space.
+    // Broadcast active node to other peers in the space - subscribe to both layout and attention.
+    let broadcastCleanup: (() => void) | undefined;
+    const setupBroadcast = () => {
+      broadcastCleanup?.();
+
+      const layout = registry.get(layoutAtom);
+      const current = attention.current;
+      const active = layout.active;
+      const inactive = layout.inactive;
+
+      const send = () => {
+        const spaces = client.spaces.get();
+        const identity = client.halo.identity.get();
+        if (identity) {
+          // Group parts by space for efficient messaging.
+          const idsBySpace = reduceGroupBy(active, (id: string) => {
+            try {
+              const { spaceId } = parseId(id);
+              return spaceId;
+            } catch {
+              return null;
+            }
+          });
+
+          const removedBySpace = reduceGroupBy(inactive, (id: string) => {
+            try {
+              const { spaceId } = parseId(id);
+              return spaceId;
+            } catch {
+              return null;
+            }
+          });
+
+          // NOTE: Ensure all spaces are included so that we send the correct `removed` object arrays.
+          for (const space of spaces) {
+            if (!idsBySpace.has(space.id)) {
+              idsBySpace.set(space.id, []);
+            }
+          }
+
+          for (const [spaceId, added] of idsBySpace) {
+            const removed = removedBySpace.get(spaceId) ?? [];
+            const space = spaces.find((space) => space.id === spaceId);
+            if (!space) {
+              continue;
+            }
+
+            void space
+              .postMessage('viewing', {
+                identityKey: identity.identityKey.toHex(),
+                attended: current,
+                added,
+                removed,
+              })
+              // TODO(burdon): This seems defensive; why would this fail? Backoff interval.
+              .catch((err) => {
+                log.warn('Failed to broadcast active node for presence.', {
+                  err: err.message,
+                });
+              });
+          }
+        }
+      };
+
+      send();
+      // Send at interval to allow peers to expire entries if they become disconnected.
+      const interval = setInterval(() => send(), ACTIVE_NODE_BROADCAST_INTERVAL);
+      broadcastCleanup = () => clearInterval(interval);
+    };
+
+    // Subscribe to layout changes for broadcast.
+    subscriptions.add(registry.subscribe(layoutAtom, setupBroadcast));
+    // Also use scheduledEffect for attention.current changes (attention is still signal-based).
     subscriptions.add(
       scheduledEffect(
-        () => ({
-          current: attention.current,
-          active: layout.active,
-          inactive: layout.inactive,
-        }),
-        ({ current, active, inactive }) => {
-          const send = () => {
-            const spaces = client.spaces.get();
-            const identity = client.halo.identity.get();
-            if (identity) {
-              // Group parts by space for efficient messaging.
-              const idsBySpace = reduceGroupBy(active, (id) => {
-                try {
-                  const { spaceId } = parseId(id);
-                  return spaceId;
-                } catch {
-                  return null;
-                }
-              });
-
-              const removedBySpace = reduceGroupBy(inactive, (id) => {
-                try {
-                  const { spaceId } = parseId(id);
-                  return spaceId;
-                } catch {
-                  return null;
-                }
-              });
-
-              // NOTE: Ensure all spaces are included so that we send the correct `removed` object arrays.
-              for (const space of spaces) {
-                if (!idsBySpace.has(space.id)) {
-                  idsBySpace.set(space.id, []);
-                }
-              }
-
-              for (const [spaceId, added] of idsBySpace) {
-                const removed = removedBySpace.get(spaceId) ?? [];
-                const space = spaces.find((space) => space.id === spaceId);
-                if (!space) {
-                  continue;
-                }
-
-                void space
-                  .postMessage('viewing', {
-                    identityKey: identity.identityKey.toHex(),
-                    attended: current,
-                    added,
-                    removed,
-                  })
-                  // TODO(burdon): This seems defensive; why would this fail? Backoff interval.
-                  .catch((err) => {
-                    log.warn('Failed to broadcast active node for presence.', {
-                      err: err.message,
-                    });
-                  });
-              }
-            }
-          };
-
-          send();
-          // Send at interval to allow peers to expire entries if they become disconnected.
-          const interval = setInterval(() => send(), ACTIVE_NODE_BROADCAST_INTERVAL);
-          return () => clearInterval(interval);
-        },
+        () => ({ current: attention.current }),
+        () => setupBroadcast(),
       ),
     );
+    // Initial setup.
+    setupBroadcast();
+    // Cleanup.
+    subscriptions.add(() => broadcastCleanup?.());
 
     // Listen for active nodes from other peers in the space.
     subscriptions.add(
