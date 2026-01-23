@@ -66,6 +66,7 @@ catalog:
   '@dxos/echo': ^0.8.3
   '@dxos/echo-db': ^0.8.3
   '@dxos/effect': ^0.8.3
+  '@dxos/keys': ^0.8.3
   '@dxos/live-object': ^0.8.3
   '@dxos/log': ^0.8.3
   '@dxos/schema': ^0.8.3
