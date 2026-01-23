@@ -6,7 +6,7 @@
 // TDOO(burdon): Standardize import * as A.
 import type { ChangeFn, ChangeOptions, Doc, Heads } from '@automerge/automerge';
 
-import { type Reference } from '@dxos/echo-protocol';
+import { type EncodedReference } from '@dxos/echo-protocol';
 import { get } from '@dxos/util';
 
 export type DecodedAutomergePrimaryValue =
@@ -16,7 +16,7 @@ export type DecodedAutomergePrimaryValue =
   | boolean
   | DecodedAutomergePrimaryValue[]
   | { [key: string]: DecodedAutomergePrimaryValue }
-  | Reference;
+  | EncodedReference;
 
 //
 // Automerge types.
