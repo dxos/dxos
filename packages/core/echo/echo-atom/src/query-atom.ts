@@ -5,6 +5,7 @@
 import { Atom } from '@effect-atom/atom';
 
 import { DXN, Database, type Entity, type Filter, Query, type QueryResult } from '@dxos/echo';
+import { WeakDictionary } from '@dxos/util';
 
 /**
  * Create a self-updating atom from an existing QueryResult.
@@ -30,28 +31,27 @@ export const fromQuery = <T extends Entity.Unknown>(queryResult: QueryResult.Que
     return queryResult.results;
   });
 
-// Registry: key → Queryable (WeakRef to allow GC).
-const queryableRegistry = new Map<string, WeakRef<Database.Queryable>>();
+// Registry: key → Queryable (WeakRef with auto-cleanup when GC'd).
+const queryableRegistry = new WeakDictionary<string, Database.Queryable>();
 
 // Atom.family keyed by "identifier:serializedAST".
 const queryFamily = Atom.family((key: string) => {
+  // Parse key outside Atom.make - runs once per key.
+  const separatorIndex = key.indexOf(':');
+  const identifier = key.slice(0, separatorIndex);
+  const serializedAst = key.slice(separatorIndex + 1);
+
+  // Get queryable outside Atom.make - keeps Queryable alive via closure.
+  const queryable = queryableRegistry.get(identifier);
+  if (!queryable) {
+    return Atom.make(() => [] as Entity.Unknown[]);
+  }
+
+  // Create query outside Atom.make - runs once, not on every recompute.
+  const ast = JSON.parse(serializedAst);
+  const queryResult = queryable.query(Query.fromAst(ast)) as QueryResult.QueryResult<Entity.Unknown>;
+
   return Atom.make((get) => {
-    // Parse key to extract identifier and AST.
-    const separatorIndex = key.indexOf(':');
-    const identifier = key.slice(0, separatorIndex);
-    const serializedAst = key.slice(separatorIndex + 1);
-
-    // Look up queryable from registry.
-    const queryableRef = queryableRegistry.get(identifier);
-    const queryable = queryableRef?.deref();
-    if (!queryable) {
-      return [] as Entity.Unknown[];
-    }
-
-    // Deserialize and run query.
-    const ast = JSON.parse(serializedAst);
-    const queryResult = queryable.query(Query.fromAst(ast)) as QueryResult.QueryResult<Entity.Unknown>;
-
     const unsubscribe = queryResult.subscribe(() => {
       get.setSelf(queryResult.results);
     });
@@ -106,8 +106,8 @@ const fromQueryable = <T extends Entity.Unknown>(
   identifier: string,
   queryOrFilter: Query.Query<T> | Filter.Filter<T>,
 ): Atom.Atom<T[]> => {
-  // Register/update queryable in registry.
-  queryableRegistry.set(identifier, new WeakRef(queryable));
+  // Register queryable in registry (WeakDictionary handles cleanup automatically).
+  queryableRegistry.set(identifier, queryable);
 
   // Normalize to Query.
   const normalizedQuery: Query.Any = Query.is(queryOrFilter)
