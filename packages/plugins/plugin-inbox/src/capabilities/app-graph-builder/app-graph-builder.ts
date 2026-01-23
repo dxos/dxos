@@ -123,9 +123,7 @@ export default Capability.makeModule(
           const selection = get(selectionAtom)[0];
           const nodeId = Obj.getDXN(cal).toString();
           const eventId = get(CreateAtom.fromSignal(() => selection?.getSelected(nodeId, 'single')));
-          const event = get(
-            AtomQuery.make<Event.Event>(queue, eventId ? Filter.id(eventId) : Filter.nothing()),
-          )[0];
+          const event = get(AtomQuery.make<Event.Event>(queue, eventId ? Filter.id(eventId) : Filter.nothing()))[0];
           return Effect.succeed([
             {
               id: `${nodeId}${ATTENDABLE_PATH_SEPARATOR}event`,
