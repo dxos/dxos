@@ -4,7 +4,7 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Common, Plugin } from '@dxos/app-framework';
+import { Capability, Common, Plugin } from '@dxos/app-framework';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { type CreateObject } from '@dxos/plugin-space/types';
 import { Event, Message } from '@dxos/types';
@@ -14,6 +14,8 @@ import { AppGraphBuilder, BlueprintDefinition, OperationResolver, ReactSurface }
 import { meta } from './meta';
 import { translations } from './translations';
 import { Calendar, Mailbox } from './types';
+import { CreateCalendarSchema } from './types/Calendar';
+import { CreateMailboxSchema } from './types/Mailbox';
 
 export const InboxPlugin = Plugin.define(meta).pipe(
   Common.Plugin.addTranslationsModule({ translations }),
@@ -25,9 +27,10 @@ export const InboxPlugin = Plugin.define(meta).pipe(
           icon: 'ph--tray--regular',
           iconHue: 'rose',
           blueprints: [InboxBlueprint.Key],
-          createObject: ((props, { db, context }) =>
-            Effect.sync(() => {
-              const client = context.getCapability(ClientCapabilities.Client);
+          inputSchema: CreateMailboxSchema,
+          createObject: ((props, { db }) =>
+            Effect.gen(function* () {
+              const client = yield* Capability.get(ClientCapabilities.Client);
               const space = client.spaces.get(db.spaceId);
               return Mailbox.make({ ...props, space });
             })) satisfies CreateObject,
@@ -47,9 +50,10 @@ export const InboxPlugin = Plugin.define(meta).pipe(
           icon: 'ph--calendar--regular',
           iconHue: 'rose',
           blueprints: [CalendarBlueprint.Key],
-          createObject: ((props, { db, context }) =>
-            Effect.sync(() => {
-              const client = context.getCapability(ClientCapabilities.Client);
+          inputSchema: CreateCalendarSchema,
+          createObject: ((props, { db }) =>
+            Effect.gen(function* () {
+              const client = yield* Capability.get(ClientCapabilities.Client);
               const space = client.spaces.get(db.spaceId);
               return Calendar.make({ ...props, space });
             })) satisfies CreateObject,

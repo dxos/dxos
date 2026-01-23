@@ -5,11 +5,15 @@
 import { describe, expect, test } from 'vitest';
 
 import { Context } from '@dxos/context';
+import { type Hypergraph } from '@dxos/echo';
 import { type QueryAST } from '@dxos/echo-protocol';
 import { SpaceId } from '@dxos/keys';
 import { QueryReactivity, type QueryRequest, type QueryService } from '@dxos/protocols/proto/dxos/echo/query';
 
 import { IndexQuerySource } from './index-query-source-provider';
+
+// Mock graph - only used for queue items which are not tested here.
+const mockGraph = {} as Hypergraph.Hypergraph;
 
 const makeQuery = (): QueryAST.Query => ({
   type: 'options',
@@ -47,6 +51,7 @@ describe('IndexQuerySource', () => {
       objectLoader: {
         loadObject: async () => undefined,
       },
+      graph: mockGraph,
     });
 
     const query = makeQuery();
@@ -84,6 +89,7 @@ describe('IndexQuerySource', () => {
       objectLoader: {
         loadObject: async () => undefined,
       },
+      graph: mockGraph,
     });
 
     // Avoid any side effects caused by `changed` listeners.

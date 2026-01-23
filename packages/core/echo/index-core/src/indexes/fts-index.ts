@@ -4,13 +4,18 @@
 
 import * as SqlClient from '@effect/sql/SqlClient';
 import type * as SqlError from '@effect/sql/SqlError';
+import type * as Statement from '@effect/sql/Statement';
 import * as Effect from 'effect/Effect';
 
-import type { SpaceId } from '@dxos/keys';
+import type { Obj } from '@dxos/echo';
+import type { ObjectId, SpaceId } from '@dxos/keys';
 
 import type { Index, IndexerObject } from './interface';
 import type { ObjectMeta } from './object-meta-index';
 
+/**
+ * The space and queue constrains are combined together using a logical OR.
+ */
 export interface FtsQuery {
   /**
    * Text to search.
@@ -20,7 +25,28 @@ export interface FtsQuery {
   /**
    * Space ID to search within.
    */
-  spaceId?: SpaceId;
+  spaceId: readonly SpaceId[] | null;
+
+  /**
+   * If true, include all queues in the spaces specified by `spaceId`.
+   */
+  includeAllQueues: boolean;
+
+  /**
+   * Queue IDs to search within.
+   */
+  queueIds: readonly ObjectId[] | null;
+}
+
+/**
+ * Result of FTS query including the indexed snapshot data.
+ */
+export interface FtsResult extends ObjectMeta {
+  /**
+   * The indexed snapshot data (JSON string).
+   * Used to load queue objects without going through document loading.
+   */
+  snapshot: string;
 }
 
 /**
@@ -61,7 +87,12 @@ export class FtsIndex implements Index {
     yield* sql`CREATE VIRTUAL TABLE IF NOT EXISTS ftsIndex USING fts5(snapshot, tokenize='trigram')`;
   });
 
-  query({ query, spaceId }: FtsQuery): Effect.Effect<readonly ObjectMeta[], SqlError.SqlError, SqlClient.SqlClient> {
+  query({
+    query,
+    spaceId,
+    includeAllQueues,
+    queueIds,
+  }: FtsQuery): Effect.Effect<readonly ObjectMeta[], SqlError.SqlError, SqlClient.SqlClient> {
     return Effect.gen(function* () {
       const trimmed = query.trim();
       if (trimmed.length === 0) {
@@ -82,10 +113,52 @@ export class FtsIndex implements Index {
           : // MATCH - fast index lookup.
             [sql`f.snapshot MATCH ${escapeFts5Query(trimmed)}`];
 
-      if (spaceId) {
-        conditions.push(sql`m.spaceId = ${spaceId}`);
+      // Space and queue constraints are combined with OR.
+      const sourceConditions: Statement.Statement<{}>[] = [];
+
+      if (spaceId && spaceId.length > 0) {
+        if (includeAllQueues) {
+          // All items from these spaces (both space objects and queue objects).
+          sourceConditions.push(sql`m.spaceId IN ${sql.in(spaceId)}`);
+        } else {
+          // Only space objects (not queue objects) from these spaces.
+          sourceConditions.push(sql`(m.spaceId IN ${sql.in(spaceId)} AND m.queueId = '')`);
+        }
       }
+
+      if (queueIds && queueIds.length > 0) {
+        // Items from specific queues.
+        sourceConditions.push(sql`m.queueId IN ${sql.in(queueIds)}`);
+      }
+
+      if (sourceConditions.length > 0) {
+        conditions.push(sql`(${sql.or(sourceConditions)})`);
+      }
+
       return yield* sql<ObjectMeta>`SELECT m.* FROM ftsIndex AS f JOIN objectMeta AS m ON f.rowid = m.recordId WHERE ${sql.and(conditions)}`;
+    });
+  }
+
+  /**
+   * Query snapshots by recordIds.
+   * Returns the parsed JSON snapshots for queue objects.
+   */
+  querySnapshotsJSON(
+    recordIds: number[],
+  ): Effect.Effect<readonly { recordId: number; snapshot: Obj.JSON }[], SqlError.SqlError, SqlClient.SqlClient> {
+    return Effect.gen(function* () {
+      if (recordIds.length === 0) {
+        return [];
+      }
+      const sql = yield* SqlClient.SqlClient;
+      const results = yield* sql<{
+        rowid: number;
+        snapshot: string;
+      }>`SELECT rowid, snapshot FROM ftsIndex WHERE rowid IN ${sql.in(recordIds)}`;
+      return results.map((r) => ({
+        recordId: r.rowid,
+        snapshot: JSON.parse(r.snapshot),
+      }));
     });
   }
 
@@ -100,7 +173,7 @@ export class FtsIndex implements Index {
             Effect.gen(function* () {
               const { recordId, data } = object;
               if (recordId === null) {
-                yield* Effect.die(new Error('FtsIndex.update requires recordId to be set'));
+                return yield* Effect.die(new Error('FtsIndex.update requires recordId to be set'));
               }
 
               const snapshot = JSON.stringify(data);

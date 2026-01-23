@@ -51,8 +51,11 @@ type AddProps = {
 };
 
 export const add = Effect.fn(function* ({ object, target, hidden }: AddProps) {
+  const objectRef = Ref.make(object);
   if (Obj.instanceOf(Collection, target)) {
-    target.objects.push(Ref.make(object));
+    Obj.change(target, (t) => {
+      t.objects.push(objectRef);
+    });
   } else if (hidden) {
     yield* Database.Service.add(object);
   } else {
@@ -62,11 +65,17 @@ export const add = Effect.fn(function* ({ object, target, hidden }: AddProps) {
 
     const collection = properties[Collection.typename]?.target;
     if (Obj.instanceOf(Collection, collection)) {
-      collection.objects.push(Ref.make(object));
+      Obj.change(collection, (c) => {
+        c.objects.push(objectRef);
+      });
     } else {
       // TODO(wittjosiah): Can't add non-echo objects by including in a collection because of types.
-      const collection = Obj.make(Collection, { objects: [Ref.make(object)] });
-      properties[Collection.typename] = Ref.make(collection);
+      const newCollection = Obj.make(Collection, { objects: [objectRef] });
+      const collectionRef = Ref.make(newCollection);
+      // Use outer reference pattern since Expando doesn't satisfy Obj.change type constraints.
+      Obj.change(properties as Obj.Any, () => {
+        properties[Collection.typename] = collectionRef;
+      });
     }
   }
 });

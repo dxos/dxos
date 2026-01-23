@@ -2,12 +2,12 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type Capability, Common } from '@dxos/app-framework';
+import { type CapabilityManager, Common } from '@dxos/app-framework';
 import { sleep } from '@dxos/async';
 import { type Step } from '@dxos/plugin-help';
 
-const ensureSidebar: Step['before'] = async (context: Capability.PluginContext) => {
-  const { invokePromise } = context.getCapability(Common.Capability.OperationInvoker);
+const ensureSidebar: Step['before'] = async (capabilities: CapabilityManager.CapabilityManager) => {
+  const { invokePromise } = capabilities.get(Common.Capability.OperationInvoker);
   await invokePromise(Common.LayoutOperation.UpdateSidebar, { state: 'expanded' });
   return await sleep(200);
 };

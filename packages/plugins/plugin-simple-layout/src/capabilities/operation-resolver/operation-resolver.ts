@@ -11,8 +11,6 @@ import { SimpleLayoutState } from '../../types';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    const context = yield* Capability.PluginContextService;
-
     return Capability.contributes(Common.Capability.OperationResolver, [
       //
       // UpdateSidebar - No-op for simple layout.
@@ -35,16 +33,15 @@ export default Capability.makeModule(
       //
       OperationResolver.make({
         operation: Common.LayoutOperation.UpdateDialog,
-        handler: (input) =>
-          Effect.sync(() => {
-            const layout = context.getCapability(SimpleLayoutState);
-            layout.dialogOpen = input.state ?? Boolean(input.subject);
-            layout.dialogType = input.type ?? 'default';
-            layout.dialogBlockAlign = input.blockAlign ?? 'center';
-            layout.dialogOverlayClasses = input.overlayClasses;
-            layout.dialogOverlayStyle = input.overlayStyle;
-            layout.dialogContent = input.subject ? { component: input.subject, props: input.props } : null;
-          }),
+        handler: Effect.fnUntraced(function* (input) {
+          const layout = yield* Capability.get(SimpleLayoutState);
+          layout.dialogOpen = input.state ?? Boolean(input.subject);
+          layout.dialogType = input.type ?? 'default';
+          layout.dialogBlockAlign = input.blockAlign ?? 'center';
+          layout.dialogOverlayClasses = input.overlayClasses;
+          layout.dialogOverlayStyle = input.overlayStyle;
+          layout.dialogContent = input.subject ? { component: input.subject, props: input.props } : null;
+        }),
       }),
 
       //
@@ -52,24 +49,23 @@ export default Capability.makeModule(
       //
       OperationResolver.make({
         operation: Common.LayoutOperation.UpdatePopover,
-        handler: (input) =>
-          Effect.sync(() => {
-            const layout = context.getCapability(SimpleLayoutState);
-            layout.popoverOpen = input.state ?? Boolean(input.subject);
-            layout.popoverContent =
-              typeof input.subject === 'string'
-                ? { component: input.subject, props: input.props }
-                : input.subject
-                  ? { subject: input.subject }
-                  : undefined;
-            layout.popoverSide = input.side;
-            layout.popoverVariant = input.variant;
-            if (input.variant === 'virtual') {
-              layout.popoverAnchor = input.anchor;
-            } else {
-              layout.popoverAnchorId = input.anchorId;
-            }
-          }),
+        handler: Effect.fnUntraced(function* (input) {
+          const layout = yield* Capability.get(SimpleLayoutState);
+          layout.popoverOpen = input.state ?? Boolean(input.subject);
+          layout.popoverContent =
+            typeof input.subject === 'string'
+              ? { component: input.subject, props: input.props }
+              : input.subject
+                ? { subject: input.subject }
+                : undefined;
+          layout.popoverSide = input.side;
+          layout.popoverVariant = input.variant;
+          if (input.variant === 'virtual') {
+            layout.popoverAnchor = input.anchor;
+          } else {
+            layout.popoverAnchorId = input.anchorId;
+          }
+        }),
       }),
 
       //
@@ -77,17 +73,16 @@ export default Capability.makeModule(
       //
       OperationResolver.make({
         operation: Common.LayoutOperation.SwitchWorkspace,
-        handler: (input) =>
-          Effect.sync(() => {
-            const layout = context.getCapability(SimpleLayoutState);
-            // TODO(wittjosiah): This is a hack to prevent the previous deck from being set for pinned items.
-            //  Ideally this should be worked into the data model in a generic way.
-            if (!layout.workspace.startsWith('!')) {
-              layout.previousWorkspace = layout.workspace;
-            }
-            layout.workspace = input.subject;
-            layout.active = undefined;
-          }),
+        handler: Effect.fnUntraced(function* (input) {
+          const layout = yield* Capability.get(SimpleLayoutState);
+          // TODO(wittjosiah): This is a hack to prevent the previous deck from being set for pinned items.
+          //  Ideally this should be worked into the data model in a generic way.
+          if (!layout.workspace.startsWith('!')) {
+            layout.previousWorkspace = layout.workspace;
+          }
+          layout.workspace = input.subject;
+          layout.active = undefined;
+        }),
       }),
 
       //
@@ -95,13 +90,12 @@ export default Capability.makeModule(
       //
       OperationResolver.make({
         operation: Common.LayoutOperation.RevertWorkspace,
-        handler: () =>
-          Effect.gen(function* () {
-            const layout = context.getCapability(SimpleLayoutState);
-            yield* Operation.invoke(Common.LayoutOperation.SwitchWorkspace, {
-              subject: layout.previousWorkspace,
-            });
-          }),
+        handler: Effect.fnUntraced(function* () {
+          const layout = yield* Capability.get(SimpleLayoutState);
+          yield* Operation.invoke(Common.LayoutOperation.SwitchWorkspace, {
+            subject: layout.previousWorkspace,
+          });
+        }),
       }),
 
       //
@@ -109,11 +103,10 @@ export default Capability.makeModule(
       //
       OperationResolver.make({
         operation: Common.LayoutOperation.Open,
-        handler: (input) =>
-          Effect.sync(() => {
-            const layout = context.getCapability(SimpleLayoutState);
-            layout.active = input.subject[0];
-          }),
+        handler: Effect.fnUntraced(function* (input) {
+          const layout = yield* Capability.get(SimpleLayoutState);
+          layout.active = input.subject[0];
+        }),
       }),
 
       //
@@ -121,11 +114,10 @@ export default Capability.makeModule(
       //
       OperationResolver.make({
         operation: Common.LayoutOperation.Close,
-        handler: () =>
-          Effect.sync(() => {
-            const layout = context.getCapability(SimpleLayoutState);
-            layout.active = undefined;
-          }),
+        handler: Effect.fnUntraced(function* () {
+          const layout = yield* Capability.get(SimpleLayoutState);
+          layout.active = undefined;
+        }),
       }),
 
       //
@@ -133,11 +125,10 @@ export default Capability.makeModule(
       //
       OperationResolver.make({
         operation: Common.LayoutOperation.Set,
-        handler: (input) =>
-          Effect.sync(() => {
-            const layout = context.getCapability(SimpleLayoutState);
-            layout.active = input.subject[0];
-          }),
+        handler: Effect.fnUntraced(function* (input) {
+          const layout = yield* Capability.get(SimpleLayoutState);
+          layout.active = input.subject[0];
+        }),
       }),
     ]);
   }),

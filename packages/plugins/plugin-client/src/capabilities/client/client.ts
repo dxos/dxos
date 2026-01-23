@@ -17,7 +17,8 @@ type ClientCapabilityOptions = Omit<ClientPluginOptions, 'appKey' | 'invitationU
 export default Capability.makeModule(
   Effect.fnUntraced(function* (props?: ClientCapabilityOptions) {
     const { onClientInitialized, onSpacesReady, ...options } = props!;
-    const context = yield* Capability.PluginContextService;
+    const capabilityManager = yield* Capability.Service;
+    const pluginManager = yield* Plugin.Service;
 
     log('creating client');
     const client = new Client(options);
@@ -25,7 +26,10 @@ export default Capability.makeModule(
     yield* Effect.tryPromise(() => client.initialize());
     log('initialized client');
     if (onClientInitialized) {
-      yield* onClientInitialized({ client }).pipe(Effect.provideService(Capability.PluginContextService, context));
+      yield* onClientInitialized({ client }).pipe(
+        Effect.provideService(Capability.Service, capabilityManager),
+        Effect.provideService(Plugin.Service, pluginManager),
+      );
     }
     log('called client initialized callback');
 
@@ -46,7 +50,11 @@ export default Capability.makeModule(
           if (onSpacesReady) {
             yield* onSpacesReady({ client });
           }
-        }).pipe(Effect.provideService(Capability.PluginContextService, context), runAndForwardErrors);
+        }).pipe(
+          Effect.provideService(Capability.Service, capabilityManager),
+          Effect.provideService(Plugin.Service, pluginManager),
+          runAndForwardErrors,
+        );
       }
     });
 

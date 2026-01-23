@@ -136,7 +136,12 @@ describe('IndexEngine', () => {
       expect(results1[0].version).toBeGreaterThan(0);
 
       // Verify FTS index gets updated.
-      const ftsResults1 = yield* ftsIndex.query({ query: 'Hello' });
+      const ftsResults1 = yield* ftsIndex.query({
+        query: 'Hello',
+        spaceId: null,
+        includeAllQueues: false,
+        queueIds: null,
+      });
       expect(ftsResults1.length).toBeGreaterThan(0);
       expect(ftsResults1.some((row) => row.objectId === obj1.data.id)).toBe(true);
 
@@ -160,7 +165,12 @@ describe('IndexEngine', () => {
       expect(results2[0].objectId).toBe(obj1Updated.data.id);
       expect(results2[0].version).toBeGreaterThan(results1[0].version);
 
-      const ftsResults2 = yield* ftsIndex.query({ query: 'World' });
+      const ftsResults2 = yield* ftsIndex.query({
+        query: 'World',
+        spaceId: null,
+        includeAllQueues: false,
+        queueIds: null,
+      });
       expect(ftsResults2.length).toBeGreaterThan(0);
     }, Effect.provide(TestLayer)),
   );
@@ -220,7 +230,12 @@ describe('IndexEngine', () => {
       const resultsB = yield* metaIndex.query({ spaceId: spaceId.toString(), typeDxn: TYPE_B });
       expect(resultsB).toHaveLength(1);
 
-      const ftsResults = yield* ftsIndex.query({ query: 'TypeA' });
+      const ftsResults = yield* ftsIndex.query({
+        query: 'TypeA',
+        spaceId: null,
+        includeAllQueues: false,
+        queueIds: null,
+      });
       expect(ftsResults).toHaveLength(2);
     }, Effect.provide(TestLayer)),
   );

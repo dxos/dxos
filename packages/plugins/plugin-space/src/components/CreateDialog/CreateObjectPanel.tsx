@@ -6,7 +6,7 @@ import * as Option from 'effect/Option';
 import type * as Schema from 'effect/Schema';
 import React, { useCallback, useMemo } from 'react';
 
-import { type Database } from '@dxos/echo';
+import { type Database, Obj } from '@dxos/echo';
 import { type AnyProperties, type TypeAnnotation, getTypeAnnotation } from '@dxos/echo/internal';
 import { type Space, type SpaceId } from '@dxos/react-client/echo';
 import { toLocalizedString, useDefaultValue, useTranslation } from '@dxos/react-ui';
@@ -115,6 +115,7 @@ export const CreateObjectPanel = ({
       autoFocus
       schema={omitId(metadata.inputSchema)}
       values={initialFormValues}
+      db={Obj.isObject(target) ? Obj.getDatabase(target) : target}
       fieldProvider={inputSurfaceLookup}
       onSave={handleCreateObject}
     >

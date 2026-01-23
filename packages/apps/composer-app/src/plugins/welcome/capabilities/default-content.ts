@@ -5,6 +5,7 @@
 import * as Effect from 'effect/Effect';
 
 import { Capability, Common, Plugin } from '@dxos/app-framework';
+import { Operation } from '@dxos/operation';
 import { Graph } from '@dxos/plugin-graph';
 import { SPACES, SpaceEvents } from '@dxos/plugin-space';
 import { SpaceCapabilities } from '@dxos/plugin-space/types';
@@ -20,23 +21,31 @@ export default Capability.makeModule(
     const { Markdown } = yield* Effect.tryPromise(() => import('@dxos/plugin-markdown/types'));
     const { Collection } = yield* Effect.tryPromise(() => import('@dxos/schema'));
 
-    const { invoke } = yield* Capability.get(Common.Capability.OperationInvoker);
+    const operationInvoker = yield* Capability.get(Common.Capability.OperationInvoker);
+    const { invoke } = operationInvoker;
     const { graph } = yield* Capability.get(Common.Capability.AppGraph);
     const client = yield* Capability.get(ClientCapabilities.Client);
 
     const space = client.spaces.default;
-    space.properties.icon = SPACE_ICON;
+    Obj.change(space.properties, (p) => {
+      p.icon = SPACE_ICON;
+    });
     const defaultSpaceCollection = space.properties[Collection.Collection.typename].target;
 
-    defaultSpaceCollection?.objects.push(
-      Ref.make(Collection.makeManaged({ key: Type.getTypename(Type.PersistentType) })),
-    );
+    if (defaultSpaceCollection) {
+      const typesCollectionRef = Ref.make(Collection.makeManaged({ key: Type.getTypename(Type.PersistentType) }));
+      Obj.change(defaultSpaceCollection, (c) => {
+        c.objects.push(typesCollectionRef);
+      });
+    }
 
     yield* Plugin.activate(SpaceEvents.SpaceCreated);
     const onCreateSpaceCallbacks = yield* Capability.getAll(SpaceCapabilities.OnCreateSpace);
     yield* Effect.all(
       onCreateSpaceCallbacks.map((onCreateSpace) =>
-        onCreateSpace({ space: space, isDefault: true, rootCollection: defaultSpaceCollection }),
+        onCreateSpace({ space: space, isDefault: true, rootCollection: defaultSpaceCollection }).pipe(
+          Effect.provideService(Operation.Service, operationInvoker),
+        ),
       ),
     );
 
@@ -44,7 +53,12 @@ export default Capability.makeModule(
       name: 'README',
       content: README_CONTENT,
     });
-    defaultSpaceCollection?.objects.push(Ref.make(readme));
+    if (defaultSpaceCollection) {
+      const readmeRef = Ref.make(readme);
+      Obj.change(defaultSpaceCollection, (c) => {
+        c.objects.push(readmeRef);
+      });
+    }
 
     // Ensure the default content is in the graph and connected.
     // This will allow the expose action to work before the navtree renders for the first time.

@@ -6,6 +6,8 @@ import * as Schema from 'effect/Schema';
 
 import { Operation } from '@dxos/operation';
 
+import { Capability } from '../core';
+
 import { meta } from './meta';
 
 // TODO(burdon): Document.
@@ -38,6 +40,7 @@ export namespace SettingsOperation {
       name: 'Open Settings',
       description: 'Open the settings panel.',
     },
+    services: [Capability.Service],
     schema: {
       input: Schema.Struct({
         plugin: Schema.optional(Schema.String.annotations({ description: 'The plugin to open settings for.' })),
@@ -52,6 +55,7 @@ export namespace SettingsOperation {
       name: 'Open Plugin Registry',
       description: 'Open the plugin registry.',
     },
+    services: [Capability.Service],
     schema: {
       input: Schema.Void,
       output: Schema.Void,

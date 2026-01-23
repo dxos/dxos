@@ -59,7 +59,9 @@ describe('EchoSchema', () => {
     }).pipe(Type.Obj({ typename: 'example.com/type/Test', version: '0.1.0' }));
 
     const [schema] = await db.schemaRegistry.register([GeneratedSchema]);
-    instanceWithSchemaRef.schema = Ref.make(schema);
+    Obj.change(instanceWithSchemaRef, (o) => {
+      o.schema = Ref.make(schema);
+    });
     const schemaWithId = GeneratedSchema.annotations({
       [TypeAnnotationId]: {
         kind: EntityKind.Object,
@@ -92,7 +94,9 @@ describe('EchoSchema', () => {
       field: Schema.String,
     }).pipe(Type.Obj({ typename: 'example.com/type/Test', version: '0.1.0' }));
     const [schema] = await db.schemaRegistry.register([GeneratedSchema]);
-    instanceWithSchemaRef.schemaArray!.push(Ref.make(schema));
+    Obj.change(instanceWithSchemaRef, (o) => {
+      o.schemaArray!.push(Ref.make(schema));
+    });
     expect(instanceWithSchemaRef.schemaArray![0].target!.typename).to.eq(GeneratedSchema.typename);
   });
 
@@ -101,10 +105,16 @@ describe('EchoSchema', () => {
     const [schema] = await db.schemaRegistry.register([TestEmpty]);
     const object = Obj.make(schema, {});
     schema.addFields({ field1: Schema.String });
-    object.field1 = 'works';
-    object.field1 = undefined;
+    Obj.change(object, (o) => {
+      o.field1 = 'works';
+    });
+    Obj.change(object, (o) => {
+      o.field1 = undefined;
+    });
     expect(() => {
-      object.field1 = 42;
+      Obj.change(object, (o) => {
+        o.field1 = 42;
+      });
     }).to.throw();
 
     // TODO(burdon): Re-enable validation?

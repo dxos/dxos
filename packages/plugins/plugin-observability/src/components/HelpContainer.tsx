@@ -6,6 +6,7 @@ import React, { useCallback } from 'react';
 
 import { Common } from '@dxos/app-framework';
 import { useOperationInvoker } from '@dxos/app-framework/react';
+import { osTranslations } from '@dxos/ui-theme';
 
 import { meta } from '../meta';
 import { ObservabilityOperation, type UserFeedback } from '../types';
@@ -25,7 +26,7 @@ export const HelpContainer = () => {
         duration: 3000,
         title: ['feedback toast label', { ns: meta.id }],
         description: ['feedback toast description', { ns: meta.id }],
-        closeLabel: ['close label', { ns: 'os' }],
+        closeLabel: ['close label', { ns: osTranslations }],
       });
     },
     [invokePromise],

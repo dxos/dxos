@@ -5,10 +5,12 @@
 import type * as Brand from 'effect/Brand';
 import type * as Schema from 'effect/Schema';
 
-import type { CleanupFn } from '@dxos/async';
+import type { CleanupFn, Event } from '@dxos/async';
 import { inspectCustom } from '@dxos/debug';
 import type { SchemaId } from '@dxos/echo/internal';
 import { type GenericSignal, compositeRuntime } from '@dxos/echo-signals/runtime';
+// eslint-disable-next-line @typescript-eslint/consistent-type-imports
+import { EventId } from '@dxos/live-object';
 import { ComplexMap } from '@dxos/util';
 
 import type { KeyPath, ObjectCore } from '../core-db';
@@ -124,4 +126,9 @@ export type ProxyTarget = {
    * Used for objects created by `createObject`.
    */
   [SchemaId]?: Schema.Schema.AnyNoContext;
+
+  /**
+   * For modifications.
+   */
+  [EventId]: Event<void>;
 } & ({ [key: keyof any]: any } | EchoArray<any>);

@@ -22,9 +22,9 @@ import { Calendar, Mailbox } from '../../types';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    const context = yield* Capability.PluginContextService;
+    const capabilities = yield* Capability.Service;
 
-    return Capability.contributes(Common.Capability.AppGraphBuilder, [
+    const extensions = yield* Effect.all([
       GraphBuilder.createExtension({
         id: `${meta.id}/mailbox-filters`,
         match: (node) =>
@@ -34,44 +34,48 @@ export default Capability.makeModule(
             ? Option.some(node.data)
             : Option.none(),
         connector: (mailbox, get) =>
-          get(
-            CreateAtom.fromSignal(() => [
-              {
-                id: `${Obj.getDXN(mailbox).toString()}-unfiltered`,
-                type: `${Mailbox.Mailbox.typename}-filter`,
-                data: mailbox,
-                properties: {
-                  label: ['inbox label', { ns: meta.id }],
-                  icon: 'ph--tray--regular',
-                  filter: null,
-                },
-              },
-              ...mailbox.filters?.map(({ name, filter }: { name: string; filter: any }) => ({
-                id: `${Obj.getDXN(mailbox).toString()}-filter-${kebabize(name)}`,
-                type: `${Mailbox.Mailbox.typename}-filter`,
-                data: mailbox,
-                properties: {
-                  label: name,
-                  icon: 'ph--tray--regular',
-                  filter,
-                },
-                nodes: [
-                  {
-                    id: `${Obj.getDXN(mailbox).toString()}-filter-${kebabize(name)}-delete`,
-                    type: Node.ActionType,
-                    data: async () => {
-                      const index = mailbox.filters.findIndex((f: any) => f.name === name);
-                      mailbox.filters.splice(index, 1);
-                    },
-                    properties: {
-                      label: ['delete filter label', { ns: meta.id }],
-                      icon: 'ph--trash--regular',
-                      disposition: 'list-item',
-                    },
+          Effect.succeed(
+            get(
+              CreateAtom.fromSignal(() => [
+                {
+                  id: `${Obj.getDXN(mailbox).toString()}-unfiltered`,
+                  type: `${Mailbox.Mailbox.typename}-filter`,
+                  data: mailbox,
+                  properties: {
+                    label: ['inbox label', { ns: meta.id }],
+                    icon: 'ph--tray--regular',
+                    filter: null,
                   },
-                ],
-              })),
-            ]),
+                },
+                ...mailbox.filters?.map(({ name, filter }: { name: string; filter: any }) => ({
+                  id: `${Obj.getDXN(mailbox).toString()}-filter-${kebabize(name)}`,
+                  type: `${Mailbox.Mailbox.typename}-filter`,
+                  data: mailbox,
+                  properties: {
+                    label: name,
+                    icon: 'ph--tray--regular',
+                    filter,
+                  },
+                  nodes: [
+                    {
+                      id: `${Obj.getDXN(mailbox).toString()}-filter-${kebabize(name)}-delete`,
+                      type: Node.ActionType,
+                      data: Effect.fnUntraced(function* () {
+                        const index = mailbox.filters.findIndex((f: any) => f.name === name);
+                        Obj.change(mailbox, (m) => {
+                          m.filters.splice(index, 1);
+                        });
+                      }),
+                      properties: {
+                        label: ['delete filter label', { ns: meta.id }],
+                        icon: 'ph--trash--regular',
+                        disposition: 'list-item',
+                      },
+                    },
+                  ],
+                })),
+              ]),
+            ),
           ),
       }),
       GraphBuilder.createTypeExtension({
@@ -80,10 +84,10 @@ export default Capability.makeModule(
         connector: (mailbox, get) => {
           const queue = get(CreateAtom.fromSignal(() => mailbox.queue.target));
           if (!queue) {
-            return [];
+            return Effect.succeed([]);
           }
 
-          const selectionAtom = context.capabilities(AttentionCapabilities.Selection);
+          const selectionAtom = capabilities.atom(AttentionCapabilities.Selection);
           const selection = get(selectionAtom)[0];
           const nodeId = Obj.getDXN(mailbox).toString();
           const messageId = get(CreateAtom.fromSignal(() => selection?.getSelected(nodeId, 'single')));
@@ -91,7 +95,7 @@ export default Capability.makeModule(
             messageId ? Filter.id(messageId) : Filter.nothing(),
           ) as QueryResult.QueryResult<Message.Message>;
           const message = get(atomFromQuery(query))[0];
-          return [
+          return Effect.succeed([
             {
               id: `${nodeId}${ATTENDABLE_PATH_SEPARATOR}message`,
               type: PLANK_COMPANION_TYPE,
@@ -102,7 +106,7 @@ export default Capability.makeModule(
                 disposition: 'hidden',
               },
             },
-          ];
+          ]);
         },
       }),
       GraphBuilder.createTypeExtension({
@@ -111,10 +115,10 @@ export default Capability.makeModule(
         connector: (calendar, get) => {
           const queue = get(CreateAtom.fromSignal(() => calendar.queue.target));
           if (!queue) {
-            return [];
+            return Effect.succeed([]);
           }
 
-          const selectionAtom = context.capabilities(AttentionCapabilities.Selection);
+          const selectionAtom = capabilities.atom(AttentionCapabilities.Selection);
           const selection = get(selectionAtom)[0];
           const nodeId = Obj.getDXN(calendar).toString();
           const eventId = get(CreateAtom.fromSignal(() => selection?.getSelected(nodeId, 'single')));
@@ -122,7 +126,7 @@ export default Capability.makeModule(
             eventId ? Filter.id(eventId) : Filter.nothing(),
           ) as QueryResult.QueryResult<Event.Event>;
           const event = get(atomFromQuery(query))[0];
-          return [
+          return Effect.succeed([
             {
               id: `${nodeId}${ATTENDABLE_PATH_SEPARATOR}event`,
               type: PLANK_COMPANION_TYPE,
@@ -133,53 +137,61 @@ export default Capability.makeModule(
                 disposition: 'hidden',
               },
             },
-          ];
+          ]);
         },
       }),
       GraphBuilder.createTypeExtension({
         id: `${meta.id}/sync-mailbox`,
         type: Mailbox.Mailbox,
-        actions: (mailbox) => [
-          {
-            id: `${Obj.getDXN(mailbox).toString()}-sync`,
-            data: async () => {
-              const computeRuntime = context.getCapability(AutomationCapabilities.ComputeRuntime);
-              const db = Obj.getDatabase(mailbox);
-              invariant(db);
-              const runtime = computeRuntime.getRuntime(db.spaceId);
-              await runtime.runPromise(invokeFunctionWithTracing(gmail.sync, { mailbox: Ref.make(mailbox) }));
+        actions: (mailbox) =>
+          Effect.succeed([
+            {
+              id: `${Obj.getDXN(mailbox).toString()}-sync`,
+              data: Effect.fnUntraced(function* () {
+                const computeRuntime = yield* Capability.get(AutomationCapabilities.ComputeRuntime);
+                const db = Obj.getDatabase(mailbox);
+                invariant(db);
+                const runtime = computeRuntime.getRuntime(db.spaceId);
+                yield* Effect.tryPromise(() =>
+                  runtime.runPromise(invokeFunctionWithTracing(gmail.sync, { mailbox: Ref.make(mailbox) })),
+                );
+              }),
+              properties: {
+                label: ['sync mailbox label', { ns: meta.id }],
+                icon: 'ph--arrows-clockwise--regular',
+                disposition: 'list-item',
+              },
             },
-            properties: {
-              label: ['sync mailbox label', { ns: meta.id }],
-              icon: 'ph--arrows-clockwise--regular',
-              disposition: 'list-item',
-            },
-          },
-        ],
+          ]),
       }),
       GraphBuilder.createTypeExtension({
         id: `${meta.id}/sync-calendar`,
         type: Calendar.Calendar,
-        actions: (calendarObj) => [
-          {
-            id: `${Obj.getDXN(calendarObj).toString()}-sync`,
-            data: async () => {
-              const computeRuntime = context.getCapability(AutomationCapabilities.ComputeRuntime);
-              const db = Obj.getDatabase(calendarObj);
-              invariant(db);
-              const runtime = computeRuntime.getRuntime(db.spaceId);
-              await runtime.runPromise(
-                invokeFunctionWithTracing(calendar.sync, { calendarId: Obj.getDXN(calendarObj).toString() }),
-              );
+        actions: (calendarObj) =>
+          Effect.succeed([
+            {
+              id: `${Obj.getDXN(calendarObj).toString()}-sync`,
+              data: Effect.fnUntraced(function* () {
+                const computeRuntime = yield* Capability.get(AutomationCapabilities.ComputeRuntime);
+                const db = Obj.getDatabase(calendarObj);
+                invariant(db);
+                const runtime = computeRuntime.getRuntime(db.spaceId);
+                yield* Effect.tryPromise(() =>
+                  runtime.runPromise(
+                    invokeFunctionWithTracing(calendar.sync, { calendarId: Obj.getDXN(calendarObj).toString() }),
+                  ),
+                );
+              }),
+              properties: {
+                label: ['sync calendar label', { ns: meta.id }],
+                icon: 'ph--arrows-clockwise--regular',
+                disposition: 'list-item',
+              },
             },
-            properties: {
-              label: ['sync calendar label', { ns: meta.id }],
-              icon: 'ph--arrows-clockwise--regular',
-              disposition: 'list-item',
-            },
-          },
-        ],
+          ]),
       }),
     ]);
+
+    return Capability.contributes(Common.Capability.AppGraphBuilder, extensions);
   }),
 );

@@ -26,7 +26,6 @@ const RECOVER_IDENTITY_RPC_TIMEOUT = 20_000;
 export default Capability.makeModule(
   Effect.fnUntraced(function* (props?: OperationResolverOptions) {
     const { appName = 'Composer' } = props ?? {};
-    const context = yield* Capability.PluginContextService;
 
     return Capability.contributes(Common.Capability.OperationResolver, [
       //
@@ -34,15 +33,14 @@ export default Capability.makeModule(
       //
       OperationResolver.make({
         operation: ClientOperation.CreateIdentity,
-        handler: (profile) =>
-          Effect.gen(function* () {
-            const manager = context.getCapability(Common.Capability.PluginManager);
-            const client = context.getCapability(ClientCapabilities.Client);
-            const data = yield* Effect.promise(() => client.halo.createIdentity(profile));
-            yield* Effect.promise(() => runAndForwardErrors(manager.activate(ClientEvents.IdentityCreated)));
-            yield* Operation.schedule(ObservabilityOperation.SendEvent, { name: 'identity.create' });
-            return data;
-          }),
+        handler: Effect.fnUntraced(function* (profile) {
+          const manager = yield* Capability.get(Common.Capability.PluginManager);
+          const client = yield* Capability.get(ClientCapabilities.Client);
+          const data = yield* Effect.promise(() => client.halo.createIdentity(profile));
+          yield* Effect.promise(() => runAndForwardErrors(manager.activate(ClientEvents.IdentityCreated)));
+          yield* Operation.schedule(ObservabilityOperation.SendEvent, { name: 'identity.create' });
+          return data;
+        }),
       }),
 
       //
@@ -50,17 +48,16 @@ export default Capability.makeModule(
       //
       OperationResolver.make({
         operation: ClientOperation.JoinIdentity,
-        handler: (data) =>
-          Effect.gen(function* () {
-            yield* Operation.invoke(Common.LayoutOperation.UpdateDialog, {
-              subject: JOIN_DIALOG,
-              blockAlign: 'start',
-              props: {
-                initialInvitationCode: data.invitationCode,
-                initialDisposition: 'accept-halo-invitation',
-              },
-            });
-          }),
+        handler: Effect.fnUntraced(function* (data) {
+          yield* Operation.invoke(Common.LayoutOperation.UpdateDialog, {
+            subject: JOIN_DIALOG,
+            blockAlign: 'start',
+            props: {
+              initialInvitationCode: data.invitationCode,
+              initialDisposition: 'accept-halo-invitation',
+            },
+          });
+        }),
       }),
 
       //
@@ -68,12 +65,11 @@ export default Capability.makeModule(
       //
       OperationResolver.make({
         operation: ClientOperation.ShareIdentity,
-        handler: () =>
-          Effect.gen(function* () {
-            yield* Operation.invoke(Common.LayoutOperation.SwitchWorkspace, { subject: Account.id });
-            yield* Operation.invoke(Common.LayoutOperation.Open, { subject: [Account.Profile] });
-            yield* Operation.schedule(ObservabilityOperation.SendEvent, { name: 'identity.share' });
-          }),
+        handler: Effect.fnUntraced(function* () {
+          yield* Operation.invoke(Common.LayoutOperation.SwitchWorkspace, { subject: Account.id });
+          yield* Operation.invoke(Common.LayoutOperation.Open, { subject: [Account.Profile] });
+          yield* Operation.schedule(ObservabilityOperation.SendEvent, { name: 'identity.share' });
+        }),
       }),
 
       //
@@ -81,16 +77,15 @@ export default Capability.makeModule(
       //
       OperationResolver.make({
         operation: ClientOperation.RecoverIdentity,
-        handler: () =>
-          Effect.gen(function* () {
-            yield* Operation.invoke(Common.LayoutOperation.UpdateDialog, {
-              subject: JOIN_DIALOG,
-              blockAlign: 'start',
-              props: {
-                initialDisposition: 'recover-identity',
-              } satisfies Partial<JoinPanelProps>,
-            });
-          }),
+        handler: Effect.fnUntraced(function* () {
+          yield* Operation.invoke(Common.LayoutOperation.UpdateDialog, {
+            subject: JOIN_DIALOG,
+            blockAlign: 'start',
+            props: {
+              initialDisposition: 'recover-identity',
+            } satisfies Partial<JoinPanelProps>,
+          });
+        }),
       }),
 
       //
@@ -98,16 +93,15 @@ export default Capability.makeModule(
       //
       OperationResolver.make({
         operation: ClientOperation.ResetStorage,
-        handler: (data) =>
-          Effect.gen(function* () {
-            yield* Operation.invoke(Common.LayoutOperation.UpdateDialog, {
-              subject: RESET_DIALOG,
-              blockAlign: 'start',
-              props: {
-                mode: data.mode ?? 'reset storage',
-              },
-            });
-          }),
+        handler: Effect.fnUntraced(function* (data) {
+          yield* Operation.invoke(Common.LayoutOperation.UpdateDialog, {
+            subject: RESET_DIALOG,
+            blockAlign: 'start',
+            props: {
+              mode: data.mode ?? 'reset storage',
+            },
+          });
+        }),
       }),
 
       //
@@ -115,12 +109,13 @@ export default Capability.makeModule(
       //
       OperationResolver.make({
         operation: ClientOperation.CreateAgent,
-        handler: () =>
-          Effect.promise(async () => {
-            const client = context.getCapability(ClientCapabilities.Client);
-            invariant(client.services.services.EdgeAgentService, 'Missing EdgeAgentService');
-            await client.services.services.EdgeAgentService.createAgent(undefined, { timeout: 10_000 });
-          }),
+        handler: Effect.fnUntraced(function* () {
+          const client = yield* Capability.get(ClientCapabilities.Client);
+          invariant(client.services.services.EdgeAgentService, 'Missing EdgeAgentService');
+          yield* Effect.promise(() =>
+            client.services.services.EdgeAgentService!.createAgent(undefined, { timeout: 10_000 }),
+          );
+        }),
       }),
 
       //
@@ -128,20 +123,19 @@ export default Capability.makeModule(
       //
       OperationResolver.make({
         operation: ClientOperation.CreateRecoveryCode,
-        handler: () =>
-          Effect.gen(function* () {
-            const client = context.getCapability(ClientCapabilities.Client);
-            invariant(client.services.services.IdentityService, 'IdentityService not available');
-            const { recoveryCode } = yield* Effect.promise(() =>
-              client.services.services.IdentityService!.createRecoveryCredential({}),
-            );
-            yield* Operation.invoke(Common.LayoutOperation.UpdateDialog, {
-              subject: RECOVERY_CODE_DIALOG,
-              blockAlign: 'start',
-              type: 'alert',
-              props: { code: recoveryCode },
-            });
-          }),
+        handler: Effect.fnUntraced(function* () {
+          const client = yield* Capability.get(ClientCapabilities.Client);
+          invariant(client.services.services.IdentityService, 'IdentityService not available');
+          const { recoveryCode } = yield* Effect.promise(() =>
+            client.services.services.IdentityService!.createRecoveryCredential({}),
+          );
+          yield* Operation.invoke(Common.LayoutOperation.UpdateDialog, {
+            subject: RECOVERY_CODE_DIALOG,
+            blockAlign: 'start',
+            type: 'alert',
+            props: { code: recoveryCode },
+          });
+        }),
       }),
 
       //
@@ -149,14 +143,14 @@ export default Capability.makeModule(
       //
       OperationResolver.make({
         operation: ClientOperation.CreatePasskey,
-        handler: () =>
-          Effect.promise(async () => {
-            const client = context.getCapability(ClientCapabilities.Client);
-            const identity = client.halo.identity.get();
-            invariant(identity, 'Identity not available');
+        handler: Effect.fnUntraced(function* () {
+          const client = yield* Capability.get(ClientCapabilities.Client);
+          const identity = client.halo.identity.get();
+          invariant(identity, 'Identity not available');
 
-            const lookupKey = PublicKey.random();
-            const credential = await navigator.credentials.create({
+          const lookupKey = PublicKey.random();
+          const credential = yield* Effect.promise(() =>
+            navigator.credentials.create({
               publicKey: {
                 challenge: new Uint8Array(),
                 rp: { id: location.hostname, name: appName },
@@ -174,21 +168,24 @@ export default Capability.makeModule(
                   requireResidentKey: true,
                 },
               },
-            });
+            }),
+          );
 
-            invariant(credential, 'Credential not available');
-            const recoveryKey = PublicKey.from(new Uint8Array((credential as any).response.getPublicKey()));
-            const algorithm = (credential as any).response.getPublicKeyAlgorithm() === -7 ? 'ES256' : 'ED25519';
+          invariant(credential, 'Credential not available');
+          const recoveryKey = PublicKey.from(new Uint8Array((credential as any).response.getPublicKey()));
+          const algorithm = (credential as any).response.getPublicKeyAlgorithm() === -7 ? 'ES256' : 'ED25519';
 
-            invariant(client.services.services.IdentityService, 'IdentityService not available');
-            await client.services.services.IdentityService.createRecoveryCredential({
+          invariant(client.services.services.IdentityService, 'IdentityService not available');
+          yield* Effect.promise(() =>
+            client.services.services.IdentityService!.createRecoveryCredential({
               data: {
                 recoveryKey,
                 algorithm,
                 lookupKey,
               },
-            });
-          }),
+            }),
+          );
+        }),
       }),
 
       //
@@ -196,21 +193,24 @@ export default Capability.makeModule(
       //
       OperationResolver.make({
         operation: ClientOperation.RedeemPasskey,
-        handler: () =>
-          Effect.promise(async () => {
-            const client = context.getCapability(ClientCapabilities.Client);
-            invariant(client.services.services.IdentityService, 'IdentityService not available');
-            const { deviceKey, controlFeedKey, challenge } =
-              await client.services.services.IdentityService.requestRecoveryChallenge();
-            const credential = await navigator.credentials.get({
+        handler: Effect.fnUntraced(function* () {
+          const client = yield* Capability.get(ClientCapabilities.Client);
+          invariant(client.services.services.IdentityService, 'IdentityService not available');
+          const { deviceKey, controlFeedKey, challenge } = yield* Effect.promise(() =>
+            client.services.services.IdentityService!.requestRecoveryChallenge(),
+          );
+          const credential = yield* Effect.promise(() =>
+            navigator.credentials.get({
               publicKey: {
                 challenge: Buffer.from(challenge, 'base64'),
                 rpId: location.hostname,
                 userVerification: 'required',
               },
-            });
-            const lookupKey = PublicKey.from(new Uint8Array((credential as any).response.userHandle));
-            await client.services.services.IdentityService.recoverIdentity(
+            }),
+          );
+          const lookupKey = PublicKey.from(new Uint8Array((credential as any).response.userHandle));
+          yield* Effect.promise(() =>
+            client.services.services.IdentityService!.recoverIdentity(
               {
                 external: {
                   lookupKey,
@@ -222,8 +222,9 @@ export default Capability.makeModule(
                 },
               },
               { timeout: RECOVER_IDENTITY_RPC_TIMEOUT },
-            );
-          }),
+            ),
+          );
+        }),
       }),
 
       //
@@ -231,15 +232,16 @@ export default Capability.makeModule(
       //
       OperationResolver.make({
         operation: ClientOperation.RedeemToken,
-        handler: (data) =>
-          Effect.promise(async () => {
-            const client = context.getCapability(ClientCapabilities.Client);
-            invariant(client.services.services.IdentityService, 'IdentityService not available');
-            await client.services.services.IdentityService.recoverIdentity(
+        handler: Effect.fnUntraced(function* (data) {
+          const client = yield* Capability.get(ClientCapabilities.Client);
+          invariant(client.services.services.IdentityService, 'IdentityService not available');
+          yield* Effect.promise(() =>
+            client.services.services.IdentityService!.recoverIdentity(
               { token: data.token },
               { timeout: RECOVER_IDENTITY_RPC_TIMEOUT },
-            );
-          }),
+            ),
+          );
+        }),
       }),
     ]);
   }),

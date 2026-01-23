@@ -138,10 +138,23 @@ export namespace Plugin {
    * ```ts
    * Plugin.define(meta).pipe(
    *   Common.Plugin.addAppGraphModule({
-   *     activate: (context) =>
-   *       Capability.contributes(Common.Capability.AppGraphBuilder, [
-   *         GraphBuilder.createExtension({ id: meta.id, ... })
-   *       ])
+   *     activate: Effect.fnUntraced(function* () {
+   *       const extensions = yield* GraphBuilder.createExtension({
+   *         id: meta.id,
+   *         match: NodeMatcher.whenRoot,
+   *         // All callbacks must return Effects.
+   *         actions: () => Effect.succeed([{
+   *           id: 'my-action',
+   *           // Action data returns Effect for automatic context access.
+   *           data: Effect.fnUntraced(function* () {
+   *             yield* Operation.invoke(MyOperation, { ... });
+   *           }),
+   *           properties: { label: 'My Action', icon: 'ph--icon' },
+   *         }]),
+   *         connector: (node, get) => Effect.succeed([{ id: 'child', ... }]),
+   *       });
+   *       return Capability.contributes(Common.Capability.AppGraphBuilder, extensions);
+   *     })
    *   })
    * )
    * ```

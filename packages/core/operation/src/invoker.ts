@@ -48,6 +48,15 @@ export interface OperationInvoker {
       ? [input?: I, options?: Operation.InvokeOptions]
       : [input: I, options?: Operation.InvokeOptions]
   ) => Effect.Effect<O, Error>;
+  /**
+   * Schedule an operation to run as a followup.
+   * The followup is tracked and won't be cancelled when the parent operation completes.
+   * Returns an Effect that completes immediately after scheduling.
+   */
+  schedule: <I, O>(
+    op: Operation.Definition<I, O>,
+    ...args: void extends I ? [input?: I] : [input: I]
+  ) => Effect.Effect<void>;
   invokePromise: <I, O>(
     op: Operation.Definition<I, O>,
     ...args: void extends I
@@ -104,6 +113,8 @@ class OperationInvokerImpl implements OperationInvokerInternal {
   private readonly _followupScheduler: Scheduler.FollowupScheduler;
   private readonly _managedRuntime?: AnyManagedRuntime;
   private readonly _databaseResolver?: DatabaseResolver;
+  // Cache for DynamicRuntime instances keyed by service tag keys.
+  private readonly _dynamicRuntimeCache = new Map<string, DynamicRuntime.DynamicRuntime<any>>();
 
   constructor(
     getHandlers: () => Effect.Effect<OperationResolver.OperationResolver<any, any, Error, any>[], Error>,
@@ -118,6 +129,23 @@ class OperationInvokerImpl implements OperationInvokerInternal {
     this._databaseResolver = databaseResolver;
   }
 
+  /**
+   * Get or create a DynamicRuntime for the given service tags.
+   * Caches instances to allow runtime caching to work across invocations.
+   */
+  private _getDynamicRuntime(services: readonly Context.Tag<any, any>[]): DynamicRuntime.DynamicRuntime<any> {
+    const cacheKey = services
+      .map((s) => s.key)
+      .sort()
+      .join(',');
+    let dynamicRuntime = this._dynamicRuntimeCache.get(cacheKey);
+    if (!dynamicRuntime) {
+      dynamicRuntime = DynamicRuntime.make(this._managedRuntime!, services);
+      this._dynamicRuntimeCache.set(cacheKey, dynamicRuntime);
+    }
+    return dynamicRuntime;
+  }
+
   get invocations(): PubSub.PubSub<InvocationEvent> {
     return this._pubsub;
   }
@@ -129,6 +157,12 @@ class OperationInvokerImpl implements OperationInvokerInternal {
   get awaitFollowups(): Effect.Effect<void> {
     return this._followupScheduler.awaitAll;
   }
+
+  // Arrow function to preserve `this` context when destructured.
+  schedule = <I, O>(
+    op: Operation.Definition<I, O>,
+    ...args: void extends I ? [input?: I] : [input: I]
+  ): Effect.Effect<void> => this._followupScheduler.schedule(op, ...(args as [I]));
 
   // Arrow function to preserve `this` context when destructured.
   invoke = <I, O>(
@@ -176,7 +210,10 @@ class OperationInvokerImpl implements OperationInvokerInternal {
       ? [input?: I, options?: Operation.InvokeOptions]
       : [input: I, options?: Operation.InvokeOptions]
   ): { data?: O; error?: Error } => {
-    const exit = Effect.runSyncExit(this.invoke(op, ...args));
+    const effect = this.invoke(op, ...args);
+    // Use ManagedRuntime.runSyncExit when available - it handles fiber scheduling correctly.
+    // Fall back to Effect.runSyncExit for operations without ManagedRuntime.
+    const exit = this._managedRuntime ? this._managedRuntime.runSyncExit(effect) : Effect.runSyncExit(effect);
     if (Exit.isSuccess(exit)) {
       return { data: exit.value };
     } else {
@@ -240,12 +277,11 @@ class OperationInvokerImpl implements OperationInvokerInternal {
 
       // If the operation declares services and we have a ManagedRuntime, use DynamicRuntime.
       if (op.services && op.services.length > 0 && this._managedRuntime) {
-        // Create a DynamicRuntime with the operation's declared services.
-        // Cast to DynamicRuntime<[]> to allow any effect - runtime validation handles the actual check.
-        const dynamicRuntime = DynamicRuntime.make(this._managedRuntime, op.services) as DynamicRuntime.DynamicRuntime<
-          []
-        >;
-        // Get the runtime and provide its context to the handler effect.
+        // Get or create a cached DynamicRuntime for this service combination.
+        const dynamicRuntime = this._getDynamicRuntime(op.services);
+        // Use runtimeEffect to get the runtime - when cached, this returns immediately.
+        // For sync operations, the caller must ensure the cache is populated first
+        // (e.g., via an async warmup call during initialization).
         const runtime = yield* dynamicRuntime.runtimeEffect;
         output = yield* handlerEffect.pipe(Effect.provide(runtime.context));
       } else {

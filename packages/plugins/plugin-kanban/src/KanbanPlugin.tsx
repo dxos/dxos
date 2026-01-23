@@ -9,6 +9,7 @@ import { Type } from '@dxos/echo';
 import { type CreateObject } from '@dxos/plugin-space/types';
 import { translations as kanbanTranslations } from '@dxos/react-ui-kanban';
 import { Kanban } from '@dxos/react-ui-kanban/types';
+import { View } from '@dxos/schema';
 
 import { BlueprintDefinition, OperationResolver, ReactSurface } from './capabilities';
 import { meta } from './meta';
@@ -24,7 +25,11 @@ export const KanbanPlugin = Plugin.define(meta).pipe(
         icon: 'ph--kanban--regular',
         iconHue: 'green',
         inputSchema: CreateKanbanSchema,
-        createObject: ((props) => Effect.sync(() => Kanban.make(props))) satisfies CreateObject,
+        createObject: ((props, { db }) =>
+          Effect.promise(async () => {
+            const { view } = await View.makeFromDatabase({ db, typename: props.typename });
+            return Kanban.make({ name: props.name, view });
+          })) satisfies CreateObject,
       },
     },
   }),

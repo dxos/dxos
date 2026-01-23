@@ -4,6 +4,7 @@
 
 import * as Schema from 'effect/Schema';
 
+import { Capability } from '@dxos/app-framework';
 import { Operation } from '@dxos/operation';
 import { EditorViewMode } from '@dxos/ui-editor/types';
 
@@ -16,6 +17,7 @@ const MARKDOWN_OPERATION = `${meta.id}/operation`;
 export namespace MarkdownOperation {
   export const Create = Operation.make({
     meta: { key: `${MARKDOWN_OPERATION}/create`, name: 'Create Markdown Document' },
+    services: [Capability.Service],
     schema: {
       input: Schema.Struct({
         name: Schema.optional(Schema.String),
@@ -30,6 +32,7 @@ export namespace MarkdownOperation {
   // TODO(wittjosiah): This appears to be unused.
   export const SetViewMode = Operation.make({
     meta: { key: `${MARKDOWN_OPERATION}/set-view-mode`, name: 'Set View Mode' },
+    services: [Capability.Service],
     schema: {
       input: Schema.Struct({
         id: Schema.String,

@@ -7,6 +7,7 @@ import * as Schema from 'effect/Schema';
 
 import { ActivationEvent, Capability, Common, Plugin } from '@dxos/app-framework';
 import { Ref, Tag, Type } from '@dxos/echo';
+import { Operation } from '@dxos/operation';
 import { AttentionEvents } from '@dxos/plugin-attention';
 import { ClientEvents } from '@dxos/plugin-client';
 import { translations as componentsTranslations } from '@dxos/react-ui-components';
@@ -76,14 +77,16 @@ export const SpacePlugin = Plugin.define<SpacePluginOptions>(meta).pipe(
           icon: 'ph--database--regular',
           iconHue: 'green',
           inputSchema: SpaceOperation.StoredSchemaForm,
-          createObject: ((props, { db, context }) =>
+          createObject: ((props, { db }) =>
             Effect.gen(function* () {
-              const { invoke } = context.getCapability(Common.Capability.OperationInvoker);
               if (props.typename) {
-                const result = yield* invoke(SpaceOperation.UseStaticSchema, { db, typename: props.typename });
+                const result = yield* Operation.invoke(SpaceOperation.UseStaticSchema, {
+                  db,
+                  typename: props.typename,
+                });
                 return result as any;
               } else {
-                const result = yield* invoke(SpaceOperation.AddSchema, {
+                const result = yield* Operation.invoke(SpaceOperation.AddSchema, {
                   db,
                   name: props.name,
                   schema: createDefaultSchema(),

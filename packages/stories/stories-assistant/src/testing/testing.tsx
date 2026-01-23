@@ -9,7 +9,15 @@ import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
 import { SERVICES_CONFIG } from '@dxos/ai/testing';
-import { ActivationEvent, Capability, Common, OperationPlugin, Plugin, SettingsPlugin } from '@dxos/app-framework';
+import {
+  ActivationEvent,
+  Capability,
+  type CapabilityManager,
+  Common,
+  OperationPlugin,
+  Plugin,
+  SettingsPlugin,
+} from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { AiContextBinder, ArtifactId, GenericToolkit } from '@dxos/assistant';
 import { Agent, DesignBlueprint, Document, PlanningBlueprint, Research, Tasks } from '@dxos/assistant-toolkit';
@@ -77,7 +85,7 @@ const Toolkit$ = Toolkit.make(
 namespace TestingToolkit {
   export const Toolkit = Toolkit$;
 
-  export const createLayer = (_context: Capability.PluginContext) =>
+  export const createLayer = (_capabilities: CapabilityManager.CapabilityManager) =>
     Toolkit$.toLayer({
       'open-item': ({ id }) => Console.log('Called open-item', { id }),
     });
@@ -212,11 +220,11 @@ const StoryPlugin = Plugin.define<StoryPluginOptions>({
     id: 'example.com/plugin/testing/module/toolkit',
     activatesOn: Common.ActivationEvent.Startup,
     activate: Effect.fnUntraced(function* () {
-      const context = yield* Capability.PluginContextService;
+      const capabilities = yield* Capability.Service;
       return [
         Capability.contributes(
           Common.Capability.Toolkit,
-          GenericToolkit.make(TestingToolkit.Toolkit, TestingToolkit.createLayer(context)),
+          GenericToolkit.make(TestingToolkit.Toolkit, TestingToolkit.createLayer(capabilities)),
         ),
       ];
     }),

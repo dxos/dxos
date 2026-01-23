@@ -11,16 +11,13 @@ import { MapCapabilities, MapOperation } from '../../types';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    const context = yield* Capability.PluginContextService;
-
     return Capability.contributes(Common.Capability.OperationResolver, [
       OperationResolver.make({
         operation: MapOperation.Toggle,
-        handler: () =>
-          Effect.sync(() => {
-            const mutableState = context.getCapability(MapCapabilities.MutableState);
-            mutableState.type = mutableState.type === 'globe' ? 'map' : 'globe';
-          }),
+        handler: Effect.fnUntraced(function* () {
+          const mutableState = yield* Capability.get(MapCapabilities.MutableState);
+          mutableState.type = mutableState.type === 'globe' ? 'map' : 'globe';
+        }),
       }),
     ]);
   }),
