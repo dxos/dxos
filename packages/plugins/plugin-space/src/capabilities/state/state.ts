@@ -32,12 +32,15 @@ export default Capability.makeModule(
 
     const manager = yield* Capability.get(Common.Capability.PluginManager);
     // TODO(wittjosiah): Find a way to make this capability-based.
-    const unsubscribe = registry.subscribe(manager.enabled, () => {
+    const updateNavigableCollections = () => {
       const enabled = manager.getEnabled().includes('dxos.org/plugin/stack');
       if (enabled !== store.values.navigableCollections) {
         store.set({ navigableCollections: enabled });
       }
-    });
+    };
+    // Check initial state and subscribe to changes.
+    updateNavigableCollections();
+    const unsubscribe = registry.subscribe(manager.enabled, updateNavigableCollections);
 
     return Capability.contributes(SpaceCapabilities.State, store, () =>
       Effect.sync(() => {
