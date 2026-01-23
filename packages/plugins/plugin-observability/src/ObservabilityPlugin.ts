@@ -15,9 +15,9 @@ import {
   OperationResolver,
   ReactSurface,
 } from './capabilities';
-import { ClientReadyEvent, ObservabilityEvents } from './types';
 import { meta } from './meta';
 import { translations } from './translations';
+import { ClientReadyEvent, ObservabilityEvents } from './types';
 import { ObservabilityCapabilities } from './types';
 
 export type ObservabilityPluginOptions = {

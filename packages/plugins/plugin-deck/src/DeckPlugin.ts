@@ -18,9 +18,9 @@ import {
   Toolkit,
   UrlHandler,
 } from './capabilities';
-import { DeckEvents } from './types';
 import { meta } from './meta';
 import { translations } from './translations';
+import { DeckEvents } from './types';
 
 // NOTE(Zan): When producing values with immer, we shouldn't auto-freeze them because
 //   our signal implementation needs to add some hidden properties to the produced values.

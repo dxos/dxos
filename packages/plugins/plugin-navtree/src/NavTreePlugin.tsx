@@ -10,9 +10,9 @@ import { type TreeData } from '@dxos/react-ui-list';
 
 import { AppGraphBuilder, Keyboard, OperationResolver, ReactSurface, State } from './capabilities';
 import { NODE_TYPE } from './components';
-import { NavTreeEvents } from './types';
 import { meta } from './meta';
 import { translations } from './translations';
+import { NavTreeEvents } from './types';
 
 export const NavTreePlugin = Plugin.define(meta).pipe(
   Plugin.addModule({

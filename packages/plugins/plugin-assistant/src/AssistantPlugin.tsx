@@ -28,9 +28,9 @@ import {
   Settings,
   Toolkit,
 } from './capabilities';
-import { AssistantEvents } from './types';
 import { meta } from './meta';
 import { translations } from './translations';
+import { AssistantEvents } from './types';
 import { Assistant, AssistantOperation } from './types';
 
 export const AssistantPlugin = Plugin.define(meta).pipe(

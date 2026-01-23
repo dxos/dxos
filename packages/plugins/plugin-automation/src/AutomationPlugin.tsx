@@ -7,9 +7,9 @@ import { Function, Trigger } from '@dxos/functions';
 import { ClientEvents } from '@dxos/plugin-client/types';
 
 import { AppGraphBuilder, ComputeRuntime, OperationResolver, ReactSurface } from './capabilities';
-import { AutomationEvents } from './types';
 import { meta } from './meta';
 import { translations } from './translations';
+import { AutomationEvents } from './types';
 
 export const AutomationPlugin = Plugin.define(meta).pipe(
   Common.Plugin.addTranslationsModule({ translations }),

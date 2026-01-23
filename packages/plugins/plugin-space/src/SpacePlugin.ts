@@ -39,9 +39,9 @@ import {
   SpaceState,
   SpacesReady,
 } from './capabilities';
-import { SpaceEvents } from './types';
 import { meta } from './meta';
 import { translations } from './translations';
+import { SpaceEvents } from './types';
 import { type CreateObject, SpaceOperation, type SpacePluginOptions } from './types';
 
 export const SpacePlugin = Plugin.define<SpacePluginOptions>(meta).pipe(

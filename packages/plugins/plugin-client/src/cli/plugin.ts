@@ -8,8 +8,8 @@ import { Capability, Common, Plugin } from '@dxos/app-framework';
 import { Client } from '../capabilities/client';
 import { OperationResolver } from '../capabilities/operation-resolver';
 import { SchemaDefs } from '../capabilities/schema-defs';
-import { ClientEvents } from '../types';
 import { meta } from '../meta';
+import { ClientEvents } from '../types';
 import { type ClientPluginOptions } from '../types';
 
 import { config, device, edge, halo, profile } from './commands';

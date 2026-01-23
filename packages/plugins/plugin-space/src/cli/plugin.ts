@@ -23,8 +23,8 @@ import {
 
 import { IdentityCreated } from '../capabilities/identity-created';
 import { OperationResolver } from '../capabilities/operation-resolver';
-import { SpaceEvents } from '../types';
 import { meta } from '../meta';
+import { SpaceEvents } from '../types';
 import { type CreateObject, type SpacePluginOptions } from '../types';
 
 import { database, queue, space } from './commands';

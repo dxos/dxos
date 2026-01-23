@@ -18,9 +18,9 @@ import {
   ReactSurface,
   ScriptSettings,
 } from './capabilities';
-import { ScriptEvents } from './types';
 import { meta } from './meta';
 import { translations } from './translations';
+import { ScriptEvents } from './types';
 import { Notebook, ScriptOperation } from './types';
 
 export const ScriptPlugin = Plugin.define(meta).pipe(

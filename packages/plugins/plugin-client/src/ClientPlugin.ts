@@ -13,9 +13,9 @@ import {
   ReactSurface,
   SchemaDefs,
 } from './capabilities';
-import { ClientEvents } from './types';
 import { meta } from './meta';
 import { translations } from './translations';
+import { ClientEvents } from './types';
 import { type ClientPluginOptions } from './types';
 
 export const ClientPlugin = Plugin.define<ClientPluginOptions>(meta).pipe(
