@@ -40,9 +40,38 @@ export const MessageArticle = ({
     [db, invokePromise],
   );
 
+  const handleReply = useCallback(() => {
+    void invokePromise(InboxOperation.OpenComposeEmail, {
+      mode: 'reply',
+      originalMessage: message,
+    });
+  }, [invokePromise, message]);
+
+  const handleReplyAll = useCallback(() => {
+    void invokePromise(InboxOperation.OpenComposeEmail, {
+      mode: 'reply-all',
+      originalMessage: message,
+    });
+  }, [invokePromise, message]);
+
+  const handleForward = useCallback(() => {
+    void invokePromise(InboxOperation.OpenComposeEmail, {
+      mode: 'forward',
+      originalMessage: message,
+    });
+  }, [invokePromise, message]);
+
   return (
     <StackItem.Content toolbar>
-      <Message.Root attendableId={Obj.getDXN(mailbox).toString()} viewMode={viewMode} message={message} sender={sender}>
+      <Message.Root
+        attendableId={Obj.getDXN(mailbox).toString()}
+        viewMode={viewMode}
+        message={message}
+        sender={sender}
+        onReply={handleReply}
+        onReplyAll={handleReplyAll}
+        onForward={handleForward}
+      >
         <Message.Toolbar />
         <Message.Viewport role={role}>
           <Message.Header onContactCreate={handleContactCreate} />

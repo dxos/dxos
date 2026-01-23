@@ -27,6 +27,7 @@ import { Message } from '@dxos/types';
 import * as Mailbox from '../../../types/Mailbox';
 import { GoogleMail } from '../../apis';
 import * as InboxResolver from '../../inbox-resolver';
+import { GoogleCredentials } from '../../services/google-credentials';
 
 import { mapMessage } from './mapper';
 
@@ -145,7 +146,11 @@ export default defineFunction({
       return {
         newMessages: newMessagesCount,
       };
-    }).pipe(Effect.provide(Layer.mergeAll(FetchHttpClient.layer, InboxResolver.Live))),
+    }).pipe(
+      Effect.provide(
+        Layer.mergeAll(FetchHttpClient.layer, InboxResolver.Live, GoogleCredentials.fromMailboxRef(mailboxRef)),
+      ),
+    ),
 });
 
 //
@@ -157,8 +162,10 @@ export default defineFunction({
  */
 const syncLabels = Effect.fn(function* (mailbox: Mailbox.Mailbox, userId: string) {
   const { labels } = yield* GoogleMail.listLabels(userId);
-  labels.forEach((label) => {
-    (mailbox.labels ??= {})[label.id] = label.name;
+  Obj.change(mailbox, (m) => {
+    labels.forEach((label) => {
+      (m.labels ??= {})[label.id] = label.name;
+    });
   });
   return labels.length;
 });

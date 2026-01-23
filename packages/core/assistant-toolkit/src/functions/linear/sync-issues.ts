@@ -11,7 +11,7 @@ import * as Schema from 'effect/Schema';
 
 import { Filter, Obj, Query, Ref, type Type } from '@dxos/echo';
 import { Database } from '@dxos/echo';
-import { defineFunction, withAuthorization } from '@dxos/functions';
+import { CredentialsService, defineFunction, withAuthorization } from '@dxos/functions';
 import { log } from '@dxos/log';
 import { Person, Project, Task } from '@dxos/types';
 
@@ -85,7 +85,8 @@ export default defineFunction({
     }),
   }),
   handler: Effect.fnUntraced(function* ({ data }) {
-    const client = yield* HttpClient.HttpClient.pipe(Effect.map(withAuthorization({ service: 'linear.app' })));
+    const credential = yield* CredentialsService.getCredential({ service: 'linear.app' });
+    const client = yield* HttpClient.HttpClient.pipe(Effect.map(withAuthorization(credential.apiKey!)));
 
     // Get the timestamp that was previosly synced.
     const after = yield* getLatestUpdateTimestamp(data.team, Task.Task);
