@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 
 import { Capability, Common, Plugin } from '@dxos/app-framework';
 import { Tag } from '@dxos/echo';
-import { ClientEvents } from '@dxos/plugin-client';
+import { ClientEvents } from '@dxos/plugin-client/cli';
 import { Collection, DataTypes } from '@dxos/schema';
 import {
   AnchoredTo,

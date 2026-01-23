@@ -68,6 +68,7 @@
     "@effect/printer-ansi": "catalog:",
     "@effect/rpc": "catalog:",
     "@effect/sql": "catalog:",
+    "@effect/sql-sqlite-bun": "catalog:",
     "@effect/typeclass": "catalog:",
     "@effect/workflow": "catalog:",
     "@lezer/common": "catalog:",

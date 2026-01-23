@@ -13,6 +13,7 @@ import { ObservabilityPlugin } from '@dxos/plugin-observability/cli';
 import { RegistryPlugin } from '@dxos/plugin-registry/cli';
 import { SpacePlugin } from '@dxos/plugin-space/cli';
 import { TokenManagerPlugin } from '@dxos/plugin-token-manager/cli';
+// import * as SqliteClient from '@effect/sql-sqlite-bun/SqliteClient';
 
 export type PluginConfig = {
   config?: Config;
@@ -31,12 +32,25 @@ export const getCore = (): string[] => [
   TokenManagerPlugin.meta.id,
 ];
 
-export const getDefaults = (): string[] => [ChessPlugin.meta.id, InboxPlugin.meta.id, MarkdownPlugin.meta.id];
+export const getDefaults = (): string[] => [
+  //
+  ChessPlugin.meta.id,
+  InboxPlugin.meta.id,
+  MarkdownPlugin.meta.id,
+];
 
 export const getPlugins = ({ config }: PluginConfig): Plugin.Plugin[] => [
   AutomationPlugin(),
   ChessPlugin(),
-  ClientPlugin({ config }),
+  ClientPlugin({
+    config,
+    // services: new LocalClientServices({
+    //   config,
+    //   // sqliteLayer: SqliteClient.layer({
+    //   //   filename: config?.get('')
+    //   // }),
+    // }),
+  }),
   InboxPlugin(),
   MarkdownPlugin(),
   ObservabilityPlugin(),

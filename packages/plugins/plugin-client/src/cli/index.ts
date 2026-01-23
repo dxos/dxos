@@ -3,3 +3,5 @@
 //
 
 export * from './plugin';
+export * from '../events';
+export * from '../types';

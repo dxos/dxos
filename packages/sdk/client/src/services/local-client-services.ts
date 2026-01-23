@@ -29,6 +29,7 @@ import { isBun } from '@dxos/util';
 
 export type LocalClientServicesParams = Omit<ClientServicesHostProps, 'runtime'> & {
   createOpfsWorker?: () => Worker;
+  sqliteLayer?: Layer.Layer<SqlClient.SqlClient, never>;
 };
 
 /**
@@ -172,7 +173,7 @@ export class LocalClientServices implements ClientServicesProvider {
       sqliteLayer = SqliteClient.layer({ worker: Effect.succeed(this._opfsWorker) });
     } else {
       // Fallback to in-memory SQLite.
-      sqliteLayer = layerMemory;
+      sqliteLayer = this._params.sqliteLayer ?? layerMemory;
     }
 
     this._runtime = ManagedRuntime.make(Layer.merge(sqliteLayer, Reactivity.layer).pipe(Layer.orDie));

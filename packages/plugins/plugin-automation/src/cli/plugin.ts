@@ -3,7 +3,7 @@
 //
 
 import { Common, Plugin } from '@dxos/app-framework';
-import { ClientEvents } from '@dxos/plugin-client';
+import { ClientEvents } from '@dxos/plugin-client/cli';
 
 // NOTE: Must not import from index to avoid pulling in react dependencies.
 import { ComputeRuntime } from '../capabilities/compute-runtime';
