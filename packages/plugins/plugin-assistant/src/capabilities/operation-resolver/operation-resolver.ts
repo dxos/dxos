@@ -46,6 +46,7 @@ export default Capability.makeModule(
       OperationResolver.make({
         operation: AssistantOperation.CreateChat,
         handler: Effect.fnUntraced(function* ({ db, name }) {
+          const registry = yield* Capability.get(Common.Capability.AtomRegistry);
           const client = yield* Capability.get(ClientCapabilities.Client);
           const space = client.spaces.get(db.spaceId);
           invariant(space, 'Space not found');
@@ -60,7 +61,7 @@ export default Capability.makeModule(
             defaultBlueprint = db.add(createBlueprint());
           }
 
-          const binder = new AiContextBinder(queue);
+          const binder = new AiContextBinder({ queue, registry });
           yield* Effect.promise(() =>
             binder.use((b: AiContextBinder) => b.bind({ blueprints: [Ref.make(defaultBlueprint!)] })),
           );
@@ -71,6 +72,7 @@ export default Capability.makeModule(
       OperationResolver.make({
         operation: AssistantOperation.UpdateChatName,
         handler: Effect.fnUntraced(function* ({ chat }) {
+          const registry = yield* Capability.get(Common.Capability.AtomRegistry);
           const db = Obj.getDatabase(chat);
           const queue = chat.queue.target as Queue<Message.Message>;
           if (!db || !queue) {
@@ -85,7 +87,7 @@ export default Capability.makeModule(
           );
 
           yield* Effect.promise(() =>
-            new AiConversation(queue).use(async (conversation) => updateName(runtime, conversation, chat)),
+            new AiConversation({ queue, registry }).use(async (conversation) => updateName(runtime, conversation, chat)),
           );
         }),
       }),

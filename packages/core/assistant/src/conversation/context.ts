@@ -2,6 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
+import { Atom, Registry } from '@effect-atom/atom-react';
 import * as EArray from 'effect/Array';
 import * as Context from 'effect/Context';
 import * as Function from 'effect/Function';
@@ -56,60 +57,67 @@ export class Bindings {
   }
 }
 
+export type AiContextBinderOptions = {
+  queue: Queue;
+  registry?: Registry.Registry;
+};
+
 /**
  * Manages bindings of blueprints and objects to a conversation.
  */
 // TODO(burdon): Context should manage ephemeral state of bindings until prompt is issued?
 export class AiContextBinder extends Resource {
-  private _blueprints: Blueprint.Blueprint[] = [];
-  private _objects: Obj.Any[] = [];
-  private readonly _blueprintSubscribers: Set<(blueprints: Blueprint.Blueprint[]) => void> = new Set();
-  private readonly _objectSubscribers: Set<(objects: Obj.Any[]) => void> = new Set();
+  private readonly _blueprints = Atom.make<Blueprint.Blueprint[]>([]).pipe(Atom.keepAlive);
+  private readonly _objects = Atom.make<Obj.Any[]>([]).pipe(Atom.keepAlive);
+  private readonly _registry: Registry.Registry;
+  private readonly _queue: Queue;
 
-  constructor(private readonly _queue: Queue) {
+  constructor(options: AiContextBinderOptions) {
     super();
+    this._queue = options.queue;
+    this._registry = options.registry ?? Registry.make();
   }
 
   /**
-   * Get the current blueprints value.
+   * Returns the blueprints atom for subscription.
    */
-  get blueprintsValue(): Blueprint.Blueprint[] {
+  get blueprints(): Atom.Atom<Blueprint.Blueprint[]> {
     return this._blueprints;
   }
 
   /**
-   * Get the current objects value.
+   * Returns the objects atom for subscription.
    */
-  get objectsValue(): Obj.Any[] {
+  get objects(): Atom.Atom<Obj.Any[]> {
     return this._objects;
+  }
+
+  /**
+   * Gets the current blueprints value.
+   */
+  getBlueprints(): Blueprint.Blueprint[] {
+    return this._registry.get(this._blueprints);
+  }
+
+  /**
+   * Gets the current objects value.
+   */
+  getObjects(): Obj.Any[] {
+    return this._registry.get(this._objects);
   }
 
   /**
    * Subscribe to changes in blueprints.
    */
   subscribeBlueprints(cb: (blueprints: Blueprint.Blueprint[]) => void): () => void {
-    this._blueprintSubscribers.add(cb);
-    return () => this._blueprintSubscribers.delete(cb);
+    return this._registry.subscribe(this._blueprints, () => cb(this._registry.get(this._blueprints)));
   }
 
   /**
    * Subscribe to changes in objects.
    */
   subscribeObjects(cb: (objects: Obj.Any[]) => void): () => void {
-    this._objectSubscribers.add(cb);
-    return () => this._objectSubscribers.delete(cb);
-  }
-
-  private _notifyBlueprints(): void {
-    for (const cb of this._blueprintSubscribers) {
-      cb(this._blueprints);
-    }
-  }
-
-  private _notifyObjects(): void {
-    for (const cb of this._objectSubscribers) {
-      cb(this._objects);
-    }
+    return this._registry.subscribe(this._objects, () => cb(this._registry.get(this._objects)));
   }
 
   protected override async _open(): Promise<void> {
@@ -136,21 +144,14 @@ export class AiContextBinder extends Resource {
     const bindings = this._reduce(items);
 
     // Resolve references (loading them first if needed).
-    const newBlueprints = await this._resolve(bindings.blueprints, this._blueprints);
-    const newObjects = await this._resolve(bindings.objects, this._objects);
+    const currentBlueprints = this._registry.get(this._blueprints);
+    const currentObjects = this._registry.get(this._objects);
+    const newBlueprints = await this._resolve(bindings.blueprints, currentBlueprints);
+    const newObjects = await this._resolve(bindings.objects, currentObjects);
 
-    const blueprintsChanged = newBlueprints.length !== this._blueprints.length;
-    const objectsChanged = newObjects.length !== this._objects.length;
-
-    this._blueprints = newBlueprints;
-    this._objects = newObjects;
-
-    if (blueprintsChanged) {
-      this._notifyBlueprints();
-    }
-    if (objectsChanged) {
-      this._notifyObjects();
-    }
+    // Atomic updates - subscribers notified automatically.
+    this._registry.set(this._blueprints, newBlueprints);
+    this._registry.set(this._objects, newObjects);
 
     log('updated bindings', {
       blueprints: newBlueprints.length,
@@ -159,29 +160,24 @@ export class AiContextBinder extends Resource {
   }
 
   protected override async _close(): Promise<void> {
-    this._blueprints = [];
-    this._objects = [];
+    // Reset atoms to empty state.
+    this._registry.set(this._blueprints, []);
+    this._registry.set(this._objects, []);
   }
 
   async bind({ blueprints, objects }: BindingProps): Promise<void> {
-    const { added: addedBlueprints, next: nextBlueprints } = this._processBindings(blueprints, this._blueprints);
-    const { added: addedObjects, next: nextObjects } = this._processBindings(objects, this._objects);
+    const currentBlueprints = this._registry.get(this._blueprints);
+    const currentObjects = this._registry.get(this._objects);
+
+    const { added: addedBlueprints, next: nextBlueprints } = this._processBindings(blueprints, currentBlueprints);
+    const { added: addedObjects, next: nextObjects } = this._processBindings(objects, currentObjects);
     if (!addedBlueprints.length && !addedObjects.length) {
       return;
     }
 
-    const blueprintsChanged = nextBlueprints.length !== this._blueprints.length;
-    const objectsChanged = nextObjects.length !== this._objects.length;
-
-    this._blueprints = nextBlueprints;
-    this._objects = nextObjects;
-
-    if (blueprintsChanged) {
-      this._notifyBlueprints();
-    }
-    if (objectsChanged) {
-      this._notifyObjects();
-    }
+    // Atomic updates - subscribers notified automatically.
+    this._registry.set(this._blueprints, nextBlueprints);
+    this._registry.set(this._objects, nextObjects);
 
     log('bind', { blueprints: addedBlueprints.length, objects: addedObjects.length });
     await this._queue.append([

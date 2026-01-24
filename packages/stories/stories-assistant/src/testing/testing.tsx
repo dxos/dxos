@@ -258,6 +258,7 @@ const StoryPlugin = Plugin.define<StoryPluginOptions>({
           operation: AssistantOperation.CreateChat,
           handler: ({ db, name }) =>
             Effect.gen(function* () {
+              const registry = yield* Capability.get(Common.Capability.AtomRegistry);
               const space = client.spaces.get(db.spaceId);
               invariant(space, 'Space not found');
 
@@ -268,7 +269,7 @@ const StoryPlugin = Plugin.define<StoryPluginOptions>({
                 queue: Ref.fromDXN(queue.dxn),
                 traceQueue: Ref.fromDXN(traceQueue.dxn),
               });
-              const binder = new AiContextBinder(queue);
+              const binder = new AiContextBinder({ queue, registry });
 
               // Story-specific behaviour to allow chat creation to be extended.
               space.db.add(chat);

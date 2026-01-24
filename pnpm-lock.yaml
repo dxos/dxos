@@ -3671,39 +3671,6 @@ importers:
         specifier: 'catalog:'
         version: 1.0.1
 
-  packages/common/local-storage:
-    dependencies:
-      '@dxos/async':
-        specifier: workspace:*
-        version: link:../async
-      '@dxos/echo':
-        specifier: workspace:*
-        version: link:../../core/echo/echo
-      '@dxos/effect':
-        specifier: workspace:*
-        version: link:../effect
-      '@dxos/invariant':
-        specifier: workspace:*
-        version: link:../invariant
-      '@dxos/live-object':
-        specifier: workspace:*
-        version: link:../../core/echo/live-object
-      '@dxos/log':
-        specifier: workspace:*
-        version: link:../log
-      '@dxos/node-std':
-        specifier: workspace:*
-        version: link:../node-std
-      '@dxos/util':
-        specifier: workspace:*
-        version: link:../util
-      '@effect-atom/atom-react':
-        specifier: 'catalog:'
-        version: 0.4.4(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/platform@0.93.6(effect@3.19.11))(@effect/rpc@0.72.2(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11))(effect@3.19.11)(react@19.2.3)(scheduler@0.27.0)
-      effect:
-        specifier: 'catalog:'
-        version: 3.19.11
-
   packages/common/lock-file:
     dependencies:
       '@dxos/async':
@@ -6359,6 +6326,9 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
+      '@effect-atom/atom-react':
+        specifier: 'catalog:'
+        version: 0.4.4(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/platform@0.93.6(effect@3.19.11))(@effect/rpc@0.72.2(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11))(effect@3.19.11)(react@19.2.3)(scheduler@0.27.0)
       '@effect/ai':
         specifier: 'catalog:'
         version: 0.32.1(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/platform@0.93.6(effect@3.19.11))(@effect/rpc@0.72.2(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11))(effect@3.19.11)
@@ -7354,9 +7324,6 @@ importers:
       '@dxos/live-object':
         specifier: workspace:*
         version: link:../../core/echo/live-object
-      '@dxos/local-storage':
-        specifier: workspace:*
-        version: link:../../common/local-storage
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
@@ -8010,9 +7977,6 @@ importers:
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../common/invariant
-      '@dxos/local-storage':
-        specifier: workspace:*
-        version: link:../../common/local-storage
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
@@ -8255,9 +8219,6 @@ importers:
       '@dxos/live-object':
         specifier: workspace:*
         version: link:../../core/echo/live-object
-      '@dxos/local-storage':
-        specifier: workspace:*
-        version: link:../../common/local-storage
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
@@ -8436,9 +8397,6 @@ importers:
       '@dxos/live-object':
         specifier: workspace:*
         version: link:../../core/echo/live-object
-      '@dxos/local-storage':
-        specifier: workspace:*
-        version: link:../../common/local-storage
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
@@ -8563,9 +8521,6 @@ importers:
       '@dxos/live-object':
         specifier: workspace:*
         version: link:../../core/echo/live-object
-      '@dxos/local-storage':
-        specifier: workspace:*
-        version: link:../../common/local-storage
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
@@ -8814,9 +8769,6 @@ importers:
       '@dxos/live-object':
         specifier: workspace:*
         version: link:../../core/echo/live-object
-      '@dxos/local-storage':
-        specifier: workspace:*
-        version: link:../../common/local-storage
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
@@ -8972,9 +8924,6 @@ importers:
       '@dxos/live-object':
         specifier: workspace:*
         version: link:../../core/echo/live-object
-      '@dxos/local-storage':
-        specifier: workspace:*
-        version: link:../../common/local-storage
       '@dxos/operation':
         specifier: workspace:*
         version: link:../../core/operation
@@ -9425,9 +9374,6 @@ importers:
       '@dxos/live-object':
         specifier: workspace:*
         version: link:../../core/echo/live-object
-      '@dxos/local-storage':
-        specifier: workspace:*
-        version: link:../../common/local-storage
       '@dxos/operation':
         specifier: workspace:*
         version: link:../../core/operation
@@ -9604,9 +9550,6 @@ importers:
       '@dxos/live-object':
         specifier: workspace:*
         version: link:../../core/echo/live-object
-      '@dxos/local-storage':
-        specifier: workspace:*
-        version: link:../../common/local-storage
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
@@ -9876,9 +9819,6 @@ importers:
       '@dxos/live-object':
         specifier: workspace:*
         version: link:../../core/echo/live-object
-      '@dxos/local-storage':
-        specifier: workspace:*
-        version: link:../../common/local-storage
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
@@ -10167,9 +10107,6 @@ importers:
       '@dxos/live-object':
         specifier: workspace:*
         version: link:../../core/echo/live-object
-      '@dxos/local-storage':
-        specifier: workspace:*
-        version: link:../../common/local-storage
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
@@ -10300,9 +10237,6 @@ importers:
       '@dxos/live-object':
         specifier: workspace:*
         version: link:../../core/echo/live-object
-      '@dxos/local-storage':
-        specifier: workspace:*
-        version: link:../../common/local-storage
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
@@ -10506,9 +10440,6 @@ importers:
       '@dxos/live-object':
         specifier: workspace:*
         version: link:../../core/echo/live-object
-      '@dxos/local-storage':
-        specifier: workspace:*
-        version: link:../../common/local-storage
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
@@ -11087,9 +11018,6 @@ importers:
       '@dxos/live-object':
         specifier: workspace:*
         version: link:../../core/echo/live-object
-      '@dxos/local-storage':
-        specifier: workspace:*
-        version: link:../../common/local-storage
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
@@ -11769,9 +11697,6 @@ importers:
       '@dxos/live-object':
         specifier: workspace:*
         version: link:../../core/echo/live-object
-      '@dxos/local-storage':
-        specifier: workspace:*
-        version: link:../../common/local-storage
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
@@ -11941,9 +11866,6 @@ importers:
       '@dxos/live-object':
         specifier: workspace:*
         version: link:../../core/echo/live-object
-      '@dxos/local-storage':
-        specifier: workspace:*
-        version: link:../../common/local-storage
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
@@ -12116,9 +12038,6 @@ importers:
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../common/invariant
-      '@dxos/local-storage':
-        specifier: workspace:*
-        version: link:../../common/local-storage
       '@dxos/operation':
         specifier: workspace:*
         version: link:../../core/operation
@@ -12696,9 +12615,6 @@ importers:
       '@dxos/live-object':
         specifier: workspace:*
         version: link:../../core/echo/live-object
-      '@dxos/local-storage':
-        specifier: workspace:*
-        version: link:../../common/local-storage
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
@@ -13034,9 +12950,6 @@ importers:
       '@dxos/live-object':
         specifier: workspace:*
         version: link:../../core/echo/live-object
-      '@dxos/local-storage':
-        specifier: workspace:*
-        version: link:../../common/local-storage
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
@@ -13297,9 +13210,6 @@ importers:
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../common/invariant
-      '@dxos/local-storage':
-        specifier: workspace:*
-        version: link:../../common/local-storage
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
@@ -13439,9 +13349,6 @@ importers:
       '@dxos/live-object':
         specifier: workspace:*
         version: link:../../core/echo/live-object
-      '@dxos/local-storage':
-        specifier: workspace:*
-        version: link:../../common/local-storage
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
@@ -14752,9 +14659,6 @@ importers:
       '@dxos/live-object':
         specifier: workspace:*
         version: link:../../core/echo/live-object
-      '@dxos/local-storage':
-        specifier: workspace:*
-        version: link:../../common/local-storage
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log

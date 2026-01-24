@@ -2,6 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
+import { type Registry } from '@effect-atom/atom-react';
 import * as Cause from 'effect/Cause';
 import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
@@ -29,14 +30,29 @@ import { isTruthy } from '@dxos/util';
 
 import { type AiChatServices, blueprintRegistry } from '../../util';
 
+export type ChatProcessorOptions = {
+  runtime: Runtime.Runtime<AiChatServices>;
+  toolkit: GenericToolkit.GenericToolkit;
+  functions: FunctionDefinition.Any[];
+  metadata?: AiService.ServiceMetadata;
+  registry?: Registry.Registry;
+};
+
 // TODO(burdon): Factor out common guts from AiChatProcessor.
 export class ChatProcessor {
-  constructor(
-    private readonly _runtime: Runtime.Runtime<AiChatServices>,
-    private readonly _toolkit: GenericToolkit.GenericToolkit,
-    private readonly _functions: FunctionDefinition.Any[],
-    private readonly _metadata?: AiService.ServiceMetadata,
-  ) {}
+  private readonly _runtime: Runtime.Runtime<AiChatServices>;
+  private readonly _toolkit: GenericToolkit.GenericToolkit;
+  private readonly _functions: FunctionDefinition.Any[];
+  private readonly _metadata?: AiService.ServiceMetadata;
+  private readonly _registry?: Registry.Registry;
+
+  constructor(options: ChatProcessorOptions) {
+    this._runtime = options.runtime;
+    this._toolkit = options.toolkit;
+    this._functions = options.functions;
+    this._metadata = options.metadata;
+    this._registry = options.registry;
+  }
 
   get runtime() {
     return this._runtime;
@@ -104,7 +120,7 @@ export class ChatProcessor {
     const chat = Assistant.make({ queue: Ref.fromDXN(queue.dxn) });
     space.db.add(chat);
 
-    const conversation = new AiConversation(queue);
+    const conversation = new AiConversation({ queue, registry: this._registry });
     await conversation.open();
 
     // Bind blueprints.

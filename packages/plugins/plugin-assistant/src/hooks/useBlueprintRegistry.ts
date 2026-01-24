@@ -50,7 +50,7 @@ export const useActiveBlueprints = ({ context }: { context?: AiContextBinder }) 
     }
 
     const updateActive = () => {
-      const blueprints = context.blueprintsValue ?? [];
+      const blueprints = context.getBlueprints();
       setActive(new Map(blueprints.map((blueprint) => [blueprint.key, blueprint])));
     };
 

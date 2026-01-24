@@ -2,6 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
+import { Registry } from '@effect-atom/atom-react';
 import * as Command from '@effect/cli/Command';
 import * as Options from '@effect/cli/Options';
 import * as Effect from 'effect/Effect';
@@ -73,8 +74,15 @@ export const chat = Command.make(
         ),
       );
 
+      const registry = Registry.make();
       const toolkit = GenericToolkit.merge(...toolkits);
-      const processor = new ChatProcessor(runtime, toolkit, functions, service.metadata);
+      const processor = new ChatProcessor({
+        runtime,
+        toolkit,
+        functions,
+        metadata: service.metadata,
+        registry,
+      });
       const [conversation, setConversation] = createSignal<AiConversation | undefined>(undefined);
 
       invariant(client.halo.identity);

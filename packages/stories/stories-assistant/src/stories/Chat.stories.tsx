@@ -9,7 +9,7 @@ import React, { type FC, useCallback } from 'react';
 import { ToolId } from '@dxos/ai';
 import { EXA_API_KEY } from '@dxos/ai/testing';
 import { Common } from '@dxos/app-framework';
-import { Surface, useCapabilities } from '@dxos/app-framework/react';
+import { Surface, useCapabilities, useCapability } from '@dxos/app-framework/react';
 import { AiContextBinder } from '@dxos/assistant';
 import { Agent, LinearBlueprint, ResearchBlueprint, ResearchDataTypes, ResearchGraph } from '@dxos/assistant-toolkit';
 import { Blueprint, Prompt, Template } from '@dxos/blueprints';
@@ -98,6 +98,7 @@ type StoryProps = {
 
 const DefaultStory = ({ modules, showContext, blueprints = [] }: StoryProps) => {
   const blueprintsDefinitions = useCapabilities(Common.Capability.BlueprintDefinition);
+  const atomRegistry = useCapability(Common.Capability.AtomRegistry);
 
   const space = useSpace();
   useAsyncEffect(async () => {
@@ -112,17 +113,17 @@ const DefaultStory = ({ modules, showContext, blueprints = [] }: StoryProps) => 
     }
 
     // Add blueprints to context.
-    const registry = new Blueprint.Registry(blueprintsDefinitions);
+    const blueprintRegistry = new Blueprint.Registry(blueprintsDefinitions);
     const blueprintObjects = blueprints
       .map((key) => {
-        const blueprint = registry.getByKey(key);
+        const blueprint = blueprintRegistry.getByKey(key);
         if (blueprint) {
           return space.db.add(Obj.clone(blueprint));
         }
       })
       .filter(isNonNullable);
 
-    const binder = new AiContextBinder(await chat.queue.load());
+    const binder = new AiContextBinder({ queue: await chat.queue.load(), registry: atomRegistry });
     await binder.use((binder) => binder.bind({ blueprints: blueprintObjects.map((blueprint) => Ref.make(blueprint)) }));
   }, [space, blueprints, blueprintsDefinitions]);
 
@@ -132,7 +133,7 @@ const DefaultStory = ({ modules, showContext, blueprints = [] }: StoryProps) => 
 
   const chats = useQuery(space?.db, Filter.type(Assistant.Chat));
   const binder = useContextBinder(chats.at(-1)?.queue.target);
-  const objects = binder?.objectsValue ?? [];
+  const objects = binder?.getObjects() ?? [];
 
   if (!space) {
     return null;

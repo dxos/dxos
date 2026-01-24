@@ -64,11 +64,12 @@ export const Chat = (props: ChatProps) => {
     // Bridge atom subscriptions to Solid signals.
     const onUpdate = () => {
       setBlueprints(
-        props.conversation.context.blueprintsValue
+        props.conversation.context
+          .getBlueprints()
           .map((blueprint) => blueprintRegistry.getByKey(blueprint.key))
           .filter(isTruthy),
       );
-      setObjects(props.conversation.context.objectsValue);
+      setObjects(props.conversation.context.getObjects());
     };
 
     const unsubscribeBlueprints = props.conversation.context.subscribeBlueprints(onUpdate);
@@ -175,7 +176,7 @@ export const Chat = (props: ChatProps) => {
           </Match>
           <Match when={popup() === 'blueprints'}>
             <BlueprintPicker
-              selected={props.conversation.context.blueprintsValue.map((blueprint) => blueprint.key)}
+              selected={props.conversation.context.getBlueprints().map((blueprint) => blueprint.key)}
               onSave={(blueprints) => {
                 props.onChatCreate?.({ blueprints });
                 setPopup(undefined);
