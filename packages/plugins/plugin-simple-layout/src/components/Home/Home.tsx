@@ -86,7 +86,7 @@ const Workspace = ({ node }: { node: Node.Node }) => {
       classNames={mx('dx-focus-ring', isSelected && 'bg-hoverOverlay')}
       onClick={handleSelect}
     >
-      <Card.Chrome classNames='grid grid-cols-[min-content_1fr_min-content] items-center gap-cardSpacingInline pie-cardSpacingInline'>
+      <Card.Toolbar>
         <Avatar.Root>
           <Avatar.Content
             hue={node.properties.hue}
@@ -99,7 +99,7 @@ const Workspace = ({ node }: { node: Node.Node }) => {
           <Avatar.Label>{name}</Avatar.Label>
           <Icon icon='ph--caret-right--regular' />
         </Avatar.Root>
-      </Card.Chrome>
+      </Card.Toolbar>
     </Card.Root>
   );
 };

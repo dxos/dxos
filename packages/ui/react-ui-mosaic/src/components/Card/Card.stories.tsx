@@ -3,7 +3,7 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import React from 'react';
+import React, { useRef } from 'react';
 
 import { faker } from '@dxos/random';
 import { withTheme } from '@dxos/react-ui/testing';
@@ -19,19 +19,33 @@ type CardStoryProps = {
 };
 
 const DefaultStory = ({ title, description, image }: CardStoryProps) => {
+  const handleRef = useRef<HTMLButtonElement>(null);
   return (
     <Card.Root role='card--intrinsic'>
       <Card.Toolbar>
-        <Card.DragHandle />
+        <Card.DragHandle ref={handleRef} />
         <Card.Title>{title}</Card.Title>
-        <Card.Menu items={[]} />
+        <Card.Close onClose={() => console.log('close')} />
       </Card.Toolbar>
-      {image && <Card.Poster alt={title} image={image} />}
-      {description && (
-        <Card.Row>
-          <Card.Text variant='description'>{description}</Card.Text>
-        </Card.Row>
-      )}
+      <Card.Poster alt='Card.Poster' image={image} />
+      <Card.Row icon='ph--dot-outline--regular'>
+        <Card.Heading>Card.Heading</Card.Heading>
+      </Card.Row>
+      <Card.Row icon='ph--dot-outline--regular'>
+        <Card.Text>Card.Text (default)</Card.Text>
+      </Card.Row>
+      <Card.Row icon='ph--dot-outline--regular'>
+        <Card.Text variant='description'>
+          Card.Text (description)
+          <br />
+          {description}
+        </Card.Text>
+      </Card.Row>
+      <Card.Row icon='ph--dot-outline--regular'>
+        <Card.Heading variant='subtitle'>Card.Heading (subtitle)</Card.Heading>
+      </Card.Row>
+      <Card.Action label='Card.Action' onClick={() => console.log('action')} />
+      <Card.Link label='Card.Link' href='https://dxos.org' />
     </Card.Root>
   );
 };
@@ -55,38 +69,20 @@ export const Default: Story = {
   args: {
     title: faker.commerce.productName(),
     description: faker.lorem.paragraph(3),
-  },
-};
-
-export const WithImage: Story = {
-  args: {
-    title: faker.commerce.productName(),
-    description: faker.lorem.paragraph(3),
     image,
   },
 };
 
-export const Everything: Story = {
-  args: {
-    title: faker.commerce.productName(),
-    description: faker.lorem.paragraph(3),
-    image,
-  },
-  render: ({ title, description, image }) => {
-    return (
-      <Card.Root role='card--intrinsic'>
-        <Card.Toolbar>
-          <Card.DragHandle />
-          <Card.Title>{title}</Card.Title>
-          <Card.Close onClose={() => console.log('close')} />
-        </Card.Toolbar>
-        <Card.Poster alt='Card.Poster' image={image} />
-        <Card.Heading>Card.Heading</Card.Heading>
-        <Card.Text>Card.Text</Card.Text>
-        <Card.Text variant='description'>Card.Description {description}</Card.Text>
-        <Card.Action label='Card.Action' onClick={() => console.log('action')} />
-        <Card.Link label='Card.Link' href='https://dxos.org' />
-      </Card.Root>
-    );
-  },
-};
+export const Mock = () => (
+  <div className='grid grid-cols-[2rem_1fr_2rem] is-cardMinWidth border border-separator rounded-sm'>
+    <div className='grid grid-cols-subgrid col-span-full'>
+      <div className='p-1'>A</div>
+      <div className='p-1 truncate text-description'>This line is very very long and it should wrap.</div>
+      <div className='p-1'>B</div>
+    </div>
+    <div className='grid grid-cols-subgrid col-span-3'>
+      <div className='p-1'>A</div>
+      <div className='p-1 truncate text-description col-span-2'>This line is very very long and it should wrap.</div>
+    </div>
+  </div>
+);

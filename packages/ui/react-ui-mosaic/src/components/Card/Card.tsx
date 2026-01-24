@@ -62,7 +62,7 @@ const CardRoot = forwardRef<HTMLDivElement, CardRootProps>(
         {...(id && { 'data-object-id': id })}
         {...props}
         role={role}
-        className={mx(styles.root, styles.grid, roleClassNames[role], className, classNames)}
+        className={mx(styles.root, roleClassNames[role], className, classNames)}
         ref={forwardedRef}
       >
         {children}
@@ -77,7 +77,7 @@ const CardRoot = forwardRef<HTMLDivElement, CardRootProps>(
 
 const CardToolbar = forwardRef<HTMLDivElement, ToolbarRootProps>(({ children, classNames, ...props }, forwardedRef) => {
   return (
-    <Toolbar.Root {...props} classNames={['density-fine bg-transparent', styles.row, classNames]} ref={forwardedRef}>
+    <Toolbar.Root {...props} classNames={['density-fine bg-transparent', styles.grid_3, classNames]} ref={forwardedRef}>
       {children}
     </Toolbar.Root>
   );
@@ -197,6 +197,79 @@ const CardTitle = forwardRef<HTMLDivElement, CardTitleProps>(
 );
 
 //
+// Row
+//
+
+type CardRowProps = CardSharedProps & { icon?: string };
+
+const CardRow = forwardRef<HTMLDivElement, CardRowProps>(
+  ({ children, classNames, className, role = 'none', icon, ...props }, forwardedRef) => {
+    return (
+      <div {...props} role={role} className={mx(styles.grid_2, 'pli-1', classNames, className)} ref={forwardedRef}>
+        {(icon && <CardIcon classNames='text-subdued' icon={icon} />) || <div />}
+        {children}
+      </div>
+    );
+  },
+);
+
+//
+// Heading
+//
+
+type CardHeadingProps = CardSharedProps & { variant?: 'default' | 'subtitle' };
+
+const CardHeading = forwardRef<HTMLDivElement, CardHeadingProps>(
+  ({ children, classNames, className, asChild, role = 'heading', variant = 'default', ...props }, forwardedRef) => {
+    const Root = asChild ? Slot : 'div';
+    // NOTE: Padding align first line of text with center of icon.
+    const variantClassNames: Record<string, string> = {
+      default: 'plb-1',
+      subtitle: 'plb-2 text-xs text-description font-medium uppercase',
+    };
+
+    return (
+      <Root {...props} role={role} className={mx(variantClassNames[variant], classNames, className)} ref={forwardedRef}>
+        {children}
+      </Root>
+    );
+  },
+);
+
+//
+// Text
+//
+
+type CardTextProps = CardSharedProps & { variant?: 'default' | 'description' };
+
+const CardText = forwardRef<HTMLDivElement, CardTextProps>(
+  ({ children, classNames, className, asChild, role = 'none', variant = 'default', ...props }, forwardedRef) => {
+    const Root = asChild ? Slot : 'div';
+    // NOTE: Padding align first line of text with center of icon.
+    const variantClassNames: Record<string, { root: string; span?: string }> = {
+      default: {
+        root: 'plb-1',
+      },
+      description: {
+        root: 'plb-1.5',
+        span: 'text-sm text-description line-clamp-3',
+      },
+    };
+
+    return (
+      <Root
+        {...props}
+        role={role}
+        className={mx(variantClassNames[variant].root, classNames, className)}
+        ref={forwardedRef}
+      >
+        <span className={variantClassNames[variant].span}>{children}</span>
+      </Root>
+    );
+  },
+);
+
+//
 // Poster
 //
 
@@ -239,7 +312,7 @@ type CardActionProps = { icon?: string; label: string; actionIcon?: string; onCl
 const CardAction = ({ icon, actionIcon = 'ph--arrow-right--regular', label, onClick }: CardActionProps) => {
   return (
     <div role='none' className='is-full col-span-3 pli-1'>
-      <Button variant='ghost' classNames={mx(styles.row, '!p-0 is-full text-start')} onClick={onClick}>
+      <Button variant='ghost' classNames={mx(styles.grid_3, '!p-0 is-full text-start')} onClick={onClick}>
         {(icon && <CardIcon classNames='text-subdued' icon={icon} />) || <div />}
         <span className={mx('min-is-0 flex-1 truncate', !onClick && 'col-span-2')}>{label}</span>
         {actionIcon && <CardIcon icon={actionIcon} />}
@@ -256,9 +329,9 @@ type CardLinkProps = { label: string; href: string };
 
 const CardLink = ({ label, href }: CardLinkProps) => {
   return (
-    <div role='none' className='is-full col-span-3 pli-1'>
+    <div role='none' className='is-full pli-1'>
       <a
-        className={mx(styles.row, 'group !p-0 dx-button dx-focus-ring !min-bs-1')}
+        className={mx(styles.grid_3, 'group !p-0 dx-button dx-focus-ring !min-bs-1')}
         data-variant='ghost'
         href={href}
         target='_blank'
@@ -271,91 +344,6 @@ const CardLink = ({ label, href }: CardLinkProps) => {
     </div>
   );
 };
-
-//
-// Row
-//
-
-type CardRowProps = CardSharedProps & { icon?: string };
-
-const CardRow = forwardRef<HTMLDivElement, CardRowProps>(
-  ({ children, classNames, className, role = 'none', icon, ...props }, forwardedRef) => {
-    return (
-      <div {...props} role={role} className={mx(styles.row, 'pli-1', classNames, className)} ref={forwardedRef}>
-        {(icon && <CardIcon classNames='text-subdued' icon={icon} />) || <div />}
-        {children}
-      </div>
-    );
-  },
-);
-
-//
-// Chrome
-//
-
-/**
- * @deprecated Use Card.Row
- */
-const CardChrome = forwardRef<HTMLDivElement, CardSharedProps>(
-  ({ children, classNames, className, asChild, role = 'none', ...props }, forwardedRef) => {
-    const Root = asChild ? Slot : 'div';
-
-    return (
-      <Root
-        {...props}
-        role={role}
-        className={mx(
-          'pli-[--dx-cardSpacingChrome] mlb-[--dx-cardSpacingChrome] [&_.dx-button]:text-start [&_.dx-button]:is-full [&_.dx-button]:pis-[calc(var(--dx-cardSpacingInline)-var(--dx-cardSpacingChrome))]',
-          classNames,
-          className,
-        )}
-        ref={forwardedRef}
-      >
-        {children}
-      </Root>
-    );
-  },
-);
-
-//
-// Heading
-//
-
-type CardHeadingProps = CardSharedProps;
-
-const CardHeading = forwardRef<HTMLDivElement, CardHeadingProps>(
-  ({ children, classNames, className, asChild, role = 'heading', ...props }, forwardedRef) => {
-    const Root = asChild ? Slot : 'div';
-
-    return (
-      <Root {...props} role={role} className={mx('grow truncate', classNames, className)} ref={forwardedRef}>
-        {children}
-      </Root>
-    );
-  },
-);
-
-//
-// Text
-//
-
-type CardTextProps = CardSharedProps & { variant?: 'description' };
-
-const CardText = forwardRef<HTMLDivElement, CardTextProps>(
-  ({ children, classNames, className, asChild, role = 'none', variant, ...props }, forwardedRef) => {
-    const Root = asChild ? Slot : 'div';
-    return (
-      <Root
-        {...props}
-        role={role}
-        className={mx('plb-1', variant === 'description' && 'plb-1.5', classNames, className)}
-        ref={forwardedRef}
-      >
-        <span className={mx(variant === 'description' && 'text-sm text-description line-clamp-3')}>{children}</span>
-      </Root>
-    );
-  },
-);
 
 //
 // Icon
@@ -387,11 +375,10 @@ export const Card = {
   Menu: CardMenu,
 
   // Content
-  Heading: CardHeading,
-  Poster: CardPoster,
   Row: CardRow,
-  Chrome: CardChrome,
+  Heading: CardHeading,
   Text: CardText,
+  Poster: CardPoster,
   Action: CardAction,
   Link: CardLink,
 };
