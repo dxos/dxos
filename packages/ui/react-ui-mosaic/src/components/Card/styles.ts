@@ -9,7 +9,6 @@ export const styles = {
     'group/card relative',
     'min-bs-[--rail-item] overflow-hidden',
     'bg-cardSurface border border-separator dark:border-subduedSeparator rounded-sm dx-focus-ring-group-y-indicator',
-    '[&>:last-child]:pbe-1',
   ],
 
   /**

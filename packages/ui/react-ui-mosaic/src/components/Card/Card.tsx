@@ -3,7 +3,13 @@
 //
 
 import { Slot } from '@radix-ui/react-slot';
-import React, { type ComponentPropsWithoutRef, createContext, forwardRef, useContext } from 'react';
+import React, {
+  type ComponentPropsWithoutRef,
+  type PropsWithChildren,
+  createContext,
+  forwardRef,
+  useContext,
+} from 'react';
 
 import {
   Button,
@@ -48,6 +54,7 @@ const CardRoot = forwardRef<HTMLDivElement, CardRootProps>(
   ({ children, classNames, className, id, asChild, role = 'group', ...props }, forwardedRef) => {
     const Root = asChild ? Slot : 'div';
 
+    // TODO(burdon): Should surface cards implement the toolbar?
     // TODO(burdon): Option for drag handle (via surface).
     // TODO(burdon): Document (see app-framework, and ui-theme size.css, length.ts)
     const roleClassNames: Record<string, ClassNameValue> = {
@@ -197,6 +204,22 @@ const CardTitle = forwardRef<HTMLDivElement, CardTitleProps>(
     );
   },
 );
+
+//
+// Content
+// TODO(burdon): Root for card--content role (possibly multiple).
+// TODO(burdon): Consider collapsible sections (surfaces).
+//
+
+type CardContentProps = PropsWithChildren;
+
+const CardContent = forwardRef<HTMLDivElement, CardContentProps>(({ children, ...props }, forwardedRef) => {
+  return (
+    <div role='none' className='contents [&>:last-child]:pbe-1' {...props} ref={forwardedRef}>
+      {children}
+    </div>
+  );
+});
 
 //
 // Row
@@ -385,6 +408,7 @@ export const Card = {
   Icon: CardIcon,
 
   // Content
+  Content: CardContent,
   Row: CardRow,
   Heading: CardHeading,
   Text: CardText,

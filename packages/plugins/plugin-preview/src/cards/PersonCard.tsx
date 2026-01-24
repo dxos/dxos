@@ -15,11 +15,6 @@ export const PersonCard = ({ children, role, subject, onSelect }: CardPreviewPro
 
   return (
     <Card.Root id={subject.id} role={role}>
-      {/* <Card.Row role='group'>
-        <div role='none' className={mx(gridRow, 'grid-rows-2')}>
-          {db ? <CardSubjectMenu subject={subject} db={db} /> : <div />}
-        </div>
-      </Card.Row> */}
       <Avatar.Root>
         <Card.Toolbar>
           <Card.Icon toolbar icon='ph--user--regular' />
@@ -29,34 +24,37 @@ export const PersonCard = ({ children, role, subject, onSelect }: CardPreviewPro
           {/* TODO(burdon): Menu. */}
           <Card.Close onClose={() => {}} />
         </Card.Toolbar>
-        {image && (
-          <Card.Row className='plb-1'>
-            <Avatar.Content
-              imgSrc={image}
-              icon='ph--user--regular'
-              size={16}
-              classNames={!image && 'opacity-50'}
-              hue='neutral'
-              variant='square'
+
+        <Card.Content>
+          {image && (
+            <Card.Row className='plb-1'>
+              <Avatar.Content
+                imgSrc={image}
+                icon='ph--user--regular'
+                size={16}
+                classNames={!image && 'opacity-50'}
+                hue='neutral'
+                variant='square'
+              />
+            </Card.Row>
+          )}
+          {organization?.name && (
+            <Card.Action
+              icon='ph--buildings--regular'
+              label={organization.name}
+              onClick={onSelect ? () => onSelect(organization) : undefined}
             />
-          </Card.Row>
-        )}
+          )}
+          {emails.map(({ value }) => (
+            <Card.Row key={value} icon='ph--at--regular'>
+              <Card.Text truncate className='text-primaryText'>
+                {value}
+              </Card.Text>
+            </Card.Row>
+          ))}
+          {children}
+        </Card.Content>
       </Avatar.Root>
-      {organization?.name && (
-        <Card.Action
-          icon='ph--buildings--regular'
-          label={organization.name}
-          onClick={onSelect ? () => onSelect(organization) : undefined}
-        />
-      )}
-      {emails.map(({ value }) => (
-        <Card.Row key={value} icon='ph--at--regular'>
-          <Card.Text truncate className='text-primaryText'>
-            {value}
-          </Card.Text>
-        </Card.Row>
-      ))}
-      {children}
     </Card.Root>
   );
 };

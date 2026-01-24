@@ -28,25 +28,27 @@ const DefaultStory = ({ title, description, image }: CardStoryProps) => {
         <Card.Title>{title}</Card.Title>
         <Card.Close onClose={() => console.log('close')} />
       </Card.Toolbar>
-      <Card.Poster alt='Card.Poster' image={image} />
-      <Card.Row icon='ph--dot-outline--regular'>
-        <Card.Heading>Card.Heading</Card.Heading>
-      </Card.Row>
-      <Card.Row icon='ph--dot-outline--regular'>
-        <Card.Text>Card.Text (default)</Card.Text>
-      </Card.Row>
-      <Card.Row icon='ph--dot-outline--regular'>
-        <Card.Text variant='description'>
-          Card.Text (description)
-          <br />
-          {description}
-        </Card.Text>
-      </Card.Row>
-      <Card.Row icon='ph--dot-outline--regular'>
-        <Card.Heading variant='subtitle'>Card.Heading (subtitle)</Card.Heading>
-      </Card.Row>
-      <Card.Action label='Card.Action' onClick={() => console.log('action')} />
-      <Card.Link label='Card.Link' href='https://dxos.org' />
+      <Card.Content>
+        <Card.Poster alt='Card.Poster' image={image} />
+        <Card.Row icon='ph--dot-outline--regular'>
+          <Card.Heading>Card.Heading</Card.Heading>
+        </Card.Row>
+        <Card.Row icon='ph--dot-outline--regular'>
+          <Card.Text>Card.Text (default)</Card.Text>
+        </Card.Row>
+        <Card.Row icon='ph--dot-outline--regular'>
+          <Card.Text variant='description'>
+            Card.Text (description)
+            <br />
+            {description}
+          </Card.Text>
+        </Card.Row>
+        <Card.Row icon='ph--dot-outline--regular'>
+          <Card.Heading variant='subtitle'>Card.Heading (subtitle)</Card.Heading>
+        </Card.Row>
+        <Card.Action label='Card.Action' onClick={() => console.log('action')} />
+        <Card.Link label='Card.Link' href='https://dxos.org' />
+      </Card.Content>
     </Card.Root>
   );
 };
@@ -106,9 +108,11 @@ export const Description: Story = {
           <Card.Title>{title}</Card.Title>
           <Card.Close onClose={() => console.log('close')} />
         </Card.Toolbar>
-        <Card.Row>
-          <Card.Text variant='description'>{description}</Card.Text>
-        </Card.Row>
+        <Card.Content>
+          <Card.Row>
+            <Card.Text variant='description'>{description}</Card.Text>
+          </Card.Row>
+        </Card.Content>
       </Card.Root>
     );
   },
