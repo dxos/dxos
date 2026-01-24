@@ -274,7 +274,7 @@ export class TablePresentation<T extends TableRow = TableRow> {
           continue;
         }
 
-        this.createDataCell(cells, this.model.rows[row], field, col, row);
+        this.createDataCell(cells, this.model.getRows()[row], field, col, row);
       }
     }
 
@@ -284,7 +284,7 @@ export class TablePresentation<T extends TableRow = TableRow> {
   private getDraftRowCells(range: DxGridPlaneRange): DxGridPlaneCells {
     const cells: DxGridPlaneCells = {};
     const fields = this.model.projection?.fields ?? [];
-    const draftRows = this.model.draftRows;
+    const draftRows = this.model.getDraftRows();
 
     // Return cells of the CTA row if no draft row is active
     if (draftRows.length === 0) {
@@ -325,7 +325,7 @@ export class TablePresentation<T extends TableRow = TableRow> {
   private getHeaderCells(range: DxGridPlaneRange): DxGridPlaneCells {
     const cells: DxGridPlaneCells = {};
     const fields = this.model.projection?.fields ?? [];
-    const currentSort = this.model.sorting;
+    const currentSort = this.model.getSorting();
     for (let col = range.start.col; col <= range.end.col && col < fields.length; col++) {
       const { field, props } = this.model.projection.getFieldProjection(fields[col].id);
       const direction = currentSort?.fieldId === field.id ? currentSort.direction : undefined;
@@ -420,7 +420,7 @@ export class TablePresentation<T extends TableRow = TableRow> {
 
   private getDraftActionCells(range: DxGridPlaneRange): DxGridPlaneCells {
     const cells: DxGridPlaneCells = {};
-    const draftRows = this.model.draftRows;
+    const draftRows = this.model.getDraftRows();
 
     // Return cells of the CTA row if no draft row is active
     if (draftRows.length === 0) {
@@ -447,7 +447,7 @@ export class TablePresentation<T extends TableRow = TableRow> {
 
   private getDraftIconCells(range: DxGridPlaneRange): DxGridPlaneCells {
     const cells: DxGridPlaneCells = {};
-    const draftRows = this.model.draftRows;
+    const draftRows = this.model.getDraftRows();
 
     for (let row = range.start.row; row <= range.end.row; row++) {
       cells[toPlaneCellIndex({ col: 0, row })] = {

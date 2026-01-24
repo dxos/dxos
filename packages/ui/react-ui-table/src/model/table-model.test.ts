@@ -12,7 +12,11 @@ import { ProjectionModel, View, createDirectChangeCallback } from '@dxos/schema'
 
 import { Table } from '../types';
 
-import { TableModel, type TableModelProps } from './table-model';
+import {
+  TableModel,
+  type TableModelProps,
+  createDirectChangeCallback as createTableDirectChangeCallback,
+} from './table-model';
 
 // TODO(burdon): Tests are disabled in project.json since they bring in plugin deps.
 //  Restore once factored out into react-ui-table.
@@ -74,16 +78,16 @@ describe('TableModel', () => {
   describe('reactivity', () => {
     test('rows should update when setRows is called', () => {
       model.setRows([{ id: '4', title: 'Test 4', completed: false }]);
-      expect(model.rows).toHaveLength(1);
-      expect(model.rows[0].id).toBe('4');
+      expect(model.getRows()).toHaveLength(1);
+      expect(model.getRows()[0].id).toBe('4');
 
       model.setRows([
         { id: '5', title: 'Test 5', completed: false },
         { id: '6', title: 'Test 6', completed: true },
       ]);
-      expect(model.rows).toHaveLength(2);
-      expect(model.rows[0].id).toBe('5');
-      expect(model.rows[1].id).toBe('6');
+      expect(model.getRows()).toHaveLength(2);
+      expect(model.getRows()[0].id).toBe('5');
+      expect(model.getRows()[1].id).toBe('6');
     });
 
     test('selection should update when toggled', () => {
@@ -105,7 +109,7 @@ describe('TableModel', () => {
       ]);
 
       // Verify rows are accessible.
-      const rows = model.rows;
+      const rows = model.getRows();
       expect(rows).toHaveLength(3);
       expect(rows[0].id).toBeDefined();
     });
@@ -134,5 +138,11 @@ const createTableModel = (registry: Registry.Registry, props: Partial<TableModel
     view.projection,
     createDirectChangeCallback(view.projection, schema.jsonSchema),
   );
-  return new TableModel({ registry, object, projection, ...props });
+  return new TableModel({
+    registry,
+    object,
+    projection,
+    change: createTableDirectChangeCallback(object),
+    ...props,
+  });
 };

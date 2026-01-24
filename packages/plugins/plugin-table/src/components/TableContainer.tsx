@@ -165,7 +165,7 @@ export const TableContainer = forwardRef<HTMLDivElement, TableContainerProps>(({
       <TableToolbar
         attendableId={Obj.getDXN(object).toString()}
         customActions={customActions}
-        viewDirty={model?.viewDirty}
+        viewDirty={model?.getViewDirty()}
         onAdd={handleInsertRow}
         onSave={handleSave}
       />

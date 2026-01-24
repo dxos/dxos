@@ -22,7 +22,7 @@ export const ColumnActionsMenu = ({ model, modals }: ColumnActionsMenuProps) => 
     return null;
   }
 
-  const currentSort = model.sorting;
+  const currentSort = model.getSorting();
   const isCurrentColumnSorted = currentSort?.fieldId === state.fieldId;
 
   return (

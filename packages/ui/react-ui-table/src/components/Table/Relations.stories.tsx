@@ -16,10 +16,10 @@ import { useClient } from '@dxos/react-client';
 import { useClientStory, withClientProvider } from '@dxos/react-client/testing';
 import { useAsyncEffect } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
-import { withRegistry } from '@dxos/storybook-utils';
 import { translations as formTranslations } from '@dxos/react-ui-form';
 import { View } from '@dxos/schema';
 import { type ValueGenerator, createAsyncGenerator } from '@dxos/schema/testing';
+import { withRegistry } from '@dxos/storybook-utils';
 import { Organization, Person } from '@dxos/types';
 
 import { useProjectionModel, useTableModel } from '../../hooks';

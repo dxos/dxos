@@ -11,7 +11,13 @@ import { useSelected, useSelectionActions } from '@dxos/react-ui-attention';
 import { type ProjectionModel } from '@dxos/schema';
 import { isNonNullable } from '@dxos/util';
 
-import { TableModel, type TableModelProps, type TableRow, type TableRowAction } from '../model';
+import {
+  TableModel,
+  type TableModelProps,
+  type TableRow,
+  type TableRowAction,
+  createEchoChangeCallback,
+} from '../model';
 import { type Table } from '../types';
 
 export type UseTableModelProps<T extends TableRow = TableRow> = {
@@ -55,6 +61,7 @@ export const useTableModel = <T extends TableRow = TableRow>({
         object,
         projection,
         db,
+        change: createEchoChangeCallback<T>(object),
         features,
         rowActions,
         initialSelection,

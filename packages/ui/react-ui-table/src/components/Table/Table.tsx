@@ -106,9 +106,9 @@ const TableMainInner = <T extends Type.Entity.Any = Type.Entity.Any>(
   const modals = useMemo(() => new ModalController(registry), [registry]);
   const columnMeta = useAtomValue(model?.columnMeta ?? emptyColumnMeta);
   // Subscribe to rows atom to trigger re-render when rows change.
-  const rows = useAtomValue(model?.rowsAtom ?? emptyRowsAtom);
+  const rows = useAtomValue(model?.rows ?? emptyRowsAtom);
   // Subscribe to cell update counter to trigger re-render when individual cells change.
-  const cellUpdateCounter = useAtomValue(model?.cellUpdateAtom ?? emptyCellUpdateAtom);
+  const cellUpdateCounter = useAtomValue(model?.cellUpdate ?? emptyCellUpdateAtom);
   // Derive column count from columnMeta (reactive) with fallback.
   const columnCount = Object.keys(columnMeta.grid).length || model?.projection.fields.length || 0;
 

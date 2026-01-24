@@ -11,9 +11,9 @@ import { faker } from '@dxos/random';
 import { Filter, useQuery, useSchema } from '@dxos/react-client/echo';
 import { useClientStory, withClientProvider } from '@dxos/react-client/testing';
 import { withTheme } from '@dxos/react-ui/testing';
-import { withRegistry } from '@dxos/storybook-utils';
 import { type SchemaPropertyDefinition } from '@dxos/schema';
 import { TestSchema } from '@dxos/schema/testing';
+import { withRegistry } from '@dxos/storybook-utils';
 
 import { type TableFeatures } from '../../model';
 import { translations } from '../../translations';

@@ -36,6 +36,41 @@ export type FieldSortType = {
 
 import { type SelectionMode, SelectionModel } from './selection-model';
 
+/**
+ * Callback type for wrapping mutations in Obj.change().
+ * Contains separate callbacks for table object and row mutations.
+ */
+export type TableChangeCallback<T extends TableRow> = {
+  /** Callback to wrap table object mutations. */
+  table: (mutate: (mutableTable: Table.Table) => void) => void;
+  /** Callback to wrap row mutations. */
+  row: (row: T, mutate: (mutableRow: T) => void) => void;
+};
+
+/**
+ * Creates a change callback for ECHO-backed table and rows.
+ * Use this when the table and rows are stored in the ECHO database.
+ */
+export const createEchoChangeCallback = <T extends TableRow>(table: Table.Table): TableChangeCallback<T> => ({
+  table: (mutate) => Obj.change(table, (mutableTable) => mutate(mutableTable as unknown as Table.Table)),
+  row: (row, mutate) => {
+    if (Obj.isObject(row)) {
+      Obj.change(row, (mutableRow) => mutate(mutableRow as T));
+    } else {
+      mutate(row);
+    }
+  },
+});
+
+/**
+ * Creates a change callback that directly mutates objects without wrapping.
+ * Use this for plain JavaScript objects (tests, non-ECHO scenarios).
+ */
+export const createDirectChangeCallback = <T extends TableRow>(table: Table.Table): TableChangeCallback<T> => ({
+  table: (mutate) => mutate(table),
+  row: (row, mutate) => mutate(row),
+});
+
 // Domain types for cell classification
 export type TableCellType = 'standard' | 'draft' | 'header';
 
@@ -75,6 +110,11 @@ export type TableModelProps<T extends TableRow = TableRow> = {
   object: Table.Table;
   projection: ProjectionModel;
   db?: Database.Database;
+  /**
+   * Callbacks to wrap mutations in Obj.change().
+   * Use createEchoChangeCallback() for ECHO-backed objects or createDirectChangeCallback() for plain objects.
+   */
+  change?: TableChangeCallback<T>;
   features?: Partial<TableFeatures>;
   initialSelection?: string[];
   pinnedRows?: { top: number[]; bottom: number[] };
@@ -93,6 +133,7 @@ export class TableModel<T extends TableRow = TableRow> extends Resource {
   private readonly _object: Table.Table;
   private readonly _projection: ProjectionModel;
   private readonly _db?: Database.Database;
+  private readonly _change: TableChangeCallback<T>;
 
   private readonly _visibleRange: Atom.Writable<DxGridPlaneRange>;
 
@@ -131,6 +172,7 @@ export class TableModel<T extends TableRow = TableRow> extends Resource {
     object,
     projection,
     db,
+    change,
     features = {},
     initialSelection = [],
     pinnedRows = { top: [], bottom: [] },
@@ -148,6 +190,7 @@ export class TableModel<T extends TableRow = TableRow> extends Resource {
     this._projection = projection;
     this._projection.normalizeView();
     this._db = db;
+    this._change = change ?? createEchoChangeCallback<T>(object);
 
     // TODO(ZaymonFC): Use our more robust config merging module?
     this._features = { ...defaultFeatures, ...features };
@@ -280,33 +323,31 @@ export class TableModel<T extends TableRow = TableRow> extends Resource {
   }
 
   /**
-   * Gets rows with in-memory sorting applied.
-   * In-memory sort is local to this instance until saved.
+   * Atom for reactive access to rows with in-memory sorting applied.
    */
-  public get rows(): T[] {
-    return this._registry.get(this._sortedRows);
-  }
-
-  /** Get the rows atom for reactive access. */
-  public get rowsAtom(): Atom.Atom<T[]> {
+  public get rows(): Atom.Atom<T[]> {
     return this._sortedRows;
   }
 
-  /** Get the cell update counter atom for reactive access to cell changes. */
-  public get cellUpdateAtom(): Atom.Atom<number> {
+  /**
+   * Gets rows with in-memory sorting applied.
+   * In-memory sort is local to this instance until saved.
+   */
+  public getRows(): T[] {
+    return this._registry.get(this._sortedRows);
+  }
+
+  /** Atom for reactive access to cell changes. */
+  public get cellUpdate(): Atom.Atom<number> {
     return this._cellUpdateCounter;
   }
 
   /**
-   * Change a row using Obj.change for ECHO objects.
+   * Change a row using the configured change callback.
    * Use this instead of directly mutating to ensure consistent mutation handling.
    */
   public changeRow(row: T, mutate: (mutableRow: T) => void): void {
-    if (Obj.isObject(row)) {
-      Obj.change(row, (mutableRow) => mutate(mutableRow as T));
-    } else {
-      mutate(row);
-    }
+    this._change.row(row, mutate);
   }
 
   public get features(): TableFeatures {
@@ -317,7 +358,7 @@ export class TableModel<T extends TableRow = TableRow> extends Resource {
    * Gets the current sort state.
    * Priority: in-memory sort (local changes) > persisted sort (from query AST).
    */
-  public get sorting(): FieldSortType | undefined {
+  public getSorting(): FieldSortType | undefined {
     return this._registry.get(this._sorting);
   }
 
@@ -453,19 +494,18 @@ export class TableModel<T extends TableRow = TableRow> extends Resource {
 
   public getRowCount = (): number => this._registry.get(this._sortedRows).length;
 
-  /**
-   * @reactive
-   */
-  public getDraftRowCount = (): number => this._registry.get(this._draftRows).length;
-
-  /** Gets the draft rows. */
-  public get draftRows(): DraftRow<T>[] {
-    return this._registry.get(this._draftRows);
+  public getDraftRowCount(): number {
+    return this._registry.get(this._draftRows).length;
   }
 
-  /** Get the draft rows atom for reactive access. */
-  public get draftRowsAtom(): Atom.Atom<DraftRow<T>[]> {
+  /** Atom for reactive access to draft rows. */
+  public get draftRows(): Atom.Atom<DraftRow<T>[]> {
     return this._draftRows;
+  }
+
+  /** Gets the current draft rows. */
+  public getDraftRows(): DraftRow<T>[] {
+    return this._registry.get(this._draftRows);
   }
 
   /**
@@ -702,7 +742,7 @@ export class TableModel<T extends TableRow = TableRow> extends Resource {
     }
 
     if (plane === 'frozenRowsEnd') {
-      // Update draft row data
+      // Update draft row data (draft rows are plain objects, not ECHO objects).
       if (row >= 0 && row < this._registry.get(this._draftRows).length) {
         setValue(this._registry.get(this._draftRows)[row].data, field.path, transformedValue);
         // Re-validate the draft row after the update
@@ -711,7 +751,10 @@ export class TableModel<T extends TableRow = TableRow> extends Resource {
     } else {
       // Update regular row data (use sorted rows for display index)
       const sortedRows = this._registry.get(this._sortedRows);
-      setValue(sortedRows[row], field.path, transformedValue);
+      const rowData = sortedRows[row];
+      this._change.row(rowData, (mutableRow) => {
+        setValue(mutableRow, field.path, transformedValue);
+      });
     }
   };
 
@@ -724,10 +767,13 @@ export class TableModel<T extends TableRow = TableRow> extends Resource {
     const fields = this._projection?.fields ?? [];
     const field = fields[col];
     const sortedRows = this._registry.get(this._sortedRows);
+    const rowData = sortedRows[row];
 
-    const value = getValue(sortedRows[row], field.path);
+    const value = getValue(rowData, field.path);
     const updatedValue = update(value);
-    setValue(sortedRows[row], field.path, updatedValue);
+    this._change.row(rowData, (mutableRow) => {
+      setValue(mutableRow, field.path, updatedValue);
+    });
   }
 
   /**
@@ -782,7 +828,9 @@ export class TableModel<T extends TableRow = TableRow> extends Resource {
       const newWidth = Math.max(0, width);
       const field = fields[columnIndex];
       if (field) {
-        this.table.sizes[field.path] = newWidth;
+        this._change.table((mutableTable) => {
+          mutableTable.sizes[field.path] = newWidth;
+        });
       }
     }
   }
@@ -826,7 +874,7 @@ export class TableModel<T extends TableRow = TableRow> extends Resource {
    * Toggles the sort direction for a field in-memory.
    */
   public toggleSort(fieldId: string): void {
-    const currentSort = this.sorting;
+    const currentSort = this.getSorting();
     if (!currentSort || currentSort.fieldId !== fieldId) {
       this.setSort(fieldId, 'asc');
       return;
@@ -888,7 +936,7 @@ export class TableModel<T extends TableRow = TableRow> extends Resource {
   /**
    * Checks if the view has unsaved changes (in-memory sort differs from persisted sort).
    */
-  public get viewDirty(): boolean {
+  public getViewDirty(): boolean {
     return this._registry.get(this._viewDirty);
   }
 }

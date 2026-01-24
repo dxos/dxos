@@ -13,11 +13,11 @@ import { faker } from '@dxos/random';
 import { PublicKey } from '@dxos/react-client';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { withTheme } from '@dxos/react-ui/testing';
-import { withRegistry } from '@dxos/storybook-utils';
 import { ViewEditor, translations as formTranslations } from '@dxos/react-ui-form';
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { View, getSchemaFromPropertyDefinitions, getTypenameFromQuery } from '@dxos/schema';
 import { TestSchema, createObjectFactory } from '@dxos/schema/testing';
+import { withRegistry } from '@dxos/storybook-utils';
 
 import { useTestTableModel } from '../../testing';
 import { translations } from '../../translations';

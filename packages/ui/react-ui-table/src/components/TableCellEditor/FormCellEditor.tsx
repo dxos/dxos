@@ -71,7 +71,7 @@ export const FormCellEditor = <T extends Type.Entity.Any = Type.Entity.Any>({
       // Check if this is a draft cell and get the appropriate row data
       const cell = parseCellIndex(contextEditing.index);
       if (model.isDraftCell(cell)) {
-        const draftRow = model.draftRows[cell.row];
+        const draftRow = model.getDraftRows()[cell.row];
         invariant(draftRow);
         return draftRow.data;
       } else {
