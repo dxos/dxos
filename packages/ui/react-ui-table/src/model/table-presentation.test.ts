@@ -107,10 +107,12 @@ const createTableModel = (registry: Registry.Registry, props: Partial<TableModel
     jsonSchema: schema.jsonSchema,
   });
   const object = Table.make({ view });
-  const projection = new ProjectionModel(
-    schema.jsonSchema,
-    view.projection,
-    createDirectChangeCallback(view.projection, schema.jsonSchema),
-  );
+  const projection = new ProjectionModel({
+    registry,
+    view,
+    baseSchema: schema.jsonSchema,
+    change: createDirectChangeCallback(view.projection, schema.jsonSchema),
+  });
+  projection.normalizeView();
   return new TableModel({ registry, object, projection, ...props });
 };

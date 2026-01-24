@@ -2,6 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
+import { Atom, Registry } from '@effect-atom/atom-react';
 import * as Schema from 'effect/Schema';
 
 import { type Entity, Format, Obj } from '@dxos/echo';
@@ -14,6 +15,7 @@ import {
   typeToFormat,
 } from '@dxos/echo/internal';
 import { createSchemaReference, getSchemaReference } from '@dxos/echo/internal';
+import { AtomObj } from '@dxos/echo-atom';
 import { invariant } from '@dxos/invariant';
 import { type Live, getSnapshot } from '@dxos/live-object';
 import { log } from '@dxos/log';
@@ -74,25 +76,136 @@ export const createDirectChangeCallback = (
 });
 
 /**
+ * Props for creating a ProjectionModel.
+ */
+export type ProjectionModelProps = {
+  /** Registry for atom management. Optional - if not provided, atoms won't be created. */
+  registry?: Registry.Registry;
+  /** The View object (for subscriptions). */
+  view: View.View;
+  /** The base JSON schema of the data being projected. */
+  baseSchema: Live<JsonSchemaType>;
+  /**
+   * Callbacks to wrap mutations in Obj.change().
+   * Use createEchoChangeCallback() for ECHO-backed objects or createDirectChangeCallback() for plain objects.
+   */
+  change: ProjectionChangeCallback;
+};
+
+/**
  * Wrapper for Projection that manages Field and Format updates.
+ * Exposes atoms for reactive access.
  */
 export class ProjectionModel {
   private readonly _encode = Schema.encodeSync(PropertySchema);
   private readonly _decode = Schema.decodeSync(PropertySchema, {});
 
-  // TOOD(burdon): Take an instance of S.S.AnyNoContext and derive the JsonSchemaType (and watch for reactivity)?
-  constructor(
-    // TODO(burdon): Pass in boolean readonly?
-    private readonly _baseSchema: Live<JsonSchemaType>,
-    private readonly _projection: Live<View.Projection>,
-    /**
-     * Callbacks to wrap mutations in Obj.change().
-     * Mutating operations will invoke these callbacks with mutator functions.
-     * Each callback is responsible for calling Obj.change() and providing the mutable version.
-     * Use createEchoChangeCallback() for ECHO-backed objects or createDirectChangeCallback() for plain objects.
-     */
-    private readonly _change: ProjectionChangeCallback,
-  ) {}
+  private readonly _registry: Registry.Registry;
+  private readonly _view: View.View;
+  private readonly _baseSchema: Live<JsonSchemaType>;
+  private readonly _change: ProjectionChangeCallback;
+
+  // Internal atoms.
+  private readonly _viewAtom: Atom.Atom<View.View>;
+  private readonly _projectionAtom: Atom.Atom<View.Projection>;
+  private readonly _fieldsAtom: Atom.Atom<FieldType[]>;
+  private readonly _hiddenFieldsAtom: Atom.Atom<FieldType[]>;
+  private readonly _allFieldsAtom: Atom.Atom<FieldType[]>;
+
+  constructor({ registry = Registry.make(), view, baseSchema, change }: ProjectionModelProps) {
+    this._registry = registry;
+    this._view = view;
+    this._baseSchema = baseSchema;
+    this._change = change;
+
+    this._viewAtom = AtomObj.make(this._view);
+
+    // Derived atom that extracts projection from the view snapshot.
+    this._projectionAtom = Atom.make((get) => {
+      const view = get(this._viewAtom);
+      return view.projection;
+    });
+
+    // Derived atoms for filtered fields.
+    this._fieldsAtom = Atom.make((get) => {
+      const projection = get(this._projectionAtom);
+      return projection.fields.filter((field) => field.visible !== false);
+    });
+
+    this._hiddenFieldsAtom = Atom.make((get) => {
+      const projection = get(this._projectionAtom);
+      return projection.fields.filter((field) => field.visible === false);
+    });
+
+    this._allFieldsAtom = Atom.make((get) => {
+      const projection = get(this._projectionAtom);
+      return projection.fields;
+    });
+  }
+
+  //
+  // Atom getters for reactive access
+  //
+
+  /**
+   * Atom for the visible fields in the projection.
+   */
+  get fields(): Atom.Atom<FieldType[]> {
+    return this._fieldsAtom;
+  }
+
+  /**
+   * Atom for the hidden fields in the projection.
+   */
+  get hiddenFields(): Atom.Atom<FieldType[]> {
+    return this._hiddenFieldsAtom;
+  }
+
+  /**
+   * Atom for all fields in the projection (both visible and hidden).
+   */
+  get allFields(): Atom.Atom<FieldType[]> {
+    return this._allFieldsAtom;
+  }
+
+  /**
+   * Atom for the core projection data type.
+   */
+  get projection(): Atom.Atom<View.Projection> {
+    return this._projectionAtom;
+  }
+
+  //
+  // Synchronous getters for imperative access
+  //
+
+  /**
+   * Gets the current visible fields array.
+   */
+  getFields(): FieldType[] {
+    return this._registry.get(this._fieldsAtom);
+  }
+
+  /**
+   * Gets the current hidden fields array.
+   */
+  getHiddenFields(): FieldType[] {
+    return this._registry.get(this._hiddenFieldsAtom);
+  }
+
+  /**
+   * Gets the current all fields array.
+   */
+  getAllFields(): FieldType[] {
+    return this._registry.get(this._allFieldsAtom);
+  }
+
+  /**
+   * Gets the current projection value.
+   */
+  getProjection(): View.Projection {
+    return this._registry.get(this._projectionAtom);
+  }
 
   /**
    * The base schema of the data being projected.
@@ -102,42 +215,14 @@ export class ProjectionModel {
   }
 
   /**
-   * The core projection data type.
-   */
-  get data(): Live<View.Projection> {
-    return this._projection;
-  }
-
-  /**
-   * The visible fields in the projection.
-   */
-  get fields() {
-    return this._projection.fields.filter((field) => field.visible !== false);
-  }
-
-  /**
-   * The hidden fields in the projection.
-   */
-  get hiddenFields() {
-    return this._projection.fields.filter((field) => field.visible === false);
-  }
-
-  /**
-   * All fields in the projection (both visible and hidden).
-   */
-  get allFields() {
-    return this._projection.fields;
-  }
-
-  /**
    * Construct a new property.
    */
   createFieldProjection(): FieldType {
-    invariant(this._projection.fields.length < VIEW_FIELD_LIMIT, `Field limit reached: ${VIEW_FIELD_LIMIT}`);
+    invariant(this._view.projection.fields.length < VIEW_FIELD_LIMIT, `Field limit reached: ${VIEW_FIELD_LIMIT}`);
 
     const field: FieldType = {
       id: createFieldId(),
-      path: createUniqueProperty(this._projection),
+      path: createUniqueProperty(this._view.projection),
       visible: true,
     };
 
@@ -149,7 +234,7 @@ export class ProjectionModel {
   }
 
   getFieldId(path: string): string | undefined {
-    return this._projection.fields.find((field) => field.path === path)?.id;
+    return this._view.projection.fields.find((field: FieldType) => field.path === path)?.id;
   }
 
   /**
@@ -157,7 +242,7 @@ export class ProjectionModel {
    */
   getFieldProjection(fieldId: string): FieldProjection {
     invariant(this._baseSchema.properties);
-    const field = this._projection.fields.find((field) => field.id === fieldId);
+    const field = this._view.projection.fields.find((field: FieldType) => field.id === fieldId);
     invariant(field, `invalid field: ${fieldId}`);
     invariant(field.path.indexOf('.') === -1);
 
@@ -212,7 +297,7 @@ export class ProjectionModel {
    */
   tryGetFieldProjection(fieldId: string): FieldProjection | undefined {
     invariant(this._baseSchema.properties);
-    const field = this._projection.fields.find((field) => field.id === fieldId);
+    const field = this._view.projection.fields.find((field: FieldType) => field.id === fieldId);
     if (!field) {
       return undefined;
     }
@@ -224,7 +309,7 @@ export class ProjectionModel {
    * Get all field projections.
    */
   getFieldProjections(): FieldProjection[] {
-    return this._projection.fields.map((field) => this.getFieldProjection(field.id));
+    return this._view.projection.fields.map((field: FieldType) => this.getFieldProjection(field.id));
   }
 
   /**
@@ -232,7 +317,7 @@ export class ProjectionModel {
    * @returns Schema property names that aren't mapped to any view field path, returned as an alphabetically sorted string array.
    */
   getHiddenProperties(): string[] {
-    return this.hiddenFields.map((field) => field.path as string) ?? [];
+    return this.getHiddenFields().map((field) => field.path as string) ?? [];
   }
 
   /**
@@ -376,7 +461,7 @@ export class ProjectionModel {
     const snapshot = getSnapshot(current);
 
     // Calculate field index before deleting (Obj.change returns void, so we can't get return values from the callback).
-    const fieldIndex = this._projection.fields.findIndex((field) => field.id === fieldId);
+    const fieldIndex = this._view.projection.fields.findIndex((field: FieldType) => field.id === fieldId);
 
     // Delete field from projection.
     this._change.projection((projection) => {

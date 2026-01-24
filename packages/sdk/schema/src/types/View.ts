@@ -129,11 +129,11 @@ export const make = ({
     },
   });
 
-  const projection = new ProjectionModel(
-    jsonSchema,
-    view.projection,
-    createDirectChangeCallback(view.projection, jsonSchema),
-  );
+  const projection = new ProjectionModel({
+    view,
+    baseSchema: jsonSchema,
+    change: createDirectChangeCallback(view.projection, jsonSchema),
+  });
   projection.normalizeView();
   const schema = toEffectSchema(jsonSchema);
   const properties = getProperties(schema.ast);
@@ -198,11 +198,11 @@ export const makeWithReferences = async ({
     pivotFieldName,
   });
 
-  const projection = new ProjectionModel(
-    jsonSchema,
-    view.projection,
-    createDirectChangeCallback(view.projection, jsonSchema),
-  );
+  const projection = new ProjectionModel({
+    view,
+    baseSchema: jsonSchema,
+    change: createDirectChangeCallback(view.projection, jsonSchema),
+  });
   const schema = toEffectSchema(jsonSchema);
   const properties = getProperties(schema.ast);
   for (const property of properties) {

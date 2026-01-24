@@ -65,7 +65,7 @@ export const useSimulator = ({ items, projection, insertInterval, updateInterval
 
     const i = setInterval(() => {
       const rowIdx = Math.floor(Math.random() * items.length);
-      const fields = projection.fields ?? [];
+      const fields = projection.getFields() ?? [];
       const columnIdx = Math.floor(Math.random() * fields.length);
       const field = fields[columnIdx];
       const item = items[rowIdx];
@@ -104,5 +104,5 @@ export const useSimulator = ({ items, projection, insertInterval, updateInterval
     }, updateInterval);
 
     return () => clearInterval(i);
-  }, [items, projection.fields, updateInterval]);
+  }, [items, projection.getFields(), updateInterval]);
 };

@@ -125,7 +125,7 @@ export const TableContainer = forwardRef<HTMLDivElement, TableContainerProps>(({
     [db],
   );
 
-  const projection = useProjectionModel(schema, object);
+  const projection = useProjectionModel(schema, object, registry);
   const model = useTableModel({
     object,
     projection,

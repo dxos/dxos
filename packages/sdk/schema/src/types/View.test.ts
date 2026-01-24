@@ -44,11 +44,11 @@ describe('Projection', () => {
     const visibleFields = view.projection.fields.filter((f) => f.visible);
     expect(visibleFields.map((f) => f.path)).to.deep.eq(['name', 'image', 'email', 'organization']);
 
-    const projection = new ProjectionModel(
-      jsonSchema,
-      view.projection,
-      createDirectChangeCallback(view.projection, jsonSchema),
-    );
+    const projection = new ProjectionModel({
+      view,
+      baseSchema: jsonSchema,
+      change: createDirectChangeCallback(view.projection, jsonSchema),
+    });
 
     {
       const { props } = projection.getFieldProjection(projection.getFieldId('name')!);

@@ -226,32 +226,33 @@ export default Capability.makeModule(
         //
         OperationResolver.make({
           operation: SpaceOperation.DeleteField,
-          handler: (input) =>
-            Effect.promise(async () => {
-              const view = input.view as any;
-              const db = Obj.getDatabase(view);
-              invariant(db);
-              const typename = getTypenameFromQuery(view.query.ast);
-              invariant(typename);
-              const schema = await db.schemaRegistry.query({ typename }).firstOrUndefined();
-              invariant(schema);
+          handler: Effect.fnUntraced(function* (input) {
+            const registry = yield* Capability.get(Common.Capability.AtomRegistry);
+            const view = input.view as any;
+            const db = Obj.getDatabase(view);
+            invariant(db);
+            const typename = getTypenameFromQuery(view.query.ast);
+            invariant(typename);
+            const schema = yield* Effect.promise(() => db.schemaRegistry.query({ typename }).firstOrUndefined());
+            invariant(schema);
 
-              // Create projection with change callbacks that wrap in Obj.change().
-              const projection = new ProjectionModel(
-                schema.jsonSchema,
-                view.projection,
-                createEchoChangeCallback(view, schema),
-              );
+            // Create projection with change callbacks that wrap in Obj.change().
+            const projection = new ProjectionModel({
+              registry,
+              view,
+              baseSchema: schema.jsonSchema,
+              change: createEchoChangeCallback(view, schema),
+            });
 
-              const result = projection.deleteFieldProjection(input.fieldId);
+            const result = projection.deleteFieldProjection(input.fieldId);
 
-              // Return data needed for undo.
-              return {
-                field: result.deleted.field,
-                props: result.deleted.props,
-                index: result.index,
-              };
-            }),
+            // Return data needed for undo.
+            return {
+              field: result.deleted.field,
+              props: result.deleted.props,
+              index: result.index,
+            };
+          }),
         }),
 
         //
@@ -690,25 +691,26 @@ export default Capability.makeModule(
         //
         OperationResolver.make({
           operation: SpaceOperation.RestoreField,
-          handler: (input) =>
-            Effect.promise(async () => {
-              const view = input.view as any;
-              const db = Obj.getDatabase(view);
-              invariant(db);
-              const typename = getTypenameFromQuery(view.query.ast);
-              invariant(typename);
-              const schema = await db.schemaRegistry.query({ typename }).firstOrUndefined();
-              invariant(schema);
+          handler: Effect.fnUntraced(function* (input) {
+            const registry = yield* Capability.get(Common.Capability.AtomRegistry);
+            const view = input.view as any;
+            const db = Obj.getDatabase(view);
+            invariant(db);
+            const typename = getTypenameFromQuery(view.query.ast);
+            invariant(typename);
+            const schema = yield* Effect.promise(() => db.schemaRegistry.query({ typename }).firstOrUndefined());
+            invariant(schema);
 
-              // Create projection with change callbacks that wrap in Obj.change().
-              const projection = new ProjectionModel(
-                schema.jsonSchema,
-                view.projection,
-                createEchoChangeCallback(view, schema),
-              );
+            // Create projection with change callbacks that wrap in Obj.change().
+            const projection = new ProjectionModel({
+              registry,
+              view,
+              baseSchema: schema.jsonSchema,
+              change: createEchoChangeCallback(view, schema),
+            });
 
-              projection.setFieldProjection({ field: input.field, props: input.props }, input.index);
-            }),
+            projection.setFieldProjection({ field: input.field, props: input.props }, input.index);
+          }),
         }),
 
         //

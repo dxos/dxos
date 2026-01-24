@@ -2,9 +2,10 @@
 // Copyright 2024 DXOS.org
 //
 
+import { RegistryContext } from '@effect-atom/atom-react';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Effect from 'effect/Effect';
-import React, { useCallback } from 'react';
+import React, { useCallback, useContext } from 'react';
 import { expect, waitFor, within } from 'storybook/test';
 
 import { withPluginManager } from '@dxos/app-framework/testing';
@@ -42,6 +43,7 @@ const rollOrg = () => ({
 });
 
 const StorybookKanban = () => {
+  const registry = useContext(RegistryContext);
   const spaces = useSpaces();
   const space = spaces[spaces.length - 1];
   const [object] = useQuery(space?.db, Filter.type(Kanban.Kanban));
@@ -51,7 +53,7 @@ const StorybookKanban = () => {
   const objects = useQuery(space?.db, schema ? Filter.type(schema) : Filter.nothing());
   const filteredObjects = useGlobalFilteredObjects(objects);
 
-  const projection = useProjectionModel(schema, object);
+  const projection = useProjectionModel(schema, object, registry);
   const model = useKanbanModel({
     object,
     projection,

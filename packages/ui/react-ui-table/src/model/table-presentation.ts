@@ -265,7 +265,7 @@ export class TablePresentation<T extends TableRow = TableRow> {
 
   private getMainGridCells(range: DxGridPlaneRange): DxGridPlaneCells {
     const cells: DxGridPlaneCells = {};
-    const fields = this.model.projection?.fields ?? [];
+    const fields = this.model.projection?.getFields() ?? [];
 
     for (let row = range.start.row; row <= range.end.row && row < this.model.getRowCount(); row++) {
       for (let col = range.start.col; col <= range.end.col && col < fields.length; col++) {
@@ -283,7 +283,7 @@ export class TablePresentation<T extends TableRow = TableRow> {
 
   private getDraftRowCells(range: DxGridPlaneRange): DxGridPlaneCells {
     const cells: DxGridPlaneCells = {};
-    const fields = this.model.projection?.fields ?? [];
+    const fields = this.model.projection?.getFields() ?? [];
     const draftRows = this.model.getDraftRows();
 
     // Return cells of the CTA row if no draft row is active
@@ -324,7 +324,7 @@ export class TablePresentation<T extends TableRow = TableRow> {
 
   private getHeaderCells(range: DxGridPlaneRange): DxGridPlaneCells {
     const cells: DxGridPlaneCells = {};
-    const fields = this.model.projection?.fields ?? [];
+    const fields = this.model.projection?.getFields() ?? [];
     const currentSort = this.model.getSorting();
     for (let col = range.start.col; col <= range.end.col && col < fields.length; col++) {
       const { field, props } = this.model.projection.getFieldProjection(fields[col].id);
@@ -408,7 +408,7 @@ export class TablePresentation<T extends TableRow = TableRow> {
       [toPlaneCellIndex({ col: 0, row: 0 })]: {
         accessoryHtml: this.model.features.schemaEditable
           ? tableButtons.addColumn.render({
-              disabled: (this.model.projection?.fields?.length ?? 0) >= VIEW_FIELD_LIMIT,
+              disabled: (this.model.projection?.getFields()?.length ?? 0) >= VIEW_FIELD_LIMIT,
             })
           : undefined,
         className: '!bg-toolbarSurface',

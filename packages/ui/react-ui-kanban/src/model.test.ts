@@ -67,11 +67,13 @@ const createKanbanModel = (registry: Registry.Registry): { model: KanbanModel<Ta
   });
 
   const kanban = Kanban.make({ view });
-  const projection = new ProjectionModel(
-    schema.jsonSchema,
-    view.projection,
-    createDirectChangeCallback(view.projection, schema.jsonSchema),
-  );
+  const projection = new ProjectionModel({
+    registry,
+    view,
+    baseSchema: schema.jsonSchema,
+    change: createDirectChangeCallback(view.projection, schema.jsonSchema),
+  });
+  projection.normalizeView();
 
   const model = new KanbanModel<TaskItem>({
     registry,

@@ -110,7 +110,7 @@ const TableMainInner = <T extends Type.Entity.Any = Type.Entity.Any>(
   // Subscribe to cell update counter to trigger re-render when individual cells change.
   const cellUpdateCounter = useAtomValue(model?.cellUpdate ?? emptyCellUpdateAtom);
   // Derive column count from columnMeta (reactive) with fallback.
-  const columnCount = Object.keys(columnMeta.grid).length || model?.projection.fields.length || 0;
+  const columnCount = Object.keys(columnMeta.grid).length || model?.projection.getFields().length || 0;
 
   const draftRowCount = model?.getDraftRowCount() ?? 0;
 

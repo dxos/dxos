@@ -44,7 +44,7 @@ export const TableCard = ({ role, object }: TableCardProps) => {
     [],
   );
 
-  const projection = useProjectionModel(schema, object);
+  const projection = useProjectionModel(schema, object, registry);
   const model = useTableModel({
     object,
     projection,

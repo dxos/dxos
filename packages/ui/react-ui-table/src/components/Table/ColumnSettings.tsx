@@ -38,11 +38,11 @@ export const ColumnSettings = ({ registry, model, modals, onNewColumn }: ColumnS
     if (state?.type === 'columnSettings') {
       const { mode } = state;
       if (mode.type === 'edit') {
-        return model?.projection?.fields.find((f) => f.id === mode.fieldId);
+        return model?.projection?.getFields().find((f) => f.id === mode.fieldId);
       }
     }
     return undefined;
-  }, [model?.projection?.fields, state]);
+  }, [model?.projection, state]);
 
   const field = existingField ?? newField;
 

@@ -201,8 +201,13 @@ export class KanbanModel<T extends BaseKanbanItem = { id: string }> extends Reso
       }
     });
 
+    // Subscribe to changes in the projection fields (e.g., pivot field options updated).
+    // This fixes missing reactivity for pivot field changes.
+    const fieldsUnsubscribe = this._registry.subscribe(this._projection.fields, recomputeArrangement);
+
     this._ctx.onDispose(() => {
       itemsUnsubscribe();
+      fieldsUnsubscribe();
       for (const unsub of itemSubscriptions.values()) {
         unsub();
       }

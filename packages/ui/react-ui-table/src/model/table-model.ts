@@ -161,8 +161,6 @@ export class TableModel<T extends TableRow = TableRow> extends Resource {
 
   private _pinnedRows: NonNullable<TableModelProps<T>['pinnedRows']>;
   private _selection!: SelectionModel<T>;
-  // Atom for the view's projection - all field-related reactivity derives from this.
-  private _projectionAtom?: Atom.Atom<View.Projection>;
   private _columnMeta?: Atom.Atom<DxGridAxisMeta>;
   // Counter atom that increments when cells are updated - allows UI to react to cell changes.
   private readonly _cellUpdateCounter: Atom.Writable<number>;
@@ -222,7 +220,7 @@ export class TableModel<T extends TableRow = TableRow> extends Resource {
         const firstOrder = orders[0];
         if (firstOrder.kind === 'property') {
           // Find field by property path.
-          const field = this._projection.fields.find((f) => f.path === firstOrder.property);
+          const field = this._projection.getFields().find((f) => f.path === firstOrder.property);
           if (field) {
             return {
               fieldId: field.id,
@@ -250,7 +248,7 @@ export class TableModel<T extends TableRow = TableRow> extends Resource {
         return rows;
       }
 
-      const field = this._projection.fields.find((f) => f.id === sort.fieldId);
+      const field = this._projection.getFields().find((f) => f.id === sort.fieldId);
       if (!field) {
         return rows;
       }
@@ -403,27 +401,12 @@ export class TableModel<T extends TableRow = TableRow> extends Resource {
   }
 
   private initializeColumnMeta(): void {
-    const view = this._object.view.target;
-    invariant(view, 'View must be loaded before initializing column meta');
+    invariant(this._object.view.target, 'View must be loaded before initializing column meta');
 
-    // Create atom for the view's projection with subscription to view changes.
-    // Use getSnapshot to get a new object reference each time to ensure atom updates.
-    this._projectionAtom = Atom.make<View.Projection>((get) => {
-      const unsubscribe = Obj.subscribe(view, () => {
-        get.setSelf(Obj.getSnapshot(view).projection);
-      });
-
-      get.addFinalizer(() => unsubscribe());
-
-      return Obj.getSnapshot(view).projection;
-    });
-
-    // Derive columnMeta from the projection atom - updates when fields change.
+    // Derive columnMeta from the projection's fields atom - updates when fields change.
+    // The projection.fields atom handles subscriptions to view changes internally.
     this._columnMeta = Atom.make((get) => {
-      // Subscribe to projection changes.
-      const projection = get(this._projectionAtom!);
-      // Filter to visible fields (matching ProjectionModel.fields behavior).
-      const fields = projection.fields.filter((field) => field.visible !== false);
+      const fields = get(this._projection.fields);
       const meta = Object.fromEntries(
         fields.map((field, index: number) => [index, { size: this.table.sizes[field.path] ?? 256, resizeable: true }]),
       );
@@ -524,7 +507,7 @@ export class TableModel<T extends TableRow = TableRow> extends Resource {
     return validationErrors.some((error) => error.path === fieldPath);
   }
 
-  public getColumnCount = (): number => this._projection?.fields.length ?? 0;
+  public getColumnCount = (): number => this._projection?.getFields().length ?? 0;
 
   public insertRow = (): InsertRowResult => {
     const result = this._onInsertRow?.();
@@ -628,7 +611,7 @@ export class TableModel<T extends TableRow = TableRow> extends Resource {
 
   public getCellData = (cell: DxGridPosition): any => {
     const { col, row, plane } = cell;
-    const fields = this._projection?.fields ?? [];
+    const fields = this._projection?.getFields() ?? [];
     if (col < 0 || col >= fields.length) {
       return undefined;
     }
@@ -674,7 +657,7 @@ export class TableModel<T extends TableRow = TableRow> extends Resource {
   };
 
   public validateCellData = async ({ col, row, plane }: DxGridPosition, value: any): Promise<ValidationResult> => {
-    const fields = this._projection?.fields ?? [];
+    const fields = this._projection?.getFields() ?? [];
     if (col < 0 || col >= fields.length) {
       return { valid: false, error: 'Invalid column index' };
     }
@@ -727,7 +710,7 @@ export class TableModel<T extends TableRow = TableRow> extends Resource {
 
   public setCellData = (cell: DxGridPosition, value: any): void => {
     const { col, row, plane } = cell;
-    const fields = this._projection?.fields ?? [];
+    const fields = this._projection?.getFields() ?? [];
     if (col < 0 || col >= fields.length) {
       return;
     }
@@ -764,7 +747,7 @@ export class TableModel<T extends TableRow = TableRow> extends Resource {
    * @param {(value: any) => any} update - A function that takes the current value and returns the updated value.
    */
   public updateCellData({ col, row }: DxGridPlanePosition, update: (value: any) => any): void {
-    const fields = this._projection?.fields ?? [];
+    const fields = this._projection?.getFields() ?? [];
     const field = fields[col];
     const sortedRows = this._registry.get(this._sortedRows);
     const rowData = sortedRows[row];
@@ -812,7 +795,7 @@ export class TableModel<T extends TableRow = TableRow> extends Resource {
       return;
     }
 
-    const field = this._projection?.fields.find((field) => field.id === fieldId);
+    const field = this._projection?.getFields().find((field) => field.id === fieldId);
     if (field && this._onDeleteColumn) {
       this._onDeleteColumn(field.id);
     }
@@ -823,7 +806,7 @@ export class TableModel<T extends TableRow = TableRow> extends Resource {
   //
 
   public setColumnWidth(columnIndex: number, width: number): void {
-    const fields = this._projection?.fields ?? [];
+    const fields = this._projection?.getFields() ?? [];
     if (columnIndex < fields.length) {
       const newWidth = Math.max(0, width);
       const field = fields[columnIndex];
@@ -858,7 +841,7 @@ export class TableModel<T extends TableRow = TableRow> extends Resource {
    * Use saveView() to persist the sort to the view query.
    */
   public setSort(fieldId: string, direction: QueryAST.OrderDirection): void {
-    const field = this._projection.fields.find((f) => f.id === fieldId);
+    const field = this._projection.getFields().find((f) => f.id === fieldId);
     if (!field) {
       return;
     }
@@ -906,7 +889,7 @@ export class TableModel<T extends TableRow = TableRow> extends Resource {
 
     if (inMemorySort) {
       // Find the field to get its path
-      const field = this._projection.fields.find((f) => f.id === inMemorySort.fieldId);
+      const field = this._projection.getFields().find((f) => f.id === inMemorySort.fieldId);
       if (field) {
         // Persist sort to view.query.ast
         const newQuery = baseQuery.orderBy(Order.property<any>(field.path as string, inMemorySort.direction));

@@ -47,7 +47,7 @@ export const useTestTableModel = <T extends Type.Entity.Any = Type.Entity.Any>()
   const table = tables.at(0);
   const typename = table?.view.target?.query ? getTypenameFromQuery(table.view.target.query.ast) : undefined;
   const schema = useSchema<T>(space?.db, typename);
-  const projection = useProjectionModel(schema, table);
+  const projection = useProjectionModel(schema, table, registry);
 
   const features = useMemo(
     () => ({
