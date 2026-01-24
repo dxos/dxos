@@ -70,9 +70,6 @@
       "path": "packages/common/kv-store/tsconfig.json"
     },
     {
-      "path": "packages/common/local-storage/tsconfig.json"
-    },
-    {
       "path": "packages/common/lock-file/tsconfig.json"
     },
     {
