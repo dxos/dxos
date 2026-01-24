@@ -7,24 +7,21 @@ import { type ClassNameValue } from '@dxos/react-ui';
 export const styles = {
   root: [
     'group/card relative',
-    'min-bs-[--rail-item] overflow-hidden',
+    'min-bs-[--rail-item] pbe-1 overflow-hidden',
     'bg-cardSurface border border-separator dark:border-subduedSeparator rounded-sm dx-focus-ring-group-y-indicator',
   ],
-  /**
-   * Outer grid.
-   */
-  grid: '!pli-1 grid grid-cols-[var(--rail-item)_minmax(0,1fr)_var(--rail-item)] gap-1',
-  /**
-   * Inner grid.
-   */
-  row: '!pli-1 col-span-3 grid grid-cols-[auto_1fr_auto] items-center',
-} satisfies Record<string, ClassNameValue>;
 
-// TODO(burdon): Remove.
-export const cardSpacing = 'pli-cardSpacingInline mlb-cardSpacingBlock';
-export const cardNoSpacing = 'pli-0 mlb-0';
-export const cardChrome =
-  'pli-[--dx-cardSpacingChrome] mlb-[--dx-cardSpacingChrome] [&_.dx-button]:text-start [&_.dx-button]:is-full [&_.dx-button]:pis-[calc(var(--dx-cardSpacingInline)-var(--dx-cardSpacingChrome))]';
+  /**
+   * Main outer grid.
+   */
+  grid: 'grid grid-cols-[var(--rail-item)_minmax(0,1fr)_var(--rail-item)] gap-x-1',
+
+  /**
+   * Row inner grid.
+   * NOTE: Rows should provide their own line padding (since they may need to encapsulate buttons, etc.)
+   */
+  row: 'col-span-full grid grid-cols-subgrid gap-x-1',
+} satisfies Record<string, ClassNameValue>;
 
 // TODO(burdon): Move/delete (dialog?)
 export const cardDialogContent = 'p-0 bs-content min-bs-[8rem] max-bs-full md:max-is-[32rem] overflow-hidden';

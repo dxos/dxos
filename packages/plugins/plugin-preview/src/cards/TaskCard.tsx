@@ -6,9 +6,8 @@ import * as SchemaAST from 'effect/SchemaAST';
 import React from 'react';
 
 import { type PropertyMetaAnnotation, PropertyMetaAnnotationId } from '@dxos/echo/internal';
-import { Card, cardNoSpacing, cardSpacing } from '@dxos/react-ui-mosaic';
+import { Card } from '@dxos/react-ui-mosaic';
 import { Task } from '@dxos/types';
-import { mx } from '@dxos/ui-theme';
 
 import { CardSubjectMenu } from '../components';
 import { type CardPreviewProps } from '../types';
@@ -32,8 +31,8 @@ export const TaskCard = ({ subject, role, db }: CardPreviewProps<Task.Task>) => 
 
   return (
     <Card.Root id={subject.id} role={role}>
-      <div role='none' className={mx('flex items-center gap-2', cardSpacing)}>
-        <Card.Heading classNames={[cardNoSpacing, 'min-is-0 flex-1 truncate']}>{title}</Card.Heading>
+      <div role='none' className='flex items-center gap-2'>
+        <Card.Heading classNames='min-is-0 flex-1 truncate'>{title}</Card.Heading>
         {statusOption && (
           <span className='dx-tag' data-hue={statusOption.color}>
             {statusOption.title}

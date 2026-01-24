@@ -43,13 +43,13 @@
                     <div xmlns="http://www.w3.org/1999/xhtml" style="display: flex; align-items: unsafe flex-start; justify-content: unsafe flex-start; width: 274px; height: 1px; padding-top: 1073px; margin-left: 206px;">
                         <div data-drawio-colors="color: rgb(0, 0, 0); " style="box-sizing: border-box; font-size: 0px; text-align: left;">
                             <div style="display: inline-block; font-size: 12px; font-family: &quot;Space Grotesk&quot;; color: rgb(0, 0, 0); line-height: 1.2; pointer-events: all; white-space: normal; overflow-wrap: normal;">
-                                Card.Section
+                                Card.Row
                             </div>
                         </div>
                     </div>
                 </foreignObject>
                 <text x="206" y="1085" fill="rgb(0, 0, 0)" font-family="Space Grotesk" font-size="12px">
-                    Card.Section
+                    Card.Row
                 </text>
             </switch>
         </g>

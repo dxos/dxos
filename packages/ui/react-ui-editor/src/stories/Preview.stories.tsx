@@ -57,7 +57,7 @@ const PreviewCard = () => {
         <Popover.Viewport>
           <Card.Root role='card--popover'>
             <Card.Heading>{target?.label}</Card.Heading>
-            {target && <Card.Text classNames='line-clamp-3'>{target.text}</Card.Text>}
+            {target && <Card.Text variant='description'>{target.text}</Card.Text>}
           </Card.Root>
         </Popover.Viewport>
         <Popover.Arrow />
@@ -162,7 +162,7 @@ const PreviewBlockComponent = ({ link, el, view }: { link: PreviewLinkRef; el: H
         )}
         <Card.Heading classNames='grow order-first mie-0'>{link.label}</Card.Heading>
       </div>
-      {target && <Card.Text classNames='line-clamp-3 mbs-0'>{target.text}</Card.Text>}
+      {target && <Card.Text variant='description'>{target.text}</Card.Text>}
     </Card.Root>,
     el,
   );

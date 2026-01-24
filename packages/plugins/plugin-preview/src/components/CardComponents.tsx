@@ -18,8 +18,7 @@ import {
   MenuProvider,
   useMenuActions,
 } from '@dxos/react-ui-menu';
-import { Card, cardSpacing } from '@dxos/react-ui-mosaic';
-import { mx } from '@dxos/ui-theme';
+import { Card } from '@dxos/react-ui-mosaic';
 
 import { meta } from '../meta';
 import { type CardPreviewProps } from '../types';
@@ -29,7 +28,7 @@ export const gridRow = 'is-full grid grid-cols-[1.5rem_1fr_min-content] gap-2 it
 /** @deprecated */
 export const CardHeader = ({ label, subject, db }: { label?: string } & CardPreviewProps) => {
   return (
-    <div role='none' className={mx('flex items-center gap-2', cardSpacing)}>
+    <div role='none' className='flex items-center gap-2'>
       <Card.Heading>{label}</Card.Heading>
       <CardSubjectMenu db={db} subject={subject} />
     </div>

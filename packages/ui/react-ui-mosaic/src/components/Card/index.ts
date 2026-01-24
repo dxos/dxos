@@ -9,8 +9,6 @@ export {
   cardDialogOverflow,
   cardDialogPaddedOverflow,
   cardDialogSearchListRoot,
-  cardSpacing,
-  cardNoSpacing,
   styles as cardStyles,
 } from './styles';
 

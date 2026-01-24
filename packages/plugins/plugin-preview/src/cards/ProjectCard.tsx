@@ -18,7 +18,7 @@ export const ProjectCard = ({ subject, role, db }: CardPreviewProps<Project.Proj
     <Card.Root id={subject.id} role={role}>
       {image && <Card.Poster image={image} alt={Obj.getLabel(subject) ?? ''} aspect='auto' />}
       <CardHeader label={name} subject={subject} db={db} />
-      {description && <Card.Text classNames='line-clamp-2'>{description}</Card.Text>}
+      {description && <Card.Text variant='description'>{description}</Card.Text>}
     </Card.Root>
   );
 };

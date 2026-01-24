@@ -17,18 +17,18 @@ export const PersonCard = ({ children, role, subject, db, onSelect }: CardPrevie
 
   return (
     <Card.Root id={subject.id} role={role}>
-      {/* <Card.Section role='group'>
+      {/* <Card.Row role='group'>
         <div role='none' className={mx(gridRow, 'grid-rows-2')}>
           {db ? <CardSubjectMenu subject={subject} db={db} /> : <div />}
         </div>
-      </Card.Section> */}
+      </Card.Row> */}
       <Avatar.Root>
-        <Card.Section indent>
+        <Card.Row>
           <Avatar.Label asChild>
             <h2 className='grow truncate'>{fullName}</h2>
           </Avatar.Label>
-        </Card.Section>
-        <Card.Section indent>
+        </Card.Row>
+        <Card.Row>
           <Avatar.Content
             imgSrc={image}
             icon='ph--user--regular'
@@ -37,7 +37,7 @@ export const PersonCard = ({ children, role, subject, db, onSelect }: CardPrevie
             hue='neutral'
             variant='square'
           />
-        </Card.Section>
+        </Card.Row>
       </Avatar.Root>
       {organization?.name && (
         <Card.Action

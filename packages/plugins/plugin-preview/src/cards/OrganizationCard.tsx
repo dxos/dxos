@@ -21,7 +21,7 @@ export const OrganizationCard = ({ children, subject, role, db }: CardPreviewPro
         {...(image ? { image } : { icon: 'ph--building-office--regular' })}
         classNames={!image && 'opacity-50'}
       />
-      {description && <Card.Text classNames='line-clamp-2'>{description}</Card.Text>}
+      {description && <Card.Text variant='description'>{description}</Card.Text>}
       {website && <Card.Link label={website} href={website} />}
       {children}
     </Card.Root>

@@ -12,8 +12,6 @@ import { AppGraphBuilder, FileSettings, FileState, Markdown, OperationResolver, 
 import { meta } from './meta';
 import { translations } from './translations';
 
-// TODO(burdon): Rename package plugin-file (singular).
-
 export const FilesPlugin = Plugin.define(meta).pipe(
   Common.Plugin.addSettingsModule({ activate: FileSettings }),
   Plugin.addModule({

@@ -196,9 +196,9 @@ const DefaultComponent: StackProps['Component'] = (props) => {
         />
       </Card.Toolbar>
       {open && (
-        <Card.Section>
+        <Card.Row>
           <pre className='text-xs whitespace-pre-wrap text-description'>{JSON.stringify(props.object, null, 2)}</pre>
-        </Card.Section>
+        </Card.Row>
       )}
     </Mosaic.Tile>
   );

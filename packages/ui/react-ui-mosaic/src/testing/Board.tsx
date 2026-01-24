@@ -206,16 +206,16 @@ const Tile = forwardRef<HTMLDivElement, TileProps>(({ classNames, object, locati
             <Card.Title>{object.name}</Card.Title>
             <Card.Menu context={object} items={menuItems} />
           </Card.Toolbar>
-          <Card.Section icon='ph--note--regular' classNames='text-description'>
+          <Card.Row icon='ph--note--regular' classNames='text-description'>
             {object.description}
-          </Card.Section>
-          <Card.Section icon='ph--tag--regular'>
+          </Card.Row>
+          <Card.Row icon='ph--tag--regular'>
             {object.label && (
               <div role='none' className='flex shrink-0 gap-1 text-xs'>
                 <Tag palette={getHashStyles(object.label).hue}>{object.label}</Tag>
               </div>
             )}
-          </Card.Section>
+          </Card.Row>
         </Card.Root>
       </Focus.Group>
     </Mosaic.Tile>

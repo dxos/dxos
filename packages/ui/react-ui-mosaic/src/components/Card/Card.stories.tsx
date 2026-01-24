@@ -15,11 +15,10 @@ faker.seed(0);
 type CardStoryProps = {
   title: string;
   description: string;
-  indent?: boolean;
   image?: string;
 };
 
-const DefaultStory = ({ title, description, indent, image }: CardStoryProps) => {
+const DefaultStory = ({ title, description, image }: CardStoryProps) => {
   return (
     <Card.Root role='card--intrinsic'>
       <Card.Toolbar>
@@ -29,9 +28,9 @@ const DefaultStory = ({ title, description, indent, image }: CardStoryProps) => 
       </Card.Toolbar>
       {image && <Card.Poster alt={title} image={image} />}
       {description && (
-        <Card.Section indent={indent}>
-          <Card.Text valence='description'>{description}</Card.Text>
-        </Card.Section>
+        <Card.Row>
+          <Card.Text variant='description'>{description}</Card.Text>
+        </Card.Row>
       )}
     </Card.Root>
   );
@@ -56,7 +55,6 @@ export const Default: Story = {
   args: {
     title: faker.commerce.productName(),
     description: faker.lorem.paragraph(3),
-    indent: true,
   },
 };
 
@@ -80,19 +78,13 @@ export const Everything: Story = {
         <Card.Toolbar>
           <Card.DragHandle />
           <Card.Title>{title}</Card.Title>
-          <Card.Menu items={[]} />
+          <Card.Close onClose={() => console.log('close')} />
         </Card.Toolbar>
-        <Card.Section icon='ph--circle--regular'>
-          <Card.Text>Card.Text</Card.Text>
-        </Card.Section>
         <Card.Poster alt='Card.Poster' image={image} />
-        <Card.Section icon='ph--circle--regular'>
-          <Card.Text valence='description'>Card.Description {description}</Card.Text>
-        </Card.Section>
-        <Card.Section icon='ph--circle--regular'>
-          <Card.Text>Card.Text</Card.Text>
-        </Card.Section>
-        <Card.Action icon='ph--circle--regular' label='Card.Action' onClick={() => console.log('action')} />
+        <Card.Heading>Card.Heading</Card.Heading>
+        <Card.Text>Card.Text</Card.Text>
+        <Card.Text variant='description'>Card.Description {description}</Card.Text>
+        <Card.Action label='Card.Action' onClick={() => console.log('action')} />
         <Card.Link label='Card.Link' href='https://dxos.org' />
       </Card.Root>
     );

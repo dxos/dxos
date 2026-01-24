@@ -125,7 +125,7 @@ const CardStackStory = () => {
                     </Card.Toolbar>
                     <Card.Poster alt={card.title} image={card.image} />
                     <Card.Heading>{card.title}</Card.Heading>
-                    <Card.Text classNames='line-clamp-2'>{card.description}</Card.Text>
+                    <Card.Text variant='description'>{card.description}</Card.Text>
                   </Card.Root>
                   <StackItem.DragPreview>
                     {() => (
@@ -136,7 +136,7 @@ const CardStackStory = () => {
                           </Card.Toolbar>
                           <Card.Poster alt={card.title} image={card.image} />
                           <Card.Heading>{card.title}</Card.Heading>
-                          <Card.Text classNames='line-clamp-2'>{card.description}</Card.Text>
+                          <Card.Text variant='description'>{card.description}</Card.Text>
                         </CardDragPreview.Content>
                       </CardDragPreview.Root>
                     )}

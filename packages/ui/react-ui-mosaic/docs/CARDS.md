@@ -6,7 +6,8 @@
 ## API
 
 - react-ui-mosaic
-  - [ ] Card components; impl. all use cases (Toolbar, Poster, Section, Form, List).
+  - [x] Card components; impl. all use cases (Toolbar, Poster, Section).
+  - [ ] Card form and list.
   - [ ] Menu (via context).
   - [ ] Remove style fragment exports.
   - [ ] Remove CardDragPreview? (used in react-ui-kanban)

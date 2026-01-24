@@ -21,7 +21,7 @@ import { hoverableControls, mx } from '@dxos/ui-theme';
 import { translationKey } from '../../translations';
 import { Image } from '../Image';
 
-import { cardChrome, cardSpacing, styles } from './styles';
+import { styles } from './styles';
 
 //
 // Context
@@ -44,6 +44,7 @@ type CardSharedProps = ThemedClassName<ComponentPropsWithoutRef<'div'>> & {
 
 type CardRootProps = CardSharedProps & { id?: string };
 
+// TODO(burdon): Option without drag handle (i.e., grid).
 const CardRoot = forwardRef<HTMLDivElement, CardRootProps>(
   ({ children, classNames, className, id, asChild, role = 'group', ...props }, forwardedRef) => {
     const Root = asChild ? Slot : 'div';
@@ -86,47 +87,6 @@ const CardToolbarIconButton = Toolbar.IconButton;
 const CardToolbarSeparator = Toolbar.Separator;
 
 //
-// Title
-//
-
-type CardTitleProps = CardSharedProps;
-
-const CardTitle = forwardRef<HTMLDivElement, CardTitleProps>(
-  ({ children, classNames, className, asChild, role = 'heading', ...props }, forwardedRef) => {
-    const Root = asChild ? Slot : 'div';
-
-    return (
-      <Root {...props} role={role} className={mx('grow truncate', classNames, className)} ref={forwardedRef}>
-        {children}
-      </Root>
-    );
-  },
-);
-
-//
-// Heading
-//
-
-type CardHeadingProps = CardSharedProps & { padding?: boolean };
-
-const CardHeading = forwardRef<HTMLDivElement, CardHeadingProps>(
-  ({ children, classNames, className, asChild, role = 'heading', padding = true, ...props }, forwardedRef) => {
-    const Root = asChild ? Slot : 'div';
-
-    return (
-      <Root
-        {...props}
-        role={role}
-        className={mx('grow truncate', padding && cardSpacing, classNames, className)}
-        ref={forwardedRef}
-      >
-        {children}
-      </Root>
-    );
-  },
-);
-
-//
 // DragHandle
 //
 
@@ -134,6 +94,9 @@ type CardDragHandleProps = {};
 
 const CardDragHandle = forwardRef<HTMLButtonElement, CardDragHandleProps>((_, forwardedRef) => {
   const { t } = useTranslation(translationKey);
+  if (!forwardedRef) {
+    return <CardIcon classNames='text-subdued' icon='ph--square--regular' />;
+  }
 
   return (
     <Toolbar.IconButton
@@ -143,6 +106,28 @@ const CardDragHandle = forwardRef<HTMLButtonElement, CardDragHandleProps>((_, fo
       variant='ghost'
       label={t('drag handle label')}
       classNames='cursor-pointer'
+      ref={forwardedRef}
+    />
+  );
+});
+
+//
+// Close
+//
+
+type CardCloseProps = { onClose: () => void };
+
+const CardClose = forwardRef<HTMLButtonElement, CardCloseProps>(({ onClose }, forwardedRef) => {
+  const { t } = useTranslation(translationKey);
+
+  return (
+    <Toolbar.IconButton
+      iconOnly
+      icon='ph--x--regular'
+      variant='ghost'
+      label={t('card close label')}
+      classNames='cursor-pointer'
+      onClick={onClose}
       ref={forwardedRef}
     />
   );
@@ -194,6 +179,24 @@ const CardMenu = <T extends any | void = void>({ context, items }: CardMenuProps
 };
 
 //
+// Title
+//
+
+type CardTitleProps = CardSharedProps;
+
+const CardTitle = forwardRef<HTMLDivElement, CardTitleProps>(
+  ({ children, classNames, className, asChild, role = 'heading', ...props }, forwardedRef) => {
+    const Root = asChild ? Slot : 'div';
+
+    return (
+      <Root {...props} role={role} className={mx('grow truncate', classNames, className)} ref={forwardedRef}>
+        {children}
+      </Root>
+    );
+  },
+);
+
+//
 // Poster
 //
 
@@ -208,7 +211,9 @@ const CardPoster = (props: CardPosterProps) => {
   const aspect = props.aspect === 'auto' ? 'aspect-auto' : 'aspect-video';
   if (props.image) {
     return (
-      <Image classNames={[`dx-card__poster is-full`, aspect, props.classNames]} src={props.image} alt={props.alt} />
+      <div role='none' className='col-span-3 mbe-1'>
+        <Image classNames={[`dx-card__poster`, aspect, props.classNames]} src={props.image} alt={props.alt} />
+      </div>
     );
   }
 
@@ -226,38 +231,16 @@ const CardPoster = (props: CardPosterProps) => {
 };
 
 //
-// Section
-//
-
-type CardSectionProps = CardSharedProps & { indent?: boolean; icon?: string };
-
-const CardSection = forwardRef<HTMLDivElement, CardSectionProps>(
-  ({ children, classNames, className, role = 'none', indent, icon, ...props }, forwardedRef) => {
-    return (
-      <div
-        {...props}
-        role={role}
-        className={mx((indent || icon) && styles.section, classNames, className)}
-        ref={forwardedRef}
-      >
-        {(icon && <CardIcon classNames='text-subdued' icon={icon} />) || (indent && <div />)}
-        {children}
-      </div>
-    );
-  },
-);
-
-//
 // Action
 //
 
-type CardActionProps = { icon: string; label: string; actionIcon?: string; onClick?: () => void };
+type CardActionProps = { icon?: string; label: string; actionIcon?: string; onClick?: () => void };
 
 const CardAction = ({ icon, actionIcon = 'ph--arrow-right--regular', label, onClick }: CardActionProps) => {
   return (
-    <div className='pli-1'>
-      <Button variant='ghost' classNames={mx(styles.toolbar, '!p-0 is-full text-start')} onClick={onClick}>
-        <CardIcon classNames='text-subdued' icon={icon} />
+    <div role='none' className='is-full col-span-3 pli-1'>
+      <Button variant='ghost' classNames={mx(styles.row, '!p-0 is-full text-start')} onClick={onClick}>
+        {(icon && <CardIcon classNames='text-subdued' icon={icon} />) || <div />}
         <span className={mx('min-is-0 flex-1 truncate', !onClick && 'col-span-2')}>{label}</span>
         {actionIcon && <CardIcon icon={actionIcon} />}
       </Button>
@@ -273,9 +256,9 @@ type CardLinkProps = { label: string; href: string };
 
 const CardLink = ({ label, href }: CardLinkProps) => {
   return (
-    <div className='pli-1'>
+    <div role='none' className='is-full col-span-3 pli-1'>
       <a
-        className={mx(styles.toolbar, 'group dx-button dx-focus-ring !p-0 !min-bs-1 is-full')}
+        className={mx(styles.row, 'group !p-0 dx-button dx-focus-ring !min-bs-1')}
         data-variant='ghost'
         href={href}
         target='_blank'
@@ -290,6 +273,91 @@ const CardLink = ({ label, href }: CardLinkProps) => {
 };
 
 //
+// Row
+//
+
+type CardRowProps = CardSharedProps & { icon?: string };
+
+const CardRow = forwardRef<HTMLDivElement, CardRowProps>(
+  ({ children, classNames, className, role = 'none', icon, ...props }, forwardedRef) => {
+    return (
+      <div {...props} role={role} className={mx(styles.row, 'pli-1', classNames, className)} ref={forwardedRef}>
+        {(icon && <CardIcon classNames='text-subdued' icon={icon} />) || <div />}
+        {children}
+      </div>
+    );
+  },
+);
+
+//
+// Chrome
+//
+
+/**
+ * @deprecated Use Card.Row
+ */
+const CardChrome = forwardRef<HTMLDivElement, CardSharedProps>(
+  ({ children, classNames, className, asChild, role = 'none', ...props }, forwardedRef) => {
+    const Root = asChild ? Slot : 'div';
+
+    return (
+      <Root
+        {...props}
+        role={role}
+        className={mx(
+          'pli-[--dx-cardSpacingChrome] mlb-[--dx-cardSpacingChrome] [&_.dx-button]:text-start [&_.dx-button]:is-full [&_.dx-button]:pis-[calc(var(--dx-cardSpacingInline)-var(--dx-cardSpacingChrome))]',
+          classNames,
+          className,
+        )}
+        ref={forwardedRef}
+      >
+        {children}
+      </Root>
+    );
+  },
+);
+
+//
+// Heading
+//
+
+type CardHeadingProps = CardSharedProps;
+
+const CardHeading = forwardRef<HTMLDivElement, CardHeadingProps>(
+  ({ children, classNames, className, asChild, role = 'heading', ...props }, forwardedRef) => {
+    const Root = asChild ? Slot : 'div';
+
+    return (
+      <Root {...props} role={role} className={mx('grow truncate', classNames, className)} ref={forwardedRef}>
+        {children}
+      </Root>
+    );
+  },
+);
+
+//
+// Text
+//
+
+type CardTextProps = CardSharedProps & { variant?: 'description' };
+
+const CardText = forwardRef<HTMLDivElement, CardTextProps>(
+  ({ children, classNames, className, asChild, role = 'none', variant, ...props }, forwardedRef) => {
+    const Root = asChild ? Slot : 'div';
+    return (
+      <Root
+        {...props}
+        role={role}
+        className={mx('plb-1', variant === 'description' && 'plb-1.5', classNames, className)}
+        ref={forwardedRef}
+      >
+        <span className={mx(variant === 'description' && 'text-sm text-description line-clamp-3')}>{children}</span>
+      </Root>
+    );
+  },
+);
+
+//
 // Icon
 //
 
@@ -302,47 +370,6 @@ const CardIcon = (props: IconProps) => {
 };
 
 //
-// Chrome
-//
-
-/**
- * @deprecated Use Card.Section
- */
-const CardChrome = forwardRef<HTMLDivElement, CardSharedProps>(
-  ({ children, classNames, className, asChild, role = 'none', ...props }, forwardedRef) => {
-    const Root = asChild ? Slot : 'div';
-
-    return (
-      <Root {...props} role={role} className={mx(cardChrome, classNames, className)} ref={forwardedRef}>
-        {children}
-      </Root>
-    );
-  },
-);
-
-//
-// Text
-//
-
-type CardProps = CardSharedProps & { valence?: 'description' };
-
-const CardText = forwardRef<HTMLDivElement, CardProps>(
-  ({ children, classNames, className, asChild, role = 'none', valence, ...props }, forwardedRef) => {
-    const Root = asChild ? Slot : 'div';
-    return (
-      <Root
-        {...props}
-        role={role}
-        className={mx('plb-1', valence === 'description' && 'plb-1.5', classNames, className)}
-        ref={forwardedRef}
-      >
-        <span className={mx(valence === 'description' && 'text-sm text-description line-clamp-3')}>{children}</span>
-      </Root>
-    );
-  },
-);
-
-//
 // Card
 //
 
@@ -352,17 +379,18 @@ export const Card = {
 
   // Toolbar
   Toolbar: CardToolbar,
-  ToolbarIconButton: CardToolbarIconButton, // TODO(burdon): Remove.
-  ToolbarSeparator: CardToolbarSeparator, // TODO(burdon): Remove.
+  ToolbarIconButton: CardToolbarIconButton,
+  ToolbarSeparator: CardToolbarSeparator,
   DragHandle: CardDragHandle,
   Title: CardTitle,
+  Close: CardClose,
   Menu: CardMenu,
 
   // Content
   Heading: CardHeading,
   Poster: CardPoster,
-  Section: CardSection,
-  Chrome: CardChrome, // TODO(burdon): Reconcile with Section.
+  Row: CardRow,
+  Chrome: CardChrome,
   Text: CardText,
   Action: CardAction,
   Link: CardLink,
