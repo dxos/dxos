@@ -49,10 +49,10 @@ const setupDevtools = (attention: AttentionManager) => {
       return attention;
     },
     get attended() {
-      return attention.current;
+      return attention.getCurrent();
     },
     get currentSpace() {
-      for (const id of attention.current) {
+      for (const id of attention.getCurrent()) {
         const [spaceId, objectId] = id.split(':');
         if (spaceId && objectId && spaceId.length === 33) {
           return spaceId;

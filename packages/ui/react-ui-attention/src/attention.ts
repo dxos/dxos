@@ -31,9 +31,16 @@ export class AttentionManager {
   }
 
   /**
-   * Currently attended element.
+   * Atom for the currently attended element path.
    */
-  get current(): readonly string[] {
+  get current(): Atom.Atom<string[]> {
+    return this._currentAtom;
+  }
+
+  /**
+   * Gets the currently attended element path.
+   */
+  getCurrent(): readonly string[] {
     return this._registry.get(this._currentAtom);
   }
 
@@ -90,7 +97,7 @@ export class AttentionManager {
    * @internal
    */
   update(nextKey: string[]): void {
-    const currentKey = this.current;
+    const currentKey = this.getCurrent();
     const currentRelatedTo = currentKey[0];
     const nextRelatedTo = nextKey[0];
 

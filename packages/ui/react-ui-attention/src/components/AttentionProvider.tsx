@@ -80,7 +80,7 @@ const useAttended = () => {
     }
 
     // Set initial state.
-    setCurrent(attention.current);
+    setCurrent(attention.getCurrent());
 
     // Subscribe to changes.
     return attention.subscribeCurrent((newCurrent) => {
@@ -135,7 +135,7 @@ const RootAttentionProvider = ({
         (el) => `[id="${el.getAttribute('aria-controls')}"]`,
       ),
     ].join(',');
-    const prev = attention.current;
+    const prev = attention.getCurrent();
     const next = getAttendables(selector, event.target);
     // TODO(wittjosiah): Not allowing empty state means that the attended item is not strictly guaranteed to be in the DOM.
     //   Currently this depends on the deck in order to ensure that when the attended item is removed something else is attended.

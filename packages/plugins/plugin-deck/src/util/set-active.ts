@@ -52,7 +52,7 @@ export const computeActiveUpdates = ({ next, deck, attention }: SetActiveOptions
 
   let toAttend: string | undefined;
   if (attention) {
-    const attended = attention.current;
+    const attended = attention.getCurrent();
     const [attendedId] = Array.from(attended);
     const isAttendedAvailable = !!attendedId && next.includes(attendedId);
     if (!isAttendedAvailable) {

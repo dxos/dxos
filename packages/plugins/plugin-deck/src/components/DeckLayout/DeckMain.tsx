@@ -41,7 +41,7 @@ export const DeckMain = () => {
   useEffect(() => {
     // NOTE: Not `useAttended` so that the layout component is not re-rendered when the attended list changes.
     const attention = pluginManager.capabilities.get(AttentionCapabilities.Attention);
-    const attended = attention.current;
+    const attended = attention.getCurrent();
     const firstId = solo ?? active[0];
     if (attended.length === 0 && firstId) {
       // TODO(wittjosiah): Focusing the type button is a workaround.
@@ -58,7 +58,7 @@ export const DeckMain = () => {
     if (!isNotMobile && layoutMode === 'deck') {
       // NOTE: Not `useAttended` so that the layout component is not re-rendered when the attended list changes.
       const attention = pluginManager.capabilities.get(AttentionCapabilities.Attention);
-      const attended = attention.current;
+      const attended = attention.getCurrent();
 
       shouldRevert.current = true;
       invokeSync(Common.LayoutOperation.SetLayoutMode, { subject: attended[0], mode: 'solo' });

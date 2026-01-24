@@ -134,7 +134,7 @@ export default Capability.makeModule(
           const disabled = get(
             Atom.make((get) => {
               const toolbar = get(stateAtom)[0]?.state.toolbar ?? {};
-              const selectionState = get(selectionManager.stateAtom);
+              const selectionState = get(selectionManager.state);
               const selectionMode = metadata.selectionMode;
               const selection =
                 selectionState.selections[objectId] ?? (selectionMode ? defaultSelection(selectionMode) : undefined);

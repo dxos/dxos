@@ -11,7 +11,7 @@ describe('AttentionManager', () => {
   test('takes an initial attendable', () => {
     const registry = Registry.make();
     const attention = new AttentionManager(registry, ['a', 'b', 'c']);
-    expect(attention.current).to.deep.equal(['a', 'b', 'c']);
+    expect(attention.getCurrent()).to.deep.equal(['a', 'b', 'c']);
     expect(attention.keys()).to.deep.equal([['a'], ['b', 'c'], ['c'], ['a', 'b', 'c']]);
     expect(attention.get(['a'])).to.deep.equal({ hasAttention: false, isAncestor: false, isRelated: true });
     expect(attention.get(['b', 'c'])).to.deep.equal({ hasAttention: false, isAncestor: true, isRelated: false });
@@ -23,10 +23,10 @@ describe('AttentionManager', () => {
   test('current returns last updated key', () => {
     const registry = Registry.make();
     const attention = new AttentionManager(registry);
-    expect(attention.current).to.deep.equal([]);
+    expect(attention.getCurrent()).to.deep.equal([]);
 
     attention.update(['a', 'b', 'c']);
-    expect(attention.current).to.deep.equal(['a', 'b', 'c']);
+    expect(attention.getCurrent()).to.deep.equal(['a', 'b', 'c']);
   });
 
   test('keys returns all stored attendables', () => {

@@ -43,7 +43,7 @@ export default Capability.makeModule(
             id: `${Common.LayoutOperation.Close.meta.key}/current`,
             data: Effect.fnUntraced(function* () {
               const attention = yield* Capability.get(AttentionCapabilities.Attention);
-              const attended = attention.current.at(-1);
+              const attended = attention.getCurrent().at(-1);
               if (attended) {
                 yield* Operation.invoke(Common.LayoutOperation.Close, { subject: [attended] });
               }
@@ -59,7 +59,7 @@ export default Capability.makeModule(
             data: Effect.fnUntraced(function* () {
               const attention = yield* Capability.get(AttentionCapabilities.Attention);
               const deck = yield* DeckCapabilities.getDeck();
-              const attended = attention.current.at(-1);
+              const attended = attention.getCurrent().at(-1);
               const ids = deck.active.filter((id: string) => id !== attended) ?? [];
               yield* Operation.invoke(Common.LayoutOperation.Close, { subject: ids });
             }),

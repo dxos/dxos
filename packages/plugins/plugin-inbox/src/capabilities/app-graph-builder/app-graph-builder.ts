@@ -93,7 +93,7 @@ export default Capability.makeModule(
           const nodeId = Obj.getDXN(mailbox).toString();
           const messageId = get(
             Atom.make((get) => {
-              const state = get(selectionManager.stateAtom);
+              const state = get(selectionManager.state);
               const selection = state.selections[nodeId];
               return selection?.mode === 'single' ? selection.id : undefined;
             }),
@@ -128,7 +128,7 @@ export default Capability.makeModule(
           const nodeId = Obj.getDXN(calendar).toString();
           const eventId = get(
             Atom.make((get) => {
-              const state = get(selectionManager.stateAtom);
+              const state = get(selectionManager.state);
               const selection = state.selections[nodeId];
               return selection?.mode === 'single' ? selection.id : undefined;
             }),

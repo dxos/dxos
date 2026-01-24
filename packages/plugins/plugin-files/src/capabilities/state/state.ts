@@ -102,7 +102,7 @@ export default Capability.makeModule(
         return;
       }
 
-      const attended = attention.current;
+      const attended = attention.getCurrent();
       const active = attended?.[0];
       const current = (active?.startsWith(PREFIX) && attended && findFile(getState().files, attended)) || undefined;
       if (getState().current !== current) {

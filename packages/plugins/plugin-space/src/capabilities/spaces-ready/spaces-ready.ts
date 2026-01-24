@@ -140,7 +140,7 @@ export default Capability.makeModule(
       broadcastCleanup?.();
 
       const layout = registry.get(layoutAtom);
-      const current = attention.current;
+      const current = attention.getCurrent();
       const active = layout.active;
       const inactive = layout.inactive;
 
