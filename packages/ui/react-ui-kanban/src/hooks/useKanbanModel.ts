@@ -8,7 +8,7 @@ import { useContext, useEffect, useState } from 'react';
 import { type Live } from '@dxos/react-client/echo';
 import { type ProjectionModel } from '@dxos/schema';
 
-import { type BaseKanbanItem, KanbanModel } from '../model';
+import { type BaseKanbanItem, KanbanModel, createEchoChangeCallback } from '../model';
 import { type Kanban } from '../types';
 
 export type UseKanbanModelProps<T extends BaseKanbanItem = { id: string }> = {
@@ -32,7 +32,13 @@ export const useKanbanModel = <T extends BaseKanbanItem = { id: string }>({
 
     let model: KanbanModel<T> | undefined;
     const t = setTimeout(async () => {
-      model = new KanbanModel<T>({ registry, object, projection, ...props });
+      model = new KanbanModel<T>({
+        registry,
+        object,
+        projection,
+        change: createEchoChangeCallback<T>(object),
+        ...props,
+      });
       await model.open();
       setModel(model);
     });
@@ -47,7 +53,7 @@ export const useKanbanModel = <T extends BaseKanbanItem = { id: string }>({
   // Update data.
   useEffect(() => {
     if (model && items) {
-      model.items = items;
+      model.setItems(items);
     }
   }, [model, items]);
 

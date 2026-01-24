@@ -124,7 +124,6 @@ export class ProjectionModel {
 
   /**
    * All fields in the projection (both visible and hidden).
-   * @reactive
    */
   get allFields() {
     return this._projection.fields;

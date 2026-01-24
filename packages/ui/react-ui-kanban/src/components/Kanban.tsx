@@ -25,19 +25,23 @@ import { type BaseKanbanItem, type KanbanModel, UNCATEGORIZED_VALUE } from '../m
 import { translationKey } from '../translations';
 
 export type KanbanProps<T extends BaseKanbanItem = { id: string }> = {
-  model: KanbanModel;
+  model: KanbanModel<T>;
   onAddCard?: (columnValue: string | undefined) => string | undefined;
   onRemoveCard?: (card: T) => void;
 };
 
-export const Kanban = ({ model, onAddCard, onRemoveCard }: KanbanProps) => {
+export const Kanban = <T extends BaseKanbanItem = { id: string }>({
+  model,
+  onAddCard,
+  onRemoveCard,
+}: KanbanProps<T>) => {
   const { t } = useTranslation(translationKey);
   const { multiSelect, clear } = useSelectionActions([model.id]);
   const selected = useSelected(model.id, 'multi');
   useEffect(() => () => clear(), []);
 
   // Subscribe to arranged cards atom for reactivity.
-  const arrangedCards = useAtomValue(model.cardsAtom);
+  const arrangedCards = useAtomValue(model.cards);
 
   const handleAddCard = useCallback(
     (columnValue: string | undefined) => onAddCard?.(columnValue === UNCATEGORIZED_VALUE ? undefined : columnValue),
@@ -182,7 +186,7 @@ type CardComponentProps<T extends BaseKanbanItem = { id: string }> = {
   onRemoveCard?: (card: T) => void;
 } & Pick<StackItemRootProps, 'prevSiblingId' | 'nextSiblingId'>;
 
-const CardComponent = ({
+const CardComponent = <T extends BaseKanbanItem = { id: string }>({
   item,
   projection,
   selected,
@@ -190,7 +194,7 @@ const CardComponent = ({
   prevSiblingId,
   nextSiblingId,
   onRemoveCard,
-}: CardComponentProps) => {
+}: CardComponentProps<T>) => {
   const { t } = useTranslation(translationKey);
   return (
     <CardStack.Item key={item.id} asChild>
