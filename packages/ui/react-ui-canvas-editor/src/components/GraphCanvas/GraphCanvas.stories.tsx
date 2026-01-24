@@ -5,7 +5,8 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useEffect, useState } from 'react';
 
-import { withLayout, withRegistry, withTheme } from '@dxos/react-ui/testing';
+import { withLayout, withTheme } from '@dxos/react-ui/testing';
+import { withRegistry } from '@dxos/storybook-utils';
 import { render } from '@dxos/storybook-utils';
 
 import { CanvasGraphModel, type Connection, type Polygon } from '../../types';

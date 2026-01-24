@@ -8,7 +8,8 @@ import React, { useContext, useEffect, useMemo, useState } from 'react';
 
 import { faker } from '@dxos/random';
 import { Icon, Input, Toolbar } from '@dxos/react-ui';
-import { withRegistry, withTheme } from '@dxos/react-ui/testing';
+import { withTheme } from '@dxos/react-ui/testing';
+import { withRegistry } from '@dxos/storybook-utils';
 import { MarkdownViewer } from '@dxos/react-ui-markdown';
 
 import { ToggleContainer, type ToggleContainerRootProps } from './ToggleContainer';

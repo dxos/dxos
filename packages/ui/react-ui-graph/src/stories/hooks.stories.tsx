@@ -10,7 +10,8 @@ import React, { type PropsWithChildren, useContext, useEffect, useMemo, useRef }
 import { combine } from '@dxos/async';
 import { type Graph } from '@dxos/graph';
 import { log } from '@dxos/log';
-import { withRegistry, withTheme } from '@dxos/react-ui/testing';
+import { withTheme } from '@dxos/react-ui/testing';
+import { withRegistry } from '@dxos/storybook-utils';
 
 import { SVG } from '../components';
 import {

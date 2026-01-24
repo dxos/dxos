@@ -7,7 +7,8 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useCallback, useContext, useEffect, useMemo, useState } from 'react';
 
 import { Button, Toolbar } from '@dxos/react-ui';
-import { withLayout, withRegistry, withTheme } from '@dxos/react-ui/testing';
+import { withLayout, withTheme } from '@dxos/react-ui/testing';
+import { withRegistry } from '@dxos/storybook-utils';
 
 import { Gameboard, type GameboardRootProps, type Move, type Player } from '../Gameboard';
 

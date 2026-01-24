@@ -5,7 +5,8 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
-import { withLayout, withRegistry, withTheme } from '@dxos/react-ui/testing';
+import { withLayout, withTheme } from '@dxos/react-ui/testing';
+import { withRegistry } from '@dxos/storybook-utils';
 import { Canvas } from '@dxos/react-ui-canvas';
 
 import { createRectangle } from '../../shapes';

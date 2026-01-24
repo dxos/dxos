@@ -9,7 +9,8 @@ import React, { useCallback, useContext, useEffect, useMemo, useRef, useState } 
 
 import { type Graph, type GraphModel, SelectionModel } from '@dxos/graph';
 import { IconButton, Popover, Toolbar } from '@dxos/react-ui';
-import { withRegistry, withTheme } from '@dxos/react-ui/testing';
+import { withTheme } from '@dxos/react-ui/testing';
+import { withRegistry } from '@dxos/storybook-utils';
 import { Card } from '@dxos/react-ui-mosaic';
 import { JsonFilter, SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { getHashStyles, mx } from '@dxos/ui-theme';
@@ -185,7 +186,7 @@ const DefaultStory = ({
 
   const active = useMemo(() => new SelectionModel(), []);
   const handlePing = useCallback(() => {
-    for (const id of active.selected.value) {
+    for (const id of active.getSelectedIds()) {
       const node = graphRef.current?.findNode(id);
       if (node) {
         Pulsar.remove(select(node));
@@ -193,7 +194,7 @@ const DefaultStory = ({
     }
 
     active.clear();
-    for (const id of selection.selected.value) {
+    for (const id of selection.getSelectedIds()) {
       const node = graphRef.current?.findNode(id);
       if (node) {
         active.add(id);

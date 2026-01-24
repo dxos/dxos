@@ -3972,6 +3972,9 @@ importers:
       '@dxos/react-ui-dnd':
         specifier: workspace:*
         version: link:../../ui/react-ui-dnd
+      '@effect-atom/atom-react':
+        specifier: 'catalog:'
+        version: 0.4.4(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/platform@0.93.6(effect@3.19.11))(@effect/rpc@0.72.2(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11))(effect@3.19.11)(react@19.2.3)(scheduler@0.27.0)
       lodash.defaultsdeep:
         specifier: 'catalog:'
         version: 4.6.1

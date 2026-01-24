@@ -4,5 +4,4 @@
 
 export * from './withLayout';
 export * from './withLayoutVariants';
-export * from './withRegistry';
 export * from './withTheme';
