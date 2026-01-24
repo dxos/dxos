@@ -54,7 +54,7 @@ export const TableCard = ({ role, object }: TableCardProps) => {
   const presentation = useMemo(() => (model ? new TablePresentation(model) : undefined), [model]);
 
   return (
-    <Card.SurfaceRoot role={role}>
+    <Card.Root role={role}>
       <TableComponent.Root role={role}>
         <TableComponent.Main
           key={Obj.getDXN(object).toString()}
@@ -64,7 +64,7 @@ export const TableCard = ({ role, object }: TableCardProps) => {
           schema={schema}
         />
       </TableComponent.Root>
-    </Card.SurfaceRoot>
+    </Card.Root>
   );
 };
 

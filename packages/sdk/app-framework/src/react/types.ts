@@ -6,11 +6,12 @@ import * as Schema from 'effect/Schema';
 
 import { type Obj } from '@dxos/echo';
 
+// TODO(burdon): Extract to react-ui-mosaic?
 export const SurfaceCardRole = Schema.Literal(
   'card',
   'card--popover',
-  'card--intrinsic',
-  'card--extrinsic',
+  'card--intrinsic', // Internal size contstraints.
+  'card--extrinsic', // External size contstraints.
   'card--transclusion',
 );
 

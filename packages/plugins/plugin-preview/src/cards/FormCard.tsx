@@ -50,7 +50,7 @@ export const FormCard = ({
   const label = Obj.getLabel(subject) ?? Obj.getTypename(subject) ?? t('unable to create preview message');
 
   return (
-    <Card.SurfaceRoot id={subject.id} role={role}>
+    <Card.Root id={subject.id} role={role}>
       <Card.Heading classNames='flex items-center'>
         {label}
         <span className='grow' />
@@ -70,6 +70,6 @@ export const FormCard = ({
           </Form.Content>
         </Form.Viewport>
       </Form.Root>
-    </Card.SurfaceRoot>
+    </Card.Root>
   );
 };

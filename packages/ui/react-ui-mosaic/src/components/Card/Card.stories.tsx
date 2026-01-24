@@ -19,27 +19,18 @@ type CardStoryProps = {
   image?: string;
 };
 
-// https://m2.material.io/components/cards#anatomy
-// - Drag handle/menu (via surface)
-// - Action bar
-
 const DefaultStory = ({ title, description, indent, image }: CardStoryProps) => {
-  // TODO(burdon): Remove padding from Card.Heading; instead Card.Section should provide padding.
   return (
-    <Card.Root classNames='is-cardMinWidth max-is-cardMinWidth'>
+    <Card.Root role='card--intrinsic'>
       <Card.Toolbar>
-        <Card.DragHandle toolbarItem />
-        <Card.Heading padding={false}>{title}</Card.Heading>
+        <Card.DragHandle />
+        <Card.Title>{title}</Card.Title>
         <Card.Menu items={[]} />
       </Card.Toolbar>
       {image && <Card.Poster alt={title} image={image} />}
-      {/* <Card.Section fullWidth={fullWidth}>
-        <Card.Heading padding={false}>{title}</Card.Heading>
-      </Card.Section> */}
       {description && (
-        <Card.Section indent={indent} classNames='text-description line-clamp-3'>
-          {description}
-          {/* <Card.Text classNames='text-description line-clamp-3'>{description}</Card.Text> */}
+        <Card.Section indent={indent}>
+          <Card.Text valence='description'>{description}</Card.Text>
         </Card.Section>
       )}
     </Card.Root>
@@ -74,5 +65,36 @@ export const WithImage: Story = {
     title: faker.commerce.productName(),
     description: faker.lorem.paragraph(3),
     image,
+  },
+};
+
+export const Everything: Story = {
+  args: {
+    title: faker.commerce.productName(),
+    description: faker.lorem.paragraph(3),
+    image,
+  },
+  render: ({ title, description, image }) => {
+    return (
+      <Card.Root role='card--intrinsic'>
+        <Card.Toolbar>
+          <Card.DragHandle />
+          <Card.Title>{title}</Card.Title>
+          <Card.Menu items={[]} />
+        </Card.Toolbar>
+        <Card.Section icon='ph--circle--regular'>
+          <Card.Text>Card.Text</Card.Text>
+        </Card.Section>
+        <Card.Poster alt='Card.Poster' image={image} />
+        <Card.Section icon='ph--circle--regular'>
+          <Card.Text valence='description'>Card.Description {description}</Card.Text>
+        </Card.Section>
+        <Card.Section icon='ph--circle--regular'>
+          <Card.Text>Card.Text</Card.Text>
+        </Card.Section>
+        <Card.Action icon='ph--circle--regular' label='Card.Action' onClick={() => console.log('action')} />
+        <Card.Link label='Card.Link' href='https://dxos.org' />
+      </Card.Root>
+    );
   },
 };

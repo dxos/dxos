@@ -112,7 +112,7 @@ const CardStackStory = () => {
                   <Card.Root>
                     <Card.Toolbar>
                       <StackItem.DragHandle asChild>
-                        <Card.DragHandle toolbarItem />
+                        <Card.DragHandle />
                       </StackItem.DragHandle>
                       <Card.ToolbarSeparator variant='gap' />
                       <Card.ToolbarIconButton
@@ -132,7 +132,7 @@ const CardStackStory = () => {
                       <CardDragPreview.Root>
                         <CardDragPreview.Content>
                           <Card.Toolbar>
-                            <Card.DragHandle toolbarItem />
+                            <Card.DragHandle />
                           </Card.Toolbar>
                           <Card.Poster alt={card.title} image={card.image} />
                           <Card.Heading>{card.title}</Card.Heading>

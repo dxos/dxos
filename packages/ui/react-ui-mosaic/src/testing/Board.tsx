@@ -149,7 +149,7 @@ export const Column = forwardRef<HTMLDivElement, ColumnProps>(
           >
             <Card.Toolbar>
               <Card.DragHandle ref={dragHandleRef} />
-              <Card.Heading padding={false}>{id}</Card.Heading>
+              <Card.Title>{id}</Card.Title>
               <Card.Menu items={[]} />
             </Card.Toolbar>
             <Card.Context value={{ menuItems }}>
@@ -203,7 +203,7 @@ const Tile = forwardRef<HTMLDivElement, TileProps>(({ classNames, object, locati
         <Card.Root classNames={classNames} onClick={() => rootRef.current?.focus()} ref={composedRef}>
           <Card.Toolbar>
             <Card.DragHandle ref={dragHandleRef} />
-            <Card.Heading padding={false}>{object.name}</Card.Heading>
+            <Card.Title>{object.name}</Card.Title>
             <Card.Menu context={object} items={menuItems} />
           </Card.Toolbar>
           <Card.Section icon='ph--note--regular' classNames='text-description'>

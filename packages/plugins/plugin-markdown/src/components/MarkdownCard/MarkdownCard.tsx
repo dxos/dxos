@@ -33,7 +33,7 @@ export const MarkdownCard = forwardRef<HTMLDivElement, MarkdownCardProps>(
     }, [invokePromise, subject]);
 
     return (
-      <Card.SurfaceRoot role={role} ref={forwardedRef}>
+      <Card.Root role={role} ref={forwardedRef}>
         <Card.Heading classNames='flex items-center'>
           {getTitle(subject, t('fallback title'))}
           <span className='grow' />
@@ -54,7 +54,7 @@ export const MarkdownCard = forwardRef<HTMLDivElement, MarkdownCardProps>(
         <Card.Text classNames='text-xs text-description'>
           {info.words} {t('words label', { count: info.words })}
         </Card.Text>
-      </Card.SurfaceRoot>
+      </Card.Root>
     );
   },
 );

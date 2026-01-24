@@ -22,8 +22,7 @@ const meta = {
   component: NotebookStack,
   decorators: [
     withTheme,
-    withLayout({ layout: 'column', classNames: 'is-prose' }),
-    // TODO(burdon): Factor out Surface to avoid dependency on app-framework.
+    withLayout({ layout: 'column', classNames: 'is-proseMaxWidth' }),
     withPluginManager({
       plugins: [
         ...corePlugins(),

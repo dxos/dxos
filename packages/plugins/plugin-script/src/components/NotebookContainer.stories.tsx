@@ -40,7 +40,7 @@ const meta = {
   },
   decorators: [
     withTheme,
-    withLayout({ layout: 'column', classNames: 'is-prose' }),
+    withLayout({ layout: 'column', classNames: 'is-proseMaxWidth' }),
     withPluginManager({
       plugins: [
         ...corePlugins(),

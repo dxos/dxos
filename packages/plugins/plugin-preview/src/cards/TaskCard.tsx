@@ -31,7 +31,7 @@ export const TaskCard = ({ subject, role, db }: CardPreviewProps<Task.Task>) => 
   const statusOption = getActiveStatusOption(status);
 
   return (
-    <Card.SurfaceRoot id={subject.id} role={role}>
+    <Card.Root id={subject.id} role={role}>
       <div role='none' className={mx('flex items-center gap-2', cardSpacing)}>
         <Card.Heading classNames={[cardNoSpacing, 'min-is-0 flex-1 truncate']}>{title}</Card.Heading>
         {statusOption && (
@@ -41,6 +41,6 @@ export const TaskCard = ({ subject, role, db }: CardPreviewProps<Task.Task>) => 
         )}
         <CardSubjectMenu db={db} subject={subject} />
       </div>
-    </Card.SurfaceRoot>
+    </Card.Root>
   );
 };

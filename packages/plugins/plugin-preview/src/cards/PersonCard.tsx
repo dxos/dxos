@@ -9,14 +9,14 @@ import { Card } from '@dxos/react-ui-mosaic';
 import { type Person } from '@dxos/types';
 import { mx } from '@dxos/ui-theme';
 
-import { CardRow, gridRow } from '../components';
+import { gridRow } from '../components';
 import { type CardPreviewProps } from '../types';
 
 export const PersonCard = ({ children, role, subject, db, onSelect }: CardPreviewProps<Person.Person>) => {
   const { fullName, image, organization: { target: organization } = {}, emails = [] } = subject;
 
   return (
-    <Card.SurfaceRoot id={subject.id} role={role}>
+    <Card.Root id={subject.id} role={role}>
       {/* <Card.Section role='group'>
         <div role='none' className={mx(gridRow, 'grid-rows-2')}>
           {db ? <CardSubjectMenu subject={subject} db={db} /> : <div />}
@@ -40,7 +40,7 @@ export const PersonCard = ({ children, role, subject, db, onSelect }: CardPrevie
         </Card.Section>
       </Avatar.Root>
       {organization?.name && (
-        <CardRow
+        <Card.Action
           icon='ph--buildings--regular'
           label={organization.name}
           onClick={onSelect ? () => onSelect(organization) : undefined}
@@ -62,6 +62,6 @@ export const PersonCard = ({ children, role, subject, db, onSelect }: CardPrevie
         </dl>
       )}
       {children}
-    </Card.SurfaceRoot>
+    </Card.Root>
   );
 };

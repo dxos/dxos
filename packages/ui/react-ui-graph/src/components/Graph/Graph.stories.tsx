@@ -254,13 +254,13 @@ const DefaultStory = ({
       <Popover.VirtualTrigger virtualRef={popoverAnchorRef} />
       <Popover.Content onOpenAutoFocus={(event) => event.preventDefault()}>
         <Popover.Viewport>
-          <Card.SurfaceRoot role='card--popover'>
+          <Card.Root role='card--popover'>
             <SyntaxHighlighter
               language='json'
               classNames='text-xs mlb-cardSpacingBlock pli-cardSpacingInline bg-transparent'
               code={JSON.stringify(popover, null, 2)}
             />
-          </Card.SurfaceRoot>
+          </Card.Root>
         </Popover.Viewport>
         <Popover.Arrow />
       </Popover.Content>

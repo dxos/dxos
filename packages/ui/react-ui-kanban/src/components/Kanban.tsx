@@ -201,7 +201,7 @@ const CardComponent = ({
         <Card.Root>
           <Card.Toolbar>
             <StackItem.DragHandle asChild>
-              <Card.DragHandle toolbarItem />
+              <Card.DragHandle />
             </StackItem.DragHandle>
             <AttentionGlyph attended={selected.includes(item.id)} />
             {/* TODO(burdon): Coordinate actions. */}
@@ -227,7 +227,7 @@ const CardComponent = ({
             <CardDragPreview.Root>
               <CardDragPreview.Content>
                 <Card.Toolbar>
-                  <Card.DragHandle toolbarItem />
+                  <Card.DragHandle />
                 </Card.Toolbar>
                 <Surface role='card--intrinsic' limit={1} data={{ subject: item, projection }} />
               </CardDragPreview.Content>
