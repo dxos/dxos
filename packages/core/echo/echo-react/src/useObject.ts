@@ -77,6 +77,30 @@ export const useObject: {
     obj: T | undefined,
     property: K,
   ): [Readonly<T[K]> | undefined, ObjectPropUpdateCallback<T[K]>];
+
+  /**
+   * Hook to subscribe to a specific property of a Ref's target object.
+   * Automatically dereferences the ref and handles async loading.
+   * Returns undefined if the ref hasn't loaded yet.
+   *
+   * @param ref - The Ref to dereference and subscribe to
+   * @param property - Property key to subscribe to
+   * @returns The current property value (or undefined if not loaded) and update callback
+   */
+  <T, K extends keyof T>(ref: Ref.Ref<T>, property: K): [Readonly<T[K]> | undefined, ObjectPropUpdateCallback<T[K]>];
+
+  /**
+   * Hook to subscribe to a specific property of a Ref's target object that may be undefined.
+   * Returns undefined if the ref is undefined or hasn't loaded yet.
+   *
+   * @param ref - The Ref to dereference and subscribe to (can be undefined)
+   * @param property - Property key to subscribe to
+   * @returns The current property value (or undefined) and update callback
+   */
+  <T, K extends keyof T>(
+    ref: Ref.Ref<T> | undefined,
+    property: K,
+  ): [Readonly<T[K]> | undefined, ObjectPropUpdateCallback<T[K]>];
 } = (<T extends Entity.Unknown, K extends keyof T>(objOrRef: T | Ref.Ref<T> | undefined, property?: K): any => {
   // Get the live object for the callback (refs need to dereference).
   const isRef = Ref.isRef(objOrRef);
