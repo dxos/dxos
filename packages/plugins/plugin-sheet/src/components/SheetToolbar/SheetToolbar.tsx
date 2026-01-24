@@ -66,7 +66,7 @@ export const SheetToolbar = ({ id }: SheetToolbarProps) => {
         edges: nodes.map((node) => ({ source: 'root', target: node.id })),
       };
     });
-  }, [graph]);
+  }, [graph, id]);
 
   const actionsCreator = useMemo(
     () => createToolbarActions(model, state, cursorFallbackRange, customActions),

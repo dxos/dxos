@@ -15,7 +15,6 @@ import { useSpace } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { withTheme } from '@dxos/react-ui/testing';
 import { AttendableContainer } from '@dxos/react-ui-attention';
-import { withAttention } from '@dxos/react-ui-attention/testing';
 
 import { createTestCells, useTestSheet, withComputeGraphDecorator } from '../../testing';
 import { translations } from '../../translations';
@@ -32,7 +31,6 @@ const meta = {
     withTheme,
     withClientProvider({ types: [Sheet.Sheet], createSpace: true }),
     withComputeGraphDecorator(),
-    withAttention,
     // TODO(wittjosiah): Consider whether we should refactor component so story doesn't need to depend on intents.
     withPluginManager({
       plugins: [...corePlugins()],
