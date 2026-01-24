@@ -39,7 +39,8 @@ export default Capability.makeModule(
     const deckStateAtoms = yield* Capability.getAll(DeckCapabilities.State);
     const deckStateAtom = deckStateAtoms.flat()[0];
     const attention = yield* Capability.get(AttentionCapabilities.Attention);
-    const store = yield* Capability.get(SpaceCapabilities.State);
+    const stateAtom = yield* Capability.get(SpaceCapabilities.State);
+    const ephemeralAtom = yield* Capability.get(SpaceCapabilities.EphemeralState);
     const client = yield* Capability.get(ClientCapabilities.Client);
 
     const defaultSpace = client.spaces.default;
@@ -116,12 +117,12 @@ export default Capability.makeModule(
             const updateSpaceName = () => {
               const name = space.properties.name;
               if (!name) {
-                store.update((current) => {
+                registry.update(stateAtom, (current) => {
                   const { [space.id]: _, ...rest } = current.spaceNames;
                   return { ...current, spaceNames: rest };
                 });
               } else {
-                store.update((current) => ({
+                registry.update(stateAtom, (current) => ({
                   ...current,
                   spaceNames: { ...current.spaceNames, [space.id]: name },
                 }));
@@ -229,30 +230,33 @@ export default Capability.makeModule(
                 Array.isArray(added) &&
                 Array.isArray(removed)
               ) {
-                // NOTE: Direct mutation of ComplexMap won't trigger atom updates.
                 // TODO(wittjosiah): Stop using (Complex)Map inside reactive object.
-                added.forEach((id) => {
-                  if (typeof id === 'string') {
-                    if (!(id in store.values.viewersByObject)) {
-                      store.values.viewersByObject[id] = new ComplexMap(PublicKey.hash);
+                registry.update(ephemeralAtom, (ephemeral) => {
+                  added.forEach((id) => {
+                    if (typeof id === 'string') {
+                      if (!(id in ephemeral.viewersByObject)) {
+                        ephemeral.viewersByObject[id] = new ComplexMap(PublicKey.hash);
+                      }
+                      ephemeral.viewersByObject[id]!.set(identityKey, {
+                        lastSeen: Date.now(),
+                        currentlyAttended: new Set(attended).has(id),
+                      });
+                      if (!ephemeral.viewersByIdentity.has(identityKey)) {
+                        ephemeral.viewersByIdentity.set(identityKey, new Set());
+                      }
+                      ephemeral.viewersByIdentity.get(identityKey)!.add(id);
                     }
-                    store.values.viewersByObject[id]!.set(identityKey, {
-                      lastSeen: Date.now(),
-                      currentlyAttended: new Set(attended).has(id),
-                    });
-                    if (!store.values.viewersByIdentity.has(identityKey)) {
-                      store.values.viewersByIdentity.set(identityKey, new Set());
-                    }
-                    store.values.viewersByIdentity.get(identityKey)!.add(id);
-                  }
-                });
+                  });
 
-                removed.forEach((id) => {
-                  if (typeof id === 'string') {
-                    store.values.viewersByObject[id]?.delete(identityKey);
-                    store.values.viewersByIdentity.get(identityKey)?.delete(id);
-                    // It's okay for these to be empty sets/maps, reduces churn.
-                  }
+                  removed.forEach((id) => {
+                    if (typeof id === 'string') {
+                      ephemeral.viewersByObject[id]?.delete(identityKey);
+                      ephemeral.viewersByIdentity.get(identityKey)?.delete(id);
+                      // It's okay for these to be empty sets/maps, reduces churn.
+                    }
+                  });
+
+                  return { ...ephemeral };
                 });
               }
             }),
@@ -270,7 +274,7 @@ export default Capability.makeModule(
             .map((space) => space.internal.setEdgeReplicationPreference(EdgeReplicationSetting.ENABLED)),
         ),
       );
-      store.set({ enabledEdgeReplication: true });
+      registry.update(stateAtom, (current) => ({ ...current, enabledEdgeReplication: true }));
     } catch (err) {
       log.catch(err);
     }

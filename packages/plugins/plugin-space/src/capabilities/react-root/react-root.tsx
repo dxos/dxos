@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 import React from 'react';
 
 import { Capability, Common } from '@dxos/app-framework';
-import { useCapability } from '@dxos/app-framework/react';
+import { useAtomCapability } from '@dxos/app-framework/react';
 
 import { AwaitingObject } from '../../components';
 import { meta } from '../../meta';
@@ -17,8 +17,8 @@ export default Capability.makeModule(() =>
     Capability.contributes(Common.Capability.ReactRoot, {
       id: meta.id,
       root: () => {
-        const store = useCapability(SpaceCapabilities.State);
-        return store.values.awaiting ? <AwaitingObject id={store.values.awaiting} /> : null;
+        const ephemeral = useAtomCapability(SpaceCapabilities.EphemeralState);
+        return ephemeral.awaiting ? <AwaitingObject id={ephemeral.awaiting} /> : null;
       },
     }),
   ),

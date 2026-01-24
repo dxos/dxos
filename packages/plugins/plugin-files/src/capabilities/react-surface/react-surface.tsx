@@ -5,7 +5,7 @@ import * as Effect from 'effect/Effect';
 import React from 'react';
 
 import { Capability, Common } from '@dxos/app-framework';
-import { useCapability, useSettingsState } from '@dxos/app-framework/react';
+import { useAtomCapability, useSettingsState } from '@dxos/app-framework/react';
 
 import { ExportStatus, FilesSettings, LocalFileContainer } from '../../components';
 import { meta } from '../../meta';
@@ -32,8 +32,8 @@ export default Capability.makeModule(
           Common.Capability.isSettings(data.subject) && data.subject.prefix === meta.id,
         component: ({ data: { subject } }) => {
           const { settings, updateSettings } = useSettingsState<FilesSettingsProps>(subject.atom);
-          const store = useCapability(FileCapabilities.State);
-          return <FilesSettings settings={settings} state={store.values} onSettingsChange={updateSettings} />;
+          const state = useAtomCapability(FileCapabilities.State);
+          return <FilesSettings settings={settings} state={state} onSettingsChange={updateSettings} />;
         },
       }),
       Common.createSurface({
@@ -44,8 +44,8 @@ export default Capability.makeModule(
           return !!settings.autoExport;
         },
         component: () => {
-          const store = useCapability(FileCapabilities.State);
-          return <ExportStatus running={store.values.exportRunning} lastExport={store.values.lastExport} />;
+          const state = useAtomCapability(FileCapabilities.State);
+          return <ExportStatus running={state.exportRunning} lastExport={state.lastExport} />;
         },
       }),
     ]);

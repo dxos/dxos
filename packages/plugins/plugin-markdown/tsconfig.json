@@ -34,9 +34,6 @@
       "path": "../../common/keys"
     },
     {
-      "path": "../../common/local-storage"
-    },
-    {
       "path": "../../common/log"
     },
     {

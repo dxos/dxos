@@ -8,7 +8,7 @@ import type * as Schema from 'effect/Schema';
 import React, { useCallback } from 'react';
 
 import { Capability, Common } from '@dxos/app-framework';
-import { Surface, useCapability, useLayout, useSettingsState } from '@dxos/app-framework/react';
+import { Surface, useAtomCapability, useLayout, useSettingsState } from '@dxos/app-framework/react';
 import { Database, Obj, type Ref } from '@dxos/echo';
 import { findAnnotation } from '@dxos/effect';
 import { type Space, SpaceState, getSpace, isLiveObject, isSpace, parseId, useSpace } from '@dxos/react-client/echo';
@@ -323,9 +323,8 @@ export default Capability.makeModule(
         filter: (data): data is { id: string; subject: Obj.Any; open?: boolean } =>
           typeof data.id === 'string' && Obj.isObject(data.subject),
         component: ({ data }) => {
-          // TODO(wittjosiah): Doesn't need to be mutable but readonly type messes with ComplexMap.
-          const store = useCapability(SpaceCapabilities.State);
-          return <SmallPresenceLive id={data.id} open={data.open} viewers={store.values.viewersByObject[data.id]} />;
+          const ephemeral = useAtomCapability(SpaceCapabilities.EphemeralState);
+          return <SmallPresenceLive id={data.id} open={data.open} viewers={ephemeral.viewersByObject[data.id]} />;
         },
       }),
       // TODO(wittjosiah): Attention glyph for non-echo items should be handled elsewhere.

@@ -21,11 +21,11 @@ export default Capability.makeModule(
           const registry = capabilities.get(Common.Capability.AtomRegistry);
           const settingsAtom = capabilities.get(FileCapabilities.Settings);
           const settings = registry.get(settingsAtom);
-          const store = capabilities.get(FileCapabilities.State);
-          const { current } = store.values;
+          const stateAtom = capabilities.get(FileCapabilities.State);
+          const { current } = registry.get(stateAtom);
           if (settings.openLocalFiles && current && current.id === id && current.text !== text) {
             // Update the current file's text and modified state.
-            store.update((state) => ({
+            registry.update(stateAtom, (state) => ({
               ...state,
               current: state.current ? { ...state.current, text: text.toString(), modified: true } : undefined,
               files: state.files.map((f) =>

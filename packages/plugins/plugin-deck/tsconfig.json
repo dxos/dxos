@@ -34,9 +34,6 @@
       "path": "../../common/keyboard"
     },
     {
-      "path": "../../common/local-storage"
-    },
-    {
       "path": "../../common/log"
     },
     {

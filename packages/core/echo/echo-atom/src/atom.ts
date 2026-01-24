@@ -107,28 +107,6 @@ export function make<T extends Entity.Unknown>(objOrRef: T | Ref.Ref<T> | undefi
 }
 
 /**
- * Internal helper to create an atom from a Ref.
- * Handles async loading and subscribes to the target for reactive updates.
- */
-const makeFromRef = <T extends Entity.Unknown>(ref: Ref.Ref<T>): Atom.Atom<T | undefined> => {
-  return Atom.make<T | undefined>((get) => {
-    let unsubscribeTarget: (() => void) | undefined;
-
-    const setupTargetSubscription = (target: T): T => {
-      unsubscribeTarget?.();
-      unsubscribeTarget = Obj.subscribe(target, () => {
-        get.setSelf(getSnapshot(target) as T);
-      });
-      return getSnapshot(target) as T;
-    };
-
-    get.addFinalizer(() => unsubscribeTarget?.());
-
-    return loadRefTarget(ref, get, setupTargetSubscription);
-  });
-};
-
-/**
  * Create a read-only atom for a specific property of a reactive object.
  * Works with both Echo objects (from createObject) and plain live objects (from Obj.make).
  * The atom updates automatically when the property is mutated.

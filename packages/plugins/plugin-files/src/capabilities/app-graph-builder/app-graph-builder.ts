@@ -109,9 +109,11 @@ export default Capability.makeModule(
               : []),
           ]),
         connector: () => {
-          const store = capabilities.get(FileCapabilities.State);
+          const registry = capabilities.get(Common.Capability.AtomRegistry);
+          const stateAtom = capabilities.get(FileCapabilities.State);
+          const state = registry.get(stateAtom);
           return Effect.succeed(
-            store.values.files.map((entity) => ({
+            state.files.map((entity) => ({
               id: entity.id,
               type: isLocalDirectory(entity) ? 'directory' : 'file',
               data: entity,

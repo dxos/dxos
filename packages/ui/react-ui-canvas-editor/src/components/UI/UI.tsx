@@ -33,7 +33,7 @@ export const UI = ({ showTools, showToolbar }: UIProps) => {
       edges: graph.edges.length,
     },
     dragging,
-    selected: selection.selected.value,
+    selected: selection.getSelectedIds(),
     showGrid,
     snapToGrid,
   };

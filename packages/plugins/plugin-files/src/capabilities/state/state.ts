@@ -2,12 +2,12 @@
 // Copyright 2025 DXOS.org
 //
 
+import { Atom } from '@effect-atom/atom-react';
 import * as Effect from 'effect/Effect';
 import localforage from 'localforage';
 
 import { Capability, Common } from '@dxos/app-framework';
 import { SubscriptionList } from '@dxos/async';
-import { LocalStorageStore } from '@dxos/local-storage';
 import { AttentionCapabilities } from '@dxos/plugin-attention';
 
 import { meta } from '../../meta';
@@ -16,7 +16,8 @@ import { PREFIX, findFile, handleToLocalDirectory, handleToLocalFile } from '../
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    const store = new LocalStorageStore<FilesState>(meta.id, {
+    // State atom for files plugin (not persisted to localStorage, uses localforage for handles).
+    const stateAtom = Atom.make<FilesState>({
       exportRunning: false,
       files: [],
       current: undefined,
@@ -27,6 +28,7 @@ export default Capability.makeModule(
     const attention = yield* Capability.get(AttentionCapabilities.Attention);
     const settingsAtom = yield* Capability.get(FileCapabilities.Settings);
     const getSettings = () => registry.get(settingsAtom);
+    const getState = () => registry.get(stateAtom);
 
     const subscriptions = new SubscriptionList();
 
@@ -46,7 +48,7 @@ export default Capability.makeModule(
           }),
         ),
       );
-      store.update((current) => ({ ...current, files: [...current.files, ...files] }));
+      registry.update(stateAtom, (current) => ({ ...current, files: [...current.files, ...files] }));
     }
 
     // Auto-export subscription.
@@ -59,18 +61,18 @@ export default Capability.makeModule(
         }
 
         const { autoExport, autoExportInterval: interval } = getSettings();
-        if (!autoExport || !store.values.rootHandle || !invokePromise) {
+        if (!autoExport || !getState().rootHandle || !invokePromise) {
           return;
         }
 
         autoExportInterval = setInterval(async () => {
-          if (store.values.exportRunning) {
+          if (getState().exportRunning) {
             return;
           }
 
-          store.update((current) => ({ ...current, exportRunning: true }));
+          registry.update(stateAtom, (current) => ({ ...current, exportRunning: true }));
           await invokePromise(LocalFilesOperation.Export);
-          store.update((current) => ({ ...current, exportRunning: false }));
+          registry.update(stateAtom, (current) => ({ ...current, exportRunning: false }));
         }, interval);
       }),
     );
@@ -82,12 +84,14 @@ export default Capability.makeModule(
 
     // Persist file handles.
     subscriptions.add(
-      registry.subscribe(store.atom, () => {
+      registry.subscribe(stateAtom, () => {
         if (!getSettings().openLocalFiles) {
           return;
         }
 
-        const fileHandles = store.values.files.map((file) => file.handle).filter(Boolean);
+        const fileHandles = getState()
+          .files.map((file) => file.handle)
+          .filter(Boolean);
         void localforage.setItem(meta.id, fileHandles);
       }),
     );
@@ -100,9 +104,9 @@ export default Capability.makeModule(
 
       const attended = attention.current;
       const active = attended?.[0];
-      const current = (active?.startsWith(PREFIX) && attended && findFile(store.values.files, attended)) || undefined;
-      if (store.values.current !== current) {
-        store.update((s) => ({ ...s, current }));
+      const current = (active?.startsWith(PREFIX) && attended && findFile(getState().files, attended)) || undefined;
+      if (getState().current !== current) {
+        registry.update(stateAtom, (s) => ({ ...s, current }));
       }
     };
     updateCurrentFile();
@@ -113,23 +117,22 @@ export default Capability.makeModule(
       localforage.getItem<FileSystemDirectoryHandle>(`${meta.id}/rootHandle`),
     );
     if (savedRootHandle) {
-      store.update((current) => ({ ...current, rootHandle: savedRootHandle }));
+      registry.update(stateAtom, (current) => ({ ...current, rootHandle: savedRootHandle }));
     }
 
     // Persist root handle.
     subscriptions.add(
-      registry.subscribe(store.atom, () => {
-        const rootHandle = store.values.rootHandle;
+      registry.subscribe(stateAtom, () => {
+        const rootHandle = getState().rootHandle;
         if (rootHandle) {
           void localforage.setItem(`${meta.id}/rootHandle`, rootHandle);
         }
       }),
     );
 
-    return Capability.contributes(FileCapabilities.State, store, () =>
+    return Capability.contributes(FileCapabilities.State, stateAtom, () =>
       Effect.sync(() => {
         subscriptions.clear();
-        store.close();
       }),
     );
   }),

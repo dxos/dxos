@@ -55,7 +55,7 @@ const TestItem = Schema.Struct({
 
 const TestChat: FC<{ doc: Markdown.Document; content: string }> = ({ doc, content }) => {
   const { parentRef } = useTextEditor({ initialValue: content });
-  const { editorState } = useCapability(MarkdownCapabilities.State);
+  const editorState = useCapability(MarkdownCapabilities.EditorState);
 
   const space = useSpace();
   const queueDxn = useMemo(() => space && space.queues.create().dxn, [space]);
@@ -113,7 +113,7 @@ const DefaultStory = ({ document, chat }: { document: string; chat: string }) =>
   const space = useSpace();
   const [doc, setDoc] = useState<Markdown.Document>();
   const settings = useAtomCapability(MarkdownCapabilities.Settings);
-  const { editorState } = useCapability(MarkdownCapabilities.State);
+  const editorState = useCapability(MarkdownCapabilities.EditorState);
 
   useEffect(() => {
     if (!space) {

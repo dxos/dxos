@@ -24,9 +24,6 @@
       "path": "../../common/effect"
     },
     {
-      "path": "../../common/local-storage"
-    },
-    {
       "path": "../../common/log"
     },
     {

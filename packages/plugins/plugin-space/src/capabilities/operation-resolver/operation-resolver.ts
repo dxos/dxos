@@ -123,8 +123,10 @@ export default Capability.makeModule(
         OperationResolver.make({
           operation: SpaceOperation.WaitForObject,
           handler: Effect.fnUntraced(function* (input) {
-            const store = yield* Capability.get(SpaceCapabilities.State);
-            store.set({ awaiting: input.id });
+            yield* Common.Capability.updateAtomValue(SpaceCapabilities.EphemeralState, (current) => ({
+              ...current,
+              awaiting: input.id,
+            }));
           }),
         }),
 
@@ -258,7 +260,7 @@ export default Capability.makeModule(
         OperationResolver.make({
           operation: SpaceOperation.OpenCreateObject,
           handler: Effect.fnUntraced(function* (input) {
-            const state = yield* Capability.get(SpaceCapabilities.State);
+            const ephemeralState = yield* Common.Capability.getAtomValue(SpaceCapabilities.EphemeralState);
             const navigable = input.navigable ?? true;
             yield* Operation.invoke(Common.LayoutOperation.UpdateDialog, {
               subject: CREATE_OBJECT_DIALOG,
@@ -273,7 +275,7 @@ export default Capability.makeModule(
                   ? (object: Obj.Any) => {
                       const isCollection = Obj.instanceOf(Collection.Collection, object);
                       const isSystemCollection = Obj.instanceOf(Collection.Managed, object);
-                      return (!isCollection && !isSystemCollection) || state.values.navigableCollections;
+                      return (!isCollection && !isSystemCollection) || ephemeralState.navigableCollections;
                     }
                   : () => false,
               },
@@ -443,16 +445,15 @@ export default Capability.makeModule(
         OperationResolver.make({
           operation: SpaceOperation.Migrate,
           handler: Effect.fnUntraced(function* (input) {
-            const store = yield* Capability.get(SpaceCapabilities.State);
             const { space, version: targetVersion } = input;
 
             if (space.state.get() === SpaceState.SPACE_REQUIRES_MIGRATION) {
-              store.update((current) => ({
+              yield* Common.Capability.updateAtomValue(SpaceCapabilities.EphemeralState, (current) => ({
                 ...current,
                 sdkMigrationRunning: { ...current.sdkMigrationRunning, [space.id]: true },
               }));
               yield* Effect.promise(() => space.internal.migrate());
-              store.update((current) => ({
+              yield* Common.Capability.updateAtomValue(SpaceCapabilities.EphemeralState, (current) => ({
                 ...current,
                 sdkMigrationRunning: { ...current.sdkMigrationRunning, [space.id]: false },
               }));

@@ -88,7 +88,7 @@ const createGraph = (client: Client, registry: Registry.Registry): Graph.Expanda
             return objects.map((object) => ({
               id: object.id,
               type: 'dxos.org/type/test',
-              properties: { label: (object as any).name },
+              properties: { label: object.name },
               data: object,
             }));
           }),

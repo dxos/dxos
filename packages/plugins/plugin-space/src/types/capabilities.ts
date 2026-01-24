@@ -4,25 +4,50 @@
 
 import { type Atom } from '@effect-atom/atom-react';
 import type * as Effect from 'effect/Effect';
-import type * as Schema from 'effect/Schema';
+import * as Schema from 'effect/Schema';
 
 import { Capability } from '@dxos/app-framework';
 import { type Space } from '@dxos/client/echo';
 import { type Database } from '@dxos/echo';
-import { type LocalStorageStore } from '@dxos/local-storage';
+import { type PublicKey } from '@dxos/keys';
 import { type Operation } from '@dxos/operation';
 import { type Collection } from '@dxos/schema';
 import { type Label } from '@dxos/ui-types';
-import { type Position } from '@dxos/util';
+import { type ComplexMap, type Position } from '@dxos/util';
 
 import { meta } from '../meta';
 
-import { type PluginState, type SpaceSettingsProps } from './types';
+import { type ObjectViewerProps, type SpaceSettingsProps } from './types';
 
 export namespace SpaceCapabilities {
   export const Settings = Capability.make<Atom.Writable<SpaceSettingsProps>>(`${meta.id}/capability/settings`);
 
-  export const State = Capability.make<LocalStorageStore<PluginState>>(`${meta.id}/capability/state`);
+  /** Schema for persisted space plugin state. */
+  export const StateSchema = Schema.mutable(
+    Schema.Struct({
+      spaceNames: Schema.Record({ key: Schema.String, value: Schema.String }),
+      enabledEdgeReplication: Schema.Boolean,
+    }),
+  );
+
+  export type SpaceState = Schema.Schema.Type<typeof StateSchema>;
+
+  /** Persisted state (stored in KVS/localStorage). */
+  export const State = Capability.make<Atom.Writable<SpaceState>>(`${meta.id}/capability/state`);
+
+  /** Ephemeral space plugin state (not persisted). */
+  export type SpaceEphemeralState = {
+    awaiting: string | undefined;
+    sdkMigrationRunning: Record<string, boolean>;
+    navigableCollections: boolean;
+    viewersByObject: Record<string, ComplexMap<PublicKey, ObjectViewerProps>>;
+    viewersByIdentity: ComplexMap<PublicKey, Set<string>>;
+  };
+
+  /** Transient/ephemeral state (not persisted). */
+  export const EphemeralState = Capability.make<Atom.Writable<SpaceEphemeralState>>(
+    `${meta.id}/capability/ephemeral-state`,
+  );
 
   export type SettingsSection = { id: string; label: Label; position?: Position };
   export const SettingsSection = Capability.make<SettingsSection>(`${meta.id}/capability/settings-section`);

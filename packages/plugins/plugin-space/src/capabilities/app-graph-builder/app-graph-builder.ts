@@ -159,7 +159,8 @@ export default Capability.makeModule(
         match: NodeMatcher.whenId(SPACES),
         connector: (node, get) => {
           const client = capabilities.get(ClientCapabilities.Client);
-          const state = capabilities.get(SpaceCapabilities.State);
+          const stateAtom = capabilities.get(SpaceCapabilities.State);
+          const ephemeralAtom = capabilities.get(SpaceCapabilities.EphemeralState);
           const spacesAtom = CreateAtom.fromObservable(client.spaces);
           const isReadyAtom = CreateAtom.fromObservable(client.spaces.isReady);
 
@@ -173,6 +174,8 @@ export default Capability.makeModule(
           const registry = capabilities.get(Common.Capability.AtomRegistry);
           const settingsAtom = capabilities.get(SpaceCapabilities.Settings);
           const settings = registry.get(settingsAtom);
+          const state = get(stateAtom);
+          const ephemeralState = get(ephemeralAtom);
 
           try {
             const [spacesOrder] = get(
@@ -205,9 +208,9 @@ export default Capability.makeModule(
                 .map((space) =>
                   constructSpaceNode({
                     space,
-                    navigable: state.values.navigableCollections,
+                    navigable: ephemeralState.navigableCollections,
                     personal: space === client.spaces.default,
-                    namesCache: state.values.spaceNames,
+                    namesCache: state.spaceNames,
                     resolve: resolve(get),
                   }),
                 ),
@@ -224,9 +227,10 @@ export default Capability.makeModule(
         match: whenSpace,
         actions: (space, get) => {
           const [client] = get(capabilities.atom(ClientCapabilities.Client));
-          const [state] = get(capabilities.atom(SpaceCapabilities.State));
+          const ephemeralAtom = capabilities.get(SpaceCapabilities.EphemeralState);
+          const ephemeralState = get(ephemeralAtom);
 
-          if (!client || !state) {
+          if (!client) {
             return Effect.succeed([]);
           }
 
@@ -234,7 +238,7 @@ export default Capability.makeModule(
             constructSpaceActions({
               space,
               personal: space === client.spaces.default,
-              migrating: state.values.sdkMigrationRunning[space.id],
+              migrating: ephemeralState.sdkMigrationRunning[space.id],
             }),
           );
         },
@@ -245,7 +249,8 @@ export default Capability.makeModule(
         id: `${meta.id}/root-collection`,
         match: whenSpace,
         connector: (space, get) => {
-          const state = capabilities.get(SpaceCapabilities.State);
+          const ephemeralAtom = capabilities.get(SpaceCapabilities.EphemeralState);
+          const ephemeralState = get(ephemeralAtom);
           const spaceState = get(CreateAtom.fromObservable(space.state));
           if (spaceState !== SpaceState.SPACE_READY) {
             return Effect.succeed([]);
@@ -284,7 +289,7 @@ export default Capability.makeModule(
                   db: space.db,
                   object,
                   resolve: resolve(get),
-                  navigable: state.values.navigableCollections,
+                  navigable: ephemeralState.navigableCollections,
                 }),
               )
               .filter(isNonNullable),
@@ -297,7 +302,8 @@ export default Capability.makeModule(
         id: `${meta.id}/objects`,
         match: (node) => (Obj.instanceOf(Collection.Collection, node.data) ? Option.some(node.data) : Option.none()),
         connector: (collection, get) => {
-          const state = capabilities.get(SpaceCapabilities.State);
+          const ephemeralAtom = capabilities.get(SpaceCapabilities.EphemeralState);
+          const ephemeralState = get(ephemeralAtom);
           const space = getSpace(collection);
 
           // Get collection snapshot using AtomObj (cached via Atom.family).
@@ -322,7 +328,7 @@ export default Capability.makeModule(
                     object,
                     db: space.db,
                     resolve: resolve(get),
-                    navigable: state.values.navigableCollections,
+                    navigable: ephemeralState.navigableCollections,
                   }),
               )
               .filter(isNonNullable),
@@ -536,9 +542,10 @@ export default Capability.makeModule(
           }
 
           const [appGraph] = get(capabilities.atom(Common.Capability.AppGraph));
-          const [state] = get(capabilities.atom(SpaceCapabilities.State));
+          const ephemeralAtom = capabilities.get(SpaceCapabilities.EphemeralState);
+          const ephemeralState = get(ephemeralAtom);
 
-          if (!appGraph || !state) {
+          if (!appGraph) {
             return Effect.succeed([]);
           }
 
@@ -549,7 +556,7 @@ export default Capability.makeModule(
               resolve: resolve(get),
               capabilities,
               deletable,
-              navigable: state.values.navigableCollections,
+              navigable: ephemeralState.navigableCollections,
             }),
           );
         },

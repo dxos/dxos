@@ -3,13 +3,20 @@
 //
 
 import * as Effect from 'effect/Effect';
-import React, { forwardRef, useCallback } from 'react';
+import React, { forwardRef, useCallback, useMemo } from 'react';
 
 import { Capability, Common } from '@dxos/app-framework';
-import { SurfaceCardRole, useAtomCapability, useCapability, useSettingsState } from '@dxos/app-framework/react';
+import {
+  SurfaceCardRole,
+  useAtomCapability,
+  useAtomCapabilityState,
+  useCapability,
+  useSettingsState,
+} from '@dxos/app-framework/react';
 import { Obj } from '@dxos/echo';
 import { AttentionCapabilities } from '@dxos/plugin-attention';
 import { Text } from '@dxos/schema';
+import { type EditorViewMode } from '@dxos/ui-editor';
 
 import { MarkdownCard, MarkdownContainer, type MarkdownContainerProps, MarkdownSettings } from '../../components';
 import { meta } from '../../meta';
@@ -75,11 +82,15 @@ const Container = forwardRef<HTMLDivElement, { id: string; subject: MarkdownCont
   ({ id, subject, role }, forwardedRef) => {
     const selectionManager = useCapability(AttentionCapabilities.Selection);
     const settings = useAtomCapability(MarkdownCapabilities.Settings);
-    const { state, editorState, getViewMode, setViewMode } = useCapability(MarkdownCapabilities.State);
-    const viewMode = getViewMode(id);
+    const [state, setState] = useAtomCapabilityState(MarkdownCapabilities.State);
+    const editorState = useCapability(MarkdownCapabilities.EditorState);
+    const extensions = useCapability(MarkdownCapabilities.Extensions);
+    const extensionProviders = useMemo(() => extensions.flat(), [extensions]);
+
+    const viewMode: EditorViewMode = (id && state.viewMode[id]) || settings?.defaultViewMode || 'source';
     const handleViewModeChange = useCallback<NonNullable<MarkdownContainerProps['onViewModeChange']>>(
-      (mode) => setViewMode(id, mode),
-      [id, setViewMode],
+      (mode) => setState((current) => ({ ...current, viewMode: { ...current.viewMode, [id]: mode } })),
+      [id, setState],
     );
 
     return (
@@ -89,7 +100,7 @@ const Container = forwardRef<HTMLDivElement, { id: string; subject: MarkdownCont
         role={role}
         settings={settings}
         selectionManager={selectionManager}
-        extensionProviders={state.extensionProviders}
+        extensionProviders={extensionProviders}
         editorStateStore={editorState}
         viewMode={viewMode}
         onViewModeChange={handleViewModeChange}

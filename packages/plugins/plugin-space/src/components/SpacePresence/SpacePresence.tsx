@@ -5,7 +5,7 @@
 import * as Option from 'effect/Option';
 import React, { forwardRef, useCallback, useEffect, useState } from 'react';
 
-import { useAppGraph, useCapability } from '@dxos/app-framework/react';
+import { useAppGraph, useAtomCapability } from '@dxos/app-framework/react';
 import { generateName } from '@dxos/display-name';
 import { type Key, Obj } from '@dxos/echo';
 import { PublicKey } from '@dxos/react-client';
@@ -47,8 +47,7 @@ export type SpacePresenceProps = {
 };
 
 export const SpacePresence = ({ object, spaceId }: SpacePresenceProps) => {
-  // TODO(wittjosiah): Doesn't need to be mutable but readonly type messes with ComplexMap.
-  const store = useCapability(SpaceCapabilities.State);
+  const ephemeral = useAtomCapability(SpaceCapabilities.EphemeralState);
   const identity = useIdentity();
   const db = Obj.getDatabase(object);
   const space = useSpace(spaceId ?? db?.spaceId);
@@ -70,11 +69,11 @@ export const SpacePresence = ({ object, spaceId }: SpacePresenceProps) => {
 
   // TODO(thure): Could it be a smell to return early when there are interactions with `deepSignal` later, since it
   //  prevents reactivity?
-  if (!identity || !store || !space) {
+  if (!identity || !ephemeral || !space) {
     return null;
   }
 
-  const currentObjectViewers = store.values.viewersByObject[Obj.getDXN(object).toString()] ?? noViewers;
+  const currentObjectViewers = ephemeral.viewersByObject[Obj.getDXN(object).toString()] ?? noViewers;
 
   const membersForObject = spaceMembers
     .filter((member) => memberOnline(member) && memberIsNotSelf(member))
