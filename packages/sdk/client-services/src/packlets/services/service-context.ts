@@ -64,6 +64,7 @@ export type ServiceContextRuntimeProps = Pick<
     disableP2pReplication?: boolean;
     enableVectorIndexing?: boolean;
     enableFullTextIndexing?: boolean;
+    enableLocalQueues?: boolean;
   };
 /**
  * Shared backend for all client services.
@@ -169,6 +170,7 @@ export class ServiceContext extends Resource {
         fullText: this._runtimeProps?.enableFullTextIndexing,
       },
       runtime: this._runtime,
+      localQueues: this._runtimeProps?.enableLocalQueues,
     });
 
     this.invitations = new InvitationsHandler(

@@ -16,6 +16,7 @@ import {
   Common,
   OperationPlugin,
   Plugin,
+  RuntimePlugin,
   SettingsPlugin,
 } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
@@ -58,12 +59,16 @@ export const config = {
         storage: {
           persistent: true,
         },
+        enableLocalQueues: true,
       },
       services: SERVICES_CONFIG.REMOTE,
     },
   }),
   local: new Config({
     runtime: {
+      client: {
+        enableLocalQueues: true,
+      },
       services: SERVICES_CONFIG.LOCAL,
     },
   }),
@@ -111,6 +116,7 @@ export const getDecorators = ({
   withPluginManager({
     plugins: [
       // System plugins.
+      RuntimePlugin(),
       AttentionPlugin(),
       AutomationPlugin(),
       GraphPlugin(),

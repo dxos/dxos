@@ -51,6 +51,7 @@ export default Capability.makeModule(
           invariant(space, 'Space not found');
           const queue = space.queues.create();
           const chat = Assistant.make({ name, queue: Ref.fromDXN(queue.dxn) });
+          space.db.add(chat);
 
           // TODO(wittjosiah): This should be a space-level setting.
           // TODO(burdon): Clone when activated. Copy-on-write for template.

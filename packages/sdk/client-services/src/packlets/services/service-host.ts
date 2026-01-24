@@ -212,9 +212,11 @@ export class ClientServicesHost {
       if (this._runtimeProps.disableP2pReplication === undefined) {
         this._runtimeProps.disableP2pReplication = config?.get('runtime.client.disableP2pReplication', false);
       }
-
       if (this._runtimeProps.enableVectorIndexing === undefined) {
         this._runtimeProps.enableVectorIndexing = config?.get('runtime.client.enableVectorIndexing', false);
+      }
+      if (this._runtimeProps.enableLocalQueues === undefined) {
+        this._runtimeProps.enableLocalQueues = config?.get('runtime.client.enableLocalQueues', false);
       }
 
       invariant(!this._config, 'config already set');
