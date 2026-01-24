@@ -6,6 +6,7 @@ import * as BrowserKeyValueStore from '@effect/platform-browser/BrowserKeyValueS
 import { Atom } from '@effect-atom/atom-react';
 import type * as Schema from 'effect/Schema';
 
+// TODO(wittjosiah): This is currently provided for convenience but maybe should be removed.
 const defaultRuntime = Atom.runtime(BrowserKeyValueStore.layerLocalStorage);
 
 /**

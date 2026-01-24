@@ -7,16 +7,36 @@ import { Atom, Registry } from '@effect-atom/atom-react';
 import { invariant } from '@dxos/invariant';
 
 /**
- * Simple wrapper to provide a signal-like interface for reading selected IDs.
+ * Reactive selection model.
  */
-export class SelectedIdsAccessor {
-  constructor(
-    private readonly _registry: Registry.Registry,
-    private readonly _atom: Atom.Writable<Set<string>>,
-  ) {}
+export class SelectionModel {
+  private readonly _registry: Registry.Registry;
+  private readonly _selected: Atom.Writable<Set<string>>;
 
-  get value(): string[] {
-    return Array.from(this._registry.get(this._atom).values());
+  constructor(private readonly _singleSelect: boolean = false) {
+    this._registry = Registry.make();
+    this._selected = Atom.make<Set<string>>(new Set<string>());
+  }
+
+  /**
+   * Returns the selected IDs atom for subscription.
+   */
+  get selected(): Atom.Atom<Set<string>> {
+    return this._selected;
+  }
+
+  /**
+   * Gets the current selected IDs as a Set.
+   */
+  getSelected(): Set<string> {
+    return this._registry.get(this._selected);
+  }
+
+  /**
+   * Gets the current selected IDs as an array.
+   */
+  getSelectedIds(): string[] {
+    return Array.from(this._registry.get(this._selected).values());
   }
 
   /**
@@ -24,40 +44,24 @@ export class SelectedIdsAccessor {
    */
   subscribe(cb: (selected: Set<string>) => void): () => void {
     // Prime the atom by reading before subscribing.
-    this._registry.get(this._atom);
+    this._registry.get(this._selected);
 
-    return this._registry.subscribe(this._atom, () => {
-      cb(this._registry.get(this._atom));
+    return this._registry.subscribe(this._selected, () => {
+      cb(this._registry.get(this._selected));
     });
-  }
-}
-
-/**
- * Reactive selection model.
- */
-export class SelectionModel {
-  private readonly _registry: Registry.Registry;
-  private readonly _selected: Atom.Writable<Set<string>>;
-  private readonly _selectedAccessor: SelectedIdsAccessor;
-
-  constructor(private readonly _singleSelect: boolean = false) {
-    this._registry = Registry.make();
-    this._selected = Atom.make<Set<string>>(new Set<string>());
-    this._selectedAccessor = new SelectedIdsAccessor(this._registry, this._selected);
   }
 
   toJSON(): { selected: string[] } {
     return {
-      selected: Array.from(this._registry.get(this._selected).values()),
+      selected: this.getSelectedIds(),
     };
   }
 
-  get size(): number {
+  /**
+   * Gets the current selection size.
+   */
+  getSize(): number {
     return this._registry.get(this._selected).size;
-  }
-
-  get selected(): SelectedIdsAccessor {
-    return this._selectedAccessor;
   }
 
   contains(id: string): boolean {

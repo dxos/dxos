@@ -17,8 +17,8 @@ export const useSelection = (graph?: CanvasGraphModel): [SelectionModel, Shape |
       return;
     }
 
-    return selection.selected.subscribe((selected) => {
-      if (selection.size) {
+    return selection.subscribe((selected) => {
+      if (selection.getSize()) {
         // Selection included nodes and edges.
         for (const id of Array.from(selected.values())) {
           const node = graph.findNode(id);

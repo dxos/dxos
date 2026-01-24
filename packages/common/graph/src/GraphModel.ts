@@ -268,6 +268,9 @@ export type Subscription = <Node extends Graph.Node.Any = Graph.Node.Any, Edge e
 /**
  * Basic reactive model using Effect Atoms.
  */
+// NOTE: Unlike Preact Signals' `live()` which uses proxies for transparent reactivity,
+// Effect Atom requires explicit `registry.set()` calls. All mutation methods must be
+// overridden to update the atom immutably rather than mutating `_graph` directly.
 export class ReactiveGraphModel<
   Node extends Graph.Node.Any = Graph.Node.Any,
   Edge extends Graph.Edge.Any = Graph.Edge.Any,
