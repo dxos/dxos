@@ -150,7 +150,7 @@ const useObjectProperty = <T extends Entity.Unknown, K extends keyof T>(
  * @param refs - Array of Refs to dereference and subscribe to
  * @returns Array of loaded target snapshots (excludes unloaded refs)
  */
-export const useObjects = <T extends Entity.Unknown>(refs: Ref.Ref<T>[]): Readonly<T>[] => {
+export const useObjects = <T extends Entity.Unknown>(refs: readonly Ref.Ref<T>[]): Readonly<T>[] => {
   // Track version to trigger re-renders when any ref or target changes.
   const [, setVersion] = useState(0);
 
