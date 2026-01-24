@@ -2,17 +2,15 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { Fragment } from 'react';
+import React from 'react';
 
-import { Avatar, Icon } from '@dxos/react-ui';
+import { Avatar } from '@dxos/react-ui';
 import { Card } from '@dxos/react-ui-mosaic';
 import { type Person } from '@dxos/types';
-import { mx } from '@dxos/ui-theme';
 
-import { gridRow } from '../components';
 import { type CardPreviewProps } from '../types';
 
-export const PersonCard = ({ children, role, subject, db, onSelect }: CardPreviewProps<Person.Person>) => {
+export const PersonCard = ({ children, role, subject, onSelect }: CardPreviewProps<Person.Person>) => {
   const { fullName, image, organization: { target: organization } = {}, emails = [] } = subject;
 
   return (
@@ -23,21 +21,26 @@ export const PersonCard = ({ children, role, subject, db, onSelect }: CardPrevie
         </div>
       </Card.Row> */}
       <Avatar.Root>
-        <Card.Row>
+        <Card.Toolbar>
+          <Card.Icon toolbar icon='ph--user--regular' />
           <Avatar.Label asChild>
             <h2 className='grow truncate'>{fullName}</h2>
           </Avatar.Label>
-        </Card.Row>
-        <Card.Row>
-          <Avatar.Content
-            imgSrc={image}
-            icon='ph--user--regular'
-            size={16}
-            classNames={['text-subdued', !image && 'opacity-50']}
-            hue='neutral'
-            variant='square'
-          />
-        </Card.Row>
+          {/* TODO(burdon): Menu. */}
+          <Card.Close onClose={() => {}} />
+        </Card.Toolbar>
+        {image && (
+          <Card.Row className='plb-1'>
+            <Avatar.Content
+              imgSrc={image}
+              icon='ph--user--regular'
+              size={16}
+              classNames={!image && 'opacity-50'}
+              hue='neutral'
+              variant='square'
+            />
+          </Card.Row>
+        )}
       </Avatar.Root>
       {organization?.name && (
         <Card.Action
@@ -46,21 +49,13 @@ export const PersonCard = ({ children, role, subject, db, onSelect }: CardPrevie
           onClick={onSelect ? () => onSelect(organization) : undefined}
         />
       )}
-      {emails.length > 0 && (
-        <dl className={mx(gridRow, '[&_dt]:text-subdued [&_dt]:pbs-0.5 [&_dd]:min-is-0')}>
-          {emails.map(({ label, value }) => (
-            <Fragment key={value}>
-              <dt>
-                <span className='sr-only'>{label}</span>
-                <Icon icon='ph--at--regular' size={5} />
-              </dt>
-              <dd key={value} className='col-span-2 break-words'>
-                {value}
-              </dd>
-            </Fragment>
-          ))}
-        </dl>
-      )}
+      {emails.map(({ value }) => (
+        <Card.Row key={value} icon='ph--at--regular'>
+          <Card.Text truncate className='text-primaryText'>
+            {value}
+          </Card.Text>
+        </Card.Row>
+      ))}
       {children}
     </Card.Root>
   );

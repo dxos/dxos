@@ -8,13 +8,13 @@ import React, { type PropsWithChildren } from 'react';
 import { Icon, Popover } from '@dxos/react-ui';
 import { ResizeHandle, type Size, resizeAttributes, sizeStyle } from '@dxos/react-ui-dnd';
 
-import { Card } from '../components';
-
 // Sizes in rem
 
-const DEFAULT_INLINE_SIZE = 24;
-const MIN_INLINE_SIZE = 8;
-const DEFAULT_BLOCK_SIZE = 24;
+// TODO(burdon): From theme.
+const DEFAULT_INLINE_SIZE = 22;
+const MIN_INLINE_SIZE = 18;
+
+const DEFAULT_BLOCK_SIZE = 22;
 const MIN_BLOCK_SIZE = 8;
 
 //
@@ -29,25 +29,16 @@ export const CardContainer = ({
   switch (role) {
     case 'card--popover':
       return <PopoverCardContainer icon={icon}>{children}</PopoverCardContainer>;
-
     case 'card--extrinsic':
-      return (
-        <ExtrinsicCardContainer>
-          <Card.Root>{children}</Card.Root>
-        </ExtrinsicCardContainer>
-      );
-
+      return <ExtrinsicCardContainer>{children}</ExtrinsicCardContainer>;
     case 'card--intrinsic':
-      return (
-        <IntrinsicCardContainer>
-          <Card.Root>{children}</Card.Root>
-        </IntrinsicCardContainer>
-      );
-
+      return <IntrinsicCardContainer>{children}</IntrinsicCardContainer>;
     default:
-      return <Card.Root>{children}</Card.Root>;
+      return children;
   }
 };
+
+const border = 'relative border border-dashed border-subduedSeparator p-4 rounded-lg overflow-x-auto';
 
 //
 // Popover
@@ -59,53 +50,13 @@ export const PopoverCardContainer = ({ children, icon = 'ph--placeholder--regula
   return (
     <Popover.Root open>
       <Popover.Content onOpenAutoFocus={(event) => event.preventDefault()}>
-        <Popover.Viewport>{children}</Popover.Viewport>
+        <Popover.Viewport classNames='popover-card-width'>{children}</Popover.Viewport>
         <Popover.Arrow />
       </Popover.Content>
-      <Popover.Trigger>
+      <Popover.Trigger asChild>
         <Icon icon={icon} size={5} />
       </Popover.Trigger>
     </Popover.Root>
-  );
-};
-
-//
-// Intrinsic card container (size constrained by card).
-//
-
-export type IntrinsicCardContainerProps = PropsWithChildren<{
-  defaultSize?: Size;
-  size?: Size;
-  onSizeChange?: (size: Size, commit?: boolean) => void;
-}>;
-
-export const IntrinsicCardContainer = ({
-  children,
-  defaultSize,
-  size: propSize,
-  onSizeChange,
-}: IntrinsicCardContainerProps) => {
-  const [size = DEFAULT_BLOCK_SIZE, setSize] = useControllableState<Size>({
-    prop: propSize,
-    defaultProp: defaultSize,
-    onChange: onSizeChange,
-  });
-
-  return (
-    <div
-      className='relative border border-dashed border-subduedSeparator p-4 rounded-lg'
-      style={sizeStyle(size, 'horizontal')}
-      {...resizeAttributes}
-    >
-      {children}
-      <ResizeHandle
-        side='inline-end'
-        fallbackSize={DEFAULT_BLOCK_SIZE}
-        minSize={MIN_BLOCK_SIZE}
-        size={size}
-        onSizeChange={setSize}
-      />
-    </div>
   );
 };
 
@@ -145,7 +96,7 @@ export const ExtrinsicCardContainer = ({
 
   return (
     <div
-      className='grid relative border border-dashed border-subduedSeparator p-4 rounded-lg overflow-hidden contain-layout'
+      className={border}
       style={{
         ...sizeStyle(inlineSize, 'horizontal'),
         ...sizeStyle(blockSize, 'vertical'),
@@ -166,6 +117,42 @@ export const ExtrinsicCardContainer = ({
         minSize={MIN_BLOCK_SIZE}
         size={blockSize}
         onSizeChange={setBlockSize}
+      />
+    </div>
+  );
+};
+
+//
+// Intrinsic card container (size constrained by card).
+//
+
+export type IntrinsicCardContainerProps = PropsWithChildren<{
+  defaultSize?: Size;
+  size?: Size;
+  onSizeChange?: (size: Size, commit?: boolean) => void;
+}>;
+
+export const IntrinsicCardContainer = ({
+  children,
+  defaultSize,
+  size: propSize,
+  onSizeChange,
+}: IntrinsicCardContainerProps) => {
+  const [size = DEFAULT_BLOCK_SIZE, setSize] = useControllableState<Size>({
+    prop: propSize,
+    defaultProp: defaultSize,
+    onChange: onSizeChange,
+  });
+
+  return (
+    <div className={border} style={sizeStyle(size, 'horizontal')} {...resizeAttributes}>
+      {children}
+      <ResizeHandle
+        side='inline-end'
+        fallbackSize={DEFAULT_BLOCK_SIZE}
+        minSize={MIN_BLOCK_SIZE}
+        size={size}
+        onSizeChange={setSize}
       />
     </div>
   );

@@ -11,7 +11,7 @@ import { useOperationInvoker } from '@dxos/app-framework/react';
 import { runAndForwardErrors } from '@dxos/effect';
 import { Dialog, IconButton, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
-import { cardDialogContent, cardDialogHeader } from '@dxos/react-ui-mosaic';
+import { dialogStyles } from '@dxos/react-ui-mosaic';
 
 import { useInputSurfaceLookup } from '../../hooks';
 import { meta } from '../../meta';
@@ -48,8 +48,8 @@ export const CreateSpaceDialog = () => {
   return (
     // TODO(wittjosiah): The tablist dialog pattern is copied from @dxos/plugin-manager.
     //  Consider factoring it out to the tabs package.
-    <Dialog.Content classNames={cardDialogContent}>
-      <div role='none' className={cardDialogHeader}>
+    <Dialog.Content classNames={dialogStyles.content}>
+      <div role='none' className={dialogStyles.header}>
         <Dialog.Title>{t('create space dialog title')}</Dialog.Title>
         <Dialog.Close asChild>
           <IconButton

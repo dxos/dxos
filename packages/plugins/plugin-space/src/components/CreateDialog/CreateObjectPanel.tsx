@@ -11,7 +11,7 @@ import { type AnyProperties, type TypeAnnotation, getTypeAnnotation } from '@dxo
 import { type Space, type SpaceId } from '@dxos/react-client/echo';
 import { toLocalizedString, useDefaultValue, useTranslation } from '@dxos/react-ui';
 import { Form, omitId } from '@dxos/react-ui-form';
-import { cardDialogOverflow, cardDialogPaddedOverflow, cardDialogSearchListRoot } from '@dxos/react-ui-mosaic';
+import { dialogStyles } from '@dxos/react-ui-mosaic';
 import { SearchList, useSearchListResults } from '@dxos/react-ui-searchlist';
 import { type Collection, ViewAnnotation } from '@dxos/schema';
 import { type MaybePromise, isNonNullable } from '@dxos/util';
@@ -168,13 +168,13 @@ const SelectSpace = ({
   });
 
   return (
-    <SearchList.Root label={t('space input label')} onSearch={handleSearch} classNames={cardDialogSearchListRoot}>
+    <SearchList.Root label={t('space input label')} onSearch={handleSearch} classNames={dialogStyles.searchListRoot}>
       <SearchList.Input
         autoFocus
         data-testid='create-object-form.space-input'
         placeholder={t('space input placeholder')}
       />
-      <SearchList.Content classNames={[cardDialogOverflow, 'plb-cardSpacingBlock']}>
+      <SearchList.Content classNames={dialogStyles.paddedOverflow}>
         <SearchList.Viewport>
           {results.map((space) => (
             <SearchList.Item
@@ -216,13 +216,13 @@ const SelectSchema = ({
   });
 
   return (
-    <SearchList.Root label={t('schema input label')} onSearch={handleSearch} classNames={cardDialogSearchListRoot}>
+    <SearchList.Root label={t('schema input label')} onSearch={handleSearch} classNames={dialogStyles.searchListRoot}>
       <SearchList.Input
         autoFocus
         data-testid='create-object-form.schema-input'
         placeholder={t('schema input placeholder')}
       />
-      <SearchList.Content classNames={cardDialogPaddedOverflow}>
+      <SearchList.Content classNames={dialogStyles.paddedOverflow}>
         <SearchList.Viewport>
           {results.map((option) => (
             <SearchList.Item

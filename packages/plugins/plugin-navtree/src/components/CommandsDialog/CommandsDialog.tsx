@@ -10,12 +10,7 @@ import { Keyboard, keySymbols } from '@dxos/keyboard';
 import { Graph, Node, useActionRunner } from '@dxos/plugin-graph';
 import { useActions } from '@dxos/plugin-graph';
 import { Button, Dialog, toLocalizedString, useTranslation } from '@dxos/react-ui';
-import {
-  cardDialogContent,
-  cardDialogHeader,
-  cardDialogPaddedOverflow,
-  cardDialogSearchListRoot,
-} from '@dxos/react-ui-mosaic';
+import { dialogStyles } from '@dxos/react-ui-mosaic';
 import { SearchList, useSearchListResults } from '@dxos/react-ui-searchlist';
 import { osTranslations } from '@dxos/ui-theme';
 import { getHostPlatform } from '@dxos/util';
@@ -74,16 +69,15 @@ export const CommandsDialogContent = forwardRef<HTMLDivElement, CommandsDialogCo
     });
 
     return (
-      <Dialog.Content classNames={cardDialogContent} ref={forwardedRef}>
-        <Dialog.Title classNames={cardDialogHeader}>{t('commands dialog title', { ns: meta.id })}</Dialog.Title>
-
+      <Dialog.Content classNames={dialogStyles.content} ref={forwardedRef}>
+        <Dialog.Title classNames={dialogStyles.header}>{t('commands dialog title', { ns: meta.id })}</Dialog.Title>
         <SearchList.Root
           label={t('command list input placeholder')}
           onSearch={handleSearch}
-          classNames={cardDialogSearchListRoot}
+          classNames={dialogStyles.searchListRoot}
         >
           <SearchList.Input placeholder={t('command list input placeholder')} />
-          <SearchList.Content classNames={cardDialogPaddedOverflow}>
+          <SearchList.Content classNames={dialogStyles.paddedOverflow}>
             <SearchList.Viewport>
               {results.map((action) => {
                 const shortcut =

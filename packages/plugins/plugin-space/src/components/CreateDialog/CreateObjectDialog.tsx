@@ -15,7 +15,7 @@ import { Operation } from '@dxos/operation';
 import { useClient } from '@dxos/react-client';
 import { isLiveObject, useSpaces } from '@dxos/react-client/echo';
 import { Dialog, IconButton, useTranslation } from '@dxos/react-ui';
-import { cardDialogContent, cardDialogHeader } from '@dxos/react-ui-mosaic';
+import { dialogStyles } from '@dxos/react-ui-mosaic';
 import { type Collection } from '@dxos/schema';
 
 import { meta } from '../../meta';
@@ -115,8 +115,8 @@ export const CreateObjectDialog = ({
   return (
     // TODO(wittjosiah): The tablist dialog pattern is copied from @dxos/plugin-manager.
     //  Consider factoring it out to the tabs package.
-    <Dialog.Content classNames={cardDialogContent}>
-      <div role='none' className={cardDialogHeader}>
+    <Dialog.Content classNames={dialogStyles.content}>
+      <div role='none' className={dialogStyles.header}>
         <Dialog.Title>
           {t('create object dialog title', {
             object: t('typename label', {

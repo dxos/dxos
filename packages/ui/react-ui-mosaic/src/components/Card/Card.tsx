@@ -44,17 +44,17 @@ type CardSharedProps = ThemedClassName<ComponentPropsWithoutRef<'div'>> & {
 
 type CardRootProps = CardSharedProps & { id?: string };
 
-// TODO(burdon): Option without drag handle (i.e., grid).
 const CardRoot = forwardRef<HTMLDivElement, CardRootProps>(
   ({ children, classNames, className, id, asChild, role = 'group', ...props }, forwardedRef) => {
     const Root = asChild ? Slot : 'div';
 
+    // TODO(burdon): Option for drag handle (via surface).
     // TODO(burdon): Document (see app-framework, and ui-theme size.css, length.ts)
     const roleClassNames: Record<string, ClassNameValue> = {
-      'card--extrinsic': 'contents',
-      'card--intrinsic': 'is-full min-is-cardMinWidth max-is-cardMaxWidth',
-      'card--popover': 'is-full popover-card-width',
-      'card--transclusion': ['is-full mlb-1', hoverableControls],
+      'card--popover': 'contents',
+      'card--extrinsic': 'is-full min-is-cardMinWidth',
+      'card--intrinsic': 'is-cardDefaultWidth',
+      'card--transclusion': ['is-full mlb-1', hoverableControls], // TODO(burdon): Why hoverableControls?
     };
 
     return (
@@ -95,7 +95,7 @@ type CardDragHandleProps = {};
 const CardDragHandle = forwardRef<HTMLButtonElement, CardDragHandleProps>((_, forwardedRef) => {
   const { t } = useTranslation(translationKey);
   if (!forwardedRef) {
-    return <CardIcon classNames='text-subdued' icon='ph--square--regular' />;
+    return <CardIcon classNames='text-subdued' toolbar icon='ph--square--regular' />;
   }
 
   return (
@@ -106,6 +106,7 @@ const CardDragHandle = forwardRef<HTMLButtonElement, CardDragHandleProps>((_, fo
       variant='ghost'
       label={t('drag handle label')}
       classNames='cursor-pointer'
+      size={5}
       ref={forwardedRef}
     />
   );
@@ -127,6 +128,7 @@ const CardClose = forwardRef<HTMLButtonElement, CardCloseProps>(({ onClose }, fo
       variant='ghost'
       label={t('card close label')}
       classNames='cursor-pointer'
+      size={5}
       onClick={onClose}
       ref={forwardedRef}
     />
@@ -240,10 +242,13 @@ const CardHeading = forwardRef<HTMLDivElement, CardHeadingProps>(
 // Text
 //
 
-type CardTextProps = CardSharedProps & { variant?: 'default' | 'description' };
+type CardTextProps = CardSharedProps & { truncate?: boolean; variant?: 'default' | 'description' };
 
 const CardText = forwardRef<HTMLDivElement, CardTextProps>(
-  ({ children, classNames, className, asChild, role = 'none', variant = 'default', ...props }, forwardedRef) => {
+  (
+    { children, classNames, className, asChild, role = 'none', truncate, variant = 'default', ...props },
+    forwardedRef,
+  ) => {
     const Root = asChild ? Slot : 'div';
     // NOTE: Padding align first line of text with center of icon.
     const variantClassNames: Record<string, { root: string; span?: string }> = {
@@ -260,10 +265,10 @@ const CardText = forwardRef<HTMLDivElement, CardTextProps>(
       <Root
         {...props}
         role={role}
-        className={mx(variantClassNames[variant].root, classNames, className)}
+        className={mx('flex overflow-hidden', variantClassNames[variant].root, classNames, className)}
         ref={forwardedRef}
       >
-        <span className={variantClassNames[variant].span}>{children}</span>
+        <span className={mx(variantClassNames[variant].span, truncate && 'truncate')}>{children}</span>
       </Root>
     );
   },
@@ -284,7 +289,7 @@ const CardPoster = (props: CardPosterProps) => {
   const aspect = props.aspect === 'auto' ? 'aspect-auto' : 'aspect-video';
   if (props.image) {
     return (
-      <div role='none' className='col-span-3 mbe-1'>
+      <div role='none' className='mbe-1'>
         <Image classNames={[`dx-card__poster`, aspect, props.classNames]} src={props.image} alt={props.alt} />
       </div>
     );
@@ -311,10 +316,14 @@ type CardActionProps = { icon?: string; label: string; actionIcon?: string; onCl
 
 const CardAction = ({ icon, actionIcon = 'ph--arrow-right--regular', label, onClick }: CardActionProps) => {
   return (
-    <div role='none' className='is-full col-span-3 pli-1'>
-      <Button variant='ghost' classNames={mx(styles.grid_3, '!p-0 is-full text-start')} onClick={onClick}>
-        {(icon && <CardIcon classNames='text-subdued' icon={icon} />) || <div />}
-        <span className={mx('min-is-0 flex-1 truncate', !onClick && 'col-span-2')}>{label}</span>
+    <div role='none' className='is-full pli-1'>
+      <Button
+        variant='ghost'
+        classNames={mx(styles.grid_3, '!p-0 is-full text-start overflow-hidden')}
+        onClick={onClick}
+      >
+        {icon ? <CardIcon classNames='text-subdued' icon={icon} /> : <div />}
+        <span className={mx('min-is-0 flex-1 truncate', !actionIcon && 'col-span-2')}>{label}</span>
         {actionIcon && <CardIcon icon={actionIcon} />}
       </Button>
     </div>
@@ -349,10 +358,10 @@ const CardLink = ({ label, href }: CardLinkProps) => {
 // Icon
 //
 
-const CardIcon = (props: IconProps) => {
+const CardIcon = ({ toolbar, ...props }: IconProps & { toolbar?: boolean }) => {
   return (
     <div role='none' className='grid bs-[var(--rail-item)] is-[var(--rail-item)] place-items-center'>
-      <Icon {...props} />
+      <Icon {...props} size={toolbar ? 5 : 4} />
     </div>
   );
 };
@@ -373,6 +382,7 @@ export const Card = {
   Title: CardTitle,
   Close: CardClose,
   Menu: CardMenu,
+  Icon: CardIcon,
 
   // Content
   Row: CardRow,

@@ -6,6 +6,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useRef } from 'react';
 
 import { faker } from '@dxos/random';
+import { Icon } from '@dxos/react-ui';
 import { withTheme } from '@dxos/react-ui/testing';
 
 import { Card } from './Card';
@@ -14,7 +15,7 @@ faker.seed(0);
 
 type CardStoryProps = {
   title: string;
-  description: string;
+  description?: string;
   image?: string;
 };
 
@@ -73,16 +74,64 @@ export const Default: Story = {
   },
 };
 
+export const Simple: Story = {
+  args: {
+    title: faker.commerce.productName(),
+  },
+  render: ({ title }) => {
+    const handleRef = useRef<HTMLButtonElement>(null);
+    return (
+      <Card.Root role='card--intrinsic'>
+        <Card.Toolbar>
+          <Card.DragHandle ref={handleRef} />
+          <Card.Title>{title}</Card.Title>
+          <Card.Close onClose={() => console.log('close')} />
+        </Card.Toolbar>
+      </Card.Root>
+    );
+  },
+};
+
+export const Description: Story = {
+  args: {
+    title: faker.commerce.productName(),
+    description: faker.lorem.paragraph(3),
+  },
+  render: ({ title, description }) => {
+    const handleRef = useRef<HTMLButtonElement>(null);
+    return (
+      <Card.Root role='card--intrinsic'>
+        <Card.Toolbar>
+          <Card.DragHandle ref={handleRef} />
+          <Card.Title>{title}</Card.Title>
+          <Card.Close onClose={() => console.log('close')} />
+        </Card.Toolbar>
+        <Card.Row>
+          <Card.Text variant='description'>{description}</Card.Text>
+        </Card.Row>
+      </Card.Root>
+    );
+  },
+};
+
 export const Mock = () => (
   <div className='grid grid-cols-[2rem_1fr_2rem] is-cardMinWidth border border-separator rounded-sm'>
     <div className='grid grid-cols-subgrid col-span-full'>
-      <div className='p-1'>A</div>
-      <div className='p-1 truncate text-description'>This line is very very long and it should wrap.</div>
-      <div className='p-1'>B</div>
+      <div role='none' className='grid bs-[var(--rail-item)] is-[var(--rail-item)] place-items-center'>
+        <Icon icon='ph--dots-six-vertical--regular' />
+      </div>
+      <div className='p-1 truncate text-description items-center'>This line is very very long and it should wrap.</div>
+      <div role='none' className='grid bs-[var(--rail-item)] is-[var(--rail-item)] place-items-center'>
+        <Icon icon='ph--x--regular' />
+      </div>
     </div>
     <div className='grid grid-cols-subgrid col-span-3'>
-      <div className='p-1'>A</div>
-      <div className='p-1 truncate text-description col-span-2'>This line is very very long and it should wrap.</div>
+      <div role='none' className='grid bs-[var(--rail-item)] is-[var(--rail-item)] place-items-center'>
+        <Icon icon='ph--dots-six-vertical--regular' />
+      </div>
+      <div className='p-1 text-description items-center col-span-2'>
+        This line is very very long and it should wrap.
+      </div>
     </div>
   </div>
 );

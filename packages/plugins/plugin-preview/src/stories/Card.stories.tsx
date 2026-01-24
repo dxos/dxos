@@ -8,19 +8,21 @@ import { withPluginManager } from '@dxos/app-framework/testing';
 import { corePlugins } from '@dxos/plugin-testing';
 import { faker } from '@dxos/random';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
+import { Organization, Person, Project, Task } from '@dxos/types';
 
+import { OrganizationCard, PersonCard, ProjectCard, TaskCard } from '../cards';
 import { translations } from '../translations';
 
-import { Defaultstory, createCards } from './testing';
+import { DefaultStory, createObject } from './testing';
 
 faker.seed(999);
 
 const meta = {
   title: 'plugins/plugin-preview/Card',
-  render: Defaultstory,
+  render: DefaultStory,
   decorators: [
     withTheme,
-    withLayout({ layout: 'fullscreen' }),
+    withLayout({ layout: 'column', scroll: true }),
     withPluginManager({
       plugins: [...corePlugins()],
     }),
@@ -30,36 +32,40 @@ const meta = {
     layout: 'fullscreen',
   },
   tags: ['cards'],
-} satisfies Meta<typeof Defaultstory>;
+} satisfies Meta<typeof DefaultStory>;
 
 export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-export const Popover: Story = {
+export const _Person: Story = {
   args: {
-    role: 'card--popover',
-    cards: createCards(),
+    Component: PersonCard,
+    object: createObject(Person.Person),
+    image: true,
   },
 };
 
-export const Intrinsic: Story = {
+export const _Organization: Story = {
   args: {
-    role: 'card--intrinsic',
-    cards: createCards(),
+    Component: OrganizationCard,
+    object: createObject(Organization.Organization),
+    image: true,
   },
 };
 
-export const Extrinsic: Story = {
+export const _Project: Story = {
   args: {
-    role: 'card--extrinsic',
-    cards: createCards(),
+    Component: ProjectCard,
+    object: createObject(Project.Project),
+    image: true,
   },
 };
 
-export const ExtrinsicNoImage: Story = {
+export const _Task: Story = {
   args: {
-    role: 'card--extrinsic',
-    cards: createCards(false),
+    Component: TaskCard,
+    object: createObject(Task.Task),
+    image: true,
   },
 };

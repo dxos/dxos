@@ -2,15 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-// TODO(burdon): Remove exports.
-export {
-  cardDialogContent,
-  cardDialogHeader,
-  cardDialogOverflow,
-  cardDialogPaddedOverflow,
-  cardDialogSearchListRoot,
-  styles as cardStyles,
-} from './styles';
+export { styles as cardStyles, dialogStyles } from './styles';
 
 export * from './Card';
 export * from './CardDragPreview';
