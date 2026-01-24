@@ -2,8 +2,9 @@
 // Copyright 2025 DXOS.org
 //
 
-import type * as Response from '@effect/ai/Response';
+import * as Response from '@effect/ai/Response';
 import type * as Tool from '@effect/ai/Tool';
+import type * as Toolkit from '@effect/ai/Toolkit';
 import * as Effect from 'effect/Effect';
 import * as Function from 'effect/Function';
 import * as Option from 'effect/Option';
@@ -252,44 +253,38 @@ export const parseResponse =
               }
 
               case 'tool-params-start': {
-                // NOTE: Effect-ai outputs both streamed and parsed tool calls. We ignore the streamed version for now.
-                // invariant(!block);
-                // block = {
-                //   _tag: 'toolCall',
-                //   toolCallId: part.id,
-                //   name: part.name,
-                //   input: '',
-                //   pending: true,
-                //   providerExecuted: part.providerExecuted,
-                // } satisfies ContentBlock.ToolCall;
-                // yield* onBlock(block);
+                invariant(!block);
+                block = {
+                  _tag: 'toolCall',
+                  toolCallId: part.id,
+                  name: part.name,
+                  input: '',
+                  pending: true,
+                  providerExecuted: part.providerExecuted,
+                } satisfies ContentBlock.ToolCall;
+                yield* emitPartialContentBlock(block);
                 break;
               }
 
               case 'tool-params-delta': {
-                // invariant(block?._tag === 'toolCall');
-                // block.input += part.delta;
-                // yield* onBlock(block);
+                invariant(block?._tag === 'toolCall');
+                block.input += part.delta;
+                yield* emitPartialContentBlock(block);
                 break;
               }
 
               case 'tool-params-end': {
-                // invariant(block?._tag === 'toolCall');
-                // block.pending = false;
-                // yield* emitFullBlock(block);
-                // block = undefined;
+                invariant(block?._tag === 'toolCall');
+                block.pending = false;
+                yield* emitFullBlock(block);
+                toolCalls++;
+                block = undefined;
                 break;
               }
 
               case 'tool-call': {
-                yield* emitFullBlock({
-                  _tag: 'toolCall',
-                  toolCallId: part.id,
-                  name: part.name,
-                  input: JSON.stringify(part.params),
-                  providerExecuted: part.providerExecuted,
-                } satisfies ContentBlock.ToolCall);
-                toolCalls++;
+                // NOTE: Tool calls are handled via tool-params-start/delta/end streaming parts.
+                // This event is still emitted by Effect-ai but we ignore it.
                 break;
               }
 

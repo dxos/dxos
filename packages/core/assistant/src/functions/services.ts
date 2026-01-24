@@ -12,10 +12,12 @@ import * as Schema from 'effect/Schema';
 
 import { AiToolNotFoundError, ToolExecutionService, ToolResolverService } from '@dxos/ai';
 import { todo } from '@dxos/debug';
-import { Query } from '@dxos/echo';
+import { Query, Ref, Type } from '@dxos/echo';
 import { Database } from '@dxos/echo';
 import { Function, FunctionDefinition, FunctionInvocationService } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
+import * as SchemaAST from 'effect/SchemaAST';
+import { RefFromLLM } from '../types';
 
 /**
  * Constructs a `ToolResolverService` whose `resolve(id)` looks up tools in the following order:
@@ -148,12 +150,26 @@ const makeToolName = (name: string) => {
 const createStructFieldsFromSchema = (schema: Schema.Schema<any, any>): Record<string, Schema.Schema<any, any>> => {
   switch (schema.ast._tag) {
     case 'TypeLiteral':
-      return Object.fromEntries(schema.ast.propertySignatures.map((prop) => [prop.name, Schema.make(prop.type)]));
+      return Object.fromEntries(
+        schema.ast.propertySignatures.map((prop) => [prop.name, Schema.make(mapSchemaTypeForLLM(prop.type))]),
+      );
     case 'VoidKeyword':
       return {};
     default:
       return todo(`Unsupported schema AST: ${schema.ast._tag}`);
   }
+};
+
+/**
+ * Picks an LLM-friendly schema type for the given schema AST.
+ * The picked schema type decodes to the original schema type.
+ */
+const mapSchemaTypeForLLM = (ast: SchemaAST.AST): SchemaAST.AST => {
+  if (Type.Ref.isRefSchemaAST(ast)) {
+    return RefFromLLM.ast;
+  }
+
+  return ast;
 };
 
 const isHandlerLike = (value: unknown): value is Toolkit.WithHandler<Record<string, Tool.Any>> => {
