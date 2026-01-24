@@ -175,9 +175,6 @@
       "path": "packages/core/echo/echo-react/tsconfig.json"
     },
     {
-      "path": "packages/core/echo/echo-signals/tsconfig.json"
-    },
-    {
       "path": "packages/core/echo/echo-solid/tsconfig.json"
     },
     {

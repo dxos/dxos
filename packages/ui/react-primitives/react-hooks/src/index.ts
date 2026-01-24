@@ -17,7 +17,6 @@ export * from './useMediaQuery';
 export * from './useMulticastObservable';
 export * from './useRefCallback';
 export * from './useViewportResize';
-export * from './useSignals';
 export * from './useTimeout';
 export * from './useTransitions';
 

@@ -70,6 +70,9 @@
       "path": "../../core/echo/echo-db"
     },
     {
+      "path": "../../core/echo/echo-react"
+    },
+    {
       "path": "../../core/echo/live-object"
     },
     {

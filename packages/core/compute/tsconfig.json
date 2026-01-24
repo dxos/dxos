@@ -64,9 +64,6 @@
       "path": "../echo/echo-db"
     },
     {
-      "path": "../echo/echo-signals"
-    },
-    {
       "path": "../echo/live-object"
     },
     {

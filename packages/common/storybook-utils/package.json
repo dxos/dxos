@@ -25,7 +25,6 @@
     "src"
   ],
   "dependencies": {
-    "@dxos/echo-signals": "workspace:*",
     "@dxos/lit-theme-editor": "workspace:*",
     "@dxos/lit-ui": "workspace:*",
     "@dxos/log": "workspace:*",

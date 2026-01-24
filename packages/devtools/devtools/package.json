@@ -65,7 +65,6 @@
     "@dxos/tracing": "workspace:*",
     "@dxos/util": "workspace:*",
     "@effect/platform": "catalog:",
-    "@preact-signals/safe-react": "catalog:",
     "@radix-ui/react-tabs": "catalog:",
     "@robloche/chartjs-plugin-streaming": "catalog:",
     "@types/bytes": "catalog:",

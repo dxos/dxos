@@ -91,7 +91,6 @@
     "@dxos/config": "workspace:*",
     "@dxos/echo": "workspace:*",
     "@dxos/echo-atom": "workspace:*",
-    "@dxos/echo-signals": "workspace:*",
     "@dxos/keyboard": "workspace:*",
     "@dxos/random": "workspace:*",
     "@dxos/react-client": "workspace:*",

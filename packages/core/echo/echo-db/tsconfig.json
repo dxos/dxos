@@ -76,9 +76,6 @@
       "path": "../echo-protocol"
     },
     {
-      "path": "../echo-signals"
-    },
-    {
       "path": "../feed"
     },
     {

@@ -38,18 +38,13 @@
     "@dxos/async": "workspace:*",
     "@dxos/debug": "workspace:*",
     "@dxos/echo-protocol": "workspace:*",
-    "@dxos/echo-signals": "workspace:*",
     "@dxos/effect": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/keys": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/node-std": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@preact/signals-core": "catalog:",
     "effect": "catalog:"
-  },
-  "devDependencies": {
-    "@preact/signals-core": "catalog:"
   },
   "publishConfig": {
     "access": "public"

@@ -27,7 +27,6 @@
   "dependencies": {
     "@dxos/async": "workspace:*",
     "@dxos/log": "workspace:*",
-    "@preact/signals-react": "catalog:",
     "@radix-ui/react-id": "catalog:",
     "alea": "catalog:",
     "lodash.defaultsdeep": "catalog:",

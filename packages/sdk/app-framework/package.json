@@ -115,7 +115,6 @@
   },
   "devDependencies": {
     "@dxos/echo-db": "workspace:*",
-    "@dxos/echo-signals": "workspace:*",
     "@dxos/random": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-syntax-highlighter": "workspace:*",

@@ -88,7 +88,6 @@
     "@automerge/automerge-repo-network-broadcastchannel": "catalog:",
     "@dxos/config": "workspace:*",
     "@dxos/echo": "workspace:*",
-    "@dxos/echo-signals": "workspace:*",
     "@dxos/keyboard": "workspace:*",
     "@dxos/random": "workspace:*",
     "@dxos/schema": "workspace:*",

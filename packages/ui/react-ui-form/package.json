@@ -57,7 +57,6 @@
     "tabster": "catalog:"
   },
   "devDependencies": {
-    "@dxos/echo-signals": "workspace:*",
     "@dxos/random": "workspace:*",
     "@dxos/react-client": "workspace:*",
     "@dxos/react-ui": "workspace:*",

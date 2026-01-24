@@ -61,7 +61,6 @@
     "@octokit/rest": "catalog:",
     "@phosphor-icons/core": "catalog:",
     "@playwright/test": "catalog:",
-    "@preact-signals/safe-react": "catalog:",
     "@rollup/plugin-inject": "catalog:",
     "@rushstack/eslint-patch": "catalog:",
     "@swc/core": "catalog:",

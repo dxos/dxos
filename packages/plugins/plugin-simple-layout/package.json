@@ -39,7 +39,6 @@
     "@radix-ui/react-context": "catalog:"
   },
   "devDependencies": {
-    "@dxos/echo-signals": "workspace:*",
     "@dxos/plugin-client": "workspace:*",
     "@dxos/plugin-search": "workspace:*",
     "@dxos/plugin-space": "workspace:*",

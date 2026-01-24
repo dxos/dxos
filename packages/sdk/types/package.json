@@ -55,7 +55,6 @@
     "jsonpath": "catalog:"
   },
   "devDependencies": {
-    "@dxos/echo-signals": "workspace:*",
     "@dxos/react-client": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-syntax-highlighter": "workspace:*",

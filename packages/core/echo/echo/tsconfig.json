@@ -46,9 +46,6 @@
       "path": "../echo-protocol"
     },
     {
-      "path": "../echo-signals"
-    },
-    {
       "path": "../live-object"
     }
   ]
