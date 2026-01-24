@@ -37,7 +37,7 @@ export const useCapability = <T>(interfaceDef: Capability.InterfaceDef<T>) => {
  * Automatically subscribes to changes.
  * @example const settings = useAtomCapability(ThreadCapabilities.Settings);
  */
-export const useAtomCapability = <T>(atomCapability: Capability.InterfaceDef<Atom.Writable<T>>): T => {
+export const useAtomCapability = <T>(atomCapability: Capability.InterfaceDef<Atom.Atom<T>>): T => {
   const atom = useCapability(atomCapability);
   return useAtomValue(atom);
 };

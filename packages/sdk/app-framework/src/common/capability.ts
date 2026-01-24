@@ -3,7 +3,7 @@
 //
 
 import type * as Command$ from '@effect/cli/Command';
-import type { Atom, Registry } from '@effect-atom/atom-react';
+import { Atom, type Registry } from '@effect-atom/atom-react';
 import * as Effect from 'effect/Effect';
 import type * as Layer$ from 'effect/Layer';
 import type * as ManagedRuntime$ from 'effect/ManagedRuntime';
@@ -50,20 +50,6 @@ export namespace Capability {
    * @category Capability
    */
   export const AtomRegistry = Capability$.make<Registry.Registry>('dxos.org/app-framework/capability/atom-registry');
-
-  /**
-   * Standard interface for plugin state capabilities backed by Effect Atoms.
-   */
-  export type StateStore<T> = {
-    /** The underlying atom for advanced use cases. */
-    atom: Atom.Writable<T>;
-    /** Current state value (getter). */
-    readonly state: T;
-    /** Update state using a function that receives current state and returns new state. */
-    update: (fn: (current: T) => T) => void;
-    /** Subscribe to state changes. Returns unsubscribe function. */
-    subscribe: (callback: () => void) => () => void;
-  };
 
   export type ReactContext = Readonly<{
     id: string;
@@ -158,7 +144,6 @@ export namespace Capability {
   export type Settings = {
     prefix: string;
     schema: Schema$.Schema.All;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     atom: Atom.Writable<any>;
   };
 
@@ -170,7 +155,9 @@ export namespace Capability {
     value !== null &&
     'prefix' in value &&
     typeof (value as Settings).prefix === 'string' &&
-    'atom' in value;
+    'atom' in value &&
+    Atom.isAtom(value.atom) &&
+    Atom.isWritable(value.atom);
 
   /**
    * @category Capability

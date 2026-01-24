@@ -9,17 +9,14 @@ import type { OperationInvoker } from '@dxos/operation';
 
 import * as Common from '../common';
 
-import { useCapability } from './useCapabilities';
+import { useAtomCapability, useCapability } from './useCapabilities';
 
 export const useOperationInvoker = (): OperationInvoker.OperationInvoker =>
   useCapability(Common.Capability.OperationInvoker);
 
 export const useAppGraph = (): Common.Capability.AppGraph => useCapability(Common.Capability.AppGraph);
 
-export const useLayout = (): Common.Capability.Layout => {
-  const layoutAtom = useCapability(Common.Capability.Layout);
-  return useAtomValue(layoutAtom);
-};
+export const useLayout = (): Common.Capability.Layout => useAtomCapability(Common.Capability.Layout);
 
 /**
  * Hook to read and update a settings atom.
