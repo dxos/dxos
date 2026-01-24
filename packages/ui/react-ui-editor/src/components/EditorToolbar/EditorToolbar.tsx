@@ -7,8 +7,6 @@ import { Atom } from '@effect-atom/atom-react';
 import React, { memo, useMemo } from 'react';
 
 import { type Node } from '@dxos/app-graph';
-import { AtomLive } from '@dxos/echo-atom';
-import { type Live } from '@dxos/live-object';
 import { ElevationProvider, type ThemedClassName } from '@dxos/react-ui';
 import {
   type ActionGraphProps,
@@ -42,7 +40,7 @@ export type EditorToolbarFeatureFlags = Partial<{
 }>;
 
 export type EditorToolbarActionGraphProps = {
-  state: Live<EditorToolbarState>;
+  state: Atom.Atom<EditorToolbarState>;
   getView: () => EditorView;
   // TODO(wittjosiah): Control positioning.
   customActions?: Atom.Atom<ActionGraphProps>;
@@ -115,7 +113,7 @@ const createToolbarActions = ({
     };
 
     // Subscribe to state changes.
-    const stateSnapshot = get(AtomLive.make(state));
+    const stateSnapshot = get(state);
 
     if (features?.showHeadings ?? true) {
       addSubGraph(graph, createHeadings(stateSnapshot, getView));

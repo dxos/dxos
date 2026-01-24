@@ -1245,20 +1245,15 @@ export const getFormatting = (state: EditorState): Formatting => {
 };
 
 /**
- * Hook provides an extension to compute the current formatting state.
+ * Extension to compute and publish the current formatting state.
+ * @param onStateChange - Callback invoked with the current formatting state when the editor state changes.
+ * @param delay - Debounce/throttle delay in ms.
  */
-export const formattingListener = (stateProvider: () => Formatting | undefined, delay = 100): Extension => {
+export const formattingListener = (onStateChange: (state: Formatting) => void, delay = 100): Extension => {
   return EditorView.updateListener.of(
     debounceAndThrottle((update: ViewUpdate) => {
       if (update.docChanged || update.selectionSet) {
-        const state = stateProvider();
-        if (!state) {
-          return;
-        }
-
-        Object.entries(getFormatting(update.state)).forEach(([key, active]) => {
-          state[key as keyof Formatting] = active as any;
-        });
+        onStateChange(getFormatting(update.state));
       }
     }, delay),
   );

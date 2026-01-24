@@ -3,10 +3,10 @@
 //
 
 import { type EditorView } from '@codemirror/view';
-import React, { forwardRef, useEffect, useImperativeHandle, useMemo } from 'react';
+import { type Atom, RegistryContext } from '@effect-atom/atom-react';
+import React, { forwardRef, useCallback, useContext, useEffect, useImperativeHandle, useMemo } from 'react';
 
-import { type Live } from '@dxos/live-object';
-import { type ThemedClassName, useDynamicRef, useThemeContext, useTranslation } from '@dxos/react-ui';
+import { type ThemedClassName, useThemeContext, useTranslation } from '@dxos/react-ui';
 import {
   type EditorMenuGroup,
   type EditorToolbarState,
@@ -42,7 +42,7 @@ export type MarkdownEditorContentProps = ThemedClassName<{
   scrollPastEnd?: boolean;
   slashCommandGroups?: EditorMenuGroup[];
   editorStateStore?: EditorStateStore;
-  toolbarState?: Live<EditorToolbarState>;
+  toolbarState?: Atom.Writable<EditorToolbarState>;
   onLinkQuery?: (query?: string) => Promise<EditorMenuGroup[]>;
 }> &
   // prettier-ignore
@@ -69,9 +69,17 @@ export const MarkdownEditorContent = forwardRef<EditorView | null, MarkdownEdito
   ) => {
     const { t } = useTranslation(meta.id);
     const { themeMode } = useThemeContext();
+    const registry = useContext(RegistryContext);
 
-    // TODO(burdon): Toolbar state is not reactive.
-    const toolbarStateRef = useDynamicRef(toolbarState);
+    // Callback to update toolbar state atom.
+    const updateToolbarState = useCallback(
+      (formatting: EditorToolbarState) => {
+        if (toolbarState) {
+          registry.set(toolbarState, { ...registry.get(toolbarState), ...formatting });
+        }
+      },
+      [registry, toolbarState],
+    );
 
     // Restore last selection and scroll point.
     const { scrollTo, selection } = useMemo<EditorSelectionState>(() => editorStateStore?.getState(id) ?? {}, [id]);
@@ -104,7 +112,7 @@ export const MarkdownEditorContent = forwardRef<EditorView | null, MarkdownEdito
             syntaxHighlighting: true,
           }),
           createMarkdownExtensions(),
-          formattingListener(() => toolbarStateRef.current),
+          toolbarState && formattingListener(updateToolbarState),
           role !== 'section' &&
             onFileUpload &&
             dropFile({
