@@ -5,7 +5,7 @@
 import { monitorForElements } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
 import { type Instruction, extractInstruction } from '@atlaskit/pragmatic-drag-and-drop-hitbox/tree-item';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import React, { useEffect } from 'react';
+import React, { useEffect, useMemo, useSyncExternalStore } from 'react';
 
 import { type Live, live } from '@dxos/live-object';
 import { faker } from '@dxos/random';
@@ -49,6 +49,30 @@ const DefaultStory = (props: TreeProps) => {
 
 const tree = live<TestItem>(createTree());
 const state = new Map<string, Live<{ open: boolean; current: boolean }>>();
+const listeners = new Set<() => void>();
+
+const getOrCreateState = (path: string) => {
+  let object = state.get(path);
+  if (!object) {
+    object = live({ open: false, current: false });
+    state.set(path, object);
+  }
+  return object;
+};
+
+const notifyListeners = () => listeners.forEach((l) => l());
+
+/** Hook to subscribe to item state reactively. */
+const useItemState = (_path: string[]) => {
+  const path = useMemo(() => Path.create(..._path), [_path.join('~')]);
+  return useSyncExternalStore(
+    (callback) => {
+      listeners.add(callback);
+      return () => listeners.delete(callback);
+    },
+    () => getOrCreateState(path),
+  );
+};
 
 const meta = {
   title: 'ui/react-ui-list/Tree',
@@ -69,23 +93,11 @@ const meta = {
         parentOf: parent.items!.map(({ id }) => id),
       }),
     }),
-    isOpen: (_path: string[]) => {
-      const path = Path.create(..._path);
-      const object = state.get(path) ?? live({ open: false, current: false });
-      if (!state.has(path)) {
-        state.set(path, object);
-      }
-
-      return object.open;
+    useIsOpen: (_path: string[]) => {
+      return useItemState(_path).open;
     },
-    isCurrent: (_path: string[]) => {
-      const path = Path.create(..._path);
-      const object = state.get(path) ?? live({ open: false, current: false });
-      if (!state.has(path)) {
-        state.set(path, object);
-      }
-
-      return object.current;
+    useIsCurrent: (_path: string[]) => {
+      return useItemState(_path).current;
     },
     renderColumns: () => {
       return (
@@ -96,13 +108,15 @@ const meta = {
     },
     onOpenChange: ({ path: _path, open }) => {
       const path = Path.create(..._path);
-      const object = state.get(path);
-      object!.open = open;
+      const object = getOrCreateState(path);
+      object.open = open;
+      notifyListeners();
     },
     onSelect: ({ path: _path, current }) => {
       const path = Path.create(..._path);
-      const object = state.get(path);
-      object!.current = current;
+      const object = getOrCreateState(path);
+      object.current = current;
+      notifyListeners();
     },
   },
 } satisfies Meta<typeof Tree<TestItem>>;

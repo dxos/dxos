@@ -6,7 +6,16 @@ import { Atom, type Registry, RegistryContext, useAtomValue } from '@effect-atom
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Function from 'effect/Function';
 import * as Option from 'effect/Option';
-import React, { type PropsWithChildren, useCallback, useContext, useEffect, useMemo, useState } from 'react';
+import React, {
+  type PropsWithChildren,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  useSyncExternalStore,
+} from 'react';
 
 import { Filter, type Live, type Space, SpaceState, isSpace, live } from '@dxos/client/echo';
 import { Obj, Query, Type } from '@dxos/echo';
@@ -284,7 +293,24 @@ export const TreeView: Story = {
     const client = useClient();
     const registry = useContext(RegistryContext);
     const graph = useMemo(() => createGraph(client, registry), [client, registry]);
-    const state = useMemo(() => new Map<string, Live<{ open: boolean; current: boolean }>>(), []);
+    const stateRef = useRef(new Map<string, Live<{ open: boolean; current: boolean }>>());
+    const listenersRef = useRef(new Set<() => void>());
+
+    const getOrCreateState = useMemo(
+      () => (path: string) => {
+        let object = stateRef.current.get(path);
+        if (!object) {
+          object = live({ open: true, current: false });
+          stateRef.current.set(path, object);
+        }
+        return object;
+      },
+      [],
+    );
+
+    const notifyListeners = useCallback(() => {
+      listenersRef.current.forEach((l) => l());
+    }, []);
 
     const useItems = useCallback(
       (node?: Node.Node, options?: { disposition?: string; sort?: boolean }) => {
@@ -315,48 +341,44 @@ export const TreeView: Story = {
       [graph],
     );
 
-    const isOpen = useCallback(
-      (_path: string[]) => {
-        const path = Path.create(..._path);
-        const object = state.get(path) ?? live({ open: true, current: false });
-        if (!state.has(path)) {
-          state.set(path, object);
-        }
+    // Hook that subscribes to item state.
+    const useItemState = (_path: string[]) => {
+      const path = useMemo(() => Path.create(..._path), [_path.join('~')]);
+      return useSyncExternalStore(
+        (callback) => {
+          listenersRef.current.add(callback);
+          return () => listenersRef.current.delete(callback);
+        },
+        () => getOrCreateState(path),
+      );
+    };
 
-        return object.open;
-      },
-      [state],
-    );
+    const useIsOpen = (_path: string[]) => {
+      return useItemState(_path).open;
+    };
 
-    const isCurrent = useCallback(
-      (_path: string[]) => {
-        const path = Path.create(..._path);
-        const object = state.get(path) ?? live({ open: false, current: false });
-        if (!state.has(path)) {
-          state.set(path, object);
-        }
-
-        return object.current;
-      },
-      [state],
-    );
+    const useIsCurrent = (_path: string[]) => {
+      return useItemState(_path).current;
+    };
 
     const onOpenChange = useCallback(
       ({ path: _path, open }: { path: string[]; open: boolean }) => {
         const path = Path.create(..._path);
-        const object = state.get(path);
+        const object = stateRef.current.get(path);
         object!.open = open;
+        notifyListeners();
       },
-      [state],
+      [notifyListeners],
     );
 
     const onSelect = useCallback(
       ({ path: _path, current }: { path: string[]; current: boolean }) => {
         const path = Path.create(..._path);
-        const object = state.get(path);
+        const object = stateRef.current.get(path);
         object!.current = current;
+        notifyListeners();
       },
-      [state],
+      [notifyListeners],
     );
 
     return (
@@ -366,8 +388,8 @@ export const TreeView: Story = {
           id={Node.RootId}
           useItems={useItems}
           getProps={getProps}
-          isOpen={isOpen}
-          isCurrent={isCurrent}
+          useIsOpen={useIsOpen}
+          useIsCurrent={useIsCurrent}
           onOpenChange={onOpenChange}
           onSelect={onSelect}
         />

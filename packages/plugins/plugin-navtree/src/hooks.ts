@@ -2,16 +2,14 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type Atom } from '@effect-atom/atom-react';
-import { useAtomValue } from '@effect-atom/atom-react';
-import { useCallback, useEffect } from 'react';
+import { type Atom, useAtomValue } from '@effect-atom/atom-react';
+import { useEffect, useMemo } from 'react';
 
 import { useCapability } from '@dxos/app-framework/react';
 import { type Node } from '@dxos/app-graph';
-import { Path } from '@dxos/react-ui-list';
 
 import { useNavTreeContext } from './components';
-import { NavTreeCapabilities, type NavTreeItemGraphNode } from './types';
+import { NavTreeCapabilities } from './types';
 
 export const useLoadDescendents = (root?: Node.Node) => {
   const { loadDescendents } = useNavTreeContext();
@@ -26,47 +24,50 @@ export const useLoadDescendents = (root?: Node.Node) => {
 };
 
 export type UseNavTreeStateResult = {
-  stateAtom: Atom.Writable<NavTreeCapabilities.NavTreeState>;
-  state: NavTreeCapabilities.NavTreeState;
   getItem: (path: string[]) => NavTreeCapabilities.NavTreeItemState;
+  getItemAtom: (path: string[]) => Atom.Atom<NavTreeCapabilities.NavTreeItemState>;
   setItem: (path: string[], key: 'open' | 'current' | 'alternateTree', next: boolean) => void;
-  isOpen: (path: string[], item?: NavTreeItemGraphNode) => boolean;
-  isCurrent: (path: string[], item?: NavTreeItemGraphNode) => boolean;
-  isAlternateTree: (path: string[], item?: NavTreeItemGraphNode) => boolean;
 };
 
 /**
- * Hook that subscribes to navtree state and provides reactive accessor functions.
- * Use this instead of the capability's functions directly when you need reactivity.
+ * Hook that provides access to navtree state functions.
+ * For reactive subscriptions, use `useNavTreeItemState` or `useAtomValue(getItemAtom(path))`.
  */
 export const useNavTreeState = (): UseNavTreeStateResult => {
-  const { stateAtom, setItem } = useCapability(NavTreeCapabilities.State);
-  const state = useAtomValue(stateAtom);
+  return useCapability(NavTreeCapabilities.State);
+};
 
-  const getItem = useCallback(
-    (path: string[]): NavTreeCapabilities.NavTreeItemState => {
-      const pathString = Path.create(...path);
-      return state.get(pathString) ?? { open: false, current: false, alternateTree: false };
-    },
-    [state],
-  );
+/**
+ * Hook that subscribes to a single navtree item's state.
+ * Use this for fine-grained reactivity.
+ */
+export const useNavTreeItemState = (path: string[]): NavTreeCapabilities.NavTreeItemState => {
+  const { getItemAtom } = useCapability(NavTreeCapabilities.State);
+  // Memoize the path to avoid creating new atoms on every render.
+  const pathKey = useMemo(() => path.join('~'), [path]);
+  const atom = useMemo(() => getItemAtom(path), [getItemAtom, pathKey]);
+  return useAtomValue(atom);
+};
 
-  const isOpen = useCallback((path: string[], _item?: NavTreeItemGraphNode) => getItem(path).open, [getItem]);
+/**
+ * Hook that subscribes to the open state for a tree item.
+ * Designed to be passed to Tree component as useIsOpen prop.
+ */
+export const useIsOpen = (path: string[], _item?: any): boolean => {
+  return useNavTreeItemState(path).open;
+};
 
-  const isCurrent = useCallback((path: string[], _item?: NavTreeItemGraphNode) => getItem(path).current, [getItem]);
+/**
+ * Hook that subscribes to the current state for a tree item.
+ * Designed to be passed to Tree component as useIsCurrent prop.
+ */
+export const useIsCurrent = (path: string[], _item?: any): boolean => {
+  return useNavTreeItemState(path).current;
+};
 
-  const isAlternateTree = useCallback(
-    (path: string[], _item?: NavTreeItemGraphNode) => getItem(path).alternateTree ?? false,
-    [getItem],
-  );
-
-  return {
-    stateAtom,
-    state,
-    getItem,
-    setItem,
-    isOpen,
-    isCurrent,
-    isAlternateTree,
-  };
+/**
+ * Hook that subscribes to the alternateTree state for a tree item.
+ */
+export const useIsAlternateTree = (path: string[], _item?: any): boolean => {
+  return useNavTreeItemState(path).alternateTree ?? false;
 };

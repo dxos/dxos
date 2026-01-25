@@ -4,8 +4,7 @@
 
 import { monitorForElements } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
 import { type Instruction, extractInstruction } from '@atlaskit/pragmatic-drag-and-drop-hitbox/tree-item';
-import { RegistryContext } from '@effect-atom/atom-react';
-import React, { forwardRef, memo, useCallback, useContext, useEffect, useMemo, useRef } from 'react';
+import React, { forwardRef, memo, useCallback, useEffect, useMemo } from 'react';
 
 import { Common } from '@dxos/app-framework';
 import { Surface, useAppGraph, useLayout, useOperationInvoker } from '@dxos/app-framework/react';
@@ -17,7 +16,7 @@ import { Path, type TreeData, type TreeItemDataProps, isTreeData } from '@dxos/r
 import { mx } from '@dxos/ui-theme';
 import { arrayMove, byPosition } from '@dxos/util';
 
-import { useNavTreeState } from '../hooks';
+import { useIsAlternateTree, useIsCurrent, useIsOpen, useNavTreeState } from '../hooks';
 import { meta } from '../meta';
 import { type FlattenedActions, type NavTreeItemGraphNode } from '../types';
 import { getChildren, getParent, resolveMigrationOperation } from '../util';
@@ -96,8 +95,7 @@ export const NavTreeContainer$ = forwardRef<HTMLDivElement, NavTreeContainerProp
     const { invokeSync, invokePromise } = useOperationInvoker();
     const runAction = useActionRunner();
     const { graph } = useAppGraph();
-    const registry = useContext(RegistryContext);
-    const { stateAtom, isOpen, isCurrent, isAlternateTree, setItem } = useNavTreeState();
+    const { getItem, setItem } = useNavTreeState();
     const layout = useLayout();
     const { navigationSidebarState } = useSidebars(meta.id);
 
@@ -196,7 +194,7 @@ export const NavTreeContainer$ = forwardRef<HTMLDivElement, NavTreeContainerProp
           return;
         }
 
-        const current = isCurrent(path, node);
+        const current = getItem(path).current;
         if (!current) {
           invokeSync(Common.LayoutOperation.Open, { subject: [node.id], key: node.properties.key });
         } else if (option) {
@@ -216,7 +214,7 @@ export const NavTreeContainer$ = forwardRef<HTMLDivElement, NavTreeContainerProp
           invokeSync(Common.LayoutOperation.UpdateSidebar, { state: 'closed' });
         }
       },
-      [graph, invokeSync, invokePromise, isCurrent, isLg, runAction],
+      [graph, invokeSync, invokePromise, getItem, isLg, runAction],
     );
 
     const handleBack = useCallback(() => invokeSync(Common.LayoutOperation.RevertWorkspace), [invokeSync]);
@@ -280,40 +278,6 @@ export const NavTreeContainer$ = forwardRef<HTMLDivElement, NavTreeContainerProp
       });
     }, [graph]);
 
-    // Track layout.active changes to update current state of navtree items.
-    const previousActiveRef = useRef<string[]>([]);
-
-    useEffect(() => {
-      const active = layout.active;
-      const removed = previousActiveRef.current.filter((id) => !active.includes(id));
-      previousActiveRef.current = active;
-
-      const handleUpdate = () => {
-        // Read state directly from registry to avoid re-triggering effect when state changes.
-        const state = registry.get(stateAtom);
-
-        removed.forEach((id) => {
-          const keys = Array.from(state.keys()).filter((key) => Path.last(key) === id);
-          keys.forEach((key) => {
-            setItem(Path.parts(key), 'current', false);
-          });
-        });
-
-        active.forEach((id: string) => {
-          const keys = Array.from(new Set([...state.keys(), id])).filter((key) => Path.last(key) === id);
-          keys.forEach((key) => {
-            setItem(Path.parts(key), 'current', true);
-          });
-        });
-      };
-
-      // TODO(wittjosiah): This is setTimeout because there's a race between the keys being initialized.
-      //   Keys are initialized on the first render of an item in the navtree.
-      //   This could be avoided if the location was a path as well and not just an id.
-      setTimeout(handleUpdate, 500);
-      handleUpdate();
-    }, [layout.active, registry, stateAtom, setItem]);
-
     const setAlternateTree = useCallback(
       (path: string[], open: boolean) => {
         setItem(path, 'alternateTree', open);
@@ -327,9 +291,9 @@ export const NavTreeContainer$ = forwardRef<HTMLDivElement, NavTreeContainerProp
         canDrop,
         canSelect,
         getProps,
-        isAlternateTree,
-        isCurrent,
-        isOpen,
+        useIsAlternateTree,
+        useIsCurrent,
+        useIsOpen,
         loadDescendents,
         onBack: handleBack,
         onOpenChange: handleOpenChange,
@@ -352,9 +316,6 @@ export const NavTreeContainer$ = forwardRef<HTMLDivElement, NavTreeContainerProp
         handleOpenChange,
         handleSelect,
         handleTabChange,
-        isAlternateTree,
-        isCurrent,
-        isOpen,
         loadDescendents,
         popoverAnchorId,
         renderItemEnd,
