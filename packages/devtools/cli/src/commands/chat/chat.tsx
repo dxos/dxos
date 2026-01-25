@@ -2,7 +2,6 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Registry } from '@effect-atom/atom-react';
 import * as Command from '@effect/cli/Command';
 import * as Options from '@effect/cli/Options';
 import * as Effect from 'effect/Effect';
@@ -15,6 +14,7 @@ import { type AiConversation, GenericToolkit } from '@dxos/assistant';
 import { CommandConfig, Common, withTypes } from '@dxos/cli-util';
 import { ClientService } from '@dxos/client';
 import { Filter } from '@dxos/echo';
+import { Registry } from '@dxos/effect-atom-solid';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { Assistant } from '@dxos/plugin-assistant/types';
@@ -135,7 +135,13 @@ export const chat = Command.make(
       // Render.
       yield* render({
         app: () => (
-          <App debug={options.debug} focusElements={['input', 'messages']} logBuffer={logBuffer} theme={theme}>
+          <App
+            debug={options.debug}
+            focusElements={['input', 'messages']}
+            logBuffer={logBuffer}
+            registry={registry}
+            theme={theme}
+          >
             {conversation() && (
               <Chat
                 db={space.db}

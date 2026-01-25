@@ -6248,6 +6248,9 @@ importers:
       '@dxos/effect':
         specifier: workspace:*
         version: link:../../common/effect
+      '@dxos/effect-atom-solid':
+        specifier: workspace:*
+        version: link:../../common/effect-atom-solid
       '@dxos/errors':
         specifier: workspace:*
         version: link:../../common/errors
