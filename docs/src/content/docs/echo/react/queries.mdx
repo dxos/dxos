@@ -19,13 +19,11 @@ The first argument to `useQuery` from package `@dxos/react-client` is the [`spac
 
 <Code code={useQuery.slice(34)} lang="tsx" />
 
-`useQuery` returns a generic `TypedObject` type which supports the ability to set and read arbitrary keys and values. See [below](#typed-queries) for how to add type safety.
+`useQuery` returns objects which support the ability to set and read arbitrary keys and values. See [below](#typed-queries) for how to add type safety.
 
 ## Typed Queries
 
 It's possible to obtain strongly typed objects from `useQuery`.
-
-Because `useQuery` returns tracked ECHO objects, their type must descend from `TypedObject`.
 
 DXOS provides apis to define these types using [Effect Schema](https://effect.website).
 

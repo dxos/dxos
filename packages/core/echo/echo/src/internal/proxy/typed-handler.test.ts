@@ -9,7 +9,7 @@ import * as Obj from '../../Obj';
 import { TestSchema } from '../../testing';
 import { isInstanceOf } from '../annotations';
 import { EchoObjectSchema } from '../entities';
-import { TypedObject, createObject } from '../object';
+import { createObject } from '../object';
 import { Ref } from '../ref';
 import { foreignKey, getMeta, getSchema } from '../types';
 
@@ -40,8 +40,12 @@ describe('complex schema validations', () => {
   });
 
   test('references', () => {
-    class Foo extends TypedObject({ typename: 'example.com/type/Foo', version: '0.1.0' })({ field: Schema.String }) {}
-    class Bar extends TypedObject({ typename: 'example.com/type/Bar', version: '0.1.0' })({ fooRef: Ref(Foo) }) {}
+    const Foo = Schema.Struct({ field: Schema.String }).pipe(
+      EchoObjectSchema({ typename: 'example.com/type/Foo', version: '0.1.0' }),
+    );
+    const Bar = Schema.Struct({ fooRef: Ref(Foo) }).pipe(
+      EchoObjectSchema({ typename: 'example.com/type/Bar', version: '0.1.0' }),
+    );
     const field = 'hello';
     expect(() => makeObject(Bar, { fooRef: { id: '1', field } as any })).to.throw();
     expect(() => makeObject(Bar, { fooRef: undefined as any })).to.throw(); // Unresolved reference.

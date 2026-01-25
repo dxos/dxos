@@ -7,8 +7,7 @@ import * as Schema from 'effect/Schema';
 import { describe, expect, onTestFinished, test } from 'vitest';
 
 import { Client } from '@dxos/client';
-import { Obj } from '@dxos/echo';
-import { TypedObject } from '@dxos/echo/internal';
+import { Obj, Type } from '@dxos/echo';
 import { getObjectCore } from '@dxos/echo-db';
 import { faker } from '@dxos/random';
 
@@ -93,12 +92,14 @@ describe('TestObjectGenerator', () => {
   });
 
   test('create object with in memory schema', async () => {
-    class Task extends TypedObject({
-      typename: 'example.org/type/Task',
-      version: '0.1.0',
-    })({
+    const Task = Schema.Struct({
       name: Schema.optional(Schema.String),
-    }) {}
+    }).pipe(
+      Type.Obj({
+        typename: 'example.org/type/Task',
+        version: '0.1.0',
+      }),
+    );
 
     enum Types {
       task = 'example.org/type/Task',

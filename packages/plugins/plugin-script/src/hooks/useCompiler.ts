@@ -7,7 +7,7 @@ import { runAndForwardErrors } from '@dxos/effect';
 import { useAsyncEffect } from '@dxos/react-ui';
 
 import type { Compiler } from '../compiler';
-import { ScriptEvents } from '../events';
+import { ScriptEvents } from '../types';
 import { ScriptCapabilities } from '../types';
 
 /**

@@ -4,7 +4,7 @@
 
 import { type ActivationEvent, Common } from '@dxos/app-framework';
 
-import { meta } from './meta';
+import { meta } from '../meta';
 
 export namespace MarkdownEvents {
   export const SetupExtensions: ActivationEvent.ActivationEvent = Common.ActivationEvent.createStateEvent(

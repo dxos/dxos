@@ -6,8 +6,7 @@ import { computed } from '@preact/signals-core';
 import * as Schema from 'effect/Schema';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
-import { Filter, Query } from '@dxos/echo';
-import { TypedObject } from '@dxos/echo/internal';
+import { Filter, Query, Type } from '@dxos/echo';
 import { updateCounter } from '@dxos/echo/testing';
 import { createEchoSchema } from '@dxos/echo/testing';
 import { registerSignalsRuntime } from '@dxos/echo-signals';
@@ -105,10 +104,15 @@ describe('TableModel', () => {
   });
 });
 
-class Test extends TypedObject({ typename: 'example.com/type/Test', version: '0.1.0' })({
+const Test = Schema.Struct({
   title: Schema.String,
   completed: Schema.Boolean,
-}) {}
+}).pipe(
+  Type.Obj({
+    typename: 'example.com/type/Test',
+    version: '0.1.0',
+  }),
+);
 
 const createTableModel = (props: Partial<TableModelProps> = {}): TableModel => {
   const schema = createEchoSchema(Test);

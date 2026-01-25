@@ -22,6 +22,8 @@ import { meta } from '../../meta';
 export type ComposeEmailDialogProps = {
   mode?: 'compose' | 'reply' | 'reply-all' | 'forward';
   originalMessage?: MessageType.Message;
+  subject?: string;
+  body?: string;
 };
 
 const ComposeEmailForm = Schema.Struct({
@@ -45,7 +47,7 @@ const formatQuotedBody = (message: MessageType.Message): string => {
   return `\n\n---\nOn ${date}, ${senderName} wrote:\n\n${originalText}`;
 };
 
-export const ComposeEmailDialog = ({ mode = 'compose', originalMessage }: ComposeEmailDialogProps) => {
+export const ComposeEmailDialog = ({ mode = 'compose', originalMessage, subject, body }: ComposeEmailDialogProps) => {
   const closeRef = useRef<HTMLButtonElement | null>(null);
   const { t } = useTranslation(meta.id);
   const { invokePromise } = useOperationInvoker();
@@ -57,7 +59,7 @@ export const ComposeEmailDialog = ({ mode = 'compose', originalMessage }: Compos
 
   const initialValues = useMemo<FormValues>(() => {
     if (!originalMessage || mode === 'compose') {
-      return { to: '', body: '' };
+      return { to: '', subject: subject ?? '', body: body ?? '' };
     }
 
     const originalSubject = originalMessage.properties?.subject ?? '';
@@ -85,7 +87,7 @@ export const ComposeEmailDialog = ({ mode = 'compose', originalMessage }: Compos
       default:
         return { to: '', body: '' };
     }
-  }, [mode, originalMessage]);
+  }, [mode, originalMessage, subject, body]);
 
   const dialogTitle = useMemo(() => {
     switch (mode) {

@@ -4,7 +4,7 @@
 
 import { ActivationEvent, Common } from '@dxos/app-framework';
 
-import { meta } from './meta';
+import { meta } from '../meta';
 
 export namespace ObservabilityEvents {
   export const StateReady: ActivationEvent.ActivationEvent = Common.ActivationEvent.createStateEvent(meta.id);

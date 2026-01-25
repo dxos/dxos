@@ -7,4 +7,5 @@ export { MarkdownOperation } from './MarkdownAction';
 export * as Markdown from './Markdown';
 
 export * from './capabilities';
+export * from './events';
 export * from './types';

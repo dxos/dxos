@@ -35,8 +35,6 @@ export default defineConfig({
     }),
     TopLevelAwaitPlugin(),
     WasmPlugin(),
-    ReactPlugin({
-      tsDecorators: true,
-    }),
+    ReactPlugin({ tsDecorators: true }),
   ],
 });

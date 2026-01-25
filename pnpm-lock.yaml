@@ -58,14 +58,14 @@ catalogs:
       specifier: ^7.9.6
       version: 7.27.1
     '@bufbuild/buf':
-      specifier: 1.43.0
-      version: 1.43.0
+      specifier: 1.61.0
+      version: 1.61.0
     '@bufbuild/protobuf':
-      specifier: 2.9.0
-      version: 2.9.0
+      specifier: 2.10.1
+      version: 2.10.1
     '@bufbuild/protoc-gen-es':
-      specifier: 2.9.0
-      version: 2.9.0
+      specifier: 2.10.1
+      version: 2.10.1
     '@ch-ui/colors':
       specifier: 1.2.1
       version: 1.2.1
@@ -100,7 +100,7 @@ catalogs:
       specifier: ^6.0.2
       version: 6.0.2
     '@codemirror/lang-markdown':
-      specifier: ^6.3.4
+      specifier: 6.3.4
       version: 6.3.4
     '@codemirror/lang-xml':
       specifier: ^6.1.0
@@ -115,7 +115,7 @@ catalogs:
       specifier: ^6.5.1
       version: 6.5.1
     '@codemirror/lint':
-      specifier: ^6.8.5
+      specifier: 6.8.5
       version: 6.8.5
     '@codemirror/search':
       specifier: ^6.5.11
@@ -144,6 +144,9 @@ catalogs:
     '@dnd-kit/utilities':
       specifier: ^3.2.0
       version: 3.2.0
+    '@dxos/keys':
+      specifier: ^0.8.3
+      version: 0.8.3
     '@dxos/wa-sqlite':
       specifier: ^0.2.1
       version: 0.2.1
@@ -382,7 +385,7 @@ catalogs:
       specifier: ^2.1.1
       version: 2.1.1
     '@phosphor-icons/react':
-      specifier: ^2.1.10
+      specifier: 2.1.10
       version: 2.1.10
     '@playwright/test':
       specifier: 1.57.0
@@ -1981,8 +1984,8 @@ catalogs:
       specifier: '>=0.11.4 <0.12.0-0 || >=0.13.0 <0.14.0-0 || >=0.14.0 <0.15.0-0'
       version: 0.14.8
     zx:
-      specifier: ^8.4.1
-      version: 8.5.4
+      specifier: ^8.8.5
+      version: 8.8.5
 
 overrides:
   '@automerge/automerge': 3.2.1
@@ -2416,7 +2419,7 @@ importers:
         version: 16.2.0
       zx:
         specifier: 'catalog:'
-        version: 8.5.4
+        version: 8.8.5
 
   docs:
     dependencies:
@@ -3199,6 +3202,12 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
+      '@effect-atom/atom':
+        specifier: 'catalog:'
+        version: 0.4.10(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/platform@0.93.6(effect@3.19.11))(@effect/rpc@0.72.2(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11))(effect@3.19.11)
+      '@effect-atom/atom-react':
+        specifier: 'catalog:'
+        version: 0.4.4(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/platform@0.93.6(effect@3.19.11))(@effect/rpc@0.72.2(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11))(effect@3.19.11)(react@19.2.3)(scheduler@0.27.0)
       '@sentry/react':
         specifier: 'catalog:'
         version: 7.101.0(react@19.2.3)
@@ -6250,7 +6259,7 @@ importers:
     dependencies:
       '@bufbuild/protobuf':
         specifier: 'catalog:'
-        version: 2.9.0
+        version: 2.10.1
       '@dxos/codec-protobuf':
         specifier: workspace:*
         version: link:../../common/codec-protobuf
@@ -6275,10 +6284,10 @@ importers:
     devDependencies:
       '@bufbuild/buf':
         specifier: 'catalog:'
-        version: 1.43.0
+        version: 1.61.0
       '@bufbuild/protoc-gen-es':
         specifier: 'catalog:'
-        version: 2.9.0(@bufbuild/protobuf@2.9.0)
+        version: 2.10.1(@bufbuild/protobuf@2.10.1)
       '@dxos/protobuf-compiler':
         specifier: workspace:*
         version: link:../../common/protobuf-compiler
@@ -7325,12 +7334,18 @@ importers:
       '@codemirror/lang-html':
         specifier: 'catalog:'
         version: 6.4.11
+      '@codemirror/lang-markdown':
+        specifier: 'catalog:'
+        version: 6.3.4
       '@codemirror/lang-xml':
         specifier: 'catalog:'
         version: 6.1.0
       '@codemirror/language':
         specifier: 'catalog:'
         version: 6.11.3
+      '@codemirror/lint':
+        specifier: 'catalog:'
+        version: 6.8.5
       '@codemirror/state':
         specifier: 'catalog:'
         version: 6.5.2
@@ -7541,6 +7556,9 @@ importers:
       '@effect/platform-browser':
         specifier: 'catalog:'
         version: 0.73.0(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)
+      '@phosphor-icons/react':
+        specifier: 'catalog:'
+        version: 2.1.10(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
       '@preact-signals/safe-react':
         specifier: 'catalog:'
         version: 0.9.0(@babel/core@7.28.0)(@swc/helpers@0.5.17)(react@19.2.3)
@@ -9193,6 +9211,9 @@ importers:
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../core/echo/echo
+      '@dxos/echo-atom':
+        specifier: workspace:*
+        version: link:../../core/echo/echo-atom
       '@dxos/echo-db':
         specifier: workspace:*
         version: link:../../core/echo/echo-db
@@ -12092,6 +12113,9 @@ importers:
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../core/echo/echo
+      '@dxos/echo-atom':
+        specifier: workspace:*
+        version: link:../../core/echo/echo-atom
       '@dxos/echo-db':
         specifier: workspace:*
         version: link:../../core/echo/echo-db
@@ -14349,6 +14373,9 @@ importers:
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../common/invariant
+      '@dxos/keys':
+        specifier: 'catalog:'
+        version: 0.8.3
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
@@ -20641,62 +20668,68 @@ packages:
   '@braintree/sanitize-url@6.0.2':
     resolution: {integrity: sha512-Tbsj02wXCbqGmzdnXNk0SOF19ChhRU70BsroIi4Pm6Ehp56in6vch94mfbdQ17DozxkL3BAVjbZ4Qc1a0HFRAg==}
 
-  '@bufbuild/buf-darwin-arm64@1.43.0':
-    resolution: {integrity: sha512-IBVd4qpN8udUOwmqDB8KdGz8JUqVYq8yXN2MOj6JN7XFhaq0xAVfWsuQNOW4Uzukh+Ypg8EOb1nsJubOUbVe6g==}
+  '@bufbuild/buf-darwin-arm64@1.61.0':
+    resolution: {integrity: sha512-8vUGNV65LNPp+HT3NuCT9i/mCUEyLrSFctJ2Dz8JqnUu8fVPm4f8lVBSCT0TYLoQ8o8xb/A7bwWu14aKfXxgCg==}
     engines: {node: '>=12'}
     cpu: [arm64]
     os: [darwin]
 
-  '@bufbuild/buf-darwin-x64@1.43.0':
-    resolution: {integrity: sha512-XeuLdJIdOXzLpLA95k5NWhO6cJw5YW89IJW6OHENkxXkdf9aWzg9ozrhTpPzUoZmGZbNyXfpa7kbhJaJ5+F42w==}
+  '@bufbuild/buf-darwin-x64@1.61.0':
+    resolution: {integrity: sha512-dyJghwTYXT6e/Ec+2iPWijquTzyT+5vTItX4R7hM/soNQOs4eEo2z7EHLqvclHyi7+p7+8xye3z+BFM33ucM8A==}
     engines: {node: '>=12'}
     cpu: [x64]
     os: [darwin]
 
-  '@bufbuild/buf-linux-aarch64@1.43.0':
-    resolution: {integrity: sha512-7hyXvwM5NFY08+aqbxVx4GZ/3AsqZKas3bR5TFLuD8/4u4JfA59b9+YMzLL1bxHFLqMMeXJBLgIVkyTtQIXGVg==}
+  '@bufbuild/buf-linux-aarch64@1.61.0':
+    resolution: {integrity: sha512-9r5DRqwpq3WX0ltzt1p/Oe+8g679Fg4XJLaH/zmjqpwHVO+tNzYy7PHK4qWg83PCoANw6OVizl+iTmnE0vbklg==}
     engines: {node: '>=12'}
     cpu: [arm64]
     os: [linux]
 
-  '@bufbuild/buf-linux-x64@1.43.0':
-    resolution: {integrity: sha512-4mg6ZUNpW2C61vmPyQDolLRIsfAomd2Yv1PICC9XG1iQtf3xQ+6q5B/kihOadhG2AN31WeKdorvuyPL7vmbsDA==}
+  '@bufbuild/buf-linux-armv7@1.61.0':
+    resolution: {integrity: sha512-P2cSlzu68omZ6kyijMcYezZJFS4XayfLA0ATm1HP0zUaV+xVoeMOGhKvMWUFAa9SGYUs4Drxi2fyK/c2ZFA8sw==}
+    engines: {node: '>=12'}
+    cpu: [arm]
+    os: [linux]
+
+  '@bufbuild/buf-linux-x64@1.61.0':
+    resolution: {integrity: sha512-USDSLB0vkrR6Sk/VDtECLdOKHfynenCjnAchr9bdqC137IVJT7TVT8JhBW0UWMmXDZYjwbDrBLITwWj8hwk6Uw==}
     engines: {node: '>=12'}
     cpu: [x64]
     os: [linux]
 
-  '@bufbuild/buf-win32-arm64@1.43.0':
-    resolution: {integrity: sha512-YKoiA5Ui8VBW0GaWthDLBYr1C3I4Fx/j9txrUpg3Fvf+iwWutWQuTdA6W95HnLzUyhT6KnBMbXmB+SzosW9iFg==}
+  '@bufbuild/buf-win32-arm64@1.61.0':
+    resolution: {integrity: sha512-36n90c0lzhDMXRKhht8XreUCha4OTY7yR6g+bnkAFUXSbCbR3BpqrenWvl5NBtfX2Y70dmvjKnGwVanSIrb1uA==}
     engines: {node: '>=12'}
     cpu: [arm64]
     os: [win32]
 
-  '@bufbuild/buf-win32-x64@1.43.0':
-    resolution: {integrity: sha512-//t0ndbP7zkQDydwAXShCqsqgOGX/ktsS2g0+D9A5Aw/nyLTxBmfsN+7hPxL4o0qq2N4MKs6DJeP4TvjYKBaMA==}
+  '@bufbuild/buf-win32-x64@1.61.0':
+    resolution: {integrity: sha512-uBIU7tQlCBPyoeJZH0NzL6y9Y4ikje4OlgHYGssbaPLsCKELSFDHQkHFabkwnVeXSUf9Intq+U3jtb+qOIlflw==}
     engines: {node: '>=12'}
     cpu: [x64]
     os: [win32]
 
-  '@bufbuild/buf@1.43.0':
-    resolution: {integrity: sha512-lWiH+QJ8l0TGWP1KELvIA5BvAsZc0IiXppJlwI8EdQ2vQp39Ue2Xub8b13uy6IH0VDm9azQEjXuY1FxdB4mqsA==}
+  '@bufbuild/buf@1.61.0':
+    resolution: {integrity: sha512-9kKZK/GjhIDUj50pngmjtC6bGFl6U1rFDH2gZJATRfp2vNnQPsb6BqZ+2lea37bgHBYdAYttlve8wnXszXmftA==}
     engines: {node: '>=12'}
     hasBin: true
 
-  '@bufbuild/protobuf@2.9.0':
-    resolution: {integrity: sha512-rnJenoStJ8nvmt9Gzye8nkYd6V22xUAnu4086ER7h1zJ508vStko4pMvDeQ446ilDTFpV5wnoc5YS7XvMwwMqA==}
+  '@bufbuild/protobuf@2.10.1':
+    resolution: {integrity: sha512-ckS3+vyJb5qGpEYv/s1OebUHDi/xSNtfgw1wqKZo7MR9F2z+qXr0q5XagafAG/9O0QPVIUfST0smluYSTpYFkg==}
 
-  '@bufbuild/protoc-gen-es@2.9.0':
-    resolution: {integrity: sha512-g54rrHLKc7fnxN25ikynstRxR19M5G5l/hyqut2JoypJ9iU9QgUE63zEm8PNvVfBd4r5PEzWPfbWy5MNOeuMKQ==}
+  '@bufbuild/protoc-gen-es@2.10.1':
+    resolution: {integrity: sha512-vsfbWs1X93oX+sMMJ7910/OwIizAYH5IOAArsxnSTifiop1fVgLFPAvJBLiHZoNMI8B/lbqji2SFwvjK0AWO1Q==}
     engines: {node: '>=20'}
     hasBin: true
     peerDependencies:
-      '@bufbuild/protobuf': 2.9.0
+      '@bufbuild/protobuf': 2.10.1
     peerDependenciesMeta:
       '@bufbuild/protobuf':
         optional: true
 
-  '@bufbuild/protoplugin@2.9.0':
-    resolution: {integrity: sha512-uoiwNVYoTq+AyqaV1L6pBazGx5fXOO89L0NSR9/7hEfo0Y8n9T1jsKGu4mkitLmP3z+8gJREaule1mMuKBPyYw==}
+  '@bufbuild/protoplugin@2.10.1':
+    resolution: {integrity: sha512-imB8dKEjrOnG5+XqVS+CeYn924WGLU/g3wogKhk11XtX9y9NJ7432OS6h24asuBbLrQcPdEZ6QkfM7KeOCeeyQ==}
 
   '@capsizecss/unpack@3.0.0':
     resolution: {integrity: sha512-+ntATQe1AlL7nTOYjwjj6w3299CgRot48wL761TUGYpYgAou3AaONZazp0PKZyCyWhudWsjhq1nvRHOvbMzhTA==}
@@ -21104,6 +21137,18 @@ packages:
     resolution: {integrity: sha512-h65/pn2IPCCIWwdlR2BMLqRkDxpTEONA+HQW3n765HBijLYGyrnTCLa2YQt8VVjjSQD6EfFlTE6aS2Q/b6nb2g==}
     peerDependencies:
       react: ~19.2.3
+
+  '@dxos/debug@0.8.3':
+    resolution: {integrity: sha512-sDsOvwejoVKdLPpBK3yd4RAX8/sZf3C4ZtmmSJm9rmb8kv6NcyJgiPYZZFOJIArEL6Xm4Z9aHfDhOjrK8p4YtQ==}
+
+  '@dxos/invariant@0.8.3':
+    resolution: {integrity: sha512-PWu7u8LxPwGwOedstv4SfB6q4ZtZpclercV5xERai3HNAf+cl1ExA1KOLjgeKQVZsI7Ip3K5dM4mymhA98+KQg==}
+
+  '@dxos/keys@0.8.3':
+    resolution: {integrity: sha512-+ht+usY5oFawxnZaojtACBRQMj8lLzmh+P0QrJ6MAw8UpCqD+NkTC3IdWnHncUJZyAd597k21Kr1NCn8ukFsAg==}
+
+  '@dxos/node-std@0.8.3':
+    resolution: {integrity: sha512-aR4HR7nd7/xbvl//3XKxUTXtAPywHrW/n0UI1vuutKodRNgmmnnz+doNkCkUQlkVPe6zf/ITAtty9JJdqjQIEA==}
 
   '@dxos/wa-sqlite@0.2.1':
     resolution: {integrity: sha512-RVktTCzwJ1ix1MP/LWDjpO1HOOP0JpnAtjB/Zp/csbrlBEhhYYpwIlgDJzCi1Ri4cWHOo04iy+YtlnjfshM1Zw==}
@@ -27712,6 +27757,11 @@ packages:
     peerDependencies:
       typescript: '*'
 
+  '@typescript/vfs@1.6.2':
+    resolution: {integrity: sha512-hoBwJwcbKHmvd2QVebiytN1aELvpk9B74B4L1mFm/XT1Q/VOYAWl2vQ9AWRFtQq8zmz6enTpfTV8WRc4ATjW/g==}
+    peerDependencies:
+      typescript: '*'
+
   '@typespec/ts-http-runtime@0.3.2':
     resolution: {integrity: sha512-IlqQ/Gv22xUC1r/WQm4StLkYQmaaTsXAhUVsNE0+xiyf0yRFiH5++q78U3bw6bLKDCTmh0uqKB9eG9+Bt75Dkg==}
     engines: {node: '>=20.0.0'}
@@ -30505,6 +30555,9 @@ packages:
 
   ee-first@1.1.1:
     resolution: {integrity: sha512-WMwm9LhRUo+WUaRN+vRuETqG89IgZphVSNkdFgeb6sS/E4OrDIN7t48CAewSHXc6C8lefD8KKfr5vY61brQlow==}
+
+  effect@3.14.21:
+    resolution: {integrity: sha512-TKR7zfWcuZgEdWd+oIGA8LdREj/c+1Q0wz4pWqQtYT7VHnkW/QQEYCXgrDI5dT6lJgRTgyQAC1bAnpAf6MdjIA==}
 
   effect@3.19.11:
     resolution: {integrity: sha512-UTEj3c1s41Ha3uzSPKKvFBZaDjZ8ez00Q2NYWVm2mKh2LXeX8j6LTg1HcQHnmdUhOjr79KHmhVWYB/zbegLO1A==}
@@ -38750,8 +38803,8 @@ packages:
   zwitch@2.0.4:
     resolution: {integrity: sha512-bXE4cR/kVZhKZX/RjPEflHaKVhUVl85noU3v6b8apfQEc1x4A+zBxjZ4lN8LqGd6WZ3dl98pY4o717VFmoPp+A==}
 
-  zx@8.5.4:
-    resolution: {integrity: sha512-44oKea9Sa8ZnOkTnS6fRJpg3quzgnbB43nLrVfYnqE86J4sxgZMUDLezzKET/FdOAVkF4X+Alm9Bume+W+RW9Q==}
+  zx@8.8.5:
+    resolution: {integrity: sha512-SNgDF5L0gfN7FwVOdEFguY3orU5AkfFZm9B5YSHog/UDHv+lvmd82ZAsOenOkQixigwH2+yyH198AwNdKhj+RA==}
     engines: {node: '>= 12.17.0'}
     hasBin: true
 
@@ -40612,47 +40665,51 @@ snapshots:
 
   '@braintree/sanitize-url@6.0.2': {}
 
-  '@bufbuild/buf-darwin-arm64@1.43.0':
+  '@bufbuild/buf-darwin-arm64@1.61.0':
     optional: true
 
-  '@bufbuild/buf-darwin-x64@1.43.0':
+  '@bufbuild/buf-darwin-x64@1.61.0':
     optional: true
 
-  '@bufbuild/buf-linux-aarch64@1.43.0':
+  '@bufbuild/buf-linux-aarch64@1.61.0':
     optional: true
 
-  '@bufbuild/buf-linux-x64@1.43.0':
+  '@bufbuild/buf-linux-armv7@1.61.0':
     optional: true
 
-  '@bufbuild/buf-win32-arm64@1.43.0':
+  '@bufbuild/buf-linux-x64@1.61.0':
     optional: true
 
-  '@bufbuild/buf-win32-x64@1.43.0':
+  '@bufbuild/buf-win32-arm64@1.61.0':
     optional: true
 
-  '@bufbuild/buf@1.43.0':
+  '@bufbuild/buf-win32-x64@1.61.0':
+    optional: true
+
+  '@bufbuild/buf@1.61.0':
     optionalDependencies:
-      '@bufbuild/buf-darwin-arm64': 1.43.0
-      '@bufbuild/buf-darwin-x64': 1.43.0
-      '@bufbuild/buf-linux-aarch64': 1.43.0
-      '@bufbuild/buf-linux-x64': 1.43.0
-      '@bufbuild/buf-win32-arm64': 1.43.0
-      '@bufbuild/buf-win32-x64': 1.43.0
+      '@bufbuild/buf-darwin-arm64': 1.61.0
+      '@bufbuild/buf-darwin-x64': 1.61.0
+      '@bufbuild/buf-linux-aarch64': 1.61.0
+      '@bufbuild/buf-linux-armv7': 1.61.0
+      '@bufbuild/buf-linux-x64': 1.61.0
+      '@bufbuild/buf-win32-arm64': 1.61.0
+      '@bufbuild/buf-win32-x64': 1.61.0
 
-  '@bufbuild/protobuf@2.9.0': {}
+  '@bufbuild/protobuf@2.10.1': {}
 
-  '@bufbuild/protoc-gen-es@2.9.0(@bufbuild/protobuf@2.9.0)':
+  '@bufbuild/protoc-gen-es@2.10.1(@bufbuild/protobuf@2.10.1)':
     dependencies:
-      '@bufbuild/protoplugin': 2.9.0
+      '@bufbuild/protoplugin': 2.10.1
     optionalDependencies:
-      '@bufbuild/protobuf': 2.9.0
+      '@bufbuild/protobuf': 2.10.1
     transitivePeerDependencies:
       - supports-color
 
-  '@bufbuild/protoplugin@2.9.0':
+  '@bufbuild/protoplugin@2.10.1':
     dependencies:
-      '@bufbuild/protobuf': 2.9.0
-      '@typescript/vfs': 1.6.0(typescript@5.4.5)
+      '@bufbuild/protobuf': 2.10.1
+      '@typescript/vfs': 1.6.2(typescript@5.4.5)
       typescript: 5.4.5
     transitivePeerDependencies:
       - supports-color
@@ -41192,6 +41249,28 @@ snapshots:
     dependencies:
       react: 19.2.3
       tslib: 2.8.1
+
+  '@dxos/debug@0.8.3':
+    dependencies:
+      '@dxos/node-std': 0.8.3
+
+  '@dxos/invariant@0.8.3': {}
+
+  '@dxos/keys@0.8.3':
+    dependencies:
+      '@dxos/debug': 0.8.3
+      '@dxos/invariant': 0.8.3
+      '@dxos/node-std': 0.8.3
+      effect: 3.14.21
+      ulidx: 2.3.0
+
+  '@dxos/node-std@0.8.3':
+    dependencies:
+      assert: 2.0.0
+      events: 3.3.0
+      path-browserify: 1.0.1
+      readable-stream: 3.6.2
+      util: 0.12.5
 
   '@dxos/wa-sqlite@0.2.1': {}
 
@@ -48288,17 +48367,17 @@ snapshots:
       '@typescript/native-preview-win32-arm64': 7.0.0-dev.20250808.1
       '@typescript/native-preview-win32-x64': 7.0.0-dev.20250808.1
 
-  '@typescript/vfs@1.6.0(typescript@5.4.5)':
-    dependencies:
-      debug: 4.4.3
-      typescript: 5.4.5
-    transitivePeerDependencies:
-      - supports-color
-
   '@typescript/vfs@1.6.0(typescript@5.9.3)':
     dependencies:
       debug: 4.4.3
       typescript: 5.9.3
+    transitivePeerDependencies:
+      - supports-color
+
+  '@typescript/vfs@1.6.2(typescript@5.4.5)':
+    dependencies:
+      debug: 4.4.3
+      typescript: 5.4.5
     transitivePeerDependencies:
       - supports-color
 
@@ -51864,6 +51943,11 @@ snapshots:
       semver: 7.7.3
 
   ee-first@1.1.1: {}
+
+  effect@3.14.21:
+    dependencies:
+      '@standard-schema/spec': 1.0.0
+      fast-check: 3.23.2
 
   effect@3.19.11:
     dependencies:
@@ -62195,4 +62279,4 @@ snapshots:
 
   zwitch@2.0.4: {}
 
-  zx@8.5.4: {}
+  zx@8.8.5: {}
