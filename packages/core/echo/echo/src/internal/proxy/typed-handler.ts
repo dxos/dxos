@@ -146,6 +146,15 @@ const wouldCreateCycle = (targetRoot: object, value: any, visited = new Set<obje
  * Deep copy a value, handling arrays and nested objects.
  * Preserves ReactiveArray type and hidden properties (SchemaId, TypeId).
  * Does not copy class instances or functions (except ReactiveArray).
+ *
+ * Note: Cannot use structuredClone because we need to:
+ * - Unwrap proxies
+ * - Preserve ReactiveArray instances
+ * - Copy Symbol-keyed hidden properties (SchemaId, TypeId)
+ * - Convert plain arrays to ReactiveArray
+ *
+ * Performance: O(n) where n is the total number of nested objects/arrays.
+ * For large structures, consider using Refs for frequently reassigned subtrees.
  */
 const deepCopy = <T>(value: T, visited = new Map<object, object>()): T => {
   if (value == null || typeof value !== 'object') {
@@ -211,18 +220,26 @@ const copyHiddenProperties = (source: any, target: any): void => {
 };
 
 /**
+ * Maximum depth for owner chain traversal.
+ * This is a defensive measure against malformed circular ownership.
+ * Primary cycle detection is handled by wouldCreateCycle() before assignment.
+ */
+const MAX_OWNER_DEPTH = 100;
+
+/**
  * Get the root ECHO object for a target.
  * Follows the owner chain to find the ultimate root.
  * An object may have EventId (from being created standalone) but if it now
  * has an owner, it's nested and we should use its owner's root instead.
  */
-const getEchoRoot = (target: object): object => {
+const getEchoRoot = (target: object, depth = 0): object => {
+  invariant(depth < MAX_OWNER_DEPTH, 'Owner chain too deep - possible circular ownership');
   // If target has an owner, follow the chain to find the true root.
   // This handles the case where a standalone reactive object (with EventId)
   // is later nested into another object.
   const owner = getOwner(target);
   if (owner) {
-    return getEchoRoot(owner);
+    return getEchoRoot(owner, depth + 1);
   }
   // No owner means this is a root object.
   return target;
@@ -301,42 +318,12 @@ export class TypedReactiveHandler implements ReactiveHandler<ProxyTarget> {
   }
 
   set(target: ProxyTarget, prop: string | symbol, value: any, receiver: any): boolean {
-    // Get the root ECHO object that owns this target.
-    const echoRoot = getEchoRoot(target);
-
-    // Check for cycles before assignment.
-    if (isValidProxyTarget(value) || isProxy(value)) {
-      if (wouldCreateCycle(echoRoot, value)) {
-        throw new Error('Cannot create cycles in typed object graph. Consider using Ref for circular references.');
-      }
-    }
-
-    // Copy-on-assign: If the value is already owned by a different ECHO object, deep copy it.
-    // This prevents multiple inbound pointers to the same nested record.
-    if (isValidProxyTarget(value) || isProxy(value)) {
-      const actualValue = getRawTarget(value);
-      const existingOwner = getOwner(actualValue);
-      // If already owned by a different ECHO object, copy it.
-      if (existingOwner != null && existingOwner !== echoRoot) {
-        value = deepCopy(value);
-      }
-    }
-
-    // Convert arrays to reactive arrays on write.
-    if (Array.isArray(value)) {
-      value = ReactiveArray.from(value);
-    }
-
     let result: boolean = false;
     this._inSet = true;
     try {
       batchEvents(() => {
-        const validatedValue = this._validateValue(target, prop, value);
-        // Set owner on new value to the root ECHO object.
-        if (isValidProxyTarget(validatedValue) || isProxy(validatedValue)) {
-          setOwnerRecursive(validatedValue, echoRoot);
-        }
-        result = Reflect.set(target, prop, validatedValue, receiver);
+        const { echoRoot, preparedValue } = this._prepareValueForAssignment(target, prop, value);
+        result = Reflect.set(target, prop, preparedValue, receiver);
         // Emit event on the root ECHO object (centralized reactivity).
         emitEvent(echoRoot);
       });
@@ -351,9 +338,27 @@ export class TypedReactiveHandler implements ReactiveHandler<ProxyTarget> {
   }
 
   defineProperty(target: ProxyTarget, property: string | symbol, attributes: PropertyDescriptor): boolean {
-    let value = attributes.value;
+    const { echoRoot, preparedValue } = this._prepareValueForAssignment(target, property, attributes.value);
+    const result = Reflect.defineProperty(target, property, {
+      ...attributes,
+      value: preparedValue,
+    });
+    if (!this._inSet) {
+      // Emit event on the root ECHO object (centralized reactivity).
+      emitEvent(echoRoot);
+    }
+    return result;
+  }
 
-    // Get the root ECHO object that owns this target.
+  /**
+   * Prepare a value for assignment to a typed object property.
+   * Handles cycle detection, copy-on-assign, array conversion, validation, and ownership.
+   */
+  private _prepareValueForAssignment(
+    target: ProxyTarget,
+    prop: string | symbol,
+    value: any,
+  ): { echoRoot: object; preparedValue: any } {
     const echoRoot = getEchoRoot(target);
 
     // Check for cycles before assignment.
@@ -367,39 +372,29 @@ export class TypedReactiveHandler implements ReactiveHandler<ProxyTarget> {
     if (isValidProxyTarget(value) || isProxy(value)) {
       const actualValue = getRawTarget(value);
       const existingOwner = getOwner(actualValue);
-      // If already owned by a different ECHO object, copy it.
       if (existingOwner != null && existingOwner !== echoRoot) {
         value = deepCopy(value);
       }
     }
 
     // Convert arrays to reactive arrays.
-    if (Array.isArray(value)) {
+    if (Array.isArray(value) && !(value instanceof ReactiveArray)) {
       value = ReactiveArray.from(value);
     }
 
-    const validatedValue = this._validateValue(target, property, value);
+    const validatedValue = this._validateValue(target, prop, value);
+
     // Set owner on new value to the root ECHO object.
     if (isValidProxyTarget(validatedValue) || isProxy(validatedValue)) {
       setOwnerRecursive(validatedValue, echoRoot);
     }
-    const result = Reflect.defineProperty(target, property, {
-      ...attributes,
-      value: validatedValue,
-    });
-    if (!this._inSet) {
-      // Emit event on the root ECHO object (centralized reactivity).
-      emitEvent(echoRoot);
-    }
-    return result;
+
+    return { echoRoot, preparedValue: validatedValue };
   }
 
   private _validateValue(target: any, prop: string | symbol, value: any) {
     const schema = SchemaValidator.getTargetPropertySchema(target, prop);
     const _ = Schema.asserts(schema)(value);
-    if (Array.isArray(value)) {
-      value = new ReactiveArray(...value);
-    }
     if (isValidProxyTarget(value)) {
       setSchemaProperties(value, schema);
     }

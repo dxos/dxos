@@ -242,6 +242,27 @@ describe('object structure restrictions', () => {
     unsubscribe();
   });
 
+  test('centralized reactivity - nested mutation triggers event on root', () => {
+    const obj = makeObject(NestedSchema, {
+      data: { level1: { value: 1 } },
+    });
+
+    let notificationCount = 0;
+    const unsubscribe = Obj.subscribe(obj as any, () => {
+      notificationCount++;
+    });
+
+    // Mutate deeply nested property - should trigger event on root.
+    obj.data.level1.value = 2;
+    expect(notificationCount).to.eq(1);
+
+    // Another nested mutation.
+    obj.data.level1 = { value: 3 };
+    expect(notificationCount).to.eq(2);
+
+    unsubscribe();
+  });
+
   test('reassigning owned object to same root does not copy', () => {
     const obj = makeObject(NestedSchema, {
       data: { original: true },
