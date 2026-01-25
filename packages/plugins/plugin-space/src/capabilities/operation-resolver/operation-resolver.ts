@@ -149,9 +149,7 @@ export default Capability.makeModule(
         OperationResolver.make({
           operation: SpaceOperation.RemoveObjects,
           handler: Effect.fnUntraced(function* (input) {
-            const registry = yield* Capability.get(Common.Capability.AtomRegistry);
-            const layoutAtom = yield* Capability.get(Common.Capability.Layout);
-            const layout = registry.get(layoutAtom);
+            const layout = yield* Common.Capability.getAtomValue(Common.Capability.Layout);
             const objects = input.objects as Obj.Any[];
 
             // All objects must be a member of the same space.

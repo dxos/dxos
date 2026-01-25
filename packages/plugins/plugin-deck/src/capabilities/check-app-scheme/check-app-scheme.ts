@@ -33,10 +33,7 @@ const checkAppScheme = (url: string) => {
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    const capabilities = yield* Capability.Service;
-    const registry = capabilities.get(Common.Capability.AtomRegistry);
-    const settingsAtom = capabilities.get(DeckCapabilities.Settings);
-    const settings = registry.get(settingsAtom);
+    const settings = yield* Common.Capability.getAtomValue(DeckCapabilities.Settings);
     if (!isSocket && settings?.enableNativeRedirect) {
       checkAppScheme(appScheme);
     }
