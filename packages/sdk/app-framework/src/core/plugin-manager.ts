@@ -4,6 +4,7 @@
 
 import { Atom, Registry } from '@effect-atom/atom-react';
 import * as Array from 'effect/Array';
+import * as Cause from 'effect/Cause';
 import * as Deferred from 'effect/Deferred';
 import * as Duration from 'effect/Duration';
 import * as Effect from 'effect/Effect';
@@ -614,9 +615,15 @@ class ManagerImpl implements PluginManager {
         yield* Effect.forkDaemon(
           loadEffect.pipe(
             Effect.tap((result) => Deferred.succeed(deferred, result)),
-            Effect.catchAll((error) => {
-              log.error('module failed to activate', { module: module.id, error });
-              return Deferred.fail(deferred, error);
+            Effect.catchAllCause((cause) => {
+              const error = Cause.squash(cause);
+              log.error('module failed to activate', {
+                module: module.id,
+                error: error instanceof Error ? error.message : String(error),
+                stack: error instanceof Error ? error.stack : undefined,
+                isDefect: !Cause.isFailure(cause),
+              });
+              return Deferred.fail(deferred, error instanceof Error ? error : new Error(String(error)));
             }),
           ),
         );
