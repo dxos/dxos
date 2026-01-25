@@ -287,6 +287,7 @@ export class ClientServicesHost {
     if (!this._level) {
       this._level = await createLevel(this._config.get('runtime.client.storage', {})!);
     }
+    await this._level.open();
 
     await this._loggingService.open();
 
