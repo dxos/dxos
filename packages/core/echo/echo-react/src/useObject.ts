@@ -2,8 +2,9 @@
 // Copyright 2025 DXOS.org
 //
 
+import * as Atom from '@effect-atom/atom/Atom';
 import { useAtomValue } from '@effect-atom/atom-react';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useMemo } from 'react';
 
 import { type Entity, Obj, Ref } from '@dxos/echo';
 import { AtomObj } from '@dxos/echo-atom';
@@ -175,65 +176,19 @@ const useObjectProperty = <T extends Entity.Unknown, K extends keyof T>(
  * @returns Array of loaded target snapshots (excludes unloaded refs)
  */
 export const useObjects = <T extends Entity.Unknown>(refs: readonly Ref.Ref<T>[]): Readonly<T>[] => {
-  // Track version to trigger re-renders when any ref or target changes.
-  const [, setVersion] = useState(0);
-
-  // Subscribe to all refs and their targets.
-  useEffect(() => {
-    let isMounted = true;
-    const targetUnsubscribes = new Map<string, () => void>();
-
-    // Function to trigger re-render.
-    const triggerUpdate = () => {
-      if (isMounted) {
-        setVersion((v) => v + 1);
-      }
-    };
-
-    // Function to set up subscription for a target.
-    const subscribeToTarget = (ref: Ref.Ref<T>) => {
-      if (!isMounted) return;
-      const target = ref.target;
-      if (target) {
-        const key = ref.dxn.toString();
-        if (!targetUnsubscribes.has(key)) {
-          targetUnsubscribes.set(key, Obj.subscribe(target, triggerUpdate));
+  const atom = useMemo(
+    () =>
+      Atom.make((get) => {
+        const results: T[] = [];
+        for (const ref of refs) {
+          const value = get(AtomObj.make(ref));
+          if (value !== undefined) {
+            results.push(value);
+          }
         }
-      }
-    };
-
-    // Try to load all refs and subscribe to targets.
-    for (const ref of refs) {
-      // Subscribe to existing target if available.
-      subscribeToTarget(ref);
-
-      // Trigger async load if not already loaded.
-      if (!ref.target) {
-        void ref
-          .load()
-          .then(() => {
-            subscribeToTarget(ref);
-            triggerUpdate();
-          })
-          .catch(() => {
-            // Ignore load errors.
-          });
-      }
-    }
-
-    return () => {
-      isMounted = false;
-      targetUnsubscribes.forEach((u) => u());
-    };
-  }, [refs]);
-
-  // Compute current snapshots by reading each ref's target.
-  const snapshots: Readonly<T>[] = [];
-  for (const ref of refs) {
-    const target = ref.target;
-    if (target !== undefined) {
-      snapshots.push(target as Readonly<T>);
-    }
-  }
-  return snapshots;
+        return results;
+      }),
+    [refs],
+  );
+  return useAtomValue(atom);
 };
