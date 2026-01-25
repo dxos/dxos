@@ -8,10 +8,11 @@ import * as Option from 'effect/Option';
 
 import { Capability, Common } from '@dxos/app-framework';
 import { Filter, Obj, Ref } from '@dxos/echo';
-import { AtomObj, AtomQuery } from '@dxos/echo-atom';
+import { AtomObj, AtomQuery, AtomRef } from '@dxos/echo-atom';
 import { invariant } from '@dxos/invariant';
 import { Operation } from '@dxos/operation';
 import { AttentionCapabilities } from '@dxos/plugin-attention';
+import { type SelectionManager } from '@dxos/react-ui-attention';
 import { AutomationCapabilities, invokeFunctionWithTracing } from '@dxos/plugin-automation';
 import { ATTENDABLE_PATH_SEPARATOR, PLANK_COMPANION_TYPE } from '@dxos/plugin-deck/types';
 import { GraphBuilder, Node } from '@dxos/plugin-graph';
@@ -22,6 +23,20 @@ import { kebabize } from '@dxos/util';
 import { calendar, gmail } from '../../functions';
 import { meta } from '../../meta';
 import { Calendar, InboxOperation, Mailbox } from '../../types';
+
+/**
+ * Atom family to derive the selected item ID from selection state.
+ * Keyed by (selectionManager, nodeId) to ensure proper caching.
+ */
+const selectedIdFamily = Atom.family((selectionManager: SelectionManager) =>
+  Atom.family((nodeId: string) =>
+    Atom.make((get) => {
+      const state = get(selectionManager.state);
+      const selection = state.selections[nodeId];
+      return selection?.mode === 'single' ? selection.id : undefined;
+    }),
+  ),
+);
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
@@ -84,20 +99,15 @@ export default Capability.makeModule(
         id: `${meta.id}/mailbox-message`,
         type: Mailbox.Mailbox,
         connector: (mailbox, get) => {
-          const queue = mailbox.queue.target;
+          // Subscribe to queue ref to reactively load the target.
+          const queue = get(AtomRef.make(mailbox.queue));
           if (!queue) {
             return Effect.succeed([]);
           }
 
           const selectionManager = capabilities.get(AttentionCapabilities.Selection);
           const nodeId = Obj.getDXN(mailbox).toString();
-          const messageId = get(
-            Atom.make((get) => {
-              const state = get(selectionManager.state);
-              const selection = state.selections[nodeId];
-              return selection?.mode === 'single' ? selection.id : undefined;
-            }),
-          );
+          const messageId = get(selectedIdFamily(selectionManager)(nodeId));
           const message = get(
             AtomQuery.make<Message.Message>(queue, messageId ? Filter.id(messageId) : Filter.nothing()),
           )[0];
@@ -118,21 +128,16 @@ export default Capability.makeModule(
       GraphBuilder.createTypeExtension({
         id: `${meta.id}/calendar-event`,
         type: Calendar.Calendar,
-        connector: (calendar, get) => {
-          const queue = calendar.queue.target;
+        connector: (cal, get) => {
+          // Subscribe to queue ref to reactively load the target.
+          const queue = get(AtomRef.make(cal.queue));
           if (!queue) {
             return Effect.succeed([]);
           }
 
           const selectionManager = capabilities.get(AttentionCapabilities.Selection);
-          const nodeId = Obj.getDXN(calendar).toString();
-          const eventId = get(
-            Atom.make((get) => {
-              const state = get(selectionManager.state);
-              const selection = state.selections[nodeId];
-              return selection?.mode === 'single' ? selection.id : undefined;
-            }),
-          );
+          const nodeId = Obj.getDXN(cal).toString();
+          const eventId = get(selectedIdFamily(selectionManager)(nodeId));
           const event = get(AtomQuery.make<Event.Event>(queue, eventId ? Filter.id(eventId) : Filter.nothing()))[0];
           return Effect.succeed([
             {

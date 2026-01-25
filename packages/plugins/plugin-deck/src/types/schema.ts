@@ -116,11 +116,7 @@ export const DeckEphemeralStateSchema = Schema.Struct({
 export type DeckEphemeralStateProps = Schema.Schema.Type<typeof DeckEphemeralStateSchema>;
 
 // Combined state type (for convenience in components that need both).
-export type DeckPluginState = DeckStateProps &
-  DeckEphemeralStateProps & {
-    /** Derived from decks[activeDeck]. */
-    deck: DeckState;
-  };
+export type DeckPluginState = DeckStateProps & DeckEphemeralStateProps;
 
 export namespace DeckAction {
   const PartAdjustmentSchema = Schema.Union(

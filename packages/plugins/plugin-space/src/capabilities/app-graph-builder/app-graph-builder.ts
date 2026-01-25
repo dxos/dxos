@@ -171,9 +171,8 @@ export default Capability.makeModule(
             return Effect.succeed([]);
           }
 
-          const registry = capabilities.get(Common.Capability.AtomRegistry);
           const settingsAtom = capabilities.get(SpaceCapabilities.Settings);
-          const settings = registry.get(settingsAtom);
+          const settings = get(settingsAtom);
           const state = get(stateAtom);
           const ephemeralState = get(ephemeralAtom);
 

@@ -158,8 +158,8 @@ const PlankComponent = memo(
     settings,
   }: PlankComponentProps) => {
     const { invokePromise } = useOperationInvoker();
-    const { state } = useDeckState();
-    const { deck, popoverAnchorId, scrollIntoView } = state;
+    const { state, deck } = useDeckState();
+    const { popoverAnchorId, scrollIntoView } = state;
     const { findFirstFocusable } = useFocusFinders();
     const canResize = layoutMode === 'deck';
 

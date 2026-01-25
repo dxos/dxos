@@ -21,6 +21,22 @@ import { SpaceState, getSpace } from '@dxos/react-client/echo';
 import { meta } from '../../meta';
 import { Meeting, MeetingCapabilities, MeetingOperation } from '../../types';
 
+/**
+ * Atom families to derive meeting state properties.
+ * Keyed by store to ensure proper caching.
+ */
+const activeMeetingFamily = Atom.family((store: MeetingCapabilities.MeetingStateStore) =>
+  Atom.make((get) => get(store.stateAtom).activeMeeting),
+);
+
+const activeMeetingOrPlaceholderFamily = Atom.family((store: MeetingCapabilities.MeetingStateStore) =>
+  Atom.make((get) => get(store.stateAtom).activeMeeting ?? ('meeting' as const)),
+);
+
+const transcriptionManagerFamily = Atom.family((store: MeetingCapabilities.MeetingStateStore) =>
+  Atom.make((get) => get(store.stateAtom).transcriptionManager),
+);
+
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     const extensions = yield* Effect.all([
@@ -59,7 +75,7 @@ export default Capability.makeModule(
         type: Channel.Channel,
         connector: Effect.fnUntraced(function* (channel, get) {
           const store = yield* Capability.get(MeetingCapabilities.State);
-          const meeting = get(Atom.make((get) => get(store.stateAtom).activeMeeting));
+          const meeting = get(activeMeetingFamily(store));
           if (!meeting) {
             return [];
           }
@@ -101,7 +117,7 @@ export default Capability.makeModule(
           }
 
           const store = yield* Capability.get(MeetingCapabilities.State);
-          const data = get(Atom.make((get) => get(store.stateAtom).activeMeeting ?? 'meeting'));
+          const data = get(activeMeetingOrPlaceholderFamily(store));
 
           return [
             {
@@ -124,7 +140,7 @@ export default Capability.makeModule(
         type: Channel.Channel,
         actions: Effect.fnUntraced(function* (channel, get) {
           const store = yield* Capability.get(MeetingCapabilities.State);
-          const transcriptionManager = get(Atom.make((get) => get(store.stateAtom).transcriptionManager));
+          const transcriptionManager = get(transcriptionManagerFamily(store));
           const enabled = transcriptionManager ? get(transcriptionManager.enabledAtom) : false;
           return [
             {
@@ -175,7 +191,7 @@ export default Capability.makeModule(
         }),
         connector: Effect.fnUntraced(function* (channel, get) {
           const store = yield* Capability.get(MeetingCapabilities.State);
-          const meeting = get(Atom.make((get) => get(store.stateAtom).activeMeeting));
+          const meeting = get(activeMeetingFamily(store));
           if (!meeting) {
             return [];
           }

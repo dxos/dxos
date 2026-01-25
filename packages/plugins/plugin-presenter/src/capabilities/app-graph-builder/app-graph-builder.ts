@@ -32,9 +32,8 @@ export default Capability.makeModule(
       // TODO(wittjosiah): This is a hack to work around presenter previously relying on "variant". Remove.
       match: whenPresentable,
       connector: (object, get) => {
-        const registry = capabilities.get(Common.Capability.AtomRegistry);
         const settingsAtom = capabilities.get(PresenterCapabilities.Settings);
-        const settings = registry.get(settingsAtom);
+        const settings = get(settingsAtom);
         const isPresentable = settings?.presentCollections
           ? Obj.instanceOf(Collection.Collection, object) || Obj.instanceOf(Markdown.Document, object)
           : Obj.instanceOf(Markdown.Document, object);
@@ -56,9 +55,8 @@ export default Capability.makeModule(
         ]);
       },
       actions: (object, get) => {
-        const registry = capabilities.get(Common.Capability.AtomRegistry);
         const settingsAtom = capabilities.get(PresenterCapabilities.Settings);
-        const settings = registry.get(settingsAtom);
+        const settings = get(settingsAtom);
         const isPresentable = settings?.presentCollections
           ? Obj.instanceOf(Collection.Collection, object) || Obj.instanceOf(Markdown.Document, object)
           : Obj.instanceOf(Markdown.Document, object);

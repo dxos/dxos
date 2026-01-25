@@ -48,9 +48,8 @@ export default Capability.makeModule(
         id: `${meta.id}/root`,
         match: NodeMatcher.whenRoot,
         connector: (node, get) => {
-          const registry = capabilities.get(Common.Capability.AtomRegistry);
           const settingsAtom = capabilities.get(FileCapabilities.Settings);
-          const settings = registry.get(settingsAtom);
+          const settings = get(settingsAtom);
           return Effect.succeed(
             settings && settings.openLocalFiles
               ? [
@@ -108,10 +107,9 @@ export default Capability.makeModule(
                 ]
               : []),
           ]),
-        connector: () => {
-          const registry = capabilities.get(Common.Capability.AtomRegistry);
+        connector: (_node, get) => {
           const stateAtom = capabilities.get(FileCapabilities.State);
-          const state = registry.get(stateAtom);
+          const state = get(stateAtom);
           return Effect.succeed(
             state.files.map((entity) => ({
               id: entity.id,

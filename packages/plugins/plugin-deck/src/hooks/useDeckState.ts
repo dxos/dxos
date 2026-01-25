@@ -31,9 +31,6 @@ export type DeckStateHook = {
 /**
  * Hook to access the deck plugin state reactively.
  * Returns the combined state, the active deck, and update functions for each atom.
- *
- * NOTE: The `deck` is returned separately (not spread into state) to avoid creating
- * new object references on every state update, which would cause infinite re-render loops.
  */
 export const useDeckState = (): DeckStateHook => {
   const registry = useCapability(Common.Capability.AtomRegistry);
@@ -55,9 +52,8 @@ export const useDeckState = (): DeckStateHook => {
     (): DeckPluginState => ({
       ...persistedState,
       ...ephemeralState,
-      deck,
     }),
-    [persistedState, ephemeralState, deck],
+    [persistedState, ephemeralState],
   );
 
   const updateState = useCallback(

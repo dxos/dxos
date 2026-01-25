@@ -13,7 +13,6 @@ import { meta } from '../../meta';
 import {
   DeckCapabilities,
   type DeckEphemeralStateProps,
-  type DeckPluginState,
   type DeckStateProps,
   DeckStateSchema,
   defaultDeck,
@@ -21,7 +20,7 @@ import {
 } from '../../types';
 
 /** Default persisted state. */
-export const defaultDeckState: DeckStateProps = {
+const defaultDeckState: DeckStateProps = {
   sidebarState: 'expanded',
   complementarySidebarState: 'collapsed',
   complementarySidebarPanel: undefined,
@@ -34,7 +33,7 @@ export const defaultDeckState: DeckStateProps = {
 };
 
 /** Default ephemeral state. */
-export const defaultDeckEphemeralState: DeckEphemeralStateProps = {
+const defaultDeckEphemeralState: DeckEphemeralStateProps = {
   dialogContent: null,
   dialogOpen: false,
   dialogBlockAlign: undefined,
@@ -46,13 +45,6 @@ export const defaultDeckEphemeralState: DeckEphemeralStateProps = {
   toasts: [],
   currentUndoId: undefined,
   scrollIntoView: undefined,
-};
-
-/** Default combined state for testing. */
-export const defaultDeckPluginState: DeckPluginState = {
-  ...defaultDeckState,
-  ...defaultDeckEphemeralState,
-  deck: { ...defaultDeck },
 };
 
 export default Capability.makeModule(

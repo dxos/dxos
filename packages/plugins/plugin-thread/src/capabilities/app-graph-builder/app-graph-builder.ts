@@ -12,11 +12,37 @@ import { Operation } from '@dxos/operation';
 import { AttentionCapabilities } from '@dxos/plugin-attention';
 import { ATTENDABLE_PATH_SEPARATOR, DECK_COMPANION_TYPE, PLANK_COMPANION_TYPE } from '@dxos/plugin-deck/types';
 import { GraphBuilder, NodeMatcher } from '@dxos/plugin-graph';
-import { defaultSelection } from '@dxos/react-ui-attention';
+import { defaultSelection, type SelectionManager, type SelectionMode } from '@dxos/react-ui-attention';
 
 import { meta } from '../../meta';
 import { Channel, ThreadCapabilities, ThreadOperation } from '../../types';
 import { getAnchor } from '../../util';
+
+type CommentDisabledParams = {
+  stateAtom: Atom.Atom<ThreadCapabilities.ThreadStateStore[]>;
+  selectionManager: SelectionManager;
+  objectId: string;
+  commentsType: string;
+  selectionMode: SelectionMode | undefined;
+};
+
+/**
+ * Atom family to derive whether the comment button should be disabled.
+ * Uses a composite key to ensure proper caching.
+ */
+const commentDisabledFamily = Atom.family(
+  ({ stateAtom, selectionManager, objectId, commentsType, selectionMode }: CommentDisabledParams) =>
+    Atom.make((get) => {
+      const toolbar = get(stateAtom)[0]?.state.toolbar ?? {};
+      const selectionState = get(selectionManager.state);
+      const selection =
+        selectionState.selections[objectId] ?? (selectionMode ? defaultSelection(selectionMode) : undefined);
+      const anchor = getAnchor(selection);
+      const invalidSelection = !anchor;
+      const overlappingComment = toolbar[objectId];
+      return (commentsType === 'anchored' && invalidSelection) || overlappingComment;
+    }),
+);
 
 /** Match ECHO objects that are NOT Channels (i.e. objects that can have comments). */
 const whenCommentableObject = NodeMatcher.whenAll(
@@ -132,16 +158,12 @@ export default Capability.makeModule(
           const metadata = resolve(Obj.getTypename(object)!);
 
           const disabled = get(
-            Atom.make((get) => {
-              const toolbar = get(stateAtom)[0]?.state.toolbar ?? {};
-              const selectionState = get(selectionManager.state);
-              const selectionMode = metadata.selectionMode;
-              const selection =
-                selectionState.selections[objectId] ?? (selectionMode ? defaultSelection(selectionMode) : undefined);
-              const anchor = getAnchor(selection);
-              const invalidSelection = !anchor;
-              const overlappingComment = toolbar[objectId];
-              return (metadata.comments === 'anchored' && invalidSelection) || overlappingComment;
+            commentDisabledFamily({
+              stateAtom,
+              selectionManager,
+              objectId,
+              commentsType: metadata.comments as string,
+              selectionMode: metadata.selectionMode,
             }),
           );
 

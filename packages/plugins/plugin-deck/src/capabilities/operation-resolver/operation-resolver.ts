@@ -252,36 +252,39 @@ export default Capability.makeModule(
         operation: Common.LayoutOperation.SwitchWorkspace,
         handler: Effect.fnUntraced(function* (input) {
           const { graph } = yield* Capability.get(Common.Capability.AppGraph);
-          const state = yield* Common.Capability.getAtomValue(DeckCapabilities.State);
 
-          // TODO(wittjosiah): This is a hack to prevent the previous deck from being set for pinned items.
-          //   Ideally this should be worked into the data model in a generic way.
-          const shouldUpdatePrevious = !state.activeDeck.startsWith('!');
+          {
+            const state = yield* Common.Capability.getAtomValue(DeckCapabilities.State);
+            // TODO(wittjosiah): This is a hack to prevent the previous deck from being set for pinned items.
+            //   Ideally this should be worked into the data model in a generic way.
+            const shouldUpdatePrevious = !state.activeDeck.startsWith('!');
 
-          yield* Common.Capability.updateAtomValue(DeckCapabilities.State, (s) => {
-            const newDecks = s.decks[input.subject] ? s.decks : { ...s.decks, [input.subject]: { ...defaultDeck } };
-            return {
-              ...s,
-              previousDeck: shouldUpdatePrevious ? s.activeDeck : s.previousDeck,
-              activeDeck: input.subject,
-              decks: newDecks,
-            };
-          });
+            yield* Common.Capability.updateAtomValue(DeckCapabilities.State, (s) => {
+              const newDecks = s.decks[input.subject] ? s.decks : { ...s.decks, [input.subject]: { ...defaultDeck } };
+              return {
+                ...s,
+                previousDeck: shouldUpdatePrevious ? s.activeDeck : s.previousDeck,
+                activeDeck: input.subject,
+                decks: newDecks,
+              };
+            });
+          }
 
-          // Re-read state after update to get the new deck.
-          const newState = yield* Common.Capability.getAtomValue(DeckCapabilities.State);
-          const newDeck = newState.decks[input.subject];
-          invariant(newDeck, `Deck not found: ${input.subject}`);
+          {
+            const state = yield* Common.Capability.getAtomValue(DeckCapabilities.State);
+            const deck = state.decks[input.subject];
+            invariant(deck, `Deck not found: ${input.subject}`);
 
-          const first = newDeck.solo ? newDeck.solo : newDeck.active[0];
-          if (first) {
-            yield* Operation.schedule(Common.LayoutOperation.ScrollIntoView, { subject: first });
-          } else {
-            const [item] = Graph.getConnections(graph, input.subject).filter(
-              (node) => !Node.isActionLike(node) && !node.properties.disposition,
-            );
-            if (item) {
-              yield* Operation.schedule(Common.LayoutOperation.Open, { subject: [item.id] });
+            const first = deck.solo ? deck.solo : deck.active[0];
+            if (first) {
+              yield* Operation.schedule(Common.LayoutOperation.ScrollIntoView, { subject: first });
+            } else {
+              const [item] = Graph.getConnections(graph, input.subject).filter(
+                (node) => !Node.isActionLike(node) && !node.properties.disposition,
+              );
+              if (item) {
+                yield* Operation.schedule(Common.LayoutOperation.Open, { subject: [item.id] });
+              }
             }
           }
         }),
@@ -305,62 +308,66 @@ export default Capability.makeModule(
         operation: Common.LayoutOperation.Open,
         handler: Effect.fnUntraced(function* (input) {
           const { graph } = yield* Capability.get(Common.Capability.AppGraph);
-          const state = yield* Common.Capability.getAtomValue(DeckCapabilities.State);
           const attention = yield* Capability.get(AttentionCapabilities.Attention);
           const settings = yield* Common.Capability.getAtomValue(DeckCapabilities.Settings);
 
-          if (input.workspace && state.activeDeck !== input.workspace) {
-            yield* Operation.invoke(Common.LayoutOperation.SwitchWorkspace, { subject: input.workspace });
+          {
+            const state = yield* Common.Capability.getAtomValue(DeckCapabilities.State);
+            if (input.workspace && state.activeDeck !== input.workspace) {
+              yield* Operation.invoke(Common.LayoutOperation.SwitchWorkspace, { subject: input.workspace });
+            }
           }
 
-          // Re-read deck after potential workspace switch.
-          const deck = yield* DeckCapabilities.getDeck();
+          let previouslyOpenIds: Set<string>;
+          {
+            const deck = yield* DeckCapabilities.getDeck();
+            previouslyOpenIds = new Set<string>(deck.solo ? [deck.solo] : deck.active);
+            const next = deck.solo
+              ? input.subject.map((id) => createEntryId(id, input.variant))
+              : input.subject.reduce(
+                  (acc, entryId) =>
+                    openEntry(acc, entryId, {
+                      key: input.key,
+                      positioning: input.positioning ?? settings?.newPlankPositioning,
+                      pivotId: input.pivotId,
+                      variant: input.variant,
+                    }),
+                  deck.active,
+                );
 
-          const previouslyOpenIds = new Set<string>(deck.solo ? [deck.solo] : deck.active);
-          const next = deck.solo
-            ? input.subject.map((id) => createEntryId(id, input.variant))
-            : input.subject.reduce(
-                (acc, entryId) =>
-                  openEntry(acc, entryId, {
-                    key: input.key,
-                    positioning: input.positioning ?? settings?.newPlankPositioning,
-                    pivotId: input.pivotId,
-                    variant: input.variant,
-                  }),
-                deck.active,
-              );
-
-          const { deckUpdates, toAttend: _toAttend } = computeActiveUpdates({ next, deck, attention });
-          yield* Common.Capability.updateAtomValue(DeckCapabilities.State, (s) => updateActiveDeck(s, deckUpdates));
-
-          // Re-read deck after update.
-          const afterDeck = yield* DeckCapabilities.getDeck();
-          const ids = afterDeck.solo ? [afterDeck.solo] : afterDeck.active;
-          const newlyOpen = ids.filter((i: string) => !previouslyOpenIds.has(i));
-
-          if (input.scrollIntoView !== false && (newlyOpen[0] ?? input.subject[0])) {
-            yield* Operation.schedule(Common.LayoutOperation.ScrollIntoView, {
-              subject: newlyOpen[0] ?? input.subject[0],
-            });
+            const { deckUpdates, toAttend: _toAttend } = computeActiveUpdates({ next, deck, attention });
+            yield* Common.Capability.updateAtomValue(DeckCapabilities.State, (s) => updateActiveDeck(s, deckUpdates));
           }
 
-          if (newlyOpen[0] ?? input.subject[0]) {
-            yield* Operation.schedule(Common.LayoutOperation.Expose, { subject: newlyOpen[0] ?? input.subject[0] });
-          }
+          {
+            const deck = yield* DeckCapabilities.getDeck();
+            const ids = deck.solo ? [deck.solo] : deck.active;
+            const newlyOpen = ids.filter((i: string) => !previouslyOpenIds.has(i));
 
-          // Send analytics events for newly opened items.
-          for (const subjectId of newlyOpen) {
-            const typename = Option.match(Graph.getNode(graph, subjectId), {
-              onNone: () => undefined,
-              onSome: (node) => {
-                const active = node.data;
-                return isLiveObject(active) ? Obj.getTypename(active) : undefined;
-              },
-            });
-            yield* Operation.schedule(ObservabilityOperation.SendEvent, {
-              name: 'navigation.activate',
-              properties: { subjectId, typename },
-            });
+            if (input.scrollIntoView !== false && (newlyOpen[0] ?? input.subject[0])) {
+              yield* Operation.schedule(Common.LayoutOperation.ScrollIntoView, {
+                subject: newlyOpen[0] ?? input.subject[0],
+              });
+            }
+
+            if (newlyOpen[0] ?? input.subject[0]) {
+              yield* Operation.schedule(Common.LayoutOperation.Expose, { subject: newlyOpen[0] ?? input.subject[0] });
+            }
+
+            // Send analytics events for newly opened items.
+            for (const subjectId of newlyOpen) {
+              const typename = Option.match(Graph.getNode(graph, subjectId), {
+                onNone: () => undefined,
+                onSome: (node) => {
+                  const active = node.data;
+                  return isLiveObject(active) ? Obj.getTypename(active) : undefined;
+                },
+              });
+              yield* Operation.schedule(ObservabilityOperation.SendEvent, {
+                name: 'navigation.activate',
+                properties: { subjectId, typename },
+              });
+            }
           }
         }),
       }),
