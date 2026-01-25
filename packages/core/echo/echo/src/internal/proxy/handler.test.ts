@@ -34,23 +34,24 @@ const TEST_OBJECT: TestSchema.ExampleSchema = {
   },
 };
 
-for (const schema of [undefined, TestSchema.ExampleSchema]) {
+// Schema is now required for reactive objects.
+{
   const createObject = (props: Partial<TestSchema.ExampleSchema> = {}): Live<TestSchema.ExampleSchema> => {
-    return schema == null ? (makeObject(props) as TestSchema.ExampleSchema) : makeObject(schema, props);
+    return makeObject(TestSchema.ExampleSchema, props);
   };
 
-  describe(`Non-echo specific proxy properties${schema == null ? '' : ' with schema'}`, () => {
+  describe('Non-echo specific proxy properties with schema', () => {
     test.skipIf(!isNode())('inspect', () => {
       const obj = createObject({ string: 'bar' });
       const str = inspect(obj, { colors: false });
-      expect(str).to.eq(`${schema == null ? '' : 'Typed '}{ string: 'bar' }`);
+      expect(str).to.eq("Typed { string: 'bar' }");
     });
 
     test('data symbol', async () => {
       const obj = createObject({ ...TEST_OBJECT });
       const objData: any = (obj as any)[objectData];
       expect(objData).to.deep.contain({
-        '@type': `${schema ? 'Typed' : ''}ReactiveObject`,
+        '@type': 'TypedReactiveObject',
         ...TEST_OBJECT,
       });
     });
@@ -72,18 +73,14 @@ for (const schema of [undefined, TestSchema.ExampleSchema]) {
       test('toJSON', () => {
         const original = { classInstance: new TestSchema.TestClass() };
         const reactive = createObject(original);
-        if (!schema) {
-          expect(JSON.stringify(reactive)).to.eq(JSON.stringify(original));
-        } else {
-          expect(JSON.stringify(reactive)).to.eq(
-            JSON.stringify({
-              [ATTR_META]: {
-                keys: [],
-              },
-              ...original,
-            }),
-          );
-        }
+        expect(JSON.stringify(reactive)).to.eq(
+          JSON.stringify({
+            [ATTR_META]: {
+              keys: [],
+            },
+            ...original,
+          }),
+        );
       });
 
       test('chai deep equal works', () => {
@@ -116,56 +113,6 @@ for (const schema of [undefined, TestSchema.ExampleSchema]) {
   });
 }
 
-describe('getters', () => {
-  test('add getter to object', () => {
-    let value = 'foo';
-    const obj = makeObject({
-      get getter() {
-        return value;
-      },
-    });
-    expect(obj.getter).to.eq('foo');
-
-    value = 'bar';
-    expect(obj.getter).to.eq('bar');
-  });
-
-  test('subscription updates on inner object', () => {
-    const innerObj = makeObject({
-      string: 'bar',
-    });
-
-    const obj = makeObject({
-      field: 1,
-      get getter() {
-        return innerObj.string;
-      },
-    });
-
-    // Subscribe to innerObj to detect changes.
-    using innerUpdates = updateCounter(innerObj);
-    using objUpdates = updateCounter(obj);
-
-    innerObj.string = 'baz';
-    expect(obj.getter).to.eq('baz');
-    expect(innerUpdates.count, 'inner update count').to.eq(1);
-
-    // Changes to outer obj don't affect inner subscription.
-    obj.field = 2;
-    expect(innerUpdates.count, 'inner update count').to.eq(1);
-    expect(objUpdates.count, 'obj update count').to.eq(1);
-  });
-
-  test('getter for array', () => {
-    const value = [1];
-    const obj = makeObject({
-      get getter() {
-        return value;
-      },
-    });
-    expect(obj.getter).to.have.length(1);
-
-    value.push(2);
-    expect(obj.getter).to.have.length(2);
-  });
-});
+// NOTE: Getter tests with external variable references were removed.
+// These patterns only worked with untyped reactive objects, which are no longer supported.
+// For typed schemas, getters should be defined in the schema itself.

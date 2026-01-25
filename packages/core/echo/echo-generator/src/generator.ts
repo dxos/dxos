@@ -9,7 +9,7 @@ import { Obj } from '@dxos/echo';
 import { EchoSchema, getTypeAnnotation } from '@dxos/echo/internal';
 import { type AnyLiveObject } from '@dxos/echo-db';
 import { invariant } from '@dxos/invariant';
-import { type Live, isLiveObject, live } from '@dxos/live-object';
+import { type Live, isLiveObject } from '@dxos/live-object';
 import { faker } from '@dxos/random';
 import { entries, range } from '@dxos/util';
 
@@ -54,7 +54,8 @@ export class TestObjectGenerator<T extends string = TestSchemaType> {
     }
 
     const schema = this.getSchema(type);
-    return schema ? Obj.make(schema, data) : live(data);
+    invariant(schema, `Schema is required for type: ${type}. Register a schema for this type.`);
+    return Obj.make(schema, data);
   }
 
   // TODO(burdon): Based on dependencies (e.g., organization before contact).

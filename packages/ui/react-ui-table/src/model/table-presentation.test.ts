@@ -8,7 +8,6 @@ import { beforeEach, describe, expect, it } from 'vitest';
 
 import { Filter, Query, Type } from '@dxos/echo';
 import { createEchoSchema } from '@dxos/echo/testing';
-import { live } from '@dxos/live-object';
 import { ProjectionModel, View, createDirectChangeCallback } from '@dxos/schema';
 
 import { Table } from '../types';
@@ -25,12 +24,10 @@ describe('TablePresentation', () => {
 
     beforeEach(async () => {
       registry = Registry.make();
-      ({ data } = live({
-        data: [
-          { id: '1', title: 'A', count: 1 },
-          { id: '2', title: 'B', count: 2 },
-        ],
-      }));
+      data = [
+        { id: '1', title: 'A', count: 1 },
+        { id: '2', title: 'B', count: 2 },
+      ];
 
       model = createTableModel(registry, {});
       await model.open();

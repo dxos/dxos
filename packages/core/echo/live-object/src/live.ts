@@ -18,6 +18,8 @@ interface LiveMarker {}
  *
  * It is recommended to use explicitly use this type when expecting reactive semantics, e.g. `Live<MyObject>`.
  * One common use case includes React components.
+ *
+ * @deprecated
  */
 export type Live<T> = LiveMarker & T;
 

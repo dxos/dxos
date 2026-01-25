@@ -73,24 +73,8 @@ describe('complex schema validations', () => {
     expect(() => setValue(object.array, '0', '4')).to.throw();
   });
 
-  test('nesting static objects with schema in the live object', () => {
-    const contact1 = createObject(TestSchema.Person, {
-      name: 'Robert Smith',
-      email: 'robert@example.com',
-    } as any);
-    const contact2 = createObject(TestSchema.Person, {
-      name: 'Katy Perry',
-      email: 'katy@example.com',
-    } as any);
-
-    const network = makeObject({ contacts: [contact1] });
-    expect(isInstanceOf(TestSchema.Person, network.contacts[0])).to.eq(true);
-    expect(getSchema(network.contacts[0])).to.eq(TestSchema.Person);
-
-    network.contacts.push(contact2);
-    expect(isInstanceOf(TestSchema.Person, network.contacts[1])).to.eq(true);
-    expect(getSchema(network.contacts[1])).to.eq(TestSchema.Person);
-  });
+  // NOTE: Test for nesting typed objects in untyped containers was removed.
+  // Untyped reactive objects are no longer supported - use Atoms for untyped reactive state.
 
   test('creating an object with data from another object', () => {
     const contact = makeObject(TestSchema.Person, {

@@ -38,6 +38,7 @@
     "@dxos/live-object": "workspace:*",
     "@dxos/operation": "workspace:*",
     "@dxos/util": "workspace:*",
+    "@effect-atom/atom-react": "catalog:",
     "effect": "catalog:"
   },
   "devDependencies": {

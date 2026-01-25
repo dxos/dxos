@@ -5,13 +5,7 @@
 import type * as Schema from 'effect/Schema';
 
 import { ObjectId } from '@dxos/keys';
-import {
-  type Live,
-  UntypedReactiveHandler,
-  createProxy,
-  defineHiddenProperty,
-  isValidProxyTarget,
-} from '@dxos/live-object';
+import { type Live, createProxy, defineHiddenProperty, isValidProxyTarget } from '@dxos/live-object';
 
 import { getTypeAnnotation } from '../annotations';
 import { Expando } from '../entities';
@@ -66,26 +60,24 @@ const createReactiveObject = <T extends AnyProperties>(
     throw new Error('Value cannot be made into a reactive object.');
   }
 
+  if (!schema && !options?.expando) {
+    throw new Error('Schema is required for reactive objects. Use Atom for untyped reactive state.');
+  }
+
+  const annotation = schema ? getTypeAnnotation(schema) : undefined;
+  const shouldGenerateId = options?.expando || !!annotation;
+  if (shouldGenerateId) {
+    setIdOnTarget(obj);
+  }
+  if (annotation) {
+    defineHiddenProperty(obj, KindId, annotation.kind);
+  }
+  initMeta(obj, meta);
   if (schema) {
-    const annotation = getTypeAnnotation(schema);
-    const shouldGenerateId = options?.expando || !!annotation;
-    if (shouldGenerateId) {
-      setIdOnTarget(obj);
-    }
-    if (annotation) {
-      defineHiddenProperty(obj, KindId, annotation.kind);
-    }
-    initMeta(obj, meta);
     prepareTypedTarget(obj, schema);
     attachTypedJsonSerializer(obj);
-    return createProxy<T>(obj, TypedReactiveHandler.instance);
-  } else {
-    if (options?.expando) {
-      setIdOnTarget(obj);
-    }
-    initMeta(obj, meta);
-    return createProxy<T>(obj, UntypedReactiveHandler.instance);
   }
+  return createProxy<T>(obj, TypedReactiveHandler.instance);
 };
 
 /**

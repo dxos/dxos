@@ -73,7 +73,7 @@ catalog:
   '@dxos/test-utils': ^0.8.3
   '@dxos/wa-sqlite': ^0.2.1
   '@effect-atom/atom': ^0.4.10
-  '@effect-atom/atom-react': ^0.4.4
+  '@effect-atom/atom-react': 'catalog:'
   '@effect/ai': 0.32.1
   '@effect/ai-anthropic': 0.22.0
   '@effect/ai-openai': 0.36.0

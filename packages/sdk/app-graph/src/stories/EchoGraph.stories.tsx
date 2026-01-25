@@ -6,18 +6,9 @@ import { Atom, type Registry, RegistryContext, useAtomValue } from '@effect-atom
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Function from 'effect/Function';
 import * as Option from 'effect/Option';
-import React, {
-  type PropsWithChildren,
-  useCallback,
-  useContext,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-  useSyncExternalStore,
-} from 'react';
+import React, { type PropsWithChildren, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 
-import { Filter, type Live, type Space, SpaceState, isSpace, live } from '@dxos/client/echo';
+import { Filter, type Space, SpaceState, isSpace } from '@dxos/client/echo';
 import { Obj, Query, Type } from '@dxos/echo';
 import { AtomObj, AtomQuery } from '@dxos/echo-atom';
 import { faker } from '@dxos/random';
@@ -293,24 +284,19 @@ export const TreeView: Story = {
     const client = useClient();
     const registry = useContext(RegistryContext);
     const graph = useMemo(() => createGraph(client, registry), [client, registry]);
-    const stateRef = useRef(new Map<string, Live<{ open: boolean; current: boolean }>>());
-    const listenersRef = useRef(new Set<() => void>());
+    const stateRef = useRef(new Map<string, Atom.Writable<{ open: boolean; current: boolean }>>());
 
     const getOrCreateState = useMemo(
       () => (path: string) => {
-        let object = stateRef.current.get(path);
-        if (!object) {
-          object = live({ open: true, current: false });
-          stateRef.current.set(path, object);
+        let atom = stateRef.current.get(path);
+        if (!atom) {
+          atom = Atom.make({ open: true, current: false }).pipe(Atom.keepAlive);
+          stateRef.current.set(path, atom);
         }
-        return object;
+        return atom;
       },
       [],
     );
-
-    const notifyListeners = useCallback(() => {
-      listenersRef.current.forEach((l) => l());
-    }, []);
 
     const useItems = useCallback(
       (node?: Node.Node, options?: { disposition?: string; sort?: boolean }) => {
@@ -341,16 +327,11 @@ export const TreeView: Story = {
       [graph],
     );
 
-    // Hook that subscribes to item state.
+    // Hook that subscribes to item state via Atom.
     const useItemState = (_path: string[]) => {
       const path = useMemo(() => Path.create(..._path), [_path.join('~')]);
-      return useSyncExternalStore(
-        (callback) => {
-          listenersRef.current.add(callback);
-          return () => listenersRef.current.delete(callback);
-        },
-        () => getOrCreateState(path),
-      );
+      const atom = getOrCreateState(path);
+      return useAtomValue(atom);
     };
 
     const useIsOpen = (_path: string[]) => {
@@ -364,21 +345,25 @@ export const TreeView: Story = {
     const onOpenChange = useCallback(
       ({ path: _path, open }: { path: string[]; open: boolean }) => {
         const path = Path.create(..._path);
-        const object = stateRef.current.get(path);
-        object!.open = open;
-        notifyListeners();
+        const atom = stateRef.current.get(path);
+        if (atom) {
+          const prev = registry.get(atom);
+          registry.set(atom, { ...prev, open });
+        }
       },
-      [notifyListeners],
+      [registry],
     );
 
     const onSelect = useCallback(
       ({ path: _path, current }: { path: string[]; current: boolean }) => {
         const path = Path.create(..._path);
-        const object = stateRef.current.get(path);
-        object!.current = current;
-        notifyListeners();
+        const atom = stateRef.current.get(path);
+        if (atom) {
+          const prev = registry.get(atom);
+          registry.set(atom, { ...prev, current });
+        }
       },
-      [notifyListeners],
+      [registry],
     );
 
     return (

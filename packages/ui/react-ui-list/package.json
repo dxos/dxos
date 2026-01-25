@@ -36,6 +36,7 @@
     "@dxos/ui-theme": "workspace:*",
     "@dxos/ui-types": "workspace:*",
     "@dxos/util": "workspace:*",
+    "@effect-atom/atom-react": "catalog:",
     "@radix-ui/react-accordion": "catalog:",
     "@radix-ui/react-context": "catalog:"
   },

@@ -2,8 +2,8 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Atom } from '@effect-atom/atom-react';
-import React, { type PropsWithChildren, useMemo } from 'react';
+import { Atom, type Registry, RegistryContext } from '@effect-atom/atom-react';
+import React, { type PropsWithChildren, useContext, useMemo } from 'react';
 
 import { useAppGraph } from '@dxos/app-framework/react';
 import { type CompleteCellRange } from '@dxos/compute';
@@ -20,17 +20,28 @@ import { useSheetContext } from '../SheetContext';
 
 import { createAlign, useAlignState } from './align';
 import { createStyle, useStyleState } from './style';
-import { type ToolbarState, useToolbarState } from './useToolbarState';
+import { type ToolbarStateAtom, useToolbarState } from './useToolbarState';
 
-const createToolbarActions = (
-  model: SheetModel,
-  state: ToolbarState,
-  cursorFallbackRange?: CompleteCellRange,
-  customActions?: Atom.Atom<ActionGraphProps>,
-): Atom.Atom<ActionGraphProps> => {
+type ToolbarActionsContext = {
+  model: SheetModel;
+  stateAtom: ToolbarStateAtom;
+  registry: Registry.Registry;
+  cursorFallbackRange?: CompleteCellRange;
+  customActions?: Atom.Atom<ActionGraphProps>;
+};
+
+const createToolbarActions = ({
+  model,
+  stateAtom,
+  registry,
+  cursorFallbackRange,
+  customActions,
+}: ToolbarActionsContext): Atom.Atom<ActionGraphProps> => {
   return Atom.make((get) => {
-    const align = createAlign(model, state, cursorFallbackRange);
-    const style = createStyle(model, state, cursorFallbackRange);
+    const state = get(stateAtom);
+    const context = { model, state, stateAtom, registry, cursorFallbackRange };
+    const align = createAlign(context);
+    const style = createStyle(context);
     const gap = createGapSeparator();
 
     const graph: ActionGraphProps = {
@@ -52,9 +63,10 @@ export type SheetToolbarProps = PropsWithChildren<{ id: string }>;
 
 export const SheetToolbar = ({ id }: SheetToolbarProps) => {
   const { model, cursorFallbackRange } = useSheetContext();
-  const state = useToolbarState({});
-  useAlignState(state);
-  useStyleState(state);
+  const stateAtom = useToolbarState({});
+  const registry = useContext(RegistryContext);
+  useAlignState(stateAtom);
+  useStyleState(stateAtom);
 
   const { graph } = useAppGraph();
   const customActions = useMemo(() => {
@@ -69,8 +81,8 @@ export const SheetToolbar = ({ id }: SheetToolbarProps) => {
   }, [graph, id]);
 
   const actionsCreator = useMemo(
-    () => createToolbarActions(model, state, cursorFallbackRange, customActions),
-    [model, state, cursorFallbackRange, customActions],
+    () => createToolbarActions({ model, stateAtom, registry, cursorFallbackRange, customActions }),
+    [model, stateAtom, registry, cursorFallbackRange, customActions],
   );
   const menu = useMenuActions(actionsCreator);
 
