@@ -13,7 +13,8 @@
     "#coordinator-worker": {
       "source": "./src/services/dedicated/coordinator-worker-entrypoint.ts",
       "types": "./dist/types/src/services/dedicated/coordinator-worker-entrypoint.d.ts",
-      "browser": "./dist/lib/browser/services/dedicated/coordinator-worker-entrypoint.mjs"
+      "browser": "./dist/lib/browser/services/dedicated/coordinator-worker-entrypoint.mjs",
+      "node": "./dist/lib/node-esm/services/dedicated/coordinator-worker-entrypoint.mjs"
     }
   },
   "exports": {
