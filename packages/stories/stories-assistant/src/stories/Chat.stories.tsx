@@ -392,7 +392,7 @@ export const WithMail: Story = {
 export const WithGmail: Story = {
   decorators: getDecorators({
     plugins: [InboxPlugin(), TokenManagerPlugin()],
-    config: config.remote,
+    config: config.persistent,
     types: [Mailbox.Mailbox],
     onInit: async ({ space }) => {
       space.db.add(Mailbox.make({ name: 'Mailbox', space }));
