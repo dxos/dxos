@@ -8,8 +8,9 @@ import { ObjectId } from '@dxos/keys';
 
 import { getTypeAnnotation } from '../annotations';
 import { Expando } from '../entities';
-import { attachTypedJsonSerializer } from '../object';
 import { type AnyProperties, KindId, MetaId, type ObjectMeta, ObjectMetaSchema } from '../types';
+
+import { attachTypedJsonSerializer } from './json-serializer';
 
 import { defineHiddenProperty } from './define-hidden-property';
 import { createProxy, isValidProxyTarget } from './proxy-utils';

@@ -25,7 +25,7 @@ import {
   SelfDXNId,
   assertObjectModel,
 } from '../entities';
-import { defineHiddenProperty } from '../proxy';
+import { attachTypedJsonSerializer, defineHiddenProperty, typedJsonSerializer } from '../proxy';
 import { Ref, type RefResolver, refFromEncodedReference, setRefResolver } from '../ref';
 import {
   ATTR_META,
@@ -38,6 +38,9 @@ import {
   TypeId,
   setSchema,
 } from '../types';
+
+// Re-export for backward compatibility.
+export { attachTypedJsonSerializer };
 
 type DeepReplaceRef<T> =
   T extends Ref<any>
@@ -168,70 +171,6 @@ export const setRefResolverOnData = (obj: AnyEchoObject, refResolver: RefResolve
   };
 
   visitor(obj);
-};
-
-export const attachTypedJsonSerializer = (obj: any) => {
-  const descriptor = Object.getOwnPropertyDescriptor(obj, 'toJSON');
-  if (descriptor) {
-    return;
-  }
-
-  Object.defineProperty(obj, 'toJSON', {
-    value: typedJsonSerializer,
-    writable: false,
-    enumerable: false,
-    // Setting `configurable` to false breaks proxy invariants, should be fixable.
-    configurable: true,
-  });
-};
-
-// NOTE: KEEP as function.
-const typedJsonSerializer = function (this: any) {
-  const { id, ...rest } = this;
-  const result: any = {
-    id,
-  };
-
-  if (this[TypeId]) {
-    result[ATTR_TYPE] = this[TypeId].toString();
-  }
-
-  if (this[MetaId]) {
-    result[ATTR_META] = serializeMeta(this[MetaId]);
-  }
-
-  if (this[SelfDXNId]) {
-    result[ATTR_SELF_DXN] = this[SelfDXNId].toString();
-  }
-
-  if (this[RelationSourceDXNId]) {
-    const sourceDXN = this[RelationSourceDXNId];
-    invariant(sourceDXN instanceof DXN);
-    result[ATTR_RELATION_SOURCE] = sourceDXN.toString();
-  }
-  if (this[RelationTargetDXNId]) {
-    const targetDXN = this[RelationTargetDXNId];
-    invariant(targetDXN instanceof DXN);
-    result[ATTR_RELATION_TARGET] = targetDXN.toString();
-  }
-
-  Object.assign(result, serializeData(rest));
-  return result;
-};
-
-const serializeData = (data: unknown) => {
-  return deepMapValues(data, (value, recurse) => {
-    if (Ref.isRef(value)) {
-      // TODO(dmaretskyi): Should this be configurable?
-      return value.noInline().encode();
-    }
-
-    return recurse(value);
-  });
-};
-
-const serializeMeta = (meta: ObjectMeta) => {
-  return deepMapValues(meta, (value, recurse) => recurse(value));
 };
 
 /**

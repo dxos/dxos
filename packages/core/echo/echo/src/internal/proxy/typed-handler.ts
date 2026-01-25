@@ -13,8 +13,9 @@ import { invariant } from '@dxos/invariant';
 
 import { getSchemaDXN } from '../annotations';
 import { ObjectDeletedId } from '../entities';
-import { SchemaValidator } from '../object';
 import { SchemaId, TypeId } from '../types';
+
+import { SchemaValidator } from './schema-validator';
 
 import { defineHiddenProperty } from './define-hidden-property';
 import { batchEvents, emitEvent } from './event-batch';
