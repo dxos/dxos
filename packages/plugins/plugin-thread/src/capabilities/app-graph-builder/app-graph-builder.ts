@@ -12,10 +12,10 @@ import { Operation } from '@dxos/operation';
 import { AttentionCapabilities } from '@dxos/plugin-attention';
 import { ATTENDABLE_PATH_SEPARATOR, DECK_COMPANION_TYPE, PLANK_COMPANION_TYPE } from '@dxos/plugin-deck/types';
 import { GraphBuilder, NodeMatcher } from '@dxos/plugin-graph';
-import { defaultSelection, type SelectionManager, type SelectionMode } from '@dxos/react-ui-attention';
+import { type SelectionManager, type SelectionMode, defaultSelection } from '@dxos/react-ui-attention';
 
 import { meta } from '../../meta';
-import { Channel, type ThreadState, ThreadCapabilities, ThreadOperation } from '../../types';
+import { Channel, ThreadCapabilities, ThreadOperation, type ThreadState } from '../../types';
 import { getAnchor } from '../../util';
 
 type CommentDisabledParams = {

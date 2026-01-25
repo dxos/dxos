@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { RegistryContext, type Registry } from '@effect-atom/atom-react';
+import { type Registry, RegistryContext } from '@effect-atom/atom-react';
 import { useContext, useState } from 'react';
 
 import { AiContextBinder } from '@dxos/assistant';

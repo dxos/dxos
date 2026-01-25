@@ -19,7 +19,7 @@ import { mx } from '@dxos/ui-theme';
 
 import { CommentsContainer, type CommentsContainerProps } from '../components';
 import { meta } from '../meta';
-import { type ViewState, ThreadCapabilities, ThreadOperation } from '../types';
+import { ThreadCapabilities, ThreadOperation, type ViewState } from '../types';
 
 const initialViewState: ViewState = { showResolvedThreads: false };
 

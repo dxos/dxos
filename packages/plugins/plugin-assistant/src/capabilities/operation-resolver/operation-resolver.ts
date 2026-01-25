@@ -87,7 +87,9 @@ export default Capability.makeModule(
           );
 
           yield* Effect.promise(() =>
-            new AiConversation({ queue, registry }).use(async (conversation) => updateName(runtime, conversation, chat)),
+            new AiConversation({ queue, registry }).use(async (conversation) =>
+              updateName(runtime, conversation, chat),
+            ),
           );
         }),
       }),

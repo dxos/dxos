@@ -4,7 +4,6 @@
 
 import { type Extension } from '@codemirror/state';
 import { EditorView } from '@codemirror/view';
-
 import { type Atom, type Registry } from '@effect-atom/atom-react';
 
 import { Filter, Obj, Query, Relation } from '@dxos/echo';
@@ -14,7 +13,7 @@ import { type Markdown } from '@dxos/plugin-markdown/types';
 import { AnchoredTo, Thread } from '@dxos/types';
 import { comments, createExternalCommentSync } from '@dxos/ui-editor';
 
-import { type ThreadState, ThreadOperation } from '../types';
+import { ThreadOperation, type ThreadState } from '../types';
 
 // TODO(burdon): Factor out.
 const getName = (doc: Markdown.Document, anchor: string): string | undefined => {

@@ -12,11 +12,11 @@ import { AtomObj, AtomQuery, AtomRef } from '@dxos/echo-atom';
 import { invariant } from '@dxos/invariant';
 import { Operation } from '@dxos/operation';
 import { AttentionCapabilities } from '@dxos/plugin-attention';
-import { type SelectionManager } from '@dxos/react-ui-attention';
 import { AutomationCapabilities, invokeFunctionWithTracing } from '@dxos/plugin-automation';
 import { ATTENDABLE_PATH_SEPARATOR, PLANK_COMPANION_TYPE } from '@dxos/plugin-deck/types';
 import { GraphBuilder, Node } from '@dxos/plugin-graph';
 import { Markdown } from '@dxos/plugin-markdown/types';
+import { type SelectionManager } from '@dxos/react-ui-attention';
 import { AccessToken, type Event, type Message } from '@dxos/types';
 import { kebabize } from '@dxos/util';
 
