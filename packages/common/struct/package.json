@@ -1,0 +1,34 @@
+{
+  "name": "@dxos/struct",
+  "version": "0.8.1",
+  "description": "Serializing objects to plain structs.",
+  "homepage": "https://dxos.org",
+  "bugs": "https://github.com/dxos/dxos/issues",
+  "license": "MIT",
+  "author": "DXOS.org",
+  "sideEffects": false,
+  "type": "module",
+  "exports": {
+    ".": {
+      "browser": "./dist/lib/browser/index.mjs",
+      "node": {
+        "require": "./dist/lib/node/index.cjs",
+        "default": "./dist/lib/node-esm/index.mjs"
+      },
+      "types": "./dist/types/src/index.d.ts"
+    }
+  },
+  "types": "dist/types/src/index.d.ts",
+  "typesVersions": {
+    "*": {}
+  },
+  "files": [
+    "dist",
+    "src"
+  ],
+  "dependencies": {},
+  "devDependencies": {},
+  "publishConfig": {
+    "access": "public"
+  }
+}
