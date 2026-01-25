@@ -141,7 +141,7 @@ export default Capability.makeModule(
         actions: Effect.fnUntraced(function* (channel, get) {
           const store = yield* Capability.get(MeetingCapabilities.State);
           const transcriptionManager = get(transcriptionManagerFamily(store));
-          const enabled = transcriptionManager ? get(transcriptionManager.enabledAtom) : false;
+          const enabled = transcriptionManager ? get(transcriptionManager.enabled) : false;
           return [
             {
               id: `${Obj.getDXN(channel).toString()}/action/start-stop-transcription`,

@@ -129,6 +129,13 @@ export class QueueImpl<T extends Entity.Unknown = Entity.Unknown> implements Que
   }
 
   /**
+   * Subscribe to queue updates.
+   */
+  subscribe(callback: () => void): () => void {
+    return this.updated.on(callback);
+  }
+
+  /**
    * @deprecated Use `query` method instead.
    */
   get isLoading(): boolean {

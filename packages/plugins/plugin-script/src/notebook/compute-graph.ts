@@ -28,9 +28,9 @@ export class ComputeGraph {
   ) {}
 
   /**
-   * Parsed expressions by cell ID.
+   * Atom for parsed expressions by cell ID.
    */
-  get expressionsAtom(): Atom.Writable<Record<string, ParsedExpression>> {
+  get expressions(): Atom.Atom<Record<string, ParsedExpression>> {
     return this._expressionsAtom;
   }
 
@@ -42,16 +42,23 @@ export class ComputeGraph {
   }
 
   /**
-   * Computed values by cell ID.
+   * Atom for computed values by cell ID.
    */
-  get valuesAtom(): Atom.Writable<Record<string, any>> {
+  get values(): Atom.Atom<Record<string, any>> {
     return this._valuesByCellIdAtom;
   }
 
   /**
-   * Computed values by name.
+   * Get computed values by cell ID.
    */
-  get valuesByNameAtom(): Atom.Writable<Record<string, any>> {
+  getValues(): Record<string, any> {
+    return this._registry.get(this._valuesByCellIdAtom);
+  }
+
+  /**
+   * Atom for computed values by name.
+   */
+  get valuesByName(): Atom.Atom<Record<string, any>> {
     return this._valuesByNameAtom;
   }
 
@@ -65,7 +72,7 @@ export class ComputeGraph {
   /**
    * Get computed value by cell ID.
    */
-  getValue(cellId: string) {
+  getValue(cellId: string): any {
     return this._registry.get(this._valuesByCellIdAtom)[cellId];
   }
 

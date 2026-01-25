@@ -67,8 +67,8 @@ export class MessageNormalizer extends Resource {
     updateMessages();
 
     // Subscribe to queue changes.
-    const unsubscribe = (this._queue as any).updated.on(updateMessages);
-    this._ctx.onDispose(() => unsubscribe());
+    const unsubscribe = this._queue.subscribe(updateMessages);
+    this._ctx.onDispose(unsubscribe);
   }
 
   // Need to unpack strings from blocks from messages run them through the function and then pack them back into blocks into messages.

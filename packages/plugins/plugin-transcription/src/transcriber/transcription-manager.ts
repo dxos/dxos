@@ -63,11 +63,11 @@ export class TranscriptionManager extends Resource {
     this._registry = options.registry;
   }
 
-  get enabledAtom() {
+  get enabled(): Atom.Atom<boolean> {
     return this._enabledAtom;
   }
 
-  get enabled() {
+  getEnabled(): boolean {
     return this._registry.get(this._enabledAtom);
   }
 
@@ -84,7 +84,7 @@ export class TranscriptionManager extends Resource {
   }
 
   setRecording(recording?: boolean): this {
-    if (!this.isOpen || !this._registry.get(this._enabledAtom)) {
+    if (!this.isOpen || !this.getEnabled()) {
       return this;
     }
 
@@ -97,7 +97,7 @@ export class TranscriptionManager extends Resource {
   }
 
   async setEnabled(enabled: boolean): Promise<void> {
-    if (this._registry.get(this._enabledAtom) === enabled) {
+    if (this.getEnabled() === enabled) {
       return;
     }
 
@@ -128,7 +128,7 @@ export class TranscriptionManager extends Resource {
   }
 
   private async _maybeRestartTranscriber(): Promise<void> {
-    if (!this._audioStreamTrack || !this._registry.get(this._enabledAtom) || !this.isOpen) {
+    if (!this._audioStreamTrack || !this.getEnabled() || !this.isOpen) {
       return;
     }
 

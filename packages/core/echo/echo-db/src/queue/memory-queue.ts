@@ -53,6 +53,10 @@ export class MemoryQueue<T extends Entity.Unknown> implements Queue<T> {
     return this._dxn;
   }
 
+  subscribe(callback: () => void): () => void {
+    return this.updated.on(callback);
+  }
+
   get isLoading(): boolean {
     return false;
   }
