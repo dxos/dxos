@@ -5,13 +5,14 @@
 import type * as Schema from 'effect/Schema';
 
 import { ObjectId } from '@dxos/keys';
-import { createProxy, defineHiddenProperty, isValidProxyTarget } from '../live-object';
 
 import { getTypeAnnotation } from '../annotations';
 import { Expando } from '../entities';
 import { attachTypedJsonSerializer } from '../object';
 import { type AnyProperties, KindId, MetaId, type ObjectMeta, ObjectMetaSchema } from '../types';
 
+import { defineHiddenProperty } from './define-hidden-property';
+import { createProxy, isValidProxyTarget } from './proxy-utils';
 import { TypedReactiveHandler, prepareTypedTarget } from './typed-handler';
 
 /**

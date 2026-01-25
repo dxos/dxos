@@ -8,7 +8,6 @@ import { raise } from '@dxos/debug';
 import { type EncodedReference, type ObjectMeta, ObjectStructure, isEncodedReference } from '@dxos/echo-protocol';
 import { assertArgument, invariant } from '@dxos/invariant';
 import { DXN, ObjectId } from '@dxos/keys';
-import { defineHiddenProperty } from '../live-object';
 import { assumeType, deepMapValues, visitValues } from '@dxos/util';
 
 import type * as Obj from '../../Obj';
@@ -26,6 +25,7 @@ import {
   SelfDXNId,
   assertObjectModel,
 } from '../entities';
+import { defineHiddenProperty } from '../proxy';
 import { Ref, type RefResolver, refFromEncodedReference, setRefResolver } from '../ref';
 import {
   ATTR_META,

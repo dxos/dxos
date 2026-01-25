@@ -10,25 +10,18 @@ import * as SchemaAST from 'effect/SchemaAST';
 import { Event } from '@dxos/async';
 import { inspectCustom } from '@dxos/debug';
 import { invariant } from '@dxos/invariant';
-import {
-  EventId,
-  ReactiveArray,
-  type ReactiveHandler,
-  batchEvents,
-  createProxy,
-  defineHiddenProperty,
-  emitEvent,
-  getProxyTarget,
-  isProxy,
-  isValidProxyTarget,
-  objectData,
-  symbolIsProxy,
-} from '../live-object';
 
 import { getSchemaDXN } from '../annotations';
 import { ObjectDeletedId } from '../entities';
 import { SchemaValidator } from '../object';
 import { SchemaId, TypeId } from '../types';
+
+import { defineHiddenProperty } from './define-hidden-property';
+import { batchEvents, emitEvent } from './event-batch';
+import { type ReactiveHandler, objectData } from './proxy-types';
+import { createProxy, getProxyTarget, isProxy, isValidProxyTarget, symbolIsProxy } from './proxy-utils';
+import { ReactiveArray } from './reactive-array';
+import { EventId } from './symbols';
 
 type ProxyTarget = {
   /**

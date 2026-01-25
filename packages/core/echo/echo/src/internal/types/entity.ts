@@ -21,5 +21,3 @@ export const EntityKindSchema = Schema.Enums(EntityKind);
  */
 export const KindId: unique symbol = EntityKindId as any;
 export type KindId = typeof KindId;
-
-// ChangeId is now exported from ./live-object

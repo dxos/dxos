@@ -6,10 +6,9 @@ import type * as Schema from 'effect/Schema';
 import type * as SchemaAST from 'effect/SchemaAST';
 
 import { assertArgument } from '@dxos/invariant';
-import { subscribe } from '../internal/live-object';
 import { deepMapValues } from '@dxos/util';
 
-import { EchoSchema, PersistentSchema, getSchemaTypename, makeObject, toJsonSchema } from '../internal';
+import { EchoSchema, PersistentSchema, getSchemaTypename, makeObject, subscribe, toJsonSchema } from '../internal';
 
 /**
  * Create a reactive mutable schema that updates when the JSON schema is updated.

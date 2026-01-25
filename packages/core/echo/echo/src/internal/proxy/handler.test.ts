@@ -6,7 +6,6 @@ import { inspect } from 'node:util';
 
 import { describe, expect, test } from 'vitest';
 
-import { objectData } from '../live-object';
 import { isNode } from '@dxos/util';
 
 import { TestSchema, updateCounter } from '../../testing';
@@ -14,6 +13,7 @@ import { createObject } from '../object';
 import { ATTR_META } from '../types';
 
 import { makeObject } from './make-object';
+import { objectData } from './proxy-types';
 
 describe('proxy', () => {
   test.skipIf(!isNode())('inspect', ({ expect }) => {

@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { batchEvents } from '../event-batch';
+import { batchEvents } from './event-batch';
 
 /**
  * Extends the native array to make sure that arrays methods are correctly reactive.

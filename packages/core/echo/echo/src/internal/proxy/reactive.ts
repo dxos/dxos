@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { getProxyTarget, isProxy } from './proxy';
+import { getProxyTarget, isProxy } from './proxy-utils';
 import { ChangeId, EventId } from './symbols';
 
 /**

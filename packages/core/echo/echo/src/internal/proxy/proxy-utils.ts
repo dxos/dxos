@@ -4,8 +4,8 @@
 
 import { invariant } from '@dxos/invariant';
 
-import { ReactiveArray } from './array';
-import { type ReactiveHandler } from './types';
+import { type ReactiveHandler } from './proxy-types';
+import { ReactiveArray } from './reactive-array';
 
 export const symbolIsProxy = Symbol.for('@dxos/schema/Proxy');
 
