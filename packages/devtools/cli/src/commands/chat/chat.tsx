@@ -10,11 +10,11 @@ import * as Option from 'effect/Option';
 import { createSignal } from 'solid-js';
 
 import { AiService, DEFAULT_EDGE_MODEL, DEFAULT_LMSTUDIO_MODEL, DEFAULT_OLLAMA_MODEL, ModelName } from '@dxos/ai';
+import { Capability, Common as Common$ } from '@dxos/app-framework';
 import { type AiConversation, GenericToolkit } from '@dxos/assistant';
 import { CommandConfig, Common, withTypes } from '@dxos/cli-util';
 import { ClientService } from '@dxos/client';
 import { Filter } from '@dxos/echo';
-import { Registry } from '@dxos/effect-atom-solid';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { Assistant } from '@dxos/plugin-assistant/types';
@@ -74,7 +74,7 @@ export const chat = Command.make(
         ),
       );
 
-      const registry = Registry.make();
+      const registry = yield* Capability.get(Common$.Capability.AtomRegistry);
       const toolkit = GenericToolkit.merge(...toolkits);
       const processor = new ChatProcessor({
         runtime,
