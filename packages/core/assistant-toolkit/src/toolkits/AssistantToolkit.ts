@@ -9,7 +9,7 @@ import * as Record from 'effect/Record';
 import * as Schema from 'effect/Schema';
 
 import { AiContextService, ArtifactId } from '@dxos/assistant';
-import { Database, Ref } from '@dxos/echo';
+import { Database, type Ref } from '@dxos/echo';
 import { trim } from '@dxos/util';
 
 export const AssistantToolkit = Toolkit.make(
