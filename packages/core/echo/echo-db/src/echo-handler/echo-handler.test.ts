@@ -228,7 +228,8 @@ describe('Reactive Object with ECHO database', () => {
     const obj = db.add(Obj.make(Type.Expando, { string: 'foo' }));
     expect(obj.id).to.be.a('string');
     expect(obj.string).to.eq('foo');
-    expect(Obj.getSchema(obj)).to.eq(undefined);
+    // Note: Schema is now tracked for all typed objects (Expando is the default schema).
+    expect(Obj.getSchema(obj)).to.eq(Type.Expando);
   });
 
   test('instantiating reactive objects after a restart', async () => {
@@ -718,6 +719,7 @@ describe('Reactive Object with ECHO database', () => {
       expect(employeeJson).to.deep.eq({
         id: employee.id,
         '@meta': { keys: [] },
+        '@type': 'dxn:type:dxos.org/type/Expando:0.1.0',
         name: 'John',
         worksAt: EncodedReference.fromDXN(DXN.fromLocalObjectId(org.id)),
       });

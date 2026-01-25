@@ -226,7 +226,6 @@ export default defineConfig((env) => ({
         '@dxos/client-services',
         '@dxos/config',
         '@dxos/echo',
-        '@dxos/live-object',
         '@dxos/react-client',
         '@dxos/react-client/devtools',
         '@dxos/react-client/echo',

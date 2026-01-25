@@ -56,9 +56,6 @@
       "path": "../../core/echo/echo-db"
     },
     {
-      "path": "../../core/echo/live-object"
-    },
-    {
       "path": "../../core/protocols"
     },
     {

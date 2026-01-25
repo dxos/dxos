@@ -11,7 +11,7 @@ import { Capability, Common } from '@dxos/app-framework';
 import { Surface, useAtomCapability, useLayout, useSettingsState } from '@dxos/app-framework/react';
 import { Database, Obj, type Ref } from '@dxos/echo';
 import { findAnnotation } from '@dxos/effect';
-import { type Space, SpaceState, getSpace, isLiveObject, isSpace, parseId, useSpace } from '@dxos/react-client/echo';
+import { type Space, SpaceState, getSpace, isSpace, parseId, useSpace } from '@dxos/react-client/echo';
 import { Input } from '@dxos/react-ui';
 import { type FormFieldComponentProps, SelectField } from '@dxos/react-ui-form';
 import { HuePicker, IconPicker } from '@dxos/react-ui-pickers';
@@ -308,7 +308,7 @@ export default Capability.makeModule(
         id: OBJECT_RENAME_POPOVER,
         role: 'card--popover',
         filter: (data): data is { props: Obj.Any } =>
-          data.component === OBJECT_RENAME_POPOVER && isLiveObject(data.props),
+          data.component === OBJECT_RENAME_POPOVER && Obj.isObject(data.props),
         component: ({ data }) => <ObjectRenamePopover object={data.props} />,
       }),
       Common.createSurface({

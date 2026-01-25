@@ -18,7 +18,7 @@ import {
 } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
 import { DXN, ObjectId } from '@dxos/keys';
-import { isLiveObject } from '@dxos/live-object';
+import { isProxy } from '@dxos/echo/internal';
 import { log } from '@dxos/log';
 import { defer, getDeep, setDeep, throwUnhandledError } from '@dxos/util';
 
@@ -258,7 +258,7 @@ export class ObjectCore {
    * Encode a value to be stored in the Automerge document.
    */
   encode(value: DecodedAutomergePrimaryValue) {
-    if (isLiveObject(value) as boolean) {
+    if (isProxy(value) as boolean) {
       throw new TypeError('Linking is not allowed');
     }
 

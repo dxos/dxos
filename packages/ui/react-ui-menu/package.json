@@ -36,7 +36,6 @@
     "@radix-ui/react-use-controllable-state": "catalog:"
   },
   "devDependencies": {
-    "@dxos/live-object": "workspace:*",
     "@dxos/random": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/storybook-utils": "workspace:*",

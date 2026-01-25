@@ -51,9 +51,6 @@
       "path": "../../core/echo/echo-atom"
     },
     {
-      "path": "../../core/echo/live-object"
-    },
-    {
       "path": "../../sdk/react-client"
     },
     {

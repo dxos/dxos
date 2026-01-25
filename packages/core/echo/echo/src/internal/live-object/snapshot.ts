@@ -4,12 +4,10 @@
 
 import { deepMapValues } from '@dxos/util';
 
-import type { Live } from './live';
-
 /**
- * Returns an immutable snapshot of the live object.
+ * Returns an immutable snapshot of the reactive object.
  */
-export const getSnapshot = <T extends object>(obj: Live<T>): T => {
+export const getSnapshot = <T extends object>(obj: T): T => {
   return deepMapValues(obj, (value, recurse) => {
     // Do not recurse on references (but do recurse on arrays).
     if (

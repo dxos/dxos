@@ -4,8 +4,6 @@
 
 import * as Schema from 'effect/Schema';
 
-import { ChangeId as ChangeId$ } from '@dxos/live-object';
-
 const EntityKindId = Symbol.for('@dxos/echo/EntityKind');
 
 /**
@@ -24,10 +22,4 @@ export const EntityKindSchema = Schema.Enums(EntityKind);
 export const KindId: unique symbol = EntityKindId as any;
 export type KindId = typeof KindId;
 
-/**
- * Symbol for the change function on live objects.
- * Used to allow mutations within a controlled context.
- * Re-exported from live-object for backwards compatibility.
- */
-export const ChangeId: typeof ChangeId$ = ChangeId$;
-export type ChangeId = typeof ChangeId;
+// ChangeId is now exported from ./live-object

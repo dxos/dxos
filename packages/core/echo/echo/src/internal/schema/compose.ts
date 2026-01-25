@@ -6,7 +6,7 @@ import { invariant } from '@dxos/invariant';
 
 import { type JsonSchemaType } from '../json-schema';
 
-import { getSnapshot } from './snapshot';
+import { getSnapshot } from '../live-object';
 
 /**
  * Creates a composite schema from the source and projection schemas.

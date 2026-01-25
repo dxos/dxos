@@ -6,7 +6,7 @@ import type * as Schema from 'effect/Schema';
 import type * as SchemaAST from 'effect/SchemaAST';
 
 import { assertArgument } from '@dxos/invariant';
-import { subscribe } from '@dxos/live-object';
+import { subscribe } from '../internal/live-object';
 import { deepMapValues } from '@dxos/util';
 
 import { EchoSchema, PersistentSchema, getSchemaTypename, makeObject, toJsonSchema } from '../internal';
@@ -56,5 +56,31 @@ export const prepareAstForCompare = (obj: SchemaAST.AST): any =>
     return recurse(value);
   });
 
-// Re-export updateCounter from live-object/testing for use with ECHO objects.
-export { updateCounter } from '@dxos/live-object/testing';
+/**
+ * Creates an update counter that tracks changes to reactive objects.
+ * @param objects - Reactive objects to subscribe to.
+ * @returns An object with a count property and Symbol.dispose for cleanup.
+ */
+export const updateCounter = (...objects: object[]) => {
+  let updateCount = 0;
+
+  const unsubscribes = objects.map((obj) =>
+    subscribe(obj, () => {
+      updateCount++;
+    }),
+  );
+
+  const unsubscribeAll = () => {
+    for (const unsub of unsubscribes) {
+      unsub();
+    }
+  };
+
+  return {
+    // https://github.com/tc39/proposal-explicit-resource-management
+    [Symbol.dispose]: unsubscribeAll,
+    get count() {
+      return updateCount;
+    },
+  };
+};

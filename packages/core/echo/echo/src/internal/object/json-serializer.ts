@@ -8,7 +8,7 @@ import { raise } from '@dxos/debug';
 import { type EncodedReference, type ObjectMeta, ObjectStructure, isEncodedReference } from '@dxos/echo-protocol';
 import { assertArgument, invariant } from '@dxos/invariant';
 import { DXN, ObjectId } from '@dxos/keys';
-import { defineHiddenProperty } from '@dxos/live-object';
+import { defineHiddenProperty } from '../live-object';
 import { assumeType, deepMapValues, visitValues } from '@dxos/util';
 
 import type * as Obj from '../../Obj';

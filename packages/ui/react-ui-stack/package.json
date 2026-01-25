@@ -42,7 +42,6 @@
     "@atlaskit/pragmatic-drag-and-drop-react-drop-indicator": "catalog:",
     "@dxos/echo": "workspace:*",
     "@dxos/keyboard": "workspace:*",
-    "@dxos/live-object": "workspace:*",
     "@dxos/react-ui-attention": "workspace:*",
     "@dxos/react-ui-dnd": "workspace:*",
     "@dxos/react-ui-mosaic": "workspace:*",

@@ -4,8 +4,6 @@
 
 import { invariant } from '@dxos/invariant';
 
-import type { Live } from '../live';
-
 import { ReactiveArray } from './array';
 import { type ReactiveHandler } from './types';
 
@@ -30,17 +28,17 @@ export const isValidProxyTarget = (value: any): value is object => {
 /**
  * @deprecated
  */
-export const getProxySlot = <T extends object>(proxy: Live<any>): ProxyHandlerSlot<T> => {
+export const getProxySlot = <T extends object>(proxy: any): ProxyHandlerSlot<T> => {
   const value = (proxy as any)[symbolIsProxy];
   invariant(value instanceof ProxyHandlerSlot);
   return value;
 };
 
-export const getProxyTarget = <T extends object>(proxy: Live<any>): T => {
+export const getProxyTarget = <T extends object>(proxy: any): T => {
   return getProxySlot<T>(proxy).target;
 };
 
-export const getProxyHandler = <T extends object>(proxy: Live<any>): ReactiveHandler<T> => {
+export const getProxyHandler = <T extends object>(proxy: any): ReactiveHandler<T> => {
   return getProxySlot<T>(proxy).handler;
 };
 
@@ -48,7 +46,7 @@ export const getProxyHandler = <T extends object>(proxy: Live<any>): ReactiveHan
  * Unsafe method to override id for debugging/testing and migration purposes.
  * @deprecated
  */
-export const dangerouslySetProxyId = <T>(obj: Live<T>, id: string) => {
+export const dangerouslySetProxyId = <T>(obj: T, id: string) => {
   (getProxySlot(obj).target as any).id = id;
 };
 
@@ -61,7 +59,7 @@ export const dangerouslySetProxyId = <T>(obj: Live<T>, id: string) => {
  */
 // TODO(burdon): Document.
 // TODO(burdon): Tests for low-level functions.
-export const createProxy = <T extends object>(target: T, handler: ReactiveHandler<T>): Live<T> => {
+export const createProxy = <T extends object>(target: T, handler: ReactiveHandler<T>): T => {
   const existingProxy = handler._proxyMap.get(target);
   if (existingProxy) {
     return existingProxy;

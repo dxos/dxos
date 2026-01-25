@@ -43,7 +43,6 @@ import {
 } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
-import { type Live } from '@dxos/live-object';
 
 import { FieldSchema, ProjectionModel, createDirectChangeCallback } from '../projection';
 import { createDefaultSchema, getSchema } from '../util';
@@ -120,7 +119,7 @@ export const make = ({
   overrideSchema,
   fields,
   pivotFieldName,
-}: MakeProps): Live<View> => {
+}: MakeProps): View => {
   const view = Obj.make(View, {
     query: { raw: queryRaw, ast: query.ast },
     projection: {
@@ -188,7 +187,7 @@ export const makeWithReferences = async ({
   fields,
   pivotFieldName,
   registry,
-}: MakeWithReferencesProps): Promise<Live<View>> => {
+}: MakeWithReferencesProps): Promise<View> => {
   const view = make({
     query,
     queryRaw,

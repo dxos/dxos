@@ -9,7 +9,6 @@ import * as Option from 'effect/Option';
 import { Capability, Common } from '@dxos/app-framework';
 import { Obj } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
-import { isLiveObject } from '@dxos/live-object';
 import { log } from '@dxos/log';
 import { OperationResolver } from '@dxos/operation';
 import { Operation } from '@dxos/operation';
@@ -360,7 +359,7 @@ export default Capability.makeModule(
                 onNone: () => undefined,
                 onSome: (node) => {
                   const active = node.data;
-                  return isLiveObject(active) ? Obj.getTypename(active) : undefined;
+                  return Obj.isObject(active) ? Obj.getTypename(active) : undefined;
                 },
               });
               yield* Operation.schedule(ObservabilityOperation.SendEvent, {

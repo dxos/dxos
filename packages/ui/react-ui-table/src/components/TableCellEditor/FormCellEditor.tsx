@@ -8,7 +8,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Obj, type Type } from '@dxos/echo';
 import { Ref, getValue } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
-import { getSnapshot } from '@dxos/live-object';
+import { getSnapshot } from '@dxos/echo/internal';
 import { type Label, Popover } from '@dxos/react-ui';
 import { Form, type FormRootProps, type RefFieldProps } from '@dxos/react-ui-form';
 import { parseCellIndex, useGridContext } from '@dxos/react-ui-grid';

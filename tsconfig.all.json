@@ -184,9 +184,6 @@
       "path": "packages/core/echo/indexing/tsconfig.json"
     },
     {
-      "path": "packages/core/echo/live-object/tsconfig.json"
-    },
-    {
       "path": "packages/core/functions/tsconfig.json"
     },
     {

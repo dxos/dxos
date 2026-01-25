@@ -15,7 +15,7 @@ import {
   change as change$,
   getSnapshot as getSnapshot$,
   subscribe as subscribe$,
-} from '@dxos/live-object';
+} from './internal/live-object';
 import { assumeType, deepMapValues } from '@dxos/util';
 
 import type * as Database from './Database';

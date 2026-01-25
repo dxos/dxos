@@ -44,7 +44,6 @@
     "@dxos/effect": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/keys": "workspace:*",
-    "@dxos/live-object": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/random": "workspace:*",
     "@dxos/schema": "workspace:*",

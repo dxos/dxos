@@ -80,9 +80,6 @@
     },
     {
       "path": "../indexing"
-    },
-    {
-      "path": "../live-object"
     }
   ]
 }

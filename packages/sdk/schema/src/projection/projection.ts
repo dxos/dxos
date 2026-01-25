@@ -17,7 +17,7 @@ import {
 import { createSchemaReference, getSchemaReference } from '@dxos/echo/internal';
 import { AtomObj } from '@dxos/echo-atom';
 import { invariant } from '@dxos/invariant';
-import { type Live, getSnapshot } from '@dxos/live-object';
+import { getSnapshot } from '@dxos/echo/internal';
 import { log } from '@dxos/log';
 import { omit, pick } from '@dxos/util';
 
@@ -84,7 +84,7 @@ export type ProjectionModelProps = {
   /** The View object (for subscriptions). */
   view: View.View;
   /** The base JSON schema of the data being projected. */
-  baseSchema: Live<JsonSchemaType>;
+  baseSchema: JsonSchemaType;
   /**
    * Callbacks to wrap mutations in Obj.change().
    * Use createEchoChangeCallback() for ECHO-backed objects or createDirectChangeCallback() for plain objects.
@@ -102,7 +102,7 @@ export class ProjectionModel {
 
   private readonly _registry: Registry.Registry;
   private readonly _view: View.View;
-  private readonly _baseSchema: Live<JsonSchemaType>;
+  private readonly _baseSchema: JsonSchemaType;
   private readonly _change: ProjectionChangeCallback;
 
   // Internal atoms.

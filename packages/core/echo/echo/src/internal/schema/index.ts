@@ -5,4 +5,4 @@
 export * from './echo-schema';
 export * from './manipulation';
 export * from './persistent-schema';
-export * from './snapshot';
+// snapshot.ts removed - use getSnapshot from live-object

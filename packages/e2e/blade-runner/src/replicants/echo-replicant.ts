@@ -16,7 +16,6 @@ import { TestReplicator, TestReplicatorConnection } from '@dxos/echo-pipeline/te
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { createTestLevel } from '@dxos/kv-store/testing';
-import { type Live } from '@dxos/live-object';
 import { log } from '@dxos/log';
 import { trace } from '@dxos/tracing';
 
@@ -100,7 +99,7 @@ export class EchoReplicant {
 
     invariant(this._db, 'Database not initialized.');
     for (let objIdx = 0; objIdx < amount; objIdx++) {
-      const doc = Obj.make(Text, { content: '' }) satisfies Live<Text>;
+      const doc = Obj.make(Text, { content: '' }) satisfies Text;
       this._db!.add(doc);
       const accessor = createDocAccessor(doc, ['content']);
       for (let mutationIdx = 0; mutationIdx < insertions; mutationIdx++) {

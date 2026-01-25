@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type Live, type Space } from '@dxos/client/echo';
+import { type Space } from '@dxos/client/echo';
 import { Obj, Ref, Relation, type Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { Employer, HasConnection, Message, Organization, Person } from '@dxos/types';
@@ -101,7 +101,7 @@ const testRelationships: Record<
 };
 
 export const addTestData = async (space: Space): Promise<void> => {
-  const objectMap = new Map<string, Live<any>>();
+  const objectMap = new Map<string, any>();
 
   for (const [typename, objects] of Object.entries(testObjects)) {
     const schema = space.internal.db.graph.schemaRegistry.getSchema(typename);

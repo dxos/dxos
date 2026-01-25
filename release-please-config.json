@@ -325,11 +325,6 @@
         },
         {
           "type": "json",
-          "path": "packages/core/echo/live-object/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
           "path": "packages/core/functions/package.json",
           "jsonpath": "$.version"
         },

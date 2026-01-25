@@ -68,7 +68,6 @@
     "yaml": "catalog:"
   },
   "devDependencies": {
-    "@dxos/live-object": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/storybook-utils": "workspace:*",
     "@dxos/ui-theme": "workspace:*",

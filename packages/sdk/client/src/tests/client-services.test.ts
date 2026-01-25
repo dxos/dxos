@@ -8,6 +8,7 @@ import { Trigger } from '@dxos/async';
 import { type Space } from '@dxos/client-protocol';
 import { performInvitation } from '@dxos/client-services/testing';
 import { Context } from '@dxos/context';
+import { Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { createTestLevel } from '@dxos/kv-store/testing';
 import { log } from '@dxos/log';
@@ -200,6 +201,7 @@ describe('Client services', () => {
 
       await client1.initialize();
       await client2.initialize();
+      await Promise.all([client1, client2].map((c) => c.addTypes([Type.Expando])));
       await client1.halo.createIdentity({ displayName: 'Peer 1' });
       await client2.halo.createIdentity({ displayName: 'Peer 2' });
     }

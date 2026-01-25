@@ -9,7 +9,7 @@ import type { CleanupFn, Event } from '@dxos/async';
 import { inspectCustom } from '@dxos/debug';
 import type { SchemaId } from '@dxos/echo/internal';
 // eslint-disable-next-line @typescript-eslint/consistent-type-imports
-import { EventId } from '@dxos/live-object';
+import { EventId } from '@dxos/echo/internal';
 import { ComplexMap } from '@dxos/util';
 
 import type { KeyPath, ObjectCore } from '../core-db';

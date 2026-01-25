@@ -6,7 +6,7 @@ import { next as A } from '@automerge/automerge';
 
 import { type AnyProperties } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
-import { isLiveObject } from '@dxos/live-object';
+import { isProxy } from '@dxos/echo/internal';
 import { get } from '@dxos/util';
 
 import { type DocAccessor, type KeyPath, isValidKeyPath } from './core-db';
@@ -91,7 +91,7 @@ export const updateText = <T extends AnyProperties>(
   path: KeyPath,
   newText: string,
 ): AnyLiveObject<T> => {
-  invariant(isLiveObject(obj));
+  invariant(isProxy(obj));
   invariant(path === undefined || isValidKeyPath(path));
   const accessor = createDocAccessor(obj, path);
   accessor.handle.change((doc) => {

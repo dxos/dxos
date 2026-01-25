@@ -35,7 +35,6 @@
   "dependencies": {
     "@dxos/app-framework": "workspace:*",
     "@dxos/echo": "workspace:*",
-    "@dxos/live-object": "workspace:*",
     "@dxos/operation": "workspace:*",
     "@dxos/util": "workspace:*",
     "@effect-atom/atom-react": "catalog:",

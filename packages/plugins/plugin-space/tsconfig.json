@@ -67,9 +67,6 @@
       "path": "../../core/echo/echo-protocol"
     },
     {
-      "path": "../../core/echo/live-object"
-    },
-    {
       "path": "../../core/functions"
     },
     {

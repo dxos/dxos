@@ -60,16 +60,15 @@ import { assertArgument, invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
 import {
   EventId,
-  type Live,
   type ReactiveHandler,
   createProxy,
   defineHiddenProperty,
   getProxyHandler,
   getProxySlot,
   getProxyTarget,
-  isLiveObject,
+  isProxy,
   symbolIsProxy,
-} from '@dxos/live-object';
+} from '@dxos/echo/internal';
 import { log } from '@dxos/log';
 import { deepMapValues, defaultMap, getDeep, setDeep } from '@dxos/util';
 
@@ -493,7 +492,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
         // The value is a value-object field of another echo-object. We don't want to create a reference
         // to it or have shared mutability, we need to copy by value.
         return recurse({ ...value });
-      } else if (isLiveObject(value)) {
+      } else if (isProxy(value)) {
         throw new Error('Object references must be wrapped with `Ref.make`');
       } else if (Ref.isRef(value)) {
         const savedTarget = getRefSavedTarget(value);
@@ -588,7 +587,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     return false;
   }
 
-  arrayPush(target: Live<ProxyTarget>, path: KeyPath, ...items: any[]): number {
+  arrayPush(target: ProxyTarget, path: KeyPath, ...items: any[]): number {
     this._checkArrayMutationAllowed(target, 'push');
     const validatedItems = this._validateForArray(target, path, items, target.length);
 
@@ -597,7 +596,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     return result;
   }
 
-  arrayPop(target: Live<ProxyTarget>, path: KeyPath): any {
+  arrayPop(target: ProxyTarget, path: KeyPath): any {
     this._checkArrayMutationAllowed(target, 'pop');
     const fullPath = this._getPropertyMountPath(target, path);
 
@@ -611,7 +610,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     return returnValue;
   }
 
-  arrayShift(target: Live<ProxyTarget>, path: KeyPath): any {
+  arrayShift(target: ProxyTarget, path: KeyPath): any {
     this._checkArrayMutationAllowed(target, 'shift');
     const fullPath = this._getPropertyMountPath(target, path);
 
@@ -625,7 +624,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     return returnValue;
   }
 
-  arrayUnshift(target: Live<ProxyTarget>, path: KeyPath, ...items: any[]): number {
+  arrayUnshift(target: ProxyTarget, path: KeyPath, ...items: any[]): number {
     this._checkArrayMutationAllowed(target, 'unshift');
     const validatedItems = this._validateForArray(target, path, items, 0);
     const fullPath = this._getPropertyMountPath(target, path);
@@ -642,7 +641,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     return newLength;
   }
 
-  arraySplice(target: Live<ProxyTarget>, path: KeyPath, start: number, deleteCount?: number, ...items: any[]): any[] {
+  arraySplice(target: ProxyTarget, path: KeyPath, start: number, deleteCount?: number, ...items: any[]): any[] {
     this._checkArrayMutationAllowed(target, 'splice');
     const validatedItems = this._validateForArray(target, path, items, start);
 
@@ -664,7 +663,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     return deletedElements;
   }
 
-  arraySort(target: Live<ProxyTarget>, path: KeyPath, compareFn?: (v1: any, v2: any) => number): any[] {
+  arraySort(target: ProxyTarget, path: KeyPath, compareFn?: (v1: any, v2: any) => number): any[] {
     this._checkArrayMutationAllowed(target, 'sort');
     const fullPath = this._getPropertyMountPath(target, path);
 
@@ -678,7 +677,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     return target as EchoArray<any>;
   }
 
-  arrayReverse(target: Live<ProxyTarget>, path: KeyPath): any[] {
+  arrayReverse(target: ProxyTarget, path: KeyPath): any[] {
     this._checkArrayMutationAllowed(target, 'reverse');
     const fullPath = this._getPropertyMountPath(target, path);
 
@@ -695,7 +694,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
   /**
    * Check if array mutation is allowed (inside a change context).
    */
-  private _checkArrayMutationAllowed(target: Live<ProxyTarget>, method: string): void {
+  private _checkArrayMutationAllowed(target: ProxyTarget, method: string): void {
     const core = target[symbolInternals].core;
     if (!isInChangeContext(core)) {
       throw createArrayMethodError(method);
@@ -988,9 +987,7 @@ export { isRootDataObject };
  */
 const isEchoObjectField = (value: any) => {
   return (
-    isLiveObject(value) &&
-    getProxyHandler(value) instanceof EchoReactiveHandler &&
-    !isRootDataObject(getProxyTarget(value))
+    isProxy(value) && getProxyHandler(value) instanceof EchoReactiveHandler && !isRootDataObject(getProxyTarget(value))
   );
 };
 
@@ -1004,7 +1001,7 @@ interface DecodedValueAtPath {
 
 /** @deprecated */
 // TODO(burdon): Remove.
-export type AnyLiveObject<T extends AnyProperties = any> = Live<T> & HasId & AnyProperties;
+export type AnyLiveObject<T extends AnyProperties = any> = T & HasId & AnyProperties;
 
 // Re-export from echo-object-utils for backward compatibility.
 export { isEchoObject };
@@ -1015,7 +1012,7 @@ export { isEchoObject };
  * @returns True if `value` is a reactive object with an EchoHandler backend or a schema that has an `Object` annotation.
  */
 // TODO(dmaretskyi): Reconcile with `isEchoObject`.
-export const isTypedObjectProxy = (value: any): value is Live<any> => {
+export const isTypedObjectProxy = (value: any): value is any => {
   if (isEchoObject(value)) {
     return true;
   }
@@ -1047,7 +1044,7 @@ export const createObject = <T extends AnyProperties>(obj: T): CreateObjectRetur
   validateInitialProps(obj);
 
   const core = new ObjectCore();
-  if (isLiveObject(obj)) {
+  if (isProxy(obj)) {
     // Already an echo-schema reactive object.
     const meta = getProxyTarget<ObjectMeta>(Obj.getMeta(obj));
 
@@ -1206,10 +1203,10 @@ const setRelationSourceAndTarget = (
     if (!sourceRef || !targetRef) {
       throw new TypeError('Relation source and target must be specified');
     }
-    if (!isLiveObject(sourceRef)) {
+    if (!isProxy(sourceRef)) {
       throw new TypeError('source must be an ECHO object');
     }
-    if (!isLiveObject(targetRef)) {
+    if (!isProxy(targetRef)) {
       throw new TypeError('target must be an ECHO object');
     }
 

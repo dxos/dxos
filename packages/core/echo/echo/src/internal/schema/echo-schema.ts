@@ -11,7 +11,7 @@ import { type ObjectId } from '@dxos/keys';
 import { type SchemaMeta, SchemaMetaSymbol, type TypeAnnotation, getTypeAnnotation } from '../annotations';
 import { type JsonSchemaType, toEffectSchema, toJsonSchema } from '../json-schema';
 import { type TypedObject, type TypedObjectPrototype } from '../object';
-import { ChangeId } from '../types/entity';
+import { ChangeId } from '../live-object';
 
 import {
   addFieldsToSchema,
@@ -21,7 +21,7 @@ import {
   updateFieldsInSchema,
 } from './manipulation';
 import { PersistentSchema } from './persistent-schema';
-import { getSnapshot } from './snapshot';
+import { getSnapshot } from '../live-object';
 
 /**
  * Base schema type.

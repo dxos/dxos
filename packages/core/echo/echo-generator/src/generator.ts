@@ -9,7 +9,7 @@ import { Obj } from '@dxos/echo';
 import { EchoSchema, getTypeAnnotation } from '@dxos/echo/internal';
 import { type AnyLiveObject } from '@dxos/echo-db';
 import { invariant } from '@dxos/invariant';
-import { type Live, isLiveObject } from '@dxos/live-object';
+import { isProxy } from '@dxos/echo/internal';
 import { faker } from '@dxos/random';
 import { entries, range } from '@dxos/util';
 
@@ -46,10 +46,10 @@ export class TestObjectGenerator<T extends string = TestSchemaType> {
     this._schemas[type] = schema;
   }
 
-  async createObject({ types }: { types?: T[] } = {}): Promise<Live<any>> {
+  async createObject({ types }: { types?: T[] } = {}): Promise<any> {
     const type = faker.helpers.arrayElement(types ?? (Object.keys(this._schemas) as T[]));
     const data = await this._generators[type](this._provider);
-    if (isLiveObject(data)) {
+    if (isProxy(data)) {
       return data;
     }
 
@@ -60,7 +60,7 @@ export class TestObjectGenerator<T extends string = TestSchemaType> {
 
   // TODO(burdon): Based on dependencies (e.g., organization before contact).
   async createObjects(map: Partial<Record<T, number>>) {
-    const results: Live<any>[] = [];
+    const results: any[] = [];
     for (const [type, count] of entries(map)) {
       results.push(...(await Promise.all(range(count ?? 0, () => this.createObject({ types: [type as T] })))));
     }

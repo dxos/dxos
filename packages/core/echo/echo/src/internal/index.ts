@@ -9,6 +9,7 @@ export * from './annotations';
 export * from './entities';
 export * from './formats';
 export * from './json-schema';
+export * from './live-object';
 export * from './ref';
 export * from './types';
 

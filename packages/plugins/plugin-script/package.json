@@ -82,7 +82,6 @@
     "@dxos/functions-simulator-cloudflare": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/keys": "workspace:*",
-    "@dxos/live-object": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/operation": "workspace:*",
     "@dxos/plugin-assistant": "workspace:*",

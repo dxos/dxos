@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { batchEvents } from '@dxos/live-object';
+import { batchEvents } from '@dxos/echo/internal';
 
 import type { KeyPath } from '../core-db';
 

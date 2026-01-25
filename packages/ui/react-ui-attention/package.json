@@ -46,7 +46,6 @@
   "dependencies": {
     "@dxos/echo": "workspace:*",
     "@dxos/invariant": "workspace:*",
-    "@dxos/live-object": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/react-hooks": "workspace:*",
     "@dxos/util": "workspace:*",

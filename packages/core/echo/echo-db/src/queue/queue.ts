@@ -9,7 +9,7 @@ import { type Database, type Entity, Obj, type Ref } from '@dxos/echo';
 import { type HasId, type ObjectJSON, SelfDXNId, assertObjectModel, setRefResolverOnData } from '@dxos/echo/internal';
 import { assertArgument, failedInvariant } from '@dxos/invariant';
 import { type DXN, type ObjectId, type SpaceId } from '@dxos/keys';
-import { defineHiddenProperty } from '@dxos/live-object';
+import { defineHiddenProperty } from '@dxos/echo/internal';
 import { log } from '@dxos/log';
 import { type QueueService } from '@dxos/protocols';
 

@@ -124,7 +124,8 @@ describe('Database', () => {
     const task = Obj.make(Type.Expando, {
       title: 'Main task',
       tags: ['red', 'green'],
-      assignee: Obj.make(Type.Expando, { name: 'Test' }),
+      // Note: Using plain object for nested data. For typed object references, use Ref.make.
+      assignee: { name: 'Test' },
     });
     db.add(task);
     await db.flush();

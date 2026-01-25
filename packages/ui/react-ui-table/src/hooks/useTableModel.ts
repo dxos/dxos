@@ -6,7 +6,6 @@ import { RegistryContext } from '@effect-atom/atom-react';
 import { useContext, useEffect, useMemo, useState } from 'react';
 
 import { type Database, Obj } from '@dxos/echo';
-import { type Live } from '@dxos/live-object';
 import { useSelected, useSelectionActions } from '@dxos/react-ui-attention';
 import { type ProjectionModel } from '@dxos/schema';
 import { isNonNullable } from '@dxos/util';
@@ -24,7 +23,7 @@ export type UseTableModelProps<T extends TableRow = TableRow> = {
   object?: Table.Table;
   projection?: ProjectionModel;
   db?: Database.Database;
-  rows?: Live<T>[];
+  rows?: T[];
   rowActions?: TableRowAction[];
   onSelectionChanged?: (selection: string[]) => void;
   onRowAction?: (actionId: string, data: T) => void;

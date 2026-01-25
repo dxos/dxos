@@ -5,7 +5,6 @@
 import { RegistryContext } from '@effect-atom/atom-react';
 import { useContext, useEffect, useState } from 'react';
 
-import { type Live } from '@dxos/react-client/echo';
 import { type ProjectionModel } from '@dxos/schema';
 
 import { type BaseKanbanItem, KanbanModel, createEchoChangeCallback } from '../model';
@@ -14,7 +13,7 @@ import { type Kanban } from '../types';
 export type UseKanbanModelProps<T extends BaseKanbanItem = { id: string }> = {
   object?: Kanban.Kanban;
   projection?: ProjectionModel;
-  items?: Live<T>[];
+  items?: T[];
 };
 
 export const useKanbanModel = <T extends BaseKanbanItem = { id: string }>({

@@ -67,12 +67,11 @@ catalog:
   '@dxos/echo-db': ^0.8.3
   '@dxos/effect': ^0.8.3
   '@dxos/keys': ^0.8.3
-  '@dxos/live-object': ^0.8.3
   '@dxos/log': ^0.8.3
   '@dxos/schema': ^0.8.3
   '@dxos/test-utils': ^0.8.3
   '@dxos/wa-sqlite': ^0.2.1
-  '@effect-atom/atom': ^0.4.10
+  '@effect-atom/atom': ^0.4.13
   '@effect-atom/atom-react': ^0.4.6
   '@effect/ai': 0.32.1
   '@effect/ai-anthropic': 0.22.0

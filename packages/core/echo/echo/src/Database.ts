@@ -13,7 +13,6 @@ import { type QueryAST } from '@dxos/echo-protocol';
 import { promiseWithCauseCapture } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { type DXN, type PublicKey, type SpaceId } from '@dxos/keys';
-import { type Live } from '@dxos/live-object';
 import { type QueryOptions as QueryOptionsProto } from '@dxos/protocols/proto/dxos/echo/filter';
 
 import type * as Entity from './Entity';
@@ -296,11 +295,11 @@ export class Service extends Context.Tag('@dxos/echo/Database/Service')<
    * Creates a `QueryResult` object that can be subscribed to.
    */
   static query: {
-    <Q extends Query.Any>(query: Q): Effect.Effect<QueryResult.QueryResult<Live<Query.Type<Q>>>, never, Service>;
-    <F extends Filter.Any>(filter: F): Effect.Effect<QueryResult.QueryResult<Live<Filter.Type<F>>>, never, Service>;
+    <Q extends Query.Any>(query: Q): Effect.Effect<QueryResult.QueryResult<Query.Type<Q>>, never, Service>;
+    <F extends Filter.Any>(filter: F): Effect.Effect<QueryResult.QueryResult<Filter.Type<F>>, never, Service>;
   } = (queryOrFilter: Query.Any | Filter.Any) =>
     Service.pipe(
-      Effect.map(({ db }) => db.query(queryOrFilter as any) as QueryResult.QueryResult<Live<any>>),
+      Effect.map(({ db }) => db.query(queryOrFilter as any) as QueryResult.QueryResult<any>),
       Effect.withSpan('Service.query'),
     );
 
@@ -308,8 +307,8 @@ export class Service extends Context.Tag('@dxos/echo/Database/Service')<
    * Executes the query once and returns the results.
    */
   static runQuery: {
-    <Q extends Query.Any>(query: Q): Effect.Effect<Live<Query.Type<Q>>[], never, Service>;
-    <F extends Filter.Any>(filter: F): Effect.Effect<Live<Filter.Type<F>>[], never, Service>;
+    <Q extends Query.Any>(query: Q): Effect.Effect<Query.Type<Q>[], never, Service>;
+    <F extends Filter.Any>(filter: F): Effect.Effect<Filter.Type<F>[], never, Service>;
   } = (queryOrFilter: Query.Any | Filter.Any) =>
     Service.query(queryOrFilter as any).pipe(
       Effect.flatMap((queryResult) => promiseWithCauseCapture(() => queryResult.run())),

@@ -16,6 +16,9 @@ export class ReactiveArray<T> extends Array<T> {
     /**
      * These methods will trigger proxy traps like `set` and `defineProperty` and emit event notifications.
      * We wrap them in a batch to avoid unnecessary event notifications.
+     *
+     * Note: When called on a proxy, `this` will be the proxy, so array mutations
+     * go through the proxy's set trap which handles event emission.
      */
     const BATCHED_METHODS = ['push', 'pop', 'shift', 'unshift', 'splice', 'sort', 'reverse'] as const;
 

@@ -24,7 +24,7 @@ import { type DatabaseDirectory, EncodedReference, type ObjectStructure, type Sp
 import { invariant } from '@dxos/invariant';
 import { type ObjectId } from '@dxos/keys';
 import { type DXN, type PublicKey, type SpaceId } from '@dxos/keys';
-import { batchEvents } from '@dxos/live-object';
+import { batchEvents } from '@dxos/echo/internal';
 import { log } from '@dxos/log';
 import type { QueryService } from '@dxos/protocols/proto/dxos/echo/query';
 import type { DataService, SpaceSyncState } from '@dxos/protocols/proto/dxos/echo/service';

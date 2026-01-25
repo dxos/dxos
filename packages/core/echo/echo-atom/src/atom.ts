@@ -7,7 +7,7 @@ import isEqual from 'lodash.isequal';
 
 import { type Entity, Obj, Ref } from '@dxos/echo';
 import { assertArgument } from '@dxos/invariant';
-import { getSnapshot, isLiveObject } from '@dxos/live-object';
+import { getSnapshot, isProxy } from '@dxos/echo/internal';
 
 import { loadRefTarget } from './ref-utils';
 
@@ -120,7 +120,7 @@ export function make<T extends Entity.Unknown>(objOrRef: T | Ref.Ref<T> | undefi
 
   // At this point, objOrRef is definitely T (not a Ref).
   const obj = objOrRef as T;
-  assertArgument(isLiveObject(obj), 'obj', 'Object must be a reactive object');
+  assertArgument(isProxy(obj), 'obj', 'Object must be a reactive object');
 
   return objectFamily(obj) as Atom.Atom<T | undefined>;
 }
@@ -149,7 +149,7 @@ export function makeProperty<T extends Entity.Unknown, K extends keyof T>(
     return Atom.make<T[K] | undefined>(() => undefined);
   }
 
-  assertArgument(isLiveObject(obj), 'obj', 'Object must be a reactive object');
+  assertArgument(isProxy(obj), 'obj', 'Object must be a reactive object');
   assertArgument(key in obj, 'key', 'Property must exist on object');
   return propertyFamily(obj)(key);
 }

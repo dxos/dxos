@@ -8,11 +8,10 @@ import { useCallback, useMemo } from 'react';
 import { Common } from '@dxos/app-framework';
 import { useCapability, useOperationInvoker } from '@dxos/app-framework/react';
 import { Obj } from '@dxos/echo';
-import { type Live } from '@dxos/live-object';
 import { DeckCapabilities } from '@dxos/plugin-deck';
 import { DeckOperation } from '@dxos/plugin-deck/types';
 
-export const useExitPresenter = (object: Live<any>) => {
+export const useExitPresenter = (object: any) => {
   const { invokePromise } = useOperationInvoker();
   const stateAtom = useCapability(DeckCapabilities.State);
   const state = useAtomValue(stateAtom);

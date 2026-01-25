@@ -6,7 +6,7 @@ import { inspect } from 'node:util';
 
 import { describe, expect, test } from 'vitest';
 
-import { type Live, objectData } from '@dxos/live-object';
+import { objectData } from '../live-object';
 import { isNode } from '@dxos/util';
 
 import { TestSchema, updateCounter } from '../../testing';
@@ -36,7 +36,7 @@ const TEST_OBJECT: TestSchema.ExampleSchema = {
 
 // Schema is now required for reactive objects.
 {
-  const createObject = (props: Partial<TestSchema.ExampleSchema> = {}): Live<TestSchema.ExampleSchema> => {
+  const createObject = (props: Partial<TestSchema.ExampleSchema> = {}): TestSchema.ExampleSchema => {
     return makeObject(TestSchema.ExampleSchema, props);
   };
 

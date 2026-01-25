@@ -5,7 +5,7 @@
 import type * as Schema from 'effect/Schema';
 
 import { ObjectId } from '@dxos/keys';
-import { type Live, createProxy, defineHiddenProperty, isValidProxyTarget } from '@dxos/live-object';
+import { createProxy, defineHiddenProperty, isValidProxyTarget } from '../live-object';
 
 import { getTypeAnnotation } from '../annotations';
 import { Expando } from '../entities';
@@ -29,17 +29,17 @@ export type MakeObjectProps<T extends AnyProperties> = Omit<T, 'id' | KindId>;
 // TODO(dmaretskyi): Invert generics (generic over schema) to have better error messages.
 // TODO(dmaretskyi): Could mutate original object making it unusable.
 export const makeObject: {
-  <T extends AnyProperties>(obj: T): Live<T>;
+  <T extends AnyProperties>(obj: T): T;
   <T extends AnyProperties>(
     schema: Schema.Schema<T, any, never>,
     obj: NoInfer<MakeObjectProps<T>>,
     meta?: ObjectMeta,
-  ): Live<T>;
+  ): T;
 } = <T extends AnyProperties>(
   objOrSchema: Schema.Schema<T, any> | T,
   obj?: MakeObjectProps<T>,
   meta?: ObjectMeta,
-): Live<T> => {
+): T => {
   // TODO(dmaretskyi): Remove Expando special case.
   if (obj && (objOrSchema as any) !== Expando) {
     return createReactiveObject<T>({ ...obj } as T, meta, objOrSchema as Schema.Schema<T, any>);
@@ -55,7 +55,7 @@ const createReactiveObject = <T extends AnyProperties>(
   meta?: ObjectMeta,
   schema?: Schema.Schema<T>,
   options?: { expando?: boolean },
-): Live<T> => {
+): T => {
   if (!isValidProxyTarget(obj)) {
     throw new Error('Value cannot be made into a reactive object.');
   }
@@ -64,7 +64,10 @@ const createReactiveObject = <T extends AnyProperties>(
     throw new Error('Schema is required for reactive objects. Use Atom for untyped reactive state.');
   }
 
-  const annotation = schema ? getTypeAnnotation(schema) : undefined;
+  // Use Expando schema if the expando option is set but no schema provided.
+  const effectiveSchema = schema ?? (options?.expando ? (Expando as unknown as Schema.Schema<T>) : undefined);
+
+  const annotation = effectiveSchema ? getTypeAnnotation(effectiveSchema) : undefined;
   const shouldGenerateId = options?.expando || !!annotation;
   if (shouldGenerateId) {
     setIdOnTarget(obj);
@@ -73,8 +76,8 @@ const createReactiveObject = <T extends AnyProperties>(
     defineHiddenProperty(obj, KindId, annotation.kind);
   }
   initMeta(obj, meta);
-  if (schema) {
-    prepareTypedTarget(obj, schema);
+  if (effectiveSchema) {
+    prepareTypedTarget(obj, effectiveSchema);
     attachTypedJsonSerializer(obj);
   }
   return createProxy<T>(obj, TypedReactiveHandler.instance);
