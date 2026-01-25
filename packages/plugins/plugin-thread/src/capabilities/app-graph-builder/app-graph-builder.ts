@@ -15,11 +15,11 @@ import { GraphBuilder, NodeMatcher } from '@dxos/plugin-graph';
 import { defaultSelection, type SelectionManager, type SelectionMode } from '@dxos/react-ui-attention';
 
 import { meta } from '../../meta';
-import { Channel, ThreadCapabilities, ThreadOperation } from '../../types';
+import { Channel, type ThreadState, ThreadCapabilities, ThreadOperation } from '../../types';
 import { getAnchor } from '../../util';
 
 type CommentDisabledParams = {
-  stateAtom: Atom.Atom<ThreadCapabilities.ThreadStateStore[]>;
+  stateAtom: Atom.Atom<Atom.Writable<ThreadState>[]>;
   selectionManager: SelectionManager;
   objectId: string;
   commentsType: string;
@@ -33,7 +33,9 @@ type CommentDisabledParams = {
 const commentDisabledFamily = Atom.family(
   ({ stateAtom, selectionManager, objectId, commentsType, selectionMode }: CommentDisabledParams) =>
     Atom.make((get) => {
-      const toolbar = get(stateAtom)[0]?.state.toolbar ?? {};
+      const stateAtoms = get(stateAtom);
+      const state = stateAtoms[0] ? get(stateAtoms[0]) : undefined;
+      const toolbar = state?.toolbar ?? {};
       const selectionState = get(selectionManager.state);
       const selection =
         selectionState.selections[objectId] ?? (selectionMode ? defaultSelection(selectionMode) : undefined);

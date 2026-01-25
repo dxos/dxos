@@ -5,6 +5,8 @@
 import { type Extension } from '@codemirror/state';
 import { EditorView } from '@codemirror/view';
 
+import { type Atom, type Registry } from '@effect-atom/atom-react';
+
 import { Filter, Obj, Query, Relation } from '@dxos/echo';
 import { createDocAccessor, getTextInRange } from '@dxos/echo-db';
 import { type OperationInvoker } from '@dxos/operation';
@@ -12,7 +14,7 @@ import { type Markdown } from '@dxos/plugin-markdown/types';
 import { AnchoredTo, Thread } from '@dxos/types';
 import { comments, createExternalCommentSync } from '@dxos/ui-editor';
 
-import { type ThreadCapabilities, ThreadOperation } from '../types';
+import { type ThreadState, ThreadOperation } from '../types';
 
 // TODO(burdon): Factor out.
 const getName = (doc: Markdown.Document, anchor: string): string | undefined => {
@@ -22,11 +24,16 @@ const getName = (doc: Markdown.Document, anchor: string): string | undefined => 
   }
 };
 
+export type ThreadStore = {
+  registry: Registry.Registry;
+  stateAtom: Atom.Writable<ThreadState>;
+};
+
 /**
  * Construct plugins.
  */
 export const threads = (
-  store: ThreadCapabilities.ThreadStateStore,
+  store: ThreadStore,
   doc?: Markdown.Document,
   invokePromise?: OperationInvoker.OperationInvoker['invokePromise'],
 ): Extension => {
@@ -37,6 +44,7 @@ export const threads = (
     return [comments()];
   }
 
+  const { registry, stateAtom } = store;
   const objectId = Obj.getDXN(doc).toString();
   const query = db.query(Query.select(Filter.id(doc.id)).targetOf(AnchoredTo.AnchoredTo));
 
@@ -47,7 +55,7 @@ export const threads = (
         const thread = Relation.getSource(anchor);
         return Obj.instanceOf(Thread.Thread, thread) && thread.status !== 'resolved';
       })
-      .concat(store.state.drafts[objectId] ?? []);
+      .concat(registry.get(stateAtom).drafts[objectId] ?? []);
 
   return [
     EditorView.domEventHandlers({
@@ -79,7 +87,7 @@ export const threads = (
       (sink) => {
         // Subscribe to both query changes and store state changes.
         const unsubQuery = query.subscribe(sink);
-        const unsubStore = store.subscribeState(sink);
+        const unsubStore = registry.subscribe(stateAtom, sink);
         return () => {
           unsubQuery();
           unsubStore();
@@ -105,17 +113,18 @@ export const threads = (
         });
       },
       onDelete: ({ id }) => {
-        const drafts = store.state.drafts[objectId];
+        const drafts = registry.get(stateAtom).drafts[objectId];
         if (drafts) {
           const index = drafts.findIndex((thread) => Obj.getDXN(thread).toString() === id);
           if (index !== -1) {
-            store.updateState((current) => ({
+            const current = registry.get(stateAtom);
+            registry.set(stateAtom, {
               ...current,
               drafts: {
                 ...current.drafts,
                 [objectId]: current.drafts[objectId]?.filter((_, i) => i !== index),
               },
-            }));
+            });
           }
         }
 
@@ -127,7 +136,7 @@ export const threads = (
         }
       },
       onUpdate: ({ id, cursor }) => {
-        const draft = store.state.drafts[objectId]?.find((thread) => Obj.getDXN(thread).toString() === id);
+        const draft = registry.get(stateAtom).drafts[objectId]?.find((thread) => Obj.getDXN(thread).toString() === id);
         if (draft) {
           const thread = Relation.getSource(draft) as Thread.Thread;
           Obj.change(thread, (t) => {

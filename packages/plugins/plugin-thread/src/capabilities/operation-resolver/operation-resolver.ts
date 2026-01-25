@@ -90,8 +90,10 @@ export default Capability.makeModule(
         OperationResolver.make({
           operation: ThreadOperation.Select,
           handler: Effect.fnUntraced(function* (input) {
-            const { updateState } = yield* Capability.get(ThreadCapabilities.State);
-            updateState((current) => ({ ...current, current: input.current }));
+            const registry = yield* Capability.get(Common.Capability.AtomRegistry);
+            const stateAtom = yield* Capability.get(ThreadCapabilities.State);
+            const current = registry.get(stateAtom);
+            registry.set(stateAtom, { ...current, current: input.current });
           }),
         }),
 
@@ -153,7 +155,8 @@ export default Capability.makeModule(
         OperationResolver.make({
           operation: ThreadOperation.Create,
           handler: Effect.fnUntraced(function* ({ name, anchor: _anchor, subject }) {
-            const { state, updateState } = yield* Capability.get(ThreadCapabilities.State);
+            const registry = yield* Capability.get(Common.Capability.AtomRegistry);
+            const stateAtom = yield* Capability.get(ThreadCapabilities.State);
             const subjectId = Obj.getDXN(subject).toString();
             const thread = Thread.make({ name });
             const anchor = Relation.make(AnchoredTo.AnchoredTo, {
@@ -162,14 +165,15 @@ export default Capability.makeModule(
               anchor: _anchor,
             });
 
+            const state = registry.get(stateAtom);
             const existingDrafts = state.drafts[subjectId];
-            updateState((current) => ({
-              ...current,
+            registry.set(stateAtom, {
+              ...state,
               drafts: {
-                ...current.drafts,
+                ...state.drafts,
                 [subjectId]: existingDrafts ? [...existingDrafts, anchor] : [anchor],
               },
-            }));
+            });
 
             // Follow-up operations.
             yield* Operation.invoke(ThreadOperation.Select, { current: Obj.getDXN(thread).toString() });
@@ -186,21 +190,23 @@ export default Capability.makeModule(
         OperationResolver.make({
           operation: ThreadOperation.Delete,
           handler: Effect.fnUntraced(function* ({ subject, anchor, thread: _thread }) {
-            const { state, updateState } = yield* Capability.get(ThreadCapabilities.State);
+            const registry = yield* Capability.get(Common.Capability.AtomRegistry);
+            const stateAtom = yield* Capability.get(ThreadCapabilities.State);
             const thread = _thread ?? (Relation.getSource(anchor) as Thread.Thread);
             const subjectId = Obj.getDXN(subject).toString();
+            const state = registry.get(stateAtom);
             const draft = state.drafts[subjectId];
             if (draft) {
               // Check if we're deleting a draft; if so, remove it.
               const index = draft.findIndex((a: { id: string }) => a.id === anchor.id);
               if (index !== -1) {
-                updateState((current) => ({
-                  ...current,
+                registry.set(stateAtom, {
+                  ...state,
                   drafts: {
-                    ...current.drafts,
-                    [subjectId]: current.drafts[subjectId]?.filter((_, i) => i !== index),
+                    ...state.drafts,
+                    [subjectId]: state.drafts[subjectId]?.filter((_, i) => i !== index),
                   },
-                }));
+                });
                 // Draft deletion is not undoable.
                 return {};
               }
@@ -236,7 +242,8 @@ export default Capability.makeModule(
         OperationResolver.make({
           operation: ThreadOperation.AddMessage,
           handler: Effect.fnUntraced(function* ({ anchor, subject, sender, text }) {
-            const { state, updateState } = yield* Capability.get(ThreadCapabilities.State);
+            const registry = yield* Capability.get(Common.Capability.AtomRegistry);
+            const stateAtom = yield* Capability.get(ThreadCapabilities.State);
             const thread = Relation.getSource(anchor) as Thread.Thread;
             const subjectId = Obj.getDXN(subject).toString();
             const db = Obj.getDatabase(subject);
@@ -251,19 +258,20 @@ export default Capability.makeModule(
               t.messages.push(Ref.make(message));
             });
 
+            const state = registry.get(stateAtom);
             const draft = state.drafts[subjectId]?.find((a: { id: string }) => a.id === anchor.id);
             if (draft) {
               // Move draft to document.
               Obj.change(thread, (t) => {
                 t.status = 'active';
               });
-              updateState((current) => ({
-                ...current,
+              registry.set(stateAtom, {
+                ...state,
                 drafts: {
-                  ...current.drafts,
-                  [subjectId]: current.drafts[subjectId]?.filter((a: { id: string }) => a.id !== anchor.id),
+                  ...state.drafts,
+                  [subjectId]: state.drafts[subjectId]?.filter((a: { id: string }) => a.id !== anchor.id),
                 },
-              }));
+              });
               yield* Operation.invoke(SpaceOperation.AddObject, { object: thread, target: db, hidden: true });
               yield* Operation.invoke(SpaceOperation.AddRelation, {
                 db,

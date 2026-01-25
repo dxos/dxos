@@ -21,45 +21,33 @@ export const Participant = memo(({ item: user, debug, ...props }: ResponsiveGrid
   const isSelf: boolean = self.id !== undefined && user.id !== undefined && user.id.startsWith(self.id);
   const isScreenshare = user.id?.endsWith(SCREENSHARE_SUFFIX);
 
-  // Determine which track to pull (if any) for non-self users.
-  const trackToPull = useMemo<EncodedTrackName | undefined>(() => {
+  // Get pulled video stream for non-self users.
+  const pulledVideoStream = useMemo<MediaStream | undefined>(() => {
     if (isSelf) {
       return undefined;
     }
-    if (isScreenshare && user.tracks?.screenshareEnabled) {
-      return user.tracks?.screenshare as EncodedTrackName;
-    }
-    if (!isScreenshare && user.tracks?.videoEnabled) {
-      return user.tracks?.video as EncodedTrackName;
-    }
-    return undefined;
+    const trackName =
+      isScreenshare && user.tracks?.screenshareEnabled
+        ? (user.tracks?.screenshare as EncodedTrackName)
+        : !isScreenshare && user.tracks?.videoEnabled
+          ? (user.tracks?.video as EncodedTrackName)
+          : undefined;
+    return trackName ? media.pulledVideoStreams[trackName]?.stream : undefined;
   }, [
     isSelf,
     isScreenshare,
+    media.pulledVideoStreams,
     user.tracks?.screenshare,
     user.tracks?.video,
     user.tracks?.screenshareEnabled,
     user.tracks?.videoEnabled,
   ]);
 
-  // Get pulled video streams from media state.
-  const pulledVideoStream = useMemo<MediaStream | undefined>(() => {
-    if (!trackToPull) {
-      return undefined;
-    }
-    return media.pulledVideoStreams[trackToPull]?.stream;
-  }, [media.pulledVideoStreams, trackToPull]);
-
   const videoStream = useMemo<MediaStream | undefined>(() => {
     if (isSelf) {
-      if (isScreenshare) {
-        return media.screenshareVideoStream;
-      } else if (!isScreenshare) {
-        return media.videoStream;
-      }
-    } else if (!isSelf) {
-      return pulledVideoStream;
+      return isScreenshare ? media.screenshareVideoStream : media.videoStream;
     }
+    return pulledVideoStream;
   }, [isSelf, isScreenshare, media.videoStream, media.screenshareVideoStream, pulledVideoStream]);
 
   return (

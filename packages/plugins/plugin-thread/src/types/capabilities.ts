@@ -8,7 +8,7 @@ import { Capability } from '@dxos/app-framework';
 
 import { type CallManager, type CallState, type MediaState } from '../calls';
 import { meta } from '../meta';
-import { type Channel, type ThreadSettingsProps, type ThreadState, type ViewState } from '../types';
+import { type Channel, type ThreadSettingsProps, type ThreadState, type ViewStore } from '../types';
 
 export namespace ThreadCapabilities {
   export const Settings = Capability.make<Atom.Writable<ThreadSettingsProps>>(`${meta.id}/capability/settings`);
@@ -26,15 +26,9 @@ export namespace ThreadCapabilities {
 
   export const CallExtension = Capability.make<CallProperties>(`${meta.id}/capability/call-extension`);
 
-  type GetViewState = (subjectId: string) => ViewState;
+  /** Thread state (drafts, toolbar state, current selection). */
+  export const State = Capability.make<Atom.Writable<ThreadState>>(`${meta.id}/capability/state`);
 
-  export type ThreadStateStore = {
-    stateAtom: Atom.Writable<ThreadState>;
-    get state(): ThreadState;
-    updateState: (updater: (current: ThreadState) => ThreadState) => void;
-    subscribeState: (callback: () => void) => () => void;
-    getViewState: GetViewState;
-  };
-
-  export const State = Capability.make<ThreadStateStore>(`${meta.id}/capability/state`);
+  /** Per-subject view state (e.g., showResolvedThreads). */
+  export const ViewState = Capability.make<Atom.Writable<ViewStore>>(`${meta.id}/capability/view-state`);
 }
