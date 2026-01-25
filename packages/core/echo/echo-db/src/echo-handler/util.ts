@@ -4,9 +4,9 @@
 
 import { Obj } from '@dxos/echo';
 import { type AnyProperties } from '@dxos/echo/internal';
+import { getProxyTarget } from '@dxos/echo/internal';
 import { type ForeignKey } from '@dxos/echo-protocol';
 import { DXN } from '@dxos/keys';
-import { getProxyTarget } from '@dxos/echo/internal';
 
 import { type EchoDatabase } from '../proxy-db';
 

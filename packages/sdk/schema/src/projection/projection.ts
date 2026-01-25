@@ -15,9 +15,9 @@ import {
   typeToFormat,
 } from '@dxos/echo/internal';
 import { createSchemaReference, getSchemaReference } from '@dxos/echo/internal';
+import { getSnapshot } from '@dxos/echo/internal';
 import { AtomObj } from '@dxos/echo-atom';
 import { invariant } from '@dxos/invariant';
-import { getSnapshot } from '@dxos/echo/internal';
 import { log } from '@dxos/log';
 import { omit, pick } from '@dxos/util';
 

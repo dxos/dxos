@@ -6,8 +6,8 @@ import * as Atom from '@effect-atom/atom/Atom';
 import isEqual from 'lodash.isequal';
 
 import { type Entity, Obj, Ref } from '@dxos/echo';
-import { assertArgument } from '@dxos/invariant';
 import { getSnapshot, isProxy } from '@dxos/echo/internal';
+import { assertArgument } from '@dxos/invariant';
 
 import { loadRefTarget } from './ref-utils';
 

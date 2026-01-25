@@ -7,8 +7,8 @@ import { afterAll, beforeAll, describe, expect, test } from 'vitest';
 
 import { Obj, Type } from '@dxos/echo';
 import { getSchemaDXN } from '@dxos/echo/internal';
-import { TestSchema, updateCounter } from '@dxos/echo/testing';
 import { getProxyHandler } from '@dxos/echo/internal';
+import { TestSchema, updateCounter } from '@dxos/echo/testing';
 import { log } from '@dxos/log';
 
 const TEST_OBJECT: TestSchema.ExampleSchema = {

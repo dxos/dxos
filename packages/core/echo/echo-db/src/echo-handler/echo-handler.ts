@@ -50,15 +50,6 @@ import {
   setRefResolver,
 } from '@dxos/echo/internal';
 import {
-  DATA_NAMESPACE,
-  EncodedReference,
-  type ObjectStructure,
-  PROPERTY_ID,
-  isEncodedReference,
-} from '@dxos/echo-protocol';
-import { assertArgument, invariant } from '@dxos/invariant';
-import { DXN } from '@dxos/keys';
-import {
   EventId,
   type ReactiveHandler,
   createProxy,
@@ -69,6 +60,15 @@ import {
   isProxy,
   symbolIsProxy,
 } from '@dxos/echo/internal';
+import {
+  DATA_NAMESPACE,
+  EncodedReference,
+  type ObjectStructure,
+  PROPERTY_ID,
+  isEncodedReference,
+} from '@dxos/echo-protocol';
+import { assertArgument, invariant } from '@dxos/invariant';
+import { DXN } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { deepMapValues, defaultMap, getDeep, setDeep } from '@dxos/util';
 

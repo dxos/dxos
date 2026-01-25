@@ -5,8 +5,8 @@
 import { next as A } from '@automerge/automerge';
 
 import { type AnyProperties } from '@dxos/echo/internal';
-import { invariant } from '@dxos/invariant';
 import { isProxy } from '@dxos/echo/internal';
+import { invariant } from '@dxos/invariant';
 import { get } from '@dxos/util';
 
 import { type DocAccessor, type KeyPath, isValidKeyPath } from './core-db';

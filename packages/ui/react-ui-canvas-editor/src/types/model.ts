@@ -4,8 +4,8 @@
 
 import { DEFAULT_INPUT, DEFAULT_OUTPUT } from '@dxos/conductor';
 import { Obj } from '@dxos/echo';
-import { type Graph, GraphModel } from '@dxos/graph';
 import { isProxy } from '@dxos/echo/internal';
+import { type Graph, GraphModel } from '@dxos/graph';
 import { type MakeOptional } from '@dxos/util';
 
 import { type Connection, type Shape } from './schema';

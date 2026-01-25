@@ -4,8 +4,8 @@
 
 import { type Obj } from '@dxos/echo';
 import { type AnyProperties } from '@dxos/echo/internal';
-import { DATA_NAMESPACE } from '@dxos/echo-protocol';
 import { getProxyTarget, isProxy } from '@dxos/echo/internal';
+import { DATA_NAMESPACE } from '@dxos/echo-protocol';
 
 import { type ObjectCore } from '../core-db';
 

@@ -7,9 +7,9 @@ import type * as Schema from 'effect/Schema';
 import { Filter, type Space } from '@dxos/client/echo';
 import { Obj } from '@dxos/echo';
 import { EchoSchema, getTypeAnnotation } from '@dxos/echo/internal';
+import { isProxy } from '@dxos/echo/internal';
 import { type AnyLiveObject } from '@dxos/echo-db';
 import { invariant } from '@dxos/invariant';
-import { isProxy } from '@dxos/echo/internal';
 import { faker } from '@dxos/random';
 import { entries, range } from '@dxos/util';
 

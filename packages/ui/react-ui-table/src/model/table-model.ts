@@ -7,10 +7,10 @@ import { Atom, type Registry } from '@effect-atom/atom-react';
 import { Resource } from '@dxos/context';
 import { type Database, Format, Obj, Order, Query, type QueryAST, Ref } from '@dxos/echo';
 import { type JsonProp, type JsonSchemaType, toEffectSchema } from '@dxos/echo/internal';
+import { getSnapshot } from '@dxos/echo/internal';
 import { getValue, setValue } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { ObjectId } from '@dxos/keys';
-import { getSnapshot } from '@dxos/echo/internal';
 import { type Label } from '@dxos/react-ui';
 import { formatForEditing, parseValue } from '@dxos/react-ui-form';
 import {

@@ -112,14 +112,7 @@ type MakeProps = {
 /**
  * Create view from provided schema.
  */
-export const make = ({
-  query,
-  queryRaw,
-  jsonSchema,
-  overrideSchema,
-  fields,
-  pivotFieldName,
-}: MakeProps): View => {
+export const make = ({ query, queryRaw, jsonSchema, overrideSchema, fields, pivotFieldName }: MakeProps): View => {
   const view = Obj.make(View, {
     query: { raw: queryRaw, ast: query.ast },
     projection: {

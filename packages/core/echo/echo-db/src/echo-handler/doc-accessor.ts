@@ -3,8 +3,8 @@
 //
 
 import { type AnyProperties } from '@dxos/echo/internal';
-import { assertArgument } from '@dxos/invariant';
 import { isProxy } from '@dxos/echo/internal';
+import { assertArgument } from '@dxos/invariant';
 
 import { type DocAccessor, type KeyPath, isValidKeyPath } from '../core-db';
 
