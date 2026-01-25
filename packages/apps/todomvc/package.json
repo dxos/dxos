@@ -18,6 +18,8 @@
     "@dxos/react-client": "workspace:*",
     "@dxos/shell": "workspace:*",
     "@dxos/util": "workspace:*",
+    "@effect-atom/atom": "catalog:",
+    "@effect-atom/atom-react": "catalog:",
     "@sentry/react": "catalog:",
     "classnames": "catalog:",
     "react": "catalog:",

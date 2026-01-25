@@ -7,7 +7,7 @@ import type * as SqlError from '@effect/sql/SqlError';
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
-import { decodeReference, isEncodedReference } from '@dxos/echo-protocol';
+import { EncodedReference, isEncodedReference } from '@dxos/echo-protocol';
 
 import { EscapedPropPath } from '../utils';
 
@@ -20,7 +20,7 @@ const extractReferences = (data: Record<string, unknown>): { path: string[]; tar
   const refs: { path: string[]; targetDxn: string }[] = [];
   const visit = (path: string[], value: unknown) => {
     if (isEncodedReference(value)) {
-      const dxn = decodeReference(value).toDXN();
+      const dxn = EncodedReference.toDXN(value);
       const echoId = dxn.asEchoDXN()?.echoId;
       if (!echoId) {
         return; // Skip non-echo references.

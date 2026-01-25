@@ -55,8 +55,10 @@ export const BaseObjectSettings = ({ classNames, children, object }: BaseObjectS
     invariant(db);
     const newObject = db.add(Obj.make(schema, values));
     if (Obj.instanceOf(Tag.Tag, newObject)) {
-      const meta = Obj.getMeta(object);
-      meta.tags = [...(meta.tags ?? []), Obj.getDXN(newObject).toString()];
+      Obj.change(object, () => {
+        const meta = Obj.getMeta(object);
+        meta.tags = [...(meta.tags ?? []), Obj.getDXN(newObject).toString()];
+      });
     }
   }, []);
 
@@ -72,18 +74,20 @@ export const BaseObjectSettings = ({ classNames, children, object }: BaseObjectS
 
       const changedPaths = Object.keys(changed).filter((path) => changed[path as JsonPath]) as JsonPath[];
       batch(() => {
-        for (const path of changedPaths) {
-          const parts = splitJsonPath(path);
-          // TODO(wittjosiah): This doesn't handle array paths well.
-          if (parts[0] === 'tags') {
-            const meta = Obj.getMeta(object);
-            meta.tags = tags?.map((tag: Ref.Ref<Tag.Tag>) => tag.dxn.toString()) ?? [];
-            continue;
-          }
+        Obj.change(object, () => {
+          for (const path of changedPaths) {
+            const parts = splitJsonPath(path);
+            // TODO(wittjosiah): This doesn't handle array paths well.
+            if (parts[0] === 'tags') {
+              const meta = Obj.getMeta(object);
+              meta.tags = tags?.map((tag: Ref.Ref<Tag.Tag>) => tag.dxn.toString()) ?? [];
+              continue;
+            }
 
-          const value = Obj.getValue(values, parts);
-          Obj.setValue(object, parts, value);
-        }
+            const value = Obj.getValue(values, parts);
+            Obj.setValue(object, parts, value);
+          }
+        });
       });
     },
     [object],

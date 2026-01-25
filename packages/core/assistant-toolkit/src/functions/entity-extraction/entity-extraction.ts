@@ -75,9 +75,13 @@ export default defineFunction({
           throw new Error('Multiple organizations created');
         } else if (created.length === 1) {
           organization = yield* Database.Service.resolve(created[0], Organization.Organization);
-          Obj.getMeta(organization).tags ??= [];
-          Obj.getMeta(organization).tags!.push(...(tags ?? []));
-          contact.organization = Ref.make(organization);
+          Obj.change(organization, (o) => {
+            Obj.getMeta(o).tags ??= [];
+            Obj.getMeta(o).tags!.push(...(tags ?? []));
+          });
+          Obj.change(contact, (c) => {
+            c.organization = Ref.make(organization!);
+          });
         }
       }
 
@@ -128,7 +132,9 @@ const extractContact = Effect.fn('extractContact')(function* (actor: Actor.Actor
   yield* Database.Service.add(newContact);
 
   if (name) {
-    newContact.fullName = name;
+    Obj.change(newContact, (c) => {
+      c.fullName = name;
+    });
   }
 
   const emailDomain = email.split('@')[1]?.toLowerCase();
@@ -167,7 +173,9 @@ const extractContact = Effect.fn('extractContact')(function* (actor: Actor.Actor
 
   if (matchingOrg) {
     log.info('found matching organization', { organization: matchingOrg });
-    newContact.organization = Ref.make(matchingOrg);
+    Obj.change(newContact, (c) => {
+      c.organization = Ref.make(matchingOrg);
+    });
   }
 
   return newContact;

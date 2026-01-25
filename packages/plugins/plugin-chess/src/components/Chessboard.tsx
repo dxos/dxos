@@ -13,6 +13,7 @@ import React, {
 } from 'react';
 
 import { addEventListener } from '@dxos/async';
+import { Obj } from '@dxos/echo';
 import { type ThemedClassName } from '@dxos/react-ui';
 import {
   ChessModel,
@@ -79,7 +80,9 @@ const Root = forwardRef<ChessboardController, RootProps>(({ game, children }, fo
       }
 
       void click.play();
-      game.pgn = model.pgn;
+      Obj.change(game, (g) => {
+        g.pgn = model.pgn;
+      });
       return true;
     },
     [model],

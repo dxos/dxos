@@ -71,7 +71,9 @@ const getCollectionGraphNodePartials = ({
     role: 'branch',
     onRearrangeChildren: (nextOrder: unknown[]) => {
       // Change on disk.
-      collection.objects = nextOrder.filter(Obj.isObject).map(Ref.make);
+      Obj.change(collection, (c) => {
+        c.objects = nextOrder.filter(Obj.isObject).map(Ref.make);
+      });
     },
     onTransferStart: (child: Node.Node<Obj.Any>, index?: number) => {
       // TODO(wittjosiah): Support transfer between spaces.
@@ -92,22 +94,26 @@ const getCollectionGraphNodePartials = ({
 
       // Add child to destination collection.
       // TODO(dmaretskyi): Compare by id.
-      if (!collection.objects.find((object) => object.target === child.data)) {
-        if (typeof index !== 'undefined') {
-          collection.objects.splice(index, 0, Ref.make(child.data));
-        } else {
-          collection.objects.push(Ref.make(child.data));
+      Obj.change(collection, (c) => {
+        if (!c.objects.find((object) => object.target === child.data)) {
+          if (typeof index !== 'undefined') {
+            c.objects.splice(index, 0, Ref.make(child.data));
+          } else {
+            c.objects.push(Ref.make(child.data));
+          }
         }
-      }
+      });
 
       // }
     },
     onTransferEnd: (child: Node.Node<Obj.Any>, destination: Node.Node) => {
       // Remove child from origin collection.
-      const index = collection.objects.findIndex((object) => object.target === child.data);
-      if (index > -1) {
-        collection.objects.splice(index, 1);
-      }
+      Obj.change(collection, (c) => {
+        const index = c.objects.findIndex((object) => object.target === child.data);
+        if (index > -1) {
+          c.objects.splice(index, 1);
+        }
+      });
 
       // TODO(wittjosiah): Support transfer between spaces.
       // const childSpace = getSpace(child.data);
@@ -122,11 +128,13 @@ const getCollectionGraphNodePartials = ({
       // Create clone of child and add to destination space.
       const newObject = await cloneObject(child.data, resolve, db);
       db.add(newObject);
-      if (typeof index !== 'undefined') {
-        collection.objects.splice(index, 0, Ref.make(newObject));
-      } else {
-        collection.objects.push(Ref.make(newObject));
-      }
+      Obj.change(collection, (c) => {
+        if (typeof index !== 'undefined') {
+          c.objects.splice(index, 0, Ref.make(newObject));
+        } else {
+          c.objects.push(Ref.make(newObject));
+        }
+      });
     },
   };
 };
@@ -391,7 +399,9 @@ export const createStaticSchemaActions = ({
             (typename: string) => typename === Type.getTypename(schema),
           );
           if (index > -1) {
-            space.properties.staticRecords.splice(index, 1);
+            Obj.change(space.properties, (p) => {
+              p.staticRecords.splice(index, 1);
+            });
           }
         }),
       properties: {

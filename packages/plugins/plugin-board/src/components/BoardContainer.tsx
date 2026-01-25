@@ -75,10 +75,12 @@ export const BoardContainer = ({ board }: BoardContainerProps) => {
     (id) => {
       // TODO(burdon): Impl. DXN.equals and pass in DXN from `id`.
       const idx = board.items.findIndex((ref) => ref.dxn.asEchoDXN()?.echoId === id);
-      if (idx !== -1) {
-        board.items.splice(idx, 1);
-      }
-      delete board.layout.cells[id];
+      Obj.change(board, (b) => {
+        if (idx !== -1) {
+          b.items.splice(idx, 1);
+        }
+        delete b.layout.cells[id];
+      });
     },
     [board],
   );
@@ -86,7 +88,9 @@ export const BoardContainer = ({ board }: BoardContainerProps) => {
   const handleMove = useCallback<NonNullable<BoardRootProps['onMove']>>(
     (id, position) => {
       const layout = board.layout.cells[id];
-      board.layout.cells[id] = { ...layout, ...position };
+      Obj.change(board, (b) => {
+        b.layout.cells[id] = { ...layout, ...position };
+      });
     },
     [board],
   );

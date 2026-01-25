@@ -226,7 +226,9 @@ describe('signals integration', () => {
       expect(count).to.eq(3);
 
       // NOTE: This graph builder is not reactive to the object update.
-      object.name = 'updated';
+      Obj.change(object, (o) => {
+        (o as any).name = 'updated';
+      });
       await db.flush();
       expect(count).to.eq(3);
     });

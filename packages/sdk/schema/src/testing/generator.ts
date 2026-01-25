@@ -13,7 +13,6 @@ import {
   GeneratorAnnotationId,
   type GeneratorAnnotationValue,
   type JsonSchemaType,
-  type TypedObject,
   getSchemaReference,
 } from '@dxos/echo/internal';
 import { type AnyLiveObject, Filter, Query } from '@dxos/echo-db';
@@ -38,8 +37,13 @@ export type ValueGenerator<T = any> = Record<string, () => T>;
 const randomBoolean = (p = 0.5) => Math.random() <= p;
 const randomElement = <T>(elements: T[]): T => elements[Math.floor(Math.random() * elements.length)];
 
+/**
+ * Type that has a typename property.
+ */
+export type TypedSchema = Schema.Schema.AnyNoContext & { typename: string };
+
 export type TypeSpec = {
-  type: TypedObject;
+  type: TypedSchema;
   count: number;
 };
 

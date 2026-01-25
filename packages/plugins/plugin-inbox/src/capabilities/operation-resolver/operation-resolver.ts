@@ -119,10 +119,11 @@ export default Capability.makeModule(
       }),
       OperationResolver.make({
         operation: InboxOperation.OpenComposeEmail,
-        handler: () =>
+        handler: (input) =>
           Operation.invoke(Common.LayoutOperation.UpdateDialog, {
             subject: COMPOSE_EMAIL_DIALOG,
             blockAlign: 'start',
+            props: input ?? {},
           }),
       }),
     ]);

@@ -2,6 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
+import * as A from '@automerge/automerge';
 import { type AutomergeUrl } from '@automerge/automerge-repo';
 import * as Schema from 'effect/Schema';
 import { afterEach, beforeEach, describe, expect, onTestFinished, test } from 'vitest';
@@ -261,7 +262,7 @@ describe('Query', () => {
       await createObjects(peer, db, { count: 3 });
 
       expect((await db.query(Query.select(Filter.everything())).run()).length).to.eq(3);
-      root = db.coreDatabase._automergeDocLoader.getSpaceRootDocHandle().url;
+      root = db.coreDatabase._automergeDocLoader.getSpaceRootDocHandle().url!;
       await peer.close();
     }
 
@@ -294,7 +295,7 @@ describe('Query', () => {
         doc.links![obj1.id] = 'automerge:4hjTgo9zLNsfRTJiLcpPY8P4smy';
       });
       await db.flush();
-      root = rootDocHandle.url;
+      root = rootDocHandle.url!;
       expectedObjectId = obj2.id;
       await peer.close();
     }
@@ -325,24 +326,28 @@ describe('Query', () => {
 
       expect((await db.query(Query.select(Filter.everything())).run()).length).to.eq(2);
       const rootDocHandle = db.coreDatabase._automergeDocLoader.getSpaceRootDocHandle();
+      const obj1DocHandle = getObjectCore(obj1).docHandle!;
       const anotherDocHandle = getObjectCore(obj2).docHandle!;
+      // Wait for documents to be ready before accessing url and objects.
+      await Promise.all([rootDocHandle.whenReady(), obj1DocHandle.whenReady(), anotherDocHandle.whenReady()]);
       anotherDocHandle.change((doc: DatabaseDirectory) => {
-        doc.objects![obj1.id] = getObjectCore(obj1).docHandle!.doc()!.objects![obj1.id];
+        doc.objects![obj1.id] = obj1DocHandle.doc()!.objects![obj1.id];
       });
       rootDocHandle.change((doc: DatabaseDirectory) => {
-        doc.links![obj1.id] = anotherDocHandle.url;
+        doc.links![obj1.id] = new A.RawString(anotherDocHandle.url!);
       });
       await db.flush();
       await peer.host.queryService.reindex();
 
-      root = rootDocHandle.url;
-      assertion = { objectId: obj2.id, documentUrl: anotherDocHandle.url };
+      root = rootDocHandle.url!;
+      assertion = { objectId: obj2.id, documentUrl: anotherDocHandle.url! };
     }
 
     await peer.reload();
 
     {
       const db = await peer.openDatabase(spaceKey, root);
+      await db.coreDatabase.updateIndexes();
       const queryResult = await db.query(Query.select(Filter.everything())).run();
       expect(queryResult.length).to.eq(2);
 
@@ -904,7 +909,9 @@ describe('Query', () => {
       }
 
       // Update the object.
-      obj.title = 'Updated Title';
+      Obj.change(obj, (o) => {
+        o.title = 'Updated Title';
+      });
       await db.flush({ indexes: true });
 
       // Verify search results.
@@ -1148,7 +1155,9 @@ describe('Query', () => {
       query.subscribe(() => {
         updateCount++;
       });
-      (objects[0] as any).title = 'Task 0a';
+      Obj.change(objects[0], (o: any) => {
+        o.title = 'Task 0a';
+      });
       await sleep(10);
       expect(updateCount).to.equal(0);
     });
@@ -1345,7 +1354,9 @@ describe('Query', () => {
       });
       onTestFinished(() => unsub());
 
-      contact.name = name;
+      Obj.change(contact, (c) => {
+        c.name = name;
+      });
       db.add(Obj.make(TestSchema.Person, {}));
 
       await asyncTimeout(nameUpdate.wait(), 1000);

@@ -10,6 +10,7 @@ import { ObservabilityOperation } from '@dxos/plugin-observability/types';
 import { type InvitationResult } from '@dxos/react-client/invitations';
 import { Dialog, useTranslation } from '@dxos/react-ui';
 import { JoinPanel, type JoinPanelProps } from '@dxos/shell/react';
+import { osTranslations } from '@dxos/ui-theme';
 
 import { meta } from '../meta';
 import { ClientOperation } from '../types';
@@ -36,7 +37,7 @@ export const JoinDialog = (props: JoinPanelProps) => {
 
   return (
     <Dialog.Content>
-      <Dialog.Title classNames='sr-only'>{t('join space label', { ns: 'os' })}</Dialog.Title>
+      <Dialog.Title classNames='sr-only'>{t('join space label', { ns: osTranslations })}</Dialog.Title>
       <JoinPanel
         mode='halo-only'
         {...props}

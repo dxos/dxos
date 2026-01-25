@@ -326,8 +326,17 @@ const ComboboxEmpty = SearchList.Empty;
 // https://www.w3.org/WAI/ARIA/apg/patterns/combobox
 //
 
+//
+// Portal
+//
+
+type ComboboxPortalProps = React.ComponentPropsWithoutRef<typeof Popover.Portal>;
+
+const ComboboxPortal = Popover.Portal;
+
 export const Combobox = {
   Root: ComboboxRoot,
+  Portal: ComboboxPortal,
   Content: ComboboxContent,
   Trigger: ComboboxTrigger,
   VirtualTrigger: ComboboxVirtualTrigger,
@@ -340,6 +349,7 @@ export const Combobox = {
 
 export type {
   ComboboxRootProps,
+  ComboboxPortalProps,
   ComboboxContentProps,
   ComboboxTriggerProps,
   ComboboxVirtualTriggerProps,

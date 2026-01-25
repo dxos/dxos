@@ -159,17 +159,19 @@ export const RefField = (props: RefFieldProps) => {
                 </Button>
               )}
             </ObjectPicker.Trigger>
-            <ObjectPicker.Content
-              classNames='popover-card-width'
-              options={options}
-              selectedIds={selectedIds}
-              createSchema={createSchema && omitId(createSchema)}
-              createOptionLabel={createOptionLabel}
-              createOptionIcon={createOptionIcon}
-              createInitialValuePath={createInitialValuePath}
-              onCreate={handleCreate}
-              onSelect={handleSelect}
-            />
+            <ObjectPicker.Portal>
+              <ObjectPicker.Content
+                classNames='popover-card-width'
+                options={options}
+                selectedIds={selectedIds}
+                createSchema={createSchema && omitId(createSchema)}
+                createOptionLabel={createOptionLabel}
+                createOptionIcon={createOptionIcon}
+                createInitialValuePath={createInitialValuePath}
+                onCreate={handleCreate}
+                onSelect={handleSelect}
+              />
+            </ObjectPicker.Portal>
           </ObjectPicker.Root>
         )}
       </div>

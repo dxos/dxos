@@ -6,13 +6,12 @@ import { computed } from '@preact/signals-core';
 import * as Schema from 'effect/Schema';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
-import { Filter, Query } from '@dxos/echo';
-import { TypedObject } from '@dxos/echo/internal';
+import { Filter, Query, Type } from '@dxos/echo';
 import { updateCounter } from '@dxos/echo/testing';
 import { createEchoSchema } from '@dxos/echo/testing';
 import { registerSignalsRuntime } from '@dxos/echo-signals';
 import { live } from '@dxos/live-object';
-import { ProjectionModel, View } from '@dxos/schema';
+import { ProjectionModel, View, createDirectChangeCallback } from '@dxos/schema';
 
 import { Table } from '../types';
 
@@ -105,10 +104,15 @@ describe('TableModel', () => {
   });
 });
 
-class Test extends TypedObject({ typename: 'example.com/type/Test', version: '0.1.0' })({
+const Test = Schema.Struct({
   title: Schema.String,
   completed: Schema.Boolean,
-}) {}
+}).pipe(
+  Type.Obj({
+    typename: 'example.com/type/Test',
+    version: '0.1.0',
+  }),
+);
 
 const createTableModel = (props: Partial<TableModelProps> = {}): TableModel => {
   const schema = createEchoSchema(Test);
@@ -117,6 +121,10 @@ const createTableModel = (props: Partial<TableModelProps> = {}): TableModel => {
     jsonSchema: schema.jsonSchema,
   });
   const object = Table.make({ view });
-  const projection = new ProjectionModel(schema.jsonSchema, view.projection);
+  const projection = new ProjectionModel(
+    schema.jsonSchema,
+    view.projection,
+    createDirectChangeCallback(view.projection, schema.jsonSchema),
+  );
   return new TableModel({ object, projection, ...props });
 };

@@ -3,7 +3,13 @@
 //
 
 import { Filter, type JsonSchema, Obj, Order, Query, type QueryAST, Ref, Type } from '@dxos/echo';
-import { ProjectionModel, type SchemaPropertyDefinition, View, getSchemaFromPropertyDefinitions } from '@dxos/schema';
+import {
+  ProjectionModel,
+  type SchemaPropertyDefinition,
+  View,
+  createDirectChangeCallback,
+  getSchemaFromPropertyDefinitions,
+} from '@dxos/schema';
 
 import { Table } from '../types';
 
@@ -57,7 +63,12 @@ export const makeDynamicTable = ({
   });
   const object = Obj.make(Table.Table, { view: Ref.make(view), sizes: {} });
 
-  const projection = new ProjectionModel(jsonSchema, view.projection);
+  // Use direct change callback for in-memory objects (non-ECHO backed).
+  const projection = new ProjectionModel(
+    jsonSchema,
+    view.projection,
+    createDirectChangeCallback(view.projection, jsonSchema),
+  );
   projection.normalizeView();
   if (properties && projection.fields) {
     setProperties(view, projection, object, properties);
@@ -76,7 +87,9 @@ const setProperties = (
     const field = projection.fields.find((field) => field.path === property.name);
     if (field) {
       if (property.size !== undefined) {
-        table.sizes[field.path] = property.size;
+        Obj.change(table, (t) => {
+          t.sizes[field.path] = property.size!;
+        });
       }
 
       if (property.title !== undefined) {
@@ -92,7 +105,10 @@ const setProperties = (
         const currentQuery = Query.fromAst(Obj.getSnapshot(view).query.ast);
         // Use any type parameter since we're working with dynamic field paths
         const newQuery = currentQuery.orderBy(Order.property<any>(field.path as string, property.sort));
-        view.query.ast = newQuery.ast;
+        Obj.change(view, (v) => {
+          // Type assertion needed because Query AST types have some variance issues.
+          v.query.ast = newQuery.ast as typeof v.query.ast;
+        });
       }
     }
   }

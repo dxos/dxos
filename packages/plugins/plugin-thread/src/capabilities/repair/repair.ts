@@ -44,5 +44,8 @@ const ensureSystemCollection = async (space: Space) => {
     return;
   }
 
-  rootCollection.objects.push(Ref.make(Collection.makeManaged({ key: Type.getTypename(Channel.Channel) })));
+  const channelCollectionRef = Ref.make(Collection.makeManaged({ key: Type.getTypename(Channel.Channel) }));
+  Obj.change(rootCollection, (c) => {
+    c.objects.push(channelCollectionRef);
+  });
 };

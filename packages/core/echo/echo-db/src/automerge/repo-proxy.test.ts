@@ -30,9 +30,10 @@ describe('RepoProxy', () => {
 
     log.break();
     const clientHandle = clientRepo.create<{ text: string }>();
+    await clientHandle.whenReady();
     log.break();
 
-    const hostHandle = await host.loadDoc<{ text: string }>(Context.default(), clientHandle.url);
+    const hostHandle = await host.loadDoc<{ text: string }>(Context.default(), clientHandle.url!);
     log.break();
     await hostHandle.whenReady();
 
@@ -68,7 +69,7 @@ describe('RepoProxy', () => {
     await openAndClose(clientRepo);
 
     const text = 'Hello World!';
-    const hostHandle = host.createDoc<{ text: string }>({ text });
+    const hostHandle = await host.createDoc<{ text: string }>({ text });
     const clientHandle = clientRepo.find<{ text: string }>(hostHandle.url);
     await asyncTimeout(clientHandle.whenReady(), 1000);
     expect(clientHandle.doc()?.text).to.equal(text);
@@ -89,9 +90,10 @@ describe('RepoProxy', () => {
 
     const text = 'Hello World!';
     const handle1 = repo1.create<{ text: string }>({ text });
+    await handle1.whenReady();
     await repo1.flush();
 
-    const handle2 = repo2.find<{ text: string }>(handle1.url);
+    const handle2 = repo2.find<{ text: string }>(handle1.url!);
     await handle2.whenReady();
     expect(handle2.doc()?.text).to.equal(text);
     await peer1.host.flush();
@@ -123,7 +125,8 @@ describe('RepoProxy', () => {
       const text = 'Hello World!';
 
       const clientHandle = clientRepo.create<{ text: string }>();
-      url = clientHandle.url;
+      await clientHandle.whenReady();
+      url = clientHandle.url!;
       clientHandle.change((doc: any) => {
         doc.text = text;
       });
@@ -159,9 +162,9 @@ describe('RepoProxy', () => {
       await openAndClose(clientRepo);
 
       const text = 'Hello World!';
-      const clientHandle = clientRepo.create<{ text: string }>({ text });
-      url = clientHandle.url;
+      const clientHandle = clientRepo.create<{ text: string }>({ text: text });
       await sleep(200); // Wait for the object to be saved without flush.
+      url = clientHandle.url!;
       await level.close();
       await host.close();
       await clientRepo.close();
@@ -180,7 +183,7 @@ describe('RepoProxy', () => {
     }
   });
 
-  test('document mutation persists without `flush`', async () => {
+  test('document mutation persists with `flush`', async () => {
     const path = createTmpPath();
     let url: AutomergeUrl;
 
@@ -195,7 +198,7 @@ describe('RepoProxy', () => {
       const clientHandle = clientRepo.create<TestDoc>();
       await clientRepo.flush();
       clientHandle.change((doc: TestDoc) => (doc.text = text));
-      url = clientHandle.url;
+      url = clientHandle.url!;
       await sleep(200); // Wait for the object to be saved without flush.
       await level.close();
       await host.close();
@@ -221,7 +224,8 @@ describe('RepoProxy', () => {
     await openAndClose(clientRepo);
 
     const handle = clientRepo.create<{ client: number; host: number }>();
-    const hostHandle = await host.loadDoc<{ client: number; host: number }>(Context.default(), handle.url);
+    await handle.whenReady();
+    const hostHandle = await host.loadDoc<{ client: number; host: number }>(Context.default(), handle.url!);
 
     const numberOfUpdates = 1000;
     for (let i = 1; i <= numberOfUpdates; i++) {
@@ -260,7 +264,7 @@ describe('RepoProxy', () => {
     await cloneHandle.whenReady();
     expect(cloneHandle.doc()?.text).to.equal(text);
 
-    const hostHandle = await host.loadDoc<{ text: string }>(Context.default(), cloneHandle.url);
+    const hostHandle = await host.loadDoc<{ text: string }>(Context.default(), cloneHandle.url!);
     await hostHandle.whenReady();
     await expect.poll(() => hostHandle.doc()?.text).toEqual(text);
   });
@@ -290,8 +294,11 @@ describe('RepoProxy', () => {
       expect(handle.doc()).to.not.equal(text);
     }
 
+    // Wait for all handles to be ready before accessing their URLs.
+    await Promise.all(handles.map((handle) => handle.whenReady()));
+
     const hostHandles = await Promise.all(
-      handles.map(async (handle) => host.loadDoc<{ text: string }>(Context.default(), handle.url)),
+      handles.map(async (handle) => host.loadDoc<{ text: string }>(Context.default(), handle.url!)),
     );
 
     for (const handle of hostHandles) {
@@ -318,8 +325,9 @@ describe('RepoProxy', () => {
         doc.text1 = text1;
       });
     }
+    await Promise.all(handles1.map((h) => h.whenReady()));
 
-    // Create documents in repo2.s
+    // Create documents in repo2.
     const handles2: DocHandleProxy<DocStruct>[] = [];
     for (let i = 0; i < amountToCreateInEachRepo; i++) {
       handles2.push(repo2.create<DocStruct>());
@@ -327,25 +335,26 @@ describe('RepoProxy', () => {
         doc.text2 = text2;
       });
     }
+    await Promise.all(handles2.map((h) => h.whenReady()));
 
     // Replicate documents from repo1 to repo2.
     for (const handle of handles1) {
-      const foundHandle = repo2.find<DocStruct>(handle.url);
+      const foundHandle = repo2.find<DocStruct>(handle.url!);
       await foundHandle.whenReady();
       foundHandle.change((doc: DocStruct) => {
         doc.text2 = text2;
       });
-      handles2.push(repo2.find<DocStruct>(handle.url));
+      handles2.push(repo2.find<DocStruct>(handle.url!));
     }
 
     // Replicate documents from repo2 to repo1.
     for (const handle of handles2) {
-      const foundHandle = repo1.find<DocStruct>(handle.url);
+      const foundHandle = repo1.find<DocStruct>(handle.url!);
       await foundHandle.whenReady();
       foundHandle.change((doc: DocStruct) => {
         doc.text1 = text1;
       });
-      handles1.push(repo1.find<DocStruct>(handle.url));
+      handles1.push(repo1.find<DocStruct>(handle.url!));
     }
 
     // Check that all documents are replicated.

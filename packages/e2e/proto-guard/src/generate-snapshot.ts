@@ -12,7 +12,7 @@ import { hideBin } from 'yargs/helpers';
 import { Client } from '@dxos/client';
 import { live } from '@dxos/client/echo';
 import { Obj, Type } from '@dxos/echo';
-import { Ref, TypedObject } from '@dxos/echo/internal';
+import { Ref } from '@dxos/echo/internal';
 import { log } from '@dxos/log';
 import { STORAGE_VERSION } from '@dxos/protocols';
 import { CreateEpochRequest } from '@dxos/protocols/proto/dxos/client/services';
@@ -116,7 +116,12 @@ const main = async () => {
     // Create dynamic schema.
 
     // TODO(burdon): Should just be example.org/type/Test
-    class TestType extends TypedObject({ typename: 'example.org/type/TestType', version: '0.1.0' })({}) {}
+    const TestType = Schema.Struct({}).pipe(
+      Type.Obj({
+        typename: 'example.org/type/TestType',
+        version: '0.1.0',
+      }),
+    );
     const [dynamicSchema] = await space.db.schemaRegistry.register([TestType]);
     await client.addTypes([TestType]);
     const object = space.db.add(Obj.make(dynamicSchema, {}));

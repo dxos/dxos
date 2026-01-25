@@ -5,6 +5,7 @@
 import { useEffect } from 'react';
 
 import { type CompleteCellRange, inRange } from '@dxos/compute';
+import { Obj } from '@dxos/echo';
 import {
   type ActionGraphProps,
   type ToolbarMenuActionGroupProperties,
@@ -70,13 +71,19 @@ const createAlignActions = (model: SheetModel, state: ToolbarState, cursorFallba
           value: alignValue as AlignValue,
         };
         if (index < 0) {
-          model.sheet.ranges?.push(nextRangeEntity);
+          Obj.change(model.sheet, (s) => {
+            s.ranges?.push(nextRangeEntity);
+          });
           state[alignKey] = nextRangeEntity.value;
         } else if (model.sheet.ranges![index].value === nextRangeEntity.value) {
-          model.sheet.ranges?.splice(index, 1);
+          Obj.change(model.sheet, (s) => {
+            s.ranges?.splice(index, 1);
+          });
           state[alignKey] = undefined;
         } else {
-          model.sheet.ranges?.splice(index, 1, nextRangeEntity);
+          Obj.change(model.sheet, (s) => {
+            s.ranges?.splice(index, 1, nextRangeEntity);
+          });
           state[alignKey] = nextRangeEntity.value;
         }
       },
