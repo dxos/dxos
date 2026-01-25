@@ -4,8 +4,8 @@
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 
-import { OperationPlugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
+import { corePlugins } from '@dxos/plugin-testing';
 import { faker } from '@dxos/random';
 import { withTheme } from '@dxos/react-ui/testing';
 
@@ -21,7 +21,7 @@ const meta = {
   decorators: [
     withTheme,
     // TODO(wittjosiah): Try to write story which does not depend on plugin manager.
-    withPluginManager({ plugins: [OperationPlugin()] }),
+    withPluginManager({ plugins: corePlugins() }),
   ],
   parameters: {
     translations,

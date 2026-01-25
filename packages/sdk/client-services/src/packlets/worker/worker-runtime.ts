@@ -97,6 +97,8 @@ export class WorkerRuntime {
       runtime: this._runtime.runtimeEffect,
       runtimeProps: {
         enableFullTextIndexing: enableFullTextIndexing,
+        // Auto-activate spaces that were previously active after leader changeover.
+        autoActivateSpaces: true,
       },
     });
     this._automaticallyConnectWebrtc = automaticallyConnectWebrtc;

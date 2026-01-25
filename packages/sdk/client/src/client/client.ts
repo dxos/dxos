@@ -542,7 +542,7 @@ export class Client {
   private _setupStatusStream(trigger?: Trigger<Error | undefined>): void {
     // Close existing stream if any.
     this._statusTimeout && clearTimeout(this._statusTimeout);
-    this._statusStream?.close();
+    void this._statusStream?.close();
 
     invariant(this._services?.services.SystemService, 'SystemService is not available.');
     this._statusStream = this._services.services.SystemService.queryStatus({ interval: 3_000 });

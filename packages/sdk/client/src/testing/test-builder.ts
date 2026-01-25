@@ -35,7 +35,12 @@ import { type ProtoRpcPeer, createLinkedPorts, createProtoRpcPeer } from '@dxos/
 import * as SqliteClient from '@dxos/sql-sqlite/SqliteClient';
 
 import { Client } from '../client';
-import { ClientServicesProxy, DedicatedWorkerClientServices, LocalClientServices, MemoryWorkerCoordiantor } from '../services';
+import {
+  ClientServicesProxy,
+  DedicatedWorkerClientServices,
+  LocalClientServices,
+  MemoryWorkerCoordiantor,
+} from '../services';
 
 import { TestWorkerFactory } from './test-worker-factory';
 

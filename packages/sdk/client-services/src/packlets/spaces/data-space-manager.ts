@@ -125,6 +125,11 @@ export type DataSpaceManagerRuntimeProps = {
   spaceMemberPresenceOfflineTimeout?: number;
   activeEdgeNotarizationPollingInterval?: number;
   disableP2pReplication?: boolean;
+  /**
+   * If true, spaces that were previously SPACE_ACTIVE will be automatically activated on startup.
+   * This is used in dedicated worker mode to restore space state after leader changeover.
+   */
+  autoActivateSpaces?: boolean;
 };
 
 export type CreateSpaceOptions = {
@@ -217,15 +222,13 @@ export class DataSpaceManager extends Resource {
     log.trace('dxos.echo.data-space-manager.open', Trace.begin({ id: this._instanceId }));
     log('metadata loaded', { spaces: this._metadataStore.spaces.length });
 
-    // Track spaces that need to be auto-activated (were previously active).
     const spacesToActivate: DataSpace[] = [];
-
     await forEachAsync(this._metadataStore.spaces, async (spaceMetadata) => {
       try {
         log('load space', { spaceMetadata });
         const space = await this._constructSpace(spaceMetadata);
-        // If the space was previously active, queue it for auto-activation.
-        if (spaceMetadata.state === SpaceState.SPACE_ACTIVE) {
+        // Track spaces that were previously active for auto-activation (used in dedicated worker mode).
+        if (this._runtimeProps?.autoActivateSpaces && spaceMetadata.state === SpaceState.SPACE_ACTIVE) {
           spacesToActivate.push(space);
         }
       } catch (err) {
@@ -233,8 +236,7 @@ export class DataSpaceManager extends Resource {
       }
     });
 
-    // Auto-activate spaces that were previously active.
-    // This ensures spaces are fully initialized when the worker restarts.
+    // Auto-activate spaces that were previously active (used in dedicated worker mode after leader changeover).
     for (const space of spacesToActivate) {
       log('auto-activating space', { spaceKey: space.key });
       space.activate().catch((err) => {
