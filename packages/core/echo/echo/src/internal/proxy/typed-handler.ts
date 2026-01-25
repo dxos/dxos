@@ -30,6 +30,12 @@ import { ObjectDeletedId } from '../entities';
 import { SchemaValidator } from '../object';
 import { SchemaId, TypeId } from '../types';
 
+/**
+ * Symbol to track which typed root object owns a nested object.
+ * Each nested JS object should be attributed to exactly one typed root.
+ */
+const OwnerId = Symbol.for('@dxos/echo/OwnerId');
+
 type ProxyTarget = {
   /**
    * Typename or type DXN.
@@ -75,6 +81,123 @@ const clearParent = (value: object): void => {
 };
 
 /**
+ * Get the owner ID from an object if it exists.
+ */
+const getOwner = (value: any): symbol | undefined => {
+  return value?.[OwnerId] as symbol | undefined;
+};
+
+/**
+ * Set the owner ID on an object and all its nested objects.
+ */
+const setOwnerRecursive = (value: any, ownerId: symbol, visited = new Set<object>()): void => {
+  if (value == null || typeof value !== 'object' || visited.has(value)) {
+    return;
+  }
+  visited.add(value);
+
+  defineHiddenProperty(value, OwnerId, ownerId);
+
+  if (Array.isArray(value)) {
+    for (const item of value) {
+      setOwnerRecursive(item, ownerId, visited);
+    }
+  } else {
+    for (const key in value) {
+      if (Object.prototype.hasOwnProperty.call(value, key)) {
+        setOwnerRecursive(value[key], ownerId, visited);
+      }
+    }
+  }
+};
+
+/**
+ * Check if a value would create a cycle when assigned to a target.
+ * Returns true if assigning value to target would create a cycle.
+ */
+const wouldCreateCycle = (target: ProxyTarget, value: any, visited = new Set<object>()): boolean => {
+  if (value == null || typeof value !== 'object') {
+    return false;
+  }
+
+  // Get the actual target if value is a proxy.
+  const actualValue = isProxy(value) ? getProxyTarget(value) : value;
+
+  if (visited.has(actualValue)) {
+    return false; // Already checked this object.
+  }
+  visited.add(actualValue);
+
+  // Check if value IS the target or any of its ancestors.
+  let ancestor: ProxyTarget | undefined = target;
+  while (ancestor) {
+    if (ancestor === actualValue) {
+      return true; // Would create a cycle.
+    }
+    ancestor = getParent(ancestor);
+  }
+
+  // Recursively check nested objects in value.
+  if (Array.isArray(actualValue)) {
+    for (const item of actualValue) {
+      if (wouldCreateCycle(target, item, visited)) {
+        return true;
+      }
+    }
+  } else {
+    for (const key in actualValue) {
+      if (Object.prototype.hasOwnProperty.call(actualValue, key)) {
+        if (wouldCreateCycle(target, actualValue[key], visited)) {
+          return true;
+        }
+      }
+    }
+  }
+
+  return false;
+};
+
+/**
+ * Deep copy a value, handling arrays and nested objects.
+ * Does not copy class instances or functions.
+ */
+const deepCopy = <T>(value: T, visited = new Map<object, object>()): T => {
+  if (value == null || typeof value !== 'object') {
+    return value;
+  }
+
+  // Handle proxies - get the underlying target.
+  const actualValue = isProxy(value) ? getProxyTarget(value) : value;
+
+  // Check for circular references in the copy.
+  if (visited.has(actualValue)) {
+    return visited.get(actualValue) as T;
+  }
+
+  // Don't copy class instances (objects with non-Object prototype).
+  const proto = Object.getPrototypeOf(actualValue);
+  if (proto !== Object.prototype && proto !== Array.prototype && proto !== null) {
+    return value; // Return as-is, don't copy class instances.
+  }
+
+  if (Array.isArray(actualValue)) {
+    const copy: any[] = [];
+    visited.set(actualValue, copy);
+    for (const item of actualValue) {
+      copy.push(deepCopy(item, visited));
+    }
+    return copy as T;
+  }
+
+  const copy: Record<string, any> = {};
+  visited.set(actualValue, copy);
+  for (const key of Object.keys(actualValue)) {
+    copy[key] = deepCopy((actualValue as any)[key], visited);
+  }
+  return copy as T;
+};
+
+/**
  * Emit events up the parent chain to notify ancestors of changes.
  */
 const bubbleEvent = (target: ProxyTarget): void => {
@@ -106,6 +229,11 @@ export class TypedReactiveHandler implements ReactiveHandler<ProxyTarget> {
     }
 
     defineHiddenProperty(target, ObjectDeletedId, false);
+
+    // Create a unique owner ID for this root typed object.
+    // This ID is used to track which nested objects belong to this root.
+    const ownerId = Symbol('typed-object-owner');
+    setOwnerRecursive(target, ownerId);
 
     // Set parent references on nested objects for event bubbling.
     for (const key in target) {
@@ -159,6 +287,25 @@ export class TypedReactiveHandler implements ReactiveHandler<ProxyTarget> {
       clearParent(oldValue);
     }
 
+    // Check for cycles before assignment.
+    if (isValidProxyTarget(value) || isProxy(value)) {
+      if (wouldCreateCycle(target, value)) {
+        throw new Error('Cannot create cycles in typed object graph. Consider using Ref for circular references.');
+      }
+    }
+
+    // Copy-on-assign: If the value is already owned by another typed object, deep copy it.
+    // This prevents multiple inbound pointers to the same nested object.
+    if (isValidProxyTarget(value) || isProxy(value)) {
+      const actualValue = isProxy(value) ? getProxyTarget(value) : value;
+      const existingOwner = getOwner(actualValue);
+      const targetOwner = getOwner(target);
+      if (existingOwner != null && existingOwner !== targetOwner) {
+        // Value is owned by a different typed object - copy it.
+        value = deepCopy(value);
+      }
+    }
+
     // Convert arrays to reactive arrays on write.
     if (Array.isArray(value)) {
       value = ReactiveArray.from(value);
@@ -172,9 +319,20 @@ export class TypedReactiveHandler implements ReactiveHandler<ProxyTarget> {
         // Set parent reference on new value for event bubbling.
         if (isValidProxyTarget(validatedValue)) {
           setParent(validatedValue, target);
+          // Set ownership on the new value.
+          const targetOwner = getOwner(target);
+          if (targetOwner != null) {
+            setOwnerRecursive(validatedValue, targetOwner);
+          }
         } else if (isProxy(validatedValue)) {
           // Value is already a proxy - set parent on its underlying target.
-          setParent(getProxyTarget(validatedValue), target);
+          const proxyTarget = getProxyTarget(validatedValue);
+          setParent(proxyTarget, target);
+          // Set ownership on the proxy target.
+          const targetOwner = getOwner(target);
+          if (targetOwner != null) {
+            setOwnerRecursive(proxyTarget, targetOwner);
+          }
         }
         result = Reflect.set(target, prop, validatedValue, receiver);
         emitEvent(target);
@@ -192,13 +350,48 @@ export class TypedReactiveHandler implements ReactiveHandler<ProxyTarget> {
   }
 
   defineProperty(target: ProxyTarget, property: string | symbol, attributes: PropertyDescriptor): boolean {
-    const validatedValue = this._validateValue(target, property, attributes.value);
+    let value = attributes.value;
+
+    // Check for cycles before assignment.
+    if (isValidProxyTarget(value) || isProxy(value)) {
+      if (wouldCreateCycle(target, value)) {
+        throw new Error('Cannot create cycles in typed object graph. Consider using Ref for circular references.');
+      }
+    }
+
+    // Copy-on-assign: If the value is already owned by another typed object, deep copy it.
+    if (isValidProxyTarget(value) || isProxy(value)) {
+      const actualValue = isProxy(value) ? getProxyTarget(value) : value;
+      const existingOwner = getOwner(actualValue);
+      const targetOwner = getOwner(target);
+      if (existingOwner != null && existingOwner !== targetOwner) {
+        value = deepCopy(value);
+      }
+    }
+
+    // Convert arrays to reactive arrays.
+    if (Array.isArray(value)) {
+      value = ReactiveArray.from(value);
+    }
+
+    const validatedValue = this._validateValue(target, property, value);
     // Set parent reference on new value for event bubbling.
     if (isValidProxyTarget(validatedValue)) {
       setParent(validatedValue, target);
+      // Set ownership on the new value.
+      const targetOwner = getOwner(target);
+      if (targetOwner != null) {
+        setOwnerRecursive(validatedValue, targetOwner);
+      }
     } else if (isProxy(validatedValue)) {
       // Value is already a proxy - set parent on its underlying target.
-      setParent(getProxyTarget(validatedValue), target);
+      const proxyTarget = getProxyTarget(validatedValue);
+      setParent(proxyTarget, target);
+      // Set ownership on the proxy target.
+      const targetOwner = getOwner(target);
+      if (targetOwner != null) {
+        setOwnerRecursive(proxyTarget, targetOwner);
+      }
     }
     const result = Reflect.defineProperty(target, property, {
       ...attributes,

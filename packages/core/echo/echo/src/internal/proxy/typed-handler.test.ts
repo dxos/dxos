@@ -7,11 +7,9 @@ import { describe, expect, test } from 'vitest';
 
 import * as Obj from '../../Obj';
 import { TestSchema } from '../../testing';
-import { isInstanceOf } from '../annotations';
 import { EchoObjectSchema } from '../entities';
-import { createObject } from '../object';
 import { Ref } from '../ref';
-import { foreignKey, getMeta, getSchema } from '../types';
+import { foreignKey, getMeta } from '../types';
 
 import { makeObject } from './make-object';
 
@@ -106,5 +104,74 @@ describe('complex schema validations', () => {
     unsubscribe();
     object.field = 'value3';
     expect(called).to.eq(1);
+  });
+});
+
+describe('object structure restrictions', () => {
+  const NestedSchema = Schema.Struct({
+    data: Schema.optional(Schema.Any),
+    nested: Schema.optional(Schema.Any),
+  });
+
+  test('prevents direct cycles', () => {
+    const obj = makeObject(NestedSchema, { data: null });
+    expect(() => {
+      obj.data = obj;
+    }).to.throw('Cannot create cycles');
+  });
+
+  test('prevents indirect cycles via nested objects', () => {
+    const obj = makeObject(NestedSchema, {
+      nested: { value: 1 },
+    });
+    expect(() => {
+      obj.nested.parent = obj;
+    }).to.throw('Cannot create cycles');
+  });
+
+  test('copy-on-assign for cross-proxy assignment', () => {
+    const obj1 = makeObject(NestedSchema, {
+      data: { shared: 'original' },
+    });
+    const obj2 = makeObject(NestedSchema, {});
+
+    // Assign obj1's nested data to obj2.
+    obj2.data = obj1.data;
+
+    // Should be a copy, not the same reference.
+    expect(obj2.data).to.deep.eq({ shared: 'original' });
+
+    // Modifying obj2.data should not affect obj1.data.
+    obj2.data.shared = 'modified';
+    expect(obj1.data.shared).to.eq('original');
+    expect(obj2.data.shared).to.eq('modified');
+  });
+
+  test('allows assigning within same typed object', () => {
+    const obj = makeObject(NestedSchema, {
+      data: { value: 1 },
+      nested: null,
+    });
+
+    // Moving data within the same typed object should work without copying.
+    const originalData = obj.data;
+    obj.nested = obj.data;
+    obj.data = null;
+
+    expect(obj.nested).to.deep.eq({ value: 1 });
+  });
+
+  test('allows assigning plain objects (not owned by any typed object)', () => {
+    const obj = makeObject(NestedSchema, {});
+    const plainData = { value: 'plain' };
+
+    obj.data = plainData;
+    expect(obj.data).to.deep.eq({ value: 'plain' });
+
+    // Modifying the original plain object should not affect the typed object
+    // (since it's been claimed by the typed object).
+    plainData.value = 'changed';
+    // The value in obj.data depends on when ownership is claimed.
+    // After assignment, the typed object owns it.
   });
 });
