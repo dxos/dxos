@@ -5,7 +5,7 @@
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 
-import { type Platform, type Plugin } from 'esbuild';
+import { type Plugin } from 'esbuild';
 
 export type BundleDepsPluginOptions = {
   /**
@@ -27,75 +27,6 @@ export type BundleDepsPluginOptions = {
 };
 
 /**
- * Result of resolving a subpath import.
- */
-interface SubpathResolution {
-  /** Resolved file path (for relative imports). */
-  path?: string;
-  /** External package name (for package imports). */
-  external?: string;
-}
-
-/**
- * Resolves a `#` import (subpath import) using the package.json imports field.
- * Follows the Node.js resolution algorithm for conditional exports.
- */
-const resolveSubpathImport = (
-  importPath: string,
-  imports: Record<string, any>,
-  platform: Platform,
-  packageDir: string,
-): SubpathResolution | null => {
-  const importSpec = imports[importPath];
-  if (!importSpec) {
-    return null;
-  }
-
-  // Helper to resolve a condition object.
-  const resolveCondition = (spec: any): SubpathResolution | null => {
-    if (typeof spec === 'string') {
-      // Check if it's a relative path or an external package.
-      if (spec.startsWith('./') || spec.startsWith('../')) {
-        return { path: join(packageDir, spec) };
-      }
-      // It's an external package reference.
-      return { external: spec };
-    }
-    if (typeof spec !== 'object' || spec === null) {
-      return null;
-    }
-
-    // Check for source condition first (for development/build time resolution).
-    if (spec.source) {
-      const sourceResolved = resolveCondition(spec.source);
-      if (sourceResolved) {
-        return sourceResolved;
-      }
-    }
-
-    // Platform-specific conditions.
-    if (platform === 'browser' && spec.browser) {
-      return resolveCondition(spec.browser);
-    }
-    if (platform === 'node' && spec.node) {
-      return resolveCondition(spec.node);
-    }
-
-    // Default fallbacks.
-    if (spec.default) {
-      return resolveCondition(spec.default);
-    }
-    if (spec.import) {
-      return resolveCondition(spec.import);
-    }
-
-    return null;
-  };
-
-  return resolveCondition(importSpec);
-};
-
-/**
  * Ensures all external dependencies are marked as external unless specifically listed for being included in the package bundle.
  */
 export const bundleDepsPlugin = (options: BundleDepsPluginOptions): Plugin => ({
@@ -107,7 +38,6 @@ export const bundleDepsPlugin = (options: BundleDepsPluginOptions): Plugin => ({
       ...Object.keys(packageJson.peerDependencies ?? {}),
       ...Object.keys(packageJson.optionalDependencies ?? {}),
     ]);
-    const platform = build.initialOptions.platform ?? 'browser';
 
     build.onResolve({ namespace: 'file', filter: /.*/ }, (args) => {
       // Ignore aliased imports.
@@ -120,20 +50,8 @@ export const bundleDepsPlugin = (options: BundleDepsPluginOptions): Plugin => ({
         });
       }
 
-      // Resolve subpath imports (#) using package.json imports field.
+      // Keep subpath imports (#) as external - let the consuming code do the resolution.
       if (args.path.startsWith('#')) {
-        if (packageJson.imports) {
-          const resolved = resolveSubpathImport(args.path, packageJson.imports, platform, options.packageDir);
-          if (resolved) {
-            if (resolved.path) {
-              return { path: resolved.path };
-            }
-            if (resolved.external) {
-              return { external: true, path: resolved.external };
-            }
-          }
-        }
-        // If no resolution found, keep as external (for vendor files etc.).
         return { external: true, path: args.path };
       }
 
