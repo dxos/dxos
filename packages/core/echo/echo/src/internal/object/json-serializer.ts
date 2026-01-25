@@ -5,7 +5,7 @@
 import * as Schema from 'effect/Schema';
 
 import { raise } from '@dxos/debug';
-import { type EncodedReference, type ObjectMeta, ObjectStructure, isEncodedReference } from '@dxos/echo-protocol';
+import { type EncodedReference, ObjectStructure, isEncodedReference } from '@dxos/echo-protocol';
 import { assertArgument, invariant } from '@dxos/invariant';
 import { DXN, ObjectId } from '@dxos/keys';
 import { assumeType, deepMapValues, visitValues } from '@dxos/util';
@@ -35,7 +35,6 @@ import {
   KindId,
   MetaId,
   ObjectMetaSchema,
-  TypeId,
   setSchema,
 } from '../types';
 

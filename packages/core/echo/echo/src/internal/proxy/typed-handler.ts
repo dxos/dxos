@@ -15,13 +15,12 @@ import { getSchemaDXN } from '../annotations';
 import { ObjectDeletedId } from '../entities';
 import { SchemaId, TypeId } from '../types';
 
-import { SchemaValidator } from './schema-validator';
-
 import { defineHiddenProperty } from './define-hidden-property';
 import { batchEvents, emitEvent } from './event-batch';
 import { type ReactiveHandler, objectData } from './proxy-types';
 import { createProxy, getProxyTarget, isProxy, isValidProxyTarget, symbolIsProxy } from './proxy-utils';
 import { ReactiveArray } from './reactive-array';
+import { SchemaValidator } from './schema-validator';
 import { EventId } from './symbols';
 
 type ProxyTarget = {

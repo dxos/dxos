@@ -10,9 +10,8 @@ import { getTypeAnnotation } from '../annotations';
 import { Expando } from '../entities';
 import { type AnyProperties, KindId, MetaId, type ObjectMeta, ObjectMetaSchema } from '../types';
 
-import { attachTypedJsonSerializer } from './json-serializer';
-
 import { defineHiddenProperty } from './define-hidden-property';
+import { attachTypedJsonSerializer } from './json-serializer';
 import { createProxy, isValidProxyTarget } from './proxy-utils';
 import { TypedReactiveHandler, prepareTypedTarget } from './typed-handler';
 
