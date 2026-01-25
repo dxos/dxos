@@ -30,14 +30,14 @@ export default Capability.makeModule(
       defaultValue: () => ({ ...defaultSpaceState }),
     });
 
-    // Ephemeral state (not persisted).
+    // Ephemeral state (not persisted, but kept alive to prevent GC resets).
     const ephemeralAtom = Atom.make<SpaceCapabilities.SpaceEphemeralState>({
       awaiting: undefined,
       sdkMigrationRunning: {},
       navigableCollections: false,
       viewersByObject: {},
       viewersByIdentity: new ComplexMap<PublicKey, Set<string>>(PublicKey.hash),
-    });
+    }).pipe(Atom.keepAlive);
 
     const manager = yield* Capability.get(Common.Capability.PluginManager);
     // Update navigableCollections based on plugin state.

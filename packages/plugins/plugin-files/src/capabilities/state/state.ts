@@ -21,7 +21,7 @@ export default Capability.makeModule(
       exportRunning: false,
       files: [],
       current: undefined,
-    });
+    }).pipe(Atom.keepAlive);
 
     const registry = yield* Capability.get(Common.Capability.AtomRegistry);
     const { invokePromise } = yield* Capability.get(Common.Capability.OperationInvoker);

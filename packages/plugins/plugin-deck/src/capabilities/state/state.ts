@@ -58,8 +58,8 @@ export default Capability.makeModule(
       defaultValue: () => ({ ...defaultDeckState }),
     });
 
-    // Ephemeral state (not persisted).
-    const ephemeralAtom = Atom.make<DeckEphemeralStateProps>({ ...defaultDeckEphemeralState });
+    // Ephemeral state (not persisted, but kept alive to prevent GC resets).
+    const ephemeralAtom = Atom.make<DeckEphemeralStateProps>({ ...defaultDeckEphemeralState }).pipe(Atom.keepAlive);
 
     // Don't allow fullscreen mode to be persisted to prevent getting stuck in it.
     const currentState = registry.get(stateAtom);
@@ -93,7 +93,7 @@ export default Capability.makeModule(
         inactive: deck.inactive,
         scrollIntoView: ephemeral.scrollIntoView,
       } satisfies Common.Capability.Layout;
-    });
+    }).pipe(Atom.keepAlive);
 
     return [
       Capability.contributes(DeckCapabilities.State, stateAtom),

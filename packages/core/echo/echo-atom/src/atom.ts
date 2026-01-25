@@ -51,6 +51,22 @@ const refFamily = Atom.family(<T extends Entity.Unknown>(ref: Ref.Ref<T>): Atom.
 });
 
 /**
+ * Snapshot a value to create a new reference for comparison and React dependency tracking.
+ * Arrays and plain objects are shallow-copied so that:
+ * 1. The snapshot is isolated from mutations to the original value.
+ * 2. React's shallow comparison (Object.is) detects changes via new reference identity.
+ */
+const snapshotForComparison = <V>(value: V): V => {
+  if (Array.isArray(value)) {
+    return [...value] as V;
+  }
+  if (value !== null && typeof value === 'object') {
+    return { ...value } as V;
+  }
+  return value;
+};
+
+/**
  * Atom family for ECHO object properties.
  * Uses nested families: outer keyed by object, inner keyed by property key.
  * Same object+key combination returns same atom instance.
@@ -58,19 +74,22 @@ const refFamily = Atom.family(<T extends Entity.Unknown>(ref: Ref.Ref<T>): Atom.
 const propertyFamily = Atom.family(<T extends Entity.Unknown>(obj: T) =>
   Atom.family(<K extends keyof T>(key: K): Atom.Atom<T[K]> => {
     return Atom.make<T[K]>((get) => {
-      let previousValue = obj[key];
+      // Snapshot the initial value for comparison (arrays/objects need copying).
+      let previousSnapshot = snapshotForComparison(obj[key]);
 
       const unsubscribe = Obj.subscribe(obj, () => {
         const newValue = obj[key];
-        if (!isEqual(previousValue, newValue)) {
-          previousValue = newValue;
-          get.setSelf(newValue);
+        if (!isEqual(previousSnapshot, newValue)) {
+          previousSnapshot = snapshotForComparison(newValue);
+          // Return a snapshot copy so React sees a new reference.
+          get.setSelf(snapshotForComparison(newValue));
         }
       });
 
       get.addFinalizer(() => unsubscribe());
 
-      return obj[key];
+      // Return a snapshot copy so React sees a new reference.
+      return snapshotForComparison(obj[key]);
     });
   }),
 );

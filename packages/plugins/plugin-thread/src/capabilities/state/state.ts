@@ -11,8 +11,8 @@ import { ThreadCapabilities, type ThreadState, type ViewStore } from '../../type
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    const stateAtom = Atom.make<ThreadState>({ toolbar: {}, drafts: {} });
-    const viewStoreAtom = Atom.make<ViewStore>({});
+    const stateAtom = Atom.make<ThreadState>({ toolbar: {}, drafts: {} }).pipe(Atom.keepAlive);
+    const viewStoreAtom = Atom.make<ViewStore>({}).pipe(Atom.keepAlive);
 
     return [
       Capability.contributes(ThreadCapabilities.State, stateAtom),

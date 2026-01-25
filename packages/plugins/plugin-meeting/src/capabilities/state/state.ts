@@ -12,7 +12,7 @@ import { type MeetingCapabilities as MC, MeetingCapabilities } from '../../types
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     const registry = yield* Capability.get(Common.Capability.AtomRegistry);
-    const stateAtom = Atom.make<MC.MeetingState>({});
+    const stateAtom = Atom.make<MC.MeetingState>({}).pipe(Atom.keepAlive);
 
     const updateState = (updater: (current: MC.MeetingState) => MC.MeetingState) => {
       registry.set(stateAtom, updater(registry.get(stateAtom)));
