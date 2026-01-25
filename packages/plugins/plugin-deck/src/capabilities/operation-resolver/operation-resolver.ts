@@ -313,10 +313,8 @@ export default Capability.makeModule(
             yield* Operation.invoke(Common.LayoutOperation.SwitchWorkspace, { subject: input.workspace });
           }
 
-          // Re-read state after potential workspace switch.
-          const currentState = yield* Common.Capability.getAtomValue(DeckCapabilities.State);
-          const deck = currentState.decks[currentState.activeDeck];
-          invariant(deck, `Deck not found: ${currentState.activeDeck}`);
+          // Re-read deck after potential workspace switch.
+          const deck = yield* DeckCapabilities.getDeck();
 
           const previouslyOpenIds = new Set<string>(deck.solo ? [deck.solo] : deck.active);
           const next = deck.solo
@@ -335,10 +333,8 @@ export default Capability.makeModule(
           const { deckUpdates, toAttend: _toAttend } = computeActiveUpdates({ next, deck, attention });
           yield* Common.Capability.updateAtomValue(DeckCapabilities.State, (s) => updateActiveDeck(s, deckUpdates));
 
-          // Re-read state after update.
-          const afterState = yield* Common.Capability.getAtomValue(DeckCapabilities.State);
-          const afterDeck = afterState.decks[afterState.activeDeck];
-          invariant(afterDeck, `Deck not found: ${afterState.activeDeck}`);
+          // Re-read deck after update.
+          const afterDeck = yield* DeckCapabilities.getDeck();
           const ids = afterDeck.solo ? [afterDeck.solo] : afterDeck.active;
           const newlyOpen = ids.filter((i: string) => !previouslyOpenIds.has(i));
 
@@ -464,22 +460,24 @@ export default Capability.makeModule(
       OperationResolver.make({
         operation: DeckOperation.ChangeCompanion,
         handler: Effect.fnUntraced(function* (input) {
-          yield* Common.Capability.updateAtomValue(DeckCapabilities.State, (s) => {
-            const currentDeck = s.decks[s.activeDeck];
-            invariant(currentDeck, `Deck not found: ${s.activeDeck}`);
-            if (input.companion === null) {
-              const { [input.primary]: _, ...nextActiveCompanions } = currentDeck.activeCompanions ?? {};
-              return updateActiveDeck(s, { activeCompanions: nextActiveCompanions });
-            } else {
-              invariant(input.companion !== input.primary);
-              return updateActiveDeck(s, {
+          const deck = yield* DeckCapabilities.getDeck();
+          if (input.companion === null) {
+            const { [input.primary]: _, ...nextActiveCompanions } = deck.activeCompanions ?? {};
+            yield* Common.Capability.updateAtomValue(DeckCapabilities.State, (s) =>
+              updateActiveDeck(s, { activeCompanions: nextActiveCompanions }),
+            );
+          } else {
+            const companion = input.companion;
+            invariant(companion !== input.primary);
+            yield* Common.Capability.updateAtomValue(DeckCapabilities.State, (s) =>
+              updateActiveDeck(s, {
                 activeCompanions: {
-                  ...currentDeck.activeCompanions,
-                  [input.primary]: input.companion,
+                  ...deck.activeCompanions,
+                  [input.primary]: companion,
                 },
-              });
-            }
-          });
+              }),
+            );
+          }
         }),
       }),
 
