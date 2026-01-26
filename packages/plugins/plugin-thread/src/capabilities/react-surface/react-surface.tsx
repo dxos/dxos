@@ -2,13 +2,13 @@
 // Copyright 2025 DXOS.org
 //
 
+import { useAtomValue } from '@effect-atom/atom-react';
 import * as Effect from 'effect/Effect';
 import React from 'react';
 
 import { Capability, Common } from '@dxos/app-framework';
-import { useCapability } from '@dxos/app-framework/react';
+import { useCapability, useSettingsState } from '@dxos/app-framework/react';
 import { Obj, type Ref } from '@dxos/echo';
-import { SettingsStore } from '@dxos/local-storage';
 import { getSpace } from '@dxos/react-client/echo';
 import { Thread } from '@dxos/types';
 
@@ -71,9 +71,12 @@ export default Capability.makeModule(() =>
       Common.createSurface({
         id: `${meta.id}/plugin-settings`,
         role: 'article',
-        filter: (data): data is { subject: SettingsStore<ThreadSettingsProps> } =>
-          data.subject instanceof SettingsStore && data.subject.prefix === meta.id,
-        component: ({ data: { subject } }) => <ThreadSettings settings={subject.value} />,
+        filter: (data): data is { subject: Common.Capability.Settings } =>
+          Common.Capability.isSettings(data.subject) && data.subject.prefix === meta.id,
+        component: ({ data: { subject } }) => {
+          const { settings, updateSettings } = useSettingsState<ThreadSettingsProps>(subject.atom);
+          return <ThreadSettings settings={settings} onSettingsChange={updateSettings} />;
+        },
       }),
       Common.createSurface({
         id: `${meta.id}/assistant`,
@@ -85,7 +88,8 @@ export default Capability.makeModule(() =>
         role: 'devtools-overview',
         component: () => {
           const call = useCapability(ThreadCapabilities.CallManager);
-          return <CallDebugPanel state={call.state} />;
+          const state = useAtomValue(call.stateAtom);
+          return <CallDebugPanel state={state} />;
         },
       }),
     ]),

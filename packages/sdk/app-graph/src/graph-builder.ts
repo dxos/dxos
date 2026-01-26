@@ -505,8 +505,8 @@ export const createExtensionRaw = (extension: CreateExtensionRawOptions): Builde
             Atom.make((get) => {
               try {
                 return get(connector(node));
-              } catch {
-                log.warn('Error in connector', { id: getId('connector'), node });
+              } catch (error) {
+                log.warn('Error in connector', { id: getId('connector'), node, error });
                 return [];
               }
             }).pipe(Atom.withLabel(`graph-builder:connector:${id}`)),
@@ -526,8 +526,8 @@ export const createExtensionRaw = (extension: CreateExtensionRawOptions): Builde
                   data: Node.actionGroupSymbol,
                   type: Node.ActionGroupType,
                 }));
-              } catch {
-                log.warn('Error in actionGroups', { id: getId('actionGroups'), node });
+              } catch (error) {
+                log.warn('Error in actionGroups', { id: getId('actionGroups'), node, error });
                 return [];
               }
             }).pipe(Atom.withLabel(`graph-builder:connector:actionGroups:${id}`)),
@@ -543,8 +543,8 @@ export const createExtensionRaw = (extension: CreateExtensionRawOptions): Builde
             Atom.make((get) => {
               try {
                 return get(actions(node)).map((arg) => ({ ...arg, type: Node.ActionType }));
-              } catch {
-                log.warn('Error in actions', { id: getId('actions'), node });
+              } catch (error) {
+                log.warn('Error in actions', { id: getId('actions'), node, error });
                 return [];
               }
             }).pipe(Atom.withLabel(`graph-builder:connector:actions:${id}`)),

@@ -10,7 +10,6 @@ tasks:
     args:
       - '--entryPoint=src/data.ts'
       - '--entryPoint=src/index.ts'
-      - '--preactSignalTracking'
   test:
     inputs:
       - .storybook/*

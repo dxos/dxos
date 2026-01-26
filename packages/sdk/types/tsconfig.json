@@ -51,12 +51,6 @@
       "path": "../../core/echo/echo-query"
     },
     {
-      "path": "../../core/echo/echo-signals"
-    },
-    {
-      "path": "../../core/echo/live-object"
-    },
-    {
       "path": "../../ui/react-ui"
     },
     {

@@ -35,8 +35,6 @@
     "@dxos/schema": "workspace:*",
     "@dxos/util": "workspace:*",
     "@fluentui/react-tabster": "catalog:",
-    "@preact-signals/safe-react": "catalog:",
-    "@preact/signals-core": "catalog:",
     "@radix-ui/react-slot": "catalog:",
     "date-fns": "catalog:",
     "effect": "catalog:",

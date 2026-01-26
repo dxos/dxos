@@ -129,7 +129,7 @@ export const ToolboxContainer = ({ classNames, db, processor }: ToolboxContainer
   return (
     <Toolbox
       classNames={classNames}
-      blueprints={processor?.context.blueprints.value}
+      blueprints={processor?.context.getBlueprints()}
       services={serviceTools}
       functions={functions}
     />

@@ -32,7 +32,6 @@
     "@dxos/ui-editor": "workspace:*",
     "@dxos/util": "workspace:*",
     "@lit/react": "catalog:",
-    "@preact-signals/safe-react": "catalog:",
     "@radix-ui/react-context": "catalog:",
     "@radix-ui/react-popper": "catalog:",
     "@radix-ui/react-use-controllable-state": "catalog:"

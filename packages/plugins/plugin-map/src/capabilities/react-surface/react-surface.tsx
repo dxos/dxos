@@ -7,7 +7,7 @@ import type * as Schema from 'effect/Schema';
 import React, { useCallback, useMemo, useState } from 'react';
 
 import { Capability, Common } from '@dxos/app-framework';
-import { useCapability } from '@dxos/app-framework/react';
+import { useAtomCapability } from '@dxos/app-framework/react';
 import { Database, JsonSchema, Obj } from '@dxos/echo';
 import { Format } from '@dxos/echo/internal';
 import { findAnnotation } from '@dxos/effect';
@@ -27,7 +27,7 @@ export default Capability.makeModule(() =>
         role: ['article', 'section'],
         filter: (data): data is { subject: Map.Map } => Obj.instanceOf(Map.Map, data.subject),
         component: ({ data, role }) => {
-          const state = useCapability(MapCapabilities.MutableState);
+          const state = useAtomCapability(MapCapabilities.State);
           const [center, setCenter] = useState<LatLngLiteral | undefined>(undefined);
           const [zoom, setZoom] = useState<number | undefined>(undefined);
 

@@ -137,7 +137,7 @@ export const FieldEditor = ({ readonly, projection, field, registry, view, onSav
 
   const handleValidate = useCallback<NonNullable<FormRootProps<PropertyType>['onValidate']>>(
     ({ property }) => {
-      if (property && projection.fields.find((f) => f.path === property && f.path !== field.path)) {
+      if (property && projection.getFields().find((f) => f.path === property && f.path !== field.path)) {
         return [
           {
             path: 'property',
@@ -146,7 +146,7 @@ export const FieldEditor = ({ readonly, projection, field, registry, view, onSav
         ];
       }
     },
-    [projection.fields, field],
+    [projection.getFields(), field],
   );
 
   const handleSave = useCallback<NonNullable<FormRootProps<PropertyType>['onSave']>>(

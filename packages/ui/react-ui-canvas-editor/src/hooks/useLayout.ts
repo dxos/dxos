@@ -2,6 +2,8 @@
 // Copyright 2024 DXOS.org
 //
 
+import { useAtomValue } from '@effect-atom/atom-react';
+
 import { invariant } from '@dxos/invariant';
 import { type Point, type Rect } from '@dxos/react-ui-canvas';
 
@@ -27,8 +29,8 @@ import { useEditorContext } from './useEditorContext';
 export const useLayout = (): Layout => {
   const { dragMonitor, graph, layout } = useEditorContext();
 
-  // TODO(burdon): Use to trigger state update.
-  const dragging = dragMonitor.state(({ type }) => type === 'frame' || type === 'resize' || type === 'anchor').value;
+  // Subscribe to dragging state changes for layout updates.
+  const dragging = useAtomValue(dragMonitor.state);
   const getShape = (shape: Polygon) =>
     (dragging.type === 'frame' || dragging.type === 'resize') && dragging.shape.id === shape.id
       ? dragging.shape

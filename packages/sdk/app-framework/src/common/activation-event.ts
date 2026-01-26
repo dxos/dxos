@@ -80,11 +80,6 @@ export namespace ActivationEvent {
   export const ManagedRuntimeReady = ActivationEvent$.make('dxos.org/app-framework/event/managed-runtime-ready');
 
   /**
-   * Fired after the settings store is ready.
-   */
-  export const SettingsReady = ActivationEvent$.make('dxos.org/app-framework/event/settings-ready');
-
-  /**
    * Fired when the graph is ready.
    */
   export const AppGraphReady = ActivationEvent$.make('dxos.org/app-framework/event/graph-ready');
@@ -95,4 +90,10 @@ export namespace ActivationEvent {
   export const createStateEvent = (specifier: string) =>
     ActivationEvent$.make('dxos.org/app-framework/event/state', specifier);
   export const LayoutReady = createStateEvent(Capability.Layout.identifier);
+
+  /**
+   * Fired when a specific settings capability is ready.
+   */
+  export const createSettingsEvent = (specifier: string) =>
+    ActivationEvent$.make('dxos.org/app-framework/event/settings', specifier);
 }

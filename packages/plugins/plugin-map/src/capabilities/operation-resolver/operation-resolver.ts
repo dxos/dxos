@@ -15,8 +15,10 @@ export default Capability.makeModule(
       OperationResolver.make({
         operation: MapOperation.Toggle,
         handler: Effect.fnUntraced(function* () {
-          const mutableState = yield* Capability.get(MapCapabilities.MutableState);
-          mutableState.type = mutableState.type === 'globe' ? 'map' : 'globe';
+          yield* Common.Capability.updateAtomValue(MapCapabilities.State, (state) => ({
+            ...state,
+            type: state.type === 'globe' ? ('map' as const) : ('globe' as const),
+          }));
         }),
       }),
     ]);

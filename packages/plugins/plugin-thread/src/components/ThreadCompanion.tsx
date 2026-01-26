@@ -2,6 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
+import { useAtomValue } from '@effect-atom/atom-react';
 import React, { useCallback, useMemo } from 'react';
 
 import { Common } from '@dxos/app-framework';
@@ -18,23 +19,41 @@ import { mx } from '@dxos/ui-theme';
 
 import { CommentsContainer, type CommentsContainerProps } from '../components';
 import { meta } from '../meta';
-import { ThreadCapabilities, ThreadOperation } from '../types';
+import { ThreadCapabilities, ThreadOperation, type ViewState } from '../types';
+
+const initialViewState: ViewState = { showResolvedThreads: false };
 
 export const ThreadCompanion = ({ subject }: { subject: any }) => {
   const { t } = useTranslation(meta.id);
   const { invokePromise } = useOperationInvoker();
   const identity = useIdentity();
   const subjectId = Obj.getDXN(subject).toString();
+  const registry = useCapability(Common.Capability.AtomRegistry);
 
-  const { state, getViewState } = useCapability(ThreadCapabilities.MutableState);
+  const stateAtom = useCapability(ThreadCapabilities.State);
+  const viewStoreAtom = useCapability(ThreadCapabilities.ViewState);
+  const state = useAtomValue(stateAtom);
+  const viewStore = useAtomValue(viewStoreAtom);
   const drafts = state.drafts[subjectId];
-  const viewState = useMemo(() => getViewState(subjectId), [getViewState, subjectId]);
+
+  // Get or initialize view state for this subject.
+  const viewState = useMemo(() => {
+    if (!viewStore[subjectId]) {
+      registry.set(viewStoreAtom, { ...viewStore, [subjectId]: { ...initialViewState } });
+      return initialViewState;
+    }
+    return viewStore[subjectId];
+  }, [viewStore, subjectId, registry, viewStoreAtom]);
   const { showResolvedThreads } = viewState;
+
   const onChangeViewState = useCallback(
     (nextValue: string) => {
-      viewState.showResolvedThreads = nextValue === 'all';
+      registry.set(viewStoreAtom, {
+        ...registry.get(viewStoreAtom),
+        [subjectId]: { ...registry.get(viewStoreAtom)[subjectId], showResolvedThreads: nextValue === 'all' },
+      });
     },
-    [viewState],
+    [registry, viewStoreAtom, subjectId],
   );
 
   const anchorSorts = useCapabilities(Common.Capability.AnchorSort);
@@ -58,7 +77,7 @@ export const ThreadCompanion = ({ subject }: { subject: any }) => {
       const threadId = Obj.getDXN(thread).toString();
 
       if (state.current !== threadId) {
-        state.current = threadId;
+        registry.set(stateAtom, { ...registry.get(stateAtom), current: threadId });
 
         // TODO(wittjosiah): Should this be a thread-specific intent?
         //  The layout doesn't know about threads and this working depends on other plugins conditionally handling it.
@@ -70,7 +89,7 @@ export const ThreadCompanion = ({ subject }: { subject: any }) => {
         });
       }
     },
-    [state.current, invokePromise, subject],
+    [state.current, invokePromise, subject, registry, stateAtom],
   );
 
   const handleComment = useCallback(
@@ -83,9 +102,9 @@ export const ThreadCompanion = ({ subject }: { subject: any }) => {
       });
 
       const thread = Relation.getSource(anchor) as Thread.Thread;
-      state.current = Obj.getDXN(thread).toString();
+      registry.set(stateAtom, { ...registry.get(stateAtom), current: Obj.getDXN(thread).toString() });
     },
-    [invokePromise, identity, subject, state],
+    [invokePromise, identity, subject, registry, stateAtom],
   );
 
   const handleResolve = useCallback(

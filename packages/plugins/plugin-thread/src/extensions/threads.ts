@@ -4,7 +4,7 @@
 
 import { type Extension } from '@codemirror/state';
 import { EditorView } from '@codemirror/view';
-import { computed, effect } from '@preact/signals-core';
+import { type Atom, type Registry } from '@effect-atom/atom-react';
 
 import { Filter, Obj, Query, Relation } from '@dxos/echo';
 import { createDocAccessor, getTextInRange } from '@dxos/echo-db';
@@ -23,11 +23,16 @@ const getName = (doc: Markdown.Document, anchor: string): string | undefined => 
   }
 };
 
+export type ThreadStore = {
+  registry: Registry.Registry;
+  stateAtom: Atom.Writable<ThreadState>;
+};
+
 /**
  * Construct plugins.
  */
 export const threads = (
-  state: ThreadState,
+  store: ThreadStore,
   doc?: Markdown.Document,
   invokePromise?: OperationInvoker.OperationInvoker['invokePromise'],
 ): Extension => {
@@ -38,28 +43,29 @@ export const threads = (
     return [comments()];
   }
 
+  const { registry, stateAtom } = store;
+  const objectId = Obj.getDXN(doc).toString();
   const query = db.query(Query.select(Filter.id(doc.id)).targetOf(AnchoredTo.AnchoredTo));
-  const unsubscribe = query.subscribe();
 
-  const anchors = computed(() =>
+  // Get current anchors by combining query results with store drafts.
+  const getAnchors = () =>
     query.results
       .filter((anchor) => {
         const thread = Relation.getSource(anchor);
         return Obj.instanceOf(Thread.Thread, thread) && thread.status !== 'resolved';
       })
-      .concat(state.drafts[Obj.getDXN(doc).toString()] ?? []),
-  );
+      .concat(registry.get(stateAtom).drafts[objectId] ?? []);
 
   return [
     EditorView.domEventHandlers({
       destroy: () => {
-        unsubscribe();
+        // Note: cleanup functions for subscriptions are handled by createExternalCommentSync.
       },
     }),
 
     EditorView.updateListener.of((update) => {
       if (update.docChanged) {
-        anchors.value.forEach((anchor) => {
+        getAnchors().forEach((anchor) => {
           if (anchor.anchor) {
             // Only update if the name has changed, otherwise this will cause an infinite loop.
             // Skip if the name is empty; this means comment text was deleted, but thread name should remain.
@@ -76,10 +82,18 @@ export const threads = (
     }),
 
     createExternalCommentSync(
-      Obj.getDXN(doc).toString(),
-      (sink) => effect(() => sink()),
+      objectId,
+      (sink) => {
+        // Subscribe to both query changes and store state changes.
+        const unsubQuery = query.subscribe(sink);
+        const unsubStore = registry.subscribe(stateAtom, sink);
+        return () => {
+          unsubQuery();
+          unsubStore();
+        };
+      },
       () =>
-        anchors.value
+        getAnchors()
           .filter((anchor) => anchor.anchor)
           .map((anchor) => ({
             id: Obj.getDXN(Relation.getSource(anchor)).toString(),
@@ -88,7 +102,7 @@ export const threads = (
     ),
 
     comments({
-      id: Obj.getDXN(doc).toString(),
+      id: objectId,
       onCreate: ({ cursor }) => {
         const name = getName(doc, cursor);
         void invokePromise(ThreadOperation.Create, {
@@ -98,11 +112,18 @@ export const threads = (
         });
       },
       onDelete: ({ id }) => {
-        const draft = state.drafts[Obj.getDXN(doc).toString()];
-        if (draft) {
-          const index = draft.findIndex((thread) => Obj.getDXN(thread).toString() === id);
+        const drafts = registry.get(stateAtom).drafts[objectId];
+        if (drafts) {
+          const index = drafts.findIndex((thread) => Obj.getDXN(thread).toString() === id);
           if (index !== -1) {
-            draft.splice(index, 1);
+            const current = registry.get(stateAtom);
+            registry.set(stateAtom, {
+              ...current,
+              drafts: {
+                ...current.drafts,
+                [objectId]: current.drafts[objectId]?.filter((_, i) => i !== index),
+              },
+            });
           }
         }
 
@@ -114,7 +135,7 @@ export const threads = (
         }
       },
       onUpdate: ({ id, cursor }) => {
-        const draft = state.drafts[Obj.getDXN(doc).toString()]?.find((thread) => Obj.getDXN(thread).toString() === id);
+        const draft = registry.get(stateAtom).drafts[objectId]?.find((thread) => Obj.getDXN(thread).toString() === id);
         if (draft) {
           const thread = Relation.getSource(draft) as Thread.Thread;
           Obj.change(thread, (t) => {

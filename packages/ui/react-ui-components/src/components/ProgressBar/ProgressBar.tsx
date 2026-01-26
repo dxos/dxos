@@ -2,9 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
-import { useEffect } from '@preact-signals/safe-react/react';
 import { AnimatePresence, motion } from 'motion/react';
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useResizeDetector } from 'react-resize-detector';
 
 import { type ThemedClassName, useStateWithRef } from '@dxos/react-ui';

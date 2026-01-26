@@ -10,8 +10,8 @@ import { type ObjectId } from '@dxos/keys';
 
 import { type SchemaMeta, SchemaMetaSymbol, type TypeAnnotation, getTypeAnnotation } from '../annotations';
 import { type JsonSchemaType, toEffectSchema, toJsonSchema } from '../json-schema';
-import { type TypedObject, type TypedObjectPrototype } from '../object';
-import { ChangeId } from '../types/entity';
+import { type TypedObject, type TypedObjectPrototype, getSnapshot } from '../object';
+import { ChangeId } from '../proxy';
 
 import {
   addFieldsToSchema,
@@ -21,7 +21,6 @@ import {
   updateFieldsInSchema,
 } from './manipulation';
 import { PersistentSchema } from './persistent-schema';
-import { getSnapshot } from './snapshot';
 
 /**
  * Base schema type.
@@ -250,7 +249,7 @@ export class EchoSchema<A = any, I = any> extends EchoSchemaConstructor() implem
   }
 
   /**
-   * @reactive
+   * Returns the JSON schema for the schema.
    */
   public get jsonSchema(): JsonSchemaType {
     return this._persistentSchema.jsonSchema;

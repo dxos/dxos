@@ -106,6 +106,7 @@ export default Capability.makeModule(() =>
               const result = await View.makeFromDatabase({
                 db: extensions.space.db,
                 typename,
+                pivotFieldName: locationFieldId,
               });
               view = result.view;
             }

@@ -36,7 +36,6 @@ export interface EsbuildExecutorOptions {
   moduleFormat: Format[];
   sourcemap: boolean;
   watch: boolean;
-  preactSignalTracking: boolean;
   verbose: boolean;
 }
 
@@ -123,11 +122,6 @@ export default async (options: EsbuildExecutorOptions): Promise<{ success: boole
                   ],
                 },
               ];
-
-              if (options.preactSignalTracking) {
-                // https://github.com/XantreDev/preact-signals/tree/main/packages/react#how-parser-plugins-works
-                yield ['@preact-signals/safe-react/swc', { mode: 'all' }];
-              }
             })(),
           ],
         },

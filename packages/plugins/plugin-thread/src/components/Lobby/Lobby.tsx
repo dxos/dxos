@@ -2,6 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
+import { useAtomValue } from '@effect-atom/atom-react';
 import React, { type FC, type PropsWithChildren, useEffect, useState } from 'react';
 
 import { useCapability } from '@dxos/app-framework/react';
@@ -39,9 +40,10 @@ type LobbyPreviewProps = {};
 const LobbyPreview: FC<LobbyPreviewProps> = () => {
   const { t } = useTranslation(meta.id);
   const call = useCapability(ThreadCapabilities.CallManager);
+  const media = useAtomValue(call.mediaAtom);
   const [classNames, setClassNames] = useState('');
   useEffect(() => {
-    if (!call.media.videoEnabled) {
+    if (!media.videoEnabled) {
       setClassNames('');
       return;
     }
@@ -52,14 +54,14 @@ const LobbyPreview: FC<LobbyPreviewProps> = () => {
     }, 500);
 
     return () => clearTimeout(timeout);
-  }, [call.media.videoEnabled]);
+  }, [media.videoEnabled]);
 
   return (
     <div className='grid grow p-4'>
       <ResponsiveContainer>
-        {(call.media.videoEnabled && (
+        {(media.videoEnabled && (
           <VideoObject
-            videoStream={call.media.videoStream}
+            videoStream={media.videoStream}
             flip
             muted
             classNames={mx(

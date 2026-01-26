@@ -2,13 +2,16 @@
 // Copyright 2025 DXOS.org
 //
 
+import { type Atom } from '@effect-atom/atom-react';
+
 import { Capability } from '@dxos/app-framework';
 
 import { meta } from '../meta';
 
-import { type FilesState } from './schema';
+import { type FilesSettingsProps, type FilesState } from './schema';
 
 export namespace FileCapabilities {
-  export const State = Capability.make<Readonly<FilesState>>(`${meta.id}/capability/state`);
-  export const MutableState = Capability.make<FilesState>(`${meta.id}/capability/state`);
+  export const Settings = Capability.make<Atom.Writable<FilesSettingsProps>>(`${meta.id}/capability/settings`);
+
+  export const State = Capability.make<Atom.Writable<FilesState>>(`${meta.id}/capability/state`);
 }

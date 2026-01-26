@@ -20,8 +20,8 @@ import { Stream } from '@dxos/codec-protobuf/stream';
 import { Context, ContextDisposedError } from '@dxos/context';
 import { raise } from '@dxos/debug';
 import { type Database, Ref } from '@dxos/echo';
+import { batchEvents } from '@dxos/echo/internal';
 import { type DatabaseDirectory, EncodedReference, type ObjectStructure, type SpaceState } from '@dxos/echo-protocol';
-import { compositeRuntime } from '@dxos/echo-signals/runtime';
 import { invariant } from '@dxos/invariant';
 import { type ObjectId } from '@dxos/keys';
 import { type DXN, type PublicKey, type SpaceId } from '@dxos/keys';
@@ -750,7 +750,7 @@ export class CoreDatabase {
       return;
     }
 
-    compositeRuntime.batch(() => {
+    batchEvents(() => {
       for (const id of itemsUpdated) {
         const objCore = this._objects.get(id);
         if (objCore) {
@@ -924,7 +924,7 @@ export class CoreDatabase {
     this._objectsForNextUpdate.clear();
     this._objectsForNextDbUpdate.clear();
 
-    compositeRuntime.batch(() => {
+    batchEvents(() => {
       if (allDbUpdates.size > 0) {
         this._updateEvent.emit({
           spaceId: this.spaceId,

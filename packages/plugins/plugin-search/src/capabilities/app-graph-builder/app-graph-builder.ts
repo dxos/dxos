@@ -8,7 +8,7 @@ import { Capability, Common } from '@dxos/app-framework';
 import { Operation } from '@dxos/operation';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { ATTENDABLE_PATH_SEPARATOR, DECK_COMPANION_TYPE } from '@dxos/plugin-deck/types';
-import { CreateAtom, GraphBuilder, NodeMatcher } from '@dxos/plugin-graph';
+import { GraphBuilder, NodeMatcher } from '@dxos/plugin-graph';
 import { parseId } from '@dxos/react-client/echo';
 
 import { meta } from '../../meta';
@@ -23,10 +23,10 @@ export default Capability.makeModule(
         id: `${meta.id}/space-search`,
         match: NodeMatcher.whenRoot,
         connector: (node, get) => {
-          const layout = capabilities.get(Common.Capability.Layout);
+          const layoutAtom = capabilities.get(Common.Capability.Layout);
           const client = capabilities.get(ClientCapabilities.Client);
-          const workspace = get(CreateAtom.fromSignal(() => layout.workspace));
-          const { spaceId } = parseId(workspace);
+          const layout = get(layoutAtom);
+          const { spaceId } = parseId(layout.workspace);
           const space = spaceId ? client.spaces.get(spaceId) : null;
 
           return Effect.succeed([

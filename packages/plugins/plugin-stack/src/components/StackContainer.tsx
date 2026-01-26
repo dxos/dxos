@@ -7,7 +7,6 @@ import React, { useCallback, useState } from 'react';
 
 import { Common } from '@dxos/app-framework';
 import { useAppGraph, useCapabilities, useOperationInvoker } from '@dxos/app-framework/react';
-import { isLiveObject } from '@dxos/client/echo';
 import { Obj } from '@dxos/echo';
 import { Graph } from '@dxos/plugin-graph';
 import { SpaceOperation } from '@dxos/plugin-space/types';
@@ -80,7 +79,7 @@ const StackContainer = ({ id, collection }: StackContainerProps) => {
         .filter(isNonNullable)
         .findIndex((section) => Obj.getDXN(section).toString() === id);
       const object = collection.objects[index].target;
-      if (isLiveObject(object)) {
+      if (Obj.isObject(object)) {
         await invokePromise(SpaceOperation.RemoveObjects, {
           objects: [object],
           target: collection,

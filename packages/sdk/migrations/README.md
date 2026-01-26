@@ -1,9 +1,9 @@
-# @dxos/echo-signals
+# @dxos/migrations
 
 ## Installation
 
 ```bash
-pnpm i @dxos/echo-signals
+pnpm i @dxos/migrations
 ```
 
 ## DXOS Resources

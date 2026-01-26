@@ -22,7 +22,6 @@ tasks:
       - '--moduleFormat=cjs'
       - '--moduleFormat=esm'
       - '--platform=node'
-      - '--preactSignalTracking'
     deps:
       - ^:compile
       - dx-compile:compile

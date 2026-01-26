@@ -5,22 +5,29 @@
 import * as Effect from 'effect/Effect';
 
 import { Capability, Common } from '@dxos/app-framework';
-import { live } from '@dxos/live-object';
+import { createKvsStore } from '@dxos/effect';
 
 import { meta } from '../../meta';
-import { type FilesSettingsProps, FilesSettingsSchema } from '../../types';
+import { FileCapabilities, FilesSettingsSchema } from '../../types';
 
 export default Capability.makeModule(() =>
   Effect.sync(() => {
-    const settings = live<FilesSettingsProps>({
-      autoExport: false,
-      autoExportInterval: 30_000,
+    const settingsAtom = createKvsStore({
+      key: meta.id,
+      schema: FilesSettingsSchema,
+      defaultValue: () => ({
+        autoExport: false,
+        autoExportInterval: 30_000,
+      }),
     });
 
-    return Capability.contributes(Common.Capability.Settings, {
-      prefix: meta.id,
-      schema: FilesSettingsSchema,
-      value: settings,
-    });
+    return [
+      Capability.contributes(FileCapabilities.Settings, settingsAtom),
+      Capability.contributes(Common.Capability.Settings, {
+        prefix: meta.id,
+        schema: FilesSettingsSchema,
+        atom: settingsAtom,
+      }),
+    ];
   }),
 );

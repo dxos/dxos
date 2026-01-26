@@ -2,14 +2,16 @@
 // Copyright 2024 DXOS.org
 //
 
+import { Registry } from '@effect-atom/atom-react';
 import { describe, expect, test } from 'vitest';
 
 import { AttentionManager } from './attention';
 
 describe('AttentionManager', () => {
   test('takes an initial attendable', () => {
-    const attention = new AttentionManager(['a', 'b', 'c']);
-    expect(attention.current).to.deep.equal(['a', 'b', 'c']);
+    const registry = Registry.make();
+    const attention = new AttentionManager(registry, ['a', 'b', 'c']);
+    expect(attention.getCurrent()).to.deep.equal(['a', 'b', 'c']);
     expect(attention.keys()).to.deep.equal([['a'], ['b', 'c'], ['c'], ['a', 'b', 'c']]);
     expect(attention.get(['a'])).to.deep.equal({ hasAttention: false, isAncestor: false, isRelated: true });
     expect(attention.get(['b', 'c'])).to.deep.equal({ hasAttention: false, isAncestor: true, isRelated: false });
@@ -19,15 +21,17 @@ describe('AttentionManager', () => {
   });
 
   test('current returns last updated key', () => {
-    const attention = new AttentionManager();
-    expect(attention.current).to.deep.equal([]);
+    const registry = Registry.make();
+    const attention = new AttentionManager(registry);
+    expect(attention.getCurrent()).to.deep.equal([]);
 
     attention.update(['a', 'b', 'c']);
-    expect(attention.current).to.deep.equal(['a', 'b', 'c']);
+    expect(attention.getCurrent()).to.deep.equal(['a', 'b', 'c']);
   });
 
   test('keys returns all stored attendables', () => {
-    const attention = new AttentionManager();
+    const registry = Registry.make();
+    const attention = new AttentionManager(registry);
     expect(attention.keys()).to.deep.equal([]);
 
     attention.update(['a']);
@@ -38,7 +42,8 @@ describe('AttentionManager', () => {
   });
 
   test('get returns attention object for a given key', () => {
-    const attention = new AttentionManager();
+    const registry = Registry.make();
+    const attention = new AttentionManager(registry);
     expect(attention.get(['a'])).to.deep.equal({ hasAttention: false, isAncestor: false, isRelated: false });
 
     attention.update(['a']);

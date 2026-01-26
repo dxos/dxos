@@ -211,13 +211,6 @@ export default defineConfig((env) => ({
             ],
           },
         ],
-        // https://github.com/XantreDev/preact-signals/tree/main/packages/react#how-parser-plugins-works
-        [
-          '@preact-signals/safe-react/swc',
-          {
-            mode: 'all',
-          },
-        ],
       ],
     }),
 
@@ -235,8 +228,6 @@ export default defineConfig((env) => ({
         '@dxos/client-services',
         '@dxos/config',
         '@dxos/echo',
-        '@dxos/echo-signals',
-        '@dxos/live-object',
         '@dxos/react-client',
         '@dxos/react-client/devtools',
         '@dxos/react-client/echo',

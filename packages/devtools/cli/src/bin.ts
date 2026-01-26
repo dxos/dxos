@@ -19,7 +19,7 @@ import * as Option from 'effect/Option';
 
 import { createCliApp } from '@dxos/app-framework';
 import { unrefTimeout } from '@dxos/async';
-import { ClientService, ConfigService, DXOS_VERSION } from '@dxos/client';
+import { ConfigService, DXOS_VERSION } from '@dxos/client';
 import { DEFAULT_PROFILE } from '@dxos/client-protocol';
 import { LogLevel, levels, log } from '@dxos/log';
 import { loadEnabledPlugins } from '@dxos/plugin-registry/cli';
@@ -74,12 +74,13 @@ const program = Effect.gen(function* () {
       // TODO(wittjosiah): Factor out.
       //   Currently would require standalone plugins due to clash between solid & react compilation.
       //   Either create cli-specific plugins for these or wait until assistant/script plugins are built w/ Solid.
-      chat.pipe(Command.provide(ClientService.layer)),
-      fn.pipe(Command.provide(ClientService.layer)),
+      // Note: ClientPlugin already contributes ClientService via its layer, so we don't need to provide it again.
+      chat,
+      fn,
 
       // TODO(burdon): Admin-only. Where should these commands live?
-      debug.pipe(Command.provide(ClientService.layer)),
-      hub.pipe(Command.provide(ClientService.layer)),
+      debug,
+      hub,
     ],
     plugins: getPlugins({ config }),
     core: getCore(),
