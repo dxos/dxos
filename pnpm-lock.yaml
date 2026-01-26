@@ -12359,6 +12359,9 @@ importers:
       '@dxos/operation':
         specifier: workspace:*
         version: link:../../core/operation
+      '@dxos/plugin-debug':
+        specifier: workspace:*
+        version: link:../plugin-debug
       '@dxos/plugin-graph':
         specifier: workspace:*
         version: link:../plugin-graph

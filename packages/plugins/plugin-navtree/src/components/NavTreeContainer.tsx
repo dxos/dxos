@@ -255,7 +255,7 @@ export const NavTreeContainer$ = forwardRef<HTMLDivElement, NavTreeContainerProp
               case 'rearrange': {
                 const nextItems = sourceItems.map(({ data }) => data);
                 arrayMove(nextItems, sourceIndex, targetIndex);
-                void sourceParent?.properties.onRearrangeChildren?.(nextItems);
+                void sourceNode.properties.onRearrange?.(nextItems);
                 break;
               }
               case 'copy': {

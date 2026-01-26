@@ -11,11 +11,10 @@ import { Capability, Common } from '@dxos/app-framework';
 import { type Space, SpaceState, getSpace, isSpace, parseId } from '@dxos/client/echo';
 import { DXN, Filter, Obj, type Ref, Type } from '@dxos/echo';
 import { AtomObj, AtomQuery } from '@dxos/echo-atom';
-import { log } from '@dxos/log';
 import { Operation } from '@dxos/operation';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { ATTENDABLE_PATH_SEPARATOR, PLANK_COMPANION_TYPE } from '@dxos/plugin-deck/types';
-import { CreateAtom, Graph, GraphBuilder, type Node, NodeMatcher } from '@dxos/plugin-graph';
+import { CreateAtom, GraphBuilder, type Node, NodeMatcher } from '@dxos/plugin-graph';
 import { Collection, Expando, ViewAnnotation, getTypenameFromQuery } from '@dxos/schema';
 import { isNonNullable } from '@dxos/util';
 
@@ -24,7 +23,6 @@ import { meta } from '../../meta';
 import { SPACE_TYPE, SpaceCapabilities, SpaceOperation } from '../../types';
 import {
   SHARED,
-  SPACES,
   constructObjectActions,
   constructSpaceActions,
   constructSpaceNode,
@@ -44,46 +42,6 @@ export default Capability.makeModule(
     // TODO(wittjosiah): Using `get` and being reactive seems to cause a bug with Atom where disposed atoms are accessed.
     const resolve = (get: Atom.Context) => (typename: string) =>
       capabilities.getAll(Common.Capability.Metadata).find(({ id }) => id === typename)?.metadata ?? {};
-
-    const spacesNode = {
-      id: SPACES,
-      type: SPACES,
-      cacheable: ['label', 'role'],
-      properties: {
-        label: ['spaces label', { ns: meta.id }],
-        icon: 'ph--planet--regular',
-        testId: 'spacePlugin.spaces',
-        role: 'branch',
-        disposition: 'collection',
-        disabled: true,
-        childrenPersistenceClass: 'echo',
-        onRearrangeChildren: async (nextOrder: Space[]) => {
-          const { graph } = capabilities.get(Common.Capability.AppGraph);
-          const client = capabilities.get(ClientCapabilities.Client);
-
-          // NOTE: This is needed to ensure order is updated by next animation frame.
-          // TODO(wittjosiah): Is there a better way to do this?
-          //   If not, graph should be passed as an argument to the extension.
-          Graph.sortEdges(
-            graph,
-            SPACES,
-            'outbound',
-            nextOrder.map(({ id }) => id),
-          );
-
-          const [spacesOrder] = await client.spaces.default.db
-            .query(Filter.type(Expando.Expando, { key: SHARED }))
-            .run();
-          if (spacesOrder) {
-            Obj.change(spacesOrder, (o) => {
-              o.order = nextOrder.map(({ id }) => id);
-            });
-          } else {
-            log.warn('spaces order object not found');
-          }
-        },
-      },
-    };
 
     const extensions = yield* Effect.all([
       // Primary actions.
@@ -149,18 +107,10 @@ export default Capability.makeModule(
           ]),
       }),
 
-      // Create spaces group node.
-      GraphBuilder.createExtension({
-        id: `${meta.id}/root`,
-        position: 'hoist',
-        match: NodeMatcher.whenRoot,
-        connector: () => Effect.succeed([spacesNode]),
-      }),
-
       // Create space nodes.
       GraphBuilder.createExtension({
-        id: SPACES,
-        match: NodeMatcher.whenId(SPACES),
+        id: `${meta.id}/spaces`,
+        match: NodeMatcher.whenRoot,
         connector: (node, get) => {
           const client = capabilities.get(ClientCapabilities.Client);
           const stateAtom = capabilities.get(SpaceCapabilities.State);
@@ -184,6 +134,7 @@ export default Capability.makeModule(
             const [spacesOrder] = get(
               AtomQuery.make(client.spaces.default.db, Filter.type(Expando.Expando, { key: SHARED })),
             );
+            const { graph } = capabilities.get(Common.Capability.AppGraph);
 
             // Get order from spacesOrder snapshot using AtomObj (cached via Atom.family).
             const spacesOrderSnapshot = spacesOrder ? get(AtomObj.make(spacesOrder)) : undefined;
@@ -215,6 +166,8 @@ export default Capability.makeModule(
                     personal: space === client.spaces.default,
                     namesCache: state.spaceNames,
                     resolve: resolve(get),
+                    graph,
+                    spacesOrder,
                   }),
                 ),
             );

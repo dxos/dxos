@@ -29,6 +29,7 @@
     "@dxos/app-framework": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/operation": "workspace:*",
+    "@dxos/plugin-debug": "workspace:*",
     "@dxos/plugin-graph": "workspace:*",
     "@dxos/react-ui-editor": "workspace:*",
     "@dxos/react-ui-menu": "workspace:*",
