@@ -33,7 +33,7 @@ jobs:
           branch: ${{ steps.branch.outputs.prefix }}-${{ steps.time.outputs.today }}-${{ steps.git.outputs.sha }}
 
       - name: Checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
         with:
           fetch-depth: 0 # Checkout all branches
           token: ${{ secrets.CREATE_PR_TOKEN }}
