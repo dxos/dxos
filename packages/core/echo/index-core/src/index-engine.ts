@@ -42,7 +42,7 @@ export interface IndexDataSource {
   readonly sourceName: string; // e.g. queue, automerge, etc.
 
   getChangedObjects(
-    cursors: IndexCursor[],
+    cursors: DataSourceCursor[],
     opts?: { limit?: number },
   ): Effect.Effect<{ objects: IndexerObject[]; cursors: DataSourceCursor[] }>;
 }
@@ -88,6 +88,14 @@ export class IndexEngine {
   queryReverseRef(query: ReverseRefQuery) {
     // TODO(mykola): Join with metadata table here.
     return this.#reverseRefIndex.query(query);
+  }
+
+  /**
+   * Query snapshots by recordIds.
+   * Used to load queue objects from indexed snapshots.
+   */
+  querySnapshotsJSON(recordIds: number[]) {
+    return this.#ftsIndex.querySnapshotsJSON(recordIds);
   }
 
   queryType(
@@ -186,7 +194,8 @@ export class IndexEngine {
           const cursors = yield* this.#tracker.queryCursors({
             indexName: opts.indexName,
             sourceName: source.sourceName,
-            spaceId: opts.spaceId,
+            // Pass undefined to get all cursors when spaceId is null.
+            spaceId: opts.spaceId ?? undefined,
           });
           const { objects, cursors: updatedCursors } = yield* source.getChangedObjects(cursors, { limit: opts.limit });
           if (objects.length === 0) {
@@ -204,7 +213,7 @@ export class IndexEngine {
             updatedCursors.map(
               (_): IndexCursor => ({
                 indexName: opts.indexName,
-                spaceId: opts.spaceId,
+                spaceId: _.spaceId,
                 sourceName: source.sourceName,
                 resourceId: _.resourceId,
                 cursor: _.cursor,

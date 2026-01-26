@@ -9,7 +9,7 @@ import Redis from 'ioredis';
 
 import { Trigger } from '@dxos/async';
 import { Context } from '@dxos/context';
-import { TypedObject } from '@dxos/echo/internal';
+import { Type } from '@dxos/echo';
 import { type EchoDatabaseImpl, Filter, type QueryResult, createDocAccessor } from '@dxos/echo-db';
 import { EchoTestPeer } from '@dxos/echo-db/testing';
 import { TestReplicator, TestReplicatorConnection } from '@dxos/echo-pipeline/testing';
@@ -23,9 +23,16 @@ import { trace } from '@dxos/tracing';
 import { type ReplicantEnv, ReplicantRegistry } from '../env';
 import { DEFAULT_REDIS_OPTIONS, createRedisReadableStream, createRedisWritableStream } from '../redis';
 
-export class Text extends TypedObject({ typename: 'dxos.org/blade-runner/Text', version: '0.1.0' })({
+export const Text = Schema.Struct({
   content: Schema.String,
-}) {}
+}).pipe(
+  Type.Obj({
+    typename: 'dxos.org/blade-runner/Text',
+    version: '0.1.0',
+  }),
+);
+
+export interface Text extends Schema.Schema.Type<typeof Text> {}
 
 @trace.resource()
 export class EchoReplicant {

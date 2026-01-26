@@ -9,7 +9,7 @@ import { Obj } from '@dxos/echo';
 import { TestSchema } from '@dxos/echo/testing';
 import { createObject } from '@dxos/echo-db';
 
-import { AtomObj } from './atom';
+import * as AtomObj from './atom';
 
 describe('Echo Atom - Basic Functionality', () => {
   test('AtomObj.make creates atom for entire object', () => {
@@ -20,9 +20,12 @@ describe('Echo Atom - Basic Functionality', () => {
     const registry = Registry.make();
     const atom = AtomObj.make(obj);
 
-    const value = AtomObj.get(registry, atom);
-    expect(value).toBe(obj);
-    expect(value.name).toBe('Test');
+    // Returns a snapshot (plain object), not the Echo object itself.
+    const snapshot = registry.get(atom);
+    expect(snapshot).not.toBe(obj);
+    expect(snapshot.name).toBe('Test');
+    expect(snapshot.username).toBe('test');
+    expect(snapshot.email).toBe('test@example.com');
   });
 
   test('AtomObj.makeProperty creates atom for specific property', () => {
@@ -33,8 +36,8 @@ describe('Echo Atom - Basic Functionality', () => {
     const registry = Registry.make();
     const atom = AtomObj.makeProperty(obj, 'name');
 
-    const value = AtomObj.get(registry, atom);
-    expect(value).toBe('Test');
+    const atomValue = registry.get(atom);
+    expect(atomValue).toBe('Test');
   });
 
   test('AtomObj.makeProperty is type-safe', () => {
@@ -43,15 +46,15 @@ describe('Echo Atom - Basic Functionality', () => {
     );
 
     const registry = Registry.make();
-    // This should compile and work
+    // This should compile and work.
     const nameAtom = AtomObj.makeProperty(obj, 'name');
     const emailAtom = AtomObj.makeProperty(obj, 'email');
 
-    expect(AtomObj.get(registry, nameAtom)).toBe('Test');
-    expect(AtomObj.get(registry, emailAtom)).toBe('test@example.com');
+    expect(registry.get(nameAtom)).toBe('Test');
+    expect(registry.get(emailAtom)).toBe('test@example.com');
   });
 
-  test('atoms can be updated through update function', () => {
+  test('atom updates when object is mutated via Obj.change', () => {
     const obj = createObject(
       Obj.make(TestSchema.Person, { name: 'Test', username: 'test', email: 'test@example.com' }),
     );
@@ -59,27 +62,29 @@ describe('Echo Atom - Basic Functionality', () => {
     const registry = Registry.make();
     const atom = AtomObj.makeProperty(obj, 'name');
 
-    // Register atom (get() registers but doesn't subscribe)
-    AtomObj.get(registry, atom);
-
-    // Subscribe to registry directly (not through AtomObj.subscribe which sets up Echo subscription)
     let updateCount = 0;
-    registry.subscribe(atom, () => {
-      updateCount++;
+    registry.subscribe(
+      atom,
+      () => {
+        updateCount++;
+      },
+      { immediate: true },
+    );
+
+    // Mutate object via Obj.change.
+    Obj.change(obj, (o) => {
+      o.name = 'Updated';
     });
 
-    // Update through update function
-    AtomObj.updateProperty(registry, atom, 'Updated');
+    // Subscription should have fired: immediate + update.
+    expect(updateCount).toBe(2);
 
-    // Subscription should have fired exactly once (from registry.set in updateProperty)
-    expect(updateCount).toBe(1);
-
-    // Atom should reflect the change
-    expect(AtomObj.get(registry, atom)).toBe('Updated');
+    // Atom should reflect the change.
+    expect(registry.get(atom)).toBe('Updated');
     expect(obj.name).toBe('Updated');
   });
 
-  test('atoms support updater function', () => {
+  test('property atom supports updater pattern via Obj.change', () => {
     const obj = createObject(
       Obj.make(TestSchema.Task, {
         title: 'Task',
@@ -89,23 +94,59 @@ describe('Echo Atom - Basic Functionality', () => {
     const registry = Registry.make();
     const atom = AtomObj.makeProperty(obj, 'title');
 
-    // Register atom (get() registers but doesn't subscribe)
-    AtomObj.get(registry, atom);
-
-    // Subscribe to registry directly (not through AtomObj.subscribe which sets up Echo subscription)
     let updateCount = 0;
-    registry.subscribe(atom, () => {
-      updateCount++;
+    registry.subscribe(
+      atom,
+      () => {
+        updateCount++;
+      },
+      { immediate: true },
+    );
+
+    // Update through Obj.change.
+    Obj.change(obj, (o) => {
+      o.title = (o.title ?? '') + ' Updated';
     });
 
-    // Update through updater function
-    AtomObj.updateProperty(registry, atom, (current: string | undefined) => (current ?? '') + ' Updated');
+    // Subscription should have fired: immediate + update.
+    expect(updateCount).toBe(2);
 
-    // Subscription should have fired exactly once (from registry.set in updateProperty)
-    expect(updateCount).toBe(1);
-
-    // Atom should reflect the change
-    expect(AtomObj.get(registry, atom)).toBe('Task Updated');
+    // Atom should reflect the change.
+    expect(registry.get(atom)).toBe('Task Updated');
     expect(obj.title).toBe('Task Updated');
+  });
+
+  test('atoms work for plain live objects (Obj.make without createObject)', () => {
+    // This test explicitly verifies that reactivity works for plain live objects
+    // created with just Obj.make() - no createObject() or database required.
+    // This is the simplest form of reactive object.
+    const obj = Obj.make(TestSchema.Person, { name: 'Standalone', username: 'test', email: 'test@example.com' });
+
+    // Verify object has an id (Obj.make generates one).
+    expect(obj.id).toBeDefined();
+
+    const registry = Registry.make();
+    const objectAtom = AtomObj.make(obj);
+    const propertyAtom = AtomObj.makeProperty(obj, 'name');
+
+    let objectUpdateCount = 0;
+    let propertyUpdateCount = 0;
+
+    registry.subscribe(objectAtom, () => objectUpdateCount++, { immediate: true });
+    registry.subscribe(propertyAtom, () => propertyUpdateCount++, { immediate: true });
+
+    expect(objectUpdateCount).toBe(1);
+    expect(propertyUpdateCount).toBe(1);
+
+    // Mutate the standalone object.
+    obj.name = 'Updated Standalone';
+
+    // Both atoms should have received updates.
+    expect(objectUpdateCount).toBe(2);
+    expect(propertyUpdateCount).toBe(2);
+
+    // Verify values are correct.
+    expect(registry.get(objectAtom)!.name).toBe('Updated Standalone');
+    expect(registry.get(propertyAtom)).toBe('Updated Standalone');
   });
 });

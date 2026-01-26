@@ -7,8 +7,9 @@ import * as Schema from 'effect/Schema';
 
 import { ActivationEvent, Capability, Common, Plugin } from '@dxos/app-framework';
 import { Ref, Tag, Type } from '@dxos/echo';
+import { Operation } from '@dxos/operation';
 import { AttentionEvents } from '@dxos/plugin-attention';
-import { ClientEvents } from '@dxos/plugin-client';
+import { ClientEvents } from '@dxos/plugin-client/types';
 import { translations as componentsTranslations } from '@dxos/react-ui-components';
 import { translations as formTranslations } from '@dxos/react-ui-form';
 import { Collection, DataTypes, createDefaultSchema } from '@dxos/schema';
@@ -38,9 +39,9 @@ import {
   SpaceState,
   SpacesReady,
 } from './capabilities';
-import { SpaceEvents } from './events';
 import { meta } from './meta';
 import { translations } from './translations';
+import { SpaceEvents } from './types';
 import { type CreateObject, SpaceOperation, type SpacePluginOptions } from './types';
 
 export const SpacePlugin = Plugin.define<SpacePluginOptions>(meta).pipe(
@@ -76,14 +77,16 @@ export const SpacePlugin = Plugin.define<SpacePluginOptions>(meta).pipe(
           icon: 'ph--database--regular',
           iconHue: 'green',
           inputSchema: SpaceOperation.StoredSchemaForm,
-          createObject: ((props, { db, context }) =>
+          createObject: ((props, { db }) =>
             Effect.gen(function* () {
-              const { invoke } = context.getCapability(Common.Capability.OperationInvoker);
               if (props.typename) {
-                const result = yield* invoke(SpaceOperation.UseStaticSchema, { db, typename: props.typename });
+                const result = yield* Operation.invoke(SpaceOperation.UseStaticSchema, {
+                  db,
+                  typename: props.typename,
+                });
                 return result as any;
               } else {
-                const result = yield* invoke(SpaceOperation.AddSchema, {
+                const result = yield* Operation.invoke(SpaceOperation.AddSchema, {
                   db,
                   name: props.name,
                   schema: createDefaultSchema(),
@@ -162,7 +165,7 @@ export const SpacePlugin = Plugin.define<SpacePluginOptions>(meta).pipe(
       return {
         id: Capability.getModuleTag(OperationResolver),
         activatesOn: Common.ActivationEvent.SetupOperationResolver,
-        activate: (context) => OperationResolver({ context, createInvitationUrl, observability }),
+        activate: () => OperationResolver({ createInvitationUrl, observability }),
       };
     },
   ),

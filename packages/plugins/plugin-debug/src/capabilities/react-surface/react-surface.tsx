@@ -82,9 +82,11 @@ const useCurrentSpace = () => {
   return space;
 };
 
-export default Capability.makeModule((context) =>
-  Effect.succeed(
-    Capability.contributes(Common.Capability.ReactSurface, [
+export default Capability.makeModule(
+  Effect.fnUntraced(function* () {
+    const capabilities = yield* Capability.Service;
+
+    return Capability.contributes(Common.Capability.ReactSurface, [
       Common.createSurface({
         id: `${meta.id}/plugin-settings`,
         role: 'article',
@@ -140,8 +142,8 @@ export default Capability.makeModule((context) =>
         role: ['article', 'section'],
         position: 'hoist',
         filter: (data): data is { subject: Obj.Any } => {
-          const settings = context
-            .getCapability(Common.Capability.SettingsStore)
+          const settings = capabilities
+            .get(Common.Capability.SettingsStore)
             .getStore<DebugSettingsProps>(meta.id)!.value;
           return Obj.isObject(data.subject) && !!settings.wireframe;
         },
@@ -397,6 +399,6 @@ export default Capability.makeModule((context) =>
           return <TestingPanel onSpaceCreate={onSpaceCreate} onScriptPluginOpen={onScriptPluginOpen} />;
         },
       }),
-    ]),
-  ),
+    ]);
+  }),
 );

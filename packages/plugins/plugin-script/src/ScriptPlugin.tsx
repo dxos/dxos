@@ -7,6 +7,7 @@ import * as Effect from 'effect/Effect';
 import { Common, Plugin } from '@dxos/app-framework';
 import { Ref } from '@dxos/echo';
 import { Script } from '@dxos/functions';
+import { Operation } from '@dxos/operation';
 import { type CreateObject } from '@dxos/plugin-space/types';
 
 import {
@@ -17,9 +18,9 @@ import {
   ReactSurface,
   ScriptSettings,
 } from './capabilities';
-import { ScriptEvents } from './events';
 import { meta } from './meta';
 import { translations } from './translations';
+import { ScriptEvents } from './types';
 import { Notebook, ScriptOperation } from './types';
 
 export const ScriptPlugin = Plugin.define(meta).pipe(
@@ -42,10 +43,9 @@ export const ScriptPlugin = Plugin.define(meta).pipe(
           // TODO(wittjosiah): Move out of metadata.
           loadReferences: async (script: Script.Script) => await Ref.Array.loadAll([script.source]),
           inputSchema: ScriptOperation.ScriptProps,
-          createObject: ((props, { context }) =>
+          createObject: ((props) =>
             Effect.gen(function* () {
-              const { invoke } = context.getCapability(Common.Capability.OperationInvoker);
-              const { object } = yield* invoke(ScriptOperation.CreateScript, props);
+              const { object } = yield* Operation.invoke(ScriptOperation.CreateScript, props);
               return object;
             })) satisfies CreateObject,
           addToCollectionOnCreate: true,

@@ -6,7 +6,7 @@
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
   "author": "DXOS.org",
-  "sideEffects": true,
+  "sideEffects": false,
   "type": "module",
   "exports": {
     ".": {
@@ -73,6 +73,7 @@
     "@dxos/protocols": "workspace:*",
     "@dxos/random-access-storage": "workspace:*",
     "@dxos/rpc": "workspace:*",
+    "@dxos/sql-sqlite": "workspace:*",
     "@dxos/teleport": "workspace:*",
     "@dxos/teleport-extension-gossip": "workspace:*",
     "@dxos/teleport-extension-object-sync": "workspace:*",
@@ -83,7 +84,6 @@
     "@effect/experimental": "catalog:",
     "@effect/sql": "catalog:",
     "@effect/sql-sqlite-node": "catalog:",
-    "@effect/sql-sqlite-wasm": "catalog:",
     "@obsidize/tar-browserify": "catalog:",
     "cbor-x": "catalog:",
     "effect": "catalog:",

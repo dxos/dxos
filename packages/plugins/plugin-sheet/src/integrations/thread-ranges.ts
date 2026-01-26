@@ -5,11 +5,12 @@
 import * as Effect from 'effect/Effect';
 import { useCallback, useEffect, useMemo } from 'react';
 
-import { Common, OperationResolver } from '@dxos/app-framework';
+import { Common } from '@dxos/app-framework';
 import { useOperationInvoker, useOperationResolver } from '@dxos/app-framework/react';
 import { debounce } from '@dxos/async';
 import { type CellAddress, type CompleteCellRange, inRange } from '@dxos/compute';
 import { Obj, Relation } from '@dxos/echo';
+import { OperationResolver } from '@dxos/operation';
 import { ATTENDABLE_PATH_SEPARATOR, DeckOperation } from '@dxos/plugin-deck/types';
 import { ThreadOperation } from '@dxos/plugin-thread/types';
 import { Filter, Query, useQuery } from '@dxos/react-client/echo';

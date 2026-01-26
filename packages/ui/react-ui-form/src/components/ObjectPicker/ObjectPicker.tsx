@@ -168,6 +168,7 @@ ObjectPickerContent.displayName = 'ObjectPickerContent';
 
 export const ObjectPicker = {
   Root: Combobox.Root,
+  Portal: Combobox.Portal,
   Trigger: Combobox.Trigger,
   VirtualTrigger: Combobox.VirtualTrigger,
   Content: ObjectPickerContent,

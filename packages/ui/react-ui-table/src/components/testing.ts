@@ -5,19 +5,24 @@
 import * as Schema from 'effect/Schema';
 import { useEffect } from 'react';
 
-import { Format } from '@dxos/echo';
-import { TypeEnum, TypedObject } from '@dxos/echo/internal';
+import { Format, Type } from '@dxos/echo';
+import { TypeEnum } from '@dxos/echo/internal';
 import { setValue } from '@dxos/effect';
 import { live } from '@dxos/live-object';
 import { faker } from '@dxos/random';
 import { type ProjectionModel } from '@dxos/schema';
 
-export const TestSchema = TypedObject({ typename: 'example.com/type/Test', version: '0.1.0' })({
+export const TestSchema = Schema.Struct({
   name: Schema.optional(Schema.String),
   age: Schema.optional(Schema.Number),
   active: Schema.optional(Schema.Boolean),
   netWorth: Schema.optional(Schema.Number),
-});
+}).pipe(
+  Type.Obj({
+    typename: 'example.com/type/Test',
+    version: '0.1.0',
+  }),
+);
 
 export const createItems = (n: number) => {
   const { data } = live({

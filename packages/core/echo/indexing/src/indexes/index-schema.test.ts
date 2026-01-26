@@ -4,21 +4,21 @@
 
 import { describe, expect, onTestFinished, test } from 'vitest';
 
-import { type ObjectStructure, Reference, encodeReference } from '@dxos/echo-protocol';
+import { EncodedReference, type ObjectStructure } from '@dxos/echo-protocol';
+import { DXN } from '@dxos/keys';
 
 import { IndexSchema } from './index-schema';
 
 describe('IndexSchema', () => {
-  const schemaURI = '@example.org/schema/Contact';
+  const schemaURI = 'example.org/schema/Contact';
   const objects: Partial<ObjectStructure>[] = [
     {
       data: {
         name: 'John',
       },
-      // Complaint structure with automerge storage
+      // Compliant structure with automerge storage.
       system: {
-        // TODO(dmaretskyi): Fix references
-        type: encodeReference(Reference.localObjectReference(schemaURI)),
+        type: EncodedReference.fromDXN(DXN.fromTypename(schemaURI)),
       },
     },
     {
@@ -26,8 +26,7 @@ describe('IndexSchema', () => {
         title: 'first document',
       },
       system: {
-        // TODO(dmaretskyi): Fix references
-        type: encodeReference(Reference.localObjectReference('@example.org/schema/Document')),
+        type: EncodedReference.fromDXN(DXN.fromTypename('example.org/schema/Document')),
       },
     },
   ];
@@ -131,7 +130,7 @@ describe('IndexSchema', () => {
     expect(ids.length).to.equal(1);
     expect(ids[0].id).to.equal('0');
 
-    const ids2 = await index.find({ typenames: [schemaURI, '@example.org/schema/Document'] });
+    const ids2 = await index.find({ typenames: [schemaURI, 'example.org/schema/Document'] });
     expect(ids2.length).to.equal(2);
     expect(ids2[0].id).to.equal('0');
     expect(ids2[1].id).to.equal('1');

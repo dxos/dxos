@@ -9,7 +9,13 @@ import { type ForeignKey } from '@dxos/echo-protocol';
 import { createJsonPath, getValue as getValue$ } from '@dxos/effect';
 import { assertArgument, invariant } from '@dxos/invariant';
 import { type DXN, ObjectId } from '@dxos/keys';
-import { getSnapshot as getSnapshot$ } from '@dxos/live-object';
+import {
+  type ChangeCallback,
+  type Mutable,
+  change as change$,
+  getSnapshot as getSnapshot$,
+  subscribe as subscribe$,
+} from '@dxos/live-object';
 import { assumeType, deepMapValues } from '@dxos/util';
 
 import type * as Database from './Database';
@@ -133,6 +139,15 @@ export const isObject = (obj: unknown): obj is Any => {
   return typeof obj === 'object' && obj !== null && obj[Entity.KindId] === Entity.Kind.Object;
 };
 
+/**
+ * Subscribe to object updates.
+ * The callback is called synchronously when the object is modified.
+ * @returns Unsubscribe function.
+ */
+export const subscribe = (obj: Entity.Unknown, callback: () => void): (() => void) => {
+  return subscribe$(obj, callback);
+};
+
 //
 // Snapshot
 //
@@ -178,6 +193,48 @@ export const clone = <T extends Any>(obj: T, opts?: CloneOptions): T => {
   });
 
   return make(schema as Type.Obj.Any, props);
+};
+
+//
+// Change
+//
+
+/**
+ * Makes all properties mutable recursively.
+ * Used to provide a mutable view of an object within `Obj.change`.
+ */
+export type { Mutable };
+
+/**
+ * Perform mutations on an ECHO object within a controlled context.
+ *
+ * All mutations within the callback are batched and trigger a single notification
+ * when the callback completes. Direct mutations outside of `Obj.change` will throw
+ * an error for ECHO objects.
+ *
+ * This function also works with nested objects within ECHO objects (e.g., Template structs)
+ * that are reactive at runtime.
+ *
+ * @param obj - The ECHO object or nested reactive object to mutate.
+ * @param callback - The callback that performs mutations on the object.
+ *
+ * @example
+ * ```ts
+ * const person = Obj.make(Person, { name: 'John', age: 25 });
+ *
+ * // Mutate within Obj.change
+ * Obj.change(person, (p) => {
+ *   p.name = 'Jane';
+ *   p.age = 30;
+ * });
+ * // ONE notification fires here
+ *
+ * // Direct mutation throws
+ * person.name = 'Bob'; // Error: Cannot modify outside Obj.change()
+ * ```
+ */
+export const change = <T extends Entity.Unknown>(obj: T, callback: ChangeCallback<T>): void => {
+  change$(obj, callback);
 };
 
 /**
@@ -312,6 +369,7 @@ export const Meta: unique symbol = MetaId as any;
 // TODO(burdon): Narrow type.
 // TODO(dmaretskyi): Allow returning undefined.
 export const getMeta = (entity: AnyProperties): ObjectMeta => {
+  assertArgument(entity, 'entity', 'Should be an object.');
   const meta = getMeta$(entity);
   invariant(meta != null, 'Invalid object.');
   return meta;
@@ -324,6 +382,7 @@ export const getKeys: {
   (entity: Entity.Unknown, source: string): ForeignKey[];
   (source: string): (entity: Entity.Unknown) => ForeignKey[];
 } = Function.dual(2, (entity: Entity.Unknown, source?: string): ForeignKey[] => {
+  assertArgument(entity, 'entity', 'Should be an object.');
   const meta = getMeta(entity);
   invariant(meta != null, 'Invalid object.');
   return meta.keys.filter((key) => key.source === source);
@@ -335,6 +394,7 @@ export const getKeys: {
  * @param source
  */
 export const deleteKeys = (entity: Entity.Unknown, source: string) => {
+  assertArgument(entity, 'entity', 'Should be an object.');
   const meta = getMeta(entity);
   for (let i = 0; i < meta.keys.length; i++) {
     if (meta.keys[i].source === source) {

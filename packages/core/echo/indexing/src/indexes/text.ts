@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { ObjectStructure, decodeReference, isEncodedReference } from '@dxos/echo-protocol';
+import { EncodedReference, ObjectStructure, isEncodedReference } from '@dxos/echo-protocol';
 import { visitValues } from '@dxos/util';
 
 /**
@@ -25,7 +25,7 @@ export type ExtractInputBlock = {
  */
 export const extractTextBlocks = (object: Partial<ObjectStructure>): ExtractInputBlock[] => {
   const type = ObjectStructure.getTypeReference(object as any);
-  const dxnType = type && decodeReference(type).toDXN();
+  const dxnType = type && EncodedReference.toDXN(type);
 
   if (IGNORED_TYPENAMES.includes(dxnType?.asTypeDXN()?.type ?? '')) {
     return [];

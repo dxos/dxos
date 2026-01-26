@@ -6,7 +6,7 @@ import React, { type FC, useEffect, useRef, useState } from 'react';
 
 import { Client } from '@dxos/client';
 import { TestBuilder, performInvitation } from '@dxos/client/testing';
-import { type TypedObject } from '@dxos/echo/internal';
+import { type Type } from '@dxos/echo';
 import { registerSignalsRuntime } from '@dxos/echo-signals/react';
 import { faker } from '@dxos/random';
 import { useAsyncEffect } from '@dxos/react-hooks';
@@ -27,7 +27,7 @@ export type ClientRepeaterProps<P extends ClientRepeatedComponentProps> = {
   controls?: FC<ClientRepeaterControlsProps>;
   count?: number;
   clients?: Client[];
-  types?: TypedObject[];
+  types?: Type.Obj.Any[];
   args?: Omit<P, 'id' | 'count'>;
 } & Pick<WithClientProviderProps, 'createIdentity' | 'createSpace' | 'onCreateSpace'>;
 

@@ -5,6 +5,7 @@
 import * as Effect from 'effect/Effect';
 
 import { Capability, Common } from '@dxos/app-framework';
+import { Operation } from '@dxos/operation';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { ATTENDABLE_PATH_SEPARATOR, DECK_COMPANION_TYPE } from '@dxos/plugin-deck/types';
 import { CreateAtom, GraphBuilder, NodeMatcher } from '@dxos/plugin-graph';
@@ -13,19 +14,22 @@ import { parseId } from '@dxos/react-client/echo';
 import { meta } from '../../meta';
 import { SearchOperation } from '../../types';
 
-export default Capability.makeModule((context) =>
-  Effect.succeed(
-    Capability.contributes(Common.Capability.AppGraphBuilder, [
+export default Capability.makeModule(
+  Effect.fnUntraced(function* () {
+    const capabilities = yield* Capability.Service;
+
+    const extensions = yield* Effect.all([
       GraphBuilder.createExtension({
         id: `${meta.id}/space-search`,
         match: NodeMatcher.whenRoot,
         connector: (node, get) => {
-          const workspace = get(CreateAtom.fromSignal(() => context.getCapability(Common.Capability.Layout).workspace));
-          const client = context.getCapability(ClientCapabilities.Client);
+          const layout = capabilities.get(Common.Capability.Layout);
+          const client = capabilities.get(ClientCapabilities.Client);
+          const workspace = get(CreateAtom.fromSignal(() => layout.workspace));
           const { spaceId } = parseId(workspace);
           const space = spaceId ? client.spaces.get(spaceId) : null;
 
-          return [
+          return Effect.succeed([
             {
               id: [node.id, 'search'].join(ATTENDABLE_PATH_SEPARATOR),
               type: DECK_COMPANION_TYPE,
@@ -36,31 +40,33 @@ export default Capability.makeModule((context) =>
                 disposition: 'hidden',
               },
             },
-          ];
+          ]);
         },
       }),
       GraphBuilder.createExtension({
         id: meta.id,
         match: NodeMatcher.whenRoot,
-        actions: () => [
-          {
-            id: SearchOperation.OpenSearch.meta.key,
-            data: async () => {
-              const { invokePromise } = context.getCapability(Common.Capability.OperationInvoker);
-              await invokePromise(SearchOperation.OpenSearch);
-              return false;
-            },
-            properties: {
-              label: ['search action label', { ns: meta.id }],
-              icon: 'ph--magnifying-glass--regular',
-              keyBinding: {
-                macos: 'shift+meta+f',
-                windows: 'shift+alt+f',
+        actions: () =>
+          Effect.succeed([
+            {
+              id: SearchOperation.OpenSearch.meta.key,
+              data: Effect.fnUntraced(function* () {
+                yield* Operation.invoke(SearchOperation.OpenSearch);
+                return false;
+              }),
+              properties: {
+                label: ['search action label', { ns: meta.id }],
+                icon: 'ph--magnifying-glass--regular',
+                keyBinding: {
+                  macos: 'shift+meta+f',
+                  windows: 'shift+alt+f',
+                },
               },
             },
-          },
-        ],
+          ]),
       }),
-    ]),
-  ),
+    ]);
+
+    return Capability.contributes(Common.Capability.AppGraphBuilder, extensions);
+  }),
 );

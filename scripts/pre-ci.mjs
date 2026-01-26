@@ -180,7 +180,7 @@ async function main() {
         ...process.env,
         CI: 1,
       },
-    })`moon run :test --no-bail --quiet -- --no-file-parallelism`;
+    })`moon run :test --no-bail --quiet -- --no-file-parallelism --project=node`;
     console.log(chalk.green('Build and tests completed successfully.'));
   } catch (error) {
     console.error(chalk.red('Build or tests failed:'), error.message);

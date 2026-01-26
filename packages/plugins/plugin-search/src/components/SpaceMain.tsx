@@ -6,49 +6,52 @@ import React, { useCallback, useMemo, useState } from 'react';
 
 import { useAppGraph } from '@dxos/app-framework/react';
 import { Surface } from '@dxos/app-framework/react';
-import { Filter, Obj } from '@dxos/echo';
-import { QueryBuilder } from '@dxos/echo-query';
+import { Filter, Obj, Query } from '@dxos/echo';
 import { Graph, type Node, useConnections } from '@dxos/plugin-graph';
 import { type Space, useQuery } from '@dxos/react-client/echo';
 import { useTranslation } from '@dxos/react-ui';
-import { QueryEditor, type QueryEditorProps } from '@dxos/react-ui-components';
 import { SearchList } from '@dxos/react-ui-searchlist';
 import { StackItem } from '@dxos/react-ui-stack';
+import { Text } from '@dxos/schema';
 
 import { meta } from '../meta';
 
 export const SpaceMain = ({ space }: { space: Space }) => {
   const { t } = useTranslation(meta.id);
-  const [queryRaw, setQueryRaw] = useState('');
-  const [queryFilter, setQueryFilter] = useState<Filter.Any | undefined>(undefined);
+  const [query, setQuery] = useState<string>();
 
   // Get all descendents of the space node for the default view.
   const descendents = useAllDescendents(space.id);
 
-  const builder = useMemo(() => new QueryBuilder(), []);
-  const handleChange = useCallback<NonNullable<QueryEditorProps['onChange']>>(
-    (value) => {
-      setQueryRaw(value);
-      const { filter } = builder.build(value);
-      setQueryFilter(filter);
-    },
-    [builder],
+  const handleSearch = useCallback((text: string) => {
+    setQuery(text);
+  }, []);
+
+  // TODO(dmaretskyi): Switch back to QueryEditor once query builder is ready for production.
+  // Query results using full-text search.
+  const results = useQuery(
+    space.db,
+    query === undefined
+      ? Query.select(Filter.nothing())
+      : Query.all(
+          Query.select(Filter.text(query, { type: 'full-text' })).select(Filter.not(Filter.type(Text.Text))),
+          Query.select(Filter.text(query, { type: 'full-text' }))
+            .select(Filter.type(Text.Text))
+            .referencedBy('dxos.org/type/Document', 'content'),
+        ),
   );
 
-  // Query results using the filter.
-  const results = useQuery(space.db, queryFilter ?? Filter.nothing());
-
   // Determine if query is empty (show default view).
-  const isQueryEmpty = !queryRaw.trim();
+  const isQueryEmpty = !query?.trim();
 
   // Filter descendents to only those which are objects.
   const filteredDescendents = useMemo(() => descendents.filter((node) => Obj.isObject(node.data)), [descendents]);
 
   return (
     <StackItem.Content>
-      <SearchList.Root>
-        <QueryEditor value={queryRaw} db={space.db} onChange={handleChange} />
-        <SearchList.Content>
+      <SearchList.Root onSearch={handleSearch} classNames='flex flex-col bs-full overflow-hidden'>
+        <SearchList.Input placeholder={t('search placeholder')} classNames='pli-2' />
+        <SearchList.Content classNames='overflow-y-auto'>
           <SearchList.Viewport>
             {isQueryEmpty &&
               filteredDescendents.map((node) => (

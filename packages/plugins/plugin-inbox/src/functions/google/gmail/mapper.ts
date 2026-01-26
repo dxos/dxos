@@ -50,6 +50,10 @@ export const mapMessage = Effect.fn(function* (message: GoogleMail.Message) {
         snippet: message.snippet,
         subject: message.payload.headers.find(({ name }) => name === 'Subject')?.value,
         labels: message.labelIds,
+        messageId: message.payload.headers.find(({ name }) => name === 'Message-ID')?.value,
+        references: message.payload.headers.find(({ name }) => name === 'References')?.value,
+        to: message.payload.headers.find(({ name }) => name === 'To')?.value,
+        cc: message.payload.headers.find(({ name }) => name === 'Cc')?.value,
       },
     },
     {

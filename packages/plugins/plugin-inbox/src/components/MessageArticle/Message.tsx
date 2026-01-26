@@ -35,6 +35,9 @@ type MessageContextValue = {
   viewMode: Signal<ViewMode>;
   message: MessageType.Message;
   sender: Signal<DXN | undefined>;
+  onReply?: () => void;
+  onReplyAll?: () => void;
+  onForward?: () => void;
 };
 
 const [MessageContextProvider, useMessageContext] = createContext<MessageContextValue>('Message');
@@ -43,13 +46,30 @@ const [MessageContextProvider, useMessageContext] = createContext<MessageContext
 // Root
 //
 
-type MessageRootProps = PropsWithChildren<Omit<MessageContextValue, 'viewMode'> & { viewMode?: ViewMode }>;
+type MessageRootProps = PropsWithChildren<
+  Omit<MessageContextValue, 'viewMode'> & {
+    viewMode?: ViewMode;
+  }
+>;
 
-const MessageRoot = ({ children, viewMode: viewModeProp = 'plain', ...props }: MessageRootProps) => {
+const MessageRoot = ({
+  children,
+  viewMode: viewModeProp = 'plain',
+  onReply,
+  onReplyAll,
+  onForward,
+  ...props
+}: MessageRootProps) => {
   const viewMode = useSignal(viewModeProp);
 
   return (
-    <MessageContextProvider viewMode={viewMode} {...props}>
+    <MessageContextProvider
+      viewMode={viewMode}
+      onReply={onReply}
+      onReplyAll={onReplyAll}
+      onForward={onForward}
+      {...props}
+    >
       {children}
     </MessageContextProvider>
   );
@@ -64,8 +84,8 @@ MessageRoot.displayName = 'Message.Root';
 type MessageToolbarProps = ThemedClassName<{}>;
 
 export const MessageToolbar = ({ classNames }: MessageToolbarProps) => {
-  const { attendableId, viewMode } = useMessageContext(MessageToolbar.displayName);
-  const actions = useMessageToolbarActions({ viewMode });
+  const { attendableId, viewMode, onReply, onReplyAll, onForward } = useMessageContext(MessageToolbar.displayName);
+  const actions = useMessageToolbarActions({ viewMode, onReply, onReplyAll, onForward });
 
   return (
     <MenuProvider {...actions} attendableId={attendableId}>

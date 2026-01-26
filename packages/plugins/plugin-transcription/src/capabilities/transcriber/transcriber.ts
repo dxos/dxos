@@ -31,8 +31,11 @@ const TRANSCRIBE_AFTER_CHUNKS_AMOUNT = 50;
 /**
  * Records audio while user is speaking and transcribes it after user is done speaking.
  */
-export default Capability.makeModule((context) =>
-  Effect.sync(() => {
+export default Capability.makeModule(
+  Effect.fnUntraced(function* () {
+    // Get context for lazy capability access in callbacks.
+    const capabilities = yield* Capability.Service;
+
     const getTranscriber: TranscriptionCapabilities.GetTranscriber = ({
       audioStreamTrack,
       onSegments,
@@ -58,7 +61,7 @@ export default Capability.makeModule((context) =>
     };
 
     const getTranscriptionManager: TranscriptionCapabilities.GetTranscriptionManager = ({ messageEnricher }) => {
-      const client = context.getCapability(ClientCapabilities.Client);
+      const client = capabilities.get(ClientCapabilities.Client);
       const transcriptionManager = new TranscriptionManager({
         edgeClient: client.edge,
         messageEnricher,

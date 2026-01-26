@@ -41,5 +41,8 @@ const ensureSystemCollection = async (space: Space) => {
     return;
   }
 
-  rootCollection.objects.push(Ref.make(Collection.makeManaged({ key: Type.getTypename(Meeting.Meeting) })));
+  const meetingsCollectionRef = Ref.make(Collection.makeManaged({ key: Type.getTypename(Meeting.Meeting) }));
+  Obj.change(rootCollection, (c) => {
+    c.objects.push(meetingsCollectionRef);
+  });
 };

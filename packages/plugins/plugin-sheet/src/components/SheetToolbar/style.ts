@@ -5,6 +5,7 @@
 import { useEffect } from 'react';
 
 import { type CompleteCellRange, inRange } from '@dxos/compute';
+import { Obj } from '@dxos/echo';
 import {
   type ActionGraphProps,
   type ToolbarMenuActionGroupProperties,
@@ -82,11 +83,15 @@ const createStyleActions = (model: SheetModel, state: StyleState, cursorFallback
         ) {
           // this value should be unset
           if (index >= 0) {
-            model.sheet.ranges?.splice(index, 1);
+            Obj.change(model.sheet, (s) => {
+              s.ranges?.splice(index, 1);
+            });
           }
           state[nextRangeEntity.value] = false;
         } else {
-          model.sheet.ranges?.push(nextRangeEntity);
+          Obj.change(model.sheet, (s) => {
+            s.ranges?.push(nextRangeEntity);
+          });
           state[nextRangeEntity.value] = true;
         }
       },

@@ -13,9 +13,9 @@ import {
   ReactSurface,
   SchemaDefs,
 } from './capabilities';
-import { ClientEvents } from './events';
 import { meta } from './meta';
 import { translations } from './translations';
+import { ClientEvents } from './types';
 import { type ClientPluginOptions } from './types';
 
 export const ClientPlugin = Plugin.define<ClientPluginOptions>(meta).pipe(
@@ -24,7 +24,7 @@ export const ClientPlugin = Plugin.define<ClientPluginOptions>(meta).pipe(
       id: Capability.getModuleTag(Client),
       activatesOn: ActivationEvent.oneOf(Common.ActivationEvent.Startup, Common.ActivationEvent.SetupAppGraph),
       activatesAfter: [ClientEvents.ClientReady],
-      activate: (context) => Client({ ...options, context }),
+      activate: () => Client(options),
     };
   }),
   Plugin.addModule({
@@ -52,7 +52,7 @@ export const ClientPlugin = Plugin.define<ClientPluginOptions>(meta).pipe(
     };
   }),
   Common.Plugin.addAppGraphModule({ activate: AppGraphBuilder }),
-  Common.Plugin.addOperationResolverModule({ activate: (context) => OperationResolver({ context }) }),
+  Common.Plugin.addOperationResolverModule({ activate: OperationResolver }),
   Common.Plugin.addTranslationsModule({ translations }),
   Plugin.make,
 );

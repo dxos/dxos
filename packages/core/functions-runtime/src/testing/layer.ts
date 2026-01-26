@@ -52,7 +52,7 @@ export const TestDatabaseLayer = ({ indexing, types, spaceKey, storagePath, onIn
         // const keyCount = yield* Effect.promise(async () => (await kv!.iterator({ values: false }).all()).length);
         // log.info('opened test db', { storagePath, keyCount });
       }
-      const peer = yield* Effect.promise(() => builder.createPeer({ indexing, types, kv }));
+      const peer = yield* Effect.promise(() => builder.createPeer({ indexing, types, kv, assignQueuePositions: true }));
 
       let db: EchoDatabaseImpl | undefined;
       let queues: QueueFactory | undefined;

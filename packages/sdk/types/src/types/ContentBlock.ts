@@ -290,7 +290,7 @@ export interface Suggestion extends Schema.Schema.Type<typeof Suggestion> {}
  */
 // TODO(burdon): Rename Choice.
 export const Select = Schema.TaggedStruct('select', {
-  options: Schema.Array(Schema.String),
+  options: Schema.mutable(Schema.Array(Schema.String)),
 
   ...Base.fields,
 }).pipe(Schema.mutable);

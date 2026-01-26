@@ -6,9 +6,9 @@ import { type Extension } from '@codemirror/state';
 import { EditorView } from '@codemirror/view';
 import { computed, effect } from '@preact/signals-core';
 
-import { type OperationInvoker } from '@dxos/app-framework';
 import { Filter, Obj, Query, Relation } from '@dxos/echo';
 import { createDocAccessor, getTextInRange } from '@dxos/echo-db';
+import { type OperationInvoker } from '@dxos/operation';
 import { type Markdown } from '@dxos/plugin-markdown/types';
 import { AnchoredTo, Thread } from '@dxos/types';
 import { comments, createExternalCommentSync } from '@dxos/ui-editor';
@@ -66,7 +66,9 @@ export const threads = (
             const name = getName(doc, anchor.anchor);
             const thread = Relation.getSource(anchor) as Thread.Thread;
             if (name && name !== thread.name) {
-              thread.name = name;
+              Obj.change(thread, (t) => {
+                t.name = name;
+              });
             }
           }
         });
@@ -106,23 +108,33 @@ export const threads = (
 
         const thread = query.results.find((object) => Relation.getSource(object).id === id);
         if (thread) {
-          thread.anchor = undefined;
+          Obj.change(thread, (t) => {
+            t.anchor = undefined;
+          });
         }
       },
       onUpdate: ({ id, cursor }) => {
         const draft = state.drafts[Obj.getDXN(doc).toString()]?.find((thread) => Obj.getDXN(thread).toString() === id);
         if (draft) {
           const thread = Relation.getSource(draft) as Thread.Thread;
-          thread.name = getName(doc, cursor);
-          draft.anchor = cursor;
+          Obj.change(thread, (t) => {
+            t.name = getName(doc, cursor);
+          });
+          Obj.change(draft, (d) => {
+            d.anchor = cursor;
+          });
         }
 
         const relation = query.results.find((object) => Relation.getSource(object).id === id);
         if (relation) {
           const thread = Relation.getSource(relation);
           if (Obj.instanceOf(Thread.Thread, thread)) {
-            thread.name = getName(doc, cursor);
-            relation.anchor = cursor;
+            Obj.change(thread, (t) => {
+              t.name = getName(doc, cursor);
+            });
+            Obj.change(relation, (r) => {
+              r.anchor = cursor;
+            });
           }
         }
       },

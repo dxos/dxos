@@ -825,8 +825,18 @@ export function addNodes<T extends WritableGraph>(
  */
 const addNodeImpl = <T extends WritableGraph>(graph: T, nodeArg: Node.NodeArg<any, Record<string, any>>): T => {
   const internal = getInternal(graph);
-  const { nodes, edges, ...node } = nodeArg;
-  const { id, type, data = null, properties = {} } = node;
+  // Extract known NodeArg fields, preserve any extra fields (like _actionContext) in rest.
+  const {
+    nodes,
+    edges,
+    id,
+    type,
+    data = null,
+    properties = {},
+    ...rest
+  } = nodeArg as Node.NodeArg<any> & {
+    _actionContext?: Node.ActionContext;
+  };
   const nodeAtom = internal._node(id);
   const existingNode = internal._registry.get(nodeAtom);
   Option.match(existingNode, {
@@ -844,6 +854,7 @@ const addNodeImpl = <T extends WritableGraph>(graph: T, nodeArg: Node.NodeArg<an
         log('updating node', { id, type, data, properties });
         const newNode = Option.some({
           ...existing,
+          ...rest,
           type,
           data,
           properties: { ...existing.properties, ...properties },
@@ -854,7 +865,7 @@ const addNodeImpl = <T extends WritableGraph>(graph: T, nodeArg: Node.NodeArg<an
     },
     onNone: () => {
       log('new node', { id, type, data, properties });
-      const newNode = internal._constructNode({ id, type, data, properties });
+      const newNode = internal._constructNode({ id, type, data, properties, ...rest });
       internal._registry.set(nodeAtom, newNode);
       graph.onNodeChanged.emit({ id, node: newNode });
     },

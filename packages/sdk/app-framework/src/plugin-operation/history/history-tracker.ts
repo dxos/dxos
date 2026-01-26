@@ -7,9 +7,9 @@ import * as Stream from 'effect/Stream';
 
 import { runAndForwardErrors } from '@dxos/effect';
 import { log } from '@dxos/log';
+import { type OperationInvoker } from '@dxos/operation';
 
 import { UndoOperation } from '../../common';
-import { type OperationInvoker } from '../invoker';
 
 import { EmptyHistoryError } from './errors';
 import type { HistoryEntry } from './types';
@@ -38,7 +38,10 @@ export interface HistoryTracker {
 /**
  * Creates a HistoryTracker that subscribes to invocation events and provides undo.
  */
-export const make = (invoker: OperationInvoker.OperationInvoker, undoRegistry: UndoRegistry): HistoryTracker => {
+export const make = (
+  invoker: OperationInvoker.OperationInvokerInternal,
+  undoRegistry: UndoRegistry,
+): HistoryTracker => {
   const history: HistoryEntry[] = [];
 
   // Subscribe to invocation stream.

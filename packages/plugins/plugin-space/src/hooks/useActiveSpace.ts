@@ -2,14 +2,14 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type Capability, Common } from '@dxos/app-framework';
+import { type CapabilityManager, Common } from '@dxos/app-framework';
 import { useLayout } from '@dxos/app-framework/react';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { parseId, useSpace } from '@dxos/react-client/echo';
 
-export const getActiveSpace = (context: Capability.PluginContext) => {
-  const client = context.getCapability(ClientCapabilities.Client);
-  const layout = context.getCapability(Common.Capability.Layout);
+export const getActiveSpace = (capabilities: CapabilityManager.CapabilityManager) => {
+  const client = capabilities.get(ClientCapabilities.Client);
+  const layout = capabilities.get(Common.Capability.Layout);
   const { spaceId } = parseId(layout.workspace);
   return spaceId ? client.spaces.get(spaceId) : undefined;
 };

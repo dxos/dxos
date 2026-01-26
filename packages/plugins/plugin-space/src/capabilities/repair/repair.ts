@@ -58,5 +58,8 @@ const ensureSystemCollection = async (space: Space) => {
     return;
   }
 
-  rootCollection.objects.push(Ref.make(Collection.makeManaged({ key: Type.getTypename(Type.PersistentType) })));
+  const recordsCollectionRef = Ref.make(Collection.makeManaged({ key: Type.getTypename(Type.PersistentType) }));
+  Obj.change(rootCollection, (c) => {
+    c.objects.push(recordsCollectionRef);
+  });
 };

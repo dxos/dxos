@@ -64,9 +64,11 @@ type ReactSurfaceOptions = {
   createInvitationUrl: (invitationCode: string) => string;
 };
 
-export default Capability.makeModule(({ createInvitationUrl }: ReactSurfaceOptions) =>
-  Effect.succeed(
-    Capability.contributes(Common.Capability.ReactSurface, [
+export default Capability.makeModule(
+  Effect.fnUntraced(function* (props?: ReactSurfaceOptions) {
+    const { createInvitationUrl } = props!;
+
+    return Capability.contributes(Common.Capability.ReactSurface, [
       Common.createSurface({
         id: `${meta.id}/article`,
         role: 'article',
@@ -367,6 +369,6 @@ export default Capability.makeModule(({ createInvitationUrl }: ReactSurfaceOptio
         role: 'status',
         component: () => <SyncStatus />,
       }),
-    ]),
-  ),
+    ]);
+  }),
 );

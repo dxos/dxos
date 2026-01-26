@@ -8,14 +8,15 @@ import { Capability, Common } from '@dxos/app-framework';
 
 import { ClientCapabilities } from '../../types';
 
-export default Capability.makeModule((context) =>
-  Effect.sync(() => {
-    const registry = context.getCapability(Common.Capability.AtomRegistry);
-    const client = context.getCapability(ClientCapabilities.Client);
+export default Capability.makeModule(
+  Effect.fnUntraced(function* () {
+    const registry = yield* Capability.get(Common.Capability.AtomRegistry);
+    const client = yield* Capability.get(ClientCapabilities.Client);
+    const migrationsAtom = yield* Capability.atom(ClientCapabilities.Migration);
 
     // NOTE: Migrations are currently unidirectional and idempotent.
     const cancel = registry.subscribe(
-      context.capabilities(ClientCapabilities.Migration),
+      migrationsAtom,
       (_migrations: any[]) => {
         const migrations = Array.from(new Set(_migrations.flat()));
         const spaces = client.spaces.get();

@@ -76,7 +76,7 @@ export const WelcomeTour = ({ steps: initialSteps, running: runningProp, onRunni
   const setStepIndex = (index: number) => {
     if (runningProp) {
       const step = steps[index];
-      step?.before?.(manager.context);
+      step?.before?.(manager.capabilities);
     }
     _setStepIndex(index);
   };

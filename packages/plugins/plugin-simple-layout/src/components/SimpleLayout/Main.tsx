@@ -48,11 +48,10 @@ export const Main = () => {
 
   return (
     <NaturalMain.Root complementarySidebarState='closed' navigationSidebarState='closed'>
-      <NaturalMain.Content bounce classNames='!overflow-y-auto'>
+      <NaturalMain.Content bounce classNames='dx-mobile-main dx-mobile-main-scroll-area--flush !overflow-y-auto'>
         <div
           className={mx(
             'bs-full overflow-hidden grid',
-            'pis-[env(safe-area-inset-left)] pie-[env(safe-area-inset-right)]',
             showNavBar ? 'grid-rows-[min-content_1fr_min-content]' : 'grid-rows-[min-content_1fr]',
           )}
         >
@@ -61,8 +60,7 @@ export const Main = () => {
             <Home />
           </Activity>
           <Activity mode={id !== 'default' ? 'visible' : 'hidden'}>
-            {/* TODO(wittjosiah): This class is needed to constrain the content area on mobile. Better way? */}
-            <section className='overflow-x-hidden'>
+            <section>
               <Surface
                 key={id}
                 role='article'

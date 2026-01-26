@@ -4,8 +4,9 @@
 
 import * as Schema from 'effect/Schema';
 
+import { Capability } from '@dxos/app-framework';
 import { Format } from '@dxos/echo';
-import * as Operation from '@dxos/operation';
+import { Operation } from '@dxos/operation';
 
 import { meta } from '../meta';
 import { translations } from '../translations';
@@ -37,6 +38,7 @@ export namespace ObservabilityOperation {
       name: 'Toggle Observability',
       description: 'Toggle observability on or off.',
     },
+    services: [Capability.Service],
     schema: {
       input: Schema.Struct({
         state: Schema.optional(Schema.Boolean),
@@ -51,6 +53,7 @@ export namespace ObservabilityOperation {
       name: 'Capture User Feedback',
       description: 'Capture user feedback.',
     },
+    services: [Capability.Service],
     schema: {
       input: UserFeedback,
       output: Schema.Void,
@@ -63,6 +66,7 @@ export namespace ObservabilityOperation {
       name: 'Send Event',
       description: 'Send an observability event.',
     },
+    services: [Capability.Service],
     schema: {
       input: Schema.Struct({
         name: Schema.String.annotations({ description: 'The name of the event.' }),

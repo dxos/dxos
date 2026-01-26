@@ -14,18 +14,20 @@ import { Devtools } from '../../types';
 
 const DEVTOOLS_TYPE = `${meta.id}/devtools`;
 
-export default Capability.makeModule((context) =>
-  Effect.sync(() => {
-    return Capability.contributes(Common.Capability.AppGraphBuilder, [
+export default Capability.makeModule(
+  Effect.fnUntraced(function* () {
+    const capabilities = yield* Capability.Service;
+
+    const extensions = yield* Effect.all([
       // Devtools node.
       GraphBuilder.createExtension({
         id: `${meta.id}/devtools`,
         match: NodeMatcher.whenAny(NodeMatcher.whenRoot, NodeMatcher.whenNodeType(`${spaceMeta.id}/settings`)),
         connector: (node, get) => {
-          const space = get(CreateAtom.fromSignal(() => getActiveSpace(context)));
-          const [graph] = get(context.capabilities(Common.Capability.AppGraph));
+          const space = get(CreateAtom.fromSignal(() => getActiveSpace(capabilities)));
+          const [graph] = get(capabilities.atom(Common.Capability.AppGraph));
 
-          return [
+          return Effect.succeed([
             {
               id: `${Devtools.id}-${node.id}`,
               data: null,
@@ -362,47 +364,51 @@ export default Capability.makeModule((context) =>
                 },
               ],
             },
-          ];
+          ]);
         },
       }),
 
       // Debug object companion.
       GraphBuilder.createExtension({
         id: `${meta.id}/debug-object`,
-        match: NodeMatcher.whenObject,
-        connector: (node) => [
-          {
-            id: [node.id, 'debug'].join(ATTENDABLE_PATH_SEPARATOR),
-            type: PLANK_COMPANION_TYPE,
-            data: 'debug',
-            properties: {
-              label: ['debug label', { ns: meta.id }],
-              icon: 'ph--bug--regular',
-              disposition: 'hidden',
-              position: 'fallback',
+        match: NodeMatcher.whenEchoObject,
+        connector: (node) =>
+          Effect.succeed([
+            {
+              id: [node.id, 'debug'].join(ATTENDABLE_PATH_SEPARATOR),
+              type: PLANK_COMPANION_TYPE,
+              data: 'debug',
+              properties: {
+                label: ['debug label', { ns: meta.id }],
+                icon: 'ph--bug--regular',
+                disposition: 'hidden',
+                position: 'fallback',
+              },
             },
-          },
-        ],
+          ]),
       }),
 
       // Devtools deck companion.
       GraphBuilder.createExtension({
         id: `${meta.id}/devtools-overview`,
         match: NodeMatcher.whenRoot,
-        connector: (node) => [
-          {
-            id: [node.id, 'devtools'].join(ATTENDABLE_PATH_SEPARATOR),
-            type: DECK_COMPANION_TYPE,
-            data: null,
-            properties: {
-              label: ['devtools overview label', { ns: meta.id }],
-              icon: 'ph--equalizer--regular',
-              disposition: 'hidden',
-              position: 'fallback',
+        connector: (node) =>
+          Effect.succeed([
+            {
+              id: [node.id, 'devtools'].join(ATTENDABLE_PATH_SEPARATOR),
+              type: DECK_COMPANION_TYPE,
+              data: null,
+              properties: {
+                label: ['devtools overview label', { ns: meta.id }],
+                icon: 'ph--equalizer--regular',
+                disposition: 'hidden',
+                position: 'fallback',
+              },
             },
-          },
-        ],
+          ]),
       }),
     ]);
+
+    return Capability.contributes(Common.Capability.AppGraphBuilder, extensions);
   }),
 );

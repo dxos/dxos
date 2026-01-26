@@ -1,9 +1,8 @@
 //! Composer Tauri application entry point.
 
-#[cfg(target_os = "macos")]
-use std::sync::Arc;
-
 mod oauth;
+#[cfg(target_os = "macos")]
+mod menubar;
 #[cfg(target_os = "macos")]
 mod spotlight;
 
@@ -32,14 +31,11 @@ pub fn run() {
         // Spotlight panel and global shortcut are macOS-only.
         #[cfg(target_os = "macos")]
         {
-            use spotlight::{toggle_spotlight, SpotlightConfig, SpotlightState};
+            use spotlight::{toggle_spotlight, SpotlightConfig};
             use tauri_plugin_global_shortcut::ShortcutState;
 
             let spotlight_config = SpotlightConfig::default();
-            let spotlight_state = Arc::new(SpotlightState::new());
-
             let config_for_shortcut = spotlight_config.clone();
-            let state_for_shortcut = spotlight_state.clone();
 
             builder.plugin(
                 tauri_plugin_global_shortcut::Builder::new()
@@ -47,9 +43,7 @@ pub fn run() {
                     .unwrap()
                     .with_handler(move |app, _shortcut, event| {
                         if event.state == ShortcutState::Pressed {
-                            if let Err(e) =
-                                toggle_spotlight(app, &config_for_shortcut, state_for_shortcut.clone())
-                            {
+                            if let Err(e) = toggle_spotlight(app, &config_for_shortcut) {
                                 eprintln!("[spotlight] Error toggling spotlight: {}", e);
                             }
                         }
@@ -63,14 +57,26 @@ pub fn run() {
         }
     };
 
+    // Configure invoke handler with platform-specific commands.
+    #[cfg(target_os = "macos")]
+    let builder = builder.invoke_handler(tauri::generate_handler![
+        oauth::start_oauth_server,
+        oauth::stop_oauth_server,
+        oauth::get_oauth_result,
+        oauth::initiate_oauth_flow,
+        spotlight::hide_spotlight,
+    ]);
+
+    #[cfg(not(target_os = "macos"))]
+    let builder = builder.invoke_handler(tauri::generate_handler![
+        oauth::start_oauth_server,
+        oauth::stop_oauth_server,
+        oauth::get_oauth_result,
+        oauth::initiate_oauth_flow,
+    ]);
+
     builder
         .manage(OAuthServerState::new())
-        .invoke_handler(tauri::generate_handler![
-            oauth::start_oauth_server,
-            oauth::stop_oauth_server,
-            oauth::get_oauth_result,
-            oauth::initiate_oauth_flow,
-        ])
         .setup(move |app| {
             // Initialize logging in debug mode.
             if cfg!(debug_assertions) {
@@ -79,6 +85,15 @@ pub fn run() {
                         .level(log::LevelFilter::Info)
                         .build(),
                 )?;
+            }
+
+            // Initialize menu bar (macOS only).
+            #[cfg(target_os = "macos")]
+            {
+                let spotlight_config = spotlight::SpotlightConfig::default();
+                if let Err(e) = menubar::init_menubar(app.handle(), spotlight_config) {
+                    log::error!("Failed to initialize menu bar: {}", e);
+                }
             }
 
             Ok(())

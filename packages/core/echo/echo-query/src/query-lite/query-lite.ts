@@ -395,14 +395,18 @@ class QueryClass implements Query$.Any {
     });
   }
 
-  referencedBy(target: Schema.Schema.All | string, key: string): Query$.Any {
-    assertArgument(typeof target === 'string', 'target');
-    assertArgument(!target.startsWith('dxn:'), 'target');
+  referencedBy(target?: Schema.Schema.All | string, key?: string): Query$.Any {
+    const typename =
+      target !== undefined
+        ? (assertArgument(typeof target === 'string', 'target'),
+          assertArgument(!target.startsWith('dxn:'), 'target'),
+          target)
+        : null;
     return new QueryClass({
       type: 'incoming-references',
       anchor: this.ast,
-      property: key,
-      typename: target,
+      property: key ?? null,
+      typename,
     });
   }
 
@@ -445,6 +449,14 @@ class QueryClass implements Query$.Any {
       type: 'order',
       query: this.ast,
       order: order.map((o) => o.ast),
+    });
+  }
+
+  limit(limit: number): Query$.Any {
+    return new QueryClass({
+      type: 'limit',
+      query: this.ast,
+      limit,
     });
   }
 
