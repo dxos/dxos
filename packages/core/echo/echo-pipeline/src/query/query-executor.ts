@@ -734,7 +734,7 @@ export class QueryExecutor extends Resource {
                 await this._indexer2
                   .queryReverseRefMulti({
                     targetDxns,
-                    propPath: step.traversal.property,
+                    propPath: step.traversal.property ?? undefined,
                   })
                   .pipe(Runtime.runPromiseExit(runtime)),
               );
@@ -1084,7 +1084,10 @@ export class QueryExecutor extends Resource {
         objectId: meta.objectId as ObjectId,
         documentId: meta.documentId as DocumentId,
         spaceId,
+        queueId: meta.queueId ? (meta.queueId as ObjectId) : null,
+        queueNamespace: null,
         doc: object,
+        data: null,
       };
     }
 
