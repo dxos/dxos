@@ -25,6 +25,7 @@ describe('DedicatedWorkerClientServices', { timeout: 1_000, retry: 0 }, () => {
     await using services = await testBuilder.createDedicatedWorkerClientServices().open();
     await using client = await new Client({ services }).initialize();
     await client.halo.createIdentity();
+    await client.addTypes([Type.Expando]);
     client.spaces.default.db.add(Obj.make(Type.Expando, { name: 'Test' }));
     await client.spaces.default.db.flush({ indexes: true });
   });
