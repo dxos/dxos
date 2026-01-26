@@ -16,6 +16,7 @@ import {
   Common,
   OperationPlugin,
   Plugin,
+  RuntimePlugin,
   SettingsPlugin,
 } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
@@ -115,6 +116,7 @@ export const getDecorators = ({
       AutomationPlugin(),
       GraphPlugin(),
       OperationPlugin(),
+      RuntimePlugin(),
       SettingsPlugin(),
       SpacePlugin({}),
       ClientPlugin({
@@ -256,6 +258,7 @@ const StoryPlugin = Plugin.define<StoryPluginOptions>({
         }),
         OperationResolver.make({
           operation: AssistantOperation.CreateChat,
+          position: 'hoist',
           handler: ({ db, name }) =>
             Effect.gen(function* () {
               const registry = yield* Capability.get(Common.Capability.AtomRegistry);
