@@ -83,18 +83,21 @@ const getOwner = (value: object | null | undefined): object | undefined => {
  *
  * @param value - The value to set ownership on (can be a proxy or raw target).
  * @param owner - The raw target of the root ECHO object that will own this value.
- * @param visited - Set of already-visited objects to avoid infinite loops.
- * @param depth - Current recursion depth (unused, kept for debugging).
- * @param allowedPreviousOwner - When reassigning a root ECHO object, its nested structures
+ * @param options.visited - Set of already-visited objects to avoid infinite loops.
+ * @param options.depth - Current recursion depth (unused, kept for debugging).
+ * @param options.allowedPreviousOwner - When reassigning a root ECHO object, its nested structures
  *   are allowed to have this as their previous owner without triggering the invariant.
  */
 const setOwnerRecursive = (
   value: any,
   owner: object,
-  visited = new Set<object>(),
-  depth = 0,
-  allowedPreviousOwner?: object,
+  options: {
+    visited?: Set<object>;
+    depth?: number;
+    allowedPreviousOwner?: object;
+  } = {},
 ): void => {
+  const { visited = new Set<object>(), depth = 0, allowedPreviousOwner } = options;
   if (value == null || typeof value !== 'object') {
     return;
   }
@@ -132,10 +135,15 @@ const setOwnerRecursive = (
   defineHiddenProperty(actualValue, EchoOwner, owner);
 
   // Recursively set owner on nested objects and array elements.
+  const recursiveOptions = {
+    visited,
+    depth: depth + 1,
+    allowedPreviousOwner: newAllowedPreviousOwner,
+  };
   if (Array.isArray(actualValue)) {
     for (const item of actualValue) {
       if (isValidProxyTarget(item) || isProxy(item)) {
-        setOwnerRecursive(item, owner, visited, depth + 1, newAllowedPreviousOwner);
+        setOwnerRecursive(item, owner, recursiveOptions);
       }
     }
   } else {
@@ -143,7 +151,7 @@ const setOwnerRecursive = (
       if (Object.prototype.hasOwnProperty.call(actualValue, key)) {
         const nested = actualValue[key];
         if (isValidProxyTarget(nested) || isProxy(nested)) {
-          setOwnerRecursive(nested, owner, visited, depth + 1, newAllowedPreviousOwner);
+          setOwnerRecursive(nested, owner, recursiveOptions);
         }
       }
     }
@@ -151,10 +159,18 @@ const setOwnerRecursive = (
 };
 
 /**
- * Check if a value would create a cycle when assigned to a target ECHO object.
- * Returns true if the value (or any nested object) IS the target root.
+ * Traverse an object graph, calling the visitor on each object.
+ * Handles proxy unwrapping and cycle detection.
+ *
+ * @param value - The value to traverse (can be a proxy or raw target).
+ * @param visitor - Called for each object. Return true to stop traversal (early exit).
+ * @returns true if the visitor returns true for any object.
  */
-const wouldCreateCycle = (targetRoot: object, value: any, visited = new Set<object>()): boolean => {
+const traverseObjectGraph = (
+  value: any,
+  visitor: (actualValue: any) => boolean,
+  visited = new Set<object>(),
+): boolean => {
   if (value == null || typeof value !== 'object') {
     return false;
   }
@@ -162,26 +178,24 @@ const wouldCreateCycle = (targetRoot: object, value: any, visited = new Set<obje
   const actualValue = getRawTarget(value);
 
   if (visited.has(actualValue)) {
-    return false; // Already checked this object.
+    return false;
   }
   visited.add(actualValue);
 
-  // Check if value IS the target root ECHO object.
-  if (actualValue === targetRoot) {
+  if (visitor(actualValue)) {
     return true;
   }
 
-  // Recursively check nested objects in value.
   if (Array.isArray(actualValue)) {
     for (const item of actualValue) {
-      if (wouldCreateCycle(targetRoot, item, visited)) {
+      if (traverseObjectGraph(item, visitor, visited)) {
         return true;
       }
     }
   } else {
     for (const key in actualValue) {
       if (Object.prototype.hasOwnProperty.call(actualValue, key)) {
-        if (wouldCreateCycle(targetRoot, actualValue[key], visited)) {
+        if (traverseObjectGraph(actualValue[key], visitor, visited)) {
           return true;
         }
       }
@@ -190,6 +204,30 @@ const wouldCreateCycle = (targetRoot: object, value: any, visited = new Set<obje
 
   return false;
 };
+
+/**
+ * Check if a value would create a cycle when assigned to a target ECHO object.
+ * Returns true if the value (or any nested object) IS the target root.
+ */
+const wouldCreateCycle = (targetRoot: object, value: any): boolean =>
+  traverseObjectGraph(value, (v) => v === targetRoot);
+
+/**
+ * Check if a value or any of its nested objects has an owner different from the target.
+ * Used to determine if deep copy is needed during init.
+ */
+const hasForeignOwner = (value: any, target: object): boolean =>
+  traverseObjectGraph(value, (v) => {
+    const owner = getOwner(v);
+    if (owner != null && owner !== target) {
+      return true;
+    }
+    // Root ECHO objects (with EventId) have their nested structures owned by them.
+    if (EventId in v && v !== target) {
+      return true;
+    }
+    return false;
+  });
 
 /**
  * Deep copy a value, handling arrays and nested objects.
@@ -332,10 +370,10 @@ export class TypedReactiveHandler implements ReactiveHandler<ProxyTarget> {
         }
         let value = (target as any)[key];
         if (isValidProxyTarget(value) || isProxy(value)) {
-          // Deep copy values that are already owned by a different object.
-          const actualValue = getRawTarget(value);
-          const existingOwner = getOwner(actualValue);
-          if (existingOwner != null && existingOwner !== target) {
+          // Deep copy values that have foreign owners (owned by a different object,
+          // or are root ECHO objects whose nested structures would be owned by them).
+          // This recursively checks all nested objects.
+          if (hasForeignOwner(value, target)) {
             value = deepCopy(value);
             (target as any)[key] = value;
           }
