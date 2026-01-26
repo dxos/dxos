@@ -130,6 +130,13 @@ export class SpaceProxy implements Space, CustomInspectable {
   private _error: Error | undefined = undefined;
   private _properties?: Obj.Obj<SpaceProperties> = undefined;
 
+  /**
+   * When true, the space is waiting for the backend to finish re-initializing after a reconnect.
+   * During this period, state updates that would regress from READY are ignored.
+   * Once the backend reaches READY again, normal processing resumes.
+   */
+  private _awaitingBackendReady = false;
+
   constructor(
     private _clientServices: ClientServicesProvider,
     private _data: SpaceData,
@@ -278,12 +285,38 @@ export class SpaceProxy implements Space, CustomInspectable {
   }
 
   /**
+   * Called by SpaceList to notify that a reconnection is starting.
+   * The space will ignore state updates until the backend reaches READY again.
+   * @internal Package-private.
+   */
+  _notifyReconnecting(): void {
+    if (this._initialized && this._data.state === SpaceState.SPACE_READY) {
+      this._awaitingBackendReady = true;
+      log('entering reconnecting state', { key: this.key });
+    }
+  }
+
+  /**
    * Called by EchoProxy to update this space instance.
    * Called once on initial creation.
    * @internal Package-private.
    */
   @synchronized
   async _processSpaceUpdate(space: SpaceData): Promise<void> {
+    // During reconnection, if we're waiting for the backend to re-initialize,
+    // ignore all updates until it reaches READY (or REQUIRES_MIGRATION) again.
+    if (this._awaitingBackendReady) {
+      if (space.state === SpaceState.SPACE_READY || space.state === SpaceState.SPACE_REQUIRES_MIGRATION) {
+        // Backend is ready again, resume normal processing.
+        this._awaitingBackendReady = false;
+        log('backend ready, resuming updates', { key: this.key, state: SpaceState[space.state] });
+      } else {
+        // Still waiting for backend to be ready, ignore this update.
+        log('ignoring update while awaiting backend ready', { key: this.key, ignoredState: SpaceState[space.state] });
+        return;
+      }
+    }
+
     const emitEvent = shouldUpdate(this._data, space);
     const emitPipelineEvent = shouldPipelineUpdate(this._data, space);
     const emitMembersEvent = shouldMembersUpdate(this._data.members, space.members);
