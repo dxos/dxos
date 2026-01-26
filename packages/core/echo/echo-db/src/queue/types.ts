@@ -17,6 +17,12 @@ export interface Queue<T extends Entity.Unknown = Entity.Unknown> extends Databa
   readonly dxn: DXN;
 
   /**
+   * Subscribe to queue updates.
+   * @returns Unsubscribe function.
+   */
+  subscribe(callback: () => void): () => void;
+
+  /**
    * @deprecated Use query() API instead.
    */
   readonly isLoading: boolean;

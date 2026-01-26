@@ -4,8 +4,8 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capability } from '@dxos/app-framework';
-import { LocalStorageStore } from '@dxos/local-storage';
+import { Capability, Common } from '@dxos/app-framework';
+import { createKvsStore } from '@dxos/effect';
 import { getObservabilityGroup } from '@dxos/observability';
 
 import { meta } from '../../meta';
@@ -14,15 +14,17 @@ import { ObservabilityCapabilities } from '../../types';
 export default Capability.makeModule(
   Effect.fnUntraced(function* (props?: { namespace: string }) {
     const { namespace } = props!;
-    const state = new LocalStorageStore<ObservabilityCapabilities.State>(meta.id);
+    const stateAtom = createKvsStore({
+      key: meta.id,
+      schema: ObservabilityCapabilities.StateSchema,
+      defaultValue: () => ({}),
+    });
 
-    state.prop({ key: 'notified', type: LocalStorageStore.bool({ allowUndefined: true }) });
+    // NOTE: Group is set at runtime, not persisted.
+    const group = yield* Effect.tryPromise(() => getObservabilityGroup(namespace));
+    const registry = yield* Capability.get(Common.Capability.AtomRegistry);
+    registry.set(stateAtom, { ...registry.get(stateAtom), group });
 
-    // NOTE: This is not stored in local storage such that it can be accessed by workers.
-    state.values.group = yield* Effect.tryPromise(() => getObservabilityGroup(namespace));
-
-    return Capability.contributes(ObservabilityCapabilities.State, state.values, () =>
-      Effect.sync(() => state.close()),
-    );
+    return Capability.contributes(ObservabilityCapabilities.State, stateAtom);
   }),
 );

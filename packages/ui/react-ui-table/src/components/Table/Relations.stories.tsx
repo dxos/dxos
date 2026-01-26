@@ -2,9 +2,10 @@
 // Copyright 2025 DXOS.org
 //
 
+import { RegistryContext } from '@effect-atom/atom-react';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import type * as Schema from 'effect/Schema';
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { expect, userEvent, within } from 'storybook/test';
 
 import { Obj, Type } from '@dxos/echo';
@@ -18,6 +19,7 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { translations as formTranslations } from '@dxos/react-ui-form';
 import { View } from '@dxos/schema';
 import { type ValueGenerator, createAsyncGenerator } from '@dxos/schema/testing';
+import { withRegistry } from '@dxos/storybook-utils';
 import { Organization, Person } from '@dxos/types';
 
 import { useProjectionModel, useTableModel } from '../../hooks';
@@ -35,6 +37,7 @@ const generator: ValueGenerator = faker as any;
 // TODO(burdon): Reconcile schemas types and utils (see API PR).
 // TODO(burdon): Base type for T (with id); see ECHO API PR?
 const useTestModel = <S extends Type.Obj.Any>(schema: S, count: number) => {
+  const registry = useContext(RegistryContext);
   const { space } = useClientStory();
   const [object, setObject] = useState<Table.Table>();
 
@@ -54,7 +57,7 @@ const useTestModel = <S extends Type.Obj.Any>(schema: S, count: number) => {
     space.db.add(object);
   }, [space, schema]);
 
-  const projection = useProjectionModel(schema, object);
+  const projection = useProjectionModel(schema, object, registry);
   const model = useTableModel<TableRow>({ object, projection, db: space?.db, features });
 
   useEffect(() => {
@@ -73,8 +76,8 @@ const useTestModel = <S extends Type.Obj.Any>(schema: S, count: number) => {
       return;
     }
 
-    return new TablePresentation(model);
-  }, [model]);
+    return new TablePresentation(registry, model);
+  }, [registry, model]);
 
   return { model, presentation };
 };
@@ -123,7 +126,8 @@ const meta = {
   render: DefaultStory,
   decorators: [
     withTheme,
-    // TODO(thure): Shouldn’t `layout: 'fullscreen'` below make this unnecessary?
+    withRegistry,
+    // TODO(thure): Shouldn't `layout: 'fullscreen'` below make this unnecessary?
     withLayout({ classNames: 'fixed inset-0' }),
     withClientProvider({
       types: [View.View, Organization.Organization, Person.Person, Table.Table],

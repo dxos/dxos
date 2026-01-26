@@ -10,7 +10,6 @@ import yargs from 'yargs';
 import { hideBin } from 'yargs/helpers';
 
 import { Client } from '@dxos/client';
-import { live } from '@dxos/client/echo';
 import { Obj, Type } from '@dxos/echo';
 import { Ref } from '@dxos/echo/internal';
 import { log } from '@dxos/log';
@@ -83,12 +82,11 @@ const main = async () => {
     await space.waitUntilReady();
 
     space.db.add(
-      // TODO(dmaretskyi): Change to Obj.make.
-      live({
+      Obj.make(Type.Expando, {
         value: 100,
         string: 'hello world!',
         array: ['one', 'two', 'three'],
-      }) as any,
+      }),
     );
     await space.db.flush();
 

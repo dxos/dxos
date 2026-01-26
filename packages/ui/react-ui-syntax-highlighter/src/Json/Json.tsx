@@ -3,9 +3,8 @@
 //
 
 // TODO(burdon): Use to jsonpath-plus.
-import { forwardRef } from '@preact-signals/safe-react/react';
 import jp from 'jsonpath';
-import React, { useEffect, useState } from 'react';
+import React, { forwardRef, useEffect, useState } from 'react';
 
 import { Input, type ThemedClassName } from '@dxos/react-ui';
 import { type CreateReplacerProps, createReplacer, safeStringify } from '@dxos/util';

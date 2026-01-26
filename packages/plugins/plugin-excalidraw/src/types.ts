@@ -2,8 +2,10 @@
 // Copyright 2023 DXOS.org
 //
 
+import { type Atom } from '@effect-atom/atom-react';
 import * as Schema from 'effect/Schema';
 
+import { Capability } from '@dxos/app-framework';
 import { Operation } from '@dxos/operation';
 import { Diagram } from '@dxos/plugin-sketch/types';
 
@@ -42,3 +44,7 @@ export const SketchSettingsSchema = Schema.mutable(
 );
 
 export type SketchSettingsProps = Schema.Schema.Type<typeof SketchSettingsSchema>;
+
+export namespace ExcalidrawCapabilities {
+  export const Settings = Capability.make<Atom.Writable<SketchSettingsProps>>(`${meta.id}/capability/settings`);
+}

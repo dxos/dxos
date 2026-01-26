@@ -50,8 +50,7 @@
     "@dxos/react-ui-stack": "workspace:*",
     "@dxos/schema": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@preact-signals/safe-react": "catalog:",
-    "@preact/signals-core": "catalog:"
+    "@effect-atom/atom-react": "catalog:"
   },
   "devDependencies": {
     "@dxos/invariant": "workspace:*",

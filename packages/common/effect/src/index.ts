@@ -3,6 +3,7 @@
 //
 
 export * from './ast';
+export * from './atom-kvs';
 export * from './context';
 export * as DynamicRuntime from './dynamic-runtime';
 export * from './errors';

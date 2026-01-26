@@ -141,10 +141,12 @@ export default Capability.makeModule(
       OperationResolver.make({
         operation: LocalFilesOperation.SelectRoot,
         handler: Effect.fnUntraced(function* () {
-          const mutableState = yield* Capability.get(FileCapabilities.MutableState);
           const rootDir = yield* Effect.promise(async () => (window as any).showDirectoryPicker({ mode: 'readwrite' }));
           if (rootDir) {
-            mutableState.rootHandle = rootDir;
+            yield* Common.Capability.updateAtomValue(FileCapabilities.State, (current) => ({
+              ...current,
+              rootHandle: rootDir,
+            }));
           }
         }),
       }),
@@ -152,9 +154,8 @@ export default Capability.makeModule(
         operation: LocalFilesOperation.Export,
         handler: Effect.fnUntraced(function* () {
           const { explore } = yield* Capability.get(Common.Capability.AppGraph);
-          const state = yield* Capability.get(FileCapabilities.State);
-          const mutableState = yield* Capability.get(FileCapabilities.MutableState);
-          if (!mutableState.rootHandle) {
+          const state = yield* Common.Capability.getAtomValue(FileCapabilities.State);
+          if (!state.rootHandle) {
             yield* Operation.invoke(SettingsOperation.Open, { plugin: meta.id });
             return;
           }
@@ -182,7 +183,10 @@ export default Capability.makeModule(
             }),
           );
 
-          mutableState.lastExport = Date.now();
+          yield* Common.Capability.updateAtomValue(FileCapabilities.State, (current) => ({
+            ...current,
+            lastExport: Date.now(),
+          }));
         }),
       }),
       OperationResolver.make({
@@ -230,7 +234,6 @@ export default Capability.makeModule(
       OperationResolver.make({
         operation: LocalFilesOperation.OpenFile,
         handler: Effect.fnUntraced(function* () {
-          const mutableState = yield* Capability.get(FileCapabilities.MutableState);
           if ('showOpenFilePicker' in window) {
             const [handle]: FileSystemFileHandle[] = yield* Effect.promise(async () =>
               (window as any).showOpenFilePicker({
@@ -239,10 +242,15 @@ export default Capability.makeModule(
               }),
             );
             const file = yield* Effect.promise(async () => handleToLocalFile(handle));
-            mutableState.files.push(file);
+            yield* Common.Capability.updateAtomValue(FileCapabilities.State, (current) => ({
+              ...current,
+              files: [...current.files, file],
+            }));
             return { id: file.id, subject: [file.id] };
           }
 
+          const registry = yield* Capability.get(Common.Capability.AtomRegistry);
+          const stateAtom = yield* Capability.get(FileCapabilities.State);
           const input = document.createElement('input');
           input.type = 'file';
           input.accept = '.md,text/markdown';
@@ -251,7 +259,7 @@ export default Capability.makeModule(
             const [legacyFile] = input.files ? Array.from(input.files) : [];
             if (legacyFile) {
               const file = await legacyFileToLocalFile(legacyFile);
-              mutableState.files.push(file);
+              registry.update(stateAtom, (current) => ({ ...current, files: [...current.files, file] }));
               result.wake(file.id);
             }
           };
@@ -263,18 +271,20 @@ export default Capability.makeModule(
       OperationResolver.make({
         operation: LocalFilesOperation.OpenDirectory,
         handler: Effect.fnUntraced(function* () {
-          const mutableState = yield* Capability.get(FileCapabilities.MutableState);
           const handle = yield* Effect.promise(async () => (window as any).showDirectoryPicker({ mode: 'readwrite' }));
           const directory = yield* Effect.promise(async () => handleToLocalDirectory(handle));
-          mutableState.files.push(directory);
+          yield* Common.Capability.updateAtomValue(FileCapabilities.State, (current) => ({
+            ...current,
+            files: [...current.files, directory],
+          }));
           return { id: directory.id, subject: [directory.id] };
         }),
       }),
       OperationResolver.make({
         operation: LocalFilesOperation.Reconnect,
         handler: Effect.fnUntraced(function* ({ id }) {
-          const mutableState = yield* Capability.get(FileCapabilities.MutableState);
-          const entity = mutableState.files.find((entity) => entity.id === id);
+          const state = yield* Common.Capability.getAtomValue(FileCapabilities.State);
+          const entity = state.files.find((entity) => entity.id === id);
           if (!entity) {
             return;
           }
@@ -284,10 +294,15 @@ export default Capability.makeModule(
               (entity.handle as any).requestPermission({ mode: 'readwrite' }),
             );
             if (permission === 'granted') {
-              entity.children = yield* Effect.promise(async () =>
+              const children = yield* Effect.promise(async () =>
                 getDirectoryChildren(entity.handle, entity.handle.name),
               );
-              entity.permission = permission;
+              yield* Common.Capability.updateAtomValue(FileCapabilities.State, (current) => ({
+                ...current,
+                files: current.files.map((f) =>
+                  f.id === id ? { ...f, children, permission } : f,
+                ) as typeof current.files,
+              }));
             }
           } else {
             const permission = yield* Effect.promise(async () =>
@@ -297,8 +312,10 @@ export default Capability.makeModule(
               const text = yield* Effect.promise(async () =>
                 (entity.handle as any).getFile?.().then((file: any) => file.text()),
               );
-              entity.text = text;
-              entity.permission = permission;
+              yield* Common.Capability.updateAtomValue(FileCapabilities.State, (current) => ({
+                ...current,
+                files: current.files.map((f) => (f.id === id ? { ...f, text, permission } : f)) as typeof current.files,
+              }));
             }
           }
         }),
@@ -306,8 +323,8 @@ export default Capability.makeModule(
       OperationResolver.make({
         operation: LocalFilesOperation.Save,
         handler: Effect.fnUntraced(function* ({ id }) {
-          const mutableState = yield* Capability.get(FileCapabilities.MutableState);
-          const file = findFile(mutableState.files, [id]);
+          const state = yield* Common.Capability.getAtomValue(FileCapabilities.State);
+          const file = findFile(state.files, [id]);
           if (file) {
             yield* Effect.promise(async () => handleSave(file));
           }
@@ -316,11 +333,10 @@ export default Capability.makeModule(
       OperationResolver.make({
         operation: LocalFilesOperation.Close,
         handler: Effect.fnUntraced(function* ({ id }) {
-          const mutableState = yield* Capability.get(FileCapabilities.MutableState);
-          const index = mutableState.files.findIndex((f) => f.id === id);
-          if (index >= 0) {
-            mutableState.files.splice(index, 1);
-          }
+          yield* Common.Capability.updateAtomValue(FileCapabilities.State, (current) => ({
+            ...current,
+            files: current.files.filter((f) => f.id !== id),
+          }));
         }),
       }),
     ]);

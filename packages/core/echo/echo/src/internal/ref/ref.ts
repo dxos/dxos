@@ -8,8 +8,8 @@ import * as ParseResult from 'effect/ParseResult';
 import * as Schema from 'effect/Schema';
 import * as SchemaAST from 'effect/SchemaAST';
 
+import { Event } from '@dxos/async';
 import { type EncodedReference } from '@dxos/echo-protocol';
-import { compositeRuntime } from '@dxos/echo-signals/runtime';
 import { assertArgument, invariant } from '@dxos/invariant';
 import { DXN, ObjectId } from '@dxos/keys';
 
@@ -142,8 +142,6 @@ export interface Ref<T> {
    * @returns The reference target.
    * May return `undefined` if the object is not loaded in the working set.
    * Accessing this property, even if it returns `undefined` will trigger the object to be loaded to the working set.
-   *
-   * @reactive Supports signal subscriptions.
    */
   get target(): T | undefined;
 
@@ -329,7 +327,7 @@ export interface RefResolver {
 export class RefImpl<T> implements Ref<T> {
   #dxn: DXN;
   #resolver?: RefResolver = undefined;
-  #signal = compositeRuntime.createSignal();
+  #resolved = new Event<void>();
 
   /**
    * Target is set when the reference is created from a specific object.
@@ -341,7 +339,7 @@ export class RefImpl<T> implements Ref<T> {
    * Callback to issue a reactive notification when object is resolved.
    */
   #resolverCallback = () => {
-    this.#signal.notifyWrite();
+    this.#resolved.emit();
   };
 
   constructor(dxn: DXN, target?: T) {
@@ -367,7 +365,6 @@ export class RefImpl<T> implements Ref<T> {
    * @inheritdoc
    */
   get target(): T | undefined {
-    this.#signal.notifyRead();
     if (this.#target) {
       return this.#target;
     }

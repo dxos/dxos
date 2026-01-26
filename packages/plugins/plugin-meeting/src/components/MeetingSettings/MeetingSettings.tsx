@@ -10,7 +10,12 @@ import { ControlGroup, ControlItemInput, ControlPage, ControlSection } from '@dx
 import { meta } from '../../meta';
 import { type Meeting } from '../../types';
 
-export const MeetingSettings = ({ settings }: { settings: Meeting.Settings }) => {
+export type MeetingSettingsComponentProps = {
+  settings: Meeting.Settings;
+  onSettingsChange: (fn: (current: Meeting.Settings) => Meeting.Settings) => void;
+};
+
+export const MeetingSettings = ({ settings, onSettingsChange }: MeetingSettingsComponentProps) => {
   const { t } = useTranslation(meta.id);
 
   return (
@@ -20,7 +25,7 @@ export const MeetingSettings = ({ settings }: { settings: Meeting.Settings }) =>
           <ControlItemInput title={t('entity extraction label')} description={t('entity extraction description')}>
             <Input.Switch
               checked={!!settings.entityExtraction}
-              onCheckedChange={(checked) => (settings.entityExtraction = checked)}
+              onCheckedChange={(checked) => onSettingsChange((s) => ({ ...s, entityExtraction: checked }))}
             />
           </ControlItemInput>
         </ControlGroup>

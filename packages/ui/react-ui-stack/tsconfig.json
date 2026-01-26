@@ -34,9 +34,6 @@
       "path": "../../core/echo/echo-db"
     },
     {
-      "path": "../../core/echo/live-object"
-    },
-    {
       "path": "../../sdk/app-framework"
     },
     {

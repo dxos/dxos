@@ -2,11 +2,13 @@
 // Copyright 2025 DXOS.org
 //
 
+import { type Atom } from '@effect-atom/atom-react';
+
 import { Capability } from '@dxos/app-framework';
 
 import { meta } from '../meta';
 
-export type LayoutState = {
+export type LayoutStateProps = {
   sidebarState?: 'expanded' | 'collapsed' | 'closed';
   complementarySidebarState?: 'expanded' | 'collapsed' | 'closed';
 
@@ -28,4 +30,4 @@ export type LayoutState = {
   workspace: string;
 };
 
-export const LayoutState = Capability.make<LayoutState>(`${meta.id}/state`);
+export const LayoutState = Capability.make<Atom.Writable<LayoutStateProps>>(`${meta.id}/state`);

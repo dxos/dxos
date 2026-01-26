@@ -2,7 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { useCallback, useMemo } from 'react';
+import { RegistryContext } from '@effect-atom/atom-react';
+import React, { useCallback, useContext, useMemo } from 'react';
 
 import { Obj } from '@dxos/echo';
 import { Format } from '@dxos/echo/internal';
@@ -18,11 +19,12 @@ import { SettingsSchema } from '../types';
 type KanbanViewEditorProps = { object: Kanban.Kanban };
 
 export const KanbanViewEditor = ({ object }: KanbanViewEditorProps) => {
+  const registry = useContext(RegistryContext);
   const db = Obj.getDatabase(object);
   const view = object.view.target;
   const currentTypename = view?.query ? getTypenameFromQuery(view.query.ast) : undefined;
   const schema = useSchema(db, currentTypename);
-  const projection = useProjectionModel(schema, object);
+  const projection = useProjectionModel(schema, object, registry);
 
   const fieldProjections = projection?.getFieldProjections() || [];
   const selectFields = fieldProjections
@@ -32,7 +34,9 @@ export const KanbanViewEditor = ({ object }: KanbanViewEditorProps) => {
   const handleSave = useCallback(
     (values: Partial<{ columnFieldId: string }>) => {
       invariant(view);
-      view.projection.pivotFieldId = values.columnFieldId;
+      Obj.change(view, (v) => {
+        v.projection.pivotFieldId = values.columnFieldId;
+      });
     },
     [view],
   );

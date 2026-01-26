@@ -76,16 +76,10 @@
       "path": "../echo-protocol"
     },
     {
-      "path": "../echo-signals"
-    },
-    {
       "path": "../feed"
     },
     {
       "path": "../indexing"
-    },
-    {
-      "path": "../live-object"
     }
   ]
 }

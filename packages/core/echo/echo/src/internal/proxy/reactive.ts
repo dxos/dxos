@@ -2,37 +2,12 @@
 // Copyright 2025 DXOS.org
 //
 
-import { getProxyTarget, isProxy } from './proxy';
+import { getProxyTarget, isProxy } from './proxy-utils';
+import { ChangeId, EventId } from './symbols';
 
 /**
- * Marker interface.
- * This odd construct only serves one purpose: when you hover over `const x: Live<T>` you'd see `Live<T>` type.
- * Without this, typescript would simplify the type to just `T` instead.
- */
-interface LiveMarker {}
-
-/**
- * Live reactive object marker interface (does not change the shape of the object.)
- * Accessing properties triggers signal semantics.
- *
- * It is recommended to use explicitly use this type when expecting reactive semantics, e.g. `Live<MyObject>`.
- * One common use case includes React components.
- */
-export type Live<T> = LiveMarker & T;
-
-/**
- * @returns true if the value is a reactive object.
- * @deprecated The code should not rely on "liveness" of the object. Better way would be to check the type of the object or if object is mutable.
- */
-export const isLiveObject = (value: unknown): boolean => isProxy(value);
-
-// TODO(dmaretskyi): Rename all symbols that are props to end with *Key.
-export const EventId = Symbol.for('@dxos/live-object/EventId');
-export const ChangeId = Symbol.for('@dxos/live-object/ChangeId');
-
-/**
- * Subscribe to changes on a live object.
- * @param obj - The live object to subscribe to.
+ * Subscribe to changes on a reactive object.
+ * @param obj - The reactive object to subscribe to.
  * @param callback - Called when the object changes.
  * @returns Unsubscribe function.
  */
@@ -58,7 +33,7 @@ export type Mutable<T> = {
 export type ChangeCallback<T> = (mutableObj: Mutable<T>) => void;
 
 /**
- * Perform mutations on a live object within a change context.
+ * Perform mutations on a reactive object within a change context.
  *
  * If the object has a change handler (via ChangeId), it will be called with the callback.
  * This allows handlers to implement features like:
@@ -68,7 +43,7 @@ export type ChangeCallback<T> = (mutableObj: Mutable<T>) => void;
  *
  * If the object doesn't have a change handler, the callback is called directly.
  *
- * @param obj - The live object to mutate.
+ * @param obj - The reactive object to mutate.
  * @param callback - Callback that receives a mutable view of the object.
  */
 export const change = <T>(obj: T, callback: ChangeCallback<T>): void => {

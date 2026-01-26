@@ -10,7 +10,6 @@ import React, { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 
 import { useApp } from '@dxos/app-framework/react';
-import { registerSignalsRuntime } from '@dxos/echo-signals';
 import { runAndForwardErrors } from '@dxos/effect';
 import { LogLevel, log } from '@dxos/log';
 import { getObservabilityGroup, initializeAppObservability, isObservabilityDisabled } from '@dxos/observability';
@@ -41,8 +40,6 @@ const main = async () => {
   }
 
   TRACE_PROCESSOR.setInstanceTag('app');
-
-  registerSignalsRuntime();
 
   const { defs, SaveConfig } = await import('@dxos/config');
   const { createClientServices } = await import('@dxos/react-client');

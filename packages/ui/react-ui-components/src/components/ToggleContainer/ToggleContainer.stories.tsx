@@ -2,35 +2,46 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type ReadonlySignal, computed, signal } from '@preact/signals-core';
+import { Atom, type Registry, RegistryContext, useAtomValue } from '@effect-atom/atom-react';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useContext, useEffect, useMemo, useState } from 'react';
 
 import { faker } from '@dxos/random';
 import { Icon, Input, Toolbar } from '@dxos/react-ui';
 import { withTheme } from '@dxos/react-ui/testing';
 import { MarkdownViewer } from '@dxos/react-ui-markdown';
+import { withRegistry } from '@dxos/storybook-utils';
 
 import { ToggleContainer, type ToggleContainerRootProps } from './ToggleContainer';
 
 class Generator {
-  private readonly _current = signal<string>(faker.lorem.sentence(5));
-  private readonly _lines = signal<string[]>([]);
+  private readonly _current: Atom.Writable<string>;
+  private readonly _lines: Atom.Writable<string[]>;
   private _running: NodeJS.Timeout | undefined;
 
-  readonly count = computed(() => this._lines.value.length);
-  readonly text: ReadonlySignal<string[]> = computed(() => [...this._lines.value, this._current.value]);
+  readonly count: Atom.Atom<number>;
+  readonly text: Atom.Atom<string[]>;
+
+  constructor(private readonly _registry: Registry.Registry) {
+    this._current = Atom.make<string>(faker.lorem.sentence(5));
+    this._lines = Atom.make<string[]>([]);
+    this.count = Atom.make((get) => get(this._lines).length);
+    this.text = Atom.make((get) => [...get(this._lines), get(this._current)]);
+  }
 
   start(): void {
     this.stop();
     this._running = setInterval(() => {
-      if (this._current.value.length > 0) {
-        this._current.value += ' ';
+      const current = this._registry.get(this._current);
+      const lines = this._registry.get(this._lines);
+      if (current.length > 0) {
+        this._registry.set(this._current, current + ' ');
       }
-      this._current.value += faker.lorem.words(Math.ceil(Math.random() * 2));
+      const newCurrent = this._registry.get(this._current) + faker.lorem.words(Math.ceil(Math.random() * 2));
+      this._registry.set(this._current, newCurrent);
       if (Math.random() > 0.95) {
-        this._lines.value = [...this._lines.value, this._current.value + '.'];
-        this._current.value = '';
+        this._registry.set(this._lines, [...lines, newCurrent + '.']);
+        this._registry.set(this._current, '');
       }
     }, 100);
   }
@@ -44,8 +55,12 @@ class Generator {
 }
 
 const DefaultStory = (props: ToggleContainerRootProps) => {
-  const generator = useMemo(() => new Generator(), []);
+  const registry = useContext(RegistryContext);
+  const generator = useMemo(() => new Generator(registry), [registry]);
   const [running, setRunning] = useState(false);
+  const count = useAtomValue(generator.count);
+  const text = useAtomValue(generator.text);
+
   useEffect(() => {
     if (running) {
       generator.start();
@@ -61,7 +76,7 @@ const DefaultStory = (props: ToggleContainerRootProps) => {
           <Input.Switch checked={running} onCheckedChange={(checked) => setRunning(checked)} />
         </Input.Root>
         <div className='grow' />
-        <div>{generator.count.value}</div>
+        <div>{count}</div>
       </Toolbar.Root>
       <div className='flex p-4'>
         <ToggleContainer.Root classNames='border border-separator rounded-md' {...props}>
@@ -75,7 +90,7 @@ const DefaultStory = (props: ToggleContainerRootProps) => {
             Test
           </ToggleContainer.Header>
           <ToggleContainer.Content classNames='bg-modalSurface'>
-            <MarkdownViewer classNames='p-2 text-sm' content={generator.text.value.join('\n\n')} />
+            <MarkdownViewer classNames='p-2 text-sm' content={text.join('\n\n')} />
           </ToggleContainer.Content>
         </ToggleContainer.Root>
       </div>
@@ -87,7 +102,7 @@ const meta = {
   title: 'ui/react-ui-components/ToggleContainer',
   component: ToggleContainer.Root,
   render: DefaultStory,
-  decorators: [withTheme],
+  decorators: [withRegistry, withTheme],
   parameters: {
     layout: 'centered',
   },

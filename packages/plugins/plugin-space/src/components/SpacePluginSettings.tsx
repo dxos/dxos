@@ -14,7 +14,12 @@ import { meta } from '../meta';
 import { SpaceOperation, type SpaceSettingsProps } from '../types';
 import { getSpaceDisplayName } from '../util';
 
-export const SpacePluginSettings = ({ settings }: { settings: SpaceSettingsProps }) => {
+export type SpacePluginSettingsComponentProps = {
+  settings: SpaceSettingsProps;
+  onSettingsChange: (fn: (current: SpaceSettingsProps) => SpaceSettingsProps) => void;
+};
+
+export const SpacePluginSettings = ({ settings, onSettingsChange }: SpacePluginSettingsComponentProps) => {
   const { t } = useTranslation(meta.id);
   const client = useClient();
   const spaces = useSpaces({ all: settings.showHidden });
@@ -27,7 +32,7 @@ export const SpacePluginSettings = ({ settings }: { settings: SpaceSettingsProps
           <ControlItemInput title={t('show hidden spaces label')}>
             <Input.Switch
               checked={settings.showHidden}
-              onCheckedChange={(checked) => (settings.showHidden = !!checked)}
+              onCheckedChange={(checked) => onSettingsChange((s) => ({ ...s, showHidden: !!checked }))}
             />
           </ControlItemInput>
         </ControlGroup>

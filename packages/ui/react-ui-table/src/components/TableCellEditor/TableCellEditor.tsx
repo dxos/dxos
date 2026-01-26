@@ -68,7 +68,7 @@ export const TableValueEditor = <T extends Type.Entity.Any = Type.Entity.Any>({
     }
 
     const { col } = parseCellIndex(editing.index);
-    const field = model.projection.fields[col];
+    const field = model.projection.getFields()[col];
     const fieldProjection = model.projection.getFieldProjection(field.id);
     invariant(fieldProjection);
     return fieldProjection;
@@ -115,7 +115,7 @@ export const TableCellEditor = ({
     }
 
     const { col } = parseCellIndex(editing.index);
-    const field = model.projection.fields[col];
+    const field = model.projection.getFields()[col];
     const fieldProjection = model.projection.getFieldProjection(field.id);
     invariant(fieldProjection);
     return fieldProjection;

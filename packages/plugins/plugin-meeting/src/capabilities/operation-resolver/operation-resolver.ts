@@ -57,9 +57,9 @@ export default Capability.makeModule(
       OperationResolver.make({
         operation: MeetingOperation.SetActive,
         handler: Effect.fnUntraced(function* ({ object }) {
-          const state = yield* Capability.get(MeetingCapabilities.State);
+          const store = yield* Capability.get(MeetingCapabilities.State);
           const callManager = yield* Capability.get(ThreadCapabilities.CallManager);
-          state.activeMeeting = object;
+          store.updateState((current) => ({ ...current, activeMeeting: object }));
           callManager.setActivity(Type.getTypename(Meeting.Meeting)!, {
             meetingId: object ? Obj.getDXN(object).toString() : '',
           });
@@ -70,24 +70,28 @@ export default Capability.makeModule(
         operation: MeetingOperation.HandlePayload,
         handler: Effect.fnUntraced(function* ({ meetingId, transcriptDxn, transcriptionEnabled }) {
           const client = yield* Capability.get(ClientCapabilities.Client);
-          const state = yield* Capability.get(MeetingCapabilities.State);
+          const store = yield* Capability.get(MeetingCapabilities.State);
           const { spaceId, objectId } = meetingId ? parseId(meetingId) : {};
           const space = spaceId && client.spaces.get(spaceId);
           const meeting =
             objectId && space
               ? yield* Effect.promise(() => space.db.query(Query.select(Filter.id(objectId))).first())
               : undefined;
-          state.activeMeeting = meeting as Meeting.Meeting | undefined;
+          store.updateState((current) => ({
+            ...current,
+            activeMeeting: meeting as Meeting.Meeting | undefined,
+          }));
 
           const enabled = !!transcriptionEnabled;
+          const { transcriptionManager } = store.state;
           if (space && transcriptDxn) {
             // NOTE: Must set queue before enabling transcription.
             const queue = space.queues.get<Message.Message>(DXN.parse(transcriptDxn));
-            state.transcriptionManager?.setQueue(queue);
+            transcriptionManager?.setQueue(queue);
           }
 
-          if (state.transcriptionManager) {
-            yield* Effect.promise(() => state.transcriptionManager!.setEnabled(enabled));
+          if (transcriptionManager) {
+            yield* Effect.promise(() => transcriptionManager.setEnabled(enabled));
           }
         }),
       }),

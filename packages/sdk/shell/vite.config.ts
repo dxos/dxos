@@ -55,8 +55,7 @@ export default defineConfig({
         path.resolve(dirname, './node_modules/@dxos/ui-theme/dist/**/*.mjs'),
       ],
     }),
-    // https://github.com/preactjs/signals/issues/269
-    ReactPlugin({ jsxRuntime: 'classic' }),
+    ReactPlugin(),
     // https://www.bundle-buddy.com/rollup
     {
       name: 'bundle-buddy',

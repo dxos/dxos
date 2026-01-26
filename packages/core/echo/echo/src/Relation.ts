@@ -7,7 +7,6 @@ import * as Schema from 'effect/Schema';
 import { raise } from '@dxos/debug';
 import { assertArgument, invariant } from '@dxos/invariant';
 import { DXN, type ObjectId } from '@dxos/keys';
-import { type Live } from '@dxos/live-object';
 import { assumeType } from '@dxos/util';
 
 import * as Entity from './Entity';
@@ -84,7 +83,7 @@ export const make = <S extends Type.Relation.Any>(
   schema: S,
   props: NoInfer<MakeProps<Schema.Schema.Type<S>>>,
   meta?: ObjectMeta,
-): Live<Schema.Schema.Type<S> & Entity.OfKind<typeof Entity.Kind.Relation>> => {
+): Schema.Schema.Type<S> & Entity.OfKind<typeof Entity.Kind.Relation> => {
   assertArgument(getTypeAnnotation(schema)?.kind === EntityKind.Relation, 'schema', 'Expected a relation schema');
 
   if (props[MetaId] != null) {

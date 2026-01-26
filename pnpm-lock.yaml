@@ -148,11 +148,11 @@ catalogs:
       specifier: ^0.2.1
       version: 0.2.1
     '@effect-atom/atom':
-      specifier: ^0.4.10
-      version: 0.4.10
+      specifier: ^0.4.13
+      version: 0.4.13
     '@effect-atom/atom-react':
-      specifier: ^0.4.4
-      version: 0.4.4
+      specifier: ^0.4.6
+      version: 0.4.6
     '@effect/ai':
       specifier: 0.32.1
       version: 0.32.1
@@ -387,18 +387,6 @@ catalogs:
     '@playwright/test':
       specifier: 1.57.0
       version: 1.57.0
-    '@preact-signals/safe-react':
-      specifier: ^0.9.0
-      version: 0.9.0
-    '@preact/signals':
-      specifier: ^2.3.1
-      version: 2.3.2
-    '@preact/signals-core':
-      specifier: ^1.12.1
-      version: 1.12.1
-    '@preact/signals-react':
-      specifier: ^3.3.0
-      version: 3.3.1
     '@radix-ui/primitive':
       specifier: 1.1.1
       version: 1.1.1
@@ -1833,9 +1821,6 @@ catalogs:
     types-package-json:
       specifier: ^2.0.39
       version: 2.0.39
-    typescript:
-      specifier: ^5.9.3
-      version: 5.9.3
     typescript-eslint:
       specifier: ^8.39.0
       version: 8.39.0
@@ -1985,6 +1970,7 @@ catalogs:
       version: 8.8.5
 
 overrides:
+  typescript: ^5.9.3
   '@automerge/automerge': 3.2.1
   better-sqlite3: 12.6.0
   '@lezer/lr': ^1.4.2
@@ -2096,9 +2082,6 @@ importers:
       '@playwright/test':
         specifier: 'catalog:'
         version: 1.57.0
-      '@preact-signals/safe-react':
-        specifier: 'catalog:'
-        version: 0.9.0(@babel/core@7.28.0)(@swc/helpers@0.5.17)(react@19.2.3)
       '@rollup/plugin-inject':
         specifier: 'catalog:'
         version: 5.0.5(rollup@3.23.0)
@@ -2361,7 +2344,7 @@ importers:
         specifier: 'catalog:'
         version: 2.0.39
       typescript:
-        specifier: 'catalog:'
+        specifier: ^5.9.3
         version: 5.9.3
       typescript-eslint:
         specifier: 'catalog:'
@@ -2448,18 +2431,9 @@ importers:
       '@dxos/echo':
         specifier: workspace:*
         version: link:../packages/core/echo/echo
-      '@dxos/echo-signals':
-        specifier: workspace:*
-        version: link:../packages/core/echo/echo-signals
-      '@dxos/live-object':
-        specifier: workspace:*
-        version: link:../packages/core/echo/live-object
       '@dxos/react-client':
         specifier: workspace:*
         version: link:../packages/sdk/react-client
-      '@preact/signals-core':
-        specifier: 'catalog:'
-        version: 1.12.1
 
   packages/apps/composer-app:
     dependencies:
@@ -2484,9 +2458,6 @@ importers:
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../core/echo/echo
-      '@dxos/echo-signals':
-        specifier: workspace:*
-        version: link:../../core/echo/echo-signals
       '@dxos/effect':
         specifier: workspace:*
         version: link:../../common/effect
@@ -2731,9 +2702,6 @@ importers:
       '@dxos/echo-db':
         specifier: workspace:*
         version: link:../../core/echo/echo-db
-      '@dxos/live-object':
-        specifier: workspace:*
-        version: link:../../core/echo/live-object
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
@@ -2992,10 +2960,10 @@ importers:
         version: link:../../common/util
       '@effect-atom/atom':
         specifier: 'catalog:'
-        version: 0.4.10(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/platform@0.93.6(effect@3.19.11))(@effect/rpc@0.72.2(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11))(effect@3.19.11)
+        version: 0.4.13(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/platform@0.93.6(effect@3.19.11))(@effect/rpc@0.72.2(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11))(effect@3.19.11)
       '@effect-atom/atom-react':
         specifier: 'catalog:'
-        version: 0.4.4(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/platform@0.93.6(effect@3.19.11))(@effect/rpc@0.72.2(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11))(effect@3.19.11)(react@19.2.3)(scheduler@0.27.0)
+        version: 0.4.6(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/platform@0.93.6(effect@3.19.11))(@effect/rpc@0.72.2(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11))(effect@3.19.11)(react@19.2.3)(scheduler@0.27.0)
       react:
         specifier: ~19.2.3
         version: 19.2.3
@@ -3060,9 +3028,6 @@ importers:
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../common/invariant
-      '@dxos/live-object':
-        specifier: workspace:*
-        version: link:../../core/echo/live-object
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
@@ -3104,7 +3069,7 @@ importers:
         version: link:../../common/util
       '@effect-atom/atom-react':
         specifier: 'catalog:'
-        version: 0.4.4(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/platform@0.93.6(effect@3.19.11))(@effect/rpc@0.72.2(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11))(effect@3.19.11)(react@19.2.3)(scheduler@0.27.0)
+        version: 0.4.6(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/platform@0.93.6(effect@3.19.11))(@effect/rpc@0.72.2(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11))(effect@3.19.11)(react@19.2.3)(scheduler@0.27.0)
       '@effect/platform-browser':
         specifier: 'catalog:'
         version: 0.73.0(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)
@@ -3201,10 +3166,10 @@ importers:
         version: link:../../common/util
       '@effect-atom/atom':
         specifier: 'catalog:'
-        version: 0.4.10(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/platform@0.93.6(effect@3.19.11))(@effect/rpc@0.72.2(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11))(effect@3.19.11)
+        version: 0.4.13(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/platform@0.93.6(effect@3.19.11))(@effect/rpc@0.72.2(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11))(effect@3.19.11)
       '@effect-atom/atom-react':
         specifier: 'catalog:'
-        version: 0.4.4(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/platform@0.93.6(effect@3.19.11))(@effect/rpc@0.72.2(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11))(effect@3.19.11)(react@19.2.3)(scheduler@0.27.0)
+        version: 0.4.6(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/platform@0.93.6(effect@3.19.11))(@effect/rpc@0.72.2(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11))(effect@3.19.11)(react@19.2.3)(scheduler@0.27.0)
       '@sentry/react':
         specifier: 'catalog:'
         version: 7.101.0(react@19.2.3)
@@ -3376,9 +3341,15 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../util
+      '@effect-atom/atom-react':
+        specifier: 'catalog:'
+        version: 0.4.6(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/platform@0.93.6(effect@3.19.11))(@effect/rpc@0.72.2(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11))(effect@3.19.11)(react@19.2.3)(scheduler@0.27.0)
       '@effect/opentelemetry':
         specifier: 'catalog:'
         version: 0.59.2(@effect/platform@0.93.6(effect@3.19.11))(@opentelemetry/api@1.9.0)(@opentelemetry/resources@2.1.0(@opentelemetry/api@1.9.0))(@opentelemetry/sdk-logs@0.203.0(@opentelemetry/api@1.9.0))(@opentelemetry/sdk-metrics@2.1.0(@opentelemetry/api@1.9.0))(@opentelemetry/sdk-trace-base@2.1.0(@opentelemetry/api@1.9.0))(@opentelemetry/sdk-trace-node@2.1.0(@opentelemetry/api@1.9.0))(@opentelemetry/sdk-trace-web@2.1.0(@opentelemetry/api@1.9.0))(@opentelemetry/semantic-conventions@1.37.0)(effect@3.19.11)
+      '@effect/platform-browser':
+        specifier: 'catalog:'
+        version: 0.73.0(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)
       '@opentelemetry/api':
         specifier: 'catalog:'
         version: 1.9.0
@@ -3415,7 +3386,7 @@ importers:
     devDependencies:
       '@effect-atom/atom':
         specifier: 'catalog:'
-        version: 0.4.10(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/platform@0.93.6(effect@3.19.11))(@effect/rpc@0.72.2(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11))(effect@3.19.11)
+        version: 0.4.13(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/platform@0.93.6(effect@3.19.11))(@effect/rpc@0.72.2(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11))(effect@3.19.11)
       '@solidjs/testing-library':
         specifier: 'catalog:'
         version: 0.8.10(solid-js@1.9.10)
@@ -3524,24 +3495,18 @@ importers:
       '@dxos/debug':
         specifier: workspace:*
         version: link:../debug
-      '@dxos/echo-signals':
-        specifier: workspace:*
-        version: link:../../core/echo/echo-signals
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../invariant
-      '@dxos/live-object':
-        specifier: workspace:*
-        version: link:../../core/echo/live-object
       '@dxos/log':
         specifier: workspace:*
         version: link:../log
       '@dxos/util':
         specifier: workspace:*
         version: link:../util
-      '@preact/signals-core':
+      '@effect-atom/atom-react':
         specifier: 'catalog:'
-        version: 1.12.1
+        version: 0.4.6(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/platform@0.93.6(effect@3.19.11))(@effect/rpc@0.72.2(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11))(effect@3.19.11)(react@19.2.3)(scheduler@0.27.0)
     devDependencies:
       '@dxos/echo':
         specifier: workspace:*
@@ -3690,43 +3655,6 @@ importers:
       level-transcoder:
         specifier: 'catalog:'
         version: 1.0.1
-
-  packages/common/local-storage:
-    dependencies:
-      '@dxos/echo':
-        specifier: workspace:*
-        version: link:../../core/echo/echo
-      '@dxos/echo-signals':
-        specifier: workspace:*
-        version: link:../../core/echo/echo-signals
-      '@dxos/effect':
-        specifier: workspace:*
-        version: link:../effect
-      '@dxos/invariant':
-        specifier: workspace:*
-        version: link:../invariant
-      '@dxos/live-object':
-        specifier: workspace:*
-        version: link:../../core/echo/live-object
-      '@dxos/log':
-        specifier: workspace:*
-        version: link:../log
-      '@dxos/node-std':
-        specifier: workspace:*
-        version: link:../node-std
-      '@dxos/util':
-        specifier: workspace:*
-        version: link:../util
-      '@preact/signals-core':
-        specifier: 'catalog:'
-        version: 1.12.1
-      effect:
-        specifier: 'catalog:'
-        version: 3.19.11
-    devDependencies:
-      '@dxos/async':
-        specifier: workspace:*
-        version: link:../async
 
   packages/common/lock-file:
     dependencies:
@@ -3880,7 +3808,7 @@ importers:
         specifier: 'catalog:'
         version: 10.6.0
       typescript:
-        specifier: 'catalog:'
+        specifier: ^5.9.3
         version: 5.9.3
 
   packages/common/random:
@@ -4017,9 +3945,6 @@ importers:
 
   packages/common/storybook-utils:
     dependencies:
-      '@dxos/echo-signals':
-        specifier: workspace:*
-        version: link:../../core/echo/echo-signals
       '@dxos/lit-theme-editor':
         specifier: workspace:*
         version: link:../../ui/lit-theme-editor
@@ -4032,6 +3957,9 @@ importers:
       '@dxos/react-ui-dnd':
         specifier: workspace:*
         version: link:../../ui/react-ui-dnd
+      '@effect-atom/atom-react':
+        specifier: 'catalog:'
+        version: 0.4.6(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/platform@0.93.6(effect@3.19.11))(@effect/rpc@0.72.2(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11))(effect@3.19.11)(react@19.2.3)(scheduler@0.27.0)
       lodash.defaultsdeep:
         specifier: 'catalog:'
         version: 4.6.1
@@ -4238,9 +4166,6 @@ importers:
       '@dxos/keys':
         specifier: workspace:*
         version: link:../../common/keys
-      '@dxos/live-object':
-        specifier: workspace:*
-        version: link:../echo/live-object
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
@@ -4350,9 +4275,6 @@ importers:
       '@dxos/keys':
         specifier: workspace:*
         version: link:../../common/keys
-      '@dxos/live-object':
-        specifier: workspace:*
-        version: link:../echo/live-object
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
@@ -4368,6 +4290,9 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
+      '@effect-atom/atom-react':
+        specifier: 'catalog:'
+        version: 0.4.6(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/platform@0.93.6(effect@3.19.11))(@effect/rpc@0.72.2(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11))(effect@3.19.11)(react@19.2.3)(scheduler@0.27.0)
       '@effect/ai':
         specifier: 'catalog:'
         version: 0.32.1(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/platform@0.93.6(effect@3.19.11))(@effect/rpc@0.72.2(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11))(effect@3.19.11)
@@ -4377,9 +4302,6 @@ importers:
       '@effect/platform':
         specifier: 'catalog:'
         version: 0.93.6(effect@3.19.11)
-      '@preact/signals-core':
-        specifier: 'catalog:'
-        version: 1.12.1
       '@xenova/transformers':
         specifier: 'catalog:'
         version: 2.17.2
@@ -4556,9 +4478,6 @@ importers:
       '@dxos/keys':
         specifier: workspace:*
         version: link:../../common/keys
-      '@dxos/live-object':
-        specifier: workspace:*
-        version: link:../echo/live-object
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
@@ -4577,9 +4496,6 @@ importers:
       '@dxos/vendor-hyperformula':
         specifier: workspace:*
         version: link:../../../vendor/hyperformula
-      '@preact/signals-core':
-        specifier: 'catalog:'
-        version: 1.12.1
       effect:
         specifier: 'catalog:'
         version: 3.19.11
@@ -4647,9 +4563,6 @@ importers:
       '@dxos/keys':
         specifier: workspace:*
         version: link:../../common/keys
-      '@dxos/live-object':
-        specifier: workspace:*
-        version: link:../echo/live-object
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
@@ -4674,9 +4587,6 @@ importers:
       '@effect/platform':
         specifier: 'catalog:'
         version: 0.93.6(effect@3.19.11)
-      '@preact/signals-core':
-        specifier: 'catalog:'
-        version: 1.12.1
       chalk:
         specifier: 'catalog:'
         version: 4.1.2
@@ -4701,9 +4611,6 @@ importers:
       '@dxos/echo-protocol':
         specifier: workspace:*
         version: link:../echo-protocol
-      '@dxos/echo-signals':
-        specifier: workspace:*
-        version: link:../echo-signals
       '@dxos/effect':
         specifier: workspace:*
         version: link:../../../common/effect
@@ -4716,9 +4623,6 @@ importers:
       '@dxos/keys':
         specifier: workspace:*
         version: link:../../../common/keys
-      '@dxos/live-object':
-        specifier: workspace:*
-        version: link:../live-object
       '@dxos/log':
         specifier: workspace:*
         version: link:../../../common/log
@@ -4731,9 +4635,6 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../../../common/util
-      '@preact/signals-core':
-        specifier: 'catalog:'
-        version: 1.12.1
       effect:
         specifier: 'catalog:'
         version: 3.19.11
@@ -4749,15 +4650,12 @@ importers:
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../../common/invariant
-      '@dxos/live-object':
-        specifier: workspace:*
-        version: link:../live-object
       '@dxos/util':
         specifier: workspace:*
         version: link:../../../common/util
       '@effect-atom/atom':
         specifier: 'catalog:'
-        version: 0.4.10(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/platform@0.93.6(effect@3.19.11))(@effect/rpc@0.72.2(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11))(effect@3.19.11)
+        version: 0.4.13(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/platform@0.93.6(effect@3.19.11))(@effect/rpc@0.72.2(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11))(effect@3.19.11)
       lodash.isequal:
         specifier: 'catalog:'
         version: 4.5.0
@@ -4804,9 +4702,6 @@ importers:
       '@dxos/echo-protocol':
         specifier: workspace:*
         version: link:../echo-protocol
-      '@dxos/echo-signals':
-        specifier: workspace:*
-        version: link:../echo-signals
       '@dxos/edge-client':
         specifier: workspace:*
         version: link:../../mesh/edge-client
@@ -4825,9 +4720,6 @@ importers:
       '@dxos/kv-store':
         specifier: workspace:*
         version: link:../../../common/kv-store
-      '@dxos/live-object':
-        specifier: workspace:*
-        version: link:../live-object
       '@dxos/log':
         specifier: workspace:*
         version: link:../../../common/log
@@ -4877,9 +4769,6 @@ importers:
       '@dxos/test-utils':
         specifier: workspace:*
         version: link:../../../common/test-utils
-      '@preact/signals-core':
-        specifier: 'catalog:'
-        version: 1.12.1
       '@types/lodash.isequal':
         specifier: 'catalog:'
         version: 4.5.6
@@ -4901,9 +4790,6 @@ importers:
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../../common/invariant
-      '@dxos/live-object':
-        specifier: workspace:*
-        version: link:../live-object
       '@dxos/log':
         specifier: workspace:*
         version: link:../../../common/log
@@ -5139,7 +5025,7 @@ importers:
         specifier: 'catalog:'
         version: 0.16.8(@typescript/native-preview@7.0.0-dev.20250808.1)(oxc-resolver@11.9.0)(synckit@0.11.11)(typescript@5.9.3)
       typescript:
-        specifier: 'catalog:'
+        specifier: ^5.9.3
         version: 5.9.3
 
   packages/core/echo/echo-react:
@@ -5150,16 +5036,16 @@ importers:
       '@dxos/echo-atom':
         specifier: workspace:*
         version: link:../echo-atom
+      '@effect-atom/atom':
+        specifier: 'catalog:'
+        version: 0.4.13(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/platform@0.93.6(effect@3.19.11))(@effect/rpc@0.72.2(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11))(effect@3.19.11)
       '@effect-atom/atom-react':
         specifier: 'catalog:'
-        version: 0.4.4(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/platform@0.93.6(effect@3.19.11))(@effect/rpc@0.72.2(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11))(effect@3.19.11)(react@19.2.3)(scheduler@0.27.0)
+        version: 0.4.6(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/platform@0.93.6(effect@3.19.11))(@effect/rpc@0.72.2(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11))(effect@3.19.11)(react@19.2.3)(scheduler@0.27.0)
     devDependencies:
       '@dxos/echo-db':
         specifier: workspace:*
         version: link:../echo-db
-      '@effect-atom/atom':
-        specifier: 'catalog:'
-        version: 0.4.10(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/platform@0.93.6(effect@3.19.11))(@effect/rpc@0.72.2(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11))(effect@3.19.11)
       '@testing-library/react':
         specifier: 'catalog:'
         version: 16.3.0(@testing-library/dom@10.4.1)(@types/react-dom@19.2.3(@types/react@19.2.7))(@types/react@19.2.7)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
@@ -5176,25 +5062,6 @@ importers:
         specifier: ~19.2.3
         version: 19.2.3(react@19.2.3)
 
-  packages/core/echo/echo-signals:
-    dependencies:
-      '@preact/signals':
-        specifier: 'catalog:'
-        version: 2.3.2(preact@10.26.9)
-      '@preact/signals-core':
-        specifier: 'catalog:'
-        version: 1.12.1
-      '@preact/signals-react':
-        specifier: 'catalog:'
-        version: 3.3.1(react@19.2.3)
-    optionalDependencies:
-      preact:
-        specifier: 'catalog:'
-        version: 10.26.9
-      react:
-        specifier: ~19.2.3
-        version: 19.2.3
-
   packages/core/echo/echo-solid:
     dependencies:
       '@dxos/echo':
@@ -5206,6 +5073,9 @@ importers:
       '@dxos/effect-atom-solid':
         specifier: workspace:*
         version: link:../../../common/effect-atom-solid
+      '@effect-atom/atom':
+        specifier: 'catalog:'
+        version: 0.4.13(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/platform@0.93.6(effect@3.19.11))(@effect/rpc@0.72.2(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11))(effect@3.19.11)
       '@solid-primitives/utils':
         specifier: 'catalog:'
         version: 6.3.2(solid-js@1.9.10)
@@ -5381,45 +5251,6 @@ importers:
         specifier: 'catalog:'
         version: 4.5.6
 
-  packages/core/echo/live-object:
-    dependencies:
-      '@dxos/async':
-        specifier: workspace:*
-        version: link:../../../common/async
-      '@dxos/debug':
-        specifier: workspace:*
-        version: link:../../../common/debug
-      '@dxos/echo-protocol':
-        specifier: workspace:*
-        version: link:../echo-protocol
-      '@dxos/echo-signals':
-        specifier: workspace:*
-        version: link:../echo-signals
-      '@dxos/effect':
-        specifier: workspace:*
-        version: link:../../../common/effect
-      '@dxos/invariant':
-        specifier: workspace:*
-        version: link:../../../common/invariant
-      '@dxos/keys':
-        specifier: workspace:*
-        version: link:../../../common/keys
-      '@dxos/log':
-        specifier: workspace:*
-        version: link:../../../common/log
-      '@dxos/node-std':
-        specifier: workspace:*
-        version: link:../../../common/node-std
-      '@dxos/util':
-        specifier: workspace:*
-        version: link:../../../common/util
-      '@preact/signals-core':
-        specifier: 'catalog:'
-        version: 1.12.1
-      effect:
-        specifier: 'catalog:'
-        version: 3.19.11
-
   packages/core/functions:
     dependencies:
       '@dxos/ai':
@@ -5533,9 +5364,6 @@ importers:
       '@dxos/kv-store':
         specifier: workspace:*
         version: link:../../common/kv-store
-      '@dxos/live-object':
-        specifier: workspace:*
-        version: link:../echo/live-object
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
@@ -6345,6 +6173,9 @@ importers:
       '@dxos/effect':
         specifier: workspace:*
         version: link:../../common/effect
+      '@dxos/effect-atom-solid':
+        specifier: workspace:*
+        version: link:../../common/effect-atom-solid
       '@dxos/errors':
         specifier: workspace:*
         version: link:../../common/errors
@@ -6426,6 +6257,9 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
+      '@effect-atom/atom-react':
+        specifier: 'catalog:'
+        version: 0.4.6(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/platform@0.93.6(effect@3.19.11))(@effect/rpc@0.72.2(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11))(effect@3.19.11)(react@19.2.3)(scheduler@0.27.0)
       '@effect/ai':
         specifier: 'catalog:'
         version: 0.32.1(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/platform@0.93.6(effect@3.19.11))(@effect/rpc@0.72.2(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11))(effect@3.19.11)
@@ -6524,7 +6358,7 @@ importers:
         specifier: 'catalog:'
         version: 0.10.0
       typescript:
-        specifier: 'catalog:'
+        specifier: ^5.9.3
         version: 5.9.3
       vitest:
         specifier: 'catalog:'
@@ -6573,7 +6407,7 @@ importers:
         specifier: 'catalog:'
         version: 3.19.11
       typescript:
-        specifier: 'catalog:'
+        specifier: ^5.9.3
         version: 5.9.3
       vitest:
         specifier: 'catalog:'
@@ -6644,9 +6478,6 @@ importers:
       '@dxos/keys':
         specifier: workspace:*
         version: link:../../common/keys
-      '@dxos/live-object':
-        specifier: workspace:*
-        version: link:../../core/echo/live-object
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
@@ -6704,9 +6535,6 @@ importers:
       '@effect/platform':
         specifier: 'catalog:'
         version: 0.93.6(effect@3.19.11)
-      '@preact-signals/safe-react':
-        specifier: 'catalog:'
-        version: 0.9.0(@babel/core@7.28.0)(@swc/helpers@0.5.17)(react@19.2.3)
       '@radix-ui/react-tabs':
         specifier: 'catalog:'
         version: 1.1.3(@types/react-dom@19.2.3(@types/react@19.2.7))(@types/react@19.2.7)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
@@ -7042,9 +6870,6 @@ importers:
       '@dxos/kv-store':
         specifier: workspace:*
         version: link:../../common/kv-store
-      '@dxos/live-object':
-        specifier: workspace:*
-        version: link:../../core/echo/live-object
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
@@ -7391,6 +7216,9 @@ importers:
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../core/echo/echo
+      '@dxos/echo-atom':
+        specifier: workspace:*
+        version: link:../../core/echo/echo-atom
       '@dxos/echo-db':
         specifier: workspace:*
         version: link:../../core/echo/echo-db
@@ -7424,12 +7252,6 @@ importers:
       '@dxos/lit-ui':
         specifier: workspace:*
         version: link:../../ui/lit-ui
-      '@dxos/live-object':
-        specifier: workspace:*
-        version: link:../../core/echo/live-object
-      '@dxos/local-storage':
-        specifier: workspace:*
-        version: link:../../common/local-storage
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
@@ -7538,6 +7360,12 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
+      '@effect-atom/atom':
+        specifier: 'catalog:'
+        version: 0.4.13(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/platform@0.93.6(effect@3.19.11))(@effect/rpc@0.72.2(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11))(effect@3.19.11)
+      '@effect-atom/atom-react':
+        specifier: 'catalog:'
+        version: 0.4.6(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/platform@0.93.6(effect@3.19.11))(@effect/rpc@0.72.2(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11))(effect@3.19.11)(react@19.2.3)(scheduler@0.27.0)
       '@effect/ai':
         specifier: 'catalog:'
         version: 0.32.1(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/platform@0.93.6(effect@3.19.11))(@effect/rpc@0.72.2(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11))(effect@3.19.11)
@@ -7553,18 +7381,6 @@ importers:
       '@effect/platform-browser':
         specifier: 'catalog:'
         version: 0.73.0(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)
-      '@phosphor-icons/react':
-        specifier: 'catalog:'
-        version: 2.1.10(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
-      '@preact-signals/safe-react':
-        specifier: 'catalog:'
-        version: 0.9.0(@babel/core@7.28.0)(@swc/helpers@0.5.17)(react@19.2.3)
-      '@preact/signals-core':
-        specifier: 'catalog:'
-        version: 1.12.1
-      '@preact/signals-react':
-        specifier: 'catalog:'
-        version: 3.3.1(react@19.2.3)
       '@radix-ui/react-context':
         specifier: 'catalog:'
         version: 1.1.1(@types/react@19.2.7)(react@19.2.3)
@@ -7611,9 +7427,6 @@ importers:
       '@dxos/ui-theme':
         specifier: workspace:*
         version: link:../../ui/ui-theme
-      '@effect-atom/atom-react':
-        specifier: 'catalog:'
-        version: 0.4.4(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/platform@0.93.6(effect@3.19.11))(@effect/rpc@0.72.2(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11))(effect@3.19.11)(react@19.2.3)(scheduler@0.27.0)
       '@effect/platform':
         specifier: 'catalog:'
         version: 0.93.6(effect@3.19.11)
@@ -7647,9 +7460,6 @@ importers:
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../core/echo/echo
-      '@dxos/echo-signals':
-        specifier: workspace:*
-        version: link:../../core/echo/echo-signals
       '@dxos/keyboard':
         specifier: workspace:*
         version: link:../../common/keyboard
@@ -7665,12 +7475,6 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
-      '@preact-signals/safe-react':
-        specifier: 'catalog:'
-        version: 0.9.0(@babel/core@7.28.0)(@swc/helpers@0.5.17)(react@19.2.3)
-      '@preact/signals-core':
-        specifier: 'catalog:'
-        version: 1.12.1
       effect:
         specifier: 'catalog:'
         version: 3.19.11
@@ -7729,9 +7533,6 @@ importers:
       '@dxos/keys':
         specifier: workspace:*
         version: link:../../common/keys
-      '@dxos/live-object':
-        specifier: workspace:*
-        version: link:../../core/echo/live-object
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
@@ -7792,12 +7593,6 @@ importers:
       '@effect/printer-ansi':
         specifier: 'catalog:'
         version: 0.47.0(@effect/typeclass@0.38.0(effect@3.19.11))(effect@3.19.11)
-      '@preact-signals/safe-react':
-        specifier: 'catalog:'
-        version: 0.9.0(@babel/core@7.28.0)(@swc/helpers@0.5.17)(react@19.2.3)
-      '@preact/signals-core':
-        specifier: 'catalog:'
-        version: 1.12.1
     devDependencies:
       '@dxos/react-ui':
         specifier: workspace:*
@@ -7810,7 +7605,7 @@ importers:
         version: link:../../ui/ui-theme
       '@effect-atom/atom-react':
         specifier: 'catalog:'
-        version: 0.4.4(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/platform@0.93.6(effect@3.19.11))(@effect/rpc@0.72.2(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11))(effect@3.19.11)(react@19.2.3)(scheduler@0.27.0)
+        version: 0.4.6(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/platform@0.93.6(effect@3.19.11))(@effect/rpc@0.72.2(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11))(effect@3.19.11)(react@19.2.3)(scheduler@0.27.0)
       '@effect/platform':
         specifier: 'catalog:'
         version: 0.93.6(effect@3.19.11)
@@ -7856,6 +7651,9 @@ importers:
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../core/echo/echo
+      '@dxos/echo-react':
+        specifier: workspace:*
+        version: link:../../core/echo/echo-react
       '@dxos/effect':
         specifier: workspace:*
         version: link:../../common/effect
@@ -7910,15 +7708,6 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
-      '@preact-signals/safe-react':
-        specifier: 'catalog:'
-        version: 0.9.0(@babel/core@7.28.0)(@swc/helpers@0.5.17)(react@19.2.3)
-      '@preact/signals-core':
-        specifier: 'catalog:'
-        version: 1.12.1
-      '@preact/signals-react':
-        specifier: 'catalog:'
-        version: 3.3.1(react@19.2.3)
       effect:
         specifier: 'catalog:'
         version: 3.19.11
@@ -7989,15 +7778,15 @@ importers:
       '@dxos/echo-db':
         specifier: workspace:*
         version: link:../../core/echo/echo-db
+      '@dxos/echo-react':
+        specifier: workspace:*
+        version: link:../../core/echo/echo-react
       '@dxos/functions':
         specifier: workspace:*
         version: link:../../core/functions
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../common/invariant
-      '@dxos/live-object':
-        specifier: workspace:*
-        version: link:../../core/echo/live-object
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
@@ -8040,12 +7829,9 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
-      '@preact-signals/safe-react':
+      '@effect-atom/atom-react':
         specifier: 'catalog:'
-        version: 0.9.0(@babel/core@7.28.0)(@swc/helpers@0.5.17)(react@19.2.3)
-      '@preact/signals-core':
-        specifier: 'catalog:'
-        version: 1.12.1
+        version: 0.4.6(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/platform@0.93.6(effect@3.19.11))(@effect/rpc@0.72.2(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11))(effect@3.19.11)(react@19.2.3)(scheduler@0.27.0)
       chess.js:
         specifier: 'catalog:'
         version: 1.4.0
@@ -8107,18 +7893,12 @@ importers:
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../core/echo/echo
-      '@dxos/echo-signals':
-        specifier: workspace:*
-        version: link:../../core/echo/echo-signals
       '@dxos/effect':
         specifier: workspace:*
         version: link:../../common/effect
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../common/invariant
-      '@dxos/local-storage':
-        specifier: workspace:*
-        version: link:../../common/local-storage
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
@@ -8158,12 +7938,6 @@ importers:
       '@effect/platform':
         specifier: 'catalog:'
         version: 0.93.6(effect@3.19.11)
-      '@preact-signals/safe-react':
-        specifier: 'catalog:'
-        version: 0.9.0(@babel/core@7.28.0)(@swc/helpers@0.5.17)(react@19.2.3)
-      '@preact/signals-core':
-        specifier: 'catalog:'
-        version: 1.12.1
       effect:
         specifier: 'catalog:'
         version: 3.19.11
@@ -8174,9 +7948,6 @@ importers:
         specifier: 'catalog:'
         version: 2.8.2
     devDependencies:
-      '@dxos/live-object':
-        specifier: workspace:*
-        version: link:../../core/echo/live-object
       '@dxos/react-ui':
         specifier: workspace:*
         version: link:../../ui/react-ui
@@ -8188,7 +7959,7 @@ importers:
         version: link:../../ui/ui-theme
       '@effect-atom/atom-react':
         specifier: 'catalog:'
-        version: 0.4.4(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/platform@0.93.6(effect@3.19.11))(@effect/rpc@0.72.2(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11))(effect@3.19.11)(react@19.2.3)(scheduler@0.27.0)
+        version: 0.4.6(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/platform@0.93.6(effect@3.19.11))(@effect/rpc@0.72.2(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11))(effect@3.19.11)(react@19.2.3)(scheduler@0.27.0)
       '@effect/printer':
         specifier: 'catalog:'
         version: 0.47.0(@effect/typeclass@0.38.0(effect@3.19.11))(effect@3.19.11)
@@ -8240,9 +8011,6 @@ importers:
       '@dxos/functions-runtime':
         specifier: workspace:*
         version: link:../../core/functions-runtime
-      '@dxos/live-object':
-        specifier: workspace:*
-        version: link:../../core/echo/live-object
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
@@ -8273,9 +8041,6 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
-      '@preact-signals/safe-react':
-        specifier: 'catalog:'
-        version: 0.9.0(@babel/core@7.28.0)(@swc/helpers@0.5.17)(react@19.2.3)
       effect:
         specifier: 'catalog:'
         version: 3.19.11
@@ -8355,6 +8120,9 @@ importers:
       '@dxos/echo-pipeline':
         specifier: workspace:*
         version: link:../../core/echo/echo-pipeline
+      '@dxos/effect':
+        specifier: workspace:*
+        version: link:../../common/effect
       '@dxos/functions':
         specifier: workspace:*
         version: link:../../core/functions
@@ -8364,12 +8132,6 @@ importers:
       '@dxos/keys':
         specifier: workspace:*
         version: link:../../common/keys
-      '@dxos/live-object':
-        specifier: workspace:*
-        version: link:../../core/echo/live-object
-      '@dxos/local-storage':
-        specifier: workspace:*
-        version: link:../../common/local-storage
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
@@ -8460,12 +8222,12 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
-      '@preact-signals/safe-react':
+      '@effect-atom/atom':
         specifier: 'catalog:'
-        version: 0.9.0(@babel/core@7.28.0)(@swc/helpers@0.5.17)(react@19.2.3)
-      '@preact/signals-core':
+        version: 0.4.13(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/platform@0.93.6(effect@3.19.11))(@effect/rpc@0.72.2(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11))(effect@3.19.11)
+      '@effect-atom/atom-react':
         specifier: 'catalog:'
-        version: 1.12.1
+        version: 0.4.6(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/platform@0.93.6(effect@3.19.11))(@effect/rpc@0.72.2(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11))(effect@3.19.11)(react@19.2.3)(scheduler@0.27.0)
       '@tldraw/tldraw':
         specifier: 'catalog:'
         version: 3.0.0(@types/react-dom@19.2.3(@types/react@19.2.7))(@types/react@19.2.7)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
@@ -8491,9 +8253,6 @@ importers:
       '@dxos/ui-theme':
         specifier: workspace:*
         version: link:../../ui/ui-theme
-      '@effect-atom/atom-react':
-        specifier: 'catalog:'
-        version: 0.4.4(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/platform@0.93.6(effect@3.19.11))(@effect/rpc@0.72.2(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11))(effect@3.19.11)(react@19.2.3)(scheduler@0.27.0)
       '@effect/platform':
         specifier: 'catalog:'
         version: 0.93.6(effect@3.19.11)
@@ -8539,9 +8298,6 @@ importers:
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../core/echo/echo
-      '@dxos/echo-signals':
-        specifier: workspace:*
-        version: link:../../core/echo/echo-signals
       '@dxos/effect':
         specifier: workspace:*
         version: link:../../common/effect
@@ -8551,12 +8307,6 @@ importers:
       '@dxos/keyboard':
         specifier: workspace:*
         version: link:../../common/keyboard
-      '@dxos/live-object':
-        specifier: workspace:*
-        version: link:../../core/echo/live-object
-      '@dxos/local-storage':
-        specifier: workspace:*
-        version: link:../../common/local-storage
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
@@ -8599,6 +8349,12 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
+      '@effect-atom/atom':
+        specifier: 'catalog:'
+        version: 0.4.13(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/platform@0.93.6(effect@3.19.11))(@effect/rpc@0.72.2(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11))(effect@3.19.11)
+      '@effect-atom/atom-react':
+        specifier: 'catalog:'
+        version: 0.4.6(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/platform@0.93.6(effect@3.19.11))(@effect/rpc@0.72.2(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11))(effect@3.19.11)(react@19.2.3)(scheduler@0.27.0)
       '@effect/ai':
         specifier: 'catalog:'
         version: 0.32.1(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/platform@0.93.6(effect@3.19.11))(@effect/rpc@0.72.2(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11))(effect@3.19.11)
@@ -8608,12 +8364,6 @@ importers:
       '@fluentui/react-tabster':
         specifier: 'catalog:'
         version: 9.26.11(@types/react-dom@19.2.3(@types/react@19.2.7))(@types/react@19.2.7)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
-      '@preact-signals/safe-react':
-        specifier: 'catalog:'
-        version: 0.9.0(@babel/core@7.28.0)(@swc/helpers@0.5.17)(react@19.2.3)
-      '@preact/signals-core':
-        specifier: 'catalog:'
-        version: 1.12.1
       '@radix-ui/react-context':
         specifier: 'catalog:'
         version: 1.1.1(@types/react@19.2.7)(react@19.2.3)
@@ -8633,9 +8383,6 @@ importers:
       '@dxos/ui-theme':
         specifier: workspace:*
         version: link:../../ui/ui-theme
-      '@effect-atom/atom-react':
-        specifier: 'catalog:'
-        version: 0.4.4(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/platform@0.93.6(effect@3.19.11))(@effect/rpc@0.72.2(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11))(effect@3.19.11)(react@19.2.3)(scheduler@0.27.0)
       '@effect/platform':
         specifier: 'catalog:'
         version: 0.93.6(effect@3.19.11)
@@ -8675,15 +8422,12 @@ importers:
       '@dxos/echo-db':
         specifier: workspace:*
         version: link:../../core/echo/echo-db
+      '@dxos/effect':
+        specifier: workspace:*
+        version: link:../../common/effect
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../common/invariant
-      '@dxos/live-object':
-        specifier: workspace:*
-        version: link:../../core/echo/live-object
-      '@dxos/local-storage':
-        specifier: workspace:*
-        version: link:../../common/local-storage
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
@@ -8720,15 +8464,15 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
+      '@effect-atom/atom':
+        specifier: 'catalog:'
+        version: 0.4.13(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/platform@0.93.6(effect@3.19.11))(@effect/rpc@0.72.2(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11))(effect@3.19.11)
+      '@effect-atom/atom-react':
+        specifier: 'catalog:'
+        version: 0.4.6(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/platform@0.93.6(effect@3.19.11))(@effect/rpc@0.72.2(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11))(effect@3.19.11)(react@19.2.3)(scheduler@0.27.0)
       '@excalidraw/excalidraw':
         specifier: 'catalog:'
         version: 0.18.0(@types/react-dom@19.2.3(@types/react@19.2.7))(@types/react@19.2.7)(immer@10.1.1)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
-      '@preact-signals/safe-react':
-        specifier: 'catalog:'
-        version: 0.9.0(@babel/core@7.28.0)(@swc/helpers@0.5.17)(react@19.2.3)
-      '@preact/signals-core':
-        specifier: 'catalog:'
-        version: 1.12.1
       effect:
         specifier: 'catalog:'
         version: 3.19.11
@@ -8796,9 +8540,6 @@ importers:
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../common/invariant
-      '@dxos/live-object':
-        specifier: workspace:*
-        version: link:../../core/echo/live-object
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
@@ -8841,15 +8582,12 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
+      '@effect-atom/atom-react':
+        specifier: 'catalog:'
+        version: 0.4.6(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/platform@0.93.6(effect@3.19.11))(@effect/rpc@0.72.2(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11))(effect@3.19.11)(react@19.2.3)(scheduler@0.27.0)
       '@observablehq/plot':
         specifier: 'catalog:'
         version: 0.6.11
-      '@preact-signals/safe-react':
-        specifier: 'catalog:'
-        version: 0.9.0(@babel/core@7.28.0)(@swc/helpers@0.5.17)(react@19.2.3)
-      '@preact/signals-core':
-        specifier: 'catalog:'
-        version: 1.12.1
       d3:
         specifier: 'catalog:'
         version: 7.9.0
@@ -8929,15 +8667,9 @@ importers:
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../core/echo/echo
-      '@dxos/echo-signals':
+      '@dxos/effect':
         specifier: workspace:*
-        version: link:../../core/echo/echo-signals
-      '@dxos/live-object':
-        specifier: workspace:*
-        version: link:../../core/echo/live-object
-      '@dxos/local-storage':
-        specifier: workspace:*
-        version: link:../../common/local-storage
+        version: link:../../common/effect
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
@@ -8974,12 +8706,12 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
-      '@preact-signals/safe-react':
+      '@effect-atom/atom':
         specifier: 'catalog:'
-        version: 0.9.0(@babel/core@7.28.0)(@swc/helpers@0.5.17)(react@19.2.3)
-      '@preact/signals-core':
+        version: 0.4.13(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/platform@0.93.6(effect@3.19.11))(@effect/rpc@0.72.2(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11))(effect@3.19.11)
+      '@effect-atom/atom-react':
         specifier: 'catalog:'
-        version: 1.12.1
+        version: 0.4.6(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/platform@0.93.6(effect@3.19.11))(@effect/rpc@0.72.2(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11))(effect@3.19.11)(react@19.2.3)(scheduler@0.27.0)
       localforage:
         specifier: 'catalog:'
         version: 1.10.0
@@ -8993,9 +8725,6 @@ importers:
       '@dxos/ui-theme':
         specifier: workspace:*
         version: link:../../ui/ui-theme
-      '@effect-atom/atom-react':
-        specifier: 'catalog:'
-        version: 0.4.4(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/platform@0.93.6(effect@3.19.11))(@effect/rpc@0.72.2(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11))(effect@3.19.11)(react@19.2.3)(scheduler@0.27.0)
       '@effect/platform':
         specifier: 'catalog:'
         version: 0.93.6(effect@3.19.11)
@@ -9041,9 +8770,6 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
-      '@preact-signals/safe-react':
-        specifier: 'catalog:'
-        version: 0.9.0(@babel/core@7.28.0)(@swc/helpers@0.5.17)(react@19.2.3)
     devDependencies:
       '@dxos/react-client':
         specifier: workspace:*
@@ -9053,7 +8779,7 @@ importers:
         version: link:../../common/storybook-utils
       '@effect-atom/atom-react':
         specifier: 'catalog:'
-        version: 0.4.4(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/platform@0.93.6(effect@3.19.11))(@effect/rpc@0.72.2(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11))(effect@3.19.11)(react@19.2.3)(scheduler@0.27.0)
+        version: 0.4.6(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/platform@0.93.6(effect@3.19.11))(@effect/rpc@0.72.2(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11))(effect@3.19.11)(react@19.2.3)(scheduler@0.27.0)
       '@effect/platform':
         specifier: 'catalog:'
         version: 0.93.6(effect@3.19.11)
@@ -9090,15 +8816,12 @@ importers:
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../core/echo/echo
+      '@dxos/effect':
+        specifier: workspace:*
+        version: link:../../common/effect
       '@dxos/keyboard':
         specifier: workspace:*
         version: link:../../common/keyboard
-      '@dxos/live-object':
-        specifier: workspace:*
-        version: link:../../core/echo/live-object
-      '@dxos/local-storage':
-        specifier: workspace:*
-        version: link:../../common/local-storage
       '@dxos/operation':
         specifier: workspace:*
         version: link:../../core/operation
@@ -9117,12 +8840,12 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
+      '@effect-atom/atom':
+        specifier: 'catalog:'
+        version: 0.4.13(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/platform@0.93.6(effect@3.19.11))(@effect/rpc@0.72.2(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11))(effect@3.19.11)
       '@fluentui/react-tabster':
         specifier: 'catalog:'
         version: 9.26.11(@types/react-dom@19.2.3(@types/react@19.2.7))(@types/react@19.2.7)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
-      '@preact-signals/safe-react':
-        specifier: 'catalog:'
-        version: 0.9.0(@babel/core@7.28.0)(@swc/helpers@0.5.17)(react@19.2.3)
       react-joyride:
         specifier: 'catalog:'
         version: 2.7.2(@types/react@19.2.7)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
@@ -9144,7 +8867,7 @@ importers:
         version: link:../../ui/ui-theme
       '@effect-atom/atom-react':
         specifier: 'catalog:'
-        version: 0.4.4(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/platform@0.93.6(effect@3.19.11))(@effect/rpc@0.72.2(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11))(effect@3.19.11)(react@19.2.3)(scheduler@0.27.0)
+        version: 0.4.6(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/platform@0.93.6(effect@3.19.11))(@effect/rpc@0.72.2(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11))(effect@3.19.11)(react@19.2.3)(scheduler@0.27.0)
       '@effect/platform':
         specifier: 'catalog:'
         version: 0.93.6(effect@3.19.11)
@@ -9238,9 +8961,6 @@ importers:
       '@dxos/lit-ui':
         specifier: workspace:*
         version: link:../../ui/lit-ui
-      '@dxos/live-object':
-        specifier: workspace:*
-        version: link:../../core/echo/live-object
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
@@ -9319,21 +9039,15 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
+      '@effect-atom/atom-react':
+        specifier: 'catalog:'
+        version: 0.4.6(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/platform@0.93.6(effect@3.19.11))(@effect/rpc@0.72.2(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11))(effect@3.19.11)(react@19.2.3)(scheduler@0.27.0)
       '@effect/ai':
         specifier: 'catalog:'
         version: 0.32.1(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/platform@0.93.6(effect@3.19.11))(@effect/rpc@0.72.2(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11))(effect@3.19.11)
       '@effect/experimental':
         specifier: 'catalog:'
         version: 0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2)
-      '@preact-signals/safe-react':
-        specifier: 'catalog:'
-        version: 0.9.0(@babel/core@7.28.0)(@swc/helpers@0.5.17)(react@19.2.3)
-      '@preact/signals-core':
-        specifier: 'catalog:'
-        version: 1.12.1
-      '@preact/signals-react':
-        specifier: 'catalog:'
-        version: 3.3.1(react@19.2.3)
       '@radix-ui/react-context':
         specifier: 'catalog:'
         version: 1.1.1(@types/react@19.2.7)(react@19.2.3)
@@ -9377,9 +9091,6 @@ importers:
       '@dxos/ui-theme':
         specifier: workspace:*
         version: link:../../ui/ui-theme
-      '@effect-atom/atom-react':
-        specifier: 'catalog:'
-        version: 0.4.4(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/platform@0.93.6(effect@3.19.11))(@effect/rpc@0.72.2(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11))(effect@3.19.11)(react@19.2.3)(scheduler@0.27.0)
       '@effect/platform':
         specifier: 'catalog:'
         version: 0.93.6(effect@3.19.11)
@@ -9482,12 +9193,9 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
-      '@preact-signals/safe-react':
+      '@effect-atom/atom-react':
         specifier: 'catalog:'
-        version: 0.9.0(@babel/core@7.28.0)(@swc/helpers@0.5.17)(react@19.2.3)
-      '@preact/signals-core':
-        specifier: 'catalog:'
-        version: 1.12.1
+        version: 0.4.6(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/platform@0.93.6(effect@3.19.11))(@effect/rpc@0.72.2(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11))(effect@3.19.11)(react@19.2.3)(scheduler@0.27.0)
       effect:
         specifier: 'catalog:'
         version: 3.19.11
@@ -9549,6 +9257,9 @@ importers:
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../core/echo/echo
+      '@dxos/echo-atom':
+        specifier: workspace:*
+        version: link:../../core/echo/echo-atom
       '@dxos/effect':
         specifier: workspace:*
         version: link:../../common/effect
@@ -9558,12 +9269,6 @@ importers:
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../common/invariant
-      '@dxos/live-object':
-        specifier: workspace:*
-        version: link:../../core/echo/live-object
-      '@dxos/local-storage':
-        specifier: workspace:*
-        version: link:../../common/local-storage
       '@dxos/operation':
         specifier: workspace:*
         version: link:../../core/operation
@@ -9606,12 +9311,9 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
-      '@preact-signals/safe-react':
+      '@effect-atom/atom':
         specifier: 'catalog:'
-        version: 0.9.0(@babel/core@7.28.0)(@swc/helpers@0.5.17)(react@19.2.3)
-      '@preact/signals-core':
-        specifier: 'catalog:'
-        version: 1.12.1
+        version: 0.4.13(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/platform@0.93.6(effect@3.19.11))(@effect/rpc@0.72.2(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11))(effect@3.19.11)
       react-resize-detector:
         specifier: 'catalog:'
         version: 11.0.1(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
@@ -9627,7 +9329,7 @@ importers:
         version: link:../../ui/ui-theme
       '@effect-atom/atom-react':
         specifier: 'catalog:'
-        version: 0.4.4(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/platform@0.93.6(effect@3.19.11))(@effect/rpc@0.72.2(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11))(effect@3.19.11)(react@19.2.3)(scheduler@0.27.0)
+        version: 0.4.6(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/platform@0.93.6(effect@3.19.11))(@effect/rpc@0.72.2(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11))(effect@3.19.11)(react@19.2.3)(scheduler@0.27.0)
       '@effect/platform':
         specifier: 'catalog:'
         version: 0.93.6(effect@3.19.11)
@@ -9740,12 +9442,6 @@ importers:
       '@dxos/lit-ui':
         specifier: workspace:*
         version: link:../../ui/lit-ui
-      '@dxos/live-object':
-        specifier: workspace:*
-        version: link:../../core/echo/live-object
-      '@dxos/local-storage':
-        specifier: workspace:*
-        version: link:../../common/local-storage
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
@@ -9812,18 +9508,18 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
+      '@effect-atom/atom':
+        specifier: 'catalog:'
+        version: 0.4.13(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/platform@0.93.6(effect@3.19.11))(@effect/rpc@0.72.2(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11))(effect@3.19.11)
+      '@effect-atom/atom-react':
+        specifier: 'catalog:'
+        version: 0.4.6(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/platform@0.93.6(effect@3.19.11))(@effect/rpc@0.72.2(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11))(effect@3.19.11)(react@19.2.3)(scheduler@0.27.0)
       '@effect/ai':
         specifier: 'catalog:'
         version: 0.32.1(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/platform@0.93.6(effect@3.19.11))(@effect/rpc@0.72.2(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11))(effect@3.19.11)
       '@effect/experimental':
         specifier: 'catalog:'
         version: 0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2)
-      '@preact-signals/safe-react':
-        specifier: 'catalog:'
-        version: 0.9.0(@babel/core@7.28.0)(@swc/helpers@0.5.17)(react@19.2.3)
-      '@preact/signals-core':
-        specifier: 'catalog:'
-        version: 1.12.1
       '@radix-ui/react-context':
         specifier: 'catalog:'
         version: 1.1.1(@types/react@19.2.7)(react@19.2.3)
@@ -9849,9 +9545,6 @@ importers:
       '@dxos/ui-theme':
         specifier: workspace:*
         version: link:../../ui/ui-theme
-      '@effect-atom/atom-react':
-        specifier: 'catalog:'
-        version: 0.4.4(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/platform@0.93.6(effect@3.19.11))(@effect/rpc@0.72.2(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11))(effect@3.19.11)(react@19.2.3)(scheduler@0.27.0)
       '@effect/platform':
         specifier: 'catalog:'
         version: 0.93.6(effect@3.19.11)
@@ -9921,15 +9614,6 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
-      '@preact-signals/safe-react':
-        specifier: 'catalog:'
-        version: 0.9.0(@babel/core@7.28.0)(@swc/helpers@0.5.17)(react@19.2.3)
-      '@preact/signals-core':
-        specifier: 'catalog:'
-        version: 1.12.1
-      '@preact/signals-react':
-        specifier: 'catalog:'
-        version: 3.3.1(react@19.2.3)
     devDependencies:
       '@dxos/plugin-preview':
         specifier: workspace:*
@@ -10000,12 +9684,18 @@ importers:
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../core/echo/echo
+      '@dxos/echo-atom':
+        specifier: workspace:*
+        version: link:../../core/echo/echo-atom
       '@dxos/echo-db':
         specifier: workspace:*
         version: link:../../core/echo/echo-db
       '@dxos/edge-client':
         specifier: workspace:*
         version: link:../../core/mesh/edge-client
+      '@dxos/effect':
+        specifier: workspace:*
+        version: link:../../common/effect
       '@dxos/functions':
         specifier: workspace:*
         version: link:../../core/functions
@@ -10018,12 +9708,6 @@ importers:
       '@dxos/keys':
         specifier: workspace:*
         version: link:../../common/keys
-      '@dxos/live-object':
-        specifier: workspace:*
-        version: link:../../core/echo/live-object
-      '@dxos/local-storage':
-        specifier: workspace:*
-        version: link:../../common/local-storage
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
@@ -10090,18 +9774,18 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
+      '@effect-atom/atom':
+        specifier: 'catalog:'
+        version: 0.4.13(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/platform@0.93.6(effect@3.19.11))(@effect/rpc@0.72.2(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11))(effect@3.19.11)
+      '@effect-atom/atom-react':
+        specifier: 'catalog:'
+        version: 0.4.6(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/platform@0.93.6(effect@3.19.11))(@effect/rpc@0.72.2(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11))(effect@3.19.11)(react@19.2.3)(scheduler@0.27.0)
       '@effect/ai':
         specifier: 'catalog:'
         version: 0.32.1(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/platform@0.93.6(effect@3.19.11))(@effect/rpc@0.72.2(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11))(effect@3.19.11)
       '@effect/experimental':
         specifier: 'catalog:'
         version: 0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2)
-      '@preact-signals/safe-react':
-        specifier: 'catalog:'
-        version: 0.9.0(@babel/core@7.28.0)(@swc/helpers@0.5.17)(react@19.2.3)
-      '@preact/signals-core':
-        specifier: 'catalog:'
-        version: 1.12.1
       date-fns:
         specifier: 'catalog:'
         version: 3.6.0
@@ -10133,9 +9817,6 @@ importers:
       '@dxos/ui-theme':
         specifier: workspace:*
         version: link:../../ui/ui-theme
-      '@effect-atom/atom-react':
-        specifier: 'catalog:'
-        version: 0.4.4(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/platform@0.93.6(effect@3.19.11))(@effect/rpc@0.72.2(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11))(effect@3.19.11)(react@19.2.3)(scheduler@0.27.0)
       '@effect/platform':
         specifier: 'catalog:'
         version: 0.93.6(effect@3.19.11)
@@ -10190,9 +9871,6 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
-      '@preact-signals/safe-react':
-        specifier: 'catalog:'
-        version: 0.9.0(@babel/core@7.28.0)(@swc/helpers@0.5.17)(react@19.2.3)
       mermaid:
         specifier: 'catalog:'
         version: 10.9.4
@@ -10315,12 +9993,6 @@ importers:
       '@dxos/lit-ui':
         specifier: workspace:*
         version: link:../../ui/lit-ui
-      '@dxos/live-object':
-        specifier: workspace:*
-        version: link:../../core/echo/live-object
-      '@dxos/local-storage':
-        specifier: workspace:*
-        version: link:../../common/local-storage
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
@@ -10366,12 +10038,6 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
-      '@preact-signals/safe-react':
-        specifier: 'catalog:'
-        version: 0.9.0(@babel/core@7.28.0)(@swc/helpers@0.5.17)(react@19.2.3)
-      '@preact/signals-core':
-        specifier: 'catalog:'
-        version: 1.12.1
       '@radix-ui/react-dismissable-layer':
         specifier: 'catalog:'
         version: 1.1.5(@types/react-dom@19.2.3(@types/react@19.2.7))(@types/react@19.2.7)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
@@ -10382,9 +10048,6 @@ importers:
         specifier: 'catalog:'
         version: 3.6.0
     devDependencies:
-      '@dxos/echo-signals':
-        specifier: workspace:*
-        version: link:../../core/echo/echo-signals
       '@dxos/plugin-attention':
         specifier: workspace:*
         version: link:../plugin-attention
@@ -10414,7 +10077,7 @@ importers:
         version: link:../../ui/ui-theme
       '@effect-atom/atom-react':
         specifier: 'catalog:'
-        version: 0.4.4(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/platform@0.93.6(effect@3.19.11))(@effect/rpc@0.72.2(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11))(effect@3.19.11)(react@19.2.3)(scheduler@0.27.0)
+        version: 0.4.6(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/platform@0.93.6(effect@3.19.11))(@effect/rpc@0.72.2(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11))(effect@3.19.11)(react@19.2.3)(scheduler@0.27.0)
       '@effect/platform':
         specifier: 'catalog:'
         version: 0.93.6(effect@3.19.11)
@@ -10457,12 +10120,6 @@ importers:
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../common/invariant
-      '@dxos/live-object':
-        specifier: workspace:*
-        version: link:../../core/echo/live-object
-      '@dxos/local-storage':
-        specifier: workspace:*
-        version: link:../../common/local-storage
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
@@ -10490,12 +10147,12 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
-      '@preact-signals/safe-react':
+      '@effect-atom/atom':
         specifier: 'catalog:'
-        version: 0.9.0(@babel/core@7.28.0)(@swc/helpers@0.5.17)(react@19.2.3)
-      '@preact/signals-core':
+        version: 0.4.13(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/platform@0.93.6(effect@3.19.11))(@effect/rpc@0.72.2(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11))(effect@3.19.11)
+      '@effect-atom/atom-react':
         specifier: 'catalog:'
-        version: 1.12.1
+        version: 0.4.6(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/platform@0.93.6(effect@3.19.11))(@effect/rpc@0.72.2(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11))(effect@3.19.11)(react@19.2.3)(scheduler@0.27.0)
       effect:
         specifier: 'catalog:'
         version: 3.19.11
@@ -10512,9 +10169,6 @@ importers:
       '@dxos/ui-theme':
         specifier: workspace:*
         version: link:../../ui/ui-theme
-      '@effect-atom/atom-react':
-        specifier: 'catalog:'
-        version: 0.4.4(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/platform@0.93.6(effect@3.19.11))(@effect/rpc@0.72.2(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11))(effect@3.19.11)(react@19.2.3)(scheduler@0.27.0)
       '@effect/platform':
         specifier: 'catalog:'
         version: 0.93.6(effect@3.19.11)
@@ -10554,9 +10208,6 @@ importers:
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../common/invariant
-      '@dxos/live-object':
-        specifier: workspace:*
-        version: link:../../core/echo/live-object
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
@@ -10611,12 +10262,6 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
-      '@preact-signals/safe-react':
-        specifier: 'catalog:'
-        version: 0.9.0(@babel/core@7.28.0)(@swc/helpers@0.5.17)(react@19.2.3)
-      '@preact/signals-core':
-        specifier: 'catalog:'
-        version: 1.12.1
       date-fns:
         specifier: 'catalog:'
         version: 3.6.0
@@ -10635,7 +10280,7 @@ importers:
         version: link:../../ui/ui-theme
       '@effect-atom/atom-react':
         specifier: 'catalog:'
-        version: 0.4.4(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/platform@0.93.6(effect@3.19.11))(@effect/rpc@0.72.2(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11))(effect@3.19.11)(react@19.2.3)(scheduler@0.27.0)
+        version: 0.4.6(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/platform@0.93.6(effect@3.19.11))(@effect/rpc@0.72.2(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11))(effect@3.19.11)(react@19.2.3)(scheduler@0.27.0)
       '@effect/platform':
         specifier: 'catalog:'
         version: 0.93.6(effect@3.19.11)
@@ -10669,12 +10314,9 @@ importers:
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../core/echo/echo
-      '@dxos/live-object':
+      '@dxos/effect':
         specifier: workspace:*
-        version: link:../../core/echo/live-object
-      '@dxos/local-storage':
-        specifier: workspace:*
-        version: link:../../common/local-storage
+        version: link:../../common/effect
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
@@ -10714,12 +10356,12 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
-      '@preact-signals/safe-react':
+      '@effect-atom/atom':
         specifier: 'catalog:'
-        version: 0.9.0(@babel/core@7.28.0)(@swc/helpers@0.5.17)(react@19.2.3)
-      '@preact/signals-core':
+        version: 0.4.13(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/platform@0.93.6(effect@3.19.11))(@effect/rpc@0.72.2(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11))(effect@3.19.11)
+      '@effect-atom/atom-react':
         specifier: 'catalog:'
-        version: 1.12.1
+        version: 0.4.6(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/platform@0.93.6(effect@3.19.11))(@effect/rpc@0.72.2(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11))(effect@3.19.11)(react@19.2.3)(scheduler@0.27.0)
       hastscript:
         specifier: 'catalog:'
         version: 7.1.0
@@ -10763,9 +10405,6 @@ importers:
       '@dxos/ui-theme':
         specifier: workspace:*
         version: link:../../ui/ui-theme
-      '@effect-atom/atom-react':
-        specifier: 'catalog:'
-        version: 0.4.4(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/platform@0.93.6(effect@3.19.11))(@effect/rpc@0.72.2(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11))(effect@3.19.11)(react@19.2.3)(scheduler@0.27.0)
       '@effect/platform':
         specifier: 'catalog:'
         version: 0.93.6(effect@3.19.11)
@@ -10873,10 +10512,7 @@ importers:
         version: link:../../common/util
       '@effect-atom/atom-react':
         specifier: 'catalog:'
-        version: 0.4.4(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/platform@0.93.6(effect@3.19.11))(@effect/rpc@0.72.2(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11))(effect@3.19.11)(react@19.2.3)(scheduler@0.27.0)
-      '@preact-signals/safe-react':
-        specifier: 'catalog:'
-        version: 0.9.0(@babel/core@7.28.0)(@swc/helpers@0.5.17)(react@19.2.3)
+        version: 0.4.6(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/platform@0.93.6(effect@3.19.11))(@effect/rpc@0.72.2(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11))(effect@3.19.11)(react@19.2.3)(scheduler@0.27.0)
     devDependencies:
       '@dxos/echo-db':
         specifier: workspace:*
@@ -10983,12 +10619,6 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
-      '@preact-signals/safe-react':
-        specifier: 'catalog:'
-        version: 0.9.0(@babel/core@7.28.0)(@swc/helpers@0.5.17)(react@19.2.3)
-      '@preact/signals-core':
-        specifier: 'catalog:'
-        version: 1.12.1
       '@radix-ui/react-context':
         specifier: 'catalog:'
         version: 1.1.1(@types/react@19.2.7)(react@19.2.3)
@@ -11022,7 +10652,7 @@ importers:
         version: link:../../ui/ui-theme
       '@effect-atom/atom-react':
         specifier: 'catalog:'
-        version: 0.4.4(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/platform@0.93.6(effect@3.19.11))(@effect/rpc@0.72.2(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11))(effect@3.19.11)(react@19.2.3)(scheduler@0.27.0)
+        version: 0.4.6(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/platform@0.93.6(effect@3.19.11))(@effect/rpc@0.72.2(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11))(effect@3.19.11)(react@19.2.3)(scheduler@0.27.0)
       '@types/react':
         specifier: ~19.2.7
         version: 19.2.7
@@ -11056,9 +10686,6 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
-      '@preact-signals/safe-react':
-        specifier: 'catalog:'
-        version: 0.9.0(@babel/core@7.28.0)(@swc/helpers@0.5.17)(react@19.2.3)
       effect:
         specifier: 'catalog:'
         version: 3.19.11
@@ -11114,9 +10741,6 @@ importers:
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../common/invariant
-      '@dxos/live-object':
-        specifier: workspace:*
-        version: link:../../core/echo/live-object
       '@dxos/operation':
         specifier: workspace:*
         version: link:../../core/operation
@@ -11137,13 +10761,10 @@ importers:
         version: link:../../common/util
       '@effect-atom/atom-react':
         specifier: 'catalog:'
-        version: 0.4.4(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/platform@0.93.6(effect@3.19.11))(@effect/rpc@0.72.2(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11))(effect@3.19.11)(react@19.2.3)(scheduler@0.27.0)
+        version: 0.4.6(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/platform@0.93.6(effect@3.19.11))(@effect/rpc@0.72.2(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11))(effect@3.19.11)(react@19.2.3)(scheduler@0.27.0)
       '@effect/cli':
         specifier: 'catalog:'
         version: 0.72.1(@effect/platform@0.93.6(effect@3.19.11))(@effect/printer-ansi@0.47.0(@effect/typeclass@0.38.0(effect@3.19.11))(effect@3.19.11))(@effect/printer@0.47.0(@effect/typeclass@0.38.0(effect@3.19.11))(effect@3.19.11))(effect@3.19.11)
-      '@preact-signals/safe-react':
-        specifier: 'catalog:'
-        version: 0.9.0(@babel/core@7.28.0)(@swc/helpers@0.5.17)(react@19.2.3)
     devDependencies:
       '@dxos/random':
         specifier: workspace:*
@@ -11268,12 +10889,6 @@ importers:
       '@dxos/keys':
         specifier: workspace:*
         version: link:../../common/keys
-      '@dxos/live-object':
-        specifier: workspace:*
-        version: link:../../core/echo/live-object
-      '@dxos/local-storage':
-        specifier: workspace:*
-        version: link:../../common/local-storage
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
@@ -11370,6 +10985,12 @@ importers:
       '@dxos/vendor-quickjs':
         specifier: workspace:*
         version: link:../../../vendor/quickjs
+      '@effect-atom/atom':
+        specifier: 'catalog:'
+        version: 0.4.13(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/platform@0.93.6(effect@3.19.11))(@effect/rpc@0.72.2(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11))(effect@3.19.11)
+      '@effect-atom/atom-react':
+        specifier: 'catalog:'
+        version: 0.4.6(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/platform@0.93.6(effect@3.19.11))(@effect/rpc@0.72.2(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11))(effect@3.19.11)(react@19.2.3)(scheduler@0.27.0)
       '@lezer/common':
         specifier: 'catalog:'
         version: 1.2.2
@@ -11379,12 +11000,6 @@ importers:
       '@octokit/core':
         specifier: 'catalog:'
         version: 4.1.0
-      '@preact-signals/safe-react':
-        specifier: 'catalog:'
-        version: 0.9.0(@babel/core@7.28.0)(@swc/helpers@0.5.17)(react@19.2.3)
-      '@preact/signals-core':
-        specifier: 'catalog:'
-        version: 1.12.1
       '@typescript/vfs':
         specifier: 'catalog:'
         version: 1.6.0(typescript@5.9.3)
@@ -11410,7 +11025,7 @@ importers:
         specifier: 'catalog:'
         version: 15.6.6(react@19.2.3)
       typescript:
-        specifier: 'catalog:'
+        specifier: ^5.9.3
         version: 5.9.3
     devDependencies:
       '@automerge/automerge':
@@ -11434,9 +11049,6 @@ importers:
       '@dxos/ui-theme':
         specifier: workspace:*
         version: link:../../ui/ui-theme
-      '@effect-atom/atom-react':
-        specifier: 'catalog:'
-        version: 0.4.4(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/platform@0.93.6(effect@3.19.11))(@effect/rpc@0.72.2(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11))(effect@3.19.11)(react@19.2.3)(scheduler@0.27.0)
       '@effect/ai':
         specifier: 'catalog:'
         version: 0.32.1(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/platform@0.93.6(effect@3.19.11))(@effect/rpc@0.72.2(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11))(effect@3.19.11)
@@ -11503,9 +11115,6 @@ importers:
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../common/invariant
-      '@dxos/live-object':
-        specifier: workspace:*
-        version: link:../../core/echo/live-object
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
@@ -11548,9 +11157,6 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
-      '@preact-signals/safe-react':
-        specifier: 'catalog:'
-        version: 0.9.0(@babel/core@7.28.0)(@swc/helpers@0.5.17)(react@19.2.3)
       exa-js:
         specifier: 'catalog:'
         version: 1.7.0
@@ -11578,7 +11184,7 @@ importers:
         version: link:../../ui/ui-theme
       '@effect-atom/atom-react':
         specifier: 'catalog:'
-        version: 0.4.4(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/platform@0.93.6(effect@3.19.11))(@effect/rpc@0.72.2(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11))(effect@3.19.11)(react@19.2.3)(scheduler@0.27.0)
+        version: 0.4.6(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/platform@0.93.6(effect@3.19.11))(@effect/rpc@0.72.2(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11))(effect@3.19.11)(react@19.2.3)(scheduler@0.27.0)
       '@effect/platform':
         specifier: 'catalog:'
         version: 0.93.6(effect@3.19.11)
@@ -11666,9 +11272,6 @@ importers:
       '@dxos/lit-grid':
         specifier: workspace:*
         version: link:../../ui/lit-grid
-      '@dxos/live-object':
-        specifier: workspace:*
-        version: link:../../core/echo/live-object
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
@@ -11756,12 +11359,6 @@ importers:
       '@lezer/lr':
         specifier: ^1.4.2
         version: 1.4.2
-      '@preact-signals/safe-react':
-        specifier: 'catalog:'
-        version: 0.9.0(@babel/core@7.28.0)(@swc/helpers@0.5.17)(react@19.2.3)
-      '@preact/signals-core':
-        specifier: 'catalog:'
-        version: 1.12.1
       '@radix-ui/react-context':
         specifier: 'catalog:'
         version: 1.1.1(@types/react@19.2.7)(react@19.2.3)
@@ -11813,7 +11410,7 @@ importers:
         version: link:../../ui/ui-types
       '@effect-atom/atom-react':
         specifier: 'catalog:'
-        version: 0.4.4(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/platform@0.93.6(effect@3.19.11))(@effect/rpc@0.72.2(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11))(effect@3.19.11)(react@19.2.3)(scheduler@0.27.0)
+        version: 0.4.6(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/platform@0.93.6(effect@3.19.11))(@effect/rpc@0.72.2(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11))(effect@3.19.11)(react@19.2.3)(scheduler@0.27.0)
       '@effect/platform':
         specifier: 'catalog:'
         version: 0.93.6(effect@3.19.11)
@@ -11853,9 +11450,6 @@ importers:
       '@dxos/app-framework':
         specifier: workspace:*
         version: link:../../sdk/app-framework
-      '@dxos/live-object':
-        specifier: workspace:*
-        version: link:../../core/echo/live-object
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
@@ -11886,16 +11480,16 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
-      '@preact-signals/safe-react':
+      '@effect-atom/atom':
         specifier: 'catalog:'
-        version: 0.9.0(@babel/core@7.28.0)(@swc/helpers@0.5.17)(react@19.2.3)
+        version: 0.4.13(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/platform@0.93.6(effect@3.19.11))(@effect/rpc@0.72.2(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11))(effect@3.19.11)
+      '@effect-atom/atom-react':
+        specifier: 'catalog:'
+        version: 0.4.6(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/platform@0.93.6(effect@3.19.11))(@effect/rpc@0.72.2(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11))(effect@3.19.11)(react@19.2.3)(scheduler@0.27.0)
       '@radix-ui/react-context':
         specifier: 'catalog:'
         version: 1.1.1(@types/react@19.2.7)(react@19.2.3)
     devDependencies:
-      '@dxos/echo-signals':
-        specifier: workspace:*
-        version: link:../../core/echo/echo-signals
       '@dxos/plugin-client':
         specifier: workspace:*
         version: link:../plugin-client
@@ -11956,15 +11550,12 @@ importers:
       '@dxos/echo-db':
         specifier: workspace:*
         version: link:../../core/echo/echo-db
+      '@dxos/effect':
+        specifier: workspace:*
+        version: link:../../common/effect
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../common/invariant
-      '@dxos/live-object':
-        specifier: workspace:*
-        version: link:../../core/echo/live-object
-      '@dxos/local-storage':
-        specifier: workspace:*
-        version: link:../../common/local-storage
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
@@ -12007,12 +11598,12 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
-      '@preact-signals/safe-react':
+      '@effect-atom/atom':
         specifier: 'catalog:'
-        version: 0.9.0(@babel/core@7.28.0)(@swc/helpers@0.5.17)(react@19.2.3)
-      '@preact/signals-core':
+        version: 0.4.13(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/platform@0.93.6(effect@3.19.11))(@effect/rpc@0.72.2(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11))(effect@3.19.11)
+      '@effect-atom/atom-react':
         specifier: 'catalog:'
-        version: 1.12.1
+        version: 0.4.6(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/platform@0.93.6(effect@3.19.11))(@effect/rpc@0.72.2(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11))(effect@3.19.11)(react@19.2.3)(scheduler@0.27.0)
       '@tldraw/assets':
         specifier: 'catalog:'
         version: 3.0.0
@@ -12119,9 +11710,6 @@ importers:
       '@dxos/echo-protocol':
         specifier: workspace:*
         version: link:../../core/echo/echo-protocol
-      '@dxos/echo-signals':
-        specifier: workspace:*
-        version: link:../../core/echo/echo-signals
       '@dxos/effect':
         specifier: workspace:*
         version: link:../../common/effect
@@ -12134,12 +11722,6 @@ importers:
       '@dxos/keys':
         specifier: workspace:*
         version: link:../../common/keys
-      '@dxos/live-object':
-        specifier: workspace:*
-        version: link:../../core/echo/live-object
-      '@dxos/local-storage':
-        specifier: workspace:*
-        version: link:../../common/local-storage
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
@@ -12230,15 +11812,15 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
+      '@effect-atom/atom':
+        specifier: 'catalog:'
+        version: 0.4.13(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/platform@0.93.6(effect@3.19.11))(@effect/rpc@0.72.2(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11))(effect@3.19.11)
+      '@effect-atom/atom-react':
+        specifier: 'catalog:'
+        version: 0.4.6(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/platform@0.93.6(effect@3.19.11))(@effect/rpc@0.72.2(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11))(effect@3.19.11)(react@19.2.3)(scheduler@0.27.0)
       '@effect/cli':
         specifier: 'catalog:'
         version: 0.72.1(@effect/platform@0.93.6(effect@3.19.11))(@effect/printer-ansi@0.47.0(@effect/typeclass@0.38.0(effect@3.19.11))(effect@3.19.11))(@effect/printer@0.47.0(@effect/typeclass@0.38.0(effect@3.19.11))(effect@3.19.11))(effect@3.19.11)
-      '@preact-signals/safe-react':
-        specifier: 'catalog:'
-        version: 0.9.0(@babel/core@7.28.0)(@swc/helpers@0.5.17)(react@19.2.3)
-      '@preact/signals-core':
-        specifier: 'catalog:'
-        version: 1.12.1
       jszip:
         specifier: 'catalog:'
         version: 3.10.1
@@ -12273,9 +11855,6 @@ importers:
       '@dxos/storybook-utils':
         specifier: workspace:*
         version: link:../../common/storybook-utils
-      '@effect-atom/atom-react':
-        specifier: 'catalog:'
-        version: 0.4.4(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/platform@0.93.6(effect@3.19.11))(@effect/rpc@0.72.2(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11))(effect@3.19.11)(react@19.2.3)(scheduler@0.27.0)
       '@effect/platform':
         specifier: 'catalog:'
         version: 0.93.6(effect@3.19.11)
@@ -12315,9 +11894,6 @@ importers:
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../common/invariant
-      '@dxos/local-storage':
-        specifier: workspace:*
-        version: link:../../common/local-storage
       '@dxos/operation':
         specifier: workspace:*
         version: link:../../core/operation
@@ -12360,12 +11936,6 @@ importers:
       '@fluentui/react-tabster':
         specifier: 'catalog:'
         version: 9.26.11(@types/react-dom@19.2.3(@types/react@19.2.7))(@types/react@19.2.7)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
-      '@preact-signals/safe-react':
-        specifier: 'catalog:'
-        version: 0.9.0(@babel/core@7.28.0)(@swc/helpers@0.5.17)(react@19.2.3)
-      '@preact/signals-core':
-        specifier: 'catalog:'
-        version: 1.12.1
       '@radix-ui/react-collapsible':
         specifier: 'catalog:'
         version: 1.1.3(@types/react-dom@19.2.3(@types/react@19.2.7))(@types/react@19.2.7)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
@@ -12439,12 +12009,6 @@ importers:
       '@fluentui/react-tabster':
         specifier: 'catalog:'
         version: 9.26.11(@types/react-dom@19.2.3(@types/react@19.2.7))(@types/react@19.2.7)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
-      '@preact-signals/safe-react':
-        specifier: 'catalog:'
-        version: 0.9.0(@babel/core@7.28.0)(@swc/helpers@0.5.17)(react@19.2.3)
-      '@preact/signals-core':
-        specifier: 'catalog:'
-        version: 1.12.1
       '@radix-ui/react-slot':
         specifier: 'catalog:'
         version: 1.1.2(@types/react@19.2.7)(react@19.2.3)
@@ -12509,9 +12073,6 @@ importers:
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../common/invariant
-      '@dxos/live-object':
-        specifier: workspace:*
-        version: link:../../core/echo/live-object
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
@@ -12566,9 +12127,6 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
-      '@preact-signals/safe-react':
-        specifier: 'catalog:'
-        version: 0.9.0(@babel/core@7.28.0)(@swc/helpers@0.5.17)(react@19.2.3)
     devDependencies:
       '@dxos/random':
         specifier: workspace:*
@@ -12584,7 +12142,7 @@ importers:
         version: link:../../ui/ui-theme
       '@effect-atom/atom-react':
         specifier: 'catalog:'
-        version: 0.4.4(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/platform@0.93.6(effect@3.19.11))(@effect/rpc@0.72.2(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11))(effect@3.19.11)(react@19.2.3)(scheduler@0.27.0)
+        version: 0.4.6(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/platform@0.93.6(effect@3.19.11))(@effect/rpc@0.72.2(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11))(effect@3.19.11)(react@19.2.3)(scheduler@0.27.0)
       '@effect/platform':
         specifier: 'catalog:'
         version: 0.93.6(effect@3.19.11)
@@ -12636,12 +12194,6 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
-      '@preact-signals/safe-react':
-        specifier: 'catalog:'
-        version: 0.9.0(@babel/core@7.28.0)(@swc/helpers@0.5.17)(react@19.2.3)
-      '@preact/signals-core':
-        specifier: 'catalog:'
-        version: 1.12.1
       '@radix-ui/react-context':
         specifier: 'catalog:'
         version: 1.1.1(@types/react@19.2.7)(react@19.2.3)
@@ -12679,9 +12231,6 @@ importers:
       '@dxos/app-framework':
         specifier: workspace:*
         version: link:../../sdk/app-framework
-      '@dxos/live-object':
-        specifier: workspace:*
-        version: link:../../core/echo/live-object
       '@dxos/operation':
         specifier: workspace:*
         version: link:../../core/operation
@@ -12700,9 +12249,12 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
-      '@preact-signals/safe-react':
+      '@effect-atom/atom':
         specifier: 'catalog:'
-        version: 0.9.0(@babel/core@7.28.0)(@swc/helpers@0.5.17)(react@19.2.3)
+        version: 0.4.13(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/platform@0.93.6(effect@3.19.11))(@effect/rpc@0.72.2(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11))(effect@3.19.11)
+      '@effect-atom/atom-react':
+        specifier: 'catalog:'
+        version: 0.4.6(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/platform@0.93.6(effect@3.19.11))(@effect/rpc@0.72.2(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11))(effect@3.19.11)(react@19.2.3)(scheduler@0.27.0)
     devDependencies:
       '@dxos/react-ui':
         specifier: workspace:*
@@ -12737,18 +12289,15 @@ importers:
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../core/echo/echo
-      '@dxos/live-object':
-        specifier: workspace:*
-        version: link:../../core/echo/live-object
       '@dxos/operation':
         specifier: workspace:*
         version: link:../../core/operation
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
-      '@preact-signals/safe-react':
+      '@effect-atom/atom-react':
         specifier: 'catalog:'
-        version: 0.9.0(@babel/core@7.28.0)(@swc/helpers@0.5.17)(react@19.2.3)
+        version: 0.4.6(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/platform@0.93.6(effect@3.19.11))(@effect/rpc@0.72.2(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11))(effect@3.19.11)(react@19.2.3)(scheduler@0.27.0)
       effect:
         specifier: 'catalog:'
         version: 3.19.11
@@ -12813,9 +12362,6 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
-      '@preact-signals/safe-react':
-        specifier: 'catalog:'
-        version: 0.9.0(@babel/core@7.28.0)(@swc/helpers@0.5.17)(react@19.2.3)
       '@types/lodash.debounce':
         specifier: 'catalog:'
         version: 4.0.9
@@ -12834,7 +12380,7 @@ importers:
         version: link:../../ui/ui-theme
       '@effect-atom/atom-react':
         specifier: 'catalog:'
-        version: 0.4.4(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/platform@0.93.6(effect@3.19.11))(@effect/rpc@0.72.2(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11))(effect@3.19.11)(react@19.2.3)(scheduler@0.27.0)
+        version: 0.4.6(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/platform@0.93.6(effect@3.19.11))(@effect/rpc@0.72.2(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11))(effect@3.19.11)(react@19.2.3)(scheduler@0.27.0)
       '@effect/platform':
         specifier: 'catalog:'
         version: 0.93.6(effect@3.19.11)
@@ -12901,6 +12447,12 @@ importers:
       '@dxos/echo-db':
         specifier: workspace:*
         version: link:../../core/echo/echo-db
+      '@dxos/echo-react':
+        specifier: workspace:*
+        version: link:../../core/echo/echo-react
+      '@dxos/effect':
+        specifier: workspace:*
+        version: link:../../common/effect
       '@dxos/functions':
         specifier: workspace:*
         version: link:../../core/functions
@@ -12910,12 +12462,6 @@ importers:
       '@dxos/keys':
         specifier: workspace:*
         version: link:../../common/keys
-      '@dxos/live-object':
-        specifier: workspace:*
-        version: link:../../core/echo/live-object
-      '@dxos/local-storage':
-        specifier: workspace:*
-        version: link:../../common/local-storage
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
@@ -12991,6 +12537,12 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
+      '@effect-atom/atom':
+        specifier: 'catalog:'
+        version: 0.4.13(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/platform@0.93.6(effect@3.19.11))(@effect/rpc@0.72.2(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11))(effect@3.19.11)
+      '@effect-atom/atom-react':
+        specifier: 'catalog:'
+        version: 0.4.6(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/platform@0.93.6(effect@3.19.11))(@effect/rpc@0.72.2(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11))(effect@3.19.11)(react@19.2.3)(scheduler@0.27.0)
       '@effect/ai':
         specifier: 'catalog:'
         version: 0.32.1(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/platform@0.93.6(effect@3.19.11))(@effect/rpc@0.72.2(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11))(effect@3.19.11)
@@ -13000,12 +12552,6 @@ importers:
       '@peermetrics/webrtc-stats':
         specifier: 'catalog:'
         version: 5.7.1
-      '@preact-signals/safe-react':
-        specifier: 'catalog:'
-        version: 0.9.0(@babel/core@7.28.0)(@swc/helpers@0.5.17)(react@19.2.3)
-      '@preact/signals-core':
-        specifier: 'catalog:'
-        version: 1.12.1
       date-fns:
         specifier: 'catalog:'
         version: 3.6.0
@@ -13043,9 +12589,6 @@ importers:
       '@dxos/ui-theme':
         specifier: workspace:*
         version: link:../../ui/ui-theme
-      '@effect-atom/atom-react':
-        specifier: 'catalog:'
-        version: 0.4.4(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/platform@0.93.6(effect@3.19.11))(@effect/rpc@0.72.2(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11))(effect@3.19.11)(react@19.2.3)(scheduler@0.27.0)
       '@effect/platform':
         specifier: 'catalog:'
         version: 0.93.6(effect@3.19.11)
@@ -13091,9 +12634,6 @@ importers:
       '@dxos/functions-runtime':
         specifier: workspace:*
         version: link:../../core/functions-runtime
-      '@dxos/live-object':
-        specifier: workspace:*
-        version: link:../../core/echo/live-object
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
@@ -13145,9 +12685,6 @@ importers:
       '@effect/platform-bun':
         specifier: 'catalog:'
         version: 0.86.0(@effect/cluster@0.55.0(@effect/platform@0.93.6(effect@3.19.11))(@effect/rpc@0.72.2(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11))(@effect/sql@0.48.6(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11))(@effect/workflow@0.15.2(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/platform@0.93.6(effect@3.19.11))(@effect/rpc@0.72.2(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11))(effect@3.19.11))(effect@3.19.11))(@effect/platform@0.93.6(effect@3.19.11))(@effect/rpc@0.72.2(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11))(@effect/sql@0.48.6(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11))(effect@3.19.11)
-      '@preact-signals/safe-react':
-        specifier: 'catalog:'
-        version: 0.9.0(@babel/core@7.28.0)(@swc/helpers@0.5.17)(react@19.2.3)
       '@tauri-apps/api':
         specifier: 'catalog:'
         version: 2.8.0
@@ -13175,7 +12712,7 @@ importers:
         version: link:../../ui/ui-theme
       '@effect-atom/atom-react':
         specifier: 'catalog:'
-        version: 0.4.4(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/platform@0.93.6(effect@3.19.11))(@effect/rpc@0.72.2(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11))(effect@3.19.11)(react@19.2.3)(scheduler@0.27.0)
+        version: 0.4.6(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/platform@0.93.6(effect@3.19.11))(@effect/rpc@0.72.2(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11))(effect@3.19.11)(react@19.2.3)(scheduler@0.27.0)
       '@effect/platform':
         specifier: 'catalog:'
         version: 0.93.6(effect@3.19.11)
@@ -13254,12 +12791,6 @@ importers:
       '@dxos/keys':
         specifier: workspace:*
         version: link:../../common/keys
-      '@dxos/live-object':
-        specifier: workspace:*
-        version: link:../../core/echo/live-object
-      '@dxos/local-storage':
-        specifier: workspace:*
-        version: link:../../common/local-storage
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
@@ -13329,12 +12860,6 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
-      '@preact-signals/safe-react':
-        specifier: 'catalog:'
-        version: 0.9.0(@babel/core@7.28.0)(@swc/helpers@0.5.17)(react@19.2.3)
-      '@preact/signals-core':
-        specifier: 'catalog:'
-        version: 1.12.1
       date-fns:
         specifier: 'catalog:'
         version: 3.6.0
@@ -13389,7 +12914,7 @@ importers:
         version: link:../../ui/ui-theme
       '@effect-atom/atom-react':
         specifier: 'catalog:'
-        version: 0.4.4(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/platform@0.93.6(effect@3.19.11))(@effect/rpc@0.72.2(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11))(effect@3.19.11)(react@19.2.3)(scheduler@0.27.0)
+        version: 0.4.6(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/platform@0.93.6(effect@3.19.11))(@effect/rpc@0.72.2(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11))(effect@3.19.11)(react@19.2.3)(scheduler@0.27.0)
       '@effect/platform':
         specifier: 'catalog:'
         version: 0.93.6(effect@3.19.11)
@@ -13429,9 +12954,6 @@ importers:
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../common/invariant
-      '@dxos/live-object':
-        specifier: workspace:*
-        version: link:../../core/echo/live-object
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
@@ -13462,12 +12984,6 @@ importers:
       '@huggingface/transformers':
         specifier: 'catalog:'
         version: 3.5.1
-      '@preact-signals/safe-react':
-        specifier: 'catalog:'
-        version: 0.9.0(@babel/core@7.28.0)(@swc/helpers@0.5.17)(react@19.2.3)
-      '@preact/signals-core':
-        specifier: 'catalog:'
-        version: 1.12.1
       date-fns:
         specifier: 'catalog:'
         version: 3.6.0
@@ -13532,9 +13048,6 @@ importers:
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../common/invariant
-      '@dxos/local-storage':
-        specifier: workspace:*
-        version: link:../../common/local-storage
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
@@ -13574,9 +13087,6 @@ importers:
       '@ipld/car':
         specifier: 'catalog:'
         version: 5.4.1
-      '@preact-signals/safe-react':
-        specifier: 'catalog:'
-        version: 0.9.0(@babel/core@7.28.0)(@swc/helpers@0.5.17)(react@19.2.3)
       blockstore-core:
         specifier: 'catalog:'
         version: 5.0.2
@@ -13674,12 +13184,6 @@ importers:
       '@dxos/keys':
         specifier: workspace:*
         version: link:../../common/keys
-      '@dxos/live-object':
-        specifier: workspace:*
-        version: link:../../core/echo/live-object
-      '@dxos/local-storage':
-        specifier: workspace:*
-        version: link:../../common/local-storage
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
@@ -13714,9 +13218,6 @@ importers:
       '@dxos/echo-db':
         specifier: workspace:*
         version: link:../../core/echo/echo-db
-      '@dxos/echo-signals':
-        specifier: workspace:*
-        version: link:../../core/echo/echo-signals
       '@dxos/random':
         specifier: workspace:*
         version: link:../../common/random
@@ -13737,7 +13238,7 @@ importers:
         version: link:../../ui/ui-theme
       '@effect-atom/atom-react':
         specifier: 'catalog:'
-        version: 0.4.4(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/platform@0.93.6(effect@3.19.11))(@effect/rpc@0.72.2(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11))(effect@3.19.11)(react@19.2.3)(scheduler@0.27.0)
+        version: 0.4.6(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/platform@0.93.6(effect@3.19.11))(@effect/rpc@0.72.2(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11))(effect@3.19.11)(react@19.2.3)(scheduler@0.27.0)
       '@effect/platform':
         specifier: 'catalog:'
         version: 0.93.6(effect@3.19.11)
@@ -13771,24 +13272,18 @@ importers:
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../core/echo/echo
-      '@dxos/echo-signals':
+      '@dxos/echo-atom':
         specifier: workspace:*
-        version: link:../../core/echo/echo-signals
+        version: link:../../core/echo/echo-atom
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../common/invariant
-      '@dxos/live-object':
-        specifier: workspace:*
-        version: link:../../core/echo/live-object
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
-      '@preact/signals-core':
-        specifier: 'catalog:'
-        version: 1.12.1
       main-thread-scheduling:
         specifier: 'catalog:'
         version: 14.2.0
@@ -13819,7 +13314,7 @@ importers:
         version: link:../../ui/ui-theme
       '@effect-atom/atom-react':
         specifier: 'catalog:'
-        version: 0.4.4(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/platform@0.93.6(effect@3.19.11))(@effect/rpc@0.72.2(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11))(effect@3.19.11)(react@19.2.3)(scheduler@0.27.0)
+        version: 0.4.6(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/platform@0.93.6(effect@3.19.11))(@effect/rpc@0.72.2(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11))(effect@3.19.11)(react@19.2.3)(scheduler@0.27.0)
       '@effect/platform':
         specifier: 'catalog:'
         version: 0.93.6(effect@3.19.11)
@@ -13862,7 +13357,7 @@ importers:
     devDependencies:
       '@effect-atom/atom':
         specifier: 'catalog:'
-        version: 0.4.10(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/platform@0.93.6(effect@3.19.11))(@effect/rpc@0.72.2(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11))(effect@3.19.11)
+        version: 0.4.13(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/platform@0.93.6(effect@3.19.11))(@effect/rpc@0.72.2(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11))(effect@3.19.11)
       '@solidjs/testing-library':
         specifier: 'catalog:'
         version: 0.8.10(solid-js@1.9.10)
@@ -13941,9 +13436,6 @@ importers:
       '@dxos/kv-store':
         specifier: workspace:*
         version: link:../../common/kv-store
-      '@dxos/live-object':
-        specifier: workspace:*
-        version: link:../../core/echo/live-object
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
@@ -14283,12 +13775,6 @@ importers:
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../core/echo/echo
-      '@dxos/echo-signals':
-        specifier: workspace:*
-        version: link:../../core/echo/echo-signals
-      '@dxos/live-object':
-        specifier: workspace:*
-        version: link:../../core/echo/live-object
       '@dxos/plugin-markdown':
         specifier: workspace:*
         version: link:../../plugins/plugin-markdown
@@ -14382,6 +13868,9 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
+      '@effect-atom/atom':
+        specifier: 'catalog:'
+        version: 0.4.13(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/platform@0.93.6(effect@3.19.11))(@effect/rpc@0.72.2(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11))(effect@3.19.11)
 
   packages/sdk/observability:
     dependencies:
@@ -14533,9 +14022,6 @@ importers:
       '@dxos/echo-react':
         specifier: workspace:*
         version: link:../../core/echo/echo-react
-      '@dxos/echo-signals':
-        specifier: workspace:*
-        version: link:../../core/echo/echo-signals
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../common/invariant
@@ -14604,9 +14090,6 @@ importers:
       '@dxos/echo-db':
         specifier: workspace:*
         version: link:../../core/echo/echo-db
-      '@dxos/echo-signals':
-        specifier: workspace:*
-        version: link:../../core/echo/echo-signals
       '@dxos/edge-client':
         specifier: workspace:*
         version: link:../../core/mesh/edge-client
@@ -14647,6 +14130,9 @@ importers:
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../core/echo/echo
+      '@dxos/echo-atom':
+        specifier: workspace:*
+        version: link:../../core/echo/echo-atom
       '@dxos/echo-db':
         specifier: workspace:*
         version: link:../../core/echo/echo-db
@@ -14668,9 +14154,6 @@ importers:
       '@dxos/keys':
         specifier: workspace:*
         version: link:../../common/keys
-      '@dxos/live-object':
-        specifier: workspace:*
-        version: link:../../core/echo/live-object
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
@@ -14680,12 +14163,12 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
+      '@effect-atom/atom-react':
+        specifier: 'catalog:'
+        version: 0.4.6(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/platform@0.93.6(effect@3.19.11))(@effect/rpc@0.72.2(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11))(effect@3.19.11)(react@19.2.3)(scheduler@0.27.0)
       '@effect/schema':
         specifier: 'catalog:'
         version: 0.75.5(effect@3.19.11)
-      '@preact/signals-core':
-        specifier: 'catalog:'
-        version: 1.12.1
       date-fns:
         specifier: 'catalog:'
         version: 3.6.0
@@ -14696,9 +14179,6 @@ importers:
         specifier: 'catalog:'
         version: 1.1.1
     devDependencies:
-      '@dxos/echo-signals':
-        specifier: workspace:*
-        version: link:../../core/echo/echo-signals
       '@dxos/react-client':
         specifier: workspace:*
         version: link:../react-client
@@ -14771,9 +14251,6 @@ importers:
       '@fluentui/react-tabster':
         specifier: 'catalog:'
         version: 9.26.11(@types/react-dom@19.2.3(@types/react@19.2.7))(@types/react@19.2.7)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
-      '@preact-signals/safe-react':
-        specifier: 'catalog:'
-        version: 0.9.0(@babel/core@7.28.0)(@swc/helpers@0.5.17)(react@19.2.3)
       '@radix-ui/react-accordion':
         specifier: 'catalog:'
         version: 1.2.3(@types/react-dom@19.2.3(@types/react@19.2.7))(@types/react@19.2.7)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
@@ -14881,9 +14358,6 @@ importers:
       '@dxos/keys':
         specifier: workspace:*
         version: link:../../common/keys
-      '@dxos/live-object':
-        specifier: workspace:*
-        version: link:../../core/echo/live-object
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
@@ -14899,9 +14373,6 @@ importers:
       '@effect/schema':
         specifier: 'catalog:'
         version: 0.75.5(effect@3.19.11)
-      '@preact/signals-core':
-        specifier: 'catalog:'
-        version: 1.12.1
       date-fns:
         specifier: 'catalog:'
         version: 3.6.0
@@ -14912,9 +14383,6 @@ importers:
         specifier: 'catalog:'
         version: 1.1.1
     devDependencies:
-      '@dxos/echo-signals':
-        specifier: workspace:*
-        version: link:../../core/echo/echo-signals
       '@dxos/react-client':
         specifier: workspace:*
         version: link:../react-client
@@ -15014,12 +14482,6 @@ importers:
       '@dxos/lit-ui':
         specifier: workspace:*
         version: link:../../ui/lit-ui
-      '@dxos/live-object':
-        specifier: workspace:*
-        version: link:../../core/echo/live-object
-      '@dxos/local-storage':
-        specifier: workspace:*
-        version: link:../../common/local-storage
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
@@ -15255,9 +14717,6 @@ importers:
       '@fluentui/react-tabster':
         specifier: 'catalog:'
         version: 9.26.11(@types/react-dom@19.2.3(@types/react@19.2.7))(@types/react@19.2.7)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
-      '@preact-signals/safe-react':
-        specifier: 'catalog:'
-        version: 0.9.0(@babel/core@7.28.0)(@swc/helpers@0.5.17)(react@19.2.3)
       '@radix-ui/react-compose-refs':
         specifier: 'catalog:'
         version: 1.1.1(@types/react@19.2.7)(react@19.2.3)
@@ -15446,9 +14905,6 @@ importers:
       '@dxos/log':
         specifier: workspace:*
         version: link:../../../common/log
-      '@preact-signals/safe-react':
-        specifier: 'catalog:'
-        version: 0.9.0(@babel/core@7.28.0)(@swc/helpers@0.5.17)(react@19.2.3)
       '@radix-ui/react-id':
         specifier: 'catalog:'
         version: 1.1.0(@types/react@19.2.7)(react@19.2.3)
@@ -15483,9 +14939,6 @@ importers:
       '@dxos/react-hooks':
         specifier: workspace:*
         version: link:../react-hooks
-      '@preact-signals/safe-react':
-        specifier: 'catalog:'
-        version: 0.9.0(@babel/core@7.28.0)(@swc/helpers@0.5.17)(react@19.2.3)
       '@radix-ui/react-compose-refs':
         specifier: 'catalog:'
         version: 1.1.1(@types/react@19.2.7)(react@19.2.3)
@@ -15526,9 +14979,6 @@ importers:
       '@dxos/react-hooks':
         specifier: workspace:*
         version: link:../react-hooks
-      '@preact-signals/safe-react':
-        specifier: 'catalog:'
-        version: 0.9.0(@babel/core@7.28.0)(@swc/helpers@0.5.17)(react@19.2.3)
       '@radix-ui/react-collapsible':
         specifier: 'catalog:'
         version: 1.1.3(@types/react-dom@19.2.3(@types/react@19.2.7))(@types/react@19.2.7)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
@@ -15602,12 +15052,12 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
+      '@effect-atom/atom-react':
+        specifier: 'catalog:'
+        version: 0.4.6(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/platform@0.93.6(effect@3.19.11))(@effect/rpc@0.72.2(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11))(effect@3.19.11)(react@19.2.3)(scheduler@0.27.0)
       '@fluentui/react-tabster':
         specifier: 'catalog:'
         version: 9.26.11(@types/react-dom@19.2.3(@types/react@19.2.7))(@types/react@19.2.7)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
-      '@preact-signals/safe-react':
-        specifier: 'catalog:'
-        version: 0.9.0(@babel/core@7.28.0)(@swc/helpers@0.5.17)(react@19.2.3)
       '@radix-ui/primitive':
         specifier: 'catalog:'
         version: 1.1.1
@@ -15762,21 +15212,18 @@ importers:
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../common/invariant
-      '@dxos/live-object':
-        specifier: workspace:*
-        version: link:../../core/echo/live-object
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
+      '@dxos/react-hooks':
+        specifier: workspace:*
+        version: link:../react-primitives/react-hooks
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
-      '@preact-signals/safe-react':
+      '@effect-atom/atom-react':
         specifier: 'catalog:'
-        version: 0.9.0(@babel/core@7.28.0)(@swc/helpers@0.5.17)(react@19.2.3)
-      '@preact/signals-core':
-        specifier: 'catalog:'
-        version: 1.12.1
+        version: 0.4.6(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/platform@0.93.6(effect@3.19.11))(@effect/rpc@0.72.2(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11))(effect@3.19.11)(react@19.2.3)(scheduler@0.27.0)
       '@radix-ui/primitive':
         specifier: 'catalog:'
         version: 1.1.1
@@ -15850,9 +15297,6 @@ importers:
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../common/invariant
-      '@dxos/live-object':
-        specifier: workspace:*
-        version: link:../../core/echo/live-object
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
@@ -15880,12 +15324,6 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
-      '@preact-signals/safe-react':
-        specifier: 'catalog:'
-        version: 0.9.0(@babel/core@7.28.0)(@swc/helpers@0.5.17)(react@19.2.3)
-      '@preact/signals-core':
-        specifier: 'catalog:'
-        version: 1.12.1
       '@radix-ui/react-context':
         specifier: 'catalog:'
         version: 1.1.1(@types/react@19.2.7)(react@19.2.3)
@@ -15953,12 +15391,6 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
-      '@preact-signals/safe-react':
-        specifier: 'catalog:'
-        version: 0.9.0(@babel/core@7.28.0)(@swc/helpers@0.5.17)(react@19.2.3)
-      '@preact/signals-core':
-        specifier: 'catalog:'
-        version: 1.12.1
       '@radix-ui/react-context':
         specifier: 'catalog:'
         version: 1.1.1(@types/react@19.2.7)(react@19.2.3)
@@ -16026,12 +15458,6 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
-      '@preact-signals/safe-react':
-        specifier: 'catalog:'
-        version: 0.9.0(@babel/core@7.28.0)(@swc/helpers@0.5.17)(react@19.2.3)
-      '@preact/signals-core':
-        specifier: 'catalog:'
-        version: 1.12.1
       '@radix-ui/react-context':
         specifier: 'catalog:'
         version: 1.1.1(@types/react@19.2.7)(react@19.2.3)
@@ -16138,9 +15564,6 @@ importers:
       '@dxos/keys':
         specifier: workspace:*
         version: link:../../common/keys
-      '@dxos/live-object':
-        specifier: workspace:*
-        version: link:../../core/echo/live-object
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
@@ -16186,9 +15609,6 @@ importers:
       '@effect/platform':
         specifier: 'catalog:'
         version: 0.93.6(effect@3.19.11)
-      '@preact-signals/safe-react':
-        specifier: 'catalog:'
-        version: 0.9.0(@babel/core@7.28.0)(@swc/helpers@0.5.17)(react@19.2.3)
       chess.js:
         specifier: 'catalog:'
         version: 1.4.0
@@ -16199,9 +15619,6 @@ importers:
       '@dxos/compute':
         specifier: workspace:*
         version: link:../../core/compute
-      '@dxos/echo-signals':
-        specifier: workspace:*
-        version: link:../../core/echo/echo-signals
       '@dxos/random':
         specifier: workspace:*
         version: link:../../common/random
@@ -16286,9 +15703,6 @@ importers:
       '@dxos/keys':
         specifier: workspace:*
         version: link:../../common/keys
-      '@dxos/live-object':
-        specifier: workspace:*
-        version: link:../../core/echo/live-object
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
@@ -16310,12 +15724,9 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
-      '@preact-signals/safe-react':
+      '@effect-atom/atom-react':
         specifier: 'catalog:'
-        version: 0.9.0(@babel/core@7.28.0)(@swc/helpers@0.5.17)(react@19.2.3)
-      '@preact/signals-core':
-        specifier: 'catalog:'
-        version: 1.12.1
+        version: 0.4.6(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/platform@0.93.6(effect@3.19.11))(@effect/rpc@0.72.2(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11))(effect@3.19.11)(react@19.2.3)(scheduler@0.27.0)
       '@radix-ui/react-context':
         specifier: 'catalog:'
         version: 1.1.1(@types/react@19.2.7)(react@19.2.3)
@@ -16410,9 +15821,6 @@ importers:
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../common/invariant
-      '@dxos/live-object':
-        specifier: workspace:*
-        version: link:../../core/echo/live-object
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
@@ -16452,12 +15860,6 @@ importers:
       '@fluentui/react-tabster':
         specifier: 'catalog:'
         version: 9.26.11(@types/react-dom@19.2.3(@types/react@19.2.7))(@types/react@19.2.7)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
-      '@preact-signals/safe-react':
-        specifier: 'catalog:'
-        version: 0.9.0(@babel/core@7.28.0)(@swc/helpers@0.5.17)(react@19.2.3)
-      '@preact/signals-core':
-        specifier: 'catalog:'
-        version: 1.12.1
       '@radix-ui/react-accordion':
         specifier: 'catalog:'
         version: 1.2.3(@types/react-dom@19.2.3(@types/react@19.2.7))(@types/react@19.2.7)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
@@ -16573,12 +15975,6 @@ importers:
       '@lezer/xml':
         specifier: 'catalog:'
         version: 1.0.6
-      '@preact-signals/safe-react':
-        specifier: 'catalog:'
-        version: 0.9.0(@babel/core@7.28.0)(@swc/helpers@0.5.17)(react@19.2.3)
-      '@preact/signals-core':
-        specifier: 'catalog:'
-        version: 1.12.1
       '@radix-ui/react-compose-refs':
         specifier: 'catalog:'
         version: 1.1.1(@types/react@19.2.7)(react@19.2.3)
@@ -16619,6 +16015,9 @@ importers:
       '@dxos/ui-theme':
         specifier: workspace:*
         version: link:../ui-theme
+      '@effect-atom/atom-react':
+        specifier: 'catalog:'
+        version: 0.4.6(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/platform@0.93.6(effect@3.19.11))(@effect/rpc@0.72.2(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11))(effect@3.19.11)(react@19.2.3)(scheduler@0.27.0)
       '@types/react':
         specifier: ~19.2.7
         version: 19.2.7
@@ -16640,9 +16039,6 @@ importers:
       '@atlaskit/pragmatic-drag-and-drop':
         specifier: 'catalog:'
         version: 1.7.7
-      '@preact-signals/safe-react':
-        specifier: 'catalog:'
-        version: 0.9.0(@babel/core@7.28.0)(@swc/helpers@0.5.17)(react@19.2.3)
       '@radix-ui/react-use-controllable-state':
         specifier: 'catalog:'
         version: 1.1.0(@types/react@19.2.7)(react@19.2.3)
@@ -16749,9 +16145,6 @@ importers:
       '@dxos/lit-ui':
         specifier: workspace:*
         version: link:../lit-ui
-      '@dxos/live-object':
-        specifier: workspace:*
-        version: link:../../core/echo/live-object
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
@@ -16794,12 +16187,6 @@ importers:
       '@lezer/markdown':
         specifier: 'catalog:'
         version: 1.3.1
-      '@preact-signals/safe-react':
-        specifier: 'catalog:'
-        version: 0.9.0(@babel/core@7.28.0)(@swc/helpers@0.5.17)(react@19.2.3)
-      '@preact/signals-react':
-        specifier: 'catalog:'
-        version: 3.3.1(react@19.2.3)
       '@radix-ui/react-context':
         specifier: 'catalog:'
         version: 1.1.1(@types/react@19.2.7)(react@19.2.3)
@@ -16849,9 +16236,9 @@ importers:
       '@dxos/config':
         specifier: workspace:*
         version: link:../../sdk/config
-      '@dxos/echo-signals':
+      '@dxos/echo-atom':
         specifier: workspace:*
-        version: link:../../core/echo/echo-signals
+        version: link:../../core/echo/echo-atom
       '@dxos/keyboard':
         specifier: workspace:*
         version: link:../../common/keyboard
@@ -16881,7 +16268,7 @@ importers:
         version: link:../ui-types
       '@effect-atom/atom-react':
         specifier: 'catalog:'
-        version: 0.4.4(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/platform@0.93.6(effect@3.19.11))(@effect/rpc@0.72.2(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11))(effect@3.19.11)(react@19.2.3)(scheduler@0.27.0)
+        version: 0.4.6(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/platform@0.93.6(effect@3.19.11))(@effect/rpc@0.72.2(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11))(effect@3.19.11)(react@19.2.3)(scheduler@0.27.0)
       '@effect/platform':
         specifier: 'catalog:'
         version: 0.93.6(effect@3.19.11)
@@ -16981,9 +16368,6 @@ importers:
       '@dxos/lit-ui':
         specifier: workspace:*
         version: link:../lit-ui
-      '@dxos/live-object':
-        specifier: workspace:*
-        version: link:../../core/echo/live-object
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
@@ -17023,15 +16407,12 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
+      '@effect-atom/atom-react':
+        specifier: 'catalog:'
+        version: 0.4.6(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/platform@0.93.6(effect@3.19.11))(@effect/rpc@0.72.2(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11))(effect@3.19.11)(react@19.2.3)(scheduler@0.27.0)
       '@fluentui/react-tabster':
         specifier: 'catalog:'
         version: 9.26.11(@types/react-dom@19.2.3(@types/react@19.2.7))(@types/react@19.2.7)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
-      '@preact-signals/safe-react':
-        specifier: 'catalog:'
-        version: 0.9.0(@babel/core@7.28.0)(@swc/helpers@0.5.17)(react@19.2.3)
-      '@preact/signals-react':
-        specifier: 'catalog:'
-        version: 3.3.1(react@19.2.3)
       '@radix-ui/react-context':
         specifier: 'catalog:'
         version: 1.1.1(@types/react@19.2.7)(react@19.2.3)
@@ -17048,9 +16429,6 @@ importers:
         specifier: 'catalog:'
         version: 8.5.5
     devDependencies:
-      '@dxos/echo-signals':
-        specifier: workspace:*
-        version: link:../../core/echo/echo-signals
       '@dxos/random':
         specifier: workspace:*
         version: link:../../common/random
@@ -17114,12 +16492,9 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
-      '@preact-signals/safe-react':
+      '@effect-atom/atom-react':
         specifier: 'catalog:'
-        version: 0.9.0(@babel/core@7.28.0)(@swc/helpers@0.5.17)(react@19.2.3)
-      '@preact/signals-core':
-        specifier: 'catalog:'
-        version: 1.12.1
+        version: 0.4.6(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/platform@0.93.6(effect@3.19.11))(@effect/rpc@0.72.2(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11))(effect@3.19.11)(react@19.2.3)(scheduler@0.27.0)
       '@radix-ui/react-context':
         specifier: 'catalog:'
         version: 1.1.1(@types/react@19.2.7)(react@19.2.3)
@@ -17181,9 +16556,6 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
-      '@preact-signals/safe-react':
-        specifier: 'catalog:'
-        version: 0.9.0(@babel/core@7.28.0)(@swc/helpers@0.5.17)(react@19.2.3)
       '@radix-ui/react-context':
         specifier: 'catalog:'
         version: 1.1.1(@types/react@19.2.7)(react@19.2.3)
@@ -17290,9 +16662,6 @@ importers:
       '@dxos/debug':
         specifier: workspace:*
         version: link:../../common/debug
-      '@dxos/echo-signals':
-        specifier: workspace:*
-        version: link:../../core/echo/echo-signals
       '@dxos/graph':
         specifier: workspace:*
         version: link:../../common/graph
@@ -17308,12 +16677,9 @@ importers:
       '@dxos/react-ui-mosaic':
         specifier: workspace:*
         version: link:../react-ui-mosaic
-      '@preact-signals/safe-react':
+      '@effect-atom/atom-react':
         specifier: 'catalog:'
-        version: 0.9.0(@babel/core@7.28.0)(@swc/helpers@0.5.17)(react@19.2.3)
-      '@preact/signals-core':
-        specifier: 'catalog:'
-        version: 1.12.1
+        version: 0.4.6(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/platform@0.93.6(effect@3.19.11))(@effect/rpc@0.72.2(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11))(effect@3.19.11)(react@19.2.3)(scheduler@0.27.0)
       d3:
         specifier: 'catalog:'
         version: 7.9.0
@@ -17412,9 +16778,6 @@ importers:
       '@lit/react':
         specifier: 'catalog:'
         version: 1.0.8(@types/react@19.2.7)
-      '@preact-signals/safe-react':
-        specifier: 'catalog:'
-        version: 0.9.0(@babel/core@7.28.0)(@swc/helpers@0.5.17)(react@19.2.3)
       '@radix-ui/react-context':
         specifier: 'catalog:'
         version: 1.1.1(@types/react@19.2.7)(react@19.2.3)
@@ -17503,12 +16866,9 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
-      '@preact-signals/safe-react':
+      '@effect-atom/atom-react':
         specifier: 'catalog:'
-        version: 0.9.0(@babel/core@7.28.0)(@swc/helpers@0.5.17)(react@19.2.3)
-      '@preact/signals-core':
-        specifier: 'catalog:'
-        version: 1.12.1
+        version: 0.4.6(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/platform@0.93.6(effect@3.19.11))(@effect/rpc@0.72.2(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11))(effect@3.19.11)(react@19.2.3)(scheduler@0.27.0)
     devDependencies:
       '@dxos/plugin-search':
         specifier: workspace:*
@@ -17567,9 +16927,6 @@ importers:
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../common/invariant
-      '@dxos/live-object':
-        specifier: workspace:*
-        version: link:../../core/echo/live-object
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
@@ -17588,12 +16945,9 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
-      '@preact-signals/safe-react':
+      '@effect-atom/atom-react':
         specifier: 'catalog:'
-        version: 0.9.0(@babel/core@7.28.0)(@swc/helpers@0.5.17)(react@19.2.3)
-      '@preact/signals-core':
-        specifier: 'catalog:'
-        version: 1.12.1
+        version: 0.4.6(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/platform@0.93.6(effect@3.19.11))(@effect/rpc@0.72.2(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11))(effect@3.19.11)(react@19.2.3)(scheduler@0.27.0)
       '@radix-ui/react-accordion':
         specifier: 'catalog:'
         version: 1.2.3(@types/react-dom@19.2.3(@types/react@19.2.7))(@types/react@19.2.7)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
@@ -17673,12 +17027,6 @@ importers:
       '@lezer/xml':
         specifier: 'catalog:'
         version: 1.0.6
-      '@preact-signals/safe-react':
-        specifier: 'catalog:'
-        version: 0.9.0(@babel/core@7.28.0)(@swc/helpers@0.5.17)(react@19.2.3)
-      '@preact/signals-core':
-        specifier: 'catalog:'
-        version: 1.12.1
       '@radix-ui/react-compose-refs':
         specifier: 'catalog:'
         version: 1.1.1(@types/react@19.2.7)(react@19.2.3)
@@ -17834,12 +17182,6 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
-      '@preact-signals/safe-react':
-        specifier: 'catalog:'
-        version: 0.9.0(@babel/core@7.28.0)(@swc/helpers@0.5.17)(react@19.2.3)
-      '@preact/signals-react':
-        specifier: 'catalog:'
-        version: 3.3.1(react@19.2.3)
       '@radix-ui/react-context':
         specifier: 'catalog:'
         version: 1.1.1(@types/react@19.2.7)(react@19.2.3)
@@ -17847,9 +17189,6 @@ importers:
         specifier: 'catalog:'
         version: 1.1.0(@types/react@19.2.7)(react@19.2.3)
     devDependencies:
-      '@dxos/live-object':
-        specifier: workspace:*
-        version: link:../../core/echo/live-object
       '@dxos/random':
         specifier: workspace:*
         version: link:../../common/random
@@ -17864,7 +17203,7 @@ importers:
         version: link:../ui-theme
       '@effect-atom/atom-react':
         specifier: 'catalog:'
-        version: 0.4.4(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/platform@0.93.6(effect@3.19.11))(@effect/rpc@0.72.2(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11))(effect@3.19.11)(react@19.2.3)(scheduler@0.27.0)
+        version: 0.4.6(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/platform@0.93.6(effect@3.19.11))(@effect/rpc@0.72.2(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11))(effect@3.19.11)(react@19.2.3)(scheduler@0.27.0)
       '@effect/platform':
         specifier: 'catalog:'
         version: 0.93.6(effect@3.19.11)
@@ -17940,9 +17279,6 @@ importers:
       '@fluentui/react-tabster':
         specifier: 'catalog:'
         version: 9.26.11(@types/react-dom@19.2.3(@types/react@19.2.7))(@types/react@19.2.7)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
-      '@preact-signals/safe-react':
-        specifier: 'catalog:'
-        version: 0.9.0(@babel/core@7.28.0)(@swc/helpers@0.5.17)(react@19.2.3)
       '@radix-ui/react-compose-refs':
         specifier: 'catalog:'
         version: 1.1.1(@types/react@19.2.7)(react@19.2.3)
@@ -18025,9 +17361,6 @@ importers:
       '@emoji-mart/react':
         specifier: 'catalog:'
         version: 1.1.1(emoji-mart@5.5.2)(react@19.2.3)
-      '@preact-signals/safe-react':
-        specifier: 'catalog:'
-        version: 0.9.0(@babel/core@7.28.0)(@swc/helpers@0.5.17)(react@19.2.3)
       '@radix-ui/react-use-controllable-state':
         specifier: 'catalog:'
         version: 1.1.0(@types/react@19.2.7)(react@19.2.3)
@@ -18065,9 +17398,6 @@ importers:
       '@fluentui/react-tabster':
         specifier: 'catalog:'
         version: 9.26.11(@types/react-dom@19.2.3(@types/react@19.2.7))(@types/react@19.2.7)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
-      '@preact-signals/safe-react':
-        specifier: 'catalog:'
-        version: 0.9.0(@babel/core@7.28.0)(@swc/helpers@0.5.17)(react@19.2.3)
       '@radix-ui/react-compose-refs':
         specifier: 'catalog:'
         version: 1.1.1(@types/react@19.2.7)(react@19.2.3)
@@ -18123,9 +17453,6 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
-      '@preact-signals/safe-react':
-        specifier: 'catalog:'
-        version: 0.9.0(@babel/core@7.28.0)(@swc/helpers@0.5.17)(react@19.2.3)
       '@react-three/drei':
         specifier: 'catalog:'
         version: 10.7.7(@react-three/fiber@9.5.0(@types/react@19.2.7)(immer@10.1.1)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)(three@0.178.0))(@types/react@19.2.7)(@types/three@0.165.0)(immer@10.1.1)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)(three@0.178.0)
@@ -18223,9 +17550,6 @@ importers:
       '@dxos/keyboard':
         specifier: workspace:*
         version: link:../../common/keyboard
-      '@dxos/live-object':
-        specifier: workspace:*
-        version: link:../../core/echo/live-object
       '@dxos/react-ui-attention':
         specifier: workspace:*
         version: link:../react-ui-attention
@@ -18241,9 +17565,6 @@ importers:
       '@fluentui/react-tabster':
         specifier: 'catalog:'
         version: 9.26.11(@types/react-dom@19.2.3(@types/react@19.2.7))(@types/react@19.2.7)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
-      '@preact-signals/safe-react':
-        specifier: 'catalog:'
-        version: 0.9.0(@babel/core@7.28.0)(@swc/helpers@0.5.17)(react@19.2.3)
       '@radix-ui/primitive':
         specifier: 'catalog:'
         version: 1.1.1
@@ -18326,9 +17647,6 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
-      '@preact-signals/safe-react':
-        specifier: 'catalog:'
-        version: 0.9.0(@babel/core@7.28.0)(@swc/helpers@0.5.17)(react@19.2.3)
       jsonpath:
         specifier: 'catalog:'
         version: 1.1.1
@@ -18393,6 +17711,9 @@ importers:
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../core/echo/echo
+      '@dxos/echo-atom':
+        specifier: workspace:*
+        version: link:../../core/echo/echo-atom
       '@dxos/effect':
         specifier: workspace:*
         version: link:../../common/effect
@@ -18405,9 +17726,6 @@ importers:
       '@dxos/lit-grid':
         specifier: workspace:*
         version: link:../lit-grid
-      '@dxos/live-object':
-        specifier: workspace:*
-        version: link:../../core/echo/live-object
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
@@ -18456,15 +17774,12 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
+      '@effect-atom/atom-react':
+        specifier: 'catalog:'
+        version: 0.4.6(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/platform@0.93.6(effect@3.19.11))(@effect/rpc@0.72.2(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11))(effect@3.19.11)(react@19.2.3)(scheduler@0.27.0)
       '@fluentui/react-tabster':
         specifier: 'catalog:'
         version: 9.26.11(@types/react-dom@19.2.3(@types/react@19.2.7))(@types/react@19.2.7)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
-      '@preact-signals/safe-react':
-        specifier: 'catalog:'
-        version: 0.9.0(@babel/core@7.28.0)(@swc/helpers@0.5.17)(react@19.2.3)
-      '@preact/signals-core':
-        specifier: 'catalog:'
-        version: 1.12.1
       '@radix-ui/react-context':
         specifier: 'catalog:'
         version: 1.1.1(@types/react@19.2.7)(react@19.2.3)
@@ -18484,9 +17799,6 @@ importers:
         specifier: 'catalog:'
         version: 4.6.0
     devDependencies:
-      '@dxos/echo-signals':
-        specifier: workspace:*
-        version: link:../../core/echo/echo-signals
       '@dxos/lit-ui':
         specifier: workspace:*
         version: link:../lit-ui
@@ -18502,9 +17814,6 @@ importers:
       '@dxos/ui-theme':
         specifier: workspace:*
         version: link:../ui-theme
-      '@effect-atom/atom-react':
-        specifier: 'catalog:'
-        version: 0.4.4(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/platform@0.93.6(effect@3.19.11))(@effect/rpc@0.72.2(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11))(effect@3.19.11)(react@19.2.3)(scheduler@0.27.0)
       '@effect/platform':
         specifier: 'catalog:'
         version: 0.93.6(effect@3.19.11)
@@ -18544,9 +17853,6 @@ importers:
       '@fluentui/react-tabster':
         specifier: 'catalog:'
         version: 9.26.11(@types/react-dom@19.2.3(@types/react@19.2.7))(@types/react@19.2.7)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
-      '@preact-signals/safe-react':
-        specifier: 'catalog:'
-        version: 0.9.0(@babel/core@7.28.0)(@swc/helpers@0.5.17)(react@19.2.3)
       '@radix-ui/primitive':
         specifier: 'catalog:'
         version: 1.1.1
@@ -18596,9 +17902,6 @@ importers:
 
   packages/ui/react-ui-text-tooltip:
     dependencies:
-      '@preact-signals/safe-react':
-        specifier: 'catalog:'
-        version: 0.9.0(@babel/core@7.28.0)(@swc/helpers@0.5.17)(react@19.2.3)
       '@radix-ui/react-compose-refs':
         specifier: 'catalog:'
         version: 1.1.1(@types/react@19.2.7)(react@19.2.3)
@@ -18636,9 +17939,6 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
-      '@preact-signals/safe-react':
-        specifier: 'catalog:'
-        version: 0.9.0(@babel/core@7.28.0)(@swc/helpers@0.5.17)(react@19.2.3)
       '@radix-ui/react-primitive':
         specifier: 'catalog:'
         version: 2.0.2(@types/react-dom@19.2.3(@types/react@19.2.7))(@types/react@19.2.7)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
@@ -18655,9 +17955,6 @@ importers:
       '@dxos/keys':
         specifier: workspace:*
         version: link:../../common/keys
-      '@dxos/live-object':
-        specifier: workspace:*
-        version: link:../../core/echo/live-object
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
@@ -18721,7 +18018,7 @@ importers:
     devDependencies:
       '@effect-atom/atom':
         specifier: 'catalog:'
-        version: 0.4.10(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/platform@0.93.6(effect@3.19.11))(@effect/rpc@0.72.2(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11))(effect@3.19.11)
+        version: 0.4.13(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/platform@0.93.6(effect@3.19.11))(@effect/rpc@0.72.2(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11))(effect@3.19.11)
       '@solidjs/testing-library':
         specifier: 'catalog:'
         version: 0.8.10(solid-js@1.9.10)
@@ -18915,9 +18212,6 @@ importers:
       '@dxos/lit-ui':
         specifier: workspace:*
         version: link:../lit-ui
-      '@dxos/live-object':
-        specifier: workspace:*
-        version: link:../../core/echo/live-object
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
@@ -18988,9 +18282,6 @@ importers:
       '@dxos/config':
         specifier: workspace:*
         version: link:../../sdk/config
-      '@dxos/echo-signals':
-        specifier: workspace:*
-        version: link:../../core/echo/echo-signals
       '@dxos/keyboard':
         specifier: workspace:*
         version: link:../../common/keyboard
@@ -20113,10 +19404,6 @@ packages:
     resolution: {integrity: sha512-0NFvs3VkuSYbFi1x2Vd6tKrywq+z/cLeYC/RJNFrIX/30Bf5aiGYbtvGXolEktzJH8o5E5KJ3tT+nkxuuZFVlA==}
     engines: {node: '>=6.9.0'}
 
-  '@babel/helper-module-imports@7.25.9':
-    resolution: {integrity: sha512-tnUA4RsrmflIM6W6RFTLFSXITtl0wKjgpnLgXyowocVPrbYrLUXSBXDgTs8BlbmIzIdlBySRQjINYs2BAkiLtw==}
-    engines: {node: '>=6.9.0'}
-
   '@babel/helper-module-imports@7.27.1':
     resolution: {integrity: sha512-0gSFWUPNXNopqtIPQvlD5WgXYI5GY2kP2cCvoT8kczjbfcfuIljTbcWrulD1CIPIX2gt1wghbDy08yE1p+/r3w==}
     engines: {node: '>=6.9.0'}
@@ -21138,15 +20425,15 @@ packages:
   '@dxos/wa-sqlite@0.2.1':
     resolution: {integrity: sha512-RVktTCzwJ1ix1MP/LWDjpO1HOOP0JpnAtjB/Zp/csbrlBEhhYYpwIlgDJzCi1Ri4cWHOo04iy+YtlnjfshM1Zw==}
 
-  '@effect-atom/atom-react@0.4.4':
-    resolution: {integrity: sha512-EWT9WpB67GNCecxQXJdAZNVMhuk3VxpdDfojxg1wOgWmR5TPaGiXA74Jqa2Y9AEjSB0hMMAk7RNve2CoIikg2w==}
+  '@effect-atom/atom-react@0.4.6':
+    resolution: {integrity: sha512-ZvncuSQsCcUrsddD00JcKDMraPge0AiDMGiJqKc7ProvagCVrxB+Emy5uHM0l0SLGUx4X56bFE0d1tp9Z/Bf+g==}
     peerDependencies:
       effect: ^3.19
       react: ~19.2.3
       scheduler: '*'
 
-  '@effect-atom/atom@0.4.10':
-    resolution: {integrity: sha512-SEPDN4rbNsz0LTWfu4+a//OGh+zIpe64pJ4SJDFN1k07c9l171FTKCHIQHVwjK84vE+TxIj/Tg/JZzgxEkdMsQ==}
+  '@effect-atom/atom@0.4.13':
+    resolution: {integrity: sha512-wYCPDg/vN2IWTqxho7kTTSivh//V2TSAcdkQvLXMJWww8YzhcCGmCiDpT6cefyNXvHj+qZrqYB54mrUqG6EYCA==}
     peerDependencies:
       '@effect/experimental': ^0.57.0
       '@effect/platform': ^0.93.0
@@ -22762,7 +22049,7 @@ packages:
   '@joshwooding/vite-plugin-react-docgen-typescript@0.6.3':
     resolution: {integrity: sha512-9TGZuAX+liGkNKkwuo3FYJu7gHWT0vkBcf7GkOe7s7fmC19XwH/4u5u7sDIFrMooe558ORcmuBvBz7Ur5PlbHw==}
     peerDependencies:
-      typescript: '>= 4.3.x'
+      typescript: ^5.9.3
       vite: ^3.0.0 || ^4.0.0 || ^5.0.0 || ^6.0.0 || ^7.0.0
     peerDependenciesMeta:
       typescript:
@@ -24195,25 +23482,6 @@ packages:
   '@poppinss/exception@1.2.2':
     resolution: {integrity: sha512-m7bpKCD4QMlFCjA/nKTs23fuvoVFoA83brRKmObCUNmi/9tVu8Ve3w4YQAnJu4q3Tjf5fr685HYIC/IA2zHRSg==}
 
-  '@preact-signals/safe-react@0.9.0':
-    resolution: {integrity: sha512-pNGrxqUSUDsptJufqpQMpxdT2kLy3vOF6sFkOf42Xhc9nYbIBCoggHDCCfz+e3RXPDkJqyFszqDiBNzMs5rbwA==}
-    peerDependencies:
-      '@babel/core': ^7.0.0
-      react: ~19.2.3
-
-  '@preact/signals-core@1.12.1':
-    resolution: {integrity: sha512-BwbTXpj+9QutoZLQvbttRg5x3l5468qaV2kufh+51yha1c53ep5dY4kTuZR35+3pAZxpfQerGJiQqg34ZNZ6uA==}
-
-  '@preact/signals-react@3.3.1':
-    resolution: {integrity: sha512-VMVDVt2zxtv/uvYBfuaAX1KJPZjpSB23ohbbCAzWAv0J0IXRxyDMSVUirxq1nY6nzeyldAAXJOykAtlVIyQ/jA==}
-    peerDependencies:
-      react: ~19.2.3
-
-  '@preact/signals@2.3.2':
-    resolution: {integrity: sha512-Q22avIn4z0BQnmFeo6Y5HCnJTo8VufN84zN51OtqeNgZOVCYgdwEOcJKVX1x/IrjRVxUnOy6Ubn7H5aVFujXaQ==}
-    peerDependencies:
-      preact: '>= 10.25.0 || >=11.0.0-0'
-
   '@prisma/instrumentation@5.17.0':
     resolution: {integrity: sha512-c1Sle4ji8aasMcYfBBHFM56We4ljfenVtRmS8aY06BllS7SoU6SmJBwG7vil+GHiR0Yrh+t9iBwt4AY0Jr4KNQ==}
 
@@ -24252,7 +23520,7 @@ packages:
     engines: {node: '>=16.3.0'}
     hasBin: true
     peerDependencies:
-      typescript: '>= 4.7.4'
+      typescript: ^5.9.3
     peerDependenciesMeta:
       typescript:
         optional: true
@@ -26558,7 +25826,7 @@ packages:
       react: ~19.2.3
       react-dom: ~19.2.3
       storybook: ^10.1.11
-      typescript: '>= 4.9.x'
+      typescript: ^5.9.3
     peerDependenciesMeta:
       typescript:
         optional: true
@@ -26662,22 +25930,10 @@ packages:
     peerDependencies:
       '@svgr/core': '*'
 
-  '@swc/core-darwin-arm64@1.11.1':
-    resolution: {integrity: sha512-bJbqZ51JghEZ8WaFetofkfkS3MWsS/V3vDvY+0r+SlLeocZwf8q8/GqcafnElHcU+zLV6yTi13fJwUce6ULiUQ==}
-    engines: {node: '>=10'}
-    cpu: [arm64]
-    os: [darwin]
-
   '@swc/core-darwin-arm64@1.13.5':
     resolution: {integrity: sha512-lKNv7SujeXvKn16gvQqUQI5DdyY8v7xcoO3k06/FJbHJS90zEwZdQiMNRiqpYw/orU543tPaWgz7cIYWhbopiQ==}
     engines: {node: '>=10'}
     cpu: [arm64]
-    os: [darwin]
-
-  '@swc/core-darwin-x64@1.11.1':
-    resolution: {integrity: sha512-9GGEoN0uxkLg3KocOVzMfe9c9/DxESXclsL/U2xVLa3pTFB5YnXhiCP5YBT/3Q7nSGLD+R2ALqkNlDoueUjvPw==}
-    engines: {node: '>=10'}
-    cpu: [x64]
     os: [darwin]
 
   '@swc/core-darwin-x64@1.13.5':
@@ -26686,32 +25942,14 @@ packages:
     cpu: [x64]
     os: [darwin]
 
-  '@swc/core-linux-arm-gnueabihf@1.11.1':
-    resolution: {integrity: sha512-Lt7l/l0nfSTUzsWcVY3dtOPl5RtgCJ+Ya8IG4Aa3l6c7kLc6Sx4JpylpEIY9yhGidDy/uQ8KUg5kqUPtUrXrvQ==}
-    engines: {node: '>=10'}
-    cpu: [arm]
-    os: [linux]
-
   '@swc/core-linux-arm-gnueabihf@1.13.5':
     resolution: {integrity: sha512-Q6eS3Pt8GLkXxqz9TAw+AUk9HpVJt8Uzm54MvPsqp2yuGmY0/sNaPPNVqctCX9fu/Nu8eaWUen0si6iEiCsazQ==}
     engines: {node: '>=10'}
     cpu: [arm]
     os: [linux]
 
-  '@swc/core-linux-arm64-gnu@1.11.1':
-    resolution: {integrity: sha512-oe826cfuGukctTSpDjk7RJRDEJihQMAzvO5tdWK0wcy+zvMPFyH5Fg6cW0X4ST3M7fcV91/1T/iuiiD2SVamYw==}
-    engines: {node: '>=10'}
-    cpu: [arm64]
-    os: [linux]
-
   '@swc/core-linux-arm64-gnu@1.13.5':
     resolution: {integrity: sha512-aNDfeN+9af+y+M2MYfxCzCy/VDq7Z5YIbMqRI739o8Ganz6ST+27kjQFd8Y/57JN/hcnUEa9xqdS3XY7WaVtSw==}
-    engines: {node: '>=10'}
-    cpu: [arm64]
-    os: [linux]
-
-  '@swc/core-linux-arm64-musl@1.11.1':
-    resolution: {integrity: sha512-ABb4pnYeQp/JBJS5Qd2apTwOzpzrTebQFUiFjk0WgTKIr9T6SL3tLXMjgvbSXIath+1HnbCKFUwDXNQhgGFFTg==}
     engines: {node: '>=10'}
     cpu: [arm64]
     os: [linux]
@@ -26722,20 +25960,8 @@ packages:
     cpu: [arm64]
     os: [linux]
 
-  '@swc/core-linux-x64-gnu@1.11.1':
-    resolution: {integrity: sha512-E09TcHv40bV0mOHTKquZw0IOcQ+lzzpQjyOhCa7+GBpbS3eg5/35Gu7DfToN2bomz74LPKW/l7jZRG+ZNOYNHQ==}
-    engines: {node: '>=10'}
-    cpu: [x64]
-    os: [linux]
-
   '@swc/core-linux-x64-gnu@1.13.5':
     resolution: {integrity: sha512-WD530qvHrki8Ywt/PloKUjaRKgstQqNGvmZl54g06kA+hqtSE2FTG9gngXr3UJxYu/cNAjJYiBifm7+w4nbHbA==}
-    engines: {node: '>=10'}
-    cpu: [x64]
-    os: [linux]
-
-  '@swc/core-linux-x64-musl@1.11.1':
-    resolution: {integrity: sha512-cuW4r7GbvQt9uv+rGdYLHUjDvGjHmr1nYE7iFVk6r4i+byZuXBK6M7P1p+/dTzacshOc05I9n/eUV+Hfjp9a3A==}
     engines: {node: '>=10'}
     cpu: [x64]
     os: [linux]
@@ -26746,22 +25972,10 @@ packages:
     cpu: [x64]
     os: [linux]
 
-  '@swc/core-win32-arm64-msvc@1.11.1':
-    resolution: {integrity: sha512-H8Q78GwaKnCL4isHx8JRTRi6vUU6iMLbpegS2jzWWC1On7EePhkLx2eR8nEsaRIQB6rc3WqdIj74OgOpNoPi7g==}
-    engines: {node: '>=10'}
-    cpu: [arm64]
-    os: [win32]
-
   '@swc/core-win32-arm64-msvc@1.13.5':
     resolution: {integrity: sha512-cZ6UpumhF9SDJvv4DA2fo9WIzlNFuKSkZpZmPG1c+4PFSEMy5DFOjBSllCvnqihCabzXzpn6ykCwBmHpy31vQw==}
     engines: {node: '>=10'}
     cpu: [arm64]
-    os: [win32]
-
-  '@swc/core-win32-ia32-msvc@1.11.1':
-    resolution: {integrity: sha512-Rx7cZ0OvqMb16fgmUSlPWQbH1+X355IDJhVQpUlpL+ezD/kkWmJix+4u2GVE/LHrfbdyZ4sjjIzSsCQxJV05Mw==}
-    engines: {node: '>=10'}
-    cpu: [ia32]
     os: [win32]
 
   '@swc/core-win32-ia32-msvc@1.13.5':
@@ -26770,26 +25984,11 @@ packages:
     cpu: [ia32]
     os: [win32]
 
-  '@swc/core-win32-x64-msvc@1.11.1':
-    resolution: {integrity: sha512-6bEEC/XU1lwYzUXY7BXj3nhe7iBF9+i9dVo+hbiVxXZMrD0LUd+7urOBM3NtVnDsUaR6Ge/g7aR+OfpgYscKOg==}
-    engines: {node: '>=10'}
-    cpu: [x64]
-    os: [win32]
-
   '@swc/core-win32-x64-msvc@1.13.5':
     resolution: {integrity: sha512-YrKdMVxbYmlfybCSbRtrilc6UA8GF5aPmGKBdPvjrarvsmf4i7ZHGCEnLtfOMd3Lwbs2WUZq3WdMbozYeLU93Q==}
     engines: {node: '>=10'}
     cpu: [x64]
     os: [win32]
-
-  '@swc/core@1.11.1':
-    resolution: {integrity: sha512-67+lBHZ1lAJQKoOhBHl9DE2iugPYAulRVArZjoF+DnIY3G9wLXCXxw5It0IaCnzvJVvUPxGmr0rHViXKBDP5Vg==}
-    engines: {node: '>=10'}
-    peerDependencies:
-      '@swc/helpers': '*'
-    peerDependenciesMeta:
-      '@swc/helpers':
-        optional: true
 
   '@swc/core@1.13.5':
     resolution: {integrity: sha512-WezcBo8a0Dg2rnR82zhwoR6aRNxeTGfK5QCD6TQ+kg3xx/zNT02s/0o+81h/3zhvFSB24NtqEr8FTw88O5W/JQ==}
@@ -27637,20 +26836,20 @@ packages:
     peerDependencies:
       '@typescript-eslint/parser': ^8.39.0
       eslint: ^8.57.0 || ^9.0.0
-      typescript: '>=4.8.4 <6.0.0'
+      typescript: ^5.9.3
 
   '@typescript-eslint/parser@8.39.0':
     resolution: {integrity: sha512-g3WpVQHngx0aLXn6kfIYCZxM6rRJlWzEkVpqEFLT3SgEDsp9cpCbxxgwnE504q4H+ruSDh/VGS6nqZIDynP+vg==}
     engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
     peerDependencies:
       eslint: ^8.57.0 || ^9.0.0
-      typescript: '>=4.8.4 <6.0.0'
+      typescript: ^5.9.3
 
   '@typescript-eslint/project-service@8.39.0':
     resolution: {integrity: sha512-CTzJqaSq30V/Z2Og9jogzZt8lJRR5TKlAdXmWgdu4hgcC9Kww5flQ+xFvMxIBWVNdxJO7OifgdOK4PokMIWPew==}
     engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
     peerDependencies:
-      typescript: '>=4.8.4 <6.0.0'
+      typescript: ^5.9.3
 
   '@typescript-eslint/scope-manager@8.39.0':
     resolution: {integrity: sha512-8QOzff9UKxOh6npZQ/4FQu4mjdOCGSdO3p44ww0hk8Vu+IGbg0tB/H1LcTARRDzGCC8pDGbh2rissBuuoPgH8A==}
@@ -27660,14 +26859,14 @@ packages:
     resolution: {integrity: sha512-Fd3/QjmFV2sKmvv3Mrj8r6N8CryYiCS8Wdb/6/rgOXAWGcFuc+VkQuG28uk/4kVNVZBQuuDHEDUpo/pQ32zsIQ==}
     engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
     peerDependencies:
-      typescript: '>=4.8.4 <6.0.0'
+      typescript: ^5.9.3
 
   '@typescript-eslint/type-utils@8.39.0':
     resolution: {integrity: sha512-6B3z0c1DXVT2vYA9+z9axjtc09rqKUPRmijD5m9iv8iQpHBRYRMBcgxSiKTZKm6FwWw1/cI4v6em35OsKCiN5Q==}
     engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
     peerDependencies:
       eslint: ^8.57.0 || ^9.0.0
-      typescript: '>=4.8.4 <6.0.0'
+      typescript: ^5.9.3
 
   '@typescript-eslint/types@8.39.0':
     resolution: {integrity: sha512-ArDdaOllnCj3yn/lzKn9s0pBQYmmyme/v1HbGIGB0GB/knFI3fWMHloC+oYTJW46tVbYnGKTMDK4ah1sC2v0Kg==}
@@ -27677,14 +26876,14 @@ packages:
     resolution: {integrity: sha512-ndWdiflRMvfIgQRpckQQLiB5qAKQ7w++V4LlCHwp62eym1HLB/kw7D9f2e8ytONls/jt89TEasgvb+VwnRprsw==}
     engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
     peerDependencies:
-      typescript: '>=4.8.4 <6.0.0'
+      typescript: ^5.9.3
 
   '@typescript-eslint/utils@8.39.0':
     resolution: {integrity: sha512-4GVSvNA0Vx1Ktwvf4sFE+exxJ3QGUorQG1/A5mRfRNZtkBT2xrA/BCO2H0eALx/PnvCS6/vmYwRdDA41EoffkQ==}
     engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
     peerDependencies:
       eslint: ^8.57.0 || ^9.0.0
-      typescript: '>=4.8.4 <6.0.0'
+      typescript: ^5.9.3
 
   '@typescript-eslint/visitor-keys@8.39.0':
     resolution: {integrity: sha512-ldgiJ+VAhQCfIjeOgu8Kj5nSxds0ktPOSO9p4+0VDH2R2pLvQraaM5Oen2d7NxzMCm+Sn/vJT+mv2H5u6b/3fA==}
@@ -27740,12 +26939,12 @@ packages:
   '@typescript/vfs@1.6.0':
     resolution: {integrity: sha512-hvJUjNVeBMp77qPINuUvYXj4FyWeeMMKZkxEATEU3hqBAQ7qdTBCUFT7Sp0Zu0faeEtFf+ldXxMEDr/bk73ISg==}
     peerDependencies:
-      typescript: '*'
+      typescript: ^5.9.3
 
   '@typescript/vfs@1.6.2':
     resolution: {integrity: sha512-hoBwJwcbKHmvd2QVebiytN1aELvpk9B74B4L1mFm/XT1Q/VOYAWl2vQ9AWRFtQq8zmz6enTpfTV8WRc4ATjW/g==}
     peerDependencies:
-      typescript: '*'
+      typescript: ^5.9.3
 
   '@typespec/ts-http-runtime@0.3.2':
     resolution: {integrity: sha512-IlqQ/Gv22xUC1r/WQm4StLkYQmaaTsXAhUVsNE0+xiyf0yRFiH5++q78U3bw6bLKDCTmh0uqKB9eG9+Bt75Dkg==}
@@ -29001,7 +28200,7 @@ packages:
   bun-ffi-structs@0.1.2:
     resolution: {integrity: sha512-Lh1oQAYHDcnesJauieA4UNkWGXY9hYck7OA5IaRwE3Bp6K2F2pJSNYqq+hIy7P3uOvo3km3oxS8304g5gDMl/w==}
     peerDependencies:
-      typescript: ^5
+      typescript: ^5.9.3
 
   bun-webgpu-darwin-arm64@0.1.4:
     resolution: {integrity: sha512-eDgLN9teKTfmvrCqgwwmWNsNszxYs7IZdCqk0S1DCarvMhr4wcajoSBlA/nQA0/owwLduPTS8xxCnQp4/N/gDg==}
@@ -29678,7 +28877,7 @@ packages:
     resolution: {integrity: sha512-kcZ6+W5QzcJ3P1Mt+83OUv/oHFqZHIx8DuxG6eZ5RGMERoLqp4BuGjhHLYGK+Kf5XVkQvqBSmAy/nGWN3qDgEA==}
     engines: {node: '>=14'}
     peerDependencies:
-      typescript: '>=4.9.5'
+      typescript: ^5.9.3
     peerDependenciesMeta:
       typescript:
         optional: true
@@ -30341,13 +29540,13 @@ packages:
     resolution: {integrity: sha512-pgN43/80MmWVSEi5LUuiVvO/0a9ss5V7fwVfrJ4QzAQRd3cwqU1SfWGXJFcNKUqoD5cS+uIovhw5t/0rSeC5Mw==}
     engines: {node: '>=18'}
     peerDependencies:
-      typescript: ^5.4.4
+      typescript: ^5.9.3
 
   detective-vue2@2.2.0:
     resolution: {integrity: sha512-sVg/t6O2z1zna8a/UIV6xL5KUa2cMTQbdTIIvqNM0NIPswp52fe43Nwmbahzj3ww4D844u/vC2PYfiGLvD3zFA==}
     engines: {node: '>=18'}
     peerDependencies:
-      typescript: ^5.4.4
+      typescript: ^5.9.3
 
   detective@5.2.1:
     resolution: {integrity: sha512-v9XE1zRnz1wRtgurGu0Bs8uHKFSTdteYZNbIPFVhUZ39L/S79ppMpdmVOZAnoz1jfEFodc48n6MX483Xo3t1yw==}
@@ -31948,9 +31147,6 @@ packages:
   hotkeys-js@3.13.7:
     resolution: {integrity: sha512-ygFIdTqqwG4fFP7kkiYlvayZppeIQX2aPpirsngkv1xM1lP0piDY5QEh68nQnIKvz64hfocxhBaD/uK3sSK1yQ==}
 
-  hotscript@1.0.13:
-    resolution: {integrity: sha512-C++tTF1GqkGYecL+2S1wJTfoH6APGAsbb7PAWQ3iVIwgG/EFseAfEVOKFgAFq4yK3+6j1EjUD4UQ9dRJHX/sSQ==}
-
   html-encoding-sniffer@4.0.0:
     resolution: {integrity: sha512-Y22oTqIU4uuPgEemfz7NDJz6OeKf12Lsu+QC+s3BVpda64lTiMYCyGwg5ki4vFxkMwQdeZDl2adZoqUgdFuTgQ==}
     engines: {node: '>=18'}
@@ -33000,7 +32196,7 @@ packages:
     hasBin: true
     peerDependencies:
       '@types/node': 22.10.2
-      typescript: '>=5.0.4 <7'
+      typescript: ^5.9.3
 
   koffi@2.14.1:
     resolution: {integrity: sha512-IMFL3IbRDXacSIjs7pPbPxgNlJ2hUtawQXU2QPdr6iw38jmv5AesAUG8HPX00xl0PPA2BbEa3noTw1YdHY+gHg==}
@@ -33366,7 +32562,7 @@ packages:
     engines: {node: '>=18'}
     hasBin: true
     peerDependencies:
-      typescript: ^5.4.4
+      typescript: ^5.9.3
     peerDependenciesMeta:
       typescript:
         optional: true
@@ -35173,7 +34369,7 @@ packages:
     resolution: {integrity: sha512-H9fYZQzMTRrkboEfPmf7m3CLDN6JvbxXA3qTtS+dFt27tR+CsFHzPsT6pzp6lYL6bJbAPaR0HaPO6uSi+F94Pg==}
     engines: {node: '>=16.3.0'}
     peerDependencies:
-      typescript: '>= 4.7.4'
+      typescript: ^5.9.3
     peerDependenciesMeta:
       typescript:
         optional: true
@@ -35318,7 +34514,7 @@ packages:
   react-docgen-typescript@2.2.2:
     resolution: {integrity: sha512-tvg2ZtOpOi6QDwsb3GZhOjDkkX0h8Z2gipvTg6OVMUyoYoURhEiRNePT8NZItTVCDh39JJHnLdfCOkzoLbFnTg==}
     peerDependencies:
-      typescript: '>= 4.3.x'
+      typescript: ^5.9.3
 
   react-docgen@8.0.2:
     resolution: {integrity: sha512-+NRMYs2DyTP4/tqWz371Oo50JqmWltR1h2gcdgUMAWZJIAvrd0/SqlCfx7tpzpl/s36rzw6qH2MjoNrxtRNYhA==}
@@ -35350,12 +34546,6 @@ packages:
   react-error-boundary@4.0.13:
     resolution: {integrity: sha512-b6PwbdSv8XeOSYvjt8LpgpKrZ0yGdtZokYwkwV2wlcZbxgopHX/hgPl5VgpnoVOWd868n1hktM8Qm4b+02MiLQ==}
     peerDependencies:
-      react: ~19.2.3
-
-  react-fast-hoc@0.3.2:
-    resolution: {integrity: sha512-YmR0TCcljZqXT9R/9bm9XxqNX18HjXT+Han/4ER0Ewsxc/1qX+kLbG9q9HhLcluFbN4diTt9z4C30OgWOmbh7g==}
-    peerDependencies:
-      hotscript: ^1.0.12
       react: ~19.2.3
 
   react-floater@0.7.9:
@@ -35948,7 +35138,7 @@ packages:
       '@ts-macro/tsc': ^0.3.6
       '@typescript/native-preview': '>=7.0.0-dev.20250601.1'
       rolldown: ^1.0.0-beta.51
-      typescript: ^5.0.0
+      typescript: ^5.9.3
       vue-tsc: ~3.1.0
     peerDependenciesMeta:
       '@ts-macro/tsc':
@@ -36594,7 +35784,7 @@ packages:
     peerDependencies:
       solid-js: ^1.9.0
       storybook: ^0.0.0-0 || ^10.0.0
-      typescript: '>= 4.9.x'
+      typescript: ^5.9.3
       vite: ^5.0.0 || ^6.0.0 || ^7.0.0
     peerDependenciesMeta:
       typescript:
@@ -37199,7 +36389,7 @@ packages:
     resolution: {integrity: sha512-CUgTZL1irw8u29bzrOD/nH85jqyc74D6SshFgujOIA7osm2Rz7dYH77agkx7H4FBNxDq7Cjf+IjaX/8zwFW+ZQ==}
     engines: {node: '>=18.12'}
     peerDependencies:
-      typescript: '>=4.8.4'
+      typescript: ^5.9.3
 
   ts-dedent@2.2.0:
     resolution: {integrity: sha512-q5W7tVM71e2xjHZTlgfTDoPF/SmqKG5hddq9SzR49CH2hayqRKJtQ4mtRlSxKaJlR/+9rEM+mnBHf7I2/BQcpQ==}
@@ -37229,7 +36419,7 @@ packages:
     engines: {node: ^18 || >=20}
     hasBin: true
     peerDependencies:
-      typescript: ^5.0.0
+      typescript: ^5.9.3
     peerDependenciesMeta:
       typescript:
         optional: true
@@ -37246,7 +36436,7 @@ packages:
       '@arethetypeswrong/core': ^0.18.1
       '@vitejs/devtools': ^0.0.0-alpha.18
       publint: ^0.3.0
-      typescript: ^5.0.0
+      typescript: ^5.9.3
       unplugin-lightningcss: ^0.4.0
       unplugin-unused: ^0.5.0
     peerDependenciesMeta:
@@ -37391,7 +36581,7 @@ packages:
     engines: {node: '>= 18', pnpm: '>= 10'}
     hasBin: true
     peerDependencies:
-      typescript: ^5.0.0
+      typescript: ^5.9.3
 
   types-package-json@2.0.39:
     resolution: {integrity: sha512-c8ua5W1Uu6x7LAwtwSGCl46cHmj+r2eAA+lXR1CluIZotu9V03ZHcGB9wKRZE2oIAX5IzMP/rxDV9g9ikCg9Nw==}
@@ -37401,12 +36591,7 @@ packages:
     engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
     peerDependencies:
       eslint: ^8.57.0 || ^9.0.0
-      typescript: '>=4.8.4 <6.0.0'
-
-  typescript@5.4.5:
-    resolution: {integrity: sha512-vcI4UpRgg81oIRUFwR0WSIHKt11nJ7SAVlYNIu+QpqeyXP+gpQJy/Z4+F0aGxSE4MqwjyXvW/TzgkLAx2AGHwQ==}
-    engines: {node: '>=14.17'}
-    hasBin: true
+      typescript: ^5.9.3
 
   typescript@5.9.3:
     resolution: {integrity: sha512-jl1vZzPDinLr9eUt3J/t7V6FgNEw9QjvBPdysz9KfQDD41fQrC2Y4vKQdiaUpFT4bXlb1RHhLpp8wtm6M5TgSw==}
@@ -38708,13 +37893,13 @@ packages:
   zod-to-ts@1.2.0:
     resolution: {integrity: sha512-x30XE43V+InwGpvTySRNz9kB7qFU8DlyEy7BsSTCHPH1R0QasMmHWZDCzYm6bVXtj/9NNJAZF3jW8rzFvH5OFA==}
     peerDependencies:
-      typescript: ^4.9.4 || ^5.0.2
+      typescript: ^5.9.3
       zod: ^3
 
   zod-to-ts@2.0.0:
     resolution: {integrity: sha512-aHsUgIl+CQutKAxtRNeZslLCLXoeuSq+j5HU7q3kvi/c2KIAo6q4YjT7/lwFfACxLB923ELHYMkHmlxiqFy4lw==}
     peerDependencies:
-      typescript: ^5.0.0
+      typescript: ^5.9.3
       zod: ^3.25.0 || ^4.0.0
 
   zod@3.22.3:
@@ -39931,13 +39116,6 @@ snapshots:
     dependencies:
       '@babel/types': 7.28.5
 
-  '@babel/helper-module-imports@7.25.9':
-    dependencies:
-      '@babel/traverse': 7.28.5
-      '@babel/types': 7.28.5
-    transitivePeerDependencies:
-      - supports-color
-
   '@babel/helper-module-imports@7.27.1':
     dependencies:
       '@babel/traverse': 7.28.5
@@ -40683,8 +39861,8 @@ snapshots:
   '@bufbuild/protoplugin@2.10.1':
     dependencies:
       '@bufbuild/protobuf': 2.10.1
-      '@typescript/vfs': 1.6.2(typescript@5.4.5)
-      typescript: 5.4.5
+      '@typescript/vfs': 1.6.2(typescript@5.9.3)
+      typescript: 5.9.3
     transitivePeerDependencies:
       - supports-color
 
@@ -41226,9 +40404,9 @@ snapshots:
 
   '@dxos/wa-sqlite@0.2.1': {}
 
-  '@effect-atom/atom-react@0.4.4(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/platform@0.93.6(effect@3.19.11))(@effect/rpc@0.72.2(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11))(effect@3.19.11)(react@19.2.3)(scheduler@0.27.0)':
+  '@effect-atom/atom-react@0.4.6(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/platform@0.93.6(effect@3.19.11))(@effect/rpc@0.72.2(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11))(effect@3.19.11)(react@19.2.3)(scheduler@0.27.0)':
     dependencies:
-      '@effect-atom/atom': 0.4.10(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/platform@0.93.6(effect@3.19.11))(@effect/rpc@0.72.2(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11))(effect@3.19.11)
+      '@effect-atom/atom': 0.4.13(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/platform@0.93.6(effect@3.19.11))(@effect/rpc@0.72.2(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11))(effect@3.19.11)
       effect: 3.19.11
       react: 19.2.3
       scheduler: 0.27.0
@@ -41237,7 +40415,7 @@ snapshots:
       - '@effect/platform'
       - '@effect/rpc'
 
-  '@effect-atom/atom@0.4.10(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/platform@0.93.6(effect@3.19.11))(@effect/rpc@0.72.2(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11))(effect@3.19.11)':
+  '@effect-atom/atom@0.4.13(@effect/experimental@0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2))(@effect/platform@0.93.6(effect@3.19.11))(@effect/rpc@0.72.2(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11))(effect@3.19.11)':
     dependencies:
       '@effect/experimental': 0.57.11(@effect/platform@0.93.6(effect@3.19.11))(effect@3.19.11)(ioredis@5.3.2)
       '@effect/platform': 0.93.6(effect@3.19.11)
@@ -44387,36 +43565,6 @@ snapshots:
 
   '@poppinss/exception@1.2.2': {}
 
-  '@preact-signals/safe-react@0.9.0(@babel/core@7.28.0)(@swc/helpers@0.5.17)(react@19.2.3)':
-    dependencies:
-      '@babel/core': 7.28.0
-      '@babel/helper-module-imports': 7.25.9
-      '@babel/helper-plugin-utils': 7.27.1
-      '@preact/signals-core': 1.12.1
-      debug: 4.4.3
-      hotscript: 1.0.13
-      react: 19.2.3
-      react-fast-hoc: 0.3.2(hotscript@1.0.13)(react@19.2.3)
-      use-sync-external-store: 1.6.0(react@19.2.3)
-    optionalDependencies:
-      '@swc/core': 1.11.1(@swc/helpers@0.5.17)
-    transitivePeerDependencies:
-      - '@swc/helpers'
-      - supports-color
-
-  '@preact/signals-core@1.12.1': {}
-
-  '@preact/signals-react@3.3.1(react@19.2.3)':
-    dependencies:
-      '@preact/signals-core': 1.12.1
-      react: 19.2.3
-      use-sync-external-store: 1.6.0(react@19.2.3)
-
-  '@preact/signals@2.3.2(preact@10.26.9)':
-    dependencies:
-      '@preact/signals-core': 1.12.1
-      preact: 10.26.9
-
   '@prisma/instrumentation@5.17.0':
     dependencies:
       '@opentelemetry/api': 1.9.0
@@ -47175,82 +46323,34 @@ snapshots:
     transitivePeerDependencies:
       - typescript
 
-  '@swc/core-darwin-arm64@1.11.1':
-    optional: true
-
   '@swc/core-darwin-arm64@1.13.5':
-    optional: true
-
-  '@swc/core-darwin-x64@1.11.1':
     optional: true
 
   '@swc/core-darwin-x64@1.13.5':
     optional: true
 
-  '@swc/core-linux-arm-gnueabihf@1.11.1':
-    optional: true
-
   '@swc/core-linux-arm-gnueabihf@1.13.5':
-    optional: true
-
-  '@swc/core-linux-arm64-gnu@1.11.1':
     optional: true
 
   '@swc/core-linux-arm64-gnu@1.13.5':
     optional: true
 
-  '@swc/core-linux-arm64-musl@1.11.1':
-    optional: true
-
   '@swc/core-linux-arm64-musl@1.13.5':
-    optional: true
-
-  '@swc/core-linux-x64-gnu@1.11.1':
     optional: true
 
   '@swc/core-linux-x64-gnu@1.13.5':
     optional: true
 
-  '@swc/core-linux-x64-musl@1.11.1':
-    optional: true
-
   '@swc/core-linux-x64-musl@1.13.5':
-    optional: true
-
-  '@swc/core-win32-arm64-msvc@1.11.1':
     optional: true
 
   '@swc/core-win32-arm64-msvc@1.13.5':
     optional: true
 
-  '@swc/core-win32-ia32-msvc@1.11.1':
-    optional: true
-
   '@swc/core-win32-ia32-msvc@1.13.5':
     optional: true
 
-  '@swc/core-win32-x64-msvc@1.11.1':
-    optional: true
-
   '@swc/core-win32-x64-msvc@1.13.5':
-    optional: true
-
-  '@swc/core@1.11.1(@swc/helpers@0.5.17)':
-    dependencies:
-      '@swc/counter': 0.1.3
-      '@swc/types': 0.1.25
-    optionalDependencies:
-      '@swc/core-darwin-arm64': 1.11.1
-      '@swc/core-darwin-x64': 1.11.1
-      '@swc/core-linux-arm-gnueabihf': 1.11.1
-      '@swc/core-linux-arm64-gnu': 1.11.1
-      '@swc/core-linux-arm64-musl': 1.11.1
-      '@swc/core-linux-x64-gnu': 1.11.1
-      '@swc/core-linux-x64-musl': 1.11.1
-      '@swc/core-win32-arm64-msvc': 1.11.1
-      '@swc/core-win32-ia32-msvc': 1.11.1
-      '@swc/core-win32-x64-msvc': 1.11.1
-      '@swc/helpers': 0.5.17
     optional: true
 
   '@swc/core@1.13.5(@swc/helpers@0.5.17)':
@@ -48326,10 +47426,10 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@typescript/vfs@1.6.2(typescript@5.4.5)':
+  '@typescript/vfs@1.6.2(typescript@5.9.3)':
     dependencies:
       debug: 4.4.3
-      typescript: 5.4.5
+      typescript: 5.9.3
     transitivePeerDependencies:
       - supports-color
 
@@ -53925,8 +53025,6 @@ snapshots:
 
   hotkeys-js@3.13.7: {}
 
-  hotscript@1.0.13: {}
-
   html-encoding-sniffer@4.0.0:
     dependencies:
       whatwg-encoding: 3.1.1
@@ -58075,11 +57173,6 @@ snapshots:
       '@babel/runtime': 7.27.1
       react: 19.2.3
 
-  react-fast-hoc@0.3.2(hotscript@1.0.13)(react@19.2.3):
-    dependencies:
-      hotscript: 1.0.13
-      react: 19.2.3
-
   react-floater@0.7.9(react-dom@19.2.3(react@19.2.3))(react@19.2.3):
     dependencies:
       deepmerge: 4.3.1
@@ -60699,8 +59792,6 @@ snapshots:
       typescript: 5.9.3
     transitivePeerDependencies:
       - supports-color
-
-  typescript@5.4.5: {}
 
   typescript@5.9.3: {}
 

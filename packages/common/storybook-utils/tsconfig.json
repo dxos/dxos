@@ -12,9 +12,6 @@
   ],
   "references": [
     {
-      "path": "../../core/echo/echo-signals"
-    },
-    {
       "path": "../../ui/lit-theme-editor"
     },
     {

@@ -4,14 +4,13 @@
 
 import { type EditorView } from '@codemirror/view';
 import * as LanguageModel from '@effect/ai/LanguageModel';
-import { ArrowsClockwise, CaretLeft, CaretRight, Keyboard } from '@phosphor-icons/react';
 import * as Effect from 'effect/Effect';
 import type * as Runtime from 'effect/Runtime';
 import React, { useState } from 'react';
 
 import { runInRuntime } from '@dxos/effect';
 import { log } from '@dxos/log';
-import { Button, Input, ThemeProvider } from '@dxos/react-ui';
+import { Button, Icon, Input, ThemeProvider } from '@dxos/react-ui';
 
 export interface AssistantToolbarProps {
   view: EditorView;
@@ -104,7 +103,7 @@ export const AssistantToolbar = ({ view, from, to, runtime }: AssistantToolbarPr
             onClick={handleEditWithPrompt}
             disabled={!customPrompt || isProcessing}
           >
-            <ArrowsClockwise className={isProcessing ? 'animate-spin' : ''} />
+            <Icon icon='ph--arrows-clockwise--regular' classNames={isProcessing ? 'animate-spin' : ''} />
           </Button>
         </div>
       ) : (
@@ -119,7 +118,7 @@ export const AssistantToolbar = ({ view, from, to, runtime }: AssistantToolbarPr
               onClick={handleCasual}
               disabled={isProcessing}
             >
-              <CaretLeft size={16} />
+              <Icon icon='ph--caret-left--regular' size={4} />
               <span className='text-[10px] leading-none text-neutral-500 font-medium'>Casual</span>
             </Button>
 
@@ -129,7 +128,7 @@ export const AssistantToolbar = ({ view, from, to, runtime }: AssistantToolbarPr
               onClick={handleRegenerate}
               disabled={isProcessing}
             >
-              <ArrowsClockwise size={16} className={isProcessing ? 'animate-spin' : ''} />
+              <Icon icon='ph--arrows-clockwise--regular' size={4} classNames={isProcessing ? 'animate-spin' : ''} />
               <span className='text-[10px] leading-none text-neutral-500 font-medium'>Different</span>
             </Button>
 
@@ -139,7 +138,7 @@ export const AssistantToolbar = ({ view, from, to, runtime }: AssistantToolbarPr
               onClick={handleFormal}
               disabled={isProcessing}
             >
-              <CaretRight size={16} />
+              <Icon icon='ph--caret-right--regular' size={4} />
               <span className='text-[10px] leading-none text-neutral-500 font-medium'>Formal</span>
             </Button>
           </div>
@@ -152,7 +151,7 @@ export const AssistantToolbar = ({ view, from, to, runtime }: AssistantToolbarPr
             onClick={() => setShowPromptInput(true)}
             disabled={isProcessing}
           >
-            <Keyboard size={16} />
+            <Icon icon='ph--keyboard--regular' size={4} />
             <span className='text-[10px] leading-none text-neutral-500 font-medium'>Instruct</span>
           </Button>
         </div>

@@ -34,13 +34,13 @@
       "path": "../../common/display-name"
     },
     {
+      "path": "../../common/effect"
+    },
+    {
       "path": "../../common/invariant"
     },
     {
       "path": "../../common/keys"
-    },
-    {
-      "path": "../../common/local-storage"
     },
     {
       "path": "../../common/log"
@@ -67,7 +67,7 @@
       "path": "../../core/echo/echo-db"
     },
     {
-      "path": "../../core/echo/live-object"
+      "path": "../../core/echo/echo-react"
     },
     {
       "path": "../../core/functions"
