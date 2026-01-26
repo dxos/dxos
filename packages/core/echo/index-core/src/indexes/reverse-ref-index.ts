@@ -62,6 +62,20 @@ export interface ReverseRefQuery {
 }
 
 /**
+ * Query for multiple targets with optional property filtering.
+ */
+export interface ReverseRefMultiQuery {
+  /**
+   * Target DXN strings to match. Matches objects referencing ANY of these targets.
+   */
+  targetDxns: string[];
+  /**
+   * Optional escaped property path to filter by.
+   */
+  propPath?: string;
+}
+
+/**
  * Indexes reverse references - tracks which objects reference which targets.
  * Only indexes references, not relations.
  */
@@ -88,6 +102,41 @@ export class ReverseRefIndex implements Index {
         const sql = yield* SqlClient.SqlClient;
         // TODO(mykola): Join objectMeta table here.
         const rows = yield* sql`SELECT * FROM reverseRef WHERE targetDxn = ${targetDxn}`;
+        return rows as ReverseRef[];
+      }),
+  );
+
+  /**
+   * Query references pointing to multiple targets with optional property filtering.
+   * Returns object metadata for the source objects.
+   */
+  queryMulti = Effect.fn('ReverseRefIndex.queryMulti')(
+    ({
+      targetDxns,
+      propPath,
+    }: ReverseRefMultiQuery): Effect.Effect<readonly ReverseRef[], SqlError.SqlError, SqlClient.SqlClient> =>
+      Effect.gen(function* () {
+        if (targetDxns.length === 0) {
+          return [];
+        }
+
+        const sql = yield* SqlClient.SqlClient;
+        const conditions: string[] = [];
+        const params: (string | number)[] = [];
+
+        // Target filter - match any of the targets.
+        const placeholders = targetDxns.map(() => '?').join(', ');
+        conditions.push(`targetDxn IN (${placeholders})`);
+        params.push(...targetDxns);
+
+        // Property filter.
+        if (propPath) {
+          conditions.push(`propPath = ?`);
+          params.push(propPath);
+        }
+
+        const whereClause = conditions.join(' AND ');
+        const rows = yield* sql.unsafe(`SELECT * FROM reverseRef WHERE ${whereClause}`, params);
         return rows as ReverseRef[];
       }),
   );

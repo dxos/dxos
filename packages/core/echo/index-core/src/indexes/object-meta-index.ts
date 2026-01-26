@@ -67,6 +67,102 @@ export class ObjectMetaIndex implements Index {
       }),
   );
 
+  /**
+   * Query objects by type(s) with optional space filtering and inverted matching.
+   * @param query.typeDxns - Type DXNs to match. Empty array means all objects.
+   * @param query.spaceIds - Optional space IDs to filter by.
+   * @param query.inverted - If true, returns objects that do NOT match the types.
+   */
+  queryByTypes = Effect.fn('ObjectMetaIndex.queryByTypes')(
+    (query: {
+      typeDxns: string[];
+      spaceIds?: string[];
+      inverted?: boolean;
+    }): Effect.Effect<readonly ObjectMeta[], SqlError.SqlError, SqlClient.SqlClient> =>
+      Effect.gen(function* () {
+        const sql = yield* SqlClient.SqlClient;
+        const conditions: string[] = [];
+        const params: string[] = [];
+
+        // Type filter.
+        if (query.typeDxns.length > 0) {
+          const placeholders = query.typeDxns.map(() => '?').join(', ');
+          if (query.inverted) {
+            conditions.push(`typeDxn NOT IN (${placeholders})`);
+          } else {
+            conditions.push(`typeDxn IN (${placeholders})`);
+          }
+          params.push(...query.typeDxns);
+        }
+
+        // Space filter.
+        if (query.spaceIds && query.spaceIds.length > 0) {
+          const placeholders = query.spaceIds.map(() => '?').join(', ');
+          conditions.push(`spaceId IN (${placeholders})`);
+          params.push(...query.spaceIds);
+        }
+
+        let rows: readonly ObjectMeta[];
+        if (conditions.length === 0) {
+          rows = yield* sql<ObjectMeta>`SELECT * FROM objectMeta`;
+        } else {
+          const whereClause = conditions.join(' AND ');
+          rows = yield* sql.unsafe<ObjectMeta>(`SELECT * FROM objectMeta WHERE ${whereClause}`, params);
+        }
+
+        return rows.map((row) => ({
+          ...row,
+          deleted: !!row.deleted,
+        }));
+      }),
+  );
+
+  /**
+   * Query relations by source or target object IDs.
+   * @param query.direction - 'source' to find relations where anchors are sources, 'target' for targets.
+   * @param query.anchors - Object DXN strings to match against source/target columns.
+   * @param query.spaceIds - Optional space IDs to filter by.
+   */
+  queryRelations = Effect.fn('ObjectMetaIndex.queryRelations')(
+    (query: {
+      direction: 'source' | 'target';
+      anchors: string[];
+      spaceIds?: string[];
+    }): Effect.Effect<readonly ObjectMeta[], SqlError.SqlError, SqlClient.SqlClient> =>
+      Effect.gen(function* () {
+        if (query.anchors.length === 0) {
+          return [];
+        }
+
+        const sql = yield* SqlClient.SqlClient;
+        const conditions: string[] = [];
+        const params: string[] = [];
+
+        // Filter by entityKind = 'relation'.
+        conditions.push(`entityKind = 'relation'`);
+
+        // Anchor filter - match source or target column.
+        const column = query.direction === 'source' ? 'source' : 'target';
+        const placeholders = query.anchors.map(() => '?').join(', ');
+        conditions.push(`${column} IN (${placeholders})`);
+        params.push(...query.anchors);
+
+        // Space filter.
+        if (query.spaceIds && query.spaceIds.length > 0) {
+          const spacePlaceholders = query.spaceIds.map(() => '?').join(', ');
+          conditions.push(`spaceId IN (${spacePlaceholders})`);
+          params.push(...query.spaceIds);
+        }
+
+        const whereClause = conditions.join(' AND ');
+        const rows = yield* sql.unsafe<ObjectMeta>(`SELECT * FROM objectMeta WHERE ${whereClause}`, params);
+        return rows.map((row) => ({
+          ...row,
+          deleted: !!row.deleted,
+        }));
+      }),
+  );
+
   // TODO(dmaretskyi): Update recordId on objects so that we don't need to look it up separately.
   update = Effect.fn('ObjectMetaIndex.update')(
     (objects: IndexerObject[]): Effect.Effect<void, SqlError.SqlError, SqlClient.SqlClient> =>

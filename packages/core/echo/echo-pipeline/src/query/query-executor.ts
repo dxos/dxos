@@ -10,7 +10,7 @@ import * as Runtime from 'effect/Runtime';
 import { Context, ContextDisposedError, LifecycleState, Resource } from '@dxos/context';
 import { DatabaseDirectory, ObjectStructure, type QueryAST, isEncodedReference } from '@dxos/echo-protocol';
 import { type RuntimeProvider, runAndForwardErrors, unwrapExit } from '@dxos/effect';
-import { type IndexEngine } from '@dxos/index-core';
+import { type IndexEngine, type ObjectMeta } from '@dxos/index-core';
 import { EscapedPropPath, type FindResult, type Indexer } from '@dxos/indexing';
 import { invariant } from '@dxos/invariant';
 import { DXN, type ObjectId, PublicKey, type SpaceId } from '@dxos/keys';
@@ -317,25 +317,51 @@ export class QueryExecutor extends Resource {
 
     switch (step.selector._tag) {
       case 'WildcardSelector': {
-        const beginIndexQuery = performance.now();
-        const indexHits = await this._indexer.execQuery({
-          typenames: [],
-          inverted: false,
-        });
-        trace.indexHits = +indexHits.length;
-        trace.indexQueryTime += performance.now() - beginIndexQuery;
+        if (this._indexer2 && this._runtime) {
+          // Use new SQL indexer.
+          const beginIndexQuery = performance.now();
+          const runtime = await runAndForwardErrors(this._runtime);
+          const metaResults = await unwrapExit(
+            await this._indexer2
+              .queryByTypes({ typeDxns: [], spaceIds: [...step.spaces] })
+              .pipe(Runtime.runPromiseExit(runtime)),
+          );
+          trace.indexHits = metaResults.length;
+          trace.indexQueryTime += performance.now() - beginIndexQuery;
 
-        if (this._ctx.disposed) {
-          return { workingSet, trace };
+          if (this._ctx.disposed) {
+            return { workingSet, trace };
+          }
+
+          const documentLoadStart = performance.now();
+          const results = await this._loadDocumentsFromObjectMeta(metaResults);
+          trace.documentsLoaded += results.filter(isNonNullable).length;
+          trace.documentLoadTime += performance.now() - documentLoadStart;
+
+          workingSet.push(...results.filter(isNonNullable));
+          trace.objectCount = workingSet.length;
+        } else {
+          // Fallback to old indexer.
+          const beginIndexQuery = performance.now();
+          const indexHits = await this._indexer.execQuery({
+            typenames: [],
+            inverted: false,
+          });
+          trace.indexHits = +indexHits.length;
+          trace.indexQueryTime += performance.now() - beginIndexQuery;
+
+          if (this._ctx.disposed) {
+            return { workingSet, trace };
+          }
+
+          const documentLoadStart = performance.now();
+          const results = await this._loadDocumentsAfterIndexQuery(indexHits);
+          trace.documentsLoaded += results.length;
+          trace.documentLoadTime += performance.now() - documentLoadStart;
+
+          workingSet.push(...results.filter(isNonNullable).filter((item) => step.spaces.includes(item.spaceId)));
+          trace.objectCount = workingSet.length;
         }
-
-        const documentLoadStart = performance.now();
-        const results = await this._loadDocumentsAfterIndexQuery(indexHits);
-        trace.documentsLoaded += results.length;
-        trace.documentLoadTime += performance.now() - documentLoadStart;
-
-        workingSet.push(...results.filter(isNonNullable).filter((item) => step.spaces.includes(item.spaceId)));
-        trace.objectCount = workingSet.length;
 
         break;
       }
@@ -355,25 +381,55 @@ export class QueryExecutor extends Resource {
       }
 
       case 'TypeSelector': {
-        const beginIndexQuery = performance.now();
-        const indexHits = await this._indexer.execQuery({
-          typenames: step.selector.typename,
-          inverted: step.selector.inverted,
-        });
-        trace.indexHits = +indexHits.length;
-        trace.indexQueryTime += performance.now() - beginIndexQuery;
+        if (this._indexer2 && this._runtime) {
+          // Use new SQL indexer.
+          const beginIndexQuery = performance.now();
+          const runtime = await runAndForwardErrors(this._runtime);
+          const metaResults = await unwrapExit(
+            await this._indexer2
+              .queryByTypes({
+                typeDxns: [...step.selector.typename],
+                spaceIds: [...step.spaces],
+                inverted: step.selector.inverted,
+              })
+              .pipe(Runtime.runPromiseExit(runtime)),
+          );
+          trace.indexHits = metaResults.length;
+          trace.indexQueryTime += performance.now() - beginIndexQuery;
 
-        if (this._ctx.disposed) {
-          return { workingSet, trace };
+          if (this._ctx.disposed) {
+            return { workingSet, trace };
+          }
+
+          const documentLoadStart = performance.now();
+          const results = await this._loadDocumentsFromObjectMeta(metaResults);
+          trace.documentsLoaded += results.filter(isNonNullable).length;
+          trace.documentLoadTime += performance.now() - documentLoadStart;
+
+          workingSet.push(...results.filter(isNonNullable));
+          trace.objectCount = workingSet.length;
+        } else {
+          // Fallback to old indexer.
+          const beginIndexQuery = performance.now();
+          const indexHits = await this._indexer.execQuery({
+            typenames: step.selector.typename,
+            inverted: step.selector.inverted,
+          });
+          trace.indexHits = +indexHits.length;
+          trace.indexQueryTime += performance.now() - beginIndexQuery;
+
+          if (this._ctx.disposed) {
+            return { workingSet, trace };
+          }
+
+          const documentLoadStart = performance.now();
+          const results = await this._loadDocumentsAfterIndexQuery(indexHits);
+          trace.documentsLoaded += results.length;
+          trace.documentLoadTime += performance.now() - documentLoadStart;
+
+          workingSet.push(...results.filter(isNonNullable).filter((item) => step.spaces.includes(item.spaceId)));
+          trace.objectCount = workingSet.length;
         }
-
-        const documentLoadStart = performance.now();
-        const results = await this._loadDocumentsAfterIndexQuery(indexHits);
-        trace.documentsLoaded += results.length;
-        trace.documentLoadTime += performance.now() - documentLoadStart;
-
-        workingSet.push(...results.filter(isNonNullable).filter((item) => step.spaces.includes(item.spaceId)));
-        trace.objectCount = workingSet.length;
 
         break;
       }
@@ -537,24 +593,66 @@ export class QueryExecutor extends Resource {
             break;
           }
           case 'incoming': {
-            const indexHits = await this._indexer.execQuery({
-              typenames: [],
-              inverted: false,
-              graph: {
-                kind: 'inbound-reference',
-                property: step.traversal.property,
-                anchors: workingSet.map((item) => item.objectId),
-              },
-            });
-            trace.indexHits += indexHits.length;
+            if (this._indexer2 && this._runtime) {
+              // Use new SQL indexer for reverse reference lookup.
+              const beginIndexQuery = performance.now();
+              const runtime = await runAndForwardErrors(this._runtime);
 
-            const documentLoadStart = performance.now();
-            const results = await this._loadDocumentsAfterIndexQuery(indexHits);
-            trace.documentsLoaded += results.length;
-            trace.documentLoadTime += performance.now() - documentLoadStart;
+              // Build target DXNs from working set object IDs.
+              // The reverse ref index stores full DXN strings as targets.
+              const targetDxns = workingSet.map((item) =>
+                DXN.fromSpaceAndObjectId(item.spaceId, item.objectId).toString(),
+              );
 
-            newWorkingSet.push(...results.filter(isNonNullable));
-            trace.objectCount = newWorkingSet.length;
+              const reverseRefs = await unwrapExit(
+                await this._indexer2
+                  .queryReverseRefMulti({
+                    targetDxns,
+                    propPath: step.traversal.property,
+                  })
+                  .pipe(Runtime.runPromiseExit(runtime)),
+              );
+              trace.indexHits += reverseRefs.length;
+              trace.indexQueryTime += performance.now() - beginIndexQuery;
+
+              if (this._ctx.disposed) {
+                return { workingSet: newWorkingSet, trace };
+              }
+
+              // Get unique recordIds and lookup metadata.
+              const recordIds = [...new Set(reverseRefs.map((ref) => ref.recordId))];
+              const metaResults = await unwrapExit(
+                await this._indexer2.lookupByRecordIds(recordIds).pipe(Runtime.runPromiseExit(runtime)),
+              );
+
+              const documentLoadStart = performance.now();
+              const results = await this._loadDocumentsFromObjectMeta(metaResults);
+              trace.documentsLoaded += results.filter(isNonNullable).length;
+              trace.documentLoadTime += performance.now() - documentLoadStart;
+
+              newWorkingSet.push(...results.filter(isNonNullable));
+              trace.objectCount = newWorkingSet.length;
+            } else {
+              // Fallback to old indexer.
+              const indexHits = await this._indexer.execQuery({
+                typenames: [],
+                inverted: false,
+                graph: {
+                  kind: 'inbound-reference',
+                  property: step.traversal.property,
+                  anchors: workingSet.map((item) => item.objectId),
+                },
+              });
+              trace.indexHits += indexHits.length;
+
+              const documentLoadStart = performance.now();
+              const results = await this._loadDocumentsAfterIndexQuery(indexHits);
+              trace.documentsLoaded += results.length;
+              trace.documentLoadTime += performance.now() - documentLoadStart;
+
+              newWorkingSet.push(...results.filter(isNonNullable));
+              trace.objectCount = newWorkingSet.length;
+            }
 
             break;
           }
@@ -601,25 +699,61 @@ export class QueryExecutor extends Resource {
 
           case 'source-to-relation':
           case 'target-to-relation': {
-            const indexHits = await this._indexer.execQuery({
-              typenames: [],
-              inverted: false,
-              graph: {
-                kind: step.traversal.direction === 'source-to-relation' ? 'relation-source' : 'relation-target',
-                anchors: workingSet.map((item) => item.objectId),
-                property: null,
-              },
-            });
+            if (this._indexer2 && this._runtime) {
+              // Use new SQL indexer for relation lookup.
+              const beginIndexQuery = performance.now();
+              const runtime = await runAndForwardErrors(this._runtime);
 
-            trace.indexHits += indexHits.length;
+              // Build anchor DXN strings from working set.
+              // Relations store source/target as DXN strings.
+              const anchors = workingSet.map((item) =>
+                DXN.fromSpaceAndObjectId(item.spaceId, item.objectId).toString(),
+              );
 
-            const documentLoadStart = performance.now();
-            const results = await this._loadDocumentsAfterIndexQuery(indexHits);
-            trace.documentsLoaded += results.length;
-            trace.documentLoadTime += performance.now() - documentLoadStart;
+              const metaResults = await unwrapExit(
+                await this._indexer2
+                  .queryRelations({
+                    direction: step.traversal.direction === 'source-to-relation' ? 'source' : 'target',
+                    anchors,
+                  })
+                  .pipe(Runtime.runPromiseExit(runtime)),
+              );
+              trace.indexHits += metaResults.length;
+              trace.indexQueryTime += performance.now() - beginIndexQuery;
 
-            newWorkingSet.push(...results.filter(isNonNullable));
-            trace.objectCount = newWorkingSet.length;
+              if (this._ctx.disposed) {
+                return { workingSet: newWorkingSet, trace };
+              }
+
+              const documentLoadStart = performance.now();
+              const results = await this._loadDocumentsFromObjectMeta(metaResults);
+              trace.documentsLoaded += results.filter(isNonNullable).length;
+              trace.documentLoadTime += performance.now() - documentLoadStart;
+
+              newWorkingSet.push(...results.filter(isNonNullable));
+              trace.objectCount = newWorkingSet.length;
+            } else {
+              // Fallback to old indexer.
+              const indexHits = await this._indexer.execQuery({
+                typenames: [],
+                inverted: false,
+                graph: {
+                  kind: step.traversal.direction === 'source-to-relation' ? 'relation-source' : 'relation-target',
+                  anchors: workingSet.map((item) => item.objectId),
+                  property: null,
+                },
+              });
+
+              trace.indexHits += indexHits.length;
+
+              const documentLoadStart = performance.now();
+              const results = await this._loadDocumentsAfterIndexQuery(indexHits);
+              trace.documentsLoaded += results.length;
+              trace.documentLoadTime += performance.now() - documentLoadStart;
+
+              newWorkingSet.push(...results.filter(isNonNullable));
+              trace.objectCount = newWorkingSet.length;
+            }
 
             break;
           }
@@ -769,6 +903,53 @@ export class QueryExecutor extends Resource {
         return this._loadFromIndexHit(hit);
       }),
     );
+  }
+
+  /**
+   * Load documents from ObjectMeta results (from new SQL indexer).
+   */
+  private async _loadDocumentsFromObjectMeta(metas: readonly ObjectMeta[]): Promise<(QueryItem | null)[]> {
+    return Promise.all(
+      metas.map(async (meta): Promise<QueryItem | null> => {
+        return this._loadFromObjectMeta(meta);
+      }),
+    );
+  }
+
+  /**
+   * Load a QueryItem from ObjectMeta.
+   */
+  private async _loadFromObjectMeta(meta: ObjectMeta): Promise<QueryItem | null> {
+    const spaceId = meta.spaceId as SpaceId;
+
+    // Try to load from documentId if available.
+    if (meta.documentId) {
+      const handle = await this._automergeHost.loadDoc<DatabaseDirectory>(
+        Context.default(),
+        meta.documentId as DocumentId,
+        { fetchFromNetwork: true },
+      );
+      const doc = handle.doc();
+      if (!doc) {
+        return null;
+      }
+
+      const object = DatabaseDirectory.getInlineObject(doc, meta.objectId);
+      if (!object) {
+        return null;
+      }
+
+      return {
+        objectId: meta.objectId as ObjectId,
+        documentId: meta.documentId as DocumentId,
+        spaceId,
+        doc: object,
+      };
+    }
+
+    // Fallback: load via DXN if no documentId.
+    const dxn = DXN.fromLocalObjectId(meta.objectId as ObjectId);
+    return this._loadFromDXN(dxn, { sourceSpaceId: spaceId });
   }
 
   /**

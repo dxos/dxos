@@ -17,6 +17,7 @@ import {
   type ObjectMeta,
   ObjectMetaIndex,
   ReverseRefIndex,
+  type ReverseRefMultiQuery,
   type ReverseRefQuery,
 } from './indexes';
 
@@ -93,6 +94,46 @@ export class IndexEngine {
     query: Pick<ObjectMeta, 'spaceId' | 'typeDxn'>,
   ): Effect.Effect<readonly ObjectMeta[], SqlError.SqlError, SqlClient.SqlClient> {
     return this.#objectMetaIndex.query(query);
+  }
+
+  /**
+   * Query objects by type(s) with optional space filtering and inverted matching.
+   * Use this for WildcardSelector (empty typeDxns) and TypeSelector queries.
+   */
+  queryByTypes(query: {
+    typeDxns: string[];
+    spaceIds?: string[];
+    inverted?: boolean;
+  }): Effect.Effect<readonly ObjectMeta[], SqlError.SqlError, SqlClient.SqlClient> {
+    return this.#objectMetaIndex.queryByTypes(query);
+  }
+
+  /**
+   * Query relations by source or target object DXNs.
+   * Use this for RelationTraversal with source-to-relation or target-to-relation direction.
+   */
+  queryRelations(query: {
+    direction: 'source' | 'target';
+    anchors: string[];
+    spaceIds?: string[];
+  }): Effect.Effect<readonly ObjectMeta[], SqlError.SqlError, SqlClient.SqlClient> {
+    return this.#objectMetaIndex.queryRelations(query);
+  }
+
+  /**
+   * Query reverse references - find objects referencing any of the target DXNs.
+   * Use this for ReferenceTraversal with incoming direction.
+   * Returns recordIds of source objects; use lookupByRecordIds to get full metadata.
+   */
+  queryReverseRefMulti(query: ReverseRefMultiQuery) {
+    return this.#reverseRefIndex.queryMulti(query);
+  }
+
+  /**
+   * Look up object metadata by recordIds.
+   */
+  lookupByRecordIds(recordIds: number[]): Effect.Effect<readonly ObjectMeta[], SqlError.SqlError, SqlClient.SqlClient> {
+    return this.#objectMetaIndex.lookupByRecordIds(recordIds);
   }
 
   update(
