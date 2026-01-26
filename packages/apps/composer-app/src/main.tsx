@@ -78,20 +78,29 @@ const main = async () => {
   const observabilityDisabled = await isObservabilityDisabled(APP_KEY);
   const observabilityGroup = await getObservabilityGroup(APP_KEY);
 
-  const disableSharedWorker = config.values.runtime?.app?.env?.DX_HOST;
-  const services = await createClientServices(
-    config,
-    disableSharedWorker
-      ? undefined
-      : () =>
-          new SharedWorker(new URL('./shared-worker', import.meta.url), {
-            type: 'module',
-            name: 'dxos-client-worker',
-          }),
+  const useLocalServices = config.values.runtime?.app?.env?.DX_HOST;
+  const useSharedWorker = config.values.runtime?.app?.env?.DX_SHARED_WORKER;
+  const services = await createClientServices(config, {
+    createWorker:
+      useLocalServices || !useSharedWorker
+        ? undefined
+        : () =>
+            new SharedWorker(new URL('./shared-worker', import.meta.url), {
+              type: 'module',
+              name: 'dxos-client-worker',
+            }),
+    createDedicatedWorker:
+      useLocalServices || useSharedWorker
+        ? undefined
+        : () =>
+            new Worker(new URL('@dxos/client/dedicated-worker', import.meta.url), {
+              type: 'module',
+              name: 'dxos-client-worker',
+            }),
+    createOpfsWorker: () => new Worker(new URL('@dxos/client/opfs-worker', import.meta.url), { type: 'module' }),
     observabilityGroup,
-    !observabilityDisabled,
-    () => new Worker(new URL('@dxos/client/opfs-worker', import.meta.url), { type: 'module' }),
-  );
+    signalTelemetryEnabled: !observabilityDisabled,
+  });
 
   const isTauri = isTauri$();
   if (isTauri) {

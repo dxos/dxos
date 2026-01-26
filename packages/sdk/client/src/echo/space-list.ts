@@ -4,7 +4,15 @@
 
 import { inspect } from 'node:util';
 
-import { Event, MulticastObservable, PushStream, Trigger, asyncTimeout, scheduleMicroTask } from '@dxos/async';
+import {
+  Event,
+  MulticastObservable,
+  PushStream,
+  SubscriptionList,
+  Trigger,
+  asyncTimeout,
+  scheduleMicroTask,
+} from '@dxos/async';
 import {
   CREATE_SPACE_TIMEOUT,
   type ClientServicesProvider,
@@ -52,6 +60,9 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
   private readonly _spacesStream: PushStream<Space[]>;
   private readonly _spaceCreated = new Event<PublicKey>();
   private readonly _instanceId = PublicKey.random().toHex();
+
+  /** Subscriptions for RPC streams that need to be re-established on reconnect. */
+  private readonly _streamSubscriptions = new SubscriptionList();
 
   @trace.info()
   private get _isReadyState() {
@@ -107,7 +118,37 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
     });
     this._ctx.onDispose(() => credentialsSubscription.unsubscribe());
 
-    invariant(this._serviceProvider.services.SpacesService, 'SpacesService is not available.');
+    // Register reconnection callback to re-establish streams.
+    this._serviceProvider.onReconnect?.(async () => {
+      log('reconnected, re-establishing streams');
+      // Notify all existing spaces that reconnection is starting.
+      // They will ignore state updates until the backend reaches READY again.
+      for (const space of this._spaces) {
+        (space as SpaceProxy)._notifyReconnecting();
+      }
+
+      await this._setupInvitationProxy();
+      this._setupSpacesStream();
+    });
+
+    await this._setupInvitationProxy();
+
+    // Subscribe to spaces and create proxies.
+    const gotInitialUpdate = new Trigger();
+    this._setupSpacesStream(gotInitialUpdate);
+
+    // TODO(nf): implement/verify works
+    // TODO(nf): trigger automatically? feedback on how many were resumed?
+
+    await gotInitialUpdate.wait();
+    log.trace('dxos.sdk.echo-proxy.open', Trace.end({ id: this._instanceId }));
+  }
+
+  /**
+   * Set up the invitation proxy. Called on initial open and reconnect.
+   */
+  private async _setupInvitationProxy(): Promise<void> {
+    await this._invitationProxy?.close();
     invariant(this._serviceProvider.services.InvitationsService, 'InvitationsService is not available.');
     this._invitationProxy = new InvitationsProxy(
       this._serviceProvider.services.InvitationsService,
@@ -117,11 +158,20 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
       }),
     );
     await this._invitationProxy.open();
+  }
 
-    // Subscribe to spaces and create proxies.
+  /**
+   * Set up the spaces stream. Called on initial open and reconnect.
+   * @param gotInitialUpdate - Trigger to wake when first update is received (only on initial open).
+   */
+  private _setupSpacesStream(gotInitialUpdate?: Trigger): void {
+    const isReconnect = !gotInitialUpdate;
+    this._streamSubscriptions.clear();
 
-    const gotInitialUpdate = new Trigger();
+    // On reconnect, we need to emit once after the first data arrives to notify React.
+    let isFirstDataAfterReconnect = isReconnect;
 
+    invariant(this._serviceProvider.services.SpacesService, 'SpacesService is not available.');
     const spacesStream = this._serviceProvider.services.SpacesService.querySpaces(undefined, { timeout: RPC_TIMEOUT });
     spacesStream.subscribe((data) => {
       let emitUpdate = false;
@@ -161,18 +211,18 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
         });
       }
 
-      gotInitialUpdate.wake();
+      // Force emit on first data after reconnect to notify React subscribers.
+      if (isFirstDataAfterReconnect) {
+        emitUpdate = true;
+        isFirstDataAfterReconnect = false;
+      }
+
+      gotInitialUpdate?.wake();
       if (emitUpdate) {
         this._spacesStream.next([...newSpaces]);
       }
     });
-    this._ctx.onDispose(() => spacesStream.close());
-
-    // TODO(nf): implement/verify works
-    // TODO(nf): trigger automatically? feedback on how many were resumed?
-
-    await gotInitialUpdate.wait();
-    log.trace('dxos.sdk.echo-proxy.open', Trace.end({ id: this._instanceId }));
+    this._streamSubscriptions.add(() => spacesStream.close());
   }
 
   private _updateAndOpenDefaultSpace(): boolean {
@@ -229,6 +279,7 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
    */
   @trace.span()
   async _close(): Promise<void> {
+    this._streamSubscriptions.clear();
     await this._ctx.dispose();
     await Promise.all(this.get().map((space) => (space as SpaceProxy)._destroy()));
     this._spacesStream.next([]);
@@ -278,7 +329,11 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
   }
 
   get default(): Space {
-    invariant(this._defaultSpaceId, 'Default space ID not set.');
+    if (!this._defaultSpaceId) {
+      throw new ApiError({
+        message: 'Default space ID not set. Is identity initialized and `spaces.waitUntilReady()` called?',
+      });
+    }
     const space = this.get().find((space) => space.id === this._defaultSpaceId);
     invariant(space, 'Default space is not yet available. Use `client.spaces.isReady` to wait for the default space.');
     return space;
