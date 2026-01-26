@@ -75,6 +75,7 @@ import {
   TasksModule,
   TokenManagerModule,
   TriggersModule,
+  InboxModule,
 } from '../components';
 import {
   ResearchInputQueue,
@@ -404,7 +405,7 @@ export const WithGmail: Story = {
   }),
   args: {
     showContext: true,
-    modules: [[ChatModule], [MessageModule, TokenManagerModule]],
+    modules: [[ChatModule], [InboxModule], [TokenManagerModule]],
     blueprints: [AssistantBlueprint.Key, 'dxos.org/blueprint/inbox'],
   },
 };
