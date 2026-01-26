@@ -89,10 +89,32 @@ export class IndexEngine {
     return this.#reverseRefIndex.query(query);
   }
 
+  queryAll(
+    query: Pick<ObjectMeta, 'spaceId'>,
+  ): Effect.Effect<readonly ObjectMeta[], SqlError.SqlError, SqlClient.SqlClient> {
+    return this.#objectMetaIndex.queryAll(query);
+  }
+
   queryType(
     query: Pick<ObjectMeta, 'spaceId' | 'typeDxn'>,
   ): Effect.Effect<readonly ObjectMeta[], SqlError.SqlError, SqlClient.SqlClient> {
     return this.#objectMetaIndex.query(query);
+  }
+
+  queryTypes(
+    query: Pick<ObjectMeta, 'spaceId'> & { typeDxns: readonly ObjectMeta['typeDxn'][]; inverted?: boolean },
+  ): Effect.Effect<readonly ObjectMeta[], SqlError.SqlError, SqlClient.SqlClient> {
+    return query.inverted ? this.#objectMetaIndex.queryNotTypes(query) : this.#objectMetaIndex.queryTypes(query);
+  }
+
+  queryRelations(
+    query: { endpoint: 'source' | 'target'; anchorDxns: readonly string[] },
+  ): Effect.Effect<readonly ObjectMeta[], SqlError.SqlError, SqlClient.SqlClient> {
+    return this.#objectMetaIndex.queryRelations(query);
+  }
+
+  lookupByRecordIds(recordIds: number[]): Effect.Effect<readonly ObjectMeta[], SqlError.SqlError, SqlClient.SqlClient> {
+    return this.#objectMetaIndex.lookupByRecordIds(recordIds);
   }
 
   update(

@@ -116,4 +116,86 @@ describe('ObjectMetaIndex', () => {
       expect(oldTypeResults.length).toBe(0);
     }).pipe(Effect.provide(TestLayer)),
   );
+
+  it.effect('should support queryAll/queryTypes/queryNotTypes/queryRelations', () =>
+    Effect.gen(function* () {
+      const index = new ObjectMetaIndex();
+      yield* index.migrate();
+
+      const spaceId = SpaceId.random();
+      const objectId1 = ObjectId.random();
+      const objectId2 = ObjectId.random();
+      const relationId = ObjectId.random();
+
+      const item1: IndexerObject = {
+        spaceId,
+        queueId: ObjectId.random(),
+        documentId: null,
+        recordId: null,
+        data: {
+          id: objectId1,
+          [ATTR_TYPE]: TYPE_PERSON,
+          [ATTR_DELETED]: false,
+        },
+      };
+
+      const item2: IndexerObject = {
+        spaceId,
+        queueId: ObjectId.random(),
+        documentId: null,
+        recordId: null,
+        data: {
+          id: objectId2,
+          [ATTR_TYPE]: TYPE_RELATION,
+          [ATTR_DELETED]: false,
+        },
+      };
+
+      const relation: IndexerObject = {
+        spaceId,
+        queueId: ObjectId.random(),
+        documentId: null,
+        recordId: null,
+        data: {
+          id: relationId,
+          [ATTR_TYPE]: TYPE_RELATION,
+          [ATTR_RELATION_SOURCE]: DXN.fromLocalObjectId(objectId1).toString(),
+          [ATTR_RELATION_TARGET]: DXN.fromLocalObjectId(objectId2).toString(),
+          [ATTR_DELETED]: false,
+        },
+      };
+
+      yield* index.update([item1, item2, relation]);
+
+      const all = yield* index.queryAll({ spaceId });
+      expect(all.map((_) => _.objectId).sort()).toEqual([objectId1, objectId2, relationId].sort());
+
+      const types = yield* index.queryTypes({ spaceId, typeDxns: [TYPE_PERSON, TYPE_RELATION] });
+      expect(types.map((_) => _.objectId).sort()).toEqual([objectId1, objectId2, relationId].sort());
+
+      const onlyPerson = yield* index.queryTypes({ spaceId, typeDxns: [TYPE_PERSON] });
+      expect(onlyPerson.map((_) => _.objectId)).toEqual([objectId1]);
+
+      const notPerson = yield* index.queryNotTypes({ spaceId, typeDxns: [TYPE_PERSON] });
+      expect(notPerson.map((_) => _.objectId).sort()).toEqual([objectId2, relationId].sort());
+
+      const emptyTypes = yield* index.queryTypes({ spaceId, typeDxns: [] });
+      expect(emptyTypes).toEqual([]);
+
+      const notEmptyTypes = yield* index.queryNotTypes({ spaceId, typeDxns: [] });
+      expect(notEmptyTypes.map((_) => _.objectId).sort()).toEqual([objectId1, objectId2, relationId].sort());
+
+      const bySource = yield* index.queryRelations({
+        endpoint: 'source',
+        anchorDxns: [DXN.fromLocalObjectId(objectId1).toString()],
+      });
+      expect(bySource.map((_) => _.objectId)).toEqual([relationId]);
+
+      const byTarget = yield* index.queryRelations({
+        endpoint: 'target',
+        anchorDxns: [DXN.fromLocalObjectId(objectId2).toString()],
+      });
+      expect(byTarget.map((_) => _.objectId)).toEqual([relationId]);
+    }).pipe(Effect.provide(TestLayer)),
+  );
 });
