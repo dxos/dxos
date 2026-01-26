@@ -67,6 +67,99 @@ export class ObjectMetaIndex implements Index {
       }),
   );
 
+  queryAll = Effect.fn('ObjectMetaIndex.queryAll')(
+    (query: Pick<ObjectMeta, 'spaceId'>): Effect.Effect<readonly ObjectMeta[], SqlError.SqlError, SqlClient.SqlClient> =>
+      Effect.gen(function* () {
+        const sql = yield* SqlClient.SqlClient;
+        const rows = yield* sql<ObjectMeta>`SELECT * FROM objectMeta WHERE spaceId = ${query.spaceId}`;
+        return rows.map((row) => ({
+          ...row,
+          deleted: !!row.deleted,
+        }));
+      }),
+  );
+
+  queryTypes = Effect.fn('ObjectMetaIndex.queryTypes')(
+    ({
+      spaceId,
+      typeDxns,
+    }: {
+      spaceId: ObjectMeta['spaceId'];
+      typeDxns: readonly ObjectMeta['typeDxn'][];
+    }): Effect.Effect<readonly ObjectMeta[], SqlError.SqlError, SqlClient.SqlClient> =>
+      Effect.gen(function* () {
+        if (typeDxns.length === 0) {
+          return [];
+        }
+        const sql = yield* SqlClient.SqlClient;
+        const placeholders = typeDxns.map(() => '?').join(', ');
+        const rows = yield* sql.unsafe<ObjectMeta>(
+          `SELECT * FROM objectMeta WHERE spaceId = ? AND typeDxn IN (${placeholders})`,
+          [spaceId, ...typeDxns],
+        );
+        return rows.map((row) => ({
+          ...row,
+          deleted: !!row.deleted,
+        }));
+      }),
+  );
+
+  queryNotTypes = Effect.fn('ObjectMetaIndex.queryNotTypes')(
+    ({
+      spaceId,
+      typeDxns,
+    }: {
+      spaceId: ObjectMeta['spaceId'];
+      typeDxns: readonly ObjectMeta['typeDxn'][];
+    }): Effect.Effect<readonly ObjectMeta[], SqlError.SqlError, SqlClient.SqlClient> =>
+      Effect.gen(function* () {
+        const sql = yield* SqlClient.SqlClient;
+        if (typeDxns.length === 0) {
+          const rows = yield* sql<ObjectMeta>`SELECT * FROM objectMeta WHERE spaceId = ${spaceId}`;
+          return rows.map((row) => ({
+            ...row,
+            deleted: !!row.deleted,
+          }));
+        }
+
+        const placeholders = typeDxns.map(() => '?').join(', ');
+        const rows = yield* sql.unsafe<ObjectMeta>(
+          `SELECT * FROM objectMeta WHERE spaceId = ? AND typeDxn NOT IN (${placeholders})`,
+          [spaceId, ...typeDxns],
+        );
+        return rows.map((row) => ({
+          ...row,
+          deleted: !!row.deleted,
+        }));
+      }),
+  );
+
+  queryRelations = Effect.fn('ObjectMetaIndex.queryRelations')(
+    ({
+      endpoint,
+      anchorDxns,
+    }: {
+      endpoint: 'source' | 'target';
+      anchorDxns: readonly string[];
+    }): Effect.Effect<readonly ObjectMeta[], SqlError.SqlError, SqlClient.SqlClient> =>
+      Effect.gen(function* () {
+        if (anchorDxns.length === 0) {
+          return [];
+        }
+        const sql = yield* SqlClient.SqlClient;
+        const column = endpoint === 'source' ? 'source' : 'target';
+        const placeholders = anchorDxns.map(() => '?').join(', ');
+        const rows = yield* sql.unsafe<ObjectMeta>(
+          `SELECT * FROM objectMeta WHERE entityKind = 'relation' AND ${column} IN (${placeholders})`,
+          anchorDxns,
+        );
+        return rows.map((row) => ({
+          ...row,
+          deleted: !!row.deleted,
+        }));
+      }),
+  );
+
   // TODO(dmaretskyi): Update recordId on objects so that we don't need to look it up separately.
   update = Effect.fn('ObjectMetaIndex.update')(
     (objects: IndexerObject[]): Effect.Effect<void, SqlError.SqlError, SqlClient.SqlClient> =>
@@ -80,7 +173,6 @@ export class ObjectMetaIndex implements Index {
               const { spaceId, queueId, documentId, data } = object;
 
               // Extract metadata (Logic emulating Echo APIs as strict imports are unavailable).
-              // TODO(agent): Verify property access matches Obj.JSON structure.
               const castData = data;
               const objectId = castData.id;
 
