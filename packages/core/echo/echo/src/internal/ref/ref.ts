@@ -16,7 +16,7 @@ import { DXN, ObjectId } from '@dxos/keys';
 import { ReferenceAnnotationId, getSchemaDXN, getTypeAnnotation, getTypeIdentifierAnnotation } from '../annotations';
 import { type JsonSchemaType } from '../json-schema';
 import type { AnyProperties, WithId } from '../types';
-import { Database } from '../..';
+import * as Database from '../../Database';
 
 /**
  * The `$id` and `$ref` fields for an ECHO reference schema.
