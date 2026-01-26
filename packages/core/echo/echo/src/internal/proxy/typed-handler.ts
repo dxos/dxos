@@ -85,8 +85,16 @@ const getOwner = (value: object | null | undefined): object | undefined => {
  * @param owner - The raw target of the root ECHO object that will own this value.
  * @param visited - Set of already-visited objects to avoid infinite loops.
  * @param depth - Current recursion depth (unused, kept for debugging).
+ * @param allowedPreviousOwner - When reassigning a root ECHO object, its nested structures
+ *   are allowed to have this as their previous owner without triggering the invariant.
  */
-const setOwnerRecursive = (value: any, owner: object, visited = new Set<object>(), depth = 0): void => {
+const setOwnerRecursive = (
+  value: any,
+  owner: object,
+  visited = new Set<object>(),
+  depth = 0,
+  allowedPreviousOwner?: object,
+): void => {
   if (value == null || typeof value !== 'object') {
     return;
   }
@@ -97,14 +105,28 @@ const setOwnerRecursive = (value: any, owner: object, visited = new Set<object>(
   }
   visited.add(actualValue);
 
-  // Check that we're not stealing an object owned by a different ECHO object.
-  // This should never happen if _prepareValueForAssignment is called correctly,
-  // which deep-copies values owned by other objects before assignment.
+  // Check that we're not stealing a nested record owned by a different ECHO object.
+  // Root ECHO objects (those with EventId) can be reassigned - they maintain their own
+  // identity and choosing to embed them in another object is a valid operation.
+  // When reassigning a root, its nested records (owned by that root) are also allowed.
   const existingOwner = getOwner(actualValue);
-  invariant(
-    existingOwner == null || existingOwner === owner,
-    'Cannot reassign ownership of a nested record to a different ECHO object. Use deep copy first.',
-  );
+  const isRootEchoObject = EventId in actualValue;
+
+  // Track if this is a root being assigned - its nested structures are allowed to transfer.
+  let newAllowedPreviousOwner = allowedPreviousOwner;
+  if (isRootEchoObject && depth === 0) {
+    // This is the top-level root being assigned; allow its nested structures to transfer.
+    newAllowedPreviousOwner = actualValue;
+  }
+
+  if (!isRootEchoObject) {
+    const ownershipAllowed =
+      existingOwner == null || existingOwner === owner || existingOwner === newAllowedPreviousOwner;
+    invariant(
+      ownershipAllowed,
+      'Cannot reassign ownership of a nested record to a different ECHO object. Use deep copy first.',
+    );
+  }
 
   // Set owner directly to the root ECHO object.
   defineHiddenProperty(actualValue, EchoOwner, owner);
@@ -113,7 +135,7 @@ const setOwnerRecursive = (value: any, owner: object, visited = new Set<object>(
   if (Array.isArray(actualValue)) {
     for (const item of actualValue) {
       if (isValidProxyTarget(item) || isProxy(item)) {
-        setOwnerRecursive(item, owner, visited, depth + 1);
+        setOwnerRecursive(item, owner, visited, depth + 1, newAllowedPreviousOwner);
       }
     }
   } else {
@@ -121,7 +143,7 @@ const setOwnerRecursive = (value: any, owner: object, visited = new Set<object>(
       if (Object.prototype.hasOwnProperty.call(actualValue, key)) {
         const nested = actualValue[key];
         if (isValidProxyTarget(nested) || isProxy(nested)) {
-          setOwnerRecursive(nested, owner, visited, depth + 1);
+          setOwnerRecursive(nested, owner, visited, depth + 1, newAllowedPreviousOwner);
         }
       }
     }
@@ -402,14 +424,14 @@ export class TypedReactiveHandler implements ReactiveHandler<ProxyTarget> {
       }
     }
 
-    // Copy-on-assign: If the value is already owned by a different ECHO object, deep copy it.
-    // Also deep copy if the value is itself a root ECHO object (has EventId), since its nested
-    // objects would be owned by it and we can't reassign those to our echoRoot.
+    // Copy-on-assign: If the value is a nested record owned by a different ECHO object, deep copy it.
+    // Note: Root ECHO objects (those with EventId) maintain their own identity and should NOT be
+    // copied - they can be legitimately referenced by multiple objects.
     if (isValidProxyTarget(value) || isProxy(value)) {
       const actualValue = getRawTarget(value);
       const existingOwner = getOwner(actualValue);
-      const isRootEchoObject = EventId in actualValue && actualValue !== echoRoot;
-      if ((existingOwner != null && existingOwner !== echoRoot) || isRootEchoObject) {
+      const isRootEchoObject = EventId in actualValue;
+      if (existingOwner != null && existingOwner !== echoRoot && !isRootEchoObject) {
         value = deepCopy(value);
       }
     }
