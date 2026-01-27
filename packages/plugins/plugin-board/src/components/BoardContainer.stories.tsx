@@ -85,18 +85,20 @@ const meta = {
               yield* Effect.promise(() => space.waitUntilReady());
               const board = space.db.add(createBoard());
 
-              // Add some sample items
-              Array.from({ length: 10 }).map(() => {
-                const org = createOrg();
-                space.db.add(org);
-                board.items.push(Ref.make(org));
-                board.layout.cells[org.id] = {
-                  x: Math.floor(Math.random() * 5) - 2,
-                  y: Math.floor(Math.random() * 5) - 2,
-                  width: 1,
-                  height: 1,
-                };
-                return org;
+              Obj.change(board, (b) => {
+                // Add some sample items
+                Array.from({ length: 10 }).map(() => {
+                  const org = createOrg();
+                  space.db.add(org);
+                  b.items.push(Ref.make(org));
+                  b.layout.cells[org.id] = {
+                    x: Math.floor(Math.random() * 5) - 2,
+                    y: Math.floor(Math.random() * 5) - 2,
+                    width: 1,
+                    height: 1,
+                  };
+                  return org;
+                });
               });
             }),
         }),
