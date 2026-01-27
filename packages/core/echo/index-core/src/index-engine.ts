@@ -12,6 +12,7 @@ import { type IndexCursor, IndexTracker } from './index-tracker';
 import {
   FtsIndex,
   type FtsQuery,
+  type FtsQueryResult,
   type Index,
   type IndexerObject,
   type ObjectMeta,
@@ -76,9 +77,9 @@ export class IndexEngine {
   }
 
   /**
-   * Query text index and return full object metadata.
+   * Query text index and return full object metadata with rank.
    */
-  queryText(query: FtsQuery): Effect.Effect<readonly ObjectMeta[], SqlError.SqlError, SqlClient.SqlClient> {
+  queryText(query: FtsQuery): Effect.Effect<readonly FtsQueryResult[], SqlError.SqlError, SqlClient.SqlClient> {
     return Effect.gen(this, function* () {
       return yield* this.#ftsIndex.query(query);
     });

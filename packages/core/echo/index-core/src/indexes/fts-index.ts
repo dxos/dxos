@@ -50,6 +50,18 @@ export interface FtsResult extends ObjectMeta {
 }
 
 /**
+ * Result of FTS query with rank.
+ */
+export interface FtsQueryResult extends ObjectMeta {
+  /**
+   * Relevance rank from FTS5.
+   * Higher values indicate better matches.
+   * Uses BM25 algorithm when available, falls back to 1 for non-BM25 queries.
+   */
+  rank: number;
+}
+
+/**
  * Escapes user input for safe FTS5 queries.
  *
  * FTS5 has special syntax characters that can cause errors or unexpected behavior:
@@ -92,7 +104,7 @@ export class FtsIndex implements Index {
     spaceId,
     includeAllQueues,
     queueIds,
-  }: FtsQuery): Effect.Effect<readonly ObjectMeta[], SqlError.SqlError, SqlClient.SqlClient> {
+  }: FtsQuery): Effect.Effect<readonly FtsQueryResult[], SqlError.SqlError, SqlClient.SqlClient> {
     return Effect.gen(function* () {
       const trimmed = query.trim();
       if (trimmed.length === 0) {
@@ -105,6 +117,11 @@ export class FtsIndex implements Index {
       // Check if ALL terms are at least 3 chars; otherwise use LIKE fallback.
       const terms = trimmed.split(/\s+/).filter(Boolean);
       const minTermLength = Math.min(...terms.map((t) => t.length));
+
+      // Use BM25 ranking for FTS5 MATCH queries, fall back to rank 1 for LIKE queries.
+      // BM25 returns negative values where lower (more negative) means better match,
+      // so we negate it to get higher = better.
+      const useBm25 = minTermLength >= 3;
 
       const conditions =
         minTermLength < 3
@@ -135,7 +152,29 @@ export class FtsIndex implements Index {
         conditions.push(sql`(${sql.or(sourceConditions)})`);
       }
 
-      return yield* sql<ObjectMeta>`SELECT m.* FROM ftsIndex AS f JOIN objectMeta AS m ON f.rowid = m.recordId WHERE ${sql.and(conditions)}`;
+      if (useBm25) {
+        // Use BM25 ranking for FTS5 MATCH queries.
+        // BM25 returns negative values, negate to get higher = better match.
+        // Order by rank descending so best matches come first.
+        // Note: bm25() requires the actual table name, not an alias.
+        const rows = yield* sql<ObjectMeta & { rank: number }>`
+          SELECT m.*, -bm25(ftsIndex) AS rank 
+          FROM ftsIndex AS f 
+          JOIN objectMeta AS m ON f.rowid = m.recordId 
+          WHERE ${sql.and(conditions)}
+          ORDER BY rank DESC
+        `;
+        return rows;
+      } else {
+        // LIKE fallback - no ranking available, default to 1.
+        const rows = yield* sql<ObjectMeta>`
+          SELECT m.* 
+          FROM ftsIndex AS f 
+          JOIN objectMeta AS m ON f.rowid = m.recordId 
+          WHERE ${sql.and(conditions)}
+        `;
+        return rows.map((row) => ({ ...row, rank: 1 }));
+      }
     });
   }
 

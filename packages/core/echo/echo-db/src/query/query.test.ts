@@ -1097,6 +1097,119 @@ describe('Query', () => {
       expect(Obj.getMeta(obj).keys).toEqual([]);
       expect(obj.title).toEqual('Queue Object TypeScript');
     });
+
+    test('full-text search returns rank in entries', async () => {
+      const { db } = await builder.createDatabase({ indexing: { fullText: true } });
+
+      db.add(Obj.make(Type.Expando, { title: 'TypeScript TypeScript TypeScript' })); // High relevance.
+      db.add(Obj.make(Type.Expando, { title: 'TypeScript Programming' })); // Medium relevance.
+      db.add(Obj.make(Type.Expando, { title: 'Python Programming' })); // No match.
+      await db.flush({ indexes: true });
+
+      const query = db.query(Query.select(Filter.text('TypeScript', { type: 'full-text' })));
+      const entries = await query.runEntries();
+
+      expect(entries).toHaveLength(2);
+      // All FTS results should have a rank in their match metadata.
+      for (const entry of entries) {
+        expect(entry.match).toBeDefined();
+        expect(entry.match!.rank).toBeDefined();
+        expect(typeof entry.match!.rank).toBe('number');
+        expect(entry.match!.rank).toBeGreaterThan(0);
+      }
+    });
+
+    test('full-text search order by rank descending (default)', async () => {
+      const { db } = await builder.createDatabase({ indexing: { fullText: true } });
+
+      // Create objects with varying relevance to the search term "TypeScript".
+      db.add(Obj.make(Type.Expando, { title: 'TypeScript' })); // Single occurrence.
+      db.add(Obj.make(Type.Expando, { title: 'TypeScript TypeScript TypeScript TypeScript' })); // High relevance.
+      db.add(Obj.make(Type.Expando, { title: 'TypeScript Programming Guide' })); // Medium relevance.
+      await db.flush({ indexes: true });
+
+      // Order by rank descending (best matches first) - default direction.
+      const query = db.query(Query.select(Filter.text('TypeScript', { type: 'full-text' })).orderBy(Order.rank()));
+      const entries = await query.runEntries();
+
+      expect(entries).toHaveLength(3);
+
+      // Verify ranks are in descending order (higher rank = better match = first).
+      for (let i = 0; i < entries.length - 1; i++) {
+        expect(entries[i].match!.rank).toBeGreaterThanOrEqual(entries[i + 1].match!.rank);
+      }
+
+      // The item with highest relevance (most occurrences) should be first.
+      expect(entries[0].result!.title).toBe('TypeScript TypeScript TypeScript TypeScript');
+    });
+
+    test('full-text search order by rank ascending', async () => {
+      const { db } = await builder.createDatabase({ indexing: { fullText: true } });
+
+      // Create objects with varying relevance to the search term "TypeScript".
+      db.add(Obj.make(Type.Expando, { title: 'TypeScript' })); // Single occurrence.
+      db.add(Obj.make(Type.Expando, { title: 'TypeScript TypeScript TypeScript TypeScript' })); // High relevance.
+      db.add(Obj.make(Type.Expando, { title: 'TypeScript Programming Guide' })); // Medium relevance.
+      await db.flush({ indexes: true });
+
+      // Order by rank ascending (worst matches first).
+      const query = db.query(Query.select(Filter.text('TypeScript', { type: 'full-text' })).orderBy(Order.rank('asc')));
+      const entries = await query.runEntries();
+
+      expect(entries).toHaveLength(3);
+
+      // Verify ranks are in ascending order (lower rank = worse match = first).
+      for (let i = 0; i < entries.length - 1; i++) {
+        expect(entries[i].match!.rank).toBeLessThanOrEqual(entries[i + 1].match!.rank);
+      }
+
+      // The item with lowest relevance should be first.
+      expect(entries[entries.length - 1].result!.title).toBe('TypeScript TypeScript TypeScript TypeScript');
+    });
+
+    test('non-FTS queries return default rank of 1', async () => {
+      const { db } = await builder.createDatabase();
+
+      db.add(Obj.make(Type.Expando, { title: 'Non-FTS Test Object 1' }));
+      db.add(Obj.make(Type.Expando, { title: 'Non-FTS Test Object 2' }));
+      await db.flush({ indexes: true });
+
+      // Non-FTS query (all expandos, no text search).
+      const query = db.query(Query.select(Filter.type(Type.Expando)));
+      const entries = await query.runEntries();
+
+      // Should have at least 2 entries (the ones we created).
+      expect(entries.length).toBeGreaterThanOrEqual(2);
+      // All non-FTS results should have a default rank of 1.
+      for (const entry of entries) {
+        expect(entry.match).toBeDefined();
+        expect(entry.match!.rank).toBe(1);
+      }
+    });
+
+    test('order by rank with limit', async () => {
+      const { db } = await builder.createDatabase({ indexing: { fullText: true } });
+
+      // Create multiple objects with varying relevance.
+      db.add(Obj.make(Type.Expando, { title: 'TypeScript' }));
+      db.add(Obj.make(Type.Expando, { title: 'TypeScript TypeScript' }));
+      db.add(Obj.make(Type.Expando, { title: 'TypeScript TypeScript TypeScript' }));
+      db.add(Obj.make(Type.Expando, { title: 'TypeScript TypeScript TypeScript TypeScript' }));
+      await db.flush({ indexes: true });
+
+      // Order by rank descending and limit to top 2 results.
+      const query = db.query(
+        Query.select(Filter.text('TypeScript', { type: 'full-text' }))
+          .orderBy(Order.rank())
+          .limit(2),
+      );
+      const entries = await query.runEntries();
+
+      expect(entries).toHaveLength(2);
+      // Should get the top 2 most relevant results.
+      expect(entries[0].result!.title).toBe('TypeScript TypeScript TypeScript TypeScript');
+      expect(entries[1].result!.title).toBe('TypeScript TypeScript TypeScript');
+    });
   });
 
   describe('Reactivity', () => {

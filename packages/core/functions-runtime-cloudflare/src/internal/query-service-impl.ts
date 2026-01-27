@@ -54,7 +54,8 @@ export class QueryServiceImpl implements QueryServiceProto {
                 spaceId,
                 spaceKey: PublicKey.ZERO,
                 documentId: object.document.documentId,
-                rank: 0,
+                // Rank 1 for predicate matches where ranking is not determined.
+                rank: 1,
                 // Copy returned object to avoid hanging RPC stub.
                 // See https://developers.cloudflare.com/workers/runtime-apis/rpc/lifecycle/
                 documentAutomerge: copyUint8Array(object.document.data),

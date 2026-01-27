@@ -290,6 +290,12 @@ const Order_ = Schema.Union(
     property: Schema.String,
     direction: OrderDirection,
   }),
+  Schema.Struct({
+    // Order by relevance rank (for FTS/vector search results).
+    // Default direction is 'desc' (higher rank = better match first).
+    kind: Schema.Literal('rank'),
+    direction: OrderDirection,
+  }),
 );
 
 export type Order = Schema.Schema.Type<typeof Order_>;
