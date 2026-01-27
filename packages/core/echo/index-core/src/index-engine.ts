@@ -203,6 +203,6 @@ export class IndexEngine {
           return { updated: objects.length, done: false };
         }),
       );
-    }).pipe(Effect.withSpan('IndexEngine.#updateDependentIndex'));
+    }).pipe(Effect.withSpan('IndexEngine.#update'));
   }
 }
