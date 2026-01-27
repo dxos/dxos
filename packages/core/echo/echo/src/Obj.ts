@@ -118,8 +118,16 @@ export const make = <S extends Schema.Schema.AnyNoContext>(
     delete props[MetaId];
   }
 
-  // Filter undefined values.
-  const filterUndefined = Object.fromEntries(Object.entries(props).filter(([_, v]) => v !== undefined));
+  // Filter undefined values (Object.entries only returns string-keyed properties).
+  const filterUndefined: any = Object.fromEntries(Object.entries(props).filter(([_, v]) => v !== undefined));
+
+  // Copy symbol properties (like ParentId) that Object.entries doesn't include.
+  for (const sym of Object.getOwnPropertySymbols(props)) {
+    const value = (props as any)[sym];
+    if (value !== undefined) {
+      filterUndefined[sym] = value;
+    }
+  }
 
   return makeObject<Schema.Schema.Type<S>>(schema, filterUndefined as any, {
     ...defaultMeta,
@@ -413,6 +421,18 @@ export const setDescription = (entity: Entity.Unknown, description: string) => {
     setDescription$(schema, entity, description);
   }
 };
+
+/**
+ * Symbol to set parent when creating objects with `Obj.make`.
+ * @example
+ * ```ts
+ * Obj.make(TestSchema.Person, {
+ *   [Obj.Parent]: parentObject,
+ *   name: 'John',
+ * })
+ * ```
+ */
+export const Parent: unique symbol = ParentId as any;
 
 export const getParent = (entity: Any): Any | undefined => {
   assertArgument(isObject(entity), 'Expected an object');

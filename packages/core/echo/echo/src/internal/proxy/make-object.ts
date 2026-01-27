@@ -16,7 +16,7 @@ import {
 import { getTypeAnnotation } from '../annotations';
 import { Expando } from '../entities';
 import { attachTypedJsonSerializer } from '../object';
-import { type AnyProperties, KindId, MetaId, type ObjectMeta, ObjectMetaSchema } from '../types';
+import { type AnyProperties, KindId, MetaId, type ObjectMeta, ObjectMetaSchema, ParentId } from '../types';
 
 import { TypedReactiveHandler, prepareTypedTarget } from './typed-handler';
 
@@ -48,9 +48,10 @@ export const makeObject: {
 ): Live<T> => {
   // TODO(dmaretskyi): Remove Expando special case.
   if (obj && (objOrSchema as any) !== Expando) {
-    return createReactiveObject<T>({ ...obj } as T, meta, objOrSchema as Schema.Schema<T, any>);
+    // Use Object.assign to copy symbol properties (like ParentId) that spread operator doesn't copy.
+    return createReactiveObject<T>(Object.assign({}, obj) as T, meta, objOrSchema as Schema.Schema<T, any>);
   } else if (obj && (objOrSchema as any) === Expando) {
-    return createReactiveObject<T>({ ...obj } as T, meta, undefined, { expando: true });
+    return createReactiveObject<T>(Object.assign({}, obj) as T, meta, undefined, { expando: true });
   } else {
     return createReactiveObject<T>(objOrSchema as T, meta);
   }
@@ -66,6 +67,12 @@ const createReactiveObject = <T extends AnyProperties>(
     throw new Error('Value cannot be made into a reactive object.');
   }
 
+  // Extract parent from props (can be set via [Obj.Parent]).
+  const parent = (obj as any)[ParentId];
+  if (parent !== undefined) {
+    delete (obj as any)[ParentId];
+  }
+
   if (schema) {
     const annotation = getTypeAnnotation(schema);
     const shouldGenerateId = options?.expando || !!annotation;
@@ -76,6 +83,9 @@ const createReactiveObject = <T extends AnyProperties>(
       defineHiddenProperty(obj, KindId, annotation.kind);
     }
     initMeta(obj, meta);
+    if (parent !== undefined) {
+      defineHiddenProperty(obj, ParentId, parent);
+    }
     prepareTypedTarget(obj, schema);
     attachTypedJsonSerializer(obj);
     return createProxy<T>(obj, TypedReactiveHandler.instance);
@@ -84,6 +94,9 @@ const createReactiveObject = <T extends AnyProperties>(
       setIdOnTarget(obj);
     }
     initMeta(obj, meta);
+    if (parent !== undefined) {
+      defineHiddenProperty(obj, ParentId, parent);
+    }
     return createProxy<T>(obj, UntypedReactiveHandler.instance);
   }
 };
