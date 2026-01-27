@@ -119,6 +119,7 @@ export const Column = forwardRef<HTMLDivElement, ColumnProps>(
       canDrop: ({ source }) => Obj.instanceOf(TestItem, source.object),
       get: (item) => item.target,
       make: (object) => Ref.make(object),
+      onChange: (mutator) => updateColumn((column) => mutator(column.items)),
     });
 
     // Context menu.
