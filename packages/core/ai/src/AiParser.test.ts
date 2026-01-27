@@ -69,10 +69,7 @@ describe('parser', () => {
     it.effect(
       'text followed by a tool call',
       Effect.fn(function* ({ expect }) {
-        const result = yield* makeInputStream([
-          ...text(['Hello, world!']),
-          ...toolCall('123', 'foo', { bar: 'baz' }),
-        ])
+        const result = yield* makeInputStream([...text(['Hello, world!']), ...toolCall('123', 'foo', { bar: 'baz' })])
           .pipe(parseResponse())
           .pipe(Stream.runCollect)
           .pipe(Effect.map(Chunk.toArray));
